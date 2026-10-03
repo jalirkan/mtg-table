@@ -1,0 +1,133 @@
+{
+  "$comment": "Written by tools/build-deck.ts into decks/hulk-family.dck. decks/README.md says what it is and how the AI plays it; docs/evidence/more-villains.md what was run.",
+  "deck": "decks/hulk-family.dck",
+  "name": "Hulk Family (Marvel Super Heroes gamma)",
+  "colors": "RG",
+  "archetype": "stompy: gamma tramplers that grow each other with +1/+1 counters, on two Birds of Paradise",
+  "size": 40,
+  "lands": 17,
+  "minCreatures": 15,
+  "maxCopies": 2,
+  "cards": [
+    {
+      "count": 1,
+      "name": "Rick Jones, Destined Sidekick",
+      "why": "the teenager Banner saved from the gamma bomb test: digs four deep for a Hero"
+    },
+    {
+      "count": 2,
+      "name": "Birds of Paradise",
+      "why": "the one generic reprint: mana of any colour, so the Hulks land a turn early"
+    },
+    {
+      "count": 1,
+      "name": "Brawn, Amadeus Cho",
+      "why": "the Totally Awesome Hulk: draws a card; castable with {G}"
+    },
+    {
+      "count": 1,
+      "name": "Hellcat, Undying Vigilante",
+      "why": "a Defender beside Hulk: 2/2 haste who comes back once"
+    },
+    {
+      "count": 2,
+      "name": "Knight of Wundagore",
+      "why": "the High Evolutionary's cat-men, a Villain 2-drop: every +1/+1 counter the Hulks hand out grows them too, and a Villain's combat damage grows Abomination"
+    },
+    {
+      "count": 2,
+      "name": "Gallant Citizen",
+      "why": "a generic citizen from MSC (its flavour text is J. Jonah Jameson's): a 1/1 that draws a card; castable with {G}{G}"
+    },
+    {
+      "count": 1,
+      "name": "HULK SMASH!",
+      "why": "a creature of yours deals its power to one of theirs"
+    },
+    {
+      "count": 2,
+      "name": "Gamma Grotesque",
+      "why": "3/3 vigilance whose power-up draws"
+    },
+    {
+      "count": 1,
+      "name": "She-Hulk, Attorney-at-Law",
+      "why": "3/3 vigilance for three; castable with {G}"
+    },
+    {
+      "count": 1,
+      "name": "Hercules, Prince of Power",
+      "why": "Amadeus Cho's partner after World War Hulk: 3/3, power-up makes him indestructible"
+    },
+    {
+      "count": 1,
+      "name": "Hulkling, Burgeoning Bruiser",
+      "why": "the Young Avenger named for Hulk: 2/3 vigilance that grows when a bigger creature arrives"
+    },
+    {
+      "count": 1,
+      "name": "Hulk, Brutal Brawler",
+      "why": "attacks every combat and grows the rest of the team"
+    },
+    {
+      "count": 1,
+      "name": "Hulk, Strongest There Is",
+      "why": "doubles the +1/+1 counters on every Gamma each upkeep"
+    },
+    {
+      "count": 1,
+      "name": "Abomination, Irradiated Brute",
+      "why": "4/4 trample that grows from a Gamma's combat damage"
+    },
+    {
+      "count": 1,
+      "name": "Abomination, Terrifying Titan",
+      "why": "4/4 trample; power-up fights"
+    },
+    {
+      "count": 1,
+      "name": "She-Hulk, Jade Defender",
+      "why": "4/4 reach trample"
+    },
+    {
+      "count": 1,
+      "name": "Wolverine, Fierce Fighter",
+      "why": "his first appearance was a fight with Hulk (Incredible Hulk #181): 3/5 haste that fights on arrival"
+    },
+    {
+      "count": 1,
+      "name": "Hulk, Gamma Goliath",
+      "why": "6/5 reach trample; power-ups cost {3} less"
+    },
+    {
+      "count": 1,
+      "name": "Red Hulk",
+      "why": "6/7 reach trample that shoots back when hurt"
+    },
+    {
+      "count": 1,
+      "name": "Los Diablos Missile Base",
+      "why": "where Banner tested the gamma bomb (its flavour text is Ross's): R/G, enters tapped, gain 1"
+    },
+    {
+      "count": 1,
+      "name": "Training Compound",
+      "why": "R/G while you control a basic"
+    },
+    {
+      "count": 1,
+      "name": "Rootbound Crag",
+      "why": "R/G, untapped with a Mountain or Forest out"
+    },
+    {
+      "count": 9,
+      "name": "Forest",
+      "why": "green is the main colour: every double pip is green"
+    },
+    {
+      "count": 5,
+      "name": "Mountain",
+      "why": "red the second, single-pip except Red Hulk"
+    }
+  ]
+}

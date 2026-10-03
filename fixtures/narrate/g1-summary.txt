@@ -1,0 +1,14 @@
+== g1 · seed 42: AI-Seat0 (AI) vs AI-Seat1 (AI) ==
+Seen from AI-Seat0's seat. 25 turns (13 rounds).
+Game over after turn 25: AI-Seat0 wins. AI-Seat1's life fell to -1.
+
+                              AI-Seat0 (seat)         AI-Seat1
+  turns taken                              13               12
+  mulligans                                 0                2
+  lands played                             10                8
+  spells cast                               8                8
+  abilities used                            9               17
+  their creatures that died                 3                1
+  damage dealt to players                  21               18
+  damage dealt to creatures                14               18
+  life at the end                           2               -1

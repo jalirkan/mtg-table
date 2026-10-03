@@ -1,0 +1,15 @@
+== g1 · seed 42: AI-Seat0 (AI) vs AI-Seat1 (AI) ==
+This is AI-Seat0's view (seat 0): AI-Seat1's hand and every library stay hidden,
+so an unseen card is "a card" here, and a face-down one "a face-down card".
+
+Turn 1 · AI-Seat0 (AI)
+  main 1  Plays Island.
+
+Turn 2 · AI-Seat1 (AI)
+  draw    Draws a card.
+  main 1  Plays Plains.
+  main 2  Casts S.H.I.E.L.D. Spy Kit ({W}, Equipment).
+
+Turn 3 · AI-Seat0 (AI)
+  draw    Draws A.I.M. Scientists.
+  main 1  Plays Island.

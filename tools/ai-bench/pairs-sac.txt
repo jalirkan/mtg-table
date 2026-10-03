@@ -1,0 +1,15 @@
+# tools/ai-bench/pairs-sac.txt -- the sacrifice-outlet benchmark (D310).
+# The first deck of each line is the FOCUS deck: two hand-built Rakdos
+# sacrifice decks from the synergy cube (Viscera Seer, Goblin Bombardment,
+# Carrion Feeder, Priest of Forgotten Gods, Blood Artist, Zulaport Cutthroat,
+# Mayhem Devil, token makers), each against five cube-drafted Forge AI decks.
+tools/ai-bench/decks/rakdos-sac-1.dck tools/ai-bench/decks/synergy-1003-A.dck   # UR
+tools/ai-bench/decks/rakdos-sac-1.dck tools/ai-bench/decks/synergy-1004-A.dck   # WU
+tools/ai-bench/decks/rakdos-sac-1.dck tools/ai-bench/decks/synergy-1012-B.dck   # WG
+tools/ai-bench/decks/rakdos-sac-1.dck tools/ai-bench/decks/synergy-1015-B.dck   # BG
+tools/ai-bench/decks/rakdos-sac-1.dck tools/ai-bench/decks/synergy-1017-A.dck   # RG
+tools/ai-bench/decks/rakdos-sac-2.dck tools/ai-bench/decks/synergy-1003-B.dck   # WG
+tools/ai-bench/decks/rakdos-sac-2.dck tools/ai-bench/decks/synergy-1009-A.dck   # WB
+tools/ai-bench/decks/rakdos-sac-2.dck tools/ai-bench/decks/synergy-1011-A.dck   # UG
+tools/ai-bench/decks/rakdos-sac-2.dck tools/ai-bench/decks/synergy-1018-B.dck   # UB
+tools/ai-bench/decks/rakdos-sac-2.dck tools/ai-bench/decks/synergy-1006-B.dck   # BG

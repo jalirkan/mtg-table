@@ -1,0 +1,1548 @@
+{
+  "version": 1,
+  "_file": "THE per-card identity table (Tier 2 slice 3, T9 and T10). figures.json says which BODY a card stands in; this file says what makes it THAT card — size, hover, colour, what it carries or wears, whether it is a swarm, whether it is a vehicle's silhouette. Validated by figures/validate.ts's validateTraits exactly as cues.json is: a bad row is dropped and the ladder falls through, and web/test/traits.test.ts fails on any error.",
+  "_ladder": "default ⊕ every matching `subtype:<word>` rung, least specific first (the word order is resolve.ts's SUBTYPE_ORDER) ⊕ the card's own row. Scalars: the most specific rung that says one wins. `props` is REPLACED by a more specific rung that names it, never appended — so a row lists every prop it wants.",
+  "_pose": "Every row keys off the SNAPSHOT (this card is face up on the battlefield, this is its name and type line), never off an event: a trait is a POSE and survives `skip all`, a scrub and a resync (D56). A card drawn as a back — redacted or face down — never reaches this file: it is the anonymous disc with no props (hard rule 8, report 13 §1.4).",
+  "_rule": "A prop is a SHARED kind from figures/props.ts's kit, procedural and instanced — one draw call per kind on the table. No row here introduces a model used by exactly one card (report 13 §12): the carrier is the `subtype:vehicle` archetype's silhouette, and every prop kind is open to every row.",
+  "_hooks": "Two keys the CUE layer reads rather than the pose. `shrink` is the scale Ant-Man's attack takes him to (the attack.shrink cue owns the transition). And every glowing prop (exhaust, laserEye, gauntlets, badge, muzzle) is the EMITTER HOOK: it burns at its kit's rest level as a pose, and flares with the clip lane's weight on its card (any `attack` / `summon` / `channel` / `grow` request — so attack.jet on the Doombot is its jet burn) and with the cue offset's `glow`. A cue drives it by asking for a clip or a glow on the card; there is no second API.",
+  "default": {},
+  "archetypes": {
+    "_note": "Only the words SUBTYPE_ORDER recognises can be a rung: robot, insect, vehicle, scientist, spy, hero, soldier, villain, human. A Hero gets nothing extra — the hero body (figures.json) is its identity.",
+    "subtype:insect": {
+      "idle": "hover",
+      "hover": 0.2,
+      "props": [
+        "wings"
+      ],
+      "_note": "Any Insect flies: it hovers, bobs, and carries a pair of translucent wings over the bee's own stubby ones. Both of the deck's insects have rows of their own below; this rung is for any other."
+    },
+    "subtype:robot": {
+      "idle": "hover",
+      "hover": 0.12,
+      "accent": "#7fe8ff",
+      "props": [
+        "laserEye",
+        "visor"
+      ],
+      "_note": "A robot has a lit eye — cyan for the Robot token, red for the Doombot (its own row) — and a visor, the eye's glow as a band round its head, so it reads as red- or cyan-eyed from BEHIND too (the second verification pass: the opponent's figures show the table view their backs)."
+    },
+    "subtype:villain": {
+      "shade": 0.78,
+      "_note": "A Villain reads darker: the body tint at 78% brightness. The Doombot (Robot Villain) keeps its Doom green, darkened; A.I.M. (Scientist Villain) opts out with shade 1 — their suits are bright yellow."
+    },
+    "subtype:scientist": {
+      "props": [
+        "labBench"
+      ],
+      "rest": "working",
+      "_note": "A scientist works at a lab bench: a slab, legs, a flask and three lit vials, standing between the figure and the centre line. Bold Biochemist and A.I.M. Scientists. Slice 4: a white lab coat over grey trousers, pale gloves.",
+      "costume": {
+        "top": "#eef3f1",
+        "shirt": "#cfe9df",
+        "legs": "#7f878c",
+        "shoes": "#2a2c30",
+        "gloves": "#e7f1ec",
+        "belt": "#5a6166"
+      }
+    },
+    "subtype:vehicle": {
+      "silhouette": "carrier",
+      "hover": 1.25,
+      "tint": "#a8c6ea",
+      "_note": "T10 — S.H.I.E.L.D. Helicarrier reaches it through this rung and has NO row of its own, so the silhouette stays an archetype. A Vehicle is drawn as a flying carrier silhouette — hull, flight deck, island and four rotor discs — high over its card, riding the card's own presence hover and bob. `hover` 1.25 (slice 3 first flew it 0.4 lower, and 20% longer, and from the table view its rotor pods sat on the heads of the figures below it: layout.ts's SILHOUETTE_ALTITUDE). It is drawn crewed or not (613 of the corpus's 728 Helicarrier frame-instances are an uncrewed Artifact - Vehicle), because the snapshot says it is on the battlefield either way; it is an archetype so no model belongs to one card."
+    },
+    "subtype:spy": {
+      "costume": {
+        "top": "#28344a",
+        "shirt": "#eef0f3",
+        "legs": "#222c3f",
+        "shoes": "#15161a",
+        "belt": "#15161a"
+      },
+      "rest": "atEase",
+      "_note": "Slice 4: the S.H.I.E.L.D. agent's dark suit and white shirt — every Spy (Coulson, Peggy, Agent 13, Quake, Fury, the Agents) starts here and a card row names what makes it that agent."
+    },
+    "subtype:hero": {
+      "costume": {
+        "legs": "#2d3f7c",
+        "shoes": "#2d3f7c",
+        "belt": "#d8b64a"
+      },
+      "rest": "akimbo",
+      "_note": "Slice 4: a hero's costume is its tint on top, blue below and a gold belt — the Hero token's look. A Spy Hero's spy rung (more specific) replaces all three; Wasp's own row replaces them too."
+    },
+    "subtype:soldier": {
+      "costume": {
+        "top": "#5b6574",
+        "shirt": "#5b6574",
+        "legs": "#474f5b",
+        "shoes": "#16171a",
+        "gloves": "#1a1c20",
+        "belt": "#1a1c20"
+      },
+      "rest": "atEase",
+      "hair": "crop",
+      "_note": "Slice 4: tactical grey with black gloves and belt — the Soldier token, told from an agent in a suit by having no shirt-front."
+    }
+  },
+  "cards": {
+    "Wasp, Shrinking Savior": {
+      "scale": 0.55,
+      "hover": 0.35,
+      "idle": "hover",
+      "tint": "#f7c843",
+      "accent": "#d8f0ff",
+      "props": [
+        "wings"
+      ],
+      "hair": "bob",
+      "_note": "Janet van Dyne: small, flying, in gold. Half a hero's height, hovering 0.35 over her stand point (on top of the card's own presence hover), with four iridescent insect wings on her back — pale blue-white so they separate from the gold body, each darkening toward its root.",
+      "costume": {
+        "top": "#f2c230",
+        "shirt": "#16151b",
+        "legs": "#16151b",
+        "shoes": "#f2c230",
+        "gloves": "#16151b",
+        "belt": "#16151b",
+        "hair": "#161419"
+      },
+      "_costume": "Slice 4: gold and black — a gold suit with a black chest-panel, black below, gold boots, black hair."
+    },
+    "Ant-Man, Reformed Rogue": {
+      "tint": "#e8594c",
+      "accent": "#dfe6f0",
+      "props": [
+        "helmet"
+      ],
+      "shrink": 0.18,
+      "_note": "Scott Lang in red, full size at rest, in the helmet — a glass dome with antennae and red lenses. `shrink` is the cue layer's key: his attack takes him to 0.18 (attack.shrink); the pose never shrinks him.",
+      "costume": {
+        "top": "#c3302a",
+        "shirt": "#1c1c22",
+        "legs": "#c3302a",
+        "shoes": "#1c1c22",
+        "gloves": "#c8cdd5",
+        "belt": "#c8cdd5"
+      },
+      "_costume": "Slice 4: red and silver — a red suit with a black chest-panel, silver gloves and belt, black boots; the helmet is silver."
+    },
+    "Ant-Man's Air Force": {
+      "swarm": 5,
+      "formation": "ring",
+      "hover": 0.22,
+      "idle": "hover",
+      "props": [],
+      "_note": "A swarm, not a bee: five small procedural bees in a slowly turning ring round the stand point, one draw call for all of them (instanced). The insect rig still stands at the centre for the clip lane, and is not drawn."
+    },
+    "Giant-Sized Flying Ant": {
+      "scale": 1.35,
+      "hover": 0.3,
+      "turn": 90,
+      "turnedRatio": 0.83,
+      "props": [
+        "wings",
+        "rider"
+      ],
+      "_note": "T9's giant (slice 2 follow-up 3). The strict width clamp (D65) held every insect to 0.49 tall because the bee's WINGSPAN is its width; flown side-on (turn 90) its width is its body's length, 0.78 of its height (measured from figures.glb by traits.test.ts; 0.83 declared), so at scale 1.35 it clamps to 0.87 — nearly twice any other insect, with no exemption. A tiny crouching rider sits on its back."
+    },
+    "Aerial Doombot": {
+      "hover": 0.3,
+      "tint": "#6fe08c",
+      "accent": "#ff4232",
+      "props": [
+        "laserEye",
+        "visor",
+        "jetpack",
+        "exhaust"
+      ],
+      "_note": "T9. Doom green (the villain rung darkens it), a red laser eye and its red visor band, twin thrusters on its back and a faint resting exhaust under them that flares when its attack.jet cue drives the clip lane."
+    },
+    "Robot Token": {
+      "hover": 0.1,
+      "_note": "The robot rung's cyan eye and hover, a little lower than the Doombot's, so the token and the card read as the same kind of thing and not the same thing."
+    },
+    "Nick Fury, Spymaster": {
+      "tint": "#566076",
+      "accent": "#15181e",
+      "props": [
+        "coat",
+        "coatTails",
+        "eyepatch"
+      ],
+      "rest": "folded",
+      "hair": "none",
+      "face": "patched",
+      "_note": "The director, as a BLACK figure (the second verification pass: at #8e98b0 he was 'a grey agent with sunglasses'): a dark slate body in a long, nearly opaque black coat flared wider than his head, with slate trim down its front, round its stand-up collar and its hem, so it reads from above and from both seats; a big black eyepatch with a thin pale rim over HIS left eye, and a black strap running diagonally up across his forehead and round the back of his head. The body is slate rather than black on purpose: a hologram is translucent (holoMaterial's core alpha is 0.38), so a black body over a bright card reads grey, and the black patch and strap need a head to be darker than.",
+      "costume": {
+        "top": "#16181d",
+        "shirt": "#2a2e36",
+        "legs": "#16181d",
+        "shoes": "#0d0e11",
+        "gloves": "#16181d",
+        "belt": "#0d0e11",
+        "hair": "#231d19"
+      },
+      "_costume": "Slice 4: all in black — a black suit under the black coat, black gloves."
+    },
+    "Agent Phil Coulson": {
+      "tint": "#3f5fbf",
+      "props": [
+        "badge",
+        "tie"
+      ],
+      "rest": "clasped",
+      "_note": "A navy suit, a white shirt-front and dark tie down his chest, and the S.H.I.E.L.D. badge in gold on his left breast AND as a bigger emblem on his back. Slice 3 first drew a 0.055 additive badge on a mid-blue body: from the table view it was a 1–2 px white glint on 'just another blue agent' (the verification pass). The second pass found the chest badge under his chin from your seat and invisible from the opponent's — whose figures show the table view their backs — so the badge kind has a back anchor and the chest badge sits lower.",
+      "costume": {
+        "top": "#1f2c4c",
+        "shirt": "#f4f4f2",
+        "legs": "#1f2c4c",
+        "shoes": "#111216",
+        "belt": "#111216",
+        "hair": "#6b5a4a"
+      },
+      "_costume": "Slice 4: a navy suit and a white shirt, thinning brown hair."
+    },
+    "Quake, Agent of S.H.I.E.L.D.": {
+      "tint": "#5fe3d2",
+      "accent": "#8ff8ff",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "bob",
+      "_note": "Daisy Johnson in teal, both fists glowing — her gauntlets flare with the clip lane when she acts. Lane BODIES' second fix pass (D165): her bob read as a helmet over her face from above, so the bob was re-cut (a high side-swept fringe, the temples open, lit locks across the crown), and her braced guard lifts her head. The third fix pass made the lit locks cool (an inker's blue-white on black hair), so her hair is back to the near-black her painting draws and the locks still show.",
+      "costume": {
+        "top": "#16181e",
+        "shirt": "#16181e",
+        "legs": "#16181e",
+        "shoes": "#16181e",
+        "gloves": "#3fd6c6",
+        "belt": "#3fd6c6",
+        "hair": "#1c1a22"
+      },
+      "_costume": "Slice 4: black with teal accents — a black bodysuit, teal gloves and belt, dark hair."
+    },
+    "Peggy Carter, Secret Agent": {
+      "tint": "#f3ede4",
+      "accent": "#d8352e",
+      "props": [
+        "shield",
+        "hat",
+        "sidearm"
+      ],
+      "rest": "ready",
+      "hair": "waves",
+      "_note": "The founder: a warm white body, her red hat on top — the part of a figure the table view sees most of — and a round red-white-and-blue shield on her left arm, 1.5× slice 3's first roundel and turned out so it shows side-on.",
+      "costume": {
+        "top": "#2d4f9e",
+        "shirt": "#f5f2ec",
+        "legs": "#2a3552",
+        "shoes": "#3a2a22",
+        "belt": "#2a3552",
+        "hair": "#5a3a26"
+      },
+      "_costume": "Slice 4: a blue jacket over a white shirt, navy below, brown shoes and hair — under her red hat."
+    },
+    "Agent 13, Sharon Carter": {
+      "tint": "#5b52c4",
+      "accent": "#e4e9f2",
+      "props": [
+        "pistol",
+        "muzzle"
+      ],
+      "rest": "highReady",
+      "hair": "bun",
+      "_note": "The field agent in a dark indigo suit — her own colour, so she is never the pale agent a Soldier Token or Peggy is — with a silver pistol, its muzzle lit — at REST held at the high ready, barrel up beside her face (lane BODIES' second fix pass, D165: the held two-handed aim pointed the barrel at the lens and read 'low at her hip' from above). Slice 3's first pistol hung at her right hand at 0.17 in her body's grey-cream; its fix raised it at her chest, barrel forward, where it pointed at your camera and was hidden from the opponent's seat (both verification passes). Out to the side it shows in silhouette from the front, the back and side-on. Her attack's pistolDraw alias and the muzzle-flash cue fire from the lit tip, turned toward the player she attacks.",
+      "costume": {
+        "top": "#3c3593",
+        "shirt": "#3c3593",
+        "legs": "#2c2770",
+        "shoes": "#16151f",
+        "gloves": "#2c2770",
+        "belt": "#c9ccd6",
+        "hair": "#e0c16a"
+      },
+      "_costume": "Slice 4: indigo — a field suit in two indigos, a silver belt, blonde hair."
+    },
+    "Agents of S.H.I.E.L.D.": {
+      "swarm": 2,
+      "formation": "squad",
+      "tint": "#6c86c0",
+      "_note": "A squad, not one agent: the leader and two followers in a WEDGE — one each side, a step back — one draw call for the followers, the whole squad clamped into its one rank slot. The followers ride the leader's transform, so the squad steps forward together when it attacks. Slice 3 stood the followers almost straight behind the leader and it read as one pale agent with a doubled outline (the second verification pass); and it wears a squad's steel blue of its own, not the cream a Soldier Token and Peggy share.",
+      "costume": {
+        "top": "#59616e",
+        "shirt": "#eef0f2",
+        "legs": "#4a505b",
+        "shoes": "#141519",
+        "belt": "#141519",
+        "hair": "#2e2620"
+      },
+      "_costume": "Slice 4: grey suits and white shirts — the leader's palette, and the followers (baked bodies) wear its top as their shade."
+    },
+    "Bold Biochemist": {
+      "accent": "#d6e2dd",
+      "props": [
+        "coat",
+        "coatTails",
+        "labBench"
+      ],
+      "_note": "The lab tint in a long WHITE lab coat — the coat kind Fury wears, in another colour, which is the point of a shared kit — at the white bench. Slice 3 first gave it only the scientist rung's small bench, and it read as 'a mint scientist' (the verification pass). Lane BODIES' second fix pass (D163) greyed the coat a step off paper white (#eef5f2 → #d6e2dd): at paper white the hologram's rim blew it out to a white shape with no folds, and the comic look's bands had nowhere to go.",
+      "costume": {
+        "hair": "#4a3a2e"
+      },
+      "_costume": "Slice 4: the scientist rung's white coat, and his own hair."
+    },
+    "Doctor Doom": {
+      "scale": 1.08,
+      "tint": "#98a39f",
+      "accent": "#2c8f4c",
+      "shade": 1,
+      "props": [
+        "mask",
+        "cape",
+        "coatTails"
+      ],
+      "rest": "akimbo",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221). Victor von Doom as the MSH card paints him and the villain duelist dresses him: the iron MASK (the kit's faceplate, in his iron tint) under a Doom-green HOOD (the `cowl`, in the costume's hair slot, from the brow round the jaw to the shoulders — from behind the hood carries him), a green cloak down his back and a green tunic from the chest to the knee (`cape` and `coatTails`, both in the accent), iron armour under it, a gold belt, hands on his hips. He is a Human Scientist Villain, so the scientist rung would have stood him at a lab bench in a white coat: this row replaces its props, its rest and every slot of its costume. `shade: 1` keeps the iron from the villain rung's 78%.",
+      "costume": {
+        "hair": "#1f6a3a",
+        "top": "#56615d",
+        "shirt": "#2c8f4c",
+        "legs": "#46504c",
+        "shoes": "#2b3230",
+        "gloves": "#56615d",
+        "belt": "#c9a64a"
+      },
+      "_costume": "The villain duelist's palette (duelists.json's `villain`): iron armour and gauntlets, the green of the tunic and hood, a gold belt."
+    },
+    "Doombot": {
+      "hover": 0.08,
+      "tint": "#a9b3af",
+      "accent": "#3fe070",
+      "_note": "Villain identity (D221). The token Doctor Doom makes (the wire names it `Doombot`, with no `Token`): the robot rung's drone, eye and visor, in Doom's iron with his green eye, standing close to the table — a 3/3 that walks. The Aerial Doombot is the green one with a red eye and thrusters; these are the steel ones."
+    },
+    "Doom's Servo-Guards": {
+      "hover": 0.04,
+      "tint": "#6f7a76",
+      "accent": "#ff4a36",
+      "_note": "Villain identity (D221). A guard robot: the robot rung's drone in dark gunmetal with a red eye, lowest of the three drones — a sentry, not a flier."
+    },
+    "A.I.M. Bot": {
+      "hover": 0.34,
+      "idle": "hover",
+      "tint": "#f0cc3a",
+      "accent": "#7fe8ff",
+      "shade": 1,
+      "props": [
+        "laserEye",
+        "visor",
+        "wings"
+      ],
+      "_note": "Villain identity (D221). A.I.M.'s flying robot: the drone in A.I.M. yellow (shade 1, as A.I.M. Scientists keep theirs), the robot rung's cyan eye and visor, and a pair of wings — it flies, where the Doombot rows stand."
+    },
+    "Agents of HYDRA": {
+      "swarm": 2,
+      "formation": "squad",
+      "tint": "#5a9a5c",
+      "hair": "cowl",
+      "rest": "atEase",
+      "_note": "Villain identity (D221). HYDRA's endless agents as a squad, as the S.H.I.E.L.D. Agents are one (a leader and two followers in a wedge, one draw call for the followers, the formation clamped into its slot) — told apart by HYDRA's colours: green uniforms with a yellow chest, gloves and belt, and green hooded cowls (the `cowl`, in the costume's hair slot, with the face in its opening).",
+      "costume": {
+        "hair": "#2d5a34",
+        "top": "#2d5a34",
+        "shirt": "#e0b82a",
+        "legs": "#243f29",
+        "shoes": "#141712",
+        "gloves": "#e0b82a",
+        "belt": "#e0b82a"
+      },
+      "_costume": "HYDRA green and yellow; the followers wear the leader's top as their shade."
+    },
+    "HYDRA Troopers": {
+      "tint": "#5f8f55",
+      "accent": "#8f98a8",
+      "props": [
+        "pistol"
+      ],
+      "rest": "highReady",
+      "hair": "cowl",
+      "_note": "Villain identity (D221). A HYDRA trooper at the high ready — a gunmetal pistol up beside his green cowl (the kit's `pistol`, Agent 13's, in the accent; the `cowl` in the costume's hair slot, HYDRA's hood, with his face in its opening) — in HYDRA green with yellow gloves and belt. His attack opens fire (figures.json's pistolDraw alias, cues.json's muzzle flash). One trooper alone where the Agents are a squad of three.",
+      "costume": {
+        "hair": "#2f5e36",
+        "top": "#2f5e36",
+        "shirt": "#2f5e36",
+        "legs": "#263f2b",
+        "shoes": "#121411",
+        "gloves": "#d9b52a",
+        "belt": "#d9b52a"
+      }
+    },
+    "Baron Strucker, HYDRA Overlord": {
+      "tint": "#4f7a52",
+      "accent": "#2c5a33",
+      "props": [
+        "coat",
+        "coatTails"
+      ],
+      "rest": "atEase",
+      "hair": "none",
+      "_note": "Villain identity (D221). HYDRA's overlord: bald, in a black uniform with HYDRA's yellow belt under a long HYDRA-green greatcoat (the kit's coat and its skirt, Fury's, in another colour — which is the point of a shared kit), hands clasped behind his back. Fury is black-coated and folds his arms; Strucker is green-coated and stands at ease.",
+      "costume": {
+        "top": "#1b1d1a",
+        "shirt": "#1b1d1a",
+        "legs": "#1b1d1a",
+        "shoes": "#0f100e",
+        "gloves": "#1b1d1a",
+        "belt": "#d9b52a"
+      }
+    },
+    "Loki, God of Mischief": {
+      "tint": "#45b060",
+      "accent": "#2f8f47",
+      "props": [
+        "cape",
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "long",
+      "_note": "Villain identity (D221). The god of mischief in green and gold: a green cloak, sorcery glowing green in both hands pushed out before him (the kit's `gauntlets`, Quake's, in his accent, in her braced guard — at his belt, clasped, they were behind his own back from your seat), his long black hair.",
+      "costume": {
+        "hair": "#16151a",
+        "top": "#2a7a3f",
+        "shirt": "#d8b24a",
+        "legs": "#1d4d2a",
+        "shoes": "#c9a13e",
+        "gloves": "#c9a13e",
+        "belt": "#d8b24a"
+      }
+    },
+    "Kang the Conqueror": {
+      "hover": 0.18,
+      "idle": "hover",
+      "tint": "#5a86e8",
+      "accent": "#7fd4ff",
+      "shade": 1,
+      "props": [
+        "mask",
+        "gauntlets"
+      ],
+      "rest": "aim",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221). Kang the Conqueror, flying: his blue mask (the kit's faceplate, in his tint) under a purple helm (the `cowl`), a green tunic over purple, and his wrist blasters lit at both hands (`gauntlets`), held out in the library's two-handed aim — the rest pose Agent 13 once rested in, without the pistol.",
+      "costume": {
+        "hair": "#5b2f8f",
+        "top": "#2f7d45",
+        "shirt": "#2f7d45",
+        "legs": "#5b2f8f",
+        "shoes": "#5b2f8f",
+        "gloves": "#5b2f8f",
+        "belt": "#5b2f8f"
+      }
+    },
+    "Kang, Temporal Tyrant": {
+      "scale": 1.04,
+      "tint": "#4a6fd0",
+      "accent": "#6a3fa0",
+      "shade": 1,
+      "props": [
+        "mask",
+        "cape"
+      ],
+      "rest": "folded",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221). Kang again, as the tyrant: the same blue mask under a darker helm, purple armour over green, a purple cloak, arms folded. The conqueror hovers and aims; the tyrant stands and waits.",
+      "costume": {
+        "hair": "#3a2466",
+        "top": "#5b2f8f",
+        "shirt": "#2f7d45",
+        "legs": "#2a2233",
+        "shoes": "#5b2f8f",
+        "gloves": "#5b2f8f",
+        "belt": "#c9a64a"
+      }
+    },
+    "Pharaoh Rama-Tut": {
+      "scale": 1.04,
+      "tint": "#e0b84a",
+      "accent": "#2f5fbf",
+      "shade": 1,
+      "props": [
+        "cape"
+      ],
+      "rest": "folded",
+      "hair": "long",
+      "_note": "Villain identity (D221). Kang as a pharaoh: a gold headdress to the shoulders (the `long` hairstyle in gold), a gold collar over white linen, a royal-blue cloak and sash, arms crossed on the chest as a pharaoh's are.",
+      "costume": {
+        "hair": "#d8b04a",
+        "top": "#d9b042",
+        "shirt": "#f0e6c8",
+        "legs": "#f0e6c8",
+        "shoes": "#c9a13e",
+        "gloves": "#c9a13e",
+        "belt": "#2f5fbf"
+      }
+    },
+    "Unliving Legionnaire": {
+      "hover": 0.3,
+      "idle": "hover",
+      "tint": "#c9bde8",
+      "shade": 1,
+      "accent": "#a8467c",
+      "props": [
+        "mask",
+        "wings"
+      ],
+      "rest": "folded",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221; the fix pass). A vampire of the Legion of the Unliving, as its card paints it — a thing of the night, not a man: a corpse-pale lavender face (the kit's `mask`, in its tint; `shade: 1` keeps it pale against the villain rung's 78%) under a wine-black hood (the `cowl`, in the costume's hair slot), flying on magenta wings (the kit's `wings`, Wasp's, in its accent — the membranes on its card are pink), violet and crimson under them (above the comic look's black threshold, so it does not read as S.H.I.E.L.D. navy), arms folded across the chest the way a vampire rests. Every kind it wears is one the Doom Legion's table already draws (the fix pass took a hairstyle off the crowded table).",
+      "costume": {
+        "hair": "#3a1a2c",
+        "top": "#4b3a5e",
+        "shirt": "#8a2433",
+        "legs": "#3d3350",
+        "shoes": "#2a2233",
+        "gloves": "#4b3a5e",
+        "belt": "#8a2433"
+      }
+    },
+    "Madame Hydra, Reanimated": {
+      "tint": "#3cb45a",
+      "accent": "#34313a",
+      "props": [
+        "cape"
+      ],
+      "rest": "akimbo",
+      "hair": "long",
+      "_note": "Villain identity (D221; the fix pass). Madame Hydra: her long GREEN hair — the part of her a comic reader knows first — a charcoal catsuit with HYDRA's yellow belt and a charcoal cloak, as her card paints her (the fix pass took her suit off the green half the Doom Legion wears; her green is her hair), hands on her hips. The woman's body (figures.json).",
+      "costume": {
+        "hair": "#3cbf55",
+        "top": "#3c3a40",
+        "shirt": "#3c3a40",
+        "legs": "#35333a",
+        "shoes": "#1f1d22",
+        "gloves": "#35333a",
+        "belt": "#d9b52a"
+      }
+    },
+    "Crossbones, Malicious Mercenary": {
+      "scale": 1.14,
+      "tint": "#ece6d6",
+      "shade": 1,
+      "props": [
+        "mask"
+      ],
+      "rest": "braced",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "Villain identity (D221; the fix pass). Brock Rumlow: the white skull (the kit's faceplate, in his bone-white tint) on a balaclava (the `cowl`), a bone-white chest, warm charcoal tactical fatigues and brown webbing — charcoal, not black, because the comic look lifts a black paint to navy (Lane LOOK's rule) and a navy Crossbones read as a S.H.I.E.L.D. agent — the biggest man on the villains' side, in a brawler's guard.",
+      "costume": {
+        "hair": "#423b35",
+        "top": "#4a423a",
+        "shirt": "#d8d2c2",
+        "legs": "#3f3a34",
+        "shoes": "#2e2a26",
+        "gloves": "#2e2a26",
+        "belt": "#6a4a2a"
+      }
+    },
+    "Villain Token": {
+      "tint": "#7a6a8e",
+      "rest": "atEase",
+      "hair": "cowl",
+      "_note": "Villain identity (D221). The 2/1 menace token Agents of HYDRA and HYDRA Troopers leave behind (the wire's name verbatim): a henchman in black, hooded (the `cowl`), standing at ease — the villain rung's body, so a token reads as the same kind of thing as the cards that made it and not as one of them.",
+      "costume": {
+        "hair": "#1e1b22",
+        "top": "#1e1b22",
+        "shirt": "#1e1b22",
+        "legs": "#18161b",
+        "shoes": "#0e0d10",
+        "gloves": "#0e0d10",
+        "belt": "#3a3440"
+      }
+    },
+    "A.I.M. Scientists": {
+      "tint": "#f2cf4a",
+      "accent": "#e9c33c",
+      "shade": 1,
+      "props": [
+        "hood",
+        "labBench"
+      ],
+      "hair": "none",
+      "face": "none",
+      "_note": "A.I.M.'s beekeeper suits: bright yellow, the bucket hood with its dark visor, and the lab bench.",
+      "costume": {
+        "top": "#e8c22e",
+        "shirt": "#e8c22e",
+        "legs": "#d9b528",
+        "shoes": "#2b2b2b",
+        "gloves": "#2b2b2b",
+        "belt": "#2b2b2b"
+      },
+      "_costume": "Slice 4: A.I.M.'s yellow suits, black gloves, boots and belt."
+    },
+    "Whiplash, Vengeful Engineer": {
+      "tint": "#2f6a64",
+      "shade": 1,
+      "accent": "#8fe4ff",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "ready",
+      "hair": "cowl",
+      "_note": "More villain identity (D231), the Masters of Evil. The engineer as his card paints him: a dark suit under a teal hood, his two electric whips crackling blue-white in both hands (the kit's `gauntlets`, Quake's, in his accent), ready to lash. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: his suit was dark green, and with Whirlwind's armour and Radioactive Man's glow the Masters stood three green figures in a row; the card's figure is a dark silhouette with a teal hood.",
+      "costume": {
+        "hair": "#2f6a64",
+        "top": "#2c3238",
+        "shirt": "#2c3238",
+        "legs": "#23282d",
+        "shoes": "#15181b",
+        "gloves": "#3a4148",
+        "belt": "#8a7a3a"
+      }
+    },
+    "Songbird, Sonic Screamer": {
+      "tint": "#f0eef2",
+      "shade": 1,
+      "accent": "#ff5aa8",
+      "props": [
+        "wings"
+      ],
+      "rest": "braced",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Masters of Evil. Melissa Gold as her card paints her: long white hair, a charcoal and white suit, and her hard-sound WINGS in pink (the kit's `wings`, Wasp's, in her accent) — the wings she flies on when she discards a card.",
+      "costume": {
+        "hair": "#eef0f4",
+        "top": "#3e3844",
+        "shirt": "#f0eef2",
+        "legs": "#f0eef2",
+        "shoes": "#3e3844",
+        "gloves": "#3e3844",
+        "belt": "#ff5aa8"
+      }
+    },
+    "MACH-1, Swooping Scoundrel": {
+      "hover": 0.3,
+      "idle": "hover",
+      "tint": "#6c747e",
+      "shade": 1,
+      "accent": "#ff3a30",
+      "props": [
+        "mask",
+        "visor",
+        "jetpack",
+        "exhaust"
+      ],
+      "rest": "ready",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), the Masters of Evil. Abe Jenkins in the flying armour: a gunmetal helm (the `cowl`) and faceplate (the `mask`, in his tint) with its red lenses as a lit VISOR band round his head (the kit's `visor`, in his accent — the Doombot's eye band), thrusters on his back and their flame (the Aerial Doombot's `jetpack` and `exhaust`), hovering. An Artifact Creature — Human Villain: a man in a suit, so the man's body, not a drone.",
+      "costume": {
+        "hair": "#5c636c",
+        "top": "#6c747e",
+        "shirt": "#4e555e",
+        "legs": "#565d66",
+        "shoes": "#3a3f46",
+        "gloves": "#4e555e",
+        "belt": "#3a3f46"
+      }
+    },
+    "Yellowjacket, Heartless Marauder": {
+      "scale": 0.6,
+      "hover": 0.3,
+      "idle": "hover",
+      "tint": "#f0c22a",
+      "shade": 1,
+      "accent": "#f0c22a",
+      "props": [
+        "helmet",
+        "wings"
+      ],
+      "rest": "akimbo",
+      "hair": "none",
+      "_note": "More villain identity (D231), the Masters of Evil. Rita DeMara: small and flying like Wasp (0.6, hovering), in yellow and black, under the helmet with its antennae (the kit's `helmet`, Ant-Man's, in her yellow) and on a pair of insect wings (Wasp's, in the same yellow) — the helmet is what tells her from Wasp, who flies bare-headed in gold.",
+      "costume": {
+        "top": "#f0c22a",
+        "shirt": "#1c1b20",
+        "legs": "#1c1b20",
+        "shoes": "#f0c22a",
+        "gloves": "#1c1b20",
+        "belt": "#1c1b20"
+      }
+    },
+    "Boomerang, Blade Flinger": {
+      "tint": "#aeb8c6",
+      "shade": 1,
+      "rest": "highReady",
+      "hair": "cowl",
+      "_note": "More villain identity (D231), the Masters of Evil. Fred Myers in steel blue with steel gloves and belt, a blade raised at the high ready — his card's colours — and his helm's silver faceguard (the kit's `mask`, in the tint) under a dark navy cowl. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he stood a slate man in a slate hood, one of three generic hooded men; the art's helm is a silver face in a dark hood. The horns and the boomerangs are still not in the kit (follow-up 7).",
+      "costume": {
+        "hair": "#2a3448",
+        "top": "#3e4c66",
+        "shirt": "#3e4c66",
+        "legs": "#2e3950",
+        "shoes": "#1e2533",
+        "gloves": "#9aa4b2",
+        "belt": "#9aa4b2"
+      },
+      "props": [
+        "mask"
+      ],
+      "face": "none"
+    },
+    "Fixer, Techno Terror": {
+      "tint": "#6a7078",
+      "shade": 1,
+      "accent": "#ff3a30",
+      "props": [
+        "visor",
+        "labBench"
+      ],
+      "rest": "working",
+      "hair": "parted",
+      "_note": "More villain identity (D231), the Masters of Evil. Paul Ebersol, the gadgeteer: red goggles as a lit band round his head (the kit's `visor`, in his accent), a grey tech harness over a red suit, bent over a bench of gadgets (the scientists' `labBench`, in his red) — an Artificer at work, told from MACH-1's helm by his bare head and his bench. His hair is the man's own parted cut, the kind the table already draws (D231's reuse rule).",
+      "costume": {
+        "hair": "#2a2420",
+        "top": "#6a7078",
+        "shirt": "#b8322a",
+        "legs": "#b8322a",
+        "shoes": "#2a2c30",
+        "gloves": "#6a7078",
+        "belt": "#2a2c30"
+      }
+    },
+    "White Widow, Yelena Belova": {
+      "tint": "#eef1f5",
+      "shade": 1,
+      "accent": "#bfe6ff",
+      "props": [
+        "visor"
+      ],
+      "rest": "ready",
+      "hair": "bob",
+      "_note": "More villain identity (D231), the Masters of Evil. Yelena Belova as her card paints her: a white suit with silver gloves, boots and belt, a short blonde bob, and her ice-blue goggles as a lit band (the kit's `visor`), in a fighter's ready.",
+      "costume": {
+        "hair": "#e6d096",
+        "top": "#eef1f5",
+        "shirt": "#eef1f5",
+        "legs": "#dde2e9",
+        "shoes": "#9aa4b0",
+        "gloves": "#9aa4b0",
+        "belt": "#9aa4b0"
+      }
+    },
+    "Common Crook": {
+      "tint": "#b8502a",
+      "shade": 1,
+      "rest": "atEase",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Masters of Evil. The brute his card paints: long dark hair, a rust-orange shirt over a tan undershirt, dark trousers, standing at ease. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he wore a burglar's balaclava (the `cowl`), and beside Boomerang's hood the Masters had three generic hooded men; the art's crook is bare-headed and long-haired, and the long style is a kind the Masters' table already draws.",
+      "costume": {
+        "hair": "#2a201c",
+        "top": "#b8602a",
+        "shirt": "#d89a5a",
+        "legs": "#3a3430",
+        "shoes": "#1a1716",
+        "gloves": "#3a3430",
+        "belt": "#1a1716"
+      }
+    },
+    "Whirlwind, Killer Cyclone": {
+      "hover": 0.14,
+      "idle": "hover",
+      "tint": "#5f8a5a",
+      "shade": 1,
+      "props": [
+        "mask"
+      ],
+      "rest": "braced",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), the Masters of Evil. David Cannon in his green armour and finned helm (the `cowl`, green) over a green-grey faceplate (the `mask`, in his tint), bronze bands at the belt and chest, riding his own cyclone a little off the table (hovering). His attack is a gust — cues.json.",
+      "costume": {
+        "hair": "#3f7a45",
+        "top": "#3f7a45",
+        "shirt": "#c9a04a",
+        "legs": "#2f6036",
+        "shoes": "#6a4a2a",
+        "gloves": "#6a4a2a",
+        "belt": "#c9a04a"
+      }
+    },
+    "Volcanic Villain": {
+      "scale": 1.05,
+      "tint": "#d8541e",
+      "shade": 1,
+      "accent": "#ffa040",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Masters of Evil. An Elemental, not a man: molten skin (the costume's `skin` — a body of lava is its costume, not a complexion; D231), dark rock over it with glowing seams, flames for hair (the `long` style in fire orange) and both fists burning (the `gauntlets`, in the lava's accent).",
+      "costume": {
+        "skin": "#c8461e",
+        "hair": "#ff7a2a",
+        "top": "#5a2418",
+        "shirt": "#d8541e",
+        "legs": "#4a1e14",
+        "shoes": "#2a1410",
+        "gloves": "#d8541e",
+        "belt": "#ff8a3a"
+      }
+    },
+    "Klaw, Sonic Subjugator": {
+      "tint": "#c83a6a",
+      "shade": 1,
+      "accent": "#ff4a8a",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "parted",
+      "_note": "More villain identity (D231), the Masters of Evil. Ulysses Klaue as his card paints him — a cream shirt and brown trousers, black hair in the man's own parted cut — with the sound his right arm throws as a magenta glow at his hands (the `gauntlets`, in his accent). He attacks by aiming it (figures.json's pistolDraw alias; cues.json's muzzle flash).",
+      "costume": {
+        "hair": "#1c1a18",
+        "top": "#ece4d4",
+        "shirt": "#ece4d4",
+        "legs": "#6a4a32",
+        "shoes": "#2a1e16",
+        "belt": "#3a2a20"
+      }
+    },
+    "Titania, Proud Pummeler": {
+      "scale": 1.2,
+      "tint": "#3a3fa0",
+      "shade": 1,
+      "rest": "braced",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Masters of Evil. Mary MacPherran's bulk is her scale (1.2 — the woman's body stays inside the strict width clamp, D65): long red hair, a deep blue suit with a red belt and boots, in a brawler's guard.",
+      "costume": {
+        "hair": "#c8452a",
+        "top": "#3a3fa0",
+        "shirt": "#3a3fa0",
+        "legs": "#2e3180",
+        "shoes": "#b8322a",
+        "gloves": "#3a3fa0",
+        "belt": "#b8322a"
+      }
+    },
+    "Moonstone, Harsh Mistress": {
+      "hover": 0.26,
+      "idle": "hover",
+      "tint": "#f2ecd8",
+      "shade": 1,
+      "accent": "#ffe27a",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Masters of Evil. Karla Sofen flying (hovering) in white and gold, long blonde hair, the moonstone's light in both hands (the `gauntlets`, in her gold) as her card paints it.",
+      "costume": {
+        "hair": "#f0d680",
+        "top": "#f2ecd8",
+        "shirt": "#e6c65a",
+        "legs": "#f2ecd8",
+        "shoes": "#e6c65a",
+        "gloves": "#e6c65a",
+        "belt": "#e6c65a"
+      }
+    },
+    "Tiger Shark, Abyssal Hunter": {
+      "scale": 1.12,
+      "tint": "#f08a2a",
+      "shade": 1,
+      "rest": "braced",
+      "hair": "cowl",
+      "_note": "More villain identity (D231), the Masters of Evil. Todd Arliss as his card paints him: an orange suit, purple gloves, boots and finned hood (the `cowl`), and the shark's grey skin (the costume's `skin`: a mutation, not a complexion; D231), big and braced.",
+      "costume": {
+        "skin": "#8e9aa8",
+        "hair": "#6a3a9a",
+        "top": "#f08a2a",
+        "shirt": "#f08a2a",
+        "legs": "#e07a22",
+        "shoes": "#6a3a9a",
+        "gloves": "#6a3a9a",
+        "belt": "#6a3a9a"
+      }
+    },
+    "Atlas, Sizable Stooge": {
+      "scale": 1.3,
+      "tint": "#8a2a2a",
+      "shade": 1,
+      "rest": "akimbo",
+      "hair": "parted",
+      "_note": "More villain identity (D231), the Masters of Evil. Erik Josten, a giant (1.3 — the strict width clamp still holds, D65), in maroon with gold bracers and belt, hands on his hips; his hair is the man's own parted cut (D231's reuse rule — his size is what he is).",
+      "costume": {
+        "hair": "#2a1e18",
+        "top": "#8a2a2a",
+        "shirt": "#8a2a2a",
+        "legs": "#6a2020",
+        "shoes": "#6a2020",
+        "gloves": "#d8a83a",
+        "belt": "#d8a83a"
+      }
+    },
+    "Radioactive Man": {
+      "tint": "#7fe05a",
+      "shade": 1,
+      "accent": "#c8ff5a",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "none",
+      "_note": "More villain identity (D231), the Masters of Evil. Chen Lu glows: a radioactive green body (the costume's `skin`, a glow and not a complexion; D231), a green suit with the yellow star on his chest (the shirt), bald, and the glow burning at both hands (the `gauntlets`, in his accent). He is a Human Scientist Villain, so the scientist rung would have stood him at a lab bench in a white coat: this row replaces its props, its rest and its costume.",
+      "costume": {
+        "skin": "#9fe86a",
+        "hair": "#9fe86a",
+        "top": "#4fb838",
+        "shirt": "#ffe23a",
+        "legs": "#3f9a2a",
+        "shoes": "#3f9a2a",
+        "gloves": "#9fe86a",
+        "belt": "#3f9a2a"
+      }
+    },
+    "The Masters of Evil": {
+      "swarm": 2,
+      "formation": "squad",
+      "tint": "#7a4aa8",
+      "shade": 1,
+      "accent": "#5b2f8f",
+      "props": [
+        "mask",
+        "cape"
+      ],
+      "rest": "akimbo",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), the Masters of Evil. The team, as a squad (the Agents' wedge, one draw call for the followers): Baron Zemo, whose team it is, in front — his purple hood (the `cowl`), mask (the `mask`, in the tint) and cloak (the `cape`, in the accent), purple at the chest and hands and gold at the belt over a dark tunic — and two Masters behind him as the card paints them, figures in the shadow (a squad's followers wear the leader's `top`). Zemo himself carries AI:RemoveDeck:All and is not in the deck (decks/README.md); the card that leads the team is. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: the followers wore his purple and the three read as a purple gang, not as Zemo leading the villains.",
+      "costume": {
+        "hair": "#6a3a9a",
+        "top": "#2c2430",
+        "shirt": "#6a3a9a",
+        "legs": "#241e28",
+        "shoes": "#1a141c",
+        "gloves": "#6a3a9a",
+        "belt": "#d8b24a"
+      }
+    },
+    "Rick Jones, Destined Sidekick": {
+      "scale": 0.94,
+      "tint": "#c0302a",
+      "rest": "atEase",
+      "hair": "crop",
+      "_note": "More villain identity (D231), the Hulk family. The sidekick, a young man and no hero (a Human Advisor — the human rung stands him in the man's body): a red jacket over a yellow sweater, jeans, brown hair, a little under a hero's height.",
+      "costume": {
+        "hair": "#6a3a22",
+        "top": "#c0302a",
+        "shirt": "#e8b83a",
+        "legs": "#3a5a8a",
+        "shoes": "#3a2a22",
+        "belt": "#3a2a22"
+      }
+    },
+    "Birds of Paradise": {
+      "hover": 0.3,
+      "idle": "hover",
+      "tint": "#8e979f",
+      "shade": 1,
+      "accent": "#f4f4f0",
+      "props": [],
+      "_note": "More villain identity (D231), the Hulk family. Not a person, and more than one: a flock of three small fliers in the crowned crane's grey and white (the tint, banded dark by the kit), circling its stand point as the Air Force's bees do (a `ring` swarm: one instanced call; the insect rig stands at the centre for the clip lane and is not drawn, figures.json). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: it stood the insect body at 0.38, which read as a white blob with a face, not a bird; the card is Birds, a flock over the savannah.",
+      "swarm": 3,
+      "formation": "ring"
+    },
+    "Brawn, Amadeus Cho": {
+      "tint": "#5aa84a",
+      "props": [],
+      "rest": "braced",
+      "hair": "crop",
+      "_note": "More villain identity (D231), the Hulk family. Amadeus Cho as his card paints him: a green gamma body (the costume's `skin`: gamma, not a complexion; D231), black hair, a dark purple vest over white, charcoal trousers and white gloves, flexing for his own selfie. He is a Gamma Scientist Hero, so the scientist rung would have stood him at a lab bench in a white coat: this row replaces its props (none), its rest and its costume. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: his vest and trousers were the Hulks' purple.",
+      "costume": {
+        "skin": "#5aa84a",
+        "hair": "#221c18",
+        "top": "#3a2a4a",
+        "shirt": "#e8eaee",
+        "legs": "#2c2c34",
+        "shoes": "#1e1e24",
+        "gloves": "#eef0f2",
+        "belt": "#2c2c34"
+      }
+    },
+    "Hellcat, Undying Vigilante": {
+      "tint": "#e8a82a",
+      "rest": "ready",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Hulk family. Patsy Walker: long red hair, the yellow catsuit, brown gloves, boots and belt, ready to pounce. The woman's body is the hero rung's.",
+      "costume": {
+        "hair": "#c8402a",
+        "top": "#e8a82a",
+        "shirt": "#e8a82a",
+        "legs": "#e0a028",
+        "shoes": "#4a3222",
+        "gloves": "#4a3222",
+        "belt": "#4a3222"
+      }
+    },
+    "Knight of Wundagore": {
+      "tint": "#d8903a",
+      "shade": 1,
+      "rest": "ready",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Hulk family. One of the High Evolutionary's cat-knights, as its card paints it: an orange lion's face (the kit's `mask`, in the tint: a face that is not a man's) under an orange mane (the `long` style in the mane's orange; the costume's `skin` is the fur — a cat is not a complexion, D231) over dark blue armour with red and steel. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: it stood an orange-skinned man with human eyes under long orange hair — an orange-haired person, not a cat-knight. A lance (the `spear`) was tried with the mask and taken off: the two put the Hulk family's table at 18 prop kinds at once (@323), over the 17 every recording but the villain tables keeps. The card's sword is still not in the kit (follow-up 7).",
+      "costume": {
+        "skin": "#d8903a",
+        "hair": "#c8702a",
+        "top": "#2a3a6a",
+        "shirt": "#b8322a",
+        "legs": "#2a3a6a",
+        "shoes": "#2a2e3a",
+        "gloves": "#8a93a0",
+        "belt": "#b8322a"
+      },
+      "props": [
+        "mask"
+      ],
+      "face": "none"
+    },
+    "Gallant Citizen": {
+      "tint": "#eef0f2",
+      "rest": "atEase",
+      "hair": "parted",
+      "_note": "More villain identity (D231), in the Hulk family and Wakanda both: the citizen its card paints — an astronaut in a white suit with red trim, his helmet under his arm and his parted hair showing (the human rung stands him in the man's body).",
+      "costume": {
+        "hair": "#6a4a32",
+        "top": "#eef0f2",
+        "shirt": "#eef0f2",
+        "legs": "#e4e6ea",
+        "shoes": "#9aa4b0",
+        "gloves": "#eef0f2",
+        "belt": "#c0302a"
+      }
+    },
+    "Gamma Grotesque": {
+      "scale": 1.18,
+      "tint": "#236b5c",
+      "rest": "working",
+      "hair": "none",
+      "_note": "More villain identity (D231), the Hulk family. A gamma monster out of a broken lab tank: a dark teal-green hide (the costume's `skin`; D231), bald, in black torn trunks, hunched forward (the `working` rest's lean, with no bench) and bigger than a man (1.18). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: it stood braced in a darker green in purple-grey trunks, one of the Hulks' slim green bodies.",
+      "costume": {
+        "skin": "#236b5c",
+        "top": "#236b5c",
+        "shirt": "#236b5c",
+        "legs": "#1c1c20",
+        "shoes": "#236b5c",
+        "gloves": "#236b5c",
+        "belt": "#1c1c20"
+      }
+    },
+    "She-Hulk, Attorney-at-Law": {
+      "scale": 1.12,
+      "tint": "#6ab85a",
+      "rest": "akimbo",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Hulk family. Jennifer Walters in court: green (the costume's `skin`; D231), long dark green hair, a purple suit over a white blouse, hands on her hips — the woman's body, a head taller than a woman (1.12).",
+      "costume": {
+        "skin": "#6ab85a",
+        "hair": "#1f3a24",
+        "top": "#4a2a5a",
+        "shirt": "#eef0f2",
+        "legs": "#4a2a5a",
+        "shoes": "#1a1a1e",
+        "gloves": "#6ab85a",
+        "belt": "#1a1a1e"
+      }
+    },
+    "She-Hulk, Jade Defender": {
+      "scale": 1.18,
+      "tint": "#6ab85a",
+      "rest": "braced",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Hulk family. She-Hulk in her fighting white and purple, green (the costume's `skin`; D231), long dark green hair, braced — taller than the attorney (1.18).",
+      "costume": {
+        "skin": "#6ab85a",
+        "hair": "#1f3a24",
+        "top": "#eef0f2",
+        "shirt": "#7a3a9a",
+        "legs": "#7a3a9a",
+        "shoes": "#eef0f2",
+        "gloves": "#6ab85a",
+        "belt": "#7a3a9a"
+      }
+    },
+    "Hercules, Prince of Power": {
+      "scale": 1.16,
+      "tint": "#d8b24a",
+      "rest": "akimbo",
+      "hair": "crop",
+      "_note": "More villain identity (D231), the Hulk family. The prince of power: bare-chested (the top in the one skin tone every person wears), black-haired, in green trunks with a gold belt, gold bracers and sandals, hands on his hips, big (1.16).",
+      "costume": {
+        "hair": "#1a1614",
+        "top": "#d6a57f",
+        "shirt": "#d6a57f",
+        "legs": "#2f6a3a",
+        "shoes": "#8a5a2a",
+        "gloves": "#d8b24a",
+        "belt": "#d8b24a"
+      }
+    },
+    "Hulkling, Burgeoning Bruiser": {
+      "scale": 1.08,
+      "tint": "#8fb04a",
+      "rest": "highReady",
+      "hair": "crop",
+      "_note": "More villain identity (D231), the Hulk family. Teddy Altman as his card paints him: a yellow-green Kree-Skrull (the costume's `skin`; D231), blond, in a lavender shirt with the olive-gold of his scaled armour down the chest and at the belt, a fist raised to punch through the wall (the `highReady` rest), a little bigger than a man (1.08) and growing. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he stood braced in a purple shirt, another slim green body beside the Hulks.",
+      "costume": {
+        "skin": "#8fb04a",
+        "hair": "#e6c860",
+        "top": "#7a4ab0",
+        "shirt": "#9aa040",
+        "legs": "#2a2438",
+        "shoes": "#2a2438",
+        "gloves": "#8fb04a",
+        "belt": "#9aa040"
+      }
+    },
+    "Hulk, Brutal Brawler": {
+      "scale": 1.34,
+      "tint": "#4fa84a",
+      "rest": "braced",
+      "hair": "parted",
+      "_note": "More villain identity (D231), the Hulk family. The Hulk: green (the costume's `skin` and every bare slot — gamma, not a complexion; D231), black-haired (the man's own parted cut), barefoot in torn purple trousers, braced to charge, and one of the biggest people on the table (1.34, the strict width clamp still holding, D65). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: the three Hulks wore one crop that read as a dark helmet, one purple and one green, told apart by stance and size alone; now each has his own hair, green and trousers.",
+      "costume": {
+        "skin": "#4fa84a",
+        "hair": "#2a3222",
+        "top": "#4fa84a",
+        "shirt": "#4fa84a",
+        "legs": "#5b2f8f",
+        "shoes": "#4fa84a",
+        "gloves": "#4fa84a",
+        "belt": "#5b2f8f"
+      }
+    },
+    "Hulk, Strongest There Is": {
+      "scale": 1.38,
+      "tint": "#3a8a36",
+      "rest": "akimbo",
+      "hair": "crop",
+      "_note": "More villain identity (D231), the Hulk family. The Hulk roaring in the fire of his card: a deeper green, close-cropped, in torn maroon-brown trousers, hands on his hips, bigger (1.38). The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he wore the Brawler's purple and the same crop; the deeper green and the brown trousers tell the two apart at the table's distance.",
+      "costume": {
+        "skin": "#3a8a36",
+        "hair": "#2a3222",
+        "top": "#3a8a36",
+        "shirt": "#3a8a36",
+        "legs": "#5a3a3a",
+        "shoes": "#3a8a36",
+        "gloves": "#3a8a36",
+        "belt": "#5a3a3a"
+      }
+    },
+    "Hulk, Gamma Goliath": {
+      "scale": 1.42,
+      "tint": "#66c24e",
+      "rest": "ready",
+      "hair": "long",
+      "_note": "More villain identity (D231), the Hulk family. The biggest Hulk (1.42), the 6/5 the deck tops out at: a bright green, a shaggy black mane (the `long` style), indigo trousers, at the ready. The fix pass (D232) re-dressed it after the verifier's reading of the pictures: he wore the Brawler's crop and purple.",
+      "costume": {
+        "skin": "#66c24e",
+        "hair": "#2a3222",
+        "top": "#66c24e",
+        "shirt": "#66c24e",
+        "legs": "#2a3470",
+        "shoes": "#66c24e",
+        "gloves": "#66c24e",
+        "belt": "#2a3470"
+      }
+    },
+    "Red Hulk": {
+      "scale": 1.38,
+      "tint": "#c83a2a",
+      "shade": 1,
+      "rest": "akimbo",
+      "hair": "crop",
+      "_note": "More villain identity (D231), the Hulk family. Thunderbolt Ross, red (the costume's `skin`; D231), black-haired, in black trousers, as big as the Hulk (1.38). `shade: 1` keeps his red from the villain rung's 78%.",
+      "costume": {
+        "skin": "#c83a2a",
+        "hair": "#4a3a30",
+        "top": "#c83a2a",
+        "shirt": "#c83a2a",
+        "legs": "#2c2a30",
+        "shoes": "#2c2a30",
+        "gloves": "#c83a2a",
+        "belt": "#2c2a30"
+      }
+    },
+    "Abomination, Irradiated Brute": {
+      "scale": 1.3,
+      "tint": "#8a8e6a",
+      "shade": 1,
+      "rest": "braced",
+      "hair": "none",
+      "_note": "More villain identity (D231), the Hulk family. Emil Blonsky as his card paints him: a grey-olive, scaled hide (the costume's `skin`; D231), bald, in dark trunks — grey where the Hulks are green.",
+      "costume": {
+        "skin": "#8a8e6a",
+        "top": "#8a8e6a",
+        "shirt": "#7a7e5a",
+        "legs": "#3a2e2a",
+        "shoes": "#8a8e6a",
+        "gloves": "#8a8e6a",
+        "belt": "#3a2e2a"
+      }
+    },
+    "Abomination, Terrifying Titan": {
+      "scale": 1.34,
+      "tint": "#4a7a42",
+      "shade": 1,
+      "rest": "akimbo",
+      "hair": "none",
+      "_note": "More villain identity (D231), the Hulk family. The Abomination again, as this card paints him: a darker, greener hide (the costume's `skin`; D231), bald, in black trunks, standing tall (1.34).",
+      "costume": {
+        "skin": "#4a7a42",
+        "top": "#4a7a42",
+        "shirt": "#3f6a3a",
+        "legs": "#2c2a30",
+        "shoes": "#4a7a42",
+        "gloves": "#4a7a42",
+        "belt": "#2c2a30"
+      }
+    },
+    "Wolverine, Fierce Fighter": {
+      "scale": 0.92,
+      "tint": "#f0c22a",
+      "shade": 1,
+      "accent": "#e4ecf6",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "braced",
+      "hair": "cowl",
+      "_note": "More villain identity (D231), the Hulk family. Logan in the yellow and blue his card paints: the yellow cowl with his face in its opening, blue gloves and boots, a red belt, the claws' steel glinting at both fists (the `gauntlets`, in a steel-white accent) — and short (0.92).",
+      "costume": {
+        "hair": "#f0c22a",
+        "top": "#f0c22a",
+        "shirt": "#f0c22a",
+        "legs": "#2a3f9a",
+        "shoes": "#2a3f9a",
+        "gloves": "#2a3f9a",
+        "belt": "#c0302a"
+      }
+    },
+    "Shuri, the Black Panther": {
+      "tint": "#2e2e3c",
+      "shade": 1,
+      "accent": "#d8b24a",
+      "props": [
+        "mask"
+      ],
+      "rest": "ready",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), Wakanda. Shuri as the Black Panther: the black suit, the panther's cowl and mask (the `cowl` and the `mask`, in the suit's blue-black), and the gold at her belt and gloves that tells her from her brother — the woman's body (the hero rung's).",
+      "costume": {
+        "hair": "#24242e",
+        "top": "#262632",
+        "shirt": "#262632",
+        "legs": "#20202a",
+        "shoes": "#20202a",
+        "gloves": "#d8b24a",
+        "belt": "#d8b24a"
+      }
+    },
+    "T'Chaka, Venerable King": {
+      "tint": "#6a3a9a",
+      "shade": 1,
+      "accent": "#5b2f8f",
+      "props": [
+        "cape"
+      ],
+      "rest": "clasped",
+      "hair": "crop",
+      "_note": "More villain identity (D231), Wakanda. The old king as his card paints him: white hair, a royal-purple cloak with its gold hem (the kit's `cape`, in his accent) over black with gold, hands clasped behind him. A long robe was the coat and its skirt, two kinds; the cloak is one the Wakandan table already draws for Storm and the Shield Guard, which took the crowded frames of villain-wakanda-232 from 121 calls to under the bench's 120 (D231's reuse rule).",
+      "costume": {
+        "hair": "#e8e8e8",
+        "top": "#2a2230",
+        "shirt": "#d8b24a",
+        "legs": "#2a2230",
+        "shoes": "#1a161e",
+        "belt": "#d8b24a"
+      }
+    },
+    "Dora Milaje Elite": {
+      "tint": "#b8322a",
+      "shade": 1,
+      "accent": "#c9ccd6",
+      "props": [
+        "spear"
+      ],
+      "rest": "ready",
+      "hair": "none",
+      "_note": "More villain identity (D231), Wakanda. The king's guard as their card paints them: shaven heads, red armour with gold at the chest, arms and feet, and the Dora Milaje's vibranium SPEAR planted at the right hand (the kit's `spear`, D231's one new kind — shared by every spear-carrier in Wakanda).",
+      "costume": {
+        "top": "#b8322a",
+        "shirt": "#d8a83a",
+        "legs": "#8a2622",
+        "shoes": "#d8a83a",
+        "gloves": "#d8a83a",
+        "belt": "#d8a83a"
+      }
+    },
+    "Wakandan Shield Guard": {
+      "tint": "#6a4a2e",
+      "shade": 1,
+      "accent": "#4a5a9a",
+      "props": [
+        "cape",
+        "spear"
+      ],
+      "rest": "ready",
+      "hair": "crop",
+      "_note": "More villain identity (D231), Wakanda. A border guard in brown leather, his blanket slung behind him as the shield it becomes (the kit's `cape`, in the blanket's blue), and a spear (the kit's `spear`) — the Soldier rung's body.",
+      "costume": {
+        "hair": "#1a1614",
+        "top": "#6a4a2e",
+        "shirt": "#8a6a42",
+        "legs": "#4a3420",
+        "shoes": "#2a1e14",
+        "gloves": "#6a4a2e",
+        "belt": "#2a1e14"
+      }
+    },
+    "T'Challa, the Black Panther": {
+      "tint": "#2e2e3c",
+      "shade": 1,
+      "accent": "#c9ccd6",
+      "props": [
+        "mask"
+      ],
+      "rest": "braced",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), Wakanda. The Black Panther: the black suit (the comic look draws black as blue-black with blue highlights, as the comics do), the panther's cowl and mask (the `cowl` and the `mask`), silver vibranium at the belt and gloves, crouched in guard.",
+      "costume": {
+        "hair": "#24242e",
+        "top": "#262632",
+        "shirt": "#262632",
+        "legs": "#20202a",
+        "shoes": "#20202a",
+        "gloves": "#c9ccd6",
+        "belt": "#c9ccd6"
+      }
+    },
+    "Black Panther, Claws of Bast": {
+      "tint": "#2e2e3c",
+      "shade": 1,
+      "accent": "#e0e8ff",
+      "props": [
+        "mask",
+        "gauntlets"
+      ],
+      "rest": "ready",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), Wakanda. The Black Panther with his claws out: the suit, cowl and mask, and the claws' vibranium glinting white at both hands (the `gauntlets`, in his accent), ready to spring.",
+      "costume": {
+        "hair": "#24242e",
+        "top": "#262632",
+        "shirt": "#262632",
+        "legs": "#20202a",
+        "shoes": "#20202a",
+        "gloves": "#262632",
+        "belt": "#c9ccd6"
+      }
+    },
+    "Black Panther, Most Dangerous": {
+      "tint": "#2e2e3c",
+      "shade": 1,
+      "accent": "#8a5aff",
+      "props": [
+        "mask",
+        "gauntlets",
+        "visor"
+      ],
+      "rest": "akimbo",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), Wakanda. The Black Panther charged with the kinetic energy his suit stores, as his card paints it: violet light down his chest (the shirt) and belt, at both hands (the `gauntlets`) and in his eyes (the `visor`, all in his violet accent).",
+      "costume": {
+        "hair": "#24242e",
+        "top": "#262632",
+        "shirt": "#6a4ad8",
+        "legs": "#20202a",
+        "shoes": "#20202a",
+        "gloves": "#262632",
+        "belt": "#8a5aff"
+      }
+    },
+    "Black Panther, Vanguard": {
+      "scale": 1.06,
+      "tint": "#2e2e3c",
+      "shade": 1,
+      "accent": "#2c2c3a",
+      "props": [
+        "mask",
+        "cape"
+      ],
+      "rest": "folded",
+      "hair": "cowl",
+      "face": "none",
+      "_note": "More villain identity (D231), Wakanda. The Black Panther as the king at the head of his army: the suit, cowl and mask, a black cloak with its gold hem (the `cape`), standing tall with his arms folded.",
+      "costume": {
+        "hair": "#24242e",
+        "top": "#262632",
+        "shirt": "#262632",
+        "legs": "#20202a",
+        "shoes": "#20202a",
+        "gloves": "#262632",
+        "belt": "#d8b24a"
+      }
+    },
+    "Nakia, Wakandan Operative": {
+      "tint": "#b8322a",
+      "shade": 1,
+      "accent": "#e8c25a",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "ready",
+      "hair": "crop",
+      "_note": "More villain identity (D231), Wakanda. Nakia as her card paints her: red and gold, close-cropped black hair, her two ring blades as gold light at her hands (the `gauntlets`, in her accent) — told from the Dora Milaje by her hair and her blades.",
+      "costume": {
+        "hair": "#1a1614",
+        "top": "#b8322a",
+        "shirt": "#d8a83a",
+        "legs": "#3a2a22",
+        "shoes": "#3a2a22",
+        "gloves": "#d8a83a",
+        "belt": "#d8a83a"
+      }
+    },
+    "Shuri, Vibranium Technologist": {
+      "tint": "#d8cfe8",
+      "shade": 1,
+      "accent": "#b08aff",
+      "props": [
+        "gauntlets"
+      ],
+      "rest": "working",
+      "hair": "bun",
+      "_note": "More villain identity (D231), Wakanda. Shuri in her lab as her card paints her: lavender and white, her hair up in a bun, gold armlets, and her vibranium gauntlets lit violet (the `gauntlets`, in her accent), bent over her work.",
+      "costume": {
+        "hair": "#1a1614",
+        "top": "#d8cfe8",
+        "shirt": "#efe8f6",
+        "legs": "#9a8ab8",
+        "shoes": "#6a5a88",
+        "gloves": "#d8b24a",
+        "belt": "#d8b24a"
+      }
+    },
+    "Okoye, Dora Milaje Leader": {
+      "scale": 1.04,
+      "tint": "#b8322a",
+      "shade": 1,
+      "accent": "#c9ccd6",
+      "props": [
+        "spear"
+      ],
+      "rest": "atEase",
+      "hair": "none",
+      "_note": "More villain identity (D231), Wakanda. The general, at the head of her guard: shaven, in red armour with a gold chest, at ease with her vibranium spear planted (the kit's `spear`) — a head over the Elite who carry the same spear.",
+      "costume": {
+        "top": "#a82a24",
+        "shirt": "#e0b040",
+        "legs": "#7a2220",
+        "shoes": "#e0b040",
+        "gloves": "#e0b040",
+        "belt": "#e0b040"
+      }
+    },
+    "Okoye, Mighty and Adored": {
+      "scale": 1.04,
+      "tint": "#b8322a",
+      "shade": 1,
+      "accent": "#c9ccd6",
+      "props": [
+        "spear"
+      ],
+      "rest": "akimbo",
+      "hair": "none",
+      "_note": "More villain identity (D231), Wakanda. Okoye again, as this card paints her: shaven, red armour over blue, gold at the arms and the belt, her spear planted (the `spear`), hands on her hips.",
+      "costume": {
+        "top": "#b8322a",
+        "shirt": "#2a3a8a",
+        "legs": "#2a3a8a",
+        "shoes": "#d8a83a",
+        "gloves": "#d8a83a",
+        "belt": "#d8a83a"
+      }
+    },
+    "Wakandan Drone Flock": {
+      "hover": 0.36,
+      "idle": "hover",
+      "tint": "#dfe4ea",
+      "accent": "#7fe0ff",
+      "props": [
+        "laserEye",
+        "visor",
+        "wings"
+      ],
+      "_note": "More villain identity (D231), Wakanda. An Artifact Creature — Robot, not a person: the robot rung's drone in Wakandan white, its cyan eye and visor band, and a pair of wing pods (the A.I.M. Bot's `wings`) — it flies, higher than the A.I.M. Bot."
+    },
+    "Warriors of Wakanda": {
+      "swarm": 2,
+      "formation": "squad",
+      "scale": 1.04,
+      "tint": "#3a4a7a",
+      "shade": 1,
+      "accent": "#c9ccd6",
+      "props": [
+        "spear"
+      ],
+      "rest": "ready",
+      "hair": "parted",
+      "_note": "More villain identity (D231), Wakanda. A war party, as the S.H.I.E.L.D. Agents are a squad (a leader and two followers in a wedge, one draw call for the followers), in indigo with white, the leader's spear planted (the `spear`) and the man's own parted hair (a squad's leader is drawn small, and the crop read 44 px from the front; the parted cut is the S.H.I.E.L.D. squad's, with the same partner in the raster).",
+      "costume": {
+        "hair": "#1a1614",
+        "top": "#3a4a7a",
+        "shirt": "#eef0f2",
+        "legs": "#2a3050",
+        "shoes": "#1e1e28",
+        "gloves": "#3a4a7a",
+        "belt": "#eef0f2"
+      }
+    },
+    "Storm, Queen of Wakanda": {
+      "hover": 0.3,
+      "idle": "hover",
+      "tint": "#e8ecf2",
+      "shade": 1,
+      "accent": "#cfe6ff",
+      "props": [
+        "gauntlets",
+        "cape"
+      ],
+      "rest": "braced",
+      "hair": "long",
+      "_note": "More villain identity (D231), Wakanda. Ororo as queen, flying (hovering): long white hair, white and silver with a gold collar, a white cloak (the `cape`) and lightning at both hands (the `gauntlets`, in her storm-white accent).",
+      "costume": {
+        "hair": "#f2f4f8",
+        "top": "#e8ecf2",
+        "shirt": "#d8b24a",
+        "legs": "#dfe4ec",
+        "shoes": "#c9ccd6",
+        "gloves": "#e8ecf2",
+        "belt": "#d8b24a"
+      }
+    }
+  },
+  "_costume": "Slice 4 — what the body WEARS. A `costume` names a colour per slot of the proportioned body (skin, hair, top, shirt, legs, shoes, gloves, belt — figures/props.ts's COSTUME_SLOTS; `tint` means the figure's own tint), MERGED slot by slot down the ladder (a card row that names only its hair keeps its rung's suit), and every slot nobody names follows the top (pose.ts's costumeOf). The holographic shader draws the body in its palette and rims its silhouette in the tint, so a figure reads as a person in a costume and still as a hologram. `body: chibi` stands a card in slices 1–3's Kenney body instead (kept in the library as `<id>-chibi`); no row does today. Only a body that carries slots wears a costume: the drone, the bee and the disc never do, and an anonymous figure never does (hard rule 8).",
+  "_bodies": "Lane BODIES (D156–D160). `rest` names the pose a card RESTS in — figures/rests.ts's closed table (stand, folded, ready, aim, highReady, akimbo, clasped, braced, working, atEase), each a frame of a library clip turned by a few joint aims; a pose, drawn whenever the card is untapped and out of combat, and never an anonymous figure's. `hair` names a hairstyle — parted and long are the pack's own two, carved off the bodies at load; crop, bob, waves and bun are procedural shells; none is bald — a shared kind rigid on the head, in the costume's hair colour; absent means the body's own (the man's parted, the woman's long). `face` is `on` for every person unless a row says `none` (A.I.M.'s bucket hood) or `patched` (the face without HIS left eye, under Fury's eyepatch). `palette` is `art` (the default: the card's own painting colours what no hand-written row does — the art rung, under every rung here) or `off`. Since this lane a long coat is two kinds: `coat` is the YOKE (shoulders, collar, lapels, to the chest, on the upper spine) and `coatTails` is its body and skirt, panels that ride the lowest spine joint and the legs — so a pose that bends the chest, or kneels, bends the coat with it."
+}

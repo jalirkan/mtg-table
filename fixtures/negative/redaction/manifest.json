@@ -1,0 +1,176 @@
+[
+  {
+    "file": "baseline.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "an unmodified slice of a real recording -- the control for every probe below"
+  },
+  {
+    "file": "p1-stub-without-owner.jsonl",
+    "level": "fail",
+    "expect": "is missing \"owner\"",
+    "why": "amendment P1: the redacted stub is five keys, and `owner` is the fifth"
+  },
+  {
+    "file": "p15-card-without-token.jsonl",
+    "level": "fail",
+    "expect": "is missing \"token\"",
+    "why": "amendment P15: every full card carries `token` (CardView.isToken)"
+  },
+  {
+    "file": "p3-card-without-alt.jsonl",
+    "level": "fail",
+    "expect": "is missing \"alt\"",
+    "why": "amendment P3: every full card carries `alt`, `null` unless the seat may flip it"
+  },
+  {
+    "file": "p2-library-without-cards.jsonl",
+    "level": "fail",
+    "expect": "has no \"cards\" array",
+    "why": "amendment P2: a library is {count, cards}, not a bare count"
+  },
+  {
+    "file": "p3-facedownhidden-revived.jsonl",
+    "level": "fail",
+    "expect": "faceDownHidden",
+    "why": "amendment P3 retired the eleven-key faceDownHidden object; no emitter writes one"
+  },
+  {
+    "file": "a1-stub-with-a-name.jsonl",
+    "level": "fail",
+    "expect": "leaks extra keys: name",
+    "why": "A1: a sixth key on a stub is a leak, and a name is the worst one"
+  },
+  {
+    "file": "a6-opponent-hand-named.jsonl",
+    "level": "fail",
+    "expect": "carries a name",
+    "why": "A4/A6: a full named card in the opponent hand, for an id nothing ever revealed"
+  },
+  {
+    "file": "a3-opponent-library-revealed.jsonl",
+    "level": "fail",
+    "expect": "NOT the viewing seat",
+    "why": "A3: an opponent library dumped as full cards -- reachable, but it must be declared"
+  },
+  {
+    "file": "a6-library-reveal-is-not-a-whitelist.jsonl",
+    "level": "fail",
+    "expect": "nothing earlier in this log",
+    "why": "A6: an opponent-library reveal must not excuse the same id later in their HAND"
+  },
+  {
+    "file": "notice-names-a-concealed-card.jsonl",
+    "level": "fail",
+    "expect": "notice.title names card",
+    "why": "section 6: both notice strings go through Snap.sweepText, so an id here is OUR gate failing"
+  },
+  {
+    "file": "ask-text-initial-null.jsonl",
+    "level": "fail",
+    "expect": "ask.text.initial",
+    "why": "section 5.2: `text.initial` is a string, \"\" when Forge has none -- never null"
+  },
+  {
+    "file": "ask-ability-menu-cardid-null.jsonl",
+    "level": "fail",
+    "expect": "ask.ability_menu.cardId",
+    "why": "section 5.2: `ability_menu.cardId` is a number -- with no host there is no ask to send"
+  },
+  {
+    "file": "a6-reveal-ask-one-frame-too-late.jsonl",
+    "level": "fail",
+    "expect": "carries a name",
+    "why": "the lookahead is ONE frame: a reveal ask two frames after the state does not justify it"
+  },
+  {
+    "file": "p12-choose-list-reveals-without-the-flag.jsonl",
+    "level": "fail",
+    "expect": "an option list may only show what the effect reveals",
+    "why": "P12: only `reveal: true` (or a delayedReveal) lets a list-shaped ask carry an opponent hand card"
+  },
+  {
+    "file": "a7-reveal-flag-on-the-wrong-ask-kind.jsonl",
+    "level": "fail",
+    "expect": "ask.reveal is true on kind",
+    "why": "amendment A7: `reveal: true` is Forge's getChoices(min < 0) channel and is a `choose_list` only"
+  },
+  {
+    "file": "m44-match-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M44: the baseline plus a hello_ok.match exactly as the bridge writes it -- the control for the three m44 probes below"
+  },
+  {
+    "file": "m44-aideck-carries-path.jsonl",
+    "level": "fail",
+    "expect": "aiDeck carries \"path\"",
+    "why": "amendment M44: the AI's deck is its NAME and card COUNT; a path identifies the opponent's decklist"
+  },
+  {
+    "file": "m44-aideck-cards-is-a-list.jsonl",
+    "level": "fail",
+    "expect": "aiDeck.cards must be an integer",
+    "why": "amendment M44: aiDeck.cards is a COUNT; a list of names there is the opponent's decklist on the wire"
+  },
+  {
+    "file": "m44-yourdeck-path-mismatch.jsonl",
+    "level": "fail",
+    "expect": "but the session header says",
+    "why": "amendment M44: hello_ok.match and the session header are written from the same Deck objects; a different yourDeck.path means one of them describes a different match"
+  },
+  {
+    "file": "m47-spectated-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M47: the baseline plus hello_ok.match.yourProfile on an AI viewer and a paced session header, exactly as RecordMatch --match --pace writes them -- the control for the m47 probes"
+  },
+  {
+    "file": "m47-yourprofile-on-a-human-seat.jsonl",
+    "level": "fail",
+    "expect": "does not mark the viewing seat",
+    "why": "amendment M47: yourProfile is a fact about an AI seat; on a viewer players[] marks human it describes a different match"
+  },
+  {
+    "file": "m47-yourprofile-is-a-path.jsonl",
+    "level": "fail",
+    "expect": "yourProfile must be a Forge AI profile name",
+    "why": "amendment M47: yourProfile is the base name of a .ai file, never a path"
+  },
+  {
+    "file": "m47-pace-not-a-number.jsonl",
+    "level": "fail",
+    "expect": "\"paceMs\" must be a positive integer",
+    "why": "amendment M47: the session header's paceMs is a positive integer of milliseconds"
+  },
+  {
+    "file": "m49-keywords-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M49: the baseline with `keywords` on every full card exactly as Snap.card writes it -- the control for the four m49 probes below"
+  },
+  {
+    "file": "m49-stub-carries-keywords.jsonl",
+    "level": "fail",
+    "expect": "leaks extra keys: keywords",
+    "why": "amendment M49: a redacted stub is five keys -- a keyword on it is a sixth key, and a fact about a hidden card"
+  },
+  {
+    "file": "m49-keyword-is-a-display-string.jsonl",
+    "level": "fail",
+    "expect": ".keywords = [\"Flying\"] does not match the type",
+    "why": "amendment M49: a keyword is a Keyword constant's name() -- a display string (or a card name) is not one"
+  },
+  {
+    "file": "m49-face-down-carries-keywords.jsonl",
+    "level": "fail",
+    "expect": "is face down and carries keywords",
+    "why": "amendment M49: a face-down card's keywords are [] in both branches of gate 2, like its name"
+  },
+  {
+    "file": "m49-keywords-half-present.jsonl",
+    "level": "fail",
+    "expect": "keywords are HALF PRESENT",
+    "why": "amendment M49: every full card carries keywords or none does -- some of each is a Snap.card branch that forgot it"
+  }
+]

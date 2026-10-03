@@ -1,0 +1,5493 @@
+/*
+ * mtg-table — styles.css
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * One plain stylesheet, no framework, two explicit breakpoints — the whole of
+ * M4's layout (docs/research/10-board-ui-spec.md §2).
+ *
+ * M1's board was a text board on purpose. M4 is the same data laid out as a
+ * table: a CSS grid, real card tiles with Scryfall art over a generated text
+ * frame, a left rail of seats and the decision, a right rail of thirteen phase
+ * rows. Nothing under `web/src/render/` imports CSS — every rule is here, and
+ * `main.tsx` imports this file once — because `web/test/render.test.tsx` imports
+ * that whole component tree into a `node` environment with no CSS loader
+ * (report 10 §1's hard rule for the component tree, §15).
+ *
+ * The numbers are explicit rather than `clamp()`ed for one reason: two fixed
+ * blocks can be screenshot-verified and a fluid one cannot (report 10 §2.1).
+ * The two blocks are 1600×900 and 1280×720, and `docs/evidence/m4-board.md` has
+ * a screenshot of each.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* --- M1's tokens, unchanged ------------------------------------------- */
+  --bg: #14161a;
+  --panel: #1c1f25;
+  --panel-2: #22262e;
+  --ink: #e6e8ec;
+  --muted: #8d95a3;
+  --line: #2e333d;
+  --accent: #6fb4ff;
+  --select: #ffcf5c;
+  --highlight: #b98bff;
+  --warn: #ffb454;
+  --error: #ff6b6b;
+  --ok: #7ddf87;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* --- M4 geometry: 1600 × 900 and anything wider (report 10 §2.1) ------- */
+  --pad: 12px;
+  --gap-col: 12px;
+  --gap-row: 10px;
+  --gap-card: 8px;
+  --rail-l: 264px;
+  --rail-r: 128px;
+
+  --ch-bf: 132px;   --cw-bf: 95px;    /* permanents: 132 / 1.3934 = 94.7 */
+  --ch-land: 104px; --cw-land: 75px;  /* lands:      104 / 1.3934 = 74.6 */
+  --ch-hand: 190px; --cw-hand: 136px; /* hand:       190 / 1.3934 = 136.4 */
+  --ch-strip: 62px; --cw-strip: 45px; /* graveyard / exile strips          */
+  --ch-stack: 61px; --cw-stack: 44px; /* stack-panel thumbnails            */
+  --middle-min: 120px;
+  --stack-w: 240px;
+  /* The hover zoom. 300px covered most of the opponent's two rows while a hand
+     card was hovered (evening 2's own note); 232 is still 1.7x the hand tile and
+     `Z` is the one that goes big (report 10 §12.2). */
+  --zoom-w: 232px;
+
+  /* --- M4 board palette — extends M1's, does not replace it -------------- */
+  --felt: #10161c;
+  --felt-line: #1d2731;
+  --you: #6fb4ff;
+  --opp: #ff8a6b;
+  --tap: #b9772f;
+  --arrow-target: #c79bff;
+  --arrow-attack: #ff6b6b;
+  --arrow-block: #7ddf87;
+}
+
+/* 1280 × 720. Same areas, tighter tokens (report 10 §2.5). */
+@media (max-width: 1439px) {
+  :root {
+    --pad: 10px;
+    --gap-col: 10px;
+    --gap-row: 8px;
+    --gap-card: 6px;
+    --rail-l: 216px;
+    --rail-r: 112px;
+
+    --ch-bf: 104px;   --cw-bf: 75px;
+    --ch-land: 84px;  --cw-land: 60px;
+    --ch-hand: 150px; --cw-hand: 108px;
+    --ch-strip: 48px; --cw-strip: 34px;
+    --ch-stack: 54px; --cw-stack: 39px;
+    --middle-min: 96px;
+    --stack-w: 200px;
+    --zoom-w: 196px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  block-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 12px/1.4 var(--ui);
+  /* The page never scrolls sideways. Rows compress instead (report 10 §2.3). */
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--accent);
+}
+
+code,
+kbd {
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+.pad {
+  padding: 1rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.k {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  margin-right: 0.25em;
+}
+
+.hint {
+  color: var(--warn);
+  margin: 0.25rem 0;
+}
+
+.hint--loud {
+  border-left: 3px solid var(--warn);
+  padding-left: 0.4rem;
+}
+
+/* Visually hidden, still announced. Every fact an arrow or a glyph carries is
+   also text (report 10 §14 rule 4). */
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- shell ---------------------------------------------------------------- */
+
+/*
+ * The board is the page. One thin bar above it carries the title, the mode, the
+ * socket status and the credits, because every pixel that bar takes is a pixel
+ * the hand row does not have: at 1600×900 the fixed rows plus gaps plus padding
+ * are 736 px, which leaves 164 px for the middle row and nothing at all for a
+ * second chrome strip.
+ */
+.app {
+  display: flex;
+  flex-direction: column;
+  block-size: 100dvh;
+  overflow: hidden;
+}
+
+.app__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.app__bar h1 {
+  font-size: 12px;
+  margin: 0;
+  letter-spacing: 0.04em;
+  font-family: var(--mono);
+}
+
+.app__bar .app__credit {
+  margin-left: auto;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Banners float over the board rather than pushing it: a transient warning must
+   not cost the hand row 40 px of height for the rest of the game. */
+.app__overlays {
+  position: fixed;
+  inset-block-start: 28px;
+  inset-inline: 0;
+  z-index: 90;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.app__overlays > * {
+  pointer-events: auto;
+  max-inline-size: min(900px, 90vw);
+  box-shadow: 0 6px 24px #0009;
+}
+
+/* --- replay controls ------------------------------------------------------ */
+
+.replay {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  padding: 0.15rem 0.6rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.replay__buttons {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.replay__scrub {
+  flex: 1 1 260px;
+  min-inline-size: 120px;
+  accent-color: var(--accent);
+}
+
+.replay__count strong {
+  color: var(--accent);
+}
+
+/*
+ * Spectating (D118) — follow mode's chip in the app bar: where the recorder is
+ * and how far behind it the page is. A dot, a colour AND a word, so colour alone
+ * never carries it (M4 convention 5's rule, applied to a status).
+ */
+.follow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.follow--live {
+  color: var(--ok);
+}
+
+.follow--stalled {
+  color: var(--warn);
+}
+
+/* A 416: the followed file was re-recorded and polling has stopped (polish-1). No dot. */
+.follow--lost {
+  color: var(--error);
+}
+
+button,
+select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.1rem 0.45rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  /* Visibly distinct from `.tile--selectable`'s outline, so "focused" and "the
+     engine will accept this" never look the same (report 10 §14 rule 5). */
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
+/* --- banners -------------------------------------------------------------- */
+
+.banner {
+  padding: 0.5rem 0.7rem;
+  border-radius: 4px;
+  border-left: 4px solid var(--line);
+  background: var(--panel);
+}
+
+.banner--error {
+  border-left-color: var(--error);
+  color: var(--error);
+}
+
+.banner--warn {
+  border-left-color: var(--warn);
+  color: var(--warn);
+}
+
+.banner--over {
+  border-left-color: var(--ok);
+  color: var(--ok);
+  background: #0d1318f2;
+}
+
+.banner pre {
+  white-space: pre-wrap;
+  max-block-size: 16rem;
+  overflow: auto;
+  color: var(--muted);
+}
+
+/* --- the connection bar (inline in the top bar) --------------------------- */
+
+.wsbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wsbar__dot {
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.wsbar__dot--open {
+  background: var(--ok);
+}
+
+.wsbar__dot--connecting,
+.wsbar__dot--reconnecting {
+  background: var(--warn);
+}
+
+.wsbar__dot--closed,
+.wsbar__dot--refused {
+  background: var(--error);
+}
+
+/* ===========================================================================
+ * THE BOARD (report 10 §2.2)
+ * =========================================================================== */
+
+.board {
+  display: grid;
+  grid-template-columns: var(--rail-l) minmax(0, 1fr) var(--rail-r);
+  gap: var(--gap-row) var(--gap-col);
+  padding: var(--pad);
+  background:
+    radial-gradient(120% 80% at 50% 0%, #16202a 0%, var(--felt) 70%),
+    var(--felt);
+  position: relative; /* arrows overlay and the drawer anchor here */
+  overflow: hidden; /* the page never scrolls; rows compress instead */
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.board--empty {
+  display: grid;
+  place-items: center;
+  grid-template-columns: 1fr;
+}
+
+.board__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --- the rails ------------------------------------------------------------ */
+
+.board__rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-row);
+  min-block-size: 0;
+}
+
+.board__rail--left {
+  grid-column: 1;
+}
+
+.board__drawer {
+  margin-block-start: auto;
+}
+
+.pill {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.pill--readonly {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.pill--active {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.pill--priority {
+  border-color: var(--select);
+  color: var(--select);
+}
+
+/* --- PlayerRail ----------------------------------------------------------- */
+
+.rail {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #151b21cc;
+  padding: 0.3rem 0.45rem;
+  flex: 0 0 auto;
+}
+
+.rail--you {
+  border-inline-start: 3px solid var(--you);
+}
+
+.rail--opp {
+  border-inline-start: 3px solid var(--opp);
+}
+
+.rail--active {
+  background: #1b242dcc;
+  box-shadow: inset 0 0 0 1px #ffffff12;
+}
+
+.rail__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0 0 0.15rem;
+  font-size: 13px;
+}
+
+.rail__name {
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: start;
+}
+
+.rail__name:hover:not(:disabled) {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.rail__name--selectable {
+  color: var(--select);
+  text-decoration: underline dotted;
+}
+
+.rail__tags {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.rail__vitals {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.life {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.life__glyph {
+  color: var(--error);
+}
+
+.life__n {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--mono);
+  line-height: 1;
+}
+
+.poison {
+  color: var(--muted);
+}
+
+.poison--on {
+  color: var(--ok);
+}
+
+.rail__turnmark {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 0.2rem;
+}
+
+.rail__zones {
+  display: flex;
+  gap: 0.45rem;
+  margin-block-start: 0.15rem;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.zc__n {
+  color: var(--ink);
+}
+
+.rail__mana {
+  margin-block-start: 0.15rem;
+}
+
+.rail__counters,
+.rail__revealed {
+  margin-block-start: 0.2rem;
+}
+
+.rail__revealed .row {
+  block-size: var(--ch-strip);
+  justify-content: flex-start;
+}
+
+/* --- mana pips (mana-font, report 10 §13) --------------------------------- */
+
+.mana {
+  display: inline-flex;
+  gap: 1px;
+  align-items: center;
+}
+
+.mana--md .ms {
+  font-size: 13px;
+}
+
+.mana__raw {
+  font-family: var(--mono);
+}
+
+.pool {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.pool__pip {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  opacity: 0.35;
+  font-family: var(--mono);
+}
+
+.pool__pip--on {
+  opacity: 1;
+  color: var(--ink);
+}
+
+.pool__n {
+  font-size: 10px;
+}
+
+/* The `@font-face` moved to `src/mana.css` (M4 follow-up 1): it used to be an
+   OVERRIDE that had to come after the package's stylesheet, because
+   `mana.css@1.18.0` lists eot/woff/ttf/svg and not the woff2 it ships, and a
+   later @font-face for the same family wins (report 10 §13, D29). Nothing
+   declares the other five formats any more, so it is just the declaration —
+   and the build stopped emitting 3.72 MB of faces nothing fetched. */
+
+.ms {
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* --- DecisionPanel -------------------------------------------------------- */
+
+.decision {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #151b21cc;
+  padding: 0.35rem 0.45rem;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.decision__title {
+  margin: 0 0 0.2rem;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.prompt {
+  color: var(--ink);
+  margin: 0.2rem 0;
+  font-size: 13px;
+}
+
+.decision__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0.35rem 0;
+}
+
+.decision__meta,
+.decision__zones {
+  font-size: 10px;
+  margin: 0.25rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: baseline;
+}
+
+.decision__focus {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-block-start: 0.25rem;
+}
+
+.decision__focus .row {
+  inline-size: auto;
+  block-size: var(--ch-strip);
+}
+
+/* --- buttons -------------------------------------------------------------- */
+
+.btn {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+}
+
+.btn--small {
+  padding: 0 0.35rem;
+  font-size: 10px;
+}
+
+.btn--primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn--on {
+  border-color: var(--select);
+  color: var(--select);
+}
+
+.btn--engine {
+  min-inline-size: 5.5rem;
+  border-color: var(--accent);
+}
+
+.btn--engine:disabled {
+  border-color: var(--line);
+}
+
+.btn__key {
+  color: var(--muted);
+  font-size: 9px;
+  margin-inline-start: 0.3rem;
+  letter-spacing: 0.06em;
+}
+
+/* §9 invariant 6: reachable from every UI state, and visibly not an ordinary
+   button — it ends the game and there is no undo for it. */
+.btn--concede {
+  margin-inline-start: auto;
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.btn--armed {
+  background: var(--error);
+  color: #14161a;
+}
+
+/* A control whose engine call exists and whose milestone has not arrived — or,
+   as of M6, one the engine currently says is unavailable (an Undo with an empty
+   undo stack). It is disabled and its tooltip says which (report 10 §7.2). */
+.btn--future {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+/* M6 — the button `input.buttons.focus` named: SPACE presses this one (§4). */
+.btn--focus {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* M6 — the auto-yield buttons on a stack item, and the pass-to row. Small,
+   because the stack panel is 260 px wide and the item's text comes first. */
+.btn--tiny {
+  font-size: 9px;
+  padding: 0 0.25rem;
+  line-height: 1.4;
+}
+
+.decision__passto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem;
+  margin: 0.25rem 0;
+}
+
+.decision__newgame {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin: 0.35rem 0;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.25rem 0.3rem;
+  font-size: 10px;
+}
+
+.pill--game {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hint--yield {
+  flex-basis: 100%;
+  color: var(--accent);
+  font-size: 10px;
+  margin: 0.15rem 0 0;
+}
+
+/* M6 fix — the New Game row when the socket is not open. Its own line inside
+   the flex row, for the same reason `.hint--yield` has one: it is a sentence,
+   not a chip. */
+.hint--offline {
+  flex-basis: 100%;
+  margin: 0.15rem 0 0;
+}
+
+.stackitem__yield {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  margin-block-start: 0.15rem;
+}
+
+
+/* --- PhaseStrip ----------------------------------------------------------- */
+
+.strip {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-block-size: 0;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #151b21cc;
+  padding: 0.3rem 0.25rem;
+}
+
+.strip__turn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-block-end: 1px solid var(--line);
+  padding-block-end: 0.2rem;
+  margin-block-end: 0.2rem;
+}
+
+.strip__round {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.strip__turnno {
+  font-size: 10px;
+}
+
+.strip__whose {
+  font-size: 10px;
+}
+
+.strip__whose--you {
+  color: var(--you);
+}
+
+.strip__whose--opp {
+  color: var(--opp);
+}
+
+.strip__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.strip__divider {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-block-start: 1px solid var(--felt-line);
+  margin: 2px 0 1px;
+  padding-inline-start: 2px;
+}
+
+.phase {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.phase--combat .phase__label {
+  padding-inline-start: 0.35rem;
+}
+
+.phase__label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phase--active {
+  color: #0d1318;
+  font-weight: 700;
+}
+
+.phase--active-you {
+  background: var(--you);
+}
+
+.phase--active-opp {
+  background: var(--opp);
+}
+
+.phase__dots {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.dot {
+  font: inherit;
+  background: none;
+  border: 0;
+  padding: 0 1px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.dot--on {
+  color: var(--select);
+}
+
+.dot--none {
+  opacity: 0.5;
+}
+
+.phase--active .dot {
+  color: #0d1318;
+}
+
+.strip__legend {
+  font-size: 9px;
+  margin: 0.2rem 0;
+}
+
+/* M6 — the dots are toggles now, so they have to be hittable and to look it.
+   Disabled (a replay, or a stream with no `players[].phaseStops`) they keep the
+   M4 look exactly. */
+.dot:not(:disabled) {
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.dot:not(:disabled):hover,
+.dot:not(:disabled):focus-visible {
+  outline: 1px solid var(--select);
+  outline-offset: 0;
+}
+
+/* M6 — `state.yield`'s marker, on the phase cell the engine is passing to. */
+.phase--marked {
+  outline: 1px dashed var(--accent);
+  outline-offset: -1px;
+}
+
+.phase__marker {
+  font-size: 9px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.phase--active .phase__marker {
+  color: #0d1318;
+}
+
+.strip__yield {
+  font-size: 9px;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 3px;
+  padding: 0.15rem 0.25rem;
+  margin: 0.2rem 0 0;
+  margin-block-start: auto;
+}
+
+.strip__yieldglyph {
+  font-size: 10px;
+}
+
+/* --- the table ------------------------------------------------------------ */
+
+.table {
+  grid-column: 2;
+  display: grid;
+  grid-template-rows:
+    var(--ch-land) /* opponent lands      */
+    var(--ch-bf) /* opponent permanents */
+    minmax(var(--middle-min), 1fr) /* the table           */
+    var(--ch-bf) /* your permanents     */
+    var(--ch-land) /* your lands          */
+    var(--ch-hand); /* your hand           */
+  gap: var(--gap-row);
+  min-block-size: 0;
+}
+
+/* The two rows of a seat are grid items of `.table`, not of a wrapper. */
+.table__seat {
+  display: contents;
+}
+
+.table__row {
+  position: relative;
+  min-inline-size: 0;
+  border-radius: 4px;
+  background: linear-gradient(#ffffff05, #ffffff00);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+}
+
+.table__middle {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  padding-inline-end: calc(var(--stack-w) + 10px);
+  min-block-size: 0;
+}
+
+.middle__strips {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.middle__combat {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.table__hand {
+  position: relative;
+  min-block-size: 0;
+}
+
+/* --- a zone row (report 10 §2.3) ------------------------------------------ */
+
+.zonerow {
+  position: relative;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  block-size: 100%;
+}
+
+.zonerow__label {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 4px;
+  font-size: 9px;
+  color: #6b7482;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  z-index: 1;
+  max-inline-size: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zonerow__n {
+  color: var(--muted);
+}
+
+/*
+ * Belt and braces for the collapse the band strip caused (see `.bands`): a
+ * caption is `position: absolute` at the TOP of its row, so two adjacent short
+ * rows put two 13 px captions within a row gap of each other and the upper one
+ * becomes unhittable. Taking `.bands` out of the flow is what actually fixed it
+ * — the two strip rows are `1fr` of a box with a 120 px floor, so neither can be
+ * shorter than 58 px again — but a row that is ever shorter than its own caption
+ * is a defect waiting to come back, so the strips carry a floor of their own and
+ * their caption starts at the row's very top edge (the caption BUTTON already
+ * did; the plain M4 caption was 2 px lower, which is the 2 px that made the
+ * overlap read as a near-miss rather than as a bug).
+ */
+.zonerow--strip {
+  min-block-size: 18px;
+}
+
+.zonerow--strip > .zonerow__label {
+  inset-block-start: 0;
+}
+
+/*
+ * A row packs tighter as it fills and never scrolls. `--slots` counts SLOTS,
+ * not cards: a tapped tile is rotated and therefore 1.3934× wider (§2.3, §4.3).
+ * Past the threshold the margin goes negative and the tiles shingle
+ * left-over-right; `--i` as the z-index keeps that consistent.
+ */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  --step: min(
+    calc(var(--cw) + var(--gap-card)),
+    calc((100% - var(--cw)) / max(calc(var(--slots) - 1), 1))
+  );
+}
+
+.row > li + li {
+  margin-inline-start: calc(var(--step) - var(--cw));
+}
+
+.zonerow--start .row {
+  justify-content: flex-start;
+  padding-inline-start: 2px;
+}
+
+.row--bf {
+  --cw: var(--cw-bf);
+  --ch: var(--ch-bf);
+}
+
+.row--land {
+  --cw: var(--cw-land);
+  --ch: var(--ch-land);
+}
+
+.row--hand {
+  --cw: var(--cw-hand);
+  --ch: var(--ch-hand);
+}
+
+.row--strip {
+  --cw: var(--cw-strip);
+  --ch: var(--ch-strip);
+}
+
+.row--stack {
+  --cw: var(--cw-stack);
+  --ch: var(--ch-stack);
+}
+
+/* --- CardTile (report 10 §4) ---------------------------------------------- */
+
+.tile {
+  position: relative;
+  flex: 0 0 auto;
+  inline-size: var(--cw);
+  block-size: var(--ch);
+  z-index: var(--i, 0);
+}
+
+/* A tapped tile claims the ROTATED footprint, so nothing overlaps a neighbour
+   and `--slots` has already paid for the extra width (§4.3). */
+.tile--tapped {
+  inline-size: var(--ch);
+}
+
+.tile__btn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.tile__btn:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.tile__face {
+  position: relative;
+  inline-size: var(--cw);
+  block-size: var(--ch);
+  border-radius: calc(var(--cw) * 0.05);
+  overflow: hidden;
+  background: #0b0f13;
+  box-shadow:
+    0 1px 2px #000a,
+    inset 0 0 0 1px #ffffff14;
+  transition: transform 140ms ease;
+}
+
+.tile--tapped .tile__face {
+  transform: rotate(90deg);
+  box-shadow:
+    0 1px 2px #000a,
+    inset 0 0 0 2px var(--tap);
+}
+
+.tile__img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.tile__img--loaded {
+  opacity: 1;
+}
+
+/* The generated text card frame, always underneath the image: a 404, a slow CDN
+   or a fresh checkout with no art.json renders this and changes nothing about
+   the layout (§4.1). */
+.frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--cw) * 0.05);
+  gap: 1px;
+  font-size: calc(var(--cw) * 0.095);
+  line-height: 1.15;
+  background: linear-gradient(160deg, #2b3340, #171d25 45%, #10151b);
+  color: #dfe4ea;
+  overflow: hidden;
+}
+
+.frame__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.frame__name {
+  font-weight: 700;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.frame__art {
+  flex: 1 1 auto;
+  margin: 2px 0;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(45deg, #ffffff08 0 6px, #ffffff03 6px 12px),
+    #0f151c;
+}
+
+.frame__type {
+  color: #aab3c0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.frame__foot {
+  display: flex;
+  justify-content: flex-end;
+  color: #aab3c0;
+}
+
+.frame__pt {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: #e8edf4;
+}
+
+/* The card back is drawn in CSS, never fetched: Scryfall has no generic-back
+   endpoint and Forge's own art is not ours to ship (§4.2). */
+.tile__face--back .back {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 45% at 50% 40%, #3a2c52 0%, #241c36 55%, #140f20 100%);
+  box-shadow: inset 0 0 0 calc(var(--cw) * 0.06) #0b0813;
+}
+
+.tile__face--back .back::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 38%;
+  inset-inline-start: 50%;
+  inline-size: calc(var(--cw) * 0.3);
+  block-size: calc(var(--cw) * 0.3);
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: #6d5aa0;
+  opacity: 0.8;
+}
+
+/* P3 — the face only THIS seat may look at. Marked apart from the card's name,
+   because the table sees a nameless 2/2 and only this seat sees what it is. */
+.back__alt {
+  position: absolute;
+  inset-inline: 2px;
+  inset-block-end: 2px;
+  display: flex;
+  flex-direction: column;
+  background: #0b0f13e0;
+  border-inline-start: 2px solid var(--accent);
+  padding: 1px 2px;
+  font-size: calc(var(--cw) * 0.085);
+}
+
+.back__altname {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back__altpt {
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+/* Overlays live on `.tile`, NOT inside `.tile__face` — the face is what rotates
+   when a card taps, and a P/T pill that rotated with it is the single most
+   common way this goes wrong (§4.3). */
+.tile__overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 9px;
+}
+
+.tile__stripe {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  border-radius: 2px;
+  background: var(--opp);
+}
+
+.tile--mine .tile__stripe {
+  background: var(--you);
+}
+
+.tile__bottom {
+  position: absolute;
+  inset-inline-end: 2px;
+  inset-block-end: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tile__pt,
+.tile__loyalty,
+.tile__dmg {
+  font-family: var(--mono);
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 3px;
+  background: #0b0f13e6;
+  box-shadow: inset 0 0 0 1px #ffffff26;
+}
+
+.tile__loyalty {
+  background: #2a2118e6;
+  color: var(--warn);
+}
+
+/* Never subtracted from toughness — that would be a rules computation (§4.5). */
+.tile__dmg {
+  color: var(--error);
+  background: #2a1212e6;
+}
+
+.tile__counters {
+  position: absolute;
+  inset-inline-start: 5px;
+  inset-block-end: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-start;
+}
+
+.ctr {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 3px;
+  padding: 0 3px;
+  background: #0b0f13e6;
+  box-shadow: inset 0 0 0 1px #ffffff26;
+  font-size: 9px;
+}
+
+.ctr__n {
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.ctr__t {
+  color: var(--muted);
+}
+
+.tile--bf .ctr__t,
+.tile--land .ctr__t,
+.tile--strip .ctr__t,
+.tile--stack .ctr__t {
+  /* No room on a small tile: the count and the glyph carry it, and the full
+     text is in the tile's aria-label. */
+  display: none;
+}
+
+.ctr--plus {
+  color: var(--ok);
+}
+
+.ctr--minus {
+  color: var(--error);
+}
+
+.tile__badge {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 5px;
+  border-radius: 999px;
+  padding: 0 3px;
+  background: #0b0f13e6;
+}
+
+.tile__badge--sick {
+  color: var(--highlight);
+}
+
+/* Summoning sickness, only on the battlefield (§4.5). */
+.tile--sick .tile__face {
+  filter: grayscale(0.35) brightness(0.86);
+}
+
+.tile__tapmark {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: 3px;
+  color: var(--tap);
+}
+
+.tile__mark {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: 3px;
+  font-size: 11px;
+}
+
+.tile__mark--attack {
+  color: var(--arrow-attack);
+}
+
+.tile__mark--block {
+  color: var(--arrow-block);
+  inset-block-start: 14px;
+}
+
+.tile__micro {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline: 4px;
+  text-align: center;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: #0b0f13c0;
+  border-radius: 2px;
+}
+
+.tile--token .tile__face {
+  box-shadow:
+    0 1px 2px #000a,
+    inset 0 0 0 1px #ffffff14,
+    inset 0 0 0 2px #8d95a366;
+}
+
+.tile__note {
+  position: absolute;
+  inset-inline: 1px;
+  inset-block-end: -1px;
+  /* Was 8px on one truncated line, which lost the defender's name exactly when
+     it mattered (evening 2's own note). Two lines, and the `title` carries the
+     whole string for a hover. */
+  font-size: 9px;
+  line-height: 1.15;
+  color: var(--ink);
+  background: #0b0f13e6;
+  border-radius: 2px;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.tile--strip .tile__note,
+.tile--stack .tile__note {
+  font-size: 8px;
+  -webkit-line-clamp: 1;
+}
+
+/* Attachments render behind and down-right of their host, peeking out — the
+   standard tabletop read (§4.4). They take no slot of their own. */
+.tile__attachments {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.tile__attachment {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform: translate(calc(var(--a) * 14% + 12%), calc(var(--a) * 8% + 8%)) scale(0.82);
+}
+
+/* --- the three card states (report 10 §5.1) ------------------------------- */
+
+/* The engine named this id in `input.selectable.cardIds`. It is an OUTLINE for
+   an outstanding choice and it is NOT what gates the click (amendment M8). */
+.tile--selectable .tile__face {
+  box-shadow:
+    0 0 0 3px var(--select),
+    0 2px 10px #ffcf5c55;
+}
+
+/* Not colour alone: a corner caret says the same thing (§14 rule 3). */
+.tile--selectable::after {
+  content: "";
+  position: absolute;
+  inset-block-start: -4px;
+  inset-inline-end: -4px;
+  border: 6px solid transparent;
+  border-block-start-color: var(--select);
+  border-inline-end-color: var(--select);
+  pointer-events: none;
+}
+
+.tile--highlighted .tile__face {
+  outline: 2px dashed var(--highlight);
+  outline-offset: -2px;
+}
+
+.tile--focus .tile__face {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 12px #6fb4ff66;
+}
+
+.tile--weak .tile__face {
+  outline: 1px dotted var(--muted);
+}
+
+.tile--attacking .tile__face {
+  box-shadow:
+    0 0 0 2px var(--arrow-attack),
+    0 2px 8px #ff6b6b44;
+}
+
+.tile--blocking .tile__face {
+  box-shadow:
+    0 0 0 2px var(--arrow-block),
+    0 2px 8px #7ddf8744;
+}
+
+.tile__btn:hover:not(:disabled) .tile__face {
+  filter: brightness(1.12);
+}
+
+/* --- hover / focus zoom (§4.2's `display` variant) ------------------------ */
+
+.tile__zoom {
+  display: none;
+  position: absolute;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  inline-size: var(--zoom-w);
+  z-index: 80;
+  pointer-events: none;
+}
+
+.tile__zoom--up {
+  inset-block-end: calc(100% + 6px);
+}
+
+.tile__zoom--down {
+  inset-block-start: calc(100% + 6px);
+}
+
+.tile:hover > .tile__zoom,
+.tile:focus-within > .tile__zoom {
+  display: block;
+}
+
+.tile__zoomimg {
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: calc(var(--zoom-w) * 0.045);
+  box-shadow: 0 10px 34px #000c;
+  background: #0b0f13;
+}
+
+/* The Fan Content Policy and Scryfall's terms both require the credit to travel
+   with the image. */
+.tile__credit {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  background: #0b0f13e0;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-block-start: 2px;
+  text-align: center;
+}
+
+/* --- the hand ------------------------------------------------------------- */
+
+/* M4 follow-up 7: the fan's outer tiles left their grid cell — 121 x 159 in a
+   150 px row at 1280 x 720. A rotated box is taller than the card it holds
+   (h·cos θ + w·sin θ), and the row is exactly `--ch-hand`, so the TILE is what
+   has to give: 0.88 of the row, and the angle clamped at ±10°, makes the bounding
+   box fit for any hand up to about twenty cards. Nothing is clipped, and the
+   hover lift still reads. */
+.row--hand {
+  --cw: calc(var(--cw-hand) * 0.88);
+  --ch: calc(var(--ch-hand) * 0.88);
+  --fan-step: 1.6deg;
+}
+
+.hand {
+  position: relative;
+  block-size: 100%;
+}
+
+.hand__label {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 4px;
+  font-size: 9px;
+  color: #6b7482;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hand__more {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 4px;
+  font-size: 9px;
+}
+
+.hand__empty {
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  margin: 0;
+}
+
+.hand__fan > li {
+  transform-origin: 50% 150%;
+  transform: rotate(
+    clamp(-10deg, (var(--i) - (var(--n) - 1) / 2) * var(--fan-step, 1.6deg), 10deg)
+  );
+  transition:
+    transform 120ms ease,
+    filter 120ms ease;
+}
+
+.hand__fan > li:hover,
+.hand__fan > li:focus-within {
+  transform: translateY(-12px) scale(1.04);
+  z-index: 70;
+}
+
+/* --- the stack panel (report 10 §8) --------------------------------------- */
+
+.stackpanel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: var(--stack-w);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #131920e6;
+  padding: 0.25rem 0.35rem;
+  overflow: auto;
+  z-index: 20;
+}
+
+.stackpanel__head {
+  margin: 0 0 0.2rem;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.stackpanel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stackitem {
+  display: flex;
+  gap: 0.3rem;
+  align-items: flex-start;
+}
+
+.stackitem--next .stackitem__text {
+  color: var(--accent);
+}
+
+.stackitem__thumb .row {
+  inline-size: auto;
+  block-size: var(--ch-stack);
+}
+
+.stackitem__body {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stackitem__text {
+  font-size: 11px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.stackitem__meta {
+  font-size: 9px;
+}
+
+.stackitem__targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-block-start: 2px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 4px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.chip--target {
+  border-color: var(--arrow-target);
+  color: var(--arrow-target);
+}
+
+/* M6 — `stack[].yielded`: this ability is on always-yes / always-no. */
+.chip--yielded {
+  border-color: var(--select);
+  color: var(--select);
+}
+
+/* --- the log drawer (report 10 §10) --------------------------------------- */
+
+.drawer__handle {
+  inline-size: 100%;
+  text-align: start;
+  font-size: 10px;
+  background: #151b21cc;
+}
+
+/* M4 follow-up 6: 520 px over a 264 px rail covered the rail plus ~256 px of the
+   table. Report 10 §10 says "left edge, over the rail", so the width comes down
+   to the rail — and then every string in it has to wrap, because a log line is a
+   sentence and the drawer no longer has room for one on a line. */
+.drawer {
+  position: absolute;
+  inset-block: var(--pad);
+  inset-inline-start: var(--pad);
+  inline-size: var(--rail-l);
+  overflow-wrap: anywhere;
+  word-break: normal;
+  background: #0f141af2;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.4rem 0.6rem;
+  overflow: auto;
+  z-index: 85;
+  box-shadow: 0 10px 40px #000b;
+}
+
+.drawer__section {
+  border-block-end: 1px solid var(--felt-line);
+  padding-block-end: 0.3rem;
+  margin-block-end: 0.3rem;
+}
+
+.drawer__section h3 {
+  margin: 0 0 0.2rem;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.drawer__log,
+.drawer__events {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  max-block-size: 18rem;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.drawer__notices,
+.drawer__bands,
+.drawer__cards {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  font-size: 11px;
+}
+
+.drawer__meta {
+  margin: 0;
+  font-size: 10px;
+}
+
+.drawer__meta dt {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+.drawer__meta dd {
+  margin: 0 0 0.2rem;
+  font-family: var(--mono);
+}
+
+.notice--warn {
+  color: var(--warn);
+}
+
+.notice--error {
+  color: var(--error);
+}
+
+/* --- toasts --------------------------------------------------------------- */
+
+/* "Briefly" is a CSS animation and not a timer, deliberately: a timer in the
+   board would be an effect, and the render test folds every frame of every
+   fixture through `renderToStaticMarkup`, which runs none. The full history
+   stays in the log drawer — a toast is never the only copy. */
+.toasts {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.toast {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.05rem 0.4rem;
+  background: #151b21e6;
+  font-size: 11px;
+  animation: toast-fade 8s ease-out forwards;
+}
+
+/* M6 — "Your turn" left the toast strip (952 of the corpus's notices are that
+   one line). It is a tint across the table now, over information that is
+   already in the phase strip's header and the decision panel's title. */
+.turnflash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25;
+  border: 1px solid var(--ok);
+  border-radius: 4px;
+  animation: turn-flash 1.6s ease-out forwards;
+}
+
+@keyframes turn-flash {
+  0% {
+    opacity: 0.55;
+    box-shadow: inset 0 0 22px -6px var(--ok);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: none;
+  }
+}
+
+.toast--warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.toast--error {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+@keyframes toast-fade {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.banner--over {
+  position: absolute;
+  inset-block-start: 40%;
+  inset-inline: 10%;
+  z-index: 40;
+  text-align: center;
+}
+
+/* ===========================================================================
+ * The ask modal (report 10 §11; M4 restyles the shell, M5 replaces the bodies)
+ * =========================================================================== */
+
+.ask-modal {
+  position: absolute;
+  inset-block-start: 8%;
+  inset-inline: 12%;
+  z-index: 100;
+  border: 1px solid var(--accent);
+  border-left-width: 4px;
+  border-radius: 5px;
+  background: #141a21f7;
+  padding: 0.6rem 0.8rem;
+  max-block-size: 80%;
+  overflow: auto;
+  box-shadow: 0 16px 60px #000c;
+}
+
+.ask-modal__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block-end: 0.2rem;
+}
+
+.ask-modal__blocked {
+  margin-inline-start: auto;
+  color: var(--warn);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ask-modal__options {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  max-block-size: 22rem;
+  overflow: auto;
+}
+
+.ask-modal__option {
+  padding: 0.05rem 0;
+}
+
+/* The ask-local index (§5.1), which is what an answer echoes — never a Forge
+   id. Dimmed, so the eye lands on the engine's label first. */
+.ask-modal__index {
+  color: var(--muted);
+}
+
+/* The engine's own label, verbatim. Never parsed, never rebuilt. */
+.ask-modal__label {
+  color: var(--ink);
+}
+
+.ask-modal__body {
+  max-block-size: 26rem;
+  overflow: auto;
+}
+
+.ask-modal__list {
+  margin: 0.2rem 0;
+  padding-inline-start: 0;
+  list-style: none;
+}
+
+.ask-modal__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.05rem 0;
+}
+
+.ask-modal__row--on {
+  background: rgba(255, 207, 92, 0.12);
+}
+
+.ask-modal__row-actions {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 0.2rem;
+}
+
+.ask-modal__pick {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0.05rem 0.2rem;
+  text-align: start;
+  cursor: pointer;
+  flex: 1 1 auto;
+}
+
+.ask-modal__pick:hover:not(:disabled) {
+  background: var(--panel);
+}
+
+.ask-modal__tick {
+  color: var(--select);
+}
+
+.ask-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-block-start: 0.4rem;
+}
+
+.ask-modal__two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.6rem;
+}
+
+.ask-modal__two h4 {
+  margin: 0.2rem 0;
+  font-size: 12px;
+}
+
+.ask-modal__amount {
+  inline-size: 4rem;
+  margin-inline-start: auto;
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.ask-modal__text {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.15rem 0.4rem;
+  min-inline-size: 14rem;
+}
+
+.ask-modal__suggestions {
+  display: inline-flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.ask-modal__choices {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.ask-modal__reveal {
+  border-block-start: 1px dashed var(--line);
+  margin-block-start: 0.4rem;
+}
+
+.ask-modal__card {
+  margin: 0.2rem 0;
+}
+
+.ask-modal__remember {
+  display: block;
+  margin: 0.3rem 0;
+  color: var(--muted);
+}
+
+/* The ask modal still renders M1's plain card lines in its option bodies. */
+.cards {
+  list-style: none;
+  margin: 0.2rem 0;
+  padding: 0;
+}
+
+.card {
+  padding: 0.05rem 0;
+}
+
+/* ===========================================================================
+ * M4 evening 3 — arrows, overlays, the stack toggle (report 10 §9, §11, §12)
+ * =========================================================================== */
+
+/* One SVG over the whole board. `aria-hidden` in the markup, inert here: every
+   fact it draws is also text (§14 rule 4), so it may never eat a click. */
+.arrows {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+  z-index: 60;
+  overflow: visible;
+}
+
+/* Two strokes, dark under light, so an arrow stays readable over card art
+   (report 10 §9.2). */
+.arrow__under {
+  fill: none;
+  stroke: #05080bcc;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+.arrow__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.arrow--target .arrow__line,
+.arrow--target .arrow__head {
+  stroke: var(--arrow-target);
+  fill: var(--arrow-target);
+}
+
+.arrow--attack .arrow__line,
+.arrow--attack .arrow__head {
+  stroke: var(--arrow-attack);
+  fill: var(--arrow-attack);
+}
+
+.arrow--block .arrow__line,
+.arrow--block .arrow__head {
+  stroke: var(--arrow-block);
+  fill: var(--arrow-block);
+}
+
+/* The targeting arrow is also dashed, so the three classes differ in more than
+   hue (§14 rule 3) — curvature, colour and dash between them. */
+.arrow--target .arrow__line {
+  stroke-dasharray: 7 4;
+}
+
+.arrow--block .arrow__line {
+  stroke-dasharray: 2 3;
+}
+
+.arrow__head {
+  stroke-width: 1;
+}
+
+/* `C` — Forge's SHORTCUT_SHOWCOMBAT. Forge opens a panel; ours are always drawn,
+   so the key emphasises them and dims everything else. */
+.arrows--combat .arrow--attack .arrow__line,
+.arrows--combat .arrow--block .arrow__line {
+  stroke-width: 3.5;
+}
+
+.arrows--combat .arrow--target {
+  opacity: 0.4;
+}
+
+/* --- the stack panel's toggle (S) ----------------------------------------- */
+
+.stackpanel__toggle {
+  inline-size: 100%;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  font: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stackpanel--shut {
+  block-size: auto;
+  inset-block-end: auto;
+  background: #131920cc;
+}
+
+/* --- Z / H — the two full overlays (report 10 §11, §12) ------------------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+}
+
+.overlay__scrim {
+  position: absolute;
+  inset: 0;
+  background: #05080bcc;
+}
+
+.overlay__panel {
+  position: relative;
+  max-block-size: 92%;
+  overflow: auto;
+  background: #131920f7;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  box-shadow: 0 18px 60px #000d;
+}
+
+.overlay__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.overlay__head h2 {
+  margin: 0 0 0.3rem;
+  font-size: 13px;
+}
+
+.hotkeys {
+  inline-size: min(780px, 86vw);
+}
+
+.hotkeys__table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  font-size: 11px;
+}
+
+.hotkeys__table th,
+.hotkeys__table td {
+  text-align: start;
+  padding: 0.12rem 0.4rem;
+  border-block-end: 1px solid var(--felt-line);
+  vertical-align: top;
+}
+
+.hotkeys__table thead th {
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+}
+
+.hotkeys__table kbd {
+  white-space: nowrap;
+}
+
+/* M6 — the "not yet" row styling is gone with the rows it described: every
+   binding in KEYMAP now does something, so the milestone is provenance and the
+   help screen greys nothing out. */
+
+.cardzoom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.row--zoom {
+  --cw: min(420px, 34vw, 46vh);
+  --ch: calc(var(--cw) * 1.3934);
+  inline-size: auto;
+}
+
+/* `Z` is "let me read this card", so the zoom draws it upright even when it is
+   tapped — the ⭮ mark and the aria-label still say that it is. A rotated card
+   filling the overlay is the state the BOARD is for. */
+.row--zoom .tile--tapped {
+  inline-size: var(--cw);
+}
+
+.row--zoom .tile--tapped .tile__face {
+  transform: none;
+}
+
+.cardzoom__credit {
+  font-size: 10px;
+  margin: 0;
+}
+
+/* --- the ask modal's shell (report 10 §11) -------------------------------- */
+
+.ask-modal__scrim {
+  position: absolute;
+  inset: 0;
+  background: #05080bb0;
+  z-index: 99;
+}
+
+/* §5 — advisory for the client, enforced by the server. A static bar, because a
+   countdown that expired and then did nothing would misstate who is counting. */
+.ask-modal__timeout {
+  block-size: 3px;
+  background: var(--felt-line);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-block-end: 0.3rem;
+}
+
+.ask-modal__timeoutbar {
+  display: block;
+  block-size: 100%;
+  inline-size: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--warn));
+}
+
+/* --- a key that was pressed and did nothing (report 10 §12.2 rule 4) ------ */
+
+.btn--flash {
+  outline: 2px solid var(--warn);
+  outline-offset: 1px;
+}
+
+.hint--flash {
+  color: var(--warn);
+}
+
+/* ===========================================================================
+ * Motion (report 10 §14 rule 5) — the end states are unchanged.
+ * =========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .tile__face,
+  .tile__img,
+  .hand__fan > li {
+    transition: none;
+  }
+
+  .hand__fan > li:hover,
+  .hand__fan > li:focus-within {
+    transform: none;
+  }
+
+  .toast {
+    animation: none;
+  }
+
+  /* Arrows are decoration; their end state is what carries the meaning. The
+     dash pattern STAYS — it is one of the three non-colour cues (§14 rule 3)
+     and nothing about it moves. Only animation goes. */
+  .arrow__line {
+    animation: none;
+  }
+
+  .tile__zoom,
+  .overlay,
+  .ask-modal {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ===========================================================================
+ * M5 — nothing dead-ends: the pool as a control, the ask on the board, the
+ * zone browsers, the declared bands, the pending arrow.
+ * =========================================================================== */
+
+/* --- the mana pool, when it is a control (act: useMana, §2.2) -------------- */
+
+.pool--live {
+  padding: 1px 3px;
+  border: 1px dashed var(--select);
+  border-radius: 999px;
+}
+
+button.pool__pip {
+  border: 0;
+  background: none;
+  padding: 0 1px;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pool__pip--live {
+  color: var(--ink);
+}
+
+button.pool__pip:hover,
+button.pool__pip:focus-visible {
+  outline: 1px solid var(--select);
+  border-radius: 999px;
+}
+
+.pool__key {
+  font-size: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+/* --- the pool between a `useMana` and the next snapshot -------------------- */
+
+/* Forge pushes no `state` for a mana payment (§2.2, amendment M30), so between
+   the act and the next snapshot the counts on screen are known to be behind.
+   Dimmed, with `·` in place of the number: still clickable, because paying {2}
+   with two blue mana is two clicks and the second one is real, but no longer
+   printing a number the wire has not confirmed. "A hint that lies is worse than
+   no hint" (report 10 §5). */
+.pool--provisional {
+  border-style: dotted;
+  opacity: 0.55;
+}
+
+.pool__pip--provisional .pool__n {
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+/* M6 — the same fact on the Undo button: an `undo` is applied by the engine and
+   answered with an `input` (Cancel goes from `Undo (1)` to `End Turn`) but with
+   no snapshot, so `state.undo.depth` is a frame behind until one arrives. */
+.btn--provisional {
+  border-style: dotted;
+}
+
+/* --- a tile the outstanding ask names (the 'ask' outline variant) ---------- */
+
+/* Deliberately NOT `--select`: `selectable` is the engine's explicit selection
+   set inside an `input`, and this is a candidate of a blocking `ask`. Two
+   different states, two colours, and the caret below is the third cue (§14
+   rule 3) so it is never colour alone. */
+.tile--ask .tile__face {
+  box-shadow:
+    0 0 0 3px var(--arrow-target),
+    0 2px 12px #c79bff55;
+}
+
+.tile--ask::before {
+  content: "?";
+  position: absolute;
+  inset-block-start: -6px;
+  inset-inline-start: -4px;
+  z-index: 3;
+  font-size: 10px;
+  font-weight: 700;
+  color: #17111f;
+  background: var(--arrow-target);
+  border-radius: 999px;
+  inline-size: 13px;
+  block-size: 13px;
+  line-height: 13px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.tile--picked .tile__face {
+  box-shadow:
+    0 0 0 3px var(--ok),
+    0 2px 12px #7ddf8766;
+}
+
+.tile--picked::before {
+  content: "✓";
+  background: var(--ok);
+}
+
+/* §5.3 — assign_damage, on the blockers themselves. */
+.tile__amount {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #0f141aee;
+  border: 1px solid var(--arrow-attack);
+  border-radius: 4px;
+  padding: 1px 2px;
+}
+
+.tile__amount input {
+  inline-size: 34px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: center;
+}
+
+.tile__lethal {
+  font-size: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.rail__name--ask {
+  outline: 2px solid var(--arrow-target);
+}
+
+.rail__name--picked {
+  outline: 2px solid var(--ok);
+}
+
+/* --- the ask picker, in the decision panel -------------------------------- */
+
+.askpick {
+  border: 1px solid var(--arrow-target);
+  border-radius: 5px;
+  background: #1a1524cc;
+  padding: 0.3rem 0.4rem;
+  margin-block-end: 0.35rem;
+}
+
+.askpick__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: baseline;
+  font-size: 10px;
+}
+
+.askpick__blocked {
+  color: var(--warn);
+}
+
+.askpick__count {
+  margin: 0.2rem 0;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.askpick__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-block-size: 30vh;
+  overflow-y: auto;
+}
+
+.askpick__row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-block-end: 1px solid var(--felt-line);
+  padding: 1px 0;
+}
+
+.askpick__row--on {
+  background: #1d2a1f;
+}
+
+.askpick__thumb,
+.ask-modal__thumb {
+  inline-size: var(--cw-strip);
+  block-size: var(--ch-strip);
+  flex: 0 0 auto;
+}
+
+.askpick__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-block-start: 0.3rem;
+}
+
+.decision__chosen {
+  margin: 0.2rem 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink);
+}
+
+/* --- the zone browser ----------------------------------------------------- */
+
+button.zonerow__label,
+button.zonerow__open {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: start;
+  padding: 0;
+  font: inherit;
+}
+
+/* The caption overlaps the row by design (report 10 §2.3), and on a `--start`
+   strip the first tile lands directly under it — measured in the browser on
+   2026-09-12, where the click reached the tile and not the button. A control
+   has to be on top of what it overlaps, so the button (and only the button,
+   never the plain caption) rises above the tiles and takes a chip background to
+   stay readable over card art. It covers the top ~11 px of the first tile's
+   left edge; the rest of that tile is still its own click. */
+button.zonerow__label {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 2px;
+  z-index: 60;
+  font-size: 9px;
+  color: #7d8794;
+  background: #0f141ad9;
+  border-radius: 3px;
+  padding: 0 3px;
+  /* M4's caption is `pointer-events: none` — it is decoration over the row, and
+     a caption that ate a card's click would be worse than no caption. A BUTTON
+     has to take its own clicks back, and the measurement that found this is in
+     `docs/evidence/m5-board.md` §4: with the property inherited, the click
+     reached the `ul.row` underneath and the panel never opened. */
+  pointer-events: auto;
+}
+
+button.zonerow__label:hover,
+button.zonerow__open:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.zonebrowser {
+  position: absolute;
+  inset-block-start: var(--pad);
+  inset-inline-end: calc(var(--rail-r) + var(--pad) * 2);
+  inline-size: min(560px, 52vw);
+  max-block-size: 70vh;
+  overflow: auto;
+  z-index: 90;
+  background: #0f141af5;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  box-shadow: 0 12px 44px #000c;
+}
+
+.zonebrowser__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.zonebrowser__head h2 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.zonebrowser__panel h3 {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 11px;
+}
+
+.zonebrowser__cards {
+  --cw: var(--cw-bf);
+  --ch: var(--ch-bf);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-card);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* The browser's tiles sit in a wrapping grid, not a shingled row: the whole
+   point of opening a zone is that nothing overlaps. */
+.zonebrowser__cards > li {
+  margin-inline-start: 0;
+}
+
+/* --- the declared bands --------------------------------------------------- */
+
+/*
+ * **The band strip is an OVERLAY, not a row** — and that is a correction, not a
+ * preference. It shipped as an in-flow child of `.table__middle`, whose
+ * `grid-template-rows` is `1fr 1fr` (the two seats' graveyard/exile/command
+ * strips). A third child therefore landed in an IMPLICIT auto row, and an auto
+ * row is sized to its content *before* the `1fr` rows are given anything. At the
+ * repo's own reference viewport — 1600 × 900, where the middle is already
+ * sitting on its `--middle-min` floor of 120 px — that measured
+ * `gridTemplateRows: "0px 0px 112px"`: both strip rows collapsed to zero, their
+ * 62 px tiles spilled over everything below, and the two absolutely-positioned
+ * caption BUTTONS of adjacent rows landed 4 px apart, so the opponent's zone
+ * control was 4 px of hit area under the player's own. Measured again at 1366 ×
+ * 768, 1440 × 900 and 1600 × 900, live and in replay (`docs/evidence/m5-board.md`
+ * §11, which carries the before/after `gridTemplateRows` at four viewports —
+ * this repo has no DOM test environment to assert one in).
+ *
+ * There is no in-flow answer at that viewport: two 62 px strip rows plus a gap
+ * already want 128 px of a 120 px box. So the strip leaves the flow the way
+ * `.stackpanel` next to it already has — anchored to the middle's bottom edge,
+ * stopping short of the stack column, capped at the middle's height and
+ * scrolling past that. The two `1fr` rows go back to the 58 px they had in M4.
+ *
+ * `z-index: 55` is above any tile (a tile's z-index is its `--i`, i.e. its index
+ * in the row) and below the 60 the caption buttons carry, so the two zone-browser
+ * controls stay clickable *over* the strip — which is the whole reason the number
+ * is 55 and not 65. The background goes from `cc` to `e6` because it now sits
+ * over card art rather than over felt.
+ */
+.bands {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  /* Shrink-to-fit rather than stretched, so the strip covers only as much of the
+     two zone rows as it actually needs. `.table__middle` reserves the stack
+     column with `padding-inline-end`, and an absolute inset resolves against the
+     PADDING box — so the reservation has to be repeated here or a wide strip
+     would slide under `.stackpanel`. */
+  max-inline-size: calc(100% - var(--stack-w) - 10px);
+  z-index: 55;
+  border: 1px solid var(--felt-line);
+  border-radius: 5px;
+  background: #131a20e6;
+  padding: 0.2rem 0.35rem;
+  max-block-size: 100%;
+  overflow: auto;
+}
+
+.bands__head {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 400;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: baseline;
+}
+
+.bands__list {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.band {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  font-size: 10px;
+}
+
+.band__side {
+  display: inline-flex;
+}
+
+.band__row {
+  inline-size: auto;
+  block-size: var(--ch-stack);
+  justify-content: flex-start;
+}
+
+.band__row > li {
+  margin-inline-start: 0;
+}
+
+.band__arrow {
+  color: var(--arrow-attack);
+}
+
+.band__defender {
+  color: var(--ink);
+}
+
+.band__blocked {
+  color: var(--arrow-block);
+}
+
+/* --- the pending-target arrow (M5) ---------------------------------------- */
+
+.arrow--pending .arrow__line,
+.arrow--pending .arrow__head {
+  stroke: var(--select);
+  fill: var(--select);
+}
+
+.arrow--pending .arrow__line {
+  stroke-dasharray: 3 4;
+  stroke-width: 2.5;
+}
+
+/* --- the modal's card rows ------------------------------------------------ */
+
+.ask-modal__row--card {
+  align-items: center;
+}
+
+.ask-modal__reveal-cards {
+  --cw: var(--cw-strip);
+  --ch: var(--ch-strip);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-card);
+  list-style: none;
+  margin: 0.2rem 0;
+  padding: 0;
+}
+
+.ask-modal__reveal-cards > li {
+  margin-inline-start: 0;
+}
+
+/* --- M7: the arena ------------------------------------------------------- */
+
+/*
+ * The 3D renderer is one flex child of `.app`, exactly where `<Board>` goes, so
+ * the bar and the replay controls above it are unchanged and the canvas gets
+ * every remaining pixel. `min-block-size: 0` is load-bearing: without it a flex
+ * item refuses to shrink below its content and the canvas grows the page
+ * instead of fitting it.
+ *
+ * Report 09 §2.1 rule 2: the decision UI is plain DOM stacked ABOVE the canvas,
+ * never drei `<Html>`. `.arena__layer` is that layer — `pointer-events: none` on
+ * the container so the canvas keeps every click, `auto` on each widget. E6
+ * mounts the decision strip and M5's twelve ask modals in it; E2 put the art
+ * credit there, because the Fan Content Policy requires the credit to travel
+ * with the art and a `<canvas>` has no markup to hang it on.
+ */
+.arena {
+  position: relative;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  background: #0a0d12;
+}
+
+.arena canvas {
+  display: block;
+  touch-action: none;
+}
+
+.arena__layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  /* Top, not bottom: the own hand fans across the bottom of the frame (the
+     camera rest pose frames it there deliberately, §8 rule 6) and a credit line
+     over it hides the cards the player is about to play. The felt above the
+     opponent's rank is the one part of the table that is always empty. */
+  justify-content: flex-start;
+  padding: 0.4rem 0.6rem;
+  z-index: 10;
+}
+
+/*
+ * **The layer's `pointer-events: none` is a default, and a widget that forgets
+ * to opt out of it ships INERT.** That is not a hypothetical: M5's `<AskModal>`
+ * was mounted here from the day E6 opened the seat and could not be clicked at
+ * all — `getComputedStyle(answerButton).pointerEvents === "none"`, and
+ * `elementsFromPoint` at the button's own centre returned the `<canvas>`, which
+ * wins the hit test through a transparent parent. Escape still answered `null`,
+ * so the arena quietly took the engine's default for every one of M5's twelve
+ * ask kinds: no option pickable, no list reorderable, no number typeable. The
+ * `?`/`H` overlay had the same defect (its Close button and its click-to-close
+ * scrim), for the same one-word reason.
+ *
+ * So every widget class the layer mounts is listed here, and
+ * `web/test/liveness.test.ts` asserts the list covers every component
+ * `Arena.tsx` puts inside `.arena__layer` — the next widget added to this layer
+ * cannot ship inert without that test going red.
+ *
+ * **The ask scrim catches clicks too, and that is deliberate.** While an `ask`
+ * is outstanding the Forge game thread is parked inside that call listening for
+ * exactly one thing (§5), so a card click then is a click into a void — which is
+ * precisely what the 2D board's scrim already prevents (`.ask-modal__scrim` is
+ * `inset: 0` inside `.board` and covers its decision panel too). The arena
+ * inherits M5's modality along with M5's modals; `Esc` (§5.4's always-legal
+ * `null`) and `CTRL+Q` are the keyboard's way past it, exactly as on the board.
+ */
+.arena__layer .ask-modal,
+.arena__layer .ask-modal__scrim,
+.arena__layer .overlay,
+.arena__layer .arena__over {
+  pointer-events: auto;
+}
+
+/*
+ * **The credit line and the inspect chip share one row** (the play-distance
+ * audit, D265): D241 put the chip on a row of its own under the credit, the
+ * column's fourth, and at a live seat whose prompt wraps that took the chrome to
+ * 137 px — past `HUD_TOP_PX` (128), the band the carriers, the duelists and the
+ * seat plates are measured against. The wrapper is layout only and keeps the
+ * layer's `pointer-events: none`; it stops 15rem short of the right edge, as the
+ * strips do, for the opponent's plate.
+ *
+ * **The credit keeps its words; the chip gives way** (D265 point 2 as its second
+ * fix pass amended it; `arena/hud.ts`'s `CREDIT_ROW`, held by `hud.test.ts`). A
+ * shrink factor cannot rank two items — it is weighted by each one's width, so
+ * even 1 against the chip's 1,000 cut the credit by 0.3 px, and an ellipsis cut
+ * "…Unofficial Fan Conte…" (`human-sideboard-7`@1195 at 1280 × 800). So the
+ * credit does not shrink at all: it takes its whole width up to what the row
+ * leaves beside the chip's floor, and no cap of its own stops it sooner (the
+ * third fix pass dropped M7's 980 px), `--inspect-floor` — the chip's key, "⌕
+ * inspect · I" and the gap before its reason (or "⌕ inspect  · I" round a
+ * name), 14 characters of the mono face (0.6021em each, DejaVu Sans Mono's
+ * advance as Chromium drew it here), plus its padding and border. Only a
+ * credit longer than that gives way, and then only its artist list
+ * (`.arena__credit-lead`): Scryfall's name opens it and the notice the art
+ * travels with — © Wizards of the Coast · Unofficial Fan Content, the Fan
+ * Content Policy's words — closes it whole (`.arena__credit-notice`).
+ */
+.arena__creditrow {
+  --inspect-floor: calc(14 * 0.6021em + 0.9rem + 2px);
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  column-gap: 0.4rem;
+  min-inline-size: 0;
+  max-inline-size: calc(100% - 15rem);
+}
+
+.arena__credit {
+  pointer-events: auto;
+  display: flex;
+  flex: 0 0 auto;
+  min-inline-size: 0;
+  /* No width cap of its own (the audit's third fix pass): M7's 980px, from when
+     the credit stood alone, cut the artist list at 1600 px while the chip still
+     held 350 — the row's 15rem keeps it off the opponent's plate. */
+  max-inline-size: calc(100% - var(--inspect-floor) - 0.4rem);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: #0b0e13c4;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.arena__credit-lead {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__credit-notice {
+  flex: none;
+}
+
+.arena__credit strong {
+  color: var(--ink);
+}
+
+/*
+ * **The inspect chip** (D241): the hover surface's button — the arena has no card
+ * zoom — for the card `I` would inspect. A link when that card is face up with a
+ * figure; inert, with its reason, otherwise (a face-down card is never named).
+ * In the layer, so it opts back into pointer events (liveness.test.ts's table).
+ */
+.arena__inspect {
+  pointer-events: auto;
+  /* Beside the credit, on its row (D265): the chip gives way, the credit does
+     not (above), down to its floor — its key, "⌕ inspect · I", whole. A 13ch
+     floor on this border-box had left out the padding and the border, and one
+     ellipsis over the whole chip then ate the key itself, "⌕ inspect · …" (the
+     audit's second fix pass); now the key is a part that never shrinks, and
+     only the name or the reason is cut, whole in the tooltip. */
+  flex: 0 1 auto;
+  display: flex;
+  min-inline-size: var(--inspect-floor);
+  max-inline-size: 560px;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #0b0e13d9;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* The chip's key, "⌕ inspect · I", is never cut; its name or reason is. */
+.arena__inspect-key {
+  flex: none;
+}
+
+.arena__inspect-what {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+a.arena__inspect:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arena__inspect--inert {
+  color: var(--muted);
+  cursor: default;
+}
+
+.arena__inspect-why {
+  margin-inline-start: 0.35rem;
+  opacity: 0.8;
+}
+
+/*
+ * **The caption strip** (D255, D256): the story's moment for the frame on screen,
+ * the one or two before it dimmed above, a turn marker in the turn player's
+ * colour. Over the table's right edge, between the two seat plates: it grows
+ * upward from just above yours, and over every board frame of the corpus that
+ * corner is felt at the table view — the stack stands above it, your hand and
+ * ranks to its left (`caption.test.ts` measures it). Every number below is
+ * `arena/caption.ts`'s `CAPTION_BOX`, and `caption.test.ts` holds the two
+ * together: the plate's inset, 7.4rem up (7.2 px over your plate's 111.2), at
+ * most `min(28rem, 19.5vw)` wide — what the right end of a full land rank leaves
+ * — and 13rem tall. A current line is clamped to two lines and an earlier one to
+ * one, and each turn's lines sit under that turn's marker; the busiest caption
+ * that fits (two markers, one earlier line, four current) is 208 px, the cap —
+ * past it the column is cut at the top, the oldest line first — and a clamped
+ * line's whole sentence is its tooltip. In the layer, so it opts back into pointer events
+ * (liveness.test.ts's widget table).
+ */
+.arena__caption {
+  pointer-events: auto;
+  position: absolute;
+  inset-inline-end: 0.6rem;
+  inset-block-end: 7.4rem;
+  z-index: 15;
+  box-sizing: border-box;
+  inline-size: min(28rem, 19.5vw);
+  max-block-size: 13rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-inline-start: 3px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13e0;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.arena__caption--you {
+  border-inline-start-color: var(--you);
+}
+
+.arena__caption--opp {
+  border-inline-start-color: var(--opp);
+}
+
+.arena__caption-turn {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__caption-turn--you {
+  color: var(--you);
+}
+
+.arena__caption-turn--opp {
+  color: var(--opp);
+}
+
+.arena__caption-turn--before {
+  opacity: 0.75;
+}
+
+.arena__caption-line {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.arena__caption-line--before {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  color: var(--muted);
+  opacity: 0.75;
+}
+
+.arena__caption-card {
+  font-weight: 600;
+}
+
+.arena__caption-line--before .arena__caption-card {
+  font-weight: 500;
+}
+
+.arena__caption-more {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Board ⇄ arena. A link, because the hash really is the state. */
+.viewtoggle {
+  flex: 0 0 auto;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--ink);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.viewtoggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/*
+ * M7 E4 — the cue controls, in the DOM sibling layer above the canvas.
+ *
+ * They drive the CUE QUEUE, not the transport: `<ReplayControls>` above the
+ * canvas moves the frame log, and these move the film played over it. Both can
+ * run, and either can be paused, without the other noticing — which is what
+ * makes "pause the animation and read the board" and "step one batch with the
+ * log stopped" two different, useful things.
+ *
+ * `pointer-events: auto` here and nowhere else on the layer: the canvas must
+ * keep every click these buttons do not want (report 09 §2.1 rule 2).
+ */
+.arena__cues {
+  pointer-events: auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  /* 0.25rem, not 0.35 (the play-distance audit, D265): ten gaps, 16 px — what
+     the 1280 px row was short of with the strip idle. */
+  gap: 0.25rem;
+  margin-block-end: 0.3rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13d9;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.arena__cues button,
+.arena__cues select {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.arena__cues button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arena__cues button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.arena__cues label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--muted);
+}
+
+/*
+ * **The queue's status is a FIXED width** (the play-distance audit, D265;
+ * `arena/hud.ts`'s `CUE_STRIP`, held by `hud.test.ts`). It grew by ~92 px the
+ * moment a batch started ("idle" → "12 steps · 4155 ms"), so the camera switcher
+ * beside it wrapped onto a row of its own over the opponent's rank whenever cues
+ * played, and back when they stopped. A box of `statusCh.wide` characters holds
+ * the longest status `cueStatusOf` writes, so the strip is as wide playing as
+ * idle. Below `narrowBelowPx` the strip takes its narrow form: the word *speed*
+ * folds into the select's tooltip and the status is the seconds of film left,
+ * in `statusCh.narrow` characters — the whole status is the box's tooltip.
+ */
+.arena__cues-status {
+  display: inline-flex;
+  align-items: center;
+  /* A rule before it (the audit's fix pass): beside the caption checkbox with
+     nothing between them, the status read as that checkbox's label — "caption
+     idle", "caption 2.0 s". */
+  border-inline-start: 1px solid var(--line);
+  padding-inline-start: 0.3rem;
+}
+
+.arena__cues-status-wide,
+.arena__cues-status-narrow {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.arena__cues-status-wide {
+  inline-size: 21ch;
+}
+
+.arena__cues-status-narrow {
+  display: none;
+  inline-size: 6ch;
+}
+
+@media (max-width: 1399px) {
+  .arena__cues-speed,
+  .arena__cues-status-wide {
+    display: none;
+  }
+
+  .arena__cues-status-narrow {
+    display: inline-block;
+  }
+}
+
+/*
+ * M7 Tier 2 (T8) — the camera switcher: five views, the director, spectator.
+ *
+ * Beside the cue strip, in the same top-left column, because that is the part of
+ * the frame the table never needs (the own hand fans across the bottom, the seat
+ * plates hold the right edge). `pointer-events: auto` for the same reason as
+ * every other widget in `.arena__layer`, and `liveness.test.ts` holds the class
+ * to it. The view on screen is outlined; a view this seat may not use is dimmed
+ * but still takes the click, and the hint line says why.
+ *
+ * **One row with the cue strip, not a row of its own** (slice-2 verification
+ * fix). As a fourth row it sat at y 146–175, 670 px wide at every width, over the
+ * opponent's bust (Tier 2 follow-up 10 — which this does not close: the decision
+ * strip, the cue strip and the credit line still cover most of the bust at
+ * 1024 × 700, exactly as they did in slice 1). `.arena__strips` is a layout wrapper
+ * only: it keeps the layer's `pointer-events: none`, so the canvas still owns
+ * every pixel between the two strips. It stops 15rem short of the right edge for
+ * the same reason `.arena__decision` does — the opponent's plate is there — and
+ * wraps rather than running under it. Below 1840 px each view button collapses
+ * to its key; the name stays in the tooltip and in `aria-label`. (It was 1400
+ * until the caption's checkbox joined the cue strip, D256: at 1600 px the two
+ * strips with their labels then measured 728 + 672 px against the 1,360 the row
+ * has, and the switcher wrapped to a row of its own — the defect this row fixed.
+ * It was 1800 until the rebase onto the sound cues put their checkbox beside it:
+ * the cue strip was 790 px idle and up to 882 px while cues played, so with the
+ * labels the row needed 1,560 px, and at 1800 px — 1,540 px of row — the switcher
+ * wrapped whenever cues played; 1900 until the play-distance audit fixed the
+ * status's width, D265: the wide strip is now 886 px idle and playing alike, the
+ * labelled row needs 1,565 px, which a viewport of 1,824 px gives, and 1840 keeps
+ * 16 px in hand. `arena/hud.ts`'s `CUE_STRIP` holds every one of these numbers,
+ * and `hud.test.ts` holds this stylesheet to it.)
+ */
+.arena__strips {
+  align-self: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: 0.4rem;
+  max-inline-size: calc(100% - 15rem);
+}
+
+@media (max-width: 1839px) {
+  .arena__view-label,
+  .arena__views-title {
+    display: none;
+  }
+}
+
+.arena__views {
+  pointer-events: auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-block-end: 0.3rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13d9;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.arena__views-title {
+  color: var(--muted);
+}
+
+.arena__view {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.arena__view:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arena__view--on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  color: var(--accent);
+}
+
+.arena__view--off {
+  opacity: 0.45;
+  cursor: help;
+}
+
+/*
+ * **The director's shot is a mark, not a word** (D265, the audit's third fix
+ * pass): the view the director is on draws its border dashed in the accent — the
+ * same 1-px border, so the same width — and the director's own tooltip names it.
+ * As text in the director's button (" · Opp. shoulder") it grew the switcher by
+ * up to 106 px the moment `6` was pressed and wrapped it under the cue strip.
+ */
+.arena__view--shot {
+  border-style: dashed;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.arena__view--spectator {
+  margin-inline-start: 0.35rem;
+}
+
+/*
+ * M7 E6 — the decision strip: the arena's seat.
+ *
+ * It is the top line of the layer because that is the one part of the table
+ * that is always empty (the hand fans across the bottom), and because the
+ * engine's prompt is the thing a player looks at between every pair of clicks.
+ * The buttons carry the ENGINE's labels, verbatim, and the focus ring is
+ * `input.buttons.focus` — which button SPACE presses (§4, D45).
+ */
+.arena__decision {
+  pointer-events: auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  /* **One line of items, never two** (D267 as the audit's second fix pass
+     amended it): every item below is either one line that keeps its width (the
+     engine's buttons, Concede) or at most two lines that give way (the prompt,
+     the watching line, the outlined-cards line, the hint, the notice), so the
+     bar is never taller than the prompt's two lines, whatever is in it. It
+     wrapped until then, and a key that did nothing — `I` with no card under the
+     pointer — put its hint and the "Your turn" notice on a second line under a
+     two-line prompt: 70.5 px of bar, 136.7 of column (`human-ability-42`@1060). */
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  margin-block-end: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  /* **The last 15rem of the row belong to the opponent's plate.** The strip grows
+     with the engine's own prompt, and at 1280 a full-width one reached x=1110
+     while `.arena__seats` starts at 1108 — two pixels of overlap, and a longer
+     prompt is a plate with a sentence through it. The plates are absolutely
+     positioned, so nothing else reserves the space for them. */
+  max-inline-size: min(1100px, calc(100% - 15rem));
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13e6;
+  font-size: 12px;
+}
+
+/*
+ * **The engine's prompt is two lines at most** (D267; `arena/hud.ts`'s
+ * `HUD_PROMPT`, held by `hud.test.ts`). The bar is the chrome column's first
+ * row, and a prompt that wrapped to five lines (Quake's targeting trigger, 250
+ * characters) took the column to 167 px — past `HUD_TOP_PX`, with the credit row
+ * over the far rank the prompt asked you to target. It starts from nothing
+ * (`flex: 1 1 0`) and grows into the room the bar has beside its buttons (the
+ * bar is still at most `min(1100px, 100% - 15rem)`), so a spell's "…Pay Mana
+ * Cost: {1}{G}" fits two lines from 1280 px; past two lines it is cut with an
+ * ellipsis. **It never gives way below 46ch** (the second fix pass: from a zero
+ * basis a long hint beside it squeezed it to a sliver and pushed the rest onto
+ * a second line) — the width the prompt had before D267, two lines of it about
+ * ninety characters. The text is the engine's, whole and verbatim: it is all in
+ * the DOM (the `role="status"` region reads all of it), all of it is the
+ * element's tooltip, and hovering the prompt opens it in place.
+ */
+.arena__decision .prompt {
+  margin: 0;
+  flex: 1 1 0;
+  min-inline-size: min(46ch, 100%);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--ink);
+}
+
+.arena__decision .prompt:hover {
+  -webkit-line-clamp: unset;
+}
+
+/* The engine's buttons and Concede keep their width: one line each. */
+.arena__decision > .btn {
+  flex: none;
+}
+
+/*
+ * What gives way beside the prompt, each at most two lines and cut past them,
+ * whole in its tooltip (D267, the second fix pass): the outlined-cards line,
+ * the "not asked yet" line, the key hint (`planKey`'s `inert` reason — where
+ * `I` with nothing to inspect says so, D241) and the engine's last notice.
+ */
+.arena__decision > .muted,
+.arena__decision > .arena__hint,
+.arena__decision > .arena__notice {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* "click one of the 16 outlined cards" stays whole in its two lines. */
+.arena__decision > .muted {
+  min-inline-size: 11em;
+}
+
+/* The engine's notice is a title — "Your turn", "Not selectable" — and keeps
+   its width up to 16em; the hint is what gives way. */
+.arena__decision > .arena__notice {
+  flex-shrink: 0;
+  max-inline-size: 16em;
+}
+
+.arena__decision .btn--focused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/*
+ * Spectating (amendment M47, D118) — **the "watching" line**, in the decision
+ * strip's place when every seat is an AI: an AI-vs-AI stream never asks this
+ * seat anything (§8.4), so the strip says what is being watched — each deck by
+ * NAME with its Forge profile, the seat the recording sees from, and "following"
+ * while the log is still being written. It lives inside `.arena__decision`,
+ * which already opts back into pointer events (for its tooltips), so it is not a
+ * new widget of the layer.
+ */
+.arena__watch {
+  margin: 0;
+  max-inline-size: 100%;
+  color: var(--ink);
+  line-height: 1.35;
+  /* Two lines at most, and never below 46ch, as the prompt it stands in for
+     (D267, the second fix pass): a hint beside it cannot wrap the bar. */
+  flex: 0 1 auto;
+  min-inline-size: min(46ch, 100%);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.arena__watch-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.arena__watch-vs {
+  color: var(--muted);
+}
+
+.arena__watch-follow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.arena__watch-follow--following {
+  color: var(--ok);
+}
+
+.arena__watch-follow--stalled {
+  color: var(--warn);
+}
+
+/* A 416 (polish-1's follow-up 2): the followed file was re-recorded and following stopped. No dot. */
+.arena__watch-follow--lost {
+  color: var(--error);
+}
+
+/*
+ * M7 verification fix — **the life totals.**
+ *
+ * The arena shipped with no persistent player HUD at all: the layer held the
+ * prompt, the two engine buttons, Concede, the cue strip and the art credit, and
+ * not one number about either seat. `life.tick` and `damage.player` put a plate
+ * in the 3D scene, but a cue decays to identity by construction (report 09
+ * §5.1), so the number existed for 400 ms when it changed and was then gone. On
+ * 11 life, in a live game, the arena could not say so and `V` to the board could.
+ *
+ * Report 09 prices this three times — §9.1's "~12 `<Text>`" HUD slots, §9.3's
+ * risk 2 (*"life totals change often"*, so pre-create the slot and mutate it)
+ * and §12.1's **"HUD overlays — plain DOM above the canvas — free"**. This is
+ * the free one: no SDF re-tessellation, no draw call, nothing a cue can cover
+ * and nothing the camera can swing off-screen.
+ *
+ * **On the right edge, vertically opposed**: the opponent's plate above and
+ * yours below, which is the seating the table already has (§3.1 — you at +Z).
+ * Not the top-left, because `.arena__decision` is up to 1100 px of engine prompt
+ * there; not the bottom centre, because that is where the hand fans (§8 rule 6).
+ * The container passes clicks through and only the plates take them, so the
+ * canvas keeps the felt between them.
+ */
+.arena__seats {
+  position: absolute;
+  inset-block: 2.6rem 0.5rem;
+  inset-inline-end: 0.6rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+.arena__seat {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-inline-size: 9.5rem;
+  max-inline-size: 14rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #0b0e13e6;
+  font-size: 12px;
+}
+
+/* Forge's own "whose turn is it": `state.activePlayer`, and nothing the client
+   worked out for itself. */
+.arena__seat--active {
+  border-color: var(--accent);
+}
+
+/* **A plate is four rows and every row is ONE line** (the 2026-09-27 hardening
+   pass, rebased onto match setup). The opponent's plate sits under the arena's
+   top band, over the opponent's duelist (D100), and `camera.ts`'s
+   `PLAYER_PLATES` models it as a keep-out: its height is these rules, and
+   `camera.test.ts` asserts it ends inside `HUD_TOP_PX`. So the name is
+   ellipsised (the whole name in its `title`; `--ai-name` can be anything), the
+   opponent's name row never wraps, and the match and any player counters ride
+   the life row. Your plate's name row may still wrap its tags under the name —
+   it is anchored to the bottom, and modelled wrapped. */
+.arena__seat-who {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-inline-size: 100%;
+}
+
+.arena__seat--opp .arena__seat-who {
+  flex-wrap: nowrap;
+}
+
+.arena__seat-name {
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.arena__seat-tags {
+  flex: none;
+  white-space: nowrap;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+/* Match setup (M44): the seat's deck NAME from `seatMatchOf`, on the life row,
+   ellipsised to what the row has left — the tooltip has the rest — and then the
+   AI's profile. The deck gives way first (its shrink factor dwarfs the
+   profile's); the profile only once the deck is gone, which takes poison and
+   player counters beside it. Life, poison and counters never shrink. */
+.arena__seat-deck {
+  flex: 0 1000 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.arena__seat-profile {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.arena__seat-vitals {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  max-inline-size: 100%;
+}
+
+.arena__seat-vitals > .life,
+.arena__seat-vitals > .poison {
+  flex: none;
+}
+
+.arena__seat-zones {
+  display: flex;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.arena__seat-counters {
+  display: flex;
+  flex: none;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
+}
+
+.arena__hint,
+.arena__notice {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--muted);
+}
+
+.arena__notice--warn,
+.arena__notice--error {
+  color: var(--warn, #e0b050);
+}
+
+/*
+ * M7 verification fix — **the end of the game, in the arena.**
+ *
+ * The arena showed nothing at all when a game ended: conceding from it greyed
+ * the two buttons out (that is `live === false`, i.e. `state.gameOver !== null`)
+ * and said not one word about who won or why, and M6's headline flow — three
+ * games back to back, New Game clicked from the renderer you are sitting in —
+ * was reachable only by pressing `V` to the board. It is the same
+ * `<GameOverBanner>` and the same `<NewGameRow>` the board mounts, over the
+ * canvas: the engine's own `winner` and `reason`, verbatim, and D40's rule that
+ * the row goes quiet when the socket does.
+ *
+ * Centred rather than stacked with the strip, because it is the one thing on
+ * screen that ends the session.
+ *
+ * **It is `position: absolute` and the banner inside it is not.** `.banner--over`
+ * carries its own `position: absolute; inset-block-start: 40%` for the 2D board,
+ * where it is a child of `.board`; dropped into a flex column it left the panel
+ * with nothing in flow — measured in the browser as a **24 × 18 px** empty
+ * bordered box at the top of the frame with the banner floating 170 px below it.
+ * So the panel owns the position and the banner is reset to static inside it.
+ */
+.arena__over {
+  position: absolute;
+  inset-block-start: 34%;
+  inset-inline: 0;
+  z-index: 40;
+  margin-inline: auto;
+  inline-size: fit-content;
+  max-inline-size: min(760px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #0b0e13f2;
+  box-shadow: 0 16px 60px #000c;
+  text-align: center;
+}
+
+.arena__over .banner {
+  position: static;
+  inset: auto;
+  inline-size: 100%;
+  margin: 0;
+}
+
+/* The New Game row is a grid on the board's decision panel; here it is one line
+   under the banner, and it must stay clickable (see `.arena__layer` above). */
+.arena__over .decision__newgame {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+/* ==========================================================================
+ * The card browser — `#cards` (web/src/cards/, docs/evidence/card-library.md)
+ *
+ * A page of its own over the local card library: a control row, a results
+ * grid and a detail aside. Every class is `cardlib…` so nothing here can reach
+ * the board's `.cards` or the arena's layer. Card images are drawn whole —
+ * `object-fit: contain`, the printed aspect ratio, no filter — because
+ * Scryfall's image terms forbid cropping, stretching or recolouring them; the
+ * rounded corner is the card's own (≈ 3 mm on 63 × 88 mm), not a crop of the
+ * border text.
+ * ========================================================================== */
+
+.cardlib__keys {
+  display: inline-flex;
+  gap: 0.6rem;
+}
+
+.cardlib__keys kbd {
+  padding: 0 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-2);
+  font-size: 10px;
+}
+
+.cardlib__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  flex: 0 0 auto;
+}
+
+.cardlib__search {
+  flex: 1 1 320px;
+  min-inline-size: 200px;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.3 var(--ui);
+}
+
+.cardlib__search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+
+.cardlib__chips {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cardlib__chips .btn {
+  padding: 0.1rem 0.45rem;
+  font-size: 11px;
+}
+
+.cardlib__color .ms {
+  font-size: 13px;
+}
+
+.cardlib__color:not(.btn--on) .ms {
+  opacity: 0.55;
+}
+
+.cardlib__select {
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+}
+
+.cardlib__select--on {
+  border-color: var(--select);
+  color: var(--select);
+}
+
+.cardlib__body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 440px;
+}
+
+.cardlib__results {
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+
+.cardlib__summary {
+  margin: 0 0 0.6rem;
+  font-size: 12px;
+}
+
+.cardlib__aside {
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: 0.75rem;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.cardlib__placeholder {
+  margin: 2rem 0.5rem;
+  font-size: 13px;
+}
+
+.cardlib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardlib-grid__cell {
+  min-inline-size: 0;
+}
+
+.cardlib-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  inline-size: 100%;
+  padding: 5px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.cardlib-tile:hover {
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.cardlib-tile--selected {
+  border-color: var(--select);
+  background: var(--panel);
+  box-shadow: 0 0 0 1px var(--select);
+}
+
+.cardlib-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cardlib-tile__name {
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cardlib-tile__print {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.cardlib-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.cardlib-card--detail {
+  inline-size: 100%;
+  max-inline-size: 340px;
+  margin-inline: auto;
+}
+
+.cardlib-card__img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 488 / 680;
+  object-fit: contain;
+  border-radius: 4.75% / 3.4%;
+  background: #000;
+}
+
+.cardlib-card__credit {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The generated frame, when there is no image (a miss, `image_status: missing`). */
+.cardlib-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  aspect-ratio: 488 / 680;
+  padding: 6px;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 4.75% / 3.4%;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  font-size: 11px;
+}
+
+.cardlib-frame__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.cardlib-frame__art {
+  flex: 1 1 40%;
+  border: 1px solid var(--felt-line);
+  border-radius: 2px;
+  background: var(--felt);
+}
+
+.cardlib-frame__type {
+  padding-block: 2px;
+  border-block: 1px solid var(--line);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cardlib-frame__text {
+  flex: 1 1 35%;
+  overflow: hidden;
+  font-size: 10px;
+}
+
+.cardlib-frame__text p {
+  margin: 0 0 3px;
+}
+
+.cardlib-frame__stats {
+  align-self: flex-end;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.cardlib-card--detail .cardlib-frame {
+  font-size: 13px;
+}
+
+.cardlib-card--detail .cardlib-frame__text,
+.cardlib-card--detail .cardlib-frame__type {
+  font-size: 12px;
+}
+
+/* --- pips ----------------------------------------------------------------- */
+
+.cardlib-cost {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.cardlib-cost--md .ms {
+  font-size: 16px;
+}
+
+.cardlib-pip--inline {
+  margin-inline: 1px;
+  font-size: 0.95em;
+  vertical-align: -0.08em;
+}
+
+.cardlib-pip--raw {
+  font-family: var(--mono);
+}
+
+/* --- the detail aside ----------------------------------------------------- */
+
+.cardlib-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 13px;
+}
+
+.cardlib-detail__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardlib-detail__ext {
+  font-size: 11px;
+}
+
+/* The detail bar's right-hand links: View in 3D (the workshop, D102) and Scryfall. */
+.cardlib-detail__links {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cardlib-3d {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Greyed, not disabled: its tooltip says why the workshop has nothing to show. */
+.cardlib-3d--off {
+  cursor: not-allowed;
+}
+
+.cardlib-detail__images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.cardlib-detail__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  font-size: 18px;
+}
+
+.cardlib-detail__type {
+  padding-block-end: 0.25rem;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.cardlib-rules p {
+  margin: 0 0 0.4rem;
+  line-height: 1.45;
+}
+
+.cardlib-reminder {
+  color: var(--muted);
+}
+
+.cardlib-flavor {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cardlib-detail__stats {
+  align-self: flex-start;
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cardlib-face {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-block-start: 0.35rem;
+  border-top: 1px dashed var(--line);
+}
+
+.cardlib-face__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 15px;
+}
+
+.cardlib-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+}
+
+.cardlib-facts dt {
+  color: var(--muted);
+}
+
+.cardlib-facts dd {
+  margin: 0;
+}
+
+.cardlib-decks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardlib-decks li {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.cardlib-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cardlib-copy__line {
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg);
+  user-select: all;
+}
+
+.cardlib-copy__status {
+  color: var(--ok);
+  font-size: 11px;
+}
+
+.cardlib-legal h3 {
+  margin: 0.25rem 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cardlib-legal ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.cardlib-legal__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px dotted var(--line);
+}
+
+.cardlib-legal__status {
+  color: var(--muted);
+}
+
+.cardlib-legal--legal .cardlib-legal__status {
+  color: var(--ok);
+}
+
+.cardlib-legal--banned .cardlib-legal__status {
+  color: var(--error);
+}
+
+.cardlib-legal--restricted .cardlib-legal__status {
+  color: var(--warn);
+}
+
+/* --- empty and intro states ----------------------------------------------- */
+
+.cardlib-empty {
+  max-inline-size: 720px;
+  margin: 3rem auto;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cardlib-empty h2 {
+  margin: 0 0 0.5rem;
+  font-size: 18px;
+}
+
+.cardlib-empty__cmd {
+  margin: 0.5rem 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.cardlib-intro {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Narrow windows: the aside becomes a sheet over the grid, open only on a card. */
+@media (max-width: 900px) {
+  .cardlib__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cardlib__aside {
+    display: none;
+    position: fixed;
+    inset: auto 0 0;
+    max-block-size: 72dvh;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    box-shadow: 0 -12px 40px #000a;
+    z-index: 20;
+  }
+
+  .cardlib__body--open .cardlib__aside {
+    display: block;
+  }
+
+  .cardlib__keys {
+    display: none;
+  }
+
+  /* Wrapped onto a line of its own, the credit reads from the left. */
+  .cardlib .app__bar .app__credit {
+    margin-left: 0;
+  }
+}
+
+/* The credit line carries the Scryfall credit and the Fan Content notice, and
+   on #cards it is NEVER clipped: the bar wraps at every width rather than
+   hiding the notice under the board bar's `nowrap` + ellipsis. At 1024 px the
+   clipped version showed 378 of the credit's 754 px, and the missing half was
+   the notice. */
+.cardlib .app__bar {
+  flex-wrap: wrap;
+  row-gap: 0.15rem;
+  white-space: normal;
+  overflow: visible;
+}
+
+.cardlib .app__bar .app__credit {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.cardlib-copy__note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 11px;
+}
+
+.cardlib-prints h3 {
+  margin: 0.25rem 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cardlib-prints ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cardlib-prints .btn {
+  font-family: var(--mono);
+}
+
+/* --- the workshop (web/src/workshop/) ------------------------------------------
+ *
+ * A fourth page over the same app: the card list, the pedestal and the action /
+ * tuning panel. Appended, not woven in, and every rule is under `.workshop` so it
+ * reaches nothing on the board or in the arena. Like everything else in the app,
+ * no component imports CSS; this file is the one stylesheet.
+ */
+.workshop {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr) 420px;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'bar bar bar'
+    'list stage panel';
+  block-size: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.workshop button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.12rem 0.45rem;
+  cursor: pointer;
+}
+
+.workshop button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.workshop button.on,
+.workshop button[aria-pressed='true'] {
+  border-color: var(--select);
+  color: var(--select);
+}
+
+.workshop__bar {
+  grid-area: bar;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.workshop__bar h1 {
+  font-size: 12px;
+  margin: 0;
+  letter-spacing: 0.04em;
+  font-family: var(--mono);
+}
+
+.workshop__links {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.workshop__credit {
+  margin-left: auto;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The list ------------------------------------------------------------------ */
+
+.workshop__list {
+  grid-area: list;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.workshop__search {
+  margin: 0.45rem;
+  padding: 0.3rem 0.45rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.workshop__list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.35rem 0.6rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.workshop__heading {
+  margin: 0.6rem 0.2rem 0.25rem;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.workshop .workshop__row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.45rem;
+  inline-size: 100%;
+  padding: 0.2rem 0.3rem;
+  margin: 1px 0;
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+}
+
+.workshop .workshop__row:hover {
+  background: var(--panel-2);
+}
+
+.workshop .workshop__row--on {
+  background: var(--panel-2);
+  border-color: var(--accent);
+}
+
+.workshop__thumb {
+  inline-size: 30px;
+  block-size: 42px;
+  border-radius: 2px;
+  object-fit: cover;
+  background: #0e1116;
+}
+
+.workshop__thumb--none {
+  display: block;
+  border: 1px dashed var(--line);
+}
+
+.workshop__thumb--back {
+  background: repeating-linear-gradient(45deg, #2b3350 0 4px, #1c2238 4px 8px);
+  border-style: solid;
+}
+
+.workshop__rowtext {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.workshop__name,
+.workshop__types {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workshop__types {
+  font-size: 10px;
+}
+
+.workshop__rung {
+  font-size: 9px;
+  padding: 0 0.3rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.workshop__rung--per-card {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.workshop__rung--subtype {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.workshop__rung--colour {
+  color: var(--highlight);
+  border-color: var(--highlight);
+}
+
+.workshop__rung--concealed {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+/* The personal tier (D196): a card an active personal model dresses on this machine. */
+.workshop__personal {
+  font-size: 9px;
+  padding: 0 0.3rem;
+  margin-right: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--highlight);
+  background: var(--highlight);
+  color: var(--bg);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* The stage ----------------------------------------------------------------- */
+
+.workshop__stage {
+  grid-area: stage;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 0;
+  min-inline-size: 0;
+}
+
+.workshop__toolbar,
+.workshop__queue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.8rem;
+  padding: 0.3rem 0.55rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.workshop__queue {
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  /* One line, always: a status that wrapped changed the pedestal's height, and a
+     canvas that resizes mid-cue is one more render of <Canvas> (Pedestal.tsx). */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.workshop__queue .workshop__status {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workshop__seg {
+  display: inline-flex;
+}
+
+.workshop__seg button {
+  border-radius: 0;
+}
+
+.workshop__seg button:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.workshop__seg button:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
+.workshop__status {
+  margin-left: auto;
+}
+
+.workshop__pedestal {
+  position: relative;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.workshop__canvas {
+  position: absolute !important;
+  inset: 0;
+}
+
+.workshop__divider {
+  position: absolute;
+  inset: -100vh auto 0 50%;
+  inline-size: 1px;
+  background: var(--line);
+}
+
+.workshop__caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 0.25rem;
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* The panel ----------------------------------------------------------------- */
+
+.workshop__panel {
+  grid-area: panel;
+  overflow-y: auto;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  padding: 0.35rem 0.5rem 1rem;
+}
+
+.workshop__box {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  margin: 0 0 0.5rem;
+  padding: 0.3rem 0.45rem 0.45rem;
+  background: var(--bg);
+}
+
+.workshop__box > summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.workshop__stances,
+.workshop__clips,
+.workshop__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+  margin: 0.25rem 0;
+}
+
+.workshop__cues {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.workshop__cues td {
+  vertical-align: top;
+  padding: 0.18rem 0.2rem;
+  border-top: 1px solid var(--line);
+}
+
+.workshop__cues td:first-child {
+  white-space: nowrap;
+}
+
+.workshop__cueline {
+  line-height: 1.35;
+}
+
+.workshop__cueline code.bad {
+  color: var(--error);
+}
+
+.workshop__src {
+  font-size: 9px;
+  padding: 0 0.25rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  text-transform: uppercase;
+}
+
+.workshop__src--card {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.workshop__src--archetype {
+  color: var(--highlight);
+  border-color: var(--highlight);
+}
+
+.workshop__warn {
+  color: var(--warn);
+}
+
+.workshop__fine {
+  font-size: 10px;
+  margin: 0.3rem 0 0;
+}
+
+.workshop__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.2rem;
+}
+
+.workshop__field {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-inline-size: 0;
+}
+
+.workshop__field > span:first-child {
+  inline-size: 5.6rem;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.workshop__field input[type='number'],
+.workshop__field select {
+  inline-size: 5rem;
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.workshop__field input[type='color'] {
+  flex: 0 0 auto;
+  inline-size: 2.2rem;
+  min-inline-size: 2.2rem;
+  block-size: 1.3rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: none;
+}
+
+.workshop__field em {
+  font-size: 10px;
+}
+
+.workshop__field--wide {
+  grid-column: 1 / -1;
+  align-items: flex-start;
+}
+
+.workshop__props {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.55rem;
+}
+
+.workshop__props label {
+  white-space: nowrap;
+}
+
+/* Lane BODIES (D160): the card art's palette — one bar per cluster, as wide as
+   its share of the painting, then the accent the art rung offers. */
+.workshop__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  min-inline-size: 0;
+}
+
+.workshop__swatch {
+  display: inline-block;
+  block-size: 0.9rem;
+  border-radius: 2px;
+  outline: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Slice 4's costume (D97): one row per slot — the swatch is what the body is
+   drawn in, the code what the data says, the label where it came from. */
+.workshop__costume {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.15rem;
+  margin: 0.1rem 0 0.2rem 5.95rem;
+}
+
+.workshop__slot {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-inline-size: 0;
+}
+
+.workshop__slot label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.workshop__slot label > span {
+  inline-size: 3.2rem;
+  color: var(--muted);
+}
+
+.workshop__slot input[type='color'] {
+  inline-size: 2.2rem;
+  block-size: 1.2rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: none;
+}
+
+.workshop__slot code {
+  min-inline-size: 4.6rem;
+}
+
+.workshop__slot em {
+  font-size: 10px;
+}
+
+.workshop__slot--this-card code {
+  color: var(--ink);
+}
+
+.workshop__slot--filled code,
+.workshop__slot--inherited code {
+  color: var(--muted);
+}
+
+.workshop__errors {
+  margin: 0.35rem 0;
+  padding-left: 1rem;
+  color: var(--error);
+}
+
+.workshop__cueparams h4 {
+  margin: 0.6rem 0 0.25rem;
+  font-size: 11px;
+}
+
+.workshop__param {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+}
+
+.workshop__param textarea,
+.workshop__copied {
+  inline-size: 100%;
+  box-sizing: border-box;
+  font: 11px/1.35 var(--mono);
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.workshop__meter,
+.workshop__keys {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.workshop__meter th,
+.workshop__meter td {
+  padding: 0.12rem 0.3rem;
+  border-top: 1px solid var(--line);
+  text-align: right;
+}
+
+.workshop__meter th[scope='row'],
+.workshop__meter th:first-child {
+  text-align: left;
+}
+
+.workshop__meter td.bad {
+  color: var(--error);
+  font-weight: 600;
+  background: #ff6b6b1a;
+}
+
+.workshop__meter td.good {
+  color: var(--ok);
+}
+
+.workshop__meter--body th,
+.workshop__meter--body td {
+  opacity: 0.7;
+}
+
+.workshop__keys th {
+  text-align: left;
+  padding-right: 0.6rem;
+  white-space: nowrap;
+}
+
+/* The workshop's fix pass: the live-game chip, a required field, a ladder note,
+   a clip on a hidden rig. */
+.workshop__waiting {
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--warn);
+  border-radius: 999px;
+  color: var(--warn);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40ch;
+}
+
+.workshop__need {
+  color: var(--error);
+}
+
+.workshop__outranks {
+  color: var(--warn);
+  font-size: 10px;
+}
+
+.workshop__clip--hidden {
+  opacity: 0.6;
+  text-decoration: line-through dotted;
+}
+
+/* --- the story (web/src/story/, #story, D125) ------------------------------------
+ *
+ * The narrator in the browser: a side column (the summary card, the frame on
+ * screen and its cards, the switches, the keys) and the story itself, a column of
+ * moments grouped by turn that scrolls with the replay cursor. The moment on
+ * screen carries a colour, a bar AND the word "now" is not needed: it is the one
+ * line with a border, so colour alone never carries it (M4 convention 5). What
+ * comes after the cursor is dimmed, or not drawn at all (`data-ahead="hide"`).
+ */
+.app--story .app__bar h1 {
+  color: var(--highlight);
+}
+
+.story {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  background: var(--bg);
+}
+
+.story__side {
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  padding: 0.6rem 0.7rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  font-size: 12px;
+}
+
+.story__column {
+  overflow-y: auto;
+  padding: 0 1.1rem 40vh;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.story__summary,
+.story__at {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+}
+
+.story__summary h2,
+.story__at h2 {
+  margin: 0 0 0.3rem;
+  font-size: 12px;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+.story__title {
+  color: var(--highlight);
+}
+
+.story__summary p,
+.story__at p {
+  margin: 0.2rem 0;
+}
+
+.story__result {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.story__sofar {
+  color: var(--warn);
+  font-family: var(--mono);
+}
+
+.story__totals {
+  margin-top: 0.35rem;
+  border-collapse: collapse;
+  inline-size: 100%;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.story__totals th,
+.story__totals td {
+  padding: 0.08rem 0.3rem;
+  border-top: 1px solid var(--line);
+}
+
+.story__totals thead th {
+  text-align: right;
+  color: var(--ink);
+  border-top: 0;
+  overflow-wrap: anywhere;
+}
+
+.story__totals th[scope='row'] {
+  text-align: left;
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.story__totals td {
+  text-align: right;
+}
+
+.story__where {
+  font-family: var(--mono);
+}
+
+.story__seats,
+.story__saying {
+  list-style: none;
+  margin: 0.25rem 0;
+  padding: 0;
+}
+
+.story__seats li {
+  padding: 0.05rem 0;
+}
+
+.story__saying li {
+  padding: 0.2rem 0.35rem;
+  margin: 0.15rem 0;
+  border-left: 3px solid var(--select);
+  background: var(--panel-2);
+}
+
+.story__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.story__cardimg {
+  margin: 0;
+}
+
+.story__cardframe {
+  position: relative;
+}
+
+.story__cardframe img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 4.75% / 3.5%;
+}
+
+.story__cardtext {
+  aspect-ratio: 488 / 680;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  font-weight: 600;
+}
+
+.story__cardframe--bare .story__cardtext {
+  aspect-ratio: auto;
+  min-block-size: 2.4rem;
+}
+
+.story__cardimg figcaption {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+.story__switches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.story__keys summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.story__keys th {
+  text-align: left;
+  padding-right: 0.6rem;
+  white-space: nowrap;
+}
+
+/* The column: one section per turn, its heading sticky while you read it. */
+.story__gametitle {
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--highlight);
+  margin: 1rem 0 0.3rem;
+}
+
+.story__turn {
+  margin: 0 0 0.35rem;
+}
+
+.story__turnhead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0.45rem 0 0.2rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.story__turn[data-side='you'] .story__turnhead {
+  color: var(--you);
+}
+
+.story__turn[data-side='opp'] .story__turnhead {
+  color: var(--opp);
+}
+
+.story__turn--ahead .story__turnhead {
+  opacity: 0.6;
+}
+
+.story__runs,
+.story__moments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.story__run {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  gap: 0.4rem;
+  padding: 0.1rem 0;
+}
+
+.story__phase {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding-top: 0.28rem;
+}
+
+.story__go {
+  display: block;
+  inline-size: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0 3px 3px 0;
+  padding: 0.12rem 0.45rem;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.story__go:hover {
+  background: var(--panel);
+}
+
+.story__go:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.story__moment--now .story__go {
+  background: #ffcf5c1f;
+  border-left-color: var(--select);
+}
+
+.story__moment--ahead .story__go {
+  opacity: 0.42;
+}
+
+.story__card {
+  font-weight: 600;
+  border-bottom: 1px dotted var(--muted);
+}
+
+.story__passes,
+.story__note {
+  margin: 0.2rem 0 0.2rem 5rem;
+  font-size: 12px;
+}
+
+.story__ending {
+  margin: 0.8rem 0;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--highlight);
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.story__tail {
+  margin: 0.6rem 0 0 5rem;
+}
+
+.story__empty {
+  margin: 1rem 0;
+}
+
+.story__nolog {
+  max-inline-size: 60ch;
+}
+
+@media (max-width: 900px) {
+  .story {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .story__side {
+    max-block-size: 38dvh;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .story__run {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .story__passes,
+  .story__note,
+  .story__tail {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story__column {
+    scroll-behavior: auto;
+  }
+}
+
+/* =========================================================================
+ * The status layer (amendment M49, D210–D212) — the board's half.
+ *
+ * A face-up card's keyword icons in a row under its P/T, and on a battlefield
+ * creature a bar of what is left of its toughness (`status.ts`'s `cardStatus`,
+ * the same data the arena's strip draws). The row is INSIDE the tile's button,
+ * so an icon's `title` shows on hover and a click on it is a click on the card.
+ * The P/T pill and the counters step up to sit above it; nothing they say
+ * changes (D211: the damage chip stays, the bar asserts nothing about death).
+ * ========================================================================= */
+
+.tile__status {
+  position: absolute;
+  inset-inline: 6px 3px;
+  inset-block-end: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1;
+}
+
+.tile__keywords {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1px;
+  align-items: center;
+}
+
+.tile__kw {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 14px;
+  block-size: 14px;
+  border-radius: 50%;
+  background: #0b0f13eb;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.tile__kw svg {
+  display: block;
+  inline-size: 10px;
+  block-size: 10px;
+}
+
+.tile--hand .tile__kw {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.tile--hand .tile__kw svg {
+  inline-size: 13px;
+  block-size: 13px;
+}
+
+/* The bar: the fill is what is left; the rest is the damage marked this turn. */
+.tile__hp {
+  display: block;
+  block-size: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #7a2424;
+  box-shadow: 0 0 0 1px #0b0f13e6;
+}
+
+.tile__hpfill {
+  display: block;
+  block-size: 100%;
+}
+
+.tile--hp .tile__bottom,
+.tile--hp .tile__counters {
+  inset-block-end: 9px;
+}
+
+.tile--kw .tile__bottom,
+.tile--kw .tile__counters {
+  inset-block-end: 18px;
+}
+
+.tile--kw.tile--hp .tile__bottom,
+.tile--kw.tile--hp .tile__counters {
+  inset-block-end: 24px;
+}
+
+.tile--hand.tile--kw .tile__bottom,
+.tile--hand.tile--kw .tile__counters {
+  inset-block-end: 22px;
+}
+
+/* =========================================================================
+ * The status layer — the arena's turn-order bar (D210).
+ *
+ * The eleven phases of a turn down the arena's left edge, the active one lit in
+ * the turn player's colour, the seat's stops as two pips per phase (left: your
+ * turn, right: the opponent's). Below the chrome band (HUD_TOP_PX) and clear of
+ * the plates, the hand and the duelists. It is a widget in `.arena__layer`,
+ * which is `pointer-events: none`, so it opts back in — `liveness.test.ts`
+ * requires the rule.
+ * ========================================================================= */
+
+.arena__phases {
+  position: absolute;
+  inset-inline-start: 10px;
+  inset-block-start: 168px;
+  inline-size: 100px;
+  padding: 6px 6px 7px;
+  border-radius: 8px;
+  background: #0b0f13cc;
+  box-shadow: inset 0 0 0 1px #ffffff1f;
+  pointer-events: auto;
+  font-size: 10.5px;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.arena__phases-head {
+  margin: 0 0 5px;
+  font-family: var(--mono);
+  /* 10px, not the bar's 10.5 (the audit's fix pass): "R12 their turn" is 14
+     characters of a monospace face, 88.5 px at 10.5 against the bar's 88 px of
+     content, so every opponent's turn from round 10 read "R12 their tu…".
+     `hud.test.ts` holds "R99 their turn" to the bar's width. */
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__phases-round {
+  font-weight: 700;
+}
+
+.arena__phases-whose--you {
+  color: var(--you);
+}
+
+.arena__phases-whose--opp {
+  color: var(--opp);
+}
+
+.arena__phases-off {
+  color: var(--muted);
+}
+
+.arena__phases-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.arena__phase {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #aeb6c2;
+  background: #ffffff0a;
+}
+
+.arena__phase--combat {
+  margin-inline-start: 6px;
+}
+
+.arena__phase--active {
+  color: #0b0f13;
+  font-weight: 700;
+}
+
+.arena__phase--active-you {
+  background: var(--you);
+  box-shadow: 0 0 10px var(--you);
+}
+
+.arena__phase--active-opp {
+  background: var(--opp);
+  box-shadow: 0 0 10px var(--opp);
+}
+
+.arena__phase-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena__phase-stops {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.arena__stop {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.arena__stop:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.arena__stop--on.arena__stop--own {
+  color: var(--you);
+}
+
+.arena__stop--on.arena__stop--opp {
+  color: var(--opp);
+}
+
+.arena__phase--active .arena__stop {
+  color: #0b0f13;
+}
+
+/* D250 — the workshop's rehearsal panel: the pedestal's sound switch. */
+.workshop__sound {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 6px;
+}

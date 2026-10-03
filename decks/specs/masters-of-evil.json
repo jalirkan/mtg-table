@@ -1,0 +1,148 @@
+{
+  "$comment": "Written by tools/build-deck.ts into decks/masters-of-evil.dck. decks/README.md says what it is and how the AI plays it; docs/evidence/more-villains.md what was run.",
+  "deck": "decks/masters-of-evil.dck",
+  "name": "Masters of Evil (Marvel Super Heroes villains)",
+  "colors": "BR",
+  "archetype": "villain aggro: cheap flying, hasty and deathtouch Villains, a little burn, and the team card as the lord",
+  "size": 40,
+  "lands": 17,
+  "minCreatures": 16,
+  "maxCopies": 2,
+  "cards": [
+    {
+      "count": 1,
+      "name": "Whiplash, Vengeful Engineer",
+      "why": "Whiplash: a 2/2 for {B}"
+    },
+    {
+      "count": 1,
+      "name": "Lightning Bolt",
+      "why": "3 damage for {R}: a blocker gone, or the last points"
+    },
+    {
+      "count": 1,
+      "name": "Shock",
+      "why": "2 damage for {R}"
+    },
+    {
+      "count": 1,
+      "name": "Songbird, Sonic Screamer",
+      "why": "Screaming Mimi: 2/1 lifelink, flies for a discard"
+    },
+    {
+      "count": 1,
+      "name": "MACH-1, Swooping Scoundrel",
+      "why": "the Beetle: a 1/3 flyer that surveils"
+    },
+    {
+      "count": 1,
+      "name": "Yellowjacket, Heartless Marauder",
+      "why": "Rita DeMara: a 1/2 flyer that hits harder as each Villain arrives"
+    },
+    {
+      "count": 1,
+      "name": "Boomerang, Blade Flinger",
+      "why": "every attack drains 1"
+    },
+    {
+      "count": 1,
+      "name": "Fixer, Techno Terror",
+      "why": "the gadgeteer; draws when an artifact came in"
+    },
+    {
+      "count": 1,
+      "name": "White Widow, Yelena Belova",
+      "why": "1/2 deathtouch who grows when she connects"
+    },
+    {
+      "count": 2,
+      "name": "Common Crook",
+      "why": "the henchmen: a 2/2 that leaves a Treasure"
+    },
+    {
+      "count": 1,
+      "name": "Night's Whisper",
+      "why": "draw two, lose 2"
+    },
+    {
+      "count": 1,
+      "name": "Whirlwind, Killer Cyclone",
+      "why": "haste, and a fresh attacker stops a blocker"
+    },
+    {
+      "count": 2,
+      "name": "Volcanic Villain",
+      "why": "3/2 haste"
+    },
+    {
+      "count": 1,
+      "name": "Klaw, Sonic Subjugator",
+      "why": "makes you discard a card he chooses"
+    },
+    {
+      "count": 1,
+      "name": "Titania, Proud Pummeler",
+      "why": "first strike; every creature gets melee"
+    },
+    {
+      "count": 1,
+      "name": "Moonstone, Harsh Mistress",
+      "why": "a 2/4 flyer"
+    },
+    {
+      "count": 1,
+      "name": "Tiger Shark, Abyssal Hunter",
+      "why": "connives on entering and attacking; castable with {B}{B}"
+    },
+    {
+      "count": 1,
+      "name": "Atlas, Sizable Stooge",
+      "why": "Erik Josten, Goliath of the Masters of Evil: 5/4 reach for four, castable with {B}{B}"
+    },
+    {
+      "count": 1,
+      "name": "Avengers: Under Siege",
+      "why": "the siege of Avengers Mansion: two menace Villains, 2 to every non-Villain and to you, Treasure"
+    },
+    {
+      "count": 1,
+      "name": "Radioactive Man",
+      "why": "deathtouch; his combat damage halves your life"
+    },
+    {
+      "count": 1,
+      "name": "The Masters of Evil",
+      "why": "the team: every other Villain gets +2/+1"
+    },
+    {
+      "count": 1,
+      "name": "Hell's Kitchen",
+      "why": "B/R, enters tapped, gain 1"
+    },
+    {
+      "count": 1,
+      "name": "Dark Fortress",
+      "why": "B/R while you control a basic"
+    },
+    {
+      "count": 1,
+      "name": "Villainous Hideout",
+      "why": "any colour for a Villain; {3}, tap: a Villain connives"
+    },
+    {
+      "count": 1,
+      "name": "Dragonskull Summit",
+      "why": "B/R, untapped with a Swamp or Mountain out"
+    },
+    {
+      "count": 7,
+      "name": "Swamp",
+      "why": "black is the main colour"
+    },
+    {
+      "count": 6,
+      "name": "Mountain",
+      "why": "red the second"
+    }
+  ]
+}

@@ -11,6 +11,20 @@ and report it here.
 Use JOBS=7, no more. The search works to a wall-clock budget, so oversubscribing cores
 weakens it. Don't run any other heavy job alongside it.
 
+## Pilot
+About 10 minutes: 2 deals per pair, control and search only.
+```bash
+cd /home/justin-a/code/mtg-table && git checkout main && git pull && ./bridge/build.sh && ./tools/ai-bench.sh --selftest
+B=tools/ai-bench.sh
+$B play --pairs tools/ai-bench/pairs-cube.txt --games 2 --seed 7 --jobs 7 --run pilot-cube-control --a Default --b Default
+$B play --pairs tools/ai-bench/pairs-cube.txt --games 2 --seed 7 --jobs 7 --run pilot-cube-search --a Default+search --b Default
+```
+Checks:
+- The selftest passes.
+- All 20 + 20 games finish, with 0 crashes, engine errors or "Couldn't map" copier errors.
+- Control games take roughly 4–10 s each, and search games roughly 30–60 s each.
+- If the output reports a time-budget fallback rate, it is at most 40%.
+
 ## Commands
 ```bash
 cd /home/justin-a/code/mtg-table && git checkout main && git pull && ./bridge/build.sh && ./tools/ai-bench.sh --selftest
@@ -23,6 +37,11 @@ $B play --pairs tools/ai-bench/pairs-sac.txt --games 40 --seed $S --jobs $JOBS -
 for t in cube-search cube-search3; do $B paired --control var/ai-bench/night-cube-control/shard-*.jsonl --treatment var/ai-bench/night-$t/shard-*.jsonl; done && \
 $B paired --control var/ai-bench/night-sac-control/shard-*.jsonl --treatment var/ai-bench/night-sac-search/shard-*.jsonl
 ```
+
+## Abort if
+- More than 1% of games end in an error or crash.
+- A run's win rate is exactly 0% or 100% after 50 or more games (something is broken).
+- Search games average under 10 s (the search isn't running) or over 120 s.
 
 ## Report
 - The three `paired` outputs, in full.

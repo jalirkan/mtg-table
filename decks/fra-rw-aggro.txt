@@ -1,0 +1,36 @@
+# Justin's Reality Fracture pool: red-white legends aggro, 40 cards (Reality Fracture, FRA; Austere Command is the set's Special Guests reprint, SPG)
+# Source: /mnt/e/jalir/Projects/Magic/fra-pool-red-white-aggro.md (the user's own list, read-only; copied 2026-09-27). Forge's format is decks/fra-rw-aggro.dck.
+# NOT PLAYABLE YET. Forge 2.0.14, the engine this repo runs today, predates the set: node tools/audit-deck.mjs decks/fra-rw-aggro.dck
+# reports 19 ok, 31 missing, 0 broken (copies), and Forge would silently drop the 31 from the library. That is the expected result, not a bug.
+# On the 2.0.15-SNAPSHOT-09.27 daily build all 50 cards (main + sideboard) build. It becomes playable the day an OFFICIAL Forge release
+# ships the set: docs/research/14-engine-upgrade.md, "On the day Forge releases with FRA".
+1 Samut, Hazoret's Champion
+1 Gallia, the Merrymaker
+1 Eardrum Rattler
+1 Graft Surgeon
+1 Koth, the Geomancer
+1 Chandra's Emberling
+1 Pyre Rhymer
+1 Yoshimaru, Beloved Companion
+2 Mabel, Valley Hero
+2 Shatterwing Pegasus
+1 Woodwork Prodigy
+1 Thalia, the Survivor
+1 Whiplash Wordsmith
+1 Jiang Yanggu, Alone
+4 Wrath of the Bloodmane
+1 No Admittance
+1 Fulminous Forte
+1 Ajani's Anguish
+9 Mountain
+8 Plains
+
+Sideboard
+2 Surgical Precision
+1 Your Fate Ends Here
+1 Hexhaven Battalion
+1 Way of the Pyromancer
+2 Medic's Kitesail
+1 Austere Command
+1 Ghalta the Immovable
+1 Room of Refuge

@@ -1,0 +1,14 @@
+# tools/ai-bench/pairs-cube.txt -- ten deck pairs for profile benchmarks (D309).
+# Each line: two .dck paths.  Decks drafted and built by Forge's own AI drafting
+# and BoosterDeckBuilder in the cube-lab prototype (grid draft, two players):
+# seven from the synergy cube, three from the modern-era cube.  Colours in the comment.
+tools/ai-bench/decks/synergy-1003-A.dck tools/ai-bench/decks/synergy-1003-B.dck   # UR vs WG
+tools/ai-bench/decks/synergy-1004-A.dck tools/ai-bench/decks/synergy-1004-B.dck   # WU vs WB
+tools/ai-bench/decks/synergy-1006-A.dck tools/ai-bench/decks/synergy-1006-B.dck   # UR vs BG
+tools/ai-bench/decks/synergy-1009-A.dck tools/ai-bench/decks/synergy-1009-B.dck   # WB vs WG
+tools/ai-bench/decks/synergy-1011-A.dck tools/ai-bench/decks/synergy-1011-B.dck   # UG vs WB
+tools/ai-bench/decks/synergy-1014-A.dck tools/ai-bench/decks/synergy-1014-B.dck   # BR vs RG
+tools/ai-bench/decks/synergy-1018-A.dck tools/ai-bench/decks/synergy-1018-B.dck   # WR vs UB
+tools/ai-bench/decks/modern-3-A.dck tools/ai-bench/decks/modern-3-B.dck
+tools/ai-bench/decks/modern-3100-A.dck tools/ai-bench/decks/modern-3100-B.dck     # UB vs WR
+tools/ai-bench/decks/modern-3101-A.dck tools/ai-bench/decks/modern-3101-B.dck     # WU vs BG

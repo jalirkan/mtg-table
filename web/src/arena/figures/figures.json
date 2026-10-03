@@ -1,0 +1,318 @@
+{
+  "version": 1,
+  "_file": "THE figure table (report 13 §3.7). Text, keyed by card name and archetype key, committed beside cues.json for the same reason cues.json is: it is art direction, not code.",
+  "_rule": "Tier 2 is ARCHETYPES. A per-card entry may choose a model and alias a clip; it may NOT introduce a model used by exactly one card — that is Tier 3 (§12).",
+  "_identity": "Slice 3: this file says which BODY a card stands in; traits.json (validated by the same validator module) says what makes it THAT card — size, hover, colour, props, swarm, silhouette. `scale` stays in the schema and multiplies with the trait's; no card row here uses it any more.",
+  "_pose": "Every entry here keys off the SNAPSHOT — this card is on the battlefield and this is its type line — never off an event. That is what makes a figure survive `skip all`, a backwards scrub and a `resync` (§1.3).",
+  "_names": "Card keys are the wire's string VERBATIM, including the word `Token`: the wire says \"Soldier Token\", and a key of \"Soldier\" would never match (§2's measured trap).",
+  "archetypes": {
+    "_note": "The subtype rung is tried BEFORE the colour rung: a Robot Villain and a Human Spy Hero are both mono-white, and the colour key cannot tell them apart (§3.7).",
+    "creature/subtype:robot": {
+      "model": "drone",
+      "tint": "#9fb4c8"
+    },
+    "creature/subtype:insect": {
+      "model": "insect",
+      "tint": "#9ec7f0"
+    },
+    "creature/subtype:scientist": {
+      "model": "scientist",
+      "tint": "#8ee0c0",
+      "_note": "Slice 4: the man's body (`scientist` is the same node as `agent`), in the lab tint — Bold Biochemist's white coat and A.I.M.'s yellow suit and hood are traits.json's. Keys off the snapshot's type line, never an event."
+    },
+    "creature/subtype:spy": {
+      "model": "agent",
+      "tint": "#f6f0d8"
+    },
+    "creature/subtype:hero": {
+      "model": "hero",
+      "tint": "#f2d98c",
+      "_note": "The woman's body (slice 4 — the Superhero female with long hair; T8's chibi with two buns before it). Wasp and the Hero token reach it through this rung; Quake and every other Spy Hero stop at subtype:spy first, which is the rung order doing its job — the women among them choose this body by a card row."
+    },
+    "creature/subtype:soldier": {
+      "model": "agent",
+      "tint": "#cfd6de"
+    },
+    "creature/subtype:villain": {
+      "model": "agent",
+      "tint": "#8a7aa8",
+      "_note": "Villain identity (D221): a Villain the rungs above do not claim is a PERSON — the man's body, in a dusk violet the villain shade (traits.json) darkens. Before this rung a black Human Villain had no colour rung either (figures.json has creature/W and creature/U), so Doom Legion's Crossbones, Baron Strucker, Madame Hydra, the Unliving Legionnaire and every Villain token fell to creature/* and stood as glow discs. SUBTYPE_ORDER puts `villain` after robot, scientist, spy, hero and soldier, so the Doombots stay drones, Doctor Doom and A.I.M. stand in the scientist rung's body and the HYDRA agents and troopers in the spy's and the soldier's; the card rows in traits.json dress each."
+    },
+    "creature/subtype:human": {
+      "model": "agent",
+      "tint": "#c9b79c",
+      "_note": "More villain identity (D231): a Human the rungs above do not claim is a PERSON — the man's body — as D221's villain rung made a Villain one. SUBTYPE_ORDER has always listed `human` last and no archetype answered it, so a green or red Human with no other recognised word (the Hulk family's Rick Jones and Gallant Citizen, Wakanda's Warriors) fell to creature/* and stood as a glow disc. It reaches no committed recording before the three AI decks' (every earlier Human is a Spy, Scientist, Hero, Soldier or Villain first); card rows put the women in the woman's body."
+    },
+    "_vehicle": "creature/subtype:vehicle is deliberately ABSENT here: a Vehicle is not a BODY. Since slice 3 (T10) it is traits.json's `subtype:vehicle` silhouette — a procedural carrier drawn over its card, crewed or not — and never a model.",
+    "creature/W": {
+      "model": "agent",
+      "tint": "#f6f0d8"
+    },
+    "creature/U": {
+      "model": "agent",
+      "tint": "#9ec7f0"
+    },
+    "creature/*": {
+      "model": null,
+      "_note": "The declared fallback, not a hole (§9.4): the glow disc at the stand point, in the card's own colour, sized by P/T. Every probe-deck creature lands here and that is correct — they are not the deck this is for."
+    }
+  },
+  "cards": {
+    "Aerial Doombot": {
+      "model": "drone",
+      "clips": {
+        "attack": "jet"
+      },
+      "_note": "Also reached by creature/subtype:robot; the entry exists for the jet alias, not for the model."
+    },
+    "Giant-Sized Flying Ant": {
+      "model": "insect",
+      "_note": "Its size (1.35, flown side-on so the strict clamp lets it be giant), its hover, its wings and its rider are IDENTITY and live in traits.json since slice 3 — one place for what makes a card itself. A `scale` here would MULTIPLY with that one."
+    },
+    "Ant-Man's Air Force": {
+      "model": "insect",
+      "_note": "The insect rig stands at the centre for the clip lane and is not drawn: traits.json's `swarm: 5` (slice 3, T9) draws five small bees round it in one instanced call."
+    },
+    "Ant-Man, Reformed Rogue": {
+      "model": "agent",
+      "clips": {
+        "attack": "shrink"
+      },
+      "_note": "He attacks by getting smaller. Slice 4: the MAN's body (T8 stood him in the hero chibi, which since slice 4 is the woman's body) — he is a Human Rogue Hero, and `rogue` is not a recognised subtype, so without this entry he would stop at the hero rung."
+    },
+    "Agent 13, Sharon Carter": {
+      "model": "hero",
+      "clips": {
+        "attack": "pistolDraw"
+      },
+      "_note": "Report 09 §12.2's \"the pose is the point, and the pose is a model\", answered with one alias and no new cue id. Slice 4: the woman's body (the spy rung would give her the man's)."
+    },
+    "Peggy Carter, Secret Agent": {
+      "model": "hero",
+      "_note": "Slice 4: the woman's body — the spy rung alone would stand the founder of S.H.I.E.L.D. in the man's."
+    },
+    "Quake, Agent of S.H.I.E.L.D.": {
+      "model": "hero",
+      "_note": "Slice 4: the woman's body — Daisy Johnson is an Inhuman Spy Hero, and the spy rung alone would give her the man's."
+    },
+    "Nick Fury, Spymaster": {
+      "model": "agent",
+      "clips": {
+        "channel": "radioCall"
+      },
+      "_note": "The radio call is his own gesture; the agents he makes are the existing fx.agents cue and are NOT keyed here."
+    },
+    "Madame Hydra, Reanimated": {
+      "model": "hero",
+      "_note": "Villain identity (D221): the woman's body — Madame Hydra is a Human Horror Villain, and the villain rung alone would stand her in the man's."
+    },
+    "Kang the Conqueror": {
+      "model": "agent",
+      "clips": {
+        "attack": "pistolDraw"
+      },
+      "_note": "Villain identity (D221): he attacks with the wrist blasters — the library's two-handed aim, the alias Agent 13's pistol uses, with no pistol in his hands: his `gauntlets` glow at them and attack.lunge's muzzle flash fires from them. A row that aliases a clip names its body too, or the ladder stops here with none (the man's, as the villain rung would give him)."
+    },
+    "HYDRA Troopers": {
+      "model": "agent",
+      "clips": {
+        "attack": "pistolDraw"
+      },
+      "_note": "Villain identity (D221): the troopers attack by opening fire — the same alias, and their own `pistol` is in their hands for it (traits.json). The body is the man's, as the soldier rung would give them."
+    },
+    "Soldier Token": {
+      "model": "agent",
+      "tint": "#cfd6de",
+      "token": true,
+      "_note": "1,193 frame-instances in the corpus — the most-seen creature the deck makes. Keeps the agent body (T8) in the cool token grey; the key is the wire's name VERBATIM, `Soldier Token`."
+    },
+    "Hero Token": {
+      "model": "hero",
+      "tint": "#e8dcb4",
+      "token": true,
+      "_note": "T8: the hero body in a paler, token gold, so a 3/2 Hero token and Wasp are the same kind of thing and not the same card. `Hero Token` is the wire's name verbatim (it would otherwise reach creature/subtype:hero)."
+    },
+    "Songbird, Sonic Screamer": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Melissa Gold — the woman's body; the villain rung alone would give her the man's."
+    },
+    "Yellowjacket, Heartless Marauder": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Rita DeMara — the woman's body."
+    },
+    "White Widow, Yelena Belova": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Yelena Belova — the woman's body."
+    },
+    "Titania, Proud Pummeler": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Mary MacPherran — the woman's body, at the scale traits.json gives her."
+    },
+    "Moonstone, Harsh Mistress": {
+      "model": "hero",
+      "_note": "More villain identity (D231): Karla Sofen — the woman's body."
+    },
+    "Klaw, Sonic Subjugator": {
+      "model": "agent",
+      "clips": {
+        "attack": "pistolDraw"
+      },
+      "_note": "More villain identity (D231): he attacks by aiming the sonic emitter that is his right arm — the library's two-handed aim, Kang the Conqueror's alias, with no pistol in his hands: his `gauntlets` burn in the sound's magenta there and attack.lunge's muzzle flash fires from them. The body is the man's, as the villain rung would give him."
+    },
+    "Hulk, Brutal Brawler": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body — the hero rung alone would give Hulk the woman's. His gamma skin, size and purple trousers are traits.json's."
+    },
+    "Hulk, Strongest There Is": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body, as Hulk, Brutal Brawler."
+    },
+    "Hulk, Gamma Goliath": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body, as Hulk, Brutal Brawler."
+    },
+    "Hercules, Prince of Power": {
+      "model": "agent",
+      "_note": "More villain identity (D231): a Demigod Warrior Hero — the man's body; the hero rung alone would give him the woman's."
+    },
+    "Hulkling, Burgeoning Bruiser": {
+      "model": "agent",
+      "_note": "More villain identity (D231): Teddy Altman, a Kree Skrull Hero — the man's body."
+    },
+    "Wolverine, Fierce Fighter": {
+      "model": "agent",
+      "_note": "More villain identity (D231): Logan, a Mutant Berserker Hero — the man's body, short (traits.json)."
+    },
+    "Birds of Paradise": {
+      "model": "insect",
+      "_note": "More villain identity (D231): the library has no bird, and its one organic flier is the insect — a Bird of Paradise's insect rig stands at the centre for the clip lane and, since the fix pass (D232), is not drawn: traits.json's `swarm: 3` draws a flock of three small fliers in the crowned crane's grey round it in one instanced call, as the Air Force's are. Before this row it was a glow disc (a Bird is no recognised subtype)."
+    },
+    "T'Chaka, Venerable King": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the old king — the man's body; the hero rung alone would give him the woman's."
+    },
+    "T'Challa, the Black Panther": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body, as every Black Panther below — the hero rung alone would give them the woman's."
+    },
+    "Black Panther, Claws of Bast": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body."
+    },
+    "Black Panther, Most Dangerous": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body."
+    },
+    "Black Panther, Vanguard": {
+      "model": "agent",
+      "_note": "More villain identity (D231): the man's body."
+    },
+    "Dora Milaje Elite": {
+      "model": "hero",
+      "_note": "More villain identity (D231): the king's guard are women — the woman's body; a Human Warrior with no hero word, the human rung alone would give them the man's."
+    }
+  },
+  "default": {
+    "model": null,
+    "_note": "A card with no entry anywhere, and every card whose identity this seat may not know (§1.4): the anonymous disc."
+  },
+  "lands": {
+    "_note": "T4's terrain (report 13 §5). THE SAME THREE-RUNG LADDER: per-name, then a land subtype, then `*`. Per-name comes first because BOTH Thriving lands have the bare type line `Land` and no subtype at all — measured over the corpus, 2,291 frame-instances of it.",
+    "_kinds": "A `tile` is a geometry-and-material family and there are three (plateau, water, slab), not §5.2's five: the difference between a crag and a grove is a TINT, which is per-instance and free, and a fourth InstancedMesh is a fourth draw call for two lands that are not in this deck. See figures/tiles.ts.",
+    "_pose": "Tapped is NOT here: it comes off the snapshot (`card.tapped`), so a board scrubbed to mid-turn shows the right lands spent with no cue history (§5.3).",
+    "Thriving Heath": {
+      "tile": "plateau",
+      "tint": "#e8e2cc",
+      "rim": "#9ec7f0",
+      "_note": "Two-tone: a white plateau with a blue band at the rim, which is what a dual land is."
+    },
+    "Thriving Isle": {
+      "tile": "water",
+      "tint": "#7fb6e8",
+      "rim": "#f6f0d8",
+      "_note": "The same tile in water, with the white band."
+    },
+    "subtype:plains": {
+      "tile": "plateau",
+      "tint": "#e8e2cc"
+    },
+    "subtype:island": {
+      "tile": "water",
+      "tint": "#7fb6e8"
+    },
+    "subtype:mountain": {
+      "tile": "slab",
+      "tint": "#d08464"
+    },
+    "subtype:forest": {
+      "tile": "slab",
+      "tint": "#7fae76"
+    },
+    "subtype:swamp": {
+      "tile": "slab",
+      "tint": "#8d86a6"
+    },
+    "*": {
+      "tile": "slab",
+      "_note": "The declared fallback: a neutral slab in the card's own colour identity. Every non-basic land that is not a Thriving land lands here, and that is correct."
+    }
+  },
+  "landDefault": {
+    "tile": "slab",
+    "_note": "Reached only by a land whose identity this seat may not know — of which the corpus has none. The branch is explicit rather than incidental (§1.4)."
+  },
+  "attachments": {
+    "_note": "T5's auras and Equipment (report 13 §4). THE SAME THREE-RUNG LADDER: per-name, then an attachment subtype, then `*`. Every entry keys off the SNAPSHOT — `card.attachedToId` — never off the `attach` event, which fires 28 times in the whole corpus against 985 frames that show an attachment (§4.1).",
+    "_kinds": "`shrink` and `halo` are T5's; `shell`, `circuit`, `glints` and `cocoon` are §4.3's per-card table, drawn since Tier 2 slice 3 (T12) by scene/overlays.ts, one instanced mesh per KIND. Every kind keeps the halo ring at the host's feet and replaces its chest glow; an anonymous host (a face-down creature) wears the ring and nothing else (hard rule 8). The three deck rows below landed with slice 3's verification fixes — before that the per-name rung was empty and all three drew the plain halo.",
+    "_hosts": "Measured: 2,030 of 2,030 attachment instances in the corpus have a CREATURE host, so every entry here lands on a figure. An attachment on a land or an artifact draws its card and nothing else, which is correct.",
+    "Quantum Reduction": {
+      "kind": "shrink",
+      "hostScale": 0.45,
+      "strength": 0.95,
+      "_note": "944 frame-instances, the most-seen attachment in the corpus. The Quantum Realm takes it: the host figure is less than half its height and a ring closes at its feet. The SHRINK is the pose — it survives `skip all` because the snapshot still says the Aura is attached — and `fx.collapse` is the cast beat."
+    },
+    "Super Suit": {
+      "kind": "shell",
+      "metal": true,
+      "strength": 0.9,
+      "_note": "T12: the armour shell — a plated capsule round the whole figure, a bright rim and two seams, metal-cooled. 409 frame-instances in the corpus."
+    },
+    "S.H.I.E.L.D. Spy Kit": {
+      "kind": "glints",
+      "metal": true,
+      "strength": 0.95,
+      "_note": "T12: three four-point gadget glints orbiting at hand height, twinkling on the overlay's gated clock. 362 frame-instances."
+    },
+    "Robotics Mastery": {
+      "kind": "circuit",
+      "strength": 0.9,
+      "_note": "T12: bold circuit traces over the body, pulsing. 315 frame-instances."
+    },
+    "Vibranium Energy Daggers": {
+      "kind": "glints",
+      "metal": true,
+      "strength": 0.9,
+      "_note": "More villain identity (D231): Wakanda's Equipment — the S.H.I.E.L.D. Spy Kit's gadget glints (T12's `glints`, metal-cooled) as the daggers' vibranium edges orbiting at the host's hands, where the equipment rung alone gave it the plain metallic halo. A shared overlay kind, so no new draw call on a table where the Spy Kit is."
+    },
+    "subtype:aura": {
+      "kind": "halo",
+      "strength": 0.85,
+      "_note": "1,259 frame-instances of the type line `Enchantment - Aura` — Quantum Reduction and Robotics Mastery, both of which have rows of their own above. This rung is for any other Aura: the halo, in its own colour."
+    },
+    "subtype:equipment": {
+      "kind": "halo",
+      "metal": true,
+      "strength": 0.8,
+      "_note": "771 frame-instances of `Artifact - Equipment` — Super Suit and the S.H.I.E.L.D. Spy Kit, both with rows of their own above. This rung is §4.4's metallic variant of the halo for any other Equipment: a harder, colder rim."
+    },
+    "*": {
+      "kind": "halo",
+      "_note": "The declared fallback, and it is what makes the feature FINISHED rather than seeded (§4.4): an aura nobody wrote an entry for still visibly does something to the creature it is on, in its own colour."
+    }
+  },
+  "attachDefault": {
+    "kind": "halo",
+    "_note": "Reached only by an attaching card whose identity this seat may not know — of which the corpus has none. `manifestationOf` gives it the colourless grey, because \"something is attached here\" is public and what it is is not."
+  },
+  "_bodies": "Slice 4: the humanoid ids are BODIES now — `agent` is the man's (Quaternius's Universal Base Characters Superhero male, short parted hair), `hero` the woman's (the Superhero female, long hair), `scientist` the man's body again (one node in the library); each card's costume (traits.json) is what makes it Coulson's suit or Wasp's gold and black. So the card rows below choose the WOMAN's body for the women the spy rung would put in the man's (Peggy, Agent 13, Quake) and the MAN's for Ant-Man, whom the hero rung would put in the woman's. Slices 1–3's Kenney chibis are still in the library as `agent-chibi`, `hero-chibi` and `scientist-chibi`, and a traits.json row with `\"body\": \"chibi\"` stands a card in its body's chibi again."
+}

@@ -1,0 +1,67 @@
+[
+ {
+  "object": "set",
+  "code": "trk",
+  "name": "Star Trek",
+  "released_at": "2026-11-13",
+  "set_type": "expansion",
+  "card_count": 135,
+  "digital": false,
+  "icon_svg_uri": "https://svgs.scryfall.io/sets/trk.svg?1789963200"
+ },
+ {
+  "object": "set",
+  "code": "msh",
+  "name": "Marvel Super Heroes",
+  "released_at": "2026-06-26",
+  "set_type": "expansion",
+  "card_count": 453,
+  "digital": false,
+  "icon_svg_uri": "https://svgs.scryfall.io/sets/msh.svg?1789963200"
+ },
+ {
+  "object": "set",
+  "code": "tmsh",
+  "name": "Marvel Super Heroes Tokens",
+  "released_at": "2026-06-26",
+  "set_type": "token",
+  "card_count": 27,
+  "parent_set_code": "msh",
+  "digital": false,
+  "icon_svg_uri": "https://svgs.scryfall.io/sets/msh.svg?1789963200"
+ },
+ {
+  "object": "set",
+  "code": "amsh",
+  "name": "Marvel Super Heroes Art Series",
+  "released_at": "2026-06-26",
+  "set_type": "memorabilia",
+  "card_count": 66,
+  "parent_set_code": "msh",
+  "digital": false,
+  "icon_svg_uri": "https://svgs.scryfall.io/sets/msh.svg?1789963200"
+ },
+ {
+  "object": "set",
+  "code": "msc",
+  "name": "Marvel Super Heroes Commander",
+  "released_at": "2026-06-26",
+  "set_type": "commander",
+  "card_count": 866,
+  "parent_set_code": "msh",
+  "digital": false,
+  "block_code": "cmd",
+  "block": "Commander",
+  "icon_svg_uri": "https://svgs.scryfall.io/sets/msc.svg?1789963200"
+ },
+ {
+  "object": "set",
+  "code": "mar",
+  "name": "Marvel Universe",
+  "released_at": "2025-09-26",
+  "set_type": "masterpiece",
+  "card_count": 100,
+  "digital": false,
+  "icon_svg_uri": "https://svgs.scryfall.io/sets/mar.svg?1789963200"
+ }
+]

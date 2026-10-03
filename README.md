@@ -37,15 +37,21 @@ git ls-tree --name-only origin/pc-jobs jobs/
    `git fetch && git checkout <ref> && git pull` for a branch, or `git checkout <sha>` for
    a commit. Then run any build step the job lists. If a checkout has local changes, don't
    clobber them: mark the job `waiting` and tell Justin. Then push a STATUS of `running`.
-5. **Run the commands exactly as written.** Don't fix code, change flags, or improvise.
+5. **Pilot first, always.** Every job has a `## Pilot` section: a small version of the job,
+   usually 2–10 minutes, with a list of checks. Run it before the full job. If any check
+   fails, don't run the full job: mark it `failed`, put `pilot` in the reason, and attach
+   the pilot output. The point is to never spend hours making data we later find invalid.
+   While the full job runs, look at its output now and then. Stop it early (TERM, status
+   `failed`, reason `aborted: <why>`) if the job's `## Abort if` conditions appear.
+6. **Run the commands exactly as written.** Don't fix code, change flags, or improvise.
    You may retry once if a failure is plainly transient (network, a busy port), and you
    may lower `JOBS=` if the machine is struggling; say so in the summary.
-6. **Report.** Write `results/<id>/STATUS` and `results/<id>/summary.md` with what the
+7. **Report.** Write `results/<id>/STATUS` and `results/<id>/summary.md` with what the
    job's `report:` section asks for, then push. Copy small outputs (under 5 MB each, text
    or json) into `results/<id>/`. Large data stays in `var/`; give its path and size in
    the summary instead. On failure, use the `failed` status and include the failing
    command, its exit code and the last ~60 lines of output.
-7. **Heartbeat.** On every check, update `HEARTBEAT.md` on `pc-results`. It holds the
+8. **Heartbeat.** On every check, update `HEARTBEAT.md` on `pc-results`. It holds the
    time, what is running, the load average, the last finished job, and any message for the
    cloud session. Push it even when nothing changed.
 
@@ -101,8 +107,12 @@ cpu: heavy | light
 after: J001            (optional)
 repos: mtg-table@main, ForgeCoach@main
 est: ~3 h on the 9700X
+## Pilot
+small version + checks that must pass
 ## Commands
 …
+## Abort if
+conditions that mean the data is bad, so stop early
 ## Report
 …
 ```

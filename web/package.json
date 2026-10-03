@@ -1,0 +1,48 @@
+{
+  "name": "mtg-table-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "description": "mtg-table browser client — renders the frame stream from bridge/ (M1: text board + log replay)",
+  "scripts": {
+    "dev": "vite",
+    "dev:replay": "vite --open \"/?replay=games/g1.jsonl\"",
+    "dev:arena": "vite --open \"/?replay=games/g1.jsonl#arena\"",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.ts && vitest run",
+    "test:node": "node --test test/*.test.ts",
+    "test:render": "vitest run"
+  },
+  "dependencies": {
+    "@react-three/drei": "9.122.0",
+    "@react-three/fiber": "8.18.0",
+    "@react-three/postprocessing": "2.19.1",
+    "postprocessing": "6.39.5",
+    "mana-font": "^1.18.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "4.5.0",
+    "@types/node": "^24.13.4",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/three": "0.185.4",
+    "@vitejs/plugin-react": "^5.2.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.6",
+    "vitest": "^5.0.0"
+  },
+  "overrides": {
+    "@gltf-transform/core": "4.5.0",
+    "@gltf-transform/extensions": "4.5.0",
+    "@gltf-transform/functions": "4.5.0",
+    "@gltf-transform/cli": {
+      "meshoptimizer": "1.2.0"
+    }
+  }
+}

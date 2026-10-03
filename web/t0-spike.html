@@ -1,0 +1,163 @@
+<!doctype html>
+<!--
+  mtg-table — web/t0-spike.html
+  SPDX-License-Identifier: GPL-3.0-or-later
+
+  **Report 13 §11's T0: the spike and the go/no-go**, kept as the thing that
+  produced the numbers in `docs/evidence/m7-tier2.md`. It answers one question,
+  against the library the app actually ships:
+
+    N figures of one archetype, cloned with SkeletonUtils.clone, one clip
+    scrubbed from a hand-driven `t` via `action.time` + `mixer.update(0)` —
+    how many draw calls, how many materials, how long is the frame body?
+
+      /t0-spike.html?n=12&archetype=agent      the gate
+      /t0-spike.html?n=21&archetype=drone      the corpus's worst case
+
+  It is **not part of the app**: `vite build`'s only input is `index.html`, so
+  nothing here reaches `dist/`. It uses `three` directly (never drei's
+  `useGLTF`, never `useAnimations`) and loads from `/models/`, which is Vite's
+  static root — no network, no CDN.
+
+  Read it with `node cdp-run.mjs --url .../t0-spike.html --expr 'window.__t0'`,
+  or open it in a browser and read the JSON under the canvas.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>T0 spike</title>
+    <style>
+      body { margin: 0; background: #0a0d12; color: #dfe5ee; font: 13px/1.5 monospace; }
+      pre { padding: 12px; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="1280" height="720"></canvas>
+    <pre id="out">loading…</pre>
+    <script type="module">
+      import * as THREE from 'three';
+      import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+      import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+      import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+
+      const params = new URLSearchParams(location.search);
+      const FIGURES = Number(params.get('n') ?? '12');
+      const ARCHETYPE = params.get('archetype') ?? 'agent';
+      const SAMPLES = 240;
+
+      const canvas = document.getElementById('c');
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setPixelRatio(1);
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color('#0a0d12');
+      // The arena's rest pose, near enough: a steep three-quarter view.
+      const camera = new THREE.PerspectiveCamera(40, 1280 / 720, 0.1, 100);
+      camera.position.set(0, 9.3, 8.3);
+      camera.lookAt(0, 0, 0.8);
+
+      const out = document.getElementById('out');
+      const say = (text) => { out.textContent = text; };
+
+      const rigs = [];
+
+      const loader = new GLTFLoader();
+      loader.setMeshoptDecoder(MeshoptDecoder);
+      loader.load(
+        '/models/figures.glb',
+        (gltf) => {
+          // The SHIPPED library, by archetype node — so this measures the file
+          // the app actually loads, meshopt and all, not a one-off export.
+          const source = gltf.scene.getObjectByName(ARCHETYPE);
+          if (source === undefined) throw new Error(`no node "${ARCHETYPE}" in figures.glb`);
+          const clip =
+            gltf.animations.find((a) => a.name === `${ARCHETYPE}_idle`) ??
+            gltf.animations.find((a) => a.name.startsWith(`${ARCHETYPE}_`));
+
+          // Normalise exactly as `scene/models.ts` will: measure the source's
+          // own bounding box and scale so its height is FIGURE_HEIGHT (0.85).
+          const box = new THREE.Box3().setFromObject(source);
+          const height = box.max.y - box.min.y;
+          const k = 0.85 / height;
+
+          for (let i = 0; i < FIGURES; i++) {
+            const root = skeletonClone(source);
+            root.scale.setScalar(k);
+            // Two ranks of six, at the arena's own creature-rank pitch.
+            const row = Math.floor(i / 6);
+            root.position.set((i % 6) * 0.795 - 2, 0, row === 0 ? 1.78 : -1.78);
+            root.rotation.y = row === 0 ? 0 : Math.PI;
+            root.traverse((o) => { o.raycast = () => {}; });
+            scene.add(root);
+            const mixer = new THREE.AnimationMixer(root);
+            const action = mixer.clipAction(clip);
+            action.play();
+            rigs.push({ root, mixer, action, duration: clip.duration });
+          }
+
+          // §8.3 rule 3: warm the programs before the first measured frame.
+          renderer.compile(scene, camera);
+
+          const samples = [];
+          let frame = 0;
+          const tick = () => {
+            const t0 = performance.now();
+            // THE mechanism under test: the cue owns `t`; the mixer never ticks
+            // itself. `AnimationAction._updateTime` returns `this.time`
+            // untouched for a zero delta, so this is a deterministic scrub.
+            const t = (frame % 120) / 120;
+            for (const rig of rigs) {
+              rig.action.time = t * rig.duration;
+              rig.action.setEffectiveWeight(1);
+              rig.mixer.update(0);
+            }
+            renderer.render(scene, camera);
+            const body = performance.now() - t0;
+            frame += 1;
+            // Skip the first 20 frames: the first draw uploads the geometry,
+            // the skeleton texture and the colormap.
+            if (frame > 20) samples.push(body);
+            if (samples.length < SAMPLES) {
+              requestAnimationFrame(tick);
+              return;
+            }
+
+            const materials = new Set();
+            const geometries = new Set();
+            let skinned = 0;
+            scene.traverse((o) => {
+              if (o.isMesh || o.isSkinnedMesh) {
+                materials.add(o.material.uuid);
+                geometries.add(o.geometry.uuid);
+                if (o.isSkinnedMesh) skinned += 1;
+              }
+            });
+            const sorted = [...samples].sort((a, b) => a - b);
+            const at = (q) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];
+            window.__t0 = {
+              figures: FIGURES,
+              skinnedMeshes: skinned,
+              distinctMaterials: materials.size,
+              distinctGeometries: geometries.size,
+              render: { ...renderer.info.render },
+              memory: { ...renderer.info.memory },
+              programs: renderer.info.programs?.length ?? null,
+              bones: rigs[0].root.getObjectByProperty('isSkinnedMesh', true)?.skeleton.bones.length ?? null,
+              frameBodyMs: { p50: at(0.5), p95: at(0.95), max: sorted[sorted.length - 1], n: sorted.length },
+              archetype: ARCHETYPE,
+              clips: gltf.animations.length,
+              clipScrubbed: clip.name,
+              sourceHeight: height,
+            };
+            say(JSON.stringify(window.__t0, null, 2));
+          };
+          requestAnimationFrame(tick);
+        },
+        undefined,
+        (err) => {
+          window.__t0 = { error: String(err) };
+          say(String(err));
+        },
+      );
+    </script>
+  </body>
+</html>

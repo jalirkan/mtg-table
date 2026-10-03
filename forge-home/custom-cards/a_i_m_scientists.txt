@@ -1,0 +1,25 @@
+# mtg-table card-script overlay -- A.I.M. Scientists (MSH #44).
+#
+# Provenance: this is Forge 2.0.14's own res/cardsfolder/cardsfolder.zip entry
+# a/a_i_m_scientists.txt, byte for byte, with ONE line deleted: "K:Trample".
+# The printed card has no trample.  Scryfall /cards/named?exact=A.I.M. Scientists
+# and /cards/msh/44 both return
+#   keywords: ["Landcycling","Basic landcycling","Typecycling","Cycling","Connive"]
+# and an oracle_text with no trample line, and Forge's own Oracle: line below
+# contradicts its own K: line -- the signature of a scripting slip.  The bug is
+# still present in Forge master, so updating Forge will not fix it.
+#
+# See docs/research/08-deck-card-coverage.md section 2 and DECISIONS.md D14.
+# tools/make-forge-home.sh copies this file into var/forge/custom/cards/, which
+# is ForgeConstants.USER_CUSTOM_CARDS_DIR; StaticData loads the stock tree first
+# and then the custom tree into the same map, so this entry wins by name.
+# Do not edit by hand except to re-sync with a newer stock script.
+Name:A.I.M. Scientists
+ManaCost:3 U
+Types:Creature Human Scientist Villain
+PT:3/3
+K:TypeCycling:Basic:2
+T:Mode$ ChangesZone | Origin$ Any | Destination$ Battlefield | ValidCard$ Card.Self | Execute$ TrigConnive | TriggerDescription$ When this creature enters, it connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)
+SVar:TrigConnive:DB$ Connive
+DeckHas:Ability$Discard|Counters
+Oracle:When this creature enters, it connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)\nBasic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)

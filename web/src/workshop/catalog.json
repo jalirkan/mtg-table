@@ -1,0 +1,2548 @@
+{
+  "version": 1,
+  "_generated": "WRITTEN BY tools/build-workshop-catalog.ts from decks/*.dck, fixtures/games/*.jsonl, the engine's card scripts (for a deck card the corpus never showed face up) and the card names in web/src/arena/cues/cues.json — do not edit by hand; web/test/workshop.test.ts fails when it drifts",
+  "decks": [
+    {
+      "file": "pacho-shield.dck",
+      "name": "Pacho SHIELD (Marvel Super Heroes)",
+      "cards": [
+        {
+          "name": "Agent Phil Coulson",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Peggy Carter, Secret Agent",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Agent 13, Sharon Carter",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Agents of S.H.I.E.L.D.",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Quake, Agent of S.H.I.E.L.D.",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Nick Fury, Spymaster",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "S.H.I.E.L.D. Helicarrier",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "S.H.I.E.L.D. Spy Kit",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Strategic Intervention",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Web Up",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Helicarrier Strike",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Borough Backup",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wasp, Shrinking Savior",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Ant-Man, Reformed Rogue",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Ant-Man's Air Force",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Giant-Sized Flying Ant",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Bold Biochemist",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "A.I.M. Scientists",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Aerial Doombot",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Super Suit",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Robotics Mastery",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Quantum Reduction",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Depower",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Pym Particles",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Heath",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Isle",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Plains",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Island",
+          "count": 7,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "doom-legion.dck",
+      "name": "Doom Legion (Marvel Super Heroes villains)",
+      "cards": [
+        {
+          "name": "Aerial Doombot",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Agents of HYDRA",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Loki, God of Mischief",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doom's Servo-Guards",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doom Reigns Supreme",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dark Deed",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doom Blade",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Baron Strucker, HYDRA Overlord",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "HYDRA Troopers",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "A.I.M. Bot",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Visions of Villainy",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Frozen in Ice",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Kang the Conqueror",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Kang, Temporal Tyrant",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Unliving Legionnaire",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Madame Hydra, Reanimated",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hour of Defeat",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Crossbones, Malicious Mercenary",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Pharaoh Rama-Tut",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Doctor Doom",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Isle",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thriving Moor",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hidden Lair",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Castle Doom",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Villainous Hideout",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Swamp",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Island",
+          "count": 5,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "amount-probe.dck",
+      "name": "Divided amount probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 20,
+          "section": "main"
+        },
+        {
+          "name": "Manamorphose",
+          "count": 20,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "fra-rw-aggro.dck",
+      "name": "Reality Fracture red-white legends aggro",
+      "cards": [
+        {
+          "name": "Samut, Hazoret's Champion",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Gallia, the Merrymaker",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Eardrum Rattler",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Graft Surgeon",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Koth, the Geomancer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Chandra's Emberling",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Pyre Rhymer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Yoshimaru, Beloved Companion",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Mabel, Valley Hero",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Shatterwing Pegasus",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Woodwork Prodigy",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Thalia, the Survivor",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Whiplash Wordsmith",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Jiang Yanggu, Alone",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wrath of the Bloodmane",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "No Admittance",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Fulminous Forte",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Ajani's Anguish",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Mountain",
+          "count": 9,
+          "section": "main"
+        },
+        {
+          "name": "Plains",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Surgical Precision",
+          "count": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Your Fate Ends Here",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Hexhaven Battalion",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Way of the Pyromancer",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Medic's Kitesail",
+          "count": 2,
+          "section": "sideboard"
+        },
+        {
+          "name": "Austere Command",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Ghalta the Immovable",
+          "count": 1,
+          "section": "sideboard"
+        },
+        {
+          "name": "Room of Refuge",
+          "count": 1,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "file": "future-sight-probe.dck",
+      "name": "Future Sight probe",
+      "cards": [
+        {
+          "name": "Island",
+          "count": 22,
+          "section": "main"
+        },
+        {
+          "name": "Future Sight",
+          "count": 18,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "hulk-family.dck",
+      "name": "Hulk Family (Marvel Super Heroes gamma)",
+      "cards": [
+        {
+          "name": "Rick Jones, Destined Sidekick",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Birds of Paradise",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Brawn, Amadeus Cho",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hellcat, Undying Vigilante",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Knight of Wundagore",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Gallant Citizen",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "HULK SMASH!",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Gamma Grotesque",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "She-Hulk, Attorney-at-Law",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hercules, Prince of Power",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulkling, Burgeoning Bruiser",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulk, Brutal Brawler",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulk, Strongest There Is",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Abomination, Irradiated Brute",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Abomination, Terrifying Titan",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "She-Hulk, Jade Defender",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wolverine, Fierce Fighter",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hulk, Gamma Goliath",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Red Hulk",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Los Diablos Missile Base",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Training Compound",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Rootbound Crag",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Forest",
+          "count": 9,
+          "section": "main"
+        },
+        {
+          "name": "Mountain",
+          "count": 5,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "masters-of-evil.dck",
+      "name": "Masters of Evil (Marvel Super Heroes villains)",
+      "cards": [
+        {
+          "name": "Whiplash, Vengeful Engineer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Lightning Bolt",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Shock",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Songbird, Sonic Screamer",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "MACH-1, Swooping Scoundrel",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Yellowjacket, Heartless Marauder",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Boomerang, Blade Flinger",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Fixer, Techno Terror",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "White Widow, Yelena Belova",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Common Crook",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Night's Whisper",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Whirlwind, Killer Cyclone",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Volcanic Villain",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Klaw, Sonic Subjugator",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Titania, Proud Pummeler",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Moonstone, Harsh Mistress",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Tiger Shark, Abyssal Hunter",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Atlas, Sizable Stooge",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Avengers: Under Siege",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Radioactive Man",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "The Masters of Evil",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Hell's Kitchen",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dark Fortress",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Villainous Hideout",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dragonskull Summit",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Swamp",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Mountain",
+          "count": 6,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "morph-probe.dck",
+      "name": "Morph probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Ainok Tracker",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Battering Craghorn",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Ashcloud Phoenix",
+          "count": 6,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "number-probe.dck",
+      "name": "Chosen number probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 24,
+          "section": "main"
+        },
+        {
+          "name": "Volcano Hellion",
+          "count": 16,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "scry-probe.dck",
+      "name": "Scry probe",
+      "cards": [
+        {
+          "name": "Island",
+          "count": 24,
+          "section": "main"
+        },
+        {
+          "name": "Opt",
+          "count": 16,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "search-probe.dck",
+      "name": "Library search probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 20,
+          "section": "main"
+        },
+        {
+          "name": "Rampant Growth",
+          "count": 20,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "sideboard-probe.dck",
+      "name": "Sideboard probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Garruk's Companion",
+          "count": 22,
+          "section": "main"
+        },
+        {
+          "name": "Giant Growth",
+          "count": 15,
+          "section": "sideboard"
+        }
+      ]
+    },
+    {
+      "file": "trample-probe.dck",
+      "name": "Trample probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Garruk's Companion",
+          "count": 22,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "wakanda.dck",
+      "name": "Wakanda (Marvel Super Heroes Black Panther)",
+      "cards": [
+        {
+          "name": "Swords to Plowshares",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Vibranium Energy Daggers",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Shuri, the Black Panther",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "T'Chaka, Venerable King",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Dora Milaje Elite",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Wakandan Shield Guard",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Gallant Citizen",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "Wakandan Tusker",
+          "count": 2,
+          "section": "main"
+        },
+        {
+          "name": "T'Challa, the Black Panther",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Black Panther, Claws of Bast",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Black Panther, Most Dangerous",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Nakia, Wakandan Operative",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Shuri, Vibranium Technologist",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Black Panther, Vanguard",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Okoye, Dora Milaje Leader",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Okoye, Mighty and Adored",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Wakandan Drone Flock",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Warriors of Wakanda",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Storm, Queen of Wakanda",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Birnin Zana Plaza",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Gathering Place",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Sunpetal Grove",
+          "count": 1,
+          "section": "main"
+        },
+        {
+          "name": "Plains",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Forest",
+          "count": 7,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "yield-probe.dck",
+      "name": "Yield probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Thallid",
+          "count": 22,
+          "section": "main"
+        }
+      ]
+    }
+  ],
+  "cards": {
+    "A.I.M. Bot": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": "{2}{U}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "A.I.M. Scientists": {
+      "types": "Creature - Human Scientist Villain",
+      "manaCost": "{3}{U}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Abomination, Irradiated Brute": {
+      "types": "Legendary Creature - Gamma Villain",
+      "manaCost": "{2}{G}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "TRAMPLE"
+      ]
+    },
+    "Abomination, Terrifying Titan": {
+      "types": "Legendary Creature - Gamma Villain",
+      "manaCost": "{3}{R/G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "TRAMPLE"
+      ]
+    },
+    "Aerial Doombot": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": "{U}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Agent 13, Sharon Carter": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Agent Phil Coulson": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Agents of HYDRA": {
+      "types": "Creature - Human Spy Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Agents of S.H.I.E.L.D.": {
+      "types": "Creature - Human Spy Hero",
+      "manaCost": "{2}{W}",
+      "power": "2",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Ainok Tracker": {
+      "types": "Creature - Dog Scout",
+      "manaCost": "{5}{R}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "PLST"
+    },
+    "Ant-Man's Air Force": {
+      "types": "Creature - Insect",
+      "manaCost": "{1}{U}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Ant-Man, Reformed Rogue": {
+      "types": "Legendary Creature - Human Rogue Hero",
+      "manaCost": "{2}{G/U}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Ashcloud Phoenix": {
+      "types": "Creature - Phoenix",
+      "manaCost": "{2}{R}{R}",
+      "power": "4",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MKC"
+    },
+    "Atlas, Sizable Stooge": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{B/G}{B/G}",
+      "power": "5",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "REACH"
+      ]
+    },
+    "Austere Command": {
+      "types": "Sorcery",
+      "manaCost": "{4}{W}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Avengers: Under Siege": {
+      "types": "Enchantment - Saga",
+      "manaCost": "{2}{B}{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Baron Strucker, HYDRA Overlord": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Battering Craghorn": {
+      "types": "Creature - Goat Beast",
+      "manaCost": "{2}{R}{R}",
+      "power": "3",
+      "toughness": "1",
+      "token": false,
+      "setCode": "ARC"
+    },
+    "Birds of Paradise": {
+      "types": "Creature - Bird",
+      "manaCost": "{G}",
+      "power": "0",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Birnin Zana Plaza": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Black Panther, Claws of Bast": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "LIFELINK"
+      ]
+    },
+    "Black Panther, Most Dangerous": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Black Panther, Vanguard": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{G}{W}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Bold Biochemist": {
+      "types": "Creature - Human Scientist",
+      "manaCost": "{1}{U}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Boomerang, Blade Flinger": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Borough Backup": {
+      "types": "Sorcery",
+      "manaCost": "{4}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "TYPECYCLING"
+      ]
+    },
+    "Brawn, Amadeus Cho": {
+      "types": "Legendary Creature - Gamma Scientist Hero",
+      "manaCost": "{1}{G/U}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Castle Doom": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Clue Token": {
+      "types": "Artifact - Clue",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": true,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Common Crook": {
+      "types": "Creature - Human Rogue Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Crossbones, Malicious Mercenary": {
+      "types": "Legendary Creature - Human Mercenary Villain",
+      "manaCost": "{3}{B}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "DEATHTOUCH"
+      ]
+    },
+    "Dark Deed": {
+      "types": "Instant",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Dark Fortress": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Depower": {
+      "types": "Instant",
+      "manaCost": "{2}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Doctor Doom": {
+      "types": "Legendary Creature - Human Scientist Villain",
+      "manaCost": "{4}{B}{B}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Doom Blade": {
+      "types": "Instant",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Doom Reigns Supreme": {
+      "types": "Enchantment - Plan",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Doom's Servo-Guards": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Doombot": {
+      "types": "Artifact Creature - Robot Villain",
+      "manaCost": null,
+      "power": "3",
+      "toughness": "3",
+      "token": true,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Dora Milaje Elite": {
+      "types": "Creature - Human Warrior",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "FIRST_STRIKE"
+      ]
+    },
+    "Dragonskull Summit": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Fixer, Techno Terror": {
+      "types": "Legendary Creature - Human Artificer Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Forest": {
+      "types": "Basic Land - Forest",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TRK"
+    },
+    "Frozen in Ice": {
+      "types": "Enchantment - Aura",
+      "manaCost": "{2}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "ENCHANT"
+      ]
+    },
+    "Future Sight": {
+      "types": "Enchantment",
+      "manaCost": "{2}{U}{U}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MB2"
+    },
+    "Gallant Citizen": {
+      "types": "Creature - Human Citizen",
+      "manaCost": "{G/W}{G/W}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Gamma Grotesque": {
+      "types": "Creature - Gamma Horror Villain",
+      "manaCost": "{2}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "VIGILANCE"
+      ]
+    },
+    "Garruk's Companion": {
+      "types": "Creature - Beast",
+      "manaCost": "{G}{G}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "M12"
+    },
+    "Gathering Place": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Giant Growth": {
+      "types": "Instant",
+      "manaCost": "{G}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Giant-Sized Flying Ant": {
+      "types": "Creature - Insect",
+      "manaCost": "{3}{U}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "FLASH",
+        "FLYING"
+      ]
+    },
+    "HULK SMASH!": {
+      "types": "Instant",
+      "manaCost": "{1}{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "TEAMWORK"
+      ]
+    },
+    "HYDRA Troopers": {
+      "types": "Creature - Human Soldier Villain",
+      "manaCost": "{2}{B}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Helicarrier Strike": {
+      "types": "Instant",
+      "manaCost": "{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Hell's Kitchen": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Hellcat, Undying Vigilante": {
+      "types": "Legendary Creature - Human Hero",
+      "manaCost": "{G}{G}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "HASTE"
+      ]
+    },
+    "Hercules, Prince of Power": {
+      "types": "Legendary Creature - Demigod Warrior Hero",
+      "manaCost": "{2}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Hero Token": {
+      "types": "Creature - Hero",
+      "manaCost": null,
+      "power": "3",
+      "toughness": "2",
+      "token": true,
+      "setCode": "MSH",
+      "keywords": [
+        "VIGILANCE"
+      ]
+    },
+    "Hidden Lair": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Hour of Defeat": {
+      "types": "Instant",
+      "manaCost": "{3}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Hulk, Brutal Brawler": {
+      "types": "Legendary Creature - Gamma Berserker Hero",
+      "manaCost": "{2}{G}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Hulk, Gamma Goliath": {
+      "types": "Legendary Creature - Gamma Berserker Hero",
+      "manaCost": "{3}{R}{G}",
+      "power": "6",
+      "toughness": "5",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ]
+    },
+    "Hulk, Strongest There Is": {
+      "types": "Legendary Creature - Gamma Berserker Hero",
+      "manaCost": "{2}{G}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "TRAMPLE"
+      ]
+    },
+    "Hulkling, Burgeoning Bruiser": {
+      "types": "Legendary Creature - Kree Skrull Hero",
+      "manaCost": "{2}{G}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "VIGILANCE"
+      ]
+    },
+    "Island": {
+      "types": "Basic Land - Island",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TRK"
+    },
+    "Kang the Conqueror": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{U}{U}",
+      "power": "4",
+      "toughness": "5",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Kang, Temporal Tyrant": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{2}{U}{B}",
+      "power": "3",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Klaw, Sonic Subjugator": {
+      "types": "Legendary Creature - Human Rogue Villain",
+      "manaCost": "{2}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Knight of Wundagore": {
+      "types": "Creature - Cat Knight Villain",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "TRAMPLE"
+      ]
+    },
+    "Lightning Bolt": {
+      "types": "Instant",
+      "manaCost": "{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Loki, God of Mischief": {
+      "types": "Legendary Creature - God Sorcerer Villain",
+      "manaCost": "{1}{U}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Los Diablos Missile Base": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "MACH-1, Swooping Scoundrel": {
+      "types": "Legendary Artifact Creature - Human Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Madame Hydra, Reanimated": {
+      "types": "Legendary Creature - Human Horror Villain",
+      "manaCost": "{3}{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "MENACE"
+      ]
+    },
+    "Manamorphose": {
+      "types": "Instant",
+      "manaCost": "{1}{R/G}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "SPG"
+    },
+    "Moonstone, Harsh Mistress": {
+      "types": "Legendary Creature - Human Doctor Villain",
+      "manaCost": "{3}{B}",
+      "power": "2",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Mountain": {
+      "types": "Basic Land - Mountain",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TRK"
+    },
+    "Nakia, Wakandan Operative": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{G}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "REACH"
+      ]
+    },
+    "Nick Fury, Spymaster": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{4}{W}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "FIRST_STRIKE"
+      ]
+    },
+    "Night's Whisper": {
+      "types": "Sorcery",
+      "manaCost": "{1}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Okoye, Dora Milaje Leader": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{3}{W}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Okoye, Mighty and Adored": {
+      "types": "Legendary Creature - Human Warrior Hero",
+      "manaCost": "{2}{G}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Opt": {
+      "types": "Instant",
+      "manaCost": "{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "TDC"
+    },
+    "Peggy Carter, Secret Agent": {
+      "types": "Legendary Creature - Human Spy Hero",
+      "manaCost": "{1}{W}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Pharaoh Rama-Tut": {
+      "types": "Legendary Creature - Human Noble Villain",
+      "manaCost": "{4}{U}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "WARD"
+      ]
+    },
+    "Plains": {
+      "types": "Basic Land - Plains",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Pym Particles": {
+      "types": "Sorcery",
+      "manaCost": "{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Quake, Agent of S.H.I.E.L.D.": {
+      "types": "Legendary Creature - Inhuman Spy Hero",
+      "manaCost": "{2}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Quantum Reduction": {
+      "types": "Enchantment - Aura",
+      "manaCost": "{1}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Radioactive Man": {
+      "types": "Legendary Creature - Human Scientist Villain",
+      "manaCost": "{4}{B}",
+      "power": "3",
+      "toughness": "5",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "DEATHTOUCH"
+      ]
+    },
+    "Rampant Growth": {
+      "types": "Sorcery",
+      "manaCost": "{1}{G}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "FIC"
+    },
+    "Red Hulk": {
+      "types": "Legendary Creature - Gamma Berserker Villain",
+      "manaCost": "{4}{R}{R}",
+      "power": "6",
+      "toughness": "7",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ]
+    },
+    "Rick Jones, Destined Sidekick": {
+      "types": "Legendary Creature - Human Advisor",
+      "manaCost": "{G}",
+      "power": "0",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Robot Token": {
+      "types": "Artifact Creature - Robot",
+      "manaCost": null,
+      "power": "1",
+      "toughness": "1",
+      "token": true,
+      "setCode": "SPM"
+    },
+    "Robotics Mastery": {
+      "types": "Enchantment - Aura",
+      "manaCost": "{4}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Rootbound Crag": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "S.H.I.E.L.D. Helicarrier": {
+      "types": "Artifact - Vehicle",
+      "manaCost": "{4}",
+      "power": "4",
+      "toughness": "5",
+      "token": false,
+      "setCode": "MSH"
+    },
+    "S.H.I.E.L.D. Spy Kit": {
+      "types": "Artifact - Equipment",
+      "manaCost": "{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Saproling Token": {
+      "types": "Creature - Saproling",
+      "manaCost": null,
+      "power": "1",
+      "toughness": "1",
+      "token": true,
+      "setCode": "MMA"
+    },
+    "She-Hulk, Attorney-at-Law": {
+      "types": "Legendary Creature - Gamma Advisor Hero",
+      "manaCost": "{2}{G/W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "VIGILANCE"
+      ]
+    },
+    "She-Hulk, Jade Defender": {
+      "types": "Legendary Creature - Gamma Hero",
+      "manaCost": "{3}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "REACH",
+        "TRAMPLE"
+      ]
+    },
+    "Shock": {
+      "types": "Instant",
+      "manaCost": "{R}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Shuri, Vibranium Technologist": {
+      "types": "Legendary Creature - Human Artificer Hero",
+      "manaCost": "{2}{W/U}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "VIGILANCE"
+      ]
+    },
+    "Shuri, the Black Panther": {
+      "types": "Legendary Creature - Human Noble Hero",
+      "manaCost": "{G}{W}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "LIFELINK"
+      ]
+    },
+    "Soldier Token": {
+      "types": "Creature - Soldier",
+      "manaCost": null,
+      "power": "1",
+      "toughness": "1",
+      "token": true,
+      "setCode": "MSH"
+    },
+    "Songbird, Sonic Screamer": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{1}{B}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "LIFELINK"
+      ]
+    },
+    "Storm, Queen of Wakanda": {
+      "types": "Legendary Creature - Mutant Noble Hero",
+      "manaCost": "{3}{G}{W}",
+      "power": "4",
+      "toughness": "5",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Strategic Intervention": {
+      "types": "Enchantment",
+      "manaCost": "{1}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Sunpetal Grove": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Super Suit": {
+      "types": "Artifact - Equipment",
+      "manaCost": "{1}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Swamp": {
+      "types": "Basic Land - Swamp",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Swords to Plowshares": {
+      "types": "Instant",
+      "manaCost": "{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "T'Chaka, Venerable King": {
+      "types": "Legendary Creature - Human Noble Hero",
+      "manaCost": "{G}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "T'Challa, the Black Panther": {
+      "types": "Legendary Creature - Human Noble Hero",
+      "manaCost": "{1}{G}{W}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Thallid": {
+      "types": "Creature - Fungus",
+      "manaCost": "{G}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MMA"
+    },
+    "The Masters of Evil": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{5}{B}",
+      "power": "5",
+      "toughness": "6",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Thriving Heath": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Thriving Isle": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC"
+    },
+    "Thriving Moor": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Tiger Shark, Abyssal Hunter": {
+      "types": "Legendary Creature - Shark Human Villain",
+      "manaCost": "{2}{UB}{UB}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Titania, Proud Pummeler": {
+      "types": "Legendary Creature - Human Villain",
+      "manaCost": "{3}{R}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Training Compound": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Unliving Legionnaire": {
+      "types": "Creature - Vampire Villain",
+      "manaCost": "{3}{B}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Vibranium Energy Daggers": {
+      "types": "Artifact - Equipment",
+      "manaCost": "{1}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "INDESTRUCTIBLE",
+        "EQUIP"
+      ]
+    },
+    "Vibranium Token": {
+      "types": "Artifact - Vibranium",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": true,
+      "setCode": "MSC",
+      "keywords": [
+        "INDESTRUCTIBLE"
+      ]
+    },
+    "Villainous Hideout": {
+      "types": "Land",
+      "manaCost": null,
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Visions of Villainy": {
+      "types": "Instant",
+      "manaCost": "{2}{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH",
+      "keywords": []
+    },
+    "Volcanic Villain": {
+      "types": "Creature - Elemental Villain",
+      "manaCost": "{2}{R}",
+      "power": "3",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "HASTE"
+      ]
+    },
+    "Volcano Hellion": {
+      "types": "Creature - Hellion",
+      "manaCost": "{2}{R}{R}",
+      "power": "6",
+      "toughness": "5",
+      "token": false,
+      "setCode": "PLC"
+    },
+    "Wakandan Drone Flock": {
+      "types": "Artifact Creature - Robot",
+      "manaCost": "{3}{W}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Wakandan Shield Guard": {
+      "types": "Creature - Human Soldier",
+      "manaCost": "{1}{W}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Wakandan Tusker": {
+      "types": "Creature - Elephant",
+      "manaCost": "{1}{G/W}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": []
+    },
+    "Warriors of Wakanda": {
+      "types": "Creature - Human Warrior",
+      "manaCost": "{3}{G}",
+      "power": "4",
+      "toughness": "4",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "TRAMPLE"
+      ]
+    },
+    "Wasp, Shrinking Savior": {
+      "types": "Legendary Creature - Human Hero",
+      "manaCost": "{2}{U}",
+      "power": "1",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "FLYING"
+      ]
+    },
+    "Web Up": {
+      "types": "Enchantment",
+      "manaCost": "{2}{W}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": "MSH"
+    },
+    "Whiplash, Vengeful Engineer": {
+      "types": "Legendary Creature - Human Artificer Villain",
+      "manaCost": "{B}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Whirlwind, Killer Cyclone": {
+      "types": "Legendary Creature - Mutant Villain",
+      "manaCost": "{2}{R}",
+      "power": "2",
+      "toughness": "3",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "HASTE"
+      ]
+    },
+    "White Widow, Yelena Belova": {
+      "types": "Legendary Creature - Human Assassin Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSC",
+      "keywords": [
+        "DEATHTOUCH"
+      ]
+    },
+    "Wolverine, Fierce Fighter": {
+      "types": "Legendary Creature - Mutant Berserker Hero",
+      "manaCost": "{2}{R}{G}",
+      "power": "3",
+      "toughness": "5",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "HASTE"
+      ]
+    },
+    "Woodwork Prodigy": {
+      "types": "Creature - Cat Druid",
+      "manaCost": "{2}{RG}",
+      "power": "3",
+      "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Yellowjacket, Heartless Marauder": {
+      "types": "Legendary Creature - Human Rogue Villain",
+      "manaCost": "{1}{B}",
+      "power": "1",
+      "toughness": "2",
+      "token": false,
+      "setCode": "MSH",
+      "keywords": [
+        "FLYING"
+      ]
+    }
+  },
+  "tokens": [
+    {
+      "name": "Clue Token",
+      "recordings": 2
+    },
+    {
+      "name": "Doombot",
+      "recordings": 1
+    },
+    {
+      "name": "Hero Token",
+      "recordings": 6
+    },
+    {
+      "name": "Robot Token",
+      "recordings": 8
+    },
+    {
+      "name": "Saproling Token",
+      "recordings": 1
+    },
+    {
+      "name": "Soldier Token",
+      "recordings": 9
+    },
+    {
+      "name": "Vibranium Token",
+      "recordings": 1
+    }
+  ],
+  "missing": [
+    "Ajani's Anguish",
+    "Chandra's Emberling",
+    "Eardrum Rattler",
+    "Fulminous Forte",
+    "Gallia, the Merrymaker",
+    "Ghalta the Immovable",
+    "Graft Surgeon",
+    "Hexhaven Battalion",
+    "Jiang Yanggu, Alone",
+    "Koth, the Geomancer",
+    "Mabel, Valley Hero",
+    "Medic's Kitesail",
+    "No Admittance",
+    "Pyre Rhymer",
+    "Room of Refuge",
+    "Samut, Hazoret's Champion",
+    "Shatterwing Pegasus",
+    "Surgical Precision",
+    "Thalia, the Survivor",
+    "Way of the Pyromancer",
+    "Whiplash Wordsmith",
+    "Wrath of the Bloodmane",
+    "Yoshimaru, Beloved Companion",
+    "Your Fate Ends Here"
+  ],
+  "engine": [
+    "Austere Command",
+    "Avengers: Under Siege",
+    "Giant Growth",
+    "Hidden Lair",
+    "Lightning Bolt",
+    "Tiger Shark, Abyssal Hunter",
+    "Titania, Proud Pummeler",
+    "Whiplash, Vengeful Engineer",
+    "Woodwork Prodigy"
+  ],
+  "threeD": {
+    "A.I.M. Bot": "figure",
+    "A.I.M. Scientists": "figure",
+    "Abomination, Irradiated Brute": "figure",
+    "Abomination, Terrifying Titan": "figure",
+    "Aerial Doombot": "figure",
+    "Agent 13, Sharon Carter": "figure",
+    "Agent Phil Coulson": "figure",
+    "Agents of HYDRA": "figure",
+    "Agents of S.H.I.E.L.D.": "figure",
+    "Ainok Tracker": "figure",
+    "Ajani's Anguish": null,
+    "Ant-Man's Air Force": "figure",
+    "Ant-Man, Reformed Rogue": "figure",
+    "Ashcloud Phoenix": "figure",
+    "Atlas, Sizable Stooge": "figure",
+    "Austere Command": null,
+    "Avengers: Under Siege": null,
+    "Baron Strucker, HYDRA Overlord": "figure",
+    "Battering Craghorn": "figure",
+    "Birds of Paradise": "figure",
+    "Birnin Zana Plaza": null,
+    "Black Panther, Claws of Bast": "figure",
+    "Black Panther, Most Dangerous": "figure",
+    "Black Panther, Vanguard": "figure",
+    "Bold Biochemist": "figure",
+    "Boomerang, Blade Flinger": "figure",
+    "Borough Backup": "cues",
+    "Brawn, Amadeus Cho": "figure",
+    "Castle Doom": null,
+    "Chandra's Emberling": null,
+    "Clue Token": null,
+    "Common Crook": "figure",
+    "Crossbones, Malicious Mercenary": "figure",
+    "Dark Deed": null,
+    "Dark Fortress": null,
+    "Depower": "cues",
+    "Doctor Doom": "figure",
+    "Doom Blade": null,
+    "Doom Reigns Supreme": null,
+    "Doom's Servo-Guards": "figure",
+    "Doombot": "figure",
+    "Dora Milaje Elite": "figure",
+    "Dragonskull Summit": null,
+    "Eardrum Rattler": null,
+    "Fixer, Techno Terror": "figure",
+    "Forest": null,
+    "Frozen in Ice": null,
+    "Fulminous Forte": null,
+    "Future Sight": null,
+    "Gallant Citizen": "figure",
+    "Gallia, the Merrymaker": null,
+    "Gamma Grotesque": "figure",
+    "Garruk's Companion": "figure",
+    "Gathering Place": null,
+    "Ghalta the Immovable": null,
+    "Giant Growth": null,
+    "Giant-Sized Flying Ant": "figure",
+    "Graft Surgeon": null,
+    "HULK SMASH!": null,
+    "HYDRA Troopers": "figure",
+    "Helicarrier Strike": "cues",
+    "Hell's Kitchen": null,
+    "Hellcat, Undying Vigilante": "figure",
+    "Hercules, Prince of Power": "figure",
+    "Hero Token": "figure",
+    "Hexhaven Battalion": null,
+    "Hidden Lair": null,
+    "Hour of Defeat": null,
+    "Hulk, Brutal Brawler": "figure",
+    "Hulk, Gamma Goliath": "figure",
+    "Hulk, Strongest There Is": "figure",
+    "Hulkling, Burgeoning Bruiser": "figure",
+    "Island": "cues",
+    "Jiang Yanggu, Alone": null,
+    "Kang the Conqueror": "figure",
+    "Kang, Temporal Tyrant": "figure",
+    "Klaw, Sonic Subjugator": "figure",
+    "Knight of Wundagore": "figure",
+    "Koth, the Geomancer": null,
+    "Lightning Bolt": null,
+    "Loki, God of Mischief": "figure",
+    "Los Diablos Missile Base": null,
+    "MACH-1, Swooping Scoundrel": "figure",
+    "Mabel, Valley Hero": null,
+    "Madame Hydra, Reanimated": "figure",
+    "Manamorphose": null,
+    "Medic's Kitesail": null,
+    "Moonstone, Harsh Mistress": "figure",
+    "Mountain": null,
+    "Nakia, Wakandan Operative": "figure",
+    "Nick Fury, Spymaster": "figure",
+    "Night's Whisper": null,
+    "No Admittance": null,
+    "Okoye, Dora Milaje Leader": "figure",
+    "Okoye, Mighty and Adored": "figure",
+    "Opt": null,
+    "Peggy Carter, Secret Agent": "figure",
+    "Pharaoh Rama-Tut": "figure",
+    "Plains": "cues",
+    "Pym Particles": "cues",
+    "Pyre Rhymer": null,
+    "Quake, Agent of S.H.I.E.L.D.": "figure",
+    "Quantum Reduction": "cues",
+    "Radioactive Man": "figure",
+    "Rampant Growth": null,
+    "Red Hulk": "figure",
+    "Rick Jones, Destined Sidekick": "figure",
+    "Robot Token": "figure",
+    "Robotics Mastery": "cues",
+    "Room of Refuge": null,
+    "Rootbound Crag": null,
+    "S.H.I.E.L.D. Helicarrier": "figure",
+    "S.H.I.E.L.D. Spy Kit": "cues",
+    "Samut, Hazoret's Champion": null,
+    "Saproling Token": "figure",
+    "Shatterwing Pegasus": null,
+    "She-Hulk, Attorney-at-Law": "figure",
+    "She-Hulk, Jade Defender": "figure",
+    "Shock": null,
+    "Shuri, Vibranium Technologist": "figure",
+    "Shuri, the Black Panther": "figure",
+    "Soldier Token": "figure",
+    "Songbird, Sonic Screamer": "figure",
+    "Storm, Queen of Wakanda": "figure",
+    "Strategic Intervention": "cues",
+    "Sunpetal Grove": null,
+    "Super Suit": "cues",
+    "Surgical Precision": null,
+    "Swamp": null,
+    "Swords to Plowshares": null,
+    "T'Chaka, Venerable King": "figure",
+    "T'Challa, the Black Panther": "figure",
+    "Thalia, the Survivor": null,
+    "Thallid": "figure",
+    "The Masters of Evil": "figure",
+    "Thriving Heath": "cues",
+    "Thriving Isle": "cues",
+    "Thriving Moor": null,
+    "Tiger Shark, Abyssal Hunter": "figure",
+    "Titania, Proud Pummeler": "figure",
+    "Training Compound": null,
+    "Unliving Legionnaire": "figure",
+    "Vibranium Energy Daggers": null,
+    "Vibranium Token": null,
+    "Villainous Hideout": null,
+    "Visions of Villainy": null,
+    "Volcanic Villain": "figure",
+    "Volcano Hellion": "figure",
+    "Wakandan Drone Flock": "figure",
+    "Wakandan Shield Guard": "figure",
+    "Wakandan Tusker": "figure",
+    "Warriors of Wakanda": "figure",
+    "Wasp, Shrinking Savior": "figure",
+    "Way of the Pyromancer": null,
+    "Web Up": "cues",
+    "Whiplash Wordsmith": null,
+    "Whiplash, Vengeful Engineer": "figure",
+    "Whirlwind, Killer Cyclone": "figure",
+    "White Widow, Yelena Belova": "figure",
+    "Wolverine, Fierce Fighter": "figure",
+    "Woodwork Prodigy": "figure",
+    "Wrath of the Bloodmane": null,
+    "Yellowjacket, Heartless Marauder": "figure",
+    "Yoshimaru, Beloved Companion": null,
+    "Your Fate Ends Here": null
+  }
+}

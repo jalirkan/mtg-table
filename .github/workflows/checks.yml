@@ -1,0 +1,200 @@
+# mtg-table -- the engine-free half of the gate, on GitHub Actions.
+# Copyright (C) 2026 mtg-table contributors.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# What this is NOT: tools/check-all.sh.  The gate boots Forge and plays games --
+# Smoke, RecordMatch, the fourteen ten-games rows, seven WebSocket servers, the
+# engine-crash probe -- and it stays a LOCAL command, run before every commit
+# (CLAUDE.md, "Build and run").  Nothing here plays a game or starts an engine.
+# What this IS: every check that needs no running engine, on every push to main
+# and every pull request, in three jobs that run side by side:
+#
+#   web        npm ci, then `npm --prefix web run build` (tsc + vite) and
+#              `npm --prefix web test` (node --test, then vitest).  Hermetic by
+#              construction: MTGTABLE_WS_LOGS is unset, so ws-log.test.ts replays
+#              the committed fixtures/games/human-*.jsonl, and web/public/art.json
+#              (Scryfall art, gitignored) is absent -- every reader of it falls
+#              back to the empty index, exactly as in a fresh checkout.  Nothing
+#              here calls Scryfall.
+#   bridge     tools/lint-bridge-selftest.sh (every lint rule fires on a planted
+#              snippet, D180) and tools/lint-bridge.sh (a grep over bridge/src
+#              and tools/**/*.java; neither needs a jar), then the pinned engine --
+#              the official forge-2.0.14 release asset, its jar checked against
+#              the repo's pin (D110) -- and ./bridge/build.sh: javac plus its seven
+#              self-tests.  None of the seven boots an engine or reads Forge's
+#              res/ (measured: the two that install the headless GUI,
+#              OverRaceSelfTest and ActGuardSelfTest, pass over an empty Forge
+#              home -- no res/, no profile -- and write nothing outside var/), so
+#              only the jar is extracted and only the jar is cached.
+#   redaction  the committed corpus through tools/check-redaction.mjs, the
+#              checker's own negative controls, the narrator's self-test
+#              (12d), the wire-drift comparison's self-test (step 6's), the
+#              workshop catalog check (12b) and the coach helper's self-test
+#              (12f, D292: a loopback HTTP server and a FAKE `claude` -- no real
+#              CLI, no login, no network) -- plain Node, no npm install.
+#
+# Also local only: tools/arena-bench.mjs (a built dist, a preview server and a
+# headless Chromium), the card library's real build (Scryfall's bulk file),
+# tools/fetch-art.ts (Scryfall) and gate step 12e, `node tools/build-deck.ts
+# --check` (D183): it re-resolves every AI deck's spec against the local card
+# index, var/cards/cards.sqlite, which only that real build makes.  Its
+# hermetic half, web/test/deck-specs.test.ts, runs in the web job above.
+
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: npm ci
+        run: npm ci
+        working-directory: web
+      - name: npm --prefix web run build
+        run: npm --prefix web run build
+      - name: npm --prefix web test
+        run: npm --prefix web test
+
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # The one engine this repo is built, gated and recorded against (CLAUDE.md,
+      # "Environment"; README, "Getting the engine").  The asset is Forge's own
+      # desktop distribution on the tagged forge-2.0.14 release -- the archive
+      # the local install was unpacked from -- never the rolling daily-snapshots
+      # build (D109, D110).  Its sha256 is the digest GitHub reports for the
+      # asset (301,832,993 bytes); the jar's is the repo's pin (39,383,858 bytes).
+      FORGE_TAG: forge-2.0.14
+      FORGE_ASSET: forge-installer-2.0.14.tar.bz2
+      FORGE_ASSET_SHA256: e71749376945177d603d52a21a089bc1574330cf34599544b6bae1a04c83da41
+      FORGE_JAR_NAME: forge-gui-desktop-2.0.14-jar-with-dependencies.jar
+      FORGE_JAR_SHA256: 3c0a7c385b9207e593fe149255e00d1cd7e556809f138568d07e3828b78e5dd9
+      # D110's place for an official release: under the gitignored var/.
+      ENGINE_DIR: var/forge-engine/2.0.14
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # The JDK rather than the JRE: bridge/build.sh and tools/check-forge.sh
+      # reach javac and javap as the jdk.compiler and jdk.jdeps MODULES, which
+      # the local Ubuntu JRE happens to carry and a Temurin JRE image is not
+      # built to.  The commands are the local ones, unchanged.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      # D180: the lint's own negative controls -- every rule it declares must
+      # fire on a snippet planted in a scratch copy under var/, and a rule with no
+      # case fails.  bridge/build.sh runs it again (--quiet) before javac.
+      - name: tools/lint-bridge-selftest.sh (no engine needed)
+        run: ./tools/lint-bridge-selftest.sh
+      - name: tools/lint-bridge.sh (no engine needed)
+        run: ./tools/lint-bridge.sh
+      # Only the 39 MB jar is cached, never the 302 MB archive and never res/.
+      # The key names the asset and both digests, so a different engine is a
+      # different key rather than a stale hit -- and the jar is checked against
+      # the pin on every run anyway, hit or miss.
+      - name: restore the pinned engine jar
+        id: engine-cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.ENGINE_DIR }}
+          key: forge-engine-${{ env.FORGE_ASSET }}-${{ env.FORGE_ASSET_SHA256 }}-jar-${{ env.FORGE_JAR_SHA256 }}
+      - name: fetch the engine from Forge's official release (cache miss only)
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        run: |
+          url="https://github.com/Card-Forge/forge/releases/download/$FORGE_TAG/$FORGE_ASSET"
+          archive="$RUNNER_TEMP/$FORGE_ASSET"
+          unpack="$RUNNER_TEMP/forge-unpack"
+          echo "downloading $url"
+          curl -fsSL --retry 3 --retry-delay 5 -o "$archive" "$url"
+          ls -l "$archive"
+          echo "$FORGE_ASSET_SHA256  $archive" | sha256sum -c -
+          # bzip2 is one stream: tar reads the whole archive to reach any member,
+          # so extract the jar alone and use every core when lbzip2 is there.
+          if command -v lbzip2 >/dev/null 2>&1; then z=lbzip2; else z=bzip2; fi
+          mkdir -p "$unpack" "$ENGINE_DIR"
+          tar -x -f "$archive" -I "$z" -C "$unpack" --wildcards --no-anchored "$FORGE_JAR_NAME"
+          jar="$(find "$unpack" -type f -name "$FORGE_JAR_NAME" | head -n 1)"
+          [ -n "$jar" ] || { echo "$FORGE_JAR_NAME is not in $FORGE_ASSET"; exit 1; }
+          mv "$jar" "$ENGINE_DIR/"
+          rm -rf "$archive" "$unpack"
+      - name: verify the jar against the pin (D110) and export FORGE_JAR
+        run: |
+          jar="$GITHUB_WORKSPACE/$ENGINE_DIR/$FORGE_JAR_NAME"
+          [ -f "$jar" ] || { echo "no engine jar at $jar"; exit 1; }
+          echo "$(stat -c %s "$jar") bytes"
+          # A different hash is a different engine, whatever its file is called.
+          echo "$FORGE_JAR_SHA256  $jar" | sha256sum -c -
+          # Hard rule 9: every script reads the jar from $FORGE_JAR or
+          # config.json's forgeJar; config.json keeps the local path untouched.
+          echo "FORGE_JAR=$jar" >> "$GITHUB_ENV"
+      - name: tools/check-forge.sh
+        run: ./tools/check-forge.sh
+      # javac, then JsonSelfTest, AskSelfTest, GameLogSelfTest, OverRaceSelfTest
+      # and ActGuardSelfTest.  The last two install the headless GUI over the
+      # committed forge-home/ (hard rule 1) and boot no engine, so
+      # tools/make-forge-home.sh -- which needs Forge's res/ beside the jar -- is
+      # not run: nothing here reads res/, and every file the build writes is
+      # under var/.
+      - name: ./bridge/build.sh
+        run: ./bridge/build.sh
+
+  redaction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # Gate step 11's committed half: every committed recording, games AND
+      # synthetic.  Never --pre-amendment, never --opponent-library-ok.
+      - name: check-redaction.mjs over the committed fixtures
+        run: node tools/check-redaction.mjs fixtures/games/*.jsonl fixtures/synthetic/*.jsonl
+      # Step 12: the checker must still reject every one-defect probe.
+      - name: check-redaction-selftest.mjs
+        run: node tools/check-redaction-selftest.mjs
+      # Step 12d over the committed corpus (the gate adds its fresh logs).
+      - name: narrate-selftest.mjs
+        run: node tools/narrate-selftest.mjs
+      # Step 6's own controls: the drift comparison still rejects every drift.
+      - name: wire-drift-selftest.mjs
+        run: node tools/wire-drift-selftest.mjs
+      # Step 12b: web/src/workshop/catalog.json is what the repo makes.
+      - name: build-workshop-catalog.ts --check
+        run: node tools/build-workshop-catalog.ts --check
+      # Step 12f: the coach helper's contract with ForgeCoach, against a fake claude.
+      - name: coach-helper-selftest.mjs
+        run: node tools/coach-helper-selftest.mjs
+      # Step 12f's second half (D303): the match launcher, play.sh against a fake engine.
+      - name: match-launcher-selftest.mjs
+        run: node tools/match-launcher-selftest.mjs
+      # Step 12h's standard-library half: the ML encoder over every committed
+      # recording, hidden zones scrambled (D305). numpy is not installed here,
+      # so the dataset and baseline tests report themselves skipped.
+      - name: tools/ml tests (encoder, hidden information)
+        run: python3 -m unittest discover -s tools/ml/tests
