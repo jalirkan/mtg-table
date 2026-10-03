@@ -15838,3 +15838,43 @@ deriving a human's choices from the seat's `act`/`answer` lines is the
 follow-up. Forge's own targeting inside effects it resolves without asking the
 controller, mode choices, cost choices (which creature to sacrifice) and the
 London mulligan's bottom cards are not recorded.
+
+## D352 — A frame is never cut while a "may look" effect outlives its source: both snapshot hooks hold that flush and the next one ships its events
+
+**2026-10-03**
+
+*Branch `c/reveal-leak`; D352, the next number free at push.*
+
+**Finding.** The PC lab's J019 failed `check-redaction.mjs` A3 on one frame of
+80 logs (`p9-g0-seat0.jsonl.gz`, seq 378): Swords to Plowshares exiled the
+opponent's Oracle of Mul Daya, and the viewer's frame had the Oracle gone from
+the battlefield and the opponent's top card still in `library.cards`. Snap was
+right to send it — `canBeShownTo` said yes — and the checker was right to fail
+it: rule 611.3a ends a static ability's effect when its source leaves. The
+frame was cut in the middle of `GameAction.changeZone` (2.0.14, javap):
+`Zone.remove` and `Zone.add` each fire a `GameEventZone`, the untap fires a
+`GameEventCardTapped`, and only then does `checkStaticAbilities()` remove the
+Oracle's effect (`Card.removeMayLookAt` → `CardView.setPlayerMayLook`, a
+property that ignores the tracker's freeze). `GameEventForwarder` flushes on
+the first event 500 ms after its last flush, which after a searching AI's think
+is the first event of the resolution; the decision records' flush (D347) can
+land there too, and state-based actions widen the window (`checkStateEffects`
+holds static checks while it destroys). `MidMoveSelfTest` reproduces it: the
+bare frame at that event leaks the card.
+
+**Decision.** `MidMove`: while any `MayLookAt` static effect's source is out of
+the zone its ability works from (`EffectZone$`, else the battlefield; the
+command zone always counts), `RecordMatch.SpectatorGui.handleGameEvents` and
+`WireGuiGame.handleGameEvents` keep the batch instead of building a frame (the
+wire's into its existing `deferred` buffer, uncounted), and the next flush —
+after Forge has re-run its statics — ships the held events with its own. A
+finished game is never held (Forge stops re-running statics), and a hook holds
+at most 8 flushes in a row before it stops holding until the test next comes
+out false, printing `MID-MOVE HOLD GAVE UP`, so a mistake costs merged frames,
+never a board that stops updating. Gate step 12i runs the self-test.
+
+**Rejected.** Narrowing A3 to allow the boundary frame: under the protocol the
+card was no longer public in that state, so the checker's verdict stands.
+Filtering in `Snap.library`: Snap walks views only and cannot see the static
+effect's source on the live game (hard rule 3). Forcing `checkStaticAbilities`
+from the hook: the recorder would change the game it records.
