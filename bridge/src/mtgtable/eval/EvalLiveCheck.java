@@ -96,9 +96,7 @@ public final class EvalLiveCheck {
 
     private EvalLiveCheck() { }
 
-    private static final Set<String> SKIP = new HashSet<>(List.of(
-            "me.abilities_turn", "me.spells_cast_game", "me.lands_played_game", "me.mulligans",
-            "opp.abilities_turn", "opp.spells_cast_game", "opp.lands_played_game", "opp.mulligans"));
+    private static final Set<String> SKIP = new HashSet<>(EvalModel.LIVE_UNSAFE);
 
     // results
     static int decisions;
@@ -276,6 +274,7 @@ public final class EvalLiveCheck {
         private final Map<Integer, Tally> logTally = new TreeMap<>();
         private final Set<String> want = new HashSet<>(FeatureSchema.DECISION_PHASES);
         Throwable error;
+        Map<?, ?> lastState;
 
         Checker(final Game game, final FeatureEncoder enc, final EvalModel model, final Random rng) {
             this.game = game;
@@ -312,6 +311,7 @@ public final class EvalLiveCheck {
                 final Tally t = logTally.computeIfAbsent(pv.getId(), k -> new Tally());
                 t.apply(JsonPosition.arr(st.get("events")), JsonPosition.arr(st.get("stack")));
                 if (pv.getId() == seat) {
+                    lastState = st;
                     if (!Integer.valueOf(seat).equals(JsonPosition.intOrNull(st.get("priority")))) {
                         return;   // the view has not caught up with the priority pass: not a row
                     }
@@ -344,6 +344,19 @@ public final class EvalLiveCheck {
             }
             if (same) {
                 exact++;
+            } else if (System.getenv("EVAL_LIVE_DEBUG") != null) {
+                final StringBuilder sb = new StringBuilder("  DEBUG turn " + game.getPhaseHandler().getTurn() + " "
+                        + game.getPhaseHandler().getPhase() + " live stack:");
+                for (final forge.game.spellability.SpellAbilityStackInstance si : game.getStack()) {
+                    sb.append(" [ability=").append(si.isAbility()).append(" spell=").append(si.isSpell())
+                      .append(" trigger=").append(si.isTrigger()).append(" src=")
+                      .append(si.getSourceCard() == null ? null : si.getSourceCard().getName()).append(']');
+                }
+                sb.append(" | log stack: ").append(JsonPosition.arr(lastState.get("stack")).length).append(" items ");
+                for (final Object o : JsonPosition.arr(lastState.get("stack"))) {
+                    sb.append(JsonPosition.map(o).get("isAbility")).append(' ');
+                }
+                System.out.println(sb);
             }
             if (model != null) {
                 final long t0 = System.nanoTime();

@@ -6,7 +6,7 @@
 
     python3 tools/ml/dataset.py --vocab cubes/synergy-cube-180.md \
         --out var/ml/data/synergy LOGDIR... [--split 80,10,10] [--salt ""] \
-        [--shard-rows 100000] [--phases main,combat] [--group-by game|match]
+        [--shard-rows 100000] [--phases main,combat] [--group-by match|game]
 
 Every log under the LOGDIRs is encoded by encode.py (one row per decision
 state).  Rows are split BY GAME -- more exactly by split group: the two chairs
@@ -14,9 +14,11 @@ of one seed and match are one game (protocol.md §8.7), so both land in the same
 split and nothing about a test game is seen in training.  The split is a hash
 of the group id (with --salt), so it is deterministic and stable as logs are
 added: a game never moves between splits when the corpus grows.
-`--group-by match` puts every game of one deck pair in one split instead, which
-asks the harder question -- does the evaluator generalise to decks it never
-saw? -- and is the number to trust once the cube lab drafts many pairs.
+`--group-by match` (the default since D316) puts every game of one deck pair in
+one split, which asks the honest question -- does the evaluator generalise to
+decks it never saw? -- because a bench replays the same pairs over many seeds
+and a by-game split would score positions of decks already seen in training.
+`--group-by game` keeps D305's by-game split.
 
 Writes, under --out:
 
@@ -65,7 +67,7 @@ def split_of(group: str, weights: tuple[int, int, int], salt: str = "") -> str:
 
 def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10), salt: str = "",
           shard_rows: int = 100_000, phases: list[str] | None = None, quiet: bool = False,
-          group_by: str = "game") -> dict[str, Any]:
+          group_by: str = "match") -> dict[str, Any]:
     if np is None:
         raise SystemExit("dataset.py needs numpy (pip install numpy)")
     vocab = E.Vocab.from_files(vocab_paths)
@@ -122,7 +124,10 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
             last_turn = max(r.turn + r.turns_to_end for r in rows)
             games.append({"index": len(games), "game_key": g.game_key, "split_group": group,
                           "split": s, "file": os.path.relpath(path), "seat": g.seat,
-                          "rows": len(rows), "label": rows[0].label, "last_turn": last_turn})
+                          "rows": len(rows), "label": rows[0].label, "last_turn": last_turn,
+                          # D316: the deck pair by name ('' when the log has no match block) and the
+                          # game's own group, so a trainer can re-split by pair or hold decks out
+                          "match": g.match_key(), "game_group": g.split_group})
             stats[s]["rows"] += len(rows)
             stats[s]["games"] += 1
             stats[s]["labels"][str(rows[0].label)] += 1
@@ -192,9 +197,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--salt", default="")
     ap.add_argument("--shard-rows", type=int, default=100_000)
     ap.add_argument("--phases", default="main,combat")
-    ap.add_argument("--group-by", choices=("game", "match"), default="game",
-                    help="game: the chairs of one seed+match together (default); match: every game of "
-                         "one deck pair together, a harder test of generalising to unseen decks")
+    ap.add_argument("--group-by", choices=("game", "match"), default="match",
+                    help="match (default since D316): every game of one deck pair in one split -- the "
+                         "test split is decks the model never saw; game: only the chairs of one "
+                         "seed+match together (a log with no match block always groups by game)")
     a = ap.parse_args(argv)
     w = tuple(int(x) for x in a.split.split(","))
     if len(w) != 3 or sum(w) <= 0:

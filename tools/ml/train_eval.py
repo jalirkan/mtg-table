@@ -303,13 +303,101 @@ def fit(tr, va, names, hp, vocab_size, backend, seed=0, log=None, deadline=None)
 
 # ---------------------------------------------------------------- the runs
 
-def load_data(data: str):
+def load_data(data: str, split_by: str = "dataset"):
     import evalnet as N
     schema = N.read_schema(data)
     off = N.card_offset_of(schema)
     names = N.board_names(schema)
     splits = {s: N.load_rows(data, s, off) for s in ("train", "val", "test")}
+    if split_by != "dataset":
+        splits = resplit(data, splits, split_by)
     return schema, names, splits
+
+
+def read_games(data: str) -> list[dict[str, Any]]:
+    with open(os.path.join(data, "games.jsonl"), encoding="utf-8") as f:
+        return [json.loads(line) for line in f]
+
+
+def pair_key(g: dict[str, Any]) -> str:
+    """A game's deck pair (D316): the match block's two deck names, or -- for a
+    log without one -- its own game group."""
+    return g.get("match") or g.get("game_group") or g["split_group"]
+
+
+def _h(s: str) -> int:
+    return int(hashlib.sha256(s.encode()).hexdigest()[:12], 16)
+
+
+def assign_pairs(keys: list[str], weights=(80, 10, 10)) -> dict[str, str]:
+    """Pair -> split.  With 20 pairs or more a hash threshold (stable as the
+    corpus grows); with fewer, the pairs in hash order with at least one each in
+    val and test when there are three or more, so a small corpus still has a
+    held-out pair to score."""
+    keys = sorted(set(keys), key=lambda k: _h("pair|" + k))
+    tot = sum(weights)
+    if len(keys) >= 20:
+        out = {}
+        for k in keys:
+            x = _h("pair|" + k) % tot
+            out[k] = "train" if x < weights[0] else ("val" if x < weights[0] + weights[1] else "test")
+        return out
+    n = len(keys)
+    n_test = max(1, round(n * weights[2] / tot)) if n >= 3 and weights[2] else 0
+    n_val = max(1, round(n * weights[1] / tot)) if n >= 3 and weights[1] else 0
+    return {k: ("test" if i < n_test else "val" if i < n_test + n_val else "train") for i, k in enumerate(keys)}
+
+
+def resplit(data: str, splits: dict[str, Any], how: str) -> dict[str, Any]:
+    """Re-split every row by deck pair (`pair`) or hold out the games whose decks
+    match a pattern -- a deck name or the log's path -- as the test split
+    (`holdout:REGEX`, e.g. a whole cube's `holdout:^modern-`); the rest go to train/val by pair.  No pair is ever in two
+    splits, so the test split is decks the model never saw."""
+    import re
+    import evalnet as N
+    games = read_games(data)
+    allr = N.Rows.concat([splits[s] for s in ("train", "val", "test") if len(splits[s])])
+    keys = [pair_key(g) for g in games]
+    if how == "game":   # D305's by-game split, for comparison: it flatters (a pair's other games train)
+        gk = [g.get("game_group") or g["split_group"] for g in games]
+        where = assign_pairs(gk)
+        split_of_game = [where[k] for k in gk]
+    elif how == "pair":
+        where = assign_pairs(keys)
+        split_of_game = [where[k] for k in keys]
+    elif how.startswith("holdout:"):
+        rx = re.compile(how.split(":", 1)[1])
+        held = [bool(rx.search(g.get("file", ""))) or any(rx.search(d) for d in (g.get("match") or "").split("|") if d)
+                for g in games]
+        if not any(held):
+            raise SystemExit(f"train_eval: no game's decks match {how}")
+        where = assign_pairs([k for k, hd in zip(keys, held) if not hd], (80, 20, 0))
+        split_of_game = ["test" if hd else where[k] for k, hd in zip(keys, held)]
+    else:
+        raise SystemExit(f"train_eval: --split-by {how}: pair, game, dataset or holdout:REGEX")
+    sg = np.array(split_of_game)[allr.game] if len(allr) else np.array([], dtype=str)
+    return {s: allr.take(np.nonzero(sg == s)[0]) for s in ("train", "val", "test")}
+
+
+def split_summary(data: str, splits: dict[str, Any]) -> dict[str, Any]:
+    """Per split: games, deck pairs and decks -- and how many test rows come from
+    a deck the training split also holds (0 under pair and holdout splits)."""
+    games = read_games(data)
+    out: dict[str, Any] = {}
+    decks: dict[str, set] = {}
+    for s, r in splits.items():
+        gi = sorted(set(r.game.tolist()))
+        ds = set()
+        for i in gi:
+            ds |= set(d for d in (games[i].get("match") or "").split("|") if d)
+        decks[s] = ds
+        out[s] = {"rows": len(r), "games": len(gi), "pairs": len({pair_key(games[i]) for i in gi}),
+                  "decks": len(ds)}
+    te = splits["test"]
+    seen = sum(1 for i in te.game.tolist()
+               if set((games[i].get("match") or "").split("|")) & decks["train"] - {""})
+    out["testRowsWithATrainingDeck"] = seen
+    return out
 
 
 def score_all(models: dict[str, Any], splits: dict[str, Any]) -> dict[str, Any]:
@@ -324,11 +412,16 @@ def score_all(models: dict[str, Any], splits: dict[str, Any]) -> dict[str, Any]:
 
 def run_train(a, hp, log) -> dict[str, Any]:
     import evalnet as N
-    schema, names, splits = load_data(a.data)
+    schema, names, splits = load_data(a.data, a.split_by)
     tr, va, te = splits["train"], splits["val"], splits["test"]
     if not len(tr):
         raise SystemExit("train_eval: no training rows")
     backend = pick_backend(a.backend)
+    summary = split_summary(a.data, splits)
+    log(f"split by {a.split_by}: " + "; ".join(
+        f"{s} {summary[s]['rows']} rows / {summary[s]['games']} games / {summary[s]['pairs']} pairs"
+        for s in ("train", "val", "test")) + f"; test rows from a deck seen in training: "
+        f"{summary['testRowsWithATrainingDeck']}")
     log(f"train_eval: schema {schema['schemaId']}, {schema['nFeatures']} features, vocab {len(schema['vocab']['cards'])}; "
         f"rows train/val/test {len(tr)}/{len(va)}/{len(te)}; games "
         f"{len(np.unique(tr.game))}/{len(np.unique(va.game))}/{len(np.unique(te.game))}; backend {backend}")
@@ -344,6 +437,7 @@ def run_train(a, hp, log) -> dict[str, Any]:
     models = fit_baselines(tr, va, names)
     models["eval"] = net.predict
     report = {"schemaId": schema["schemaId"], "data": os.path.abspath(a.data), "backend": backend,
+              "splitBy": a.split_by, "splitSummary": summary,
               "rows": {s: len(r) for s, r in splits.items()},
               "games": {s: int(len(np.unique(r.game))) for s, r in splits.items()},
               "hyper": hp, "fit": {k: v for k, v in info.items() if k != "history"},
@@ -353,6 +447,7 @@ def run_train(a, hp, log) -> dict[str, Any]:
         model = net.to_json(schema, names, {
             "excluded": info["excluded"],
             "training": {"date": N.now(), "data": os.path.relpath(os.path.abspath(a.data)), "backend": backend,
+                         "splitBy": a.split_by,
                          "hyper": hp, "rows": report["rows"], "games": report["games"],
                          "bestEpoch": info["bestEpoch"],
                          "metrics": {m: {s: report["models"][m][s].get("all") for s in ("val", "test")}
@@ -403,12 +498,17 @@ def grid_search(tr, va, names, base_hp, vocab_size, backend, a, log):
 def run_cv(a, hp, log) -> dict[str, Any]:
     import evalnet as N
     schema, names, splits = load_data(a.data)
-    with open(os.path.join(a.data, "games.jsonl"), encoding="utf-8") as f:
-        games = [json.loads(line) for line in f]
+    games = read_games(a.data)
     allr = N.Rows.concat([splits[s] for s in ("train", "val", "test") if len(splits[s])])
-    group = [g["split_group"] for g in games]
+    group = [g["split_group"] if a.split_by == "dataset" else
+             (g.get("game_group") or g["split_group"]) if a.split_by == "game" else pair_key(g) for g in games]
     h = lambda s: int(hashlib.sha256(s.encode()).hexdigest()[:8], 16)  # noqa: E731
-    fold = np.array([h(f"cv|{g}") % a.cv for g in group])[allr.game]
+    distinct = sorted(set(group), key=lambda k: h(f"cv|{k}"))
+    if len(distinct) <= a.cv:   # few groups: leave one group out
+        rank = {k: i for i, k in enumerate(distinct)}
+        fold = np.array([rank[g] for g in group])[allr.game]
+    else:
+        fold = np.array([h(f"cv|{g}") % a.cv for g in group])[allr.game]
     inner = np.array([h(f"inner|{g}") % 7 == 0 for g in group])[allr.game]
     backend = pick_backend(a.backend)
     oof = {m: np.full(len(allr), np.nan) for m in ("prior", "life", "core", "eval")}
@@ -428,7 +528,7 @@ def run_cv(a, hp, log) -> dict[str, Any]:
         log(f"fold {k}: {len(tr)} train / {len(va)} inner-val / {len(te)} held-out rows; "
             f"eval best epoch {info['bestEpoch']}")
     ok = ~np.isnan(oof["prior"])
-    rep = {"schemaId": schema["schemaId"], "folds": a.cv, "rows": int(ok.sum()), "games": len(games),
+    rep = {"schemaId": schema["schemaId"], "folds": a.cv, "splitBy": a.split_by, "rows": int(ok.sum()), "games": len(games),
            "groups": len(set(group)), "backend": backend, "hyper": hp,
            "models": {m: {"cv": metrics(p[ok], allr.y[ok].astype(np.int64), allr.turn[ok].astype(np.int64))}
                       for m, p in oof.items()}}
@@ -479,7 +579,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--grid", action="store_true", help="search hyperparameters (see GRID) until --time-budget")
     ap.add_argument("--time-budget", type=float, default=0, help="seconds for --grid (0: the whole grid)")
     ap.add_argument("--grid-log", help="append one JSON line per grid configuration")
-    ap.add_argument("--cv", type=int, default=0, metavar="K", help="grouped K-fold out-of-fold scores; no export")
+    ap.add_argument("--cv", type=int, default=0, metavar="K", help="grouped K-fold out-of-fold scores; no export "
+                    "(folds by deck pair unless --split-by dataset; K = the number of pairs is leave-one-pair-out)")
+    ap.add_argument("--split-by", default="pair",
+                    help="pair (default): every deck pair in one split, so test is decks never seen in training; "
+                         "holdout:REGEX: the games whose deck names match are the test split (a whole cube: "
+                         "holdout:^modern-); game: D305's by-game split (flatters: shown for comparison); "
+                         "dataset: dataset.py's own split")
     ap.add_argument("--verbose", action="store_true", help="print every epoch")
     a = ap.parse_args(argv)
     if np is None:

@@ -58,6 +58,10 @@ public final class PositionEvaluator {
     private final FeatureEncoder encoder;
 
     private PositionEvaluator(final EvalModel model) {
+        if (!model.liveUnsafeRead().isEmpty()) {
+            throw new IllegalArgumentException("the model reads features a live game cannot reproduce: "
+                    + model.liveUnsafeRead());
+        }
         this.model = model;
         this.encoder = new FeatureEncoder(model.schema());
     }

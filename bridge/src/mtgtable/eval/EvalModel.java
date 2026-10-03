@@ -68,6 +68,17 @@ public final class EvalModel {
     private final int[] out;
     private final int maxWidth;
     private final Map<?, ?> training;
+    private final List<String> liveUnsafeRead = new ArrayList<>();
+
+    /**
+     * Features a live game cannot reproduce as the log has them (evalnet.py's
+     * LIVE_UNSAFE): the trainer never gives them to a model, and a model that
+     * reads one is refused for live use ({@link PositionEvaluator}).
+     */
+    public static final List<String> LIVE_UNSAFE = List.of(
+            "me.abilities_turn", "me.spells_cast_game", "me.lands_played_game", "me.mulligans",
+            "opp.abilities_turn", "opp.spells_cast_game", "opp.lands_played_game", "opp.mulligans",
+            "stack.abilities");
 
     private EvalModel(final Map<?, ?> m) {
         if (!FORMAT.equals(m.get("format")) || num(m.get("formatVersion")) != FORMAT_VERSION) {
@@ -104,6 +115,11 @@ public final class EvalModel {
             if (cols[i] < 0 || cols[i] >= schema.cardOffset()
                     || (names.length == c.length && !schema.names().get(cols[i]).equals(names[i]))) {
                 throw new IllegalArgumentException("board column " + cols[i] + " is not " + names[i]);
+            }
+        }
+        for (final int col : cols) {
+            if (LIVE_UNSAFE.contains(schema.names().get(col))) {
+                liveUnsafeRead.add(schema.names().get(col));
             }
         }
         mean = doubles(inp.get("mean"));
@@ -184,6 +200,11 @@ public final class EvalModel {
                     + schemaId + " has " + schema.vocab().size() + " slots, this cube's schema is "
                     + new FeatureSchema(cube).schemaId() + " with " + cube.size());
         }
+    }
+
+    /** The live-unsafe features this model reads (empty for any model train_eval.py writes). */
+    public List<String> liveUnsafeRead() {
+        return liveUnsafeRead;
     }
 
     public FeatureSchema schema() {

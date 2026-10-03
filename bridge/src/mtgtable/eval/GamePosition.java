@@ -81,7 +81,11 @@ public final class GamePosition {
         pos.activePlayer = ph.getPlayerTurn() == null ? null : ph.getPlayerTurn().getId();
         pos.priority = ph.getPriorityPlayer() == null ? null : ph.getPriorityPlayer().getId();
         pos.gameOver = game.isGameOver();
-        final Combat combat = game.getCombat();
+        // The log's `combat` is Forge's CombatView, which the engine refreshes at
+        // fixed points (declare attackers, declare blockers, end of combat,
+        // phase starts) -- never at COMBAT_BEGIN, where the live Combat already
+        // exists but no recording shows one.  Read it the way the log does.
+        final Combat combat = ph.getPhase() == forge.game.phase.PhaseType.COMBAT_BEGIN ? null : game.getCombat();
 
         for (final Player p : game.getPlayers()) {
             final PlayerPos pp = new PlayerPos();

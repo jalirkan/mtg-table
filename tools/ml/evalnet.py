@@ -27,8 +27,9 @@ hidden layer it is a logistic regression on the same inputs.
 TWO GROUPS OF COLUMNS ARE LEFT OUT of the board input, and the export names
 them: the four per-player tally features a live Forge game cannot reproduce
 exactly from its own state (LIVE_UNSAFE: this game's spells, lands and
-mulligans, and the abilities-this-turn count, which the log counts from `cast`
-events that include triggers and Forge's own counter does not -- D316), and
+mulligans, the abilities-this-turn count, which the log counts from `cast`
+events that include triggers and Forge's own counter does not, and the
+stack's ability count, which only a seat's recording carries -- D316), and
 every column that is constant on the training split (my_priority is always 1 on
 a decision row; an unseen phase).  The Java encoder still computes every
 feature; the model reads only `boardColumns`.
@@ -67,6 +68,10 @@ N_STATES = len(E.CARD_STATES)
 # events include triggered abilities), Forge keeps no such counters (D316).
 LIVE_UNSAFE = [f"{s}.{n}" for s in ("me", "opp")
                for n in ("abilities_turn", "spells_cast_game", "lands_played_game", "mulligans")]
+# And stack.abilities: `stack[].isAbility` is a comfort field (amendment M36),
+# written only into a seat's recording, so every AI-vs-AI log reads 0 here
+# while a live game knows the truth (measured by EvalLiveCheck, D316).
+LIVE_UNSAFE.append("stack.abilities")
 
 
 # ---------------------------------------------------------------- data
