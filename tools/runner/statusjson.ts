@@ -7,10 +7,11 @@
 // HEARTBEAT.md to pc-results (private), and pushes a SANITISED copy to the
 // orphan branch `lab-status` of the PUBLIC jalirkan/ForgeCoach.  Schema 1:
 //
-//   { schema: 1, updated, paused,
+//   { schema: 1, updated, heartbeat, paused, state (running|idle), idleSince, idleReason,
 //     host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus, budgetGb },
 //     running: [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,
-//                  workers, workersMax, errors, paused, dataUpdated, pressureEvents: [{ at, kind, workers, pressure }] } ],
+//                  workers, workersMax, errors, paused, dataUpdated, pressureEvents: [{ at, kind, workers, pressure }],
+//                  memGb, live: { <metric>: <number> }, cubes: [{ id, done, planned }] } ],
 //     queue:    [ { id, title, cpu, est } ],
 //     waiting:  [ { id, title, reason, est } ],
 //     finished: [ { id, title, status, finished, headline, numbers: { <metric>: <number> } } ] }
@@ -51,8 +52,46 @@ export interface RunningJob extends Publicly {
   paused: boolean;
   dataUpdated: string | null;
   pressureEvents: PressureEvent[];
+  /** The job's unit's memory now (GB), as the backoff last read it. */
+  memGb?: number | null;
+  /** The job's current metric values (its `metrics:`, read every minute), headline keys first, plus `<counter>_per_h` rates. */
+  live?: Record<string, number>;
+  /** Which of `live`'s keys are the job's `headline:` metrics (names only), in its order. */
+  liveHeadline?: string[];
+  /** A cube-lab queue's per-cube progress (`cubes.<id>.done` / `.planned`). */
+  cubes?: CubeProgress[];
+  /** Private only: the job file opts its cube ids into the public copy (`public_cubes: yes`). */
+  publicCubes?: boolean;
   /** Private only. */
   detail?: string;
+}
+
+export interface CubeProgress { id: string; done: number; planned: number }
+
+export const LIVE_MAX = 40;
+export const CUBES_MAX = 24;
+const CUBE_KEY = /^(?:.+\.)?cubes\.([a-z0-9-]{1,40})\.(done|planned)$/;
+
+/**
+ * A running job's metrics, split: per-cube progress (from `cubes.<id>.done|planned` keys) and
+ * every other NUMBER (booleans are dropped), the headline keys first, at most LIVE_MAX.
+ */
+export function liveOf(metrics: Record<string, number | boolean>, headline: string[] = []): { live: Record<string, number>; liveHeadline: string[]; cubes: CubeProgress[] } {
+  const cubes = new Map<string, CubeProgress>();
+  const rest: Array<[string, number]> = [];
+  for (const [k, v] of Object.entries(metrics)) {
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+    const m = CUBE_KEY.exec(k);
+    if (m) {
+      const c = cubes.get(m[1] as string) ?? { id: m[1] as string, done: 0, planned: 0 };
+      c[m[2] as 'done' | 'planned'] = v;
+      cubes.set(c.id, c);
+    } else rest.push([k, v]);
+  }
+  const rank = (k: string): number => { const i = headline.indexOf(k); return i < 0 ? headline.length : i; };
+  rest.sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b));
+  const live = Object.fromEntries(rest.slice(0, LIVE_MAX));
+  return { live, liveHeadline: headline.filter((k) => k in live), cubes: [...cubes.values()].slice(0, CUBES_MAX) };
 }
 
 /** `publicTitle` / `publicEst`: the job file's opt-in public words (jobfile.ts); private copy only, read by `sanitise`. */
@@ -61,10 +100,20 @@ export interface QueueItem extends Publicly { id: string; title: string; cpu: 'h
 export interface WaitingItem extends Publicly { id: string; title: string; reason: string; est: string; detail?: string }
 export interface FinishedItem extends Publicly { id: string; title: string; status: 'done' | 'failed' | 'skipped'; finished: string | null; headline: string; numbers: Record<string, number>; detail?: string }
 
+export type RunState = 'running' | 'idle';
+
 export interface StatusDoc {
   schema: 1;
   updated: string;
+  /** When the runner's loop last ran (each tick, every 10 s): a quiet job's page still sees it alive. */
+  heartbeat?: string;
   paused: boolean;
+  /** Something runs (this runner's job or someone else's), or nothing does. */
+  state?: RunState;
+  /** Since when nothing has run (null while running). */
+  idleSince?: string | null;
+  /** Why nothing runs (idleReasonOf; null while running). */
+  idleReason?: string | null;
   host: { load1: number; memUsedGb: number; memTotalGb: number; swapUsedMb: number; pressure: number; cpus: number; budgetGb: number };
   running: RunningJob[];
   queue: QueueItem[];
@@ -97,6 +146,8 @@ const UNITS = new Set(['games', 'drafts', 'lines', 'files', 'items', 'matches', 
 const STATUSES = new Set(['done', 'failed', 'skipped']);
 /** Public event kinds: `playing` / `play-ended` say whether Justin is at the table, and are never published. */
 const KINDS = new Set(['drop', 'raise', 'pause', 'resume', 'stop']);
+/** A cube id the public copy may name (only when the job opts in): `fair-fight`, `omega`. */
+const CUBE_ID = /^[a-z][a-z0-9-]{0,39}$/;
 /** What an opted-in public title or estimate may contain: no `.`, `/`, `@`, `\`, quotes or brackets. */
 export const PUBLIC_TEXT = /^[A-Za-z0-9 ,:;()+%~#&-]{1,80}$/;
 /** The public words for why a job waits (schedule.ts's codes). */
@@ -113,11 +164,55 @@ export const REASONS: Record<string, string> = {
 };
 const REASON_WORDS = new Set(Object.values(REASONS));
 
+/** The idle reasons, private words; `sanitise` maps "Justin playing" to "held" (no presence in public). */
+export const IDLE_WORDS = ['queue empty', 'paused', 'Justin playing', 'held', 'memory backoff', 'needs a check', 'job file needs fixing', 'waiting'] as const;
+const IDLE_AFTER = /^blocked after J\d{3,5}$/;
+
+/**
+ * Why nothing runs, from the schedule's blocked list: the runner paused; Justin at the table;
+ * a job held back for memory; a job blocked after an earlier one (named); a pilot waiting for a
+ * check; a broken job file; else the queue is empty (or only waiting).
+ */
+export function idleReasonOf(blocked: Array<{ code: string; reason: string }>, paused: boolean): string {
+  if (paused) return 'paused';
+  if (!blocked.length) return 'queue empty';
+  const has = (c: string) => blocked.find((b) => b.code === c);
+  if (has('playing')) return 'Justin playing';
+  if (has('paused')) return 'paused';
+  if (has('memory')) return 'memory backoff';
+  const after = has('after');
+  const dep = after && /\b(J\d{3,5})\b/.exec(after.reason)?.[1];
+  if (dep) return `blocked after ${dep}`;
+  if (has('needs-check')) return 'needs a check';
+  if (has('invalid')) return 'job file needs fixing';
+  return 'waiting';
+}
+
+function publicIdleReason(v: unknown): string | null {
+  if (typeof v !== 'string') return null;
+  if (v === 'Justin playing') return 'held';
+  return (IDLE_WORDS as readonly string[]).includes(v) || IDLE_AFTER.test(v) ? v : 'waiting';
+}
+
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 1000) / 1000 : null);
 const iso = (v: unknown): string | null => (typeof v === 'string' && ISO.test(v) ? v : null);
 const id = (v: unknown): string | null => (typeof v === 'string' && ID.test(v) ? v : null);
 const pubTitle = (x: Publicly, fallback: string): string => (typeof x.publicTitle === 'string' && PUBLIC_TEXT.test(x.publicTitle) ? x.publicTitle : fallback);
 const pubEst = (x: Publicly): string => (typeof x.publicEst === 'string' && PUBLIC_TEXT.test(x.publicEst) ? x.publicEst : '');
+
+/** A `live` key that names a cube (`cubes.<id>.…`): cube ids go out only through `cubes`, opted in. */
+const CUBE_SEGMENT = /(^|\.)cubes\./;
+
+/** `live`: METRIC keys and finite numbers only, at most LIVE_MAX; never a per-cube key. */
+function liveNumbers(v: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+  for (const [k, x] of Object.entries(v as Record<string, unknown>).slice(0, LIVE_MAX)) {
+    const n = num(x);
+    if (METRIC.test(k) && !CUBE_SEGMENT.test(k) && n !== null) out[k] = n;
+  }
+  return out;
+}
 
 function numbers(v: unknown): Record<string, number> {
   const out: Record<string, number> = {};
@@ -136,6 +231,7 @@ export function sanitise(doc: StatusDoc): StatusDoc {
     const rid = id(r.id);
     if (!rid) return [];
     const unit = typeof r.unit === 'string' && UNITS.has(r.unit) ? r.unit : null;
+    const live = liveNumbers(r.live);
     return [{
       id: rid, title: pubTitle(r, rid), cpu: r.cpu === 'light' ? 'light' : 'heavy',
       phase: typeof r.phase === 'string' && PHASE.test(r.phase) ? r.phase : 'commands',
@@ -143,6 +239,15 @@ export function sanitise(doc: StatusDoc): StatusDoc {
       done: num(r.done), total: num(r.total), unit, ratePerHour: num(r.ratePerHour), eta: iso(r.eta),
       workers: num(r.workers), workersMax: num(r.workersMax), errors: num(r.errors), paused: r.paused === true,
       dataUpdated: iso(r.dataUpdated),
+      memGb: num(r.memGb),
+      live,
+      liveHeadline: (Array.isArray(r.liveHeadline) ? r.liveHeadline : []).filter((k): k is string => typeof k === 'string' && k in live).slice(0, LIVE_MAX),
+      cubes: (Array.isArray(r.cubes) ? r.cubes : []).slice(0, CUBES_MAX).flatMap((c, i): CubeProgress[] => {
+        const done = num(c?.done), planned = num(c?.planned);
+        if (done === null || planned === null) return [];
+        const named = r.publicCubes === true && typeof c.id === 'string' && CUBE_ID.test(c.id);
+        return [{ id: named ? c.id : `cube ${i + 1}`, done, planned }];
+      }),
       pressureEvents: (Array.isArray(r.pressureEvents) ? r.pressureEvents : []).slice(-EVENTS_MAX).flatMap((e): PressureEvent[] => {
         const at = iso(e.at);
         if (!at || !KINDS.has(e.kind)) return [];
@@ -164,10 +269,15 @@ export function sanitise(doc: StatusDoc): StatusDoc {
     const n = numbers(f.numbers);
     return [{ id: fid, title: pubTitle(f, fid), status: f.status, finished: iso(f.finished), headline: headlineOf(n), numbers: n }];
   });
+  const state: RunState = doc.state === 'idle' || doc.state === 'running' ? doc.state : running.length ? 'running' : 'idle';
   return {
     schema: 1,
     updated: iso(doc.updated) ?? '',
+    heartbeat: iso(doc.heartbeat) ?? iso(doc.updated) ?? '',
     paused: doc.paused === true,
+    state,
+    idleSince: state === 'idle' ? iso(doc.idleSince) : null,
+    idleReason: state === 'idle' ? publicIdleReason(doc.idleReason) : null,
     host: {
       load1: num(h.load1) ?? 0, memUsedGb: num(h.memUsedGb) ?? 0, memTotalGb: num(h.memTotalGb) ?? 0,
       swapUsedMb: num(h.swapUsedMb) ?? 0, pressure: num(h.pressure) ?? 0, cpus: num(h.cpus) ?? 0, budgetGb: num(h.budgetGb) ?? 0,
