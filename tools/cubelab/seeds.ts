@@ -11,7 +11,7 @@
 // again, record their games and hand them to the position evaluator -- which the
 // search would then be confirmed on (methodology review 2, N4).
 //
-// So the seed line is split, once, here (D332):
+// So the seed line is split, once, here (D340):
 //
 //   1 .. 799,999,999            LAB: plain runs, the queue (its ledger counts up from 1),
 //                               selfplay, evolve (evolve's confirmation seeds sit at
@@ -57,11 +57,11 @@ export function assertRunSeeds(seed: number, drafts: number, o: { deckset?: bool
     if (!hit || hit[0] !== seed || hit[1] !== seed + drafts - 1) {
       throw new Error(`--deckset drafts the AI ladder's deck sets, which live at seeds ${RESERVED_SEED_MIN}..${RESERVED_SEED_MAX} only (seeds.ts); got ${seed}..${seed + drafts - 1}`);
     }
-    if (o.games !== 0) throw new Error('--deckset drafts and builds only: it needs --games 0 (a reserved deck is never played by the lab, D332)');
+    if (o.games !== 0) throw new Error('--deckset drafts and builds only: it needs --games 0 (a reserved deck is never played by the lab, D340)');
     return;
   }
   if (hit) {
-    throw new Error(`seeds ${hit[0]}..${hit[1]} are RESERVED for the AI ladder's deck sets (${RESERVED_SEED_MIN}..${RESERVED_SEED_MAX}, seeds.ts, D332): `
+    throw new Error(`seeds ${hit[0]}..${hit[1]} are RESERVED for the AI ladder's deck sets (${RESERVED_SEED_MIN}..${RESERVED_SEED_MAX}, seeds.ts, D340): `
       + 'drafting them would re-create the confirm decks -- pick a seed below ' + VERIFY_SEED_MIN + ' (or ' + VERIFY_SEED_MIN + '+ for a verification)');
   }
 }
@@ -69,6 +69,6 @@ export function assertRunSeeds(seed: number, drafts: number, o: { deckset?: bool
 /** The queue's seeds stay in the LAB range: a chunk at or past VERIFY_SEED_MIN is refused. */
 export function assertQueueSeeds(key: string, seed: number, drafts: number): void {
   if (seed < 1 || seed + drafts - 1 >= VERIFY_SEED_MIN) {
-    throw new Error(`queue: ${key} seeds ${seed}..${seed + drafts - 1} leave the lab range 1..${VERIFY_SEED_MIN - 1} (seeds.ts, D332) -- the ledger is broken or exhausted`);
+    throw new Error(`queue: ${key} seeds ${seed}..${seed + drafts - 1} leave the lab range 1..${VERIFY_SEED_MIN - 1} (seeds.ts, D340) -- the ledger is broken or exhausted`);
   }
 }

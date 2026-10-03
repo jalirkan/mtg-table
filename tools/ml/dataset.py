@@ -27,12 +27,12 @@ decks it never saw? -- because a bench replays the same pairs over many seeds
 and a by-game split would score positions of decks already seen in training.
 `--group-by game` keeps D305's by-game split.
 
-RESERVED DECKS (D332).  A game played with a deck of the AI ladder's dev or
+RESERVED DECKS (D340).  A game played with a deck of the AI ladder's dev or
 confirm set (tools/ai-bench/pairs-*.txt) is dropped and counted, matched card
 for card (reserved.py): a lab recording by its run's drafts.jsonl, any other
 log by the viewer's own .dck when its hello names one.  The search is graded
 on those decks; the evaluator must never have trained on them.
-`--keep-reserved` turns this off.  Each game's lab version (`ver`, D333) is in
+`--keep-reserved` turns this off.  Each game's lab version (`ver`, D341) is in
 games.jsonl and `--ver` keeps only some.
 
 Writes, under --out:
@@ -129,15 +129,15 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
     reserved_hits: Counter = Counter()
     for path in E.find_logs(logs):
         for g in E.read_games(path):
-            # D332: never a game played with a deck of the AI ladder's dev/confirm sets, matched card for card
+            # D340: never a game played with a deck of the AI ladder's dev/confirm sets, matched card for card
             decks, ver = R.game_decks(path, g.hello)
             hit = R.reserved_hit(decks, reserved) if reserved else None
             if hit:
-                skipped["reserved deck (D332)"] += 1
+                skipped["reserved deck (D340)"] += 1
                 reserved_hits[hit] += 1
                 continue
             if vers and ver not in vers:
-                skipped["other lab version (D333)"] += 1
+                skipped["other lab version (D341)"] += 1
                 continue
             rows = E.encode_game(g, schema, phases)
             if not rows:
@@ -156,7 +156,7 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
                           # D316: the deck pair by name ('' when the log has no match block) and the
                           # game's own group, so a trainer can re-split by pair or hold decks out
                           "match": g.match_key(), "game_group": g.split_group,
-                          # D333: the lab version that played it ('unversioned' outside the lab or before D333)
+                          # D341: the lab version that played it ('unversioned' outside the lab or before D341)
                           "ver": ver})
             stats[s]["rows"] += len(rows)
             stats[s]["games"] += 1
@@ -232,8 +232,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--shard-rows", type=int, default=100_000)
     ap.add_argument("--phases", default="main,combat")
     ap.add_argument("--keep-reserved", action="store_true",
-                    help="keep games played with an AI-ladder dev/confirm deck (default: drop them, matched card for card; D332)")
-    ap.add_argument("--ver", default="", help="only games of these lab versions (comma-separated `ver` ids; D333)")
+                    help="keep games played with an AI-ladder dev/confirm deck (default: drop them, matched card for card; D340)")
+    ap.add_argument("--ver", default="", help="only games of these lab versions (comma-separated `ver` ids; D341)")
     ap.add_argument("--repo", default=".", help="where tools/ai-bench/pairs-*.txt are (the reserved decks)")
     ap.add_argument("--group-by", choices=("game", "match"), default="match",
                     help="match (default since D316): every game of one deck pair in one split -- the "

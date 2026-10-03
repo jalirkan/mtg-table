@@ -21,17 +21,17 @@ line per decisive game:
      "onPlay": "A" | "B", "winner": "A" | "B",
      "from": {"Lightning Bolt": "pauper", ...},      # bridge only: the cube each card of both decks came from
      "run": "<the run folder, relative to the repo>",
-     "ver": "<the lab version that drafted and played it>" | "unversioned"}   # D333, tools/cubelab/versions.ts
+     "ver": "<the lab version that drafted and played it>" | "unversioned"}   # D341, tools/cubelab/versions.ts
 
 `ver` is the lab version (code tree, jar, ratings, cube, weights) stamped on
-the draft's line since D333; `collect(..., vers=...)` keeps only some, and the
+the draft's line since D341; `collect(..., vers=...)` keeps only some, and the
 model's report counts games per version, so a night run on other code can be
 split off rather than silently pooled.
 
 NO RESERVED DECKS.  A game whose deck A or B is, card for card, a deck of the
 AI ladder's dev or confirm set (tools/ai-bench/pairs-*.txt, reserved.py) is
 dropped and counted (`stats["reserved"]`), whatever its seed: those decks are
-the ladder's held-out yardstick (methodology review 2, N4; D332).
+the ladder's held-out yardstick (methodology review 2, N4; D340).
 
 Draws (timeouts) and engine errors are left out (a draw says nothing about
 who is stronger).  `draft` groups every game of one deck pair: the split is by
@@ -154,7 +154,7 @@ def collect(paths: Iterable[str], rel_to: str = ".", reserved: Optional[Dict[str
     """Every decisive game under these paths, each once.  Returns the records and counts of what was skipped.
 
     `reserved` (reserved.reserved_decks()): drop a game either of whose decks is one of these, card for card.
-    `vers`: keep only games of these lab versions (`unversioned` names lines from before D333)."""
+    `vers`: keep only games of these lab versions (`unversioned` names lines from before D341)."""
     import reserved as R
     seen = set()
     out: List[Dict[str, Any]] = []
@@ -192,7 +192,7 @@ def collect(paths: Iterable[str], rel_to: str = ".", reserved: Optional[Dict[str
 
 
 def version_counts(games: Iterable[Dict[str, Any]]) -> Dict[str, int]:
-    """Decisive games per lab version (D333)."""
+    """Decisive games per lab version (D341)."""
     out: Dict[str, int] = {}
     for r in games:
         v = r.get("ver") or "unversioned"
@@ -444,8 +444,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--out", required=True, help="games.jsonl")
     ap.add_argument("--overlap", action="store_true", help="also print the overlap report over the committed cubes")
     ap.add_argument("--check", action="store_true", help="validate every record; exit 1 if any is bad (a pilot's check)")
-    ap.add_argument("--keep-reserved", action="store_true", help="keep games played with an AI-ladder deck-set deck (default: drop them, D332)")
-    ap.add_argument("--ver", default="", help="keep only these lab versions (comma-separated ids; `unversioned` = before D333)")
+    ap.add_argument("--keep-reserved", action="store_true", help="keep games played with an AI-ladder deck-set deck (default: drop them, D340)")
+    ap.add_argument("--ver", default="", help="keep only these lab versions (comma-separated ids; `unversioned` = before D341)")
     ap.add_argument("--repo", default=".")
     a = ap.parse_args(argv)
     import reserved as R

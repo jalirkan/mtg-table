@@ -7,7 +7,7 @@
 // folder.  A drafter, builder, recorder or bridge fix between nights would
 // silently mix two populations in a model that assumes one, and nothing could
 // tell them apart afterwards (methodology review 2, N5).  So every run stamps
-// its VERSION (D333):
+// its VERSION (D341):
 //
 //   gitSha          HEAD of the checkout, recorded (not compared: a docs-only commit changes it)
 //   codeTree        sha256 of `git ls-tree HEAD` over the paths that make a draft or a game:
@@ -114,7 +114,7 @@ export function versionDiff(a: Partial<LabVersion>, b: Partial<LabVersion>): str
 /**
  * The resume rule: the folder's newest version must be this one, unless `allow` (--allow-version-change).
  * Returns the `versions` list to write; throws when the change is not allowed.  `old` is null for a new
- * folder; a folder from before D333 (run.json with no `versions`) passes undefined and counts as a
+ * folder; a folder from before D341 (run.json with no `versions`) passes undefined and counts as a
  * different, unknown version.
  */
 export function resumeVersions(old: VersionEntry[] | null | undefined, cur: LabVersion, firstSeed: number, allow: boolean, out: string,

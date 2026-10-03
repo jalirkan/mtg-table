@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: the pre-registered verification of a `design` candidate (D336).
+# mtg-table — tools/ml: the pre-registered verification of a `design` candidate (D344).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Is a proposed cube more balanced than the original?  A pre-registered, group-sequential test.
@@ -36,7 +36,7 @@ SIZE.  At 400 drafts per arm (the old rule: "accept if at least as even") an
 archetype's win rate has an SE of 5.6 points, bigger than the effect, and the
 old rule accepted a real worsening (5 -> 7 points) 42% of the time.  `sim`
 gives this test's numbers (400 trials, 10 archetypes, realised spreads
-fixed; D336): at 8,000 drafts per arm a 5 -> 5 cube is accepted 4.5% of the
+fixed; D344): at 8,000 drafts per arm a 5 -> 5 cube is accepted 4.5% of the
 time, a 5 -> 3 improvement 90% (after 5,930 drafts per arm on average), 5 -> 4
 42%, 5 -> 7 never; at 4,000 per arm the 5 -> 3 power is 64%.
 16,000 drafts in all, about one PC night at the measured rates: ONE CANDIDATE

@@ -316,7 +316,7 @@ def load_data(data: str, split_by: str = "dataset"):
 
 
 def reserved_warning(data: str) -> None:
-    """D332: say so when a dataset was built without dropping the AI ladder's deck-set decks (before D332, or --keep-reserved)."""
+    """D340: say so when a dataset was built without dropping the AI ladder's deck-set decks (before D340, or --keep-reserved)."""
     f = os.path.join(data, "stats.json")
     try:
         with open(f, encoding="utf-8") as fh:
@@ -324,7 +324,7 @@ def reserved_warning(data: str) -> None:
     except (OSError, json.JSONDecodeError):
         return
     if not st.get("reservedChecked"):
-        print(f"WARNING: {data} was built without the reserved-deck filter (D332): games with an AI-ladder dev/confirm "
+        print(f"WARNING: {data} was built without the reserved-deck filter (D340): games with an AI-ladder dev/confirm "
               "deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks")
 
 

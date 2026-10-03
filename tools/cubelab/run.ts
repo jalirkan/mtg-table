@@ -63,9 +63,9 @@ export interface RunOptions {
   mixed?: { mode: MixedMode; ratingsFile: string; synergyFile: string | null; deckSynergy: boolean };
   /** A bridge run (`--bridge a,b`): every draft's pool sampled from these cubes (bridge.ts). */
   bridge?: BridgeOptions;
-  /** D332: draft the AI ladder's deck sets at their reserved seeds (`--deckset`, with --games 0 only; seeds.ts). */
+  /** D340: draft the AI ladder's deck sets at their reserved seeds (`--deckset`, with --games 0 only; seeds.ts). */
   deckset?: boolean;
-  /** D333: append to a folder another lab version wrote (`--allow-version-change`; logged in run.json). */
+  /** D341: append to a folder another lab version wrote (`--allow-version-change`; logged in run.json). */
   allowVersionChange?: boolean;
 }
 
@@ -87,7 +87,7 @@ export interface DraftRecord extends Omit<DraftOut, 'drafters' | 'ms'> {
   ms: DraftOut['ms'] & { match: number };
   /** A bridge draft's pool: its source cubes and which cube each card came from (bridge.ts; absent in a normal run). */
   bridge?: BridgeTag;
-  /** D333: the lab version (versions.ts) that drafted and played this line; absent on lines written before D333. */
+  /** D341: the lab version (versions.ts) that drafted and played this line; absent on lines written before D341. */
   ver?: string;
 }
 
@@ -120,9 +120,9 @@ export interface RunMeta {
   };
   /** A bridge run's source cubes, shares and pool size (bridge.ts; absent in a normal run). */
   bridge?: BridgeMeta;
-  /** D333: every lab version that wrote to this folder, oldest first; the last is the current one (versions.ts). */
+  /** D341: every lab version that wrote to this folder, oldest first; the last is the current one (versions.ts). */
   versions?: VersionEntry[];
-  /** D332: a deck-set run at reserved seeds (seeds.ts). */
+  /** D340: a deck-set run at reserved seeds (seeds.ts). */
   deckset?: boolean;
 }
 
@@ -207,7 +207,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     meta.seed = Math.min(old.seed, o.seed);
     meta.drafts = Math.max(old.seed + old.drafts, o.seed + o.drafts) - meta.seed;
     if (done.size > 0) say(`resuming: ${done.size} draft(s) already in ${jsonl}`);
-    // D333: a folder is one lab version unless --allow-version-change says otherwise (and it is logged).
+    // D341: a folder is one lab version unless --allow-version-change says otherwise (and it is logged).
     meta.versions = resumeVersions(old.versions ?? (done.size === 0 ? null : undefined), version, o.seed, !!o.allowVersionChange, o.out, say);
   } else {
     meta.versions = resumeVersions(null, version, o.seed, false, o.out, say);

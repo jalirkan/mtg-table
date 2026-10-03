@@ -7,7 +7,7 @@ The AI ladder confirms an AI on the confirm set's decks.  If a game played with
 one of those decks reaches the position evaluator's (or the matchup model's)
 training data, a search with that evaluator is confirmed on decks it trained
 on (methodology review 2, N4).  Seeds keep the lab off them
-(tools/cubelab/seeds.ts, D332), but a seed is not a deck: an old run folder,
+(tools/cubelab/seeds.ts, D340), but a seed is not a deck: an old run folder,
 a changed cube or ratings file, or a deck copied into another tool would get
 past a seed rule.  So the dataset builders drop a game when either of its
 decks IS a deck-set deck, card for card:

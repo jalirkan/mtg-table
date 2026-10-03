@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
  * Seed separation and version stamps (tools/cubelab/seeds.ts, versions.ts;
- * D332-D334, methodology review 2 N1/N4/N5):
+ * D340-D342, methodology review 2 N1/N4/N5):
  *
  *  - a plain run refuses any seed in the deck sets' reserved range, and a
  *    `--deckset` run is allowed only there and only with --games 0;
  *  - the queue's ledger never plans a chunk past the lab range, and a plan
  *    with one is refused;
  *  - the resume rule: the same version appends, a new folder starts a list, a
- *    different version (or a pre-D333 folder with drafts) is refused, and
+ *    different version (or a pre-D341 folder with drafts) is refused, and
  *    --allow-version-change appends it with what changed, logged;
  *  - the version id moves with the code tree, the jar, the ratings, the cube
  *    and the weights, and not with the Node version;

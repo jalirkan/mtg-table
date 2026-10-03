@@ -350,11 +350,11 @@ evidence is sound — else **5-fold cross-validation grouped by draft** (a best
 of three's games share both decks, and the evidence would count them as
 independent; D324). In the simulation (`matchup_sim.py`) the evidence lands on
 the true τ where cross-validation's pick is noisy and low, and everything below
-inherits τ (D334). The split is by draft (70/15/15 by a hash of the draft id —
+inherits τ (D342). The split is by draft (70/15/15 by a hash of the draft id —
 the deck pair, as the evaluator's `--split-by pair`) and the held-out intervals
 bootstrap over drafts. **A card's uncertainty is its Laplace posterior SD**
 (`sdPost`: the square root of the diagonal of the inverse Hessian at the MAP,
-centred as the power is; D334). The bootstrap over training drafts stays as
+centred as the power is; D342). The bootstrap over training drafts stays as
 `sdBoot`, a misspecification check only: it measures how much the *shrunk*
 estimate moves, about 0 for a card with no games, and understated the error
 2–15× for the least-seen cards (review 2, N1). Numpy only for M0, M1 and the
@@ -362,10 +362,10 @@ baselines; torch only for M2.
 
 **What it leaves out.** A game played with a deck of the AI ladder's dev or
 confirm set (`tools/ai-bench/pairs-*.txt`), matched **card for card** whatever
-its seed (`reserved.py`, D332), and on request games of other lab versions
-(`--ver`, D333; every draft line carries `ver`, and the report counts games per
+its seed (`reserved.py`, D340), and on request games of other lab versions
+(`--ver`, D341; every draft line carries `ver`, and the report counts games per
 version). **AI-limited cards** (Forge's `AI:RemoveDeck:All`, from the engine
-facts, a run's `cards.json` and the cube documents' notes; D335) are not
+facts, a run's `cards.json` and the cube documents' notes; D343) are not
 rated: their card columns are zero, so they stay at their feature prior, and
 one shared column — how many such cards each deck holds — takes the dead weight
 of a card Forge's pilot seldom casts, so it is not blamed on their deckmates.
@@ -386,7 +386,7 @@ report, games per lab version, the reserved games dropped), `model.json`
 
 **The balance number** is the SD across a cube's decks of each deck's predicted
 win rate against the cube's other decks (at most 400 of them), **de-biased for
-shrinkage** (D334): the MAP's predictions are pulled toward even odds by an
+shrinkage** (D342): the MAP's predictions are pulled toward even odds by an
 amount that depends on how many games the cube has, so the old number read 3.6
 for a true 6.1 points at 8k games and ranked cubes partly by sample size
 (review 2, N2). It is now sqrt(mean of SD² over 200 draws from M1's Laplace
@@ -398,7 +398,7 @@ shrunk² / de-biased², the share of the spread the data has pinned down:
 simulated world (8 seeds, `matchup_sim.py`) the de-biased number reads
 {BALANCE_NUMBERS}.
 
-**Verifying a `design` candidate** (D336). `design` prints the exact job: both
+**Verifying a `design` candidate** (D344). `design` prints the exact job: both
 arms (the original cube and the candidate, with the same ratings) on the same
 fresh seeds in the verification range (800,000,000+), one game per draft, a
 look every 2,000 drafts per arm up to 8,000, and `matchup_verify.py test` at
@@ -417,6 +417,6 @@ themes and roles are still a person's check.
 (`src/cube/flatness.ts`) reads `meta.json`'s per-card and per-archetype win
 rates and subtracts binomial noise; the matchup model's number is a deck-level
 spread from a model fitted net of deckmates, de-biased for its shrinkage
-(above; before D334 it was a lower bound); flatness's intervals are
+(above; before D342 it was a lower bound); flatness's intervals are
 too narrow under clumped games (a card's games come about 2.4 at a time from
 one deck pair). Compare the two only at thousands of games per cube.

@@ -16,7 +16,7 @@ cube has them.  It minimises
   + wFlat   * SD of nonland power                                      no bombs, no duds
   + wArch   * SD over the ten colour pairs of the pair's deck strength the archetypes even
   + wViable * pairs with fewer than 30 castable nonland cards           every archetype viable
-  + wUnc    * mean POSTERIOR SD of the pool's cards (sdPost, D334)    prefer cards the data knows
+  + wUnc    * mean POSTERIOR SD of the pool's cards (sdPost, D342)    prefer cards the data knows
   + wSwap   * swaps from the target cube                                change only what the model is sure of
 
 where a pair's deck strength is the summed power of the 23 best nonland
@@ -30,7 +30,7 @@ were noise, dropped its sacrifice theme and added Black Lotus.  The themes
 are not in the objective: a swap keeps a card's colour class, not its role,
 so read the swap table before playing a candidate.
 
-GUARDS ADDED BY REVIEW 2 (D334-D336).  The uncertainty term reads the Laplace
+GUARDS ADDED BY REVIEW 2 (D342-D344).  The uncertainty term reads the Laplace
 posterior SD: the old bootstrap SD was ~0 for a card with no games, so the
 penalty pushed the optimiser TOWARD the least-known cards.  An AI-limited card
 (Forge's AI:RemoveDeck, All or Random: the cube documents' notes, the engine
@@ -107,7 +107,7 @@ def design_cmd(a) -> int:
     with open(os.path.join(a.model, "model.json"), encoding="utf-8") as fh:
         m = json.load(fh)
     if "powerSdPost" not in m:
-        raise SystemExit(f"{a.model}/model.json predates D334: its powerSd is a bootstrap of shrunk estimates (about 0 for the "
+        raise SystemExit(f"{a.model}/model.json predates D342: its powerSd is a bootstrap of shrunk estimates (about 0 for the "
                          "least-seen cards, so the uncertainty penalty would favour them) -- retrain with tools/ml/matchup.py train")
     power, sd, land, facts = m["power"], m["powerSdPost"], m["land"], m["facts"]
     ai = dict(m.get("aiLimited") or {})
@@ -188,7 +188,7 @@ def verify_job(out: str, target: str, seed: int) -> str:
     step = pre["perArm"] // pre["looks"]
     bounds = ", ".join(f"{MV.bound(k, pre['looks'], pre['alpha']):.2f}" for k in range(1, pre["looks"] + 1))
     return "\n".join([
-        f"# Pre-registered test (matchup_verify.py, D336): H1 = {name} has a smaller between-archetype variance of win rates",
+        f"# Pre-registered test (matchup_verify.py, D344): H1 = {name} has a smaller between-archetype variance of win rates",
         f"# than {target}. Both arms: grid, one game per draft, Default pilots, the same fresh seeds {seed}.., {pre['perArm']} drafts",
         f"# per arm at most, a look every {step}; accept only if z = (v_orig - v_cand) / SE crosses the O'Brien-Fleming bound",
         f"# ({bounds} at looks 1-{pre['looks']}; one-sided alpha {pre['alpha']}); stop and keep the original if z < 0 from look {pre['futilityFrom']}",

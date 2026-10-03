@@ -1,22 +1,22 @@
-# mtg-table — tools/ml tests: methodology review 2's fixes (D332-D336).
+# mtg-table — tools/ml tests: methodology review 2's fixes (D340-D344).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Reserved decks, version stamps, the posterior SD, the de-biased balance, the AI-limited guard, the verification test.
 
-- RESERVED DECKS (D332, reserved.py): a deck in a pairs file is matched by
+- RESERVED DECKS (D340, reserved.py): a deck in a pairs file is matched by
   card multiset whatever its seed; matchup_data.collect drops a game with one
   (and counts it); dataset.py's lookup finds a lab recording's decks through
   its run folder and drops the game.
-- VERSIONS (D333): a draft line's `ver` reaches the record; `vers` filters.
-- POSTERIOR SD (D334): an unseen card's sdPost is its prior width, a card's
+- VERSIONS (D341): a draft line's `ver` reaches the record; `vers` filters.
+- POSTERIOR SD (D342): an unseen card's sdPost is its prior width, a card's
   shrinks with games; the dual (Woodbury) and primal covariances agree;
   on a small simulated world the 95% intervals cover near 95% while the
   bootstrap's cover far less; the de-biased balance lands near the true
   spread where the shrunk one reads low.
-- AI-LIMITED (D335): a planted AI:RemoveDeck:All card that never wins is not
+- AI-LIMITED (D343): a planted AI:RemoveDeck:All card that never wins is not
   rated a blank (its power is its prior; the shared column takes the loss),
   and `design` never cuts it.
-- VERIFICATION (D336): the MoM variance is unbiased, the O'Brien-Fleming
+- VERIFICATION (D344): the MoM variance is unbiased, the O'Brien-Fleming
   constant is pinned, and the rule's exit codes.
 """
 from __future__ import annotations

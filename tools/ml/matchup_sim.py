@@ -2,7 +2,7 @@
 # mtg-table — tools/ml: a simulated world for checking the matchup model's uncertainty and balance numbers.
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Synthetic cube-lab games with KNOWN card powers, fitted by matchup.py's own code (D334).
+"""Synthetic cube-lab games with KNOWN card powers, fitted by matchup.py's own code (D342).
 
     python3 tools/ml/matchup_sim.py [--sigma 0.06] [--games 1000,4000,12000] [--cards 300] [--seed 7] [--boot 8]
 
@@ -14,7 +14,7 @@ rating correlated 0.5 with the truth), one game per draft, logit P(A) = sum
 grouped cross-validation, as `train` does) and reports:
 
   - COVERAGE of 95% intervals for card power (est +- 1.96 sd, centred as
-    power.tsv centres) with sd = the Laplace posterior SD (sdPost, D334) and
+    power.tsv centres) with sd = the Laplace posterior SD (sdPost, D342) and
     with sd = the bootstrap of the MAP (sdBoot, the old `sd`), over all seen
     cards and the least-seen fifth;
   - BALANCE of cube 0: the true SD of its decks' win rates against each other
