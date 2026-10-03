@@ -7,7 +7,7 @@
 // self-contained page in the cube lab's house style (inline CSS and SVG, a few
 // lines of inline script for hover, no URL that loads anything).
 //
-// ladder.json, schema version 1 — ForgeCoach's contract (D317).  A field may be
+// ladder.json, schema version 1 — ForgeCoach's contract (D318).  A field may be
 // ADDED in version 1; renaming, removing or redefining one is version 2 and a
 // change on ForgeCoach's side in the same breath (D297's rule for meta.json).
 //
@@ -35,6 +35,9 @@
 //                 winner: { label, params, hash, registeredAs },
 //                 rounds: [{ round, blocks, standings: [{ label, wins, losses, score }] }] }
 //   league        { best, pool: [..], promoted: [{ name, at, reason }] } | null
+//   set           the deck-pair file the ratings are on ("tools/ai-bench/pairs-confirm.txt"), or "all"
+//   experiments[] newest first: { at, id, cmd, purpose: pilot|dev|confirm,
+//                 status: finished|stopped|failed|abandoned|running?, sha, dirty, set, hypothesis, games|null }
 //
 // Numbers are rounded: ratings to 0.1, rates to 0.001.
 
@@ -42,6 +45,7 @@ import type { Player } from './registry.ts';
 import { ANCHOR } from './registry.ts';
 import { bootstrap, fit, type Fit } from './rating.ts';
 import { hashIndex, identity, outcomes, type GameRecord } from './results.ts';
+import type { ExpRow } from './experiments.ts';
 import type { LeagueState } from './league.ts';
 
 export interface SprtLog {
@@ -79,6 +83,10 @@ export interface LadderDoc {
   sprt: SprtLog[];
   tune: TuneLog[];
   league: { best: string; pool: string[]; promoted: Array<{ name: string; at: string; reason: string }> } | null;
+  /** Added in schema 1: the deck-pair file the ratings are fitted on, or "all". */
+  set: string;
+  /** Added in schema 1: the committed experiment log, newest first (docs/evidence/experiments.jsonl). */
+  experiments: Array<{ at: string; id: string; cmd: string; purpose: string; status: string; sha: string; dirty: boolean; set: string; hypothesis: string; games: number | null }>;
 }
 
 const r1 = (x: number): number => Math.round(x * 10) / 10;
@@ -97,6 +105,9 @@ export interface BuildInput {
   sprt: SprtLog[];
   tune: TuneLog[];
   league: (LeagueState & { pool: string[] }) | null;
+  /** The deck set the ratings are on (null = every set); `recs` must already be filtered to it. */
+  ratingSet?: string | null;
+  experiments?: ExpRow[];
   priorSd: number;
   bootstrap: number;
   now?: string;
@@ -172,6 +183,11 @@ export function buildLadder(inp: BuildInput): LadderDoc {
     sprt: [...inp.sprt].reverse(),
     tune: [...inp.tune].reverse(),
     league: inp.league ? { best: inp.league.best, pool: inp.league.pool, promoted: inp.league.promoted.map((p) => ({ name: p.name, at: p.at, reason: p.reason })) } : null,
+    set: inp.ratingSet ?? 'all',
+    experiments: [...(inp.experiments ?? [])].reverse().map((e) => ({
+      at: e.start.at, id: e.start.id, cmd: e.start.cmd, purpose: e.start.purpose, status: e.status, sha: e.start.git.sha.slice(0, 12),
+      dirty: e.start.git.dirty, set: e.start.set, hypothesis: e.start.hypothesis, games: e.end ? e.end.games : null,
+    })),
   };
 }
 
@@ -224,6 +240,13 @@ function ratingBar(p: LadderPlayer, lo: number, hi: number): string {
     + `<rect x="0" y="6" width="${Wd}" height="2" class="track"/><line x1="${x(1500)}" x2="${x(1500)}" y1="1" y2="13" class="mid"/>`
     + `<rect x="${x(Math.max(lo, p.lo))}" y="3" width="${Math.max(1, x(Math.min(hi, p.hi)) - x(Math.max(lo, p.lo)))}" height="8" rx="2" class="ci"/>`
     + `<circle cx="${x(p.rating)}" cy="7" r="3.5" class="pt"/></svg>`;
+}
+
+function expTable(doc: LadderDoc): string {
+  if (doc.experiments.length === 0) return '<p class="dim">No experiments logged.</p>';
+  return `<div class="wrap"><table><thead><tr><th>when</th><th>command</th><th>purpose</th><th>status</th><th>commit</th><th>set</th><th>games</th><th>hypothesis</th></tr></thead><tbody>`
+    + doc.experiments.slice(0, 40).map((e) => `<tr><td class="dim">${esc(e.at.slice(0, 16).replace('T', ' '))}</td><td>${esc(e.cmd)}</td><td>${esc(e.purpose)}</td><td>${esc(e.status)}</td><td><code>${esc(e.sha.slice(0, 8))}${e.dirty ? '+' : ''}</code></td><td class="dim">${esc(e.set.replace(/^tools\/ai-bench\//, ''))}</td><td>${e.games ?? '–'}</td><td style="white-space:normal;min-width:280px">${esc(e.hypothesis)}</td></tr>`).join('')
+    + '</tbody></table></div>';
 }
 
 export function renderHtml(doc: LadderDoc): string {
@@ -287,7 +310,7 @@ ${Array.from({ length: SERIES }, (_, k) => `.s${k + 1}{stroke:var(--s${k + 1})}c
 .tip{position:absolute;top:12px;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap}
 </style></head><body><main>
 <h1>AI ladder</h1>
-<p class="dim">Bradley–Terry ratings on the Elo scale, forge-default fixed at ${doc.anchor.rating}; 95% intervals by ${doc.ci === 'hessian' ? 'the Hessian' : esc(doc.ci.replace(':', ' with ') + ' resamples of mirrored deals')}. Every game is an ai-bench game on fixed deck pairs, each deal played from both sides. Generated ${esc(doc.generatedAt.slice(0, 16).replace('T', ' '))}.</p>
+<p class="dim">Rated on <code>${esc(doc.set)}</code>. Bradley–Terry ratings on the Elo scale, forge-default fixed at ${doc.anchor.rating}; 95% intervals by ${doc.ci === 'hessian' ? 'the Hessian' : esc(doc.ci.replace(':', ' with ') + ' resamples of mirrored deals')}. Every game is an ai-bench game on fixed deck pairs, each deal played from both sides. Generated ${esc(doc.generatedAt.slice(0, 16).replace('T', ' '))}.</p>
 <div class="kpis">
 <div class="kpi"><b>${t.games}</b>games (${t.decisive} decisive)</div>
 <div class="kpi"><b>${t.draws}</b>draws (timeouts and engine errors; not rated)</div>
@@ -301,6 +324,7 @@ ${Array.from({ length: SERIES }, (_, k) => `.s${k + 1}{stroke:var(--s${k + 1})}c
 <h2>Recent SPRT outcomes</h2>${sprt}
 <h2>Tuner results</h2><div class="decks">${tune}</div>
 <h2>League</h2>${lg}
+<h2>Experiment log</h2><p class="dim">Every engine run, with its git commit and purpose, from <code>docs/evidence/experiments.jsonl</code> (committed). A run with no end line was abandoned.</p>${expTable(doc)}
 <p class="dim">Made by <code>tools/ai-ladder.sh report</code> (mtg-table, GPL-3.0-or-later). The same numbers are in <code>ladder.json</code> (schema 1).</p>
 </main>
 <script>

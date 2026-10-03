@@ -1,6 +1,6 @@
 # The AI ladder — manual
 
-*D317–D320. `tools/ai-ladder.sh`, `tools/ai-ladder/`. What was measured with it is
+*D318–D321. `tools/ai-ladder.sh`, `tools/ai-ladder/`. What was measured with it is
 [`docs/evidence/ai-ladder.md`](../evidence/ai-ladder.md); the design's place in
 the AI roadmap is [`docs/research/ai-architecture.md`](../research/ai-architecture.md) §9.*
 
@@ -19,8 +19,8 @@ unit-tested engine-free in `web/test/ai-ladder.test.ts` (step 13, CI).
 
 ```bash
 ./bridge/build.sh                               # once: bridge/out
-./tools/ai-ladder.sh list                       # the players, and which this checkout can play
-./tools/ai-ladder.sh run --hours 1 --jobs 2     # rate them for an hour
+./tools/ai-ladder.sh list                       # the players, which this checkout can play, the deck sets
+./tools/ai-ladder.sh run --hours 1 --jobs 2     # rate them for an hour (confirm set)
 ./tools/ai-ladder.sh report                     # var/ai-ladder/report.html + ladder.json
 ```
 
@@ -32,7 +32,7 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
 |---|---|---|---|
 | `forge` | `profile` (Default \| Cautious \| Reckless \| Experimental), `sim` (none \| full \| hybrid) | `Reckless`, `Default+sim` | always |
 | `policy` | `profile`, `outlets` (on \| off \| shadow; on) | `Default+outlets` | always (D309/D310) |
-| `search` | `profile`, `outlets`, `budgetMs` (1500), `cands` (6), `turns` (0), `rounds` (2), `margin` (20), `maxRounds` (12), `what` (pab) | `Default+outlets+search:ms=1500,cands=6,...` | yes, since the search AI merged (D312–D314); `search-v1` is the game's `--ai-policy search` with its defaults |
+| `search` | `profile`, `outlets`, `budgetMs` (1500), `cands` (6), `turns` (0), `rounds` (2), `margin` (20), `maxRounds` (12), `what` (pab), `seed` (0 = clock) | `Default+outlets+search:ms=1500,cands=6,...` | yes (D312–D314): `search-v1` is the game's `--ai-policy search`; `search-v1-fixed3` is the fixed-rollout benchmark mode |
 | `search-eval` | the search's, plus `model` (a model hash) | — | not yet: the evaluator has no bench option (branch c/evaluator) |
 
 - **A name is permanent.** A player's identity in the results is its **config
@@ -55,8 +55,7 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
 ## How a game is played
 
 A **batch** is one `AiBench play` JVM: `--a <cfg> --b <cfg> --games 4 --mirror
---seed <bseed>` over `--batch-pairs` deck pairs from `--pairs`
-(`tools/ai-bench/pairs-cube.txt`, the ten Forge-drafted cube pairs). For each
+--seed <bseed>` over `--batch-pairs` deck pairs of the command's deck set (below). For each
 pair the four games are both decks on both seats, and `--mirror` (the one hook
 the ladder added to ai-bench) gives games 0 and 3, and 1 and 2, the same seed:
 the same deck in the same seat with the same shuffle, the two configs swapped.
@@ -78,6 +77,27 @@ this PC's `var/ai-ladder/results/` (and its `sprt.jsonl`/`tune.jsonl` lines,
 if you want them in the report). Ids are unique across machines and a line
 read twice counts once. A draw (an ai-bench timeout or an engine error) is kept
 in the log, counted in the report, and left out of the ratings.
+
+## Deck sets: dev and confirm
+
+Tuning and confirming on the same decks selects settings that exploit those
+decks. So the ladder has two generated sets, from cube-lab drafts across six
+cubes (fair-fight, modern-era, pauper, peasant, synergy, vintage; two AI
+drafters and the lab's builder, `cubelab.sh run --games 0`, which drafts and
+builds and plays nothing):
+
+| set | file | used by |
+|---|---|---|
+| **dev** | `tools/ai-bench/pairs-dev.txt` | `tune` (always; it refuses the confirm set), pilots, exploration |
+| **confirm** | `tools/ai-bench/pairs-confirm.txt` | `run`, `sprt`, `league`, and `ratings`/`report` (which rate only the confirm set's games unless `--set all`) |
+
+Each cube's drafts, sorted by seed, are dealt alternately to dev and confirm,
+so the split is a function of the drafts. The committed sets are 10 drafts per
+cube from seed 9100 (`ai-ladder.sh decksets --per-cube 10 --seed 9100`):
+30 pairs each. The decks are under `tools/ai-bench/decks/sets/`. The old
+`pairs-cube.txt` (ten Forge-drafted pairs from two cubes) stays for D309–D314's
+numbers and as `--pairs` for anything that must compare with them. **Never tune
+on confirm**, and quote published numbers from confirm only.
 
 ## Ratings
 
@@ -110,7 +130,7 @@ whenever a worker frees (`tools/ai-ladder/schedule.ts`):
 
 ## `sprt A B --elo0 0 --elo1 20 [--alpha 0.05 --beta 0.05 --max-games 4000]`
 
-Plays A vs B in batches of `--batch-pairs` (2 here: 8 games) until the test
+Plays A vs B on the confirm set in batches of `--batch-pairs` (2 here: 8 games) until the test
 decides "A is stronger than B by ≥ elo1" (H1) or "by ≤ elo0" (H0), or the game
 limit says inconclusive. The unit of evidence is a mirrored pair (A's share of
 its decisive games: 0, ½ or 1) and the statistic is the generalized SPRT on
@@ -123,7 +143,7 @@ Its games are ladder games too. Elo is the logistic scale above, not
 
 ## `tune <base> --param k=v1,v2 [--param ...]`
 
-Any int or enum parameter of the base's kind. The grid is every combination
+Any int or enum parameter of the base's kind, **on the dev set only**. The grid is every combination
 (`--sample K` draws K of them, seeded by `--seed`). Successive halving
 (`tools/ai-ladder/tune.ts`): in round r every surviving candidate plays
 `--blocks · eta^r` batches against **each** opponent in `--pool`
@@ -132,24 +152,43 @@ the win rate over all rounds; the best `ceil(n/eta)` survive (`--eta` 2) until
 one is left or `--max-rounds`. The winner goes into `players.json` under a new
 name (`--candidate` marks it for the league); if its config is already
 registered the tuner says so and writes nothing. A line goes to `tune.jsonl`.
+**The winner's score is optimistic** (it won a race on noisy scores — the
+winner's curse), so it is never evidence: confirm the winner on the confirm set
+with `sprt` or the league (`--candidate`).
 
 Without the search, on parameters that have always existed: `tune policy-outlet --param
 profile=Default,Cautious,Reckless,Experimental --param outlets=on,off`.
 
-## `league --hours H [--pool-size 4 --share 0.5 --elo1 20 --min-forge-games 80 --forge-margin 0]`
+## `league --hours H [--pool-size 4 --share 0.5 --elo1 20 --ni-margin 30 --ni-alpha 0.05 --ni-beta 0.1]`
 
-The self-play loop. State is `var/ai-ladder/league.json`: the current best
-(`--start`, forge-default by default), the promoted versions, and every decided
-candidate. The pool is the last `--pool-size` promoted versions plus the
-available anchors. Each batch is either the best against the pool member it
-has played least (`--share` of the batches), a pending candidate's test, or an
-ordinary ladder batch. A candidate is a registry player with `"candidate":
-true` not yet decided; its tests cycle candidate-vs-best (the SPRT, twice),
-candidate-vs-forge-default and best-vs-forge-default on the same deals. It is
-**promoted only if** the SPRT accepts H1 **and**, on those shared deals with at
-least `--min-forge-games` decisive games each, its Elo against forge-default is
-not below the best's by more than `--forge-margin`: no "beats itself, forgets
-Forge" promotions. H0, an inconclusive SPRT or a failed Forge check rejects it.
+The self-play loop, on the confirm set. State is `var/ai-ladder/league.json`:
+the current best (`--start`, forge-default by default), the promoted versions,
+and every decided candidate. The pool is the last `--pool-size` promoted
+versions plus the available anchors. Each batch is either the best against the
+pool member it has played least (`--share` of the batches), a pending
+candidate's tests, or an ordinary ladder batch. A candidate is a registry
+player with `"candidate": true` not yet decided (`tune --candidate` sets it).
+
+**A candidate is promoted only if both tests pass:**
+
+1. **SPRT**, candidate vs best: "beats it by ≥ `--elo1`" (H1).
+2. **Non-inferiority against forge-default.** Candidate and best each play
+   forge-default on the same deals; each shared mirrored deal gives
+   d = candidate's pair score − best's. A sequential test of H0 "inferior by
+   δ" (mean d = −δ, δ = `--ni-margin` 30 Elo ≈ 0.043 in score) against H1
+   "equal" (mean d = 0), Wald's bounds. Its stated error rates: a candidate
+   truly 30 Elo worse than the best against Forge passes with probability
+   `--ni-alpha` (5%); a candidate truly equal passes with probability
+   1 − `--ni-beta` (90%). Simulated with correlated deals: 4.8% and 93.8%;
+   a candidate 15 Elo worse passes 37%; 20 Elo better, 100%. Average cost:
+   about 650 shared deals (≈ 1,300 games per side); a fixed-size test would
+   need about 940 (`niPairsNeeded`). When the best is forge-default itself,
+   d = candidate's pair score − ½.
+
+H0 or an inconclusive SPRT, or an "inferior" or inconclusive Forge test,
+rejects the candidate at once. (The first version compared two 80-game point
+estimates with no margin: it rejected about half of the candidates equal to the
+best and about 30% of those 20 Elo better — the methodology review's M5.)
 
 ## `report [--bootstrap N] [--out DIR]` and `ladder.json`
 
@@ -187,7 +226,10 @@ a change on ForgeCoach's side in the same breath (D297's rule).
                 "pool": ["forge-default"], "eta": 2, "games": 640,
                 "winner": { "label": "outlets=on", "params": { … }, "hash": "…", "registeredAs": "policy-outlet" },
                 "rounds": [ { "round": 0, "blocks": 1, "standings": [ { "label": "outlets=on", "wins": 21, "losses": 17, "score": 0.553 } ] } ] } ],
-  "league": { "best": "forge-default", "pool": ["forge-default", "…"], "promoted": [ { "name": "…", "at": "…", "reason": "…" } ] }   // or null
+  "league": { "best": "forge-default", "pool": ["forge-default", "…"], "promoted": [ { "name": "…", "at": "…", "reason": "…" } ] },  // or null
+  "set": "tools/ai-bench/pairs-confirm.txt",   // the deck set the ratings are on, or "all"
+  "experiments": [ { "at": "…", "id": "…", "cmd": "sprt", "purpose": "confirm", "status": "finished",   // newest first; status
+                     "sha": "…", "dirty": false, "set": "…", "hypothesis": "…", "games": 812 } ]        // finished|stopped|failed|abandoned|running?
 }
 ```
 
@@ -196,26 +238,41 @@ Players include every registered one (unavailable ones too, with
 (`registered: false`, named `name@hash`). Ratings are rounded to 0.1, rates to
 0.001.
 
-## Overnight on the owner's PC (Ryzen 7 9700X, 7 workers, ~3.8 s a game)
+## Benchmarks that reproduce: mirrored deals, fixed rollouts, the experiment log
 
-About 6,600 games an hour on 7 workers, so 8 hours is about 50,000 games.
+- **Mirrored deals, tested against 50%.** Every ladder game is mirrored, and
+  `ai-bench.sh play` now mirrors by default too (`--no-mirror` reproduces the
+  pre-D318 seeds). With deck and seat swapped, a config tied with its opponent
+  scores exactly 50% by symmetry, so a comparison needs no separate
+  Default-vs-Default control: `ai-bench.sh report` prints A's score against the
+  known 50% by deal, with its interval, p and Elo. (A control's own luck, the
+  47% in D312's confirmation, no longer leaks into the effect.)
+- **Fixed rollouts.** `search-v1` budgets 1.5 s of wall clock per decision; on
+  a busy machine a quarter of its decisions fell back to Forge (D312's
+  evidence), so its strength depends on the machine. `search-v1-fixed3` is
+  the same search with `rounds = maxRounds = 3`, `budgetMs` at its 60000
+  ceiling and a fixed determinization seed: every searched decision does
+  exactly three rounds, on any machine. Use it (or another fixed-count
+  variant) for ladder, SPRT and tuner numbers; keep the wall clock for live
+  play. Forge's own 5 s evaluation timeout is still wall clock — each game line
+  records the machine's load and Forge's timeout count (`load`,
+  `evalTimeouts`).
+- **The experiment log** is committed: `docs/evidence/experiments.jsonl`.
+  Every `run`, `sprt`, `tune` and `league` appends a start line before its
+  first game (git sha and dirty flag, deck set and its hash, players and
+  config hashes, seed base, purpose `pilot | dev | confirm`, hypothesis) and
+  an end line when it stops (status, games, seed range, result). A start with no
+  end is an abandoned run, and it stays in the log. Write `--hypothesis "…"`
+  before a confirm run; `sprt`, `tune` and `league` write their own.
+  `ai-ladder.sh experiments` lists it; the report shows it. Commit the file
+  with the run's write-up.
 
-```bash
-cd ~/code/mtg-table
-./bridge/build.sh
-# 1. The ladder: every available player, 8 hours, then the report.
-./tools/ai-ladder.sh run --hours 8 --jobs 7 && ./tools/ai-ladder.sh report --bootstrap 200
-# 2. Or settle one question first: is the outlet policy at least +20 over Default?
-./tools/ai-ladder.sh sprt policy-outlet forge-default --elo0 0 --elo1 20 --jobs 7 --hours 2
-# 3. Or tune today's knobs (8 candidates, about 2,000 games), then rate the winner overnight:
-./tools/ai-ladder.sh tune policy-outlet --param profile=Default,Cautious,Reckless,Experimental \
-    --param outlets=on,off --jobs 7 --candidate
-./tools/ai-ladder.sh league --hours 6 --jobs 7 && ./tools/ai-ladder.sh report
-```
+## On the owner's PC (Ryzen 7 9700X, 7 workers)
 
-Open `var/ai-ladder/report.html` in a browser. A second PC: the same commands
-there, then copy its `var/ai-ladder/results/<its-host>.jsonl` into this PC's
-`var/ai-ladder/results/` and run `report` again.
+Long runs go to the owner's PC as `pc-jobs` jobs (pilot, commands, abort-if,
+report); the current ones are in `docs/evidence/ai-ladder.md` §4. About 3.8 s a
+plain game and 7 workers: some 6,600 plain games an hour. A fixed-rollout search
+game costs several times that, so budget search jobs in games, not hours.
 
 ## The search, and the evaluator when it merges
 

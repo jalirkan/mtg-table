@@ -148,7 +148,8 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   };
   if (one(f, 'deck-synergy') === 'on' && !one(f, 'synergy')) usage('--deck-synergy on needs --synergy <tsv>');
   if (o.jobs > env.homes.length) usage(`--jobs ${o.jobs} but only ${env.homes.length} Forge home(s) were built (tools/cubelab.sh builds --jobs of them)`);
-  if (o.games < 1) usage('--games must be at least 1');
+  // --games 0 drafts and builds only, plays nothing (the AI ladder's deck sets, D318); a report of such a run has no games
+  if (o.games < 0) usage('--games must be 0 or more');
   say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}`);
   await runLab(env, o, say);
   say(`next: tools/cubelab.sh report ${o.out}`);

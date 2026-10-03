@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "The AI ladder's players (D317): a name, an AI kind and its parameters. A name is permanent: never edit the kind or params of a player that has played (the ladder keys results by name AND config hash, so an edit would split it in two); add a new name instead. Anchors are stock Forge and are always in the pool; forge-default is fixed at 1500. tools/ai-ladder/kinds.ts lists the kinds and their parameters. `ai-ladder.sh tune` appends here and never overwrites.",
+  "comment": "The AI ladder's players (D318): a name, an AI kind and its parameters. A name is permanent: never edit the kind or params of a player that has played (the ladder keys results by name AND config hash, so an edit would split it in two); add a new name instead. Anchors are stock Forge and are always in the pool; forge-default is fixed at 1500. tools/ai-ladder/kinds.ts lists the kinds and their parameters. `ai-ladder.sh tune` appends here and never overwrites.",
   "players": [
     {"name":"forge-default","kind":"forge","params":{"profile":"Default"},"anchor":true,"note":"Forge 2.0.14's AI, Default.ai profile. The rating scale's zero: 1500."},
     {"name":"forge-reckless","kind":"forge","params":{"profile":"Reckless"},"anchor":true,"note":"Reckless.ai; D311 measured it about +10 points over Default on the cube pairs."},
@@ -8,6 +8,7 @@
     {"name":"forge-experimental","kind":"forge","params":{"profile":"Experimental"},"anchor":true,"note":"Experimental.ai: 30 knob values, not simulation (D311)."},
     {"name":"policy-outlet","kind":"policy","params":{"profile":"Default","outlets":"on"},"note":"D310's sacrifice-outlet policy in front of the Default AI."},
     {"name":"policy-outlet-reckless","kind":"policy","params":{"profile":"Reckless","outlets":"on"}},
-    {"name":"search-v1","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500},"note":"The game's `MtgTable --ai-policy search` seat with its defaults: D310's outlet policy plus D312's determinized rollout search (D312-D314)."}
+    {"name":"search-v1","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":1500},"note":"The game's `MtgTable --ai-policy search` seat with its defaults: D310's outlet policy plus D312's determinized rollout search (D312-D314). Wall-clock budget: for live play, and machine-dependent as a benchmark."},
+    {"name":"search-v1-fixed3","kind":"search","params":{"profile":"Default","outlets":"on","budgetMs":60000,"rounds":3,"maxRounds":3,"seed":1},"note":"Fixed-rollout benchmark mode: exactly 3 rounds per searched decision (search-v1 averaged ~2.5 on the shared container at 1.5 s), a fixed determinization seed, no budget fallback. Use this one for ladder, SPRT and tuner numbers that must reproduce across machines."}
   ]
 }

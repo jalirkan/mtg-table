@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # mtg-table — the AI ladder: named AI configs rated against each other and
-# stock Forge, from ai-bench games (D317-D320).
+# stock Forge, from ai-bench games (D318-D321).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
@@ -12,6 +12,8 @@
 #   tools/ai-ladder.sh league --hours 8 --jobs 7             # the self-play loop
 #   tools/ai-ladder.sh ratings [--bootstrap 200]
 #   tools/ai-ladder.sh report                                # var/ai-ladder/report.html + ladder.json
+#   tools/ai-ladder.sh decksets --per-cube 10 --seed 9100    # the dev/confirm deck sets (no games)
+#   tools/ai-ladder.sh experiments                           # the committed experiment log
 #
 # docs/guides/ai-ladder.md is the manual.  Players are tools/ai-ladder/players.json;
 # results are var/ai-ladder/results/<host>.jsonl, append-only, one file per machine.
@@ -29,6 +31,32 @@ cd "$REPO_ROOT"
 
 cmd="$1"
 case "$cmd" in
+  decksets)
+    # Draft every rated cube with the lab (two AI drafters, the lab's builder) and
+    # --games 0 -- no game is played; one JVM at a time -- then split the drafts
+    # into tools/ai-bench/pairs-dev.txt and pairs-confirm.txt (decksets.ts).
+    shift
+    per=10 seed=9100 cubes="fair-fight modern-era pauper peasant synergy vintage"
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --per-cube) per="$2"; shift 2 ;;
+        --seed) seed="$2"; shift 2 ;;
+        --cubes) cubes="${2//,/ }"; shift 2 ;;
+        *) echo "ai-ladder decksets: unknown flag $1" >&2; exit 2 ;;
+      esac
+    done
+    dirs=()
+    for c in $cubes; do
+      f="cubes/$c-cube-180.md"
+      [ -f "$f" ] || { echo "ai-ladder decksets: no cube $f" >&2; exit 2; }
+      out="var/ai-ladder/decksets/$c-$seed-$per"
+      rm -rf "$out"
+      echo "== $c: $per drafts from seed $seed (no games)"
+      ./tools/cubelab.sh run "$f" --drafts "$per" --games 0 --jobs 1 --seed "$seed" --out "$out" | tail -2
+      dirs+=("$out")
+    done
+    exec node tools/ai-ladder/cli.ts decksets-collect "${dirs[@]}" --note "$per drafts per cube from seed $seed: $cubes"
+    ;;
   run|sprt|tune|league)
     [ -f "$FORGE_JAR" ] || { echo "ai-ladder: FORGE_JAR not found: $FORGE_JAR" >&2; exit 1; }
     if [ ! -f bridge/out/mtgtable/ai/PolicyLobbyPlayerAi.class ]; then

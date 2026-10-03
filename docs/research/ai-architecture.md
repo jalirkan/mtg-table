@@ -282,7 +282,7 @@ the same 200 cube deals, 37 deals gained and 18 lost (p = 0.015); copier errors
 0.22% before the token fix; a quarter of searched decisions kept Forge's answer
 for want of budget at 1.5 s on this machine.
 
-## 9. Measuring progress: the ladder and the league (D317–D320)
+## 9. Measuring progress: the ladder and the league (D318–D321)
 
 The bench (§7, step 1) answers "is this change better than plain Default, on
 these deals?". Once there are many configs — profiles, the outlet policy,
@@ -326,9 +326,15 @@ players.json ─► kinds.ts: {kind, params} ─► ai-bench seat config ("Reckl
 - **The self-play loop** (league): the newest version plays a fixed share of
   games against the last N promoted versions and the anchors; a candidate (a
   tuned config, later an evaluator retrained on the league's own games) is
-  promoted only if the SPRT says it beats the current best **and** it does not
-  lose ground against forge-default on the same deals — so the loop cannot
-  drift into beating only itself.
+  promoted only if the SPRT says it beats the current best **and** a
+  non-inferiority test shows it is not worse than the best against
+  forge-default by more than 30 Elo (alpha 5%, power 90%) on the same deals —
+  so the loop cannot drift into beating only itself.
+- **Selection and confirmation on different decks.** The tuner plays a dev
+  deck set, the SPRT, the league and the published ratings a confirm set (30
+  pairs each, cube-lab drafts across six cubes); benchmarks of the search use
+  a fixed rollout count, not the wall clock; every run is in the committed
+  experiment log.
 
 The roadmap then reads: build a search variant or train an evaluator → register
 it (a new name, a new hash) → `tune` its knobs against the pool → mark the

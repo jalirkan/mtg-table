@@ -25,6 +25,9 @@
 //   aDeck, bDeck, aSeat
 //   w      "a" | "b" | "d" (a draw: ai-bench's timeout or engine error)
 //   turns, ms, timeout, error (boolean)
+//   evalTimeouts  Forge's "AI eval thread at timeout" count in the game (ai-bench's aiEvalTimeouts)
+//   load   the machine's 1-minute load average when the batch ended — a busy
+//          machine weakens Forge's AI (its 5 s timeout) and a wall-clock search
 
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -58,19 +61,21 @@ export interface GameRecord {
   ms: number;
   timeout: boolean;
   error: boolean;
+  evalTimeouts?: number;
+  load?: number;
 }
 
 /** The ai-bench line's fields the ladder reads. */
 export interface BenchLine {
   pair: number; game: number; seed: number; a: string; b: string; aDeck: string; bDeck: string; aSeat: number;
-  winner: string; turns: number; ms: number; timeout: boolean; error: string;
+  winner: string; turns: number; ms: number; timeout: boolean; error: string; aiEvalTimeouts?: number;
 }
 
 export interface BatchInfo {
   host: string; run: string; batch: number; purpose: string; set: string; bseed: number;
   /** The pair-file line index of each line of the batch's own pairs file. */
   pairIndex: number[];
-  a: Player; b: Player; at: string;
+  a: Player; b: Player; at: string; load?: number;
 }
 
 export function fromBench(l: BenchLine, info: BatchInfo): GameRecord {
@@ -83,6 +88,7 @@ export function fromBench(l: BenchLine, info: BatchInfo): GameRecord {
     set: info.set, pair, g: l.game, seed: l.seed, bseed: info.bseed, aDeck: l.aDeck, bDeck: l.bDeck, aSeat: l.aSeat,
     w: l.winner === 'A' ? 'a' : l.winner === 'B' ? 'b' : 'd',
     turns: l.turns, ms: l.ms, timeout: !!l.timeout, error: !!l.error,
+    evalTimeouts: l.aiEvalTimeouts ?? 0, load: info.load ?? -1,
   };
 }
 

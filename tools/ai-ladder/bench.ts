@@ -18,6 +18,7 @@
 
 import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { loadavg } from 'node:os';
 import { join, relative } from 'node:path';
 
 import type { Player } from './registry.ts';
@@ -138,7 +139,7 @@ export function ingest(env: Pick<EngineEnv, 'dir' | 'host' | 'run' | 'set'>, spe
     } catch {
       continue;
     }
-    recs.push(fromBench(l, { host: env.host, run: env.run, batch, purpose: spec.purpose, set: env.set, bseed: spec.bseed, pairIndex: spec.pairs, a: spec.a, b: spec.b, at }));
+    recs.push(fromBench(l, { host: env.host, run: env.run, batch, purpose: spec.purpose, set: env.set, bseed: spec.bseed, pairIndex: spec.pairs, a: spec.a, b: spec.b, at, load: Math.round(loadavg()[0]! * 100) / 100 }));
   }
   appendResults(env.dir, env.host, recs);
   return recs;

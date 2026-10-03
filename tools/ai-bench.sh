@@ -10,7 +10,7 @@
 #
 #   ./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt \
 #        --a Experimental --b Default [--games 20] [--jobs 3] [--seed 1] \
-#        [--timeout 300] [--mirror] [--run NAME]
+#        [--timeout 300] [--no-mirror] [--run NAME]
 #   ./tools/ai-bench.sh report var/ai-bench/<run>/*.jsonl [--by-pair]
 #   ./tools/ai-bench.sh paired --control var/ai-bench/<c>/shard-*.jsonl \
 #        --treatment var/ai-bench/<t>/shard-*.jsonl     # same --pairs/--seed/--games
@@ -23,9 +23,11 @@
 # determinized rollout search (D312: keys ms, cands, turns, rounds, margin,
 # maxrounds, what -- see mtgtable.ai.SearchConfig).  Game g of a pair gives
 # config A the pair's first deck when g is even, and seat 0 when g/2 is even,
-# so every four games cover both decks on both seats.  --mirror (the AI
-# ladder) gives games 4k/4k+3 and 4k+1/4k+2 one seed each: the same deck in the
-# same seat, the configs swapped -- each deal from both sides.
+# so every four games cover both decks on both seats.  `play` MIRRORS by
+# default (D318): games 4k/4k+3 and 4k+1/4k+2 get one seed each -- the same deck
+# in the same seat, the configs swapped, each deal from both sides -- and
+# `report` tests A against the known 50% by deal, so no control run is needed.
+# --no-mirror deals as before D318 (to reproduce the D309-D314 runs' seeds).
 #
 # --jobs K runs K JVMs, each with every K-th game and a Forge home of its own
 # under var/ai-bench/<run>/home-<i>/ (tools/config.sh's forge_home_make, D129's
@@ -78,11 +80,13 @@ case "$mode" in
     ;;
   play)
     shift
-    jobs=3 run="" args=()
+    jobs=3 run="" args=() mirror=--mirror
     while [ $# -gt 0 ]; do
       case "$1" in
         --jobs) jobs="$2"; shift 2 ;;
         --run) run="$2"; shift 2 ;;
+        --mirror) mirror=--mirror; shift ;;
+        --no-mirror) mirror=""; shift ;;
         *) args+=("$1"); shift ;;
       esac
     done
@@ -95,7 +99,7 @@ case "$mode" in
     pids=()
     for ((i = 0; i < jobs; i++)); do
       home="$(forge_home_make "$dir/home-$i")"
-      jvm "$home" play "${args[@]}" --shard "$i/$jobs" --out "$dir/shard-$i.jsonl" \
+      jvm "$home" play "${args[@]}" ${mirror:+"$mirror"} --shard "$i/$jobs" --out "$dir/shard-$i.jsonl" \
         > "$dir/shard-$i.log" 2>&1 &
       pids+=("$!")
     done
@@ -106,7 +110,7 @@ case "$mode" in
     exit "$rc"
     ;;
   *)
-    sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,35p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
     ;;
 esac

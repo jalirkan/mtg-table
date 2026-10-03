@@ -5,7 +5,7 @@
 
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { hostname } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { drive, Engine, engineEnv, readPairs, type BatchResult, type BatchSpec } from './bench.ts';
 import { bootstrap, fit, type Fit } from './rating.ts';
@@ -22,6 +22,8 @@ export interface SessionOptions {
   gameTimeoutSec: number;
   host?: string;
   priorSd: number;
+  /** Rate only games on this pairs file (repo-relative, as records carry it); null = every set. */
+  ratingSet: string | null;
 }
 
 export class Session {
@@ -76,8 +78,19 @@ export class Session {
     return p;
   }
 
+  /** The records the ratings are fitted on (the rating set's). */
+  get rated(): GameRecord[] {
+    const set = this.opt.ratingSet;
+    return set === null ? this.recs : this.recs.filter((r) => r.set === set);
+  }
+
   outcomes(filter?: (r: GameRecord) => boolean): Outcome[] {
-    return outcomes(filter ? this.recs.filter(filter) : this.recs, this.byHash);
+    return outcomes(filter ? this.rated.filter(filter) : this.rated, this.byHash);
+  }
+
+  /** The pairs file as records name it (repo-relative). */
+  get set(): string {
+    return relative(this.opt.repo, this.opt.pairsFile) || this.opt.pairsFile;
   }
 
   fit(bootstrapSamples = 0): Fit {

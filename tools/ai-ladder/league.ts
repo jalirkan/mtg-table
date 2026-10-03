@@ -2,7 +2,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The league is the self-play loop (D320).  It keeps the CURRENT BEST (the last
+// The league is the self-play loop (D321).  It keeps the CURRENT BEST (the last
 // promoted version; forge-default before any promotion), a POOL of the last
 // `poolSize` promoted versions plus every available stock-Forge anchor, and a
 // queue of CANDIDATES (registry players marked `"candidate": true`, e.g. by
@@ -19,52 +19,46 @@
 //
 // A candidate is PROMOTED only if both hold (`decide`):
 //   1. the SPRT (sprt.ts) accepts H1, "candidate beats best by >= elo1"; and
-//   2. against forge-default, on the shared deals, the candidate's Elo is not
-//      below the best's by more than `forgeMargin` (0 by default) — with at
-//      least `minForgeGames` decisive games each.  No "beats itself, forgets
-//      Forge" promotions.
-// H0 or an inconclusive SPRT, or a failed check 2, rejects it; every decision
-// is kept in league.json and one line in sprt.jsonl.
+//   2. a NON-INFERIORITY test against forge-default (sprt.ts `niState`): on the
+//      same deals, the candidate's mirror-pair score minus the best's must be
+//      shown to be above −δ, δ = `margin` Elo (30): a sequential test of
+//      "inferior by δ" (H0) against "equal" (H1) with alpha 0.05 (a candidate
+//      truly δ worse passes 5% of the time) and beta 0.1 (a truly equal one
+//      passes 90% of the time).  No "beats itself, forgets Forge" promotions,
+//      and no coin-flip rejections of good candidates (the first version
+//      compared two 80-game point estimates: it rejected about half of the
+//      candidates equal to the best).
+// H0 or an inconclusive SPRT, or an "inferior" or inconclusive Forge test,
+// rejects it; every decision is kept in league.json and one line in sprt.jsonl.
+// Tests are played on the CONFIRM deck set; candidates come from tuning on DEV.
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-import { eloOf } from './rating.ts';
-import type { SprtState } from './sprt.ts';
-import type { Tally } from './tune.ts';
+import { NI_DEFAULTS, type NiParams, type NiState, type SprtState } from './sprt.ts';
 
 export interface LeagueOptions {
   poolSize: number;
   share: number;
-  minForgeGames: number;
-  forgeMargin: number;
+  ni: NiParams;
 }
 
-export const LEAGUE_DEFAULTS: LeagueOptions = { poolSize: 4, share: 0.5, minForgeGames: 80, forgeMargin: 0 };
+export const LEAGUE_DEFAULTS: LeagueOptions = { poolSize: 4, share: 0.5, ni: NI_DEFAULTS };
 
 export interface Decision {
   verdict: 'promote' | 'reject' | 'continue';
   reason: string;
-  candElo?: number;
-  bestElo?: number;
 }
 
-/** Elo vs forge-default from a tally, with a half-game of smoothing so 10-0 is not infinite. */
-export const eloVs = (t: Tally): number => eloOf((t.wins + 0.5) / (t.wins + t.losses + 1));
-
-export function decide(sprt: SprtState, candVsForge: Tally, bestVsForge: Tally | null, opt: Pick<LeagueOptions, 'minForgeGames' | 'forgeMargin'>): Decision {
+export function decide(sprt: SprtState, ni: NiState, margin: number): Decision {
   if (sprt.result === 'H0') return { verdict: 'reject', reason: `SPRT accepted H0 after ${sprt.games} games (LLR ${sprt.llr.toFixed(2)})` };
   if (sprt.result === 'inconclusive') return { verdict: 'reject', reason: `SPRT inconclusive at its game limit (${sprt.games} games)` };
-  const n = (t: Tally): number => t.wins + t.losses;
-  const enough = n(candVsForge) >= opt.minForgeGames && (bestVsForge === null || n(bestVsForge) >= opt.minForgeGames);
-  if (sprt.result === 'continue' || !enough) {
-    return { verdict: 'continue', reason: sprt.result === 'continue' ? 'SPRT running' : `SPRT accepted H1; waiting for ${opt.minForgeGames} games each vs forge-default` };
+  const vs = `${ni.diffElo >= 0 ? '+' : ''}${ni.diffElo.toFixed(0)} Elo vs the best against forge-default over ${ni.pairs} shared deals`;
+  if (ni.result === 'inferior') return { verdict: 'reject', reason: `forgets Forge: shown worse than the best by ${margin} Elo against forge-default (${vs})` };
+  if (ni.result === 'inconclusive') return { verdict: 'reject', reason: `Forge non-inferiority inconclusive at its limit (${vs})` };
+  if (sprt.result === 'H1' && ni.result === 'non-inferior') {
+    return { verdict: 'promote', reason: `SPRT H1 after ${sprt.games} games; non-inferior to the best against forge-default within ${margin} Elo (${vs})` };
   }
-  const candElo = eloVs(candVsForge);
-  const bestElo = bestVsForge === null ? 0 : eloVs(bestVsForge);   // best = forge-default itself: 0 by definition
-  if (candElo < bestElo - opt.forgeMargin) {
-    return { verdict: 'reject', reason: `beats the best but forgets Forge: ${candElo.toFixed(0)} vs ${bestElo.toFixed(0)} Elo against forge-default`, candElo, bestElo };
-  }
-  return { verdict: 'promote', reason: `SPRT H1 after ${sprt.games} games; vs forge-default ${candElo.toFixed(0)} >= ${bestElo.toFixed(0)} - ${opt.forgeMargin}`, candElo, bestElo };
+  return { verdict: 'continue', reason: sprt.result === 'continue' ? 'SPRT running' : 'SPRT accepted H1; Forge non-inferiority test running' };
 }
 
 export interface LeagueState {

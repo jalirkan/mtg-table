@@ -14,7 +14,7 @@
 // `available()` says whether this checkout can play the kind.  A kind the table
 // does not know, or one whose engine side has not merged (the search before
 // c/search-ai, the evaluator before c/evaluator), is reported UNAVAILABLE with a
-// reason and skipped by every scheduler — never a crash (D317).
+// reason and skipped by every scheduler — never a crash (D318).
 //
 // Plugging a new AI in is one row here: its params, its cfg() mapping onto the
 // bench's seat syntax, and an available() probe for the files it needs.
@@ -64,7 +64,7 @@ function benchKnows(repo: string, token: string): boolean {
 
 /** The search's knobs (D312's SearchConfig) by ladder name -> bench key. */
 const SEARCH_KEYS: Record<string, string> = {
-  budgetMs: 'ms', cands: 'cands', turns: 'turns', rounds: 'rounds', margin: 'margin', maxRounds: 'maxrounds', what: 'what',
+  budgetMs: 'ms', cands: 'cands', turns: 'turns', rounds: 'rounds', margin: 'margin', maxRounds: 'maxrounds', what: 'what', seed: 'seed',
 };
 
 export const KINDS: Record<string, Kind> = {
@@ -95,7 +95,12 @@ export const KINDS: Record<string, Kind> = {
       margin: { type: 'int', min: 0, max: 1000, default: 20, doc: "leaf points an alternative must beat Forge's own answer by" },
       maxRounds: { type: 'int', min: 1, max: 256, default: 12, doc: 'stop after this many complete rounds' },
       what: { type: 'enum', values: ['p', 'a', 'b', 'pa', 'pb', 'ab', 'pab'], default: 'pab', doc: 'decisions searched: priority, attacks, blocks' },
+      seed: { type: 'int', min: 0, max: 2147483647, default: 0, doc: "the determinizations' seed; 0 = the clock" },
     },
+    // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
+    // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
+    // seed -- every searched decision does exactly N rounds on any machine, so a
+    // benchmark measures the search, not the CPU (D318; search-v1-fixed3).
     cfg: (p) => {
       const kv = Object.entries(SEARCH_KEYS).map(([k, b]) => `${b}=${p[k]}`).join(',');
       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv}`;

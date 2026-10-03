@@ -14128,10 +14128,10 @@ decision, and the gate's recordings must stay Forge's); a new profile name
 (profiles are `.ai` files, D311); a ForgeCoach-side switch now (the launcher's
 contract is D303's, changed in both repositories or not at all — a follow-up).
 
-## D317 — The AI ladder: named AI configs rated on one Elo scale from ai-bench games on mirrored deals, forge-default fixed at 1500, every game one line of an append-only per-machine log
+## D318 — The AI ladder: named AI configs rated on one Elo scale from ai-bench games on mirrored deals, forge-default fixed at 1500, every game one line of an append-only per-machine log
 
-*Branch `c/ai-ladder`. D317–D320: D312–D314 are the search AI's, and D315–D316
-are left for the lab-record and evaluator lanes; renumber at the merge if they
+*Branch `c/ai-ladder`. D318–D321: D312–D314 are the search AI's, D315
+lab-record's and D316–D317 the evaluator's; renumber at the merge if they
 clash.*
 
 **2026-10-03** (the owner's goal: an AI that beats stock Forge, then improves
@@ -14184,7 +14184,40 @@ identity by name (a re-tuned config under an old name would inherit games it
 never played); YAML (no parser in the repo, and JSON one-line-per-player diffs
 as cleanly).
 
-## D318 — The ladder spends its games where they inform: new players first, a fixed share against the anchors, then the closest, most uncertain pair; an SPRT on mirror-pair scores decides "A beats B by ≥ elo1"
+**Revised the same day, after the methodology review** (the coordinator's
+review of the AI and statistics lanes, findings H2, M1, M3, M5, M8):
+
+- **Mirrored deals are the default for evaluations.** `ai-bench.sh play` now
+  passes `--mirror` unless `--no-mirror` (which reproduces the pre-D318 seeds
+  of D309–D314's runs), and `ai-bench report` prints A's score **against the
+  known 50%** by deal — with deck and seat swapped, a tie is exactly 50% by
+  symmetry — with its interval, p and Elo. No separate Default-vs-Default
+  control run: a control's own luck (D312's 47%) no longer leaks into the
+  effect, and the compute it cost is saved. The interval's variance is shrunk
+  by one pseudo-deal toward ¼ so a handful of all-split deals cannot claim a
+  zero-width interval.
+- **Dev and confirm deck sets.** `tools/ai-bench/pairs-dev.txt` and
+  `pairs-confirm.txt`, 30 pairs each, from cube-lab drafts across six cubes
+  (`ai-ladder.sh decksets`: `cubelab.sh run --games 0`, which this decision
+  allows — draft and build, play nothing), each cube's drafts dealt alternately
+  by seed. `tune` plays dev and refuses confirm; `run`, `sprt`, `league`,
+  `ratings` and `report` play and rate confirm. The old `pairs-cube.txt`
+  stays for D309–D314's numbers.
+- **Fixed-rollout benchmarks.** A wall-clock search measures the machine as
+  much as the AI (a quarter of `search-v1`'s decisions fell back to Forge on
+  the shared container). D312's loop already stops at `maxrounds`, so a
+  fixed-count mode needs no search change: `search-v1-fixed3` is `rounds =
+  maxRounds = 3`, the 60000 ms ceiling and a fixed determinization seed (the
+  `search` kind gained the `seed` parameter). Benchmarks use it; live play
+  keeps the clock. Each game line records the 1-minute load and Forge's own
+  timeout count.
+- **A committed experiment log**, `docs/evidence/experiments.jsonl`: every
+  engine command appends a start line (git sha and dirty flag, deck set and
+  hash, players and config hashes, seed base, purpose pilot | dev | confirm,
+  the hypothesis) before its first game and an end line when it stops; a start
+  with no end is an abandoned run and stays in the log.
+
+## D319 — The ladder spends its games where they inform: new players first, a fixed share against the anchors, then the closest, most uncertain pair; an SPRT on mirror-pair scores decides "A beats B by ≥ elo1"
 
 **2026-10-03**
 
@@ -14214,7 +14247,7 @@ deal played from both sides as two independent observations, overstating the
 evidence); deciding on a fixed number of games (an obvious result wastes the
 night, a close one is underpowered).
 
-## D319 — The tuner races a config's parameters by successive halving on shared deals against a fixed pool, and writes its winner back under a new name
+## D320 — The tuner races a config's parameters by successive halving on shared deals against a fixed pool, and writes its winner back under a new name
 
 **2026-10-03**
 
@@ -14237,7 +14270,12 @@ candidates by their ladder rating (it mixes in whom they happened to play; a
 fixed pool is a fixed yardstick); overwriting the base (results are keyed by
 config, and a name is permanent).
 
-## D320 — League mode: the newest version plays a fixed share against its past versions and the anchors; a candidate is promoted only if an SPRT says it beats the current best AND it does not lose ground against forge-default
+**Revised the same day:** the tuner plays the **dev** set only and refuses
+the confirm set; its winner's score is optimistic (it won a race on noisy
+scores) and is never quoted as evidence — the winner is confirmed by an SPRT or
+the league on the confirm set.
+
+## D321 — League mode: the newest version plays a fixed share against its past versions and the anchors; a candidate is promoted only if an SPRT says it beats the current best AND a non-inferiority test shows it is not worse against forge-default
 
 **2026-10-03**
 
@@ -14249,10 +14287,21 @@ is the best against the pool member it has played least — the self-play loop;
 a pending candidate's tests cycle candidate-vs-best (the SPRT) twice,
 candidate-vs-forge-default and best-vs-forge-default on the same deals; the
 rest is the ordinary ladder. **Promotion needs both**: SPRT accepts H1 against
-the best, and on the shared deals against forge-default (at least 80 decisive
-games each) the candidate's Elo is not below the best's by more than a margin
-(0). H0, an inconclusive test, or a failed Forge check rejects it, and the
-reason is kept.
+the best, and a **non-inferiority test** against forge-default passes: on the
+same deals, each shared mirrored deal gives d = the candidate's pair score −
+the best's, and a sequential test of "inferior by δ" (mean d = −δ, δ = 30 Elo ≈
+0.043) against "equal" (mean d = 0) accepts "equal" — stated error rates: a
+candidate truly 30 Elo worse passes 5% of the time (alpha), a truly equal one
+90% (power). Simulated with correlated deals: 4.8% and 93.8%, about 650
+shared deals on average. H0, an inconclusive SPRT, or an "inferior" or
+inconclusive Forge test rejects it, and the reason is kept. All of it plays on
+the confirm deck set.
+
+*Revised the same day.* The first version compared the two point estimates
+(≥ 80 decisive games each, margin 0): with an SE of about 39 Elo on the
+difference it rejected about half of the candidates equal to the best and
+about 30% of those 20 Elo better — a coin flip after a long SPRT (the
+methodology review's M5).
 
 **Why the second condition.** Self-play can climb by exploiting its own past
 versions' habits; Forge is the opponent the owner actually plays and the

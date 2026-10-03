@@ -2,7 +2,7 @@
  * mtg-table — web/test/ai-ladder.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * The AI ladder (tools/ai-ladder/, D317–D320), engine-free, on synthetic
+ * The AI ladder (tools/ai-ladder/, D318–D321), engine-free, on synthetic
  * results from players with known strengths:
  *
  *  - the Bradley-Terry fit recovers known Elo differences, keeps the anchor at
@@ -28,12 +28,14 @@ import { fileURLToPath } from 'node:url';
 import { rng } from '../../tools/cubelab/rng.ts';
 import { KINDS, resolveParams, unavailable } from '../../tools/ai-ladder/kinds.ts';
 import { decide } from '../../tools/ai-ladder/league.ts';
+import { joinLog, type ExpLine } from '../../tools/ai-ladder/experiments.ts';
+import { split } from '../../tools/ai-ladder/decksets.ts';
 import { bootstrap, expected, fit, solve } from '../../tools/ai-ladder/rating.ts';
 import { addPlayer, configHash, parseRegistry, players, resolvePlayer, type Player } from '../../tools/ai-ladder/registry.ts';
 import { buildLadder, renderHtml } from '../../tools/ai-ladder/report.ts';
 import { appendResults, blockKey, fromBench, hashIndex, outcomes, readResults, type GameRecord, type Outcome } from '../../tools/ai-ladder/results.ts';
 import { batchPairs, choose, hostBase, mkey, type SchedPlayer, type SchedState } from '../../tools/ai-ladder/schedule.ts';
-import { bounds, pairScores, sprtState, type SprtParams } from '../../tools/ai-ladder/sprt.ts';
+import { bounds, NI_DEFAULTS, niPairsNeeded, niState, pairScores, scoreDelta, sprtState, type SprtParams } from '../../tools/ai-ladder/sprt.ts';
 import { grid, halving, sample, scoreOf, type Tally } from '../../tools/ai-ladder/tune.ts';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
@@ -216,21 +218,58 @@ test('successive halving finds the strongest of eight synthetic configs, with th
 
 // ------------------------------------------------------------ league
 
-test('league promotion: SPRT H1 AND no regression against forge-default', () => {
+test('league promotion: SPRT H1 AND non-inferior against forge-default', () => {
   const st = (result: 'H1' | 'H0' | 'continue' | 'inconclusive') => ({ llr: 3, lower: -2.94, upper: 2.94, pairs: 100, games: 200, score: 0.56, result });
-  const opt = { minForgeGames: 80, forgeMargin: 0 };
-  const T = (w: number, l: number): Tally => ({ wins: w, losses: l, draws: 0 });
-  assert.equal(decide(st('H1'), T(60, 40), T(55, 45), opt).verdict, 'promote');
-  const forgot = decide(st('H1'), T(45, 55), T(60, 40), opt);
+  const ni = (result: 'non-inferior' | 'inferior' | 'continue' | 'inconclusive') => ({ llr: 0, lower: -2.89, upper: 2.2, pairs: 400, diff: 0, diffElo: 0, result });
+  assert.equal(decide(st('H1'), ni('non-inferior'), 30).verdict, 'promote');
+  const forgot = decide(st('H1'), ni('inferior'), 30);
   assert.equal(forgot.verdict, 'reject');
   assert.match(forgot.reason, /forgets Forge/);
-  assert.equal(decide(st('H0'), T(60, 40), T(55, 45), opt).verdict, 'reject');
-  assert.equal(decide(st('inconclusive'), T(60, 40), T(55, 45), opt).verdict, 'reject');
-  assert.equal(decide(st('continue'), T(60, 40), T(55, 45), opt).verdict, 'continue');
-  assert.equal(decide(st('H1'), T(20, 10), T(55, 45), opt).verdict, 'continue', 'waits for enough forge games');
-  assert.equal(decide(st('H1'), T(50, 40), null, opt).verdict, 'promote', 'best = forge-default: just beat 50%');
-  assert.equal(decide(st('H1'), T(40, 50), null, opt).verdict, 'reject');
-  assert.equal(decide(st('H1'), T(50, 50), T(52, 48), { ...opt, forgeMargin: 30 }).verdict, 'promote', 'a margin tolerates a small dip');
+  assert.equal(decide(st('H0'), ni('continue'), 30).verdict, 'reject', 'H0 rejects without waiting for the Forge test');
+  assert.equal(decide(st('inconclusive'), ni('non-inferior'), 30).verdict, 'reject');
+  assert.equal(decide(st('continue'), ni('non-inferior'), 30).verdict, 'continue');
+  assert.equal(decide(st('H1'), ni('continue'), 30).verdict, 'continue', 'waits for the Forge test');
+  assert.equal(decide(st('continue'), ni('inferior'), 30).verdict, 'reject', 'an inferior result rejects at once');
+  assert.equal(decide(st('H1'), ni('inconclusive'), 30).verdict, 'reject');
+});
+
+/** Paired mirror blocks vs forge-default for a candidate `edge` Elo above the best; the deal is shared (rho ~ 0.5). */
+function runNi(edge: number, seed: number, bestElo = 30): ReturnType<typeof niState> {
+  const r = rng(seed, 'ni');
+  const diffs: number[] = [];
+  for (let k = 0; ; k++) {
+    const tilt = 0.5 * (r.next() - 0.5);                       // the deal, common to both arms
+    const block = (elo: number): number => {
+      const p = expected(1500 + elo, 1500);
+      let w = 0;
+      for (let g = 0; g < 2; g++) if (r.next() < Math.min(0.99, Math.max(0.01, p + (g === 0 ? tilt : -tilt)))) w++;
+      return w / 2;
+    };
+    diffs.push(block(bestElo + edge) - block(bestElo));
+    if (k % 20 === 19) {
+      const st = niState(diffs, NI_DEFAULTS);
+      if (st.result !== 'continue') return st;
+    }
+  }
+}
+
+test('the Forge non-inferiority test: stated margin 30 Elo, alpha 5%, power 90%', () => {
+  const N = 60;
+  let eq = 0, worse = 0, better = 0, pairs = 0;
+  for (let i = 0; i < N; i++) {
+    const e = runNi(0, 10 + i);
+    if (e.result === 'non-inferior') eq++;
+    pairs += e.pairs;
+    if (runNi(-30, 500 + i).result === 'non-inferior') worse++;
+    if (runNi(20, 900 + i).result === 'non-inferior') better++;
+  }
+  assert.ok(eq / N >= 0.8, `a candidate equal to the best passes ${eq}/${N} (power 90% by design)`);
+  assert.ok(worse / N <= 0.12, `a candidate 30 Elo worse passes ${worse}/${N} (alpha 5% by design)`);
+  assert.ok(better / N >= 0.95, `a candidate 20 Elo better passes ${better}/${N}`);
+  assert.ok(pairs / N < 2500, `${Math.round(pairs / N)} shared deals on average`);
+  // the fixed-sample planning number is larger than the sequential average, as it should be
+  assert.ok(niPairsNeeded(NI_DEFAULTS, 0.45) > pairs / N);
+  assert.ok(Math.abs(scoreDelta(30) - 0.0430) < 0.0005);
 });
 
 // ------------------------------------------------------------ scheduler
@@ -286,6 +325,10 @@ test('the committed registry: anchors, hashes, an unmerged kind is unavailable, 
   assert.ok(by.get('forge-default')!.anchor);
   assert.equal(by.get('forge-reckless')!.cfg, 'Reckless');
   assert.equal(by.get('policy-outlet')!.cfg, 'Default+outlets');
+  // the search entrants: the game's --ai-policy search, and the fixed-rollout benchmark mode
+  assert.equal(by.get('search-v1')!.unavailable, null, 'the search is on main');
+  assert.match(by.get('search-v1')!.cfg!, /^Default\+outlets\+search:ms=1500,.*rounds=2,.*maxrounds=12/);
+  assert.match(by.get('search-v1-fixed3')!.cfg!, /ms=60000,.*rounds=3,.*maxrounds=3,.*seed=1$/);
   assert.equal(new Set(ps.map((p) => p.hash)).size, ps.length, 'no two players share a config');
   const odd = resolvePlayer({ name: 'mystery', kind: 'neural-net', params: { layers: 3 } }, REPO);
   assert.match(odd.unavailable!, /unknown kind/);
@@ -295,7 +338,7 @@ test('the committed registry: anchors, hashes, an unmerged kind is unavailable, 
 
 test('search kind: params map onto the bench\'s +search syntax; defaults fill the hash', () => {
   const p = resolveParams('search', { budgetMs: 500 });
-  assert.equal(KINDS.search!.cfg(p), 'Default+outlets+search:ms=500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab');
+  assert.equal(KINDS.search!.cfg(p), 'Default+outlets+search:ms=500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0');
   assert.equal(configHash('policy', resolveParams('policy', { outlets: 'on' })), configHash('policy', resolveParams('policy', { profile: 'Default', outlets: 'on' })));
   assert.throws(() => resolveParams('search', { budgetMs: 10 }), /50\.\.60000/);
   assert.throws(() => resolveParams('policy', { depth: 2 }), /no parameter depth/);
@@ -357,7 +400,8 @@ test('ladder.json schema 1 and the HTML page', () => {
   const doc = buildLadder({ players: [B, C, A], recs, sprt: [], tune: [], league: null, priorSd: 350, bootstrap: 0, now: '2026-10-03T12:00:00.000Z' });
   assert.equal(doc.schema, 'mtg-table/ai-ladder');
   assert.equal(doc.version, 1);
-  assert.deepEqual(Object.keys(doc), ['schema', 'version', 'generatedAt', 'anchor', 'scale', 'ci', 'totals', 'players', 'history', 'sprt', 'tune', 'league']);
+  assert.deepEqual(Object.keys(doc), ['schema', 'version', 'generatedAt', 'anchor', 'scale', 'ci', 'totals', 'players', 'history', 'sprt', 'tune', 'league', 'set', 'experiments']);
+  assert.equal(doc.set, 'all');
   assert.deepEqual(Object.keys(doc.players[0]!), ['name', 'kind', 'params', 'hash', 'anchor', 'registered', 'available', 'unavailable', 'rating', 'lo', 'hi', 'rated', 'games', 'wins', 'losses', 'draws', 'vsAnchor']);
   assert.equal(doc.totals.games, 360);
   assert.equal(doc.totals.draws, 9);
@@ -371,4 +415,25 @@ test('ladder.json schema 1 and the HTML page', () => {
   for (const h of ['Ladder', 'Rating over time', 'Recent SPRT outcomes', 'Tuner results']) assert.ok(html.includes(`<h2>${h}</h2>`), h);
   assert.ok(!/(src|href)="https?:/.test(html), 'self-contained: nothing loads from a URL');
   assert.ok(html.includes('<polyline'), 'the chart is drawn');
+});
+
+test('dev / confirm deck sets: each cube\'s drafts alternate by seed; the split is a function of the drafts', () => {
+  const ps = [3, 1, 2, 4, 5].map((seed) => ({ cube: 'synergy', seed, a: `s${seed}A`, b: `s${seed}B` }))
+    .concat([10, 11].map((seed) => ({ cube: 'pauper', seed, a: `p${seed}A`, b: `p${seed}B` })));
+  const { dev, confirm } = split(ps);
+  assert.deepEqual(dev.map((p) => `${p.cube}${p.seed}`), ['pauper10', 'synergy1', 'synergy3', 'synergy5']);
+  assert.deepEqual(confirm.map((p) => `${p.cube}${p.seed}`), ['pauper11', 'synergy2', 'synergy4']);
+  assert.deepEqual(split([...ps].reverse()), { dev, confirm }, 'order-independent');
+});
+
+test('experiment log: a start with no end is abandoned; ends join their starts', () => {
+  const start = (id: string, at: string): ExpLine => ({ v: 1, id, kind: 'start', at, host: 'h', cmd: 'sprt', args: [], git: { sha: 'abc', dirty: false }, purpose: 'confirm', hypothesis: 'x', set: 's', setHash: 'h', players: [], seedBase: 1 });
+  const lines: ExpLine[] = [
+    start('a', '2026-10-01T00:00:00.000Z'),
+    { v: 1, id: 'a', kind: 'end', at: '2026-10-01T01:00:00.000Z', status: 'finished', games: 8, decisive: 8, draws: 0, bseeds: [1, 2], result: {} },
+    start('b', '2026-10-01T02:00:00.000Z'),
+    start('c', '2026-10-03T11:00:00.000Z'),
+  ];
+  const rows = joinLog(lines, Date.parse('2026-10-03T12:00:00.000Z'));
+  assert.deepEqual(rows.map((r) => r.status), ['finished', 'abandoned', 'running?']);
 });
