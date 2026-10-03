@@ -1,0 +1,471 @@
+{
+ "run": {
+  "cube": "Mini Cube",
+  "cubeFile": "fixtures/cubelab/mini/mini.md",
+  "format": "grid",
+  "seed": 1,
+  "drafts": 3,
+  "games": 3,
+  "profiles": [
+   "Default",
+   "Default"
+  ],
+  "builder": "lab",
+  "ratingsFile": null,
+  "gameTimeoutSec": 300
+ },
+ "totals": {
+  "drafts": 3,
+  "matches": 3,
+  "games": 8,
+  "decisive": 7,
+  "draws": 1,
+  "timeouts": 1,
+  "engineErrors": 1,
+  "avgTurns": 11.29,
+  "avgGameSec": 4.29,
+  "avgMatchSec": 120,
+  "onPlay": {
+   "wins": 3,
+   "losses": 4,
+   "draws": 1,
+   "rate": 0.429,
+   "lo": 0.158,
+   "hi": 0.75
+  },
+  "labDecks": 5,
+  "forgeDecks": 1,
+  "stretched": 0,
+  "splashed": 1,
+  "labSpells": 23,
+  "forgeSpells": 22.17,
+  "forgeSameColours": 0.8
+ },
+ "byPair": [
+  {
+   "key": "BG",
+   "label": "BG",
+   "decks": 1,
+   "matchWins": 1,
+   "matches": 1,
+   "splashed": 0,
+   "wins": 2,
+   "losses": 0,
+   "draws": 0,
+   "rate": 1,
+   "lo": 0.342,
+   "hi": 1
+  },
+  {
+   "key": "BR",
+   "label": "BR",
+   "decks": 2,
+   "matchWins": 1,
+   "matches": 2,
+   "splashed": 0,
+   "wins": 3,
+   "losses": 2,
+   "draws": 1,
+   "rate": 0.6,
+   "lo": 0.231,
+   "hi": 0.882
+  },
+  {
+   "key": "WU",
+   "label": "Azorius: Fliers",
+   "decks": 3,
+   "matchWins": 1,
+   "matches": 3,
+   "splashed": 1,
+   "wins": 2,
+   "losses": 5,
+   "draws": 1,
+   "rate": 0.286,
+   "lo": 0.082,
+   "hi": 0.641
+  }
+ ],
+ "byTheme": [
+  {
+   "key": "SAC",
+   "label": "Sacrifice",
+   "decks": 2,
+   "matchWins": 1,
+   "matches": 2,
+   "splashed": 0,
+   "wins": 3,
+   "losses": 2,
+   "draws": 1,
+   "rate": 0.6,
+   "lo": 0.231,
+   "hi": 0.882
+  },
+  {
+   "key": "none",
+   "label": "none",
+   "decks": 2,
+   "matchWins": 1,
+   "matches": 2,
+   "splashed": 1,
+   "wins": 2,
+   "losses": 2,
+   "draws": 0,
+   "rate": 0.5,
+   "lo": 0.15,
+   "hi": 0.85
+  },
+  {
+   "key": "TOK",
+   "label": "Tokens",
+   "decks": 2,
+   "matchWins": 1,
+   "matches": 2,
+   "splashed": 0,
+   "wins": 2,
+   "losses": 3,
+   "draws": 1,
+   "rate": 0.4,
+   "lo": 0.118,
+   "hi": 0.769
+  }
+ ],
+ "cards": [
+  {
+   "name": "Deep Study",
+   "section": "Blue",
+   "colors": "U",
+   "rating": 50,
+   "remAIDeck": true,
+   "dealt": 1,
+   "picked": 1,
+   "pickRate": 1,
+   "avgPick": 2,
+   "inDeck": 1,
+   "deckRate": 1,
+   "games": {
+    "wins": 0,
+    "losses": 2,
+    "draws": 0,
+    "rate": 0,
+    "lo": 0,
+    "hi": 0.658
+   }
+  },
+  {
+   "name": "Ember Rite",
+   "section": "Red",
+   "colors": "R",
+   "rating": 70,
+   "remAIDeck": false,
+   "dealt": 2,
+   "picked": 2,
+   "pickRate": 1,
+   "avgPick": 1.5,
+   "inDeck": 2,
+   "deckRate": 1,
+   "games": {
+    "wins": 3,
+    "losses": 2,
+    "draws": 1,
+    "rate": 0.6,
+    "lo": 0.231,
+    "hi": 0.882
+   }
+  },
+  {
+   "name": "Grave Imp",
+   "section": "Black",
+   "colors": "B",
+   "rating": 65,
+   "remAIDeck": false,
+   "dealt": 2,
+   "picked": 2,
+   "pickRate": 1,
+   "avgPick": 1.5,
+   "inDeck": 3,
+   "deckRate": 1.5,
+   "games": {
+    "wins": 5,
+    "losses": 2,
+    "draws": 1,
+    "rate": 0.714,
+    "lo": 0.359,
+    "hi": 0.918
+   }
+  },
+  {
+   "name": "Iron Idol",
+   "section": "Colorless",
+   "colors": "",
+   "rating": 40,
+   "remAIDeck": false,
+   "dealt": 1,
+   "picked": 1,
+   "pickRate": 1,
+   "avgPick": 3,
+   "inDeck": 1,
+   "deckRate": 1,
+   "games": {
+    "wins": 0,
+    "losses": 2,
+    "draws": 0,
+    "rate": 0,
+    "lo": 0,
+    "hi": 0.658
+   }
+  },
+  {
+   "name": "Mist Fountain",
+   "section": "Lands",
+   "colors": "",
+   "rating": 30,
+   "remAIDeck": false,
+   "dealt": 1,
+   "picked": 1,
+   "pickRate": 1,
+   "avgPick": 4,
+   "inDeck": 0,
+   "deckRate": 0,
+   "games": {
+    "wins": 0,
+    "losses": 0,
+    "draws": 0,
+    "rate": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  {
+   "name": "Moss Beast",
+   "section": "Green",
+   "colors": "G",
+   "rating": 45,
+   "remAIDeck": false,
+   "dealt": 2,
+   "picked": 1,
+   "pickRate": 0.5,
+   "avgPick": 1,
+   "inDeck": 1,
+   "deckRate": 1,
+   "games": {
+    "wins": 2,
+    "losses": 0,
+    "draws": 0,
+    "rate": 1,
+    "lo": 0.342,
+    "hi": 1
+   }
+  },
+  {
+   "name": "Sky Herald",
+   "section": "White",
+   "colors": "W",
+   "rating": 75,
+   "remAIDeck": false,
+   "dealt": 2,
+   "picked": 2,
+   "pickRate": 1,
+   "avgPick": 1.5,
+   "inDeck": 2,
+   "deckRate": 1,
+   "games": {
+    "wins": 2,
+    "losses": 3,
+    "draws": 0,
+    "rate": 0.4,
+    "lo": 0.118,
+    "hi": 0.769
+   }
+  },
+  {
+   "name": "Tide Mage",
+   "section": "Blue",
+   "colors": "U",
+   "rating": 55,
+   "remAIDeck": false,
+   "dealt": 2,
+   "picked": 2,
+   "pickRate": 1,
+   "avgPick": 2.5,
+   "inDeck": 2,
+   "deckRate": 1,
+   "games": {
+    "wins": 2,
+    "losses": 3,
+    "draws": 1,
+    "rate": 0.4,
+    "lo": 0.118,
+    "hi": 0.769
+   }
+  },
+  {
+   "name": "Unseen Relic",
+   "section": "Colorless",
+   "colors": "",
+   "rating": 35,
+   "remAIDeck": false,
+   "dealt": 0,
+   "picked": 0,
+   "pickRate": null,
+   "avgPick": null,
+   "inDeck": 0,
+   "deckRate": null,
+   "games": {
+    "wins": 0,
+    "losses": 0,
+    "draws": 0,
+    "rate": null,
+    "lo": null,
+    "hi": null
+   }
+  },
+  {
+   "name": "Wing Scout",
+   "section": "White",
+   "colors": "W",
+   "rating": 60,
+   "remAIDeck": false,
+   "dealt": 2,
+   "picked": 2,
+   "pickRate": 1,
+   "avgPick": 1,
+   "inDeck": 2,
+   "deckRate": 1,
+   "games": {
+    "wins": 2,
+    "losses": 3,
+    "draws": 1,
+    "rate": 0.4,
+    "lo": 0.118,
+    "hi": 0.769
+   }
+  }
+ ],
+ "neverPlayed": [
+  {
+   "name": "Unseen Relic",
+   "dealt": 0,
+   "picked": 0
+  }
+ ],
+ "curves": [
+  {
+   "key": "WU",
+   "decks": 3,
+   "curve": [
+    0.67,
+    0.67,
+    0.67,
+    0.33,
+    0,
+    0.33
+   ],
+   "avgCmc": 2.75
+  },
+  {
+   "key": "BR",
+   "decks": 2,
+   "curve": [
+    2,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "avgCmc": 1
+  },
+  {
+   "key": "BG",
+   "decks": 1,
+   "curve": [
+    1,
+    0,
+    0,
+    0,
+    1,
+    0
+   ],
+   "avgCmc": 3
+  }
+ ],
+ "samples": [
+  {
+   "key": "BR",
+   "seed": 3,
+   "seat": "A",
+   "record": "2-0",
+   "colors": "BR",
+   "splash": null,
+   "theme": "SAC",
+   "main": [
+    [
+     1,
+     "Ember Rite"
+    ],
+    [
+     1,
+     "Grave Imp"
+    ],
+    [
+     9,
+     "Swamp"
+    ],
+    [
+     8,
+     "Mountain"
+    ]
+   ],
+   "file": "decks/x-A.dck"
+  },
+  {
+   "key": "WU",
+   "seed": 1,
+   "seat": "A",
+   "record": "2-1",
+   "colors": "WU",
+   "splash": null,
+   "theme": "TOK",
+   "main": [
+    [
+     1,
+     "Wing Scout"
+    ],
+    [
+     1,
+     "Sky Herald"
+    ],
+    [
+     1,
+     "Tide Mage"
+    ],
+    [
+     1,
+     "Mist Fountain"
+    ],
+    [
+     8,
+     "Plains"
+    ],
+    [
+     8,
+     "Island"
+    ]
+   ],
+   "file": "decks/x-A.dck"
+  }
+ ],
+ "recordings": [
+  {
+   "seed": 1,
+   "file": "frames/draft-1-g1.jsonl",
+   "seat": "A",
+   "decks": [
+    "1-A.dck",
+    "1-B.dck"
+   ],
+   "ok": true,
+   "ms": 9000
+  }
+ ]
+}

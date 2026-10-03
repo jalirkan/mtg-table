@@ -1,0 +1,120 @@
+{
+ "Wing Scout": {
+  "section": "White",
+  "colors": "W",
+  "cmc": 1,
+  "land": false,
+  "themes": [
+   "TOK"
+  ],
+  "rating": 60,
+  "remAIDeck": false,
+  "type": "Creature"
+ },
+ "Sky Herald": {
+  "section": "White",
+  "colors": "W",
+  "cmc": 3,
+  "land": false,
+  "themes": [
+   "TOK",
+   "LIFE"
+  ],
+  "rating": 75,
+  "remAIDeck": false,
+  "type": "Creature"
+ },
+ "Tide Mage": {
+  "section": "Blue",
+  "colors": "U",
+  "cmc": 2,
+  "land": false,
+  "themes": [
+   "SPL"
+  ],
+  "rating": 55,
+  "remAIDeck": false,
+  "type": "Creature"
+ },
+ "Deep Study": {
+  "section": "Blue",
+  "colors": "U",
+  "cmc": 4,
+  "land": false,
+  "themes": [
+   "SPL"
+  ],
+  "rating": 50,
+  "remAIDeck": true,
+  "type": "Sorcery"
+ },
+ "Grave Imp": {
+  "section": "Black",
+  "colors": "B",
+  "cmc": 1,
+  "land": false,
+  "themes": [
+   "SAC"
+  ],
+  "rating": 65,
+  "remAIDeck": false,
+  "type": "Creature"
+ },
+ "Ember Rite": {
+  "section": "Red",
+  "colors": "R",
+  "cmc": 1,
+  "land": false,
+  "themes": [
+   "SAC",
+   "SPL"
+  ],
+  "rating": 70,
+  "remAIDeck": false,
+  "type": "Instant"
+ },
+ "Moss Beast": {
+  "section": "Green",
+  "colors": "G",
+  "cmc": 5,
+  "land": false,
+  "themes": [],
+  "rating": 45,
+  "remAIDeck": false,
+  "type": "Creature"
+ },
+ "Iron Idol": {
+  "section": "Colorless",
+  "colors": "",
+  "cmc": 6,
+  "land": false,
+  "themes": [
+   "ART"
+  ],
+  "rating": 40,
+  "remAIDeck": false,
+  "type": "Artifact"
+ },
+ "Mist Fountain": {
+  "section": "Lands",
+  "colors": "",
+  "cmc": 0,
+  "land": true,
+  "themes": [],
+  "rating": 30,
+  "remAIDeck": false,
+  "type": "Land"
+ },
+ "Unseen Relic": {
+  "section": "Colorless",
+  "colors": "",
+  "cmc": 3,
+  "land": false,
+  "themes": [
+   "ART"
+  ],
+  "rating": 35,
+  "remAIDeck": false,
+  "type": "Artifact"
+ }
+}

@@ -158,6 +158,18 @@
 #                                 the body limit, one question at a time, and a
 #                                 client that leaves killing the child (~7 s; no
 #                                 real CLI, no network)
+#                                 Then 12g: tools/cubelab.sh -- the cube lab
+#                                 (D293-D296) end to end at its smallest: two
+#                                 grid drafts of cubes/synergy-cube-180.md at a
+#                                 fixed seed, both decks lab-built and legal, one
+#                                 game each on one worker, the JSONL and the
+#                                 report written (~30 s, one engine boot)
+#                                 Then 12h: the ML dataset's tests (D305,
+#                                 tools/ml/tests) -- the encoder over every
+#                                 committed recording, the hidden zones
+#                                 scrambled and every feature unchanged, the
+#                                 schema golden, the split by game; numpy's
+#                                 half says whether it ran (~30 s; python3)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -251,7 +263,8 @@
 #     they depend on every job that records one;
 #   - 12b (the catalog), 12c (the crash check, its own scratch Forge home) and
 #     12e (the AI decks against their specs) depend on nothing but the build,
-#     and neither does 12f (the coach helper, which needs no build at all).
+#     and neither does 12f (the coach helper, which needs no build at all)
+#     or 12h (the ML dataset's Python tests, which read only fixtures/).
 #
 # Step 10's servers listen on WSPORT+0 .. WSPORT+7 (10a..10h) when GATE_JOBS >
 # 1, so all eight can be up at once; GATE_JOBS=1 keeps the single WSPORT.
@@ -1876,10 +1889,82 @@ s12e_skipped() {
 #      turn, the user text on stdin), the Origin and LAN-token rules, the 512 KB
 #      body limit, one question at a time, and a client that disconnects
 #      killing the child and its process group.  Its servers bind port 0.
+#      Since D303 it also runs tools/match-launcher-selftest.mjs: the helper's
+#      /match and scripts/play.sh's restart, the real play.sh driven against a
+#      FAKE engine (MTGTABLE_TEST_FAKE_ENGINE; no Forge, no build) on free
+#      ports, its files under var/match-launcher-selftest/; about 25 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
     || die "coach-helper-selftest.mjs (12f: the coach helper broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D303: the helper's /match and play.sh's restart, against a fake engine.
+  node tools/match-launcher-selftest.mjs \
+    || die "match-launcher-selftest.mjs (12f: the match launcher broke its contract with ForgeCoach -- see the FAIL lines above)"
+}
+
+# 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid
+#      drafts of the synergy cube at seed 7, both drafters AI, both decks built
+#      by the lab, one game each on one worker JVM, then the report.  It holds
+#      what the unit tests cannot: that CubeLab.java compiles against the pinned
+#      jar and boots, that facts resolve every card of a committed cube, that a
+#      worker plays a game to a winner, the protocol between them, and that the
+#      worker homes save no preferences (cubelab.sh's own check).  Its homes are
+#      built under this job's home (CUBELAB_HOME_ROOT), its output is
+#      var/check-all-cubelab/, and it records no frame log.  About 30 s.
+s12g_cubelab() {
+  printf '\n=== 12g. cubelab.sh -- two drafts, two decks each, one game each (D293-D296) ===\n'
+  local out="var/check-all-cubelab"
+  rm -rf "$out"
+  CUBELAB_HOME_ROOT="$JOB_HOME/cubelab-homes" ./tools/cubelab.sh run cubes/synergy-cube-180.md \
+      --format grid --drafts 2 --games 1 --jobs 1 --seed 7 --out "$out" \
+    || die "cubelab.sh run (12g: the cube lab could not draft, build or play -- see the log above and $out/logs/)"
+  ./tools/cubelab.sh report "$out" || die "cubelab.sh report (12g)"
+  node -e '
+    const fs = require("node:fs");
+    const out = process.argv[1];
+    const recs = fs.readFileSync(out + "/drafts.jsonl", "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
+    const bad = [];
+    if (recs.length !== 2) bad.push(recs.length + " drafts, not 2");
+    for (const r of recs) {
+      if (r.match.engineError) bad.push("seed " + r.seed + ": " + r.match.engineError);
+      if (r.match.games.length !== 1) bad.push("seed " + r.seed + ": " + r.match.games.length + " games, not 1");
+      for (const g of r.match.games) {
+        if (!["A", "B", "draw"].includes(g.winner)) bad.push("seed " + r.seed + ": winner " + g.winner);
+        if (g.onPlay !== g.onPlayVerified) bad.push("seed " + r.seed + ": on the play " + g.onPlay + " but turn 1 was " + g.onPlayVerified);
+      }
+      for (const d of r.drafters) {
+        if (d.played !== "lab" || d.deckErrors.length) bad.push("seed " + r.seed + " " + d.seat + ": not a legal lab deck " + JSON.stringify(d.deckErrors));
+        if (!d.forge || d.forge.error) bad.push("seed " + r.seed + " " + d.seat + ": no Forge builder comparison");
+      }
+    }
+    const html = fs.readFileSync(out + "/report.html", "utf8");
+    if (!html.startsWith("<!doctype html>")) bad.push("report.html is not a page");
+    const meta = JSON.parse(fs.readFileSync(out + "/meta.json", "utf8"));
+    if (meta.schema !== 1 || meta.cube.cards.length !== 180 || meta.sample.drafts !== 2) bad.push("meta.json is not schema 1 over 180 cards and 2 drafts");
+    if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
+    console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html and meta.json written");
+  ' "$out" || die "the cube lab's smoke run is not what it should be (12g)"
+}
+
+# 12h. D305: tools/ml/, the dataset pipeline for a learned position evaluator.
+#      Its tests read the committed fixtures only: every recording encoded, a
+#      scrambler that rewrites every hidden zone (the opponent's hand stubs
+#      named, both libraries filled, every face-down card given an alt) must
+#      leave every feature of every row unchanged -- with a negative control on
+#      the viewer's own hand -- plus labels, determinism, the schema golden and
+#      the split by game.  The encoder is standard library; the dataset and
+#      baseline tests need numpy and are SKIPPED without it, which this step
+#      prints.  No engine, no network.
+s12h_ml() {
+  printf '\n=== 12h. tools/ml tests -- the dataset pipeline, hidden information held (D305) ===\n'
+  command -v python3 >/dev/null || die "python3 not found (12h: tools/ml needs Python 3)"
+  if python3 -c 'import numpy' 2>/dev/null; then
+    echo "numpy present: the dataset and baseline tests run"
+  else
+    echo "numpy ABSENT: the dataset and baseline tests are skipped (pip install numpy)"
+  fi
+  python3 -m unittest discover -s tools/ml/tests 2>&1 \
+    || die "tools/ml tests (12h: the ML encoder broke -- if it names a hidden-information feature, the encoder read a card the viewer may not see)"
 }
 
 s13_skipped() {
@@ -2017,6 +2102,8 @@ else
   job 12e-decks   12 both     s12e_decks        "$PRE"
 fi
 job 12f-coach     12 both     s12f_coach        "$PRE"
+job 12g-cubelab   12 both     s12g_cubelab      "$PRE"
+job 12h-ml        12 both     s12h_ml           "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
@@ -2039,10 +2126,10 @@ fi
 # and nothing waits for the ten-games rows, and the build is right behind them
 # because `node --test` waits for it too; Smoke is early because 9c and 9e
 # wait for it.  Anything not named runs after, in table order.
-PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach"
+PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach 12h-ml"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
-PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash"
+PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash 12g-cubelab"
 
 # ---------------------------------------------------------------------------
 # The runner (D130).

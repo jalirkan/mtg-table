@@ -14,8 +14,10 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 352 items still open across 39 follow-up lists** — 326
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the test
+**The index below lists 364 items still open across 41 follow-up lists** — 338
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — Omega's
+evolve loop (D299–D300, 2026-10-03) added a list of six; the cube lab
+(D293–D296, 2026-10-03) added a list of six; the test
 gaps lane (D291, 2026-10-01) closed the observer socket's 1 and 2 and added a
 list of two; the observer
 socket's three (D280–D282, 2026-10-01, a list of its own) added to the count
@@ -393,6 +395,18 @@ villain identity's rebase, were removed at the same recount.)
 | [Observer socket](#fu-observe) | 3 | open | ForgeCoach's `live.ts` and README still say mtg-table has no observer endpoint (another repository, the owner's) | — |
 | [Test gaps](#fu-test-gaps) | 1 | open | `awaitNextGame`'s `sawClient` is per wait: a client that leaves between `over` and the wait costs a session the 30 s grace (10e, under load) | `bridge/src/mtgtable/MtgTable.java` |
 | [Test gaps](#fu-test-gaps) | 2 | open | Frames reach the socket out of `seq` order when two threads emit at once (5, 3, 4 seen); numbering and pushing are not one step | `bridge/src/mtgtable/WireGuiGame.java` |
+| [Cube lab](#fu-cube-lab) | 1 | open | `check-redaction.mjs`'s A3 fails a Courser of Kruphix's revealed top card, which is public | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 2 | open | A `--record` game is a replay of the decks, not one of the counted games | `tools/cubelab/run.ts` |
+| [Cube lab](#fu-cube-lab) | 3 | open | The seeded ratings mix CubeCobra's scale with set files' halved one | `cubes/*.ratings.tsv` |
+| [Cube lab](#fu-cube-lab) | 4 | open | The watchdog's timeout, stuck-exit and restart paths have not fired on a real hang | `tools/cubelab/engine.ts` |
+| [Cube lab](#fu-cube-lab) | 5 | open | `motion.test.ts`'s film digest fails under Node 22, on `main` too | `web/test/motion.test.ts` |
+| [Cube lab](#fu-cube-lab) | 6 | open | Winston pools are thin for two colours: 10 of 40 decks stretched | `tools/cubelab/deck.ts` |
+| [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
+| [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
+| [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
+| [Omega evolve](#fu-omega-evolve) | 4 | open | `run` has no lock, and concurrent lab runs share `var/cubelab/homes/<k>` | `tools/cubelab/run.ts` |
+| [Omega evolve](#fu-omega-evolve) | 5 | open | Re-deciding a generation is a manual delete of its `result.json` | `tools/cubelab/evolve-run.ts` |
+| [Omega evolve](#fu-omega-evolve) | 6 | open | No gate step runs `evolve`; its tests are engine-free | `tools/check-all.sh` |
 
 ### Questions only the owner can settle
 
@@ -482,6 +496,8 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | LAN play: ForgeCoach from a phone on the same Wi-Fi *(off the plan; on the owner's approval)* | ½ day | **built and verified, gate not run** on branch `c/lan-play` (2026-10-01), off `main`'s `e511c37` — `play.sh --lan` (implies `--engine-only`): the bridge binds `0.0.0.0` behind a per-run 128-bit pairing token every non-loopback request must carry (loopback needs none), serves ForgeCoach's built site (downloaded as a zip from its Pages site and cached a day under `var/forgecoach/`, or `--site-dir`) on the ws port, admits the page's own `http://<Host>` Origin from a non-loopback peer, and prints the phone URLs (and a QR code with `qrencode`) (amendment **M51**, **D287**–**D289**); `WsLanSelfTest` is the build's seventh self-test; *LAN play*, just above *Deferred* |
 | — | The test gaps: the observer, the idle limit and Node 22 in the gate *(off the plan; the follow-ups of D280–D289)* | ¼ day | **built and verified, gate not run** on branch `c/test-gaps` (2026-10-01), off `main`'s `0a32d1b`, `af0512a` merged in — 10c plays with two `/observe` followers (one from before the session, compared frame for frame with the bridge's log and the seat's; one opened while the seat holds an `ask`, which must be caught up on it), a new **10h** proves `--idle-timeout` both ways, `ws-smoke` and `ws-auto-play` survive Node 22's `WebSocket`, and `GATE_ONLY` runs named jobs alone (**D291**); two follow-ups; *The test gaps*, just above *Deferred* |
 | — | The coach helper: ForgeCoach coaches through the logged-in Claude Code CLI *(off the plan; on the owner's approval, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/coach-helper` (2026-10-01), off `main`'s `cb7d041` — `tools/coach-helper.mjs` on `coachPort` 8643: `GET /health`, `POST /coach` answered by `claude -p` with every tool off and streamed as NDJSON, M50's Origin list and M51's token; `play.sh` starts it beside the engine in every mode (`--no-coach`); the gate's `WSPORT` moves to 8644; gate step **12f** and CI run its self-test against a fake `claude` (**D292**); *The coach helper*, just above *Deferred* |
+| — | The cube lab: two Forge AIs draft a two-player cube, build decks and play them *(off the plan; the owner's request, for cube design)* | 1 day | **built, run and documented, gate not run** on branch `c/cube-lab` (2026-10-03), off `main`'s `4204bc6` — `tools/cubelab.sh check / ratings init / run / report` over `tools/cubelab/` (TypeScript) and one Java worker, `CubeLab.java`: Grid and Winston drafts with Forge's ranks as editable ratings plus theme synergy and late colour commitment, 40-card 16–17-land decks, a best of three per draft with the play alternating, sharded over `--jobs` JVMs with a watchdog, JSONL per draft, a self-contained HTML report and ForgeCoach's `meta.json`; four cubes under `cubes/` (synergy, modern, vintage, pauper); gate step **12g** (**D293–D297**); six follow-ups; *The cube lab*, just above *Deferred* |
+| — | Omega and the cube lab's evolve loop: a cube that changes by simulation *(off the plan; the owner's approval)* | ½ day | **built, tested, run small (2 × 15 drafts: no swap passes; 24 leads, 28 rating-limited) and documented, gate not run** on branch `c/omega-evolve` (2026-10-03), off `main`'s `78efcdf`, `f69caf1` (D298) merged in — `tools/cubelab.sh evolve`: generations of grid drafts on a cube, per-card evidence against Wilson-interval thresholds (dead, dominant by wins, dominant by first picks; else *insufficient data*), at most six swaps a generation from a seed pool under the cube's constraints, AI:RemoveDeck cards never cut on AI numbers and AI:All never auto-added, `cubes/omega-notes.tsv` overriding; the cube document written back line for line with an iteration-log entry, a changelog and an HTML page; Omega v1, its 938-card pool and notes under `cubes/` (**D299–D300**); *Omega and the evolve loop*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9782,6 +9798,187 @@ authenticated by its host), so its message rests on the documented error code an
 text; and a browser with local-network-access prompts (Chrome's newer
 replacement for private network access preflights) may ask the owner once
 before the github.io page reaches `127.0.0.1`.
+
+## The cube lab — two AIs draft a cube, build decks and play them (2026-10-03, D293–D297)
+
+**Status: built, run for real and documented; the full gate was not run** (the
+new step, 12g, was run alone through the gate's runner, green and red under a
+planted mutant). Branch `c/cube-lab`, off `main`'s `4204bc6`; D293–D297. The
+owner designs two-player 180-card cubes and wants to see how decks come together
+under randomness and how cards perform, with the data kept for a later drafting
+AI and play AI — on his own machine, no tokens. `docs/guides/cube-lab.md` is the
+manual; `docs/evidence/cube-lab.md` what was run.
+
+```bash
+tools/cubelab.sh check cubes/synergy-cube-180.md
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 40 --jobs 4 --record 3
+tools/cubelab.sh report var/cubelab/runs/synergy-cube-180-grid-1
+GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
+```
+
+- **Both cubes resolve**, 180 of 180 each (the Pathways by front face); the
+  synergy cube has 8 `AI:RemAIDeck` cards and none unranked, the modern cube 4
+  and 4 (Pathways).
+- **Synergy, grid, 40 drafts, 4 workers**: 484 s of matches, 95 games, no
+  timeout and no engine error; WB 75% and WG 65% lead, UR 18% and RG 25% trail;
+  tokens and sacrifice lead the themes, graveyard trails; 28 cards never played.
+- **Modern, Winston, 20 drafts**: 146 s, 47 games; Winston's thin pools made 34
+  of 40 decks splash and 10 stretch; RG 6–0, WU 35%.
+- **Vintage and Pauper, grid, 20 drafts each** (added mid-lane, with each
+  cube's own theme codes): 51 and 49 games, no errors; Vintage's WU was drafted
+  most and won 44%, reanimation and tutors lose under the AI; Pauper's drafters
+  took blue in 32 of 40 decks, spells 67%, blink 36%.
+- **`meta.json`** (D297, schema 1) for ForgeCoach's draft and deck assistant:
+  `report` writes it, `tools/cubelab.sh meta <out>` alone; shrunk win rates
+  (Beta prior, 20 games), archetypes with key cards, pairs by lift, land counts,
+  splash.
+- **Three recorded games** read by ForgeCoach's own `parseLog` and
+  `extractDecisions`; one fails `check-redaction.mjs` on a Courser of Kruphix's
+  revealed top card (follow-up 1).
+
+<a id="fu-cube-lab"></a>
+### The cube lab's follow-ups — six, 2026-10-03
+
+1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
+   `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
+   Courser of Kruphix reveals its library's top card to everyone, so the card is
+   public and `canBeShownTo` is right. The checker excuses only look-at effects
+   (Opposition Agent, Bribery, Gonti); Courser is in both cubes (and Future
+   Sight's `MayLookAt` is the other shape it already knows). Teach A3 the
+   revealed-top statics, with a fixture, before a cube recording goes into
+   `fixtures/`.
+2. **A recorded game is not one of the counted games.** `RecordMatch` plays one
+   game per process with its own coin flip, so `--record M` replays a draft's
+   decks once more; the report's numbers never include it. Recording the counted
+   games needs the worker to carry a recorder, which is a second serialiser
+   unless it is `RecordMatch`'s own (hard rule 8).
+3. **The seeded ratings mix two scales.** A card on CubeCobra's list scores
+   about 80–99; a card ranked only by a set's file is halved by
+   `CardRanker.getRawScore` (Birds of Paradise 49.6, Hengegate Pathway 18.4). The
+   drafters undervalue the second kind until someone edits the TSV; a
+   per-source rescale in `ratings init` is the likely fix, and the owner's
+   judgement the real one. The Pauper cube, 104 of whose cards are set-ranked
+   only, shows it most (blue in 32 of 40 decks).
+4. **The watchdog's two halves have not fired on a real hang.** No game timed
+   out and no worker died in 142 games; the draw-at-deadline path, the `stuck`
+   exit and the runner's restart are reasoned and typed, not seen. A probe deck
+   that stalls (two walls of 0/4s) would exercise the first.
+5. **`motion.test.ts`'s pre-lane film digest fails under Node 22** — on a clean
+   `origin/main` too, so not this lane's; Node 24 (the owner's) passes. CI runs
+   Node 24.
+6. **Winston pools are thin for a two-colour deck.** 10 of 40 modern-cube decks
+   needed the stretched splash and 34 splashed at all; real Winston players play
+   three colours or 18 lands. Whether the lab should allow either is the owner's
+   call (the brief said two colours plus a splash, 16–17 lands).
+
+## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
+
+**Status: built, tested, run small and documented; the full gate was not run.**
+Branch `c/omega-evolve`, off `main`'s `78efcdf` with `f69caf1` (D298, thin-pool
+builds) merged in. The owner approved "Omega": a 180-card two-player
+greatest-hits cube that evolves by simulation. `tools/cubelab.sh evolve`
+drafts the cube going in, assesses every card against thresholds on Wilson
+intervals, swaps at most six cards a generation for seed-pool cards under the
+cube's constraints, and writes the next cube document with an iteration-log
+entry, a changelog and one HTML page; AI-limited cards are never cut on AI
+numbers, AI:RemoveDeck:All cards are never auto-added, and
+`cubes/omega-notes.tsv` overrides everything. `docs/guides/cube-lab.md`'s
+*Evolve* is the manual.
+
+```bash
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
+    --generations 2 --drafts-per-gen 15 --jobs 2 --seed 1 --out var/cubelab/evolve/omega-1
+# overnight, on the owner's four-core PC (about three hours):
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
+    --generations 8 --drafts-per-gen 200 --jobs 4 --seed 1 --out var/cubelab/evolve/omega-overnight
+node --test web/test/cubelab-evolve.test.ts        # 17 tests
+```
+
+- **The run: 2 generations × 15 grid drafts, 2 workers** (on a shared 4-core
+  container at load 30–160, so the size was cut from the brief's 30 per
+  generation): 691 s of matches for generation 2's 15 drafts, 78 decisive games
+  over the 30, no engine error. Generation 2 drafted the same list, so it pooled
+  generation 1's drafts. **Verdict: no swap passes at 30 drafts** — 24 leads to
+  watch (about 115 drafts a generation would settle half), 28 cards
+  rating-limited, Omega v1 unchanged. The leads are nearly all red and lean
+  *dominant* (Fury 25–11, Lightning Bolt 24–12, Chain Lightning, Inferno Titan,
+  Bonecrusher, Arc Trail, Goldspan); WR and UR win 61–62%, WU 40%; **no BR deck
+  was built in 60**.
+- **Four rules came from that data, not from the brief**, each fixed and tested
+  before the final decision: meta.json counts only spells, so every land read
+  as never played (lands now counted from the full lists, then judged by notes
+  only — their numbers are their pair's); 25 of the first 29 "dead" cards were
+  rated under 55 by Forge's ranks (`rating-limited`, never cut; adds must be
+  rated ≥ 60); Kolaghan's Command was "dead" because BR was never drafted (dead
+  is now the on-colour play rate); and two evolve processes on one folder
+  corrupted a first attempt (`evolve.lock`). D299 has the numbers.
+- **The swap path on real data**: the same 30 drafts re-decided under loosened
+  thresholds (a demonstration, `var/cubelab/evolve/omega-1-loose/`) swap Fury →
+  Harvester of Misery, Lightning Bolt → Burst Lightning and Karn Liberated → The
+  Mightstone and Weakstone, and write a clean v2 (title, counts, headings, one
+  log entry). The engine-free half is `web/test/cubelab-evolve.test.ts`: all five
+  committed cubes write back byte for byte, constraints after every swap,
+  AI-limited never cut, thresholds respected, notes, tabu, the budget.
+
+<a id="fu-omega-evolve"></a>
+### Omega and the evolve loop's follow-ups — six, 2026-10-03
+
+1. **Rate Omega before the overnight run.** 28 of its 180 cards (Delver of
+   Secrets 19.7, Ephemerate 22.9, Reflector Mage 32.5 …) are rated under 60 by
+   Forge's halved set-file ranks (the cube lab's follow-up 3), so the drafters
+   pass them over and the loop can only call them rating-limited. A ratings TSV
+   for Omega (`tools/cubelab.sh ratings init cubes/omega-cube-180.md`, then the
+   owner's edits, then `evolve … --ratings`) is what lets the loop judge them.
+2. **BR is never drafted**: 0 of 60 decks. Whether that is the drafters' colour
+   logic or the BR cards' ratings is unmeasured; the changelog reports it.
+3. **The notes file's `cut` lines are v1's design exclusions, written by the
+   lane**, not Justin's verdicts (the file says so). The owner should read
+   them.
+4. **`run` has no lock either, and every run shares `var/cubelab/homes/<k>`**:
+   two lab runs at once on one machine, in different folders, share Forge
+   homes. `evolve.lock` covers one folder only.
+5. **Re-deciding a generation is a manual step** (delete its `result.json` and
+   the later generations), documented in the guide; a `--redecide` flag would be
+   friendlier.
+6. **No gate step runs `evolve`**; its tests are engine-free (step 13 and CI).
+   A one-generation, two-draft smoke beside 12g would cover the loop's I/O.
+
+## The ML dataset — frames to position rows for a learned evaluator (2026-10-03, D305)
+
+**Status: built and measured; the full gate was not run** (the new step, 12h,
+ran alone through the gate's runner; nothing else in the gate reads
+`tools/ml/`). Branch `c/ml-dataset`, off `main`'s `4204bc6`, rebased onto
+`f69caf1` (the cube lab and its thin-pool fix); D305 (D305–D307 reserved). The owner approved the long-term plan — a stronger play AI for the
+180-card cubes, trained here from self-play with no LLM, by search over Forge's
+engine guided by a small learned position evaluator — and this lane is its
+preparation: the pipeline from recorded games to training rows, so collection
+starts the day the cube lab records games. `tools/ml/README.md` is the manual.
+
+```bash
+tools/ml/record-pairs.sh --pairs var/ml/pairs.txt --seeds 1-4 --seats 0,1 --jobs 4   # AI-vs-AI games of deck pairs
+python3 tools/ml/dataset.py --vocab cubes/synergy-cube-180.md --out var/ml/data/synergy var/ml/games
+python3 tools/ml/baseline_eval.py var/ml/data/synergy --cv 5 --l2 1.0              # logistic, numpy
+python3 tools/ml/train_mlp.py var/ml/data/synergy                                  # torch, optional
+python3 -m unittest discover -s tools/ml/tests                                     # gate 12h; CI's half
+```
+
+Checked: 48 synergy-cube AI-vs-AI games recorded here (4,671 rows, 40 split
+groups) and the 22 committed fixtures (2,561 rows) encoded; the scrambler over
+all 70 with every feature unchanged, and red under a planted opponent-hand leak;
+the tests with numpy and torch, with numpy and torch made unimportable (8
+skipped), and 12h through `GATE_ONLY` (32.5 s); `web/test/claude-md.test.ts`
+for the root `CLAUDE.md`'s job count and `tools/CLAUDE.md`'s 12h. Grouped
+5-fold cross-validation (D305's *Measured*): the twelve-number core model
+0.620 log-loss against the prior's 0.678 (0.509 against 0.620 from turn 17),
+the full vector 0.675 — signal, and too few games for the card block.
+
+No follow-up list of its own; the next steps are the plan's: the cube lab
+records every game it plays, both chairs, with `--match` (README's *What the
+cube lab needs to record*; the cube lab's follow-up 2 is the same need from its
+side), then the evaluator is trained on thousands of games and the search
+player is designed against it. The cube lab's follow-up 1 (a Courser of
+Kruphix's revealed top card) does not reach the features: the encoder reads
+both libraries as counts only.
 
 ## The AI baseline — measuring Forge's AI on the owner's cubes, and its sacrifice outlets (2026-10-03, D309–D311)
 

@@ -1,0 +1,13 @@
+[
+ {
+  "seed": 1,
+  "file": "frames/draft-1-g1.jsonl",
+  "seat": "A",
+  "decks": [
+   "1-A.dck",
+   "1-B.dck"
+  ],
+  "ok": true,
+  "ms": 9000
+ }
+]

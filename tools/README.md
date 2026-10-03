@@ -36,12 +36,23 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `narrate-selftest.mjs` | The narrator's gate: every fixture and every fresh log told as a story with hard rule 8 held, six negative controls, the goldens (D123). | step 12d; CI | no |
 | `narrate.mjs` | A frame log as a turn-by-turn story (`--turn`, `--summary`, `--seat`, `--json`); a shell over `web/src/story/narrate.ts`. | no (its self-test is 12d) | no |
 | `coach-helper.mjs` | **The coach helper** (D292): a loopback HTTP service on `coachPort` (8643) that ForgeCoach's coach calls instead of the Claude API — `GET /health`, `POST /coach` — answered by the logged-in Claude Code CLI (`claude -p`, every tool off), streamed back as NDJSON; `--lan` binds 0.0.0.0 behind the bridge's pairing token. `scripts/play.sh` starts it when `claude` is on PATH. Its header is the contract. | no (its self-test is 12f) | no (the `claude` CLI) |
+| `match-launcher.mjs` | **The match launcher** (D303, M53): the coach helper's `GET`/`POST /match` — two decklists from ForgeCoach checked (names, counts, profile, the engine's card scripts), written as `var/match/<id>/you.dck` and `ai.dck`, and `play.sh` signalled to restart the engine on them. Imported by `coach-helper.mjs`; `docs/match-launcher.md` is the contract. | no (its self-test is 12f) | no (`play.sh` restarts the engine) |
+| `match-launcher-selftest.mjs` | The match launcher end to end: the real `play.sh --engine-only` against a FAKE engine (`MTGTABLE_TEST_FAKE_ENGINE`), the `.dck` files, the restart's argv, the dropped seat, bad input, Origin, a failed start restoring the previous match, never two engines, `--lan` keeping its token, the card index over a built zip (D303); ~25 s, no Forge, no claude. | step 12f; CI | no |
 | `coach-helper-selftest.mjs` | The coach helper's contract against a FAKE `claude` put first on its PATH: `/health`, the stream-json → NDJSON translation and its one terminal line, the CLI's flags, the Origin and LAN-token rules, the private-network preflight, the 512 KB limit, one question at a time, a disconnect killing the child's process group (D292); ~7 s, no real CLI, no network. | step 12f; CI | no |
+| `ml/encode.py` | **The ML dataset** (D305): frame logs (`.jsonl`, `.jsonl.gz`, seat and AI-vs-AI) → one row per decision state (the viewer has priority in a main phase or combat step), a fixed-size vector for a cube's closed card pool, labelled with the eventual winner from the viewer's side; `--features-json` writes the layout. The opponent's hand and both libraries are counts only. `ml/README.md` is the manual. | no (its tests are 12h) | no |
+| `ml/dataset.py` | A directory of frame logs → int16 `.npz` shards split train/val/test BY GAME (the two chairs of one game together; `--group-by match` holds deck pairs out), `features.json`, `games.jsonl`, `stats.json`. Needs numpy. | no (12h) | no |
+| `ml/baseline_eval.py` | Logistic regression in numpy on a dataset against a prior and a life-difference model, accuracy, log-loss and Brier per turn bucket. | no (12h) | no |
+| `ml/train_mlp.py` | A small MLP evaluator (win head + turns-to-end head); torch optional — without it, a note and exit 0. | no (12h smoke when torch is there) | no |
+| `ml/record-pairs.sh` | AI-vs-AI games of deck pairs × seeds × seats through `RecordMatch --match`, each worker in its own Forge home, resumable. | no | boots Forge |
+| `ml/tests/` | The ML tests (`python3 -m unittest discover -s tools/ml/tests`): every committed recording encoded with its hidden zones scrambled and nothing changed, labels, determinism, the schema golden, the split. | step 12h; CI (the standard-library half) | no |
 | `build-deck.ts` | Writes every AI deck's `.dck` from `decks/specs/*.json`; `--check` fails when one differs (D116); `--pool RG` lists castable cards. Needs `var/cards/cards.sqlite`. | step 12e (`--check`, D183); not CI | no |
 | `check-deck.mjs` | Will the engine play this `.dck`, card for card? A static pass over Forge's scripts, then `Smoke` on the deck (`--no-engine` skips it), then `--scryfall`. | no | boots Forge (unless `--no-engine`) |
 | `deck-smoke.sh` | Five games per AI deck with the AI piloting it; asserts it casts and attacks (D116, D117). | no | boots Forge |
 | `audit-deck.mjs` | Per card of a `.dck`: ok / missing / broken on the configured engine, in a throwaway home under `var/audit-deck/`; fails if a preferences file changes (D182). Needs `bridge/out`. | no | boots Forge |
 | `audit-deck/AuditDeck.java` | `audit-deck.mjs`'s Java half, compiled on demand into the throwaway home. Scanned by `lint-bridge.sh`. | no (linted at step 2) | boots Forge |
+| `cubelab.sh` | **The cube lab** (D293–D297): `check` a cube markdown against the engine's card database, `ratings init` its editable ratings from Forge's draft ranks, `run` N two-player drafts (Grid or Winston, both drafters AI) with deckbuilding and a best of three per draft on `--jobs` worker JVMs (each its own Forge home, a watchdog per game; resumable; `--record M` frame logs for ForgeCoach), and `report` a run folder as one self-contained HTML page, a Markdown summary and ForgeCoach's `meta.json` (`meta`, D297); `evolve` (D299–D300) runs generations of drafts on a cube and swaps dead or dominating cards for seed-pool cards under the cube's constraints, writing each next version of the cube document, a changelog and an HTML page. `docs/guides/cube-lab.md` is the manual. | step 12g (two drafts, one game each) | boots Forge (`report` does not) |
+| `cubelab/*.ts` | The lab's TypeScript: `cube.ts` (the markdown), `cards.ts`, `ratings.ts`, `weights.ts`, `pick.ts`, `draft.ts` (Grid, Winston), `deck.ts`, `lab.ts`, `engine.ts` (the facts call, the worker pool and its watchdog), `run.ts`, `report.ts`, `cli.ts`; `evolve.ts` (the evolve loop's stats, thresholds, constraints and swap choice, pure), `evolve-report.ts`, `evolve-run.ts` and `cubedoc.ts` (a cube document written back). Tested by `web/test/cubelab.test.ts` and `web/test/cubelab-evolve.test.ts`. | step 13 (`cubelab.test.ts`, `cubelab-evolve.test.ts`); CI | no |
+| `cubelab/CubeLab.java` | The lab's engine half: `facts` (each card in Forge's database, its best-ranked printing's draft score, the AI hints) and `play` (a worker: a match per stdin line, one-game Matches with the play alternating, Forge's builder for comparison). Compiled on demand into `var/cubelab/classes/`. Scanned by `lint-bridge.sh`. | step 12g; linted at step 2 | boots Forge |
 | `ai-bench.sh` | Forge AI against Forge AI on fixed decks (D309): `play --pairs <file> --a <cfg> --b <cfg>` runs `--jobs` JVMs, each with a Forge home of its own under `var/ai-bench/<run>/`, one JSON line per game; `report` prints win rates with Wilson 95% intervals, game times, AI-timeout counts and the outlet policy's counters (D310); `--selftest` checks the statistics and ten outlet-policy board scenarios, three of them controls (~15 s). A seat config is `<Profile>[+sim\|+hybrid][+outlets\|+shadow]`. Needs `bridge/out`. | no | boots Forge |
 | `ai-bench/AiBench.java` | `ai-bench.sh`'s Java half, compiled on demand into `var/ai-bench/classes/`; `pairs-cube.txt`, `pairs-sac.txt` and `decks/` are its fixed deck pairs. Scanned by `lint-bridge.sh`. | no (linted at step 2) | boots Forge |
 | `javap-seam-diff.sh` | The bridge's Forge API diffed between two jars, class by class — for the day an official release lands (D109, D110). | no | jar |
@@ -67,7 +78,9 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `personal/relief.mjs` | **The relief cache** (D225): a depth map of every card's painting for the workshop's inspect view (D226) — `--all` (every card in `web/public/art.json` and every personal model's card) or `--card "<name>"`; the card's `normal` image from the card library's cache, else fetched once through its `ScryfallClient` (≤ 10 a second, kept in `personal/relief/source/`); Depth Anything V2 Small on the art box by `personal/relief_depth.py` in the likeness venv's Python (`--likeness`, offline, every cache pinned); `personal/relief/<scryfall id>.png` (8-bit RGB: red the front layer's depth, green the back layer's, near = 255, blue the front's keep mask — D227, D228), `<scryfall id>.back.jpg` (the back layer's colour: the subjects filled by the background across each silhouette, mirrored and blurred) and `index.json` with the recipe (version 3). Idempotent (`--force`; a changed recipe makes a map stale); the model ~30 ms a card on the GTX 1080 or ~0.11–0.14 s on the CPU, the back layer (numpy and scipy) ~0.09 s either way — 158 cards in 40.6 s, 32.89 MiB. Card-art-derived: gitignored, never committed. | no (`web/test/relief.test.ts` runs the Python step on synthetic images when `MTG_TABLE_LIKENESS` names a venv; `check-all.sh` prints whether they ran) | no (the venv) |
 | `personal/check.mjs` | Plays our clip set (idle, attack, hit, die, kneel) on a prepared model by the build's world-space-delta retarget, and judges the rig map against the `agent` body — weight on every core joint, sides, the feet's facing, the branches (D192), and each spine, arm and leg link's direction, proportion and flesh, and the chain ends at attack t = 0.5 (D193) — with a joint-coverage table and a limb table; renders previews through headless Chromium (`--no-preview`), whose profile stays in the slug's folder and is read and deleted, and whose net log must show no connection, byte, DNS query or cache entry beyond 127.0.0.1. Its closing line lists what was judged. Since D194 it also holds the clips baked into `model.glb` to the retarget, and writes `check.json` (the verdict and the model's sha256) — what the dev server reads before it loads a model. | no (`web/test/personal-tier.test.ts` runs the whole pipeline on a figure of boxes, `--no-preview`) | no (a browser) |
 
-Three files here are not scripts: `assets-manifest.json` (every CC0 asset's
+`ml/README.md` is the ML dataset's manual (D305): how frames flow from the cube
+lab to a trained evaluator, the feature layout, hidden information, the split,
+hardware, and what the cube lab should record. Three files here are not scripts: `assets-manifest.json` (every CC0 asset's
 URL, bytes, sha256 and licence badge, read by `build-figures.mjs`; D54 — and
 every asset this repository draws itself, the status glyphs and the sound clips,
 under `procedural`),
@@ -194,7 +207,11 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
                                                     # every mode also starts the COACH HELPER (D292) when `claude`
                                                     # is on PATH and prints "Coach: Claude Code on this PC (no API key
                                                     # needed) — http://127.0.0.1:8643"; log var/play/coach.log
-./scripts/play.sh --engine-only --no-coach          # D292: no coach helper ("Coach: off (--no-coach) — …")
+./scripts/play.sh --engine-only --no-coach          # D292: no coach helper ("Coach: off (--no-coach) — …"), so no match launcher
+                                                    # D303: the helper also serves POST /match (ForgeCoach's Play this
+                                                    # match) and starts without `claude` too; "Match launcher: …" line
+./scripts/play.sh --engine-only --no-match          # D303: the coach helper without /match
+./scripts/play.sh --coach-port 8653                 # the coach helper on another port
 ./scripts/play.sh --engine-only --lan               # M51/D287-D289: ForgeCoach from a PHONE on the same Wi-Fi --
                                                     # binds 0.0.0.0 behind a fresh pairing token, serves ForgeCoach's
                                                     # site (var/forgecoach/, cached a day) on the ws port, prints
@@ -218,7 +235,33 @@ curl -s http://127.0.0.1:8643/health                # {"ok":true,"helper":1,"cla
 curl -sN http://127.0.0.1:8643/coach -H 'Content-Type: application/json' \
     --data '{"system":"You are a terse Magic coach.","user":"Land before attacking?","model":"haiku"}'
                                                     # NDJSON: {"type":"text",…} … then {"type":"done",…} or {"type":"error",…}
+curl -s http://127.0.0.1:8643/match                 # D303: the running match, names and counts
+curl -s http://127.0.0.1:8643/match -H 'Content-Type: application/json' --data @match.json
+                                                    # restarts the engine on two decks (docs/match-launcher.md)
+node tools/match-launcher-selftest.mjs              # its self-test, a fake engine under play.sh (gate 12f, CI)
 ```
+
+### The cube lab (D293–D297)
+
+```bash
+tools/cubelab.sh check cubes/synergy-cube-180.md            # every card in Forge's DB? RemAIDeck and unranked cards
+tools/cubelab.sh ratings init cubes/synergy-cube-180.md     # cubes/synergy-cube-180.ratings.tsv (--force to redo)
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 40 --games 3 --jobs 4 --seed 1 --record 3
+tools/cubelab.sh run cubes/modern-era-cube-180.md --format winston --drafts 20 --jobs 4
+tools/cubelab.sh report var/cubelab/runs/synergy-cube-180-grid-1   # report.html, report.md, summary.json, meta.json
+tools/cubelab.sh meta var/cubelab/runs/synergy-cube-180-grid-1 --cube cubes/synergy-cube-180.md   # meta.json alone (ForgeCoach, D297)
+# overnight, resumable (the same --out skips the drafts already done):
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 1000 --jobs 4 --out var/cubelab/runs/overnight \
+    && tools/cubelab.sh report var/cubelab/runs/overnight
+# weights: --weights <file.json> or --weight synergy=0 (repeatable); --builder forge plays Forge's decks;
+# --profiles Default,Reckless; --game-timeout 300; --ratings <tsv>
+CUBELAB_GOLDEN_WRITE=1 node --test web/test/cubelab.test.ts  # regenerate the report golden, then read the diff
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv --generations 2 --drafts-per-gen 30 \
+    --jobs 2 --out var/cubelab/evolve/omega-1      # D299-D300: index.html, changelog.md, the next cube; resumable
+```
+
+A recorded game (`<out>/frames/draft-<seed>-g1.jsonl`) opens in ForgeCoach with
+**Load file**.
 
 ### The arena, the workshop and their assets
 

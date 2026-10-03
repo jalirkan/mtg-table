@@ -355,7 +355,10 @@ node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summar
 #   the token is the only lock.
 #   Every mode also starts the COACH HELPER (D292) when `claude` is on PATH:
 #   "Coach: Claude Code on this PC (no API key needed) — http://127.0.0.1:8643"
-#   ("Coaching without an API key" below); --no-coach skips it.
+#   ("Coaching without an API key" below); --no-coach skips it.  Since D303 it
+#   is also the MATCH LAUNCHER (ForgeCoach's "Play this match": POST /match
+#   restarts the engine on two drafted decks) and starts without `claude` too;
+#   --no-match turns that half off.
 
 # Match setup — WHAT you play against (amendment M44; "Choosing decks and the AI"
 #   below has the whole story).  A bare ./scripts/play.sh is your deck against
@@ -709,6 +712,16 @@ that means for you:
 
 Your browser may ask once whether ForgeCoach may reach devices on your local
 network: that is the github.io page calling `127.0.0.1`, and it is this helper.
+
+**Playing the decks you drafted** (**D303**). ForgeCoach's cube draft builds
+both decks in the browser, and its **Play this match** button sends them to the
+same helper (`POST /match`). The helper writes them as `.dck` files under
+`var/match/`, and `play.sh` restarts the engine on them — the old game's
+connection drops, ForgeCoach reconnects, and the new match begins, with the AI's
+deck still named by its name and card count only. `play.sh` prints a
+`Match launcher:` line under the `Coach:` one; the helper now starts even
+without `claude` on your PATH, for this. `--no-match` turns it off (`--no-coach`
+turns off both). `docs/match-launcher.md` is the request and reply.
 
 **A game you play has no clock** (**D286**). `--transport ws` and `console` put no
 wall-clock limit on a game, so thinking for an hour is fine; `--transport null` and
@@ -2579,6 +2592,33 @@ and `web/test/story-render.test.tsx` renders the page over every fixture to hold
 it to that. With no `?replay=`, `#story` says it needs a recorded game (a live
 seat's story is PLAN.md's follow-up).
 
+### The cube lab — two AIs draft your cube (D293–D297)
+
+For designing a two-player cube: `tools/cubelab.sh` has two Forge AIs draft a
+cube markdown (Grid or Winston), builds each a 40-card deck from what it
+drafted, plays the two decks a best of three, and reports which colour pairs,
+themes and cards win — with every pick and the cards on offer kept as data.
+Everything runs on this machine; nothing the game uses changes. One command,
+then the report:
+
+```bash
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 40 --jobs 4 --record 3
+tools/cubelab.sh report var/cubelab/runs/synergy-cube-180-grid-1    # open its report.html
+```
+
+Overnight (resumable — the same line again skips the drafts already done):
+
+```bash
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 1000 --jobs 4 --out var/cubelab/runs/overnight \
+    && tools/cubelab.sh report var/cubelab/runs/overnight
+```
+
+`tools/cubelab.sh check <cube.md>` first, to see every card resolve;
+`--record M` keeps M games as frame logs under the run's `frames/`, which
+ForgeCoach opens with **Load file**. [`docs/guides/cube-lab.md`](docs/guides/cube-lab.md)
+is the manual — the cube format, the ratings file you can edit, how the AIs
+draft and build, every flag and weight, the JSONL.
+
 ## Repo layout
 
 Everything listed exists on `main` today: M0–M7 (the arena's Tier 1 and all four
@@ -2603,6 +2643,12 @@ mtg-table/
                              webPort, scryfallUserAgent }. `match` is read by
                              scripts/play.sh and scripts/spectate.sh only (D106,
                              D122); wsAllowedOrigins by the ws bridge (D281)
+
+  cubes/*.md                 four 180-card two-player cube designs (D293) — synergy,
+                             modern-era, vintage, pauper — as given; cubes/*.ratings.tsv
+                             the cube lab's pick
+                             ratings beside each (tools/cubelab.sh ratings init, edit
+                             freely)
 
   decks/README.md            what every deck here is, and tools/check-deck.mjs
   decks/pacho-shield.dck     the deck (40 cards, MSH + MSC), plus .txt as typed
@@ -2954,6 +3000,12 @@ mtg-table/
     undo-race-repro.sh       D136: the undo race held open every run, guarded (refused
                              "Not now") and with the guard off (the write under a held
                              engine thread), 13 checks, ~15 s; not in the gate
+    cubelab.sh               the cube lab (D293-D296): check / ratings init / run /
+                             report; docs/guides/cube-lab.md is the manual. Gate 12g
+    cubelab/                 its TypeScript (cube, ratings, weights, pick, draft,
+                             deck, lab, engine, run, report, cli) and CubeLab.java,
+                             the engine half (facts; a match worker), linted with the
+                             bridge; web/test/cubelab.test.ts tests the rest
     card-library/            (D90) the local card index: build.ts (Scryfall's bulk
                              file + the MSH/MSC prints -> var/cards/cards.sqlite,
                              SQLite + FTS5, D91) images.ts (the image cache, D93)

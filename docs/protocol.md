@@ -30,6 +30,21 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-03 — the match launcher: a match from decks the browser built
+
+Applied by the match-launcher lane (branch `c/match-launcher`), for
+ForgeCoach's cube draft, which builds both decks in the page and then plays
+them. One row. **No frame changes**: the wire's shapes are what they were, and
+the AI's deck still reaches the seat as `hello_ok.match.aiDeck` `{name, cards}`
+and nothing else. What it adds is a door beside the wire — the coach helper's
+`/match`, which restarts the engine — and one environment variable the bridge
+reads. Decision **D303**; held by `tools/match-launcher-selftest.mjs` (gate step
+12f, CI) and `mtgtable.WsLanSelfTest`'s `lanToken` cases on every build.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M53 | §2, §2.1, M44, M51 | **`POST /match` on the coach helper starts a match on two decklists the browser sent, by restarting the engine; `GET /health` there gains `match: 0\|1`.** The helper (D292's, on `coachPort`, behind its `wsAllowedOrigins` and LAN-token gate) checks the request — strict name patterns, 40–250 main-deck cards, a profile among the `.ai` files, 1–9 games, every card name against the engine's own scripts when they are on disk — writes `var/match/<id>/you.dck` and `ai.dck`, and asks `scripts/play.sh`, which owns the engine, to restart it (SIGUSR1; `var/match/request.json`, `status.json`, `current.json`). `play.sh` stops the bridge, waits for its port to go quiet — never two engines — and starts it with `--deck var/match/<id>/you.dck --ai-deck var/match/<id>/ai.dck --ai-profile <P> --games <N>` and every other flag it had. **A restart is a new session**: the seat's socket and every observer's drop with the old process (no close frame: the JVM is stopped, 1006), and a client reconnects and reads a new `hello_ok` — a new `gameId` (`match-<id>`: with a `--seed` the default id would repeat, and §2.1 reads a repeated `gameId` as a reconnect), `match` naming the new decks, `yourDeck.path` the `var/match/…/you.dck` file. **The opponent's decklist is never on the wire**: the bridge reads `ai.dck` exactly as it reads `decks/doom-legion.dck`, and `hello_ok.match.aiDeck` stays `{name, cards}`; the helper's own replies name the AI's deck by name and count too. **`MTGTABLE_LAN_TOKEN`** (§2, M51): a `--lan` bridge whose environment carries it uses it as its pairing token instead of minting one (unset or empty: a fresh token, as before; anything but 16+ of `[A-Za-z0-9_-]`: refused at startup, the value not echoed). Only `play.sh` sets it, on a restart, to the first run's token, so a phone's link and the helper's copy stay good across matches; M51's "one per run" now reads "one per `play.sh` run". The request and reply shapes are `docs/match-launcher.md`. | match launcher |
+
 ### 2026-10-01 — the `blockers` event: an unblocked attacker has no blockers
 
 Applied by the blockers-event lane (branch `c/blockers-event`), for

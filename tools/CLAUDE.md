@@ -57,9 +57,9 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **fourteen** lettered sub-steps — **2b**, **6b**,
-9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d**, **12e** and **12f**; 9d and 10g
-added by **M6**, 10h by **D291**, 12f by **D292**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+is **thirteen numbered steps** (plus **sixteen** lettered sub-steps — **2b**, **6b**,
+9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g** and **12h**; 9d and 10g
+added by **M6**, 10h by **D291**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
@@ -190,7 +190,13 @@ FAILS 12e with that command, and `SKIP_DECKS=1` skips it and says so; about a
 tenth of a second) → **12f**, `tools/coach-helper-selftest.mjs` (**D292**: the
 coach helper ForgeCoach calls instead of the Claude API, against a FAKE `claude`
 first on its PATH — never the real CLI, so no login and no network; about seven
-seconds) → `npm run build && npm test`.
+seconds) → **12g**, `tools/cubelab.sh` at its smallest (**D296**: two grid drafts
+of the synergy cube at seed 7, one game each on one worker, then the report —
+four legal lab decks, a winner per game, turn 1 where it was forced; about 30 s,
+its worker homes under the job's own) → **12h**, `python3 -m unittest discover -s tools/ml/tests` (**D305**:
+the ML dataset's encoder over every committed recording with the hidden zones
+scrambled, which must change no feature; the numpy half is skipped, and says
+so, where numpy is missing; about thirty seconds) → `npm run build && npm test`.
 `SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes. **Pass
 `WSPORT=<n>` if 8644 is busy** (8644 since **D292**: `play.sh` holds 8642 for the
 bridge and 8643 for the coach helper) — step 10 starts **eight** servers: on `WSPORT`,
@@ -224,7 +230,8 @@ and its seven self-tests, on Temurin 21's JDK: this machine's Ubuntu JRE happens
 to carry `jdk.compiler` and `jdk.jdeps`, and a Temurin JRE image is not built
 to) and **`redaction`** (`check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, the
 checker's selftest, 12d's `narrate-selftest.mjs`, step 6's
-`wire-drift-selftest.mjs`, 12b's catalog check and 12f's coach helper; not 12e, whose card index only
+`wire-drift-selftest.mjs`, 12b's catalog check, 12f's coach helper and 12h's
+standard-library half; not 12e, whose card index only
 the network build makes — D183). **It is the one place anything
 downloads the engine, and the pin still holds there**: the bridge job fetches
 `forge-installer-2.0.14.tar.bz2` (301,832,993 bytes) from Forge's tagged
@@ -292,6 +299,58 @@ built against, and four things about it are rules:
    12f, CI) puts a fake `claude` first on PATH; a real call costs the owner's
    usage and needs a login CI does not have, so it is measured by hand
    (D292's *Measured*).
+
+The match launcher (D303, amendment M53) is the helper's second route:
+`GET`/`POST /match` in `tools/match-launcher.mjs`, contract
+`docs/match-launcher.md`. The four rules above hold for it — rule 1 in
+particular: its shapes change in both repositories or not at all. Beyond them:
+the helper only writes `var/match/` and signals `play.sh`, which alone stops
+and starts the engine and never lets two run; browser text goes into `.dck`
+files through the strict name patterns and never into a path or a command
+line; and the AI's deck leaves the helper as a name and a count, as on the
+wire. Its self-test, `tools/match-launcher-selftest.mjs`, drives the real
+`play.sh` against a fake engine (`MTGTABLE_TEST_FAKE_ENGINE`, a test seam
+nothing else may set) and runs in 12f and CI beside the helper's own.
+
+## The cube lab — the conventions D293–D297 added
+
+`tools/cubelab.sh` drafts a two-player cube with two Forge AIs, builds their
+decks and plays them, for the owner's cube design; `docs/guides/cube-lab.md` is
+the manual (every flag, every weight, the JSONL), `docs/evidence/cube-lab.md`
+what was measured, PLAN.md's *The cube lab* the status. Five things about it
+are rules:
+
+1. **The lab is a tool beside the game** (**D293**). Nothing the engine, the
+   bridge, the wire, the board or the arena reads comes from it, and it opens no
+   socket. Its one Java file, `tools/cubelab/CubeLab.java`, boots the engine
+   through `mtgtable.Bootstrap`, seats every AI through
+   `Bootstrap.createAiPlayer`, reads decks with `DeckSerializer.fromFile`, names
+   no `CardView`, starts no thread and hops onto no game thread — each game is
+   started from `main` with `GameAction.invoke`, as `RecordMatch` starts its
+   one; the lint scans it like every `tools/**/*.java`. Everything else is
+   TypeScript under `tools/cubelab/`, pure where it can be, tested in
+   `web/test/cubelab.test.ts` (and the evolve loop, D299–D300, in
+   `web/test/cubelab-evolve.test.ts`).
+2. **A draft and its decks are a function of the seed** (**D294**). Every
+   random choice of a draft goes through `tools/cubelab/rng.ts` seeded from the
+   draft's seed — never `Math.random`, never the clock, never the worker that
+   plays it — so the same seed gives the same picks and decks under any
+   `--jobs`. Only the games may differ between runs.
+3. **Every worker JVM has a Forge home of its own** (`forge_home_make`, under
+   `var/cubelab/homes/<k>/` or `CUBELAB_HOME_ROOT`), and a run that finds a
+   saved preferences file in one fails (hard rule 11, D107).
+4. **Every number the lab decides by is a named weight** in
+   `tools/cubelab/weights.ts`, documented in the guide's table and recorded in
+   the run's `run.json`. A new knob is a weight, a row in that table and a line
+   in the defaults, in the same change — never a literal in the logic. The
+   evolve loop's thresholds and fit weights are the same kind of thing in a
+   table of their own, `EVOLVE_DEFAULTS` in `tools/cubelab/evolve.ts` (D299),
+   with a row each in the guide's *The evolve knobs*.
+5. **`meta.json` schema 1 is ForgeCoach's contract** (**D297**). Its keys and
+   their meaning (`tools/cubelab/meta.ts`'s header; the guide's *meta.json*)
+   change in both repositories or not at all: a field may be added, while a
+   renamed, removed or redefined one is schema 2 and a change on ForgeCoach's
+   side in the same breath. `fixtures/cubelab/mini/meta.golden.json` holds it.
 
 ## The narrator
 

@@ -1,0 +1,236 @@
+// mtg-table — the cube lab's commands.  Run it through tools/cubelab.sh.
+// Copyright (C) 2026 mtg-table contributors.
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+//   check   <cube.md>                       every card against the engine's database
+//   ratings init <cube.md> [--out <tsv>] [--force]
+//   run     <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K]
+//           [--seed S] [--profiles Default,Default] [--ratings <tsv>] [--record M]
+//           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
+//           [--winston-cards 90] [--weights <json>] [--weight name=value]...
+//   report  <out> [--min-games N]           <out>/report.html, report.md, summary.json and meta.json
+//   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]   <out>/meta.json (ForgeCoach, D297)
+//   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
+//           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300)
+//
+// docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
+
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { parseCube } from './cube.ts';
+import { engineEnv, engineFacts } from './engine.ts';
+import { GUILD } from './cards.ts';
+import { initialRating, ratingsTsv } from './ratings.ts';
+import { buildMeta, DEFAULT_META } from './meta.ts';
+import { aggregate, renderHtml, renderMarkdown, type CardInfo, type Recording } from './report.ts';
+import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
+import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
+import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
+import { defaultNotes, evolve } from './evolve-run.ts';
+
+const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
+const say = (s: string): void => { process.stdout.write(`${s}\n`); };
+
+function usage(msg?: string): never {
+  if (msg) process.stderr.write(`cubelab: ${msg}\n`);
+  process.stderr.write(`usage: tools/cubelab.sh check <cube.md>
+       tools/cubelab.sh ratings init <cube.md> [--out <tsv>] [--force]
+       tools/cubelab.sh run <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K] [--seed S]
+                        [--profiles Default,Default] [--ratings <tsv>] [--record M] [--out <dir>]
+                        [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
+                        [--weights <json>] [--weight name=value]...
+       tools/cubelab.sh report <out> [--min-games N]
+       tools/cubelab.sh meta <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]
+       tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N]
+                        [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
+                        [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
+`);
+  process.exit(2);
+}
+
+function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
+  const pos: string[] = [];
+  const f = new Map<string, string[]>();
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i] as string;
+    if (a === '--force') { f.set('force', ['1']); continue; }
+    if (a.startsWith('--')) {
+      const v = argv[++i];
+      if (v === undefined) usage(`${a} needs a value`);
+      f.set(a.slice(2), [...(f.get(a.slice(2)) ?? []), v]);
+    } else pos.push(a);
+  }
+  return { pos, f };
+}
+const one = (f: Map<string, string[]>, k: string): string | undefined => f.get(k)?.at(-1);
+const int = (f: Map<string, string[]>, k: string, d: number): number => {
+  const v = one(f, k);
+  if (v === undefined) return d;
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 0) usage(`--${k} wants a whole number, got "${v}"`);
+  return n;
+};
+
+function check(cubeFile: string): number {
+  const env = engineEnv(REPO);
+  const cube = parseCube(fs.readFileSync(cubeFile, 'utf8'));
+  const facts = engineFacts(env, cube.cards.map((c) => c.name), say);
+  say(`== ${cubeFile}: ${cube.title}`);
+  say(`sections        ${cube.sections.map((s) => `${s.name} ${s.parsed}/${s.expected}`).join(', ')}`);
+  for (const w of cube.warnings) say(`WARNING         ${w}`);
+  const found = facts.filter((f) => f.found);
+  const missing = facts.filter((f) => !f.found);
+  say(`cards listed    ${cube.cards.length}`);
+  say(`in Forge's DB   ${found.length}${missing.length ? `   MISSING ${missing.length}` : ''}`);
+  for (const m of missing) say(`  MISSING       ${m.listed}   did you mean: ${(m.suggestions ?? []).join(' | ') || '-'}`);
+  const mdfc = found.filter((f) => f.otherFace);
+  if (mdfc.length) say(`two-faced       ${mdfc.length}: ${mdfc.map((f) => `${f.name} // ${f.otherFace}`).join('; ')}  (looked up by the front face)`);
+  const renamed = found.filter((f) => f.name !== f.listed);
+  for (const f of renamed) say(`  NAME          listed "${f.listed}" -> Forge "${f.name}"`);
+  const unsupported = found.filter((f) => f.unsupported);
+  say(`unsupported     ${unsupported.length}${unsupported.length ? `: ${unsupported.map((f) => f.name).join(', ')}` : ''}`);
+  const rem = found.filter((f) => f.remAIDeck);
+  say(`AI:RemAIDeck    ${rem.length} (Forge: its AI plays these poorly or not at all)`);
+  for (const f of rem) say(`  ${f.name}`);
+  const remR = found.filter((f) => f.remRandomDeck);
+  say(`AI:RemRandomDeck ${remR.length}${remR.length ? `: ${remR.map((f) => f.name).join(', ')}` : ''} (left out of Forge's random decks; harmless here)`);
+  const bySource = { cube: 0, set: 0, none: 0 };
+  for (const f of found) bySource[f.rank?.source ?? 'none']++;
+  say(`draft ranks     CubeCobra list ${bySource.cube}, a set's rank file only ${bySource.set}, none ${bySource.none}`);
+  const unranked = found.filter((f) => (f.rank?.source ?? 'none') === 'none');
+  say(`unranked        ${unranked.length} (Forge would score these -100 and draft them last; the lab starts them at ${DEFAULT_WEIGHTS.unrated})`);
+  for (const f of unranked) say(`  ${f.name}`);
+  const setOnly = found.filter((f) => f.rank?.source === 'set' && f.rank.edition !== f.rank.defaultEdition);
+  if (setOnly.length) say(`best printing   ${setOnly.length} card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): ${setOnly.map((f) => `${f.name} [${f.rank?.edition}]`).join(', ')}`);
+  return missing.length > 0 ? 1 : 0;
+}
+
+function ratingsInit(cubeFile: string, out: string | undefined, force: boolean): number {
+  const env = engineEnv(REPO);
+  const cube = parseCube(fs.readFileSync(cubeFile, 'utf8'));
+  const facts = engineFacts(env, cube.cards.map((c) => c.name), say);
+  const file = out ?? `${cubeFile.replace(/\.md$/, '')}.ratings.tsv`;
+  if (fs.existsSync(file) && !force) usage(`${file} exists -- edit it, or pass --force to overwrite it`);
+  const rows = facts.filter((f) => f.found).map((f) => initialRating(f, DEFAULT_WEIGHTS.unrated));
+  fs.writeFileSync(file, ratingsTsv(cube.title, rows, DEFAULT_WEIGHTS.unrated));
+  say(`wrote ${rows.length} ratings to ${file} (${rows.filter((r) => r.source === 'none').length} unranked at ${DEFAULT_WEIGHTS.unrated})`);
+  return 0;
+}
+
+async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> {
+  const env = engineEnv(REPO);
+  const format = (one(f, 'format') ?? 'grid') as 'grid' | 'winston';
+  if (format !== 'grid' && format !== 'winston') usage(`--format is grid or winston, got ${format}`);
+  const builder = (one(f, 'builder') ?? 'lab') as 'lab' | 'forge';
+  if (builder !== 'lab' && builder !== 'forge') usage(`--builder is lab or forge, got ${builder}`);
+  const profiles = (one(f, 'profiles') ?? 'Default,Default').split(',');
+  if (profiles.length !== 2 || profiles.some((p) => !p)) usage('--profiles wants two names, e.g. Default,Reckless');
+  let weights = DEFAULT_WEIGHTS;
+  for (const wf of f.get('weights') ?? []) weights = mergeWeights(weights, JSON.parse(fs.readFileSync(wf, 'utf8')) as Record<string, unknown>);
+  weights = mergeWeights(weights, parseWeightArgs(f.get('weight') ?? []));
+  const seed = int(f, 'seed', 1);
+  const ratingsFile = one(f, 'ratings') ?? defaultRatings(cubeFile);
+  const o: RunOptions = {
+    cubeFile, format, drafts: int(f, 'drafts', 10), games: int(f, 'games', 3), jobs: Math.max(1, int(f, 'jobs', 1)), seed,
+    profiles: [profiles[0] as string, profiles[1] as string], ratingsFile, record: int(f, 'record', 0),
+    out: one(f, 'out') ?? path.join('var/cubelab/runs', `${path.basename(cubeFile, '.md')}-${format}-${seed}`),
+    builder, gameTimeoutSec: int(f, 'game-timeout', 300), winstonCards: int(f, 'winston-cards', 90), weights,
+  };
+  if (o.jobs > env.homes.length) usage(`--jobs ${o.jobs} but only ${env.homes.length} Forge home(s) were built (tools/cubelab.sh builds --jobs of them)`);
+  if (o.games < 1) usage('--games must be at least 1');
+  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}`);
+  await runLab(env, o, say);
+  say(`next: tools/cubelab.sh report ${o.out}`);
+  return 0;
+}
+
+export function readRun(out: string): { meta: RunMeta; cards: Record<string, CardInfo>; recs: DraftRecord[]; recordings: Recording[] } {
+  const meta = JSON.parse(fs.readFileSync(path.join(out, 'run.json'), 'utf8')) as RunMeta;
+  const cards = JSON.parse(fs.readFileSync(path.join(out, 'cards.json'), 'utf8')) as Record<string, CardInfo>;
+  const jsonl = path.join(out, 'drafts.jsonl');
+  const recs = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const rf = path.join(out, 'recordings.json');
+  const recordings = fs.existsSync(rf) ? JSON.parse(fs.readFileSync(rf, 'utf8')) as Recording[] : [];
+  return { meta, cards, recs, recordings };
+}
+
+export function pairNames(meta: RunMeta): Record<string, string> {
+  // A run.json written before the parser keyed pairs in WUBRG order may say GW.
+  const plans: Record<string, string> = {};
+  for (const [k, v] of Object.entries(meta.archetypes ?? {})) plans[[...k].sort((a, b) => 'WUBRG'.indexOf(a) - 'WUBRG'.indexOf(b)).join('')] = v;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(GUILD)) out[k] = plans[k] ? `${v}: ${plans[k]}` : v;
+  return out;
+}
+
+function report(out: string, f: Map<string, string[]>): number {
+  const { meta, cards, recs, recordings } = readRun(out);
+  const s = aggregate(meta, cards, recs, recordings, { pairs: pairNames(meta), themes: meta.themeNames ?? {} });
+  fs.writeFileSync(path.join(out, 'report.html'), renderHtml(s));
+  fs.writeFileSync(path.join(out, 'report.md'), renderMarkdown(s, int(f, 'min-games', 6)));
+  fs.writeFileSync(path.join(out, 'summary.json'), `${JSON.stringify(s, null, 1)}\n`);
+  writeMeta(out, f);
+  say(`${recs.length} draft(s): ${path.join(out, 'report.html')}, ${path.join(out, 'report.md')}, ${path.join(out, 'meta.json')}`);
+  return 0;
+}
+
+/** <out>/meta.json, ForgeCoach's draft and deck assistant's input (schema 1, D297). */
+function writeMeta(out: string, f: Map<string, string[]>): string {
+  const { meta, cards, recs } = readRun(out);
+  const cubeFile = one(f, 'cube') ?? path.join(REPO, meta.cubeFile);
+  const cube = fs.existsSync(cubeFile) ? parseCube(fs.readFileSync(cubeFile, 'utf8')) : null;
+  const doc = buildMeta(meta, cards, recs, cube, {
+    minPairGames: int(f, 'min-pair-games', DEFAULT_META.minPairGames), maxPairs: int(f, 'max-pairs', DEFAULT_META.maxPairs),
+  });
+  const file = path.join(out, 'meta.json');
+  fs.writeFileSync(file, `${JSON.stringify(doc)}\n`);
+  return file;
+}
+
+async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<number> {
+  const env = engineEnv(REPO);
+  const poolFile = one(f, 'pool');
+  if (!poolFile) usage('evolve needs --pool <pool.tsv>');
+  const profiles = (one(f, 'profiles') ?? 'Default,Default').split(',');
+  if (profiles.length !== 2 || profiles.some((p) => !p)) usage('--profiles wants two names, e.g. Default,Reckless');
+  let weights = DEFAULT_WEIGHTS;
+  for (const wf of f.get('weights') ?? []) weights = mergeWeights(weights, JSON.parse(fs.readFileSync(wf, 'utf8')) as Record<string, unknown>);
+  weights = mergeWeights(weights, parseWeightArgs(f.get('weight') ?? []));
+  let knobs = mergeKnobs(EVOLVE_DEFAULTS, f.get('evolve') ?? []);
+  if (one(f, 'swaps') !== undefined) knobs = { ...knobs, swaps: int(f, 'swaps', knobs.swaps) };
+  const notes = one(f, 'notes') ?? defaultNotes(cubeFile);
+  const seed = int(f, 'seed', 1);
+  const jobs = Math.max(1, int(f, 'jobs', 1));
+  if (jobs > env.homes.length) usage(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
+  const date = one(f, 'date') ?? new Date().toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) usage(`--date wants YYYY-MM-DD, got ${date}`);
+  const o = {
+    cubeFile, poolFile, notesFile: fs.existsSync(notes) ? notes : null, generations: Math.max(1, int(f, 'generations', 1)),
+    drafts: Math.max(1, int(f, 'drafts-per-gen', 30)), jobs, seed,
+    out: one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`),
+    games: Math.max(1, int(f, 'games', 3)), profiles: [profiles[0] as string, profiles[1] as string] as [string, string],
+    ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date,
+  };
+  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}`);
+  await evolve(env, o, say);
+  return 0;
+}
+
+async function main(): Promise<number> {
+  const [cmd, ...rest] = process.argv.slice(2);
+  const { pos, f } = flags(rest);
+  switch (cmd) {
+    case 'check': if (!pos[0]) usage('check needs a cube file'); return check(pos[0]);
+    case 'ratings': if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md>'); return ratingsInit(pos[1], one(f, 'out'), f.has('force'));
+    case 'run': if (!pos[0]) usage('run needs a cube file'); return run(pos[0], f);
+    case 'report': if (!pos[0]) usage('report needs a run directory'); return report(pos[0], f);
+    case 'meta': if (!pos[0]) usage('meta needs a run directory'); say(writeMeta(pos[0], f)); return 0;
+    case 'evolve': if (!pos[0]) usage('evolve needs a cube file'); return evolveCmd(pos[0], f);
+    default: return usage(cmd ? `unknown command ${cmd}` : undefined);
+  }
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
+  main().then((rc) => process.exit(rc), (e: unknown) => { process.stderr.write(`cubelab: ${e instanceof Error ? e.message : String(e)}\n`); process.exit(1); });
+}
