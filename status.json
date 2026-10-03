@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:36:11-04:00",
+ "updated": "2026-10-03T13:40:48-04:00",
  "paused": false,
  "host": {
-  "load1": 1.66,
-  "memUsedGb": 6.6,
+  "load1": 7,
+  "memUsedGb": 10.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
@@ -20,7 +20,7 @@
    "cpu": "heavy",
    "phase": "commands 1/1",
    "started": "2026-10-03T13:35:58-04:00",
-   "elapsed": 13,
+   "elapsed": 290,
    "done": null,
    "total": null,
    "unit": null,
