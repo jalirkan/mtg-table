@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:30:38-04:00",
+ "updated": "2026-10-03T13:30:52-04:00",
  "paused": false,
  "host": {
-  "load1": 4.7,
+  "load1": 4.07,
   "memUsedGb": 6.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
@@ -11,30 +11,7 @@
   "cpus": 16,
   "budgetGb": 23.4
  },
- "running": [
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J015",
-   "title": "Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-03T13:30:01-04:00",
-   "elapsed": 38,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "pressureEvents": [],
-   "detail": "lab-J015-run1"
-  }
- ],
+ "running": [],
  "queue": [
   {
    "publicTitle": null,
@@ -63,6 +40,25 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J015",
+   "title": "Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
+   "status": "failed",
+   "finished": "2026-10-03T13:30:51-04:00",
+   "headline": "fit.scale -10325 · fit.scaleLo -10324.964 · fit.scaleHi -10324.964 · fit.games 1 · b1500.retired 0 · b3000.retired 0 · b3000.p90_wall_s 0",
+   "numbers": {
+    "fit.scale": -10325,
+    "fit.scaleLo": -10324.963607313552,
+    "fit.scaleHi": -10324.963607313552,
+    "fit.games": 1,
+    "b1500.retired": 0,
+    "b3000.retired": 0,
+    "b3000.p90_wall_s": 0
+   },
+   "detail": "check: fit.rows >= 100 (fit.rows = 34); fit.scale between 50 and 5000 (fit.scale = -10325); b1500.failed + b3000.failed <= 2 (b1500.failed = 12, b3000.failed = 12); b3000.median_halfwidth < 0.5 (b3000.median_halfwidth is missing)"
+  },
   {
    "publicTitle": null,
    "publicEst": null,

@@ -1,7 +1,8 @@
-running
+failed
+reason: check: fit.rows >= 100 (fit.rows = 34); fit.scale between 50 and 5000 (fit.scale = -10325); b1500.failed + b3000.failed <= 2 (b1500.failed = 12, b3000.failed = 12); b3000.median_halfwidth < 0.5 (b3000.median_halfwidth is missing)
 runner: forgecoach-runner 6fbcdea
 started: 2026-10-03T13:30:01-04:00
-phase: commands 1/1
+finished: 2026-10-03T13:30:51-04:00
 mtg-table: d9a2107
 workers: 1 (sized 1: min(cores 7, memory 7, max_workers 1); peak 2.50 GB per worker (default; measured 1.07), budget 21.4 GB)
 peak_worker_rss_gb: 1.07
