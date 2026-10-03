@@ -103,7 +103,22 @@ Prosperous Innkeeper) or a drain aimed elsewhere. For Blood Artist the lethal su
 longer counts Mayhem Devil, whose any-target trigger Forge aims as it likes
 (commit `e225eb1`, self-test `lethal-vs-artist`).
 
-PENDING: the corrected policy with FODDER (`sac-after2`).
+**The corrected policy** (FODDER plus the Blood Artist correction, `sac-after2`,
+the first 20 deals of each pair — 200 games, `--games 20 --seed 7`), against the
+same 200 deals of plain Forge and of the first policy:
+
+| | sacrifice deck wins | 95% CI | lethal all-ins that failed | paired vs plain Forge |
+|---|---|---|---|---|
+| plain Forge | 72 of 200, 36.0% | 29.7–42.9% | — | — |
+| first policy | 89 of 200, 44.5% | 37.8–51.4% | 3 of 66 (2 games lost) | — |
+| corrected policy | 85 of 200, **42.5%** | 35.9–49.4% | **0 of 58** | 21 gained, 8 lost, exact p = 0.024 |
+
+The corrections did what they were for — no failed all-in in 200 games, and
+315 of Forge's own outlet activations paid with fodder — but the two policies
+are not distinguishable in win rate on 200 deals (first vs corrected: 7 and 3
+discordant games, p = 0.34). The policy's measured effect is the 400-deal one
+above: about +7 to +9 points for a sacrifice deck, interval from about +2 to
++16.
 
 ## 5. The self-test
 

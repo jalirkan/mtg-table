@@ -96,6 +96,13 @@ per-slot option (`LobbySlot.aiOptions`); the two-argument
      main-phase play is scored after this turn's combat as Forge's own attack/block
      controllers would fight it. Win/loss is ±`Integer.MAX_VALUE` minus a turn
      penalty.
+  - **On the owner's cubes it does not run.** `GameCopier.makeCopy` throws
+    `RuntimeException: Couldn't map <card>` (`GameCopier.find`, reached from
+    `StaticEffect.removeMapped`) whenever a static ability is live on a card the
+    copy did not map — a characteristic-defining or all-zones static such as
+    Grist, the Hunger Tide's, Anax's or Hero of Light's — and the exception
+    escapes the game loop: the game ends on turn 1 or 2. Measured in the
+    evidence's §3.
   - What it does **not** search: attacks and blocks (still `AiAttackController` /
     `AiBlockController`), the opponent's responses or turn, and hidden information
     (it cheats instead). It is a one-sided, depth-3, full-information planner over
@@ -161,7 +168,9 @@ untouched.
    a paired, seat- and deck-balanced win rate with its interval, plus game time.
 2. **Search at priority, using Forge's own simulator, honest about hidden cards.**
    In `PolicyControllerAi.chooseSpellAbilityToPlay`: enumerate candidates (Forge's
-   `getCandidateSpellsAndAbilities` plus "pass"), copy the game with `GameCopier`,
+   `getCandidateSpellsAndAbilities` plus "pass"), copy the game with `GameCopier`
+   — catching its `Couldn't map` failure (§4) per decision and falling back to
+   Forge's own answer, or first finding which static effects it cannot map —
    **redeal the opponent's hand and library from the unseen card pool**
    (determinization, several samples), play each candidate, then roll the copy
    forward to the end of the turn (and later, of the next turn) with plain
@@ -173,9 +182,12 @@ untouched.
    neither. Enumerate a small set of attack configurations (all-in, none, Forge's
    own, each single creature held back) and score each with the same rollout.
 4. **A better evaluator.** Replace the hand weights in `GameStateEvaluator` with a
-   learned value function trained on self-play outcomes from the bench (features:
-   life, cards, board power/toughness by evasion, mana, tempo). Linear or
-   gradient-boosted first; it must run in-process in Java on the owner's PC.
+   learned value function trained on self-play outcomes (features: life, cards,
+   board power/toughness by evasion, mana, tempo). `main` now carries the ML
+   dataset (D305, `tools/ml/`: viewer-side position rows from frame logs, a
+   baseline and a small MLP); the bench can produce games in volume for it. Linear
+   or a small MLP exported as weights, evaluated in-process in Java on the
+   owner's PC.
 5. **Keep the policies.** Targeted fixes like D310's outlet policy stay as cheap
    rules in front of the search: they cover what a shallow search misses (a
    response on the stack) and cost nothing per decision.

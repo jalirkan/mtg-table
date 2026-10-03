@@ -13876,13 +13876,18 @@ unflagged control); Forge's deckbuilder never main-decks the ten flagged cube
 cards (0 of 149 copies over 98 Forge-built cube decks); and nothing in Forge
 uses an outlet when a creature is about to die. Carrion Feeder's
 `AristocratCounters` logic decides on fodder and pays with the worst creature
-(746 non-token creatures fed to it in 400 games, Blood Artist and Priest of
-Forgotten Gods among them; a self-test scenario). Two Rakdos sacrifice decks
+(at least 849 non-token creatures fed to it in 400 games — Gravecrawler most,
+but Blood Artist 23 times and Priest of Forgotten Gods 19; a self-test
+scenario). Two Rakdos sacrifice decks
 from the synergy cube against ten Forge-drafted opponents, 400 games each way,
 the same seeds: **35.0% → 43.8%** for the sacrifice deck (+8.8 points, 95% CI
 +2.0 to +15.5; paired, 51 games turned from loss to win and 16 the other way,
-McNemar exact p < 0.0001), without FODDER, which was added after and is
-measured in the evidence.
+McNemar exact p < 0.0001) for the first version. FODDER and the opponent's
+Blood Artist correction came after that run showed 13 failed all-ins (9 games
+then lost) and 849 bad Carrion Feeder payments; on the first 200 of the same
+deals the corrected policy wins 42.5% against plain Forge's 36.0% (21 deals
+gained, 8 lost, p = 0.024) with no failed all-in, and is not distinguishable
+from the first version at that size.
 
 **Rejected.** Un-flagging the cards in a card overlay (D111, and the AI would
 then only use them on Forge's terms); a policy that sacrifices on its own
