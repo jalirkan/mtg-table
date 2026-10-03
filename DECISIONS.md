@@ -13320,3 +13320,28 @@ contract, as D292's rule 1 does for the coach helper.
 an empirical-Bayes prior strength fitted per run (it moves between runs of the
 same cube, so a card's shrunk rate would move for reasons that are not the
 card's); lift as a difference (a ratio reads the same at any base rate).
+
+## D298 — A thin pool may build three colours or play 18 lands: the deckbuilder's second pass scores a wide splash, 18 lands with 22 spells, and three full colours together
+
+**Context.** Winston pools are often too thin for any pair to reach 23 castable
+spells; D294's only answer was a splash of up to `maxSplashStretch` cards, which
+cannot take a card with two pips of the third colour, and otherwise Forge's
+builder played instead. The owner chose (2026-10-03): when the pool is thin, the
+lab may play three colours or 18 lands.
+
+**Decision.** The first pass is unchanged (two colours, at most `maxSplash`
+splash cards, 16–17 lands). Only when it finds nothing, the second pass builds,
+for every pair and splash, the wide-splash deck and an 18-land, 22-spell deck,
+and for every three-colour set a 17- and an 18-land deck with no splash; the
+best score plays and the deck says `stretched`. A three-colour build needs a
+land or fixer making its least-used colour and a spell in every colour; it
+loses `deckThreeColour` (1.5) per spell its best pair cannot cast, an 18-land
+build loses `deckEighteenLands` (2). `checkDeck` allows 18 lands and three main
+colours only for a `stretched` deck. In `meta.json` (D297, schema still 1) an
+archetype's colours can now be three letters and a land count 18; ForgeCoach's
+reader is told.
+
+**Rejected.** Three colours or 18 lands on the first pass (they would win
+some normal pools on raw card quality and teach the meta guidance to stretch
+when it need not); falling back to Forge's builder (it is the 11-spell builder
+D294 replaced).
