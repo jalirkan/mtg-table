@@ -1,0 +1,16 @@
+COACH LISTENING http://127.0.0.1:8653
+COACH CLAUDE    2.1.288 (Claude Code)
+COACH QUEUE     one question at a time; up to 4 more wait in line (--queue-max)
+COACH ORIGINS   http://127.0.0.1:* http://localhost:* https://jalirkan.github.io  (from /home/justin-a/code/mtg-table-main/config.json)
+COACH MATCH     /match off (not started by play.sh)
+COACH GET /health from 127.0.0.1 -> 200
+COACH GET /health from 127.0.0.1 -> 200
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-sonnet-5-5 end_turn; sonnet; 7090 ms)
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-sonnet-5-5 end_turn; sonnet; 8972 ms)
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-sonnet-5-5 end_turn; sonnet; 6398 ms)
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-sonnet-5-5 end_turn; sonnet; 6880 ms)
+COACH GET /health from 127.0.0.1 -> 200
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-haiku-4-5-20251001 end_turn; haiku; thinking off; 8119 ms)
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-haiku-4-5-20251001 end_turn; haiku; thinking off; 7739 ms)
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-haiku-4-5-20251001 end_turn; haiku; thinking off; 6527 ms)
+COACH POST /coach from 127.0.0.1 -> 200 (done claude-haiku-4-5-20251001 end_turn; haiku; thinking off; 6936 ms)

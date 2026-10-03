@@ -1,0 +1,346 @@
+{
+ "bench": 2,
+ "label": "J014-pilot-haiku-off",
+ "startedAt": "2026-10-03T16:36:03.123Z",
+ "source": "helper",
+ "model": "haiku",
+ "repeat": 1,
+ "cases": [
+  {
+   "id": "mulligan-comfort13-two-lands-on-draw",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7637,
+     "text": "**Play:** Keep this hand.\n\n**Why:** You have two lands (Thriving Isle, Island) which is the bare minimum but playable on the draw. More importantly, your hand contains several cheap, impactful creatures and effects: Ant-Man's Air Force is a flying body with evasion, Wasp is a strong flyer with tempo upside, Quake is a 3/3 that taps down threats on every noncreature spell, and Web Up is a one-card removal suite. The mana base supports both your {U} creatures and your {W} interaction. You're on the draw, so you need a playable hand, not a perfect one—this qualifies.\n\n**Rule:** \"Playable is good enough on the draw\" — you have the density of interaction and creatures to stay ahead of a blind opening 7.\n\n**Confidence:** High. This is a functional opener: two lands, multiple threats, and a removal spell. Mulliganing to six would likely cost you raw power and consistency.\n\n**Trap:** Over-mulliganing because the hand \"looks loose.\" Two lands is the floor, not the ceiling—you're not in trouble yet, and keeping lets you hit your third land drop naturally while deploying threats.\n\n**Their turn:** You don't know what they're playing yet. Assume they're on play with a first-turn play coming. Keep blockers or evasion open in case they have an early threat.\n\n**Assumptions:** Thriving Isle will enter tapped, so on turn 1 you have only the Island available. You'll choose a color for Thriving Isle when it enters (likely {W} to support your heavier white spell costs).\n\nANSWER: keep",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Playable is good enough on the draw\" — you have the density of interaction and creatures to stay ahead of a blind opening 7"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  },
+  {
+   "id": "mulligan-number7-four-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7212,
+     "text": "**Play:** Keep.\n\n**Why:** Four Mountains gives you consistent mana to cast Volcano Hellion on turn 3–4, and you have three copies of your threats already in hand—a strong position for a red creature deck. While three lands is not ideal, the density of payoffs and colour consistency makes this keepable, especially on the draw where you can afford a turn slower than the aggressor.\n\n**Rule:** Mana consistency beats perfect land counts in creature-heavy hands.\n\n**Confidence:** High. You're on turn 2 with three threats and four mana sources; that's a functional hand for a midrange red strategy.\n\n**Trap:** Mulligan thinking \"only 4 lands feels light.\" The redundancy of three Volcano Hellions and the colour-fixing of four Mountains (all {R}{R} costs are satisfied) offsets the small library. Mulliganning into randomness is riskier here than keeping a synergistic hand.\n\n**Their turn:** Forge goes first and likely plays a land and passes. You untap, play a Mountain (turn 2), and have options: hold mana to see what they deploy, or curve into a Hellion if you draw a land or an accelerant.\n\n**Assumptions:** Volcano Hellion's echo cost triggers only if it enters and stays on the battlefield until your upkeep, and the damage-split ability is mandatory on entry. The deck likely runs other red 1–2 drops or a midrange shell to support these fatties, so consistency matters over perfect curves.\n\n---\n\nANSWER: keep",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Mana consistency beats perfect land counts in creature-heavy hands"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  },
+  {
+   "id": "mulligan-trample7-curve",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6011,
+     "text": "**Play:** Keep this hand.\n\n**Why:** You have three lands (enough to cast Garruk's Companion on turn 2–3) and four copies of your payoff creature, all requiring only green mana. You're a mono-green aggressive deck, so colour screw is minimal. Mulliganing trades a 7-card hand with a clear game plan for a 6-card hand with unknown quality—a bad exchange when your mana and threats align perfectly.\n\n**Rule:** \"Keep functional openers in aggressive decks.\"\n\n**Confidence:** High. This is a straightforward keep for a mono-green beatdown hand with a realistic curve (land, land, 3/2 with trample into more 3/2s).\n\n**Trap:** Don't mulligan hoping for a \"better\" hand. You already have lands and threats; the next hand could be worse. Forge will race you early, and your trample creatures are well-positioned to race back.\n\n**Their turn:** Forge goes first and will likely play a 1-drop or 2-drop if it has one. Your job is to establish pressure with your own Companions by turn 2–3. Keep back blockers if needed, but this deck wants to attack.\n\nANSWER: keep",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Keep functional openers in aggressive decks"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  },
+  {
+   "id": "mulligan-yield13-five-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6414,
+     "text": "**Play:** Keep.\n\n**Why:** Five Forests give you perfect mana consistency and hit your land drops reliably through turn 3+. Two Thallids are excellent turn-1 plays that generate value (spore counters on upkeep) and a sustainable token engine (sac three counters for a 1/1). This is a slow, synergistic deck—you need early mana to fuel Thallids and reach the mid-game where they explode. A mulligan risks worse colour screw or fewer early threats.\n\n**Rule:** Mulligan only for mana-starved hands or completely incompatible colour bases; this has clean ramp and on-curve plays.\n\n**Confidence:** High. Five lands + two playable creatures is a classic keep for a greedier, creature-focused deck.\n\n**Trap:** Mulligan looking for \"more action.\" Thallids *are* the action—they generate value every turn, and you have the mana to cast them. Mulligan away your mana base and you'll lose faster to nothing.\n\n**Their turn:** Forge will play a turn-1 creature or land and have 6 unknown cards in hand. Keep both Thallids alive early; they'll grow into threats.\n\nANSWER: keep",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Mulligan only for mana-starved hands or completely incompatible colour bases; this has clean ramp and on-curve plays"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  }
+ ],
+ "summary": {
+  "byType": {
+   "mulligan": {
+    "cases": 4,
+    "samples": 4,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.4898908403969213
+    },
+    "errors": 0,
+    "transportError": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.4898908403969213
+    },
+    "unstable": 0,
+    "latencyMs": {
+     "mean": 6819,
+     "median": 7212,
+     "p90": 7637,
+     "max": 7637
+    },
+    "models": [
+     "claude-haiku-4-5-20251001"
+    ],
+    "regret": null,
+    "regretInformative": null,
+    "regretNoise": null,
+    "gradedCases": 0,
+    "gradedAnswers": 0,
+    "ungradedAnswers": 0,
+    "lowInfoAnswers": 0
+   }
+  },
+  "total": {
+   "cases": 4,
+   "samples": 4,
+   "score": {
+    "mean": 1,
+    "lo": 1,
+    "hi": 1
+   },
+   "acceptable": {
+    "mean": 1,
+    "lo": 1,
+    "hi": 1
+   },
+   "blunder": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0
+   },
+   "formatFailure": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.4898908403969213
+   },
+   "errors": 0,
+   "transportError": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.4898908403969213
+   },
+   "unstable": 0,
+   "latencyMs": {
+    "mean": 6819,
+    "median": 7212,
+    "p90": 7637,
+    "max": 7637
+   },
+   "models": [
+    "claude-haiku-4-5-20251001"
+   ],
+   "regret": null,
+   "regretInformative": null,
+   "regretNoise": null,
+   "gradedCases": 0,
+   "gradedAnswers": 0,
+   "ungradedAnswers": 0,
+   "lowInfoAnswers": 0
+  },
+  "lowConfidence": 0,
+  "latencyMs": {
+   "mean": 6819,
+   "median": 7212,
+   "p90": 7637,
+   "max": 7637
+  },
+  "errors": 0,
+  "calls": 4
+ },
+ "promptFormat": "classic",
+ "thinking": "off",
+ "promptSections": [
+  {
+   "name": "System prompt",
+   "meanChars": 4057,
+   "maxChars": 4057,
+   "cases": 4,
+   "share": 0.7213085607609565
+  },
+  {
+   "name": "Card text",
+   "meanChars": 514,
+   "maxChars": 1264,
+   "cases": 4,
+   "share": 0.09138590096897502
+  },
+  {
+   "name": "You (state)",
+   "meanChars": 374,
+   "maxChars": 421,
+   "cases": 4,
+   "share": 0.06640590274691084
+  },
+  {
+   "name": "Bench answer",
+   "meanChars": 231,
+   "maxChars": 231,
+   "cases": 4,
+   "share": 0.04107031736154325
+  },
+  {
+   "name": "Decision",
+   "meanChars": 178,
+   "maxChars": 178,
+   "cases": 4,
+   "share": 0.03164725753400302
+  },
+  {
+   "name": "Question",
+   "meanChars": 156,
+   "maxChars": 156,
+   "cases": 4,
+   "share": 0.02773579873766557
+  },
+  {
+   "name": "Opponent (state)",
+   "meanChars": 101,
+   "maxChars": 101,
+   "cases": 4,
+   "share": 0.01795715174682194
+  },
+  {
+   "name": "Stack",
+   "meanChars": 14,
+   "maxChars": 14,
+   "cases": 4,
+   "share": 0.002489110143123833
+  }
+ ],
+ "split": "dev"
+}

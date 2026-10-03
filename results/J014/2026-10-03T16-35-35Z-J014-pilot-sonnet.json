@@ -1,0 +1,345 @@
+{
+ "bench": 2,
+ "label": "J014-pilot-sonnet",
+ "startedAt": "2026-10-03T16:35:35.185Z",
+ "source": "helper",
+ "model": "sonnet",
+ "repeat": 1,
+ "cases": [
+  {
+   "id": "mulligan-comfort13-two-lands-on-draw",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6597,
+     "text": "**Play:**\n1. Keep the seven.\n2. Turn 1: play Thriving Isle tapped and choose white as its second colour.\n3. Turn 2: play Island. Cast Ant-Man's Air Force with {1}{U}, paying with the Isle for U and the Island for the generic.\n4. Turn 3: if you draw a land, cast Quake or Wasp. Web Up also works on a threat you need to answer.\n\n**Why:** You have 2 lands, and the Isle covers both blue and white. Your hand has a 2-drop and three 3-drops, and you're on the draw, so you see an extra card to find the third land. With about 15 lands left in 33 cards, you're likely to hit it by turn 3. A mulligan to six would cost more than this slightly light keep.\n\n**Rule:** Keep a two-lander on the draw when it has both colours and a cheap curve.\n\n**Confidence:** medium. Two lands is a little risky, and missing the third land would stall the 3-drops.\n\n**Trap:** Mulliganing because it only has two lands. On the draw with a 2-drop and a fixing land, this hand is better than a random six.\n\n**Their turn:** The AI goes first and you can't act on its turn 1. Nothing to hold back yet.\n\n**Assumptions:** I don't know your deck's land count. I assumed a normal count of about 16-17 lands in 40 cards.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "medium",
+      "rule": "Keep a two-lander on the draw when it has both colours and a cheap curve"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  },
+  {
+   "id": "mulligan-number7-four-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8446,
+     "text": "**Play:** Keep.\n1. Four Mountains and three Volcano Hellions, all one colour. On the draw you see an extra card.\n2. Turn 4 you cast Volcano Hellion with the four Mountains ({2}{R}{R}), leaving 0 mana.\n\n**Why:** Four lands of the right colour and a 6/5 on turn 4 is a strong, castable hand. The risk is the lack of early plays and the echo cost. Echo is your whole life total, so you will almost never pay it and the Hellion gets sacrificed at your next upkeep. That means each Hellion is a one-shot: it hits for some damage to you and to a target creature, then it is gone. It is a removal spell plus a blocker for a turn, not a lasting threat. Still, a mulligan to six is worse than this hand, and the draws can add cheap plays.\n\n**Rule:** Keep a functional hand: right colours, enough lands, a real turn-4 play.\n\n**Confidence:** Medium. The hand is clunky and does nothing before turn 4, but it is castable and a mulligan costs a card.\n\n**Trap:** Mulliganing because the hand is \"all the same card.\" A six-card hand is usually worse than four on-colour lands plus spells you can cast.\n\n**Their turn:** Forge AI goes first and will develop on turns 1-3 while you do nothing. Expect to take some early damage. Once you land the Hellion, use its damage on their best creature and pick the smallest amount you need to deal to yourself. The damage you choose to take is your choice, so don't take more than needed, and remember echo equals your current life total, so you won't be paying it.\n\n**Assumptions:** I assume the Hellion's ETB lets you choose how much damage, including 0 to you, and that you'll let it die to echo rather than pay your whole life total.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "medium",
+      "rule": "Keep a functional hand: right colours, enough lands, a real turn-4 play"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  },
+  {
+   "id": "mulligan-trample7-curve",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 5916,
+     "text": "**Play:** Keep.\n1. Turn 1: play Forest.\n2. Turn 2: play Forest, cast Garruk's Companion with {G}{G} from both Forests.\n3. Turn 3: play the third Forest, cast another Companion with two Forests, and keep one Forest open.\n4. Keep casting a Companion each turn as you draw lands.\n\n**Why:** Three lands, all Forests, and four 3/2 tramplers for GG is a very fast curve. You're on the draw, so you get an extra card to find a fourth land. The hand has no color issues, and the deck seems to be mono-green.\n\n**Rule:** Keep a hand with lands and a curve.\n\n**Confidence:** High.\n\n**Trap:** Mulliganing because the hand has only one spell type and no top-end. Four copies of a cheap, efficient creature is exactly what an aggressive deck wants, and a mulligan to six costs far more than the lack of variety.\n\n**Their turn:** The opponent goes first with 7 hidden cards. Expect early plays or removal, but nothing changes your keep. Just curve out and see what they do.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "high",
+      "rule": "Keep a hand with lands and a curve"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  },
+  {
+   "id": "mulligan-yield13-five-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6355,
+     "text": "**Play:** Keep.\n1. Turn 1: Forest, cast Thallid (G).\n2. Turn 2: Forest, cast the second Thallid (G), with one Forest left over.\n3. Keep playing a land each turn and draw into spells.\n\n**Why:** Five lands plus two cheap creatures is a functional hand that casts everything on time. It is weak on power, but the 7-card hand on the draw with a guaranteed curve beats a 6-card hand. Thallids slowly grow Saprolings, which gives you board presence even from flood draws.\n\n**Rule:** Keep functional hands; don't mulligan lands plus plays.\n\n**Confidence:** Medium. It is a flood-prone, low-impact hand, but you're on the draw and every card is castable.\n\n**Trap:** Mulliganing because the hand looks boring. A 6-card hand is a real cost, and this hand does not miss land drops or colours.\n\n**Their turn:** The opponent goes first with 6 cards in hand and is hidden. Expect a turn-1 play or just a land. Nothing to hold back yet; just see what they do.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "medium",
+      "rule": "Keep functional hands; don't mulligan lands plus plays"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null,
+    "graded": 0,
+    "ungraded": 0,
+    "lowInfo": 0,
+    "regretNoise": null
+   }
+  }
+ ],
+ "summary": {
+  "byType": {
+   "mulligan": {
+    "cases": 4,
+    "samples": 4,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.4898908403969213
+    },
+    "errors": 0,
+    "transportError": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.4898908403969213
+    },
+    "unstable": 0,
+    "latencyMs": {
+     "mean": 6829,
+     "median": 6597,
+     "p90": 8446,
+     "max": 8446
+    },
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "regret": null,
+    "regretInformative": null,
+    "regretNoise": null,
+    "gradedCases": 0,
+    "gradedAnswers": 0,
+    "ungradedAnswers": 0,
+    "lowInfoAnswers": 0
+   }
+  },
+  "total": {
+   "cases": 4,
+   "samples": 4,
+   "score": {
+    "mean": 1,
+    "lo": 1,
+    "hi": 1
+   },
+   "acceptable": {
+    "mean": 1,
+    "lo": 1,
+    "hi": 1
+   },
+   "blunder": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0
+   },
+   "formatFailure": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.4898908403969213
+   },
+   "errors": 0,
+   "transportError": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.4898908403969213
+   },
+   "unstable": 0,
+   "latencyMs": {
+    "mean": 6829,
+    "median": 6597,
+    "p90": 8446,
+    "max": 8446
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "regret": null,
+   "regretInformative": null,
+   "regretNoise": null,
+   "gradedCases": 0,
+   "gradedAnswers": 0,
+   "ungradedAnswers": 0,
+   "lowInfoAnswers": 0
+  },
+  "lowConfidence": 0,
+  "latencyMs": {
+   "mean": 6829,
+   "median": 6597,
+   "p90": 8446,
+   "max": 8446
+  },
+  "errors": 0,
+  "calls": 4
+ },
+ "promptFormat": "classic",
+ "promptSections": [
+  {
+   "name": "System prompt",
+   "meanChars": 4057,
+   "maxChars": 4057,
+   "cases": 4,
+   "share": 0.7213085607609565
+  },
+  {
+   "name": "Card text",
+   "meanChars": 514,
+   "maxChars": 1264,
+   "cases": 4,
+   "share": 0.09138590096897502
+  },
+  {
+   "name": "You (state)",
+   "meanChars": 374,
+   "maxChars": 421,
+   "cases": 4,
+   "share": 0.06640590274691084
+  },
+  {
+   "name": "Bench answer",
+   "meanChars": 231,
+   "maxChars": 231,
+   "cases": 4,
+   "share": 0.04107031736154325
+  },
+  {
+   "name": "Decision",
+   "meanChars": 178,
+   "maxChars": 178,
+   "cases": 4,
+   "share": 0.03164725753400302
+  },
+  {
+   "name": "Question",
+   "meanChars": 156,
+   "maxChars": 156,
+   "cases": 4,
+   "share": 0.02773579873766557
+  },
+  {
+   "name": "Opponent (state)",
+   "meanChars": 101,
+   "maxChars": 101,
+   "cases": 4,
+   "share": 0.01795715174682194
+  },
+  {
+   "name": "Stack",
+   "meanChars": 14,
+   "maxChars": 14,
+   "cases": 4,
+   "share": 0.002489110143123833
+  }
+ ],
+ "split": "dev"
+}

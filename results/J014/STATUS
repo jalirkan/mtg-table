@@ -1,4 +1,7 @@
-running
-started: 2026-10-03T12:35:18-04:00
+failed
+reason: pilot: check 4 failed, Haiku-off median latency (7212 ms) is not below Sonnet (6597 ms); checks 1-3 passed; full job not run
+started: 2026-10-03T12:35:30-04:00
+finished: 2026-10-03T12:37:00-04:00
 mtg-table: e3d74dd (helper worktree mtg-table-main)
 ForgeCoach: 360ea3f
+claude: 2.1.288
