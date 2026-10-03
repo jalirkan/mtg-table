@@ -1,0 +1,185 @@
+# cube lab ratings for: The Pauper Cube — two-player edition (180 cards)
+# Seeded by `tools/cubelab.sh ratings init` from Forge's draft ranks (CardRanker.getRawScore of the
+# best-ranked printing; source cube = CubeCobra's list, set = that set's rank file). A card Forge has no
+# rank for starts at 40. Edit the rating column; the other two say where it started.
+# name	rating	forge	source
+Thraben Inspector	97	97	cube:2XM
+Doomed Traveler	28	28	set:SIS
+Faerie Guidemother	9.3	9.3	set:ELD
+Seeker of the Way	41	41	set:KTK
+Stormfront Pegasus	33	33	set:M11
+Kor Skyfisher	90.4	90.4	cube:ZEN
+Attended Knight	32.5	32.5	set:M13
+Lone Missionary	16.9	16.9	set:MM3
+Search Party Captain	29.3	29.3	set:DBL
+Inspiring Overseer	52.3	52.3	cube:SNC
+Militia Bugler	61.6	61.6	cube:M19
+Palace Sentinels	97.2	97.2	cube:CN2
+Eagles of the North	77.9	77.9	cube:LTR
+Battle Screech	73.4	73.4	cube:DMR
+Triplicate Spirits	31.2	31.2	set:PIO
+Raise the Alarm	28.5	28.5	set:M15
+Rally the Peasants	25.6	25.6	set:UMA
+Prismatic Strands	10.5	10.5	set:JUD
+Ephemerate	22.9	22.9	set:STA
+Momentary Blink	38.2	38.2	set:DMR
+Ancestral Blade	33.2	33.2	set:M20
+Journey to Nowhere	50.6	50.6	cube:OTP
+Oblivion Ring	83	83	cube:HOP
+Settle Beyond Reality	28.1	28.1	set:2X2
+Sunlance	43.9	43.9	set:PLC
+Faith's Fetters	46	46	set:RAV
+Faerie Seer	8.7	8.7	set:MH1
+Delver of Secrets	19.7	19.7	set:ISD
+Spellstutter Sprite	70.3	70.3	cube:MMA
+Moon-Circuit Hacker	34.3	34.3	set:NEO
+Augur of Bolas	33.8	33.8	set:M13
+Ninja of the Deep Hours	37.9	37.9	set:BOK
+Pestermite	52	52	cube:LRW
+Man-o'-War	86.9	86.9	cube:DMR
+Mist Raven	82.8	82.8	cube:AVR
+Cloudkin Seer	43.9	43.9	set:M20
+Archaeomancer	52.6	52.6	cube:C17
+Murmuring Mystic	50.4	50.4	cube:RVR
+Mulldrifter	71.5	71.5	cube:2X2
+Tolarian Terror	57.9	57.9	cube:DMU
+Brainstorm	85	85	cube:C15
+Ponder	98.1	98.1	cube:MAR
+Preordain	85.3	85.3	cube:C15
+Thought Scour	80.4	80.4	cube:2X2
+Snap	80.7	80.7	cube:DMR
+Counterspell	98.6	98.6	cube:30A
+Mana Leak	98.6	98.6	cube:STH
+Exclude	71.9	71.9	cube:INV
+Ghostly Flicker	69.2	69.2	cube:AVR
+Hard Evidence	89.3	89.3	cube:MH2
+Deep Analysis	94.5	94.5	cube:TOR
+Treasure Cruise	50.1	50.1	cube:C16
+Mire Triton	39	39	set:THB
+Carrier Thrall	27.9	27.9	set:BFZ
+Nested Shambler	6.6	6.6	set:MH2
+Unwilling Ingredient	8.3	8.3	set:STX
+Plagued Rusalka	34.8	34.8	set:GPT
+Dusk Legion Zealot	68.2	68.2	cube:RIX
+Chittering Rats	32.4	32.4	set:DST
+Gravedigger	45.8	45.8	set:6ED
+Falkenrath Noble	78.7	78.7	cube:ISD
+Crypt Rats	73.1	73.1	cube:7ED
+Okiba-Gang Shinobi	39.1	39.1	set:BOK
+Thorn of the Black Rose	72	72	cube:CN2
+Gray Merchant of Asphodel	60.4	60.4	cube:C14
+Gurmag Angler	79.6	79.6	cube:UMA
+Cast Down	54.8	54.8	cube:DOM
+Disfigure	91.2	91.2	cube:M20
+Tragic Slip	66.3	66.3	cube:C14
+Vicious Offering	51.2	51.2	cube:DOM
+Snuff Out	97.9	97.9	cube:MMQ
+Village Rites	14.7	14.7	set:INR
+Deadly Dispute	66.1	66.1	cube:FCA
+Night's Whisper	81.1	81.1	cube:5DN
+Unearth	26.2	26.2	set:ULG
+Tortured Existence	54	54	cube:STH
+Blood Fountain	96.3	96.3	cube:DBL
+Ecstatic Awakener	34.2	34.2	set:DBL
+Monastery Swiftspear	87.2	87.2	cube:PIO
+Fanatical Firebrand	14.2	14.2	set:FDN
+Firebrand Archer	72.7	72.7	cube:HOU
+Mogg War Marshal	30.1	30.1	set:DMR
+Goblin Bushwhacker	24.9	24.9	set:SPG
+Rimrock Knight	40.6	40.6	set:PIO
+Beetleback Chief	39.7	39.7	set:PCA
+Guttersnipe	37.5	37.5	set:E01
+Ardent Elementalist	14.5	14.5	set:DBL
+Bogardan Dragonheart	10.6	10.6	set:MH1
+Dragon Fodder	66.6	66.6	cube:ARC
+Kuldotha Rebirth	8.3	8.3	set:SOM
+Hordeling Outburst	38.2	38.2	set:A25
+Raid Bombardment	12.8	12.8	set:UMA
+Experimental Synthesizer	57.1	57.1	cube:NEO
+Lightning Bolt	98.9	98.9	cube:LEB
+Chain Lightning	85.2	85.2	cube:LEG
+Burst Lightning	89.8	89.8	cube:ZEN
+Galvanic Discharge	55.9	55.9	cube:MH3
+Flame Slash	72.2	72.2	cube:ROE
+Fireball	66.9	66.9	cube:DST
+Rolling Thunder	49	49	set:TPR
+Faithless Looting	93.3	93.3	cube:C14
+Wrenn's Resolve	92.9	92.9	cube:MOM
+Skewer the Critics	91.9	91.9	cube:RNA
+Fling	31.3	31.3	set:PCA
+Llanowar Elves	72.2	72.2	cube:C14
+Arbor Elf	54.1	54.1	cube:A25
+Utopia Sprawl	82.1	82.1	cube:WOT
+Sakura-Tribe Elder	48.9	48.9	set:ARC
+Wall of Roots	42.1	42.1	set:MIR
+Satyr Wayfinder	31.3	31.3	set:CMA
+Nest Invader	32.7	32.7	set:ROE
+Basking Broodscale	88.7	88.7	cube:MH3
+Jewel Thief	40.7	40.7	set:SNC
+Llanowar Visionary	53.6	53.6	cube:M21
+Yavimaya Elder	39.9	39.9	set:UDS
+Mother Bear	28.9	28.9	set:MH1
+Werebear	39.7	39.7	set:ODY
+Owlbear	35.6	35.6	set:AFR
+Conclave Naturalists	34.7	34.7	set:ORI
+Krosan Tusker	38	38	set:A25
+Annoyed Altisaur	35.1	35.1	set:MH3
+Generous Ent	86	86	cube:LTR
+Wildheart Invoker	30.7	30.7	set:ROE
+Sprout Swarm	45	45	set:FUT
+Saproling Migration	62.8	62.8	cube:DOM
+Rancor	46.8	46.8	set:A25
+Ram Through	27.3	27.3	set:IKO
+Bushwhack	63.7	63.7	cube:BRO
+Pulse of Murasa	26.9	26.9	set:PIO
+Grapple with the Past	13.7	13.7	set:EMN
+Silver Drake	35.7	35.7	set:PLS
+Judge's Familiar	31.7	31.7	set:RTR
+Cavern Harpy	38.1	38.1	set:PLS
+Dinrova Horror	43	43	set:PIO
+Body Dropper	29.2	29.2	set:SNC
+Fireblade Artist	36.1	36.1	set:RNA
+Writhing Chrysalis	94	94	cube:MH3
+Branching Bolt	43	43	set:ALA
+Selesnya Evangel	41.2	41.2	set:RVR
+Qasali Pridemage	33.4	33.4	set:ARB
+Izzet Charm	36.3	36.3	set:2XM
+Bloodwater Entity	37.2	37.2	set:HOU
+Glowspore Shaman	37.4	37.4	set:GRN
+Desecrator Hag	28.6	28.6	set:EVE
+Tenth District Legionnaire	43.7	43.7	set:PIO
+Dog Walker	42	42	set:MKM
+Bonesplitter	93.4	93.4	cube:MRD
+Vault Skirge	27.9	27.9	set:NPH
+Prophetic Prism	90.5	90.5	cube:WOE
+Mind Stone	60.4	60.4	cube:C14
+Ichor Wellspring	73.7	73.7	cube:C14
+Chromatic Star	54.1	54.1	cube:BRR
+Candy Trail	57.9	57.9	cube:WOE
+Flayer Husk	63.5	63.5	cube:MBS
+Myr Sire	22.8	22.8	set:MBS
+Perilous Myr	57.3	57.3	cube:SOM
+Serrated Arrows	48.7	48.7	set:HML
+Renegade Freighter	22.3	22.3	set:KLD
+Guardian Idol	43.6	43.6	set:5DN
+Ulamog's Crusher	30.3	30.3	set:ROE
+Tranquil Cove	31.5	31.5	set:FDN
+Dismal Backwater	38.2	38.2	set:C16
+Bloodfell Caves	33.2	33.2	set:C17
+Rugged Highlands	32.4	32.4	set:C16
+Blossoming Sands	32.5	32.5	set:C17
+Scoured Barrens	41.8	41.8	set:C15
+Swiftwater Cliffs	41.1	41.1	set:C15
+Jungle Hollow	40.8	40.8	set:CMA
+Wind-Scarred Crag	38.4	38.4	set:C15
+Thornwood Falls	40.2	40.2	set:C15
+Azorius Chancery	46.9	46.9	set:C13
+Dimir Aqueduct	47.3	47.3	set:PCA
+Rakdos Carnarium	45.2	45.2	set:C13
+Gruul Turf	45.8	45.8	set:PCA
+Selesnya Sanctuary	46.6	46.6	set:PCA
+Izzet Boilerworks	46.4	46.4	set:C13
+Golgari Rot Farm	46.1	46.1	set:C13
+Boros Garrison	46.1	46.1	set:HOP
+Evolving Wilds	93.5	93.5	cube:C13
+Ash Barrens	54.4	54.4	cube:C16
