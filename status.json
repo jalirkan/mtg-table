@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-03T19:13:10-04:00",
- "heartbeat": "2026-10-03T19:13:10-04:00",
+ "updated": "2026-10-03T19:13:37-04:00",
+ "heartbeat": "2026-10-03T19:13:37-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.28,
-  "memUsedGb": 7.2,
+  "load1": 7.27,
+  "memUsedGb": 6.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3208,
-  "pressure": 0.04,
+  "swapUsedMb": 3324,
+  "pressure": 12.75,
   "cpus": 16,
   "budgetGb": 23.4
  },
@@ -22,20 +22,20 @@
    "id": "J039",
    "title": "Omega evolve with exploration on (D356): 4 generations x 2,000 drafts, best of 3, unrecorded",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-03T19:13:10-04:00",
-   "elapsed": 0,
+   "elapsed": 27,
    "done": 0,
    "total": 0,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-03T19:13:10-04:00",
-   "memGb": null,
+   "memGb": 0,
    "live": {
     "big.generations_done": 0,
     "big.drafts": 0,
@@ -71,7 +71,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J039-prepare"
+   "detail": "lab-J039-pilot1"
   }
  ],
  "queue": [
