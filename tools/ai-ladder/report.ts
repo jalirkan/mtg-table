@@ -245,7 +245,7 @@ function ratingBar(p: LadderPlayer, lo: number, hi: number): string {
 function expTable(doc: LadderDoc): string {
   if (doc.experiments.length === 0) return '<p class="dim">No experiments logged.</p>';
   return `<div class="wrap"><table><thead><tr><th>when</th><th>command</th><th>purpose</th><th>status</th><th>commit</th><th>set</th><th>games</th><th>hypothesis</th></tr></thead><tbody>`
-    + doc.experiments.slice(0, 40).map((e) => `<tr><td class="dim">${esc(e.at.slice(0, 16).replace('T', ' '))}</td><td>${esc(e.cmd)}</td><td>${esc(e.purpose)}</td><td>${esc(e.status)}</td><td><code>${esc(e.sha.slice(0, 8))}${e.dirty ? '+' : ''}</code></td><td class="dim">${esc(e.set.replace(/^tools\/ai-bench\//, ''))}</td><td>${e.games ?? '–'}</td><td style="white-space:normal;min-width:280px">${esc(e.hypothesis)}</td></tr>`).join('')
+    + doc.experiments.slice(0, 40).map((e) => `<tr><td class="dim">${esc(e.at.slice(0, 16).replace('T', ' '))}</td><td>${esc(e.cmd)}</td><td>${esc(e.purpose)}</td><td>${esc(e.status)}</td><td><code>${esc(e.sha.slice(0, 8))}${e.dirty ? '+' : ''}</code></td><td class="dim wr">${esc(e.set.replace(/^tools\/ai-bench\//, ''))}</td><td>${e.games ?? '–'}</td><td style="white-space:normal;min-width:280px">${esc(e.hypothesis)}</td></tr>`).join('')
     + '</tbody></table></div>';
 }
 
@@ -257,7 +257,7 @@ export function renderHtml(doc: LadderDoc): string {
     const va = p.vsAnchor;
     const status = !p.registered ? '<span class="tag" title="a config no longer in players.json">old config</span>'
       : p.unavailable ? `<span class="tag" title="${esc(p.unavailable)}">unavailable</span>` : p.anchor ? '<span class="tag">anchor</span>' : '';
-    return `<tr><td><b>${esc(p.name)}</b> ${status}<div class="dim small">${esc(p.kind)} ${esc(Object.entries(p.params).map(([k, v]) => `${k}=${v}`).join(' '))}</div></td>`
+    return `<tr><td class="pl"><b>${esc(p.name)}</b> ${status}<div class="dim small">${esc(p.kind)} ${esc(Object.entries(p.params).map(([k, v]) => `${k}=${v}`).join(' '))}</div></td>`
       + `<td data-v="${p.rated ? p.rating : -1}">${p.rated ? `<b>${p.rating.toFixed(0)}</b>` : '–'}</td><td class="dim">${p.rated && p.name !== doc.anchor.name ? `${p.lo.toFixed(0)}–${p.hi.toFixed(0)}` : p.name === doc.anchor.name ? 'fixed' : ''}</td>`
       + `<td>${ratingBar(p, lo, hi)}</td><td>${p.games}</td><td>${p.wins}–${p.losses}</td><td>${p.draws}</td>`
       + `<td data-v="${va ? va.rate : -1}">${va ? `${pct(va.rate)} <span class="dim">${va.wins}–${va.losses} · ${pct(va.lo)}–${pct(va.hi)}</span>` : '–'}</td></tr>`;
@@ -306,6 +306,7 @@ th,td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:left;white-
 #hist .ln{fill:none;stroke-width:2;stroke-linejoin:round}#hist .dot{stroke:var(--card);stroke-width:2}#hist .xh{stroke:var(--dim);stroke-dasharray:2 2}
 ${Array.from({ length: SERIES }, (_, k) => `.s${k + 1}{stroke:var(--s${k + 1})}circle.s${k + 1}{fill:var(--s${k + 1})}i.s${k + 1}{background:var(--s${k + 1})}`).join('')}
 .sx{stroke:var(--dim)}circle.sx{fill:var(--dim)}i.sx{background:var(--dim)}
+.pl{white-space:normal;min-width:170px;max-width:300px}.wr{white-space:normal;max-width:220px}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 6px;font-size:12px}.key{display:inline-flex;align-items:center;gap:5px}.sw{display:inline-block;width:12px;height:3px;border-radius:2px}
 .tip{position:absolute;top:12px;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.12);white-space:nowrap}
 </style></head><body><main>

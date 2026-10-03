@@ -43,6 +43,20 @@ deal outweighs the AI by far — which is why the pair, not the game, is the uni
 on 18 blocks is degenerate (it can only resample the one unsplit block: its
 "interval" was 1500–1561). At this size quote the Hessian interval.
 
+## 1b. Smoke tests of every command (after the review fixes)
+
+Commit `474b522`, one engine process, 8 games each, `--batch-pairs 1`, logged
+as `pilot` in `experiments.jsonl` (load 6–8 by then; game median 9.9 s):
+
+| command | set | result |
+|---|---|---|
+| `sprt policy-outlet forge-default --max-games 8` | confirm | 4–4, LLR −0.17 in [−2.94, 2.94]: **inconclusive** at the limit, as 8 games must be |
+| `tune policy-outlet --param outlets=on,off --pool forge-default --max-rounds 1` | dev | 2–2 and 2–2 on the same deals; winner `outlets=on` (the grid's first on a tie) is already `policy-outlet`, so the registry was left alone |
+| `league --max-games 8` (candidate `policy-outlet`) | confirm | one share batch (forge-default 1–3 forge-cautious), one SPRT batch (2–2); no decision |
+| `check` | all | 24 games, 0 draws, 0 errors, 12 mirrored deals, 0 malformed; **11 decided by the deal**, 1 by the config |
+
+The deal-dominance of §1 holds on the new cube-lab decks too (11 of 12).
+
 ## 2. The mirror hook (pilot)
 
 `ai-bench play --pairs <first cube pair> --a Default --b Reckless --games 4

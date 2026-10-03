@@ -21,8 +21,14 @@ unit-tested engine-free in `web/test/ai-ladder.test.ts` (step 13, CI).
 ./bridge/build.sh                               # once: bridge/out
 ./tools/ai-ladder.sh list                       # the players, which this checkout can play, the deck sets
 ./tools/ai-ladder.sh run --hours 1 --jobs 2     # rate them for an hour (confirm set)
+./tools/ai-ladder.sh check                      # the data checks a pilot runs
 ./tools/ai-ladder.sh report                     # var/ai-ladder/report.html + ladder.json
+./tools/ai-ladder.sh experiments                # the committed experiment log
 ```
+
+On a machine whose checkout must stay clean (the owner's PC under `pc-jobs`),
+pass `--experiments var/ai-ladder/experiments.jsonl` and, for `tune`,
+`--registry var/ai-ladder/players.json` (a copy), and send those files back.
 
 ## Players: `tools/ai-ladder/players.json`
 
@@ -183,7 +189,8 @@ player with `"candidate": true` not yet decided (`tune --candidate` sets it).
    a candidate 15 Elo worse passes 37%; 20 Elo better, 100%. Average cost:
    about 650 shared deals (≈ 1,300 games per side); a fixed-size test would
    need about 940 (`niPairsNeeded`). When the best is forge-default itself,
-   d = candidate's pair score − ½.
+   d = candidate's pair score − ½, read from the SPRT's own games (they are
+   already candidate vs forge-default), so no extra games are played.
 
 H0 or an inconclusive SPRT, or an "inferior" or inconclusive Forge test,
 rejects the candidate at once. (The first version compared two 80-game point

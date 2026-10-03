@@ -14295,7 +14295,9 @@ candidate truly 30 Elo worse passes 5% of the time (alpha), a truly equal one
 90% (power). Simulated with correlated deals: 4.8% and 93.8%, about 650
 shared deals on average. H0, an inconclusive SPRT, or an "inferior" or
 inconclusive Forge test rejects it, and the reason is kept. All of it plays on
-the confirm deck set.
+the confirm deck set. When the best is forge-default itself, the SPRT's games
+are already the candidate against forge-default, and the Forge test reads them
+(d = pair score − ½) instead of playing more.
 
 *Revised the same day.* The first version compared the two point estimates
 (≥ 80 decisive games each, margin 0): with an SE of about 39 Elo on the

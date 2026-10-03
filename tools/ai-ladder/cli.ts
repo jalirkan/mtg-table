@@ -376,12 +376,13 @@ async function cmdLeague(a: Args, argv: string[]): Promise<void> {
   };
   const states = (c: Player): { sprt: SprtState; ni: ReturnType<typeof niState> } => {
     const best = L.best;
-    const sprt = sprtState(pairScores(sprtGames(s, s.recs, `league-sprt:${c.name}`, c)), sp);
+    const ps = pairScores(sprtGames(s, s.recs, `league-sprt:${c.name}`, c));
+    const sprt = sprtState(ps, sp);
     const fp = `league-forge:${c.name}`;
-    const cs = forgeScores(s, fp, c.name);
     const diffs: number[] = [];
-    if (best === ANCHOR) for (const v of cs.values()) diffs.push(v - 0.5);
-    else { const bs = forgeScores(s, fp, best); for (const [k, v] of cs) { const b = bs.get(k); if (b !== undefined) diffs.push(v - b); } }
+    // best = forge-default: the SPRT's own games ARE the candidate against forge-default
+    if (best === ANCHOR) for (const q of ps) diffs.push(q.x - 0.5);
+    else { const cs = forgeScores(s, fp, c.name), bs = forgeScores(s, fp, best); for (const [k, v] of cs) { const b = bs.get(k); if (b !== undefined) diffs.push(v - b); } }
     return { sprt, ni: niState(diffs, ni) };
   };
   const decisions: Array<{ name: string; verdict: string; reason: string }> = [];
@@ -422,12 +423,13 @@ async function cmdLeague(a: Args, argv: string[]): Promise<void> {
       const fbase = hostBase(s.host) + 700_000 + slotOf(c) * 1000;
       const forgeSpec = (): BatchSpec => {
         // candidate and best alternate on the same deal slots; with best = forge-default only the candidate plays
-        const who = best.name === ANCHOR || fcycle++ % 2 === 0 ? c : best;
+        const who = fcycle++ % 2 === 0 ? c : best;
         return s.spec(who, anchor, `league-forge:${c.name}`, fbase);
       };
-      if (sprtOn && niOn) return cycle++ % 3 === 0 ? sprtSpec() : forgeSpec();
-      if (sprtOn) return sprtSpec();
-      if (niOn) return forgeSpec();
+      if (best.name === ANCHOR) { if (sprtOn || niOn) return sprtSpec(); }   // one stream serves both tests
+      else if (sprtOn && niOn) return cycle++ % 3 === 0 ? sprtSpec() : forgeSpec();
+      else if (sprtOn) return sprtSpec();
+      else if (niOn) return forgeSpec();
     }
     // 3. the ordinary ladder
     const ch = choose(schedPlayers(s, null), st, { anchor: ANCHOR, ...SCHED_DEFAULTS });
