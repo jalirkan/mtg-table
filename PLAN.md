@@ -9943,6 +9943,43 @@ node --test web/test/cubelab-evolve.test.ts        # 17 tests
 6. **No gate step runs `evolve`**; its tests are engine-free (step 13 and CI).
    A one-generation, two-draft smoke beside 12g would cover the loop's I/O.
 
+## The ML dataset — frames to position rows for a learned evaluator (2026-10-03, D305)
+
+**Status: built and measured; the full gate was not run** (the new step, 12h,
+ran alone through the gate's runner; nothing else in the gate reads
+`tools/ml/`). Branch `c/ml-dataset`, off `main`'s `4204bc6`, rebased onto
+`f69caf1` (the cube lab and its thin-pool fix); D305 (D305–D307 reserved). The owner approved the long-term plan — a stronger play AI for the
+180-card cubes, trained here from self-play with no LLM, by search over Forge's
+engine guided by a small learned position evaluator — and this lane is its
+preparation: the pipeline from recorded games to training rows, so collection
+starts the day the cube lab records games. `tools/ml/README.md` is the manual.
+
+```bash
+tools/ml/record-pairs.sh --pairs var/ml/pairs.txt --seeds 1-4 --seats 0,1 --jobs 4   # AI-vs-AI games of deck pairs
+python3 tools/ml/dataset.py --vocab cubes/synergy-cube-180.md --out var/ml/data/synergy var/ml/games
+python3 tools/ml/baseline_eval.py var/ml/data/synergy --cv 5 --l2 1.0              # logistic, numpy
+python3 tools/ml/train_mlp.py var/ml/data/synergy                                  # torch, optional
+python3 -m unittest discover -s tools/ml/tests                                     # gate 12h; CI's half
+```
+
+Checked: 48 synergy-cube AI-vs-AI games recorded here (4,671 rows, 40 split
+groups) and the 22 committed fixtures (2,561 rows) encoded; the scrambler over
+all 70 with every feature unchanged, and red under a planted opponent-hand leak;
+the tests with numpy and torch, with numpy and torch made unimportable (8
+skipped), and 12h through `GATE_ONLY` (32.5 s); `web/test/claude-md.test.ts`
+for the root `CLAUDE.md`'s job count and `tools/CLAUDE.md`'s 12h. Grouped
+5-fold cross-validation (D305's *Measured*): the twelve-number core model
+0.620 log-loss against the prior's 0.678 (0.509 against 0.620 from turn 17),
+the full vector 0.675 — signal, and too few games for the card block.
+
+No follow-up list of its own; the next steps are the plan's: the cube lab
+records every game it plays, both chairs, with `--match` (README's *What the
+cube lab needs to record*; the cube lab's follow-up 2 is the same need from its
+side), then the evaluator is trained on thousands of games and the search
+player is designed against it. The cube lab's follow-up 1 (a Courser of
+Kruphix's revealed top card) does not reach the features: the encoder reads
+both libraries as counts only.
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these

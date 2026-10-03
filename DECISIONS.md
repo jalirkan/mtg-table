@@ -13462,3 +13462,104 @@ design principles, power choices, cards to watch — is the owner's and must
 survive every generation; only the list and its counts are the loop's); a
 separate machine-readable list beside the markdown (two sources of truth for
 one cube; `check` and `run` already read the markdown).
+
+## D305 — The ML dataset: `tools/ml/` encodes frame logs into fixed-size, viewer-side position rows for a cube's closed card pool, labelled with the eventual winner, split by game, and reads less hidden information than the log carries
+
+*Branch `c/ml-dataset`; D305 (a block of D305–D307 reserved, D306–D307
+unused). The cube lab's D293–D297 and the AI baseline's D300–D301 are on other
+branches; the lead renumbers on merge if these collide.*
+
+**2026-10-03** (the owner's approval of the plan: a stronger play AI for the
+180-card cubes, trained on this machine from self-play, with no LLM — search
+over Forge's engine guided by a small learned position evaluator)
+
+**Decision.** The preparation step is a dataset pipeline in Python under
+`tools/ml/` (`tools/ml/README.md` is its manual), and its shape is fixed here:
+
+- **A row is a decision state from one seat's log**: a `state` in which the
+  log's viewing seat holds `priority`, in a main phase or a combat step
+  (configurable), the game not over; identical consecutive rows of one game are
+  one. Every kind of frame log is read — AI-vs-AI (`RecordMatch`,
+  `spectate.sh`, the cube lab's `--record`) and seat recordings, `.jsonl` and
+  `.jsonl.gz`, a client log's re-deliveries once.
+- **The vector is fixed-size for a CLOSED card pool** — the cube the decks were
+  drafted from, read from its design file (the cube lab's format), a `.dck` or
+  a plain list: the six basics, the pool in listed order, then `<other>`,
+  `<token>` and `<facedown>`. 243 board-level features (turn, phase one-hot,
+  stack, combat, life, zone counts, lands and untapped lands by colour, mana,
+  this turn's land drop and spells, battlefield P/T, counters, keywords, and
+  type and mana-value aggregates per zone, which keep what `<other>` loses)
+  plus 17 counts per slot (my hand; battlefield untapped, tapped, sick,
+  attacking, blocking, and graveyard, exile, stack — for each side): 3,456
+  features for a 180-card cube. `features.json` is the layout, with a
+  `schemaId` hashed from the names; a test holds a golden layout for a fixed
+  vocabulary.
+- **The label is the eventual winner from the viewer's side** (+1/−1, a draw
+  0), with turns-to-end and rows-to-end; a game with no outcome, or an engine
+  crash's null `over` (M46), gives no rows.
+- **Hidden information: the encoder is stricter than the log.** The opponent's
+  hand is its count and never a card of it, even a revealed one; both
+  libraries are counts; a stub counts in its zone only; a face-down card is
+  `<facedown>`, never its `alt`; no engine string but a card's `name`, `types`
+  and `manaCost`. A test rewrites every hidden zone of every committed
+  recording as if it had leaked and requires every feature unchanged, with a
+  negative control on the viewer's own hand; a planted leak fails it.
+- **The split is by game, by hash.** A row's split is a hash of its game's
+  split group — one seed of one match, so the two chairs of a game are one
+  group — so it is deterministic and stable as the corpus grows;
+  `--group-by match` holds whole deck pairs out. Shards are int16 `.npz`
+  (every feature is an integer).
+- **Dependencies:** the encoder is standard library; the dataset and the
+  logistic baseline need numpy; torch is optional and only in `train_mlp.py`,
+  which exits 0 without it. Gate step **12h** runs the tests (about 30 s;
+  numpy's half says whether it ran), and CI's redaction job runs the
+  standard-library half.
+
+**Why.** A fixed vocabulary is what a closed cube allows and an open format
+would not: a card's identity becomes a column, so a small model can learn what
+a Skullclamp on the battlefield is worth, while the aggregates carry everything
+the vocabulary misses. The viewer's side is the only side a seat's log has, and
+it is the side a search player stands on. Splitting by row would put positions
+of one game on both sides of the split, and a game's positions are nearly
+copies of each other — the score would measure memory. Reading less than the
+log is cheap insurance: a reveal is rare and its value small, and a feature
+built on it would be the first thing in this repo that a leak upstream could
+silently turn into a cheating evaluator.
+
+**Measured** (2026-10-03, a shared 4-core container at a load of 15 to 160).
+`tools/ml/record-pairs.sh` recorded the ten synergy-cube deck pairs of the AI
+baseline's bench (`tools/ai-bench/decks/synergy-*`, on its branch; copied into
+`var/ml/decks/`, not committed) at seeds 1–4 from seat 0 and seed 1 from seat 1:
+50 games, 48 finished, 2 seat-1 games killed by the 300 s `GAME_TIMEOUT` (their
+seat-0 twins had finished — under load the same seed is not always the same
+game's length) and skipped as unlabelled. `FModel.initialize` took 29 s of each
+run. With `cubes/synergy-cube-180.md`'s list as the vocabulary (189 slots, 3,456
+features): **4,671 rows from 48 games in 40 split groups** (the two chairs of
+eight games share a group), 80/10/10 → 3,684 / 626 / 361 rows; games won/lost
+from the viewer's side 21/27. Every one of the 48 recordings passed the
+scrambler. The 22 committed fixtures give 2,561 rows. Grouped 5-fold
+cross-validation of the logistic baseline (`--cv 5 --l2 1.0`, out-of-fold
+log-loss, all rows / turn 17+): prior 0.678 / 0.620, life difference 0.637 /
+0.518, the twelve-number core model **0.620 / 0.509** (accuracy 0.674 / 0.829),
+every non-card feature 0.622 / 0.494, the full vector 0.675 / 0.676; at `--l2
+0.01` the life difference alone is the best, 0.533, the core model 0.600 and
+the wide models overfit to 1.05–1.09. The single 80/10/10 split (7 validation
+games, 3 test) is too small to rank anything — test log-loss: life 0.304, core
+0.274, full 2.79 — and the MLP (3,456 → 256 → 64, 30 epochs, CPU torch) kept
+its epoch 2: validation 0.508, test 1.22. There is signal, it grows with the
+turn, and at 40 games everything wider than a dozen numbers overfits: the card
+block needs thousands of games before it pays.
+
+**Rejected.**
+
+- **Per-row or random splits** — leak game identity, above.
+- **An open vocabulary (hashing every name)** — the cube is closed; hashing
+  buys collisions and nothing else, and `<other>` with its aggregates covers a
+  card outside the list.
+- **Reading revealed opposing cards** (a revealed hand card, a Future Sight
+  top) — rare, small, and the one way the encoder could ever learn from what a
+  player may not know.
+- **Torch as a hard dependency** — the dataset and the baseline must run on a
+  bare `python3` + numpy, in the gate and CI, before any GPU is involved.
+- **Features from `stack[].text` or `cast.text`** — engine strings that §3.6
+  gates and sweeps; ids and public faces already say what is on the stack.

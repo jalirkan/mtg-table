@@ -190,3 +190,8 @@ jobs:
       # Step 12f: the coach helper's contract with ForgeCoach, against a fake claude.
       - name: coach-helper-selftest.mjs
         run: node tools/coach-helper-selftest.mjs
+      # Step 12h's standard-library half: the ML encoder over every committed
+      # recording, hidden zones scrambled (D305). numpy is not installed here,
+      # so the dataset and baseline tests report themselves skipped.
+      - name: tools/ml tests (encoder, hidden information)
+        run: python3 -m unittest discover -s tools/ml/tests

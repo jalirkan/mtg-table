@@ -453,11 +453,12 @@ ladder off); `?stats=1`, `?grid=1` and `?glinfo=1` are the debug flags, and
 saying you are done: every check the repo has — the lint and its self-test, the
 build, the recordings and the drift checks, the ten-games rows, the eight socket
 servers, redaction, the selftests, the deck check and the web build and tests —
-as **51 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
+as **52 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
 desktop), each after the jobs it depends on; `GATE_JOBS=1` is the serial gate,
-the same checks as 35 jobs one after another (D291 added the 49th and 33rd, 10h,
-about 25 s of job time, D292 the 50th and 34th, 12f, about 7 s, and D296 the
-51st and 35th, 12g, the cube lab's smoke run, about 30 s, to the timings below). From a deleted `bridge/out` it
+the same checks as 36 jobs one after another (D291 added the 49th and 33rd, 10h,
+about 25 s of job time, D292 the 50th and 34th, 12f, about 7 s, D296 the
+51st and 35th, 12g, the cube lab's smoke run, about 30 s, and D305 the 52nd and
+36th, 12h, about 30 s, to the timings below). From a deleted `bridge/out` it
 takes about **four minutes** at `GATE_JOBS=4` (239.0 s and 240.5 s on
 `102fb1f`; 259.2 s on the docs block's `502ad9d`, whose code is `102fb1f`'s),
 about **two and a half** at `GATE_JOBS=8` (151.2 s on `6b35054`) and
