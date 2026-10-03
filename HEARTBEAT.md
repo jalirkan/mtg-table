@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T13:25:08-04:00
-- runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00, PAUSED (tools/runner.sh resume)
-- running: nothing
-- load: 0.16; memory 6.2/30.5 GB, swap 934 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J015, J016, J017, J018
-- waiting: J009 (the runner is paused); J010 (the runner is paused)
+- time: 2026-10-03T13:26:32-04:00
+- runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00
+- running: J010 prepare, 0/56 games, 1 worker(s)
+- load: 0.2; memory 6.5/30.5 GB, swap 934 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J009, J015, J016, J017, J018
+- waiting: nothing
 - last finished: J003 done at 2026-10-03T13:10:11-04:00
 
 ## Messages
