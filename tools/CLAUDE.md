@@ -57,9 +57,9 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **fifteen** lettered sub-steps — **2b**, **6b**,
-9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d**, **12e**, **12f** and **12g**; 9d and 10g
-added by **M6**, 10h by **D291**, 12f by **D292**, 12g by **D296**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+is **thirteen numbered steps** (plus **sixteen** lettered sub-steps — **2b**, **6b**,
+9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g** and **12h**; 9d and 10g
+added by **M6**, 10h by **D291**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
@@ -193,7 +193,10 @@ first on its PATH — never the real CLI, so no login and no network; about seve
 seconds) → **12g**, `tools/cubelab.sh` at its smallest (**D296**: two grid drafts
 of the synergy cube at seed 7, one game each on one worker, then the report —
 four legal lab decks, a winner per game, turn 1 where it was forced; about 30 s,
-its worker homes under the job's own) → `npm run build && npm test`.
+its worker homes under the job's own) → **12h**, `python3 -m unittest discover -s tools/ml/tests` (**D305**:
+the ML dataset's encoder over every committed recording with the hidden zones
+scrambled, which must change no feature; the numpy half is skipped, and says
+so, where numpy is missing; about thirty seconds) → `npm run build && npm test`.
 `SKIP_TEN=1` skips 9c, about six of the serial gate's fifteen minutes. **Pass
 `WSPORT=<n>` if 8644 is busy** (8644 since **D292**: `play.sh` holds 8642 for the
 bridge and 8643 for the coach helper) — step 10 starts **eight** servers: on `WSPORT`,
@@ -227,7 +230,8 @@ and its seven self-tests, on Temurin 21's JDK: this machine's Ubuntu JRE happens
 to carry `jdk.compiler` and `jdk.jdeps`, and a Temurin JRE image is not built
 to) and **`redaction`** (`check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, the
 checker's selftest, 12d's `narrate-selftest.mjs`, step 6's
-`wire-drift-selftest.mjs`, 12b's catalog check and 12f's coach helper; not 12e, whose card index only
+`wire-drift-selftest.mjs`, 12b's catalog check, 12f's coach helper and 12h's
+standard-library half; not 12e, whose card index only
 the network build makes — D183). **It is the one place anything
 downloads the engine, and the pin still holds there**: the bridge job fetches
 `forge-installer-2.0.14.tar.bz2` (301,832,993 bytes) from Forge's tagged
