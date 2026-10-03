@@ -312,6 +312,18 @@ wire. Its self-test, `tools/match-launcher-selftest.mjs`, drives the real
 `play.sh` against a fake engine (`MTGTABLE_TEST_FAKE_ENGINE`, a test seam
 nothing else may set) and runs in 12f and CI beside the helper's own.
 
+With the launcher on, the engine ending does not end `play.sh` (D308): in
+`--engine-only` and `--lan`, when the bridge exits (a finished match, D286's
+idle limit, a crash) `play.sh` falls asleep with no JVM, keeps the helper, and
+starts the bridge again on the next `POST /match`; `/health` says `"engine":
+"running"|"idle"`. It gives up by itself after `--idle-exit-after <minutes>`
+(240; 0 never), and Ctrl-C and SIGTERM stop everything as before. Without the
+launcher (`--no-match`, `--no-coach`) and in the bare board mode the old exit
+stays. `POST /engine/start` wakes it on the last setup (plain Play), and a
+second `play.sh --engine-only` beside a live helper wakes the first and exits 0
+instead of clashing on its ports. The self-test's fake engine takes the bridge's own `--idle-timeout` to
+exit on cue.
+
 ## The cube lab — the conventions D293–D297 added
 
 `tools/cubelab.sh` drafts a two-player cube with two Forge AIs, builds their
