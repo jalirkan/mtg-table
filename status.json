@@ -1,9 +1,9 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:30:01-04:00",
+ "updated": "2026-10-03T13:30:15-04:00",
  "paused": false,
  "host": {
-  "load1": 5.22,
+  "load1": 4.36,
   "memUsedGb": 6.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
@@ -18,9 +18,9 @@
    "id": "J015",
    "title": "Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-03T13:30:01-04:00",
-   "elapsed": 0,
+   "elapsed": 14,
    "done": null,
    "total": null,
    "unit": null,
@@ -32,7 +32,7 @@
    "paused": false,
    "dataUpdated": null,
    "pressureEvents": [],
-   "detail": "lab-J015-prepare"
+   "detail": "lab-J015-pilot1"
   }
  ],
  "queue": [
