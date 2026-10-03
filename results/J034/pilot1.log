@@ -1,0 +1,222 @@
+==== J034 pilot1 started 2026-10-03T18:59:12-04:00 in unit lab-J034-pilot1, 1 worker(s)
+lint-bridge-selftest OK: 31 rules, 60 firing cases (each fired its own rule and no other), 73 checks
+bridge lint OK (63 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 63 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 45 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 278 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2076 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:34760): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:34776): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:34790 (1 watching)
+WS CONNECT /127.0.0.1:34794 (connection #1)
+WS REFUSED /127.0.0.1:34796: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:34798 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:34798 (1 watching)
+WS DISCONNECT /127.0.0.1:34794 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:34802 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:34802 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:34806 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:60652 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:60652: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 38 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:52004: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:52018: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:52032: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:52040: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:52064: no valid pairing token
+WS SITE REFUSED /127.0.0.1:52182: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52192: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52206: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52208: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52214: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52220: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52224: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52228: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52242: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52250: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52258: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:52260: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:52274: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:52288: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:52298: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:52300 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:52300 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:52304 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:52304 (0 watching)
+WS CONNECT /127.0.0.1:52318 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:52318 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:52324): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:52328): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:52330 (1 watching)
+WS CONNECT /127.0.0.1:40188 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:40188 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:40204 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:40204 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:43381 (/127.0.0.1:40218): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:59504: a path that would leave the site
+WS CONNECT /127.0.0.1:55126 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:55126 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:55136): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:38911 (/127.0.0.1:55148): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 6.1 us + predict 2.9 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 105 check(s), 0 failure(s)
+decision selftest: 44 check(s), 0 failure(s)
+build OK
+...s....gate_regret_grade truth: 3 request(s), 0 already answered, 3 to go on 2 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+[1/3] ok1 spell ok 4 playouts  ms
+[2/3] ok2 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=12 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=13 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=4 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+[3/3] die spell error  playouts  ms
+{"mode": "truth", "answered": 3, "of": 3, "status": {"ok": 2, "error": 1}, "workerErrors": []}
+gate_regret_grade truth: 1 request(s), 0 already answered, 1 to go on 1 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=7 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+[1/1] hang spell error  playouts  ms
+{"mode": "truth", "answered": 1, "of": 1, "status": {"error": 1}, "workerErrors": []}
+..gate_regret_grade rank: 1 request(s), 0 already answered, 1 to go on 1 JVM(s); serve --playouts 3 --initial 3 --no-race --horizon 0 --budget-ms 0 --timeout-ms 20000 --cap 12 --seed 1 --leaf-scale 500 {"leaf": "eval:/tmp/tmp3bjmbuxt/m.json"}
+[1/1] r0 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{"mode": "rank", "answered": 1, "of": 1, "status": {"ok": 1}, "workerErrors": []}
+usage: python3 -m unittest [-h] --requests REQUESTS --out OUT [--jobs JOBS]
+                           [--leaf LEAF] [--rounds ROUNDS] [--name NAME]
+                           [--timeout-s TIMEOUT_S] [--retry-errors]
+                           [--allow-version-change] [--repo REPO]
+                           {truth,rank}
+python3 -m unittest: error: --rounds is the rule's 3 (primary) or 12 (secondary)
+.gate_regret_grade truth: 6 request(s), 0 already answered, 6 to go on 2 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+[1/6] r0 spell ok 4 playouts  ms
+[2/6] r2 spell ok 4 playouts  ms
+[3/6] r4 spell ok 4 playouts  ms
+[4/6] r1 spell ok 4 playouts  ms
+[5/6] r3 spell ok 4 playouts  ms
+[6/6] r5 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=6 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=7 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=12 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=13 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{"mode": "truth", "answered": 6, "of": 6, "status": {"ok": 6}, "workerErrors": []}
+gate_regret_grade truth: 8 request(s), 6 already answered, 2 to go on 2 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+[7/8] r7 spell ok 4 playouts  ms
+[8/8] r6 spell ok 4 playouts  ms
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=12 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=13 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=5 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/justin-a/code/lab/mtg-table/tools/ml/gate_regret_grade.py:126: ResourceWarning: unclosed file <_io.TextIOWrapper name=7 encoding='UTF-8'>
+  self.proc = None
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+{"mode": "truth", "answered": 8, "of": 8, "status": {"ok": 8}, "workerErrors": []}
+...............
+----------------------------------------------------------------------
+Ran 26 tests in 4.267s
+
+OK (skipped=1)
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.1327  eval 0.0000  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.2016  eval 0.0000  agree 0%
+  block  n 100  hand 0.1966  eval 0.0000  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1327 [+0.1217, +0.1434] (95%, 10000 resamples of decisions)
+gate 2 (regret): PASS
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.0000  eval 0.0000  forge 0.0997  (picks agree 100%)
+  attack n 100  hand 0.0000  eval 0.0000  agree 100%
+  block  n 100  hand 0.0000  eval 0.0000  agree 100%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.0000 [+0.0000, +0.0000] (95%, 10000 resamples of decisions)
+gate 2 (regret): FAIL -- mean regret(hand) - regret(eval) = +0.0000 is not above 0
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 150 of 150 decisions; unscored {}
+mean regret: hand 0.1335  eval 0.0000  forge 0.1006  (picks agree 33%)
+  attack n  50  hand 0.2022  eval 0.0000  agree 0%
+  block  n  50  hand 0.1984  eval 0.0000  agree 0%
+  spell  n  50  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1335 [+0.1178, +0.1485] (95%, 10000 resamples of decisions)
+gate 2 (regret): FAIL -- 150 scored decisions < 240 (underpowered)
+WARNING: no version stamp (<file>.meta.json) for eval: not graded by gate_regret_grade.py
+WARNING: no version stamp (<file>.meta.json) for eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.1327  eval 0.0000  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.2016  eval 0.0000  agree 0%
+  block  n 100  hand 0.1966  eval 0.0000  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1327 [+0.1217, +0.1434] (95%, 10000 resamples of decisions)
+gate 2 (regret): PASS
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.0000  eval 0.1327  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.0000  eval 0.2016  agree 0%
+  block  n 100  hand 0.0000  eval 0.1966  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: -0.1327 [-0.1434, -0.1217] (95%, 10000 resamples of decisions)
+gate 2 (regret): FAIL -- mean regret(hand) - regret(eval) = -0.1327 is not above 0
+search-v1-fixed3-eval-68163cb8b844
+search-v1-fixed3-eval-68163cb8b844
+{"result": "H1", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): PASS
+{"result": "H0", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): FAIL -- result H0
+{"result": "inconclusive", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): FAIL -- result inconclusive
+{"result": "stopped", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): NO VERDICT -- the SPRT is stopped
+{"result": "H1", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): NO VERDICT -- the last SPRT of this pair used other elo0/elo1/alpha/beta than the rule's
+ls: write error: Broken pipe
+dataset.py needs numpy (pip install numpy)
