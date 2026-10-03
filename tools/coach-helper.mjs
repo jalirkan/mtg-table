@@ -12,6 +12,7 @@
 //
 //   node tools/coach-helper.mjs                      # http://127.0.0.1:8643
 //   node tools/coach-helper.mjs --port 8700          # config.json `coachPort` otherwise
+//   node tools/coach-helper.mjs --queue-max 2        # questions that may wait (default 4; 0 = refuse, D325)
 //   COACH_HELPER_TOKEN=<T> node tools/coach-helper.mjs --lan [--ws-port 8642]
 //   node tools/coach-helper.mjs --lan --token <T>    # the same; the env keeps <T> off `ps`
 //   node tools/coach-helper.mjs --match-dir var/match --supervisor <play.sh's pid>   # D303, play.sh does this
@@ -24,7 +25,8 @@
 //                    is missing or `claude --version` fails.  It does not prove a login:
 //                    only a real call can, and a logged-out CLI answers /coach with the
 //                    error line below.
-//   POST /coach   {"system": string, "user": string, "model"?: "opus"|"sonnet"|"haiku"}
+//   POST /coach   {"system": string, "user": string, "model"?: "opus"|"sonnet"|"haiku",
+//                  "supersedes"?: string}
 //                 (default "sonnet"; body at most 512 KB, else 413)
 //                 -> 200 Content-Type: application/x-ndjson, one JSON object a line:
 //                    {"type":"text","text":"<delta>"}            ... the answer, as it streams
@@ -42,10 +44,29 @@
 //                 when scripts/play.sh started this helper (--match-dir, --supervisor):
 //                 play.sh owns the engine and restarts it.
 //
-//   ONE QUESTION AT A TIME.  A /coach that arrives while another is running waits
-//   up to 5 s (--busy-wait <ms>) for it to finish or be cancelled -- which absorbs
-//   ForgeCoach's "abort the old question, ask the new one" race -- and is then
-//   answered 429 {"type":"error","message":"the coach is busy ..."}.
+//   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
+//   question at a time.  A /coach that arrives while one runs is QUEUED, first in
+//   first out, up to --queue-max (default 4) waiting; past that it is answered
+//   429 {"type":"error","message":"the coach is busy ..."} with Retry-After: 2.
+//   A queued question gets its 200 at once and, before anything else,
+//                    {"type":"queued","position":<n>}   n = questions ahead of it
+//                                                       (sent again when n drops)
+//                    {"type":"running"}                 when its turn comes
+//   then the stream above.  A question that never waited gets neither line (an
+//   older client ignores both: they are not text, done or error).  A queued
+//   question whose client disconnects leaves the queue; a running one is
+//   cancelled, its `claude` killed.
+//
+//   SUPERSEDING.  /coach also takes "supersedes": "<key>" (a string of 1-200
+//   characters, e.g. ForgeCoach's "live coach of this tab").  A new question with
+//   a key ends every QUEUED question with the same key at once with
+//                    {"type":"error","code":"superseded","message":"superseded by a newer question"}
+//   (its one terminal line) and takes its place at the back of the queue.  A
+//   RUNNING question is never superseded: the client cancels it by disconnecting.
+//
+//   /health then also carries "concurrency": 1, "queue": {"max": <n>, "length":
+//   <waiting now>}, "running": 0|1 and "supersedes": 1.  An older helper has none
+//   of these: a client that finds no "queue" must expect 429 to a second question.
 //
 // WHO MAY CALL IT (amendments M50 and M51's rules, applied to this port):
 //
@@ -103,6 +124,8 @@ export const MODELS = ['opus', 'sonnet', 'haiku'];
 export const DEFAULT_MODEL = 'sonnet';
 export const DEFAULT_PORT = 8643;
 export const MAX_BODY = 512 * 1024;
+export const DEFAULT_QUEUE_MAX = 4;
+export const MAX_SUPERSEDE_KEY = 200;
 export const DEFAULT_ALLOWED_ORIGINS = ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'];
 const ORIGIN_ENTRY = /^(http|https):\/\/[a-z0-9.-]+(:([0-9]{1,5}|\*))?$/;
 const ARGV_SYSTEM_MAX = 100 * 1024;
@@ -274,7 +297,7 @@ function readConfig() {
 }
 
 function parseArgs(argv) {
-  const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, busyWaitMs: 5000, timeoutS: 300,
+  const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
     matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
@@ -286,7 +309,8 @@ function parseArgs(argv) {
     else if (f === '--lan') a.lan = true;
     else if (f === '--token') a.token = val();
     else if (f === '--ws-port') a.wsPort = Number(val());
-    else if (f === '--busy-wait') a.busyWaitMs = Number(val());
+    else if (f === '--queue-max') a.queueMax = Number(val());
+    else if (f === '--busy-wait') val();   // before D325: the wait before a 429; the queue replaced it (accepted, ignored)
     else if (f === '--timeout') a.timeoutS = Number(val());
     else if (f === '--match-dir') a.matchDir = val();
     else if (f === '--supervisor') a.supervisor = Number(val());
@@ -341,8 +365,16 @@ export function claudeArgs({ model, systemArg, help }) {
 // ---------------------------------------------------------------------------
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, busyWaitMs, timeoutS, match = null, log = (s) => console.log(s) } = opts;
-  let active = null;          // { kill(), done: Promise } of the running question
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, log = (s) => console.log(s) } = opts;
+  let active = null;          // { kill() } of the running question
+  const queue = [];           // waiting questions, oldest first: { key, go(), supersede(), position(n) }
+  const pump = () => {
+    if (active || !queue.length) return;
+    const next = queue.shift();
+    active = { kill: () => {} };   // reserved now, so nothing can start between here and its turn
+    queue.forEach((w, i) => w.position(i + 1));
+    next.go(active);
+  };
   const live = new Set();     // every child still alive, for shutdown
 
   const send = (res, status, obj, headers = {}) => {
@@ -394,9 +426,10 @@ export function startHelper(opts) {
       const info = await claudeInfo();
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? match.engine() : null;           // D308: engine running | idle
+      const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -434,39 +467,89 @@ export function startHelper(opts) {
     try { q = JSON.parse(body); } catch { send(res, 400, { type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
     const model = q?.model ?? DEFAULT_MODEL;
     if (!q || typeof q.system !== 'string' || typeof q.user !== 'string' || q.user.trim() === '') {
-      send(res, 400, { type: 'error', message: 'expected {"system": string, "user": non-empty string, "model"?: "opus"|"sonnet"|"haiku"}' }, cors);
+      send(res, 400, { type: 'error', message: 'expected {"system": string, "user": non-empty string, "model"?: "opus"|"sonnet"|"haiku", "supersedes"?: string}' }, cors);
       say(400);
       return;
     }
     if (!MODELS.includes(model)) { send(res, 400, { type: 'error', message: `model must be one of ${MODELS.join(', ')}` }, cors); say(400); return; }
+    const key = q.supersedes ?? null;
+    if (key !== null && (typeof key !== 'string' || key.length < 1 || key.length > MAX_SUPERSEDE_KEY)) {
+      send(res, 400, { type: 'error', message: `"supersedes" must be a string of 1-${MAX_SUPERSEDE_KEY} characters` }, cors);
+      say(400);
+      return;
+    }
 
-    // One question at a time; a short wait absorbs abort-then-ask.
-    if (active) {
-      await Promise.race([active.done, new Promise((r) => setTimeout(r, busyWaitMs))]);
-      if (active) {
-        send(res, 429, { type: 'error', message: 'the coach is busy with another question — try again in a moment' }, { ...cors, 'Retry-After': '2' });
-        say(429);
+    // D325: one question at a time; the rest wait in a queue, oldest first.
+    if (key !== null) for (const w of queue.filter((x) => x.key === key)) w.supersede();
+    let headersSent = false;
+    const writeHead = () => {
+      if (headersSent) return;
+      headersSent = true;
+      res.writeHead(200, { ...cors, 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      res.flushHeaders();
+    };
+    const write = (ev) => { if (!res.destroyed && !res.writableEnded) res.write(JSON.stringify(ev) + '\n'); };
+    let slot;
+    if (active || queue.length) {
+      if (queue.length >= queueMax) {
+        send(res, 429, { type: 'error', message: 'the coach is busy with other questions — try again in a moment' }, { ...cors, 'Retry-After': '2' });
+        say(429, ` (queue full: ${queue.length})`);
         return;
       }
+      const turn = await new Promise((resolve) => {
+        const w = {
+          key,
+          go: (reserved) => { off(); resolve(reserved); },
+          supersede: () => {
+            off();
+            const i = queue.indexOf(w);
+            if (i >= 0) queue.splice(i, 1);
+            queue.forEach((x, j) => x.position(j + 1));
+            write({ type: 'error', code: 'superseded', message: 'superseded by a newer question' });
+            res.end();
+            resolve('superseded');
+          },
+          position: (n) => write({ type: 'queued', position: n }),
+        };
+        const gone = () => {
+          off();
+          const i = queue.indexOf(w);
+          if (i >= 0) { queue.splice(i, 1); queue.forEach((x, j) => x.position(j + 1)); }
+          resolve('gone');
+        };
+        const off = () => res.off('close', gone);
+        res.on('close', gone);
+        queue.push(w);
+        writeHead();
+        w.position(queue.length);   // the running one plus those queued before it
+      });
+      if (turn === 'superseded') { say(200, ' (superseded while queued)'); return; }
+      if (turn === 'gone') { say('-', ' (client left while queued)'); pump(); return; }
+      slot = turn;
+      write({ type: 'running' });
+    } else {
+      slot = { kill: () => {} };
+      active = slot;
     }
-    if (res.destroyed || req.socket.destroyed) { say('-', ' (client left while waiting)'); return; }
-    let release;
-    const slot = { done: new Promise((r) => { release = r; }), kill: () => {} };
-    active = slot;
+    if (res.destroyed || req.socket.destroyed) {
+      if (active === slot) active = null;
+      say('-', ' (client left while waiting)');
+      pump();
+      return;
+    }
 
     const info = await claudeInfo();
-    res.writeHead(200, { ...cors, 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-    res.flushHeaders();
-    const write = (ev) => { if (!res.destroyed && !res.writableEnded) res.write(JSON.stringify(ev) + '\n'); };
+    writeHead();
     let outcome = '';
     const tr = makeTranslator((ev) => {
       write(ev);
       if (ev.type === 'done' || ev.type === 'error') {
         outcome = ev.type === 'done' ? `done ${ev.model} ${ev.stopReason}` : 'error';
         res.end();
+        finishSlot();   // the answer is out: the next question need not wait for this process to exit
       }
     }, model);
-    const finishSlot = () => { if (active === slot) active = null; release(); };
+    function finishSlot() { if (active === slot) { active = null; pump(); } }
 
     if (!info.ok) {
       tr.end({ spawnError: { code: 'ENOENT', message: info.error } });
@@ -630,7 +713,8 @@ async function main() {
       });
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, busyWaitMs: a.busyWaitMs, timeoutS: a.timeoutS, match });
+  if (!Number.isInteger(a.queueMax) || a.queueMax < 0 || a.queueMax > 64) { console.error('coach-helper: --queue-max must be a whole number, 0-64'); process.exit(2); }
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -640,6 +724,7 @@ async function main() {
   console.log(`COACH LISTENING http://127.0.0.1:${bound}`);
   if (a.lan) console.log(`COACH LAN       bound 0.0.0.0:${bound}; non-loopback requests need the pairing token; the LAN page's origin is http://<host>:${wsPort}`);
   console.log(`COACH CLAUDE    ${info.ok ? info.version : info.error}`);
+  console.log(`COACH QUEUE     one question at a time; up to ${a.queueMax} more wait in line (--queue-max)`);
   console.log(`COACH ORIGINS   ${cfg.origins.join(' ')}  (from ${cfg.file})`);
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   const stop = () => { h.close(); process.exit(0); };

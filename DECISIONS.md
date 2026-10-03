@@ -14359,3 +14359,60 @@ trained on every night; pairs are the unit of novelty.
 **Rejected.** Splitting by single deck (a pair's two decks always play each
 other in a bench, so a deck and its opponent would straddle splits); a random
 row split (D305).
+
+## D325 — The coach helper queues questions instead of refusing them: one runs, up to four wait (`--queue-max`), a queued one can be superseded by key, and `/health` says so
+
+*Branch `c/helper-queue`; D325, the next number free of every lane's claim (D315–D324 are other lanes').*
+
+**2026-10-03**
+
+**Context.** D292's helper ran one question at a time and answered a second one
+429 after a five-second wait. ForgeCoach's coach benchmark asks two questions at
+once by default, so on the owner's PC 69–70% of its answers were that 429,
+recorded as format failures: only 10 of 28 cases paired, and "unstable" cases
+that were only the helper saying busy. Players met the same 429: auto-coach asks
+at the main phase and again at attacks, and a manual *Ask* while one is running
+errored out.
+
+**Decision.** `/coach` still runs one `claude` at a time, and the others wait
+in a first-in-first-out queue of at most `--queue-max` (default **4**; 0 is the
+old refusal without the wait). Past the cap a question is still **429** with
+`Retry-After: 2`. A queued question gets its 200 at once and the NDJSON line
+`{"type":"queued","position":n}` (n questions ahead of it, sent again as it
+moves up), then `{"type":"running"}` when its turn comes, then the stream as
+before; a question that never waited gets neither line, so D292's stream is
+unchanged for it, and an older ForgeCoach ignores both lines (they are not
+`text`, `done` or `error`). A queued question whose client disconnects leaves
+the queue without ever starting `claude`; a running one is cancelled as before,
+its process group killed. The slot is released when the terminal line is
+written, not when the process exits, so a client that asks again at once is not
+queued behind a process that is only exiting.
+
+**Superseding.** `/coach` takes an optional `"supersedes": "<key>"` (1–200
+characters). A new question with a key ends every *queued* question with the
+same key at once — its one terminal line is
+`{"type":"error","code":"superseded","message":"superseded by a newer question"}` —
+and joins the back of the queue. A running question is never superseded (the
+client cancels it by disconnecting, which ForgeCoach does when the decision
+moves on). ForgeCoach sends one key per tab for the live coach, so a stale
+question that is still waiting is replaced, not answered.
+
+**`/health`** also carries `"concurrency": 1`, `"queue": {"max", "length"}`
+(waiting now), `"running": 0|1` and `"supersedes": 1`. All of it is additive: a
+client that finds no `queue` is talking to a D292 helper and must expect a 429.
+`--busy-wait` is still accepted and ignored, so an old command line still starts.
+
+**Checked.** `tools/coach-helper-selftest.mjs` (gate 12f) holds the queued and
+running lines and their positions, a full queue's 429, a bad `supersedes` (400),
+superseding a queued question (one terminal line, `code: "superseded"`), a
+queued client leaving (dropped, the next moves up, no `claude` started for
+either), the running question untouched by a key, the queued one then
+answering in full, `/health`'s queue before and after, and `--queue-max 0`.
+
+**Rejected.** Running two `claude` processes at once (the owner's usage and the
+CLI's own rate limits; one answer at a time is what the PC can give, and the
+bench measures latency per answer); an unbounded queue (a stuck client would
+pile up minutes of stale questions); superseding the running question by key (a
+manual *Ask again* on the same decision would kill the answer that is nearly
+done — cancelling is the client's call); a separate status endpoint for the
+queue (the stream already reaches the asker).
