@@ -45,7 +45,55 @@ larger budget (`ms=3000` and up) on a faster machine.
 
 ## 2. The confirmation run — fresh deals, seed 21
 
-RESULTS-CUBE
+Chosen before this run: `turns=0` and every other default (`ms=1500`, six
+candidates, two rounds minimum, margin 20). New deals (seed 21, never used by
+the pilots), 20 games of each of the ten cube pairs:
+
+```bash
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --games 20 --seed 21 --jobs 2 --run cube-control --a Default --b Default
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --games 20 --seed 21 --jobs 2 --run cube-search  --a Default+search --b Default
+./tools/ai-bench.sh paired --control var/ai-bench/cube-control/shard-*.jsonl --treatment var/ai-bench/cube-search/shard-*.jsonl
+```
+
+| A (vs Default) | A wins of 200 | 95% CI | paired: gained / lost | exact p | s / game | mean turns |
+|---|---|---|---|---|---|---|
+| `Default` (control) | 94 (47.0%) | 40.2–53.9% | — | — | 7.4 | 18.8 |
+| **`Default+search`** | **113 (56.5%)** | **49.6–63.2%** | **37 / 18** | **0.0145** | 44.3 | 18.0 |
+
+**The search beats plain Default**: +9.5 points over the control on the same
+deals (an unpaired 95% interval for the difference of about −0.3 to +19; the
+paired test is the sharper one, p = 0.015 two-sided). No game hit the 300 s cap
+and no engine error ended a game. Load was 1–3 throughout (control 10:47–11:00,
+search 11:00–12:18).
+
+By pair (A's wins of 20, treatment / control, and the deals gained / lost):
+
+| focus pair | search | control | gained / lost |
+|---|---|---|---|
+| synergy-1003 | 11 | 10 | 3 / 2 |
+| synergy-1004 | 13 | 8 | 8 / 3 |
+| synergy-1006 | 9 | 10 | 1 / 2 |
+| synergy-1009 | 9 | 10 | 3 / 4 |
+| synergy-1011 | 10 | 7 | 4 / 1 |
+| synergy-1014 | 14 | 9 | 5 / 0 |
+| synergy-1018 | 9 | 8 | 2 / 1 |
+| modern-3 | 17 | 12 | 6 / 1 |
+| modern-3100 | 10 | 11 | 1 / 2 |
+| modern-3101 | 11 | 9 | 4 / 2 |
+
+Seven pairs gained, three lost one deal net; no pair moved against the search
+by more than one deal.
+
+**What it did.** 5,017 decisions searched (25 a game: 3,450 priorities, 1,167
+attacks, 400 blocks), 626 answers changed (12.5%): 503 priorities (202 times
+Forge passed and the search played something, 174 times Forge played and the
+search held, 127 times a different play), 94 attacks and 29 blocks. 1.47 s per searched decision,
+73,704 rollouts (14.7 a decision; 79 ms each to play, 8.8 ms to copy).
+Land drops (1,517) are never searched.
+
+**The cost.** 44 s a game against 7.4 s, on two JVMs here — about 37 s of
+thinking a game, 1.5 s at a time. In a game against the owner that is a short
+pause at most main phases and combats.
 
 ## 3. The sacrifice decks — the outlet policy with and without the search
 
@@ -53,7 +101,32 @@ RESULTS-SAC
 
 ## 4. The copier, and every fallback
 
-RESULTS-FALLBACK
+Over the 200 searched games (`cube-search`):
+
+| outcome of a searched decision | count | rate |
+|---|---|---|
+| searched | 5,017 | — |
+| the copy needed a stand-in (D313's sideboard workaround) | 3,285 | 65.5% |
+| **copier error → Forge's answer** | **11** | **0.22%** |
+| budget: fewer than two complete rounds in 1.5 s → Forge's answer | 1,301 | 25.9% |
+| Forge's own answer could not be mapped onto the copy → Forge's answer | 2 | 0.04% |
+| an alternative could not be mapped (dropped, search went on) | 14 | — |
+| rollouts that threw (round dropped) | 3 | of 73,704 |
+
+**Without D313's workaround two decisions in three would have failed to copy**
+— the stand-in rate is the copier-error rate Forge's own simulator would have
+had. The 11 that still failed were all one card, `Couldn't map Bird Token`, a
+token in a copied zone that the copier's zone listing did not return (a
+phased-out or combat-only reference); since commit `26563b1` such a card gets a
+stand-in too, so the sacrifice run below is on the corrected copier. The
+budget fallbacks are the real limit on this machine: a quarter of the searched
+decisions had more candidates than 1.5 s could roll out twice (six candidates at
+≈ 90 ms is ≈ 1.1 s a round); a faster PC or `ms=3000` turns most of them into
+searches.
+
+Forge's own AI-eval timeouts (its 5 s limit, cut to 1 s inside a copy): 0.08 a
+game with the search (the count includes the copies' own) against 0.005 in the
+control.
 
 ## 5. The self-test
 
