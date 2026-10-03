@@ -13424,9 +13424,14 @@ scrambler. The 22 committed fixtures give 2,561 rows. Grouped 5-fold
 cross-validation of the logistic baseline (`--cv 5 --l2 1.0`, out-of-fold
 log-loss, all rows / turn 17+): prior 0.678 / 0.620, life difference 0.637 /
 0.518, the twelve-number core model **0.620 / 0.509** (accuracy 0.674 / 0.829),
-every non-card feature 0.622 / 0.494, the full vector 0.675 / 0.676. There is
-signal, it grows with the turn, and at 40 games the full vector overfits: the
-card block needs thousands of games before it pays.
+every non-card feature 0.622 / 0.494, the full vector 0.675 / 0.676; at `--l2
+0.01` the life difference alone is the best, 0.533, the core model 0.600 and
+the wide models overfit to 1.05–1.09. The single 80/10/10 split (7 validation
+games, 3 test) is too small to rank anything — test log-loss: life 0.304, core
+0.274, full 2.79 — and the MLP (3,456 → 256 → 64, 30 epochs, CPU torch) kept
+its epoch 2: validation 0.508, test 1.22. There is signal, it grows with the
+turn, and at 40 games everything wider than a dozen numbers overfits: the card
+block needs thousands of games before it pays.
 
 **Rejected.**
 
