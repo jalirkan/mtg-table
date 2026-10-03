@@ -4,7 +4,7 @@
 //
 //   learn    <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>]
 //            [--synergy-out <tsv>] [--learn name=value]...
-//            -> x.ratings.tsv, x.synergy.tsv, x.learn.md, x.learn.json.  No engine.
+//            -> x.ratings.tsv, x.synergy.tsv, x.learn.md (+ .html), x.learn.json.  No engine.
 //   selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h 0]
 //            [--deck-synergy on|off] [--from <run-dir>]... [--seed 1] [--jobs K] [--games 3]
 //            [--format grid] [--out <dir>] [--ratings <tsv>] [--learn name=value]...
@@ -93,6 +93,7 @@ export function learnFromRuns(repo: string, dirs: string[], prior: string | null
   fs.writeFileSync(p.ratings, learnedRatingsTsv(title, l, inputs));
   fs.writeFileSync(p.synergy, synergyTsv(title, l));
   fs.writeFileSync(p.md, learnSummaryMd(title, l));
+  fs.writeFileSync(p.md.replace(/\.md$/, '.html'), mdPage(`Learned ratings — ${title}`, learnSummaryMd(title, l)));
   writeJson(p.json, { inputs, prior: priorFile ? path.relative(repo, path.resolve(priorFile)) : null, ...l });
   say(`learn: ${l.drafts} draft(s), ${l.games} decisive game(s), ${l.cards.filter((c) => c.status === 'learned').length} card(s) learned, ${l.pairsConsidered} pair(s); alpha ${l.alpha.value.toFixed(4)} +/- ${l.alpha.sd.toFixed(4)}; ${l.pointsPerLogit} points/logit (${l.pointsPerLogitSource})`);
   if (l.cv) say(`learn: held-out log loss ${l.cv.logLossLearned.toFixed(4)} learned vs ${l.cv.logLossPrior.toFixed(4)} prior-only (coin ${l.cv.logLossCoin.toFixed(4)}; difference +/- ${(1.96 * l.cv.diffSe).toFixed(4)} at 95%), ${l.cv.folds}-fold by draft over ${l.cv.games} games`);
@@ -247,5 +248,44 @@ export function renderSelfplayMd(s: SelfplaySummary): string {
 
 function writeSummary(out: string, s: SelfplaySummary): void {
   writeJson(path.join(out, 'summary.json'), s);
-  fs.writeFileSync(path.join(out, 'summary.md'), renderSelfplayMd(s));
+  const md = renderSelfplayMd(s);
+  fs.writeFileSync(path.join(out, 'summary.md'), md);
+  fs.writeFileSync(path.join(out, 'summary.html'), mdPage(`Self-play — ${path.basename(s.cube)}`, md));
+}
+
+/**
+ * The summary's own Markdown (headings, paragraphs, pipe tables, `code`, **bold**,
+ * fenced code) as one self-contained HTML page: no script, font or style from anywhere.
+ */
+export function mdPage(title: string, md: string): string {
+  const esc = (x: string): string => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = (x: string): string => esc(x).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  const html: string[] = [];
+  const lines = md.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i] as string;
+    if (l.startsWith('```')) {
+      const body: string[] = [];
+      for (i++; i < lines.length && !(lines[i] as string).startsWith('```'); i++) body.push(esc(lines[i] as string));
+      html.push(`<pre>${body.join('\n')}</pre>`);
+    } else if (/^#{1,3} /.test(l)) {
+      const n = (/^#+/.exec(l) as RegExpExecArray)[0].length;
+      html.push(`<h${n}>${inline(l.slice(n + 1))}</h${n}>`);
+    } else if (l.startsWith('|')) {
+      const rows: string[][] = [];
+      for (; i < lines.length && (lines[i] as string).startsWith('|'); i++) rows.push((lines[i] as string).slice(1, -1).split(' | ').map((c) => c.trim()));
+      i--;
+      const [head, , ...body] = rows;
+      html.push(`<table><tr>${(head ?? []).map((c) => `<th>${inline(c)}</th>`).join('')}</tr>${body.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</table>`);
+    } else if (l.startsWith('- ')) {
+      html.push(`<li>${inline(l.slice(2))}</li>`);
+    } else if (l.trim()) html.push(`<p>${inline(l)}</p>`);
+  }
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;max-width:1100px;margin:0 auto;padding:16px;color:#1d1d1f;background:#fff}
+table{border-collapse:collapse;margin:8px 0;font-size:13px;display:block;overflow-x:auto}td,th{border:1px solid #ccc;padding:3px 7px;text-align:left}
+th{background:#f2f2f2}code,pre{font:12px ui-monospace,monospace;background:#f6f6f6}pre{padding:8px;overflow-x:auto}
+@media (prefers-color-scheme:dark){body{background:#161618;color:#e6e6e6}th{background:#26262a}td,th{border-color:#444}code,pre{background:#222}}</style></head>
+<body>${html.join('\n')}</body></html>
+`;
 }
