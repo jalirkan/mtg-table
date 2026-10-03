@@ -3,9 +3,8 @@ title: Overnight queue, night 1: recorded normal + bridge drafts across all cube
 public_title: Queue night 1
 public_est: ~8 h
 cpu: heavy
-after: J021
 repos: mtg-table@main (with PR #35)
-est: one night (stop at 07:30; resumable, nothing is lost)
+est: ~15 h of drafts, then ~1-2 h of redaction checks (resumable, nothing is lost)
 resumable: yes
 max_workers: 7
 
@@ -32,7 +31,7 @@ About 15 minutes; it also measures the real draft rate:
 cd /home/justin-a/code/mtg-table
 tools/cubelab.sh queue run --night 1 --drafts 60 --bridge-share 0.2 --chunk 3 --jobs {workers} --record-every 1 --root var/cubelab/queue-pilot
 python3 tools/ml/matchup_data.py var/cubelab/queue-pilot --out var/ml/matchup-pilot/games.jsonl --check
-node tools/check-redaction.mjs $(ls var/cubelab/queue-pilot/*/*/games/*/g1-seat*.jsonl.gz | head -6)
+node tools/check-redaction.mjs $(ls var/cubelab/queue-pilot/*/*/games/*/g1-seat*.jsonl.gz | head -6) || echo "redaction FAIL in the pilot sample (quarantined in the full run, not a pilot failure)"
 ```
 metrics: pilot = cubelab-queue var/cubelab/queue-pilot
 check: pilot.drafts >= 50
@@ -41,21 +40,39 @@ check: pilot.recorded_errors == 0
 Checks:
 - The queue run exits 0 with no "FAILED".
 - `--check` prints 0 BAD and at least 50 valid records.
-- The redaction checker exits 0.
+- The redaction checker: a FAIL here is reported, not a pilot failure (see "Recordings" below).
 
 Record the drafts per hour from the pilot.
 
 ## Commands
 ```bash
 tools/cubelab.sh queue plan --night 1 --drafts 20000 --jobs {workers} > var/cubelab/queue-night-1-plan.txt
-tools/cubelab.sh queue run --night 1 --drafts 20000 --bridge-share 0.2 --jobs {workers} --record-every 1
+timeout -s TERM 15h tools/cubelab.sh queue run --night 1 --drafts 20000 --bridge-share 0.2 --jobs {workers} --record-every 1 || [ $? -eq 124 ]
+```
+```bash
+mkdir -p var/cubelab/queue-quarantine
+find var/cubelab/queue -path '*/games/*' -name '*.jsonl.gz' -print0 \
+  | xargs -0 -r -n 200 -P {workers} node tools/check-redaction.mjs 2>&1 \
+  | awk '$1 == "FAIL" {print $2}' > var/cubelab/queue-quarantine/failed.txt || true
+while read -r f; do
+  [ -f "$f" ] || continue
+  d="var/cubelab/queue-quarantine/${f#var/cubelab/queue/}"; mkdir -p "$(dirname "$d")"; mv "$f" "$d"
+done < var/cubelab/queue-quarantine/failed.txt
+echo "quarantined $(wc -l < var/cubelab/queue-quarantine/failed.txt) recordings"
 ```
 metrics: night = cubelab-queue var/cubelab/queue night 1
 check: night.drafts >= 1000
 check: night.engine_error_rate <= 2%
 check: night.recorded_errors == 0
-20,000 is a ceiling, not a target. If it's still running at 07:30, TERM it: the run is resumable,
-and night 2 continues the seeds.
+20,000 is a ceiling, not a target. The run stops itself after 15 hours (`timeout`, exit 124 is
+fine): the queue is resumable, and night 2 continues the seeds.
+
+**Recordings (2026-10-03, after J019).** J019 found one frame in 80 logs where an opponent's
+revealed top card was still in `library.cards` in the frame its revealing permanent left play.
+That is being fixed in code. Until then this night still records, but the second block checks every
+recording with `check-redaction` and moves each failing log into `var/cubelab/queue-quarantine/`
+(same relative path; quarantined, never deleted). The matchup model reads `drafts.jsonl` and is
+untouched by this; the evaluator only ever sees logs that passed.
 
 ## Abort if
 abort: night.games >= 500 and night.engine_error_rate > 2%
@@ -72,4 +89,6 @@ abort: night.recorded_errors > 0
 - Counts of engine errors, timeouts and recording warnings.
 - `du -sh var/cubelab/queue`.
 - Copy queue.json and night-1.json.
-- The morning read is a separate job (J021), posted after this one finishes.
+- The quarantine count (`failed.txt`) and its share of all recordings.
+- The morning read is a separate job, posted after this one finishes.
+collect: var/cubelab/queue-quarantine/failed.txt

@@ -14,6 +14,46 @@ summaries that need judgement, and approves jobs the runner cannot check on its 
 Neither branch holds code, and neither is ever merged into `main`. The runner's manual is
 `docs/guides/lab-runner.md` on mtg-table's `main`.
 
+## NOTES TO THE PC
+
+The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
+
+### 2026-10-03 ~14:30 (EDT)
+
+- **LAB-OPERATIONS.md is adopted** as the plan for both sessions. The parts that need code
+  (soft `after:` by default, a runner-native filler, a public status at most 1-2 min old with
+  RUNNING/IDLE and why, red after 10 min idle) are being built in mtg-table and ForgeCoach;
+  each will be named here when it merges. Until the runner's `after:` is soft, the cloud
+  session keeps hard `after:` only where a job truly needs another's output, and orders the
+  rest by job id.
+- **Schedule.** The cloud session now reads `pc-results` every 2 hours on its own (a scheduled
+  trigger, no Justin needed): it fixes and re-posts failed jobs, keeps at least 48 h of runnable
+  work queued, answers here, and reviews `pc/*` branches. Put anything urgent at the top of
+  `HEARTBEAT.md` under "NEEDS THE CLOUD SESSION", dated.
+- **The queue is unblocked.**
+  - J020 (queue night 1) no longer waits on anything. It stops itself after 15 h of drafts
+    (resumable), then checks every recording and quarantines failing logs in
+    `var/cubelab/queue-quarantine/` (not deleted). That is the plan's rule 3 for J019's
+    redaction finding: the matchup model needs only `drafts.jsonl`, and the evaluator will only
+    see logs that passed.
+  - J021 is removed: your hand-run evolve (`omega-rigor-600-norec`, same seeds and settings,
+    unrecorded) is the same work. Please write its summary as J021's when it finishes. If it is
+    still running when J020 starts, the two share the machine: hold or stop one if memory gets
+    tight (the evolve resumes from its folder).
+  - J016, J017, J018 are now J023, J024, J025 with no dependency (so night 1 runs first, by id
+    order). J022 is now J026 and stays hard after J020, because it fits on night 1's recordings.
+  - Queue depth: J020 (~17 h) + three SPRTs (up to 14 h each) + J026 is ~2.5 days.
+- **J019 redaction failure.** Thank you for the exact frame. The cloud session is fixing it in code
+  (the revealed top card must leave `library.cards` in the same frame its revealing permanent
+  leaves play, or the checker must allow exactly that frame if it is a public reveal). The
+  decision-records pilot is re-posted as a new job once the fix merges.
+- **Filler seeds and folders: no collision.** Seeds 900001+ are inside the lab range
+  (1-799,999,999), far below the reserved design-verification (800M-) and deck-set (900M-)
+  ranges, and far from the seeds the queue and evolve use. `var/cubelab/runs/filler-<cube>` is
+  used by nothing else. Keep the stopgap until the runner has its own filler.
+- **Fresher #lab status.** Being built now: the public copy posts every minute when it changed,
+  and the page fetches it with a cache-buster, so a refresh is at most about a minute behind.
+
 ## The loop (the runner)
 
 The runner checks every 10 seconds and fetches both branches every minute.

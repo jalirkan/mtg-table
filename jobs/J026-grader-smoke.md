@@ -1,5 +1,5 @@
-id: J022
-title: (retry of J015, after night 1 has recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)
+id: J026
+title: (was J022; retry of J015; hard after J020: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)
 cpu: heavy
 after: J020
 repos: mtg-table@main (main once it merges)
@@ -8,10 +8,10 @@ resumable: no
 max_workers: 1
 timeout: 1h
 metrics: fit = sh: cat var/coach-grade/leaf-scale.json
-metrics: b1500 = sh: node var/coach-grade/j022/summ.js var/coach-grade/j022/answers-1500.jsonl
-metrics: b3000 = sh: node var/coach-grade/j022/summ.js var/coach-grade/j022/answers-3000.jsonl
+metrics: b1500 = sh: node var/coach-grade/j026/summ.js var/coach-grade/j026/answers-1500.jsonl
+metrics: b3000 = sh: node var/coach-grade/j026/summ.js var/coach-grade/j026/answers-3000.jsonl
 headline: fit.scale, fit.scaleLo, fit.scaleHi, fit.games, b1500.median_halfwidth, b3000.median_halfwidth, b1500.retired, b3000.retired, b3000.p90_wall_s
-clean: var/coach-grade/j022
+clean: var/coach-grade/j026
 
 The engine review (2026-10-03) found the live analysis's numbers were not what they said:
 a leaf score through an unfitted logistic (scale 400), and intervals floored at 1/n so wide
@@ -31,17 +31,17 @@ About 3 minutes: build, the engine smoke, and two decisions.
 ```bash
 ./bridge/build.sh
 ./tools/coach-grade.sh selftest
-mkdir -p var/coach-grade/j022
-cat > var/coach-grade/j022/summ.js <<'JS'
+mkdir -p var/coach-grade/j026
+cat > var/coach-grade/j026/summ.js <<'JS'
 const L=require("fs").readFileSync(process.argv.at(-1),"utf8").trim().split("\n").map(JSON.parse).filter(x=>!x.ready);const ok=L.filter(x=>x.status==="ok");const q=(a,p)=>{a=a.filter(v=>v!=null).sort((x,y)=>x-y);return a.length?a[Math.floor(p*(a.length-1))]:null};console.log(JSON.stringify({answers:L.length,ok:ok.length,refused:L.filter(x=>x.status==="refused").length,failed:L.filter(x=>x.status==="error"||x.status==="unsupported").length,median_rounds:q(ok.map(x=>x.rounds),0.5),median_halfwidth:q(ok.map(x=>x.noise),0.5),max_halfwidth:q(ok.map(x=>x.noise),1),retired:ok.reduce((s,x)=>s+(x.retired||0),0),decisions_with_drop:ok.filter(x=>x.retired>0).length,p90_wall_s:q(L.map(x=>x.wallMs),0.9)/1000}))
 JS
-awk '/^\[/{m=(tolower($0)=="[main]");next} m && /^[0-9]+ /{sub(/^[0-9]+ +/,"");sub(/\|.*/,"");print "1 "$0}' decks/*.dck | sort -u > var/coach-grade/j022/pool.txt
+awk '/^\[/{m=(tolower($0)=="[main]");next} m && /^[0-9]+ /{sub(/^[0-9]+ +/,"");sub(/\|.*/,"");print "1 "$0}' decks/*.dck | sort -u > var/coach-grade/j026/pool.txt
 printf '%s\n' \
- '{"id":"p1","log":"fixtures/games/human-trample-7.jsonl","frame":497,"type":"attack","oppPool":"var/coach-grade/j022/pool.txt","budgetMs":3000}' \
- '{"id":"p2","log":"fixtures/games/human-trample-7.jsonl","frame":216,"type":"spell","oppPool":"var/coach-grade/j022/pool.txt","budgetMs":3000}' \
- | ./tools/coach-grade.sh serve > var/coach-grade/j022/pilot.jsonl
+ '{"id":"p1","log":"fixtures/games/human-trample-7.jsonl","frame":497,"type":"attack","oppPool":"var/coach-grade/j026/pool.txt","budgetMs":3000}' \
+ '{"id":"p2","log":"fixtures/games/human-trample-7.jsonl","frame":216,"type":"spell","oppPool":"var/coach-grade/j026/pool.txt","budgetMs":3000}' \
+ | ./tools/coach-grade.sh serve > var/coach-grade/j026/pilot.jsonl
 ```
-metrics: pilot = sh: node var/coach-grade/j022/summ.js var/coach-grade/j022/pilot.jsonl
+metrics: pilot = sh: node var/coach-grade/j026/summ.js var/coach-grade/j026/pilot.jsonl
 check: pilot.answers == 2
 check: pilot.ok == 2
 check: pilot.median_rounds >= 2
@@ -53,7 +53,7 @@ neither took a minute. No width or racing bound here: those are what the job mea
 ## Commands
 ```bash
 ./tools/coach-grade.sh fit-scale --logs var/cubelab/queue,fixtures/cubelab/recorded --out var/coach-grade/leaf-scale.json --max-logs 600
-P=var/coach-grade/j022/pool.txt
+P=var/coach-grade/j026/pool.txt
 for B in 1500 3000; do
   for m in human-amount-7.jsonl:216:spell human-auto-2026.jsonl:131:spell human-scry-7.jsonl:171:spell \
            human-search-7.jsonl:169:spell human-trample-7.jsonl:216:spell human-yield-13.jsonl:126:spell \
@@ -61,7 +61,7 @@ for B in 1500 3000; do
            human-trample-7.jsonl:497:attack human-sideboard-7.jsonl:423:block human-trample-7.jsonl:756:block; do
     IFS=: read -r f fr t <<< "$m"
     printf '{"id":"%s","log":"fixtures/games/%s","frame":%s,"type":"%s","oppPool":"%s","budgetMs":%s}\n' "$m" "$f" "$fr" "$t" "$P" "$B"
-  done | ./tools/coach-grade.sh serve > var/coach-grade/j022/answers-$B.jsonl
+  done | ./tools/coach-grade.sh serve > var/coach-grade/j026/answers-$B.jsonl
 done
 ```
 check: fit.rows >= 100
@@ -80,9 +80,9 @@ abort: elapsed_s > 3000
 
 ## Report
 collect: var/coach-grade/leaf-scale.json
-collect: var/coach-grade/j022/answers-1500.jsonl
-collect: var/coach-grade/j022/answers-3000.jsonl
-collect: var/coach-grade/j022/pilot.jsonl
+collect: var/coach-grade/j026/answers-1500.jsonl
+collect: var/coach-grade/j026/answers-3000.jsonl
+collect: var/coach-grade/j026/pilot.jsonl
 
 summary.md: the fitted scale with its interval, games and positions, and the log-loss at the
 fit against 400 (from leaf-scale.json, with its reliability table); then per budget the

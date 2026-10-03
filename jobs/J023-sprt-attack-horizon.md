@@ -1,7 +1,6 @@
-id: J016
-title: Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn
+id: J023
+title: (was J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn
 cpu: heavy
-after: J020
 repos: mtg-table@main (main once it merges)
 est: one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops well before)
 resumable: no

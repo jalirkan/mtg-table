@@ -1,7 +1,6 @@
-id: J018
-title: Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin
+id: J025
+title: (was J018) Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin
 cpu: heavy
-after: J020
 repos: mtg-table@main (main once it merges)
 est: one to two nights (up to 2,400 games)
 resumable: no
