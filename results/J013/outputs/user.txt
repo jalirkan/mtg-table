@@ -1,0 +1,39 @@
+# Decision
+Pre-game · opening hand (keep or mulligan)
+Decision type: choice
+Engine prompt: Forge AI is going first. / Human, you are going 2nd. / Do you want to keep your hand?
+
+## YOU — Human
+Life 20 · library 33 · hand 7 · graveyard 0 · exile 0
+Hand (7):
+  - Mountain · Basic Land - Mountain
+  - Volcano Hellion {2}{R}{R} · Creature - Hellion
+  - Mountain · Basic Land - Mountain
+  - Volcano Hellion {2}{R}{R} · Creature - Hellion
+  - Volcano Hellion {2}{R}{R} · Creature - Hellion
+  - Mountain · Basic Land - Mountain
+  - Mountain · Basic Land - Mountain
+
+## OPPONENT — Forge AI
+Life 20 · library 33 · hand 7 · graveyard 0 · exile 0
+Hand: 7 cards (hidden)
+
+Stack: empty
+
+# Card text
+Volcano Hellion {2}{R}{R} — Creature — Hellion — 6/5
+  This creature has echo {X}, where X is your life total. (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)
+  When this creature enters, it deals an amount of damage of your choice to you and target creature. The damage can't be prevented.
+
+# Question
+This is my opening hand, before the game starts. Should I keep it or mulligan? Judge lands, colours and early plays against what my deck needs.
+
+# Bench answer
+Keep this opening hand, or mulligan?
+
+Answer in your usual format. Then end with exactly one final line, in this form:
+ANSWER: <one choice token below, exactly>
+
+Choices:
+- keep — keep this hand
+- mulligan — mulligan

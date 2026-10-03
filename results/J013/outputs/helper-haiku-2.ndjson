@@ -1,0 +1,119 @@
+{"type":"text","text":"**"}
+{"type":"text","text":"Play:** Mulligan."}
+{"type":"text","text":" Seek a hand with 2"}
+{"type":"text","text":"–"}
+{"type":"text","text":"3 lands, at least"}
+{"type":"text","text":" two different spell"}
+{"type":"text","text":" types, and at"}
+{"type":"text","text":" least one spell"}
+{"type":"text","text":" that costs 1–3"}
+{"type":"text","text":" mana.\n\n**"}
+{"type":"text","text":"Why:** You"}
+{"type":"text","text":" have four"}
+{"type":"text","text":" lands and three identical 4"}
+{"type":"text","text":"-drops"}
+{"type":"text","text":" (Volcano Hellion"}
+{"type":"text","text":")."}
+{"type":"text","text":" No"}
+{"type":"text","text":" early plays"}
+{"type":"text","text":", zero"}
+{"type":"text","text":" spell diversity, and you're"}
+{"type":"text","text":" on"}
+{"type":"text","text":" the draw."}
+{"type":"text","text":" Forge AI will develop threats on"}
+{"type":"text","text":" turns"}
+{"type":"text","text":" 2"}
+{"type":"text","text":"–3 that"}
+{"type":"text","text":" you cannot answer, and your"}
+{"type":"text","text":" first spell"}
+{"type":"text","text":" doesn"}
+{"type":"text","text":"'t resolve"}
+{"type":"text","text":" until turn 4. You"}
+{"type":"text","text":"'ll be"}
+{"type":"text","text":" behind and"}
+{"type":"text","text":" reactive"}
+{"type":"text","text":" before"}
+{"type":"text","text":" you can do"}
+{"type":"text","text":" anything.\n\n**Rule:**"}
+{"type":"text","text":" \"Mulligan for plays"}
+{"type":"text","text":" and"}
+{"type":"text","text":" diversity, not land"}
+{"type":"text","text":" count alone"}
+{"type":"text","text":"\" or \"Early"}
+{"type":"text","text":" game"}
+{"type":"text","text":" interaction"}
+{"type":"text","text":" beats"}
+{"type":"text","text":" hope.\""}
+{"type":"text","text":"\n\n**Confidence:** High"}
+{"type":"text","text":". This is textbook mull"}
+{"type":"text","text":"igan material—no interaction"}
+{"type":"text","text":", no curve variety"}
+{"type":"text","text":", first"}
+{"type":"text","text":" spell"}
+{"type":"text","text":" on"}
+{"type":"text","text":" turn 4 "}
+{"type":"text","text":"while"}
+{"type":"text","text":" facing"}
+{"type":"text","text":" the play"}
+{"type":"text","text":".\n\n**Trap:**"}
+{"type":"text","text":" \""}
+{"type":"text","text":"I have 4 lands"}
+{"type":"text","text":", I"}
+{"type":"text","text":" should keep.\" Land count is"}
+{"type":"text","text":" necessary"}
+{"type":"text","text":" but not sufficient."}
+{"type":"text","text":" A"}
+{"type":"text","text":" hand with only one spell type"}
+{"type":"text","text":" and"}
+{"type":"text","text":" no"}
+{"type":"text","text":" early interaction loses"}
+{"type":"text","text":" to first-player advantage every"}
+{"type":"text","text":" time,"}
+{"type":"text","text":" especially"}
+{"type":"text","text":" on"}
+{"type":"text","text":" the draw.\n\n**Their"}
+{"type":"text","text":" turn:** Not applicable (pre"}
+{"type":"text","text":"-game).\n\n**Alternative"}
+{"type":"text","text":":** There"}
+{"type":"text","text":" is"}
+{"type":"text","text":" almost"}
+{"type":"text","text":" no"}
+{"type":"text","text":" case for keeping."}
+{"type":"text","text":" Volcano"}
+{"type":"text","text":" Hellion is"}
+{"type":"text","text":" a powerful 6/5"}
+{"type":"text","text":","}
+{"type":"text","text":" but"}
+{"type":"text","text":" you need to survive"}
+{"type":"text","text":" turns"}
+{"type":"text","text":" 1–3"}
+{"type":"text","text":" first"}
+{"type":"text","text":"."}
+{"type":"text","text":" Mull"}
+{"type":"text","text":"igan."}
+{"type":"text","text":"\n\n**Assumptions:** I"}
+{"type":"text","text":" assume"}
+{"type":"text","text":" this"}
+{"type":"text","text":" is constructed"}
+{"type":"text","text":" play"}
+{"type":"text","text":" and"}
+{"type":"text","text":" your deck has"}
+{"type":"text","text":" other"}
+{"type":"text","text":" cards beyond"}
+{"type":"text","text":" these"}
+{"type":"text","text":" seven."}
+{"type":"text","text":" If"}
+{"type":"text","text":" this"}
+{"type":"text","text":" is limited"}
+{"type":"text","text":" ("}
+{"type":"text","text":"sealed/draft), mull"}
+{"type":"text","text":"igan is still"}
+{"type":"text","text":" correct"}
+{"type":"text","text":"—"}
+{"type":"text","text":"one"}
+{"type":"text","text":"-"}
+{"type":"text","text":"spell-type hands lose"}
+{"type":"text","text":" to tempo"}
+{"type":"text","text":".\n\n---"}
+{"type":"text","text":"\n\nANSWER: mulligan"}
+{"type":"done","stopReason":"end_turn","model":"claude-haiku-4-5-20251001"}

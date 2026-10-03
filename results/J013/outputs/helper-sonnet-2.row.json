@@ -1,0 +1,22 @@
+{
+  "tag": "helper-sonnet-2",
+  "path": "helper",
+  "model": "sonnet",
+  "wall_ms": 6849,
+  "first_line_ms": 1123,
+  "first_thinking_ms": null,
+  "first_text_ms": 1123,
+  "text_chars": 1878,
+  "thinking_chars": 0,
+  "thinking_lines": 0,
+  "line_types": {
+    "text": 173,
+    "done": 1
+  },
+  "done": {
+    "type": "done",
+    "stopReason": "end_turn",
+    "model": "claude-sonnet-5-5"
+  },
+  "error": null
+}

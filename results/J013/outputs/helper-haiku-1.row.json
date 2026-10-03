@@ -1,0 +1,22 @@
+{
+  "tag": "helper-haiku-1",
+  "path": "helper",
+  "model": "haiku",
+  "wall_ms": 20120,
+  "first_line_ms": 15146,
+  "first_thinking_ms": null,
+  "first_text_ms": 15146,
+  "text_chars": 1452,
+  "thinking_chars": 0,
+  "thinking_lines": 0,
+  "line_types": {
+    "text": 195,
+    "done": 1
+  },
+  "done": {
+    "type": "done",
+    "stopReason": "end_turn",
+    "model": "claude-haiku-4-5-20251001"
+  },
+  "error": null
+}
