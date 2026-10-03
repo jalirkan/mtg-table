@@ -268,6 +268,13 @@ public final class MtgTable {
         // PlayerControllerHuman.java:275), and it is NOT sufficient on its own:
         // see docs/evidence/m5-probes.md, the `sideboard` row.
         rules.setGamesPerMatch(a.games);
+        // Hard rule 8 / M44 (amendment M54): before the first game Forge's
+        // Match.prepareAllZones -> GameAction.revealUnplayableByAI reveals the
+        // AI deck's AI:RemAIDeck cards to every player ("AI can't play these
+        // cards well"), which the seat would receive as a choose_list reveal
+        // naming cards of the AI's hidden decklist.  The AI's list never
+        // reaches the wire, so the warning is off.
+        rules.setWarnAboutAICards(false);
         final RegisteredPlayer me = new RegisteredPlayer(deck1);
         me.setPlayer(GamePlayerUtil.getGuiPlayer());
         final RegisteredPlayer ai = new RegisteredPlayer(deck2);
