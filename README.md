@@ -236,7 +236,7 @@ the first failure: `check-forge.sh` → `lint-bridge.sh` (the banned-accessor
 grep over `bridge/src` and `tools/**/*.java`, D182, the three game-thread hops
 among it, D181) → **2b**, `lint-bridge-selftest.sh` (every rule of the lint
 fires on a planted snippet, and a rule with no case fails, D180) →
-`bridge/build.sh` (javac plus seven self-tests) → `Smoke` → a `RecordMatch`
+`bridge/build.sh` (javac plus eight self-tests) → `Smoke` → a `RecordMatch`
 re-record into `var/` → **a value-level drift check** of that recording against
 `fixtures/games/g1.jsonl` (`tools/wire-drift.mjs`: the same non-state frames,
 event stream, phase walk and final board, every board cut at a turn, phase or
@@ -519,7 +519,7 @@ side by side on GitHub's `ubuntu-latest`.
 | job | what it runs |
 |---|---|
 | `web` | `npm ci`, `npm --prefix web run build`, `npm --prefix web test` — Node 24. Hermetic as it is locally: `MTGTABLE_WS_LOGS` is unset, so the ws-log suite replays the committed fixtures, and there is no `web/public/art.json`, so every reader of it falls back to the empty index, as in a fresh checkout. Nothing calls Scryfall. |
-| `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its seven self-tests, on Temurin 21 |
+| `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its eight self-tests, on Temurin 21 |
 | `redaction` | `check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, `check-redaction-selftest.mjs`, `narrate-selftest.mjs`, `wire-drift-selftest.mjs` and `build-workshop-catalog.ts --check` — plain Node, no npm install |
 
 **The engine in CI.** CI is the one place anything downloads Forge, and it
@@ -532,7 +532,7 @@ it, extracts **the jar alone**, fails unless the jar's sha256 is the pin in
 `FORGE_JAR` at it (hard rule 9; `config.json` is not edited). Only that jar is
 kept, in the Actions cache under a key naming the asset and both digests — never
 in git and never as an artifact. `res/` is not extracted and
-`tools/make-forge-home.sh` is not run: none of the seven self-tests boots an engine
+`tools/make-forge-home.sh` is not run: none of the eight self-tests boots an engine
 or reads `res/`.
 
 **What stays local.** `./tools/check-all.sh` — Smoke, the recordings and the

@@ -307,6 +307,8 @@ try {
   const onL = () => starts().filter((e) => argOf(e.argv, '--port') === String(L.port));
   const lanFirst = onL()[0];
   const t1 = events().find((e) => e.pid === lanFirst?.pid && e.lanToken)?.lanToken;
+  // play.sh echoes the engine's pairing line a moment after the engine logs it: wait for it.
+  for (let i = 0; i < 50 && t1 && !L.out().includes(`token=${t1}`); i++) await sleep(100);
   check('the first --lan engine minted its own token (none handed in)', lanFirst?.token === null && !!t1 && L.out().includes(`token=${t1}`), JSON.stringify({ lanFirst, t1 }));
   r = await post(L.coachPort, req1);
   check('POST /match on a --lan engine: 200', r.status === 200, `${r.status} ${r.body}`);
