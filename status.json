@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T14:34:26-04:00",
+ "updated": "2026-10-03T14:37:12-04:00",
  "paused": false,
  "host": {
-  "load1": 7.77,
-  "memUsedGb": 11.5,
+  "load1": 7.42,
+  "memUsedGb": 9.5,
   "memTotalGb": 30.5,
   "swapUsedMb": 1853,
   "pressure": 0,
@@ -18,21 +18,21 @@
    "id": "J023",
    "title": "(was J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/1",
    "started": "2026-10-03T14:29:26-04:00",
-   "elapsed": 301,
+   "elapsed": 466,
    "done": 0,
    "total": 2400,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
+   "workers": 7,
+   "workersMax": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-03T14:29:26-04:00",
    "pressureEvents": [],
-   "detail": "lab-J023-pilot1"
+   "detail": "lab-J023-run1"
   }
  ],
  "queue": [

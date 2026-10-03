@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T14:35:11-04:00
+- time: 2026-10-03T14:37:12-04:00
 - runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00
-- running: J023 (runner, pilot) + hand-run unrecorded evolve at 3 workers; PC cadence step 1
-- load: 7.42 10.76 14.52
+- running: J023 commands 1/1, 0/2400 games, 7 worker(s)
+- load: 7.42; memory 9.5/30.5 GB, swap 1853 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J024, J025, J026
 - waiting: nothing
-- last finished: J020 ABORTED 14:29 (one timed-out game's recording errors); J010 done; J003 done
+- last finished: J020 failed at 2026-10-03T14:29:25-04:00
 
 ## Messages
 
