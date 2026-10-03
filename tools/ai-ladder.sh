@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # mtg-table — the AI ladder: named AI configs rated against each other and
-# stock Forge, from ai-bench games (D315-D318).
+# stock Forge, from ai-bench games (D317-D320).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #

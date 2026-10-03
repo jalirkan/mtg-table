@@ -2,7 +2,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The league is the self-play loop (D315).  It keeps the CURRENT BEST (the last
+// The league is the self-play loop (D320).  It keeps the CURRENT BEST (the last
 // promoted version; forge-default before any promotion), a POOL of the last
 // `poolSize` promoted versions plus every available stock-Forge anchor, and a
 // queue of CANDIDATES (registry players marked `"candidate": true`, e.g. by

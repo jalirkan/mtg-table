@@ -7,7 +7,7 @@
 // self-contained page in the cube lab's house style (inline CSS and SVG, a few
 // lines of inline script for hover, no URL that loads anything).
 //
-// ladder.json, schema version 1 — ForgeCoach's contract (D315).  A field may be
+// ladder.json, schema version 1 — ForgeCoach's contract (D317).  A field may be
 // ADDED in version 1; renaming, removing or redefining one is version 2 and a
 // change on ForgeCoach's side in the same breath (D297's rule for meta.json).
 //

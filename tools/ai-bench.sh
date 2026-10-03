@@ -12,16 +12,20 @@
 #        --a Experimental --b Default [--games 20] [--jobs 3] [--seed 1] \
 #        [--timeout 300] [--mirror] [--run NAME]
 #   ./tools/ai-bench.sh report var/ai-bench/<run>/*.jsonl [--by-pair]
+#   ./tools/ai-bench.sh paired --control var/ai-bench/<c>/shard-*.jsonl \
+#        --treatment var/ai-bench/<t>/shard-*.jsonl     # same --pairs/--seed/--games
 #   ./tools/ai-bench.sh --selftest [--no-engine]
 #
-# A seat config is <Profile>[+sim|+hybrid][+outlets|+shadow]: an .ai profile
+# A seat config is <Profile>[+sim|+hybrid][+outlets|+shadow][+search[:k=v,..]]: an .ai profile
 # (Default, Cautious, Reckless, Experimental), Forge's simulation option (a
 # lobby-player AIOption, not a profile key), and the sacrifice-outlet policy
-# (D310: +outlets acts, +shadow only counts what it would have done).  Game g of
-# a pair gives config A the pair's first deck when g is even, and seat 0 when
-# g/2 is even, so every four games cover both decks on both seats.  --mirror
-# (D315, the AI ladder) gives games 4k/4k+3 and 4k+1/4k+2 one seed each: the
-# same deck in the same seat, the configs swapped -- each deal from both sides.
+# (D310: +outlets acts, +shadow only counts what it would have done), and the
+# determinized rollout search (D312: keys ms, cands, turns, rounds, margin,
+# maxrounds, what -- see mtgtable.ai.SearchConfig).  Game g of a pair gives
+# config A the pair's first deck when g is even, and seat 0 when g/2 is even,
+# so every four games cover both decks on both seats.  --mirror (the AI
+# ladder) gives games 4k/4k+3 and 4k+1/4k+2 one seed each: the same deck in the
+# same seat, the configs swapped -- each deal from both sides.
 #
 # --jobs K runs K JVMs, each with every K-th game and a Forge home of its own
 # under var/ai-bench/<run>/home-<i>/ (tools/config.sh's forge_home_make, D129's
@@ -67,6 +71,11 @@ case "$mode" in
     compile
     jvm "$REPO_ROOT/config.json" report "$@"
     ;;
+  paired)
+    shift
+    compile
+    jvm "$REPO_ROOT/config.json" paired "$@"
+    ;;
   play)
     shift
     jobs=3 run="" args=()
@@ -97,7 +106,7 @@ case "$mode" in
     exit "$rc"
     ;;
   *)
-    sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
     ;;
 esac

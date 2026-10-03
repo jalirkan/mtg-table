@@ -1,8 +1,8 @@
 # The AI ladder — manual
 
-*D315–D318. `tools/ai-ladder.sh`, `tools/ai-ladder/`. What was measured with it is
+*D317–D320. `tools/ai-ladder.sh`, `tools/ai-ladder/`. What was measured with it is
 [`docs/evidence/ai-ladder.md`](../evidence/ai-ladder.md); the design's place in
-the AI roadmap is [`docs/research/ai-architecture.md`](../research/ai-architecture.md) §8.*
+the AI roadmap is [`docs/research/ai-architecture.md`](../research/ai-architecture.md) §9.*
 
 The ladder answers one question, night after night: **how strong is each AI
 config, on one scale, with an honest interval?** Every config is a named player;
@@ -32,8 +32,8 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
 |---|---|---|---|
 | `forge` | `profile` (Default \| Cautious \| Reckless \| Experimental), `sim` (none \| full \| hybrid) | `Reckless`, `Default+sim` | always |
 | `policy` | `profile`, `outlets` (on \| off \| shadow; on) | `Default+outlets` | always (D309/D310) |
-| `search` | `profile`, `outlets`, `budgetMs` (1500), `cands` (6), `turns` (0), `rounds` (2), `margin` (20), `maxRounds` (12), `what` (pab) | `Default+outlets+search:ms=1500,cands=6,...` | once ai-bench parses `+search` (the search AI, D312) |
-| `search-eval` | the search's, plus `model` (a model hash) | — | not yet: the evaluator has no bench option (D314) |
+| `search` | `profile`, `outlets`, `budgetMs` (1500), `cands` (6), `turns` (0), `rounds` (2), `margin` (20), `maxRounds` (12), `what` (pab) | `Default+outlets+search:ms=1500,cands=6,...` | yes, since the search AI merged (D312–D314); `search-v1` is the game's `--ai-policy search` with its defaults |
+| `search-eval` | the search's, plus `model` (a model hash) | — | not yet: the evaluator has no bench option (branch c/evaluator) |
 
 - **A name is permanent.** A player's identity in the results is its **config
   hash** (sha256 of the kind and the params with defaults filled, 12 hex
@@ -133,7 +133,7 @@ one is left or `--max-rounds`. The winner goes into `players.json` under a new
 name (`--candidate` marks it for the league); if its config is already
 registered the tuner says so and writes nothing. A line goes to `tune.jsonl`.
 
-Today's parameters (until the search merges): `tune policy-outlet --param
+Without the search, on parameters that have always existed: `tune policy-outlet --param
 profile=Default,Cautious,Reckless,Experimental --param outlets=on,off`.
 
 ## `league --hours H [--pool-size 4 --share 0.5 --elo1 20 --min-forge-games 80 --forge-margin 0]`
@@ -217,17 +217,18 @@ Open `var/ai-ladder/report.html` in a browser. A second PC: the same commands
 there, then copy its `var/ai-ladder/results/<its-host>.jsonl` into this PC's
 `var/ai-ladder/results/` and run `report` again.
 
-## When the search and the evaluator merge
+## The search, and the evaluator when it merges
 
-- **The search (D312).** Once `tools/ai-bench/AiBench.java` on `main` parses the
-  `+search:k=v,...` seat option, the `search` kind turns available by itself
-  (its probe reads the bench source); `search-v1` in `players.json` starts
-  playing. Add variants as new lines, e.g.
-  `{"name":"search-v1-b3000","kind":"search","params":{"budgetMs":3000}}`, and
-  tune it: `tune search-v1 --param budgetMs=500,1500,3000 --param turns=0,1
-  --param what=p,pab`. If the merged bench spells a knob differently, the one
-  place to change is `SEARCH_KEYS` and `cfg()` in `tools/ai-ladder/kinds.ts`.
-- **The evaluator (D314).** When the bench gains an option to load a model,
+- **The search (D312–D314)** is on `main`, and the `search` kind is available
+  (its probe reads the bench source for the `+search` seat option). `search-v1`
+  is exactly the game's `MtgTable --ai-policy search` seat: the Default profile,
+  D310's outlet policy on, and `SearchConfig`'s defaults. A variant is a new
+  line, e.g. `{"name":"search-v1-b3000","kind":"search","params":{"budgetMs":3000}}`
+  (the seat `--ai-search ms=3000` would give), and the tuner can race its knobs:
+  `tune search-v1 --param budgetMs=500,1500,3000 --param turns=0,1 --param
+  what=p,pab`. If the bench's spelling of a knob changes, the one place to
+  change is `SEARCH_KEYS` and `cfg()` in `tools/ai-ladder/kinds.ts`.
+- **The evaluator (branch c/evaluator).** When the bench gains an option to load a model,
   write `search-eval`'s `cfg()` (its params already include `model`, a model
   hash) and drop its `available()` refusal; register
   `{"name":"search-v1-eval-<hash8>","kind":"search-eval","params":{"model":"<hash>"}}`

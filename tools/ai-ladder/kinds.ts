@@ -14,7 +14,7 @@
 // `available()` says whether this checkout can play the kind.  A kind the table
 // does not know, or one whose engine side has not merged (the search before
 // c/search-ai, the evaluator before c/evaluator), is reported UNAVAILABLE with a
-// reason and skipped by every scheduler — never a crash (D315).
+// reason and skipped by every scheduler — never a crash (D317).
 //
 // Plugging a new AI in is one row here: its params, its cfg() mapping onto the
 // bench's seat syntax, and an available() probe for the files it needs.
@@ -107,15 +107,15 @@ export const KINDS: Record<string, Kind> = {
   },
 };
 
-// The search with a learned evaluator at its leaves (c/evaluator, D314).  Its
+// The search with a learned evaluator at its leaves (branch c/evaluator).  Its
 // bench option does not exist yet, so the kind is declared -- players can be
 // registered and are listed -- but always unavailable until a cfg() mapping
 // onto the bench's syntax is written here.
 KINDS['search-eval'] = {
-  doc: "D312's search scoring leaves with a learned evaluator (branch c/evaluator, D314): `model` is the model file's hash.",
+  doc: "D312's search scoring leaves with a learned evaluator (branch c/evaluator): `model` is the model file's hash.",
   params: { ...KINDS.search!.params, model: { type: 'text', default: '', doc: "the evaluator model's content hash" } },
   cfg: () => { throw new Error('search-eval has no ai-bench seat option yet'); },
-  available: () => 'the learned evaluator has no ai-bench seat option yet (branch c/evaluator, D314)',
+  available: () => 'the learned evaluator has no ai-bench seat option yet (branch c/evaluator)',
 };
 
 /** Fill defaults and check every param against the kind; throws on an unknown param or a bad value. */

@@ -2,7 +2,7 @@
  * mtg-table — web/test/ai-ladder.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * The AI ladder (tools/ai-ladder/, D315–D318), engine-free, on synthetic
+ * The AI ladder (tools/ai-ladder/, D317–D320), engine-free, on synthetic
  * results from players with known strengths:
  *
  *  - the Bradley-Terry fit recovers known Elo differences, keeps the anchor at

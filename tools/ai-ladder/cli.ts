@@ -2,7 +2,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// docs/guides/ai-ladder.md is the manual; DECISIONS.md D315–D318 are why.
+// docs/guides/ai-ladder.md is the manual; DECISIONS.md D317–D320 are why.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -21,7 +21,7 @@ import { grid, halving, sample, TUNE_DEFAULTS, type Tally } from './tune.ts';
 
 const REPO = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 
-const USAGE = `ai-ladder -- rate AI configs against each other and stock Forge (D315)
+const USAGE = `ai-ladder -- rate AI configs against each other and stock Forge (D317)
 
   ai-ladder.sh list
   ai-ladder.sh run     --hours H [--jobs J] [--max-games N] [--players a,b,...]

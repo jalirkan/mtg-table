@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // Pure: the current fit, the available players and what is already running in,
-// one matchup out.  Three rules, in this order (D315):
+// one matchup out.  Three rules, in this order (D318):
 //
 //  1. NEW FIRST.  A player with fewer than `newGames` decisive games plays next
 //     (the fewest first) — against forge-default until it has `newGames` there
