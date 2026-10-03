@@ -1115,7 +1115,7 @@ public final class RecordMatch {
      * {@code PlayerController.revealUnsupported}, whose AI override is an empty
      * method.  Applying the same predicate here is the only way to know.
      */
-    private static List<String> unsupported(final Deck... decks) {
+    static List<String> unsupported(final Deck... decks) {
         final Set<String> out = new LinkedHashSet<>();
         for (final Deck d : decks) {
             for (final Map.Entry<PaperCard, Integer> e : d.getMain()) {
@@ -1149,7 +1149,7 @@ public final class RecordMatch {
         return n;
     }
 
-    private static String sha256(final File f) {
+    static String sha256(final File f) {
         try {
             final MessageDigest md = MessageDigest.getInstance("SHA-256");
             try (java.io.InputStream in = Files.newInputStream(f.toPath())) {

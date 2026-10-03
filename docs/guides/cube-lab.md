@@ -162,6 +162,45 @@ and pick the `.jsonl`** — it replays like any recorded game (the other seat's
 hand stays hidden, as in every frame log). A recorded game is its own game of
 the same two decks, not one of the counted ones.
 
+### Recording every game, for the ML dataset (D315)
+
+`--record-all` records **the games the workers play**, in the worker, while
+they are played: every game of every draft, from **both chairs**, as two
+gzipped frame logs —
+
+```
+<out>/games/<seed>/g<n>-seat0.jsonl.gz    drafter A's view (seat 0)
+<out>/games/<seed>/g<n>-seat1.jsonl.gz    drafter B's view (seat 1)
+<out>/cube.md                             the cube as drafted: the dataset's vocabulary
+```
+
+`--record-every N` samples instead: every game of each draft whose seed is a
+multiple of N (`--record-every 1` is `--record-all`). Recording is off unless
+one of the two is given, and a run without them writes exactly what it wrote
+before.
+
+Each log is a `RecordMatch --match` recording in all but name: the worker
+reuses the bridge's own recorder (`mtgtable.SeatRecorder` around
+`RecordMatch`'s spectator seam and `Snap.state`), so each chair's log is
+redacted for that chair exactly as the bridge redacts a seat, and
+`tools/check-redaction.mjs` (which reads `.gz`) passes it. The session header
+carries a `lab` block — `run`, `cube`, `cubeFile`, `cubeSha`, `format`,
+`match`, `draftSeed`, `game`, `gameSeed`, `onPlay` — and its `seed` is the
+game's seed; `hello_ok.match` names the two decks `cubelab <seed> A` and
+`cubelab <seed> B` (name and count only for the other chair, as always), so
+the dataset keeps the two chairs of a game in one split and `--group-by match`
+holds a draft's decks out. The game's row in `drafts.jsonl` gains
+`recorded: {dir, bytes, frames, errors}`.
+
+Then, from the repo root:
+
+```bash
+python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/dataset/
+```
+
+`--record M` still exists for watching a game in ForgeCoach (a plain
+`.jsonl`, the `--record M` replay); `--record-all` is for training data.
+
 ## Every flag
 
 | flag | default | |
@@ -174,6 +213,8 @@ the same two decks, not one of the counted ones.
 | `--profiles A,B` | `Default,Default` | the AI profile of each seat (`forge-home/res/ai/*.ai`) |
 | `--ratings <tsv>` | `<cube>.ratings.tsv` if present, else Forge's ranks | |
 | `--record M` | 0 | frame logs of M drafts' decks, in `<out>/frames/` |
+| `--record-all` | off | every game played, both chairs, gzipped, in `<out>/games/` (D315) |
+| `--record-every N` | 0 (off) | the same for each draft whose seed is a multiple of N |
 | `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes |
 | `--builder lab\|forge` | `lab` | which deck plays |
 | `--game-timeout <sec>` | 300 | a game past it is a draw |
@@ -234,7 +275,8 @@ tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 100 --jobs 4 --out var/c
 `cards.json` (each card as the run saw it: section, colours, mana value, themes,
 rating), `decks/<seed>-A.dck` and `-B.dck` (the lab's) and `-A-forge.dck` /
 `-B-forge.dck` (Forge's builder's), `logs/worker-<k>.log` (the engine's own
-output), `frames/` and `recordings.json` under `--record`, and
+output), `frames/` and `recordings.json` under `--record`, `games/` and
+`cube.md` under `--record-all` / `--record-every` (above), and
 **`drafts.jsonl`**, one line per draft:
 
 ```jsonc
@@ -250,7 +292,9 @@ output), `frames/` and `recordings.json` under `--record`, and
       "deckErrors": [], "played": "lab", "deckFile": "decks/7-A.dck",
       "forge": { "colors": "WU", "spells": 22, "lands": 18, "value": 22.7, "main": […] } }, … ],
   "match": { "games": [ { "n": 1, "onPlay": "B", "onPlayVerified": "B", "winner": "A",
-                          "turns": 18, "ms": 11162, "timeout": false, "reason": "AllOpponentsLost" } ],
+                          "turns": 18, "ms": 11162, "timeout": false, "reason": "AllOpponentsLost",
+                          "cpuMs": 21540, "gameCpuMs": 10870,       // the worker's CPU time, all threads / the game thread
+                          "recorded": { "dir": "games/7", "bytes": 125523, "frames": 683, "errors": 0 } } ],  // D315, when recorded
              "winsA": 1, "winsB": 0, "winner": "A", "worker": 0 },
   "ms": { "draft": 15, "build": 20, "match": 24970 } }
 ```

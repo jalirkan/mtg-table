@@ -6,6 +6,7 @@
 //   ratings init <cube.md> [--out <tsv>] [--force]
 //   run     <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K]
 //           [--seed S] [--profiles Default,Default] [--ratings <tsv>] [--record M]
+//           [--record-all | --record-every N]                  every game, both chairs, in the worker (D315)
 //           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
 //           [--synergy <tsv>] [--deck-synergy on|off]          learned pairs (D301)
@@ -43,6 +44,7 @@ function usage(msg?: string): never {
        tools/cubelab.sh ratings init <cube.md> [--out <tsv>] [--force]
        tools/cubelab.sh run <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K] [--seed S]
                         [--profiles Default,Default] [--ratings <tsv>] [--record M] [--out <dir>]
+                        [--record-all | --record-every N]
                         [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
                         [--weights <json>] [--weight name=value]... [--synergy <tsv>] [--deck-synergy on|off]
        tools/cubelab.sh learn <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...
@@ -63,6 +65,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
+    if (a === '--record-all') { f.set('record-all', ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);
@@ -142,6 +145,7 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   const o: RunOptions = {
     cubeFile, format, drafts: int(f, 'drafts', 10), games: int(f, 'games', 3), jobs: Math.max(1, int(f, 'jobs', 1)), seed,
     profiles: [profiles[0] as string, profiles[1] as string], ratingsFile, record: int(f, 'record', 0),
+    recordEvery: one(f, 'record-all') ? 1 : int(f, 'record-every', 0),
     out: one(f, 'out') ?? path.join('var/cubelab/runs', `${path.basename(cubeFile, '.md')}-${format}-${seed}`),
     builder, gameTimeoutSec: int(f, 'game-timeout', 300), winstonCards: int(f, 'winston-cards', 90), weights,
     ...(one(f, 'synergy') ? { synergyFile: one(f, 'synergy') as string, deckSynergy: one(f, 'deck-synergy') === 'on' } : {}),
@@ -150,7 +154,8 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   if (o.jobs > env.homes.length) usage(`--jobs ${o.jobs} but only ${env.homes.length} Forge home(s) were built (tools/cubelab.sh builds --jobs of them)`);
   // --games 0 drafts and builds only, plays nothing (the AI ladder's deck sets, D318); a report of such a run has no games
   if (o.games < 0) usage('--games must be 0 or more');
-  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}`);
+  if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
+  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}`);
   await runLab(env, o, say);
   say(`next: tools/cubelab.sh report ${o.out}`);
   return 0;

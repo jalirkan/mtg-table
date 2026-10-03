@@ -12,6 +12,10 @@
 // 4. --record M: the first M drafts' decks played once more by
 //    mtgtable.RecordMatch, one game each, into <out>/frames/ (a ForgeCoach
 //    frame log, seat 0 = drafter A's view);
+//    --record-all / --record-every N (D315) instead record the games the
+//    workers PLAY, in the worker, both chairs, gzipped, into
+//    <out>/games/<seed>/g<n>-seat{0,1}.jsonl.gz, with the cube's markdown
+//    copied to <out>/cube.md (the ML dataset's vocabulary, tools/ml);
 // 5. every worker's Forge home checked for a saved preferences file (hard rule
 //    11 / D107: a run must never save one).
 
@@ -41,6 +45,8 @@ export interface RunOptions {
   profiles: [string, string];
   ratingsFile: string | null;
   record: number;
+  /** D315: record every game of every Nth draft (seed % N === 0) in the worker; 0 = off, 1 = every game. */
+  recordEvery?: number;
   out: string;
   builder: 'lab' | 'forge';
   gameTimeoutSec: number;
@@ -92,6 +98,8 @@ export interface RunMeta {
   missing: string[];
   themeNames: Record<string, string>;
   archetypes: Record<string, string>;
+  /** D315: in-worker recording (absent when off): every game of a draft whose seed % every === 0. */
+  record?: { every: number; dir: 'games'; cubeCopy: 'cube.md' };
   /** D301-D302: the learned files this run drafted or built with (absent for a plain run). */
   learned?: {
     synergyFile: string | null; synergySha: string | null; deckSynergy: boolean;
@@ -149,6 +157,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     forgeJar: process.env.FORGE_JAR ?? '', missing: lc.missing.map((m) => m.listed),
     themeNames: lc.cube.themeNames, archetypes: lc.cube.archetypes,
     ...(learnedMeta ? { learned: learnedMeta } : {}),
+    ...(o.recordEvery ? { record: { every: o.recordEvery, dir: 'games' as const, cubeCopy: 'cube.md' as const } } : {}),
   };
   fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   const metaFile = path.join(o.out, 'run.json');
@@ -168,6 +177,9 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     if (done.size > 0) say(`resuming: ${done.size} draft(s) already in ${jsonl}`);
   }
   fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
+  // D315: the cube as drafted, beside the recordings, so the dataset's vocabulary is this pool.
+  const cubeCopy = path.join(o.out, 'cube.md');
+  if (o.recordEvery) fs.writeFileSync(cubeCopy, text);
   // What the report needs to know about each card, as this run saw it.
   const info: Record<string, CardInfo> = {};
   for (const c of lc.cards) {
@@ -199,12 +211,20 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
       deckA: sides[0] ?? null, deckB: sides[1] ?? null,
       poolA: d.drafters[0].pool, poolB: d.drafters[1].pool,
       forgeDeckOutA: path.resolve(deckPath('A', '-forge')), forgeDeckOutB: path.resolve(deckPath('B', '-forge')),
+      ...(o.recordEvery && seed % o.recordEvery === 0 ? {
+        record: {
+          dir: path.resolve(o.out, 'games', String(seed)), rel: path.join('games', String(seed)),
+          run: path.basename(path.resolve(o.out)), cube: lc.cube.title, cubeFile: rel(cubeCopy), cubeSha: meta.cubeSha,
+          format: o.format, deckNameA: `cubelab ${seed} A`, deckNameB: `cubelab ${seed} B`,
+        },
+      } : {}),
     });
   }
   say(`drafted and built ${jobs.length} draft(s) in ${((Date.now() - tDraft) / 1000).toFixed(1)} s; playing ${o.games > 1 ? `best of ${o.games}` : '1 game'} each on ${Math.min(o.jobs, Math.max(1, jobs.length))} worker(s)`);
 
   // 3. matches
   let finished = 0;
+  const recTotal = { games: 0, bytes: 0, errors: 0 };
   const tMatch = Date.now();
   const started = new Map<string, number>();
   for (const j of jobs) started.set(j.id, Date.now());
@@ -235,12 +255,17 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
       ms: { ...d.ms, match: Date.now() - (started.get(job.id) ?? Date.now()) },
     };
     fs.appendFileSync(jsonl, `${JSON.stringify(rec)}\n`);
+    for (const g of r.games) if (g.recorded) { recTotal.games++; recTotal.bytes += g.recorded.bytes; recTotal.errors += g.recorded.errors; }
     finished++;
     const g = r.games.map((x) => (x.winner === 'draw' ? (x.timeout ? 'T' : 'D') : x.winner)).join('');
     say(`[${finished}/${jobs.length}] seed ${job.seed}: ${deckLabel(d, 0)} ${wins.A}-${wins.B} ${deckLabel(d, 1)}  games ${g || '-'}${r.engineError ? `  ENGINE ERROR: ${r.engineError}` : ''}`);
   }, say);
   const matchSecs = (Date.now() - tMatch) / 1000;
   if (jobs.length > 0) say(`matches: ${matchSecs.toFixed(0)} s for ${jobs.length} (${(matchSecs / jobs.length).toFixed(1)} s a draft wall-clock on ${homes.length} worker(s))`);
+  if (recTotal.games > 0) {
+    say(`recorded: ${recTotal.games} game(s), both chairs, ${(recTotal.bytes / 1048576).toFixed(1)} MiB gzipped (${Math.round(recTotal.bytes / recTotal.games / 1024)} KiB a game) under ${path.join(o.out, 'games')}`);
+    if (recTotal.errors > 0) say(`WARNING: ${recTotal.errors} snapshot or write error(s) in the recordings; see logs/worker-*.log`);
+  }
 
   // 4. recordings
   if (o.record > 0) recordGames(env, o, say);

@@ -71,6 +71,7 @@ public final class GameLogSelfTest {
         closeIsFastAndComplete();
         preHeaderFramesAreHeldNotNumberedZero();
         sequencesArePerDirection();
+        gzipIsTheSameLines();
         misuse();
 
         System.out.println("GameLogSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
@@ -170,6 +171,36 @@ public final class GameLogSelfTest {
         expect("dir is on every frame and only on frames",
                got.get(1).contains("\"dir\":\"s2c\"") && got.get(2).contains("\"dir\":\"c2s\"")
                && !got.get(0).contains("\"dir\""));
+    }
+
+    /** D315: a gzipped log holds exactly the lines a plain one would, and bytes() is its size on disk. */
+    private static void gzipIsTheSameLines() throws IOException {
+        final File plain = new File(dir, "same.jsonl");
+        final File gz = new File(dir, "same.jsonl.gz");
+        final GameLog a = new GameLog(plain);
+        final GameLog b = new GameLog(gz, true);
+        for (final GameLog log : List.of(a, b)) {
+            log.header("{\"v\":1,\"kind\":\"session\"}");
+            for (int i = 0; i < 2_000; i++) {
+                log.s2c("state", "{\"n\":" + i + ",\"pad\":\"" + "x".repeat(i % 50) + "\"}");
+            }
+            log.close();
+        }
+        final List<String> want = Files.readAllLines(plain.toPath(), StandardCharsets.UTF_8);
+        final List<String> got = new ArrayList<>();
+        try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(
+                new java.util.zip.GZIPInputStream(Files.newInputStream(gz.toPath())), StandardCharsets.UTF_8))) {
+            for (String line; (line = r.readLine()) != null; ) {
+                got.add(line.replaceFirst("\"t\":\\d+", "\"t\":0"));
+            }
+        }
+        final List<String> wantNoT = new ArrayList<>();
+        for (final String line : want) {
+            wantNoT.add(line.replaceFirst("\"t\":\\d+", "\"t\":0"));
+        }
+        expect("a gzipped log holds the plain log's lines (t aside)", got.equals(wantNoT));
+        eq("gzip bytes() is the file's size", gz.length(), b.bytes());
+        expect("the gzip is smaller", gz.length() * 4 < plain.length());
     }
 
     private static void misuse() throws IOException {
