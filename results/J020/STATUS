@@ -1,7 +1,8 @@
-running
+failed
+reason: aborted: night.recorded_errors > 0 (night.recorded_errors = 2)
 runner: forgecoach-runner 6fbcdea
 started: 2026-10-03T13:57:43-04:00
-phase: stopping
+finished: 2026-10-03T14:29:25-04:00
 mtg-table: bf3dca7
 workers: 7 (sized 7: min(cores 7, memory 7, max_workers 7); peak 2.50 GB per worker (default; measured 2.16), budget 21.4 GB)
 peak_worker_rss_gb: 2.16

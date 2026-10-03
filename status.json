@@ -1,62 +1,41 @@
 {
  "schema": 1,
- "updated": "2026-10-03T14:29:12-04:00",
+ "updated": "2026-10-03T14:29:26-04:00",
  "paused": false,
  "host": {
-  "load1": 21.49,
-  "memUsedGb": 21.1,
+  "load1": 18.47,
+  "memUsedGb": 9.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 1872,
+  "swapUsedMb": 1853,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4
  },
  "running": [
   {
-   "publicTitle": "Queue night 1",
-   "publicEst": "~8 h",
-   "id": "J020",
-   "title": "Overnight queue, night 1: recorded normal + bridge drafts across all cubes (decision records on)",
-   "cpu": "heavy",
-   "phase": "stopping",
-   "started": "2026-10-03T13:57:43-04:00",
-   "elapsed": 1889,
-   "done": 1271,
-   "total": 20000,
-   "unit": "drafts",
-   "ratePerHour": 3398.7,
-   "eta": "2026-10-03T19:59:51-04:00",
-   "workers": 7,
-   "workersMax": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-03T14:29:12-04:00",
-   "pressureEvents": [
-    {
-     "at": "2026-10-03T14:08:06-04:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 17
-    },
-    {
-     "at": "2026-10-03T14:13:30-04:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J020-run1"
-  }
- ],
- "queue": [
-  {
    "publicTitle": null,
    "publicEst": null,
    "id": "J023",
    "title": "(was J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
    "cpu": "heavy",
-   "est": "one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops well before)"
-  },
+   "phase": "prepare",
+   "started": "2026-10-03T14:29:26-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": 2400,
+   "unit": "games",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": "2026-10-03T14:29:26-04:00",
+   "pressureEvents": [],
+   "detail": "lab-J023-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": null,
    "publicEst": null,
@@ -84,6 +63,17 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Queue night 1",
+   "publicEst": "~8 h",
+   "id": "J020",
+   "title": "Overnight queue, night 1: recorded normal + bridge drafts across all cubes (decision records on)",
+   "status": "failed",
+   "finished": "2026-10-03T14:29:25-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "aborted: night.recorded_errors > 0 (night.recorded_errors = 2)"
+  },
   {
    "publicTitle": "Decision records pilot",
    "publicEst": "~60 min",
