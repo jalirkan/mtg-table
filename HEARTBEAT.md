@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T15:25:12-04:00
+- time: 2026-10-03T15:27:34-04:00
 - runner: 5e6ba2a, up since 2026-10-03T14:45:31-04:00
-- running: J029 (night job) on the runner, alone; nothing hand-run
-- load: 7.48 12.52 15.56
+- running: J029 commands 1/2, 4287/20000 drafts, 3822.1/h, ETA 2026-10-03T19:34:14-04:00, 7 worker(s)
+- load: 13.63; memory 11.4/30.5 GB, swap 1853 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J027, J028, J030, J031, J032, J033, J034, J035, J036, J037
 - waiting: nothing
-- last finished: J021 done (hand-run unrecorded evolve, 4 x 600: NO swaps; Sheoldred discovered then not confirmed) — results/J021/
+- last finished: J021 done at 2026-10-03T15:22:00-04:00
 
 ## Messages
 
