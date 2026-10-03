@@ -14721,3 +14721,130 @@ pile up minutes of stale questions); superseding the running question by key (a
 manual *Ask again* on the same decision would kill the answer that is nearly
 done — cancelling is the client's call); a separate status endpoint for the
 queue (the stream already reaches the asker).
+
+## D331 — Evolve cuts in two stages: a Benjamini–Hochberg discovery on the generation's own drafts makes a candidate, and only a confirmation on a fresh, disjoint seed range cuts it; win rates count the deck's match as the unit; nothing is pooled across generations
+
+*Branch `c/evolve-rigor`; D331 rather than D326, because D326–D330 may be held by
+branches not yet pushed (main holds up to D325).*
+
+**2026-10-03** (the methodology review's finding M2: "evolve's cuts are about
+180 simultaneous 95% tests, re-checked as data accumulates")
+
+**Decision.** D299's thresholds — a Wilson 95% bound per card, per rule — are
+replaced by two looks (`tools/cubelab/evolve.ts`, arithmetic in
+`evolve-stats.ts`, both pure):
+
+- **The tests.** Each rule is a one-sided exact binomial test: *dead*, H0 "at
+  least `deadPlayRateHi` of the on-colour decks play it"; *dominant-win*, H0
+  "its win rate is at most the run's mean", which counts only when it also won
+  `dominantMargin` (0.05) over the mean (`dominantLoMargin` is renamed, since it
+  no longer bounds an interval); *dominant-pick*, H0 "first line at most
+  `dominantFirstPickLo` of the time", counting only with a shrunk win rate at
+  least the mean. The minimum samples (`minGames`, `minSeen`, `minOnColour`)
+  still gate a test in discovery.
+- **Discovery** reads the generation's own drafts and nothing else. The family
+  is every test a cut could follow from — cards with no note, no AI flag, not a
+  land, and (for *dead*) rated at least `deadMinRating`, chosen by attribute
+  before any result is seen — about 400 tests on Omega. Benjamini–Hochberg at
+  `fdrQ` = 0.10 decides; a discovery is a **candidate**. Cards outside the
+  family are still reported with the signal they would have given.
+- **Confirmation.** When there are candidates the generation plays a second
+  batch on the same cube from seeds `S + confirmSeedOffset (10⁶) +
+  (g−1)·confirmMaxDrafts` onward (`gen-NN/confirm/`), disjoint from every
+  discovery batch and every other generation's confirmation, and tests each
+  candidate's rule again on that batch alone, with Holm at `confirmAlpha` =
+  0.05 across the candidates and the size filter again. Only a confirmed
+  candidate is cut; a note-cut needs no confirmation. The batch is sized per
+  candidate for power `confirmPower` = 0.8 at Holm's strictest level
+  (`confirmAlpha` / candidates), at the effect that matters — not at the
+  discovery estimate, which selection biased upward: a win rate `dominantEffect`
+  = 0.10 over the mean, a first-line rate `pickEffect` = 0.9, an on-colour play
+  rate `deadEffect` = 0.1 — using the observations per draft the card met in
+  discovery; the largest need, within `confirmMinDrafts` 20 ..
+  `confirmMaxDrafts` 300, is the batch (a candidate whose need is over the cap
+  is reported under-powered and tested anyway).
+- **Clumps.** A card's games are its decks' matches: one deck, one opponent,
+  about 2.4 games. The generation's design effect D = Σ(wᵢ − p̄nᵢ)² /
+  (p̄(1−p̄)Σnᵢ) over every played deck divides a card's games and wins before
+  its test and its interval (`clusteredCi`). It is pooled over the batch's
+  ~2N decks rather than computed per card (a sandwich over a card's 10–60
+  decks is too noisy to test with). D is exactly 1 for independent games with
+  best-of-three's stopping included (enumerated in the test), so it measures
+  only how much decks differ; the lab's runs give 1.08 (pauper, 20 drafts),
+  1.21 (synergy, 40) and 1.10 pooled. An ANOVA intra-class correlation was
+  tried on paper and rejected: the stopping rule alone gives it about 0.11 with
+  no real inflation. Play and first-line rates need no correction (one
+  observation per card per pool or grid).
+- **Recording.** `evolve --record-all` / `--record-every N` passes D315's
+  `recordEvery` to both batches' runs; it changes no decision and is not part
+  of `evolve.json`'s resume key.
+- **Reporting.** The changelog and the page explain discovery and confirmation
+  in plain words, list every candidate with its discovery numbers (p, BH q) and
+  its confirmation numbers (p, Holm p), and a swap's evidence names both seed
+  ranges; the iteration-log line names the confirmation batch.
+
+**The repeated looks.** D300 pooled a generation's drafts with the earlier
+generations that drafted the same list, so a card was re-tested on a growing
+sample until it crossed — optional stopping. Now no data is read by two
+decisions: each generation's discovery has fresh seeds, and each confirmation
+has its own. So the chance that a generation cuts any card by chance is at
+most `confirmAlpha` whatever discovery did (Holm on independent data), and
+under a cube where nothing is wrong at most `fdrQ`·`confirmAlpha` = 0.5%; over
+G generations at most G times that. Alpha-spending across pooled looks was the
+alternative; it keeps pooling's power but needs the number of looks fixed in
+advance (a resumable loop does not know it) and its bookkeeping in every
+folder. The price of not pooling is that a weak lead does not accumulate: the
+remedy is a bigger generation, and *watch* says how big.
+
+**Measured** (`node tools/cubelab/evolve-sim.ts --sims 1000`: a simulated
+180-card cube, best of three, deck spread set so D ≈ 1.15, about 0.6 decisive
+games per card per draft as Omega's runs give, the real `discoveryStage` and
+`confirmCandidates` on the simulated stats):
+
+| null cube (no card better) | any false flag a generation |
+|---|---|
+| old rule, 30 drafts, one look | 43% |
+| old rule, 30 drafts, three pooled looks | 90% (mean 2.6 cards) |
+| D331, 30 / 100 / 200 / 400 drafts: any false candidate | 0.2% / 2.6% / 2.3% / 2.4% |
+| D331, same: any false cut | 0.0% / 0.0% / 0.0% / 0.3% |
+
+The review's own script gave 18% and 83% with independent games; deck spread
+makes the old rule worse. Power, a single planted card (confirmed and cut;
+extra confirmation drafts per generation on average, zero when nothing is
+found): dead (played by 5% of the decks that could) 63% / 93% at 100 / 200 drafts; dominant
++0.15 on its deck's game-win chance 17% / 56% / 80% at 200 / 400 / 600 drafts
+(60 / 172 / 245 confirmation drafts); dominant +0.10 2% / 9% / 21%. Under the
+null, confirmation costs 0.5–7 drafts a generation on average, because it runs
+only in the 2–3% of generations with a candidate. With a planted dominant card
+the hitchhikers — cards that shared its decks — are cut by chance in under 1%
+of generations: that is the confounding of the review's H1, which only a
+deck-adjusted card value (`learn.ts`) removes.
+
+**What it means for a run.** At 30 drafts a generation nothing is cut on AI
+evidence; 200 finds the dead; a card dominant by wins needs 400–600 drafts a
+generation, or a note. The guide says so. Old evolve folders are refused
+(their knobs differ).
+
+**Held by** `web/test/cubelab-evolve.test.ts` (no cut without a confirmation;
+a candidate the fresh batch does not repeat stays; the confirmation counts are
+the fresh batch's own; both batches in the evidence, the changelog and the
+page) and `web/test/cubelab-evolve-sim.test.ts` (the arithmetic against hand
+values; on the null cube the old rule's false-flag rate over 20% one look and
+70% pooled, the new candidate rate at most 10% and the cut rate at most 5%;
+a planted dead card confirmed at least 80% of the time at 200 drafts and a
+planted +0.15 card at least 65% at 600).
+
+**Rejected.**
+
+- **BH alone, cutting on discovery** (the review's alternative): it bounds the
+  share of wrong cuts, not the chance of one, and a 10% FDR may cut a wrong card
+  in up to one generation in ten when the cube is fine.
+- **Separate BH families per rule:** under a cube with nothing wrong the
+  family-wise rate adds up across them.
+- **A hierarchical Bayes screen** (shrink every card's effect toward the mean
+  with a fitted spread): when nothing is wrong the fitted spread is near zero
+  and it flags as little as BH, and it buys a model of card effects the next
+  step (H1: `learn.ts`'s deck-adjusted values) will replace.
+- **Sizing confirmation by the discovery estimate:** the winner's curse makes
+  it too small.
+- **A per-card cluster-robust variance:** too few decks per card to test with.

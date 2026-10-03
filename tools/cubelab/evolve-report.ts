@@ -32,7 +32,7 @@ const confirmHead = (g: GenSummary): string => {
 
 /** What discovery vs confirmed means, in plain words (the changelog's and the page's preamble). */
 export const stagesInWords = (q: number): string => 'A card is cut on the AI\'s evidence only after two separate looks. **Discovery**: in this generation\'s drafts the card stands out by more than chance can explain, '
-  + 'allowing for the fact that some 180 cards are looked at at once (a false-discovery rate of ' + `${Math.round(q * 100)}%: of the cards flagged, at most about ${q >= 0.5 ? 'half' : `one in ${Math.round(1 / q)}`} could be a fluke` + '). A discovery is a *candidate*, not a verdict. '
+  + 'allowing for the fact that some 180 cards are looked at at once (a false-discovery rate of ' + `${Math.round(q * 100)}%: of the cards flagged, at most about ${q > 0.5 ? `${Math.round(q * 100)}%` : `one in ${Math.round(1 / q)}`} could be a fluke` + '). A discovery is a *candidate*, not a verdict. '
   + '**Confirmed**: the candidate stands out again, the same way, in a second batch of fresh drafts that played no part in finding it. Only confirmed cards are cut; a candidate that does not confirm stays, and is reported. '
   + 'Win rates count each deck\'s match as one clump of games (the same deck against the same opponent), so their intervals are wider than a count of games would make them.';
 
