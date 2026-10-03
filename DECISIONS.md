@@ -14721,3 +14721,47 @@ pile up minutes of stale questions); superseding the running question by key (a
 manual *Ask again* on the same decision would kill the answer that is nearly
 done — cancelling is the client's call); a separate status endpoint for the
 queue (the stream already reaches the asker).
+
+## D333 — The match launcher picks the opponent AI: `POST /match` takes `aiPolicy` (`plain`|`outlets`|`search`) and `aiSearchMs` (500–5000), `/health` advertises them, and `play.sh` passes them as `--ai-policy` / `--ai-search ms=<n>`
+
+*Branch `c/match-ai-policy`; D333, past every number open lanes may hold (D326–D332).*
+
+**2026-10-03** (D314's follow-up: "a ForgeCoach-side switch … changed in both
+repositories or not at all")
+
+**Decision.** `POST /match` (D303) gains two optional keys. `aiPolicy` is exactly
+one of `plain`, `outlets`, `search` — D314's `--ai-policy` values, case-sensitive,
+no aliases; `aiSearchMs` is a whole number 500–5000 and only goes with
+`"aiPolicy": "search"` (`--ai-search ms=<n>`; absent, the bridge's default 1500).
+Anything else is a 400 before a file is written, as for every other field.
+`request.json` carries them only when sent; `play.sh` re-checks both in its node
+reader (the same enum and range) and, when the request names a policy, drops the
+startup's `--ai-policy` / `--ai-search` from the restart's argv and appends the
+request's — so a `play.sh --ai-search` session can still be asked for plain
+Forge. **No `aiPolicy` keeps today's behaviour**: the restart keeps whatever
+`play.sh` was started with. A wake (`/engine/start`, D308) restarts the last
+setup, policy included. The reply and `GET /match` gain `aiPolicy`, read from the
+bridge's banner (`ai policy = …`; no line is `plain`). `/health`, when `"match":
+1`, gains `"aiPolicies": ["plain","outlets","search"]` and `"aiSearchMs": {"min":
+500, "max": 5000, "default": 1500}` — additive, so ForgeCoach shows its
+"Opponent AI" choice only to a helper that lists them and sends no key to an
+older one. The wire is unchanged: nothing of the policy or the search reaches a
+frame or `hello_ok` (D314), and the AI's deck stays a name and a count (M44).
+
+**Checked.** `tools/match-launcher-selftest.mjs`: `/health`'s two keys; no
+`aiPolicy` adds no flag (plain, as started); `search` with 3000 reaches the
+engine as `--ai-policy search --ai-search ms=3000` and `GET /match` says
+`search`; `outlets` replaces it with exactly one `--ai-policy` and no
+`--ai-search`; a later request without the key goes back to as started; a
+`play.sh --ai-search-ms 2000` session keeps its search on a request without
+`aiPolicy` and drops it for `"aiPolicy": "plain"`; refused with 400 and nothing
+restarted: an unknown policy, the wrong case, a policy carrying a flag, a
+budget under 500 or over 5000, a budget as a string (`"3000,turns=4"`), a budget
+with `outlets` or with no policy.
+
+**Rejected.** Exposing D312's other knobs (`turns`, `rounds`, candidates) to the
+page (the budget is the one a player can feel; the rest are the lab's, and
+every key added is one more thing to vet); a free-form `--ai-search` string
+(only an enum and an integer may reach a command line); making a missing
+`aiPolicy` mean `plain` (it would silently undo a `play.sh --ai-search` start
+for every client that predates this); the search as the default (D314).

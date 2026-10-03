@@ -18,7 +18,9 @@
 //                 match is over, or D286's idle limit) and play.sh is waiting for a
 //                 POST /match to start it again; with "idleSince" and "exitsAt" (ISO
 //                 times; exitsAt null = play.sh never gives up, --idle-exit-after 0).
-//                 No "engine" key when "match" is 0.
+//                 No "engine" key when "match" is 0.  (D333) With "match": 1 also
+//                 "aiPolicies": ["plain","outlets","search"] and
+//                 "aiSearchMs": {"min":500,"max":5000,"default":1500}: POST /match takes them.
 //   POST /engine/start  (D308)  wake a sleeping engine on the last match setup (play.sh's
 //                 startup decks if there was no /match).  No body.  200 = the POST /match
 //                 200's shape plus "already": false; engine running already -> 200
@@ -26,14 +28,17 @@
 //                 refusals (409, 502, 503, 504).  /health carries "engine_start": 1.
 //   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
-//                                  "aiProfile","games"}}
-//                 "match" is null until play.sh has written one.
+//                                  "aiProfile","aiPolicy","games"}}
+//                 "match" is null until play.sh has written one.  "aiPolicy" (D333):
+//                 "plain"|"outlets"|"search" as the engine says it started.
 //   POST /match   {"deck":   {"name": string, "main": [[n, cardName], ...], "sideboard"?: [[n, cardName], ...]},
 //                  "aiDeck": {...the same},
 //                  "aiProfile"?: "Default"|"Cautious"|"Reckless"|"Experimental"  (default "Default"),
-//                  "games"?: 1..9                                                 (default 3)}
+//                  "games"?: 1..9                                                 (default 3),
+//                  "aiPolicy"?: "plain"|"outlets"|"search"    (D333; absent = as play.sh was started),
+//                  "aiSearchMs"?: 500..5000                    (D333; only with "search"; default 1500)}
 //                 -> 200 {"ok":true,"yourDeck":{"name","path","cards"},"aiDeck":{"name","cards"},
-//                         "aiProfile","games","ms","warnings":[string]}
+//                         "aiProfile","aiPolicy","games","ms","warnings":[string]}
 //                    once the new engine answers /health; the seat socket of the old
 //                    engine has been dropped, and the client reconnects to /ws.
 //   Every refusal is {"ok":false,"type":"error","message":"<plain words>"} (+ "problems"
@@ -58,6 +63,9 @@
 //     read once, lazily; without them the engine reports, as a count in "warnings".
 //   - Nothing edits Forge preferences: the profile is one of the .ai files'
 //     names, passed to the bridge as --ai-profile (M44's never-empty override).
+//   - The AI's controller (D333) is one of AI_POLICIES, passed as --ai-policy, and
+//     the search's budget a whole number of ms in AI_SEARCH_MS's range, passed as
+//     --ai-search ms=<n>.  /health advertises both ("aiPolicies", "aiSearchMs").
 //
 // Run from the repo root (hard rule 9).  Its self-test is
 // tools/match-launcher-selftest.mjs (a fake engine under play.sh; gate 12f, CI).
@@ -76,6 +84,10 @@ export const MAX_COPIES = 250;
 export const MAX_GAMES = 9;
 export const DEFAULT_GAMES = 3;
 export const KEEP_MATCH_DIRS = 5;
+// D333: the AI seat's controller (MtgTable --ai-policy, D314) and the search's
+// budget per decision (--ai-search ms=<n>; the bridge's own default is 1500).
+export const AI_POLICIES = ['plain', 'outlets', 'search'];
+export const AI_SEARCH_MS = { min: 500, max: 5000, default: 1500 };
 
 // A deck's name: what the .dck's Name= says and what hello_ok prints.  Letters,
 // digits, spaces and plain punctuation; never a control character, `|`, `[`,
@@ -159,6 +171,13 @@ export function checkRequest(body, { profiles = DEFAULT_PROFILES, known = null }
   if (aiProfile === null) problems.push(`aiProfile must be one of ${profiles.join(', ')}, got ${JSON.stringify(String(body.aiProfile)).slice(0, 40)}`);
   const games = body.games === undefined ? DEFAULT_GAMES : body.games;
   if (!Number.isInteger(games) || games < 1 || games > MAX_GAMES) problems.push(`games must be a whole number 1-${MAX_GAMES}, got ${JSON.stringify(body.games)}`);
+  // D333: absent = the AI play.sh was started with; exact names only.
+  const aiPolicy = body.aiPolicy === undefined ? null : AI_POLICIES.includes(body.aiPolicy) ? body.aiPolicy : undefined;
+  if (aiPolicy === undefined) problems.push(`aiPolicy must be one of ${AI_POLICIES.join(', ')}, got ${JSON.stringify(String(body.aiPolicy)).slice(0, 40)}`);
+  const aiSearchMs = body.aiSearchMs === undefined ? null : body.aiSearchMs;
+  if (aiSearchMs !== null && (!Number.isInteger(aiSearchMs) || aiSearchMs < AI_SEARCH_MS.min || aiSearchMs > AI_SEARCH_MS.max)) {
+    problems.push(`aiSearchMs must be a whole number ${AI_SEARCH_MS.min}-${AI_SEARCH_MS.max}, got ${JSON.stringify(body.aiSearchMs)}`.slice(0, 120));
+  } else if (aiSearchMs !== null && aiPolicy !== 'search') problems.push('aiSearchMs goes only with "aiPolicy": "search"');
   if (problems.length) return { problems };
   if (known) {
     for (const [who, d] of [['deck', you.deck], ['aiDeck', ai.deck]]) {
@@ -169,7 +188,7 @@ export function checkRequest(body, { profiles = DEFAULT_PROFILES, known = null }
     }
     if (problems.length) return { problems };
   }
-  return { match: { deck: you.deck, aiDeck: ai.deck, aiProfile, games }, problems };
+  return { match: { deck: you.deck, aiDeck: ai.deck, aiProfile, games, aiPolicy, aiSearchMs }, problems };
 }
 
 /** A deck as a Forge .dck file.  Every string in it has passed the patterns above. */
@@ -238,7 +257,7 @@ export function readProfiles(aiDir) {
 // The launcher: the files it shares with play.sh, and the signal.
 //
 //   var/match/<id>/you.dck, ai.dck   the decks (written here)
-//   var/match/request.json           {id, deck, aiDeck, aiProfile, games}  (here, then SIGUSR1 to play.sh)
+//   var/match/request.json           {id, deck, aiDeck, aiProfile, games, aiPolicy?, aiSearchMs?}  (here, then SIGUSR1 to play.sh)
 //   var/match/status.json            {id, state, error?, restored?, match?, ms?}  (play.sh)
 //   var/match/current.json           {id, match}  (play.sh, after every start)
 // ---------------------------------------------------------------------------
@@ -251,7 +270,7 @@ const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { 
 export function publicMatch(m) {
   if (!m || typeof m !== 'object') return null;
   const deck = (d) => (d && typeof d === 'object' ? { name: String(d.name ?? ''), cards: Number(d.cards ?? 0) } : null);
-  return { yourDeck: deck(m.yourDeck), aiDeck: deck(m.aiDeck), aiProfile: m.aiProfile ?? null, games: m.games ?? null };
+  return { yourDeck: deck(m.yourDeck), aiDeck: deck(m.aiDeck), aiProfile: m.aiProfile ?? null, aiPolicy: m.aiPolicy ?? null, games: m.games ?? null };
 }
 
 export function createMatchLauncher(opts) {
@@ -317,11 +336,12 @@ export function createMatchLauncher(opts) {
       yourDeck: { name: String(got.yourDeck?.name ?? m?.deck.name ?? ''), path: youPath ?? got.yourDeck?.path ?? null, cards: cnt(got.yourDeck) },
       aiDeck: { name: String(got.aiDeck?.name ?? m?.aiDeck.name ?? ''), cards: cnt(got.aiDeck) },
       aiProfile: got.aiProfile ?? m?.aiProfile ?? null,
+      aiPolicy: got.aiPolicy ?? m?.aiPolicy ?? null,
       games: got.games ?? m?.games ?? null,
       ms: Date.now() - t0,
       warnings,
     };
-    log(`MATCH started ${id}: you ${reply.yourDeck.name} (${reply.yourDeck.cards}), AI ${reply.aiDeck.name} (${reply.aiDeck.cards}), ${reply.aiProfile}, ${reply.games} game(s), ${reply.ms} ms`);
+    log(`MATCH started ${id}: you ${reply.yourDeck.name} (${reply.yourDeck.cards}), AI ${reply.aiDeck.name} (${reply.aiDeck.cards}), ${reply.aiProfile}, ${reply.aiPolicy ?? 'policy as started'}, ${reply.games} game(s), ${reply.ms} ms`);
     return { status: 200, body: reply };
   };
 
@@ -367,9 +387,13 @@ export function createMatchLauncher(opts) {
     return { engine: 'idle', idleSince: typeof e.at === 'string' ? e.at : null, exitsAt: typeof e.exitsAt === 'string' ? e.exitsAt : null };
   };
 
+  // D333: what /health advertises about the AI a POST /match may ask for.
+  const aiChoices = () => ({ aiPolicies: [...AI_POLICIES], aiSearchMs: { ...AI_SEARCH_MS } });
+
   return {
     available,
     engine,
+    aiChoices,
     wake,
     get() {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
@@ -401,7 +425,8 @@ export function createMatchLauncher(opts) {
         const rel = (f) => join(matchDir, id, f).split(sep).join('/');
         const dirs = readdirSync(dir).filter((n) => MATCH_ID.test(n)).sort();
         for (const old of dirs.slice(0, Math.max(0, dirs.length - KEEP_MATCH_DIRS))) rmSync(join(dir, old), { recursive: true, force: true });
-        writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, deck: rel('you.dck'), aiDeck: rel('ai.dck'), aiProfile: m.aiProfile, games: m.games }) + '\n');
+        writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, deck: rel('you.dck'), aiDeck: rel('ai.dck'), aiProfile: m.aiProfile, games: m.games,
+          ...(m.aiPolicy ? { aiPolicy: m.aiPolicy } : {}), ...(m.aiSearchMs ? { aiSearchMs: m.aiSearchMs } : {}) }) + '\n');
         try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) {
           return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
         }
