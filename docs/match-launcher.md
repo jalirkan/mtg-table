@@ -23,7 +23,7 @@ and `--lan` included) and was not given `--no-coach` or `--no-match`. Without
 key is there whether `ok` is `true` or `false` — read it on both.
 
 ```json
-{"ok":true,"helper":1,"claude":"2.1.287 (Claude Code)","models":["opus","sonnet","haiku"],"match":1,"engine":"running"}
+{"ok":true,"helper":1,"claude":"2.1.287 (Claude Code)","models":["opus","sonnet","haiku"],"match":1,"engine":"running","engine_start":1}
 {"ok":true,"helper":1,"claude":"2.1.287 (Claude Code)","models":["opus","sonnet","haiku"],"match":1,"engine":"idle","idleSince":"2026-10-03T18:04:11.402Z","exitsAt":"2026-10-03T22:04:11.402Z"}
 {"ok":false,"helper":1,"error":"the claude CLI is not installed or not on PATH — …","match":1,"engine":"running"}
 ```
@@ -36,7 +36,36 @@ closed, or D286's hour with no seat — `play.sh` and the helper stay up (in
 `null` when `play.sh` never gives up). Nothing listens on the ws port then, and
 no JVM runs. `POST /match` starts the engine from there, exactly as it
 restarts a running one (10–20 s). `"engine"` is there only when `"match": 1`;
-absent means an older helper — treat it as running.
+absent means an older helper — treat it as running. `"engine_start": 1`
+(same condition as `"match": 1`) says `POST /engine/start` exists.
+
+## `POST /engine/start` (D308)
+
+Wakes a sleeping engine **on the last match setup** — the decks, profile and
+games of the last `POST /match`, or `play.sh`'s own startup decks when there
+never was one — with a game id of its own. No body (anything sent is ignored,
+4 KB at most). The helper's own gate, exactly as `/match`; it goes through the
+same request file and SIGUSR1, so a wake and a `POST /match` never run at once
+(409 for the second). This is what ForgeCoach's ordinary **Play vs Forge**
+calls when `engine` is `"idle"`, then it connects to `/ws`.
+
+200 — the engine is running: the `POST /match` 200's shape (`yourDeck`, `aiDeck`,
+`aiProfile`, `games`, `ms`, `warnings`; `yourDeck.path` is `null` for the startup
+decks) plus `"already": false`. The engine already running is also 200, at once:
+`{"ok":true,"already":true,"yourDeck":…,"aiDeck":…,"aiProfile":…,"games":…}`
+(the current match, or just `"ok"` and `"already"` when none is known). Refusals
+are `/match`'s: 403 (gate), 405 (not POST), 409, 502 (`restored:false`: the
+engine stays asleep), 503 (no launcher), 504.
+
+**A second `play.sh` beside a sleeping one** (ForgeCoach's launcher runs
+`play.sh --engine-only` on every click of its menu entry): when the coach port
+already answers with `match: 1`, a new `play.sh --engine-only` builds nothing,
+binds nothing and starts no second helper. Engine asleep: it `POST`s
+`/engine/start`, prints `Engine ready on ws://…`, and exits 0 (the first
+`play.sh` keeps running). Engine running: it says so and exits 0. Not with
+`--port` (a second bridge on purpose), `--no-coach` or `--no-match`; the flags of
+the second launch (decks, `--lan`) are not applied — the wake uses the first
+launch's setup.
 
 ## Who may call it
 
@@ -195,7 +224,8 @@ export interface MatchCurrent {
     games: number | null;
   };
 }
-// GET /health gains: match: 0 | 1, and (when match is 1) engine: 'running' | 'idle',
+// POST /engine/start -> MatchStarted & { already: false } | { ok: true, already: true, ...current }
+// GET /health gains: match: 0 | 1, engine_start?: 1, and (when match is 1) engine: 'running' | 'idle',
 // idleSince?: string, exitsAt?: string | null  (only when idle)
 ```
 
@@ -222,9 +252,6 @@ export interface MatchCurrent {
   240; `0` never), and on Ctrl-C or the launcher's Stop; `GET /health` failing
   is then the sign. Without the launcher (`--no-match`, `--no-coach`) and in
   `play.sh`'s bare board mode the old exit stays.
-- A match request is the only thing that wakes the engine: ForgeCoach's plain
-  Play (the configured match, no decks) has no door yet while it sleeps — it
-  must send `POST /match` with the decks it wants, or say the engine is asleep.
 - ForgeCoach's launcher holds a sleep lock (`systemd-inhibit`) for as long as
   `play.sh` runs. An asleep engine is still a running `play.sh`, so the lock is
   held until the idle exit — up to four hours after the last match with the

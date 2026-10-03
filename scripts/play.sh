@@ -175,6 +175,14 @@
 # Without the launcher (--no-match, --no-coach, no helper) and in the bare board
 # mode (vite) the script exits with the bridge, as before.
 #
+# A SECOND LAUNCH (D308).  ForgeCoach's launcher runs `play.sh --engine-only` on
+# every click of its menu entry.  When the coach port already answers with the
+# match launcher on, this script (before the gate, the build or any bind) asks the
+# helper to wake the sleeping engine -- POST /engine/start, which restarts the
+# last match setup -- prints "Engine ready", and exits 0, leaving the first
+# play.sh running; or, with the engine running, says so and exits 0.  Not with
+# --port, --no-coach or --no-match.
+#
 # The previous run's log is kept as var/play/server.prev.log.  --no-match starts
 # the helper without the launcher; --no-coach starts no helper, so neither.  The
 # launcher works in every mode (bare, --engine-only, --lan).
@@ -218,6 +226,7 @@ IDLE_EXIT_MIN=240                # D308: minutes asleep with no match request be
 IDLE=0                           # D308: 1 while the engine has exited and play.sh waits for a match request
 IDLE_SINCE_S=0                   # D308: $SECONDS when it fell asleep
 IDLE_EXPIRED=0
+PORT_EXPLICIT=0                  # D308: --port given, so this is a second bridge on purpose
 PASSTHROUGH=()
 
 # D303: the coach helper's /match asks for a restart with SIGUSR1.  Trapped
@@ -258,7 +267,7 @@ GAMES_DEFAULT="$(cfg_match games || echo 3)"   # M6: "three games back to back, 
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --port)      WS_PORT="$2"; shift 2 ;;
+    --port)      WS_PORT="$2"; PORT_EXPLICIT=1; shift 2 ;;
     --web-port)  WEB_PORT="$2"; shift 2 ;;
     --engine-only) ENGINE_ONLY=1; shift ;;
     --lan)       LAN=1; ENGINE_ONLY=1; shift ;;
@@ -339,6 +348,36 @@ if ! passthrough_has --ai-profile; then
   fi
   MATCH_ARGS+=(--ai-profile "$AI_PROFILE")
 fi
+# --------------------------------------------------------------------------
+# 0a: a second launch beside a play.sh whose engine sleeps (D308)
+# --------------------------------------------------------------------------
+# ForgeCoach's launcher runs `play.sh --engine-only` each time its app-menu entry
+# is clicked.  If a play.sh already owns this coach port with the match launcher
+# on, this one must not build, bind, or start a second helper: asleep, it wakes
+# the first through POST /engine/start; running, it says so.  Either way exit 0.
+# Not with --port (a second bridge on purpose), --no-coach or --no-match.
+if [ "$ENGINE_ONLY" = "1" ] && [ "$COACH" = "1" ] && [ "$MATCH" = "1" ] && [ "$PORT_EXPLICIT" = "0" ] && command -v node >/dev/null 2>&1; then
+  node -e '
+    const base = "http://127.0.0.1:" + process.argv[1];
+    const get = async (u) => { try { const r = await fetch(u, { signal: AbortSignal.timeout(2000) }); return { s: r.status, t: await r.text() }; } catch { return null; } };
+    (async () => {
+      const h = await get(base + "/health"); let j = null;
+      try { j = JSON.parse(h && h.t); } catch {}
+      if (!j || j.helper !== 1 || j.match !== 1 || !j.engine) process.exit(10);        // not a launcher-carrying helper: carry on
+      if (j.engine !== "idle") {
+        const e = await get("http://127.0.0.1:" + process.argv[2] + "/health");
+        if (e && e.s === 200) { console.log("ForgeCoach engine already running on ws://127.0.0.1:" + process.argv[2] + "/ws (play.sh is running; Ctrl-C it to stop) — nothing to start"); process.exit(0); }
+        process.exit(10);
+      }
+      console.log("An engine from an earlier play.sh is asleep — waking it (POST /engine/start, up to 3 min)");
+      let r; try { r = await fetch(base + "/engine/start", { method: "POST", signal: AbortSignal.timeout(200000) }); } catch (e) { console.error("play.sh: could not wake it: " + e.message); process.exit(11); }
+      const b = await r.json().catch(() => ({}));
+      if (r.status === 200 && b.ok) { console.log("Engine ready on ws://127.0.0.1:" + process.argv[2] + "/ws — open https://jalirkan.github.io/ForgeCoach/ and click Play (the earlier play.sh keeps running; Ctrl-C it to stop)"); process.exit(0); }
+      console.error("play.sh: the sleeping engine did not wake: " + (b.message || "HTTP " + r.status)); process.exit(11);
+    })();
+  ' "$COACH_PORT" "$WS_PORT" && exit 0 || { rc=$?; [ "$rc" = "11" ] && exit 1; }
+fi
+
 say "match"
 [ "$ENGINE_ONLY" = "1" ] && echo "mode: engine only (no vite, no browser) — D285"
 [ "$LAN" = "1" ] && echo "mode: LAN — a phone on the same network, behind a pairing token (amendment M51)"
@@ -713,7 +752,7 @@ engine_write running
 
 restart_match() {
   MATCH_PENDING=0
-  local req=() id rc why tail_txt was_idle="$IDLE"
+  local req=() id rc why tail_txt was_idle="$IDLE" wake=0
   # The request, read back and checked again: nothing the browser sent reaches
   # a command line but these five checked words.
   mapfile -t req < <(node -e '
@@ -722,13 +761,15 @@ restart_match() {
     const id = typeof r.id === "string" && /^m[0-9]{13}$/.test(r.id) ? r.id : "";
     const bad = (why) => { console.log("BAD"); console.log(id); console.log(why); process.exit(0); };
     if (!id) bad("no request id");
+    if (r.wake === true) { for (const x of ["WAKE", id, "", "", "", ""]) console.log(x); process.exit(0); }   // D308 /engine/start
     const dir = process.argv[2];
     if (r.deck !== `${dir}/${id}/you.dck` || r.aiDeck !== `${dir}/${id}/ai.dck`) bad("deck paths are not <match dir>/<id>/you.dck and ai.dck");
     if (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile)) bad("not a profile name");
     if (!Number.isInteger(r.games) || r.games < 1 || r.games > 9) bad("games is not 1-9");
     for (const x of ["OK", id, r.deck, r.aiDeck, r.aiProfile, String(r.games)]) console.log(x);
   ' "$MATCH_DIR/request.json" "$MATCH_DIR" 2>/dev/null) || true
-  if [ "${req[0]:-}" != "OK" ]; then
+  [ "${req[0]:-}" = "WAKE" ] && wake=1
+  if [ "${req[0]:-}" != "OK" ] && [ "$wake" = "0" ]; then
     echo "match launcher: request refused: ${req[2]:-no answer from node}" >&2
     [ -n "${req[1]:-}" ] && match_write status "${req[1]}" failed "play.sh refused the request: ${req[2]:-}" 1
     return 0
@@ -736,8 +777,17 @@ restart_match() {
   id="${req[1]}"
   [ "$id" = "$LAST_REQ_ID" ] && return 0
   LAST_REQ_ID="$id"
-  [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
-  say "match $id — restarting the engine on ForgeCoach's decks (D303)"
+  if [ "$wake" = "1" ] && [ "$IDLE" != "1" ]; then
+    # D308: /engine/start while an engine runs (the helper checks too; this is the race).
+    match_write status "$id" ready
+    return 0
+  fi
+  if [ "$wake" = "0" ]; then
+    [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
+    say "match $id — restarting the engine on ForgeCoach's decks (D303)"
+  else
+    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)"
+  fi
   match_write status "$id" restarting
   local prev=("${BRIDGE_ARGS[@]}") pass=() skip=0 a
   # Everything after the class as before, but the request's decks, profile and games.
@@ -749,11 +799,27 @@ restart_match() {
       *) pass+=("$a") ;;
     esac
   done
-  local next=(--transport ws --port "$WS_PORT" --deck "${req[2]}" --ai-deck "${req[3]}" --ai-profile "${req[4]}")
-  [ "$KEEP_OPEN" = "1" ] && next+=(--keep-open)
-  # Its own game id: with a --seed the bridge's default id would repeat, and a
-  # client reads a repeated gameId as a reconnect (§2.1), not a new match.
-  next+=(--games "${req[5]}" --game-id "match-$id" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}" "${pass[@]+"${pass[@]}"}")
+  local next=()
+  if [ "$wake" = "1" ]; then
+    # The last setup as it was (the previous match's decks, or the startup ones),
+    # but a game id of its own, for the same reason as below.
+    skip=0
+    for a in "${BRIDGE_ARGS[@]}"; do
+      if [ "$skip" = "1" ]; then skip=0; continue; fi
+      case "$a" in
+        --game-id) skip=1 ;;
+        --game-id=*) : ;;
+        *) next+=("$a") ;;
+      esac
+    done
+    next+=(--game-id "match-$id")
+  else
+    next=(--transport ws --port "$WS_PORT" --deck "${req[2]}" --ai-deck "${req[3]}" --ai-profile "${req[4]}")
+    [ "$KEEP_OPEN" = "1" ] && next+=(--keep-open)
+    # Its own game id: with a --seed the bridge's default id would repeat, and a
+    # client reads a repeated gameId as a reconnect (§2.1), not a new match.
+    next+=(--games "${req[5]}" --game-id "match-$id" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}" "${pass[@]+"${pass[@]}"}")
+  fi
 
   # Never two engines: the old one is gone, and its port quiet, before the next starts.
   if [ "$was_idle" = "1" ]; then echo "the engine was asleep (D308) — starting it on the new decks"

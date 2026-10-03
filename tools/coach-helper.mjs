@@ -395,8 +395,8 @@ export function startHelper(opts) {
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? match.engine() : null;           // D308: engine running | idle
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap, ...eng }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap, ...eng }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -412,6 +412,16 @@ export function startHelper(opts) {
       const r = await match.post(q);
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/engine/start') {
+      // D308: wake a sleeping engine (match-launcher.mjs `wake`).  The same gate.
+      if (!match) { send(res, 503, { ok: false, type: 'error', message: 'the match launcher is off: this helper was not started by scripts/play.sh' }, cors); say(503); return; }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (await readBody(req, res, 4096, '4 KB', cors, say) === null) return;
+      const r = await match.wake();
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 200 ? ` (${r.body.already ? 'already running' : r.body.ms + ' ms'})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path !== '/coach') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }

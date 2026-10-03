@@ -319,7 +319,9 @@ starts the bridge again on the next `POST /match`; `/health` says `"engine":
 "running"|"idle"`. It gives up by itself after `--idle-exit-after <minutes>`
 (240; 0 never), and Ctrl-C and SIGTERM stop everything as before. Without the
 launcher (`--no-match`, `--no-coach`) and in the bare board mode the old exit
-stays. The self-test's fake engine takes the bridge's own `--idle-timeout` to
+stays. `POST /engine/start` wakes it on the last setup (plain Play), and a
+second `play.sh --engine-only` beside a live helper wakes the first and exits 0
+instead of clashing on its ports. The self-test's fake engine takes the bridge's own `--idle-timeout` to
 exit on cue.
 
 ## The cube lab — the conventions D293–D297 added

@@ -13630,9 +13630,25 @@ nothing is spinning. `--idle-exit-after` is the dial; the launcher can pass a
 smaller one, or poll `engine` and drop the lock itself. That repository is not
 changed here.
 
-**Not done.** A plain Play (the configured match, no decks) has no way to wake
-the engine: only `POST /match` does, and it needs decks. A small
-`POST /engine/start` is the obvious next route if ForgeCoach wants one.
+**Plain Play and a second launch (added before the PR).** A plain Play has no
+decks to `POST /match`, and ForgeCoach's launcher runs `play.sh --engine-only`
+again on every menu click, so two more doors:
+
+- `POST /engine/start` (same gate; `/health` `"engine_start": 1`): wakes the
+  sleeping engine on the last match setup — the last `/match`'s decks, else the
+  startup decks — through the same `request.json` + SIGUSR1, as `{"wake":true}`;
+  `play.sh` re-uses `BRIDGE_ARGS` with a fresh `--game-id` (a repeated gameId is
+  a reconnect, §2.1). Reply: `POST /match`'s 200 plus `already:false`; the
+  engine already running is 200 `already:true`. Shares `/match`'s busy flag.
+- Before it checks, builds or binds anything, `play.sh --engine-only` probes its
+  coach port. Today (before this) a second `play.sh` started its own bridge on
+  the taken ws port and died with "the bridge exited before it was ready", or,
+  with the sleeper's port free, started a second bridge beside the first's
+  helper. Now, when `/health` says `match:1` and `engine:idle`, it `POST`s
+  `/engine/start`, prints `Engine ready…` and exits 0; when the engine is
+  running and the ws port answers it says so and exits 0. Not with `--port`,
+  `--no-coach` or `--no-match`. A probe that finds nothing leaves the old
+  start-up untouched.
 
 **Tested.** `tools/match-launcher-selftest.mjs` (fake engine with the bridge's
 own `--idle-timeout`): the engine exits on idle and `play.sh` stays up with

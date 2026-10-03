@@ -362,11 +362,68 @@ try {
   await sleep(600);
   r = await http({ port: Z.coachPort });
   check('asleep again after the next match', Z.proc.exitCode === null && r.json?.engine === 'idle', r.body);
+  // D308: POST /engine/start wakes it on the last match setup.
+  r = await http({ port: Z.coachPort });
+  check('/health: engine_start 1', r.json?.engine_start === 1, r.body);
+  r = await http({ port: Z.coachPort, path: '/engine/start' });
+  check('GET /engine/start: 405', r.status === 405, `${r.status}`);
+  r = await http({ port: Z.coachPort, method: 'POST', path: '/engine/start', headers: { Origin: 'https://evil.example' } });
+  check('/engine/start from another origin: 403', r.status === 403);
+  const zs = onZ().length;
+  r = await http({ port: Z.coachPort, method: 'POST', path: '/engine/start', headers: { Origin: 'https://jalirkan.github.io' } });
+  check('POST /engine/start while asleep: 200, already false, the last match', r.status === 200 && r.json?.ok === true && r.json?.already === false
+    && r.json?.yourDeck?.name === NAME && r.json?.aiDeck?.name === 'AI Draft' && r.json?.aiProfile === 'Reckless' && r.json?.games === 1
+    && JSON.stringify(Object.keys(r.json.aiDeck)) === '["name","cards"]' && r.headers['access-control-allow-origin'] === 'https://jalirkan.github.io', `${r.status} ${r.body}`);
+  const zw = onZ();
+  check('the engine started on the last decks, with a game id of its own', zw.length === zs + 1 && argOf(zw.at(-1).argv, '--deck') === argOf(zlast.argv, '--deck')
+    && argOf(zw.at(-1).argv, '--ai-profile') === 'Reckless' && argOf(zw.at(-1).argv, '--game-id') !== argOf(zlast.argv, '--game-id')
+    && /^match-m\d{13}$/.test(argOf(zw.at(-1).argv, '--game-id') ?? ''), zw.at(-1)?.argv?.join(' '));
+  r = await http({ port: Z.coachPort, method: 'POST', path: '/engine/start' });
+  check('POST /engine/start while running: 200 already true', r.status === 200 && r.json?.ok === true && r.json?.already === true && r.json?.yourDeck?.name === NAME && onZ().length === zs + 1, `${r.status} ${r.body}`);
+  const zwl = zw.at(-1);
+  for (let i = 0; i < 100 && alive(zwl.pid); i++) await sleep(100);
+  await sleep(600);
+  r = await http({ port: Z.coachPort });
+  check('asleep once more', r.json?.engine === 'idle', r.body);
+
+  // A second launch beside a sleeping play.sh wakes it and exits 0.
+  const zc = onZ().length;
+  const second2 = spawn('bash', ['scripts/play.sh', '--engine-only', '--coach-port', String(Z.coachPort)], {
+    env: { ...process.env, PATH, MTGTABLE_TEST_FAKE_ENGINE: join(DIR, 'fake-engine.cjs'), MTGTABLE_TEST_VAR: `${REL}/second`, FAKE_EVENTS: EVENTS, FAKE_ALIVE: ALIVE },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  procs.push(second2);
+  let sout = '';
+  second2.stdout.on('data', (d) => { sout += d; });
+  second2.stderr.on('data', (d) => { sout += d; });
+  for (let i = 0; i < 200 && second2.exitCode === null; i++) await sleep(100);
+  check('second play.sh: exit 0 with a clear message', second2.exitCode === 0 && /asleep — waking it/.test(sout) && /Engine ready on/.test(sout), `${second2.exitCode}\n${sout}`);
+  check('...it started no bridge and no helper of its own, and the sleeper woke', onZ().length === zc + 1 && !starts().some((e) => argOf(e.argv, '--port') === '8642') && !existsSync(join(DIR, 'second')), sout);
+  r = await http({ port: Z.coachPort });
+  check('...and the first play.sh is running its engine again', Z.proc.exitCode === null && r.json?.engine === 'running', r.body);
+  const zl2 = onZ().at(-1);
+  for (let i = 0; i < 100 && alive(zl2.pid); i++) await sleep(100);
+  await sleep(600);
   Z.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && Z.proc.exitCode === null; i++) await sleep(50);
   check('Ctrl-C while asleep: play.sh exited 0', Z.proc.exitCode === 0, String(Z.proc.exitCode));
   check('...its coach helper is gone', await http({ port: Z.coachPort }).then(() => false, () => true));
   check('...engine.json and current.json removed', !existsSync(join(DIR, 'idle', 'match', 'engine.json')) && !existsSync(join(DIR, 'idle', 'match', 'current.json')));
+
+  console.log('== /engine/start with no earlier /match: the startup decks');
+  const W = await startPlay(['--', '--idle-timeout', '1'], 'wake');
+  const onW = () => starts().filter((e) => argOf(e.argv, '--port') === String(W.port));
+  for (let i = 0; i < 100 && alive(onW()[0]?.pid); i++) await sleep(100);
+  await sleep(600);
+  r = await http({ port: W.coachPort });
+  check('asleep', r.json?.engine === 'idle', r.body);
+  r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
+  check('POST /engine/start: 200 on the startup decks', r.status === 200 && r.json?.already === false && typeof r.json?.yourDeck?.name === 'string' && r.json?.yourDeck?.cards > 0, `${r.status} ${r.body}`);
+  const w0 = onW()[0].argv.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id');
+  const w1 = onW()[1]?.argv ?? [];
+  check('with the same flags as the first start and a game id of its own', JSON.stringify(w1.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id')) === JSON.stringify(w0) && /^match-m\d{13}$/.test(argOf(w1, '--game-id') ?? ''), w1.join(' '));
+  W.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && W.proc.exitCode === null; i++) await sleep(50);
 
   console.log('== --idle-exit-after: play.sh gives up by itself');
   const X = await startPlay(['--idle-exit-after', '0.05', '--', '--idle-timeout', '1'], 'idlex');
