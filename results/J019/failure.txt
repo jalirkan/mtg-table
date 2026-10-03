@@ -1,0 +1,62 @@
+step run1 exited 1
+
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-lab/games/730118/g1-seat1.jsonl.gz
+      frames=379 (state=313, other=2)  bytes=49994  events=1383
+      cards checked=7317  redacted=891  face-down=13  stack cards=11  opponent-hand cards=891  viewer-hand named=1248
+      shape-checked state bodies=313 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=37 (stack[].text + events[].cast.text), concealed=2, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=43  library cards revealed=0  alt blocks=0  tokens=315  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-lab/games/730119/g1-seat0.jsonl.gz
+      frames=422 (state=331, other=2)  bytes=60921  events=1432
+      cards checked=9210  redacted=1305  face-down=0  stack cards=22  opponent-hand cards=1305  viewer-hand named=1505
+      shape-checked state bodies=331 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=59 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=43  library cards revealed=152  alt blocks=0  tokens=652  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-lab/games/730119/g1-seat1.jsonl.gz
+      frames=596 (state=417, other=2)  bytes=71067  events=1432
+      cards checked=11220  redacted=1912  face-down=0  stack cards=35  opponent-hand cards=1912  viewer-hand named=1727
+      shape-checked state bodies=417 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=72 (stack[].text + events[].cast.text), concealed=1, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=42  library cards revealed=209 (209 an opponent's top card revealed by a permanent, A3)  alt blocks=0  tokens=706  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-lab/games/730120/g1-seat0.jsonl.gz
+      frames=741 (state=521, other=2)  bytes=92112  events=1700
+      cards checked=14274  redacted=1427  face-down=0  stack cards=41  opponent-hand cards=1427  viewer-hand named=1627
+      shape-checked state bodies=521 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=84 (stack[].text + events[].cast.text), concealed=4, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=42  library cards revealed=0  alt blocks=0  tokens=840  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-lab/games/730120/g1-seat1.jsonl.gz
+      frames=725 (state=511, other=2)  bytes=90332  events=1700
+      cards checked=14158  redacted=1562  face-down=0  stack cards=35  opponent-hand cards=1562  viewer-hand named=1411
+      shape-checked state bodies=511 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=78 (stack[].text + events[].cast.text), concealed=4, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=42  library cards revealed=0  alt blocks=0  tokens=838  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)

@@ -1,40 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:40:48-04:00",
+ "updated": "2026-10-03T13:41:11-04:00",
  "paused": false,
  "host": {
-  "load1": 7,
-  "memUsedGb": 10.8,
+  "load1": 7.39,
+  "memUsedGb": 6.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4
  },
- "running": [
-  {
-   "publicTitle": "Decision records pilot",
-   "publicEst": "~60 min",
-   "id": "J019",
-   "title": "Decision records pilot: 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-03T13:35:58-04:00",
-   "elapsed": 290,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 4,
-   "workersMax": 4,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "pressureEvents": [],
-   "detail": "lab-J019-run1"
-  }
- ],
+ "running": [],
  "queue": [
   {
    "publicTitle": null,
@@ -87,6 +64,17 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Decision records pilot",
+   "publicEst": "~60 min",
+   "id": "J019",
+   "title": "Decision records pilot: 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded",
+   "status": "failed",
+   "finished": "2026-10-03T13:41:11-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "step run1 exited 1"
+  },
   {
    "publicTitle": null,
    "publicEst": null,
