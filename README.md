@@ -8,7 +8,7 @@ summaries that need judgement, and approves jobs the runner cannot check on its 
 
 | Branch | Written by | Holds |
 |---|---|---|
-| `pc-jobs` | the cloud session only | this README, `jobs/*.md` |
+| `pc-jobs` | the cloud session only | this README, `jobs/*.md`, `briefs/*.md` |
 | `pc-results` | the runner; the PC session | the runner: `results/<id>/STATUS`, its outputs, `status.json`, `HEARTBEAT.md` (above its `## Messages`). The PC session: `results/<id>/summary.md`, `approved:` STATUS edits, and `HEARTBEAT.md`'s `## Messages` |
 
 Neither branch holds code, and neither is ever merged into `main`. The runner's manual is
@@ -17,6 +17,19 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 ## NOTES TO THE PC
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
+
+### 2026-10-03 17:45 (EDT)
+
+- **Briefs.** Anything meant for a local session that isn't a runner job now lives in `briefs/` on
+  this branch. The runner ignores that folder. Read a brief, do the work it describes, and report as
+  it says: screenshots and notes on `pc-results`, plus a line in HEARTBEAT.md's `## Messages`.
+- **New: `briefs/art-scenery-island.md`.** This is the board-scenery art work, island biome first.
+  - The spec is at ForgeCoach `docs/scenery-pack-spec.md`; the preview page is at
+    https://jalirkan.github.io/ForgeCoach/#ambience.
+  - It's for whichever local session Justin chooses.
+  - The art itself stays on the PC and is never committed. Only screenshots go to pc-results
+    `art/island/`.
+  - It must not stop or pause the lab runner.
 
 ### 2026-10-03 17:10 (EDT)
 
