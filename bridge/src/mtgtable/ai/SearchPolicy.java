@@ -1209,6 +1209,7 @@ public final class SearchPolicy {
         final List<double[]> wins = new ArrayList<>();
         final boolean[] active = new boolean[k];
         Arrays.fill(active, true);
+        final int[] errs = new int[k];
         int errors = 0;
         int complete = 0;
         long rolloutNs = 0;
@@ -1264,14 +1265,23 @@ public final class SearchPolicy {
                         active[i] = false;   // the rest keep playing: no restart, no lost rounds
                         continue;
                     } catch (final RuntimeException | StackOverflowError e) {
+                        // A candidate that throws in its copies (a script the copy
+                        // cannot run) is retired on its second error; only Forge's
+                        // own answer erroring, or errors everywhere, ends the search.
                         errors++;
+                        errs[i]++;
                         sink.add("search.rolloutErrors", 1);
-                        if (errors >= 3) {
+                        if (errs[0] >= 3 || errors >= 3 * k) {
                             sink.add("search.fallback.rolloutErrors", 1);
                             rep.fallback = "rolloutErrors";
                             return null;
                         }
-                        full = false;
+                        if (i > 0 && errs[i] >= 2) {
+                            active[i] = false;
+                            sink.add("search.anytime.erroredOut", 1);
+                        } else {
+                            full = false;
+                        }
                         continue;
                     }
                     if (p == null) {
