@@ -12,7 +12,8 @@
 #   tools/ai-ladder.sh league --hours 8 --jobs 7             # the self-play loop
 #   tools/ai-ladder.sh ratings [--bootstrap 200]
 #   tools/ai-ladder.sh report                                # var/ai-ladder/report.html + ladder.json
-#   tools/ai-ladder.sh decksets --per-cube 10 --seed 9100    # the dev/confirm deck sets (no games)
+#   tools/ai-ladder.sh decksets --per-cube 10                # the dev/confirm deck sets (no games), at the reserved
+#                                                            # seeds 900000000+ (tools/cubelab/seeds.ts, D332)
 #   tools/ai-ladder.sh experiments                           # the committed experiment log
 #
 # docs/guides/ai-ladder.md is the manual.  Players are tools/ai-ladder/players.json;
@@ -35,8 +36,11 @@ case "$cmd" in
     # Draft every rated cube with the lab (two AI drafters, the lab's builder) and
     # --games 0 -- no game is played; one JVM at a time -- then split the drafts
     # into tools/ai-bench/pairs-dev.txt and pairs-confirm.txt (decksets.ts).
+    # The seeds are the RESERVED range (tools/cubelab/seeds.ts, D332): the lab's
+    # own runs and the overnight queue refuse them, so no lab game is ever played
+    # on a deck-set deck; `cubelab.sh run --deckset` is the one way in.
     shift
-    per=10 seed=9100 cubes="fair-fight modern-era pauper peasant synergy vintage"
+    per=10 seed=900000000 cubes="fair-fight modern-era pauper peasant synergy vintage"
     while [ $# -gt 0 ]; do
       case "$1" in
         --per-cube) per="$2"; shift 2 ;;
@@ -52,7 +56,7 @@ case "$cmd" in
       out="var/ai-ladder/decksets/$c-$seed-$per"
       rm -rf "$out"
       echo "== $c: $per drafts from seed $seed (no games)"
-      ./tools/cubelab.sh run "$f" --drafts "$per" --games 0 --jobs 1 --seed "$seed" --out "$out" | tail -2
+      ./tools/cubelab.sh run "$f" --drafts "$per" --games 0 --jobs 1 --seed "$seed" --deckset --out "$out" | tail -2
       dirs+=("$out")
     done
     exec node tools/ai-ladder/cli.ts decksets-collect "${dirs[@]}" --note "$per drafts per cube from seed $seed: $cubes"

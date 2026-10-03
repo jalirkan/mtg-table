@@ -35,6 +35,8 @@ import { parseRatings } from './ratings.ts';
 import { reRated, runMixedDraft, type MixedMode } from './selfplay.ts';
 import type { CardInfo } from './report.ts';
 import type { Weights } from './weights.ts';
+import { assertRunSeeds } from './seeds.ts';
+import { labVersion, resumeVersions, type VersionEntry } from './versions.ts';
 
 export interface RunOptions {
   cubeFile: string;
@@ -61,6 +63,10 @@ export interface RunOptions {
   mixed?: { mode: MixedMode; ratingsFile: string; synergyFile: string | null; deckSynergy: boolean };
   /** A bridge run (`--bridge a,b`): every draft's pool sampled from these cubes (bridge.ts). */
   bridge?: BridgeOptions;
+  /** D332: draft the AI ladder's deck sets at their reserved seeds (`--deckset`, with --games 0 only; seeds.ts). */
+  deckset?: boolean;
+  /** D333: append to a folder another lab version wrote (`--allow-version-change`; logged in run.json). */
+  allowVersionChange?: boolean;
 }
 
 /** A drafter's line in drafts.jsonl: the draft side, plus which deck played and Forge's own build. */
@@ -81,6 +87,8 @@ export interface DraftRecord extends Omit<DraftOut, 'drafters' | 'ms'> {
   ms: DraftOut['ms'] & { match: number };
   /** A bridge draft's pool: its source cubes and which cube each card came from (bridge.ts; absent in a normal run). */
   bridge?: BridgeTag;
+  /** D333: the lab version (versions.ts) that drafted and played this line; absent on lines written before D333. */
+  ver?: string;
 }
 
 export interface RunMeta {
@@ -112,6 +120,10 @@ export interface RunMeta {
   };
   /** A bridge run's source cubes, shares and pool size (bridge.ts; absent in a normal run). */
   bridge?: BridgeMeta;
+  /** D333: every lab version that wrote to this folder, oldest first; the last is the current one (versions.ts). */
+  versions?: VersionEntry[];
+  /** D332: a deck-set run at reserved seeds (seeds.ts). */
+  deckset?: boolean;
 }
 
 export const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
@@ -133,6 +145,7 @@ export function defaultRatings(cubeFile: string): string | null {
 
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<void> {
   const t0 = Date.now();
+  assertRunSeeds(o.seed, o.drafts, { deckset: o.deckset, games: o.games });
   const bridge = o.bridge ? loadBridge(env, o.bridge, o.weights, say, sha) : null;
   const { lc, text } = bridge ?? loadForRun(env, o.cubeFile, o.ratingsFile, o.weights, say);
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
@@ -171,7 +184,13 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     ...(learnedMeta ? { learned: learnedMeta } : {}),
     ...(bridge ? { bridge: bridge.meta } : {}),
     ...(o.recordEvery ? { record: { every: o.recordEvery, dir: 'games' as const, cubeCopy: 'cube.md' as const } } : {}),
+    ...(o.deckset ? { deckset: true } : {}),
   };
+  const version = labVersion(env.repo, {
+    cubeShas: bridge ? bridge.meta.sources.map((x) => x.sha) : [meta.cubeSha],
+    ratingsFiles: bridge ? bridge.meta.sources.map((x) => x.ratingsFile ? path.resolve(env.repo, x.ratingsFile) : null) : [o.ratingsFile],
+    weights: o.weights,
+  });
   fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   const metaFile = path.join(o.out, 'run.json');
   const jsonl = path.join(o.out, 'drafts.jsonl');
@@ -188,6 +207,10 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     meta.seed = Math.min(old.seed, o.seed);
     meta.drafts = Math.max(old.seed + old.drafts, o.seed + o.drafts) - meta.seed;
     if (done.size > 0) say(`resuming: ${done.size} draft(s) already in ${jsonl}`);
+    // D333: a folder is one lab version unless --allow-version-change says otherwise (and it is logged).
+    meta.versions = resumeVersions(old.versions ?? (done.size === 0 ? null : undefined), version, o.seed, !!o.allowVersionChange, o.out, say);
+  } else {
+    meta.versions = resumeVersions(null, version, o.seed, false, o.out, say);
   }
   fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
   // D315: the cube as drafted, beside the recordings, so the dataset's vocabulary is this pool.
@@ -247,7 +270,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     const wins = { A: 0, B: 0 };
     for (const g of r.games) if (g.winner === 'A' || g.winner === 'B') wins[g.winner]++;
     const rec: DraftRecord = {
-      v: 1, cube: lc.cube.title, ...d,
+      v: 1, cube: lc.cube.title, ...d, ver: version.id,
       drafters: d.drafters.map((dr, k): DrafterRecord => {
         const side = k === 0 ? 'A' : 'B';
         const fb = r.forge.find((f) => f.side === side);
