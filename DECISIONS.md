@@ -13409,7 +13409,24 @@ log is cheap insurance: a reveal is rare and its value small, and a feature
 built on it would be the first thing in this repo that a leak upstream could
 silently turn into a cheating evaluator.
 
-**Measured.** See *Measured* below, added when the baseline ran.
+**Measured** (2026-10-03, a shared 4-core container at a load of 15 to 160).
+`tools/ml/record-pairs.sh` recorded the ten synergy-cube deck pairs of the AI
+baseline's bench (`tools/ai-bench/decks/synergy-*`, on its branch; copied into
+`var/ml/decks/`, not committed) at seeds 1–4 from seat 0 and seed 1 from seat 1:
+50 games, 48 finished, 2 seat-1 games killed by the 300 s `GAME_TIMEOUT` (their
+seat-0 twins had finished — under load the same seed is not always the same
+game's length) and skipped as unlabelled. `FModel.initialize` took 29 s of each
+run. With `cubes/synergy-cube-180.md`'s list as the vocabulary (189 slots, 3,456
+features): **4,671 rows from 48 games in 40 split groups** (the two chairs of
+eight games share a group), 80/10/10 → 3,684 / 626 / 361 rows; games won/lost
+from the viewer's side 21/27. Every one of the 48 recordings passed the
+scrambler. The 22 committed fixtures give 2,561 rows. Grouped 5-fold
+cross-validation of the logistic baseline (`--cv 5 --l2 1.0`, out-of-fold
+log-loss, all rows / turn 17+): prior 0.678 / 0.620, life difference 0.637 /
+0.518, the twelve-number core model **0.620 / 0.509** (accuracy 0.674 / 0.829),
+every non-card feature 0.622 / 0.494, the full vector 0.675 / 0.676. There is
+signal, it grows with the turn, and at 40 games the full vector overfits: the
+card block needs thousands of games before it pays.
 
 **Rejected.**
 
