@@ -1,3 +1,5 @@
-running
-started: 2026-10-03T11:48:16-04:00
-phase: pilot
+failed
+reason: pilot — every answer must take 1-30 s; Haiku took a median 45.5 s (mean 38.4, max 56.9)
+finished: 2026-10-03T11:51:29-04:00
+ForgeCoach: 2bf68d4
+mtg-table: e54aa16 (helper worktree)

@@ -1,0 +1,316 @@
+{
+ "bench": 2,
+ "label": "J012-pilot",
+ "startedAt": "2026-10-03T15:48:19.787Z",
+ "source": "helper",
+ "model": "claude-haiku-4-5",
+ "repeat": 1,
+ "cases": [
+  {
+   "id": "mulligan-comfort13-two-lands-on-draw",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 45496,
+     "text": "**Play:** Keep this hand.\n\n**Why:** You have 2 lands in 7 cards (28.5%, solid for a typical 24–26 land deck), reasonable color (Thriving Isle will choose White, giving you {U}{W}), and a strong creature suite with good interaction. Wasp + S.H.I.E.L.D. Spy Kit is a powerful synergy, Quake is a efficient threat that taps on noncreature spells, and you have removal (Web Up) and evasion (Ant-Man). The main downside is the slow start: Thriving Isle enters tapped, so you'll likely pass turns 1–2 and deploy creatures on turn 3 (Ant-Man + Spy Kit). However, on the draw against Forge AI, a slow but stable hand with interaction is better than gambling on a 6-card mulligan that might not improve your land count or curve.\n\n**Rule:** \"Keep 2-land hands with solid spells\" — Land count matters more than perfect curve for newer players.\n\n**Confidence:** High. This is a textbook keepable opening hand; 2 lands is the floor, not a mulligan trigger.\n\n**Trap:** Don't mulligan just because turn 1 is empty. Many decks have no turn-1 plays. What matters is: do you have a plan by turn 3–4? You do: ramp mana, then deploy Ant-Man/Wasp/Quake and use Spy Kit and Web Up. That's a real game.\n\n**Their turn:** Forge AI will untap first and likely play a 1–2 drop. Be ready to trade, block if safe, or set up Web Up for their key threat. Hold back at least one Island untap step for potential removal or interaction on their turn 2.\n\nANSWER: keep",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Keep 2-land hands with solid spells\" — Land count matters more than perfect curve for newer players"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  },
+  {
+   "id": "mulligan-number7-four-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "mulligan",
+     "canonical": "mulligan",
+     "verdict": "unacceptable",
+     "score": -1,
+     "latencyMs": 56926,
+     "text": "**Play:** Not applicable—opening-hand mulligan decision.\n\n**Why:** You have zero plays for turns 1–2 (only lands and three expensive creatures). More critically, Volcano Hellion's echo cost equals your life total *at the beginning of your next upkeep*. If you cast one on turn 3 at 20 life, you'd need to pay 20 mana next turn to keep it—an impossible cost. The hand is mana-flooded with repetition (three copies of the same spell) and no early interaction or diversification.\n\n**Rule:** \"Mulligan hands with no early plays and a single spell type\" / \"Avoid trappy cards without supporting synergies.\"\n\n**Confidence:** High. Textbook mulligan: three expensive creatures, zero early game, echo costs that will kill your creatures.\n\n**Trap:** Thinking \"four lands is a strong foundation\"—the problem isn't lack of mana, it's having *only* four lands and *only* three copies of the same expensive, punishing creature, with nothing to do until turn 3 and then a card designed to die to its own echo.\n\n**Their turn:** Not relevant.\n\n**Alternative:** None—no close call here.\n\n**Assumptions:** Volcano Hellion's echo cost is evaluated when the ability resolves (at the beginning of your upkeep), not when it entered. For newer players without dedicated echo-support cards (cost reduction, life gain), this is essentially a one-shot effect that dies to its own drawback—a trap mechanic you can't afford to learn about through this hand.\n\n---\n\nANSWER: mulligan",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Mulligan hands with no early plays and a single spell type\" / \"Avoid trappy cards without supporting synergies"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": -1,
+    "acceptable": 0,
+    "unacceptable": 1,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "mulligan",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  },
+  {
+   "id": "mulligan-trample7-curve",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 31056,
+     "text": "**Why:** Three lands support a clean curve of four 2-mana creatures on turns 2–5. Garruk's Companion (3/2 trample) provides evasion and early pressure. Mulliganing to six risks worse plays overall, and an aggressive mana curve is exactly what you want in an aggro or limited deck.\n\n**Rule:** \"Lands and plays\" — keep hands with functional mana and on-curve creatures; mulligan only for color screw or if playing control and need answers.\n\n**Confidence:** High. Fixed mana base (all green, no color issues), zero flood risk (only three lands), and a strong aggressive curve that threatens early. The lack of interaction is a drawback, but it's not a mulligan-trigger in an aggro deck.\n\n**Trap:** \"No removal means mulligan\" — in limited and aggressive decks, early pressure wins games before the opponent can stabilize. A 6-card hand often has fewer playable turns.\n\n---\n\nANSWER: keep",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Lands and plays\" — keep hands with functional mana and on-curve creatures; mulligan only for color screw or if playing control and need answers"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  },
+  {
+   "id": "mulligan-yield13-five-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 20158,
+     "text": "**Mulligan decision:** KEEP\n\n**Why:** You have 5 green sources out of 7, which is a solid mana base for a monochrome green deck running cheap creatures. Turn 1 Thallid, Turn 2 Forest + Thallid is a reasonable start, and from turn 3 onward you'll be generating saproling tokens. While spell-light, this hand is functional—mulliganing to 6 cards gives you worse odds of a better draw and still doesn't guarantee you escape a weak hand.\n\n**Rule:** \"Keep hands with functional mana (no colour screw) and a play turn 1–2; mulligan only if you're locked out or can't cast spells.\"\n\n**Confidence:** High. This is a textbook opener for a green token/growth deck.\n\n**Trap:** Don't mulligan because you see \"a lot of lands.\" Green decks with many cheap creatures and token generators *should* play 5–6 lands in the opener to hit land drops and cast spells reliably. The real trap is being mulligan-happy and throwing away a playable hand for a risky shorter hand.\n\n**Their turn:** Forge plays first. Watch what they cast on turn 1—if it's aggressive, you're on the back foot. But your Thallids are resilient and don't need to be creatures; they're long-term token factories, so you can afford to be patient if they're not an immediate threat.\n\n**Assumption:** I'm reading this as a green-focused Limited or casual deck centered on Thallids and Saproling tokens.\n\n---\n\nANSWER: keep",
+     "model": "claude-haiku-4-5-20251001",
+     "stated": {
+      "confidence": "high",
+      "rule": "Keep hands with functional mana (no colour screw) and a play turn 1–2; mulligan only if you're locked out or can't cast spells"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  }
+ ],
+ "summary": {
+  "byType": {
+   "mulligan": {
+    "cases": 4,
+    "samples": 4,
+    "score": {
+     "mean": 0.5,
+     "lo": -0.5,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 0.75,
+     "lo": 0.25,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0.25,
+     "lo": 0,
+     "hi": 0.75
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.4898908403969213
+    },
+    "errors": 0,
+    "transportError": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.4898908403969213
+    },
+    "unstable": 0,
+    "latencyMs": {
+     "mean": 38409,
+     "median": 45496,
+     "p90": 56926,
+     "max": 56926
+    },
+    "models": [
+     "claude-haiku-4-5-20251001"
+    ],
+    "regret": null
+   }
+  },
+  "total": {
+   "cases": 4,
+   "samples": 4,
+   "score": {
+    "mean": 0.5,
+    "lo": -0.5,
+    "hi": 1
+   },
+   "acceptable": {
+    "mean": 0.75,
+    "lo": 0.25,
+    "hi": 1
+   },
+   "blunder": {
+    "mean": 0.25,
+    "lo": 0,
+    "hi": 0.75
+   },
+   "formatFailure": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.4898908403969213
+   },
+   "errors": 0,
+   "transportError": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.4898908403969213
+   },
+   "unstable": 0,
+   "latencyMs": {
+    "mean": 38409,
+    "median": 45496,
+    "p90": 56926,
+    "max": 56926
+   },
+   "models": [
+    "claude-haiku-4-5-20251001"
+   ],
+   "regret": null
+  },
+  "lowConfidence": 0,
+  "latencyMs": {
+   "mean": 38409,
+   "median": 45496,
+   "p90": 56926,
+   "max": 56926
+  },
+  "errors": 0,
+  "calls": 4
+ },
+ "promptFormat": "classic",
+ "promptSections": [
+  {
+   "name": "System prompt",
+   "meanChars": 4057,
+   "maxChars": 4057,
+   "cases": 4,
+   "share": 0.7213085607609565
+  },
+  {
+   "name": "Card text",
+   "meanChars": 514,
+   "maxChars": 1264,
+   "cases": 4,
+   "share": 0.09138590096897502
+  },
+  {
+   "name": "You (state)",
+   "meanChars": 374,
+   "maxChars": 421,
+   "cases": 4,
+   "share": 0.06640590274691084
+  },
+  {
+   "name": "Bench answer",
+   "meanChars": 231,
+   "maxChars": 231,
+   "cases": 4,
+   "share": 0.04107031736154325
+  },
+  {
+   "name": "Decision",
+   "meanChars": 178,
+   "maxChars": 178,
+   "cases": 4,
+   "share": 0.03164725753400302
+  },
+  {
+   "name": "Question",
+   "meanChars": 156,
+   "maxChars": 156,
+   "cases": 4,
+   "share": 0.02773579873766557
+  },
+  {
+   "name": "Opponent (state)",
+   "meanChars": 101,
+   "maxChars": 101,
+   "cases": 4,
+   "share": 0.01795715174682194
+  },
+  {
+   "name": "Stack",
+   "meanChars": 14,
+   "maxChars": 14,
+   "cases": 4,
+   "share": 0.002489110143123833
+  }
+ ]
+}
