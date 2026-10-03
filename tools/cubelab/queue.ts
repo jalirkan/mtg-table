@@ -6,6 +6,14 @@
 //   tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7      # plays it (resumable: run the same line again)
 //       [--bridge-share 0.2] [--games 1] [--chunk 250] [--min-drafts 20] [--cubes a,b,...] [--power power.tsv]
 //       [--bridge-ratings even|own] [--record-every N]   (N = 1: every game, both chairs, D315)
+//       [--allow-version-change]   append to key folders another lab version wrote (D341; logged)
+//
+// SEEDS (D340, seeds.ts): the ledger counts each key's seeds up from 1 and a
+// chunk must stay below 800,000,000; the AI ladder's deck sets live at
+// 900,000,000+ and the lab never drafts them.  VERSIONS (D341): every chunk's
+// run refuses to append to a key folder another code / engine / ratings / cube
+// version wrote unless --allow-version-change, and night-<N>.json lists every
+// `queue run` of the night with its code and jar.
 //
 // One folder (`--root`, default var/cubelab/queue) holds every night: a run
 // folder per POOL KEY — `normal/<cube>` for a cube's own drafts,
@@ -32,7 +40,9 @@
 //   pair weight  = novelty × link(tier gap) × (mean var_c over the pair's cards) / prior var
 //
 // var_c is a card's current uncertainty: its posterior variance from the
-// matchup model's power.tsv when `--power` names one (the `sd` column), else
+// matchup model's power.tsv when `--power` names one (the `sdPost` column, the
+// Laplace posterior SD, D342; an old file with only a bootstrap `sd` is
+// refused, and an AI-limited card counts 0), else
 // 1 / (1/τ² + g_c/4), τ = 0.25 logits, g_c = the decisive games the card has
 // already played in ANY cube's runs under the root (pooled by name: a card's
 // Omega games count for Vintage too).  m_c is the number of selected cubes
@@ -56,6 +66,8 @@ import { parseCube } from './cube.ts';
 import { engineEnv, engineFacts } from './engine.ts';
 import { defaultRatings, runLab, type DraftRecord, type RunOptions } from './run.ts';
 import { DEFAULT_WEIGHTS } from './weights.ts';
+import { assertQueueSeeds } from './seeds.ts';
+import { codeVersion, fileSha } from './versions.ts';
 
 /** Power tier of each cube: 0 flat, 1 middle, 2 powered.  A cube not listed is treated as middle. */
 export const TIERS: Record<string, { tier: number; why: string }> = {
@@ -144,7 +156,11 @@ export function allocate(total: number, keys: Array<{ key: string; weight: numbe
 }
 
 export interface Chunk { key: string; kind: 'normal' | 'bridge'; cubes: string[]; seed: number; drafts: number }
-export interface NightPlan { night: number; drafts: number; games: number; format: string; knobs: QueueKnobs; alloc: KeyAlloc[]; pairs: PairRow[]; chunks: Chunk[]; bridgeRatings?: 'even' | 'own' }
+export interface NightPlan {
+  night: number; drafts: number; games: number; format: string; knobs: QueueKnobs; alloc: KeyAlloc[]; pairs: PairRow[]; chunks: Chunk[]; bridgeRatings?: 'even' | 'own';
+  /** D341: one line per `queue run` of this night: when, the code and engine it ran on (each chunk's run.json has the full version). */
+  runs?: Array<{ at: string; gitSha: string | null; codeTree: string | null; dirty: boolean; diffSha: string | null; forgeJarSha256: string | null; allowVersionChange: boolean }>;
+}
 export interface Ledger { v: 1; games: number; format: string; nextSeed: Record<string, number>; nights: number[] }
 
 /** The night's plan: the allocation, then chunks of at most `chunk` drafts with fresh seeds from the ledger, interleaved. */
@@ -165,6 +181,7 @@ export function planNight(night: number, total: number, cubes: CubeSet[], games:
     let seed = ledger.nextSeed[a.key] ?? 1;
     for (let left = a.drafts; left > 0;) {
       const n = Math.min(chunk, left);
+      assertQueueSeeds(a.key, seed, n);
       out.push({ key: a.key, kind: a.kind, cubes: a.cubes, seed, drafts: n });
       seed += n; left -= n;
     }
@@ -177,10 +194,11 @@ export function planNight(night: number, total: number, cubes: CubeSet[], games:
   return { night, drafts: total, games: ledger.games, format: ledger.format, knobs: k, alloc, pairs, chunks };
 }
 
-/** Every (key, seed) of every plan, once: throws on a duplicate (it would be the same draft twice). */
+/** Every (key, seed) of every plan, once: throws on a duplicate (it would be the same draft twice) or a seed out of the lab range (D340). */
 export function assertNoDuplicates(plans: NightPlan[]): number {
   const seen = new Set<string>();
   let n = 0;
+  for (const p of plans) for (const c of p.chunks) assertQueueSeeds(c.key, c.seed, c.drafts);
   for (const p of plans) for (const c of p.chunks) for (let s = c.seed; s < c.seed + c.drafts; s++) {
     const id = `${c.key}#${s}`;
     if (seen.has(id)) throw new Error(`queue: ${c.key} seed ${s} is planned twice (nights ${p.night} and earlier) -- the ledger is broken`);
@@ -217,15 +235,28 @@ export function gamesByCard(dirs: string[]): Map<string, number> {
 }
 const BASICS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes']);
 
-/** power.tsv's sd column (tools/ml/matchup.py), by card name. */
+/**
+ * power.tsv's POSTERIOR SD column (`sdPost`, tools/ml/matchup.py, D342), by card name.  A file with only the old
+ * `sd` column (a bootstrap of shrunk estimates, 2-15x too small for the least-seen cards: review 2, N1) is
+ * refused, not read.  An AI-limited card (`ai` = limited) gets 0: Forge's games cannot rate it, so no
+ * draft is spent on learning it.
+ */
 export function readPowerSd(file: string): Map<string, number> {
   const m = new Map<string, number>();
   const lines = fs.readFileSync(file, 'utf8').split('\n').filter((l) => l.trim() && !l.startsWith('#'));
   const head = (lines.shift() ?? '').split('\t');
   const iName = head.indexOf('name');
-  const iSd = head.indexOf('sd');
-  if (iName < 0 || iSd < 0) throw new Error(`${file}: want a header with name and sd columns`);
-  for (const l of lines) { const f = l.split('\t'); m.set(f[iName] as string, Number(f[iSd])); }
+  const iSd = head.indexOf('sdPost');
+  const iAi = head.indexOf('ai');
+  if (iName < 0 || iSd < 0) {
+    throw new Error(head.includes('sd')
+      ? `${file} is an old power.tsv: its sd column is a bootstrap of shrunk estimates (far too small for the least-seen cards) -- retrain with tools/ml/matchup.py, which writes sdPost`
+      : `${file}: want a header with name and sdPost columns`);
+  }
+  for (const l of lines) {
+    const f = l.split('\t');
+    m.set(f[iName] as string, iAi >= 0 && f[iAi] === 'limited' ? 0 : Number(f[iSd]));
+  }
   return m;
 }
 
@@ -261,12 +292,13 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
   let plan: NightPlan;
   if (fs.existsSync(planFile)) {
     plan = JSON.parse(fs.readFileSync(planFile, 'utf8')) as NightPlan;
+    for (const c of plan.chunks) assertQueueSeeds(c.key, c.seed, c.drafts);
     say(`night ${night}: re-reading its plan (${planFile}); finished drafts are skipped`);
   } else {
     const drafts = num('drafts', NaN);
     if (!Number.isInteger(drafts) || drafts < 1) throw new Error('a new night needs --drafts D');
     const knobs: QueueKnobs = { ...QUEUE_DEFAULTS, bridgeShare: num('bridge-share', QUEUE_DEFAULTS.bridgeShare), minDrafts: num('min-drafts', QUEUE_DEFAULTS.minDrafts) };
-    const sd = one('power') ? readPowerSd(one('power') as string) : null;
+    const sd = one('power') ? readPowerSd(one('power') as string) : null;  // sdPost, D342
     const g = gamesByCard([root]);
     say(`coverage: ${g.size} card(s) with games under ${root}${sd ? `; uncertainty from ${one('power')}` : ''}`);
     ledger = JSON.parse(JSON.stringify(ledger)) as Ledger;
@@ -290,6 +322,10 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
   engineFacts(env, [...new Set(cubes.flatMap((c) => c.cards))], say);
   const jobs = Math.max(1, num('jobs', 1));
   const recordEvery = num('record-every', 0);
+  const allowVersionChange = f.has('allow-version-change');
+  // D341: the night's plan records every run of it, with the code and engine (each chunk's run.json has the full version).
+  plan.runs = [...(plan.runs ?? []), { at: new Date().toISOString(), ...codeVersion(repo), forgeJarSha256: fileSha(process.env.FORGE_JAR ?? null), allowVersionChange }];
+  fs.writeFileSync(planFile, `${JSON.stringify(plan, null, 1)}\n`);
   if (jobs > env.homes.length) throw new Error(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
   let k = 0;
   const failed: string[] = [];
@@ -300,6 +336,7 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
       cubeFile, format: plan.format as 'grid' | 'winston', drafts: c.drafts, games: plan.games, jobs, seed: c.seed,
       profiles: ['Default', 'Default'], ratingsFile: c.kind === 'normal' ? defaultRatings(cubeFile) : null, record: 0,
       out: path.join(root, c.key), builder: 'lab', gameTimeoutSec: num('game-timeout', 300), winstonCards: 90, weights: DEFAULT_WEIGHTS,
+      ...(allowVersionChange ? { allowVersionChange: true } : {}),
     };
     if (c.kind === 'bridge') {
       o.bridge = bridgeOptions(repo, c.cubes.join(','), undefined, 180, plan.bridgeRatings ?? 'even');
@@ -317,7 +354,7 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
         if (!rj.record) throw new Error('--record-every was asked for, but the run did not record (D315) -- stopping the night');
       }
     } catch (e) {
-      if (e instanceof Error && /did not record \(D315\)/.test(e.message)) throw e;
+      if (e instanceof Error && /did not record \(D315\)|was written by lab version/.test(e.message)) throw e;
       failed.push(`${c.key} seeds ${c.seed}..${c.seed + c.drafts - 1}: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`);
       say(`chunk ${k} FAILED, carrying on: ${failed.at(-1)}`);
     }

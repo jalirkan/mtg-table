@@ -207,7 +207,7 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 |---|---|---|
 | `--format grid\|winston` | `grid` | |
 | `--drafts N` | 10 | drafts, seeds `S` .. `S+N-1` |
-| `--seed S` | 1 | a draft and its decks are a function of their seed |
+| `--seed S` | 1 | a draft and its decks are a function of their seed; 900,000,000+ is reserved for the AI ladder's deck sets and refused (D340, *Seeds and versions* below) |
 | `--games N` | 3 | best of N; stops at a majority. `0` drafts and builds only and plays nothing (the AI ladder's deck sets, D318) |
 | `--jobs K` | 1 | worker JVMs, each in its own Forge home under `var/cubelab/homes/<k>/` |
 | `--profiles A,B` | `Default,Default` | the AI profile of each seat (`forge-home/res/ai/*.ai`) |
@@ -215,7 +215,9 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 | `--record M` | 0 | frame logs of M drafts' decks, in `<out>/frames/` |
 | `--record-all` | off | every game played, both chairs, gzipped, in `<out>/games/` (D315) |
 | `--record-every N` | 0 (off) | the same for each draft whose seed is a multiple of N |
-| `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes |
+| `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes, under the same lab version only (D341) |
+| `--allow-version-change` | off | resume a folder another lab version (code, jar, ratings, cube, weights) wrote; logged in `run.json` (D341) |
+| `--deckset` | off | draft the AI ladder's deck sets at the reserved seeds; needs `--games 0` (`ai-ladder.sh decksets` passes it; D340) |
 | `--builder lab\|forge` | `lab` | which deck plays |
 | `--game-timeout <sec>` | 300 | a game past it is a draw |
 | `--winston-cards N` | 90 | the size of the Winston stack |
@@ -744,7 +746,8 @@ tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 -
 | `--chunk N` | 250 | drafts per run call; chunks of every key are interleaved, so a night cut short has some of everything |
 | `--min-drafts N` | 20 | a key that would get fewer gets none, and its share goes to the rest |
 | `--cubes a,b,…` | every `cubes/*-cube-180.md` | |
-| `--power <tsv>` | | the matchup model's `power.tsv`: its `sd` column drives the allocation |
+| `--power <tsv>` | | the matchup model's `power.tsv`: its `sdPost` column (the posterior SD, D342) drives the allocation; an old file with only a bootstrap `sd` is refused, and an AI-limited card counts 0 |
+| `--allow-version-change` | off | append to key folders another lab version wrote (D341; logged in each `run.json`) |
 | `--bridge-ratings even\|own` | `even` | as for `run` |
 | `--record-every N` | 0 | passed to every run: record every game of every Nth draft in the worker, both chairs (D315; the night stops if a run did not record) |
 | `--root <dir>` | `var/cubelab/queue` | |
@@ -762,7 +765,7 @@ every cube's cards at the start; every chunk's lookup is then a subset of it
 drafts follow weights, printed by `plan`:
 
 - a cube's weight is Σ over its cards of var_c / m_c: var_c is the card's
-  uncertainty (`--power`'s `sd`², else 1 / (16 + g_c/4), g_c its decisive
+  uncertainty (`--power`'s `sdPost`², else 1 / (16 + g_c/4), g_c its decisive
   games so far under the root, POOLED BY NAME across cubes), m_c the number of
   cubes listing it, so a card five cubes share is paid for once and a cube
   whose cards are well covered elsewhere gets fewer drafts;
@@ -787,6 +790,39 @@ plan file records them) and the tiers its `TIERS` table:
 | `minPairWeight` | 0.25 | a pair whose novelty × link is under this is skipped |
 | `tau` | 0.25 | the prior SD (logits) behind var_c from game counts when there is no `--power` |
 | `minDrafts` | 20 | a key under this many drafts gets none (`--min-drafts`) |
+
+### Seeds and versions (D340–D341)
+
+**Seeds belong to someone** (`tools/cubelab/seeds.ts`). A draft is a function
+of its seed, so two tools drafting one cube at one seed make the same decks.
+The line is split once: **1 – 799,999,999** is the lab's (plain runs, the
+queue's ledger counting up from 1, selfplay, evolve); **800,000,000 –
+899,999,999** is for pre-registered verifications (`matchup.py design` prints
+its job there; the queue never reaches it); **900,000,000 – 999,999,999** is
+**reserved** for the AI ladder's dev and confirm deck sets. `run` refuses a
+reserved seed unless `--deckset`, which `ai-ladder.sh decksets` passes and
+which requires `--games 0`: the lab never plays a deck-set deck, so none of
+their games can reach a training set. The queue refuses a plan or a chunk
+outside the lab range. The seed rule has a second line behind it: the dataset
+builders drop any game whose deck *is* a deck-set deck, card for card,
+whatever its seed (`tools/ml/reserved.py`).
+
+**Every run says what made it** (`tools/cubelab/versions.ts`). `run.json`
+keeps `versions`: each lab version that wrote to the folder, oldest first —
+the HEAD commit (recorded), a hash of the committed tree under `bridge/src`,
+`tools/cubelab` and `forge-home` and whether those paths are dirty (with a
+hash of the diff), the Forge jar's sha256, the ratings file's (a bridge run:
+each source's), the cube's, the weights', and the Node version (recorded) —
+with the first seed it drafted. Every `drafts.jsonl` line carries `ver`, the
+version's 12-hex id. **A folder is one version**: resuming under a different
+code tree, diff, jar, ratings, cube or weights is refused, naming what changed;
+`--allow-version-change` appends anyway and logs it in `run.json`
+(`allowedChange`: the flag, what changed, the version before), so a reader can
+split the folder by `ver` (`matchup.py train --ver`, `dataset.py --ver`). A
+docs-only commit changes HEAD but not the tree hash, so it does not stop a
+night. The queue's `night-N.json` lists every `queue run` of the night with its
+commit, tree, diff and jar; a version refusal stops the night (every chunk would
+fail the same way).
 
 ## What it does not do
 

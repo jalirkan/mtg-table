@@ -15218,3 +15218,342 @@ to the public branch (one commit, replaced, is the value; the history is on `pc-
   Globs treat `[` and `]` as literal. Old `.restart-*` copies are pruned to two. Missing
   timestamps are null. The guide says that oomd's 60% kill can come before the soft
   backoff, and that push access to `pc-jobs` is code execution on the PC.
+
+## D340 — Draft seeds belong to someone: the lab keeps 1–799,999,999, verifications 800,000,000+, and the AI ladder's deck sets 900,000,000+, which `run` and the queue refuse; the dataset builders also drop any game played with a deck-set deck, matched card for card
+
+*Branch `c/review2-fixes`; D340–D344, past every number the open lanes hold or may hold (the lab runner, the coach grader D332–D334, the match launcher's D333, evolve-rigor's D331).*
+
+**2026-10-03** (methodology review 2, N4: a condition of the multi-night runs)
+
+**Context.** A draft is a pure function of its cube, ratings, weights, format and
+seed (D294). The ladder's dev and confirm sets (D318) were drafted at seeds
+9100–9109 of each cube with the lab's defaults, and the overnight queue (D323)
+counts every cube's seeds up from 1 with the same defaults: by night 2 it would
+have drafted the confirm decks again, recorded their games (D315) and handed
+them to the position evaluator, so a search with an evaluator leaf would be
+confirmed on decks it trained on — the leak H2 and M7 were about. Checked
+here: `cubelab.sh run cubes/synergy-cube-180.md --seed 9100 --drafts 2 --games 0`
+on this branch's code wrote seed 9100's deck A identical, card for card, to the
+committed `synergy-9100-A.dck`.
+
+**Decision.**
+
+- **`tools/cubelab/seeds.ts`** splits the seed line once: **1–799,999,999** the
+  lab's (plain runs, the queue, selfplay, evolve — whose confirmation seeds sit
+  at S + 1,000,000, D331); **800,000,000–899,999,999** fresh seeds for a
+  pre-registered verification (D344); **900,000,000–999,999,999 RESERVED** for
+  the deck sets. `runLab` refuses a range that touches the reserved one unless
+  `--deckset`, which is allowed only inside it and only with `--games 0`: the lab
+  never plays a deck-set deck, so no game of one can be recorded. The queue's
+  planner and its re-read plans refuse a chunk outside the lab range.
+- **`ai-ladder.sh decksets`** drafts at 900,000,000 (`--seed` still overrides,
+  inside the range) and passes `--deckset`. **The sets were regenerated** on this branch (10 drafts per cube
+  of the six rated cubes at 900,000,000–900,000,009, `--games 0`, about a minute a
+  cube): `pairs-dev.txt` and `pairs-confirm.txt` hold 30 new pairs each, and the
+  old `*-9100…9109-*.dck` files are removed. Ladder results on the old sets keep
+  their `setHash` in `experiments.jsonl`; they are a different deck set from the
+  current one and are not pooled with it.
+- **The second line: card multisets.** `tools/ml/reserved.py` reads every deck
+  named by `tools/ai-bench/pairs-dev.txt` and `pairs-confirm.txt` and keys it by
+  its main deck's card counts (set codes dropped). `matchup_data.collect`
+  (hence `matchup.py train`) and `dataset.py` drop and count every game either
+  of whose decks is one of them, whatever its seed — an old run folder, a cube or
+  ratings change that moves a deck to another seed, a deck copied into another
+  tool. A lab recording is traced to its decks through its run folder's
+  `drafts.jsonl` (`games/<seed>/…`, `frames/draft-<seed>-…`); any other log by the
+  viewer's own `.dck` when `hello_ok` names one. Both sets are reserved by
+  default (training on dev decks would flatter a tune on them the same way);
+  `--keep-reserved` turns it off. `dataset.py` writes `reservedChecked` to
+  `stats.json`, and `train_eval.py` warns on a dataset built without it.
+
+**Rejected.** Having the queue's ledger skip 9000–9999 (it protects one
+historical range, not the next deck set, and a seed rule alone misses a deck
+that moved seed); filtering by seed in the builders (the same: a seed is not a
+deck); reserving only the confirm set (the dev set is what `tune` reads).
+
+## D341 — Every lab run stamps its version: code tree, diff, jar, ratings, cube and weights in `run.json`, a `ver` id on every draft line; a folder is one version unless `--allow-version-change`, which is logged
+
+**2026-10-03** (methodology review 2, N5: a condition of the multi-night runs)
+
+**Context.** Queue nights append to one folder per pool key and the PC pulls
+`main` before its jobs; `run.json` recorded the cube's hash and the jar's *path*
+only, and the resume check compared neither code nor ratings. A fix to the
+drafter, builder, recorder or bridge between nights would have mixed two
+populations in one folder with nothing to tell them apart afterwards.
+
+**Decision.** `tools/cubelab/versions.ts`: a run's version is HEAD (recorded),
+the sha256 of `git ls-tree -r HEAD` over `bridge/src`, `tools/cubelab` and
+`forge-home` (compared), whether those paths have uncommitted changes or new
+files and a hash of the diff and the new files (compared), the Forge jar's
+sha256 (compared; cached by size and mtime), the ratings file's (a bridge run:
+each source's), the cube's, the weights' (compared) and the Node version
+(recorded). Its id is 12 hex of a hash over the compared fields. `run.json`
+keeps `versions`, every version that wrote to the folder with the first seed it
+drafted; every `drafts.jsonl` line carries `ver`. **Resuming under another id
+is refused**, naming the fields that changed; `--allow-version-change` (on
+`run` and `queue run`) appends anyway and records `allowedChange: {flag,
+changed, from}` in `run.json` and on stdout. A folder from before D341 with
+drafts in it is an unknown version and needs the flag. The queue's
+`night-N.json` lists every `queue run` of the night with its commit, tree, diff
+and jar, and a version refusal stops the night rather than failing every chunk.
+`matchup_data` carries `ver` into every record (`unversioned` before D341),
+`matchup.py train --ver` and `dataset.py --ver` keep only some, and the report,
+`balance.json` and the dataset's `games.jsonl` / `stats.json` count games per
+version, so a reader can split by it.
+
+**Why the tree hash and not HEAD.** HEAD moves with a docs-only commit, and a
+refusal that fires on every pull would train everyone to pass the flag. The
+three paths are what makes a draft and a game; the cube, ratings and jar are
+hashed separately.
+
+**Rejected.** Refusing any change outright (a deliberate engine or bug fix
+mid-programme must stay possible, and visible); stamping only `run.json` (a
+folder holds many nights; the line is the unit a reader filters); `git describe`
+(not a content hash); hashing all of `tools/` (the runner, the ladder and the
+docs change daily and make no draft).
+
+Not done: the queue does not yet write start and end lines to
+`docs/evidence/experiments.jsonl` (review 2's N5 also asks for them); that
+log's shape is the ladder's (players, deck set), and a queue line needs its own
+kind first.
+
+## D342 — The matchup model's card uncertainty is the Laplace posterior SD, its balance number is de-biased over the posterior, and with one game per draft its prior widths come from the evidence
+
+**2026-10-03** (methodology review 2, N1 and N2)
+
+**Context.** `power.tsv`'s `sd` was the spread of M0 refitted on bootstrap
+resamples of drafts with the prior width held fixed: the spread of a *shrunk*
+estimate, about 0 for a card with no games. The shipped report had uncertainty
+going *down* with evidence (The Wandering Emperor, 2 games, 0.005; Hangarback
+Walker, 62 games, 0.008). Three things read it: `design`'s uncertainty penalty
+(which then pushed the optimiser toward the least-known cards), the queue's
+`--power` allocation (fewer drafts to the cubes whose cards are least known),
+and the planned `meta.json` `valueSd`. The balance number was the spread of the
+MAP's predictions, biased toward "balanced" by an amount that depends on the
+games a cube has (3.6 points for a true 6.1 at 8k games in the review's
+simulation), so it ranked cubes partly by sample size.
+
+**Decision.**
+
+- **`sdPost`**: `Linear.posterior_cov()` is H⁻¹ at the MAP, H = Z′WZ +
+  diag(prec) — in the dual regime by Woodbury, Σ = L − (ZL)′(R⁻¹ + ZLZ′)⁻¹(ZL) —
+  and `power_sd_post(centre)` the square root of diag(AΣA′), A the linear map
+  from θ to each card's power relative to the average nonland card (features
+  and the centring included). `power.tsv`'s header is now `name power sdPost
+  sdBoot points prior games land ai cubes`: the old `sd` column is gone, so an
+  old file cannot be misread; `queue --power` reads `sdPost` and refuses a file
+  with only `sd`; `model.json` carries `powerSdPost` and `powerSdBoot`, and
+  `design` refuses a model without `powerSdPost`. Nothing exports `valueSd`
+  yet; when `meta.json` gains it (D324's switch), it is `sdPost`. The bootstrap
+  stays as `sdBoot`, a misspecification check.
+- **The balance number** (`balance_posterior`): each deck's win rate against
+  at most 400 of the cube's other decks (the full K × K matrix is 650 MB at a
+  night's 9,000 decks a cube), SD across decks, computed over 200 draws θ_s ~
+  N(θ̂, Σ) of M1's Laplace posterior and reported as sqrt(mean_s SD_s²) — the
+  law of total variance: the spread of the posterior means plus the variance
+  the shrinkage left out — with the draws' 2.5–97.5% as its interval. The report
+  keeps the shrunk number beside it and a **reliability**, shrunk² /
+  de-biased², with the rule **compare cubes only when their reliabilities are
+  alike**. (Not flatness's subtraction: flatness de-noises *unbiased* raw rates
+  by subtracting their noise; a posterior mean is already shrunk, so the
+  posterior variance is *added* back.)
+- **The prior widths** (`train --tau-by auto`, the default): the Laplace
+  evidence when every draft has one decisive game — the queue's `--games 1`,
+  where games are independent given the decks and D324's objection (a best of
+  three's games counted as independent) does not apply — else D324's grouped
+  cross-validation. The τ grid gained 0.03, 0.04, 0.06 and 0.085. Everything
+  above inherits τ: with cross-validation's pick (0.02 for a true 0.03 at 12k
+  games) the 95% intervals covered 0.88 and the balance read 2.4 for 3.4.
+
+**Validated** (`tools/ml/matchup_sim.py`, the review's world in the model's own
+classes: 300 cards over four overlapping cubes, 23-card decks drafted toward the
+stronger cards, one game per draft, seeded; `tests/test_review2.py` runs a small
+one on every gate). Coverage of the cards' 95% intervals, and the
+balance of cube 0's decks (true / old shrunk / de-biased, win-rate points):
+
+| world | games | sdPost covers | least-seen fifth | sdBoot covers | least-seen fifth | balance true | shrunk | de-biased |
+|---|---|---|---|---|---|---|---|---|
+| τ 0.06, seed 7 | 1,000 | 0.98 | 0.93 | 0.48 | 0.30 | 6.7 | 4.0 | 6.5 |
+| τ 0.06, seed 7 | 4,000 | 0.97 | 0.93 | 0.60 | 0.32 | 6.6 | 5.2 | 6.6 |
+| τ 0.06, seed 7 | 12,000 | 0.95 | 0.91 | 0.76 | 0.73 | 6.6 | 5.6 | 6.4 |
+| τ 0.03, seed 7 | 1,000 | 0.98 | 0.93 | 0.52 | 0.27 | 3.4 | 1.6 | 3.4 |
+| τ 0.03, seed 7 | 4,000 | 0.97 | 0.91 | 0.48 | 0.20 | 3.4 | 2.1 | 3.4 |
+| τ 0.03, seed 7 | 12,000 | 0.96 | 0.93 | 0.66 | 0.48 | 3.4 | 2.2 | 3.2 |
+| τ 0.06, seeds 1–4, mean | 1,000 | 0.96 | 0.92 | 0.51 | 0.28 | 6.6 | 4.1 | 7.0 |
+| τ 0.06, seeds 1–4, mean | 4,000 | 0.96 | 0.92 | 0.65 | 0.46 | 6.5 | 5.1 | 6.6 |
+| τ 0.03, seeds 1–4, mean | 1,000 | 0.93 | 0.90 | 0.45 | 0.30 | 3.4 | 1.7 | 3.7 |
+| τ 0.03, seeds 1–4, mean | 4,000 | 0.97 | 0.93 | 0.55 | 0.33 | 3.3 | 2.3 | 3.8 |
+
+With D324's cross-validated τ on the same seed-7 worlds the posterior SD
+covered 0.86–0.94 (0.80–0.89 for the least-seen) and the balance read 4.7 / 6.6
+/ 6.0 for 6.6 and 2.6 / 3.4 / 2.4 for 3.4: the remaining bias was τ's.
+
+**What is still loose.** The de-biased number is close at τ 0.06 (+3% to +7%
+over seeds 1–4) but runs high at τ 0.03 (+12% to +16%, seed-to-seed SD about
+20%), where the evidence's τ is itself uncertain; and its 95% interval is a
+posterior interval *given* τ, which covered the truth in 3 of 4 worlds at τ 0.06
+and 2 of 4 at τ 0.03. Read it as a lower bound on the uncertainty, and the
+reliability column as the comparability check. An interval that also carries
+τ's uncertainty (a bootstrap over drafts of the whole fit) is the next step if
+cubes are to be ranked on it.
+
+**Rejected.** A larger bootstrap (it estimates the wrong quantity at any B);
+MCMC (Laplace is exact for the Gaussian prior up to the logistic curvature and
+costs one inverse); reporting the shrunk balance with a caveat only (the bias
+depends on game counts, so the ranking would still be by sample size); keeping
+CV for τ under one game per draft (its pick is noisy and low, and the
+uncertainty and balance inherit it).
+
+## D343 — The matchup model does not rate the cards Forge cannot play: AI:RemoveDeck:All cards stay at their feature prior, one shared column takes their dead weight, and `design` never cuts an AI-limited card
+
+**2026-10-03** (methodology review 2, N6)
+
+**Context.** `learn.ts` held Forge `AI:RemAIDeck` cards at their prior (D301) and
+`evolve` never cuts them (D299); the matchup model and `design` had no such
+guard. Forge's Default pilot seldom or never casts these cards (Viscera Seer
+and Goblin Bombardment: 0 casts in 400 games, ai-baseline §4), so the model
+rated them confident blanks, and `design` would have swapped them out.
+
+**Decision.** `matchup_data.ai_flags`: a card is **All** when the engine facts
+(`remAIDeck`), a run's `cards.json` or a cube document's notes ("Rated `All`:",
+"`AI:RemoveDeck:All` …:") say so, **Random** for `remRandomDeck` or a "Random"
+note. In M0, M1 and the additive baseline an **All** card's columns are zero —
+its b_c stays at its prior and it teaches the feature weights nothing — and one
+shared column, the difference in how many such cards the two decks hold (prior
+SD 0.25), takes the dead weight so it is not blamed on its deckmates. Its power
+is its feature prior and its `sdPost` the prior's width; `power.tsv` marks it
+`ai = limited` (`random` for the other flag), the report does not rank it and
+lists it apart, the queue's `--power` gives it variance 0 (Forge's games
+cannot rate it, so no draft is spent learning it). `design` locks every
+AI-limited card of the target (All or Random) in the pool and never swaps an
+All card in. `--rate-ai-limited` turns the guard off.
+
+**Held by** `tests/test_review2.py`: a planted All card worth −0.4 logits in
+Forge's games is rated −0.15 or worse unguarded, exactly its prior guarded,
+with the shared column negative and no deckmate off by more than 0.15; `design`
+on a model that rates Goblin Bombardment and Toxic Deluge the worst cards in
+Vintage keeps both.
+
+**Rejected.** Dropping the games of decks holding such a card (most decks hold
+one in some cubes); fitting them and hiding the number (the dead weight would
+still land on their deckmates).
+
+## D344 — `design`'s verification is a pre-registered group-sequential test on the de-noised between-archetype variance, about 8,000 drafts per arm; `design` prints the job and its rule, and one candidate costs about one night
+
+**2026-10-03** (methodology review 2, N3)
+
+**Context.** The written rule was "400 drafts on fresh seeds; accept if the
+archetype win rates are at least as even as the original's". At 400 drafts an
+archetype's win rate has an SE of 5.6 points, larger than the effect, and the
+review's simulation accepted a real worsening (5 → 7 points) 42% of the time
+and a no-change 52%.
+
+**Decision.** `tools/ml/matchup_verify.py`. Both arms — the original cube and
+the candidate, the candidate with a ratings file `design` writes beside it from
+the committed cubes' own ratings so the drafters do not differ — run on the same
+fresh seeds in the verification range (D340), one game per draft. A deck's
+archetype is its played colours. Per arm, the between-archetype variance of
+the true win rates by the method of moments (raw variance over archetypes with
+≥ 30 games minus the mean binomial noise r(1 − r)/g; unbiased). D = v_orig −
+v_cand, its SE a bootstrap over drafts in each arm, z = D / SE, H0 D ≤ 0,
+one-sided α 5%. **Four looks** at 2,000, 4,000, 6,000 and 8,000 drafts per arm,
+O'Brien–Fleming efficacy bounds 3.47, 2.45, 2.00, 1.73 (c = 1.733 for K = 4,
+computed by Monte Carlo over the looks' joint normal and pinned in `OBF`), and a
+non-binding futility stop when z < 0 from look 2. Accept only on crossing a
+bound. `design` prints the job — a loop that extends both runs by a quarter and
+runs `matchup_verify.py test` (exit 3 = continue, 0 = decided) — at the top of
+the candidate and on stdout, with `--verify-seed` (800,000,000 by default; one
+block per candidate). Themes and roles stay a person's check, before the job.
+
+**Measured** (`matchup_verify.py sim`, 400 trials a row, 10 archetypes,
+realised spreads fixed, bootstrap 200). | drafts per arm (max) | 5 → 5 (no change) | 5 → 3 | 5 → 4 | 5 → 7 (worse) | mean drafts used, 5 → 3 |
+|---|---|---|---|---|---|
+| 4,000 | 3.0% | 64% | 23% | 0% | 3,475 |
+| **8,000** | **4.5%** | **90%** | 42% | 0% | 5,930 |
+| 12,000 | 5.8% | 99% | 54% | 0% | 7,710 |
+
+8,000 drafts per arm, 16,000 in
+all at most, is about one PC night at J003's measured 1,600 games an hour at 7
+workers (review 2, N8): **one candidate costs about one night**. Against the
+old rule's 52% / 60% / 42% (review 2) the error rates are now the stated ones.
+
+**Why sequential.** A clear improvement stops early (about 5,900 drafts per arm
+on average for 5 → 3 against 8,000 fixed), a hopeless one stops at look 2, and
+O'Brien–Fleming spends almost no α at the early looks, so the last look's bound
+is nearly the fixed test's. An SPRT on the balance metric was considered: its
+likelihood has a nuisance parameter per archetype and no clean form, whereas
+the z of a difference of moment estimators is close to normal at these sizes,
+so a group-sequential design is the sound sequential test here.
+
+**Also in `design`:** three-colour cards stay in the pool, locked (the
+candidate kept fewer than 180 cards before), and the uncertainty penalty reads
+`sdPost` (D342).
+
+**Rejected.** 400 drafts (above); a fixed 8,000 (sequential saves a quarter of
+a night on clear cases at no cost in α); comparing SDs rather than variances
+(the SD's truncation at 0 makes its difference non-normal near balance).
+
+## D346 — The coach helper caps thinking per question: `POST /coach` takes `"thinking": "off"|"low"|"default"`, set on the child through `MAX_THINKING_TOKENS` and `CLAUDE_CODE_EFFORT_LEVEL`, and `/health` advertises it
+
+*Branch `c/helper-thinking`; D346, the next number free of every lane's claim (open branches hold numbers up to about D345).*
+
+**2026-10-03**
+
+**Context.** Measured on the owner's PC (job J013, Claude Code CLI 2.1.288)
+with the helper's flags: Haiku (`--model haiku`) thinks before every answer —
+1.2k–3.5k thinking tokens, 79–94% of its output — and its first visible word
+arrives at 15–38 s, while Sonnet answers in about 7 s with near-zero thinking.
+The CLI's init line says `per_turn_effort_active: true` for Sonnet and `false`
+for Haiku: Haiku has no effort levels, so it thinks on a fixed budget. The CLI
+also streams that thinking as empty deltas, so the helper forwards no
+`thinking` line and ForgeCoach shows nothing until the first word.
+
+**Decision.** `/coach` takes an optional `"thinking"`. Absent is `"default"`
+and the child runs exactly as before (its environment untouched). Present, it
+must be one of the three strings — anything else, `null` included, is **400**
+and no `claude` starts. The value reaches the child **only through its
+environment** (`spawn`'s `env`, never argv, never a shell string), using the two
+variables Claude Code documents for this
+(code.claude.com/docs/en/env-vars, `MAX_THINKING_TOKENS` and
+`CLAUDE_CODE_EFFORT_LEVEL`; code.claude.com/docs/en/model-config, *Extended
+thinking* and *Adjust effort level*):
+
+| `thinking` | child env |
+|---|---|
+| `default` | unchanged |
+| `low` | `MAX_THINKING_TOKENS=1024`, `CLAUDE_CODE_EFFORT_LEVEL=low` |
+| `off` | `MAX_THINKING_TOKENS=0`, `CLAUDE_CODE_EFFORT_LEVEL=low` |
+
+`MAX_THINKING_TOKENS` is the fixed budget the docs give a model without
+adaptive reasoning — `0` turns thinking off on the Anthropic API, and 1,024 is
+the CLI's floor for a nonzero budget — which is Haiku's case. Models with
+adaptive reasoning (Sonnet, Opus) ignore a nonzero budget and, on the newest
+ones, cannot have thinking turned off at all; for them the effort level is the
+documented control, so both `off` and `low` set it to `low`. "off" therefore
+means *as little thinking as the model allows*. The environment variable wins
+over a user's `--effort`, `/effort` or `effortLevel` setting (env-vars page),
+which is what a per-question cap needs. `/health` carries
+`"thinking": ["off","low","default"]` beside `models` — additive, so an older
+ForgeCoach is unaffected and a newer one sends the field only when it sees the key.
+
+**Measured** (this container, CLI 2.1.288, one short mulligan question, Haiku
+4.5, the helper's flags): default — one thinking block, 389 output tokens,
+5.3 s; `off` — no thinking block, 35 output tokens, 1.8 s. J014 re-runs J012's
+comparison on the owner's PC with it.
+
+**Checked.** `tools/coach-helper-selftest.mjs` (gate 12f): the fake `claude`
+records the two variables; `off` and `low` reach it with the values above,
+`default` and an absent field reach it with neither (the self-test strips both
+from its own environment first), the argv is identical for all three, eight bad
+values are 400 with no child started, and `/health` advertises the list.
+
+**Rejected.** `--effort` on argv (Haiku has no effort levels, and the env
+variable overrides the flag anyway, so a user's own `CLAUDE_CODE_EFFORT_LEVEL`
+would silently beat it); `--settings '{"alwaysThinkingEnabled":false}'` (a
+settings toggle, not a per-request cap, and it does not give `low`);
+`CLAUDE_CODE_DISABLE_THINKING=1` (the docs call it a proxy compatibility
+switch that only omits the parameter, so a model that thinks by default may
+still think); a numeric budget on the wire (three named levels are all a
+client needs, and only an enum reaches the child); making `off` the default
+(Sonnet's answers are what J012 scored; a change of default is J014's verdict
+to make, not this one's).

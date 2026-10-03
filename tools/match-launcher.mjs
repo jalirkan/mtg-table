@@ -303,9 +303,10 @@ export function createMatchLauncher(opts) {
   // `m` is the checked request (to count cards against), or null for a wake.
   const ask = async (id, t0, m, youPath) => {
     // play.sh stops the engine, starts the new one, and says how it went.
-    // A signal can land while play.sh is between two commands of its last
-    // restart, so it is sent again until play.sh has taken this request up
-    // (it ignores an id it has already handled).
+    // play.sh takes SIGUSR1 only while it waits (it ignores it the rest of the
+    // time: a bash 5.2 trap mid-$( ) killed it), so a signal can be lost; it is
+    // sent again until play.sh has taken this request up (it ignores an id it
+    // has already handled).
     let st = null;
     let seen = false;
     let lastSignal = Date.now();

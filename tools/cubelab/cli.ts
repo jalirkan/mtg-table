@@ -10,6 +10,8 @@
 //           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
 //           [--synergy <tsv>] [--deck-synergy on|off]          learned pairs (D301)
+//           [--allow-version-change]                           append to a folder another lab version wrote (D341)
+//           [--deckset]                                        the AI ladder's deck sets: reserved seeds, --games 0 (D340)
 //   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
 //   queue   plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
 //   learn   <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...   (D301)
@@ -52,10 +54,11 @@ function usage(msg?: string): never {
                         [--record-all | --record-every N]
                         [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
                         [--weights <json>] [--weight name=value]... [--synergy <tsv>] [--deck-synergy on|off]
+                        [--allow-version-change] [--deckset]   (seeds 900000000+ are the deck sets', seeds.ts)
        tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
                         [the flags above but --ratings]
        tools/cubelab.sh queue plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
-                        [--cubes a,b,...] [--power <power.tsv>] [--chunk 250]
+                        [--cubes a,b,...] [--power <power.tsv>] [--chunk 250] [--allow-version-change]
        tools/cubelab.sh learn <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...
        tools/cubelab.sh selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N]
                         [--deck-synergy on|off] [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>] [--ratings <tsv>]
@@ -76,6 +79,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);
@@ -159,6 +163,8 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     out: one(f, 'out') ?? path.join('var/cubelab/runs', `${path.basename(cubeFile, '.md')}-${format}-${seed}`),
     builder, gameTimeoutSec: int(f, 'game-timeout', 300), winstonCards: int(f, 'winston-cards', 90), weights,
     ...(one(f, 'synergy') ? { synergyFile: one(f, 'synergy') as string, deckSynergy: one(f, 'deck-synergy') === 'on' } : {}),
+    ...(f.has('deckset') ? { deckset: true } : {}),
+    ...(f.has('allow-version-change') ? { allowVersionChange: true } : {}),
   };
   if (one(f, 'deck-synergy') === 'on' && !one(f, 'synergy')) usage('--deck-synergy on needs --synergy <tsv>');
   const bridgeArg = one(f, 'bridge');
