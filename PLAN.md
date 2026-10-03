@@ -9783,6 +9783,58 @@ text; and a browser with local-network-access prompts (Chrome's newer
 replacement for private network access preflights) may ask the owner once
 before the github.io page reaches `127.0.0.1`.
 
+## The AI baseline — measuring Forge's AI on the owner's cubes, and its sacrifice outlets (2026-10-03, D309–D311)
+
+**Status: built and measured; the full gate was not run** (nothing the gate
+plays changed: no entry point seats the new controller). Branch `c/ai-baseline`,
+off `main`'s `4204bc6`; D309–D311 (assigned at the merge of `main` `1e31619`). The owner's goal
+is a stronger Forge AI for his two 180-card two-player cubes, on his PC, with no
+LLM; this lane is its first step — what Forge's AI is, a bench to measure any
+change, and a fix for the weakness that hurts his synergy cube most.
+
+```bash
+./tools/ai-bench.sh --selftest                     # 22 checks, ~15 s: statistics + ten outlet-policy boards
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --a Experimental --b Default --games 20 --jobs 3
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-sac.txt --a Default+outlets --b Default+outlets --games 40 --seed 7
+./tools/ai-bench.sh report var/ai-bench/<run>/*.jsonl [--by-pair]
+```
+
+- `docs/research/ai-architecture.md` — how Forge 2.0.14's AI decides (greedy,
+  rule-based, per-effect `SpellAbilityAi` classes), what its profiles are (knobs;
+  **Experimental does not enable simulation** — simulation is a lobby-player
+  `AIOption`), what its simulation searches and what it does not (combat, the
+  opponent, hidden information: it cheats), and the seams we can use without
+  patching the jar, with a roadmap for a search-based player.
+- `docs/evidence/ai-baseline.md` — the measurements: profiles and simulation
+  against Default on ten cube deck pairs, the failure modes, and the
+  sacrifice-outlet study.
+- D309: `PolicyLobbyPlayerAi` / `PolicyControllerAi` (Forge's controller with
+  ours in front) through `Bootstrap.createAiSeat`; `tools/ai-bench.sh`.
+- D310: the sacrifice-outlet policy. Sacrifice decks against Forge-drafted
+  opponents, same 400 deals: **35.0% → 43.8%** (paired McNemar p < 0.0001)
+  before its two corrections; see the evidence for the corrected version.
+
+### AI baseline follow-ups
+
+1. **The game's own AI seat does not use the policy yet.** `MtgTable` and
+   `scripts/play.sh` still seat `Bootstrap.createAiPlayer`. A flag
+   (`--ai-policy outlets`) that switches the seat to `createAiSeat`, off by
+   default so the gate's recordings stay plain Forge, is the next small step.
+2. **The cube lab's deckbuilder should know the AI's dead cards**: Forge's own
+   builder never main-decks a RemAIDeck card, but the cube lab's (D294) may;
+   with the policy, Seer and Bombardment are live, the other flagged cards
+   (Faithless Looting, Mishra's Bauble, Chromatic Star, Prophetic Prism, Beast
+   Within, Prismatic Ending, Embercleave, Adanto Vanguard) are still dead.
+3. **Life gain the lethal sum cannot see** (Scavenging Ooze, lifelink at
+   instant speed, an "any target" drain aimed elsewhere) still costs an
+   occasional all-in; a search (roadmap step 2) is the real answer.
+4. **Load-dependent play**: Forge's 5 s evaluation timeout makes it pass on a
+   busy machine (§1 of the evidence); the owner's PC should not run the bench
+   and a game at once, and any search must budget by wall clock.
+5. **The roadmap** in `docs/research/ai-architecture.md` §7: determinized
+   search at priority over `GameCopier` with Default-AI rollouts, then combat,
+   then a learned evaluator — each landing with a bench run.
+
 ## Deferred — out of scope for M0–M7
 
 Not cancelled, not scheduled. **M6 has landed and M7's Tier 1 with it**, so these

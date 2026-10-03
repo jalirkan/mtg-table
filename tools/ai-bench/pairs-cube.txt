@@ -1,4 +1,4 @@
-# tools/ai-bench/pairs-cube.txt -- ten deck pairs for profile benchmarks (D300).
+# tools/ai-bench/pairs-cube.txt -- ten deck pairs for profile benchmarks (D309).
 # Each line: two .dck paths.  Decks drafted and built by Forge's own AI drafting
 # and BoosterDeckBuilder in the cube-lab prototype (grid draft, two players):
 # seven from the synergy cube, three from the modern-era cube.  Colours in the comment.

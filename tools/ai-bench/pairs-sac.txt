@@ -1,4 +1,4 @@
-# tools/ai-bench/pairs-sac.txt -- the sacrifice-outlet benchmark (D301).
+# tools/ai-bench/pairs-sac.txt -- the sacrifice-outlet benchmark (D310).
 # The first deck of each line is the FOCUS deck: two hand-built Rakdos
 # sacrifice decks from the synergy cube (Viscera Seer, Goblin Bombardment,
 # Carrion Feeder, Priest of Forgotten Gods, Blood Artist, Zulaport Cutthroat,

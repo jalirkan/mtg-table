@@ -47,7 +47,7 @@ import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
 
 /**
- * The sacrifice-outlet policy (decision D301): when Forge's AI controls a
+ * The sacrifice-outlet policy (decision D310): when Forge's AI controls a
  * "sacrifice a creature: effect" ability, the moments a human would use it.
  *
  * <p>Forge 2.0.14's AI does not use these cards (docs/research/ai-architecture.md

@@ -34,7 +34,7 @@ import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
 
 /**
- * Forge's own AI controller with one seam of ours in front of it (D300, D301).
+ * Forge's own AI controller with one seam of ours in front of it (D309, D310).
  *
  * <p>{@code PlayerControllerAi.chooseSpellAbilityToPlay()} is the one place
  * Forge asks an AI seat "what do you do with this priority?" -- every phase,
@@ -120,7 +120,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
             // Forge chose an outlet by itself (Carrion Feeder's AristocratCounters
             // logic, Woe Strider's AtOppEOT): it justified the activation with a
             // fodder creature but pays with whatever the script's AIPreference
-            // finds worst.  Pay with the fodder (D301, FODDER).
+            // finds worst.  Pay with the fodder (D310, FODDER).
             final Card fodder = OutletPolicy.fodderFor(player, forge.get(0));
             if (fodder != null) {
                 count("opportunity.FODDER");

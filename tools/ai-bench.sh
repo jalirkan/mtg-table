@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mtg-table — AI-vs-AI benchmark on fixed decks (D300).
+# mtg-table — AI-vs-AI benchmark on fixed decks (D309).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
@@ -17,7 +17,7 @@
 # A seat config is <Profile>[+sim|+hybrid][+outlets|+shadow]: an .ai profile
 # (Default, Cautious, Reckless, Experimental), Forge's simulation option (a
 # lobby-player AIOption, not a profile key), and the sacrifice-outlet policy
-# (D301: +outlets acts, +shadow only counts what it would have done).  Game g of
+# (D310: +outlets acts, +shadow only counts what it would have done).  Game g of
 # a pair gives config A the pair's first deck when g is even, and seat 0 when
 # g/2 is even, so every four games cover both decks on both seats.
 #

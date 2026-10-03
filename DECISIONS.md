@@ -13090,10 +13090,11 @@ the `authentication_failed` code, a 401/403 status, or the CLI's `Not logged in
 - **The real CLI in the gate or CI** — it costs the owner's usage, needs a login
   CI does not have, and its answers are not reproducible.
 
-## D300 — An AI seat of our own in front of Forge's: `PolicyLobbyPlayerAi` makes a `PolicyControllerAi`, a subclass of Forge's `PlayerControllerAi`, through `Bootstrap.createAiSeat`; and `tools/ai-bench.sh` measures any change to it AI against AI
+## D309 — An AI seat of our own in front of Forge's: `PolicyLobbyPlayerAi` makes a `PolicyControllerAi`, a subclass of Forge's `PlayerControllerAi`, through `Bootstrap.createAiSeat`; and `tools/ai-bench.sh` measures any change to it AI against AI
 
-*Branch `c/ai-baseline`; this lane reserves D300–D304 (D200's rule; the cube lab
-holds D293–D296 on its own branch). The lead renumbers on merge if needed.*
+*Branch `c/ai-baseline`; D309–D311, the numbers the coordinator assigned at the
+merge of `main` `1e31619` (written as D300–D302 before it; D298–D308 are the
+thin-pool builds', cube evolve's, the match launcher's and the ML dataset's).*
 
 **2026-10-03** (the owner's goal: a stronger Forge AI for his two 180-card
 cubes, on his PC, no LLM; this is its first step)
@@ -13143,7 +13144,7 @@ card-script overlays to change `AI:RemoveDeck` or `AILogic` (D111); a bench that
 reuses `RecordMatch` (it writes a frame log and redacts for one seat — neither
 is wanted for thousands of games).
 
-## D301 — The sacrifice-outlet policy: answer removal, doomed combatants and expiring creatures with an outlet, go all in when the sacrifices are lethal, cast the outlets Forge's RemAIDeck filter hides, and pay Forge's own outlet activations with fodder
+## D310 — The sacrifice-outlet policy: answer removal, doomed combatants and expiring creatures with an outlet, go all in when the sacrifices are lethal, cast the outlets Forge's RemAIDeck filter hides, and pay Forge's own outlet activations with fodder
 
 **2026-10-03**
 
@@ -13190,5 +13191,5 @@ measured in the evidence.
 **Rejected.** Un-flagging the cards in a card overlay (D111, and the AI would
 then only use them on Forge's terms); a policy that sacrifices on its own
 estimate of value every turn (no evaluator yet — that is the search's job,
-D302's roadmap); vetoing Forge's own outlet activations instead of steering
+D311's roadmap); vetoing Forge's own outlet activations instead of steering
 them (a veto passes priority, losing whatever else Forge would have done).

@@ -28,7 +28,7 @@ import forge.game.player.PlayerController;
 
 /**
  * A Forge AI lobby player whose in-game controller is a {@link PolicyControllerAi}
- * (D300).  This is the extension point that needs no patch to Forge's jar:
+ * (D309).  This is the extension point that needs no patch to Forge's jar:
  * {@code LobbyPlayerAi.createIngamePlayer} is public and not final, and
  * {@code PlayerControllerAi} is a public, non-final class whose priority callback
  * we can wrap.  {@code LobbyPlayerAi}'s own {@code createControllerFor} is

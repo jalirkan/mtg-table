@@ -66,7 +66,7 @@ import mtgtable.ai.PolicyControllerAi;
 import mtgtable.ai.PolicyLobbyPlayerAi;
 
 /**
- * The Java half of {@code tools/ai-bench.sh} (D300): Forge AI against Forge AI
+ * The Java half of {@code tools/ai-bench.sh} (D309): Forge AI against Forge AI
  * on fixed decks, many games, one JSON line per game; and the report over those
  * lines.  A measuring tool beside the game, like {@code tools/audit-deck/}: it
  * opens no socket, emits no protocol, records no frame log, and boots Forge
@@ -83,7 +83,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * <p>A CFG is {@code <Profile>[+sim|+hybrid][+outlets|+shadow]}: an {@code .ai}
  * profile from {@code res/ai/}, Forge's simulation option (a lobby-player option,
  * {@code AIOption}, not a profile key -- docs/research/ai-architecture.md), and
- * the outlet policy's mode (D301; plain = off, {@code +shadow} = counted but not
+ * the outlet policy's mode (D310; plain = off, {@code +shadow} = counted but not
  * acted on).
  *
  * <p>Game {@code g} of a pair: config A plays the pair's first deck when g is
@@ -289,7 +289,7 @@ public final class AiBench {
         final Throwable[] fail = new Throwable[1];
         final long t0 = System.nanoTime();
         // Forge's own "Game" pool, exactly as RecordMatch starts a game; one game
-        // at a time in this process, so nothing else runs on that pool (D300).
+        // at a time in this process, so nothing else runs on that pool (D309).
         game.getAction().invoke(() -> {
             try {
                 match.startGame(game);
@@ -735,7 +735,7 @@ public final class AiBench {
         final Game game = match.createGame();
         final CountDownLatch done = new CountDownLatch(1);
         final Throwable[] fail = new Throwable[1];
-        // One task on Forge's game pool at a time, and no match running (D300).
+        // One task on Forge's game pool at a time, and no match running (D309).
         game.getAction().invoke(() -> {
             try {
                 final GameState gs = new GameState();

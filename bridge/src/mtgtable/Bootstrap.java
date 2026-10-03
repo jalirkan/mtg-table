@@ -267,13 +267,13 @@ public final class Bootstrap {
     }
 
     /**
-     * An AI seat with mtg-table's own controller in front of Forge's (D300): the
+     * An AI seat with mtg-table's own controller in front of Forge's (D309): the
      * same profile checks as {@link #createAiPlayer}, then a
      * {@link PolicyLobbyPlayerAi} -- which never reaches {@code GamePlayerUtil}
      * at all, so no preferences branch exists on this path -- with Forge's
      * simulation option ({@code AIOption}; null for none: simulation is a
      * lobby-player option, not an {@code .ai} profile key) and the
-     * sacrifice-outlet policy's mode (D301).  Sleeve 0, which is what
+     * sacrifice-outlet policy's mode (D310).  Sleeve 0, which is what
      * {@link #createAiPlayer} gets from a headless GUI with no sleeves.  Used by
      * {@code tools/ai-bench/}; none of the game's own entry points calls it, so
      * every seat they make, and every recording, is unchanged.
