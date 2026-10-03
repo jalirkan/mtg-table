@@ -1,0 +1,1650 @@
+{
+ "bench": 2,
+ "label": "after-fixes-r3c",
+ "startedAt": "2026-10-03T13:39:13.780Z",
+ "source": "helper",
+ "model": "claude-sonnet-5-5",
+ "repeat": 3,
+ "cases": [
+  {
+   "id": "attack-ability42-flier-and-quake",
+   "type": "attack",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "attack:25",
+     "canonical": "attack:25",
+     "verdict": "other",
+     "score": 0,
+     "latencyMs": 11585,
+     "text": "**Play:**\n1. Attack with Aerial Doombot (#25) at the opponent. Nothing else attacks.\n2. Keep Quake (#31) and both Soldier tokens home. The Soldiers are summoning sick and can't attack anyway.\n3. Your 2 untapped Plains stay open. Nothing in your hand can be cast at instant speed with them, since Robotics Mastery needs 5 mana and the Spy Kit is not flash.\n\n**Why:** This follows \"free damage, no risk.\" The opponent has no flyers or reach, and their Helicarrier can't be crewed. Crew 6 needs total power 6, and their creatures have 0 + 2 + 1 = 3 power combined. So Doombot connects for 1 safely. Quake attacking is a \"trade on your terms\" problem: a double block by the 2/2 and 1/1 Soldiers deals 3 damage and kills Quake, while Quake kills both. That gives up your tapper engine for two tokens.\n\n**Trap:** Attacking with Quake because Peggy has -3 power and the opponent is tapped out. Peggy deals 0, but the two Soldiers together still deal exactly 3, and you have no trick to save Quake.\n\n**Their turn:** They have 0 cards in hand and will untap five lands. Their attackers are the 2/2 Soldier (with Spy Kit), the 1/1 Soldier, and Peggy at -3/1. Quake and your two untapped 1/1 Soldiers hold the ground easily, and you're at 20 life. Next turn, use your mana on Robotics Mastery or the Spy Kit. Casting either noncreature spell triggers Quake to tap a blocker or land.\n\nANSWER: attack:25",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:25",
+     "canonical": "attack:25",
+     "verdict": "other",
+     "score": 0,
+     "latencyMs": 15260,
+     "text": "**Play:**\n1. Attack with Aerial Doombot #25 only, at the Forge AI player.\n2. Keep Quake #31 and both Soldier tokens home. The tokens are summoning sick anyway.\n3. After combat, in main phase 2, cast S.H.I.E.L.D. Spy Kit with Plains #1 (W). Quake's trigger taps one of their creatures or lands. Then pay equip {1} with Plains #2 to put it on Quake or Doombot. Mana left: 0.\n\n**Why:** Count lethal: they're at 20, so nothing is close either way. Doombot has flying and they have no flying blockers. Their Helicarrier can't be crewed, because their total power is -3+2+1 = 0 against crew 6. So Doombot's 1 damage is free. Quake attacking into three untapped potential blockers risks a double block by the 2/2 and 1/1, which deal 3 damage and kill Quake. That's a trade of your best creature for two tokens, so don't do it. Use all your mana after combat.\n\n**Trap:** Attacking with Quake because they're tapped out. Tapped lands don't stop blocks, and a double block kills a 3/3 with no trick needed.\n\n**Their turn:** They have 0 cards in hand and will untap 5 lands. They will topdeck one card, and may use Super Suit (flash, {1}{U}) or equip. Their attackers are a 2/2 (3/3 with the Spy Kit already on it), a 1/1 and Peggy at -3 power. Quake, the two Soldiers and Doombot (if it untaps, or if you equip it) can block those attackers comfortably. Your life is 20, so there is no danger.\n\n**Alternative:** Attack with both Quake and Doombot to pressure them, but only if you accept losing Quake to a double block. I don't recommend it.\n\nANSWER: attack:25",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:25",
+     "canonical": "attack:25",
+     "verdict": "other",
+     "score": 0,
+     "latencyMs": 12975,
+     "text": "**Play:**\n1. Attack with Aerial Doombot #25 only, at the Forge AI player.\n2. Keep Quake #31 and both Soldier tokens home. The tokens are summoning sick and can't attack anyway.\n3. After combat, cast S.H.I.E.L.D. Spy Kit with Plains #1 (W). Quake's trigger taps one of their creatures or a land, which does little on your own turn. Then pay equip {1} with Plains #2 to put it on Quake (4/4) or a Soldier. That uses all your mana.\n\n**Why:** \"Trade on your terms.\" Doombot has flying and they have no flyer or reach. Their Helicarrier can't be crewed, because their creatures' total power is 0 (Peggy -3, +2, +1). So Doombot gets 1 free damage. Quake attacking into the 2/2 and 1/1 gives them a double block that deals 3 and kills it, which trades your best creature for two tokens.\n\n**Trap:** Attacking with Quake as well. They are all tapped out with no hand, but that doesn't stop blockers. A 2/2 + 1/1 double block kills Quake, and you gain almost nothing at 20 life each.\n\n**Their turn:** They have 5 lands, no hand, and one topdeck. Their only attackers are the 2/2 and 1/1 Soldiers, and your untapped Quake and two Soldiers wall those easily. Doombot being tapped doesn't matter. Keep Robotics Mastery for a turn when you have 5 mana open, since it has flash.\n\nANSWER: attack:25",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 0,
+    "acceptable": 0,
+    "unacceptable": 0,
+    "other": 3,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "attack:25",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "attack-comfort13-hold-flier-home",
+   "type": "attack",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "attack:none",
+     "canonical": "attack:none",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 13235,
+     "text": "**Play:**\n1. Declare no attackers. Ant-Man's Air Force #23 and Coulson #30 both stay home.\n2. Don't spend the untapped Plains. Keep W open for Helicarrier Strike (Islands and Thriving Isle cover the generic part of any other spell).\n\n**Why:** This follows \"count lethal both ways\". Attacking with the Air Force deals 2 to a player at 20, which changes nothing. Tapping it leaves me with one blocker against 10 power on their side, and I'm at 6.\n\n**Trap:** Sending the flyer because their Ant and Agents are tapped and nothing untapped can block it. The 2 free damage is irrelevant. The Air Force is my only flying blocker for their Giant-Sized Flying Ant, and it won't untap in time to block.\n\n**Their turn:** They can attack with Ant 3 flying, Agents 2, Quake 3 and Coulson 2, which is 10 power, and the Quake and Coulson they cast this turn will no longer be summoning sick.\n- If I attacked, I block one creature and take at least 7, which is lethal.\n- If I stay home, the Air Force blocks the Ant and Coulson blocks Quake. I take about 4 and go to 2, and Helicarrier Strike on an attacker (2 damage for W, or 4 with teamwork) can improve that.\n- If they attack with only one creature, their Agents give it +1/+1.\n- They also have 2 hidden cards and 1 open white mana, so watch for tricks.\n\n**Assumptions:** I assume the Air Force can't profitably chump or trade, and that holding W for Helicarrier Strike is better than casting Strategic Intervention now, because my only untapped W source can't do both.\n\nANSWER: attack:none",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:none",
+     "canonical": "attack:none",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 16430,
+     "text": "**Play:**\n1. Declare no attackers. Ant-Man's Air Force #23 stays home.\n2. After combat, cast Quake {2}{W}. Plains pays the W, and Island + Island pay the generic cost. That leaves Thriving Isle open, but you can't cast Helicarrier Strike without the Plains. Both options are covered under Their turn.\n\n**Why:** Count lethal both ways. Your attack deals 2 to a player at 20, which is meaningless. The attack taps your only flying blocker, and it stays tapped through their turn. Their board has 10 power (Ant 3 flying, Quake 3, Agents 2, Coulson 2) against your 6 life, so you need every blocker you have.\n\n**Trap:** Attacking because \"nothing can block a flyer\". The 2 damage is irrelevant, and with Air Force tapped you have only Coulson back. Blocking Quake with Coulson still lets 3 + 2 + 2 = 7 through, which is lethal.\n\n**Their turn:** They have 4 potential attackers. Giant-Sized Flying Ant (flying) and Agents untap, and Quake and Coulson are no longer summoning sick. They also have 2 unknown cards and 6 lands, so expect more pressure or tricks.\n- **If you cast Quake:** you have 3 blockers (Air Force, Coulson, Quake) and only Thriving Isle open. Quake can tap an attacker or a land whenever you cast a noncreature spell, which helps later but not on this turn's mana.\n- **If you hold Plains + Helicarrier Strike instead:** you have only 2 blockers, but Strike (W, tapping creatures with total power 2+ for teamwork) can kill an attacker, such as Ant, and Strike counts as a noncreature spell.\n\nQuake as a third blocker is the safer choice, because it adds a body without relying on a single trick.\n\n**Assumptions:** Quake's Seismic Takedown only triggers on noncreature spells, so casting Quake itself does nothing. Their Ant is tapped now but untaps on their turn.\n\nANSWER: attack:none",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:none",
+     "canonical": "attack:none",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 17162,
+     "text": "**Play:**\n1. Don't attack. Ant-Man's Air Force (#23) stays home. Coulson is summoning sick and can't attack anyway.\n2. After combat, choose one use for your single white source (the Plains):\n   - **Cast Quake** (Plains + 2 Islands, leaving Thriving Isle). This adds a 3/3 blocker.\n   - **Hold Helicarrier Strike** ({W}) for their attack. You can add teamwork by tapping Coulson (power 2) to make it 4 damage.\n\n**Why:** Count lethal both ways. Your 2 flying damage into their 20 life does nothing. Their board has 10 power (Ant 3 flying, Quake 3, Agents 2, Coulson 2) against your 6 life. Keep every blocker back, and especially keep the only flyer that can block their Ant.\n\n**Trap:** Attacking with the 2/1 because the blockers can't touch it. It's safe in combat, but it stays tapped on their turn. Then nothing of yours can block the 3-power flyer, and Ant + Quake alone is exactly 6, which is lethal if the ground gets through.\n\n**Their turn:** Their four creatures all untap, and the two new ones are no longer summoning sick. They have 6 lands and 2 hidden cards, so a flash or trick is possible. Block the Ant with Air Force (it dies to 3 damage, but you take none). Use Coulson and Quake, if cast, on the ground creatures. If you held Helicarrier instead, use it on an attacker you can't block profitably.\n\n**Alternative:** Cast Quake and hold nothing, or hold Helicarrier and skip Quake. They're close. I lean toward Quake because the extra body blocks every turn, while Helicarrier is a one-shot answer.\n\nANSWER: attack:none",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "attack:none",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "attack-trample7-alpha",
+   "type": "attack",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "attack:34,26,21,32,22",
+     "canonical": "attack:21,22,26,32,34",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11861,
+     "text": "**Play:**\n1. Attack with all five Companions (#34, #26, #21, #32, #22) at the Forge AI player.\n2. After combat, cast Garruk's Companion from hand with two Forests (GG). That leaves 4 Forests untapped, with nothing else to spend them on.\n\n**Why:** Count lethal. Their only possible blocker is the face-down 2/2, because Ainok Tracker is tapped. They have 2 Mountains open, which is too little to unmorph (the morph cost is {4}{R}). Fifteen trample power goes in, and the worst case is one Companion trading with the morph while 1 damage tramples over, so they take 13 and drop to 7 or less. This follows \"use all your mana\" and \"attack when the blockers are tapped.\"\n\n**Trap:** Holding creatures back \"for defense.\" Their counterattack can't threaten 14 life: Tracker is a 3/3 and the morph is a 2/2, and they have 4 unknown cards. Passive play wastes a window where they have almost no blockers.\n\n**Their turn:** They untap with 5 lands and 4 cards in hand. Tracker (3/3 first strike) and the morph, if it survives, can attack, and they can unmorph for {4}{R}. Their attack is at most about 6 damage, and I'm at 14. My freshly cast Companion stays untapped as a blocker. Be careful with 3/2s blocking a first striker: they would die without dealing damage.\n\n**Assumptions:** The 2 open Mountains could be a burn spell or trick. That would cost me one Companion at worst, which doesn't change the plan.\n\nANSWER: attack:34,26,21,32,22",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:34,26,21,32,22",
+     "canonical": "attack:21,22,26,32,34",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12388,
+     "text": "**Play:**\n1. Attack with all five Companions (#34, #26, #21, #32, #22) at the Forge AI player.\n2. After combat, cast the sixth Garruk's Companion with two Forests (GG). That leaves 4 Forests untapped, with nothing else to spend them on.\n\n**Why:** Count lethal both ways. You have 15 trampling power against 20 life, so it isn't lethal. But their Ainok Tracker is tapped, and the face-down 2/2 is the only possible blocker. If it blocks, it trades with one 3/2 (both die) and 1 damage tramples over, so they drop to about 7. If it doesn't block, they drop to 5. The morph can't be turned face up, since that costs {4}{R} and they have only 2 untapped lands. This follows \"attack when their blockers are tapped\" and \"use all your mana\", casting the Companion post-combat.\n\n**Trap:** Holding creatures back \"for defense\". Their only attackers next turn are the 3/3 first striker and the 2/2, which can't threaten your 14 life. Chip damage now sets up lethal next turn, so keeping creatures home just wastes it.\n\n**Their turn:** Their Tracker untaps and they have 5+ lands and 4 cards in hand. They could swing a 3/3 first striker into your fresh untapped Companion, but you're at 14 and safe. Keep the new Companion home as a blocker. Expect red burn or a new blocker, and a Companion dying to a 2-mana trick during combat is the main risk, which is acceptable.\n\n**Assumptions:** The face-down card can't be turned up this turn with only 2 untapped lands, and their 2 open red mana could only be a cheap trick or burn spell.\n\nANSWER: attack:34,26,21,32,22",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:34,26,21,32,22",
+     "canonical": "attack:21,22,26,32,34",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10108,
+     "text": "**Play:**\n1. Attack with all five Companions (#34, #26, #21, #32, #22) at the Forge AI player.\n2. After combat, cast the sixth Garruk's Companion with two Forests (GG). That leaves 4 Forests open.\n\n**Why:** Count lethal both ways. They are at 20 and I have 15 trample power, so it isn't lethal this turn. But their only possible blocker is the face-down 2/2, because the Tracker is tapped. With only 2 Mountains open they can't pay the {4}{R} to unmorph it. A block would trade their 2/2 for one of my 3/2s, and trample still pushes 1 damage through. That puts them around 5–6 life, and I threaten lethal next turn.\n\n**Trap:** Holding creatures back out of fear. Their board is a tapped 3/3 and a summoning-sick 2/2, which can't threaten my 14 life. Holding back just gives them time to untap and unmorph.\n\n**Their turn:** They untap with 5 lands and 4 cards in hand. They could unmorph the Tracker for {4}{R} or cast a blocker. Even then, their attackers (a 3/3 first striker and a 2/2) are no danger to my 14 life. My freshly cast Companion stays home untapped as a blocker, so I'm safe.\n\n**Assumptions:** Their 2 open Mountains could be a burn spell or trick, which would kill one Companion at worst. That doesn't change the decision.\n\nANSWER: attack:34,26,21,32,22",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "attack:21,22,26,32,34",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "attack-trample7-no-blockers",
+   "type": "attack",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "attack:34,26,21",
+     "canonical": "attack:21,26,34",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7384,
+     "text": "**Play:**\n1. Attack the opponent with #34, #26 and #21 (three 3/2 tramplers).\n2. Keep #32 home (summoning sick anyway).\n3. Post-combat you have 3 untapped Forests and a second Garruk's Companion in hand, but the land drop is used. Cast it with 2 Forests, leaving 1 Forest open.\n\n**Why:** Their only creature, Ainok Tracker, is TAPPED, and all 5 of their Mountains are tapped, so there are no blockers and no tricks. This is a free 9 damage (20 → 11). \"Use all your mana\": the second Companion adds to the board for next turn.\n\n**Trap:** Holding attackers back out of fear. Nothing can block or respond this turn, so staying home gains nothing. Also don't forget to cast the Companion after combat, since the attack reveals nothing they can punish.\n\n**Their turn:** They untap with 5 Mountains, a 3/3 first striker and 4 cards in hand. Their best swing is Tracker into my board. My untapped blockers will be #32 and the new Companion (my attackers untap on my turn, but they are tapped during their turn). A 3/3 first strike kills a 3/2 blocker without dying, so I shouldn't block it with a single Companion. I'm at 17, so taking 3 is fine. Next turn I'd have 5 Companions, with 11 life left for them to defend.\n\n**Assumptions:** The opponent's hidden hand could contain burn or a sweeper, but with zero untapped sources none of it matters this turn.\n\nANSWER: attack:34,26,21",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:34,26,21",
+     "canonical": "attack:21,26,34",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7272,
+     "text": "**Play:**\n1. Attack the opponent with #34, #26 and #21. Keep #32 home (summoning sick anyway).\n2. No mana is needed. The 3 untapped Forests stay open, and there is nothing to cast with them (the Companions in hand are {G}{G} and the land drop is used). You could cast one more Companion postcombat with 2 Forests, leaving 1 G. That is better done after combat so you don't reveal anything beforehand.\n\n**Why:** \"Use all your mana\" and \"attack when they can't block.\" The opponent's only creature, Ainok Tracker, is TAPPED, and all 5 of their Mountains are tapped, so there are no blockers and no tricks. All three attackers deal 9 damage for free, taking them from 20 to 11.\n\n**Trap:** Holding back out of caution. There is no block and no instant-speed interaction available to them, so nothing can punish the attack.\n\n**Their turn:** They untap 5 Mountains with a 3/3 first striker and 4 cards in hand. At 17 life you are far from lethal range. Your untapped #32 and the Companion you cast postcombat can block. A 3/3 first striker beats a 3/2 in combat, so don't block it with a single Companion. Double-block it if needed, or just take 3.\n\n**Assumptions:** Casting the second Companion postcombat is optional. I'm treating the attack as the main decision.\n\nANSWER: attack:34,26,21",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "attack:34,26,21",
+     "canonical": "attack:21,26,34",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7658,
+     "text": "**Play:**\n1. Attack the opponent with #34, #26 and #21. The summoning-sick #32 stays home.\n2. Keep your 3 untapped Forests open. You have no instants, so nothing to cast. Your second Companion in hand costs GG, but you've already used the land drop and can cast it post-combat with 2 of the 3 Forests (leaving 1 G).\n3. After combat, cast the second Garruk's Companion with 2 Forests. That leaves 1 Forest untapped.\n\n**Why:** The opponent's only creature, Ainok Tracker, is TAPPED and all 5 of their Mountains are tapped, so there are no blockers and no tricks. This is a free 9 damage (20 → 11). The heuristic is \"use all your mana\" and \"attack when the coast is clear.\"\n\n**Trap:** Holding creatures back \"for defense.\" Their only creature is tapped now, and attacking doesn't leave you exposed beyond what it would anyway. Your creatures untap before their turn ends being relevant, and #32 plus the freshly cast Companion stay untapped as blockers.\n\n**Their turn:** They untap with 5 Mountains, Ainok Tracker (3/3 first strike) and 4 cards in hand. At 17 life you're nowhere near lethal range. Your attackers will be tapped during their turn (no vigilance), so blockers are #32 and the new Companion, both 3/2. Blocking a 3/3 first striker with a 3/2 just loses the creature without killing it, so don't block it unless you double-block. A double block deals 6 and kills it, but first strike kills one Companion first.\n\n**Assumptions:** Casting the second Companion post-combat is optional; you could also cast it precombat since it can't attack anyway. Post-combat hides information, so it's slightly better.\n\nANSWER: attack:34,26,21",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "attack:21,26,34",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "block-auto7-must-block",
+   "type": "block",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "block:26>42,4>42",
+     "canonical": "block:4>42,26>42",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 17290,
+     "text": "**Play:**\n1. Double block A.I.M. Scientists (#42) with Agent 13 (#26) and Peggy (#4). You have nothing to cast now, so keep your 2 open mana (Island + Thriving Isle).\n2. The two flyers (#63, #64) can't be blocked by your ground creatures. You take 2 + 3 = 5 and go to 4 life.\n3. After blocks, if nothing happens, you can crack the Clue ({2}, sacrifice) with the 2 open lands. Only do it if you'd rather draw than keep mana up, since you have no instant to cast anyway.\n\n**Why:** Count lethal: 9 power against your 9 life is exactly lethal, so you must block, and the Scientists is the only attacker you can block. Your two blockers deal 2 + 2 = 4 damage, which exactly kills the 4/4 Scientists. That is a trade on your terms for their best creature. Their 4 damage kills both of your small creatures, so you're trading two for one.\n\n**Trap:** No block is lethal. A single chump block is the other trap. It takes you to 4 life and leaves a 4/4 alive to keep forcing chump blocks every turn.\n\n**Their turn:** They have 5 untapped lands and 3 cards in hand. A flash creature (like another Giant-Sized Flying Ant) or a trick could save the Scientists or push extra damage. You're at 4 after this block, and their two flyers present 5 power next turn. On your turn, cast Wasp (1/3 flyer) as a flying blocker and keep it home. Wasp can block one flyer, but the other still gets through: Air Force deals 2 and Giant-Sized Flying Ant deals 3, so you'd drop to 2 or 1. You need a better answer, such as more flying blockers, quickly.\n\n**Alternative:** Chump with only Peggy (#4) and keep Agent 13. It protects you from a combat trick blowout, but the 4/4 survives and you keep falling behind. I think that's worse.\n\nANSWER: block:26>42,4>42",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:26>42,4>42",
+     "canonical": "block:4>42,26>42",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 16621,
+     "text": "**Play:**\n1. Declare Agent 13 (#26) and Peggy (#4) as a double block on A.I.M. Scientists (#42).\n2. Cast nothing. You have 2 untapped mana (Island, Thriving Isle), but nothing in hand is castable at instant speed.\n\nResult: the two fliers hit you for 5, leaving you at 4. Scientists takes 2 + 2 = 4 damage and dies. It assigns 4 damage, which is enough to kill both of your creatures (2 + 1 = 3 needed).\n\n**Why:** Count lethal: 9 power is exactly your 9 life. Neither of your creatures has flying or reach, so you can't touch the two fliers (5 damage). That means you must block the Scientists, or you die. Double blocking makes exactly 4 damage, so you kill their best creature instead of just chump blocking. This is \"trade on your terms\", and it leaves their board as only the two fliers.\n\n**Trap:** No block, or blocking a flier, isn't legal or survivable. A single chump block also keeps the 4/4 alive, and you would have to chump it again next turn while still facing the fliers.\n\n**Their turn:** They have 5 untapped lands and 3 cards in hand. They could use a trick or flash in a creature (Giant-Sized Flying Ant can tap or untap a permanent) to save the Scientists or blow out the block. Their fliers (2/1 and 3/2) threaten 5 damage a turn against your 4 life. On your turn, cast Wasp (1/3 flier) with the 3 mana and keep it back as a flying blocker. With 6 lands you can't also cast Borough Backup, since Wasp and Backup together cost 8.\n\n**Assumptions:** The Scientists has no protection or evasion beyond the text shown. The Ant-Man's Air Force attack trigger had no target, so it did nothing.\n\nANSWER: block:26>42,4>42",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:26>42,4>42",
+     "canonical": "block:4>42,26>42",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 13895,
+     "text": "**Play:**\n1. Declare Agent 13 (#26) and Peggy Carter (#4) as a double block on A.I.M. Scientists (#42).\n2. Cast nothing. Your two untapped sources (Island, Thriving Isle) can't cast Wasp ({2}{U}) anyway.\n\n**Why:** Count lethal first. You're at 9 and 9 power is attacking, so not blocking is lethal. Only the Scientists can be blocked, because the other two attackers have flying. Blocking it means you take 5 and go to 4. Given that, make the block count: 2 + 2 = 4 damage kills the 4/4, so the double block turns a chump block into a trade.\n\n**Trap:** A single chump block with one creature. You lose a creature and the Scientists survives. Also don't skip blocking: it's lethal.\n\n**Their turn:** You'll be at 4 facing Ant-Man's Air Force (2 power) and Giant-Sized Flying Ant (3 power) in the air. That's 5 flying power, which is lethal next turn if both connect. On your turn, Wasp (a 1/3 flier) can block one of them, and you must stop the other from getting through. Keep that in mind when you spend mana.\n\n**Alternative:** Chump with only Peggy and keep Agent 13. That's weaker, because you lose a card without killing anything. The only reason to prefer it is a fear of a combat trick, since they have 5 open mana and 3 cards in hand.\n\n**Assumptions:** The opponent has no trick. If they do, the double block could cost you both creatures.\n\nANSWER: block:26>42,4>42",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "block:4>42,26>42",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "block-comfort13-must-block",
+   "type": "block",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "block:23>64,30>70,31>71",
+     "canonical": "block:23>64,30>70,31>71",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 20134,
+     "text": "**Play:**\n1. Block #23 (Ant-Man's Air Force) on #64 (Giant-Sized Flying Ant). It's the only creature of yours that can block a flyer, and its 2 damage kills the 3/2.\n2. Block #30 (Coulson) on #70 (their Coulson). It's a 2/2 trade.\n3. Block #31 (Quake) on #71 (their Quake). It's a 3/3 trade.\n4. Leave #50 (Agents of S.H.I.E.L.D., 2/4) unblocked. You take 2 and go to 4.\n5. Cast nothing. Your only untapped land is Thriving Isle, which makes U or B. Helicarrier Strike needs {W}, so you can't cast it.\n\n**Why:** Count lethal. 10 power is coming at your 6 life, so you must stop at least 5 damage. This line stops 8 and trades evenly, three of your creatures for three of theirs. It also removes their Coulson, which would otherwise put +1/+1 counters on their other Heroes every turn. The one attacker left unblocked is the 2/4, because it has the lowest power and the highest toughness, so none of your creatures can profitably block it.\n\n**Trap:** Blocking #70 with Quake (#31) and leaving #71 and #50 unblocked. Quake kills Coulson and survives, but you take 3+2 = 5 and drop to 1 life. Any trick or burn from their 6 open mana then kills you. Chump-blocking #71 with your Coulson to keep Quake keeps you at 4 but loses a creature for nothing.\n\n**Their turn:** They'll have the 2/4 plus whatever they cast with 6 mana and 3 cards in hand. They could flash in or pump something mid-combat, but you have no open {W} to respond either way. At 4 life you must keep chump-blockers back and not race. Strategic Intervention can tap a blocker, but it also only buffs a creature that attacks alone, so use it carefully.\n\n**Alternative:** Block #23>#64, #31>#70 and #30>#71 (chump). Quake survives, but you lose Coulson for nothing. It's close to even, but the main line is cleaner because it also kills their Coulson and Quake.\n\nANSWER: block:23>64,30>70,31>71",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:23>64,30>70,31>71",
+     "canonical": "block:23>64,30>70,31>71",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 22397,
+     "text": "**Play:**\n1. No spells. Your only untapped land is Thriving Isle, which makes U or B. You can't pay {W} for Helicarrier Strike.\n2. Block #23 (Ant-Man's Air Force) on #64 (Giant-Sized Flying Ant). Your 2 damage kills their 2-toughness Ant, and only your flyer can block it anyway.\n3. Block #30 (Coulson) on #70 (their Coulson). It's a 2/2 for 2/2 trade.\n4. Block #31 (Quake) on #71 (their Quake). It's a 3/3 for 3/3 trade.\n5. Leave #50 (Agents, 2/4) unblocked. You take 2 and go to 4.\n\n**Why:** \"Count lethal\": 10 power is coming at 6 life, so you must block three attackers, and the unblocked one should be the weakest. Agents is 2/4, so you can't kill it anyway, and leaving it unblocked costs you only 2 life. The other three blocks are even trades that clear their board, including their Coulson, which pumps their Heroes every turn.\n\n**Trap:** Blocking only the \"free\" kill (Quake on their Coulson) and leaving Quake and Agents unblocked. That is 5 damage, putting you at 1 life with their 6 open mana and 3 cards in hand. Any trick or flash creature kills you.\n\n**Their turn:** After these trades they keep only Agents (2/4), plus 3 cards in hand and 6 mana. Next turn, use your {1}{W} for Strategic Intervention or rebuild the board. At 4 life, don't tap out recklessly.\n\n**Alternative:** Quake blocks their Coulson instead (kills it and survives), your Coulson blocks their Quake (and dies), and the Ant trade stays. You end at 4 life with your Quake alive, but you lose a 2/2 for nothing, so it's slightly worse.\n\nANSWER: block:23>64,30>70,31>71",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:23>64,31>71,30>70",
+     "canonical": "block:23>64,30>70,31>71",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 24015,
+     "text": "**Play:**\n1. Don't cast anything. Your only untapped land is Thriving Isle (U/B), and Helicarrier Strike needs {W}, so no trick is available.\n2. Block Giant-Sized Flying Ant #64 with Ant-Man's Air Force #23. Your flier deals 2 to its 2 toughness, and both die.\n3. Block Quake #71 with Quake #31. Both are 3/3s and both die.\n4. Block Agent Phil Coulson #70 with Agent Phil Coulson #30. Both are 2/2s and both die.\n5. Leave Agents of S.H.I.E.L.D. #50 (2 power) unblocked. You go to 4 life.\n\n**Why:** \"Count lethal\": 10 power is coming at your 6 life, so you must block three attackers and let only a 2-power one through. Blocking the three that can die in a trade also removes most of their offense, including their Coulson, which would otherwise keep adding counters to their Heroes.\n\n**Trap:** Having Quake #31 eat their Coulson for free and leaving your Coulson back. That leaves 5 damage unblocked and puts you at 1 life, where any trick or pump kills you. Chump-blocking with Coulson #30 instead saves your Quake but gets you nothing in return.\n\n**Their turn:** After combat they keep Agents (2/4), 6 untapped lands and 3 cards in hand. They could use a combat trick or flash in another creature during blocks, and that is the risk of being at 4 life. Next turn Agents attacking alone gets +1/+1 and hits for 3, so you'll want a blocker or a removal/tapping effect (Web Up is on the battlefield; Strategic Intervention can tap a creature) to stay out of range.\n\n**Alternative:** Air Force blocks the Ant, Quake #31 blocks their Coulson (it kills it and survives), and Coulson #30 chump-blocks their Quake. You keep your Quake but kill one fewer creature, and they keep Quake and Agents, which leaves you under heavier pressure at 4 life.\n\nANSWER: block:23>64,31>71,30>70",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "block:23>64,30>70,31>71",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "block-comfort13-trade-fliers",
+   "type": "block",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "block:23>64",
+     "canonical": "block:23>64",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11149,
+     "text": "**Play:**\n1. Declare Ant-Man's Air Force #23 (2/1 flier) as a blocker on Giant-Sized Flying Ant #64 (3/2 flier). Scientists #42 goes unblocked.\n2. After blocks, cast Depower ({2}{U}, costing {2} less because it targets an attacker) on Flying Ant #64. Pay {U} with one Island. The Ant becomes -1/2 and the spell draws you a card.\n3. Combat damage: your 2-power flier kills the Ant (toughness 2) and takes no damage back. You take 3 from the Scientists, going from 17 to 14.\n4. You have Island and Thriving Isle left untapped, which you don't need for anything else this turn.\n\n**Why:** This follows \"trade on your terms\" and \"use all your mana.\" For one blue mana you turn a bad trade into a free kill of their 4-mana flier, and you draw a card. Counting lethal both ways, you're at 17 facing 6 power, so there's no danger, and they're at 20, so you aren't racing yet.\n\n**Trap:** Blocking without Depower trades your 2-mana 2/1 for their Ant. That's fine, but you lose your only creature and your Depower for later. Also don't chump the Scientists: a 2/1 can't kill a 3/3.\n\n**Their turn:** They have 5 untapped lands and 5 cards in hand, so they could respond with a trick or flash creature. If the Ant survives, you still lose nothing big. On your turn, play a land and Quake or Coulson with your remaining mana, since you hold Web Up for the Scientists.\n\n**Assumptions:** The opponent has no relevant instant. If they respond, the worst case is losing Air Force and Depower.\n\nANSWER: block:23>64",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:23>64",
+     "canonical": "block:23>64",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 9917,
+     "text": "**Play:**\n1. Block Giant-Sized Flying Ant #64 with Ant-Man's Air Force #23. Its 2 power kills the 3/2 and the Ant-Man's Air Force dies too.\n2. Take 3 from A.I.M. Scientists, going to 14. Cast nothing: your 3 open mana has no instant to use (Depower is already in the graveyard).\n\n**Why:** This follows \"trade on your terms\". Your 2-mana 2/1 kills their 4-mana 3/2 flier, and that flier is the only creature that can block or race your fliers. Lethal is nowhere near either way: you're at 17 facing 6 power, and they're at 20.\n\n**Trap:** Blocking A.I.M. Scientists (3/3) just loses your creature for nothing, since 2 damage doesn't kill it. Not blocking at all keeps a 2/1 but takes 6 and leaves their flier alive.\n\n**Their turn:** They have 5 open mana and 5 hidden cards, so a trick or flash creature after blocks is possible. If they have one, you lose a cheap 2/1, which is an acceptable risk. Next turn, play a land and cast Quake or Coulson. A.I.M. Scientists (3/3) is their remaining attacker, and Quake as a 3/3 blocks it well.\n\nANSWER: block:23>64",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:23>64",
+     "canonical": "block:23>64",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10734,
+     "text": "**Play:**\n1. Declare no blocks. Take 6, going from 17 to 11.\n2. Don't cast Depower. It's in your graveyard already, so nothing is lost there.\n3. Keep the 3 untapped sources (Island, Island, Thriving Isle) open. You have no instant in hand, so they do nothing this turn, but nothing is wasted by not blocking.\n\n**Why:** \"Count lethal\": you're at 17 and they have 6 power on board, so you aren't in danger. Your 2/1 flier is your only clock and your only evasive attacker. Blocking the 3/3 or the 3/2 flier with it just loses it for nothing, since it deals 2 damage and the 3/2 Ant has 2 toughness. Blocking the Ant (3/2 flier) would trade, since 2 damage kills a 3/2 and the 3 damage kills your 2/1. So that's the one real option.\n\n**Trap:** Blocking the Giant-Sized Flying Ant with your 2/1 looks like a fine trade (a 2-mana creature for a 4-mana creature). The catch is that they have 5 open mana and 5 cards in hand, so a trick or a flash play can blow you out. It also leaves you with an empty board before you've cast Quake or Coulson. Their Ant is worth more than your Air Force, so the trade is actually good in a vacuum. The cost is the tempo and risk, and the trade is close.\n\n**Their turn:** They have 5 untapped lands and a land drop, and they're in combat now, so a post-combat creature is likely. At 11 life you're still safe from 6 power. Next turn you play a land and cast Quake or Coulson plus Web Up mana to answer a threat.\n\n**Alternative:** Block #23 on #64 (the Ant). It's a genuine 1-for-1 that trades your 2-drop for their 4-drop flier and removes their evasive attacker. It's close, and it's the better line if you value the trade over keeping your flier. The risk is a trick with their 5 open mana. I lean toward trading, because a 2-mana 2/1 for their 4-mana 3/2 flier is a good exchange and their flier would otherwise keep hitting you for 3 each turn.\n\nTaking that into account, the trade is the stronger play: it wins on mana value, and you're not racing, so your 2/1 attacking for 2 matters less than killing their flier.\n\n**Assumptions:** Giant-Sized Flying Ant's flash ETB is irrelevant now since it's already on the battlefield. I'm assuming they have no combat trick, which I can't know.\n\nANSWER: block:23>64",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "block:23>64",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "block-number7-hellion",
+   "type": "block",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "block:33>55",
+     "canonical": "block:33>55",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11282,
+     "text": "**Play:**\n1. Block Ainok Tracker #55 with Volcano Hellion #33. You have no spells to cast, so the 4 untapped Mountains stay unused.\n2. Take 3 from Tracker #49 (18 → 15).\n\n**Why:** \"Get value from what's already doomed.\" Hellion's echo is {X} where X is your life total (15–18), and you'll have at most 9 lands next upkeep, so you can't pay it. It will be sacrificed anyway, so risking it in combat costs nothing. The first-strike Tracker deals 3 to a 5-toughness Hellion, which survives and kills the Tracker with its 6 damage. Counting lethal: they have 14 total power against your 18 life, and only 6 is attacking, so you're nowhere near dead.\n\n**Trap:** Not blocking to \"protect\" Hellion. It's gone at your upkeep regardless, so keeping it back wastes a free kill.\n\n**Their turn:** The opponent has 1 untapped Mountain and 3 hidden cards. A 1-mana burn spell (2+ damage) after first-strike damage could kill Hellion before it deals damage, but you lose nothing you weren't already losing. After combat they'd have two 3/3 first-strikers (one if you kill #55, plus #56 untapped), a 3/1 Craghorn and a face-down 2/2. You'll be at 15 life facing an empty board, so you need to rebuild next turn with whatever you draw.\n\nANSWER: block:33>55",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:33>55",
+     "canonical": "block:33>55",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10241,
+     "text": "**Play:**\n1. Block Ainok Tracker #55 with Volcano Hellion #33.\n2. Don't activate anything. Your 4 untapped Mountains have nothing to cast, and the 2 Mountains in hand can't be played on their turn.\n3. Take 3 from Tracker #49, going to 15 life.\n\n**Why:** \"Trade on your terms\" with a creature that is already doomed. Echo costs {X} equal to your life total, which is about 15 to 18, and you'll have only 9 lands next upkeep. The Hellion will be sacrificed regardless, so use it now. It survives the Tracker's 3 first-strike damage (toughness 5) and kills the Tracker with its 6 power. Count lethal: you're at 18 and they present 6 damage, so there's no danger.\n\n**Trap:** Not blocking to \"protect\" the Hellion. It can't be kept anyway, so you'd take 6 damage and gain nothing.\n\n**Their turn:** They have 1 untapped Mountain and 3 hidden cards, so a 1-mana trick is possible. Even if they use one, you lose only a creature that was dying anyway. After combat they have Tracker #56, Craghorn (3/1 first strike), a face-down 2/2 and one surviving attacking Tracker. Next turn, play a Mountain and rebuild with whatever you draw.\n\n**Assumptions:** The Hellion's echo can't realistically be paid, since X equals your current life total (at least 15) and you'll have at most 9 lands.\n\nANSWER: block:33>55",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:33>55",
+     "canonical": "block:33>55",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11945,
+     "text": "**Play:**\n1. Block Ainok Tracker #55 with Volcano Hellion #33. Don't activate or cast anything; your 4 untapped Mountains have nothing to use.\n2. Take 3 from Tracker #49, going to 15 life.\n\n**Why:** \"Use the creature before you lose it.\" Hellion's echo is your life total (15+), and you'll have at most 9 lands next upkeep, so you can't pay it and it gets sacrificed anyway. The block is free value. The Tracker's first strike deals 3 to a toughness-5 Hellion, which survives and kills the Tracker with 6 damage. Counting lethal: you're at 18 facing 6 power, so you aren't close to dying this turn. Their whole board (three 3/3s, a 3/1, a 2/2) is only 14 power, so you'd survive next turn even with no blockers.\n\n**Trap:** Not blocking to \"protect\" the Hellion. It's already doomed by echo, so keeping it back gains nothing and wastes a free kill.\n\n**Their turn:** They have 1 untapped Mountain and 3 cards in hand, so a 1-mana red trick could save the Tracker or kill the Hellion. That's a small risk, and the Hellion is lost anyway. After combat they'll have Tracker #49, Tracker #56, Craghorn and the face-down 2/2 for next turn, and you'll have no board once the Hellion is sacrificed. Play your Mountain and rebuild.\n\n**Assumptions:** Hellion's echo is still unpaid, which is what its SUMMONING SICK flag suggests. If echo was already paid, the block is still correct, since the Hellion kills the Tracker and survives.\n\nANSWER: block:33>55",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "block:33>55",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "block-trample7-first-strike",
+   "type": "block",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "block:26>49,21>49",
+     "canonical": "block:21>49,26>49",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12400,
+     "text": "**Play:**\n1. Double block Ainok Tracker #49 with Garruk's Companion #26 and #21. Keep #34 out of the block.\n2. You have no untapped mana and nothing to cast, so there is nothing to do before or after blocks.\n\n**Why:** All 5 of their Mountains are tapped, so they can't cast a trick or flip anything. Tracker's first strike deals 3 damage before your blockers hit back. That kills one Companion (toughness 2) and leaves 1 damage on the other, which isn't lethal. The surviving Companion then deals 3 to the 3/3 Tracker and kills it. This is \"trade on your terms\": you lose a {G}{G} 3/2 and they lose a 6-mana creature. Count lethal: you're at 20 and they're at 20, so neither side is under any pressure.\n\n**Trap:** Single blocking. The Companion dies to first strike without dealing any damage, so you lose a creature for nothing. A triple block also adds nothing, because they still only kill one Companion, and it just exposes more creatures to a surprise.\n\n**Their turn:** The attack is already happening, and they have no mana left. They have 4 cards in hand and will untap with 5 lands next turn, so expect another creature or removal. On your turn you still have 2 Companions plus 2 more in hand, and your Forest makes five lands. Cast both Companions with {G}{G} each, which uses 4 of your 5 lands.\n\n**Assumptions:** Which two Companions block doesn't matter, since they're identical and all will be able to attack on your next turn.\n\nANSWER: block:26>49,21>49",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:26>49,21>49",
+     "canonical": "block:21>49,26>49",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10240,
+     "text": "**Play:**\n1. Double block Ainok Tracker #49 with Companion #26 and Companion #21. Nothing is needed before or after blocks, because all four of your Forests are tapped.\n2. First strike deals 3 damage first. It can kill only one Companion (2 damage to one, 1 to the other). The surviving Companion then deals 3 damage and kills the 3/3.\n\n**Why:** \"Trade on your terms.\" You lose a 2-mana 3/2 and they lose a 6-mana 3/3. The opponent has all 5 Mountains tapped, so no combat trick is possible. Count lethal: you're at 20 and they have a single 3-power attacker, so you are in no danger either way.\n\n**Trap:** Single blocking with one Companion. First strike kills it before it deals damage, so you lose a creature for nothing. A triple block adds nothing, since the Tracker still kills only one Companion.\n\n**Their turn:** They have 4 cards in hand and will untap with 5-6 lands, so expect another creature or removal. After this block you keep two 3/2 tramplers plus two more in hand, and you can attack back into an empty board. Next turn, play the Forest and cast one Companion (GG), and you'll have mana left over if you draw more.\n\nANSWER: block:26>49,21>49",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "block:34>49,26>49",
+     "canonical": "block:26>49,34>49",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10921,
+     "text": "**Play:**\n1. Declare #34 and #26 both as blockers on Ainok Tracker #49. Leave #21 out of the block.\n2. You have no untapped mana and nothing to cast. After combat, nothing else is needed.\n3. On your own turn, play Forest (5 lands), cast Garruk's Companion ×2 with 4 Forests, and keep 1 mana spare.\n\n**Why:** Count the damage. Tracker has first strike and deals 3 to one blocker, which kills that 3/2 but can't kill both, since the 1 leftover damage isn't lethal. The surviving Companion then deals 3 and kills the 3/3 Tracker. This is \"trade on your terms\": your 2-mana 3/2 for their 6-mana first striker. All five of their Mountains are tapped, so they can't have a trick.\n\n**Trap:** A single block loses. First strike kills the blocker before it deals any damage, so you lose a creature for nothing. A triple block adds no extra kill and just exposes more creatures to damage.\n\n**Their turn:** This is their turn, and they have 0 untapped mana and have already used their land drop. They can't cast anything after combat. You're at 20 life, so nothing is threatening you, and the worst case is that you take 0 from this attack. They keep 4 hidden cards, so next turn expect a new creature or removal. Your two Companions in hand will rebuild your board.\n\n**Alternative:** No block, taking 3 (20 → 17), keeps all three creatures. It's worse: you give up a very favorable trade against their only creature and gain nothing.\n\nANSWER: block:34>49,26>49",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 0.6666666666666666,
+    "answers": [
+     {
+      "answer": "block:21>49,26>49",
+      "count": 2
+     },
+     {
+      "answer": "block:26>49,34>49",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "choice-comfort13-thriving-colour",
+   "type": "choice",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "option:3",
+     "canonical": "option:3",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 5396,
+     "text": "**Play:**\n1. Play Thriving Isle and choose white. It enters tapped, so you have no mana this turn (0 untapped sources).\n2. Pass the turn.\n\n**Why:** Your hand is blue and white: Quake, Web Up and Spy Kit need {W}, and the blue cards need {U}. Thriving Isle makes {U} or {W}, and choosing white gives you both colours from one land. Follow the \"fix your colours\" heuristic: pick the colour your hand needs most.\n\n**Trap:** Picking black, red or green. Nothing in your hand uses them, so the land would only ever tap for blue.\n\n**Their turn:** The opponent has 2 lands (Plains, Island) and 6 cards in hand, with no creatures. Next turn you have Thriving Isle plus an Island, which is 2 mana. That is enough for Ant-Man's Air Force ({1}{U}) or Spy Kit plus an equip. On the turn after, with 3 lands, you can cast Quake or Web Up.\n\nANSWER: option:3",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "option:3",
+     "canonical": "option:3",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6392,
+     "text": "**Play:**\n1. Play Thriving Isle (land drop), choose **white**. It enters tapped, so no mana this turn.\n2. Cast nothing. You have 0 untapped sources, so there is nothing to spend.\n\n**Why:** Your hand is blue and white: Web Up, Quake, S.H.I.E.L.D. Spy Kit (white) and Wasp, Ant-Man's Air Force, Depower (blue). Choosing white lets this one land make both colors, which is the \"fix your colors\" heuristic. With two Islands in hand, white is the color you'll be short on.\n\n**Trap:** Picking a color that isn't in your hand (black, red, green) makes the land just an Island and wastes the fixing. Your white cards would then depend on drawing Plains.\n\n**Their turn:** The opponent has 2 lands (Plains, Island) and 6 cards in hand, with no creatures. They can play a 2-drop or a third land. You have no board yet, so nothing is at risk.\n\n**Next turn:** Play an Island, giving Thriving Isle (W or U) plus two Islands. That lets you cast Quake ({2}{W}, paying W from the Thriving Isle) or Wasp ({2}{U}), or Ant-Man's Air Force plus Spy Kit.\n\nANSWER: option:3",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "option:3",
+     "canonical": "option:3",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6607,
+     "text": "**Play:**\n1. Play Thriving Isle as your land drop and choose white. It enters tapped, so you have no mana this turn.\n2. Pass the turn. Your hand is Island, Island, and all the spells are blue or white, so white is the only colour that matters.\n\n**Why:** Follow \"match your mana to your hand.\" Your hand has white cards (Quake, Web Up, Spy Kit) and blue cards (Wasp, Ant-Man's Air Force, Depower). Thriving Isle already makes blue, and the two Islands cover blue too, so choosing white is what lets you cast both colours. Playing the tapped land on a turn with no other play is also efficient tempo.\n\n**Trap:** Choosing black, red or green. Nothing in your hand uses them, and you would be left with no white source, so Quake and Web Up would be stuck in your hand.\n\n**Their turn:** The opponent has Plains and Island untapped, no creatures, and 6 cards in hand. They could cast a creature or a trick. You have nothing on the board, so there's nothing to protect. Next turn you'll have Thriving Isle plus an Island, which gives you 2 mana (for Ant-Man's Air Force) or 3 mana with another land drop (for Quake, Web Up or Wasp).\n\nANSWER: option:3",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "option:3",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "choice-number7-hellion-damage",
+   "type": "choice",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "option:0",
+     "canonical": "option:0",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12427,
+     "text": "**Play:**\n1. Choose 0 damage. The trigger resolves with no damage to you or to Hellion #28.\n2. You have no untapped mana, and your land drop is used, so nothing else is possible this turn.\n\n**Why:** The trigger's target is your own Hellion #28, so any damage hurts both you and your creature for nothing. The idea would be to lower your life total so echo (X = your life) becomes payable, but Hellion has 5 toughness, so you can deal at most 4 and stay at 14 life. Echo of 14 is unpayable with 4 lands, so the damage can't help. This follows \"don't pay life for no gain.\"\n\n**Trap:** Picking a big number to \"make echo cheap.\" Anything 5 or more kills your own Hellion, and anything from 1 to 4 costs life without getting echo down to something you can pay.\n\n**Their turn:** The opponent has two face-down 2/2s, one tapped and one summoning sick, and 1 untapped Mountain. They could unmorph or burn something, but your 6/5 can block a 2/2. At your next upkeep you'll have to sacrifice Hellion, since echo of 18 is unpayable. So treat it as a one-turn blocker, and hold the other Hellions until you can use them well.\n\n**Assumptions:** The prompt says \"0–1\" but lists 0–9. Either way, 0 is the right choice.\n\nANSWER: option:0",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "option:0",
+     "canonical": "option:0",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11171,
+     "text": "**Play:**\n1. Choose 0 damage. The trigger resolves with no effect, and you keep your life total at 18 and the Hellion at full 6/5.\n2. You have no untapped mana, so nothing else this turn. The land drop is already used.\n\n**Why:** The trigger's only legal target is your own Hellion, so any damage you pick hits you and your own creature. Echo X equals your life total, and you'd have only 4 lands at upkeep. Getting life low enough to pay would take 14 or more damage, which kills the 5-toughness Hellion anyway. So nothing is gained by hurting yourself (\"don't pay life for nothing\").\n\n**Trap:** Dealing damage to yourself to shrink the echo cost. Even 4 damage leaves you at 14, still far above the 4 mana you can pay, and it only costs you life.\n\n**Their turn:** The Hellion is a 6/5 blocker against their two 2/2 face-down creatures, so they likely won't attack into it. They have one untapped Mountain, so at most a cheap trick. On your upkeep the Hellion will be sacrificed because you can't pay echo 18. Don't count on it surviving.\n\n**Assumptions:** The prompt says \"choose 0–1\" but lists up to 9. I assume 0 is a legal pick either way.\n\nANSWER: option:0",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "option:0",
+     "canonical": "option:0",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11720,
+     "text": "**Play:**\n1. Choose 0 damage. The trigger resolves with no life loss and no damage to anything.\n2. Nothing else this turn: all 4 Mountains are tapped and the land drop is used.\n\n**Why:** The stack shows the trigger targeting your own Volcano Hellion (28), not an opponent's creature, so any damage you choose only hurts you and your own 6/5. This is \"don't pay for nothing\". The engine also caps the choice at 0–1, and 1 would just cost you a life point for no gain.\n\n**Trap:** Dealing damage on the idea that the trigger kills a face-down 2/2 would be a mistake. Here it can't. Lowering your life enough to pay echo (life ≤4 with 4 lands) would take 14 damage, which isn't available and would kill the 5-toughness Hellion anyway.\n\n**Their turn:** They have 1 untapped Mountain and 4 cards in hand. Their face-down 2/2 (#55) is tapped, and #49 is summoning sick, so #49 can't attack either. The Hellion can still block on their turn, since being summoning sick doesn't stop blocking. At your upkeep it will be sacrificed because echo costs your whole life total (18), which you can't pay. Plan around the Hellion as a one-turn 6/5 blocker and don't count on keeping it.\n\n**Assumptions:** The target is shown as your own Hellion, which looks like an engine quirk. If the engine let you pick a different target, I'd retarget a 2/2 and choose 2 damage, which costs you 2 life.\n\nANSWER: option:0",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "option:0",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "mulligan-comfort13-two-lands-on-draw",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7337,
+     "text": "**Play:** Keep.\n1. Turn 1 (on the draw): play Thriving Isle tapped, choose white.\n2. Turn 2: play Island, cast Ant-Man's Air Force ({1}{U}, paid by Isle + Island).\n3. Turn 3: if you draw a land, cast Quake, Wasp or Web Up. Spy Kit ({W}) can go with a spare mana.\n\n**Why:** Two lands is a bit light, but you're on the draw, so you see an extra card. The hand has a cheap curve (2-drop, then three 3-drops, plus a 1-mana equipment) and both colours are covered by Thriving Isle. The heuristic is \"keep hands that function on a land-light draw\": nothing here is expensive, so one or two land draws in the first few turns gets you going.\n\n**Trap:** Mulliganing to six because of only two lands. A six-card hand is usually worse than a cheap, well-coloured seven on the draw.\n\n**Their turn:** The AI has no board yet. Expect a land and perhaps a early creature. You don't need to hold anything back; just develop your curve.\n\n**Assumptions:** The deck has about 16-17 lands (typical for 40-card or 60-card decks), so the odds of drawing a third land by turn 3 are decent. Only Thriving Isle makes white, so if you draw no more white sources, Quake, Web Up and Spy Kit will be stuck until you find them.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7068,
+     "text": "**Play:** Keep.\n1. Turn 1: play Thriving Isle (enters tapped), choose white as the second colour. It gives you both U and W.\n2. Turn 2: play Island. Cast Ant-Man's Air Force ({1}{U}) using Isle and Island, or cast Spy Kit ({W}) with Isle and hold up {U}.\n3. Turn 3: if you draw a land, cast Quake, Wasp or Web Up. Each costs 3.\n\n**Why:** \"Keep a hand with lands, colours and a curve.\" You have 2 lands that cover both colours, a 2-drop, and a run of 3-drops, and you're on the draw, so you see an extra card. Two-landers on the draw with cheap plays are a normal keep, and the whole hand costs 3 or less.\n\n**Trap:** Mulliganing because it's only 2 lands. Going to 6 cards costs more than the risk here. With about 15 lands left in 33 cards, you hit a third land by turn 3 fairly often, and the hand still works on 2 lands (Air Force, Spy Kit).\n\n**Their turn:** The AI has 7 hidden cards and will develop first. Nothing to hold back yet. Keep Web Up for their best threat rather than spending it on the first creature.\n\n**Assumptions:** I'm assuming the deck runs around 16–17 lands, since the list isn't given.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7025,
+     "text": "**Play:** Keep.\n1. Turn 1: play Thriving Isle (enters tapped), choose white as the second colour. No other play is needed, so the tapped land costs nothing.\n2. Turn 2: play Island, cast Ant-Man's Air Force ({1}{U}) with Thriving Isle and Island. You'll have 0 mana left, or cast Spy Kit instead if you prefer.\n3. Turn 3: if you draw a land, cast Quake ({2}{W}), Wasp ({2}{U}) or Web Up ({2}{W}). Thriving Isle supplies the W for Quake or Web Up.\n\n**Why:** Two lands in a 7-card hand is risky, but you're on the draw, so you see an extra card. The hand has a cheap curve (a 1-drop, a 2-drop and three 3-drops), and Thriving Isle fixes both colours. This follows \"keep a functional hand on the draw\": with a low curve and good colours, you only need to find one more land in your first three or four draws.\n\n**Trap:** Mulliganing because there are only two lands. Going to 6 cards costs more than the risk here. With 15 or so lands left in 33 cards, you're likely to find a third land by turn 3 or 4, and every spell in hand is cheap.\n\n**Their turn:** The AI is on the play and will develop first. Nothing you do on turn 1 interacts with it, so just pass with the tapped land.\n\n**Assumptions:** I'm assuming a roughly 16–17 land deck, so about 14–15 lands remain in the 33-card library.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "mulligan-number7-four-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8280,
+     "text": "**Play:** Keep.\n1. Four Mountains and three Volcano Hellions is a hand that casts its spells on time: turn 4 Hellion needs {2}{R}{R}, and all four lands are Mountains.\n\n**Why:** Follow \"keep hands that function.\" Four lands in seven cards with the right colour is a clean keep, and you are on the draw, so you see an extra card. Mulligan to six would cost you a card for a hand that already works.\n\n**Trap:** Mulliganing because it's \"only one spell, repeated.\" The Hellion is powerful, but its echo is {X} where X is your life total. Don't pay echo on a Hellion you've cast. You'd pay your entire life total, which is lethal or close to it. So expect each Hellion to be a one-turn 6/5 that deals its ETB damage and then gets sacrificed at your next upkeep. Casting three in a row is not a strong plan by itself, so you need draws to fill turns 1 through 3 and to support the Hellions.\n\n**Their turn:** The opponent is on the play with 7 unknown cards. Expect early pressure while you do nothing until turn 4. Your life total matters, since the Hellion's ETB lets you choose how much damage you take (you can choose 0), so you don't need to hurt yourself.\n\n**Assumptions:** The echo wording says \"unless you pay its echo cost,\" so I read it as an optional payment you'd normally decline. Your draws need cheap plays to make the hand good, but the mana and colours are fine, so keep.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8186,
+     "text": "**Play:** Keep.\n1. Play Mountain each turn through turn 4 (you have 4 Mountains, so the land drops are guaranteed).\n2. Turn 4: cast Volcano Hellion with {2}{R}{R}, paid by all four Mountains.\n\n**Why:** \"Keep a hand that does something\": four lands and three copies of a castable 4-drop gives you a guaranteed curve to turn 4 on the draw, with an extra draw step to find more. It's mono-red with only red costs, so there are no colour problems. It's a bit top-heavy and has no early plays, but a 4-land, 3-spell hand is far better than going to six.\n\n**Trap:** Mulliganing because \"all my spells are the same card.\" That throws away a hand with perfect mana. Also, don't treat Hellion as a free 6/5 later on.\n\n**Their turn:** The AI goes first, so expect it to develop a board while you do nothing until turn 4. Hellion's echo is {X} where X is your life total, so you can't realistically pay it. The Hellion is effectively a 4-mana \"deal damage to a target creature, take the same damage yourself, and get a 6/5 body for one turn cycle\" card. Pick the damage amount carefully: it only needs to be enough to kill the target, and you take that damage too. Also, since you will not pay echo, the Hellion will be sacrificed on your next upkeep, so plan for it to be a one-shot removal spell, or a one-turn blocker.\n\n**Assumptions:** I don't know the rest of your deck, so I'm judging only this hand. If your deck has cheap plays or ways to use a sacrificed Hellion, the hand gets better.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8221,
+     "text": "**Play:** Keep the 7 cards (4 Mountains, 3 Volcano Hellion).\n\n**Why:** \"Keep hands that function.\" You have 4 lands of the right colour, so you can cast Hellion on turn 4 with no colour problems, and you're on the draw, so you see an extra card. A 6/5 for 4 is a huge body, and the ETB lets you kill a creature (you choose the damage to yourself, so you can kill small things cheaply).\n\n**Trap:** Mulliganing because there are no plays before turn 4 or because three copies of the same card feels clunky. Going to 6 costs a card and is worse than a slow, castable hand. Also, don't assume you must pay echo each time: echo is your life total, so paying it would be a huge cost.\n\n**Their turn:** Forge AI is on the play with 7 cards and will develop early creatures. You have no early plays, so you may take some damage before turn 4. Keep your life total healthy, because Hellion's ETB damage to yourself and the echo cost both interact with it.\n\n**Assumptions:** Echo {X} equals your life total at upkeep, so you basically can't pay it, as that would be your whole life total's worth of mana. Each Hellion is effectively a one-shot: a 6/5 that deals damage to a target creature on ETB, then is sacrificed next upkeep unless you somehow pay. The hand is mostly a removal-plus-one-turn-attacker plan. It's still a keep because the alternative is a random 6.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "mulligan-trample7-curve",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6707,
+     "text": "**Play:**\n1. Keep the hand.\n2. Turn 2 (you're on the draw, so you also get a draw on turn 1): Forest, Forest, then cast Garruk's Companion with both Forests ({G}{G}). Leftover mana: 0.\n3. Turn 3: play a third Forest if you have it, and cast another Companion with two of the lands. One land is left over.\n\n**Why:** \"Use all your mana\": three Forests and four 3/2 tramplers for {G}{G} is a clean curve with no colour problems. You are on the draw, so you're more likely to hit a fourth land. The hand is aggressive and fast, and a 3/2 trampler on turn 2 pressures the AI right away.\n\n**Trap:** Mulliganing because the hand looks \"all the same card.\" Four copies of a good two-drop plus three lands that cast them all is a strong keep. A mulligan to six would be a much bigger cost than the hand's lack of variety.\n\n**Their turn:** The AI goes first and may have an early blocker or removal, but you can't plan around that yet. Just deploy one Companion per turn and keep attacking where the trade is good for you.\n\n**Assumptions:** The deck is mostly green, so the Forests should cast everything. I'm also assuming the rest of the deck has a reasonable land count to find a fourth land for double-spelling later.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6375,
+     "text": "**Play:** Keep.\n1. Turn 2 (your second turn, on the draw you'll have seen an extra card): play Forest on turns 1 and 2, then cast Garruk's Companion ({G}{G}, paid by two Forests) on turn 2.\n2. Turn 3: Forest as the third land and cast another Companion with two Forests, leaving one Forest up. If you haven't drawn a fourth land, keep casting one Companion per turn.\n\n**Why:** Three lands of the right colour plus four 3/2 tramplers for two mana is a fast, aggressive curve, and being on the draw gives you an extra card to find more lands. Follow \"keep hands that do what the deck wants\": this is a mono-green hand that casts every spell on curve.\n\n**Trap:** Mulliganing because the hand looks repetitive or has no top end. Four copies of the same two-drop is fine against the AI; a 6-card hand is a bigger cost than a lack of variety.\n\n**Their turn:** The AI goes first and will likely develop a board or use removal on your first Companion. Your threats are cheap and redundant, so one removal spell doesn't hurt much. Keep deploying rather than holding back.\n\n**Assumptions:** The deck is mostly green (Forests plus GG creatures), so colour isn't a concern.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6565,
+     "text": "**Play:** Keep.\n1. Land drop turn 1: Forest.\n2. Turn 2: Forest, cast Garruk's Companion ({G}{G} from both Forests).\n3. Turn 3: Forest, cast another Companion, with one Forest left over.\n\n**Why:** Follow \"keep hands that do something on curve.\" Three Forests and four 3/2 tramplers for GG make a strong, aggressive start, and you're on the draw, so you see an extra card to find more lands or other spells. The hand is mono-green and the lands match every spell perfectly.\n\n**Trap:** Mulliganing because the hand looks \"samey\" or has only three lands. A 7-card hand that plays a 3/2 trampler on turn 2 is much better than a random 6-card hand. Don't throw away a hand that is good for what it does.\n\n**Their turn:** The AI goes first, so expect it to develop a turn 1 or 2 play. Your 3/2 tramplers should trade well with early creatures, and you can start attacking on turn 3.\n\n**Assumptions:** The deck is mostly green. The hand has only 3 lands and no spells above two mana, so it's fine even if you don't draw more lands.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "mulligan-yield13-five-lands",
+   "type": "mulligan",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8508,
+     "text": "**Play:** Keep.\n1. Play Forest each turn on turns 1-2 and cast a Thallid ({G} from a Forest) on turn 1, then the second Thallid on turn 2 alongside your land drop.\n2. Keep making land drops; you have five Forests, so you won't miss early drops, and every draw is a free spell.\n\n**Why:** \"Keep functional hands\": 5 lands and 2 one-drops in a single colour means you can cast everything on curve, and you're on the draw, so you see an extra card. It's low-powered, but a 7-card hand that works beats a mulligan to 6.\n\n**Trap:** Mulliganing because the hand is flood-prone and weak. A mulligan costs a card for sure, and this hand has no colour or mana problems. The risk is just drawing more lands, which is acceptable on the draw.\n\n**Their turn:** The AI goes first with 6 cards in hand. Nothing is known yet; Thallids are slow, so don't expect them to race. Spore counters will turn them into Saproling makers over time (3 upkeeps each).\n\n**Assumptions:** I assume your deck is mostly green (the hand is all Forests), so the lands fit your colours. A deck with a heavier non-green component would make me want to check that the five Forests aren't stranding colour needs.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7358,
+     "text": "**Play:**\n1. Keep the 7 cards.\n2. Turn 1: Forest, Thallid. Turn 2: Forest, Thallid. Keep playing a Forest each turn.\n\n**Why:** Five lands and two one-drops is a flawed but playable hand. It follows \"don't mulligan a functional hand\": you will hit every land drop and have plays on turns 1 and 2. Going second means you also draw an extra card, which helps find spells. Thallid is slow, but it grows toward Saprolings every three upkeeps and costs only {G}, so it uses your mana for free.\n\n**Trap:** Mulliganing because the hand looks \"flood-y\". Going to 6 costs a full card, which hurts more than a hand with five lands and two cheap threats that you can fix with draws. All five lands are Forests and both spells are green, so colour isn't a problem.\n\n**Their turn:** The AI goes first with 6 cards in hand and hasn't shown anything. Nothing to prepare for yet. Just develop your board, and keep Thallid alive so the spore counters accumulate.\n\n**Assumptions:** I don't know the rest of your deck. If it has expensive green spells or mana sinks, this hand is even better, since the extra lands will cast them.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "keep",
+     "canonical": "keep",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7190,
+     "text": "**Play:**\n1. Keep the seven cards.\n2. Turn 1: Forest, Thallid. Turn 2: Forest, second Thallid. Keep playing a land each turn after that.\n\n**Why:** \"Use all your mana\" and \"have a curve\" both point to keep. Five lands means you hit every land drop, and you're on the draw, so you see an extra card. Both Thallids are one-drops that grow into Saprolings over time, which gives you a slow but real board. It's a flood-prone hand, but a mulligan to six is usually worse than a hand that does something each turn.\n\n**Trap:** Mulliganing because the hand is \"all lands and weak creatures.\" Five lands with two plays is a normal keep. A six-card hand has a real chance of being worse. Your draws will supply the spells.\n\n**Their turn:** The AI goes first with six cards in hand. You have nothing to worry about before your turn 1, so just plan to play Forest and Thallid when you get there.\n\n**Assumptions:** I don't know the rest of your deck. I'm assuming it is mostly green, since every card in this hand is a Forest or a green creature. If it has expensive cards or other colors, the five Forests help cast them, except for any off-color spells.\n\nANSWER: keep",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "keep",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "pass-auto2026-no-target-yet",
+   "type": "pass",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "pass",
+     "canonical": "pass",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 9897,
+     "text": "**Play:**\n1. Pass priority now. Helicarrier Strike only targets an attacking or blocking creature, and nobody is attacking yet, so it has no legal target.\n2. After attackers are declared, cast Helicarrier Strike ({W} from a Plains) on the best attacker. Skip teamwork, since 2 damage already kills every creature they have. That leaves Plains + Thriving Isle open.\n3. Quake triggers on the noncreature spell, so tap target creature or land. Tap a potential blocker or an untapped land of theirs.\n\n**Why:** \"Hold the instant until it has a target.\" The spell is at its best after attackers are declared, when it can kill a flier for one mana. Each of their creatures has toughness of 2 or less, so the cheap mode is enough and you don't need to tap Quake.\n\n**Trap:** Trying to cast it now fails because it has no target. Using teamwork and tapping Quake wastes your best blocker for no extra benefit.\n\n**Their turn:** They have 5 untapped lands and 3 cards in hand. Giant-Sized Flying Ant has flash, and it can tap or untap a nonland permanent. Strategic Intervention gives a lone attacker +1/+1 and taps one of your creatures. If they attack with only the 3/2 Ant, it becomes 4/3 and Strike's 2 damage won't kill it, so you'd need teamwork (4 damage). If it's a smaller flier alone, plain Strike still works.\n\n**Alternative:** None that's close.\n\nANSWER: pass",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "pass",
+     "canonical": "pass",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10445,
+     "text": "**Play:**\n1. Pass priority now. Helicarrier Strike only targets an *attacking or blocking* creature, and no attackers are declared yet, so it has no legal target.\n2. After attackers are declared, cast Helicarrier Strike for {W}, paid by a Plains. Don't use teamwork. Target the best attacker, which is probably Giant-Sized Flying Ant (3/2). Its toughness is 2, so the plain 2 damage kills it. Aim at Ant-Man's Air Force (2/1) or Aerial Doombot (1/1) only if they are the better targets.\n3. Quake's trigger fires on the cast, since Strike is noncreature. Tap one of their lands or a creature. This mostly matters if they try a trick with their open mana. You end with 2 untapped sources (Thriving Isle and a Plains).\n\n**Why:** \"Wait for a legal target.\" Beginning of combat is too early, so you wait until attackers are declared. Then \"use the cheapest sufficient answer\": 2 damage kills any of their three creatures, so skip the teamwork tap.\n\n**Trap:** Tapping Quake for teamwork. It adds nothing, because 2 damage already kills everything they have, and it costs you a blocker and your Quake body.\n\n**Their turn:** They have 5 open mana (UU, WWW) and 3 hidden cards. They have flash fliers like Giant-Sized Flying Ant, which taps or untaps a permanent, and they may have protection tricks. Your creatures can't block fliers. Bold Biochemist is a -4/3 and Quake is a 3/3. Strategic Intervention gives a lone attacker +1/+1 and taps one of your creatures. At 13 life you aren't in danger from their small fliers this turn.\n\nANSWER: pass",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "pass",
+     "canonical": "pass",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8272,
+     "text": "**Play:** Pass priority now. Don't cast anything at beginning of combat.\n\n1. Pass. Let the opponent declare attackers.\n2. After attackers are declared, if a creature attacks, you can cast Helicarrier Strike ({W} from a Plains) on it. Without teamwork it deals 2 damage. That kills Ant-Man's Air Force (2/1), Aerial Doombot (1/1) or Giant-Sized Flying Ant (3/2).\n3. Teamwork needs tapping Quake (power 3). Don't do that on their turn, because it removes your blocker. Strike without teamwork is enough for any of their creatures.\n4. Mana left after the Strike: Plains plus Thriving Isle, 2 mana.\n\n**Why:** Helicarrier Strike only targets an attacking or blocking creature, so it has no legal target right now. This follows \"wait for the window\": hold the instant until a creature is declared as an attacker. The Strike's 2 damage is enough to kill any of their creatures.\n\n**Trap:** Trying to cast it now. It has no legal target, since nothing is attacking yet. Also don't tap Quake for teamwork. The extra damage isn't needed, and you'd lose your only real blocker.\n\n**Their turn:** They have 5 untapped lands and 3 cards in hand, so they can flash in something else. Giant-Sized Flying Ant has flash and can tap or untap a nonland permanent. Strategic Intervention gives a lone attacker +1/+1 and taps one of your creatures. If one flyer attacks alone, it becomes bigger (Air Force would be 3/2), but a 2-damage Strike still kills it. Your Biochemist is -4/3 and can't deal damage, so Quake is your only real blocker, and Intervention can tap it. You're at 13, so you can afford a hit while you wait for the best Strike target.\n\nANSWER: pass",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "pass",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "pass-auto2026-strike-before-damage",
+   "type": "pass",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:3",
+     "canonical": "cast:3",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12406,
+     "text": "**Play:**\n1. Cast Helicarrier Strike ({W}, paid with one untapped Plains) on Giant-Sized Flying Ant #64, with no teamwork. Its 2 damage kills the 3/2.\n2. Quake's trigger fires on the cast. Target one of their Islands. This leaves them one blue source before the spell resolves, so a two-blue counter or trick is harder.\n3. You end with Plains and Thriving Isle untapped, and the Island still in hand.\n\n**Why:** \"Use all your mana\" and \"trade up\". One mana kills their best attacker (a 4-mana creature) and saves 3 damage right now. Declare blockers is your last window to stop this combat's damage, and you can't block flyers anyway. Teamwork isn't needed, since 2 damage already kills the 3/2, so Quake stays untapped.\n\n**Trap:** Passing and saving the Strike. You take 6 and 13 life gets chipped down by flyers every turn. Also, don't tap Quake for teamwork: it gives no extra value and leaves you without a blocker.\n\n**Their turn:** They have 5 open mana and 3 hidden cards. They could respond with a trick or counter. After combat they may cast more flyers or creatures. If the Strike resolves, you take 3 (Doombot 1 + Air Force 2) and go to 10. Next turn, play your Island.\n\n**Alternative:** Hitting Ant-Man's Air Force (2/1) saves less damage, so it's worse.\n\nANSWER: cast:3",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:3",
+     "canonical": "cast:3",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11896,
+     "text": "**Play:**\n1. Cast Helicarrier Strike (W from an untapped Plains) without teamwork, targeting Giant-Sized Flying Ant #64 (3/2). Don't tap Quake.\n2. When Quake's trigger goes on the stack, target one of their untapped Islands. This is a small bonus and may not matter.\n3. Mana left: Plains and Thriving Isle, with nothing else to spend it on.\n\n**Why:** \"Use all your mana\" and \"trade up\". One W spell kills their best attacker, a 3-power flier, for 1 mana, and the 2 damage is already enough for its 2 toughness. It also cuts the damage you take from 6 to 3. Your creatures can't block fliers, so this is your only way to affect combat.\n\n**Trap:** Paying teamwork by tapping Quake. The 4 damage is wasted on a 2-toughness creature, and a tapped Quake leaves you open on their next attack. Also, don't waste the Strike on the 1/1 Doombot or the 2/1 just because it's the cheaper kill.\n\n**Their turn:** They have 5 open mana (UU WWW) and 3 cards in hand, so they could counter the Strike or protect the Ant with a trick. If so, you lose a 1-mana spell, which is an acceptable risk. After combat you're at 10 life, or 7 if it gets stopped. Next turn, play the Island and keep up W for any further instant.\n\nANSWER: cast:3",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:3",
+     "canonical": "cast:3",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12067,
+     "text": "**Play:**\n1. Cast Helicarrier Strike for {W}, paid by one untapped Plains, targeting Giant-Sized Flying Ant #64 (3/2). Don't use teamwork, because 2 damage already kills it.\n2. Quake's trigger fires on the noncreature spell. Target one of their untapped Islands, since blue is probably their trick or counter colour.\n3. Pass priority afterwards. You'll have Thriving Isle and one Plains still untapped.\n\nYou take 3 from the Doombot and Air Force, going to 10.\n\n**Why:** This follows \"trade on your terms\" and \"use all your mana\". A 1-mana spell kills their best attacker, a 3-power flyer you can't block, and your mana would otherwise go unused this turn. Quake's trigger gives a free tap.\n\n**Trap:** Passing to hold the Strike for later. Your creatures can't block flyers, so the damage keeps coming. The Ant is the biggest source, and it's also a clean 2-toughness target.\n\n**Their turn:** They have 5 open mana and 3 cards in hand, and the Ant has flash, so they may have more flyers or a trick. After this you face a 1/1 flyer and a 2/1 flyer, and you're at 10. Keep developing your board, and plan around Strategic Intervention tapping your blockers.\n\n**Alternative:** Use teamwork by tapping Quake (power 2) for 4 damage. It isn't needed here and gives you nothing extra.\n\nANSWER: cast:3",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:3",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "pass-scry7-opt-end-step",
+   "type": "pass",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:12",
+     "canonical": "cast:12",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7328,
+     "text": "**Play:**\n1. Cast Opt ({U}) now, in the opponent's end step, paid by one untapped Island. Scry 1, then draw a card.\n2. That leaves 3 Islands untapped, which do nothing else this turn since the hand is only lands and no other instants.\n\n**Why:** \"Use all your mana\": the 4 untapped Islands will untap anyway, so casting Opt at end of turn is free card selection and a free card. You are at 1 life with no board, so you need to find real answers fast. Casting it at the end step also hides information until it matters.\n\n**Trap:** Passing and saving Opt for later. Your hand is six Islands plus Opt, so Opt is your only way to dig, and holding it wastes this turn's mana. There is no counterspell or trick to bluff, so holding it has no value.\n\n**Their turn:** Next turn the opponent attacks with two 3/3 first strikers and two 2/2 morphs that are no longer summoning sick, which is 10 damage against your 1 life. With no creatures, you die unless you find a sweeper, fog or similar effect. Scry and draw to look for one. Use the Islands you untap on your own turn to cast it, and play your land drop.\n\n**Assumptions:** The state does not show your deck list, so I assume Opt is the best instant-speed play and nothing in your library is worth holding mana for.\n\nANSWER: cast:12",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:12",
+     "canonical": "cast:12",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7198,
+     "text": "**Play:**\n1. Cast Opt ({U}) now, paid by one of the 4 untapped Islands. Scry 1, then draw a card. That leaves 3 Islands untapped, which you don't need.\n\n**Why:** \"Use all your mana\": it's the opponent's end step and your mana would otherwise go unused. Opt at their end step costs you nothing, and you dig toward real action with 17 cards left in the library. At 1 life you need every look you can get.\n\n**Trap:** Holding Opt \"for later\". You have 6 Islands, so next turn you could cast it and still have mana. But mana spent now is free, and it doesn't compete with anything on your own turn. Waiting gains nothing.\n\n**Their turn:** Right now they have 2 Ainok Trackers (3/3 first strike, tapped) and 2 face-down 2/2s (summoning sick). On their next attack all four can swing, and you have no creatures and 1 life. You need a sweeper, a fog effect, or blockers and answers for all four attackers, or you lose. Look for that with Opt, then play a land on your turn and spend your mana on whatever it finds.\n\n**Assumptions:** Your hand is 6 Islands and Opt, so Opt is the only spell I can see. I'm assuming your deck has answers somewhere in the library, which is why digging matters.\n\nANSWER: cast:12",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:12",
+     "canonical": "cast:12",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8824,
+     "text": "**Play:**\n1. Cast Opt ({U}, paid by one untapped Island) now, in the opponent's end step. Scry 1, then draw a card.\n2. 3 Islands stay untapped, which doesn't matter because nothing else is castable.\n\n**Why:** \"Use all your mana\": your mana would go unused otherwise, and Opt at the end of their turn costs you nothing. It digs you toward real action, since your hand is just lands and Opt. You are at 1 life, so you need to find an answer.\n\n**Trap:** Holding Opt for later. You have no other instant to protect, and your mana untaps next turn anyway. Waiting only wastes this turn's mana.\n\n**Their turn:** The opponent has two 3/3 first strikers, two face-down 2/2s, and 3 cards in hand. You have no creatures and 1 life, so any attack next turn is lethal unless Opt finds something. On your turn, play an Island (7 lands) and use the new card, and Opt first if you have more. You need a sweeper, fog or mass bounce effect.\n\n**Assumptions:** Your deck is mostly blue cantrips and lands. A graveyard of 10 Opts suggests a self-mill or odd deck, so I assume the card you draw could be an answer.\n\nANSWER: cast:12",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:12",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "playdraw-auto2026-coin-toss",
+   "type": "play_draw",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "play",
+     "canonical": "play",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6663,
+     "text": "**Play:**\n1. Choose to play first.\n2. Mulligan decisions come after seeing the hand; keep any hand with 2-4 lands and a few cheap plays.\n\n**Why:** Follow the \"tempo first\" heuristic: going first gives a full extra turn of development, and against the Forge AI, a deck that curves out usually wins by pressuring it before it stabilizes. I don't have the decklist for pacho-shield, only its name, so nothing here points toward a slow control deck that needs the extra card.\n\n**Trap:** Choosing to draw because the extra card feels like free value. It only pays off for slow, grindy decks or ones that are short on lands, and without evidence that your deck is that, you give up tempo for a marginal card.\n\n**Their turn:** Nothing is known about the opponent's deck yet. Once your opening hand is dealt, check how many lands it has and plan your first few turns around your curve.\n\n**Alternative:** Draw, only if the deck turns out to be a slow control deck with few early plays, or a deck with a high curve that often stumbles on lands. Nothing in the information I have suggests that.\n\n**Assumptions:** The decklist for pacho-shield isn't visible, so I'm assuming it's a typical midrange or aggressive 40-card deck. If it's actually a durdly control deck, reconsider.\n\nANSWER: play",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "play",
+     "canonical": "play",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6301,
+     "text": "**Play:**\n1. Choose to play first.\n\n**Why:** \"Tempo first\": with no decklist or play guide in view, the default applies. Going first gets your threats and lands down a turn ahead, and against the Forge AI, which plays a fairly straightforward game, a tempo lead is easy to turn into a win. The name \"pacho-shield\" hints at a defensive or midrange deck, but nothing shows it's a slow control deck that wants the extra card.\n\n**Trap:** Drawing because \"card advantage feels good.\" The extra card only matters in a grindy, low-pressure game, and being a turn behind lets the opponent set the pace.\n\n**Their turn:** Nothing to prepare yet. The opponent's hand is hidden and the board is empty. After you see your opening hand, you can mulligan on the usual terms (2–4 lands with playable spells).\n\n**Assumptions:** I can't see the 40 cards in pacho-shield, so I'm assuming it's a regular creature-and-spell deck rather than an ultra-slow control list. If the list turns out to be very top-heavy with few lands, drawing would be worth reconsidering.\n\nANSWER: play",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "play",
+     "canonical": "play",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6266,
+     "text": "**Play:**\n1. Choose to play first.\n\n**Why:** Follow the default heuristic: tempo matters most. I don't have the decklist or a play guide for \"pacho-shield\", so nothing says it's a slow control deck or one that needs extra draws. Against the Forge AI, which tends to just develop its board, getting a turn ahead is a safe edge.\n\n**Trap:** Choosing to draw for the extra card. It only pays off for slow, grindy decks or ones short on lands, and I have no evidence this deck is either. Without that, the extra card doesn't outweigh giving up a full turn of tempo.\n\n**Their turn:** Nothing to prepare yet. The opponent has 0 cards in hand shown and no board. Just keep or mulligan your opening seven on its merits.\n\n**Assumptions:** The deck's contents are unknown (only the name \"pacho-shield\" and 40 cards). If it turns out to be a very slow control deck, drawing could be reasonable, but I'm assuming it's a normal creature-and-spell deck.\n\nANSWER: play",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "play",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "playdraw-sideboard7-game2",
+   "type": "play_draw",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "play",
+     "canonical": "play",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 5591,
+     "text": "**Play:** \n1. Choose to play first.\n\n**Why:** Your deck is 21 Garruk's Companion (a cheap, aggressive 3/2 trampler for GG) plus Giant Growth, so it is a pure beatdown deck. \"Tempo wins for aggro\": a turn-two Companion on the play attacks a turn before the opponent's equivalent, and the extra card from drawing matters little in a deck of near-identical creatures. With 18 Forests, colour is no issue, so the only thing the draw would buy you is a marginal land-drop cushion.\n\n**Trap:** Choosing to draw because you lost last game or want the extra card. This deck wants to curve out and race, and the card you'd gain is worth less than the turn of tempo you'd give up.\n\n**Their turn:** Nothing to plan yet, since no cards are dealt. Once the game starts, keep a hand with 2-4 Forests and some Companions.\n\nANSWER: play",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "play",
+     "canonical": "play",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 4960,
+     "text": "**Play:**\n1. Choose to play first.\n\n**Why:** The deck is a pile of Garruk's Companion (a 3/2 trampler for GG) plus one Giant Growth. It's pure aggression, so \"tempo wins\": a turn-2 Companion on the play hits before the opponent can block or answer. With 18 Forests, colour is never an issue, so the extra card from drawing buys little.\n\n**Trap:** Drawing for the extra card. The deck has no card advantage engine and no late game. It wins by being faster, and the draw gives up that speed.\n\n**Their turn:** Nothing yet, since no cards have been dealt. Expect the AI to try to stabilize with blockers, so push damage early.\n\nANSWER: play",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "play",
+     "canonical": "play",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7405,
+     "text": "**Play:**\n1. Choose to play first.\n2. Mulligan only if the opening hand has very few lands or almost no lands. Keep hands with 2–4 Forests and some Garruk's Companions.\n\n**Why:** This is a mono-green aggro deck (21 Garruk's Companions, a 3-mana 3/2 trampler, plus a Giant Growth). Heuristic: \"aggressive decks play first.\" Being a turn ahead means your 3-drops arrive and attack before the opponent's blockers do, and Giant Growth works best as a combat trick when you're the one applying pressure. You have no card-advantage engine that would make the extra draw worth giving up tempo.\n\n**Trap:** Choosing to draw to hit land drops. With 18 lands in 40 cards (45%) you're already well supplied, and the extra card doesn't compensate for losing a full turn of tempo with a deck that only wants to curve out and attack.\n\n**Their turn:** Nothing to plan yet, since no cards are dealt. Once the game starts, the AI will be one turn behind on board development, so look to curve into a Companion on turn 3 and keep Giant Growth mana up when attacking.\n\n**Assumptions:** Garruk's Companion is assumed to be the usual {G}{G} 3/2 trampler. The card text wasn't provided, so I'm going by memory. The play/draw choice doesn't change either way.\n\nANSWER: play",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "play",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "spell-auto2026-turn2",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:12",
+     "canonical": "cast:12",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8624,
+     "text": "**Play:**\n1. Play Island as your land drop.\n2. Cast Bold Biochemist {1}{U}, paying with Island for {U} and Plains for {1}. Mana left: 0.\n3. No attack, since you have no creatures that can attack.\n\n**Why:** Follow \"use all your mana\". Island lets you spend both lands on a 2-drop this turn. Next turn you can play Plains and cast Quake ({2}{W}) with all three lands untapped. Thriving Isle can wait for a turn when you don't need the mana.\n\n**Trap:** Playing Thriving Isle now, since it enters tapped, is tempting. It wastes this turn's mana and delays Quake. Casting Quantum Reduction on a 1/1 Aerial Doombot is also wrong. It spends a premium aura on a cheap creature, and the Doombot only has 1 power anyway. Save the aura for a real threat.\n\n**Their turn:** The opponent has an Island and a 1/1 flying Doombot that can attack you for 1. The Biochemist has no flying or reach, so it can't block the Doombot. Take 1 and don't worry about it. They may add a second creature, and Doombot's power-up costs {5}{U}, so it isn't a threat soon.\n\nANSWER: cast:12",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:12",
+     "canonical": "cast:12",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 9925,
+     "text": "**Play:**\n1. Play Island as your land drop.\n2. Cast Bold Biochemist {1}{U}, paying U from Island and 1 from Plains. Mana left: 0.\n3. No attacks, since you have no creatures that can attack.\n\n**Why:** Use all your mana. A land that enters untapped plus a 2-drop gives you a full turn-2 play. Next turn you play Plains and cast Quake with {2}{W}, so your mana is used on both turns. Keep Thriving Isle for a turn when you have mana to spare, because it enters tapped.\n\n**Trap:** Playing Thriving Isle now. It wastes this turn's mana, because you'd have only the one Plains and nothing to cast. Casting Quantum Reduction on a 1/1 Doombot is also a waste of a good card.\n\n**Their turn:** The opponent has an Aerial Doombot (1/1 flier) that will be able to attack, and Biochemist can't block it. They'll have 2 mana and 6 cards in hand, so expect another creature. The Doombot's power-up needs 6 mana, so it isn't a threat yet. Keep Quantum Reduction for a bigger target, and hold the second Plains for next turn's Quake.\n\nANSWER: cast:12",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:12",
+     "canonical": "cast:12",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10436,
+     "text": "**Play:**\n1. Play Island as your land drop.\n2. Cast Bold Biochemist ({1}{U}), paying with Island for {U} and Plains for {1}. You have 0 mana left.\n3. No attack, since you have no creatures that can attack.\n\n**Why:** \"Use all your mana\" on a turn where you have a 2-drop. Playing the untapped Island now lets you spend both lands this turn. Next turn you play Plains and cast Quake on curve. Save Thriving Isle, the tapped land, for a later turn when you won't miss the mana.\n\n**Trap:** Playing Thriving Isle now. It wastes this turn's mana and leaves you with no blocker. Casting Quantum Reduction on a 1/1 Aerial Doombot is also poor value, and it would use your whole turn on a small threat.\n\n**Their turn:** The opponent has 1 Island and 6 cards in hand. Their Doombot is a 1/1 flyer, so it can chip you for 1 and your Biochemist can't block it. Don't worry about that damage. Keep Quantum Reduction for a bigger threat, such as a Doombot that later gets its power-up.\n\nANSWER: cast:12",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:12",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "spell-comfort13-first-land",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "land:9",
+     "canonical": "land:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7029,
+     "text": "**Play:**\n1. Play Thriving Isle, choosing white as the color. It enters tapped.\n2. Cast nothing. You have no untapped mana sources, so nothing is castable this turn.\n\n**Why:** Follow \"tap lands on the turn you can't use mana anyway.\" This is your first land and you have nothing to cast, so the tapped land costs you nothing. Next turn you'll have Thriving Isle plus an Island, which gives you {U}{U} or {U}{W}. That casts Ant-Man's Air Force, or the Spy Kit plus one extra mana. Your hand needs both blue and white, and Thriving Isle covers both.\n\n**Trap:** Playing an Island now. It leaves you with no tapped land to play later, and you'd have to play Thriving Isle on a turn when you want to spend all your mana. That costs you tempo on turn 3 or 4.\n\n**Their turn:** The opponent has a Plains and 6 cards in hand. Expect a 1-drop or just a land. You have no creatures, so nothing to protect yet.\n\n**Assumptions:** Choosing white for Thriving Isle, because your hand has Web Up, Quake, and the Spy Kit as white cards.\n\nANSWER: land:9",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "land:9",
+     "canonical": "land:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7217,
+     "text": "**Play:**\n1. Play Thriving Isle (land:9), choosing white as the other colour. It enters tapped.\n2. Cast nothing. You have no untapped sources, and this is your first land.\n3. No attack. You have no creatures.\n\nMana left: none.\n\n**Why:** Follow the \"tap lands on the turn you can't use mana anyway\" heuristic. This turn you have 0 mana available, so the tapped land costs you nothing. Later turns will need untapped lands. Your hand is blue and white (Wasp, Ant-Man's Air Force, Quake, Web Up, Spy Kit), so Thriving Isle set to white fixes your colours.\n\n**Trap:** Playing an Island now. That wastes the free tempo window. You'd have one usable mana this turn at most, and nothing in hand costs just {U}. Then you'd have to play the tapped land on a later turn and miss a play, such as the 2-drop.\n\n**Their turn:** The opponent has 1 Plains and 6 cards in hand and no creatures. Expect a 1-drop or just a land. You have nothing to protect yet.\n\nNext turn: play an Island and cast Ant-Man's Air Force ({1}{U}) using Isle and Island. Turn after that, Quake or Wasp, or Web Up on their best threat.\n\n**Assumptions:** The chosen colour is white, since your hand has several white cards.\n\nANSWER: land:9",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "land:9",
+     "canonical": "land:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8523,
+     "text": "**Play:**\n1. Play Thriving Isle and choose white as its color. It enters tapped.\n2. Cast nothing and don't attack. You have no creatures and no untapped mana.\n\n**Why:** \"Use all your mana\" applies here. With one land you could only cast Spy Kit, which needs {W}, and an Island can't make it. So the tapped land costs you nothing this turn. Thriving Isle also fixes your white for Quake, Web Up and Spy Kit later.\n\n**Trap:** Playing an Island now and saving the tapped land for later. Next turn you'd want to cast Ant-Man's Air Force on two untapped lands, and a tapped Isle then would cost you that play.\n\n**Their turn:** The opponent has one Plains and 6 cards in hand, so expect a one- or two-drop. You have nothing to protect yet.\n\n**Next turns:**\n- Turn 2: play an Island, then cast Ant-Man's Air Force ({1}{U}) with Isle + Island.\n- Turn 3: play the other Island, then cast Quake or Wasp, or Web Up on their best threat. Isle supplies the {W} for Quake and Web Up.\n\n**Assumptions:** The Isle's chosen color is white, which is what your deck's white cards need.\n\nANSWER: land:9",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "land:9",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "spell-comfort13-thriving-black",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:23",
+     "canonical": "cast:23",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 9649,
+     "text": "**Play:**\n1. Play Island from hand (land drop). Keep the second Island for next turn.\n2. Cast Ant-Man's Air Force {1}{U}, paying with Island (U) and Thriving Isle (U/B for the generic). 0 mana left.\n3. No attack: you have no creatures, and the new one is summoning sick.\n\n**Why:** \"Use all your mana.\" Two lands means a 2-drop is your only castable play, since you have no white source and Thriving Isle is set to black. Getting a evasive flyer out early starts pressure against an empty board.\n\n**Trap:** Passing to hold up Depower. You can't afford it (it costs {U} only if it targets an attacker, and they have no creatures), and you'd waste the turn's mana.\n\n**Their turn:** They have no creatures and 3 lands (2 Plains, 1 Island) with 6 cards in hand. They'll likely cast a creature or removal on the 2/1 flyer. That's acceptable; don't overextend into it. Next turn, with your third land (the other Island) you'll have 3 mana for Depower or other blue plays, and you'll need a white source to unlock your white cards.\n\n**Assumptions:** Thriving Isle's chosen color is black, so there is no white mana available.\n\nANSWER: cast:23",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:23",
+     "canonical": "cast:23",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7838,
+     "text": "**Play:**\n1. Play Island from hand (land drop). You now have Thriving Isle (U/B) and Island, both untapped.\n2. Cast Ant-Man's Air Force {1}{U}: Island pays {U} and Thriving Isle pays {1}. Mana left: none.\n3. No attack. You have no creatures, and the new one is summoning sick.\n\n**Why:** Use all your mana. You have no white source, so the white cards (Coulson, Quake, Web Up, Spy Kit) are stuck in hand. Ant-Man's Air Force is the only spell you can cast, and it starts applying evasive pressure. Depower costs 3 here, which you can't pay, since the 2-mana discount only applies against an attacking creature.\n\n**Trap:** Holding mana for Depower. You can't afford it this turn, and the opponent has no creatures, so you'd waste the turn.\n\n**Their turn:** The opponent has no creatures and 3 open mana (WWU) with 6 cards in hand. They could cast a creature, removal or a counterspell. Your Island #2 and any white source next turn let you start deploying the white cards. Keep playing lands, and hold Depower for when a creature attacks and it costs only {U}.\n\nANSWER: cast:23",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:23",
+     "canonical": "cast:23",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 9481,
+     "text": "**Play:**\n1. Play Island (land drop).\n2. Cast Ant-Man's Air Force {1}{U}, paying with Island (U) and Thriving Isle (any colour for the generic). No mana is left.\n3. No attack. Nothing you control can attack yet.\n\n**Why:** Use all your mana. Ant-Man's Air Force is the only castable card, because you have no white source (Thriving Isle is set to black). It also gives you an evasive 2/1 flyer on an empty opposing board.\n\n**Trap:** Holding up Depower. Against an empty board it has no attacker to target, and without one it costs {2}{U}, which you can't pay with two lands. Passing with the mana unused just wastes the turn.\n\n**Their turn:** The opponent has no creatures, 3 untapped lands (WWU) and 6 cards in hand. They may cast a creature or removal, and a 2/1 is fragile. Don't worry about holding anything back, since you have nothing else you can cast. Next turn you'll have 3 lands but still no white, so you can attack with the flyer and keep Depower ({U} if it targets an attacker) open.\n\n**Assumptions:** The opponent's hand is unknown, so a counterspell from the one open Island is possible. That's not worth playing around on a 2-drop.\n\nANSWER: cast:23",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:23",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "spell-comfort13-turn3-play",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:31",
+     "canonical": "cast:31",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 13298,
+     "text": "**Play:**\n1. Play Plains (land drop). It enters untapped.\n2. Cast Quake, Agent of S.H.I.E.L.D. {2}{W}: Plains pays {W}, Island pays {U}, Thriving Isle pays the last generic mana. 0 mana left.\n3. Attack with Ant-Man's Air Force (2/1 flying) alone. Its trigger can target A.I.M. Scientists for -1/-0, which doesn't matter. Scientists has no flying or reach, so it can't block. That's 2 damage, putting them at 18.\n\n**Why:** \"Use all your mana\" and \"develop before spending removal.\" Quake is a 3/3 that matches their Scientists. Next turn Quake makes Web Up better, because casting any noncreature spell taps a creature or land.\n\n**Trap:** Web Up on a vanilla 3/3 Scientists. It's your only answer to a real threat, and the opponent still has 5 cards in hand, so keep it for a bomb. Also don't play the Island instead of the Plains. You have no white source without the Plains, so none of your white cards would be castable.\n\n**Their turn:** They untap with 4 or 5 lands and 5 cards. Scientists (3/3) can attack, but Quake blocks it as an even trade. Air Force will be tapped, so don't count it as a blocker. Keep Depower in mind. It costs only {U}{U}-ish less when it targets an attacker (it would cost {2}{U} minus {2}, so just {U}). Next turn you'll have {U} open if you hold back.\n\n**Alternative:** Web Up on Scientists and attack for 2. It's a clean tempo play, but it spends premium removal on a mediocre target.\n\nANSWER: cast:31",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:31",
+     "canonical": "cast:31",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 11149,
+     "text": "**Play:**\n1. Play Plains as your land drop.\n2. Cast Quake, Agent of S.H.I.E.L.D. for {2}{W}. Plains pays {W}, Island and Thriving Isle pay the {2}. You have 0 mana left.\n3. Attack with Ant-Man's Air Force alone. Its trigger can target A.I.M. Scientists for -1/-0, which doesn't matter. The opponent has no flyers or reach creatures, so it is unblockable in practice and deals 2.\n\n**Why:** \"Use all your mana\" and develop the board. Quake is a 3/3 that matches their Scientists and uses all 3 of your mana. Web Up is better saved for a real threat, not a 3/3 with no special abilities.\n\n**Trap:** Casting Web Up on the Scientists. It spends your best removal on an ordinary body. Casting Coulson wastes a mana, because the lone W source means you can't also cast Spy Kit.\n\n**Their turn:** The opponent has 5 cards in hand and 4 lands, so expect another creature or a 5-drop. Scientists can attack, but Quake untapped as a 3/3 blocker trades with it or deters the attack. Ant-Man will be tapped, so keep Quake home and don't attack with it. Next turn you'll have Web Up, Coulson and Depower available, and each noncreature spell you cast with Quake out taps a creature or land.\n\nANSWER: cast:31",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:31",
+     "canonical": "cast:31",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12404,
+     "text": "**Play:**\n1. Play Plains as your land drop. It's untapped, and it's your only white source.\n2. Cast Quake ({2}{W}), paying W with Plains, U with Island and U with Thriving Isle. That leaves 0 mana.\n3. Attack with Ant-Man's Air Force alone. Its attack trigger can target A.I.M. Scientists for -1/-0, though it doesn't matter. Quake stays home (summoning sick).\n\n**Why:** \"Use all your mana\": Quake is the only play that spends all 3 mana on a body, and a 3/3 stands off the opposing 3/3. The opponent is fully tapped out with no fliers, so the Air Force attack for 2 is free damage. Saving Web Up for a better target than a vanilla 3/3 follows \"don't spend premium removal on an average threat.\"\n\n**Trap:** Casting Web Up on the Scientists. It uses your removal on a mediocre creature and leaves you with no new body. Another trap is casting Coulson and wasting the third mana, since Spy Kit needs a second W you don't have.\n\n**Their turn:** They untap with 4–5 lands and 5 cards in hand. The Scientists (3/3) can attack, but Quake blocks it without losing anything. Your Air Force is tapped, so it can't block. Keep Web Up and Depower in hand for next turn. Next turn you'll have 4 mana (Island, Thriving Isle, Plains plus the land drop), enough for Coulson and Spy Kit, or Web Up. Casting a noncreature spell with Quake out taps a creature or land.\n\n**Assumptions:** Coulson and Quake are both Heroes, so Coulson's counters help later.\n\nANSWER: cast:31",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:31",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "spell-yield13-turn1",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:9",
+     "canonical": "cast:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7005,
+     "text": "**Play:**\n1. Play a Forest (land drop). It's the only untapped source, so it pays for the next step.\n2. Cast Thallid (tap the Forest for {G}). Both Thallids are identical, so either one works. Mana left: 0.\n3. No attacks. The new Thallid is summoning sick and you have no other creatures.\n\n**Why:** \"Use all your mana\": a 1-mana creature on turn one is the best use of your mana, and it starts its spore counters ticking right away. Each upkeep adds a counter, and the earlier it comes down, the sooner it makes Saprolings (3 counters = one token).\n\n**Trap:** Passing to \"save\" Thallids. Your hand is mostly lands, so holding creatures gains nothing and just delays the counter clock. Also don't cast both. You only get one land drop, so you only have one mana.\n\n**Their turn:** The opponent has a 1/1 Thallid (summoning sick now, able to attack next turn) and 4 cards in hand. Your Thallid can block it as a 1/1 trade, but you probably want to keep it alive to grow Saprolings. You don't need to decide until they attack.\n\n**Assumptions:** Both Thallids are identical, so the choice between them doesn't matter. I picked the first one in the list.\n\nANSWER: cast:9",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:9",
+     "canonical": "cast:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 5990,
+     "text": "**Play:**\n1. Play Forest (land drop). It's untapped.\n2. Cast Thallid {G}, paid by that Forest. Mana left: 0.\n3. No attack, since you have no creatures that can attack.\n\n**Why:** \"Use all your mana\" and develop the board on turn one. Thallid grows spore counters every upkeep and makes Saprolings for free, so starting the clock early gives the most value. The two Thallids in hand are identical, so which one you cast doesn't matter.\n\n**Trap:** Passing with the Forest untapped. You have no instant or flash cards, so unused mana is wasted, and Thallid gets a turn behind on spore counters.\n\n**Their turn:** The opponent has a 1/1 Thallid, which is summoning sick now but can attack next turn. They have 4 cards in hand and 1 land. Your Thallid can block their 1/1, but a trade isn't worth much, because yours makes Saprolings later. You can decide that when it happens. Keep your remaining Thallid and lands in hand and cast the second Thallid next turn alongside your land drop.\n\nANSWER: cast:9",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "cast:9",
+     "canonical": "cast:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6532,
+     "text": "**Play:**\n1. Play Forest (land drop, from hand). It's your only untapped source.\n2. Cast Thallid with that Forest ({G}). Either copy works, they are identical.\n3. No attack, since you have no creatures that can attack. Mana left: 0.\n\n**Why:** \"Use all your mana\" and develop the board early. Thallid gets a spore counter every upkeep, so the sooner it lands, the sooner it starts making Saprolings (three upkeeps from now). Your hand is mostly lands, so you want your few spells on the table as early as possible.\n\n**Trap:** Passing with a Thallid in hand to \"save\" it. There's no reason to hold it: you've no sweepers to play around, and every turn it waits is a turn of spore counters lost. Casting both isn't possible anyway, because you have only one land.\n\n**Their turn:** Their Thallid #41 (1/1) will no longer be summoning sick and can attack. Your Thallid can block it for a 1/1 trade, but you probably don't want that, since your Thallid is worth more as a Saproling engine. Decide on the block when you see what they do. They have 4 hidden cards and will have 2 lands, so expect another small creature or a trick.\n\n**Assumptions:** Both Thallids are identical, so I picked the first in the list (cast:9).\n\nANSWER: cast:9",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:9",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "target-ability42-seismic-takedown",
+   "type": "target",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "target:91",
+     "canonical": "target:91",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12159,
+     "text": "**Play:**\n1. Target Soldier Token #91 (the 2/2 with Spy Kit) with this Seismic Takedown trigger.\n2. Cast S.H.I.E.L.D. Spy Kit for {W} from Plains #15. It is a noncreature spell, so Quake triggers again. Tap Soldier Token #92 with that trigger.\n3. Equip Spy Kit to Quake for {1} from Plains #20. Mana is then empty.\n4. Attack with Quake alone, now a 4/4. Spy Kit untaps it after it attacks, so it can still block. The attack is only blockable by Peggy, who deals no damage at -3 power.\n\n**Why:** Use your free taps on the opponent's best blockers (\"remove blockers, then attack\"). Their lands are already tapped, so tapping a land does nothing. Tapping your own permanents is just a cost to you.\n\n**Trap:** Tapping one of your own tapped Islands or Plains looks harmless, but it wastes the trigger. Tapping Peggy is also wasted: she is -3/1 and harmless as a blocker.\n\n**Their turn:** They have 0 cards in hand and their creatures untap normally. Soldiers #91 and #92 can attack next turn, and Strategic Intervention gives +1/+1 and taps a blocker if one attacks alone. Quake untaps from Spy Kit and the Helicarrier stays home as a 4/5 body, so you are safe.\n\nANSWER: target:91",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "target:91",
+     "canonical": "target:91",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 14195,
+     "text": "**Play:**\n1. Target opponent's Soldier Token #91 (2/2, carrying their Spy Kit) with Quake's trigger. It resolves before the Helicarrier and taps that Soldier.\n2. After the Helicarrier resolves, you have 2 Plains left. Cast Spy Kit with Plains #15 (W). It is a noncreature spell, so Quake triggers again; tap Soldier #92 or Peggy.\n3. Equip Spy Kit to Quake with Plains #20 (1). Quake becomes 4/4. Attack with Quake alone, which untaps it and scries 1. That ends with 0 mana left.\n\n**Why:** This follows \"use all your mana\" and \"remove the best blocker.\" Tapping Soldier #91 takes their biggest body out of combat. Their lands are all tapped, so tapping a land would do nothing. Tapping your own permanents only hurts you.\n\n**Trap:** Tapping one of your own lands or creatures just wastes the trigger. Tapping an opponent's land is also pointless, because they are already tapped out and untap on their own turn anyway.\n\n**Their turn:** They have 0 cards in hand and 5 lands, which untap. Their board is Peggy (-3/1, no abilities), two Soldiers (2/2 and 1/1) and an uncrewed Helicarrier (crew 6, which they can't reach). If Quake attacks alone, it untaps via the Spy Kit and can still block. Keep Doombot home as an extra blocker.\n\n**Assumptions:** The engine tapping a creature on my turn only matters for this turn's combat, since it untaps in their untap step. I'm also assuming you'll go on to cast Spy Kit and attack with Quake.\n\nANSWER: target:91",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "target:91",
+     "canonical": "target:91",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 13808,
+     "text": "**Play:**\n1. Target Soldier Token #91 (the 2/2 with their Spy Kit) with this Quake trigger. It's free, since the trigger comes from Helicarrier already on the stack.\n2. After Helicarrier resolves, cast S.H.I.E.L.D. Spy Kit with Plains #15 ({W}). That's a noncreature spell, so Quake triggers again. Target Soldier Token #92 (the 1/1).\n3. Equip Spy Kit to Quake with Plains #20 ({1}). Quake becomes 4/4. Mana is then at 0.\n4. Attack with Quake alone. Spy Kit untaps it and you scry 1. Their only untapped potential blocker is Peggy, who has -3 power, so she deals no damage.\n5. Keep Aerial Doombot home. If you send it too, Quake no longer attacks alone and loses the untap.\n\n**Why:** This follows \"remove blockers on your terms.\" The two tokens could double-block a 3/3 Quake for exactly 3 damage and kill it. Tapping the 2/2 and then the 1/1 makes the attack safe. The tapped tokens stay tapped through your turn only, but they're summoning sick anyway.\n\n**Trap:** Tapping your own tapped Island does nothing. Tapping Peggy is also wasted, because with -3 power she can't hurt Quake. Tapping their lands is pointless, since they're already tapped and untap on their turn.\n\n**Their turn:** They have 0 cards in hand and draw one. Both tokens untap and can attack. Strategic Intervention gives +1/+1 and taps a blocker if a creature attacks alone. Quake stays untapped as a blocker thanks to Spy Kit, and Doombot can block too. Their Helicarrier can't be crewed, since the tokens' total power is far below 6.\n\nANSWER: target:91",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "target:91",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "target-auto2026-quantum-reduction",
+   "type": "target",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "target:63",
+     "canonical": "target:63",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 8324,
+     "text": "**Play:**\n1. Cast Quantum Reduction ({1}{U}) targeting Ant-Man's Air Force #63. Pay U with the Island and the generic {1} with the Plains. Mana left: none (Thriving Isle is tapped).\n2. Don't cast it with teamwork. Just cast it at sorcery speed in main 1 and keep Bold Biochemist untapped.\n3. Don't attack with Bold Biochemist. Keep it home as a blocker.\n\n**Why:** Ant-Man's Air Force is their best threat. It is a 2/1 flyer whose attack trigger shrinks my blockers. The Aura makes it -3/1 and strips flying and the attack trigger, so it is neutralized. This follows \"answer the real threat\". The Doombot is only a 1/1 flyer, though its power-up could make it a bigger problem later.\n\n**Trap:** Targeting my own Bold Biochemist is wrong, since it only hurts me. Targeting the Doombot is tempting because it can later grow with its power-up. But that costs {5}{U}, which is far off, and the Air Force is the immediate evasive damage and combat-trick source. Also, the Aura leaves the creature on the battlefield, so it's weaker value than real removal, and I should spend it on the best target.\n\n**Their turn:** They have 5 cards in hand and will untap with 2 lands (3 if they play a land). The Air Force will be a vanilla -3/1 that can't hurt me. The Doombot can still swing for 1 in the air. I'll have Quake next turn with three lands, plus 2 Plains in hand for land drops, and Helicarrier Strike ({W}) is a future trick.\n\n**Assumptions:** The Aura loses \"all abilities\", so I assume flying and the attack trigger are both removed. Power 2 minus 5 means it deals no damage, and it can still be a chump blocker.\n\nANSWER: target:63",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "target:63",
+     "canonical": "target:63",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 9412,
+     "text": "**Play:**\n1. Cast Quantum Reduction on Ant-Man's Air Force #63, paying {U} with the Island and {1} with the Plains. Don't use teamwork, since Bold Biochemist has only 1 power and can't meet the \"total power 2\" requirement.\n2. Mana left: none. Thriving Isle is already tapped.\n\n**Why:** The Aura gives -5/-0 and removes all abilities. That turns the Air Force into a -3/1 with no flying and no attack trigger, so it can't deal damage or shrink your creatures. The Air Force is the opponent's best creature on board, and this follows \"use all your mana\" on the threat that matters most.\n\n**Trap:**\n- Targeting your own Bold Biochemist is plainly wrong, because it gives your creature -5/-0 and strips its power-up.\n- Targeting Aerial Doombot #65 is the weaker choice. It's only a 1/1 flyer. It does have a late-game power-up ({5}{U} for three counters), but the Air Force is the bigger threat right now.\n\n**Their turn:** The opponent has 5 cards in hand and will untap with 2 lands, possibly 3. The Doombot can attack in the air for 1, and the neutralized Air Force can't hurt you. Next turn, cast Quake (3 mana) and keep Helicarrier Strike ({W}) for later turns when you have spare mana. It hits an attacking or blocking creature, so it can kill the Doombot when it attacks.\n\nANSWER: target:63",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "target:63",
+     "canonical": "target:63",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7536,
+     "text": "**Play:**\n1. Cast Quantum Reduction ({1}{U}) targeting Ant-Man's Air Force #63. Island pays {U} and Plains pays {1}. No teamwork (don't tap Biochemist, its power is only 1 anyway). No mana left, and the land drop is already used.\n\n**Why:** Quantum Reduction gives -5/-0 and removes all abilities, so Ant-Man's Air Force becomes a 0/1 with no flying and no attack trigger. Of their two creatures it's the best threat: a 2-power evasive attacker that also shrinks your blocker. \"Use all your mana\" and \"neutralize the best threat\" both point here.\n\n**Trap:** Targeting Aerial Doombot. It's only a 1/1 flier, and its power-up ({5}{U}) is far off, so the aura buys little. Targeting your own Biochemist is pointless because it would shrink your own creature for nothing.\n\n**Their turn:** They have 5 cards in hand and will untap with 2-3 lands. Ant-Man's Air Force is now a 0/1 non-flier and won't threaten you. The Doombot can poke for 1 in the air. Next turn you can cast Quake with 3 lands (you'll have 4 with another Plains in hand).\n\n**Alternative:** Hold the aura and cast nothing, keeping Helicarrier Strike mana up. That's weaker, because the aura on a sorcery-speed turn uses your mana now while the opponent is tapped out.\n\n**Assumptions:** The aura stays on Ant-Man's Air Force and the AI doesn't have a bounce or sacrifice answer.\n\nANSWER: target:63",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "target:63",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "target-auto2026-seismic-takedown",
+   "type": "target",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "target:64",
+     "canonical": "target:64",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 13311,
+     "text": "**Play:**\n1. Target Giant-Sized Flying Ant #64 with Quake's Seismic Takedown trigger. It costs no mana, since the trigger comes from casting Strategic Intervention.\n2. Strategic Intervention resolves (already paid).\n3. Attack with Quake alone. It becomes 4/4 from Strategic Intervention. Its tap trigger has no untapped target left, which is fine.\n4. Keep the 3 untapped lands (Thriving Isle, 2× Plains) open. Helicarrier Strike ({W}) stays available, though nothing should block.\n\n**Why:** Quake's trigger taps a creature or land. The only opposing permanent that matters right now is the untapped Giant-Sized Flying Ant, a 3/2 flyer that could block. Every other opposing creature and land is already tapped. This follows the \"remove the only blocker\" heuristic. Quake then hits for 4 unblocked, and the opponent goes to 16.\n\n**Trap:** Tapping an opposing land or one of the already-tapped creatures does nothing, since they're already tapped. Tapping your own permanents wastes the trigger. Also, don't count on Strategic Intervention's own attack trigger to handle the Ant. It would work, but using Quake's trigger first is free insurance.\n\n**Their turn:** The opponent untaps everything. They'll have the Doombot (1/1 flyer), Ant-Man's Air Force (2/1 flyer), and the Ant (3/2 flyer), with 3 cards in hand. Quake will be tapped from attacking, so you have no flying blockers, and your 13 life faces up to 6 flying damage. Holding {W} for Helicarrier Strike on an attacker (2 damage, or 4 with teamwork) can kill the Ant-Man's Air Force or the Giant-Sized Flying Ant.\n\nANSWER: target:64",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "target:64",
+     "canonical": "target:64",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 12302,
+     "text": "**Play:**\n1. Target Giant-Sized Flying Ant #64 with Quake's trigger. It costs no mana.\n2. Strategic Intervention resolves. Attack with Quake alone, so it becomes 4/4 and the Intervention trigger fires.\n3. Keep all 3 untapped lands (Thriving Isle, Plains, Plains) open. Helicarrier Strike costs {W}, paid by a Plains, and leaves 2 mana.\n\n**Why:** Quake's trigger taps a creature or land. The opponent's lands and two creatures are already tapped, so the Ant is the only thing that can block. Tapping it (\"remove the blocker\") means Quake's attack is unblockable in practice. Tapping your own permanents or the opponent's tapped lands does nothing.\n\n**Trap:** Tapping an opponent's land or creature that's already tapped, or one of your own permanents, wastes the trigger. The opponent has no untapped mana, so land tapping doesn't matter.\n\n**Their turn:** The Ant untaps, and the opponent has three fliers (1 + 2 + 3 = 6 power) against your 13 life. Quake will be tapped from attacking, and the Biochemist can't block fliers. You can't be killed. Hold Helicarrier Strike for an attacking Ant (2 toughness), Air Force (1 toughness) or Doombot, since 2 damage kills any of them. Casting it also triggers Quake again, which can tap a creature or land.\n\n**Assumptions:** Quake isn't summoning sick, since the state doesn't mark it.\n\nANSWER: target:64",
+     "model": "claude-sonnet-5-5"
+    },
+    {
+     "answer": "target:64",
+     "canonical": "target:64",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 14403,
+     "text": "**Play:**\n1. Target Giant-Sized Flying Ant #64 with the Seismic Takedown trigger. It taps, and the Strategic Intervention spell then resolves.\n2. Attack with Quake alone. Strategic Intervention's \"attacks alone\" trigger gives it +1/+1 (4/4) and lets you tap up to one more defending creature. Everything else they have is already tapped, so nothing can block.\n3. Keep Plains ×2 and Thriving Isle untapped. That is 3 mana left, with Helicarrier Strike ({W}) ready.\n\n**Why:** \"Tap target creature or land\" is only useful on their one untapped potential blocker, the Ant. Their other creatures and all their lands are already tapped. Tapping my own stuff only hurts me. This follows \"remove the blocker before you attack.\"\n\n**Trap:** Tapping one of their lands or already-tapped creatures does nothing. Tapping your own permanents is a pure cost. Don't think the Ant is safe to ignore: it's a 3/2 flash flyer and the only thing that could block or trade with Quake.\n\n**Their turn:** The Ant untaps, and so do Air Force (2/1 flyer) and Doombot (1/1 flyer). Together they can swing for up to 6 in the air, which leaves you at 7 from 13. Quake will be tapped after attacking, and the Biochemist is -4/3 and deals no damage. Hold Helicarrier Strike for an attacker. Without teamwork it deals 2, which kills Air Force or Doombot. Their 3 cards in hand could include more flash creatures.\n\n**Alternative:** Targeting the Ant with Strategic Intervention's attack trigger instead is nearly identical, since both just tap it. Using Quake's trigger first is cleaner because it leaves the attack trigger free as a backup.\n\nANSWER: target:64",
+     "model": "claude-sonnet-5-5"
+    }
+   ],
+   "stats": {
+    "n": 3,
+    "valid": 3,
+    "meanScore": 1,
+    "acceptable": 3,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "target:64",
+      "count": 3
+     }
+    ]
+   }
+  }
+ ],
+ "summary": {
+  "byType": {
+   "mulligan": {
+    "cases": 4,
+    "samples": 12,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.2424940095530979
+    },
+    "unstable": 0
+   },
+   "play_draw": {
+    "cases": 2,
+    "samples": 6,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.39033429165637346
+    },
+    "unstable": 0
+   },
+   "spell": {
+    "cases": 5,
+    "samples": 15,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.20388330359648707
+    },
+    "unstable": 0
+   },
+   "attack": {
+    "cases": 4,
+    "samples": 12,
+    "score": {
+     "mean": 0.75,
+     "lo": 0.25,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 0.75,
+     "lo": 0.25,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.2424940095530979
+    },
+    "unstable": 0
+   },
+   "block": {
+    "cases": 5,
+    "samples": 15,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.20388330359648707
+    },
+    "unstable": 1
+   },
+   "target": {
+    "cases": 3,
+    "samples": 9,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.299145051727044
+    },
+    "unstable": 0
+   },
+   "pass": {
+    "cases": 3,
+    "samples": 9,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.299145051727044
+    },
+    "unstable": 0
+   },
+   "choice": {
+    "cases": 2,
+    "samples": 6,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.39033429165637346
+    },
+    "unstable": 0
+   }
+  },
+  "total": {
+   "cases": 28,
+   "samples": 84,
+   "score": {
+    "mean": 0.9642857142857143,
+    "lo": 0.8928571428571429,
+    "hi": 1
+   },
+   "acceptable": {
+    "mean": 0.9642857142857143,
+    "lo": 0.8928571428571429,
+    "hi": 1
+   },
+   "blunder": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0
+   },
+   "formatFailure": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.04373172907438993
+   },
+   "unstable": 1
+  },
+  "lowConfidence": 0,
+  "latencyMs": {
+   "mean": 10299,
+   "median": 9917,
+   "p90": 14403,
+   "max": 24015
+  }
+ }
+}

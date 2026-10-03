@@ -1,0 +1,5 @@
+done
+started: 2026-10-03T09:24:18-07:00
+finished: 2026-10-03T09:53:39-07:00
+ForgeCoach: baseline on bench/pre-prompt-fixes aa9c687; after-fixes on main 39eb318
+mtg-table: e49800e (helper + engine from this checkout)
