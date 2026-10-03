@@ -59,7 +59,7 @@ import forge.game.zone.ZoneType;
  * script marked {@code SacMe} or a token.  Nothing in Forge asks "is a creature
  * of mine about to die anyway?".
  *
- * <p>This class asks that, five ways, each a {@link Situation}:
+ * <p>This class asks that, six ways, each a {@link Situation}:
  * <ol>
  *   <li>{@link Situation#LETHAL} -- every creature we can sacrifice, through the
  *       best outlet, plus the drain triggers on the board ({@link #DRAINS}), is at
@@ -80,6 +80,9 @@ import forge.game.zone.ZoneType;
  *       own main phase and holds an outlet card it filtered as RemAIDeck: cast
  *       it.  Only cards that ARE an outlet are let through; every other
  *       RemAIDeck card stays filtered.</li>
+ *   <li>{@link Situation#FODDER} -- Forge chose an outlet activation itself: pay
+ *       with a creature Forge counts as fodder ({@link #fodderFor}) instead of the
+ *       worst creature on the board.</li>
  * </ol>
  *
  * <p>The victim is steered into Forge's own sacrifice-cost payment
@@ -93,7 +96,7 @@ import forge.game.zone.ZoneType;
 public final class OutletPolicy {
 
     /** Why the policy acted (or would have, in shadow mode). */
-    public enum Situation { LETHAL, THREATENED, COMBAT, EXPIRING, CAST_OUTLET }
+    public enum Situation { LETHAL, THREATENED, COMBAT, EXPIRING, CAST_OUTLET, FODDER }
 
     /** One decision: the ability to play, the creature to sacrifice (null for a cast), and why. */
     public static final class Choice {
@@ -460,6 +463,46 @@ public final class OutletPolicy {
             }
         }
         return false;
+    }
+
+    /**
+     * When Forge's own AI activates an outlet, the creature it should pay with:
+     * one Forge itself counts as fodder -- threatened (Forge's
+     * {@code shouldSacrificeThreatenedCard}), then marked {@code SacMe} by its
+     * script (highest first), then a token or a creature Forge calls useless --
+     * the cheapest by Forge's creature evaluation; null when there is none, and
+     * Forge pays as it would have.  The motive: Carrion Feeder's
+     * {@code AILogic$ AristocratCounters} activates when SOME fodder exists, and
+     * then its {@code AIPreference SacCost$Creature.Other} pays with the worst
+     * creature on the board, fodder or not (docs/evidence/ai-baseline.md, section 4).
+     */
+    public static Card fodderFor(final Player ai, final SpellAbility outlet) {
+        Card best = null;
+        int bestRank = Integer.MIN_VALUE;
+        for (final Card c : victimsFor(ai, outlet)) {
+            int rank;
+            if (ComputerUtil.shouldSacrificeThreatenedCard(ai, c, outlet)) {
+                rank = 3000;
+            } else if (c.hasSVar("SacMe")) {
+                int n = 1;
+                try {
+                    n = Integer.parseInt(c.getSVar("SacMe").trim());
+                } catch (final NumberFormatException e) {
+                    n = 1;
+                }
+                rank = 2000 + 100 * n;
+            } else if (c.isToken() || ComputerUtilCard.isUselessCreature(ai, c)) {
+                rank = 1000;
+            } else {
+                continue;
+            }
+            rank -= Math.min(99, ComputerUtilCard.evaluateCreature(c) / 10);
+            if (rank > bestRank) {
+                best = c;
+                bestRank = rank;
+            }
+        }
+        return best;
     }
 
     /**

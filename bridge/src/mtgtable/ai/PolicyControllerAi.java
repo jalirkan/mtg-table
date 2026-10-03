@@ -115,6 +115,24 @@ public class PolicyControllerAi extends PlayerControllerAi {
             }
         }
         final List<SpellAbility> forge = super.chooseSpellAbilityToPlay();
+        if (forge != null && forge.size() == 1 && policy != null
+                && OutletPolicy.creatureSacCost(forge.get(0)) != null) {
+            // Forge chose an outlet by itself (Carrion Feeder's AristocratCounters
+            // logic, Woe Strider's AtOppEOT): it justified the activation with a
+            // fodder creature but pays with whatever the script's AIPreference
+            // finds worst.  Pay with the fodder (D301, FODDER).
+            final Card fodder = OutletPolicy.fodderFor(player, forge.get(0));
+            if (fodder != null) {
+                count("opportunity.FODDER");
+                if (policy.acts()) {
+                    count("policy.FODDER");
+                    event("policy FODDER: " + forge.get(0).getHostCard().getName() + " pays with "
+                            + fodder.getName() + (fodder.isToken() ? " (token)" : ""));
+                    steerSa = forge.get(0);
+                    steerVictim = fodder;
+                }
+            }
+        }
         if ((forge == null || forge.isEmpty()) && policy != null) {
             final OutletPolicy.Choice cast = policy.castOutlet(player);
             if (cast != null) {

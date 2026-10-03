@@ -607,6 +607,30 @@ public final class AiBench {
                         "the Bears were sacrificed, not the Memnite Carrion Feeder's own preference would pick");
                 check(!ctl.counts().containsKey("policy.steerMissed"), "no steer miss counted");
             });
+        // 1c. Forge activates Carrion Feeder by itself (AristocratCounters: Gravecrawler,
+        //     SacMe 3, is fodder) and then pays with the WORST creature, Blood Artist; with
+        //     the policy it pays with the fodder.  The first half is the control.
+        final List<String> fodderBoard = List.of(
+                "humanlife=20", "ailife=20", "turn=6", "activeplayer=ai", "activephase=MAIN2",
+                "humanbattlefield=Forest",
+                "aibattlefield=Carrion Feeder;Gravecrawler;Blood Artist;Swamp");
+        for (final PolicyLobbyPlayerAi.Outlets mode : List.of(PolicyLobbyPlayerAi.Outlets.OFF,
+                                                               PolicyLobbyPlayerAi.Outlets.ON)) {
+            scenario("fodder-" + mode, fodderBoard, mode, (ai, pol) -> {
+                final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                final boolean feeder = pick != null && pick.size() == 1
+                        && "Carrion Feeder".equals(pick.get(0).getHostCard().getName());
+                check(feeder, mode + ": Forge chooses to activate Carrion Feeder (got " + pick + ")");
+                if (feeder) {
+                    ctl.playChosenSpellAbility(pick.get(0));
+                }
+                final String gone = ai.getCardsIn(ZoneType.Graveyard).isEmpty() ? "nothing"
+                        : ai.getCardsIn(ZoneType.Graveyard).get(0).getName();
+                final String want = mode == PolicyLobbyPlayerAi.Outlets.OFF ? "Blood Artist" : "Gravecrawler";
+                check(want.equals(gone), mode + ": it pays with " + want + " (paid with " + gone + ")");
+            });
+        }
         // 2. A bounce is not a threat worth a card.
         scenario("bounce", List.of(
                 "humanlife=20", "ailife=20", "turn=3", "activeplayer=human", "activephase=MAIN1",
@@ -684,6 +708,11 @@ public final class AiBench {
     }
 
     static void scenario(final String name, final List<String> state, final Body body) throws Exception {
+        scenario(name, state, PolicyLobbyPlayerAi.Outlets.ON, body);
+    }
+
+    static void scenario(final String name, final List<String> state, final PolicyLobbyPlayerAi.Outlets mode,
+                         final Body body) throws Exception {
         final Deck lands = new Deck("lands");
         final PaperCard swamp = FModel.getMagicDb().getCommonCards().getCard("Swamp");
         final CardPool main = lands.getMain();
@@ -691,8 +720,7 @@ public final class AiBench {
         final RegisteredPlayer r0 = new RegisteredPlayer(lands);
         r0.setPlayer(Bootstrap.createAiSeat("Human", 0, Bootstrap.DEFAULT_AI_PROFILE, null, PolicyLobbyPlayerAi.Outlets.OFF));
         final RegisteredPlayer r1 = new RegisteredPlayer(lands);
-        final PolicyLobbyPlayerAi aiLp = Bootstrap.createAiSeat("Ai", 1, Bootstrap.DEFAULT_AI_PROFILE, null,
-                PolicyLobbyPlayerAi.Outlets.ON);
+        final PolicyLobbyPlayerAi aiLp = Bootstrap.createAiSeat("Ai", 1, Bootstrap.DEFAULT_AI_PROFILE, null, mode);
         r1.setPlayer(aiLp);
         final GameRules rules = new GameRules(GameType.Constructed);
         rules.setGamesPerMatch(1);
