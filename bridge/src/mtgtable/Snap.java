@@ -754,6 +754,35 @@ public final class Snap {
     }
 
     /**
+     * {@link #label} for every card of an index ({@link #cardIndex}), built on
+     * the game thread so a string made on the EDT -- an act's notice -- can name
+     * a card without walking the view graph (hard rule 3).  The values are
+     * {@link #label}'s, gates and all: {@code "???"} for a card the viewer may
+     * not see.  Read them through {@link #noticeName}.
+     */
+    public static Map<Integer, String> labelIndex(final Map<Integer, CardView> index, final PlayerView viewer) {
+        assertGameThread("Snap.labelIndex");
+        final Map<Integer, String> out = new java.util.HashMap<>(index.size() * 2);
+        for (final Map.Entry<Integer, CardView> e : index.entrySet()) {
+            out.put(e.getKey(), label(e.getValue(), viewer));
+        }
+        return out;
+    }
+
+    /**
+     * How a notice names a card: its gated label ({@link #labelIndex}) when the
+     * viewer may see it, otherwise -- concealed ({@code "???"}) or not in the
+     * last frame at all -- only its wire id, which the frame already carries.
+     * Pure: no view is read, so any thread may call it.
+     */
+    public static String noticeName(final int id, final String gatedLabel) {
+        if (gatedLabel == null || gatedLabel.isEmpty() || "???".equals(gatedLabel)) {
+            return "card " + id;
+        }
+        return gatedLabel;
+    }
+
+    /**
      * <b>May this viewer know which card this is?</b>  All three gates, as one
      * predicate, for callers that must decide whether a <em>string</em> may name
      * it -- a {@code SpellAbilityView.getDescription()} on an ability menu, for
