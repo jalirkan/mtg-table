@@ -195,6 +195,7 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
 ./scripts/play.sh                                   # THREE games vs decks/doom-legion.dck, a random seed
 ./scripts/play.sh --seed 42                         # a reproducible shuffle
 ./scripts/play.sh --mirror --ai-profile Cautious    # match setup: the AI's deck and Forge profile
+./scripts/play.sh --ai-search [--ai-search-ms 3000]  # D314: the AI seat with the outlet policy and the search (opt-in)
 ./scripts/play.sh --ai-deck decks/masters-of-evil.dck   # D116: B/R villain aggro
 ./scripts/play.sh --ai-deck decks/hulk-family.dck       # D116: R/G gamma stompy
 ./scripts/play.sh --ai-deck decks/wakanda.dck           # D116: G/W go-wide
