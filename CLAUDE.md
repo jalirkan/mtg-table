@@ -453,11 +453,11 @@ ladder off); `?stats=1`, `?grid=1` and `?glinfo=1` are the debug flags, and
 saying you are done: every check the repo has — the lint and its self-test, the
 build, the recordings and the drift checks, the ten-games rows, the eight socket
 servers, redaction, the selftests, the deck check and the web build and tests —
-as **50 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
+as **51 jobs**, `GATE_JOBS` at a time (default `min(4, nproc/4)`, four on this
 desktop), each after the jobs it depends on; `GATE_JOBS=1` is the serial gate,
-the same checks as 34 jobs one after another (D291 added the 49th and 33rd, 10h,
-about 25 s of job time, and D292 the 50th and 34th, 12f, about 7 s, to the
-timings below). From a deleted `bridge/out` it
+the same checks as 35 jobs one after another (D291 added the 49th and 33rd, 10h,
+about 25 s of job time, D292 the 50th and 34th, 12f, about 7 s, and D296 the
+51st and 35th, 12g, the cube lab's smoke run, about 30 s, to the timings below). From a deleted `bridge/out` it
 takes about **four minutes** at `GATE_JOBS=4` (239.0 s and 240.5 s on
 `102fb1f`; 259.2 s on the docs block's `502ad9d`, whose code is `102fb1f`'s),
 about **two and a half** at `GATE_JOBS=8` (151.2 s on `6b35054`) and
@@ -551,6 +551,7 @@ are history from before this rule, and stay.
 | `docs/research/14-engine-upgrade.md` | **Why Forge stays 2.0.14** (D109–D112), and §0, the checklist for the day an official release ships Reality Fracture. |
 | `docs/research/15-art-direction.md` | **Art direction**: the comic look, motion and bodies, and §9's three lanes. Read §9 before touching the figure or prop material, `Post.tsx`, the effects, `cues/`, `figures/` or `scene/props.ts`. |
 | `docs/guides/java-for-typescript-people.md` | The Java this repo uses, from a TypeScript starting point; chapter 9 maps `WireGuiGame.java` and follows one ask and one act through the threads. |
+| `docs/guides/cube-lab.md` | **The cube lab's manual** (D293–D296): `tools/cubelab.sh` drafts a two-player cube with two Forge AIs, builds their decks and plays them, and reports win rates by pair, theme and card; every flag and weight, the JSONL. A tool beside the game, never read by it. |
 | `docs/guides/personal-tier.md` | **The personal tier's manual** (D190–D198): the never-publish rule, the folder, the slug, the manifest, the three commands, `bones.json`, the Sketchfab click-through, the loader — how a model reaches the arena and the workshop from the dev server — and the relief cache (D225–D228: a depth map of every card's painting, in two layers, for the workshop's inspect view); `docs/evidence/personal-tier.md` is Doctor Doom and the seven others run through it, `docs/evidence/relief-window.md` the relief. |
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |

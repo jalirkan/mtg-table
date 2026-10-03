@@ -13089,3 +13089,197 @@ the `authentication_failed` code, a 401/403 status, or the CLI's `Not logged in
   abort-then-ask, and 429 says the rest.
 - **The real CLI in the gate or CI** — it costs the owner's usage, needs a login
   CI does not have, and its answers are not reproducible.
+
+## D293 — The cube lab: a tool beside the game that drafts a two-player cube with two Forge AIs, builds their decks and plays them, on the owner's machine; it drafts with its own code because Forge 2.0.14 cannot run a two-player cube draft headless
+
+*Branch `c/cube-lab`; the block D293–D296, the next numbers after D292.*
+
+**2026-10-03** (the owner's request: design 2-player 180-card cubes, see how
+decks come together under randomness and how cards perform, and make data on
+his own machine — no tokens — for a later drafting AI and play AI)
+
+**Decision.** `tools/cubelab.sh check | ratings init | run | report` over
+`tools/cubelab/`: TypeScript run by Node's type stripping (no package, no
+dependency, `tsc`-checked through `web/tsconfig.json`'s `../tools`) for
+everything that is not the engine — parsing the cube markdown, ratings, both
+drafts, deckbuilding, sharding, the report — and **one Java file,
+`tools/cubelab/CubeLab.java`**, for the two things only Forge can answer: what a
+listed name is in its card database (`facts`) and who wins when its AI plays
+two decks (`play`, a worker reading a match per stdin line). The Java boots the
+engine through `mtgtable.Bootstrap` like every process here (hard rules 1, 6 and
+11, every AI seat through `Bootstrap.createAiPlayer`, decks through
+`DeckSerializer.fromFile`), sits under `tools/` where the lint already scans
+(D182), is compiled on demand into `var/cubelab/classes/` against `bridge/out`
+(as `audit-deck.mjs` compiles its helper), and runs each worker in a Forge home of
+its own built by `tools/config.sh`'s `forge_home_make` (D129's helper) under
+`var/cubelab/homes/<k>/`. Justin's two cube files are committed as given under
+`cubes/`, with a ratings TSV beside each.
+
+**It lifts no NON-GOAL.** It is a tool beside the game in the sense D90 used for
+the card library: nothing the engine, the bridge, the wire, the board or the
+arena depends on, nothing it writes is read by them, and it starts no socket.
+Its deckbuilder is an AI's, for a simulation; README's *no deck builder* is
+about the client, and the client still edits no deck.
+
+**Why the lab drafts itself.** Measured on the pinned 2.0.14 before this lane
+(the prototype in the session scratchpad): Forge has no headless AI-vs-AI cube
+draft for two players. Its Winston AI picks at random and
+`LimitedPlayerAI.determineDeckColor` crashes on a Winston pool; there is no Grid
+draft in the jar at all; and the booster draft is an eight-seat pack format.
+What Forge does have, and the lab borrows, is its card evaluation: the draft
+ranks (`CardRanker.getRawScore`, CubeCobra's cube list first) seed the ratings
+(D294), and `BoosterDeckBuilder` builds a comparison deck for every pool.
+
+**Rejected.**
+
+- **Forge's own `BoosterDraft` with two seats** — an eight-pack format, and its
+  AI's colour logic is the part that crashes.
+- **Everything in Java** — the draft and deckbuilding logic needs no engine and
+  is the part most likely to change; in TypeScript it is unit-tested in
+  `node --test` (and so in the gate's step 13 and CI) with no JVM, and the Java
+  stays a small worker the lint can read in one sitting.
+- **Driving `RecordMatch` per game** — a JVM boot (6–19 s) per game is several
+  times the game itself; a worker boots once and plays hundreds.
+- **A ForgeCoach launcher subcommand** — ForgeCoach is untouched; the lab is one
+  command here (`tools/README.md`, README).
+
+## D294 — The lab's drafters and deckbuilder: Forge's ranks as editable ratings, a theme-synergy term, colours committed after a third of the picks with a splash for fixing, and decks scored by playables, curve and theme density; a draft and its decks are a pure function of the seed
+
+**2026-10-03**
+
+**Decision.** Pick value = **rating** (the cube's `<cube>.ratings.tsv`, seeded by
+`ratings init` from Forge's raw draft score of the card's *best-ranked* printing,
+because Forge's default printing is often a reprint with no rank file and an
+unranked card scores −100 there; unranked starts at 40) + **synergy** ×
+Σ over the card's themes of √min(cap, the drafter's on-colour picks sharing it)
++ a **colour** term + **fixing** for a land or fixer making the committed pair.
+A drafter leans toward its colours until it has made `commitAt` (⅓) of its
+expected picks, then commits to its two heaviest colours, re-derived at every
+pick; after that an off-colour card costs `offColour` (40) unless it is a
+splash — one colour off, one pip, rated ≥ 70, two sources of it already picked
+— which costs `splash` (15). A grid line or pile is its best card plus 0.6 of
+each other. Winston takes a pile when it beats the expected value of a blind
+card (the mean over the cards the drafter has not seen) by a per-pile margin.
+
+The deckbuilder tries every pair, with no splash and with each splash the pool
+can support, picks 23 spells (24 with 16 lands when the average mana value is
+≤ 2.5) greedily by rating plus synergy with the other candidates against a
+curve target, adds the duals and fetches that make two deck colours (or the
+splash) and basics by pips, and scores the build: mean rating + 2 per playable
++ 1.5 per spell of the best theme (half for the second) − distance from the
+curve − creatures short of 13 − 3 per splash card. **Every lab deck is 40
+cards with 16–17 lands, two colours and at most a 3-card splash**
+(`checkDeck`, held over every deck of 30 drafts by the test). A pool where no
+pair reaches 23 spells gets a second pass with up to 7 splash cards
+(`stretched`), then Forge's `BoosterDeckBuilder`; 2 of 320 trial pools (40
+seeds × both formats × both cubes × two drafters, before the real runs), both
+Winston, needed Forge's. Every number is a named weight
+(`tools/cubelab/weights.ts`; `--weights`, `--weight name=value`), recorded in
+`run.json`, documented in `docs/guides/cube-lab.md`.
+
+The draft's generator is sfc32 seeded per draft (`rng(seed, 'draft:<format>')`),
+so the same seed gives the same picks and decks on any machine and any `--jobs`;
+who opens is the seed's parity. Only the games vary between runs.
+
+**Rationale.** The owner's brief named each piece: Forge's ranks as the start,
+a synergy term from his theme tags, commitment "flexible longer than Forge's",
+a splash with fixing, and a deck score that counts playables, curve and theme
+density, "not just Forge's evaluator (which liked 11-spell decks)" — in the
+prototype `LimitedDeckEvaluator` preferred an 11-spell, 29-land build of a thin
+pool. The ratings are a file because the point of the lab is that its owner's
+judgement replaces Forge's where they differ.
+
+**Rejected.** Forge's `CardRanker.getScoresForPack` as the pick function (the
+prototype's): it commits on the first strong pick, scores an unranked card at
+−100, and has no notion of the cube's themes. Forge's evaluator as the deck
+score (above). A fixed land count of 17 (aggressive pools ran out of spells for
+nothing).
+
+## D295 — A match is up to N one-game Forge `Match`es with the play alternating, forced at Forge's coin flip; a game past its deadline is a draw, and a worker that hangs or dies is replaced while the run goes on
+
+**2026-10-03**
+
+**Decision.** `CubeLab.java play` plays each game as its own one-game
+`forge.game.Match` under `GameType.Draft` (a limited deck), so Forge's first-game
+coin flip decides who plays first every game rather than the loser's choice
+after game 1 — and the lab decides that flip: `GameAction.determineFirstTurnPlayer`
+(private; javap) fires `GameEventFlipCoin` and then draws
+`Aggregates.random(players)`, i.e. `MyRandom.getRandom().nextInt(2)`, so a
+subscriber on the game's bus hands `MyRandom` a `Random` whose next bounded
+`nextInt` names the seat due to play and which puts the seeded generator back at
+that call; nothing else draws from the substitute. Game g has drafter A on the
+play when `(seed + g)` is odd, so play alternates within a match and game 1
+alternates across drafts. The first `GameEventTurnBegan`'s owner is read back
+into each game's `onPlayVerified`, and gate step 12g fails when it disagrees.
+Each game's `MyRandom` is seeded from the draft's seed and the game number.
+
+The watchdog has two halves. The worker waits for each game with a deadline
+(`--game-timeout`, 300 s); past it, `Game.setGameOver(GameEndReason.Draw)` ends
+the game, which is recorded as a draw with `timeout: true`; a game thread that
+has not returned 30 s later makes the worker print a `stuck` line and exit 3.
+The runner (`engine.ts`) kills a worker whose match runs past
+`games × (timeout + 40 s) + 120 s`, records any match a dead or killed worker
+held as an engine error with the games it finished, starts a fresh worker for
+the rest, and stops the run only when a worker cannot boot twice running.
+Games start with `GameAction.invoke` from `main`, exactly as `RecordMatch`
+starts its one game, so `main` starts `Game-n` rather than hopping beside it:
+no new game-thread hop (hard rule 3, D181's list stays three), no thread, no
+`CardView`.
+
+`--record M` replays the first M drafts' decks once more through
+`mtgtable.RecordMatch` (a JVM each, seat 0 = drafter A) into `<out>/frames/`,
+frame logs ForgeCoach opens with **Load file**; a recorded game is a game of its
+own, not one of the counted ones, because `RecordMatch` is one game per process
+and its recorder is the only one that may serialise a card (hard rule 8).
+
+**Rationale.** The owner asked for alternating play/draw; Forge's own rule
+(loser chooses, the AI always chooses to play) would hand the play to whoever
+lost the last game, which confounds a card's win rate with being behind. A
+timeout is a draw because an AI-vs-AI stall (two boards that never attack) is a
+real outcome of the cube, not a failure of the tool, and the report counts
+them.
+
+**Rejected.** One Bo3 `Match` (the loser plays first). Re-seeding until the flip
+lands right (it depends on everything drawn before it). Reflection into
+`determineFirstTurnPlayer` (private, and a hop onto engine internals for a coin).
+A new recorder in the worker (a second serialiser).
+
+## D296 — The lab's output is one JSONL line per draft, appended as each match lands and resumable; the report is one self-contained HTML page and a Markdown summary over decisive games with Wilson intervals; gate step 12g runs the lab at its smallest
+
+**2026-10-03**
+
+**Decision.** `<out>/drafts.jsonl` holds one line per draft — the seed, every
+decision of both drafters with the cards on offer and what was taken, both
+pools, both lab decks (colours, splash, list, curve, themes, score and its
+parts, alternatives), Forge's builder's deck for the same pool, which deck
+played, and per game who was on the play, the winner, turns, milliseconds,
+timeout, Forge's win condition and any engine error — appended the moment the
+match lands, so a stopped run keeps every finished draft, and `run` with the
+same `--out` resumes past the seeds already there (refusing a folder whose cube,
+format, games, profiles, builder or weights differ). `run.json` and `cards.json`
+say what the run was. This is the data a drafting AI would train on: the options
+and the choice, at every decision.
+
+`report <out>` aggregates it (`aggregate()`, pure) into `report.html` — inline
+CSS, a few lines of inline script to sort the card table, inline SVG, nothing
+loaded from anywhere — and `report.md`: win rate by colour pair and by primary
+theme (the theme ≥ 5 of a deck's spells carry), on the play, per card pick rate
+(picked / dealt), deck rate (in a played deck / picked) and win rate in deck,
+never-played cards, the average curve per pair, sample lists of the top pairs,
+Forge's builder against the lab's, and the recorded games with how to open them
+in ForgeCoach. A win rate is over **decisive** games with **Wilson's 95%
+interval**, and draws are counted beside it.
+
+**Gate step 12g** (`s12g_cubelab`, the 51st job, the 35th serially) runs two grid
+drafts of the synergy cube at seed 7 with one game each on one worker and the
+report, and asserts two lines, four legal lab decks, a Forge comparison for each,
+a winner per game, turn 1 where it was forced and a page. About 30 s; its Forge
+homes are under the job's own (`CUBELAB_HOME_ROOT`). The engine-free half —
+parsing, the grid and Winston rules, deck legality, scoring, the ratings file and
+the report against `fixtures/cubelab/mini/summary.golden.json` — is
+`web/test/cubelab.test.ts` in step 13 and CI.
+
+**Rejected.** A database (a file per draft line is what a later trainer reads,
+and appending survives a kill). Win rates with draws as half a win (a timeout
+says nothing about which deck was better). A charting library in the report (the
+page must open from a folder with no network).

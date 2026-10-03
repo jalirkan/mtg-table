@@ -1,0 +1,267 @@
+# The cube lab
+
+Design a two-player cube, then watch two Forge AIs draft it, build decks from
+what they drafted and play those decks against each other, as many times as
+you like, on your own machine. What comes out is a report — which colour pairs
+and themes win, which cards get picked, make decks and win, which never do —
+and the raw data behind it, every pick with the cards that were on offer, for
+a drafting AI or a play AI to learn from later. No tokens, no network: Forge
+plays every game.
+
+The decisions are **D293–D296** in [`DECISIONS.md`](../../DECISIONS.md); what
+was measured is [`docs/evidence/cube-lab.md`](../evidence/cube-lab.md).
+
+## One command
+
+```bash
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 40 --jobs 4 --record 3
+tools/cubelab.sh report var/cubelab/runs/synergy-cube-180-grid-1
+```
+
+Then open `var/cubelab/runs/synergy-cube-180-grid-1/report.html` in a browser.
+
+Overnight, with every core busy (resumable — run the same line again after a
+stop and it skips the drafts already done):
+
+```bash
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 1000 --jobs 4 \
+    --out var/cubelab/runs/overnight && tools/cubelab.sh report var/cubelab/runs/overnight
+```
+
+A draft and its best of three take about 25 s of one core; four workers on
+four cores did 40 drafts in about ten minutes (the evidence file has the exact
+numbers). Memory: each worker is a JVM with `-Xmx4096m` (hard rule 6), so
+`--jobs` is bounded by RAM as much as by cores.
+
+## The cube file
+
+A cube is a markdown file in the shape of the two under `cubes/`:
+
+```markdown
+## The list (name — themes)
+### White (24)
+Thraben Inspector — ART ETB SAC · Spirited Companion — ETB SAC · …
+### Gold (20)
+WU: Reflector Mage — ETB removal · Soulherder — ETB CTR
+### Lands (20)
+Shocklands: Hallowed Fountain, Watery Grave, …
+Pathways: Hengegate 4.85 · Clearwater 4.47 · …
+```
+
+- Any `## The list…` heading opens the list; each `### Name (N)` is a section,
+  and `check` warns when a section does not hold the N it promises.
+- Items are separated by ` · `. After a name, ` — ` starts its tags:
+  **UPPER-CASE codes are themes** (`SAC`, `TOK`, `LIFE`; a colour pair like `WU`
+  is not one) and lower-case words are roles (`removal`, `counter`). A trailing
+  number is a price and is dropped.
+- A `Shocklands:` / `Fetchlands:` / `Pathways:` line may use commas; a Pathway
+  given by its first word becomes `<word> Pathway`, the front face Forge keys the
+  card by.
+- A `| Code | Theme | … |` table names the themes in the report; a
+  `| WU | <plan> | … |` table names the colour pairs' archetypes.
+
+`tools/cubelab.sh check <cube.md>` looks every card up in the engine's own
+database and lists what is missing (with spelling suggestions), two-faced cards
+(looked up by the front face), Forge's `AI:RemAIDeck` cards — the ones Forge
+says its AI plays poorly or not at all, worth knowing before you read a card's
+win rate — and the cards Forge has no draft rank for.
+
+## Ratings
+
+`tools/cubelab.sh ratings init <cube.md>` writes `<cube>.ratings.tsv` beside the
+cube: one line per card, `name  rating  forge  source`. The rating starts as
+Forge's own draft score for the card's best-ranked printing — CubeCobra's cube
+list first, then the set's rank file — because Forge's default printing is often
+a recent reprint with no rank at all, and a card with no rank scores −100 in
+Forge ("draft it last"); here it starts at `unrated` (40). **Edit the rating
+column** to tell the drafters what you think a card is worth; `run` reads the
+file beside the cube by default (`--ratings <tsv>` names another, and the
+report says which it used).
+
+## How the AIs draft (D294)
+
+Forge 2.0.14 cannot run a two-player cube draft on its own: its Winston AI picks
+at random and crashes deciding its colours, and it has no Grid draft. So the lab
+drafts itself, with the same ingredients Forge's drafters use and a few of its
+own. A drafter values a card it could take as
+
+```
+rating                                      the ratings TSV
++ synergy × Σ over the card's themes of √(min(synergyCap, picks sharing it))
++ colour term                               lean early, penalties once committed
++ fixing                                    a land or fixer that makes its colours
+− remAIDeck                                 (0 by default)
+```
+
+- **Synergy** counts the drafter's picks that share a theme with the card — after
+  it commits, only the picks in its colours. A hub card with three themes in a
+  pile of sacrifice and token cards is worth a lot more than its rating.
+- **Colours.** Forge's drafter commits to the colours of its first good pick and
+  never looks back. Here a drafter only **leans** until it has made `commitAt`
+  (a third) of its expected picks, then commits to its two heaviest colours —
+  re-read at every pick, so it can still drift into a colour it keeps being
+  passed. After that a card outside the pair costs `offColour`, unless it can
+  be a **splash**: one colour off, at most one pip of it, rated at least
+  `splashMinRating`, with `splashSources` ways to make that colour already
+  picked — then it costs only `splash`.
+- **Sets.** A grid line or a Winston pile is worth its best card plus `setRest`
+  (0.6) of each other card.
+
+**Grid** (the cubes' recommended format): 162 of the shuffled 180 laid out as 18
+grids of 3 × 3, face up; the first drafter takes a row or a column, the second a
+remaining one (3 cards if parallel, 2 if it crosses), the rest is discarded,
+and the first pick alternates. **Winston**: 90 of the 180 face down, three
+one-card piles; look at pile 1, take it or add the top card to it and look at
+pile 2, then 3; declining all three takes the top card blind; a taken pile is
+replaced by one card. The AI takes a pile when it is worth the expected value
+of a blind card (the mean of the cards it has not seen) plus a margin
+(`winstonMargin1..3`). Who opens is the seed's parity.
+
+## How the decks are built (D294)
+
+Every two-colour pair, with no splash and with each splash colour the pool can
+support, is built and scored, and the best one plays:
+
+- 23 spells chosen by rating plus synergy with the other candidates
+  (`buildSynergy`), against a curve target of 3 / 6 / 5 / 4 / 3 / 2 at mana value
+  0–1 / 2 / 3 / 4 / 5 / 6+; **16 lands and 24 spells** when the spells average
+  `sixteenLandsAt` (2.5) or less, else 17 and 23;
+- lands: the pool's duals and fetches that make two of the deck's colours (or
+  the splash colour), then basics by pip count; a splash needs
+  `splashDeckSources` sources and may take at most two basics to get them;
+- score = mean rating + `deckPlayable` × playables (rated ≥ `playable`) +
+  `deckTheme` × (best theme's count + half the second's) − `deckCurve` × distance
+  from the curve − `deckCreatures` × creatures short of `creaturesMin` −
+  `deckSplash` × splash cards.
+
+Every deck is **40 cards with 16–17 lands**, two colours plus at most a
+`maxSplash`-card splash. When no pair reaches 23 spells, a second pass allows
+`maxSplashStretch` splash cards (the report counts these as *stretched*); when
+even that fails, Forge's `BoosterDeckBuilder` builds the deck. Forge's builder
+runs for every pool anyway, and the JSONL keeps its deck beside the lab's
+(`--builder forge` plays Forge's decks instead, to compare).
+
+## How the games are played (D295)
+
+Each draft is a best of `--games` (3) between the two decks, both seats Forge's
+AI under `--profiles` (Default, Default). Who is on the play alternates game by
+game (and game 1 alternates draft by draft), so being on the play is spread
+evenly; the report shows how much it is worth. A game that runs past
+`--game-timeout` (300 s) is ended and recorded as a draw (`timeout: true`); a
+game whose engine thread will not stop, or a worker that dies, is recorded as
+an engine error with the games it finished, and a fresh worker carries on.
+
+`--record M` plays the first M drafts' decks once more through
+`mtgtable.RecordMatch` and keeps each game as a frame log in `<out>/frames/`,
+seen from drafter A's seat. **To watch one, open ForgeCoach, choose Load file,
+and pick the `.jsonl`** — it replays like any recorded game (the other seat's
+hand stays hidden, as in every frame log). A recorded game is its own game of
+the same two decks, not one of the counted ones.
+
+## Every flag
+
+| flag | default | |
+|---|---|---|
+| `--format grid\|winston` | `grid` | |
+| `--drafts N` | 10 | drafts, seeds `S` .. `S+N-1` |
+| `--seed S` | 1 | a draft and its decks are a function of their seed |
+| `--games N` | 3 | best of N; stops at a majority |
+| `--jobs K` | 1 | worker JVMs, each in its own Forge home under `var/cubelab/homes/<k>/` |
+| `--profiles A,B` | `Default,Default` | the AI profile of each seat (`forge-home/res/ai/*.ai`) |
+| `--ratings <tsv>` | `<cube>.ratings.tsv` if present, else Forge's ranks | |
+| `--record M` | 0 | frame logs of M drafts' decks, in `<out>/frames/` |
+| `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes |
+| `--builder lab\|forge` | `lab` | which deck plays |
+| `--game-timeout <sec>` | 300 | a game past it is a draw |
+| `--winston-cards N` | 90 | the size of the Winston stack |
+| `--weights <file.json>` | | a partial object of the weights below |
+| `--weight name=value` | | one weight; repeatable; wins over `--weights` |
+
+## The weights
+
+`tools/cubelab/weights.ts` is the list and the defaults; the run's `run.json`
+records the weights it used, and a run folder refuses to resume under different
+ones.
+
+| weight | default | what it does |
+|---|---|---|
+| `unrated` | 40 | the rating of a card Forge has no rank for |
+| `landScale` | 0.45 | a nonbasic land's rating is scaled by this while drafting |
+| `synergy` | 4 | points per shared theme, times √(picks sharing it) |
+| `synergyCap` | 6 | at most this many picks count toward one theme |
+| `lean` | 10 | before commitment, the pull of the drafter's colours |
+| `commitAt` | 0.333 | commit after this share of the expected picks |
+| `offColour` | 40 | after commitment, a card that cannot be played |
+| `splash` | 15 | after commitment, a card that can be splashed |
+| `splashMinRating` | 70 | a splash card is at least this good |
+| `splashSources` | 2 | ...and this many sources of its colour are picked already |
+| `fixing` | 12 | a land or fixer that makes both committed colours (half for one) |
+| `setRest` | 0.6 | the weight of a line's or pile's second and later cards |
+| `winstonMargin1..3` | 10, 5, 0 | how much better than a blind card pile 1, 2, 3 must be |
+| `remAIDeck` | 0 | subtract for Forge's AI:RemAIDeck cards, picking and building |
+| `playable` | 45 | a spell rated this or more is a playable |
+| `deckPlayable` | 2 | deck score per playable |
+| `deckTheme` | 1.5 | deck score per spell of its best theme (half for the second) |
+| `deckCurve` | 1 | deck score lost per spell off the curve target |
+| `deckCreatures` | 1.5 | deck score lost per creature short of `creaturesMin` |
+| `creaturesMin` | 13 | |
+| `deckSplash` | 3 | deck score lost per splash card |
+| `maxSplash` | 3 | splash cards allowed |
+| `maxSplashStretch` | 7 | splash cards allowed on the second pass, for a thin pool |
+| `splashDeckSources` | 3 | sources of the splash colour a deck needs |
+| `buildSynergy` | 3 | spell choice: points per √(other candidates sharing a theme) |
+| `sixteenLandsAt` | 2.5 | 16 lands when the spells' average mana value is at most this |
+
+For example, to see how much the themes matter, run the same seeds twice:
+
+```bash
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 100 --jobs 4 --out var/cubelab/runs/syn-on
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 100 --jobs 4 --out var/cubelab/runs/syn-off \
+    --weight synergy=0 --weight buildSynergy=0 --weight deckTheme=0
+```
+
+## What a run writes
+
+`<out>/` holds `run.json` (the cube, its sha256, every option and weight),
+`cards.json` (each card as the run saw it: section, colours, mana value, themes,
+rating), `decks/<seed>-A.dck` and `-B.dck` (the lab's) and `-A-forge.dck` /
+`-B-forge.dck` (Forge's builder's), `logs/worker-<k>.log` (the engine's own
+output), `frames/` and `recordings.json` under `--record`, and
+**`drafts.jsonl`**, one line per draft:
+
+```jsonc
+{ "v": 1, "cube": "…", "seed": 7, "format": "grid", "dealt": 162, "aOpens": false,
+  "drafters": [                                   // A, then B
+    { "seat": "A",
+      "picks": [ { "n": 1, "kind": "grid", "at": 1, "how": "col 2", "value": 144,
+                   "seen": ["…the cards on offer…"], "took": ["…"] } ],   // pile | blind | forced for Winston
+      "pool": ["…"],
+      "deck": { "colors": "WU", "splash": "G", "main": [[1, "Snapcaster Mage"], …, [10, "Island"]],
+                "spells": 23, "lands": 17, "curve": [6,7,5,2,1,2], "avgCmc": 2.6, "creatures": 13,
+                "themes": [["ETB", 10], …], "score": 135.5, "parts": {…}, "alternatives": […], "stretched": false },
+      "deckErrors": [], "played": "lab", "deckFile": "decks/7-A.dck",
+      "forge": { "colors": "WU", "spells": 22, "lands": 18, "value": 22.7, "main": […] } }, … ],
+  "match": { "games": [ { "n": 1, "onPlay": "B", "onPlayVerified": "B", "winner": "A",
+                          "turns": 18, "ms": 11162, "timeout": false, "reason": "AllOpponentsLost" } ],
+             "winsA": 1, "winsB": 0, "winner": "A", "worker": 0 },
+  "ms": { "draft": 15, "build": 20, "match": 24970 } }
+```
+
+`report <out>` reads the folder and writes `report.html` (one self-contained
+page: no script, font or style from anywhere), `report.md` (the headline
+numbers as text) and `summary.json` (everything the two show). Win rates there
+are over decisive games, with Wilson's 95% interval — with a few dozen games
+per colour pair, **the interval is the finding**; run more drafts before
+reading much into a difference inside it.
+
+## What it does not do
+
+- It never touches the game: no bridge code, no wire, nothing the board reads.
+  It boots the same engine the same way (`mtgtable.Bootstrap`), under the same
+  lint, and writes only under `var/` (and the ratings TSV you ask for).
+- Forge's AI is the only player. A card the AI misplays — Forge marks some
+  `AI:RemAIDeck` — will look worse than it is; `check` lists them and the
+  report tags them.
+- Games are not byte-for-byte repeatable: Forge's AI runs on its own threads.
+  The drafts and decks are (the same seed gives the same picks and decks on any
+  machine and any `--jobs`).

@@ -89,6 +89,10 @@
 **Never `--dangerously-skip-permissions`** or `bypassPermissions`, and never a
 3. **It is M50's and M51's door, not a new one**: the Origin list is
 4. **Its self-test never runs the real CLI.** `coach-helper-selftest.mjs` (gate
+1. **The lab is a tool beside the game** (**D293**). Nothing the engine, the
+2. **A draft and its decks are a function of the seed** (**D294**). Every
+3. **Every worker JVM has a Forge home of its own** (`forge_home_make`, under
+4. **Every number the lab decides by is a named weight** in
 **The narrator (D123) tells a frame log as a story, and it is hard rule 8's
 1. **It is a tool, not a package, and the game never reads it** (**D90**,
 **D91**). No `package.json`, no npm dependency: `node:sqlite` with FTS5, `fetch`,
@@ -350,6 +354,7 @@ span: The arena's spec (M7 Tier 1).
 span: Tier 2's asset landscape.
 span: Tier 2's spec, the manifestation stage.
 span: Why Forge stays 2.0.14
+span: The cube lab's manual
 span: The personal tier's manual
 span: no rules logic in the client
 span: default them to Opus
@@ -414,6 +419,10 @@ span: Claude runs with nothing to act with.
 span: Never `--dangerously-skip-permissions`
 span: It is M50's and M51's door, not a new one
 span: Its self-test never runs the real CLI.
+span: The lab is a tool beside the game
+span: A draft and its decks are a function of the seed
+span: Every worker JVM has a Forge home of its own
+span: Every number the lab decides by is a named weight
 span: The narrator (D123) tells a frame log as a story, and it is hard rule 8's third reader.
 span: A name is read from the event's own frame or the one before it and never remembered
 span: A change to the narration is a `--write-golden` and a read diff, never a hand edit of the goldens.
