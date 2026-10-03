@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-03T18:53:06-04:00",
- "heartbeat": "2026-10-03T18:53:06-04:00",
+ "updated": "2026-10-03T18:53:28-04:00",
+ "heartbeat": "2026-10-03T18:53:28-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.89,
-  "memUsedGb": 10.1,
+  "load1": 6.97,
+  "memUsedGb": 8.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 2485,
   "pressure": 0,
@@ -17,113 +17,79 @@
  },
  "running": [
   {
-   "publicTitle": "Queue night 1",
-   "publicEst": "~8 h",
-   "id": "J029",
-   "title": "(J020 again, continues its folder) Overnight queue, night 1: recorded normal + bridge drafts across all cubes (decision records on)",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-10-03T14:40:49-04:00",
-   "elapsed": 15137,
-   "done": 20000,
-   "total": 20000,
-   "unit": "drafts",
-   "ratePerHour": 3365.7,
-   "eta": null,
-   "workers": 7,
-   "workersMax": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-03T18:49:06-04:00",
-   "memGb": 4.72,
-   "live": {
-    "night.drafts": 20000,
-    "night.games": 19999,
-    "night.engine_error_rate": 0.0001,
-    "elapsed_s": 15085,
-    "night.bridge_drafts": 4000,
-    "night.bridge_drafts_done": 4000,
-    "night.bridge_drafts_planned": 4000,
-    "night.bridge_share": 0.2,
-    "night.cpu_ms_per_turn": 366,
-    "night.drafts_per_h": 3365.7,
-    "night.draws": 6,
-    "night.engine_errors": 1,
-    "night.games_per_h": 3365.7,
-    "night.mean_game_ms": 4406,
-    "night.mean_game_s": 4.4063,
-    "night.mean_turns": 19.3357,
-    "night.median_game_s": 2.535,
-    "night.ms_per_turn": 228,
-    "night.night_drafts_done": 20000,
-    "night.night_drafts_done_per_h": 3365.7,
-    "night.nights": 1,
-    "night.output_bytes": 3632109081,
-    "night.planned_drafts": 20000,
-    "night.recorded_bytes_per_game": 164994,
-    "night.recorded_errors": 18,
-    "night.recorded_games": 19999,
-    "night.runs": 26,
-    "night.timeouts": 6,
-    "pressure_events": 0,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "night.drafts",
-    "night.games",
-    "night.engine_error_rate"
-   ],
-   "cubes": [
-    {
-     "id": "fair-fight",
-     "done": 1980,
-     "planned": 1980
-    },
-    {
-     "id": "modern-era",
-     "done": 2111,
-     "planned": 2111
-    },
-    {
-     "id": "omega",
-     "done": 1878,
-     "planned": 1878
-    },
-    {
-     "id": "pauper",
-     "done": 2555,
-     "planned": 2555
-    },
-    {
-     "id": "peasant",
-     "done": 3192,
-     "planned": 3192
-    },
-    {
-     "id": "synergy",
-     "done": 2211,
-     "planned": 2211
-    },
-    {
-     "id": "vintage",
-     "done": 2073,
-     "planned": 2073
-    }
-   ],
-   "publicCubes": true,
-   "pressureEvents": [],
-   "detail": "lab-J029-run2"
-  }
- ],
- "queue": [
-  {
    "publicTitle": "Decision records pilot re-run",
    "publicEst": "~60 min",
    "id": "J027",
    "title": "Decision records pilot, re-run after the reveal-leak fix (D352): 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded, redaction-checked mechanically",
    "cpu": "heavy",
-   "est": "~60 min"
-  },
+   "phase": "prepare",
+   "started": "2026-10-03T18:53:28-04:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "errors": 0,
+   "paused": false,
+   "dataUpdated": null,
+   "memGb": null,
+   "live": {
+    "recorded_logs": 0,
+    "bench.games": 0,
+    "lab.drafts": 0,
+    "bench.a_win_rate": 0,
+    "bench.a_wins": 0,
+    "bench.ai_eval_timeouts": 0,
+    "bench.b_wins": 0,
+    "bench.copier_errors": 0,
+    "bench.draws": 0,
+    "bench.error_rate": 0,
+    "bench.errors": 0,
+    "bench.focus_win_rate": 0,
+    "bench.max_game_s": 0,
+    "bench.mean_game_s": 0,
+    "bench.mean_turns": 0,
+    "bench.median_game_s": 0,
+    "bench.runs": 0,
+    "bench.searched_decisions": 0,
+    "bench.timeouts": 0,
+    "elapsed_s": 0,
+    "engine_errors": 0,
+    "lab.bridge_drafts": 0,
+    "lab.cpu_ms_per_turn": 0,
+    "lab.draws": 0,
+    "lab.engine_error_rate": 0,
+    "lab.engine_errors": 0,
+    "lab.games": 0,
+    "lab.mean_game_ms": 0,
+    "lab.mean_game_s": 0,
+    "lab.mean_turns": 0,
+    "lab.median_game_s": 0,
+    "lab.ms_per_turn": 0,
+    "lab.output_bytes": 0,
+    "lab.recorded_bytes_per_game": 0,
+    "lab.recorded_errors": 0,
+    "lab.recorded_games": 0,
+    "lab.runs": 0,
+    "lab.timeouts": 0,
+    "metrics_errors": 4,
+    "pressure_events": 0
+   },
+   "liveHeadline": [
+    "recorded_logs",
+    "bench.games",
+    "lab.drafts"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J027-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Game review smoke",
    "publicEst": "~15 min",
@@ -215,6 +181,20 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Queue night 1",
+   "publicEst": "~8 h",
+   "id": "J029",
+   "title": "(J020 again, continues its folder) Overnight queue, night 1: recorded normal + bridge drafts across all cubes (decision records on)",
+   "status": "done",
+   "finished": "2026-10-03T18:53:28-04:00",
+   "headline": "night.drafts 20000 · night.games 19999 · night.engine_error_rate 0",
+   "numbers": {
+    "night.drafts": 20000,
+    "night.games": 19999,
+    "night.engine_error_rate": 0.0001
+   }
+  },
   {
    "publicTitle": null,
    "publicEst": null,

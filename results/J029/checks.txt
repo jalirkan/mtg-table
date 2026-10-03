@@ -1,0 +1,3 @@
+PASS  night.drafts >= 1000   [night.drafts = 20000]
+PASS  night.engine_error_rate <= 2%   [night.engine_error_rate = 0.0001]
+PASS  night.recorded_errors <= 0.01 * night.recorded_games   [night.recorded_errors = 18, night.recorded_games = 19999]

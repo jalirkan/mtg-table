@@ -1,7 +1,7 @@
-running
+done
 runner: forgecoach-runner 5e6ba2a
 started: 2026-10-03T14:40:49-04:00
-phase: commands 2/2
+finished: 2026-10-03T18:53:28-04:00
 mtg-table: bf3dca7
 workers: 7 (sized 7: min(cores 7, memory 7, max_workers 7); peak 2.50 GB per worker (default), budget 21.4 GB)
 adopted: 2026-10-03T14:45:32-04:00: the runner restarted; lab-J029-run1 was still running

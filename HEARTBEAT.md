@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T18:53:06-04:00
+- time: 2026-10-03T18:53:28-04:00
 - runner: 5e6ba2a, up since 2026-10-03T14:45:31-04:00
-- running: J029 commands 2/2, 20000/20000 drafts, 3365.7/h, 7 worker(s)
-- load: 7.89; memory 10.1/30.5 GB, swap 2485 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J027, J028, J034, J038, J039, J040, J041, J042, J043, J044, J045, J046
+- running: J027 prepare, 1 worker(s)
+- load: 6.97; memory 8.1/30.5 GB, swap 2485 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J028, J034, J038, J039, J040, J041, J042, J043, J044, J045, J046
 - waiting: nothing
-- last finished: J021 done at 2026-10-03T15:22:00-04:00
+- last finished: J029 done at 2026-10-03T18:53:28-04:00: night.drafts 20000 · night.games 19999 · night.engine_error_rate 0
 
 ## Messages
 
