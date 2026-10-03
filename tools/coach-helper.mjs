@@ -39,6 +39,14 @@
 //                 JSON body.  A client that disconnects kills the `claude` process
 //                 and its whole process group.
 //
+//   GET  /review, POST /review, GET /review/<id>  -- THE POST-GAME REVIEW (D353):
+//                 run tools/coach-grade.sh review on a game the engine wrote
+//                 (var/games/<gameId>/frames.jsonl), one at a time, and fetch its
+//                 report.  tools/review-runner.mjs's header is that contract
+//                 (docs/game-review.md the copyable form); /health carries
+//                 "review": 1 when the bridge is built (else 0), --no-review
+//                 turns it off, --review-jobs N (default: cores - 1, at most 7).
+//
 //   GET  /match, POST /match  -- THE MATCH LAUNCHER (D303): start a match with two
 //                 decks the browser built.  tools/match-launcher.mjs's header is that
 //                 contract; /health then carries "match": 1 (else "match": 0).  Only
@@ -130,10 +138,11 @@ import { execFile, spawn } from 'node:child_process';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { tmpdir } from 'node:os';
+import { availableParallelism, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
+import { MAX_REVIEW_BODY, createReviewRunner, cleanOld } from './review-runner.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -321,7 +330,8 @@ function readConfig() {
 
 function parseArgs(argv) {
   const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
-    matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined };
+    matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined,
+    review: true, reviewJobs: undefined, reviewQueueMax: 2 };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
     const val = () => {
@@ -339,6 +349,9 @@ function parseArgs(argv) {
     else if (f === '--supervisor') a.supervisor = Number(val());
     else if (f === '--match-timeout') a.matchTimeoutS = Number(val());
     else if (f === '--cards-zip') a.cardsZip = val();
+    else if (f === '--no-review') a.review = false;
+    else if (f === '--review-jobs') a.reviewJobs = Number(val());
+    else if (f === '--review-queue-max') a.reviewQueueMax = Number(val());
     else if (f === '--help' || f === '-h') a.help = true;
     else throw new Error(`unknown flag ${f} (--help)`);
   }
@@ -388,7 +401,7 @@ export function claudeArgs({ model, systemArg, help }) {
 // ---------------------------------------------------------------------------
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, log = (s) => console.log(s) } = opts;
   let active = null;          // { kill() } of the running question
   const queue = [];           // waiting questions, oldest first: { key, go(), supersede(), position(n) }
   const pump = () => {
@@ -450,9 +463,10 @@ export function startHelper(opts) {
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
+      const rv = review ? review.health() : { review: 0 };   // D353
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -468,6 +482,25 @@ export function startHelper(opts) {
       const r = await match.post(q);
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/review' || path.startsWith('/review/')) {
+      // D353: the post-game review (tools/review-runner.mjs).  Behind the same gate as /coach.
+      if (!review) { send(res, 503, { ok: false, type: 'error', message: 'the review is off: this helper was started with --no-review' }, cors); say(503); return; }
+      if (path === '/review' && req.method === 'POST') {
+        const raw = await readBody(req, res, MAX_REVIEW_BODY, '256 KB', cors, say);
+        if (raw === null) return;
+        let q;
+        try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+        const r = review.post(q);
+        send(res, r.status, r.body, cors);
+        say(r.status, r.status === 202 ? ` (${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
+        return;
+      }
+      if (req.method !== 'GET') { send(res, 405, { ok: false, type: 'error', message: path === '/review' ? 'use GET or POST' : 'use GET' }, { ...cors, Allow: path === '/review' ? 'GET, POST, OPTIONS' : 'GET, OPTIONS' }); say(405); return; }
+      const r = path === '/review' ? review.list() : review.get(path.slice('/review/'.length));
+      send(res, r.status, r.body, cors);
+      say(r.status);
       return;
     }
     if (path === '/engine/start') {
@@ -694,6 +727,7 @@ export function startHelper(opts) {
     }),
     close: () => {
       for (const c of live) { try { process.kill(-c.pid, 'SIGKILL'); } catch { /* gone */ } }
+      review?.close();
       server.close();
       server.closeAllConnections?.();
     },
@@ -741,7 +775,15 @@ async function main() {
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
   }
   if (!Number.isInteger(a.queueMax) || a.queueMax < 0 || a.queueMax > 64) { console.error('coach-helper: --queue-max must be a whole number, 0-64'); process.exit(2); }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match });
+  let review = null;
+  if (a.review) {
+    const jobs = a.reviewJobs ?? Math.max(1, Math.min(7, availableParallelism() - 1));
+    if (!Number.isInteger(jobs) || jobs < 1 || jobs > 32) { console.error('coach-helper: --review-jobs must be a whole number, 1-32'); process.exit(2); }
+    if (!Number.isInteger(a.reviewQueueMax) || a.reviewQueueMax < 0 || a.reviewQueueMax > 16) { console.error('coach-helper: --review-queue-max must be a whole number, 0-16'); process.exit(2); }
+    cleanOld(cfg.repoRoot);
+    review = createReviewRunner({ repoRoot: cfg.repoRoot, jobs, queueMax: a.reviewQueueMax, log: (s) => console.log(s) });
+  }
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -753,6 +795,9 @@ async function main() {
   console.log(`COACH CLAUDE    ${info.ok ? info.version : info.error}`);
   console.log(`COACH QUEUE     one question at a time; up to ${a.queueMax} more wait in line (--queue-max)`);
   console.log(`COACH ORIGINS   ${cfg.origins.join(' ')}  (from ${cfg.file})`);
+  console.log(!review ? 'COACH REVIEW    /review off (--no-review)'
+    : review.available() ? 'COACH REVIEW    /review on: tools/coach-grade.sh review, one at a time'
+    : 'COACH REVIEW    /review waits for the bridge build (./bridge/build.sh); /health says "review": 0 until then');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   const stop = () => { h.close(); process.exit(0); };
   process.on('SIGINT', stop);
