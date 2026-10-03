@@ -13346,6 +13346,134 @@ some normal pools on raw card quality and teach the meta guidance to stretch
 when it need not); falling back to Forge's builder (it is the 11-spell builder
 D294 replaced).
 
+## D303 — The match launcher: the coach helper's `POST /match` takes two decklists from ForgeCoach, writes them under `var/match/`, and `play.sh` — which owns the engine — restarts the bridge on them
+
+*Branch `c/match-launcher`; D303 alone (D298–D302 are other lanes').*
+
+**2026-10-03** (the owner's request, for ForgeCoach's cube draft)
+
+**Decision.** ForgeCoach drafts a cube in the browser against an AI drafter and
+builds both 40-card decks there; **Play this match** must then play them
+without a terminal. The coach helper (D292, `coachPort` 8643) gains
+`GET /match` and `POST /match` (`tools/match-launcher.mjs`), and `/health`
+gains `"match": 0|1`. `docs/match-launcher.md` is the contract ForgeCoach
+copies; protocol amendment **M53** is the row.
+
+- **The door is the helper's, not a new one.** `/match` sits behind exactly
+  the gate `/coach` does — `wsAllowedOrigins`, M51's token off loopback, the
+  private-network preflight — because it starts processes. 64 KB body limit.
+- **play.sh owns the engine, so play.sh restarts it.** The helper writes
+  `var/match/<id>/you.dck` and `ai.dck` (`id` = `m` + a millisecond clock, its
+  own), then `var/match/request.json`, and sends `play.sh` **SIGUSR1** (the pid
+  it was started with, `--supervisor`; trapped first thing in `play.sh`). `play.sh`
+  reads the request back through `node`, re-checks every field (the two paths
+  must be exactly `<match dir>/<id>/you.dck` and `ai.dck`, the profile
+  `[A-Za-z0-9_-]`, games 1–9), stops the bridge (SIGTERM, SIGKILL after 3 s,
+  reaped), **waits until the ws port stops answering `/health`** (and stops
+  itself if it never does — never two engines), starts the bridge with the
+  request's `--deck/--ai-deck/--ai-profile/--games`, `--game-id match-<id>` (with
+  a `--seed` the bridge's default id would repeat, and §2.1 reads a repeated
+  `gameId` as a reconnect — the real-engine smoke found it) and every other flag it had
+  (`--keep-open`, `--site-dir`, `--lan`, the passthrough minus those four),
+  waits for `/health` as at startup, and writes `var/match/status.json`
+  (`ready`, with the names and counts read from the bridge's own `deck you =`
+  / `deck ai =` lines) and `current.json`. The helper polls for its id and
+  answers. A bridge that does not come up: `failed` with the log's last lines
+  (any `token=` masked) and the **previous** match started again (`restored`);
+  if that fails too, `play.sh` stops. The helper re-sends the signal every
+  2 s until `play.sh` has taken the request up, because one can land while
+  `play.sh` is between two commands of its previous restart; `play.sh` ignores
+  an id it has handled. One restart at a time (409).
+- **Nothing from the browser reaches a command line or a path.** A deck name
+  is 1–80 of letters, digits, spaces and `' ’ , . ! ? & ( ) + : / _ -`, starting
+  with a letter or digit; a card name is up to 141 of those plus `"`,
+  optionally `|SET` (`[A-Z0-9]{2,8}`). No control character, `[`, `]`, `=`,
+  `#`, `\`, `$`, `;`, `<`, `>`. They go into the `.dck` text only; the files'
+  paths are the helper's own. The bridge then reads them with
+  `DeckSerializer.fromFile` like any deck (hard rule 4).
+- **Card names are checked against the engine's own scripts when they are
+  there**: every `Name:` in `forge-home/res/cardsfolder/cardsfolder.zip` (and
+  `forge-home/custom-cards/`), folded (case, accents), a multi-face script also
+  as `A // B` — read once, lazily, by a 60-line zip reader (Node has none;
+  33,617 entries in about 0.8 s measured here under load). An unknown name is a
+  400 naming it. Without the zip (CI, a checkout with no Forge home) the engine
+  reports: the reply's `cards` is the count the bridge loaded, and a shortfall
+  is a plain-words `warnings` entry.
+- **Hard rule 8 is untouched**: the AI's list is a file the bridge loads as it
+  loads `decks/doom-legion.dck`; `hello_ok.match.aiDeck` stays `{name, cards}`
+  (M44), and the helper's replies and `GET /match` carry the AI's deck as a name
+  and a count too.
+- **Forge preferences are untouched**: the profile is a `.ai` file's name,
+  passed as `--ai-profile` (M44's never-empty override, D107).
+- **A restarted `--lan` bridge keeps the first run's token.** M51 minted one
+  per JVM; a restart would have broken the phone's link and the helper's copy.
+  `play.sh` reads the first token from the bridge's `WS LAN PAGE` line and
+  hands it to every restarted bridge as `MTGTABLE_LAN_TOKEN` (environment, never
+  argv); `MtgTable.lanToken` takes it (16+ of `[A-Za-z0-9_-]`, else refused
+  without echoing it) and mints a fresh one when it is unset, so the first run
+  is what it was — `play.sh` unsets an inherited one. `WsLanSelfTest` holds it.
+- **`play.sh` changes**: the helper now starts without `claude` on PATH too
+  (its `/health` then says `ok: false` for the coach and `match: 1`); a
+  `Match launcher:` line follows the `Coach:` line; `--no-match` keeps the
+  helper without the launcher; `--coach-port` puts the helper elsewhere;
+  `--no-coach` still starts no helper, so no launcher either. A helper already
+  answering on the port belongs to another `play.sh`, whose engine its `/match`
+  restarts, and this run says so. The previous log is kept as
+  `var/play/server.prev.log` (a failed one as `server.failed.log`). Every
+  existing launch path — bare, `--engine-only`, `--lan`, `--no-coach`,
+  ForgeCoach's `forgecoach.sh` — starts exactly as before.
+
+**Tests.** `tools/match-launcher-selftest.mjs` (gate step 12f beside the coach
+helper's, CI's `redaction` job; about 25 s) runs the real `play.sh
+--engine-only` against a **fake engine** — `MTGTABLE_TEST_FAKE_ENGINE`, a test
+seam that skips check-forge and the build, with `MTGTABLE_TEST_VAR` keeping its
+files under `var/match-launcher-selftest/` — that answers `/health`, holds a
+seat socket, prints the bridge's deck lines, records its argv and token, and
+takes 700 ms to die holding its port: 72 checks — the `.dck` text byte for
+byte, the restart's argv, the seat dropped, the reply's `aiDeck` exactly
+`{name, cards}`, seventeen malformed requests and an oversized one refused with
+nothing written or restarted, another Origin 403, a deck the engine will not start on 502 with
+the previous match back, the engine's count as a warning, 409, two back to
+back, never two engines, `--lan` keeping its token, Ctrl-C taking it all down,
+the card index over a built zip, and `/match` off without a supervisor. It
+failed under each planted mutant: the restart not waiting for the old engine,
+the LAN token not handed on, the card-name pattern removed.
+
+**Measured on the real engine** (Forge 2.0.14, the pinned jar, in a container
+at a load average of 20–170): `play.sh --engine-only --seed 7 -- --games 1`,
+then `POST /match` from the github.io Origin with two 40-card decks of real
+cards — an unknown card was refused 400 against the 33,617-entry card index
+in about a second; the restart answered 200 in 25.3 s with both decks at 40,
+`Cautious`, one game; a `/ws` client's `hello_ok.match` then named the new
+decks with `aiDeck` exactly `{name, cards}` and `yourDeck.path`
+`var/match/<id>/you.dck`. That run found the repeated `gameId` (`human-ws-7`
+both times under `--seed 7`), hence `--game-id match-<id>`; the fix is held by
+the self-test, not re-run on the engine. The full gate was not run.
+
+**Rationale.** The helper already is the browser's door to this machine, with
+its gate solved; the restart belongs to whoever started the engine, and that is
+`play.sh` — its `stop()`, its Ctrl-C and its log all keep working because the
+JVM stays its child. A signal plus three small files keeps the two processes'
+contract inspectable on disk and needs no new socket.
+
+**Rejected.**
+
+- **The helper spawning the engine itself** — two owners of one JVM, and the
+  helper does not run at all under `--no-coach`; `play.sh`'s lifecycle (stop,
+  Ctrl-C, the log, the vite loop) would have needed a second copy in Node.
+- **A restart endpoint on the bridge** — a JVM cannot replace itself, and a
+  new match in the same JVM would mean re-registering players under Forge's
+  `HostedMatch`, a seam nothing here has measured.
+- **A shutdown hook to send close 1000 before the restart** — a ninth named
+  thread in the bridge (hard rule 10's thread guard) for a courtesy: ForgeCoach
+  started the restart and knows its socket will drop.
+- **Deck names in file names** — a path built from browser text is exactly
+  what the strict patterns exist to avoid needing.
+- **Keeping `play.sh` alive after the match ends** so the launcher outlives
+  it — a change to every existing launch path (D285, M6's linger, D286's idle
+  limit). Left as a follow-up: a long draft with no seat connected can outlast
+  the engine, and ForgeCoach sees `/health` fail.
+
 ## D305 — The ML dataset: `tools/ml/` encodes frame logs into fixed-size, viewer-side position rows for a cube's closed card pool, labelled with the eventual winner, split by game, and reads less hidden information than the log carries
 
 *Branch `c/ml-dataset`; D305 (a block of D305–D307 reserved, D306–D307

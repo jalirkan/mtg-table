@@ -14,6 +14,7 @@
 //   node tools/coach-helper.mjs --port 8700          # config.json `coachPort` otherwise
 //   COACH_HELPER_TOKEN=<T> node tools/coach-helper.mjs --lan [--ws-port 8642]
 //   node tools/coach-helper.mjs --lan --token <T>    # the same; the env keeps <T> off `ps`
+//   node tools/coach-helper.mjs --match-dir var/match --supervisor <play.sh's pid>   # D303, play.sh does this
 //
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
@@ -33,6 +34,12 @@
 //                 400 / 403 / 404 / 405 / 413 / 429 carry one {"type":"error","message":...}
 //                 JSON body.  A client that disconnects kills the `claude` process
 //                 and its whole process group.
+//
+//   GET  /match, POST /match  -- THE MATCH LAUNCHER (D303): start a match with two
+//                 decks the browser built.  tools/match-launcher.mjs's header is that
+//                 contract; /health then carries "match": 1 (else "match": 0).  Only
+//                 when scripts/play.sh started this helper (--match-dir, --supervisor):
+//                 play.sh owns the engine and restarts it.
 //
 //   ONE QUESTION AT A TIME.  A /coach that arrives while another is running waits
 //   up to 5 s (--busy-wait <ms>) for it to finish or be cancelled -- which absorbs
@@ -88,6 +95,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -261,11 +269,12 @@ function readConfig() {
   for (const o of origins) {
     if (typeof o !== 'string' || !ORIGIN_ENTRY.test(o)) throw new Error(`"wsAllowedOrigins" in ${file} holds a bad entry: ${JSON.stringify(o)}`);
   }
-  return { file, coachPort: c.coachPort, wsPort: c.wsPort, origins };
+  return { file, coachPort: c.coachPort, wsPort: c.wsPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
 }
 
 function parseArgs(argv) {
-  const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, busyWaitMs: 5000, timeoutS: 300 };
+  const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, busyWaitMs: 5000, timeoutS: 300,
+    matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
     const val = () => {
@@ -278,6 +287,10 @@ function parseArgs(argv) {
     else if (f === '--ws-port') a.wsPort = Number(val());
     else if (f === '--busy-wait') a.busyWaitMs = Number(val());
     else if (f === '--timeout') a.timeoutS = Number(val());
+    else if (f === '--match-dir') a.matchDir = val();
+    else if (f === '--supervisor') a.supervisor = Number(val());
+    else if (f === '--match-timeout') a.matchTimeoutS = Number(val());
+    else if (f === '--cards-zip') a.cardsZip = val();
     else if (f === '--help' || f === '-h') a.help = true;
     else throw new Error(`unknown flag ${f} (--help)`);
   }
@@ -327,7 +340,7 @@ export function claudeArgs({ model, systemArg, help }) {
 // ---------------------------------------------------------------------------
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, busyWaitMs, timeoutS, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, busyWaitMs, timeoutS, match = null, log = (s) => console.log(s) } = opts;
   let active = null;          // { kill(), done: Promise } of the running question
   const live = new Set();     // every child still alive, for shutdown
 
@@ -378,43 +391,33 @@ export function startHelper(opts) {
     if (path === '/health') {
       if (req.method !== 'GET') { send(res, 405, { type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
       const info = await claudeInfo();
+      const matchCap = match && match.available() ? 1 : 0;   // D303
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS }
-        : { ok: false, helper: HELPER_VERSION, error: info.error }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
+      return;
+    }
+    if (path === '/match') {
+      // D303: the match launcher (tools/match-launcher.mjs).  Behind the same gate as /coach.
+      if (!match) { send(res, 503, { ok: false, type: 'error', message: 'the match launcher is off: this helper was not started by scripts/play.sh' }, cors); say(503); return; }
+      if (req.method === 'GET') { const r = match.get(); send(res, r.status, r.body, cors); say(r.status); return; }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use GET or POST' }, { ...cors, Allow: 'GET, POST, OPTIONS' }); say(405); return; }
+      const raw = await readBody(req, res, MAX_MATCH_BODY, '64 KB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+      const r = await match.post(q);
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 200 ? ` (${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path !== '/coach') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
     if (req.method !== 'POST') { send(res, 405, { type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
 
     // The body, at most MAX_BODY bytes.
-    if (Number(req.headers['content-length'] ?? 0) > MAX_BODY) {
-      send(res, 413, { type: 'error', message: 'request too large (at most 512 KB)' }, { ...cors, Connection: 'close' });
-      say(413);
-      req.destroy();
-      return;
-    }
-    let body;
-    try {
-      body = await new Promise((resolve, reject) => {
-        const parts = [];
-        let n = 0;
-        req.on('data', (c) => {
-          n += c.length;
-          if (n > MAX_BODY) { reject(Object.assign(new Error('too large'), { status: 413 })); return; }
-          parts.push(c);
-        });
-        req.on('end', () => resolve(Buffer.concat(parts).toString('utf8')));
-        req.on('error', reject);
-      });
-    } catch (e) {
-      if (e.status === 413) {
-        send(res, 413, { type: 'error', message: 'request too large (at most 512 KB)' }, { ...cors, Connection: 'close' });
-        say(413);
-        req.destroy();
-      }
-      return;
-    }
+    const body = await readBody(req, res, MAX_BODY, '512 KB', cors, say);
+    if (body === null) return;
     let q;
     try { q = JSON.parse(body); } catch { send(res, 400, { type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
     const model = q?.model ?? DEFAULT_MODEL;
@@ -534,6 +537,32 @@ export function startHelper(opts) {
     }
   });
 
+  /** The whole body as a string, or null once a 413 (or a broken request) has been dealt with. */
+  async function readBody(req, res, max, words, cors, say) {
+    const tooLarge = () => {
+      send(res, 413, { type: 'error', message: `request too large (at most ${words})` }, { ...cors, Connection: 'close' });
+      say(413);
+      req.destroy();
+    };
+    if (Number(req.headers['content-length'] ?? 0) > max) { tooLarge(); return null; }
+    try {
+      return await new Promise((resolve, reject) => {
+        const parts = [];
+        let n = 0;
+        req.on('data', (c) => {
+          n += c.length;
+          if (n > max) { reject(Object.assign(new Error('too large'), { status: 413 })); return; }
+          parts.push(c);
+        });
+        req.on('end', () => resolve(Buffer.concat(parts).toString('utf8')));
+        req.on('error', reject);
+      });
+    } catch (e) {
+      if (e.status === 413) tooLarge();
+      return null;
+    }
+  }
+
   server.on('clientError', (err, socket) => { socket.destroy(); });
   return {
     server,
@@ -571,7 +600,25 @@ async function main() {
     console.error('coach-helper: --lan needs the pairing token (COACH_HELPER_TOKEN or --token; 16+ characters of [A-Za-z0-9_-])');
     process.exit(2);
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, busyWaitMs: a.busyWaitMs, timeoutS: a.timeoutS });
+  let match = null;
+  if (a.matchDir !== undefined || a.supervisor !== undefined) {
+    if (a.matchDir === undefined || !Number.isInteger(a.supervisor) || a.supervisor <= 1) {
+      console.error('coach-helper: the match launcher needs both --match-dir <dir under var/> and --supervisor <pid>');
+      process.exit(2);
+    }
+    const fh = resolve(cfg.repoRoot, cfg.forgeHome);
+    try {
+      match = createMatchLauncher({
+        repoRoot: cfg.repoRoot, matchDir: a.matchDir, supervisorPid: a.supervisor,
+        cardsZip: a.cardsZip ?? join(fh, 'res', 'cardsfolder', 'cardsfolder.zip'),
+        customCardsDir: join(resolve(cfg.repoRoot), 'forge-home', 'custom-cards'),
+        aiDir: join(fh, 'res', 'ai'),
+        timeoutMs: a.matchTimeoutS * 1000,
+        log: (s) => console.log(s),
+      });
+    } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
+  }
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, busyWaitMs: a.busyWaitMs, timeoutS: a.timeoutS, match });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -582,6 +629,7 @@ async function main() {
   if (a.lan) console.log(`COACH LAN       bound 0.0.0.0:${bound}; non-loopback requests need the pairing token; the LAN page's origin is http://<host>:${wsPort}`);
   console.log(`COACH CLAUDE    ${info.ok ? info.version : info.error}`);
   console.log(`COACH ORIGINS   ${cfg.origins.join(' ')}  (from ${cfg.file})`);
+  console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   const stop = () => { h.close(); process.exit(0); };
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
