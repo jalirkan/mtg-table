@@ -56,6 +56,14 @@ import java.util.Locale;
  *     worth.  {@link #parseLive} refuses it, and the game's AI seat
  *     ({@code MtgTable --ai-search}) parses with that.</li>
  * </ul>
+ *
+ * <p>{@code leaf} (the evaluator gates' one search flag, D352): {@code hand}
+ * (default: {@link SearchPolicy#leaf}, the hand-written score) or
+ * {@code eval:<model.json>} -- a rollout that does not finish the game is scored
+ * by D316's learned evaluator ({@code mtgtable.eval.PositionEvaluator}) instead,
+ * mapped onto the leaf's scale as {@code LEAF_SCALE · logit(P(win))}, so the
+ * margin, the reports and their win estimates keep their meaning.  The model
+ * reads only the searching seat's knowledge, so a live seat may use it.
  */
 public final class SearchConfig {
 
@@ -80,6 +88,13 @@ public final class SearchConfig {
     public final double untapped;
     /** Bench only: no determinization, the copies keep the real hidden cards (D350). */
     public final boolean oracle;
+
+    /**
+     * The learned evaluator's model file for the leaves, or null for the
+     * hand-written leaf (D352; {@code leaf=eval:<path>}).  Set only through
+     * {@link #withLeaf}, so the constructors above stay as they are.
+     */
+    public final String leafModel;
 
     /** The fewest complete rounds the {@code lcb} rule overrules Forge on (an sd from fewer is no sd). */
     public static final int LCB_MIN_ROUNDS = 3;
@@ -122,6 +137,41 @@ public final class SearchConfig {
         this.z = z;
         this.untapped = untapped;
         this.oracle = oracle;
+        this.leafModel = null;
+    }
+
+    /** D352: a copy of {@code base} whose leaves use the evaluator at {@code model} (null = the hand leaf). */
+    private SearchConfig(final SearchConfig base, final String model) {
+        this.budgetMs = base.budgetMs;
+        this.maxCandidates = base.maxCandidates;
+        this.horizonTurns = base.horizonTurns;
+        this.minRounds = base.minRounds;
+        this.margin = base.margin;
+        this.maxRounds = base.maxRounds;
+        this.priority = base.priority;
+        this.attacks = base.attacks;
+        this.blocks = base.blocks;
+        this.seed = base.seed;
+        this.attackTurns = base.attackTurns;
+        this.lcb = base.lcb;
+        this.z = base.z;
+        this.untapped = base.untapped;
+        this.oracle = base.oracle;
+        this.leafModel = model;
+    }
+
+    /**
+     * D352: this config with the leaf {@code hand} or {@code eval:<model.json>}.
+     * A path with a comma or a plus cannot be spelled in a seat config.
+     */
+    public SearchConfig withLeaf(final String leaf) {
+        if (leaf == null || leaf.isEmpty() || "hand".equals(leaf)) {
+            return leafModel == null ? this : new SearchConfig(this, null);
+        }
+        if (!leaf.startsWith("eval:") || leaf.length() <= 5 || leaf.matches(".*[,+\\s].*")) {
+            throw new IllegalArgumentException("search leaf= is hand or eval:<model.json> (no comma, plus or space): " + leaf);
+        }
+        return new SearchConfig(this, leaf.substring(5));
     }
 
     /** The horizon for a decision of kind {@code p}, {@code a} or {@code b}. */
@@ -161,6 +211,7 @@ public final class SearchConfig {
         double z = 1.0;
         double untapped = 1.0;
         boolean oracle = false;
+        String leaf = "hand";   // D352
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -186,8 +237,9 @@ public final class SearchConfig {
                     }
                     oracle = "1".equals(p[1]);
                     break;
+                case "leaf": leaf = p[1]; break;   // D352: hand | eval:<model.json>
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
-                        + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle)");
+                        + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle, leaf)");
                 }
             }
         }
@@ -198,7 +250,7 @@ public final class SearchConfig {
             throw new IllegalArgumentException("search override= is margin or lcb: " + override);
         }
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
-                what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle);
+                what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle).withLeaf(leaf);
     }
 
     @Override
@@ -219,6 +271,9 @@ public final class SearchConfig {
         }
         if (oracle) {
             sb.append(",oracle=1");
+        }
+        if (leafModel != null) {
+            sb.append(",leaf=eval:").append(leafModel);   // D352
         }
         return sb.toString();
     }

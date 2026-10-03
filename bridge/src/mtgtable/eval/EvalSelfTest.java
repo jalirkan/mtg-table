@@ -234,6 +234,36 @@ public final class EvalSelfTest {
                         + "model %s; checksum %.3f)",
                 tEnc / 1000.0 / n, tPred / 1000.0 / n, n, model.schema().size(), describe(model), sink % 1));
 
+        // ---- 5. D352: the search's one evaluator flag, leaf=eval:<model.json> (engine-free)
+        final String mp = dir.resolve("model.json").toString();
+        final mtgtable.ai.SearchConfig hand = mtgtable.ai.SearchConfig.parse("");
+        final mtgtable.ai.SearchConfig withEval = mtgtable.ai.SearchConfig.parse("rounds=3,maxrounds=3,leaf=eval:" + mp);
+        check(hand.leafModel == null && !hand.toString().contains("leaf"), "the default leaf is the hand leaf, printed as before");
+        check(mp.equals(withEval.leafModel) && withEval.minRounds == 3 && withEval.maxRounds == 3,
+                "leaf=eval:<model> keeps the other keys and names the model");
+        check(mtgtable.ai.SearchConfig.parse(withEval.toString()).leafModel.equals(mp), "leaf=eval round-trips through toString");
+        check(mtgtable.ai.SearchConfig.parse("leaf=hand").leafModel == null, "leaf=hand is the hand leaf");
+        check(mtgtable.ai.SearchConfig.parseLive("leaf=eval:" + mp).leafModel != null,
+                "a live seat may use the evaluator (it reads only the seat's own knowledge, D316)");
+        for (final String bad : new String[] {"leaf=eval:", "leaf=net", "leaf=eval:a+b.json"}) {
+            boolean no = false;
+            try {
+                mtgtable.ai.SearchConfig.parse(bad);
+            } catch (final IllegalArgumentException e) {
+                no = true;
+            }
+            check(no, "refused: " + bad);
+        }
+        final PositionEvaluator ev1 = mtgtable.ai.SearchPolicy.evaluator(mp);
+        check(ev1 == mtgtable.ai.SearchPolicy.evaluator(mp), "one loaded evaluator per model path, shared");
+        boolean missing = false;
+        try {
+            mtgtable.ai.SearchPolicy.evaluator(dir.resolve("no-such-model.json").toString());
+        } catch (final IllegalArgumentException e) {
+            missing = true;
+        }
+        check(missing, "a model that cannot be loaded is an error, never a silent hand leaf");
+
         if (failures > 0) {
             System.out.println("EVAL SELFTEST FAILED: " + failures + " of " + checks + " checks");
             System.exit(1);

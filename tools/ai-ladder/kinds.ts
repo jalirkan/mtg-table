@@ -19,6 +19,7 @@
 // Plugging a new AI in is one row here: its params, its cfg() mapping onto the
 // bench's seat syntax, and an available() probe for the files it needs.
 
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -129,16 +130,46 @@ export const KINDS: Record<string, Kind> = {
   },
 };
 
-// The search with a learned evaluator at its leaves (branch c/evaluator).  Its
-// bench option does not exist yet, so the kind is declared -- players can be
-// registered and are listed -- but always unavailable until a cfg() mapping
-// onto the bench's syntax is written here.
+// The search with the learned evaluator at its leaves (D316's model through
+// D352's one search flag, `leaf=eval:<model.json>`).  `model` is the first 12
+// hex of the model file's sha256, and the file is var/ml/models/eval-<model>.json
+// (tools/ml/gate_sprt.py puts it there and registers the player): the name and
+// the config hash then pin the exact model, and a file whose content does not
+// match its name makes the player unavailable instead of rating another model.
+export const EVAL_MODEL_DIR = 'var/ml/models';
+export const evalModelPath = (hash: ParamValue): string => `${EVAL_MODEL_DIR}/eval-${hash}.json`;
+
 KINDS['search-eval'] = {
-  doc: "D312's search scoring leaves with a learned evaluator (branch c/evaluator): `model` is the model file's hash.",
-  params: { ...KINDS.search!.params, model: { type: 'text', default: '', doc: "the evaluator model's content hash" } },
-  cfg: () => { throw new Error('search-eval has no ai-bench seat option yet'); },
-  available: () => 'the learned evaluator has no ai-bench seat option yet (branch c/evaluator)',
+  doc: "D312's search scoring the leaves of unfinished rollouts with D316's learned evaluator (D352): `model` is the 12-hex sha256 prefix of var/ml/models/eval-<model>.json.",
+  params: { ...KINDS.search!.params, model: { type: 'text', default: '', doc: "the evaluator model's content hash (12 hex of its sha256)" } },
+  cfg: (p) => {
+    const { model, ...search } = p;
+    if (!/^[0-9a-f]{12}$/.test(String(model))) throw new Error(`search-eval.model must be 12 hex (the model file's sha256 prefix), got ${JSON.stringify(model)}`);
+    const file = evalModelPath(model as string);
+    let got: string;
+    try {
+      got = createHash('sha256').update(readFileSync(join(REPO_FOR_MODELS.root, file))).digest('hex').slice(0, 12);
+    } catch {
+      throw new Error(`search-eval: ${file} is not here (tools/ml/gate_sprt.py register puts it there)`);
+    }
+    if (got !== model) throw new Error(`search-eval: ${file} hashes to ${got}, not ${model} -- the file changed; register the new model under its own name`);
+    return `${KINDS.search!.cfg(search)},leaf=eval:${file}`;
+  },
+  available: (repo) => {
+    REPO_FOR_MODELS.root = repo;
+    const s = KINDS.search!.available(repo);
+    if (s) return s;
+    try {
+      if (!readFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8').includes('case "leaf"')) return 'the search has no leaf= flag in this checkout (D352)';
+    } catch {
+      return 'the search has no leaf= flag in this checkout (D352)';
+    }
+    return null;
+  },
 };
+
+/** Where `search-eval` reads its model files from: the repo `available()` was last asked about (the ladder's REPO). */
+const REPO_FOR_MODELS = { root: '.' };
 
 /** Fill defaults and check every param against the kind; throws on an unknown param or a bad value. */
 export function resolveParams(kindName: string, params: Params): Params {

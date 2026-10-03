@@ -454,3 +454,30 @@ test('experiment log: a start with no end is abandoned; ends join their starts',
   const rows = joinLog(lines, Date.parse('2026-10-03T12:00:00.000Z'));
   assert.deepEqual(rows.map((r) => r.status), ['finished', 'abandoned', 'running?']);
 });
+
+test('search-eval (D352): the search with leaf=eval:<model>, pinned to the model file by its content hash', async () => {
+  const { createHash } = await import('node:crypto');
+  const repo = mkdtempSync(join(tmpdir(), 'ladder-eval-'));
+  mkdirSync(join(repo, 'tools/ai-bench'), { recursive: true });
+  mkdirSync(join(repo, 'bridge/src/mtgtable/ai'), { recursive: true });
+  mkdirSync(join(repo, 'var/ml/models'), { recursive: true });
+  writeFileSync(join(repo, 'tools/ai-bench/AiBench.java'), '// +search');
+  const params = { profile: 'Default', outlets: 'on', budgetMs: 60000, rounds: 3, maxRounds: 3, seed: 1 } as const;
+  // a checkout whose search has no leaf= flag: unavailable, not a crash
+  writeFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'class SearchConfig {}');
+  const body = '{"format":"mtgtable-position-eval"}\n';
+  const hash = createHash('sha256').update(body).digest('hex').slice(0, 12);
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo).unavailable!, /no leaf= flag/);
+  writeFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'case "leaf": leaf = p[1];');
+  // the model file missing, then present, then changed
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo).unavailable!, /is not here/);
+  writeFileSync(join(repo, `var/ml/models/eval-${hash}.json`), body);
+  const p = resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo);
+  assert.equal(p.unavailable, null);
+  assert.equal(p.cfg, `Default+outlets+search:ms=60000,cands=6,turns=0,rounds=3,margin=20,maxrounds=3,what=pab,seed=1,leaf=eval:var/ml/models/eval-${hash}.json`);
+  const fixed3 = resolvePlayer({ name: 'f', kind: 'search', params }, repo);
+  assert.equal(p.cfg, `${fixed3.cfg},leaf=eval:var/ml/models/eval-${hash}.json`, 'the same search, only the leaf differs');
+  writeFileSync(join(repo, `var/ml/models/eval-${hash}.json`), body + ' ');
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo).unavailable!, /hashes to/);
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: 'abc' } }, repo).unavailable!, /12 hex/);
+});

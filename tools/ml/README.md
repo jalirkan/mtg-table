@@ -248,6 +248,54 @@ run, copied under the checkout). **Send back** the `.txt` reports
 At 50,000 games (~5 M rows) the dataset is a few GB of shards and training
 holds the card block sparse (~1.5 GB); `--batch 4096` is faster on the 9700X.
 
+## The evaluator's three gates (D352)
+
+The search uses the learned evaluator at its leaves (`SearchConfig`
+`leaf=eval:<model.json>`) only after three gates pass, in order. Each gate's
+rule is fixed in `gates.py` (`FIT_RULE`, `REGRET_RULE`, `SPRT_RULE`) and in
+D352. Each script prints `PASS` or `FAIL` and takes no flag that loosens the
+rule. A failed gate is not lowered: collect another night and retry.
+
+```bash
+M=var/ml/models/night-1-eval.json        # train_eval.py ... --split-by pair --out $M
+# gate 1: the held-out fit (core baseline on decision rows; the fitted leaf on rebuilt turn ends; calibration)
+python3 tools/ml/gate_fit.py heldout --model $M --out var/ml/gates/fit/heldout.txt
+tools/ml/leaf-rows.sh --list var/ml/gates/fit/heldout.txt --model $M --out var/ml/gates/fit/leaf-rows.jsonl
+python3 tools/ml/gate_fit.py score --model $M --leaf-rows var/ml/gates/fit/leaf-rows.jsonl --report var/ml/gates/fit/report.json
+# gate 2: regret against full-game truth tables, on ~300 held-out decisions
+R=var/ml/gates/regret
+python3 tools/ml/gate_regret_build.py candidates --model $M --logs var/cubelab/queue --out $R/candidates.jsonl
+python3 tools/ml/gate_regret_grade.py rank --leaf hand --requests $R/candidates.jsonl --out $R/rank-hand-3.jsonl --jobs 7
+python3 tools/ml/gate_regret_build.py select --candidates $R/candidates.jsonl --screen $R/rank-hand-3.jsonl --out $R/set.jsonl
+python3 tools/ml/gate_regret_grade.py truth --requests $R/set.jsonl --out $R/truth.jsonl --jobs 7      # a night; resumable
+python3 tools/ml/gate_regret_grade.py rank --leaf eval:$M --requests $R/set.jsonl --out $R/rank-eval-3.jsonl --jobs 7
+python3 tools/ml/gate_regret_score.py --set $R/set.jsonl --truth $R/truth.jsonl --hand $R/rank-hand-3.jsonl \
+    --eval $R/rank-eval-3.jsonl --report $R/report.json
+# gate 3: the SPRT, search-v1-fixed3 with the evaluator's leaves against search-v1-fixed3
+N=$(python3 tools/ml/gate_sprt.py register --model $M --registry var/ml/gates/players.json)
+tools/ai-ladder.sh sprt $N search-v1-fixed3 --elo0 0 --elo1 20 --max-games 2400 --registry var/ml/gates/players.json --jobs 7
+python3 tools/ml/gate_sprt.py verdict --name $N --report var/ml/gates/sprt.json
+```
+
+How each gate works:
+
+- **Gate 2's grading** goes through `coach-grade.sh serve`, the live analysis.
+  - D348's hidden-information guard therefore holds. The opponent's hidden
+    cards come from the run's cube list (pool mode), and the opponent's deck
+    list is never sent.
+  - `gate_regret_grade.py` runs K serve JVMs, each with its own Forge home. It
+    writes an answer line per decision as it comes, and a rerun skips every
+    answered decision.
+  - A JVM that dies or hangs is restarted.
+  - `<out>.meta.json` stamps the code version, and a resume under another
+    version is refused (D341).
+- **The rankers** score the same end-of-this-turn rollouts. Only the leaf
+  differs: the hand leaf through σ(leaf/500), or the evaluator's P(win).
+- **`gate_metrics.py`** prints flat numbers for the lab runner's checks.
+- **The tests** are `tests/test_gates.py`. They run every rule on synthetic
+  numbers whose answer is known, and drive the grading driver with a fake
+  `serve`.
+
 ## Hardware: the owner's desktop
 
 Ryzen 7 9700X (8 cores, 16 threads), 30 GB, a GTX 1080 (8 GB) until the RTX 50
