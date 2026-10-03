@@ -1,9 +1,7 @@
-waiting
-reason: pilot approved; the runner runs the commands
+running
 runner: forgecoach-runner 6fbcdea
-started: 2026-10-03T13:33:06-04:00
-finished: 2026-10-03T13:33:43-04:00
-mtg-table: bf3dca7
-workers: 3
+started: 2026-10-03T13:35:58-04:00
+phase: prepare
+workers: 1
 peak_worker_rss_gb: 0.76
-approved: 2026-10-03T13:34:59-04:00 by justin-a
+approved: pilot approved; the runner skipped it

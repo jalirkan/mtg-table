@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T13:35:20-04:00
+- time: 2026-10-03T13:35:58-04:00
 - runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00
-- running: the lab runner owns the queue; J019 approved by the PC session 13:38 after its pilot checks (build OK, 4 .gz, redaction exit 0, 0 ENGINE ERROR)
-- load: 2.71; memory 6.7/30.5 GB, swap 934 MB, pressure 0% (lab budget 23.4 GB)
+- running: J019 prepare, 1 worker(s)
+- load: 0.71; memory 6.3/30.5 GB, swap 934 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J016, J017, J018, J020, J021, J022
-- waiting: J019 (needs a human/Claude check: the job file has no check: lines, so the runner ran the pilot only)
-- last finished: J010 done (shakedown passed: 48 games, peak worker RSS 1.03 GB); J009 failed pilot (exit 128), J015 failed (fit.rows 34) — retries J021, J022 queued
+- waiting: nothing
+- last finished: J015 failed at 2026-10-03T13:30:51-04:00: fit.scale -10325 · fit.scaleLo -10324.964 · fit.scaleHi -10324.964 · fit.games 1 · b1500.retired 0 · b3000.retired 0 · b3000.p90_wall_s 0
 
 ## Messages
 
