@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:15:57-04:00",
+ "updated": "2026-10-03T13:20:33-04:00",
  "paused": true,
  "host": {
-  "load1": 0.09,
-  "memUsedGb": 5.9,
+  "load1": 0.34,
+  "memUsedGb": 6,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
