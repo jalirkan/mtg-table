@@ -1,5 +1,5 @@
 id: J004
-title: Omega evolve rerun, 1,200 drafts a generation (Justin's request)
+title: [SUPERSEDED by J009, skip] Omega evolve rerun, 1,200 drafts a generation (Justin's request)
 cpu: heavy
 after: J005
 repos: mtg-table@main
@@ -13,6 +13,11 @@ Before starting, `git pull` mtg-table: main now has `--record-all`. Add it to th
 command if evolve accepts it (check `tools/cubelab.sh evolve --help`), so its games are
 kept as training data. If evolve doesn't take it, run it as it is and say so. If J005 showed
 recording costs more than 30% of wall time, run without it and say so.
+
+**Superseded (2026-10-03):** evolve's cut rule changed (D331: cuts are confirmed on fresh
+seeds, and repeated looks are no longer pooled). J009 runs the same Omega rerun under the new
+rule with recording. Write STATUS `skipped`, reason "superseded by J009", unless Justin asks
+for the old-rule run.
 
 ## Pilot
 Run evolve with 1 generation of 50 drafts into var/cubelab/evolve/omega-pilot.
