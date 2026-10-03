@@ -93,6 +93,13 @@ public final class Rebuild {
         public Map<String, Integer> oppDeck;
         /** Else a card pool to draw a plausible deck from (a cube's list), or null. */
         public Map<String, Integer> oppPool;
+        /**
+         * The viewer's whole drafted pool (their deck's main and sideboard), or
+         * null: in pool mode none of it can be the opponent's (D348).
+         */
+        public Map<String, Integer> ownPool;
+        /** AI picks the viewer SAW during the draft (ForgeCoach's knownAiCards), or null: drawn first in pool mode (D348). */
+        public Map<String, Integer> oppKnown;
         public String oppSource = "unknown";
         /** The plausible deck's shape in pool mode. */
         public int deckSize = 40;
@@ -198,37 +205,7 @@ public final class Rebuild {
 
     /** A .dck's [Main] (or a plain "N Name" / "Name" list): name -> copies.  No Forge call. */
     public static Map<String, Integer> readList(final File f) throws IOException {
-        final Map<String, Integer> out = new LinkedHashMap<>();
-        String section = "main";
-        for (final String raw : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) {
-            final String l = raw.trim();
-            if (l.isEmpty() || l.startsWith("#") || l.startsWith("//")) {
-                continue;
-            }
-            if (l.startsWith("[")) {
-                section = l.substring(1, l.indexOf(']') > 0 ? l.indexOf(']') : l.length()).trim().toLowerCase(Locale.ROOT);
-                continue;
-            }
-            if (!section.equals("main")) {
-                continue;
-            }
-            if (l.contains("=") && !l.matches("^\\d+\\s.*")) {
-                continue;   // [metadata] style key=value outside a section header
-            }
-            final java.util.regex.Matcher m = java.util.regex.Pattern.compile("^(\\d+)\\s*x?\\s+(.+)$").matcher(l);
-            int n = 1;
-            String name = l;
-            if (m.matches()) {
-                n = Integer.parseInt(m.group(1));
-                name = m.group(2);
-            }
-            final int bar = name.indexOf('|');
-            if (bar >= 0) {
-                name = name.substring(0, bar);
-            }
-            out.merge(name.trim(), n, Integer::sum);
-        }
-        return out;
+        return HiddenPool.readList(f, false);
     }
 
     // ------------------------------------------------------------------
@@ -253,7 +230,6 @@ public final class Rebuild {
 
         // Who has been seen, by owner (tokens are never in a deck).
         final List<List<String>> seen = new ArrayList<>();
-        final Set<String> seenAll = new HashSet<>();
         for (int i = 0; i < 2; i++) {
             seen.add(new ArrayList<>());
         }
@@ -276,17 +252,15 @@ public final class Rebuild {
             if (owner >= 0) {
                 seen.get(owner).add(n);
             }
-            seenAll.add(n);
         }
 
         for (final String n : tw.extraHand.values()) {
             seen.get(viewerIdx).add(n);
-            seenAll.add(n);
         }
         // The hidden cards of each side.
         final int opp = 1 - viewerIdx;
         final List<String> ownLibrary = ownHidden(seen.get(viewerIdx), b);
-        final List<String> oppHidden = oppHidden(seen.get(opp), seenAll, rnd, b);
+        final List<String> oppHidden = oppHidden(seen.get(opp), seen.get(viewerIdx), rnd, b);
         Collections.shuffle(ownLibrary, rnd);
         Collections.shuffle(oppHidden, rnd);
 
@@ -553,7 +527,7 @@ public final class Rebuild {
     }
 
     /** The opponent's hand + library (+ unknown face-down cards): deck minus seen, or a plausible deck from the pool. */
-    private List<String> oppHidden(final List<String> oppSeen, final Set<String> seenAll, final Random rnd, final Base b) {
+    private List<String> oppHidden(final List<String> oppSeen, final List<String> ownSeen, final Random rnd, final Base b) {
         final Map<?, ?> p = player(1 - viewerIdx);
         int need = 0;
         need += count(p, "hand");
@@ -600,7 +574,10 @@ public final class Rebuild {
             out.addAll(basicsFor(colorsOf(oppSeen), need));
             return out;
         }
-        // A plausible deck from the pool: spells of the opponent's seen colours, basics for the rest.
+        // A plausible deck from the pool (D348): the pool minus everything of the
+        // viewer's (deck, drafted pool, public copies) and every public card of
+        // the opponent's; the AI picks the viewer saw first, then spells of the
+        // opponent's seen colours, basics for the rest.
         final Set<Character> colors = colorsOf(oppSeen);
         int publicLands = 0;
         for (final String n : oppSeen) {
@@ -610,21 +587,30 @@ public final class Rebuild {
         final int landsLeft = Math.max(0, know.lands - publicLands);
         final int left = Math.max(1, know.deckSize - oppSeen.size());
         final int lands = Math.min(need, (int) Math.round((double) need * landsLeft / left));
+        final Map<String, Integer> rest = HiddenPool.remainder(know.oppPool, know.ownDeck, know.ownPool, ownSeen, oppSeen);
+        final Map<String, Integer> known = HiddenPool.knownHidden(know.oppKnown, rest, oppSeen);
+        final List<String> first = new ArrayList<>();
         final List<String> spells = new ArrayList<>();
-        for (final Map.Entry<String, Integer> e : new TreeMap<>(know.oppPool).entrySet()) {
-            if (seenAll.contains(e.getKey())) {
-                continue;
-            }
+        for (final Map.Entry<String, Integer> e : rest.entrySet()) {
             final CardRules r = rules(e.getKey());
-            if (r == null || r.getType().isLand() || !within(r, colors)) {
+            if (r == null || r.getType().isLand()) {
                 continue;
             }
-            for (int i = 0; i < e.getValue(); i++) {
+            final int k = HiddenPool.get(known, e.getKey());
+            for (int i = 0; i < k; i++) {
+                first.add(e.getKey());   // seen picked by the AI: in its pool for sure, whatever the colours
+            }
+            if (!within(r, colors)) {
+                continue;
+            }
+            for (int i = k; i < e.getValue(); i++) {
                 spells.add(e.getKey());
             }
         }
+        Collections.shuffle(first, rnd);
         Collections.shuffle(spells, rnd);
-        out.addAll(spells.subList(0, Math.min(need - lands, spells.size())));
+        first.addAll(spells);
+        out.addAll(first.subList(0, Math.min(Math.max(0, need - lands), first.size())));
         out.addAll(basicsFor(colors, need - out.size()));
         return out;
     }

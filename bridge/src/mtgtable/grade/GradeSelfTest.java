@@ -30,8 +30,11 @@ import java.util.Set;
  * The coach grader's engine-free self-test (D334), run by
  * {@code bridge/build.sh}: CRN seeds, the intervals, the regret table, racing,
  * the enumeration by class, the bench's token spelling, and the log reader's
- * moments.  No Forge class is loaded (Jetty's JSON parser aside, through
- * {@link WireLog}).
+ * moments; and D348–D351's: the leaf measure's intervals and their coverage in a
+ * small simulation, racing at live round counts, the leaf-scale fit, the
+ * search's override rules, the pool-mode arithmetic and the planted-leak test
+ * of the live knowledge guard.  No Forge class is initialised (Jetty's JSON
+ * parser aside, through {@link WireLog}).
  */
 public final class GradeSelfTest {
 
@@ -45,6 +48,8 @@ public final class GradeSelfTest {
         if (!ok) {
             failures++;
             System.out.println("FAIL: " + what);
+        } else if (Boolean.getBoolean("grade.verbose")) {
+            System.out.println("ok   " + what);
         }
     }
 
@@ -60,6 +65,17 @@ public final class GradeSelfTest {
         enumeration();
         tokens();
         wireLog();
+        leafMeasure();
+        coverage();
+        liveRacing();
+        fitScale();
+        overrideRule();
+        hiddenPool();
+        try {
+            plantedLeak();
+        } catch (final java.io.IOException e) {
+            check(false, "the planted-leak test could not write its files: " + e);
+        }
         System.out.println("grade selftest: " + checks + " check(s), " + failures + " failure(s)");
         System.exit(failures == 0 ? 0 : 1);
     }
@@ -230,5 +246,275 @@ public final class GradeSelfTest {
             threw = true;
         }
         check(threw, "a review moment on a non-state frame is refused");
+    }
+
+    // ------------------------------------------------------------------
+    // D349: the leaf measure, coverage, live racing, the scale fit
+    // ------------------------------------------------------------------
+
+    static void leafMeasure() {
+        check(near(GradeMath.tQuantile(0.975, 5), 2.5706, 1e-3) && near(GradeMath.tQuantile(0.975, 1), 12.706, 1e-2)
+                && near(GradeMath.tQuantile(0.995, 3), 5.8409, 1e-3) && near(GradeMath.tQuantile(0.975, 1000), 1.9623, 1e-3),
+                "Student's t quantiles (2.571 at 5 df, 12.71 at 1, 5.841 at 99%/3, 1.962 at 1000)");
+        check(near(GradeMath.normalCdf(GradeMath.Z95), 0.975, 1e-6), "the normal CDF at 1.96 is 0.975");
+        // The review's acceptance case: a leaf-mode table at n = 6 with paired sd 0.03 is under +-0.05.
+        final Random rnd = new Random(31);
+        final double[][] x = new double[2][6];
+        for (int r = 0; r < 6; r++) {
+            final double common = 0.5 + 0.1 * rnd.nextGaussian();
+            x[0][r] = common + 0.05 + 0.03 / Math.sqrt(2) * rnd.nextGaussian();
+            x[1][r] = common + 0.03 / Math.sqrt(2) * rnd.nextGaussian();
+        }
+        final GradeMath.Row[] leaf = GradeMath.table(x, new boolean[] {true, true}, GradeMath.Z95, GradeMath.Measure.LEAF);
+        final GradeMath.Row[] wins = GradeMath.table(x, new boolean[] {true, true}, GradeMath.Z95, GradeMath.Measure.WINS);
+        final double hw = (leaf[1].regretHi - leaf[1].regretLo) / 2;
+        check(hw < 0.05, "leaf measure, n = 6, paired sd 0.03: regret half-width " + hw + " < 0.05");
+        final double floorHw = GradeMath.Z95 * GradeMath.pairedDiff(x[0], x[1], GradeMath.Measure.WINS)[1];
+        check(floorHw > 0.3 && wins[1].regretHi > leaf[1].regretHi, "the 1/n floor (WINS) at n = 6 was > +-0.3: " + floorHw);
+        final double[] flat = {0.5, 0.5, 0.5, 0.5};
+        check(near(GradeMath.pairedDiff(flat, flat, GradeMath.Measure.LEAF)[1], GradeMath.LEAF_SD_FLOOR / 2, 1e-12),
+                "identical leaf values: the standard error is the floor's (sd 0.02), not 1/n");
+        check(near(GradeMath.pairedDiff(new double[] {0.6}, new double[] {0.5}, GradeMath.Measure.LEAF)[1], 0.5, 1e-12),
+                "one round: the sd is assumed at its largest (0.5), not estimated");
+        check(leaf[0].winHi - leaf[0].winLo < 0.3 && leaf[0].winLo >= 0 && leaf[0].winHi <= 1,
+                "a leaf-mode win interval is a t interval on the mean, inside [0,1]");
+    }
+
+    /** Coverage of the 95% paired interval, leaf measure, on normal data with a known difference. */
+    static double[] coverageOf(final int n, final double sd, final GradeMath.Measure m, final int reps, final long seed) {
+        final Random rnd = new Random(seed);
+        int cover = 0;
+        double width = 0;
+        final double truth = 0.04;
+        for (int t = 0; t < reps; t++) {
+            final double[] a = new double[n];
+            final double[] b = new double[n];
+            for (int r = 0; r < n; r++) {
+                b[r] = 0.5 + 0.1 * rnd.nextGaussian();
+                a[r] = b[r] + truth + sd * rnd.nextGaussian();
+            }
+            final double[] d = GradeMath.pairedDiff(a, b, m);
+            final double h = GradeMath.crit(GradeMath.Z95, n, m) * d[1];
+            cover += Math.abs(d[0] - truth) <= h ? 1 : 0;
+            width += h;
+        }
+        return new double[] {(double) cover / reps, width / reps};
+    }
+
+    static void coverage() {
+        final StringBuilder sb = new StringBuilder();
+        boolean ok = true;
+        for (final int n : new int[] {4, 6, 12}) {
+            for (final double sd : new double[] {0.06, 0.12}) {
+                final double[] after = coverageOf(n, sd, GradeMath.Measure.LEAF, 4000, 7 * n + (long) (sd * 1000));
+                final double[] before = coverageOf(n, sd, GradeMath.Measure.WINS, 4000, 7 * n + (long) (sd * 1000));
+                ok &= after[0] >= 0.93 && after[0] <= 0.975 && after[1] < before[1] / 2;
+                sb.append(String.format(java.util.Locale.ROOT, " n=%d sd=%.2f: %.3f +-%.3f (1/n floor: %.3f +-%.3f);", n, sd,
+                        after[0], after[1], before[0], before[1]));
+            }
+        }
+        check(ok, "the leaf interval covers 93-97.5% at nominal 95% and is under half the floor's width:" + sb);
+    }
+
+    static void liveRacing() {
+        final double[] p = {0.60, 0.50, 0.45, 0.40, 0.35};
+        int retiredLeaf = 0;
+        int retiredWins = 0;
+        int bestLost = 0;
+        for (int t = 0; t < 40; t++) {
+            for (final GradeMath.Measure m : GradeMath.Measure.values()) {
+                final Random rnd = new Random(100 + t);
+                final Map<Long, Double> common = new java.util.HashMap<>();
+                final Racer.Config c = new Racer.Config();   // the live analysis's racing (CoachGrade.liveSettings)
+                c.target = 8;
+                c.initial = 4;
+                c.batch = 2;
+                c.measure = m;
+                final Racer.Result res = Racer.run(p.length, "live" + t, 9, c, (i, r, seed) ->
+                        p[i] + common.computeIfAbsent(seed, s -> 0.05 * rnd.nextGaussian()) + 0.06 / Math.sqrt(2) * rnd.nextGaussian());
+                int retired = 0;
+                for (final boolean a : res.active) {
+                    retired += a ? 0 : 1;
+                }
+                if (m == GradeMath.Measure.LEAF) {
+                    retiredLeaf += retired;
+                    bestLost += res.active[0] ? 0 : 1;
+                } else {
+                    retiredWins += retired;
+                }
+            }
+        }
+        check(retiredLeaf >= 40 * 3 && bestLost == 0, "live racing (8 rounds, from round 4) retires clearly worse options: "
+                + retiredLeaf / 40.0 + " of 4 a decision, the best never (" + bestLost + " of 40)");
+        check(retiredWins == 0, "under the 1/n floor the same racing retired nothing (" + retiredWins + ")");
+    }
+
+    static void fitScale() {
+        final Random rnd = new Random(77);
+        final int n = 20000;
+        final double[] x = new double[n];
+        final double[] y = new double[n];
+        final List<double[]> rows = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            x[i] = (rnd.nextDouble() * 2 - 1) * 1500;
+            y[i] = rnd.nextDouble() < GradeMath.sigmoid(x[i] / 300) ? 1 : 0;
+            rows.add(new double[] {x[i], y[i], i % 200});
+        }
+        final double scale = 1 / GradeMath.fitSlope(x, y);
+        check(near(scale, 300, 15), "the leaf-scale fit recovers a known scale of 300: " + scale);
+        final double[] ab = GradeMath.fitLogistic(x, y);
+        check(Math.abs(ab[0]) < 0.06 && near(1 / ab[1], 300, 15), "the two-parameter fit: intercept ~0, scale ~300 ("
+                + ab[0] + ", " + 1 / ab[1] + ")");
+        check(GradeMath.logLoss(x, y, 0, 1 / scale) < GradeMath.logLoss(x, y, 0, 1.0 / 400),
+                "the fitted scale's log-loss beats 400's on its own data");
+        final Map<?, ?> rep = (Map<?, ?>) mtgtable.Json.parse(CoachGrade.fitReport(rows, 200, 200, new int[3], 20, "synthetic"));
+        final double rs = ((Number) rep.get("scale")).doubleValue();
+        final double lo = ((Number) rep.get("scaleLo")).doubleValue();
+        final double hi = ((Number) rep.get("scaleHi")).doubleValue();
+        check(near(rs, 300, 15) && lo < rs && rs < hi && WireLog.arr(rep, "reliability").length >= 8,
+                "fit-scale's report: scale " + rs + " [" + lo + ", " + hi + "] with a reliability table");
+    }
+
+    static void overrideRule() {
+        final mtgtable.ai.SearchConfig margin = mtgtable.ai.SearchConfig.parse("");
+        final mtgtable.ai.SearchConfig lcb = mtgtable.ai.SearchConfig.parse("override=lcb,z=1,margin=0");
+        check("ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab".equals(margin.toString()),
+                "the default search config prints as before D350: " + margin);
+        check(margin.horizonFor("a") == 0 && mtgtable.ai.SearchConfig.parse("aturns=1").horizonFor("a") == 1
+                && mtgtable.ai.SearchConfig.parse("aturns=1").horizonFor("p") == 0, "aturns=1 lengthens attacks only");
+        boolean refused = false;
+        try {
+            mtgtable.ai.SearchConfig.parseLive("oracle=1");
+        } catch (final IllegalArgumentException e) {
+            refused = true;
+        }
+        check(refused && mtgtable.ai.SearchConfig.parse("oracle=1").oracle, "oracle=1 parses for the bench and is refused live");
+        // A noisy alternative: +30 on average, but one round of three carries it.
+        final List<double[]> noisy = List.of(new double[] {100, 250}, new double[] {100, 130}, new double[] {100, 10});
+        final List<double[]> steady = List.of(new double[] {100, 128}, new double[] {100, 131}, new double[] {100, 127});
+        final mtgtable.ai.SearchPolicy.Report rn = new mtgtable.ai.SearchPolicy.Report();
+        mtgtable.ai.SearchPolicy.Report.fillStats(rn, noisy, List.of(), 2);
+        final mtgtable.ai.SearchPolicy.Report rs = new mtgtable.ai.SearchPolicy.Report();
+        mtgtable.ai.SearchPolicy.Report.fillStats(rs, steady, List.of(), 2);
+        check(near(rn.diffLeaf[1], 30, 1e-9) && rn.seDiff[1] > 50 && near(rs.diffLeaf[1], 28.67, 0.01) && rs.seDiff[1] < 2,
+                "the report's paired difference and its standard error (noisy " + rn.diffLeaf[1] + "+-" + rn.seDiff[1]
+                + ", steady " + rs.diffLeaf[1] + "+-" + rs.seDiff[1] + ")");
+        check(mtgtable.ai.SearchPolicy.Report.verdict(margin, rn, 1, 3) == 1 && mtgtable.ai.SearchPolicy.Report.verdict(lcb, rn, 1, 3) == 0,
+                "the margin rule takes the noisy +30, the lcb rule keeps Forge's");
+        check(mtgtable.ai.SearchPolicy.Report.verdict(lcb, rs, 1, 3) == 1 && mtgtable.ai.SearchPolicy.Report.verdict(lcb, rs, 1, 2) == 0,
+                "the lcb rule takes a steady +29 over 3 rounds, and never over fewer than 3");
+    }
+
+    // ------------------------------------------------------------------
+    // D348: hidden information -- pool mode and the live guard
+    // ------------------------------------------------------------------
+
+    static void hiddenPool() {
+        final Map<String, Integer> pool = HiddenPool.count(List.of("A", "B", "C", "D", "E", "F", "G", "Island"));
+        final Map<String, Integer> ownDeck = HiddenPool.count(List.of("A", "Island", "Island"));
+        final Map<String, Integer> ownPool = HiddenPool.count(List.of("A", "B", "Island", "Island"));
+        final Map<String, Integer> rest = HiddenPool.remainder(pool, ownDeck, ownPool, List.of("C"), List.of("D"));
+        check(rest.keySet().equals(new java.util.TreeSet<>(List.of("E", "F", "G"))),
+                "pool mode: minus the viewer's deck (A), drafted pool (B), public cards of theirs (C) and the opponent's (D): " + rest);
+        final Map<String, Integer> known = HiddenPool.knownHidden(HiddenPool.count(List.of("E", "D", "A")), rest, List.of("D"));
+        check(known.keySet().equals(java.util.Set.of("E")), "known AI picks still hidden: E (D is public, A is the viewer's): " + known);
+        check(HiddenPool.parseNames("2 Lightning Bolt; Kongming, \"Sleeping Dragon\"").equals(
+                HiddenPool.count(List.of("Lightning Bolt", "Lightning Bolt", "Kongming, \"Sleeping Dragon\""))),
+                "known picks parse as \"N Name\" entries split on ';' (names keep their commas)");
+    }
+
+    /**
+     * The planted-leak test (D348, the review's H3): the AI's real list sits
+     * where the match launcher writes it, and the log header names it; a live
+     * analysis's knowledge must be byte-identical with the file present and
+     * deleted, and every way of handing it in without the public flag must be
+     * refused.  The negative control -- the same list marked public -- must
+     * change the knowledge, or the test proves nothing.
+     */
+    static void plantedLeak() throws java.io.IOException {
+        final java.nio.file.Path root = java.nio.file.Files.createTempDirectory("grade-leak");
+        final java.io.File dir = root.resolve("var/match/m1").toFile();
+        dir.mkdirs();
+        final StringBuilder ai = new StringBuilder("[metadata]\nName=AI Drafter\n[Main]\n17 Swamp\n");
+        final StringBuilder you = new StringBuilder("[Main]\n17 Island\n");
+        final StringBuilder cube = new StringBuilder();
+        for (int i = 0; i < 23; i++) {
+            ai.append("1 Secret AI Card ").append(i).append('\n');
+            you.append("1 Player Card ").append(i).append('\n');
+            cube.append("1 Secret AI Card ").append(i).append('\n').append("1 Player Card ").append(i).append('\n');
+        }
+        you.append("[Sideboard]\n1 Player Sideboard Card\n");
+        cube.append("1 Player Sideboard Card\n");
+        for (int i = 0; i < 80; i++) {
+            cube.append("1 Other Cube Card ").append(i).append('\n');
+        }
+        final java.io.File aiFile = new java.io.File(dir, "ai.dck");
+        java.nio.file.Files.writeString(aiFile.toPath(), ai);
+        java.nio.file.Files.writeString(new java.io.File(dir, "you.dck").toPath(), you);
+        java.nio.file.Files.writeString(root.resolve("cube.txt"), cube);
+        java.nio.file.Files.writeString(root.resolve("ai-copy.txt"), ai);
+        final WireLog log = WireLog.parse(List.of("{\"v\":1,\"kind\":\"session\",\"gameId\":\"leak\",\"seat\":0,\"decks\":["
+                + "{\"player\":0,\"path\":\"var/match/m1/you.dck\"},{\"player\":1,\"path\":\"var/match/m1/ai.dck\"}]}"));
+        final java.io.File r = root.toFile();
+        final CoachGrade.Flags live = new CoachGrade.Flags(new String[] {"--opp-pool", "cube.txt", "--opp-known",
+            "Secret AI Card 3; Secret AI Card 7"});
+        final String present = HiddenPool.describe(CoachGrade.liveKnowledge(r, log, live));
+        check(present.contains("Player Sideboard Card") && present.contains("oppPool={") && present.contains("oppDeck=null"),
+                "live knowledge is pool mode, with the viewer's whole drafted pool (sideboard included) to subtract");
+        check(present.contains("oppKnown={Secret AI Card 3=1, Secret AI Card 7=1}"), "the AI picks the player saw are carried");
+        java.nio.file.Files.delete(aiFile.toPath());
+        final String absent = HiddenPool.describe(CoachGrade.liveKnowledge(r, log, live));
+        check(present.equals(absent), "PLANTED LEAK: the live knowledge is byte-identical with the AI's real list present and deleted");
+        java.nio.file.Files.writeString(aiFile.toPath(), ai);
+        // Every way of handing the real list in without the public flag is refused.
+        final String[][] attempts = {
+            {"--opp-deck", "var/match/m1/ai.dck"},
+            {"--opp-deck", "ai-copy.txt"},
+            {"--opp-pool", "var/match/m1/ai.dck"},
+            {"--opp-pool", "ai-copy.txt"},
+            {"--opp-deck", "var/match/m1/ai.dck", "--opp-deck-public", "true"},
+            {"--opp-deck", "var/match/m1/ai.dck", "--opp-deck-public", ""},
+        };
+        int refused = 0;
+        for (final String[] a : attempts) {
+            try {
+                CoachGrade.liveKnowledge(r, log, new CoachGrade.Flags(a));
+            } catch (final HiddenPool.Refused e) {
+                refused++;
+            }
+        }
+        check(refused == attempts.length, "every live attempt to pass the AI's list (deck, pool, copy, public without a reason) is"
+                + " refused: " + refused + " of " + attempts.length);
+        // serve: a request's own fields decide; a server default cannot lend the public flag.
+        final CoachGrade.Flags req = new CoachGrade.Flags(new String[] {"--opp-deck", "var/match/m1/ai.dck",
+            "--opp-deck-public", "set by the server's defaults"});
+        CoachGrade.serveKnowledge(new java.util.HashMap<String, Object>(), req);
+        boolean serveRefused = false;
+        try {
+            CoachGrade.liveKnowledge(r, log, req);
+        } catch (final HiddenPool.Refused e) {
+            serveRefused = true;
+        }
+        check(serveRefused, "serve: a request that does not mark the list public is refused, whatever the server's defaults");
+        // The negative control: marked public with a reason, the list IS used -- so the guard is what kept it out.
+        final String pub = HiddenPool.describe(CoachGrade.liveKnowledge(r, log, new CoachGrade.Flags(new String[] {
+            "--opp-deck", "var/match/m1/ai.dck", "--opp-deck-public", "constructed: both lists shared"})));
+        check(!pub.equals(present) && pub.contains("Secret AI Card 0=1") && pub.contains("oppDeck={"),
+                "negative control: the same list marked public changes the knowledge (it carries the AI's cards)");
+        // Review grading keeps D334's rule: a named list is read.
+        final String review = HiddenPool.describe(CoachGrade.knowledge(r, log, new CoachGrade.Flags(new String[] {
+            "--opp-deck", "var/match/m1/ai.dck"})));
+        check(review.contains("oppDeck={"), "review grading (grade, batch) still reads a named opponent list");
+        // The pool-mode subtraction on the planted pool: none of the viewer's cards remain.
+        final Rebuild.Knowledge k = CoachGrade.liveKnowledge(r, log, live);
+        final Map<String, Integer> rest = HiddenPool.remainder(k.oppPool, k.ownDeck, k.ownPool, List.of(), List.of());
+        boolean clean = true;
+        for (final String n : rest.keySet()) {
+            clean &= !n.startsWith("Player");
+        }
+        check(clean && rest.size() == 23 + 80, "pool mode leaves the cube minus every card of the viewer's pool: " + rest.size());
+        try (java.util.stream.Stream<java.nio.file.Path> w = java.nio.file.Files.walk(root)) {
+            w.sorted(java.util.Comparator.reverseOrder()).forEach(q -> q.toFile().delete());
+        }
     }
 }

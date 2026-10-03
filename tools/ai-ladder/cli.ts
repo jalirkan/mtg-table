@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import type { BatchSpec } from './bench.ts';
 import { draftsOf, split, writeSets } from './decksets.ts';
 import { append, endLine, joinLog, readLog, startLine, type ExpStart } from './experiments.ts';
-import { KINDS, parseValue, type ParamValue } from './kinds.ts';
+import { KINDS, parseValue, testOnly, type ParamValue } from './kinds.ts';
 import { decide, LEAGUE_DEFAULTS, loadLeague, poolOf, saveLeague, type LeagueState } from './league.ts';
 import { buildLadder, renderHtml, type SprtLog, type TuneLog } from './report.ts';
 import { ANCHOR, addPlayer, nextName, resolvePlayer, writeRegistry, type Player } from './registry.ts';
@@ -146,7 +146,8 @@ function printRatings(s: Session, boot: number): void {
 
 function schedPlayers(s: Session, only: Set<string> | null): SchedPlayer[] {
   const f = s.fit();
-  return s.available.filter((p) => !only || only.has(p.name)).map((p) => {
+  // D350: a test-only player (the oracle) is rated only when --players names it.
+  return s.available.filter((p) => (only ? only.has(p.name) : !testOnly(p.resolved))).map((p) => {
     const r = f.ratings.get(p.name);
     return { name: p.name, anchor: !!p.anchor, rating: r?.rating ?? 1500, se: r?.se ?? 350, games: r?.games ?? 0 };
   });
@@ -361,7 +362,8 @@ async function cmdLeague(a: Args, argv: string[]): Promise<void> {
   const lo = { ...LEAGUE_DEFAULTS, poolSize: num(a, 'pool-size', LEAGUE_DEFAULTS.poolSize), share: num(a, 'share', LEAGUE_DEFAULTS.share), ni };
   const sp: SprtParams = { elo0: num(a, 'elo0', 0), elo1: num(a, 'elo1', 20), alpha: num(a, 'alpha', 0.05), beta: num(a, 'beta', 0.05), maxGames: num(a, 'max-games-per-test', 4000), minPairs: 8 };
   const anchor = s.playable(ANCHOR);
-  const pending = (): Player | null => s.available.find((p) => p.candidate && !L.decided[p.name] && p.name !== L.best) ?? null;
+  // D350: a test-only player (the oracle reads hidden cards) is never a candidate.
+  const pending = (): Player | null => s.available.find((p) => p.candidate && !testOnly(p.resolved) && !L.decided[p.name] && p.name !== L.best) ?? null;
   const st: SchedState = { batches: 0, anchorBatches: 0, pairGames: pairGames(s), running: new Map() };
   const finish = experiment(a, s, 'league', argv, s.available, hostBase(s.host) + 650_000, `league: candidate ${pending()?.name ?? '(none)'} beats best ${L.best} by >= ${sp.elo1} Elo (SPRT) AND is non-inferior to it vs forge-default within ${ni.margin} Elo (alpha ${ni.alpha}, power ${1 - ni.beta})`, purposeOf(s));
   let leagueBatches = 0, cycle = 0, fcycle = 0, started = 0;

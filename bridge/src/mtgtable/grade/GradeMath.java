@@ -42,7 +42,9 @@ import java.util.List;
  *     differences over the rounds both played, with a normal interval whose
  *     standard error is floored at 1/n (zero discordant rounds out of n still
  *     leave a difference of about 1/n unexcluded -- the rule of three's
- *     spirit).  Regret is at least 0, so the interval is clipped at 0.  The
+ *     spirit) for game results; for the live analysis's continuous leaf
+ *     scores, the sample sd and Student's t (D349, {@link Measure}).  Regret
+ *     is at least 0, so the interval is clipped at 0.  The
  *     best option's own interval runs from 0 to the largest amount by which
  *     another option might still beat it.</li>
  * <li><b>Racing</b> (adaptive allocation): after a minimum number of rounds,
@@ -103,8 +105,39 @@ public final class GradeMath {
         return new double[] {p, Math.max(0, centre - half), Math.min(1, centre + half)};
     }
 
-    /** Mean, standard error (floored at 1/n) and n of {@code a[r] − b[r]} over the rounds both played. */
+    // ------------------------------------------------------------------
+    // What a playout's number is (D349's measure-aware intervals)
+    // ------------------------------------------------------------------
+
+    /**
+     * {@code WINS}: each value is a game result, 0, 0.5 or 1 -- the 1/n floor
+     * on the paired standard error (zero discordant rounds out of n still
+     * leave a difference of about 1/n unexcluded) is that measure's, and the
+     * interval is normal.  {@code LEAF}: each value is a continuous score (a
+     * logistic of the search's leaf, or 0/1 when the copy's game ended) --
+     * the 1/n floor would swamp it (±0.98 at n = 2, ±0.33 at n = 6 whatever
+     * the data say), so its standard error is the sample one, floored at a
+     * small sd ({@link #LEAF_SD_FLOOR}), and its interval uses Student's t
+     * with n − 1 degrees of freedom, since the sd is estimated from a handful
+     * of rounds.
+     */
+    public enum Measure { WINS, LEAF }
+
+    /** The smallest paired sd a leaf-mode difference is credited with (in win-probability units). */
+    public static final double LEAF_SD_FLOOR = 0.02;
+    /** The paired sd assumed for a leaf difference seen in one round only (the largest a [0,1] score can have). */
+    public static final double LEAF_SD_ONE_ROUND = 0.5;
+
+    /** Mean, standard error (floored at 1/n) and n of {@code a[r] − b[r]} over the rounds both played (the WINS measure). */
     public static double[] pairedDiff(final double[] a, final double[] b) {
+        return pairedDiff(a, b, Measure.WINS);
+    }
+
+    /**
+     * Mean, standard error and n of {@code a[r] − b[r]} over the rounds both
+     * played, the standard error as the measure wants it ({@link Measure}).
+     */
+    public static double[] pairedDiff(final double[] a, final double[] b, final Measure measure) {
         int n = 0;
         double sum = 0;
         for (int r = 0; r < Math.min(a.length, b.length); r++) {
@@ -124,9 +157,211 @@ public final class GradeMath {
                 ss += d * d;
             }
         }
+        if (measure == Measure.LEAF) {
+            final double sd = n > 1 ? Math.max(Math.sqrt(ss / (n - 1)), LEAF_SD_FLOOR) : LEAF_SD_ONE_ROUND;
+            return new double[] {mean, sd / Math.sqrt(n), n};
+        }
         final double var = n > 1 ? ss / (n - 1) : 0.25;
         final double se = Math.sqrt(var / n + 1.0 / ((double) n * n));
         return new double[] {mean, se, n};
+    }
+
+    /**
+     * The critical value an interval on a paired mean over {@code n} rounds
+     * uses for normal quantile {@code z}: z itself for WINS (normal, as D334),
+     * Student's t at the same two-sided level with n − 1 degrees of freedom for
+     * LEAF (n = 1 uses one degree of freedom, with its sd assumed, not estimated).
+     */
+    public static double crit(final double z, final int n, final Measure measure) {
+        if (measure != Measure.LEAF) {
+            return z;
+        }
+        return tQuantile(normalCdf(z), Math.max(1, n - 1));
+    }
+
+    // ------------------------------------------------------------------
+    // Distributions (no library: Student's t through the incomplete beta)
+    // ------------------------------------------------------------------
+
+    /** The standard normal CDF (Abramowitz-Stegun 7.1.26 on erf, |error| < 1.5e-7). */
+    public static double normalCdf(final double x) {
+        final double t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.sqrt(2));
+        final double y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592)
+                * t * Math.exp(-x * x / 2);
+        return x >= 0 ? 0.5 * (1 + y) : 0.5 * (1 - y);
+    }
+
+    /** Student's t CDF with {@code df} degrees of freedom. */
+    public static double tCdf(final double t, final double df) {
+        final double x = df / (df + t * t);
+        final double tail = 0.5 * incBeta(df / 2, 0.5, x);
+        return t >= 0 ? 1 - tail : tail;
+    }
+
+    /** The {@code p} quantile of Student's t with {@code df} degrees of freedom (bisection on the CDF). */
+    public static double tQuantile(final double p, final double df) {
+        if (p <= 0 || p >= 1) {
+            throw new IllegalArgumentException("p must be in (0,1): " + p);
+        }
+        if (p < 0.5) {
+            return -tQuantile(1 - p, df);
+        }
+        double lo = 0;
+        double hi = 1;
+        while (tCdf(hi, df) < p) {
+            hi *= 2;
+        }
+        for (int i = 0; i < 100; i++) {
+            final double mid = (lo + hi) / 2;
+            if (tCdf(mid, df) < p) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        return (lo + hi) / 2;
+    }
+
+    /** The regularized incomplete beta I_x(a, b) (a continued fraction, Lentz's method). */
+    static double incBeta(final double a, final double b, final double x) {
+        if (x <= 0) {
+            return 0;
+        }
+        if (x >= 1) {
+            return 1;
+        }
+        final double lbeta = lgamma(a + b) - lgamma(a) - lgamma(b);
+        final double front = Math.exp(Math.log(x) * a + Math.log(1 - x) * b + lbeta);
+        if (x < (a + 1) / (a + b + 2)) {
+            return front * betaCf(a, b, x) / a;
+        }
+        return 1 - Math.exp(Math.log(1 - x) * b + Math.log(x) * a + lbeta) * betaCf(b, a, 1 - x) / b;
+    }
+
+    private static double betaCf(final double a, final double b, final double x) {
+        final double tiny = 1e-300;
+        double c = 1;
+        double d = 1 - (a + b) * x / (a + 1);
+        d = Math.abs(d) < tiny ? tiny : d;
+        d = 1 / d;
+        double h = d;
+        for (int m = 1; m <= 300; m++) {
+            final int m2 = 2 * m;
+            double aa = m * (b - m) * x / ((a + m2 - 1) * (a + m2));
+            d = 1 + aa * d;
+            d = Math.abs(d) < tiny ? tiny : d;
+            c = 1 + aa / c;
+            c = Math.abs(c) < tiny ? tiny : c;
+            d = 1 / d;
+            h *= d * c;
+            aa = -(a + m) * (a + b + m) * x / ((a + m2) * (a + m2 + 1));
+            d = 1 + aa * d;
+            d = Math.abs(d) < tiny ? tiny : d;
+            c = 1 + aa / c;
+            c = Math.abs(c) < tiny ? tiny : c;
+            d = 1 / d;
+            final double del = d * c;
+            h *= del;
+            if (Math.abs(del - 1) < 1e-14) {
+                break;
+            }
+        }
+        return h;
+    }
+
+    /** log Γ(x) for x > 0 (Lanczos, g = 7). */
+    static double lgamma(final double x) {
+        final double[] g = {0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+            -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7};
+        if (x < 0.5) {
+            return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - lgamma(1 - x);
+        }
+        final double xx = x - 1;
+        double a = g[0];
+        final double t = xx + 7.5;
+        for (int i = 1; i < 9; i++) {
+            a += g[i] / (xx + i);
+        }
+        return 0.5 * Math.log(2 * Math.PI) + (xx + 0.5) * Math.log(t) - t + Math.log(a);
+    }
+
+    // ------------------------------------------------------------------
+    // The leaf -> win probability scale (D349): a logistic fitted on outcomes
+    // ------------------------------------------------------------------
+
+    /**
+     * Fit {@code P(win) = σ(b·x)} (no intercept: the leaf is antisymmetric
+     * between the seats) by Newton's method on the log-likelihood; returns b.
+     * {@code y} is 1 (the viewer won) or 0.
+     */
+    public static double fitSlope(final double[] x, final double[] y) {
+        double b = 1.0 / 400;
+        for (int it = 0; it < 100; it++) {
+            double g = 0;
+            double h = 0;
+            for (int i = 0; i < x.length; i++) {
+                final double p = sigmoid(b * x[i]);
+                g += (y[i] - p) * x[i];
+                h += p * (1 - p) * x[i] * x[i];
+            }
+            if (h <= 0) {
+                break;
+            }
+            final double step = g / h;
+            b += step;
+            if (Math.abs(step) < 1e-12) {
+                break;
+            }
+        }
+        return b;
+    }
+
+    /** Fit {@code P(win) = σ(a + b·x)} by Newton's method; returns {a, b}. */
+    public static double[] fitLogistic(final double[] x, final double[] y) {
+        double a = 0;
+        double b = 1.0 / 400;
+        for (int it = 0; it < 100; it++) {
+            double ga = 0;
+            double gb = 0;
+            double haa = 0;
+            double hab = 0;
+            double hbb = 0;
+            for (int i = 0; i < x.length; i++) {
+                final double p = sigmoid(a + b * x[i]);
+                final double w = p * (1 - p);
+                ga += y[i] - p;
+                gb += (y[i] - p) * x[i];
+                haa += w;
+                hab += w * x[i];
+                hbb += w * x[i] * x[i];
+            }
+            final double det = haa * hbb - hab * hab;
+            if (det <= 0) {
+                break;
+            }
+            final double da = (hbb * ga - hab * gb) / det;
+            final double db = (haa * gb - hab * ga) / det;
+            a += da;
+            b += db;
+            if (Math.abs(da) < 1e-10 && Math.abs(db) < 1e-12) {
+                break;
+            }
+        }
+        return new double[] {a, b};
+    }
+
+    public static double sigmoid(final double z) {
+        return 1 / (1 + Math.exp(-z));
+    }
+
+    /** Mean log-loss of probabilities {@code σ(b·x)} (clipped at 1e-6) against outcomes {@code y}. */
+    public static double logLoss(final double[] x, final double[] y, final double a, final double b) {
+        double s = 0;
+        for (int i = 0; i < x.length; i++) {
+            final double p = Math.min(1 - 1e-6, Math.max(1e-6, sigmoid(a + b * x[i])));
+            s -= y[i] * Math.log(p) + (1 - y[i]) * Math.log(1 - p);
+        }
+        return s / x.length;
     }
 
     // ------------------------------------------------------------------
@@ -146,6 +381,28 @@ public final class GradeMath {
         public int pairedN;
         public boolean best;
         public boolean active;
+    }
+
+    /**
+     * A leaf-mode option's mean with a t interval (sample sd floored at
+     * {@link #LEAF_SD_FLOOR}), clipped to [0, 1]: Wilson's interval is for
+     * counts of wins, not for continuous scores.
+     */
+    static double[] meanInterval(final double[] xs, final double z) {
+        final int n = count(xs);
+        if (n == 0) {
+            return new double[] {Double.NaN, 0, 1};
+        }
+        final double m = sum(xs) / n;
+        double ss = 0;
+        for (final double v : xs) {
+            if (!Double.isNaN(v)) {
+                ss += (v - m) * (v - m);
+            }
+        }
+        final double sd = n > 1 ? Math.max(Math.sqrt(ss / (n - 1)), LEAF_SD_FLOOR) : LEAF_SD_ONE_ROUND;
+        final double h = crit(z, n, Measure.LEAF) * sd / Math.sqrt(n);
+        return new double[] {m, Math.max(0, m - h), Math.min(1, m + h)};
     }
 
     /** Index of the active option with the highest mean (ties: the most rounds, then the lowest index). */
@@ -171,8 +428,17 @@ public final class GradeMath {
         return best;
     }
 
-    /** The regret table: {@code x[option][round]} outcomes (NaN = not played), {@code active} at the end. */
+    /** The regret table for game results (the WINS measure). */
     public static Row[] table(final double[][] x, final boolean[] active, final double z) {
+        return table(x, active, z, Measure.WINS);
+    }
+
+    /**
+     * The regret table: {@code x[option][round]} outcomes (NaN = not played),
+     * {@code active} at the end; each regret interval as the measure wants it
+     * ({@link #pairedDiff(double[], double[], Measure)}, {@link #crit}).
+     */
+    public static Row[] table(final double[][] x, final boolean[] active, final double z, final Measure measure) {
         final int k = x.length;
         final Row[] rows = new Row[k];
         final int best = bestOf(x, active);
@@ -182,7 +448,7 @@ public final class GradeMath {
             rows[i] = row;
             row.n = count(x[i]);
             final double wins = sum(x[i]);
-            final double[] w = wilson(wins, row.n, z);
+            final double[] w = measure == Measure.LEAF ? meanInterval(x[i], z) : wilson(wins, row.n, z);
             row.winRate = w[0];
             row.winLo = w[1];
             row.winHi = w[2];
@@ -197,7 +463,7 @@ public final class GradeMath {
             if (i == best) {
                 continue;   // filled below
             }
-            final double[] d = pairedDiff(x[best], x[i]);
+            final double[] d = pairedDiff(x[best], x[i], measure);
             row.pairedN = (int) d[2];
             if (row.pairedN == 0) {
                 row.regret = Double.NaN;
@@ -205,11 +471,12 @@ public final class GradeMath {
                 row.regretHi = Double.NaN;
                 continue;
             }
+            final double q = crit(z, row.pairedN, measure);
             row.regret = Math.max(0, d[0]);
-            row.regretLo = Math.max(0, d[0] - z * d[1]);
-            row.regretHi = Math.min(1, Math.max(0, d[0] + z * d[1]));
+            row.regretLo = Math.max(0, d[0] - q * d[1]);
+            row.regretHi = Math.min(1, Math.max(0, d[0] + q * d[1]));
             // How much this option might still beat the best by: the best's own regret bound.
-            bestHi = Math.max(bestHi, z * d[1] - d[0]);
+            bestHi = Math.max(bestHi, q * d[1] - d[0]);
         }
         if (best >= 0) {
             final Row b = rows[best];
@@ -226,6 +493,12 @@ public final class GradeMath {
      * {@code minRounds} shared rounds).  Returns the new active set.
      */
     public static boolean[] race(final double[][] x, final boolean[] active, final double zElim, final int minRounds) {
+        return race(x, active, zElim, minRounds, Measure.WINS);
+    }
+
+    /** {@link #race} with the measure's standard error and critical value (D349: live leaf racing can retire). */
+    public static boolean[] race(final double[][] x, final boolean[] active, final double zElim, final int minRounds,
+                                 final Measure measure) {
         final boolean[] out = active.clone();
         final int best = bestOf(x, active);
         if (best < 0) {
@@ -235,8 +508,8 @@ public final class GradeMath {
             if (i == best || !active[i]) {
                 continue;
             }
-            final double[] d = pairedDiff(x[best], x[i]);
-            if (d[2] >= minRounds && d[0] - zElim * d[1] > 0) {
+            final double[] d = pairedDiff(x[best], x[i], measure);
+            if (d[2] >= minRounds && d[0] - crit(zElim, (int) d[2], measure) * d[1] > 0) {
                 out[i] = false;
             }
         }

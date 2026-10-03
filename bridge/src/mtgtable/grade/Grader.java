@@ -89,8 +89,15 @@ public final class Grader {
         public long playoutTimeoutMs = 120_000;
         /** Most options enumerated in full; above it, a shortlist. */
         public int cap = 24;
-        /** Leaf points per logit in horizon mode (SearchPolicy.leaf's scale). */
-        public double leafScale = 400;
+        /**
+         * Leaf points per logit in horizon mode: {@code P(win) = σ(leaf / leafScale)}.
+         * D349: fitted on recorded games against their outcomes
+         * ({@code coach-grade.sh fit-scale}); the shipped default is
+         * {@link SearchPolicy#LEAF_SCALE}.  D336's 400 was never fitted.
+         */
+        public double leafScale = SearchPolicy.LEAF_SCALE;
+        /** Where {@link #leafScale} came from, for the answer's {@code config}. */
+        public String leafScaleSource = "default";
         public boolean lands;
         /** Only these tokens (null = all). */
         public List<String> only;
@@ -238,8 +245,14 @@ public final class Grader {
                 return Double.NaN;
             }
         };
+        final GradeMath.Measure measure = set.horizon < 0 ? GradeMath.Measure.WINS : GradeMath.Measure.LEAF;
+        set.race.measure = measure;
         final Racer.Result res = Racer.run(opts.size(), key, set.seed, set.race, play);
-        final GradeMath.Row[] rows = GradeMath.table(res.x, res.active, GradeMath.Z95);
+        final GradeMath.Row[] rows = GradeMath.table(res.x, res.active, GradeMath.Z95, measure);
+        int retired = 0;
+        for (int i = 0; i < rows.length; i++) {
+            retired += !res.active[i] && !res.failed[i] ? 1 : 0;
+        }
         final long ms = (System.nanoTime() - t0) / 1_000_000L;
         int bestIdx = -1;
         double lo = 1;
@@ -255,7 +268,7 @@ public final class Grader {
         }
         j.n("status", "ok").n("measure", set.horizon < 0 ? "wins" : "leaf").n("rounds", res.rounds).n("playouts", res.playouts).n("stop", res.stop)
                 .n("best", bestIdx < 0 ? "" : opts.get(bestIdx).token)
-                .n("spread", hi - lo).n("noise", GradeMath.noise(rows));
+                .n("spread", hi - lo).n("noise", GradeMath.noise(rows)).n("retired", retired);
         for (final Opt o : opts) {
             if (o.forge) {
                 j.n("forgeChoice", o.token);
@@ -265,7 +278,12 @@ public final class Grader {
         writeOptions(j, opts, rows, res);
         j.key("config").obj().n("seed", set.seed).n("target", set.race.target).n("initial", set.race.initial)
                 .n("batch", set.race.batch).n("zElim", set.race.zElim).n("race", set.race.race)
-                .n("horizon", set.horizon).n("maxTurns", set.maxTurns).n("yardstick", "forge-default").end();
+                .n("horizon", set.horizon).n("maxTurns", set.maxTurns).n("yardstick", "forge-default")
+                .n("interval", measure == GradeMath.Measure.LEAF ? "t, sample sd" : "normal, 1/n floor");
+        if (measure == GradeMath.Measure.LEAF) {
+            j.n("leafScale", set.leafScale).n("leafScaleSource", set.leafScaleSource);
+        }
+        j.end();
         j.key("counters").obj();
         for (final Map.Entry<String, Integer> e : counters.entrySet()) {
             j.n(e.getKey(), e.getValue());

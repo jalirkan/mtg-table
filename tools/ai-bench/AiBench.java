@@ -1317,6 +1317,27 @@ public final class AiBench {
                     check(combat.getAttackers().size() == 2, "both Bears attack for lethal (got "
                             + combat.getAttackers() + "; " + ctl.events() + ")");
                 });
+
+        // 6. D350–D351's switches on the same board: attacks to the end of the next
+        //    turn, the noise-aware rule, a heavier untapped term, the bench-only
+        //    oracle -- and the search's report carries the numbers.
+        scenario("search-d347", List.of(
+                "humanlife=4", "ailife=20", "turn=5", "activeplayer=ai", "activephase=COMBAT_DECLARE_ATTACKERS",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp",
+                "aibattlefield=Grizzly Bears;Grizzly Bears;Forest"), PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,maxrounds=3,seed=7,what=a,aturns=1,override=lcb,z=1,margin=0,untapped=5,oracle=1"),
+                (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
+                    ai.getGame().getPhaseHandler().setCombat(combat);
+                    combat.initConstraints();
+                    ctl.declareAttackers(ai, combat);
+                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
+                    check(rep != null && "a".equals(rep.kind) && rep.horizon == 1 && "lcb".equals(rep.rule) && rep.rounds >= 1
+                            && rep.seLeaf.length == rep.cands.size() && rep.diffLeaf[0] == 0
+                            && ctl.counts().getOrDefault("search.oracleRollouts", 0) >= 2,
+                            "the report: " + (rep == null ? "none" : rep.summary()) + " (" + ctl.counts() + ")");
+                });
     }
 
     static boolean targets(final forge.game.spellability.SpellAbility sa, final Player p) {
