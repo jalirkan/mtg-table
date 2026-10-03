@@ -1,7 +1,6 @@
 id: J010
 title: Lab runner shakedown on the PC: units, memory limits, pause, resize, resume
 cpu: heavy
-after: J003
 repos: mtg-table@main
 est: ~25 min
 public_title: Lab runner shakedown

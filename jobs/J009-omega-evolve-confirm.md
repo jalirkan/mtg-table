@@ -1,7 +1,7 @@
 id: J009
 title: Omega evolve with discovery + confirmation (D331) and recording (replaces J004)
 cpu: heavy
-after: J003
+after: J010
 repos: mtg-table@main (d549e7a or later: has D331)
 est: ~1.5–2 h on the 9700X (4 × 600 discovery drafts + up to 4 × 300 confirmation drafts, best of 3); ~1.3 GB of recordings
 
