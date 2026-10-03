@@ -14017,7 +14017,7 @@ and scores each by rollouts. A rollout copies the game, redeals what the AI
 cannot see, forces the candidate as the AI seat's first answer
 (`RolloutController`), lets Forge's plain Default AI play **both** seats with
 the copy's own game loop (`PhaseHandler.mainLoopStep`) to the end of the turn
-(`turns=0`) or the next (`turns=1`), and scores the leaf: win/loss first, then
+(`turns=0`, the default) or the next (`turns=1`), and scores the leaf: win/loss first, then
 life on a concave curve, cards in hand, poison, and every permanent through
 Forge's `GameStateEvaluator.evalCard`. A round plays every candidate on one
 determinization with one engine seed (common random numbers); rounds repeat
@@ -14027,6 +14027,16 @@ least two complete rounds. Every failure — a copy that throws, Forge's
 candidate unmappable onto the copy, a budget too short for two rounds — is
 Forge's answer, counted (`search.fallback.*`). `SearchConfig` holds the knobs
 (`ms, cands, turns, rounds, margin, maxrounds, what`).
+
+**Measured** (`docs/evidence/search-ai.md`): on 200 new cube deals (ten
+Forge-drafted pairs, seed 21), `Default+search` against Default won **113 of
+200 (56.5%, 95% CI 49.6–63.2%)** where Default in the same chair won 94 (47.0%);
+paired, **37 deals gained and 18 lost, exact McNemar p = 0.015**. 25 searched
+decisions a game, 12.5% of them changed, 1.5 s each; 44 s a game against 7 s on
+this machine. A quarter of the searched decisions ran out of budget before two
+rounds and kept Forge's answer. The horizon was chosen on separate pilot deals:
+to the end of this turn (`turns=0`) rather than the next, because a next-turn
+rollout costs three times as much and at 1.5 s left half the decisions to Forge.
 
 **What the AI may know** — the rule, in `Determinizer`'s header: everything
 public, its own hand, its own decklist, and the opponent's decklist (the
@@ -14084,8 +14094,11 @@ Forge-built cube deck carries a sideboard, so most cube decisions hit it (the
 pilot: 59% of searched decisions needed a stand-in). `removeMapped` only strips
 the effect's layers from the mapped copies so that the copy's own
 `checkStateEffects` can re-apply them; stripping a stand-in is a no-op, and the
-copy is the game it would have been. After the workaround the bench's copier
-errors are 0 (D312's evidence).
+copy is the game it would have been. Measured over 200 searched cube games
+(`docs/evidence/search-ai.md` §4): 3,285 of 5,017 searched decisions (65.5%)
+needed a stand-in, and 11 (0.22%) still failed — all one card, a Bird token in a
+copied zone that the zone's listing did not return; since then any card the
+strict lookup cannot map while copying gets a stand-in as well (marked `?`).
 
 **Rejected.** Catching the exception and falling back (it would fall back on
 most cube decisions); stripping the sideboard from the decks (changes the game

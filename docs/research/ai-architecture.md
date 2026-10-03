@@ -228,8 +228,8 @@ both public); a combat candidate rewinds the copy one step
 (`devModeSet(COMBAT_BEGIN)` or `(COMBAT_DECLARE_ATTACKERS)`, combat kept) so the
 next step re-enters the declaration and asks the forced controller.
 (4) Determinize (below). (5) Run the copy's own game loop
-(`PhaseHandler.mainLoopStep`, public) until the end of the next turn (`turns`)
-or the game ends — Forge's Default AI playing both sides, Forge's AI timeout cut
+(`PhaseHandler.mainLoopStep`, public) until the end of this turn (`turns=0`,
+the default; `turns=1` goes on through the next) or the game ends — Forge's Default AI playing both sides, Forge's AI timeout cut
 to 1 s inside the copy. (6) Score the leaf: a win or loss dominates (sooner
 better); otherwise life on a concave curve (30 a point up to 5, 18 to 10, 8 to
 20, 2 beyond), 40 per card in hand (capped at hand size), poison, an empty
@@ -274,4 +274,10 @@ layers from the cards it maps, so stripping them from a stand-in is a no-op, and
 the copy's own `checkStateEffects` re-applies every static. Copied zones still
 go through Forge's strict lookup, and every stand-in is counted. The self-test
 pins both halves: Forge's copier throws on a board with Tarmogoyf and Grist in
-the sideboard, ours copies it.
+the sideboard, ours copies it. (A card in a copied zone that the strict lookup
+still cannot map — the bench met one, a Bird token — gets a stand-in too.)
+
+**Measured** (`docs/evidence/search-ai.md`): 56.5% against Default's 47.0% on
+the same 200 cube deals, 37 deals gained and 18 lost (p = 0.015); copier errors
+0.22% before the token fix; a quarter of searched decisions kept Forge's answer
+for want of budget at 1.5 s on this machine.
