@@ -16234,3 +16234,136 @@ rule 3). Skipping only `BoundaryFlusher`'s off-thread flush: the forwarder's own
 500 ms clock flushes from `receiveGameEvent` on the same thread, so the guard
 belongs where the walk would start. Subtracting timeouts from `errors` in the
 lab: it would hide the dropped outcome event, and any other off-thread flush.
+
+## D356 — The evolve loop judges the low-rated cards by a logged, seeded experiment: a share of its drafts force one eligible low-rated card into a deck with a recorded probability, the old rules read only the evidence they read before, and a weighted forced-versus-not comparison judges the card; it never cuts
+
+**2026-10-03**
+
+*Branch `c/ratings`; D356, the next number free on a freshly fetched `main`.*
+
+**Finding.** The PC's Omega evolve (`--generations 4 --drafts-per-gen 600
+--games 3 --seed 20001`) swapped nothing. Its report gave two reasons: 600 drafts
+a generation is too few (its estimates want about 1,200–3,400), and 33–40 cards
+were `rating-limited` — rarely played on colour, but rated under
+`deadMinRating` (60). The cause is the lab's deckbuilder, not its drafters:
+`deck.ts`'s `buildOne` ranks every candidate spell by `x.card.rating` plus
+synergy (`tools/cubelab/deck.ts:105`), so a card rated 19.7 (Delver of Secrets)
+sits in on-colour pools and is not played, and `evolve.ts`'s `assess` can only
+park it (`tools/cubelab/evolve.ts:710` on this branch, 673 before it: `rating-limited`, D299's protection).
+The grid puts these cards in pools anyway (three cards a line): over 2,000
+draft-only Omega drafts (seeds 3,000,001+, the real facts, no engine) 36 such
+cards sat on colour 80–1,125 times and were played 0–295 times — Delver 0 of
+477, Ephemerate 0 of 342, Mystic Snake 0 of 80, Reflector Mage 1 of 157. More
+drafts multiply both numbers by the same factor: it is a ratings question, as
+the report said.
+
+**What was rejected first.**
+- *(a) Ratings from evidence alone* (D301's `learn`, or a blend like
+  ForgeCoach's `cube/score.ts`). The evidence is games in a deck, and these
+  cards have almost none, so a shrunk estimate stays at the prior: the blind
+  spot reproduces itself. It also changes what the drafters think is good for
+  every card, which moves the whole population the evolve measures. It becomes
+  useful once exploration has made games; it is a later, separate step (below).
+- *Exploring picks.* The cards are already in pools; picks feed
+  `dominant-pick`, which would then need correcting.
+- *Uniform exploration over the eligible cards.* Measured on the same 2,000
+  drafts it gives a gold card (Mystic Snake, Maelstrom Pulse) about 3 forced
+  decks a generation, and its probability 1/m depends on how many cards are
+  eligible — thin pools force more often, and they are the weaker decks, so a
+  plain forced-versus-not comparison is biased (the test below shows it).
+- *Mixing explored games into `dominant-win`.* A forced card changes its deck
+  and its opponent's match; every bias that follows would need a model.
+
+**Decision.** `tools/cubelab/explore.ts`, behind `evolve --explore name=value`
+(off by default; `run.ts` takes it as `RunOptions.explore`):
+
+1. A discovery draft is **explored** with probability `share` (0.3), from its
+   own stream `rng(seed, 'explore')`; otherwise it is **plain**. Confirmation
+   batches never explore.
+2. In an explored draft each seat's deck is built as always (the **choice**
+   deck). Its **eligible targets** are pool cards that are not lands, are rated
+   under `deadMinRating` (the cards the rating-limited rule protects, chosen by
+   attribute before any game), are not `AI:RemAIDeck` (D301: their outcome is
+   about Forge's AI), are castable in the deck's main colours and are not in it.
+3. At most one is **forced**: card c with probability v_c / max(Σv, `cap`),
+   v = `gold` (4) for a multicolour card and 1 otherwise, `cap` 4, from the
+   seat's own stream `rng(seed, 'explore:A'|'explore:B')`. Each eligible card's
+   probability is written down with the eligible list.
+4. The forced card replaces the lowest-rated spell of its mana-value bucket
+   (the lowest-rated spell when the bucket has none; ties, the one chosen last);
+   lands stay; the deck is re-checked by `checkDeck` and an illegal one throws.
+5. `drafts.jsonl`'s `deck` is the deck that **played** (so `report`, `meta`,
+   `learn` and the ML datasets read the truth); `explore.seats[k]` keeps the
+   eligible list with probabilities, `in`, `out` and the **choice** deck.
+6. `run.json` records `explore`, it is part of the resume check, and it is
+   folded into the D341 version stamp's weights — **only when on**, so a run
+   without it has the same version id, folder check and bytes as before; the
+   same holds for `evolve.json` (`explore` absent when off, and in the resume
+   key as `null`). Seeds stay in D340's lab range.
+
+**How it is read** (`evolve.ts`'s `batchStats`, `explore.ts`'s `exploreTable`,
+`judgeExplored`):
+- The **counting rules** — dealt, picked, first line (`dominant-pick`), played
+  decks, on-colour pools (`dead`) — read every draft with its choice decks put
+  back. Exploration draws come from streams of their own after the builder is
+  done, so the drafts, picks and choice decks are bit for bit those of an
+  unexplored run at the same seeds (tested), and so are these counts.
+- The **game rules** — `dominant-win`, the mean, the balance, the design effect,
+  `meta.json` — read the **plain** drafts only: a coin-chosen subset of an
+  unexplored run's drafts, so unbiased; the price is 30% of their games.
+  `confirmPlan` still divides a card's games by all the drafts, which slightly
+  over-sizes a confirmation batch (which never explores): conservative.
+- Each target's **explored evidence** is a randomised comparison inside the
+  explored drafts: the decks it was forced into against the decks where it was
+  eligible and not forced, weighted by 1/p and 1/(1−p) (Hájek), a deck's match
+  as the unit, the variance by linearisation (so the 2–3-game clumps need no
+  design effect). Both groups meet opponents from the same explored drafts.
+  *delta* is "this card instead of the builder's lowest choice", in win rate.
+  Because the probability is recorded per deck, the weighting removes the
+  thin-pool bias above; a simulated batch where it biases the raw comparison by
+  more than 0.02 recovers the true effect within 3 standard errors (tested).
+- **Verdicts**, once a card has `minDecks` (10) forced and 10 control decks:
+  *holds its own when played* when "delta ≤ −`margin` (0.10)" is rejected,
+  *weak when played* when "delta ≥ 0" is rejected — both one-sided, Benjamini–
+  Hochberg at the loop's `fdrQ` over every judged card's two tests — else
+  *undecided*. The changelog pools every generation (the sums add) in one table
+  at its top, marked provisional until the last generation: that is the one
+  look. Per-generation tables are in `stats.json`.
+- **No verdict cuts a card.** `assess` and `selectSwaps` are unchanged, so the
+  swaps are what they were. A card that holds its own is evidence for raising
+  its rating; a weak one goes to Justin's notes, which override every number
+  (his rule), and a card the AI plays badly stays if it is good (his other
+  rule: "weak when played" cannot tell a weak card from one Forge misplays).
+  Making the verdicts a cut rule would need its own discovery and confirmation
+  and is not part of this decision.
+
+**Why these sizes.** On the 2,000 draft-only drafts at share 0.3: 658 drafts
+explored, 1,125 forced decks against 1,122 expected (z 0.08), the choice-deck
+mean rating 0.04 points apart between forced and not (balance), 66 targets;
+Delver 28 forced decks a generation, Ephemerate 17, Mystic Snake 10 (gold
+weight), the rarest about 1. Over J039's four generations that is about 110,
+70 and 40 decks — enough to see an effect of about 0.10 for the common ones,
+not for the rarest; they stay *too few* or *undecided*, which is the honest
+answer. `dominant-win` keeps 1,400 plain drafts a generation of 2,000.
+
+**What would show it broken** (pre-registered; J038 and J039 check them):
+1. A choice deck that is not the builder's deck for that seed (unit test).
+2. The explored share outside its binomial interval: |z| > 4.
+3. Forced decks against the sum of recorded probabilities: |z| > 4 — the draw
+   or its bookkeeping is wrong.
+4. The balance check: the choice-deck mean rating of forced and control decks
+   more than 2 rating points apart — the randomisation is not random.
+5. Every forced card pooled: delta outside −0.15..+0.10 — the swap is breaking
+   decks (a land or a key spell going) or the arithmetic is wrong.
+6. More engine errors or timeouts than an unexplored run (an explored deck
+   Forge cannot play).
+7. The plain drafts' design effect over 2.0, or their mean card win rate
+   outside 0.45–0.55 — the split went wrong.
+
+**Later, not here.** A ratings pass from evidence — D301's `learn` over the
+explored drafts, or the pooled deltas as rating changes — is now possible
+because the cards have games. It must be fitted on one batch and tested on
+another seed range (learning from the drafts the evolve then judges is
+circular), and Justin's ratings TSV is where it lands. No ratings pass is
+needed for this decision; J038 is the exploration's calibration on the engine
+before J039, the four-generation run.
