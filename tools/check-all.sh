@@ -1910,13 +1910,17 @@ s12f_coach() {
 #      worker plays a game to a winner, the protocol between them, and that the
 #      worker homes save no preferences (cubelab.sh's own check).  Its homes are
 #      built under this job's home (CUBELAB_HOME_ROOT), its output is
-#      var/check-all-cubelab/, and it records no frame log.  About 30 s.
+#      var/check-all-cubelab/.  Since D313 it passes --record-every 2, so the
+#      worker records seed 8's game from both chairs (gzipped, under the run's
+#      games/) and not seed 7's; this step checks those two logs itself --
+#      check-redaction.mjs and tools/ml/encode.py --run-dir -- so it is not one
+#      of RECORDERS (step 11 and 12d read plain .jsonl logs).  About 30 s.
 s12g_cubelab() {
   printf '\n=== 12g. cubelab.sh -- two drafts, two decks each, one game each (D293-D296) ===\n'
   local out="var/check-all-cubelab"
   rm -rf "$out"
   CUBELAB_HOME_ROOT="$JOB_HOME/cubelab-homes" ./tools/cubelab.sh run cubes/synergy-cube-180.md \
-      --format grid --drafts 2 --games 1 --jobs 1 --seed 7 --out "$out" \
+      --format grid --drafts 2 --games 1 --jobs 1 --seed 7 --record-every 2 --out "$out" \
     || die "cubelab.sh run (12g: the cube lab could not draft, build or play -- see the log above and $out/logs/)"
   ./tools/cubelab.sh report "$out" || die "cubelab.sh report (12g)"
   node -e '
@@ -1941,9 +1945,27 @@ s12g_cubelab() {
     if (!html.startsWith("<!doctype html>")) bad.push("report.html is not a page");
     const meta = JSON.parse(fs.readFileSync(out + "/meta.json", "utf8"));
     if (meta.schema !== 1 || meta.cube.cards.length !== 180 || meta.sample.drafts !== 2) bad.push("meta.json is not schema 1 over 180 cards and 2 drafts");
+    // D313: --record-every 2 records seed 8 (8 % 2 === 0), both chairs, and not seed 7.
+    for (const r of recs) {
+      const g = r.match.games[0] || {};
+      const want = r.seed % 2 === 0;
+      if (!!g.recorded !== want) bad.push("seed " + r.seed + ": recorded " + JSON.stringify(g.recorded) + ", wanted " + (want ? "a recording" : "none"));
+      if (g.recorded && (g.recorded.errors !== 0 || g.recorded.frames < 20)) bad.push("seed " + r.seed + ": recording " + JSON.stringify(g.recorded));
+      for (const s of [0, 1]) {
+        const f = out + "/games/" + r.seed + "/g1-seat" + s + ".jsonl.gz";
+        if (fs.existsSync(f) !== want) bad.push(f + (want ? " missing" : " should not exist"));
+      }
+    }
+    if (!fs.existsSync(out + "/cube.md")) bad.push("no cube.md beside the recordings");
     if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
-    console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html and meta.json written");
+    console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html and meta.json written, seed 8 recorded from both chairs");
   ' "$out" || die "the cube lab's smoke run is not what it should be (12g)"
+  # D313: the worker's recordings are the bridge's redaction, per seat -- the
+  # checker passes both chairs, and the dataset reads the run folder.
+  node tools/check-redaction.mjs "$out"/games/8/g1-seat0.jsonl.gz "$out"/games/8/g1-seat1.jsonl.gz \
+    || die "a cube-lab recording failed the redaction checker (12g, D313)"
+  python3 tools/ml/encode.py --run-dir "$out" --out /dev/null \
+    || die "tools/ml/encode.py could not read the cube lab's run folder (12g, D313)"
 }
 
 # 12h. D305: tools/ml/, the dataset pipeline for a learned position evaluator.

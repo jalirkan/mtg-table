@@ -41,6 +41,13 @@ trainers add numpy.
 
     python3 tools/ml/encode.py --vocab CUBE.md LOG... [--out rows.jsonl]
         [--features-json features.json] [--phases main,combat]
+    python3 tools/ml/encode.py --run-dir var/cubelab/runs/X [--out rows.jsonl]
+
+--run-dir reads a cube-lab run folder (D313): its recordings under `games/`
+(`run --record-all` / `--record-every N`, both chairs, `.jsonl.gz`) and
+`frames/` (`--record M`), with the cube the decks were drafted from as the
+vocabulary -- the run's own copy, `cube.md`, or else the `cubeFile` its
+`run.json` names.  Several run folders must share one cube.
 
 CUBE.md is a cube design file (the `## The list` / `### Section (N)` format of
 cubes/*.md), a Forge `.dck`, or a plain list (one name per line, `4 Name`
@@ -56,6 +63,7 @@ import os
 import re
 import sys
 import unicodedata
+import zlib
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Iterator
 
@@ -444,6 +452,17 @@ def _open(path: str):
     return open(path, encoding="utf-8")
 
 
+def _lines(path: str) -> Iterator[str]:
+    """A log's lines.  A gzip that stops early -- a recorder killed mid-game
+    (the cube lab's are flushed in the deflater's own blocks, D313) -- yields
+    the lines up to where it stops, like a plain file's torn last line."""
+    with _open(path) as f:
+        try:
+            yield from f
+        except (EOFError, zlib.error):
+            return
+
+
 def read_games(path: str) -> Iterator[Game]:
     """Every game in a frame log.  Line 0 is the session header (§8.1); a file
     holding several headers is several games.  A verbatim re-delivery of an s2c
@@ -452,29 +471,28 @@ def read_games(path: str) -> Iterator[Game]:
     frames: list[dict[str, Any]] = []
     seen: set[int] = set()
     idx = 0
-    with _open(path) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
+    for line in _lines(path):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue  # a torn last line of a killed recorder
+        if obj.get("kind") == "session":
+            if header is not None:
+                yield Game(path, header, frames, idx)
+                idx += 1
+            header, frames, seen = obj, [], set()
+            continue
+        if header is None or obj.get("dir", "s2c") != "s2c":
+            continue
+        seq = obj.get("seq")
+        if isinstance(seq, int):
+            if seq in seen:
                 continue
-            try:
-                obj = json.loads(line)
-            except json.JSONDecodeError:
-                continue  # a torn last line of a killed recorder
-            if obj.get("kind") == "session":
-                if header is not None:
-                    yield Game(path, header, frames, idx)
-                    idx += 1
-                header, frames, seen = obj, [], set()
-                continue
-            if header is None or obj.get("dir", "s2c") != "s2c":
-                continue
-            seq = obj.get("seq")
-            if isinstance(seq, int):
-                if seq in seen:
-                    continue
-                seen.add(seq)
-            frames.append(obj)
+            seen.add(seq)
+        frames.append(obj)
     if header is not None:
         yield Game(path, header, frames, idx)
 
@@ -853,16 +871,83 @@ def find_logs(paths: list[str]) -> list[str]:
     return sorted(set(out))
 
 
+# ---------------------------------------------------------------- a cube-lab run folder
+
+@dataclass
+class RunDir:
+    """What a cube-lab run folder hands the dataset (D313)."""
+    path: str
+    logs: list[str]
+    vocab: str
+    cube_sha: str | None
+    run: dict[str, Any]
+
+
+def read_run_dir(path: str, repo: str | None = None) -> RunDir:
+    """A cube-lab run folder: `run.json`, the recordings under `games/`
+    (in-worker, both chairs) and `frames/` (`--record M`), and the cube's
+    markdown -- the run's copy `cube.md` when there is one (written by a
+    recording run), else `run.json`'s `cubeFile`, relative to the repo root (or
+    the working directory).  A cube file whose sha256 is not the run's
+    `cubeSha` is refused: it is not the pool the decks were drafted from."""
+    meta_path = os.path.join(path, "run.json")
+    if not os.path.isfile(meta_path):
+        raise SystemExit(f"{path}: not a cube-lab run folder (no run.json)")
+    with open(meta_path, encoding="utf-8") as f:
+        run = json.load(f)
+    cands = [os.path.join(path, "cube.md")]
+    if run.get("cubeFile"):
+        cf = run["cubeFile"]
+        cands += [cf] if os.path.isabs(cf) else [os.path.join(repo or _repo_root(), cf), cf]
+    vocab = next((c for c in cands if os.path.isfile(c)), None)
+    if vocab is None:
+        raise SystemExit(f"{path}: the run's cube is not here -- none of {cands} exists")
+    want = run.get("cubeSha")
+    with open(vocab, "rb") as f:
+        got = hashlib.sha256(f.read()).hexdigest()
+    if want and got != want:
+        raise SystemExit(f"{path}: {vocab} is not the cube this run drafted (sha256 {got[:12]}, run.json "
+                         f"says {want[:12]}) -- the cube file changed since; use the run's own copy")
+    dirs = [d for d in (os.path.join(path, "games"), os.path.join(path, "frames")) if os.path.isdir(d)]
+    return RunDir(path, find_logs(dirs) if dirs else [], vocab, want or got, run)
+
+
+def read_run_dirs(paths: list[str]) -> tuple[list[str], str]:
+    """Several run folders: every log, and the ONE cube they share."""
+    runs = [read_run_dir(p) for p in paths]
+    shas = {r.cube_sha for r in runs}
+    if len(shas) > 1:
+        raise SystemExit("--run-dir: these runs drafted different cubes ("
+                         + ", ".join(f"{r.path}: {r.cube_sha[:12] if r.cube_sha else '?'}" for r in runs)
+                         + ") -- one dataset is one vocabulary")
+    logs = sorted({lg for r in runs for lg in r.logs})
+    return logs, runs[0].vocab
+
+
+def _repo_root() -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("logs", nargs="+", help="frame logs or directories of them")
-    ap.add_argument("--vocab", action="append", required=True, help="cube .md, .dck or plain list")
+    ap.add_argument("logs", nargs="*", help="frame logs or directories of them")
+    ap.add_argument("--vocab", action="append", help="cube .md, .dck or plain list")
+    ap.add_argument("--run-dir", action="append", default=[],
+                    help="a cube-lab run folder: its recordings, with its cube as the vocabulary (D313)")
     ap.add_argument("--out", help="rows as JSONL (default: stdout)")
     ap.add_argument("--features-json", help="write the schema here")
     ap.add_argument("--phases", default="main,combat",
                     help="decision phases: groups main,combat,beginning,end or Forge names")
     a = ap.parse_args(argv)
-    vocab = Vocab.from_files(a.vocab)
+    logs = list(a.logs)
+    vocab_paths = list(a.vocab or [])
+    if a.run_dir:
+        run_logs, run_vocab = read_run_dirs(a.run_dir)
+        logs += run_logs
+        vocab_paths = vocab_paths or [run_vocab]
+    if not logs or not vocab_paths:
+        ap.error("give LOGs and --vocab, or --run-dir")
+    vocab = Vocab.from_files(vocab_paths)
     schema = Schema(vocab)
     phases = parse_phases(a.phases)
     if a.features_json:
@@ -872,7 +957,7 @@ def main(argv: list[str] | None = None) -> int:
     out = open(a.out, "w", encoding="utf-8") if a.out else sys.stdout
     n_rows = n_games = 0
     try:
-        for path in find_logs(a.logs):
+        for path in find_logs(logs):
             for g in read_games(path):
                 rows = encode_game(g, schema, phases)
                 n_games += 1 if rows else 0

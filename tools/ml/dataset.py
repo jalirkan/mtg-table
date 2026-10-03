@@ -7,6 +7,13 @@
     python3 tools/ml/dataset.py --vocab cubes/synergy-cube-180.md \
         --out var/ml/data/synergy LOGDIR... [--split 80,10,10] [--salt ""] \
         [--shard-rows 100000] [--phases main,combat] [--group-by game|match]
+    python3 tools/ml/dataset.py --run-dir var/cubelab/runs/X [--run-dir ...] [--out DIR] [...]
+
+--run-dir takes a cube-lab run folder (D313) -- its recordings under `games/`
+and `frames/`, with the run's cube (`cube.md`, or `run.json`'s `cubeFile`) as
+the vocabulary -- and writes to `<run-dir>/dataset` unless --out says
+otherwise.  Several run folders (a week of nights) make one dataset when they
+drafted the same cube; LOGDIRs and --vocab may be given beside them.
 
 Every log under the LOGDIRs is encoded by encode.py (one row per decision
 state).  Rows are split BY GAME -- more exactly by split group: the two chairs
@@ -185,9 +192,11 @@ def load(out: str, split: str) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("logs", nargs="+")
-    ap.add_argument("--vocab", action="append", required=True)
-    ap.add_argument("--out", required=True)
+    ap.add_argument("logs", nargs="*")
+    ap.add_argument("--vocab", action="append")
+    ap.add_argument("--out")
+    ap.add_argument("--run-dir", action="append", default=[],
+                    help="a cube-lab run folder: its recordings, its cube as the vocabulary (D313)")
     ap.add_argument("--split", default="80,10,10", help="train,val,test weights")
     ap.add_argument("--salt", default="")
     ap.add_argument("--shard-rows", type=int, default=100_000)
@@ -199,7 +208,18 @@ def main(argv: list[str] | None = None) -> int:
     w = tuple(int(x) for x in a.split.split(","))
     if len(w) != 3 or sum(w) <= 0:
         ap.error("--split takes three weights")
-    build(a.logs, a.vocab, a.out, w, a.salt, a.shard_rows, E.parse_phases(a.phases), group_by=a.group_by)
+    logs, vocab, out = list(a.logs), list(a.vocab or []), a.out
+    if a.run_dir:
+        run_logs, run_vocab = E.read_run_dirs(a.run_dir)
+        logs += run_logs
+        vocab = vocab or [run_vocab]
+        out = out or os.path.join(a.run_dir[0], "dataset")
+    if not logs:
+        ap.error("no frame logs: give LOGDIRs, or a --run-dir whose run recorded games "
+                 "(tools/cubelab.sh run ... --record-all)")
+    if not vocab or not out:
+        ap.error("--vocab and --out are required without --run-dir")
+    build(logs, vocab, out, w, a.salt, a.shard_rows, E.parse_phases(a.phases), group_by=a.group_by)
     return 0
 
 

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * The JSONL frame log of {@code docs/protocol.md} section 8.
@@ -149,13 +150,28 @@ public final class GameLog implements AutoCloseable {
      * file: a fixture is regenerated, never appended to.
      */
     public GameLog(final File out) throws IOException {
+        this(out, false);
+    }
+
+    /**
+     * Open a log, gzipped when {@code gzip} is true (D313: the cube lab's
+     * in-process recordings, {@code .jsonl.gz}).  The deflater sits above the
+     * byte counter, so {@link #bytes()} is the size on disk.  Lines are still
+     * flushed one at a time to the deflater; without a sync flush the
+     * compressed stream reaches the disk in the deflater's own blocks, so a
+     * killed JVM leaves a gzip that ends early -- readers take the lines up to
+     * where it stops (a game with no {@code over} gives no training rows), and
+     * a sync flush per line would cost most of the compression.
+     */
+    public GameLog(final File out, final boolean gzip) throws IOException {
         this.file = out.getAbsoluteFile();
         final File dir = file.getParentFile();
         if (dir != null && !dir.isDirectory() && !dir.mkdirs()) {
             throw new IOException("cannot create directory " + dir);
         }
         this.counting = new Counting(new BufferedOutputStream(new FileOutputStream(file), 1 << 16));
-        this.writer = new OutputStreamWriter(counting, StandardCharsets.UTF_8);
+        this.writer = new OutputStreamWriter(gzip ? new GZIPOutputStream(counting, 1 << 16) : counting,
+                                             StandardCharsets.UTF_8);
         this.thread = new Thread(this::drain, THREAD_NAME);
         this.thread.setDaemon(true);
         this.thread.start();

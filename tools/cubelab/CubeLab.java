@@ -22,6 +22,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -65,6 +67,7 @@ import mtgtable.Bootstrap;
 import mtgtable.Config;
 import mtgtable.Json;
 import mtgtable.Json.JsonOut;
+import mtgtable.SeatRecorder;
 
 /**
  * The cube lab's engine half (D293-D296; {@code tools/cubelab.sh} is the
@@ -89,6 +92,18 @@ import mtgtable.Json.JsonOut;
  *       own chatter goes to stderr, which the TypeScript runner files under
  *       {@code <out>/logs/}.</li>
  * </ol>
+ *
+ * <h2>Recording (D313)</h2>
+ *
+ * A match line with a {@code record} block ({@code run --record-all} /
+ * {@code --record-every N}) has every game of it written, while it is played,
+ * as two gzipped frame logs -- {@code <dir>/g<n>-seat0.jsonl.gz} (drafter A's
+ * view) and {@code -seat1} (drafter B's) -- by {@link SeatRecorder}, which is
+ * {@code RecordMatch}'s recorder reused: the bridge's {@code Snap.state} and its
+ * redaction, the same header and {@code hello_ok.match}.  The recorders are
+ * subscribed before the game starts and finished inside the same
+ * {@code GameAction.invoke} body that runs the game, so this file still makes
+ * no hop and names no {@code CardView}.
  *
  * <h2>The rules it keeps</h2>
  *
@@ -138,6 +153,12 @@ public final class CubeLab {
     /** The stdout the runner reads.  System.out itself is pointed at stderr for Forge's chatter. */
     private static PrintStream proto;
 
+    /** This worker's config (the Forge home, the jar). */
+    private static Config cfg;
+
+    /** The jar's sha256 for the recordings' headers, computed on the first recorded game. */
+    private static String jarSha;
+
     public static void main(final String[] args) throws Exception {
         proto = new PrintStream(new java.io.FileOutputStream(java.io.FileDescriptor.out), true, StandardCharsets.UTF_8);
         System.setOut(System.err);
@@ -145,7 +166,7 @@ public final class CubeLab {
             System.err.println("usage: CubeLab facts --names <file> --out <json> | CubeLab play");
             System.exit(2);
         }
-        final Config cfg = Config.load();
+        cfg = Config.load();
         final long t0 = System.nanoTime();
         Bootstrap.installGui(cfg.forgeHomeDir());           // hard rule 1: the FIRST Forge call
         final long initMs = Bootstrap.initializeModel(false);
@@ -327,6 +348,7 @@ public final class CubeLab {
         final String profA = str(job, "profileA"), profB = str(job, "profileB");
         final String builder = str(job, "builder");
         final Deck[] decks = new Deck[2];
+        final File[] deckFiles = new File[2];
         final JsonOut res = new JsonOut().obj().n("type", "match").n("id", id);
 
         // Forge's own builder, for comparison (and as the deck when --builder forge or the lab's failed).
@@ -347,6 +369,7 @@ public final class CubeLab {
             final boolean useForge = "forge".equals(builder) || labDeck == null;
             decks[s] = useForge ? forgeDeck : DeckSerializer.fromFile(new File(labDeck));
             if (decks[s] == null) throw new IllegalStateException("no deck for side " + side + " of " + id);
+            deckFiles[s] = useForge ? (forgeOut == null ? null : new File(forgeOut)) : new File(labDeck);
             decks[s].setName("Drafter " + side);
             System.err.println("[cubelab] " + id + " side " + side + " forge build " + ms(t) + " ms");
         }
@@ -354,6 +377,7 @@ public final class CubeLab {
 
         final LobbyPlayer lpA = Bootstrap.createAiPlayer("Drafter A", 0, profA);
         final LobbyPlayer lpB = Bootstrap.createAiPlayer("Drafter B", 1, profB);
+        final Map<?, ?> record = job.get("record") instanceof Map ? (Map<?, ?>) job.get("record") : null;
         int winsA = 0, winsB = 0;
         final int need = games / 2 + 1;
         res.key("games").arr();
@@ -361,7 +385,9 @@ public final class CubeLab {
             // Alternate who is on the play; the draft's seed decides game 1, so it alternates across drafts too.
             final boolean aOnPlay = ((seed + g) % 2L) == 1L;
             final long gameSeed = seed * 1000003L + g;
-            final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs);
+            final Recording rec = record == null ? null
+                    : new Recording(record, id, seed, g, gameSeed, aOnPlay, decks, deckFiles, profA, profB);
+            final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec);
             if (r.stuck) {
                 res.end().n("stuck", true).end();
                 emit(res.done());
@@ -371,7 +397,12 @@ public final class CubeLab {
             else if ("B".equals(r.winner)) winsB++;
             res.obj().n("n", (long) g).n("onPlay", aOnPlay ? "A" : "B").n("onPlayVerified", r.firstTurn)
                .n("winner", r.winner).n("turns", (long) r.turns).n("ms", r.ms).n("timeout", r.timeout)
-               .n("reason", r.reason).n("error", r.error).end();
+               .n("reason", r.reason).n("error", r.error).n("cpuMs", r.cpuMs).n("gameCpuMs", r.gameCpuMs);
+            if (r.recorded != null) {
+                res.key("recorded").obj().n("dir", r.recorded).n("bytes", r.recordBytes)
+                   .n("frames", (long) r.recordFrames).n("errors", (long) r.recordErrors).end();
+            }
+            res.end();
         }
         res.end().n("winsA", (long) winsA).n("winsB", (long) winsB).end();
         emit(res.done());
@@ -447,10 +478,87 @@ public final class CubeLab {
         long ms;
         boolean timeout;
         boolean stuck;
+        long cpuMs;          // the worker JVM's CPU time over the game, every thread (D313's overhead measure)
+        long gameCpuMs;      // the game thread's own CPU time
+        String recorded;     // the recording's folder, relative to the run (D313)
+        long recordBytes;
+        int recordFrames;
+        int recordErrors;
+    }
+
+    /**
+     * What one recorded game's two logs say about it (D313).  The job's
+     * {@code record} block: {@code dir} (absolute: the draft's folder),
+     * {@code rel} (that folder relative to the run), {@code run}, {@code cube},
+     * {@code cubeFile}, {@code cubeSha}, {@code format} and the two deck names
+     * the recordings use ({@code deckNameA}, {@code deckNameB}).
+     */
+    static final class Recording {
+        final File dir;
+        final String rel;
+        final String gameId;
+        final long gameSeed;
+        final List<SeatRecorder.Seat> seats = new ArrayList<>();
+        final Map<String, Object> lab = new LinkedHashMap<>();
+
+        Recording(final Map<?, ?> rec, final String id, final long seed, final int g, final long gameSeed,
+                  final boolean aOnPlay, final Deck[] decks, final File[] deckFiles,
+                  final String profA, final String profB) {
+            this.dir = new File(str(rec, "dir"));
+            this.rel = str(rec, "rel");
+            this.gameId = id + "-g" + g;
+            this.gameSeed = gameSeed;
+            final String[] names = {str(rec, "deckNameA"), str(rec, "deckNameB")};
+            final String[] profiles = {profA, profB};
+            for (int s = 0; s < 2; s++) {
+                seats.add(new SeatRecorder.Seat(names[s], deckFiles[s], relPath(deckFiles[s]), decks[s], profiles[s]));
+            }
+            lab.put("run", str(rec, "run"));
+            lab.put("cube", str(rec, "cube"));
+            lab.put("cubeFile", str(rec, "cubeFile"));
+            lab.put("cubeSha", str(rec, "cubeSha"));
+            lab.put("format", str(rec, "format"));
+            lab.put("match", id);
+            lab.put("draftSeed", seed);
+            lab.put("game", (long) g);
+            lab.put("gameSeed", gameSeed);
+            lab.put("onPlay", aOnPlay ? "A" : "B");
+        }
+
+        File out(final int seat) {
+            return new File(dir, "g" + lab.get("game") + "-seat" + seat + ".jsonl.gz");
+        }
+
+        static String relPath(final File f) {
+            if (f == null) return null;
+            final String root = cfg.root().getAbsolutePath() + File.separator;
+            final String p = f.getAbsolutePath();
+            return p.startsWith(root) ? p.substring(root.length()) : p;
+        }
+    }
+
+    static synchronized String jarSha() {
+        if (jarSha == null) {
+            try {
+                final java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                try (java.io.InputStream in = Files.newInputStream(cfg.forgeJar().toPath())) {
+                    final byte[] buf = new byte[1 << 16];
+                    int n;
+                    while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
+                }
+                final StringBuilder sb = new StringBuilder(64);
+                for (final byte b : md.digest()) sb.append(String.format(Locale.ROOT, "%02x", b));
+                jarSha = sb.toString();
+            } catch (final Exception e) {
+                jarSha = "";
+            }
+        }
+        return jarSha.isEmpty() ? null : jarSha;
     }
 
     static GameResult playGame(final Deck[] decks, final LobbyPlayer lpA, final LobbyPlayer lpB,
-                               final boolean aOnPlay, final long gameSeed, final long timeoutMs) throws Exception {
+                               final boolean aOnPlay, final long gameSeed, final long timeoutMs,
+                               final Recording rec) throws Exception {
         final GameRules rules = new GameRules(GameType.Draft);
         rules.setAppliedVariants(EnumSet.of(GameType.Draft));
         rules.setGamesPerMatch(1);
@@ -463,15 +571,29 @@ public final class CubeLab {
         final Game game = match.createGame();
         final GameResult r = new GameResult();
         game.subscribeToEvents(new FirstPlayer(game, aOnPlay ? lpA : lpB, r));
+        // D313: both chairs' recorders, subscribed after FirstPlayer and before the game starts.
+        final List<SeatRecorder> recorders = new ArrayList<>();
+        if (rec != null) {
+            for (int s = 0; s < 2; s++) {
+                recorders.add(SeatRecorder.attach(game, s, rec.out(s), rec.gameId, rec.gameSeed, jarSha(),
+                        rec.seats, rec.lab));
+            }
+        }
         final CountDownLatch done = new CountDownLatch(1);
         final Throwable[] fail = new Throwable[1];
         final long t = System.nanoTime();
+        final long cpu0 = processCpuNanos();
+        final long[] gameCpu = new long[1];
         game.getAction().invoke(() -> {           // Forge's own Game pool, as RecordMatch starts its game
+            final long c0 = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime();
             try {
                 match.startGame(game);
+                for (final SeatRecorder sr : recorders) sr.finish();   // still the game thread, as RecordMatch
             } catch (final Throwable e) {
                 fail[0] = e;
+                for (final SeatRecorder sr : recorders) sr.crashed();
             } finally {
+                gameCpu[0] = ManagementFactory.getThreadMXBean().getCurrentThreadCpuTime() - c0;
                 done.countDown();
             }
         });
@@ -484,6 +606,22 @@ public final class CubeLab {
             }
         }
         r.ms = ms(t);
+        if (rec != null) {
+            for (final SeatRecorder sr : recorders) {
+                try {
+                    sr.close();
+                } catch (final IOException e) {
+                    r.recordErrors++;
+                    System.err.println("[cubelab] recording " + sr.file() + " failed: " + e);
+                }
+                r.recordBytes += sr.bytes();
+                r.recordFrames += sr.frames();
+                r.recordErrors += sr.errors();
+            }
+            r.recorded = rec.rel;
+        }
+        r.cpuMs = (processCpuNanos() - cpu0) / 1_000_000L;
+        r.gameCpuMs = gameCpu[0] / 1_000_000L;
         if (fail[0] != null) {
             r.error = fail[0].getClass().getName();
             fail[0].printStackTrace();
@@ -572,4 +710,11 @@ public final class CubeLab {
     }
 
     static long ms(final long t) { return (System.nanoTime() - t) / 1_000_000L; }
+
+    /** The JVM's CPU time, every thread (0 where the platform will not say). */
+    static long processCpuNanos() {
+        final java.lang.management.OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        return os instanceof com.sun.management.OperatingSystemMXBean
+                ? ((com.sun.management.OperatingSystemMXBean) os).getProcessCpuTime() : 0L;
+    }
 }

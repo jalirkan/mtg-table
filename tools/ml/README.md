@@ -16,8 +16,8 @@ with a note when it is missing. Run everything from the repo root (hard rule 9).
 ## How data flows
 
 ```
-cube lab (--record M) / tools/ml/record-pairs.sh / any seat or spectate recording
-        │  frame logs: <out>/frames/*.jsonl, var/ml/games/*.jsonl, var/games/<id>/frames.jsonl
+cube lab (--record-all, D313) / tools/ml/record-pairs.sh / any seat or spectate recording
+        │  frame logs: <run>/games/<seed>/g<n>-seat{0,1}.jsonl.gz, var/ml/games/*.jsonl, var/games/<id>/frames.jsonl
         ▼
 encode.py      one row per decision state, a fixed-size vector for the cube's card pool
         ▼
@@ -29,6 +29,12 @@ later: the evaluator guides a search over Forge's engine (not built yet)
 ```
 
 ```bash
+# a night of the cube lab, recorded (both chairs of every game), then its dataset (D313):
+tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 5000 --games 3 --jobs 7 --seed 1 --record-all \
+    --out var/cubelab/runs/night-1
+python3 tools/ml/dataset.py --run-dir var/cubelab/runs/night-1      # -> var/cubelab/runs/night-1/dataset/
+python3 tools/ml/dataset.py --run-dir var/cubelab/runs/night-1 --run-dir var/cubelab/runs/night-2 \
+    --out var/ml/data/synergy-nights                                 # several nights of one cube
 # 1. games: the cube lab's recordings, or deck pairs recorded directly
 tools/ml/record-pairs.sh --pairs var/ml/pairs.txt --seeds 1-4 --seats 0,1 --jobs 4
 # 2. the dataset (the vocabulary is the cube the decks were drafted from)
@@ -154,6 +160,11 @@ card arrives (`docs/guides/gpu-day.md`).
   system-wide.
 
 ## What the cube lab needs to record for this to scale
+
+*Items 1–4 and 6 are done by D313 (`run --record-all` / `--record-every N`,
+and `--run-dir` here, which takes the run's own `cube.md` as the vocabulary and
+refuses a cube whose sha256 is not the run's); 5 and the policy target below
+are still open.*
 
 1. **Every game, not the first M.** A position evaluator wants tens of
    thousands of games; `--record M` replays M drafts' decks through a fresh

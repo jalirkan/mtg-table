@@ -153,6 +153,7 @@
  */
 
 import { readFileSync, statSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 
 const PROTOCOL_VERSION = 1;
 
@@ -1081,7 +1082,9 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
 
-  const text = readFileSync(path, 'utf8');
+  // A `.gz` log (the cube lab's in-worker recordings, D313) is read whole and
+  // checked exactly as its plain text would be.
+  const text = path.endsWith('.gz') ? gunzipSync(readFileSync(path)).toString('utf8') : readFileSync(path, 'utf8');
   const lines = text.split('\n').filter((l) => l.length > 0);
   if (lines.length === 0) {
     return { problems: [`${path}: empty file`], stats: {} };
