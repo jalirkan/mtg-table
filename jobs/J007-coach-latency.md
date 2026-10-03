@@ -1,9 +1,13 @@
 id: J007
-title: Coach latency experiments: Haiku on routine types; answer-first layout
+title: [SUPERSEDED by J012, skip] Coach latency experiments: Haiku on routine types; answer-first layout
 cpu: light
 after: J011
 repos: same as J011
 est: ~45 min (two runs of 84 calls)
+
+
+**Superseded (Justin, 2026-10-03):** coach benchmarking is cut back to light checks, because
+cloud models change outside our control. Write STATUS `skipped`, reason "superseded by J012".
 
 ## Pilot
 ```bash

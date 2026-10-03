@@ -1,5 +1,5 @@
 id: J011
-title: (second retry of J006, after J008) New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)
+title: [SUPERSEDED by J012, skip] (second retry of J006, after J008) New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)
 cpu: light
 repos: mtg-table@main (e54aa16 or later), ForgeCoach@main (8cc33bd or later: launcher tests no longer probe the live engine, #32)
 est: ~30 min (84 calls at ~11 s, plus setup)
@@ -16,6 +16,10 @@ worktree, then run play.sh from that worktree:
 J008 failed its pilot only on a 5 s latency floor that was too tight; that floor is now 1 s.
 Before that, J006 failed its pilot only because `npm test` saw the live engine on 8642. ForgeCoach #32
 fixed that. Every other J006 check passed, so this is a straight retry.
+
+
+**Superseded (Justin, 2026-10-03):** coach benchmarking is cut back to light checks, because
+cloud models change outside our control. Write STATUS `skipped`, reason "superseded by J012".
 
 ## Pilot
 ```bash
