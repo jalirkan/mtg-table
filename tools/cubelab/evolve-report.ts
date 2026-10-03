@@ -14,8 +14,11 @@ export interface GenSummary {
   versionIn: number;
   versionOut: number;
   date: string;
+  /** Drafts the decision read: this generation's, plus those of the generations before it that drafted the same list. */
   drafts: number;
   seeds: [number, number];
+  /** The first generation whose drafts were pooled (= gen when none were). */
+  pooledFrom?: number;
   games: number;
   decision: Decision;
   balance: Balance;
@@ -23,11 +26,12 @@ export interface GenSummary {
 }
 
 const r2 = (x: number): string => x.toFixed(2);
+const pooled = (g: GenSummary): string => (g.pooledFrom !== undefined && g.pooledFrom < g.gen ? ` (generations ${g.pooledFrom}–${g.gen} on the same list)` : '');
 const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** The one line appended to the cube document's `## Iteration log`. */
 export function logEntry(g: GenSummary): string {
-  const head = `v${g.versionOut} (${g.date}, cube lab evolve generation ${g.gen}: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games)`;
+  const head = `v${g.versionOut} (${g.date}, cube lab evolve generation ${g.gen}: ${g.drafts} grid drafts${pooled(g)}, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games)`;
   if (!g.decision.swaps.length) return `${head}: no swaps, v${g.versionIn} unchanged. ${g.decision.verdict}`;
   const sw = g.decision.swaps.map((s) => `**${s.out}** → **${s.in}** (${s.why}: ${s.evidence}; in: ${s.fit})`).join('; ');
   return `${head}: ${sw}.`;
@@ -42,7 +46,7 @@ export function changelogSection(g: GenSummary): string {
   const d = g.decision;
   const out: string[] = [];
   out.push(`## Generation ${g.gen} — v${g.versionIn} → v${g.versionOut} (${g.date})`, '');
-  out.push(`${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games; mean card win rate ${r2(g.balance.mean)}.`, '');
+  out.push(`${g.drafts} grid drafts${pooled(g)}, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games; mean card win rate ${r2(g.balance.mean)}.`, '');
   out.push(`**Verdict.** ${d.verdict}`, '');
   if (d.swaps.length) {
     out.push('| Out | Why | Evidence | In | Why this card |', '|---|---|---|---|---|');
@@ -92,7 +96,7 @@ export function htmlSection(g: GenSummary): string {
   const d = g.decision;
   const parts: string[] = [];
   parts.push(`<section><h2>Generation ${g.gen} <span class="dim">v${g.versionIn} → v${g.versionOut} · ${esc(g.date)}</span></h2>`);
-  parts.push(`<p class="dim">${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}</p>`);
+  parts.push(`<p class="dim">${g.drafts} grid drafts${esc(pooled(g))}, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}</p>`);
   parts.push(`<p class="verdict">${esc(d.verdict)}</p>`);
   if (d.swaps.length) parts.push('<h3>Swaps</h3>', table(['Out', 'Why', 'Evidence', 'In', 'Why this card'], d.swaps.map((s) => [s.out, s.why, s.evidence, s.in, s.fit])));
   if (d.watch.length) parts.push('<h3>Insufficient data</h3>', table(['Card', 'Lean', 'Evidence', 'Drafts to settle'], d.watch.slice(0, 15).map((w) => [w.name, w.signal, w.evidence, String(w.draftsNeeded ?? '—')])));

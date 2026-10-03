@@ -332,7 +332,10 @@ over seeds `S + (g−1)·N` .. `S + g·N − 1` (grid, best of three, the run's
 weights), then reads every card's numbers from the run's `meta.json` plus one
 more: how often it went in the **first line taken** from its grid (3 of 9 cards
 is the base rate, so a card that goes there every time is everyone's first
-pick). Each card is then assessed:
+pick). When the generations just before it drafted the same list (none of
+them swapped anything), their drafts are pooled with this one's — the same
+list's evidence adds up, so a run of *insufficient data* generations settles
+on its own. Each card is then assessed:
 
 | status | when |
 |---|---|

@@ -13424,7 +13424,11 @@ section.html, result.json}`, and the out folder `evolve.json`, `changelog.md`,
 `index.html` and the latest cube; `result.json` is written last, so a
 generation that has one (made from the same input) is skipped on a re-run and
 one without it resumes its run folder by seed. Generation g plays seeds
-`S + (g−1)·N` onward, fresh drafts each time.
+`S + (g−1)·N` onward, fresh drafts each time; when the generations just before
+it drafted the same list (compared card by card, since a no-swap generation's
+document still gains a log entry), their drafts are pooled with its own, so
+repeated *insufficient data* accumulates evidence rather than starting over.
+A lock file, `evolve.lock`, keeps a second process out of a folder in use.
 
 Omega v1 (`cubes/omega-cube-180.md`) and its 938-card seed pool
 (`cubes/omega-seed-pool.tsv`) are committed as given; `cubes/omega-notes.tsv`

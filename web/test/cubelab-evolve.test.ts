@@ -322,6 +322,7 @@ test('the log entry, the changelog and a self-contained page', () => {
   assert.match(logEntry(g), /^v2 \(2026-10-03, cube lab evolve generation 1: 30 grid drafts, seeds 1–30, 80 decisive games\): \*\*Doom Blade\*\* → \*\*/);
   const none: GenSummary = { ...g, versionOut: 1, decision: selectSwaps(input()) };
   assert.match(logEntry(none), /no swaps, v1 unchanged/);
+  assert.match(logEntry({ ...none, gen: 2, drafts: 60, seeds: [1, 60], pooledFrom: 1 }), /generation 2: 60 grid drafts \(generations 1–2 on the same list\), seeds 1–60/);
   assert.match(changelog('Omega', [g, none]), /## Generation 1 — v1 → v2[\s\S]*\| Doom Blade \(Black\) \| dead \|/);
   const html = htmlPage('Omega', [g]);
   assert.ok(!/\b(src|href)=|https?:\/\//.test(html.replace(/name="viewport"[^>]*>/, '')), 'nothing loaded from anywhere');

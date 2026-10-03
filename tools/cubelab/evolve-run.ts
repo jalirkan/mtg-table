@@ -83,6 +83,8 @@ export function defaultNotes(cubeFile: string): string {
   return path.join(path.dirname(cubeFile), `${base}-notes.tsv`);
 }
 
+/** A cube's list, whatever its prose says: the sorted names with their sections. */
+const listKey = (c: { cards: Array<{ name: string; section: string }> }): string => c.cards.map((x) => `${x.section}\t${x.name}`).sort().join('\n');
 const versionOf = (title: string): number => Number(/\bversion (\d+)\b/.exec(title)?.[1] ?? 1);
 const pad = (g: number): string => String(g).padStart(2, '0');
 
@@ -174,7 +176,19 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
       cubeFile: inputFile, format: 'grid', drafts: o.drafts, games: o.games, jobs: o.jobs, seed: seeds[0], profiles: o.profiles,
       ratingsFile: o.ratingsFile, record: 0, out: runDir, builder: 'lab', gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: o.weights,
     }, say);
-    const { meta, cards: info, recs } = readRunDir(runDir);
+    const { meta, cards: info, recs: own } = readRunDir(runDir);
+    // The same list drafted by the generations just before (none of them swapped): their drafts are
+    // evidence about this list too, so they pool -- more power, no bias.
+    let recs = own;
+    let from = g;
+    for (let h = g - 1; h >= 1; h--) {
+      const prev = path.join(o.out, `gen-${pad(h)}`);
+      if (!fs.existsSync(path.join(prev, 'input.md')) || listKey(parseCube(fs.readFileSync(path.join(prev, 'input.md'), 'utf8'))) !== listKey(cube)) break;
+      recs = [...readRunDir(path.join(prev, 'run')).recs, ...recs];
+      from = h;
+    }
+    if (from < g) say(`generation ${g}: the list is the one generation(s) ${from}-${g - 1} drafted; pooling their ${recs.length - own.length} draft(s) with these ${own.length}`);
+    const pooledSeeds: [number, number] = [o.seed + (from - 1) * o.drafts, seeds[1]];
     const metaDoc = buildMeta(meta, info, recs, cube) as MetaDoc;
     fs.writeFileSync(path.join(runDir, 'meta.json'), `${JSON.stringify(metaDoc)}\n`);
     fs.writeFileSync(path.join(runDir, 'report.html'), renderHtml(aggregate(meta, info, recs, [], { pairs: GUILD, themes: cube.themeNames })));
@@ -188,14 +202,14 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     const versionIn = versionOf(cube.title);
     const versionOut = decision.swaps.length ? versionIn + 1 : versionIn;
     const summary: GenSummary = {
-      gen: g, versionIn, versionOut, date: o.date, drafts: recs.length, seeds, games: metaDoc.sample.games, decision, balance,
+      gen: g, versionIn, versionOut, date: o.date, drafts: recs.length, seeds: pooledSeeds, pooledFrom: from, games: metaDoc.sample.games, decision, balance,
       stats: [...stats.values()].filter((s) => cube.cards.some((c) => c.name === s.name)),
     };
     const outText = writeCubeDoc(inputText, applySwaps(cube, decision.swaps, poolBy), { version: versionOut, logEntry: logEntry(summary) });
     const check = parseCube(outText);
     if (check.cards.length !== cube.cards.length || check.warnings.length) throw new Error(`generation ${g}: the written cube does not parse cleanly: ${check.warnings.join('; ')}`);
     fs.writeFileSync(path.join(dir, 'cube.md'), outText);
-    fs.writeFileSync(path.join(dir, 'stats.json'), `${JSON.stringify({ gen: g, drafts: recs.length, seeds, mean: balance.mean, balance, decision, stats: summary.stats }, null, 1)}\n`);
+    fs.writeFileSync(path.join(dir, 'stats.json'), `${JSON.stringify({ gen: g, drafts: recs.length, seeds: pooledSeeds, pooledFrom: from, mean: balance.mean, balance, decision, stats: summary.stats }, null, 1)}\n`);
     fs.writeFileSync(path.join(dir, 'summary.json'), `${JSON.stringify(summary)}\n`);
     fs.writeFileSync(path.join(dir, 'section.html'), `${htmlSection(summary)}\n`);
     const result: GenResult = {
