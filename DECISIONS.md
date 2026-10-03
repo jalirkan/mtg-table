@@ -15227,6 +15227,25 @@ to the public branch (one commit, replaced, is the value; the history is on `pc-
   timestamps are null. The guide says that oomd's 60% kill can come before the soft
   backoff, and that push access to `pc-jobs` is code execution on the PC.
 
+**Amended 2026-10-03 (branch `c/status-fresh`, with ForgeCoach's `c/lab-fresh`): a fresher
+`#lab` page without loading the PC.**
+
+- **The public copy has its own clock.** It goes to `lab-status` on a state change, every
+  minute while a job runs if what it says changed (`updated`, `elapsed`, the rate and the
+  ETA aside), and every five minutes otherwise (`publicBusyEveryMs`, `publicIdleEveryMs`;
+  `--public-busy-s`, `--public-idle-s`). It is still one parentless commit, replaced, and a
+  failed push backs off as `pc-results` does, on its own count. `pc-results` keeps 4.5
+  minutes.
+- **The local server serves the public copies only**, `/public-status.json` (and the old
+  `/status.json`) and `/public-ladder.json`, on 127.0.0.1 only (`--http-host` is gone). CORS
+  names `https://jalirkan.github.io` and localhost dev origins, never `*`, and refuses other
+  origins with 403; `OPTIONS` answers the Private Network Access preflight
+  (`Access-Control-Allow-Private-Network: true`). The page tries it first on the PC, with a
+  short timeout, and falls back to GitHub; a phone reaches it through `tailscale serve`
+  (the lab-runner guide). Rejected: binding the LAN (plain http is mixed content on the
+  https page, and it would expose the server to every device at home), and pushing every
+  minute regardless (a commit a minute while nothing moves).
+
 ## D340 — Draft seeds belong to someone: the lab keeps 1–799,999,999, verifications 800,000,000+, and the AI ladder's deck sets 900,000,000+, which `run` and the queue refuse; the dataset builders also drop any game played with a deck-set deck, matched card for card
 
 *Branch `c/review2-fixes`; D340–D344, past every number the open lanes hold or may hold (the lab runner, the coach grader D332–D334, the match launcher's D333, evolve-rigor's D331).*

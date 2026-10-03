@@ -22,7 +22,7 @@ text of the `pc-jobs` branch's README. `tools/runner/jobs/` has worked examples.
 ```bash
 cd /home/justin-a/code/mtg-table            # any checkout of a commit that has tools/runner.sh
 ./tools/runner.sh install --dry-run         # what it would write and run
-./tools/runner.sh install                   # [--ref main] [--reserve-gb 7] [--public-status on|off] [--http-port 8645]
+./tools/runner.sh install                   # [--ref main] [--reserve-gb 7] [--public-status on|off] [--http-port 8645] [--public-busy-s 60] [--public-idle-s 300]
 sudo loginctl enable-linger $USER           # ONCE, by Justin: the service keeps running with nobody logged in
 ./tools/runner.sh status
 ```
@@ -219,10 +219,13 @@ and needs its own `--out` or `--allow-version-change`.
 
 ## status.json, and the public copy
 
-The runner writes `var/runner/status.json` every 10 s and serves its public copy on
-`http://127.0.0.1:8645/status.json`, with `Access-Control-Allow-Origin: *` (`--http-port`,
-`--http-host`). The full copy goes to `pc-results` with `HEARTBEAT.md` every 4.5 minutes
-and on every job state change. Schema 1 (`tools/runner/statusjson.ts`):
+The runner writes `var/runner/status.json` every 10 s. The full copy goes to `pc-results`
+with `HEARTBEAT.md` every 4.5 minutes and on every job state change. The public copy (below)
+goes to `lab-status` on its own clock: on every state change; every minute while a job
+runs, but only when what it says changed (the clock aside: `updated`, `elapsed`, the rate
+and the ETA); and every five minutes otherwise, so the page can see the runner is alive
+(`--public-busy-s 60`, `--public-idle-s 300`; a failed push backs off as `pc-results` does).
+Schema 1 (`tools/runner/statusjson.ts`):
 
 ```
 { schema: 1, updated, paused,
@@ -262,6 +265,40 @@ else null; a promotion's reason only in the one shape the league writes, else
 and the experiment log are dropped. It is published whenever the file changes. A field
 the page starts to need is a line in both allowlists, in the same change.
 
+**The local server.** The daemon also serves the public copies, and only those, on
+`http://127.0.0.1:8645` (`--http-port`, 0 turns it off; `tools/runner/serve.ts`):
+`/public-status.json` (also at its old path `/status.json`) and `/public-ladder.json`
+(404 when there is no ladder). They are the same sanitised documents `lab-status` carries,
+made fresh on each request, so the `#lab` page opened on the PC itself reads them first and
+shows what the runner wrote seconds ago. The server binds 127.0.0.1 and nothing else. CORS
+names `https://jalirkan.github.io` and the localhost dev origins (`http://localhost:<port>`,
+`http://127.0.0.1:<port>`), never `*`; a request from any other origin gets 403. An
+`OPTIONS` preflight is answered with `Access-Control-Allow-Private-Network: true`, which a
+browser asks for (Private Network Access) before an https page may read a loopback address.
+
+### Optional: the page on a phone, through Tailscale
+
+A phone cannot reach `127.0.0.1` on the PC, and plain `http://<pc>:8645` over the LAN does
+not work either: the page is https, and browsers block an https page's requests to plain
+http (mixed content). With [Tailscale](https://tailscale.com) on the PC and the phone, and
+HTTPS certificates turned on for the tailnet (admin console, DNS, *HTTPS Certificates*),
+proxy an https name on the tailnet to the local server:
+
+```bash
+tailscale serve --bg http://127.0.0.1:8645   # https://<machine>.<tailnet>.ts.net -> the local server
+tailscale serve status                      # what is served; `tailscale serve reset` stops it
+```
+
+Then open the page on the phone with the source named:
+
+```
+https://jalirkan.github.io/ForgeCoach/#lab?src=https://<machine>.<tailnet>.ts.net/public-status.json
+```
+
+`tailscale serve` (not `funnel`) is reachable from your tailnet only, and its requests
+arrive on loopback, so the server still binds 127.0.0.1 and still serves only the public
+copies. Without it, the phone reads `lab-status` on GitHub, as before.
+
 ## Security: who can run code on the PC
 
 **Whoever can push to `pc-jobs` can run code on Justin's PC.** A job file's blocks run as
@@ -283,7 +320,7 @@ names are fixed in its code.
   repo are removed at start.
 - **The network is down.** Fetches and pushes time out after 30 s and never prompt, and the
   jobs are monitored before any git call. A failed publish is retried after 30 s, then 1,
-  2, 4 … up to 30 minutes. A job file is treated as removed only after it is missing from
+  2, 4 … up to 30 minutes (the public copy on its own count, the same way). A job file is treated as removed only after it is missing from
   two successful reads of `pc-jobs`.
 - **A step failed.** `results/<id>/failure.txt` on `pc-results` has the exit code and the
   log tail. The whole log is `var/runner/jobs/<id>/<step>.log`. The exact script is

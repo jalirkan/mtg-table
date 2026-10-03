@@ -11,8 +11,10 @@
 //     metrics and the `abort:` lines); a step's unit that ended is READ (its
 //     exit code file) and the next step starts;
 //  3. start what the schedule allows (schedule.ts), one heavy and one light;
-//  4. write var/runner/status.json; publish to pc-results (and the public
-//     lab-status copy) every five minutes and on every job state change.
+//  4. write var/runner/status.json; publish to pc-results every 4.5 minutes and
+//     on every job state change; the public lab-status copy on its own clock:
+//     on a state change, every minute while a job runs and its content changed,
+//     else every five minutes (publicBusyEveryMs, publicIdleEveryMs).
 //
 // A job is a list of STEPS, each a transient systemd unit in
 // forgecoach-lab.slice (`lab-<id>-<step>`), except the runner's own checks:
@@ -67,7 +69,12 @@ export interface RunnerConfig {
   budget: BudgetOptions;
   backoff: BackoffConfig;
   publicStatus: boolean;
+  /** pc-results (STATUS, outputs, HEARTBEAT.md): every this often, and on each state change. */
   publishEveryMs: number;
+  /** The public copy on lab-status while a job runs: at most this often, and only when its content (not its timestamps) changed. */
+  publicBusyEveryMs: number;
+  /** The public copy otherwise (and while busy but unchanged): this often, so the page sees the runner is alive. */
+  publicIdleEveryMs: number;
   fetchEveryMs: number;
   metricsEveryMs: number;
   commit: string;
@@ -79,7 +86,7 @@ export interface RunnerConfig {
 
 export const DEFAULT_CONFIG: Omit<RunnerConfig, 'runnerDir' | 'stateDir' | 'labRoot' | 'homeRepos' | 'urls' | 'commit'> = {
   bridgePort: 8642, budget: DEFAULT_BUDGET, backoff: DEFAULT_BACKOFF, publicStatus: true,
-  publishEveryMs: 4.5 * 60_000, fetchEveryMs: 60_000, metricsEveryMs: 60_000, push: true,
+  publishEveryMs: 4.5 * 60_000, publicBusyEveryMs: 60_000, publicIdleEveryMs: 5 * 60_000, fetchEveryMs: 60_000, metricsEveryMs: 60_000, push: true,
 };
 
 type StepKind = 'shell' | 'pilot-checks' | 'final-checks' | 'collect';
@@ -131,6 +138,22 @@ interface Persist {
   paused: boolean; lastPublish: number; lastFetch: number; dirty: boolean; lastHost: HostSample | null; started: number; ladderSig?: string;
   /** Failed publishes in a row, and when the next try may come (exponential: 30 s, 1, 2, 4 … 30 min). */
   publishFailures?: number; nextPublishAt?: number;
+  /** The public copy's own clock: when it was last pushed, what it held (publicSig), and its failures and backoff. */
+  lastPublic?: number; publicSig?: string; publicFailures?: number; nextPublicAt?: number;
+}
+
+/** Exponential backoff after `failures` failed pushes in a row: 30 s, 1, 2, 4 … 30 minutes. */
+export function retryAt(now: number, failures: number): number {
+  return now + Math.min(30 * 60_000, 30_000 * 2 ** (failures - 1));
+}
+
+/**
+ * What the public copy says, the clock aside: `updated`, and what moves with it alone
+ * (`elapsed`, and `ratePerHour` / `eta`, which follow from `done` and the time).  A change
+ * of this is worth a push; a new `done` changes it.
+ */
+export function publicSignature(doc: StatusDoc, ladderSig = ''): string {
+  return JSON.stringify({ ...doc, updated: '', running: doc.running.map((r) => ({ ...r, elapsed: 0, ratePerHour: null, eta: null })), ladder: ladderSig });
 }
 
 /** Names a `collect:` file may not take: they are the runner's own facts in results/<id>/. */
@@ -291,11 +314,13 @@ export class Runner {
     });
     this.blocked = blocked;
     for (const job of start) this.begin(job, st.get(job.id) ?? null);
-    this.writeStatusJson();
+    const doc = this.writeStatusJson();
     if (this.ladderSig() !== (this.p.ladderSig ?? '')) this.p.dirty = true;
     const now = this.sys.now();
+    const stateChanged = this.p.dirty;
     const due = this.p.dirty || now - this.p.lastPublish >= this.cfg.publishEveryMs;
     if (due && now >= (this.p.nextPublishAt ?? 0)) this.publish();
+    if (this.cfg.publicStatus) this.maybePublishPublic(sanitise(doc), stateChanged);
     this.save();
   }
 
@@ -1058,7 +1083,7 @@ ${keep.trimEnd()}
     const doc = this.writeStatusJson();
     if (!this.cfg.push) { this.p.dirty = false; this.p.lastPublish = this.sys.now(); this.p.ladderSig = this.ladderSig(); return; }
     const ok = this.publishResults(doc);
-    if (this.cfg.publicStatus) this.publishPublic(sanitise(doc)); else this.p.ladderSig = this.ladderSig();
+    if (!this.cfg.publicStatus) this.p.ladderSig = this.ladderSig();
     if (ok) {
       this.p.dirty = false;
       this.p.lastPublish = this.sys.now();
@@ -1067,7 +1092,7 @@ ${keep.trimEnd()}
     } else {
       // Exponential backoff: 30 s, 1, 2, 4 … 30 minutes; never a push every tick while the network is down.
       this.p.publishFailures = (this.p.publishFailures ?? 0) + 1;
-      this.p.nextPublishAt = this.sys.now() + Math.min(30 * 60_000, 30_000 * 2 ** (this.p.publishFailures - 1));
+      this.p.nextPublishAt = retryAt(this.sys.now(), this.p.publishFailures);
       this.sys.log(`publish failed ${this.p.publishFailures} time(s) in a row; next try at ${isoLocal(this.p.nextPublishAt)}`);
     }
   }
@@ -1124,14 +1149,41 @@ ${keep.trimEnd()}
     return false;
   }
 
-  /** The numbers-only copy: one commit on the orphan branch lab-status of ForgeCoach, replaced on every push. */
-  publishPublic(doc: StatusDoc): void {
+  /**
+   * The public copy runs on its own clock (the page's freshness): on a state change; every
+   * publicBusyEveryMs while a job runs, if what it says changed; else every publicIdleEveryMs.
+   * A failed push backs off as pc-results does.
+   */
+  maybePublishPublic(doc: StatusDoc, stateChanged: boolean): void {
+    const now = this.sys.now();
+    if (now < (this.p.nextPublicAt ?? 0)) return;
+    const sig = publicSignature(doc, this.ladderSig());
+    const since = now - (this.p.lastPublic ?? 0);
+    const changed = sig !== this.p.publicSig;
+    const busy = doc.running.length > 0;
+    const due = since >= this.cfg.publicIdleEveryMs || (changed && (stateChanged || (busy && since >= this.cfg.publicBusyEveryMs)));
+    if (!due) return;
+    if (!this.cfg.push) { this.p.lastPublic = now; this.p.publicSig = sig; this.p.ladderSig = this.ladderSig(); return; }
+    if (this.publishPublic(doc)) {
+      this.p.lastPublic = now;
+      this.p.publicSig = sig;
+      this.p.publicFailures = 0;
+      this.p.nextPublicAt = 0;
+    } else {
+      this.p.publicFailures = (this.p.publicFailures ?? 0) + 1;
+      this.p.nextPublicAt = retryAt(now, this.p.publicFailures);
+      this.sys.log(`public status: failed ${this.p.publicFailures} time(s) in a row; next try at ${isoLocal(this.p.nextPublicAt)}`);
+    }
+  }
+
+  /** The numbers-only copy: one commit on the orphan branch lab-status of ForgeCoach, replaced on every push.  True when pushed. */
+  publishPublic(doc: StatusDoc): boolean {
     const dir = this.publicDir();
     try {
       if (!fs.existsSync(path.join(dir, '.git'))) {
         const home = this.cfg.homeRepos.ForgeCoach;
         const url = this.cfg.urls.ForgeCoach ?? (home ? this.sys.run(['git', '-C', home, 'remote', 'get-url', 'origin']).stdout.trim() : '');
-        if (!url) { this.sys.log('public status: no ForgeCoach URL'); return; }
+        if (!url) { this.sys.log('public status: no ForgeCoach URL'); return false; }
         fs.mkdirSync(dir, { recursive: true });
         this.sys.run(['git', 'init', '--quiet', dir]);
         this.git(dir, 'remote', 'add', 'origin', url);
@@ -1144,13 +1196,15 @@ ${keep.trimEnd()}
       const id = ['-c', 'user.name=forgecoach-runner', '-c', 'user.email=runner@localhost'];
       // One commit, replaced each time: the branch is a value, not a history.
       const parentless = this.git(dir, ...id, 'commit-tree', this.git(dir, 'write-tree').stdout.trim(), '-m', `lab status ${doc.updated}`).stdout.trim();
-      if (!parentless) return;
+      if (!parentless) return false;
       this.git(dir, 'reset', '--quiet', '--soft', parentless);
       const p = this.git(dir, 'push', '--quiet', '--force', 'origin', 'HEAD:refs/heads/lab-status');
-      if (p.code !== 0) this.sys.log(`public status: push failed: ${p.stderr.trim().split('\n').at(-1)}`);
-      else this.p.ladderSig = this.ladderSig();
+      if (p.code !== 0) { this.sys.log(`public status: push failed: ${p.stderr.trim().split('\n').at(-1)}`); return false; }
+      this.p.ladderSig = this.ladderSig();
+      return true;
     } catch (e) {
       this.sys.log(`public status: ${(e as Error).message}`);
+      return false;
     }
   }
 

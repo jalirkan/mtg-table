@@ -18,12 +18,12 @@
 //
 // Options: --lab-root DIR (~/code/lab)  --state DIR (<runner>/var/runner)
 //   --home-mtg-table DIR --home-forgecoach DIR (Justin's checkouts, ~/code/<repo>)
-//   --reserve-gb N (7)  --public-status on|off (on)  --http-port N (8645; 0 = off)  --http-host H (127.0.0.1)
+//   --reserve-gb N (7)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
+//   --public-busy-s N (60: the public copy while a job runs, when it changed)  --public-idle-s N (300)
 //   --bridge-port N (8642)  --dry-run (once/daemon: same as plan)  --no-push (write nothing to git remotes)
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
-import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -33,8 +33,9 @@ import { evaluate, parse as parseExpr } from './expr.ts';
 import { parseJobFile } from './jobfile.ts';
 import { EXTRACTORS } from './metrics.ts';
 import { DEFAULT_CONFIG, Runner, verdictText, type RunnerConfig } from './runner.ts';
+import { serveStatus, STATUS_HOST } from './serve.ts';
 import { budget, DEFAULT_BUDGET, DESKTOP_DROPIN, SERVICE, serviceUnit, SLICE, sliceUnit } from './sizing.ts';
-import { isoLocal, sanitise, type StatusDoc } from './statusjson.ts';
+import { isoLocal, type StatusDoc } from './statusjson.ts';
 import { dryRunSys, realSys } from './sys.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
@@ -57,6 +58,12 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string> } {
   return { pos, f };
 }
 
+/** A positive number of seconds, in ms; undefined when absent or not a number (the default stands). */
+function seconds(v: string | undefined): number | undefined {
+  const n = Number(v);
+  return v !== undefined && Number.isFinite(n) && n > 0 ? n * 1000 : undefined;
+}
+
 function config(f: Map<string, string>): RunnerConfig {
   const labRoot = path.resolve(f.get('lab-root') ?? path.join(HOME, 'code', 'lab'));
   const homeMtg = f.get('home-mtg-table') ?? path.join(HOME, 'code', 'mtg-table');
@@ -76,6 +83,8 @@ function config(f: Map<string, string>): RunnerConfig {
     bridgePort: Number(f.get('bridge-port') ?? 8642),
     budget: { ...DEFAULT_BUDGET, reserveGb: Number(f.get('reserve-gb') ?? DEFAULT_BUDGET.reserveGb) },
     publicStatus: (f.get('public-status') ?? 'on') !== 'off',
+    publicBusyEveryMs: seconds(f.get('public-busy-s')) ?? DEFAULT_CONFIG.publicBusyEveryMs,
+    publicIdleEveryMs: seconds(f.get('public-idle-s')) ?? DEFAULT_CONFIG.publicIdleEveryMs,
     commit,
     push: !f.has('no-push'),
   };
@@ -166,7 +175,7 @@ function install(cfg: RunnerConfig, f: Map<string, string>): number {
   const b = budget(m, cfg.budget);
   const node = path.dirname(process.execPath);
   const args = [`--lab-root ${cfg.labRoot}`, `--reserve-gb ${cfg.budget.reserveGb}`, `--public-status ${cfg.publicStatus ? 'on' : 'off'}`,
-    `--http-port ${f.get('http-port') ?? 8645}`, ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
+    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-busy-s', 'public-idle-s'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
     ...(cfg.homeRepos.ForgeCoach ? [`--home-forgecoach ${cfg.homeRepos.ForgeCoach}`] : [])];
   write(path.join(unitDir, SLICE), sliceUnit(b));
   write(path.join(unitDir, SERVICE), serviceUnit({ runnerDir, node, args }));
@@ -191,16 +200,11 @@ function approve(cfg: RunnerConfig, id: string, f: Map<string, string>): number 
   return 0;
 }
 
-function serve(cfg: RunnerConfig, host: string, port: number): void {
-  http.createServer((req, res) => {
-    const h = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store', 'Content-Type': 'application/json' };
-    if (req.method === 'OPTIONS') { res.writeHead(204, { ...h, 'Access-Control-Allow-Methods': 'GET' }); res.end(); return; }
-    if (req.method !== 'GET' || !/^\/(status\.json)?(\?.*)?$/.test(req.url ?? '')) { res.writeHead(404, h); res.end('{}'); return; }
-    const doc = readStatus(cfg);
-    // The public, numbers-only copy: the same one lab-status carries.
-    res.writeHead(doc ? 200 : 503, h);
-    res.end(doc ? JSON.stringify(sanitise(doc)) : '{"error":"no status yet"}');
-  }).on('error', (e) => console.error(`http: ${e.message}`)).listen(port, host, () => console.log(`status.json on http://${host}:${port}/status.json`));
+/** The public copies on 127.0.0.1 (serve.ts): status.json as the runner last wrote it, ladder.json as the ladder last wrote it. */
+function serve(cfg: RunnerConfig, r: Runner, port: number): void {
+  serveStatus(port, { status: () => readStatus(cfg), ladder: () => r.publicLadder() })
+    .then(() => console.log(`public status on http://${STATUS_HOST}:${port}/public-status.json (and /public-ladder.json)`))
+    .catch((e: Error) => console.error(`http: ${e.message}`));
 }
 
 function printStatus(cfg: RunnerConfig): number {
@@ -245,7 +249,8 @@ async function main(): Promise<number> {
       r.reconcile();
       if (cmd === 'once') { r.tick(); return printStatus(cfg); }
       const port = Number(f.get('http-port') ?? 8645);
-      if (port > 0) serve(cfg, f.get('http-host') ?? '127.0.0.1', port);
+      if (f.has('http-host')) console.error('--http-host is gone: the status server binds 127.0.0.1 only (a phone: tailscale serve, docs/guides/lab-runner.md)');
+      if (port > 0) serve(cfg, r, port);
       console.log(`runner ${cfg.commit}: lab ${cfg.labRoot}, state ${cfg.stateDir}, public status ${cfg.publicStatus ? 'on' : 'off'}`);
       let stopping = false;
       process.on('SIGTERM', () => { stopping = true; });
@@ -293,7 +298,7 @@ async function main(): Promise<number> {
       return 0;
     }
     default:
-      console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(3, 22).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+      console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(3, 23).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
       return 2;
   }
 }

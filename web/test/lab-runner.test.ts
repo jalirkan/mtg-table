@@ -20,6 +20,9 @@
  *    pushed STATUS / outputs / status.json / HEARTBEAT.md, the public copy on lab-status;
  *    an old-format job stopping after its pilot and `approve`; a failed pilot; an abort; a
  *    memory stop and its retry; a restart that adopts, resumes or restarts;
+ *  - the public copy's own clock (every minute while busy and changed, five minutes
+ *    otherwise, backed off on failure); the local server's CORS allowlist, Private
+ *    Network Access preflight, 127.0.0.1 bind and public-only paths;
  *  - the pool control file in the cube lab's runPool (a fake `java` on PATH) and the AI
  *    ladder's drive: pause holds, maxWorkers caps, absent means unchanged.
  */
@@ -37,7 +40,8 @@ import { controlReader, parseControl, readControl, writeControl } from '../../to
 import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expandGlob, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
-import { DEFAULT_CONFIG, Runner, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { DEFAULT_CONFIG, publicSignature, Runner, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, schedule, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
 import { isoLocal, PUBLIC_TEXT, REASONS, sanitise, type StatusDoc } from '../../tools/runner/statusjson.ts';
@@ -1271,4 +1275,150 @@ test('review: sh: metrics run in the lab slice; a stale git lock in the runner\'
   const removed = r.clearStaleGitLocks();
   assert.ok(removed.includes(lockFile));
   assert.ok(!fs.existsSync(lockFile));
+});
+
+// ------------------------------------------------------------------ the public copy's clock, the local server
+
+/** A FakeSys whose load can be moved, so the public copy's content changes without a state change. */
+function movableLoad(w: World): (load: number) => void {
+  let load = 1;
+  const base = w.sys.host.bind(w.sys);
+  w.sys.host = () => ({ ...base(), load1: load });
+  return (x: number) => { load = x; };
+}
+
+test('public copy: every minute while a job runs and its content changed; five minutes when unchanged or idle; a failed push backs off', () => {
+  const { w, r } = heldAtRun1('J060');
+  const setLoad = movableLoad(w);
+  const pushedAt = (): number | undefined => r.p.lastPublic;
+  const t0 = pushedAt();
+  assert.equal(t0, w.sys.t, 'the start (a state change) was pushed');
+  assert.match(git(w.fc, 'log', '-1', '--format=%s', 'lab-status'), /^lab status /);
+  // Changed, but under a minute: no push.
+  w.sys.t += 30_000; setLoad(2); r.tick();
+  assert.equal(pushedAt(), t0);
+  // A minute on, still changed since the last push: pushed.
+  w.sys.t += 31_000; r.tick();
+  assert.equal(pushedAt(), w.sys.t);
+  assert.equal(JSON.parse(show(w.fc, 'lab-status:status.json')).host.load1, 2);
+  assert.equal(git(w.fc, 'rev-list', '--count', 'lab-status'), '1', 'one commit, replaced');
+  const t1 = w.sys.t;
+  // Nothing changed but the clock: no push at a minute, nor at four.
+  w.sys.t += 61_000; r.tick();
+  w.sys.t += 3 * 60_000; r.tick();
+  assert.equal(pushedAt(), t1);
+  // At five minutes, a push anyway: the page sees the runner is alive.
+  w.sys.t += 60_000; r.tick();
+  assert.equal(pushedAt(), w.sys.t);
+  // A failed push backs off (30 s, then 1 minute ...), and is not retried every tick.
+  w.sys.gitFails = new Set(['push']);
+  w.sys.t += 61_000; setLoad(3); r.tick();
+  assert.equal(r.p.publicFailures, 1);
+  assert.ok((r.p.nextPublicAt ?? 0) > w.sys.t);
+  const fails = w.sys.lines.filter((l) => /^public status: failed/.test(l)).length;
+  w.sys.t += 10_000; setLoad(4); r.tick();
+  assert.equal(w.sys.lines.filter((l) => /^public status: failed/.test(l)).length, fails, 'waited out the backoff');
+  w.sys.gitFails.clear();
+  w.sys.t += 30_000; r.tick();
+  assert.equal(r.p.publicFailures, 0);
+  assert.equal(pushedAt(), w.sys.t);
+  assert.equal(JSON.parse(show(w.fc, 'lab-status:status.json')).host.load1, 4);
+});
+
+test('public copy: idle, a change waits for the five-minute push; the intervals are config', () => {
+  const w = world({ 'README.txt': 'no jobs\n' });
+  const setLoad = movableLoad(w);
+  const r = new Runner({ ...w.cfg, publicIdleEveryMs: 2 * 60_000 }, w.sys);
+  r.reconcile();
+  r.tick();
+  const t0 = r.p.lastPublic;
+  assert.equal(t0, w.sys.t);
+  w.sys.t += 61_000; setLoad(5); r.tick();
+  assert.equal(r.p.lastPublic, t0, 'idle: no minute pushes');
+  w.sys.t += 60_000; r.tick();
+  assert.equal(r.p.lastPublic, w.sys.t, 'the configured idle interval');
+  assert.equal(DEFAULT_CONFIG.publicBusyEveryMs, 60_000);
+  assert.equal(DEFAULT_CONFIG.publicIdleEveryMs, 5 * 60_000);
+});
+
+test('public copy: its signature ignores the clock (updated, elapsed, rate, ETA) and nothing else', () => {
+  const doc = sanitise({ schema: 1, updated: '2026-10-03T10:00:00-04:00', paused: false, host: { load1: 1, memUsedGb: 1, memTotalGb: 2, swapUsedMb: 0, pressure: 0, cpus: 4, budgetGb: 1 },
+    running: [{ id: 'J001', title: 'J001', cpu: 'heavy', phase: 'commands', started: '2026-10-03T09:00:00-04:00', elapsed: 3600, done: 5, total: 10, unit: 'games', ratePerHour: 5, eta: null, workers: 2, workersMax: 2, errors: 0, paused: false, dataUpdated: null, pressureEvents: [] }],
+    queue: [], waiting: [], finished: [] });
+  const later = { ...doc, updated: '2026-10-03T10:01:00-04:00', running: [{ ...doc.running[0]!, elapsed: 3660, ratePerHour: 4.9, eta: '2026-10-03T11:02:00-04:00' }] };
+  assert.equal(publicSignature(later), publicSignature(doc));
+  assert.notEqual(publicSignature({ ...later, running: [{ ...later.running[0]!, done: 6 }] }), publicSignature(doc));
+  assert.notEqual(publicSignature(doc, '10:1'), publicSignature(doc, '10:2'), 'a new ladder.json is a change');
+});
+
+const PRIVATE_DOC = (): StatusDoc => ({
+  schema: 1, updated: '2026-10-03T10:00:00-04:00', paused: false,
+  host: { load1: 1, memUsedGb: 1, memTotalGb: 2, swapUsedMb: 0, pressure: 0, cpus: 4, budgetGb: 1 },
+  running: [{ id: 'J001', title: 'Secret deck /home/justin-a/x', cpu: 'heavy', phase: 'commands', started: null, elapsed: 0, done: 1, total: 2, unit: 'games', ratePerHour: null, eta: null, workers: 1, workersMax: 1, errors: 0, paused: false, dataUpdated: null, pressureEvents: [], detail: 'lab-J001-run1' }],
+  queue: [], waiting: [], finished: [], runner: { commit: 'abc', started: '2026-10-03T09:00:00-04:00', dryRun: false },
+});
+const SRC = (ladder: string | null = null): StatusSource => ({ status: PRIVATE_DOC, ladder: () => ladder });
+
+test('local server: CORS names the site and localhost dev origins only, never *; others are refused', () => {
+  assert.ok(originAllowed('https://jalirkan.github.io'));
+  for (const o of ['http://localhost:5173', 'http://127.0.0.1:4173', 'http://[::1]:5173']) assert.ok(originAllowed(o), o);
+  for (const o of ['https://evil.example', 'https://jalirkan.github.io.evil.example', 'http://jalirkan.github.io', 'https://localhost.evil.example:5173', 'null', '*', '']) assert.ok(!originAllowed(o), o);
+  const ok = answer('GET', '/public-status.json', { origin: 'https://jalirkan.github.io' }, SRC());
+  assert.equal(ok.status, 200);
+  assert.equal(ok.headers['Access-Control-Allow-Origin'], 'https://jalirkan.github.io');
+  assert.equal(ok.headers.Vary, 'Origin');
+  const bad = answer('GET', '/public-status.json', { origin: 'https://evil.example' }, SRC());
+  assert.equal(bad.status, 403);
+  assert.equal(bad.headers['Access-Control-Allow-Origin'], undefined);
+  assert.ok(!bad.body.includes('J001'));
+  const curl = answer('GET', '/public-status.json?t=1', {}, SRC());
+  assert.equal(curl.status, 200);
+  assert.equal(curl.headers['Access-Control-Allow-Origin'], undefined);
+  for (const r of [ok, bad, curl]) assert.ok(!Object.values(r.headers).includes('*'));
+});
+
+test('local server: the Private Network Access preflight is answered', () => {
+  const pre = answer('OPTIONS', '/public-status.json', { origin: 'https://jalirkan.github.io', 'access-control-request-method': 'GET', 'access-control-request-private-network': 'true' }, SRC());
+  assert.equal(pre.status, 204);
+  assert.equal(pre.headers['Access-Control-Allow-Private-Network'], 'true');
+  assert.equal(pre.headers['Access-Control-Allow-Origin'], 'https://jalirkan.github.io');
+  assert.equal(pre.headers['Access-Control-Allow-Methods'], 'GET');
+  assert.equal(answer('OPTIONS', '/public-status.json', { origin: 'https://evil.example', 'access-control-request-private-network': 'true' }, SRC()).status, 403);
+});
+
+test('local server: only the public copies — status sanitised, ladder as sanitised, nothing else', () => {
+  const st = answer('GET', '/public-status.json', {}, SRC());
+  const doc = JSON.parse(st.body) as StatusDoc;
+  assert.deepEqual(doc, sanitise(PRIVATE_DOC()));
+  assert.equal(doc.running[0]?.title, 'J001');
+  for (const leak of ['Secret', 'justin-a', 'lab-J001-run1', '"runner"', 'detail']) assert.ok(!st.body.includes(leak), leak);
+  assert.equal(answer('GET', '/status.json', {}, SRC()).body, st.body, 'the old path is the same public copy');
+  assert.equal(answer('GET', '/public-ladder.json', {}, SRC()).status, 404);
+  assert.equal(answer('GET', '/public-ladder.json', {}, SRC('{"schema":1}\n')).body, '{"schema":1}');
+  for (const p of ['/status.public.json', '/runner.json', '/../status.json', '/jobs/J001/run1.log', '/ladder.json']) assert.equal(answer('GET', p, {}, SRC()).status, 404, p);
+  assert.equal(answer('POST', '/public-status.json', {}, SRC()).status, 405);
+  assert.equal(answer('GET', '/public-status.json', {}, { status: () => null, ladder: () => null }).status, 503);
+});
+
+test('local server: binds 127.0.0.1 and answers over HTTP with the same headers', async () => {
+  const server = await serveStatus(0, SRC('{"schema":1}\n'));
+  try {
+    const a = server.address();
+    assert.ok(a && typeof a === 'object');
+    assert.equal(a.address, '127.0.0.1');
+    const base = `http://127.0.0.1:${a.port}`;
+    const pre = await fetch(`${base}/public-status.json`, { method: 'OPTIONS', headers: { Origin: 'https://jalirkan.github.io', 'Access-Control-Request-Private-Network': 'true', 'Access-Control-Request-Method': 'GET' } });
+    assert.equal(pre.status, 204);
+    assert.equal(pre.headers.get('access-control-allow-private-network'), 'true');
+    const res = await fetch(`${base}/public-status.json`, { headers: { Origin: 'http://localhost:5173' } });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+    assert.equal(((await res.json()) as StatusDoc).running[0]?.title, 'J001');
+    const lad = await fetch(`${base}/public-ladder.json`);
+    assert.equal(await lad.text(), '{"schema":1}');
+    assert.equal((await fetch(`${base}/public-status.json`, { headers: { Origin: 'https://evil.example' } })).status, 403);
+  } finally {
+    await new Promise((res) => server.close(res));
+  }
 });
