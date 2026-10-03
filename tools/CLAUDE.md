@@ -278,7 +278,7 @@ someone types it on the command line and says why in the commit message.
 `tools/coach-helper.mjs` lets ForgeCoach coach through the Claude Code CLI the
 owner is already logged in to, with no API key; `scripts/play.sh` starts it on
 `coachPort` (8643) beside the bridge. Its header is the contract ForgeCoach is
-built against, and four things about it are rules:
+built against, and five things about it are rules:
 
 1. **The contract changes in both repositories or not at all.** The paths, the
    JSON shapes, the NDJSON lines (exactly one terminal `done` or `error`), the
@@ -299,10 +299,15 @@ built against, and four things about it are rules:
    12f, CI) puts a fake `claude` first on PATH; a real call costs the owner's
    usage and needs a login CI does not have, so it is measured by hand
    (D292's *Measured*).
+5. **One `claude` at a time; the rest queue** (**D325**). `/coach` runs one
+   question and queues up to `--queue-max` more (a 429 past that). Anything the
+   queue adds to the stream (`queued`, `running`, the `superseded` error's
+   `code`) is a line an older client ignores, and anything it adds to `/health`
+   is a new key: a D292 client must keep working unchanged.
 
 The match launcher (D303, amendment M53) is the helper's second route:
 `GET`/`POST /match` in `tools/match-launcher.mjs`, contract
-`docs/match-launcher.md`. The four rules above hold for it — rule 1 in
+`docs/match-launcher.md`. The first four rules above hold for it — rule 1 in
 particular: its shapes change in both repositories or not at all. Beyond them:
 the helper only writes `var/match/` and signals `play.sh`, which alone stops
 and starts the engine and never lets two run; browser text goes into `.dck`

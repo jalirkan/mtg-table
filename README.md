@@ -700,9 +700,12 @@ that means for you:
 - **Claude gets nothing to act with**: every tool off, no MCP servers, no
   session saved, an empty temporary folder as its working directory, one turn.
   It reads the prompt and answers; it cannot open a file or run a command.
-- **One question at a time.** A second question waits up to five seconds for the
-  first to finish or be cancelled; closing or moving on in ForgeCoach cancels the
-  question, and the `claude` process is stopped.
+- **One question at a time, the rest in line** (**D325**). Claude Code answers one
+  question at a time; up to four more wait their turn (ForgeCoach shows *waiting
+  for the coach…*), and only a fifth is turned away. Moving on in ForgeCoach
+  cancels the question it no longer needs — a waiting one leaves the line, a
+  running one has its `claude` process stopped — and a newer question from the
+  same coach replaces an older one that is still waiting.
 - **Who may call it** is who may open the engine's socket: pages from
   `wsAllowedOrigins` (loopback and `https://jalirkan.github.io`), anything on this
   machine with no `Origin`, and — under `--lan` — the phone's page, with the same
