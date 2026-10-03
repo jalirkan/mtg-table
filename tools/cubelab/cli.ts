@@ -8,6 +8,10 @@
 //           [--seed S] [--profiles Default,Default] [--ratings <tsv>] [--record M]
 //           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
+//           [--synergy <tsv>] [--deck-synergy on|off]          learned pairs (D301)
+//   learn   <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...   (D301)
+//   selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N] [--deck-synergy on|off]
+//           [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>]   (D302; learncmd.ts has every flag)
 //   report  <out> [--min-games N]           <out>/report.html, report.md, summary.json and meta.json
 //   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]   <out>/meta.json (ForgeCoach, D297)
 //   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
@@ -26,6 +30,7 @@ import { buildMeta, DEFAULT_META } from './meta.ts';
 import { aggregate, renderHtml, renderMarkdown, type CardInfo, type Recording } from './report.ts';
 import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
+import { learnCommand, selfplayCommand } from './learncmd.ts';
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve } from './evolve-run.ts';
 
@@ -39,7 +44,10 @@ function usage(msg?: string): never {
        tools/cubelab.sh run <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K] [--seed S]
                         [--profiles Default,Default] [--ratings <tsv>] [--record M] [--out <dir>]
                         [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
-                        [--weights <json>] [--weight name=value]...
+                        [--weights <json>] [--weight name=value]... [--synergy <tsv>] [--deck-synergy on|off]
+       tools/cubelab.sh learn <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...
+       tools/cubelab.sh selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N]
+                        [--deck-synergy on|off] [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>] [--ratings <tsv>]
        tools/cubelab.sh report <out> [--min-games N]
        tools/cubelab.sh meta <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]
        tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N]
@@ -136,7 +144,9 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     profiles: [profiles[0] as string, profiles[1] as string], ratingsFile, record: int(f, 'record', 0),
     out: one(f, 'out') ?? path.join('var/cubelab/runs', `${path.basename(cubeFile, '.md')}-${format}-${seed}`),
     builder, gameTimeoutSec: int(f, 'game-timeout', 300), winstonCards: int(f, 'winston-cards', 90), weights,
+    ...(one(f, 'synergy') ? { synergyFile: one(f, 'synergy') as string, deckSynergy: one(f, 'deck-synergy') === 'on' } : {}),
   };
+  if (one(f, 'deck-synergy') === 'on' && !one(f, 'synergy')) usage('--deck-synergy on needs --synergy <tsv>');
   if (o.jobs > env.homes.length) usage(`--jobs ${o.jobs} but only ${env.homes.length} Forge home(s) were built (tools/cubelab.sh builds --jobs of them)`);
   if (o.games < 1) usage('--games must be at least 1');
   say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}`);
@@ -225,6 +235,8 @@ async function main(): Promise<number> {
     case 'ratings': if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md>'); return ratingsInit(pos[1], one(f, 'out'), f.has('force'));
     case 'run': if (!pos[0]) usage('run needs a cube file'); return run(pos[0], f);
     case 'report': if (!pos[0]) usage('report needs a run directory'); return report(pos[0], f);
+    case 'learn': return learnCommand(REPO, pos, f, say);
+    case 'selfplay': if (!pos[0]) usage('selfplay needs a cube file'); return selfplayCommand(REPO, pos[0], f, say);
     case 'meta': if (!pos[0]) usage('meta needs a run directory'); say(writeMeta(pos[0], f)); return 0;
     case 'evolve': if (!pos[0]) usage('evolve needs a cube file'); return evolveCmd(pos[0], f);
     default: return usage(cmd ? `unknown command ${cmd}` : undefined);

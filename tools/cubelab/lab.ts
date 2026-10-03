@@ -11,6 +11,7 @@ import { labCard, type Fact, type LabCard } from './cards.ts';
 import type { Cube } from './cube.ts';
 import { buildDeck, checkDeck, type DeckBuild } from './deck.ts';
 import { aiChooser, gridDraft, winstonDraft, type DraftResult, type PickRecord } from './draft.ts';
+import type { PairTable } from './pairs.ts';
 import { initialRating } from './ratings.ts';
 import { rng } from './rng.ts';
 import type { Weights } from './weights.ts';
@@ -24,6 +25,10 @@ export interface LoadedCube {
   missing: Fact[];
   /** Ratings that came from the file (the rest from the engine's rank). */
   ratedFromFile: number;
+  /** Learned pair synergy for the drafters (`run --synergy`, D301). */
+  pairs?: PairTable;
+  /** ...and for the deckbuilder (`run --deck-synergy`). */
+  deckPairs?: PairTable;
 }
 
 /** The cube's cards as LabCards: facts for what each is, the ratings file (or Forge's rank) for its rating. */
@@ -64,14 +69,14 @@ export function runDraft(lc: LoadedCube, format: Format, seed: number, w: Weight
   const t0 = Date.now();
   const r = rng(seed, `draft:${format}`);
   const aOpens = seed % 2 === 0;
-  const chooser = aiChooser(w);
+  const chooser = aiChooser(w, lc.pairs);
   const d: DraftResult = format === 'grid'
     ? gridDraft(lc.cards, r, chooser, w, aOpens)
     : winstonDraft(lc.cards, r, chooser, w, aOpens, winstonCards);
   const t1 = Date.now();
   const outs = d.drafters.map((dr): DrafterOut => {
     const pool = dr.state.picks;
-    const deck = buildDeck(pool, w);
+    const deck = buildDeck(pool, w, lc.deckPairs);
     const deckErrors = deck
       ? checkDeck(deck, pool, lc.byName, deck.stretched ? w.maxSplashStretch : w.maxSplash)
       : ['no build reaches 22 castable spells, even with a wide splash, 18 lands or three colours'];
