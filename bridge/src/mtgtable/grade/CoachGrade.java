@@ -267,6 +267,7 @@ public final class CoachGrade {
         s.cap = f.i("cap", 24);
         s.lands = f.v.containsKey("lands");
         s.race.minRounds = f.i("min-rounds", s.race.minRounds);
+        s.maxOptions = f.i("max-options", 0);
         if (f.v.containsKey("leaf-scale")) {
             leafScale(s, f.v.get("leaf-scale"));
         }

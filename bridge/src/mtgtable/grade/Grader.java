@@ -110,6 +110,12 @@ public final class Grader {
          * creatures, another copy of a card -- or null when no option is).
          */
         public String played;
+        /**
+         * Most options graded (0 = no limit): above it the player's option and
+         * Forge's are kept, then the enumeration's own order (the review's
+         * triage, D352: a cheap look must stay cheap).
+         */
+        public int maxOptions;
     }
 
     /** One option: its bench token, and how to set it up on a rebuilt base. */
@@ -559,6 +565,25 @@ public final class Grader {
         }
         if (set.only != null) {
             out.removeIf(o -> !set.only.contains(o.token));
+        }
+        if (set.maxOptions > 0 && out.size() > set.maxOptions) {
+            final String po = set.played == null ? null : playedOption(out, set.played);
+            final List<Opt> keep = new ArrayList<>();
+            for (final Opt o : out) {
+                if (o.token.equals(po) || o.forge) {
+                    keep.add(o);
+                }
+            }
+            for (final Opt o : out) {
+                if (keep.size() >= set.maxOptions) {
+                    break;
+                }
+                if (!keep.contains(o)) {
+                    keep.add(o);
+                }
+            }
+            notes.add(out.size() + " options: " + keep.size() + " graded (--max-options; the player's and Forge's kept)");
+            out.retainAll(keep);
         }
         return out;
     }

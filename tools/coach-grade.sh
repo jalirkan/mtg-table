@@ -22,6 +22,7 @@
 #   ./tools/coach-grade.sh fit-scale --logs DIR[,DIR] [--out F]   # D349: refit the leaf -> P(win) scale
 #   ./tools/coach-grade.sh review --log F --seat N [--opp-pool P] [--opp-known "N; N"] [--jobs 7] \
 #        [--triage-s 15] [--deep-s 150] [--deep-k 6] [--out R.json]   # D352: the post-game review
+#   ./tools/coach-grade.sh review-smoke [--log F] [--jobs 2]   # D352: the review at tiny budgets, report checked (~2 min)
 #
 # Every flag of grade / batch is mtgtable.grade.CoachGrade's (see its header):
 # --playouts N rounds an option still in the race ends with (200), --initial N
@@ -164,7 +165,7 @@ review() {
     echo "REVIEW STAGE triage $decisions decision(s) on $tjobs JVM(s), ${tms} ms each"
     t0="$(now_ms)"
     batch --run "$run" --jobs "$tjobs" --guard live --claim "$dir/claim-triage" --moments "$dir/plan.jsonl" --out "$dir/triage.jsonl" \
-      --horizon 0 --playouts 10000 --initial 4 --batch 2 --cap 12 --timeout-ms 5000 --min-rounds 2 \
+      --horizon 0 --playouts 10000 --initial 4 --batch 2 --cap 12 --max-options 8 --timeout-ms 2500 --min-rounds 2 \
       --budget-ms "$tms" --seed "$seed" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} || echo "REVIEW WARN a triage shard failed (see $dir/triage.jsonl.shard-*.log)"
     t1="$(now_ms)"; tri_wall=$((t1 - t0))
 
@@ -225,6 +226,42 @@ case "$mode" in
     shift
     REVIEW_T0="$(now_ms)"
     review "$@"
+    ;;
+  review-smoke)
+    # D352's engine smoke: a fixture game reviewed at tiny budgets (the deepening to the end of
+    # the next turn, under the full-game floor), then the report's shape and rules checked.
+    shift
+    sm_log=fixtures/games/human-trample-7.jsonl sm_jobs=2
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --log) sm_log="$2"; shift 2 ;;
+        --jobs) sm_jobs="$2"; shift 2 ;;
+        *) echo "review-smoke: unknown flag $1" >&2; exit 2 ;;
+      esac
+    done
+    sm_seat="$(node -e 'const l=require("fs").readFileSync(process.argv[1]);const t=(l[0]===0x1f?require("zlib").gunzipSync(l):l).toString("utf8");process.stdout.write(String(JSON.parse(t.slice(0,t.indexOf("\n"))).seat))' "$sm_log")"
+    sm_run="review-smoke-$$"
+    REVIEW_T0="$(now_ms)"
+    review --log "$sm_log" --seat "$sm_seat" --jobs "$sm_jobs" --triage-s 4 --triage-min-ms 400 --triage-max-ms 1000 \
+      --deep-k 2 --deep-s 20 --deep-options 3 --run "$sm_run"
+    node -e '
+      const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+      let n = 0, bad = 0;
+      const check = (ok, what) => { n++; if (!ok) bad++; console.log((ok ? "ok   " : "FAIL ") + what); };
+      check(r.kind === "game-review" && r.v === 1, "a game-review report, v1");
+      check(Array.isArray(r.decisions) && r.decisions.length === r.summary.decisions && r.decisions.length > 0, r.decisions.length + " decision(s), as the summary says");
+      check(r.decisions.every((d) => ["spell", "attack", "block", "target"].includes(d.type) && Number.isInteger(d.frame) && d.stateFrame < d.frame), "every decision has a graded type and its frames");
+      check(r.decisions.every((d) => d.clear === (d.verdict === "mistake")), "clear exactly when the verdict is a mistake");
+      check(r.decisions.filter((d) => d.verdict === "mistake").every((d) => d.regretLo > 0), "a mistake has its regret interval above zero");
+      check(r.decisions.filter((d) => d.verdict === "close").every((d) => d.regretLo === 0 || d.regretLo < 1e-9), "a close call has its interval touching zero");
+      check(r.decisions.filter((d) => d.status === "ok" && d.playedOption).every((d) => d.options.filter((o) => o.played).length === 1), "one played option in every table that has it");
+      check(r.decisions.filter((d) => d.status === "ok").every((d) => d.options.every((o) => o.winRate === undefined || (o.winRate >= 0 && o.winRate <= 1))), "win rates in [0, 1]");
+      check(r.summary.deepened >= 0 && r.summary.deepened <= 2 && r.decisions.filter((d) => d.stage === "deep").length === r.summary.deepened, r.summary.deepened + " deepened, at most --deep-k");
+      check(r.keyMoments.every((f) => r.decisions.some((d) => d.frame === f && d.key)), "every key moment is a decision marked key");
+      check(r.knowledge.opponentModel === "basic-lands", "no pool given: the opponent model says basic lands");
+      console.log("review-smoke: " + n + " check(s), " + bad + " failure(s); timing " + JSON.stringify(r.timing));
+      process.exit(bad ? 1 : 0);
+    ' "var/coach-grade/review/$sm_run/report.json"
     ;;
   *)
     sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
