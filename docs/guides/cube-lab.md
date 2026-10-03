@@ -316,11 +316,13 @@ tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv
 ```
 
 Overnight on a four-core PC (resumable: run the same line again after a stop;
-a finished generation is skipped and a half-played one picks up its seeds):
+a finished generation is skipped and a half-played one picks up its seeds).
+At about 25 s of one core a draft, a 200-draft generation is some 20 minutes on
+four workers, so eight are about three hours:
 
 ```bash
 tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
-    --generations 6 --drafts-per-gen 200 --jobs 4 --seed 1 --out var/cubelab/evolve/omega-overnight
+    --generations 8 --drafts-per-gen 200 --jobs 4 --seed 1 --out var/cubelab/evolve/omega-overnight
 ```
 
 Then open `var/cubelab/evolve/omega-overnight/index.html`; the latest cube is

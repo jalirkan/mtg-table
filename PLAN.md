@@ -14,8 +14,9 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 358 items still open across 40 follow-up lists** — 332
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the cube lab
+**The index below lists 364 items still open across 41 follow-up lists** — 338
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — Omega's
+evolve loop (D299–D300, 2026-10-03) added a list of six; the cube lab
 (D293–D296, 2026-10-03) added a list of six; the test
 gaps lane (D291, 2026-10-01) closed the observer socket's 1 and 2 and added a
 list of two; the observer
@@ -400,6 +401,12 @@ villain identity's rebase, were removed at the same recount.)
 | [Cube lab](#fu-cube-lab) | 4 | open | The watchdog's timeout, stuck-exit and restart paths have not fired on a real hang | `tools/cubelab/engine.ts` |
 | [Cube lab](#fu-cube-lab) | 5 | open | `motion.test.ts`'s film digest fails under Node 22, on `main` too | `web/test/motion.test.ts` |
 | [Cube lab](#fu-cube-lab) | 6 | open | Winston pools are thin for two colours: 10 of 40 decks stretched | `tools/cubelab/deck.ts` |
+| [Omega evolve](#fu-omega-evolve) | 1 | open | 28 Omega cards are rated under 60 by Forge's ranks, so the loop can only call them rating-limited: rate Omega before the overnight run | `cubes/omega-cube-180.md` |
+| [Omega evolve](#fu-omega-evolve) | 2 | open | No BR deck in 60: the drafters' colour logic or the BR cards' ratings, unmeasured | `tools/cubelab/pick.ts` |
+| [Omega evolve](#fu-omega-evolve) | 3 | open | The notes file's `cut` lines are v1's design exclusions written by the lane; the owner should read them | `cubes/omega-notes.tsv` |
+| [Omega evolve](#fu-omega-evolve) | 4 | open | `run` has no lock, and concurrent lab runs share `var/cubelab/homes/<k>` | `tools/cubelab/run.ts` |
+| [Omega evolve](#fu-omega-evolve) | 5 | open | Re-deciding a generation is a manual delete of its `result.json` | `tools/cubelab/evolve-run.ts` |
+| [Omega evolve](#fu-omega-evolve) | 6 | open | No gate step runs `evolve`; its tests are engine-free | `tools/check-all.sh` |
 
 ### Questions only the owner can settle
 
@@ -490,7 +497,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | The test gaps: the observer, the idle limit and Node 22 in the gate *(off the plan; the follow-ups of D280–D289)* | ¼ day | **built and verified, gate not run** on branch `c/test-gaps` (2026-10-01), off `main`'s `0a32d1b`, `af0512a` merged in — 10c plays with two `/observe` followers (one from before the session, compared frame for frame with the bridge's log and the seat's; one opened while the seat holds an `ask`, which must be caught up on it), a new **10h** proves `--idle-timeout` both ways, `ws-smoke` and `ws-auto-play` survive Node 22's `WebSocket`, and `GATE_ONLY` runs named jobs alone (**D291**); two follow-ups; *The test gaps*, just above *Deferred* |
 | — | The coach helper: ForgeCoach coaches through the logged-in Claude Code CLI *(off the plan; on the owner's approval, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/coach-helper` (2026-10-01), off `main`'s `cb7d041` — `tools/coach-helper.mjs` on `coachPort` 8643: `GET /health`, `POST /coach` answered by `claude -p` with every tool off and streamed as NDJSON, M50's Origin list and M51's token; `play.sh` starts it beside the engine in every mode (`--no-coach`); the gate's `WSPORT` moves to 8644; gate step **12f** and CI run its self-test against a fake `claude` (**D292**); *The coach helper*, just above *Deferred* |
 | — | The cube lab: two Forge AIs draft a two-player cube, build decks and play them *(off the plan; the owner's request, for cube design)* | 1 day | **built, run and documented, gate not run** on branch `c/cube-lab` (2026-10-03), off `main`'s `4204bc6` — `tools/cubelab.sh check / ratings init / run / report` over `tools/cubelab/` (TypeScript) and one Java worker, `CubeLab.java`: Grid and Winston drafts with Forge's ranks as editable ratings plus theme synergy and late colour commitment, 40-card 16–17-land decks, a best of three per draft with the play alternating, sharded over `--jobs` JVMs with a watchdog, JSONL per draft, a self-contained HTML report and ForgeCoach's `meta.json`; four cubes under `cubes/` (synergy, modern, vintage, pauper); gate step **12g** (**D293–D297**); six follow-ups; *The cube lab*, just above *Deferred* |
-| — | Omega and the cube lab's evolve loop: a cube that changes by simulation *(off the plan; the owner's approval)* | ½ day | **built, tested, run small and documented, gate not run** on branch `c/omega-evolve` (2026-10-03), off `main`'s `78efcdf`, `f69caf1` (D298) merged in — `tools/cubelab.sh evolve`: generations of grid drafts on a cube, per-card evidence against Wilson-interval thresholds (dead, dominant by wins, dominant by first picks; else *insufficient data*), at most six swaps a generation from a seed pool under the cube's constraints, AI:RemoveDeck cards never cut on AI numbers and AI:All never auto-added, `cubes/omega-notes.tsv` overriding; the cube document written back line for line with an iteration-log entry, a changelog and an HTML page; Omega v1, its 938-card pool and notes under `cubes/` (**D299–D300**); *Omega and the evolve loop*, just above *Deferred* |
+| — | Omega and the cube lab's evolve loop: a cube that changes by simulation *(off the plan; the owner's approval)* | ½ day | **built, tested, run small (2 × 15 drafts: no swap passes; 24 leads, 28 rating-limited) and documented, gate not run** on branch `c/omega-evolve` (2026-10-03), off `main`'s `78efcdf`, `f69caf1` (D298) merged in — `tools/cubelab.sh evolve`: generations of grid drafts on a cube, per-card evidence against Wilson-interval thresholds (dead, dominant by wins, dominant by first picks; else *insufficient data*), at most six swaps a generation from a seed pool under the cube's constraints, AI:RemoveDeck cards never cut on AI numbers and AI:All never auto-added, `cubes/omega-notes.tsv` overriding; the cube document written back line for line with an iteration-log entry, a changelog and an HTML page; Omega v1, its 938-card pool and notes under `cubes/` (**D299–D300**); *Omega and the evolve loop*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9863,6 +9870,78 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    needed the stretched splash and 34 splashed at all; real Winston players play
    three colours or 18 lands. Whether the lab should allow either is the owner's
    call (the brief said two colours plus a splash, 16–17 lands).
+
+## Omega and the evolve loop — a cube that changes by simulation (2026-10-03, D299–D300)
+
+**Status: built, tested, run small and documented; the full gate was not run.**
+Branch `c/omega-evolve`, off `main`'s `78efcdf` with `f69caf1` (D298, thin-pool
+builds) merged in. The owner approved "Omega": a 180-card two-player
+greatest-hits cube that evolves by simulation. `tools/cubelab.sh evolve`
+drafts the cube going in, assesses every card against thresholds on Wilson
+intervals, swaps at most six cards a generation for seed-pool cards under the
+cube's constraints, and writes the next cube document with an iteration-log
+entry, a changelog and one HTML page; AI-limited cards are never cut on AI
+numbers, AI:RemoveDeck:All cards are never auto-added, and
+`cubes/omega-notes.tsv` overrides everything. `docs/guides/cube-lab.md`'s
+*Evolve* is the manual.
+
+```bash
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
+    --generations 2 --drafts-per-gen 15 --jobs 2 --seed 1 --out var/cubelab/evolve/omega-1
+# overnight, on the owner's four-core PC (about three hours):
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
+    --generations 8 --drafts-per-gen 200 --jobs 4 --seed 1 --out var/cubelab/evolve/omega-overnight
+node --test web/test/cubelab-evolve.test.ts        # 17 tests
+```
+
+- **The run: 2 generations × 15 grid drafts, 2 workers** (on a shared 4-core
+  container at load 30–160, so the size was cut from the brief's 30 per
+  generation): 691 s of matches for generation 2's 15 drafts, 78 decisive games
+  over the 30, no engine error. Generation 2 drafted the same list, so it pooled
+  generation 1's drafts. **Verdict: no swap passes at 30 drafts** — 24 leads to
+  watch (about 115 drafts a generation would settle half), 28 cards
+  rating-limited, Omega v1 unchanged. The leads are nearly all red and lean
+  *dominant* (Fury 25–11, Lightning Bolt 24–12, Chain Lightning, Inferno Titan,
+  Bonecrusher, Arc Trail, Goldspan); WR and UR win 61–62%, WU 40%; **no BR deck
+  was built in 60**.
+- **Four rules came from that data, not from the brief**, each fixed and tested
+  before the final decision: meta.json counts only spells, so every land read
+  as never played (lands now counted from the full lists, then judged by notes
+  only — their numbers are their pair's); 25 of the first 29 "dead" cards were
+  rated under 55 by Forge's ranks (`rating-limited`, never cut; adds must be
+  rated ≥ 60); Kolaghan's Command was "dead" because BR was never drafted (dead
+  is now the on-colour play rate); and two evolve processes on one folder
+  corrupted a first attempt (`evolve.lock`). D299 has the numbers.
+- **The swap path on real data**: the same 30 drafts re-decided under loosened
+  thresholds (a demonstration, `var/cubelab/evolve/omega-1-loose/`) swap Fury →
+  Harvester of Misery, Lightning Bolt → Burst Lightning and Karn Liberated → The
+  Mightstone and Weakstone, and write a clean v2 (title, counts, headings, one
+  log entry). The engine-free half is `web/test/cubelab-evolve.test.ts`: all five
+  committed cubes write back byte for byte, constraints after every swap,
+  AI-limited never cut, thresholds respected, notes, tabu, the budget.
+
+<a id="fu-omega-evolve"></a>
+### Omega and the evolve loop's follow-ups — six, 2026-10-03
+
+1. **Rate Omega before the overnight run.** 28 of its 180 cards (Delver of
+   Secrets 19.7, Ephemerate 22.9, Reflector Mage 32.5 …) are rated under 60 by
+   Forge's halved set-file ranks (the cube lab's follow-up 3), so the drafters
+   pass them over and the loop can only call them rating-limited. A ratings TSV
+   for Omega (`tools/cubelab.sh ratings init cubes/omega-cube-180.md`, then the
+   owner's edits, then `evolve … --ratings`) is what lets the loop judge them.
+2. **BR is never drafted**: 0 of 60 decks. Whether that is the drafters' colour
+   logic or the BR cards' ratings is unmeasured; the changelog reports it.
+3. **The notes file's `cut` lines are v1's design exclusions, written by the
+   lane**, not Justin's verdicts (the file says so). The owner should read
+   them.
+4. **`run` has no lock either, and every run shares `var/cubelab/homes/<k>`**:
+   two lab runs at once on one machine, in different folders, share Forge
+   homes. `evolve.lock` covers one folder only.
+5. **Re-deciding a generation is a manual step** (delete its `result.json` and
+   the later generations), documented in the guide; a `--redecide` flag would be
+   friendlier.
+6. **No gate step runs `evolve`**; its tests are engine-free (step 13 and CI).
+   A one-generation, two-draft smoke beside 12g would cover the loop's I/O.
 
 ## Deferred — out of scope for M0–M7
 
