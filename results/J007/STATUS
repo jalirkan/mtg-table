@@ -1,2 +1,2 @@
-waiting
-reason: after: J008 (the retry of J006, whose result J007 compares against), which failed its pilot on the 5-30 s latency bound (two answers at 4.78 s and 4.86 s; see results/J008/summary.md). Not started.
+skipped
+reason: superseded by J012 (Justin, 2026-10-03: coach testing cut back)
