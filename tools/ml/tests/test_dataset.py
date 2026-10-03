@@ -108,6 +108,16 @@ class DatasetTest(unittest.TestCase):
         self.assertLess(r["models"]["full"]["train"]["all"]["logloss"],
                         r["models"]["prior"]["train"]["all"]["logloss"])
 
+    def test_train_mlp_with_torch_trains(self):
+        try:
+            import torch  # noqa: F401
+        except ImportError:
+            self.skipTest("torch is not installed (optional)")
+        p = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "ml", "train_mlp.py"), self.out,
+                            "--epochs", "2", "--hidden", "16"], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("best epoch", p.stdout)
+
     def test_train_mlp_without_torch_is_a_skip(self):
         try:
             import torch  # noqa: F401

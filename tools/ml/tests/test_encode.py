@@ -112,20 +112,19 @@ class EncodeTest(unittest.TestCase):
         cls.vocab = fixture_vocab()
         cls.schema = E.Schema(cls.vocab)
         cls.games = [g for p in corpus() for g in E.read_games(p)]
+        cls.rows = [E.encode_game(g, cls.schema) for g in cls.games]
 
     def test_every_fixture_yields_rows(self):
         self.assertGreaterEqual(len(self.games), 22)
-        for g in self.games:
-            rows = E.encode_game(g, self.schema)
+        for g, rows in zip(self.games, self.rows):
             self.assertTrue(rows, g.path)
             for r in rows:
                 self.assertEqual(len(r.features), self.schema.n)
 
     def test_rows_are_decision_states_with_labels(self):
-        for g in self.games:
+        for g, rows in zip(self.games, self.rows):
             winner, last_turn, labelled = E.game_outcome(g)
             self.assertTrue(labelled)
-            rows = E.encode_game(g, self.schema)
             want = 1 if winner == g.seat else (-1 if winner is not None else 0)
             by_seq = {f.get("seq"): f["body"] for f in g.frames if f.get("type") == "state"}
             for i, r in enumerate(rows):
@@ -163,8 +162,8 @@ class EncodeTest(unittest.TestCase):
 
     def test_land_drop_and_casts_follow_events(self):
         seen_drop = seen_cast = False
-        for g in self.games:
-            for r in E.encode_game(g, self.schema):
+        for rows in self.rows:
+            for r in rows:
                 ix = self.schema.index
                 if r.active and r.features[ix["me.land_drop_used"]]:
                     seen_drop = True
@@ -176,8 +175,8 @@ class EncodeTest(unittest.TestCase):
         self.assertTrue(seen_drop and seen_cast)
 
     def test_deterministic(self):
-        for g in self.games[:6]:
-            a = [r.features for r in E.encode_game(g, self.schema)]
+        for g, rows in list(zip(self.games, self.rows))[:6]:
+            a = [r.features for r in rows]
             b = [r.features for r in E.encode_game(copy.deepcopy(g), E.Schema(fixture_vocab()))]
             self.assertEqual(a, b)
 
@@ -189,7 +188,8 @@ class EncodeTest(unittest.TestCase):
             with open(src, "rb") as f, gzip.open(gz, "wb") as o:
                 shutil.copyfileobj(f, o)
             # a client log may re-deliver a frame verbatim (M10): read once
-            lines = open(src, encoding="utf-8").read().splitlines()
+            with open(src, encoding="utf-8") as f:
+                lines = f.read().splitlines()
             dup = os.path.join(d, "dup.jsonl")
             with open(dup, "w", encoding="utf-8") as o:
                 o.write("\n".join(lines[:200] + lines[150:]) + "\n")
