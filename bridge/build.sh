@@ -143,4 +143,11 @@ env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
 # Forge class beyond Jetty's JSON parser; it writes one temp file and deletes it.
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.eval.EvalSelfTest "$REPO_ROOT"
 
+# Unit-check the coach grader's arithmetic (D334): common-random-number
+# seeds, Wilson and paired-difference intervals, the regret table, racing on
+# synthetic options with known win rates, enumeration by creature class, the
+# coach bench's token spelling, and the frame-log reader's moments.  No engine;
+# the engine half is tools/coach-grade.sh selftest (not in the build).
+java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.grade.GradeSelfTest
+
 echo "build OK"
