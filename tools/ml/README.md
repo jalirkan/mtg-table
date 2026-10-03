@@ -88,7 +88,7 @@ is **3,456 features**: 243 board-level ones and 3,213 card counts.
 **The vocabulary** is the closed card pool, from `--vocab`: a cube design file
 in the format of `cubes/*.md` (`## The list`, `### Section (N)`, items split by
 ` · `, `Name — THEMES`, prices dropped, `WU:` pair prefixes, and `Shocklands: a,
-b, c` group lines in a lands section — the cube lab's parser, read in Python),
+b, c` group lines in a lands section — the cube lab's parser, `tools/cubelab/cube.ts`, read in Python: it gives the same 180 names in the same order for all four `cubes/*.md`),
 a Forge `.dck`, or a plain list (`4 Name` allowed); several merge in order. The
 slots are the six basics first, the pool in listed order, then three special
 slots: **`<other>`** for any card outside the pool, **`<token>`** for every token,

@@ -56,6 +56,16 @@ class VocabTest(unittest.TestCase):
             "Reflector Mage", "Soulherder", "Grumgully, the Generous", "Hallowed Fountain",
             "Watery Grave", "Hengegate Pathway", "Clearwater Pathway"])
 
+    def test_committed_cubes_parse_whole(self):
+        """Every cube under cubes/ gives its 180 distinct names (the cube lab's
+        parser, tools/cubelab/cube.ts, gives the same lists in the same order)."""
+        cubes = sorted(f for f in os.listdir(os.path.join(ROOT, "cubes")) if f.endswith(".md"))
+        self.assertTrue(cubes)
+        for c in cubes:
+            names = E.read_vocab_names(os.path.join(ROOT, "cubes", c))
+            self.assertEqual(len(names), 180, c)
+            self.assertEqual(len({E.norm_name(n) for n in names}), 180, c)
+
     def test_basics_first_specials_last_and_other(self):
         v = E.Vocab.from_files([MINI_CUBE])
         self.assertEqual(v.cards[:6], E.BASICS)
