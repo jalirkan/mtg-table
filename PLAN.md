@@ -10107,7 +10107,8 @@ change, and a fix for the weakness that hurts his synergy cube most.
 
 ### AI baseline follow-ups
 
-1. **The game's own AI seat does not use the policy yet.** `MtgTable` and
+1. *(Closed by D314: `MtgTable --ai-policy outlets|search`, `play.sh --ai-search`.)*
+   **The game's own AI seat does not use the policy yet.** `MtgTable` and
    `scripts/play.sh` still seat `Bootstrap.createAiPlayer`. A flag
    (`--ai-policy outlets`) that switches the seat to `createAiSeat`, off by
    default so the gate's recordings stay plain Forge, is the next small step.
@@ -10123,12 +10124,66 @@ change, and a fix for the weakness that hurts his synergy cube most.
 4. **Load-dependent play**: Forge's 5 s evaluation timeout makes it pass on a
    busy machine (§1 of the evidence); the owner's PC should not run the bench
    and a game at once, and any search must budget by wall clock.
-5. **Simulation's copy failure**: if the search reuses `GameCopier`, find which
+5. *(Closed by D313: the sideboard; `LenientGameCopier`.)* **Simulation's copy failure**: if the search reuses `GameCopier`, find which
    static effects it cannot map (Grist, Anax, Hero of Light, Tarmogoyf) or catch
    the failure per decision; never let it reach the game loop.
-6. **The roadmap** in `docs/research/ai-architecture.md` §7: determinized
+6. *(Steps 2, 3 and 6 built: D312–D314.)* **The roadmap** in `docs/research/ai-architecture.md` §7: determinized
    search at priority over `GameCopier` with Default-AI rollouts, then combat,
    then a learned evaluator — each landing with a bench run.
+
+## The search AI — a determinized look-ahead in front of Forge's AI (2026-10-03, D312–D314)
+
+**Status: built, measured on the bench, opt-in in the game; the full gate was
+not run** (nothing the gate plays changed: the game's seat is Forge's own unless
+`--ai-policy` says otherwise). Branch `c/search-ai`, off `main`'s `e49800e`;
+D312–D314. Roadmap step 2 of D311 (and step 3, combat, with it).
+
+```bash
+./tools/ai-bench.sh --selftest                     # 37 checks, ~20 s: + the search's plumbing
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --games 20 --seed 21 --jobs 2 --run c --a Default --b Default
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --games 20 --seed 21 --jobs 2 --run s --a Default+search --b Default
+./tools/ai-bench.sh paired --control var/ai-bench/c/shard-*.jsonl --treatment var/ai-bench/s/shard-*.jsonl
+./scripts/play.sh --ai-search                      # play against it (outlet policy + search)
+```
+
+- **Measured:** on 200 new cube deals the search wins 56.5% against Default's
+  47.0% in the same chair (37 deals gained, 18 lost, McNemar p = 0.015); on 80
+  sacrifice deals, outlet policy on both sides, 52.5% against 40.0% (14 / 4,
+  p = 0.031). 44–48 s a game against 7–8 s on this machine; copier errors 0.22%,
+  then 0 after the token fix; a quarter of searched decisions keep Forge's answer
+  for want of budget.
+- D312: `SearchPolicy` — at main-phase priority, attacks and blocks, Forge's
+  answer plus up to five alternatives, each scored by rollouts on determinized
+  copies (the opponent's hand and library redealt from their multiset), Default
+  AIs on both seats to the end of the turn, a heuristic leaf; Forge's answer on
+  any failure or a budget too short.
+- D313: Forge's `Couldn't map` is the sideboard; `LenientGameCopier` makes the
+  copy anyway (copier errors on the cubes: 0).
+- D314: `MtgTable --ai-policy plain|outlets|search`, `--ai-search <k=v,…>`,
+  `play.sh --ai-search`.
+- `docs/evidence/search-ai.md` — the pilots, the confirmation run, the sacrifice
+  decks, the fallbacks; `docs/research/ai-architecture.md` §8 — the design.
+
+### Search AI follow-ups
+
+1. **Run the full benchmark on the owner's PC overnight** (the command is in
+   `docs/evidence/search-ai.md` §6): 400 deals per config, the 3 s / next-turn
+   variant beside the default, so the effect gets an interval narrow enough to
+   tell +5 points from +10.
+2. **Instant-speed decisions are still Forge's** (responses on the stack, the
+   opponent's turn); the outlet policy covers sacrifice responses. A search at
+   "they cast removal / they attack" priorities is the next candidate.
+3. **The leaf is hand weights** — roadmap step 4: a learned evaluator from
+   D305's dataset, fed by the bench's games.
+4. **Rollouts are Forge's Default AI on both sides**, so the search ranks lines
+   as Forge would continue them; a rollout policy that also uses the outlet rules
+   (or the search's own choices one ply down) would see more combo lines.
+5. **Face-down opponent cards keep their identity in the copy** (counted,
+   `search.oppFaceDownDecisions`, 6–12 decisions in 40 games); replacing them
+   with a sample from the unseen pool would close it.
+6. **ForgeCoach's match launcher cannot ask for the search yet**: `play.sh
+   --ai-search` keeps it across launcher restarts, but `POST /match` has no field
+   for it (D303's contract changes in both repositories at once).
 
 ## Deferred — out of scope for M0–M7
 

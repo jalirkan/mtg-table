@@ -169,6 +169,7 @@ untouched.
    below lands with a bench run against the plain Default AI on the cube pairs:
    a paired, seat- and deck-balanced win rate with its interval, plus game time.
 2. **Search at priority, using Forge's own simulator, honest about hidden cards.**
+   *(Built, 2026-10-03: §8, D312–D314; priority, attacks and blocks together.)*
    In `PolicyControllerAi.chooseSpellAbilityToPlay`: enumerate candidates (Forge's
    `getCandidateSpellsAndAbilities` plus "pass"), copy the game with `GameCopier`
    — catching its `Couldn't map` failure (§4) per decision and falling back to
@@ -180,7 +181,7 @@ untouched.
    Pick by mean score over samples. This is Forge's full simulation minus its
    cheating, plus rollouts that include the opponent's answer. Budget by wall
    clock (Forge's own AI timeout is 5 s per decision).
-3. **Combat next.** Attacks and blocks decide most cube games and Forge searches
+3. **Combat next.** *(Built with step 2: §8.)* Attacks and blocks decide most cube games and Forge searches
    neither. Enumerate a small set of attack configurations (all-in, none, Forge's
    own, each single creature held back) and score each with the same rollout.
 4. **A better evaluator.** Replace the hand weights in `GameStateEvaluator` with a
@@ -193,6 +194,90 @@ untouched.
 5. **Keep the policies.** Targeted fixes like D310's outlet policy stay as cheap
    rules in front of the search: they cover what a shallow search misses (a
    response on the stack) and cost nothing per decision.
-6. **Then the game's own seat.** Only after the bench shows a gain: switch
+6. **Then the game's own seat.** *(Built as opt-in: `MtgTable --ai-policy
+   search`, `play.sh --ai-search`, D314.)* Only after the bench shows a gain: switch
    `MtgTable`'s AI seat to `Bootstrap.createAiSeat` behind a flag, so the
    owner plays the stronger AI; the gate's recordings stay on plain Forge.
+
+## 8. The search as built (D312–D314)
+
+*Branch `c/search-ai`. Code: `bridge/src/mtgtable/ai/` — `SearchPolicy` (the
+search), `Determinizer`, `LenientGameCopier`, `RolloutController`,
+`SearchConfig`. Measurements: [`docs/evidence/search-ai.md`](../evidence/search-ai.md).*
+
+**Where it sits.** `PolicyControllerAi` asks Forge first, then D310's outlet
+policy (when on), and only then the search, at three decisions:
+
+| decision | when | candidates (Forge's own answer is always candidate 0) |
+|---|---|---|
+| (p) priority | our turn, main 1 or 2, empty stack, Forge's answer is not a land drop | pass; every other spell or non-mana ability Forge's own per-card judgment (`AiController.canPlaySa`) accepts and the AI can pay for — RemAIDeck cards included, which Forge's chooser hides; untargeted spells it declines, if affordable |
+| (a) attacks | our declare-attackers step, after Forge declared | no attack; everything that can attack; Forge's minus each attacker; Forge's plus each creature it held back — each checked with `CombatUtil.validateAttackers` |
+| (b) blocks | their declare-blockers step, after Forge blocked | no block; Forge's minus each blocker; Forge's plus each legal extra block — each checked with `CombatUtil.validateBlocks` |
+
+At most `cands` (6) candidates, in that order.
+
+**One rollout.** (1) Copy the real game with `LenientGameCopier` (Forge's
+`GameCopier` plus the sideboard workaround below). (2) Give both seats of the
+copy fresh controllers: ours a `RolloutController` (Forge's `PlayerControllerAi`
+whose first answer to the searched question is forced to the candidate), theirs
+a plain `PlayerControllerAi` — no simulation, no search, no recursion. (3) Install
+the candidate: a priority candidate is mapped onto the copy (the same card by id,
+the ability by its description, X, modes and targets copied) and the copy's
+`PhaseHandler` is told the AI holds priority (`setPriority` + `onStackResolved`,
+both public); a combat candidate rewinds the copy one step
+(`devModeSet(COMBAT_BEGIN)` or `(COMBAT_DECLARE_ATTACKERS)`, combat kept) so the
+next step re-enters the declaration and asks the forced controller.
+(4) Determinize (below). (5) Run the copy's own game loop
+(`PhaseHandler.mainLoopStep`, public) until the end of this turn (`turns=0`,
+the default; `turns=1` goes on through the next) or the game ends — Forge's Default AI playing both sides, Forge's AI timeout cut
+to 1 s inside the copy. (6) Score the leaf: a win or loss dominates (sooner
+better); otherwise life on a concave curve (30 a point up to 5, 18 to 10, 8 to
+20, 2 beyond), 40 per card in hand (capped at hand size), poison, an empty
+library, and every permanent through Forge's own `GameStateEvaluator.evalCard`
+(its creature evaluator, mana for lands), ours plus and theirs minus.
+
+**Rounds and the budget.** A round is one determinization (one seed) played out
+for every candidate, with the same seed installed as Forge's `MyRandom` in each
+— common random numbers, so the candidates are compared on the same draws and
+the same coin flips; the real game's `MyRandom` is restored after every rollout,
+so the search never perturbs the real game's randomness. Rounds repeat until
+the wall-clock budget (`ms`, 1500) or `maxrounds` (12). The best mean wins
+only if it beats Forge's own answer by `margin` (20 points) over at least
+`rounds` (2) complete rounds; otherwise — or on any failure — it is Forge's
+answer. The search runs after Forge's own decision, which keeps its own 5 s
+limit, so one AI decision costs at most Forge's time plus the budget.
+
+**What the AI may know** (`Determinizer`'s header is the rule). Everything
+public, its own hand, its own decklist and **the opponent's decklist** (the
+owner's ruling: a cube's pool is known). The decklist minus the opponent's
+public cards is exactly the multiset of their hand plus library, so the copy's
+opponent hand and library are pooled, put in a canonical order (name, then id),
+shuffled with the search's own random source and dealt back — as many to hand
+as the hand held. The AI's own library is shuffled the same way. The result
+depends only on the multiset, the hand size and the seed; the self-test plays
+two games that differ only in the hidden split and order and requires identical
+determinizations. Known limit: an opponent's face-down permanent or exiled card
+keeps its real identity in the copy (counted, `search.oppFaceDownDecisions`).
+The search reads the real game only through the copier and the candidate
+generation, both on the game thread inside Forge's callback; it writes nothing
+the wire or a view can see.
+
+**The copier's failure, found.** §4's `Couldn't map <card>` is the
+**sideboard**. `GameCopier` copies seven zones and then re-maps every live
+`StaticEffect`; a static ability that works in all zones (Tarmogoyf's
+characteristic-defining P/T, Grist's type-changing static, Anax, Hero of Light)
+also affects the copy of that card sitting in the sideboard, which the copier
+never copies, and `find` throws. `LenientGameCopier` overrides `find` while the
+copy is being made: a card in a zone the copier does not copy (or in none) maps
+to a stand-in card of the copy that lives in no zone; `removeMapped` only strips
+layers from the cards it maps, so stripping them from a stand-in is a no-op, and
+the copy's own `checkStateEffects` re-applies every static. Copied zones still
+go through Forge's strict lookup, and every stand-in is counted. The self-test
+pins both halves: Forge's copier throws on a board with Tarmogoyf and Grist in
+the sideboard, ours copies it. (A card in a copied zone that the strict lookup
+still cannot map — the bench met one, a Bird token — gets a stand-in too.)
+
+**Measured** (`docs/evidence/search-ai.md`): 56.5% against Default's 47.0% on
+the same 200 cube deals, 37 deals gained and 18 lost (p = 0.015); copier errors
+0.22% before the token fix; a quarter of searched decisions kept Forge's answer
+for want of budget at 1.5 s on this machine.
