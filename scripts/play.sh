@@ -144,7 +144,8 @@
 #   3. it starts the bridge on the new decks, profile and games, with every
 #      other flag as before (--keep-open, --site-dir, --lan, anything after `--`
 #      except --deck/--ai-deck/--deck2/--ai-profile/--games, which the request
-#      replaces); under --lan the restarted bridge keeps the FIRST run's pairing
+#      replaces, and --game-id, which is match-<id> so a client never takes the
+#      new match for a reconnect); under --lan the restarted bridge keeps the FIRST run's pairing
 #      token (MTGTABLE_LAN_TOKEN, in the environment), so the phone's link and
 #      the helper's token stay good;
 #   4. it waits for /health as at startup and writes var/match/status.json
@@ -690,14 +691,16 @@ restart_match() {
   for a in "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}"; do
     if [ "$skip" = "1" ]; then skip=0; continue; fi
     case "$a" in
-      --deck|--deck2|--ai-deck|--ai-profile|--games) skip=1 ;;
-      --deck=*|--deck2=*|--ai-deck=*|--ai-profile=*|--games=*) : ;;
+      --deck|--deck2|--ai-deck|--ai-profile|--games|--game-id) skip=1 ;;
+      --deck=*|--deck2=*|--ai-deck=*|--ai-profile=*|--games=*|--game-id=*) : ;;
       *) pass+=("$a") ;;
     esac
   done
   local next=(--transport ws --port "$WS_PORT" --deck "${req[2]}" --ai-deck "${req[3]}" --ai-profile "${req[4]}")
   [ "$KEEP_OPEN" = "1" ] && next+=(--keep-open)
-  next+=(--games "${req[5]}" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}" "${pass[@]+"${pass[@]}"}")
+  # Its own game id: with a --seed the bridge's default id would repeat, and a
+  # client reads a repeated gameId as a reconnect (§2.1), not a new match.
+  next+=(--games "${req[5]}" --game-id "match-$id" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}" "${pass[@]+"${pass[@]}"}")
 
   # Never two engines: the old one is gone, and its port quiet, before the next starts.
   echo "stopping the bridge (pid $SERVER_PID)"

@@ -13371,7 +13371,9 @@ copies; protocol amendment **M53** is the row.
   `[A-Za-z0-9_-]`, games 1–9), stops the bridge (SIGTERM, SIGKILL after 3 s,
   reaped), **waits until the ws port stops answering `/health`** (and stops
   itself if it never does — never two engines), starts the bridge with the
-  request's `--deck/--ai-deck/--ai-profile/--games` and every other flag it had
+  request's `--deck/--ai-deck/--ai-profile/--games`, `--game-id match-<id>` (with
+  a `--seed` the bridge's default id would repeat, and §2.1 reads a repeated
+  `gameId` as a reconnect — the real-engine smoke found it) and every other flag it had
   (`--keep-open`, `--site-dir`, `--lan`, the passthrough minus those four),
   waits for `/health` as at startup, and writes `var/match/status.json`
   (`ready`, with the names and counts read from the bridge's own `deck you =`
@@ -13427,7 +13429,7 @@ helper's, CI's `redaction` job; about 25 s) runs the real `play.sh
 seam that skips check-forge and the build, with `MTGTABLE_TEST_VAR` keeping its
 files under `var/match-launcher-selftest/` — that answers `/health`, holds a
 seat socket, prints the bridge's deck lines, records its argv and token, and
-takes 700 ms to die holding its port: 71 checks — the `.dck` text byte for
+takes 700 ms to die holding its port: 72 checks — the `.dck` text byte for
 byte, the restart's argv, the seat dropped, the reply's `aiDeck` exactly
 `{name, cards}`, seventeen malformed requests and an oversized one refused with
 nothing written or restarted, another Origin 403, a deck the engine will not start on 502 with
@@ -13436,6 +13438,17 @@ back, never two engines, `--lan` keeping its token, Ctrl-C taking it all down,
 the card index over a built zip, and `/match` off without a supervisor. It
 failed under each planted mutant: the restart not waiting for the old engine,
 the LAN token not handed on, the card-name pattern removed.
+
+**Measured on the real engine** (Forge 2.0.14, the pinned jar, in a container
+at a load average of 20–170): `play.sh --engine-only --seed 7 -- --games 1`,
+then `POST /match` from the github.io Origin with two 40-card decks of real
+cards — an unknown card was refused 400 against the 33,617-entry card index
+in about a second; the restart answered 200 in 25.3 s with both decks at 40,
+`Cautious`, one game; a `/ws` client's `hello_ok.match` then named the new
+decks with `aiDeck` exactly `{name, cards}` and `yourDeck.path`
+`var/match/<id>/you.dck`. That run found the repeated `gameId` (`human-ws-7`
+both times under `--seed 7`), hence `--game-id match-<id>`; the fix is held by
+the self-test, not re-run on the engine. The full gate was not run.
 
 **Rationale.** The helper already is the browser's door to this machine, with
 its gate solved; the restart belongs to whoever started the engine, and that is

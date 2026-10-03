@@ -84,6 +84,7 @@ console.log('deck you      = ' + you.name + ' (' + you.cards + ' cards)');
 console.log('deck ai       = ' + ai.name + ' (' + ai.cards + ' cards)');
 const lan = argv.includes('--lan');
 const token = lan ? (process.env.MTGTABLE_LAN_TOKEN || crypto.randomBytes(16).toString('base64url')) : null;
+if (lan) ev({ lanToken: token });
 const sockets = new Set();
 const server = http.createServer((req, res) => {
   if (req.url.startsWith('/health')) { res.end('ok'); return; }
@@ -214,6 +215,7 @@ try {
     && argOf(second, '--ai-profile') === 'Reckless' && argOf(second, '--games') === '1', second.join(' '));
   check('and every other flag kept (--transport ws, the port, --keep-open)', argOf(second, '--transport') === 'ws' && argOf(second, '--port') === String(A.port) && second.includes('--keep-open')
     && second.filter((a) => a === '--deck').length === 1 && second.filter((a) => a === '--games').length === 1, second.join(' '));
+  check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
   check('the deck name never reached a command line', !second.some((a) => a.includes('Rock')));
   check('the old engine is gone', !alive(first[0].pid));
   for (let i = 0; i < 20 && !seatClosed; i++) await sleep(50);
@@ -287,13 +289,14 @@ try {
   // ------------------------------------------------------------- play.sh --lan
   console.log('== play.sh --lan: a restart keeps the pairing token');
   const L = await startPlay(['--lan', '--site-dir', `${REL}/site`], 'lan');
-  const lanFirst = starts().at(-1);
-  const t1 = /token=([A-Za-z0-9_-]+)/.exec(L.out())?.[1];
-  check('the first --lan engine minted its own token (none handed in)', lanFirst?.token === null && !!t1);
+  const onL = () => starts().filter((e) => argOf(e.argv, '--port') === String(L.port));
+  const lanFirst = onL()[0];
+  const t1 = events().find((e) => e.pid === lanFirst?.pid && e.lanToken)?.lanToken;
+  check('the first --lan engine minted its own token (none handed in)', lanFirst?.token === null && !!t1 && L.out().includes(`token=${t1}`), JSON.stringify({ lanFirst, t1 }));
   r = await post(L.coachPort, req1);
   check('POST /match on a --lan engine: 200', r.status === 200, `${r.status} ${r.body}`);
-  const lanSecond = starts().at(-1);
-  check('the restarted engine got the first token, in its environment', lanSecond?.token === t1 && lanSecond.argv.includes('--lan') && !lanSecond.argv.some((a) => a.includes(t1)), JSON.stringify(lanSecond));
+  const lanSecond = onL()[1];
+  check('the restarted engine got the first token, in its environment', !!t1 && lanSecond?.token === t1 && lanSecond.argv.includes('--lan') && !lanSecond.argv.some((a) => a.includes(t1)), JSON.stringify({ t1, lanSecond }));
   check('--site-dir kept', argOf(lanSecond?.argv ?? [], '--site-dir') === `${REL}/site`);
   check('the token is not in the launcher reply', !r.body.includes(t1));
 

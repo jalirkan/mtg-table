@@ -106,7 +106,7 @@ the same two keys `hello_ok.match.aiDeck` carries.
 
 **Then reconnect** the seat to `/ws` (`ws://127.0.0.1:<wsPort>/ws`, or the LAN
 URL with the same token as before — a restart keeps it). The new engine sends
-`hello_ok` with a new `gameId` and `match` naming the new decks, then `state`.
+`hello_ok` with a new `gameId` (`match-<id>`) and `match` naming the new decks, then `state`.
 
 ### Every refusal
 
