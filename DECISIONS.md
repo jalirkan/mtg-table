@@ -14548,6 +14548,123 @@ A beats B beats C beats A go unseen); generating candidates inside the league
 (the generators are the tuner today and the evaluator's training later; the
 league judges, it does not invent).
 
+## D322 — Bridge drafts: a pool sampled afresh per draft from two or more cubes, each cube's share stratified by its sections, every card tagged with its source cube, the cubes' ratings put on one scale per draft
+
+*Branch `c/matchup-model`; D322–D324 (the next free numbers after the search
+AI's D312–D314, the lab recording's D315, the evaluator's D316–D317 and the
+ladder's D318–D321 on their branches).*
+
+**2026-10-03** (the owner's request: one model over every cube's cards, and
+"bridge drafts" between cubes)
+
+**Context.** Games inside one cube rank that cube's cards against each other
+and nothing else; the cubes' card scales float apart. A game between a deck
+drafted from cube A's cards and one from cube B's links the two scales, the
+way games across pools anchor an Elo ladder.
+
+**Decision.** `tools/cubelab.sh run --bridge a,b[,c]` (`tools/cubelab/bridge.ts`)
+drafts from a pool sampled for each draft from its seed (rng stream `bridge`;
+D294's rule, so a pool, its picks and its decks are a function of the seed):
+each cube gives its share (`--bridge-ratio`, equal by default) of
+`--bridge-size` (180) cards, apportioned over that cube's own sections by the
+largest remainder, so each half keeps its cube's colour balance; a card two
+cubes list is taken once and the next card of its section stands in. Every
+draft line carries `bridge: {sources, shares, from}`, `run.json` a `bridge`
+block and `cubeFile: bridge:<a>+<b>`; a run without `--bridge` writes what it
+wrote before (one added optional field in each type, one added term in the
+resume check). The cubes' ratings are on different scales, and drafters
+comparing them take mostly the stronger cube's cards (measured: 17–50% of a
+deck from Pauper in a Pauper + Vintage pool), so by default
+(`--bridge-ratings even`) each draft rescales each cube's cards to the pool's
+mean and SD — order within a cube kept, the halves weighed evenly (measured:
+41–56%); `own` keeps the raw ratings.
+
+**Rejected.** One pool per run (fewer contexts per night, and a run's
+`cards.json` is then one arbitrary sample); deck composition forced (one deck
+from each cube): it would test the cubes against each other, not mix them, and
+the drafters would no longer draft; leaving the ratings raw: the weaker cube's
+cards would seldom meet the stronger cube's, the link a bridge is for. The
+matchup model reads only what was played, so how a deck came to be does not
+bias it — it decides which cards meet.
+
+## D323 — The overnight queue: one root folder of normal and bridge drafts over every cube, drafts allocated by card uncertainty pooled by name, bridge pairs chosen for information, each pool key's seeds handed out once across nights
+
+**Decision.** `tools/cubelab.sh queue plan|run --night N --drafts D`
+(`tools/cubelab/queue.ts`). `--bridge-share` (0.2) of the drafts go to bridge
+pairs, the rest to the cubes' own drafts; in each half drafts follow weights.
+A cube's is Σ var_c / m_c over its cards — var_c the card's uncertainty
+(`--power`'s SD², else 1 / (16 + g_c/4) from its decisive games so far under
+the root, pooled by name across cubes), m_c the number of cubes listing it —
+so a card several cubes share is paid for once and a cube whose cards are
+covered elsewhere gets fewer drafts. A pair's is novelty (1 − shared / the
+smaller cube) × link (1.0 for adjacent power tiers, 0.7 for flat with powered,
+0.4 within a tier) × its cards' mean uncertainty; a pair under 0.25 before
+uncertainty is skipped (Omega + Vintage, 108 cards shared: 0.16; Fair Fight +
+Pauper, 99: 0.18). Each pool key (`normal/<cube>`, `bridge/<a>+<b>` in one
+order) has one run folder that nights append to; `queue.json` hands out its
+seeds once, a plan is refused if it repeats one, a written plan is re-read on
+a re-run, and `run` skips a seed already in `drafts.jsonl` — no deck pair is
+drafted twice and a resumed night replays no finished draft. Chunks of every
+key interleave, so a night cut short has some of everything; a failed chunk
+is reported and the night goes on. One engine lookup covers all cubes' cards
+(`engineFacts` now reuses a cached lookup that covers the names asked for).
+`--record-every N` is passed to every run for D315's in-worker recording, and
+the night stops if the lab does not record. The knobs are `QUEUE_DEFAULTS`
+and `TIERS`, with a row each in the guide.
+
+**Rejected.** Round-robin pairs (half the pairs re-draft nearly one pool);
+a separate night per model (the evaluator and the matchup model read one
+pooled recorded run); a per-cube rating pass (it rates a shared card again
+in every cube).
+
+## D324 — The matchup model: P(deck A beats deck B) over every cube's cards at once; the plain pooled Bradley-Terry first, bigger models only if they beat it on held-out drafts and cubes; priors and intervals by draft
+
+**Decision.** `tools/ml/matchup_data.py` reads cube lab run folders — no new
+lab output: `drafts.jsonl` already holds both played decks, the winner and the
+verified play side — into one record per decisive game (v1: `id, draft, pool,
+kind, cubes, seed, game, deckA, deckB, onPlay, winner, from?, run`), each game
+once (pool, seed, game and both decks), cards by name. `tools/ml/matchup.py
+train` fits a ladder: **M0**, a pooled Bradley-Terry on cards, logit P(A) =
+Σ (n_A − n_B)·p_c + β·play with p_c = w·f_c + b_c — one power per card, the
+card's features (mana value, colours, types, P/T, keywords, rules-text
+patterns, Forge's rank, from the lab's cached engine facts) as the prior mean
+so an unseen card gets a guess; **M1**, M0 + a per-cube deviation; **M2**, M0
++ embeddings, a deck term and an antisymmetric matchup term (torch, opt-in).
+Baselines: a coin with the play, plain Bradley-Terry, and the per-cube shrunk
+win rates as `meta.json` computes them. The prior widths are chosen by 5-fold
+cross-validation **grouped by draft**, never by the Laplace evidence, which
+counts a best of three's games as independent and picked too loose a prior
+(τ = 0.035) on the first real data; the split is by draft, held-out intervals
+bootstrap over drafts, a card's SD comes from refits on bootstrap resamples of
+the training drafts. Held-out cubes are scored with every game touching the
+cube removed. Outputs: `power.tsv` (one scale for every card, its SD, its
+feature prior), `cube-dev.tsv`, `balance.json` and `report.md` (the balance
+number: the SD across a cube's decks of their predicted win rate against the
+cube's other decks; bridge composition; overlap), `model.json`. `design`
+(`matchup_design.py`) is a prototype: in-class swaps under a swap budget,
+candidates from cubes at or below the target's power tier, every output marked
+PROPOSED BY MODEL, UNVERIFIED with the lab command that verifies it on fresh
+seeds.
+
+**Its place.** It is meant to become the one source of card value — to
+replace `meta.json`'s per-card win rates (deck value, confounded) and
+`learn.ts`'s per-cube fit (and its τ of 0.25, which implies 85/15 matchups
+from cards alone) — not to sit beside them. The switch (`meta.json`
+`value`/`valueSd`, then `evolve`'s cuts, ForgeCoach's `score.ts` and
+flatness) waits for data that shows card signal.
+
+**Measured** (`docs/evidence/matchup-model.md`): 285 decisive games, 143
+drafts. Out-of-fold by draft no model beats the coin (0.6925): M0 +0.012
+[−0.010, +0.037], M1 +0.014, the per-cube meta rates +0.086 [+0.002, +0.178],
+M2 +0.080 [+0.022, +0.145]; cross-validation picks τ = 0.002. That is the
+pipeline proven, not a card scale: the review's estimate is about 5,000 games
+a cube, which the PC's nights provide.
+
+**Rejected.** Starting with embeddings (they lost to M0 out-of-fold at this
+size, as D305's wide evaluators did); the per-cube ratings as the value (the
+confounding, and on these games they predict worse than a coin); a separate
+model per cube (72% of card-games here are of cards two or more cubes list).
+
 ## D325 — The coach helper queues questions instead of refusing them: one runs, up to four wait (`--queue-max`), a queued one can be superseded by key, and `/health` says so
 
 *Branch `c/helper-queue`; D325, the next number free of every lane's claim (D315–D324 are other lanes').*
@@ -14604,3 +14721,130 @@ pile up minutes of stale questions); superseding the running question by key (a
 manual *Ask again* on the same decision would kill the answer that is nearly
 done — cancelling is the client's call); a separate status endpoint for the
 queue (the stream already reaches the asker).
+
+## D331 — Evolve cuts in two stages: a Benjamini–Hochberg discovery on the generation's own drafts makes a candidate, and only a confirmation on a fresh, disjoint seed range cuts it; win rates count the deck's match as the unit; nothing is pooled across generations
+
+*Branch `c/evolve-rigor`; D331 rather than D326, because D326–D330 may be held by
+branches not yet pushed (main holds up to D325).*
+
+**2026-10-03** (the methodology review's finding M2: "evolve's cuts are about
+180 simultaneous 95% tests, re-checked as data accumulates")
+
+**Decision.** D299's thresholds — a Wilson 95% bound per card, per rule — are
+replaced by two looks (`tools/cubelab/evolve.ts`, arithmetic in
+`evolve-stats.ts`, both pure):
+
+- **The tests.** Each rule is a one-sided exact binomial test: *dead*, H0 "at
+  least `deadPlayRateHi` of the on-colour decks play it"; *dominant-win*, H0
+  "its win rate is at most the run's mean", which counts only when it also won
+  `dominantMargin` (0.05) over the mean (`dominantLoMargin` is renamed, since it
+  no longer bounds an interval); *dominant-pick*, H0 "first line at most
+  `dominantFirstPickLo` of the time", counting only with a shrunk win rate at
+  least the mean. The minimum samples (`minGames`, `minSeen`, `minOnColour`)
+  still gate a test in discovery.
+- **Discovery** reads the generation's own drafts and nothing else. The family
+  is every test a cut could follow from — cards with no note, no AI flag, not a
+  land, and (for *dead*) rated at least `deadMinRating`, chosen by attribute
+  before any result is seen — about 400 tests on Omega. Benjamini–Hochberg at
+  `fdrQ` = 0.10 decides; a discovery is a **candidate**. Cards outside the
+  family are still reported with the signal they would have given.
+- **Confirmation.** When there are candidates the generation plays a second
+  batch on the same cube from seeds `S + confirmSeedOffset (10⁶) +
+  (g−1)·confirmMaxDrafts` onward (`gen-NN/confirm/`), disjoint from every
+  discovery batch and every other generation's confirmation, and tests each
+  candidate's rule again on that batch alone, with Holm at `confirmAlpha` =
+  0.05 across the candidates and the size filter again. Only a confirmed
+  candidate is cut; a note-cut needs no confirmation. The batch is sized per
+  candidate for power `confirmPower` = 0.8 at Holm's strictest level
+  (`confirmAlpha` / candidates), at the effect that matters — not at the
+  discovery estimate, which selection biased upward: a win rate `dominantEffect`
+  = 0.10 over the mean, a first-line rate `pickEffect` = 0.9, an on-colour play
+  rate `deadEffect` = 0.1 — using the observations per draft the card met in
+  discovery; the largest need, within `confirmMinDrafts` 20 ..
+  `confirmMaxDrafts` 300, is the batch (a candidate whose need is over the cap
+  is reported under-powered and tested anyway).
+- **Clumps.** A card's games are its decks' matches: one deck, one opponent,
+  about 2.4 games. The generation's design effect D = Σ(wᵢ − p̄nᵢ)² /
+  (p̄(1−p̄)Σnᵢ) over every played deck divides a card's games and wins before
+  its test and its interval (`clusteredCi`). It is pooled over the batch's
+  ~2N decks rather than computed per card (a sandwich over a card's 10–60
+  decks is too noisy to test with). D is exactly 1 for independent games with
+  best-of-three's stopping included (enumerated in the test), so it measures
+  only how much decks differ; the lab's runs give 1.08 (pauper, 20 drafts),
+  1.21 (synergy, 40) and 1.10 pooled. An ANOVA intra-class correlation was
+  tried on paper and rejected: the stopping rule alone gives it about 0.11 with
+  no real inflation. Play and first-line rates need no correction (one
+  observation per card per pool or grid).
+- **Recording.** `evolve --record-all` / `--record-every N` passes D315's
+  `recordEvery` to both batches' runs; it changes no decision and is not part
+  of `evolve.json`'s resume key.
+- **Reporting.** The changelog and the page explain discovery and confirmation
+  in plain words, list every candidate with its discovery numbers (p, BH q) and
+  its confirmation numbers (p, Holm p), and a swap's evidence names both seed
+  ranges; the iteration-log line names the confirmation batch.
+
+**The repeated looks.** D300 pooled a generation's drafts with the earlier
+generations that drafted the same list, so a card was re-tested on a growing
+sample until it crossed — optional stopping. Now no data is read by two
+decisions: each generation's discovery has fresh seeds, and each confirmation
+has its own. So the chance that a generation cuts any card by chance is at
+most `confirmAlpha` whatever discovery did (Holm on independent data), and
+under a cube where nothing is wrong at most `fdrQ`·`confirmAlpha` = 0.5%; over
+G generations at most G times that. Alpha-spending across pooled looks was the
+alternative; it keeps pooling's power but needs the number of looks fixed in
+advance (a resumable loop does not know it) and its bookkeeping in every
+folder. The price of not pooling is that a weak lead does not accumulate: the
+remedy is a bigger generation, and *watch* says how big.
+
+**Measured** (`node tools/cubelab/evolve-sim.ts --sims 1000`: a simulated
+180-card cube, best of three, deck spread set so D ≈ 1.15, about 0.6 decisive
+games per card per draft as Omega's runs give, the real `discoveryStage` and
+`confirmCandidates` on the simulated stats):
+
+| null cube (no card better) | any false flag a generation |
+|---|---|
+| old rule, 30 drafts, one look | 43% |
+| old rule, 30 drafts, three pooled looks | 90% (mean 2.6 cards) |
+| D331, 30 / 100 / 200 / 400 drafts: any false candidate | 0.2% / 2.6% / 2.3% / 2.4% |
+| D331, same: any false cut | 0.0% / 0.0% / 0.0% / 0.3% |
+
+The review's own script gave 18% and 83% with independent games; deck spread
+makes the old rule worse. Power, a single planted card (confirmed and cut;
+extra confirmation drafts per generation on average, zero when nothing is
+found): dead (played by 5% of the decks that could) 63% / 93% at 100 / 200 drafts; dominant
++0.15 on its deck's game-win chance 17% / 56% / 80% at 200 / 400 / 600 drafts
+(60 / 172 / 245 confirmation drafts); dominant +0.10 2% / 9% / 21%. Under the
+null, confirmation costs 0.5–7 drafts a generation on average, because it runs
+only in the 2–3% of generations with a candidate. With a planted dominant card
+the hitchhikers — cards that shared its decks — are cut by chance in under 1%
+of generations: that is the confounding of the review's H1, which only a
+deck-adjusted card value (`learn.ts`) removes.
+
+**What it means for a run.** At 30 drafts a generation nothing is cut on AI
+evidence; 200 finds the dead; a card dominant by wins needs 400–600 drafts a
+generation, or a note. The guide says so. Old evolve folders are refused
+(their knobs differ).
+
+**Held by** `web/test/cubelab-evolve.test.ts` (no cut without a confirmation;
+a candidate the fresh batch does not repeat stays; the confirmation counts are
+the fresh batch's own; both batches in the evidence, the changelog and the
+page) and `web/test/cubelab-evolve-sim.test.ts` (the arithmetic against hand
+values; on the null cube the old rule's false-flag rate over 20% one look and
+70% pooled, the new candidate rate at most 10% and the cut rate at most 5%;
+a planted dead card confirmed at least 80% of the time at 200 drafts and a
+planted +0.15 card at least 65% at 600).
+
+**Rejected.**
+
+- **BH alone, cutting on discovery** (the review's alternative): it bounds the
+  share of wrong cuts, not the chance of one, and a 10% FDR may cut a wrong card
+  in up to one generation in ten when the cube is fine.
+- **Separate BH families per rule:** under a cube with nothing wrong the
+  family-wise rate adds up across them.
+- **A hierarchical Bayes screen** (shrink every card's effect toward the mean
+  with a fitted spread): when nothing is wrong the fitted spread is near zero
+  and it flags as little as BH, and it buys a model of card effects the next
+  step (H1: `learn.ts`'s deck-adjusted values) will replace.
+- **Sizing confirmation by the discovery estimate:** the winner's curse makes
+  it too small.
+- **A per-card cluster-robust variance:** too few decks per card to test with.

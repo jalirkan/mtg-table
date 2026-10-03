@@ -297,3 +297,71 @@ are still open.*
 Later, for a policy (not only a value): the seat's `act`/`answer` lines are in
 seat recordings already; AI-vs-AI recordings carry no actions, so a policy
 target needs the lab to log the AI's chosen action at each decision.
+
+## The matchup model — one card scale across every cube (D324)
+
+A second, separate model: not "who's winning from this board" but **"which of
+two decks wins"**, from both 40-card lists and who is on the play. It is meant
+to become the ONE source of card value for every cube — replacing the per-cube
+card win rates of `meta.json` (`winRateShrunk`, which mostly measure a card's
+deck and archetype) and `learn.ts`'s per-cube fit — because it credits a card
+net of its deckmates and its opponent, and pools a card's games across every
+cube that lists it (722 distinct cards in the seven cubes' 1,260 slots).
+
+```bash
+# the record: one JSON line per decisive game, from any cube lab run folders or a queue root
+python3 tools/ml/matchup_data.py var/cubelab/queue --out var/ml/matchup/games.jsonl --overlap
+# train: the ladder of models, baselines, held-out drafts and cubes, power.tsv, balance.json, report.md
+python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup --holdout-cubes all [--embed 8]
+# a candidate cube (prototype; PROPOSED BY MODEL, UNVERIFIED until the lab plays it on fresh seeds)
+python3 tools/ml/matchup.py design --model var/ml/matchup --target-cube synergy --out var/ml/design/synergy.md
+python3 -m unittest tools/ml/tests/test_matchup.py
+```
+
+**The data needs nothing new from the lab.** `drafts.jsonl` already holds both
+played decks, every game's winner and play side (`onPlayVerified`), and
+`run.json` the cube; bridge runs (D322) add `bridge.from`, the cube each card
+came from. `matchup_data.py` reads run folders into **the record (v1)**:
+`{v, id, draft, pool, kind: normal|bridge, cubes, seed, game, deckA, deckB,
+onPlay, winner, from?, run}`, decisive games only, each game once (a game is
+its pool, seed, number and both decks: a copied folder is not counted twice),
+cards keyed by name. Card features come from the engine facts the lab already
+caches (`var/cubelab/facts/*.json`: type, colours, cost, P/T, rules text,
+Forge's draft rank), so a card no game has shown still gets a guess.
+
+**The ladder** (simplest first; a bigger model is used only if it beats the
+smaller one on held-out drafts AND held-out cubes):
+
+| model | what it is |
+|---|---|
+| M0 | pooled Bradley-Terry on cards: logit P(A) = Σ (n_A − n_B)·p_c + β·play, p_c = w·f_c + b_c — **one number per card**, its features as the prior mean |
+| M1 | M0 + a per-cube deviation for a card in its cube's games (a hierarchy) |
+| M2 | M0 + embeddings, a deck term and an antisymmetric matchup term (torch, `--embed k`) |
+
+and three baselines: (a) coin with play/draw, (b) plain Bradley-Terry on cards,
+(c) the per-cube shrunk win rates as `meta.json` computes them. The prior
+widths (τ per card, τ_w for the features, τ_cube) are chosen by **5-fold
+cross-validation grouped by draft**: a draft's games share both decks, so
+anything that treats them as independent (the binomial, the Laplace evidence,
+a bootstrap over games) overstates what they say. For the same reason the
+split is by draft (70/15/15 by a hash of the draft id — the deck pair, as the
+evaluator's `--split-by pair`), the intervals bootstrap over drafts, and a
+card's `sd` in `power.tsv` is the spread over refits on bootstrap resamples of
+the training drafts. Numpy only for M0, M1 and the baselines; torch only for M2.
+
+**Outputs.** `power.tsv` (every card on one scale: logits per copy against the
+average nonland card, × 25 ≈ points of win rate at even odds; `sd`; the part
+the features predict; games; the cubes listing it — the `--power` input of
+`cubelab.sh queue`), `cube-dev.tsv` (M1's per-cube deviations), `balance.json`
+and `report.md` (held-out tables with sample sizes, calibration, held-out
+cubes, **each cube's balance number** — the SD across its decks of each deck's
+predicted win rate against the cube's other decks — bridge-deck composition,
+the overlap report), `model.json`.
+
+**The balance number and ForgeCoach's flatness.** Flatness
+(`src/cube/flatness.ts`) reads `meta.json`'s per-card and per-archetype win
+rates and subtracts binomial noise; the matchup model's number is a deck-level
+spread from a model fitted net of deckmates. The model shrinks toward even
+odds, so with few games its spread is a lower bound; flatness's intervals are
+too narrow under clumped games (a card's games come about 2.4 at a time from
+one deck pair). Compare the two only at thousands of games per cube.

@@ -223,6 +223,10 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 | `--weight name=value` | | one weight; repeatable; wins over `--weights` |
 | `--synergy <tsv>` | | learned pair synergy for both drafters (`learn` writes it; D301) |
 | `--deck-synergy on\|off` | `off` | ...and for both deckbuilders (needs `--synergy`) |
+| `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
+| `--bridge-ratio 0.5,0.5` | equal | each cube's share of a bridge pool |
+| `--bridge-size N` | 180 | a bridge pool's size (at least 162, a grid's deal) |
+| `--bridge-ratings even\|own` | `even` | rescale each cube's ratings to the pool's scale per draft, or keep them |
 
 ## The weights
 
@@ -348,7 +352,7 @@ redefined without a schema 2 on both sides.
 - **lands**: win rate by the played deck's land count; **splash**: the
   splashing decks' win rate, and `vsNoSplash` its difference from the rest.
 
-## Evolve: a cube that changes by simulation (D299–D300)
+## Evolve: a cube that changes by simulation (D299–D300, D331)
 
 `evolve` runs generations of the lab on a cube and swaps cards in from a seed
 pool where the evidence says a card is dead or dominating, writing the next
@@ -364,11 +368,14 @@ tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv
 Overnight on a four-core PC (resumable: run the same line again after a stop;
 a finished generation is skipped and a half-played one picks up its seeds).
 At about 25 s of one core a draft, a 200-draft generation is some 20 minutes on
-four workers, so eight are about three hours:
+four workers, plus a confirmation batch of up to 300 drafts in a generation
+that found something (below), so eight generations are three to six hours.
+`--record-all` (or `--record-every N`) records both batches' games for the ML
+dataset, as `run` does (D315):
 
 ```bash
 tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
-    --generations 8 --drafts-per-gen 200 --jobs 4 --seed 1 --out var/cubelab/evolve/omega-overnight
+    --generations 8 --drafts-per-gen 200 --jobs 4 --seed 1 --record-all --out var/cubelab/evolve/omega-overnight
 ```
 
 Then open `var/cubelab/evolve/omega-overnight/index.html`; the latest cube is
@@ -382,21 +389,73 @@ more: how often it went in the **first line taken** from its grid (3 of 9 cards
 is the base rate, so a card that goes there every time is everyone's first
 pick). A land's decks and games are counted from the played decks' full lists
 (`meta.json` counts a deck's spells only, so there every land reads as never
-played). When the generations just before it drafted the same list (none of
-them swapped anything), their drafts are pooled with this one's — the same
-list's evidence adds up, so a run of *insufficient data* generations settles
-on its own. Each card is then assessed:
+played). **Nothing is pooled across generations** (D331, which replaced
+D300's pooling): every decision reads one batch of drafts that no earlier
+decision has looked at. Each card is then assessed:
 
 | status | when |
 |---|---|
-| `dead` | it sat in a drafter's pool whose played deck could cast it (its colours within the deck's, splash included) ≥ `minOnColour` times, and the Wilson 95% upper bound of *the share of those decks that played it* is ≤ `deadPlayRateHi`: passed over when it was there to play. A gold card of a pair nobody drafted is not dead — it never had the chance (the changelog names such pairs) |
-| `dominant-win` | ≥ `minGames` decisive games in played decks, and the Wilson lower bound of its win rate is ≥ the run's mean + `dominantLoMargin` |
-| `dominant-pick` | dealt in ≥ `minSeen` drafts, the Wilson lower bound of its first-line rate is ≥ `dominantFirstPickLo`, and its shrunk win rate is at least the mean |
+| `dead` | a **candidate** (below): it sat in a drafter's pool whose played deck could cast it (its colours within the deck's, splash included) ≥ `minOnColour` times, and the test "at least `deadPlayRateHi` of those decks play it" fails — passed over when it was there to play. A gold card of a pair nobody drafted is not dead — it never had the chance (the changelog names such pairs) |
+| `dominant-win` | a **candidate**: ≥ `minGames` decisive games in played decks, the test "it wins no more than the run's mean" fails (its games counted by deck, below), and it won at least `dominantMargin` over the mean |
+| `dominant-pick` | a **candidate**: dealt in ≥ `minSeen` drafts, the test "it goes in the first line taken at most `dominantFirstPickLo` of the time" fails, and its shrunk win rate is at least the mean |
 | `note-cut` / `note-keep` | the notes file says `cut` / `keep` (or `try` for a card already in) |
 | `ai-limited` | Forge marks it `AI:RemoveDeck:All` or `:Random` (the pool's `forge_ai_flag`, or the engine's own facts): its numbers are reported, the status the AI evidence alone would give is shown beside them, and **only a note can cut it** |
 | `builder-limited` | every land: the lab's deckbuilder plays a dual or fetchland only in its own pair's decks and a colourless land (Mutavault) never, so a land's deck rate and win rate measure its pair, not the land; a land goes only by a note (the changelog lists the lands never played) |
 | `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the drafters pick by rating, so the data cannot tell a weak card from an underrated one; **never cut** — raise its rating in a ratings TSV (`tools/cubelab.sh ratings init`, edit, then `evolve … --ratings <tsv>`; the loop then judges every rating, the pool's too, by that file) to test it |
-| `watch` | a lead — an on-colour play rate at or under `deadPlayRateHi`, or a win rate `watchWinMargin` over the mean — that has **not** passed its threshold: *insufficient data*, with the drafts per generation that would likely settle it |
+| `watch` | a lead — an on-colour play rate at or under `deadPlayRateHi`, or a win rate `watchWinMargin` over the mean — that has **not** passed its test: *insufficient data*, with the drafts per generation at which it would likely be discovered |
+
+**Discovery, then confirmation (D331).** About 180 cards are looked at every
+generation, so a test that is wrong one time in twenty per card is wrong
+about several cards every generation: on a simulated cube where no card is
+better than another, the old rule (a 95% interval per card) called some card
+"dominant" in 43% of 30-draft generations, and in 90% once three generations
+were pooled. Two looks fix it:
+
+- **Discovery.** Every rule is an exact one-sided binomial test, and every
+  test a cut could follow from (the cards no note, AI flag, land or low rating
+  protects) is one family. Benjamini–Hochberg at `fdrQ` (10%) decides which
+  pass: of the cards it flags, at most about one in ten is a fluke on
+  average — and when nothing is really wrong with the cube, it flags anything
+  at all in at most one generation in ten (2–3% in the simulation). A
+  discovery is a **candidate**, not a verdict.
+- **Confirmation.** When there are candidates, the generation plays a second
+  batch of fresh drafts on the same cube, from a seed range nothing else uses
+  (`S + confirmSeedOffset + (g−1)·confirmMaxDrafts` onward, into
+  `gen-NN/confirm/`), and tests each candidate again, the same way, on that
+  batch alone, with Holm at `confirmAlpha` (5%) across the candidates. Only a
+  **confirmed** candidate is cut, so the chance that a generation cuts any card
+  by chance is at most 5% whatever discovery did (under 0.5% in the
+  simulation). The batch is sized for power `confirmPower` (80%) against the
+  smallest effect that matters — a win rate `dominantEffect` over the mean, a
+  first-line rate of `pickEffect`, an on-colour play rate of `deadEffect` — at
+  the rate the card met observations in discovery, between `confirmMinDrafts`
+  and `confirmMaxDrafts` drafts. A generation with no candidate plays no
+  confirmation batch.
+
+The changelog and `index.html` show both: each candidate's discovery numbers
+(with its p and BH q value) beside its confirmation numbers (with its
+Holm-adjusted p), and whether it was confirmed; a swap's evidence names both
+seed ranges.
+
+**A card's games come in clumps**: one deck, against one opponent, best of
+three (about 2.4 games). Win rates therefore count the deck's match as the
+unit: the generation's *design effect* D — the spread of the decks' match
+results over what independent games would give (1 for independent games, the
+best-of-three stopping included) — divides a card's games and wins before its
+test and its interval. The lab's own runs measure D at 1.08–1.21. Play and
+first-line rates need no such correction: a card is in at most one pool and
+one grid a draft.
+
+**What it costs and what it finds** (`node tools/cubelab/evolve-sim.ts`, a
+simulated 180-card cube with D ≈ 1.15 and about 0.6 decisive games per card per
+draft, as Omega's runs give): a card played in 5% of the decks that could play
+it is found and cut about nine times in ten at 200 drafts a generation. Win
+rates are much harder: a card that adds 15 points to its deck's chance of
+winning a game is confirmed about one time in six at 200 drafts, one in two at
+400 and eight in ten at 600; one that adds 10 points, only one in five even at
+600. So 30 drafts
+a generation will almost never cut on AI evidence; 200 finds the dead; a
+dominant card by wins needs 400–600 a generation, or a note.
 
 **The swaps.** The cuts, in order — notes, then dominant by wins, by picks,
 then dead, strongest first — each take the best-fitting pool card that keeps
@@ -435,7 +494,9 @@ swaps applied, the title's version bumped, the format-counts table and section
 headings recounted, and one entry in its `## Iteration log` listing each swap
 and its evidence; every other line as it was), `stats.json` (every card's
 numbers and assessment, the balance by pair, colour and theme, the decision),
-`section.html` and, last, `result.json`. `<out>/` holds `evolve.json` (options,
+`section.html` and, last, `result.json`; and, when discovery found
+candidates, `confirm/` (the confirmation batch's run folder, with its own
+`meta.json` and `report.html`). `<out>/` holds `evolve.json` (options,
 knobs, the constraints, each generation's swaps), `changelog.md`, `index.html`
 (every generation, one self-contained page) and the latest cube under its own
 file name. A folder made with another cube, pool, seed, drafts, games, profiles,
@@ -466,8 +527,17 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | `minOnColour` | 8 | on-colour pools a card must have sat in before play-rate evidence counts |
 | `deadPlayRateHi` | 0.35 | dead: the upper bound of its on-colour play rate is at most this |
 | `deadMinRating` | 60 | a dead card rated under this is `rating-limited`, never cut; and no pool card rated under it is added (unless a note says `try`) |
-| `dominantLoMargin` | 0.05 | dominant: the lower bound of its win rate is this far over the mean |
-| `dominantFirstPickLo` | 0.75 | dominant by picks: the lower bound of its first-line rate |
+| `dominantMargin` | 0.05 | dominant by wins: its win rate must also be this far over the mean, in both batches (replaces D299's `dominantLoMargin`) |
+| `dominantFirstPickLo` | 0.75 | dominant by picks: the first-line rate it is tested against |
+| `fdrQ` | 0.1 | discovery: the false-discovery rate (Benjamini–Hochberg) over the generation's tests |
+| `confirmAlpha` | 0.05 | confirmation: the chance of confirming any card by chance (Holm over the candidates) |
+| `confirmPower` | 0.8 | confirmation: the power the batch is sized for |
+| `dominantEffect` | 0.1 | confirmation is sized to confirm a card winning this far over the mean |
+| `pickEffect` | 0.9 | ...a card going in the first line this often |
+| `deadEffect` | 0.1 | ...a card played this often by the decks that could |
+| `confirmMinDrafts` | 20 | the smallest confirmation batch |
+| `confirmMaxDrafts` | 300 | the largest (also the spacing of the generations' confirmation seed ranges) |
+| `confirmSeedOffset` | 1000000 | confirmation seeds start this far above `--seed` |
 | `watchWinMargin` | 0.12 | a win rate this far over the mean is a lead to watch |
 | `colourSlack` | 2 | each colour's nonland count may move this far from the start |
 | `minSignposts` | 2 | gold cards each colour pair keeps (or its starting count, if fewer) |
@@ -482,9 +552,11 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | `humanTest` | 10 | human-test candidates listed |
 
 With 30 drafts a generation a card is dealt about 27 times, sits on colour in
-some 5–15 pools and plays some 10–25 decisive games, so only clear cases pass; the changelog's *insufficient data*
-table says how many drafts would settle the rest. Two hundred drafts a
-generation is where most leads resolve.
+some 5–15 pools and plays some 10–25 decisive games, so with some 400 tests in
+the family almost nothing passes; the changelog's *insufficient data* table
+says how many drafts would find the rest. Two hundred drafts a generation
+finds the dead cards; dominance by wins needs 400–600 (above). An evolve
+folder made before D331 is refused (its knobs differ): start a new `--out`.
 
 ## Learning the drafters' values from the games (D301–D302)
 
@@ -614,6 +686,108 @@ tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/syne
 (= drafts per iteration), `--deck-h2h` (0), `--deck-synergy on|off` (off),
 `--control on|off` (on),
 `--from <run-dir>` (repeatable) and `--learn name=value`.
+## Bridge drafts and the overnight queue (D322–D323)
+
+The matchup model (`tools/ml/matchup.py`, D324; `tools/ml/README.md`) rates
+every card of every cube on ONE scale from games between whole decks. Games
+inside one cube can only rank that cube's cards against each other; a
+**bridge draft** puts two cubes' cards into one pool, so the decks it makes
+link the cubes' scales, the way cross-pool games anchor an Elo ladder.
+
+```bash
+tools/cubelab.sh run --bridge pauper,modern-era --drafts 40 --games 1 --jobs 4
+tools/cubelab.sh run --bridge fair-fight,vintage --bridge-ratio 0.6,0.4 --drafts 40 --jobs 4
+```
+
+**The pool** is sampled afresh for every draft from the draft's seed (rng
+stream `bridge`, D294's rule: the same seed gives the same pool, picks and
+decks anywhere): each cube gives its share (half each by default), spread
+over that cube's own sections in proportion, so each half keeps its cube's
+colour balance; a card both cubes list is taken once and the next card of the
+same section stands in. A cube is named by its id (`fair-fight` for
+`cubes/fair-fight-cube-180.md`) or a path.
+
+**Ratings.** Each cube's ratings file (or Forge's ranks) rates its own
+cards, and those scales differ: a drafter comparing them takes mostly the
+stronger cube's cards, and the weaker cube's cards then rarely meet the other
+cube's in a game. So by default (`--bridge-ratings even`) each draft rescales
+each cube's cards to the pool's own mean and SD: within a cube the order is
+kept, between the cubes the halves weigh the same. The model reads only what
+was played, so this changes which cards meet, not what a game says.
+`matchup.py`'s report shows each bridge deck's share from each cube.
+
+**What it writes.** Every draft line in `drafts.jsonl` carries
+`bridge: {sources, shares, from}` — `from` names the cube each card of the
+pool came from — and `run.json` a `bridge` block (the sources with their
+sha256, the shares, the size, the ratings mode); `cubeFile` reads
+`bridge:<a>+<b>`. A run without `--bridge` writes exactly what it wrote
+before. `report` reads a bridge folder like any other.
+
+### The overnight queue
+
+`tools/cubelab.sh queue` plans and plays a night of normal and bridge drafts
+over all the committed cubes, into one root folder that every night adds to:
+
+```bash
+tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7            # print the plan, play nothing
+tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7 --record-every 1   # play it; resumable
+python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup/night-1
+tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-1/power.tsv
+```
+
+| flag | default | |
+|---|---|---|
+| `--night N` | | the night; its plan is `<root>/night-N.json`, written once and re-read on a re-run |
+| `--drafts D` | | the night's drafts (a new night only) |
+| `--bridge-share x` | 0.2 | the share of bridge drafts |
+| `--games N` | 1 | games a draft: fixed for the root (independent games are worth more than a best of three's) |
+| `--chunk N` | 250 | drafts per run call; chunks of every key are interleaved, so a night cut short has some of everything |
+| `--min-drafts N` | 20 | a key that would get fewer gets none, and its share goes to the rest |
+| `--cubes a,b,…` | every `cubes/*-cube-180.md` | |
+| `--power <tsv>` | | the matchup model's `power.tsv`: its `sd` column drives the allocation |
+| `--bridge-ratings even\|own` | `even` | as for `run` |
+| `--record-every N` | 0 | passed to every run: record every game of every Nth draft in the worker, both chairs (D315; the night stops if a run did not record) |
+| `--root <dir>` | `var/cubelab/queue` | |
+
+**No double work.** A draft is a function of its pool key (`normal/<cube>` or
+`bridge/<a>+<b>`, a pair keyed in one order) and its seed. The root's
+`queue.json` hands out each key's seeds once across all nights, the planner
+refuses a plan that would repeat one, every key keeps one run folder that
+nights append to, and `run` skips a seed its `drafts.jsonl` already holds, so
+re-running a night plays only what never finished. One engine lookup covers
+every cube's cards at the start; every chunk's lookup is then a subset of it
+(the facts cache reuses a file that covers the names).
+
+**Where the drafts go.** The bridge share is fixed; inside each half the
+drafts follow weights, printed by `plan`:
+
+- a cube's weight is Σ over its cards of var_c / m_c: var_c is the card's
+  uncertainty (`--power`'s `sd`², else 1 / (16 + g_c/4), g_c its decisive
+  games so far under the root, POOLED BY NAME across cubes), m_c the number of
+  cubes listing it, so a card five cubes share is paid for once and a cube
+  whose cards are well covered elsewhere gets fewer drafts;
+- a pair's weight is novelty × link × uncertainty: novelty = 1 − shared /
+  the smaller cube (Omega and Vintage share 108 of 180 cards, so their mix is
+  mostly an in-cube draft again); link by power tier (flat: Pauper, Peasant,
+  Fair Fight; middle: Synergy, Modern-Era; powered: Omega, Vintage): 1.0 for
+  adjacent tiers, which chain the levels, 0.7 for flat with powered (lopsided
+  games teach a logistic model little), 0.4 within a tier; a pair whose
+  novelty × link is under 0.25 is skipped (Omega+Vintage 0.16, Fair
+  Fight+Pauper 0.18).
+
+The queue's knobs are `QUEUE_DEFAULTS` in `tools/cubelab/queue.ts` (the
+plan file records them) and the tiers its `TIERS` table:
+
+| knob | default | what it does |
+|---|---|---|
+| `bridgeShare` | 0.2 | the night's share of bridge drafts (`--bridge-share`) |
+| `linkAdjacent` | 1.0 | a pair's link for adjacent power tiers |
+| `linkFar` | 0.7 | ...for flat with powered |
+| `linkSame` | 0.4 | ...for two cubes of one tier |
+| `minPairWeight` | 0.25 | a pair whose novelty × link is under this is skipped |
+| `tau` | 0.25 | the prior SD (logits) behind var_c from game counts when there is no `--power` |
+| `minDrafts` | 20 | a key under this many drafts gets none (`--min-drafts`) |
+
 ## What it does not do
 
 - It never touches the game: no bridge code, no wire, nothing the board reads.

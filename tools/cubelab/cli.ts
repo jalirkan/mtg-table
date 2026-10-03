@@ -10,13 +10,16 @@
 //           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
 //           [--synergy <tsv>] [--deck-synergy on|off]          learned pairs (D301)
+//   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
+//   queue   plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
 //   learn   <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...   (D301)
 //   selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N] [--deck-synergy on|off]
 //           [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>]   (D302; learncmd.ts has every flag)
 //   report  <out> [--min-games N]           <out>/report.html, report.md, summary.json and meta.json
 //   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]   <out>/meta.json (ForgeCoach, D297)
 //   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
-//           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300)
+//           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300, D331)
+//           [--record-all | --record-every N]                  record both batches' games (D315)
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -32,6 +35,8 @@ import { aggregate, renderHtml, renderMarkdown, type CardInfo, type Recording } 
 import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
 import { learnCommand, selfplayCommand } from './learncmd.ts';
+import { bridgeOptions } from './bridge.ts';
+import { queueCommand } from './queue.ts';
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve } from './evolve-run.ts';
 
@@ -47,6 +52,10 @@ function usage(msg?: string): never {
                         [--record-all | --record-every N]
                         [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
                         [--weights <json>] [--weight name=value]... [--synergy <tsv>] [--deck-synergy on|off]
+       tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
+                        [the flags above but --ratings]
+       tools/cubelab.sh queue plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
+                        [--cubes a,b,...] [--power <power.tsv>] [--chunk 250]
        tools/cubelab.sh learn <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...
        tools/cubelab.sh selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N]
                         [--deck-synergy on|off] [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>] [--ratings <tsv>]
@@ -55,6 +64,7 @@ function usage(msg?: string): never {
        tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N]
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
+                        [--record-all | --record-every N]
 `);
   process.exit(2);
 }
@@ -151,6 +161,15 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     ...(one(f, 'synergy') ? { synergyFile: one(f, 'synergy') as string, deckSynergy: one(f, 'deck-synergy') === 'on' } : {}),
   };
   if (one(f, 'deck-synergy') === 'on' && !one(f, 'synergy')) usage('--deck-synergy on needs --synergy <tsv>');
+  const bridgeArg = one(f, 'bridge');
+  if (bridgeArg) {
+    if (cubeFile || one(f, 'ratings')) usage('--bridge names its cubes itself (no cube file, no --ratings: each cube keeps its own ratings)');
+    o.bridge = bridgeOptions(REPO, bridgeArg, one(f, 'bridge-ratio'), int(f, 'bridge-size', 180), one(f, 'bridge-ratings') ?? 'even');
+    o.cubeFile = `bridge:${o.bridge.sources.map((s) => s.id).join('+')}`;
+    o.ratingsFile = null;
+    if (!one(f, 'out')) o.out = path.join('var/cubelab/runs', `bridge-${o.bridge.sources.map((s) => s.id).join('+')}-${format}-${seed}`);
+    say(`bridge: ${o.bridge.sources.map((s, i) => `${s.id} ${Math.round((o.bridge?.shares[i] ?? 0) * 100)}%`).join(' + ')} of ${o.bridge.size} cards, sampled afresh for every draft from its seed`);
+  }
   if (o.jobs > env.homes.length) usage(`--jobs ${o.jobs} but only ${env.homes.length} Forge home(s) were built (tools/cubelab.sh builds --jobs of them)`);
   // --games 0 drafts and builds only, plays nothing (the AI ladder's deck sets, D318); a report of such a run has no games
   if (o.games < 0) usage('--games must be 0 or more');
@@ -221,14 +240,16 @@ async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<nu
   if (jobs > env.homes.length) usage(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
   const date = one(f, 'date') ?? new Date().toISOString().slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) usage(`--date wants YYYY-MM-DD, got ${date}`);
+  if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
+  const recordEvery = one(f, 'record-all') ? 1 : int(f, 'record-every', 0);
   const o = {
     cubeFile, poolFile, notesFile: fs.existsSync(notes) ? notes : null, generations: Math.max(1, int(f, 'generations', 1)),
     drafts: Math.max(1, int(f, 'drafts-per-gen', 30)), jobs, seed,
     out: one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`),
     games: Math.max(1, int(f, 'games', 3)), profiles: [profiles[0] as string, profiles[1] as string] as [string, string],
-    ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date,
+    ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date, recordEvery,
   };
-  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}`);
+  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}${recordEvery ? `, recording ${recordEvery === 1 ? 'every game' : `every game of every ${recordEvery}th draft`} (both chairs, both batches)` : ''}`);
   await evolve(env, o, say);
   return 0;
 }
@@ -239,7 +260,8 @@ async function main(): Promise<number> {
   switch (cmd) {
     case 'check': if (!pos[0]) usage('check needs a cube file'); return check(pos[0]);
     case 'ratings': if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md>'); return ratingsInit(pos[1], one(f, 'out'), f.has('force'));
-    case 'run': if (!pos[0]) usage('run needs a cube file'); return run(pos[0], f);
+    case 'run': if (!pos[0] && !f.has('bridge')) usage('run needs a cube file (or --bridge a,b)'); return run(pos[0] ?? '', f);
+    case 'queue': if (pos[0] !== 'plan' && pos[0] !== 'run') usage('queue plan|run --night N --drafts D'); return queueCommand(REPO, pos[0], f, say);
     case 'report': if (!pos[0]) usage('report needs a run directory'); return report(pos[0], f);
     case 'learn': return learnCommand(REPO, pos, f, say);
     case 'selfplay': if (!pos[0]) usage('selfplay needs a cube file'); return selfplayCommand(REPO, pos[0], f, say);
