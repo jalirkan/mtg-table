@@ -1,7 +1,8 @@
 running
 runner: forgecoach-runner 6fbcdea
 started: 2026-10-03T13:35:58-04:00
-phase: prepare
-workers: 1
+phase: commands 1/1
+mtg-table: bf3dca7
+workers: 4 (sized 4: min(cores 7, memory 7, max_workers 4); peak 2.50 GB per worker (default; measured 0.76), budget 21.4 GB)
 peak_worker_rss_gb: 0.76
 approved: pilot approved; the runner skipped it
