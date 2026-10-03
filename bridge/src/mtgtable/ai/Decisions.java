@@ -606,6 +606,8 @@ public final class Decisions {
         s.horizon = r.horizon;
         s.rule = r.rule;
         s.margin = r.margin;
+        s.z = r.z;
+        s.stat = r.stat;
         s.forge = 0;
         s.best = r.best;
         s.rounds = r.rounds;

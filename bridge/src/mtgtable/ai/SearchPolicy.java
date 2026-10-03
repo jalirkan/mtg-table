@@ -59,12 +59,19 @@ import forge.util.MyRandom;
  * ({@link LenientGameCopier}), redeal what the AI cannot see
  * ({@link Determinizer}), force the candidate as the searching seat's first
  * answer ({@link RolloutController}), let Forge's plain Default AI play BOTH
- * seats to the end of the next turn, and score the leaf ({@link #leaf}).  Every
+ * seats to the end of THIS turn ({@code turns=0}, the default: a rollout of our
+ * own main phase or attack stops before the opponent untaps; D351 corrects
+ * D312's title, which said "the next turn"), and score the leaf ({@link #leaf}).  Every
  * candidate is rolled out on the same determinization and the same engine
  * random seed in a round (common random numbers), rounds repeat until the
  * wall-clock budget runs out, and the candidate with the best mean wins only
  * if it beats Forge's own answer by {@link SearchConfig#margin} over at least
- * {@link SearchConfig#minRounds} complete rounds.  Anything else -- a copy that
+ * {@link SearchConfig#minRounds} complete rounds (or, with {@code override=lcb},
+ * if the lower confidence bound of its paired difference to Forge's answer
+ * clears the margin, D350).  Every search leaves a {@link Report} -- each
+ * candidate's mean, standard error and rounds, the override verdict, the margin
+ * and rule used, the budget -- for the decision record ({@link #takeReport}).
+ * Anything else -- a copy that
  * throws, a candidate that cannot be mapped into the copy, a budget too short
  * for the rounds -- is Forge's answer, counted.
  *
@@ -161,14 +168,26 @@ public final class SearchPolicy {
     }
 
     /**
-     * What one search measured, for the decision record (D347): every
-     * candidate's mean leaf, its standard error over rounds, its paired
-     * difference to Forge's answer with that difference's standard error, the
-     * win estimate, the rounds, the horizon, the rule and margin the verdict
-     * used, whether Forge was overridden, and whether the budget cut the search
-     * short or made it fall back.  Filled whatever the outcome; read and cleared
-     * by {@link #takeReport}.  The field names are the ones branch
-     * {@code c/engine-week1} (D350) gives the same class, so the two meet as one.
+     * Leaf points per logit when a leaf is read as a win probability,
+     * {@code P(win) = σ(leaf / LEAF_SCALE)}: the coach grader's live analysis
+     * ({@code mtgtable.grade.Grader}) and {@link Report#win}.  D349: fitted on
+     * recorded lab games against their outcomes ({@code coach-grade.sh
+     * fit-scale}): 502.8, bootstrap 95% [268, 1301] over 24 cube games (both
+     * seats, 888 end-of-turn positions; docs/evidence/engine-week1.md), shipped
+     * rounded.  D336's 400 was never fitted.  The PC refits it on more games
+     * ({@code var/coach-grade/leaf-scale.json} then wins in the live modes).
+     */
+    public static final double LEAF_SCALE = 500;
+
+    /**
+     * What one search measured (D350, the review's M1): every candidate's mean
+     * leaf, its standard error over rounds, its paired difference to Forge's
+     * answer with that difference's standard error, the rounds, the rule and
+     * margin the verdict used, whether Forge was overridden, and whether the
+     * budget cut the search short or made it fall back.  Filled whatever the
+     * outcome; {@link #takeReport} hands it to the decision record (branch
+     * {@code c/decision-records}) and clears it.  Engine-free (numbers and
+     * labels), so it costs a few arrays per search.
      */
     public static final class Report {
         /** p, a or b. */
@@ -180,29 +199,60 @@ public final class SearchPolicy {
         public double[] meanLeaf = new double[0];
         /** Standard error of the mean leaf over rounds (NaN below two rounds). */
         public double[] seLeaf = new double[0];
-        /** Mean of (this - Forge's) per round, and its standard error (paired, CRN). */
+        /** Mean of (this − Forge's) per round, and its standard error (paired, CRN). */
         public double[] diffLeaf = new double[0];
         public double[] seDiff = new double[0];
-        /** Win estimate: a finished copy 1 / 0 / 0.5, else a logistic of the leaf ({@link #LEAF_SCALE}). */
+        /** Win estimate: a finished copy 1 / 0 / 0.5, else σ(leaf / {@link #LEAF_SCALE}). */
         public double[] win = new double[0];
+        /** Per round, per candidate leaf values ({@code leaves[round][cand]}): the search's raw noise. */
+        public List<double[]> leaves = new ArrayList<>();
         public int rounds;
         public int playouts;
         public long ms;
         public long budgetMs;
         /** The horizon the rollouts used (turns past this one). */
         public int horizon;
-        /** The verdict's rule and its margin in leaf points. */
+        /** margin or lcb, the multiplier z (lcb only) and the margin in leaf points. */
         public String rule = "margin";
+        public double z;
         public int margin;
         /** The wall-clock budget stopped the loop before {@code maxrounds}. */
         public boolean timedOut;
-        /** null, budget, copyError, unmappable, rolloutErrors or invalidAtEnd. */
+        /** null, or why Forge's answer was kept without a verdict: budget | copyError | unmappable | rolloutErrors | invalidAtEnd. */
         public String fallback;
         /** -1 until a verdict; else the index played (0 = Forge's). */
         public int chosen = -1;
+        /** The candidate with the best mean (-1 before a verdict). */
         public int best = -1;
         /** The search's answer replaced Forge's. */
         public boolean overrode;
+        /** The statistic the rule compared with the margin: the mean difference, or its lower bound. */
+        public double stat = Double.NaN;
+
+        /**
+         * The override rule (D312; D350's noise-aware variant).  {@code margin}:
+         * the best mean beats Forge's by more than {@code margin}.  {@code lcb}:
+         * the lower bound {@code mean_d − z·se_d} of the best's paired per-round
+         * difference to Forge's answer clears {@code margin}, over at least
+         * {@link SearchConfig#LCB_MIN_ROUNDS} rounds.  Returns the index played.
+         * Pure (no Forge class), so {@code GradeSelfTest} checks it on numbers.
+         */
+        public static int verdict(final SearchConfig cfg, final Report rep, final int best, final int rounds) {
+            if (best == 0) {
+                rep.stat = 0;
+                return 0;
+            }
+            if (!cfg.lcb) {
+                rep.stat = rep.diffLeaf[best];
+                return rep.diffLeaf[best] > cfg.margin ? best : 0;
+            }
+            if (rounds < SearchConfig.LCB_MIN_ROUNDS || Double.isNaN(rep.seDiff[best])) {
+                rep.stat = Double.NaN;
+                return 0;
+            }
+            rep.stat = rep.diffLeaf[best] - cfg.z * rep.seDiff[best];
+            return rep.stat > cfg.margin ? best : 0;
+        }
 
         /** Means, standard errors and paired differences to candidate 0 over the complete rounds. */
         public static void fillStats(final Report rep, final List<double[]> leaves, final List<double[]> wins, final int k) {
@@ -222,7 +272,7 @@ public final class SearchPolicy {
                 for (int j = 0; j < r; j++) {
                     m += leaves.get(j)[i];
                     d += leaves.get(j)[i] - leaves.get(j)[0];
-                    w += wins.get(j)[i];
+                    w += wins.isEmpty() ? 0 : wins.get(j)[i];
                 }
                 m = r == 0 ? Double.NaN : m / r;
                 d = r == 0 ? Double.NaN : d / r;
@@ -236,14 +286,27 @@ public final class SearchPolicy {
                 rep.diffLeaf[i] = d;
                 rep.seLeaf[i] = r > 1 ? Math.sqrt(sm / (r - 1) / r) : Double.NaN;
                 rep.seDiff[i] = r > 1 ? Math.sqrt(sd / (r - 1) / r) : Double.NaN;
-                rep.win[i] = r == 0 ? Double.NaN : w / r;
+                rep.win[i] = r == 0 || wins.isEmpty() ? Double.NaN : w / r;
             }
+        }
+
+        /** One line for an event log or a test. */
+        public String summary() {
+            final StringBuilder sb = new StringBuilder(String.format(Locale.ROOT,
+                    "search %s: %d rounds, %d playouts, %d ms, horizon %d, rule %s margin %d%s, ", kind, rounds, playouts, ms,
+                    horizon, rule, margin, "lcb".equals(rule) ? String.format(Locale.ROOT, " z %.2f", z) : ""));
+            for (int i = 0; i < meanLeaf.length; i++) {
+                sb.append(i == 0 ? "" : "; ").append(i == 0 ? "forge " : "").append(String.format(Locale.ROOT,
+                        "%.0f+-%.0f (d %.0f+-%.0f)", meanLeaf[i], seLeaf[i], diffLeaf[i], seDiff[i]));
+            }
+            sb.append(fallback != null ? ", fallback " + fallback : overrode ? ", overrode with " + best : ", kept Forge's");
+            return sb.toString();
         }
     }
 
     private Report report;
 
-    /** The last search's report, or null when no search ran since the last call. */
+    /** The last search's report, or null when no search ran since the last call; clears it. */
     public Report takeReport() {
         final Report r = report;
         report = null;
@@ -255,7 +318,7 @@ public final class SearchPolicy {
         return report;
     }
 
-    /** The token a candidate stands for (D347; the coach bench's spelling). */
+    /** The token a candidate stands for in a decision record (D347; the coach bench's spelling). */
     public static String token(final Cand c) {
         if (c instanceof PriorityCand) {
             return Decisions.saToken(((PriorityCand) c).sa);
@@ -276,6 +339,9 @@ public final class SearchPolicy {
         }
         throw new IllegalArgumentException("candidate " + c);
     }
+
+    /** The last search's report goes to the bench's event stream only when asked (a long line per search). */
+    private static final boolean REPORT_EVENTS = Boolean.getBoolean("mtgtable.search.reportEvents");
 
     // ==================================================================
     // (p) priority in our own main phase
@@ -798,6 +864,7 @@ public final class SearchPolicy {
         final long deadline = t0 + cfg.budgetMs * 1_000_000L;
         final Game game = ai.getGame();
         final int k = cands.size();
+        final int horizon = cfg.horizonFor(kind);
         final List<double[]> leaves = new ArrayList<>();
         final List<double[]> wins = new ArrayList<>();
         int errors = 0;
@@ -807,8 +874,11 @@ public final class SearchPolicy {
         rep.kind = kind;
         rep.cands = new ArrayList<>(cands);
         rep.budgetMs = cfg.budgetMs;
-        rep.horizon = cfg.horizonTurns;
+        rep.horizon = horizon;
+        rep.rule = cfg.lcb ? "lcb" : "margin";
+        rep.z = cfg.lcb ? cfg.z : 0;
         rep.margin = cfg.margin;
+        rep.leaves = leaves;
         if (Determinizer.hiddenFaceDown(game, ai) > 0) {
             sink.add("search.oppFaceDownDecisions", 1);
         }
@@ -821,7 +891,7 @@ public final class SearchPolicy {
                 for (int i = 0; i < k; i++) {
                     final Playout p;
                     try {
-                        p = rollout(game, ai, cands.get(i), seed, deadline, leaves.isEmpty() && i == 0);
+                        p = rollout(game, ai, cands.get(i), seed, deadline, leaves.isEmpty() && i == 0, horizon);
                     } catch (final CopyFailed e) {
                         throw e;
                     } catch (final CandidateUnmappable e) {
@@ -890,27 +960,27 @@ public final class SearchPolicy {
                 best = i;
             }
         }
-        o.chosen = best != 0 && o.mean[best] - o.mean[0] > cfg.margin ? best : 0;
+        o.chosen = Report.verdict(cfg, rep, best, rounds);
+        if (cfg.lcb) {
+            sink.add(o.chosen > 0 ? "search.lcb.overrode" : best > 0 && rep.diffLeaf[best] > cfg.margin
+                    ? "search.lcb.held" : "search.lcb.none", 1);
+        }
         rep.best = best;
         rep.chosen = o.chosen;
         rep.overrode = o.chosen > 0;
+        if (REPORT_EVENTS) {
+            sink.event(rep.summary());
+        }
         return o;
     }
 
-    /**
-     * A playout's win estimate, as the grader's live analysis scores one
-     * (D336): a finished game is 1, 0 or 0.5; otherwise a logistic of the leaf
-     * at {@link #LEAF_SCALE} points per logit.
-     */
+    /** A playout's win estimate: a finished copy 1 / 0 / 0.5, else σ(leaf / {@link #LEAF_SCALE}). */
     public static double winOf(final Playout p) {
         if (p.over) {
             return p.result > 0 ? 1 : p.result < 0 ? 0 : 0.5;
         }
         return 1 / (1 + Math.exp(-p.leaf / LEAF_SCALE));
     }
-
-    /** Leaf points per logit for {@link #winOf}: {@code mtgtable.grade.CoachGrade}'s {@code leafScale}. */
-    public static final double LEAF_SCALE = 400;
 
     /** A candidate other than Forge's could not be mapped: search the rest (rare). */
     private Outcome retryWithout(final Player ai, final List<Cand> cands, final String kind, final long t0) {
@@ -947,8 +1017,8 @@ public final class SearchPolicy {
 
     /** One rollout: null if the deadline passed before its leaf. */
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
-                            final boolean first) {
-        return playout(game, ai, cand, seed, new Limits(deadline, cfg.horizonTurns, 20_000), sink, first,
+                            final boolean first, final int horizon) {
+        return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle), sink, first,
                 failCopyForTest);
     }
 
@@ -961,10 +1031,22 @@ public final class SearchPolicy {
         /** {@code mainLoopStep} calls before the playout stops where it is (counted, scored as a leaf). */
         public final int maxSteps;
 
+        /** Leaf points per untapped creature (1 = Forge's own term; D351). */
+        public final double untapped;
+        /** Bench only: skip the determinization, so the copy keeps the real hidden cards (D350's oracle). */
+        public final boolean oracle;
+
         public Limits(final long deadline, final int horizonTurns, final int maxSteps) {
+            this(deadline, horizonTurns, maxSteps, 1.0, false);
+        }
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
+                      final boolean oracle) {
             this.deadline = deadline;
             this.horizonTurns = horizonTurns;
             this.maxSteps = maxSteps;
+            this.untapped = untapped;
+            this.oracle = oracle;
         }
     }
 
@@ -1046,7 +1128,13 @@ public final class SearchPolicy {
             } catch (final RuntimeException e) {
                 throw new CandidateUnmappable(e);
             }
-            Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
+            if (lim.oracle) {
+                // D350's bench-only oracle: the copy keeps the real hand and library
+                // order (SearchConfig.parseLive refuses it for a live seat).
+                sink.add("search.oracleRollouts", 1);
+            } else {
+                Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
+            }
             final long tp = System.nanoTime();
             final PhaseHandler ph = copy.getPhaseHandler();
             final int startTurn = ph.getTurn();
@@ -1064,7 +1152,7 @@ public final class SearchPolicy {
                 sink.add("search.rolloutStepCap", 1);
             }
             sink.add("search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
-            final double leaf = leaf(copy, aiCopy);
+            final double leaf = leaf(copy, aiCopy, lim.untapped);
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {
             MyRandom.setRandom(realRandom);
@@ -1102,6 +1190,17 @@ public final class SearchPolicy {
      * and theirs minus.
      */
     public static double leaf(final Game g, final Player ai) {
+        return leaf(g, ai, 1.0);
+    }
+
+    /**
+     * {@link #leaf} with an untapped creature worth {@code untapped} leaf
+     * points more than a tapped one (Forge's {@code CreatureEvaluator} gives 1,
+     * so 1 is the plain leaf).  D351: the review's H1 -- at 1 point, attacking
+     * with everything costs the leaf almost nothing however hard the crack-back
+     * is; the weight is a knob for the ladder's SPRT, its default unchanged.
+     */
+    public static double leaf(final Game g, final Player ai, final double untapped) {
         final int turn = g.getPhaseHandler().getTurn();
         // isInGame() is "no outcome yet": a winner is out of the game too.
         if (ai.hasLost()) {
@@ -1140,6 +1239,9 @@ public final class SearchPolicy {
                 v = 50;
             }
             s += (c.getController() == ai ? 1 : -1) * v;
+            if (untapped != 1.0 && c.isCreature() && c.isUntapped()) {
+                s += (c.getController() == ai ? 1 : -1) * (untapped - 1.0);
+            }
         }
         return s;
     }

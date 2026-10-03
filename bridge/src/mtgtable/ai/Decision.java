@@ -115,6 +115,9 @@ public final class Decision {
         public int horizon;
         public String rule = "margin";
         public int margin;
+        /** lcb only: the multiplier z; and the statistic the rule compared with the margin (NaN: none). */
+        public double z;
+        public double stat = Double.NaN;
         /** Index into {@link #tokens} of Forge's own answer (always 0) and of the best mean. */
         public int forge;
         public int best = -1;
@@ -194,7 +197,11 @@ public final class Decision {
             o.end();
             o.n("forge", s.forge).n("best", s.best).n("rounds", s.rounds).n("playouts", s.playouts)
                     .n("horizon", s.horizon).n("rule", s.rule).n("margin", s.margin)
-                    .n("ms", s.ms).n("budgetMs", s.budgetMs).n("timedOut", s.timedOut)
+                    .n("stat", round(s.stat, 1));
+            if ("lcb".equals(s.rule)) {
+                o.n("z", s.z);
+            }
+            o.n("ms", s.ms).n("budgetMs", s.budgetMs).n("timedOut", s.timedOut)
                     .n("overrode", s.overrode);
             if (s.fallback == null) {
                 o.nNull("fallback");

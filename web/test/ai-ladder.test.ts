@@ -26,7 +26,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { rng } from '../../tools/cubelab/rng.ts';
-import { KINDS, resolveParams, unavailable } from '../../tools/ai-ladder/kinds.ts';
+import { KINDS, resolveParams, testOnly, unavailable } from '../../tools/ai-ladder/kinds.ts';
 import { decide } from '../../tools/ai-ladder/league.ts';
 import { joinLog, type ExpLine } from '../../tools/ai-ladder/experiments.ts';
 import { split } from '../../tools/ai-ladder/decksets.ts';
@@ -343,6 +343,23 @@ test('search kind: params map onto the bench\'s +search syntax; defaults fill th
   assert.throws(() => resolveParams('search', { budgetMs: 10 }), /50\.\.60000/);
   assert.throws(() => resolveParams('policy', { depth: 2 }), /no parameter depth/);
   assert.equal(unavailable('forge', REPO), null);
+});
+
+test('search kind, D350–D351: the new switches stay out of the hash and the seat config at their defaults', () => {
+  const plain = resolveParams('search', { budgetMs: 500 });
+  const explicit = resolveParams('search', { budgetMs: 500, aturns: -1, override: 'margin', z: '1', untapped: 1, oracle: 'off' });
+  assert.deepEqual(explicit, plain, 'a switch at its default is the old config');
+  assert.equal(configHash('search', explicit), configHash('search', plain));
+  assert.equal(KINDS.search!.cfg(resolveParams('search', { aturns: 1 })), 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,aturns=1');
+  assert.match(KINDS.search!.cfg(resolveParams('search', { override: 'lcb', margin: 0 })), /margin=0,.*,override=lcb,z=1$/);
+  assert.match(KINDS.search!.cfg(resolveParams('search', { untapped: 20 })), /,untapped=20$/);
+  assert.match(KINDS.search!.cfg(resolveParams('search', { oracle: 'on' })), /,oracle=1$/);
+  assert.ok(testOnly(resolveParams('search', { oracle: 'on' })) && !testOnly(plain), 'the oracle is a test-only player');
+  const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  assert.equal(by.get('search-v1-fixed3')!.hash, '78d20b4c1a93', 'search-v1-fixed3 keeps the hash its games were played under');
+  assert.equal(by.get('search-v1')!.hash, '81058679773e', 'search-v1 keeps its hash');
+  for (const n of ['search-v1-fixed3-aturns1', 'search-v1-fixed3-lcb', 'search-v1-fixed3-oracle']) assert.ok(by.get(n)?.cfg, `${n} is registered and playable`);
 });
 
 test('addPlayer never overwrites', () => {

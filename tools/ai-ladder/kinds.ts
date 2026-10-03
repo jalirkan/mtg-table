@@ -35,6 +35,12 @@ export interface ParamSpec {
   values?: string[];
   default: ParamValue;
   doc: string;
+  /**
+   * A parameter added after players had played (D350): left out of the resolved
+   * params -- so out of the config hash and the seat config -- while it is at
+   * its default, so an old player's identity does not change.
+   */
+  omitAtDefault?: boolean;
 }
 
 export interface Kind {
@@ -96,14 +102,25 @@ export const KINDS: Record<string, Kind> = {
       maxRounds: { type: 'int', min: 1, max: 256, default: 12, doc: 'stop after this many complete rounds' },
       what: { type: 'enum', values: ['p', 'a', 'b', 'pa', 'pb', 'ab', 'pab'], default: 'pab', doc: 'decisions searched: priority, attacks, blocks' },
       seed: { type: 'int', min: 0, max: 2147483647, default: 0, doc: "the determinizations' seed; 0 = the clock" },
+      // D350–D351 (the engine review's week 1), each off by default and out of the hash while off.
+      aturns: { type: 'int', min: -1, max: 4, default: -1, omitAtDefault: true, doc: 'the horizon for ATTACK decisions only (-1 = turns); 1 lets an attack see the crack-back' },
+      override: { type: 'enum', values: ['margin', 'lcb'], default: 'margin', omitAtDefault: true, doc: "margin: best mean beats Forge's by margin; lcb: the paired difference's lower bound (mean - z*se, >= 3 rounds) clears margin" },
+      z: { type: 'enum', values: ['1', '1.645', '2'], default: '1', omitAtDefault: true, doc: "the lcb rule's multiplier" },
+      untapped: { type: 'int', min: 0, max: 1000, default: 1, omitAtDefault: true, doc: "leaf points an untapped creature is worth over a tapped one (1 = Forge's CreatureEvaluator)" },
+      oracle: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: 'TEST ONLY: rollouts keep the real hidden cards (an upper bound on inference); never live, never promoted' },
     },
     // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
     // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
     // seed -- every searched decision does exactly N rounds on any machine, so a
     // benchmark measures the search, not the CPU (D318; search-v1-fixed3).
     cfg: (p) => {
-      const kv = Object.entries(SEARCH_KEYS).map(([k, b]) => `${b}=${p[k]}`).join(',');
-      return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv}`;
+      const kv = Object.entries(SEARCH_KEYS).map(([k, b]) => `${b}=${p[k]}`);
+      // D350–D351's switches, only when set (omitAtDefault): the bench's SearchConfig keys.
+      if (p.aturns !== undefined) kv.push(`aturns=${p.aturns}`);
+      if (p.override !== undefined) kv.push(`override=${p.override}`, `z=${p.z ?? '1'}`);
+      if (p.untapped !== undefined) kv.push(`untapped=${p.untapped}`);
+      if (p.oracle === 'on') kv.push('oracle=1');
+      return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
     },
     available: (repo) => {
       if (!benchKnows(repo, '+search')) return 'the search AI has not merged (ai-bench has no +search seat option; branch c/search-ai, D312)';
@@ -132,6 +149,7 @@ export function resolveParams(kindName: string, params: Params): Params {
   for (const [key, spec] of Object.entries(k.params)) {
     const v = params[key] ?? spec.default;
     checkValue(kindName, key, spec, v);
+    if (spec.omitAtDefault && v === spec.default) continue;
     out[key] = v;
   }
   return out;
@@ -162,4 +180,9 @@ export function unavailable(kindName: string, repo: string): string | null {
   const k = KINDS[kindName];
   if (!k) return `unknown kind "${kindName}" (this checkout knows ${Object.keys(KINDS).join(', ')})`;
   return k.available(repo);
+}
+
+/** A player that may only ever be benchmarked (D350's oracle): never rated by `run` unless named, never a league candidate. */
+export function testOnly(resolved: Params): boolean {
+  return resolved.oracle === 'on';
 }

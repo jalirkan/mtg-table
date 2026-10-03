@@ -334,8 +334,8 @@ past the 20-point margin, so the search overrode it.)
   score and its standard error, the paired difference to Forge's answer and its
   standard error (common random numbers: option 0 is Forge's), and win estimate
   (a finished playout 1/0/½, else a logistic of the leaf at
-  `SearchPolicy.LEAF_SCALE` points per logit, as the grader's live analysis);
-  the rounds, playouts, horizon, the override rule and margin; whether it
+  `SearchPolicy.LEAF_SCALE` points per logit, D349's fitted 500, as the grader's live analysis);
+  the rounds, playouts, horizon, the override rule, margin and the statistic it compared (`stat`, and `z` under `override=lcb`); whether it
   overrode Forge, whether the time budget cut it, and why it fell back to
   Forge's answer (`budget`, `copyError`, `unmappable`, `rolloutErrors`,
   `invalidAtEnd`) — `by` is `search` only when it reached a verdict;

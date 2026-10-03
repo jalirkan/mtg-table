@@ -2322,7 +2322,7 @@ const DECISION_SOURCES = ['targets', 'trigger', 'chooseTargets', 'entity', 'card
 const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn', 'phase', 'options', 'complete',
   'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search']);
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
-  'overrode', 'fallback', 'horizon', 'rule', 'margin']);
+  'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z']);
 const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win']);
 const SEARCH_RULES = ['margin', 'lcb'];
 const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced']);

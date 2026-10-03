@@ -14072,6 +14072,14 @@ reflection onto `PhaseHandler.givePriorityToPlayer` (the public
 `onStackResolved` sets it); a search on every priority (instant-speed
 responses stay Forge's and the outlet policy's — a later step).
 
+*Amended 2026-10-03 by **D351**: the title's "to the end of the next turn" is
+wrong, and the body was always right. The default horizon is `turns=0`, the end
+of the CURRENT turn (`SearchConfig`, `SearchPolicy.playout`: a rollout stops
+when the turn number moves on), so for the AI's own main-phase plays and
+attacks the opponent never gets a turn in the rollout, and a block's rollout
+ends with that turn. The title is kept as written (numbers and titles are
+final, D200); read it as "to the end of this turn".*
+
 ## D313 — Forge's `Couldn't map` is the sideboard: an all-zones static ability affects a sideboard card the copier never copies; `LenientGameCopier` maps such cards to a zoneless stand-in while copying
 
 **2026-10-03**
@@ -15558,6 +15566,158 @@ client needs, and only an enum reaches the child); making `off` the default
 (Sonnet's answers are what J012 scored; a change of default is J014's verdict
 to make, not this one's).
 
+## D348 — A live analysis never takes the opponent's real deck list unless it is marked public with a reason; its default knowledge is pool mode: the cube list minus the player's deck, drafted pool and every public card, the AI picks they saw first
+
+*Branch `c/engine-week1`; D348–D351, the engine review's week 1 (2026-10-03,
+four findings: H3, H2, M1 with M5's oracle, H1). D347 is the decision-records
+lane's, D337 the runner's and D346 taken.*
+
+**2026-10-03**
+
+**Decision.** `coach-grade.sh analyse` and `serve` (D336) check a request's
+knowledge before reading any list (`HiddenPool.checkLive`, called by
+`CoachGrade.liveKnowledge`):
+
+- an opponent DECK list (`--opp-deck`, `"oppDeck"`) is refused unless the
+  request marks it public **with a reason** (`--opp-deck-public "<reason>"`,
+  `"oppDeckPublic": true, "oppDeckPublicReason": "…"`) — a constructed match
+  whose lists both players shared; `true` or an empty reason is refused too;
+- a "pool" that is the match launcher's AI file (`ai.dck`) or the opponent's
+  deck path the log header names is refused, and so is a pool under 80 cards
+  (`MIN_LIVE_POOL`: a deck under another name);
+- in `serve` a request's own fields decide: a public flag in the server's
+  defaults is dropped unless the request repeats it;
+- a refused request is answered `"status": "refused"` with the reason, and
+  nothing is graded.
+
+**Pool mode** (`Rebuild.oppHidden`, `HiddenPool.remainder`) now subtracts, name
+by name, the most copies the player is known to own — their deck, their whole
+drafted pool (the deck's `[Sideboard]`, or `--own-pool`), their copies seen in
+public — and every public card of the opponent's, where it used to remove only
+the names seen on the wire, leaving the player's unseen library and pool as
+"opponent spells" (impossible in a singleton cube). The AI picks the player
+saw during the draft (`--opp-known`, `"oppKnown"`: ForgeCoach's
+`knownAiCards`) are drawn first, whatever the colours seen, then the
+remainder's spells of the seen colours, basics for the rest. Review and bench
+grading (`grade`, `batch`) keep D334's rule: nobody is playing that game any
+more, so a named list is read.
+
+**Held by** `GradeSelfTest` in `bridge/build.sh`, engine-free: the
+**planted-leak test** writes the AI's real list where the launcher does
+(`var/match/<id>/ai.dck`) and has the log header name it; the live knowledge
+is byte-identical with the file present and deleted; all six ways of handing it
+in without the flag (as a deck, as a pool, a copy of it as either, the flag
+without a reason, an empty reason) and a server-default flag are refused; and
+the negative control — the same list marked public — changes the knowledge,
+so the guard is what kept it out. The pool arithmetic is checked on its own.
+`tools/README.md`'s live example, which passed the AI's actual deck, now passes
+a pool.
+
+**Rejected.** Trusting the caller (the helper starting `serve` beside
+`var/match/` was one convenient line from the leak, the review's H3);
+refusing everything under `var/match/` (the launcher's directory may hold the
+player's own lists and a cube list); weighting known picks by a probability
+model (a later step; drawing them first is honest and cheap).
+
+## D349 — The grader's numbers mean what they say: intervals by measure (the 1/n floor only for win/loss outcomes, a t interval on the sample sd for leaf scores), the leaf read through a scale fitted on recorded games, live racing from round 4
+
+**2026-10-03**
+
+**Decision.**
+
+- **Intervals by measure** (`GradeMath.Measure`). `WINS` (playouts to the end
+  of the game, 0 / 0.5 / 1) keeps D334's normal interval with its 1/n floor.
+  `LEAF` (the live analysis's continuous pseudo win rates) uses the paired
+  differences' sample sd, floored at 0.02, and Student's t with n − 1 degrees
+  of freedom (one round: the sd is assumed at 0.5, never estimated); a leaf
+  option's win interval is a t interval on its mean, not Wilson's. Racing uses
+  the same standard error and critical value at its 99% level. The answer's
+  `config` says which (`interval`), and `retired` counts the options racing
+  dropped.
+- **The leaf scale is fitted.** `P(win) = σ(leaf / scale)`, the scale fitted by
+  maximum likelihood on end-of-turn positions of recorded games against their
+  winners (`coach-grade.sh fit-scale --logs …`: each turn's last state rebuilt
+  from the seat's redacted log and scored by `SearchPolicy.leaf`; no game is
+  played; a percentile bootstrap over games, the two-parameter fit, log-loss
+  and Brier at the fit and at 400, a reliability table). Shipped default:
+  **500** (`SearchPolicy.LEAF_SCALE`) — the fit on every recorded lab game in
+  reach, 24 cube games, both seats, 888 positions: **502.8, 95% [268, 1301]**;
+  log-loss 0.6126 against 0.6158 at 400 (0.6931 for a coin). A refit on the PC
+  writes `var/coach-grade/leaf-scale.json`, which `analyse` and `serve` then use
+  (`leafScaleSource` in the answer); `--leaf-scale N|FILE` overrides both.
+- **Live racing from round 4, every 2** (D336 raced from 6, every 3).
+
+**Measured** (`GradeSelfTest`, and the simulation in
+`docs/evidence/engine-week1.md` §2): on paired leaf differences with sd 0.06 the
+95% interval's coverage is 95.6% / 95.2% / 95.0% at n = 4 / 6 / 12 with
+half-widths ±0.088 / ±0.060 / ±0.037, where the floor gave 100% at ±0.49 /
+±0.33 / ±0.17 — the review's acceptance case (n = 6, sd 0.03) is ±0.031. At
+live settings (8 rounds, racing from 4) the clear case retires 3.84 of its 4
+worse options (0.00 before) and the best is retired in 0.0–0.5% of decisions.
+
+**Rejected.** Dropping the floor for wins too (it is the right correction for
+0/1 outcomes with no discordant rounds); a normal interval on an estimated sd
+at n = 4 (under-covers); calling the leaf number a win rate (it is still a
+short-horizon estimate, now on a fitted scale — the coach must say so);
+shipping the fixture games' fit (264, one seat per game, a scripted seat
+against Forge, intercept −0.59: another population).
+
+## D350 — The search logs its noise per decision and can override Forge on a lower confidence bound: `SearchPolicy.Report`, `override=lcb`, and a bench-only `oracle=1`
+
+**2026-10-03**
+
+**Decision.** Every search fills a `SearchPolicy.Report` (`takeReport` /
+`peekReport`): per candidate the rounds, the mean leaf and its standard error,
+the paired difference to Forge's answer and its standard error, the win
+estimate (`σ(leaf / LEAF_SCALE)`, or the result of a finished copy), every
+round's raw leaves; and the horizon, the rule and margin the verdict used, the
+statistic compared, whether Forge was overridden, whether the budget cut the
+search short (`timedOut`) and why it fell back (`budget`, `copyError`,
+`unmappable`, `rolloutErrors`, `invalidAtEnd`). It is the decision object
+branch `c/decision-records` (D347) records; its field names follow that
+branch's draft of the same class. `-Dmtgtable.search.reportEvents=true` also
+writes it as an event line.
+
+`override=lcb` (with `z`, default 1) overrides Forge only when the lower bound
+`mean_d − z·se_d` of the best candidate's paired per-round difference to
+Forge's answer clears `margin`, over at least 3 rounds; the default stays
+D312's `margin` rule on raw means, so `search-v1` is unchanged and the ladder
+can SPRT the rule (`search-v1-fixed3-lcb`: z 1, margin 0, the review's M1).
+
+`oracle=1` skips the determinization: the copies keep the real hand and
+library order. It measures what inference could be worth (the review's M5) and
+is **bench only**: `SearchConfig.parseLive` refuses it and the game's AI seat
+(`MtgTable --ai-search`) parses with that; the ladder never rates it unless a
+run names it and never takes it as a league candidate
+(`search-v1-fixed3-oracle`).
+
+**Rejected.** Logging only the means (the event line did; the paired sd is
+the number M1 needs); switching the rule now (the review's simulation makes it
+a wash at sd 50–100 and a gain only above ~120: an SPRT decides).
+
+## D351 — The search's horizon is the end of this turn, said so; attacks may look one turn further (`aturns=1`), and the untapped-creature leaf term is a knob
+
+**2026-10-03**
+
+**Decision.** D312's title is amended (above): `turns=0`, the default, plays
+to the end of the CURRENT turn — the opponent never gets a turn after the AI's
+own main-phase play or attack — and the live grader inherits it
+(`--horizon 0`). Two switches, off by default, for the ladder's SPRTs:
+
+- `aturns=<n>` — the horizon for ATTACK decisions only (default: `turns`).
+  `aturns=1` lets an attack's rollout see the opponent's crack-back turn while
+  priority and block decisions keep `turns=0` (`search-v1-fixed3-aturns1`,
+  night 2);
+- `untapped=<points>` — what an untapped creature is worth over a tapped one
+  in the leaf (`SearchPolicy.leaf(g, ai, untapped)`; default 1, Forge's own
+  `CreatureEvaluator` term, so the leaf is unchanged). At 1 point, all-in
+  attacks and tapping out are nearly free in the leaf.
+
+**Rejected.** `turns=1` for every decision (D312's pilot: three times the cost,
+53% budget fallbacks at 1.5 s); a crack-back term in the leaf (the review's
+H1(b): half a day, after the SPRT says whether a longer horizon pays);
+changing the untapped weight's default before an SPRT.
+
 ## D347 — Recorded games carry the AI seats' decisions: every decision with more than one legal answer, its options as the coach bench's tokens, the answer, the policy that chose and the search's per-option statistics, in the deciding seat's own log only; ai-bench records too, headers name every seat's style, the lab mixes profiles, and the owner's games are a held-out test set
 
 *Branch `c/decision-records`; D347, the next number free at push (D340–D344 are
@@ -15582,9 +15742,10 @@ policy and to drive expert iteration, not only the value evaluator — D315's
   — its `SearchPolicy.Report`: per candidate the rounds, mean leaf and its
   standard error, the paired difference to Forge's answer and its standard
   error, the win estimate; the rounds, playouts, horizon, rule, margin, time,
-  budget, `timedOut`, `overrode` and the `fallback` reason. The Report's field
-  names are branch `c/engine-week1`'s (D350) for the same class, so the two
-  meet as one. Tokens are the coach bench's and the grader's (D334–D336), over
+  budget, `timedOut`, `overrode` and the `fallback` reason, and the statistic
+  the override rule compared (`stat`; `z` under D350's `override=lcb`). The
+  record reads D350's `SearchPolicy.Report` as it is; the win estimate is its
+  `win`, a logistic of the leaf at `SearchPolicy.LEAF_SCALE` (D349's 500). Tokens are the coach bench's and the grader's (D334–D336), over
   wire ids. Attacks and blocks list every combination up to 64 (a whole
   declaration's rules unchecked), else a shortlist marked `complete: false`,
   with `atoms`. A one-option decision is counted (`decisions` summary line),
