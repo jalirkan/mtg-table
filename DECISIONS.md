@@ -15885,9 +15885,9 @@ measured.
 **Measured** (`docs/evidence/search-week3.md`): 12 games on three dev deck
 pairs, the same deals, search at 1.5 s against Default+outlets, three JVMs on
 the shared 4-core container. Budget fallbacks **18.5% → 0.9%** of searched
-decisions (55 of 297 → 3 of 316), all fallbacks 19.5% → 4.4% before the
-erroring-candidate fix (see the evidence file for the run after it); 1,407 →
-1,189 ms per searched decision. On 156 games of the larger dev set, D312's
+decisions (55 of 297 → 3 of 316), all fallbacks 19.5% → 4.4%; with the
+erroring-candidate rule, **0 fallbacks of any kind in 302 searched decisions**
+(five candidates retired on errors); 1,407 → 1,208 ms per searched decision. On 156 games of the larger dev set, D312's
 loop fell back on budget in 11.7%; the review cites 26–37% (another machine
 and load; a budget fallback rate is a property of the CPU as much as the search).
 

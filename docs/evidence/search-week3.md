@@ -19,7 +19,7 @@ Counters are the searching seat's (`aStats.counts`), summed.
 |---|---|---|---|---|---|---|---|
 | before: `<base>` | 297 | **55 (18.5%)** | 3 (rolloutErrors) | 1,407 | 16.3 | 73.2 + 8.0 | 6 of 12 |
 | `<base>,anytime=1` | 316 | **3 (0.9%)** | 11 (rolloutErrors) | 1,189 | 11.1 | 91.0 + 8.6 | 8 of 12 |
-| `<base>,anytime=1` after the erroring-candidate fix | ANYTIME2 |
+| `<base>,anytime=1` after the erroring-candidate fix | 302 | **0** | **0** (5 candidates retired on errors) | 1,208 | 11.9 | 87.3 + 8.5 | 8 of 12 |
 | `<base>,anytime=1,rank=prior,gen=24` | 324 | 3 (0.9%) | 6 | 1,217 | 10.3 | 96.6 + 8.8 | 8 of 12 |
 | `<base>,rollout=outlets` | 306 | 46 (15.0%) | 8 | 1,387 | 16.0 | 73.9 + 7.8 | 8 of 12 |
 | fixed 3 rounds: `ms=60000,rounds=3,maxrounds=3,seed=1` | 302 | 0 | 8 | 1,415 | 9.7 | **135.3** + 9.1 | 8 of 12 |
