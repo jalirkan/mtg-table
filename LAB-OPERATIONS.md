@@ -64,3 +64,19 @@ a Claude session to be awake.
   Filler = unrecorded grid drafts, 2,000 per cube, seeds 900001+, out var/cubelab/runs/filler-<cube>.
   Tell me if those seeds or folders collide with anything.
 - PC session scheduled hourly and for the two digests.
+
+## Targets we hold ourselves to (added 14:00 on Justin's demand: "how much downtime should I expect?")
+
+| Measure | Target | How it is measured | Who answers for it |
+|---|---|---|---|
+| Machine doing no lab work at all | at most 5 minutes per stall, at most 30 minutes a day | the never-idle ledger (`var/usage-<date>.txt` in ~/code/mtg-table-install: 30-second ticks on runner jobs, filler, idle) | PC side (mechanical guard) |
+| Machine on filler because planned work is blocked | at most 2 hours per blockage, at most 4 hours a day | same ledger (filler ticks) | cloud session (unblocks on its 2-hourly pass) |
+| PC session checks | every hour | scheduled task runs; heartbeat time | PC session |
+| Cloud session checks pc-results | every 2 hours, day and night | commits on pc-jobs; "NOTES TO THE PC" | cloud session — NOT YET CONFIRMED |
+| Queue depth | at least 48 hours of runnable planned work | runner status, queued estimates | cloud session |
+| Status page age | at most 2 minutes (today: up to 10) | the page's own stamp | cloud session |
+| Justin's time | at most 10 minutes a day; zero messages carried between sessions | his own count; the digest asks | both |
+| Phone alert | only if idle 30 minutes unresolved, disk under 15 GB, or a decision with no default | notifications sent | PC session |
+
+Every digest (08:07 and 20:07) reports the last 12 hours against the first two rows, in minutes, and
+says plainly when a target was missed and why.

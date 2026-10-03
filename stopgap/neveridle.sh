@@ -11,15 +11,17 @@ say(){ echo "$(date -Is) $*" >> "$LOG"; }
 runner_busy(){ systemctl --user list-units 'lab-J*' --no-legend 2>/dev/null | grep -q running; }
 hand_busy(){ systemctl --user is-active --quiet forgecoach-hand-evolve || systemctl --user is-active --quiet forgecoach-filler-job; }
 mkdir -p "$SRC/var"; say "neveridle started"
+# Usage ledger, one line a day: 30-second ticks spent on the runner's jobs, on hand/filler work, and idle.
+tick(){ f="$SRC/var/usage-$(date +%F).txt"; read -r a b c < "$f" 2>/dev/null || { a=0; b=0; c=0; }; case "$1" in runner) a=$((a+1));; filler) b=$((b+1));; idle) c=$((c+1));; esac; echo "$a $b $c" > "$f"; }
 while true; do
   if runner_busy; then
-    idle=0
+    idle=0; tick runner
     for u in forgecoach-hand-evolve forgecoach-filler-job; do
       systemctl --user is-active --quiet $u && { systemctl --user stop $u; say "runner has work: stopped $u"; }
     done
-  elif hand_busy; then idle=0
+  elif hand_busy; then idle=0; tick filler
   else
-    idle=$((idle + 1))
+    idle=$((idle + 1)); tick idle
     if [ "$idle" -ge 10 ]; then   # 10 x 30 s with nothing running
       for c in synergy-cube-180 modern-era-cube-180 vintage-cube-180 pauper-cube-180; do
         n=$(wc -l < "$SRC/var/cubelab/runs/filler-$c/drafts.jsonl" 2>/dev/null || echo 0)
