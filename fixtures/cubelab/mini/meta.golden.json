@@ -1,0 +1,583 @@
+{
+ "schema": 1,
+ "cube": {
+  "name": "Mini Cube",
+  "file": "fixtures/cubelab/mini/mini.md",
+  "cards": [
+   {
+    "name": "Deep Study",
+    "colors": [
+     "U"
+    ],
+    "mv": 4,
+    "types": [
+     "Sorcery"
+    ],
+    "themes": [
+     "SPL"
+    ]
+   },
+   {
+    "name": "Ember Rite",
+    "colors": [
+     "R"
+    ],
+    "mv": 1,
+    "types": [
+     "Instant"
+    ],
+    "themes": [
+     "SAC",
+     "SPL"
+    ]
+   },
+   {
+    "name": "Grave Imp",
+    "colors": [
+     "B"
+    ],
+    "mv": 1,
+    "types": [
+     "Creature"
+    ],
+    "themes": [
+     "SAC"
+    ]
+   },
+   {
+    "name": "Iron Idol",
+    "colors": [],
+    "mv": 6,
+    "types": [
+     "Artifact"
+    ],
+    "themes": [
+     "ART"
+    ]
+   },
+   {
+    "name": "Mist Fountain",
+    "colors": [],
+    "mv": 0,
+    "types": [
+     "Land"
+    ],
+    "themes": []
+   },
+   {
+    "name": "Moss Beast",
+    "colors": [
+     "G"
+    ],
+    "mv": 5,
+    "types": [
+     "Creature"
+    ],
+    "themes": []
+   },
+   {
+    "name": "Sky Herald",
+    "colors": [
+     "W"
+    ],
+    "mv": 3,
+    "types": [
+     "Creature"
+    ],
+    "themes": [
+     "TOK",
+     "LIFE"
+    ]
+   },
+   {
+    "name": "Tide Mage",
+    "colors": [
+     "U"
+    ],
+    "mv": 2,
+    "types": [
+     "Creature"
+    ],
+    "themes": [
+     "SPL"
+    ]
+   },
+   {
+    "name": "Unseen Relic",
+    "colors": [],
+    "mv": 3,
+    "types": [
+     "Artifact"
+    ],
+    "themes": [
+     "ART"
+    ]
+   },
+   {
+    "name": "Wing Scout",
+    "colors": [
+     "W"
+    ],
+    "mv": 1,
+    "types": [
+     "Creature"
+    ],
+    "themes": [
+     "TOK"
+    ]
+   }
+  ]
+ },
+ "sample": {
+  "drafts": 3,
+  "games": 7,
+  "seedRange": [
+   1,
+   3
+  ],
+  "aiProfile": "Default",
+  "format": "grid",
+  "shrinkage": {
+   "prior": "beta",
+   "mean": 0.4848,
+   "strength": 20
+  }
+ },
+ "cards": {
+  "Deep Study": {
+   "picked": 1,
+   "seen": 1,
+   "pickRate": 1,
+   "avgPickIndex": 2,
+   "inDecks": 1,
+   "inclusionRate": 1,
+   "games": 2,
+   "wins": 0,
+   "winRate": 0,
+   "winRateShrunk": 0.4408,
+   "ci": [
+    0,
+    0.658
+   ]
+  },
+  "Ember Rite": {
+   "picked": 2,
+   "seen": 2,
+   "pickRate": 1,
+   "avgPickIndex": 1.5,
+   "inDecks": 2,
+   "inclusionRate": 1,
+   "games": 5,
+   "wins": 3,
+   "winRate": 0.6,
+   "winRateShrunk": 0.5079,
+   "ci": [
+    0.231,
+    0.882
+   ]
+  },
+  "Grave Imp": {
+   "picked": 2,
+   "seen": 2,
+   "pickRate": 1,
+   "avgPickIndex": 1.5,
+   "inDecks": 3,
+   "inclusionRate": 1.5,
+   "games": 7,
+   "wins": 5,
+   "winRate": 0.7143,
+   "winRateShrunk": 0.5443,
+   "ci": [
+    0.359,
+    0.918
+   ]
+  },
+  "Iron Idol": {
+   "picked": 1,
+   "seen": 1,
+   "pickRate": 1,
+   "avgPickIndex": 3,
+   "inDecks": 1,
+   "inclusionRate": 1,
+   "games": 2,
+   "wins": 0,
+   "winRate": 0,
+   "winRateShrunk": 0.4408,
+   "ci": [
+    0,
+    0.658
+   ]
+  },
+  "Mist Fountain": {
+   "picked": 1,
+   "seen": 1,
+   "pickRate": 1,
+   "avgPickIndex": 4,
+   "inDecks": 0,
+   "inclusionRate": 0,
+   "games": 0,
+   "wins": 0,
+   "winRate": 0,
+   "winRateShrunk": 0.4848,
+   "ci": [
+    0,
+    1
+   ]
+  },
+  "Moss Beast": {
+   "picked": 1,
+   "seen": 2,
+   "pickRate": 0.5,
+   "avgPickIndex": 1,
+   "inDecks": 1,
+   "inclusionRate": 1,
+   "games": 2,
+   "wins": 2,
+   "winRate": 1,
+   "winRateShrunk": 0.5317,
+   "ci": [
+    0.342,
+    1
+   ]
+  },
+  "Sky Herald": {
+   "picked": 2,
+   "seen": 2,
+   "pickRate": 1,
+   "avgPickIndex": 1.5,
+   "inDecks": 2,
+   "inclusionRate": 1,
+   "games": 5,
+   "wins": 2,
+   "winRate": 0.4,
+   "winRateShrunk": 0.4679,
+   "ci": [
+    0.118,
+    0.769
+   ]
+  },
+  "Tide Mage": {
+   "picked": 2,
+   "seen": 2,
+   "pickRate": 1,
+   "avgPickIndex": 2.5,
+   "inDecks": 2,
+   "inclusionRate": 1,
+   "games": 5,
+   "wins": 2,
+   "winRate": 0.4,
+   "winRateShrunk": 0.4679,
+   "ci": [
+    0.118,
+    0.769
+   ]
+  },
+  "Unseen Relic": {
+   "picked": 0,
+   "seen": 0,
+   "pickRate": 0,
+   "avgPickIndex": 0,
+   "inDecks": 0,
+   "inclusionRate": 0,
+   "games": 0,
+   "wins": 0,
+   "winRate": 0,
+   "winRateShrunk": 0.4848,
+   "ci": [
+    0,
+    1
+   ]
+  },
+  "Wing Scout": {
+   "picked": 2,
+   "seen": 2,
+   "pickRate": 1,
+   "avgPickIndex": 1,
+   "inDecks": 2,
+   "inclusionRate": 1,
+   "games": 5,
+   "wins": 2,
+   "winRate": 0.4,
+   "winRateShrunk": 0.4679,
+   "ci": [
+    0.118,
+    0.769
+   ]
+  }
+ },
+ "archetypes": [
+  {
+   "id": "BR-SAC",
+   "colors": "BR",
+   "primaryTheme": "SAC",
+   "decks": 2,
+   "games": 5,
+   "winRate": 0.6,
+   "ci": [
+    0.231,
+    0.882
+   ],
+   "keyCards": [],
+   "avgLands": 17,
+   "avgCurve": {
+    "1": 2,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6+": 0
+   },
+   "sampleDecks": [
+    [
+     "Ember Rite",
+     "Grave Imp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain"
+    ],
+    [
+     "Grave Imp",
+     "Ember Rite",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain",
+     "Mountain"
+    ]
+   ]
+  },
+  {
+   "id": "WU-TOK",
+   "colors": "WU",
+   "primaryTheme": "TOK",
+   "decks": 2,
+   "games": 5,
+   "winRate": 0.4,
+   "ci": [
+    0.118,
+    0.769
+   ],
+   "keyCards": [
+    "Sky Herald"
+   ],
+   "avgLands": 17,
+   "avgCurve": {
+    "1": 1,
+    "2": 1,
+    "3": 0.5,
+    "4": 0,
+    "5": 0,
+    "6+": 0
+   },
+   "sampleDecks": [
+    [
+     "Wing Scout",
+     "Sky Herald",
+     "Tide Mage",
+     "Mist Fountain",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island"
+    ],
+    [
+     "Wing Scout",
+     "Tide Mage",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island"
+    ]
+   ]
+  },
+  {
+   "id": "BG",
+   "colors": "BG",
+   "primaryTheme": "none",
+   "decks": 1,
+   "games": 2,
+   "winRate": 1,
+   "ci": [
+    0.342,
+    1
+   ],
+   "keyCards": [],
+   "avgLands": 20,
+   "avgCurve": {
+    "1": 1,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 1,
+    "6+": 0
+   },
+   "sampleDecks": [
+    [
+     "Moss Beast",
+     "Grave Imp",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Forest",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp",
+     "Swamp"
+    ]
+   ]
+  },
+  {
+   "id": "WU",
+   "colors": "WU",
+   "primaryTheme": "none",
+   "decks": 1,
+   "games": 2,
+   "winRate": 0,
+   "ci": [
+    0,
+    0.658
+   ],
+   "keyCards": [],
+   "avgLands": 17,
+   "avgCurve": {
+    "1": 0,
+    "2": 0,
+    "3": 1,
+    "4": 1,
+    "5": 0,
+    "6+": 1
+   },
+   "sampleDecks": [
+    [
+     "Sky Herald",
+     "Deep Study",
+     "Iron Idol",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Plains",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island",
+     "Island"
+    ]
+   ]
+  }
+ ],
+ "pairs": [],
+ "lands": {
+  "overall": {
+   "17": {
+    "games": 12,
+    "winRate": 0.4167
+   },
+   "20": {
+    "games": 2,
+    "winRate": 1
+   }
+  },
+  "byArchetype": {
+   "BG": {
+    "20": {
+     "games": 2,
+     "winRate": 1
+    }
+   },
+   "BR-SAC": {
+    "17": {
+     "games": 5,
+     "winRate": 0.6
+    }
+   },
+   "WU": {
+    "17": {
+     "games": 2,
+     "winRate": 0
+    }
+   },
+   "WU-TOK": {
+    "17": {
+     "games": 5,
+     "winRate": 0.4
+    }
+   }
+  }
+ },
+ "splash": {
+  "games": 2,
+  "winRate": 0,
+  "vsNoSplash": -0.5833
+ }
+}

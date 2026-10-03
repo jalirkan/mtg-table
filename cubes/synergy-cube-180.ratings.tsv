@@ -1,0 +1,185 @@
+# cube lab ratings for: The Synergy Cube — version 1 (180 cards, two-player)
+# Seeded by `tools/cubelab.sh ratings init` from Forge's draft ranks (CardRanker.getRawScore of the
+# best-ranked printing; source cube = CubeCobra's list, set = that set's rank file). A card Forge has no
+# rank for starts at 40. Edit the rating column; the other two say where it started.
+# name	rating	forge	source
+Thraben Inspector	97	97	cube:2XM
+Spirited Companion	87.3	87.3	cube:NEO
+Lunarch Veteran	63.2	63.2	cube:INR
+Soul Warden	62.2	62.2	cube:HOP
+Ajani's Pridemate	35.1	35.1	set:M15
+Luminarch Aspirant	96.1	96.1	cube:ZNR
+Charming Prince	33.5	33.5	set:ELD
+Skyclave Apparition	96.7	96.7	cube:ZNR
+Flickerwisp	43.4	43.4	set:2X2
+Restoration Angel	48.5	48.5	set:2X2
+Ephemerate	22.9	22.9	set:STA
+Blade Splicer	63	63	cube:NPH
+Intangible Virtue	26.2	26.2	set:CNS
+Battle Screech	73.4	73.4	cube:DMR
+Adeline, Resplendent Cathar	92.7	92.7	cube:FCA
+Welcoming Vampire	80.5	80.5	cube:VOW
+Brimaz, King of Oreskos	76.1	76.1	cube:BNG
+Swords to Plowshares	99.4	99.4	cube:C16
+Prismatic Ending	57.8	57.8	cube:MH2
+March of Otherworldly Light	30.6	30.6	set:NEO
+Sun Titan	64.8	64.8	cube:M11
+Elspeth, Sun's Champion	91.3	91.3	cube:THS
+Mentor of the Meek	66.3	66.3	cube:E01
+Reveillark	49	49	set:MOR
+Opt	82.3	82.3	cube:M21
+Consider	94.9	94.9	cube:PIO
+Brainstorm	85	85	cube:C15
+Ponder	98.1	98.1	cube:MAR
+Thought Scour	80.4	80.4	cube:2X2
+Delver of Secrets	19.7	19.7	set:ISD
+Ledger Shredder	72.4	72.4	cube:SPG
+Snapcaster Mage	98.3	98.3	cube:UMA
+Man-o'-War	86.9	86.9	cube:DMR
+Mulldrifter	71.5	71.5	cube:2X2
+Phantasmal Image	68.2	68.2	cube:SPG
+Thieving Skydiver	52.8	52.8	cube:ZNR
+Sai, Master Thopterist	50.3	50.3	cube:M19
+Emry, Lurker of the Loch	55.6	55.6	cube:MUL
+Murmuring Mystic	50.4	50.4	cube:RVR
+Talrand, Sky Summoner	90.5	90.5	cube:UMA
+Champion of Wits	68.4	68.4	cube:HOU
+Mana Leak	98.6	98.6	cube:STH
+Remand	98.8	98.8	cube:MM2
+Unsummon	39.8	39.8	set:6ED
+Deep Analysis	94.5	94.5	cube:TOR
+Torrential Gearhulk	70.9	70.9	cube:MPS_KLD
+Watcher for Tomorrow	31.3	31.3	set:MH1
+Jace, Vryn's Prodigy	98	98	cube:PIO
+Blood Artist	65.2	65.2	cube:C17
+Zulaport Cutthroat	36.9	36.9	set:BFZ
+Viscera Seer	43.6	43.6	set:C13
+Carrion Feeder	30.1	30.1	set:MH1
+Cauldron Familiar	96.2	96.2	cube:ELD
+Priest of Forgotten Gods	44.2	44.2	set:RNA
+Village Rites	14.7	14.7	set:INR
+Deadly Dispute	66.1	66.1	cube:FCA
+Bone Shards	86.4	86.4	cube:MH2
+Fatal Push	51	51	cube:AER
+Go for the Throat	84.9	84.9	cube:BRO
+Stitcher's Supplier	65.6	65.6	cube:M19
+Bloodghast	40	40	set:ZEN
+Gravecrawler	63.8	63.8	cube:DKA
+Unburial Rites	46.1	46.1	set:2X2
+Persist	51.3	51.3	cube:MH2
+Woe Strider	43.4	43.4	set:THB
+Kitesail Freebooter	50	50	cube:XLN
+Vampire Nighthawk	94.3	94.3	cube:ZEN
+Grim Haruspex	72.5	72.5	cube:KTK
+Midnight Reaper	47.4	47.4	set:RVR
+Archon of Cruelty	98.5	98.5	cube:MH2
+Marionette Master	44.8	44.8	set:KLD
+Ophiomancer	91.2	91.2	cube:MH3
+Monastery Swiftspear	87.2	87.2	cube:PIO
+Soul-Scar Mage	9.4	9.4	set:AKH
+Young Pyromancer	42.4	42.4	set:2X2
+Dreadhorde Arcanist	17.5	17.5	set:WAR
+Goblin Bombardment	75.4	75.4	cube:WOT
+Reckless Fireweaver	10.4	10.4	set:KLD
+Pia Nalaar	44.4	44.4	set:KLD
+Pia and Kiran Nalaar	49.2	49.2	set:PIO
+Hordeling Outburst	38.2	38.2	set:A25
+Faithless Looting	93.3	93.3	cube:C14
+Cathartic Reunion	61.9	61.9	cube:KLD
+Lightning Bolt	98.9	98.9	cube:LEB
+Burst Lightning	89.8	89.8	cube:ZEN
+Kari Zev, Skyship Raider	34.8	34.8	set:AER
+Hanweir Garrison	44.8	44.8	set:INR
+Goblin Rabblemaster	63.5	63.5	cube:PIO
+Legion Warboss	45.7	45.7	set:GRN
+Krenko, Tin Street Kingpin	81.5	81.5	cube:WAR
+Flame Slash	72.2	72.2	cube:ROE
+Chandra, Torch of Defiance	52.1	52.1	cube:KLD
+Experimental Synthesizer	57.1	57.1	cube:NEO
+Unexpected Windfall	80.5	80.5	cube:MAR
+Seasoned Pyromancer	55.6	55.6	cube:MH1
+Anax, Hardened in the Forge	39.6	39.6	set:THB
+Llanowar Elves	72.2	72.2	cube:C14
+Sakura-Tribe Elder	48.9	48.9	set:ARC
+Satyr Wayfinder	31.3	31.3	set:CMA
+Lotus Cobra	82.7	82.7	cube:ZNR
+Tireless Tracker	83	83	cube:SPG
+Scavenging Ooze	66.6	66.6	cube:FDN
+Hardened Scales	72.6	72.6	cube:C16
+Pelt Collector	45.1	45.1	set:GRN
+Scute Swarm	58.6	58.6	cube:ZNR
+Springbloom Druid	63.4	63.4	cube:MH1
+Eternal Witness	83.8	83.8	cube:CMA
+Wood Elves	81.8	81.8	cube:C14
+Courser of Kruphix	92.6	92.6	cube:A25
+Prosperous Innkeeper	97.3	97.3	cube:AFR
+Evolution Sage	71.2	71.2	cube:WAR
+Rishkar, Peema Renegade	89.2	89.2	cube:AER
+Ramunap Excavator	96.3	96.3	cube:HOU
+Titania, Protector of Argoth	58.1	58.1	cube:MH2
+Ulvenwald Mysteries	39	39	set:SOI
+Beast Within	48.9	48.9	set:PCA
+Ram Through	27.3	27.3	set:IKO
+Elvish Visionary	74.8	74.8	cube:C14
+Deep Forest Hermit	47	47	set:MH1
+Avenger of Zendikar	67.5	67.5	cube:C13
+Reflector Mage	32.5	32.5	set:OGW
+Soulherder	39.6	39.6	set:MH1
+Prized Amalgam	35.6	35.6	set:SIR
+Baleful Strix	54	54	cube:E01
+Mayhem Devil	33.9	33.9	set:WAR
+Juri, Master of the Revue	13.6	13.6	set:MUL
+Grumgully, the Generous	40.7	40.7	set:ELD
+Omnath, Locus of Rage	47.4	47.4	set:BFZ
+Conclave Mentor	41.8	41.8	set:2X2
+Knight of Autumn	42.9	42.9	set:GRN
+Lingering Souls	80.7	80.7	cube:MM3
+Tidehollow Sculler	32.1	32.1	set:ALA
+Third Path Iconoclast	69.1	69.1	cube:BRO
+Saheeli, Sublime Artificer	55.1	55.1	cube:WAR
+Winding Constrictor	42.7	42.7	set:AER
+Grist, the Hunger Tide	51.5	51.5	cube:MH2
+Lightning Helix	80.7	80.7	cube:RAV
+Showdown of the Skalds	45.1	45.1	set:KHM
+Risen Reef	88.4	88.4	cube:SPG
+Lonis, Cryptozoologist	38.8	38.8	set:MH2
+Walking Ballista	84.5	84.5	cube:2XM
+Hangarback Walker	52	52	cube:MPS_KLD
+Smuggler's Copter	49.3	49.3	set:FCA
+Ichor Wellspring	73.7	73.7	cube:C14
+Mishra's Bauble	71.5	71.5	cube:BRR
+Chromatic Star	54.1	54.1	cube:BRR
+Servo Schematic	76	76	cube:AER
+Myr Sire	22.8	22.8	set:MBS
+Steel Overseer	49.5	49.5	set:MPS_KLD
+Bonesplitter	93.4	93.4	cube:MRD
+Shadowspear	83	83	cube:THB
+Mind Stone	60.4	60.4	cube:C14
+Prophetic Prism	90.5	90.5	cube:WOE
+Candy Trail	57.9	57.9	cube:WOE
+Skullclamp	99.1	99.1	cube:DST
+Cranial Plating	54.9	54.9	cube:5DN
+Solemn Simulacrum	54.7	54.7	cube:MPS_KLD
+Lotus Petal	98.7	98.7	cube:MPS_KLD
+Karn, Scion of Urza	58.3	58.3	cube:DOM
+Retrofitter Foundry	97.7	97.7	cube:DRC
+Hallowed Fountain	95.8	95.8	cube:EXP
+Watery Grave	71.3	71.3	cube:EXP
+Blood Crypt	58.7	58.7	cube:EXP
+Stomping Ground	93.7	93.7	cube:EXP
+Temple Garden	91.2	91.2	cube:EXP
+Godless Shrine	88.8	88.8	cube:EXP
+Steam Vents	72	72	cube:EXP
+Overgrown Tomb	96.7	96.7	cube:EXP
+Sacred Foundry	96.1	96.1	cube:EXP
+Breeding Pool	59	59	cube:EXP
+Flooded Strand	99.3	99.3	cube:EXP
+Polluted Delta	99.4	99.4	cube:EXP
+Bloodstained Mire	98.9	98.9	cube:EXP
+Wooded Foothills	98.7	98.7	cube:EXP
+Windswept Heath	98.7	98.7	cube:EXP
+Marsh Flats	98.7	98.7	cube:EXP
+Scalding Tarn	99.4	99.4	cube:EXP
+Verdant Catacombs	99	99	cube:EXP
+Arid Mesa	99.1	99.1	cube:EXP
+Misty Rainforest	99.1	99.1	cube:EXP

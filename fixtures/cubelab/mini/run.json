@@ -1,0 +1,29 @@
+{
+ "v": 1,
+ "cube": "Mini Cube",
+ "cubeFile": "fixtures/cubelab/mini/mini.md",
+ "cubeSha": "0",
+ "format": "grid",
+ "seed": 1,
+ "drafts": 3,
+ "games": 3,
+ "profiles": [
+  "Default",
+  "Default"
+ ],
+ "builder": "lab",
+ "ratingsFile": null,
+ "ratingsFromFile": 0,
+ "gameTimeoutSec": 300,
+ "winstonCards": 90,
+ "weights": {},
+ "forgeJar": "",
+ "missing": [],
+ "themeNames": {
+  "TOK": "Tokens",
+  "SAC": "Sacrifice"
+ },
+ "archetypes": {
+  "WU": "Fliers"
+ }
+}

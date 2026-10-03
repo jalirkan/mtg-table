@@ -158,6 +158,12 @@
 #                                 the body limit, one question at a time, and a
 #                                 client that leaves killing the child (~7 s; no
 #                                 real CLI, no network)
+#                                 Then 12g: tools/cubelab.sh -- the cube lab
+#                                 (D293-D296) end to end at its smallest: two
+#                                 grid drafts of cubes/synergy-cube-180.md at a
+#                                 fixed seed, both decks lab-built and legal, one
+#                                 game each on one worker, the JSONL and the
+#                                 report written (~30 s, one engine boot)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -1882,6 +1888,50 @@ s12f_coach() {
     || die "coach-helper-selftest.mjs (12f: the coach helper broke its contract with ForgeCoach -- see the FAIL lines above)"
 }
 
+# 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid
+#      drafts of the synergy cube at seed 7, both drafters AI, both decks built
+#      by the lab, one game each on one worker JVM, then the report.  It holds
+#      what the unit tests cannot: that CubeLab.java compiles against the pinned
+#      jar and boots, that facts resolve every card of a committed cube, that a
+#      worker plays a game to a winner, the protocol between them, and that the
+#      worker homes save no preferences (cubelab.sh's own check).  Its homes are
+#      built under this job's home (CUBELAB_HOME_ROOT), its output is
+#      var/check-all-cubelab/, and it records no frame log.  About 30 s.
+s12g_cubelab() {
+  printf '\n=== 12g. cubelab.sh -- two drafts, two decks each, one game each (D293-D296) ===\n'
+  local out="var/check-all-cubelab"
+  rm -rf "$out"
+  CUBELAB_HOME_ROOT="$JOB_HOME/cubelab-homes" ./tools/cubelab.sh run cubes/synergy-cube-180.md \
+      --format grid --drafts 2 --games 1 --jobs 1 --seed 7 --out "$out" \
+    || die "cubelab.sh run (12g: the cube lab could not draft, build or play -- see the log above and $out/logs/)"
+  ./tools/cubelab.sh report "$out" || die "cubelab.sh report (12g)"
+  node -e '
+    const fs = require("node:fs");
+    const out = process.argv[1];
+    const recs = fs.readFileSync(out + "/drafts.jsonl", "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
+    const bad = [];
+    if (recs.length !== 2) bad.push(recs.length + " drafts, not 2");
+    for (const r of recs) {
+      if (r.match.engineError) bad.push("seed " + r.seed + ": " + r.match.engineError);
+      if (r.match.games.length !== 1) bad.push("seed " + r.seed + ": " + r.match.games.length + " games, not 1");
+      for (const g of r.match.games) {
+        if (!["A", "B", "draw"].includes(g.winner)) bad.push("seed " + r.seed + ": winner " + g.winner);
+        if (g.onPlay !== g.onPlayVerified) bad.push("seed " + r.seed + ": on the play " + g.onPlay + " but turn 1 was " + g.onPlayVerified);
+      }
+      for (const d of r.drafters) {
+        if (d.played !== "lab" || d.deckErrors.length) bad.push("seed " + r.seed + " " + d.seat + ": not a legal lab deck " + JSON.stringify(d.deckErrors));
+        if (!d.forge || d.forge.error) bad.push("seed " + r.seed + " " + d.seat + ": no Forge builder comparison");
+      }
+    }
+    const html = fs.readFileSync(out + "/report.html", "utf8");
+    if (!html.startsWith("<!doctype html>")) bad.push("report.html is not a page");
+    const meta = JSON.parse(fs.readFileSync(out + "/meta.json", "utf8"));
+    if (meta.schema !== 1 || meta.cube.cards.length !== 180 || meta.sample.drafts !== 2) bad.push("meta.json is not schema 1 over 180 cards and 2 drafts");
+    if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
+    console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html and meta.json written");
+  ' "$out" || die "the cube lab's smoke run is not what it should be (12g)"
+}
+
 s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 }
@@ -2017,6 +2067,7 @@ else
   job 12e-decks   12 both     s12e_decks        "$PRE"
 fi
 job 12f-coach     12 both     s12f_coach        "$PRE"
+job 12g-cubelab   12 both     s12g_cubelab      "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
@@ -2042,7 +2093,7 @@ fi
 PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
-PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash"
+PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash 12g-cubelab"
 
 # ---------------------------------------------------------------------------
 # The runner (D130).

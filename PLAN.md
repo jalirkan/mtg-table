@@ -14,8 +14,9 @@ An item counts as open unless its entry marks it closed or strikes it through;
 Each lane links to its list. When a list changes, change this index in the same
 commit.
 
-**The index below lists 352 items still open across 39 follow-up lists** — 326
-open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the test
+**The index below lists 358 items still open across 40 follow-up lists** — 332
+open, 19 partly done, 3 not reproduced, 2 standing and 2 accepted — the cube lab
+(D293–D296, 2026-10-03) added a list of six; the test
 gaps lane (D291, 2026-10-01) closed the observer socket's 1 and 2 and added a
 list of two; the observer
 socket's three (D280–D282, 2026-10-01, a list of its own) added to the count
@@ -393,6 +394,12 @@ villain identity's rebase, were removed at the same recount.)
 | [Observer socket](#fu-observe) | 3 | open | ForgeCoach's `live.ts` and README still say mtg-table has no observer endpoint (another repository, the owner's) | — |
 | [Test gaps](#fu-test-gaps) | 1 | open | `awaitNextGame`'s `sawClient` is per wait: a client that leaves between `over` and the wait costs a session the 30 s grace (10e, under load) | `bridge/src/mtgtable/MtgTable.java` |
 | [Test gaps](#fu-test-gaps) | 2 | open | Frames reach the socket out of `seq` order when two threads emit at once (5, 3, 4 seen); numbering and pushing are not one step | `bridge/src/mtgtable/WireGuiGame.java` |
+| [Cube lab](#fu-cube-lab) | 1 | open | `check-redaction.mjs`'s A3 fails a Courser of Kruphix's revealed top card, which is public | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 2 | open | A `--record` game is a replay of the decks, not one of the counted games | `tools/cubelab/run.ts` |
+| [Cube lab](#fu-cube-lab) | 3 | open | The seeded ratings mix CubeCobra's scale with set files' halved one | `cubes/*.ratings.tsv` |
+| [Cube lab](#fu-cube-lab) | 4 | open | The watchdog's timeout, stuck-exit and restart paths have not fired on a real hang | `tools/cubelab/engine.ts` |
+| [Cube lab](#fu-cube-lab) | 5 | open | `motion.test.ts`'s film digest fails under Node 22, on `main` too | `web/test/motion.test.ts` |
+| [Cube lab](#fu-cube-lab) | 6 | open | Winston pools are thin for two colours: 10 of 40 decks stretched | `tools/cubelab/deck.ts` |
 
 ### Questions only the owner can settle
 
@@ -482,6 +489,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | LAN play: ForgeCoach from a phone on the same Wi-Fi *(off the plan; on the owner's approval)* | ½ day | **built and verified, gate not run** on branch `c/lan-play` (2026-10-01), off `main`'s `e511c37` — `play.sh --lan` (implies `--engine-only`): the bridge binds `0.0.0.0` behind a per-run 128-bit pairing token every non-loopback request must carry (loopback needs none), serves ForgeCoach's built site (downloaded as a zip from its Pages site and cached a day under `var/forgecoach/`, or `--site-dir`) on the ws port, admits the page's own `http://<Host>` Origin from a non-loopback peer, and prints the phone URLs (and a QR code with `qrencode`) (amendment **M51**, **D287**–**D289**); `WsLanSelfTest` is the build's seventh self-test; *LAN play*, just above *Deferred* |
 | — | The test gaps: the observer, the idle limit and Node 22 in the gate *(off the plan; the follow-ups of D280–D289)* | ¼ day | **built and verified, gate not run** on branch `c/test-gaps` (2026-10-01), off `main`'s `0a32d1b`, `af0512a` merged in — 10c plays with two `/observe` followers (one from before the session, compared frame for frame with the bridge's log and the seat's; one opened while the seat holds an `ask`, which must be caught up on it), a new **10h** proves `--idle-timeout` both ways, `ws-smoke` and `ws-auto-play` survive Node 22's `WebSocket`, and `GATE_ONLY` runs named jobs alone (**D291**); two follow-ups; *The test gaps*, just above *Deferred* |
 | — | The coach helper: ForgeCoach coaches through the logged-in Claude Code CLI *(off the plan; on the owner's approval, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/coach-helper` (2026-10-01), off `main`'s `cb7d041` — `tools/coach-helper.mjs` on `coachPort` 8643: `GET /health`, `POST /coach` answered by `claude -p` with every tool off and streamed as NDJSON, M50's Origin list and M51's token; `play.sh` starts it beside the engine in every mode (`--no-coach`); the gate's `WSPORT` moves to 8644; gate step **12f** and CI run its self-test against a fake `claude` (**D292**); *The coach helper*, just above *Deferred* |
+| — | The cube lab: two Forge AIs draft a two-player cube, build decks and play them *(off the plan; the owner's request, for cube design)* | 1 day | **built, run and documented, gate not run** on branch `c/cube-lab` (2026-10-03), off `main`'s `4204bc6` — `tools/cubelab.sh check / ratings init / run / report` over `tools/cubelab/` (TypeScript) and one Java worker, `CubeLab.java`: Grid and Winston drafts with Forge's ranks as editable ratings plus theme synergy and late colour commitment, 40-card 16–17-land decks, a best of three per draft with the play alternating, sharded over `--jobs` JVMs with a watchdog, JSONL per draft, a self-contained HTML report and ForgeCoach's `meta.json`; four cubes under `cubes/` (synergy, modern, vintage, pauper); gate step **12g** (**D293–D297**); six follow-ups; *The cube lab*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9782,6 +9790,78 @@ authenticated by its host), so its message rests on the documented error code an
 text; and a browser with local-network-access prompts (Chrome's newer
 replacement for private network access preflights) may ask the owner once
 before the github.io page reaches `127.0.0.1`.
+
+## The cube lab — two AIs draft a cube, build decks and play them (2026-10-03, D293–D297)
+
+**Status: built, run for real and documented; the full gate was not run** (the
+new step, 12g, was run alone through the gate's runner, green and red under a
+planted mutant). Branch `c/cube-lab`, off `main`'s `4204bc6`; D293–D297. The
+owner designs two-player 180-card cubes and wants to see how decks come together
+under randomness and how cards perform, with the data kept for a later drafting
+AI and play AI — on his own machine, no tokens. `docs/guides/cube-lab.md` is the
+manual; `docs/evidence/cube-lab.md` what was run.
+
+```bash
+tools/cubelab.sh check cubes/synergy-cube-180.md
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 40 --jobs 4 --record 3
+tools/cubelab.sh report var/cubelab/runs/synergy-cube-180-grid-1
+GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
+```
+
+- **Both cubes resolve**, 180 of 180 each (the Pathways by front face); the
+  synergy cube has 8 `AI:RemAIDeck` cards and none unranked, the modern cube 4
+  and 4 (Pathways).
+- **Synergy, grid, 40 drafts, 4 workers**: 484 s of matches, 95 games, no
+  timeout and no engine error; WB 75% and WG 65% lead, UR 18% and RG 25% trail;
+  tokens and sacrifice lead the themes, graveyard trails; 28 cards never played.
+- **Modern, Winston, 20 drafts**: 146 s, 47 games; Winston's thin pools made 34
+  of 40 decks splash and 10 stretch; RG 6–0, WU 35%.
+- **Vintage and Pauper, grid, 20 drafts each** (added mid-lane, with each
+  cube's own theme codes): 51 and 49 games, no errors; Vintage's WU was drafted
+  most and won 44%, reanimation and tutors lose under the AI; Pauper's drafters
+  took blue in 32 of 40 decks, spells 67%, blink 36%.
+- **`meta.json`** (D297, schema 1) for ForgeCoach's draft and deck assistant:
+  `report` writes it, `tools/cubelab.sh meta <out>` alone; shrunk win rates
+  (Beta prior, 20 games), archetypes with key cards, pairs by lift, land counts,
+  splash.
+- **Three recorded games** read by ForgeCoach's own `parseLog` and
+  `extractDecisions`; one fails `check-redaction.mjs` on a Courser of Kruphix's
+  revealed top card (follow-up 1).
+
+<a id="fu-cube-lab"></a>
+### The cube lab's follow-ups — six, 2026-10-03
+
+1. **`check-redaction.mjs`'s A3 does not know "play with the top card revealed".**
+   `frames/draft-3-g1.jsonl` of the synergy run fails A3 from frame 414: seat 1's
+   Courser of Kruphix reveals its library's top card to everyone, so the card is
+   public and `canBeShownTo` is right. The checker excuses only look-at effects
+   (Opposition Agent, Bribery, Gonti); Courser is in both cubes (and Future
+   Sight's `MayLookAt` is the other shape it already knows). Teach A3 the
+   revealed-top statics, with a fixture, before a cube recording goes into
+   `fixtures/`.
+2. **A recorded game is not one of the counted games.** `RecordMatch` plays one
+   game per process with its own coin flip, so `--record M` replays a draft's
+   decks once more; the report's numbers never include it. Recording the counted
+   games needs the worker to carry a recorder, which is a second serialiser
+   unless it is `RecordMatch`'s own (hard rule 8).
+3. **The seeded ratings mix two scales.** A card on CubeCobra's list scores
+   about 80–99; a card ranked only by a set's file is halved by
+   `CardRanker.getRawScore` (Birds of Paradise 49.6, Hengegate Pathway 18.4). The
+   drafters undervalue the second kind until someone edits the TSV; a
+   per-source rescale in `ratings init` is the likely fix, and the owner's
+   judgement the real one. The Pauper cube, 104 of whose cards are set-ranked
+   only, shows it most (blue in 32 of 40 decks).
+4. **The watchdog's two halves have not fired on a real hang.** No game timed
+   out and no worker died in 142 games; the draw-at-deadline path, the `stuck`
+   exit and the runner's restart are reasoned and typed, not seen. A probe deck
+   that stalls (two walls of 0/4s) would exercise the first.
+5. **`motion.test.ts`'s pre-lane film digest fails under Node 22** — on a clean
+   `origin/main` too, so not this lane's; Node 24 (the owner's) passes. CI runs
+   Node 24.
+6. **Winston pools are thin for a two-colour deck.** 10 of 40 modern-cube decks
+   needed the stretched splash and 34 splashed at all; real Winston players play
+   three colours or 18 lands. Whether the lab should allow either is the owner's
+   call (the brief said two colours plus a splash, 16–17 lands).
 
 ## Deferred — out of scope for M0–M7
 
