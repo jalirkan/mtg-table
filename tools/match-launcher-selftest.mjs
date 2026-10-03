@@ -46,6 +46,8 @@ const DIR = resolve(REL);
 const NODE_ONLY = join(DIR, 'node-only');      // a PATH with node and no claude
 const EVENTS = join(DIR, 'engine-events.jsonl');
 const ALIVE = join(DIR, 'alive');
+// A fake engine an interrupted earlier run left behind is stopped before its record goes.
+for (const f of existsSync(ALIVE) ? readdirSync(ALIVE) : []) { try { process.kill(Number(f), 'SIGKILL'); } catch { /* gone */ } }
 rmSync(DIR, { recursive: true, force: true });
 for (const d of [NODE_ONLY, ALIVE, join(DIR, 'site')]) mkdirSync(d, { recursive: true });
 symlinkSync(process.execPath, join(NODE_ONLY, 'node'));
