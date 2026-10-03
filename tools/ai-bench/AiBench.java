@@ -325,11 +325,21 @@ public final class AiBench {
                 .n("turns", o == null ? game.getPhaseHandler().getTurn() : o.getLastTurnNumber())
                 .n("ms", ms)
                 .n("timeout", timeout)
-                .n("error", fail[0] == null ? "" : String.valueOf(fail[0]))
+                .n("error", fail[0] == null ? "" : describe(fail[0]))
                 .n("aiEvalTimeouts", count(noiseText, "AI eval thread at timeout"));
         seatStats(j, "aStats", la, game);
         seatStats(j, "bStats", lb, game);
         return j.end().done();
+    }
+
+    /** The exception and its first eight frames: enough to say where Forge failed. */
+    static String describe(final Throwable t) {
+        final StringBuilder sb = new StringBuilder(String.valueOf(t));
+        final StackTraceElement[] st = t.getStackTrace();
+        for (int i = 0; i < Math.min(8, st.length); i++) {
+            sb.append(" | at ").append(st[i]);
+        }
+        return sb.toString();
     }
 
     static int count(final String hay, final String needle) {
