@@ -16021,3 +16021,177 @@ both); calling every decision whose interval reaches above zero a mistake (at
 triage budgets nearly all would be); a JVM per decision (a 10 s boot each);
 streaming the report over one long HTTP response (a phone or a closed tab
 loses it; a polled id survives both).
+## D354 — The learned evaluator is promoted only through three pre-registered gates: a held-out fit against the core baseline and the fitted leaf, a decision-level regret test against full-game truth tables, and an SPRT against the current search; the search gains one flag, `leaf=eval:<model.json>`
+
+*Branch `c/eval-gates`; D354, the next number free at push (D347–D351 are on
+`main`). The engine review's H4 and its week-2 roadmap (2026-10-03).*
+
+**2026-10-03**
+
+**Context.** D316's evaluator loses to the twelve-number logistic at three deck
+pairs, and night 1 (J020) brings thousands. A better log-loss does not
+guarantee better moves: the search takes the maximum over candidates, so it
+seeks out the positions where the evaluator is most wrong, and its leaves
+(the end of this turn) are sparse in the decision-state rows it trains on. The
+review asked for three gates, in order, each written down before it is run.
+This entry is that writing-down. The numbers are `tools/ml/gates.py`'s
+`FIT_RULE`, `REGRET_RULE` and `SPRT_RULE`; the scripts print PASS or FAIL
+against them and take no flag that loosens one. A changed rule is a new
+decision, made before its run. A gate that fails is not lowered: collect
+another night and retry (the review's rule).
+
+**Gate 1, the fit** (`tools/ml/gate_fit.py`; the Java half
+`mtgtable.eval.LeafRows`, `tools/ml/leaf-rows.sh`). It uses the model's own
+split (`train_eval.py --split-by pair`, D317) on a dataset built with D340's
+reserved decks dropped, and reads only its TEST split. PASS needs all four:
+
+- **A.** On the test decision rows, log-loss(core) − log-loss(eval) > 0, with
+  the 95% percentile bootstrap interval over deck pairs (2,000 resamples)
+  above 0. `core` is D305's twelve-number logistic, fitted on the same
+  training rows.
+- **B.** On turn-end positions of the held-out logs (each turn's last state,
+  where a playout at the live horizon stops, rebuilt in Java as `fit-scale`
+  does), log-loss(σ(leaf / scale)) − log-loss(eval) > 0, with the interval over
+  games above 0. `scale` is D349's fitted one (`var/coach-grade/leaf-scale.json`,
+  else 500). The evaluator is scored on the rebuilt game, through
+  `PositionEvaluator.winProbability`: the path the search's leaves take. At
+  most 1,500 held-out logs are used, evenly spaced.
+- **C.** Calibration on the test decision rows: ECE ≤ 0.03, and every
+  reliability bin holding at least 200 rows within ±0.05.
+- **D.** Power: at least 50 held-out deck pairs and 2,000 turn-end positions.
+  Less is a FAIL ("underpowered"), never a PASS.
+
+**Gate 2, regret** (`gate_regret_build.py`, `gate_regret_grade.py`,
+`gate_regret_score.py`). This is the test that matters.
+
+- **The set.** Decisions the AI seats took in the queue's lab games, with
+  decision records (D347).
+  - Normal drafts only: a bridge draft's pool is not one cube list.
+  - Decks outside the reserved sets, card for card, with the draft seed below
+    the reserved range (D340).
+  - The deck pair in the model's test split.
+  - Kinds: `priority` in a main phase with a `cast:` option (type `spell`),
+    `attack` and `block`, each with at least two options.
+  - At most one decision per game and type, chosen in the order of
+    sha256("gate2-v1|" + id).
+  - Up to 130 candidates per type. The set is the first 100 per type, in that
+    order, whose hand-ranker answer is `ok` with two or more options. That is a
+    rebuild check, never a result.
+- **The truth.** For each decision, every option's win rate when it is played
+  and Forge Default plays both seats to the end of the game. This is
+  `coach-grade.sh serve`, the live entry point, so D348's guard holds. The
+  knowledge is POOL mode: the run's cube list as `oppPool`; the opponent's
+  deck list is never sent. Settings:
+  - 200 rounds, racing from 40 every 20, seed 20261004;
+  - options in full up to 12;
+  - 180 s per playout, 40 min per decision.
+- **The rankers.** The same rollouts to the end of THIS turn (the live horizon
+  of `search-v1-fixed3`: `turns=0`, `aturns` unset), 3 rounds on common random
+  numbers with no racing, seed 1. The two rankers differ only in the leaf:
+  - **hand:** σ(leaf / 500), with `SearchPolicy.LEAF_SCALE` pinned;
+  - **evaluator:** its P(win), through the grader's new `--leaf eval:<model>`.
+
+  Each ranker's pick is the option with the highest mean. Ties go to Forge's
+  own choice, then to the table's order. The rankers ignore the search's
+  margin rule: the gate compares the leaves, not the override rule.
+- **The rule.** Regret(r) is the truth's best win rate minus the truth's win
+  rate of r's pick, over the options all three tables share. Take the mean of
+  regret(hand) − regret(eval) over the scored decisions. Its 95% percentile
+  interval comes from a paired bootstrap over decisions (10,000 resamples,
+  seed fixed).
+  - **PASS:** the mean is above 0 and the interval excludes 0, on at least
+    240 scored decisions.
+  - A decision is scored when the truth (`measure: wins`) and both ranker
+    answers are `ok`, with two or more shared options.
+  - The difference equals truth(eval's pick) − truth(hand's pick), so the
+    upward bias of the truth's noisy maximum cancels.
+  - Reported, not gated: the same rankers at 12 rounds, Forge's own regret,
+    the per-type table and the pick agreement.
+
+**Gate 3, the SPRT** (`tools/ml/gate_sprt.py`, the ladder's kind
+`search-eval`).
+
+- The player is `search-v1-fixed3-eval-<sha12>`: `search-v1-fixed3`'s params
+  plus `model`, the model file's 12-hex sha256.
+- Its seat config is `search-v1-fixed3`'s plus `,leaf=eval:var/ml/models/eval-<sha12>.json`,
+  and a file whose content does not hash to its name makes the player
+  unavailable.
+- It plays `ai-ladder.sh sprt` against `search-v1-fixed3` on the confirm set:
+  elo0 0, elo1 20, α = β = 0.05, at most 2,400 games.
+- **PASS** = H1. H0, or inconclusive at 2,400 games, is a FAIL.
+- It runs only after gates 1 and 2 pass (the job's pilot checks them).
+- Promotion past this gate is D321's league rule, not this one.
+
+**The search's one flag.** `SearchConfig` `leaf=hand|eval:<model.json>`
+(default `hand`, printed only when set).
+
+- It is set through `withLeaf` and a copy constructor, so the existing
+  constructors and every other key are untouched (`c/search-week3` edits the
+  search beside this).
+- `SearchPolicy` loads the model once per path (`SearchPolicy.evaluator`,
+  shared). A playout that does not finish the game is scored as
+  `LEAF_SCALE · logit(P(win))`, with p clipped to [1e-6, 1 − 1e-6]. Through
+  `winOf` that gives back p itself, and the margin keeps D349's meaning: 20
+  points is about 1 point of win rate at 50%.
+- A finished copy keeps the hand leaf's ±WIN.
+- A live seat may use the flag: the evaluator reads only its own seat's
+  knowledge (D316).
+- The grader takes the same evaluator as `--leaf` / `"leaf"` in `serve`
+  (`Grader.Settings.leafEval`; its value is P(win), its `config.leaf` says
+  which).
+- `coach-grade.sh serve` takes `COACH_GRADE_HOME` for a Forge home per JVM
+  (D129).
+- `EvalSelfTest` holds the flag engine-free:
+  - parse and round-trip;
+  - refusals;
+  - one shared instance per path;
+  - a missing model is an error, never a silent hand leaf.
+
+**Versions (D341's rule for these artefacts).** Every grading output has a
+`.meta.json` stamp:
+
+- the tree hash of `bridge/src`, its uncommitted changes and the jar's sha256
+  (all compared);
+- the serve flags, the requests' sha256 and the model's sha256.
+
+A resume under another stamp is refused unless `--allow-version-change`, which
+is recorded. The scorer refuses tables graded by different code. The PC jobs
+pin one commit of this branch so the truth and the rankers share it.
+
+**Cost** (the PC: 9700X, 7 JVMs; a full-game playout 0.5–1.0 s there, 4.7 s
+measured here; an end-of-turn playout about 0.1 s there, 0.4 s here):
+
+- **Truth:** 300 decisions × about 5 options × 200 rounds × 0.6 (racing) is
+  about 180k playouts, or 25–50 core-hours. That is **4–7 h on 7 JVMs**, one
+  night, resumable per decision.
+- **Rankers:** about 40k end-of-turn playouts over the four runs plus the
+  screen, about 1–2 core-hours, under 30 min.
+- **Leaf rows:** about 15k positions with no playouts, 15–40 min on one JVM.
+- **Training:** encoding about 1,000 rows/s, then the grid for 3 h.
+- **SPRT:** one search night (1,400–2,400 games).
+
+**Measured here** (smoke, one JVM, 16 playouts in all):
+
+- On the committed decision recording, the set builder picked one spell, one
+  attack and one block.
+- The attack decision was graded by the hand ranker (6 playouts, 2.6 s), the
+  evaluator ranker with the fixture model (6 playouts, 3.2 s:
+  `grade.evaluated` 6, `config.leaf` `eval:…`) and a 2-round truth to the end
+  of the game (4 playouts, 4.7 s each).
+- `LeafRows` rebuilt and scored both chairs' 22 turn ends with no failure.
+- The scorer and the metrics read the real answers.
+
+**Rejected.**
+
+- **Log-loss alone** (the optimizer's curse, above).
+- **Ranking with the search's margin rule** (it confounds the leaf with the
+  override rule, which D350 tests separately).
+- **The opponent's real deck in the truth.** The decisions are graded as the
+  live coach would see them, which is D348's rule. The search itself also
+  never sees it.
+- **`batch` for the truth** (its knowledge path has no live guard).
+- **Grading every candidate to the end** (the screen costs minutes, the truth
+  a night).
+- **Bridge drafts** (no single pool list).
+- **A truth seed equal to the rankers'** (shared deals would correlate a
+  ranker's pick with the truth's noise).

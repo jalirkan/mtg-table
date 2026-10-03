@@ -98,6 +98,14 @@ public final class Grader {
         public double leafScale = SearchPolicy.LEAF_SCALE;
         /** Where {@link #leafScale} came from, for the answer's {@code config}. */
         public String leafScaleSource = "default";
+        /**
+         * D354 (the evaluator gates): score a playout that stops at the horizon
+         * with the learned evaluator instead of the hand leaf; null = the hand
+         * leaf.  Its value is the evaluator's P(win) itself, not σ(leaf / leafScale).
+         */
+        public mtgtable.eval.PositionEvaluator leafEval;
+        /** The evaluator's model path, for the answer's {@code config}. */
+        public String leafEvalSource;
         public boolean lands;
         /** Only these tokens (null = all). */
         public List<String> only;
@@ -265,7 +273,7 @@ public final class Grader {
                 final long deadline = r < set.race.minRounds ? own : Math.min(own, set.race.deadline);
                 final int horizon = set.horizon < 0 ? set.maxTurns : set.horizon;
                 final SearchPolicy.Playout p = SearchPolicy.playout(base.game, base.viewer, cand, seed,
-                        new SearchPolicy.Limits(deadline, horizon, set.maxSteps), sink, r == 0 && i == 0, null);
+                        new SearchPolicy.Limits(deadline, horizon, set.maxSteps, 1.0, false, set.leafEval), sink, r == 0 && i == 0, null);
                 return value(p);
             } catch (final RuntimeException | StackOverflowError e) {
                 sink.add("grade.playoutErrors", 1);
@@ -310,6 +318,7 @@ public final class Grader {
                 .n("interval", measure == GradeMath.Measure.LEAF ? "t, sample sd" : "normal, 1/n floor");
         if (measure == GradeMath.Measure.LEAF) {
             j.n("leafScale", set.leafScale).n("leafScaleSource", set.leafScaleSource);
+            j.n("leaf", set.leafEval == null ? "hand" : "eval:" + set.leafEvalSource);   // D354
         }
         j.end();
         j.key("counters").obj();
@@ -445,6 +454,9 @@ public final class Grader {
         }
         if (set.horizon >= 0) {
             sink.add("grade.evaluated", 1);
+            if (set.leafEval != null) {
+                return SearchPolicy.winOf(p);   // D354: the evaluator's P(win)
+            }
             return 1 / (1 + Math.exp(-p.leaf / set.leafScale));
         }
         sink.add("grade.turnCapped", 1);

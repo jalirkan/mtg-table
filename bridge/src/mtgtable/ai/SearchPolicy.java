@@ -114,6 +114,40 @@ public final class SearchPolicy {
         this.cfg = cfg;
         this.sink = sink;
         this.rng = new Random(cfg.seed != 0 ? cfg.seed : System.nanoTime());
+        this.leafEval = cfg.leafModel == null ? null : evaluator(cfg.leafModel);
+    }
+
+    // ---- D354: the learned evaluator at the leaves (leaf=eval:<model.json>) ----
+
+    /** The evaluator the leaves use, or null for the hand-written leaf (D354). */
+    private final mtgtable.eval.PositionEvaluator leafEval;
+
+    private static final java.util.Map<String, mtgtable.eval.PositionEvaluator> EVALUATORS =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * One loaded evaluator per model path, shared by every seat and thread (it
+     * is immutable, D316).  A model that cannot be loaded is an error now, not
+     * a silent hand leaf.
+     */
+    public static mtgtable.eval.PositionEvaluator evaluator(final String model) {
+        return EVALUATORS.computeIfAbsent(model, m -> {
+            try {
+                return mtgtable.eval.PositionEvaluator.load(java.nio.file.Path.of(m));
+            } catch (final java.io.IOException e) {
+                throw new IllegalArgumentException("search leaf=eval:" + m + ": " + e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
+     * The evaluator's P(win) on the leaf's scale: {@code LEAF_SCALE · logit(p)},
+     * p clipped to [1e-6, 1 − 1e-6], so {@link #winOf} gives p back and the
+     * margin keeps its D349 meaning (20 points ≈ 1 point of win rate at 50%).
+     */
+    public static double evalLeaf(final mtgtable.eval.PositionEvaluator ev, final Game g, final Player ai) {
+        final double p = Math.min(1 - 1e-6, Math.max(1e-6, ev.winProbability(g, ai)));
+        return LEAF_SCALE * Math.log(p / (1 - p));
     }
 
     public SearchConfig config() {
@@ -1018,7 +1052,7 @@ public final class SearchPolicy {
     /** One rollout: null if the deadline passed before its leaf. */
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
                             final boolean first, final int horizon) {
-        return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle), sink, first,
+        return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle, leafEval), sink, first,
                 failCopyForTest);
     }
 
@@ -1042,11 +1076,20 @@ public final class SearchPolicy {
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
                       final boolean oracle) {
+            this(deadline, horizonTurns, maxSteps, untapped, oracle, null);
+        }
+
+        /** D354: the learned evaluator scores an unfinished copy instead of {@link #leaf}; null = the hand leaf. */
+        public final mtgtable.eval.PositionEvaluator evaluator;
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
+                      final boolean oracle, final mtgtable.eval.PositionEvaluator evaluator) {
             this.deadline = deadline;
             this.horizonTurns = horizonTurns;
             this.maxSteps = maxSteps;
             this.untapped = untapped;
             this.oracle = oracle;
+            this.evaluator = evaluator;
         }
     }
 
@@ -1152,7 +1195,9 @@ public final class SearchPolicy {
                 sink.add("search.rolloutStepCap", 1);
             }
             sink.add("search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
-            final double leaf = leaf(copy, aiCopy, lim.untapped);
+            final double leaf = lim.evaluator != null && !copy.isGameOver()
+                    ? evalLeaf(lim.evaluator, copy, aiCopy)   // D354
+                    : leaf(copy, aiCopy, lim.untapped);
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {
             MyRandom.setRandom(realRandom);
