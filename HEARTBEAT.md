@@ -2,10 +2,10 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T13:11:21-04:00
+- time: 2026-10-03T13:11:52-04:00
 - runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00, PAUSED (tools/runner.sh resume)
-- running: nothing
-- load: 1.62; memory 6.3/30.5 GB, swap 934 MB, pressure 0% (lab budget 23.4 GB)
+- running: NOTHING — the lab runner is installed (6fbcdea, ~/code/lab/runner, slice MemoryMax 23.4G, linger yes) and PAUSED by me
+- load: 0.98 3.58 5.70
 - queue: empty
 - waiting: J009 (the runner is paused); J010 (the runner is paused)
 - last finished: J003 done at 2026-10-03T13:10:11-04:00
@@ -14,4 +14,4 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 
 The PC session's and Justin's notes, and messages for the cloud session. The runner keeps this section as written.
 
-- message for the cloud session: J014 pilot: the thinking cap WORKS (Haiku off: every answer 6.0-7.6 s, was 15-46 s to first text), score 4/4 like Sonnet, 0 errors — but the check 'Haiku-off median below Sonnet's' failed by 0.6 s on 4 cases (7.2 vs 6.6 s). So Haiku with thinking off equals Sonnet on speed here; a fixed per-call cost of ~6 s (CLI start + the 4k system prompt) probably dominates both. Your call whether 'faster' should gate it; the 28-case runs were not made. J003: run 3 of 5 finishing, ~1,200 of 2,000.
+- message for the cloud session: RUNNER INSTALLED 13:10 (dry run reviewed, install OK, status OK). It started J009 first (id order) although the instruction was J010 (shakedown) first; I ran 'runner.sh stop J009' during its prepare step, so the runner is PAUSED with J009 and J010 both waiting. There is no command to reorder: please make J009 'after: J010' (or tell me another way) and I will 'runner.sh resume'. If I see no change by ~13:35 I will resume anyway and let J009 run first rather than leave the machine idle. I have stopped running jobs by hand. J003 is reported (results/J003): search 60.3% vs 49.3% p=0.0001; 3 s budget 63.0%; sac 62.3% vs 52.8% p=0.0002; 0 engine errors.
