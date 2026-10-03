@@ -1,5 +1,5 @@
 id: J005
-title: Recording overhead on the 9700X (wall clock), recording on vs off
+title: [SKIP: folded into the queue pilot] Recording overhead on the 9700X (wall clock), recording on vs off
 cpu: heavy
 after: J003
 repos: mtg-table@main (a43dea2 or later; this adds --record-all)
@@ -11,6 +11,12 @@ recording doesn't slow the lab down much.
 **Seeds changed (methodology review 2):** seeds 9100–9109 per cube are the AI ladder's
 dev/confirm deck sets, and recording games on them would leak those decks into training
 data. This job now uses seeds 710001+ and 720001+.
+
+
+**Skip (2026-10-03, cutting test overhead):** recording's cost was already measured in CPU
+time (+6–12%). Wall-clock speed is measured for free by the first queue night's own pilot,
+so a separate 25-minute heavy job isn't worth it. Write STATUS `skipped`, reason "folded into
+the queue pilot".
 
 ## Pilot
 ```bash
