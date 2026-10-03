@@ -1,4 +1,4 @@
-// mtg-table — the lab runner: back off on memory pressure, not on a timer (D334).
+// mtg-table — the lab runner: back off on memory pressure, not on a timer (D337).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //

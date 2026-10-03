@@ -1,4 +1,4 @@
-// mtg-table — the lab runner: the check language of `check:` and `abort:` lines (D334).
+// mtg-table — the lab runner: the check language of `check:` and `abort:` lines (D337).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //

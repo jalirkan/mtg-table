@@ -2,7 +2,7 @@
  * mtg-table — web/test/lab-runner.test.ts
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * The lab runner (tools/runner/, D334), engine-free.  systemd is a fake Sys
+ * The lab runner (tools/runner/, D337), engine-free.  systemd is a fake Sys
  * that runs each step's script with bash at once (or holds it "active"); git
  * is real, against bare repositories in a temp folder standing in for
  * jalirkan/mtg-table (pc-jobs, pc-results, main) and jalirkan/ForgeCoach

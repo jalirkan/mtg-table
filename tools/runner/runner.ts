@@ -1,4 +1,4 @@
-// mtg-table — the lab runner: the loop (D334).
+// mtg-table — the lab runner: the loop (D337).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -843,7 +843,7 @@ export class Runner {
     const last = doc.finished[0];
     return `# Heartbeat
 
-Written by the lab runner (tools/runner, D334) every few minutes and on every job state change.
+Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
 - time: ${doc.updated}
 - runner: ${this.cfg.commit}, up since ${isoLocal(this.p.started)}${doc.paused ? ', PAUSED (tools/runner.sh resume)' : ''}

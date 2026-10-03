@@ -1,4 +1,4 @@
-// mtg-table — the lab runner: the pool control file (D334).
+// mtg-table — the lab runner: the pool control file (D337).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //

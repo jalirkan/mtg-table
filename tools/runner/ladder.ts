@@ -1,4 +1,4 @@
-// mtg-table — the lab runner: the public, sanitised copy of the AI ladder's ladder.json (D334).
+// mtg-table — the lab runner: the public, sanitised copy of the AI ladder's ladder.json (D337).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //

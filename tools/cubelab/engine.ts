@@ -18,7 +18,7 @@
 // starts a fresh worker for the rest.  A worker that dies before it is ready
 // twice in a row stops the run: the engine cannot boot, and retrying is noise.
 //
-// The lab runner's control file (tools/runner/control.ts, D334): with
+// The lab runner's control file (tools/runner/control.ts, D337): with
 // LAB_CONTROL set, an idle worker gets no match while `paused`, and a worker
 // whose match ended while more than `maxWorkers` JVMs are alive quits (its
 // memory comes back); a parked worker starts again when the cap rises.

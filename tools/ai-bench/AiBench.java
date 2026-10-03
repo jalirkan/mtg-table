@@ -106,7 +106,7 @@ import mtgtable.ai.SearchConfig;
  * deal is played once from each side ({@link #gameSeed}).  Without the flag the
  * seeds are what they always were.
  *
- * <p>{@code play} RESUMES (D334): a game already in {@code --out}, or in any
+ * <p>{@code play} RESUMES (D337): a game already in {@code --out}, or in any
  * {@code --done} file (the run's other shards, so a run restarted with another
  * {@code --jobs} also skips them), with the same pair, game, seed, configs and
  * decks is not played again, and a torn last line in {@code --out} (a JVM killed
@@ -993,7 +993,7 @@ public final class AiBench {
         return failures == 0 ? 0 : 1;
     }
 
-    /** D334: resume (torn line, other shards, a different configuration) and the control file, no engine. */
+    /** D337: resume (torn line, other shards, a different configuration) and the control file, no engine. */
     static void resumeChecks() throws Exception {
         System.out.println("== ai-bench selftest: resume and the control file");
         final File dir = Files.createTempDirectory("ai-bench-resume").toFile();

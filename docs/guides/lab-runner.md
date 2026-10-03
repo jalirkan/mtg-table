@@ -1,6 +1,6 @@
 # The lab runner
 
-`tools/runner.sh` runs the `pc-jobs` queue on Justin's PC (D334). It is a systemd **user**
+`tools/runner.sh` runs the `pc-jobs` queue on Justin's PC (D337). It is a systemd **user**
 service, `forgecoach-runner.service`. It is not Claude, and it depends on no Claude session
 and on no desktop app being open. It does what the PC's Claude session used to do by hand:
 fetch the jobs, check refs out and build, run each pilot, check it, run the commands, and
@@ -172,7 +172,7 @@ pools share.
 
 ## Resume
 
-`ai-bench.sh play` resumes (D334). Run the same line again and each JVM skips every game
+`ai-bench.sh play` resumes (D337). Run the same line again and each JVM skips every game
 already in any shard file of the run: same pair, game, seed, configs and decks. A
 different configuration in the same `--run` is refused. A torn last line, left by a JVM
 killed mid-write, is cut off first. A `flock` on the run folder, inherited by every JVM,

@@ -1,4 +1,4 @@
-// mtg-table — the lab runner: metrics from the lab's own output files (D334).
+// mtg-table — the lab runner: metrics from the lab's own output files (D337).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //

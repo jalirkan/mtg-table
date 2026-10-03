@@ -153,7 +153,7 @@ export interface DriveOptions {
   next: () => BatchSpec | null;
   done: (r: BatchResult) => void;
   log?: (s: string) => void;
-  /** The lab runner's control file (tools/runner/control.ts, D334); default: LAB_CONTROL, none when unset. */
+  /** The lab runner's control file (tools/runner/control.ts, D337); default: LAB_CONTROL, none when unset. */
   control?: () => Control;
   /** How long a held pool waits before it looks again (ms). */
   pollMs?: number;

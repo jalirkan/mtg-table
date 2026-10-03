@@ -34,7 +34,7 @@
 # rule: no two JVMs share a Forge profile).  Output: var/ai-bench/<run>/
 # shard-<i>.jsonl and report.txt.  Needs ./bridge/build.sh first (bridge/out).
 #
-# `play` RESUMES (D334): run the same line again after a kill and it plays only
+# `play` RESUMES (D337): run the same line again after a kill and it plays only
 # the games no shard file holds yet (same pairs, seed, games and configs; a
 # different configuration in the same --run is refused), after cutting off a
 # torn last line.  Under the lab runner (LAB_CONTROL set, tools/runner/) each
@@ -101,13 +101,13 @@ case "$mode" in
     case "$run" in */*|.*) echo "--run must be a plain name" >&2; exit 2 ;; esac
     dir="$REPO_ROOT/var/ai-bench/$run"
     mkdir -p "$dir"
-    # One `play` per run folder at a time (D334): the lock's fd is inherited by
+    # One `play` per run folder at a time (D337): the lock's fd is inherited by
     # every JVM, so even a JVM whose shell was killed keeps the folder locked.
     exec 9>>"$dir/.lock"
     flock -n 9 || { echo "ai-bench: another play is still running on $dir (a JVM of it, maybe: pgrep -f 'AiBench play')" >&2; exit 2; }
     compile
     echo "ai-bench: run $run, $jobs job(s) -> $dir"
-    # Resume (D334): cut a torn last line off every shard file of an earlier,
+    # Resume (D337): cut a torn last line off every shard file of an earlier,
     # killed run, and hand each JVM the other shards' files so it skips every
     # game already played there (a restart with another --jobs included).
     shopt -s nullglob

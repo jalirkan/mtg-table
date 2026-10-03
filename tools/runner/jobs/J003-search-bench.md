@@ -23,10 +23,10 @@ clean: var/ai-bench/night-cube-control var/ai-bench/night-cube-search var/ai-ben
 doubles the games and changes this experiment. The runner checks ee4d127 out in its own
 clone (`~/code/lab/mtg-table`), so Justin's checkout is never moved.
 
-**Not resumable, no control file.** ai-bench at ee4d127 predates D334: it neither skips
+**Not resumable, no control file.** ai-bench at ee4d127 predates D337: it neither skips
 played deals nor reads the pool control file. So a runner restart re-runs the commands from
 the top (the `clean:` folders moved aside first), and memory pressure can only stop the job
-and retry it with fewer workers. A copy of this job on a main that has D334 could say
+and retry it with fewer workers. A copy of this job on a main that has D337 could say
 `resumable: yes` and drop `control: no`.
 
 `{workers}` is the runner's size for the full run: min(7, cores − 1, budget / pilot peak × 0.85).

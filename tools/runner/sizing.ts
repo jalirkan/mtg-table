@@ -1,4 +1,4 @@
-// mtg-table — the lab runner: the memory budget, worker sizing and the systemd units (D334).
+// mtg-table — the lab runner: the memory budget, worker sizing and the systemd units (D337).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -80,7 +80,7 @@ export const SERVICE = 'forgecoach-runner.service';
 
 /** The slice: the lab's memory budget, and oomd told to act on the lab before the desktop. */
 export function sliceUnit(b: Budget): string {
-  return `# Written by tools/runner.sh install (mtg-table, D334). Every lab job runs in this slice.
+  return `# Written by tools/runner.sh install (mtg-table, D337). Every lab job runs in this slice.
 [Unit]
 Description=ForgeCoach lab jobs (the lab runner's transient units)
 
@@ -99,7 +99,7 @@ ManagedOOMPreference=none
 }
 
 /** The drop-in for every app-*.scope (the desktop's apps, Firefox and the Claude app among them). */
-export const DESKTOP_DROPIN = `# Written by tools/runner.sh install (mtg-table, D334): ask systemd-oomd to
+export const DESKTOP_DROPIN = `# Written by tools/runner.sh install (mtg-table, D337): ask systemd-oomd to
 # pick the lab's units before the desktop's apps.  systemd honours this only
 # where the cgroup is owned by root (systemd.resource-control(5)); the lab
 # slice's own limits and the runner's pressure backoff do not depend on it.
@@ -108,7 +108,7 @@ ManagedOOMPreference=avoid
 `;
 
 export function serviceUnit(o: { runnerDir: string; node: string; args: string[] }): string {
-  return `# Written by tools/runner.sh install (mtg-table, D334).
+  return `# Written by tools/runner.sh install (mtg-table, D337).
 [Unit]
 Description=ForgeCoach lab runner (runs the pc-jobs queue)
 After=network-online.target

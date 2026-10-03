@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mtg-table — the lab runner: runs the pc-jobs queue on Justin's PC (D334).
+# mtg-table — the lab runner: runs the pc-jobs queue on Justin's PC (D337).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
