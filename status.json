@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-03T17:00:18-04:00",
- "heartbeat": "2026-10-03T17:00:18-04:00",
+ "updated": "2026-10-03T17:04:51-04:00",
+ "heartbeat": "2026-10-03T17:04:51-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 12.31,
-  "memUsedGb": 7.8,
+  "load1": 13.44,
+  "memUsedGb": 15.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 1851,
   "pressure": 0,
@@ -24,45 +24,45 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-03T14:40:49-04:00",
-   "elapsed": 8369,
-   "done": 11732,
+   "elapsed": 8643,
+   "done": 12107,
    "total": 20000,
    "unit": "drafts",
-   "ratePerHour": 4826.8,
-   "eta": "2026-10-03T18:43:04-04:00",
+   "ratePerHour": 4728.4,
+   "eta": "2026-10-03T18:45:01-04:00",
    "workers": 7,
    "workersMax": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-03T16:59:58-04:00",
-   "memGb": 3.73,
+   "dataUpdated": "2026-10-03T17:04:09-04:00",
+   "memGb": 10.6,
    "live": {
-    "night.drafts": 11732,
-    "night.games": 11731,
+    "night.drafts": 12107,
+    "night.games": 12106,
     "night.engine_error_rate": 0.0001,
-    "elapsed_s": 8349,
+    "elapsed_s": 8601,
     "night.bridge_drafts": 4000,
     "night.bridge_drafts_done": 4000,
     "night.bridge_drafts_planned": 4000,
-    "night.bridge_share": 0.3409,
-    "night.cpu_ms_per_turn": 373,
-    "night.drafts_per_h": 4826.8,
+    "night.bridge_share": 0.3304,
+    "night.cpu_ms_per_turn": 371,
+    "night.drafts_per_h": 4728.4,
     "night.draws": 1,
     "night.engine_errors": 1,
-    "night.games_per_h": 4824.8,
-    "night.mean_game_ms": 4534,
-    "night.mean_game_s": 4.5344,
-    "night.mean_turns": 19.3743,
-    "night.median_game_s": 2.699,
-    "night.ms_per_turn": 234,
-    "night.night_drafts_done": 11732,
-    "night.night_drafts_done_per_h": 4826.8,
+    "night.games_per_h": 4726.4,
+    "night.mean_game_ms": 4515,
+    "night.mean_game_s": 4.5154,
+    "night.mean_turns": 19.4181,
+    "night.median_game_s": 2.695,
+    "night.ms_per_turn": 233,
+    "night.night_drafts_done": 12107,
+    "night.night_drafts_done_per_h": 4728.4,
     "night.nights": 1,
-    "night.output_bytes": 2117949018,
+    "night.output_bytes": 2189956432,
     "night.planned_drafts": 20000,
-    "night.recorded_bytes_per_game": 163430,
+    "night.recorded_bytes_per_game": 163832,
     "night.recorded_errors": 2,
-    "night.recorded_games": 11731,
+    "night.recorded_games": 12106,
     "night.runs": 26,
     "night.timeouts": 1,
     "pressure_events": 0,
@@ -86,17 +86,17 @@
     },
     {
      "id": "omega",
-     "done": 1232,
+     "done": 1250,
      "planned": 1878
     },
     {
      "id": "pauper",
-     "done": 1000,
+     "done": 1250,
      "planned": 2555
     },
     {
      "id": "peasant",
-     "done": 1000,
+     "done": 1107,
      "planned": 3192
     },
     {
@@ -133,38 +133,6 @@
    "est": "~15 min on the 9700X"
   },
   {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J030",
-   "title": "(was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
-   "cpu": "heavy",
-   "est": "one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops well before)"
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J031",
-   "title": "(was J024, earlier J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference",
-   "cpu": "heavy",
-   "est": "about one night (up to 1,500 games; the 20-vs-40 Elo test usually stops sooner)"
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J032",
-   "title": "(was J025, earlier J018) Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin",
-   "cpu": "heavy",
-   "est": "one to two nights (up to 2,400 games)"
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J033",
-   "title": "(was J026, earlier J022; retry of J015; hard after J029: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
-   "cpu": "heavy",
-   "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
-  },
-  {
    "publicTitle": "Evaluator training and fit gate",
    "publicEst": "~6 h",
    "id": "J034",
@@ -173,9 +141,25 @@
    "est": "~4-7 h (encode about 1,000 rows/s single-threaded; the grid gets 3 h; the leaf rows about 30 min on one JVM)"
   },
   {
+   "publicTitle": "Omega exploration check",
+   "publicEst": "~40 min",
+   "id": "J038",
+   "title": "Omega exploration calibration (D356): one generation of 400 drafts with --explore on, before J039 (no ratings pass is needed)",
+   "cpu": "heavy",
+   "est": "~30-45 min on the 9700X (400 grid drafts best of 3, plus at most a 300-draft confirmation batch)"
+  },
+  {
+   "publicTitle": "Omega evolve with exploration",
+   "publicEst": "~8 h",
+   "id": "J039",
+   "title": "Omega evolve with exploration on (D356): 4 generations x 2,000 drafts, best of 3, unrecorded",
+   "cpu": "heavy",
+   "est": "~6-9 h on the 9700X (4 x 2,000 discovery drafts best of 3, plus up to 4 x 300 confirmation drafts; J009 ran about 1,400 drafts an hour)"
+  },
+  {
    "publicTitle": "Regret gate truth grading",
    "publicEst": "~one night",
-   "id": "J035",
+   "id": "J040",
    "title": "Evaluator gate 2: the decision set and its full-game truth tables (D354), resumable",
    "cpu": "heavy",
    "est": "one night: ~300 decisions x ~5 options x 200 rounds x 0.6 (racing) = ~180k full-game playouts at 0.5-1.0 s = 25-50 core-hours, 4-7 h on 7 JVMs; the screen about 10 min"
@@ -183,7 +167,7 @@
   {
    "publicTitle": "Regret gate scoring",
    "publicEst": "~30 min",
-   "id": "J036",
+   "id": "J041",
    "title": "Evaluator gate 2: rank the set with the hand leaf and the evaluator at the live horizon, and score the regret (D354)",
    "cpu": "heavy",
    "est": "~20-40 min (about 40k end-of-turn playouts at ~0.1 s on 7 JVMs, plus JVM boots)"
@@ -191,10 +175,42 @@
   {
    "publicTitle": "Evaluator SPRT",
    "publicEst": "one to two nights",
-   "id": "J037",
+   "id": "J042",
    "title": "Evaluator gate 3: SPRT search-v1-fixed3 with the evaluator's leaves vs search-v1-fixed3 (D354)",
    "cpu": "heavy",
    "est": "one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops earlier)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J043",
+   "title": "(was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
+   "cpu": "heavy",
+   "est": "one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops well before)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J044",
+   "title": "(was J024, earlier J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference",
+   "cpu": "heavy",
+   "est": "about one night (up to 1,500 games; the 20-vs-40 Elo test usually stops sooner)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J045",
+   "title": "(was J025, earlier J018) Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin",
+   "cpu": "heavy",
+   "est": "one to two nights (up to 2,400 games)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J046",
+   "title": "(was J026, earlier J022; retry of J015; hard after J029: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
+   "cpu": "heavy",
+   "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
   }
  ],
  "waiting": [],
