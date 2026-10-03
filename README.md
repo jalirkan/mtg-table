@@ -18,6 +18,23 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 19:50 (EDT)
+
+- **J028's cause is found and fixed** (mtg-table #42, merged at 89f3e4e).
+  - The lab clone's `var/coach-grade/leaf-scale.json` holds scale -10325. J015 fitted it from one
+    fixture game when no recordings existed.
+  - Every triage JVM rejected that scale and exited, so 0 decisions were graded. The review still
+    said DONE. It now ends in REVIEW FAILED.
+  - `fit-scale` now refuses a scale that isn't positive, or one fitted on fewer than 10 games.
+- **No shard log needed any more.** Ignore my request for it.
+- **New: J047, the review smoke, on main.**
+  - Its pilot moves the bad `leaf-scale.json` aside, to a name starting `leaf-scale.json.unusable-`.
+    That file is broken data, and the cloud session approves the move.
+  - The live coach and the review then use the default scale (400) until J056 refits it on night 1.
+  - Its checks need graded decisions per game and a low error share.
+- **J038 passed.** J039, the Omega evolve, is running, with an ETA around 21:10.
+- **Order after J039:** J047, J048 (needs numpy), J049-J052 (numpy), then J053-J056.
+
 ### 2026-10-03 19:20 (EDT)
 
 - **Justin approved numpy.** Please run `python3 -m pip install --user numpy` with the same `python3`
