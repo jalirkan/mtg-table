@@ -15230,12 +15230,28 @@ to the public branch (one commit, replaced, is the value; the history is on `pc-
 **Amended 2026-10-03 (branch `c/status-fresh`, with ForgeCoach's `c/lab-fresh`): a fresher
 `#lab` page without loading the PC.**
 
-- **The public copy has its own clock.** It goes to `lab-status` on a state change, every
-  minute while a job runs if what it says changed (`updated`, `elapsed`, the rate and the
-  ETA aside), and every five minutes otherwise (`publicBusyEveryMs`, `publicIdleEveryMs`;
-  `--public-busy-s`, `--public-idle-s`). It is still one parentless commit, replaced, and a
-  failed push backs off as `pc-results` does, on its own count. `pc-results` keeps 4.5
+- **The public copy has its own clock, and is at most about two minutes old** (Justin's
+  LAB-OPERATIONS.md, rule 5). It goes to `lab-status` at once on a state change; when what it
+  says changed (`updated`, `heartbeat`, `elapsed`, the rate and the ETA aside), at most once
+  a minute; and unchanged, every two minutes (`publicEveryMs`, `publicHeartbeatMs`;
+  `--public-every-s`, `--public-heartbeat-s`). It is still one parentless commit, replaced,
+  and a failed push backs off as `pc-results` does, on its own count. `pc-results` keeps 4.5
   minutes.
+- **It says RUNNING or IDLE, and why.** Schema 1 gains `heartbeat` (the loop's last tick),
+  `state`, `idleSince` and `idleReason` (`queue empty`, `blocked after J###`, `paused`,
+  `memory backoff`, `needs a check`, `job file needs fixing`, `waiting`; Justin at the table
+  is `held`, as the review ruled no presence is published). The page shows IDLE in red after
+  ten idle minutes, and warns when the heartbeat is over five minutes old.
+- **A running job shows its own numbers, live** (Justin's request for J020, the queue's first
+  night). Its `metrics:` values as of the minute's read (the one `abort:` already makes) go
+  out as `live: {name: number}`, headline keys first, with drafts and games per hour; plus
+  `memGb` and, for a cube-lab queue, per-cube progress. `cubelab-queue` gains per-cube
+  drafts done and planned, games, draws, timeouts, bridge drafts and share, mean turns and
+  output bytes; `drafts.jsonl` is read incrementally on the minute tick, memoised by size and
+  mtime. Public keys must be metric-shaped (no `cubes.` segment) and values numbers;
+  `liveHeadline` names the headline keys among them. Cube ids are published only on `public_cubes: yes`,
+  like `public_title`, since D337's review held that a title naming a cube is published only
+  on purpose.
 - **The local server serves the public copies only**, `/public-status.json` (and the old
   `/status.json`) and `/public-ladder.json`, on 127.0.0.1 only (`--http-host` is gone). CORS
   names `https://jalirkan.github.io` and localhost dev origins, never `*`, and refuses other

@@ -24,6 +24,7 @@
 //   control: yes | no                NEW: the job's tools read the pool control file (default: detected)
 //   public_title: Search AI bench    NEW: the title the PUBLIC status page may show (else the id only)
 //   public_est: ~3 h                 NEW: the estimate it may show (letters, digits, space , : ; ( ) + % ~ # & - only)
+//   public_cubes: yes                NEW: the public page may name the cube ids in its per-cube progress (else "cube 1", ...)
 //
 //   ## Pilot      fenced bash blocks run in order; `metrics:` and `check:` lines; `progress:`
 //   ## Commands   fenced bash blocks; `metrics:`, `check:` (final checks), `progress:`
@@ -82,6 +83,8 @@ export interface JobFile {
   /** The public copy's title and estimate, opted in; null: the id only. */
   publicTitle: string | null;
   publicEst: string | null;
+  /** `public_cubes: yes`: the cube ids may appear in the public per-cube progress. */
+  publicCubes: boolean;
   /** `control:` as written: true / false, or null (the runner detects it after prepare). */
   control: boolean | null;
   pilot: Section | null;
@@ -231,6 +234,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   for (const k of ['public_title', 'public_est']) {
     if (header[k] !== undefined && !PUBLIC_TEXT.test(header[k] as string)) errors.push(`${k}: "${header[k]}" may hold only letters, digits, spaces and , : ; ( ) + % ~ # & - (80 at most)`);
   }
+  if (header.public_cubes !== undefined && !/^(yes|no)$/i.test(header.public_cubes.trim())) errors.push(`public_cubes: "${header.public_cubes}" is not yes or no`);
   if (header.control !== undefined && !/^(yes|no)$/i.test(header.control.trim())) errors.push(`control: "${header.control}" is not yes or no`);
   const pilot = sections.get('pilot') ?? null;
   const commands = sections.get('commands') ?? null;
@@ -254,6 +258,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     timeoutSec,
     publicTitle: header.public_title !== undefined && PUBLIC_TEXT.test(header.public_title) ? header.public_title : null,
     publicEst: header.public_est !== undefined && PUBLIC_TEXT.test(header.public_est) ? header.public_est : null,
+    publicCubes: /^yes$/i.test((header.public_cubes ?? '').trim()),
     control: header.control === undefined ? null : /^yes$/i.test(header.control.trim()),
     pilot,
     commands,

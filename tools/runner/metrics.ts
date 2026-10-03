@@ -9,7 +9,8 @@
 //
 //   aibench <dir|glob>...     ai-bench run folders (shard-*.jsonl; shard-*.log for copier errors)
 //   cubelab <dir|glob>...     cube-lab run folders (drafts.jsonl, run.json), nested folders included
-//   cubelab-queue <root> [night N]   the overnight queue (tools/cubelab.sh queue): its night plans and run folders
+//   cubelab-queue <root> [night N]   the overnight queue (tools/cubelab.sh queue): its night plans and run folders,
+//                             per cube (`cubes.<id>.done`, `cubes.<id>.planned`) and the bridge share
 //   evolve <dir>              a cube-lab evolve folder (evolve.json, gen-*/run/drafts.jsonl)
 //   coachbench <file|glob>    a ForgeCoach coach-bench result .json (the newest match of a glob)
 //   ladder <dir>              the AI ladder's results/*.jsonl
@@ -132,8 +133,42 @@ export function aibench(cwd: string, args: string[]): Flat {
 
 // ---------------------------------------------------------------- cube lab
 
-interface GameRow { ms?: number; turns?: number; cpuMs?: number; timeout?: boolean; error?: string | null; recorded?: { bytes?: number; errors?: number } }
-interface DraftLine { seed?: number; match?: { games?: GameRow[]; engineError?: string } }
+interface GameRow { ms?: number; turns?: number; cpuMs?: number; timeout?: boolean; error?: string | null; winner?: string; recorded?: { bytes?: number; errors?: number } }
+interface DraftLine { seed?: number; bridge?: unknown; match?: { games?: GameRow[]; engineError?: string } }
+
+/**
+ * drafts.jsonl grows all night: each file is read INCREMENTALLY, from the end of its last
+ * complete line read before, and memoised by size and mtime.  A file that shrank or was
+ * replaced (its size below the offset, a different inode, or rewritten at the same size) is
+ * read again from the top.  The runner calls this on its minute metrics tick only.
+ */
+const draftCache = new Map<string, { ino: number; offset: number; size: number; mtimeMs: number; lines: DraftLine[] }>();
+
+export function readDrafts(file: string): DraftLine[] {
+  let st: fs.Stats;
+  try { st = fs.statSync(file); } catch { draftCache.delete(file); return []; }
+  let c = draftCache.get(file);
+  if (c && c.ino === st.ino && c.size === st.size && c.mtimeMs === st.mtimeMs) return c.lines;
+  if (!c || c.ino !== st.ino || st.size < c.offset || (st.size === c.size && st.mtimeMs !== c.mtimeMs)) c = { ino: st.ino, offset: 0, size: 0, mtimeMs: 0, lines: [] };
+  const len = st.size - c.offset;
+  if (len > 0) {
+    const buf = Buffer.alloc(len);
+    const fd = fs.openSync(file, 'r');
+    try { fs.readSync(fd, buf, 0, len, c.offset); } finally { fs.closeSync(fd); }
+    const end = buf.lastIndexOf(0x0a);
+    if (end >= 0) {
+      for (const l of buf.subarray(0, end).toString('utf8').split('\n')) {
+        if (!l.trim()) continue;
+        try { c.lines.push(JSON.parse(l) as DraftLine); } catch { /* a line we cannot read is not a draft */ }
+      }
+      c.offset += end + 1;
+    }
+  }
+  c.size = st.size;
+  c.mtimeMs = st.mtimeMs;
+  draftCache.set(file, c);
+  return c.lines;
+}
 
 function draftFiles(cwd: string, args: string[]): string[] {
   const out: string[] = [];
@@ -150,7 +185,7 @@ function draftFiles(cwd: string, args: string[]): string[] {
 }
 
 export function cubelabOf(files: string[]): Flat {
-  const drafts = files.flatMap((f) => jsonLines(f) as DraftLine[]);
+  const drafts = files.flatMap((f) => readDrafts(f));
   const games = drafts.flatMap((d) => d.match?.games ?? []);
   const ms = games.map((g) => numOr(g.ms));
   const turns = sum(games.map((g) => numOr(g.turns)));
@@ -170,6 +205,11 @@ export function cubelabOf(files: string[]): Flat {
     recorded_games: rec.length,
     recorded_errors: sum(rec.map((g) => numOr(g.recorded?.errors))),
     recorded_bytes_per_game: rec.length ? Math.round(sum(rec.map((g) => numOr(g.recorded?.bytes))) / rec.length) : 0,
+    draws: games.filter((g) => g.winner === 'draw').length,
+    mean_turns: games.length ? r4(turns / games.length) : 0,
+    bridge_drafts: drafts.filter((d) => d.bridge).length,
+    // The output on disk, cheaply: the drafts.jsonl files and the recordings their lines say they wrote.
+    output_bytes: sum(files.map((f) => { try { return fs.statSync(f).size; } catch { return 0; } })) + sum(rec.map((g) => numOr(g.recorded?.bytes))),
   };
 }
 
@@ -182,8 +222,10 @@ export function cubelabQueue(cwd: string, args: string[]): Flat {
   const root = path.resolve(cwd, args[0] ?? 'var/cubelab/queue');
   const ni = args.indexOf('night');
   const nights = ni >= 0 ? [Number(args[ni + 1])] : expandGlob(root, 'night-*.json').map((f) => Number(/night-(\d+)\.json$/.exec(f)?.[1])).filter(Number.isFinite);
-  let planned = 0, done = 0;
+  let planned = 0, done = 0, bridgePlanned = 0, bridgeDone = 0;
   const files = new Set<string>();
+  // Per cube (a normal chunk's key is `normal/<cube>`; a bridge pair's `bridge/<a>+<b>` counts as bridge).
+  const perCube = new Map<string, { done: number; planned: number }>();
   for (const n of nights) {
     let plan: { chunks?: Array<{ key: string; seed: number; drafts: number }> };
     try { plan = JSON.parse(fs.readFileSync(path.join(root, `night-${n}.json`), 'utf8')) as typeof plan; } catch { continue; }
@@ -191,11 +233,31 @@ export function cubelabQueue(cwd: string, args: string[]): Flat {
       planned += c.drafts;
       const f = path.join(root, c.key, 'drafts.jsonl');
       files.add(f);
-      const seeds = new Set((jsonLines(f) as DraftLine[]).map((d) => d.seed));
-      for (let s = c.seed; s < c.seed + c.drafts; s++) if (seeds.has(s)) done++;
+      const seeds = new Set(readDrafts(f).map((d) => d.seed));
+      let got = 0;
+      for (let s = c.seed; s < c.seed + c.drafts; s++) if (seeds.has(s)) got++;
+      done += got;
+      const cube = /^normal\/([a-z0-9-]{1,40})$/.exec(c.key)?.[1];
+      if (cube) {
+        const pc = perCube.get(cube) ?? { done: 0, planned: 0 };
+        pc.done += got;
+        pc.planned += c.drafts;
+        perCube.set(cube, pc);
+      } else if (c.key.startsWith('bridge/')) {
+        bridgeDone += got;
+        bridgePlanned += c.drafts;
+      }
     }
   }
-  return { ...cubelabOf([...files].filter((f) => fs.existsSync(f))), planned_drafts: planned, night_drafts_done: done, nights: nights.length };
+  const out: Flat = {
+    ...cubelabOf([...files].filter((f) => fs.existsSync(f))), planned_drafts: planned, night_drafts_done: done, nights: nights.length,
+    bridge_drafts_done: bridgeDone, bridge_drafts_planned: bridgePlanned, bridge_share: done ? r4(bridgeDone / done) : 0,
+  };
+  for (const [cube, pc] of [...perCube].sort(([a], [b]) => a.localeCompare(b))) {
+    out[`cubes.${cube}.done`] = pc.done;
+    out[`cubes.${cube}.planned`] = pc.planned;
+  }
+  return out;
 }
 
 export function evolve(cwd: string, args: string[]): Flat {

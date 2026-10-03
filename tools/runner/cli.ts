@@ -19,7 +19,7 @@
 // Options: --lab-root DIR (~/code/lab)  --state DIR (<runner>/var/runner)
 //   --home-mtg-table DIR --home-forgecoach DIR (Justin's checkouts, ~/code/<repo>)
 //   --reserve-gb N (7)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
-//   --public-busy-s N (60: the public copy while a job runs, when it changed)  --public-idle-s N (300)
+//   --public-every-s N (60: the public copy when it changed, at most)  --public-heartbeat-s N (120: unchanged)
 //   --bridge-port N (8642)  --dry-run (once/daemon: same as plan)  --no-push (write nothing to git remotes)
 
 import { spawnSync } from 'node:child_process';
@@ -83,8 +83,8 @@ function config(f: Map<string, string>): RunnerConfig {
     bridgePort: Number(f.get('bridge-port') ?? 8642),
     budget: { ...DEFAULT_BUDGET, reserveGb: Number(f.get('reserve-gb') ?? DEFAULT_BUDGET.reserveGb) },
     publicStatus: (f.get('public-status') ?? 'on') !== 'off',
-    publicBusyEveryMs: seconds(f.get('public-busy-s')) ?? DEFAULT_CONFIG.publicBusyEveryMs,
-    publicIdleEveryMs: seconds(f.get('public-idle-s')) ?? DEFAULT_CONFIG.publicIdleEveryMs,
+    publicEveryMs: seconds(f.get('public-every-s')) ?? DEFAULT_CONFIG.publicEveryMs,
+    publicHeartbeatMs: seconds(f.get('public-heartbeat-s')) ?? DEFAULT_CONFIG.publicHeartbeatMs,
     commit,
     push: !f.has('no-push'),
   };
@@ -175,7 +175,7 @@ function install(cfg: RunnerConfig, f: Map<string, string>): number {
   const b = budget(m, cfg.budget);
   const node = path.dirname(process.execPath);
   const args = [`--lab-root ${cfg.labRoot}`, `--reserve-gb ${cfg.budget.reserveGb}`, `--public-status ${cfg.publicStatus ? 'on' : 'off'}`,
-    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-busy-s', 'public-idle-s'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
+    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-every-s', 'public-heartbeat-s'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
     ...(cfg.homeRepos.ForgeCoach ? [`--home-forgecoach ${cfg.homeRepos.ForgeCoach}`] : [])];
   write(path.join(unitDir, SLICE), sliceUnit(b));
   write(path.join(unitDir, SERVICE), serviceUnit({ runnerDir, node, args }));

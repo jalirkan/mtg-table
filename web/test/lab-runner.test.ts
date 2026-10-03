@@ -39,12 +39,12 @@ import { decide, DEFAULT_BACKOFF, initialBackoff, parsePressure, retryCap, type 
 import { controlReader, parseControl, readControl, writeControl } from '../../tools/runner/control.ts';
 import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
-import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expandGlob, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
+import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expandGlob, progressOf, rateAndEta, readDrafts } from '../../tools/runner/metrics.ts';
 import { DEFAULT_CONFIG, publicSignature, Runner, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, schedule, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
-import { isoLocal, PUBLIC_TEXT, REASONS, sanitise, type StatusDoc } from '../../tools/runner/statusjson.ts';
+import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
 import { establishedOn, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
 import { runPool, type MatchJob } from '../../tools/cubelab/engine.ts';
@@ -326,6 +326,75 @@ test('metrics: cube-lab runs and the overnight queue', () => {
   const qq = cubelabQueue(d, ['var/cubelab/queue', 'night', '1']);
   assert.deepEqual([qq.planned_drafts, qq.night_drafts_done, qq.drafts], [5, 3, 4]);
   assert.deepEqual(progressOf(d, 'cubelab-queue', ['var/cubelab/queue', 'night', '1'], null), { done: 3, total: 5, unit: 'drafts' });
+});
+
+test('metrics: the queue per cube, bridge share, draws, turns, timeouts, recordings and output bytes; drafts.jsonl read incrementally', () => {
+  const d = tmp('clq');
+  const q = path.join(d, 'q');
+  const g = (extra: object = {}) => ({ ms: 1000, turns: 8, timeout: false, error: null, winner: 'A', ...extra });
+  const draft = (seed: number, games: object[], extra: object = {}) => ({ seed, match: { games }, ...extra });
+  fs.mkdirSync(q, { recursive: true });
+  fs.writeFileSync(path.join(q, 'night-1.json'), JSON.stringify({ chunks: [
+    { key: 'normal/omega', seed: 100, drafts: 4 }, { key: 'normal/fair-fight', seed: 200, drafts: 2 }, { key: 'bridge/omega+pauper', seed: 300, drafts: 2 },
+  ] }));
+  writeLines(path.join(q, 'normal/omega/drafts.jsonl'), [draft(100, [g(), g({ winner: 'draw', turns: 12 })]), draft(101, [g({ timeout: true, recorded: { bytes: 1000, errors: 1, frames: 3, dir: 'x' } })])]);
+  writeLines(path.join(q, 'normal/fair-fight/drafts.jsonl'), [draft(200, [g()])], '{"seed":201,');
+  writeLines(path.join(q, 'bridge/omega+pauper/drafts.jsonl'), [draft(300, [g()], { bridge: { sources: ['omega', 'pauper'] } })]);
+  const r = cubelabQueue(d, ['q', 'night', '1']);
+  assert.equal(r['cubes.omega.done'], 2);
+  assert.equal(r['cubes.omega.planned'], 4);
+  assert.equal(r['cubes.fair-fight.done'], 1, 'a torn last line is not a draft');
+  assert.equal(r['cubes.fair-fight.planned'], 2);
+  assert.equal(r['cubes.omega+pauper.done'], undefined, 'a bridge pair is not a cube');
+  assert.deepEqual([r.bridge_drafts_done, r.bridge_drafts_planned, r.bridge_share, r.bridge_drafts], [1, 2, 0.25, 1]);
+  assert.deepEqual([r.games, r.draws, r.timeouts, r.mean_turns, r.recorded_games, r.recorded_errors], [5, 1, 1, 8.8, 1, 1]);
+  const jsonl = ['normal/omega', 'normal/fair-fight', 'bridge/omega+pauper'].map((k) => fs.statSync(path.join(q, k, 'drafts.jsonl')).size);
+  assert.equal(r.output_bytes, jsonl.reduce((a, b) => a + b) + 1000);
+  // The torn line completes and a new one lands: only the new bytes are read.
+  const ff = path.join(q, 'normal/fair-fight/drafts.jsonl');
+  fs.appendFileSync(ff, `"match":{"games":[]}}\n${JSON.stringify(draft(999, []))}\n`);
+  const before = readDrafts(ff);
+  assert.equal(before.length, 3);
+  assert.equal(readDrafts(ff), before, 'unchanged size: memoised');
+  assert.equal(cubelabQueue(d, ['q', 'night', '1'])['cubes.fair-fight.done'], 2);
+  // Rewritten smaller (a fresh run): read again from the top.
+  writeLines(ff, [draft(200, [])]);
+  assert.equal(readDrafts(ff).length, 1);
+  // Rewritten at the same size (a new mtime): read again from the top too.
+  const same = JSON.stringify(draft(201, []));
+  fs.writeFileSync(ff, `${same}\n`);
+  const t = new Date(Date.now() + 5000);
+  fs.utimesSync(ff, t, t);
+  assert.equal(readDrafts(ff)[0]!.seed, 201);
+});
+
+test('live numbers: metrics split into per-cube progress and numbers, headline first; the public copy keeps safe keys and numbers only; cube ids only on opt-in', () => {
+  const { live, cubes, liveHeadline } = liveOf({ 'q.games': 10, 'q.drafts': 4, 'q.cubes.omega.done': 2, 'q.cubes.omega.planned': 4, 'q.cubes.fair-fight.done': 1, 'q.cubes.fair-fight.planned': 2, ok: true, 'q.engine_errors': 0 }, ['q.engine_errors', 'missing']);
+  assert.deepEqual(Object.keys(live), ['q.engine_errors', 'q.drafts', 'q.games']);
+  assert.deepEqual(liveHeadline, ['q.engine_errors']);
+  assert.deepEqual(cubes, [{ id: 'omega', done: 2, planned: 4 }, { id: 'fair-fight', done: 1, planned: 2 }]);
+  assert.equal(Object.keys(liveOf(Object.fromEntries(Array.from({ length: 60 }, (_, i) => [`m${i}`, i]))).live).length, LIVE_MAX);
+  const job = (extra: Partial<RunningJob>): RunningJob => ({ id: 'J020', title: 'x', cpu: 'heavy', phase: 'commands 1/1', started: null, elapsed: 0, done: 1, total: 2, unit: 'drafts', ratePerHour: null, eta: null, workers: 3, workersMax: 5, errors: 0, paused: false, dataUpdated: null, pressureEvents: [], ...extra });
+  const base: StatusDoc = { schema: 1, updated: '2026-10-03T10:00:00-04:00', paused: false, host: { load1: 0, memUsedGb: 0, memTotalGb: 0, swapUsedMb: 0, pressure: 0, cpus: 0, budgetGb: 0 }, running: [], queue: [], waiting: [], finished: [] };
+  const live2 = { 'q.drafts': 4, 'q.drafts_per_h': 12.34567, 'Bad Key': 1, 'a/b': 2, 'q.x': 'text' as unknown as number, 'q.inf': Infinity, 'a.b.c.d': 3, 'cubes.omega.done': 2, 'q.cubes.x': 1 };
+  const pub = sanitise({ ...base, running: [job({ memGb: 7.25, live: live2, liveHeadline: ['q.drafts', 'Bad Key', 'q.gone', 7 as unknown as string], cubes, detail: 'lab-J020-run1' })] }).running[0]!;
+  assert.deepEqual(pub.live, { 'q.drafts': 4, 'q.drafts_per_h': 12.346 }, 'safe keys, numbers only, no cube id in a key');
+  assert.deepEqual(pub.liveHeadline, ['q.drafts'], 'headline names only for published keys');
+  assert.ok(Object.values(pub.live ?? {}).every((v) => typeof v === 'number' && Number.isFinite(v)));
+  assert.deepEqual(pub.cubes, [{ id: 'cube 1', done: 2, planned: 4 }, { id: 'cube 2', done: 1, planned: 2 }], 'no opt-in: anonymous');
+  assert.equal(pub.memGb, 7.25);
+  assert.equal(pub.publicCubes, undefined);
+  const named = sanitise({ ...base, running: [job({ cubes: [...cubes, { id: '../etc', done: 1, planned: 1 }, { id: 'pauper', done: 'x' as unknown as number, planned: 1 }], publicCubes: true })] }).running[0]!;
+  assert.deepEqual(named.cubes, [{ id: 'omega', done: 2, planned: 4 }, { id: 'fair-fight', done: 1, planned: 2 }, { id: 'cube 3', done: 1, planned: 1 }]);
+  // An older private doc without them.
+  assert.deepEqual(sanitise({ ...base, running: [job({})] }).running[0]!.live, {});
+});
+
+test('job file: public_cubes opts in, yes or no', () => {
+  const head = (x: string) => parseJobFile('J099-x.md', `id: J099\ntitle: t\ncpu: light\n${x}\n`, parse);
+  assert.equal(head('public_cubes: yes').publicCubes, true);
+  assert.equal(head('').publicCubes, false);
+  assert.match(head('public_cubes: maybe').errors.join(), /public_cubes/);
 });
 
 test('metrics: a coach-bench result file', () => {
@@ -1287,7 +1356,7 @@ function movableLoad(w: World): (load: number) => void {
   return (x: number) => { load = x; };
 }
 
-test('public copy: every minute while a job runs and its content changed; five minutes when unchanged or idle; a failed push backs off', () => {
+test('public copy: at most every minute when its content changed; every two minutes unchanged (the heartbeat); a failed push backs off', () => {
   const { w, r } = heldAtRun1('J060');
   const setLoad = movableLoad(w);
   const pushedAt = (): number | undefined => r.p.lastPublic;
@@ -1303,13 +1372,17 @@ test('public copy: every minute while a job runs and its content changed; five m
   assert.equal(JSON.parse(show(w.fc, 'lab-status:status.json')).host.load1, 2);
   assert.equal(git(w.fc, 'rev-list', '--count', 'lab-status'), '1', 'one commit, replaced');
   const t1 = w.sys.t;
-  // Nothing changed but the clock: no push at a minute, nor at four.
+  // Nothing changed but the clock: no push at a minute, nor just under two.
   w.sys.t += 61_000; r.tick();
-  w.sys.t += 3 * 60_000; r.tick();
+  w.sys.t += 58_000; r.tick();
   assert.equal(pushedAt(), t1);
-  // At five minutes, a push anyway: the page sees the runner is alive.
-  w.sys.t += 60_000; r.tick();
+  // At two minutes, a push anyway: the heartbeat is never older than that.
+  w.sys.t += 1_000; r.tick();
   assert.equal(pushedAt(), w.sys.t);
+  const pub = JSON.parse(show(w.fc, 'lab-status:status.json')) as StatusDoc;
+  assert.equal(pub.heartbeat, isoLocal(w.sys.t));
+  assert.equal(pub.state, 'running');
+  assert.equal(pub.idleReason, null);
   // A failed push backs off (30 s, then 1 minute ...), and is not retried every tick.
   w.sys.gitFails = new Set(['push']);
   w.sys.t += 61_000; setLoad(3); r.tick();
@@ -1325,20 +1398,53 @@ test('public copy: every minute while a job runs and its content changed; five m
   assert.equal(JSON.parse(show(w.fc, 'lab-status:status.json')).host.load1, 4);
 });
 
-test('public copy: idle, a change waits for the five-minute push; the intervals are config', () => {
+test('public copy: idle says IDLE, since when and why; a change goes out within a minute; the intervals are config', () => {
   const w = world({ 'README.txt': 'no jobs\n' });
   const setLoad = movableLoad(w);
-  const r = new Runner({ ...w.cfg, publicIdleEveryMs: 2 * 60_000 }, w.sys);
+  const r = new Runner({ ...w.cfg, publicEveryMs: 30_000, publicHeartbeatMs: 10 * 60_000 }, w.sys);
   r.reconcile();
   r.tick();
   const t0 = r.p.lastPublic;
   assert.equal(t0, w.sys.t);
-  w.sys.t += 61_000; setLoad(5); r.tick();
-  assert.equal(r.p.lastPublic, t0, 'idle: no minute pushes');
-  w.sys.t += 60_000; r.tick();
-  assert.equal(r.p.lastPublic, w.sys.t, 'the configured idle interval');
-  assert.equal(DEFAULT_CONFIG.publicBusyEveryMs, 60_000);
-  assert.equal(DEFAULT_CONFIG.publicIdleEveryMs, 5 * 60_000);
+  const pub = JSON.parse(show(w.fc, 'lab-status:status.json')) as StatusDoc;
+  assert.equal(pub.state, 'idle');
+  assert.equal(pub.idleReason, 'queue empty');
+  assert.equal(pub.idleSince, isoLocal(t0!));
+  w.sys.t += 20_000; setLoad(5); r.tick();
+  assert.equal(r.p.lastPublic, t0, 'under the configured 30 s');
+  w.sys.t += 10_000; r.tick();
+  assert.equal(r.p.lastPublic, w.sys.t, 'the configured 30 s');
+  w.sys.t += 9 * 60_000; r.tick();
+  assert.equal(r.p.lastPublic, w.sys.t - 9 * 60_000, 'unchanged: waits for the configured heartbeat');
+  // idleSince holds across ticks.
+  assert.equal(r.statusDoc().idleSince, isoLocal(t0!));
+  assert.equal(DEFAULT_CONFIG.publicEveryMs, 60_000);
+  assert.equal(DEFAULT_CONFIG.publicHeartbeatMs, 2 * 60_000);
+});
+
+test('idle reasons: paused, Justin (held in public), memory, blocked after J###, needs a check, a broken file, queue empty', () => {
+  const b = (code: string, reason = '') => ({ code, reason });
+  assert.equal(idleReasonOf([], false), 'queue empty');
+  assert.equal(idleReasonOf([b('after', 'after J003')], true), 'paused');
+  assert.equal(idleReasonOf([b('after', 'after J003'), b('playing', 'Justin is playing')], false), 'Justin playing');
+  assert.equal(idleReasonOf([b('after', 'after J003'), b('memory', 'memory; retry after x')], false), 'memory backoff');
+  assert.equal(idleReasonOf([b('needs-check'), b('after', 'after J003, J004')], false), 'blocked after J003');
+  assert.equal(idleReasonOf([b('needs-check')], false), 'needs a check');
+  assert.equal(idleReasonOf([b('invalid')], false), 'job file needs fixing');
+  assert.equal(idleReasonOf([b('queued')], false), 'waiting');
+  const base: StatusDoc = { schema: 1, updated: '2026-10-03T10:00:00-04:00', paused: false, host: { load1: 0, memUsedGb: 0, memTotalGb: 0, swapUsedMb: 0, pressure: 0, cpus: 0, budgetGb: 0 }, running: [], queue: [], waiting: [], finished: [] };
+  const idle = (idleReason: string) => sanitise({ ...base, heartbeat: '2026-10-03T10:00:05-04:00', state: 'idle', idleSince: '2026-10-03T09:00:00-04:00', idleReason });
+  assert.equal(idle('Justin playing').idleReason, 'held', 'no presence in public');
+  assert.equal(idle('blocked after J012').idleReason, 'blocked after J012');
+  assert.equal(idle('blocked after /home/x').idleReason, 'waiting');
+  assert.equal(idle('free text with a card name').idleReason, 'waiting');
+  assert.equal(idle('queue empty').heartbeat, '2026-10-03T10:00:05-04:00');
+  assert.equal(idle('queue empty').idleSince, '2026-10-03T09:00:00-04:00');
+  // An older private doc without the fields: derived, heartbeat from updated.
+  const old = sanitise(base);
+  assert.equal(old.state, 'idle');
+  assert.equal(old.heartbeat, base.updated);
+  assert.equal(old.idleReason, null);
 });
 
 test('public copy: its signature ignores the clock (updated, elapsed, rate, ETA) and nothing else', () => {
@@ -1421,4 +1527,20 @@ test('local server: binds 127.0.0.1 and answers over HTTP with the same headers'
   } finally {
     await new Promise((res) => server.close(res));
   }
+});
+
+test('runner: a running job publishes its live metrics (headline first), its memory and its step', () => {
+  const { w, r } = heldAtRun1('J061');
+  w.sys.t += 61_000;
+  r.tick();
+  const pub = JSON.parse(show(w.fc, 'lab-status:status.json')) as StatusDoc;
+  const job = pub.running[0]!;
+  assert.equal(job.id, 'J061');
+  assert.equal(job.phase, 'commands 1/1');
+  assert.equal(Object.keys(job.live ?? {})[0], 'n');
+  assert.equal(job.live?.n, 3);
+  assert.equal(typeof job.live?.elapsed_s, 'number');
+  assert.equal(job.memGb, 2);
+  assert.deepEqual(job.cubes, []);
+  assert.ok(!JSON.stringify(job).includes('lab-J061'), 'no unit name');
 });
