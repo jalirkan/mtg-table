@@ -150,4 +150,10 @@ java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.eval.EvalSelfTest "$RE
 # the engine half is tools/coach-grade.sh selftest (not in the build).
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.grade.GradeSelfTest
 
+# Unit-check the AI seats' decision records (D347): the token grammar the
+# redaction checker also holds, the attack and block spellings agreeing with the
+# grader's, the JSON body, and a token that could carry a card name refused
+# before it is written.  No engine.
+java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.ai.DecisionSelfTest
+
 echo "build OK"

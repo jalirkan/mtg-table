@@ -140,6 +140,12 @@ public final class GameLog implements AutoCloseable {
 
     private int seqS2c;
     private int seqC2s;
+    private int seqAi;
+    /** Frames produced so far (header excluded): the next frame's index in a reader's {@code frames[]}. */
+    private int framesProduced;
+    /** The last {@code state} frame's s2c seq and frame index, -1 before the first (D347). */
+    private int lastStateSeq = -1;
+    private int lastStateIndex = -1;
     private boolean headerWritten;
 
     /** Written under this object's monitor in {@link #close()}; read from everywhere. */
@@ -233,6 +239,23 @@ public final class GameLog implements AutoCloseable {
         return frame("c2s", ++seqC2s, type, body);
     }
 
+    /**
+     * Append a recorder-only line (protocol amendment M55, D347): {@code dir}
+     * {@code "ai"}, its own {@code seq} series, never on the wire.  Today one
+     * type, {@code decision} (an AI seat's decision record), and one summary,
+     * {@code decisions}, written into that seat's own recording only.
+     *
+     * @return the {@code seq} assigned
+     */
+    public synchronized int ai(final String type, final String body) {
+        return frame("ai", ++seqAi, type, body);
+    }
+
+    /** {@code {frame index, s2c seq}} of the last {@code state} frame, {@code {-1, -1}} before the first. */
+    public synchronized int[] lastState() {
+        return new int[] {lastStateIndex, lastStateSeq};
+    }
+
     private int frame(final String dir, final int seq, final String type, final String body) {
         if (body == null || body.isEmpty() || body.charAt(0) != '{') {
             // docs/protocol.md section 1: "body" is always an object, never a
@@ -249,6 +272,11 @@ public final class GameLog implements AutoCloseable {
         Json.quote(sb, type);
         sb.append(",\"body\":").append(body).append('}');
         enqueue(sb.toString());
+        if ("s2c".equals(dir) && "state".equals(type)) {
+            lastStateSeq = seq;
+            lastStateIndex = framesProduced;
+        }
+        framesProduced++;
         return seq;
     }
 

@@ -63,6 +63,7 @@ import forge.util.MyRandom;
 import mtgtable.Bootstrap;
 import mtgtable.Config;
 import mtgtable.Json;
+import mtgtable.SeatRecorder;
 import mtgtable.ai.OutletPolicy;
 import mtgtable.ai.PolicyControllerAi;
 import mtgtable.ai.PolicyLobbyPlayerAi;
@@ -74,7 +75,8 @@ import mtgtable.ai.SearchConfig;
  * The Java half of {@code tools/ai-bench.sh} (D309): Forge AI against Forge AI
  * on fixed decks, many games, one JSON line per game; and the report over those
  * lines.  A measuring tool beside the game, like {@code tools/audit-deck/}: it
- * opens no socket, emits no protocol, records no frame log, and boots Forge
+ * opens no socket, emits no protocol, records no frame log unless asked
+ * ({@code --record-all}, {@link BenchRecording}, D347), and boots Forge
  * exactly as every mtg-table process does ({@link Bootstrap}).  Every AI seat is
  * {@link Bootstrap#createAiSeat}.
  *
@@ -242,6 +244,10 @@ public final class AiBench {
                 shards = Integer.parseInt(p[1]);
                 break;
             }
+            // D347: record the games played, both seats (BenchRecording).
+            case "--record-all": BenchRecording.configure(1, argv); break;
+            case "--record-every": BenchRecording.configure(Integer.parseInt(argv[++i]), argv); break;
+            case "--record-dir": BenchRecording.dir = new File(argv[++i]); break;
             default: throw new IllegalArgumentException("unknown flag " + argv[i]);
             }
         }
@@ -482,16 +488,25 @@ public final class AiBench {
         rules.setGamesPerMatch(1);
         final Match match = new Match(rules, aSeat0 ? List.of(ra, rb) : List.of(rb, ra), "ai-bench");
         final Game game = match.createGame();
+        final BenchRecording rec = BenchRecording.start(game, pi, g, gameSeed, a, b, aSeat0, aDeckPath, bDeckPath,
+                decks);
         final CountDownLatch done = new CountDownLatch(1);
         final Throwable[] fail = new Throwable[1];
         final long t0 = System.nanoTime();
+        final long cpu0 = BenchRecording.processCpuNanos();
         // Forge's own "Game" pool, exactly as RecordMatch starts a game; one game
         // at a time in this process, so nothing else runs on that pool (D309).
         game.getAction().invoke(() -> {
             try {
                 match.startGame(game);
+                if (rec != null) {
+                    rec.finish();   // still the game thread, as RecordMatch and the cube lab finish theirs
+                }
             } catch (final Throwable t) {
                 fail[0] = t;
+                if (rec != null) {
+                    rec.crashed();
+                }
             } finally {
                 done.countDown();
             }
@@ -526,6 +541,10 @@ public final class AiBench {
                 .n("aiEvalTimeouts", count(noiseText, "AI eval thread at timeout"));
         seatStats(j, "aStats", la, game);
         seatStats(j, "bStats", lb, game);
+        j.n("cpuMs", (BenchRecording.processCpuNanos() - cpu0) / 1_000_000L);
+        if (rec != null) {
+            rec.close(j);
+        }
         return j.end().done();
     }
 
@@ -1399,6 +1418,265 @@ public final class AiBench {
         } else if (fail[0] != null) {
             fail[0].printStackTrace();
             check(false, name + ": threw " + fail[0]);
+        }
+    }
+
+    /**
+     * Recording the bench's games (D347): {@code play --record-all} or
+     * {@code --record-every N} (game g of every pair whose g % N == 0) writes
+     * each such game, while it is played, as two gzipped frame logs --
+     * {@code <dir>/p<pair>-g<game>-seat0.jsonl.gz} and {@code -seat1}, each
+     * seat's own redacted view -- through {@link SeatRecorder}, the cube lab's
+     * recorder (D315): the same {@code Snap.state}, header and
+     * {@code hello_ok.match}, and each seat's decision records in its own log
+     * only.  {@code <dir>} is {@code --record-dir}, else {@code games/} beside
+     * {@code --out} (the run folder).  The header's {@code bench} block names the
+     * run, the pairs file, the pair, game, game seed, both seat configs and the
+     * version stamp ({@code ver}, D341's fields for the bench's code paths:
+     * {@code bridge/src}, {@code tools/ai-bench}, {@code forge-home}, and the
+     * jar).  Off by default: a run without the flags writes what it always did.
+     */
+    static final class BenchRecording {
+        static int every;
+        static File dir;
+        static String runName;
+        static String pairsFile;
+        private static String jarSha;
+        private static Map<String, Object> version;
+
+        final List<SeatRecorder> recorders = new ArrayList<>();
+        final String rel;
+
+        private BenchRecording(final String rel) {
+            this.rel = rel;
+        }
+
+        /** {@code --record-all} / {@code --record-every N}: the record dir defaults to the run folder's {@code games/}. */
+        static void configure(final int n, final String[] argv) {
+            if (n < 1) {
+                throw new IllegalArgumentException("--record-every wants N >= 1");
+            }
+            every = n;
+            for (int i = 0; i + 1 < argv.length; i++) {
+                if ("--out".equals(argv[i])) {
+                    final File run = new File(argv[i + 1]).getAbsoluteFile().getParentFile();
+                    runName = run.getName();
+                    if (dir == null) {
+                        dir = new File(run, "games");
+                    }
+                } else if ("--pairs".equals(argv[i])) {
+                    pairsFile = argv[i + 1];
+                }
+            }
+        }
+
+        static BenchRecording start(final Game game, final int pi, final int g, final long gameSeed, final Cfg a,
+                                    final Cfg b, final boolean aSeat0, final String aDeckPath, final String bDeckPath,
+                                    final Map<String, Deck> decks) throws IOException {
+            if (every <= 0 || g % every != 0) {
+                return null;
+            }
+            if (dir == null) {
+                throw new IllegalStateException("--record-* needs --out or --record-dir");
+            }
+            final Config cfg = Config.load();
+            final String gameId = "bench-p" + pi + "-g" + g;
+            final BenchRecording rec = new BenchRecording(gameId);
+            final List<SeatRecorder.Seat> seats = new ArrayList<>();
+            final Cfg[] cfgs = aSeat0 ? new Cfg[] {a, b} : new Cfg[] {b, a};
+            final String[] paths = aSeat0 ? new String[] {aDeckPath, bDeckPath} : new String[] {bDeckPath, aDeckPath};
+            for (int s = 0; s < 2; s++) {
+                final File f = new File(paths[s]);
+                final Deck d = decks.get(paths[s]);
+                seats.add(new SeatRecorder.Seat(Bootstrap.deckName(d, f), f, relPath(cfg, f), d, cfgs[s].profile,
+                        policyOf(cfgs[s]), cfgs[s].search == null ? null : cfgs[s].search.toString()));
+            }
+            final Map<String, Object> bench = new LinkedHashMap<>();
+            bench.put("run", runName);
+            bench.put("pairs", pairsFile);
+            bench.put("pair", (long) pi);
+            bench.put("game", (long) g);
+            bench.put("gameSeed", gameSeed);
+            bench.put("a", a.text);
+            bench.put("b", b.text);
+            bench.put("aSeat", (long) (aSeat0 ? 0 : 1));
+            bench.putAll(version(cfg));
+            for (int s = 0; s < 2; s++) {
+                rec.recorders.add(SeatRecorder.attach(game, s, new File(dir, "p" + pi + "-g" + g + "-seat" + s + ".jsonl.gz"),
+                        gameId, gameSeed, jarSha(cfg), seats, "bench", bench));
+            }
+            return rec;
+        }
+
+        static String policyOf(final Cfg c) {
+            if (c.search != null) {
+                return "search";
+            }
+            if (c.outlets == PolicyLobbyPlayerAi.Outlets.ON) {
+                return "outlets";
+            }
+            return c.sim == null ? "forge" : "forge-" + (c.sim == AIOption.USE_FULL_SIMULATION ? "sim" : "hybrid");
+        }
+
+        static String relPath(final Config cfg, final File f) {
+            final String root = cfg.root().getAbsolutePath() + File.separator;
+            final String p = f.getAbsolutePath();
+            return p.startsWith(root) ? p.substring(root.length()) : p;
+        }
+
+        void finish() {
+            for (final SeatRecorder r : recorders) {
+                r.finish();
+            }
+        }
+
+        void crashed() {
+            for (final SeatRecorder r : recorders) {
+                r.crashed();
+            }
+        }
+
+        /** Close both logs and say what was written in the game's JSON line. */
+        void close(final Json.JsonOut j) {
+            long bytes = 0;
+            int decisions = 0;
+            int errors = 0;
+            for (final SeatRecorder r : recorders) {
+                try {
+                    r.close();
+                } catch (final IOException e) {
+                    errors++;
+                    System.err.println("[ai-bench] recording " + r.file() + " failed: " + e);
+                }
+                bytes += r.bytes();
+                decisions += r.decisions();
+                errors += r.errors() + r.decisionErrors();
+            }
+            j.key("recorded").obj().n("dir", dir.getPath()).n("game", rel).n("bytes", bytes)
+                    .n("decisions", decisions).n("errors", errors).end();
+        }
+
+        static synchronized String jarSha(final Config cfg) {
+            if (jarSha == null) {
+                jarSha = sha256File(cfg.forgeJar());
+            }
+            return jarSha.isEmpty() ? null : jarSha;
+        }
+
+        static String sha256File(final File f) {
+            try {
+                final java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                try (java.io.InputStream in = Files.newInputStream(f.toPath())) {
+                    final byte[] buf = new byte[1 << 16];
+                    int n;
+                    while ((n = in.read(buf)) > 0) {
+                        md.update(buf, 0, n);
+                    }
+                }
+                return hex(md.digest());
+            } catch (final Exception e) {
+                return "";
+            }
+        }
+
+        static String hex(final byte[] b) {
+            final StringBuilder sb = new StringBuilder(b.length * 2);
+            for (final byte x : b) {
+                sb.append(String.format(Locale.ROOT, "%02x", x));
+            }
+            return sb.toString();
+        }
+
+        static String sha256(final String s) {
+            try {
+                return hex(java.security.MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
+            } catch (final java.security.NoSuchAlgorithmException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        /** The paths whose code makes a bench game (D341's rule: the tree, not HEAD). */
+        static final List<String> CODE_PATHS = List.of("bridge/src", "tools/ai-bench", "forge-home");
+
+        /**
+         * The bench's version stamp, D341's fields for its own code paths:
+         * {@code gitSha} (recorded), {@code codeTree} (sha256 of {@code git
+         * ls-tree -r HEAD} over {@link #CODE_PATHS}), {@code dirty} and
+         * {@code diffSha} (uncommitted changes and new files there), the jar's
+         * sha256, and {@code ver}, 12 hex of a hash over the compared fields.
+         * Computed once per JVM.
+         */
+        static synchronized Map<String, Object> version(final Config cfg) {
+            if (version != null) {
+                return version;
+            }
+            final Map<String, Object> v = new LinkedHashMap<>();
+            final File repo = cfg.root();
+            String gitSha = null;
+            String codeTree = null;
+            String diffSha = null;
+            boolean dirty = true;
+            try {
+                gitSha = git(repo, "rev-parse", "HEAD").trim();
+                final List<String> ls = new ArrayList<>(List.of("ls-tree", "-r", "HEAD", "--"));
+                ls.addAll(CODE_PATHS);
+                codeTree = sha256(git(repo, ls.toArray(new String[0])));
+                final List<String> st = new ArrayList<>(List.of("status", "--porcelain", "--"));
+                st.addAll(CODE_PATHS);
+                dirty = !git(repo, st.toArray(new String[0])).trim().isEmpty();
+                if (dirty) {
+                    final List<String> diff = new ArrayList<>(List.of("diff", "HEAD", "--"));
+                    diff.addAll(CODE_PATHS);
+                    final List<String> un = new ArrayList<>(List.of("ls-files", "--others", "--exclude-standard", "--"));
+                    un.addAll(CODE_PATHS);
+                    final StringBuilder sb = new StringBuilder(git(repo, diff.toArray(new String[0])));
+                    for (final String f : git(repo, un.toArray(new String[0])).split("\n")) {
+                        if (!f.isBlank()) {
+                            sb.append('\0').append(f).append('\0').append(sha256File(new File(repo, f)));
+                        }
+                    }
+                    diffSha = sha256(sb.toString()).substring(0, 16);
+                }
+            } catch (final IOException | RuntimeException e) {
+                System.err.println("[ai-bench] no git version stamp: " + e);
+            }
+            final String jar = jarSha(cfg);
+            v.put("gitSha", gitSha);
+            v.put("codeTree", codeTree);
+            v.put("dirty", dirty ? 1L : 0L);
+            v.put("diffSha", diffSha);
+            v.put("forgeJarSha256", jar);
+            v.put("ver", sha256(String.join("|", String.valueOf(codeTree), String.valueOf(dirty),
+                    String.valueOf(diffSha), String.valueOf(jar))).substring(0, 12));
+            version = v;
+            return v;
+        }
+
+        static String git(final File repo, final String... args) throws IOException {
+            final List<String> cmd = new ArrayList<>();
+            cmd.add("git");
+            cmd.add("-C");
+            cmd.add(repo.getPath());
+            cmd.addAll(Arrays.asList(args));
+            final Process p = new ProcessBuilder(cmd).redirectErrorStream(false).start();
+            final byte[] out = p.getInputStream().readAllBytes();
+            try {
+                if (p.waitFor() != 0) {
+                    throw new IOException("git " + String.join(" ", args) + " exited " + p.exitValue());
+                }
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException(e);
+            }
+            return new String(out, StandardCharsets.UTF_8);
+        }
+
+        /** The JVM's CPU time, every thread (0 where the platform will not say). */
+        static long processCpuNanos() {
+            final java.lang.management.OperatingSystemMXBean os =
+                    java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+            return os instanceof com.sun.management.OperatingSystemMXBean
+                    ? ((com.sun.management.OperatingSystemMXBean) os).getProcessCpuTime() : 0L;
         }
     }
 }

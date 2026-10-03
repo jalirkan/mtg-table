@@ -201,6 +201,41 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 `--record M` still exists for watching a game in ForgeCoach (a plain
 `.jsonl`, the `--record M` replay); `--record-all` is for training data.
 
+### Decision records and mixed AI styles (D347)
+
+A recorded game's seats are mtg-table's own AI controller (D309's, which with
+no policy plays exactly as Forge's), so each chair's log also holds **that
+chair's decisions** — `dir:"ai"` `decision` lines (protocol amendment M55): at
+every decision with more than one legal answer (priority, attacks, blocks, the
+targets of what it plays, choices, the mulligan), the legal options as tokens
+(`pass`, `cast:<id>`, `land:<id>`, `attack:<ids>`, `block:<b>><a>`, ...), the
+option chosen, the policy that chose it (`forge`, `outlets`, `search`), the
+`state` frame it was taken in, and, when the search decided, its per-option
+playouts, mean leaf score and win estimate. A one-option decision (a forced
+pass) is counted, not written; a `decisions` line at the end of each log has
+the counts. A seat's records are in its own log only — they name its hand —
+and `check-redaction.mjs` fails a log holding the other seat's. The game's row
+in `drafts.jsonl` gains `recorded.decisions`. `MTGTABLE_DECISIONS=off` in the
+environment records as before D347 (for measuring their cost).
+
+`tools/ml/policy_data.py --run-dir <out>` turns them into a policy dataset
+(`tools/ml/README.md`).
+
+**`--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25`** draws each
+drafter's AI for each draft from the mix instead of `--profiles`: independently
+for A and B, from a generator seeded by the draft's seed and a stream of its
+own, so the draw is a pure function of the seed (any `--jobs`, a resumed run)
+and the picks and decks are what they would be without it. An entry is a seat
+spec, `<Profile>[+outlets][+search[:k=v/k=v]]` — inside a mix the search's
+knobs are separated by `/`, since `,` separates the entries —, and
+`--profiles` takes the same specs (`--profiles Default+search,Default`). Each
+draft's `drafts.jsonl` line says which two seats played (`profiles`), the run
+records the mix (`run.json`'s `profileMix`; resuming with another mix is
+refused), and every recording's header names each seat's `profile` and
+`policy` (`seats`) and the lab block the two specs (`seatA`, `seatB`) and the
+lab version (`ver`, D341). A search seat thinks about 1.5 s a decision (`ms=`
+lowers it): a mix with search plays slower games.
+
 ## Every flag
 
 | flag | default | |
@@ -210,10 +245,11 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 | `--seed S` | 1 | a draft and its decks are a function of their seed; 900,000,000+ is reserved for the AI ladder's deck sets and refused (D340, *Seeds and versions* below) |
 | `--games N` | 3 | best of N; stops at a majority. `0` drafts and builds only and plays nothing (the AI ladder's deck sets, D318) |
 | `--jobs K` | 1 | worker JVMs, each in its own Forge home under `var/cubelab/homes/<k>/` |
-| `--profiles A,B` | `Default,Default` | the AI profile of each seat (`forge-home/res/ai/*.ai`) |
+| `--profiles A,B` | `Default,Default` | the AI of each seat: a profile (`forge-home/res/ai/*.ai`), optionally `+outlets` and `+search[:k=v,...]` (D347) |
+| `--profile-mix S:w,...` | off | each drafter's seat drawn per draft from these seat specs and weights, seeded by the draft (D347, above) |
 | `--ratings <tsv>` | `<cube>.ratings.tsv` if present, else Forge's ranks | |
 | `--record M` | 0 | frame logs of M drafts' decks, in `<out>/frames/` |
-| `--record-all` | off | every game played, both chairs, gzipped, in `<out>/games/` (D315) |
+| `--record-all` | off | every game played, both chairs, gzipped, in `<out>/games/` (D315), with each chair's decision records (D347) |
 | `--record-every N` | 0 (off) | the same for each draft whose seed is a multiple of N |
 | `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes, under the same lab version only (D341) |
 | `--allow-version-change` | off | resume a folder another lab version (code, jar, ratings, cube, weights) wrote; logged in `run.json` (D341) |

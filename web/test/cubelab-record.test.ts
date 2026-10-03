@@ -80,3 +80,63 @@ test('negative control: an opponent hand card named in a lab recording FAILS the
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// D347: fixtures/cubelab/decisions/ is one lab game recorded with the decision
+// records (drafter A played with the search, B with Forge's Default).  Each
+// chair's records are its own; the planted leak is chair B's records copied
+// into chair A's log -- B's legal options name B's hand -- and the checker must
+// fail it, as it must fail one of A's options rewritten to name a card of B's
+// concealed hand.
+const DEC = join(REPO, 'fixtures/cubelab/decisions');
+const DEC_LOGS = [0, 1].map((s) => join(DEC, `games/101/g1-seat${s}.jsonl.gz`));
+
+test('decision records: both chairs pass, each holds only its own, the search seat carries the search', () => {
+  const r = check(DEC_LOGS);
+  assert.equal(r.status, 0, r.out);
+  for (const [seat, f] of DEC_LOGS.entries()) {
+    const lines = linesOf(f);
+    const recs = lines.filter((l) => l.dir === 'ai' && l.type === 'decision');
+    assert.ok(recs.length > 50, `${f}: ${recs.length} records`);
+    assert.ok(recs.every((l) => l.body.seat === seat));
+    const searched = recs.filter((l) => l.body.search);
+    if (lines[0]!.seats.find((s: any) => s.player === seat).policy === 'search') assert.ok(searched.length > 0);
+    else assert.equal(searched.length, 0);
+    assert.equal(lines.filter((l) => l.dir === 'ai' && l.type === 'decisions').length, 1);
+  }
+});
+
+const rewrite = (src: string, edit: (frames: Array<Record<string, any>>) => void): { status: number | null; out: string } => {
+  const frames = linesOf(src);
+  edit(frames);
+  const dir = mkdtempSync(join(tmpdir(), 'decision-leak-'));
+  try {
+    const bad = join(dir, 'leak.jsonl.gz');
+    writeFileSync(bad, gzipSync(`${frames.map((f) => JSON.stringify(f)).join('\n')}\n`));
+    return check([bad]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+test('negative control: the other chair\'s decision records in a log FAIL the checker', () => {
+  const theirs = linesOf(DEC_LOGS[1] as string).filter((l) => l.dir === 'ai' && l.type === 'decision').slice(0, 1);
+  const r = rewrite(DEC_LOGS[0] as string, (frames) => {
+    const at = frames.findIndex((f) => f.dir === 'ai');
+    frames.splice(at, 0, ...theirs);
+  });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /record of seat 1 in seat 0's recording/);
+});
+
+test('negative control: an option naming the opponent\'s concealed hand card FAILS the checker', () => {
+  const r = rewrite(DEC_LOGS[0] as string, (frames) => {
+    const rec = frames.find((f) => f.dir === 'ai' && f.type === 'decision' && f.body.kind === 'priority')!;
+    const st = frames[rec.body.frame + 1]!;   // frames[0] is the header; `frame` indexes the lines after it
+    assert.equal(st.type, "state");
+    const opp = st.body.players.find((p: any) => p.id !== 0);
+    const stub = opp.zones.hand.cards.find((c: any) => c.hidden);
+    rec.body.options.push(`cast:${stub.id}`);
+  });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /which its state frame does not show/);
+});

@@ -1236,9 +1236,13 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     maxTurn: 0,
     hellos: 0, matchChecked: 0, yourProfileChecked: 0,
   };
-  const seq = { s2c: 0, c2s: 0 };
+  const seq = { s2c: 0, c2s: 0, ai: 0 };
   let sawState = false;
   const seat = header.seat;
+  /** M55 / D347: every state frame's index in frames[] -> {seq, the ids it shows the viewer}; the decision lines, audited after. */
+  const stateAt = new Map();
+  const stateOrder = [];
+  const aiLines = [];
 
   /*
    * CLIENT LOG MODE (amendment M10, the reader's half).
@@ -1869,8 +1873,8 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     if (f.v !== PROTOCOL_VERSION) note(lineNo, `v=${f.v}, expected ${PROTOCOL_VERSION}`);
     if (typeof f.seq !== 'number') note(lineNo, `seq is ${typeof f.seq}, expected a number`);
     if (typeof f.t !== 'number') note(lineNo, `t is ${typeof f.t}, expected epoch ms`);
-    if (f.dir !== 's2c' && f.dir !== 'c2s' && !(isClientLog && f.dir === undefined)) {
-      note(lineNo, `dir=${JSON.stringify(f.dir)}, expected "s2c" or "c2s"`);
+    if (f.dir !== 's2c' && f.dir !== 'c2s' && f.dir !== 'ai' && !(isClientLog && f.dir === undefined)) {
+      note(lineNo, `dir=${JSON.stringify(f.dir)}, expected "s2c", "c2s" or "ai"`);
     }
     if (typeof f.type !== 'string' || f.type.length === 0) note(lineNo, 'type is missing');
     if (f.body === null || typeof f.body !== 'object' || Array.isArray(f.body)) {
@@ -1878,6 +1882,15 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       continue;
     }
     const dir = f.dir ?? 's2c';
+    if (dir === 'ai') {
+      // M55 (D347): a recorder-only line, its own seq series, audited once the
+      // whole file is read (a decision names a state frame and the ids in it).
+      stats.decisionLines = (stats.decisionLines ?? 0) + 1;
+      if (f.seq !== seq.ai + 1) note(lineNo, `seq=${f.seq} for dir=ai, expected ${seq.ai + 1} (gap or reorder)`);
+      seq.ai = f.seq;
+      aiLines.push({ f, lineNo, index: i - 1 });
+      continue;
+    }
     if ((dir === 's2c' || dir === 'c2s') && !isClientLog) {
       const expected = seq[dir] + 1;
       if (f.seq !== expected) note(lineNo, `seq=${f.seq} for dir=${dir}, expected ${expected} (gap or reorder)`);
@@ -1926,6 +1939,10 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
     stats.state++;
     sawState = true;
+    if (Array.isArray(f.body?.players)) {
+      stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat) });
+      stateOrder.push(i - 1);
+    }
     if (typeof f.body?.turn === 'number' && f.body.turn > stats.maxTurn) stats.maxTurn = f.body.turn;
 
     const body = f.body;
@@ -2183,6 +2200,14 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
 
   if (!sawState) note(lines.length, 'no state frames at all');
 
+  // --- M55 / D347: an AI seat's decision records, its OWN recording only ---
+  if (aiLines.length > 0) {
+    for (const complaint of auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog)) {
+      note(complaint.lineNo, complaint.msg);
+    }
+    stats.decisions = aiLines.filter((x) => x.f.type === 'decision').length;
+  }
+
   // A12, the other half of "exactly one answer per ask". An ask still open at
   // EOF is a WARN, not a failure: a log truncated by a kill, or one whose game
   // ended while the thread was parked, legitimately ends mid-question. What it
@@ -2270,6 +2295,154 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   stats.redelivered = redelivered;
 
   return { problems, warnings, stats };
+}
+
+// ----------------------------------------------------------------------
+// M55 (D347): decision records.
+//
+// An AI seat's decisions -- its legal options and its answer -- are written into
+// ITS OWN recording as `dir:"ai"` lines.  They are that seat's private
+// information: `cast:41` says card 41 is in its hand and castable.  So:
+//
+//   D1  only in an AI-vs-AI recording (no `transport`, not a client log), and
+//       every record's `seat` is the header's `seat` -- a record of another
+//       seat is the opponent's options in this seat's file;
+//   D2  exact key sets, no free text: tokens only (the coach bench's grammar),
+//       numbers, and four enumerations (kind, by, source, why);
+//   D3  the record points at a `state` frame earlier in the file (`frame`, its
+//       index in frames[], and `stateSeq`, its seq), and every card id it names
+//       is a card that frame -- or the next state frame -- shows the viewer
+//       face up or as its own; never a stub's id, never a library card;
+//   D4  the answer is one of the options.
+
+const DECISION_TOKEN = /^(pass|keep|mulligan|yes|no|option:hidden|(cast|land):\d+|(target|option):p?\d+|activate:\d+(#\d+)?|attack:(none|\d+(,\d+)*)|block:(none|\d+>\d+(,\d+>\d+)*))$/;
+const DECISION_KINDS = ['priority', 'attack', 'block', 'target', 'choice', 'mulligan'];
+const DECISION_BY = ['forge', 'outlets', 'search'];
+const DECISION_SOURCES = ['targets', 'trigger', 'chooseTargets', 'entity', 'cards', 'confirm'];
+const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn', 'phase', 'options', 'complete',
+  'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search']);
+const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
+  'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z']);
+const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win']);
+const SEARCH_RULES = ['margin', 'lcb'];
+const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced']);
+const FALLBACKS = [null, 'budget', 'copyError', 'unmappable', 'rolloutErrors', 'invalidAtEnd'];
+
+/** The card ids a state shows its viewer: full cards in every zone but a hidden one, and stackCards. */
+function visibleIds(body, seat) {
+  const ids = new Set();
+  for (const p of body.players ?? []) {
+    for (const [zname, z] of Object.entries(p.zones ?? {})) {
+      if (zname === 'library' && p.id !== seat) continue;
+      for (const c of z?.cards ?? []) {
+        if (c && c.hidden !== true && typeof c.id === 'number') ids.add(c.id);
+      }
+    }
+  }
+  for (const c of body.stackCards ?? []) if (c && c.hidden !== true && typeof c.id === 'number') ids.add(c.id);
+  return ids;
+}
+
+/** The card ids (not player ids) a token names. */
+function tokenCardIds(t) {
+  const m = /^[a-z]+:(.*)$/.exec(t);
+  if (!m || m[1] === 'none' || m[1] === 'hidden') return [];
+  return m[1].split(/[,>]/).filter((x) => !x.startsWith('p')).map((x) => Number(x.split('#')[0]));
+}
+
+function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
+  const out = [];
+  const bad = (lineNo, msg) => out.push({ lineNo, msg: `${msg} (M55, D347)` });
+  const seat = header.seat;
+  const players = new Set((header.decks ?? []).map((d) => d?.player).filter((x) => typeof x === 'number'));
+  const nextState = (idx) => stateOrder.find((k) => k > idx);
+  let n = 0;
+  for (const { f, lineNo, index } of aiLines) {
+    const b = f.body;
+    if (header.transport !== undefined || isClientLog) {
+      bad(lineNo, `a "dir":"ai" line in a seat recording (transport ${JSON.stringify(header.transport)}) -- decision ` +
+        'records belong to AI-vs-AI recordings, each in the deciding seat\'s own log');
+    }
+    if (b.seat !== seat) {
+      bad(lineNo, `a ${f.type} record of seat ${JSON.stringify(b.seat)} in seat ${seat}'s recording -- another ` +
+        'seat\'s legal options and answers are ITS private information (they name its hand)');
+      continue;
+    }
+    if (f.type === 'decisions') {
+      for (const k of Object.keys(b)) if (!SUMMARY_KEYS.has(k)) bad(lineNo, `decisions summary carries an unexpected key "${k}"`);
+      for (const k of ['byKind', 'byPolicy', 'forced']) {
+        for (const [kk, v] of Object.entries(b[k] ?? {})) {
+          if (!DECISION_KINDS.includes(kk) && !DECISION_BY.includes(kk)) bad(lineNo, `decisions summary ${k} key ${JSON.stringify(kk)}`);
+          if (typeof v !== 'number') bad(lineNo, `decisions summary ${k}.${kk} is not a number`);
+        }
+      }
+      continue;
+    }
+    if (f.type !== 'decision') {
+      bad(lineNo, `a "dir":"ai" line of type ${JSON.stringify(f.type)} -- only "decision" and "decisions" exist`);
+      continue;
+    }
+    for (const k of Object.keys(b)) if (!DECISION_KEYS.has(k)) bad(lineNo, `decision ${b.n} carries an unexpected key "${k}"`);
+    if (b.n !== n) bad(lineNo, `decision n=${b.n}, expected ${n}`);
+    n = (typeof b.n === 'number' ? b.n : n) + 1;
+    if (!DECISION_KINDS.includes(b.kind)) bad(lineNo, `decision kind ${JSON.stringify(b.kind)}`);
+    if (!DECISION_BY.includes(b.by)) bad(lineNo, `decision by ${JSON.stringify(b.by)}`);
+    if (b.source !== undefined && !DECISION_SOURCES.includes(b.source)) bad(lineNo, `decision source ${JSON.stringify(b.source)}`);
+    if (b.why !== undefined && !/^[A-Z_]+$/.test(String(b.why))) bad(lineNo, `decision why ${JSON.stringify(b.why)} is not a policy reason`);
+    if (typeof b.phase !== 'string' || !/^[A-Z0-9_]+$/.test(b.phase)) bad(lineNo, `decision phase ${JSON.stringify(b.phase)}`);
+    const tokens = [];
+    const checkToken = (t, where) => {
+      if (typeof t !== 'string' || !DECISION_TOKEN.test(t)) bad(lineNo, `decision ${b.n} ${where} ${JSON.stringify(t)} is not a token`);
+      else tokens.push(t);
+    };
+    if (!Array.isArray(b.options) || b.options.length === 0) bad(lineNo, `decision ${b.n} has no options`);
+    for (const t of b.options ?? []) checkToken(t, 'option');
+    const chosen = Array.isArray(b.chosen) ? b.chosen : [b.chosen];
+    for (const t of chosen) {
+      checkToken(t, 'chosen');
+      if (!Array.isArray(b.chosen) && !(b.options ?? []).includes(t)) bad(lineNo, `decision ${b.n} chose ${JSON.stringify(t)}, which is not among its options`);
+    }
+    for (const a of b.atoms ?? []) {
+      if (typeof a !== 'string' || !/^\d+(>\d+)?$/.test(a)) bad(lineNo, `decision ${b.n} atom ${JSON.stringify(a)}`);
+      else tokens.push(`atom:${a}`);
+    }
+    if (b.search !== undefined) {
+      const sb = b.search;
+      for (const k of Object.keys(sb ?? {})) if (!SEARCH_KEYS.has(k)) bad(lineNo, `decision ${b.n} search carries an unexpected key "${k}"`);
+      if (!FALLBACKS.includes(sb?.fallback)) bad(lineNo, `decision ${b.n} search fallback ${JSON.stringify(sb?.fallback)}`);
+      if (sb?.rule !== undefined && !SEARCH_RULES.includes(sb.rule)) bad(lineNo, `decision ${b.n} search rule ${JSON.stringify(sb.rule)}`);
+      for (const o of sb?.options ?? []) {
+        for (const k of Object.keys(o)) if (!SEARCH_OPTION_KEYS.has(k)) bad(lineNo, `decision ${b.n} search option carries "${k}"`);
+        checkToken(o.token, 'search option');
+        for (const k of ['n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win']) if (o[k] !== undefined && o[k] !== null && typeof o[k] !== 'number') bad(lineNo, `decision ${b.n} search option ${k} is not a number`);
+      }
+    }
+    // D3: the state it was taken in, and what that state shows the viewer.
+    if (b.frame === null) {
+      if (b.kind !== 'mulligan') bad(lineNo, `decision ${b.n} (${b.kind}) names no state frame`);
+      continue;
+    }
+    const st = stateAt.get(b.frame);
+    if (!st || b.frame >= index) {
+      bad(lineNo, `decision ${b.n} points at frame ${b.frame}, which is not an earlier state frame`);
+      continue;
+    }
+    if (st.seq !== b.stateSeq) bad(lineNo, `decision ${b.n} stateSeq ${b.stateSeq} but frame ${b.frame} is state seq ${st.seq}`);
+    const nx = nextState(b.frame);
+    const allowed = new Set([...st.ids, ...(nx !== undefined ? stateAt.get(nx).ids : [])]);
+    for (const t of tokens) {
+      for (const id of tokenCardIds(t)) {
+        if (!allowed.has(id)) {
+          bad(lineNo, `decision ${b.n} names card ${id} (${t}), which its state frame does not show seat ${seat} -- ` +
+            'a stub\'s id, a library card or another seat\'s hidden card is never an option');
+        }
+      }
+      for (const m of t.matchAll(/p(\d+)/g)) {
+        if (players.size > 0 && !players.has(Number(m[1]))) bad(lineNo, `decision ${b.n} names player ${m[1]}, not a player of this game`);
+      }
+    }
+  }
+  return out;
 }
 
 /** Depth-first search for a key name; returns a JSON-ish path or null. */

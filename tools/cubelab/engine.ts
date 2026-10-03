@@ -132,6 +132,8 @@ export interface RecordSpec {
   format: string;
   deckNameA: string;
   deckNameB: string;
+  /** D341: the lab version that plays it, into every recording's header. */
+  ver?: string;
 }
 
 export interface GameRow {
@@ -148,7 +150,7 @@ export interface GameRow {
   cpuMs?: number;
   gameCpuMs?: number;
   /** D315: the game's two frame logs (`<dir>/g<n>-seat{0,1}.jsonl.gz`), their bytes on disk, state frames, snapshot errors. */
-  recorded?: { dir: string; bytes: number; frames: number; errors: number };
+  recorded?: { dir: string; bytes: number; frames: number; errors: number; decisions?: number; decisionErrors?: number };
 }
 
 export interface ForgeBuild { side: 'A' | 'B'; colors?: string; spells?: number; lands?: number; value?: number; main?: Array<[number, string]>; error?: string }

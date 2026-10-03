@@ -622,5 +622,86 @@ probe('m49-keywords-half-present.jsonl',
   'keywords are HALF PRESENT',
   (fs) => { withKeywords(fs); delete firstFullNow(fs).card.keywords; });
 
+// ---------------------------------------------------------------------------
+// Amendment M55 (D347): an AI seat's decision records, `dir:"ai"` lines in its
+// OWN recording.  The control carries one priority decision over the viewer's
+// own hand, taken at the first state of the slice, and the summary line; each
+// probe breaks one rule -- the planted leaks are another seat's record and an
+// option naming the opponent's concealed hand card.
+// ---------------------------------------------------------------------------
+
+/** Insert a decision (and the summary) after the slice's first state; returns the decision's body. */
+function withDecision(fs) {
+  const at = fs.findIndex((f) => f.type === 'state');
+  const st = fs[at];
+  const me = st.body.players.find((p) => p.id === header.seat);
+  const mine = [...me.zones.hand.cards, ...me.zones.battlefield.cards].filter((c) => c.hidden !== true).map((c) => c.id);
+  const body = {
+    seat: header.seat, n: 0, kind: 'priority', frame: at, stateSeq: st.seq, turn: st.body.turn, phase: st.body.phase ?? 'MAIN1',
+    options: ['pass', ...mine.slice(0, 2).map((id) => `cast:${id}`)], chosen: 'pass', by: 'search',
+    search: {
+      options: [{ token: 'pass', n: 3, meanLeaf: 120.5, win: 0.574 }, ...mine.slice(0, 1).map((id) => ({ token: `cast:${id}`, n: 3, meanLeaf: 98, win: 0.55 }))],
+      forge: 0, best: 0, rounds: 3, playouts: 6, ms: 1480, budgetMs: 1500, timedOut: true, overrode: false, fallback: null,
+    },
+  };
+  const t = st.t;
+  fs.splice(at + 1, 0, { v: 1, seq: 1, t, dir: 'ai', type: 'decision', body });
+  const overAt = fs.findIndex((f) => f.type === 'over');
+  fs.splice(overAt, 0, { v: 1, seq: 2, t, dir: 'ai', type: 'decisions',
+    body: { seat: header.seat, written: 1, searched: 1, errors: 0, recordMs: 1, byKind: { priority: 1 }, byPolicy: { search: 1 }, forced: { priority: 4 } } });
+  return body;
+}
+
+{
+  const fs = slice();
+  withDecision(fs);
+  write('m55-decisions-present.jsonl', fs);
+  manifest.push({
+    file: 'm55-decisions-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M55: the baseline with one decision record of the viewing seat and its summary -- the control for the m55 probes',
+  });
+  console.log('  PASS  m55-decisions-present.jsonl  (a decision record, no defect)');
+}
+
+probe('m55-decision-of-the-other-seat.jsonl',
+  'amendment M55 / D347: a seat\'s legal options name its hand -- the OTHER seat\'s record in this log is a leak',
+  'record of seat',
+  (fs) => { withDecision(fs).seat = header.decks.find((d) => d.player !== header.seat).player; });
+
+probe('m55-option-names-the-opponent-hand.jsonl',
+  'amendment M55 / D347: an option naming a card the viewer cannot see (the opponent\'s concealed hand) is a leak',
+  'which its state frame does not show',
+  (fs) => {
+    const b = withDecision(fs);
+    const st = fs.find((f) => f.type === 'state');
+    const them = st.body.players.find((p) => p.id !== header.seat);
+    b.options.push(`cast:${them.zones.hand.cards.find((c) => c.hidden === true).id}`);
+  });
+
+probe('m55-decision-carries-a-label.jsonl',
+  'amendment M55 / D347: a decision record is tokens and numbers -- a label is an engine string that can name a card',
+  'unexpected key "label"',
+  (fs) => { withDecision(fs).label = 'cast a card'; });
+
+probe('m55-chosen-is-not-an-option.jsonl',
+  'amendment M55 / D347: the answer is one of the legal options',
+  'not among its options',
+  (fs) => { withDecision(fs).chosen = 'attack:none'; });
+
+probe('m55-frame-is-not-a-state.jsonl',
+  'amendment M55 / D347: a decision points at the state frame it was taken in',
+  'not an earlier state frame',
+  (fs) => { withDecision(fs).frame = 0; });
+
+{
+  const name = 'm55-decision-in-a-seat-recording.jsonl';
+  const why = 'amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat\'s log';
+  const fs = slice();
+  withDecision(fs);
+  const bytes = write(name, fs, { ...header, transport: 'ws' });
+  manifest.push({ file: name, level: 'fail', expect: 'in a seat recording', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+}
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

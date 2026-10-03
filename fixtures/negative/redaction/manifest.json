@@ -190,5 +190,47 @@
     "level": "fail",
     "expect": "keywords are HALF PRESENT",
     "why": "amendment M49: every full card carries keywords or none does -- some of each is a Snap.card branch that forgot it"
+  },
+  {
+    "file": "m55-decisions-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M55: the baseline with one decision record of the viewing seat and its summary -- the control for the m55 probes"
+  },
+  {
+    "file": "m55-decision-of-the-other-seat.jsonl",
+    "level": "fail",
+    "expect": "record of seat",
+    "why": "amendment M55 / D347: a seat's legal options name its hand -- the OTHER seat's record in this log is a leak"
+  },
+  {
+    "file": "m55-option-names-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "amendment M55 / D347: an option naming a card the viewer cannot see (the opponent's concealed hand) is a leak"
+  },
+  {
+    "file": "m55-decision-carries-a-label.jsonl",
+    "level": "fail",
+    "expect": "unexpected key \"label\"",
+    "why": "amendment M55 / D347: a decision record is tokens and numbers -- a label is an engine string that can name a card"
+  },
+  {
+    "file": "m55-chosen-is-not-an-option.jsonl",
+    "level": "fail",
+    "expect": "not among its options",
+    "why": "amendment M55 / D347: the answer is one of the legal options"
+  },
+  {
+    "file": "m55-frame-is-not-a-state.jsonl",
+    "level": "fail",
+    "expect": "not an earlier state frame",
+    "why": "amendment M55 / D347: a decision points at the state frame it was taken in"
+  },
+  {
+    "file": "m55-decision-in-a-seat-recording.jsonl",
+    "level": "fail",
+    "expect": "in a seat recording",
+    "why": "amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log"
   }
 ]

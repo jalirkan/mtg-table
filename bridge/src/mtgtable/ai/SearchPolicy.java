@@ -318,6 +318,28 @@ public final class SearchPolicy {
         return report;
     }
 
+    /** The token a candidate stands for in a decision record (D347; the coach bench's spelling). */
+    public static String token(final Cand c) {
+        if (c instanceof PriorityCand) {
+            return Decisions.saToken(((PriorityCand) c).sa);
+        }
+        if (c instanceof AttackCand) {
+            final List<Integer> ids = new ArrayList<>();
+            for (final Card a : ((AttackCand) c).attack.keySet()) {
+                ids.add(a.getId());
+            }
+            return Decision.attackToken(ids);
+        }
+        if (c instanceof BlockCand) {
+            final List<int[]> pairs = new ArrayList<>();
+            for (final Map.Entry<Card, Card> e : ((BlockCand) c).block.entrySet()) {
+                pairs.add(new int[] {e.getKey().getId(), e.getValue().getId()});
+            }
+            return Decision.blockToken(pairs);
+        }
+        throw new IllegalArgumentException("candidate " + c);
+    }
+
     /** The last search's report goes to the bench's event stream only when asked (a long line per search). */
     private static final boolean REPORT_EVENTS = Boolean.getBoolean("mtgtable.search.reportEvents");
 
