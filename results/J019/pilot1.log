@@ -1,0 +1,132 @@
+==== J019 pilot1 started 2026-10-03T13:33:19-04:00 in unit lab-J019-pilot1, 3 worker(s)
+lint-bridge-selftest OK: 31 rules, 60 firing cases (each fired its own rule and no other), 73 checks
+bridge lint OK (59 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 59 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 45 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 281 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2785 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:39206): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:39214): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:39230 (1 watching)
+WS CONNECT /127.0.0.1:39234 (connection #1)
+WS REFUSED /127.0.0.1:39238: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:39244 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:39244 (1 watching)
+WS DISCONNECT /127.0.0.1:39234 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:39254 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:39254 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:39268 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:54498 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:54498: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 39 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:38100: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:38106: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:38112: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:38114: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:38142: no valid pairing token
+WS SITE REFUSED /127.0.0.1:38264: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38278: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38282: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38288: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38298: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38310: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38320: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38332: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38344: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38358: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:38360: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:38376: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:38380: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:38394: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:38402: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:38418 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:38418 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:38430 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:38430 (0 watching)
+WS CONNECT /127.0.0.1:38440 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:38440 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:38448): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:38464): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:38474 (1 watching)
+WS CONNECT /127.0.0.1:50150 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:50150 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:50164 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:50164 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:35241 (/127.0.0.1:50170): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:48572: a path that would leave the site
+WS CONNECT /127.0.0.1:52978 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:52978 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:52988): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:37097 (/127.0.0.1:53004): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 6.0 us + predict 3.6 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8029 checks)
+grade selftest: 70 check(s), 0 failure(s)
+decision selftest: 44 check(s), 0 failure(s)
+build OK
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 730001, best of 1, 1 job(s), AI mixed per drafter (Default:0.5,Reckless:0.25,Default+search:0.25), ratings cubes/synergy-cube-180.ratings.tsv, out var/cubelab/runs/j019-pilot, recording every game (both chairs) into var/cubelab/runs/j019-pilot/games
+facts: booting the engine to look up 180 cards ...
+facts: 2.1 s
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+[1/2] seed 730001: A:WG 1-0 B:WU  games A
+[2/2] seed 730002: A:UG 0-1 B:WU  games B
+matches: 6 s for 2 (3.1 s a draft wall-clock on 1 worker(s))
+recorded: 2 game(s), both chairs, 0.3 MiB gzipped (135 KiB a game) under var/cubelab/runs/j019-pilot/games
+done in 8 s -> var/cubelab/runs/j019-pilot/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/runs/j019-pilot
+PASS  var/cubelab/runs/j019-pilot/games/730001/g1-seat0.jsonl.gz
+      frames=484 (state=337, other=2)  bytes=53412  events=1008
+      cards checked=8704  redacted=1545  face-down=0  stack cards=15  opponent-hand cards=1545  viewer-hand named=1598
+      shape-checked state bodies=337 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=31 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=31  library cards revealed=0  alt blocks=0  tokens=404  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-pilot/games/730001/g1-seat1.jsonl.gz
+      frames=387 (state=292, other=2)  bytes=45568  events=1008
+      cards checked=7476  redacted=1396  face-down=0  stack cards=12  opponent-hand cards=1396  viewer-hand named=1367
+      shape-checked state bodies=292 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=28 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=32  library cards revealed=0  alt blocks=0  tokens=344  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-pilot/games/730002/g1-seat0.jsonl.gz
+      frames=522 (state=394, other=2)  bytes=87343  events=1795
+      cards checked=13721  redacted=1801  face-down=0  stack cards=65  opponent-hand cards=1801  viewer-hand named=1945
+      shape-checked state bodies=394 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=124 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=53  library cards revealed=0  alt blocks=0  tokens=387  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/runs/j019-pilot/games/730002/g1-seat1.jsonl.gz
+      frames=570 (state=413, other=2)  bytes=90147  events=1795
+      cards checked=14113  redacted=1992  face-down=0  stack cards=68  opponent-hand cards=1992  viewer-hand named=1925
+      shape-checked state bodies=413 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=127 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=55  library cards revealed=0  alt blocks=0  tokens=417  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)

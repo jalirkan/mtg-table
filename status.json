@@ -1,40 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:33:20-04:00",
+ "updated": "2026-10-03T13:33:43-04:00",
  "paused": false,
  "host": {
-  "load1": 1.42,
-  "memUsedGb": 6.6,
+  "load1": 2.71,
+  "memUsedGb": 6.7,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4
  },
- "running": [
-  {
-   "publicTitle": "Decision records pilot",
-   "publicEst": "~60 min",
-   "id": "J019",
-   "title": "Decision records pilot: 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded",
-   "cpu": "heavy",
-   "phase": "pilot 1/1",
-   "started": "2026-10-03T13:33:06-04:00",
-   "elapsed": 13,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "pressureEvents": [],
-   "detail": "lab-J019-pilot1"
-  }
- ],
+ "running": [],
  "queue": [
   {
    "publicTitle": null,
@@ -85,7 +62,17 @@
    "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
   }
  ],
- "waiting": [],
+ "waiting": [
+  {
+   "publicTitle": "Decision records pilot",
+   "publicEst": "~60 min",
+   "id": "J019",
+   "title": "Decision records pilot: 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded",
+   "reason": "pilot done; needs a check",
+   "est": "~60 min",
+   "detail": "needs a human/Claude check: the job file has no check: lines, so the runner ran the pilot only"
+  }
+ ],
  "finished": [
   {
    "publicTitle": null,
