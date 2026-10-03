@@ -8,13 +8,17 @@ est: ~25 min
 Afterwards J004 (the Omega evolve) runs with `--record-all`. This job checks first that
 recording doesn't slow the lab down much.
 
+**Seeds changed (methodology review 2):** seeds 9100–9109 per cube are the AI ladder's
+dev/confirm deck sets, and recording games on them would leak those decks into training
+data. This job now uses seeds 710001+ and 720001+.
+
 ## Pilot
 ```bash
 cd /home/justin-a/code/mtg-table && git checkout main && git pull && ./bridge/build.sh
-tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 4 --games 1 --jobs 2 --seed 9001 --record-all --out var/cubelab/runs/pilot-rec
-find var/cubelab/runs/pilot-rec/games -name '*.gz' | wc -l
-node tools/check-redaction.mjs var/cubelab/runs/pilot-rec/games/*/*.gz
-python3 tools/ml/encode.py --run-dir var/cubelab/runs/pilot-rec --out /dev/null
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 4 --games 1 --jobs 2 --seed 710001 --record-all --out var/cubelab/runs/j005-pilot-rec
+find var/cubelab/runs/j005-pilot-rec/games -name '*.gz' | wc -l
+node tools/check-redaction.mjs var/cubelab/runs/j005-pilot-rec/games/*/*.gz
+python3 tools/ml/encode.py --run-dir var/cubelab/runs/j005-pilot-rec --out /dev/null
 ```
 Checks:
 - `find` prints 8.
@@ -25,9 +29,9 @@ Checks:
 ## Commands
 Run these one after the other, never at the same time:
 ```bash
-tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 150 --games 1 --jobs 7 --seed 9101 --out var/cubelab/runs/ovh-off
-tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 150 --games 1 --jobs 7 --seed 9101 --record-all --out var/cubelab/runs/ovh-on
-python3 -c "import json;[print(a,*(lambda G:(len(G),round(sum(g['ms'] for g in G)/len(G)),round(sum(g['ms'] for g in G)/sum(g['turns'] for g in G)),round(sum(g['cpuMs'] for g in G)/sum(g['turns'] for g in G)),sum(g.get('recorded',{}).get('bytes',0) for g in G)//max(1,len(G))))([g for l in open(f'var/cubelab/runs/ovh-{a}/drafts.jsonl') for g in json.loads(l)['match']['games']])) for a in ('off','on')]"
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 150 --games 1 --jobs 7 --seed 720001 --out var/cubelab/runs/j005-ovh-off
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 150 --games 1 --jobs 7 --seed 720001 --record-all --out var/cubelab/runs/j005-ovh-on
+python3 -c "import json;[print(a,*(lambda G:(len(G),round(sum(g['ms'] for g in G)/len(G)),round(sum(g['ms'] for g in G)/sum(g['turns'] for g in G)),round(sum(g['cpuMs'] for g in G)/sum(g['turns'] for g in G)),sum(g.get('recorded',{}).get('bytes',0) for g in G)//max(1,len(G))))([g for l in open(f'var/cubelab/runs/j005-j005-ovh-{a}/drafts.jsonl') for g in json.loads(l)['match']['games']])) for a in ('off','on')]"
 ```
 
 ## Abort if
