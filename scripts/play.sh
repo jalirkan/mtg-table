@@ -99,7 +99,9 @@
 #     that says so) and the bridge serves it at / (--site-dir <path> serves a local
 #     ForgeCoach build instead, e.g. its dist/ built with --base ./);
 #   - prints the phone URL for every non-loopback IPv4 address, best guess first,
-#     and a QR code of the first if `qrencode` is installed.
+#     and a QR code of the first if `qrencode` is installed.  With the coach
+#     helper off its default port (--coach-port), the URL also carries
+#     `&coachPort=<n>`, which tells ForgeCoach's page where the helper is.
 #
 # THE TOKEN IS THE ONLY LOCK.  It is for a home network you trust: anyone on the
 # same network who sees the URL can take the seat.  Ctrl-C stops it, and the next
@@ -933,6 +935,13 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       [ "${#PAGES[@]}" -gt 0 ] && break
       sleep 0.25
     done
+    # The page ForgeCoach serves from the bridge finds the coach helper on its
+    # own host at 8643; a helper elsewhere (--coach-port, config.json coachPort)
+    # is named in the link, `&coachPort=<n>`, which ForgeCoach's helperTarget
+    # reads.  Absent means 8643, so a default run's link is unchanged.
+    if [ "$COACH_PORT" != "8643" ]; then
+      for i in "${!PAGES[@]}"; do PAGES[i]="${PAGES[i]}&coachPort=$COACH_PORT"; done
+    fi
     say "LAN — open this on your phone (same Wi-Fi), then click Play"
     if [ "${#PAGES[@]}" -eq 0 ]; then
       echo "  no non-loopback IPv4 address found -- is this machine on a network? (log: $SERVER_LOG)"
