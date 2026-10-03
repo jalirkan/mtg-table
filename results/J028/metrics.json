@@ -1,0 +1,16 @@
+{
+ "reports": 3,
+ "done": 4,
+ "failed": 0,
+ "timing.max_total_s": 7.264,
+ "timing.max_triage_wall_s": 6.932,
+ "timing.max_triage_grade_s": 0,
+ "timing.max_deep_wall_s": 0,
+ "timing.errors": 77,
+ "timing.shape_ok": 1,
+ "timing.decisions": 77,
+ "elapsed_s": 61,
+ "workers": 7,
+ "pressure_events": 0,
+ "peak_worker_rss_gb": 0.83
+}

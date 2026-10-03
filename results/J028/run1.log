@@ -1,0 +1,28 @@
+==== J028 run1 started 2026-10-03T18:58:35-04:00 in unit lab-J028-run1, 7 worker(s)
+REVIEW STAGE plan fixtures/games/human-auto-42.jsonl seat 0
+{"status":"ok","decisions":32,"jobs":7,"triageMsPerDecision":3000,"gameId":"human-auto-42","frames":1586}
+REVIEW STAGE triage 32 decision(s) on 7 JVM(s), 3000 ms each
+coach-grade: 0 graded moment(s) -> var/coach-grade/review/pc-human-auto-42/triage.jsonl
+coach-grade: a shard failed -- see var/coach-grade/review/pc-human-auto-42/triage.jsonl.shard-*.log
+REVIEW WARN a triage shard failed (see var/coach-grade/review/pc-human-auto-42/triage.jsonl.shard-*.log)
+REVIEW STAGE report
+review: 32 decision(s), 0 graded, 0 mistake(s), 0 close call(s), 0 deepened -> var/coach-grade/review/pc-human-auto-42/report.json
+REVIEW DONE var/coach-grade/review/pc-human-auto-42/report.json
+REVIEW STAGE plan fixtures/games/human-trample-7.jsonl seat 0
+{"status":"ok","decisions":23,"jobs":7,"triageMsPerDecision":3750,"gameId":"human-trample-7","frames":1155}
+REVIEW STAGE triage 23 decision(s) on 7 JVM(s), 3750 ms each
+coach-grade: 0 graded moment(s) -> var/coach-grade/review/pc-human-trample-7/triage.jsonl
+coach-grade: a shard failed -- see var/coach-grade/review/pc-human-trample-7/triage.jsonl.shard-*.log
+REVIEW WARN a triage shard failed (see var/coach-grade/review/pc-human-trample-7/triage.jsonl.shard-*.log)
+REVIEW STAGE report
+review: 23 decision(s), 0 graded, 0 mistake(s), 0 close call(s), 0 deepened -> var/coach-grade/review/pc-human-trample-7/report.json
+REVIEW DONE var/coach-grade/review/pc-human-trample-7/report.json
+REVIEW STAGE plan fixtures/games/human-comfort-13.jsonl seat 0
+{"status":"ok","decisions":22,"jobs":7,"triageMsPerDecision":3750,"gameId":"human-comfort-13","frames":1316}
+REVIEW STAGE triage 22 decision(s) on 7 JVM(s), 3750 ms each
+coach-grade: 0 graded moment(s) -> var/coach-grade/review/pc-human-comfort-13/triage.jsonl
+coach-grade: a shard failed -- see var/coach-grade/review/pc-human-comfort-13/triage.jsonl.shard-*.log
+REVIEW WARN a triage shard failed (see var/coach-grade/review/pc-human-comfort-13/triage.jsonl.shard-*.log)
+REVIEW STAGE report
+review: 22 decision(s), 0 graded, 0 mistake(s), 0 close call(s), 0 deepened -> var/coach-grade/review/pc-human-comfort-13/report.json
+REVIEW DONE var/coach-grade/review/pc-human-comfort-13/report.json

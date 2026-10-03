@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-03T18:58:35-04:00",
- "heartbeat": "2026-10-03T18:58:35-04:00",
+ "updated": "2026-10-03T18:58:59-04:00",
+ "heartbeat": "2026-10-03T18:58:59-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.22,
-  "memUsedGb": 8.3,
+  "load1": 15.99,
+  "memUsedGb": 9.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 2485,
   "pressure": 0,
@@ -17,49 +17,43 @@
  },
  "running": [
   {
-   "publicTitle": "Game review smoke",
-   "publicEst": "~15 min",
-   "id": "J028",
-   "title": "Post-game review smoke on 3 recorded games",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-03T18:57:58-04:00",
-   "elapsed": 37,
-   "done": 0,
-   "total": 3,
-   "unit": "files",
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 7,
-   "workersMax": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-03T18:57:58-04:00",
-   "memGb": 0.01,
-   "live": {
-    "elapsed_s": 37,
-    "peak_worker_rss_gb": 0.83,
-    "pilot_fail": 0,
-    "pilot_ok": 1,
-    "pressure_events": 0,
-    "workers": 3
-   },
-   "liveHeadline": [],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J028-run1"
-  }
- ],
- "queue": [
-  {
    "publicTitle": "Evaluator training and fit gate",
    "publicEst": "~6 h",
    "id": "J034",
    "title": "Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
    "cpu": "heavy",
-   "est": "~4-7 h (encode about 1,000 rows/s single-threaded; the grid gets 3 h; the leaf rows about 30 min on one JVM)"
-  },
+   "phase": "prepare",
+   "started": "2026-10-03T18:58:59-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": null,
+   "unit": "rows",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": "2026-10-03T18:58:59-04:00",
+   "memGb": null,
+   "live": {
+    "ds.written": 0,
+    "elapsed_s": 0,
+    "fit.written": 0,
+    "leaf.lines": 0,
+    "model.bytes": 0,
+    "model.exists": 0,
+    "pressure_events": 0,
+    "workers": 1
+   },
+   "liveHeadline": [],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J034-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Omega exploration check",
    "publicEst": "~40 min",
@@ -135,6 +129,20 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Game review smoke",
+   "publicEst": "~15 min",
+   "id": "J028",
+   "title": "Post-game review smoke on 3 recorded games",
+   "status": "failed",
+   "finished": "2026-10-03T18:58:59-04:00",
+   "headline": "reports 3 · timing.max_total_s 7.264",
+   "numbers": {
+    "reports": 3,
+    "timing.max_total_s": 7.264
+   },
+   "detail": "check: done == 3 (done = 4)"
+  },
   {
    "publicTitle": "Decision records pilot re-run",
    "publicEst": "~60 min",

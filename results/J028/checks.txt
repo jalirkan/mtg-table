@@ -1,0 +1,6 @@
+PASS  reports == 3   [reports = 3]
+FAIL  done == 3   [done = 4]
+PASS  failed == 0   [failed = 0]
+PASS  timing.shape_ok == 1   [timing.shape_ok = 1]
+PASS  timing.decisions > 0   [timing.decisions = 77]
+PASS  timing.max_total_s < 1800   [timing.max_total_s = 7.264]
