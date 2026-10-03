@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:11:21-04:00",
+ "updated": "2026-10-03T13:15:57-04:00",
  "paused": true,
  "host": {
-  "load1": 1.62,
-  "memUsedGb": 6.3,
+  "load1": 0.09,
+  "memUsedGb": 5.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
@@ -12,7 +12,40 @@
   "budgetGb": 23.4
  },
  "running": [],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J015",
+   "title": "Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
+   "cpu": "heavy",
+   "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J016",
+   "title": "Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
+   "cpu": "heavy",
+   "est": "one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops well before)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J017",
+   "title": "Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference",
+   "cpu": "heavy",
+   "est": "about one night (up to 1,500 games; the 20-vs-40 Elo test usually stops sooner)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J018",
+   "title": "Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin",
+   "cpu": "heavy",
+   "est": "one to two nights (up to 2,400 games)"
+  }
+ ],
  "waiting": [
   {
    "publicTitle": null,
