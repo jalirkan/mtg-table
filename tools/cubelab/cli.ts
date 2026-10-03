@@ -146,8 +146,11 @@ export function readRun(out: string): { meta: RunMeta; cards: Record<string, Car
 }
 
 export function pairNames(meta: RunMeta): Record<string, string> {
+  // A run.json written before the parser keyed pairs in WUBRG order may say GW.
+  const plans: Record<string, string> = {};
+  for (const [k, v] of Object.entries(meta.archetypes ?? {})) plans[[...k].sort((a, b) => 'WUBRG'.indexOf(a) - 'WUBRG'.indexOf(b)).join('')] = v;
   const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(GUILD)) out[k] = meta.archetypes?.[k] ? `${v}: ${meta.archetypes[k]}` : v;
+  for (const [k, v] of Object.entries(GUILD)) out[k] = plans[k] ? `${v}: ${plans[k]}` : v;
   return out;
 }
 

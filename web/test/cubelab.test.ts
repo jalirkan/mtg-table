@@ -5,9 +5,9 @@
  * The cube lab's engine-free half (tools/cubelab/, D293–D296): everything the
  * lab decides before Forge plays a game, and everything the report says after.
  *
- *  - parsing: both committed cubes read as 180 cards in the sections their
- *    headings promise, with themes, roles, gold pairs, prices dropped and the
- *    Pathways by their front faces;
+ *  - parsing: all four committed cubes read as 180 cards in the sections their
+ *    headings promise, with each cube's own theme codes, roles, gold pairs,
+ *    lands group lines, prices dropped and the Pathways by their front faces;
  *  - mana: pips, and what a dual, a fetchland, a Prism or a land search makes;
  *  - the seeded generator: a draft is a function of its seed;
  *  - GRID rules: 18 grids of 9 from 162, a row or column each, 3 then 2-or-3
@@ -82,8 +82,10 @@ function syntheticCube(): LabCard[] {
 
 // ------------------------------------------------------------ parsing
 
-test('both committed cubes parse to 180 cards in the sections their headings promise', () => {
-  for (const f of ['cubes/synergy-cube-180.md', 'cubes/modern-era-cube-180.md']) {
+const CUBES = ['cubes/synergy-cube-180.md', 'cubes/modern-era-cube-180.md', 'cubes/vintage-cube-180.md', 'cubes/pauper-cube-180.md'];
+
+test('every committed cube parses to 180 cards in the sections its headings promise', () => {
+  for (const f of CUBES) {
     const c = parseCube(readFileSync(join(REPO, f), 'utf8'));
     assert.equal(c.cards.length, 180, f);
     assert.deepEqual(c.warnings, [], f);
@@ -109,6 +111,19 @@ test('themes, roles, gold pairs, prices and Pathways', () => {
   assert.equal(Object.keys(mod.archetypes).length, 10);
   assert.deepEqual(splitItem('Lightning Helix — removal LIFE SPL'), { name: 'Lightning Helix', themes: ['LIFE', 'SPL'], roles: ['removal'] });
   assert.deepEqual(splitItem('The One Ring 117.87'), { name: 'The One Ring', themes: [], roles: [] });
+  assert.deepEqual(mod.archetypes.WG, 'Creatures, counters, value', 'a GW row is keyed WG');
+  // Each cube's own theme codes; a group line's (TAGS) apply to every card on it.
+  const vin = parseCube(readFileSync(join(REPO, 'cubes/vintage-cube-180.md'), 'utf8'));
+  const vby = new Map(vin.cards.map((c) => [c.name, c]));
+  assert.ok('REAN' in vin.themeNames && 'CTRL' in vin.themeNames);
+  assert.deepEqual(vby.get('Scalding Tarn')?.themes, ['LND', 'GY']);
+  assert.deepEqual(vby.get('Ancient Tomb')?.themes, ['RAMP', 'REAN', 'ART']);
+  assert.equal(vin.cards.filter((c) => c.section === 'Lands').length, 21);
+  const pau = parseCube(readFileSync(join(REPO, 'cubes/pauper-cube-180.md'), 'utf8'));
+  assert.deepEqual(new Map(pau.cards.map((c) => [c.name, c])).get('Thraben Inspector')?.themes, ['ART', 'FLK'], 'a price after the tags is dropped');
+  const t = parseCube('# T\n| Code | Theme |\n|---|---|\n| AGG | Aggro |\n## The list\n### White (2)\nA — AGG · B — XYZ removal\n');
+  assert.deepEqual(t.cards.map((c) => c.themes), [['AGG'], []]);
+  assert.deepEqual(t.warnings, ['tag(s) not in the theme table, ignored: XYZ']);
   const bad = parseCube('# T\n## The list\n### White (2)\nA · B · C\n');
   assert.deepEqual(bad.warnings, ['section White: parsed 3, the heading says 2']);
 });
