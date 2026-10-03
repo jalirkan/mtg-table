@@ -46,7 +46,7 @@ import mtgtable.Json;
 import mtgtable.ai.SearchPolicy;
 
 /**
- * The engine-graded coach bench's grader (D-grade): one decision of a recorded
+ * The engine-graded coach bench's grader (D332): one decision of a recorded
  * game, every legal option of the kinds the bench asks about, each played out
  * many times by Forge's Default AI on both seats, on common random numbers,
  * with racing; the result is each option's win rate and its regret against the
@@ -78,6 +78,8 @@ public final class Grader {
     /** The grading run's settings. */
     public static final class Settings {
         public long seed = 1;
+        /** Wall-clock budget for the whole decision, ms (0 = none): the live analysis's knob. */
+        public long budgetMs;
         public Racer.Config race = new Racer.Config();
         /** Negative: play to the end of the game (the default). Else turns past this one, then the evaluator. */
         public int horizon = -1;
@@ -101,6 +103,8 @@ public final class Grader {
         final String token;
         final String label;
         boolean forge;
+        /** Tokens of interchangeable choices (another copy of the same card): graded once, reported under each. */
+        final List<String> aliases = new ArrayList<>();
         /** Tweaks of its own (a target put on the stack), or null to share the round's base. */
         final Rebuild.Tweaks tweaks;
         final Function<Rebuild.Base, SearchPolicy.Cand> cand;
@@ -181,7 +185,13 @@ public final class Grader {
             }
             opts = enumerate(rb, b0);
         } catch (final RuntimeException e) {
-            return j.n("status", "unsupported").n("error", String.valueOf(e.getMessage() != null ? e.getMessage() : e))
+            final StringBuilder where = new StringBuilder();
+            if (e instanceof NullPointerException || e instanceof ClassCastException || e instanceof IndexOutOfBoundsException) {
+                for (int k = 0; k < Math.min(4, e.getStackTrace().length); k++) {
+                    where.append(" | at ").append(e.getStackTrace()[k]);
+                }
+            }
+            return j.n("status", "unsupported").n("error", String.valueOf(e.getMessage() != null ? e.getMessage() : e) + where)
                     .n("ms", (System.nanoTime() - t0) / 1_000_000L).end().done();
         }
         j.key("fidelity").arr();
@@ -216,7 +226,8 @@ public final class Grader {
                     }
                 }
                 final SearchPolicy.Cand cand = o.cand.apply(base);
-                final long deadline = System.nanoTime() + set.playoutTimeoutMs * 1_000_000L;
+                final long own = System.nanoTime() + set.playoutTimeoutMs * 1_000_000L;
+                final long deadline = r < set.race.minRounds ? own : Math.min(own, set.race.deadline);
                 final int horizon = set.horizon < 0 ? set.maxTurns : set.horizon;
                 final SearchPolicy.Playout p = SearchPolicy.playout(base.game, base.viewer, cand, seed,
                         new SearchPolicy.Limits(deadline, horizon, set.maxSteps), sink, r == 0 && i == 0, null);
@@ -242,7 +253,7 @@ public final class Grader {
                 hi = Math.max(hi, rows[i].winRate);
             }
         }
-        j.n("status", "ok").n("rounds", res.rounds).n("playouts", res.playouts).n("stop", res.stop)
+        j.n("status", "ok").n("measure", set.horizon < 0 ? "wins" : "leaf").n("rounds", res.rounds).n("playouts", res.playouts).n("stop", res.stop)
                 .n("best", bestIdx < 0 ? "" : opts.get(bestIdx).token)
                 .n("spread", hi - lo).n("noise", GradeMath.noise(rows));
         for (final Opt o : opts) {
@@ -284,8 +295,39 @@ public final class Grader {
                         .n("failed", res.failed[i]).n("errors", res.errors[i]);
             }
             j.end();
+            for (final String a : o.aliases) {
+                j.obj().n("token", a).n("label", o.label + " (the same choice as " + o.token + ")").n("forge", false).n("alias", o.token);
+                if (rows != null) {
+                    final GradeMath.Row r = rows[i];
+                    j.n("n", r.n).n("winRate", r.winRate).n("winLo", r.winLo).n("winHi", r.winHi)
+                            .n("regret", r.regret).n("regretLo", r.regretLo).n("regretHi", r.regretHi)
+                            .n("pairedN", r.pairedN).n("best", false).n("active", r.active)
+                            .n("failed", res.failed[i]).n("errors", res.errors[i]);
+                }
+                j.end();
+            }
         }
         j.end();
+    }
+
+    /** Fold options whose key is equal into the first one, as its aliases. */
+    private static List<Opt> fold(final List<Opt> in, final Function<Opt, String> key) {
+        final List<Opt> out = new ArrayList<>();
+        final Map<String, Opt> first = new HashMap<>();
+        for (final Opt o : in) {
+            final String k = key.apply(o);
+            final Opt f = k == null ? null : first.get(k);
+            if (f == null) {
+                if (k != null) {
+                    first.put(k, o);
+                }
+                out.add(o);
+            } else {
+                f.aliases.add(o.token);
+                f.forge |= o.forge;
+            }
+        }
+        return out;
     }
 
     private double value(final SearchPolicy.Playout p) {
@@ -320,6 +362,9 @@ public final class Grader {
             if (t.castFromStack) {
                 tw.toHand.add(t.sourceId);
             }
+            if (t.sourceName != null) {
+                tw.extraHand.put(t.sourceId, t.sourceName);
+            }
             tw.viewerPutOnStack.addAll(stackBelow(t, tw));
         }
         return tw;
@@ -328,6 +373,8 @@ public final class Grader {
     /** A target decision's source, read from the engine's prompt ("Name (id) - text"). */
     static final class Target {
         int sourceId;
+        /** Set when the log shows the source nowhere (a spell on its way from hand to stack): the prompt's name. */
+        String sourceName;
         String text;
         boolean trigger;
         boolean castFromStack;
@@ -359,6 +406,9 @@ public final class Grader {
         t.sourceId = Integer.parseInt(m.group(2));
         t.text = m.group(3);
         final Map<?, ?> src = wireCards.get(t.sourceId);
+        if (src == null) {
+            t.sourceName = m.group(1).trim();   // being cast: the engine took it out of the hand already
+        }
         final String zone = src == null ? "" : String.valueOf(WireLog.str(src, "zone"));
         t.trigger = "battlefield".equals(zone) && Pattern.compile("\\b(When|Whenever|At the)\\b").matcher(t.text).find();
         t.castFromStack = "stack".equals(zone);
@@ -464,7 +514,10 @@ public final class Grader {
         } catch (final RuntimeException e) {
             notes.add("Forge's own choice could not be read: " + e);
         }
-        return out;
+        // Two copies of one card in hand are one choice.
+        return fold(out, o -> o.token.startsWith("cast:") || o.token.startsWith("land:")
+                ? o.token.substring(0, o.token.indexOf(':')) + "|" + b.byWire.get(Integer.parseInt(o.token.substring(o.token.indexOf(':') + 1))).getName()
+                : null);
     }
 
     /** The land Forge's AI would play now (else the first playable land in hand), or -1 when none / no drop left. */
@@ -1022,7 +1075,7 @@ public final class Grader {
                 tw.viewerPutOnStack.add(t.sourceId + ":" + svar + "->" + id);
                 out.add(new Opt("target:" + id, "target " + names(List.of(id)), tw, base -> SearchPolicy.priorityCand(null)));
             }
-            return out;
+            return fold(out, o -> targetClass(Integer.parseInt(o.token.substring(7))));
         }
         // A spell (back in hand) or an activated ability: cast it with that target.
         for (final int id : t.ids) {
@@ -1038,7 +1091,17 @@ public final class Grader {
                 return SearchPolicy.priorityCand(sa);
             }));
         }
-        return out;
+        return fold(out, o -> targetClass(Integer.parseInt(o.token.substring(7))));
+    }
+
+    /** Two targets are one choice when they are the same card in the same state under the same controller. */
+    private String targetClass(final int id) {
+        final Map<?, ?> c = wireCards.get(id);
+        if (c == null || Rebuild.knownName(c) == null) {
+            return null;
+        }
+        return classKey(id, false) + "|" + WireLog.bool(c, "tapped") + "|" + WireLog.num(c, "controller", -1) + "|"
+                + WireLog.str(c, "zone");
     }
 
     private static String triggerSVar(final Card src, final String text) {

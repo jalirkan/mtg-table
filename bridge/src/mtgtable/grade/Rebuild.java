@@ -58,7 +58,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
 
 /**
  * A decision position rebuilt as a live Forge game from the viewing seat's
- * redacted view (D-grade), through Forge's own {@link GameState} loader.
+ * redacted view (D332), through Forge's own {@link GameState} loader.
  *
  * <p><b>What it may use</b> -- the search AI's rule (D312, {@code Determinizer}):
  * everything public in the log, the viewer's own hand, the viewer's own deck
@@ -111,6 +111,8 @@ public final class Rebuild {
         public boolean stackHandled;
         /** A spell decision with the land drop still open: this land (wire id) is played first. */
         public int playLand = -1;
+        /** Cards the log no longer shows anywhere (a spell between hand and stack while its target is chosen): wire id -> name, back in the viewer's hand. */
+        public final Map<Integer, String> extraHand = new LinkedHashMap<>();
     }
 
     /** The rebuilt game. */
@@ -277,6 +279,10 @@ public final class Rebuild {
             seenAll.add(n);
         }
 
+        for (final String n : tw.extraHand.values()) {
+            seen.get(viewerIdx).add(n);
+            seenAll.add(n);
+        }
         // The hidden cards of each side.
         final int opp = 1 - viewerIdx;
         final List<String> ownLibrary = ownHidden(seen.get(viewerIdx), b);
@@ -362,6 +368,13 @@ public final class Rebuild {
                     handIds.add((int) id);
                 }
             }
+            if (i == viewerIdx) {
+                for (final Map.Entry<Integer, String> e : tw.extraHand.entrySet()) {
+                    hand.add(e.getValue() + "|Id:" + e.getKey());
+                    handIds.add(e.getKey());
+                    specIds.put(e.getKey(), e.getKey());
+                }
+            }
             for (int n = 0; n < toDeal && !source.isEmpty(); n++) {
                 hand.add(source.remove(source.size() - 1));
                 handIds.add(null);
@@ -395,7 +408,7 @@ public final class Rebuild {
                 if (s == null) {
                     continue;
                 }
-                if (s.startsWith("t:")) {
+                if (s.startsWith("T:")) {
                     bfTokens.add(s);
                     bfTokenIds.add((int) WireLog.num(c, "id", -1));
                 } else {
@@ -740,6 +753,11 @@ public final class Rebuild {
                 found = e.getKey();
             }
         }
+        if (found != null) {
+            // GameState's "T:" form: the script and an edition that prints it.
+            final forge.item.PaperToken pt = StaticData.instance().getAllTokens().getToken(found);
+            found = pt == null ? null : found + "|Set:" + pt.getEdition();
+        }
         TOKEN_SCRIPTS.put(key, found);
         return found;
     }
@@ -757,7 +775,7 @@ public final class Rebuild {
                     b.fidelity.add("token " + name + " #" + id + " has no Forge token script: left out");
                     return null;
                 }
-                sb.append("t:").append(script);
+                sb.append("T:").append(script);
             }
         } else {
             if (StaticData.instance().getCommonCards().getCard(name) == null) {
@@ -861,6 +879,7 @@ public final class Rebuild {
             final String n = knownName(c);
             wireName.put((int) WireLog.num(c, "id", -1), n == null ? "" : n);
         }
+        wireName.putAll(tw.extraHand);
         for (int i = 0; i < 2; i++) {
             final Player p = b.game.getPlayers().get(i);
             matchZone(b, new ArrayList<>(p.getCardsIn(ZoneType.Battlefield)), battleOrder.get(i), wireName, "battlefield");

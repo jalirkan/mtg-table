@@ -55,7 +55,7 @@ import mtgtable.ai.LenientGameCopier;
 import mtgtable.ai.PolicyLobbyPlayerAi;
 
 /**
- * {@code tools/coach-grade.sh}'s Java half (D-grade): grade one decision, or a
+ * {@code tools/coach-grade.sh}'s Java half (D332): grade one decision, or a
  * file of them, against Forge Default.  A measuring tool beside the game, like
  * {@code tools/ai-bench}: no socket, no protocol, no frame log written.
  *
@@ -64,6 +64,8 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *            [knowledge] [settings] [--out FILE]
  *   batch    --moments M.jsonl --out OUT.jsonl [--shard I/K] [knowledge] [settings]
  *   selftest [--log F --frame N --type T --opp-deck D]    (engine smoke, under 20 playouts)
+ *   analyse  --log F --type T [--frame N (default: the log's end)] [knowledge] [--budget-ms 3000]
+ *   serve    [defaults]   (one booted engine; JSON requests on stdin, answers on stdout)
  *
  *   knowledge: --deck D (the viewer's list; default the log header's deck path)
  *              --opp-deck D | --opp-pool P (a list of cards, a .dck, or "N Name" lines)
@@ -80,6 +82,15 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * {@code oppDeck}, {@code oppPool}.  Each output line is {@link Grader#run}'s
  * object plus those fields.  A batch resumes: keys already in {@code --out}
  * are skipped.
+ *
+ * <p><b>Live analysis</b> (D334): {@code analyse} and {@code serve} grade the
+ * current decision of a game in play with {@link #liveSettings} -- a
+ * wall-clock budget ({@code --budget-ms}, default 3000; at least
+ * {@code --min-rounds} 2 rounds whatever it says), playouts to the end of this
+ * turn ({@code --horizon 0}) scored by the search's leaf evaluator
+ * ({@code "measure": "leaf"}: a pseudo win rate, a logistic of the leaf
+ * score, not a count of wins), racing from round 6.  The answer is the grade
+ * object below plus {@code frame} and {@code wallMs}.
  *
  * <p>Threads: the grading runs as one task on Forge's game pool, started with
  * {@code GameAction.invoke} on a scratch game and waited on with a latch, as
@@ -106,6 +117,12 @@ public final class CoachGrade {
                 break;
             case "selftest":
                 exit = selftest(rest);
+                break;
+            case "analyse":
+                exit = analyse(rest);
+                break;
+            case "serve":
+                exit = serve(rest);
                 break;
             default:
                 throw new IllegalArgumentException("unknown mode " + args[0]);
@@ -158,8 +175,30 @@ public final class CoachGrade {
         }
     }
 
+    /**
+     * The live analysis's defaults (D334): a time budget, not a playout count
+     * (at least two rounds whatever it says); playouts to the end of this turn
+     * scored by the search's leaf evaluator, its own choice for a 1.5 s think
+     * (D312) -- a full game costs seconds a playout; racing from round 6.
+     */
+    static Grader.Settings liveSettings(final Flags f) {
+        final Flags g = new Flags(new String[0]);
+        g.v.put("playouts", "10000");
+        g.v.put("initial", "6");
+        g.v.put("batch", "3");
+        g.v.put("horizon", "0");
+        g.v.put("cap", "12");
+        g.v.put("timeout-ms", "5000");
+        g.v.putAll(f.v);
+        final Grader.Settings s = settings(g);
+        s.budgetMs = g.l("budget-ms", 3000);
+        s.race.minRounds = g.i("min-rounds", 2);
+        return s;
+    }
+
     static Grader.Settings settings(final Flags f) {
         final Grader.Settings s = new Grader.Settings();
+        s.budgetMs = f.l("budget-ms", 0);
         s.seed = f.l("seed", 1);
         s.race.target = f.i("playouts", 200);
         s.race.initial = Math.min(s.race.target, f.i("initial", 40));
@@ -279,8 +318,9 @@ public final class CoachGrade {
         if (m == null) {
             throw new IllegalArgumentException("no state before frame " + frame);
         }
-        if (maxMs > 0) {
-            s.race.deadline = System.nanoTime() + maxMs * 1_000_000L;
+        final long budget = s.budgetMs > 0 ? (maxMs > 0 ? Math.min(maxMs, s.budgetMs) : s.budgetMs) : maxMs;
+        if (budget > 0) {
+            s.race.deadline = System.nanoTime() + budget * 1_000_000L;
         }
         final String key = logFile.getName() + "#" + mode + frame + ":" + type;
         final String[] out = new String[1];
@@ -288,7 +328,7 @@ public final class CoachGrade {
         realOut = System.out;
         System.setOut(new PrintStream(noise, true, "UTF-8"));   // Forge prints a lot during a game
         try {
-            onGameThread(() -> out[0] = new Grader(log, m, type, k, s, key).run(), maxMs > 0 ? maxMs + 600_000 : 7L * 24 * 3600 * 1000);
+            onGameThread(() -> out[0] = new Grader(log, m, type, k, s, key).run(), budget > 0 ? budget + 600_000 : 7L * 24 * 3600 * 1000);
         } finally {
             System.setOut(realOut);
         }
@@ -372,6 +412,9 @@ public final class CoachGrade {
                     extra.add(String.valueOf(t));
                 }
                 s.extra = extra;
+                if (WireLog.bool(mo, "lands")) {
+                    s.lands = true;   // a spell case that offers the land drop (ForgeCoach's lands: true)
+                }
                 String line;
                 final long t0 = System.nanoTime();
                 try {
@@ -404,6 +447,88 @@ public final class CoachGrade {
             }
         }
         System.err.println("[coach-grade] batch shard " + shard + "/" + shards + ": " + graded + " graded");
+        return 0;
+    }
+
+    // ------------------------------------------------------------------
+    // Live analysis (D334): one decision now, inside a time budget
+    // ------------------------------------------------------------------
+
+    /** {@code analyse}: grade with the live defaults (a budget, a short horizon); prints one JSON line. */
+    static int analyse(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        if (!f.v.containsKey("log") || !f.v.containsKey("type")) {
+            throw new IllegalArgumentException("analyse needs --log and --type (and --frame; default: the end of the log)");
+        }
+        boot();
+        final Config cfg = Config.load();
+        final String line = analyseOne(cfg, f);
+        System.out.println(line);
+        return line.contains("\"status\":\"ok\"") ? 0 : 1;
+    }
+
+    static String analyseOne(final Config cfg, final Flags f) throws Exception {
+        final File logFile = resolve(cfg, f.s("log", ""));
+        final WireLog log = WireLog.read(logFile);
+        final int frame = f.v.containsKey("frame") ? f.i("frame", 0) : log.frames.size();
+        final Rebuild.Knowledge k = knowledge(cfg, log, f.s("deck", null), f.s("opp-deck", null), f.s("opp-pool", null));
+        final long t0 = System.nanoTime();
+        final String line = gradeOne(cfg, logFile, frame, f.s("mode", "live"), f.s("type", ""), k, liveSettings(f), 0);
+        final long ms = (System.nanoTime() - t0) / 1_000_000L;
+        return line.substring(0, line.length() - 1) + ",\"frame\":" + frame + ",\"wallMs\":" + ms + "}";
+    }
+
+    /**
+     * {@code serve}: one booted engine answering analysis requests, one JSON
+     * object per line on stdin, one JSON line per answer on stdout (Forge's own
+     * printing goes to stderr).  A request is
+     * {@code {"id", "log", "type", "frame"?, "mode"?, "oppDeck"?, "oppPool"?,
+     * "deck"?, "budgetMs"?, "horizon"?, "seed"?, "only"?}}; the answer is
+     * {@code analyse}'s object with the request's {@code id}.  Requests are
+     * answered one at a time, in order; EOF ends the process.
+     */
+    static int serve(final String[] argv) throws Exception {
+        final Flags defaults = new Flags(argv);
+        final PrintStream out = System.out;
+        System.setOut(System.err);   // stdout carries the answers only
+        boot();
+        final Config cfg = Config.load();
+        out.println("{\"ready\":true}");
+        out.flush();
+        final java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(System.in, StandardCharsets.UTF_8));
+        for (String raw = in.readLine(); raw != null; raw = in.readLine()) {
+            if (raw.isBlank()) {
+                continue;
+            }
+            String id = "";
+            String line;
+            try {
+                final Map<?, ?> req = (Map<?, ?>) Json.parse(raw);
+                id = String.valueOf(req.get("id") == null ? "" : req.get("id"));
+                final Flags f = new Flags(new String[0]);
+                f.v.putAll(defaults.v);
+                for (final String[] kf : new String[][] {{"log", "log"}, {"type", "type"}, {"frame", "frame"}, {"mode", "mode"},
+                    {"oppDeck", "opp-deck"}, {"oppPool", "opp-pool"}, {"deck", "deck"}, {"budgetMs", "budget-ms"},
+                    {"horizon", "horizon"}, {"seed", "seed"}, {"only", "only"}, {"minRounds", "min-rounds"}}) {
+                    if (req.get(kf[0]) != null) {
+                        f.v.put(kf[1], String.valueOf(req.get(kf[0])));
+                    }
+                }
+                if (!f.v.containsKey("log") || !f.v.containsKey("type")) {
+                    throw new IllegalArgumentException("a request needs log and type");
+                }
+                System.setOut(System.err);
+                line = analyseOne(cfg, f);
+            } catch (final Exception e) {
+                line = new Json.JsonOut().obj().n("v", 1).n("status", "error").n("error", String.valueOf(e)).end().done();
+            } finally {
+                System.setOut(System.err);
+            }
+            final StringBuilder sb = new StringBuilder("{\"id\":");
+            Json.quote(sb, id);
+            out.println(sb + "," + line.substring(1));
+            out.flush();
+        }
         return 0;
     }
 

@@ -119,7 +119,7 @@ public final class SearchPolicy {
 
     /**
      * One alternative, installed into a fresh copy before its rollout.  Public
-     * (D-grade, the coach grader) so {@code mtgtable.grade} plays the same
+     * (D332, the coach grader) so {@code mtgtable.grade} plays the same
      * candidates through the same {@link #playout}; only this package makes
      * them ({@link #priorityCand}, {@link #attackCand}, {@link #blockCand}).
      */

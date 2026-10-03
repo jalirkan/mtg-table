@@ -1,40 +1,42 @@
 #!/usr/bin/env bash
-# mtg-table — the engine-graded coach bench's grader (D-grade).
+# mtg-table — the engine analysis of a decision (D332–D334).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Grades a decision of a recorded game: every legal option (spell / pass,
-# attack, block, target) is played out many times by Forge's Default AI on both
-# seats from the viewer's redacted view, the hidden cards determinized (never
-# the real ones), on common random numbers with racing, and each option gets a
-# win rate and a regret (best win rate minus its own) with intervals.
-# ForgeCoach's coach bench reads the result (`bench:coach -- import-graded`).
-# A measuring tool beside the game, like ai-bench: NOT in the gate (it needs
-# the engine and takes minutes per decision); its arithmetic is held by
-# bridge/build.sh (mtgtable.grade.GradeSelfTest).
+# Rebuilds a decision of a game from the viewing seat's redacted log, the hidden
+# cards determinized (never the real ones), and plays every legal option (spell
+# / pass, attack, block, target) out with Forge's Default AI on both seats, on
+# common random numbers with racing: each option gets a win rate and a regret
+# (best win rate minus its own) with intervals.  Two uses: the LIVE analysis a
+# coach explains (analyse / serve, a few seconds), and the coach bench's regret
+# tables (grade / batch, minutes; ForgeCoach `bench:coach -- import-graded`).
+# A tool beside the game, like ai-bench: NOT in the gate (it boots the engine);
+# its arithmetic is held by bridge/build.sh (mtgtable.grade.GradeSelfTest).
 #
 #   ./tools/coach-grade.sh grade --log F --frame N [--mode live|review] --type T \
 #        [--opp-deck D | --opp-pool P] [--deck D] [--playouts 200] [--seed 1] ...
 #   ./tools/coach-grade.sh batch --moments M.jsonl --out OUT.jsonl [--jobs K] ...
 #   ./tools/coach-grade.sh selftest [--log F --frame N --type T --opp-deck D]
-#   ./tools/coach-grade.sh mine --forgecoach DIR --logs 'GLOB' --run NAME \
-#        [--opp-deck D | --opp-pool P | --run-dir LABRUN] [--pass1 16] [--keep 40]
+#   ./tools/coach-grade.sh analyse --log F --type T [--frame N] [--opp-deck D] [--budget-ms 3000]
+#   ./tools/coach-grade.sh serve [defaults]      # JSON requests on stdin, one answer line each
 #
 # Every flag of grade / batch is mtgtable.grade.CoachGrade's (see its header):
 # --playouts N rounds an option still in the race ends with (200), --initial N
 # (40) and --batch N (20) for racing, --no-race, --horizon T (-1 = to the end of
 # the game), --max-turns, --timeout-ms (per playout), --max-ms (per decision),
-# --max-playouts, --cap, --lands, --only 'tok tok', --extra 'tok tok'.
+# --max-playouts, --cap, --lands, --only 'tok tok', --extra 'tok tok', --budget-ms.
 #
 # batch --jobs K runs K JVMs on every K-th moment, each with a Forge home of its
 # own under var/coach-grade/<run>/home-<i>/ (forge_home_make, D129), appending
 # to <out>.shard-<i>.jsonl, then concatenates them into <out>; a rerun resumes.
 #
-# mine is the turning-point miner: ForgeCoach lists the moments of the logs
-# (`bench:coach -- moments`), a cheap first pass grades each (--pass1 rounds per
-# option, no racing), and ForgeCoach keeps the decisions whose options differ
-# most (`bench:coach -- import-graded --select`) as candidate cases.  Its output
-# is var/coach-grade/<run>/{moments,pass1,candidates}.jsonl.
+# analyse / serve are the LIVE analysis (D334): the current decision of a game
+# being played, inside a wall-clock budget (default 3 s, at least two rounds),
+# playouts to the end of this turn scored by the search's leaf evaluator, so a
+# coach can explain the engine's numbers.  serve keeps one booted engine (Forge
+# takes ~10 s to start) and answers one JSON request per stdin line:
+#   {"id","log","type","frame"?,"mode"?,"oppDeck"?,"oppPool"?,"deck"?,"budgetMs"?,"horizon"?,"seed"?,"only"?}
+# with one JSON line on stdout (`{"ready":true}` first); see CoachGrade's header.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
@@ -98,31 +100,13 @@ case "$mode" in
     shift
     batch "$@"
     ;;
-  mine)
+  analyse)
     shift
-    fc="" logs="" run="" pass1=16 keep=40 extra=()
-    while [ $# -gt 0 ]; do
-      case "$1" in
-        --forgecoach) fc="$2"; shift 2 ;;
-        --logs) logs="$2"; shift 2 ;;
-        --run) run="$2"; shift 2 ;;
-        --pass1) pass1="$2"; shift 2 ;;
-        --keep) keep="$2"; shift 2 ;;
-        *) extra+=("$1"); shift ;;
-      esac
-    done
-    [ -n "$fc" ] && [ -n "$logs" ] && [ -n "$run" ] || { echo "mine needs --forgecoach, --logs and --run" >&2; exit 2; }
-    dir="$REPO_ROOT/var/coach-grade/$run"
-    mkdir -p "$dir"
-    # 1. The moments, as ForgeCoach defines them (the deck lists ride along when given).
-    # shellcheck disable=SC2086
-    npm --prefix "$fc" run --silent bench:coach -- moments --logs "$logs" --out "$dir/moments.jsonl" "${extra[@]}"
-    # 2. A cheap first pass: few rounds per option, no racing.
-    batch --moments "$dir/moments.jsonl" --out "$dir/pass1.jsonl" --run "$run" --playouts "$pass1" --no-race \
-      ${COACH_GRADE_JOBS:+--jobs "$COACH_GRADE_JOBS"}
-    # 3. Keep the turning points.
-    npm --prefix "$fc" run --silent bench:coach -- import-graded "$dir/pass1.jsonl" --select "$keep" \
-      --candidates "$dir/candidates.jsonl"
+    jvm "$(home_for analyse-home)" analyse "$@"
+    ;;
+  serve)
+    shift
+    jvm "$(home_for serve-home)" serve "$@"
     ;;
   *)
     sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'

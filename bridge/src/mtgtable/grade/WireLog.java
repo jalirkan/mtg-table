@@ -34,7 +34,7 @@ import java.util.zip.GZIPInputStream;
 import mtgtable.Json;
 
 /**
- * A frame log as the coach grader reads it (D-grade): the session header, then
+ * A frame log as the coach grader reads it (D332): the session header, then
  * every frame, indexed exactly as ForgeCoach's {@code log.ts} indexes
  * {@code log.frames} (line 0 is the header; frame i is line i + 1), so a
  * bench case's {@code moment.frame} means the same frame here.
@@ -89,7 +89,14 @@ public final class WireLog {
         }
         final List<Map<?, ?>> frames = new ArrayList<>(lines.size());
         for (int i = 1; i < lines.size(); i++) {
-            frames.add((Map<?, ?>) Json.parse(lines.get(i)));
+            try {
+                frames.add((Map<?, ?>) Json.parse(lines.get(i)));
+            } catch (final RuntimeException e) {
+                if (i < lines.size() - 1) {
+                    throw e;
+                }
+                // a live game's log: its last line may still be being written
+            }
         }
         return new WireLog(header, frames);
     }

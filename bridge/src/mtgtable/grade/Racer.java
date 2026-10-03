@@ -21,7 +21,7 @@ package mtgtable.grade;
 import java.util.Arrays;
 
 /**
- * The grader's playout schedule (D-grade): rounds of common random numbers
+ * The grader's playout schedule (D332): rounds of common random numbers
  * with racing.  Pure -- the playout is a callback -- so {@link GradeSelfTest}
  * runs it against synthetic options with known win rates.
  *
@@ -55,8 +55,10 @@ public final class Racer {
         /** False: every option plays every round (no racing). */
         public boolean race = true;
         public long maxPlayouts = Long.MAX_VALUE;
-        /** {@code System.nanoTime()} past which no new round starts. */
+        /** {@code System.nanoTime()} past which no new round starts; a round it cuts short is dropped. */
         public long deadline = Long.MAX_VALUE;
+        /** Rounds played whatever the deadline says (a live answer with no numbers is no answer). */
+        public int minRounds;
     }
 
     public static final class Result {
@@ -82,7 +84,7 @@ public final class Racer {
         res.errors = new int[k];
         res.stop = "target";
         for (int r = 0; r < c.target; r++) {
-            if (System.nanoTime() > c.deadline) {
+            if (r >= c.minRounds && System.nanoTime() > c.deadline) {
                 res.stop = "time";
                 break;
             }
@@ -105,6 +107,20 @@ public final class Racer {
                         res.failed[i] = true;
                     }
                 }
+            }
+            if (r >= c.minRounds && System.nanoTime() > c.deadline) {
+                // The budget ran out inside this round: drop the round so every
+                // option's numbers stay paired over the same seeds.
+                for (int i = 0; i < k; i++) {
+                    if (!Double.isNaN(res.x[i][r])) {
+                        res.playouts--;
+                    } else if (res.active[i]) {
+                        res.errors[i] = Math.max(0, res.errors[i] - 1);
+                    }
+                    res.x[i][r] = Double.NaN;
+                }
+                res.stop = "time";
+                break;
             }
             res.rounds = r + 1;
             if (c.race && res.rounds >= c.initial && (res.rounds - c.initial) % Math.max(1, c.batch) == 0) {

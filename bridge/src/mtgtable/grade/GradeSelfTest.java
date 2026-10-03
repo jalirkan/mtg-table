@@ -27,7 +27,7 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * The coach grader's engine-free self-test (D-grade), run by
+ * The coach grader's engine-free self-test (D332), run by
  * {@code bridge/build.sh}: CRN seeds, the intervals, the regret table, racing,
  * the enumeration by class, the bench's token spelling, and the log reader's
  * moments.  No Forge class is loaded (Jetty's JSON parser aside, through
