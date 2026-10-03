@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:29:47-04:00",
+ "updated": "2026-10-03T13:30:01-04:00",
  "paused": false,
  "host": {
-  "load1": 6.17,
-  "memUsedGb": 6.6,
+  "load1": 5.22,
+  "memUsedGb": 6.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
@@ -15,35 +15,27 @@
   {
    "publicTitle": null,
    "publicEst": null,
-   "id": "J009",
-   "title": "Omega evolve with discovery + confirmation (D331) and recording (replaces J004)",
+   "id": "J015",
+   "title": "Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
-   "started": "2026-10-03T13:29:33-04:00",
-   "elapsed": 14,
+   "phase": "prepare",
+   "started": "2026-10-03T13:30:01-04:00",
+   "elapsed": 0,
    "done": null,
    "total": null,
    "unit": null,
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
+   "workers": 1,
+   "workersMax": 1,
    "errors": null,
    "paused": false,
    "dataUpdated": null,
    "pressureEvents": [],
-   "detail": "lab-J009-pilot1"
+   "detail": "lab-J015-prepare"
   }
  ],
  "queue": [
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J015",
-   "title": "Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
-   "cpu": "heavy",
-   "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
-  },
   {
    "publicTitle": null,
    "publicEst": null,
@@ -71,6 +63,17 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J009",
+   "title": "Omega evolve with discovery + confirmation (D331) and recording (replaces J004)",
+   "status": "failed",
+   "finished": "2026-10-03T13:30:00-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "pilot: step pilot1 exited 128"
+  },
   {
    "publicTitle": "Lab runner shakedown",
    "publicEst": "~25 min",

@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: step pilot1 exited 128
 runner: forgecoach-runner 6fbcdea
 started: 2026-10-03T13:29:33-04:00
-phase: pilot 1/1
+finished: 2026-10-03T13:30:00-04:00
 mtg-table: d9a2107
 workers: 3
+exit: 128
