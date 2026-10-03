@@ -313,7 +313,8 @@ are rules:
    started from `main` with `GameAction.invoke`, as `RecordMatch` starts its
    one; the lint scans it like every `tools/**/*.java`. Everything else is
    TypeScript under `tools/cubelab/`, pure where it can be, tested in
-   `web/test/cubelab.test.ts`.
+   `web/test/cubelab.test.ts` (and the evolve loop, D299–D300, in
+   `web/test/cubelab-evolve.test.ts`).
 2. **A draft and its decks are a function of the seed** (**D294**). Every
    random choice of a draft goes through `tools/cubelab/rng.ts` seeded from the
    draft's seed — never `Math.random`, never the clock, never the worker that
@@ -325,7 +326,10 @@ are rules:
 4. **Every number the lab decides by is a named weight** in
    `tools/cubelab/weights.ts`, documented in the guide's table and recorded in
    the run's `run.json`. A new knob is a weight, a row in that table and a line
-   in the defaults, in the same change — never a literal in the logic.
+   in the defaults, in the same change — never a literal in the logic. The
+   evolve loop's thresholds and fit weights are the same kind of thing in a
+   table of their own, `EVOLVE_DEFAULTS` in `tools/cubelab/evolve.ts` (D299),
+   with a row each in the guide's *The evolve knobs*.
 5. **`meta.json` schema 1 is ForgeCoach's contract** (**D297**). Its keys and
    their meaning (`tools/cubelab/meta.ts`'s header; the guide's *meta.json*)
    change in both repositories or not at all: a field may be added, while a

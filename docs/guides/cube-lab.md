@@ -8,7 +8,7 @@ and the raw data behind it, every pick with the cards that were on offer, for
 a drafting AI or a play AI to learn from later. No tokens, no network: Forge
 plays every game.
 
-The decisions are **D293–D297** in [`DECISIONS.md`](../../DECISIONS.md); what
+The decisions are **D293–D297** (and **D299–D300** for *Evolve*) in [`DECISIONS.md`](../../DECISIONS.md); what
 was measured is [`docs/evidence/cube-lab.md`](../evidence/cube-lab.md).
 
 ## One command
@@ -301,6 +301,127 @@ redefined without a schema 2 on both sides.
   than apart); the top `--max-pairs` by lift.
 - **lands**: win rate by the played deck's land count; **splash**: the
   splashing decks' win rate, and `vsNoSplash` its difference from the rest.
+
+## Evolve: a cube that changes by simulation (D299–D300)
+
+`evolve` runs generations of the lab on a cube and swaps cards in from a seed
+pool where the evidence says a card is dead or dominating, writing the next
+version of the cube document each time. Omega (`cubes/omega-cube-180.md`, its
+938-card pool `cubes/omega-seed-pool.tsv` and `cubes/omega-notes.tsv`) is the
+cube it was built for.
+
+```bash
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
+    --generations 2 --drafts-per-gen 30 --jobs 2 --seed 1 --out var/cubelab/evolve/omega-1
+```
+
+Overnight on a four-core PC (resumable: run the same line again after a stop;
+a finished generation is skipped and a half-played one picks up its seeds):
+
+```bash
+tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
+    --generations 6 --drafts-per-gen 200 --jobs 4 --seed 1 --out var/cubelab/evolve/omega-overnight
+```
+
+Then open `var/cubelab/evolve/omega-overnight/index.html`; the latest cube is
+`omega-cube-180.md` in the same folder, and `changelog.md` says what changed and
+why. Copy the cube over `cubes/omega-cube-180.md` when you agree with it.
+
+**One generation.** Generation g drafts the cube going in (`gen-NN/input.md`)
+over seeds `S + (g−1)·N` .. `S + g·N − 1` (grid, best of three, the run's
+weights), then reads every card's numbers from the run's `meta.json` plus one
+more: how often it went in the **first line taken** from its grid (3 of 9 cards
+is the base rate, so a card that goes there every time is everyone's first
+pick). Each card is then assessed:
+
+| status | when |
+|---|---|
+| `dead` | dealt in ≥ `minSeen` drafts, and the Wilson 95% upper bound of *decks it was played in ÷ drafts it was dealt in* is ≤ `deadDeckRateHi` |
+| `dominant-win` | ≥ `minGames` decisive games in played decks, and the Wilson lower bound of its win rate is ≥ the run's mean + `dominantLoMargin` |
+| `dominant-pick` | dealt in ≥ `minSeen` drafts, the Wilson lower bound of its first-line rate is ≥ `dominantFirstPickLo`, and its shrunk win rate is at least the mean |
+| `note-cut` / `note-keep` | the notes file says `cut` / `keep` (or `try` for a card already in) |
+| `ai-limited` | Forge marks it `AI:RemoveDeck:All` or `:Random` (the pool's `forge_ai_flag`, or the engine's own facts): its numbers are reported, the status the AI evidence alone would give is shown beside them, and **only a note can cut it** |
+| `builder-limited` | a land that makes fewer than two colours (Mutavault): the lab's deckbuilder plays lands only for colour, so a low deck rate says nothing |
+| `watch` | a lead — deck rate at or under `deadDeckRateHi`, or win rate `watchWinMargin` over the mean — that has **not** passed its threshold: *insufficient data*, with the drafts per generation that would likely settle it |
+
+**The swaps.** The cuts, in order — notes, then dominant by wins, by picks,
+then dead, strongest first — each take the best-fitting pool card that keeps
+every constraint, at most `swaps` a generation. A pool card is eligible when
+Forge supports it, it is not in the cube, it has at most two colours, no note
+says `cut` and no earlier generation cut it, and it is **not
+`AI:RemoveDeck:All`** (the AI cannot judge it) unless a note says `try`. Its
+fit with the card it replaces is `fitSameClass` for the same colour class
+(the same mono colour, the same gold pair, colourless, or a land) +
+`fitTheme` per shared theme + `fitRole` per shared role − `fitMv` per mana
+value of difference + `fitRating` × its rating ÷ 100 (for a dominant cut, the
+rating counts only up to `dominantReplaceRatio` of the cut's, and costs above
+it) + `fitBalance` × how far its themes and colours sit below the mean (0 to 1;
+a tenth below is 1) + `fitTry` for a note's `try`. The constraints, from the
+starting cube: exactly its size, singleton; each colour's nonland count within
+`colourSlack` of its start; the land count exactly; at least as many fixers
+(lands and nonland cards that make two or more colours); and every colour pair
+keeps `minSignposts` gold cards. A swap never adds a violation. AI:RemoveDeck:All
+cards that fit the weakest archetypes are listed as **human-test candidates**:
+play them in real games, and add a `try` line to test one.
+
+**The notes file** (`cubes/<cube>-notes.tsv`, e.g. `cubes/omega-notes.tsv`, or
+`--notes <tsv>`) is `card<TAB>verdict<TAB>note`: `keep` (never cut), `cut` (cut
+now if it is in the cube; never add it if it is not) or `try` (add it when a cut
+makes room). It is Justin's verdicts from real games, and it wins over every AI
+number. Omega's starts with v1's own design exclusions (*Power choices*: the
+Power Nine, fast mana, Oko and the other draft-deciders, the cheat plans and the
+two-card wins) as `cut`, so the loop never adds them. It is re-read every
+generation, so it can be edited between runs.
+
+**What a generation writes**, under `<out>/gen-NN/`: `input.md`, the run folder
+`run/` (with `report.html` and `meta.json`), `cube.md` (the next version: the
+swaps applied, the title's version bumped, the format-counts table and section
+headings recounted, and one entry in its `## Iteration log` listing each swap
+and its evidence; every other line as it was), `stats.json` (every card's
+numbers and assessment, the balance by pair, colour and theme, the decision),
+`section.html` and, last, `result.json`. `<out>/` holds `evolve.json` (options,
+knobs, the constraints, each generation's swaps), `changelog.md`, `index.html`
+(every generation, one self-contained page) and the latest cube under its own
+file name. A folder made with another cube, pool, seed, drafts, games, profiles,
+weights or knobs is refused.
+
+The drafts and decks are a function of the seed and the swaps a function of the
+drafts' results, so a generation is repeatable from its `drafts.jsonl`; Forge's
+games are not byte-for-byte repeatable (above), so a fresh run may swap
+differently where the evidence is close — which is why a swap needs the
+evidence to pass a threshold.
+
+### The evolve knobs
+
+`tools/cubelab/evolve.ts`'s `EVOLVE_DEFAULTS`; `--evolve name=value` changes one
+(`--swaps M` is `--evolve swaps=M`), and `evolve.json` records them. They are
+the evolve loop's own, not draft weights, so they do not touch `run.json`.
+
+| knob | default | what it does |
+|---|---|---|
+| `swaps` | 6 | at most this many swaps a generation |
+| `minSeen` | 15 | drafts a card must be dealt in before deck-rate or first-pick evidence counts |
+| `minGames` | 20 | decisive games in played decks before win-rate evidence counts |
+| `deadDeckRateHi` | 0.15 | dead: the upper bound of its deck rate is at most this |
+| `dominantLoMargin` | 0.05 | dominant: the lower bound of its win rate is this far over the mean |
+| `dominantFirstPickLo` | 0.75 | dominant by picks: the lower bound of its first-line rate |
+| `watchWinMargin` | 0.12 | a win rate this far over the mean is a lead to watch |
+| `colourSlack` | 2 | each colour's nonland count may move this far from the start |
+| `minSignposts` | 2 | gold cards each colour pair keeps (or its starting count, if fewer) |
+| `fitSameClass` | 4 | fit: the same colour class as the cut |
+| `fitTheme` | 3 | fit: per shared theme |
+| `fitRole` | 2 | fit: per shared role (removal, counter, …) |
+| `fitMv` | 1 | fit: lost per mana value of difference |
+| `fitRating` | 4 | fit: per 100 points of rating |
+| `fitBalance` | 3 | fit: helping the weakest themes and colours (0 to 1) |
+| `fitTry` | 20 | fit: the notes say `try` |
+| `dominantReplaceRatio` | 0.9 | a dominant card's replacement is rated up to this share of it |
+| `humanTest` | 10 | human-test candidates listed |
+
+With 30 drafts a generation a card is dealt about 27 times and plays some 10–25
+decisive games, so only clear cases pass; the changelog's *insufficient data*
+table says how many drafts would settle the rest. Two hundred drafts a
+generation is where most leads resolve.
 
 ## What it does not do
 
