@@ -1,0 +1,22 @@
+{
+ "pilot.runs": 19,
+ "pilot.drafts": 60,
+ "pilot.games": 60,
+ "pilot.engine_errors": 0,
+ "pilot.engine_error_rate": 0,
+ "pilot.timeouts": 0,
+ "pilot.mean_game_s": 9.9188,
+ "pilot.median_game_s": 8.6145,
+ "pilot.mean_game_ms": 9919,
+ "pilot.ms_per_turn": 519,
+ "pilot.cpu_ms_per_turn": 1464,
+ "pilot.recorded_games": 60,
+ "pilot.recorded_errors": 0,
+ "pilot.recorded_bytes_per_game": 176718,
+ "pilot.planned_drafts": 60,
+ "pilot.night_drafts_done": 60,
+ "pilot.nights": 1,
+ "elapsed_s": 29,
+ "workers": 3,
+ "pressure_events": 0
+}
