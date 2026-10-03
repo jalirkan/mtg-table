@@ -145,9 +145,9 @@ and real checks of the coach and board through Justin's Claude Code and browser.
   `tools/check-redaction.mjs`, `tools/ai-bench*` recording flags, `tools/ml/dataset.py` /
   `policy_data.py`: decision records and search stats in recordings (branch
   `c/decision-records`). **The multi-night queue runs wait for this to land.**
-- mtg-table `bridge/src/mtgtable/ai/SearchConfig.java` and the search's override and horizon
-  options, `bridge/src/mtgtable/grade/` (interval math, scale, hidden-information guard), and
-  `tools/coach-grade*`: the engine review's week-1 fixes (branch `c/engine-week1`).
+- mtg-table `tools/coach-grade*` (a new `review` mode), `tools/coach-helper.mjs` (`POST /review`),
+  and ForgeCoach's review and replay screens: the post-game review (branch `c/game-review`, a
+  separate cloud session). The engine week-1 fixes have merged.
 - ForgeCoach site-wide small fixes from a product QA pass (branch `c/qa-pass`, a separate
   cloud session).
 - The lab runner (`tools/runner/`) is merged. Fixes found while installing it on the PC go on a
