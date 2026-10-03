@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T14:37:12-04:00",
+ "updated": "2026-10-03T14:40:51-04:00",
  "paused": false,
  "host": {
-  "load1": 7.42,
-  "memUsedGb": 9.5,
+  "load1": 12.33,
+  "memUsedGb": 9.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 1853,
   "pressure": 0,
@@ -13,56 +13,75 @@
  },
  "running": [
   {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J023",
-   "title": "(was J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
+   "publicTitle": "Queue night 1",
+   "publicEst": "~8 h",
+   "id": "J029",
+   "title": "(J020 again, continues its folder) Overnight queue, night 1: recorded normal + bridge drafts across all cubes (decision records on)",
    "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-03T14:29:26-04:00",
-   "elapsed": 466,
-   "done": 0,
-   "total": 2400,
-   "unit": "games",
+   "phase": "prepare",
+   "started": "2026-10-03T14:40:49-04:00",
+   "elapsed": 2,
+   "done": 1271,
+   "total": 20000,
+   "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 7,
-   "workersMax": 7,
+   "workers": 1,
+   "workersMax": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-03T14:29:26-04:00",
+   "dataUpdated": "2026-10-03T14:40:51-04:00",
    "pressureEvents": [],
-   "detail": "lab-J023-run1"
+   "detail": "lab-J029-prepare"
   }
  ],
  "queue": [
   {
    "publicTitle": null,
    "publicEst": null,
-   "id": "J024",
-   "title": "(was J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference",
+   "id": "J030",
+   "title": "(was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
+   "cpu": "heavy",
+   "est": "one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops well before)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J031",
+   "title": "(was J024, earlier J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference",
    "cpu": "heavy",
    "est": "about one night (up to 1,500 games; the 20-vs-40 Elo test usually stops sooner)"
   },
   {
    "publicTitle": null,
    "publicEst": null,
-   "id": "J025",
-   "title": "(was J018) Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin",
+   "id": "J032",
+   "title": "(was J025, earlier J018) Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin",
    "cpu": "heavy",
    "est": "one to two nights (up to 2,400 games)"
   },
   {
    "publicTitle": null,
    "publicEst": null,
-   "id": "J026",
-   "title": "(was J022; retry of J015; hard after J020: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
+   "id": "J033",
+   "title": "(was J026, earlier J022; retry of J015; hard after J029: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
    "cpu": "heavy",
    "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
   }
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J023",
+   "title": "J023",
+   "status": "skipped",
+   "finished": "2026-10-03T14:40:49-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "the job file was removed from pc-jobs"
+  },
   {
    "publicTitle": "Queue night 1",
    "publicEst": "~8 h",
