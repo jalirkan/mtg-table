@@ -313,9 +313,12 @@ cube that lists it (722 distinct cards in the seven cubes' 1,260 slots).
 python3 tools/ml/matchup_data.py var/cubelab/queue --out var/ml/matchup/games.jsonl --overlap
 # train: the ladder of models, baselines, held-out drafts and cubes, power.tsv, balance.json, report.md
 python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup --holdout-cubes all [--embed 8]
-# a candidate cube (prototype; PROPOSED BY MODEL, UNVERIFIED until the lab plays it on fresh seeds)
+# a candidate cube (prototype; PROPOSED BY MODEL, UNVERIFIED until the pre-registered test it prints says ACCEPT)
 python3 tools/ml/matchup.py design --model var/ml/matchup --target-cube synergy --out var/ml/design/synergy.md
-python3 -m unittest tools/ml/tests/test_matchup.py
+# the verification test's operating characteristics, and the uncertainty/balance check on a simulated world (seconds)
+python3 tools/ml/matchup_verify.py sim --per-arm 8000 --trials 400
+python3 tools/ml/matchup_sim.py --sigma 0.06
+python3 -m unittest tools/ml/tests/test_matchup.py tools/ml/tests/test_review2.py
 ```
 
 **The data needs nothing new from the lab.** `drafts.jsonl` already holds both
@@ -340,28 +343,80 @@ smaller one on held-out drafts AND held-out cubes):
 
 and three baselines: (a) coin with play/draw, (b) plain Bradley-Terry on cards,
 (c) the per-cube shrunk win rates as `meta.json` computes them. The prior
-widths (τ per card, τ_w for the features, τ_cube) are chosen by **5-fold
-cross-validation grouped by draft**: a draft's games share both decks, so
-anything that treats them as independent (the binomial, the Laplace evidence,
-a bootstrap over games) overstates what they say. For the same reason the
-split is by draft (70/15/15 by a hash of the draft id — the deck pair, as the
-evaluator's `--split-by pair`), the intervals bootstrap over drafts, and a
-card's `sd` in `power.tsv` is the spread over refits on bootstrap resamples of
-the training drafts. Numpy only for M0, M1 and the baselines; torch only for M2.
+widths (τ per card, τ_w for the features, τ_cube) are chosen by `--tau-by`:
+**the Laplace evidence** (type-II maximum likelihood) when every draft has one
+decisive game — the queue's default, where the games are independent and the
+evidence is sound — else **5-fold cross-validation grouped by draft** (a best
+of three's games share both decks, and the evidence would count them as
+independent; D324). In the simulation (`matchup_sim.py`) the evidence lands on
+the true τ where cross-validation's pick is noisy and low, and everything below
+inherits τ (D334). The split is by draft (70/15/15 by a hash of the draft id —
+the deck pair, as the evaluator's `--split-by pair`) and the held-out intervals
+bootstrap over drafts. **A card's uncertainty is its Laplace posterior SD**
+(`sdPost`: the square root of the diagonal of the inverse Hessian at the MAP,
+centred as the power is; D334). The bootstrap over training drafts stays as
+`sdBoot`, a misspecification check only: it measures how much the *shrunk*
+estimate moves, about 0 for a card with no games, and understated the error
+2–15× for the least-seen cards (review 2, N1). Numpy only for M0, M1 and the
+baselines; torch only for M2.
+
+**What it leaves out.** A game played with a deck of the AI ladder's dev or
+confirm set (`tools/ai-bench/pairs-*.txt`), matched **card for card** whatever
+its seed (`reserved.py`, D332), and on request games of other lab versions
+(`--ver`, D333; every draft line carries `ver`, and the report counts games per
+version). **AI-limited cards** (Forge's `AI:RemoveDeck:All`, from the engine
+facts, a run's `cards.json` and the cube documents' notes; D335) are not
+rated: their card columns are zero, so they stay at their feature prior, and
+one shared column — how many such cards each deck holds — takes the dead weight
+of a card Forge's pilot seldom casts, so it is not blamed on their deckmates.
+`power.tsv` marks them `ai = limited` and does not rank them, `design` never
+cuts one, and the queue spends no draft on learning one. `--rate-ai-limited`
+switches this off.
 
 **Outputs.** `power.tsv` (every card on one scale: logits per copy against the
-average nonland card, × 25 ≈ points of win rate at even odds; `sd`; the part
-the features predict; games; the cubes listing it — the `--power` input of
-`cubelab.sh queue`), `cube-dev.tsv` (M1's per-cube deviations), `balance.json`
+average nonland card, × 25 ≈ points of win rate at even odds; `sdPost`, the
+posterior SD — act on a card only where it is below about τ/2, review 2 N7;
+`sdBoot`; the part the features predict; games; `ai`; the cubes listing it —
+the `--power` input of `cubelab.sh queue`, which refuses an old file with only
+a bootstrap `sd`), `cube-dev.tsv` (M1's per-cube deviations), `balance.json`
 and `report.md` (held-out tables with sample sizes, calibration, held-out
-cubes, **each cube's balance number** — the SD across its decks of each deck's
-predicted win rate against the cube's other decks — bridge-deck composition,
-the overlap report), `model.json`.
+cubes, **each cube's balance number**, bridge-deck composition, the overlap
+report, games per lab version, the reserved games dropped), `model.json`
+(`powerSdPost`; `design` refuses a model without it).
+
+**The balance number** is the SD across a cube's decks of each deck's predicted
+win rate against the cube's other decks (at most 400 of them), **de-biased for
+shrinkage** (D334): the MAP's predictions are pulled toward even odds by an
+amount that depends on how many games the cube has, so the old number read 3.6
+for a true 6.1 points at 8k games and ranked cubes partly by sample size
+(review 2, N2). It is now sqrt(mean of SD² over 200 draws from M1's Laplace
+posterior) — the law of total variance: the spread of the posterior means plus
+the variance the shrinkage left out — with the draws' 2.5–97.5% as its
+interval. The report keeps the shrunk number beside it and a **reliability**,
+shrunk² / de-biased², the share of the spread the data has pinned down:
+**compare two cubes only when their reliabilities are alike.** On the
+simulated world (8 seeds, `matchup_sim.py`) the de-biased number reads
+{BALANCE_NUMBERS}.
+
+**Verifying a `design` candidate** (D336). `design` prints the exact job: both
+arms (the original cube and the candidate, with the same ratings) on the same
+fresh seeds in the verification range (800,000,000+), one game per draft, a
+look every 2,000 drafts per arm up to 8,000, and `matchup_verify.py test` at
+each look. The statistic is the difference of the two arms' between-archetype
+variances of win rate (method of moments: raw variance minus binomial noise),
+its SE a bootstrap over drafts; accept only when z crosses the O'Brien–Fleming
+bound (3.47, 2.45, 2.00, 1.73: one-sided α 5% overall), stop for futility when
+z < 0 from look 2. Simulated (`matchup_verify.py sim`, 400 trials, 10
+archetypes): at 8,000 drafts per arm a no-change cube (5 → 5 points) is
+accepted 4.5% of the time, a 5 → 3 improvement 90% (stopping after 5,930 drafts
+per arm on average), 5 → 4 42%, a 5 → 7 worsening never (stopped at 4,035 on
+average); at 4,000 per arm the 5 → 3 power is only 64%, at 12,000 99%. **One candidate costs about one PC night**; the
+themes and roles are still a person's check.
 
 **The balance number and ForgeCoach's flatness.** Flatness
 (`src/cube/flatness.ts`) reads `meta.json`'s per-card and per-archetype win
 rates and subtracts binomial noise; the matchup model's number is a deck-level
-spread from a model fitted net of deckmates. The model shrinks toward even
-odds, so with few games its spread is a lower bound; flatness's intervals are
+spread from a model fitted net of deckmates, de-biased for its shrinkage
+(above; before D334 it was a lower bound); flatness's intervals are
 too narrow under clumped games (a card's games come about 2.4 at a time from
 one deck pair). Compare the two only at thousands of games per cube.

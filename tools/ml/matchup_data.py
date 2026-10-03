@@ -20,7 +20,18 @@ line per decisive game:
      "deckA": {"Lightning Bolt": 1, ..., "Mountain": 8}, "deckB": {...},
      "onPlay": "A" | "B", "winner": "A" | "B",
      "from": {"Lightning Bolt": "pauper", ...},      # bridge only: the cube each card of both decks came from
-     "run": "<the run folder, relative to the repo>"}
+     "run": "<the run folder, relative to the repo>",
+     "ver": "<the lab version that drafted and played it>" | "unversioned"}   # D333, tools/cubelab/versions.ts
+
+`ver` is the lab version (code tree, jar, ratings, cube, weights) stamped on
+the draft's line since D333; `collect(..., vers=...)` keeps only some, and the
+model's report counts games per version, so a night run on other code can be
+split off rather than silently pooled.
+
+NO RESERVED DECKS.  A game whose deck A or B is, card for card, a deck of the
+AI ladder's dev or confirm set (tools/ai-bench/pairs-*.txt, reserved.py) is
+dropped and counted (`stats["reserved"]`), whatever its seed: those decks are
+the ladder's held-out yardstick (methodology review 2, N4; D332).
 
 Draws (timeouts) and engine errors are left out (a draw says nothing about
 who is stronger).  `draft` groups every game of one deck pair: the split is by
@@ -132,17 +143,23 @@ def games_from_run(run_dir: str, rel_to: str = ".") -> Iterator[Dict[str, Any]]:
                 draft = f"{pool}#{rec['seed']}"
                 r = {"v": RECORD_VERSION, "id": f"{draft}#g{g['n']}", "draft": draft, "pool": pool,
                      "kind": "bridge" if bridge else "normal", "cubes": cubes, "seed": rec["seed"], "game": g["n"],
-                     "deckA": a, "deckB": b, "onPlay": on, "winner": w, "run": run_rel}
+                     "deckA": a, "deckB": b, "onPlay": on, "winner": w, "run": run_rel, "ver": rec.get("ver") or "unversioned"}
                 if frm is not None:
                     r["from"] = frm
                 yield r
 
 
-def collect(paths: Iterable[str], rel_to: str = ".") -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
-    """Every decisive game under these paths, each once.  Returns the records and counts of what was skipped."""
+def collect(paths: Iterable[str], rel_to: str = ".", reserved: Optional[Dict[str, str]] = None,
+            vers: Optional[Iterable[str]] = None) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """Every decisive game under these paths, each once.  Returns the records and counts of what was skipped.
+
+    `reserved` (reserved.reserved_decks()): drop a game either of whose decks is one of these, card for card.
+    `vers`: keep only games of these lab versions (`unversioned` names lines from before D333)."""
+    import reserved as R
     seen = set()
     out: List[Dict[str, Any]] = []
-    stats = {"runs": 0, "duplicates": 0}
+    stats: Dict[str, Any] = {"runs": 0, "duplicates": 0, "reserved": 0, "reservedDecks": {}, "otherVersion": 0}
+    keep_vers = set(vers) if vers else None
     for run in find_runs(paths):
         stats["runs"] += 1
         for r in games_from_run(run, rel_to):
@@ -151,6 +168,15 @@ def collect(paths: Iterable[str], rel_to: str = ".") -> Tuple[List[Dict[str, Any
                 stats["duplicates"] += 1
                 continue
             seen.add(key)
+            if reserved:
+                hit = R.reserved_hit((r["deckA"], r["deckB"]), reserved)
+                if hit:
+                    stats["reserved"] += 1
+                    stats["reservedDecks"][hit] = stats["reservedDecks"].get(hit, 0) + 1
+                    continue
+            if keep_vers is not None and r["ver"] not in keep_vers:
+                stats["otherVersion"] += 1
+                continue
             # A draft id must name one deck pair: the same pool and seed drafted under other weights is another draft.
             out.append(r)
     # Disambiguate drafts that share pool#seed but not decks (different weights or ratings).
@@ -163,6 +189,15 @@ def collect(paths: Iterable[str], rel_to: str = ".") -> Tuple[List[Dict[str, Any
             r["id"] = f"{r['draft']}#g{r['game']}"
     out.sort(key=lambda r: r["id"])
     return out, stats
+
+
+def version_counts(games: Iterable[Dict[str, Any]]) -> Dict[str, int]:
+    """Decisive games per lab version (D333)."""
+    out: Dict[str, int] = {}
+    for r in games:
+        v = r.get("ver") or "unversioned"
+        out[v] = out.get(v, 0) + 1
+    return out
 
 
 def read_games(path: str) -> List[Dict[str, Any]]:
@@ -353,6 +388,45 @@ def card_features(name: str, fact: Optional[Dict[str, Any]], info: Optional[Dict
     return v
 
 
+# ---------------------------------------------------------------- AI-limited cards
+
+_DOC_FLAG = re.compile(r"(?:[Rr]ated `(All|Random)`|`AI:RemoveDeck:(All|Random)`)[^:\n`]*:\s*([^\n]+?)(?:\.\s|\.$|$)")
+
+
+def doc_ai_flags(repo: str) -> Dict[str, str]:
+    """The cube documents' own AI notes: every name listed after "Rated `All`:" / "`AI:RemoveDeck:All` ...:" (or Random).
+    Loose by design (prose around a list yields a few non-names); callers look names up, never list them."""
+    out: Dict[str, str] = {}
+    for f in sorted(glob.glob(os.path.join(repo, "cubes", "*-cube-*.md"))):
+        with open(f, encoding="utf-8") as fh:
+            for line in fh:
+                if "RemoveDeck" not in line and "Rated `" not in line:
+                    continue
+                for m in _DOC_FLAG.finditer(line):
+                    flag = m.group(1) or m.group(2)
+                    for n in re.split(r",\s*(?:and\s+)?", m.group(3)):
+                        n = re.sub(r"\*|\(.*?\)", "", n).strip().rstrip(".")
+                        if n and len(n) < 60:
+                            if flag == "All" or out.get(n) != "All":
+                                out[n] = flag
+    return out
+
+
+def ai_flags(names: Iterable[str], facts: Dict[str, Dict[str, Any]], info: Dict[str, Dict[str, Any]], repo: str = ".") -> Dict[str, str]:
+    """Each AI-limited card: "All" (Forge's AI:RemoveDeck:All -- the AI cannot play it; learn.ts's guard, D301)
+    or "Random" (left out of Forge's random decks, played when handed; evolve's guard, D299).  Sources, any of:
+    the engine facts (Forge's own card scripts), a run's cards.json (`remAIDeck`), the cube documents' notes."""
+    docs = doc_ai_flags(repo) if repo else {}
+    out: Dict[str, str] = {}
+    for n in names:
+        f, i = facts.get(n) or {}, info.get(n) or {}
+        if f.get("remAIDeck") or i.get("remAIDeck") or docs.get(n) == "All":
+            out[n] = "All"
+        elif f.get("remRandomDeck") or docs.get(n) == "Random":
+            out[n] = "Random"
+    return out
+
+
 def cube_lists(repo: str) -> Dict[str, List[str]]:
     """Every committed cube's card names (the cube lab's parser, run under Node), by cube id."""
     import subprocess
@@ -370,8 +444,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--out", required=True, help="games.jsonl")
     ap.add_argument("--overlap", action="store_true", help="also print the overlap report over the committed cubes")
     ap.add_argument("--check", action="store_true", help="validate every record; exit 1 if any is bad (a pilot's check)")
+    ap.add_argument("--keep-reserved", action="store_true", help="keep games played with an AI-ladder deck-set deck (default: drop them, D332)")
+    ap.add_argument("--ver", default="", help="keep only these lab versions (comma-separated ids; `unversioned` = before D333)")
+    ap.add_argument("--repo", default=".")
     a = ap.parse_args(argv)
-    games, st = collect(a.paths)
+    import reserved as R
+    games, st = collect(a.paths, reserved=None if a.keep_reserved else R.reserved_decks(a.repo),
+                        vers=[v for v in a.ver.split(",") if v] or None)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as fh:
         for r in games:
@@ -380,7 +459,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     for r in games:
         kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
     print(f"{len(games)} decisive game(s) from {st['runs']} run(s), {len({r['draft'] for r in games})} draft(s) "
-          f"({', '.join(f'{k} {v}' for k, v in sorted(kinds.items()))}); {st['duplicates']} duplicate(s) skipped -> {a.out}")
+          f"({', '.join(f'{k} {v}' for k, v in sorted(kinds.items()))}); {st['duplicates']} duplicate(s) skipped; "
+          f"{st['reserved']} game(s) with a deck-set deck dropped; {st['otherVersion']} of other versions -> {a.out}")
+    for v, n in sorted(version_counts(games).items()):
+        print(f"  version {v}: {n} game(s)")
     if a.check:
         bad = [(r["id"], e) for r in games for e in check_record(r)]
         for i, e in bad[:20]:

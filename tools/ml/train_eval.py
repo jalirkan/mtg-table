@@ -306,12 +306,26 @@ def fit(tr, va, names, hp, vocab_size, backend, seed=0, log=None, deadline=None)
 def load_data(data: str, split_by: str = "dataset"):
     import evalnet as N
     schema = N.read_schema(data)
+    reserved_warning(data)
     off = N.card_offset_of(schema)
     names = N.board_names(schema)
     splits = {s: N.load_rows(data, s, off) for s in ("train", "val", "test")}
     if split_by != "dataset":
         splits = resplit(data, splits, split_by)
     return schema, names, splits
+
+
+def reserved_warning(data: str) -> None:
+    """D332: say so when a dataset was built without dropping the AI ladder's deck-set decks (before D332, or --keep-reserved)."""
+    f = os.path.join(data, "stats.json")
+    try:
+        with open(f, encoding="utf-8") as fh:
+            st = json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return
+    if not st.get("reservedChecked"):
+        print(f"WARNING: {data} was built without the reserved-deck filter (D332): games with an AI-ladder dev/confirm "
+              "deck may be in it -- rebuild with dataset.py before using this evaluator in a search graded on those decks")
 
 
 def read_games(data: str) -> list[dict[str, Any]]:
