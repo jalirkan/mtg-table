@@ -201,3 +201,23 @@ rests on: Forge 2.0.14's Winston AI picks at random and
 unranked card scores −100; `BoosterDeckBuilder` left to its committed colours
 built 11 spells and 29 lands from one pool; `RecordMatch` records one game per
 process; a draft plus a best of three took about 24 s of one JVM.
+
+## 7. Recording the played games (D315)
+
+`run --record-all` on this shared 4-core container (load 15–30), synergy cube,
+grid, seeds 101–108, one game a draft, `--jobs 2`, off and on alternating:
+
+| run | turns | worker CPU / turn | game thread CPU / turn | wall / turn |
+|---|---|---|---|---|
+| off 1 | 153 | 1,338 ms | 383 ms | 2,926 ms |
+| on 1 | 153 | 1,307 ms | 373 ms | 1,838 ms |
+| off 2 | 153 | 1,307 ms | 385 ms | 2,409 ms |
+| on 2 | 153 | 1,654 ms | 441 ms | 5,220 ms |
+
+Every seed played the same turns in all four runs, so the recording does not
+change the game. Wall time is the load's, not the recorder's; CPU is +12%
+(worker) and +6% (game thread) over the two rounds. Recordings: 16 games, 148
+KiB a game for both chairs (median 142, max 252), 672 state frames a game;
+both chairs of every game passed `check-redaction.mjs`. A third round run
+concurrently was stopped at a load of 130 (the container is shared); its
+wall-clock overhead on the owner's PC is a PC job.

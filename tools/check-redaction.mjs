@@ -28,7 +28,9 @@
  *       half-redacted third shape cannot sneak in unnoticed.
  *   A3  `library` is {count, cards}; `cards` holds no stub, never exceeds
  *       `count`, and is WARNED about when it is non-empty for a seat other than
- *       the viewer.
+ *       the viewer -- except ONE card while that player controls a "play with
+ *       the top card of your library revealed" permanent (REVEALS_OWN_TOP,
+ *       D315: Courser of Kruphix is in the owner's cubes).
  *   A4  every card in a non-viewer's hand is a stub, unless its id was already
  *       revealed (A6), and `hand.cards.length === hand.count`.
  *   A5  no name-bearing key anywhere under `state.events`.
@@ -153,8 +155,42 @@
  */
 
 import { readFileSync, statSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 
 const PROTOCOL_VERSION = 1;
+
+/**
+ * A3, D315 (the cube lab's follow-up 1): "Play with the top card of your library
+ * revealed."  While a player controls one of these face up on the battlefield,
+ * the top card of THEIR library is public, Forge's `canBeShownTo` says so, and
+ * the bridge rightly sends it -- so an opponent's `library.cards` of exactly ONE
+ * card is not a leak.  The names are every card script in the pinned 2.0.14 jar
+ * whose static is `Affected$ Card.TopLibrary+YouCtrl | ... | MayLookAt$ Player`
+ * with that Oracle text (Courser of Kruphix is in the owner's cubes).  Experimental
+ * Frenzy carries the same static in Forge but its Oracle text is "You may look":
+ * private, so it is NOT here and a recording that shows its top card to the
+ * opponent still fails.
+ */
+const REVEALS_OWN_TOP = new Set([
+  'Courser of Kruphix', 'Conspicuous Snoop', 'Crown of Convergence', 'Future Sight', "Garruk's Horde",
+  'Goblin Spy', 'Magus of the Future', 'Melek, Izzet Paragon', 'Mul Daya Channelers', 'Oracle of Mul Daya',
+  'Skill Borrower', 'Vampire Nocturnus',
+]);
+/** ...and "Players play with the top card of their libraries revealed": every player's top, whoever controls it. */
+const REVEALS_EVERY_TOP = new Set(['Field of Dreams', 'Lantern of Insight', 'Wizened Snitches']);
+
+/** The player ids whose library top is public in this state body (REVEALS_OWN_TOP / REVEALS_EVERY_TOP). */
+function revealedTopsOf(players) {
+  const out = new Set();
+  for (const q of players) {
+    for (const c of q?.zones?.battlefield?.cards ?? []) {
+      if (!c || c.hidden === true || c.faceDown === true || typeof c.name !== 'string') continue;
+      if (REVEALS_EVERY_TOP.has(c.name)) for (const r of players) out.add(r?.id);
+      if (REVEALS_OWN_TOP.has(c.name)) out.add(typeof c.controller === 'number' ? c.controller : q.id);
+    }
+  }
+  return out;
+}
 
 /**
  * A1 / amendment P1: exactly the keys a redacted card is allowed to carry
@@ -1081,7 +1117,9 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
 
-  const text = readFileSync(path, 'utf8');
+  // A `.gz` log (the cube lab's in-worker recordings, D315) is read whole and
+  // checked exactly as its plain text would be.
+  const text = path.endsWith('.gz') ? gunzipSync(readFileSync(path)).toString('utf8') : readFileSync(path, 'utf8');
   const lines = text.split('\n').filter((l) => l.length > 0);
   if (lines.length === 0) {
     return { problems: [`${path}: empty file`], stats: {} };
@@ -1191,7 +1229,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     cardsChecked: 0, redacted: 0, faceDown: 0, stackCards: 0,
     viewerHandNamed: 0, opponentHandCards: 0, events: 0, shapeChecks: 0,
     texts: 0, textsConcealed: 0,
-    libraryRevealed: 0, altBlocks: 0, tokens: 0, asks: 0, promptsScanned: 0,
+    libraryRevealed: 0, revealedTops: 0, altBlocks: 0, tokens: 0, asks: 0, promptsScanned: 0,
     everRevealed: 0, answers: 0, answerKinds: new Set(), unanswered: 0,
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
     stackItems: 0,
@@ -1929,6 +1967,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       if (c.faceDownHidden === true) stats.faceDown++;
     }
 
+    const revealedTops = revealedTopsOf(players);
     for (let pi = 0; pi < players.length; pi++) {
       const p = players[pi];
       const zones = p.zones || {};
@@ -1952,7 +1991,12 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
           // owns" is not a reason to default to a warning nobody reads. It
           // FAILS, and a recording that really does exercise one of those
           // effects says so on the command line.
-          if (!isViewer && lib.cards.length > 0) {
+          if (!isViewer && lib.cards.length === 1 && revealedTops.has(p.id)) {
+            // Their top card, revealed to everyone by a permanent they control
+            // (REVEALS_OWN_TOP).  One card, and no A6 exemption: that stays the
+            // viewer's own library's alone, below.
+            stats.revealedTops++;
+          } else if (!isViewer && lib.cards.length > 0) {
             const msg =
               `players[${pi}] (id ${p.id}, NOT the viewing seat ${seat}) has ` +
               `${lib.cards.length} full card(s) in library.cards. Legal ONLY while a ` +
@@ -2322,7 +2366,7 @@ for (const path of files) {
   console.log(`      engine strings=${stats.texts} (stack[].text + events[].cast.text), `
     + `concealed=${stats.textsConcealed}, none joinable to a card concealed in the same frame`);
   console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
-    + `${stats.libraryRevealed}  alt blocks=${stats.altBlocks}  tokens=${stats.tokens}  `
+    + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}  tokens=${stats.tokens}  `
     + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`);
   console.log(`      A12 answers=${stats.answers} (kinds: `
     + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
