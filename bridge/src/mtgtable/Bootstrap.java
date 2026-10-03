@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import forge.LobbyPlayer;
+import forge.ai.AIOption;
 import forge.ai.AiProfileUtil;
 import forge.deck.Deck;
 import forge.gui.GuiBase;
@@ -30,6 +31,7 @@ import forge.localinstance.properties.ForgePreferences;
 import forge.localinstance.properties.ForgePreferences.FPref;
 import forge.model.FModel;
 import forge.player.GamePlayerUtil;
+import mtgtable.ai.PolicyLobbyPlayerAi;
 
 /**
  * The boot sequence every mtg-table process shares, in the one order that works.
@@ -260,6 +262,34 @@ public final class Bootstrap {
      * defaults while every line of output named the profile.
      */
     public static LobbyPlayer createAiPlayer(final String name, final int avatar, final String profile) {
+        checkAiProfile(profile);
+        return GamePlayerUtil.createAiPlayer(name, avatar, profile);
+    }
+
+    /**
+     * An AI seat with mtg-table's own controller in front of Forge's (D300): the
+     * same profile checks as {@link #createAiPlayer}, then a
+     * {@link PolicyLobbyPlayerAi} -- which never reaches {@code GamePlayerUtil}
+     * at all, so no preferences branch exists on this path -- with Forge's
+     * simulation option ({@code AIOption}; null for none: simulation is a
+     * lobby-player option, not an {@code .ai} profile key) and the
+     * sacrifice-outlet policy's mode (D301).  Sleeve 0, which is what
+     * {@link #createAiPlayer} gets from a headless GUI with no sleeves.  Used by
+     * {@code tools/ai-bench/}; none of the game's own entry points calls it, so
+     * every seat they make, and every recording, is unchanged.
+     */
+    public static PolicyLobbyPlayerAi createAiSeat(final String name, final int avatar, final String profile,
+                                                   final AIOption simulation,
+                                                   final PolicyLobbyPlayerAi.Outlets outlets) {
+        checkAiProfile(profile);
+        final PolicyLobbyPlayerAi p = new PolicyLobbyPlayerAi(name, simulation, outlets);
+        p.setAiProfile(profile);
+        p.setAvatarIndex(avatar);
+        p.setSleeveIndex(0);
+        return p;
+    }
+
+    private static void checkAiProfile(final String profile) {
         if (profile == null || profile.isEmpty()) {
             throw new IllegalArgumentException("an AI profile is required: an empty profileOverride "
                     + "reaches GamePlayerUtil's branch that saves the preferences file");
@@ -269,7 +299,6 @@ public final class Bootstrap {
                     + "loaded by FModel.initialize (AiProfileUtil.getAvailableProfiles() = "
                     + AiProfileUtil.getAvailableProfiles() + ")");
         }
-        return GamePlayerUtil.createAiPlayer(name, avatar, profile);
     }
 
     /**
