@@ -118,6 +118,13 @@ and real checks of the coach and board through Justin's Claude Code and browser.
   `c/match-launcher-hangup`).
 - ForgeCoach `src/lab/`, `src/ui/lab/`, and the site navigation: the `#lab` progress page
   (branch `c/lab-page`).
+- mtg-table `tools/coach-grade*` and the search AI's rollout code under `bridge/src/mtgtable/`,
+  plus ForgeCoach `src/bench/` and `bench/coach/`: the engine-graded coach bench (branches
+  `c/coach-grader`, `c/coach-regret`).
+- mtg-table `tools/cubelab/evolve*.ts`: evolve's false-discovery control and confirmation
+  (branch `c/evolve-rigor`).
+- ForgeCoach `src/cube/score.ts`, `src/cube/flatness.ts`: review fixes (branch
+  `c/review-fixes`).
 
 ## Safety rules
 
