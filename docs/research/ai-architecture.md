@@ -281,3 +281,62 @@ still cannot map — the bench met one, a Bird token — gets a stand-in too.)
 the same 200 cube deals, 37 deals gained and 18 lost (p = 0.015); copier errors
 0.22% before the token fix; a quarter of searched decisions kept Forge's answer
 for want of budget at 1.5 s on this machine.
+
+## 9. Measuring progress: the ladder and the league (D318–D321)
+
+The bench (§7, step 1) answers "is this change better than plain Default, on
+these deals?". Once there are many configs — profiles, the outlet policy,
+search budgets, evaluator models — the question becomes "where does each stand,
+on one scale, and is the newest better than the best so far?". That is
+`tools/ai-ladder.sh` (manual: `docs/guides/ai-ladder.md`).
+
+```
+players.json ─► kinds.ts: {kind, params} ─► ai-bench seat config ("Reckless+outlets", "Default+search:ms=1500,…")
+                                    │
+ schedule / sprt / tune / league ───┤ choose a matchup and a seed slot
+                                    ▼
+          AiBench play --a --b --games 4 --mirror --seed k   (one JVM per batch, J workers)
+                                    │ one JSON line per game
+                                    ▼
+          var/ai-ladder/results/<host>.jsonl   (append-only, one file per machine)
+                                    │
+                                    ▼
+     Bradley–Terry (MAP, forge-default ≡ 1500) ─► report.html, ladder.json (schema 1, ForgeCoach)
+```
+
+- **One game engine.** The ladder never plays a game itself; every game is an
+  ai-bench game, so a new AI joins the ladder the day the bench can seat it —
+  one row in `kinds.ts` mapping the player's params onto the bench's seat
+  syntax. The search kind maps onto §8's
+  `+search:ms=…,cands=…,turns=…` seat syntax, and `search-v1` is the game's
+  `--ai-policy search` seat; the evaluator kind is declared and waits for its
+  bench option.
+- **Paired by construction.** `--mirror` plays each deal from both sides, and a
+  matchup's k-th batch uses the same deals as every other matchup's k-th
+  batch, so comparisons against a common opponent are paired, as §7 asks.
+- **Ratings with honest intervals**: Bradley–Terry on the Elo scale, the
+  anchor fixed, a weak prior so few games give a wide interval rather than an
+  infinite rating; Hessian or block-bootstrap 95% intervals.
+- **Games where they inform**: new players first, a fixed share against the
+  stock anchors, then the closest, most uncertain pair (p(1−p)·(se²+se²)).
+- **Decisions, not just numbers**: an SPRT on mirror-pair scores ("A ≥ B +
+  elo1?") that stops as soon as the evidence is in; a successive-halving tuner
+  over any numeric or enum parameter, on shared deals against a fixed pool,
+  writing its winner back under a new name.
+- **The self-play loop** (league): the newest version plays a fixed share of
+  games against the last N promoted versions and the anchors; a candidate (a
+  tuned config, later an evaluator retrained on the league's own games) is
+  promoted only if the SPRT says it beats the current best **and** a
+  non-inferiority test shows it is not worse than the best against
+  forge-default by more than 30 Elo (alpha 5%, power 90%) on the same deals —
+  so the loop cannot drift into beating only itself.
+- **Selection and confirmation on different decks.** The tuner plays a dev
+  deck set, the SPRT, the league and the published ratings a confirm set (30
+  pairs each, cube-lab drafts across six cubes); benchmarks of the search use
+  a fixed rollout count, not the wall clock; every run is in the committed
+  experiment log.
+
+The roadmap then reads: build a search variant or train an evaluator → register
+it (a new name, a new hash) → `tune` its knobs against the pool → mark the
+winner a candidate → `league` decides; the ladder's report shows the whole
+history, and its `ladder.json` is what ForgeCoach will show.

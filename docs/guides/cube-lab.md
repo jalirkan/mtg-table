@@ -208,7 +208,7 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 | `--format grid\|winston` | `grid` | |
 | `--drafts N` | 10 | drafts, seeds `S` .. `S+N-1` |
 | `--seed S` | 1 | a draft and its decks are a function of their seed |
-| `--games N` | 3 | best of N; stops at a majority |
+| `--games N` | 3 | best of N; stops at a majority. `0` drafts and builds only and plays nothing (the AI ladder's deck sets, D318) |
 | `--jobs K` | 1 | worker JVMs, each in its own Forge home under `var/cubelab/homes/<k>/` |
 | `--profiles A,B` | `Default,Default` | the AI profile of each seat (`forge-home/res/ai/*.ai`) |
 | `--ratings <tsv>` | `<cube>.ratings.tsv` if present, else Forge's ranks | |
