@@ -643,7 +643,7 @@ export function selectSwaps(x: SelectInput): Decision {
   const settle = watch.map((w) => w.draftsNeeded).filter((d): d is number => typeof d === 'number');
   const settleAt = settle.length ? settle[Math.min(settle.length - 1, Math.floor(settle.length / 2))] : null;
   const rated = assessments.filter((a) => a.status === 'rating-limited').length;
-  const ratedNote = rated ? ` ${rated} card(s) are never played but rated under ${k.deadMinRating}: a ratings question, not a drafts one (see rating-limited).` : '';
+  const ratedNote = rated ? ` ${rated} card(s) are rarely or never played on colour but rated under ${k.deadMinRating}: a ratings question, not a drafts one (see rating-limited).` : '';
   const verdict = (swaps.length
     ? `${swaps.length} swap(s) passed the evidence threshold${unmatched.length ? `; ${unmatched.length} supported cut(s) left for later` : ''}${watch.length ? `; ${watch.length} more lead(s) are insufficient data` : ''}.`
     : watch.length

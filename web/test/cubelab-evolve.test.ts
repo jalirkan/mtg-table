@@ -307,7 +307,7 @@ test('a dead card rated under deadMinRating is rating-limited: reported, never c
     assert.match(a?.evidence ?? '', /rated 35, under 60/);
   }
   assert.ok(!d.watch.some((w) => w.name === 'Mana Leak'), 'a lean on a low-rated card is not a watch');
-  assert.match(d.verdict, /2 card\(s\) are never played but rated under 60/);
+  assert.match(d.verdict, /2 card\(s\) are rarely or never played on colour but rated under 60/);
   assert.deepEqual(selectSwaps(input({ cards: low, stats: stats({ 'Doom Blade': DEAD }), knobs: { ...K, deadMinRating: 0 } })).swaps.map((s) => s.out), ['Doom Blade']);
 });
 
