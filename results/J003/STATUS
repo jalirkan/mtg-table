@@ -1,4 +1,5 @@
-running
+done
 started: 2026-10-03T10:34:23-04:00
+finished: 2026-10-03T13:10:11-04:00
 mtg-table: ee4d127
-phase: full (restarted after an oomd kill at 10:09; JOBS=6; systemd unit forgecoach-j003)
+jobs: 6 (lowered from 7 after an oomd kill; see summary)

@@ -1,0 +1,30 @@
+===== paired night-cube-control vs night-cube-search
+== paired: treatment A = Default+search   control A = Default   (B the same in both)
+  deals matched: 400 (treatment engine errors 0)
+  treatment A wins 241 of 400 decisive = 60.3%  (95% Wilson CI 55.4-64.9%)
+  control   A wins 197 of 400 decisive = 49.3%  (95% Wilson CI 44.4-54.1%)
+  paired: 80 deals gained, 36 lost; exact McNemar p = 0.0001
+  seconds per game: treatment 31.6, control 3.2
+  search: 10218 decisions searched (25.5/game), 1746 changed Forge's answer (17.1%), 1108 ms each
+  fallbacks to Forge: copier error 0 (0.00%), budget 927 (9.1%), unmappable 4; copies that needed the sideboard stand-in: 6496 decisions (63.6%)
+  treatment counters: {activate.Carrion Feeder=71, activate.Priest of Forgotten Gods=12, activate.Woe Strider=8, cast.Blood Artist=48, cast.Carrion Feeder=11, cast.Cauldron Familiar=40, cast.Deadly Dispute=16, cast.Grim Haruspex=33, cast.Priest of Forgotten Gods=12, cast.Village Rites=7, cast.Woe Strider=31, cast.Zulaport Cutthroat=17, forge.outletActivation=79, search.a.changed=345, search.a.considered=2400, search.a.ms=2949977, search.b.changed=75, search.b.considered=792, search.b.ms=972882, search.candidateUnmappable=43, search.copyUs=817474423, search.fallback.budget=927, search.fallback.rolloutErrors=6, search.fallback.unmappable=4, search.oppFaceDownDecisions=194, search.p.changed=1326, search.p.changed.fromPass=480, search.p.changed.toOther=408, search.p.changed.toPass=438, search.p.considered=7026, search.p.ms=7393821, search.p.skipLand=3144, search.playUs=9677961521, search.rolloutErrors=18, search.rollouts=253892, search.rounds=86331, search.standInCards=8379, search.standInDecisions=6496}
+===== paired night-cube-control vs night-cube-search3
+== paired: treatment A = Default+search:ms=3000,turns=1   control A = Default   (B the same in both)
+  deals matched: 400 (treatment engine errors 0)
+  treatment A wins 252 of 400 decisive = 63.0%  (95% Wilson CI 58.2-67.6%)
+  control   A wins 197 of 400 decisive = 49.3%  (95% Wilson CI 44.4-54.1%)
+  paired: 82 deals gained, 27 lost; exact McNemar p = 0.0000
+  seconds per game: treatment 64.5, control 3.2
+  search: 10250 decisions searched (25.6/game), 1850 changed Forge's answer (18.0%), 2429 ms each
+  fallbacks to Forge: copier error 0 (0.00%), budget 1144 (11.2%), unmappable 8; copies that needed the sideboard stand-in: 6349 decisions (61.9%)
+  treatment counters: {activate.Carrion Feeder=61, activate.Priest of Forgotten Gods=7, activate.Woe Strider=6, cast.Blood Artist=46, cast.Carrion Feeder=10, cast.Cauldron Familiar=42, cast.Deadly Dispute=18, cast.Grim Haruspex=35, cast.Priest of Forgotten Gods=11, cast.Village Rites=8, cast.Woe Strider=26, cast.Zulaport Cutthroat=16, forge.outletActivation=67, search.a.changed=395, search.a.considered=2429, search.a.ms=6372639, search.b.changed=88, search.b.considered=843, search.b.ms=2142506, search.candidateUnmappable=37, search.copyUs=716372667, search.fallback.budget=1144, search.fallback.rolloutErrors=7, search.fallback.unmappable=8, search.oppFaceDownDecisions=117, search.p.changed=1367, search.p.changed.fromPass=522, search.p.changed.toOther=389, search.p.changed.toPass=456, search.p.considered=6978, search.p.ms=16385809, search.p.skipLand=3166, search.playUs=22779954065, search.rolloutErrors=21, search.rollouts=232655, search.rounds=79722, search.standInCards=8287, search.standInDecisions=6349}
+===== paired night-sac-control vs night-sac-search
+== paired: treatment A = Default+outlets+search   control A = Default+outlets   (B the same in both)
+  deals matched: 400 (treatment engine errors 0)
+  treatment A wins 249 of 400 decisive = 62.3%  (95% Wilson CI 57.4-66.9%)
+  control   A wins 211 of 400 decisive = 52.8%  (95% Wilson CI 47.9-57.6%)
+  paired: 69 deals gained, 31 lost; exact McNemar p = 0.0002
+  seconds per game: treatment 25.3, control 2.6
+  search: 9256 decisions searched (23.1/game), 1555 changed Forge's answer (16.8%), 1005 ms each
+  fallbacks to Forge: copier error 0 (0.00%), budget 469 (5.1%), unmappable 0; copies that needed the sideboard stand-in: 4796 decisions (51.8%)
+  treatment counters: {activate.Carrion Feeder=492, activate.Cauldron Familiar=6, activate.Goblin Bombardment=480, activate.Priest of Forgotten Gods=6, activate.Viscera Seer=143, activate.Woe Strider=151, cast.Blood Artist=95, cast.Carrion Feeder=82, cast.Cauldron Familiar=71, cast.Deadly Dispute=50, cast.Goblin Bombardment=76, cast.Grim Haruspex=51, cast.Juri, Master of the Revue=35, cast.Mayhem Devil=68, cast.Priest of Forgotten Gods=29, cast.Village Rites=71, cast.Viscera Seer=73, cast.Woe Strider=151, cast.Zulaport Cutthroat=68, forge.outletActivation=128, opportunity.CAST_OUTLET=143, opportunity.COMBAT=290, opportunity.FODDER=291, opportunity.LETHAL=461, opportunity.THREATENED=96, policy.CAST_OUTLET=143, policy.COMBAT=290, policy.FODDER=291, policy.LETHAL=461, policy.THREATENED=96, search.a.changed=435, search.a.considered=2310, search.a.ms=2692487, search.b.changed=126, search.b.considered=874, search.b.ms=1024663, search.candidateUnmappable=3, search.copyUs=705272493, search.fallback.budget=469, search.oppFaceDownDecisions=83, search.p.changed=994, search.p.changed.fromPass=540, search.p.changed.toOther=257, search.p.changed.toPass=197, search.p.considered=6072, search.p.ms=5580613, search.p.skipLand=2809, search.playUs=8152230209, search.rollouts=255942, search.rounds=84458, search.standInCards=6630, search.standInDecisions=4796}

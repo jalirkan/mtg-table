@@ -1,0 +1,20 @@
+== Default vs Default
+  games 400: A 197, B 203, draws 0 (timeouts 0, engine errors 0)
+  A win rate 49.3% of 400 decisive  (95% Wilson CI 44.4-54.1%)
+  game time mean 3.2 s, median 1.7 s, max 122.9 s; turns mean 18.8; AI eval timeouts 3 (0.01/game)
+== Default+search vs Default
+  games 400: A 241, B 159, draws 0 (timeouts 0, engine errors 0)
+  A win rate 60.3% of 400 decisive  (95% Wilson CI 55.4-64.9%)
+  game time mean 31.6 s, median 26.7 s, max 211.8 s; turns mean 18.3; AI eval timeouts 27 (0.07/game)
+== Default+search:ms=3000,turns=1 vs Default
+  games 400: A 252, B 148, draws 0 (timeouts 1, engine errors 0)
+  A win rate 63.0% of 400 decisive  (95% Wilson CI 58.2-67.6%)
+  game time mean 64.5 s, median 59.0 s, max 300.5 s; turns mean 18.5; AI eval timeouts 57 (0.14/game)
+== Default+outlets vs Default+outlets
+  games 400: A 211, B 189, draws 0 (timeouts 0, engine errors 0)
+  A win rate 52.8% of 400 decisive  (95% Wilson CI 47.9-57.6%)
+  game time mean 2.6 s, median 1.5 s, max 38.9 s; turns mean 16.9; AI eval timeouts 0 (0.00/game)
+== Default+outlets+search vs Default+outlets
+  games 400: A 249, B 151, draws 0 (timeouts 0, engine errors 0)
+  A win rate 62.3% of 400 decisive  (95% Wilson CI 57.4-66.9%)
+  game time mean 25.3 s, median 22.9 s, max 100.8 s; turns mean 16.4; AI eval timeouts 14 (0.04/game)
