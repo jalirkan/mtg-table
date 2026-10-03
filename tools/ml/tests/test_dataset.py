@@ -63,7 +63,7 @@ class DatasetTest(unittest.TestCase):
         with open(os.path.join(self.out, "features.json"), encoding="utf-8") as f:
             n = json.load(f)["nFeatures"]
         self.assertEqual(tr["X"].shape[1], n)
-        self.assertEqual(tr["X"].dtype, np.float32)
+        self.assertEqual(tr["X"].dtype, np.int16)
         self.assertGreater(self.summary["splits"]["train"]["shards"], 1)  # shard_rows=700
         self.assertTrue(set(np.unique(tr["y"]).tolist()) <= {-1, 0, 1})
 

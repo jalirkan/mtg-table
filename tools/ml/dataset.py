@@ -21,7 +21,8 @@ saw? -- and is the number to trust once the cube lab drafts many pairs.
 Writes, under --out:
 
     features.json             the layout (encode.Schema.to_json)
-    <split>-<NNNNN>.npz       X float32 [rows, nFeatures], y int8 (label: +1/0/-1),
+    <split>-<NNNNN>.npz       X int16 [rows, nFeatures] (every feature is an integer),
+                              y int8 (label: +1/0/-1),
                               turn, turns_to_end, rows_to_end int16, active int8,
                               game int32 (an index into games.jsonl)
     games.jsonl               one line per game: index, game_key, split_group,
@@ -90,7 +91,12 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
         rows = buf[s]
         while rows and (force or len(rows) >= shard_rows):
             chunk, rows[:] = rows[:shard_rows], rows[shard_rows:]
-            X = np.asarray([r.features for r in chunk], dtype=np.float32)
+            X = np.asarray([r.features for r in chunk], dtype=np.float64)
+            # every feature is a count, a life total or a mana value: an integer.
+            # int16 halves float32's size (rows are ~7 KB for a 180-card cube).
+            if not (np.array_equal(X, np.round(X)) and np.abs(X).max(initial=0) < 32768):
+                raise ValueError("a feature is not an int16: the schema changed -- widen X's dtype")
+            X = X.astype(np.int16)
             np.savez_compressed(
                 os.path.join(out, f"{s}-{shard_no[s]:05d}.npz"), X=X,
                 y=np.asarray([r.label for r in chunk], dtype=np.int8),
@@ -173,7 +179,7 @@ def load(out: str, split: str) -> dict[str, Any]:
     if not parts:
         with open(os.path.join(out, "features.json"), encoding="utf-8") as f:
             n = json.load(f)["nFeatures"]
-        return {k: (np.zeros((0, n), np.float32) if k == "X" else np.zeros(0, np.int32)) for k in keys}
+        return {k: (np.zeros((0, n), np.int16) if k == "X" else np.zeros(0, np.int32)) for k in keys}
     return {k: np.concatenate([p[k] for p in parts]) for k in keys}
 
 
