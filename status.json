@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-03T18:59:37-04:00",
- "heartbeat": "2026-10-03T18:59:37-04:00",
+ "updated": "2026-10-03T18:59:50-04:00",
+ "heartbeat": "2026-10-03T18:59:50-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 8.77,
-  "memUsedGb": 7.8,
+  "load1": 6.89,
+  "memUsedGb": 8.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 2485,
   "pressure": 0,
@@ -22,20 +22,20 @@
    "id": "J038",
    "title": "Omega exploration calibration (D356): one generation of 400 drafts with --explore on, before J039 (no ratings pass is needed)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-03T18:59:37-04:00",
-   "elapsed": 0,
+   "elapsed": 13,
    "done": 0,
    "total": 0,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-03T18:59:37-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "cal.drafts": 0,
     "cal.bridge_drafts": 0,
@@ -69,7 +69,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J038-prepare"
+   "detail": "lab-J038-pilot1"
   }
  ],
  "queue": [
