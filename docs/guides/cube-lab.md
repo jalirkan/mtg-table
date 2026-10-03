@@ -346,7 +346,8 @@ on its own. Each card is then assessed:
 | `dominant-pick` | dealt in ≥ `minSeen` drafts, the Wilson lower bound of its first-line rate is ≥ `dominantFirstPickLo`, and its shrunk win rate is at least the mean |
 | `note-cut` / `note-keep` | the notes file says `cut` / `keep` (or `try` for a card already in) |
 | `ai-limited` | Forge marks it `AI:RemoveDeck:All` or `:Random` (the pool's `forge_ai_flag`, or the engine's own facts): its numbers are reported, the status the AI evidence alone would give is shown beside them, and **only a note can cut it** |
-| `builder-limited` | a land that makes fewer than two colours (Mutavault): the lab's deckbuilder plays lands only for colour, so a low deck rate says nothing |
+| `builder-limited` | a land with a low deck rate: the lab's deckbuilder plays a dual or fetchland only in its own pair's decks and a colourless land (Mutavault) never, so a land's deck rate measures how often its pair is drafted, not the land; a land goes only by a note or by dominance |
+| `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the drafters pick by rating, so the data cannot tell a weak card from an underrated one; **never cut** — raise its rating in the cube's ratings TSV (`tools/cubelab.sh ratings init`, then `--ratings`) to test it |
 | `watch` | a lead — deck rate at or under `deadDeckRateHi`, or win rate `watchWinMargin` over the mean — that has **not** passed its threshold: *insufficient data*, with the drafts per generation that would likely settle it |
 
 **The swaps.** The cuts, in order — notes, then dominant by wins, by picks,
@@ -390,7 +391,10 @@ knobs, the constraints, each generation's swaps), `changelog.md`, `index.html`
 file name. A folder made with another cube, pool, seed, drafts, games, profiles,
 weights or knobs is refused. So is a folder another evolve is still running in
 (`evolve.lock` holds its pid): two would append the same seeds and share the
-workers' Forge homes.
+workers' Forge homes. To decide a generation again — after editing the notes,
+say — delete its `result.json` (and the later generations' folders) and run the
+same line: its drafts are kept, even though the cube it read now carries a
+different iteration-log line.
 
 The drafts and decks are a function of the seed and the swaps a function of the
 drafts' results, so a generation is repeatable from its `drafts.jsonl`; Forge's
@@ -410,6 +414,7 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | `minSeen` | 15 | drafts a card must be dealt in before deck-rate or first-pick evidence counts |
 | `minGames` | 20 | decisive games in played decks before win-rate evidence counts |
 | `deadDeckRateHi` | 0.15 | dead: the upper bound of its deck rate is at most this |
+| `deadMinRating` | 60 | a dead card rated under this is `rating-limited`, never cut |
 | `dominantLoMargin` | 0.05 | dominant: the lower bound of its win rate is this far over the mean |
 | `dominantFirstPickLo` | 0.75 | dominant by picks: the lower bound of its first-line rate |
 | `watchWinMargin` | 0.12 | a win rate this far over the mean is a lead to watch |

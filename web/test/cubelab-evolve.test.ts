@@ -15,7 +15,8 @@
  *    below its threshold is `watch` and never a cut, the swap budget, notes
  *    (keep, cut, try), no AI:RemoveDeck:All card is auto-added, a card cut
  *    before is not re-added, a land the builder cannot use is not cut, and the
- *    same input gives the same decision;
+ *    same input gives the same decision; a land is never cut on its deck rate,
+ *    and a never-played card rated under deadMinRating is rating-limited;
  *  - first-line takes and card stats over the mini fixture (a land's decks counted
  *    from the played lists: meta.json counts spells only), and the renderers.
  */
@@ -118,7 +119,8 @@ test('sectionFor: a colour, gold, colourless or a land, as the cube names them',
 
 // ------------------------------------------------------------ pool and notes
 
-const POOL = parsePool(read('cubes/omega-seed-pool.tsv'));
+// Every card rated 70 (Forge's ranks need the engine): over deadMinRating, so a dead card is a cut.
+const POOL = parsePool(read('cubes/omega-seed-pool.tsv'), 70);
 const POOL_BY = new Map(POOL.map((p) => [p.name, p]));
 
 test('the seed pool parses: 938 cards, WUBRG colours, flags, fixing lands', () => {
@@ -189,8 +191,9 @@ test('an average cube: no swaps, and no leads', () => {
   assert.match(d.verdict, /^No swaps/);
 });
 
+const TUNDRA_CUT = new Map<string, Note>([['Tundra', { card: 'Tundra', verdict: 'cut', note: 'test' }]]);
 test('dead and dominant cards are cut, each for a fitting pool card, and every constraint holds', () => {
-  const d = selectSwaps(input({ stats: stats({
+  const d = selectSwaps(input({ notes: TUNDRA_CUT, stats: stats({
     'Doom Blade': DEAD,
     'Fire // Ice': DEAD,
     'Tundra': DEAD,
@@ -202,8 +205,9 @@ test('dead and dominant cards are cut, each for a fitting pool card, and every c
   assert.equal(outs.get("Umezawa's Jitte")?.why, 'dominant-win');
   assert.equal(outs.get('Ponder')?.why, 'dominant-pick');
   assert.equal(outs.get('Doom Blade')?.why, 'dead');
-  // The order: dominant wins, then first picks, then the dead.
-  assert.deepEqual(d.swaps.map((s) => s.why).slice(0, 2), ['dominant-win', 'dominant-pick']);
+  assert.equal(outs.get('Tundra')?.why, 'note-cut');
+  // The order: notes, dominant wins, first picks, then the dead.
+  assert.deepEqual(d.swaps.map((s) => s.why).slice(0, 3), ['note-cut', 'dominant-win', 'dominant-pick']);
   const inn = (o: string): PoolCard => POOL_BY.get(outs.get(o)?.in as string) as PoolCard;
   assert.equal(inn('Fire // Ice').colors, 'UR', 'a signpost is replaced in its pair');
   assert.ok(inn('Tundra').land && inn('Tundra').fixing, 'a dual for a dual');
@@ -213,17 +217,17 @@ test('dead and dominant cards are cut, each for a fitting pool card, and every c
   assert.deepEqual(violations(after(d), C0), []);
   assert.equal(new Set(after(d).map((c) => c.name)).size, 180);
   // The same input, the same decision.
-  assert.deepEqual(selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD, 'Fire // Ice': DEAD, 'Tundra': DEAD, "Umezawa's Jitte": { games: 60, wins: 50, winRate: 50 / 60, shrunk: 0.75, ci: [0.72, 0.9] }, 'Ponder': { firstTakes: 26, seen: 27 } }) })), d);
+  assert.deepEqual(selectSwaps(input({ notes: TUNDRA_CUT, stats: stats({ 'Doom Blade': DEAD, 'Fire // Ice': DEAD, 'Tundra': DEAD, "Umezawa's Jitte": { games: 60, wins: 50, winRate: 50 / 60, shrunk: 0.75, ci: [0.72, 0.9] }, 'Ponder': { firstTakes: 26, seen: 27 } }) })), d);
 });
 
-test('an AI-limited card is never cut on AI evidence; a note can; a builder-limited land is not cut', () => {
+test('an AI-limited card is never cut on AI evidence; a note can; a land is never cut on its deck rate', () => {
   assert.equal(POOL_BY.get('Demonic Tutor')?.aiFlag, 'Random');
-  const d = selectSwaps(input({ stats: stats({ 'Demonic Tutor': DEAD, 'Mutavault': DEAD }) }));
+  const d = selectSwaps(input({ stats: stats({ 'Demonic Tutor': DEAD, 'Mutavault': DEAD, 'Tundra': DEAD, 'Marsh Flats': DEAD }) }));
   assert.deepEqual(d.swaps, []);
   const dt = d.aiLimited.find((a) => a.name === 'Demonic Tutor');
   assert.equal(dt?.status, 'ai-limited');
   assert.equal(dt?.signal, 'dead', 'its numbers are still reported');
-  assert.equal(d.assessments.find((a) => a.name === 'Mutavault')?.status, 'builder-limited');
+  for (const n of ['Mutavault', 'Tundra', 'Marsh Flats']) assert.equal(d.assessments.find((a) => a.name === n)?.status, 'builder-limited', n);
   const notes = new Map<string, Note>([['Demonic Tutor', { card: 'Demonic Tutor', verdict: 'cut', note: 'Justin: too swingy in paper' }]]);
   const d2 = selectSwaps(input({ stats: stats({ 'Demonic Tutor': DEAD }), notes }));
   assert.deepEqual(d2.swaps.map((s) => [s.out, s.why]), [['Demonic Tutor', 'note-cut']]);
@@ -280,8 +284,22 @@ test('a weak archetype pulls the add toward its themes and colours', () => {
   assert.match(d.swaps[0]?.fit ?? '', /helps weak/);
 });
 
+test('a dead card rated under deadMinRating is rating-limited: reported, never cut, no more drafts asked for', () => {
+  const low = CARDS.map((c) => (c.name === 'Doom Blade' || c.name === 'Mana Leak' ? { ...c, rating: 35 } : c));
+  const d = selectSwaps(input({ cards: low, stats: stats({ 'Doom Blade': DEAD, 'Mana Leak': { inDecks: 2 }, Ponder: DEAD }) }));
+  assert.deepEqual(d.swaps.map((s) => s.out), ['Ponder']);
+  for (const n of ['Doom Blade', 'Mana Leak']) {
+    const a = d.assessments.find((x) => x.name === n);
+    assert.equal(a?.status, 'rating-limited', n);
+    assert.match(a?.evidence ?? '', /rated 35, under 60/);
+  }
+  assert.ok(!d.watch.some((w) => w.name === 'Mana Leak'), 'a lean on a low-rated card is not a watch');
+  assert.match(d.verdict, /2 card\(s\) are never played but rated under 60/);
+  assert.deepEqual(selectSwaps(input({ cards: low, stats: stats({ 'Doom Blade': DEAD }), knobs: { ...K, deadMinRating: 0 } })).swaps.map((s) => s.out), ['Doom Blade']);
+});
+
 test('applySwaps then writeCubeDoc: a clean 180-card document with the adds in their sections', () => {
-  const d = selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD, 'Fire // Ice': DEAD, 'Tundra': DEAD }) }));
+  const d = selectSwaps(input({ notes: TUNDRA_CUT, stats: stats({ 'Doom Blade': DEAD, 'Fire // Ice': DEAD, 'Tundra': DEAD }) }));
   const text = writeCubeDoc(read('cubes/omega-cube-180.md'), applySwaps(OMEGA, d.swaps, POOL_BY), { version: 2, logEntry: 'v2' });
   const c = parseCube(text);
   assert.deepEqual(c.warnings, []);

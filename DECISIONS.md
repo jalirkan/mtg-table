@@ -13380,8 +13380,20 @@ evaluate it) and the ones that fit the weakest archetypes are listed as
 human-test candidates. `cubes/<cube>-notes.tsv` (`keep` / `cut` / `try`, from
 Justin's real games) overrides everything: `keep` is never cut, `cut` is cut
 now and never added, `try` is added first when a cut makes room, AI:All or not.
-A land that makes fewer than two colours is not cut for a low deck rate either:
-the lab's deckbuilder plays lands only for colour (`builder-limited`).
+Two more cards are never cut on deck-rate evidence, because the lab's own
+choices explain it. A **land** (`builder-limited`): the deckbuilder plays a dual
+or a fetchland only in its own pair's decks and a colourless land never, so a
+land's deck rate is its pair's popularity. A card **rated under
+`deadMinRating`** (60; `rating-limited`): the drafters pick by rating, so a
+low-rated card nobody plays may be weak or only underrated, and the data cannot
+tell which — the remedy is a rating, not a cut. Both were measured, not
+supposed: the first selection over Omega v1's 30 drafts found 29 dead cards, of
+which 26 were rated under 55 by Forge's ranks (Delver of Secrets 19.7,
+Ephemerate 22.9, Reflector Mage 32.5 — the halved set-file scale of D294's
+follow-up 3) and 3 were the BR/WB fixing lands (Badlands, Bloodstained Mire,
+Marsh Flats; no BR deck was built in 60), and it would have swapped Grave Titan,
+Council's Judgment and Badlands for higher-rated cards — evolving the cube
+toward Forge's ratings rather than toward better games.
 
 Every threshold and fit weight is a named knob in `EVOLVE_DEFAULTS`
 (`--evolve name=value`), in the guide's *The evolve knobs* table and recorded in

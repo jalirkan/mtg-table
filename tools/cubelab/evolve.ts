@@ -28,9 +28,14 @@
 //   - an AI-LIMITED card (Forge's AI:RemoveDeck All or Random, the pool's
 //     forge_ai_flag) on AI evidence: its numbers are reported apart, marked
 //     AI-limited, and only a note can cut it;
-//   - a land the lab's deckbuilder never plays for colour (one that makes
-//     fewer than two colours: Mutavault) on deck-rate evidence — that is the
-//     builder's blind spot, not the card's (`builder-limited`).
+//   - a LAND on deck-rate evidence (`builder-limited`): the lab's deckbuilder
+//     plays a dual or a fetchland only in its own pair's decks and a land that
+//     makes fewer than two colours (Mutavault) never, so a land's deck rate
+//     measures how often its pair was drafted, not the land;
+//   - a card whose RATING is under deadMinRating on deck-rate evidence
+//     (`rating-limited`): the drafters pick by rating, so a low-rated card that
+//     is never played may be weak or may be underrated, and the data cannot
+//     tell which — raise its rating in the cube's ratings TSV to test it.
 //
 // An ADD comes from the pool: supported by Forge, not in the cube, at most two
 // colours, never cut by an earlier generation or a note, and never an
@@ -66,6 +71,7 @@ export interface EvolveKnobs {
   minSeen: number;
   minGames: number;
   deadDeckRateHi: number;
+  deadMinRating: number;
   dominantLoMargin: number;
   dominantFirstPickLo: number;
   watchWinMargin: number;
@@ -87,6 +93,7 @@ export const EVOLVE_DEFAULTS: EvolveKnobs = {
   minSeen: 15,
   minGames: 20,
   deadDeckRateHi: 0.15,
+  deadMinRating: 60,
   dominantLoMargin: 0.05,
   dominantFirstPickLo: 0.75,
   watchWinMargin: 0.12,
@@ -407,7 +414,7 @@ function needOf(groups: Group[], mean: number): Map<string, number> {
 
 // ------------------------------------------------------------------ assessing a card
 
-export type Status = 'note-cut' | 'note-keep' | 'dominant-win' | 'dominant-pick' | 'dead' | 'watch' | 'ai-limited' | 'builder-limited' | 'ok' | 'no-data';
+export type Status = 'note-cut' | 'note-keep' | 'dominant-win' | 'dominant-pick' | 'dead' | 'watch' | 'ai-limited' | 'builder-limited' | 'rating-limited' | 'ok' | 'no-data';
 
 export interface Assessment {
   name: string;
@@ -451,15 +458,15 @@ export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, 
   let draftsNeeded: number | null | undefined;
   const perDraftSeen = s.seen / Math.max(1, drafts);
   const perDraftGames = s.games / Math.max(1, drafts);
-  const builderBlind = card.land && !card.fixing;
+  const builderBlind = card.land;
   if (s.games >= k.minGames && s.ci[0] >= mean + k.dominantLoMargin) { signal = 'dominant-win'; strength = 10 + (s.ci[0] - mean) * 10; }
   else if (s.seen >= k.minSeen && (first.lo ?? 0) >= k.dominantFirstPickLo && s.shrunk >= mean) { signal = 'dominant-pick'; strength = 5 + (first.lo ?? 0); }
-  else if (!builderBlind && s.seen >= k.minSeen && (deck.hi ?? 1) <= k.deadDeckRateHi) { signal = 'dead'; strength = 1 + (k.deadDeckRateHi - (deck.hi ?? 1)); }
+  else if (s.seen >= k.minSeen && (deck.hi ?? 1) <= k.deadDeckRateHi) { signal = 'dead'; strength = 1 + (k.deadDeckRateHi - (deck.hi ?? 1)); }
   else if (s.games > 0 && s.winRate >= mean + k.watchWinMargin) {
     signal = 'lean-dominant';
     const n = sampleToSettle(s.winRate, mean + k.dominantLoMargin, false);
     draftsNeeded = n === null || perDraftGames === 0 ? null : Math.max(Math.ceil(Math.max(n, k.minGames) / perDraftGames), drafts + 1);
-  } else if (!builderBlind && s.deckRate <= k.deadDeckRateHi) {
+  } else if (s.deckRate <= k.deadDeckRateHi) {
     signal = 'lean-dead';
     const n = sampleToSettle(Math.max(s.deckRate, 0.001), k.deadDeckRateHi, true);
     draftsNeeded = n === null ? null : Math.max(Math.ceil(Math.max(n, k.minSeen) / perDraftSeen), drafts + 1);
@@ -469,6 +476,9 @@ export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, 
   if (note?.verdict === 'keep' || note?.verdict === 'try') return { ...out, status: 'note-keep', strength: 0 };
   if (card.aiFlag !== 'none') return { ...out, status: 'ai-limited', strength: 0 };
   if (builderBlind && s.deckRate <= k.deadDeckRateHi) return { ...out, status: 'builder-limited', strength: 0 };
+  if ((signal === 'dead' || signal === 'lean-dead') && card.rating < k.deadMinRating) {
+    return { ...out, signal: 'dead', status: 'rating-limited', strength: 0, evidence: `${ev}; rated ${card.rating}, under ${k.deadMinRating}` };
+  }
   if (signal === 'dominant-win' || signal === 'dominant-pick' || signal === 'dead') return { ...out, status: signal };
   if (signal === 'lean-dead' || signal === 'lean-dominant') return { ...out, status: 'watch', strength: 0 };
   return out;
@@ -605,11 +615,13 @@ export function selectSwaps(x: SelectInput): Decision {
   const pendingTries = [...tries].filter((t) => !inCube.has(t) && !added.has(t)).sort();
   const settle = watch.map((w) => w.draftsNeeded).filter((d): d is number => typeof d === 'number');
   const settleAt = settle.length ? settle[Math.min(settle.length - 1, Math.floor(settle.length / 2))] : null;
-  const verdict = swaps.length
+  const rated = assessments.filter((a) => a.status === 'rating-limited').length;
+  const ratedNote = rated ? ` ${rated} card(s) are never played but rated under ${k.deadMinRating}: a ratings question, not a drafts one (see rating-limited).` : '';
+  const verdict = (swaps.length
     ? `${swaps.length} swap(s) passed the evidence threshold${unmatched.length ? `; ${unmatched.length} supported cut(s) left for later` : ''}${watch.length ? `; ${watch.length} more lead(s) are insufficient data` : ''}.`
     : watch.length
       ? `Insufficient data: no card passed a threshold at ${x.drafts} drafts; ${watch.length} lead(s) to watch${settleAt ? ` — about ${settleAt} drafts per generation would settle half of them` : ''}. Run more drafts.`
-      : `No swaps: nothing is dead or dominant at ${x.drafts} drafts, and nothing leans that way.`;
+      : `No swaps: nothing is dead or dominant at ${x.drafts} drafts, and nothing leans that way.`) + ratedNote;
   return { swaps, assessments, unmatched, watch, aiLimited, humanTest, pendingTries, verdict, violationsBefore: before, violationsAfter: violations(current, x.constraints) };
 }
 

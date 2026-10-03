@@ -168,10 +168,24 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     }
     fs.mkdirSync(dir, { recursive: true });
     const inputFile = path.join(dir, 'input.md');
-    fs.writeFileSync(inputFile, inputText);
     const cube = parseCube(inputText);
-    say(`== generation ${g}/${o.generations}: ${cube.title} (${cube.cards.length} cards), seeds ${seeds[0]}-${seeds[1]}`);
     const runDir = path.join(dir, 'run');
+    // Re-deciding a generation (its result.json removed, e.g. after editing the notes or a knob): the
+    // generation before it wrote a new log entry, so the input's text moved while its list did not.
+    // The drafts are still this list's, so the run folder is told the new text.
+    const runJson = path.join(runDir, 'run.json');
+    if (fs.existsSync(inputFile) && fs.existsSync(runJson)) {
+      const old = fs.readFileSync(inputFile, 'utf8');
+      if (old !== inputText && listKey(parseCube(old)) === listKey(cube)) {
+        const rm = JSON.parse(fs.readFileSync(runJson, 'utf8')) as RunMeta;
+        if (rm.cubeSha === sha(old)) {
+          fs.writeFileSync(runJson, `${JSON.stringify({ ...rm, cubeSha: sha(inputText) }, null, 2)}\n`);
+          say(`generation ${g}: the input's prose changed but not its list; keeping the drafts already played`);
+        }
+      }
+    }
+    fs.writeFileSync(inputFile, inputText);
+    say(`== generation ${g}/${o.generations}: ${cube.title} (${cube.cards.length} cards), seeds ${seeds[0]}-${seeds[1]}`);
     await runLab(env, {
       cubeFile: inputFile, format: 'grid', drafts: o.drafts, games: o.games, jobs: o.jobs, seed: seeds[0], profiles: o.profiles,
       ratingsFile: o.ratingsFile, record: 0, out: runDir, builder: 'lab', gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: o.weights,

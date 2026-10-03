@@ -68,8 +68,13 @@ export function changelogSection(g: GenSummary): string {
     for (const a of ai) out.push(`- ${a.name} (AI:RemoveDeck:${a.aiFlag}) — ${a.status}${a.signal !== 'none' ? `, the AI evidence alone says ${a.signal}` : ''}: ${a.evidence}${a.note ? `; note: ${a.note}` : ''}`);
     out.push('');
   }
+  const rated = d.assessments.filter((a) => a.status === 'rating-limited');
+  if (rated.length) {
+    out.push('**Rating-limited** (never or almost never played, but rated low: the drafters pick by rating, so these may be weak or only underrated. Raise a rating in the cube\'s ratings TSV — `tools/cubelab.sh ratings init` writes one — to test it; never cut on this evidence):', '');
+    out.push(rated.map((a) => a.name).join(', ') + '.', '');
+  }
   const builder = d.assessments.filter((a) => a.status === 'builder-limited');
-  if (builder.length) out.push(`**Builder-limited lands** (the lab's deckbuilder only plays lands for colour, so a low deck rate says nothing): ${builder.map((a) => a.name).join(', ')}.`, '');
+  if (builder.length) out.push(`**Builder-limited lands** (the lab's deckbuilder plays a dual or fetchland only in its own pair's decks, and a colourless land never, so a land's deck rate measures its pair's popularity): ${builder.map((a) => a.name).join(', ')}.`, '');
   if (d.humanTest.length) {
     out.push('**Human-test candidates** (AI:RemoveDeck:All, never auto-added; add a `try` line to the notes file to test one):', '');
     for (const h of d.humanTest) out.push(`- ${h.name} (${h.colors}) — ${h.why}`);
@@ -101,6 +106,8 @@ export function htmlSection(g: GenSummary): string {
   if (d.swaps.length) parts.push('<h3>Swaps</h3>', table(['Out', 'Why', 'Evidence', 'In', 'Why this card'], d.swaps.map((s) => [s.out, s.why, s.evidence, s.in, s.fit])));
   if (d.watch.length) parts.push('<h3>Insufficient data</h3>', table(['Card', 'Lean', 'Evidence', 'Drafts to settle'], d.watch.slice(0, 15).map((w) => [w.name, w.signal, w.evidence, String(w.draftsNeeded ?? '—')])));
   if (d.aiLimited.length) parts.push('<h3>AI-limited (never cut on AI stats)</h3>', table(['Card', 'Flag', 'Status', 'AI evidence says', 'Evidence'], d.aiLimited.map((a) => [a.name, a.aiFlag, a.status, a.signal, a.evidence])));
+  const rl = d.assessments.filter((a) => a.status === 'rating-limited');
+  if (rl.length) parts.push('<h3>Rating-limited (a ratings question, not a drafts one)</h3>', `<p>${esc(rl.map((a) => a.name).join(', '))}</p>`);
   if (d.humanTest.length) parts.push('<h3>Human-test candidates</h3>', table(['Card', 'Colours', 'Why'], d.humanTest.map((h) => [h.name, h.colors, h.why])));
   parts.push('<h3>Balance</h3><div class="row">',
     table(['Pair', 'Decks', 'Games', 'Win', 'Shrunk'], g.balance.pairs.map((x) => [x.key, String(x.decks), String(x.games), x.games ? r2(x.rate) : '–', r2(x.shrunk)])),
