@@ -103,6 +103,19 @@ public final class Grader {
         public List<String> only;
         /** Tokens always added to a shortlist (a case's listed answers). */
         public List<String> extra = new ArrayList<>();
+        /**
+         * What the player did here, as a token (the review, D353), or null.  It
+         * joins the shortlist like {@link #extra}, and the answer says which
+         * option it is ({@code playedOption}: the same class -- identical
+         * creatures, another copy of a card -- or null when no option is).
+         */
+        public String played;
+        /**
+         * Most options graded (0 = no limit): above it the player's option and
+         * Forge's are kept, then the enumeration's own order (the review's
+         * triage, D353: a cheap look must stay cheap).
+         */
+        public int maxOptions;
     }
 
     /** One option: its bench token, and how to set it up on a rebuilt base. */
@@ -174,6 +187,13 @@ public final class Grader {
         final Json.JsonOut j = new Json.JsonOut().obj().n("v", 1).n("key", key).n("type", type)
                 .n("turn", WireLog.num(moment.state, "turn", 0)).n("phase", String.valueOf(WireLog.str(moment.state, "phase")))
                 .n("seat", log.seat).n("opponent", know.oppSource).n("ownDeck", know.ownSource);
+        if (set.played != null) {
+            j.n("played", set.played);
+            if (!set.extra.contains(set.played)) {
+                set.extra = new ArrayList<>(set.extra);
+                set.extra.add(set.played);
+            }
+        }
         final Rebuild rb;
         final List<Opt> opts;
         Rebuild.Base b0;
@@ -206,6 +226,14 @@ public final class Grader {
             j.v(f);
         }
         j.end();
+        if (set.played != null) {
+            final String po = playedOption(opts, set.played);
+            if (po == null) {
+                j.nNull("playedOption");
+            } else {
+                j.n("playedOption", po);
+            }
+        }
         if (opts.size() < 2) {
             j.n("status", "trivial").n("error", opts.size() + " option(s): nothing to grade");
             writeNotes(j);
@@ -326,6 +354,64 @@ public final class Grader {
             }
         }
         j.end();
+    }
+
+    /**
+     * The option the player's token is (D353): the same choice by class --
+     * attacks by how many of each creature class, blocks by class pairs, a cast
+     * by the card's name, a target by {@link #targetClass} -- or null.
+     */
+    String playedOption(final List<Opt> opts, final String played) {
+        final String want = choiceKey(played);
+        if (want == null) {
+            return null;
+        }
+        for (final Opt o : opts) {
+            if (want.equals(choiceKey(o.token))) {
+                return o.token;
+            }
+            for (final String a : o.aliases) {
+                if (want.equals(choiceKey(a))) {
+                    return o.token;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String choiceKey(final String tok) {
+        try {
+            if (tok.equals("pass")) {
+                return "pass";
+            }
+            if (tok.startsWith("cast:") || tok.startsWith("land:")) {
+                final Map<?, ?> c = wireCards.get(Integer.parseInt(tok.substring(tok.indexOf(':') + 1)));
+                final String n = c == null ? null : Rebuild.knownName(c);
+                return tok.substring(0, tok.indexOf(':')) + "|" + (n == null ? tok : n);
+            }
+            if (tok.startsWith("attack:")) {
+                final List<String> ks = new ArrayList<>();
+                for (final int id : parseIds(tok)) {
+                    ks.add(classKey(id, false));
+                }
+                ks.sort(null);
+                return "attack|" + String.join(",", ks);
+            }
+            if (tok.startsWith("block:")) {
+                return "block|" + blockClassKey(parsePairs(tok));
+            }
+            if (tok.startsWith("target:")) {
+                final String rest = tok.substring(7);
+                if (!rest.matches("\\d+")) {
+                    return "target|" + rest;
+                }
+                final String k = targetClass(Integer.parseInt(rest));
+                return "target|" + (k == null ? "#" + rest : k);
+            }
+        } catch (final RuntimeException e) {
+            return null;
+        }
+        return null;
     }
 
     /** Fold options whose key is equal into the first one, as its aliases. */
@@ -479,6 +565,25 @@ public final class Grader {
         }
         if (set.only != null) {
             out.removeIf(o -> !set.only.contains(o.token));
+        }
+        if (set.maxOptions > 0 && out.size() > set.maxOptions) {
+            final String po = set.played == null ? null : playedOption(out, set.played);
+            final List<Opt> keep = new ArrayList<>();
+            for (final Opt o : out) {
+                if (o.token.equals(po) || o.forge) {
+                    keep.add(o);
+                }
+            }
+            for (final Opt o : out) {
+                if (keep.size() >= set.maxOptions) {
+                    break;
+                }
+                if (!keep.contains(o)) {
+                    keep.add(o);
+                }
+            }
+            notes.add(out.size() + " options: " + keep.size() + " graded (--max-options; the player's and Forge's kept)");
+            out.retainAll(keep);
         }
         return out;
     }

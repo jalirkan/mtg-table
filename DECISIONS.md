@@ -15913,3 +15913,111 @@ card was no longer public in that state, so the checker's verdict stands.
 Filtering in `Snap.library`: Snap walks views only and cannot see the static
 effect's source on the live game (hard rule 3). Forcing `checkStaticAbilities`
 from the hook: the recorder would change the game it records.
+## D353 — The post-game review: every graded decision triaged at the live settings, the ones most likely to matter graded again to the end of the game, one report with a verdict that never calls a close call a mistake; the helper's `/review` runs it on a game the engine wrote
+
+*Branch `c/game-review`; ForgeCoach's half is its branch `c/game-review`. The
+contract is `docs/game-review.md`.*
+
+**2026-10-03**
+
+**Decision.** `coach-grade.sh review --log F --seat N` reviews one game for the
+seat whose redacted log it is (another seat is refused: the log is that seat's
+view), in four steps; `Review.java` holds the engine-free ones and
+`GradeSelfTest` holds `Review`:
+
+- **Plan** (`Review.plan`). A human-seat log: the first act of each decision —
+  the viewer's main phase at a priority prompt with an empty stack (`spell`,
+  once per main phase), the attack prompt, the block prompt, each target prompt
+  answered with a click (a cancelled one is no decision). An AI-vs-AI
+  recording: the first state of each of the viewer's main phases,
+  declare-attackers steps and declare-blockers steps where something attacks
+  them. What the player did comes from the engine's public events after the
+  decision (the first spell cast from the hand the moment shows; the
+  `attackers` / `blockers` event, the bridge's self-listed unblocked attacker
+  dropped) or the player's own target click. `Grader` adds the played token to
+  its shortlist and answers `playedOption`: the option it is, by class
+  (identical creatures, another copy of a card), or null.
+- **Triage.** Every planned decision with the live analysis's settings (D336,
+  D349: to the end of this turn, the leaf measure, racing from round 4, at
+  least 2 rounds), a per-decision budget of `--triage-s × jobs / decisions`
+  clamped to 1.5–6 s, on `--jobs` JVMs that each claim the next unclaimed
+  decision (`batch --claim`: an atomic file create), so one slow decision does
+  not hold up the rest.
+- **Deepen** (`Review.select`, `Review.allocate`, `Review.deepOptions`). The
+  candidates are the decisions graded `ok` whose played option has numbers and
+  is not the best; they are ranked by the upper end of the played option's
+  regret interval (what the choice might have cost: large regrets and wide
+  close calls both rank high), ties by the point regret; the first
+  `--deep-k` (6) are graded again from scratch with playouts to the end of the
+  game when each gets at least 60 s, else to the end of the next turn. One
+  decision per JVM when `k ≤ jobs`; a deepened decision plays only its
+  shortlist (the player's option, the triage's best, Forge's, then by the
+  triage's win rate, 5 at most), every option every round, so the comparison
+  stays paired.
+- **Report** (`Review.report`): per decision the final table (the deepened
+  grade where there is one), the played and best options, Forge's choice, the
+  played option's regret with its 95% interval, and the verdict — `best`,
+  `mistake` only when the regret interval excludes zero (`clear`), `close`
+  when it includes zero, `not-graded` (one option, no table, the choice outside
+  it, or no numbers). Key moments: deepened mistakes by regret, deepened close
+  calls with a point regret of at least 0.02 (a tie is not a moment that
+  mattered), then clear triage mistakes. `knowledge.opponentModel` says
+  whether the opponent's hidden cards came from a pool, a public deck, or
+  nothing (`basic-lands`: every number flatters the player, and the screen
+  says so).
+
+**Hidden information** is the live guard's (D348), not D334's review rule:
+the review runs right after a game the player may play again, against the
+same AI. `review-plan` runs `HiddenPool.checkLive` before anything is graded
+and `batch --guard live` runs it on every moment (a moment line's `oppDeck` is
+refused too, not just the run's flags). The default is pool mode.
+
+**The helper's `/review`** (`tools/review-runner.mjs`): `POST /review
+{"gameId", "seat"?, "oppPool"?, "oppKnown"?, "deepK"?, "triageS"?, "deepS"?}`
+→ 202 with an id, `GET /review/<id>` for its state, stage and report. Only
+`var/games/<gameId>/frames.jsonl` (a plain id, its real path inside
+`var/games/`), the seat checked against the log header, the pool and known
+picks written to files of the review's own (the match launcher's card-name
+pattern; a pool under 80 cards refused), the argv an array, one review at a
+time with a queue of 2, a 30-minute limit. There is no field for the
+opponent's deck, and unknown fields are refused. `/health` carries
+`"review": 1` once the bridge is built (`--no-review` turns it off).
+
+**Held by** `GradeSelfTest` (the plan of a synthetic human log and an AI-vs-AI
+one, the budgets, the selection's order and exclusions, the deep shortlist,
+the verdict rules, the report's shape and counts, the guard on the review's
+knowledge), `tools/review-runner-selftest.mjs` (gate 12f, CI: validation,
+traversal by symlink, the seat, the queue and 429, the stages, the report,
+failure and timeout, the argv, the helper route) and `coach-grade.sh
+review-smoke` (the engine smoke at tiny budgets, the report checked; not in
+the gate, it boots Forge).
+
+**Measured** in this cloud container (4 shared cores, the UI lane's tests
+running beside it; every figure several times the PC's). One human-seat game
+(`human-auto-42`, 32 decisions, 14 of them a single option), a 390-card pool,
+3 JVMs, `--triage-s 15 --deep-s 150 --deep-k 6`: plan 0.5 s; triage 56 s wall,
+of which the busiest JVM graded for 36 s (the rest is three JVMs booting on
+four cores) — the 15 s target is missed here, because 2 rounds are the floor
+and a late-game decision with many options costs more than its budget; deepen
+6 decisions, 2 per JVM at 75 s each to the end of the game, 164 s wall (151 s
+grading); 3.7 min in all. The deepened tables are honest and wide (3–20
+rounds: ±20–50 points), so all six came out best or close calls, none a
+mistake. An AI-vs-AI recording (`villain-doom-248`, 40 decisions) at the
+smoke's tiny budgets: triage's busiest JVM 144 s, 100 s after
+`--max-options 8` and a 2.5 s playout timeout. `review-smoke` on
+`human-trample-7` (23 decisions, 2 JVMs): 58 s. Through the helper,
+ForgeCoach's own client (`runReview`) against `/review` on the same game at
+`triageS 5, deepS 30, deepK 2`: done in 63 s, the report accepted by its
+validator. On the PC (7 JVMs, a 9700X) the targets — triage ≈ 15 s, 6
+decisions deepened ≈ 2.5 min — are the budgets' defaults; the PC job measures
+them.
+
+**Rejected.** D334's review knowledge (the AI's real list) for a game the
+player may replay against the same AI; grading every decision to the end of
+the game (minutes each: a whole game is an hour on seven JVMs); splitting one
+decision's options across JVMs (pairing holds only if every option plays the
+same seeds, and racing needs one view of all of them: one decision per JVM is
+both); calling every decision whose interval reaches above zero a mistake (at
+triage budgets nearly all would be); a JVM per decision (a 10 s boot each);
+streaming the report over one long HTTP response (a phone or a closed tab
+loses it; a polled id survives both).

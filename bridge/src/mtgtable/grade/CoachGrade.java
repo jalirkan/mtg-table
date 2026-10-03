@@ -142,6 +142,15 @@ public final class CoachGrade {
             case "fit-scale":
                 exit = fitScale(rest);
                 break;
+            case "review-plan":
+                exit = reviewPlan(rest);
+                break;
+            case "review-select":
+                exit = reviewSelect(rest);
+                break;
+            case "review-report":
+                exit = reviewReport(rest);
+                break;
             default:
                 throw new IllegalArgumentException("unknown mode " + args[0]);
             }
@@ -257,6 +266,8 @@ public final class CoachGrade {
         s.playoutTimeoutMs = f.l("timeout-ms", 120_000);
         s.cap = f.i("cap", 24);
         s.lands = f.v.containsKey("lands");
+        s.race.minRounds = f.i("min-rounds", s.race.minRounds);
+        s.maxOptions = f.i("max-options", 0);
         if (f.v.containsKey("leaf-scale")) {
             leafScale(s, f.v.get("leaf-scale"));
         }
@@ -463,6 +474,17 @@ public final class CoachGrade {
             shard = Integer.parseInt(p[0]);
             shards = Integer.parseInt(p[1]);
         }
+        // --claim DIR (the review, D353): the JVMs take the next unclaimed moment instead of every K-th,
+        // so one slow decision does not hold up the moments queued behind it.
+        final File claim = f.v.containsKey("claim") ? new File(f.v.get("claim")) : null;
+        if (claim != null) {
+            claim.mkdirs();
+        }
+        // --guard live (the review, D353): every moment's knowledge passes D348's live guard.
+        final boolean guarded = "live".equals(f.s("guard", ""));
+        if (f.v.containsKey("guard") && !guarded) {
+            throw new IllegalArgumentException("--guard takes live");
+        }
         boot();
         final Config cfg = Config.load();
         final File out = new File(outPath);
@@ -487,7 +509,7 @@ public final class CoachGrade {
                     continue;
                 }
                 idx++;
-                if (idx % shards != shard) {
+                if (claim == null ? idx % shards != shard : !claim(claim, idx)) {
                     continue;
                 }
                 final Map<?, ?> mo = (Map<?, ?>) Json.parse(raw);
@@ -508,22 +530,36 @@ public final class CoachGrade {
                 if (WireLog.bool(mo, "lands")) {
                     s.lands = true;   // a spell case that offers the land drop (ForgeCoach's lands: true)
                 }
+                if (WireLog.str(mo, "played") != null) {
+                    s.played = WireLog.str(mo, "played");   // the review's moments (D353)
+                }
+                if (WireLog.arr(mo, "only").length > 0) {
+                    final List<String> only = new ArrayList<>();
+                    for (final Object t : WireLog.arr(mo, "only")) {
+                        only.add(String.valueOf(t));
+                    }
+                    s.only = only;   // a deepened decision plays its shortlist again (D353)
+                }
                 String line;
                 final long t0 = System.nanoTime();
                 try {
                     final File logFile = resolve(cfg, logPath);
                     final WireLog log = WireLog.read(logFile);
-                    final Rebuild.Knowledge k = knowledge(cfg, log,
+                    final Rebuild.Knowledge k = guarded
+                            ? liveKnowledge(cfg.root(), log, guardFlags(f, mo))
+                            : knowledge(cfg, log,
                             WireLog.str(mo, "deck") != null ? WireLog.str(mo, "deck") : f.s("deck", null),
                             WireLog.str(mo, "oppDeck") != null ? WireLog.str(mo, "oppDeck") : f.s("opp-deck", null),
                             WireLog.str(mo, "oppPool") != null ? WireLog.str(mo, "oppPool") : f.s("opp-pool", null));
                     line = gradeOne(cfg, logFile, frame, mode, type, k, s, f.l("max-ms", 0));
+                } catch (final HiddenPool.Refused e) {
+                    line = new Json.JsonOut().obj().n("v", 1).n("status", "refused").n("error", e.getMessage()).end().done();
                 } catch (final Exception e) {
                     line = new Json.JsonOut().obj().n("v", 1).n("status", "error").n("error", String.valueOf(e)).end().done();
                 }
                 // The moment's own fields in front of the grade.
                 final Json.JsonOut head = new Json.JsonOut().obj().n("momentKey", mkey).n("log", logPath).n("frame", frame)
-                        .n("mode", mode).n("type", type);
+                        .n("mode", mode).n("type", type).n("shard", shard);
                 for (final String kf : new String[] {"id", "label", "source", "deck", "oppDeck", "oppPool"}) {
                     if (WireLog.str(mo, kf) != null) {
                         head.n(kf, WireLog.str(mo, kf));
@@ -540,6 +576,207 @@ public final class CoachGrade {
             }
         }
         System.err.println("[coach-grade] batch shard " + shard + "/" + shards + ": " + graded + " graded");
+        return 0;
+    }
+
+    /** Claim moment {@code idx} for this JVM: true when no other JVM has (an atomic file create). */
+    static boolean claim(final File dir, final int idx) throws IOException {
+        return new File(dir, Integer.toString(idx)).createNewFile();
+    }
+
+    /**
+     * A guarded batch moment's knowledge flags (D353): the run's own flags, a
+     * moment's {@code deck} / {@code oppPool} over them -- and a moment's
+     * {@code oppDeck} too, so the guard refuses it rather than it slipping past.
+     */
+    static Flags guardFlags(final Flags f, final Map<?, ?> mo) {
+        final Flags g = new Flags(new String[0]);
+        for (final String k : new String[] {"deck", "own-pool", "opp-deck", "opp-pool", "opp-known", "opp-deck-public"}) {
+            if (f.v.containsKey(k)) {
+                g.v.put(k, f.v.get(k));
+            }
+        }
+        for (final String[] kf : new String[][] {{"deck", "deck"}, {"oppDeck", "opp-deck"}, {"oppPool", "opp-pool"}}) {
+            if (WireLog.str(mo, kf[0]) != null) {
+                g.v.put(kf[1], WireLog.str(mo, kf[0]));
+            }
+        }
+        return g;
+    }
+
+    // ------------------------------------------------------------------
+    // The post-game review (D353): the engine-free steps around two batches
+    // ------------------------------------------------------------------
+
+    /**
+     * {@code review-plan --log F --seat N --out plan.jsonl [knowledge]}: the
+     * log's graded decisions as moments lines.  Refuses a seat that is not the
+     * log's own (the log is one seat's redacted view) and, before any grading,
+     * knowledge the live guard refuses.  Prints {@code {"decisions": n, ...}}.
+     */
+    static int reviewPlan(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final String logPath = f.s("log", null);
+        final String outPath = f.s("out", null);
+        if (logPath == null || outPath == null || !f.v.containsKey("seat")) {
+            throw new IllegalArgumentException("review-plan needs --log, --seat and --out");
+        }
+        final Config cfg = Config.load();
+        final File logFile = resolve(cfg, logPath);
+        final WireLog log = WireLog.read(logFile);
+        final int seat = f.i("seat", -1);
+        if (seat != log.seat) {
+            System.out.println(new Json.JsonOut().obj().n("status", "refused").n("error", "this log is seat " + log.seat
+                    + "'s view; a review of seat " + seat + " needs that seat's own log").end().done());
+            return 3;
+        }
+        try {
+            HiddenPool.checkLive(f.v, log.header, log.seat, cfg.root());
+        } catch (final HiddenPool.Refused e) {
+            System.out.println(new Json.JsonOut().obj().n("status", "refused").n("error", e.getMessage()).end().done());
+            return 3;
+        }
+        final List<Review.Planned> plan = Review.plan(log);
+        final File out = new File(outPath);
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        Files.write(out.toPath(), Review.momentLines(plan, logPath), StandardCharsets.UTF_8);
+        final int jobs = f.i("jobs", 1);
+        final long budget = Review.triageBudgetMs(plan.size(), jobs, f.l("triage-ms", 15_000),
+                f.l("triage-min-ms", 1500), f.l("triage-max-ms", 6000));
+        System.out.println(new Json.JsonOut().obj().n("status", "ok").n("decisions", plan.size())
+                .n("jobs", Math.max(1, Math.min(jobs, plan.size()))).n("triageMsPerDecision", budget)
+                .n("gameId", String.valueOf(WireLog.str(log.header, "gameId"))).n("frames", log.frames.size()).end().done());
+        return 0;
+    }
+
+    static List<Map<?, ?>> readLines(final String path) throws IOException {
+        final List<Map<?, ?>> out = new ArrayList<>();
+        if (path == null || !new File(path).isFile()) {
+            return out;
+        }
+        for (final String l : Files.readAllLines(new File(path).toPath(), StandardCharsets.UTF_8)) {
+            if (!l.isBlank()) {
+                out.add((Map<?, ?>) Json.parse(l));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * {@code review-select --plan P --triage T --out deep.jsonl --k 6 --jobs 7 --deep-ms 150000
+     * [--deep-horizon -1] [--full-min-ms 60000]}: the moments to grade again
+     * ({@link Review#select}) and how ({@link Review#allocate}); prints the
+     * allocation as JSON.
+     */
+    static int reviewSelect(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final List<Map<?, ?>> triage = readLines(f.s("triage", null));
+        final List<Review.Pick> picks = Review.select(triage, f.i("k", 6));
+        final Map<String, Map<?, ?>> byKey = new java.util.HashMap<>();
+        for (final Map<?, ?> t : triage) {
+            byKey.put(WireLog.str(t, "momentKey"), t);
+        }
+        final Set<String> keys = new HashSet<>();
+        for (final Review.Pick p : picks) {
+            keys.add(p.key);
+        }
+        final List<String> out = new ArrayList<>();
+        for (final String l : Files.readAllLines(new File(f.s("plan", "")).toPath(), StandardCharsets.UTF_8)) {
+            if (l.isBlank()) {
+                continue;
+            }
+            final Map<?, ?> mo = (Map<?, ?>) Json.parse(l);
+            final String key = WireLog.str(mo, "log") + "#live" + WireLog.num(mo, "frame", -1) + ":" + WireLog.str(mo, "type");
+            if (keys.contains(key)) {
+                final List<String> only = Review.deepOptions(byKey.get(key), f.i("deep-options", 5));
+                final Json.JsonOut oj = new Json.JsonOut().arr();
+                for (final String t : only) {
+                    oj.v(t);
+                }
+                out.add(l.substring(0, l.lastIndexOf('}')) + ",\"only\":" + oj.end().done() + "}");
+            }
+        }
+        Files.write(new File(f.s("out", "")).toPath(), out, StandardCharsets.UTF_8);
+        final Review.Alloc a = Review.allocate(out.size(), f.i("jobs", 1), f.l("deep-ms", 150_000), f.i("deep-horizon", -1),
+                f.l("full-min-ms", 60_000));
+        final Json.JsonOut j = new Json.JsonOut().obj().n("k", out.size()).n("jobs", a.jobs).n("perJvm", a.perJvm)
+                .n("msPerDecision", a.msPerDecision).n("horizon", a.horizon);
+        j.key("picks").arr();
+        for (final Review.Pick p : picks) {
+            j.obj().n("key", p.key).n("reason", p.reason).end();
+        }
+        System.out.println(j.end().end().done());
+        return 0;
+    }
+
+    /**
+     * {@code review-report --log F --plan P --triage T [--deep D --picks S] --out R
+     * [--config JSON] [--timing JSON] [--triage-jobs J --deep-jobs J]}: the one report
+     * ({@link Review#report}).
+     */
+    static int reviewReport(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final Config cfg = Config.load();
+        final String logPath = f.s("log", "");
+        final WireLog log = WireLog.read(resolve(cfg, logPath));
+        final List<Review.Planned> plan = new ArrayList<>();
+        final List<String> order = new ArrayList<>();
+        for (final Map<?, ?> mo : readLines(f.s("plan", null))) {
+            final Review.Planned p = new Review.Planned();
+            p.frame = (int) WireLog.num(mo, "frame", -1);
+            p.stateFrame = (int) WireLog.num(mo, "stateFrame", -1);
+            p.type = WireLog.str(mo, "type");
+            p.played = WireLog.str(mo, "played");
+            p.turn = WireLog.num(mo, "turn", 0);
+            p.round = WireLog.num(mo, "round", 0);
+            p.phase = WireLog.str(mo, "phase");
+            plan.add(p);
+            order.add(p.momentKey(logPath));
+        }
+        final List<Map<?, ?>> triage = readLines(f.s("triage", null));
+        final List<Map<?, ?>> deep = readLines(f.s("deep", null));
+        final List<Review.Pick> picks = new ArrayList<>();
+        if (f.v.containsKey("picks")) {
+            final Map<?, ?> sel = (Map<?, ?>) Json.parse(Files.readString(new File(f.s("picks", "")).toPath(), StandardCharsets.UTF_8));
+            for (final Object o : WireLog.arr(sel, "picks")) {
+                picks.add(new Review.Pick(WireLog.str((Map<?, ?>) o, "key"), WireLog.str((Map<?, ?>) o, "reason")));
+            }
+        }
+        final List<String> deepOrder = new ArrayList<>();
+        for (final String k : order) {
+            for (final Review.Pick p : picks) {
+                if (p.key.equals(k)) {
+                    deepOrder.add(k);
+                }
+            }
+        }
+        final Review.Meta m = new Review.Meta();
+        m.log = logPath;
+        m.gameId = String.valueOf(WireLog.str(log.header, "gameId"));
+        m.seat = log.seat;
+        m.frames = log.frames.size();
+        m.createdAt = java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString();
+        m.config = f.s("config", "{}");
+        String timing = f.s("timing", "{}").trim();
+        final long tg = Review.gradeMs(triage, order, f.i("triage-jobs", 1));
+        final long dg = Review.gradeMs(deep, deepOrder, f.i("deep-jobs", 1));
+        timing = (timing.equals("{}") ? "{" : timing.substring(0, timing.length() - 1) + ",")
+                + "\"triageGradeMs\":" + tg + ",\"deepGradeMs\":" + dg + "}";
+        m.timing = timing;
+        Json.parse(m.config);   // both must be JSON objects
+        Json.parse(m.timing);
+        final String report = Review.report(m, plan, triage, deep, picks);
+        final File out = new File(f.s("out", ""));
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        Files.writeString(out.toPath(), report + "\n", StandardCharsets.UTF_8);
+        final Map<?, ?> sum = WireLog.map((Map<?, ?>) Json.parse(report), "summary");
+        System.out.println("review: " + WireLog.num(sum, "decisions", 0) + " decision(s), " + WireLog.num(sum, "graded", 0)
+                + " graded, " + WireLog.num(sum, "mistakes", 0) + " mistake(s), " + WireLog.num(sum, "closeCalls", 0)
+                + " close call(s), " + WireLog.num(sum, "deepened", 0) + " deepened -> " + out);
         return 0;
     }
 

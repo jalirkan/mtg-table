@@ -1896,6 +1896,9 @@ s12e_skipped() {
 #      /match and scripts/play.sh's restart, the real play.sh driven against a
 #      FAKE engine (MTGTABLE_TEST_FAKE_ENGINE; no Forge, no build) on free
 #      ports, its files under var/match-launcher-selftest/; about 25 s.
+#      Since D353 also tools/review-runner-selftest.mjs: /review against a
+#      FAKE coach-grade.sh (validation, the queue, the stages, the report);
+#      its files under var/review-runner-selftest/; about 10 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
@@ -1903,6 +1906,9 @@ s12f_coach() {
   # D303: the helper's /match and play.sh's restart, against a fake engine.
   node tools/match-launcher-selftest.mjs \
     || die "match-launcher-selftest.mjs (12f: the match launcher broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D353: the helper's /review against a fake coach-grade.sh.
+  node tools/review-runner-selftest.mjs \
+    || die "review-runner-selftest.mjs (12f: the review runner broke its contract with ForgeCoach -- see the FAIL lines above)"
 }
 
 # 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid
