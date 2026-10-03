@@ -281,7 +281,7 @@ a{color:var(--acc)}code{font-size:12px}
 <div class="kpi"><b>${t.avgTurns ?? '–'}</b>turns a game</div>
 <div class="kpi"><b>${pct(t.onPlay.rate)}</b>on the play wins (${ci(t.onPlay)})</div>
 <div class="kpi"><b>${t.avgMatchSec ?? '–'} s</b>per match (wall)</div>
-<div class="kpi"><b>${t.labDecks}/${t.labDecks + t.forgeDecks}</b>lab-built decks (${t.splashed} splash, ${t.stretched} stretched)</div>
+<div class="kpi"><b>${t.labDecks}/${t.labDecks + t.forgeDecks}</b>lab-built decks (${t.splashed} splash, ${t.stretched} stretched for a thin pool)</div>
 <div class="kpi"><b>${t.labSpells ?? '–'} / ${t.forgeSpells ?? '–'}</b>spells: lab / Forge builder (same colours ${pct(t.forgeSameColours)})</div>
 </div>
 <h2>Win rate by colour pair</h2><div class="wrap">${groupTable(s.byPair, 'pair')}</div>
@@ -311,7 +311,7 @@ export function renderMarkdown(s: Summary, minGames = 6): string {
   L.push(`${s.run.format} draft, ${t.drafts} drafts from seed ${s.run.seed}, best of ${s.run.games}, AI ${s.run.profiles.join(' vs ')}, builder ${s.run.builder}, ratings ${s.run.ratingsFile ?? 'Forge ranks'}.`, '');
   L.push(`- ${t.games} games, ${t.decisive} decisive, ${t.draws} draws (${t.timeouts} timeouts), ${t.engineErrors} engine errors; ${t.avgTurns ?? '–'} turns and ${t.avgGameSec ?? '–'} s a game, ${t.avgMatchSec ?? '–'} s a match.`);
   L.push(`- On the play: ${pct(t.onPlay.rate)} (95% CI ${ci(t.onPlay)}).`);
-  L.push(`- Decks: ${t.labDecks} lab-built, ${t.forgeDecks} Forge-built; ${t.splashed} splash, ${t.stretched} stretched. Spells per deck: lab ${t.labSpells ?? '–'}, Forge's builder ${t.forgeSpells ?? '–'} (same colours as the lab ${pct(t.forgeSameColours)}).`, '');
+  L.push(`- Decks: ${t.labDecks} lab-built, ${t.forgeDecks} Forge-built; ${t.splashed} splash, ${t.stretched} stretched for a thin pool (wide splash, 18 lands or three colours). Spells per deck: lab ${t.labSpells ?? '–'}, Forge's builder ${t.forgeSpells ?? '–'} (same colours as the lab ${pct(t.forgeSameColours)}).`, '');
   const grp = (title: string, rows: GroupRow[]): void => {
     L.push(`## ${title}`, '', '| key | decks | matches won | games W–L–D | win % | 95% CI |', '|---|---|---|---|---|---|');
     for (const g of rows) L.push(`| ${g.key}${g.label !== g.key ? ` (${g.label})` : ''} | ${g.decks} | ${g.matchWins}/${g.matches} | ${g.wins}–${g.losses}–${g.draws} | ${pct(g.rate)} | ${ci(g)} |`);

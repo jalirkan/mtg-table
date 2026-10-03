@@ -74,7 +74,7 @@ export function runDraft(lc: LoadedCube, format: Format, seed: number, w: Weight
     const deck = buildDeck(pool, w);
     const deckErrors = deck
       ? checkDeck(deck, pool, lc.byName, deck.stretched ? w.maxSplashStretch : w.maxSplash)
-      : ['no two-colour build reaches 23 castable spells, even with a stretched splash'];
+      : ['no build reaches 22 castable spells, even with a wide splash, 18 lands or three colours'];
     return { seat: dr.seat, picks: dr.log, pool: pool.map((c) => c.name), deck, deckErrors };
   }) as [DrafterOut, DrafterOut];
   return { seed, format, dealt: d.dealt.length, aOpens, drafters: outs, ms: { draft: t1 - t0, build: Date.now() - t1 } };

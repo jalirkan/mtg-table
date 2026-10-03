@@ -262,12 +262,45 @@ test('every AI-drafted deck is legal: 40 cards, 16-17 lands, two colours plus a 
         built++;
         assert.deepEqual(checkDeck(deck, dr.state.picks, byName, deck.stretched ? W.maxSplashStretch : W.maxSplash), [], `${fmt} ${seed} ${dr.seat}`);
         assert.equal(deck.main.reduce((s, [n]) => s + n, 0), 40);
-        assert.ok(deck.lands === 16 || deck.lands === 17);
+        assert.ok(deck.lands === 16 || deck.lands === 17 || (deck.stretched && deck.lands === 18));
         assert.equal(deck.spells + deck.lands, 40);
       }
     }
   }
   assert.ok(built >= 50, `built ${built} of 60`);
+});
+
+test('a thin pool builds three colours when no pair or splash reaches 23 spells (D298)', () => {
+  const pool: LabCard[] = [];
+  for (const c of 'WUB') for (let k = 0; k < 8; k++) pool.push(card(`${c}${k}`, c, 3, { pips: { [c]: 2 } }));
+  pool.push(card('WB dual', '', 0, { land: true, creature: false, produces: 'WB', rating: 80, type: 'Land' }));
+  pool.push(card('UB dual', '', 0, { land: true, creature: false, produces: 'UB', rating: 80, type: 'Land' }));
+  const byName = new Map(pool.map((c) => [c.name, c]));
+  const deck = buildDeck(pool, W);
+  assert.ok(deck);
+  assert.equal(deck.colors, 'WUB');
+  assert.equal(deck.splash, null);
+  assert.ok(deck.stretched);
+  assert.equal(deck.main.reduce((s, [n]) => s + n, 0), 40);
+  assert.deepEqual(checkDeck(deck, pool, byName, W.maxSplashStretch), []);
+  assert.match(checkDeck({ ...deck, stretched: false }, pool, byName, W.maxSplash).join(), /not two colours/);
+  // Without a land making its least-used colour, three colours is not a deck.
+  assert.equal(buildDeck(pool.filter((c) => !c.land), W), null);
+});
+
+test('a thin pool plays 18 lands when its best pair has 22 spells (D298)', () => {
+  const pool: LabCard[] = [];
+  for (let k = 0; k < 12; k++) pool.push(card(`W${k}`, 'W', 3));
+  for (let k = 0; k < 10; k++) pool.push(card(`U${k}`, 'U', 3));
+  const byName = new Map(pool.map((c) => [c.name, c]));
+  const deck = buildDeck(pool, W);
+  assert.ok(deck);
+  assert.equal(deck.colors, 'WU');
+  assert.equal(deck.lands, 18);
+  assert.equal(deck.spells, 22);
+  assert.ok(deck.stretched);
+  assert.deepEqual(checkDeck(deck, pool, byName, W.maxSplashStretch), []);
+  assert.match(checkDeck({ ...deck, stretched: false }, pool, byName, W.maxSplash).join(), /18 lands, not 16-17/);
 });
 
 test('the deck checker rejects what is not a deck', () => {
