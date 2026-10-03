@@ -243,6 +243,6 @@
     "file": "m56-generated-is-not-a-count.jsonl",
     "level": "fail",
     "expect": "search generated",
-    "why": "amendment M56 / D353: `generated` is how many candidates were generated -- a positive integer, never a string"
+    "why": "amendment M56 / D354: `generated` is how many candidates were generated -- a positive integer, never a string"
   }
 ]

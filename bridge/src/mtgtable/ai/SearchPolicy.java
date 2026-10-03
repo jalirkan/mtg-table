@@ -79,7 +79,7 @@ import mtgtable.eval.PositionEvaluator;
  * throws, a candidate that cannot be mapped into the copy, a budget too short
  * for the rounds -- is Forge's answer, counted.
  *
- * <p>Week 3's switches (D352–D354, each off by default): {@code anytime=1}
+ * <p>Week 3's switches (D353–D355, each off by default): {@code anytime=1}
  * ({@link #searchAnytime}: partial rounds kept, pruning to the budget, racing,
  * a verdict on whatever paired evidence exists); {@code rank=prior}
  * ({@link #rank}: generate up to {@code gen}, keep the best {@code cands} by
@@ -129,7 +129,7 @@ public final class SearchPolicy {
         this.evaluator = cfg.rankPrior && "eval".equals(cfg.prior) ? loadEvaluator(cfg.evalModel, sink) : null;
     }
 
-    /** D353's learned prior (D316's evaluator), or null: the leaf is the prior. */
+    /** D354's learned prior (D316's evaluator), or null: the leaf is the prior. */
     private final PositionEvaluator evaluator;
 
     private static PositionEvaluator loadEvaluator(final String model, final Sink sink) {
@@ -225,7 +225,7 @@ public final class SearchPolicy {
         /**
          * Per candidate: the rounds it was scored in.  Every candidate shares
          * them (CRN) unless {@code anytime=1} cut a round short, pruned it or
-         * retired it (D352): then each counts its own, and its paired
+         * retired it (D353): then each counts its own, and its paired
          * difference to Forge's answer is over the rounds both were scored in.
          */
         public int[] n = new int[0];
@@ -262,7 +262,7 @@ public final class SearchPolicy {
         /** The statistic the rule compared with the margin: the mean difference, or its lower bound. */
         public double stat = Double.NaN;
         /**
-         * D353 ({@code rank=prior}): per candidate, the prior that ranked it --
+         * D354 ({@code rank=prior}): per candidate, the prior that ranked it --
          * the leaf (or the learned evaluator's logit times {@link #LEAF_SCALE})
          * of the position after it was applied once -- NaN when not scored
          * (Forge's own answer and "pass" are kept unranked and never scored; a
@@ -271,7 +271,7 @@ public final class SearchPolicy {
          */
         public double[] prior = new double[0];
         public int generated;
-        /** D352: the anytime search ran; candidates it pruned to the budget, and retired by racing. */
+        /** D353: the anytime search ran; candidates it pruned to the budget, and retired by racing. */
         public boolean anytime;
         public int pruned;
         public int retired;
@@ -303,7 +303,7 @@ public final class SearchPolicy {
 
         /**
          * Means, standard errors and paired differences to candidate 0.  A NaN
-         * leaf is a rollout that was not played (D352's partial rounds, pruned or
+         * leaf is a rollout that was not played (D353's partial rounds, pruned or
          * retired candidates): each mean is over that candidate's own rounds and
          * each difference over the rounds both it and Forge's answer were scored
          * in.  On complete rounds (no NaN) this is D350's computation exactly.
@@ -927,7 +927,7 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
-    // The prior (D353)
+    // The prior (D354)
     // ==================================================================
 
     /** How many candidates to generate: {@code gen} under {@code rank=prior}, else the {@code cands} cut itself. */
@@ -1034,7 +1034,7 @@ public final class SearchPolicy {
         }
     }
 
-    /** The ranking's priors, aligned with {@code cands}, into the report (D353). */
+    /** The ranking's priors, aligned with {@code cands}, into the report (D354). */
     private void attachPrior(final Report rep, final List<Cand> cands) {
         rep.prior = new double[cands.size()];
         Arrays.fill(rep.prior, Double.NaN);
@@ -1169,7 +1169,7 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
-    // The anytime search (D352)
+    // The anytime search (D353)
     // ==================================================================
 
     /**
@@ -1429,12 +1429,12 @@ public final class SearchPolicy {
         public final double untapped;
         /** Bench only: skip the determinization, so the copy keeps the real hidden cards (D350's oracle). */
         public final boolean oracle;
-        /** D354: the searching seat plays D310's outlet policy in the copy; and the other seat too. */
+        /** D355: the searching seat plays D310's outlet policy in the copy; and the other seat too. */
         public final boolean outletsUs;
         public final boolean outletsThem;
-        /** D353's prior: stop as soon as the candidate has been played out ({@link RolloutForcing#applied}). */
+        /** D354's prior: stop as soon as the candidate has been played out ({@link RolloutForcing#applied}). */
         public final boolean untilApplied;
-        /** D353: score an unfinished copy with this instead of {@link #leaf} (the learned evaluator); null = the leaf. */
+        /** D354: score an unfinished copy with this instead of {@link #leaf} (the learned evaluator); null = the leaf. */
         public final java.util.function.ToDoubleBiFunction<Game, Player> score;
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps) {

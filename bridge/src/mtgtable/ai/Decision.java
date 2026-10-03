@@ -111,7 +111,7 @@ public final class Decision {
         public final List<Double> diffLeaf = new ArrayList<>();
         public final List<Double> seDiff = new ArrayList<>();
         public final List<Double> win = new ArrayList<>();
-        /** D353 ({@code rank=prior}): the prior that ranked each option (NaN: not scored), and how many were generated (0: no ranking). */
+        /** D354 ({@code rank=prior}): the prior that ranked each option (NaN: not scored), and how many were generated (0: no ranking). */
         public final List<Double> prior = new ArrayList<>();
         public int generated;
         /** The rollouts' horizon (turns past this one), and the override rule and its margin in leaf points. */

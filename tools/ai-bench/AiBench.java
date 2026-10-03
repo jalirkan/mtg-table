@@ -1357,7 +1357,7 @@ public final class AiBench {
                             && ctl.counts().getOrDefault("search.oracleRollouts", 0) >= 2,
                             "the report: " + (rep == null ? "none" : rep.summary()) + " (" + ctl.counts() + ")");
                 });
-        // 7. D352–D354 (search week 3): the anytime search ranking a wide attack
+        // 7. D353–D355 (search week 3): the anytime search ranking a wide attack
         //    list by its prior, the outlet policy inside the rollouts.  The report
         //    says what was generated, kept and scored, and it reaches a verdict.
         scenario("search-week3-attack", List.of(
