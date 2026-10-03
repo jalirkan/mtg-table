@@ -42,6 +42,8 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `deck-smoke.sh` | Five games per AI deck with the AI piloting it; asserts it casts and attacks (D116, D117). | no | boots Forge |
 | `audit-deck.mjs` | Per card of a `.dck`: ok / missing / broken on the configured engine, in a throwaway home under `var/audit-deck/`; fails if a preferences file changes (D182). Needs `bridge/out`. | no | boots Forge |
 | `audit-deck/AuditDeck.java` | `audit-deck.mjs`'s Java half, compiled on demand into the throwaway home. Scanned by `lint-bridge.sh`. | no (linted at step 2) | boots Forge |
+| `ai-bench.sh` | Forge AI against Forge AI on fixed decks (D300): `play --pairs <file> --a <cfg> --b <cfg>` runs `--jobs` JVMs, each with a Forge home of its own under `var/ai-bench/<run>/`, one JSON line per game; `report` prints win rates with Wilson 95% intervals, game times, AI-timeout counts and the outlet policy's counters (D301); `--selftest` checks the statistics and eight outlet-policy board scenarios, two of them controls (~15 s). A seat config is `<Profile>[+sim\|+hybrid][+outlets\|+shadow]`. Needs `bridge/out`. | no | boots Forge |
+| `ai-bench/AiBench.java` | `ai-bench.sh`'s Java half, compiled on demand into `var/ai-bench/classes/`; `pairs-cube.txt`, `pairs-sac.txt` and `decks/` are its fixed deck pairs. Scanned by `lint-bridge.sh`. | no (linted at step 2) | boots Forge |
 | `javap-seam-diff.sh` | The bridge's Forge API diffed between two jars, class by class — for the day an official release lands (D109, D110). | no | jar |
 | `undo-race-repro.sh` | The undo race, held open, guarded and not (D136); about fifteen seconds. | no (10g holds the same window) | boots Forge |
 | `first-divergence.mjs` | Where do two games of one seed stop being the same game, and whose choice was it? | no | no |
@@ -155,6 +157,10 @@ node tools/audit-deck.mjs decks/pacho-shield.dck   # per card: ok / missing / br
                                             # under var/audit-deck/; needs bridge/out. Not in
                                             # check-all. decks/fra-rw-aggro.dck: 19/31/0, exit 1
 ./tools/javap-seam-diff.sh <old.jar> <new.jar>     # the bridge's Forge API, diffed (read-only)
+./tools/ai-bench.sh --selftest             # D300/D301: statistics + outlet-policy scenarios (~15 s)
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --a Experimental --b Default \
+    --games 20 --jobs 3 --run exp-vs-default   # AI vs AI, win rate with a 95% CI; NOT in the gate
+./tools/ai-bench.sh report var/ai-bench/<run>/*.jsonl [--by-pair]
 ./tools/undo-race-repro.sh                  # D136: the undo race, held open, guarded and not (~15 s)
 ./scripts/spectate.sh                       # SPECTATE: two AIs, your deck vs match.aiDeck, followed in the arena
 ./scripts/spectate.sh --seed 7 --seat 1     # the same game from the other chair (M47)

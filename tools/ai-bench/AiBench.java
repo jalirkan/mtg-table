@@ -581,6 +581,32 @@ public final class AiBench {
                         && ch.victim != null && "Grizzly Bears".equals(ch.victim.getName()),
                         "Murder on Grizzly Bears -> sacrifice the Bears to Viscera Seer (got " + ch + ")");
             });
+        // 1b. The same through the controller, end to end, with Carrion Feeder -- whose own
+        //     script prefers "the worst other creature" (AIPreference SacCost$Creature.Other):
+        //     the steer must still sacrifice the threatened Bears, not the Memnite.
+        scenario("steer", List.of(
+                "humanlife=20", "ailife=20", "turn=3", "activeplayer=human", "activephase=MAIN1",
+                "humanbattlefield=Swamp;Swamp",
+                "aibattlefield=Carrion Feeder|Id:11;Grizzly Bears|Id:12;Memnite|Id:13;Swamp",
+                "humanputonstack=Murder->12"),
+            (ai, pol) -> {
+                final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                check(pick != null && pick.size() == 1 && "Carrion Feeder".equals(pick.get(0).getHostCard().getName()),
+                        "the controller answers Murder with Carrion Feeder (got " + pick + ")");
+                if (pick != null && pick.size() == 1) {
+                    ctl.playChosenSpellAbility(pick.get(0));
+                }
+                boolean bearsGone = true;
+                boolean memniteHere = false;
+                for (final Card c : ai.getCardsIn(ZoneType.Battlefield)) {
+                    bearsGone &= !"Grizzly Bears".equals(c.getName());
+                    memniteHere |= "Memnite".equals(c.getName());
+                }
+                check(bearsGone && memniteHere,
+                        "the Bears were sacrificed, not the Memnite Carrion Feeder's own preference would pick");
+                check(!ctl.counts().containsKey("policy.steerMissed"), "no steer miss counted");
+            });
         // 2. A bounce is not a threat worth a card.
         scenario("bounce", List.of(
                 "humanlife=20", "ailife=20", "turn=3", "activeplayer=human", "activephase=MAIN1",
@@ -666,7 +692,7 @@ public final class AiBench {
         r0.setPlayer(Bootstrap.createAiSeat("Human", 0, Bootstrap.DEFAULT_AI_PROFILE, null, PolicyLobbyPlayerAi.Outlets.OFF));
         final RegisteredPlayer r1 = new RegisteredPlayer(lands);
         final PolicyLobbyPlayerAi aiLp = Bootstrap.createAiSeat("Ai", 1, Bootstrap.DEFAULT_AI_PROFILE, null,
-                PolicyLobbyPlayerAi.Outlets.OFF);
+                PolicyLobbyPlayerAi.Outlets.ON);
         r1.setPlayer(aiLp);
         final GameRules rules = new GameRules(GameType.Constructed);
         rules.setGamesPerMatch(1);

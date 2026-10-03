@@ -147,16 +147,42 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
         if (outlet && sa != steerSa) {
             count("forge.outletActivation");
-            event("forge activates " + host.getName());
+            final List<Card> before = new ArrayList<>(player.getCreaturesInPlay());
+            final boolean r = super.playChosenSpellAbility(sa);
+            final List<String> gone = new ArrayList<>();
+            for (final Card c : before) {
+                if (c.getZone() == null || !c.getZone().is(ZoneType.Battlefield)) {
+                    gone.add(c.getName() + (c.isToken() ? " (token)" : ""));
+                }
+            }
+            event("forge activates " + host.getName() + " sacrificing " + gone);
+            return r;
         }
         if (sa == steerSa && steerVictim != null) {
             final Card victim = steerVictim;
             final boolean had = victim.hasSVar("SacMe");
             final String old = had ? victim.getSVar("SacMe") : null;
             victim.setSVar("SacMe", "6");
+            // The outlet's own AIPreference (Carrion Feeder: SacCost$Creature.Other)
+            // is read before SacMe in ComputerUtil.getCardPreference, so it is lifted
+            // for this one payment too.
+            final String pref = host.hasSVar("AIPreference") ? host.getSVar("AIPreference") : null;
+            final String prefOverride = host.hasSVar("AIPreferenceOverride") ? host.getSVar("AIPreferenceOverride") : null;
+            if (pref != null) {
+                host.removeSVar("AIPreference");
+            }
+            if (prefOverride != null) {
+                host.removeSVar("AIPreferenceOverride");
+            }
             try {
                 return super.playChosenSpellAbility(sa);
             } finally {
+                if (pref != null) {
+                    host.setSVar("AIPreference", pref);
+                }
+                if (prefOverride != null) {
+                    host.setSVar("AIPreferenceOverride", prefOverride);
+                }
                 if (had) {
                     victim.setSVar("SacMe", old);
                 } else {
