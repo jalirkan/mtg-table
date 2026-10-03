@@ -396,7 +396,11 @@ interval. The report keeps the shrunk number beside it and a **reliability**,
 shrunk² / de-biased², the share of the spread the data has pinned down:
 **compare two cubes only when their reliabilities are alike.** On the
 simulated world (8 seeds, `matchup_sim.py`) the de-biased number reads
-{BALANCE_NUMBERS}.
+close to the truth where the old one read balanced: 6.5–6.6 for a true
+6.6–6.7 points (shrunk 4.0–5.6) and 3.2–3.4 for 3.4 (shrunk 1.6–2.2) on the
+seed-7 worlds at 1,000–12,000 games; over seeds 1–4 it runs 3–7% high at a 6.5
+spread and 12–16% high at a 3.3 spread, and its interval (a posterior interval
+given τ) is too narrow — treat it as a lower bound (D342).
 
 **Verifying a `design` candidate** (D344). `design` prints the exact job: both
 arms (the original cube and the candidate, with the same ratings) on the same
