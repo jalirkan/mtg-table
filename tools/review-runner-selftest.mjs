@@ -3,7 +3,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The review runner's self-test (D352): tools/review-runner.mjs and the coach
+// The review runner's self-test (D353): tools/review-runner.mjs and the coach
 // helper's /review route, against a FAKE coach-grade.sh -- a small bash script
 // that prints the real one's stage lines, records its argv and writes a report.
 // A game named "fail-..." makes it fail, "slow-..." makes it sleep past the

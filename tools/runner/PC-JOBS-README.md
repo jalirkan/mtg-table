@@ -206,6 +206,7 @@ control: yes | no                    the job's tools read the pool control file;
                                      (the checkout has tools/runner/control.ts and the job runs ai-bench, the cube lab or the ladder)
 public_title: Search AI bench        the title the PUBLIC #lab page may show; without it, the id only
 public_est: ~3 h                     likewise the estimate. Both: letters, digits, spaces and , : ; ( ) + % ~ # & - only
+public_cubes: yes | no               the public page may name the cubes in a queue's per-cube progress (default: "cube 1", ...)
 
 ## Pilot
 ```bash

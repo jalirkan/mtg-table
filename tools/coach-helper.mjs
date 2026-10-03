@@ -39,7 +39,7 @@
 //                 JSON body.  A client that disconnects kills the `claude` process
 //                 and its whole process group.
 //
-//   GET  /review, POST /review, GET /review/<id>  -- THE POST-GAME REVIEW (D352):
+//   GET  /review, POST /review, GET /review/<id>  -- THE POST-GAME REVIEW (D353):
 //                 run tools/coach-grade.sh review on a game the engine wrote
 //                 (var/games/<gameId>/frames.jsonl), one at a time, and fetch its
 //                 report.  tools/review-runner.mjs's header is that contract
@@ -463,7 +463,7 @@ export function startHelper(opts) {
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
-      const rv = review ? review.health() : { review: 0 };   // D352
+      const rv = review ? review.health() : { review: 0 };   // D353
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv }, cors);
@@ -485,7 +485,7 @@ export function startHelper(opts) {
       return;
     }
     if (path === '/review' || path.startsWith('/review/')) {
-      // D352: the post-game review (tools/review-runner.mjs).  Behind the same gate as /coach.
+      // D353: the post-game review (tools/review-runner.mjs).  Behind the same gate as /coach.
       if (!review) { send(res, 503, { ok: false, type: 'error', message: 'the review is off: this helper was started with --no-review' }, cors); say(503); return; }
       if (path === '/review' && req.method === 'POST') {
         const raw = await readBody(req, res, MAX_REVIEW_BODY, '256 KB', cors, say);

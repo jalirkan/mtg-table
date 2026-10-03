@@ -21,8 +21,8 @@
 #   ./tools/coach-grade.sh serve [defaults]      # JSON requests on stdin, one answer line each
 #   ./tools/coach-grade.sh fit-scale --logs DIR[,DIR] [--out F]   # D349: refit the leaf -> P(win) scale
 #   ./tools/coach-grade.sh review --log F --seat N [--opp-pool P] [--opp-known "N; N"] [--jobs 7] \
-#        [--triage-s 15] [--deep-s 150] [--deep-k 6] [--out R.json]   # D352: the post-game review
-#   ./tools/coach-grade.sh review-smoke [--log F] [--jobs 2]   # D352: the review at tiny budgets, report checked (~2 min)
+#        [--triage-s 15] [--deep-s 150] [--deep-k 6] [--out R.json]   # D353: the post-game review
+#   ./tools/coach-grade.sh review-smoke [--log F] [--jobs 2]   # D353: the review at tiny budgets, report checked (~2 min)
 #
 # Every flag of grade / batch is mtgtable.grade.CoachGrade's (see its header):
 # --playouts N rounds an option still in the race ends with (200), --initial N
@@ -49,7 +49,7 @@
 # whose lists both players share.  The leaf's pseudo win rate uses the scale
 # fit-scale fitted (var/coach-grade/leaf-scale.json when present).
 #
-# review (D352; docs/game-review.md): every graded-type decision the log's
+# review (D353; docs/game-review.md): every graded-type decision the log's
 # seat made, triaged at the live settings (--triage-s of wall budget over
 # --jobs JVMs), the --deep-k most likely to matter graded again to the end of
 # the game (--deep-s; one decision per JVM), one JSON report.  The knowledge is
@@ -228,7 +228,7 @@ case "$mode" in
     review "$@"
     ;;
   review-smoke)
-    # D352's engine smoke: a fixture game reviewed at tiny budgets (the deepening to the end of
+    # D353's engine smoke: a fixture game reviewed at tiny budgets (the deepening to the end of
     # the next turn, under the full-game floor), then the report's shape and rules checked.
     shift
     sm_log=fixtures/games/human-trample-7.jsonl sm_jobs=2

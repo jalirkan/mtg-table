@@ -251,7 +251,7 @@ public final class GradeSelfTest {
 
 
     // ------------------------------------------------------------------
-    // D352: the post-game review's plan, selection, budgets and report
+    // D353: the post-game review's plan, selection, budgets and report
     // ------------------------------------------------------------------
 
     private static String st(final int turn, final String phase, final int active, final String hand, final String events,

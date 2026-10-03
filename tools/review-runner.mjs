@@ -2,7 +2,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// THE REVIEW RUNNER (D352): the coach helper's `/review`, which runs the
+// THE REVIEW RUNNER (D353): the coach helper's `/review`, which runs the
 // post-game review -- `tools/coach-grade.sh review` -- on a game the engine
 // wrote, one at a time, and keeps its report for ForgeCoach to fetch.
 // tools/coach-helper.mjs routes /review here, behind the same Origin and

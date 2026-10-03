@@ -474,13 +474,13 @@ public final class CoachGrade {
             shard = Integer.parseInt(p[0]);
             shards = Integer.parseInt(p[1]);
         }
-        // --claim DIR (the review, D352): the JVMs take the next unclaimed moment instead of every K-th,
+        // --claim DIR (the review, D353): the JVMs take the next unclaimed moment instead of every K-th,
         // so one slow decision does not hold up the moments queued behind it.
         final File claim = f.v.containsKey("claim") ? new File(f.v.get("claim")) : null;
         if (claim != null) {
             claim.mkdirs();
         }
-        // --guard live (the review, D352): every moment's knowledge passes D348's live guard.
+        // --guard live (the review, D353): every moment's knowledge passes D348's live guard.
         final boolean guarded = "live".equals(f.s("guard", ""));
         if (f.v.containsKey("guard") && !guarded) {
             throw new IllegalArgumentException("--guard takes live");
@@ -531,14 +531,14 @@ public final class CoachGrade {
                     s.lands = true;   // a spell case that offers the land drop (ForgeCoach's lands: true)
                 }
                 if (WireLog.str(mo, "played") != null) {
-                    s.played = WireLog.str(mo, "played");   // the review's moments (D352)
+                    s.played = WireLog.str(mo, "played");   // the review's moments (D353)
                 }
                 if (WireLog.arr(mo, "only").length > 0) {
                     final List<String> only = new ArrayList<>();
                     for (final Object t : WireLog.arr(mo, "only")) {
                         only.add(String.valueOf(t));
                     }
-                    s.only = only;   // a deepened decision plays its shortlist again (D352)
+                    s.only = only;   // a deepened decision plays its shortlist again (D353)
                 }
                 String line;
                 final long t0 = System.nanoTime();
@@ -585,7 +585,7 @@ public final class CoachGrade {
     }
 
     /**
-     * A guarded batch moment's knowledge flags (D352): the run's own flags, a
+     * A guarded batch moment's knowledge flags (D353): the run's own flags, a
      * moment's {@code deck} / {@code oppPool} over them -- and a moment's
      * {@code oppDeck} too, so the guard refuses it rather than it slipping past.
      */
@@ -605,7 +605,7 @@ public final class CoachGrade {
     }
 
     // ------------------------------------------------------------------
-    // The post-game review (D352): the engine-free steps around two batches
+    // The post-game review (D353): the engine-free steps around two batches
     // ------------------------------------------------------------------
 
     /**

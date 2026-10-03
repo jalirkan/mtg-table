@@ -104,7 +104,7 @@ public final class Grader {
         /** Tokens always added to a shortlist (a case's listed answers). */
         public List<String> extra = new ArrayList<>();
         /**
-         * What the player did here, as a token (the review, D352), or null.  It
+         * What the player did here, as a token (the review, D353), or null.  It
          * joins the shortlist like {@link #extra}, and the answer says which
          * option it is ({@code playedOption}: the same class -- identical
          * creatures, another copy of a card -- or null when no option is).
@@ -113,7 +113,7 @@ public final class Grader {
         /**
          * Most options graded (0 = no limit): above it the player's option and
          * Forge's are kept, then the enumeration's own order (the review's
-         * triage, D352: a cheap look must stay cheap).
+         * triage, D353: a cheap look must stay cheap).
          */
         public int maxOptions;
     }
@@ -357,7 +357,7 @@ public final class Grader {
     }
 
     /**
-     * The option the player's token is (D352): the same choice by class --
+     * The option the player's token is (D353): the same choice by class --
      * attacks by how many of each creature class, blocks by class pairs, a cast
      * by the card's name, a target by {@link #targetClass} -- or null.
      */

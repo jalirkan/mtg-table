@@ -10,7 +10,7 @@ and a flag for whether the difference is statistically clear. The code is
 `bridge/src/mtgtable/grade/Review.java` (the plan, the triage selection, the
 budget allocation and the report: engine-free, held by `GradeSelfTest`),
 `Grader` (the grading, D334) and `tools/review-runner.mjs` (the helper's
-`/review`). Decision **D352**.
+`/review`). Decision **D353**.
 
 ## What it grades, and with what knowledge
 
@@ -63,7 +63,7 @@ interval (`regretHi`: what the choice might have cost — large regrets and wide
 close calls both rank high), ties by the point regret. At most `--deep-k`.
 
 **Measured** (this repo's 4-core cloud container, shared, 3 JVMs; one human-seat
-game of 32 decisions, 6 deepened): see D352. On the PC's 7 JVMs the same budgets
+game of 32 decisions, 6 deepened): see D353. On the PC's 7 JVMs the same budgets
 are the targets: triage ≈ 15 s, deepening 6 decisions ≈ 2.5 min.
 
 Budgets (defaults; all flags): `--triage-s 15`, `--deep-s 150`, `--jobs 7`,

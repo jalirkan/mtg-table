@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import mtgtable.Json;
 
 /**
- * The post-game review's engine-free half (D352, {@code coach-grade.sh
+ * The post-game review's engine-free half (D353, {@code coach-grade.sh
  * review}): which decisions of the viewer's log are graded and what the player
  * did at each ({@link #plan}), the triage's per-decision budget
  * ({@link #triageBudgetMs}), which decisions are graded again with the big

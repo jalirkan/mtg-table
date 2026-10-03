@@ -170,6 +170,9 @@
 #                                 scrambled and every feature unchanged, the
 #                                 schema golden, the split by game; numpy's
 #                                 half says whether it ran (~30 s; python3)
+#                                 Then 12i: MidMoveSelfTest (D352) -- a "may
+#                                 look" revealer leaves play and no frame shows
+#                                 the top card it revealed (one engine boot)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -1893,7 +1896,7 @@ s12e_skipped() {
 #      /match and scripts/play.sh's restart, the real play.sh driven against a
 #      FAKE engine (MTGTABLE_TEST_FAKE_ENGINE; no Forge, no build) on free
 #      ports, its files under var/match-launcher-selftest/; about 25 s.
-#      Since D352 also tools/review-runner-selftest.mjs: /review against a
+#      Since D353 also tools/review-runner-selftest.mjs: /review against a
 #      FAKE coach-grade.sh (validation, the queue, the stages, the report);
 #      its files under var/review-runner-selftest/; about 10 s.
 s12f_coach() {
@@ -1903,7 +1906,7 @@ s12f_coach() {
   # D303: the helper's /match and play.sh's restart, against a fake engine.
   node tools/match-launcher-selftest.mjs \
     || die "match-launcher-selftest.mjs (12f: the match launcher broke its contract with ForgeCoach -- see the FAIL lines above)"
-  # D352: the helper's /review against a fake coach-grade.sh.
+  # D353: the helper's /review against a fake coach-grade.sh.
   node tools/review-runner-selftest.mjs \
     || die "review-runner-selftest.mjs (12f: the review runner broke its contract with ForgeCoach -- see the FAIL lines above)"
 }
@@ -1993,6 +1996,24 @@ s12h_ml() {
   fi
   python3 -m unittest discover -s tools/ml/tests 2>&1 \
     || die "tools/ml tests (12h: the ML encoder broke -- if it names a hidden-information feature, the encoder read a card the viewer may not see)"
+}
+
+# 12i. D352: a frame is never cut while a "may look" effect outlives its source.
+#      bridge/src/mtgtable/MidMoveSelfTest.java builds a position with Oracle of
+#      Mul Daya, exiles it with a flush landed on the event that takes it off the
+#      battlefield (the forwarder's 500 ms flush, made deterministic), and holds
+#      that the bare frame at that instant leaks the top card (the control: the
+#      window is real) while the recorder's log shows it in no frame without the
+#      Oracle in play.  One engine boot, about 30 s, writes var/check-all-midmove/.
+s12i_midmove() {
+  printf '\n=== 12i. MidMoveSelfTest -- the revealer leaves play, its top card leaves library.cards in that frame (D352) ===\n'
+  rc=0
+  jvm ./bridge/run.sh mtgtable.MidMoveSelfTest var/check-all-midmove > var/check-all-midmove.log 2>&1 || rc=$?
+  grep -E '^(  ok|  FAIL|MidMoveSelfTest)' var/check-all-midmove.log || true
+  if [ "$rc" != "0" ]; then
+    capped "$rc" && die "MidMoveSelfTest did not finish within ${GAME_TIMEOUT}s"
+    die "MidMoveSelfTest exited $rc: a frame can show a top card its revealer no longer reveals (12i, D352; log: var/check-all-midmove.log)"
+  fi
 }
 
 s13_skipped() {
@@ -2132,6 +2153,7 @@ fi
 job 12f-coach     12 both     s12f_coach        "$PRE"
 job 12g-cubelab   12 both     s12g_cubelab      "$PRE"
 job 12h-ml        12 both     s12h_ml           "$PRE"
+job 12i-midmove   12 both     s12i_midmove      "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
