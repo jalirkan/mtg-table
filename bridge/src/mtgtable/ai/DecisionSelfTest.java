@@ -101,7 +101,7 @@ public final class DecisionSelfTest {
         final Map<?, ?> sp = (Map<?, ?>) ((Map<?, ?>) Json.parse(d.toJson(0, 5, 17, 12))).get("search");
         final Object[] po = (Object[]) sp.get("options");
         check(!((Map<?, ?>) po[0]).containsKey("prior") && Double.valueOf(412.3).equals(((Map<?, ?>) po[1]).get("prior"))
-                && Long.valueOf(9).equals(sp.get("generated")), "M56: prior per scored option, generated (D354)");
+                && Long.valueOf(9).equals(sp.get("generated")), "M56: prior per scored option, generated (D355)");
 
         final Decision mull = new Decision("mulligan", 0, "NONE");
         mull.options.addAll(List.of("keep", "mulligan"));
@@ -142,7 +142,7 @@ public final class DecisionSelfTest {
         }
     }
 
-    /** D353–D355: the config switches, the NaN-aware statistics and the anytime schedule, on numbers. */
+    /** D354–D356: the config switches, the NaN-aware statistics and the anytime schedule, on numbers. */
     private static void searchWeek3() {
         final SearchConfig def = SearchConfig.defaults();
         check("ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab".equals(def.toString())

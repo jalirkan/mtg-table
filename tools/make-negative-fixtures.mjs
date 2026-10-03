@@ -703,7 +703,7 @@ probe('m55-frame-is-not-a-state.jsonl',
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 }
 
-// Amendment M56 (D354): the search's prior in M55's search block -- `prior` per
+// Amendment M56 (D355): the search's prior in M55's search block -- `prior` per
 // option and `generated` -- a control that passes and one malformed probe.
 {
   const fs = slice();
@@ -720,7 +720,7 @@ probe('m55-frame-is-not-a-state.jsonl',
 }
 
 probe('m56-generated-is-not-a-count.jsonl',
-  'amendment M56 / D354: `generated` is how many candidates were generated -- a positive integer, never a string',
+  'amendment M56 / D355: `generated` is how many candidates were generated -- a positive integer, never a string',
   'search generated',
   (fs) => { withDecision(fs).search.generated = 'nine'; });
 

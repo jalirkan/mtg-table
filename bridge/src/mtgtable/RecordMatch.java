@@ -299,7 +299,7 @@ public final class RecordMatch {
         //    method by itself -- only our own forwarder does -- so a single
         //    UNIMPL line in this run is real news.
         // ------------------------------------------------------------------
-        final SpectatorGui gui = new SpectatorGui(gameId, gameView, viewer, log, a.paceMs > 0);
+        final SpectatorGui gui = new SpectatorGui(gameId, game, gameView, viewer, log, a.paceMs > 0);
         gui.setGameView(null);      // HostedMatch's own two-step: clear, then set
         gui.setGameView(gameView);
         gui.openView(new TrackableCollection<>(viewer));
@@ -470,9 +470,16 @@ public final class RecordMatch {
          * those ids as a set (decision D121).
          */
         private final boolean paced;
+        /** The live game, read only by {@link #midMove} on the game thread (D352). */
+        private final Game game;
+        /** D352: holds a flush cut while a "may look" effect outlives its source. */
+        private final MidMove midMove = new MidMove();
+        /** Batches {@link MidMove#hold} kept back; the next {@link #snapshot} prepends them (D352). */
+        private final List<GameEvent> held = new ArrayList<>();
 
-        SpectatorGui(final String gameId, final GameView gameView,
+        SpectatorGui(final String gameId, final Game game, final GameView gameView,
                      final PlayerView viewer, final GameLog log, final boolean paced) {
+            this.game = game;
             this.gameId = gameId;
             this.gameView = gameView;
             this.viewer = viewer;
@@ -499,11 +506,26 @@ public final class RecordMatch {
          */
         @Override
         public void handleGameEvents(final List<GameEvent> events) {
+            if (midMove.hold(game)) {
+                // D352: cut inside changeZone (or SBAs), before Forge re-ran its
+                // statics -- a "may look" effect still outlives its source.  The
+                // next flush ships these events with its own.
+                held.addAll(events);
+                return;
+            }
             snapshot(events);
         }
 
-        /** Build and log one {@code state} frame.  Game thread only. */
-        void snapshot(final List<GameEvent> events) {
+        /** Build and log one {@code state} frame, with any held batches first.  Game thread only. */
+        void snapshot(final List<GameEvent> batch) {
+            final List<GameEvent> events;
+            if (held.isEmpty()) {
+                events = batch;
+            } else {
+                events = new ArrayList<>(held);
+                events.addAll(batch);
+                held.clear();
+            }
             if (paced) {
                 lastFrameQuiet = quiet(events);
             }

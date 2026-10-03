@@ -170,7 +170,7 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
         final PlayerView viewer = players.get(seat);
         final GameLog log = new GameLog(out, out.getName().endsWith(".gz"));
         log.header(header(gameId, seed, forgeJarSha, viewer, players, seats, block, extra));
-        final RecordMatch.SpectatorGui gui = new RecordMatch.SpectatorGui(gameId, gameView, viewer, log, false);
+        final RecordMatch.SpectatorGui gui = new RecordMatch.SpectatorGui(gameId, game, gameView, viewer, log, false);
         gui.setGameView(null);      // HostedMatch's own two-step, as RecordMatch does
         gui.setGameView(gameView);
         gui.openView(new TrackableCollection<>(viewer));

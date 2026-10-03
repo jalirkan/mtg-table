@@ -34,13 +34,13 @@ A browser is not one.
 
 Applied by the search week-3 lane (branch `c/search-week3`). One row. **No
 frame on the wire changes**: two optional keys inside M55's `search` block,
-written only when the search ran with `rank=prior` (D354). Held by
+written only when the search ran with `rank=prior` (D355). Held by
 `tools/check-redaction.mjs` (the key sets and their types) and by
 `mtgtable.ai.DecisionSelfTest`.
 
 | # | Section | Change | Source |
 |---|---|---|---|
-| M56 | §8.2 | **M55's `search` block may carry the prior that ranked the candidates.** Each `search.options[]` entry may carry **`prior`** (a number: the leaf, or the learned evaluator's logit × 500, of the position after that candidate was applied once; absent when that option was not scored, as Forge's own answer and `pass` never are), and the block may carry **`generated`** (an integer: how many candidates were generated before the prior kept `options.length` of them). Both are absent when the search did not rank (its default), so an M55 record is unchanged. Under `anytime=1` (D353) each option's `n` is its own rounds rather than a shared count, and `diff`/`seDiff` are over the rounds it shares with Forge's answer — the same keys, already per option. | search week 3 |
+| M56 | §8.2 | **M55's `search` block may carry the prior that ranked the candidates.** Each `search.options[]` entry may carry **`prior`** (a number: the leaf, or the learned evaluator's logit × 500, of the position after that candidate was applied once; absent when that option was not scored, as Forge's own answer and `pass` never are), and the block may carry **`generated`** (an integer: how many candidates were generated before the prior kept `options.length` of them). Both are absent when the search did not rank (its default), so an M55 record is unchanged. Under `anytime=1` (D354) each option's `n` is its own rounds rather than a shared count, and `diff`/`seDiff` are over the rounds it shares with Forge's answer — the same keys, already per option. | search week 3 |
 
 ### 2026-10-03 — decision records: an AI seat's choices, in its own recording
 

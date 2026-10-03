@@ -362,7 +362,7 @@ test('search kind, D350–D351: the new switches stay out of the hash and the se
   for (const n of ['search-v1-fixed3-aturns1', 'search-v1-fixed3-lcb', 'search-v1-fixed3-oracle']) assert.ok(by.get(n)?.cfg, `${n} is registered and playable`);
 });
 
-test('search kind, D353–D355: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys', () => {
+test('search kind, D354–D356: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys', () => {
   const plain = resolveParams('search', { budgetMs: 500 });
   const explicit = resolveParams('search', { budgetMs: 500, anytime: 'off', rank: 'order', gen: 24, rollout: 'default' });
   assert.deepEqual(explicit, plain, 'a switch at its default is the old config');

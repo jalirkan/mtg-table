@@ -45,7 +45,7 @@ import forge.game.spellability.SpellAbility;
  * {@link #declareBlockers} replaces whatever the copied combat holds with the
  * candidate's assignment (cards of the copy).  {@link Outlets} is the same
  * forcing with D310's outlet policy in front of Forge afterwards
- * ({@code rollout=outlets}, D355).
+ * ({@code rollout=outlets}, D356).
  */
 final class RolloutController extends PlayerControllerAi implements RolloutForcing {
 
@@ -200,7 +200,7 @@ final class RolloutController extends PlayerControllerAi implements RolloutForci
     }
 
     /**
-     * D355: the searching seat's rollout controller with D310's sacrifice-outlet
+     * D356: the searching seat's rollout controller with D310's sacrifice-outlet
      * policy acting in front of Forge (a {@link PolicyControllerAi} with no
      * search and no decision sink), the candidate forced first as above.
      */

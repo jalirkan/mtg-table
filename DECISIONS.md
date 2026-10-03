@@ -15227,6 +15227,41 @@ to the public branch (one commit, replaced, is the value; the history is on `pc-
   timestamps are null. The guide says that oomd's 60% kill can come before the soft
   backoff, and that push access to `pc-jobs` is code execution on the PC.
 
+**Amended 2026-10-03 (branch `c/status-fresh`, with ForgeCoach's `c/lab-fresh`): a fresher
+`#lab` page without loading the PC.**
+
+- **The public copy has its own clock, and is at most about two minutes old** (Justin's
+  LAB-OPERATIONS.md, rule 5). It goes to `lab-status` at once on a state change; when what it
+  says changed (`updated`, `heartbeat`, `elapsed`, the rate and the ETA aside), at most once
+  a minute; and unchanged, every two minutes (`publicEveryMs`, `publicHeartbeatMs`;
+  `--public-every-s`, `--public-heartbeat-s`). It is still one parentless commit, replaced,
+  and a failed push backs off as `pc-results` does, on its own count. `pc-results` keeps 4.5
+  minutes.
+- **It says RUNNING or IDLE, and why.** Schema 1 gains `heartbeat` (the loop's last tick),
+  `state`, `idleSince` and `idleReason` (`queue empty`, `blocked after J###`, `paused`,
+  `memory backoff`, `needs a check`, `job file needs fixing`, `waiting`; Justin at the table
+  is `held`, as the review ruled no presence is published). The page shows IDLE in red after
+  ten idle minutes, and warns when the heartbeat is over five minutes old.
+- **A running job shows its own numbers, live** (Justin's request for J020, the queue's first
+  night). Its `metrics:` values as of the minute's read (the one `abort:` already makes) go
+  out as `live: {name: number}`, headline keys first, with drafts and games per hour; plus
+  `memGb` and, for a cube-lab queue, per-cube progress. `cubelab-queue` gains per-cube
+  drafts done and planned, games, draws, timeouts, bridge drafts and share, mean turns and
+  output bytes; `drafts.jsonl` is read incrementally on the minute tick, memoised by size and
+  mtime. Public keys must be metric-shaped (no `cubes.` segment) and values numbers;
+  `liveHeadline` names the headline keys among them. Cube ids are published only on `public_cubes: yes`,
+  like `public_title`, since D337's review held that a title naming a cube is published only
+  on purpose.
+- **The local server serves the public copies only**, `/public-status.json` (and the old
+  `/status.json`) and `/public-ladder.json`, on 127.0.0.1 only (`--http-host` is gone). CORS
+  names `https://jalirkan.github.io` and localhost dev origins, never `*`, and refuses other
+  origins with 403; `OPTIONS` answers the Private Network Access preflight
+  (`Access-Control-Allow-Private-Network: true`). The page tries it first on the PC, with a
+  short timeout, and falls back to GitHub; a phone reaches it through `tailscale serve`
+  (the lab-runner guide). Rejected: binding the LAN (plain http is mixed content on the
+  https page, and it would expose the server to every device at home), and pushing every
+  minute regardless (a commit a minute while nothing moves).
+
 ## D340 — Draft seeds belong to someone: the lab keeps 1–799,999,999, verifications 800,000,000+, and the AI ladder's deck sets 900,000,000+, which `run` and the queue refuse; the dataset builders also drop any game played with a deck-set deck, matched card for card
 
 *Branch `c/review2-fixes`; D340–D344, past every number the open lanes hold or may hold (the lab runner, the coach grader D332–D334, the match launcher's D333, evolve-rigor's D331).*
@@ -15839,10 +15874,50 @@ follow-up. Forge's own targeting inside effects it resolves without asking the
 controller, mode choices, cost choices (which creature to sacrifice) and the
 London mulligan's bottom cards are not recorded.
 
-## D353 — The search respects its budget: `anytime=1` keeps a cut round's rollouts, prunes candidates to the time left, races out the clearly worse, and decides on the paired evidence that exists
+## D352 — A frame is never cut while a "may look" effect outlives its source: both snapshot hooks hold that flush and the next one ships its events
 
-*Branch `c/search-week3`; D353–D355, the next numbers free at push (D352 is
-`c/game-review`'s). The engine review's week-3 search upgrades, each behind a
+**2026-10-03**
+
+*Branch `c/reveal-leak`; D352, the next number free at push.*
+
+**Finding.** The PC lab's J019 failed `check-redaction.mjs` A3 on one frame of
+80 logs (`p9-g0-seat0.jsonl.gz`, seq 378): Swords to Plowshares exiled the
+opponent's Oracle of Mul Daya, and the viewer's frame had the Oracle gone from
+the battlefield and the opponent's top card still in `library.cards`. Snap was
+right to send it — `canBeShownTo` said yes — and the checker was right to fail
+it: rule 611.3a ends a static ability's effect when its source leaves. The
+frame was cut in the middle of `GameAction.changeZone` (2.0.14, javap):
+`Zone.remove` and `Zone.add` each fire a `GameEventZone`, the untap fires a
+`GameEventCardTapped`, and only then does `checkStaticAbilities()` remove the
+Oracle's effect (`Card.removeMayLookAt` → `CardView.setPlayerMayLook`, a
+property that ignores the tracker's freeze). `GameEventForwarder` flushes on
+the first event 500 ms after its last flush, which after a searching AI's think
+is the first event of the resolution; the decision records' flush (D347) can
+land there too, and state-based actions widen the window (`checkStateEffects`
+holds static checks while it destroys). `MidMoveSelfTest` reproduces it: the
+bare frame at that event leaks the card.
+
+**Decision.** `MidMove`: while any `MayLookAt` static effect's source is out of
+the zone its ability works from (`EffectZone$`, else the battlefield; the
+command zone always counts), `RecordMatch.SpectatorGui.handleGameEvents` and
+`WireGuiGame.handleGameEvents` keep the batch instead of building a frame (the
+wire's into its existing `deferred` buffer, uncounted), and the next flush —
+after Forge has re-run its statics — ships the held events with its own. A
+finished game is never held (Forge stops re-running statics), and a hook holds
+at most 8 flushes in a row before it stops holding until the test next comes
+out false, printing `MID-MOVE HOLD GAVE UP`, so a mistake costs merged frames,
+never a board that stops updating. Gate step 12i runs the self-test.
+
+**Rejected.** Narrowing A3 to allow the boundary frame: under the protocol the
+card was no longer public in that state, so the checker's verdict stands.
+Filtering in `Snap.library`: Snap walks views only and cannot see the static
+effect's source on the live game (hard rule 3). Forcing `checkStaticAbilities`
+from the hook: the recorder would change the game it records.
+
+## D354 — The search respects its budget: `anytime=1` keeps a cut round's rollouts, prunes candidates to the time left, races out the clearly worse, and decides on the paired evidence that exists
+
+*Branch `c/search-week3`; D354–D356, the next numbers free at push (D352 is
+main's, D353 `c/game-review`'s). The engine review's week-3 search upgrades, each behind a
 `SearchConfig` switch that is off by default, so `search-v1` and
 `search-v1-fixed3` are unchanged rollout for rollout and the ladder can SPRT
 each one.*
@@ -15858,7 +15933,7 @@ search loop (`searchAnytime`, scheduling in the pure `mtgtable.ai.Anytime`):
   over the rounds both were scored in (`Report.fillStats`, NaN-aware; on
   complete rounds it is D350's arithmetic exactly);
 - **plays what matters first**: round 0 plays Forge's answer, then the rest in
-  the order they came (the prior's, D354); later rounds Forge's, then the rest
+  the order they came (the prior's, D355); later rounds Forge's, then the rest
   best-first by their paired difference;
 - **prunes to the budget**: before each later round, the measured time per
   rollout says how many candidates the time left can carry to `rounds` rounds,
@@ -15901,7 +15976,7 @@ the margin rule an override may rest on a single paired round when the budget
 cut everything else (`search.anytime.short` counts them); `override=lcb` needs
 3.
 
-## D354 — Wider candidates ranked by a one-step prior: `rank=prior` generates up to `gen`, applies each once on a shared determinization, and keeps the best `cands` by the position after it
+## D355 — Wider candidates ranked by a one-step prior: `rank=prior` generates up to `gen`, applies each once on a shared determinization, and keeps the best `cands` by the position after it
 
 **2026-10-03**
 
@@ -15932,7 +16007,7 @@ before scoring every candidate. Budget fallbacks 0.9%, 1,217 ms per decision.
 declines); a full rollout as the prior (it is the search itself); ranking
 without a shared determinization (the prior's noise would rank the deals).
 
-## D355 — The outlet policy inside the rollouts: `rollout=outlets` plays the searching seat with D310's policy in front of Forge, `rollout=both` the opponent too
+## D356 — The outlet policy inside the rollouts: `rollout=outlets` plays the searching seat with D310's policy in front of Forge, `rollout=both` the opponent too
 
 **2026-10-03**
 

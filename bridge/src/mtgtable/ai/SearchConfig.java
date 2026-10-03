@@ -57,24 +57,24 @@ import java.util.Locale;
  *     ({@code MtgTable --ai-search}) parses with that.</li>
  * </ul>
  *
- * <p>The week-3 upgrades (D353–D355), each off by default for the same reason:
+ * <p>The week-3 upgrades (D354–D356), each off by default for the same reason:
  * <ul>
  * <li>{@code anytime=1} -- the search respects its budget: a round cut short by
  *     the deadline keeps the rollouts it finished, candidates the remaining time
  *     cannot carry to {@code rounds} are pruned worst-first, clearly worse ones
  *     are retired by racing, and the verdict is taken on whatever paired
  *     evidence exists.  Forge's answer is kept without a verdict only when no
- *     alternative was scored at all (D353);</li>
+ *     alternative was scored at all (D354);</li>
  * <li>{@code rank=prior} -- up to {@code gen} candidates (default 24) are
  *     generated, each is applied once on one shared determinization and the
  *     position after it is scored (the leaf, or the learned position evaluator
  *     with {@code prior=eval} and {@code evalmodel=<path>}, D316), and the best
  *     {@code cands} are kept: Forge's own answer and "pass" always, the rest by
- *     that prior instead of by enumeration order (D354);</li>
+ *     that prior instead of by enumeration order (D355);</li>
  * <li>{@code rollout=outlets} -- inside the rollouts the searching seat plays
  *     Forge's AI with D310's sacrifice-outlet policy in front, instead of plain
  *     Forge; {@code rollout=both} gives the opponent's seat the policy too
- *     (D355).</li>
+ *     (D356).</li>
  * </ul>
  */
 public final class SearchConfig {
@@ -101,17 +101,17 @@ public final class SearchConfig {
     /** Bench only: no determinization, the copies keep the real hidden cards (D350). */
     public final boolean oracle;
 
-    /** D353: keep partial rounds, prune to the budget, race, decide on what exists. */
+    /** D354: keep partial rounds, prune to the budget, race, decide on what exists. */
     public final boolean anytime;
-    /** D354: generate up to {@link #generate} candidates and keep the best {@link #maxCandidates} by a prior. */
+    /** D355: generate up to {@link #generate} candidates and keep the best {@link #maxCandidates} by a prior. */
     public final boolean rankPrior;
-    /** D354: how many candidates are generated before the prior's cut (only with {@link #rankPrior}). */
+    /** D355: how many candidates are generated before the prior's cut (only with {@link #rankPrior}). */
     public final int generate;
-    /** D354: the prior's scorer: "leaf" or "eval" (the learned position evaluator at {@link #evalModel}). */
+    /** D355: the prior's scorer: "leaf" or "eval" (the learned position evaluator at {@link #evalModel}). */
     public final String prior;
-    /** D354: the learned evaluator's model file for {@code prior=eval}; null = none. */
+    /** D355: the learned evaluator's model file for {@code prior=eval}; null = none. */
     public final String evalModel;
-    /** D355: the rollouts' policy: "default" (plain Forge), "outlets" (our seat with D310's policy), "both". */
+    /** D356: the rollouts' policy: "default" (plain Forge), "outlets" (our seat with D310's policy), "both". */
     public final String rollout;
 
     /** The fewest complete rounds the {@code lcb} rule overrules Forge on (an sd from fewer is no sd). */
@@ -184,12 +184,12 @@ public final class SearchConfig {
         this.rollout = rollout;
     }
 
-    /** Whether the searching seat's rollouts play D310's outlet policy (D355). */
+    /** Whether the searching seat's rollouts play D310's outlet policy (D356). */
     public boolean rolloutOutletsUs() {
         return !"default".equals(rollout);
     }
 
-    /** Whether the opponent's seat in the rollouts plays it too (D355). */
+    /** Whether the opponent's seat in the rollouts plays it too (D356). */
     public boolean rolloutOutletsThem() {
         return "both".equals(rollout);
     }
@@ -313,7 +313,7 @@ public final class SearchConfig {
         if (oracle) {
             sb.append(",oracle=1");
         }
-        // D353–D355's likewise.
+        // D354–D356's likewise.
         if (anytime) {
             sb.append(",anytime=1");
         }
