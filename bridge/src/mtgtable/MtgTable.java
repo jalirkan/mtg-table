@@ -678,6 +678,28 @@ public final class MtgTable {
         }
     }
 
+    /** D303: the environment variable a restarted {@code --lan} bridge takes its token from. */
+    static final String LAN_TOKEN_ENV = "MTGTABLE_LAN_TOKEN";
+
+    /**
+     * Amendment M51's pairing token, or (D303) the one {@code scripts/play.sh}
+     * hands a RESTARTED bridge in {@link #LAN_TOKEN_ENV}: the match launcher
+     * restarts the engine on new decks, and a fresh token would break the
+     * phone's link and the coach helper's copy of it.  Unset or empty is a
+     * fresh token, as before.  A value that is not a token (16+ characters of
+     * {@code [A-Za-z0-9_-]}) is refused -- without echoing it.
+     */
+    static String lanToken(final String given) {
+        if (given == null || given.isEmpty()) {
+            return WsTransport.newToken();
+        }
+        if (!given.matches("^[A-Za-z0-9_-]{16,}$")) {
+            throw new IllegalArgumentException(LAN_TOKEN_ENV
+                    + " is set but is not a pairing token (16 or more of A-Z a-z 0-9 _ -)");
+        }
+        return given;
+    }
+
     private static Transport transport(final Args a, final Config cfg) {
         switch (a.transport) {
         case "null":    return new NullTransport();
@@ -693,7 +715,7 @@ public final class MtgTable {
             // fresh pairing token, --site-dir serves a built ForgeCoach at `/`.
             // Neither given is the loopback server M50 left.
             return new WsTransport(a.port > 0 ? a.port : cfg.wsPort(), cfg.wsAllowedOrigins(),
-                    a.lan ? WsTransport.newToken() : null,
+                    a.lan ? lanToken(System.getenv(LAN_TOKEN_ENV)) : null,
                     a.siteDir == null ? null : resolve(cfg, a.siteDir).toPath());
         default:
             throw new IllegalArgumentException("--transport must be null|auto|console|ws, got "
