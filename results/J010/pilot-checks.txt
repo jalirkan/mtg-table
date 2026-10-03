@@ -1,0 +1,2 @@
+PASS  pilot.games == 8 and pilot.errors == 0   [pilot.games = 8, pilot.errors = 0]
+PASS  peak_worker_rss_gb between 0.3 and 4.5   [peak_worker_rss_gb = 1.03]

@@ -1,0 +1,41 @@
+==== J010 pilot1 started 2026-10-03T13:26:45-04:00 in unit lab-J010-pilot1, 3 worker(s)
+Slice=forgecoach-lab.slice
+MemoryHigh=20723217203
+MemoryMax=22978075033
+Nice=10
+KillMode=control-group
+== ai-bench selftest: statistics
+  ok   wilson(5,10) = [0.2366, 0.7634]
+  ok   wilson(0,10) = [0, 0.2775]
+  ok   wilson(81,100) = [0.7222, 0.8749]
+  ok   Cfg parses profile+sim+shadow
+  ok   Cfg refuses an unknown option
+  ok   plain seeds are unchanged
+  ok   --mirror: games 4k/4k+3 and 4k+1/4k+2 share a seed
+  ok   vs 50%: deals 1/2, 1/2, 2/2, 0/1 score 50%, p = 1, three mirrored
+  ok   phi and elo
+== ai-bench selftest: resume and the control file
+  ok   resume: complete lines of this shard and the others count
+  ok   resume: this shard's torn last line is cut off on disk
+  ok   resume: another shard's file is only read
+  ok   resume: a game's signature is its seed, configs and decks
+  ok   resume: one game with two different settings is refused
+  ok   control: unset or absent means play
+  ok   control: maxWorkers 2 keeps slots 0-1 and parks slot 2
+  ok   control: a torn file means no control
+  ok   control: a parked slot exits even while paused (its memory comes back); the hold itself is the smoke test's
+ai-bench selftest: 18 check(s), 0 failure(s)
+ai-bench: run shake-pilot, 2 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/shake-pilot
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J010.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+== Default vs Default
+  games 8: A 4, B 4, draws 0 (timeouts 0, engine errors 0)
+  A win rate 50.0% of 8 decisive  (95% Wilson CI 21.5-78.5%)
+  focus deck (first of each pair) win rate 25.0% of 8  (95% CI 7.1-59.1%)
+  game time mean 3.9 s, median 2.1 s, max 11.1 s; turns mean 19.0; AI eval timeouts 0 (0.00/game)
+  A vs the known 50%: 50.0% over 4 deal(s) (4 mirrored, both sides played), 95% CI 25.5-74.5%, p = 1.000 (-0 Elo, CI -186 to +186)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {cast.Blood Artist=2, cast.Cauldron Familiar=1, cast.Deadly Dispute=1, cast.Grim Haruspex=1}
+  B counters:     {cast.Blood Artist=2, cast.Cauldron Familiar=1, cast.Deadly Dispute=1, cast.Grim Haruspex=1}
+  focus counters: {}
