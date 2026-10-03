@@ -9,6 +9,9 @@
 #   tools/cubelab.sh run     cubes/synergy-cube-180.md --format grid --drafts 40 --jobs 4 --seed 1 --record 3
 #   tools/cubelab.sh report  var/cubelab/runs/synergy-cube-180-grid-1   # also writes meta.json
 #   tools/cubelab.sh meta    var/cubelab/runs/synergy-cube-180-grid-1 --cube cubes/synergy-cube-180.md
+#   tools/cubelab.sh learn   var/cubelab/runs/synergy-cube-180-grid-1 --cube cubes/synergy-cube-180.md \
+#                            --out var/cubelab/learned/synergy.ratings.tsv           # D301, no engine
+#   tools/cubelab.sh selfplay cubes/synergy-cube-180.md --iterations 2 --drafts-per-iter 30 --jobs 2   # D302
 #
 # Overnight, one command (resumable: run it again with the same --out and it
 # skips the drafts already in drafts.jsonl):
@@ -23,7 +26,7 @@
 #   2. builds the bridge if bridge/out is missing, and compiles
 #      tools/cubelab/CubeLab.java into var/cubelab/classes/ when it is stale
 #      (javac through jdk.compiler, never --release; the lint already scans it);
-#   3. for `check`, `ratings` and `run`, builds one Forge home per job under
+#   3. for `check`, `ratings`, `run` and `selfplay` (not `learn`, which reads files only), builds one Forge home per job under
 #      var/cubelab/homes/<k>/ with forge_home_make (D129's helper), so no two
 #      JVMs share a userDir, and hands them to the TypeScript side;
 #   4. runs tools/cubelab/cli.ts under Node (type stripping, no build step).
@@ -38,7 +41,7 @@ cd "$REPO_ROOT"
 [ $# -ge 1 ] || { node tools/cubelab/cli.ts; exit 2; }
 
 cmd="$1"
-if [ "$cmd" != "report" ] && [ "$cmd" != "meta" ]; then
+if [ "$cmd" != "report" ] && [ "$cmd" != "meta" ] && [ "$cmd" != "learn" ]; then
   [ -f "$FORGE_JAR" ] || { echo "cubelab: FORGE_JAR not found: $FORGE_JAR" >&2; exit 1; }
   if [ ! -f bridge/out/mtgtable/Bootstrap.class ]; then
     echo "cubelab: bridge/out is not built -- running ./bridge/build.sh first" >&2

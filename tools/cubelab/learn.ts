@@ -339,7 +339,11 @@ export interface CardOut {
 
 export interface PairOut { a: string; b: string; logit: number; sd: number; points: number; games: number }
 
-export interface CvResult { folds: number; games: number; logLossPrior: number; logLossLearned: number; logLossCoin: number; accPrior: number; accLearned: number }
+export interface CvResult {
+  folds: number; games: number; logLossPrior: number; logLossLearned: number; logLossCoin: number; accPrior: number; accLearned: number;
+  /** Standard error of the per-game difference (learned - prior-only log loss): the improvement is noise unless it is about 2 of these. */
+  diffSe: number;
+}
 
 export interface Learned {
   options: LearnOptions;
@@ -428,6 +432,7 @@ export function crossValidate(games: Game[], priors: Map<string, PriorCard>, o: 
   if (k < 2) return null;
   const foldOf = new Map(drafts.map((dr, i) => [dr, i % k]));
   let lp = 0, ll = 0, ap = 0, al = 0, n = 0;
+  const diffs: number[] = [];
   const priorOnly: LearnOptions = { ...o, tauCard: 1e-6, tauPair: 1e-6, maxPairs: 0 };
   for (let f = 0; f < k; f++) {
     const train = games.filter((g) => foldOf.get(g.draft) !== f);
@@ -442,11 +447,14 @@ export function crossValidate(games: Game[], priors: Map<string, PriorCard>, o: 
       const pBase = predictGame(baseD, base.theta, g, priors);
       const y = g.aWon ? 1 : 0;
       ll += logLoss(pFull, y); lp += logLoss(pBase, y);
+      diffs.push(logLoss(pFull, y) - logLoss(pBase, y));
       al += (pFull >= 0.5) === g.aWon ? 1 : 0; ap += (pBase >= 0.5) === g.aWon ? 1 : 0;
       n++;
     }
   }
-  return { folds: k, games: n, logLossPrior: lp / n, logLossLearned: ll / n, logLossCoin: Math.log(2), accPrior: ap / n, accLearned: al / n };
+  const md = diffs.reduce((s, x) => s + x, 0) / n;
+  const diffSe = Math.sqrt(diffs.reduce((s, x) => s + (x - md) ** 2, 0) / Math.max(1, n - 1) / n);
+  return { folds: k, games: n, logLossPrior: lp / n, logLossLearned: ll / n, logLossCoin: Math.log(2), accPrior: ap / n, accLearned: al / n, diffSe };
 }
 
 /** P(A wins) for a game under a design's parameters (cards and pairs the design never saw count 0). */
@@ -566,7 +574,7 @@ export function learnSummaryMd(title: string, l: Learned, top = 15): string {
   const sds = l.cards.filter((c) => c.status === 'learned').map((c) => c.sd).sort((a, b) => a - b);
   if (sds.length) out.push(`- posterior SD of a card's delta: median ${(sds[Math.floor(sds.length / 2)] as number).toFixed(3)} logits (prior SD ${l.options.tauCard}) — ${(100 * (1 - (sds[Math.floor(sds.length / 2)] as number) / l.options.tauCard)).toFixed(0)}% of the prior uncertainty removed`);
   if (l.cv) {
-    out.push(`- **held-out check** (${l.cv.folds}-fold by draft, ${l.cv.games} games): log loss prior-only ${l.cv.logLossPrior.toFixed(4)}, learned ${l.cv.logLossLearned.toFixed(4)}, coin ${l.cv.logLossCoin.toFixed(4)}; accuracy prior-only ${pct(l.cv.accPrior)}, learned ${pct(l.cv.accLearned)}. ${l.cv.logLossLearned < l.cv.logLossPrior ? 'The learned values predict held-out games better than the prior.' : 'The learned values do NOT predict held-out games better than the prior: the sample is too small for them to be signal yet.'}`);
+    out.push(`- **held-out check** (${l.cv.folds}-fold by draft, ${l.cv.games} games): log loss prior-only ${l.cv.logLossPrior.toFixed(4)}, learned ${l.cv.logLossLearned.toFixed(4)}, coin ${l.cv.logLossCoin.toFixed(4)}; accuracy prior-only ${pct(l.cv.accPrior)}, learned ${pct(l.cv.accLearned)}. difference ${(l.cv.logLossLearned - l.cv.logLossPrior).toFixed(4)} ± ${(1.96 * l.cv.diffSe).toFixed(4)} (95%). ${l.cv.logLossLearned + 1.96 * l.cv.diffSe < l.cv.logLossPrior ? 'The learned values predict held-out games better than the prior, beyond noise.' : l.cv.logLossLearned < l.cv.logLossPrior ? 'The learned values predict held-out games better than the prior, but within noise.' : 'The learned values do NOT predict held-out games better than the prior: the sample is too small for them to be signal yet.'}`);
   }
   out.push('');
   const learned = l.cards.filter((c) => c.status === 'learned');

@@ -30,10 +30,13 @@ import {
   cholesky, cholInvDiag, cholSolve, DEFAULT_LEARN, gamesOf, learn, learnedRatingsTsv, parseSynergy, pairPoints,
   spearman, synergyTsv, type Game, type LearnOptions, type PriorCard,
 } from '../../tools/cubelab/learn.ts';
+import type { Cube } from '../../tools/cubelab/cube.ts';
+import { runDraft, type LoadedCube } from '../../tools/cubelab/lab.ts';
 import { scoreCard } from '../../tools/cubelab/pick.ts';
 import { parseRatings } from '../../tools/cubelab/ratings.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import type { DraftRecord } from '../../tools/cubelab/run.ts';
+import { deckQuality, gamesForHalfWidth, headToHead, reRated, runMixedDraft } from '../../tools/cubelab/selfplay.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 
 // ------------------------------------------------------------ a planted world
@@ -223,4 +226,66 @@ test('a learned pair adds its points when the partner is already picked; no tabl
   assert.equal(plain.pairs, 0);
   assert.equal(pairPoints(table, 'Gamma', [a, b]), 0);
   assert.equal(scoreCard(c, state, DEFAULT_WEIGHTS, table).total, scoreCard(c, state, DEFAULT_WEIGHTS).total);
+});
+
+// ------------------------------------------------------------ the mixed draft
+
+const THEMES = ['SAC', 'TOK', 'ETB', 'GY', 'SPL', 'ART'];
+function cubeCards(): LabCard[] {
+  const out: LabCard[] = [];
+  let i = 0;
+  for (const c of 'WUBRG') {
+    for (let k = 0; k < 30; k++, i++) {
+      out.push(card(`${c} card ${k}`, c, { cmc: 1 + (k % 6), rating: 30 + ((i * 37) % 60), themes: [THEMES[k % 6] as string], creature: k % 3 !== 0 }));
+    }
+  }
+  for (const p of ['WU', 'UB', 'BR', 'RG', 'WG', 'WB', 'UR', 'BG', 'WR', 'UG']) {
+    out.push(card(`${p} dual`, '', { land: true, creature: false, produces: p, rating: 80, type: 'Land', cmc: 0, pips: {} }));
+    out.push(card(`${p} gold`, p, { cmc: 3, rating: 70, themes: ['TOK'] }));
+  }
+  return out;
+}
+function loaded(cards: LabCard[]): LoadedCube {
+  return { cube: { title: 'T' } as Cube, cards, byName: new Map(cards.map((c) => [c.name, c])), missing: [], ratedFromFile: cards.length };
+}
+
+test('mixed draft: with the baseline as the learned values it IS the ordinary draft; seed-determined; B never sees a learned number', () => {
+  const base = loaded(cubeCards());
+  for (const seed of [3, 4]) {
+    const plain = runDraft(base, 'grid', seed, DEFAULT_WEIGHTS);
+    const same = runMixedDraft(base, reRated(base, new Map()), 'draft+deck', 'grid', seed, DEFAULT_WEIGHTS);
+    assert.deepEqual(same.drafters.map((d) => [d.pool, d.deck?.main]), plain.drafters.map((d) => [d.pool, d.deck?.main]));
+  }
+  // A learned table that loves the blue cards: A drifts blue, and the draft repeats exactly.
+  const learned = reRated(base, new Map(base.cards.filter((c) => c.colors === 'U').map((c) => [c.name, c.rating + 60])));
+  const m1 = runMixedDraft(base, learned, 'draft+deck', 'grid', 5, DEFAULT_WEIGHTS);
+  const m2 = runMixedDraft(base, learned, 'draft+deck', 'grid', 5, DEFAULT_WEIGHTS);
+  assert.deepEqual(m1, { ...m2, ms: m1.ms });
+  const blue = (pool: string[]): number => pool.filter((n) => n.startsWith('U card')).length;
+  const plain = runDraft(base, 'grid', 5, DEFAULT_WEIGHTS);
+  assert.ok(blue(m1.drafters[0].pool) > blue(plain.drafters[0].pool), `A took ${blue(m1.drafters[0].pool)} blue cards (baseline ${blue(plain.drafters[0].pool)})`);
+  assert.ok(m1.drafters[0].deck?.colors.includes('U'));
+  assert.deepEqual(m1.drafters.flatMap((d) => d.deckErrors), []);
+  // deck mode: both draft with the baseline, so the pools are the ordinary draft's.
+  const dk = runMixedDraft(base, learned, 'deck', 'grid', 5, DEFAULT_WEIGHTS);
+  assert.deepEqual(dk.drafters.map((d) => d.pool), plain.drafters.map((d) => d.pool));
+  assert.deepEqual(dk.drafters[1].deck, plain.drafters[1].deck, 'B builds exactly the baseline deck');
+});
+
+test('deck quality offline, head-to-head arithmetic, and the games a CI needs', () => {
+  const base = loaded(cubeCards());
+  const learned = reRated(base, new Map(base.cards.filter((c) => c.colors === 'U').map((c) => [c.name, c.rating + 60])));
+  const pools = [3, 4, 5, 6].flatMap((s) => runDraft(base, 'grid', s, DEFAULT_WEIGHTS).drafters.map((d) => d.pool));
+  const same = deckQuality(pools, base, reRated(base, new Map()), DEFAULT_WEIGHTS);
+  assert.deepEqual([same.learnedView, same.baselineView, same.cardsChanged, same.coloursChanged], [0, 0, 0, 0]);
+  const q = deckQuality(pools, base, learned, DEFAULT_WEIGHTS);
+  assert.equal(q.pools, 8);
+  assert.ok(q.learnedView >= 0 && q.baselineView <= 0, JSON.stringify(q));
+  const h = headToHead([
+    { match: { games: [{ winner: 'A' }, { winner: 'A' }], winner: 'A' } },
+    { match: { games: [{ winner: 'B' }, { winner: 'draw' }, { winner: 'A' }], winner: 'A' } },
+  ]);
+  assert.deepEqual([h.winsA, h.winsB, h.draws, h.games, h.matchesA, h.matchesB, h.rate], [3, 1, 1, 5, 2, 0, 0.75]);
+  assert.ok(h.lo !== null && h.lo < 0.75 && h.hi !== null && h.hi > 0.75);
+  assert.equal(gamesForHalfWidth(0.05), 385);
 });
