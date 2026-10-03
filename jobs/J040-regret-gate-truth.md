@@ -1,4 +1,4 @@
-id: J035
+id: J040
 title: Evaluator gate 2: the decision set and its full-game truth tables (D354), resumable
 public_title: Regret gate truth grading
 public_est: ~one night

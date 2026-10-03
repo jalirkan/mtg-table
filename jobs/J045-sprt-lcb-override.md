@@ -1,4 +1,4 @@
-id: J032
+id: J045
 title: (was J025, earlier J018) Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin
 cpu: heavy
 repos: mtg-table@main (main once it merges)

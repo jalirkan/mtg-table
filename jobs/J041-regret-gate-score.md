@@ -1,9 +1,9 @@
-id: J036
+id: J041
 title: Evaluator gate 2: rank the set with the hand leaf and the evaluator at the live horizon, and score the regret (D354)
 public_title: Regret gate scoring
 public_est: ~30 min
 cpu: heavy
-after: J035
+after: J040
 repos: mtg-table@9ca3329 (main with the gates merged, #36; pinned so the truth and the rankers share one code version, D341)
 est: ~20-40 min (about 40k end-of-turn playouts at ~0.1 s on 7 JVMs, plus JVM boots)
 resumable: yes
@@ -18,12 +18,12 @@ metrics: re12 = sh: python3 tools/ml/gate_metrics.py grade var/ml/gates/regret/r
 metrics: g2 = sh: python3 tools/ml/gate_metrics.py report var/ml/gates/regret/report.json
 headline: g2.scored, g2.regretHand, g2.regretEval, g2.diffHandMinusEval_estimate, g2.diffHandMinusEval_lo, g2.pass
 
-Gate 2's verdict (D354). The job ranks every decision of J035's set by the same rollouts to
+Gate 2's verdict (D354). The job ranks every decision of J040's set by the same rollouts to
 the end of THIS turn (the search's live horizon, 3 rounds, seed 1), scored two ways:
-- by the hand leaf through σ(leaf/500) (done in J035's screen);
+- by the hand leaf through σ(leaf/500) (done in J040's screen);
 - by J034's evaluator (`--leaf eval:`).
 
-It then computes each ranker's regret against J035's truth tables. PASS when the mean of
+It then computes each ranker's regret against J040's truth tables. PASS when the mean of
 regret(hand) - regret(eval) is above 0 and its paired bootstrap 95% interval over decisions
 excludes 0, on at least 240 scored decisions. The 12-round rankers are reported, not gated.
 
@@ -74,4 +74,4 @@ summary.md:
 - the 12-round secondary;
 - the unscored decisions and why.
 
-A FAIL stops the evaluator here: J037's pilot checks gates 1 and 2 and will not start the SPRT.
+A FAIL stops the evaluator here: J042's pilot checks gates 1 and 2 and will not start the SPRT.

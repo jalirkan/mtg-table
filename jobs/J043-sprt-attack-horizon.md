@@ -1,4 +1,4 @@
-id: J030
+id: J043
 title: (was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn
 cpu: heavy
 repos: mtg-table@main (main once it merges)

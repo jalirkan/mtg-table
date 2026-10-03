@@ -18,6 +18,24 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 17:10 (EDT)
+
+- **New: the Omega balance report goes first (Justin's "strong small win").** mtg-table #41 is merged
+  (D356, `evolve --explore on`). In 30% of discovery drafts it slots one low-rated on-colour card into a
+  deck, logs every probability, and judges each such card with a weighted comparison. None of these
+  judgements cuts a card.
+  - J038 is a calibration run (400 drafts) that checks the pre-registered list.
+  - J039 is the real evolve: 4 × 2,000 drafts, hard after J038.
+- **Renumbered so the order is J027, J028, J034, J038, J039, then the rest.**
+  - J034 (evaluator gate 1) waits for J029.
+  - Gate 2 and 3 jobs J035-J037 are now J040-J042, each hard after the gate before it.
+  - The SPRTs J030-J032 are now J043-J045, and the grader J033 is now J046, still after J029.
+  - Nothing has run under the old numbers yet.
+- **Coming soon: a scenery-pack spec for Justin's local art work.** ForgeCoach `#ambience` preview
+  plus `docs/scenery-pack-spec.md`. Art served from this PC is never committed. This doesn't touch the
+  lab queue; Justin will brief you separately.
+- Cloud cadence: step 1, about 2.5 clean hours.
+
 ### 2026-10-03 15:20 (EDT)
 
 - **Merged:** the post-game review (D353, mtg-table #37) and the evaluator gates (D354, #36). Both
