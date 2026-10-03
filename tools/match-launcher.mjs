@@ -14,7 +14,17 @@
 //
 //   GET  /health  gains "match": 1 when play.sh supervises this helper (it was
 //                 started with --match-dir and --supervisor), else "match": 0.
-//   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting",
+//                 and (D308) "engine": "running"|"idle" -- "idle": the engine exited (its
+//                 match is over, or D286's idle limit) and play.sh is waiting for a
+//                 POST /match to start it again; with "idleSince" and "exitsAt" (ISO
+//                 times; exitsAt null = play.sh never gives up, --idle-exit-after 0).
+//                 No "engine" key when "match" is 0.
+//   POST /engine/start  (D308)  wake a sleeping engine on the last match setup (play.sh's
+//                 startup decks if there was no /match).  No body.  200 = the POST /match
+//                 200's shape plus "already": false; engine running already -> 200
+//                 {"ok":true,"already":true,"yourDeck","aiDeck","aiProfile","games"}; the same
+//                 refusals (409, 502, 503, 504).  /health carries "engine_start": 1.
+//   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","games"}}
 //                 "match" is null until play.sh has written one.
@@ -270,12 +280,102 @@ export function createMatchLauncher(opts) {
 
   const fail = (status, message, extra = {}) => ({ status, body: { ok: false, type: 'error', message, ...extra } });
 
+  // Waits for play.sh's status on request `id` and shapes the 200 / refusal.
+  // `m` is the checked request (to count cards against), or null for a wake.
+  const ask = async (id, t0, m, youPath) => {
+    // play.sh stops the engine, starts the new one, and says how it went.
+    // A signal can land while play.sh is between two commands of its last
+    // restart, so it is sent again until play.sh has taken this request up
+    // (it ignores an id it has already handled).
+    let st = null;
+    let seen = false;
+    let lastSignal = Date.now();
+    while (Date.now() - t0 < timeoutMs) {
+      await new Promise((r) => setTimeout(r, pollMs));
+      st = readJson(join(dir, 'status.json'));
+      if (st && st.id === id && (st.state === 'ready' || st.state === 'failed')) break;
+      if (st && st.id === id) seen = true;
+      if (!alive(supervisorPid)) return fail(503, 'scripts/play.sh stopped while the match was starting');
+      if (!seen && Date.now() - lastSignal > 2000) {
+        lastSignal = Date.now();
+        try { process.kill(supervisorPid, 'SIGUSR1'); } catch { /* the alive check above says */ }
+      }
+      st = null;
+    }
+    if (!st) return fail(504, `the engine did not answer within ${Math.round(timeoutMs / 1000)} s — see var/play/server.log`);
+    if (st.state === 'failed') {
+      return fail(502, `the engine did not start on these decks: ${String(st.error ?? 'no reason given').slice(0, 1200)}`
+        + (st.restored ? ' — the previous match is running again' : ' — no engine is running'), { restored: !!st.restored });
+    }
+    const got = st.match ?? {};
+    const warnings = [];
+    const cnt = (d) => Number(d?.cards ?? NaN);
+    if (m && cnt(got.yourDeck) !== m.deck.mainCount) warnings.push(`the engine loaded ${cnt(got.yourDeck)} of the ${m.deck.mainCount} main-deck cards of your deck — a card it does not know was left out`);
+    if (m && cnt(got.aiDeck) !== m.aiDeck.mainCount) warnings.push(`the engine loaded ${cnt(got.aiDeck)} of the ${m.aiDeck.mainCount} main-deck cards of the AI's deck — a card it does not know was left out`);
+    const reply = {
+      ok: true,
+      yourDeck: { name: String(got.yourDeck?.name ?? m?.deck.name ?? ''), path: youPath ?? got.yourDeck?.path ?? null, cards: cnt(got.yourDeck) },
+      aiDeck: { name: String(got.aiDeck?.name ?? m?.aiDeck.name ?? ''), cards: cnt(got.aiDeck) },
+      aiProfile: got.aiProfile ?? m?.aiProfile ?? null,
+      games: got.games ?? m?.games ?? null,
+      ms: Date.now() - t0,
+      warnings,
+    };
+    log(`MATCH started ${id}: you ${reply.yourDeck.name} (${reply.yourDeck.cards}), AI ${reply.aiDeck.name} (${reply.aiDeck.cards}), ${reply.aiProfile}, ${reply.games} game(s), ${reply.ms} ms`);
+    return { status: 200, body: reply };
+  };
+
+  // D308 POST /engine/start: wake a sleeping engine on the last match setup (or
+  // play.sh's own startup decks).  Same request mechanism as /match, no decks:
+  // {"v","id","wake":true}.  Already running: 200 {"ok":true,"already":true}.
+  let lastWakeId = 0;
+  const wake = async () => {
+    if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
+    if (busy) return fail(409, 'a match is already being started — wait for it');
+    const cur = engine();
+    if (cur?.engine !== 'idle') {
+      const m = publicMatch(readJson(join(dir, 'current.json'))?.match);
+      return { status: 200, body: { ok: true, already: true, ...(m ?? {}) } };
+    }
+    busy = true;
+    const t0 = Date.now();
+    try {
+      mkdirSync(dir, { recursive: true });
+      let n = Math.max(Date.now(), lastWakeId + 1);
+      let id = `m${n}`;
+      while (existsSync(join(dir, id))) id = `m${++n}`;
+      lastWakeId = n;
+      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true }) + '\n');
+      try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) {
+        return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
+      }
+      const r = await ask(id, t0, null, null);
+      if (r.status === 200) r.body = { ...r.body, already: false };
+      return r;
+    } finally {
+      busy = false;
+    }
+  };
+
+  // D308: what play.sh says about the engine (var/match/engine.json).  "idle": the
+  // engine has exited (match over, D286's idle limit) and play.sh waits for a
+  // POST /match; no engine.json yet means running.  Null when there is no launcher.
+  const engine = () => {
+    if (!available()) return null;
+    const e = readJson(join(dir, 'engine.json'));
+    if (e?.state !== 'idle') return { engine: 'running' };
+    return { engine: 'idle', idleSince: typeof e.at === 'string' ? e.at : null, exitsAt: typeof e.exitsAt === 'string' ? e.exitsAt : null };
+  };
+
   return {
     available,
+    engine,
+    wake,
     get() {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
-      const cur = readJson(join(dir, 'current.json'));
-      return { status: 200, body: { ok: true, state: busy ? 'restarting' : 'running', match: publicMatch(cur?.match) } };
+      const asleep = engine()?.engine === 'idle';
+      const cur = asleep ? null : readJson(join(dir, 'current.json'));
+      return { status: 200, body: { ok: true, state: busy ? 'restarting' : asleep ? 'idle' : 'running', match: publicMatch(cur?.match) } };
     },
     async post(body) {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
@@ -306,46 +406,7 @@ export function createMatchLauncher(opts) {
           return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
         }
 
-        // play.sh stops the engine, starts the new one, and says how it went.
-        // A signal can land while play.sh is between two commands of its last
-        // restart, so it is sent again until play.sh has taken this request up
-        // (it ignores an id it has already handled).
-        let st = null;
-        let seen = false;
-        let lastSignal = Date.now();
-        while (Date.now() - t0 < timeoutMs) {
-          await new Promise((r) => setTimeout(r, pollMs));
-          st = readJson(join(dir, 'status.json'));
-          if (st && st.id === id && (st.state === 'ready' || st.state === 'failed')) break;
-          if (st && st.id === id) seen = true;
-          if (!alive(supervisorPid)) return fail(503, 'scripts/play.sh stopped while the match was starting');
-          if (!seen && Date.now() - lastSignal > 2000) {
-            lastSignal = Date.now();
-            try { process.kill(supervisorPid, 'SIGUSR1'); } catch { /* the alive check above says */ }
-          }
-          st = null;
-        }
-        if (!st) return fail(504, `the engine did not answer within ${Math.round(timeoutMs / 1000)} s — see var/play/server.log`);
-        if (st.state === 'failed') {
-          return fail(502, `the engine did not start on these decks: ${String(st.error ?? 'no reason given').slice(0, 1200)}`
-            + (st.restored ? ' — the previous match is running again' : ' — no engine is running'), { restored: !!st.restored });
-        }
-        const got = st.match ?? {};
-        const warnings = [];
-        const cnt = (d) => Number(d?.cards ?? NaN);
-        if (cnt(got.yourDeck) !== m.deck.mainCount) warnings.push(`the engine loaded ${cnt(got.yourDeck)} of the ${m.deck.mainCount} main-deck cards of your deck — a card it does not know was left out`);
-        if (cnt(got.aiDeck) !== m.aiDeck.mainCount) warnings.push(`the engine loaded ${cnt(got.aiDeck)} of the ${m.aiDeck.mainCount} main-deck cards of the AI's deck — a card it does not know was left out`);
-        const reply = {
-          ok: true,
-          yourDeck: { name: String(got.yourDeck?.name ?? m.deck.name), path: rel('you.dck'), cards: cnt(got.yourDeck) },
-          aiDeck: { name: String(got.aiDeck?.name ?? m.aiDeck.name), cards: cnt(got.aiDeck) },
-          aiProfile: got.aiProfile ?? m.aiProfile,
-          games: got.games ?? m.games,
-          ms: Date.now() - t0,
-          warnings,
-        };
-        log(`MATCH started ${id}: you ${reply.yourDeck.name} (${reply.yourDeck.cards}), AI ${reply.aiDeck.name} (${reply.aiDeck.cards}), ${reply.aiProfile}, ${reply.games} game(s), ${reply.ms} ms`);
-        return { status: 200, body: reply };
+        return await ask(id, t0, m, rel('you.dck'));
       } finally {
         busy = false;
       }
