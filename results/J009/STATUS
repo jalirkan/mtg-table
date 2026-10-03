@@ -1,6 +1,7 @@
-running
+waiting
+reason: stopped: tools/runner.sh stop
 runner: forgecoach-runner 6fbcdea
 started: 2026-10-03T13:10:54-04:00
-phase: pilot 1/1
+finished: 2026-10-03T13:11:21-04:00
 mtg-table: 6fbcdea
 workers: 3

@@ -1,0 +1,4 @@
+==== J009 pilot1 started 2026-10-03T13:11:08-04:00 in unit lab-J009-pilot1, 3 worker(s)
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+fatal: Cannot rebase onto multiple branches.
