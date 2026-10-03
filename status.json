@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-03T18:58:59-04:00",
- "heartbeat": "2026-10-03T18:58:59-04:00",
+ "updated": "2026-10-03T18:59:13-04:00",
+ "heartbeat": "2026-10-03T18:59:13-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 15.99,
-  "memUsedGb": 9.4,
+  "load1": 12.53,
+  "memUsedGb": 8.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 2485,
   "pressure": 0,
@@ -22,9 +22,9 @@
    "id": "J034",
    "title": "Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-03T18:58:59-04:00",
-   "elapsed": 0,
+   "elapsed": 14,
    "done": 0,
    "total": null,
    "unit": "rows",
@@ -35,7 +35,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-03T18:58:59-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "ds.written": 0,
     "elapsed_s": 0,
@@ -50,7 +50,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J034-prepare"
+   "detail": "lab-J034-pilot1"
   }
  ],
  "queue": [
