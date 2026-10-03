@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T14:40:51-04:00",
+ "updated": "2026-10-03T14:41:04-04:00",
  "paused": false,
  "host": {
-  "load1": 12.33,
-  "memUsedGb": 9.1,
+  "load1": 11.52,
+  "memUsedGb": 10.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 1853,
   "pressure": 0,
@@ -18,21 +18,21 @@
    "id": "J029",
    "title": "(J020 again, continues its folder) Overnight queue, night 1: recorded normal + bridge drafts across all cubes (decision records on)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-03T14:40:49-04:00",
-   "elapsed": 2,
+   "elapsed": 16,
    "done": 1271,
    "total": 20000,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-03T14:40:51-04:00",
    "pressureEvents": [],
-   "detail": "lab-J029-prepare"
+   "detail": "lab-J029-pilot1"
   }
  ],
  "queue": [
