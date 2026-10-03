@@ -19,6 +19,7 @@
 // pass finds nothing.
 
 import { BASIC_OF, castableIn, colourPairs, COLOURS, type Colour, type LabCard } from './cards.ts';
+import { pairPoints, type PairTable } from './pairs.ts';
 import { splashColourOf, synergyCount } from './pick.ts';
 import type { Weights } from './weights.ts';
 
@@ -84,7 +85,11 @@ export function thirdColourCards(spells: LabCard[], colors: string): number {
   return spells.length - best;
 }
 
-interface BuildOpts { maxSplash: number; eighteen: boolean; stretched: boolean }
+interface BuildOpts {
+  maxSplash: number; eighteen: boolean; stretched: boolean;
+  /** Learned pair synergy (`run --deck-synergy`, D301): a candidate gains its points with the spells already chosen, and the deck scores its pairs. */
+  table?: PairTable;
+}
 
 function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weights, o: BuildOpts): DeckBuild | null {
   const { maxSplash } = o;
@@ -116,7 +121,7 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
         const b = bucketOf(x.card.cmc);
         const target = (CURVE_TARGET[b] ?? 0) * nSpells / 23;
         const over = Math.max(0, (curve[b] ?? 0) + 1 - target);
-        const v = (value.get(x) ?? 0) - w.deckCurve * 4 * over;
+        const v = (value.get(x) ?? 0) - w.deckCurve * 4 * over + (o.table ? pairPoints(o.table, x.card.name, chosen.map((y) => y.card)) : 0);
         if (v > bv) { bv = v; best = x; }
       }
       if (!best) break;
@@ -201,6 +206,7 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
     splash: -w.deckSplash * splashCards,
     threeColour: -w.deckThreeColour * thirdColourCards(spells, pair),
     eighteenLands: o.eighteen ? -w.deckEighteenLands : 0,
+    ...(o.table ? { pairs: spells.reduce((s, c, i) => s + pairPoints(o.table, c.name, spells.slice(i + 1)), 0) / spells.length } : {}),
   };
   const score = Object.values(parts).reduce((s, x) => s + x, 0);
 
@@ -227,15 +233,15 @@ function buildOne(pool: LabCard[], pair: string, splash: string | null, w: Weigh
  * full colours on 17 or 18 lands (the deck says `stretched`).  Null when that
  * fails too.
  */
-export function buildDeck(pool: LabCard[], w: Weights): DeckBuild | null {
-  return buildPass(pool, w, false) ?? buildPass(pool, w, true);
+export function buildDeck(pool: LabCard[], w: Weights, table?: PairTable): DeckBuild | null {
+  return buildPass(pool, w, false, table) ?? buildPass(pool, w, true, table);
 }
 
-function buildPass(pool: LabCard[], w: Weights, thin: boolean): DeckBuild | null {
+function buildPass(pool: LabCard[], w: Weights, thin: boolean, table?: PairTable): DeckBuild | null {
   const builds: DeckBuild[] = [];
   const tries: BuildOpts[] = thin
-    ? [{ maxSplash: w.maxSplashStretch, eighteen: false, stretched: true }, { maxSplash: w.maxSplash, eighteen: true, stretched: true }]
-    : [{ maxSplash: w.maxSplash, eighteen: false, stretched: false }];
+    ? [{ maxSplash: w.maxSplashStretch, eighteen: false, stretched: true, table }, { maxSplash: w.maxSplash, eighteen: true, stretched: true, table }]
+    : [{ maxSplash: w.maxSplash, eighteen: false, stretched: false, table }];
   for (const pair of colourPairs()) {
     const splashes: Array<string | null> = [null];
     for (const s of COLOURS) {
@@ -254,7 +260,7 @@ function buildPass(pool: LabCard[], w: Weights, thin: boolean): DeckBuild | null
   if (thin) {
     for (const triple of colourTriples()) {
       for (const eighteen of [false, true]) {
-        const b = buildOne(pool, triple, null, w, { maxSplash: 0, eighteen, stretched: true });
+        const b = buildOne(pool, triple, null, w, { maxSplash: 0, eighteen, stretched: true, table });
         if (b) builds.push(b);
       }
     }
