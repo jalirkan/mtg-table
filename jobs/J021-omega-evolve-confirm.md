@@ -20,17 +20,23 @@ about one worker (load is around 1.5 of 16 threads), which leaves the PC mostly 
 has 2 or fewer of its JVMs running, start J021 now instead of waiting, at `--jobs 6`, not 7.
 That leaves a core for J003's search, whose budget is wall-clock. Watch memory. Otherwise
 wait for J003 as before.
+progress: evolve var/cubelab/evolve/omega-rigor-600
+headline: evo.generations_done, evo.drafts, evo.engine_error_rate
 
 ## Pilot
 The knobs are loosened on purpose so that the confirmation path runs (about 6 minutes):
 ```bash
 cd /home/justin-a/code/mtg-table
 tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
-  --generations 1 --drafts-per-gen 30 --games 3 --jobs 7 --seed 20001 --record-every 5 \
+  --generations 1 --drafts-per-gen 30 --games 3 --jobs {workers} --seed 20001 --record-every 5 \
   --out var/cubelab/evolve/omega-rigor-pilot --date 2026-10-04 \
   --evolve fdrQ=1 --evolve minSeen=1 --evolve minOnColour=1 --evolve minGames=1 \
   --evolve deadPlayRateHi=0.99 --evolve confirmMinDrafts=10 --evolve confirmMaxDrafts=10
 ```
+metrics: pilot = evolve var/cubelab/evolve/omega-rigor-pilot
+check: pilot.drafts >= 30
+check: pilot.engine_error_rate <= 1%
+check: pilot.recorded_errors == 0
 All of these checks must hold:
 - Exit code 0. No match in gen-01/run/drafts.jsonl or gen-01/confirm/drafts.jsonl has
   engineError, and every match has at least 1 game.
@@ -45,12 +51,16 @@ All of these checks must hold:
 ## Commands
 ```bash
 tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv \
-  --generations 4 --drafts-per-gen 600 --games 3 --jobs 7 --seed 20001 --record-all \
+  --generations 4 --drafts-per-gen 600 --games 3 --jobs {workers} --seed 20001 --record-all \
   --out var/cubelab/evolve/omega-rigor-600 --date 2026-10-04
 ```
+metrics: evo = evolve var/cubelab/evolve/omega-rigor-600
+check: evo.generations_done == 4
+check: evo.engine_error_rate <= 1%
 This is resumable: after a stop, run the same line again.
 
 ## Abort if
+abort: evo.games >= 300 and evo.engine_error_rate > 1%
 - More than 1% of matches in any run/ or confirm/ folder end in an engine error.
 - Any generation's decision.discovery.deff is over 2.0.
 - Any generation's decision.discovery.candidates is over 30.

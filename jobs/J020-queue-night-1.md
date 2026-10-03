@@ -12,6 +12,8 @@ max_workers: 7
 The first pooled night for the matchup model and the position evaluator. Seeds come from the
 D340 lab range only, so none of the ladder's reserved deck sets are touched. Every game records
 both seats' views, with decision records.
+progress: cubelab-queue var/cubelab/queue night 1
+headline: night.drafts, night.games, night.engine_error_rate
 
 ## Questions this night answers (pre-registered, decided before any data)
 Read them the morning after with `tools/ml/matchup.py train var/cubelab/queue --holdout-cubes all`.
@@ -32,6 +34,10 @@ tools/cubelab.sh queue run --night 1 --drafts 60 --bridge-share 0.2 --chunk 3 --
 python3 tools/ml/matchup_data.py var/cubelab/queue-pilot --out var/ml/matchup-pilot/games.jsonl --check
 node tools/check-redaction.mjs $(ls var/cubelab/queue-pilot/*/*/games/*/g1-seat*.jsonl.gz | head -6)
 ```
+metrics: pilot = cubelab-queue var/cubelab/queue-pilot
+check: pilot.drafts >= 50
+check: pilot.engine_error_rate <= 2%
+check: pilot.recorded_errors == 0
 Checks:
 - The queue run exits 0 with no "FAILED".
 - `--check` prints 0 BAD and at least 50 valid records.
@@ -44,10 +50,16 @@ Record the drafts per hour from the pilot.
 tools/cubelab.sh queue plan --night 1 --drafts 20000 --jobs {workers} > var/cubelab/queue-night-1-plan.txt
 tools/cubelab.sh queue run --night 1 --drafts 20000 --bridge-share 0.2 --jobs {workers} --record-every 1
 ```
+metrics: night = cubelab-queue var/cubelab/queue night 1
+check: night.drafts >= 1000
+check: night.engine_error_rate <= 2%
+check: night.recorded_errors == 0
 20,000 is a ceiling, not a target. If it's still running at 07:30, TERM it: the run is resumable,
 and night 2 continues the seeds.
 
 ## Abort if
+abort: night.games >= 500 and night.engine_error_rate > 2%
+abort: night.recorded_errors > 0
 - More than 2% of the last 500 `[n/m]` lines show `ENGINE ERROR`.
 - More than 5% of games end as timeouts or draws.
 - Any "recording" warning, or "SAVED Forge preferences".
