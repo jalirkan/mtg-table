@@ -19,6 +19,7 @@
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
 //   GET  /health  -> 200 {"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"]}
+//                 (+ "match": 0|1 and, with the launcher, "engine": "running"|"idle", D303/D308)
 //                    or 200 {"ok":false,"helper":1,"error":"<plain words>"} when `claude`
 //                    is missing or `claude --version` fails.  It does not prove a login:
 //                    only a real call can, and a logged-out CLI answers /coach with the
@@ -392,9 +393,10 @@ export function startHelper(opts) {
       if (req.method !== 'GET') { send(res, 405, { type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
       const info = await claudeInfo();
       const matchCap = match && match.available() ? 1 : 0;   // D303
+      const eng = matchCap ? match.engine() : null;           // D308: engine running | idle
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap, ...eng }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap, ...eng }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }

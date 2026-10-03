@@ -14,7 +14,12 @@
 //
 //   GET  /health  gains "match": 1 when play.sh supervises this helper (it was
 //                 started with --match-dir and --supervisor), else "match": 0.
-//   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting",
+//                 and (D308) "engine": "running"|"idle" -- "idle": the engine exited (its
+//                 match is over, or D286's idle limit) and play.sh is waiting for a
+//                 POST /match to start it again; with "idleSince" and "exitsAt" (ISO
+//                 times; exitsAt null = play.sh never gives up, --idle-exit-after 0).
+//                 No "engine" key when "match" is 0.
+//   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","games"}}
 //                 "match" is null until play.sh has written one.
@@ -270,12 +275,24 @@ export function createMatchLauncher(opts) {
 
   const fail = (status, message, extra = {}) => ({ status, body: { ok: false, type: 'error', message, ...extra } });
 
+  // D308: what play.sh says about the engine (var/match/engine.json).  "idle": the
+  // engine has exited (match over, D286's idle limit) and play.sh waits for a
+  // POST /match; no engine.json yet means running.  Null when there is no launcher.
+  const engine = () => {
+    if (!available()) return null;
+    const e = readJson(join(dir, 'engine.json'));
+    if (e?.state !== 'idle') return { engine: 'running' };
+    return { engine: 'idle', idleSince: typeof e.at === 'string' ? e.at : null, exitsAt: typeof e.exitsAt === 'string' ? e.exitsAt : null };
+  };
+
   return {
     available,
+    engine,
     get() {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
-      const cur = readJson(join(dir, 'current.json'));
-      return { status: 200, body: { ok: true, state: busy ? 'restarting' : 'running', match: publicMatch(cur?.match) } };
+      const asleep = engine()?.engine === 'idle';
+      const cur = asleep ? null : readJson(join(dir, 'current.json'));
+      return { status: 200, body: { ok: true, state: busy ? 'restarting' : asleep ? 'idle' : 'running', match: publicMatch(cur?.match) } };
     },
     async post(body) {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');

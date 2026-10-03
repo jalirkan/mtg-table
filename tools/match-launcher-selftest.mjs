@@ -27,7 +27,10 @@
 // engines; a --lan restart keeping the first token; a card the engine's scripts
 // do not know refused (a helper of its own, a tiny cardsfolder.zip and a fake
 // supervisor); /match off without a supervisor; and play.sh's Ctrl-C taking it
-// all down.
+// all down.  D308: the engine exiting on its idle limit (the fake's --idle-timeout)
+// leaves play.sh and the helper up with /health "engine":"idle" and no current
+// match, a POST /match starts a fresh engine from there, Ctrl-C works while asleep,
+// --idle-exit-after ends play.sh by itself, and --no-match keeps the old exit.
 //
 //   node tools/match-launcher-selftest.mjs      # exit 0 iff every check passes; ~30 s
 //
@@ -90,7 +93,7 @@ if (lan) ev({ lanToken: token });
 const sockets = new Set();
 const server = http.createServer((req, res) => {
   if (req.url.startsWith('/health')) { res.end('ok'); return; }
-  ev({ seat: req.url });   // a "seat": held open until this engine dies
+  seated = true; ev({ seat: req.url });   // a "seat": held open until this engine dies
 });
 server.on('connection', (s) => { sockets.add(s); s.on('close', () => sockets.delete(s)); });
 server.on('error', (e) => { ev({ bindError: e.code }); console.error('bind: ' + e.code); bye(1); });
@@ -98,6 +101,16 @@ server.listen(Number(flag('--port')), lan ? '0.0.0.0' : '127.0.0.1', () => {
   console.log('WS LISTENING ws://127.0.0.1:' + flag('--port') + '/ws');
   if (lan) console.log('WS LAN PAGE  http://192.0.2.1:' + flag('--port') + '/?token=' + token);
 });
+// D308: the real bridge's --idle-timeout <sec> (D286): no client ever connected -> exit 1.
+let seated = false;
+const idleS = Number(flag('--idle-timeout') || 0);
+if (idleS > 0) setTimeout(() => {
+  if (seated) return;
+  console.log('ABANDONED: no client connected for ' + idleS + ' s');
+  ev({ idleExit: true });
+  for (const s of sockets) s.destroy();
+  bye(1);
+}, idleS * 1000);
 process.on('SIGTERM', () => {
   // A moment holding the port, as a JVM shutting down does.
   setTimeout(() => { for (const s of sockets) s.destroy(); ev({ exit: true }); bye(0); }, 700);
@@ -117,7 +130,7 @@ const procs = [];
 
 function http({ port, method = 'GET', path = '/health', headers = {}, body }) {
   return new Promise((res, rej) => {
-    const r = request({ host: '127.0.0.1', port, method, path, headers }, (resp) => {
+    const r = request({ host: '127.0.0.1', port, method, path, headers, agent: false }, (resp) => {
       let b = '';
       resp.setEncoding('utf8');
       resp.on('data', (d) => { b += d; });
@@ -313,6 +326,64 @@ try {
   check('its engine is gone', !alive(lastA.pid));
   check('its coach helper is gone', await http({ port: A.coachPort }).then(() => false, () => true));
   check('current.json removed', !existsSync(join(DIR, 'a', 'match', 'current.json')));
+
+  // ------------------------------------------------------------- D308: the engine sleeps
+  console.log('== the engine exits on its idle limit: play.sh and the helper stay up (D308)');
+  const Z = await startPlay(['--', '--idle-timeout', '2'], 'idle');
+  const onZ = () => starts().filter((e) => argOf(e.argv, '--port') === String(Z.port));
+  r = await http({ port: Z.coachPort });
+  check('/health: engine running while it runs', r.json?.match === 1 && r.json?.engine === 'running', r.body);
+  const z1 = onZ()[0];
+  for (let i = 0; i < 100 && alive(z1?.pid); i++) await sleep(100);
+  check('the idle limit stopped the engine', !alive(z1?.pid) && events().some((e) => e.pid === z1.pid && e.idleExit));
+  await sleep(500);
+  check('play.sh stayed up', Z.proc.exitCode === null);
+  r = await http({ port: Z.coachPort });
+  check('/health: engine idle, match 1, with idleSince and exitsAt', r.status === 200 && r.json?.engine === 'idle' && r.json?.match === 1
+    && typeof r.json?.idleSince === 'string' && typeof r.json?.exitsAt === 'string' && r.json.exitsAt > r.json.idleSince, r.body);
+  r = await http({ port: Z.coachPort, path: '/match' });
+  check('GET /match: idle, no current match', r.status === 200 && r.json?.state === 'idle' && r.json?.match === null, r.body);
+  check('no engine answers on the ws port', await http({ port: Z.port }).then(() => false, () => true));
+  check('play.sh said so', /engine asleep/.test(Z.out()));
+  const zn = onZ().length;
+  r = await post(Z.coachPort, req1);
+  check('POST /match while asleep: 200', r.status === 200 && r.json?.ok === true && r.json?.yourDeck?.name === NAME, `${r.status} ${r.body}`);
+  const z2 = onZ();
+  check('a fresh engine started on the new decks', z2.length === zn + 1 && argOf(z2.at(-1).argv, '--deck') === r.json?.yourDeck?.path
+    && argOf(z2.at(-1).argv, '--ai-profile') === 'Reckless' && argOf(z2.at(-1).argv, '--idle-timeout') === '2', z2.at(-1)?.argv?.join(' '));
+  check('never two engines on that port', !events().some((e) => e.overlap && onZ().some((z) => z.pid === e.pid)));
+  r = await http({ port: Z.coachPort });
+  check('/health: engine running again', r.json?.engine === 'running' && r.json?.idleSince === undefined, r.body);
+  r = await http({ port: Z.coachPort, path: '/match' });
+  check('GET /match: running, the new match', r.json?.state === 'running' && r.json?.match?.yourDeck?.name === NAME, r.body);
+  // ...and it can fall asleep again, then Ctrl-C while asleep cleans up.
+  const zlast = z2.at(-1);
+  for (let i = 0; i < 100 && alive(zlast.pid); i++) await sleep(100);
+  await sleep(600);
+  r = await http({ port: Z.coachPort });
+  check('asleep again after the next match', Z.proc.exitCode === null && r.json?.engine === 'idle', r.body);
+  Z.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && Z.proc.exitCode === null; i++) await sleep(50);
+  check('Ctrl-C while asleep: play.sh exited 0', Z.proc.exitCode === 0, String(Z.proc.exitCode));
+  check('...its coach helper is gone', await http({ port: Z.coachPort }).then(() => false, () => true));
+  check('...engine.json and current.json removed', !existsSync(join(DIR, 'idle', 'match', 'engine.json')) && !existsSync(join(DIR, 'idle', 'match', 'current.json')));
+
+  console.log('== --idle-exit-after: play.sh gives up by itself');
+  const X = await startPlay(['--idle-exit-after', '0.05', '--', '--idle-timeout', '1'], 'idlex');
+  for (let i = 0; i < 200 && X.proc.exitCode === null; i++) await sleep(100);
+  check('play.sh exited 0 after the limit', X.proc.exitCode === 0 && /no match request for 0\.05 min/.test(X.out()), `${X.proc.exitCode}\n${X.out().slice(-400)}`);
+  check('...its coach helper is gone', await http({ port: X.coachPort }).then(() => false, () => true));
+  const badArg = await new Promise((res) => {
+    const p = spawn('bash', ['scripts/play.sh', '--engine-only', '--idle-exit-after', 'soon'], { env: { ...process.env, PATH }, stdio: 'ignore' });
+    p.on('exit', (code) => res(code));
+  });
+  check("--idle-exit-after soon is refused", badArg === 1);
+
+  console.log('== --no-match: the old behaviour, play.sh exits with the engine');
+  const M = await startPlay(['--no-match', '--', '--idle-timeout', '1'], 'nomatch');
+  for (let i = 0; i < 100 && M.proc.exitCode === null; i++) await sleep(100);
+  check('play.sh exited when the engine did (rc 1)', M.proc.exitCode === 1 && /the bridge exited \(1\)/.test(M.out()), `${M.proc.exitCode}\n${M.out().slice(-300)}`);
+  check('no sleeping message', !/engine asleep/.test(M.out()));
 
   // ------------------------------------------------------------- the card check, a helper of its own
   console.log("== the card check against the engine's scripts (a tiny cardsfolder.zip)");
