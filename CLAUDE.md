@@ -25,7 +25,7 @@ changing, and the others when a change crosses into them.
 
 | File | What it holds |
 |---|---|
-| [`bridge/CLAUDE.md`](bridge/CLAUDE.md) | The Java bridge: `Snap.java`'s three conventions, the socket's rules, its observers and LAN play, the end of a game, `/health`, the console seat's vocabulary, the build's seven self-tests, and reading Forge's source as prose. |
+| [`bridge/CLAUDE.md`](bridge/CLAUDE.md) | The Java bridge: `Snap.java`'s three conventions, the socket's rules, its observers and LAN play, the end of a game, `/health`, the console seat's vocabulary, the build's eight self-tests, and reading Forge's source as prose. |
 | [`web/CLAUDE.md`](web/CLAUDE.md) | The TypeScript client: the test suites, the board's conventions (M4, M5 and M6 — M6's also bind the bridge's acts, its reset hook and `ActGuard`), the workshop and the story page. |
 | [`web/src/arena/CLAUDE.md`](web/src/arena/CLAUDE.md) | The 3D arena: M7, Tier 2 and its slices (camera views, per-card identity, bodies and duelists), Lanes LOOK, MOTION and BODIES, the status layer (D210–D212), the personal tier's loader (D194–D198), and villain identity (D220–D222, D230–D233). |
 | [`tools/CLAUDE.md`](tools/CLAUDE.md) | The gate step by step, adding a job, CI, the redaction checker's flags, the narrator, the card library with the `#cards` browser, and the personal tier's pipeline (`tools/personal/`, D190–D198). |
@@ -320,7 +320,7 @@ The ten commands a newcomer types most:
 ```bash
 ./tools/make-forge-home.sh                  # once per checkout: Forge's res/, the profile, D14's overlay
 ./tools/check-forge.sh                      # the engine is the pinned one; run it first when anything is strange
-./bridge/build.sh                           # the lint and its self-test, javac, the seven self-tests
+./bridge/build.sh                           # the lint and its self-test, javac, the eight self-tests
 ./scripts/play.sh                           # PLAY: the bridge and the board in your browser (--arena for 3D)
 ./bridge/run.sh mtgtable.MtgTable --transport console --seed 42   # play in the terminal
 ./scripts/spectate.sh                       # watch two AIs play, followed in the arena (--story for #story)

@@ -134,4 +134,13 @@ env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
     -Dsentry.uncaught.handler.enabled=false \
     -cp "$OUT:$FORGE_JAR" mtgtable.WsLanSelfTest "$REPO_ROOT/var/lan-selftest"
 
+# Unit-check the position evaluator's Java half (D316) against its Python half:
+# fixtures/eval/golden.json is tools/ml/eval_golden.py's answer for every
+# decision row of every committed recording -- the rows chosen, every feature,
+# and P(win) from fixtures/eval/model.json -- and Java must reproduce it; a
+# model with another schema id or for another cube is refused; and D305's
+# hidden-zone scrambler, in Java, must change no feature.  No engine and no
+# Forge class beyond Jetty's JSON parser; it writes one temp file and deletes it.
+java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.eval.EvalSelfTest "$REPO_ROOT"
+
 echo "build OK"
