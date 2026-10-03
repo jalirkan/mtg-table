@@ -4,11 +4,11 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 
 - time: 2026-10-03T18:55:12-04:00
 - runner: 5e6ba2a, up since 2026-10-03T14:45:31-04:00
-- running: J027 commands 1/1, 4 worker(s)
+- running: J027 (decision-records pilot re-run) on the runner; then J028, J034, J038, J039
 - load: 8.07 8.60 10.73
 - queue: J028, J034, J038, J039, J040, J041, J042, J043, J044, J045, J046
 - waiting: nothing
-- last finished: J029 done at 2026-10-03T18:53:28-04:00: night.drafts 20000 · night.games 19999 · night.engine_error_rate 0
+- last finished: J029 DONE 18:53 — 20,000 drafts / 19,999 games in 4 h 13 min, 1 engine error, 18 recording errors, 822 files quarantined (see results/J029/summary-pc.md; please confirm 822 is expected)
 
 ## Messages
 
