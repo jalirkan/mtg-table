@@ -1,0 +1,7 @@
+PASS  pilot.generations_done == 1   [pilot.generations_done = 1]
+PASS  pilot.drafts == 20   [pilot.drafts = 20]
+PASS  pilot.engine_errors == 0   [pilot.engine_errors = 0]
+PASS  pex.explore_on == 1   [pex.explore_on = 1]
+PASS  pex.explored_drafts between 3 and 17   [pex.explored_drafts = 12]
+PASS  pex.treated >= 4   [pex.treated = 17]
+PASS  pex.explored_engine_error_rate == 0   [pex.explored_engine_error_rate = 0]

@@ -1,0 +1,68 @@
+==== J038 pilot1 started 2026-10-03T18:59:50-04:00 in unit lab-J038-pilot1, 3 worker(s)
+✔ every committed cube writes back byte for byte, and parse -> write -> parse is identical (25.127473ms)
+✔ a swap: cards move, headings and the format-counts table recount, the version bumps, one log entry (2.066361ms)
+✔ sectionFor: a colour, gold, colourless or a land, as the cube names them (0.912738ms)
+✔ the seed pool parses: 938 cards, WUBRG colours, flags, fixing lands (0.158951ms)
+✔ notes: keep, cut, try; the header row and comments skipped; a bad verdict is an error (1.008709ms)
+✔ the starting cube keeps its own constraints: 180, colour targets, 22 lands, 20 fixing, two signposts a pair (0.282144ms)
+✔ an average cube: no swaps, and no leads (4.011153ms)
+✔ dead and dominant cards are cut, each for a fitting pool card, and every constraint holds (15.514236ms)
+✔ discovery alone cuts nothing: a candidate waits for its confirmation batch, and one that does not repeat stays (4.377527ms)
+✔ an AI-limited card is never cut on AI evidence; a note can; a land is never cut on its deck rate (2.420692ms)
+✔ thresholds: too few drafts, too few games or a wide interval is watch, never a cut (3.187173ms)
+✔ the swap budget; notes keep and try; no AI:RemoveDeck:All add; tabu; human-test candidates (12.74781ms)
+✔ a weak archetype pulls the add toward its themes and colours (1.904975ms)
+✔ a card that was never on colour is not dead (its pair was not drafted); an add is rated at least deadMinRating (1.440867ms)
+✔ a dead card rated under deadMinRating is rating-limited: reported, never cut, no more drafts asked for (3.526214ms)
+✔ applySwaps then writeCubeDoc: a clean 180-card document with the adds in their sections (3.38608ms)
+✔ first-line takes and card stats over the mini fixture; the settle estimate (2.408148ms)
+✔ the log entry, the changelog and a self-contained page (3.161414ms)
+✔ explore: share 0 leaves the draft untouched; the options parse (8.24158ms)
+✔ explore: seeded, the choice deck is the unexplored one, and the forced card is an eligible target (164.947746ms)
+✔ explore: propensity is v / max(sum v, cap), a gold target weighs `gold` (0.168279ms)
+✔ explore: over many seeds the share and the forced decks are what the probabilities say (664.263949ms)
+✔ batchStats: no exploration is exactly the old numbers; with it, counts from choice decks and games from plain drafts (80.381072ms)
+✔ explore estimator: exact sums, weights, and generations pool by adding (0.313614ms)
+✔ explore estimator: the weighted delta recovers the effect where the raw comparison is biased (100.751049ms)
+✔ explore verdicts: holds, weak, undecided, too few (0.608963ms)
+✔ the changelog table pools generations, and explore-health reads an evolve folder (1.231341ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1132.047185
+cube lab evolve: cubes/omega-cube-180.md, pool cubes/omega-seed-pool.tsv, notes cubes/omega-notes.tsv, 1 generation(s) x 20 draft(s) from seed 5100001, 3 job(s), at most 6 swap(s) a generation, out var/cubelab/evolve/omega-explore-calib-pilot, exploring 0.5 of the discovery drafts (D356: cap 4, gold 4, margin 0.1, minDecks 10)
+facts: booting the engine to look up 938 cards ...
+facts: 2.1 s
+== generation 1/1: Omega — the greatest-hits cube, version 1 (180 cards, two-player) (180 cards), seeds 5100001-5100020
+exploring (D356): 0.5 of the drafts; a target rated under 60 forced with probability v / max(sum v, 4), v 4 for gold
+drafted and built 20 draft(s) in 0.1 s; playing 1 game each on 3 worker(s)
+[1/20] seed 5100002: A:UR 1-0 B:WG  games A
+[2/20] seed 5100001: A:UB 1-0 B:WU+b  games A
+[3/20] seed 5100003: A:UB 0-1 B:WU+g  games B
+[4/20] seed 5100004: A:WG 1-0 B:UR+w  games A
+[5/20] seed 5100006: A:WB+r 1-0 B:RG  games A
+[6/20] seed 5100005: A:WG+u 1-0 B:UR  games A
+[7/20] seed 5100007: A:UB 1-0 B:UB  games A
+[8/20] seed 5100010: A:UR 0-1 B:WU  games B
+[9/20] seed 5100008: A:UR 0-1 B:WU  games B
+[10/20] seed 5100009: A:WU+g 0-1 B:UB  games B
+[11/20] seed 5100011: A:UB 0-1 B:WR  games B
+[12/20] seed 5100012: A:WR 0-1 B:UR+b  games B
+[13/20] seed 5100015: A:UR 0-1 B:WB+u  games B
+[14/20] seed 5100013: A:UG 1-0 B:WB  games A
+[15/20] seed 5100014: A:BR 1-0 B:UB  games A
+[16/20] seed 5100018: A:WR+g 1-0 B:WU  games A
+[17/20] seed 5100019: A:WB 1-0 B:WR  games A
+[18/20] seed 5100016: A:UB 1-0 B:WU+b  games A
+[19/20] seed 5100020: A:WB+u 1-0 B:WB  games A
+[20/20] seed 5100017: A:WB+g 0-1 B:RG  games B
+matches: 23 s for 20 (1.1 s a draft wall-clock on 3 worker(s))
+done in 23 s -> var/cubelab/evolve/omega-explore-calib-pilot/gen-01/run/drafts.jsonl
+generation 1: 12 of 20 draft(s) explored (D356); the game rules read the other 8
+generation 1: Insufficient data: no card was confirmed at 20 drafts; 44 lead(s) to watch — about 330 drafts per generation would find half of them. Run more drafts. 32 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).
+done: var/cubelab/evolve/omega-explore-calib-pilot/changelog.md, var/cubelab/evolve/omega-explore-calib-pilot/index.html, var/cubelab/evolve/omega-explore-calib-pilot/omega-cube-180.md
+{"explore_on":1,"generations_done":1,"explored_drafts":12,"plain_drafts":8,"explored_engine_error_rate":0,"plain_engine_error_rate":0,"explored_timeout_rate":0,"plain_timeout_rate":0,"plain_deff_max":1,"plain_mean_min":0.5,"plain_mean_max":0.5,"rating_limited":32,"share":0.6,"share_z":0.8944271909999159,"treated":17,"expected":18,"treated_z":-0.23570226039551587,"pooled_delta":0.0890999040462569,"pooled_se":0.14071016518381896,"balance_diff":-0.31780343573835523,"targets":42,"holds":0,"weak":0,"undecided":0,"too_few":42,"limited_judged":0,"limited_min_treated":0,"limited_median_treated":0}
