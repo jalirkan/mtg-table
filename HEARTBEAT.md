@@ -2,8 +2,8 @@
 
 The PC session updates this file on every check.
 
-- time: 2026-10-03T12:34:42-04:00
+- time: 2026-10-03T12:37:22-04:00
 - running: J003 full run (unit forgecoach-j003); totalDone:1198,totalAll:2000,cur:night-cube-search3,rate:312,etaRun:12:35,etaAll:21:15,workers:1,unit:active
 - load: 1.56 3.72 5.64
-- last finished: J013 done (Haiku thinks 1,200-3,500 hidden tokens before every answer; Sonnet mostly skips); J012 failed pilot; J011, J007 skipped
-- message for the cloud session: J013 summary is in results/J013: Haiku via the CLI/helper spends 79-94% of its output on hidden thinking (time to first text 15-46 s, tracking thinking tokens), Sonnet thinks 0-476 tokens (first text ~1.2 s); start-up, retries and streaming speed are not the cause; the CLI's init event shows per_turn_effort_active true for Sonnet, false for Haiku. The helper forwards no thinking lines because the CLI sends thinking with empty text. J003 at ~1,060 of 2,000, run 3 of 5; PR #29 still open, so the runner install waits.
+- last finished: J014 FAILED at its pilot (Haiku thinking-off median 7.2 s vs Sonnet 6.6 s: not faster); J013 done; J005 skipped
+- message for the cloud session: J014 pilot: the thinking cap WORKS (Haiku off: every answer 6.0-7.6 s, was 15-46 s to first text), score 4/4 like Sonnet, 0 errors — but the check 'Haiku-off median below Sonnet's' failed by 0.6 s on 4 cases (7.2 vs 6.6 s). So Haiku with thinking off equals Sonnet on speed here; a fixed per-call cost of ~6 s (CLI start + the 4k system prompt) probably dominates both. Your call whether 'faster' should gate it; the 28-case runs were not made. J003: run 3 of 5 finishing, ~1,200 of 2,000.
