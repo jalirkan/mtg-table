@@ -4,3 +4,5 @@ started: 2026-10-03T19:13:10-04:00
 phase: pilot 1/1
 mtg-table: 0f1511e
 workers: 3
+peak_worker_rss_gb: 1.11
+pressure-1: 2026-10-03T19:13:57-04:00 drop to 2 worker(s): some avg10 17.4%, swap-in 3/s, job 2.9/21.4 GB

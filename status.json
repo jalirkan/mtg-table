@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-03T19:13:37-04:00",
- "heartbeat": "2026-10-03T19:13:37-04:00",
+ "updated": "2026-10-03T19:13:58-04:00",
+ "heartbeat": "2026-10-03T19:13:58-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.27,
-  "memUsedGb": 6.2,
+  "load1": 8.38,
+  "memUsedGb": 8.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3324,
-  "pressure": 12.75,
+  "swapUsedMb": 3404,
+  "pressure": 17.36,
   "cpus": 16,
   "budgetGb": 23.4
  },
@@ -24,18 +24,18 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-03T19:13:10-04:00",
-   "elapsed": 27,
+   "elapsed": 48,
    "done": 0,
    "total": 0,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
+   "workers": 2,
    "workersMax": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-03T19:13:10-04:00",
-   "memGb": 0,
+   "memGb": 2.94,
    "live": {
     "big.generations_done": 0,
     "big.drafts": 0,
@@ -70,7 +70,14 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
+   "pressureEvents": [
+    {
+     "at": "2026-10-03T19:13:57-04:00",
+     "kind": "drop",
+     "workers": 2,
+     "pressure": 17.4
+    }
+   ],
    "detail": "lab-J039-pilot1"
   }
  ],
