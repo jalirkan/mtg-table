@@ -341,20 +341,22 @@ on its own. Each card is then assessed:
 
 | status | when |
 |---|---|
-| `dead` | dealt in ≥ `minSeen` drafts, and the Wilson 95% upper bound of *decks it was played in ÷ drafts it was dealt in* is ≤ `deadDeckRateHi` |
+| `dead` | it sat in a drafter's pool whose played deck could cast it (its colours within the deck's, splash included) ≥ `minOnColour` times, and the Wilson 95% upper bound of *the share of those decks that played it* is ≤ `deadPlayRateHi`: passed over when it was there to play. A gold card of a pair nobody drafted is not dead — it never had the chance (the changelog names such pairs) |
 | `dominant-win` | ≥ `minGames` decisive games in played decks, and the Wilson lower bound of its win rate is ≥ the run's mean + `dominantLoMargin` |
 | `dominant-pick` | dealt in ≥ `minSeen` drafts, the Wilson lower bound of its first-line rate is ≥ `dominantFirstPickLo`, and its shrunk win rate is at least the mean |
 | `note-cut` / `note-keep` | the notes file says `cut` / `keep` (or `try` for a card already in) |
 | `ai-limited` | Forge marks it `AI:RemoveDeck:All` or `:Random` (the pool's `forge_ai_flag`, or the engine's own facts): its numbers are reported, the status the AI evidence alone would give is shown beside them, and **only a note can cut it** |
 | `builder-limited` | a land with a low deck rate: the lab's deckbuilder plays a dual or fetchland only in its own pair's decks and a colourless land (Mutavault) never, so a land's deck rate measures how often its pair is drafted, not the land; a land goes only by a note or by dominance |
 | `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the drafters pick by rating, so the data cannot tell a weak card from an underrated one; **never cut** — raise its rating in the cube's ratings TSV (`tools/cubelab.sh ratings init`, then `--ratings`) to test it |
-| `watch` | a lead — deck rate at or under `deadDeckRateHi`, or win rate `watchWinMargin` over the mean — that has **not** passed its threshold: *insufficient data*, with the drafts per generation that would likely settle it |
+| `watch` | a lead — an on-colour play rate at or under `deadPlayRateHi`, or a win rate `watchWinMargin` over the mean — that has **not** passed its threshold: *insufficient data*, with the drafts per generation that would likely settle it |
 
 **The swaps.** The cuts, in order — notes, then dominant by wins, by picks,
 then dead, strongest first — each take the best-fitting pool card that keeps
 every constraint, at most `swaps` a generation. A pool card is eligible when
-Forge supports it, it is not in the cube, it has at most two colours, no note
-says `cut` and no earlier generation cut it, and it is **not
+Forge supports it, it is not in the cube, it has at most two colours, it is
+rated at least `deadMinRating` (a card the drafters undervalue would only come
+back `rating-limited`), no note says `cut` and no earlier generation cut it,
+and it is **not
 `AI:RemoveDeck:All`** (the AI cannot judge it) unless a note says `try`. Its
 fit with the card it replaces is `fitSameClass` for the same colour class
 (the same mono colour, the same gold pair, colourless, or a land) +
@@ -411,10 +413,11 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | knob | default | what it does |
 |---|---|---|
 | `swaps` | 6 | at most this many swaps a generation |
-| `minSeen` | 15 | drafts a card must be dealt in before deck-rate or first-pick evidence counts |
+| `minSeen` | 15 | drafts a card must be dealt in before first-pick evidence counts |
 | `minGames` | 20 | decisive games in played decks before win-rate evidence counts |
-| `deadDeckRateHi` | 0.15 | dead: the upper bound of its deck rate is at most this |
-| `deadMinRating` | 60 | a dead card rated under this is `rating-limited`, never cut |
+| `minOnColour` | 8 | on-colour pools a card must have sat in before play-rate evidence counts |
+| `deadPlayRateHi` | 0.35 | dead: the upper bound of its on-colour play rate is at most this |
+| `deadMinRating` | 60 | a dead card rated under this is `rating-limited`, never cut; and no pool card rated under it is added (unless a note says `try`) |
 | `dominantLoMargin` | 0.05 | dominant: the lower bound of its win rate is this far over the mean |
 | `dominantFirstPickLo` | 0.75 | dominant by picks: the lower bound of its first-line rate |
 | `watchWinMargin` | 0.12 | a win rate this far over the mean is a lead to watch |
@@ -430,8 +433,8 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | `dominantReplaceRatio` | 0.9 | a dominant card's replacement is rated up to this share of it |
 | `humanTest` | 10 | human-test candidates listed |
 
-With 30 drafts a generation a card is dealt about 27 times and plays some 10–25
-decisive games, so only clear cases pass; the changelog's *insufficient data*
+With 30 drafts a generation a card is dealt about 27 times, sits on colour in
+some 5–15 pools and plays some 10–25 decisive games, so only clear cases pass; the changelog's *insufficient data*
 table says how many drafts would settle the rest. Two hundred drafts a
 generation is where most leads resolve.
 

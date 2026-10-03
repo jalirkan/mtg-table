@@ -142,9 +142,13 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
   let state = fresh;
   if (fs.existsSync(stateFile)) {
     const old = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as State;
-    const key = (s: State): string => JSON.stringify([s.startSha, s.poolSha, s.drafts, s.seed, s.games, s.profiles, s.weights, s.knobs]);
-    if (key(old) !== key(fresh)) throw new Error(`${o.out} holds an evolve run with a different cube, pool, drafts, seed, games, profiles, weights or knobs -- use a new --out`);
-    state = old;
+    const key = (s: State): string => JSON.stringify([s.startSha, s.poolSha, s.drafts, s.seed, s.games, s.profiles, s.weights]);
+    if (key(old) !== key(fresh)) throw new Error(`${o.out} holds an evolve run with a different cube, pool, drafts, seed, games, profiles or weights -- use a new --out`);
+    // The knobs only decide the swaps: they may change while no generation has been decided under the old ones.
+    old.generations = old.generations.filter((r) => fs.existsSync(path.join(o.out, `gen-${pad(r.gen)}`, 'result.json')));
+    const knobsMoved = JSON.stringify(old.knobs) !== JSON.stringify(fresh.knobs);
+    if (knobsMoved && old.generations.length > 0) throw new Error(`${o.out} has generation(s) decided under other knobs -- use a new --out, or delete their result.json files and the generations after them`);
+    state = knobsMoved ? { ...old, knobs: fresh.knobs, constraints: fresh.constraints } : old;
     if (state.generations.length) say(`resuming: ${state.generations.length} generation(s) done in ${o.out}`);
   }
   const save = (): void => fs.writeFileSync(stateFile, `${JSON.stringify(state, null, 2)}\n`);

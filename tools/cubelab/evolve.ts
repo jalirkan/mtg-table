@@ -9,9 +9,13 @@
 //
 // A CUT needs evidence that passes a threshold (the knobs below), or a note:
 //
-//   dead           dealt in >= minSeen drafts, and the Wilson 95% upper bound
-//                  of (decks it was played in / drafts it was dealt in) is at
-//                  most deadDeckRateHi — rarely played, and we are sure of it;
+//   dead           in a drafter's pool whose played deck could cast it (its
+//                  colours within the deck's, splash included) at least
+//                  minOnColour times, and the Wilson 95% upper bound of the
+//                  share of those decks that played it is at most
+//                  deadPlayRateHi — passed over when it was there to play, and
+//                  we are sure of it (a gold card of a pair nobody drafts is
+//                  not dead: it never had the chance);
 //   dominant-win   >= minGames decisive games in played decks, and the Wilson
 //                  lower bound of its win rate is at least the run's mean +
 //                  dominantLoMargin — wins more, and we are sure of it;
@@ -38,7 +42,8 @@
 //     tell which — raise its rating in the cube's ratings TSV to test it.
 //
 // An ADD comes from the pool: supported by Forge, not in the cube, at most two
-// colours, never cut by an earlier generation or a note, and never an
+// colours, rated at least deadMinRating (a card the drafters undervalue would
+// only come back as rating-limited), never cut by an earlier generation or a note, and never an
 // AI:RemoveDeck:All card (the AI cannot evaluate it) unless the notes say
 // `try`; those are listed as HUMAN-TEST candidates instead.  Candidates are
 // ranked by fit with the card they replace — the same colour class, shared
@@ -70,7 +75,8 @@ export interface EvolveKnobs {
   swaps: number;
   minSeen: number;
   minGames: number;
-  deadDeckRateHi: number;
+  minOnColour: number;
+  deadPlayRateHi: number;
   deadMinRating: number;
   dominantLoMargin: number;
   dominantFirstPickLo: number;
@@ -92,7 +98,8 @@ export const EVOLVE_DEFAULTS: EvolveKnobs = {
   swaps: 6,
   minSeen: 15,
   minGames: 20,
-  deadDeckRateHi: 0.15,
+  minOnColour: 8,
+  deadPlayRateHi: 0.35,
   deadMinRating: 60,
   dominantLoMargin: 0.05,
   dominantFirstPickLo: 0.75,
@@ -315,6 +322,9 @@ export interface CardStat {
   inDecks: number;
   /** Played decks per draft dealt in. */
   deckRate: number;
+  /** Times it sat in a pool whose played deck could cast it, and how many of those decks played it. */
+  onColour: number;
+  onColourDecks: number;
   games: number;
   wins: number;
   winRate: number;
@@ -348,12 +358,24 @@ export function firstTakes(recs: DraftRecord[]): Map<string, number> {
 export function cardStats(meta: MetaDoc, recs: DraftRecord[], info?: Record<string, CardInfo>): Map<string, CardStat> {
   const ft = firstTakes(recs);
   const lands = new Map<string, { decks: number; games: number; wins: number }>();
+  const onCol = new Map<string, { pools: number; decks: number }>();
   if (info) {
     for (const rec of recs) for (const k of [0, 1] as const) {
       const me = k === 0 ? 'A' : 'B';
       const decisive = rec.match.games.filter((g) => g.winner !== 'draw');
       const won = decisive.filter((g) => g.winner === me).length;
-      for (const name of new Set(playedDeck(rec, k, info).main.map(([, n]) => n))) {
+      const pd = playedDeck(rec, k, info);
+      const main = new Set(pd.main.map(([, n]) => n));
+      const cols = `${pd.key}${pd.splash ?? ''}`;
+      for (const name of new Set(rec.drafters[k].pool)) {
+        const i = info[name];
+        if (!i || i.land || ![...i.colors].every((c) => cols.includes(c))) continue;
+        const o = onCol.get(name) ?? { pools: 0, decks: 0 };
+        o.pools++;
+        if (main.has(name)) o.decks++;
+        onCol.set(name, o);
+      }
+      for (const name of main) {
         if (!info[name]?.land) continue;
         const o = lands.get(name) ?? { decks: 0, games: 0, wins: 0 };
         o.decks++; o.games += decisive.length; o.wins += won;
@@ -374,7 +396,8 @@ export function cardStats(meta: MetaDoc, recs: DraftRecord[], info?: Record<stri
     const f = ft.get(name) ?? 0;
     out.set(name, {
       name, seen: c.seen, picked: c.picked, pickRate: c.pickRate, firstTakes: f, firstPickRate: c.seen ? f / c.seen : 0,
-      inDecks: c.inDecks, deckRate: c.seen ? c.inDecks / c.seen : 0, games: c.games, wins: c.wins, winRate: c.winRate,
+      inDecks: c.inDecks, deckRate: c.seen ? c.inDecks / c.seen : 0,
+      onColour: onCol.get(name)?.pools ?? 0, onColourDecks: onCol.get(name)?.decks ?? 0, games: c.games, wins: c.wins, winRate: c.winRate,
       shrunk: c.winRateShrunk, ci: c.ci,
     });
   }
@@ -448,34 +471,36 @@ export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, 
     const st: Status = note?.verdict === 'cut' ? 'note-cut' : note?.verdict === 'keep' ? 'note-keep' : 'no-data';
     return { ...base, status: st, signal: 'none', evidence: 'never dealt', strength: st === 'note-cut' ? 100 : 0 };
   }
-  const deck = wilson(s.inDecks, s.seen);
+  const play = wilson(s.onColourDecks, s.onColour);
+  const playRate = s.onColour ? s.onColourDecks / s.onColour : 0;
   const first = wilson(s.firstTakes, s.seen);
-  const ev = `dealt ${s.seen}, picked ${s.picked}, first line ${s.firstTakes}, in ${s.inDecks} deck(s) (deck rate ${pct(s.deckRate)}, CI ${pct(deck.lo ?? 0)}–${pct(deck.hi ?? 1)}); `
+  const ev = `dealt ${s.seen}, picked ${s.picked}, first line ${s.firstTakes}, in ${s.inDecks} deck(s); `
+    + (card.land ? '' : s.onColour ? `on colour in ${s.onColour} pool(s), played in ${s.onColourDecks} (${pct(playRate)}, CI ${pct(play.lo ?? 0)}–${pct(play.hi ?? 1)}); ` : 'never in a pool whose deck could cast it; ')
     + (s.games ? `won ${s.wins} of ${s.games} decisive games (${pct(s.winRate)}, CI ${pct(s.ci[0])}–${pct(s.ci[1])}, shrunk ${pct(s.shrunk)}) vs mean ${pct(mean)}` : 'no decisive games in a deck');
   // What the AI evidence says.
   let signal: Assessment['signal'] = 'none';
   let strength = 0;
   let draftsNeeded: number | null | undefined;
-  const perDraftSeen = s.seen / Math.max(1, drafts);
+  const perDraftOnColour = s.onColour / Math.max(1, drafts);
   const perDraftGames = s.games / Math.max(1, drafts);
   const builderBlind = card.land;
   if (s.games >= k.minGames && s.ci[0] >= mean + k.dominantLoMargin) { signal = 'dominant-win'; strength = 10 + (s.ci[0] - mean) * 10; }
   else if (s.seen >= k.minSeen && (first.lo ?? 0) >= k.dominantFirstPickLo && s.shrunk >= mean) { signal = 'dominant-pick'; strength = 5 + (first.lo ?? 0); }
-  else if (s.seen >= k.minSeen && (deck.hi ?? 1) <= k.deadDeckRateHi) { signal = 'dead'; strength = 1 + (k.deadDeckRateHi - (deck.hi ?? 1)); }
+  else if (!card.land && s.onColour >= k.minOnColour && (play.hi ?? 1) <= k.deadPlayRateHi) { signal = 'dead'; strength = 1 + (k.deadPlayRateHi - (play.hi ?? 1)); }
   else if (s.games > 0 && s.winRate >= mean + k.watchWinMargin) {
     signal = 'lean-dominant';
     const n = sampleToSettle(s.winRate, mean + k.dominantLoMargin, false);
     draftsNeeded = n === null || perDraftGames === 0 ? null : Math.max(Math.ceil(Math.max(n, k.minGames) / perDraftGames), drafts + 1);
-  } else if (s.deckRate <= k.deadDeckRateHi) {
+  } else if (!card.land && s.onColour > 0 && playRate <= k.deadPlayRateHi) {
     signal = 'lean-dead';
-    const n = sampleToSettle(Math.max(s.deckRate, 0.001), k.deadDeckRateHi, true);
-    draftsNeeded = n === null ? null : Math.max(Math.ceil(Math.max(n, k.minSeen) / perDraftSeen), drafts + 1);
+    const n = sampleToSettle(Math.max(playRate, 0.001), k.deadPlayRateHi, true);
+    draftsNeeded = n === null ? null : Math.max(Math.ceil(Math.max(n, k.minOnColour) / perDraftOnColour), drafts + 1);
   }
   const out: Assessment = { ...base, status: 'ok', signal, evidence: ev, strength, ...(draftsNeeded !== undefined ? { draftsNeeded } : {}) };
   if (note?.verdict === 'cut') return { ...out, status: 'note-cut', strength: 100 };
   if (note?.verdict === 'keep' || note?.verdict === 'try') return { ...out, status: 'note-keep', strength: 0 };
   if (card.aiFlag !== 'none') return { ...out, status: 'ai-limited', strength: 0 };
-  if (builderBlind && s.deckRate <= k.deadDeckRateHi) return { ...out, status: 'builder-limited', strength: 0 };
+  if (builderBlind && s.inDecks / Math.max(1, s.seen) <= k.deadPlayRateHi) return { ...out, status: 'builder-limited', strength: 0 };
   if ((signal === 'dead' || signal === 'lean-dead') && card.rating < k.deadMinRating) {
     return { ...out, signal: 'dead', status: 'rating-limited', strength: 0, evidence: `${ev}; rated ${card.rating}, under ${k.deadMinRating}` };
   }
@@ -571,6 +596,7 @@ export function selectSwaps(x: SelectInput): Decision {
   const noteCut = new Set([...x.notes.values()].filter((n) => n.verdict === 'cut').map((n) => n.card));
   const eligible = (p: PoolCard): boolean => p.supported && !inCube.has(p.name) && p.colors.length <= 2
     && !noteCut.has(p.name) && (!x.tabu.has(p.name) || tries.has(p.name)) && (p.aiFlag !== 'All' || tries.has(p.name))
+    && (p.rating >= k.deadMinRating || tries.has(p.name))
     && !['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes'].includes(p.name);
   const pool = x.pool.filter(eligible);
 

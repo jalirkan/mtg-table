@@ -152,12 +152,12 @@ const OMEGA = parseCube(read('cubes/omega-cube-180.md'));
 const CARDS = evolveCards(OMEGA, POOL_BY);
 const C0 = constraintsOf(CARDS, K);
 
-/** Every card average: dealt 27 times, in 8 decks, 20 decisive games at 10 wins. */
+/** Every card average: dealt 27 times, on colour in 10 pools and played in 8 of them, 20 decisive games at 10 wins. */
 function stats(over: Record<string, Partial<CardStat>> = {}): Map<string, CardStat> {
   const m = new Map<string, CardStat>();
   for (const c of OMEGA.cards) {
     const s: CardStat = {
-      name: c.name, seen: 27, picked: 16, pickRate: 0.59, firstTakes: 9, firstPickRate: 1 / 3, inDecks: 8, deckRate: 8 / 27,
+      name: c.name, seen: 27, picked: 16, pickRate: 0.59, firstTakes: 9, firstPickRate: 1 / 3, inDecks: 8, deckRate: 8 / 27, onColour: 10, onColourDecks: 8,
       games: 20, wins: 10, winRate: 0.5, shrunk: 0.5, ci: [0.3, 0.7], ...over[c.name],
     };
     s.deckRate = s.inDecks / s.seen;
@@ -167,7 +167,7 @@ function stats(over: Record<string, Partial<CardStat>> = {}): Map<string, CardSt
   return m;
 }
 const BAL: Balance = { mean: 0.5, colours: [], pairs: [], themes: [] };
-const DEAD: Partial<CardStat> = { inDecks: 0, games: 0, wins: 0, winRate: 0, ci: [0, 1] };
+const DEAD: Partial<CardStat> = { inDecks: 0, onColourDecks: 0, games: 0, wins: 0, winRate: 0, ci: [0, 1] };
 function input(over: Partial<SelectInput> = {}): SelectInput {
   return { cube: OMEGA, cards: CARDS, pool: POOL, stats: stats(), balance: BAL, drafts: 30, constraints: C0, notes: new Map(), tabu: new Set(), knobs: K, ...over };
 }
@@ -236,8 +236,8 @@ test('an AI-limited card is never cut on AI evidence; a note can; a land is neve
 
 test('thresholds: too few drafts, too few games or a wide interval is watch, never a cut', () => {
   const d = selectSwaps(input({ stats: stats({
-    'Doom Blade': { ...DEAD, seen: 10 },                                     // dead-looking, dealt only 10 times
-    'Mana Leak': { inDecks: 2 },                                             // 2 of 27: the interval reaches past 0.15
+    'Doom Blade': { ...DEAD, onColour: 5 },                                  // never played, but on colour only 5 times
+    'Mana Leak': { onColourDecks: 3 },                                       // 3 of 10: the interval reaches past 0.35
     'Sheoldred, the Apocalypse': { games: 12, wins: 10, winRate: 10 / 12, shrunk: 0.6, ci: [0.55, 0.95] }, // few games
     'Grave Titan': { games: 30, wins: 20, winRate: 2 / 3, shrunk: 0.6, ci: [0.49, 0.8] },                  // CI touches the mean
   }) }));
@@ -246,7 +246,7 @@ test('thresholds: too few drafts, too few games or a wide interval is watch, nev
   for (const w of d.watch) assert.ok(w.draftsNeeded === null || (w.draftsNeeded as number) > 30, w.name);
   assert.match(d.verdict, /^Insufficient data/);
   // Knobs move the thresholds.
-  const loose = selectSwaps(input({ stats: stats({ 'Doom Blade': { ...DEAD, seen: 10 } }), knobs: { ...K, minSeen: 10, deadDeckRateHi: 0.3 } }));
+  const loose = selectSwaps(input({ stats: stats({ 'Doom Blade': { ...DEAD, onColour: 5 } }), knobs: { ...K, minOnColour: 5, deadPlayRateHi: 0.5 } }));
   assert.deepEqual(loose.swaps.map((s) => s.out), ['Doom Blade']);
 });
 
@@ -284,9 +284,22 @@ test('a weak archetype pulls the add toward its themes and colours', () => {
   assert.match(d.swaps[0]?.fit ?? '', /helps weak/);
 });
 
+test('a card that was never on colour is not dead (its pair was not drafted); an add is rated at least deadMinRating', () => {
+  const d = selectSwaps(input({ stats: stats({ "Kolaghan's Command": { ...DEAD, onColour: 0 } }) }));
+  assert.deepEqual(d.swaps, []);
+  const kc = d.assessments.find((a) => a.name === "Kolaghan's Command");
+  assert.equal(kc?.status, 'ok');
+  assert.match(kc?.evidence ?? '', /never in a pool whose deck could cast it/);
+  // Rate every pool card under the bar: a dead card finds no replacement.
+  const lowPool = POOL.map((p) => ({ ...p, rating: 50 }));
+  const none = selectSwaps(input({ pool: lowPool, stats: stats({ 'Doom Blade': DEAD }) }));
+  assert.deepEqual(none.swaps, []);
+  assert.deepEqual(none.unmatched.map((u) => u.name), ['Doom Blade']);
+});
+
 test('a dead card rated under deadMinRating is rating-limited: reported, never cut, no more drafts asked for', () => {
   const low = CARDS.map((c) => (c.name === 'Doom Blade' || c.name === 'Mana Leak' ? { ...c, rating: 35 } : c));
-  const d = selectSwaps(input({ cards: low, stats: stats({ 'Doom Blade': DEAD, 'Mana Leak': { inDecks: 2 }, Ponder: DEAD }) }));
+  const d = selectSwaps(input({ cards: low, stats: stats({ 'Doom Blade': DEAD, 'Mana Leak': { onColourDecks: 3 }, Ponder: DEAD }) }));
   assert.deepEqual(d.swaps.map((s) => s.out), ['Ponder']);
   for (const n of ['Doom Blade', 'Mana Leak']) {
     const a = d.assessments.find((x) => x.name === n);
@@ -330,6 +343,11 @@ test('first-line takes and card stats over the mini fixture; the settle estimate
   const mf = st.get('Mist Fountain') as CardStat;
   assert.deepEqual([mf.inDecks, mf.games, mf.wins], [1, 3, 2], 'seed 1 A played it: A won games 1 and 3');
   assert.equal(st.get('Wing Scout')?.inDecks, cardStats(doc, recs).get('Wing Scout')?.inDecks, 'a spell is as meta.json counts it');
+  // On colour: Wing Scout sat in two pools whose decks could cast it (seed 1 A, seed 3 B) and both played it.
+  const wsc = st.get('Wing Scout') as CardStat;
+  assert.deepEqual([wsc.onColour, wsc.onColourDecks], [2, 2]);
+  for (const x of st.values()) assert.ok(x.onColourDecks <= x.onColour && x.onColourDecks <= x.inDecks, x.name);
+  assert.equal(mf.onColour, 0, 'a land has no on-colour count');
   const ws = st.get('Wing Scout') as CardStat;
   assert.equal(ws.firstTakes, 1);
   assert.equal(ws.deckRate, ws.inDecks / ws.seen);

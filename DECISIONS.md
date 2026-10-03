@@ -13358,14 +13358,15 @@ greatest-hits cube that evolves by simulation)
 cube going in, reads every card's numbers from `buildMeta` (D297) plus the share
 of its grids in which it went in the first line taken, and assesses each card
 (`tools/cubelab/evolve.ts`, pure). A card is cut only when its evidence passes a
-threshold: **dead** (the Wilson upper bound of its deck rate per draft dealt is
-at most 0.15, dealt in at least 15 drafts), **dominant by wins** (the Wilson
+threshold: **dead** (it sat at least 8 times in a pool whose played deck could
+cast it, and the Wilson upper bound of the share of those decks that played it
+is at most 0.35), **dominant by wins** (the Wilson
 lower bound of its win rate at least the run's mean + 0.05, over at least 20
 decisive games) or **dominant by picks** (the lower bound of its first-line
 rate at least 0.75, and a shrunk win rate at least the mean); a lead short of
 its threshold is reported as *insufficient data* with the drafts per
 generation that would likely settle it. At most six swaps a generation; each
-cut takes the best-fitting pool card (colour class, shared themes and roles,
+cut takes the best-fitting pool card rated at least `deadMinRating` (colour class, shared themes and roles,
 mana value, rating — capped below the cut's when it was dominant — and how much
 it helps the themes and colours winning least) that keeps every constraint of
 the starting cube: its size, singleton, each colour's nonland count within 2,
@@ -13406,8 +13407,15 @@ every existing run folder's resume).
 games; at that size most differences are inside the interval, and a loop that
 swapped on point estimates would chase noise and oscillate. Thresholds on the
 interval's edge make a swap mean something and make "run more drafts" the
-honest answer otherwise. Deck rate is per draft *dealt*, not per pick, because
-a card nobody picks is as dead as one picked and benched. The first-line rate
+honest answer otherwise. "Dead" is measured where the card had its chance — in
+a pool whose deck could cast it — because a deck rate per draft dealt mixes the
+card with its colours' popularity: Kolaghan's Command, rated 67, was picked 18
+times in Omega's 30 drafts and never played, because no BR deck was built; that
+says something about BR, which the changelog reports, not about the card. An
+added card must be rated at least `deadMinRating` for the same reason a
+low-rated card is never cut: the drafters would pass it over and the next
+generation would learn nothing (the first full selection swapped Kolaghan's
+Command for Carnage Interpreter, which Forge has no rank for). The first-line rate
 is the grid's version of "first pick": 3 of 9 cards go there at random.
 
 **Rejected.** Cutting the lowest shrunk win rates each generation (a fixed

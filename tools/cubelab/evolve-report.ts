@@ -81,6 +81,9 @@ export function changelogSection(g: GenSummary): string {
     out.push('');
   }
   if (d.pendingTries.length) out.push(`**Notes say try, not yet in:** ${d.pendingTries.join(', ')} (a try needs a supported cut to replace).`, '');
+  const PAIRS = ['WU', 'UB', 'BR', 'RG', 'WG', 'WB', 'UR', 'BG', 'WR', 'UG'];
+  const never = PAIRS.filter((p) => !g.balance.pairs.some((x) => x.key === p));
+  if (never.length) out.push(`**Pairs no played deck used:** ${never.join(', ')} — their gold cards and duals never had a deck to be in; a balance question for the pair, not the cards.`, '');
   out.push('**Balance by colour pair** (decisive games of the played decks):', '', '| Pair | Decks | Games | Win rate | 95% CI | Shrunk |', '|---|---|---|---|---|---|', ...groupRows(g.balance.pairs), '');
   if (d.violationsAfter.length) out.push(`**Constraints:** ${d.violationsAfter.join('; ')}.`, '');
   return out.join('\n');
