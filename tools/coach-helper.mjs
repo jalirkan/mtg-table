@@ -19,14 +19,15 @@
 //
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
-//   GET  /health  -> 200 {"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"]}
+//   GET  /health  -> 200 {"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"],
+//                          "thinking":["off","low","default"]}         ("thinking": D346)
 //                 (+ "match": 0|1 and, with the launcher, "engine": "running"|"idle", D303/D308)
 //                    or 200 {"ok":false,"helper":1,"error":"<plain words>"} when `claude`
 //                    is missing or `claude --version` fails.  It does not prove a login:
 //                    only a real call can, and a logged-out CLI answers /coach with the
 //                    error line below.
 //   POST /coach   {"system": string, "user": string, "model"?: "opus"|"sonnet"|"haiku",
-//                  "supersedes"?: string}
+//                  "supersedes"?: string, "thinking"?: "off"|"low"|"default"}
 //                 (default "sonnet"; body at most 512 KB, else 413)
 //                 -> 200 Content-Type: application/x-ndjson, one JSON object a line:
 //                    {"type":"text","text":"<delta>"}            ... the answer, as it streams
@@ -63,6 +64,21 @@
 //                    {"type":"error","code":"superseded","message":"superseded by a newer question"}
 //   (its one terminal line) and takes its place at the back of the queue.  A
 //   RUNNING question is never superseded: the client cancels it by disconnecting.
+//
+//   THINKING (D346).  /coach also takes "thinking": "off" | "low" | "default"
+//   (absent = "default"; anything else, null included, is 400).  It caps the
+//   model's extended thinking through the two environment variables Claude Code
+//   documents for it (code.claude.com/docs/en/env-vars, model-config "Extended
+//   thinking" and "Adjust effort level"), set on the child's env and nowhere else:
+//                    default  the env as it is (exactly the run before D346)
+//                    low      MAX_THINKING_TOKENS=1024 CLAUDE_CODE_EFFORT_LEVEL=low
+//                    off      MAX_THINKING_TOKENS=0    CLAUDE_CODE_EFFORT_LEVEL=low
+//   MAX_THINKING_TOKENS is the fixed budget of a model with no effort levels
+//   (Haiku: 0 turns thinking off, 1024 is the CLI's floor); the effort level is
+//   what a model with adaptive reasoning reads instead (Sonnet, Opus), whose
+//   thinking cannot be turned off, so "off" is "as little as it allows" there.
+//   /health advertises "thinking": ["off","low","default"]; an older helper has
+//   no such key and would ignore the field.
 //
 //   /health then also carries "concurrency": 1, "queue": {"max": <n>, "length":
 //   <waiting now>}, "running": 0|1 and "supersedes": 1.  An older helper has none
@@ -123,6 +139,13 @@ export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
 export const DEFAULT_MODEL = 'sonnet';
 export const DEFAULT_PORT = 8643;
+export const THINKING = ['off', 'low', 'default'];   // D346
+/** The child's extra environment for a "thinking" value (D346); {} for "default". */
+export function thinkingEnv(thinking) {
+  if (thinking === 'off') return { MAX_THINKING_TOKENS: '0', CLAUDE_CODE_EFFORT_LEVEL: 'low' };
+  if (thinking === 'low') return { MAX_THINKING_TOKENS: '1024', CLAUDE_CODE_EFFORT_LEVEL: 'low' };
+  return {};
+}
 export const MAX_BODY = 512 * 1024;
 export const DEFAULT_QUEUE_MAX = 4;
 export const MAX_SUPERSEDE_KEY = 200;
@@ -428,7 +451,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
@@ -467,11 +490,13 @@ export function startHelper(opts) {
     try { q = JSON.parse(body); } catch { send(res, 400, { type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
     const model = q?.model ?? DEFAULT_MODEL;
     if (!q || typeof q.system !== 'string' || typeof q.user !== 'string' || q.user.trim() === '') {
-      send(res, 400, { type: 'error', message: 'expected {"system": string, "user": non-empty string, "model"?: "opus"|"sonnet"|"haiku", "supersedes"?: string}' }, cors);
+      send(res, 400, { type: 'error', message: 'expected {"system": string, "user": non-empty string, "model"?: "opus"|"sonnet"|"haiku", "supersedes"?: string, "thinking"?: "off"|"low"|"default"}' }, cors);
       say(400);
       return;
     }
     if (!MODELS.includes(model)) { send(res, 400, { type: 'error', message: `model must be one of ${MODELS.join(', ')}` }, cors); say(400); return; }
+    const thinking = 'thinking' in q ? q.thinking : 'default';   // D346: absent only; null is not absent
+    if (!THINKING.includes(thinking)) { send(res, 400, { type: 'error', message: `"thinking" must be one of ${THINKING.join(', ')}` }, cors); say(400); return; }
     const key = q.supersedes ?? null;
     if (key !== null && (typeof key !== 'string' || key.length < 1 || key.length > MAX_SUPERSEDE_KEY)) {
       send(res, 400, { type: 'error', message: `"supersedes" must be a string of 1-${MAX_SUPERSEDE_KEY} characters` }, cors);
@@ -580,7 +605,9 @@ export function startHelper(opts) {
       setTimeout(() => killGroup('SIGKILL'), 2000).unref();
     };
     try {
-      child = spawn('claude', args, { cwd: dir, detached: true, stdio: ['pipe', 'pipe', 'pipe'] });
+      const extraEnv = thinkingEnv(thinking);   // D346: through the env, never argv or a shell
+      child = spawn('claude', args, { cwd: dir, detached: true, stdio: ['pipe', 'pipe', 'pipe'],
+        ...(Object.keys(extraEnv).length ? { env: { ...process.env, ...extraEnv } } : {}) });
     } catch (e) {
       tr.end({ spawnError: e });
       cleanup();
@@ -624,7 +651,7 @@ export function startHelper(opts) {
       }
       cleanup();
       finishSlot();
-      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}; ${Date.now() - t0} ms)`);
+      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}; ${Date.now() - t0} ms)`);
     });
     function cleanup() {
       rmSync(dir, { recursive: true, force: true });
