@@ -307,12 +307,22 @@ export function createMatchLauncher(opts) {
         }
 
         // play.sh stops the engine, starts the new one, and says how it went.
+        // A signal can land while play.sh is between two commands of its last
+        // restart, so it is sent again until play.sh has taken this request up
+        // (it ignores an id it has already handled).
         let st = null;
+        let seen = false;
+        let lastSignal = Date.now();
         while (Date.now() - t0 < timeoutMs) {
           await new Promise((r) => setTimeout(r, pollMs));
           st = readJson(join(dir, 'status.json'));
           if (st && st.id === id && (st.state === 'ready' || st.state === 'failed')) break;
+          if (st && st.id === id) seen = true;
           if (!alive(supervisorPid)) return fail(503, 'scripts/play.sh stopped while the match was starting');
+          if (!seen && Date.now() - lastSignal > 2000) {
+            lastSignal = Date.now();
+            try { process.kill(supervisorPid, 'SIGUSR1'); } catch { /* the alive check above says */ }
+          }
           st = null;
         }
         if (!st) return fail(504, `the engine did not answer within ${Math.round(timeoutMs / 1000)} s — see var/play/server.log`);

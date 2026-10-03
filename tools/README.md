@@ -36,6 +36,8 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `narrate-selftest.mjs` | The narrator's gate: every fixture and every fresh log told as a story with hard rule 8 held, six negative controls, the goldens (D123). | step 12d; CI | no |
 | `narrate.mjs` | A frame log as a turn-by-turn story (`--turn`, `--summary`, `--seat`, `--json`); a shell over `web/src/story/narrate.ts`. | no (its self-test is 12d) | no |
 | `coach-helper.mjs` | **The coach helper** (D292): a loopback HTTP service on `coachPort` (8643) that ForgeCoach's coach calls instead of the Claude API — `GET /health`, `POST /coach` — answered by the logged-in Claude Code CLI (`claude -p`, every tool off), streamed back as NDJSON; `--lan` binds 0.0.0.0 behind the bridge's pairing token. `scripts/play.sh` starts it when `claude` is on PATH. Its header is the contract. | no (its self-test is 12f) | no (the `claude` CLI) |
+| `match-launcher.mjs` | **The match launcher** (D303, M53): the coach helper's `GET`/`POST /match` — two decklists from ForgeCoach checked (names, counts, profile, the engine's card scripts), written as `var/match/<id>/you.dck` and `ai.dck`, and `play.sh` signalled to restart the engine on them. Imported by `coach-helper.mjs`; `docs/match-launcher.md` is the contract. | no (its self-test is 12f) | no (`play.sh` restarts the engine) |
+| `match-launcher-selftest.mjs` | The match launcher end to end: the real `play.sh --engine-only` against a FAKE engine (`MTGTABLE_TEST_FAKE_ENGINE`), the `.dck` files, the restart's argv, the dropped seat, bad input, Origin, a failed start restoring the previous match, never two engines, `--lan` keeping its token, the card index over a built zip (D303); ~25 s, no Forge, no claude. | step 12f; CI | no |
 | `coach-helper-selftest.mjs` | The coach helper's contract against a FAKE `claude` put first on its PATH: `/health`, the stream-json → NDJSON translation and its one terminal line, the CLI's flags, the Origin and LAN-token rules, the private-network preflight, the 512 KB limit, one question at a time, a disconnect killing the child's process group (D292); ~7 s, no real CLI, no network. | step 12f; CI | no |
 | `build-deck.ts` | Writes every AI deck's `.dck` from `decks/specs/*.json`; `--check` fails when one differs (D116); `--pool RG` lists castable cards. Needs `var/cards/cards.sqlite`. | step 12e (`--check`, D183); not CI | no |
 | `check-deck.mjs` | Will the engine play this `.dck`, card for card? A static pass over Forge's scripts, then `Smoke` on the deck (`--no-engine` skips it), then `--scryfall`. | no | boots Forge (unless `--no-engine`) |
@@ -191,7 +193,11 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
                                                     # every mode also starts the COACH HELPER (D292) when `claude`
                                                     # is on PATH and prints "Coach: Claude Code on this PC (no API key
                                                     # needed) — http://127.0.0.1:8643"; log var/play/coach.log
-./scripts/play.sh --engine-only --no-coach          # D292: no coach helper ("Coach: off (--no-coach) — …")
+./scripts/play.sh --engine-only --no-coach          # D292: no coach helper ("Coach: off (--no-coach) — …"), so no match launcher
+                                                    # D303: the helper also serves POST /match (ForgeCoach's Play this
+                                                    # match) and starts without `claude` too; "Match launcher: …" line
+./scripts/play.sh --engine-only --no-match          # D303: the coach helper without /match
+./scripts/play.sh --coach-port 8653                 # the coach helper on another port
 ./scripts/play.sh --engine-only --lan               # M51/D287-D289: ForgeCoach from a PHONE on the same Wi-Fi --
                                                     # binds 0.0.0.0 behind a fresh pairing token, serves ForgeCoach's
                                                     # site (var/forgecoach/, cached a day) on the ws port, prints
@@ -215,6 +221,10 @@ curl -s http://127.0.0.1:8643/health                # {"ok":true,"helper":1,"cla
 curl -sN http://127.0.0.1:8643/coach -H 'Content-Type: application/json' \
     --data '{"system":"You are a terse Magic coach.","user":"Land before attacking?","model":"haiku"}'
                                                     # NDJSON: {"type":"text",…} … then {"type":"done",…} or {"type":"error",…}
+curl -s http://127.0.0.1:8643/match                 # D303: the running match, names and counts
+curl -s http://127.0.0.1:8643/match -H 'Content-Type: application/json' --data @match.json
+                                                    # restarts the engine on two decks (docs/match-launcher.md)
+node tools/match-launcher-selftest.mjs              # its self-test, a fake engine under play.sh (gate 12f, CI)
 ```
 
 ### The cube lab (D293–D297)

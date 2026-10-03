@@ -1882,10 +1882,17 @@ s12e_skipped() {
 #      turn, the user text on stdin), the Origin and LAN-token rules, the 512 KB
 #      body limit, one question at a time, and a client that disconnects
 #      killing the child and its process group.  Its servers bind port 0.
+#      Since D303 it also runs tools/match-launcher-selftest.mjs: the helper's
+#      /match and scripts/play.sh's restart, the real play.sh driven against a
+#      FAKE engine (MTGTABLE_TEST_FAKE_ENGINE; no Forge, no build) on free
+#      ports, its files under var/match-launcher-selftest/; about 25 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
     || die "coach-helper-selftest.mjs (12f: the coach helper broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D303: the helper's /match and play.sh's restart, against a fake engine.
+  node tools/match-launcher-selftest.mjs \
+    || die "match-launcher-selftest.mjs (12f: the match launcher broke its contract with ForgeCoach -- see the FAIL lines above)"
 }
 
 # 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid

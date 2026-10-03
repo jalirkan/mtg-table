@@ -202,6 +202,17 @@ trap 'MATCH_PENDING=1' USR1
 # stands in for the bridge (it answers /health and prints the lines this script
 # reads).  It skips check-forge and the build.  Never set it to play.
 FAKE_ENGINE="${MTGTABLE_TEST_FAKE_ENGINE:-}"
+PLAY_VAR="var/play"
+if [ -n "$FAKE_ENGINE" ] && [ -n "${MTGTABLE_TEST_VAR:-}" ]; then
+  # ...and the self-test's own var/ folder, so it never touches a real run's.
+  case "$MTGTABLE_TEST_VAR" in
+    *..*|*' '*) echo "play.sh: MTGTABLE_TEST_VAR must be a folder under var/" >&2; exit 1 ;;
+    var/?*) : ;;
+    *) echo "play.sh: MTGTABLE_TEST_VAR must be a folder under var/" >&2; exit 1 ;;
+  esac
+  PLAY_VAR="$MTGTABLE_TEST_VAR/play"
+  MATCH_DIR="$MTGTABLE_TEST_VAR/match"
+fi
 
 # Match setup (M44): config.json's `match` block, then the flags.  `cfg_get`
 # reads top-level keys only, so the block is read here; a missing block or key
@@ -391,14 +402,14 @@ fi
 # 3: the bridge, in the background
 # --------------------------------------------------------------------------
 
-mkdir -p var/play
-SERVER_LOG="var/play/server.log"
+mkdir -p "$PLAY_VAR"
+SERVER_LOG="$PLAY_VAR/server.log"
 : > "$SERVER_LOG"
 
 SERVER_PID=""
 VITE_PID=""
 COACH_PID=""
-COACH_LOG="var/play/coach.log"
+COACH_LOG="$PLAY_VAR/coach.log"
 
 stop() {
   # Idempotent: this runs from the trap AND from the normal exit path.
@@ -611,6 +622,7 @@ start_coach
 # --------------------------------------------------------------------------
 
 CUR_MATCH_ID="play.sh"
+LAST_REQ_ID=""                   # the helper re-signals until it sees its id; once is enough
 # match_write status ID STATE [ERROR] [RESTORED] | match_write current ID
 # -- var/match/status.json or current.json, written whole and renamed into place;
 # "ready" and "current" carry the match as the bridge's own log says it loaded it.
@@ -656,17 +668,20 @@ restart_match() {
     const id = typeof r.id === "string" && /^m[0-9]{13}$/.test(r.id) ? r.id : "";
     const bad = (why) => { console.log("BAD"); console.log(id); console.log(why); process.exit(0); };
     if (!id) bad("no request id");
-    if (r.deck !== `var/match/${id}/you.dck` || r.aiDeck !== `var/match/${id}/ai.dck`) bad("deck paths are not var/match/<id>/you.dck and ai.dck");
+    const dir = process.argv[2];
+    if (r.deck !== `${dir}/${id}/you.dck` || r.aiDeck !== `${dir}/${id}/ai.dck`) bad("deck paths are not <match dir>/<id>/you.dck and ai.dck");
     if (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile)) bad("not a profile name");
     if (!Number.isInteger(r.games) || r.games < 1 || r.games > 9) bad("games is not 1-9");
     for (const x of ["OK", id, r.deck, r.aiDeck, r.aiProfile, String(r.games)]) console.log(x);
-  ' "$MATCH_DIR/request.json" 2>/dev/null) || true
+  ' "$MATCH_DIR/request.json" "$MATCH_DIR" 2>/dev/null) || true
   if [ "${req[0]:-}" != "OK" ]; then
     echo "match launcher: request refused: ${req[2]:-no answer from node}" >&2
     [ -n "${req[1]:-}" ] && match_write status "${req[1]}" failed "play.sh refused the request: ${req[2]:-}" 1
     return 0
   fi
   id="${req[1]}"
+  [ "$id" = "$LAST_REQ_ID" ] && return 0
+  LAST_REQ_ID="$id"
   [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
   say "match $id — restarting the engine on ForgeCoach's decks (D303)"
   match_write status "$id" restarting
@@ -693,7 +708,7 @@ restart_match() {
     match_write status "$id" failed "port $WS_PORT still answers after the bridge stopped — another engine is on it" 0
     die "port $WS_PORT still answers after the bridge stopped — another engine is on it"
   fi
-  cp -f "$SERVER_LOG" "var/play/server.prev.log" 2>/dev/null || true
+  cp -f "$SERVER_LOG" "$PLAY_VAR/server.prev.log" 2>/dev/null || true
   : > "$SERVER_LOG"
   start_bridge "${next[@]}"
   echo "pid $SERVER_PID · log $SERVER_LOG"
@@ -708,10 +723,10 @@ restart_match() {
   fi
   [ "$rc" = "1" ] && why="the bridge exited before it was ready" || why="no /health after 60 s"
   tail_txt="$(tail -8 "$SERVER_LOG" | sed 's/token=[A-Za-z0-9_-]*/token=…/g' | tr '\n' ' ')"
-  echo "$why — starting the previous match again (this log: var/play/server.failed.log)" >&2
+  echo "$why — starting the previous match again (this log: $PLAY_VAR/server.failed.log)" >&2
   stop_bridge
   SERVER_PID=""
-  cp -f "$SERVER_LOG" "var/play/server.failed.log" 2>/dev/null || true
+  cp -f "$SERVER_LOG" "$PLAY_VAR/server.failed.log" 2>/dev/null || true
   : > "$SERVER_LOG"
   start_bridge "${prev[@]}"
   rc=0; wait_ready || rc=$?
@@ -723,7 +738,7 @@ restart_match() {
   fi
   match_write status "$id" failed "$why: $tail_txt (and the previous match did not start again)" 0
   tail -30 "$SERVER_LOG" >&2
-  die "neither the new match nor the previous one started (logs: var/play/server.failed.log, $SERVER_LOG)"
+  die "neither the new match nor the previous one started (logs: $PLAY_VAR/server.failed.log, $SERVER_LOG)"
 }
 
 # --------------------------------------------------------------------------
@@ -767,11 +782,13 @@ if [ "$ENGINE_ONLY" = "1" ]; then
     echo "  the token is the only lock -- for a home network you trust; the next run has a new one"
   fi
   while :; do
+    # D303: a SIGUSR1 from the match launcher interrupts the wait (the bridge
+    # is still running), or arrived while the last restart was finishing;
+    # anything else is the bridge's own exit.
+    if [ "$MATCH_PENDING" = "1" ]; then restart_match; continue; fi
     SERVER_RC=0
     wait "$SERVER_PID" || SERVER_RC=$?
-    # D303: a SIGUSR1 from the match launcher interrupts the wait (the bridge
-    # is still running); anything else is the bridge's own exit.
-    if [ "$MATCH_PENDING" = "1" ]; then restart_match; continue; fi
+    [ "$MATCH_PENDING" = "1" ] && continue
     kill -0 "$SERVER_PID" 2>/dev/null && continue
     break
   done
