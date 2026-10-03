@@ -4,7 +4,7 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 
 - time: 2026-10-03T14:45:32-04:00
 - runner: 5e6ba2a, up since 2026-10-03T14:45:31-04:00
-- running: J029 commands 1/2, 1440/20000 drafts, 2383.9/h, ETA 2026-10-03T22:32:40-04:00, 7 worker(s)
+- running: J029 (night job, resumed) on the runner at 5e6ba2a + hand-run unrecorded evolve at 3 workers
 - load: 15.62; memory 18.1/30.5 GB, swap 1853 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J027, J030, J031, J032, J033
 - waiting: nothing
