@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:57:56-04:00",
+ "updated": "2026-10-03T14:02:34-04:00",
  "paused": false,
  "host": {
-  "load1": 8,
-  "memUsedGb": 9.7,
+  "load1": 22.21,
+  "memUsedGb": 16.5,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
@@ -20,7 +20,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-03T13:57:43-04:00",
-   "elapsed": 13,
+   "elapsed": 291,
    "done": 0,
    "total": null,
    "unit": "drafts",
