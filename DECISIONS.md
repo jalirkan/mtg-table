@@ -13822,7 +13822,7 @@ which is what makes a small effect measurable (McNemar on the discordant
 pairs). `--jobs K` runs K JVMs, each with its own Forge home
 (`forge_home_make`, D129's rule). One JSON line per game; `report` gives Wilson
 95% intervals, game times, Forge's AI-evaluation timeouts and the policy's
-counters. `--selftest` (~15 s) checks the statistics and ten board scenarios
+counters. `--selftest` (~15 s) checks the statistics and eleven board scenarios
 built with Forge's own `GameState` loader, three of them controls. It is not
 in the gate: it boots Forge, and the bench itself takes hours.
 
@@ -13894,3 +13894,41 @@ then only use them on Forge's terms); a policy that sacrifices on its own
 estimate of value every turn (no evaluator yet — that is the search's job,
 D311's roadmap); vetoing Forge's own outlet activations instead of steering
 them (a veto passes priority, losing whatever else Forge would have done).
+
+## D311 — Forge's AI, measured on the owner's cubes: profiles are knobs (Reckless the only measurable gain), Forge's simulation does not survive the cubes, and a stronger AI is a search we build behind D309's seam, measured with D309's bench
+
+**2026-10-03**
+
+**Decision.** The roadmap for a stronger AI (the owner's goal: his cubes, his
+PC, no LLM) is `docs/research/ai-architecture.md` §7: keep cheap targeted
+policies (D310) in front; add a determinized search at priority inside
+`PolicyControllerAi` that copies the game, redeals the opponent's hidden cards,
+plays each candidate and rolls forward with Default-AI controllers, budgeted by
+wall clock and falling back to Forge's answer; then combat; then a learned
+evaluator (D305's dataset). Every step lands with an `ai-bench.sh` run against
+plain Default on `pairs-cube.txt`, paired by seed.
+
+**Why — measured** (`docs/evidence/ai-baseline.md`):
+
+- **"Experimental" is not simulation.** `res/ai/Experimental.ai` is `Default.ai`
+  with 30 values changed; simulation is `AIOption`, a lobby-player option. AI
+  against AI on ten Forge-drafted cube pairs, 100 games each, paired with a
+  Default-vs-Default control on the same deals: Experimental 56% (15 deals
+  gained, 7 lost, p = 0.13), **Reckless 60% (14 / 2, p = 0.004)**, Cautious 53%
+  (13 / 8, p = 0.38). If the owner wants the strongest stock opponent today,
+  it is `--ai-profile Reckless`.
+- **Forge's simulation cannot be the base.** With `USE_FULL_SIMULATION` 15 of 20
+  cube games, and with `USE_HYBRID_SIMULATION` 12 of 20, ended on turn 1–2 in
+  `GameCopier`'s `Couldn't map <card>` (Grist, Anax, Hero of Light, Tarmogoyf:
+  static abilities live in hidden zones). The five full-simulation games that
+  finished were all won, at up to 24× the time of a default game. It also
+  copies the opponent's hand and library order, i.e. it cheats.
+- **The default AI is greedy and machine-dependent**: first acceptable play, no
+  lookahead, a 5 s evaluation timeout that makes it pass on a busy machine
+  (0.02–0.17 timeouts per game here, rising with load).
+
+**Rejected.** Turning on Forge's simulation for the owner's games (it ends them);
+tuning `.ai` knobs as the main road (one profile moved the needle ten points,
+the rest nothing measurable — knobs inside a greedy player); an LLM opponent
+(the owner's constraint); a learned policy before a search exists to use a
+learned evaluator.

@@ -29,17 +29,61 @@ is tested with McNemar's exact test on the games that changed hands.
 | mode | how often | what it is |
 |---|---|---|
 | Forge's AI evaluation timeout | 0.00–0.03 per game at load ≤ 12; **0.11–0.17 per game** in the runs that crossed the load-171 spike | `AiController.chooseSpellAbilityToPlay…` evaluates on a `Game AI Eval` thread with a 5 s limit (`MATCH_AI_TIMEOUT`); on timeout it prints `AI eval thread at timeout` and **plays nothing that priority**. The AI gets weaker on a slow or busy machine — a reason any search we add must budget by wall clock and degrade to Forge's answer, never to "pass". |
-| Game over the bench's 300 s cap | 5 of 800 sacrifice-deck games, all during the spike | Counted as draws and left out of win rates. |
-| Engine exceptions | 0 in every run | — |
+| Game over the bench's 300 s cap | 5 of 800 sacrifice-deck games, all during the spike; 1 of 100 Reckless games | Counted as draws and left out of win rates (a game that finishes inside the 30 s grace keeps its winner). |
+| Engine exceptions | 0 in every run of the default AI (900 cube and 1,000 sacrifice games); **27 of 40** with simulation on (§3) | `GameCopier` cannot copy a game holding an all-zones static ability; the exception ends the game. |
 | RemAIDeck cards dead in hand | 289 at game end over 400 plain-Forge sacrifice games (both seats), 8 with the policy (§4) | `AI:RemoveDeck:All` filter (§4). |
 
 ## 2. Profiles: Default vs Experimental, Reckless, Cautious
 
-PENDING
+Ten cube deck pairs × 10 games, each profile as config A against `Default`
+as B (`--pairs tools/ai-bench/pairs-cube.txt --games 10 --seed 11`, one JVM per
+run), plus `Default` against itself on the same deals as the control. Because
+the seeds match, each profile's games are paired with the control's: the
+"paired" column counts the deals on which the profile in A's chair turned the
+control's loss into a win, and the other way.
+
+| A (vs Default) | A wins of 100 | 95% CI | paired: gained / lost | exact p | median game | AI eval timeouts / game |
+|---|---|---|---|---|---|---|
+| Default (control) | 48 | 38.5–57.7% | — | — | 11.1 s | 0.07 |
+| Experimental | 56 | 46.2–65.3% | 15 / 7 | 0.13 | 12.8 s | 0.09 |
+| **Reckless** | **60** | 50.2–69.1% | **14 / 2** | **0.004** | 6.0 s | 0.13 |
+| Cautious | 53 | 43.3–62.5% | 13 / 8 | 0.38 | 6.6 s | 0.02 |
+
+(Experimental and the control ran together at load 15–30; Reckless and
+Cautious together later at load 5–15 — compare times within a pair of rows
+only.) **Reckless is the one measurable gain**: about +10 points over Default
+on these cube decks, significant paired even after a three-way Bonferroni
+correction (p ≈ 0.012). **Experimental is not measurably stronger** at this
+size (+8 points unpaired, p = 0.13 paired) — and, by `res/ai/`, it is 30 knob
+values, not simulation. No profile changes game time beyond the load's noise.
+This is AI against AI on Forge-drafted cube decks; the match-setup lane's
+finding that Cautious and Reckless were not distinguishable (`match-setup.md`
+§P) was against the automated seat on the MSH decks.
 
 ## 3. Simulation (`AIOption`) vs the default AI
 
-PENDING
+`Default+sim` (`AIOption.USE_FULL_SIMULATION`) and `Default+hybrid` as A
+against plain Default, the same ten pairs × 2 games (`--games 2 --seed 11
+--timeout 900`):
+
+| A | games | engine errors | decided | A won | game time when it finished |
+|---|---|---|---|---|---|
+| full simulation | 20 | **15** | 5 | 5 of 5 (Wilson 57–100%) | 16, 27, 485, 488 and 911 s (median Default game here: 11–29 s) |
+| hybrid | 20 | **12** | 8 | 4 of 8 | 4–38 s |
+
+**Simulation does not survive the owner's cubes.** Fifteen of twenty full
+simulation games and twelve of twenty hybrid games died on turn 1 or 2 with
+`RuntimeException: Couldn't map <card>` from `GameCopier.find` →
+`StaticEffect.removeMapped` → `GameCopier.makeCopy` → `new GameSimulator` (the
+bench keeps eight frames of each), for Grist, the Hunger Tide, Anax, Hardened
+in the Forge, Hero of Light and Tarmogoyf — cards whose static ability is live
+in hidden zones — plus two `Couldn't map <Nothing>` and one
+`Phase.nextPhase() is called, but Stack isn't empty`. The exception leaves the
+game loop, so the game is over. Where it did run, full simulation won all five
+of its games but took **up to 24 times as long** (485 s against a ~20 s game) —
+five games are too few to call it stronger. Neither is a usable opponent on these cubes as
+shipped; the roadmap's search must copy games itself or survive the copier's
+failure per decision.
 
 ## 4. Sacrifice outlets — what Forge does, and the policy (D310)
 
@@ -123,7 +167,7 @@ above: about +7 to +9 points for a sacrifice deck, interval from about +2 to
 ## 5. The self-test
 
 `./tools/ai-bench.sh --selftest` — 22 checks, about 15 s at low load: Wilson
-intervals against known values, the seat-config parser, and ten boards built
+intervals against known values, the seat-config parser, and eleven boards built
 with Forge's `GameState` loader — removal answered (Viscera Seer; and Carrion
 Feeder end to end, paying with the threatened Bears though the Feeder's own
 preference would pay with a Memnite), a bounce not answered, lethal taken (8

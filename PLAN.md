@@ -9990,7 +9990,7 @@ LLM; this lane is its first step — what Forge's AI is, a bench to measure any
 change, and a fix for the weakness that hurts his synergy cube most.
 
 ```bash
-./tools/ai-bench.sh --selftest                     # 22 checks, ~15 s: statistics + ten outlet-policy boards
+./tools/ai-bench.sh --selftest                     # 22 checks, ~15 s: statistics + eleven outlet-policy boards
 ./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --a Experimental --b Default --games 20 --jobs 3
 ./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-sac.txt --a Default+outlets --b Default+outlets --games 40 --seed 7
 ./tools/ai-bench.sh report var/ai-bench/<run>/*.jsonl [--by-pair]
@@ -10008,8 +10008,13 @@ change, and a fix for the weakness that hurts his synergy cube most.
 - D309: `PolicyLobbyPlayerAi` / `PolicyControllerAi` (Forge's controller with
   ours in front) through `Bootstrap.createAiSeat`; `tools/ai-bench.sh`.
 - D310: the sacrifice-outlet policy. Sacrifice decks against Forge-drafted
-  opponents, same 400 deals: **35.0% → 43.8%** (paired McNemar p < 0.0001)
-  before its two corrections; see the evidence for the corrected version.
+  opponents, same 400 deals: **35.0% → 43.8%** (paired McNemar p < 0.0001);
+  the corrected version (fodder payments, the opponent's Blood Artist) 36.0% →
+  42.5% on 200 of those deals (p = 0.024) with no failed all-in.
+- D311: the measurements and the roadmap. Reckless beats Default 60–40 on the
+  cube pairs (paired p = 0.004); Experimental (56%) and Cautious (53%) are not
+  distinguishable from it; **Forge's simulation ends 15 of 20 cube games in a
+  `GameCopier` exception** (hybrid: 12 of 20).
 
 ### AI baseline follow-ups
 
@@ -10017,9 +10022,10 @@ change, and a fix for the weakness that hurts his synergy cube most.
    `scripts/play.sh` still seat `Bootstrap.createAiPlayer`. A flag
    (`--ai-policy outlets`) that switches the seat to `createAiSeat`, off by
    default so the gate's recordings stay plain Forge, is the next small step.
-2. **The cube lab's deckbuilder should know the AI's dead cards**: Forge's own
-   builder never main-decks a RemAIDeck card, but the cube lab's (D294) may;
-   with the policy, Seer and Bombardment are live, the other flagged cards
+2. **The cube lab's deckbuilder should know which dead cards the policy
+   revives**: Forge's own builder never main-decks a RemAIDeck card and the cube
+   lab's (D294) only penalises them (`deck.ts`'s `remAIDeck` weight); with the
+   policy, Seer and Bombardment are live, the other flagged cards
    (Faithless Looting, Mishra's Bauble, Chromatic Star, Prophetic Prism, Beast
    Within, Prismatic Ending, Embercleave, Adanto Vanguard) are still dead.
 3. **Life gain the lethal sum cannot see** (Scavenging Ooze, lifelink at
@@ -10028,7 +10034,10 @@ change, and a fix for the weakness that hurts his synergy cube most.
 4. **Load-dependent play**: Forge's 5 s evaluation timeout makes it pass on a
    busy machine (§1 of the evidence); the owner's PC should not run the bench
    and a game at once, and any search must budget by wall clock.
-5. **The roadmap** in `docs/research/ai-architecture.md` §7: determinized
+5. **Simulation's copy failure**: if the search reuses `GameCopier`, find which
+   static effects it cannot map (Grist, Anax, Hero of Light, Tarmogoyf) or catch
+   the failure per decision; never let it reach the game loop.
+6. **The roadmap** in `docs/research/ai-architecture.md` §7: determinized
    search at priority over `GameCopier` with Default-AI rollouts, then combat,
    then a learned evaluator — each landing with a bench run.
 

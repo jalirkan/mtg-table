@@ -60,7 +60,9 @@ and thresholds inside the heuristics above (`CHANCE_TO_HOLD_COMBAT_TRICKS…`,
 `AI_IN_DANGER_MAX_THRESHOLD=12`, `TOKEN_GENERATION_ABILITY_CHANCE=100`) and
 says in its own footer that it has no experimental toggles at the moment.
 **It does not enable simulation.** `Reckless` and `Cautious` move aggression
-and risk knobs. Section 2 of the evidence measures all three against `Default`.
+and risk knobs. Measured AI against AI on ten Forge-drafted cube deck pairs
+(evidence §2): Reckless beats Default 60–40 (paired p = 0.004), Experimental
+56–44 and Cautious 53–47 are not distinguishable from it at 100 games.
 
 ## 4. Simulation (`forge.ai.simulation`) — what "Experimental" is not
 
