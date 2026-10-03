@@ -1,5 +1,5 @@
 id: J014
-title: Light coach check: Sonnet vs Haiku with thinking off (and low) on the 28 bench cases, one answer each
+title: [ANSWERED by its pilot, no full run] Light coach check: Sonnet vs Haiku with thinking off (and low) on the 28 bench cases, one answer each
 cpu: light
 after: J013
 repos: mtg-table@main (e3d74dd or later), ForgeCoach@main (360ea3f or later)
@@ -21,6 +21,13 @@ This job starts its OWN helper from the branch, on port 8653, so it never touche
 worktree (`~/code/mtg-table-main`, which J008 used: `git -C ~/code/mtg-table-main pull`),
 not in the checkout J003 is running from. The same applies to the final `git checkout main`
 lines.
+
+
+**Answered (2026-10-03):** the pilot settled the question. With thinking off, Haiku is as
+fast as Sonnet (7.2 s vs 6.6 s; it was 15–46 s before) and scored 4/4. A fixed per-call
+cost of about 6 s dominates both models. Haiku buys no speed, so the coach stays on
+Sonnet, and the 28-case runs aren't needed. If the STATUS still says `failed`, leave it.
+The result is recorded here.
 
 ## Pilot
 ```bash

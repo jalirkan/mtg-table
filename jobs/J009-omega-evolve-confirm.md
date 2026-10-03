@@ -11,6 +11,12 @@ fresh seeds. J004 is marked skipped. The seeds start at 20001, which is clear of
 and of the AI ladder's reserved deck-set seeds. Old evolve output folders are refused because
 the settings changed, so this uses a new `--out`.
 
+**May start beside J003's tail (2026-10-03):** J003's last configurations are running on
+about one worker (load is around 1.5 of 16 threads), which leaves the PC mostly idle. If J003
+has 2 or fewer of its JVMs running, start J009 now instead of waiting, at `--jobs 6`, not 7.
+That leaves a core for J003's search, whose budget is wall-clock. Watch memory. Otherwise
+wait for J003 as before.
+
 ## Pilot
 The knobs are loosened on purpose so that the confirmation path runs (about 6 minutes):
 ```bash
