@@ -15376,3 +15376,123 @@ candidate kept fewer than 180 cards before), and the uncertainty penalty reads
 **Rejected.** 400 drafts (above); a fixed 8,000 (sequential saves a quarter of
 a night on clear cases at no cost in α); comparing SDs rather than variances
 (the SD's truncation at 0 makes its difference non-normal near balance).
+
+## D347 — Recorded games carry the AI seats' decisions: every decision with more than one legal answer, its options as the coach bench's tokens, the answer, the policy that chose and the search's per-option statistics, in the deciding seat's own log only; ai-bench records too, headers name every seat's style, the lab mixes profiles, and the owner's games are a held-out test set
+
+*Branch `c/decision-records`; D347, the next number free at push (D340–D344 are
+review 2's, D346 the helper's, D348–D351 the engine week's). Protocol amendment
+M55.*
+
+**2026-10-03** (the owner's goal: recorded games complete enough to train a
+policy and to drive expert iteration, not only the value evaluator — D315's
+*Not done*)
+
+**Decision.**
+
+- **Decision records.** `PolicyControllerAi` (D309's seam) builds a
+  `Decision` at every decision its seat takes — priority (`pass`, `land:<id>`,
+  `cast:<id>`, `activate:<id>[#k]`), attackers (`attack:none|<ids>`), blockers
+  (`block:none|<b>><a>,…`), the targets of what it plays and of its triggers
+  (`target:<id>|p<id>`, `parent` = the priority decision), effect choices and
+  yes/no questions (`option:<id>|p<id>|hidden`, `yes`, `no`), and the mulligan
+  (`keep`, `mulligan`): every legal option, the option chosen, `by` (`forge`,
+  `outlets` with the outlet policy's `why`, or `search` when the search reached
+  a verdict), the `state` frame it was taken in, and — whenever the search ran
+  — its `SearchPolicy.Report`: per candidate the rounds, mean leaf and its
+  standard error, the paired difference to Forge's answer and its standard
+  error, the win estimate; the rounds, playouts, horizon, rule, margin, time,
+  budget, `timedOut`, `overrode` and the `fallback` reason. The Report's field
+  names are branch `c/engine-week1`'s (D350) for the same class, so the two
+  meet as one. Tokens are the coach bench's and the grader's (D334–D336), over
+  wire ids. Attacks and blocks list every combination up to 64 (a whole
+  declaration's rules unchecked), else a shortlist marked `complete: false`,
+  with `atoms`. A one-option decision is counted (`decisions` summary line),
+  not written.
+- **Where they go: the seat's own recording, nowhere else** (protocol M55: a
+  `dir:"ai"` line, its own `seq` series, never on the wire). The recorder of
+  that seat (`SeatRecorder`, the lab's and now ai-bench's) is the controller's
+  `DecisionSink`; before a written record it flushes the events IT holds, so
+  `frame` is the position decided in, and it never flushes the other seat's
+  recorder (whose frame cuts would show when this seat thought). No name and no
+  engine string reach a record; a card the seat cannot see (a library search)
+  is counted in `hidden` and answered `option:hidden`.
+- **The record cannot steer the game.** It is built after the answer, its
+  engine calls (Forge's own `canPlay` / `canPayCost`, candidate lists, combat
+  legality) run with `MyRandom` swapped for a throwaway generator and put back
+  (`Decisions.quiet`, as the search's rollouts do), and every failure is
+  counted, never thrown into the game. Measured: without the swap, the first
+  version turned seed 103's 16-turn game into an 18-turn one (Forge's mana
+  checks draw from `MyRandom`); with it, all three games are the unrecorded
+  ones turn for turn and winner for winner. `MTGTABLE_DECISIONS=off` records
+  as before, for measuring.
+- **The redaction checker holds it** (`tools/check-redaction.mjs`, D1–D4):
+  records only in an AI-vs-AI log, every record's `seat` the header's (another
+  seat's legal options name its hand), exact key sets and the token grammar,
+  `frame` an earlier state frame with that `stateSeq`, every card id named
+  shown face up or as the viewer's own by that frame or the next, the answer
+  among the options. Seven `m55-*` controls in `fixtures/negative/redaction/`
+  (two planted leaks: the other seat's record, and an option naming the
+  opponent's concealed hand card) and two more over the committed recording
+  `fixtures/cubelab/decisions/` in `web/test/cubelab-record.test.ts`.
+- **ai-bench records** (`play --record-all | --record-every N [--record-dir]`):
+  each such game's two seats through `SeatRecorder`, gzipped, into
+  `<run>/games/p<pair>-g<game>-seat{0,1}.jsonl.gz`, with a `bench` header block
+  (run, pairs file, pair, game, game seed, both configs) and a version stamp —
+  D341's fields over the bench's code paths (`bridge/src`, `tools/ai-bench`,
+  `forge-home`) and the jar, `ver` its 12-hex id. The flags are parse-time
+  cases beside `--shard`; `oneGame` attaches and finishes the recorders on the
+  game thread as the lab does; the game line gains `cpuMs` and `recorded`.
+- **Every recording's header names each seat's style** (`seats: [{player,
+  kind, profile, policy, search?}]`) — the lab's and the bench's; the lab block
+  adds `seatA`, `seatB` and `ver` (D341). **`cubelab.sh run --profile-mix
+  Default:0.5,Reckless:0.25,Cautious:0.25`** draws each drafter's seat per
+  draft from the mix with a generator seeded by the draft's seed and a stream of
+  its own (D294: any `--jobs`, a resume; the picks untouched); entries and
+  `--profiles` are seat specs `<Profile>[+outlets][+search[:k=v/…]]`
+  (`mtgtable.ai.SeatSpec`); `drafts.jsonl` gains `profiles`, `run.json`
+  `profileMix` (a resume with another mix is refused).
+- **The owner's games**: `var/ml/human/` (or `--human DIR`); every dataset
+  game carries `source` (`human`, `lab`, `bench`, `other`); `dataset.py` puts
+  human games in a fourth split, `human`, that `train_eval.py --eval-human`
+  scores apart; `--train-human` overrides.
+- **`tools/ml/policy_data.py`**: decision records → state features (D305's
+  encoder, for the deciding seat, at the record's frame), options, choice,
+  `chosenIndex`, policy and search values, `.npz` + row-aligned `.jsonl`, split
+  by deck pair; D340's reserved decks (a bench game's both decks from its pairs
+  file) and reserved draft seeds dropped with both chairs, D341's `ver` per
+  game and `--ver`; `--searched-only` for expert-iteration targets.
+  `tests/test_policy.py`: round trip, hidden-zone scrambler, a planted
+  other-seat record refused, the confirm-deck and seed filters, human games.
+
+**Measured** (this container, 4 shared cores, load about 5; synergy cube, grid,
+seeds 101–103, one game each, one worker, 51 turns; the same three games in
+every arm). Worker CPU per turn: unrecorded 1,574 ms, recorded without records
+1,616 ms, with records 1,764 ms (+9% over recording, +12% over nothing);
+game-thread CPU per turn 321 / 324 / 402 ms (+24% over recording) — of which
+the records' own build is 114 ms a turn (5.8 s over 1,391 priority-and-other
+decisions; 748 written, 643 forced) and their writes 6 ms. Two cuts got it
+there: a permanent with no activated ability but mana abilities is skipped
+before Forge builds its ability list, and a spell's alternative costs are
+expanded only when its own cost cannot be paid. Disk: 178 KiB a game for both
+chairs gzipped against 126 KiB (+42%): the records are 0.7% of the bytes, the
+rest is the state frames the per-decision flush adds (2,269 against 1,688).
+ai-bench, search (1.5 s) against Default, two games of `synergy-1003`: 821
+records, 80 by the search (35 with a verdict, 4 overrides; 45 budget
+fallbacks on this machine), 490 KiB a game for both seats. Search fixture
+(`ms=30000,rounds=2,maxrounds=2`): 20 searched records, 5 overrides.
+
+**Rejected.** A side file of decisions beside each log (a second artefact to
+keep in step, and the same hidden-information rule twice); recording only what
+Forge's events already show (casts, attacks: no passes, no options, no
+search); computing options with Forge's AI judgment (`canPlaySa`: the policy
+target would be Forge's taste, not legality); flushing before every priority
+(+67% frames; a forced pass now costs none); the opponent's records in an
+omniscient log (a new redaction mode, D315); training on the owner's games by
+default (they are the one test set that measures play against him).
+
+**Not done.** A human seat's log has no decision records, so the human set
+gives the policy dataset no rows yet (its value rows score the evaluator):
+deriving a human's choices from the seat's `act`/`answer` lines is the
+follow-up. Forge's own targeting inside effects it resolves without asking the
+controller, mode choices, cost choices (which creature to sacrifice) and the
+London mulligan's bottom cards are not recorded.

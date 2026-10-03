@@ -458,6 +458,8 @@ def run_train(a, hp, log) -> dict[str, Any]:
               "models": score_all(models, splits), "grid": grid_results}
     log(format_report(report))
     log(verdict(report))
+    if getattr(a, "eval_human", False):
+        report["human"] = eval_human(a.data, schema, models, log)
     if a.out:
         model = net.to_json(schema, names, {
             "excluded": info["excluded"],
@@ -470,6 +472,22 @@ def run_train(a, hp, log) -> dict[str, Any]:
         N.save_model(a.out, model)
         log(f"saved {a.out} ({os.path.getsize(a.out)} bytes)")
     return report
+
+
+def eval_human(data: str, schema: dict[str, Any], models: dict[str, Any], log) -> dict[str, Any]:
+    """D347: score every model on the owner's own games (the `human` split, never trained on) and say it apart."""
+    import evalnet as N
+    files = [f for f in os.listdir(data) if f.startswith("human-") and f.endswith(".npz")]
+    if not files:
+        log("human games: none in this dataset (put them under var/ml/human/ or pass dataset.py --human DIR)")
+        return {"rows": 0}
+    r = N.load_rows(data, "human", N.card_offset_of(schema))
+    out: dict[str, Any] = {"rows": len(r), "games": int(len(np.unique(r.game)))}
+    for m, pred in models.items():
+        out[m] = metrics(pred(r), r.y.astype(np.int64), r.turn.astype(np.int64))
+    log(f"human games ({out['games']} games, {out['rows']} rows; held out of training): " + "; ".join(
+        f"{m} logloss {out[m]['all']['logloss']:.4f} acc {out[m]['all']['acc']:.3f}" for m in models))
+    return out
 
 
 def grid_configs(seed: int):
@@ -619,6 +637,9 @@ def main(argv: list[str] | None = None) -> int:
                          "holdout:^modern-); game: D305's by-game split (flatters: shown for comparison); "
                          "dataset: dataset.py's own split")
     ap.add_argument("--verbose", action="store_true", help="print every epoch")
+    ap.add_argument("--eval-human", action="store_true",
+                    help="also score every model on the dataset's `human` split -- the owner's own games, never "
+                         "trained on (dataset.py --human; D347)")
     a = ap.parse_args(argv)
     if np is None:
         print("train_eval: needs numpy (pip install numpy; see tools/ml/README.md)", file=sys.stderr)

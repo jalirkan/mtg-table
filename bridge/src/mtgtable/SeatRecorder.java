@@ -22,16 +22,21 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import forge.deck.Deck;
 import forge.game.Game;
 import forge.game.GameView;
+import forge.game.player.Player;
 import forge.game.player.PlayerView;
 import forge.gui.control.GameEventForwarder;
 import forge.trackable.TrackableCollection;
 import forge.util.BuildInfo;
 
 import mtgtable.Json.JsonOut;
+import mtgtable.ai.Decision;
+import mtgtable.ai.DecisionSink;
+import mtgtable.ai.PolicyControllerAi;
 
 /**
  * One seat's frame log of a game some OTHER program is running (D315): the
@@ -60,8 +65,21 @@ import mtgtable.Json.JsonOut;
  * {@code GameAction.invoke} body that ran {@code match.startGame}, exactly where
  * {@link RecordMatch} calls them.  No thread is started (beyond each
  * {@link GameLog}'s own appender) and no game-thread hop is made.
+ *
+ * <h2>Decision records (D347)</h2>
+ *
+ * When the seat is ours ({@code PolicyControllerAi}, every lab and bench seat),
+ * {@link #attach} makes this recorder THAT seat's {@link DecisionSink}: its
+ * decisions -- legal options, answer, policy, the search's statistics -- go
+ * into this seat's own log as {@code dir:"ai"} lines (amendment M55) and into
+ * no other.  Before each one the recorder flushes the events it holds, so the
+ * record points at a {@code state} frame that IS the position decided in; the
+ * other seat's recorder is never flushed by it (its frame cuts would otherwise
+ * show when this seat thought).  {@link #finish} adds a {@code decisions}
+ * summary line.  The session header names every seat's profile and policy
+ * ({@code seats}), so a dataset can stratify by them.
  */
-public final class SeatRecorder implements AutoCloseable {
+public final class SeatRecorder implements AutoCloseable, DecisionSink {
 
     /**
      * What the recordings say about one seat; index {@code i} is the seat
@@ -75,25 +93,49 @@ public final class SeatRecorder implements AutoCloseable {
         final String deckPath;
         final Deck deck;
         final String profile;
+        /** forge | outlets | search: who answers for the seat (D347's header {@code seats}). */
+        final String policy;
+        /** The search's knobs ({@code SearchConfig.toString()}), or null. */
+        final String search;
 
         public Seat(final String deckName, final File deckFile, final String deckPath, final Deck deck,
                     final String profile) {
+            this(deckName, deckFile, deckPath, deck, profile, "forge", null);
+        }
+
+        public Seat(final String deckName, final File deckFile, final String deckPath, final Deck deck,
+                    final String profile, final String policy, final String search) {
             this.deckName = deckName;
             this.deckFile = deckFile;
             this.deckPath = deckPath;
             this.deck = deck;
             this.profile = profile;
+            this.policy = policy == null ? "forge" : policy;
+            this.search = search;
         }
     }
 
     private final GameLog log;
     private final RecordMatch.SpectatorGui gui;
     private final GameEventForwarder forwarder;
+    private final int seatId;
+    /** Decision records written, by kind and by policy; forced decisions counted; build errors (D347). */
+    private int written;
+    private final Map<String, Integer> byKind = new TreeMap<>();
+    private final Map<String, Integer> byPolicy = new TreeMap<>();
+    private final Map<String, Integer> forcedByKind = new TreeMap<>();
+    private int searched;
+    private int recordErrors;
+    private long recordNanos;
+    private long buildNanos;
+    private boolean decisionsOn;
 
-    private SeatRecorder(final GameLog log, final RecordMatch.SpectatorGui gui, final GameEventForwarder forwarder) {
+    private SeatRecorder(final GameLog log, final RecordMatch.SpectatorGui gui, final GameEventForwarder forwarder,
+                         final int seatId) {
         this.log = log;
         this.gui = gui;
         this.forwarder = forwarder;
+        this.seatId = seatId;
     }
 
     /**
@@ -109,6 +151,13 @@ public final class SeatRecorder implements AutoCloseable {
     public static SeatRecorder attach(final Game game, final int seat, final File out, final String gameId,
                                       final long seed, final String forgeJarSha, final List<Seat> seats,
                                       final Map<String, Object> extra) throws IOException {
+        return attach(game, seat, out, gameId, seed, forgeJarSha, seats, "lab", extra);
+    }
+
+    /** {@link #attach} with the header block's name: {@code lab} (the cube lab) or {@code bench} (ai-bench, D347). */
+    public static SeatRecorder attach(final Game game, final int seat, final File out, final String gameId,
+                                      final long seed, final String forgeJarSha, final List<Seat> seats,
+                                      final String block, final Map<String, Object> extra) throws IOException {
         final GameView gameView = game.getView();
         final List<PlayerView> players = new ArrayList<>();
         for (final PlayerView pv : gameView.getPlayers()) {
@@ -120,7 +169,7 @@ public final class SeatRecorder implements AutoCloseable {
         }
         final PlayerView viewer = players.get(seat);
         final GameLog log = new GameLog(out, out.getName().endsWith(".gz"));
-        log.header(header(gameId, seed, forgeJarSha, viewer, players, seats, extra));
+        log.header(header(gameId, seed, forgeJarSha, viewer, players, seats, block, extra));
         final RecordMatch.SpectatorGui gui = new RecordMatch.SpectatorGui(gameId, gameView, viewer, log, false);
         gui.setGameView(null);      // HostedMatch's own two-step, as RecordMatch does
         gui.setGameView(gameView);
@@ -130,14 +179,107 @@ public final class SeatRecorder implements AutoCloseable {
         game.subscribeToEvents(forwarder);
         // After its own forwarder, on purpose: RecordMatch's class javadoc.
         game.subscribeToEvents(new RecordMatch.BoundaryFlusher(forwarder, gui, 0L));
-        return new SeatRecorder(log, gui, forwarder);
+        final SeatRecorder rec = new SeatRecorder(log, gui, forwarder, viewer.getId());
+        // D347: this seat's decisions, into this seat's log only.  MTGTABLE_DECISIONS=off
+        // records the game as before D347 (to measure the records' own cost).
+        final boolean off = "off".equals(System.getenv("MTGTABLE_DECISIONS"));
+        for (final Player p : off ? List.<Player>of() : game.getPlayers()) {
+            if (p.getId() == viewer.getId() && p.getController() instanceof PolicyControllerAi) {
+                ((PolicyControllerAi) p.getController()).setDecisionSink(rec);
+                rec.decisionsOn = true;
+            }
+        }
+        return rec;
     }
 
-    /** The game ended: the last batch, a final snapshot and {@code over}.  Game thread only. */
+    /** The game ended: the last batch, a final snapshot, the decision summary and {@code over}.  Game thread only. */
     public void finish() {
         forwarder.flush();
         gui.snapshot(List.of());
+        summary();
         gui.emitOver();
+    }
+
+    // ------------------------------------------------------------------
+    // DecisionSink (D347) -- all on the game thread
+    // ------------------------------------------------------------------
+
+    @Override
+    public int[] mark() {
+        final long t = System.nanoTime();
+        if (forwarder.hasPendingEvents()) {
+            forwarder.flush();
+        }
+        int[] st = log.lastState();
+        if (st[0] < 0) {
+            gui.snapshot(List.of());   // a decision before the first frame (the mulligan): the hand it is taken on
+            st = log.lastState();
+        }
+        recordNanos += System.nanoTime() - t;
+        return st;
+    }
+
+    @Override
+    public int write(final Decision d, final int[] mark) {
+        final long t = System.nanoTime();
+        final int n = written;
+        log.ai("decision", d.toJson(seatId, n, mark[0], mark[1]));
+        written++;
+        byKind.merge(d.kind, 1, Integer::sum);
+        byPolicy.merge(d.by, 1, Integer::sum);
+        if (d.search != null) {
+            searched++;
+        }
+        recordNanos += System.nanoTime() - t;
+        return n;
+    }
+
+    @Override
+    public void cost(final long nanos) {
+        buildNanos += nanos;
+    }
+
+    @Override
+    public void forced(final String kind) {
+        forcedByKind.merge(kind, 1, Integer::sum);
+    }
+
+    @Override
+    public void error(final String where, final RuntimeException e) {
+        recordErrors++;
+        if (recordErrors <= 5) {
+            System.err.println("[decisions] seat " + seatId + " " + where + ": " + e);
+        }
+    }
+
+    /** Decision records written (D347). */
+    public int decisions() {
+        return written;
+    }
+
+    /** Decision records that could not be built. */
+    public int decisionErrors() {
+        return recordErrors;
+    }
+
+    /** The {@code decisions} summary line: counts by kind and policy, forced decisions, errors. */
+    private void summary() {
+        if (!decisionsOn) {
+            return;
+        }
+        final JsonOut o = new JsonOut().obj().n("seat", seatId).n("written", written).n("searched", searched)
+                .n("errors", recordErrors).n("recordMs", recordNanos / 1_000_000L)
+                .n("buildMs", buildNanos / 1_000_000L);
+        for (final Object[] kv : new Object[][] {{"byKind", byKind}, {"byPolicy", byPolicy}, {"forced", forcedByKind}}) {
+            o.key((String) kv[0]).obj();
+            @SuppressWarnings("unchecked")
+            final Map<String, Integer> m = (Map<String, Integer>) kv[1];
+            for (final Map.Entry<String, Integer> e : m.entrySet()) {
+                o.n(e.getKey(), (long) e.getValue());
+            }
+            o.end();
+        }
+        log.ai("decisions", o.end().done());
     }
 
     /** The game thread threw: D115's error notice and M11's null {@code over}.  Game thread only. */
@@ -172,7 +314,7 @@ public final class SeatRecorder implements AutoCloseable {
     /** {@link RecordMatch}'s session header (protocol section 8.1), plus the caller's {@code lab} block. */
     private static String header(final String gameId, final long seed, final String forgeJarSha,
                                  final PlayerView viewer, final List<PlayerView> players, final List<Seat> seats,
-                                 final Map<String, Object> extra) {
+                                 final String block, final Map<String, Object> extra) {
         final JsonOut o = new JsonOut().obj();
         o.n("v", GameLog.PROTOCOL_VERSION);
         o.n("kind", "session");
@@ -194,8 +336,20 @@ public final class SeatRecorder implements AutoCloseable {
             o.end();
         }
         o.end();
+        // D347: who played each seat -- the profile and the policy -- so datasets can stratify by style.
+        o.key("seats").arr();
+        for (int i = 0; i < players.size(); i++) {
+            final Seat s = seats.get(i);
+            o.obj().n("player", players.get(i).getId()).n("kind", "ai").n("profile", s.profile)
+                    .n("policy", s.policy);
+            if (s.search != null) {
+                o.n("search", s.search);
+            }
+            o.end();
+        }
+        o.end();
         if (extra != null && !extra.isEmpty()) {
-            o.key("lab").obj();
+            o.key(block).obj();
             for (final Map.Entry<String, Object> e : extra.entrySet()) {
                 final Object v = e.getValue();
                 if (v == null) {

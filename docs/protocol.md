@@ -30,6 +30,20 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-03 — decision records: an AI seat's choices, in its own recording
+
+Applied by the decision-records lane (branch `c/decision-records`), so recorded
+games can train a policy and drive expert iteration, not only the value
+evaluator. One row. **No frame on the wire changes**: the new lines are written
+by the in-process recorder (`mtgtable.SeatRecorder`: the cube lab's and
+ai-bench's recordings) and never reach a socket. Decision **D347**; held by
+`tools/check-redaction.mjs` (rules D1–D4) and its seven `m55-*` controls, and by
+`mtgtable.ai.DecisionSelfTest` on every build.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M55 | §8.2, §8.1, §8.3 | **A third `dir`, `"ai"`: recorder-only lines in an AI-vs-AI recording, with a `seq` series of their own.** Two types. **`decision`** — one per decision the log's viewing seat took (priority, attack, block, target, choice, mulligan): `{seat, n, kind, frame, stateSeq, turn, phase, options, complete?, atoms?, hidden?, chosen, by, why?, parent?, source?, search?}`. `frame` is the index in the log's frames (every line after the header, as ForgeCoach's `log.ts` and the grader count them) of the `state` frame the decision was taken in, `stateSeq` its `seq`: the recorder flushes the events it holds before each decision, so that frame IS the position. `options` are every legal answer as the coach bench's tokens over wire ids (`pass`, `land:<id>`, `cast:<id>`, `activate:<id>[#k]`, `attack:none\|<ids>`, `block:none\|<b>><a>,…`, `target:<id>\|p<id>`, `option:<id>\|p<id>\|hidden`, `yes`, `no`, `keep`, `mulligan`); `chosen` is one of them (a list for a multi-card choice); `by` is `forge`, `outlets` or `search`; `search` is the rollout search's statistics per candidate (`{token, n, meanLeaf, se, diff, seDiff, win}`: the mean leaf and its standard error, the paired difference to Forge's answer and its standard error, the win estimate) and its `rounds`, `playouts`, `horizon`, `rule`, `margin`, `ms`, `budgetMs`, `timedOut`, `overrode` and `fallback`. **`decisions`** — one per seat at the game's end: counts by kind and policy, forced (one-option) decisions, errors. **They are private to the seat that decided**: `cast:41` says card 41 is in that hand and castable, so a seat's records go into its OWN log only, and the other seat's recorder is not even flushed by them (its frame cuts would show when this seat thought). No card name and no engine string: tokens, numbers and four enumerations. A card the seat cannot see (a library search) is counted in `hidden` and answered `option:hidden`, never named by id. The session header of these recordings also gains **`seats`**, `[{player, kind, profile, policy, search?}]` — which AI style played each seat (the opponent's profile was already public in `hello_ok.match.aiProfile`). Readers that feed `s2c` frames to the reducer skip the lines (`dir` is not `s2c`); `encode.py` already did. | decision records |
+
 ### 2026-10-03 — the AI's "can't play these cards well" reveal is off
 
 Found by ForgeCoach's draft-to-match e2e on a real engine. One row.
@@ -2010,7 +2024,9 @@ Each subsequent line is a §1 envelope with **one added field, `dir`**:
 
 (the `hello_ok` body is abridged here; on disk it carries every field from §2.1)
 
-`dir` is `"s2c"` or `"c2s"`. `seq` is per direction, so the two interleaved series
+`dir` is `"s2c"` or `"c2s"` — or, in an AI-vs-AI recording made by the
+in-process recorder, `"ai"`: an AI seat's own decision records, never on the
+wire (amendment **M55**). `seq` is per direction, so the interleaved series
 each count independently; `t` gives the true ordering. A replay transport reads the
 file in file order and feeds only `s2c` frames to the reducer, using `c2s` lines to
 show what the player did.

@@ -68,6 +68,7 @@ import mtgtable.Config;
 import mtgtable.Json;
 import mtgtable.Json.JsonOut;
 import mtgtable.SeatRecorder;
+import mtgtable.ai.SeatSpec;
 
 /**
  * The cube lab's engine half (D293-D296; {@code tools/cubelab.sh} is the
@@ -109,7 +110,9 @@ import mtgtable.SeatRecorder;
  *
  * Hard rule 1: {@link Bootstrap#installGui} is the first Forge call.  Hard rule
  * 4: decks are read with {@link DeckSerializer#fromFile} only.  Every AI seat is
- * {@link Bootstrap#createAiPlayer} with an explicit profile (D107).  It names no
+ * {@link Bootstrap#createAiPlayer} with an explicit profile (D107), or -- in a
+ * recorded match, or for a seat spec naming a policy -- {@link Bootstrap#createAiSeat}
+ * ({@link #seat}, D347).  It names no
  * {@code CardView}, starts no thread, and hops onto no game thread: each game is
  * started with {@code GameAction.invoke}, exactly as {@code RecordMatch} starts
  * its one game, from {@code main}, which is not a game thread -- so it STARTS
@@ -375,9 +378,10 @@ public final class CubeLab {
         }
         res.end();
 
-        final LobbyPlayer lpA = Bootstrap.createAiPlayer("Drafter A", 0, profA);
-        final LobbyPlayer lpB = Bootstrap.createAiPlayer("Drafter B", 1, profB);
         final Map<?, ?> record = job.get("record") instanceof Map ? (Map<?, ?>) job.get("record") : null;
+        final SeatSpec specA = SeatSpec.parse(profA), specB = SeatSpec.parse(profB);
+        final LobbyPlayer lpA = seat("Drafter A", 0, specA, record != null);
+        final LobbyPlayer lpB = seat("Drafter B", 1, specB, record != null);
         int winsA = 0, winsB = 0;
         final int need = games / 2 + 1;
         res.key("games").arr();
@@ -386,7 +390,7 @@ public final class CubeLab {
             final boolean aOnPlay = ((seed + g) % 2L) == 1L;
             final long gameSeed = seed * 1000003L + g;
             final Recording rec = record == null ? null
-                    : new Recording(record, id, seed, g, gameSeed, aOnPlay, decks, deckFiles, profA, profB);
+                    : new Recording(record, id, seed, g, gameSeed, aOnPlay, decks, deckFiles, specA, specB);
             final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec);
             if (r.stuck) {
                 res.end().n("stuck", true).end();
@@ -400,13 +404,28 @@ public final class CubeLab {
                .n("reason", r.reason).n("error", r.error).n("cpuMs", r.cpuMs).n("gameCpuMs", r.gameCpuMs);
             if (r.recorded != null) {
                 res.key("recorded").obj().n("dir", r.recorded).n("bytes", r.recordBytes)
-                   .n("frames", (long) r.recordFrames).n("errors", (long) r.recordErrors).end();
+                   .n("frames", (long) r.recordFrames).n("errors", (long) r.recordErrors)
+                   .n("decisions", (long) r.recordDecisions).n("decisionErrors", (long) r.recordDecisionErrors).end();
             }
             res.end();
         }
         res.end().n("winsA", (long) winsA).n("winsB", (long) winsB).end();
         emit(res.done());
         return 0;
+    }
+
+    /**
+     * A seat (D347): a plain profile in an unrecorded match is Forge's own AI,
+     * exactly as before; a recorded match, or a spec with a policy of ours
+     * ({@code +outlets}, {@code +search}), seats our controller -- which with no
+     * policy plays exactly as Forge's, and lets the recorder write the seat's
+     * decisions.
+     */
+    static LobbyPlayer seat(final String name, final int avatar, final SeatSpec spec, final boolean recorded) {
+        if (spec.plain() && !recorded) {
+            return Bootstrap.createAiPlayer(name, avatar, spec.profile);
+        }
+        return Bootstrap.createAiSeat(name, avatar, spec.profile, null, spec.outlets, spec.search);
     }
 
     /**
@@ -484,6 +503,8 @@ public final class CubeLab {
         long recordBytes;
         int recordFrames;
         int recordErrors;
+        int recordDecisions;       // D347: decision records written, both chairs
+        int recordDecisionErrors;
     }
 
     /**
@@ -503,15 +524,16 @@ public final class CubeLab {
 
         Recording(final Map<?, ?> rec, final String id, final long seed, final int g, final long gameSeed,
                   final boolean aOnPlay, final Deck[] decks, final File[] deckFiles,
-                  final String profA, final String profB) {
+                  final SeatSpec specA, final SeatSpec specB) {
             this.dir = new File(str(rec, "dir"));
             this.rel = str(rec, "rel");
             this.gameId = id + "-g" + g;
             this.gameSeed = gameSeed;
             final String[] names = {str(rec, "deckNameA"), str(rec, "deckNameB")};
-            final String[] profiles = {profA, profB};
+            final SeatSpec[] specs = {specA, specB};
             for (int s = 0; s < 2; s++) {
-                seats.add(new SeatRecorder.Seat(names[s], deckFiles[s], relPath(deckFiles[s]), decks[s], profiles[s]));
+                seats.add(new SeatRecorder.Seat(names[s], deckFiles[s], relPath(deckFiles[s]), decks[s],
+                        specs[s].profile, specs[s].policy(), specs[s].searchText()));
             }
             lab.put("run", str(rec, "run"));
             lab.put("cube", str(rec, "cube"));
@@ -523,6 +545,10 @@ public final class CubeLab {
             lab.put("game", (long) g);
             lab.put("gameSeed", gameSeed);
             lab.put("onPlay", aOnPlay ? "A" : "B");
+            // D341's lab version and D347's seat specs: which code and which AI styles made this game.
+            if (str(rec, "ver") != null) lab.put("ver", str(rec, "ver"));
+            lab.put("seatA", specA.text);
+            lab.put("seatB", specB.text);
         }
 
         File out(final int seat) {
@@ -626,6 +652,8 @@ public final class CubeLab {
                 r.recordBytes += sr.bytes();
                 r.recordFrames += sr.frames();
                 r.recordErrors += sr.errors();
+                r.recordDecisions += sr.decisions();
+                r.recordDecisionErrors += sr.decisionErrors();
             }
             r.recorded = rec.rel;
         }

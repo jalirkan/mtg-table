@@ -160,6 +160,123 @@ public final class SearchPolicy {
         double[] mean;
     }
 
+    /**
+     * What one search measured, for the decision record (D347): every
+     * candidate's mean leaf, its standard error over rounds, its paired
+     * difference to Forge's answer with that difference's standard error, the
+     * win estimate, the rounds, the horizon, the rule and margin the verdict
+     * used, whether Forge was overridden, and whether the budget cut the search
+     * short or made it fall back.  Filled whatever the outcome; read and cleared
+     * by {@link #takeReport}.  The field names are the ones branch
+     * {@code c/engine-week1} (D350) gives the same class, so the two meet as one.
+     */
+    public static final class Report {
+        /** p, a or b. */
+        public String kind;
+        /** The candidates, Forge's own first (index 0). */
+        public List<Cand> cands = new ArrayList<>();
+        /** Per candidate: complete rounds it was scored in (every candidate shares them: CRN). */
+        public int[] n = new int[0];
+        public double[] meanLeaf = new double[0];
+        /** Standard error of the mean leaf over rounds (NaN below two rounds). */
+        public double[] seLeaf = new double[0];
+        /** Mean of (this - Forge's) per round, and its standard error (paired, CRN). */
+        public double[] diffLeaf = new double[0];
+        public double[] seDiff = new double[0];
+        /** Win estimate: a finished copy 1 / 0 / 0.5, else a logistic of the leaf ({@link #LEAF_SCALE}). */
+        public double[] win = new double[0];
+        public int rounds;
+        public int playouts;
+        public long ms;
+        public long budgetMs;
+        /** The horizon the rollouts used (turns past this one). */
+        public int horizon;
+        /** The verdict's rule and its margin in leaf points. */
+        public String rule = "margin";
+        public int margin;
+        /** The wall-clock budget stopped the loop before {@code maxrounds}. */
+        public boolean timedOut;
+        /** null, budget, copyError, unmappable, rolloutErrors or invalidAtEnd. */
+        public String fallback;
+        /** -1 until a verdict; else the index played (0 = Forge's). */
+        public int chosen = -1;
+        public int best = -1;
+        /** The search's answer replaced Forge's. */
+        public boolean overrode;
+
+        /** Means, standard errors and paired differences to candidate 0 over the complete rounds. */
+        public static void fillStats(final Report rep, final List<double[]> leaves, final List<double[]> wins, final int k) {
+            final int r = leaves.size();
+            rep.rounds = r;
+            rep.n = new int[k];
+            rep.meanLeaf = new double[k];
+            rep.seLeaf = new double[k];
+            rep.diffLeaf = new double[k];
+            rep.seDiff = new double[k];
+            rep.win = new double[k];
+            for (int i = 0; i < k; i++) {
+                rep.n[i] = r;
+                double m = 0;
+                double d = 0;
+                double w = 0;
+                for (int j = 0; j < r; j++) {
+                    m += leaves.get(j)[i];
+                    d += leaves.get(j)[i] - leaves.get(j)[0];
+                    w += wins.get(j)[i];
+                }
+                m = r == 0 ? Double.NaN : m / r;
+                d = r == 0 ? Double.NaN : d / r;
+                double sm = 0;
+                double sd = 0;
+                for (int j = 0; j < r; j++) {
+                    sm += Math.pow(leaves.get(j)[i] - m, 2);
+                    sd += Math.pow(leaves.get(j)[i] - leaves.get(j)[0] - d, 2);
+                }
+                rep.meanLeaf[i] = m;
+                rep.diffLeaf[i] = d;
+                rep.seLeaf[i] = r > 1 ? Math.sqrt(sm / (r - 1) / r) : Double.NaN;
+                rep.seDiff[i] = r > 1 ? Math.sqrt(sd / (r - 1) / r) : Double.NaN;
+                rep.win[i] = r == 0 ? Double.NaN : w / r;
+            }
+        }
+    }
+
+    private Report report;
+
+    /** The last search's report, or null when no search ran since the last call. */
+    public Report takeReport() {
+        final Report r = report;
+        report = null;
+        return r;
+    }
+
+    /** The last search's report, left in place. */
+    public Report peekReport() {
+        return report;
+    }
+
+    /** The token a candidate stands for (D347; the coach bench's spelling). */
+    public static String token(final Cand c) {
+        if (c instanceof PriorityCand) {
+            return Decisions.saToken(((PriorityCand) c).sa);
+        }
+        if (c instanceof AttackCand) {
+            final List<Integer> ids = new ArrayList<>();
+            for (final Card a : ((AttackCand) c).attack.keySet()) {
+                ids.add(a.getId());
+            }
+            return Decision.attackToken(ids);
+        }
+        if (c instanceof BlockCand) {
+            final List<int[]> pairs = new ArrayList<>();
+            for (final Map.Entry<Card, Card> e : ((BlockCand) c).block.entrySet()) {
+                pairs.add(new int[] {e.getKey().getId(), e.getValue().getId()});
+            }
+            return Decision.blockToken(pairs);
+        }
+        throw new IllegalArgumentException("candidate " + c);
+    }
+
     // ==================================================================
     // (p) priority in our own main phase
     // ==================================================================
@@ -464,6 +581,7 @@ public final class SearchPolicy {
         if (!CombatUtil.validateAttackers(combat)) {
             setAttack(combat, forge);
             sink.add("search.a.invalidAtEnd", 1);
+            invalidAtEnd();
             return;
         }
         sink.add("search.a.changed", 1);
@@ -593,6 +711,7 @@ public final class SearchPolicy {
         if (CombatUtil.validateBlocks(combat, ai) != null) {
             setBlock(combat, ai, forge);
             sink.add("search.b.invalidAtEnd", 1);
+            invalidAtEnd();
             return;
         }
         sink.add("search.b.changed", 1);
@@ -667,31 +786,48 @@ public final class SearchPolicy {
     // The search
     // ==================================================================
 
+    private void invalidAtEnd() {
+        if (report != null) {
+            report.fallback = "invalidAtEnd";
+            report.chosen = 0;
+            report.overrode = false;
+        }
+    }
+
     private Outcome search(final Player ai, final List<Cand> cands, final String kind, final long t0) {
         final long deadline = t0 + cfg.budgetMs * 1_000_000L;
         final Game game = ai.getGame();
         final int k = cands.size();
-        final double[] sum = new double[k];
-        int rounds = 0;
+        final List<double[]> leaves = new ArrayList<>();
+        final List<double[]> wins = new ArrayList<>();
         int errors = 0;
         boolean retried = false;
+        final Report rep = new Report();
+        report = rep;
+        rep.kind = kind;
+        rep.cands = new ArrayList<>(cands);
+        rep.budgetMs = cfg.budgetMs;
+        rep.horizon = cfg.horizonTurns;
+        rep.margin = cfg.margin;
         if (Determinizer.hiddenFaceDown(game, ai) > 0) {
             sink.add("search.oppFaceDownDecisions", 1);
         }
         try {
             rounds:
-            while (System.nanoTime() < deadline && rounds < cfg.maxRounds) {
+            while (System.nanoTime() < deadline && leaves.size() < cfg.maxRounds) {
                 final long seed = rng.nextLong();
                 final double[] round = new double[k];
+                final double[] roundWin = new double[k];
                 for (int i = 0; i < k; i++) {
-                    final Double v;
+                    final Playout p;
                     try {
-                        v = rollout(game, ai, cands.get(i), seed, deadline, rounds == 0 && i == 0);
+                        p = rollout(game, ai, cands.get(i), seed, deadline, leaves.isEmpty() && i == 0);
                     } catch (final CopyFailed e) {
                         throw e;
                     } catch (final CandidateUnmappable e) {
                         if (i == 0) {
                             sink.add("search.fallback.unmappable", 1);
+                            rep.fallback = "unmappable";
                             return null;
                         }
                         sink.add("search.candidateUnmappable", 1);
@@ -703,48 +839,78 @@ public final class SearchPolicy {
                         sink.add("search.rolloutErrors", 1);
                         if (errors >= 3) {
                             sink.add("search.fallback.rolloutErrors", 1);
+                            rep.fallback = "rolloutErrors";
                             return null;
                         }
                         continue rounds;
                     }
-                    if (v == null) {
+                    if (p == null) {
+                        rep.timedOut = true;
                         break rounds;   // out of time mid-round: the round is dropped
                     }
                     sink.add("search.rollouts", 1);
-                    round[i] = v;
+                    rep.playouts++;
+                    round[i] = p.leaf;
+                    roundWin[i] = winOf(p);
                 }
-                for (int i = 0; i < k; i++) {
-                    sum[i] += round[i];
-                }
-                rounds++;
+                leaves.add(round);
+                wins.add(roundWin);
+            }
+            if (leaves.size() < cfg.maxRounds && System.nanoTime() >= deadline) {
+                rep.timedOut = true;
             }
         } catch (final CopyFailed e) {
             sink.add("search.fallback.copyError", 1);
             sink.event("search " + kind + ": copy failed, Forge's answer: " + e.getCause());
+            rep.fallback = "copyError";
             return null;
         } finally {
             if (!retried) {
                 sink.add("search." + kind + ".ms", (int) ((System.nanoTime() - t0) / 1_000_000L));
             }
+            if (report == rep) {
+                rep.ms = (System.nanoTime() - t0) / 1_000_000L;
+                Report.fillStats(rep, leaves, wins, k);
+            }
         }
+        final int rounds = leaves.size();
         sink.add("search.rounds", rounds);
         if (rounds < cfg.minRounds) {
             sink.add("search.fallback.budget", 1);
+            rep.fallback = "budget";
+            rep.chosen = 0;
             return null;
         }
         final Outcome o = new Outcome();
         o.rounds = rounds;
-        o.mean = new double[k];
+        o.mean = rep.meanLeaf.clone();
         int best = 0;
         for (int i = 0; i < k; i++) {
-            o.mean[i] = sum[i] / rounds;
             if (o.mean[i] > o.mean[best]) {
                 best = i;
             }
         }
         o.chosen = best != 0 && o.mean[best] - o.mean[0] > cfg.margin ? best : 0;
+        rep.best = best;
+        rep.chosen = o.chosen;
+        rep.overrode = o.chosen > 0;
         return o;
     }
+
+    /**
+     * A playout's win estimate, as the grader's live analysis scores one
+     * (D336): a finished game is 1, 0 or 0.5; otherwise a logistic of the leaf
+     * at {@link #LEAF_SCALE} points per logit.
+     */
+    public static double winOf(final Playout p) {
+        if (p.over) {
+            return p.result > 0 ? 1 : p.result < 0 ? 0 : 0.5;
+        }
+        return 1 / (1 + Math.exp(-p.leaf / LEAF_SCALE));
+    }
+
+    /** Leaf points per logit for {@link #winOf}: {@code mtgtable.grade.CoachGrade}'s {@code leafScale}. */
+    public static final double LEAF_SCALE = 400;
 
     /** A candidate other than Forge's could not be mapped: search the rest (rare). */
     private Outcome retryWithout(final Player ai, final List<Cand> cands, final String kind, final long t0) {
@@ -780,11 +946,10 @@ public final class SearchPolicy {
     }
 
     /** One rollout: null if the deadline passed before its leaf. */
-    private Double rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
-                           final boolean first) {
-        final Playout p = playout(game, ai, cand, seed, new Limits(deadline, cfg.horizonTurns, 20_000), sink, first,
+    private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
+                            final boolean first) {
+        return playout(game, ai, cand, seed, new Limits(deadline, cfg.horizonTurns, 20_000), sink, first,
                 failCopyForTest);
-        return p == null ? null : p.leaf;
     }
 
     /** How far a {@link #playout} may run. */

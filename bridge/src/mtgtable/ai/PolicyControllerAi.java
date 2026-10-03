@@ -28,11 +28,17 @@ import java.util.TreeMap;
 import forge.LobbyPlayer;
 import forge.ai.PlayerControllerAi;
 import forge.game.Game;
+import forge.game.GameEntity;
 import forge.game.card.Card;
+import forge.game.card.CardCollectionView;
 import forge.game.combat.Combat;
+import forge.game.player.DelayedReveal;
 import forge.game.player.Player;
+import forge.game.player.PlayerActionConfirmMode;
 import forge.game.spellability.SpellAbility;
+import forge.game.trigger.WrappedAbility;
 import forge.game.zone.ZoneType;
+import forge.util.collect.FCollectionView;
 
 /**
  * Forge's own AI controller with one seam of ours in front of it (D309, D310).
@@ -48,6 +54,14 @@ import forge.game.zone.ZoneType;
  * <p>It also counts, for {@code tools/ai-bench.sh}: what the policy did, what it
  * WOULD have done in shadow mode (the opportunities Forge's own AI had), and the
  * outlet activations Forge chose by itself.  Counting has no effect on play.
+ *
+ * <p><b>Decision records (D347).</b>  With a {@link DecisionSink} set (the
+ * seat's own recorder), every decision the seat takes -- priority, attacks,
+ * blocks, the targets of what it plays, choices, mulligans -- is written as a
+ * {@link Decision}: the legal options, the answer, whose answer it was and the
+ * search's statistics.  The record is built AFTER the answer (it cannot steer
+ * it) and a failure to build one is counted, never thrown into the game.  With
+ * no sink, none of it runs.
  */
 public class PolicyControllerAi extends PlayerControllerAi {
 
@@ -65,6 +79,17 @@ public class PolicyControllerAi extends PlayerControllerAi {
 
     private SpellAbility steerSa;
     private Card steerVictim;
+
+    /** The seat's own recorder (D347), or null: no decision records. */
+    private DecisionSink decisions;
+    /** Whose answer the last {@link #choose} returned, and the outlet policy's reason. */
+    private String lastBy = "forge";
+    private String lastWhy;
+
+    /** Record this seat's decisions into {@code sink} (its own recording only); null = off. */
+    public void setDecisionSink(final DecisionSink sink) {
+        this.decisions = sink;
+    }
 
     /**
      * @param policy null = plain Forge (still counted); otherwise the policy, acting
@@ -122,8 +147,65 @@ public class PolicyControllerAi extends PlayerControllerAi {
 
     @Override
     public List<SpellAbility> chooseSpellAbilityToPlay() {
+        if (decisions == null) {
+            return choose();
+        }
+        if (search != null) {
+            search.takeReport();
+        }
+        final List<SpellAbility> r = choose();
+        final long t0 = System.nanoTime();
+        try {
+            final SpellAbility sa = r == null || r.isEmpty() ? null : r.get(0);
+            final Decision d = Decisions.priority(player);
+            d.chosen = Decisions.saToken(sa);
+            if (!d.options.contains(d.chosen)) {
+                d.options.add(d.chosen);   // an answer the enumeration missed: listed, and the list is not the whole
+                d.complete = false;
+            }
+            d.by = lastBy;
+            d.why = lastWhy;
+            final SearchPolicy.Report rep = search == null ? null : search.takeReport();
+            if (rep != null) {
+                d.search = Decisions.stats(rep);
+            }
+            if (d.forced() && d.search == null) {
+                decisions.forced(d.kind);
+            } else {
+                // Choosing changed nothing yet (the answer is played after this
+                // returns), so the log is made current only now, and only for a
+                // decision that is written: a forced pass costs no frame.
+                final int[] mark = decisions.mark();
+                final int n = decisions.write(d, mark);
+                if (sa != null) {
+                    for (final Decision t : Decisions.targets(sa, player, "targets")) {
+                        t.parent = n;
+                        t.by = lastBy;
+                        writeOrCount(t, mark);
+                    }
+                }
+            }
+        } catch (final RuntimeException e) {
+            decisions.error("priority", e);
+        }
+        decisions.cost(System.nanoTime() - t0);
+        return r;
+    }
+
+    private void writeOrCount(final Decision d, final int[] mark) {
+        if (d.forced()) {
+            decisions.forced(d.kind);
+        } else {
+            decisions.write(d, mark == null ? decisions.mark() : mark);
+        }
+    }
+
+    /** The priority answer: the outlet policy, Forge, the policy again, then the search (D309-D312). */
+    private List<SpellAbility> choose() {
         steerSa = null;
         steerVictim = null;
+        lastBy = "forge";
+        lastWhy = null;
         if (policy != null) {
             final OutletPolicy.Choice ch = policy.decide(player);
             if (ch != null) {
@@ -137,6 +219,8 @@ public class PolicyControllerAi extends PlayerControllerAi {
                     event("policy " + ch);
                     steerSa = ch.sa;
                     steerVictim = ch.victim;
+                    lastBy = "outlets";
+                    lastWhy = String.valueOf(ch.why);
                     return singleton(ch.sa);
                 }
             }
@@ -170,6 +254,8 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 if (policy.acts()) {
                     count("policy." + cast.why);
                     event("policy " + cast);
+                    lastBy = "outlets";
+                    lastWhy = String.valueOf(cast.why);
                     return singleton(cast.sa);
                 }
             }
@@ -177,25 +263,219 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (search != null && steerSa == null && search.wantsPriority(player)) {
             // The outlet policy's rules stay in front (D311 roadmap 5): the search
             // only reconsiders a priority none of them claimed.
-            return search.choosePriority(player, getAi(), forge);
+            final List<SpellAbility> r = search.choosePriority(player, getAi(), forge);
+            lastBy = searchBy(r != forge);
+            return r;
         }
         return forge;
     }
 
+    /** "search" when the search reached a verdict (kept Forge's answer or changed it), else "forge". */
+    private String searchBy(final boolean changed) {
+        if (changed) {
+            return "search";
+        }
+        final SearchPolicy.Report rep = search.peekReport();
+        return rep != null && rep.fallback == null && rep.chosen >= 0 ? "search" : "forge";
+    }
+
     @Override
     public void declareAttackers(final Player attacker, final Combat combat) {
+        if (decisions == null || attacker != player) {
+            super.declareAttackers(attacker, combat);
+            if (search != null && attacker == player) {
+                search.chooseAttack(player, combat);
+            }
+            return;
+        }
+        final int[] mark = decisions.mark();
+        if (search != null) {
+            search.takeReport();
+        }
         super.declareAttackers(attacker, combat);
-        if (search != null && attacker == player) {
+        if (search != null) {
             search.chooseAttack(player, combat);
+        }
+        try {
+            final List<Integer> chosen = new ArrayList<>();
+            for (final Card c : combat.getAttackers()) {
+                if (c.getController() == player) {
+                    chosen.add(c.getId());
+                }
+            }
+            final Decision d = Decisions.attack(player, Decisions.attackers(player, combat), chosen);
+            combatBy(d);
+            writeOrCount(d, mark);
+        } catch (final RuntimeException e) {
+            decisions.error("attack", e);
         }
     }
 
     @Override
     public void declareBlockers(final Player defender, final Combat combat) {
+        if (decisions == null || defender != player) {
+            super.declareBlockers(defender, combat);
+            if (search != null && defender == player) {
+                search.chooseBlock(player, combat);
+            }
+            return;
+        }
+        final int[] mark = decisions.mark();
+        if (search != null) {
+            search.takeReport();
+        }
+        List<int[]> pairs = null;
+        try {
+            pairs = Decisions.blockPairs(player, combat);   // before any block of ours is declared
+        } catch (final RuntimeException e) {
+            decisions.error("block", e);
+        }
         super.declareBlockers(defender, combat);
-        if (search != null && defender == player) {
+        if (search != null) {
             search.chooseBlock(player, combat);
         }
+        if (pairs == null) {
+            return;
+        }
+        try {
+            final Decision d = Decisions.block(player, pairs, Decisions.blocksOf(player, combat));
+            combatBy(d);
+            writeOrCount(d, mark);
+        } catch (final RuntimeException e) {
+            decisions.error("block", e);
+        }
+    }
+
+    private void combatBy(final Decision d) {
+        final SearchPolicy.Report rep = search == null ? null : search.takeReport();
+        if (rep != null) {
+            d.search = Decisions.stats(rep);
+            d.by = rep.fallback == null && rep.chosen >= 0 ? "search" : "forge";
+        }
+    }
+
+    @Override
+    public boolean mulliganKeepHand(final Player firstPlayer, final int cardsToReturn) {
+        if (decisions == null) {
+            return super.mulliganKeepHand(firstPlayer, cardsToReturn);
+        }
+        final int[] mark = decisions.mark();
+        final boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
+        try {
+            decisions.write(Decisions.mulligan(player, keep), mark);
+        } catch (final RuntimeException e) {
+            decisions.error("mulligan", e);
+        }
+        return keep;
+    }
+
+    @Override
+    public <T extends GameEntity> T chooseSingleEntityForEffect(final FCollectionView<T> optionList,
+            final DelayedReveal delayedReveal, final SpellAbility sa, final String title, final boolean isOptional,
+            final Player targetedPlayer, final java.util.Map<String, Object> params) {
+        if (decisions == null) {
+            return super.chooseSingleEntityForEffect(optionList, delayedReveal, sa, title, isOptional, targetedPlayer,
+                    params);
+        }
+        final T r = super.chooseSingleEntityForEffect(optionList, delayedReveal, sa, title, isOptional, targetedPlayer,
+                params);
+        try {
+            // the choice is applied after this returns: the log is made current only for a written record
+            writeOrCount(Decisions.entities(player, optionList, isOptional, r == null ? List.of() : List.of(r),
+                    "entity"), null);
+        } catch (final RuntimeException e) {
+            decisions.error("entity", e);
+        }
+        return r;
+    }
+
+    @Override
+    public CardCollectionView chooseCardsForEffect(final CardCollectionView sourceList, final SpellAbility sa,
+            final String title, final int min, final int max, final boolean isOptional,
+            final java.util.Map<String, Object> params) {
+        if (decisions == null) {
+            return super.chooseCardsForEffect(sourceList, sa, title, min, max, isOptional, params);
+        }
+        final CardCollectionView r = super.chooseCardsForEffect(sourceList, sa, title, min, max, isOptional, params);
+        try {
+            final List<Card> picked = new ArrayList<>();
+            if (r != null) {
+                for (final Card c : r) {
+                    picked.add(c);
+                }
+            }
+            writeOrCount(Decisions.entities(player, sourceList, isOptional || min == 0, picked, "cards"), null);
+        } catch (final RuntimeException e) {
+            decisions.error("cards", e);
+        }
+        return r;
+    }
+
+    @Override
+    public boolean confirmAction(final SpellAbility sa, final PlayerActionConfirmMode mode, final String message,
+            final List<String> options, final Card cardToShow, final java.util.Map<String, Object> params) {
+        if (decisions == null) {
+            return super.confirmAction(sa, mode, message, options, cardToShow, params);
+        }
+        final boolean r = super.confirmAction(sa, mode, message, options, cardToShow, params);
+        try {
+            decisions.write(Decisions.confirm(player, r, "confirm"), decisions.mark());
+        } catch (final RuntimeException e) {
+            decisions.error("confirm", e);
+        }
+        return r;
+    }
+
+    @Override
+    public boolean confirmTrigger(final WrappedAbility wrapper) {
+        if (decisions == null) {
+            return super.confirmTrigger(wrapper);
+        }
+        final boolean r = super.confirmTrigger(wrapper);
+        try {
+            decisions.write(Decisions.confirm(player, r, "trigger"), decisions.mark());
+        } catch (final RuntimeException e) {
+            decisions.error("trigger", e);
+        }
+        return r;
+    }
+
+    @Override
+    public boolean playTrigger(final Card host, final WrappedAbility wrapperAbility, final boolean isMandatory) {
+        if (decisions == null) {
+            return super.playTrigger(host, wrapperAbility, isMandatory);
+        }
+        final int[] mark = decisions.mark();
+        final boolean r = super.playTrigger(host, wrapperAbility, isMandatory);
+        if (r) {
+            try {
+                final SpellAbility inner = wrapperAbility.getWrappedAbility();
+                for (final Decision t : Decisions.targets(inner == null ? wrapperAbility : inner, player, "trigger")) {
+                    writeOrCount(t, mark);
+                }
+            } catch (final RuntimeException e) {
+                decisions.error("triggerTargets", e);
+            }
+        }
+        return r;
+    }
+
+    @Override
+    public boolean chooseTargetsFor(final SpellAbility currentAbility) {
+        if (decisions == null) {
+            return super.chooseTargetsFor(currentAbility);
+        }
+        final boolean r = super.chooseTargetsFor(currentAbility);
+        if (r) {
+            try {
+                for (final Decision t : Decisions.targets(currentAbility, player, "chooseTargets")) {
+                    writeOrCount(t, null);
+                }
+            } catch (final RuntimeException e) {
+                decisions.error("chooseTargets", e);
+            }
+        }
+        return r;
     }
 
     private static List<SpellAbility> singleton(final SpellAbility sa) {

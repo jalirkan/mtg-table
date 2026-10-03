@@ -6,6 +6,7 @@
 //   ratings init <cube.md> [--out <tsv>] [--force]
 //   run     <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K]
 //           [--seed S] [--profiles Default,Default] [--ratings <tsv>] [--record M]
+//           [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]  each drafter's AI drawn per draft, seeded (D347)
 //           [--record-all | --record-every N]                  every game, both chairs, in the worker (D315)
 //           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
@@ -38,6 +39,7 @@ import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
 import { learnCommand, selfplayCommand } from './learncmd.ts';
 import { bridgeOptions } from './bridge.ts';
+import { checkProfiles, isSeatSpec, mixText, parseProfileMix } from './profiles.ts';
 import { queueCommand } from './queue.ts';
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve } from './evolve-run.ts';
@@ -51,6 +53,7 @@ function usage(msg?: string): never {
        tools/cubelab.sh ratings init <cube.md> [--out <tsv>] [--force]
        tools/cubelab.sh run <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K] [--seed S]
                         [--profiles Default,Default] [--ratings <tsv>] [--record M] [--out <dir>]
+                        [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   (seat specs: <Profile>[+outlets][+search[:k=v]])
                         [--record-all | --record-every N]
                         [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
                         [--weights <json>] [--weight name=value]... [--synergy <tsv>] [--deck-synergy on|off]
@@ -149,8 +152,20 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   if (format !== 'grid' && format !== 'winston') usage(`--format is grid or winston, got ${format}`);
   const builder = (one(f, 'builder') ?? 'lab') as 'lab' | 'forge';
   if (builder !== 'lab' && builder !== 'forge') usage(`--builder is lab or forge, got ${builder}`);
-  const profiles = (one(f, 'profiles') ?? 'Default,Default').split(',');
+  // a seat spec's search knobs are separated by "/" here, as in --profile-mix (the "," separates the seats)
+  const profiles = (one(f, 'profiles') ?? 'Default,Default').split(',').map((p) => p.replace(/\//g, ','));
   if (profiles.length !== 2 || profiles.some((p) => !p)) usage('--profiles wants two names, e.g. Default,Reckless');
+  if (profiles.some((p) => !isSeatSpec(p))) usage('--profiles wants two seat specs, e.g. Default,Reckless+search:ms=1000/turns=0');
+  let profileMix;
+  if (one(f, 'profile-mix') !== undefined) {
+    if (one(f, 'profiles') !== undefined) usage('--profiles and --profile-mix: give one');
+    try { profileMix = parseProfileMix(one(f, 'profile-mix') as string); } catch (e) { usage((e as Error).message); }
+  }
+  const aiDir = path.join(REPO, 'forge-home', 'res', 'ai');
+  try {
+    checkProfiles(profileMix ? profileMix.map((m) => m.spec) : profiles,
+      fs.existsSync(aiDir) ? fs.readdirSync(aiDir).filter((n) => n.endsWith('.ai')).map((n) => n.slice(0, -3)) : null);
+  } catch (e) { usage((e as Error).message); }
   let weights = DEFAULT_WEIGHTS;
   for (const wf of f.get('weights') ?? []) weights = mergeWeights(weights, JSON.parse(fs.readFileSync(wf, 'utf8')) as Record<string, unknown>);
   weights = mergeWeights(weights, parseWeightArgs(f.get('weight') ?? []));
@@ -159,6 +174,7 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   const o: RunOptions = {
     cubeFile, format, drafts: int(f, 'drafts', 10), games: int(f, 'games', 3), jobs: Math.max(1, int(f, 'jobs', 1)), seed,
     profiles: [profiles[0] as string, profiles[1] as string], ratingsFile, record: int(f, 'record', 0),
+    ...(profileMix ? { profileMix } : {}),
     recordEvery: one(f, 'record-all') ? 1 : int(f, 'record-every', 0),
     out: one(f, 'out') ?? path.join('var/cubelab/runs', `${path.basename(cubeFile, '.md')}-${format}-${seed}`),
     builder, gameTimeoutSec: int(f, 'game-timeout', 300), winstonCards: int(f, 'winston-cards', 90), weights,
@@ -180,7 +196,7 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   // --games 0 drafts and builds only, plays nothing (the AI ladder's deck sets, D318); a report of such a run has no games
   if (o.games < 0) usage('--games must be 0 or more');
   if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
-  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}`);
+  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profileMix ? `mixed per drafter (${mixText(o.profileMix)})` : o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}`);
   await runLab(env, o, say);
   say(`next: tools/cubelab.sh report ${o.out}`);
   return 0;
