@@ -7,26 +7,40 @@
 // `swaps` swaps of a cube card for a card of the seed pool.  This module is
 // every decision of that loop and nothing else: no engine, no file system.
 //
-// A CUT needs evidence that passes a threshold (the knobs below), or a note:
+// A CUT needs evidence that passes a test twice (D331), or a note.  Each rule is
+// a one-sided exact binomial test of the card against a null boundary:
 //
-//   dead           in a drafter's pool whose played deck could cast it (its
-//                  colours within the deck's, splash included) at least
-//                  minOnColour times, and the Wilson 95% upper bound of the
-//                  share of those decks that played it is at most
-//                  deadPlayRateHi — passed over when it was there to play, and
-//                  we are sure of it (a gold card of a pair nobody drafts is
-//                  not dead: it never had the chance);
-//   dominant-win   >= minGames decisive games in played decks, and the Wilson
-//                  lower bound of its win rate is at least the run's mean +
-//                  dominantLoMargin — wins more, and we are sure of it;
-//   dominant-pick  dealt in >= minSeen drafts, the Wilson lower bound of the
-//                  share of its grids in which it went in the FIRST line taken
-//                  is at least dominantFirstPickLo, and its shrunk win rate is
-//                  at least the mean (a card everyone grabs that also wins);
+//   dead           H0: of the drafters' pools whose played deck could cast it
+//                  (its colours within the deck's, splash included), at least
+//                  deadPlayRateHi played it.  Tested once it sat in minOnColour
+//                  such pools (a gold card of a pair nobody drafts is not dead:
+//                  it never had the chance);
+//   dominant-win   H0: its win rate over decisive games in played decks is at
+//                  most the run's mean.  Its games come in clumps (one deck,
+//                  one opponent, ~2.4 games a match), so the counts are divided
+//                  by the generation's design effect first (evolve-stats.ts).
+//                  Tested once it played minGames games; a rejection counts only
+//                  when its rate is at least dominantMargin over the mean;
+//   dominant-pick  H0: the share of its grids in which it went in the FIRST line
+//                  taken is at most dominantFirstPickLo (tested once dealt in
+//                  minSeen drafts); counts only when its shrunk win rate is at
+//                  least the mean (a card everyone grabs that also wins);
 //   note           cubes/<cube>-notes.tsv says `cut` (Justin's real games).
 //
+// DISCOVERY: every test a cut could follow from (the cards no rule below
+// protects) is one family, and Benjamini–Hochberg at fdrQ decides which pass --
+// about 180 cards are looked at, so a per-card 95% test would flag several by
+// chance every generation.  Only the generation's own drafts count: nothing is
+// pooled across generations, so a card is never re-tested on data it was
+// already tested on.  A discovery is a CANDIDATE.
+//
+// CONFIRMATION: the candidates are tested again, the same rule, on a batch of
+// fresh drafts with a disjoint seed range (sized by confirmPlan for the effect
+// that matters, at power confirmPower), with Holm at confirmAlpha across the
+// candidates.  Only a confirmed candidate is cut.
+
 // A lead that does not pass is `watch` ("insufficient data"), with an estimate
-// of the drafts it would take to settle.  Never cut:
+// of the drafts per generation it would take to discover.  Never cut:
 //
 //   - a card the notes file says `keep`;
 //   - an AI-LIMITED card (Forge's AI:RemoveDeck All or Random, the pool's
@@ -68,6 +82,7 @@ import type { Cube, CubeCard } from './cube.ts';
 import { sectionFor } from './cubedoc.ts';
 import { SHRINK_K } from './meta.ts';
 import { initialRating } from './ratings.ts';
+import { benjaminiHochberg, binomLower, binomUpper, designEffect, holm, requiredN, type DeckGames } from './evolve-stats.ts';
 import { playedDeck, wilson, type CardInfo } from './report.ts';
 import type { DraftRecord } from './run.ts';
 
@@ -78,8 +93,17 @@ export interface EvolveKnobs {
   minOnColour: number;
   deadPlayRateHi: number;
   deadMinRating: number;
-  dominantLoMargin: number;
+  dominantMargin: number;
   dominantFirstPickLo: number;
+  fdrQ: number;
+  confirmAlpha: number;
+  confirmPower: number;
+  dominantEffect: number;
+  deadEffect: number;
+  pickEffect: number;
+  confirmMinDrafts: number;
+  confirmMaxDrafts: number;
+  confirmSeedOffset: number;
   watchWinMargin: number;
   colourSlack: number;
   minSignposts: number;
@@ -101,8 +125,17 @@ export const EVOLVE_DEFAULTS: EvolveKnobs = {
   minOnColour: 8,
   deadPlayRateHi: 0.35,
   deadMinRating: 60,
-  dominantLoMargin: 0.05,
+  dominantMargin: 0.05,
   dominantFirstPickLo: 0.75,
+  fdrQ: 0.1,
+  confirmAlpha: 0.05,
+  confirmPower: 0.8,
+  dominantEffect: 0.1,
+  deadEffect: 0.1,
+  pickEffect: 0.9,
+  confirmMinDrafts: 20,
+  confirmMaxDrafts: 300,
+  confirmSeedOffset: 1000000,
   watchWinMargin: 0.12,
   colourSlack: 2,
   minSignposts: 2,
@@ -404,6 +437,21 @@ export function cardStats(meta: MetaDoc, recs: DraftRecord[], info?: Record<stri
   return out;
 }
 
+/** Each played deck's decisive games and wins (two a draft), for the design effect of a card's win rate. */
+export function deckGamesOf(recs: DraftRecord[]): DeckGames[] {
+  const out: DeckGames[] = [];
+  for (const rec of recs) {
+    const decisive = rec.match.games.filter((g) => g.winner === 'A' || g.winner === 'B');
+    if (!decisive.length) continue;
+    const a = decisive.filter((g) => g.winner === 'A').length;
+    out.push({ games: decisive.length, wins: a }, { games: decisive.length, wins: decisive.length - a });
+  }
+  return out;
+}
+
+/** The design effect of a batch's card win rates (evolve-stats.ts's designEffect over its played decks). */
+export const batchDeff = (recs: DraftRecord[]): number => designEffect(deckGamesOf(recs));
+
 export interface Group { key: string; decks: number; games: number; wins: number; rate: number; shrunk: number; ci: [number, number] }
 export interface Balance { mean: number; colours: Group[]; pairs: Group[]; themes: Group[] }
 
@@ -435,25 +483,124 @@ function needOf(groups: Group[], mean: number): Map<string, number> {
   return new Map(groups.filter((g) => g.games > 0).map((g) => [g.key, Math.max(0, Math.min(1, (mean - g.shrunk) / 0.1))]));
 }
 
+// ------------------------------------------------------------------ the tests
+
+/** The three rules a card can be cut on from AI evidence. */
+export type Rule = 'dominant-win' | 'dominant-pick' | 'dead';
+export const RULES: Rule[] = ['dominant-win', 'dominant-pick', 'dead'];
+
+/** One rule's one-sided exact binomial test of one card. */
+export interface RuleTest {
+  rule: Rule;
+  /** Observations and successes (games and wins, grids dealt and first-line takes, on-colour pools and plays). */
+  n: number;
+  x: number;
+  /** x / n. */
+  rate: number;
+  /** The null's boundary: the mean (win), dominantFirstPickLo (pick), deadPlayRateHi (dead). */
+  p0: number;
+  /** The design effect the counts were divided by (games only; 1 otherwise). */
+  deff: number;
+  /** P(a result at least this extreme | the boundary). */
+  p: number;
+}
+
+/** A rule's test of a card's numbers; `gate` false skips the minimum-sample check (confirmation tests at any size). */
+export function ruleTest(rule: Rule, card: { land: boolean }, s: CardStat, mean: number, deff: number, k: EvolveKnobs, gate = true): RuleTest | null {
+  const d = Math.max(1, deff);
+  if (rule === 'dominant-win') {
+    if (s.games === 0 || (gate && s.games < k.minGames)) return null;
+    return { rule, n: s.games, x: s.wins, rate: s.wins / s.games, p0: mean, deff: d, p: binomUpper(s.wins / d, s.games / d, mean) };
+  }
+  if (rule === 'dominant-pick') {
+    if (s.seen === 0 || (gate && s.seen < k.minSeen)) return null;
+    return { rule, n: s.seen, x: s.firstTakes, rate: s.firstTakes / s.seen, p0: k.dominantFirstPickLo, deff: 1, p: binomUpper(s.firstTakes, s.seen, k.dominantFirstPickLo) };
+  }
+  if (card.land || s.onColour === 0 || (gate && s.onColour < k.minOnColour)) return null;
+  return { rule, n: s.onColour, x: s.onColourDecks, rate: s.onColourDecks / s.onColour, p0: k.deadPlayRateHi, deff: 1, p: binomLower(s.onColourDecks, s.onColour, k.deadPlayRateHi) };
+}
+
+/** The size filter a significant test must also pass: a dominant card wins dominantMargin over the mean; a first-pick card wins at least the mean. */
+export function passesSize(t: RuleTest, s: CardStat, mean: number, k: EvolveKnobs): boolean {
+  if (t.rule === 'dominant-win') return t.rate >= mean + k.dominantMargin;
+  if (t.rule === 'dominant-pick') return s.shrunk >= mean;
+  return true;
+}
+
+/** Wilson's interval with the counts divided by a design effect (the interval a clumped win rate deserves). */
+export function clusteredCi(wins: number, games: number, deff: number): [number, number] {
+  const d = Math.max(1, deff);
+  const w = wilson(wins / d, games / d);
+  return [w.lo ?? 0, w.hi ?? 1];
+}
+
+/** Can a cut follow from this rule's evidence on this card?  Only those tests are the discovery family. */
+export function cuttable(card: EvolveCard, note: Note | undefined, rule: Rule, k: EvolveKnobs): boolean {
+  if (note || card.aiFlag !== 'none' || card.land) return false;
+  return rule !== 'dead' || card.rating >= k.deadMinRating;
+}
+
+export interface Discovery {
+  /** The tests a cut could follow from (one BH family). */
+  family: number;
+  q: number;
+  /** BH's p-value cutoff (0: no discovery). */
+  cutoff: number;
+  /** The design effect of this batch's games. */
+  deff: number;
+  /** `${card}|${rule}` -> its test and BH q-value, for every test of the family. */
+  tests: Map<string, RuleTest & { qValue: number; reject: boolean }>;
+  /** Tests outside the family (AI-limited, lands, noted, low-rated), for the report only. */
+  outside: Map<string, RuleTest>;
+}
+
+/** Discovery: every card's tests on this batch, and BH over the ones a cut could follow from. */
+export function discover(cards: EvolveCard[], stats: Map<string, CardStat>, mean: number, deff: number, notes: Map<string, Note>, k: EvolveKnobs): Discovery {
+  const fam: Array<{ key: string; t: RuleTest }> = [];
+  const outside = new Map<string, RuleTest>();
+  for (const c of cards) {
+    const s = stats.get(c.name);
+    if (!s || s.seen === 0) continue;
+    for (const rule of RULES) {
+      const t = ruleTest(rule, c, s, mean, deff, k);
+      if (!t) continue;
+      if (cuttable(c, notes.get(c.name), rule, k)) fam.push({ key: `${c.name}|${rule}`, t });
+      else outside.set(`${c.name}|${rule}`, t);
+    }
+  }
+  const bh = benjaminiHochberg(fam.map((f) => f.t.p), k.fdrQ);
+  const tests = new Map(fam.map((f, i) => [f.key, { ...f.t, qValue: bh.q[i] as number, reject: bh.reject[i] as boolean }]));
+  return { family: fam.length, q: k.fdrQ, cutoff: bh.cutoff, deff, tests, outside };
+}
+
+/** Would a test outside the family have been a discovery?  Its p at or under the family's cutoff, or under the lone-test BH bar. */
+function wouldPass(t: RuleTest, d: Discovery): boolean {
+  return t.p <= Math.max(d.cutoff, d.q / (d.family + 1));
+}
+
 // ------------------------------------------------------------------ assessing a card
 
 export type Status = 'note-cut' | 'note-keep' | 'dominant-win' | 'dominant-pick' | 'dead' | 'watch' | 'ai-limited' | 'builder-limited' | 'rating-limited' | 'ok' | 'no-data';
 
 export interface Assessment {
   name: string;
+  /** dominant-win / dominant-pick / dead: a discovery, i.e. a CANDIDATE -- cut only once confirmed (Decision.confirmations). */
   status: Status;
   /** What the AI evidence alone would say (for an AI-limited or noted card too). */
   signal: 'dead' | 'dominant-win' | 'dominant-pick' | 'lean-dead' | 'lean-dominant' | 'none';
   evidence: string;
   aiFlag: AiFlag;
   note?: string;
-  /** For a watch: drafts per generation that would likely settle it (null = not reachable). */
+  /** The discovery test behind the signal, with its BH q-value when it was in the family. */
+  test?: RuleTest & { qValue?: number };
+  /** For a watch: drafts per generation that would likely make it a discovery (null = not reachable). */
   draftsNeeded?: number | null;
   /** How strong the case is (sorts the cuts). */
   strength: number;
 }
 
 const pct = (x: number): string => x.toFixed(2);
+const pv = (p: number): string => (p < 0.001 ? p.toExponential(1) : p.toFixed(3));
 
 /** The smallest n at which Wilson's bound for a steady rate p crosses `target` (upper bound <= target when below, lower >= target when above). */
 export function sampleToSettle(p: number, target: number, below: boolean, cap = 20000): number | null {
@@ -465,49 +612,171 @@ export function sampleToSettle(p: number, target: number, below: boolean, cap = 
   return null;
 }
 
-export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, drafts: number, note: Note | undefined, k: EvolveKnobs): Assessment {
+/** "p 2.1e-5, q 0.004" for a test (q only when it was in the family). */
+export function testWords(t: RuleTest & { qValue?: number }): string {
+  return `p ${pv(t.p)}${t.qValue !== undefined ? `, q ${pv(t.qValue)}` : ''}`;
+}
+
+export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, drafts: number, note: Note | undefined, k: EvolveKnobs, disc?: Discovery): Assessment {
   const base = { name: card.name, aiFlag: card.aiFlag, ...(note ? { note: note.note } : {}) };
   if (!s || s.seen === 0) {
     const st: Status = note?.verdict === 'cut' ? 'note-cut' : note?.verdict === 'keep' ? 'note-keep' : 'no-data';
     return { ...base, status: st, signal: 'none', evidence: 'never dealt', strength: st === 'note-cut' ? 100 : 0 };
   }
+  const d = disc ?? discover([card], new Map([[card.name, s]]), mean, 1, note ? new Map([[card.name, note]]) : new Map(), k);
+  const deff = d.deff;
   const play = wilson(s.onColourDecks, s.onColour);
   const playRate = s.onColour ? s.onColourDecks / s.onColour : 0;
-  const first = wilson(s.firstTakes, s.seen);
+  const ci = clusteredCi(s.wins, s.games, deff);
   const ev = `dealt ${s.seen}, picked ${s.picked}, first line ${s.firstTakes}, in ${s.inDecks} deck(s); `
     + (card.land ? '' : s.onColour ? `on colour in ${s.onColour} pool(s), played in ${s.onColourDecks} (${pct(playRate)}, CI ${pct(play.lo ?? 0)}–${pct(play.hi ?? 1)}); ` : 'never in a pool whose deck could cast it; ')
-    + (s.games ? `won ${s.wins} of ${s.games} decisive games (${pct(s.winRate)}, CI ${pct(s.ci[0])}–${pct(s.ci[1])}, shrunk ${pct(s.shrunk)}) vs mean ${pct(mean)}` : 'no decisive games in a deck');
-  // What the AI evidence says.
+    + (s.games ? `won ${s.wins} of ${s.games} decisive games (${pct(s.winRate)}, CI ${pct(ci[0])}–${pct(ci[1])} by deck${deff > 1.005 ? `, design effect ${deff.toFixed(2)}` : ''}, shrunk ${pct(s.shrunk)}) vs mean ${pct(mean)}` : 'no decisive games in a deck');
+  // What the AI evidence says: the first rule whose test is a discovery and passes its size filter.
   let signal: Assessment['signal'] = 'none';
   let strength = 0;
+  let test: Assessment['test'];
   let draftsNeeded: number | null | undefined;
-  const perDraftOnColour = s.onColour / Math.max(1, drafts);
-  const perDraftGames = s.games / Math.max(1, drafts);
-  const builderBlind = card.land;
-  if (s.games >= k.minGames && s.ci[0] >= mean + k.dominantLoMargin) { signal = 'dominant-win'; strength = 10 + (s.ci[0] - mean) * 10; }
-  else if (s.seen >= k.minSeen && (first.lo ?? 0) >= k.dominantFirstPickLo && s.shrunk >= mean) { signal = 'dominant-pick'; strength = 5 + (first.lo ?? 0); }
-  else if (!card.land && s.onColour >= k.minOnColour && (play.hi ?? 1) <= k.deadPlayRateHi) { signal = 'dead'; strength = 1 + (k.deadPlayRateHi - (play.hi ?? 1)); }
-  else if (s.games > 0 && s.winRate >= mean + k.watchWinMargin) {
-    signal = 'lean-dominant';
-    const n = sampleToSettle(s.winRate, mean + k.dominantLoMargin, false);
-    draftsNeeded = n === null || perDraftGames === 0 ? null : Math.max(Math.ceil(Math.max(n, k.minGames) / perDraftGames), drafts + 1);
-  } else if (!card.land && s.onColour > 0 && playRate <= k.deadPlayRateHi) {
-    signal = 'lean-dead';
-    const n = sampleToSettle(Math.max(playRate, 0.001), k.deadPlayRateHi, true);
-    draftsNeeded = n === null ? null : Math.max(Math.ceil(Math.max(n, k.minOnColour) / perDraftOnColour), drafts + 1);
+  for (const rule of RULES) {
+    const key = `${card.name}|${rule}`;
+    const inFam = d.tests.get(key);
+    const t = inFam ?? d.outside.get(key);
+    if (!t) continue;
+    const hit = inFam ? inFam.reject : wouldPass(t, d);
+    if (hit && passesSize(t, s, mean, k)) {
+      signal = rule;
+      test = inFam ? { ...t, qValue: inFam.qValue } : t;
+      // Strength sorts cuts within a rule: the smaller the p, the stronger.
+      strength = { 'dominant-win': 10, 'dominant-pick': 5, dead: 1 }[rule] + Math.min(4, -Math.log10(Math.max(t.p, 1e-300)) / 10);
+      break;
+    }
   }
-  const out: Assessment = { ...base, status: 'ok', signal, evidence: ev, strength, ...(draftsNeeded !== undefined ? { draftsNeeded } : {}) };
+  // A lead that is not (yet) a discovery: the drafts a generation would need for it to pass BH's bar for one discovery.
+  const alphaOne = k.fdrQ / Math.max(1, d.family);
+  if (signal === 'none' && s.games > 0 && s.winRate >= mean + k.watchWinMargin) {
+    signal = 'lean-dominant';
+    const perDraft = s.games / Math.max(1, drafts);
+    const n = requiredN(mean, Math.min(0.999, s.winRate), alphaOne, 0.5) * Math.max(1, deff);
+    draftsNeeded = !Number.isFinite(n) || perDraft === 0 ? null : Math.max(Math.ceil(Math.max(n, k.minGames) / perDraft), drafts + 1);
+  } else if (signal === 'none' && !card.land && s.onColour > 0 && playRate <= k.deadPlayRateHi) {
+    signal = 'lean-dead';
+    const perDraft = s.onColour / Math.max(1, drafts);
+    const n = requiredN(k.deadPlayRateHi, Math.max(playRate, 0.001), alphaOne, 0.5);
+    draftsNeeded = !Number.isFinite(n) ? null : Math.max(Math.ceil(Math.max(n, k.minOnColour) / perDraft), drafts + 1);
+  }
+  const evidence = test ? `${ev}; ${test.rule} ${testWords(test)}` : ev;
+  const out: Assessment = { ...base, status: 'ok', signal, evidence, strength, ...(test ? { test } : {}), ...(draftsNeeded !== undefined ? { draftsNeeded } : {}) };
   if (note?.verdict === 'cut') return { ...out, status: 'note-cut', strength: 100 };
   if (note?.verdict === 'keep' || note?.verdict === 'try') return { ...out, status: 'note-keep', strength: 0 };
   if (card.aiFlag !== 'none') return { ...out, status: 'ai-limited', strength: 0 };
   // A land's decks, games and wins are its pair's: it goes by a note only.
-  if (builderBlind) return { ...out, status: 'builder-limited', strength: 0 };
+  if (card.land) return { ...out, status: 'builder-limited', strength: 0 };
   if ((signal === 'dead' || signal === 'lean-dead') && card.rating < k.deadMinRating) {
-    return { ...out, signal: 'dead', status: 'rating-limited', strength: 0, evidence: `${ev}; rated ${card.rating}, under ${k.deadMinRating}` };
+    const { draftsNeeded: _dn, ...rest } = out;
+    return { ...rest, signal: 'dead', status: 'rating-limited', strength: 0, evidence: `${evidence}; rated ${card.rating}, under ${k.deadMinRating}` };
   }
   if (signal === 'dominant-win' || signal === 'dominant-pick' || signal === 'dead') return { ...out, status: signal };
   if (signal === 'lean-dead' || signal === 'lean-dominant') return { ...out, status: 'watch', strength: 0 };
   return out;
+}
+
+// ------------------------------------------------------------------ confirmation
+
+export interface ConfirmNeed {
+  name: string;
+  rule: Rule;
+  /** Drafts the confirmation batch needs for this candidate (null: not reachable at any size). */
+  drafts: number | null;
+}
+
+export interface ConfirmPlan {
+  /** Drafts in the confirmation batch: the largest candidate's need, within confirmMinDrafts..confirmMaxDrafts (0: no candidate). */
+  drafts: number;
+  /** Each candidate's need: observations for power confirmPower at the effect that matters, at Holm's first-step level. */
+  needs: ConfirmNeed[];
+  /** Candidates whose need is over confirmMaxDrafts: tested anyway, with less power. */
+  underpowered: string[];
+}
+
+/**
+ * The confirmation batch's size.  Each candidate's rule is tested again at
+ * confirmAlpha / (candidates) (Holm's strictest step), and must be found with
+ * power confirmPower when the card is as far from the null as matters:
+ * dominant-win at mean + dominantEffect, dominant-pick at pickEffect, dead at
+ * deadEffect.  Observations per draft come from the discovery batch (games,
+ * grids dealt, on-colour pools); a card's games are counted at the design
+ * effect.  The effect is the knob's, never the discovery's estimate, which is
+ * biased upward by having been selected.
+ */
+export function confirmPlan(candidates: Assessment[], stats: Map<string, CardStat>, drafts: number, mean: number, deff: number, k: EvolveKnobs): ConfirmPlan {
+  const cands = candidates.filter((a) => a.status === 'dominant-win' || a.status === 'dominant-pick' || a.status === 'dead');
+  if (!cands.length) return { drafts: 0, needs: [], underpowered: [] };
+  const alpha = k.confirmAlpha / cands.length;
+  const needs = cands.map((a): ConfirmNeed => {
+    const rule = a.status as Rule;
+    const s = stats.get(a.name) as CardStat;
+    const [p0, p1, perDraft, d] = rule === 'dominant-win' ? [mean, Math.min(0.99, mean + k.dominantEffect), s.games / Math.max(1, drafts), Math.max(1, deff)]
+      : rule === 'dominant-pick' ? [k.dominantFirstPickLo, k.pickEffect, s.seen / Math.max(1, drafts), 1]
+        : [k.deadPlayRateHi, k.deadEffect, s.onColour / Math.max(1, drafts), 1];
+    const n = requiredN(p0, p1, alpha, k.confirmPower) * d;
+    return { name: a.name, rule, drafts: !Number.isFinite(n) || perDraft === 0 ? null : Math.ceil(n / perDraft) };
+  });
+  const most = Math.max(...needs.map((x) => x.drafts ?? Infinity));
+  return {
+    drafts: Math.max(k.confirmMinDrafts, Math.min(k.confirmMaxDrafts, most)),
+    needs,
+    underpowered: needs.filter((x) => x.drafts === null || x.drafts > k.confirmMaxDrafts).map((x) => x.name),
+  };
+}
+
+/** The confirmation batch as the decision reads it: its own stats, mean and design effect, never pooled with discovery. */
+export interface ConfirmInput {
+  stats: Map<string, CardStat>;
+  mean: number;
+  deff: number;
+  drafts: number;
+  seeds: [number, number];
+  games: number;
+}
+
+export interface Confirmation {
+  name: string;
+  rule: Rule;
+  discovery: RuleTest & { qValue?: number };
+  /** The same test on the fresh seeds (null: no batch, or the card was never dealt there). */
+  confirm: RuleTest | null;
+  /** Holm-adjusted p of the confirmation test. */
+  holmP: number | null;
+  confirmed: boolean;
+  /** Why not, in words, when not. */
+  reason: string;
+}
+
+/** Each candidate's rule on the fresh batch; Holm at confirmAlpha across them; the size filter again. */
+export function confirmCandidates(candidates: Assessment[], cards: EvolveCard[], c: ConfirmInput | undefined, k: EvolveKnobs): Confirmation[] {
+  const byName = new Map(cards.map((x) => [x.name, x]));
+  const cands = candidates.filter((a) => a.test && (a.status === 'dominant-win' || a.status === 'dominant-pick' || a.status === 'dead'));
+  const tests = cands.map((a) => {
+    const s = c?.stats.get(a.name);
+    return c && s && s.seen > 0 ? ruleTest(a.status as Rule, byName.get(a.name) as EvolveCard, s, c.mean, c.deff, k, false) : null;
+  });
+  const h = holm(tests.map((t) => t?.p ?? 1), k.confirmAlpha);
+  return cands.map((a, i) => {
+    const t = tests[i] ?? null;
+    const s = c?.stats.get(a.name);
+    const sig = !!t && (h.reject[i] as boolean);
+    const sized = !!t && !!s && !!c && passesSize(t, s, c.mean, k);
+    const confirmed = sig && sized;
+    const reason = !c ? 'no confirmation batch was run' : !t ? 'no observations in the confirmation batch'
+      : !sig ? `not significant on the fresh seeds (Holm p ${pv(h.adjusted[i] as number)} > ${k.confirmAlpha})`
+        : !sized ? (a.status === 'dominant-win' ? `won ${pct(t.rate)}, under the mean + ${k.dominantMargin}` : 'its shrunk win rate fell under the mean') : '';
+    return { name: a.name, rule: a.status as Rule, discovery: a.test as RuleTest, confirm: t, holmP: t ? (h.adjusted[i] as number) : null, confirmed, reason };
+  });
+}
+
+/** "won 41 of 52 (0.79), p 3e-6" for a test, in the rule's own words. */
+export function ruleWords(t: RuleTest): string {
+  const what = t.rule === 'dominant-win' ? `won ${t.x} of ${t.n} decisive games` : t.rule === 'dominant-pick' ? `first line in ${t.x} of ${t.n} grids` : `played in ${t.x} of ${t.n} on-colour pools`;
+  return `${what} (${pct(t.rate)} vs ${pct(t.p0)}), p ${pv(t.p)}`;
 }
 
 // ------------------------------------------------------------------ choosing the swaps
@@ -527,6 +796,14 @@ export interface Swap {
 export interface Decision {
   swaps: Swap[];
   assessments: Assessment[];
+  /** Discovery on this generation's own drafts: the BH family, its level and cutoff, the design effect. */
+  discovery: { drafts: number; family: number; q: number; cutoff: number; deff: number; candidates: number };
+  /** The confirmation batch the candidates call for (drafts 0: none). */
+  plan: ConfirmPlan;
+  /** The confirmation batch that was run (absent: none). */
+  confirmBatch?: { drafts: number; seeds: [number, number]; games: number; mean: number; deff: number };
+  /** Every candidate, confirmed or not, with both batches' numbers. */
+  confirmations: Confirmation[];
   /** Cuts the evidence supported that found no replacement keeping the constraints. */
   unmatched: Array<{ name: string; why: Status; reason: string }>;
   /** Leads that did not pass their threshold. */
@@ -552,6 +829,10 @@ export interface SelectInput {
   /** Cards cut by an earlier generation (never re-added unless a note says try). */
   tabu: Set<string>;
   knobs: EvolveKnobs;
+  /** The design effect of the discovery batch's games (designEffect over its played decks; 1 if absent). */
+  deff?: number;
+  /** The confirmation batch: fresh seeds, read on their own.  Absent: the candidates stay candidates. */
+  confirmation?: ConfirmInput;
 }
 
 interface Candidate { card: PoolCard; score: number; parts: string }
@@ -582,13 +863,26 @@ function fit(cut: EvolveCard, why: Status, cand: PoolCard, need: { theme: Map<st
 
 const CUT_ORDER: Status[] = ['note-cut', 'dominant-win', 'dominant-pick', 'dead'];
 
+/** The first stage alone: every card assessed on the discovery batch, the candidates, and the confirmation batch they call for. */
+export function discoveryStage(x: Pick<SelectInput, 'cards' | 'stats' | 'balance' | 'drafts' | 'notes' | 'knobs' | 'deff'>): { disc: Discovery; assessments: Assessment[]; candidates: Assessment[]; plan: ConfirmPlan } {
+  const k = x.knobs;
+  const mean = x.balance.mean;
+  const disc = discover(x.cards, x.stats, mean, x.deff ?? 1, x.notes, k);
+  const assessments = x.cards.map((c) => assess(c, x.stats.get(c.name), mean, x.drafts, x.notes.get(c.name), k, disc))
+    .sort((a, b) => (a.name < b.name ? -1 : 1));
+  const candidates = assessments.filter((a) => a.status === 'dominant-win' || a.status === 'dominant-pick' || a.status === 'dead');
+  return { disc, assessments, candidates, plan: confirmPlan(candidates, x.stats, x.drafts, mean, disc.deff, k) };
+}
+
 export function selectSwaps(x: SelectInput): Decision {
   const k = x.knobs;
   const mean = x.balance.mean;
-  const assessments = x.cards.map((c) => assess(c, x.stats.get(c.name), mean, x.drafts, x.notes.get(c.name), k))
-    .sort((a, b) => (a.name < b.name ? -1 : 1));
+  const { disc, assessments, candidates, plan } = discoveryStage(x);
+  const confirmations = confirmCandidates(candidates, x.cards, x.confirmation, k);
+  const confirmed = new Map(confirmations.filter((c) => c.confirmed).map((c) => [c.name, c]));
   const byName = new Map(x.cards.map((c) => [c.name, c]));
-  const cuts = assessments.filter((a) => CUT_ORDER.includes(a.status))
+  const cb = x.confirmation;
+  const cuts = assessments.filter((a) => a.status === 'note-cut' || confirmed.has(a.name))
     .sort((a, b) => CUT_ORDER.indexOf(a.status) - CUT_ORDER.indexOf(b.status) || b.strength - a.strength || (a.name < b.name ? -1 : 1));
   const need = { theme: needOf(x.balance.themes, mean), colour: needOf(x.balance.colours, mean) };
   const inCube = new Set(x.cards.map((c) => c.name));
@@ -626,8 +920,12 @@ export function selectSwaps(x: SelectInput): Decision {
     if (!chosen) { unmatched.push({ name: a.name, why: a.status, reason: 'no pool card keeps the constraints' }); continue; }
     current = chosen.next;
     added.add(chosen.card.name);
+    const conf = confirmed.get(a.name);
+    const evidence = a.note ? `notes: ${a.note}; ${a.evidence}`
+      : conf && cb ? `discovery (${x.drafts} drafts): ${ruleWords(conf.discovery)}${conf.discovery.qValue !== undefined ? `, q ${pv(conf.discovery.qValue)}` : ''}; confirmed on fresh seeds ${cb.seeds[0]}–${cb.seeds[1]} (${cb.drafts} drafts): ${ruleWords(conf.confirm as RuleTest)}, Holm p ${pv(conf.holmP as number)}`
+        : a.evidence;
     swaps.push({ out: cut.name, outSection: cut.section, in: chosen.card.name, inSection: chosen.card.section, why: a.status,
-      evidence: a.note ? `notes: ${a.note}; ${a.evidence}` : a.evidence, fit: chosen.cand.parts });
+      evidence, fit: chosen.cand.parts });
   }
   const watch = assessments.filter((a) => a.status === 'watch').sort((a, b) => (a.draftsNeeded ?? 1e9) - (b.draftsNeeded ?? 1e9) || (a.name < b.name ? -1 : 1));
   const aiLimited = assessments.filter((a) => a.aiFlag !== 'none');
@@ -644,12 +942,22 @@ export function selectSwaps(x: SelectInput): Decision {
   const settleAt = settle.length ? settle[Math.min(settle.length - 1, Math.floor(settle.length / 2))] : null;
   const rated = assessments.filter((a) => a.status === 'rating-limited').length;
   const ratedNote = rated ? ` ${rated} card(s) are rarely or never played on colour but rated under ${k.deadMinRating}: a ratings question, not a drafts one (see rating-limited).` : '';
+  const nConf = confirmed.size;
+  const stage = candidates.length
+    ? ` Discovery: ${candidates.length} candidate(s) of ${disc.family} tests at a false-discovery rate of ${k.fdrQ}; `
+      + (cb ? `confirmation on ${cb.drafts} fresh drafts: ${nConf} confirmed, ${candidates.length - nConf} not.` : `not yet confirmed (a ${plan.drafts}-draft confirmation batch is needed); nothing is cut on them.`)
+    : '';
   const verdict = (swaps.length
-    ? `${swaps.length} swap(s) passed the evidence threshold${unmatched.length ? `; ${unmatched.length} supported cut(s) left for later` : ''}${watch.length ? `; ${watch.length} more lead(s) are insufficient data` : ''}.`
+    ? `${swaps.length} swap(s): ${nConf ? `${nConf} card(s) found and then confirmed on fresh drafts` : ''}${nConf && swaps.length > nConf ? ', and ' : ''}${swaps.length > nConf ? `${swaps.length - nConf} by the notes` : ''}${unmatched.length ? `; ${unmatched.length} supported cut(s) left for later` : ''}${watch.length ? `; ${watch.length} more lead(s) are insufficient data` : ''}.`
     : watch.length
-      ? `Insufficient data: no card passed a threshold at ${x.drafts} drafts; ${watch.length} lead(s) to watch${settleAt ? ` — about ${settleAt} drafts per generation would settle half of them` : ''}. Run more drafts.`
-      : `No swaps: nothing is dead or dominant at ${x.drafts} drafts, and nothing leans that way.`) + ratedNote;
-  return { swaps, assessments, unmatched, watch, aiLimited, humanTest, pendingTries, verdict, violationsBefore: before, violationsAfter: violations(current, x.constraints) };
+      ? `Insufficient data: no card was confirmed at ${x.drafts} drafts; ${watch.length} lead(s) to watch${settleAt ? ` — about ${settleAt} drafts per generation would find half of them` : ''}. Run more drafts.`
+      : candidates.length ? `No swaps: nothing was confirmed.` : `No swaps: nothing is dead or dominant at ${x.drafts} drafts, and nothing leans that way.`) + stage + ratedNote;
+  return {
+    swaps, assessments,
+    discovery: { drafts: x.drafts, family: disc.family, q: k.fdrQ, cutoff: disc.cutoff, deff: disc.deff, candidates: candidates.length },
+    plan, ...(cb ? { confirmBatch: { drafts: cb.drafts, seeds: cb.seeds, games: cb.games, mean: cb.mean, deff: cb.deff } } : {}), confirmations,
+    unmatched, watch, aiLimited, humanTest, pendingTries, verdict, violationsBefore: before, violationsAfter: violations(current, x.constraints),
+  };
 }
 
 /** The cube's cards after the swaps, as CubeCards for writeCubeDoc (cut cards gone, added ones without src). */
