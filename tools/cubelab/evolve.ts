@@ -32,10 +32,10 @@
 //   - an AI-LIMITED card (Forge's AI:RemoveDeck All or Random, the pool's
 //     forge_ai_flag) on AI evidence: its numbers are reported apart, marked
 //     AI-limited, and only a note can cut it;
-//   - a LAND on deck-rate evidence (`builder-limited`): the lab's deckbuilder
-//     plays a dual or a fetchland only in its own pair's decks and a land that
-//     makes fewer than two colours (Mutavault) never, so a land's deck rate
-//     measures how often its pair was drafted, not the land;
+//   - a LAND on AI evidence (`builder-limited`; a note decides): the lab's
+//     deckbuilder plays a dual or a fetchland only in its own pair's decks and
+//     a land that makes fewer than two colours (Mutavault) never, so a land's
+//     deck rate and win rate measure its pair, not the land;
 //   - a card whose RATING is under deadMinRating on deck-rate evidence
 //     (`rating-limited`): the drafters pick by rating, so a low-rated card that
 //     is never played may be weak or may be underrated, and the data cannot
@@ -500,7 +500,8 @@ export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, 
   if (note?.verdict === 'cut') return { ...out, status: 'note-cut', strength: 100 };
   if (note?.verdict === 'keep' || note?.verdict === 'try') return { ...out, status: 'note-keep', strength: 0 };
   if (card.aiFlag !== 'none') return { ...out, status: 'ai-limited', strength: 0 };
-  if (builderBlind && s.inDecks / Math.max(1, s.seen) <= k.deadPlayRateHi) return { ...out, status: 'builder-limited', strength: 0 };
+  // A land's decks, games and wins are its pair's: it goes by a note only.
+  if (builderBlind) return { ...out, status: 'builder-limited', strength: 0 };
   if ((signal === 'dead' || signal === 'lean-dead') && card.rating < k.deadMinRating) {
     return { ...out, signal: 'dead', status: 'rating-limited', strength: 0, evidence: `${ev}; rated ${card.rating}, under ${k.deadMinRating}` };
   }

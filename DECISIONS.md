@@ -13381,10 +13381,10 @@ evaluate it) and the ones that fit the weakest archetypes are listed as
 human-test candidates. `cubes/<cube>-notes.tsv` (`keep` / `cut` / `try`, from
 Justin's real games) overrides everything: `keep` is never cut, `cut` is cut
 now and never added, `try` is added first when a cut makes room, AI:All or not.
-Two more cards are never cut on deck-rate evidence, because the lab's own
-choices explain it. A **land** (`builder-limited`): the deckbuilder plays a dual
-or a fetchland only in its own pair's decks and a colourless land never, so a
-land's deck rate is its pair's popularity. A card **rated under
+Two more kinds of card are never cut on AI evidence, because the lab's own
+choices explain it. A **land** (`builder-limited`, cut by a note only): the
+deckbuilder plays a dual or a fetchland only in its own pair's decks and a
+colourless land never, so a land's deck rate and win rate are its pair's. A card **rated under
 `deadMinRating`** (60; `rating-limited`): the drafters pick by rating, so a
 low-rated card nobody plays may be weak or only underrated, and the data cannot
 tell which — the remedy is a rating, not a cut. Both were measured, not

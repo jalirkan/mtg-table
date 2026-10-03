@@ -37,6 +37,7 @@ import {
 } from './evolve.ts';
 import { changelog, htmlPage, htmlSection, logEntry, type GenSummary } from './evolve-report.ts';
 import { buildMeta } from './meta.ts';
+import { parseRatings } from './ratings.ts';
 import { aggregate, renderHtml, type CardInfo } from './report.ts';
 import { runLab, sha, type DraftRecord, type RunMeta } from './run.ts';
 import type { Weights } from './weights.ts';
@@ -128,6 +129,11 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
   // One engine boot (cached under var/cubelab/facts/) for the pool and the cube: colours, ranks, AI flags.
   const names = [...new Set([...pool.map((p) => p.name), ...startCube.cards.map((c) => c.name)])];
   pool = enrichPool(pool, engineFacts(env, names, say), o.weights.unrated);
+  // --ratings: the drafters pick by that file, so the loop judges ratings by it too (rating-limited, adds).
+  if (o.ratingsFile) {
+    const r = parseRatings(fs.readFileSync(o.ratingsFile, 'utf8'));
+    pool = pool.map((p) => (r.has(p.name) ? { ...p, rating: r.get(p.name) as number } : p));
+  }
   const poolBy = new Map(pool.map((p) => [p.name, p]));
   const missing = startCube.cards.filter((c) => !poolBy.has(c.name)).map((c) => c.name);
   if (missing.length) say(`WARNING: ${missing.length} cube card(s) not in the pool (their colours come from their sections): ${missing.join(', ')}`);
@@ -205,7 +211,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
       recs = [...readRunDir(path.join(prev, 'run')).recs, ...recs];
       from = h;
     }
-    if (from < g) say(`generation ${g}: the list is the one generation(s) ${from}-${g - 1} drafted; pooling their ${recs.length - own.length} draft(s) with these ${own.length}`);
+    if (from < g) say(`generation ${g}: the list is the one ${from === g - 1 ? `generation ${from}` : `generations ${from}-${g - 1}`} drafted; pooling their ${recs.length - own.length} draft(s) with these ${own.length}`);
     const pooledSeeds: [number, number] = [o.seed + (from - 1) * o.drafts, seeds[1]];
     const metaDoc = buildMeta(meta, info, recs, cube) as MetaDoc;
     fs.writeFileSync(path.join(runDir, 'meta.json'), `${JSON.stringify(metaDoc)}\n`);

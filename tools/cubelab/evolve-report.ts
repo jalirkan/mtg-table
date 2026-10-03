@@ -70,11 +70,11 @@ export function changelogSection(g: GenSummary): string {
   }
   const rated = d.assessments.filter((a) => a.status === 'rating-limited');
   if (rated.length) {
-    out.push('**Rating-limited** (never or almost never played, but rated low: the drafters pick by rating, so these may be weak or only underrated. Raise a rating in the cube\'s ratings TSV — `tools/cubelab.sh ratings init` writes one — to test it; never cut on this evidence):', '');
+    out.push(`**Rating-limited** (rarely or never played when on colour, but rated low: the drafters pick by rating, so these may be weak or only underrated; never cut on this evidence. To test one, raise its rating in a ratings TSV — \`tools/cubelab.sh ratings init <cube.md>\` writes one — and pass \`--ratings <tsv>\`):`, '');
     out.push(rated.map((a) => a.name).join(', ') + '.', '');
   }
-  const builder = d.assessments.filter((a) => a.status === 'builder-limited');
-  if (builder.length) out.push(`**Builder-limited lands** (the lab's deckbuilder plays a dual or fetchland only in its own pair's decks, and a colourless land never, so a land's deck rate measures its pair's popularity): ${builder.map((a) => a.name).join(', ')}.`, '');
+  const unplayed = d.assessments.filter((a) => a.status === 'builder-limited' && / in 0 deck\(s\)/.test(a.evidence));
+  if (unplayed.length) out.push(`**Lands never played** (lands go by notes only: the lab's deckbuilder plays a dual or fetchland only in its own pair's decks and a colourless land never, so a land's numbers are its pair's): ${unplayed.map((a) => a.name).join(', ')}.`, '');
   if (d.humanTest.length) {
     out.push('**Human-test candidates** (AI:RemoveDeck:All, never auto-added; add a `try` line to the notes file to test one):', '');
     for (const h of d.humanTest) out.push(`- ${h.name} (${h.colors}) — ${h.why}`);
