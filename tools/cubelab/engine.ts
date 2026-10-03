@@ -17,6 +17,12 @@
 // records that match as an engine error with whatever games it finished, and
 // starts a fresh worker for the rest.  A worker that dies before it is ready
 // twice in a row stops the run: the engine cannot boot, and retrying is noise.
+//
+// The lab runner's control file (tools/runner/control.ts, D337): with
+// LAB_CONTROL set, an idle worker gets no match while `paused`, and a worker
+// whose match ended while more than `maxWorkers` JVMs are alive quits (its
+// memory comes back); a parked worker starts again when the cap rises.
+// Without LAB_CONTROL nothing here changes.
 
 import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -25,6 +31,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 
 import type { Fact } from './cards.ts';
+import { controlReader } from '../runner/control.ts';
 
 export interface EngineEnv { cp: string; homes: string[]; repo: string }
 
@@ -168,6 +175,8 @@ interface Slot {
   startedAt: number;
   last: MatchResult | null;
   bootFailures: number;
+  /** Let go by the control file's maxWorkers; started again when the cap allows. */
+  parked: boolean;
 }
 
 /**
@@ -180,8 +189,11 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
   const queue = [...jobs];
   let pending = jobs.length;
   if (pending === 0) return;
-  const slots: Slot[] = env.homes.map((_, k) => ({ k, proc: null, ready: false, job: null, startedAt: 0, last: null, bootFailures: 0 }));
+  const slots: Slot[] = env.homes.map((_, k) => ({ k, proc: null, ready: false, job: null, startedAt: 0, last: null, bootFailures: 0, parked: false }));
   let fatal: Error | null = null;
+  const control = controlReader();
+  const cap = (): number => Math.min(slots.length, control().maxWorkers ?? slots.length);
+  const alive = (): number => slots.filter((x) => x.proc).length;
 
   return new Promise<void>((resolve, reject) => {
     const finish = (): void => {
@@ -193,6 +205,16 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
 
     const giveWork = (s: Slot): void => {
       if (!s.ready || s.job || !s.proc) return;
+      if (queue.length > 0) {
+        if (control().paused) return;                       // held: the timer offers the work again
+        if (alive() > cap()) {                              // over the cap: this worker goes
+          say(`worker ${s.k}: parked (maxWorkers ${cap()})`);
+          s.proc.stdin.end(`${JSON.stringify({ type: 'quit' })}\n`);
+          s.proc = null;
+          s.parked = true;
+          return;
+        }
+      }
       const j = queue.shift();
       if (!j) {
         s.proc.stdin.end(`${JSON.stringify({ type: 'quit' })}\n`);
@@ -213,7 +235,13 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
         pending--;
       }
       if (pending === 0) { finish(); return; }
-      if (queue.length > 0) start(s);
+      if (queue.length > 0) restart(s);
+    };
+
+    /** A fresh worker after one died or hung: parked instead while paused or at the cap (the timer starts it later). */
+    const restart = (s: Slot): void => {
+      if (control().paused || alive() >= cap()) { s.parked = true; return; }
+      start(s);
     };
 
     const start = (s: Slot): void => {
@@ -260,7 +288,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
             onResult(j, { ...s.last, engineError: 'a game thread would not stop after its timeout; the worker was restarted' }, s.k);
             s.last = null;
             if (pending === 0) { finish(); return; }
-            if (queue.length > 0) start(s);
+            if (queue.length > 0) restart(s);
             return;
           }
           fail(s, `worker exited (${code ?? signal})`);
@@ -273,13 +301,19 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
             finish();
             return;
           }
-          if (queue.length > 0) start(s);
+          if (queue.length > 0) restart(s);
         }
       });
     };
 
     const timer = setInterval(() => {
       for (const s of slots) {
+        if (s.proc && s.ready && !s.job) giveWork(s);       // released from a pause
+        if (s.parked && !s.proc && queue.length > 0 && !control().paused && alive() < cap()) {
+          s.parked = false;
+          say(`worker ${s.k}: unparked (maxWorkers ${cap()})`);
+          start(s);
+        }
         if (s.job && s.proc && Date.now() - s.startedAt > deadlineMs(s.job)) {
           const p = s.proc;
           s.proc = null;
@@ -289,6 +323,9 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
       }
     }, 2000);
 
-    for (const s of slots.slice(0, Math.min(slots.length, jobs.length))) start(s);
+    const first = Math.min(slots.length, jobs.length);
+    for (const s of slots.slice(0, first)) {
+      if (alive() < cap() && !control().paused) start(s); else s.parked = true;      // paused: no JVM starts at all
+    }
   });
 }

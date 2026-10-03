@@ -33,6 +33,13 @@
 # under var/ai-bench/<run>/home-<i>/ (tools/config.sh's forge_home_make, D129's
 # rule: no two JVMs share a Forge profile).  Output: var/ai-bench/<run>/
 # shard-<i>.jsonl and report.txt.  Needs ./bridge/build.sh first (bridge/out).
+#
+# `play` RESUMES (D337): run the same line again after a kill and it plays only
+# the games no shard file holds yet (same pairs, seed, games and configs; a
+# different configuration in the same --run is refused), after cutting off a
+# torn last line.  Under the lab runner (LAB_CONTROL set, tools/runner/) each
+# JVM reads the control file before a game: paused holds it, and a lower
+# maxWorkers lets a JVM go after its game, to be started again later.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
@@ -94,23 +101,82 @@ case "$mode" in
     case "$run" in */*|.*) echo "--run must be a plain name" >&2; exit 2 ;; esac
     dir="$REPO_ROOT/var/ai-bench/$run"
     mkdir -p "$dir"
+    # One `play` per run folder at a time (D337): the lock's fd is inherited by
+    # every JVM, so even a JVM whose shell was killed keeps the folder locked.
+    exec 9>>"$dir/.lock"
+    flock -n 9 || { echo "ai-bench: another play is still running on $dir (a JVM of it, maybe: pgrep -f 'AiBench play')" >&2; exit 2; }
     compile
     echo "ai-bench: run $run, $jobs job(s) -> $dir"
-    pids=()
+    # Resume (D337): cut a torn last line off every shard file of an earlier,
+    # killed run, and hand each JVM the other shards' files so it skips every
+    # game already played there (a restart with another --jobs included).
+    shopt -s nullglob
+    old=("$dir"/shard-*.jsonl)
+    shopt -u nullglob
+    if [ ${#old[@]} -gt 0 ]; then
+      node -e 'const fs=require("fs");for(const f of process.argv.slice(1)){const b=fs.readFileSync(f);const i=b.lastIndexOf(10);if(i+1<b.length){fs.truncateSync(f,i+1);console.log("ai-bench: cut a torn last line off "+f)}}' "${old[@]}"
+    fi
+    done_args=()
+    for f in "${old[@]}"; do done_args+=(--done "$f"); done
     for ((i = 0; i < jobs; i++)); do
-      home="$(forge_home_make "$dir/home-$i")"
-      jvm "$home" play "${args[@]}" ${mirror:+"$mirror"} --shard "$i/$jobs" --out "$dir/shard-$i.jsonl" \
-        > "$dir/shard-$i.log" 2>&1 &
-      pids+=("$!")
+      case " ${old[*]:-} " in *" $dir/shard-$i.jsonl "*) ;; *) done_args+=(--done "$dir/shard-$i.jsonl") ;; esac
     done
+    homes=() pids=() state=() slot=()
+    for ((i = 0; i < jobs; i++)); do homes+=("$(forge_home_make "$dir/home-$i")"); done
+    # launch <shard> <slot>: one JVM; LAB_SLOT is the slot the control file's maxWorkers is compared with.
+    launch() {
+      LAB_SLOT="$2" jvm "${homes[$1]}" play "${args[@]}" ${mirror:+"$mirror"} --shard "$1/$jobs" \
+        --out "$dir/shard-$1.jsonl" "${done_args[@]}" >> "$dir/shard-$1.log" 2>&1 &
+      pids[$1]=$! state[$1]=run slot[$1]=$2
+    }
     rc=0
-    for p in "${pids[@]}"; do wait "$p" || rc=1; done
+    if [ -z "${LAB_CONTROL:-}" ]; then
+      for ((i = 0; i < jobs; i++)); do launch "$i" "$i"; done
+      for ((i = 0; i < jobs; i++)); do wait "${pids[$i]}" || rc=1; done
+    else
+      # The lab runner's control file (tools/runner/control.ts): a JVM holds
+      # while paused and exits 75 (parked) when maxWorkers falls to its slot;
+      # this loop starts a parked shard again in a free slot below the cap.
+      echo "ai-bench: under the control file $LAB_CONTROL"
+      ctl() { read -r c_paused c_max < <(node "$REPO_ROOT/tools/runner/control.ts" get "$LAB_CONTROL") || true
+            case "${c_paused:-}" in 1) ;; *) c_paused=0 ;; esac
+            case "${c_max:-}" in ''|*[!0-9]*|0) c_max=$jobs ;; esac; }
+      for ((i = 0; i < jobs; i++)); do state[$i]=parked; done
+      while :; do
+        live=0
+        for ((i = 0; i < jobs; i++)); do
+          [ "${state[$i]}" = run ] || continue
+          if kill -0 "${pids[$i]}" 2>/dev/null; then live=$((live + 1)); continue; fi
+          r=0; wait "${pids[$i]}" || r=$?
+          case "$r" in
+            0) state[$i]=done ;;
+            75) state[$i]=parked; echo "ai-bench: shard $i parked" ;;
+            *) state[$i]=failed; rc=1 ;;
+          esac
+        done
+        ctl
+        for ((i = 0; i < jobs; i++)); do
+          [ "${state[$i]}" = parked ] && [ "$c_paused" = 0 ] && [ "$live" -lt "$c_max" ] || continue
+          for ((s = 0; s < c_max; s++)); do
+            used=0
+            for ((k = 0; k < jobs; k++)); do [ "${state[$k]}" = run ] && [ "${slot[$k]}" = "$s" ] && used=1; done
+            [ "$used" = 0 ] && break
+          done
+          echo "ai-bench: shard $i starts in slot $s"
+          launch "$i" "$s"; live=$((live + 1))
+        done
+        more=0
+        for ((i = 0; i < jobs; i++)); do case "${state[$i]}" in run|parked) more=1 ;; esac; done
+        [ "$more" = 1 ] || break
+        sleep 2
+      done
+    fi
     [ "$rc" = 0 ] || { echo "ai-bench: a shard failed -- see $dir/shard-*.log" >&2; }
     jvm "$REPO_ROOT/config.json" report "$dir"/shard-*.jsonl | tee "$dir/report.txt"
     exit "$rc"
     ;;
   *)
-    sed -n '2,35p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,43p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
     ;;
 esac
