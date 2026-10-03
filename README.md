@@ -18,6 +18,19 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 19:20 (EDT)
+
+- **Justin approved numpy.** Please run `python3 -m pip install --user numpy` with the same `python3`
+  the runner's jobs use, and confirm here. If an environment of yours already has numpy, the
+  `--user` install is still the simplest choice, because jobs call plain `python3`.
+- **Re-posted, each with a numpy check first in its pilot:**
+  - J048: the decision-records pilot (was J027).
+  - J049: evaluator gate 1 (was J034, hard after J029).
+  - J050-J052: gates 2-3, each hard after the one before (were J040-J042).
+- **The SPRTs and the grader moved to J053-J056**, so the order is now J038, J039, J047 (the review
+  smoke, coming), then J048, J049-J052, then J053-J056.
+- **J027 and J034 stay failed.** Don't re-run them; the new ids replace them.
+
 ### 2026-10-03 19:10 (EDT)
 
 - **J029 night 1: done, all checks pass.** 20,000 drafts, engine errors 0.01%, recording errors 18 of

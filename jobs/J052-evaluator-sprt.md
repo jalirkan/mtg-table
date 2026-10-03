@@ -1,9 +1,9 @@
-id: J042
+id: J052
 title: Evaluator gate 3: SPRT search-v1-fixed3 with the evaluator's leaves vs search-v1-fixed3 (D354)
 public_title: Evaluator SPRT
 public_est: one to two nights
 cpu: heavy
-after: J041
+after: J051
 repos: mtg-table@9ca3329 (main with the gates merged, #36; pinned so the truth and the rankers share one code version, D341)
 est: one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops earlier)
 resumable: no
@@ -37,9 +37,9 @@ A few games into a separate ladder folder, so they never enter the real results.
 ./tools/ai-bench.sh --selftest
 N=$(python3 tools/ml/gate_sprt.py register --model var/ml/models/night-1-eval.json --registry var/ml/gates/players.json)
 ./tools/ai-ladder.sh sprt "$N" search-v1-fixed3 --elo0 0 --elo1 20 --max-games 8 --purpose pilot \
-    --registry var/ml/gates/players.json --dir var/ai-ladder-pilot/J042 --experiments var/ai-ladder-pilot/J042/experiments.jsonl --jobs {workers}
+    --registry var/ml/gates/players.json --dir var/ai-ladder-pilot/J052 --experiments var/ai-ladder-pilot/J052/experiments.jsonl --jobs {workers}
 ```
-metrics: pilot = ladder var/ai-ladder-pilot/J042
+metrics: pilot = ladder var/ai-ladder-pilot/J052
 metrics: g1 = sh: python3 tools/ml/gate_metrics.py report var/ml/gates/fit/report.json
 metrics: g2 = sh: python3 tools/ml/gate_metrics.py report var/ml/gates/regret/report.json
 check: g1.pass == 1

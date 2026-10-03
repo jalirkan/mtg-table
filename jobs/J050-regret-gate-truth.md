@@ -1,9 +1,9 @@
-id: J040
+id: J050
 title: Evaluator gate 2: the decision set and its full-game truth tables (D354), resumable
 public_title: Regret gate truth grading
 public_est: ~one night
 cpu: heavy
-after: J034
+after: J049
 repos: mtg-table@9ca3329 (main with the gates merged, #36; pinned so the truth and the rankers share one code version, D341)
 est: one night: ~300 decisions x ~5 options x 200 rounds x 0.6 (racing) = ~180k full-game playouts at 0.5-1.0 s = 25-50 core-hours, 4-7 h on 7 JVMs; the screen about 10 min
 resumable: yes
@@ -18,7 +18,7 @@ headline: set.lines, truth.answered, truth.ok, truth.error, truth.playouts
 
 Gate 2 of the evaluator (D354), the expensive half. The job builds the fixed decision set:
 - decisions the AI seats took in J029's lab games, with decision records;
-- normal drafts only, held-out deck pairs of J034's model only, reserved decks dropped;
+- normal drafts only, held-out deck pairs of J049's model only, reserved decks dropped;
 - stratified 100 spell / 100 attack / 100 block, chosen in a fixed hash order after a rebuild
   screen.
 

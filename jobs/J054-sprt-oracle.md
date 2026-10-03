@@ -1,4 +1,4 @@
-id: J044
+id: J054
 title: (was J024, earlier J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference
 cpu: heavy
 repos: mtg-table@main (main once it merges)
