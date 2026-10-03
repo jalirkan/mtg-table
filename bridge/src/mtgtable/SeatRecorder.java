@@ -297,6 +297,11 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
         return gui.errors();
     }
 
+    /** Event batches that reached this recorder off the game thread and were held for it (D355). */
+    public int offThreadBatches() {
+        return gui.offThreadBatches();
+    }
+
     /** Bytes on disk; accurate after {@link #close}. */
     public long bytes() {
         return log.bytes();

@@ -173,6 +173,10 @@
 #                                 Then 12i: MidMoveSelfTest (D352) -- a "may
 #                                 look" revealer leaves play and no frame shows
 #                                 the top card it revealed (one engine boot)
+#                                 Then 12j: TimeoutSelfTest (D355) -- a game the
+#                                 watchdog ends records cleanly: no snapshot
+#                                 error, its outcome in the last frame, `over`
+#                                 last (one engine boot)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -2016,6 +2020,28 @@ s12i_midmove() {
   fi
 }
 
+# 12j. D355: a game the watchdog ends (Game.setGameOver from main, as the cube
+#      lab, ai-bench and RecordMatch do at a deadline) records cleanly.
+#      bridge/src/mtgtable/TimeoutSelfTest.java plays one game with both chairs
+#      recorded by SeatRecorder, parks the game thread at turn 3, ends the game
+#      from main and holds that neither seat counted a snapshot error, the
+#      outcome event reached the log and `over` is the last frame; then the
+#      redaction checker reads both logs.  One engine boot, about 15 s, writes
+#      var/check-all-timeout/.
+s12j_timeout() {
+  printf '\n=== 12j. TimeoutSelfTest -- a game ended by the watchdog records with no errors (D355) ===\n'
+  rc=0
+  rm -rf var/check-all-timeout
+  jvm ./bridge/run.sh mtgtable.TimeoutSelfTest var/check-all-timeout > var/check-all-timeout.log 2>&1 || rc=$?
+  grep -E '^(  ok|  FAIL|TimeoutSelfTest)' var/check-all-timeout.log || true
+  if [ "$rc" != "0" ]; then
+    capped "$rc" && die "TimeoutSelfTest did not finish within ${GAME_TIMEOUT}s"
+    die "TimeoutSelfTest exited $rc: a timed-out game's recording is not clean (12j, D355; log: var/check-all-timeout.log)"
+  fi
+  node tools/check-redaction.mjs var/check-all-timeout/timeout-seat0.jsonl var/check-all-timeout/timeout-seat1.jsonl \
+    || die "check-redaction.mjs on the timed-out game's recordings (12j)"
+}
+
 s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 }
@@ -2154,6 +2180,7 @@ job 12f-coach     12 both     s12f_coach        "$PRE"
 job 12g-cubelab   12 both     s12g_cubelab      "$PRE"
 job 12h-ml        12 both     s12h_ml           "$PRE"
 job 12i-midmove   12 both     s12i_midmove      "$PRE"
+job 12j-timeout   12 both     s12j_timeout      "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
