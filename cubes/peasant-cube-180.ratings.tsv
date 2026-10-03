@@ -1,0 +1,185 @@
+# cube lab ratings for: The Peasant Cube — two-player edition (180 cards)
+# Seeded by `tools/cubelab.sh ratings init` from Forge's draft ranks (CardRanker.getRawScore of the
+# best-ranked printing; source cube = CubeCobra's list, set = that set's rank file). A card Forge has no
+# rank for starts at 40. Edit the rating column; the other two say where it started.
+# name	rating	forge	source
+Descendant of Storms	81.9	81.9	cube:TDM
+Momo, Playful Pet	41.9	41.9	set:TLA
+Thraben Inspector	97	97	cube:2XM
+Cathar Commando	29.9	29.9	set:FDN
+Kor Skyfisher	90.4	90.4	cube:ZEN
+Lita, Little Orphan Amphibian	44.2	44.2	set:TMT
+Splitskin Doll	42.8	42.8	set:DSK
+Combat Thresher	42.3	42.3	set:BRO
+Flickerwisp	43.4	43.4	set:2X2
+Inspiring Overseer	52.3	52.3	cube:SNC
+Aerie Auxiliary	44.5	44.5	set:MH3
+All-Fates Stalker	47	47	set:EOE
+Mighty Mutanimals	49.1	49.1	set:TMT
+Witch Enchanter	68	68	cube:MH3
+Cloudgoat Ranger	92.8	92.8	cube:LRW
+Githzerai Monk	38.5	38.5	set:CLB
+Ephemerate	22.9	22.9	set:STA
+Path to Exile	85.5	85.5	cube:E02
+Swords to Plowshares	99.4	99.4	cube:C16
+The Last Ronin's Technique	40.2	40.2	set:TMT
+Battle Screech	73.4	73.4	cube:DMR
+Sheltered by Ghosts	55.3	55.3	cube:DSK
+Cast Out	46	46	set:AKH
+Spyglass Siren	71	71	cube:LCI
+Fallaji Archaeologist	38.2	38.2	set:PIO
+Floodpits Drowner	68	68	cube:DSK
+Shi'ar Soldier	40		none
+Frost Trickster	36.2	36.2	set:STX
+Slickshot Lockpicker	64.5	64.5	cube:OTJ
+Murmuring Mystic	50.4	50.4	cube:RVR
+Whirler Rogue	43.1	43.1	set:ORI
+Marauding Sphinx	40	40	set:OTJ
+Mulldrifter	71.5	71.5	cube:2X2
+Eddymurk Crab	17.5	17.5	set:BLB
+Waker of Waves	35.8	35.8	set:M21
+Consider	94.9	94.9	cube:PIO
+Counterspell	98.6	98.6	cube:30A
+Mana Leak	98.6	98.6	cube:STH
+Miscalculation	98	98	cube:ULG
+Sink into Stupor	91.3	91.3	cube:MH3
+Fact or Fiction	54.7	54.7	cube:DMR
+Ponder	98.1	98.1	cube:MAR
+Preordain	85.3	85.3	cube:C15
+Chart a Course	92.1	92.1	cube:LCI
+Stock Up	98.5	98.5	cube:SOA
+Lórien Revealed	98	98	cube:LTR
+Rise from the Tides	29.7	29.7	set:INR
+Unable to Scream	71	71	cube:DSK
+Cult Conscript	34	34	set:DMU
+Deep-Cavern Bat	97.7	97.7	cube:LCI
+Iron-Shield Elf	37.7	37.7	set:ECL
+Lampad of Death's Vigil	16.3	16.3	set:THB
+Marionette Apprentice	97.3	97.3	cube:MH3
+Sinister Starfish	10.1	10.1	set:MH2
+Umbral Collar Zealot	40.7	40.7	set:EOE
+Morbid Opportunist	92.9	92.9	cube:DBL
+Vampire Nighthawk	94.3	94.3	cube:ZEN
+Yahenni, Undying Partisan	41.3	41.3	set:AER
+Gonti, Lord of Luxury	74.3	74.3	cube:KLD
+Ravenous Chupacabra	53	53	cube:RIX
+Shriekmaw	58.5	58.5	cube:LRW
+Syr Konrad, the Grim	54.2	54.2	cube:ELD
+Troll of Khazad-dûm	97.6	97.6	cube:LTR
+Fatal Push	51	51	cube:AER
+Bitter Triumph	71.2	71.2	cube:SOA
+Power Word Kill	54.2	54.2	cube:AFR
+Dismember	98.5	98.5	cube:SOA
+Bone Shards	86.4	86.4	cube:MH2
+Reanimate	99	99	cube:ARC
+Lively Dirge	67.6	67.6	cube:OTJ
+Night's Whisper	81.1	81.1	cube:5DN
+Animate Dead	98.8	98.8	cube:30A
+Dance of the Dead	95.2	95.2	cube:ICE
+Dragon's Rage Channeler	74.9	74.9	cube:MH2
+Monastery Swiftspear	87.2	87.2	cube:PIO
+Rabbit Battery	65.9	65.9	cube:NEO
+Bothersome Noisemaker	42	42	set:HOB
+Coruscation Mage	12.9	12.9	set:BLB
+Mogg War Marshal	30.1	30.1	set:DMR
+Thermo-Alchemist	38.9	38.9	set:DBL
+Gut, True Soul Zealot	72.4	72.4	cube:CLB
+Skittering Precursor	29	29	set:MH3
+Spiteful Prankster	57.1	57.1	cube:J22
+Sourbread Auntie	26.3	26.3	set:ECL
+Twinshot Sniper	91.9	91.9	cube:NEO
+Charging Monstrosaur	47.3	47.3	set:XLN
+Amethyst Dragon	66.6	66.6	cube:CLB
+Lightning Bolt	98.9	98.9	cube:LEB
+Abrade	55.8	55.8	cube:HOU
+Goblin Surprise	88.1	88.1	cube:FDN
+Chain Lightning	85.2	85.2	cube:LEG
+Faithless Looting	93.3	93.3	cube:C14
+Firebolt	43.1	43.1	set:MH1
+Choco-Comet	90.2	90.2	cube:FIN
+Hordeling Outburst	38.2	38.2	set:A25
+Samurai's Katana	94.2	94.2	cube:FIN
+Goblin Bombardment	75.4	75.4	cube:WOT
+Elvish Mystic	53.8	53.8	cube:C14
+Llanowar Elves	72.2	72.2	cube:C14
+Stampeding Scurryfoot	73.9	73.9	cube:DFT
+Environmental Scientist	48	48	set:SOS
+Satyr Wayfinder	31.3	31.3	set:CMA
+Eldrazi Repurposer	61.5	61.5	cube:MH3
+Eternal Witness	83.8	83.8	cube:CMA
+Reclamation Sage	46.8	46.8	set:C14
+Scurry Oak	79	79	cube:MH2
+Thrashing Brontodon	41.1	41.1	set:M20
+Summon: Fenrir	53.5	53.5	cube:FIN
+Primordial Pachyderm	30	30	set:TMT
+Ka-Zar of the Savage Land	34.6	34.6	set:MSH
+Spinewoods Paladin	39.1	39.1	set:OTJ
+Spinewoods Armadillo	93.7	93.7	cube:OTJ
+Pelakka Wurm	45.6	45.6	set:M19
+Nyxborn Hydra	64.6	64.6	cube:MH3
+Sprout Swarm	45	45	set:FUT
+Malevolent Rumble	71.7	71.7	cube:MH3
+Trumpeting Herd	15.9	15.9	set:MH1
+Grizzly Fate	41.6	41.6	set:JUD
+Hunter's Talent	84.4	84.4	cube:BLB
+Curse of Predation	53.4	53.4	cube:IMA
+Eusocial Engineering	37.9	37.9	set:EOE
+Shuri, Vibranium Technologist	40		none
+Soulherder	39.6	39.6	set:MH1
+Halo Forager	41.9	41.9	set:MOM
+Dinrova Horror	43	43	set:PIO
+Mayhem Devil	33.9	33.9	set:WAR
+Goblin Plate Mail	24.6	24.6	set:HOB
+Writhing Chrysalis	94	94	cube:MH3
+Bloodbraid Elf	81.3	81.3	cube:ARB
+Vitu-Ghazi Guildmage	42.8	42.8	set:RTR
+Veteran Beastrider	41.1	41.1	set:DFT
+Elas il-Kor, Sadistic Pilgrim	38.8	38.8	set:DMU
+Lingering Souls	80.7	80.7	cube:MM3
+Hero of the Dunes	41.3	41.3	set:BRO
+Third Path Iconoclast	69.1	69.1	cube:BRO
+Balmor, Battlemage Captain	40.6	40.6	set:DMU
+Khenra Spellspear	79.9	79.9	cube:MOM
+Honest Rutstein	83.6	83.6	cube:OTJ
+Rise of the Witch-king	21.7	21.7	set:LTR
+Spider Spawning	42.7	42.7	set:INR
+Arabella, Abandoned Doll	43.7	43.7	set:DSK
+Heroic Reinforcements	41.2	41.2	set:2X2
+Biomechan Engineer	48	48	set:EOE
+Colossal Skyturtle	40.4	40.4	set:NEO
+Signal Pest	27.2	27.2	set:MBS
+Mishra's Bauble	71.5	71.5	cube:BRR
+Bonesplitter	93.4	93.4	cube:MRD
+The Underworld Cookbook	14.4	14.4	set:MH2
+Mind Stone	60.4	60.4	cube:C14
+Spawning Pit	21.5	21.5	set:DST
+Ashnod's Altar	17.6	17.6	set:ATQ
+Circuit Mender	40.7	40.7	set:NEO
+Dauntless Scrapbot	37.1	37.1	set:EOE
+Grafted Wargear	50.3	50.3	cube:5DN
+Loxodon Warhammer	87.3	87.3	cube:MRD
+Oketra's Monument	24.1	24.1	set:AKH
+Bane of Bala Ged	37.8	37.8	set:BFZ
+Artisan of Kozilek	41.2	41.2	set:ARC
+Bountiful Landscape	35.4	35.4	set:MH3
+Contaminated Landscape	25.2	25.2	set:MH3
+Deceptive Landscape	19.9	19.9	set:MH3
+Foreboding Landscape	28.8	28.8	set:MH3
+Perilous Landscape	32.4	32.4	set:MH3
+Seething Landscape	28.7	28.7	set:MH3
+Shattered Landscape	25	25	set:MH3
+Sheltering Landscape	35.3	35.3	set:MH3
+Tranquil Landscape	28.5	28.5	set:MH3
+Twisted Landscape	28.4	28.4	set:MH3
+Abandoned Campground	23.3	23.3	set:DSK
+Murky Sewer	16.8	16.8	set:DSK
+Razortrap Gorge	13.6	13.6	set:DSK
+Bleeding Woods	17	17	set:DSK
+Etched Cornfield	10.8	10.8	set:DSK
+Neglected Manor	12.1	12.1	set:DSK
+Peculiar Lighthouse	13.8	13.8	set:DSK
+Strangled Cemetery	16.6	16.6	set:DSK
+Raucous Carnival	19.6	19.6	set:DSK
+Lakeside Shack	25.7	25.7	set:DSK
+City of Brass	85.2	85.2	cube:5ED
+Ash Barrens	54.4	54.4	cube:C16
