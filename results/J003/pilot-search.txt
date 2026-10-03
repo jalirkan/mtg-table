@@ -1,0 +1,10 @@
+ai-bench: run pilot-cube-search, 7 job(s) -> /home/justin-a/code/mtg-table/var/ai-bench/pilot-cube-search
+== Default+search vs Default
+  games 20: A 7, B 13, draws 0 (timeouts 0, engine errors 0)
+  A win rate 35.0% of 20 decisive  (95% Wilson CI 18.1-56.7%)
+  focus deck (first of each pair) win rate 35.0% of 20  (95% CI 18.1-56.7%)
+  game time mean 63.2 s, median 52.7 s, max 284.9 s; turns mean 21.3; AI eval timeouts 29 (1.45/game)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {activate.Carrion Feeder=6, cast.Blood Artist=1, cast.Carrion Feeder=1, cast.Cauldron Familiar=2, cast.Deadly Dispute=1, cast.Grim Haruspex=2, cast.Village Rites=1, cast.Zulaport Cutthroat=1, forge.outletActivation=6, search.a.changed=8, search.a.considered=125, search.a.ms=202212, search.b.changed=2, search.b.considered=57, search.b.ms=95237, search.candidateUnmappable=7, search.copyUs=89439954, search.fallback.budget=205, search.oppFaceDownDecisions=13, search.p.changed=48, search.p.changed.fromPass=19, search.p.changed.toOther=15, search.p.changed.toPass=14, search.p.considered=396, search.p.ms=711450, search.p.skipLand=179, search.playUs=693148435, search.rollouts=6535, search.rounds=2399, search.standInCards=419, search.standInDecisions=325}
+  B counters:     {cast.Blood Artist=2, cast.Cauldron Familiar=2, cast.Grim Haruspex=3, cast.Priest of Forgotten Gods=1, cast.Woe Strider=1, cast.Zulaport Cutthroat=1}
+  focus counters: {activate.Carrion Feeder=6, cast.Blood Artist=1, cast.Carrion Feeder=1, cast.Cauldron Familiar=2, cast.Grim Haruspex=1, cast.Village Rites=1, forge.outletActivation=6, search.a.changed=6, search.a.considered=71, search.a.ms=115939, search.b.changed=1, search.b.considered=32, search.b.ms=54353, search.candidateUnmappable=3, search.copyUs=46291379, search.fallback.budget=118, search.p.changed=22, search.p.changed.fromPass=11, search.p.changed.toOther=5, search.p.changed.toPass=6, search.p.considered=194, search.p.ms=400254, search.p.skipLand=95, search.playUs=359316250, search.rollouts=2923, search.rounds=1087, search.standInCards=230, search.standInDecisions=180}

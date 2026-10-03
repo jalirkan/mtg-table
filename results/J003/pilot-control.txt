@@ -1,0 +1,10 @@
+ai-bench: run pilot-cube-control, 7 job(s) -> /home/justin-a/code/mtg-table/var/ai-bench/pilot-cube-control
+== Default vs Default
+  games 20: A 6, B 14, draws 0 (timeouts 0, engine errors 0)
+  A win rate 30.0% of 20 decisive  (95% Wilson CI 14.5-51.9%)
+  focus deck (first of each pair) win rate 40.0% of 20  (95% CI 21.9-61.3%)
+  game time mean 15.4 s, median 11.5 s, max 42.9 s; turns mean 20.8; AI eval timeouts 0 (0.00/game)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {activate.Carrion Feeder=4, cast.Blood Artist=1, cast.Carrion Feeder=1, cast.Cauldron Familiar=2, cast.Deadly Dispute=1, cast.Grim Haruspex=3, cast.Village Rites=1, cast.Zulaport Cutthroat=1, forge.outletActivation=4}
+  B counters:     {cast.Blood Artist=3, cast.Cauldron Familiar=1, cast.Deadly Dispute=1, cast.Grim Haruspex=3, cast.Priest of Forgotten Gods=1, cast.Woe Strider=2, cast.Zulaport Cutthroat=1}
+  focus counters: {activate.Carrion Feeder=4, cast.Blood Artist=1, cast.Carrion Feeder=1, cast.Cauldron Familiar=2, cast.Grim Haruspex=1, cast.Village Rites=1, forge.outletActivation=4}
