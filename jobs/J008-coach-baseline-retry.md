@@ -1,5 +1,5 @@
 id: J008
-title: (retry of J008) New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)
+title: (retry of J006) New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)
 cpu: light
 repos: mtg-table@main (e54aa16 or later), ForgeCoach@main (8cc33bd or later: launcher tests no longer probe the live engine, #32)
 est: ~30 min (84 calls at ~11 s, plus setup)
