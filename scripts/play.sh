@@ -142,7 +142,8 @@
 #
 #   1. it reads the request back through node and re-checks every field (the
 #      paths must be var/match/m<13 digits>/you.dck and ai.dck, the profile a
-#      .ai name, games 1-9) -- nothing from the browser reaches a command line
+#      .ai name, games 1-9, D333's aiPolicy plain|outlets|search and aiSearchMs
+#      500-5000) -- nothing from the browser reaches a command line
 #      except as those checked, quoted words;
 #   2. it stops the bridge (SIGTERM, then SIGKILL after 3 s, reaped) and waits
 #      until the ws port no longer answers -- never two engines; the seat's
@@ -150,7 +151,8 @@
 #   3. it starts the bridge on the new decks, profile and games, with every
 #      other flag as before (--keep-open, --site-dir, --lan, anything after `--`
 #      except --deck/--ai-deck/--deck2/--ai-profile/--games, which the request
-#      replaces, and --game-id, which is match-<id> so a client never takes the
+#      replaces -- and --ai-policy/--ai-search when it names an aiPolicy, D333 --
+#      and --game-id, which is match-<id> so a client never takes the
 #      new match for a reconnect); under --lan the restarted bridge keeps the FIRST run's pairing
 #      token (MTGTABLE_LAN_TOKEN, in the environment), so the phone's link and
 #      the helper's token stay good;
@@ -726,13 +728,14 @@ match_write() {
     const last = (re) => { let v = null; for (const l of lines) { const m = re.exec(l); if (m) v = m; } return v; };
     const loaded = () => {
       const you = last(/^deck you\s+= (.*) \((\d+) cards\)\s*$/), ai = last(/^deck ai\s+= (.*) \((\d+) cards\)\s*$/);
-      const prof = last(/^ai profile\s+= (\S+)/), games = last(/^games\/match\s+= (\d+)/), p = last(/^deck \(you\)\s+= (.*?)\s*$/);
+      const prof = last(/^ai profile\s+= (\S+)/), pol = last(/^ai policy\s+= (\S+)/), games = last(/^games\/match\s+= (\d+)/), p = last(/^deck \(you\)\s+= (.*?)\s*$/);
       let rel = p ? p[1] : null;
       if (rel && rel.startsWith(root + path.sep)) rel = rel.slice(root.length + 1);
       return {
         yourDeck: you ? { name: you[1], path: rel, cards: Number(you[2]) } : null,
         aiDeck: ai ? { name: ai[1], cards: Number(ai[2]) } : null,          // M44: a name and a count, never a list
         aiProfile: prof ? prof[1] : null, games: games ? Number(games[1]) : null,
+        aiPolicy: pol ? pol[1] : prof ? "plain" : null,   // D333: the bridge prints no policy line for plain
       };
     };
     const o = kind === "current" ? { id, match: loaded(), at: new Date().toISOString() } : { id, state };
@@ -780,12 +783,15 @@ restart_match() {
     const id = typeof r.id === "string" && /^m[0-9]{13}$/.test(r.id) ? r.id : "";
     const bad = (why) => { console.log("BAD"); console.log(id); console.log(why); process.exit(0); };
     if (!id) bad("no request id");
-    if (r.wake === true) { for (const x of ["WAKE", id, "", "", "", ""]) console.log(x); process.exit(0); }   // D308 /engine/start
+    if (r.wake === true) { for (const x of ["WAKE", id, "", "", "", "", "", ""]) console.log(x); process.exit(0); }   // D308 /engine/start
     const dir = process.argv[2];
     if (r.deck !== `${dir}/${id}/you.dck` || r.aiDeck !== `${dir}/${id}/ai.dck`) bad("deck paths are not <match dir>/<id>/you.dck and ai.dck");
     if (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile)) bad("not a profile name");
     if (!Number.isInteger(r.games) || r.games < 1 || r.games > 9) bad("games is not 1-9");
-    for (const x of ["OK", id, r.deck, r.aiDeck, r.aiProfile, String(r.games)]) console.log(x);
+    // D333: the AI policy and the search budget, both optional.
+    if (r.aiPolicy !== undefined && !["plain", "outlets", "search"].includes(r.aiPolicy)) bad("aiPolicy is not plain, outlets or search");
+    if (r.aiSearchMs !== undefined && (r.aiPolicy !== "search" || !Number.isInteger(r.aiSearchMs) || r.aiSearchMs < 500 || r.aiSearchMs > 5000)) bad("aiSearchMs is not 500-5000 with the search policy");
+    for (const x of ["OK", id, r.deck, r.aiDeck, r.aiProfile, String(r.games), r.aiPolicy ?? "", r.aiSearchMs === undefined ? "" : String(r.aiSearchMs)]) console.log(x);
   ' "$MATCH_DIR/request.json" "$MATCH_DIR" 2>/dev/null) || true
   [ "${req[0]:-}" = "WAKE" ] && wake=1
   if [ "${req[0]:-}" != "OK" ] && [ "$wake" = "0" ]; then
@@ -810,15 +816,22 @@ restart_match() {
   fi
   match_write status "$id" restarting
   local prev=("${BRIDGE_ARGS[@]}") pass=() skip=0 a
-  # Everything after the class as before, but the request's decks, profile and games.
+  # Everything after the class as before, but the request's decks, profile and games
+  # (and, D333, its AI policy when it names one: then it replaces --ai-policy/--ai-search).
+  local pol="${req[6]:-}" sms="${req[7]:-}"
   for a in "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}"; do
     if [ "$skip" = "1" ]; then skip=0; continue; fi
     case "$a" in
       --deck|--deck2|--ai-deck|--ai-profile|--games|--game-id) skip=1 ;;
       --deck=*|--deck2=*|--ai-deck=*|--ai-profile=*|--games=*|--game-id=*) : ;;
+      --ai-policy|--ai-search) if [ -n "$pol" ]; then skip=1; else pass+=("$a"); fi ;;
       *) pass+=("$a") ;;
     esac
   done
+  if [ -n "$pol" ]; then
+    pass+=(--ai-policy "$pol")
+    [ -n "$sms" ] && pass+=(--ai-search "ms=$sms")
+  fi
   local next=()
   if [ "$wake" = "1" ]; then
     # The last setup as it was (the previous match's decks, or the startup ones),

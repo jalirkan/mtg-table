@@ -10,7 +10,9 @@
  *    a swap moves the cards, recounts the headings and the format-counts table,
  *    bumps the title's version and appends one iteration-log entry;
  *  - the seed pool and the notes file parse;
- *  - swap selection on Omega v1 with hand-made statistics: the constraints hold
+ *  - swap selection on Omega v1 with hand-made statistics: a card the AI
+ *    evidence would cut is a candidate until a confirmation batch (fresh seeds)
+ *    shows it again (D331); the constraints hold
  *    after every swap, an AI-limited card is never cut on AI numbers, a lead
  *    below its threshold is `watch` and never a cut, the swap budget, notes
  *    (keep, cut, try), no AI:RemoveDeck:All card is auto-added, a card cut
@@ -31,7 +33,7 @@ import { parseCube, type Cube } from '../../tools/cubelab/cube.ts';
 import { sectionFor, writeCubeDoc } from '../../tools/cubelab/cubedoc.ts';
 import {
   applySwaps, balanceOf, cardStats, constraintsOf, EVOLVE_DEFAULTS, evolveCards, firstTakes, mergeKnobs, parseNotes, parsePool,
-  sampleToSettle, selectSwaps, violations, type Balance, type CardStat, type EvolveCard, type MetaDoc, type Note, type PoolCard, type SelectInput,
+  sampleToSettle, selectSwaps, violations, type Balance, type CardStat, type ConfirmInput, type EvolveCard, type MetaDoc, type Note, type PoolCard, type SelectInput,
 } from '../../tools/cubelab/evolve.ts';
 import { changelog, htmlPage, logEntry, type GenSummary } from '../../tools/cubelab/evolve-report.ts';
 import { buildMeta } from '../../tools/cubelab/meta.ts';
@@ -167,9 +169,17 @@ function stats(over: Record<string, Partial<CardStat>> = {}): Map<string, CardSt
   return m;
 }
 const BAL: Balance = { mean: 0.5, colours: [], pairs: [], themes: [] };
-const DEAD: Partial<CardStat> = { inDecks: 0, onColourDecks: 0, games: 0, wins: 0, winRate: 0, ci: [0, 1] };
+/** On colour in 30 pools and never played: p = 0.65^30, a discovery among ~500 tests. */
+const DEAD: Partial<CardStat> = { inDecks: 0, onColour: 30, onColourDecks: 0, games: 0, wins: 0, winRate: 0, ci: [0, 1] };
 function input(over: Partial<SelectInput> = {}): SelectInput {
   return { cube: OMEGA, cards: CARDS, pool: POOL, stats: stats(), balance: BAL, drafts: 30, constraints: C0, notes: new Map(), tabu: new Set(), knobs: K, ...over };
+}
+/** A confirmation batch on fresh seeds that shows the same numbers. */
+const conf = (st: Map<string, CardStat>): ConfirmInput => ({ stats: st, mean: 0.5, deff: 1, drafts: 60, seeds: [1000001, 1000060], games: 150 });
+/** input() with a confirmation batch that repeats its stats. */
+function confirmed(over: Partial<SelectInput> = {}): SelectInput {
+  const i = input(over);
+  return { ...i, confirmation: conf(i.stats) };
 }
 function after(sel: ReturnType<typeof selectSwaps>): EvolveCard[] {
   const outs = new Set(sel.swaps.map((s) => s.out));
@@ -192,14 +202,15 @@ test('an average cube: no swaps, and no leads', () => {
 });
 
 const TUNDRA_CUT = new Map<string, Note>([['Tundra', { card: 'Tundra', verdict: 'cut', note: 'test' }]]);
+const BIG = (): Map<string, CardStat> => stats({
+  'Doom Blade': DEAD,
+  'Fire // Ice': DEAD,
+  'Tundra': DEAD,
+  "Umezawa's Jitte": { games: 60, wins: 50, winRate: 50 / 60, shrunk: 0.75, ci: [0.72, 0.9] },
+  'Ponder': { firstTakes: 58, seen: 60 },
+});
 test('dead and dominant cards are cut, each for a fitting pool card, and every constraint holds', () => {
-  const d = selectSwaps(input({ notes: TUNDRA_CUT, stats: stats({
-    'Doom Blade': DEAD,
-    'Fire // Ice': DEAD,
-    'Tundra': DEAD,
-    "Umezawa's Jitte": { games: 60, wins: 50, winRate: 50 / 60, shrunk: 0.75, ci: [0.72, 0.9] },
-    'Ponder': { firstTakes: 26, seen: 27 },
-  }) }));
+  const d = selectSwaps(confirmed({ notes: TUNDRA_CUT, stats: BIG() }));
   const outs = new Map(d.swaps.map((s) => [s.out, s]));
   assert.deepEqual([...outs.keys()].sort(), ['Doom Blade', 'Fire // Ice', 'Ponder', 'Tundra', "Umezawa's Jitte"]);
   assert.equal(outs.get("Umezawa's Jitte")?.why, 'dominant-win');
@@ -217,7 +228,31 @@ test('dead and dominant cards are cut, each for a fitting pool card, and every c
   assert.deepEqual(violations(after(d), C0), []);
   assert.equal(new Set(after(d).map((c) => c.name)).size, 180);
   // The same input, the same decision.
-  assert.deepEqual(selectSwaps(input({ notes: TUNDRA_CUT, stats: stats({ 'Doom Blade': DEAD, 'Fire // Ice': DEAD, 'Tundra': DEAD, "Umezawa's Jitte": { games: 60, wins: 50, winRate: 50 / 60, shrunk: 0.75, ci: [0.72, 0.9] }, 'Ponder': { firstTakes: 26, seen: 27 } }) })), d);
+  assert.deepEqual(selectSwaps(confirmed({ notes: TUNDRA_CUT, stats: BIG() })), d);
+  // Every cut names both batches.
+  for (const s of d.swaps.filter((x) => x.why !== 'note-cut')) assert.match(s.evidence, /^discovery \(30 drafts\): .*, q [\d.e-]+; confirmed on fresh seeds 1000001–1000060 \(60 drafts\): .*Holm p/, s.out);
+});
+
+test('discovery alone cuts nothing: a candidate waits for its confirmation batch, and one that does not repeat stays', () => {
+  const st = BIG();
+  const d = selectSwaps(input({ notes: TUNDRA_CUT, stats: st }));
+  assert.deepEqual(d.swaps.map((s) => [s.out, s.why]), [['Tundra', 'note-cut']], 'a note needs no confirmation');
+  assert.deepEqual(d.confirmations.map((c) => c.name).sort(), ['Doom Blade', 'Fire // Ice', 'Ponder', "Umezawa's Jitte"]);
+  assert.ok(d.confirmations.every((c) => !c.confirmed && /no confirmation batch/.test(c.reason)));
+  assert.equal(d.discovery.candidates, 4);
+  assert.ok(d.discovery.family > 300 && d.discovery.family < 540, String(d.discovery.family));
+  assert.ok(d.plan.drafts >= K.confirmMinDrafts && d.plan.drafts <= K.confirmMaxDrafts, String(d.plan.drafts));
+  assert.match(d.verdict, /4 candidate\(s\) of \d+ tests at a false-discovery rate of 0.1; not yet confirmed/);
+  // The confirmation batch shows Doom Blade played like any card, and Jitte winning like any card: those two stay.
+  const fresh = stats({ 'Fire // Ice': DEAD, Ponder: { firstTakes: 58, seen: 60 } });
+  const c = selectSwaps({ ...input({ notes: TUNDRA_CUT, stats: st }), confirmation: conf(fresh) });
+  const outs = c.swaps.map((s) => s.out).sort();
+  assert.deepEqual(outs, ['Fire // Ice', 'Ponder', 'Tundra']);
+  const db = c.confirmations.find((x) => x.name === 'Doom Blade');
+  assert.equal(db?.confirmed, false);
+  assert.match(db?.reason ?? '', /not significant on the fresh seeds/);
+  assert.equal(db?.confirm?.n, 10, 'the confirmation counts are the fresh batch\'s own, never pooled');
+  assert.match(c.verdict, /confirmation on 60 fresh drafts: 2 confirmed, 2 not/);
 });
 
 test('an AI-limited card is never cut on AI evidence; a note can; a land is never cut on its deck rate', () => {
@@ -246,13 +281,13 @@ test('thresholds: too few drafts, too few games or a wide interval is watch, nev
   for (const w of d.watch) assert.ok(w.draftsNeeded === null || (w.draftsNeeded as number) > 30, w.name);
   assert.match(d.verdict, /^Insufficient data/);
   // Knobs move the thresholds.
-  const loose = selectSwaps(input({ stats: stats({ 'Doom Blade': { ...DEAD, onColour: 5 } }), knobs: { ...K, minOnColour: 5, deadPlayRateHi: 0.5 } }));
+  const loose = selectSwaps(confirmed({ stats: stats({ 'Doom Blade': { ...DEAD, onColour: 5 } }), knobs: { ...K, minOnColour: 5, deadPlayRateHi: 0.9 } }));
   assert.deepEqual(loose.swaps.map((s) => s.out), ['Doom Blade']);
 });
 
 test('the swap budget; notes keep and try; no AI:RemoveDeck:All add; tabu; human-test candidates', () => {
   const dead = ['Doom Blade', 'Incinerate', 'Arc Trail', 'Mana Leak', 'Preordain', 'Acidic Slime', 'Shriekmaw', 'Man-o\'-War'];
-  const d = selectSwaps(input({ stats: stats(Object.fromEntries(dead.map((n) => [n, DEAD]))) }));
+  const d = selectSwaps(confirmed({ stats: stats(Object.fromEntries(dead.map((n) => [n, DEAD]))) }));
   assert.equal(d.swaps.length, 6);
   assert.equal(d.unmatched.length, 2);
   assert.ok(d.unmatched.every((u) => /budget/.test(u.reason)));
@@ -262,16 +297,16 @@ test('the swap budget; notes keep and try; no AI:RemoveDeck:All add; tabu; human
   assert.deepEqual(selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD }), notes: keep })).swaps, []);
   // try brings in an AI:RemoveDeck:All card when a cut makes room; without it, never.
   const tryIt = new Map<string, Note>([['Toxic Deluge', { card: 'Toxic Deluge', verdict: 'try', note: 'paper favourite' }]]);
-  const t = selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD }), notes: tryIt }));
+  const t = selectSwaps(confirmed({ stats: stats({ 'Doom Blade': DEAD }), notes: tryIt }));
   assert.equal(t.swaps[0]?.in, 'Toxic Deluge');
   assert.match(t.swaps[0]?.fit ?? '', /notes say try/);
-  const plain = selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD }) }));
+  const plain = selectSwaps(confirmed({ stats: stats({ 'Doom Blade': DEAD }) }));
   const first = plain.swaps[0]?.in as string;
   assert.notEqual(POOL_BY.get(first)?.aiFlag, 'All');
   // A card cut by an earlier generation is not re-added; a notes cut is never added.
-  const tabu = selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD }), tabu: new Set([first]) }));
+  const tabu = selectSwaps(confirmed({ stats: stats({ 'Doom Blade': DEAD }), tabu: new Set([first]) }));
   assert.notEqual(tabu.swaps[0]?.in, first);
-  const ban = selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD }), notes: new Map([[first, { card: first, verdict: 'cut', note: '' }]]) }));
+  const ban = selectSwaps(confirmed({ stats: stats({ 'Doom Blade': DEAD }), notes: new Map([[first, { card: first, verdict: 'cut', note: '' }]]) }));
   assert.notEqual(ban.swaps[0]?.in, first);
   // A pending try with nothing to replace is reported.
   assert.deepEqual(selectSwaps(input({ notes: tryIt })).pendingTries, ['Toxic Deluge']);
@@ -280,7 +315,7 @@ test('the swap budget; notes keep and try; no AI:RemoveDeck:All add; tabu; human
 test('a weak archetype pulls the add toward its themes and colours', () => {
   const weak: Balance = { mean: 0.5, colours: [{ key: 'B', decks: 20, games: 50, wins: 15, rate: 0.3, shrunk: 0.36, ci: [0.2, 0.45] }],
     pairs: [], themes: [{ key: 'SAC', decks: 10, games: 40, wins: 12, rate: 0.3, shrunk: 0.37, ci: [0.2, 0.45] }] };
-  const d = selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD }), balance: weak }));
+  const d = selectSwaps(confirmed({ stats: stats({ 'Doom Blade': DEAD }), balance: weak }));
   assert.match(d.swaps[0]?.fit ?? '', /helps weak/);
 });
 
@@ -292,14 +327,14 @@ test('a card that was never on colour is not dead (its pair was not drafted); an
   assert.match(kc?.evidence ?? '', /never in a pool whose deck could cast it/);
   // Rate every pool card under the bar: a dead card finds no replacement.
   const lowPool = POOL.map((p) => ({ ...p, rating: 50 }));
-  const none = selectSwaps(input({ pool: lowPool, stats: stats({ 'Doom Blade': DEAD }) }));
+  const none = selectSwaps(confirmed({ pool: lowPool, stats: stats({ 'Doom Blade': DEAD }) }));
   assert.deepEqual(none.swaps, []);
   assert.deepEqual(none.unmatched.map((u) => u.name), ['Doom Blade']);
 });
 
 test('a dead card rated under deadMinRating is rating-limited: reported, never cut, no more drafts asked for', () => {
   const low = CARDS.map((c) => (c.name === 'Doom Blade' || c.name === 'Mana Leak' ? { ...c, rating: 35 } : c));
-  const d = selectSwaps(input({ cards: low, stats: stats({ 'Doom Blade': DEAD, 'Mana Leak': { onColourDecks: 3 }, Ponder: DEAD }) }));
+  const d = selectSwaps(confirmed({ cards: low, stats: stats({ 'Doom Blade': DEAD, 'Mana Leak': { onColourDecks: 3 }, Ponder: DEAD }) }));
   assert.deepEqual(d.swaps.map((s) => s.out), ['Ponder']);
   for (const n of ['Doom Blade', 'Mana Leak']) {
     const a = d.assessments.find((x) => x.name === n);
@@ -308,11 +343,11 @@ test('a dead card rated under deadMinRating is rating-limited: reported, never c
   }
   assert.ok(!d.watch.some((w) => w.name === 'Mana Leak'), 'a lean on a low-rated card is not a watch');
   assert.match(d.verdict, /2 card\(s\) are rarely or never played on colour but rated under 60/);
-  assert.deepEqual(selectSwaps(input({ cards: low, stats: stats({ 'Doom Blade': DEAD }), knobs: { ...K, deadMinRating: 0 } })).swaps.map((s) => s.out), ['Doom Blade']);
+  assert.deepEqual(selectSwaps(confirmed({ cards: low, stats: stats({ 'Doom Blade': DEAD }), knobs: { ...K, deadMinRating: 0 } })).swaps.map((s) => s.out), ['Doom Blade']);
 });
 
 test('applySwaps then writeCubeDoc: a clean 180-card document with the adds in their sections', () => {
-  const d = selectSwaps(input({ notes: TUNDRA_CUT, stats: stats({ 'Doom Blade': DEAD, 'Fire // Ice': DEAD, 'Tundra': DEAD }) }));
+  const d = selectSwaps(confirmed({ notes: TUNDRA_CUT, stats: stats({ 'Doom Blade': DEAD, 'Fire // Ice': DEAD, 'Tundra': DEAD }) }));
   const text = writeCubeDoc(read('cubes/omega-cube-180.md'), applySwaps(OMEGA, d.swaps, POOL_BY), { version: 2, logEntry: 'v2' });
   const c = parseCube(text);
   assert.deepEqual(c.warnings, []);
@@ -360,14 +395,19 @@ test('first-line takes and card stats over the mini fixture; the settle estimate
 });
 
 test('the log entry, the changelog and a self-contained page', () => {
-  const d = selectSwaps(input({ stats: stats({ 'Doom Blade': DEAD }) }));
+  const d = selectSwaps(confirmed({ stats: stats({ 'Doom Blade': DEAD }) }));
   const g: GenSummary = { gen: 1, versionIn: 1, versionOut: 2, date: '2026-10-03', drafts: 30, seeds: [1, 30], games: 80, decision: d, balance: BAL, stats: [...stats().values()] };
-  assert.match(logEntry(g), /^v2 \(2026-10-03, cube lab evolve generation 1: 30 grid drafts, seeds 1–30, 80 decisive games\): \*\*Doom Blade\*\* → \*\*/);
+  assert.match(logEntry(g), /^v2 \(2026-10-03, cube lab evolve generation 1: 30 grid drafts, seeds 1–30, 80 decisive games; confirmation 60 fresh drafts, seeds 1000001–1000060, 150 decisive games\): \*\*Doom Blade\*\* → \*\*/);
   const none: GenSummary = { ...g, versionOut: 1, decision: selectSwaps(input()) };
   assert.match(logEntry(none), /no swaps, v1 unchanged/);
-  assert.match(logEntry({ ...none, gen: 2, drafts: 60, seeds: [1, 60], pooledFrom: 1 }), /generation 2: 60 grid drafts \(generations 1–2 on the same list\), seeds 1–60/);
-  assert.match(changelog('Omega', [g, none]), /## Generation 1 — v1 → v2[\s\S]*\| Doom Blade \(Black\) \| dead \|/);
+  const cl = changelog('Omega', [g, none]);
+  assert.match(cl, /## Generation 1 — v1 → v2[\s\S]*\| Doom Blade \(Black\) \| dead \|/);
+  // Discovery and confirmation, in plain words and in numbers.
+  assert.match(cl, /\*\*Discovery\*\*: in this generation's drafts[\s\S]*\*\*Confirmed\*\*: the candidate stands out again/);
+  assert.match(cl, /\| Doom Blade \| dead \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, q [\d.e-]+ \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, Holm p [\d.e-]+ \| confirmed \|/);
   const html = htmlPage('Omega', [g]);
+  assert.match(html, /<h3>Discovered, then confirmed or not<\/h3>/);
+  assert.match(html, /<b>Confirmed<\/b>: the candidate stands out again/);
   assert.ok(!/\b(src|href)=|https?:\/\//.test(html.replace(/name="viewport"[^>]*>/, '')), 'nothing loaded from anywhere');
   assert.match(html, /prefers-color-scheme:dark/);
 });

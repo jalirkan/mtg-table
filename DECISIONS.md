@@ -14359,3 +14359,536 @@ trained on every night; pairs are the unit of novelty.
 **Rejected.** Splitting by single deck (a pair's two decks always play each
 other in a bench, so a deck and its opponent would straddle splits); a random
 row split (D305).
+
+## D318 — The AI ladder: named AI configs rated on one Elo scale from ai-bench games on mirrored deals, forge-default fixed at 1500, every game one line of an append-only per-machine log
+
+*Branch `c/ai-ladder`. D318–D321: D312–D314 are the search AI's, D315
+lab-record's and D316–D317 the evaluator's; renumber at the merge if they
+clash.*
+
+**2026-10-03** (the owner's goal: an AI that beats stock Forge, then improves
+against its own past versions)
+
+**Decision.** `tools/ai-ladder.sh` (TypeScript under `tools/ai-ladder/`,
+`docs/guides/ai-ladder.md`) rates **players** — a name for `{kind, params}` in
+the committed `tools/ai-ladder/players.json` — against each other. A **kind**
+is a row of `tools/ai-ladder/kinds.ts`: its parameters (int or enum, which is
+what the tuner varies) and the ai-bench seat config the params become
+(`forge` → `Reckless`, `policy` → `Default+outlets`, `search` →
+`…+search:ms=…`). A kind this checkout cannot play — unknown, or its engine side
+unmerged — is reported unavailable with its reason and never scheduled, never a
+crash. Stock Forge profiles are **anchors**, always in the pool;
+`forge-default` is fixed at 1500.
+
+- **Every game is an ai-bench game** (D309): a batch is one `AiBench play`
+  JVM, never a fork of it. The one hook the ladder added is `--mirror`
+  (backward compatible: without it every seed is what it was, a self-test check
+  says so): games 4k/4k+3 and 4k+1/4k+2 of a pair share a seed — the same deck in
+  the same seat, the configs swapped — so each deal is played from both sides.
+  The flag sits on its own lines in `play()`'s argument switch and a new
+  `gameSeed()`, apart from the seat-config parser the search branch changes.
+- **Identity is the config hash** (sha256 of the kind and the default-filled
+  params): a game is credited to whichever registered player has that hash, so
+  a later-registered tuner candidate keeps its games and an edited config does
+  not silently merge two AIs (its old games are rated apart as `name@hash`).
+  Tools only append to the registry.
+- **Results** are one `GameRecord` line per game in
+  `var/ai-ladder/results/<host>.jsonl`, append-only, one file per machine, ids
+  unique across machines: a second PC's file is copied in beside the first.
+- **Ratings**: Bradley–Terry on the logistic Elo scale, MAP under a normal
+  prior centred on 1500 (sd 350; it only matters for few or one-sided games),
+  Newton's method with the anchor's row removed; 95% intervals from the
+  Hessian, or by bootstrap over mirror blocks (a deal's two games are one
+  unit). Draws (timeouts, engine errors) are counted and not rated.
+- **Seeds line up**: batch k of a matchup uses the host's base + k and a fixed
+  set of deck pairs for k, so two players' batches against a common opponent
+  are the same deals; each host has its own base.
+- **`ladder.json` schema 1 is ForgeCoach's contract**, with D297's rule: add a
+  field freely, rename or redefine one only as schema 2 with ForgeCoach in the
+  same breath. The guide documents it; `web/test/ai-ladder.test.ts` pins its
+  keys.
+
+**Rejected.** A ladder that plays its own games (a second game loop beside
+ai-bench to drift from D309's); Elo updated game by game (order-dependent, no
+honest interval); one shared results file (two machines appending to it over a
+network share is a corruption path; per-host files merge by copying);
+identity by name (a re-tuned config under an old name would inherit games it
+never played); YAML (no parser in the repo, and JSON one-line-per-player diffs
+as cleanly).
+
+**Revised the same day, after the methodology review** (the coordinator's
+review of the AI and statistics lanes, findings H2, M1, M3, M5, M8):
+
+- **Mirrored deals are the default for evaluations.** `ai-bench.sh play` now
+  passes `--mirror` unless `--no-mirror` (which reproduces the pre-D318 seeds
+  of D309–D314's runs), and `ai-bench report` prints A's score **against the
+  known 50%** by deal — with deck and seat swapped, a tie is exactly 50% by
+  symmetry — with its interval, p and Elo. No separate Default-vs-Default
+  control run: a control's own luck (D312's 47%) no longer leaks into the
+  effect, and the compute it cost is saved. The interval's variance is shrunk
+  by one pseudo-deal toward ¼ so a handful of all-split deals cannot claim a
+  zero-width interval.
+- **Dev and confirm deck sets.** `tools/ai-bench/pairs-dev.txt` and
+  `pairs-confirm.txt`, 30 pairs each, from cube-lab drafts across six cubes
+  (`ai-ladder.sh decksets`: `cubelab.sh run --games 0`, which this decision
+  allows — draft and build, play nothing), each cube's drafts dealt alternately
+  by seed. `tune` plays dev and refuses confirm; `run`, `sprt`, `league`,
+  `ratings` and `report` play and rate confirm. The old `pairs-cube.txt`
+  stays for D309–D314's numbers.
+- **Fixed-rollout benchmarks.** A wall-clock search measures the machine as
+  much as the AI (a quarter of `search-v1`'s decisions fell back to Forge on
+  the shared container). D312's loop already stops at `maxrounds`, so a
+  fixed-count mode needs no search change: `search-v1-fixed3` is `rounds =
+  maxRounds = 3`, the 60000 ms ceiling and a fixed determinization seed (the
+  `search` kind gained the `seed` parameter). Benchmarks use it; live play
+  keeps the clock. Each game line records the 1-minute load and Forge's own
+  timeout count.
+- **A committed experiment log**, `docs/evidence/experiments.jsonl`: every
+  engine command appends a start line (git sha and dirty flag, deck set and
+  hash, players and config hashes, seed base, purpose pilot | dev | confirm,
+  the hypothesis) before its first game and an end line when it stops; a start
+  with no end is an abandoned run and stays in the log.
+
+## D319 — The ladder spends its games where they inform: new players first, a fixed share against the anchors, then the closest, most uncertain pair; an SPRT on mirror-pair scores decides "A beats B by ≥ elo1"
+
+**2026-10-03**
+
+**Decision.** `run --hours H --jobs J` keeps J workers busy with batches until
+the budget is spent (a batch starts only if it is expected to finish in time).
+The next matchup (`schedule.ts`, pure, deterministic): (1) a player with fewer
+than 40 decisive games, against forge-default until that pair has 40, then its
+nearest rating; (2) if fewer than 25% of this run's batches involved an anchor,
+the most informative anchor pair; (3) otherwise the pair maximising
+`p(1−p)·(se_A² + se_B²)` — a game's Fisher information about the rating
+difference times what is still unknown — discounted by batches of that pair
+already running.
+
+`sprt A B --elo0 --elo1 [--alpha --beta]` runs the generalized SPRT on
+**mirror-pair scores** (A's share of a pair's decisive games): the two games of
+one deal are correlated, so the pair, not the game, is the independent unit —
+the same reason Fishtest moved to pentanomial. `LLR = N((x̄−s0)² − (x̄−s1)²)/(2σ²)`,
+Wald's bounds, no decision before 8 pairs (σ² is floored), inconclusive at
+`--max-games`. Every test is a line in `sprt.jsonl` with the games it used.
+Synthetic checks: +70 Elo accepts H1 in 20 of 20 runs, −30 accepts H0 in 20 of
+20, and at Elo 0 against `elo1 20` H1 is accepted in at most 10% of 120 runs
+(alpha 5%).
+
+**Rejected.** Round-robin scheduling (most of its games are between players
+whose order is already settled); a plain binomial SPRT over games (it treats a
+deal played from both sides as two independent observations, overstating the
+evidence); deciding on a fixed number of games (an obvious result wastes the
+night, a close one is underpowered).
+
+## D320 — The tuner races a config's parameters by successive halving on shared deals against a fixed pool, and writes its winner back under a new name
+
+**2026-10-03**
+
+**Decision.** `tune <base> --param k=v1,v2 …` varies any int or enum
+parameter of the base's kind over the grid (or `--sample K` seeded points).
+Round r: every surviving candidate plays `blocks·eta^r` batches against each
+opponent in a fixed pool (default forge-default and forge-reckless), **all
+candidates on the same deals** (one `--seed` per batch slot), so their
+differences are paired; the score is the pooled win rate over all rounds; the
+best `ceil(n/eta)` survive. The winner is appended to `players.json` as
+`<base>-t<n>` (or `--name`, never over an entry; nothing is written when its
+config is already registered), optionally as a league candidate. It was proven
+on what existed before the search: the Forge profile and the outlet policy
+on or off. Synthetic check: with one config 50 Elo above the next, it
+wins 8 or more of 10 tunes.
+
+**Rejected.** Bayesian optimisation (the parameters are few, discrete and
+noisy; halving is robust, parallel and explains itself round by round); judging
+candidates by their ladder rating (it mixes in whom they happened to play; a
+fixed pool is a fixed yardstick); overwriting the base (results are keyed by
+config, and a name is permanent).
+
+**Revised the same day:** the tuner plays the **dev** set only and refuses
+the confirm set; its winner's score is optimistic (it won a race on noisy
+scores) and is never quoted as evidence — the winner is confirmed by an SPRT or
+the league on the confirm set.
+
+## D321 — League mode: the newest version plays a fixed share against its past versions and the anchors; a candidate is promoted only if an SPRT says it beats the current best AND a non-inferiority test shows it is not worse against forge-default
+
+**2026-10-03**
+
+**Decision.** `league --hours H` keeps `var/ai-ladder/league.json`: the current
+best (forge-default before any promotion), the promoted versions, and each
+decided candidate (a registry player marked `"candidate": true`). The pool is
+the last N promoted versions plus the anchors. A fixed share (50%) of batches
+is the best against the pool member it has played least — the self-play loop;
+a pending candidate's tests cycle candidate-vs-best (the SPRT) twice,
+candidate-vs-forge-default and best-vs-forge-default on the same deals; the
+rest is the ordinary ladder. **Promotion needs both**: SPRT accepts H1 against
+the best, and a **non-inferiority test** against forge-default passes: on the
+same deals, each shared mirrored deal gives d = the candidate's pair score −
+the best's, and a sequential test of "inferior by δ" (mean d = −δ, δ = 30 Elo ≈
+0.043) against "equal" (mean d = 0) accepts "equal" — stated error rates: a
+candidate truly 30 Elo worse passes 5% of the time (alpha), a truly equal one
+90% (power). Simulated with correlated deals: 4.8% and 93.8%, about 650
+shared deals on average. H0, an inconclusive SPRT, or an "inferior" or
+inconclusive Forge test rejects it, and the reason is kept. All of it plays on
+the confirm deck set. When the best is forge-default itself, the SPRT's games
+are already the candidate against forge-default, and the Forge test reads them
+(d = pair score − ½) instead of playing more.
+
+*Revised the same day.* The first version compared the two point estimates
+(≥ 80 decisive games each, margin 0): with an SE of about 39 Elo on the
+difference it rejected about half of the candidates equal to the best and
+about 30% of those 20 Elo better — a coin flip after a long SPRT (the
+methodology review's M5).
+
+**Why the second condition.** Self-play can climb by exploiting its own past
+versions' habits; Forge is the opponent the owner actually plays and the
+anchor of the scale, so a version that "beats itself, forgets Forge" is not an
+improvement. The check is paired (same deals) so it costs little.
+
+**Rejected.** Promoting on rating alone (the rating is pooled over many
+opponents and lags); keeping only the latest version in the pool (cycles:
+A beats B beats C beats A go unseen); generating candidates inside the league
+(the generators are the tuner today and the evaluator's training later; the
+league judges, it does not invent).
+
+## D322 — Bridge drafts: a pool sampled afresh per draft from two or more cubes, each cube's share stratified by its sections, every card tagged with its source cube, the cubes' ratings put on one scale per draft
+
+*Branch `c/matchup-model`; D322–D324 (the next free numbers after the search
+AI's D312–D314, the lab recording's D315, the evaluator's D316–D317 and the
+ladder's D318–D321 on their branches).*
+
+**2026-10-03** (the owner's request: one model over every cube's cards, and
+"bridge drafts" between cubes)
+
+**Context.** Games inside one cube rank that cube's cards against each other
+and nothing else; the cubes' card scales float apart. A game between a deck
+drafted from cube A's cards and one from cube B's links the two scales, the
+way games across pools anchor an Elo ladder.
+
+**Decision.** `tools/cubelab.sh run --bridge a,b[,c]` (`tools/cubelab/bridge.ts`)
+drafts from a pool sampled for each draft from its seed (rng stream `bridge`;
+D294's rule, so a pool, its picks and its decks are a function of the seed):
+each cube gives its share (`--bridge-ratio`, equal by default) of
+`--bridge-size` (180) cards, apportioned over that cube's own sections by the
+largest remainder, so each half keeps its cube's colour balance; a card two
+cubes list is taken once and the next card of its section stands in. Every
+draft line carries `bridge: {sources, shares, from}`, `run.json` a `bridge`
+block and `cubeFile: bridge:<a>+<b>`; a run without `--bridge` writes what it
+wrote before (one added optional field in each type, one added term in the
+resume check). The cubes' ratings are on different scales, and drafters
+comparing them take mostly the stronger cube's cards (measured: 17–50% of a
+deck from Pauper in a Pauper + Vintage pool), so by default
+(`--bridge-ratings even`) each draft rescales each cube's cards to the pool's
+mean and SD — order within a cube kept, the halves weighed evenly (measured:
+41–56%); `own` keeps the raw ratings.
+
+**Rejected.** One pool per run (fewer contexts per night, and a run's
+`cards.json` is then one arbitrary sample); deck composition forced (one deck
+from each cube): it would test the cubes against each other, not mix them, and
+the drafters would no longer draft; leaving the ratings raw: the weaker cube's
+cards would seldom meet the stronger cube's, the link a bridge is for. The
+matchup model reads only what was played, so how a deck came to be does not
+bias it — it decides which cards meet.
+
+## D323 — The overnight queue: one root folder of normal and bridge drafts over every cube, drafts allocated by card uncertainty pooled by name, bridge pairs chosen for information, each pool key's seeds handed out once across nights
+
+**Decision.** `tools/cubelab.sh queue plan|run --night N --drafts D`
+(`tools/cubelab/queue.ts`). `--bridge-share` (0.2) of the drafts go to bridge
+pairs, the rest to the cubes' own drafts; in each half drafts follow weights.
+A cube's is Σ var_c / m_c over its cards — var_c the card's uncertainty
+(`--power`'s SD², else 1 / (16 + g_c/4) from its decisive games so far under
+the root, pooled by name across cubes), m_c the number of cubes listing it —
+so a card several cubes share is paid for once and a cube whose cards are
+covered elsewhere gets fewer drafts. A pair's is novelty (1 − shared / the
+smaller cube) × link (1.0 for adjacent power tiers, 0.7 for flat with powered,
+0.4 within a tier) × its cards' mean uncertainty; a pair under 0.25 before
+uncertainty is skipped (Omega + Vintage, 108 cards shared: 0.16; Fair Fight +
+Pauper, 99: 0.18). Each pool key (`normal/<cube>`, `bridge/<a>+<b>` in one
+order) has one run folder that nights append to; `queue.json` hands out its
+seeds once, a plan is refused if it repeats one, a written plan is re-read on
+a re-run, and `run` skips a seed already in `drafts.jsonl` — no deck pair is
+drafted twice and a resumed night replays no finished draft. Chunks of every
+key interleave, so a night cut short has some of everything; a failed chunk
+is reported and the night goes on. One engine lookup covers all cubes' cards
+(`engineFacts` now reuses a cached lookup that covers the names asked for).
+`--record-every N` is passed to every run for D315's in-worker recording, and
+the night stops if the lab does not record. The knobs are `QUEUE_DEFAULTS`
+and `TIERS`, with a row each in the guide.
+
+**Rejected.** Round-robin pairs (half the pairs re-draft nearly one pool);
+a separate night per model (the evaluator and the matchup model read one
+pooled recorded run); a per-cube rating pass (it rates a shared card again
+in every cube).
+
+## D324 — The matchup model: P(deck A beats deck B) over every cube's cards at once; the plain pooled Bradley-Terry first, bigger models only if they beat it on held-out drafts and cubes; priors and intervals by draft
+
+**Decision.** `tools/ml/matchup_data.py` reads cube lab run folders — no new
+lab output: `drafts.jsonl` already holds both played decks, the winner and the
+verified play side — into one record per decisive game (v1: `id, draft, pool,
+kind, cubes, seed, game, deckA, deckB, onPlay, winner, from?, run`), each game
+once (pool, seed, game and both decks), cards by name. `tools/ml/matchup.py
+train` fits a ladder: **M0**, a pooled Bradley-Terry on cards, logit P(A) =
+Σ (n_A − n_B)·p_c + β·play with p_c = w·f_c + b_c — one power per card, the
+card's features (mana value, colours, types, P/T, keywords, rules-text
+patterns, Forge's rank, from the lab's cached engine facts) as the prior mean
+so an unseen card gets a guess; **M1**, M0 + a per-cube deviation; **M2**, M0
++ embeddings, a deck term and an antisymmetric matchup term (torch, opt-in).
+Baselines: a coin with the play, plain Bradley-Terry, and the per-cube shrunk
+win rates as `meta.json` computes them. The prior widths are chosen by 5-fold
+cross-validation **grouped by draft**, never by the Laplace evidence, which
+counts a best of three's games as independent and picked too loose a prior
+(τ = 0.035) on the first real data; the split is by draft, held-out intervals
+bootstrap over drafts, a card's SD comes from refits on bootstrap resamples of
+the training drafts. Held-out cubes are scored with every game touching the
+cube removed. Outputs: `power.tsv` (one scale for every card, its SD, its
+feature prior), `cube-dev.tsv`, `balance.json` and `report.md` (the balance
+number: the SD across a cube's decks of their predicted win rate against the
+cube's other decks; bridge composition; overlap), `model.json`. `design`
+(`matchup_design.py`) is a prototype: in-class swaps under a swap budget,
+candidates from cubes at or below the target's power tier, every output marked
+PROPOSED BY MODEL, UNVERIFIED with the lab command that verifies it on fresh
+seeds.
+
+**Its place.** It is meant to become the one source of card value — to
+replace `meta.json`'s per-card win rates (deck value, confounded) and
+`learn.ts`'s per-cube fit (and its τ of 0.25, which implies 85/15 matchups
+from cards alone) — not to sit beside them. The switch (`meta.json`
+`value`/`valueSd`, then `evolve`'s cuts, ForgeCoach's `score.ts` and
+flatness) waits for data that shows card signal.
+
+**Measured** (`docs/evidence/matchup-model.md`): 285 decisive games, 143
+drafts. Out-of-fold by draft no model beats the coin (0.6925): M0 +0.012
+[−0.010, +0.037], M1 +0.014, the per-cube meta rates +0.086 [+0.002, +0.178],
+M2 +0.080 [+0.022, +0.145]; cross-validation picks τ = 0.002. That is the
+pipeline proven, not a card scale: the review's estimate is about 5,000 games
+a cube, which the PC's nights provide.
+
+**Rejected.** Starting with embeddings (they lost to M0 out-of-fold at this
+size, as D305's wide evaluators did); the per-cube ratings as the value (the
+confounding, and on these games they predict worse than a coin); a separate
+model per cube (72% of card-games here are of cards two or more cubes list).
+
+## D325 — The coach helper queues questions instead of refusing them: one runs, up to four wait (`--queue-max`), a queued one can be superseded by key, and `/health` says so
+
+*Branch `c/helper-queue`; D325, the next number free of every lane's claim (D315–D324 are other lanes').*
+
+**2026-10-03**
+
+**Context.** D292's helper ran one question at a time and answered a second one
+429 after a five-second wait. ForgeCoach's coach benchmark asks two questions at
+once by default, so on the owner's PC 69–70% of its answers were that 429,
+recorded as format failures: only 10 of 28 cases paired, and "unstable" cases
+that were only the helper saying busy. Players met the same 429: auto-coach asks
+at the main phase and again at attacks, and a manual *Ask* while one is running
+errored out.
+
+**Decision.** `/coach` still runs one `claude` at a time, and the others wait
+in a first-in-first-out queue of at most `--queue-max` (default **4**; 0 is the
+old refusal without the wait). Past the cap a question is still **429** with
+`Retry-After: 2`. A queued question gets its 200 at once and the NDJSON line
+`{"type":"queued","position":n}` (n questions ahead of it, sent again as it
+moves up), then `{"type":"running"}` when its turn comes, then the stream as
+before; a question that never waited gets neither line, so D292's stream is
+unchanged for it, and an older ForgeCoach ignores both lines (they are not
+`text`, `done` or `error`). A queued question whose client disconnects leaves
+the queue without ever starting `claude`; a running one is cancelled as before,
+its process group killed. The slot is released when the terminal line is
+written, not when the process exits, so a client that asks again at once is not
+queued behind a process that is only exiting.
+
+**Superseding.** `/coach` takes an optional `"supersedes": "<key>"` (1–200
+characters). A new question with a key ends every *queued* question with the
+same key at once — its one terminal line is
+`{"type":"error","code":"superseded","message":"superseded by a newer question"}` —
+and joins the back of the queue. A running question is never superseded (the
+client cancels it by disconnecting, which ForgeCoach does when the decision
+moves on). ForgeCoach sends one key per tab for the live coach, so a stale
+question that is still waiting is replaced, not answered.
+
+**`/health`** also carries `"concurrency": 1`, `"queue": {"max", "length"}`
+(waiting now), `"running": 0|1` and `"supersedes": 1`. All of it is additive: a
+client that finds no `queue` is talking to a D292 helper and must expect a 429.
+`--busy-wait` is still accepted and ignored, so an old command line still starts.
+
+**Checked.** `tools/coach-helper-selftest.mjs` (gate 12f) holds the queued and
+running lines and their positions, a full queue's 429, a bad `supersedes` (400),
+superseding a queued question (one terminal line, `code: "superseded"`), a
+queued client leaving (dropped, the next moves up, no `claude` started for
+either), the running question untouched by a key, the queued one then
+answering in full, `/health`'s queue before and after, and `--queue-max 0`.
+
+**Rejected.** Running two `claude` processes at once (the owner's usage and the
+CLI's own rate limits; one answer at a time is what the PC can give, and the
+bench measures latency per answer); an unbounded queue (a stuck client would
+pile up minutes of stale questions); superseding the running question by key (a
+manual *Ask again* on the same decision would kill the answer that is nearly
+done — cancelling is the client's call); a separate status endpoint for the
+queue (the stream already reaches the asker).
+
+## D331 — Evolve cuts in two stages: a Benjamini–Hochberg discovery on the generation's own drafts makes a candidate, and only a confirmation on a fresh, disjoint seed range cuts it; win rates count the deck's match as the unit; nothing is pooled across generations
+
+*Branch `c/evolve-rigor`; D331 rather than D326, because D326–D330 may be held by
+branches not yet pushed (main holds up to D325).*
+
+**2026-10-03** (the methodology review's finding M2: "evolve's cuts are about
+180 simultaneous 95% tests, re-checked as data accumulates")
+
+**Decision.** D299's thresholds — a Wilson 95% bound per card, per rule — are
+replaced by two looks (`tools/cubelab/evolve.ts`, arithmetic in
+`evolve-stats.ts`, both pure):
+
+- **The tests.** Each rule is a one-sided exact binomial test: *dead*, H0 "at
+  least `deadPlayRateHi` of the on-colour decks play it"; *dominant-win*, H0
+  "its win rate is at most the run's mean", which counts only when it also won
+  `dominantMargin` (0.05) over the mean (`dominantLoMargin` is renamed, since it
+  no longer bounds an interval); *dominant-pick*, H0 "first line at most
+  `dominantFirstPickLo` of the time", counting only with a shrunk win rate at
+  least the mean. The minimum samples (`minGames`, `minSeen`, `minOnColour`)
+  still gate a test in discovery.
+- **Discovery** reads the generation's own drafts and nothing else. The family
+  is every test a cut could follow from — cards with no note, no AI flag, not a
+  land, and (for *dead*) rated at least `deadMinRating`, chosen by attribute
+  before any result is seen — about 400 tests on Omega. Benjamini–Hochberg at
+  `fdrQ` = 0.10 decides; a discovery is a **candidate**. Cards outside the
+  family are still reported with the signal they would have given.
+- **Confirmation.** When there are candidates the generation plays a second
+  batch on the same cube from seeds `S + confirmSeedOffset (10⁶) +
+  (g−1)·confirmMaxDrafts` onward (`gen-NN/confirm/`), disjoint from every
+  discovery batch and every other generation's confirmation, and tests each
+  candidate's rule again on that batch alone, with Holm at `confirmAlpha` =
+  0.05 across the candidates and the size filter again. Only a confirmed
+  candidate is cut; a note-cut needs no confirmation. The batch is sized per
+  candidate for power `confirmPower` = 0.8 at Holm's strictest level
+  (`confirmAlpha` / candidates), at the effect that matters — not at the
+  discovery estimate, which selection biased upward: a win rate `dominantEffect`
+  = 0.10 over the mean, a first-line rate `pickEffect` = 0.9, an on-colour play
+  rate `deadEffect` = 0.1 — using the observations per draft the card met in
+  discovery; the largest need, within `confirmMinDrafts` 20 ..
+  `confirmMaxDrafts` 300, is the batch (a candidate whose need is over the cap
+  is reported under-powered and tested anyway).
+- **Clumps.** A card's games are its decks' matches: one deck, one opponent,
+  about 2.4 games. The generation's design effect D = Σ(wᵢ − p̄nᵢ)² /
+  (p̄(1−p̄)Σnᵢ) over every played deck divides a card's games and wins before
+  its test and its interval (`clusteredCi`). It is pooled over the batch's
+  ~2N decks rather than computed per card (a sandwich over a card's 10–60
+  decks is too noisy to test with). D is exactly 1 for independent games with
+  best-of-three's stopping included (enumerated in the test), so it measures
+  only how much decks differ; the lab's runs give 1.08 (pauper, 20 drafts),
+  1.21 (synergy, 40) and 1.10 pooled. An ANOVA intra-class correlation was
+  tried on paper and rejected: the stopping rule alone gives it about 0.11 with
+  no real inflation. Play and first-line rates need no correction (one
+  observation per card per pool or grid).
+- **Recording.** `evolve --record-all` / `--record-every N` passes D315's
+  `recordEvery` to both batches' runs; it changes no decision and is not part
+  of `evolve.json`'s resume key.
+- **Reporting.** The changelog and the page explain discovery and confirmation
+  in plain words, list every candidate with its discovery numbers (p, BH q) and
+  its confirmation numbers (p, Holm p), and a swap's evidence names both seed
+  ranges; the iteration-log line names the confirmation batch.
+
+**The repeated looks.** D300 pooled a generation's drafts with the earlier
+generations that drafted the same list, so a card was re-tested on a growing
+sample until it crossed — optional stopping. Now no data is read by two
+decisions: each generation's discovery has fresh seeds, and each confirmation
+has its own. So the chance that a generation cuts any card by chance is at
+most `confirmAlpha` whatever discovery did (Holm on independent data), and
+under a cube where nothing is wrong at most `fdrQ`·`confirmAlpha` = 0.5%; over
+G generations at most G times that. Alpha-spending across pooled looks was the
+alternative; it keeps pooling's power but needs the number of looks fixed in
+advance (a resumable loop does not know it) and its bookkeeping in every
+folder. The price of not pooling is that a weak lead does not accumulate: the
+remedy is a bigger generation, and *watch* says how big.
+
+**Measured** (`node tools/cubelab/evolve-sim.ts --sims 1000`: a simulated
+180-card cube, best of three, deck spread set so D ≈ 1.15, about 0.6 decisive
+games per card per draft as Omega's runs give, the real `discoveryStage` and
+`confirmCandidates` on the simulated stats):
+
+| null cube (no card better) | any false flag a generation |
+|---|---|
+| old rule, 30 drafts, one look | 43% |
+| old rule, 30 drafts, three pooled looks | 90% (mean 2.6 cards) |
+| D331, 30 / 100 / 200 / 400 drafts: any false candidate | 0.2% / 2.6% / 2.3% / 2.4% |
+| D331, same: any false cut | 0.0% / 0.0% / 0.0% / 0.3% |
+
+The review's own script gave 18% and 83% with independent games; deck spread
+makes the old rule worse. Power, a single planted card (confirmed and cut;
+extra confirmation drafts per generation on average, zero when nothing is
+found): dead (played by 5% of the decks that could) 63% / 93% at 100 / 200 drafts; dominant
++0.15 on its deck's game-win chance 17% / 56% / 80% at 200 / 400 / 600 drafts
+(60 / 172 / 245 confirmation drafts); dominant +0.10 2% / 9% / 21%. Under the
+null, confirmation costs 0.5–7 drafts a generation on average, because it runs
+only in the 2–3% of generations with a candidate. With a planted dominant card
+the hitchhikers — cards that shared its decks — are cut by chance in under 1%
+of generations: that is the confounding of the review's H1, which only a
+deck-adjusted card value (`learn.ts`) removes.
+
+**What it means for a run.** At 30 drafts a generation nothing is cut on AI
+evidence; 200 finds the dead; a card dominant by wins needs 400–600 drafts a
+generation, or a note. The guide says so. Old evolve folders are refused
+(their knobs differ).
+
+**Held by** `web/test/cubelab-evolve.test.ts` (no cut without a confirmation;
+a candidate the fresh batch does not repeat stays; the confirmation counts are
+the fresh batch's own; both batches in the evidence, the changelog and the
+page) and `web/test/cubelab-evolve-sim.test.ts` (the arithmetic against hand
+values; on the null cube the old rule's false-flag rate over 20% one look and
+70% pooled, the new candidate rate at most 10% and the cut rate at most 5%;
+a planted dead card confirmed at least 80% of the time at 200 drafts and a
+planted +0.15 card at least 65% at 600).
+
+**Rejected.**
+
+- **BH alone, cutting on discovery** (the review's alternative): it bounds the
+  share of wrong cuts, not the chance of one, and a 10% FDR may cut a wrong card
+  in up to one generation in ten when the cube is fine.
+- **Separate BH families per rule:** under a cube with nothing wrong the
+  family-wise rate adds up across them.
+- **A hierarchical Bayes screen** (shrink every card's effect toward the mean
+  with a fitted spread): when nothing is wrong the fitted spread is near zero
+  and it flags as little as BH, and it buys a model of card effects the next
+  step (H1: `learn.ts`'s deck-adjusted values) will replace.
+- **Sizing confirmation by the discovery estimate:** the winner's curse makes
+  it too small.
+- **A per-card cluster-robust variance:** too few decks per card to test with.
+
+## D333 — The match launcher picks the opponent AI: `POST /match` takes `aiPolicy` (`plain`|`outlets`|`search`) and `aiSearchMs` (500–5000), `/health` advertises them, and `play.sh` passes them as `--ai-policy` / `--ai-search ms=<n>`
+
+*Branch `c/match-ai-policy`; D333, past every number open lanes may hold (D326–D332).*
+
+**2026-10-03** (D314's follow-up: "a ForgeCoach-side switch … changed in both
+repositories or not at all")
+
+**Decision.** `POST /match` (D303) gains two optional keys. `aiPolicy` is exactly
+one of `plain`, `outlets`, `search` — D314's `--ai-policy` values, case-sensitive,
+no aliases; `aiSearchMs` is a whole number 500–5000 and only goes with
+`"aiPolicy": "search"` (`--ai-search ms=<n>`; absent, the bridge's default 1500).
+Anything else is a 400 before a file is written, as for every other field.
+`request.json` carries them only when sent; `play.sh` re-checks both in its node
+reader (the same enum and range) and, when the request names a policy, drops the
+startup's `--ai-policy` / `--ai-search` from the restart's argv and appends the
+request's — so a `play.sh --ai-search` session can still be asked for plain
+Forge. **No `aiPolicy` keeps today's behaviour**: the restart keeps whatever
+`play.sh` was started with. A wake (`/engine/start`, D308) restarts the last
+setup, policy included. The reply and `GET /match` gain `aiPolicy`, read from the
+bridge's banner (`ai policy = …`; no line is `plain`). `/health`, when `"match":
+1`, gains `"aiPolicies": ["plain","outlets","search"]` and `"aiSearchMs": {"min":
+500, "max": 5000, "default": 1500}` — additive, so ForgeCoach shows its
+"Opponent AI" choice only to a helper that lists them and sends no key to an
+older one. The wire is unchanged: nothing of the policy or the search reaches a
+frame or `hello_ok` (D314), and the AI's deck stays a name and a count (M44).
+
+**Checked.** `tools/match-launcher-selftest.mjs`: `/health`'s two keys; no
+`aiPolicy` adds no flag (plain, as started); `search` with 3000 reaches the
+engine as `--ai-policy search --ai-search ms=3000` and `GET /match` says
+`search`; `outlets` replaces it with exactly one `--ai-policy` and no
+`--ai-search`; a later request without the key goes back to as started; a
+`play.sh --ai-search-ms 2000` session keeps its search on a request without
+`aiPolicy` and drops it for `"aiPolicy": "plain"`; refused with 400 and nothing
+restarted: an unknown policy, the wrong case, a policy carrying a flag, a
+budget under 500 or over 5000, a budget as a string (`"3000,turns=4"`), a budget
+with `outlets` or with no policy.
+
+**Rejected.** Exposing D312's other knobs (`turns`, `rounds`, candidates) to the
+page (the budget is the one a player can feel; the rest are the lab's, and
+every key added is one more thing to vet); a free-form `--ai-search` string
+(only an enum and an integer may reach a command line); making a missing
+`aiPolicy` mean `plain` (it would silently undo a `play.sh --ai-search` start
+for every client that predates this); the search as the default (D314).

@@ -18,7 +18,9 @@
 // --dangerously-skip-permissions), the user text on stdin and not argv, an empty
 // temp working directory removed afterwards, a big system prompt by file; the
 // Origin rules and the private-network preflight; the body limit; one question
-// at a time (a wait, then 429); a client that disconnects kills the child and
+// at a time with the rest queued (D325: the queued and running lines, positions,
+// a full queue's 429, superseding by key, a queued client leaving, /health's
+// queue, --queue-max 0); a client that disconnects kills the child and
 // its grandchild; and in --lan mode, from this machine's non-loopback address,
 // the token rule (query or header, loopback exempt), the LAN page's origin, and
 // no Origin refused off loopback.  The LAN half is skipped, and says so, on a
@@ -159,6 +161,43 @@ const lastCall = () => {
   mkdirSync(CALLS, { recursive: true });
   return f[f.length - 1];
 };
+/** A /coach request read line by line as it streams: evs(), until(pred), done, destroy(). */
+function stream(port, q) {
+  const evs = [];
+  let status = null;
+  let waiters = [];
+  const kick = () => { waiters = waiters.filter((w) => !(w.pred(evs) && (w.res(), true))); };
+  const req = request({ host: '127.0.0.1', port, method: 'POST', path: '/coach', headers: { 'Content-Type': 'application/json' } });
+  const done = new Promise((resDone) => {
+    req.on('response', (resp) => {
+      status = resp.statusCode;
+      resp.setEncoding('utf8');
+      let b = '';
+      resp.on('data', (d) => {
+        b += d;
+        let i;
+        while ((i = b.indexOf('\n')) >= 0) { evs.push(json(b.slice(0, i))); b = b.slice(i + 1); }
+        kick();
+      });
+      resp.on('end', resDone);
+      resp.on('error', resDone);
+      resp.on('close', resDone);
+    });
+    req.on('error', resDone);
+  });
+  req.end(JSON.stringify(q));
+  return {
+    evs: () => evs,
+    status: () => status,
+    done,
+    destroy: () => req.destroy(),
+    until: (pred, ms = 3000) => new Promise((res, rej) => {
+      if (pred(evs)) { res(); return; }
+      waiters.push({ pred, res });
+      setTimeout(() => rej(new Error(`timed out waiting; got ${JSON.stringify(evs)}`)), ms).unref();
+    }),
+  };
+}
 const terminalCount = (evs) => evs.filter((e) => e && (e.type === 'done' || e.type === 'error')).length;
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { return false; } };
 
@@ -170,7 +209,7 @@ writeFileSync(join(DIR, 'config.json'), JSON.stringify({
 try {
   // ------------------------------------------------------------- health
   console.log('== /health');
-  const h = await startHelper(['--busy-wait', '400']);
+  const h = await startHelper(['--queue-max', '2']);
   const P = h.port;
   let r = await http({ port: P });
   check('ok with the CLI there', r.status === 200 && json(r.body)?.ok === true && json(r.body)?.helper === 1
@@ -274,39 +313,57 @@ try {
   r = await http({ port: P, method: 'OPTIONS', path: '/coach', headers: { Origin: 'https://evil.example', 'Access-Control-Request-Method': 'POST' } });
   check('preflight from another site: 403', r.status === 403 && !r.headers['access-control-allow-private-network']);
 
-  // ------------------------------------------------------------- one at a time, disconnect
-  console.log('== one question at a time; a client that leaves');
-  const slowReq = request({ host: '127.0.0.1', port: P, method: 'POST', path: '/coach', headers: { 'Content-Type': 'application/json' } });
-  const firstLine = new Promise((res) => {
-    slowReq.on('response', (resp) => {
-      resp.setEncoding('utf8');
-      let b = '';
-      resp.on('data', (d) => { b += d; if (b.includes('\n')) res(b); });
-    });
-    slowReq.on('error', () => {});
-  });
-  slowReq.end(JSON.stringify({ system: 's', user: 'MODE:slow' }));
-  const first = await firstLine;
-  check('a slow stream arrives as it is written', json(first.split('\n')[0])?.text === 'thinking about it', first);
-  r = await coach(P, { system: 's', user: 'MODE:ok' });
-  check('a second question while one runs: 429 after the wait', r.status === 429 && json(r.body)?.type === 'error' && r.headers['retry-after'] === '2', `${r.status} ${r.body}`);
+  // ------------------------------------------------------------- one at a time, the queue (D325), disconnect
+  console.log('== one question at a time; the queue; superseding; a client that leaves');
+  lastCall();
+  const slow = stream(P, { system: 's', user: 'MODE:slow' });
+  await slow.until((evs) => evs.length >= 1);
+  check('a slow stream arrives as it is written', slow.evs()[0]?.text === 'thinking about it', JSON.stringify(slow.evs()));
   const pids = json(readFileSync(join(CALLS, 'slow-pids.json'), 'utf8'));
   check('the child and its grandchild are running', pids.every(alive));
-  const queued = coach(P, { system: 's', user: 'MODE:ok' });   // waits for the slot
-  await sleep(100);
-  slowReq.destroy();
+  const q1 = stream(P, { system: 's', user: 'MODE:ok q1' });
+  await q1.until((evs) => evs.length >= 1);
+  check('a second question is queued: 200, then {"type":"queued","position":1}', q1.status() === 200 && JSON.stringify(q1.evs()) === '[{"type":"queued","position":1}]', JSON.stringify(q1.evs()));
+  const q2 = stream(P, { system: 's', user: 'MODE:ok q2', supersedes: 'tab-1' });
+  await q2.until((evs) => evs.length >= 1);
+  check('a third: position 2', JSON.stringify(q2.evs()) === '[{"type":"queued","position":2}]', JSON.stringify(q2.evs()));
+  r = await http({ port: P });
+  check('/health: concurrency 1, the queue, running, supersedes', json(r.body)?.concurrency === 1 && json(r.body)?.queue?.max === 2
+    && json(r.body)?.queue?.length === 2 && json(r.body)?.running === 1 && json(r.body)?.supersedes === 1, r.body);
+  r = await coach(P, { system: 's', user: 'MODE:ok' });
+  check('past --queue-max: 429 with Retry-After', r.status === 429 && json(r.body)?.type === 'error' && r.headers['retry-after'] === '2', `${r.status} ${r.body}`);
+  r = await coach(P, { system: 's', user: 'MODE:ok', supersedes: 7 });
+  check('"supersedes" that is not a string: 400', r.status === 400, `${r.status} ${r.body}`);
+  const q3 = stream(P, { system: 's', user: 'MODE:ok q3', supersedes: 'tab-1' });
+  await q2.done;
+  await q3.until((evs) => evs.length >= 1);
+  check('the same key supersedes the queued one: one terminal error, code "superseded"', terminalCount(q2.evs()) === 1
+    && JSON.stringify(q2.evs().at(-1)) === '{"type":"error","code":"superseded","message":"superseded by a newer question"}', JSON.stringify(q2.evs()));
+  check('the newcomer takes the back of the queue', JSON.stringify(q3.evs()) === '[{"type":"queued","position":2}]', JSON.stringify(q3.evs()));
+  q1.destroy();
+  await q3.until((evs) => evs.length >= 2);
+  check('a queued client that leaves is dropped; the one behind moves up', JSON.stringify(q3.evs()[1]) === '{"type":"queued","position":1}', JSON.stringify(q3.evs()));
+  check('the running question is never superseded', pids.every(alive) && slow.evs().length === 1);
+  slow.destroy();
   let gone = false;
   for (let i = 0; i < 60 && !gone; i++) { await sleep(50); gone = !pids.some(alive); }
   check('the client left: the child AND its grandchild are killed', gone, pids.filter(alive).join(' '));
-  r = await queued;
-  check('a question waiting on a cancelled one is answered', r.status === 200 && lines(r.body).at(-1)?.type === 'done', `${r.status} ${r.body}`);
-  check('the helper logged the cancel', /cancelled: the client left/.test(h.log()));
+  await q3.done;
+  check('the queued question then runs: running, the stream, done', JSON.stringify(q3.evs().slice(2)) === JSON.stringify([
+    { type: 'running' }, { type: 'thinking', text: 'weighing it' }, { type: 'text', text: 'Hello' }, { type: 'text', text: ' world' },
+    { type: 'done', stopReason: 'end_turn', model: 'claude-fake-1' }]) && terminalCount(q3.evs()) === 1, JSON.stringify(q3.evs()));
+  const ran = readdirSync(CALLS).filter((n) => n.startsWith('call-')).map((n) => json(readFileSync(join(CALLS, n), 'utf8')).stdin);
+  check('neither the dropped nor the superseded question ever ran claude', ran.includes('MODE:ok q3') && !ran.includes('MODE:ok q1') && !ran.includes('MODE:ok q2'), ran.join(' | '));
+  check('the helper logged the cancel and the drops', /cancelled: the client left/.test(h.log()) && /client left while queued/.test(h.log()) && /superseded while queued/.test(h.log()));
+  r = await http({ port: P });
+  check('/health: the queue is empty again', json(r.body)?.queue?.length === 0 && json(r.body)?.running === 0, r.body);
 
-  const s1 = coach(P, { system: 's', user: 'MODE:slowfinish' });
+  const h0 = await startHelper(['--queue-max', '0', '--busy-wait', '400']);
+  const s1 = coach(h0.port, { system: 's', user: 'MODE:slowfinish' });
   await sleep(150);
-  r = await coach(P, { system: 's', user: 'MODE:ok' });   // the wait (400 ms here) outlasts nothing: 429
+  r = await coach(h0.port, { system: 's', user: 'MODE:ok' });
   const r1 = await s1;
-  check('the busy wait is bounded (--busy-wait)', r.status === 429 && lines(r1.body).at(-1)?.type === 'done');
+  check('--queue-max 0: no queue, a second question is 429 at once (and the old --busy-wait is still accepted)', r.status === 429 && lines(r1.body).at(-1)?.type === 'done');
   check('the token never appears in a log line', !/token=/.test(h.log()));
 
   // ------------------------------------------------------------- LAN

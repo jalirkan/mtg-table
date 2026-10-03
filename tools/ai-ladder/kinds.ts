@@ -1,0 +1,165 @@
+// mtg-table — the AI ladder: AI kinds, their parameters, and the ai-bench seat
+// config each player becomes.
+// Copyright (C) 2026 mtg-table contributors.
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// A player in tools/ai-ladder/players.json is `{name, kind, params}`.  A KIND is
+// one row of `KINDS` below: its parameters (each numeric or an enum, which is
+// what `tune` can vary), and `cfg()`, which turns the params into the seat
+// config string tools/ai-bench/AiBench.java parses (`<Profile>[+sim|+hybrid]
+// [+outlets|+shadow][+search:k=v,...]`).  The ladder never plays a game itself:
+// every game is an ai-bench game (D309), so a kind is only as real as the
+// bench's parser.
+//
+// `available()` says whether this checkout can play the kind.  A kind the table
+// does not know, or one whose engine side has not merged (the search before
+// c/search-ai, the evaluator before c/evaluator), is reported UNAVAILABLE with a
+// reason and skipped by every scheduler — never a crash (D318).
+//
+// Plugging a new AI in is one row here: its params, its cfg() mapping onto the
+// bench's seat syntax, and an available() probe for the files it needs.
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+export type ParamValue = string | number;
+export type Params = Record<string, ParamValue>;
+
+export interface ParamSpec {
+  /** int and enum can be tuned; text (a model hash, say) only named. */
+  type: 'int' | 'enum' | 'text';
+  /** int: inclusive bounds. */
+  min?: number;
+  max?: number;
+  /** enum: the allowed values. */
+  values?: string[];
+  default: ParamValue;
+  doc: string;
+}
+
+export interface Kind {
+  doc: string;
+  params: Record<string, ParamSpec>;
+  /** The ai-bench seat config for these (validated, defaults filled) params. */
+  cfg(p: Params): string;
+  /** null when this checkout can play the kind; else why not. */
+  available(repo: string): string | null;
+}
+
+const PROFILES = ['Default', 'Cautious', 'Reckless', 'Experimental'];
+
+const profile: ParamSpec = { type: 'enum', values: PROFILES, default: 'Default', doc: "Forge's .ai profile (res/ai/)" };
+const outlets: ParamSpec = { type: 'enum', values: ['off', 'on', 'shadow'], default: 'off', doc: "D310's sacrifice-outlet policy: off, on, or shadow (counts only)" };
+
+const outletSuffix = (o: ParamValue): string => (o === 'on' ? '+outlets' : o === 'shadow' ? '+shadow' : '');
+
+/** The bench source this checkout compiles: a kind that needs a bench option is available when the parser names it. */
+function benchKnows(repo: string, token: string): boolean {
+  try {
+    return readFileSync(join(repo, 'tools/ai-bench/AiBench.java'), 'utf8').includes(token);
+  } catch {
+    return false;
+  }
+}
+
+/** The search's knobs (D312's SearchConfig) by ladder name -> bench key. */
+const SEARCH_KEYS: Record<string, string> = {
+  budgetMs: 'ms', cands: 'cands', turns: 'turns', rounds: 'rounds', margin: 'margin', maxRounds: 'maxrounds', what: 'what', seed: 'seed',
+};
+
+export const KINDS: Record<string, Kind> = {
+  forge: {
+    doc: "Stock Forge AI: an .ai profile, optionally Forge's own simulation (AIOption). The anchors are this kind.",
+    params: {
+      profile,
+      sim: { type: 'enum', values: ['none', 'full', 'hybrid'], default: 'none', doc: "Forge's AIOption simulation (D311: it ends cube games; keep none)" },
+    },
+    cfg: (p) => `${p.profile}${p.sim === 'full' ? '+sim' : p.sim === 'hybrid' ? '+hybrid' : ''}`,
+    available: () => null,
+  },
+  policy: {
+    doc: "D309's PolicyControllerAi in front of a Forge profile, with D310's outlet policy.",
+    params: { profile, outlets: { ...outlets, default: 'on' } },
+    cfg: (p) => `${p.profile}${outletSuffix(p.outlets as string)}`,
+    available: () => null,
+  },
+  search: {
+    doc: "D312's determinized rollout search inside PolicyControllerAi (branch c/search-ai).",
+    params: {
+      profile,
+      outlets: { ...outlets, default: 'on' },
+      budgetMs: { type: 'int', min: 50, max: 60000, default: 1500, doc: 'wall-clock budget per searched decision (ms)' },
+      cands: { type: 'int', min: 2, max: 32, default: 6, doc: "most candidates searched, Forge's own and pass included" },
+      turns: { type: 'int', min: 0, max: 4, default: 0, doc: 'rollout horizon: 0 = end of this turn, 1 = end of the next' },
+      rounds: { type: 'int', min: 1, max: 64, default: 2, doc: 'determinizations each candidate must finish before overruling Forge' },
+      margin: { type: 'int', min: 0, max: 1000, default: 20, doc: "leaf points an alternative must beat Forge's own answer by" },
+      maxRounds: { type: 'int', min: 1, max: 256, default: 12, doc: 'stop after this many complete rounds' },
+      what: { type: 'enum', values: ['p', 'a', 'b', 'pa', 'pb', 'ab', 'pab'], default: 'pab', doc: 'decisions searched: priority, attacks, blocks' },
+      seed: { type: 'int', min: 0, max: 2147483647, default: 0, doc: "the determinizations' seed; 0 = the clock" },
+    },
+    // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
+    // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
+    // seed -- every searched decision does exactly N rounds on any machine, so a
+    // benchmark measures the search, not the CPU (D318; search-v1-fixed3).
+    cfg: (p) => {
+      const kv = Object.entries(SEARCH_KEYS).map(([k, b]) => `${b}=${p[k]}`).join(',');
+      return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv}`;
+    },
+    available: (repo) => {
+      if (!benchKnows(repo, '+search')) return 'the search AI has not merged (ai-bench has no +search seat option; branch c/search-ai, D312)';
+      return null;
+    },
+  },
+};
+
+// The search with a learned evaluator at its leaves (branch c/evaluator).  Its
+// bench option does not exist yet, so the kind is declared -- players can be
+// registered and are listed -- but always unavailable until a cfg() mapping
+// onto the bench's syntax is written here.
+KINDS['search-eval'] = {
+  doc: "D312's search scoring leaves with a learned evaluator (branch c/evaluator): `model` is the model file's hash.",
+  params: { ...KINDS.search!.params, model: { type: 'text', default: '', doc: "the evaluator model's content hash" } },
+  cfg: () => { throw new Error('search-eval has no ai-bench seat option yet'); },
+  available: () => 'the learned evaluator has no ai-bench seat option yet (branch c/evaluator)',
+};
+
+/** Fill defaults and check every param against the kind; throws on an unknown param or a bad value. */
+export function resolveParams(kindName: string, params: Params): Params {
+  const k = KINDS[kindName];
+  if (!k) throw new Error(`unknown kind ${kindName}`);
+  for (const key of Object.keys(params)) if (!k.params[key]) throw new Error(`kind ${kindName} has no parameter ${key} (has ${Object.keys(k.params).join(', ')})`);
+  const out: Params = {};
+  for (const [key, spec] of Object.entries(k.params)) {
+    const v = params[key] ?? spec.default;
+    checkValue(kindName, key, spec, v);
+    out[key] = v;
+  }
+  return out;
+}
+
+export function checkValue(kindName: string, key: string, spec: ParamSpec, v: ParamValue): void {
+  if (spec.type === 'text') {
+    if (typeof v !== 'string' || !/^[A-Za-z0-9._@-]*$/.test(v)) throw new Error(`${kindName}.${key} must be a plain token, got ${JSON.stringify(v)}`);
+  } else if (spec.type === 'int') {
+    if (typeof v !== 'number' || !Number.isInteger(v)) throw new Error(`${kindName}.${key} must be an integer, got ${JSON.stringify(v)}`);
+    if ((spec.min !== undefined && v < spec.min) || (spec.max !== undefined && v > spec.max)) throw new Error(`${kindName}.${key} must be ${spec.min}..${spec.max}, got ${v}`);
+  } else if (!spec.values?.includes(String(v))) {
+    throw new Error(`${kindName}.${key} must be one of ${spec.values?.join(', ')}, got ${JSON.stringify(v)}`);
+  }
+}
+
+/** Parse a command-line value for a param (`budgetMs=1500` gives 1500, `profile=Reckless` gives 'Reckless'). */
+export function parseValue(kindName: string, key: string, raw: string): ParamValue {
+  const spec = KINDS[kindName]?.params[key];
+  if (!spec) throw new Error(`kind ${kindName} has no parameter ${key}`);
+  const v: ParamValue = spec.type === 'int' ? Number(raw) : raw;
+  checkValue(kindName, key, spec, v);
+  return v;
+}
+
+/** Why this repo cannot play `kind` (unknown kinds included), or null. */
+export function unavailable(kindName: string, repo: string): string | null {
+  const k = KINDS[kindName];
+  if (!k) return `unknown kind "${kindName}" (this checkout knows ${Object.keys(KINDS).join(', ')})`;
+  return k.available(repo);
+}
