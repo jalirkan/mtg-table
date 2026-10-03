@@ -1,0 +1,939 @@
+name	colour_identity	type	mana_value	theme_tags	sources	forge_supported	forge_ai_flag	in_omega_v1
+Aang's Iceberg	W	Enchantment	3	ART	mtgovc	yes	none	no
+Aang, Swift Savior	UW	Creature	3	ETB CTR EVA	mtgovc	yes	none	no
+Abandoned Air Temple	W	Land	0	LND AGG	mtgovc	yes	none	no
+Abhorrent Oculus	U	Creature	3	GY EVA	mtgovc	yes	none	no
+Abrade	R	Instant	2	removal ART	mtgovc	yes	none	no
+Abrupt Decay	BG	Instant	2	removal	modern	yes	none	no
+Acidic Slime	G	Creature	5	ETB removal	added	yes	none	yes
+Adanto Vanguard	W	Creature	2	LIFE AGG	modern	yes	All	no
+Adeline, Resplendent Cathar	W	Creature	3	AGG TOK	mtgovc vintage180 synergy	yes	none	yes
+Aether Spellbomb	U	Artifact	1	ART	mtgovc	yes	Random	no
+Agatha's Soul Cauldron	C	Artifact	2	CTR GY ART	mtgovc	yes	none	no
+Ajani Goldmane	W	Planeswalker	4	TOK CTR LIFE CTRL	added	yes	none	no
+Ajani Vengeant	RW	Planeswalker	4	removal LIFE CTRL	modern	yes	none	no
+Ajani's Pridemate	W	Creature	2	LIFE CTR	synergy	yes	none	no
+Ajani, Nacatl Pariah	RW	Creature	2	TOK ETB CTR ART AGG	mtgovc	yes	none	no
+Akroma, Angel of Wrath	W	Creature	8	FAT	added	yes	none	no
+Alpha Deathclaw	BG	Creature	6	removal ETB CTR FAT	mtgovc	yes	none	no
+Anax, Hardened in the Forge	R	Enchantment Creature	3	SAC TOK	synergy	yes	none	no
+Ancestral Blade	W	Artifact	2	ART TOK AGG	pauper	yes	none	no
+Ancestral Recall	U	Instant	1	SPL CTRL	mtgovc vintage180	yes	none	no
+Ancient Tomb	C	Land	0	RAMP REAN ART	mtgovc vintage180	yes	Random	no
+Anger	R	Creature	4	GY AGG	mtgovc	yes	none	no
+Anger of the Gods	R	Sorcery	3	removal	modern	yes	none	no
+Anguished Unmaking	BW	Instant	3	removal	added	yes	none	no
+Animate Dead	B	Enchantment	2	REAN GY	mtgovc vintage180	yes	none	yes
+Annoyed Altisaur	G	Creature	7	RAMP ETB	pauper	yes	none	no
+Arbor Elf	G	Creature	1	RAMP	pauper	yes	none	no
+Arc Trail	R	Sorcery	2	removal SPL	added	yes	none	yes
+Archaeomancer	U	Creature	4	ETB GY SPL	pauper	yes	none	no
+Archangel Avacyn	RW	Creature	5	ETB	modern	yes	none	no
+Archmage's Charm	U	Instant	3	counter CTRL	modern	yes	none	no
+Archon of Cruelty	B	Creature	8	GY ETB FAT REAN	mtgovc vintage180 modern synergy	yes	none	no
+Ardent Elementalist	R	Creature	4	GY ETB SPL	pauper	yes	none	no
+Arena of Glory	R	Land	0	LND AGG	mtgovc	yes	none	no
+Arid Mesa	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Arwen, Mortal Queen	GW	Creature	3	CTR LIFE	mtgovc	yes	none	no
+Ash Barrens	C	Land	0	LND GY	pauper	yes	none	no
+Assassin's Trophy	BG	Instant	2	removal	added	yes	none	no
+Astrologian's Planisphere	U	Artifact	2	TOK CTR SPL ART	mtgovc	yes	none	no
+Atraxa, Grand Unifier	BGUW	Creature	7	ETB ART LIFE FAT	mtgovc	yes	none	no
+Attended Knight	W	Creature	3	TOK ETB	pauper	yes	none	no
+Augur of Bolas	U	Creature	2	SPL ETB	pauper	yes	none	no
+Avacyn's Pilgrim	GW	Creature	1	RAMP AGG	mtgovc	yes	none	no
+Avenger of Zendikar	G	Creature	7	LND TOK FAT	vintage180 synergy	yes	none	yes
+Azorius Chancery	UW	Land	0	LND	pauper	yes	none	no
+Badgermole Cub	G	Creature	2	ETB CTR AGG	mtgovc	yes	none	no
+Badlands	BR	Land	0	LND	mtgovc vintage180	yes	none	yes
+Balance	W	Sorcery	2	CTRL	mtgovc vintage180	yes	none	no
+Baleful Strix	BU	Artifact Creature	2	ETB CTRL ART	mtgovc vintage180 synergy	yes	none	yes
+Ball Lightning	R	Creature	3	AGG	added	yes	none	yes
+Baloth Prime	G	Creature	4	TOK SAC LIFE	mtgovc	yes	none	no
+Baneslayer Angel	W	Creature	5	EVA LIFE FAT	added	yes	none	yes
+Barkchannel Pathway	GU	Land	0	LND	modern	yes	none	no
+Barrin, Tolarian Archmage	U	Creature	3	ETB	modern	yes	none	no
+Barrowgoyf	B	Creature	3	GY LIFE	mtgovc	yes	none	no
+Basalt Monolith	C	Artifact	3	ART RAMP	mtgovc	yes	Random	no
+Basking Broodscale	G	Creature	2	TOK SAC	pauper	yes	none	no
+Batroc the Leaper	R	Creature	2	CTR AGG	mtgovc	yes	none	no
+Batterskull	C	Artifact	5	ART LIFE	vintage180 modern	yes	none	yes
+Battle Screech	W	Sorcery	4	TOK GY EVA	synergy pauper	yes	none	no
+Bayou	BG	Land	0	LND	mtgovc vintage180	yes	none	yes
+Bazaar of Baghdad	C	Land	0	LND	mtgovc	yes	Random	no
+Beast Within	G	Instant	3	removal	vintage180 modern synergy	yes	All	no
+Beetleback Chief	R	Creature	4	TOK ETB SAC	pauper	yes	none	no
+Birds of Paradise	G	Creature	1	RAMP	mtgovc vintage180 modern	yes	none	yes
+Bitter Triumph	B	Instant	2	removal	mtgovc	yes	none	no
+Bitterblossom	B	Enchantment	2	TOK EVA SAC	added	yes	none	yes
+Black Lotus	C	Artifact	0	RAMP ART REAN	mtgovc vintage180	yes	none	no
+Black Widow, Super Spy	B	Creature	2	CTR AGG	mtgovc	yes	none	no
+Blackcleave Cliffs	BR	Land	0	LND	mtgovc	yes	none	no
+Blade Splicer	W	Creature	3	ETB TOK ART	modern synergy	yes	none	yes
+Blazemire Verge	BR	Land	0	LND	mtgovc	yes	none	no
+Bleachbone Verge	BW	Land	0	LND	mtgovc	yes	none	no
+Blightsteel Colossus	C	Artifact Creature	12	GY ART FAT	mtgovc	yes	none	no
+Blightstep Pathway	BR	Land	0	LND	modern	yes	none	no
+Blood Artist	B	Creature	2	SAC LIFE TOK	synergy	yes	none	yes
+Blood Crypt	BR	Land	0	LND	mtgovc modern synergy	yes	none	no
+Blood Fountain	B	Artifact	1	ART GY	pauper	yes	none	no
+Bloodbraid Challenger	GR	Creature	5	GY AGG	mtgovc	yes	none	no
+Bloodbraid Elf	GR	Creature	4	AGG ETB	modern	yes	none	yes
+Bloodchief's Thirst	B	Sorcery	1	removal	mtgovc modern	yes	none	no
+Bloodfell Caves	BR	Land	0	LND	pauper	yes	none	no
+Bloodghast	B	Creature	2	SAC GY AGG	vintage180 modern synergy	yes	none	yes
+Bloodsoaked Champion	B	Creature	1	REAN AGG	modern	yes	none	no
+Bloodstained Mire	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Bloodtithe Harvester	BR	Creature	2	SAC removal AGG	mtgovc vintage180	yes	none	no
+Bloodwater Entity	RU	Creature	3	SPL EVA GY	pauper	yes	none	no
+Blooming Marsh	BG	Land	0	LND	mtgovc	yes	none	no
+Blossoming Sands	GW	Land	0	LND	pauper	yes	none	no
+Body Dropper	BR	Creature	2	SAC	pauper	yes	none	no
+Bogardan Dragonheart	R	Creature	3	SAC EVA	pauper	yes	All	no
+Bolas's Citadel	B	Artifact	6	ART	mtgovc	yes	none	no
+Bone Shards	B	Sorcery	1	SAC GY removal	mtgovc vintage180 modern synergy	yes	none	yes
+Bonecrusher Giant	R	Creature	3	removal AGG	mtgovc vintage180 modern	yes	none	yes
+Bonesplitter	C	Artifact	1	ART AGG	synergy pauper	yes	none	no
+Boomerang Basics	U	Sorcery	1	SPL	mtgovc	yes	none	no
+Boros Garrison	RW	Land	0	LND	pauper	yes	none	no
+Boseiju, Who Endures	G	Land	0	LND AGG	mtgovc	yes	none	no
+Botanical Sanctum	GU	Land	0	LND	mtgovc	yes	none	no
+Brain Freeze	U	Instant	2	SPL	mtgovc	yes	none	no
+Brainstorm	U	Instant	1	SPL	mtgovc vintage180 synergy pauper	yes	none	yes
+Branching Bolt	GR	Instant	3	removal	pauper	yes	none	no
+Branchloft Pathway	GW	Land	0	LND	modern	yes	none	no
+Brazen Borrower	U	Creature	3	SPL EVA	mtgovc vintage180 modern	yes	none	yes
+Breeding Pool	GU	Land	0	LND	mtgovc modern synergy	yes	none	no
+Brightclimb Pathway	BW	Land	0	LND	modern	yes	none	no
+Brimaz, King of Oreskos	W	Creature	3	TOK AGG	modern synergy	yes	none	yes
+Bristly Bill, Spine Sower	G	Creature	2	CTR LND AGG	mtgovc	yes	none	no
+Broadside Bombardiers	R	Creature	3	SAC ART AGG	mtgovc	yes	none	no
+Burst Lightning	R	Instant	1	removal SPL	mtgovc modern synergy pauper	yes	none	no
+Bushwhack	G	Sorcery	1	removal RAMP	pauper	yes	none	no
+Cabal Ritual	B	Instant	2	GY RAMP	mtgovc	yes	Random	no
+Candelabra of Tawnos	C	Artifact	1	ART	mtgovc	yes	All	no
+Candy Trail	C	Artifact	1	ART SAC	synergy pauper	yes	none	no
+Carnage Interpreter	BR	Creature	3	TOK ETB ART	mtgovc	yes	none	no
+Carrier Thrall	B	Creature	2	SAC TOK	pauper	yes	none	no
+Carrion Feeder	B	Creature	1	SAC CTR	synergy	yes	none	no
+Cast Down	B	Instant	2	removal	pauper	yes	none	no
+Cathar Commando	W	Creature	2	removal ART AGG	mtgovc	yes	none	no
+Cathartic Reunion	R	Sorcery	2	GY SPL	synergy	yes	none	no
+Cauldron Familiar	B	Creature	1	SAC ART GY	synergy	yes	none	no
+Caustic Bronco	B	Creature	2	AGG	mtgovc	yes	none	no
+Cavern Harpy	BU	Creature	2	ETB EVA	pauper	yes	none	no
+Celestial Colonnade	UW	Land	0	LND AGG	mtgovc	yes	none	no
+Chain Lightning	R	Sorcery	1	removal SPL AGG	mtgovc vintage180 pauper	yes	none	yes
+Chain of Smog	B	Sorcery	2	discard	mtgovc	yes	Random	no
+Chainsaw	R	Artifact	2	ART	mtgovc	yes	none	no
+Champion of Wits	U	Creature	3	ETB GY	synergy	yes	none	no
+Chandra, Torch of Defiance	R	Planeswalker	4	CTRL RAMP removal	mtgovc vintage180 modern synergy	yes	none	yes
+Channel	G	Sorcery	2	RAMP REAN	mtgovc	yes	All	no
+Charming Prince	W	Creature	2	ETB LIFE	synergy	yes	none	no
+Chart a Course	U	Sorcery	2	SPL CTRL	modern	yes	none	no
+Chittering Rats	B	Creature	3	ETB	pauper	yes	none	no
+Chromatic Star	C	Artifact	1	ART SAC	mtgovc synergy pauper	yes	All	no
+Chrome Mox	C	Artifact	0	ART RAMP	mtgovc	yes	none	no
+City of Traitors	C	Land	0	LND	mtgovc	yes	All	no
+Clearwater Pathway	BU	Land	0	LND	modern	yes	none	no
+Cloak and Dagger, Entwined	BW	Creature	3	discard LIFE	mtgovc	yes	none	no
+Cloudkin Seer	U	Creature	3	ETB EVA	pauper	yes	none	no
+Coalition Relic	C	Artifact	3	ART RAMP	mtgovc	yes	none	yes
+Collected Company	G	Instant	4	AGG ETB	modern	yes	none	no
+Collective Brutality	B	Sorcery	2	GY discard removal	mtgovc vintage180 modern	yes	none	no
+Commercial District	GR	Land	0	LND	mtgovc	yes	none	no
+Concealed Courtyard	BW	Land	0	LND	mtgovc	yes	none	no
+Concealing Curtains	B	Creature	1	discard AGG	mtgovc	yes	none	no
+Conclave Mentor	GW	Creature	2	CTR LIFE	synergy	yes	none	no
+Conclave Naturalists	G	Creature	5	ETB removal	pauper	yes	none	no
+Consecrated Sphinx	U	Creature	6	FAT CTRL REAN	added	yes	none	yes
+Consider	U	Instant	1	SPL GY	mtgovc synergy	yes	none	no
+Containment Priest	W	Creature	2	ETB GY hoser	mtgovc vintage180	yes	none	no
+Control Magic	U	Enchantment	4	removal CTRL	added	yes	none	yes
+Copperline Gorge	GR	Land	0	LND	mtgovc	yes	none	no
+Cori-Steel Cutter	R	Artifact	2	TOK SPL ART	mtgovc	yes	none	no
+Corpse Dance	B	Instant	3	GY	mtgovc	yes	none	no
+Council's Judgment	W	Sorcery	3	removal CTRL	mtgovc vintage180	yes	none	yes
+Counterspell	U	Instant	2	counter CTRL	mtgovc vintage180 modern pauper	yes	none	yes
+Courser of Kruphix	G	Enchantment Creature	3	LND LIFE	vintage180 modern synergy	yes	none	yes
+Coveted Jewel	C	Artifact	6	ART RAMP CTRL	mtgovc	yes	none	no
+Crabomination	B	Creature	6	ETB GY ART FAT	mtgovc	yes	none	no
+Cragcrown Pathway	GR	Land	0	LND	modern	yes	none	no
+Cranial Plating	B	Artifact	2	ART	synergy	yes	none	no
+Craterhoof Behemoth	G	Creature	8	FAT AGG TOK	vintage180 modern	yes	none	yes
+Creeping Tar Pit	BU	Land	0	LND AGG	mtgovc	yes	none	no
+Crop Rotation	G	Instant	1	SAC	mtgovc	yes	Random	no
+Cryogen Relic	U	Artifact	2	ART	mtgovc	yes	none	no
+Crypt Rats	B	Creature	3	SAC removal	pauper	yes	none	no
+Cryptic Command	U	Instant	4	counter CTRL	modern	yes	none	yes
+Currency Converter	C	Artifact	1	TOK GY ART	mtgovc	yes	none	no
+Cut Down	B	Instant	1	removal	mtgovc	yes	none	no
+Dack Fayden	RU	Planeswalker	3	ART CTRL	mtgovc	yes	Random	no
+Damn	BW	Sorcery	2	removal	mtgovc	yes	none	no
+Damnation	B	Sorcery	4	CTRL	mtgovc modern	yes	none	yes
+Dark Confidant	B	Creature	2	AGG CTRL	mtgovc vintage180 modern	yes	none	yes
+Dark Depths	C	Land	0	LND AGG	mtgovc	yes	none	no
+Dark Ritual	B	Instant	1	RAMP REAN	mtgovc vintage180	yes	none	no
+Darkbore Pathway	BG	Land	0	LND	modern	yes	none	no
+Darkslick Shores	BU	Land	0	LND	mtgovc	yes	none	no
+Dauthi Voidwalker	B	Creature	2	GY AGG	mtgovc modern	yes	none	no
+Daze	U	Instant	2	counter CTRL	mtgovc	yes	none	no
+Deadly Dispute	B	Instant	2	SAC ART	modern synergy pauper	yes	none	no
+Death-Greeter's Champion	R	Creature	3	ETB CTR AGG	mtgovc	yes	none	no
+Deathrite Shaman	BG	Creature	1	GY RAMP LND	mtgovc vintage180	yes	none	no
+Deep Analysis	U	Sorcery	4	GY SPL	synergy pauper	yes	none	no
+Deep Forest Hermit	G	Creature	5	ETB TOK	synergy	yes	none	no
+Deep-Cavern Bat	B	Creature	2	ETB LIFE EVA AGG	mtgovc	yes	none	no
+Delayed Blast Fireball	R	Instant	3	removal CTRL	mtgovc	yes	none	no
+Delighted Halfling	G	Creature	1	RAMP	mtgovc vintage180	yes	none	no
+Delver of Secrets	U	Creature	1	SPL EVA AGG	vintage180 modern synergy pauper	yes	none	yes
+Demonic Tutor	B	Sorcery	2	CTRL REAN	mtgovc vintage180	yes	Random	yes
+Desecrator Hag	BG	Creature	4	GY ETB	pauper	yes	none	no
+Detective's Phoenix	R	Enchantment Creature	3	GY EVA AGG	mtgovc	yes	none	no
+Dimir Aqueduct	BU	Land	0	LND	pauper	yes	none	no
+Dinrova Horror	BU	Creature	6	ETB removal	pauper	yes	none	no
+Disfigure	B	Instant	1	removal	pauper	yes	none	no
+Dismal Backwater	BU	Land	0	LND	pauper	yes	none	no
+Dismember	B	Instant	3	removal	mtgovc	yes	none	no
+Displacer Kitten	U	Creature	4	SPL	mtgovc	yes	none	no
+Dog Walker	RW	Creature	2	TOK AGG	pauper	yes	none	no
+Doom Blade	B	Instant	2	removal	added	yes	none	yes
+Doomed Traveler	W	Creature	1	SAC TOK	pauper	yes	none	no
+Doomsday	B	Sorcery	3	GY	mtgovc	yes	All	no
+Dragon Fodder	R	Sorcery	2	TOK SAC	pauper	yes	none	no
+Dragon's Rage Channeler	R	Creature	1	SPL GY AGG	mtgovc vintage180 modern	yes	none	yes
+Dreadbore	BR	Sorcery	2	removal	added	yes	none	no
+Dreadhorde Arcanist	R	Creature	2	SPL GY	synergy	yes	none	no
+Duress	B	Sorcery	1	discard	mtgovc	yes	none	no
+Dusk Legion Zealot	B	Creature	2	ETB	pauper	yes	none	no
+Eagles of the North	W	Creature	6	EVA AGG TOK	mtgovc pauper	yes	none	no
+Echo of Eons	U	Sorcery	6	GY	mtgovc	yes	none	no
+Ecstatic Awakener	B	Creature	1	SAC	pauper	yes	none	no
+Eidolon of the Great Revel	R	Enchantment Creature	2	AGG	modern	yes	Random	no
+Elder Gargaroth	G	Creature	5	TOK LIFE	modern	yes	none	no
+Electrolyze	RU	Instant	3	removal SPL	added	yes	none	no
+Elegant Parlor	RW	Land	0	LND	mtgovc	yes	none	no
+Elesh Norn, Grand Cenobite	W	Creature	7	FAT	added	yes	none	no
+Elite Spellbinder	W	Creature	3	AGG ETB	mtgovc vintage180	yes	none	no
+Elspeth, Knight-Errant	W	Planeswalker	4	TOK ART CTRL	modern	yes	none	no
+Elspeth, Storm Slayer	W	Planeswalker	5	removal TOK CTR CTRL	mtgovc	yes	none	no
+Elspeth, Sun's Champion	W	Planeswalker	6	TOK CTRL	vintage180 modern synergy	yes	none	yes
+Elvish Mystic	G	Creature	1	RAMP AGG	mtgovc modern	yes	none	no
+Elvish Visionary	G	Creature	2	ETB	synergy	yes	none	no
+Embercleave	R	Artifact	6	ART	modern	yes	All	no
+Emeritus of Abundance	G	Creature	3	GY	mtgovc	yes	none	no
+Emeritus of Ideation	U	Creature	5	GY	mtgovc	yes	none	no
+Emperor of Bones	B	Creature	2	CTR REAN AGG	mtgovc	yes	none	no
+Emrakul, the Aeons Torn	C	Creature	15	FAT REAN	mtgovc vintage180	yes	none	no
+Emry, Lurker of the Loch	U	Creature	3	ART GY	mtgovc synergy	yes	none	no
+Endurance	G	Creature	3	GY hoser	mtgovc vintage180	yes	none	no
+Enduring Innocence	W	Enchantment Creature	3	LIFE	mtgovc	yes	none	no
+Entomb	B	Instant	1	REAN GY	mtgovc vintage180	yes	none	no
+Ephemerate	W	Instant	1	ETB SPL	mtgovc vintage180 synergy pauper	yes	none	yes
+Erode	W	Instant	1	removal	mtgovc	yes	none	no
+Esika's Chariot	G	Artifact	4	TOK ART	mtgovc	yes	none	no
+Esper Sentinel	W	Artifact Creature	1	ART AGG	modern	yes	none	no
+Etali, Primal Conqueror	GR	Creature	7	ETB FAT	mtgovc	yes	none	no
+Eternal Witness	G	Creature	3	ETB GY	mtgovc vintage180 modern synergy	yes	none	yes
+Everflowing Chalice	C	Artifact	0	ART RAMP	mtgovc modern	yes	none	yes
+Evolution Sage	G	Creature	3	CTR LND	synergy	yes	none	no
+Evolved Sleeper	B	Creature	1	CTR AGG	modern	yes	none	no
+Evolving Wilds	C	Land	0	LND GY	pauper	yes	none	no
+Exalted Angel	W	Creature	6	EVA LIFE	added	yes	none	yes
+Exclude	U	Instant	3	counter ETB	pauper	yes	none	no
+Exhume	B	Sorcery	2	REAN GY	mtgovc vintage180	yes	none	no
+Expedition Map	C	Artifact	1	ART	mtgovc	yes	none	no
+Experimental Synthesizer	R	Artifact	1	ART SAC	synergy pauper	yes	none	no
+Expressive Iteration	RU	Sorcery	2	SPL	mtgovc vintage180 modern	yes	none	yes
+Fable of the Mirror-Breaker	R	Enchantment	3	ART TOK SAC	mtgovc vintage180 modern	yes	none	yes
+Fabled Passage	C	Land	0	LND GY	mtgovc	yes	none	no
+Fact or Fiction	U	Instant	4	CTRL GY	added	yes	none	yes
+Fading Hope	U	Instant	1	SPL removal	modern	yes	none	no
+Faerie Guidemother	W	Creature	1	EVA AGG	pauper	yes	none	no
+Faerie Mastermind	U	Creature	2	EVA AGG	mtgovc modern	yes	none	no
+Faerie Seer	U	Creature	1	EVA	pauper	yes	none	no
+Faith's Fetters	W	Enchantment	4	removal	pauper	yes	none	no
+Faithless Looting	R	Sorcery	1	GY SPL REAN	mtgovc vintage180 synergy pauper	yes	All	no
+Falkenrath Aristocrat	BR	Creature	4	SAC AGG	added	yes	none	yes
+Falkenrath Noble	B	Creature	4	SAC EVA	pauper	yes	none	no
+Fallen Shinobi	BU	Creature	5	EVA AGG	mtgovc	yes	none	no
+Fanatic of Rhonas	G	Creature	2	TOK GY RAMP AGG	mtgovc	yes	none	no
+Fanatical Firebrand	R	Creature	1	SAC AGG	pauper	yes	none	no
+Fastbond	G	Enchantment	1	RAMP LND	mtgovc	yes	none	no
+Fatal Push	B	Instant	1	removal LND	mtgovc vintage180 modern synergy	yes	none	yes
+Fear of Missing Out	R	Enchantment Creature	2	ETB GY AGG	mtgovc	yes	none	no
+Fiery Confluence	R	Sorcery	4	removal ART	mtgovc vintage180	yes	none	no
+Figure of Destiny	RW	Creature	1	AGG	mtgovc	yes	none	yes
+Figure of Fable	GW	Creature	1	AGG	mtgovc	yes	none	no
+Fire // Ice	RU	Instant	4	removal SPL	added	yes	none	yes
+Fire Covenant	BR	Instant	3	removal	mtgovc	yes	All	no
+Fireball	R	Sorcery	1	removal RAMP	pauper	yes	none	no
+Fireblade Artist	BR	Creature	2	SAC	pauper	yes	All	no
+Fireblast	R	Instant	6	AGG SPL	mtgovc vintage180	yes	none	no
+Firebolt	R	Sorcery	1	removal GY	mtgovc	yes	none	no
+Firebrand Archer	R	Creature	2	SPL	pauper	yes	none	no
+Flame of Anor	RU	Instant	3	removal ART	mtgovc	yes	none	no
+Flame Slash	R	Sorcery	1	removal	mtgovc modern synergy pauper	yes	none	no
+Flametongue Kavu	R	Creature	4	ETB removal	added	yes	none	yes
+Flash	U	Instant	2	REAN	mtgovc	yes	All	no
+Flayer Husk	C	Artifact	1	ART TOK SAC	pauper	yes	none	no
+Flickerwisp	W	Creature	3	ETB EVA	mtgovc vintage180 modern synergy	yes	none	yes
+Fling	R	Instant	2	SAC SPL	pauper	yes	Random	no
+Flooded Strand	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Force of Negation	U	Instant	3	counter GY	mtgovc	yes	none	no
+Force of Vigor	G	Instant	4	ART	mtgovc	yes	none	no
+Force of Will	U	Instant	5	counter CTRL	mtgovc vintage180	yes	none	yes
+Forensic Gadgeteer	U	Creature	3	TOK ART	mtgovc	yes	none	no
+Formidable Speaker	G	Creature	3	ETB	mtgovc	yes	none	no
+Forth Eorlingas!	RW	Sorcery	2	TOK	mtgovc	yes	none	no
+Fractured Identity	UW	Sorcery	5	removal TOK	mtgovc	yes	none	no
+Frantic Search	U	Instant	3	GY RAMP SPL	mtgovc vintage180	yes	Random	no
+Frost Titan	U	Creature	6	FAT	added	yes	none	no
+Fury	R	Creature	5	ETB removal REAN	mtgovc vintage180 modern	yes	none	yes
+Gaea's Cradle	G	Land	0	LND AGG	mtgovc	yes	none	no
+Galvanic Discharge	R	Instant	1	removal	mtgovc pauper	yes	none	no
+Garruk Relentless	BG	Planeswalker	4	TOK removal	added	yes	none	yes
+Garruk Wildspeaker	G	Planeswalker	4	RAMP TOK	vintage180 modern	yes	none	yes
+Gau, Feral Youth	R	Creature	2	CTR GY AGG	mtgovc	yes	none	no
+Geist of Saint Traft	UW	Creature	3	TOK EVA	added	yes	none	no
+Generous Ent	G	Creature	6	RAMP ART ETB	mtgovc pauper	yes	none	no
+Generous Plunderer	R	Creature	2	TOK ART AGG	mtgovc	yes	none	no
+Get Lost	W	Instant	2	removal TOK ART	mtgovc	yes	none	no
+Ghostly Flicker	U	Instant	3	ETB SPL	pauper	yes	All	no
+Gideon Jura	W	Planeswalker	5	CTRL	added	yes	All	no
+Gideon, Ally of Zendikar	W	Planeswalker	4	TOK CTRL	modern	yes	none	no
+Gitaxian Probe	U	Sorcery	1	SPL	mtgovc	yes	All	no
+Giver of Runes	W	Creature	1	AGG	mtgovc	yes	none	no
+Glen Elendra Archmage	U	Creature	4	counter	modern	yes	none	no
+Glimmer Lens	W	Artifact	2	TOK ART	mtgovc	yes	none	no
+Glorybringer	R	Creature	5	EVA removal FAT	modern	yes	none	yes
+Glowspore Shaman	BG	Creature	2	GY ETB	pauper	yes	none	no
+Go for the Throat	B	Instant	2	removal	modern synergy	yes	none	no
+Goblin Bombardment	R	Enchantment	2	SAC TOK	mtgovc vintage180 synergy	yes	All	no
+Goblin Bushwhacker	R	Creature	1	AGG TOK	pauper	yes	none	no
+Goblin Engineer	R	Creature	2	ART GY REAN	mtgovc vintage180	yes	none	no
+Goblin Guide	R	Creature	1	AGG	vintage180 modern	yes	none	yes
+Goblin Rabblemaster	R	Creature	3	AGG TOK	vintage180 modern synergy	yes	none	yes
+Goblin Welder	R	Creature	1	ART GY REAN	mtgovc vintage180	yes	All	no
+Godless Shrine	BW	Land	0	LND	mtgovc modern synergy	yes	none	no
+Goldspan Dragon	R	Creature	5	EVA ART RAMP	added	yes	none	yes
+Golgari Rot Farm	BG	Land	0	LND	pauper	yes	none	no
+Gollum, Riddle Master	B	Creature	2	CTR LIFE AGG	mtgovc	yes	none	no
+Grapple with the Past	G	Instant	2	GY RAMP	pauper	yes	none	no
+Grave Titan	B	Creature	6	FAT TOK	added	yes	none	yes
+Gravecrawler	B	Creature	1	GY SAC	synergy	yes	none	no
+Gravedigger	B	Creature	4	ETB GY	pauper	yes	none	no
+Gray Merchant of Asphodel	B	Creature	5	ETB	pauper	yes	none	no
+Green Sun's Zenith	G	Sorcery	1	RAMP	mtgovc vintage180	yes	none	no
+Grief	B	Creature	4	ETB REAN discard	mtgovc vintage180 modern	yes	none	no
+Grim Haruspex	B	Creature	3	SAC	synergy	yes	none	no
+Grim Monolith	C	Artifact	2	ART RAMP	mtgovc	yes	Random	no
+Grindstone	C	Artifact	1	ART	mtgovc	yes	none	no
+Griselbrand	B	Creature	8	FAT REAN	mtgovc vintage180 modern	yes	none	no
+Grist, the Hunger Tide	BG	Planeswalker	3	TOK SAC GY	mtgovc vintage180 modern synergy	yes	none	yes
+Grumgully, the Generous	GR	Creature	3	CTR	synergy	yes	none	no
+Gruul Turf	GR	Land	0	LND	pauper	yes	none	no
+Guardian Idol	C	Artifact	2	ART RAMP	pauper	yes	none	no
+Guardian Scalelord	W	Creature	5	ETB CTR REAN	mtgovc	yes	none	no
+Guide of Souls	W	Creature	1	CTR LIFE EVA AGG	mtgovc	yes	none	no
+Gurmag Angler	B	Creature	7	GY	pauper	yes	none	no
+Gush	U	Instant	5	CTRL	mtgovc	yes	none	no
+Gut, True Soul Zealot	R	Creature	3	TOK SAC ART EVA	mtgovc	yes	none	no
+Guttersnipe	R	Creature	3	SPL	pauper	yes	none	no
+Hallowed Fountain	UW	Land	0	LND	mtgovc modern synergy	yes	none	no
+Hangarback Walker	C	Artifact Creature	0	ART CTR TOK SAC	synergy	yes	none	yes
+Hanweir Garrison	R	Creature	3	TOK	synergy	yes	none	no
+Hard Evidence	U	Sorcery	1	ART SPL	pauper	yes	none	no
+Hardened Scales	G	Enchantment	1	CTR	synergy	yes	Random	no
+Harvester of Misery	B	Creature	5	removal ETB	mtgovc	yes	none	no
+Haywire Mite	G	Artifact Creature	1	ART LIFE AGG	mtgovc	yes	none	no
+Headliner Scarlett	R	Creature	4	ETB AGG	mtgovc	yes	none	no
+Heartless Act	B	Instant	2	removal	modern	yes	none	no
+Hedge Maze	GU	Land	0	LND	mtgovc	yes	none	no
+Hellrider	R	Creature	4	AGG TOK	modern	yes	none	yes
+Hengegate Pathway	UW	Land	0	LND	modern	yes	none	no
+Hero of Bladehold	W	Creature	4	TOK AGG	added	yes	none	yes
+Hero's Downfall	B	Instant	3	removal	modern	yes	none	no
+Hexdrinker	G	Creature	1	AGG	mtgovc	yes	none	no
+High Tide	U	Instant	1	RAMP SPL	mtgovc	yes	All	no
+Hissing Quagmire	BG	Land	0	LND AGG	added	yes	none	no
+Hogaak, Arisen Necropolis	BG	Creature	7	GY FAT	mtgovc	yes	none	no
+Hordeling Outburst	R	Sorcery	3	TOK SPL	synergy pauper	yes	none	no
+Horizon Canopy	GW	Land	0	LND	mtgovc	yes	none	no
+Hornet Queen	G	Creature	7	TOK ETB FAT	modern	yes	none	no
+Hullbreacher	U	Creature	3	TOK ART RAMP	mtgovc	yes	none	no
+Huntmaster of the Fells	GR	Creature	4	ETB TOK LIFE	added	yes	none	yes
+Hymn to Tourach	B	Sorcery	2	discard	mtgovc vintage180	yes	none	yes
+Hypnotic Specter	B	Creature	3	EVA discard AGG	added	yes	none	yes
+Icetill Explorer	G	Creature	4	GY LND	mtgovc	yes	none	no
+Ichor Wellspring	C	Artifact	2	ART SAC	synergy pauper	yes	Random	no
+Ignoble Hierarch	BGR	Creature	1	RAMP AGG	mtgovc	yes	none	no
+Imperial Seal	B	Sorcery	1	CTRL	mtgovc	yes	Random	no
+Impractical Joke	R	Sorcery	1	removal SPL	mtgovc	yes	none	no
+Incinerate	R	Instant	2	removal SPL	added	yes	none	yes
+Indatha Triome	BGW	Land	0	LND	mtgovc	yes	none	no
+Infernal Grasp	B	Instant	2	removal	mtgovc vintage180	yes	none	no
+Inferno Titan	R	Creature	6	FAT ETB removal	vintage180 modern	yes	none	yes
+Inquisition of Kozilek	B	Sorcery	1	discard	mtgovc modern	yes	none	no
+Inspiring Overseer	W	Creature	3	ETB EVA	pauper	yes	none	no
+Inspiring Vantage	RW	Land	0	LND	mtgovc	yes	none	no
+Intangible Virtue	W	Enchantment	2	TOK	synergy	yes	Random	no
+Inti, Seneschal of the Sun	R	Creature	2	CTR AGG	mtgovc	yes	none	no
+Invoke Despair	B	Sorcery	5	CTRL SAC	added	yes	none	no
+Iron Man Armor	C	Artifact	3	ART	mtgovc	yes	none	no
+Iron-Shield Elf	B	Creature	2	AGG	mtgovc	yes	none	no
+Ivora, Insatiable Heir	R	Creature	2	TOK ETB CTR ART AGG	mtgovc	yes	none	no
+Izzet Boilerworks	RU	Land	0	LND	pauper	yes	none	no
+Izzet Charm	RU	Instant	2	SPL removal counter	pauper	yes	none	no
+Jace, the Mind Sculptor	U	Planeswalker	4	CTRL SPL	mtgovc vintage180 modern	yes	none	yes
+Jace, Vryn's Prodigy	U	Creature	2	SPL GY	mtgovc vintage180 modern synergy	yes	none	yes
+Jace, Wielder of Mysteries	U	Planeswalker	4	CTRL	mtgovc	yes	Random	no
+Jacked Rabbit	W	Creature	2	TOK CTR AGG	mtgovc	yes	none	no
+Jennifer Walters	GW	Creature	2	AGG	mtgovc	yes	none	no
+Jetmir's Garden	GRW	Land	0	LND	mtgovc	yes	none	no
+Jewel Thief	G	Creature	3	ART AGG	pauper	yes	none	no
+Journey to Nowhere	W	Enchantment	2	removal ETB	pauper	yes	none	no
+Judge's Familiar	UW	Creature	1	EVA counter	pauper	yes	none	no
+Jungle Hollow	BG	Land	0	LND	pauper	yes	none	no
+Juri, Master of the Revue	BR	Creature	2	SAC CTR	synergy	yes	none	no
+Kaito, Bane of Nightmares	BU	Planeswalker	4	CTRL	mtgovc	yes	none	no
+Kaldra Compleat	C	Artifact	7	ART FAT	mtgovc vintage180	yes	none	no
+Kappa Cannoneer	U	Artifact Creature	6	ART AGG	mtgovc vintage180	yes	none	no
+Karakas	W	Land	0	LND AGG	mtgovc	yes	none	no
+Kari Zev, Skyship Raider	R	Creature	2	TOK	modern synergy	yes	none	no
+Karn Liberated	C	Planeswalker	7	CTRL FAT removal	modern	yes	none	yes
+Karn, Scion of Urza	C	Planeswalker	4	ART CTRL	mtgovc vintage180 synergy	yes	none	yes
+Keen-Eyed Curator	G	Creature	2	GY AGG	mtgovc	yes	none	no
+Ketria Triome	GRU	Land	0	LND	mtgovc	yes	none	no
+King T'Challa	UW	Creature	3	AGG ETB	mtgovc	yes	none	no
+Kitchen Finks	GW	Creature	3	ETB LIFE	added	yes	none	no
+Kitesail Freebooter	B	Creature	2	ETB discard	modern synergy	yes	none	no
+Knight of Autumn	GW	Creature	3	ETB LIFE	synergy	yes	none	no
+Knight of the Reliquary	GW	Creature	3	LND AGG	mtgovc vintage180 modern	yes	none	yes
+Kokusho, the Evening Star	B	Creature	6	FAT LIFE SAC REAN	added	yes	none	yes
+Kolaghan's Command	BR	Instant	3	removal GY ART	mtgovc vintage180 modern	yes	none	yes
+Kor Skyfisher	W	Creature	2	ETB EVA ART	pauper	yes	none	no
+Krenko, Tin Street Kingpin	R	Creature	3	TOK CTR	synergy	yes	none	no
+Krosan Tusker	G	Creature	7	RAMP GY	pauper	yes	none	no
+Kuldotha Rebirth	R	Sorcery	1	ART TOK SAC	pauper	yes	Random	no
+Laelia, the Blade Reforged	R	Creature	3	AGG ART	mtgovc vintage180	yes	none	no
+Lavaclaw Reaches	BR	Land	0	LND AGG	added	yes	none	no
+Ledger Shredder	U	Creature	2	SPL CTR GY AGG	mtgovc vintage180 modern synergy	yes	none	no
+Legion Extruder	R	Artifact	2	removal TOK SAC ART	mtgovc	yes	none	no
+Legion Warboss	R	Creature	3	TOK	synergy	yes	none	no
+Leovold, Emissary of Trest	BGU	Creature	3	CTRL hoser	mtgovc	yes	none	no
+Leyline Binding	W	Enchantment	6	removal	mtgovc	yes	Random	no
+Library of Alexandria	C	Land	0	LND	mtgovc	yes	none	no
+Life // Death	BG	Sorcery	3	REAN	mtgovc	yes	none	no
+Light Up the Stage	R	Sorcery	3	SPL AGG	modern	yes	none	no
+Lightning Bolt	R	Instant	1	removal SPL AGG	mtgovc vintage180 modern synergy pauper	yes	none	yes
+Lightning Greaves	C	Artifact	2	ART	mtgovc	yes	none	no
+Lightning Helix	RW	Instant	2	removal LIFE SPL	vintage180 modern synergy	yes	none	yes
+Liliana of the Veil	B	Planeswalker	3	discard GY CTRL	mtgovc vintage180 modern	yes	none	yes
+Liliana, the Last Hope	B	Planeswalker	3	GY removal CTRL	added	yes	none	yes
+Lingering Souls	BW	Sorcery	3	TOK GY EVA	mtgovc vintage180 modern synergy	yes	none	yes
+Lion Sash	W	Artifact Creature	2	CTR GY ART AGG	mtgovc	yes	none	no
+Lion's Eye Diamond	C	Artifact	0	ART RAMP	mtgovc	yes	All	no
+Llanowar Elves	G	Creature	1	RAMP	mtgovc vintage180 modern synergy pauper	yes	none	yes
+Llanowar Visionary	G	Creature	3	RAMP ETB	pauper	yes	none	no
+Lone Missionary	W	Creature	2	ETB	pauper	yes	none	no
+Lonis, Cryptozoologist	GU	Creature	2	ART ETB	synergy	yes	none	no
+Loot, the Pathfinder	GRU	Creature	5	removal RAMP AGG CTRL	mtgovc	yes	none	no
+Loran of the Third Path	W	Creature	3	ETB ART removal	mtgovc vintage180 modern	yes	Random	no
+Lose Focus	U	Instant	2	counter CTRL	mtgovc	yes	none	no
+Lotus Cobra	G	Creature	2	RAMP LND	vintage180 modern synergy	yes	none	yes
+Lotus Petal	C	Artifact	0	ART SAC	mtgovc synergy	yes	Random	no
+Lumbering Falls	GU	Land	0	LND AGG	added	yes	none	no
+Luminarch Aspirant	W	Creature	2	AGG CTR	mtgovc vintage180 modern synergy	yes	none	yes
+Lunarch Veteran	W	Creature	1	LIFE TOK GY	synergy	yes	none	no
+Lurrus of the Dream-Den	BW	Creature	3	GY LIFE	mtgovc	yes	none	no
+Lush Portico	GW	Land	0	LND	mtgovc	yes	none	no
+Lutri, the Spellchaser	RU	Creature	3	ETB	mtgovc	yes	none	no
+Lórien Revealed	U	Sorcery	5	CTRL	mtgovc	yes	none	no
+Maelstrom Pulse	BG	Sorcery	3	removal	added	yes	none	yes
+Magda, Brazen Outlaw	R	Creature	2	TOK ART AGG	mtgovc	yes	none	no
+Malcolm, Alluring Scoundrel	U	Creature	2	EVA AGG	mtgovc	yes	none	no
+Malevolent Rumble	G	Sorcery	2	TOK GY	mtgovc	yes	none	no
+Man-o'-War	U	Creature	3	ETB removal	synergy pauper	yes	none	yes
+Mana Confluence	C	Land	0	LND	mtgovc	yes	none	no
+Mana Crypt	C	Artifact	0	ART RAMP	mtgovc	yes	Random	no
+Mana Drain	U	Instant	2	counter CTRL RAMP	mtgovc vintage180	yes	none	no
+Mana Leak	U	Instant	2	counter SPL	mtgovc modern synergy pauper	yes	none	yes
+Mana Tithe	W	Instant	1	counter CTRL	mtgovc	yes	none	no
+Mana Vault	C	Artifact	1	ART RAMP	mtgovc	yes	Random	no
+Manamorphose	GR	Instant	2	SPL	mtgovc	yes	All	no
+Manifold Key	C	Artifact	1	ART	mtgovc	yes	All	no
+March of Otherworldly Light	W	Instant	1	removal ART	modern synergy	yes	none	no
+Marionette Master	B	Creature	6	ART SAC CTR	synergy	yes	none	no
+Marsh Flats	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Massacre Wurm	B	Creature	6	ETB FAT	added	yes	none	no
+Master of Death	BU	Creature	3	ETB GY	mtgovc	yes	none	no
+Masticore	C	Artifact Creature	4	removal ART	added	yes	All	no
+Mayhem Devil	BR	Creature	3	SAC	synergy	yes	none	no
+Meddling Mage	UW	Creature	2	AGG	added	yes	Random	no
+Melded Moxite	R	Artifact	2	TOK ART CTRL	mtgovc	yes	none	no
+Meloku the Clouded Mirror	U	Creature	5	TOK	added	yes	Random	no
+Memory Deluge	U	Instant	4	GY	modern	yes	none	no
+Memory Jar	C	Artifact	5	discard ART	mtgovc	yes	All	no
+Memory Lapse	U	Instant	2	counter SPL	mtgovc vintage180	yes	none	no
+Mentor of the Meek	W	Creature	3	TOK ETB	synergy	yes	none	no
+Metamorphosis Fanatic	B	Creature	6	ETB REAN LIFE FAT	mtgovc	yes	none	no
+Meticulous Archive	UW	Land	0	LND	mtgovc	yes	none	no
+Midnight Reaper	B	Creature	3	SAC	synergy	yes	none	no
+Militia Bugler	W	Creature	3	ETB	pauper	yes	none	no
+Mind Stone	C	Artifact	2	ART RAMP	mtgovc modern synergy pauper	yes	none	yes
+Mind Twist	B	Sorcery	1	discard	mtgovc	yes	none	no
+Mine Collapse	R	Instant	4	removal SAC	mtgovc	yes	none	no
+Minsc & Boo, Timeless Heroes	GR	Planeswalker	4	AGG SAC	mtgovc vintage180 modern	yes	none	no
+Mire Triton	B	Creature	2	GY ETB	pauper	yes	none	no
+Miscalculation	U	Instant	2	counter SPL CTRL	mtgovc	yes	none	no
+Mishra's Bauble	C	Artifact	0	ART SAC SPL	mtgovc vintage180 synergy	yes	All	no
+Mishra's Factory	C	Land	0	LND AGG	added	yes	none	yes
+Mishra's Workshop	C	Land	0	LND	mtgovc	yes	Random	no
+Mist Raven	U	Creature	4	ETB EVA removal	pauper	yes	none	no
+Misty Rainforest	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Mogg War Marshal	R	Creature	2	TOK SAC ETB	pauper	yes	none	no
+Mole Man, Moloid Master	G	Creature	3	TOK GY LND	mtgovc	yes	none	no
+Momentary Blink	UW	Instant	2	ETB GY SPL	pauper	yes	none	no
+Monastery Mentor	W	Creature	3	TOK SPL	added	yes	none	no
+Monastery Swiftspear	R	Creature	1	AGG SPL	vintage180 modern synergy pauper	yes	none	yes
+Moon-Circuit Hacker	U	Enchantment Creature	2	EVA	pauper	yes	none	no
+Moonshadow	B	Creature	1	GY AGG	mtgovc	yes	none	no
+Morphling	U	Creature	5	CTRL EVA	added	yes	none	yes
+Mother Bear	G	Creature	2	TOK GY	pauper	yes	none	no
+Mother of Runes	W	Creature	1	AGG	mtgovc vintage180	yes	none	yes
+Mox Diamond	C	Artifact	0	GY ART RAMP	mtgovc	yes	none	no
+Mox Emerald	G	Artifact	0	RAMP ART	mtgovc vintage180	yes	none	no
+Mox Jet	B	Artifact	0	RAMP ART	mtgovc vintage180	yes	none	no
+Mox Opal	C	Artifact	0	ART RAMP	mtgovc	yes	Random	no
+Mox Pearl	W	Artifact	0	RAMP ART	mtgovc vintage180	yes	none	no
+Mox Ruby	R	Artifact	0	RAMP ART	mtgovc vintage180	yes	none	no
+Mox Sapphire	U	Artifact	0	RAMP ART	mtgovc vintage180	yes	none	no
+Mulldrifter	U	Creature	5	ETB CTRL EVA	modern synergy pauper	yes	none	yes
+Multiversal Passage	C	Land	0	LND	mtgovc	yes	none	no
+Murderous Rider	B	Creature	3	removal LIFE	modern	yes	none	no
+Murktide Regent	U	Creature	7	SPL GY EVA	modern	yes	none	yes
+Murmuring Mystic	U	Creature	4	SPL TOK	synergy pauper	yes	none	no
+Mutagen Man, Living Ooze	G	Creature	2	TOK ETB CTR ART AGG	mtgovc	yes	none	no
+Mutavault	C	Land	0	LND AGG	added	yes	none	yes
+Myr Battlesphere	C	Artifact Creature	7	ART FAT	mtgovc vintage180	yes	none	no
+Myr Sire	C	Artifact Creature	2	ART SAC TOK	synergy pauper	yes	none	no
+Mystic Confluence	U	Instant	5	CTRL SPL	mtgovc vintage180	yes	All	no
+Mystic Forge	C	Artifact	4	ART	mtgovc	yes	Random	no
+Mystic Snake	GU	Creature	4	counter ETB	added	yes	none	yes
+Mystical Tutor	U	Instant	1	SPL REAN	mtgovc	yes	Random	no
+Nadu, Winged Wisdom	GU	Creature	3	EVA	mtgovc	yes	none	no
+Narset, Parter of Veils	U	Planeswalker	3	CTRL	mtgovc	yes	none	no
+Natural Order	G	Sorcery	4	REAN FAT	mtgovc vintage180	yes	none	no
+Necromancy	B	Enchantment	3	REAN GY	mtgovc vintage180	yes	none	no
+Needle Spires	RW	Land	0	LND AGG	added	yes	none	no
+Needleverge Pathway	RW	Land	0	LND	modern	yes	none	no
+Nest Invader	G	Creature	2	TOK SAC RAMP	pauper	yes	none	no
+Nested Shambler	B	Creature	1	SAC TOK	pauper	yes	none	no
+Nethergoyf	B	Creature	1	GY AGG	mtgovc	yes	All	no
+Nettlecyst	C	Artifact	3	TOK ART	mtgovc	yes	none	no
+Nicol Bolas, Planeswalker	BRU	Planeswalker	8	CTRL	added	yes	none	no
+Night Nurse, Healer of Heroes	W	Creature	2	ETB GY LIFE AGG	mtgovc	yes	none	no
+Night's Whisper	B	Sorcery	2	SPL	mtgovc pauper	yes	none	no
+Ninja of the Deep Hours	U	Creature	4	EVA ETB	pauper	yes	none	no
+Nissa, Who Shakes the World	G	Planeswalker	5	LND RAMP	mtgovc vintage180 modern	yes	none	yes
+No More Lies	UW	Instant	2	counter GY CTRL	mtgovc	yes	none	no
+Noble Hierarch	GUW	Creature	1	RAMP AGG	mtgovc modern	yes	none	no
+Oath of Druids	G	Enchantment	2	GY	mtgovc	yes	none	no
+Oblivion Ring	W	Enchantment	3	removal ETB	pauper	yes	none	no
+Occult Epiphany	U	Instant	1	TOK SPL CTRL	mtgovc	yes	none	no
+Ocelot Pride	W	Creature	1	AGG SAC	mtgovc vintage180	yes	none	no
+Okiba-Gang Shinobi	B	Creature	5	EVA	pauper	yes	none	no
+Oko, Thief of Crowns	GU	Planeswalker	3	ART CTRL	mtgovc vintage180 modern	yes	none	no
+Okoye, Mighty and Adored	GW	Creature	4	ETB CTR	mtgovc	yes	none	no
+Oliphaunt	R	Creature	6	FAT	mtgovc	yes	none	no
+Omnath, Locus of Creation	GRUW	Creature	4	ETB RAMP LND LIFE	mtgovc	yes	none	no
+Omnath, Locus of Rage	GR	Creature	7	LND TOK	synergy	yes	none	no
+Once Upon a Time	G	Instant	2	RAMP	mtgovc	yes	none	no
+Ophiomancer	B	Creature	3	TOK SAC	vintage180 synergy	yes	none	no
+Opt	U	Instant	1	SPL	modern synergy	yes	none	no
+Oracle of Mul Daya	G	Creature	4	LND	modern	yes	none	no
+Orcish Bowmasters	B	Creature	2	ETB removal TOK	mtgovc vintage180	yes	none	yes
+Orcish Lumberjack	GR	Creature	1	SAC RAMP AGG	mtgovc	yes	All	no
+Otawara, Soaring City	U	Land	0	LND AGG	mtgovc	yes	none	no
+Otharri, Suns' Glory	RW	Creature	5	TOK REAN LIFE AGG	mtgovc	yes	none	no
+Ouroboroid	G	Creature	4	CTR	mtgovc	yes	none	no
+Oust	W	Sorcery	1	LIFE	mtgovc	yes	none	no
+Overgrown Tomb	BG	Land	0	LND	mtgovc modern synergy	yes	none	no
+Overlord of the Balemurk	B	Enchantment Creature	5	GY	mtgovc	yes	none	no
+Overlord of the Mistmoors	W	Enchantment Creature	7	TOK FAT	mtgovc	yes	none	no
+Owlbear	G	Creature	5	ETB	pauper	yes	none	no
+Painter's Servant	C	Artifact Creature	2	ART AGG	mtgovc	yes	none	no
+Palace Jailer	W	Creature	4	ETB removal	mtgovc vintage180	yes	none	no
+Palace Sentinels	W	Creature	4	ETB	pauper	yes	none	no
+Palantír of Orthanc	C	Artifact	3	ART	mtgovc	yes	none	no
+Paradoxical Outcome	U	Instant	4	ART SPL	mtgovc	yes	none	no
+Parallax Wave	W	Enchantment	4	removal	mtgovc	yes	All	no
+Path to Exile	W	Instant	1	removal LND	mtgovc modern	yes	none	yes
+Pelt Collector	G	Creature	1	CTR	synergy	yes	none	no
+Pentad Prism	C	Artifact	2	ART RAMP	mtgovc	yes	none	no
+Perilous Myr	C	Artifact Creature	2	ART SAC	pauper	yes	none	no
+Pernicious Deed	BG	Enchantment	3	ART	added	yes	Random	no
+Persist	B	Sorcery	2	GY	modern synergy	yes	none	no
+Pest Infestation	G	Sorcery	1	TOK ART LIFE	mtgovc	yes	none	no
+Pestermite	U	Creature	3	ETB EVA	pauper	yes	none	no
+Phantasmal Image	U	Creature	2	ETB	mtgovc modern synergy	yes	none	yes
+Phelia, Exuberant Shepherd	W	Creature	2	CTR AGG	mtgovc	yes	none	no
+Phlage, Titan of Fire's Fury	RW	Creature	3	GY removal AGG	mtgovc vintage180	yes	none	no
+Phyrexian Arena	B	Enchantment	3	CTRL	added	yes	none	yes
+Phyrexian Dragon Engine	R	Artifact Creature	3	ETB GY ART CTRL	mtgovc	yes	none	no
+Phyrexian Metamorph	U	Artifact Creature	4	ART ETB	mtgovc vintage180	yes	none	no
+Phyrexian Obliterator	B	Creature	4	FAT AGG	added	yes	none	no
+Pia and Kiran Nalaar	R	Creature	4	ART TOK SAC	synergy	yes	none	no
+Pia Nalaar	R	Creature	3	ART TOK SAC	synergy	yes	none	no
+Pillage the Bog	BG	Sorcery	2	SPL	mtgovc	yes	none	no
+Plagued Rusalka	B	Creature	1	SAC removal	pauper	yes	Random	no
+Plateau	RW	Land	0	LND	mtgovc vintage180	yes	none	yes
+Platinum Angel	C	Artifact Creature	7	ART FAT	added	yes	none	yes
+Play with Fire	R	Instant	1	removal	modern	yes	none	no
+Polluted Delta	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Polukranos, World Eater	G	Creature	4	CTR removal	modern	yes	none	yes
+Ponder	U	Sorcery	1	SPL	mtgovc vintage180 modern synergy pauper	yes	none	yes
+Portable Hole	W	Artifact	1	removal ART	mtgovc modern	yes	none	no
+Portal to Phyrexia	C	Artifact	9	REAN ART	mtgovc	yes	none	no
+Preacher of the Schism	B	Creature	3	TOK LIFE	added	yes	none	no
+Preordain	U	Sorcery	1	SPL	mtgovc vintage180 modern pauper	yes	none	yes
+Priest of Forgotten Gods	B	Creature	2	SAC TOK	synergy	yes	none	no
+Primeval Titan	G	Creature	6	FAT LND RAMP	vintage180 modern	yes	none	yes
+Prismari Command	RU	Instant	3	removal TOK ART	modern	yes	none	no
+Prismatic Ending	W	Sorcery	1	removal	mtgovc modern synergy	yes	All	no
+Prismatic Strands	W	Instant	3	TOK SPL GY	pauper	yes	All	no
+Prismatic Vista	C	Land	0	LND GY	mtgovc	yes	none	no
+Prized Amalgam	BU	Creature	3	GY	synergy	yes	none	no
+Proft's Eidetic Memory	U	Enchantment	2	CTR	mtgovc	yes	none	no
+Prophetic Prism	C	Artifact	2	ART ETB	synergy pauper	yes	All	no
+Prosperous Innkeeper	G	Creature	2	LIFE ART ETB	synergy	yes	none	no
+Psychic Frog	BU	Creature	2	GY AGG REAN	mtgovc vintage180 modern	yes	none	yes
+Pulse of Murasa	G	Instant	3	GY	pauper	yes	none	no
+Putrefy	BG	Instant	3	removal ART	added	yes	none	no
+Pyrogoyf	R	Creature	4	GY	mtgovc	yes	none	no
+Pyrokinesis	R	Instant	6	removal	mtgovc vintage180	yes	none	no
+Qasali Pridemage	GW	Creature	2	AGG removal	pauper	yes	none	no
+Quantum Riddler	U	Creature	5	ETB	mtgovc	yes	none	no
+Questing Beast	G	Creature	4	AGG	mtgovc vintage180 modern	yes	none	yes
+Raffine's Tower	BUW	Land	0	LND	mtgovc	yes	none	no
+Ragavan, Nimble Pilferer	R	Creature	1	AGG ART	mtgovc vintage180 modern	yes	none	yes
+Raging Ravine	GR	Land	0	LND AGG	added	yes	none	no
+Raid Bombardment	R	Enchantment	3	TOK AGG	pauper	yes	none	no
+Raise the Alarm	W	Instant	2	TOK SPL	pauper	yes	none	no
+Rakdos Carnarium	BR	Land	0	LND	pauper	yes	none	no
+Rally the Peasants	RW	Instant	3	TOK AGG GY	pauper	yes	none	no
+Ram Through	G	Instant	2	removal	synergy pauper	yes	none	no
+Rampaging Baloths	G	Creature	6	LND TOK FAT	added	yes	none	yes
+Rampaging Ferocidon	R	Creature	3	LIFE	modern	yes	none	no
+Rampant Growth	G	Sorcery	2	RAMP	modern	yes	none	no
+Ramunap Excavator	G	Creature	3	LND GY	synergy	yes	none	no
+Rancor	G	Enchantment	1	AGG GY	modern pauper	yes	none	yes
+Ranger-Captain of Eos	W	Creature	3	ETB	modern	yes	none	no
+Rankle, Master of Pranks	B	Creature	4	discard AGG	modern	yes	none	no
+Raucous Theater	BR	Land	0	LND	mtgovc	yes	none	no
+Raugrin Triome	RUW	Land	0	LND	mtgovc	yes	none	no
+Ravenous Chupacabra	B	Creature	4	ETB removal	added	yes	none	yes
+Razorverge Thicket	GW	Land	0	LND	mtgovc	yes	none	no
+Reanimate	B	Sorcery	1	REAN GY	mtgovc vintage180	yes	none	yes
+Reckless Fireweaver	R	Creature	2	ART	synergy	yes	none	no
+Recruiter of the Guard	W	Creature	3	ETB	added	yes	none	no
+Recurring Nightmare	B	Enchantment	3	REAN ETB SAC	mtgovc vintage180	yes	none	no
+Reflector Mage	UW	Creature	3	ETB removal	synergy	yes	none	yes
+Relic of Sauron	BRU	Artifact	4	ART RAMP CTRL	mtgovc	yes	none	no
+Remand	U	Instant	2	counter SPL	mtgovc modern synergy	yes	none	no
+Renegade Freighter	C	Artifact	3	ART AGG	pauper	yes	none	no
+Reprieve	W	Instant	2	SPL	mtgovc	yes	none	no
+Restoration Angel	W	Creature	4	ETB EVA	vintage180 modern synergy	yes	none	yes
+Retrofitter Foundry	C	Artifact	1	ART TOK SAC	mtgovc vintage180 synergy	yes	none	no
+Reveillark	W	Creature	5	ETB GY SAC	synergy	yes	none	no
+Rimrock Knight	R	Creature	2	AGG SPL	pauper	yes	none	no
+Risen Reef	GU	Creature	3	ETB LND	synergy	yes	none	no
+Rishkar, Peema Renegade	G	Creature	3	CTR	synergy	yes	none	no
+Riverglide Pathway	RU	Land	0	LND	modern	yes	none	no
+Riverpyre Verge	RU	Land	0	LND	mtgovc	yes	none	no
+Robber of the Rich	R	Creature	2	AGG	mtgovc	yes	none	no
+Rolling Thunder	R	Sorcery	2	removal RAMP	pauper	yes	none	no
+Rugged Highlands	GR	Land	0	LND	pauper	yes	none	no
+Sacred Foundry	RW	Land	0	LND	mtgovc modern synergy	yes	none	no
+Sage of the Skies	W	Creature	3	LIFE EVA	mtgovc	yes	none	no
+Saheeli, Sublime Artificer	RU	Planeswalker	3	SPL ART TOK	mtgovc synergy	yes	none	no
+Sai, Master Thopterist	U	Creature	3	ART TOK	synergy	yes	none	no
+Sakura-Tribe Elder	G	Creature	2	RAMP LND SAC	vintage180 modern synergy pauper	yes	none	yes
+Sandstorm Salvager	G	Creature	3	TOK ETB CTR ART	mtgovc	yes	none	no
+Sanguine Evangelist	W	Creature	3	TOK ETB EVA	mtgovc	yes	none	no
+Saproling Migration	G	Sorcery	2	TOK	pauper	yes	none	no
+Satyr Wayfinder	G	Creature	2	GY LND	mtgovc synergy pauper	yes	none	no
+Savai Triome	BRW	Land	0	LND	mtgovc	yes	none	no
+Savannah	GW	Land	0	LND	mtgovc vintage180	yes	none	yes
+Scalding Tarn	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Scavenging Ooze	G	Creature	2	GY LIFE CTR	vintage180 modern synergy	yes	none	yes
+Scoured Barrens	BW	Land	0	LND	pauper	yes	none	no
+Scrapwork Mutt	R	Artifact Creature	2	ETB REAN ART AGG	mtgovc	yes	none	no
+Screaming Nemesis	R	Creature	3	LIFE AGG	mtgovc	yes	none	no
+Scrubland	BW	Land	0	LND	mtgovc vintage180	yes	none	yes
+Scute Swarm	G	Creature	3	LND TOK	synergy	yes	none	no
+Scythecat Cub	G	Creature	2	CTR LND AGG	mtgovc	yes	none	no
+Seachrome Coast	UW	Land	0	LND	mtgovc	yes	none	no
+Sear	R	Instant	2	removal	mtgovc	yes	none	no
+Search Party Captain	W	Creature	4	TOK AGG	pauper	yes	none	no
+Seasoned Hallowblade	W	Creature	2	AGG	modern	yes	none	no
+Seasoned Pyromancer	R	Creature	3	GY TOK SPL	mtgovc vintage180 modern synergy	yes	none	yes
+Sedgemoor Witch	B	Creature	3	TOK LIFE	mtgovc	yes	none	no
+Seeker of the Way	W	Creature	2	SPL AGG	pauper	yes	none	no
+Selesnya Evangel	GW	Creature	2	TOK	pauper	yes	none	no
+Selesnya Sanctuary	GW	Land	0	LND	pauper	yes	none	no
+Selfless Spirit	W	Creature	2	EVA AGG	modern	yes	none	no
+Sensei's Divining Top	C	Artifact	1	ART	mtgovc	yes	none	no
+Sentinel of the Nameless City	G	Creature	3	TOK ART	mtgovc	yes	none	no
+Serra Angel	W	Creature	5	EVA	added	yes	none	no
+Serra Paragon	W	Creature	4	LND GY ETB	mtgovc vintage180	yes	none	no
+Serrated Arrows	C	Artifact	4	ART removal	pauper	yes	none	no
+Servo Schematic	C	Artifact	2	ART TOK SAC	synergy	yes	none	no
+Settle Beyond Reality	W	Sorcery	5	removal ETB	pauper	yes	none	no
+Sewer-veillance Cam	U	Artifact	1	ART CTRL	mtgovc	yes	none	no
+Shadowspear	C	Artifact	1	ART	modern synergy	yes	none	no
+Shadowy Backstreet	BW	Land	0	LND	mtgovc	yes	none	no
+Shallow Grave	B	Instant	2	GY	mtgovc	yes	none	no
+Shambling Vent	BW	Land	0	LND AGG	added	yes	none	no
+Shelldock Isle	U	Land	0	LND	mtgovc	yes	Random	no
+Sheoldred's Edict	B	Instant	2	removal	mtgovc	yes	none	no
+Sheoldred, the Apocalypse	B	Creature	4	FAT LIFE	mtgovc vintage180 modern	yes	none	yes
+Shifting Woodland	G	Land	0	LND AGG	mtgovc	yes	none	no
+Shivan Dragon	R	Creature	6	EVA FAT	added	yes	none	yes
+Shorikai, Genesis Engine	UW	Artifact	4	TOK ART CTRL	mtgovc	yes	none	no
+Show and Tell	U	Sorcery	3	REAN	mtgovc vintage180	yes	none	no
+Showdown of the Skalds	RW	Enchantment	4	SPL CTR	synergy	yes	none	no
+Shriekmaw	B	Creature	5	ETB removal	added	yes	none	yes
+Siege Rhino	BGW	Creature	4	ETB LIFE	added	yes	none	no
+Siege-Gang Commander	R	Creature	5	TOK SAC ETB	added	yes	none	yes
+Silver Drake	UW	Creature	3	ETB EVA	pauper	yes	none	no
+Sink into Stupor	U	Instant	3	RAMP	mtgovc	yes	none	no
+Six	G	Creature	3	LND GY	mtgovc vintage180	yes	none	no
+Skateboard	C	Artifact	1	ART	mtgovc	yes	none	no
+Skewer the Critics	R	Sorcery	3	SPL AGG	pauper	yes	none	no
+Skullclamp	C	Artifact	1	ART SAC TOK	mtgovc vintage180 synergy	yes	none	yes
+Skyclave Apparition	W	Creature	3	ETB removal	mtgovc vintage180 modern synergy	yes	none	yes
+Smuggler's Copter	C	Artifact	2	ART AGG EVA	mtgovc vintage180 modern synergy	yes	none	yes
+Snap	U	Instant	2	SPL EVA	pauper	yes	none	no
+Snapcaster Mage	U	Creature	2	SPL GY ETB	mtgovc vintage180 modern synergy	yes	none	yes
+Sneak Attack	R	Enchantment	4	REAN	mtgovc vintage180	yes	Random	no
+Snuff Out	B	Instant	4	removal	mtgovc pauper	yes	none	no
+Sol Ring	C	Artifact	1	RAMP ART	mtgovc vintage180	yes	none	no
+Solemn Simulacrum	C	Artifact Creature	4	ART ETB RAMP	synergy	yes	none	yes
+Solitude	W	Creature	5	ETB removal REAN	mtgovc vintage180 modern	yes	none	yes
+Sorin, Lord of Innistrad	BW	Planeswalker	4	TOK LIFE	added	yes	none	yes
+Soul Warden	W	Creature	1	LIFE TOK	synergy	yes	none	no
+Soul-Guide Lantern	C	Artifact	1	GY ART	mtgovc	yes	none	no
+Soul-Scar Mage	R	Creature	1	SPL CTR	synergy	yes	none	no
+Soulherder	UW	Creature	3	ETB CTR	synergy	yes	Random	no
+Sower of Temptation	U	Creature	4	ETB removal EVA	added	yes	none	yes
+Sowing Mycospawn	G	Creature	4	RAMP LND	mtgovc	yes	none	no
+Spara's Headquarters	GUW	Land	0	LND	mtgovc	yes	none	no
+Spell Pierce	U	Instant	1	counter	mtgovc	yes	none	no
+Spell Queller	UW	Creature	3	ETB EVA	modern	yes	none	no
+Spellseeker	U	Creature	3	ETB	mtgovc	yes	none	no
+Spellstutter Sprite	U	Creature	2	EVA ETB counter	pauper	yes	none	no
+Spider-Woman, Stunning Savior	UW	Creature	2	ART EVA AGG	mtgovc	yes	none	no
+Spirebluff Canal	RU	Land	0	LND	mtgovc	yes	none	no
+Spirited Companion	W	Enchantment Creature	2	ETB SAC	synergy	yes	none	no
+Springbloom Druid	G	Creature	3	LND ETB	synergy	yes	none	no
+Springheart Nantuko	G	Enchantment Creature	2	TOK LND AGG	mtgovc	yes	none	no
+Sprout Swarm	G	Instant	2	TOK	pauper	yes	none	no
+Squee, Goblin Nabob	R	Creature	3	GY	mtgovc	yes	none	no
+Staff of the Storyteller	W	Artifact	2	TOK ART	mtgovc	yes	none	no
+Starting Town	C	Land	0	LND	mtgovc	yes	none	no
+Steam Vents	RU	Land	0	LND	mtgovc modern synergy	yes	none	no
+Steel Leaf Champion	G	Creature	3	EVA	modern	yes	none	no
+Steel Overseer	C	Artifact Creature	2	ART CTR	synergy	yes	none	no
+Stern Scolding	U	Instant	1	counter	mtgovc	yes	none	no
+Stirring Wildwood	GW	Land	0	LND AGG	added	yes	none	no
+Stitcher's Supplier	B	Creature	1	GY SAC	synergy	yes	none	no
+Stock Up	U	Sorcery	3	SPL CTRL	mtgovc	yes	none	no
+Stomping Ground	GR	Land	0	LND	mtgovc modern synergy	yes	none	no
+Stoneforge Mystic	W	Creature	2	ART AGG ETB	mtgovc vintage180 modern	yes	none	yes
+Stormchaser's Talent	U	Enchantment	1	TOK GY SPL	mtgovc	yes	none	no
+Stormfront Pegasus	W	Creature	2	EVA AGG	pauper	yes	none	no
+Strip Mine	C	Land	0	LND	mtgovc	yes	none	no
+Subtlety	U	Creature	4	ETB	mtgovc	yes	none	no
+Sun Titan	W	Creature	6	FAT GY ETB	vintage180 synergy	yes	none	yes
+Sunbaked Canyon	RW	Land	0	LND	mtgovc	yes	none	no
+Sunfall	W	Sorcery	5	removal TOK CTR ART CTRL	mtgovc	yes	none	no
+Sunlance	W	Sorcery	1	removal	pauper	yes	none	no
+Super Shredder	B	Creature	2	CTR AGG	mtgovc	yes	none	no
+Superior Spider-Man	BU	Creature	4	GY	mtgovc	yes	none	no
+Suplex	R	Sorcery	2	removal ART	mtgovc	yes	none	no
+Survival of the Fittest	G	Enchantment	2	REAN GY	mtgovc vintage180	yes	Random	no
+Swiftwater Cliffs	RU	Land	0	LND	pauper	yes	none	no
+Sword of Body and Mind	C	Artifact	3	TOK ART	added	yes	none	no
+Sword of Feast and Famine	C	Artifact	3	ART AGG	added	yes	none	yes
+Sword of Fire and Ice	C	Artifact	3	ART AGG	modern	yes	none	yes
+Sword of Light and Shadow	C	Artifact	3	ART AGG GY	added	yes	none	yes
+Sword of the Meek	C	Artifact	2	REAN ART	mtgovc	yes	none	no
+Sword of War and Peace	C	Artifact	3	ART LIFE	added	yes	none	no
+Swords to Plowshares	W	Instant	1	removal	mtgovc vintage180 modern synergy	yes	none	yes
+Sylvan Caryatid	G	Creature	2	RAMP AGG	mtgovc	yes	none	no
+Sylvan Library	G	Enchantment	2	CTRL	vintage180	yes	All	no
+Sylvan Safekeeper	G	Creature	1	SAC AGG	mtgovc	yes	All	no
+Taiga	GR	Land	0	LND	mtgovc vintage180	yes	none	yes
+Talisman of Creativity	RU	Artifact	2	ART RAMP	mtgovc	yes	none	no
+Talisman of Curiosity	GU	Artifact	2	ART RAMP	mtgovc	yes	none	no
+Talisman of Dominance	BU	Artifact	2	ART RAMP	mtgovc	yes	none	no
+Talisman of Progress	UW	Artifact	2	ART RAMP	mtgovc	yes	none	no
+Talon Gates of Madara	C	Land	0	LND AGG	mtgovc	yes	none	no
+Talrand, Sky Summoner	U	Creature	4	SPL TOK	synergy	yes	none	no
+Tamiyo, Collector of Tales	GU	Planeswalker	4	GY CTRL	mtgovc	yes	All	no
+Tamiyo, Inquisitive Student	GU	Creature	1	TOK GY ART RAMP EVA AGG	mtgovc	yes	none	no
+Tarfire	R	Instant	1	removal	mtgovc	yes	none	no
+Tarmogoyf	G	Creature	2	AGG GY	modern	yes	none	yes
+Tear Asunder	BG	Instant	2	removal ART	mtgovc	yes	none	no
+Teferi, Hero of Dominaria	UW	Planeswalker	5	CTRL	mtgovc vintage180	yes	none	yes
+Teferi, Time Raveler	UW	Planeswalker	3	CTRL ETB	mtgovc vintage180 modern	yes	none	no
+Temple Garden	GW	Land	0	LND	mtgovc modern synergy	yes	none	no
+Tendrils of Agony	B	Sorcery	4	LIFE	mtgovc	yes	none	no
+Tenth District Legionnaire	RW	Creature	2	AGG SPL	pauper	yes	none	no
+Terminate	BR	Instant	2	removal	modern	yes	none	no
+Territorial Kavu	GR	Creature	2	GY AGG	mtgovc	yes	none	no
+Tersa Lightshatter	R	Creature	3	ETB GY AGG	mtgovc	yes	none	no
+Tezzeret, Cruel Captain	C	Planeswalker	3	CTR ART CTRL	mtgovc	yes	none	no
+Thalia, Guardian of Thraben	W	Creature	2	AGG	vintage180 modern	yes	none	yes
+Thassa's Oracle	U	Creature	2	ETB AGG	mtgovc	yes	none	no
+The Fantasticar	C	Artifact	3	TOK SPL ART	mtgovc	yes	none	no
+The Legend of Roku	R	Enchantment	4	TOK RAMP	mtgovc	yes	none	no
+The Mightstone and Weakstone	C	Artifact	5	removal ART RAMP CTRL	mtgovc	yes	none	no
+The One Ring	C	Artifact	4	ART LIFE	mtgovc modern	yes	none	no
+The Wandering Emperor	W	Planeswalker	4	CTRL TOK removal	mtgovc vintage180	yes	none	yes
+The Wondrous Wasp	U	Creature	2	ETB EVA AGG	mtgovc	yes	none	no
+Thespian's Stage	C	Land	0	LND AGG	mtgovc	yes	All	no
+Thief of Sanity	BU	Creature	3	GY EVA	modern	yes	none	no
+Thieving Skydiver	U	Creature	2	ART ETB	mtgovc vintage180 synergy	yes	none	no
+Third Path Iconoclast	RU	Creature	2	SPL TOK ART SAC	mtgovc vintage180 synergy	yes	none	no
+Thopter Foundry	BUW	Artifact	2	TOK SAC ART LIFE	mtgovc	yes	none	no
+Thor, God of Thunder	R	Creature	5	ETB GY SPL ART	mtgovc	yes	none	no
+Thorn of the Black Rose	B	Creature	4	ETB	pauper	yes	none	no
+Thornspire Verge	GR	Land	0	LND	mtgovc	yes	none	no
+Thornwood Falls	GU	Land	0	LND	pauper	yes	none	no
+Thought Scour	U	Instant	1	SPL GY	mtgovc synergy pauper	yes	none	no
+Thoughtseize	B	Sorcery	1	discard	mtgovc vintage180 modern	yes	none	yes
+Thraben Inspector	W	Creature	1	ART ETB	mtgovc vintage180 modern synergy pauper	yes	none	yes
+Thragtusk	G	Creature	5	ETB LIFE SAC	vintage180 modern	yes	none	yes
+Through the Breach	R	Instant	5	REAN	mtgovc	yes	All	no
+Thrun, the Last Troll	G	Creature	4	AGG	added	yes	none	yes
+Thundering Falls	RU	Land	0	LND	mtgovc	yes	none	no
+Thundermaw Hellkite	R	Creature	5	EVA AGG	modern	yes	none	yes
+Thundertrap Trainer	U	Creature	2	TOK ETB AGG	mtgovc	yes	none	no
+Tidehollow Sculler	BW	Artifact Creature	2	ETB discard AGG	mtgovc vintage180 modern synergy	yes	none	no
+Time Spiral	U	Sorcery	6	GY	mtgovc	yes	none	no
+Time Walk	U	Sorcery	2	SPL CTRL	mtgovc vintage180	yes	none	no
+Time Warp	U	Sorcery	5	CTRL	mtgovc	yes	none	no
+Timetwister	U	Sorcery	3	GY	mtgovc	yes	none	no
+Tinker	U	Sorcery	3	REAN ART	mtgovc vintage180	yes	Random	no
+Tireless Tracker	G	Creature	3	LND ART CTR	mtgovc vintage180 modern synergy	yes	none	yes
+Tishana's Tidebinder	U	Creature	3	ETB ART	mtgovc	yes	none	no
+Titania, Protector of Argoth	G	Creature	5	LND TOK GY	mtgovc vintage180 synergy	yes	none	yes
+Tolarian Academy	U	Land	0	LND	mtgovc	yes	Random	no
+Tolarian Terror	U	Creature	7	SPL GY	modern pauper	yes	none	no
+Torrential Gearhulk	U	Artifact Creature	6	SPL ETB GY	modern synergy	yes	none	no
+Torsten, Founder of Benalia	GW	Creature	7	TOK ETB FAT	mtgovc	yes	none	no
+Tortured Existence	B	Enchantment	1	GY SAC	pauper	yes	All	no
+Town Greeter	G	Creature	2	ETB GY LIFE AGG	mtgovc	yes	none	no
+Toxic Deluge	B	Sorcery	3	CTRL removal	mtgovc vintage180	yes	All	no
+Tragic Slip	B	Instant	1	removal SAC	pauper	yes	none	no
+Tranquil Cove	UW	Land	0	LND	pauper	yes	none	no
+Traumatic Critique	RU	Instant	2	removal SPL CTRL	mtgovc	yes	none	no
+Treasure Cruise	U	Sorcery	8	SPL GY	mtgovc vintage180 pauper	yes	none	yes
+Triplicate Spirits	W	Sorcery	6	TOK EVA	pauper	yes	none	no
+Triplicate Titan	C	Artifact Creature	9	TOK ART FAT	mtgovc	yes	none	no
+Troll Ascetic	G	Creature	3	AGG	added	yes	none	no
+Troll of Khazad-dûm	B	Creature	6	FAT	mtgovc	yes	none	no
+Tropical Island	GU	Land	0	LND	mtgovc vintage180	yes	none	yes
+True-Name Nemesis	U	Creature	3	AGG EVA	added	yes	none	no
+Tundra	UW	Land	0	LND	mtgovc vintage180	yes	none	yes
+Twilight Diviner	B	Creature	3	TOK ETB GY	mtgovc	yes	none	no
+Ugin, Eye of the Storms	C	Planeswalker	7	RAMP LIFE CTRL	mtgovc	yes	none	no
+Ugin, the Spirit Dragon	C	Planeswalker	8	CTRL FAT removal	added	yes	none	yes
+Ulamog's Crusher	C	Creature	8	RAMP	pauper	yes	none	no
+Ulvenwald Mysteries	G	Enchantment	3	ART SAC TOK	synergy	yes	none	no
+Umezawa's Jitte	C	Artifact	2	ART AGG	mtgovc vintage180	yes	none	yes
+Unburial Rites	BW	Sorcery	5	GY	synergy	yes	none	no
+Undercity Sewers	BU	Land	0	LND	mtgovc	yes	none	no
+Underground Mortuary	BG	Land	0	LND	mtgovc	yes	none	no
+Underground Sea	BU	Land	0	LND	mtgovc vintage180	yes	none	yes
+Underworld Breach	R	Enchantment	2	GY	mtgovc	yes	none	no
+Unearth	B	Sorcery	1	GY ETB	mtgovc pauper	yes	none	no
+Unexpected Windfall	R	Instant	4	ART GY SPL	synergy	yes	none	no
+Unexpectedly Absent	W	Instant	2	removal	mtgovc	yes	none	no
+Unholy Heat	R	Instant	1	removal GY	mtgovc vintage180 modern	yes	none	no
+Unsummon	U	Instant	1	ETB SPL	synergy	yes	none	no
+Unwilling Ingredient	B	Creature	1	SAC GY	pauper	yes	none	no
+Upheaval	U	Sorcery	6	CTRL	mtgovc	yes	none	no
+Urborg, Tomb of Yawgmoth	C	Land	0	LND	mtgovc	yes	Random	no
+Uro, Titan of Nature's Wrath	GU	Creature	3	LND GY RAMP	mtgovc vintage180 modern	yes	none	yes
+Ursine Monstrosity	G	Creature	3	GY	mtgovc	yes	none	no
+Urza's Bauble	C	Artifact	0	ART	mtgovc	yes	All	no
+Urza's Saga	C	Enchantment Land	0	LND GY AGG	mtgovc	yes	none	no
+Urza, Lord High Artificer	U	Creature	4	ART ETB RAMP	mtgovc vintage180	yes	none	no
+Utopia Sprawl	G	Enchantment	1	RAMP	pauper	yes	All	no
+Vampire Nighthawk	B	Creature	3	EVA LIFE	modern synergy	yes	none	yes
+Vampiric Tutor	B	Instant	1	REAN CTRL	mtgovc	yes	All	no
+Vault Skirge	B	Artifact Creature	2	ART AGG EVA	pauper	yes	none	no
+Vaultborn Tyrant	G	Creature	7	TOK ART LIFE FAT	mtgovc	yes	none	no
+Vendilion Clique	U	Creature	3	EVA discard	modern	yes	none	yes
+Vengevine	G	Creature	4	AGG GY	added	yes	none	yes
+Venser, Shaper Savant	U	Creature	4	ETB counter	added	yes	none	yes
+Verdant Catacombs	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Vibrance	GR	Creature	5	removal ETB LIFE	mtgovc	yes	none	no
+Vicious Offering	B	Instant	2	removal SAC	pauper	yes	none	no
+Vicious Rivalry	BG	Sorcery	4	removal ART CTRL	mtgovc	yes	none	no
+Village Rites	B	Instant	1	SAC SPL	synergy pauper	yes	none	no
+Vindicate	BW	Sorcery	3	removal	mtgovc	yes	none	no
+Viscera Seer	B	Creature	1	SAC	synergy	yes	All	no
+Vivi Ornitier	RU	Creature	3	CTR SPL RAMP	mtgovc	yes	none	no
+Voice of Resurgence	GW	Creature	2	TOK SAC	vintage180 modern	yes	none	yes
+Voice of Victory	W	Creature	2	TOK AGG	mtgovc	yes	none	no
+Volcanic Island	RU	Land	0	LND	mtgovc vintage180	yes	none	yes
+Voldaren Epicure	R	Creature	1	TOK ETB ART AGG	mtgovc	yes	none	no
+Walking Ballista	C	Artifact Creature	0	ART CTR	mtgovc vintage180 modern synergy	yes	none	yes
+Wall of Roots	G	Creature	2	RAMP	pauper	yes	none	no
+Wan Shi Tong, All-Knowing	U	Creature	5	TOK ETB	mtgovc	yes	none	no
+Wan Shi Tong, Librarian	U	Creature	2	ETB CTR EVA AGG	mtgovc	yes	none	no
+Wandering Fumarole	RU	Land	0	LND AGG	added	yes	none	no
+Wasteland	C	Land	0	LND	mtgovc	yes	none	no
+Wastewood Verge	BG	Land	0	LND	mtgovc	yes	none	no
+Watcher for Tomorrow	U	Creature	2	ETB	synergy	yes	none	no
+Waterlogged Grove	GU	Land	0	LND	mtgovc	yes	none	no
+Watery Grave	BU	Land	0	LND	mtgovc modern synergy	yes	none	no
+Wedding Announcement	W	Enchantment	3	TOK ART	added	yes	none	yes
+Welcoming Vampire	W	Creature	3	TOK ETB	synergy	yes	none	no
+Werebear	G	Creature	2	RAMP GY	pauper	yes	none	no
+Wheel of Fortune	R	Sorcery	3	discard	mtgovc	yes	none	no
+Wight of the Reliquary	BG	Creature	2	SAC GY AGG	mtgovc	yes	none	no
+Wildheart Invoker	G	Creature	4	RAMP AGG	pauper	yes	none	no
+Wind-Scarred Crag	RW	Land	0	LND	pauper	yes	none	no
+Winding Constrictor	BG	Creature	2	CTR	synergy	yes	Random	no
+Winds of Abandon	W	Sorcery	2	removal	mtgovc	yes	none	no
+Windswept Heath	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Wishclaw Talisman	B	Artifact	2	ART	mtgovc	yes	none	no
+Wistfulness	GU	Creature	5	removal ETB ART CTRL	mtgovc	yes	none	no
+Witch Enchanter	W	Creature	4	removal ETB ART RAMP	mtgovc	yes	none	no
+Witherbloom Apprentice	BG	Creature	2	LIFE AGG	mtgovc	yes	none	no
+Woe Strider	B	Creature	3	SAC GY TOK	synergy	yes	none	no
+Wood Elves	G	Creature	3	ETB LND	synergy	yes	none	no
+Wooded Foothills	C	Land	0	LND GY	mtgovc vintage180 synergy	yes	none	yes
+Woodfall Primus	G	Creature	8	ETB FAT	mtgovc	yes	none	no
+Worldspine Wurm	G	Creature	11	TOK GY FAT	mtgovc	yes	none	no
+Wrath of God	W	Sorcery	4	CTRL	mtgovc vintage180 modern	yes	none	yes
+Wrenn and Six	GR	Planeswalker	2	LND GY	mtgovc vintage180	yes	none	no
+Wrenn's Resolve	R	Sorcery	2	SPL	pauper	yes	none	no
+Writhing Chrysalis	GR	Creature	4	TOK SAC RAMP	pauper	yes	none	no
+Wurmcoil Engine	C	Artifact Creature	6	ART FAT LIFE	vintage180 modern	yes	none	yes
+Xander's Lounge	BRU	Land	0	LND	mtgovc	yes	none	no
+Yavimaya Elder	G	Creature	3	RAMP GY SAC	pauper	yes	none	no
+Yavimaya, Cradle of Growth	C	Land	0	LND	mtgovc	yes	Random	no
+Yawgmoth's Will	B	Sorcery	3	GY	mtgovc	yes	none	no
+Young Pyromancer	R	Creature	2	SPL TOK SAC	vintage180 modern synergy	yes	none	yes
+Zagoth Triome	BGU	Land	0	LND	mtgovc	yes	none	no
+Ziatora's Proving Ground	BGR	Land	0	LND	mtgovc	yes	none	no
+Zirda, the Dawnwaker	RW	Creature	3	ART	mtgovc	yes	none	no
+Zulaport Cutthroat	B	Creature	2	SAC LIFE	synergy	yes	none	no
+Zuran Orb	C	Artifact	0	SAC ART LIFE	mtgovc	yes	none	no
