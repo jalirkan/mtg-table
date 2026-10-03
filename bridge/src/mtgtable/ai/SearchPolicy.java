@@ -760,6 +760,7 @@ public final class SearchPolicy {
         final java.util.Random realRandom = MyRandom.getRandom();
         MyRandom.setRandom(new Random(seed));
         try {
+            final long tc = System.nanoTime();
             final LenientGameCopier cp = new LenientGameCopier(game);
             final Game copy;
             COPYING.set(Boolean.TRUE);
@@ -773,6 +774,10 @@ public final class SearchPolicy {
             } finally {
                 COPYING.set(Boolean.FALSE);
             }
+            sink.add("search.copyUs", (int) ((System.nanoTime() - tc) / 1000L));
+            // Forge's own per-decision limit inside a rollout: 1 s, not 5 (an
+            // eval that times out plays nothing, which a rollout survives).
+            copy.AI_TIMEOUT = 1;
             if (first && cp.unmapped() > 0) {
                 sink.add("search.standInDecisions", 1);
                 sink.add("search.standInCards", cp.unmapped());
@@ -793,6 +798,7 @@ public final class SearchPolicy {
                 throw new CandidateUnmappable(e);
             }
             Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
+            final long tp = System.nanoTime();
             final PhaseHandler ph = copy.getPhaseHandler();
             final int limit = ph.getTurn() + cfg.horizonTurns;
             int steps = 0;
@@ -806,6 +812,7 @@ public final class SearchPolicy {
             if (steps >= 20_000) {
                 sink.add("search.rolloutStepCap", 1);
             }
+            sink.add("search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
             return leaf(copy, aiCopy);
         } finally {
             MyRandom.setRandom(realRandom);

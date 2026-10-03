@@ -49,6 +49,8 @@ import forge.util.BuildInfo;
 import forge.util.MyRandom;
 
 import mtgtable.Json.JsonOut;
+import mtgtable.ai.PolicyLobbyPlayerAi;
+import mtgtable.ai.SearchConfig;
 
 /**
  * M2: <b>a full game against the Forge AI, from one seat, over a
@@ -209,6 +211,10 @@ public final class MtgTable {
         System.out.println("ai profile    = " + aiProfile
                 + (a.aiProfile == null ? "  (the default; --ai-profile " + String.join("|",
                         Bootstrap.aiProfiles(cfg.forgeHomeDir())) + ")" : ""));
+        if (!"plain".equals(a.aiPolicy)) {
+            System.out.println("ai policy     = " + a.aiPolicy + ("search".equals(a.aiPolicy)
+                    ? "  (" + SearchConfig.parse(a.aiSearch) + ")" : ""));
+        }
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
         System.out.println("games/match   = " + a.games);
@@ -281,7 +287,14 @@ public final class MtgTable {
         // Match setup (M44): ALWAYS an explicit profile.  The two-argument
         // overload this line used to call passes an empty override, and that
         // branch of GamePlayerUtil can save the preferences file.
-        final LobbyPlayer aiLobby = Bootstrap.createAiPlayer(a.aiName, 0, aiProfile);
+        // D314: --ai-policy picks the AI seat's controller.  "plain" (the
+        // default, and every gate step) is Forge's own AI, exactly as before;
+        // "outlets" puts D310's sacrifice-outlet policy in front of it; "search"
+        // adds D312's determinized rollout search behind the policy.  Opt-in only.
+        final LobbyPlayer aiLobby = "plain".equals(a.aiPolicy)
+                ? Bootstrap.createAiPlayer(a.aiName, 0, aiProfile)
+                : Bootstrap.createAiSeat(a.aiName, 0, aiProfile, null, PolicyLobbyPlayerAi.Outlets.ON,
+                        "search".equals(a.aiPolicy) ? SearchConfig.parse(a.aiSearch) : null);
         ai.setPlayer(aiLobby);
         final List<RegisteredPlayer> seats = List.of(me, ai);
 
@@ -927,6 +940,10 @@ public final class MtgTable {
         String deck2;
         /** {@code --ai-profile}; null means {@link Bootstrap#DEFAULT_AI_PROFILE}. */
         String aiProfile;
+        /** {@code --ai-policy plain|outlets|search} (D314); plain = Forge's own AI. */
+        String aiPolicy = "plain";
+        /** {@code --ai-search <k=v,...>} (D312's SearchConfig keys); implies {@code --ai-policy search}. */
+        String aiSearch = "";
         String aiName = "Forge AI";
         String gameId;
         long seed;
@@ -981,6 +998,17 @@ public final class MtgTable {
                 }
                 case "--ai-profile": a.aiProfile = need(argv, ++i, k); break;
                 case "--ai-name":   a.aiName = need(argv, ++i, k); break;
+                case "--ai-policy":
+                    a.aiPolicy = need(argv, ++i, k);
+                    if (!a.aiPolicy.matches("plain|outlets|search")) {
+                        throw new IllegalArgumentException("--ai-policy is plain, outlets or search");
+                    }
+                    break;
+                case "--ai-search":
+                    a.aiSearch = need(argv, ++i, k);
+                    a.aiPolicy = "search";
+                    SearchConfig.parse(a.aiSearch);   // fail now, not after the engine boots
+                    break;
                 case "--game-id":   a.gameId = need(argv, ++i, k); break;
                 case "--seat":      a.seat = Integer.parseInt(need(argv, ++i, k)); break;
                 case "--seed":      a.seed = Long.parseLong(need(argv, ++i, k)); break;
@@ -1015,6 +1043,7 @@ public final class MtgTable {
                     throw new IllegalArgumentException("unknown argument " + k + "\n"
                         + "usage: MtgTable [--transport null|auto|console|ws] [--deck <path>] "
                         + "[--deck2|--ai-deck <path>] [--ai-profile Default|Cautious|Reckless|Experimental] "
+                        + "[--ai-policy plain|outlets|search] [--ai-search ms=1500,turns=1,...] "
                         + "[--seed <n>] [--seat 0|1] [--ai-name <name>] "
                         + "[--game-id <id>] [--port <n>] [--keep-open] [--lan] [--site-dir <path>] [--games <n>] "
                         + "[--game-timeout <sec>] [--idle-timeout <sec>] "

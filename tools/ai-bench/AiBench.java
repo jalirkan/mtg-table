@@ -80,6 +80,7 @@ import mtgtable.ai.SearchConfig;
  *   play     --pairs FILE --a CFG --b CFG [--games N] [--seed S] [--shard I/K]
  *            [--timeout SEC] --out FILE.jsonl
  *   report   FILE.jsonl ... [--by-pair]
+ *   paired   --control FILE.jsonl ... --treatment FILE.jsonl ...
  *   selftest [--no-engine]
  * </pre>
  *
@@ -117,6 +118,9 @@ public final class AiBench {
                 break;
             case "selftest":
                 exit = selftest(rest);
+                break;
+            case "paired":
+                exit = paired(rest);
                 break;
             default:
                 throw new IllegalArgumentException("unknown mode " + args[0]);
@@ -527,6 +531,151 @@ public final class AiBench {
             System.out.println("  A counters:     " + t.aCounts);
             System.out.println("  B counters:     " + t.bCounts);
             System.out.println("  focus counters: " + t.focusCounts);
+        }
+        return 0;
+    }
+
+    // ==================================================================
+    // paired: a treatment run against a control run on the same deals (D312)
+    // ==================================================================
+
+    /** Two-sided exact binomial (McNemar) p for k of n discordant games, p = 1/2. */
+    static double mcnemar(final int k, final int n) {
+        if (n == 0) {
+            return 1;
+        }
+        final int lo = Math.min(k, n - k);
+        double tail = 0;
+        for (int i = 0; i <= lo; i++) {
+            tail += Math.exp(logChoose(n, i) - n * Math.log(2));
+        }
+        return Math.min(1, 2 * tail);
+    }
+
+    static double logChoose(final int n, final int k) {
+        double r = 0;
+        for (int i = 1; i <= k; i++) {
+            r += Math.log(n - k + i) - Math.log(i);
+        }
+        return r;
+    }
+
+    @SuppressWarnings("unchecked")
+    static Map<String, Map<String, Object>> loadGames(final List<File> files) throws IOException {
+        final Map<String, Map<String, Object>> out = new LinkedHashMap<>();
+        for (final File f : files) {
+            for (final String l : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) {
+                if (l.isBlank()) {
+                    continue;
+                }
+                final Map<String, Object> m = (Map<String, Object>) Json.parse(l);
+                out.put(m.get("aDeck") + "|" + m.get("bDeck") + "|" + m.get("seed") + "|" + m.get("aSeat"), m);
+            }
+        }
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    static int paired(final String[] argv) throws Exception {
+        final List<File> control = new ArrayList<>();
+        final List<File> treat = new ArrayList<>();
+        List<File> into = null;
+        for (final String a : argv) {
+            if ("--control".equals(a)) {
+                into = control;
+            } else if ("--treatment".equals(a)) {
+                into = treat;
+            } else if (into == null) {
+                throw new IllegalArgumentException("paired --control FILE... --treatment FILE...");
+            } else {
+                into.add(new File(a));
+            }
+        }
+        final Map<String, Map<String, Object>> c = loadGames(control);
+        final Map<String, Map<String, Object>> t = loadGames(treat);
+        int n = 0;
+        int tWins = 0;
+        int tDec = 0;
+        int cWins = 0;
+        int cDec = 0;
+        int gained = 0;
+        int lost = 0;
+        long tMs = 0;
+        long cMs = 0;
+        int tErr = 0;
+        final Map<String, Long> counters = new TreeMap<>();
+        String tName = "?";
+        String cName = "?";
+        for (final Map.Entry<String, Map<String, Object>> e : t.entrySet()) {
+            final Map<String, Object> tg = e.getValue();
+            final Map<String, Object> cg = c.get(e.getKey());
+            if (cg == null) {
+                continue;
+            }
+            n++;
+            tName = String.valueOf(tg.get("a"));
+            cName = String.valueOf(cg.get("a"));
+            final String tw = (String) tg.get("winner");
+            final String cw = (String) cg.get("winner");
+            if (!"draw".equals(tw)) {
+                tDec++;
+                tWins += "A".equals(tw) ? 1 : 0;
+            }
+            if (!"draw".equals(cw)) {
+                cDec++;
+                cWins += "A".equals(cw) ? 1 : 0;
+            }
+            if ("A".equals(tw) && !"A".equals(cw)) {
+                gained++;
+            } else if (!"A".equals(tw) && "A".equals(cw)) {
+                lost++;
+            }
+            tMs += ((Number) tg.get("ms")).longValue();
+            cMs += ((Number) cg.get("ms")).longValue();
+            tErr += "".equals(tg.get("error")) ? 0 : 1;
+            final Map<String, Object> st = (Map<String, Object>) tg.get("aStats");
+            if (st != null && st.get("counts") != null) {
+                for (final Map.Entry<String, Object> x : ((Map<String, Object>) st.get("counts")).entrySet()) {
+                    counters.merge(x.getKey(), ((Number) x.getValue()).longValue(), Long::sum);
+                }
+            }
+        }
+        final double[] tci = wilson(tWins, tDec);
+        final double[] cci = wilson(cWins, cDec);
+        System.out.println("== paired: treatment A = " + tName + "   control A = " + cName + "   (B the same in both)");
+        System.out.println(String.format(Locale.ROOT, "  deals matched: %d (treatment engine errors %d)", n, tErr));
+        System.out.println(String.format(Locale.ROOT,
+                "  treatment A wins %d of %d decisive = %.1f%%  (95%% Wilson CI %.1f-%.1f%%)",
+                tWins, tDec, pct(tWins, tDec), 100 * tci[0], 100 * tci[1]));
+        System.out.println(String.format(Locale.ROOT,
+                "  control   A wins %d of %d decisive = %.1f%%  (95%% Wilson CI %.1f-%.1f%%)",
+                cWins, cDec, pct(cWins, cDec), 100 * cci[0], 100 * cci[1]));
+        System.out.println(String.format(Locale.ROOT,
+                "  paired: %d deals gained, %d lost; exact McNemar p = %.4f", gained, lost,
+                mcnemar(gained, gained + lost)));
+        System.out.println(String.format(Locale.ROOT, "  seconds per game: treatment %.1f, control %.1f",
+                n == 0 ? 0 : tMs / 1000.0 / n, n == 0 ? 0 : cMs / 1000.0 / n));
+        final long considered = counters.getOrDefault("search.p.considered", 0L)
+                + counters.getOrDefault("search.a.considered", 0L) + counters.getOrDefault("search.b.considered", 0L);
+        if (considered > 0) {
+            final long changed = counters.getOrDefault("search.p.changed", 0L)
+                    + counters.getOrDefault("search.a.changed", 0L) + counters.getOrDefault("search.b.changed", 0L);
+            final long copyErr = counters.getOrDefault("search.fallback.copyError", 0L);
+            final long budget = counters.getOrDefault("search.fallback.budget", 0L);
+            final long unmap = counters.getOrDefault("search.fallback.unmappable", 0L);
+            final long standIn = counters.getOrDefault("search.standInDecisions", 0L);
+            final long searchMs = counters.getOrDefault("search.p.ms", 0L) + counters.getOrDefault("search.a.ms", 0L)
+                    + counters.getOrDefault("search.b.ms", 0L);
+            System.out.println(String.format(Locale.ROOT,
+                    "  search: %d decisions searched (%.1f/game), %d changed Forge's answer (%.1f%%), %.0f ms each",
+                    considered, (double) considered / n, changed, pct((int) changed, (int) considered),
+                    (double) searchMs / considered));
+            System.out.println(String.format(Locale.ROOT,
+                    "  fallbacks to Forge: copier error %d (%.2f%%), budget %d (%.1f%%), unmappable %d;"
+                    + " copies that needed the sideboard stand-in: %d decisions (%.1f%%)",
+                    copyErr, 100.0 * copyErr / considered, budget, 100.0 * budget / considered, unmap,
+                    standIn, 100.0 * standIn / considered));
+            System.out.println("  treatment counters: " + counters);
         }
         return 0;
     }
