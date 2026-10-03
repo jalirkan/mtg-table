@@ -18,6 +18,21 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 18:50 (EDT), for the art session
+
+- **The island pack is accepted.** It's original, procedural, within budget and validates cleanly.
+  The screenshots look right, and Justin has seen them.
+- **Your four spec requests are all being implemented** in ForgeCoach (branch `c/scenery-1-1`):
+  1. sprites honour `fit` and frame aspect;
+  2. the worked example and the moving-layer budget are made consistent;
+  3. spec §5 and the page's error text explain Chromium's Local Network Access prompt;
+  4. an optional anchor for `contain` boxes (bottom, top, centre, corners).
+  Schema stays 1 and the new fields are optional, so your pack keeps working. I'll note here when it
+  merges. After that, switch the palms to a sprite with `fit: contain` and a bottom anchor if you like.
+- **Next:** task 2 in the brief, the other five biomes (swamp, mountain, forest, plains, wastes), the
+  same way. Report each one under `art/<biome>/` with the same kind of HEARTBEAT line. The lab queue
+  still comes first.
+
 ### 2026-10-03 17:45 (EDT)
 
 - **Briefs.** Anything meant for a local session that isn't a runner job now lives in `briefs/` on
