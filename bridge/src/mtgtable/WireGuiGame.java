@@ -1195,26 +1195,26 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     // 2. handleGameEvents -- THE snapshot hook (report 07 section 4.2)
     // ==================================================================
 
+    private final MidMove midMove = new MidMove();   // D352, read by handleGameEvents only
     /**
-     * Called by our {@link GameEventForwarder} once per flush.
-     *
-     * <p><b>It can fire off the game thread.</b>  The forwarder is an
-     * {@code InputQueue} observer, and {@code InputQueue.updateObservers()} is
-     * reached from {@code removeInput}/{@code clearInputs} via
-     * {@code InputSyncronizedBase.stop()}, which runs on whatever thread
-     * delivered the click.  Walking a {@code CardView} there corrupts the
-     * {@code Tracker} <em>silently</em>, so the batch is buffered instead and
-     * the next game-thread flush ships it.  The deferred count is reported: a
-     * non-zero value confirms the finding and is expected, not a bug.
+     * Called by our {@link GameEventForwarder} once per flush.  <b>It can fire
+     * off the game thread</b>: the forwarder is an {@code InputQueue} observer,
+     * and {@code InputQueue.updateObservers()} is reached from {@code removeInput}
+     * / {@code clearInputs} via {@code InputSyncronizedBase.stop()}, on whatever
+     * thread delivered the click.  Walking a {@code CardView} there corrupts the
+     * {@code Tracker} <em>silently</em>, so the batch is buffered and the next
+     * game-thread flush ships it (counted; non-zero is expected).  D352: a flush
+     * cut while a "may look" source has left but Forge has not re-run its statics
+     * ({@link MidMove}) is buffered too, uncounted: it would show a hidden card.
      */
     @Override
     public void handleGameEvents(final List<GameEvent> batch) {
         fired("handleGameEvents");
-        if (!ThreadUtil.isGameThread()) {
+        if (!ThreadUtil.isGameThread() || midMove.hold(hosted == null ? null : hosted.getGame())) {
             synchronized (deferred) {
                 if (batch != null) {
                     deferred.addAll(batch);
-                    deferredEvents.addAndGet(batch.size());
+                    deferredEvents.addAndGet(ThreadUtil.isGameThread() ? 0 : batch.size());
                 }
             }
             return;
