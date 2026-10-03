@@ -111,7 +111,11 @@ class EncodeTest(unittest.TestCase):
     def setUpClass(cls):
         cls.vocab = fixture_vocab()
         cls.schema = E.Schema(cls.vocab)
-        cls.games = [g for p in corpus() for g in E.read_games(p)]
+        # an extra log (ML_EXTRA_LOGS) may be a killed or timed-out game with no
+        # outcome: it yields no rows by design, and is left to the hidden-
+        # information sweep; every committed fixture is a finished game
+        cls.games = [g for p in corpus() for g in E.read_games(p)
+                     if p.startswith(FIXTURES) or E.game_outcome(g)[2]]
         cls.rows = [E.encode_game(g, cls.schema) for g in cls.games]
 
     def test_every_fixture_yields_rows(self):
