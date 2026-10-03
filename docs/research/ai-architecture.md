@@ -196,3 +196,55 @@ untouched.
 6. **Then the game's own seat.** Only after the bench shows a gain: switch
    `MtgTable`'s AI seat to `Bootstrap.createAiSeat` behind a flag, so the
    owner plays the stronger AI; the gate's recordings stay on plain Forge.
+
+## 8. Measuring progress: the ladder and the league (D315–D318)
+
+The bench (§7, step 1) answers "is this change better than plain Default, on
+these deals?". Once there are many configs — profiles, the outlet policy,
+search budgets, evaluator models — the question becomes "where does each stand,
+on one scale, and is the newest better than the best so far?". That is
+`tools/ai-ladder.sh` (manual: `docs/guides/ai-ladder.md`).
+
+```
+players.json ─► kinds.ts: {kind, params} ─► ai-bench seat config ("Reckless+outlets", "Default+search:ms=1500,…")
+                                    │
+ schedule / sprt / tune / league ───┤ choose a matchup and a seed slot
+                                    ▼
+          AiBench play --a --b --games 4 --mirror --seed k   (one JVM per batch, J workers)
+                                    │ one JSON line per game
+                                    ▼
+          var/ai-ladder/results/<host>.jsonl   (append-only, one file per machine)
+                                    │
+                                    ▼
+     Bradley–Terry (MAP, forge-default ≡ 1500) ─► report.html, ladder.json (schema 1, ForgeCoach)
+```
+
+- **One game engine.** The ladder never plays a game itself; every game is an
+  ai-bench game, so a new AI joins the ladder the day the bench can seat it —
+  one row in `kinds.ts` mapping the player's params onto the bench's seat
+  syntax. The search kind is already written against D312's
+  `+search:ms=…,cands=…,turns=…` syntax and turns available when `main`'s bench
+  parses it; the evaluator kind is declared and waits for its bench option.
+- **Paired by construction.** `--mirror` plays each deal from both sides, and a
+  matchup's k-th batch uses the same deals as every other matchup's k-th
+  batch, so comparisons against a common opponent are paired, as §7 asks.
+- **Ratings with honest intervals**: Bradley–Terry on the Elo scale, the
+  anchor fixed, a weak prior so few games give a wide interval rather than an
+  infinite rating; Hessian or block-bootstrap 95% intervals.
+- **Games where they inform**: new players first, a fixed share against the
+  stock anchors, then the closest, most uncertain pair (p(1−p)·(se²+se²)).
+- **Decisions, not just numbers**: an SPRT on mirror-pair scores ("A ≥ B +
+  elo1?") that stops as soon as the evidence is in; a successive-halving tuner
+  over any numeric or enum parameter, on shared deals against a fixed pool,
+  writing its winner back under a new name.
+- **The self-play loop** (league): the newest version plays a fixed share of
+  games against the last N promoted versions and the anchors; a candidate (a
+  tuned config, later an evaluator retrained on the league's own games) is
+  promoted only if the SPRT says it beats the current best **and** it does not
+  lose ground against forge-default on the same deals — so the loop cannot
+  drift into beating only itself.
+
+The roadmap then reads: build a search variant or train an evaluator → register
+it (a new name, a new hash) → `tune` its knobs against the pool → mark the
+winner a candidate → `league` decides; the ladder's report shows the whole
+history, and its `ladder.json` is what ForgeCoach will show.

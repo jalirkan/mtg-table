@@ -13996,3 +13996,139 @@ tuning `.ai` knobs as the main road (one profile moved the needle ten points,
 the rest nothing measurable — knobs inside a greedy player); an LLM opponent
 (the owner's constraint); a learned policy before a search exists to use a
 learned evaluator.
+
+## D315 — The AI ladder: named AI configs rated on one Elo scale from ai-bench games on mirrored deals, forge-default fixed at 1500, every game one line of an append-only per-machine log
+
+*Branch `c/ai-ladder`. D315–D318 were free when written (D312 search, D313
+lab-record, D314 evaluator); renumber at the merge if they clash.*
+
+**2026-10-03** (the owner's goal: an AI that beats stock Forge, then improves
+against its own past versions)
+
+**Decision.** `tools/ai-ladder.sh` (TypeScript under `tools/ai-ladder/`,
+`docs/guides/ai-ladder.md`) rates **players** — a name for `{kind, params}` in
+the committed `tools/ai-ladder/players.json` — against each other. A **kind**
+is a row of `tools/ai-ladder/kinds.ts`: its parameters (int or enum, which is
+what the tuner varies) and the ai-bench seat config the params become
+(`forge` → `Reckless`, `policy` → `Default+outlets`, `search` →
+`…+search:ms=…`). A kind this checkout cannot play — unknown, or its engine side
+unmerged — is reported unavailable with its reason and never scheduled, never a
+crash. Stock Forge profiles are **anchors**, always in the pool;
+`forge-default` is fixed at 1500.
+
+- **Every game is an ai-bench game** (D309): a batch is one `AiBench play`
+  JVM, never a fork of it. The one hook the ladder added is `--mirror`
+  (backward compatible: without it every seed is what it was, a self-test check
+  says so): games 4k/4k+3 and 4k+1/4k+2 of a pair share a seed — the same deck in
+  the same seat, the configs swapped — so each deal is played from both sides.
+  The flag sits on its own lines in `play()`'s argument switch and a new
+  `gameSeed()`, apart from the seat-config parser the search branch changes.
+- **Identity is the config hash** (sha256 of the kind and the default-filled
+  params): a game is credited to whichever registered player has that hash, so
+  a later-registered tuner candidate keeps its games and an edited config does
+  not silently merge two AIs (its old games are rated apart as `name@hash`).
+  Tools only append to the registry.
+- **Results** are one `GameRecord` line per game in
+  `var/ai-ladder/results/<host>.jsonl`, append-only, one file per machine, ids
+  unique across machines: a second PC's file is copied in beside the first.
+- **Ratings**: Bradley–Terry on the logistic Elo scale, MAP under a normal
+  prior centred on 1500 (sd 350; it only matters for few or one-sided games),
+  Newton's method with the anchor's row removed; 95% intervals from the
+  Hessian, or by bootstrap over mirror blocks (a deal's two games are one
+  unit). Draws (timeouts, engine errors) are counted and not rated.
+- **Seeds line up**: batch k of a matchup uses the host's base + k and a fixed
+  set of deck pairs for k, so two players' batches against a common opponent
+  are the same deals; each host has its own base.
+- **`ladder.json` schema 1 is ForgeCoach's contract**, with D297's rule: add a
+  field freely, rename or redefine one only as schema 2 with ForgeCoach in the
+  same breath. The guide documents it; `web/test/ai-ladder.test.ts` pins its
+  keys.
+
+**Rejected.** A ladder that plays its own games (a second game loop beside
+ai-bench to drift from D309's); Elo updated game by game (order-dependent, no
+honest interval); one shared results file (two machines appending to it over a
+network share is a corruption path; per-host files merge by copying);
+identity by name (a re-tuned config under an old name would inherit games it
+never played); YAML (no parser in the repo, and JSON one-line-per-player diffs
+as cleanly).
+
+## D316 — The ladder spends its games where they inform: new players first, a fixed share against the anchors, then the closest, most uncertain pair; an SPRT on mirror-pair scores decides "A beats B by ≥ elo1"
+
+**2026-10-03**
+
+**Decision.** `run --hours H --jobs J` keeps J workers busy with batches until
+the budget is spent (a batch starts only if it is expected to finish in time).
+The next matchup (`schedule.ts`, pure, deterministic): (1) a player with fewer
+than 40 decisive games, against forge-default until that pair has 40, then its
+nearest rating; (2) if fewer than 25% of this run's batches involved an anchor,
+the most informative anchor pair; (3) otherwise the pair maximising
+`p(1−p)·(se_A² + se_B²)` — a game's Fisher information about the rating
+difference times what is still unknown — discounted by batches of that pair
+already running.
+
+`sprt A B --elo0 --elo1 [--alpha --beta]` runs the generalized SPRT on
+**mirror-pair scores** (A's share of a pair's decisive games): the two games of
+one deal are correlated, so the pair, not the game, is the independent unit —
+the same reason Fishtest moved to pentanomial. `LLR = N((x̄−s0)² − (x̄−s1)²)/(2σ²)`,
+Wald's bounds, no decision before 8 pairs (σ² is floored), inconclusive at
+`--max-games`. Every test is a line in `sprt.jsonl` with the games it used.
+Synthetic checks: +70 Elo accepts H1 in 20 of 20 runs, −30 accepts H0 in 20 of
+20, and at Elo 0 against `elo1 20` H1 is accepted in at most 10% of 120 runs
+(alpha 5%).
+
+**Rejected.** Round-robin scheduling (most of its games are between players
+whose order is already settled); a plain binomial SPRT over games (it treats a
+deal played from both sides as two independent observations, overstating the
+evidence); deciding on a fixed number of games (an obvious result wastes the
+night, a close one is underpowered).
+
+## D317 — The tuner races a config's parameters by successive halving on shared deals against a fixed pool, and writes its winner back under a new name
+
+**2026-10-03**
+
+**Decision.** `tune <base> --param k=v1,v2 …` varies any int or enum
+parameter of the base's kind over the grid (or `--sample K` seeded points).
+Round r: every surviving candidate plays `blocks·eta^r` batches against each
+opponent in a fixed pool (default forge-default and forge-reckless), **all
+candidates on the same deals** (one `--seed` per batch slot), so their
+differences are paired; the score is the pooled win rate over all rounds; the
+best `ceil(n/eta)` survive. The winner is appended to `players.json` as
+`<base>-t<n>` (or `--name`, never over an entry; nothing is written when its
+config is already registered), optionally as a league candidate. Until the
+search merges it is proven on what exists: the Forge profile and the outlet
+policy on or off. Synthetic check: with one config 50 Elo above the next, it
+wins 8 or more of 10 tunes.
+
+**Rejected.** Bayesian optimisation (the parameters are few, discrete and
+noisy; halving is robust, parallel and explains itself round by round); judging
+candidates by their ladder rating (it mixes in whom they happened to play; a
+fixed pool is a fixed yardstick); overwriting the base (results are keyed by
+config, and a name is permanent).
+
+## D318 — League mode: the newest version plays a fixed share against its past versions and the anchors; a candidate is promoted only if an SPRT says it beats the current best AND it does not lose ground against forge-default
+
+**2026-10-03**
+
+**Decision.** `league --hours H` keeps `var/ai-ladder/league.json`: the current
+best (forge-default before any promotion), the promoted versions, and each
+decided candidate (a registry player marked `"candidate": true`). The pool is
+the last N promoted versions plus the anchors. A fixed share (50%) of batches
+is the best against the pool member it has played least — the self-play loop;
+a pending candidate's tests cycle candidate-vs-best (the SPRT) twice,
+candidate-vs-forge-default and best-vs-forge-default on the same deals; the
+rest is the ordinary ladder. **Promotion needs both**: SPRT accepts H1 against
+the best, and on the shared deals against forge-default (at least 80 decisive
+games each) the candidate's Elo is not below the best's by more than a margin
+(0). H0, an inconclusive test, or a failed Forge check rejects it, and the
+reason is kept.
+
+**Why the second condition.** Self-play can climb by exploiting its own past
+versions' habits; Forge is the opponent the owner actually plays and the
+anchor of the scale, so a version that "beats itself, forgets Forge" is not an
+improvement. The check is paired (same deals) so it costs little.
+
+**Rejected.** Promoting on rating alone (the rating is pooled over many
+opponents and lags); keeping only the latest version in the pool (cycles:
+A beats B beats C beats A go unseen); generating candidates inside the league
+(the generators are the tuner today and the evaluator's training later; the
+league judges, it does not invent).
