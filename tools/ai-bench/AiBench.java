@@ -64,6 +64,9 @@ import mtgtable.Json;
 import mtgtable.ai.OutletPolicy;
 import mtgtable.ai.PolicyControllerAi;
 import mtgtable.ai.PolicyLobbyPlayerAi;
+import mtgtable.ai.Determinizer;
+import mtgtable.ai.LenientGameCopier;
+import mtgtable.ai.SearchConfig;
 
 /**
  * The Java half of {@code tools/ai-bench.sh} (D309): Forge AI against Forge AI
@@ -77,6 +80,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *   play     --pairs FILE --a CFG --b CFG [--games N] [--seed S] [--shard I/K]
  *            [--timeout SEC] --out FILE.jsonl
  *   report   FILE.jsonl ... [--by-pair]
+ *   paired   --control FILE.jsonl ... --treatment FILE.jsonl ...
  *   selftest [--no-engine]
  * </pre>
  *
@@ -115,6 +119,9 @@ public final class AiBench {
             case "selftest":
                 exit = selftest(rest);
                 break;
+            case "paired":
+                exit = paired(rest);
+                break;
             default:
                 throw new IllegalArgumentException("unknown mode " + args[0]);
             }
@@ -137,6 +144,7 @@ public final class AiBench {
         final String profile;
         final AIOption sim;
         final PolicyLobbyPlayerAi.Outlets outlets;
+        final SearchConfig search;
 
         Cfg(final String text) {
             this.text = text;
@@ -144,7 +152,13 @@ public final class AiBench {
             profile = parts[0];
             AIOption s = null;
             PolicyLobbyPlayerAi.Outlets o = PolicyLobbyPlayerAi.Outlets.OFF;
+            SearchConfig sc = null;
             for (int i = 1; i < parts.length; i++) {
+                if (parts[i].equals("search") || parts[i].startsWith("search:")) {
+                    // +search or +search:ms=1000,what=pa (D312; SearchConfig's keys)
+                    sc = SearchConfig.parse(parts[i].length() > 7 ? parts[i].substring(7) : "");
+                    continue;
+                }
                 switch (parts[i]) {
                 case "sim":
                     s = AIOption.USE_FULL_SIMULATION;
@@ -160,11 +174,12 @@ public final class AiBench {
                     break;
                 default:
                     throw new IllegalArgumentException("unknown seat option +" + parts[i] + " in " + text
-                            + " (want +sim, +hybrid, +outlets or +shadow)");
+                            + " (want +sim, +hybrid, +outlets, +shadow or +search[:k=v,...])");
                 }
             }
             sim = s;
             outlets = o;
+            search = sc;
         }
     }
 
@@ -274,8 +289,8 @@ public final class AiBench {
         MyRandom.setRandom(new Random(gameSeed));
         final String aDeckPath = aFirstDeck ? pair[0] : pair[1];
         final String bDeckPath = aFirstDeck ? pair[1] : pair[0];
-        final PolicyLobbyPlayerAi la = Bootstrap.createAiSeat("A", aSeat0 ? 0 : 1, a.profile, a.sim, a.outlets);
-        final PolicyLobbyPlayerAi lb = Bootstrap.createAiSeat("B", aSeat0 ? 1 : 0, b.profile, b.sim, b.outlets);
+        final PolicyLobbyPlayerAi la = Bootstrap.createAiSeat("A", aSeat0 ? 0 : 1, a.profile, a.sim, a.outlets, a.search);
+        final PolicyLobbyPlayerAi lb = Bootstrap.createAiSeat("B", aSeat0 ? 1 : 0, b.profile, b.sim, b.outlets, b.search);
         final RegisteredPlayer ra = new RegisteredPlayer(decks.get(aDeckPath));
         ra.setPlayer(la);
         final RegisteredPlayer rb = new RegisteredPlayer(decks.get(bDeckPath));
@@ -520,6 +535,151 @@ public final class AiBench {
         return 0;
     }
 
+    // ==================================================================
+    // paired: a treatment run against a control run on the same deals (D312)
+    // ==================================================================
+
+    /** Two-sided exact binomial (McNemar) p for k of n discordant games, p = 1/2. */
+    static double mcnemar(final int k, final int n) {
+        if (n == 0) {
+            return 1;
+        }
+        final int lo = Math.min(k, n - k);
+        double tail = 0;
+        for (int i = 0; i <= lo; i++) {
+            tail += Math.exp(logChoose(n, i) - n * Math.log(2));
+        }
+        return Math.min(1, 2 * tail);
+    }
+
+    static double logChoose(final int n, final int k) {
+        double r = 0;
+        for (int i = 1; i <= k; i++) {
+            r += Math.log(n - k + i) - Math.log(i);
+        }
+        return r;
+    }
+
+    @SuppressWarnings("unchecked")
+    static Map<String, Map<String, Object>> loadGames(final List<File> files) throws IOException {
+        final Map<String, Map<String, Object>> out = new LinkedHashMap<>();
+        for (final File f : files) {
+            for (final String l : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) {
+                if (l.isBlank()) {
+                    continue;
+                }
+                final Map<String, Object> m = (Map<String, Object>) Json.parse(l);
+                out.put(m.get("aDeck") + "|" + m.get("bDeck") + "|" + m.get("seed") + "|" + m.get("aSeat"), m);
+            }
+        }
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    static int paired(final String[] argv) throws Exception {
+        final List<File> control = new ArrayList<>();
+        final List<File> treat = new ArrayList<>();
+        List<File> into = null;
+        for (final String a : argv) {
+            if ("--control".equals(a)) {
+                into = control;
+            } else if ("--treatment".equals(a)) {
+                into = treat;
+            } else if (into == null) {
+                throw new IllegalArgumentException("paired --control FILE... --treatment FILE...");
+            } else {
+                into.add(new File(a));
+            }
+        }
+        final Map<String, Map<String, Object>> c = loadGames(control);
+        final Map<String, Map<String, Object>> t = loadGames(treat);
+        int n = 0;
+        int tWins = 0;
+        int tDec = 0;
+        int cWins = 0;
+        int cDec = 0;
+        int gained = 0;
+        int lost = 0;
+        long tMs = 0;
+        long cMs = 0;
+        int tErr = 0;
+        final Map<String, Long> counters = new TreeMap<>();
+        String tName = "?";
+        String cName = "?";
+        for (final Map.Entry<String, Map<String, Object>> e : t.entrySet()) {
+            final Map<String, Object> tg = e.getValue();
+            final Map<String, Object> cg = c.get(e.getKey());
+            if (cg == null) {
+                continue;
+            }
+            n++;
+            tName = String.valueOf(tg.get("a"));
+            cName = String.valueOf(cg.get("a"));
+            final String tw = (String) tg.get("winner");
+            final String cw = (String) cg.get("winner");
+            if (!"draw".equals(tw)) {
+                tDec++;
+                tWins += "A".equals(tw) ? 1 : 0;
+            }
+            if (!"draw".equals(cw)) {
+                cDec++;
+                cWins += "A".equals(cw) ? 1 : 0;
+            }
+            if ("A".equals(tw) && !"A".equals(cw)) {
+                gained++;
+            } else if (!"A".equals(tw) && "A".equals(cw)) {
+                lost++;
+            }
+            tMs += ((Number) tg.get("ms")).longValue();
+            cMs += ((Number) cg.get("ms")).longValue();
+            tErr += "".equals(tg.get("error")) ? 0 : 1;
+            final Map<String, Object> st = (Map<String, Object>) tg.get("aStats");
+            if (st != null && st.get("counts") != null) {
+                for (final Map.Entry<String, Object> x : ((Map<String, Object>) st.get("counts")).entrySet()) {
+                    counters.merge(x.getKey(), ((Number) x.getValue()).longValue(), Long::sum);
+                }
+            }
+        }
+        final double[] tci = wilson(tWins, tDec);
+        final double[] cci = wilson(cWins, cDec);
+        System.out.println("== paired: treatment A = " + tName + "   control A = " + cName + "   (B the same in both)");
+        System.out.println(String.format(Locale.ROOT, "  deals matched: %d (treatment engine errors %d)", n, tErr));
+        System.out.println(String.format(Locale.ROOT,
+                "  treatment A wins %d of %d decisive = %.1f%%  (95%% Wilson CI %.1f-%.1f%%)",
+                tWins, tDec, pct(tWins, tDec), 100 * tci[0], 100 * tci[1]));
+        System.out.println(String.format(Locale.ROOT,
+                "  control   A wins %d of %d decisive = %.1f%%  (95%% Wilson CI %.1f-%.1f%%)",
+                cWins, cDec, pct(cWins, cDec), 100 * cci[0], 100 * cci[1]));
+        System.out.println(String.format(Locale.ROOT,
+                "  paired: %d deals gained, %d lost; exact McNemar p = %.4f", gained, lost,
+                mcnemar(gained, gained + lost)));
+        System.out.println(String.format(Locale.ROOT, "  seconds per game: treatment %.1f, control %.1f",
+                n == 0 ? 0 : tMs / 1000.0 / n, n == 0 ? 0 : cMs / 1000.0 / n));
+        final long considered = counters.getOrDefault("search.p.considered", 0L)
+                + counters.getOrDefault("search.a.considered", 0L) + counters.getOrDefault("search.b.considered", 0L);
+        if (considered > 0) {
+            final long changed = counters.getOrDefault("search.p.changed", 0L)
+                    + counters.getOrDefault("search.a.changed", 0L) + counters.getOrDefault("search.b.changed", 0L);
+            final long copyErr = counters.getOrDefault("search.fallback.copyError", 0L);
+            final long budget = counters.getOrDefault("search.fallback.budget", 0L);
+            final long unmap = counters.getOrDefault("search.fallback.unmappable", 0L);
+            final long standIn = counters.getOrDefault("search.standInDecisions", 0L);
+            final long searchMs = counters.getOrDefault("search.p.ms", 0L) + counters.getOrDefault("search.a.ms", 0L)
+                    + counters.getOrDefault("search.b.ms", 0L);
+            System.out.println(String.format(Locale.ROOT,
+                    "  search: %d decisions searched (%.1f/game), %d changed Forge's answer (%.1f%%), %.0f ms each",
+                    considered, (double) considered / n, changed, pct((int) changed, (int) considered),
+                    (double) searchMs / considered));
+            System.out.println(String.format(Locale.ROOT,
+                    "  fallbacks to Forge: copier error %d (%.2f%%), budget %d (%.1f%%), unmappable %d;"
+                    + " copies that needed the sideboard stand-in: %d decisions (%.1f%%)",
+                    copyErr, 100.0 * copyErr / considered, budget, 100.0 * budget / considered, unmap,
+                    standIn, 100.0 * standIn / considered));
+            System.out.println("  treatment counters: " + counters);
+        }
+        return 0;
+    }
+
     static double pct(final int k, final int n) {
         return n == 0 ? 0 : 100.0 * k / n;
     }
@@ -709,6 +869,146 @@ public final class AiBench {
                 "humanbattlefield=Forest",
                 "aibattlefield=Goblin Bombardment;Grizzly Bears;Mountain"),
             (ai, pol) -> check(pol.decide(ai) == null, "a quiet board -> no sacrifice"));
+        searchScenarios();
+    }
+
+    // ------------------------------------------------------------------
+    // The search's plumbing (D312, D313): determinization never sees the
+    // opponent's hidden cards; the copier's sideboard failure and its
+    // workaround; a copier error falls back to Forge's answer; and a search
+    // that runs end to end inside its budget.
+    // ------------------------------------------------------------------
+
+    private static final List<List<String>> DET = new ArrayList<>();
+
+    static List<String> names(final Iterable<Card> cs) {
+        final List<String> l = new ArrayList<>();
+        for (final Card c : cs) {
+            l.add(c.getName());
+        }
+        return l;
+    }
+
+    static void searchScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: search plumbing (engine)");
+        final SearchConfig quick = SearchConfig.parse("ms=3000,rounds=1,seed=7");
+        // 1. Two games whose opponent ("human") holds the same five cards between
+        //    hand and library, split and ordered differently.  The same seed must
+        //    give the same determinization: it cannot depend on what is hidden.
+        final String[][] splits = {
+            {"humanhand=Grizzly Bears;Lightning Bolt", "humanlibrary=Forest;Island;Shock"},
+            {"humanhand=Shock;Forest", "humanlibrary=Lightning Bolt;Island;Grizzly Bears"},
+        };
+        DET.clear();
+        for (int k = 0; k < 2; k++) {
+            final List<String> board = new ArrayList<>(List.of(
+                    "humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN1",
+                    "humanbattlefield=Forest", "aihand=Typhoid Rats", "ailibrary=Swamp;Mountain;Plains",
+                    "aibattlefield=Swamp"));
+            board.add(splits[k][0]);
+            board.add(splits[k][1]);
+            scenario("determinize-" + k, board, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+                final forge.game.Game g = ai.getGame();
+                final List<String> out = new ArrayList<>();
+                final java.util.Set<String> hands = new java.util.HashSet<>();
+                for (long seed = 1; seed <= 40; seed++) {
+                    final LenientGameCopier cp = new LenientGameCopier(g);
+                    final forge.game.Game copy = cp.makeCopy(null, ai);
+                    final Player aiC = (Player) cp.find(ai);
+                    Determinizer.determinize(copy, aiC, new Random(seed));
+                    final Player oppC = (Player) cp.find(ai.getWeakestOpponent());
+                    final String hand = String.join(",", names(oppC.getCardsIn(ZoneType.Hand)));
+                    hands.add(hand);
+                    out.add(hand + " | " + String.join(",", names(oppC.getCardsIn(ZoneType.Library)))
+                            + " | own hand " + String.join(",", names(aiC.getCardsIn(ZoneType.Hand))));
+                }
+                DET.add(out);
+                check(hands.size() > 3, "determinize-" + hands.size() + " distinct opponent hands over 40 seeds");
+            });
+        }
+        check(DET.size() == 2 && DET.get(0).equals(DET.get(1)),
+                "the same seeds give the same determinizations whatever the hidden split and order"
+                + (DET.size() == 2 ? " (first: " + DET.get(0).get(0) + ")" : ""));
+        check(DET.size() == 2 && DET.get(0).get(0).endsWith("own hand Typhoid Rats"),
+                "the AI's own hand is kept");
+
+        // 2. The copier's failure, and the workaround: a characteristic-defining
+        //    static (Tarmogoyf's P/T) also affects the copy in the SIDEBOARD, a
+        //    zone GameCopier does not copy.
+        scenario("copier-sideboard", List.of(
+                "humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest", "aibattlefield=Tarmogoyf;Forest",
+                "aisideboard=Tarmogoyf;Grist, the Hunger Tide"), PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+                    String plain = "copied";
+                    try {
+                        new forge.ai.simulation.GameCopier(ai.getGame()).makeCopy();
+                    } catch (final RuntimeException e) {
+                        plain = String.valueOf(e.getMessage());
+                    }
+                    check(plain.startsWith("Couldn't map"),
+                            "control: Forge's own GameCopier fails on a sideboard card (" + plain + ")");
+                    final LenientGameCopier cp = new LenientGameCopier(ai.getGame());
+                    final forge.game.Game copy = cp.makeCopy(null, ai);
+                    check(copy != null && cp.unmapped() > 0,
+                            "LenientGameCopier copies it, " + cp.unmapped() + " stand-in(s): " + cp.unmappedNames());
+                    final Player aiC = (Player) cp.find(ai);
+                    check(names(aiC.getCardsIn(ZoneType.Battlefield)).contains("Tarmogoyf"),
+                            "the copy holds the battlefield Tarmogoyf");
+                });
+
+        // 3. A copier error inside the search: Forge's own answer, counted.
+        final List<String> castBoard = List.of(
+                "humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN2",
+                "humanbattlefield=Forest", "humanhand=Lightning Bolt", "humanlibrary=Forest;Forest;Forest",
+                "aihand=Typhoid Rats", "ailibrary=Swamp;Swamp;Swamp", "aibattlefield=Swamp|Id:30");
+        scenario("search-copy-fails", castBoard, PolicyLobbyPlayerAi.Outlets.OFF, quick, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            ctl.search().failCopyForTest(new RuntimeException("Couldn't map test"));
+            final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+            check(pick != null && pick.size() == 1 && "Typhoid Rats".equals(pick.get(0).getHostCard().getName()),
+                    "a copier error -> Forge's own play, Typhoid Rats (got " + pick + ")");
+            check(Integer.valueOf(1).equals(ctl.counts().get("search.fallback.copyError")),
+                    "and it is counted (" + ctl.counts() + ")");
+        });
+
+        // 4. The same board, searched for real: rollouts run, the budget holds,
+        //    and the answer is one of the candidates.
+        scenario("search-runs", castBoard, PolicyLobbyPlayerAi.Outlets.OFF, quick, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final long t0 = System.nanoTime();
+            final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+            final long ms = (System.nanoTime() - t0) / 1_000_000L;
+            final java.util.Map<String, Integer> c = ctl.counts();
+            check(c.getOrDefault("search.rollouts", 0) >= 2 && c.getOrDefault("search.rolloutErrors", 0) == 0,
+                    "the search ran " + c.getOrDefault("search.rollouts", 0) + " rollout(s), "
+                    + c.getOrDefault("search.rounds", 0) + " round(s), no errors (" + c + ")");
+            check(ms < quick.budgetMs + 2000, "inside its budget (" + ms + " ms for " + quick.budgetMs + ")");
+            check(pick == null || "Typhoid Rats".equals(pick.get(0).getHostCard().getName()),
+                    "it answers Typhoid Rats or pass (got " + pick + ")");
+            check(ai.getWeakestOpponent().getCardsIn(ZoneType.Hand).size() == 1
+                    && "Lightning Bolt".equals(ai.getWeakestOpponent().getCardsIn(ZoneType.Hand).get(0).getName()),
+                    "the real game is untouched: the opponent still holds its Lightning Bolt");
+        });
+
+        // 5. Attacks: two Bears into an empty board at 4 life -- the search runs
+        //    and keeps (or finds) the lethal attack.
+        scenario("search-attack", List.of(
+                "humanlife=4", "ailife=20", "turn=5", "activeplayer=ai", "activephase=COMBAT_DECLARE_ATTACKERS",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp",
+                "aibattlefield=Grizzly Bears;Grizzly Bears;Forest"), PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=a"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
+                    ai.getGame().getPhaseHandler().setCombat(combat);
+                    combat.initConstraints();
+                    ctl.declareAttackers(ai, combat);
+                    final java.util.Map<String, Integer> c = ctl.counts();
+                    check(c.getOrDefault("search.a.considered", 0) == 1 && c.getOrDefault("search.rollouts", 0) >= 2
+                            && c.getOrDefault("search.rolloutErrors", 0) == 0,
+                            "the attack search ran (" + c + ")");
+                    check(combat.getAttackers().size() == 2, "both Bears attack for lethal (got "
+                            + combat.getAttackers() + "; " + ctl.events() + ")");
+                });
     }
 
     static boolean targets(final forge.game.spellability.SpellAbility sa, final Player p) {
@@ -730,6 +1030,11 @@ public final class AiBench {
 
     static void scenario(final String name, final List<String> state, final PolicyLobbyPlayerAi.Outlets mode,
                          final Body body) throws Exception {
+        scenario(name, state, mode, null, body);
+    }
+
+    static void scenario(final String name, final List<String> state, final PolicyLobbyPlayerAi.Outlets mode,
+                         final SearchConfig search, final Body body) throws Exception {
         final Deck lands = new Deck("lands");
         final PaperCard swamp = FModel.getMagicDb().getCommonCards().getCard("Swamp");
         final CardPool main = lands.getMain();
@@ -737,7 +1042,8 @@ public final class AiBench {
         final RegisteredPlayer r0 = new RegisteredPlayer(lands);
         r0.setPlayer(Bootstrap.createAiSeat("Human", 0, Bootstrap.DEFAULT_AI_PROFILE, null, PolicyLobbyPlayerAi.Outlets.OFF));
         final RegisteredPlayer r1 = new RegisteredPlayer(lands);
-        final PolicyLobbyPlayerAi aiLp = Bootstrap.createAiSeat("Ai", 1, Bootstrap.DEFAULT_AI_PROFILE, null, mode);
+        final PolicyLobbyPlayerAi aiLp = Bootstrap.createAiSeat("Ai", 1, Bootstrap.DEFAULT_AI_PROFILE, null, mode,
+                search);
         r1.setPlayer(aiLp);
         final GameRules rules = new GameRules(GameType.Constructed);
         rules.setGamesPerMatch(1);

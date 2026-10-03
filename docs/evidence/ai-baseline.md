@@ -85,6 +85,12 @@ five games are too few to call it stronger. Neither is a usable opponent on thes
 shipped; the roadmap's search must copy games itself or survive the copier's
 failure per decision.
 
+*Later (D313, `search-ai.md` §4):* the cause is the **sideboard**. A static
+ability that works in all zones also affects the card's copy in the sideboard,
+a zone `GameCopier` never copies, and `StaticEffect.removeMapped` cannot map it;
+`mtgtable.ai.LenientGameCopier` maps such cards to a zoneless stand-in, and the
+search's copier errors on these cubes went to zero.
+
 ## 4. Sacrifice outlets — what Forge does, and the policy (D310)
 
 **What Forge does with them** (400 games, `pairs-sac.txt`, both seats plain
