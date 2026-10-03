@@ -1,0 +1,50 @@
+==== J010 run1 started 2026-10-03T13:27:09-04:00 in unit lab-J010-run1, 3 worker(s)
+ai-bench: run shake-bench, 3 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/shake-bench
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J010.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+== Default vs Default
+  games 48: A 24, B 24, draws 0 (timeouts 0, engine errors 0)
+  A win rate 50.0% of 48 decisive  (95% Wilson CI 36.4-63.6%)
+  focus deck (first of each pair) win rate 25.0% of 48  (95% CI 14.9-38.8%)
+  game time mean 4.1 s, median 2.3 s, max 38.3 s; turns mean 19.7; AI eval timeouts 2 (0.04/game)
+  A vs the known 50%: 50.0% over 24 deal(s) (24 mirrored, both sides played), 95% CI 45.9-54.1%, p = 1.000 (-0 Elo, CI -28 to +28)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {cast.Blood Artist=8, cast.Cauldron Familiar=9, cast.Deadly Dispute=7, cast.Grim Haruspex=5}
+  B counters:     {cast.Blood Artist=8, cast.Cauldron Familiar=9, cast.Deadly Dispute=7, cast.Grim Haruspex=5}
+  focus counters: {}
+ai-bench: run shake-bench, 3 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/shake-bench
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J010.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+== Default vs Default
+  games 48: A 24, B 24, draws 0 (timeouts 0, engine errors 0)
+  A win rate 50.0% of 48 decisive  (95% Wilson CI 36.4-63.6%)
+  focus deck (first of each pair) win rate 25.0% of 48  (95% CI 14.9-38.8%)
+  game time mean 4.1 s, median 2.3 s, max 38.3 s; turns mean 19.7; AI eval timeouts 2 (0.04/game)
+  A vs the known 50%: 50.0% over 24 deal(s) (24 mirrored, both sides played), 95% CI 45.9-54.1%, p = 1.000 (-0 Elo, CI -28 to +28)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {cast.Blood Artist=8, cast.Cauldron Familiar=9, cast.Deadly Dispute=7, cast.Grim Haruspex=5}
+  B counters:     {cast.Blood Artist=8, cast.Cauldron Familiar=9, cast.Deadly Dispute=7, cast.Grim Haruspex=5}
+  focus counters: {}
+cube lab: cubes/synergy-cube-180.md, grid, 12 draft(s) from seed 77, best of 1, 3 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/cubelab/runs/shake-lab
+facts: booting the engine to look up 180 cards ...
+facts: 2.1 s
+drafted and built 12 draft(s) in 0.1 s; playing 1 game each on 3 worker(s)
+[1/12] seed 77: A:WB 1-0 B:UG  games A
+[2/12] seed 78: A:BG 1-0 B:UR  games A
+[3/12] seed 80: A:UR+g 0-1 B:WG  games B
+[4/12] seed 79: A:WG 0-1 B:WU  games B
+[5/12] seed 82: A:WU 0-1 B:WG  games B
+[6/12] seed 84: A:WU 1-0 B:UG+w  games A
+[7/12] seed 83: A:WU 0-1 B:UG+b  games B
+[8/12] seed 85: A:UG 0-1 B:UB  games B
+[9/12] seed 87: A:UG+b 0-1 B:WB+u  games B
+[10/12] seed 81: A:WG 1-0 B:UB  games A
+[11/12] seed 86: A:UG 1-0 B:WU  games A
+[12/12] seed 88: A:UB 0-1 B:WG  games B
+matches: 19 s for 12 (1.6 s a draft wall-clock on 3 worker(s))
+done in 22 s -> var/cubelab/runs/shake-lab/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/runs/shake-lab

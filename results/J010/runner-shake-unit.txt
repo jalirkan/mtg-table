@@ -1,0 +1,5 @@
+Slice=forgecoach-lab.slice
+MemoryHigh=20723217203
+MemoryMax=22978075033
+Nice=10
+KillMode=control-group

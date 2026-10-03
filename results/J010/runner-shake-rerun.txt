@@ -1,0 +1,15 @@
+ai-bench: run shake-bench, 3 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/shake-bench
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J010.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+== Default vs Default
+  games 48: A 24, B 24, draws 0 (timeouts 0, engine errors 0)
+  A win rate 50.0% of 48 decisive  (95% Wilson CI 36.4-63.6%)
+  focus deck (first of each pair) win rate 25.0% of 48  (95% CI 14.9-38.8%)
+  game time mean 4.1 s, median 2.3 s, max 38.3 s; turns mean 19.7; AI eval timeouts 2 (0.04/game)
+  A vs the known 50%: 50.0% over 24 deal(s) (24 mirrored, both sides played), 95% CI 45.9-54.1%, p = 1.000 (-0 Elo, CI -28 to +28)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {cast.Blood Artist=8, cast.Cauldron Familiar=9, cast.Deadly Dispute=7, cast.Grim Haruspex=5}
+  B counters:     {cast.Blood Artist=8, cast.Cauldron Familiar=9, cast.Deadly Dispute=7, cast.Grim Haruspex=5}
+  focus counters: {}
