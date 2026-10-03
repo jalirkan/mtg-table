@@ -6,7 +6,7 @@
 
     python3 tools/ml/matchup.py train <run-dirs or roots>... --out var/ml/matchup
         [--facts var/cubelab/facts] [--holdout-cubes all|a,b] [--boot 20] [--embed N]
-    python3 tools/ml/matchup.py design --model var/ml/matchup --target-cube synergy --out proposed.md
+    python3 tools/ml/matchup.py design --model var/ml/matchup --target-cube synergy --out proposed.md [--verify-seed 800000000]
 
 WHY ONE MODEL.  A card's win rate in one cube mostly measures the deck and
 archetype it sat in, and the same card in another cube is rated again from
@@ -47,16 +47,31 @@ tau by the same cross-validation; (c) per-cube -- meta.json's shrunk card win ra
 the training games, a deck scored by its spells' mean logit rate (a bridge
 deck's card rated in its source cube), logit P = alpha (A - B) + beta s.
 
-UNCERTAINTY by DRAFT, never by game: a card's games come in clumps against
-the same deck, so the split is by draft (a hash of the draft id: 70/15/15),
-the intervals on held-out log-loss bootstrap over drafts, and a card's power
-SD is the spread of M0 refitted on bootstrap resamples of the training DRAFTS
-(`--boot`, 20).
+UNCERTAINTY.  The split is by draft (a hash of the draft id: 70/15/15) and
+the intervals on held-out log-loss bootstrap over drafts: a draft's games
+share both decks.  A card's power SD is its LAPLACE POSTERIOR SD (sdPost,
+D342): sqrt(diag(A H^-1 A')) at the MAP, A taking theta to the centred powers.
+The spread of M0 refitted on bootstrap resamples of the training drafts
+(`--boot`, 20) is kept as sdBoot, a misspecification check only -- it is the
+spread of a SHRUNK estimate, ~0 for a card with no games, and understated the
+error 2-15x for the least-seen cards (methodology review 2, N1).  The prior
+widths come from the Laplace evidence when every draft has one game
+(`--tau-by auto`; the queue's default), else the grouped cross-validation.
+
+LEFT OUT (D340, D341, D343).  Games played with an AI-ladder deck-set deck,
+matched card for card (reserved.py); with `--ver`, games of other lab
+versions.  AI-LIMITED cards (Forge's AI:RemoveDeck:All) are not rated: they
+stay at their feature prior and one shared column takes their dead weight.
+
+BALANCE (D342).  Each deck's predicted win rate against the cube's other
+decks; the SD across decks, de-biased for shrinkage over draws from M1's
+Laplace posterior, with an interval and a reliability (compare cubes only
+when their reliabilities are alike).
 
 OUTPUTS (--out): power.tsv (every card of every committed cube on ONE scale:
 power in logits per copy relative to the average nonland card, x 25 ~ points
-of win rate at even odds, its bootstrap SD, the part its features predict,
-its games, its cubes), cube-dev.tsv (M1's per-cube deviations), balance.json
+of win rate at even odds, sdPost, sdBoot, the part its features predict,
+its games, ai = limited | random, its cubes), cube-dev.tsv (M1's per-cube deviations), balance.json
 and report.md (the held-out tables, calibration, held-out cubes, the
 balance numbers, bridge composition, overlap), games.jsonl, model.json (M0,
 M1 as plain numbers).  numpy is required; torch only for M2.
@@ -80,11 +95,14 @@ except ImportError:  # pragma: no cover
     np = None  # type: ignore
 
 DEFAULTS = {
-    "tauGrid": [0.002, 0.005, 0.01, 0.02, 0.035, 0.05, 0.07, 0.1, 0.15, 0.25],
+    "tauGrid": [0.002, 0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.085, 0.1, 0.15, 0.25],
     "folds": 5,
     "tauWGrid": [0.003, 0.01, 0.03],
     "tauCubeGrid": [0.01, 0.03, 0.06, 0.1],
     "betaPrior": 1.0, "shrinkK": 20.0, "boot": 20,
+    "tauAi": 0.25,       # prior SD of the AI-limited cards' shared per-copy effect (D343)
+    "balanceDraws": 200,  # posterior draws for the de-biased balance number (D342)
+    "balanceRef": 400,    # a deck's win rate is against at most this many of the cube's decks
 }
 
 
@@ -236,43 +254,71 @@ def log_evidence(Z, y, prec, th, logdet_h: float) -> float:
 
 
 class Linear:
-    """M0 / M1 / the plain additive baseline: theta = [w (features), b (cards), d (card x cube), beta]."""
+    """M0 / M1 / the plain additive baseline: theta = [w (features), b (cards), d (card x cube), a (AI-limited), beta].
 
-    def __init__(self, X: Optional[np.ndarray], data: Data, cube_dev: bool):
+    AI-LIMITED cards (`excl`, Forge's AI:RemoveDeck:All; D343) are kept out of the likelihood as cards: their
+    columns are zero, so their b_c stays at its prior and they teach w nothing, and ONE shared column, the
+    deck difference in how many AI-limited cards each deck holds, takes their dead weight (Forge's pilot
+    seldom casts them) so it is not blamed on their deckmates.  Their power is what their features
+    predict, and power.tsv marks them `limited`: unrated, never a blank."""
+
+    def __init__(self, X: Optional[np.ndarray], data: Data, cube_dev: bool, excl: Optional[np.ndarray] = None):
         self.X, self.data, self.cube_dev = X, data, cube_dev
         self.F = 0 if X is None else X.shape[1]
         self.V = len(data.vocab)
         self.C = data.cc.shape[1] if cube_dev else 0
+        self.excl = excl if excl is not None and excl.any() else None
+        self.A = 1 if self.excl is not None else 0
+        self.keep = None if self.excl is None else (~self.excl).astype(np.float64)
+        self.cc_keep = None
+        if self.excl is not None and cube_dev:
+            self.cc_keep = np.ones(self.C)
+            for (c, _cb), j in data.cc_index.items():
+                if self.excl[c]:
+                    self.cc_keep[j] = 0.0
+
+    def lin(self, counts: np.ndarray, cc: Optional[np.ndarray]) -> np.ndarray:
+        """The design rows of a signed card-count matrix (and its card x cube counts): strength = lin @ theta."""
+        D = counts.astype(np.float64)
+        Dm = D if self.keep is None else D * self.keep
+        parts = []
+        if self.X is not None:
+            parts.append(Dm @ self.X)
+        parts.append(Dm)
+        if self.cube_dev:
+            parts.append(cc if self.cc_keep is None else cc * self.cc_keep)
+        if self.A:
+            parts.append(D[:, self.excl].sum(1, keepdims=True))
+        return np.concatenate(parts, axis=1)
 
     def design(self, idx: np.ndarray) -> np.ndarray:
         d = self.data
-        parts = []
-        if self.X is not None:
-            parts.append(d.D[idx] @ self.X)
-        parts.append(d.D[idx])
-        if self.cube_dev:
-            parts.append(d.cc[idx])
-        parts.append(d.s[idx][:, None])
-        return np.concatenate(parts, axis=1).astype(np.float64)
+        Z = self.lin(d.D[idx], d.cc[idx] if self.cube_dev else None)
+        return np.concatenate([Z, d.s[idx][:, None]], axis=1).astype(np.float64)
 
     def prec(self, tau: float, tauW: float, tauCube: float) -> np.ndarray:
         return np.concatenate([np.full(self.F, 1 / tauW ** 2), np.full(self.V, 1 / tau ** 2),
-                               np.full(self.C, 1 / tauCube ** 2), [1 / DEFAULTS["betaPrior"] ** 2]])
+                               np.full(self.C, 1 / tauCube ** 2), np.full(self.A, 1 / DEFAULTS["tauAi"] ** 2),
+                               [1 / DEFAULTS["betaPrior"] ** 2]])
 
     def fit(self, idx: np.ndarray, tau: float, tauW: float = 1.0, tauCube: float = 1.0, wt=None, theta0=None, Z=None):
         Z = self.design(idx) if Z is None else Z
         pr = self.prec(tau, tauW, tauCube)
         th, ld = fit_map(Z, self.data.y[idx], pr, wt, theta0)
-        self.theta, self.taus = th, (tau, tauW, tauCube)
+        self.theta, self.taus, self.fitted = th, (tau, tauW, tauCube), idx
         self.evidence = log_evidence(Z, self.data.y[idx], pr, th, ld)
         return self
 
     def select(self, idx: np.ndarray, taus: Sequence[float], tauWs: Sequence[float], tauCubes: Sequence[float],
-               folds: int = DEFAULTS["folds"]) -> List[Tuple[float, float, float, float, float]]:
-        """Choose the prior widths by K-fold cross-validation GROUPED BY DRAFT (a draft's games, which share both
-        decks, are never split), then refit on all of `idx`.  The Laplace evidence is computed too and kept as a
-        diagnostic: it treats games as independent, so with clumped games it trusts the data too much and picks
-        too loose a prior.  Returns the grid: (tau, tauW, tauCube, cv log-loss, evidence)."""
+               folds: int = DEFAULTS["folds"], by: str = "cv") -> List[Tuple[float, float, float, float, float]]:
+        """Choose the prior widths, then refit on all of `idx`.  Returns the grid: (tau, tauW, tauCube, cv log-loss, evidence).
+
+        by="cv": K-fold cross-validation GROUPED BY DRAFT (a draft's games, which share both decks, are never split);
+        the Laplace evidence is kept as a diagnostic -- with several games per draft it trusts the data too much
+        (D324).  by="evidence": the widths that maximise the Laplace evidence (type-II maximum likelihood), no
+        folds.  With ONE game per draft (the queue's default) the games are independent and the evidence is
+        sound; in the simulation (matchup_sim.py, D342) it lands on the true tau where CV's choice is noisy and
+        low, and the posterior SDs and the de-biased balance inherit whichever tau is chosen."""
         fold = np.array([int(hashlib.sha1(("fold" + self.data.drafts[i]).encode()).hexdigest()[:8], 16) % folds for i in idx])
         Z = self.design(idx)
         y = self.data.y[idx]
@@ -281,7 +327,7 @@ class Linear:
         for t, tw, tc in combos:
             pr = self.prec(t, tw, tc)
             ll = 0.0
-            for k in range(folds):
+            for k in (range(folds) if by == "cv" else []):
                 trk, tek = fold != k, fold == k
                 if not tek.any() or not trk.any():
                     continue
@@ -289,8 +335,9 @@ class Linear:
                 p = np.clip(sigmoid(Z[tek] @ th), 1e-9, 1 - 1e-9)
                 ll -= float(np.sum(y[tek] * np.log(p) + (1 - y[tek]) * np.log(1 - p)))
             self.fit(idx, t, tw, tc, Z=Z)
-            grid.append((t, tw, tc, ll / len(idx), self.evidence))
-        best = min(grid, key=lambda g: (g[3], g[0]))
+            grid.append((t, tw, tc, ll / len(idx) if by == "cv" else float("nan"), self.evidence))
+        best = min(grid, key=lambda g: (g[3], g[0])) if by == "cv" else max(grid, key=lambda g: (g[4], -g[0]))
+        self.tau_by = by
         self.fit(idx, best[0], best[1], best[2], Z=Z)
         self.grid = grid
         return grid
@@ -312,6 +359,11 @@ class Linear:
         return self.theta[self.F + self.V:self.F + self.V + self.C]
 
     @property
+    def ai_coef(self) -> float:
+        """The shared per-copy effect of an AI-limited card in Forge's games (0 when there are none)."""
+        return float(self.theta[self.F + self.V + self.C]) if self.A else 0.0
+
+    @property
     def beta(self) -> float:
         return float(self.theta[-1])
 
@@ -321,6 +373,45 @@ class Linear:
 
     def prior_power(self) -> np.ndarray:
         return self.X @ self.w if self.X is not None else np.zeros(self.V)
+
+    # ---------------------------------------------------------- the Laplace posterior (D342)
+
+    def posterior_cov(self) -> np.ndarray:
+        """Sigma = H^-1 at the MAP, H = Z' W Z + diag(prec), over the games the model was fitted on.  In the dual regime
+        (fewer games than parameters) by Woodbury: Sigma = L - (Z L)' (R^-1 + Z L Z')^-1 (Z L), L = diag(1/prec)."""
+        Z = self.design(self.fitted)
+        pr = self.prec(*self.taus)
+        p = sigmoid(Z @ self.theta)
+        r = np.maximum(p * (1 - p), 1e-12)
+        n, d = Z.shape
+        if n < d:
+            ZL = Z / pr
+            K = ZL @ Z.T
+            K[np.diag_indices(n)] += 1.0 / r
+            S = -ZL.T @ np.linalg.solve(K, ZL)
+            S[np.diag_indices(d)] += 1.0 / pr
+        else:
+            H = (Z * r[:, None]).T @ Z
+            H[np.diag_indices(d)] += pr
+            S = np.linalg.inv(H)
+        return (S + S.T) / 2
+
+    def power_map(self, centre: np.ndarray) -> np.ndarray:
+        """The V x len(theta) matrix taking theta to each card's power relative to the mean of the `centre` cards."""
+        u = centre / centre.sum()
+        A = np.zeros((self.V, len(self.theta)))
+        if self.X is not None:
+            A[:, :self.F] = self.X - u @ self.X
+        A[:, self.F:self.F + self.V] = np.eye(self.V) - u[None, :]
+        return A
+
+    def power_sd_post(self, centre: np.ndarray, cov: Optional[np.ndarray] = None) -> np.ndarray:
+        """Each card's posterior SD of its centred power: sqrt(diag(A Sigma A')).  Unlike a bootstrap of the MAP
+        (which measures how much the SHRUNK estimate moves, ~0 for an unseen card) this is the uncertainty
+        about the card itself: tau for an unseen card, shrinking as its games add up (review 2, N1)."""
+        S = self.posterior_cov() if cov is None else cov
+        A = self.power_map(centre)
+        return np.sqrt(np.maximum(np.einsum("ij,ij->i", A @ S, A), 0.0))
 
 
 def bootstrap_power(model: Linear, tr: np.ndarray, B: int, seed: int) -> np.ndarray:
@@ -450,32 +541,86 @@ def embed_model(X: np.ndarray, data: Data, tr: np.ndarray, va: np.ndarray, k: in
 
 # ------------------------------------------------------------------ balance and bridge composition
 
-def deck_strengths(model: Linear, data: Data, cube: str, power: np.ndarray) -> Optional[np.ndarray]:
-    """Each in-cube deck's strength under the model: sum of its cards' power (plus M1's deviations in that cube)."""
-    devs = np.zeros(len(data.vocab))
-    if model.cube_dev:
-        for (c, cb), j in data.cc_index.items():
-            if cb == cube:
-                devs[c] = model.d[j]
-    seen, S = set(), []
+def cube_decks(model: Linear, data: Data, cube: str) -> Optional[np.ndarray]:
+    """Each in-cube deck the data holds, once, as a design row (model.lin): its strength is row @ theta -- the
+    summed power of its cards, M1's deviations in that cube, and the AI-limited column."""
+    ccmap = np.full(len(data.vocab), -1)
+    for (c, cb), j in data.cc_index.items():
+        if cb == cube:
+            ccmap[c] = j
+    has = ccmap >= 0
+    seen, rows = set(), []
     for g, r in enumerate(data.games):
         if r["kind"] != "normal" or r["cubes"][0] != cube:
             continue
         for key, C in ((r["draft"] + "A", data.CA[g]), (r["draft"] + "B", data.CB[g])):
             if key not in seen:
                 seen.add(key)
-                S.append(float(C @ (power + devs)))
-    return np.array(S) if len(S) >= 6 else None
+                cc = None
+                if model.cube_dev:
+                    cc = np.zeros((1, data.cc.shape[1]))
+                    cc[0, ccmap[has]] = C[has]
+                rows.append(model.lin(C[None, :], cc)[0])
+    if len(rows) < 6:
+        return None
+    Q = np.array(rows)
+    return np.concatenate([Q, np.zeros((len(Q), 1))], axis=1)  # beta's column: a deck's strength has no play term
 
 
-def spread(S: np.ndarray, beta: float) -> Dict[str, float]:
-    """Each deck's predicted win rate against the cube's other decks, play and draw averaged; their SD and IQR."""
-    diff = S[:, None] - S[None, :]
+def deck_strengths(model: Linear, data: Data, cube: str, theta: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
+    """Each in-cube deck's strength under the model (at its MAP, or at `theta`)."""
+    Q = cube_decks(model, data, cube)
+    return None if Q is None else Q @ (model.theta if theta is None else theta)
+
+
+def win_rates(S: np.ndarray, beta: float, ref: Optional[np.ndarray] = None) -> np.ndarray:
+    """Each deck's predicted win rate against the cube's other decks (or the `ref` subset of them), play and draw averaged."""
+    ref = np.arange(len(S)) if ref is None else ref
+    diff = S[:, None] - S[ref][None, :]
     P = (sigmoid(diff + beta) + sigmoid(diff - beta)) / 2
-    np.fill_diagonal(P, 0)
-    r = P.sum(1) / (len(S) - 1)
+    self_ = (np.arange(len(S))[:, None] == ref[None, :])
+    P[self_] = 0
+    return P.sum(1) / np.maximum((~self_).sum(1), 1)
+
+
+def spread(S: np.ndarray, beta: float, ref: Optional[np.ndarray] = None) -> Dict[str, float]:
+    """Each deck's predicted win rate against the cube's other decks, play and draw averaged; their SD and IQR."""
+    r = win_rates(S, beta, ref)
     return {"decks": int(len(S)), "sd": float(r.std(ddof=1)), "iqr": float(np.percentile(r, 75) - np.percentile(r, 25)),
             "best": float(r.max()), "worst": float(r.min())}
+
+
+def balance_posterior(model: Linear, Q: np.ndarray, cov: np.ndarray, draws: int, seed: int, ref_max: int = 400) -> Dict[str, Any]:
+    """The balance number DE-BIASED for shrinkage (D342; review 2, N2).
+
+    The spread of the MAP's predicted win rates is biased toward "balanced", by an amount that shrinks with the
+    games a cube has: the posterior mean of every card is pulled toward 0.  By the law of total variance the
+    spread of the decks' TRUE strengths is the spread of their posterior means plus the posterior variance the
+    shrinkage left out, so the number is computed over draws theta_s ~ N(theta_hat, Sigma) (the Laplace
+    posterior) and reported as sqrt(mean_s SD_s^2), with the 2.5-97.5% of SD_s as its interval.
+    `reliability` = SD(MAP)^2 / that^2 is the share of the spread the data has pinned down: compare two cubes'
+    balance only when their reliabilities are alike (a sample-size caveat, not a correction)."""
+    rng = np.random.default_rng(seed)
+    K = len(Q)
+    ref = np.sort(rng.choice(K, ref_max, replace=False)) if K > ref_max else None
+    point = spread(Q @ model.theta, model.beta, ref)
+    # draw only along the columns a deck touches (plus beta): the rest cannot move a strength
+    cols = np.nonzero(np.abs(Q).sum(0) > 0)[0]
+    cols = np.union1d(cols, [len(model.theta) - 1])
+    Sc = cov[np.ix_(cols, cols)]
+    L = np.linalg.cholesky(Sc + 1e-12 * np.eye(len(cols)) * max(1.0, float(np.abs(np.diag(Sc)).max())))
+    sds, rates = [], []
+    for _ in range(draws):
+        th = model.theta.copy()
+        th[cols] += L @ rng.standard_normal(len(cols))
+        r = win_rates(Q @ th, float(th[-1]), ref)
+        sds.append(r.std(ddof=1))
+        rates.append(r)
+    sds = np.array(sds)
+    deb = float(np.sqrt(np.mean(sds ** 2)))
+    noise = float(np.sqrt(np.mean(np.var(np.array(rates), axis=0, ddof=1))))
+    return {**point, "sdShrunk": point["sd"], "sd": deb, "sdLo": float(np.percentile(sds, 2.5)), "sdHi": float(np.percentile(sds, 97.5)),
+            "deckSdPost": noise, "reliability": float(point["sd"] ** 2 / deb ** 2) if deb > 0 else float("nan"), "draws": draws}
 
 
 def bridge_composition(games: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -534,18 +679,20 @@ def fit_ladder(X, data, tr, va, h, embed: int, seed: int) -> Tuple[Dict[str, np.
     info: Dict[str, Any] = {}
     preds["(a) coin"] = coin(data, tr)
     fitset = np.concatenate([tr, va])  # cross-validation inside picks the widths, so validation games can train the linear models
-    bt = Linear(None, data, False)
-    bt.select(fitset, h["tauGrid"], [1.0], [1.0])
+    excl = h.get("excl")
+    bt = Linear(None, data, False, excl)
+    by = h.get("tauBy", "cv")
+    bt.select(fitset, h["tauGrid"], [1.0], [1.0], by=by)
     preds["(b) additive: Bradley-Terry on cards"] = bt.predict()
     info["bt"] = bt
     if "land" in h:
         preds["(c) per-cube shrunk win rates (meta.json)"] = per_cube(data, fitset, h["land"], h["shrinkK"])
-    m0 = Linear(X, data, False)
-    info["m0grid"] = m0.select(fitset, h["tauGrid"], h["tauWGrid"], [1.0])
+    m0 = Linear(X, data, False, excl)
+    info["m0grid"] = m0.select(fitset, h["tauGrid"], h["tauWGrid"], [1.0], by=by)
     preds["M0 pooled BT + feature prior"] = m0.predict()
     info["m0"] = m0
-    m1 = Linear(X, data, True)
-    m1.select(fitset, [m0.taus[0]], [m0.taus[1]], h["tauCubeGrid"])
+    m1 = Linear(X, data, True, excl)
+    m1.select(fitset, [m0.taus[0]], [m0.taus[1]], h["tauCubeGrid"], by=by)
     preds["M1 = M0 + per-cube deviations"] = m1.predict()
     info["m1"] = m1
     if embed > 0:
@@ -561,7 +708,11 @@ def train_cmd(a: argparse.Namespace) -> int:
         return 0
     h = dict(DEFAULTS)
     os.makedirs(a.out, exist_ok=True)
-    games, st = MD.collect(a.paths)
+    import reserved as R
+    res = {} if a.keep_reserved else R.reserved_decks(a.repo)
+    games, st = MD.collect(a.paths, reserved=res, vers=[v for v in a.ver.split(",") if v] or None)
+    print(f"reserved decks (D340): {len(res)} deck-set decks; {st['reserved']} game(s) played with one dropped; "
+          f"{st['otherVersion']} game(s) of other lab versions left out")
     if len(games) < 20:
         print(f"matchup.py: only {len(games)} decisive games -- need more")
         return 1
@@ -576,6 +727,14 @@ def train_cmd(a: argparse.Namespace) -> int:
     data = Data(games, vocab)
     land = np.array([bool(facts.get(n, {}).get("land", info.get(n, {}).get("land", n in MD.BASICS))) for n in vocab])
     h["land"] = land
+    flags = MD.ai_flags(vocab, facts, info, a.repo)
+    excl = np.array([flags.get(n) == "All" for n in vocab]) if not a.rate_ai_limited else np.zeros(len(vocab), dtype=bool)
+    h["excl"] = excl
+    vc = MD.version_counts(games)
+    per_draft: Dict[str, int] = {}
+    for r in games:
+        per_draft[r["draft"]] = per_draft.get(r["draft"], 0) + 1
+    h["tauBy"] = a.tau_by if a.tau_by != "auto" else ("evidence" if max(per_draft.values()) == 1 else "cv")
     tr, va, te = data.idx(data.split == "train"), data.idx(data.split == "val"), data.idx(data.split == "test")
     nb = int((data.kind == "bridge").sum())
     print(f"{len(games)} games ({nb} bridge), {len(set(data.drafts))} drafts; train {len(tr)} / val {len(va)} / test {len(te)}; "
@@ -585,8 +744,12 @@ def train_cmd(a: argparse.Namespace) -> int:
     L = ["# Matchup model: held-out results", "",
          f"**Sample:** {len(games)} decisive games ({nb} bridge) from {len(set(data.drafts))} drafts in {st['runs']} run folder(s); "
          f"{st['duplicates']} duplicate game(s) skipped. Split by draft: {len(tr)} train, {len(va)} validation, {len(te)} test games. "
-         f"{len(vocab)} cards, {len(feat['noFacts'])} of them without engine facts.", "",
-         f"**Prior widths by 5-fold cross-validation grouped by draft:** M0 tau = {m0.taus[0]} logits per card copy (deck-difference prior SD "
+         f"{len(vocab)} cards, {len(feat['noFacts'])} of them without engine facts. "
+         f"Deck-set decks (D340): {st['reserved']} game(s) dropped. Lab versions (D341): "
+         + ", ".join(f"`{v}` {n}" for v, n in sorted(vc.items())) + ". "
+         f"AI-limited (Forge AI:RemoveDeck:All, D343): {int(excl.sum())} card(s) not rated, one shared column instead "
+         f"(their per-copy effect in Forge's games: {m0.ai_coef:+.3f} logits).", "",
+         f"**Prior widths by {'5-fold cross-validation grouped by draft' if h['tauBy'] == 'cv' else 'the Laplace evidence (one game per draft, D342)'}:** M0 tau = {m0.taus[0]} logits per card copy (deck-difference prior SD "
          f"{m0.taus[0] * math.sqrt(46):.2f}), tauW = {m0.taus[1]}; M1 tauCube = {m1.taus[2]}; plain BT tau = {fit['bt'].taus[0]}. "
          f"Play/draw: beta = {m0.beta:+.3f} logits.", ""]
     L += table("Held-out drafts, all games (test split)", preds, data, te)
@@ -639,15 +802,19 @@ def train_cmd(a: argparse.Namespace) -> int:
                      f"{row['M0 pooled BT + feature prior']:.4f} | {row['M1 = M0 + per-cube deviations']:.4f} | {ci[0]:+.4f} [{ci[1]:+.4f}, {ci[2]:+.4f}] |")
         L.append("")
 
-    # power: M0 on train + validation, SD from the bootstrap over training drafts
+    # power: M0 on train + validation.  Its SD is the Laplace POSTERIOR SD (D342): sqrt(diag(A H^-1 A')) at the
+    # MAP; the bootstrap over training drafts is kept beside it as sdBoot, a misspecification check only (it
+    # measures how much the shrunk estimate moves, ~0 for a card with no games: review 2, N1).
     fitset = np.concatenate([tr, va])
     boots = bootstrap_power(m0, fitset, a.boot, a.seed) if a.boot > 1 else None
     in_cube = set(n for v in cubes.values() for n in v)
     centre = np.array([vocab[i] in in_cube and not land[i] for i in range(len(vocab))])
     pw = m0.power() - m0.power()[centre].mean()
     prior = m0.prior_power() - m0.prior_power()[centre].mean()
-    sd = (boots - boots[:, centre].mean(1, keepdims=True)).std(0, ddof=1) if boots is not None else np.full(len(vocab), np.nan)
+    sd_post = m0.power_sd_post(centre)
+    sd_boot = (boots - boots[:, centre].mean(1, keepdims=True)).std(0, ddof=1) if boots is not None else np.full(len(vocab), np.nan)
     games_one = ((data.CA[fitset] > 0) ^ (data.CB[fitset] > 0)).sum(0)
+    ai_col = ["limited" if excl[i] else ("random" if flags.get(vocab[i]) == "Random" else "") for i in range(len(vocab))]
     listed: Dict[str, List[str]] = {}
     for cid, names in cubes.items():
         for n in names:
@@ -655,34 +822,40 @@ def train_cmd(a: argparse.Namespace) -> int:
     order = np.argsort(-pw)
     with open(os.path.join(a.out, "power.tsv"), "w", encoding="utf-8") as fh:
         fh.write("# matchup model M0: card power in logits per copy, relative to the average nonland card of the committed cubes\n")
-        fh.write("# points = power x 25 (win-rate points at even odds); sd = bootstrap over training DRAFTS; prior = what the features alone predict;\n")
+        fh.write("# points = power x 25 (win-rate points at even odds); sdPost = the Laplace posterior SD (D342: use this one);\n")
+        fh.write("# sdBoot = SD over refits on bootstrap resamples of the training DRAFTS (a misspecification check: it understates the\n")
+        fh.write("# uncertainty of a shrunk estimate, most for the least-seen cards); prior = what the features alone predict;\n")
+        fh.write("# ai = limited: Forge's AI:RemoveDeck:All, NOT RATED -- power is its feature prior, never a verdict (D343); random: AI:RemoveDeck:Random.\n")
         fh.write(f"# games = games with the card in exactly one deck. tau {m0.taus[0]}, tauW {m0.taus[1]}, {len(fitset)} games.\n")
-        fh.write("name\tpower\tsd\tpoints\tprior\tgames\tland\tcubes\n")
+        fh.write("name\tpower\tsdPost\tsdBoot\tpoints\tprior\tgames\tland\tai\tcubes\n")
         for i in order:
-            fh.write(f"{vocab[i]}\t{pw[i]:.4f}\t{sd[i]:.4f}\t{pw[i] * 25:.2f}\t{prior[i]:.4f}\t{int(games_one[i])}\t{int(land[i])}\t{','.join(sorted(listed.get(vocab[i], [])))}\n")
+            fh.write(f"{vocab[i]}\t{pw[i]:.4f}\t{sd_post[i]:.4f}\t{sd_boot[i]:.4f}\t{pw[i] * 25:.2f}\t{prior[i]:.4f}\t{int(games_one[i])}\t{int(land[i])}\t{ai_col[i]}\t{','.join(sorted(listed.get(vocab[i], [])))}\n")
     with open(os.path.join(a.out, "cube-dev.tsv"), "w", encoding="utf-8") as fh:
         fh.write("name\tcube\tdeviation\n")
         for (c, cb), j in sorted(data.cc_index.items(), key=lambda kv: -abs(m1.d[kv[1]])):
             fh.write(f"{vocab[c]}\t{cb}\t{m1.d[j]:.4f}\n")
 
-    # balance: M1's deck strengths (M0's power + the cube's own deviations); range from M0's bootstrap powers
+    # balance: M1's deck strengths, de-biased over the Laplace posterior (D342)
     bal: Dict[str, Any] = {}
+    cov1 = m1.posterior_cov()
     L += ["## Balance: the predicted win-rate spread of the decks each cube produces", "",
-          "Every deck the cube produced in the data, against the cube's other decks, play and draw averaged. SD across decks in win-rate "
-          "points; the range is the 2.5-97.5 percentiles over the bootstrap refits (by draft). The model shrinks toward even odds, so "
-          "with few games this understates the true spread.", "",
-          "| cube | decks | SD (points) | bootstrap range | IQR | best deck | worst deck |", "|---|---|---|---|---|---|---|"]
+          "Every deck the cube produced in the data, against the cube's other decks (at most "
+          f"{DEFAULTS['balanceRef']} of them), play and draw averaged; the SD across decks in win-rate points. **SD** is de-biased for "
+          "shrinkage (D342): sqrt of the mean, over "
+          f"{a.balance_draws} draws from M1's Laplace posterior, of the squared SD, with the 2.5-97.5% of the draws as its "
+          "interval. **Shrunk** is the old number, the SD of the MAP's predictions, which is biased toward \"balanced\" by an amount that "
+          "depends on the games a cube has. **Reliability** = shrunk^2 / SD^2, the share of the spread the data has pinned down: "
+          "**compare two cubes only when their reliabilities are alike** -- otherwise the ranking is partly a ranking by sample size.", "",
+          "| cube | decks | SD (points) | 95% interval | shrunk | reliability | a deck's posterior SD | best deck | worst deck |",
+          "|---|---|---|---|---|---|---|---|---|"]
     for cube in sorted(cubes):
-        S = deck_strengths(m1, data, cube, m1.power())
-        if S is None:
+        Q = cube_decks(m1, data, cube)
+        if Q is None:
             continue
-        b = spread(S, m1.beta)
-        if boots is not None:
-            sds = [spread(x, m0.beta)["sd"] for x in (deck_strengths(m0, data, cube, bp) for bp in boots) if x is not None]
-            b["sdLo"], b["sdHi"] = float(np.percentile(sds, 2.5)), float(np.percentile(sds, 97.5))
+        b = balance_posterior(m1, Q, cov1, a.balance_draws, a.seed, DEFAULTS["balanceRef"])
         bal[cube] = b
-        rng_s = f"{b.get('sdLo', float('nan')) * 100:.1f}-{b.get('sdHi', float('nan')) * 100:.1f}"
-        L.append(f"| {cube} | {b['decks']} | {b['sd'] * 100:.1f} | {rng_s} | {b['iqr'] * 100:.1f} | {b['best'] * 100:.1f}% | {b['worst'] * 100:.1f}% |")
+        L.append(f"| {cube} | {b['decks']} | {b['sd'] * 100:.1f} | {b['sdLo'] * 100:.1f}-{b['sdHi'] * 100:.1f} | {b['sdShrunk'] * 100:.1f} | "
+                 f"{b['reliability']:.2f} | {b['deckSdPost'] * 100:.1f} | {b['best'] * 100:.1f}% | {b['worst'] * 100:.1f}% |")
     L.append("")
     comp = bridge_composition(games)
     L += ["## Bridge decks: how much of each deck came from each cube", "",
@@ -692,10 +865,15 @@ def train_cmd(a: argparse.Namespace) -> int:
         L.append(f"| {k} | {v['decks']} | {v['firstCubeShareMean']} | {v['decksOver75FromOneSide']} | {v['distinctCardsPlayed']} |")
     ov = MD.overlap_report(games, cubes)
     L += ["", "## Overlap", "", "```", json.dumps(ov, indent=1), "```", "",
-          "## Strongest and weakest cards (M0 power; x25 for win-rate points)", "", "| card | power | sd | prior | games | cubes |", "|---|---|---|---|---|---|"]
-    nl = [i for i in order if not land[i] and games_one[i] > 0]
+          "## Strongest and weakest cards (M0 power; x25 for win-rate points)", "",
+          "AI-limited cards are not ranked (D343). sdPost is the posterior SD; act on a card only where it is below about tau/2 (review 2, N7).", "",
+          "| card | power | sdPost | sdBoot | prior | games | cubes |", "|---|---|---|---|---|---|---|"]
+    nl = [i for i in order if not land[i] and games_one[i] > 0 and not excl[i]]
     for i in nl[:12] + nl[-6:]:
-        L.append(f"| {vocab[i]} | {pw[i]:+.3f} | {sd[i]:.3f} | {prior[i]:+.3f} | {int(games_one[i])} | {','.join(sorted(listed.get(vocab[i], [])))} |")
+        L.append(f"| {vocab[i]} | {pw[i]:+.3f} | {sd_post[i]:.3f} | {sd_boot[i]:.3f} | {prior[i]:+.3f} | {int(games_one[i])} | {','.join(sorted(listed.get(vocab[i], [])))} |")
+    lim = [vocab[i] for i in range(len(vocab)) if excl[i] and games_one[i] > 0]
+    if lim:
+        L += ["", f"AI-limited, not rated ({len(lim)} with games): " + " · ".join(sorted(lim))]
     L.append("")
     with open(os.path.join(a.out, "report.md"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(L) + "\n")
@@ -704,11 +882,14 @@ def train_cmd(a: argparse.Namespace) -> int:
         json.dump({"sample": {"games": len(games), "bridgeGames": nb, "drafts": len(set(data.drafts)), "train": len(tr), "val": len(va), "test": len(te)},
                    "taus": {"m0": m0.taus, "m1": m1.taus, "bt": fit["bt"].taus}, "test": test, "heldOutCubes": held,
                    "outOfFold": {k: {kk: vv for kk, vv in metrics(p, data.y).items() if kk != "calibration"} for k, p in oof.items()},
-                   "balance": bal, "bridge": comp, "overlap": ov}, fh, indent=1)
+                   "balance": bal, "bridge": comp, "overlap": ov, "reserved": {"games": st["reserved"], "decks": st["reservedDecks"]},
+                   "versions": vc, "aiLimited": {"cards": int(excl.sum()), "coef": m0.ai_coef}}, fh, indent=1)
     with open(os.path.join(a.out, "model.json"), "w", encoding="utf-8") as fh:
         json.dump({"vocab": vocab, "features": feat, "X": X.round(5).tolist(), "m0": {"theta": m0.theta.tolist(), "taus": m0.taus, "F": m0.F},
                    "m1": {"theta": m1.theta.tolist(), "taus": m1.taus, "cc": [[vocab[c], cb, j] for (c, cb), j in data.cc_index.items()]},
-                   "power": dict(zip(vocab, pw.round(5).tolist())), "powerSd": dict(zip(vocab, np.nan_to_num(sd).round(5).tolist())),
+                   "power": dict(zip(vocab, pw.round(5).tolist())), "powerSdPost": dict(zip(vocab, sd_post.round(5).tolist())),
+                   "powerSdBoot": dict(zip(vocab, np.nan_to_num(sd_boot).round(5).tolist())), "tau": m0.taus[0],
+                   "aiLimited": {n: f for n, f in flags.items()}, "versions": vc,
                    "land": dict(zip(vocab, land.tolist())), "facts": {n: facts.get(n) for n in vocab}}, fh)
     print("\n".join(L))
     return 0
@@ -727,12 +908,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     t.add_argument("--oof", type=int, default=1, help="1: also score every game out-of-fold (5 folds by draft); 0: the test split only")
     t.add_argument("--seed", type=int, default=1)
     t.add_argument("--repo", default=".")
+    t.add_argument("--keep-reserved", action="store_true", help="keep games played with an AI-ladder deck-set deck (default: drop them, D340)")
+    t.add_argument("--ver", default="", help="train on these lab versions only (comma-separated ids from drafts.jsonl's `ver`; D341)")
+    t.add_argument("--rate-ai-limited", action="store_true", help="rate AI:RemoveDeck:All cards like any other (default: not rated, D343)")
+    t.add_argument("--tau-by", choices=("auto", "cv", "evidence"), default="auto",
+                   help="how the prior widths are chosen: evidence (type-II ML; sound with one game per draft), cv (grouped by draft; "
+                        "D324's, for best-of-three runs), auto (evidence when every draft has one decisive game, else cv; D342)")
+    t.add_argument("--balance-draws", type=int, default=DEFAULTS["balanceDraws"], help="posterior draws for the de-biased balance number")
     d = sub.add_parser("design")
     d.add_argument("--model", required=True, help="a train --out folder")
     d.add_argument("--target-cube", required=True)
     d.add_argument("--size", type=int, default=180)
     d.add_argument("--iters", type=int, default=20000)
     d.add_argument("--max-swaps", type=int, default=20, help="at most this many cards changed from the target cube")
+    d.add_argument("--verify-seed", type=int, default=800_000_000,
+                   help="first seed of the verification job it prints (the 800,000,000+ range, seeds.ts); give each candidate its own block")
     d.add_argument("--seed", type=int, default=1)
     d.add_argument("--out", required=True)
     d.add_argument("--repo", default=".")

@@ -98,9 +98,15 @@ builds and plays nothing):
 | **confirm** | `tools/ai-bench/pairs-confirm.txt` | `run`, `sprt`, `league`, and `ratings`/`report` (which rate only the confirm set's games unless `--set all`) |
 
 Each cube's drafts, sorted by seed, are dealt alternately to dev and confirm,
-so the split is a function of the drafts. The committed sets are 10 drafts per
-cube from seed 9100 (`ai-ladder.sh decksets --per-cube 10 --seed 9100`):
-30 pairs each. The decks are under `tools/ai-bench/decks/sets/`. The old
+so the split is a function of the drafts. The sets are drafted at the
+**reserved seeds** 900,000,000+ (`ai-ladder.sh decksets --per-cube 10`, D340;
+`tools/cubelab/seeds.ts`): the cube lab's runs and the overnight queue refuse
+those seeds, so they never draft or play a deck-set deck, and the ML dataset
+builders also drop any game whose deck matches a deck-set deck card for card.
+The committed sets are 10 drafts per cube from seed 900,000,000, regenerated
+on 2026-10-03 (the first sets, at seeds 9100–9109, were inside the range the
+queue drafts, and the lab re-drafted them card for card): 30 pairs each.
+Results on the old sets carry their own `setHash` in the experiment log. The decks are under `tools/ai-bench/decks/sets/`. The old
 `pairs-cube.txt` (ten Forge-drafted pairs from two cubes) stays for D309–D314's
 numbers and as `--pairs` for anything that must compare with them. **Never tune
 on confirm**, and quote published numbers from confirm only.
