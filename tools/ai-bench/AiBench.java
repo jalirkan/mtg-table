@@ -657,6 +657,13 @@ public final class AiBench {
                 "humanbattlefield=Forest",
                 "aibattlefield=Goblin Bombardment;Blood Artist;Grizzly Bears;Grizzly Bears;Grizzly Bears;Mountain"),
             (ai, pol) -> check(pol.decide(ai) == null, "9 life vs the same board -> hold"));
+        // 4b. The lethal board again, but the opponent has its own Blood Artist: each of our
+        //     sacrifices also gains them 1, so the 8 becomes 4 -- hold.
+        scenario("lethal-vs-artist", List.of(
+                "humanlife=8", "ailife=20", "turn=5", "activeplayer=ai", "activephase=MAIN2",
+                "humanbattlefield=Forest;Blood Artist",
+                "aibattlefield=Goblin Bombardment;Blood Artist;Grizzly Bears;Grizzly Bears;Grizzly Bears;Mountain"),
+            (ai, pol) -> check(pol.decide(ai) == null, "8 life, but their Blood Artist gains 1 a death -> hold"));
         // 5. The finding: Forge's own choice never casts Viscera Seer; the policy does.
         scenario("cast-outlet", List.of(
                 "humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN2",

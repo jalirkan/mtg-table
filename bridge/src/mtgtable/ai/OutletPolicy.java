@@ -62,7 +62,8 @@ import forge.game.zone.ZoneType;
  * <p>This class asks that, six ways, each a {@link Situation}:
  * <ol>
  *   <li>{@link Situation#LETHAL} -- every creature we can sacrifice, through the
- *       best outlet, plus the drain triggers on the board ({@link #DRAINS}), is at
+ *       best outlet, plus the drain triggers on the board ({@link #DRAINS}) less
+ *       the opponent's per-death life gain ({@link #OPPONENT_GAIN_PER_DEATH}), is at
  *       least the opponent's life: sacrifice them all, one per priority, the
  *       drainers last.  Once begun it is committed for the rest of that step
  *       ({@code allIn}), because the damage sits on the stack while the life
@@ -118,11 +119,12 @@ public final class OutletPolicy {
     }
 
     /**
-     * Creatures whose own trigger drains the opponent when a creature of ours
+     * Permanents whose own trigger drains the opponent when a creature of ours
      * dies or is sacrificed, and by how much per death.  By name, because the
      * trigger shapes vary (a {@code ChangesZone} trigger with a {@code LoseLife}
-     * or {@code DealDamage} execute, a {@code Sacrificed} trigger); every name is
-     * one that counts its own death too.  Used only to decide LETHAL.
+     * or {@code DealDamage} execute); every name is one that counts its own
+     * death too.  Mayhem Devil is not here: its trigger is "any target", and
+     * Forge aims it where it likes.  Used only to decide LETHAL.
      */
     public static final Map<String, Integer> DRAINS = new TreeMap<>(Map.of(
             "Blood Artist", 1,
@@ -130,9 +132,26 @@ public final class OutletPolicy {
             "Cruel Celebrant", 1,
             "Falkenrath Noble", 1,
             "Bastion of Remembrance", 1,
-            "Mayhem Devil", 1,
             "Vindictive Vampire", 1,
             "Syr Konrad, the Grim", 1));
+
+    /**
+     * The OPPONENT's permanents that trigger on ANY creature dying -- ours
+     * included -- and gain them life per death (Blood Artist: "target player
+     * loses 1 life and you gain 1 life").  Each of our sacrifices then nets one
+     * less.  The first measured run lost nine games after an all-in sacrifice
+     * against two decks holding Blood Artist (docs/evidence/ai-baseline.md §4).
+     */
+    public static final Map<String, Integer> OPPONENT_GAIN_PER_DEATH = new TreeMap<>(Map.of(
+            "Blood Artist", 1,
+            "Falkenrath Noble", 1));
+
+    /** The opponent's permanents that hurt US per creature death or sacrifice (ours included). */
+    public static final Map<String, Integer> OPPONENT_HURT_PER_DEATH = new TreeMap<>(Map.of(
+            "Blood Artist", 1,
+            "Falkenrath Noble", 1,
+            "Syr Konrad, the Grim", 1,
+            "Mayhem Devil", 1));
 
     private final boolean act;
     private int allInTurn = -1;
@@ -392,12 +411,22 @@ public final class OutletPolicy {
             for (final Card c : ai.getCardsIn(ZoneType.Battlefield)) {
                 drainsAlive += drainOf(c);
             }
+            int oppGain = 0;
+            int oppHurt = 0;
+            for (final Card c : opp.getCardsIn(ZoneType.Battlefield)) {
+                oppGain += OPPONENT_GAIN_PER_DEATH.getOrDefault(c.getName(), 0);
+                oppHurt += OPPONENT_HURT_PER_DEATH.getOrDefault(c.getName(), 0);
+            }
             int total = 0;
             for (final Card v : victims) {
-                total += bestDmg + drainsAlive;   // a drainer counts its own death
+                total += bestDmg + drainsAlive - oppGain;   // a drainer counts its own death
                 drainsAlive -= drainOf(v);
             }
             if (total < opp.getLife()) {
+                return null;
+            }
+            // and do not die doing it: their Blood Artist drains us once per sacrifice
+            if (oppHurt > 0 && ai.canLoseLife() && oppHurt * victims.size() >= ai.getLife()) {
                 return null;
             }
         }
