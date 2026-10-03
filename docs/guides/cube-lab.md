@@ -439,7 +439,7 @@ decision has looked at. Each card is then assessed:
 | `note-cut` / `note-keep` | the notes file says `cut` / `keep` (or `try` for a card already in) |
 | `ai-limited` | Forge marks it `AI:RemoveDeck:All` or `:Random` (the pool's `forge_ai_flag`, or the engine's own facts): its numbers are reported, the status the AI evidence alone would give is shown beside them, and **only a note can cut it** |
 | `builder-limited` | every land: the lab's deckbuilder plays a dual or fetchland only in its own pair's decks and a colourless land (Mutavault) never, so a land's deck rate and win rate measure its pair, not the land; a land goes only by a note (the changelog lists the lands never played) |
-| `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the drafters pick by rating, so the data cannot tell a weak card from an underrated one; **never cut** — raise its rating in a ratings TSV (`tools/cubelab.sh ratings init`, edit, then `evolve … --ratings <tsv>`; the loop then judges every rating, the pool's too, by that file) to test it |
+| `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the deckbuilder plays by rating, so the data cannot tell a weak card from an underrated one; **never cut** — `--explore` (below, D356) judges it by forcing it into decks at random, or raise its rating in a ratings TSV (`tools/cubelab.sh ratings init`, edit, then `evolve … --ratings <tsv>`; the loop then judges every rating, the pool's too, by that file) |
 | `watch` | a lead — an on-colour play rate at or under `deadPlayRateHi`, or a win rate `watchWinMargin` over the mean — that has **not** passed its test: *insufficient data*, with the drafts per generation at which it would likely be discovered |
 
 **Discovery, then confirmation (D331).** About 180 cards are looked at every
@@ -595,6 +595,50 @@ the family almost nothing passes; the changelog's *insufficient data* table
 says how many drafts would find the rest. Two hundred drafts a generation
 finds the dead cards; dominance by wins needs 400–600 (above). An evolve
 folder made before D331 is refused (its knobs differ): start a new `--out`.
+
+### Judging the low-rated cards: `--explore` (D356)
+
+The deckbuilder ranks spells by rating, so a card rated low (Delver of Secrets
+19.7, Ephemerate 22.9) sits in on-colour pools and is not played: the loop can
+only call it `rating-limited`, at any number of drafts. `--explore on` (or
+`--explore share=0.3 --explore cap=4 …`) runs a seeded, logged experiment in
+the **discovery** batches (confirmation batches never explore):
+
+- a draft is *explored* with probability `share`; in it each seat's deck is
+  built as always (the *choice* deck), and at most one *eligible target* — a
+  nonland pool card rated under `deadMinRating`, not AI:RemAIDeck, castable in
+  the deck's main colours, not chosen — is forced in, card c with probability
+  v_c / max(Σv, `cap`) (v = `gold` for a multicolour card, else 1), replacing
+  the lowest-rated spell of its mana value. `drafts.jsonl`'s `deck` is the deck
+  that played; `explore.seats[k]` keeps the eligible list with its
+  probabilities, `in`, `out` and the choice deck;
+- the play and pick rules read every draft's **choice** decks (an unexplored
+  run's numbers: the drafts, picks and choice decks are identical at the same
+  seed), the win-rate rules, the mean, the balance and `meta.json` read the
+  **plain** drafts only (a random subset of an unexplored run's), so no cut
+  changes meaning;
+- each target's *delta* compares the decks it was forced into with the decks
+  where it was eligible and was not, weighted by the recorded probabilities
+  (so a thin pool forcing more often biases nothing), a deck's match as the
+  unit. The changelog's table at the top pools every generation: **holds its
+  own when played** (delta shown above −`margin`), **weak when played** (shown
+  below 0; a human test — the notes decide), *undecided*, or *too few* forced
+  decks (under `minDecks`). **No verdict cuts a card**; `stats.json` has each
+  generation's table and the health numbers (explored share, forced against
+  expected, the balance of the choice decks' mean rating).
+
+| `--explore` | default | what it does |
+|---|---|---|
+| `share` | 0.3 | the share of discovery drafts explored (the win-rate rules keep the rest) |
+| `cap` | 4 | a target is forced with probability v / max(Σv, cap): one eligible mono card, 1/4 |
+| `gold` | 4 | v of a multicolour target (its pair's decks are about a fifth as many) |
+| `margin` | 0.1 | *holds its own*: delta shown above −margin |
+| `minDecks` | 10 | forced (and control) decks before a card is judged |
+
+At 2,000 drafts a generation and share 0.3, Omega's common low-rated cards
+get 15–60 forced decks a generation and a gold one about 10; the rarest stay
+*too few*. Exploration is part of `run.json`, the folder check and the version
+stamp only when on, so a run without it is the old run.
 
 ## Learning the drafters' values from the games (D301–D302)
 

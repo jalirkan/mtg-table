@@ -23,6 +23,8 @@
 //   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
 //           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300, D331)
 //           [--record-all | --record-every N]                  record both batches' games (D315)
+//           [--explore on | --explore name=value]...           controlled exploration of low-rated cards (D356):
+//                                                              share=0.3 cap=4 gold=4 margin=0.1 minDecks=10
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -42,7 +44,7 @@ import { bridgeOptions } from './bridge.ts';
 import { checkProfiles, isSeatSpec, mixText, parseProfileMix } from './profiles.ts';
 import { queueCommand } from './queue.ts';
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
-import { defaultNotes, evolve } from './evolve-run.ts';
+import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const say = (s: string): void => { process.stdout.write(`${s}\n`); };
@@ -70,7 +72,7 @@ function usage(msg?: string): never {
        tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N]
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
-                        [--record-all | --record-every N]
+                        [--record-all | --record-every N] [--explore on | --explore name=value]...   (D356)
 `);
   process.exit(2);
 }
@@ -270,8 +272,9 @@ async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<nu
     out: one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`),
     games: Math.max(1, int(f, 'games', 3)), profiles: [profiles[0] as string, profiles[1] as string] as [string, string],
     ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date, recordEvery,
+    explore: parseExploreArgs(f.get('explore') ?? []),
   };
-  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}${recordEvery ? `, recording ${recordEvery === 1 ? 'every game' : `every game of every ${recordEvery}th draft`} (both chairs, both batches)` : ''}`);
+  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}${recordEvery ? `, recording ${recordEvery === 1 ? 'every game' : `every game of every ${recordEvery}th draft`} (both chairs, both batches)` : ''}${o.explore ? `, exploring ${o.explore.share} of the discovery drafts (D356: cap ${o.explore.cap}, gold ${o.explore.gold}, margin ${o.explore.margin}, minDecks ${o.explore.minDecks})` : ''}`);
   await evolve(env, o, say);
   return 0;
 }

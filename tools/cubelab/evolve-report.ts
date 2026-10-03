@@ -7,6 +7,7 @@
 // generation, light and dark.
 
 import { ruleWords, type Balance, type CardStat, type Confirmation, type Decision, type Group } from './evolve.ts';
+import { exploreHealth, judgeExplored, mergeTables, type ExploreJudgeOptions, type ExploreTable } from './explore.ts';
 
 export interface GenSummary {
   gen: number;
@@ -21,6 +22,8 @@ export interface GenSummary {
   decision: Decision;
   balance: Balance;
   stats: CardStat[];
+  /** D356: the discovery batch's exploration (absent when it did not explore): its plain drafts and the explored comparisons. */
+  explore?: { plain: number; table: ExploreTable };
 }
 
 const r2 = (x: number): string => x.toFixed(2);
@@ -62,6 +65,11 @@ export function changelogSection(g: GenSummary): string {
   out.push(`## Generation ${g.gen} — v${g.versionIn} → v${g.versionOut} (${g.date})`, '');
   out.push(`Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games; mean card win rate ${r2(g.balance.mean)}; `
     + `${d.discovery.family} tests at a false-discovery rate of ${d.discovery.q}; design effect of a card's games ${d.discovery.deff.toFixed(2)}${confirmHead(g)}.`, '');
+  if (g.explore) {
+    const t = g.explore.table;
+    const forced = Object.values(t.cells).reduce((s, c) => s + c.treated.decks, 0);
+    out.push(`Exploration (D356): ${t.explored} of ${g.drafts} drafts explored, ${forced} deck(s) played a forced low-rated card; the win-rate rules, the mean and the balance read the other ${g.explore.plain} drafts, the play and pick rules every draft's choice decks. The judgement of the low-rated cards pools every generation (top of this changelog).`, '');
+  }
   out.push(`**Verdict.** ${d.verdict}`, '');
   if (d.confirmations.length) {
     out.push(`**Discovered, then confirmed or not** (${d.discovery.candidates} candidate(s); ${d.confirmBatch ? `the confirmation batch was sized for ${d.plan.drafts} drafts${d.plan.underpowered.length ? `, under-powered for ${d.plan.underpowered.join(', ')}` : ''}` : `a ${d.plan.drafts}-draft confirmation batch is due`}):`, '',
@@ -110,10 +118,43 @@ export function changelogSection(g: GenSummary): string {
   return out.join('\n');
 }
 
-export function changelog(title: string, gens: GenSummary[]): string {
+const VERDICT_WORDS: Record<string, string> = {
+  holds: 'holds its own when played (underrated by its rating)',
+  weak: 'weak when played (a human test: the notes decide)',
+  undecided: 'undecided',
+  'too-few': 'too few forced decks',
+};
+
+/** Every generation's explored drafts pooled, each low-rated card judged (D356); empty when nothing explored. */
+export function exploreSection(gens: GenSummary[], o: ExploreJudgeOptions & { share: number; final: boolean }): string {
+  const tables = gens.flatMap((g) => (g.explore ? [g.explore.table] : []));
+  if (!tables.length) return '';
+  const pooled = tables.reduce(mergeTables);
+  const h = exploreHealth(pooled, o.share);
+  const judged = judgeExplored(pooled, o);
+  const limited = new Set(gens.flatMap((g) => g.decision.assessments.filter((a) => a.status === 'rating-limited').map((a) => a.name)));
+  const order: Record<string, number> = { weak: 0, holds: 1, undecided: 2, 'too-few': 3 };
+  const rows = [...judged].sort((a, b) => (order[a.verdict] ?? 9) - (order[b.verdict] ?? 9) || b.treatedDecks - a.treatedDecks || (a.name < b.name ? -1 : 1));
+  const pc = (x: number): string => (Number.isFinite(x) ? x.toFixed(2) : '–');
+  const sd = (x: number): string => (Number.isFinite(x) ? `${x >= 0 ? '+' : ''}${x.toFixed(2)}` : '–');
+  const out = [`## Low-rated cards, judged by exploration (D356)${o.final ? '' : ' — provisional: generations still to run'}`, '',
+    `The deckbuilder plays by rating, so a card rated under the rating-limited bar is rarely played and its "dead" signal says nothing. In ${h.explored} of ${h.drafts} drafts (share ${h.share.toFixed(3)}, z ${h.shareZ.toFixed(1)} against the ${o.share} asked), one such card that sat on colour in a pool was forced into the deck in place of the builder's lowest-rated choice of its mana value, at random with a recorded probability: ${h.treated} forced deck(s) against ${h.expected.toFixed(1)} expected (z ${h.treatedZ.toFixed(1)}). `
+      + `A card's *delta* compares the decks it was forced into with the decks where it could have been and was not, weighted by those probabilities, one deck's match as one unit: its win rate in place of the builder's choice. It **holds its own** when delta is shown above −${o.margin} (BH at ${o.q}), it is **weak when played** when delta is shown below 0. Neither verdict cuts a card: a weak one is for Justin's notes, a holding one for its rating. `
+      + `Every forced card pooled: delta ${sd(h.pooledDelta)} ± ${pc(1.96 * h.pooledSe)}; choice-deck mean rating, forced minus not (a balance check, ~0): ${h.balanceDiff.toFixed(2)}.`, '',
+    '| Card | Rating-limited | Forced decks (games) | Expected | Win rate with it | Without | Delta (95% CI) | Verdict |', '|---|---|---|---|---|---|---|---|'];
+  for (const j of rows) {
+    out.push(`| ${j.name} | ${limited.has(j.name) ? 'yes' : ''} | ${j.treatedDecks} (${j.treatedGames}) | ${j.expected.toFixed(1)} | ${pc(j.withIt)} | ${pc(j.without)} | ${sd(j.delta)} (${sd(j.lo)} to ${sd(j.hi)}) | ${VERDICT_WORDS[j.verdict] ?? j.verdict} |`);
+  }
+  out.push('');
+  return out.join('\n');
+}
+
+export function changelog(title: string, gens: GenSummary[], explore?: ExploreJudgeOptions & { share: number; final: boolean }): string {
+  const ex = explore ? exploreSection(gens, explore) : '';
   return [`# ${title} — evolve changelog`, '',
     'Written by `tools/cubelab.sh evolve` (D299–D300, D331). Each generation plays its drafts on the cube going in and swaps only what the evidence supports; docs/guides/cube-lab.md *Evolve* says how.', '',
     stagesInWords(gens[0]?.decision.discovery.q ?? 0.1), '',
+    ...(ex ? [ex] : []),
     ...gens.map(changelogSection)].join('\n');
 }
 

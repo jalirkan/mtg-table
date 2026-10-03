@@ -80,11 +80,12 @@ import type { Fact } from './cards.ts';
 import { producesOf } from './cards.ts';
 import type { Cube, CubeCard } from './cube.ts';
 import { sectionFor } from './cubedoc.ts';
-import { SHRINK_K } from './meta.ts';
+import { choiceRecord, exploreTable, isPlain, type ExploreTable } from './explore.ts';
+import { buildMeta, SHRINK_K } from './meta.ts';
 import { initialRating } from './ratings.ts';
 import { benjaminiHochberg, binomLower, binomUpper, designEffect, holm, requiredN, type DeckGames } from './evolve-stats.ts';
 import { playedDeck, wilson, type CardInfo } from './report.ts';
-import type { DraftRecord } from './run.ts';
+import type { DraftRecord, RunMeta } from './run.ts';
 
 export interface EvolveKnobs {
   swaps: number;
@@ -451,6 +452,42 @@ export function deckGamesOf(recs: DraftRecord[]): DeckGames[] {
 
 /** The design effect of a batch's card win rates (evolve-stats.ts's designEffect over its played decks). */
 export const batchDeff = (recs: DraftRecord[]): number => designEffect(deckGamesOf(recs));
+
+/** A batch as the decision reads it (D356 when some drafts were explored). */
+export interface BatchStats {
+  /** meta.json: the PLAIN drafts' (with no exploration, every draft's). */
+  metaDoc: MetaDoc;
+  stats: Map<string, CardStat>;
+  /** The design effect of the plain drafts' games. */
+  deff: number;
+  drafts: number;
+  plain: number;
+  /** The explored drafts' randomised comparisons (null: nothing explored). */
+  explore: ExploreTable | null;
+}
+
+/**
+ * Every card's numbers for a batch.  With no explored draft this is exactly
+ * cardStats over buildMeta, as before D356.  With some: the counting rules
+ * (dealt, picked, first line, played decks, on-colour pools) read every
+ * draft's CHOICE decks -- an unexplored run's numbers -- and the game numbers
+ * (games, wins, win rates, the mean, the balance, the design effect) read the
+ * PLAIN drafts only, a coin-chosen subset of an unexplored run's.
+ */
+export function batchStats(meta: RunMeta, info: Record<string, CardInfo>, recs: DraftRecord[], cube: Cube | null): BatchStats {
+  const plain = recs.filter(isPlain);
+  const metaPlain = buildMeta(meta, info, plain, cube) as MetaDoc;
+  const sPlain = cardStats(metaPlain, plain, info);
+  if (plain.length === recs.length) return { metaDoc: metaPlain, stats: sPlain, deff: batchDeff(recs), drafts: recs.length, plain: plain.length, explore: null };
+  const choice = recs.map(choiceRecord);
+  const sChoice = cardStats(buildMeta(meta, info, choice, cube) as MetaDoc, choice, info);
+  const stats = new Map<string, CardStat>();
+  for (const [name, c] of sChoice) {
+    const p = sPlain.get(name);
+    stats.set(name, { ...c, games: p?.games ?? 0, wins: p?.wins ?? 0, winRate: p?.winRate ?? 0, shrunk: p?.shrunk ?? metaPlain.sample.shrinkage.mean, ci: p?.ci ?? [0, 1] });
+  }
+  return { metaDoc: metaPlain, stats, deff: batchDeff(plain), drafts: recs.length, plain: plain.length, explore: exploreTable(recs) };
+}
 
 export interface Group { key: string; decks: number; games: number; wins: number; rate: number; shrunk: number; ci: [number, number] }
 export interface Balance { mean: number; colours: Group[]; pairs: Group[]; themes: Group[] }

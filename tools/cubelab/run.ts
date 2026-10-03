@@ -30,6 +30,7 @@ import { parseCube } from './cube.ts';
 import { dckText } from './deck.ts';
 import { engineFacts, runPool, type EngineEnv, type ForgeBuild, type GameRow, type MatchJob } from './engine.ts';
 import { loadCube, runDraft, type DrafterOut, type DraftOut, type Format, type LoadedCube } from './lab.ts';
+import { checkExploreOptions, exploreDraft, type ExploreOptions } from './explore.ts';
 import { parseSynergy } from './pairs.ts';
 import { parseRatings } from './ratings.ts';
 import { reRated, runMixedDraft, type MixedMode } from './selfplay.ts';
@@ -70,6 +71,8 @@ export interface RunOptions {
   deckset?: boolean;
   /** D341: append to a folder another lab version wrote (`--allow-version-change`; logged in run.json). */
   allowVersionChange?: boolean;
+  /** D356: controlled exploration in the lab's deckbuilder (explore.ts); absent or share 0 = off, and the run is the old one. */
+  explore?: ExploreOptions;
 }
 
 /** A drafter's line in drafts.jsonl: the draft side, plus which deck played and Forge's own build. */
@@ -131,6 +134,8 @@ export interface RunMeta {
   versions?: VersionEntry[];
   /** D340: a deck-set run at reserved seeds (seeds.ts). */
   deckset?: boolean;
+  /** D356: the exploration this run's drafts used (absent: none). */
+  explore?: ExploreOptions;
 }
 
 export const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
@@ -180,6 +185,15 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     }
     learnedMeta = { synergyFile: o.synergyFile ? rel(o.synergyFile) : null, synergySha: shaOf(o.synergyFile), deckSynergy: !!o.deckSynergy, mixed: mixedMeta };
   }
+  const explore = o.explore && o.explore.share > 0 ? o.explore : null;
+  if (explore) {
+    checkExploreOptions(explore);
+    if (bridge || o.mixed || o.builder !== 'lab') throw new Error('exploration (D356) runs with the lab builder on one cube only: no --bridge, head-to-head or --builder forge');
+    const base = draftOne;
+    const maxSplash = (stretched: boolean): number => (stretched ? o.weights.maxSplashStretch : o.weights.maxSplash);
+    draftOne = (seed) => exploreDraft(base(seed), explore, lc.byName, maxSplash);
+    say(`exploring (D356): ${explore.share} of the drafts; a target rated under ${explore.below} forced with probability v / max(sum v, ${explore.cap}), v ${explore.gold} for gold`);
+  }
   if (lc.missing.length > 0) say(`WARNING: ${lc.missing.length} card(s) not in the engine, drafted without them: ${lc.missing.map((m) => m.listed).join(', ')} (run check)`);
   const meta: RunMeta = {
     v: 1, cube: lc.cube.title, cubeFile: path.relative(env.repo, path.resolve(o.cubeFile)), cubeSha: sha(text),
@@ -193,11 +207,13 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     ...(o.recordEvery ? { record: { every: o.recordEvery, dir: 'games' as const, cubeCopy: 'cube.md' as const } } : {}),
     ...(o.deckset ? { deckset: true } : {}),
     ...(o.profileMix ? { profileMix: mixText(o.profileMix) } : {}),
+    ...(explore ? { explore } : {}),
   };
   const version = labVersion(env.repo, {
     cubeShas: bridge ? bridge.meta.sources.map((x) => x.sha) : [meta.cubeSha],
     ratingsFiles: bridge ? bridge.meta.sources.map((x) => x.ratingsFile ? path.resolve(env.repo, x.ratingsFile) : null) : [o.ratingsFile],
-    weights: o.weights,
+    // D356: exploration changes the decks that play, so it is part of the version; off, the id is the old one.
+    weights: explore ? { ...o.weights, explore } : o.weights,
   });
   fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   const metaFile = path.join(o.out, 'run.json');
@@ -206,8 +222,8 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   if (fs.existsSync(metaFile)) {
     const old = JSON.parse(fs.readFileSync(metaFile, 'utf8')) as RunMeta;
     const same = (k: (m: RunMeta) => unknown): boolean => JSON.stringify(k(old)) === JSON.stringify(k(meta));
-    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null, m.bridge ?? null, m.profileMix ?? null])) {
-      throw new Error(`${o.out} holds a run with a different cube, format, games, profiles, builder, weights or learned files -- use a new --out`);
+    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null, m.bridge ?? null, m.profileMix ?? null, m.explore ?? null])) {
+      throw new Error(`${o.out} holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out`);
     }
     if (fs.existsSync(jsonl)) {
       for (const line of fs.readFileSync(jsonl, 'utf8').split('\n')) if (line.trim()) done.add((JSON.parse(line) as DraftRecord).seed);
