@@ -27,7 +27,7 @@ import path from 'node:path';
 
 export type Flat = Record<string, number | boolean>;
 
-/** `*` and `?` inside one path segment; no `**`.  Sorted, existing paths only. */
+/** `*` and `?` inside one path segment (`[` and `]` are literal); no `**`.  Sorted, existing paths only. */
 export function expandGlob(cwd: string, pattern: string): string[] {
   const abs = path.isAbsolute(pattern);
   const parts = pattern.split('/').filter((p, i) => p !== '' || i === 0);
@@ -35,10 +35,11 @@ export function expandGlob(cwd: string, pattern: string): string[] {
   for (const part of parts) {
     if (part === '') continue;
     const next: string[] = [];
-    if (!/[*?[]/.test(part)) {
+    if (!/[*?]/.test(part)) {
       for (const c of cur) { const p = path.join(c, part); if (fs.existsSync(p)) next.push(p); }
     } else {
-      const re = new RegExp(`^${part.replace(/[.+^${}()|\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]')}$`);
+      // Only * and ? are wild; everything else, [ and ] included, is literal.
+      const re = new RegExp(`^${part.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]')}$`);
       for (const c of cur) {
         let ents: string[] = [];
         try { ents = fs.readdirSync(c); } catch { continue; }

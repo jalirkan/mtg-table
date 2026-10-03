@@ -28,11 +28,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { readControl, writeControl } from './control.ts';
+import { acquireLock, releaseLock } from './lock.ts';
 import { evaluate, parse as parseExpr } from './expr.ts';
 import { parseJobFile } from './jobfile.ts';
 import { EXTRACTORS } from './metrics.ts';
 import { DEFAULT_CONFIG, Runner, verdictText, type RunnerConfig } from './runner.ts';
-import { formatStatus, parseStatus } from './schedule.ts';
 import { budget, DEFAULT_BUDGET, DESKTOP_DROPIN, SERVICE, serviceUnit, SLICE, sliceUnit } from './sizing.ts';
 import { isoLocal, sanitise, type StatusDoc } from './statusjson.ts';
 import { dryRunSys, realSys } from './sys.ts';
@@ -84,14 +84,9 @@ function config(f: Map<string, string>): RunnerConfig {
 function lock(cfg: RunnerConfig): void {
   const f = path.join(cfg.stateDir, 'daemon.pid');
   fs.mkdirSync(cfg.stateDir, { recursive: true });
-  try {
-    const pid = Number(fs.readFileSync(f, 'utf8'));
-    if (pid && pid !== process.pid) {
-      try { process.kill(pid, 0); throw new Error(`another runner is running (pid ${pid}); stop it first (systemctl --user stop ${SERVICE})`); } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'ESRCH') throw e; }
-    }
-  } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e; }
-  fs.writeFileSync(f, String(process.pid));
-  process.on('exit', () => { try { if (fs.readFileSync(f, 'utf8') === String(process.pid)) fs.rmSync(f); } catch { /* gone */ } });
+  const held = acquireLock(f, process.pid);
+  if (held !== null) throw new Error(`another runner is running (pid ${held}); stop it first (systemctl --user stop ${SERVICE})`);
+  process.on('exit', () => releaseLock(f, process.pid));
 }
 
 function plan(cfg: RunnerConfig, only: string | null): number {
@@ -108,7 +103,7 @@ function plan(cfg: RunnerConfig, only: string | null): number {
     if (!only && s && s.state !== 'waiting') continue;
     console.log(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
     if (job.errors.length) { console.log(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
-    const run = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: Date.now(), steps: r.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, unit: null, unitStartedAt: 0, workers: job.maxWorkers ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
+    const run = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: Date.now(), steps: r.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: job.maxWorkers ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
     for (const step of run.steps) {
       if (step.kind !== 'shell') { console.log(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
       const u = r.unitSpec(run, job, step);
@@ -152,10 +147,20 @@ function install(cfg: RunnerConfig, f: Map<string, string>): number {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, text);
   };
-  const head = spawnSync('git', ['-C', REPO, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
-  // 1. The runner's own checkout, at this checkout's commit: a job never moves the code that runs it.
-  if (!fs.existsSync(path.join(runnerDir, '.git'))) sh(['git', '-C', REPO, 'worktree', 'add', '--detach', runnerDir, head]);
-  else sh(['git', '-C', runnerDir, 'checkout', '--quiet', '--detach', head]);
+  // 1. The runner's own CLONE (never a worktree of Justin's checkout, which install then never writes), at
+  //    `--ref` (default origin/main), a commit that must be on origin: what runs is what anyone can review.
+  const git = (dir: string, ...a: string[]): { status: number | null; stdout: string; stderr: string } =>
+    spawnSync('git', ['-C', dir, ...a], { encoding: 'utf8', env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+  const url = cfg.urls['mtg-table'] ?? git(REPO, 'remote', 'get-url', 'origin').stdout.trim();
+  if (!url) throw new Error('no origin URL for mtg-table (pass --url-mtg-table)');
+  if (!fs.existsSync(path.join(runnerDir, '.git'))) sh(['git', 'clone', '--quiet', '--no-checkout', '--reference-if-able', REPO, '--dissociate', url, runnerDir]);
+  sh(['git', '-C', runnerDir, 'fetch', '--quiet', 'origin', '+refs/heads/*:refs/remotes/origin/*']);
+  const want = f.get('ref') ?? 'main';
+  const head = dry ? git(REPO, 'rev-parse', `origin/${want}^{commit}`).stdout.trim() || want
+    : (git(runnerDir, 'rev-parse', '-q', '--verify', `origin/${want}^{commit}`).stdout.trim() || git(runnerDir, 'rev-parse', '-q', '--verify', `${want}^{commit}`).stdout.trim());
+  if (!head) throw new Error(`--ref ${want}: no such branch or commit on origin`);
+  if (!dry && !git(runnerDir, 'branch', '-r', '--contains', head).stdout.trim()) throw new Error(`${head.slice(0, 7)} is on no branch of origin: push it first (a pc/ branch is fine), then install --ref <branch>`);
+  sh(['git', '-C', runnerDir, 'checkout', '--quiet', '--force', '--detach', head]);
   // 2. The units.
   const m = realSys().machine();
   const b = budget(m, cfg.budget);
@@ -180,26 +185,9 @@ Then: tools/runner.sh status    (docs/guides/lab-runner.md)`);
 }
 
 function approve(cfg: RunnerConfig, id: string, f: Map<string, string>): number {
-  if (!/^J\d+$/.test(id)) throw new Error('approve J###');
   const r = new Runner(cfg, realSys());
-  const wt = r.ensureResultsWorktree();
-  const git = (...a: string[]): ReturnType<typeof spawnSync> => spawnSync('git', ['-C', wt, ...a], { encoding: 'utf8' });
-  git('fetch', '--quiet', 'origin', '+refs/heads/pc-results:refs/remotes/origin/pc-results');
-  git('reset', '--quiet', '--hard', 'origin/pc-results');
-  const file = path.join(wt, 'results', id, 'STATUS');
-  const st = fs.existsSync(file) ? parseStatus(fs.readFileSync(file, 'utf8')) : null;
-  if (!st || st.state !== 'waiting') throw new Error(`${id}'s STATUS is ${st?.state ?? 'missing'}; approve is for a job waiting after its pilot`);
-  delete st.fields.needs;
-  st.fields.approved = `${isoLocal(Date.now())} by ${f.get('by') ?? os.userInfo().username}${f.get('note') ? `: ${f.get('note')}` : ''}`;
-  st.fields.reason = 'pilot approved; the runner runs the commands';
-  fs.writeFileSync(file, formatStatus(st));
-  git('add', file);
-  git('-c', 'user.name=forgecoach-runner', '-c', 'user.email=runner@localhost', 'commit', '--quiet', '-m', `${id}: approved after its pilot`);
-  if (cfg.push) {
-    const p = git('push', '--quiet', 'origin', 'HEAD:refs/heads/pc-results');
-    if (p.status !== 0) throw new Error(`push failed: ${p.stderr}`);
-  }
-  console.log(`${id} approved; the runner picks it up within a minute.`);
+  r.approve(id, f.get('by') ?? os.userInfo().username, f.get('note') ?? '');
+  console.log(`${id} approved${cfg.push ? ' and pushed' : ' (--no-push: committed only)'}; the runner picks it up within a minute.`);
   return 0;
 }
 
@@ -253,6 +241,7 @@ async function main(): Promise<number> {
       if (f.has('dry-run')) return plan(cfg, pos[0] ?? null);
       lock(cfg);
       const r = new Runner(cfg, realSys());
+      r.clearStaleGitLocks();                  // under the daemon lock: no other runner is mid-commit
       r.reconcile();
       if (cmd === 'once') { r.tick(); return printStatus(cfg); }
       const port = Number(f.get('http-port') ?? 8645);

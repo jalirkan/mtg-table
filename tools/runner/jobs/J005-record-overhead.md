@@ -4,6 +4,8 @@ cpu: heavy
 after: J003
 repos: mtg-table@main (a43dea2 or later; this adds --record-all)
 est: ~25 min
+public_title: Recording overhead, on vs off
+public_est: ~25 min
 resumable: yes
 max_workers: 7
 mem_per_worker_gb: 1.7

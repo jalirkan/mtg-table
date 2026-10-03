@@ -48,10 +48,10 @@ import { evaluate, parse as parseExpr, type Verdict } from './expr.ts';
 import { sanitiseLadder } from './ladder.ts';
 import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from './jobfile.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
-import { budget as budgetOf, DEFAULT_BUDGET, sizeWorkers, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
+import { budget as budgetOf, DEFAULT_BUDGET, PILOT_MAX_WORKERS, sizeWorkers, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
 import { formatStatus, isOurs, parseStatus, schedule, idOrder, type Blocked, type Status } from './schedule.ts';
 import { fit, headlineOf, isoLocal, REASONS, sanitise, type FinishedItem, type PressureEvent, type RunningJob, type StatusDoc } from './statusjson.ts';
-import type { HostSample, Sys } from './sys.ts';
+import { GIT_ENV, LIVE_STATES, type HostSample, type Sys } from './sys.ts';
 
 export interface RunnerConfig {
   /** The runner's own checkout (its commit is reported). */
@@ -109,8 +109,16 @@ export interface JobRun {
   metrics: Flat;
   metricsAt: number;
   shas: Record<string, string>;
+  /** Full commits the first prepare checked out: a retry or resume checks these out again, never a branch that moved (D341's version refusal). */
+  pinned?: Record<string, string>;
   restarts: Array<{ at: number; how: 'resumed' | 'restarted' | 'adopted'; why: string }>;
   approved: boolean;
+  /** Why the next step waits to start, when it does (for the log, once). */
+  heldFor?: string | null;
+  /** The job's tools read the control file: `control:` as written, else detected after prepare (null: not known yet). */
+  canControl: boolean | null;
+  /** Memory stops so far, this run and the ones before it; at backoff.maxMemoryStops the job fails. */
+  memoryStops: number;
   stopping: null | { why: 'memory' | 'abort' | 'timeout' | 'user'; detail: string };
   outcome: null | { state: 'done' | 'failed' | 'waiting' | 'skipped'; at: number; reason: string; fields?: Record<string, string> };
   numbers: Record<string, number>;
@@ -119,7 +127,17 @@ export interface JobRun {
   pendingStatus: string | null;
 }
 
-interface Persist { paused: boolean; lastPublish: number; lastFetch: number; dirty: boolean; lastHost: HostSample | null; started: number; ladderSig?: string }
+interface Persist {
+  paused: boolean; lastPublish: number; lastFetch: number; dirty: boolean; lastHost: HostSample | null; started: number; ladderSig?: string;
+  /** Failed publishes in a row, and when the next try may come (exponential: 30 s, 1, 2, 4 … 30 min). */
+  publishFailures?: number; nextPublishAt?: number;
+}
+
+/** Names a `collect:` file may not take: they are the runner's own facts in results/<id>/. */
+export const RESERVED_OUTPUTS = new Set(['STATUS', 'summary.md', 'failure.txt', 'checks.txt', 'metrics.json', 'pilot-checks.txt', 'pilot-metrics.json', 'events.jsonl', 'collect-skipped.txt']);
+
+/** A network git call is cut off after this long, so one dead fetch or push never stalls the loop. */
+export const GIT_TIMEOUT_MS = 30_000;
 
 const MB = 1024 * 1024;
 const q = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
@@ -134,6 +152,9 @@ export class Runner {
   p: Persist;
   host: HostSample | null = null;
   swapInRate = 0;
+  /** Job files that vanished from a successful read of pc-jobs: the reads in a row they were missing, and their last text. */
+  missing = new Map<string, number>();
+  retained = new Map<string, JobFile>();
 
   constructor(cfg: RunnerConfig, sys: Sys) {
     this.cfg = cfg;
@@ -171,31 +192,60 @@ export class Runner {
     if (r) this.writeJson(path.join('jobs', r.id, 'run.json'), r);
     this.writeJson('runner.json', this.p);
   }
+  /** Every git call: no prompt, ssh in batch mode, a stalled transfer cut off, and a hard timeout. */
   private git(dir: string, ...args: string[]): { code: number; stdout: string; stderr: string } {
-    return this.sys.run(['git', '-C', dir, ...args], { timeoutMs: 180_000 });
+    return this.sys.run(['git', '-C', dir, '-c', 'http.lowSpeedLimit=1000', '-c', 'http.lowSpeedTime=20', ...args], { timeoutMs: GIT_TIMEOUT_MS, env: GIT_ENV });
   }
 
   // ------------------------------------------------------------------ the queue
 
-  /** Clone the queue repo if needed, fetch pc-jobs and pc-results, read jobs and STATUS files. */
+  /**
+   * Clone the queue repo if needed, fetch pc-jobs and pc-results, read jobs and STATUS files.  A git
+   * failure keeps what was read before; a job file must be missing from two successful reads in a
+   * row before its running job is stopped (retained, below).
+   */
   readQueue(force = false): void {
     if (!force && this.sys.now() - this.p.lastFetch < this.cfg.fetchEveryMs && this.jobs.length) return;
     const repo = this.queueRepo();
-    this.ensureClone('mtg-table', repo);
+    try { this.ensureClone('mtg-table', repo); } catch (e) { this.sys.log(`queue: ${(e as Error).message}`); return; }
     const f = this.git(repo, 'fetch', '--quiet', 'origin', '+refs/heads/pc-jobs:refs/remotes/origin/pc-jobs', '+refs/heads/pc-results:refs/remotes/origin/pc-results');
     if (f.code !== 0) this.sys.log(`fetch failed: ${f.stderr.trim().split('\n').at(-1)}`);
     this.p.lastFetch = this.sys.now();
-    const names = this.git(repo, 'ls-tree', '--name-only', 'origin/pc-jobs', 'jobs/').stdout.split('\n').filter((n) => /^jobs\/J\d+[^/]*\.md$/.test(n));
-    this.jobs = names.map((n) => parseJobFile(n, this.git(repo, 'show', `origin/pc-jobs:${n}`).stdout, parseExpr))
-      .filter((j) => j.id).sort((a, b) => idOrder(a.id, b.id));
-    this.origin.clear();
-    const st = this.git(repo, 'ls-tree', '-r', '--name-only', 'origin/pc-results', 'results/').stdout.split('\n');
-    for (const n of st) {
+    const ls = this.git(repo, 'ls-tree', '--name-only', 'origin/pc-jobs', 'jobs/');
+    if (ls.code === 0) {
+      const prev = new Map(this.jobs.map((j) => [j.id, j]));
+      const next: JobFile[] = [];
+      for (const n of ls.stdout.split('\n').filter((x) => /^jobs\/J\d+[^/]*\.md$/.test(x))) {
+        const show = this.git(repo, 'show', `origin/pc-jobs:${n}`);
+        const id = /\b(J\d{3,})/.exec(n)?.[1] ?? '';
+        if (show.code !== 0) { const old = prev.get(id); if (old) next.push(old); continue; }
+        const j = parseJobFile(n, show.stdout, parseExpr);
+        if (j.id) next.push(j);
+      }
+      // Every job known before — read last time, or already retained as missing — counts one more missing read.
+      for (const [id, j] of new Map([...this.retained, ...prev])) {
+        if (next.some((x) => x.id === id)) { this.missing.delete(id); this.retained.delete(id); continue; }
+        this.missing.set(id, (this.missing.get(id) ?? 0) + 1);
+        this.retained.set(id, j);
+      }
+      for (const id of next.map((x) => x.id)) { this.missing.delete(id); this.retained.delete(id); }
+      // A removed job nothing runs any more is forgotten after a few reads.
+      for (const [id, n] of this.missing) if (n >= 3 && !this.active().some((x) => x.id === id)) { this.missing.delete(id); this.retained.delete(id); }
+      this.jobs = next.sort((a, b) => idOrder(a.id, b.id));
+    } else {
+      this.sys.log(`queue: git ls-tree pc-jobs failed (exit ${ls.code}); keeping the ${this.jobs.length} job(s) read before`);
+    }
+    const st = this.git(repo, 'ls-tree', '-r', '--name-only', 'origin/pc-results', 'results/');
+    if (st.code !== 0) { this.sys.log(`queue: git ls-tree pc-results failed (exit ${st.code}); keeping the STATUS files read before`); return; }
+    const origin = new Map<string, Status>();
+    for (const n of st.stdout.split('\n')) {
       const m = /^results\/(J\d+)\/STATUS$/.exec(n);
       if (!m) continue;
-      const s = parseStatus(this.git(repo, 'show', `origin/pc-results:${n}`).stdout);
-      if (s) this.origin.set(m[1] as string, s);
+      const show = this.git(repo, 'show', `origin/pc-results:${n}`);
+      const s = show.code === 0 ? parseStatus(show.stdout) : this.origin.get(m[1] as string) ?? null;
+      if (s) origin.set(m[1] as string, s);
     }
+    this.origin = origin;
   }
 
   ensureClone(repo: string, dest: string): void {
@@ -205,7 +255,7 @@ export class Runner {
     if (!url) throw new Error(`no remote URL for ${repo}: pass --home-${repo} or --url-${repo}`);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     this.sys.log(`cloning ${repo} into ${dest}`);
-    const r = this.sys.run(['git', 'clone', '--quiet', ...(home ? ['--reference-if-able', home, '--dissociate'] : []), url, dest], { timeoutMs: 1_800_000 });
+    const r = this.sys.run(['git', 'clone', '--quiet', ...(home ? ['--reference-if-able', home, '--dissociate'] : []), url, dest], { timeoutMs: 1_800_000, env: GIT_ENV });
     if (r.code !== 0) throw new Error(`git clone ${url} failed: ${r.stderr.trim()}`);
   }
 
@@ -229,10 +279,11 @@ export class Runner {
   // ------------------------------------------------------------------ one tick
 
   tick(): void {
-    this.readQueue();
+    // The jobs first: a slow or dead network (the fetch, the publish) never delays monitoring them.
     this.sampleHost();
     this.handleRequests();
     for (const r of this.active()) this.advance(r);
+    this.readQueue();
     const st = this.statuses();
     const { start, blocked } = schedule({
       jobs: this.jobs, statuses: st, active: new Map(this.active().map((r) => [r.id, r.cpu])),
@@ -242,7 +293,9 @@ export class Runner {
     for (const job of start) this.begin(job, st.get(job.id) ?? null);
     this.writeStatusJson();
     if (this.ladderSig() !== (this.p.ladderSig ?? '')) this.p.dirty = true;
-    if (this.p.dirty || this.sys.now() - this.p.lastPublish >= this.cfg.publishEveryMs) this.publish();
+    const now = this.sys.now();
+    const due = this.p.dirty || now - this.p.lastPublish >= this.cfg.publishEveryMs;
+    if (due && now >= (this.p.nextPublishAt ?? 0)) this.publish();
     this.save();
   }
 
@@ -257,8 +310,10 @@ export class Runner {
     const steps = this.stepsFor(job, approved || retry);
     const moved = retry && !job.resumable ? this.cleanAside(prev as JobRun, job) : [];
     const r: JobRun = {
+      canControl: job.control, memoryStops: prev?.outcome?.state === 'waiting' ? prev.memoryStops ?? 0 : 0,
       id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps, stepIndex: 0,
       unit: null, unitStartedAt: 0, workers: 1, sizing: null, cap: Number.isFinite(cap) ? cap : null,
+      pinned: retry ? prev?.pinned : undefined,
       peakRssGb: prev?.peakRssGb ?? null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null,
       metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null,
     };
@@ -287,8 +342,9 @@ export class Runner {
     return steps;
   }
 
+  /** The job file: from the last read, or retained while it has been missing from fewer than two reads. */
   jobOf(r: JobRun): JobFile | null {
-    return this.jobs.find((j) => j.id === r.id) ?? null;
+    return this.jobs.find((j) => j.id === r.id) ?? ((this.missing.get(r.id) ?? 0) < 2 ? this.retained.get(r.id) ?? null : null);
   }
 
   // ------------------------------------------------------------------ advancing
@@ -296,24 +352,25 @@ export class Runner {
   advance(r: JobRun): void {
     const job = this.jobOf(r);
     if (!job) {
-      // The job file is gone from pc-jobs: stop what runs, and say so.
-      if (r.unit && this.sys.unitState(r.unit) !== 'inactive') { this.sys.stopUnit(r.unit); return; }
+      // The job file is gone from two successful reads of pc-jobs: stop what runs, and say so.
+      if (r.unit && this.sys.unitState(r.unit) !== 'gone') { this.sys.stopUnit(r.unit); return; }
       this.finish(r, 'skipped', 'the job file was removed from pc-jobs');
       return;
     }
     for (let guard = 0; guard < 50 && !r.outcome; guard++) {
       if (r.unit) {
         const state = this.sys.unitState(r.unit);
-        if (state === 'active' || state === 'activating' || state === 'deactivating') {
-          this.monitor(r, job);
+        // `unknown` (systemctl did not answer) is still running: never orphan a step on a timeout.
+        if (LIVE_STATES.has(state)) {
+          this.monitor(r, job, state === 'unknown');
           return;
         }
-        this.stepEnded(r, job);
+        if (!this.stepEnded(r, job, state)) return;
         continue;
       }
       const step = r.steps[r.stepIndex];
       if (!step) { this.finish(r, 'done', ''); return; }
-      if (step.kind === 'shell') { this.startStep(r, job, step); continue; }
+      if (step.kind === 'shell') { if (!this.startStep(r, job, step)) return; continue; }
       this.internalStep(r, job, step);
     }
   }
@@ -321,46 +378,79 @@ export class Runner {
   private rcFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.sh.rc`); }
   logFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.log`); }
 
-  private stepEnded(r: JobRun, job: JobFile): void {
+  /**
+   * A step's unit is no longer live.  Returns false when the runner must wait: an unloaded-or-not
+   * answer without an exit code is acted on only once systemd says LoadState=not-found (`gone`).
+   */
+  private stepEnded(r: JobRun, job: JobFile, state: string): boolean {
     const step = r.steps[r.stepIndex] as Step;
     let rc: number | null = null;
     try { rc = Number(fs.readFileSync(this.rcFile(r, step), 'utf8').trim()); } catch { rc = null; }
     if (rc !== null && !Number.isFinite(rc)) rc = null;
+    if (rc === null && state !== 'gone') return false;
     r.unit = null;
     this.collectLogTail(r, step);
-    if (step.phase === 'prepare' && rc === 0) this.readShas(r, job);
+    if (step.phase === 'prepare' && rc === 0) {
+      this.readShas(r, job);
+      r.canControl ??= this.detectControl(r, job);
+    }
     if (r.stopping) {
       const s = r.stopping;
       r.stopping = null;
-      if (s.why === 'memory') {
-        const cap = retryCap(r.backoff?.workers ?? r.workers);
-        this.finish(r, 'waiting', `memory: ${s.detail}`, { workers_cap: String(cap), retry_after: isoLocal(this.sys.now() + 15 * 60_000) });
-      } else if (s.why === 'user') {
+      if (s.why === 'memory') this.memoryStop(r, s.detail);
+      else if (s.why === 'user') {
         this.finish(r, 'waiting', `stopped: ${s.detail}`);
       } else {
         this.finish(r, 'failed', `${s.why === 'abort' ? 'aborted' : 'timeout'}: ${s.detail}`);
       }
-      return;
+      return true;
     }
     if (rc === 0) {
       r.stepIndex++;
       this.save(r);
-      return;
+      return true;
     }
     if (rc === null) {
-      // No exit code: the unit was killed from outside (systemd-oomd, the kernel's OOM killer, a reboot).
-      const cap = retryCap(r.backoff?.workers ?? r.workers);
-      this.finish(r, 'waiting', `memory: step ${step.name} was killed without an exit code (oomd or the OOM killer?)`, { workers_cap: String(cap), retry_after: isoLocal(this.sys.now() + 15 * 60_000) });
-      return;
+      // No exit code and the unit unloaded: it was killed from outside (systemd-oomd, the OOM killer, a reboot).
+      this.memoryStop(r, `step ${step.name} was killed without an exit code (oomd or the OOM killer?)`);
+      return true;
     }
     this.writeOut(r, 'failure.txt', `step ${step.name} exited ${rc}\n\n${this.tail(this.logFile(r, step), 60)}`);
     this.finish(r, 'failed', `${step.phase === 'pilot' ? 'pilot: ' : step.phase === 'prepare' ? 'prepare: ' : ''}step ${step.name} exited ${rc}`, { exit: String(rc) });
+    return true;
+  }
+
+  /** A memory stop: waiting, retried later with one worker fewer — or failed, at the configured number of stops. */
+  memoryStop(r: JobRun, detail: string): void {
+    r.memoryStops = (r.memoryStops ?? 0) + 1;
+    const stops = String(r.memoryStops);
+    if (r.memoryStops >= this.cfg.backoff.maxMemoryStops) {
+      this.finish(r, 'failed', `memory: stopped ${stops} times (last: ${detail})`, { memory_stops: stops });
+      return;
+    }
+    const cap = retryCap(r.backoff?.workers ?? r.workers);
+    this.finish(r, 'waiting', `memory: ${detail}`, { workers_cap: String(cap), retry_after: isoLocal(this.sys.now() + 15 * 60_000), memory_stops: stops });
+  }
+
+  /**
+   * After prepare: the job's tools read the control file when the checkout has tools/runner/control.ts
+   * (D337's pools) and the job runs ai-bench, the cube lab or the AI ladder; otherwise drop and pause
+   * events would be fiction, and memory pressure can only stop the job.
+   */
+  detectControl(r: JobRun, job: JobFile): boolean {
+    const mtg = this.checkout('mtg-table', r.cpu);
+    const has = fs.existsSync(path.join(mtg, 'tools', 'runner', 'control.ts'));
+    const blocks = [...(job.pilot?.blocks ?? []), ...(job.commands?.blocks ?? [])].join('\n');
+    return has && /\b(ai-bench\.sh|cubelab\.sh|ai-ladder\.sh)\b/.test(blocks);
   }
 
   private readShas(r: JobRun, job: JobFile): void {
+    r.pinned ??= {};
     for (const { repo } of job.repos) {
-      const sha = this.git(this.checkout(repo, r.cpu), 'rev-parse', '--short', 'HEAD').stdout.trim();
-      if (sha) r.shas[repo] = sha;
+      const sha = this.git(this.checkout(repo, r.cpu), 'rev-parse', 'HEAD').stdout.trim();
+      if (!sha) continue;
+      r.shas[repo] = sha.slice(0, 7);
+      r.pinned[repo] ??= sha;
     }
   }
 
@@ -370,24 +460,41 @@ export class Runner {
     return this.checkout(repo, r.cpu);
   }
 
-  /** {workers}, {mtg-table}, {ForgeCoach}, and Justin's own checkout paths rewritten to the lab's. */
+  /**
+   * {workers}, {mtg-table}, {ForgeCoach}, and Justin's own checkout paths rewritten to the lab's:
+   * the literal path, `~/code/<repo>`, `$HOME/code/<repo>` and `${HOME}/code/<repo>`.
+   */
   substitute(text: string, r: JobRun): string {
     let t = text.replace(/\{workers\}/g, String(r.workers));
     for (const repo of ['mtg-table', 'ForgeCoach']) {
       const lab = this.checkout(repo, r.cpu);
       t = t.split(`{${repo}}`).join(lab);
       const home = this.cfg.homeRepos[repo];
-      if (home) {
-        t = t.replace(new RegExp(`${home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`, 'g'), lab);
-        t = t.replace(new RegExp(`~/code/${repo}(?![\\w-])`, 'g'), lab);
-      }
+      const esc = (x: string): string => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (home) t = t.replace(new RegExp(`${esc(home)}(?![\\w-])`, 'g'), lab);
+      t = t.replace(new RegExp(`(~|\\$HOME|\\$\\{HOME\\})/code/${esc(repo)}(?![\\w-])`, 'g'), lab);
     }
     return t;
   }
 
+  /**
+   * A script that still reaches Justin's checkouts after substitution (a quoted split, a variable, a
+   * relative climb): refused, never run.  Returns what it found, or null.
+   */
+  homeReference(script: string): string | null {
+    let t = script.split(this.cfg.labRoot).join('{lab}');
+    for (const repo of Object.keys(this.cfg.homeRepos)) t = t.split(this.checkout(repo, 'heavy')).join('{lab}');
+    const homes = Object.values(this.cfg.homeRepos);
+    for (const h of [...homes, ...homes.map((x) => path.dirname(x))]) if (h && t.includes(h)) return h;
+    const m = /(~|\$HOME|\$\{HOME\})\/code\b/.exec(t);
+    return m ? m[0] : null;
+  }
+
   prepareScript(r: JobRun, job: JobFile): string {
     const lines = ['set -eo pipefail'];
-    for (const { repo, ref } of job.repos) {
+    for (const { repo, ref: asked } of job.repos) {
+      // A retry or a restart checks out the commit the job first ran on, not where its branch is now.
+      const ref = r.pinned?.[repo] ?? asked;
       if (!/^[A-Za-z0-9._/-]+$/.test(ref)) throw new Error(`a ref the runner will not pass to git: ${ref}`);
       const dest = this.checkout(repo, r.cpu);
       const home = this.cfg.homeRepos[repo];
@@ -406,6 +513,10 @@ export class Runner {
   }
 
   stepScript(r: JobRun, job: JobFile, step: Step): string {
+    if (step.phase !== 'prepare') {
+      const found = this.homeReference(this.substitute(step.block ?? '', r));
+      if (found) throw new Error(`step ${step.name} still names Justin's checkout (${found}) after rewriting it to the lab's clones; the runner never runs a job there`);
+    }
     const body = step.phase === 'prepare' ? this.prepareScript(r, job) : `set -eo pipefail\ncd ${q(this.cwdOf(r, job))}\n${this.substitute(step.block ?? '', r)}`;
     return `#!/usr/bin/env bash\n# lab runner: ${r.id} ${step.name} (generated from ${job.file}; do not edit)\n${body}\n`;
   }
@@ -428,9 +539,29 @@ export class Runner {
     };
   }
 
-  private startStep(r: JobRun, job: JobFile, step: Step): void {
+  /** Why a step may not start now (the runner is paused, Justin is at the table, the backoff paused the job), or null. */
+  holdReason(r: JobRun): string | null {
+    if (this.isPaused()) return 'the runner is paused';
+    if (r.cpu === 'heavy' && this.sys.playing(this.cfg.bridgePort)) return 'Justin is at the table';
+    if (r.backoff?.paused) return 'paused for memory';
+    return null;
+  }
+
+  /** Start a shell step's unit.  False: not started now (held, or a unit of this job is still alive); the next tick tries again. */
+  private startStep(r: JobRun, job: JobFile, step: Step): boolean {
+    const hold = this.holdReason(r);
+    if (hold) {
+      if (r.heldFor !== hold) { r.heldFor = hold; this.sys.log(`${r.id}: ${step.name} waits: ${hold}`); this.save(r); }
+      return false;
+    }
+    r.heldFor = null;
+    const live = this.sys.liveUnits(`lab-${r.id}-`);
+    if (live === null || live.length) {
+      this.sys.log(`${r.id}: ${step.name} not started: ${live === null ? 'systemctl did not answer' : `${live.join(', ')} still alive`}`);
+      return false;
+    }
     if (step.phase === 'pilot' && r.stepIndex === r.steps.findIndex((s) => s.phase === 'pilot')) {
-      r.workers = sizeWorkers({ budgetGb: this.heavyBudget(r), physicalCores: this.sys.machine().physicalCores, maxWorkers: job.maxWorkers, measuredPeakGb: null, memPerWorkerGb: job.memPerWorkerGb, cap: r.cap }).workers;
+      r.workers = Math.min(PILOT_MAX_WORKERS, sizeWorkers({ budgetGb: this.heavyBudget(r), physicalCores: this.sys.machine().physicalCores, maxWorkers: job.maxWorkers, measuredPeakGb: null, memPerWorkerGb: job.memPerWorkerGb, cap: r.cap }).workers);
     }
     if (step.phase === 'commands' && !r.sizing) this.size(r, job);
     if (step.phase !== 'prepare') {
@@ -439,7 +570,12 @@ export class Runner {
       this.writeEffectiveControl(r);
     }
     const u = this.unitSpec(r, job, step);
-    fs.writeFileSync(u.script, this.stepScript(r, job, step));
+    let script: string;
+    try { script = this.stepScript(r, job, step); } catch (e) {
+      this.finish(r, 'failed', (e as Error).message);
+      return false;
+    }
+    fs.writeFileSync(u.script, script);
     const rc = this.rcFile(r, step);
     fs.rmSync(rc, { force: true });
     fs.writeFileSync(`${u.script}.wrap`, `#!/usr/bin/env bash\nbash ${q(u.script)}\nrc=$?\nprintf '%s\\n' "$rc" > ${q(`${rc}.part`)} && mv ${q(`${rc}.part`)} ${q(rc)}\nexit "$rc"\n`);
@@ -447,12 +583,13 @@ export class Runner {
     const res = this.sys.startUnit(u);
     if (res.code !== 0) {
       this.finish(r, 'failed', `systemd-run failed for ${u.unit}: ${(res.stderr || res.stdout).trim().split('\n').at(-1)}`);
-      return;
+      return false;
     }
     r.unit = u.unit;
     r.unitStartedAt = this.sys.now();
     this.setStatus(r, 'running', { phase: this.phaseOf(r) });
     this.save(r);
+    return true;
   }
 
   heavyBudget(r: JobRun): number {
@@ -475,19 +612,19 @@ export class Runner {
 
   // ------------------------------------------------------------------ monitoring
 
-  private monitor(r: JobRun, job: JobFile): void {
+  private monitor(r: JobRun, job: JobFile, unknown = false): void {
     const step = r.steps[r.stepIndex] as Step;
     const now = this.sys.now();
     if (step.phase === 'pilot' && r.unit) {
       const peaks = this.sys.unitJavaPeaksGb(r.unit);
       if (peaks.length) r.peakRssGb = Math.max(r.peakRssGb ?? 0, ...peaks);
     }
-    if (r.stopping) return;
+    if (r.stopping || unknown) return;           // stopping, or systemctl did not answer: wait for the next tick
     if (job.timeoutSec && now - r.unitStartedAt > job.timeoutSec * 1000) {
       this.stop(r, 'timeout', `step ${step.name} ran past ${job.timeoutSec} s`);
       return;
     }
-    const canControl = (job.header.control ?? 'yes').trim().toLowerCase() !== 'no';
+    const canControl = r.canControl === true;
     // Justin at the table: hold a heavy job (its games in flight finish), never start one (schedule.ts).
     if (r.cpu === 'heavy' && step.phase !== 'prepare') {
       const playing = this.sys.playing(this.cfg.bridgePort);
@@ -498,7 +635,7 @@ export class Runner {
     }
     if (this.host && r.backoff && step.phase !== 'prepare' && r.unit) {
       const maxGb = this.unitSpec(r, job, step).memoryMaxGb;
-      const { state, action } = decide(r.backoff, { at: now, some10: this.host.some10, swapIn: this.swapInRate, jobGb: this.sys.unitMemoryGb(r.unit), jobMaxGb: maxGb }, canControl, this.cfg.backoff);
+      const { state, action } = decide(r.backoff, { at: now, some10: this.host.some10, swapIn: this.swapInRate, jobGb: this.sys.unitMemoryGb(r.unit), jobMaxGb: maxGb, javaCount: this.sys.unitJavaCount(r.unit) }, canControl, this.cfg.backoff);
       r.backoff = state;
       if (action) this.apply(r, action);
     }
@@ -582,7 +719,11 @@ export class Runner {
       try {
         const args = s.args.map((a) => this.substitute(a === '{logs}' ? logs : a, r));
         if (s.kind === 'sh') {
-          const res = this.sys.run(['bash', '-c', this.substitute(s.command ?? '', r)], { cwd, timeoutMs: 300_000 });
+          const cmd = this.substitute(s.command ?? '', r);
+          const found = this.homeReference(cmd);
+          if (found) throw new Error(`names Justin's checkout (${found}); not run`);
+          // In the lab slice, like the job: a metrics command is the job's code, under the job's budget.
+          const res = this.sys.runInSlice(cmd, cwd, 300_000);
           if (res.code !== 0) throw new Error(`exit ${res.code}: ${res.stderr.trim().split('\n').at(-1)}`);
           const v = JSON.parse(res.stdout.trim()) as unknown;
           place(s.name, typeof v === 'number' ? v : flatten(v), out);
@@ -648,6 +789,10 @@ export class Runner {
         try {
           const st = fs.statSync(f);
           if (!st.isFile()) continue;
+          if (RESERVED_OUTPUTS.has(path.basename(f)) || /^(pilot|run)\d+\.log$|^prepare\.log$/.test(path.basename(f))) {
+            this.writeOut(r, 'collect-skipped.txt', `${path.basename(f)}: a name the runner reserves for its own outputs\n`, true);
+            continue;
+          }
           if (st.size > 5 * MB) { this.writeOut(r, 'collect-skipped.txt', `${path.basename(f)}: ${(st.size / MB).toFixed(1)} MB, over 5 MB\n`, true); continue; }
           fs.copyFileSync(f, path.join(this.jobDir(r.id), 'out', path.basename(f)));
         } catch { /* gone */ }
@@ -701,17 +846,22 @@ export class Runner {
           this.setStatus(r, 'running', { phase: this.phaseOf(r) });
           continue;
         }
+        if (state === 'unknown') continue;                                   // systemctl did not answer: decide at a later tick
         const step = r.steps[r.stepIndex] as Step;
         if (fs.existsSync(this.rcFile(r, step)) || r.stopping) continue;     // ended while we were down: the next tick reads it
+        if (state !== 'gone') continue;                                      // loaded and not yet unloaded: wait for systemd
         r.unit = null;
       }
       const step = r.steps[r.stepIndex];
       if (!step || step.kind !== 'shell' || step.phase === 'prepare') {
         r.restarts.push({ at: this.sys.now(), how: 'resumed', why: `the runner restarted at ${step?.name ?? 'the end'}` });
       } else if (job.resumable || step.phase === 'pilot') {
-        r.restarts.push({ at: this.sys.now(), how: 'resumed', why: `the runner restarted during ${step.name}; it runs again${job.resumable ? ' and skips what is done' : ' (a pilot is short)'}` });
+        // No exit code: maybe memory; the step runs again with one worker fewer.
+        if (step.phase === 'commands') { r.cap = retryCap(r.backoff?.workers ?? r.workers); r.sizing = null; }
+        r.restarts.push({ at: this.sys.now(), how: 'resumed', why: `the runner restarted during ${step.name}; it runs again${job.resumable ? ' and skips what is done' : ' (a pilot is short)'}${step.phase === 'commands' ? `, at most ${r.cap} worker(s)` : ''}` });
       } else {
         const moved = this.cleanAside(r, job);
+        r.cap = step.phase === 'commands' ? retryCap(r.backoff?.workers ?? r.workers) : r.cap;
         r.stepIndex = 0;
         r.sizing = null;
         r.restarts.push({ at: this.sys.now(), how: 'restarted', why: `the runner restarted during ${step.name}; the job is not resumable, so it starts again from the top${moved.length ? ` (moved aside: ${moved.join(', ')})` : ''}` });
@@ -723,7 +873,7 @@ export class Runner {
     for (const [id, st] of this.origin) {
       if (st.state === 'running' && isOurs(st) && !this.runs.get(id)?.outcome && !this.runs.has(id)) {
         const job = this.jobs.find((j) => j.id === id);
-        if (!job) continue;
+        if (!job || job.errors.length) continue;
         const r = this.begin(job, null);
         r.restarts.push({ at: this.sys.now(), how: 'restarted', why: 'STATUS said running but the runner had no record of it' });
         this.setStatus(r, 'running', { phase: this.phaseOf(r) });
@@ -743,9 +893,46 @@ export class Runner {
         // A dot name: the job's own globs (night-*) never match it again.
         fs.renameSync(p, path.join(path.dirname(p), `.restart-${stamp}-${path.basename(p)}`));
         moved.push(rel);
+        this.pruneAside(path.dirname(p), path.basename(p));
       }
     }
     return moved;
+  }
+
+  /** Keep the two newest `.restart-*-<name>` copies beside a cleaned path; older ones go (inside var/ only). */
+  pruneAside(dir: string, name: string, keep = 2): void {
+    let ents: string[] = [];
+    try { ents = fs.readdirSync(dir); } catch { return; }
+    const old = ents.filter((e) => e.startsWith('.restart-') && e.endsWith(`-${name}`)).sort().reverse().slice(keep);
+    for (const e of old) {
+      const p = path.join(dir, e);
+      if (!path.relative(this.cfg.labRoot, p).split(path.sep).includes('var')) continue;
+      fs.rmSync(p, { recursive: true, force: true });
+    }
+  }
+
+  /**
+   * At daemon start, under its lock: a git *.lock left in the runner's own repositories (the pc-results
+   * worktree's git dir, lab-status) by a runner killed mid-commit.  Never in the job clones, where a
+   * prepare may be running.
+   */
+  clearStaleGitLocks(): string[] {
+    const out: string[] = [];
+    const sweep = (dir: string, deep: boolean): void => {
+      let ents: fs.Dirent[] = [];
+      try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+      for (const e of ents) {
+        const p = path.join(dir, e.name);
+        if (e.isFile() && e.name.endsWith('.lock')) { fs.rmSync(p, { force: true }); out.push(p); }
+        else if (deep && e.isDirectory() && e.name !== 'objects') sweep(p, true);
+      }
+    };
+    const wt = this.resultsDir();
+    const gd = fs.existsSync(path.join(wt, '.git')) ? this.git(wt, 'rev-parse', '--absolute-git-dir').stdout.trim() : '';
+    if (gd && gd.includes(`${path.sep}worktrees${path.sep}`)) sweep(gd, false);
+    sweep(path.join(this.publicDir(), '.git'), true);
+    for (const f of out) this.sys.log(`removed a stale git lock: ${f}`);
+    return out;
   }
 
   // ------------------------------------------------------------------ requests from the CLI
@@ -787,6 +974,7 @@ export class Runner {
       const { ratePerHour, eta } = rateAndEta(r.progress, r.total, now);
       const errors = ['errors', 'engine_errors', 'transport_errors'].map((k) => r.metrics[k]).find((v) => typeof v === 'number') as number | undefined;
       return {
+        ...this.publicOf(r.id),
         id: r.id, title: r.title, cpu: r.cpu, phase: this.phaseOf(r), started: isoLocal(r.startedAt), elapsed: Math.round((now - r.startedAt) / 1000),
         done: r.progress.at(-1)?.done ?? null, total: r.total, unit: r.progressUnit, ratePerHour, eta: eta ? isoLocal(eta) : null,
         workers: r.backoff?.workers ?? r.workers, workersMax: r.sizing?.workers ?? r.workers, errors: errors ?? null,
@@ -801,7 +989,7 @@ export class Runner {
       if (st.state !== 'running' || this.runs.get(id) && !this.runs.get(id)?.outcome) continue;
       const job = this.jobs.find((j) => j.id === id);
       const started = Date.parse(st.fields.started ?? '');
-      running.push({ id, title: job?.title ?? id, cpu: job?.cpu ?? 'heavy', phase: 'commands', started: Number.isFinite(started) ? isoLocal(started) : '', elapsed: Number.isFinite(started) ? Math.round((now - started) / 1000) : 0,
+      running.push({ ...this.publicOf(id), id, title: job?.title ?? id, cpu: job?.cpu ?? 'heavy', phase: 'commands', started: Number.isFinite(started) ? isoLocal(started) : null, elapsed: Number.isFinite(started) ? Math.round((now - started) / 1000) : 0,
         done: null, total: null, unit: null, ratePerHour: null, eta: null, workers: null, workersMax: null, errors: null, paused: false, dataUpdated: null, pressureEvents: [], detail: 'not run by the runner' });
     }
     const queueCodes = new Set(['after', 'heavy-busy', 'light-busy', 'queued']);
@@ -810,9 +998,11 @@ export class Runner {
       if (st.state !== 'done' && st.state !== 'failed' && st.state !== 'skipped') continue;
       const at = Date.parse(st.fields.finished ?? st.fields.started ?? '');
       const numbers = this.runs.get(id)?.numbers ?? {};
-      finished.push({ id, title: this.jobs.find((j) => j.id === id)?.title ?? id, status: st.state, finished: Number.isFinite(at) ? isoLocal(at) : '', headline: headlineOf(numbers), numbers, detail: st.fields.reason });
+      finished.push({ ...this.publicOf(id), id, title: this.jobs.find((j) => j.id === id)?.title ?? id, status: st.state, finished: Number.isFinite(at) ? isoLocal(at) : null, headline: headlineOf(numbers), numbers, detail: st.fields.reason });
     }
-    finished.sort((a, b) => (b.finished > a.finished ? 1 : b.finished < a.finished ? -1 : 0));
+    // Newest first, by the instant (offsets differ between STATUS files), undated last.
+    const t = (x: FinishedItem): number => (x.finished ? Date.parse(x.finished) : -Infinity);
+    finished.sort((a, b) => t(b) - t(a));
     return fit({
       schema: 1,
       updated: isoLocal(now),
@@ -822,11 +1012,17 @@ export class Runner {
         swapUsedMb: Math.round(h.swapUsedMb), pressure: Math.round(h.some10 * 100) / 100, cpus: m.threads, budgetGb: b.labGb,
       },
       running,
-      queue: this.blocked.filter((x) => queueCodes.has(x.code)).map((x) => ({ id: x.id, title: x.title, cpu: x.cpu, est: x.est })),
-      waiting: this.blocked.filter((x) => !queueCodes.has(x.code)).map((x) => ({ id: x.id, title: x.title, reason: REASONS[x.code] ?? 'waiting', est: x.est, detail: x.reason })),
+      queue: this.blocked.filter((x) => queueCodes.has(x.code)).map((x) => ({ ...this.publicOf(x.id), id: x.id, title: x.title, cpu: x.cpu, est: x.est })),
+      waiting: this.blocked.filter((x) => !queueCodes.has(x.code)).map((x) => ({ ...this.publicOf(x.id), id: x.id, title: x.title, reason: REASONS[x.code] ?? 'waiting', est: x.est, detail: x.reason })),
       finished,
       runner: { commit: this.cfg.commit, started: isoLocal(this.p.started), dryRun: false },
     });
+  }
+
+  /** The job file's opted-in public title and estimate (`public_title:`, `public_est:`), for `sanitise`. */
+  publicOf(id: string): { publicTitle: string | null; publicEst: string | null } {
+    const j = this.jobs.find((x) => x.id === id) ?? this.retained.get(id);
+    return { publicTitle: j?.publicTitle ?? null, publicEst: j?.publicEst ?? null };
   }
 
   writeStatusJson(): StatusDoc {
@@ -863,7 +1059,17 @@ ${keep.trimEnd()}
     if (!this.cfg.push) { this.p.dirty = false; this.p.lastPublish = this.sys.now(); this.p.ladderSig = this.ladderSig(); return; }
     const ok = this.publishResults(doc);
     if (this.cfg.publicStatus) this.publishPublic(sanitise(doc)); else this.p.ladderSig = this.ladderSig();
-    if (ok) { this.p.dirty = false; this.p.lastPublish = this.sys.now(); }
+    if (ok) {
+      this.p.dirty = false;
+      this.p.lastPublish = this.sys.now();
+      this.p.publishFailures = 0;
+      this.p.nextPublishAt = 0;
+    } else {
+      // Exponential backoff: 30 s, 1, 2, 4 … 30 minutes; never a push every tick while the network is down.
+      this.p.publishFailures = (this.p.publishFailures ?? 0) + 1;
+      this.p.nextPublishAt = this.sys.now() + Math.min(30 * 60_000, 30_000 * 2 ** (this.p.publishFailures - 1));
+      this.sys.log(`publish failed ${this.p.publishFailures} time(s) in a row; next try at ${isoLocal(this.p.nextPublishAt)}`);
+    }
   }
 
   ensureResultsWorktree(): string {
@@ -881,19 +1087,22 @@ ${keep.trimEnd()}
     let wt: string;
     try { wt = this.ensureResultsWorktree(); } catch (e) { this.sys.log(`publish: ${(e as Error).message}`); return false; }
     for (let attempt = 0; attempt < 3; attempt++) {
-      this.git(wt, 'fetch', '--quiet', 'origin', '+refs/heads/pc-results:refs/remotes/origin/pc-results');
-      this.git(wt, 'reset', '--quiet', '--hard', 'origin/pc-results');
+      const fetched = this.git(wt, 'fetch', '--quiet', 'origin', '+refs/heads/pc-results:refs/remotes/origin/pc-results');
+      if (fetched.code !== 0) { this.sys.log(`publish: fetch failed: ${fetched.stderr.trim().split('\n').at(-1)}`); return false; }
+      if (this.git(wt, 'reset', '--quiet', '--hard', 'origin/pc-results').code !== 0) { this.sys.log('publish: reset failed'); return false; }
       const changed: string[] = [];
       for (const r of this.runs.values()) {
         if (r.published) continue;
         const d = path.join(wt, 'results', r.id);
         fs.mkdirSync(d, { recursive: true });
-        if (r.pendingStatus) fs.writeFileSync(path.join(d, 'STATUS'), r.pendingStatus);
         const out = path.join(this.jobDir(r.id), 'out');
         for (const f of fs.existsSync(out) ? fs.readdirSync(out) : []) {
+          if (f === 'STATUS' || f === 'summary.md') continue;          // the runner's STATUS, and the PC session's summary, are never overwritten by an output
           const src = path.join(out, f);
           if (fs.statSync(src).isFile() && fs.statSync(src).size <= 5 * MB) fs.copyFileSync(src, path.join(d, f));
         }
+        // STATUS last: nothing copied above can stand in for it.
+        if (r.pendingStatus) fs.writeFileSync(path.join(d, 'STATUS'), r.pendingStatus);
         changed.push(r.id);
       }
       fs.writeFileSync(path.join(wt, 'status.json'), `${JSON.stringify(doc, null, 1)}\n`);
@@ -960,6 +1169,48 @@ ${keep.trimEnd()}
       const doc = sanitiseLadder(JSON.parse(fs.readFileSync(this.ladderPath(), 'utf8')));
       return doc ? `${JSON.stringify(doc)}\n` : null;
     } catch { return null; }
+  }
+
+  /**
+   * `tools/runner.sh approve J###`: a job waiting after its pilot (needs: check) may run its commands.
+   * In a temporary worktree of its own (never the daemon's pc-results worktree), every git step
+   * checked; a refused push is fetched, re-applied and retried.  Throws unless it was pushed.
+   */
+  approve(id: string, by: string, note = ''): void {
+    if (!/^J\d+$/.test(id)) throw new Error('approve J###');
+    const repo = this.queueRepo();
+    this.ensureClone('mtg-table', repo);
+    const tmp = path.join(this.cfg.stateDir, `approve-${id}-${process.pid}`);
+    const must = (what: string, r: { code: number; stderr: string }): void => {
+      if (r.code !== 0) throw new Error(`approve ${id}: ${what} failed: ${r.stderr.trim().split('\n').at(-1) ?? ''}`);
+    };
+    try {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        must('git fetch', this.git(repo, 'fetch', '--quiet', 'origin', '+refs/heads/pc-results:refs/remotes/origin/pc-results'));
+        fs.rmSync(tmp, { recursive: true, force: true });
+        this.git(repo, 'worktree', 'prune');
+        must('git worktree add', this.git(repo, 'worktree', 'add', '--quiet', '--detach', tmp, 'origin/pc-results'));
+        const file = path.join(tmp, 'results', id, 'STATUS');
+        const st = fs.existsSync(file) ? parseStatus(fs.readFileSync(file, 'utf8')) : null;
+        if (!st || st.state !== 'waiting') throw new Error(`${id}'s STATUS is ${st?.state ?? 'missing'}; approve is for a job waiting after its pilot`);
+        delete st.fields.needs;
+        st.fields.approved = `${isoLocal(this.sys.now())} by ${by}${note ? `: ${note}` : ''}`;
+        st.fields.reason = 'pilot approved; the runner runs the commands';
+        fs.writeFileSync(file, formatStatus(st));
+        must('git add', this.git(tmp, 'add', path.join('results', id, 'STATUS')));
+        must('git commit', this.git(tmp, '-c', 'user.name=forgecoach-runner', '-c', 'user.email=runner@localhost', 'commit', '--quiet', '-m', `${id}: approved after its pilot`));
+        if (!this.cfg.push) return;
+        const p = this.git(tmp, 'push', '--quiet', 'origin', 'HEAD:refs/heads/pc-results');
+        if (p.code === 0) { this.p.lastFetch = 0; return; }
+        this.sys.log(`approve ${id}: push refused (attempt ${attempt + 1}); fetching and trying again`);
+        this.git(repo, 'worktree', 'remove', '--force', tmp);
+      }
+      throw new Error(`approve ${id}: the push was refused three times`);
+    } finally {
+      this.git(repo, 'worktree', 'remove', '--force', tmp);
+      fs.rmSync(tmp, { recursive: true, force: true });
+      this.git(repo, 'worktree', 'prune');
+    }
   }
 
   // ------------------------------------------------------------------ outputs

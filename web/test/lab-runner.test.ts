@@ -40,7 +40,7 @@ import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expan
 import { DEFAULT_CONFIG, Runner, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { formatStatus, parseStatus, schedule, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
-import { cleanTitle, isoLocal, sanitise, type StatusDoc } from '../../tools/runner/statusjson.ts';
+import { isoLocal, PUBLIC_TEXT, REASONS, sanitise, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
 import { establishedOn, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
 import { runPool, type MatchJob } from '../../tools/cubelab/engine.ts';
@@ -228,8 +228,9 @@ test('the unit: systemd-run --user in the lab slice, with the budget, Nice=10 an
 test('backoff: drop a worker on sustained pressure, pause at one, stop past the hard line, restore when calm', () => {
   const at = (i: number): number => i * 10_000;
   let s: BackoffState = initialBackoff(4);
+  let java: number | null = 4;                              // the unit's Java processes: a worker leaves only when its game ends
   const step = (i: number, some10: number, swapIn = 0, can = true, jobGb: number | null = null) => {
-    const r = decide(s, { at: at(i), some10, swapIn, jobGb, jobMaxGb: 21 }, can);
+    const r = decide(s, { at: at(i), some10, swapIn, jobGb, jobMaxGb: 21, javaCount: java }, can);
     s = r.state;
     return r.action;
   };
@@ -237,14 +238,19 @@ test('backoff: drop a worker on sustained pressure, pause at one, stop past the 
   assert.deepEqual(step(2, 12), { kind: 'drop', workers: 3, why: 'some avg10 12.0%, swap-in 0/s' });
   assert.equal(step(3, 12), null);
   assert.equal(step(4, 12), null);                          // cooldown: 60 s between drops
-  assert.equal(step(8, 12)?.kind, 'drop');                  // 2 workers
-  assert.equal(step(14, 3, 5000), null);
-  assert.equal(step(15, 3, 5000)?.kind, 'drop');            // swap-in counts as pressure: 1 worker
-  step(21, 12);
-  assert.equal(step(22, 12)?.kind, 'pause');                // at one worker: pause new games
-  assert.equal(step(30, 45), null);
-  assert.equal(step(31, 45), null);
-  assert.equal(step(32, 45)?.kind, 'stop');                 // past the hard line with nothing left: stop
+  assert.equal(step(9, 12), null);                          // the cooldown passed, but 4 JVMs still run: the drop has not taken effect
+  assert.equal(step(20, 12), null);
+  java = 3;                                                 // a game ended and its worker left
+  assert.equal(step(21, 12)?.kind, 'drop');                 // 2 workers
+  java = null;                                              // unknown: the next drop waits dropSettleS (300 s)
+  assert.equal(step(40, 3, 5000), null);
+  assert.equal(step(51, 3, 5000)?.kind, 'drop');            // 300 s after the last drop; swap-in counts as pressure: 1 worker
+  java = 1;
+  step(61, 12);
+  assert.equal(step(62, 12)?.kind, 'pause');                // at one worker: pause new games
+  assert.equal(step(70, 45), null);
+  assert.equal(step(71, 45), null);
+  assert.equal(step(72, 45)?.kind, 'stop');                 // past the hard line with nothing left: stop
   s = { ...s, paused: true, workers: 1, lastDrop: -Infinity };
   let a = null;
   for (let i = 100; i < 140 && !a; i++) a = step(i, 0.5);
@@ -259,8 +265,10 @@ test('backoff: drop a worker on sustained pressure, pause at one, stop past the 
   assert.equal(step(302, 50, 0, false)?.kind, 'stop');
   // The unit's own memory near MemoryMax is hard too; with control it drops first, then stops anyway.
   s = initialBackoff(6);
+  java = 6;                                                 // a job whose JVMs never leave (it ignores the cap)
   const acts = Array.from({ length: 14 }, (_, i) => step(400 + i * 7, 1, 0, true, 20.5)?.kind).filter(Boolean);
-  assert.ok(acts.includes('stop'), acts.join(','));
+  // A drop at once; a second only after dropSettleS (300 s), since the JVM count never fell; then the hard line's safety net stops it.
+  assert.deepEqual(acts.slice(0, acts.indexOf('stop') + 1), ['drop', 'drop', 'stop']);
   assert.equal(retryCap(6), 5);
   assert.equal(retryCap(1), 1);
   assert.deepEqual(parsePressure('some avg10=12.34 avg60=1.00 avg300=0.10 total=1\nfull avg10=3.50 avg60=0 avg300=0 total=0\n'), { some10: 12.34, full10: 3.5 });
@@ -339,38 +347,66 @@ test('progress: rate per hour over the last 30 minutes, and the ETA', () => {
 
 // ------------------------------------------------------------------ status.json and the public copy
 
+/** What must never reach the public copy: card, deck and cube names, e-mail addresses, host names, paths, presence. */
+const LEAKS = ['Lightning Bolt', 'Black Lotus', 'Island', 'Omega', 'Doom Legion', 'justin@example.com', 'example.com', 'desk.local', 'justins-pc', '/home', 'justin-a', '/tmp', 'proc', 'lab-J003', 'abc1234', 'Justin', 'playing', 'play-ended', 'at the table'];
+
 const DOC: StatusDoc = {
   schema: 1, updated: '2026-10-03T10:55:00-04:00', paused: false,
   host: { load1: 6.2, memUsedGb: 14.1, memTotalGb: 30, swapUsedMb: 0, pressure: 1.5, cpus: 16, budgetGb: 23 },
-  running: [{ id: 'J003', title: 'Search AI vs /home/justin-a/code/mtg-table on desk.local (Lightning Bolt)', cpu: 'heavy', phase: 'commands 1/1', started: '2026-10-03T10:34:23-04:00', elapsed: 1234,
-    done: 212, total: 400, unit: 'games', ratePerHour: 310, eta: '2026-10-03T12:40:00-04:00', workers: 6, workersMax: 7, errors: 0, paused: false, dataUpdated: '2026-10-03T10:54:00-04:00',
-    pressureEvents: [{ at: '2026-10-03T10:40:00-04:00', kind: 'drop', workers: 6, pressure: 12.3, why: 'some avg10 12% /proc' } as never], detail: 'lab-J003-run1 /home/justin-a' }],
-  queue: [{ id: 'J004', title: 'Omega evolve', cpu: 'heavy', est: '~3 h' }],
-  waiting: [{ id: 'J006', title: 'Coach', reason: 'pilot done; needs a check', est: '', detail: 'card Black Lotus in /tmp/x' }, { id: 'J007', title: 'x', reason: 'deck: 4 Island', est: '' }],
+  running: [{ id: 'J003', title: 'Search AI with Lightning Bolt decks, mail justin@example.com from desk.local', cpu: 'heavy', phase: 'commands 1/1', started: '2026-10-03T10:34:23-04:00', elapsed: 1234,
+    done: 212, total: 400, unit: 'games', ratePerHour: 310, eta: '2026-10-03T12:40:00-04:00', workers: 6, workersMax: 7, errors: 0, paused: true, dataUpdated: '2026-10-03T10:54:00-04:00',
+    pressureEvents: [
+      { at: '2026-10-03T10:40:00-04:00', kind: 'drop', workers: 6, pressure: 12.3, why: 'some avg10 12% /proc' } as never,
+      { at: '2026-10-03T10:41:00-04:00', kind: 'playing', workers: 6, pressure: 0, why: 'Justin is at the table' } as never,
+      { at: '2026-10-03T10:50:00-04:00', kind: 'play-ended', workers: 6, pressure: 0, why: 'Justin left the table' } as never,
+    ], detail: 'lab-J003-run1 /home/justin-a' }],
+  queue: [{ id: 'J004', title: 'Omega evolve', cpu: 'heavy', est: '~3 h' }, { id: 'J008', title: 'Search vs Doom Legion', publicTitle: 'Search bench (40 deals)', publicEst: '~3 h', cpu: 'heavy', est: '~3 h' },
+    { id: 'J009', title: 'x', publicTitle: 'Evolve at desk.local', publicEst: 'see /tmp', cpu: 'light', est: '' }],
+  waiting: [{ id: 'J006', title: 'Coach', reason: 'pilot done; needs a check', est: '', detail: 'card Black Lotus in /tmp/x' }, { id: 'J007', title: 'x', reason: 'deck: 4 Island', est: '' },
+    { id: 'J010', title: 'y', reason: 'held', est: '', detail: 'Justin is playing' }],
   finished: [{ id: 'J002', title: 'PR #27 coach-bench comparison', status: 'done', finished: '2026-10-03T09:53:39-07:00', headline: 'Lightning Bolt was great', numbers: { 'a_win_rate': 0.41, 'bad key!': 3, games: 400, 'control.games': 20 }, detail: 'from /home/x' }],
   runner: { commit: 'abc1234', started: '2026-10-03T10:00:00-04:00', dryRun: false },
 };
 
-test('public status: an allowlist — ids, cleaned titles, numbers, timestamps, fixed words; nothing else', () => {
+test('public status (the spec): ids; a title or estimate only when the job opts in, in the strict set; numbers, timestamps, fixed words; no presence', () => {
   const p = sanitise(DOC);
   const text = JSON.stringify(p);
-  for (const bad of ['/home', 'justin-a', 'desk.local', 'lab-J003', 'Black Lotus', 'Island', 'why', 'detail', 'runner', 'abc1234', 'bad key', 'great', 'proc']) assert.ok(!text.includes(bad), bad);
-  assert.equal(p.running[0]?.title, 'Search AI vs … on … (Lightning Bolt)');
-  assert.equal(p.waiting[0]?.reason, 'pilot done; needs a check');
-  assert.equal(p.waiting[1]?.reason, 'waiting');
+  for (const bad of LEAKS) assert.ok(!text.includes(bad), `the public copy holds "${bad}"`);
+  for (const k of ['why', 'detail', 'runner', 'publicTitle', 'publicEst']) assert.ok(!text.includes(`"${k}"`), k);
+  // No opt-in: the title is the id and there is no estimate.
+  assert.deepEqual([p.running[0]?.title, p.queue[0]?.title, p.queue[0]?.est, p.finished[0]?.title, p.waiting[0]?.title], ['J003', 'J004', '', 'J002', 'J006']);
+  // Opted in, in the strict set: shown.  Opted in with a host name or a path: the id, no estimate.
+  assert.deepEqual([p.queue[1]?.title, p.queue[1]?.est], ['Search bench (40 deals)', '~3 h']);
+  assert.deepEqual([p.queue[2]?.title, p.queue[2]?.est], ['J009', '']);
+  // Presence: the events that say Justin sat down or left are dropped; the reason is the neutral "held".
+  assert.deepEqual(p.running[0]?.pressureEvents, [{ at: '2026-10-03T10:40:00-04:00', kind: 'drop', workers: 6, pressure: 12.3 }]);
+  assert.equal(REASONS.playing, 'held');
+  assert.deepEqual(p.waiting.map((w) => w.reason), ['pilot done; needs a check', 'waiting', 'held']);
   assert.deepEqual(p.finished[0]?.numbers, { a_win_rate: 0.41, games: 400, 'control.games': 20 });
   assert.equal(p.finished[0]?.headline, 'a_win_rate 0.41 · games 400 · control.games 20');
-  assert.deepEqual(p.running[0]?.pressureEvents, [{ at: '2026-10-03T10:40:00-04:00', kind: 'drop', workers: 6, pressure: 12.3 }]);
   assert.equal(p.host.cpus, 16);
   assert.equal(p.schema, 1);
+  // A missing timestamp is null, never ''.
+  const undated = sanitise({ ...DOC, running: [{ ...DOC.running[0]!, started: 'soon' }], finished: [{ ...DOC.finished[0]!, finished: null }] });
+  assert.deepEqual([undated.running[0]?.started, undated.finished[0]?.finished], [null, null]);
   // Whatever arrives, the shape is the allowlist's.
   const hostile = sanitise({ ...DOC, running: [{ ...DOC.running[0]!, id: '../../etc', phase: 'rm -rf', unit: 'cards', eta: 'soon' }], extra: 'x' } as unknown as StatusDoc);
   assert.deepEqual(hostile.running, []);
   assert.ok(!('extra' in hostile));
   const h2 = sanitise({ ...DOC, running: [{ ...DOC.running[0]!, phase: 'rm -rf', unit: 'cards', eta: 'soon' }] });
   assert.deepEqual([h2.running[0]?.phase, h2.running[0]?.unit, h2.running[0]?.eta], ['commands', null, null]);
-  assert.equal(cleanTitle('Run http://x.y/z and 10.0.0.2 and a@b.c'), 'Run … and … and …');
+  for (const ok of ['Search bench (40 deals)', '~3 h', 'J003: control vs search, 2000 games']) assert.ok(PUBLIC_TEXT.test(ok), ok);
+  for (const bad of ['a.b', 'x/y', 'a@b', 'C:\\x', '"q"', '[x]', 'é']) assert.ok(!PUBLIC_TEXT.test(bad), bad);
   assert.match(isoLocal(Date.parse('2026-10-03T14:55:00Z'), -240), /^2026-10-03T10:55:00-04:00$/);
+});
+
+test('job file: public_title and public_est opt in, and only in the strict character set', () => {
+  const ok = parseJobFile('J030.md', 'id: J030\npublic_title: Search bench (400 deals)\npublic_est: ~3 h\n', parse);
+  assert.deepEqual([ok.publicTitle, ok.publicEst, ok.errors], ['Search bench (400 deals)', '~3 h', []]);
+  const bad = parseJobFile('J031.md', 'id: J031\npublic_title: Lightning Bolt at desk.local\n', parse);
+  assert.equal(bad.publicTitle, null);
+  assert.equal(bad.errors.length, 1);
+  assert.equal(parseJobFile('J032.md', 'id: J032\ntitle: Lightning Bolt\n', parse).publicTitle, null);
 });
 
 const LADDER = {
@@ -381,26 +417,35 @@ const LADDER = {
       rating: 1562.3, lo: 1520.1, hi: 1601.9, rated: true, games: 200, wins: 118, losses: 82, draws: 4, vsAnchor: { wins: 60, losses: 40, rate: 0.6, lo: 0.502, hi: 0.691 } },
     { name: '/etc/passwd', kind: 'x', rating: 1 },
     { name: 'old@1a2b3c4d', kind: 'Search Config!', params: {}, unavailable: 'kind removed: see /home/x', rating: 1490, lo: 1400, hi: 1580, rated: true, games: 20, wins: 9, losses: 11, draws: 0, vsAnchor: null },
+    { name: 'justin@example.com', kind: 'search', rating: 1500, lo: 1400, hi: 1600, rated: true, games: 1, wins: 1, losses: 0, draws: 0, vsAnchor: null },
+    { name: 'desk.local', kind: 'search', rating: 1500, lo: 1400, hi: 1600, rated: true, games: 1, wins: 1, losses: 0, draws: 0, vsAnchor: null },
   ],
   history: [{ at: 'x', run: 'justins-pc:run1', games: 1, ratings: {} }],
   sprt: [{ v: 1, at: '2026-10-03T10:00:00Z', id: 'justins-pc-17', host: 'justins-pc', a: 'search-ms3000', b: 'forge-default', ah: 'h', bh: 'h', elo0: 0, elo1: 30, alpha: 0.05, beta: 0.05, result: 'H1', llr: 3.1, lower: -2.9, upper: 2.9, games: 160, pairs: 40, score: 0.58, purpose: 'sprt' }],
-  tune: [{ at: '2026-10-02T10:00:00Z', id: 't1', host: 'justins-pc', base: 'search-ms3000', vary: { ms: [1000, 3000] }, pool: ['forge-default'], eta: 0.5, games: 300, winner: { label: 'ms=1000 /tmp/x', params: { ms: 1000 }, hash: 'h', registeredAs: 'search-ms1000' }, rounds: [{ round: 1, blocks: 4, standings: [{ label: 'ms=1000', wins: 30, losses: 20, score: 0.6 }, { label: '/etc/x', wins: 1, losses: 1, score: 0.5 }] }] }],
+  tune: [{ at: '2026-10-02T10:00:00Z', id: 't1', host: 'justins-pc', base: 'search-ms3000', vary: { ms: [1000, 3000] }, pool: ['forge-default'], eta: 0.5, games: 300, winner: { label: 'ms=1000 /tmp/x', params: { ms: 1000 }, hash: 'h', registeredAs: 'search-ms1000' }, rounds: [{ round: 1, blocks: 4, standings: [{ label: 'ms=1000', wins: 30, losses: 20, score: 0.6 }, { label: '/etc/x', wins: 1, losses: 1, score: 0.5 }, { label: 'mail justin@example', wins: 1, losses: 1, score: 0.5 }, { label: 'host desk.local', wins: 1, losses: 1, score: 0.5 }] }] }],
   league: { best: 'search-ms3000', pool: ['forge-default', '../x'], promoted: [{ name: 'search-ms3000', at: '2026-10-02T12:00:00Z', reason: 'SPRT H1 vs best; see /home/justin-a/x on desk.local' }] },
-  set: 'tools/ai-bench/pairs-confirm.txt',
+  set: 'var/cubelab/runs/omega-lightning-bolt.txt',
   experiments: [{ at: 'x', id: 'e1', cmd: 'tools/ai-ladder.sh run --hosts justins-pc', purpose: 'dev', status: 'finished', sha: 'abc', dirty: false, set: 'x', hypothesis: 'free text', games: 3 }],
 };
 
 test('public ladder.json: an allowlist of names, kinds, ratings, records and outcomes', () => {
   const p = sanitiseLadder(LADDER)!;
   const text = JSON.stringify(p);
-  for (const bad of ['/home', 'justin', 'passwd', 'hosts', 'params', 'hash', 'history', 'experiments', 'tools/', 'free text', 'desk.local', 'blocks', '/tmp', '/etc', 'unavailable', '../x', '"id"']) assert.ok(!text.includes(bad), bad);
-  assert.equal(p.set, 'pairs-confirm.txt');
+  for (const bad of [...LEAKS, 'lightning', 'omega', 'passwd', 'hosts', 'params', 'hash', 'history', 'experiments', 'tools/', 'free text', 'blocks', '/etc', 'unavailable', '../x', '"id"', '@example', '.local']) assert.ok(!text.toLowerCase().includes(bad.toLowerCase()), bad);
+  // A set outside the fixed list is null; the fixed ones publish their file name.
+  assert.equal(p.set, null);
+  assert.equal(sanitiseLadder({ ...LADDER, set: 'tools/ai-bench/pairs-confirm.txt' })?.set, 'pairs-confirm.txt');
+  assert.equal(sanitiseLadder({ ...LADDER, set: 'all' })?.set, 'all');
+  // An e-mail address and a host name are not player names (no `.`, and `@` only before a hex hash).
   assert.deepEqual(p.players.map((x) => [x.name, x.kind, x.rating, x.lo, x.hi]), [['search-ms3000', 'search', 1562.3, 1520.1, 1601.9], ['old@1a2b3c4d', '?', 1490, 1400, 1580]]);
   assert.deepEqual(p.players[0]?.vsAnchor, { wins: 60, losses: 40, rate: 0.6, lo: 0.502, hi: 0.691 });
   assert.deepEqual(p.sprt[0], { at: '2026-10-03T10:00:00Z', a: 'search-ms3000', b: 'forge-default', elo0: 0, elo1: 30, alpha: 0.05, beta: 0.05, result: 'H1', llr: 3.1, lower: -2.9, upper: 2.9, games: 160, pairs: 40, score: 0.58, purpose: 'sprt' });
   assert.deepEqual(p.tune[0], { at: '2026-10-02T10:00:00Z', base: 'search-ms3000', vary: { ms: [1000, 3000] }, pool: ['forge-default'], eta: 0.5, games: 300,
     winner: { label: null, registeredAs: 'search-ms1000' }, rounds: [{ round: 1, standings: [{ label: 'ms=1000', wins: 30, losses: 20, score: 0.6 }] }] });
-  assert.deepEqual(p.league, { best: 'search-ms3000', pool: ['forge-default'], promoted: [{ name: 'search-ms3000', at: '2026-10-02T12:00:00Z', reason: 'SPRT H1 vs best; see … on …' }] });
+  // A reason not in league.ts's one shape is the fixed word; the real shape passes.
+  assert.deepEqual(p.league, { best: 'search-ms3000', pool: ['forge-default'], promoted: [{ name: 'search-ms3000', at: '2026-10-02T12:00:00Z', reason: 'promoted' }] });
+  const real = 'SPRT H1 after 160 games; non-inferior to the best against forge-default within 20 Elo (+12 Elo vs the best against forge-default over 40 shared deals)';
+  assert.equal(sanitiseLadder({ ...LADDER, league: { best: 'a', pool: [], promoted: [{ name: 'a', at: '2026-10-02T12:00:00Z', reason: real }] } })?.league?.promoted[0]?.reason, real);
   // Exactly ForgeCoach's LADDER_FIELDS (src/lab/ladder.ts on c/ladder-page): every published path is one of them.
   const FIELDS = new Set(['schema', 'version', 'generatedAt', 'anchor.name', 'anchor.rating', 'scale', 'ci', 'set', 'totals.games', 'totals.decisive', 'totals.draws', 'totals.first', 'totals.last',
     ...['name', 'kind', 'anchor', 'registered', 'available', 'rating', 'lo', 'hi', 'rated', 'games', 'wins', 'losses', 'draws', 'vsAnchor', 'vsAnchor.wins', 'vsAnchor.losses', 'vsAnchor.rate', 'vsAnchor.lo', 'vsAnchor.hi'].map((k) => `players[].${k}`),
@@ -471,8 +516,18 @@ class FakeSys implements Sys {
   some10 = 0;
   isPlaying = false;
   lines: string[] = [];
+  javaCount: number | null = null;
+  /** liveUnits answers: null = systemctl did not answer. */
+  live: string[] | null = [];
+  inSlice: string[] = [];
+  /** git subcommands that fail (exit 128), e.g. ['fetch', 'push', 'ls-tree']. */
+  gitFails = new Set<string>();
   now(): number { return this.t; }
   run(argv: string[], o: { cwd?: string; timeoutMs?: number; env?: Record<string, string>; input?: string } = {}) {
+    if (argv[0] === 'git') {
+      const sub = argv.slice(1).find((a, i, all) => !a.startsWith('-') && all[i - 1] !== '-C' && all[i - 1] !== '-c');
+      if (sub && this.gitFails.has(sub)) return { code: 128, stdout: '', stderr: `fatal: ${sub}: unable to access (fake network down)` };
+    }
     const r = spawnSync(argv[0] as string, argv.slice(1), { cwd: o.cwd, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}), GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } });
     return { code: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
   }
@@ -491,11 +546,14 @@ class FakeSys implements Sys {
     const u = this.held.get(unit);
     if (u && how === 'ok') this.exec(u);
     this.held.delete(unit);
-    this.states.set(unit, 'inactive');
+    this.states.set(unit, 'gone');
   }
   stopUnit(unit: string) { this.stopped.push(unit); this.release(unit, 'killed'); return { code: 0, stdout: '', stderr: '' }; }
-  unitState(unit: string): UnitState { return this.states.get(unit) ?? 'inactive'; }
+  unitState(unit: string): UnitState { return this.states.get(unit) ?? 'gone'; }
   unitMemoryGb(): number | null { return 2; }
+  unitJavaCount(): number | null { return this.javaCount; }
+  liveUnits(prefix: string): string[] | null { return this.live === null ? null : [...this.live, ...[...this.held.keys()].filter((u) => u.startsWith(prefix))]; }
+  runInSlice(command: string, cwd: string) { this.inSlice.push(command); return this.run(['bash', '-c', command], { cwd }); }
   unitJavaPeaksGb(): number[] { return [1.6, 1.9]; }
   playing(): boolean { return this.isPlaying; }
   log(s: string): void { this.lines.push(s); }
@@ -696,7 +754,7 @@ test('runner: while a step runs, an abort line stops it (TERM) and fails the job
 });
 
 test('runner: memory pressure drops workers through the control file, then stops; the retry has fewer workers and skips the pilot', () => {
-  const w = world({ 'J016-x.md': NEW_JOB.replace('id: J010', 'id: J016').replace('max_workers: 3', 'max_workers: 4').replace('resumable: yes', 'resumable: yes') });
+  const w = world({ 'J016-x.md': NEW_JOB.replace('id: J010', 'id: J016').replace('max_workers: 3', 'max_workers: 4\ncontrol: yes') });
   const r = new Runner({ ...w.cfg, backoff: { ...w.cfg.backoff, dropCooldownS: 0 } }, w.sys);
   r.reconcile();
   w.sys.mode = 'hold';
@@ -714,7 +772,11 @@ test('runner: memory pressure drops workers through the control file, then stops
   const ctl = (): unknown => JSON.parse(fs.readFileSync(r.controlFile('J016'), 'utf8'));
   assert.deepEqual(ctl(), { paused: false, maxWorkers: 4 });
   w.sys.some10 = 15;
+  w.sys.javaCount = 4;
   for (let i = 0; i < 4; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(ctl(), { paused: false, maxWorkers: 3 });   // one drop: the next waits until a JVM has left
+  w.sys.javaCount = 3;
+  for (let i = 0; i < 2; i++) { w.sys.t += 10_000; r.tick(); }
   assert.deepEqual(ctl(), { paused: false, maxWorkers: 2 });
   assert.deepEqual(run.events.map((e) => [e.kind, e.workers]), [['drop', 3], ['drop', 2]]);
   w.sys.some10 = 50;
@@ -938,4 +1000,275 @@ test('AI ladder drive: maxWorkers caps the batches in flight; paused holds until
   await drive(engine, { deadline: Date.now() + 60_000, next: () => (left-- > 0 ? spec : null), done: () => {}, control: () => ({ paused, maxWorkers: null }), pollMs: 10 });
   assert.equal(ran, 2);
   assert.ok(Date.now() - t0 >= 190);
+});
+
+// ------------------------------------------------------------------ the review's fixes (D337)
+
+/** A runner held at run1 of a job, under the fake systemd. */
+function heldAtRun1(id: string, jobText = NEW_JOB, cfg: Partial<RunnerConfig> = {}): { w: World; r: Runner } {
+  const w = world({ [`${id}-x.md`]: jobText.replace('id: J010', `id: ${id}`) });
+  const r = new Runner({ ...w.cfg, ...cfg }, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release(`lab-${id}-prepare`, 'ok');
+  r.tick();
+  w.sys.release(`lab-${id}-pilot1`, 'ok');
+  r.tick();
+  return { w, r };
+}
+
+test('review: a unit whose state is unknown (systemctl timed out) is still running — never orphaned, never started twice', () => {
+  const { w, r } = heldAtRun1('J040');
+  const run = r.runs.get('J040')!;
+  assert.equal(run.unit, 'lab-J040-run1');
+  w.sys.states.set('lab-J040-run1', 'unknown');
+  for (let i = 0; i < 3; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.equal(run.unit, 'lab-J040-run1');
+  assert.equal(run.outcome, null);
+  assert.equal(w.sys.started.filter((u) => u.unit === 'lab-J040-run1').length, 1);
+  // Loaded but inactive, no exit code yet: wait for LoadState=not-found before calling it killed.
+  w.sys.states.set('lab-J040-run1', 'inactive');
+  w.sys.t += 10_000; r.tick();
+  assert.equal(run.outcome, null);
+  // A restart while systemctl does not answer: nothing is restarted either.
+  w.sys.states.set('lab-J040-run1', 'unknown');
+  const r2 = new Runner(w.cfg, w.sys);
+  r2.reconcile();
+  assert.equal(r2.runs.get('J040')?.unit, 'lab-J040-run1');
+  assert.equal(r2.runs.get('J040')?.restarts.length, 0);
+});
+
+test('review: a step is never started while a unit of the same job is alive, or when systemctl cannot say', () => {
+  const w = world({ 'J041-x.md': NEW_JOB.replace('id: J010', 'id: J041') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.live = ['lab-J041-pilot1'];
+  r.tick();
+  assert.deepEqual(w.sys.started.map((u) => u.unit), []);
+  w.sys.live = null;
+  w.sys.t += 10_000; r.tick();
+  assert.deepEqual(w.sys.started.map((u) => u.unit), []);
+  w.sys.live = [];
+  w.sys.t += 10_000; r.tick();
+  assert.equal(r.runs.get('J041')?.outcome?.state, 'done');
+});
+
+test('review: steps do not start while the runner is paused, Justin is at the table, or the backoff paused the job', () => {
+  const w = world({ 'J042-x.md': NEW_JOB.replace('id: J010', 'id: J042') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  assert.deepEqual(w.sys.started.map((u) => u.unit), ['lab-J042-prepare']);
+  fs.writeFileSync(r.pausedFlag(), 'x');
+  w.sys.release('lab-J042-prepare', 'ok');
+  for (let i = 0; i < 3; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(w.sys.started.map((u) => u.unit), ['lab-J042-prepare']);
+  fs.rmSync(r.pausedFlag());
+  w.sys.isPlaying = true;
+  w.sys.t += 10_000; r.tick();
+  assert.deepEqual(w.sys.started.map((u) => u.unit), ['lab-J042-prepare']);
+  w.sys.isPlaying = false;
+  const run = r.runs.get('J042')!;
+  run.backoff = { ...initialBackoff(2), paused: true };
+  w.sys.t += 10_000; r.tick();
+  assert.deepEqual(w.sys.started.map((u) => u.unit), ['lab-J042-prepare']);
+  run.backoff = null;
+  w.sys.t += 10_000; r.tick();
+  assert.deepEqual(w.sys.started.map((u) => u.unit), ['lab-J042-prepare', 'lab-J042-pilot1']);
+});
+
+test('review: a stale pid file (a reused pid after a reboot) does not block the daemon; a live runner does', async () => {
+  const { acquireLock, releaseLock } = await import('../../tools/runner/lock.ts');
+  const f = path.join(tmp('lock'), 'daemon.pid');
+  fs.writeFileSync(f, '4242');
+  assert.equal(acquireLock(f, 100, () => null), null);                          // dead
+  fs.writeFileSync(f, '4242');
+  assert.equal(acquireLock(f, 100, () => '/usr/bin/firefox --new-window'), null); // alive, but not a runner
+  assert.equal(fs.readFileSync(f, 'utf8'), '100');
+  assert.equal(acquireLock(f, 200, () => 'node tools/runner/cli.ts daemon'), 100);  // a real runner holds it
+  releaseLock(f, 200);
+  assert.ok(fs.existsSync(f));
+  releaseLock(f, 100);
+  assert.ok(!fs.existsSync(f));
+});
+
+test('review: a dead network neither stalls monitoring nor makes the queue vanish; publishing backs off', () => {
+  const { w, r } = heldAtRun1('J043');
+  const run = r.runs.get('J043')!;
+  w.sys.gitFails = new Set(['fetch', 'push', 'ls-tree', 'show']);
+  const before = r.jobs.length;
+  for (let i = 0; i < 8; i++) { w.sys.t += 70_000; r.tick(); }
+  assert.equal(r.jobs.length, before);                      // kept, not emptied
+  assert.equal(run.outcome, null);                          // the running job was not skipped as "removed"
+  assert.equal(run.unit, 'lab-J043-run1');
+  assert.ok((r.p.publishFailures ?? 0) >= 2, String(r.p.publishFailures));
+  assert.ok((r.p.nextPublishAt ?? 0) > w.sys.t, 'the next publish waits');
+  const tries = w.sys.lines.filter((l) => /publish failed/.test(l)).length;
+  for (let i = 0; i < 6; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.ok(w.sys.lines.filter((l) => /publish failed/.test(l)).length - tries <= 1, 'not a push every tick');
+  w.sys.gitFails.clear();
+  w.sys.t += 31 * 60_000;
+  r.tick();
+  assert.equal(r.p.publishFailures, 0);
+});
+
+test('review: a job file must be missing from two successful reads before its running job stops', () => {
+  const { w, r } = heldAtRun1('J044');
+  git(w.seed, 'fetch', '--quiet', w.mtg, 'pc-jobs');
+  git(w.seed, 'checkout', '--quiet', '-B', 'jobs-edit', 'FETCH_HEAD');
+  git(w.seed, 'rm', '-q', 'jobs/J044-x.md');
+  git(w.seed, 'commit', '--quiet', '-m', 'remove');
+  git(w.seed, 'push', '--quiet', '--force', w.mtg, 'HEAD:refs/heads/pc-jobs');
+  w.sys.t += 70_000; r.tick();                               // read 1: missing once
+  w.sys.t += 70_000; r.tick();                               // the job is advanced with its retained file; read 2: missing twice
+  assert.equal(r.runs.get('J044')?.outcome, null);
+  assert.deepEqual(w.sys.stopped, []);
+  w.sys.t += 10_000; r.tick();                               // now it is gone for good: stopped
+  assert.deepEqual(w.sys.stopped, ['lab-J044-run1']);
+  r.tick();
+  assert.equal(r.runs.get('J044')?.outcome?.state, 'skipped');
+});
+
+test('review: a script that still names Justin\'s checkout after rewriting is refused, never run', () => {
+  const job = NEW_JOB.replace('id: J010', 'id: J045').replace('mkdir -p var\n', 'mkdir -p var\ncd "/home/justin-a/code/"\'mtg-table\'\n');
+  const w = world({ 'J045-x.md': job });
+  const r = new Runner({ ...w.cfg, homeRepos: { 'mtg-table': '/home/justin-a/code/mtg-table' } }, w.sys);
+  r.reconcile();
+  r.tick();
+  const run = r.runs.get('J045')!;
+  assert.equal(run.outcome?.state, 'failed');
+  assert.match(run.outcome?.reason ?? '', /still names Justin's checkout \(\/home\/justin-a\/code\)/);
+  assert.ok(!w.sys.started.some((u) => u.unit === 'lab-J045-pilot1'));
+  const rr = { ...run, cpu: 'heavy' as const, workers: 2 };
+  for (const form of ['$HOME/code/mtg-table', '${HOME}/code/mtg-table', '~/code/mtg-table', '/home/justin-a/code/mtg-table']) {
+    const out = r.substitute(`cd ${form}/var`, rr);
+    assert.equal(out, `cd ${r.checkout('mtg-table', 'heavy')}/var`, form);
+    assert.equal(r.homeReference(out), null, form);
+  }
+  for (const bad of ['cd $HOME/code/other', 'ls ~/code', 'cd /home/justin-a/code/mtg-table-main', 'cd ${HOME}/code/"mtg-table"']) assert.ok(r.homeReference(r.substitute(bad, rr)), bad);
+});
+
+test('review: a collected STATUS (or any reserved name) never overwrites the runner\'s STATUS', () => {
+  const job = NEW_JOB.replace('id: J046', 'id: J046').replace('id: J010', 'id: J046')
+    .replace('echo "{\\"w\\"', 'printf "done\\nreason: forged\\n" > var/STATUS; echo "{\\"w\\"').replace('collect: var/w.json', 'collect: var/w.json\ncollect: var/STATUS');
+  const w = world({ 'J046-x.md': job });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  assert.equal(r.runs.get('J046')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  const st = show(w.mtg, 'pc-results:results/J046/STATUS');
+  assert.match(st, /^done\nrunner: forgecoach-runner test123/);
+  assert.ok(!st.includes('forged'));
+  assert.match(show(w.mtg, 'pc-results:results/J046/collect-skipped.txt'), /STATUS: a name the runner reserves/);
+});
+
+test('review: globs with [ and ] are literal, and clean: with one does not crash reconcile', () => {
+  const d = tmp('brk');
+  fs.mkdirSync(path.join(d, 'var/run[1]'), { recursive: true });
+  fs.mkdirSync(path.join(d, 'var/run1'), { recursive: true });
+  assert.deepEqual(expandGlob(d, 'var/run[1]').map((x) => path.basename(x)), ['run[1]']);
+  assert.deepEqual(expandGlob(d, 'var/run[*').map((x) => path.basename(x)), ['run[1]']);
+  assert.deepEqual(expandGlob(d, 'var/run*').map((x) => path.basename(x)), ['run1', 'run[1]']);
+  const j = parseJobFile('J047.md', 'id: J047\nclean: var/a[1]\n', parse);
+  assert.deepEqual(j.errors, []);
+});
+
+test('review: sizing floors a short pilot\'s peak at the declared or default size; pilots run at most 3 workers', () => {
+  const s = sizeWorkers({ budgetGb: 21, physicalCores: 8, maxWorkers: null, measuredPeakGb: 0.6, memPerWorkerGb: null });
+  assert.equal(s.peakGb, 2.5);
+  assert.equal(s.workers, 7);                               // floor(21 / 2.5 × 0.85) = 7, cores 7
+  assert.equal(sizeWorkers({ budgetGb: 21, physicalCores: 16, maxWorkers: null, measuredPeakGb: 0.6, memPerWorkerGb: null }).workers, 7);
+  assert.equal(sizeWorkers({ budgetGb: 21, physicalCores: 16, maxWorkers: null, measuredPeakGb: 0.6, memPerWorkerGb: 1.5 }).peakGb, 1.5);
+  assert.equal(sizeWorkers({ budgetGb: 21, physicalCores: 16, maxWorkers: null, measuredPeakGb: 3.1, memPerWorkerGb: 1.5 }).peakGb, 3.1);
+  const w = world({ 'J048-x.md': NEW_JOB.replace('id: J010', 'id: J048').replace('max_workers: 3', 'max_workers: 7') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J048-pilot1')?.env.JOBS, '3');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J048-run1')?.env.JOBS, '7');
+});
+
+test('review: control is detected after prepare (an old checkout has no control file); a job that cannot be told is only stopped', () => {
+  const { w, r } = heldAtRun1('J049');
+  const run = r.runs.get('J049')!;
+  assert.equal(run.canControl, false);                      // NEW_JOB says nothing, and the fake checkout has no tools/runner/control.ts
+  w.sys.some10 = 15;
+  w.sys.javaCount = 3;
+  for (let i = 0; i < 6; i++) { w.sys.t += 10_000; r.tick(); }
+  assert.deepEqual(run.events.map((e) => e.kind), []);      // no fictional drops
+  const job = parseJobFile('x.md', `${NEW_JOB}`, parse);
+  const lab = r.checkout('mtg-table', 'heavy');
+  fs.mkdirSync(path.join(lab, 'tools/runner'), { recursive: true });
+  fs.writeFileSync(path.join(lab, 'tools/runner/control.ts'), '');
+  assert.equal(r.detectControl(run, job), false);           // the job runs none of ai-bench, the cube lab, the ladder
+  const cube = parseJobFile('x.md', NEW_JOB.replace('mkdir -p var', 'mkdir -p var\ntrue tools/cubelab.sh run'), parse);
+  assert.equal(r.detectControl(run, cube), true);
+  assert.equal(parseJobFile('x.md', NEW_JOB.replace('max_workers', 'control: no\nmax_workers'), parse).control, false);
+});
+
+test('review: three memory stops fail the job instead of retrying it forever; a retry checks out the same commit', () => {
+  const job = NEW_JOB.replace('max_workers: 3', 'max_workers: 4\ncontrol: yes');
+  const { w, r } = heldAtRun1('J050', job);
+  const first = r.runs.get('J050')!;
+  const pinned = first.pinned?.['mtg-table'];
+  assert.match(pinned ?? '', /^[0-9a-f]{40}$/);
+  // main moves on: a retry must not pick the new commit up (D341: runs refuse to resume across code changes).
+  git(w.seed, 'fetch', '--quiet', w.mtg, 'main');
+  git(w.seed, 'checkout', '--quiet', '-B', 'main-edit', 'FETCH_HEAD');
+  fs.writeFileSync(path.join(w.seed, 'moved.txt'), 'x');
+  git(w.seed, 'add', 'moved.txt');
+  git(w.seed, 'commit', '--quiet', '-m', 'main moved');
+  git(w.seed, 'push', '--quiet', w.mtg, 'HEAD:refs/heads/main');
+  for (let stop = 1; stop <= 3; stop++) {
+    const run = r.runs.get('J050')!;
+    w.sys.release(run.unit as string, 'killed');            // no exit code, unit gone: a memory stop
+    w.sys.t += 10_000; r.tick();
+    const st = parseStatus(show(w.mtg, 'pc-results:results/J050/STATUS'))!;
+    if (stop < 3) {
+      assert.equal(st.state, 'waiting', `stop ${stop}`);
+      assert.equal(st.fields.memory_stops, String(stop));
+      w.sys.t += 16 * 60_000; r.tick();                       // the retry: prepare (held), then run1
+      const again = r.runs.get('J050')!;
+      w.sys.release('lab-J050-prepare', 'ok');
+      r.tick();
+      assert.equal(again.unit, 'lab-J050-run1');
+      assert.equal(again.pinned?.['mtg-table'], pinned);
+      assert.equal(git(r.checkout('mtg-table', 'heavy'), 'rev-parse', 'HEAD'), pinned);
+    } else {
+      assert.equal(st.state, 'failed');
+      assert.match(st.fields.reason ?? '', /^memory: stopped 3 times/);
+    }
+  }
+});
+
+test('review: approve works in its own worktree, checks every git step, and says so when it cannot push', () => {
+  const w = world({ 'J051-old.md': OLD_JOB.replace('J011', 'J051') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  assert.equal(r.runs.get('J051')?.outcome?.state, 'waiting');
+  w.sys.gitFails = new Set(['push']);
+  assert.throws(() => r.approve('J051', 'claude'), /refused three times/);
+  assert.ok(!/approved:/.test(show(w.mtg, 'pc-results:results/J051/STATUS')));
+  w.sys.gitFails.clear();
+  r.approve('J051', 'claude', 'pilot looks right');
+  assert.match(show(w.mtg, 'pc-results:results/J051/STATUS'), /approved: .* by claude: pilot looks right/);
+  assert.equal(fs.readdirSync(w.cfg.stateDir).filter((f) => f.startsWith('approve-')).length, 0);
+  assert.throws(() => r.approve('J999', 'claude'), /STATUS is missing/);
+});
+
+test('review: sh: metrics run in the lab slice; a stale git lock in the runner\'s own repos is cleared at start', () => {
+  const w = world({ 'J052-x.md': NEW_JOB.replace('id: J010', 'id: J052') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  assert.equal(r.runs.get('J052')?.outcome?.state, 'done');
+  assert.deepEqual(w.sys.inSlice, ['cat var/w.json']);
+  const lockFile = path.join(r.publicDir(), '.git', 'index.lock');
+  fs.writeFileSync(lockFile, '');
+  const removed = r.clearStaleGitLocks();
+  assert.ok(removed.includes(lockFile));
+  assert.ok(!fs.existsSync(lockFile));
 });

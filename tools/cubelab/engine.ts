@@ -233,7 +233,13 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
         pending--;
       }
       if (pending === 0) { finish(); return; }
-      if (queue.length > 0) start(s);
+      if (queue.length > 0) restart(s);
+    };
+
+    /** A fresh worker after one died or hung: parked instead while paused or at the cap (the timer starts it later). */
+    const restart = (s: Slot): void => {
+      if (control().paused || alive() >= cap()) { s.parked = true; return; }
+      start(s);
     };
 
     const start = (s: Slot): void => {
@@ -280,7 +286,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
             onResult(j, { ...s.last, engineError: 'a game thread would not stop after its timeout; the worker was restarted' }, s.k);
             s.last = null;
             if (pending === 0) { finish(); return; }
-            if (queue.length > 0) start(s);
+            if (queue.length > 0) restart(s);
             return;
           }
           fail(s, `worker exited (${code ?? signal})`);
@@ -293,7 +299,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
             finish();
             return;
           }
-          if (queue.length > 0) start(s);
+          if (queue.length > 0) restart(s);
         }
       });
     };
@@ -317,7 +323,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
 
     const first = Math.min(slots.length, jobs.length);
     for (const s of slots.slice(0, first)) {
-      if (alive() < cap()) start(s); else s.parked = true;
+      if (alive() < cap() && !control().paused) start(s); else s.parked = true;      // paused: no JVM starts at all
     }
   });
 }

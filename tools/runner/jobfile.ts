@@ -21,6 +21,9 @@
 //   headline: games, control.a_win_rate                   NEW: the numbers the progress page shows when done
 //   clean: var/ai-bench/night-*      NEW: moved aside (never deleted) before a non-resumable job restarts
 //   timeout: 8h                      NEW: a step running longer is stopped and the job fails
+//   control: yes | no                NEW: the job's tools read the pool control file (default: detected)
+//   public_title: Search AI bench    NEW: the title the PUBLIC status page may show (else the id only)
+//   public_est: ~3 h                 NEW: the estimate it may show (letters, digits, space , : ; ( ) + % ~ # & - only)
 //
 //   ## Pilot      fenced bash blocks run in order; `metrics:` and `check:` lines; `progress:`
 //   ## Commands   fenced bash blocks; `metrics:`, `check:` (final checks), `progress:`
@@ -76,6 +79,11 @@ export interface JobFile {
   headline: string[];
   clean: string[];
   timeoutSec: number | null;
+  /** The public copy's title and estimate, opted in; null: the id only. */
+  publicTitle: string | null;
+  publicEst: string | null;
+  /** `control:` as written: true / false, or null (the runner detects it after prepare). */
+  control: boolean | null;
   pilot: Section | null;
   commands: Section | null;
   aborts: string[];
@@ -219,6 +227,11 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   const clean = (header.clean ?? '').split(/[,\s]+/).filter(Boolean);
   for (const c of clean) if (!/^var\/[^\s]+$/.test(c) || c.includes('..')) errors.push(`clean: "${c}" is not a path under var/`);
 
+  const PUBLIC_TEXT = /^[A-Za-z0-9 ,:;()+%~#&-]{1,80}$/;     // statusjson.ts's; no . / @ \ quotes or brackets
+  for (const k of ['public_title', 'public_est']) {
+    if (header[k] !== undefined && !PUBLIC_TEXT.test(header[k] as string)) errors.push(`${k}: "${header[k]}" may hold only letters, digits, spaces and , : ; ( ) + % ~ # & - (80 at most)`);
+  }
+  if (header.control !== undefined && !/^(yes|no)$/i.test(header.control.trim())) errors.push(`control: "${header.control}" is not yes or no`);
   const pilot = sections.get('pilot') ?? null;
   const commands = sections.get('commands') ?? null;
   const repos = parseRepos(header.repos ?? '');
@@ -239,6 +252,9 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     headline: (header.headline ?? '').split(/[,\s]+/).filter(Boolean),
     clean,
     timeoutSec,
+    publicTitle: header.public_title !== undefined && PUBLIC_TEXT.test(header.public_title) ? header.public_title : null,
+    publicEst: header.public_est !== undefined && PUBLIC_TEXT.test(header.public_est) ? header.public_est : null,
+    control: header.control === undefined ? null : /^yes$/i.test(header.control.trim()),
     pilot,
     commands,
     aborts,

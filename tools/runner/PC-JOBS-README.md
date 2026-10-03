@@ -54,7 +54,11 @@ The runner checks every 10 seconds and fetches both branches every minute.
    drops workers and then pauses new games, through the pool control file. Past the hard
    line it stops the job: `waiting`, reason `memory: …`, `retry_after:` 15 minutes later,
    `workers_cap:` one fewer. The retry skips a pilot that passed. Every such event is a
-   `pressure-<n>:` line in STATUS and an entry in `status.json`.
+   `pressure-<n>:` line in STATUS and an entry in `status.json`. After three memory stops the
+   job is `failed` (`memory: stopped 3 times`) instead of being retried for ever. A retry, and
+   a resume after a restart, checks out the commits the job first ran on, never where its
+   branch has moved since; so a lab tool's "different code version" refusal (D341) does not
+   fire on it.
 8. **Report.** The runner writes facts only: `results/<id>/STATUS`; each step's log (its
    last 2 MB); `pilot-checks.txt`, `pilot-metrics.json`, `checks.txt`, `metrics.json` and
    `events.jsonl`; `failure.txt` (the exit code and the last 60 lines) on a failure; and
@@ -68,7 +72,9 @@ The runner checks every 10 seconds and fetches both branches every minute.
    as written. That section is where the PC session and Justin leave notes, including any
    message for the cloud session. A numbers-only copy of `status.json` goes to the public
    `lab-status` branch of jalirkan/ForgeCoach for the `#lab` page, and so does a sanitised
-   copy of the AI ladder's `ladder.json`.
+   copy of the AI ladder's `ladder.json`. **The public copy shows a job by its id only**,
+   unless the job file opts in with `public_title:` (and `public_est:`). A title can name a
+   card, deck or cube, so a job file publishes one only on purpose.
 10. **Restarts.** The jobs run in their own units, so a runner restart never stops one. On
    start the runner reconciles. A step whose unit still runs is adopted (`adopted:` in
    STATUS). A step that died with the machine runs again if the job is `resumable: yes`
@@ -196,7 +202,10 @@ metrics: [name =] sh: <command printing JSON or a number>
 headline: control.a_win_rate, all.games            the numbers the progress page shows when done
 clean: var/ai-bench/night-x var/ai-bench/night-y   moved aside before a non-resumable restart
 timeout: 8h                          a step running longer is stopped, and the job fails
-control: no                          the job's tools do not read the pool control file (old refs)
+control: yes | no                    the job's tools read the pool control file; default: detected after prepare
+                                     (the checkout has tools/runner/control.ts and the job runs ai-bench, the cube lab or the ladder)
+public_title: Search AI bench        the title the PUBLIC #lab page may show; without it, the id only
+public_est: ~3 h                     likewise the estimate. Both: letters, digits, spaces and , : ; ( ) + % ~ # & - only
 
 ## Pilot
 ```bash
@@ -222,16 +231,23 @@ collect: var/ai-bench/night-*/report.txt     copied into results/<id>/ (under 5 
 what the PC session's summary.md should say
 ~~~
 
+**Paths.** A block may name the repos as `{mtg-table}` and `{ForgeCoach}`. Justin's
+checkout paths are rewritten to the lab clones, whether written as
+`/home/justin-a/code/<repo>`, `~/code/<repo>`, `$HOME/code/<repo>` or
+`${HOME}/code/<repo>`. A block that still reaches `~/code` or Justin's checkouts after that
+rewrite (a quoted split, another repo) is refused, and the job fails without running it.
+
 **Blocks.** Each fenced block is a script run with `bash -eo pipefail` from the job's
 mtg-table clone (or its first repo's clone). The first failing command fails the step. The
 environment holds `JOBS` and `LAB_WORKERS` (the sized workers), `LAB_CONTROL` (the control
 file), `LAB_JOB`, `LAB_STEP`, `MTG_TABLE` and `FORGECOACH` (the clones). The placeholders
 `{workers}`, `{mtg-table}` and `{ForgeCoach}` are filled in.
 
-**Workers.** The pilot runs at min(max_workers, cores − 1, memory by `mem_per_worker_gb`).
-During the pilot the runner samples the peak resident size of every Java process in the
-step's unit. The full run gets `min(max_workers, physical cores − 1, floor(budget / peak ×
-0.85))`, and at least 1.
+**Workers.** The pilot runs at most 3 workers. During the pilot the runner samples the peak
+resident size of every Java process in the step's unit. The full run gets
+`min(max_workers, physical cores − 1, floor(budget / peak × 0.85))`, and at least 1. Here
+peak is the larger of the measured peak and `mem_per_worker_gb` (2.5 GB when not given),
+so a short pilot cannot size the full run too large.
 
 **Checks** (`check:`, `abort:`) are a small expression language, evaluated by the runner,
 never by a shell:
@@ -257,6 +273,7 @@ relative to the clone; `*` works within a path segment. Each gives flat numbers:
 | `ladder <dir>` | the AI ladder's `results/*.jsonl` | `games errors timeouts median_game_s` |
 | `lines <glob…>` / `files <glob…>` | complete lines / matching files | a number |
 | `count <glob…> "<text>"` | lines containing the text; `{logs}` is this job's own step logs | a number |
+| `sh: <command>` | runs inside the lab slice (`systemd-run --user --wait --pipe`), like the job | its JSON object or number |
 
 The runner adds `elapsed_s`, `workers`, `pressure_events` and `peak_worker_rss_gb`.
 `progress:` takes `aibench`, `cubelab`, `cubelab-queue` (its total from the night's plan),

@@ -4,6 +4,8 @@ cpu: heavy
 after: J001
 repos: mtg-table@ee4d127 (pinned; see below)
 est: ~2.5-3 h with 7 workers
+public_title: Search AI vs Forge Default, 400 deals a configuration
+public_est: ~3 h
 resumable: no
 control: no
 max_workers: 7

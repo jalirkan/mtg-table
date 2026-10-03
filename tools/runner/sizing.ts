@@ -13,8 +13,10 @@
 // WORKERS.  The pilot records the peak resident size of each worker JVM
 // (VmHWM, sampled from the unit's cgroup); the full run then gets
 //   workers = min(job's max_workers, physical cores − 1, floor(budget / peak × 0.85))
-// and at least 1.  `mem_per_worker_gb:` is a floor under the measured peak,
-// and with no measurement either, 2.5 GB (the cube lab's worst seen, 2.4).
+// and at least 1.  The peak is max(measured, mem_per_worker_gb ?? 2.5 GB): a
+// short pilot whose JVMs never reach their working size cannot talk the
+// estimate down below the declared or default floor (2.5 GB: the cube lab's
+// worst seen, 2.4).  A pilot runs at most PILOT_MAX_WORKERS.
 
 export interface Machine {
   memTotalGb: number;
@@ -45,6 +47,8 @@ export function budget(m: Machine, o: BudgetOptions = DEFAULT_BUDGET): Budget {
 
 export const DEFAULT_PEAK_GB = 2.5;
 export const SIZING_HEADROOM = 0.85;
+/** A pilot is small: at most this many workers, whatever the job allows. */
+export const PILOT_MAX_WORKERS = 3;
 
 export interface Sizing {
   workers: number;
@@ -59,7 +63,8 @@ export interface Sizing {
  * stop (null: none).
  */
 export function sizeWorkers(o: { budgetGb: number; physicalCores: number; maxWorkers: number | null; measuredPeakGb: number | null; memPerWorkerGb: number | null; cap?: number | null }): Sizing {
-  const peakGb = Math.max(o.measuredPeakGb ?? 0, o.memPerWorkerGb ?? 0) || DEFAULT_PEAK_GB;
+  const floor = o.memPerWorkerGb ?? DEFAULT_PEAK_GB;
+  const peakGb = Math.max(o.measuredPeakGb ?? 0, floor);
   const byMem = Math.floor((o.budgetGb / peakGb) * SIZING_HEADROOM);
   const cands: Array<[Sizing['by'], number]> = [['cores', Math.max(1, o.physicalCores - 1)], ['memory', byMem]];
   if (o.maxWorkers) cands.push(['max_workers', o.maxWorkers]);
@@ -71,7 +76,7 @@ export function sizeWorkers(o: { budgetGb: number; physicalCores: number; maxWor
     workers,
     peakGb,
     by: best[0],
-    detail: `min(${cands.map(([k, v]) => `${k} ${v}`).join(', ')}); peak ${peakGb.toFixed(2)} GB per worker${o.measuredPeakGb ? ' (measured)' : o.memPerWorkerGb ? ' (declared)' : ' (default)'}, budget ${o.budgetGb} GB`,
+    detail: `min(${cands.map(([k, v]) => `${k} ${v}`).join(', ')}); peak ${peakGb.toFixed(2)} GB per worker${o.measuredPeakGb !== null && o.measuredPeakGb > floor ? ' (measured)' : o.memPerWorkerGb ? ` (declared${o.measuredPeakGb ? `; measured ${o.measuredPeakGb.toFixed(2)}` : ''})` : ` (default${o.measuredPeakGb ? `; measured ${o.measuredPeakGb.toFixed(2)}` : ''})`}, budget ${o.budgetGb} GB`,
   };
 }
 
@@ -111,18 +116,23 @@ export function serviceUnit(o: { runnerDir: string; node: string; args: string[]
   return `# Written by tools/runner.sh install (mtg-table, D337).
 [Unit]
 Description=ForgeCoach lab runner (runs the pc-jobs queue)
-After=network-online.target
+# A runner that cannot start (a bad install) gives up after five tries in ten minutes, not forever.
+StartLimitIntervalSec=600
+StartLimitBurst=5
 
 [Service]
 Type=simple
 WorkingDirectory=${o.runnerDir}
 ExecStart=${o.runnerDir}/tools/runner.sh daemon ${o.args.join(' ')}
 Environment=PATH=${o.node}:/usr/local/bin:/usr/bin:/bin
+# git never prompts and never waits on ssh: a push or fetch fails fast instead of stalling the loop.
+Environment=GIT_TERMINAL_PROMPT=0
+Environment="GIT_SSH_COMMAND=ssh -oBatchMode=yes -oConnectTimeout=10"
 Restart=on-failure
 RestartSec=30
 # The runner is small; the jobs run in their own units in ${SLICE},
 # so stopping or restarting the runner never stops a job.
-MemoryMax=512M
+MemoryMax=2G
 ManagedOOMPreference=avoid
 Nice=0
 

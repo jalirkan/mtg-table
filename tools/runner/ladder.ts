@@ -20,14 +20,18 @@
 // league.{best, pool, promoted[].{name,at,reason}}.  Everything else is dropped
 // (params, hashes, hosts, history, the experiment log, unavailable reasons),
 // and every kept value is checked: names and labels against token patterns
-// with no `/`, `set` cut to its file name, a promotion's reason through the
-// same cleaner as status.json's titles (paths, URLs, hosts cut out).
-
-import { cleanTitle } from './statusjson.ts';
+// with no `/`, `.` or `@` (so no path, host name or e-mail address) — a
+// player's `@<hex>` hash suffix aside; `set` only from SETS, else null; a
+// promotion's reason only in the one shape league.ts writes, else "promoted".
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 /** A player name: registry names and "<name>@<hash>" for an unregistered config. */
-const NAME = /^[A-Za-z0-9][A-Za-z0-9_.+:=-]{0,59}(@[0-9a-f]{4,16})?$/;
+const NAME = /^[A-Za-z0-9][A-Za-z0-9_+=-]{0,59}(@[0-9a-f]{4,16})?$/;
+/** The deck-pair sets a ladder is fitted on; any other value publishes null. */
+const SETS = new Map([['all', 'all'], ['tools/ai-bench/pairs-confirm.txt', 'pairs-confirm.txt'], ['tools/ai-bench/pairs-dev.txt', 'pairs-dev.txt'],
+  ['tools/ai-bench/pairs-cube.txt', 'pairs-cube.txt'], ['tools/ai-bench/pairs-sac.txt', 'pairs-sac.txt']]);
+/** league.ts's promotion reason, the only shape published (numbers and fixed words). */
+const PROMOTED = /^SPRT H1 after \d+ games; non-inferior to the best against forge-default within [\d.]+ Elo \([+-]?\d+ Elo vs the best against forge-default over \d+ shared deals\)$/;
 const KIND = /^[a-z][a-z0-9_-]{0,29}$/;
 const CI = /^(hessian|bootstrap:\d{1,6})$/;
 const SPRT_RESULTS = new Set(['H1', 'H0', 'inconclusive', 'stopped']);
@@ -35,7 +39,7 @@ const PURPOSES = new Set(['sprt', 'league']);
 const MAX = 50;
 
 /** A config label or a tuned value: "ms=1000,turns=1", "Default+search"; never a path. */
-const LABEL = /^[A-Za-z0-9][A-Za-z0-9_.+:=,@ -]{0,119}$/;
+const LABEL = /^[A-Za-z0-9][A-Za-z0-9_+:=, -]{0,119}$/;
 const KEY = /^[A-Za-z][A-Za-z0-9_]{0,29}$/;
 const label = (v: unknown): string | null => (typeof v === 'string' && LABEL.test(v) && !v.includes('/') ? v : typeof v === 'number' && Number.isFinite(v) ? String(v) : null);
 
@@ -123,13 +127,13 @@ export function sanitiseLadder(raw: unknown): PublicLadder | null {
     anchor: { name: name(anchor.name) ?? 'forge-default', rating: num(anchor.rating) ?? 1500 },
     scale: 'elo',
     ci: typeof d.ci === 'string' && CI.test(d.ci) ? d.ci : 'hessian',
-    set: typeof d.set === 'string' ? (d.set === 'all' ? 'all' : (/^[A-Za-z0-9._-]{1,80}$/.exec(d.set.split('/').pop() ?? '')?.[0] ?? null)) : null,
+    set: typeof d.set === 'string' ? SETS.get(d.set) ?? null : null,
     totals: { games: n0(t.games), decisive: n0(t.decisive), draws: n0(t.draws), first: iso(t.first), last: iso(t.last) },
     players, sprt, tune,
     league: lg ? {
       best: name(lg.best),
       pool: arr(lg.pool).map(name).filter((x): x is string => !!x).slice(0, MAX),
-      promoted: arr(lg.promoted).slice(0, MAX).flatMap((x) => { const p = obj(x); const n = name(p.name), at = iso(p.at); return n && at ? [{ name: n, at, reason: cleanTitle(p.reason) }] : []; }),
+      promoted: arr(lg.promoted).slice(0, MAX).flatMap((x) => { const p = obj(x); const n = name(p.name), at = iso(p.at); return n && at ? [{ name: n, at, reason: typeof p.reason === 'string' && PROMOTED.test(p.reason) ? p.reason : 'promoted' }] : []; }),
     } : null,
   };
 }

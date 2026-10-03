@@ -15184,3 +15184,37 @@ memory and Forge's AI reads the wall clock). Dynamic work-stealing in ai-bench (
 change which shard holds a game; parking and resuming keeps D309's deterministic shards).
 A timer-based backoff (the spec's "pressure, not a timer"). Pushing status.json's history
 to the public branch (one commit, replaced, is the value; the history is on `pc-results`).
+
+**Amended at review (2026-10-03, the independent review of PR #29: "merge after fixes").**
+
+- **The public copy publishes ids, not titles.** A title or estimate goes out only when the
+  job file opts in (`public_title:`, `public_est:`, letters, digits, spaces and
+  `, : ; ( ) + % ~ # & -`), because a title can name a card, deck or cube. The events that
+  say when Justin sits down or leaves are never published, and his wait reason reads
+  "held". `ladder.json`'s names and labels may hold no `.` or `@` (a player's `@<hex>`
+  hash aside), its `set` comes from a fixed list or is null, and a promotion's reason is
+  published only in the one shape the league writes. The previous title "cleaner" is gone:
+  cutting known-bad shapes out of free text is a denylist, and it kept card names.
+- **`unknown` is running.** A unit whose state systemctl cannot report is never taken for
+  ended. A missing exit code counts as a kill only at `LoadState=not-found`. No step starts
+  while any `lab-<id>-*` unit is alive. No step starts while the runner is paused, Justin
+  is at the table, or the backoff has paused the job.
+- **The loop never waits on the network.** The jobs are monitored before the fetch. Every
+  git call has a 30 s cut-off, never prompts, and runs ssh in batch mode. A failed publish
+  backs off exponentially to 30 minutes. A git failure keeps the queue read before, and a
+  job file must be missing from two successful reads before its job is stopped.
+- **Sizing and backoff.** The peak is max(measured, declared or 2.5 GB), and pilots run at
+  most 3 workers. The next drop waits until the last one took effect (the unit's Java
+  count fell) or 5 minutes. The third memory stop fails the job. Drops and pauses act only
+  on jobs that can be told: `control:` as written, else detected after prepare.
+- **Retries keep their code.** A retry checks out the commits its first prepare recorded,
+  so D341's refusal to resume across a code change does not fire on it.
+- **Install** makes `~/code/lab/runner` a clone (`--reference … --dissociate`) at a ref
+  that must be on origin. It never adds a worktree to Justin's checkout. The pid lock
+  counts only a live runner process. The service has 2 GB and a start limit. Stale git
+  locks in the runner's own repositories are cleared at start.
+- **Smaller fixes.** A collected file can never stand in for `STATUS`. `approve` works in a
+  temporary worktree of its own and fails loudly. `sh:` metrics run in the lab slice.
+  Globs treat `[` and `]` as literal. Old `.restart-*` copies are pruned to two. Missing
+  timestamps are null. The guide says that oomd's 60% kill can come before the soft
+  backoff, and that push access to `pc-jobs` is code execution on the PC.

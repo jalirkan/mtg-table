@@ -9,7 +9,10 @@
 //
 //   HIGH  some avg10 >= highSome or swap-in >= highSwapIn pages/s, for
 //         `highSamples` samples in a row:
-//         drop a worker (control file maxWorkers − 1), at most once per
+//         drop a worker (control file maxWorkers − 1).  The NEXT drop waits
+//         until the last one took effect — the unit's Java processes have
+//         fallen to the new cap (a worker leaves only when its game ends) —
+//         or `dropSettleS` has passed, and never comes sooner than
 //         `dropCooldownS`; at 1 worker, pause new games instead.
 //   HARD  some avg10 >= hardSome, or the job's memory above `hardFraction` of
 //         its MemoryMax, for `hardSamples` in a row, while the job is already
@@ -33,14 +36,18 @@ export interface BackoffConfig {
   lowSwapIn: number;
   lowSamples: number;
   dropCooldownS: number;
+  /** The longest a drop waits for the Java count to fall before the next one (about a slow game). */
+  dropSettleS: number;
   raiseCooldownS: number;
+  /** Memory stops before a job fails instead of being retried. */
+  maxMemoryStops: number;
 }
 
 export const DEFAULT_BACKOFF: BackoffConfig = {
   highSome: 10, highSwapIn: 2000, highSamples: 2,
   hardSome: 40, hardFraction: 0.95, hardSamples: 3,
   lowSome: 2, lowSwapIn: 100, lowSamples: 12,
-  dropCooldownS: 60, raiseCooldownS: 300,
+  dropCooldownS: 60, dropSettleS: 300, raiseCooldownS: 300, maxMemoryStops: 3,
 };
 
 export interface Sample {
@@ -52,6 +59,8 @@ export interface Sample {
   /** The job unit's memory.current and MemoryMax, GB (null when unknown). */
   jobGb: number | null;
   jobMaxGb: number | null;
+  /** Java processes in the unit now (null: unknown). */
+  javaCount?: number | null;
 }
 
 export interface BackoffState {
@@ -81,7 +90,7 @@ export function initialBackoff(workers: number): BackoffState {
 export function decide(s: BackoffState, x: Sample, canControl: boolean, c: BackoffConfig = DEFAULT_BACKOFF): { state: BackoffState; action: Action | null } {
   const st = { ...s };
   const memHard = x.jobGb !== null && x.jobMaxGb !== null && x.jobMaxGb > 0 && x.jobGb >= c.hardFraction * x.jobMaxGb;
-  const high = x.some10 >= c.highSome || x.swapIn >= c.highSwapIn;
+  const high = x.some10 >= c.highSome || x.swapIn >= c.highSwapIn || memHard;
   const hard = x.some10 >= c.hardSome || memHard;
   const low = x.some10 < c.lowSome && x.swapIn < c.lowSwapIn && !memHard;
   st.highRun = high ? st.highRun + 1 : 0;
@@ -96,7 +105,9 @@ export function decide(s: BackoffState, x: Sample, canControl: boolean, c: Backo
     return { state: st, action: { kind: 'stop', why } };
   }
   if (!canControl) return { state: st, action: null };
-  if (st.highRun >= c.highSamples && x.at - st.lastDrop >= c.dropCooldownS * 1000) {
+  const settled = x.at - st.lastDrop >= c.dropSettleS * 1000
+    || (x.javaCount !== undefined && x.javaCount !== null && x.javaCount <= st.workers);
+  if (st.highRun >= c.highSamples && x.at - st.lastDrop >= c.dropCooldownS * 1000 && settled) {
     st.lastDrop = x.at;
     st.highRun = 0;
     st.lowRun = 0;

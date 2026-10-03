@@ -15,7 +15,7 @@ import os from 'node:os';
 
 import { parsePressure } from './backoff.ts';
 import type { Machine, UnitSpec } from './sizing.ts';
-import { systemdRunArgs } from './sizing.ts';
+import { SLICE, systemdRunArgs } from './sizing.ts';
 
 export interface Run { code: number; stdout: string; stderr: string }
 
@@ -30,7 +30,17 @@ export interface HostSample {
   pswpin: number;
 }
 
-export type UnitState = 'active' | 'activating' | 'deactivating' | 'inactive' | 'failed' | 'unknown';
+/**
+ * `gone`: systemd says LoadState=not-found (a --collect unit that ended); `unknown`: systemctl did
+ * not answer (a timeout, a busy bus) — the runner treats it as STILL RUNNING, never as ended.
+ */
+export type UnitState = 'active' | 'activating' | 'deactivating' | 'inactive' | 'failed' | 'gone' | 'unknown';
+
+/** States in which a step's unit may still hold processes. */
+export const LIVE_STATES: ReadonlySet<UnitState> = new Set(['active', 'activating', 'deactivating', 'unknown']);
+
+/** The environment every git call of the runner gets: never prompt, never hang on ssh. */
+export const GIT_ENV: Record<string, string> = { GIT_TERMINAL_PROMPT: '0', GIT_SSH_COMMAND: 'ssh -oBatchMode=yes -oConnectTimeout=10' };
 
 export interface Sys {
   now(): number;
@@ -43,6 +53,12 @@ export interface Sys {
   unitState(unit: string): UnitState;
   /** The unit's memory.current, GB. */
   unitMemoryGb(unit: string): number | null;
+  /** Java processes in the unit's cgroup now; null when unknown. */
+  unitJavaCount(unit: string): number | null;
+  /** Units whose name starts with `prefix` that are loaded and not inactive; null when systemctl did not answer. */
+  liveUnits(prefix: string): string[] | null;
+  /** A command (bash -c) inside the lab slice, waited for: the `sh:` metrics. */
+  runInSlice(command: string, cwd: string, timeoutMs: number): Run;
   /** Peak resident set (VmHWM, GB) of every java process in the unit's cgroup now. */
   unitJavaPeaksGb(unit: string): number[];
   /** Someone holds a socket to the bridge (Justin playing, or watching). */
@@ -83,6 +99,21 @@ export function establishedOn(tables: string[], port: number): number {
   return n;
 }
 
+/** Every pid in a unit's cgroup (its sub-cgroups too); null when the unit has none or systemctl did not answer. */
+function cgroupPids(unit: string): string[] | null {
+  const cg = systemctlShow(unit, ['ControlGroup'])?.ControlGroup;
+  if (!cg) return null;
+  const pids: string[] = [];
+  const walk = (dir: string): void => {
+    pids.push(...readOr(`${dir}/cgroup.procs`).split('\n').filter(Boolean));
+    let ents: fs.Dirent[] = [];
+    try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of ents) if (e.isDirectory()) walk(`${dir}/${e.name}`);
+  };
+  walk(`/sys/fs/cgroup${cg}`);
+  return pids;
+}
+
 function readOr(file: string, d = ''): string {
   try { return fs.readFileSync(file, 'utf8'); } catch { return d; }
 }
@@ -95,8 +126,9 @@ function run(argv: string[], o: { cwd?: string; timeoutMs?: number; env?: Record
   return { code: r.status ?? (r.error ? 127 : 1), stdout: r.stdout ?? '', stderr: (r.stderr ?? '') + (r.error ? String(r.error) : '') };
 }
 
-function systemctlShow(unit: string, props: string[]): Record<string, string> {
+function systemctlShow(unit: string, props: string[]): Record<string, string> | null {
   const r = run(['systemctl', '--user', 'show', unit, ...props.map((p) => `-p${p}`)], { timeoutMs: 10_000 });
+  if (r.code !== 0) return null;
   const out: Record<string, string> = {};
   for (const l of r.stdout.split('\n')) { const i = l.indexOf('='); if (i > 0) out[l.slice(0, i)] = l.slice(i + 1); }
   return out;
@@ -126,24 +158,30 @@ export function realSys(): Sys {
     stopUnit: (unit) => run(['systemctl', '--user', 'stop', '--no-block', unit], { timeoutMs: 30_000 }),
     unitState(unit) {
       const s = systemctlShow(unit, ['ActiveState', 'LoadState']);
-      if (s.LoadState === 'not-found') return 'inactive';
+      if (!s) return 'unknown';
+      if (s.LoadState === 'not-found') return 'gone';
       return (['active', 'activating', 'deactivating', 'inactive', 'failed'].includes(s.ActiveState ?? '') ? s.ActiveState : 'unknown') as UnitState;
     },
     unitMemoryGb(unit) {
-      const v = Number(systemctlShow(unit, ['MemoryCurrent']).MemoryCurrent);
+      const v = Number(systemctlShow(unit, ['MemoryCurrent'])?.MemoryCurrent);
       return Number.isFinite(v) && v < 2 ** 60 ? v / GB : null;
     },
+    unitJavaCount(unit) {
+      const pids = cgroupPids(unit);
+      return pids === null ? null : pids.filter((pid) => /^Name:\s+java$/m.test(readOr(`/proc/${pid}/status`))).length;
+    },
+    liveUnits(prefix) {
+      const r = run(['systemctl', '--user', 'list-units', '--all', '--plain', '--no-legend', `${prefix}*`], { timeoutMs: 10_000 });
+      if (r.code !== 0) return null;
+      return r.stdout.split('\n').map((l) => l.trim().split(/\s+/)).filter((f) => f[0] && f[2] !== 'inactive' && f[1] !== 'not-found').map((f) => f[0] as string);
+    },
+    runInSlice(command, cwd, timeoutMs) {
+      return run(['systemd-run', '--user', '--wait', '--pipe', '--quiet', '--collect', `--slice=${SLICE}`, '-p', 'MemoryMax=2G', '-p', 'Nice=10',
+        `--working-directory=${cwd}`, '/bin/bash', '-c', command], { cwd, timeoutMs });
+    },
     unitJavaPeaksGb(unit) {
-      const cg = systemctlShow(unit, ['ControlGroup']).ControlGroup;
-      if (!cg) return [];
-      const pids: string[] = [];
-      const walk = (dir: string): void => {
-        pids.push(...readOr(`${dir}/cgroup.procs`).split('\n').filter(Boolean));
-        let ents: fs.Dirent[] = [];
-        try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
-        for (const e of ents) if (e.isDirectory()) walk(`${dir}/${e.name}`);
-      };
-      walk(`/sys/fs/cgroup${cg}`);
+      const pids = cgroupPids(unit);
+      if (!pids) return [];
       const out: number[] = [];
       for (const pid of pids) {
         const st = readOr(`/proc/${pid}/status`);
@@ -172,6 +210,7 @@ export function dryRunSys(print: (s: string) => void = (s) => process.stdout.wri
       print(`[dry-run] systemctl --user stop --no-block ${unit}`);
       return { code: 0, stdout: '', stderr: '' };
     },
-    unitState: () => 'inactive',
+    unitState: () => 'gone',
+    liveUnits: () => [],
   };
 }

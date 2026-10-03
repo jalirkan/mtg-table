@@ -3,6 +3,9 @@ title: Lab runner shakedown on the PC: units, memory limits, pause, resize, resu
 cpu: heavy
 repos: mtg-table@main
 est: ~25 min
+public_title: Lab runner shakedown
+public_est: ~25 min
+control: yes
 resumable: yes
 max_workers: 3
 mem_per_worker_gb: 1.5
@@ -64,5 +67,6 @@ By hand, while step 1 runs (`tools/runner.sh status` shows `run1`):
    back too.
 3. `systemctl --user restart forgecoach-runner` during step 3: STATUS gets an `adopted:`
    line and the job carries on.
-4. `systemctl --user show forgecoach-lab.slice -p MemoryMax -p ManagedOOMMemoryPressure` and
+4. `systemctl --user show forgecoach-runner -p MemoryMax -p Environment` (2G, and
+   GIT_TERMINAL_PROMPT=0 with ssh in batch mode), then `systemctl --user show forgecoach-lab.slice -p MemoryMax -p ManagedOOMMemoryPressure` and
    `cat /proc/pressure/memory` into summary.md, with what happened in 1–3.

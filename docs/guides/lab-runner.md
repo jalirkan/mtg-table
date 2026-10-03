@@ -20,19 +20,21 @@ text of the `pc-jobs` branch's README. `tools/runner/jobs/` has worked examples.
 ## Install (once, on the PC)
 
 ```bash
-cd /home/justin-a/code/mtg-table            # any checkout at the commit to run, a pc/ branch included
-git fetch && git checkout <commit or branch>
+cd /home/justin-a/code/mtg-table            # any checkout of a commit that has tools/runner.sh
 ./tools/runner.sh install --dry-run         # what it would write and run
-./tools/runner.sh install                   # [--reserve-gb 7] [--public-status on|off] [--http-port 8645]
+./tools/runner.sh install                   # [--ref main] [--reserve-gb 7] [--public-status on|off] [--http-port 8645]
 sudo loginctl enable-linger $USER           # ONCE, by Justin: the service keeps running with nobody logged in
 ./tools/runner.sh status
 ```
 
 `install` does four things, and never runs sudo:
 
-1. It makes the runner's **own checkout**: `~/code/lab/runner`, a detached worktree of the
-   checkout you ran it from, at that checkout's commit. A job never moves the code that runs
-   it. To update the runner, run `install` again from a checkout at the new commit.
+1. It makes the runner's **own clone**, `~/code/lab/runner`. It borrows objects from
+   Justin's checkout while cloning (`--reference-if-able … --dissociate`) and never writes
+   to it. It checks out `--ref` (default `main`), which must be a branch or commit on
+   origin: what runs is what anyone can review. A `pc/` branch is fine once it is pushed.
+   A job never moves the code that runs it. To update the runner, run `install` again
+   (`--ref <branch>`).
 2. It writes `~/.config/systemd/user/forgecoach-lab.slice`. This is the lab's memory budget,
    with oomd told to act inside the slice first.
 3. It writes `forgecoach-runner.service`, with `ExecStart=~/code/lab/runner/tools/runner.sh
@@ -42,7 +44,7 @@ sudo loginctl enable-linger $USER           # ONCE, by Justin: the service keeps
    service and restarts it.
 
 Uninstall: `systemctl --user disable --now forgecoach-runner`, then remove the three files
-above and `git worktree remove ~/code/lab/runner`. Running jobs are units of their own:
+above and `rm -rf ~/code/lab/runner`. Running jobs are units of their own:
 `systemctl --user stop 'lab-*'`.
 
 ## On the PC: where things are
@@ -120,13 +122,18 @@ of the unit's `MemoryMax`, so the job is throttled and reclaimed before anything
 its own and kills inside it, a backstop below the runner's own backoff. The desktop
 drop-in asks oomd to avoid the apps. systemd honours `ManagedOOMPreference` only where the
 cgroup is owned by root (`systemd.resource-control(5)`), so on a user session it may do
-nothing. Neither the slice's limits nor the backoff depends on it.
+nothing. Neither the slice's limits nor the backoff depends on it. Note the order:
+**oomd's 60% kill can fire before the runner's soft backoff has acted.** It needs 30 s
+over its limit, while the backoff drops one worker at a time and waits for each drop to
+take effect, so a sudden surge can still end in oomd killing a job step. The runner then
+sees a unit gone without an exit code, which is a memory stop like any other.
 
 **Workers from the pilot.** During the pilot the runner samples, every 10 s, the peak
 resident size (`VmHWM`) of every `java` process in the step's cgroup. The full run gets
-`workers = min(max_workers, physical cores − 1, floor(budget / peak × 0.85))`, at least 1.
-`mem_per_worker_gb:` is a floor under the measured peak. With neither, the peak is taken as
-2.5 GB. The jobs get the number as `{workers}` and `$JOBS`. STATUS records the sizing and
+`workers = min(max_workers, physical cores − 1, floor(budget / peak × 0.85))`, at least 1,
+where peak = max(measured, `mem_per_worker_gb` or 2.5 GB). A short pilot whose JVMs never
+reached their working size cannot size the full run too large. A pilot runs at most 3
+workers. The jobs get the number as `{workers}` and `$JOBS`. STATUS records the sizing and
 the limit that decided it.
 
 **Backoff on pressure, not on a timer** (`tools/runner/backoff.ts`). Every 10 s the runner
@@ -135,16 +142,25 @@ reads `/proc/pressure/memory` (some avg10, %), the swap-in rate (`pswpin`), and 
 
 | Condition | Action |
 |---|---|
-| some avg10 ≥ 10% or swap-in ≥ 2000 pages/s, 2 samples running | one worker fewer (at most one per minute); at 1 worker, pause new games |
-| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +15 min, `workers_cap` one fewer; the retry skips the passed pilot |
+| some avg10 ≥ 10%, swap-in ≥ 2000 pages/s, or the unit at 95% of its `MemoryMax`, 2 samples running | one worker fewer. The next drop waits until this one took effect (the unit's Java processes fell to the new cap, since a worker leaves only when its game ends) or 5 minutes, and never comes sooner than 1 minute. At 1 worker, pause new games |
+| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +15 min, `workers_cap` one fewer. The retry skips the passed pilot and checks out the same commits. The third memory stop fails the job |
 | some avg10 < 2% and swap-in < 100/s for 2 minutes | lift a pause, then one worker back (at most one per 5 minutes, never above the sized count) |
 
 Every event goes to STATUS (`pressure-<n>:`), `events.jsonl` and `status.json`
 (`pressureEvents`).
 
-**Justin first.** While any TCP connection is established to the bridge port (8642: the
-board, an observer, a phone), the runner starts no heavy job and holds a running one,
-through the same control file. It resumes when he leaves.
+**Whether a job can be told.** Drops and pauses act only on a job whose tools read the
+control file. `control: yes|no` in the job file says so. Without it, the runner detects
+it after `prepare`: the job's checkout has `tools/runner/control.ts` and its blocks run
+`ai-bench.sh`, `cubelab.sh` or `ai-ladder.sh`. A job that cannot be told is only ever
+stopped, so its STATUS never shows a drop that did not happen.
+
+**Justin first, and pause.** While any TCP connection is established to the bridge port
+(8642: the board, an observer, a phone), the runner starts no heavy job, starts no further
+step of a running one, and holds the running step through the same control file. It
+resumes when he leaves. `tools/runner.sh pause`, and a backoff pause, hold new steps the
+same way. In the public copy this shows only as the neutral reason "held"; no event says
+when he sat down or left.
 
 ## The pool control file
 
@@ -182,12 +198,24 @@ resumed (`run` with the same `--out`, `queue run`, `evolve`).
 A job says `resumable: yes` when re-running its steps continues its work. On a runner
 restart:
 
-- a step whose unit still runs is adopted (`adopted:`);
-- a step that ended while the runner was down is read normally;
+- a step whose unit still runs is adopted (`adopted:`); so is one whose state systemctl
+  cannot report (a timeout): the runner never takes `unknown` for ended, never orphans a
+  live unit, and never starts a step while any `lab-<id>-*` unit is alive;
+- a step that ended while the runner was down is read normally. A unit without an exit
+  code is taken as killed only once systemd says it is unloaded (`LoadState=not-found`);
 - a step that died with the runner: if the job is resumable, the step runs again
-  (`resumed:`). Otherwise the job starts again from `prepare` (`restarted:`), after its
-  `clean:` paths (under `var/` only) are moved aside to `.restart-<time>-<name>`. They are
-  never deleted, and the job's globs never match them.
+  (`resumed:`), at one worker fewer. Otherwise the job starts again from `prepare`
+  (`restarted:`), after its `clean:` paths (under `var/` only) are moved aside to
+  `.restart-<time>-<name>`. The job's globs never match those, and only the two newest
+  copies of each are kept.
+
+**Code versions (D341).** The cube lab's `run`, `evolve` and `selfplay` refuse to resume a
+folder made by other code unless given `--allow-version-change`. A runner restart resumes a
+step on the checkout it was already using. A retry after a memory stop or a `stop` checks
+out the commits the job's first `prepare` recorded (`pinned` in its `run.json`), not the
+current tip of a branch like `main`. So neither path changes the code under a resumed run.
+A job file edited to a new ref, or a run forgotten by hand (below), starts on the new code,
+and needs its own `--out` or `--allow-version-change`.
 
 ## status.json, and the public copy
 
@@ -214,25 +242,49 @@ copy adds `detail` fields (unit names, reasons) and `runner`.
 **The public copy** goes to the orphan branch `lab-status` of the public
 `jalirkan/ForgeCoach`. It is one commit, replaced on each push, holding `status.json` and
 `ladder.json`, for the `#lab` page. `--public-status off` turns it off. `status.json` is
-rebuilt field by field from an allowlist (`sanitise`): job ids, titles with anything
-path-, URL-, host- or address-like cut out, numbers, timestamps, and words from fixed sets
-(phase, status, reason, event kind). The headline is re-made from the numbers. No card,
-deck or cube contents, no paths, no host names and no line of any log has a field to
-travel in. `ladder.json` is the AI ladder's `var/ai-ladder/ladder.json` (from `tools/ai-ladder.sh
+rebuilt field by field from an allowlist (`sanitise`): job ids, numbers, timestamps, and
+words from fixed sets (phase, status, reason, event kind). **A job's title and estimate
+appear only when its file opts in** with `public_title:` / `public_est:`, written with
+letters, digits, spaces and `, : ; ( ) + % ~ # & -` only (no `.`, `/` or `@`, so no path,
+host or address). Otherwise the title is the id. A title can name a card, deck or cube, so
+it is published only on purpose. The events that would say when Justin sat down or left
+are dropped. The headline is re-made from the numbers. No card, deck or cube contents, no
+paths, no host names and no line of any log has a field to travel in. `ladder.json` is the AI ladder's `var/ai-ladder/ladder.json` (from `tools/ai-ladder.sh
 report`, schema 1) through its own allowlist, `tools/runner/ladder.ts`. Its fields are
 exactly ForgeCoach's `LADDER_FIELDS` (`src/lab/ladder.ts`, the leaderboard page):
 `generatedAt` and the schema; the anchor, scale and interval method; the deck set's file
 name; the totals; and per player its name, kind, flags, rating with its interval, game
 counts and record against forge-default. It also has SPRT, tune and league outcomes. Every
-value is checked: names and labels against token patterns with no `/`, the set cut to its
-file name, a promotion's reason through the title cleaner. Params, hashes, hosts, history
+value is checked: names and labels against token patterns with no `/`, `.` or `@` (a
+player's `@<hex>` hash aside); the set only from a fixed list of the ai-bench pair files,
+else null; a promotion's reason only in the one shape the league writes, else
+"promoted". Params, hashes, hosts, history
 and the experiment log are dropped. It is published whenever the file changes. A field
 the page starts to need is a line in both allowlists, in the same change.
+
+## Security: who can run code on the PC
+
+**Whoever can push to `pc-jobs` can run code on Justin's PC.** A job file's blocks run as
+Justin's user, unattended, within the minute. The runner limits where they run (its own
+clones, the lab slice) and what it publishes, but not what a block does. Protect the
+branch: on GitHub, a branch protection rule (or ruleset) for `pc-jobs` that restricts who
+may push, and no force pushes. Treat write access to jalirkan/mtg-table as the keys to the
+PC. The runner's own pushes go only to `pc-results` and ForgeCoach's `lab-status`, whose
+names are fixed in its code.
 
 ## When something is wrong (for the PC session)
 
 - **Is it running?** `systemctl --user status forgecoach-runner`, then `journalctl --user -u
-  forgecoach-runner -n 200`, then `tools/runner.sh status` from `~/code/lab/runner`.
+  forgecoach-runner -n 200`, then `tools/runner.sh status`. After five failed starts in ten
+  minutes systemd gives up (`StartLimitBurst`): fix the cause, then `systemctl --user
+  reset-failed forgecoach-runner && systemctl --user start forgecoach-runner`. A pid file
+  left by a crash or a reboot does not block a start: it counts only while its process is
+  a live runner. Stale git locks in the runner's own `pc-results` worktree and `lab-status`
+  repo are removed at start.
+- **The network is down.** Fetches and pushes time out after 30 s and never prompt, and the
+  jobs are monitored before any git call. A failed publish is retried after 30 s, then 1,
+  2, 4 … up to 30 minutes. A job file is treated as removed only after it is missing from
+  two successful reads of `pc-jobs`.
 - **A step failed.** `results/<id>/failure.txt` on `pc-results` has the exit code and the
   log tail. The whole log is `var/runner/jobs/<id>/<step>.log`. The exact script is
   `<step>.sh` beside it, and running `bash <step>.sh` by hand reproduces it.
@@ -243,8 +295,8 @@ the page starts to need is a line in both allowlists, in the same change.
   the service.
 - **Fixes** go on a `pc/<topic>` branch from a fresh `origin/main` in a separate worktree,
   never in `~/code/lab/runner`, under the pc-jobs README's rules. Test the fix with
-  `(cd web && node --test test/lab-runner.test.ts)`, then install it on the PC from that branch's worktree
-  (`tools/runner.sh install`) if it is urgent. Say so in HEARTBEAT.md's `## Messages`.
+  `(cd web && node --test test/lab-runner.test.ts)`, push the branch, then install it on the
+  PC (`tools/runner.sh install --ref pc/<topic>`) if it is urgent. Say so in HEARTBEAT.md's `## Messages`.
 - **Back to running by hand:** `systemctl --user stop forgecoach-runner`. Running jobs keep
   running in their units. Write STATUS files without a `runner:` line, and the runner will
   leave those jobs alone when it comes back.
@@ -260,8 +312,15 @@ In the cloud container (4 shared cores, no systemd user session):
   collect, publish; an old-format job stopping after its pilot, then approved; a failed
   pilot; a failed command; an abort; a memory stop and its capped retry; Justin at the
   table; a restart that adopts, resumes and restarts; and a hand-run job blocking heavy
-  work. The cube-lab pool runs under the control file with a fake `java`, and the ladder's
-  `drive` with a fake engine.
+  work. Since the review it also covers: an `unknown` unit state never orphaning a step; no
+  start beside a live unit; steps held while paused, playing or backoff-paused; a stale pid
+  file; a dead network (the queue kept, publishing backing off); a job file missing from
+  only one read; a script that still names Justin's checkout; a collected `STATUS`; globs
+  with `[`; the sizing floor and the pilot cap; control detection; three memory stops
+  failing a job, with the retries on the pinned commit; `approve` failing loudly; `sh:`
+  metrics in the slice; and stale git locks. The public-copy tests assert that no card name,
+  e-mail address, host name or presence event survives. The cube-lab pool runs under the
+  control file with a fake `java`, and the ladder's `drive` with a fake engine.
 - On Forge 2.0.14, one JVM at a time, 14 games in all: `ai-bench play` killed after 2 of 4
   games and run again, with the torn line cut off and 4 unique games; a second `play` on
   the folder refused; `--jobs 2` under `maxWorkers 1` running one JVM at a time, the
