@@ -29,6 +29,7 @@ import forge.LobbyPlayer;
 import forge.ai.PlayerControllerAi;
 import forge.game.Game;
 import forge.game.card.Card;
+import forge.game.combat.Combat;
 import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
@@ -57,6 +58,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
             "Mayhem Devil", "Cauldron Familiar", "Grim Haruspex", "Juri, Master of the Revue");
 
     private final OutletPolicy policy;
+    private final SearchPolicy search;
     private final Map<String, Integer> counts = new TreeMap<>();
     private final List<String> events = new ArrayList<>();
     private final Set<String> seen = new HashSet<>();
@@ -69,8 +71,33 @@ public class PolicyControllerAi extends PlayerControllerAi {
      *               or in shadow mode
      */
     public PolicyControllerAi(final Game game, final Player p, final LobbyPlayer lp, final OutletPolicy policy) {
+        this(game, p, lp, policy, null);
+    }
+
+    /**
+     * @param search null = no search; otherwise the determinized rollout search
+     *               (D312) runs after Forge and the outlet policy have answered
+     */
+    public PolicyControllerAi(final Game game, final Player p, final LobbyPlayer lp, final OutletPolicy policy,
+                              final SearchConfig search) {
         super(game, p, lp);
         this.policy = policy;
+        this.search = search == null ? null : new SearchPolicy(search, new SearchPolicy.Sink() {
+            @Override
+            public void add(final String key, final int n) {
+                counts.merge(key, n, Integer::sum);
+            }
+
+            @Override
+            public void event(final String text) {
+                PolicyControllerAi.this.event(text);
+            }
+        });
+    }
+
+    /** The search, or null; for the self-test. */
+    public SearchPolicy search() {
+        return search;
     }
 
     public Map<String, Integer> counts() {
@@ -147,7 +174,28 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 }
             }
         }
+        if (search != null && steerSa == null && search.wantsPriority(player)) {
+            // The outlet policy's rules stay in front (D311 roadmap 5): the search
+            // only reconsiders a priority none of them claimed.
+            return search.choosePriority(player, getAi(), forge);
+        }
         return forge;
+    }
+
+    @Override
+    public void declareAttackers(final Player attacker, final Combat combat) {
+        super.declareAttackers(attacker, combat);
+        if (search != null && attacker == player) {
+            search.chooseAttack(player, combat);
+        }
+    }
+
+    @Override
+    public void declareBlockers(final Player defender, final Combat combat) {
+        super.declareBlockers(defender, combat);
+        if (search != null && defender == player) {
+            search.chooseBlock(player, combat);
+        }
     }
 
     private static List<SpellAbility> singleton(final SpellAbility sa) {

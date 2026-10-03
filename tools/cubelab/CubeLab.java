@@ -465,8 +465,10 @@ public final class CubeLab {
         game.subscribeToEvents(new FirstPlayer(game, aOnPlay ? lpA : lpB, r));
         final CountDownLatch done = new CountDownLatch(1);
         final Throwable[] fail = new Throwable[1];
+        final Thread[] runner = new Thread[1];
         final long t = System.nanoTime();
         game.getAction().invoke(() -> {           // Forge's own Game pool, as RecordMatch starts its game
+            runner[0] = Thread.currentThread();
             try {
                 match.startGame(game);
             } catch (final Throwable e) {
@@ -480,6 +482,13 @@ public final class CubeLab {
             game.setGameOver(GameEndReason.Draw);
             if (!done.await(30, TimeUnit.SECONDS)) {
                 r.stuck = true;
+                // Where the game thread is stuck, for the worker log: a hang is a Forge
+                // loop, and its stack is the only trace of which one.
+                final Thread th = runner[0];
+                System.err.println("CUBELAB stuck game, seed " + gameSeed + ", turn "
+                    + (game.getPhaseHandler() == null ? "?" : game.getPhaseHandler().getTurn())
+                    + (th == null ? ", game thread unknown" : ", thread " + th.getName() + " (" + th.getState() + "):"));
+                if (th != null) for (final StackTraceElement e : th.getStackTrace()) System.err.println("\tat " + e);
                 return r;
             }
         }

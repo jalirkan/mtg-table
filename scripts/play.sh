@@ -42,6 +42,10 @@
 #                        Cautious and Reckless were NOT measurably different
 #                        (docs/evidence/match-setup.md section P).  It is not a dial.
 #   --mirror             ignore match.aiDeck: the AI plays a copy of your deck
+#   --ai-search          the stronger AI (D312-D314, opt-in): Forge's AI with the
+#                        sacrifice-outlet policy and a determinized look-ahead search
+#                        at its main-phase plays, attacks and blocks (about 1.5 s of
+#                        thinking at each; --ai-search-ms <n> sets that budget)
 #   config.json match.games is how many games a bare run plays (default 3).
 #
 # The flags win over config.json, and a flag typed after `--` wins over both.
@@ -282,6 +286,10 @@ while [ $# -gt 0 ]; do
     --ai-deck|--deck2) AI_DECK="$2"; shift 2 ;;
     --ai-profile) AI_PROFILE="$2"; shift 2 ;;
     --mirror)    AI_DECK=""; shift ;;
+    # D314: the stronger AI, opt-in -- D310's outlet policy plus D312's search.
+    # Passed through to MtgTable, so a match ForgeCoach restarts keeps it.
+    --ai-search) PASSTHROUGH+=(--ai-policy search); AI_SEARCH=1; shift ;;
+    --ai-search-ms) PASSTHROUGH+=(--ai-search "ms=$2"); AI_SEARCH=1; shift 2 ;;
     --no-coach)  COACH=0; shift ;;
     --coach-port) COACH_PORT="$2"; shift 2 ;;
     --no-match)  MATCH=0; shift ;;
@@ -386,6 +394,7 @@ if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
 if passthrough_has --deck2 --ai-deck; then echo "AI:   (the --ai-deck after --)"
 elif [ -n "$AI_DECK" ]; then echo "AI:   $(deck_name "$AI_DECK")  [$AI_DECK]"
 else echo "AI:   a mirror of your deck  (--mirror, or config.json match.aiDeck is null)"; fi
+[ "${AI_SEARCH:-0}" = "1" ] && echo "AI policy: search (D312-D314: outlet policy + look-ahead search)"
 passthrough_has --ai-profile && echo "AI profile: (the --ai-profile after --)" \
   || echo "AI profile: $AI_PROFILE"
 
