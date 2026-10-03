@@ -22,6 +22,7 @@ import java.util.Set;
 
 import forge.ai.AIOption;
 import forge.ai.LobbyPlayerAi;
+import forge.ai.PlayerControllerAi;
 import forge.game.Game;
 import forge.game.player.Player;
 import forge.game.player.PlayerController;
@@ -52,12 +53,24 @@ public final class PolicyLobbyPlayerAi extends LobbyPlayerAi {
 
     private final AIOption sim;
     private final Outlets outlets;
+    private final SearchConfig search;
     private PolicyControllerAi last;
 
     public PolicyLobbyPlayerAi(final String name, final AIOption sim, final Outlets outlets) {
+        this(name, sim, outlets, null);
+    }
+
+    /** @param search null = no search (D312); otherwise its configuration */
+    public PolicyLobbyPlayerAi(final String name, final AIOption sim, final Outlets outlets,
+                               final SearchConfig search) {
         super(name, sim == null ? null : Set.of(sim));
         this.sim = sim;
         this.outlets = outlets;
+        this.search = search;
+    }
+
+    public SearchConfig search() {
+        return search;
     }
 
     public Outlets outlets() {
@@ -75,7 +88,7 @@ public final class PolicyLobbyPlayerAi extends LobbyPlayerAi {
 
     private PolicyControllerAi createControllerFor(final Player ai) {
         final OutletPolicy policy = outlets == Outlets.OFF ? null : new OutletPolicy(outlets == Outlets.ON);
-        final PolicyControllerAi result = new PolicyControllerAi(ai.getGame(), ai, this, policy);
+        final PolicyControllerAi result = new PolicyControllerAi(ai.getGame(), ai, this, policy, search);
         result.getAi().setUseSimulation(sim);
         return result;
     }
@@ -87,6 +100,14 @@ public final class PolicyLobbyPlayerAi extends LobbyPlayerAi {
 
     @Override
     public Player createIngamePlayer(final Game game, final int id) {
+        if (SearchPolicy.copying()) {
+            // A search is copying the game (D312): the copy's seat gets Forge's
+            // plain controller (the search then installs its rollout controllers),
+            // and the bench's "last controller" stays the real game's.
+            final Player p = new Player(getName(), game, id);
+            p.setFirstController(new PlayerControllerAi(game, p, this));
+            return p;
+        }
         final Player ai = new Player(getName(), game, id);
         last = createControllerFor(ai);
         ai.setFirstController(last);
