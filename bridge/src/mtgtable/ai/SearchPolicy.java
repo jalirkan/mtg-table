@@ -117,16 +117,40 @@ public final class SearchPolicy {
     // Candidates
     // ==================================================================
 
-    /** One alternative, installed into a fresh copy before its rollout. */
-    private abstract static class Cand {
+    /**
+     * One alternative, installed into a fresh copy before its rollout.  Public
+     * (D-grade, the coach grader) so {@code mtgtable.grade} plays the same
+     * candidates through the same {@link #playout}; only this package makes
+     * them ({@link #priorityCand}, {@link #attackCand}, {@link #blockCand}).
+     */
+    public abstract static class Cand {
         final String label;
 
         Cand(final String label) {
             this.label = label;
         }
 
+        public String label() {
+            return label;
+        }
+
         /** Set the copy up so the rollout starts with this choice; throw if it cannot be mapped. */
         abstract void install(LenientGameCopier cp, Game copy, Player aiCopy, RolloutController rc);
+    }
+
+    /** Play {@code sa} (its targets and choices as set on the original) first; null = pass priority. */
+    public static Cand priorityCand(final SpellAbility saOrNullForPass) {
+        return new PriorityCand(saOrNullForPass);
+    }
+
+    /** Declare exactly these attackers (cards of the original game) at the next declare-attackers step. */
+    public static Cand attackCand(final Map<Card, GameEntity> attackers) {
+        return new AttackCand(attackers);
+    }
+
+    /** Declare exactly these blocks (blocker -> attacker, cards of the original game). */
+    public static Cand blockCand(final Map<Card, Card> blocks) {
+        return new BlockCand(blocks);
     }
 
     /** The result of a search: the chosen index, or -1 for "Forge's own" (index 0 is always Forge's). */
@@ -212,10 +236,6 @@ public final class SearchPolicy {
             ph.setPriority(aiCopy);
             ph.onStackResolved();   // public; the one way to say "this seat has priority now"
         }
-    }
-
-    private static Cand priorityCand(final SpellAbility sa) {
-        return new PriorityCand(sa);
     }
 
     /**
@@ -743,7 +763,7 @@ public final class SearchPolicy {
         return sb.toString();
     }
 
-    static final class CopyFailed extends RuntimeException {
+    public static final class CopyFailed extends RuntimeException {
         private static final long serialVersionUID = 1L;
 
         CopyFailed(final Throwable cause) {
@@ -751,7 +771,7 @@ public final class SearchPolicy {
         }
     }
 
-    static final class CandidateUnmappable extends RuntimeException {
+    public static final class CandidateUnmappable extends RuntimeException {
         private static final long serialVersionUID = 1L;
 
         CandidateUnmappable(final Throwable cause) {
@@ -762,6 +782,65 @@ public final class SearchPolicy {
     /** One rollout: null if the deadline passed before its leaf. */
     private Double rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
                            final boolean first) {
+        final Playout p = playout(game, ai, cand, seed, new Limits(deadline, cfg.horizonTurns, 20_000), sink, first,
+                failCopyForTest);
+        return p == null ? null : p.leaf;
+    }
+
+    /** How far a {@link #playout} may run. */
+    public static final class Limits {
+        /** {@code System.nanoTime()} after which the playout gives up (and returns null). */
+        public final long deadline;
+        /** Play to the end of this turn plus this many; negative = to the end of the game. */
+        public final int horizonTurns;
+        /** {@code mainLoopStep} calls before the playout stops where it is (counted, scored as a leaf). */
+        public final int maxSteps;
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps) {
+            this.deadline = deadline;
+            this.horizonTurns = horizonTurns;
+            this.maxSteps = maxSteps;
+        }
+    }
+
+    /** What one playout ended in, from the searching seat's side. */
+    public static final class Playout {
+        /** {@link #leaf}'s score of the final position. */
+        public final double leaf;
+        /** True when the copy's game ended. */
+        public final boolean over;
+        /** +1 won, -1 lost, 0 a draw or not over. */
+        public final int result;
+        /** True when {@link Limits#maxSteps} stopped it. */
+        public final boolean stepCapped;
+        /** Turns played in the copy past the starting one. */
+        public final int turns;
+
+        Playout(final double leaf, final boolean over, final int result, final boolean stepCapped, final int turns) {
+            this.leaf = leaf;
+            this.over = over;
+            this.result = result;
+            this.stepCapped = stepCapped;
+            this.turns = turns;
+        }
+    }
+
+    /**
+     * One rollout of {@code cand} from {@code game} for the seat {@code ai}: copy
+     * the game ({@link LenientGameCopier}), seat Forge's plain Default AI on both
+     * sides with {@code ai}'s first answer forced ({@link RolloutController}),
+     * redeal what {@code ai} cannot see ({@link Determinizer}, seeded from
+     * {@code seed}), and play under {@code seed}'s engine randomness to the
+     * horizon.  The real {@code MyRandom} is restored afterwards.  The same seed
+     * on the same game gives the same determinization and engine stream for
+     * every candidate: common random numbers.  Null when the deadline passed.
+     * Shared by the search (D312) and the coach grader ({@code mtgtable.grade}).
+     *
+     * @throws CopyFailed when the copier throws; CandidateUnmappable when the
+     *         candidate cannot be put on the copy
+     */
+    public static Playout playout(final Game game, final Player ai, final Cand cand, final long seed, final Limits lim,
+                                  final Sink sink, final boolean first, final RuntimeException failCopy) {
         final java.util.Random realRandom = MyRandom.getRandom();
         MyRandom.setRandom(new Random(seed));
         try {
@@ -770,8 +849,8 @@ public final class SearchPolicy {
             final Game copy;
             COPYING.set(Boolean.TRUE);
             try {
-                if (failCopyForTest != null) {
-                    throw failCopyForTest;
+                if (failCopy != null) {
+                    throw failCopy;
                 }
                 copy = cp.makeCopy(null, ai);
             } catch (final RuntimeException e) {
@@ -805,23 +884,42 @@ public final class SearchPolicy {
             Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
             final long tp = System.nanoTime();
             final PhaseHandler ph = copy.getPhaseHandler();
-            final int limit = ph.getTurn() + cfg.horizonTurns;
+            final int startTurn = ph.getTurn();
+            final int limit = lim.horizonTurns < 0 ? Integer.MAX_VALUE : startTurn + lim.horizonTurns;
             int steps = 0;
-            while (!copy.isGameOver() && ph.getTurn() <= limit && steps < 20_000) {
-                if ((steps & 7) == 0 && System.nanoTime() > deadline) {
+            while (!copy.isGameOver() && ph.getTurn() <= limit && steps < lim.maxSteps) {
+                if ((steps & 7) == 0 && System.nanoTime() > lim.deadline) {
                     return null;
                 }
                 ph.mainLoopStep();
                 steps++;
             }
-            if (steps >= 20_000) {
+            final boolean capped = steps >= lim.maxSteps;
+            if (capped) {
                 sink.add("search.rolloutStepCap", 1);
             }
             sink.add("search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
-            return leaf(copy, aiCopy);
+            final double leaf = leaf(copy, aiCopy);
+            return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {
             MyRandom.setRandom(realRandom);
         }
+    }
+
+    /** +1 when {@code ai} won the copy, -1 when it lost, 0 for a draw or a game still going. */
+    static int resultOf(final Game g, final Player ai) {
+        if (ai.hasLost()) {
+            return -1;
+        }
+        if (ai.hasWon()) {
+            return 1;
+        }
+        for (final Player p : g.getPlayers()) {
+            if (p != ai && p.hasLost()) {
+                return 1;
+            }
+        }
+        return 0;
     }
 
     // ==================================================================
