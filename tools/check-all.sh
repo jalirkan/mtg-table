@@ -164,6 +164,12 @@
 #                                 fixed seed, both decks lab-built and legal, one
 #                                 game each on one worker, the JSONL and the
 #                                 report written (~30 s, one engine boot)
+#                                 Then 12h: the ML dataset's tests (D305,
+#                                 tools/ml/tests) -- the encoder over every
+#                                 committed recording, the hidden zones
+#                                 scrambled and every feature unchanged, the
+#                                 schema golden, the split by game; numpy's
+#                                 half says whether it ran (~30 s; python3)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -257,7 +263,8 @@
 #     they depend on every job that records one;
 #   - 12b (the catalog), 12c (the crash check, its own scratch Forge home) and
 #     12e (the AI decks against their specs) depend on nothing but the build,
-#     and neither does 12f (the coach helper, which needs no build at all).
+#     and neither does 12f (the coach helper, which needs no build at all)
+#     or 12h (the ML dataset's Python tests, which read only fixtures/).
 #
 # Step 10's servers listen on WSPORT+0 .. WSPORT+7 (10a..10h) when GATE_JOBS >
 # 1, so all eight can be up at once; GATE_JOBS=1 keeps the single WSPORT.
@@ -1882,10 +1889,17 @@ s12e_skipped() {
 #      turn, the user text on stdin), the Origin and LAN-token rules, the 512 KB
 #      body limit, one question at a time, and a client that disconnects
 #      killing the child and its process group.  Its servers bind port 0.
+#      Since D303 it also runs tools/match-launcher-selftest.mjs: the helper's
+#      /match and scripts/play.sh's restart, the real play.sh driven against a
+#      FAKE engine (MTGTABLE_TEST_FAKE_ENGINE; no Forge, no build) on free
+#      ports, its files under var/match-launcher-selftest/; about 25 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
     || die "coach-helper-selftest.mjs (12f: the coach helper broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D303: the helper's /match and play.sh's restart, against a fake engine.
+  node tools/match-launcher-selftest.mjs \
+    || die "match-launcher-selftest.mjs (12f: the match launcher broke its contract with ForgeCoach -- see the FAIL lines above)"
 }
 
 # 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid
@@ -1930,6 +1944,27 @@ s12g_cubelab() {
     if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
     console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html and meta.json written");
   ' "$out" || die "the cube lab's smoke run is not what it should be (12g)"
+}
+
+# 12h. D305: tools/ml/, the dataset pipeline for a learned position evaluator.
+#      Its tests read the committed fixtures only: every recording encoded, a
+#      scrambler that rewrites every hidden zone (the opponent's hand stubs
+#      named, both libraries filled, every face-down card given an alt) must
+#      leave every feature of every row unchanged -- with a negative control on
+#      the viewer's own hand -- plus labels, determinism, the schema golden and
+#      the split by game.  The encoder is standard library; the dataset and
+#      baseline tests need numpy and are SKIPPED without it, which this step
+#      prints.  No engine, no network.
+s12h_ml() {
+  printf '\n=== 12h. tools/ml tests -- the dataset pipeline, hidden information held (D305) ===\n'
+  command -v python3 >/dev/null || die "python3 not found (12h: tools/ml needs Python 3)"
+  if python3 -c 'import numpy' 2>/dev/null; then
+    echo "numpy present: the dataset and baseline tests run"
+  else
+    echo "numpy ABSENT: the dataset and baseline tests are skipped (pip install numpy)"
+  fi
+  python3 -m unittest discover -s tools/ml/tests 2>&1 \
+    || die "tools/ml tests (12h: the ML encoder broke -- if it names a hidden-information feature, the encoder read a card the viewer may not see)"
 }
 
 s13_skipped() {
@@ -2068,6 +2103,7 @@ else
 fi
 job 12f-coach     12 both     s12f_coach        "$PRE"
 job 12g-cubelab   12 both     s12g_cubelab      "$PRE"
+job 12h-ml        12 both     s12h_ml           "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
@@ -2090,7 +2126,7 @@ fi
 # and nothing waits for the ten-games rows, and the build is right behind them
 # because `node --test` waits for it too; Smoke is early because 9c and 9e
 # wait for it.  Anything not named runs after, in table order.
-PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach"
+PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach 12h-ml"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
 PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash 12g-cubelab"

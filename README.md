@@ -355,7 +355,10 @@ node tools/narrate.mjs fixtures/games/g1.jsonl              # --turn 3, --summar
 #   the token is the only lock.
 #   Every mode also starts the COACH HELPER (D292) when `claude` is on PATH:
 #   "Coach: Claude Code on this PC (no API key needed) — http://127.0.0.1:8643"
-#   ("Coaching without an API key" below); --no-coach skips it.
+#   ("Coaching without an API key" below); --no-coach skips it.  Since D303 it
+#   is also the MATCH LAUNCHER (ForgeCoach's "Play this match": POST /match
+#   restarts the engine on two drafted decks) and starts without `claude` too;
+#   --no-match turns that half off.
 
 # Match setup — WHAT you play against (amendment M44; "Choosing decks and the AI"
 #   below has the whole story).  A bare ./scripts/play.sh is your deck against
@@ -709,6 +712,16 @@ that means for you:
 
 Your browser may ask once whether ForgeCoach may reach devices on your local
 network: that is the github.io page calling `127.0.0.1`, and it is this helper.
+
+**Playing the decks you drafted** (**D303**). ForgeCoach's cube draft builds
+both decks in the browser, and its **Play this match** button sends them to the
+same helper (`POST /match`). The helper writes them as `.dck` files under
+`var/match/`, and `play.sh` restarts the engine on them — the old game's
+connection drops, ForgeCoach reconnects, and the new match begins, with the AI's
+deck still named by its name and card count only. `play.sh` prints a
+`Match launcher:` line under the `Coach:` one; the helper now starts even
+without `claude` on your PATH, for this. `--no-match` turns it off (`--no-coach`
+turns off both). `docs/match-launcher.md` is the request and reply.
 
 **A game you play has no clock** (**D286**). `--transport ws` and `console` put no
 wall-clock limit on a game, so thinking for an hour is fine; `--transport null` and
