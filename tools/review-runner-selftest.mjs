@@ -7,7 +7,8 @@
 // helper's /review route, against a FAKE coach-grade.sh -- a small bash script
 // that prints the real one's stage lines, records its argv and writes a report.
 // A game named "fail-..." makes it fail, "slow-..." makes it sleep past the
-// timeout, "junk-..." makes it write a report that is not one.  Everything goes
+// timeout, "junk-..." makes it write a report that is not one, "dead-..." makes
+// it write a report and end REVIEW FAILED, exit 4 (D353 amended).  Everything goes
 // under var/review-runner-selftest/.  No Forge, no claude, no network.
 //
 // What it holds: the request's validation (game ids, traversal, seat, pool
@@ -50,7 +51,7 @@ const game = (id, seat = 0) => {
   mkdirSync(join(DIR, 'games', id), { recursive: true });
   writeFileSync(join(DIR, 'games', id, 'frames.jsonl'), `${header(seat)}\n{"v":1,"type":"state","body":{}}\n`);
 };
-for (const id of ['g1', 'g2', 'g3', 'g4', 'fail-1', 'slow-1', 'junk-1']) game(id);
+for (const id of ['g1', 'g2', 'g3', 'g4', 'fail-1', 'slow-1', 'junk-1', 'dead-1']) game(id);
 game('seat1', 1);
 writeFileSync(join(DIR, 'outside', 'frames.jsonl'), `${header(0)}\n`);
 symlinkSync(join(DIR, 'outside'), join(DIR, 'games', 'escape'));
@@ -76,7 +77,10 @@ case "$log" in
   *junk-*) echo '{"kind":"something-else"}' > "$out" ;;
   *) echo '{"v":1,"kind":"game-review","gameId":"x","seat":0,"decisions":[],"keyMoments":[]}' > "$out" ;;
 esac
-echo "REVIEW DONE $out"
+case "$log" in
+  *dead-*) echo "REVIEW FAILED report: every decision (3) is an error or refused (the report, kept as evidence: $out)"; exit 4 ;;
+esac
+echo "REVIEW DONE $out decisions=0 graded=0 errors=0 deepened=0"
 `);
 chmodSync(FAKE, 0o755);
 
@@ -163,6 +167,11 @@ check(/the log is broken/.test(rr.get(f.body.id).body.error ?? ''), 'a failed re
 const j = rr.post({ gameId: 'junk-1' });
 await until(() => rr.get(j.body.id).body.state === 'failed');
 check(/could not be read|not a game-review/.test(rr.get(j.body.id).body.error ?? ''), 'a report that is not one: failed');
+// D353, amended: a review whose report is all errors exits 4 with the report written -- failed, never done.
+const dd = rr.post({ gameId: 'dead-1' });
+await until(() => ['failed', 'done'].includes(rr.get(dd.body.id).body.state));
+check(rr.get(dd.body.id).body.state === 'failed' && /every decision \(3\) is an error/.test(rr.get(dd.body.id).body.error ?? '')
+  && rr.get(dd.body.id).body.report === undefined, 'a REVIEW FAILED report (exit 4, report on disk): failed, with the reason, no report served');
 const s = rr.post({ gameId: 'slow-1' });
 await until(() => rr.get(s.body.id).body.state === 'failed', 9000);
 check(/ran past/.test(rr.get(s.body.id).body.error ?? ''), 'a review past its time is stopped');

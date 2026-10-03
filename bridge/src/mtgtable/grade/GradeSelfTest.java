@@ -476,6 +476,12 @@ public final class GradeSelfTest {
                 (Map<?, ?>) mtgtable.Json.parse("{\"momentKey\":\"b\",\"shard\":1,\"grade\":{\"ms\":300}}"),
                 (Map<?, ?>) mtgtable.Json.parse("{\"momentKey\":\"c\",\"shard\":0,\"grade\":{\"ms\":250}}"));
         check(Review.gradeMs(sh, List.of("a", "b", "c"), 2) == 350, "grade time: the busiest JVM's sum");
+        // D353, amended: a report whose every decision is an error is not a review (REVIEW FAILED); some errors are counted.
+        check(Review.failure(rep) == null && Review.errors(rep) == 1, "report health: one decision the triage never reached is counted, not a failure");
+        final Map<?, ?> none = (Map<?, ?>) mtgtable.Json.parse(Review.report(meta, plan, List.of(), List.of(), List.of()));
+        check(Review.errors(none) == plan.size() && Review.failure(none) != null
+                && Review.failure(none).contains("the triage did not reach it"),
+                "report health: a triage that graded nothing fails the review, saying why (" + Review.failure(none) + ")");
 
         // 7. The review's knowledge is the live guard's (D348): an opponent deck list, from the run's flags or a
         //    moment line, is refused before it is read; a cube-sized pool passes.
@@ -636,6 +642,29 @@ public final class GradeSelfTest {
         final double hi = ((Number) rep.get("scaleHi")).doubleValue();
         check(near(rs, 300, 15) && lo < rs && rs < hi && WireLog.arr(rep, "reliability").length >= 8,
                 "fit-scale's report: scale " + rs + " [" + lo + ", " + hi + "] with a reliability table");
+        // D353, amended (the PC's J015 fitted -10325 on one game and wrote it; every review's triage then died).
+        check(CoachGrade.fitProblem(rep, CoachGrade.FIT_MIN_GAMES) == null, "fit-scale: a positive scale on 200 games is written");
+        final Map<?, ?> oneGame = (Map<?, ?>) mtgtable.Json.parse("{\"fitted\":true,\"scale\":-10325.0,\"games\":1,\"rows\":34}");
+        check(CoachGrade.fitProblem(oneGame, CoachGrade.FIT_MIN_GAMES) != null
+                && CoachGrade.fitProblem(oneGame, CoachGrade.FIT_MIN_GAMES).contains("not a positive"),
+                "fit-scale: a negative scale (the PC's one-game fit) is never written");
+        check(CoachGrade.fitProblem((Map<?, ?>) mtgtable.Json.parse("{\"fitted\":true,\"scale\":350,\"games\":3}"), 10) != null,
+                "fit-scale: a positive scale from too few games is not written either");
+        check(CoachGrade.fitProblem((Map<?, ?>) mtgtable.Json.parse("{\"fitted\":false,\"scale\":400,\"games\":0}"), 10) == null,
+                "fit-scale: an unfitted report (the default scale) is not a problem");
+        String why = null;
+        try {
+            final java.io.File bad = java.io.File.createTempFile("leaf-scale-bad", ".json");
+            bad.deleteOnExit();
+            java.nio.file.Files.writeString(bad.toPath(), "{\"fitted\":true,\"scale\":-10325.0,\"games\":1}\n");
+            CoachGrade.leafScale(new Grader.Settings(), bad.getPath());
+        } catch (final IllegalArgumentException e) {
+            why = e.getMessage();
+        } catch (final java.io.IOException e) {
+            why = "io: " + e;
+        }
+        check(why != null && why.contains("must be positive") && why.contains("fit-scale"),
+                "a leaf-scale file holding a negative scale is refused, and the message says how to fix it (" + why + ")");
     }
 
     static void overrideRule() {

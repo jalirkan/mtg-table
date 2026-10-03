@@ -55,6 +55,13 @@
 # the game (--deep-s; one decision per JVM), one JSON report.  The knowledge is
 # the LIVE guard's (D348): pool mode, never the AI's list.  Stage lines
 # "REVIEW STAGE <name> ..." on stdout; the work under var/coach-grade/review/<run>/.
+# It ends with ONE of (D353, amended after the PC's J028):
+#   REVIEW DONE <report> decisions=N graded=G errors=E deepened=D    exit 0
+#   REVIEW FAILED <stage>: <why>     exit 3 (plan: a refused log or knowledge, an unusable leaf scale),
+#                                    4 (triage graded nothing; or every decision an error -- the report
+#                                    is still written, as evidence), 5 (the report step itself failed)
+# A shard that dies says why on a "REVIEW WARN" line.  review-smoke prints the same lines as
+# "REVIEW-SMOKE ...", so a log holding a smoke and a review counts each once.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
@@ -98,13 +105,28 @@ batch() {
     pids+=("$!")
   done
   for p in "${pids[@]}"; do wait "$p" || rc=1; done
-  cat "$out".shard-*.jsonl > "$out"
+  : > "$out"
+  for ((i = 0; i < jobs; i++)); do
+    [ -f "$out.shard-$i.jsonl" ] && cat "$out.shard-$i.jsonl" >> "$out"
+  done
   echo "coach-grade: $(wc -l < "$out") graded moment(s) -> $out"
   [ "$rc" = 0 ] || echo "coach-grade: a shard failed -- see $out.shard-*.log" >&2
   return "$rc"
 }
 
 now_ms() { date +%s%3N; }
+
+# The first JVM failure in a stage's shard logs, one line (D353, amended: the review's own output
+# says why a shard died, so a job's log keeps it even when the shard logs are not collected).
+shard_why() {
+  local w
+  w="$(cat "$1".shard-*.log 2>/dev/null | grep -m1 '^COACH-GRADE FAILED' || true)"
+  printf '%s' "${w#COACH-GRADE FAILED: }" | cut -c1-300
+}
+
+# The review's line prefix: REVIEW for a review, REVIEW-SMOKE inside review-smoke, so a log holding
+# both (a PC job's pilot and its run) never counts the smoke's lines as the review's (D353, amended).
+RV=REVIEW
 
 review() {
   local log="" seat="" out="" run="" jobs=7 triage_s=15 deep_s=150 deep_k=6 deep_horizon=-1 full_min_s=60
@@ -140,19 +162,24 @@ review() {
   case "$run" in */*|.*) echo "--run must be a plain name" >&2; exit 2 ;; esac
   local dir="var/coach-grade/review/$run"
   mkdir -p "$dir"
+  # A review is not resumable: a rerun under the same --run starts clean.  Left behind, the claim
+  # files would keep the decisions an earlier run's JVMs claimed (and maybe died on) from ever
+  # being graded again, and old shard files would be merged in (D353, amended).
+  rm -rf "$dir/claim-triage" "$dir/claim-deep"
+  rm -f "$dir"/triage.jsonl.shard-* "$dir"/deep.jsonl.shard-* "$dir/report.json"
   [ -n "$out" ] || out="$dir/report.json"
   local scale=()
   [ -f var/coach-grade/leaf-scale.json ] && scale=(--leaf-scale var/coach-grade/leaf-scale.json)
   local t0 t1 plan_ms tri_wall=0 deep_wall=0
   t0="$(now_ms)"
 
-  echo "REVIEW STAGE plan $log seat $seat"
+  echo "$RV STAGE plan $log seat $seat"
   local planned rc=0
   planned="$(jvm "$(home_for review-home)" review-plan --log "$log" --seat "$seat" --out "$dir/plan.jsonl" --jobs "$jobs" \
-    --triage-ms "$((triage_s * 1000))" --triage-min-ms "$triage_min_ms" --triage-max-ms "$triage_max_ms" ${know[@]+"${know[@]}"} \
+    --triage-ms "$((triage_s * 1000))" --triage-min-ms "$triage_min_ms" --triage-max-ms "$triage_max_ms" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} \
     2> "$dir/plan.log")" || rc=$?
   echo "$planned"
-  [ "$rc" = 0 ] || { echo "REVIEW FAILED plan: $(echo "$planned" | tail -1)"; return 3; }
+  [ "$rc" = 0 ] || { echo "$RV FAILED plan: $(echo "$planned" | tail -1)"; return 3; }
   local decisions tjobs tms
   decisions="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.decisions))' "$planned")"
   tjobs="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.jobs))' "$planned")"
@@ -162,12 +189,20 @@ review() {
   local sel='{"k":0,"jobs":0,"perJvm":0,"msPerDecision":0,"horizon":-1,"picks":[]}' djobs=0 dms=0 dh="$deep_horizon"
   : > "$dir/triage.jsonl"; : > "$dir/deep.jsonl"; echo "$sel" > "$dir/select.json"
   if [ "$decisions" -gt 0 ]; then
-    echo "REVIEW STAGE triage $decisions decision(s) on $tjobs JVM(s), ${tms} ms each"
+    echo "$RV STAGE triage $decisions decision(s) on $tjobs JVM(s), ${tms} ms each"
     t0="$(now_ms)"
     batch --run "$run" --jobs "$tjobs" --guard live --claim "$dir/claim-triage" --moments "$dir/plan.jsonl" --out "$dir/triage.jsonl" \
       --horizon 0 --playouts 10000 --initial 4 --batch 2 --cap 12 --max-options 8 --timeout-ms 2500 --min-rounds 2 \
-      --budget-ms "$tms" --seed "$seed" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} || echo "REVIEW WARN a triage shard failed (see $dir/triage.jsonl.shard-*.log)"
+      --budget-ms "$tms" --seed "$seed" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} \
+      || echo "$RV WARN a triage shard failed: $(shard_why "$dir/triage.jsonl") (see $dir/triage.jsonl.shard-*.log)"
     t1="$(now_ms)"; tri_wall=$((t1 - t0))
+    # D353, amended: a triage that graded nothing is a failed review, never a report of errors marked done.
+    local tl
+    tl="$(wc -l < "$dir/triage.jsonl")"
+    if [ "$tl" -eq 0 ]; then
+      echo "$RV FAILED triage: 0 of $decisions decision(s) graded: $(shard_why "$dir/triage.jsonl") (see $dir/triage.jsonl.shard-*.log)"
+      return 4
+    fi
 
     sel="$(jvm "$(home_for review-home)" review-select --plan "$dir/plan.jsonl" --triage "$dir/triage.jsonl" \
       --out "$dir/deep-moments.jsonl" --k "$deep_k" --jobs "$jobs" --deep-ms "$((deep_s * 1000))" \
@@ -177,23 +212,36 @@ review() {
     dms="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.msPerDecision))' "$sel")"
     dh="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.horizon))' "$sel")"
     if [ "$djobs" -gt 0 ]; then
-      echo "REVIEW STAGE deepen $(node -e 'process.stdout.write(String(JSON.parse(process.argv[1]).k))' "$sel") decision(s) on $djobs JVM(s), ${dms} ms each, horizon $dh"
+      echo "$RV STAGE deepen $(node -e 'process.stdout.write(String(JSON.parse(process.argv[1]).k))' "$sel") decision(s) on $djobs JVM(s), ${dms} ms each, horizon $dh"
       t0="$(now_ms)"
       batch --run "$run" --jobs "$djobs" --guard live --claim "$dir/claim-deep" --moments "$dir/deep-moments.jsonl" --out "$dir/deep.jsonl" \
         --horizon "$dh" --playouts 200 --initial 8 --batch 4 --timeout-ms 60000 --min-rounds 2 \
-        --max-ms "$dms" --seed "$((seed + 1))" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} || echo "REVIEW WARN a deepen shard failed (see $dir/deep.jsonl.shard-*.log)"
+        --max-ms "$dms" --seed "$((seed + 1))" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} || echo "$RV WARN a deepen shard failed: $(shard_why "$dir/deep.jsonl") (see $dir/deep.jsonl.shard-*.log)"
       t1="$(now_ms)"; deep_wall=$((t1 - t0))
     fi
   fi
 
-  echo "REVIEW STAGE report"
+  echo "$RV STAGE report"
   local config timing
   config="{\"jobs\":$jobs,\"triageS\":$triage_s,\"triageMsPerDecision\":$tms,\"triageJobs\":$tjobs,\"deepK\":$deep_k,\"deepS\":$deep_s,\"deepJobs\":$djobs,\"deepMsPerDecision\":$dms,\"deepHorizon\":$dh,\"seed\":$seed}"
   timing="{\"planMs\":$plan_ms,\"triageWallMs\":$tri_wall,\"deepWallMs\":$deep_wall,\"totalMs\":$(( $(now_ms) - REVIEW_T0 ))}"
-  jvm "$(home_for review-home)" review-report --log "$log" --plan "$dir/plan.jsonl" --triage "$dir/triage.jsonl" \
+  local said rrc=0
+  said="$(jvm "$(home_for review-home)" review-report --log "$log" --plan "$dir/plan.jsonl" --triage "$dir/triage.jsonl" \
     --deep "$dir/deep.jsonl" --picks "$dir/select.json" --out "$out" --config "$config" --timing "$timing" \
-    --triage-jobs "$tjobs" --deep-jobs "$djobs" 2> "$dir/report.log"
-  echo "REVIEW DONE $out"
+    --triage-jobs "$tjobs" --deep-jobs "$djobs" 2> "$dir/report.log")" || rrc=$?
+  [ -z "$said" ] || echo "$said"
+  # D353, amended: exit 4 is a report in which every decision is an error (written, but not a review).
+  if [ "$rrc" = 4 ]; then
+    echo "$RV FAILED report: $(echo "$said" | sed -n 's/^failed: //p' | head -1) (the report, kept as evidence: $out)"
+    return 4
+  fi
+  [ "$rrc" = 0 ] || { echo "$RV FAILED report: exit $rrc (see $dir/report.log)"; return 5; }
+  # The DONE line names the run and counts what came out, so a log holding several is unambiguous.
+  echo "$RV DONE $out $(node -e '
+    const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+    const e = r.decisions.filter((d) => d.status === "error" || d.status === "refused").length;
+    process.stdout.write("decisions=" + r.summary.decisions + " graded=" + r.summary.graded + " errors=" + e + " deepened=" + r.summary.deepened);
+  ' "$out")"
 }
 
 mode="${1:-}"
@@ -244,6 +292,7 @@ case "$mode" in
     sm_seat="$(node -e 'const l=require("fs").readFileSync(process.argv[1]);const t=(l[0]===0x1f?require("zlib").gunzipSync(l):l).toString("utf8");process.stdout.write(String(JSON.parse(t.slice(0,t.indexOf("\n"))).seat))' "$sm_log")"
     sm_run="review-smoke-$$"
     REVIEW_T0="$(now_ms)"
+    RV=REVIEW-SMOKE
     review --log "$sm_log" --seat "$sm_seat" --jobs "$sm_jobs" --triage-s 4 --triage-min-ms 400 --triage-max-ms 1000 \
       --deep-k 2 --deep-s 20 --deep-options 3 --run "$sm_run"
     node -e '
@@ -261,6 +310,11 @@ case "$mode" in
       check(r.summary.deepened >= 0 && r.summary.deepened <= 2 && r.decisions.filter((d) => d.stage === "deep").length === r.summary.deepened, r.summary.deepened + " deepened, at most --deep-k");
       check(r.keyMoments.every((f) => r.decisions.some((d) => d.frame === f && d.key)), "every key moment is a decision marked key");
       check(r.knowledge.opponentModel === "basic-lands", "no pool given: the opponent model says basic lands");
+      // D353, amended: the PC job J028 passed every check above with every decision an error (its triage
+      // JVMs all died); the smoke now holds that the triage graded and that errors are few.
+      const errs = r.decisions.filter((d) => d.status === "error" || d.status === "refused").length;
+      check(r.decisions.some((d) => d.status === "ok"), "the triage graded: " + r.decisions.filter((d) => d.status === "ok").length + " decision(s) ok");
+      check(errs * 4 <= r.decisions.length, errs + " error(s) of " + r.decisions.length + " decision(s): at most a quarter");
       console.log("review-smoke: " + n + " check(s), " + bad + " failure(s); timing " + JSON.stringify(r.timing));
       process.exit(bad ? 1 : 0);
     ' "var/coach-grade/review/$sm_run/report.json"

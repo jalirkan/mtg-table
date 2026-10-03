@@ -72,7 +72,8 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *              --opp-deck D | --opp-pool P (a list of cards, a .dck, or "N Name" lines)
  *              --opp-known "Name; 2 Name" | FILE (AI picks the player saw: drawn first)
  *              --opp-deck-public "<reason>" (live modes only: the opponent's list is shared)
- *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json] [--max-logs N]   (D349)
+ *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json] [--max-logs N] [--min-games 10]   (D349;
+ *              a non-positive scale, or one from fewer games, is printed and NOT written: exit 3, D353 amended)
  *   settings:  --playouts N (rounds an option still in the race ends with; 200)
  *              --initial N (40) --batch N (20) --no-race --seed S (1)
  *              --horizon T (-1 = to the end; else turns past this one, then the leaf evaluator)
@@ -248,8 +249,9 @@ public final class CoachGrade {
                 throw new IllegalArgumentException("cannot read a leaf scale from " + v + ": " + e);
             }
         }
-        if (!(s.leafScale > 0)) {
-            throw new IllegalArgumentException("a leaf scale must be positive: " + s.leafScale);
+        if (!(s.leafScale > 0) || Double.isInfinite(s.leafScale)) {
+            throw new IllegalArgumentException("a leaf scale must be positive: " + s.leafScale + " from " + v
+                    + (v.matches("[0-9.]+") ? "" : " (refit it with coach-grade.sh fit-scale on enough games, or move the file aside)"));
         }
     }
 
@@ -496,6 +498,10 @@ public final class CoachGrade {
         }
         boot();
         final Config cfg = Config.load();
+        // The run's own settings, read once BEFORE any moment is claimed (D353, amended after the PC's
+        // J028): a bad flag -- an unusable leaf scale -- fails this JVM here, with nothing claimed, instead of
+        // after it has claimed a moment it then never grades.
+        settings(f);
         final File out = new File(outPath);
         final Set<String> done = new HashSet<>();
         if (out.isFile()) {
@@ -645,6 +651,16 @@ public final class CoachGrade {
             System.out.println(new Json.JsonOut().obj().n("status", "refused").n("error", e.getMessage()).end().done());
             return 3;
         }
+        if (f.v.containsKey("leaf-scale")) {
+            // The scale the triage and the deepening will read (D353, amended): an unusable one fails the
+            // review here, in plain words, rather than every triage JVM after it has claimed a decision.
+            try {
+                leafScale(new Grader.Settings(), f.v.get("leaf-scale"));
+            } catch (final IllegalArgumentException e) {
+                System.out.println(new Json.JsonOut().obj().n("status", "error").n("error", e.getMessage()).end().done());
+                return 3;
+            }
+        }
         final List<Review.Planned> plan = Review.plan(log);
         final File out = new File(outPath);
         if (out.getParentFile() != null) {
@@ -782,10 +798,18 @@ public final class CoachGrade {
             out.getParentFile().mkdirs();
         }
         Files.writeString(out.toPath(), report + "\n", StandardCharsets.UTF_8);
-        final Map<?, ?> sum = WireLog.map((Map<?, ?>) Json.parse(report), "summary");
+        final Map<?, ?> rep = (Map<?, ?>) Json.parse(report);
+        final Map<?, ?> sum = WireLog.map(rep, "summary");
         System.out.println("review: " + WireLog.num(sum, "decisions", 0) + " decision(s), " + WireLog.num(sum, "graded", 0)
                 + " graded, " + WireLog.num(sum, "mistakes", 0) + " mistake(s), " + WireLog.num(sum, "closeCalls", 0)
-                + " close call(s), " + WireLog.num(sum, "deepened", 0) + " deepened -> " + out);
+                + " close call(s), " + WireLog.num(sum, "deepened", 0) + " deepened, " + Review.errors(rep) + " error(s) -> " + out);
+        // D353, amended: a report in which every decision is an error is written (it is the evidence) but is
+        // not a review: exit 4 and say why, so coach-grade.sh ends REVIEW FAILED instead of REVIEW DONE.
+        final String failed = Review.failure(rep);
+        if (failed != null) {
+            System.out.println("failed: " + failed);
+            return 4;
+        }
         return 0;
     }
 
@@ -997,6 +1021,15 @@ public final class CoachGrade {
         }
         final String json = fitReport(rows, games.size(), logs.size(), skipped, f.i("bootstrap", 200), f.s("logs", ""));
         final File out = new File(f.s("out", new File(cfg.root(), FITTED_SCALE).getPath()));
+        // D353, amended after the PC's J015 / J028: a fit on one game came out at -10325, was written as the
+        // live scale, and every later triage, analyse and serve refused it.  Such a fit is printed, never written.
+        final String problem = fitProblem((Map<?, ?>) Json.parse(json), f.i("min-games", FIT_MIN_GAMES));
+        if (problem != null) {
+            System.out.println(json);
+            System.err.println("[coach-grade] fit-scale: NOT written to " + out + ": " + problem
+                    + (out.isFile() ? " (the file there is left as it was)" : ""));
+            return 3;
+        }
         if (out.getParentFile() != null) {
             out.getParentFile().mkdirs();
         }
@@ -1004,6 +1037,31 @@ public final class CoachGrade {
         System.out.println(json);
         System.err.println("[coach-grade] fit-scale -> " + out);
         return rows.isEmpty() ? 1 : 0;
+    }
+
+    /** The fewest games a fitted scale may come from before {@code fit-scale} writes it (D353, amended). */
+    static final int FIT_MIN_GAMES = 10;
+
+    /**
+     * Why a {@code fit-scale} report must not be written as the live scale, or null: a fitted scale that
+     * is not a positive number (the readers refuse it), or one fitted on fewer than {@code minGames} games
+     * (one game's positions all share one result: the slope is noise, often negative).  An unfitted report
+     * (fewer than two positions: the default scale, {@code "fitted": false}) is not a problem.
+     */
+    static String fitProblem(final Map<?, ?> fit, final int minGames) {
+        if (!Boolean.TRUE.equals(fit.get("fitted"))) {
+            return null;
+        }
+        final Object sc = fit.get("scale");
+        final double scale = sc instanceof Number ? ((Number) sc).doubleValue() : Double.NaN;
+        if (!(scale > 0) || Double.isInfinite(scale)) {
+            return "the fitted scale is " + sc + ", not a positive number";
+        }
+        final long games = WireLog.num(fit, "games", 0);
+        if (games < minGames) {
+            return "fitted on " + games + " game(s), fewer than --min-games " + minGames;
+        }
+        return null;
     }
 
     static void collectLogs(final File f, final List<File> out) {

@@ -140,6 +140,29 @@ from: `pool` (the cube list minus what the player owns and everything public),
 known, the opponent was modelled with no spells, and **every number flatters
 the player**; a screen showing such a report must say so.
 
+## How a review ends (D353, amended after the PC's J028)
+
+`coach-grade.sh review` prints `REVIEW STAGE <plan|triage|deepen|report> …` lines
+and ends with exactly one of:
+
+- `REVIEW DONE <report> decisions=N graded=G errors=E deepened=D` — exit 0. A few
+  `errors` (decisions whose status is `error` or `refused`) leave the review done;
+  the counts say how many.
+- `REVIEW FAILED <stage>: <why>` — non-zero exit, and the helper's `/review` is
+  `failed` with that reason:
+  - `plan` (exit 3): the log or the knowledge is refused, or the leaf scale
+    (`var/coach-grade/leaf-scale.json`) is unusable — not a positive number;
+  - `triage` (exit 4): the triage graded **no** decision; the reason is the
+    first `COACH-GRADE FAILED` line of its shard logs;
+  - `report` (exit 4): every decision of the report is an error or refused (the
+    report is still written, as evidence); exit 5 if the report step itself failed.
+
+A shard that dies leaves a `REVIEW WARN … shard failed: <why>` line. A rerun under
+the same `--run` starts clean (claims and shard files removed): a review is not
+resumable. `review-smoke` prints the same lines as `REVIEW-SMOKE …`, so a log that
+holds a smoke and a review counts each once, and it fails unless the triage graded
+at least one decision and at most a quarter are errors.
+
 ## `/review` on the coach helper
 
 Only when `/health` says `"review": 1` (the bridge is built: the helper finds

@@ -848,6 +848,31 @@ public final class Review {
         j.end();
     }
 
+    /** The decisions of a report whose status is {@code error} or {@code refused}. */
+    public static int errors(final Map<?, ?> report) {
+        int n = 0;
+        for (final Object o : WireLog.arr(report, "decisions")) {
+            final String st = WireLog.str((Map<?, ?>) o, "status");
+            n += "error".equals(st) || "refused".equals(st) ? 1 : 0;
+        }
+        return n;
+    }
+
+    /**
+     * Why a report is not a review, or null (D353, amended after the PC's J028): every planned decision
+     * is an error or refused -- the triage graded nothing, because its JVMs failed (the shard logs say
+     * why).  A report with some errors is a review; its DONE line counts them.  No decisions is no failure.
+     */
+    public static String failure(final Map<?, ?> report) {
+        final Object[] ds = WireLog.arr(report, "decisions");
+        final int bad = errors(report);
+        if (ds.length == 0 || bad < ds.length) {
+            return null;
+        }
+        final String first = WireLog.str((Map<?, ?>) ds[0], "error");
+        return "every decision (" + ds.length + ") is an error or refused" + (first == null ? "" : "; the first: " + first);
+    }
+
     /** The graded time of a stage: the busiest JVM's sum of grade {@code ms} (by each line's {@code shard}; else line i is JVM i mod jobs). */
     public static long gradeMs(final List<Map<?, ?>> lines, final List<String> order, final int jobs) {
         final long[] per = new long[Math.max(1, jobs)];
