@@ -177,6 +177,32 @@ class EvalNetTest(unittest.TestCase):
         self.assertTrue(np.all((p > 0) & (p < 1)))
         self.assertTrue(np.isfinite(info["valLogloss"]))
 
+    def test_split_by_pair_and_holdout(self):
+        """No deck pair in two splits; a held-out pattern is exactly the test split."""
+        games = self.T.read_games(self.data)
+        for how in ("pair", "game", "holdout:villain-"):
+            _s, _n, sp = self.T.load_data(self.data, how)
+            self.assertEqual(sum(len(r) for r in sp.values()),
+                             sum(len(r) for r in self.splits.values()))
+            where = {}
+            for s, r in sp.items():
+                for gi in set(r.game.tolist()):
+                    k = self.T.pair_key(games[gi])
+                    self.assertEqual(where.setdefault(k, s), s, (how, k))
+            self.assertTrue(len(sp["test"]) and len(sp["train"]), how)
+            if how.startswith("holdout"):
+                files = {games[gi]["file"] for gi in set(sp["test"].game.tolist())}
+                self.assertTrue(files and all("villain-" in f for f in files), files)
+                rest = {games[gi]["file"] for s in ("train", "val") for gi in set(sp[s].game.tolist())}
+                self.assertFalse(any("villain-" in f for f in rest))
+        # a few pairs: at least one each in val and test; many: a stable hash threshold
+        small = self.T.assign_pairs([f"p{i}" for i in range(5)])
+        self.assertEqual(sorted(small.values()).count("test"), 1)
+        self.assertEqual(sorted(small.values()).count("val"), 1)
+        big = self.T.assign_pairs([f"p{i}" for i in range(200)])
+        bigger = self.T.assign_pairs([f"p{i}" for i in range(400)])
+        self.assertTrue(all(bigger[k] == v for k, v in big.items()))
+
     def test_cli_train_cv_and_grid(self):
         out = os.path.join(self.tmp, "cli.json")
         rep = os.path.join(self.tmp, "rep.json")

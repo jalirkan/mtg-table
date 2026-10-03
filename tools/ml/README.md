@@ -24,8 +24,9 @@ encode.py      one row per decision state, a fixed-size vector for the cube's ca
 dataset.py     split by game, int16 .npz shards + features.json + games.jsonl + stats.json
         ▼
 baseline_eval.py (logistic regression, numpy)   train_mlp.py (small MLP, torch)
+train_eval.py   the position evaluator: train, calibrate, compare, export JSON (D316)
         ▼
-later: the evaluator guides a search over Forge's engine (not built yet)
+bridge/src/mtgtable/eval/   the same features and model in Java, for the search AI's leaves
 ```
 
 ```bash
@@ -123,13 +124,123 @@ a planted leak (the encoder reading the opponent's hand) fails two tests.
 
 ## The split
 
-`dataset.py` splits **by game**, never by row: a row's split is a hash of its
-game's **split group**, so it is deterministic and a game never changes split
-as the corpus grows. One seed of one match is one game (protocol §8.7), so the
-two chairs of a game are one group; a game with no seed is its own group.
-`--group-by match` puts every game of a deck pair in one split, which asks the
-harder question: does the evaluator generalise to decks it never saw? With many
-drafted pairs, that is the number to trust.
+`dataset.py` splits by **split group**, never by row, and the group is the
+**deck pair** by default (`--group-by match`, since D317): every game of one
+pair of decks -- one draft, in the cube lab -- lands in one split, so the test
+split is decks the model never saw. A bench replays the same pairs over many
+seeds, and D305's by-game split (`--group-by game`, still there) scores
+positions of decks already seen in training: it flatters, measurably (below).
+A log with no match block is its own group. The split is a hash of the group,
+so it is deterministic and a game never changes split as the corpus grows.
+`train_eval.py --split-by` re-splits a built dataset the same ways, and one
+more: `holdout:REGEX` makes every game whose deck names or log path match the
+test split -- a whole cube held out (`holdout:^modern-`,
+`holdout:runs/vintage`), with a vocabulary that covers both cubes.
+
+## The position evaluator (D316)
+
+`train_eval.py` trains a position-value model -- P(the viewer wins) from one
+row -- compares it with D305's baselines, and exports it as JSON for the Java
+side, `bridge/src/mtgtable/eval/`, which the search AI calls at its leaves.
+
+**The model** (`evalnet.py`'s header has the long form). The ~240 board
+numbers go in standardised. The card block -- vocab x 17 counts, the part that
+overfit in D305 -- is **pooled through one learned 8-number embedding per
+card**, shared by all 17 states and both sides: `pooled[state] = sum_c
+count[c, state] * E[c]`, then `concat(board, pooled)` -> a 64-unit ReLU layer ->
+sigmoid. A card costs 8 parameters instead of 17 x 64; what is learned about a
+card in hand transfers to it on either battlefield; `E` starts at zero and has
+its own strong L2 (`--card-l2`), so a card seen rarely stays near zero and the
+`types` block (counts and mana values by type and zone -- the "group by type
+and mana value" half) carries it. Not read: the nine live-unsafe features (a
+live Forge game cannot reproduce them as the log has them: this game's spells,
+lands and mulligans, abilities this turn, the stack's ability count) and every
+column constant in training (`excluded` in the export lists both).
+
+**Training** is CPU numpy by default (gradients by hand, checked against finite
+differences; it measured faster than CPU torch here), `--backend torch` for a
+GPU. Early stopping on the validation split's log-loss (`--patience`).
+`--grid --time-budget S` searches hidden size, embedding size, both L2s,
+dropout and learning rate in a fixed random order and exports the best.
+`--cv K` scores every row out of fold, folds by deck pair (leave-one-pair-out
+when there are K pairs or fewer), early stopping on games held out inside each
+fold's training pairs. Every report has log-loss, Brier, accuracy, expected
+calibration error and a ten-bin reliability table, overall and by turn bucket,
+for the model and for `prior`, `life` and `core` (D305's baselines) fitted on
+the same rows.
+
+**The export** (`formatVersion` 1) carries the schema id, the vocabulary, the
+board columns with their mean and deviation, the embedding and the layers. Java
+recomputes the schema id from the vocabulary and refuses a mismatch; a caller
+naming its cube file refuses a model trained for another card list; a model
+that reads a live-unsafe feature is refused for live use.
+
+**Java, for the search** (`mtgtable.eval.PositionEvaluator`):
+
+```java
+PositionEvaluator ev = PositionEvaluator.load(Path.of("var/ml/models/synergy-eval.json"),
+                                              Path.of("cubes/synergy-cube-180.md"));
+double p = ev.winProbability(game, aiPlayer);   // P(aiPlayer wins), 0..1; ev.logit(...) too
+```
+
+It reads only what that player knows -- the other hand and both libraries are
+sizes -- so a determinized copy scores exactly as the real game. One instance
+serves every thread; call it where the game is not moving (a rollout's own
+copy, or the game thread). Check `hasWon()/hasLost()` first: a finished game is
+not special-cased. The model was trained on decision states (the viewer holding
+priority in a main phase or combat); at another phase the inputs that were
+constant in training are simply not read.
+
+**Parity.** `bridge/build.sh` runs `mtgtable.eval.EvalSelfTest`:
+`fixtures/eval/` holds a small model and Python's answer for every decision row
+of the 22 committed recordings (`eval_golden.py`); Java must pick the same rows,
+produce identical integer features and the same P(win) within 1e-9, read every
+cube and deck list as Python does, and pass D305's hidden-zone scrambler.
+`tools/ml/eval-live-check.sh` (boots Forge, not in the gate) plays games and
+compares, at every decision of both chairs, the live encoding with the encoding
+of `Snap.state` for the same moment, then redeals the hidden zones and requires
+the live encoding not to move. A change to `encode.py` that moves a feature
+fails `tests/test_eval.py`: run `python3 tools/ml/eval_golden.py` and read the
+diff.
+
+### On the owner's PC
+
+The 7-worker night run is the cube lab's (`--record-all`, D315); then, from the
+repo root:
+
+```bash
+# 0. once: numpy (and torch only for a GPU) in a venv under var/
+python3 -m venv var/ml/venv && var/ml/venv/bin/pip install numpy
+. var/ml/venv/bin/activate
+./bridge/build.sh                                  # includes the Java parity self-test
+# 1. the dataset, split by draft (the default)
+python3 tools/ml/dataset.py --run-dir var/cubelab/runs/night-1 --out var/ml/data/night-1
+# 2. the honest number first: five folds by draft
+python3 tools/ml/train_eval.py var/ml/data/night-1 --cv 5 --report var/ml/reports/night-1-cv.json \
+    | tee var/ml/reports/night-1-cv.txt
+# 3. an overnight search, exporting the best model (6 h)
+python3 tools/ml/train_eval.py var/ml/data/night-1 --grid --time-budget 21600 \
+    --grid-log var/ml/reports/night-1-grid.jsonl --out var/ml/models/synergy-eval.json \
+    --report var/ml/reports/night-1.json | tee var/ml/reports/night-1.txt
+# 4. the live parity check on a few of the night's decks, one JVM, with the model
+tools/ml/eval-live-check.sh --pairs var/ml/pairs-check.txt --seeds 1-5 \
+    --vocab cubes/synergy-cube-180.md --model var/ml/models/synergy-eval.json \
+    | tee var/ml/reports/live-check.txt
+# 5. a second cube held out entirely: record it too, build ONE dataset over both
+#    cubes' runs with both lists as the vocabulary, and hold one out
+python3 tools/ml/dataset.py --vocab cubes/synergy-cube-180.md --vocab cubes/modern-era-cube-180.md \
+    --out var/ml/data/two-cubes var/cubelab/runs/night-1/games var/cubelab/runs/modern-1/games
+python3 tools/ml/train_eval.py var/ml/data/two-cubes --split-by 'holdout:runs/modern-1' \
+    --report var/ml/reports/cube-holdout.json | tee var/ml/reports/cube-holdout.txt
+```
+
+`var/ml/pairs-check.txt` is `<deckA.dck> <deckB.dck>` lines (a few decks of the
+run, copied under the checkout). **Send back** the `.txt` reports
+(`night-1-cv`, `night-1`, `live-check`, `cube-holdout`), the dataset's
+`stats.json`, the last lines of `night-1-grid.jsonl`, and the model's
+`training` block (`python3 -c "import json;print(json.load(open('var/ml/models/synergy-eval.json'))['training'])"`).
+At 50,000 games (~5 M rows) the dataset is a few GB of shards and training
+holds the card block sparse (~1.5 GB); `--batch 4096` is faster on the 9700X.
 
 ## Hardware: the owner's desktop
 

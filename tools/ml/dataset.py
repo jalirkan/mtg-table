@@ -6,7 +6,7 @@
 
     python3 tools/ml/dataset.py --vocab cubes/synergy-cube-180.md \
         --out var/ml/data/synergy LOGDIR... [--split 80,10,10] [--salt ""] \
-        [--shard-rows 100000] [--phases main,combat] [--group-by match|game]
+        [--shard-rows 100000] [--phases main,combat] [--group-by game|match]
 
 Every log under the LOGDIRs is encoded by encode.py (one row per decision
 state).  Rows are split BY GAME -- more exactly by split group: the two chairs

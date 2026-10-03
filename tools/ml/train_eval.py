@@ -509,7 +509,9 @@ def run_cv(a, hp, log) -> dict[str, Any]:
         fold = np.array([rank[g] for g in group])[allr.game]
     else:
         fold = np.array([h(f"cv|{g}") % a.cv for g in group])[allr.game]
-    inner = np.array([h(f"inner|{g}") % 7 == 0 for g in group])[allr.game]
+    # the inner validation split (early stopping) is by GAME inside the training
+    # folds: with a handful of pairs a by-pair inner split would leave none
+    inner = np.array([h(f"inner|{g.get('game_group') or g['split_group']}") % 5 == 0 for g in games])[allr.game]
     backend = pick_backend(a.backend)
     oof = {m: np.full(len(allr), np.nan) for m in ("prior", "life", "core", "eval")}
     for k in range(a.cv):
