@@ -200,7 +200,8 @@ echo '{"id":"1","log":"…","type":"spell","oppPool":"…","budgetMs":3000}' | .
     [--jobs 7 --triage-s 15 --deep-s 150 --deep-k 6]   # D353: the post-game review -> var/coach-grade/review/<run>/report.json
 ./tools/coach-grade.sh fit-scale --logs var/cubelab/runs   # D349: refit the leaf -> P(win) scale on recorded
                                             # games (no game played); writes var/coach-grade/leaf-scale.json,
-                                            # which analyse / serve then use
+                                            # which analyse / serve / review then use -- never a non-positive
+                                            # scale or one fitted on fewer than --min-games 10 games (exit 3, D353)
 ./tools/ai-bench.sh --selftest             # D309/D310: statistics + outlet-policy scenarios (~15 s)
 ./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt --a Experimental --b Default \
     --games 20 --jobs 3 --run exp-vs-default   # AI vs AI, win rate with a 95% CI; NOT in the gate

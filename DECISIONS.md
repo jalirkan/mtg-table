@@ -16021,6 +16021,46 @@ both); calling every decision whose interval reaches above zero a mistake (at
 triage budgets nearly all would be); a JVM per decision (a 10 s boot each);
 streaming the report over one long HTTP response (a phone or a closed tab
 loses it; a polled id survives both).
+
+**Amended 2026-10-03 (branch `c/review-shards`, after the PC's job J028).** On
+the PC every triage JVM of all three fixture reviews died, the report held 77
+errors of 77 decisions, and the review still printed `REVIEW DONE`; the pilot
+`review-smoke` had passed. The cause: the PC's `var/coach-grade/leaf-scale.json`
+held a scale of −10325 — J015 had run `fit-scale` when its recordings folder was
+empty, so it fitted the one fixture game (one result for every position: the
+slope is noise) and wrote it. `review` passes that file to the triage as
+`--leaf-scale`; `CoachGrade.batch` read its settings per moment *after*
+claiming the moment and outside its try, so each JVM claimed one decision,
+threw "a leaf scale must be positive", and exited with nothing written. Not the
+cause: Forge homes (each shard has its own, D129), the claims, or the budget
+arithmetic (32 decisions on 7 JVMs is 5 each, 15 s / 5 = 3 s, as specified).
+The smoke passed because it read the same file, failed the same way, and none of
+its 11 checks required a decision to be graded. Now:
+
+- `fit-scale` never writes a fitted scale that is not a positive number, or one
+  fitted on fewer than `--min-games` (10) games: it prints the fit and exits 3
+  (`CoachGrade.fitProblem`). An unusable file says how to fix it.
+- `review-plan` checks the leaf scale first: an unusable one is
+  `REVIEW FAILED plan` (exit 3) before any JVM grades.
+- `batch` reads its settings once, before it claims anything.
+- `review` ends with exactly one of `REVIEW DONE <report> decisions=N graded=G
+  errors=E deepened=D` or `REVIEW FAILED <stage>: <why>`. A triage that graded
+  nothing is `REVIEW FAILED triage` (exit 4) with the first `COACH-GRADE FAILED`
+  line of its shard logs; a report whose every decision is an error or refused
+  is written but is `REVIEW FAILED report` (exit 4; `Review.failure`). A dying
+  shard's `REVIEW WARN` line carries its reason, so a job's log keeps it.
+- A rerun under the same `--run` starts clean (the claims and shard files go):
+  a review is not resumable, and stale claims would have kept the decisions an
+  earlier run died on from ever being graded.
+- `review-smoke` prints `REVIEW-SMOKE …` (J028's check counted the smoke's
+  `REVIEW DONE` with the reviews'), and two new checks: at least one decision
+  graded `ok`, errors at most a quarter of the decisions (13 checks).
+
+Held by `GradeSelfTest` (`fitProblem`, a negative scale file refused with its
+remedy, `Review.failure` / `errors`) and the smoke. Rejected: ignoring an
+unusable scale file silently (the live coach's numbers would change meaning
+without a word); a failed review's report marked done with an error count (the
+helper would serve a screen of errors as a review).
 ## D354 — The learned evaluator is promoted only through three pre-registered gates: a held-out fit against the core baseline and the fitted leaf, a decision-level regret test against full-game truth tables, and an SPRT against the current search; the search gains one flag, `leaf=eval:<model.json>`
 
 *Branch `c/eval-gates`; D354, the next number free at push (D347–D351 are on
