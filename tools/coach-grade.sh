@@ -20,6 +20,8 @@
 #   ./tools/coach-grade.sh analyse --log F --type T [--frame N] [--opp-pool P] [--opp-known "N; N"] [--budget-ms 3000]
 #   ./tools/coach-grade.sh serve [defaults]      # JSON requests on stdin, one answer line each
 #   ./tools/coach-grade.sh fit-scale --logs DIR[,DIR] [--out F]   # D349: refit the leaf -> P(win) scale
+#   ./tools/coach-grade.sh review --log F --seat N [--opp-pool P] [--opp-known "N; N"] [--jobs 7] \
+#        [--triage-s 15] [--deep-s 150] [--deep-k 6] [--out R.json]   # D352: the post-game review
 #
 # Every flag of grade / batch is mtgtable.grade.CoachGrade's (see its header):
 # --playouts N rounds an option still in the race ends with (200), --initial N
@@ -45,6 +47,13 @@
 # "refused") unless the request marks it public with a reason, for a match
 # whose lists both players share.  The leaf's pseudo win rate uses the scale
 # fit-scale fitted (var/coach-grade/leaf-scale.json when present).
+#
+# review (D352; docs/game-review.md): every graded-type decision the log's
+# seat made, triaged at the live settings (--triage-s of wall budget over
+# --jobs JVMs), the --deep-k most likely to matter graded again to the end of
+# the game (--deep-s; one decision per JVM), one JSON report.  The knowledge is
+# the LIVE guard's (D348): pool mode, never the AI's list.  Stage lines
+# "REVIEW STAGE <name> ..." on stdout; the work under var/coach-grade/review/<run>/.
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
@@ -94,6 +103,98 @@ batch() {
   return "$rc"
 }
 
+now_ms() { date +%s%3N; }
+
+review() {
+  local log="" seat="" out="" run="" jobs=7 triage_s=15 deep_s=150 deep_k=6 deep_horizon=-1 full_min_s=60
+  local triage_min_ms=1500 triage_max_ms=6000 seed=1 deep_options=5 know=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --log) log="$2"; shift 2 ;;
+      --seat) seat="$2"; shift 2 ;;
+      --out) out="$2"; shift 2 ;;
+      --run) run="$2"; shift 2 ;;
+      --jobs) jobs="$2"; shift 2 ;;
+      --triage-s) triage_s="$2"; shift 2 ;;
+      --deep-s) deep_s="$2"; shift 2 ;;
+      --deep-k) deep_k="$2"; shift 2 ;;
+      --deep-horizon) deep_horizon="$2"; shift 2 ;;
+      --deep-full-min-s) full_min_s="$2"; shift 2 ;;
+      --triage-min-ms) triage_min_ms="$2"; shift 2 ;;
+      --triage-max-ms) triage_max_ms="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --deep-options) deep_options="$2"; shift 2 ;;
+      --deck|--own-pool|--opp-pool|--opp-known|--opp-deck|--opp-deck-public) know+=("$1" "$2"); shift 2 ;;
+      *) echo "review: unknown flag $1" >&2; exit 2 ;;
+    esac
+  done
+  [ -n "$log" ] && [ -n "$seat" ] || { echo "review needs --log and --seat" >&2; exit 2; }
+  local n
+  for n in "$seat" "$jobs" "$triage_s" "$deep_s" "$deep_k" "$full_min_s" "$triage_min_ms" "$triage_max_ms" "$seed" "$deep_options"; do
+    [[ "$n" =~ ^[0-9]+$ ]] || { echo "review: $n is not a whole number" >&2; exit 2; }
+  done
+  [[ "$deep_horizon" =~ ^-?[0-9]+$ ]] || { echo "review: --deep-horizon must be a whole number" >&2; exit 2; }
+  [ "$jobs" -ge 1 ] || jobs=1
+  [ -n "$run" ] || run="review-$(date +%Y%m%d-%H%M%S)-$$"
+  case "$run" in */*|.*) echo "--run must be a plain name" >&2; exit 2 ;; esac
+  local dir="var/coach-grade/review/$run"
+  mkdir -p "$dir"
+  [ -n "$out" ] || out="$dir/report.json"
+  local scale=()
+  [ -f var/coach-grade/leaf-scale.json ] && scale=(--leaf-scale var/coach-grade/leaf-scale.json)
+  local t0 t1 plan_ms tri_wall=0 deep_wall=0
+  t0="$(now_ms)"
+
+  echo "REVIEW STAGE plan $log seat $seat"
+  local planned rc=0
+  planned="$(jvm "$(home_for review-home)" review-plan --log "$log" --seat "$seat" --out "$dir/plan.jsonl" --jobs "$jobs" \
+    --triage-ms "$((triage_s * 1000))" --triage-min-ms "$triage_min_ms" --triage-max-ms "$triage_max_ms" ${know[@]+"${know[@]}"} \
+    2> "$dir/plan.log")" || rc=$?
+  echo "$planned"
+  [ "$rc" = 0 ] || { echo "REVIEW FAILED plan: $(echo "$planned" | tail -1)"; return 3; }
+  local decisions tjobs tms
+  decisions="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.decisions))' "$planned")"
+  tjobs="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.jobs))' "$planned")"
+  tms="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.triageMsPerDecision))' "$planned")"
+  t1="$(now_ms)"; plan_ms=$((t1 - t0))
+
+  local sel='{"k":0,"jobs":0,"perJvm":0,"msPerDecision":0,"horizon":-1,"picks":[]}' djobs=0 dms=0 dh="$deep_horizon"
+  : > "$dir/triage.jsonl"; : > "$dir/deep.jsonl"; echo "$sel" > "$dir/select.json"
+  if [ "$decisions" -gt 0 ]; then
+    echo "REVIEW STAGE triage $decisions decision(s) on $tjobs JVM(s), ${tms} ms each"
+    t0="$(now_ms)"
+    batch --run "$run" --jobs "$tjobs" --guard live --claim "$dir/claim-triage" --moments "$dir/plan.jsonl" --out "$dir/triage.jsonl" \
+      --horizon 0 --playouts 10000 --initial 4 --batch 2 --cap 12 --timeout-ms 5000 --min-rounds 2 \
+      --budget-ms "$tms" --seed "$seed" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} || echo "REVIEW WARN a triage shard failed (see $dir/triage.jsonl.shard-*.log)"
+    t1="$(now_ms)"; tri_wall=$((t1 - t0))
+
+    sel="$(jvm "$(home_for review-home)" review-select --plan "$dir/plan.jsonl" --triage "$dir/triage.jsonl" \
+      --out "$dir/deep-moments.jsonl" --k "$deep_k" --jobs "$jobs" --deep-ms "$((deep_s * 1000))" \
+      --deep-horizon "$deep_horizon" --full-min-ms "$((full_min_s * 1000))" --deep-options "$deep_options" 2> "$dir/select.log")"
+    echo "$sel" > "$dir/select.json"
+    djobs="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.jobs))' "$sel")"
+    dms="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.msPerDecision))' "$sel")"
+    dh="$(node -e 'const o=JSON.parse(process.argv[1]);process.stdout.write(String(o.horizon))' "$sel")"
+    if [ "$djobs" -gt 0 ]; then
+      echo "REVIEW STAGE deepen $(node -e 'process.stdout.write(String(JSON.parse(process.argv[1]).k))' "$sel") decision(s) on $djobs JVM(s), ${dms} ms each, horizon $dh"
+      t0="$(now_ms)"
+      batch --run "$run" --jobs "$djobs" --guard live --claim "$dir/claim-deep" --moments "$dir/deep-moments.jsonl" --out "$dir/deep.jsonl" \
+        --horizon "$dh" --playouts 200 --initial 8 --batch 4 --timeout-ms 60000 --min-rounds 2 \
+        --max-ms "$dms" --seed "$((seed + 1))" ${scale[@]+"${scale[@]}"} ${know[@]+"${know[@]}"} || echo "REVIEW WARN a deepen shard failed (see $dir/deep.jsonl.shard-*.log)"
+      t1="$(now_ms)"; deep_wall=$((t1 - t0))
+    fi
+  fi
+
+  echo "REVIEW STAGE report"
+  local config timing
+  config="{\"jobs\":$jobs,\"triageS\":$triage_s,\"triageMsPerDecision\":$tms,\"triageJobs\":$tjobs,\"deepK\":$deep_k,\"deepS\":$deep_s,\"deepJobs\":$djobs,\"deepMsPerDecision\":$dms,\"deepHorizon\":$dh,\"seed\":$seed}"
+  timing="{\"planMs\":$plan_ms,\"triageWallMs\":$tri_wall,\"deepWallMs\":$deep_wall,\"totalMs\":$(( $(now_ms) - REVIEW_T0 ))}"
+  jvm "$(home_for review-home)" review-report --log "$log" --plan "$dir/plan.jsonl" --triage "$dir/triage.jsonl" \
+    --deep "$dir/deep.jsonl" --picks "$dir/select.json" --out "$out" --config "$config" --timing "$timing" \
+    --triage-jobs "$tjobs" --deep-jobs "$djobs" 2> "$dir/report.log"
+  echo "REVIEW DONE $out"
+}
+
 mode="${1:-}"
 case "$mode" in
   grade)
@@ -119,6 +220,11 @@ case "$mode" in
   serve)
     shift
     jvm "$(home_for serve-home)" serve "$@"
+    ;;
+  review)
+    shift
+    REVIEW_T0="$(now_ms)"
+    review "$@"
     ;;
   *)
     sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'

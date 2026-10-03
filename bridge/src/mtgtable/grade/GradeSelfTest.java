@@ -71,6 +71,7 @@ public final class GradeSelfTest {
         fitScale();
         overrideRule();
         hiddenPool();
+        review();
         try {
             plantedLeak();
         } catch (final java.io.IOException e) {
@@ -246,6 +247,268 @@ public final class GradeSelfTest {
             threw = true;
         }
         check(threw, "a review moment on a non-state frame is refused");
+    }
+
+
+    // ------------------------------------------------------------------
+    // D352: the post-game review's plan, selection, budgets and report
+    // ------------------------------------------------------------------
+
+    private static String st(final int turn, final String phase, final int active, final String hand, final String events,
+                             final String extra) {
+        return "{\"v\":1,\"dir\":\"s2c\",\"type\":\"state\",\"body\":{\"turn\":" + turn + ",\"round\":" + ((turn + 1) / 2)
+                + ",\"phase\":\"" + phase + "\",\"activePlayer\":" + active + ",\"stack\":[],\"players\":[{\"id\":0,\"zones\":"
+                + "{\"hand\":{\"count\":1,\"cards\":[" + hand + "]}}},{\"id\":1,\"zones\":{}}],\"events\":[" + events + "]"
+                + extra + "}}";
+    }
+
+    private static String in(final String prompt, final String ids) {
+        return "{\"v\":1,\"dir\":\"s2c\",\"type\":\"input\",\"body\":{\"prompt\":\"" + prompt + "\",\"selectable\":"
+                + (ids == null ? "{\"mode\":\"none\"}" : "{\"mode\":\"cards\",\"cardIds\":[" + ids + "]}") + "}}";
+    }
+
+    private static String act(final String body) {
+        return "{\"v\":1,\"dir\":\"c2s\",\"type\":\"act\",\"body\":" + body + "}";
+    }
+
+    private static final String HEAD = "{\"v\":1,\"kind\":\"session\",\"gameId\":\"rv\",\"seat\":0,\"decks\":[]}";
+
+    private static String opt(final String tok, final double wr, final double reg, final double lo, final double hi,
+                              final boolean best, final boolean forge) {
+        return "{\"token\":\"" + tok + "\",\"label\":\"" + tok + "\",\"n\":10,\"winRate\":" + wr + ",\"winLo\":" + Math.max(0, wr - 0.1)
+                + ",\"winHi\":" + Math.min(1, wr + 0.1) + ",\"regret\":" + reg + ",\"regretLo\":" + lo + ",\"regretHi\":" + hi
+                + ",\"best\":" + best + ",\"forge\":" + forge + "}";
+    }
+
+    private static Map<?, ?> line(final String key, final String status, final String best, final String played,
+                                  final String... opts) {
+        return (Map<?, ?>) mtgtable.Json.parse("{\"momentKey\":\"" + key + "\",\"grade\":{\"status\":\"" + status + "\",\"measure\":\"leaf\""
+                + ",\"best\":\"" + best + "\",\"forgeChoice\":\"" + best + "\",\"playedOption\":" + (played == null ? "null" : "\"" + played + "\"")
+                + ",\"rounds\":4,\"ms\":1000,\"opponent\":\"pool:x\",\"ownDeck\":\"deck:y\",\"options\":[" + String.join(",", opts)
+                + "],\"fidelity\":[],\"notes\":[]}}");
+    }
+
+    static void review() {
+        // 1. The plan of a human-seat log: the first act of each decision, and what the engine says the player did.
+        final List<String> h = new ArrayList<>(List.of(HEAD,
+                st(1, "MAIN1", 0, "{\"id\":5},{\"id\":6}", "", ""),                                          // 0
+                in("Priority: Human", null),                                                                   // 1
+                act("{\"action\":\"clickCard\",\"cardId\":5}"),                                                // 2 spell
+                st(1, "MAIN1", 0, "{\"id\":6}", "{\"kind\":\"land\",\"player\":0,\"cardId\":6},"
+                        + "{\"kind\":\"cast\",\"cardId\":5,\"controller\":0,\"stackId\":1,\"text\":\"\"}", ""),   // 3
+                act("{\"action\":\"passPriority\"}"),                                                         // 4 (same decision)
+                st(1, "COMBAT_DECLARE_ATTACKERS", 0, "", "{\"kind\":\"phase\",\"phase\":\"COMBAT_DECLARE_ATTACKERS\"}", ""), // 5
+                in("Select creatures to attack Forge AI", "7,8"),                                              // 6
+                act("{\"action\":\"clickCard\",\"cardId\":8}"),                                                // 7 attack
+                act("{\"action\":\"buttonOk\"}"),                                                             // 8
+                st(1, "MAIN2", 0, "", "{\"kind\":\"attackers\",\"player\":0,\"bands\":[{\"attackerIds\":[8,7]}]},"
+                        + "{\"kind\":\"phase\",\"phase\":\"MAIN2\"}", ""),                                    // 9
+                in("Priority: Human", null),                                                                   // 10
+                act("{\"action\":\"passPriority\"}"),                                                         // 11 spell MAIN2: pass
+                in("Shock (9) - Shock deals 2 damage.\\nSelect target creature", "20,21"),                     // 12
+                act("{\"action\":\"clickCard\",\"cardId\":21}"),                                               // 13 target:21
+                in("Bolt (10) - Bolt deals 3 damage.\\nSelect target creature", "20"),                          // 14
+                act("{\"action\":\"buttonCancel\"}"),                                                         // 15 cancelled: none
+                st(2, "COMBAT_DECLARE_BLOCKERS", 1, "", "{\"kind\":\"turn\",\"turn\":2}", ""),                   // 16
+                in("Select creatures to block", "7"),                                                          // 17
+                act("{\"action\":\"clickCard\",\"cardId\":7}"),                                                // 18 block
+                st(2, "COMBAT_DAMAGE", 1, "", "{\"kind\":\"blockers\",\"defendingPlayer\":0,\"blocks\":["
+                        + "{\"attackerId\":30,\"blockerIds\":[7]},{\"attackerId\":31,\"blockerIds\":[31]}]}", "")));  // 19
+        final WireLog hl = WireLog.parse(h);
+        final List<Review.Planned> hp = Review.plan(hl);
+        final StringBuilder got = new StringBuilder();
+        for (final Review.Planned p : hp) {
+            got.append(p.type).append('@').append(p.frame).append('/').append(p.stateFrame).append('=').append(p.played).append(' ');
+        }
+        check(got.toString().equals("spell@2/0=cast:5 attack@7/5=attack:7,8 spell@11/9=pass target@13/9=target:21 block@18/16=block:7>30 "),
+                "a human log's plan: first act of each decision, the cast from hand (not the land), the attack, MAIN2's pass,"
+                + " the clicked target (a cancelled one dropped), the block without the self-listed unblocked attacker: " + got);
+        check(hp.get(0).momentKey("L").equals("L#live2:spell") && hp.get(1).round == 1,
+                "a planned moment's key is batch's (log#live<frame>:<type>)");
+        final List<String> ml = Review.momentLines(hp, "L");
+        final Map<?, ?> m0 = (Map<?, ?>) mtgtable.Json.parse(ml.get(0));
+        check("live".equals(m0.get("mode")) && "cast:5".equals(m0.get("played")) && WireLog.num(m0, "stateFrame", -1) == 0,
+                "moments lines carry mode live, the played token and the state frame");
+
+        // 2. An AI-vs-AI recording: one decision per step; the step's own batch holds its first plays.
+        final List<String> a = List.of(HEAD,
+                st(2, "MAIN1", 0, "{\"id\":4}", "{\"kind\":\"phase\",\"phase\":\"MAIN1\"}", ""),                  // 0
+                st(2, "COMBAT_DECLARE_ATTACKERS", 0, "", "{\"kind\":\"phase\",\"phase\":\"COMBAT_DECLARE_ATTACKERS\"},"
+                        + "{\"kind\":\"attackers\",\"player\":0,\"bands\":[{\"attackerIds\":[3]}]}", ""),          // 1
+                st(3, "COMBAT_DECLARE_BLOCKERS", 1, "", "{\"kind\":\"turn\",\"turn\":3}",
+                        ",\"combat\":{\"bands\":[{\"attackerIds\":[40],\"defender\":{\"kind\":\"player\",\"id\":0},\"blockerIds\":[]}]}"), // 2
+                st(5, "COMBAT_DECLARE_BLOCKERS", 1, "", "", ",\"combat\":{\"bands\":[]}"));                        // 3
+        final List<Review.Planned> ap = Review.plan(WireLog.parse(a));
+        got.setLength(0);
+        for (final Review.Planned p : ap) {
+            got.append(p.type).append('@').append(p.frame).append('=').append(p.played).append(' ');
+        }
+        check(got.toString().equals("spell@1=pass attack@2=attack:3 block@3=block:none "),
+                "an AI-vs-AI plan: main, attacks read from the step's own batch, a block only where something attacks the viewer: " + got);
+
+        // 3. Budgets.
+        check(Review.triageBudgetMs(32, 7, 15_000, 1500, 6000) == 3000, "triage: 32 decisions on 7 JVMs in 15 s -> 5 each, 3 s");
+        check(Review.triageBudgetMs(100, 7, 15_000, 1500, 6000) == 1500, "triage: the floor holds when the decisions are many");
+        check(Review.triageBudgetMs(2, 7, 15_000, 1500, 6000) == 6000, "triage: the ceiling holds when they are few");
+        final Review.Alloc a6 = Review.allocate(6, 7, 150_000, -1, 60_000);
+        check(a6.jobs == 6 && a6.perJvm == 1 && a6.msPerDecision == 150_000 && a6.horizon == -1,
+                "deepen: 6 decisions on 7 JVMs -> one JVM each, the whole budget, to the end of the game");
+        final Review.Alloc a10 = Review.allocate(10, 4, 150_000, -1, 60_000);
+        check(a10.jobs == 4 && a10.perJvm == 3 && a10.msPerDecision == 50_000 && a10.horizon == 1,
+                "deepen: 10 on 4 JVMs -> 3 each at 50 s, under the 60 s floor -> to the end of the next turn");
+        check(Review.allocate(0, 7, 150_000, -1, 60_000).jobs == 0, "deepen: nothing selected, no JVM");
+
+        // 4. Selection: not-best choices ranked by regretHi, then regret; failed, trivial and best ones never.
+        final List<Map<?, ?>> tri = List.of(
+                line("k1", "ok", "a", "b", opt("a", .6, 0, 0, .05, true, true), opt("b", .5, .10, .02, .18, false, false)),
+                line("k2", "ok", "a", "b", opt("a", .6, 0, 0, .05, true, true), opt("b", .55, .05, 0, .30, false, false)),
+                line("k3", "ok", "a", "a", opt("a", .6, 0, 0, .05, true, true), opt("b", .2, .4, .3, .5, false, false)),
+                line("k4", "trivial", "", "a", opt("a", .5, 0, 0, 0, false, false)),
+                line("k5", "ok", "a", null, opt("a", .6, 0, 0, .05, true, true), opt("b", .1, .5, .4, .6, false, false)),
+                line("k6", "ok", "a", "b", opt("a", .6, 0, 0, .05, true, true), opt("b", .55, .05, 0, .18, false, false)));
+        final List<Review.Pick> picks = Review.select(tri, 6);
+        got.setLength(0);
+        for (final Review.Pick p : picks) {
+            got.append(p.key).append(' ');
+        }
+        check(got.toString().equals("k2 k1 k6 "), "select: k2 (widest regretHi) before k1, k1 before k6 (same regretHi, larger regret);"
+                + " the best choice, the trivial one and the choice outside the table never: " + got);
+        check(Review.select(tri, 1).size() == 1 && Review.select(tri, 1).get(0).key.equals("k2"), "select: at most k");
+        final Map<?, ?> failed = (Map<?, ?>) mtgtable.Json.parse("{\"momentKey\":\"kf\",\"grade\":{\"status\":\"ok\",\"best\":\"\","
+                + "\"playedOption\":\"a\",\"options\":[{\"token\":\"a\",\"n\":0,\"winRate\":null,\"regret\":null,\"best\":false,\"failed\":true}]}}");
+        check(Review.select(List.of(failed), 6).isEmpty() && "not-graded".equals(Review.verdict(new Review.Graded(failed))),
+                "a table where every playout failed (no best, no numbers) is not graded and never selected");
+        check(Review.deepOptions(tri.get(0), 5).equals(List.of("b", "a")), "deep options: the played, the best (Forge's too), no duplicates");
+        final Map<?, ?> wide = line("kw", "ok", "a", "e", opt("a", .6, 0, 0, .05, true, false), opt("b", .5, .1, 0, .2, false, true),
+                opt("c", .58, .02, 0, .1, false, false), opt("d", .1, .5, .4, .6, false, false), opt("e", .4, .2, .1, .3, false, false));
+        check(Review.deepOptions(wide, 4).equals(List.of("e", "a", "c", "b")),
+                "deep options: played, best (also Forge's here), then by the triage's win rate, capped (d, ruled out, dropped)");
+
+        // 5. Verdicts: a close call is never a mistake.
+        check("mistake".equals(Review.verdict(new Review.Graded(tri.get(0)))), "regret interval above zero: a mistake");
+        check("close".equals(Review.verdict(new Review.Graded(tri.get(1)))), "regret interval touching zero: a close call");
+        check("best".equals(Review.verdict(new Review.Graded(tri.get(2)))), "the best option played: best");
+        check("not-graded".equals(Review.verdict(new Review.Graded(tri.get(3))))
+                && "not-graded".equals(Review.verdict(new Review.Graded(tri.get(4)))), "trivial, or not in the table: not graded");
+
+        // 6. The report: the deepened grade wins, key moments ordered, the shape ForgeCoach reads.
+        final List<Review.Planned> plan = new ArrayList<>();
+        final String[] types = {"spell", "attack", "block", "spell", "target", "spell"};
+        for (int i = 0; i < types.length; i++) {
+            final Review.Planned p = new Review.Planned();
+            p.frame = 10 * (i + 1);
+            p.stateFrame = 10 * (i + 1) - 1;
+            p.type = types[i];
+            p.played = "b";
+            p.turn = i + 1;
+            p.round = (i + 2) / 2;
+            p.phase = "MAIN1";
+            plan.add(p);
+        }
+        final String[] keys = new String[types.length];
+        for (int i = 0; i < types.length; i++) {
+            keys[i] = plan.get(i).momentKey("L");
+        }
+        final List<Map<?, ?>> t2 = List.of(
+                line(keys[0], "ok", "a", "b", opt("a", .6, 0, 0, .05, true, true), opt("b", .5, .10, .02, .18, false, false)),
+                line(keys[1], "ok", "a", "b", opt("a", .6, 0, 0, .05, true, true), opt("b", .55, .05, 0, .30, false, false)),
+                line(keys[2], "ok", "b", "b", opt("b", .6, 0, 0, .05, true, true), opt("a", .55, .05, 0, .30, false, false)),
+                line(keys[3], "trivial", "", "b", opt("b", .5, 0, 0, 0, false, false)),
+                line(keys[4], "ok", "a", "b", opt("a", .7, 0, 0, .05, true, false), opt("b", .5, .2, .1, .3, false, true)));
+        final List<Map<?, ?>> d2 = List.of(
+                line(keys[0], "ok", "a", "b", opt("a", .62, 0, 0, .04, true, true), opt("b", .52, .10, .04, .16, false, false)),
+                line(keys[1], "ok", "b", "b", opt("b", .6, 0, 0, .05, true, true), opt("a", .58, .02, 0, .1, false, false)));
+        final Review.Meta meta = new Review.Meta();
+        meta.log = "L";
+        meta.gameId = "rv";
+        meta.seat = 0;
+        meta.frames = 99;
+        meta.createdAt = "2026-10-03T00:00:00Z";
+        meta.config = "{\"jobs\":7}";
+        meta.timing = "{\"totalMs\":5}";
+        final Map<?, ?> rep = (Map<?, ?>) mtgtable.Json.parse(Review.report(meta, plan, t2, d2,
+                List.of(new Review.Pick(keys[0], "r0"), new Review.Pick(keys[1], "r1"))));
+        check("game-review".equals(rep.get("kind")) && WireLog.num(rep, "v", 0) == 1 && "rv".equals(rep.get("gameId"))
+                && WireLog.num(WireLog.map(rep, "config"), "jobs", 0) == 7 && WireLog.num(WireLog.map(rep, "timing"), "totalMs", 0) == 5,
+                "report: kind game-review v1, the game, config and timing as given");
+        final Object[] ds = WireLog.arr(rep, "decisions");
+        check(ds.length == 6, "report: one entry per planned decision, the ungraded one too");
+        final Map<?, ?> d0 = (Map<?, ?>) ds[0];
+        final Map<?, ?> d1 = (Map<?, ?>) ds[1];
+        check("deep".equals(d0.get("stage")) && "mistake".equals(d0.get("verdict")) && Boolean.TRUE.equals(d0.get("clear"))
+                && near(((Number) d0.get("regret")).doubleValue(), .10, 1e-9) && near(((Number) d0.get("regretLo")).doubleValue(), .04, 1e-9)
+                && Boolean.TRUE.equals(d0.get("key")) && WireLog.num(d0, "rank", 0) == 1 && "r0".equals(d0.get("selectReason")),
+                "report: a deepened mistake carries the deep numbers, clear, key moment rank 1, why it was picked");
+        check("deep".equals(d1.get("stage")) && "best".equals(d1.get("verdict")) && !Boolean.TRUE.equals(d1.get("key"))
+                && WireLog.map(d1, "triage") != null && "a".equals(WireLog.map(d1, "triage").get("best")),
+                "report: a close call the deepening found best is best, not a key moment, and keeps its triage summary");
+        final Map<?, ?> d4 = (Map<?, ?>) ds[4];
+        check("triage".equals(d4.get("stage")) && "mistake".equals(d4.get("verdict")) && WireLog.num(d4, "rank", 0) == 2,
+                "report: a clear triage mistake that was not deepened is still a key moment, after the deepened ones");
+        check("not-graded".equals(((Map<?, ?>) ds[3]).get("verdict")) && "error".equals(((Map<?, ?>) ds[5]).get("status")),
+                "report: trivial is not graded; a decision the triage never reached says so");
+        final Object[] keyM = WireLog.arr(rep, "keyMoments");
+        check(keyM.length == 2 && ((Number) keyM[0]).intValue() == 10 && ((Number) keyM[1]).intValue() == 50,
+                "report: keyMoments are the key decisions' frames, most important first");
+        int playedFlags = 0;
+        for (final Object o : WireLog.arr(d0, "options")) {
+            playedFlags += Boolean.TRUE.equals(((Map<?, ?>) o).get("played")) ? 1 : 0;
+        }
+        check(playedFlags == 1, "report: exactly one option is marked played");
+        final Map<?, ?> sum = WireLog.map(rep, "summary");
+        check(WireLog.num(sum, "decisions", 0) == 6 && WireLog.num(sum, "graded", 0) == 4 && WireLog.num(sum, "mistakes", 0) == 2
+                && WireLog.num(sum, "best", 0) == 2 && WireLog.num(sum, "closeCalls", 0) == 0 && WireLog.num(sum, "notGraded", 0) == 2
+                && WireLog.num(sum, "trivial", 0) == 1 && WireLog.num(sum, "deepened", 0) == 2,
+                "report: the counts (" + sum + ")");
+        check("pool:x".equals(WireLog.map(rep, "knowledge").get("opponent")) && "pool".equals(WireLog.map(rep, "knowledge").get("opponentModel")),
+                "report: the knowledge line is the grader's, and says the opponent was drawn from a pool");
+        check("basic-lands".equals(Review.opponentModel("unknown")) && "basic-lands".equals(Review.opponentModel(null))
+                && "deck".equals(Review.opponentModel("deck:x (public: shared lists)")), "opponent model: basic lands when nothing is known");
+        // A deepened tie with the best (regret 0, interval touching zero) is a close call but not a key moment.
+        final List<Map<?, ?>> tie = List.of(line(keys[0], "ok", "a", "b", opt("a", 1, 0, 0, .2, true, false), opt("b", 1, 0, 0, .2, false, false)));
+        final Map<?, ?> rt = (Map<?, ?>) mtgtable.Json.parse(Review.report(meta, plan.subList(0, 1), tie, tie, List.of()));
+        final Map<?, ?> tie0 = (Map<?, ?>) WireLog.arr(rt, "decisions")[0];
+        check("close".equals(tie0.get("verdict")) && !Boolean.TRUE.equals(tie0.get("key")) && WireLog.arr(rt, "keyMoments").length == 0,
+                "a tie with the best: close call, not a key moment");
+        // The busiest JVM's grade time, by each line's shard.
+        final List<Map<?, ?>> sh = List.of(
+                (Map<?, ?>) mtgtable.Json.parse("{\"momentKey\":\"a\",\"shard\":0,\"grade\":{\"ms\":100}}"),
+                (Map<?, ?>) mtgtable.Json.parse("{\"momentKey\":\"b\",\"shard\":1,\"grade\":{\"ms\":300}}"),
+                (Map<?, ?>) mtgtable.Json.parse("{\"momentKey\":\"c\",\"shard\":0,\"grade\":{\"ms\":250}}"));
+        check(Review.gradeMs(sh, List.of("a", "b", "c"), 2) == 350, "grade time: the busiest JVM's sum");
+
+        // 7. The review's knowledge is the live guard's (D348): an opponent deck list, from the run's flags or a
+        //    moment line, is refused before it is read; a cube-sized pool passes.
+        final java.io.File root = new java.io.File(".");
+        final Map<?, ?> header = (Map<?, ?>) mtgtable.Json.parse(HEAD);
+        final CoachGrade.Flags run = new CoachGrade.Flags(new String[] {"--opp-deck", "decks/doom-legion.dck"});
+        boolean refused = false;
+        try {
+            HiddenPool.checkLive(CoachGrade.guardFlags(run, Map.of()).v, header, 0, root);
+        } catch (final HiddenPool.Refused e) {
+            refused = true;
+        } catch (final java.io.IOException e) {
+            refused = false;
+        }
+        check(refused, "review: the run's --opp-deck is refused by the live guard");
+        refused = false;
+        try {
+            HiddenPool.checkLive(CoachGrade.guardFlags(new CoachGrade.Flags(new String[0]),
+                    Map.of("oppDeck", "var/match/m1/ai.dck")).v, header, 0, root);
+        } catch (final HiddenPool.Refused e) {
+            refused = true;
+        } catch (final java.io.IOException e) {
+            refused = false;
+        }
+        check(refused, "review: a moment line's oppDeck is refused too (it cannot slip past as a moment field)");
+        boolean passed = true;
+        try {
+            HiddenPool.checkLive(CoachGrade.guardFlags(new CoachGrade.Flags(new String[] {"--opp-known", "Shock"}), Map.of()).v,
+                    header, 0, root);
+        } catch (final java.io.IOException | RuntimeException e) {
+            passed = false;
+        }
+        check(passed, "review: no list at all (basic lands) and known picks pass");
     }
 
     // ------------------------------------------------------------------
