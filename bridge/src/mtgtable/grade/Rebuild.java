@@ -58,7 +58,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
 
 /**
  * A decision position rebuilt as a live Forge game from the viewing seat's
- * redacted view (D332), through Forge's own {@link GameState} loader.
+ * redacted view (D334), through Forge's own {@link GameState} loader.
  *
  * <p><b>What it may use</b> -- the search AI's rule (D312, {@code Determinizer}):
  * everything public in the log, the viewer's own hand, the viewer's own deck

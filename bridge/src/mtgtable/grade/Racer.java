@@ -21,7 +21,7 @@ package mtgtable.grade;
 import java.util.Arrays;
 
 /**
- * The grader's playout schedule (D332): rounds of common random numbers
+ * The grader's playout schedule (D334): rounds of common random numbers
  * with racing.  Pure -- the playout is a callback -- so {@link GradeSelfTest}
  * runs it against synthetic options with known win rates.
  *

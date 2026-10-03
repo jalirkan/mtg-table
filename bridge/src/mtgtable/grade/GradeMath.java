@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * The coach grader's arithmetic (D332): no Forge class, so
+ * The coach grader's arithmetic (D334): no Forge class, so
  * {@link GradeSelfTest} holds it on every build.
  *
  * <ul>

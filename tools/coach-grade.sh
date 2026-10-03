@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mtg-table — the engine analysis of a decision (D332–D334).
+# mtg-table — the engine analysis of a decision (D334–D336).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
@@ -30,7 +30,7 @@
 # own under var/coach-grade/<run>/home-<i>/ (forge_home_make, D129), appending
 # to <out>.shard-<i>.jsonl, then concatenates them into <out>; a rerun resumes.
 #
-# analyse / serve are the LIVE analysis (D334): the current decision of a game
+# analyse / serve are the LIVE analysis (D336): the current decision of a game
 # being played, inside a wall-clock budget (default 3 s, at least two rounds),
 # playouts to the end of this turn scored by the search's leaf evaluator, so a
 # coach can explain the engine's numbers.  serve keeps one booted engine (Forge

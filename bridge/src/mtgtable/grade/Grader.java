@@ -46,7 +46,7 @@ import mtgtable.Json;
 import mtgtable.ai.SearchPolicy;
 
 /**
- * The engine-graded coach bench's grader (D332): one decision of a recorded
+ * The engine-graded coach bench's grader (D334): one decision of a recorded
  * game, every legal option of the kinds the bench asks about, each played out
  * many times by Forge's Default AI on both seats, on common random numbers,
  * with racing; the result is each option's win rate and its regret against the

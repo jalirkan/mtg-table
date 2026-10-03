@@ -39,6 +39,12 @@ restarts a running one (10–20 s). `"engine"` is there only when `"match": 1`;
 absent means an older helper — treat it as running. `"engine_start": 1`
 (same condition as `"match": 1`) says `POST /engine/start` exists.
 
+**The opponent AI (D333).** With `"match": 1`, `/health` also carries
+`"aiPolicies": ["plain","outlets","search"]` and
+`"aiSearchMs": {"min":500,"max":5000,"default":1500}`: `POST /match` then takes
+`aiPolicy` and `aiSearchMs` (below). No `aiPolicies` key: an older helper — offer
+no choice and send neither key.
+
 ## `POST /engine/start` (D308)
 
 Wakes a sleeping engine **on the last match setup** — the decks, profile and
@@ -112,6 +118,8 @@ Content-Type: application/json
 | `cardName` | string | Forge's spelling (`Kongming, "Sleeping Dragon"`, `Fire // Ice`, `Lim-Dûl the Necromancer`), letters, digits, spaces and `' ’ " , . ! ? & ( ) + : / _ -`, at most 141 characters, optionally `\|SET` (2–8 of `A-Z0-9`). Checked against the engine's own card scripts when they are on disk — any case, accents folded |
 | `aiProfile` | string | optional, default `"Default"`; one of the engine's `.ai` files — `Default`, `Cautious`, `Reckless`, `Experimental` — any case. A profile is not a difficulty |
 | `games` | integer | optional, default `3`; 1–9: the match is played to this many games (`hello_ok.gameCount`) |
+| `aiPolicy` | string | optional (D333); exactly `"plain"` (Forge's own AI), `"outlets"` (with D310's sacrifice-outlet policy) or `"search"` (D312's look-ahead search behind it), passed as `MtgTable --ai-policy`. Absent: the AI `play.sh` was started with (`--ai-search` included) |
+| `aiSearchMs` | integer | optional (D333), only with `"aiPolicy": "search"`; 500–5000, the search's budget per searched decision (`--ai-search ms=<n>`); absent: the bridge's default, 1500 |
 
 The body is at most **64 KB**. Unknown keys are ignored.
 
@@ -131,6 +139,7 @@ ready: usually 10–20 s (a cold engine boot), up to 180 s on a busy machine.
   "yourDeck": { "name": "Izzet Spells (cube draft)", "path": "var/match/m1791014114724/you.dck", "cards": 40 },
   "aiDeck":   { "name": "AI Drafter — Golgari", "cards": 40 },
   "aiProfile": "Default",
+  "aiPolicy": "plain",
   "games": 3,
   "ms": 14210,
   "warnings": []
@@ -176,10 +185,13 @@ Nothing is written or restarted on a 400, 403, 405, 409, 413 or 503.
     "yourDeck": { "name": "Izzet Spells (cube draft)", "cards": 40 },
     "aiDeck":   { "name": "AI Drafter — Golgari", "cards": 40 },
     "aiProfile": "Default",
+    "aiPolicy": "plain",
     "games": 3
   }
 }
 ```
+
+`aiPolicy` (D333) is the policy the engine says it started with (its banner).
 
 `state` is `"restarting"` while a `POST` is in flight and `"idle"` while the
 engine is asleep (D308; `match` is then `null`: there is no current match).
@@ -197,12 +209,15 @@ export interface MatchRequest {
   aiDeck: MatchDeck;
   aiProfile?: 'Default' | 'Cautious' | 'Reckless' | 'Experimental';
   games?: number; // 1..9, default 3
+  aiPolicy?: 'plain' | 'outlets' | 'search'; // D333; only when /health lists aiPolicies
+  aiSearchMs?: number; // D333; 500..5000, only with aiPolicy 'search'
 }
 export interface MatchStarted {
   ok: true;
   yourDeck: { name: string; path: string; cards: number };
   aiDeck: { name: string; cards: number };
   aiProfile: string;
+  aiPolicy?: string | null; // D333
   games: number;
   ms: number;
   warnings: string[];
@@ -221,12 +236,14 @@ export interface MatchCurrent {
     yourDeck: { name: string; cards: number } | null;
     aiDeck: { name: string; cards: number } | null;
     aiProfile: string | null;
+    aiPolicy?: string | null; // D333
     games: number | null;
   };
 }
 // POST /engine/start -> MatchStarted & { already: false } | { ok: true, already: true, ...current }
 // GET /health gains: match: 0 | 1, engine_start?: 1, and (when match is 1) engine: 'running' | 'idle',
-// idleSince?: string, exitsAt?: string | null  (only when idle)
+// idleSince?: string, exitsAt?: string | null  (only when idle),
+// aiPolicies?: string[], aiSearchMs?: {min, max, default}  (D333, when match is 1)
 ```
 
 ## What ForgeCoach does

@@ -55,7 +55,7 @@ import mtgtable.ai.LenientGameCopier;
 import mtgtable.ai.PolicyLobbyPlayerAi;
 
 /**
- * {@code tools/coach-grade.sh}'s Java half (D332): grade one decision, or a
+ * {@code tools/coach-grade.sh}'s Java half (D334): grade one decision, or a
  * file of them, against Forge Default.  A measuring tool beside the game, like
  * {@code tools/ai-bench}: no socket, no protocol, no frame log written.
  *
@@ -83,7 +83,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * object plus those fields.  A batch resumes: keys already in {@code --out}
  * are skipped.
  *
- * <p><b>Live analysis</b> (D334): {@code analyse} and {@code serve} grade the
+ * <p><b>Live analysis</b> (D336): {@code analyse} and {@code serve} grade the
  * current decision of a game in play with {@link #liveSettings} -- a
  * wall-clock budget ({@code --budget-ms}, default 3000; at least
  * {@code --min-rounds} 2 rounds whatever it says), playouts to the end of this
@@ -176,7 +176,7 @@ public final class CoachGrade {
     }
 
     /**
-     * The live analysis's defaults (D334): a time budget, not a playout count
+     * The live analysis's defaults (D336): a time budget, not a playout count
      * (at least two rounds whatever it says); playouts to the end of this turn
      * scored by the search's leaf evaluator, its own choice for a 1.5 s think
      * (D312) -- a full game costs seconds a playout; racing from round 6.
@@ -451,7 +451,7 @@ public final class CoachGrade {
     }
 
     // ------------------------------------------------------------------
-    // Live analysis (D334): one decision now, inside a time budget
+    // Live analysis (D336): one decision now, inside a time budget
     // ------------------------------------------------------------------
 
     /** {@code analyse}: grade with the live defaults (a budget, a short horizon); prints one JSON line. */

@@ -14849,11 +14849,55 @@ planted +0.15 card at least 65% at 600).
   it too small.
 - **A per-card cluster-robust variance:** too few decks per card to test with.
 
-## D332 — The coach grader: a logged decision rebuilt from the viewer's redacted view, every option played out by Forge Default through the search AI's own rollout, on common random numbers with racing; regret is the best win rate minus the option's
+## D333 — The match launcher picks the opponent AI: `POST /match` takes `aiPolicy` (`plain`|`outlets`|`search`) and `aiSearchMs` (500–5000), `/health` advertises them, and `play.sh` passes them as `--ai-policy` / `--ai-search ms=<n>`
 
-*Branch `c/coach-grader`; D332–D334, the next numbers free on `main` at push
+*Branch `c/match-ai-policy`; D333, past every number open lanes may hold (D326–D332).*
+
+**2026-10-03** (D314's follow-up: "a ForgeCoach-side switch … changed in both
+repositories or not at all")
+
+**Decision.** `POST /match` (D303) gains two optional keys. `aiPolicy` is exactly
+one of `plain`, `outlets`, `search` — D314's `--ai-policy` values, case-sensitive,
+no aliases; `aiSearchMs` is a whole number 500–5000 and only goes with
+`"aiPolicy": "search"` (`--ai-search ms=<n>`; absent, the bridge's default 1500).
+Anything else is a 400 before a file is written, as for every other field.
+`request.json` carries them only when sent; `play.sh` re-checks both in its node
+reader (the same enum and range) and, when the request names a policy, drops the
+startup's `--ai-policy` / `--ai-search` from the restart's argv and appends the
+request's — so a `play.sh --ai-search` session can still be asked for plain
+Forge. **No `aiPolicy` keeps today's behaviour**: the restart keeps whatever
+`play.sh` was started with. A wake (`/engine/start`, D308) restarts the last
+setup, policy included. The reply and `GET /match` gain `aiPolicy`, read from the
+bridge's banner (`ai policy = …`; no line is `plain`). `/health`, when `"match":
+1`, gains `"aiPolicies": ["plain","outlets","search"]` and `"aiSearchMs": {"min":
+500, "max": 5000, "default": 1500}` — additive, so ForgeCoach shows its
+"Opponent AI" choice only to a helper that lists them and sends no key to an
+older one. The wire is unchanged: nothing of the policy or the search reaches a
+frame or `hello_ok` (D314), and the AI's deck stays a name and a count (M44).
+
+**Checked.** `tools/match-launcher-selftest.mjs`: `/health`'s two keys; no
+`aiPolicy` adds no flag (plain, as started); `search` with 3000 reaches the
+engine as `--ai-policy search --ai-search ms=3000` and `GET /match` says
+`search`; `outlets` replaces it with exactly one `--ai-policy` and no
+`--ai-search`; a later request without the key goes back to as started; a
+`play.sh --ai-search-ms 2000` session keeps its search on a request without
+`aiPolicy` and drops it for `"aiPolicy": "plain"`; refused with 400 and nothing
+restarted: an unknown policy, the wrong case, a policy carrying a flag, a
+budget under 500 or over 5000, a budget as a string (`"3000,turns=4"`), a budget
+with `outlets` or with no policy.
+
+**Rejected.** Exposing D312's other knobs (`turns`, `rounds`, candidates) to the
+page (the budget is the one a player can feel; the rest are the lab's, and
+every key added is one more thing to vet); a free-form `--ai-search` string
+(only an enum and an integer may reach a command line); making a missing
+`aiPolicy` mean `plain` (it would silently undo a `play.sh --ai-search` start
+for every client that predates this); the search as the default (D314).
+
+## D334 — The coach grader: a logged decision rebuilt from the viewer's redacted view, every option played out by Forge Default through the search AI's own rollout, on common random numbers with racing; regret is the best win rate minus the option's
+
+*Branch `c/coach-grader`; D334–D336, the next numbers free on `main` at push
 (D326–D330 may be other lanes'). ForgeCoach's half is its branch `c/coach-regret`.
-D334 refocuses it on live analysis.*
+D336 refocuses it on live analysis.*
 
 **2026-10-03** (accepted from Justin's PC session's proposal: the coach bench's
 headline metric becomes each answer's *regret*, estimated with engine playouts)
@@ -14956,7 +15000,7 @@ evaluator as the default leaf (D316's model is per cube and approximate; to the
 end of the game is the yardstick, the horizon is a cheap-pass option); enumerating
 every attacker subset (2^n, mostly duplicates of identical creatures).
 
-## D333 — The coach bench's yardstick is "best against Forge Default"; every number carries its grading noise, everything is paired, about ten cases are held out, and a low-information table is reported as such
+## D335 — The coach bench's yardstick is "best against Forge Default"; every number carries its grading noise, everything is paired, about ten cases are held out, and a low-information table is reported as such
 
 **2026-10-03**
 
@@ -14968,11 +15012,11 @@ exist for Magic, and a stronger AI would itself move as it improves); and it is
 cheap enough to grade a bench. Its known limits, stated wherever regret is
 reported: it rewards lines that exploit Forge's weaknesses and can call a line
 that is right against a strong human wrong; the player's own later play is
-Forge's, not the player's; and the rebuild loses history (D332's fidelity list).
+Forge's, not the player's; and the rebuild loses history (D334's fidelity list).
 
 The methodology rules, from the reviews of this proposal:
 
-- **Pair everything.** Options within a decision share each round's seed (D332);
+- **Pair everything.** Options within a decision share each round's seed (D334);
   two coach runs are compared case by case on the same tables (ForgeCoach
   `--compare`: the paired bootstrap over cases, the headline once both runs carry
   regret).
@@ -15000,12 +15044,12 @@ acceptable/unacceptable lists alone (coarse, hand-written, and blind to how much
 an answer costs); dropping noisy cases silently (the reader must see what was
 thin).
 
-## D334 — The grader's main use is a live engine analysis the coach explains: `coach-grade.sh serve` answers "analyse this decision" for the game in play inside a time budget; the bench's mining and large grading runs are dropped
+## D336 — The grader's main use is a live engine analysis the coach explains: `coach-grade.sh serve` answers "analyse this decision" for the game in play inside a time budget; the bench's mining and large grading runs are dropped
 
 **2026-10-03** (Justin, mid-lane: cloud LLMs change often and outside our
 control, so heavy coach benchmarking is not worth the compute now)
 
-**Decision.** D332's grader is kept whole — the rebuild from the redacted view,
+**Decision.** D334's grader is kept whole — the rebuild from the redacted view,
 the determinization, the options, the paired playouts on common random numbers,
 the per-option intervals and the racing — and its main purpose becomes an
 **engine analysis for live play**: for the decision in front of the player, the
@@ -15039,7 +15083,7 @@ within a small model's reach.
   board and the prompt can name them. Wiring it into the coach helper and the
   prompt is the follow-up; the helper owns the process, as `play.sh` owns the
   bridge.
-- **Hidden information** is D332's rule unchanged: the request names the log
+- **Hidden information** is D334's rule unchanged: the request names the log
   (the viewer's redacted view) and, at most, deck lists the player may know; the
   engine never reads the bridge's live game.
 - **Dropped:** the turning-point miner and the large PC grading jobs. Kept, as

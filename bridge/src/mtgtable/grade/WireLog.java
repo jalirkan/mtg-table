@@ -34,7 +34,7 @@ import java.util.zip.GZIPInputStream;
 import mtgtable.Json;
 
 /**
- * A frame log as the coach grader reads it (D332): the session header, then
+ * A frame log as the coach grader reads it (D334): the session header, then
  * every frame, indexed exactly as ForgeCoach's {@code log.ts} indexes
  * {@code log.frames} (line 0 is the header; frame i is line i + 1), so a
  * bench case's {@code moment.frame} means the same frame here.

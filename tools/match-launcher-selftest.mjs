@@ -83,6 +83,10 @@ const you = deckOf(flag('--deck')), ai = deckOf(flag('--ai-deck') || flag('--dec
 ev({ start: true, argv, token: process.env.MTGTABLE_LAN_TOKEN ?? null });
 console.log('deck (you)    = ' + path.resolve(flag('--deck')));
 console.log('ai profile    = ' + (flag('--ai-profile') || 'Default'));
+// D333: as the bridge, a policy line only when it is not plain (--ai-search implies search; the last flag wins).
+let pol = 'plain';
+argv.forEach((a, i) => { if (a === '--ai-policy') pol = argv[i + 1]; else if (a === '--ai-search') pol = 'search'; });
+if (pol !== 'plain') console.log('ai policy     = ' + pol + (pol === 'search' ? '  (' + (flag('--ai-search') || 'ms=1500') + ')' : ''));
 console.log('games/match   = ' + (flag('--games') || '1'));
 if (you.name.startsWith('Crash') || ai.name.startsWith('Crash')) { console.error('ENGINE CRASHED (a fake one)'); ev({ crashed: true }); bye(1); }
 console.log('deck you      = ' + you.name + ' (' + you.cards + ' cards)');
@@ -186,6 +190,8 @@ try {
   check('the coach helper started without claude on PATH', /Coach: claude CLI not found/.test(A.out()));
   let r = await http({ port: A.coachPort });
   check('/health advertises match: 1', r.status === 200 && r.json?.match === 1 && r.json?.helper === 1, r.body);
+  check('/health advertises the AI policies and the search budget (D333)', JSON.stringify(r.json?.aiPolicies) === '["plain","outlets","search"]'
+    && JSON.stringify(r.json?.aiSearchMs) === '{"min":500,"max":5000,"default":1500}', r.body);
   const first = starts();
   check('one engine started', first.length === 1);
   check('the first run had no inherited MTGTABLE_LAN_TOKEN', first[0]?.token === null);
@@ -232,6 +238,7 @@ try {
     && second.filter((a) => a === '--deck').length === 1 && second.filter((a) => a === '--games').length === 1, second.join(' '));
   check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
   check('the deck name never reached a command line', !second.some((a) => a.includes('Rock')));
+  check('no aiPolicy: the AI as play.sh started it (plain), no --ai-policy added', r.json?.aiPolicy === 'plain' && !second.includes('--ai-policy') && !second.includes('--ai-search'), `${r.body} ${second.join(' ')}`);
   check('the old engine is gone', !alive(first[0].pid));
   for (let i = 0; i < 20 && !seatClosed; i++) await sleep(50);
   check("the old engine's seat socket was dropped", seatClosed);
@@ -261,6 +268,14 @@ try {
   await bad('a count over 250', { ...req1, deck: deck('Huge', [[251, 'Mountain']]) }, 400, /1-250/);
   await bad('an unknown profile', { ...req1, aiProfile: 'Hard' }, 400, /Default, Cautious, Reckless, Experimental|aiProfile must be/);
   await bad('games 0', { ...req1, games: 0 }, 400, /games/);
+  await bad('an unknown aiPolicy', { ...req1, aiPolicy: 'hard' }, 400, /aiPolicy must be one of plain, outlets, search/);
+  await bad('aiPolicy in the wrong case', { ...req1, aiPolicy: 'Search' }, 400, /aiPolicy/);
+  await bad('aiPolicy smuggling a flag', { ...req1, aiPolicy: 'search --seat 1' }, 400, /aiPolicy/);
+  await bad('aiSearchMs under 500', { ...req1, aiPolicy: 'search', aiSearchMs: 100 }, 400, /aiSearchMs must be a whole number 500-5000/);
+  await bad('aiSearchMs over 5000', { ...req1, aiPolicy: 'search', aiSearchMs: 60000 }, 400, /aiSearchMs/);
+  await bad('aiSearchMs as a string', { ...req1, aiPolicy: 'search', aiSearchMs: '3000,turns=4' }, 400, /aiSearchMs/);
+  await bad('aiSearchMs without the search policy', { ...req1, aiPolicy: 'outlets', aiSearchMs: 1000 }, 400, /only with "aiPolicy": "search"/);
+  await bad('aiSearchMs with no aiPolicy', { ...req1, aiSearchMs: 1000 }, 400, /only with/);
   await bad('games 1.5', { ...req1, games: 1.5 }, 400, /games/);
   await bad('no aiDeck', { deck: req1.deck }, 400, /aiDeck/);
   await bad('main not an array', { ...req1, deck: { name: 'X', main: 'Mountain' } }, 400, /array/);
@@ -299,11 +314,26 @@ try {
   const r2 = await post(A.coachPort, { ...req1, aiProfile: 'Experimental' });
   check('two POSTs back to back: both started', r.status === 200 && r2.status === 200 && r2.json?.aiProfile === 'Experimental', `${r.status} ${r2.status} ${r2.body}`);
   check('never two engines at once', !events().some((e) => e.overlap) && !events().some((e) => e.bindError), JSON.stringify(events().filter((e) => e.overlap || e.bindError)));
+  // ------------------------------------------------------------- the AI policy (D333)
+  console.log('== the AI policy: search with a budget, outlets, then back to as started');
+  r = await post(A.coachPort, { ...req1, aiPolicy: 'search', aiSearchMs: 3000 });
+  let pa = starts().at(-1).argv;
+  check('aiPolicy search, aiSearchMs 3000: 200 naming the policy', r.status === 200 && r.json?.aiPolicy === 'search', `${r.status} ${r.body}`);
+  check('...the engine got --ai-policy search --ai-search ms=3000', argOf(pa, '--ai-policy') === 'search' && argOf(pa, '--ai-search') === 'ms=3000', pa.join(' '));
+  r = await http({ port: A.coachPort, path: '/match' });
+  check('GET /match: aiPolicy search', r.json?.match?.aiPolicy === 'search', r.body);
+  r = await post(A.coachPort, { ...req1, aiPolicy: 'outlets' });
+  pa = starts().at(-1).argv;
+  check('aiPolicy outlets: one --ai-policy outlets, no --ai-search', r.status === 200 && r.json?.aiPolicy === 'outlets'
+    && pa.filter((a) => a === '--ai-policy').length === 1 && argOf(pa, '--ai-policy') === 'outlets' && !pa.includes('--ai-search'), `${r.body} ${pa.join(' ')}`);
+  r = await post(A.coachPort, req1);
+  pa = starts().at(-1).argv;
+  check('no aiPolicy again: plain, as play.sh was started', r.status === 200 && r.json?.aiPolicy === 'plain' && !pa.includes('--ai-policy'), `${r.body} ${pa.join(' ')}`);
   check('the decks of old matches are pruned to the last 5', readdirSync(join(DIR, 'a', 'match')).filter((n) => /^m\d{13}$/.test(n)).length <= 5);
 
   // ------------------------------------------------------------- play.sh --lan
   console.log('== play.sh --lan: a restart keeps the pairing token');
-  const L = await startPlay(['--lan', '--site-dir', `${REL}/site`], 'lan');
+  const L = await startPlay(['--lan', '--site-dir', `${REL}/site`, '--ai-search-ms', '2000'], 'lan');
   const onL = () => starts().filter((e) => argOf(e.argv, '--port') === String(L.port));
   const lanFirst = onL()[0];
   const t1 = events().find((e) => e.pid === lanFirst?.pid && e.lanToken)?.lanToken;
@@ -316,6 +346,12 @@ try {
   check('the restarted engine got the first token, in its environment', !!t1 && lanSecond?.token === t1 && lanSecond.argv.includes('--lan') && !lanSecond.argv.some((a) => a.includes(t1)), JSON.stringify({ t1, lanSecond }));
   check('--site-dir kept', argOf(lanSecond?.argv ?? [], '--site-dir') === `${REL}/site`);
   check('the token is not in the launcher reply', !r.body.includes(t1));
+  check('play.sh --ai-search-ms kept when the request names no policy (D333)', r.json?.aiPolicy === 'search'
+    && argOf(lanSecond?.argv ?? [], '--ai-search') === 'ms=2000', `${r.body} ${lanSecond?.argv?.join(' ')}`);
+  r = await post(L.coachPort, { ...req1, aiPolicy: 'plain' });
+  const lanThird = onL()[2]?.argv ?? [];
+  check('...and replaced when it does: aiPolicy plain drops --ai-search', r.status === 200 && r.json?.aiPolicy === 'plain'
+    && lanThird.filter((a) => a === '--ai-policy').length === 1 && argOf(lanThird, '--ai-policy') === 'plain' && !lanThird.includes('--ai-search'), `${r.body} ${lanThird.join(' ')}`);
 
   // ------------------------------------------------------------- Ctrl-C
   console.log("== play.sh's Ctrl-C takes it all down");
