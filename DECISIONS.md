@@ -13849,3 +13849,150 @@ on an unmodified tree.
   match nobody is playing, which is what D286 ended.
 - **Keeping the JVM up and raising `--idle-timeout`** — a hung engine would
   burn CPU for as long as the draft.
+
+## D309 — An AI seat of our own in front of Forge's: `PolicyLobbyPlayerAi` makes a `PolicyControllerAi`, a subclass of Forge's `PlayerControllerAi`, through `Bootstrap.createAiSeat`; and `tools/ai-bench.sh` measures any change to it AI against AI
+
+*Branch `c/ai-baseline`; D309–D311, the numbers the coordinator assigned at the
+merge of `main` `1e31619` (written as D300–D302 before it; D298–D308 are the
+thin-pool builds', cube evolve's, the match launcher's and the ML dataset's).*
+
+**2026-10-03** (the owner's goal: a stronger Forge AI for his two 180-card
+cubes, on his PC, no LLM; this is its first step)
+
+**Decision.** The seam for every AI improvement is a controller subclass, not
+a patch to Forge's jar and not a card script. `forge.ai.LobbyPlayerAi` is
+public and its `createIngamePlayer` / `createMindSlaveController` are
+overridable; its private `createControllerFor` is three lines and is
+re-implemented in `mtgtable.ai.PolicyLobbyPlayerAi`, which hands each game a
+`mtgtable.ai.PolicyControllerAi` — Forge's `PlayerControllerAi` with our code in
+front of `chooseSpellAbilityToPlay()` (the priority callback) and
+`playChosenSpellAbility()` (to steer a cost payment). Every other decision is
+Forge's, unchanged. `Bootstrap.createAiSeat(name, avatar, profile, AIOption,
+Outlets)` is the only constructor call: the same profile checks as
+`createAiPlayer`, and it never reaches `GamePlayerUtil`, so D107's
+preferences-saving branch does not exist on this path. Forge's simulation
+option (`AIOption`, a lobby-player option, not an `.ai` key) rides on the same
+call. **No game entry point uses it yet**: `MtgTable`, `RecordMatch` and every
+gate step still seat Forge's plain AI, so every recording and the drift checks
+are unchanged.
+
+`tools/ai-bench.sh` (with `tools/ai-bench/AiBench.java`, compiled on demand like
+`audit-deck`) plays seat configurations `<Profile>[+sim|+hybrid][+outlets|+shadow]`
+against each other over fixed deck pairs (`tools/ai-bench/pairs-*.txt`,
+`tools/ai-bench/decks/`): game g gives config A the pair's first deck when g is
+even and seat 0 when g/2 is even; a game's seed is a function of `--seed`, the
+pair and g, so two configurations on the same seed are **paired** (same deals),
+which is what makes a small effect measurable (McNemar on the discordant
+pairs). `--jobs K` runs K JVMs, each with its own Forge home
+(`forge_home_make`, D129's rule). One JSON line per game; `report` gives Wilson
+95% intervals, game times, Forge's AI-evaluation timeouts and the policy's
+counters. `--selftest` (~15 s) checks the statistics and eleven board scenarios
+built with Forge's own `GameState` loader, three of them controls. It is not
+in the gate: it boots Forge, and the bench itself takes hours.
+
+**The game-thread hop.** A bench game starts with `game.getAction().invoke(…)`,
+exactly as `RecordMatch` starts its game: one game at a time per JVM, waited on
+with a latch, so nothing else runs on Forge's `Game` pool; the self-test applies
+each `GameState` the same way, one scenario at a time, with no match running.
+No `invokeInGameThread` is written (the lint's `HOP_ALLOW` is unchanged).
+
+**Rejected.** A patched or rebuilt Forge jar (D109/D110: the engine is the pinned
+release); reflection onto `PlayerControllerAi.brains` to swap in an
+`AiController` subclass (the controller seam reaches every decision without
+it); custom `.ai` profiles (they load only from `res/ai/`, the user's install);
+card-script overlays to change `AI:RemoveDeck` or `AILogic` (D111); a bench that
+reuses `RecordMatch` (it writes a frame log and redacts for one seat — neither
+is wanted for thousands of games).
+
+## D310 — The sacrifice-outlet policy: answer removal, doomed combatants and expiring creatures with an outlet, go all in when the sacrifices are lethal, cast the outlets Forge's RemAIDeck filter hides, and pay Forge's own outlet activations with fodder
+
+**2026-10-03**
+
+**Decision.** `mtgtable.ai.OutletPolicy` handles every activated ability whose
+cost sacrifices exactly one creature other than "this" (`creatureSacCost`):
+Viscera Seer, Goblin Bombardment, Carrion Feeder, Woe Strider, and any cube's
+equivalents, found from the cost, not by name. At each priority, before Forge
+chooses, it plays an outlet when (1) **LETHAL** — every valid victim through
+the best free, untapped outlet, plus the drains on the board (`DRAINS`, a
+named table: Blood Artist, Zulaport Cutthroat, Mayhem Devil, …), reaches the
+opponent's life; plain creatures go first, drainers last, damage at the face,
+and once begun it is committed for that step; (2) **THREATENED** — Forge's own
+`ComputerUtil.predictThreatenedObjects` says something on the stack kills one
+of ours (a bounce does not count); (3) **COMBAT** — after blockers, a creature
+of ours dies without killing anything and its removal lets no trampler
+through; (4) **EXPIRING** — a creature with `EndOfTurnLeavePlay` in an end step.
+After Forge chooses: (5) **CAST_OUTLET** — Forge chose nothing in its own main
+phase and holds an outlet card it filtered as `AI:RemoveDeck:All` (Seer,
+Bombardment); only outlet cards are let through; (6) **FODDER** — Forge chose an
+outlet activation itself: pay with a creature Forge itself calls fodder
+(threatened, `SacMe`, token, useless) rather than the worst creature on the
+board. Targets come from Forge (`doTriggerNoCostWithSubs(ai, sa, true)`, its
+mandatory-trigger targeting), except lethal damage, which goes to the face.
+The victim is steered by setting `SacMe` 6 on it for that one payment and
+lifting the outlet's own `AIPreference` meanwhile (Carrion Feeder's
+`SacCost$Creature.Other` is read first and otherwise wins).
+
+**Why.** Measured in Forge 2.0.14 (`docs/research/ai-architecture.md` §5,
+`docs/evidence/ai-baseline.md` §4): `AiController.getSpellAbilityToPlay` drops
+every RemAIDeck card's spells and abilities before evaluating, so a Seer or a
+Bombardment in an AI deck is never cast (a self-test scenario, with an
+unflagged control); Forge's deckbuilder never main-decks the ten flagged cube
+cards (0 of 149 copies over 98 Forge-built cube decks); and nothing in Forge
+uses an outlet when a creature is about to die. Carrion Feeder's
+`AristocratCounters` logic decides on fodder and pays with the worst creature
+(at least 849 non-token creatures fed to it in 400 games — Gravecrawler most,
+but Blood Artist 23 times and Priest of Forgotten Gods 19; a self-test
+scenario). Two Rakdos sacrifice decks
+from the synergy cube against ten Forge-drafted opponents, 400 games each way,
+the same seeds: **35.0% → 43.8%** for the sacrifice deck (+8.8 points, 95% CI
++2.0 to +15.5; paired, 51 games turned from loss to win and 16 the other way,
+McNemar exact p < 0.0001) for the first version. FODDER and the opponent's
+Blood Artist correction came after that run showed 13 failed all-ins (9 games
+then lost) and 849 bad Carrion Feeder payments; on the first 200 of the same
+deals the corrected policy wins 42.5% against plain Forge's 36.0% (21 deals
+gained, 8 lost, p = 0.024) with no failed all-in, and is not distinguishable
+from the first version at that size.
+
+**Rejected.** Un-flagging the cards in a card overlay (D111, and the AI would
+then only use them on Forge's terms); a policy that sacrifices on its own
+estimate of value every turn (no evaluator yet — that is the search's job,
+D311's roadmap); vetoing Forge's own outlet activations instead of steering
+them (a veto passes priority, losing whatever else Forge would have done).
+
+## D311 — Forge's AI, measured on the owner's cubes: profiles are knobs (Reckless the only measurable gain), Forge's simulation does not survive the cubes, and a stronger AI is a search we build behind D309's seam, measured with D309's bench
+
+**2026-10-03**
+
+**Decision.** The roadmap for a stronger AI (the owner's goal: his cubes, his
+PC, no LLM) is `docs/research/ai-architecture.md` §7: keep cheap targeted
+policies (D310) in front; add a determinized search at priority inside
+`PolicyControllerAi` that copies the game, redeals the opponent's hidden cards,
+plays each candidate and rolls forward with Default-AI controllers, budgeted by
+wall clock and falling back to Forge's answer; then combat; then a learned
+evaluator (D305's dataset). Every step lands with an `ai-bench.sh` run against
+plain Default on `pairs-cube.txt`, paired by seed.
+
+**Why — measured** (`docs/evidence/ai-baseline.md`):
+
+- **"Experimental" is not simulation.** `res/ai/Experimental.ai` is `Default.ai`
+  with 30 values changed; simulation is `AIOption`, a lobby-player option. AI
+  against AI on ten Forge-drafted cube pairs, 100 games each, paired with a
+  Default-vs-Default control on the same deals: Experimental 56% (15 deals
+  gained, 7 lost, p = 0.13), **Reckless 60% (14 / 2, p = 0.004)**, Cautious 53%
+  (13 / 8, p = 0.38). If the owner wants the strongest stock opponent today,
+  it is `--ai-profile Reckless`.
+- **Forge's simulation cannot be the base.** With `USE_FULL_SIMULATION` 15 of 20
+  cube games, and with `USE_HYBRID_SIMULATION` 12 of 20, ended on turn 1–2 in
+  `GameCopier`'s `Couldn't map <card>` (Grist, Anax, Hero of Light, Tarmogoyf:
+  static abilities live in hidden zones). The five full-simulation games that
+  finished were all won, at up to 24× the time of a default game. It also
+  copies the opponent's hand and library order, i.e. it cheats.
+- **The default AI is greedy and machine-dependent**: first acceptable play, no
+  lookahead, a 5 s evaluation timeout that makes it pass on a busy machine
+  (0.02–0.17 timeouts per game here, rising with load).
+
+**Rejected.** Turning on Forge's simulation for the owner's games (it ends them);
+tuning `.ai` knobs as the main road (one profile moved the needle ten points,
+the rest nothing measurable — knobs inside a greedy player); an LLM opponent
+(the owner's constraint); a learned policy before a search exists to use a
+learned evaluator.
