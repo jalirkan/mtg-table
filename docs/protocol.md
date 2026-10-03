@@ -30,6 +30,14 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-03 — the AI's "can't play these cards well" reveal is off
+
+Found by ForgeCoach's draft-to-match e2e on a real engine. One row.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M54 | §5, M44 | **The seat is no longer sent Forge's pre-game "AI can't play these cards well" reveal.** Before game 1, `Match.prepareAllZones` calls `GameAction.revealUnplayableByAI`, which — when `!gameType.isCardPoolLimited() && rules.warnAboutAICards()` — reveals every `AI:RemAIDeck` card in the AI's deck to every player. The bridge relayed it to the human seat as a `choose_list` ask with `reveal: true`, prompt `"AI can't play these cards well from <AI deck name>"` and the cards as options (measured: `"Chromatic Star (BRR)"` from a cube-drafted AI deck). That names cards of the AI's hidden decklist, which M44 and hard rule 8 keep off the wire (`hello_ok.match.aiDeck` is `{name, cards}` and nothing else). `MtgTable` now builds its `GameRules` with `setWarnAboutAICards(false)` **[jar]** (`forge.game.GameRules`, pinned 2.0.14), so the reveal is never raised. `RecordMatch` (no human seat) is unchanged. ForgeCoach also auto-acknowledges such a reveal unseen, as a second lock for older engines. | ForgeCoach e2e |
+
 ### 2026-10-03 — the match launcher: a match from decks the browser built
 
 Applied by the match-launcher lane (branch `c/match-launcher`), for
