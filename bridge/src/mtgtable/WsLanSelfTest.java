@@ -162,6 +162,22 @@ public final class WsLanSelfTest {
         eq("tokenMatches: empty", false, WsTransport.tokenMatches("", TOKEN));
         eq("tokenMatches: none", false, WsTransport.tokenMatches(null, TOKEN));
 
+        // D303: a bridge the match launcher restarts keeps play.sh's first token
+        // (MtgTable.LAN_TOKEN_ENV); unset or empty is a fresh one, as before.
+        eq("lanToken: unset is a fresh token", true, MtgTable.lanToken(null).matches("^[A-Za-z0-9_-]{22}$"));
+        eq("lanToken: empty is a fresh token", true, MtgTable.lanToken("").matches("^[A-Za-z0-9_-]{22}$"));
+        eq("lanToken: a given token is kept", TOKEN, MtgTable.lanToken(TOKEN));
+        for (final String bad : new String[] { "Abc123", "not a token; rm -rf ~", TOKEN + "\n" }) {
+            String refused = null;
+            try {
+                MtgTable.lanToken(bad);
+            } catch (final IllegalArgumentException e) {
+                refused = e.getMessage();
+            }
+            eq("lanToken: " + bad.length() + " characters that are not a token are refused", true, refused != null);
+            eq("lanToken: the refusal does not echo the value", false, refused != null && refused.contains(bad.trim()));
+        }
+
         //                loopback socket  query   cookie  token   admitted
         final Object[][] gate = {
             { "not a LAN server",          false, true,  null,  null,  null,  true },

@@ -300,6 +300,18 @@ built against, and four things about it are rules:
    usage and needs a login CI does not have, so it is measured by hand
    (D292's *Measured*).
 
+The match launcher (D303, amendment M53) is the helper's second route:
+`GET`/`POST /match` in `tools/match-launcher.mjs`, contract
+`docs/match-launcher.md`. The four rules above hold for it — rule 1 in
+particular: its shapes change in both repositories or not at all. Beyond them:
+the helper only writes `var/match/` and signals `play.sh`, which alone stops
+and starts the engine and never lets two run; browser text goes into `.dck`
+files through the strict name patterns and never into a path or a command
+line; and the AI's deck leaves the helper as a name and a count, as on the
+wire. Its self-test, `tools/match-launcher-selftest.mjs`, drives the real
+`play.sh` against a fake engine (`MTGTABLE_TEST_FAKE_ENGINE`, a test seam
+nothing else may set) and runs in 12f and CI beside the helper's own.
+
 ## The cube lab — the conventions D293–D297 added
 
 `tools/cubelab.sh` drafts a two-player cube with two Forge AIs, builds their
