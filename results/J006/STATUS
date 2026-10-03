@@ -1,3 +1,7 @@
-running
+failed
+reason: pilot: "npm test" failed (9 of 702, all in src/launcher.test.ts overnight); environmental: the tests see the live engine required by this job on 127.0.0.1:8642. All other pilot checks passed. Full run not started.
 started: 2026-10-03T10:49:00-04:00
-phase: pilot
+ended: 2026-10-03T10:55:00-04:00
+mtg-table: e54aa16 (worktree ~/code/mtg-table-main)
+ForgeCoach: be989fa
+failing command: npm test (exit 1)

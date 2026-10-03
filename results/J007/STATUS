@@ -1,0 +1,2 @@
+waiting
+reason: after: J006, which failed its pilot (npm test, environmental; see results/J006/summary.md). Not started.

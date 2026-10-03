@@ -1,0 +1,354 @@
+{
+ "bench": 2,
+ "label": "J006-pilot",
+ "startedAt": "2026-10-03T14:54:10.389Z",
+ "source": "helper",
+ "model": "claude-sonnet-5-5",
+ "repeat": 1,
+ "cases": [
+  {
+   "id": "spell-auto2026-turn2",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:12",
+     "canonical": "cast:12",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 7068,
+     "text": "**Play:**\n1. Play Island as your land drop.\n2. Cast Bold Biochemist for {1}{U}, with Island paying {U} and Plains paying {1}. That leaves 0 mana.\n3. Don't attack. You have no creatures that can.\n\n**Why:** You have only two lands, so using both on a 2-drop is the best use of your mana. Next turn you play Plains and cast Quake (Plains, Plains, Island), then fit Thriving Isle in on a later turn. Biochemist's 1/3 body blocks Aerial Doombot's ground friends well, though Doombot itself flies.\n\n**Rule:** Use all your mana.\n\n**Confidence:** High.\n\n**Trap:** Playing Thriving Isle now. It enters tapped, so you'd cast nothing this turn. Quantum Reduction on a 1/1 Doombot is also a poor use of a card, and it would be a waste of mana this early.\n\n**Their turn:** The opponent has Doombot (1/1 flier) and 6 cards in hand. Doombot can attack you for 1 in the air, and Biochemist can't block it. Expect them to add another creature or two. Keep Quantum Reduction for a bigger threat later.\n\nANSWER: cast:12",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "high",
+      "rule": "Use all your mana"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:12",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  },
+  {
+   "id": "spell-comfort13-first-land",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "land:9",
+     "canonical": "land:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 5059,
+     "text": "**Play:**\n1. Play Thriving Isle (tapped), choosing white as the other colour. It makes no mana this turn, and you have no untapped sources anyway.\n2. Cast nothing and attack with nothing. You have no creatures and no mana, so nothing else is possible. Mana left: 0.\n\n**Why:** This is your first land and you can't use any mana this turn, so a tapped land costs you nothing. Playing it now gives you U/W next turn, and your hand needs both colours (Wasp and Ant-Man's Air Force are blue, while Web Up, Quake and the Spy Kit are white). Next turn you play an Island and have two untapped lands, and the turn after that a third for Quake, Wasp or Web Up.\n\n**Rule:** Tap your tapped land on the turn you have no play.\n\n**Confidence:** high\n\n**Trap:** Playing an Island first. It untaps with nothing to cast at 1 mana except the Spy Kit, which is weak without a creature. It also forces you to play the tapped land on a later turn, when you would want all your mana for a curve play.\n\n**Their turn:** The opponent has a Plains and 6 cards in hand, so expect a 1-drop or a land at most. You have no board to protect yet.\n\n**Assumptions:** The chosen colour for Thriving Isle is white, since your hand's non-blue cards are all white.\n\nANSWER: land:9",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "high",
+      "rule": "Tap your tapped land on the turn you have no play"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "land:9",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  },
+  {
+   "id": "spell-comfort13-thriving-black",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:23",
+     "canonical": "cast:23",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 6954,
+     "text": "**Play:**\n1. Play Island as your land drop. You now have Thriving Isle and Island untapped.\n2. Cast Ant-Man's Air Force ({1}{U}), paying U with the Island and the generic {1} with Thriving Isle. No mana is left.\n3. No attack. You have no creatures, and the new one is summoning sick.\n\n**Why:** Ant-Man's Air Force is your only castable spell. Coulson, Quake and Web Up all need {W}, and your only coloured sources are U and B. Depower costs 3 here, which is too much with 2 lands. A 2/1 flyer starts pressuring an empty board and uses all your mana.\n\n**Rule:** Use all your mana.\n\n**Confidence:** High\n\n**Trap:** Passing to hold up Depower. You can't afford it (it costs {2}{U} unless it targets an attacker), and doing nothing wastes the turn.\n\n**Their turn:** The opponent has 3 lands (W, W, U) and 6 cards, with no creatures yet. They may deploy a creature or removal. Your 2/1 is fragile, so don't count on it surviving. Next turn, play your second Island, which gives you 3 mana (U/B, U, U). You can attack with the flyer and hold Depower, or cast another blue spell.\n\n**Assumptions:** The opponent could counter or flash in a response with their open mana. You can't play around that this turn.\n\nANSWER: cast:23",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "high",
+      "rule": "Use all your mana"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:23",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  },
+  {
+   "id": "spell-comfort13-turn3-play",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:31",
+     "canonical": "cast:31",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 10089,
+     "text": "**Play:**\n1. Play Plains as your land drop.\n2. Cast Quake ({2}{W}): Plains pays the {W}, Island and Thriving Isle pay the {2}. You have 0 mana left.\n3. Attack with Ant-Man's Air Force alone. Its trigger can target A.I.M. Scientists for -1/-0, which doesn't matter here. Nothing of theirs has flying or reach, so it deals 2 damage unblocked.\n\n**Why:** Plains is your only white source, so you can make one white spell this turn. Quake adds a 3/3 body that matches their Scientists, and it makes every later noncreature spell (Web Up, Depower, Spy Kit) tap a creature or land. Web Up is premium removal, so save it for a better target than a vanilla 3/3.\n\n**Rule:** Develop the board first, and save removal for real threats.\n\n**Confidence:** Medium. Web Up on the Scientists right now is nearly as good.\n\n**Trap:** Casting Coulson and Spy Kit together. Both need {W}, and you only have one white source. Also, casting Web Up before Quake wastes the Quake tap triggers later.\n\n**Their turn:** They have 4 lands untapped and 5 cards in hand. The Scientists (3/3) can attack, but your untapped Quake (3/3) blocks it and trades or deters it. They may add more creatures or a counterspell, since they are on Islands, so don't overcommit next turn. Next turn, Web Up with Quake out will tap a blocker or land and exile their best permanent.\n\n**Alternative:** Play Plains and cast Web Up on the Scientists, then attack for 2. This clears their board but spends your best removal early.\n\nANSWER: cast:31",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "medium",
+      "rule": "Develop the board first, and save removal for real threats"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:31",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  },
+  {
+   "id": "spell-yield13-turn1",
+   "type": "spell",
+   "confidence": "high",
+   "samples": [
+    {
+     "answer": "cast:9",
+     "canonical": "cast:9",
+     "verdict": "acceptable",
+     "score": 1,
+     "latencyMs": 5143,
+     "text": "**Play:**\n1. Play a Forest from hand (land drop).\n2. Tap that Forest for {G} and cast one Thallid ({G}). The two Thallids in hand are identical, so either works.\n3. No attack, since you have no creatures. Mana left: none.\n\n**Why:** Thallid gets a spore counter at each of your upkeeps, so casting it now starts the clock. After three upkeeps it can make a Saproling. Your hand is Thallids plus lands, so using all your mana every turn is how you build a board.\n\n**Rule:** Use all your mana.\n\n**Confidence:** high\n\n**Trap:** Passing, or holding the Thallid back. Nothing in your hand needs the mana, and every turn of delay pushes back the first Saproling.\n\n**Their turn:** The opponent has a 1/1 Thallid that will be able to attack next turn, and a hand of 4 hidden cards. Your Thallid can block it. A 1/1 trade is fine, but don't block if you'd rather keep your spore-counter engine going. Next turn, play your second Forest and cast the other Thallid.\n\nANSWER: cast:9",
+     "model": "claude-sonnet-5-5",
+     "stated": {
+      "confidence": "high",
+      "rule": "Use all your mana"
+     }
+    }
+   ],
+   "stats": {
+    "n": 1,
+    "valid": 1,
+    "meanScore": 1,
+    "acceptable": 1,
+    "unacceptable": 0,
+    "other": 0,
+    "unparsed": 0,
+    "errors": 0,
+    "agreement": 1,
+    "answers": [
+     {
+      "answer": "cast:9",
+      "count": 1
+     }
+    ],
+    "meanRegret": null
+   }
+  }
+ ],
+ "summary": {
+  "byType": {
+   "spell": {
+    "cases": 5,
+    "samples": 5,
+    "score": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "acceptable": {
+     "mean": 1,
+     "lo": 1,
+     "hi": 1
+    },
+    "blunder": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0
+    },
+    "formatFailure": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.43448246865939283
+    },
+    "errors": 0,
+    "transportError": {
+     "mean": 0,
+     "lo": 0,
+     "hi": 0.43448246865939283
+    },
+    "unstable": 0,
+    "latencyMs": {
+     "mean": 6863,
+     "median": 6954,
+     "p90": 10089,
+     "max": 10089
+    },
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "regret": null
+   }
+  },
+  "total": {
+   "cases": 5,
+   "samples": 5,
+   "score": {
+    "mean": 1,
+    "lo": 1,
+    "hi": 1
+   },
+   "acceptable": {
+    "mean": 1,
+    "lo": 1,
+    "hi": 1
+   },
+   "blunder": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0
+   },
+   "formatFailure": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.43448246865939283
+   },
+   "errors": 0,
+   "transportError": {
+    "mean": 0,
+    "lo": 0,
+    "hi": 0.43448246865939283
+   },
+   "unstable": 0,
+   "latencyMs": {
+    "mean": 6863,
+    "median": 6954,
+    "p90": 10089,
+    "max": 10089
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "regret": null
+  },
+  "lowConfidence": 0,
+  "latencyMs": {
+   "mean": 6863,
+   "median": 6954,
+   "p90": 10089,
+   "max": 10089
+  },
+  "errors": 0,
+  "calls": 5
+ },
+ "promptFormat": "classic",
+ "promptSections": [
+  {
+   "name": "System prompt",
+   "meanChars": 4057,
+   "maxChars": 4057,
+   "cases": 5,
+   "share": 0.5739954725523486
+  },
+  {
+   "name": "Card text",
+   "meanChars": 1221,
+   "maxChars": 1924,
+   "cases": 5,
+   "share": 0.17277872099603847
+  },
+  {
+   "name": "You (state)",
+   "meanChars": 716,
+   "maxChars": 833,
+   "cases": 5,
+   "share": 0.10124504810413129
+  },
+  {
+   "name": "Opponent (state)",
+   "meanChars": 370,
+   "maxChars": 402,
+   "cases": 5,
+   "share": 0.0523203169213356
+  },
+  {
+   "name": "Bench answer",
+   "meanChars": 310,
+   "maxChars": 418,
+   "cases": 5,
+   "share": 0.04391624221844935
+  },
+  {
+   "name": "Question",
+   "meanChars": 193,
+   "maxChars": 193,
+   "cases": 5,
+   "share": 0.027306168647425015
+  },
+  {
+   "name": "Decision",
+   "meanChars": 187,
+   "maxChars": 187,
+   "cases": 5,
+   "share": 0.02645727221279004
+  },
+  {
+   "name": "Stack",
+   "meanChars": 14,
+   "maxChars": 14,
+   "cases": 5,
+   "share": 0.0019807583474816073
+  }
+ ]
+}

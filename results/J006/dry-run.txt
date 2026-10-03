@@ -1,0 +1,7 @@
+
+> forgecoach@0.1.0 bench:coach
+> node bench/coach/run.mjs --dry-run
+
+28 cases built: attack 4, block 5, choice 2, mulligan 4, pass 3, play_draw 2, spell 5, target 3
+All cases build and every answer is legal.
+dry-run exit 0

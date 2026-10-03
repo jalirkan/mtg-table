@@ -1,0 +1,284 @@
+
+> forgecoach@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.3 /home/justin-a/code/ForgeCoach
+
+ ❯ src/launcher.test.ts (23 tests | 9 failed) 12946ms
+   ❯ forgecoach.sh (23)
+     ❯ overnight (20)
+       × runs and collects the new cubes (run, report, meta.json under <cube>.meta.json) 200ms
+       × a cube file an older mtg-table lacks is skipped with a note, not a failure 195ms
+       × runs the queue one job at a time, copies the results, skips what is done, shows status 69ms
+       × a failed job is reported, the rest still run, and it is retried next time 57ms
+       × --hours 0 starts nothing 91ms
+       ❯ sizes (4)
+         × a size change never resumes into, or skips as done, a run with other sizes 50ms
+         × status shows the sizes of the run, the speed and the stop command 63ms
+       ❯ measured speed and the budget (2)
+         × assumes 10 s/draft until measured, then stores and uses the measured value 65ms
+       × --stop does nothing when nothing runs; TERM stops a running lab cleanly (child stopped, state stopped) 10036ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > runs and collects the new cubes (run, report, meta.json under <cube>.meta.json)
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/launcher.test.ts:184:22
+    182|       resetState();
+    183|       const r = await run(['overnight', '--no-pull', '--jobs', '1', '-…
+    184|       expect(r.code).toBe(0);
+       |                      ^
+    185|       expect(calls().filter((c) => c.startsWith('mtg-table report'))).…
+    186|         ['fair-fight', 'peasant', 'omega'].map((c) => `mtg-table repor…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > a cube file an older mtg-table lacks is skipped with a note, not a failure
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/launcher.test.ts:200:24
+    198|       try {
+    199|         const r = await run(['overnight', '--no-pull', '--jobs', '1', …
+    200|         expect(r.code).toBe(0);
+       |                        ^
+    201|         expect(r.out).toContain('meta-peasant: skipped');
+    202|         expect(r.out).toContain('Not a failure');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > runs the queue one job at a time, copies the results, skips what is done, shows status
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/launcher.test.ts:217:22
+    215|       resetState();
+    216|       const r = await run(['overnight', '--no-pull', '--jobs', '2', '-…
+    217|       expect(r.code).toBe(0);
+       |                      ^
+    218|       expect(calls()).toEqual([
+    219|         'mtg-table run cubes/synergy-cube-180.md --format grid --draft…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > a failed job is reported, the rest still run, and it is retried next time
+AssertionError: expected '\nForgeCoach overnight lab\n  [ok] mt…' to contain 'meta-synergy: failed'
+
+- Expected
++ Received
+
+- meta-synergy: failed
++
++ ForgeCoach overnight lab
++   [ok] mtg-table: /tmp/fc-launcher-RsHLPF/home/mtg-table (FORGECOACH_MTG)
++
++ Checking what ForgeCoach needs (Ubuntu 24.04.5 LTS)
++   [ok] curl
++   [ok] Java 21
++   [ok] Node.js 24
++   [ok] Forge 2.0.14: /tmp/fc-launcher-RsHLPF/home/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
++   [!!] That jar is not the exact Forge 2.0.14 build mtg-table is tested with; it may still work.
++   [ok] Claude Code (the coach works without an API key)
++   Cores: 8 physical (16 threads).  Jobs in parallel inside a job: 1 (--jobs, default: physical cores - 1).  Each is a Forge JVM of up to 4 GB; this PC has about 30 GB.
++   Sizes: evolve 8 generations x 1200 drafts; meta 2000 drafts per cube; learn 4 iterations x 1000 drafts, h2h 1000, deck h2h 500.
++
++ The queue (one job at a time, in this order, under nice)
++   1. [meta-synergy] Meta run: synergy cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/synergy-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/synergy-cube-180-overnight-n2000
++   2. [meta-pauper] Meta run: pauper cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/pauper-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/pauper-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/pauper-cube-180-overnight-n2000
++   In all, about 11.1 h at 1 workers (assumed 10 s/draft: not measured on this PC yet, it is after a run; an estimate, not a promise).
++   Results are copied to: /tmp/fc-launcher-RsHLPF/home/.local/share/forgecoach/{meta,omega,learned,reports}/
++   Log: /tmp/fc-launcher-RsHLPF/home/.cache/forgecoach/overnight.log   Progress: forgecoach status
++   [!!] The Forge engine is running (a game may be open).  The lab is heavy: it will slow the game down.
++   Left alone.  Stop the engine (forgecoach stop) and run this again, or add --yes to run alongside it.
++
+
+ ❯ src/launcher.test.ts:249:21
+    247|       const r = await run(['overnight', '--no-pull', '--jobs', '1', '-…
+    248|       expect(r.code).toBe(1);
+    249|       expect(r.out).toContain('meta-synergy: failed');
+       |                     ^
+    250|       expect(calls().filter((c) => c.includes(' run '))).toHaveLength(…
+    251|       const st = await run(['status']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > --hours 0 starts nothing
+AssertionError: expected '\nForgeCoach overnight lab\n  [ok] mt…' to contain 'limit is up'
+
+- Expected
++ Received
+
+- limit is up
++
++ ForgeCoach overnight lab
++   [ok] mtg-table: /tmp/fc-launcher-RsHLPF/home/mtg-table (FORGECOACH_MTG)
++
++ Checking what ForgeCoach needs (Ubuntu 24.04.5 LTS)
++   [ok] curl
++   [ok] Java 21
++   [ok] Node.js 24
++   [ok] Forge 2.0.14: /tmp/fc-launcher-RsHLPF/home/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
++   [!!] That jar is not the exact Forge 2.0.14 build mtg-table is tested with; it may still work.
++   [ok] Claude Code (the coach works without an API key)
++   Cores: 8 physical (16 threads).  Jobs in parallel inside a job: 1 (--jobs, default: physical cores - 1).  Each is a Forge JVM of up to 4 GB; this PC has about 30 GB.
++   Sizes: evolve 8 generations x 1200 drafts; meta 2000 drafts per cube; learn 4 iterations x 1000 drafts, h2h 1000, deck h2h 500.
++
++ The queue (one job at a time, in this order, under nice)
++   1. [evolve] Omega evolve: 8 generations x 1200 drafts (the cube changes by simulation)  (about 26.7 h at 1 workers)
++      tools/cubelab.sh evolve cubes/omega-cube-180.md --pool cubes/omega-seed-pool.tsv --generations 8 --drafts-per-gen 1200 --jobs 1 --seed 1 --out var/cubelab/evolve/omega-overnight-g8-d1200
++   2. [meta-synergy] Meta run: synergy cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/synergy-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/synergy-cube-180-overnight-n2000
++   3. [meta-modern-era] Meta run: modern-era cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/modern-era-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/modern-era-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/modern-era-cube-180-overnight-n2000
++   4. [meta-vintage] Meta run: vintage cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/vintage-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/vintage-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/vintage-cube-180-overnight-n2000
++   5. [meta-pauper] Meta run: pauper cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/pauper-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/pauper-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/pauper-cube-180-overnight-n2000
++   6. [meta-fair-fight] Meta run: fair-fight cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/fair-fight-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/fair-fight-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/fair-fight-cube-180-overnight-n2000
++   7. [meta-peasant] Meta run: peasant cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/peasant-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/peasant-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/peasant-cube-180-overnight-n2000
++   8. [meta-omega] Meta run: omega cube, 2000 drafts, then its meta.json  (about 5.6 h at 1 workers)
++      tools/cubelab.sh run cubes/omega-cube-180.md --format grid --drafts 2000 --jobs 1 --seed 1 --out var/cubelab/runs/omega-cube-180-overnight-n2000
++      tools/cubelab.sh report var/cubelab/runs/omega-cube-180-overnight-n2000
++   9. [learn] Learned drafter: synergy self-play, 4 iterations x 1000 drafts (h2h 1000, deck h2h 500)  (about 13.2 h at 1 workers)
++      tools/cubelab.sh selfplay cubes/synergy-cube-180.md --from var/cubelab/runs/synergy-cube-180-overnight-n2000 --iterations 4 --drafts-per-iter 1000 --h2h 1000 --deck-h2h 500 --games 1 --deck-synergy on --jobs 1 --out var/cubelab/selfplay/synergy-overnight-i4-d1000-h1000-k500
++   In all, about 78.8 h at 1 workers (assumed 10 s/draft: not measured on this PC yet, it is after a run; an estimate, not a promise).
++   --hours 0: no new job starts after 0 h (a job that has started finishes).
++   Results are copied to: /tmp/fc-launcher-RsHLPF/home/.local/share/forgecoach/{meta,omega,learned,reports}/
++   Log: /tmp/fc-launcher-RsHLPF/home/.cache/forgecoach/overnight.log   Progress: forgecoach status
++   [!!] The Forge engine is running (a game may be open).  The lab is heavy: it will slow the game down.
++   Left alone.  Stop the engine (forgecoach stop) and run this again, or add --yes to run alongside it.
++
+
+ ❯ src/launcher.test.ts:258:21
+    256|       resetState();
+    257|       const r = await run(['overnight', '--no-pull', '--jobs', '1', '-…
+    258|       expect(r.out).toContain('limit is up');
+       |                     ^
+    259|       expect(calls()).toEqual([]);
+    260|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > sizes > a size change never resumes into, or skips as done, a run with other sizes
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/launcher.test.ts:294:24
+    292|         resetState();
+    293|         const a = await run(['overnight', '--no-pull', '--jobs', '1', …
+    294|         expect(a.code).toBe(0);
+       |                        ^
+    295|         expect(calls()[0]).toContain('--drafts 600 --jobs 1 --seed 1 -…
+    296|         const same = await run(['overnight', '--no-pull', '--jobs', '1…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > sizes > status shows the sizes of the run, the speed and the stop command
+AssertionError: expected '\nForgeCoach\n  [ok] Engine running o…' to contain 'meta 600 per cube'
+
+- Expected
++ Received
+
+- meta 600 per cube
++
++ ForgeCoach
++   [ok] Engine running on ws://127.0.0.1:8642/ws (unknown)
++   Play: https://jalirkan.github.io/ForgeCoach/?play=1
++   mtg-table: /tmp/fc-launcher-RsHLPF/home/mtg-table
++   Forge jar: /tmp/fc-launcher-RsHLPF/home/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
++   Launcher:  not installed (curl -fsSL https://jalirkan.github.io/ForgeCoach/forgecoach.sh | bash -s install)
++   Log:       /tmp/fc-launcher-RsHLPF/home/.cache/forgecoach/engine.log
++
+
+ ❯ src/launcher.test.ts:311:24
+    309|         await run(['overnight', '--no-pull', '--jobs', '1', '--only', …
+    310|         const st = await run(['status']);
+    311|         expect(st.out).toContain('meta 600 per cube');
+       |                        ^
+    312|         expect(st.out).toContain('measured on this PC: 8.0 s/draft');
+    313|         expect(st.out).toContain('[done] meta-pauper');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > measured speed and the budget > assumes 10 s/draft until measured, then stores and uses the measured value
+AssertionError: expected 'MTG_DIR=/tmp/fc-launcher-RsHLPF/home/…' to contain 'OVN_SEC_PER_DRAFT=8.0'
+
+- Expected
++ Received
+
+- OVN_SEC_PER_DRAFT=8.0
++ MTG_DIR=/tmp/fc-launcher-RsHLPF/home/mtg-table
++ FORGE_JAR=/tmp/fc-launcher-RsHLPF/home/forge/forge-gui-desktop-2.0.14-jar-with-dependencies.jar
++
+
+ ❯ src/launcher.test.ts:325:87
+    323|         expect(d0.out).toContain('about 48 min at 7 workers');
+    324|         await run(['overnight', '--no-pull', '--jobs', '1', '--only', …
+    325|         expect(fs.readFileSync(path.join(home, '.config/forgecoach/con…
+       |                                                                                       ^
+    326|         const d1 = await run(['overnight', '--dry-run', '--jobs', '7',…
+    327|         expect(d1.out).toContain('about 39 min at 7 workers (measured …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  src/launcher.test.ts > forgecoach.sh > overnight > --stop does nothing when nothing runs; TERM stops a running lab cleanly (child stopped, state stopped)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/launcher.test.ts:422:40
+    420|         const exited = new Promise<void>((ok) => lab.once('exit', () =…
+    421|         for (let i = 0; i < 100 && !fs.existsSync(pidfile); i++) await…
+    422|         expect(fs.existsSync(pidfile)).toBe(true);
+       |                                        ^
+    423|         const st = await run(['status']);
+    424|         expect(st.out).toContain('overnight --stop');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed | 42 passed (43)
+      Tests  9 failed | 693 passed (702)
+   Start at  10:53:53
+   Duration  13.23s (tests 63%, transform 23%, import 14%, worker 1%)
+
+npm test exit 1

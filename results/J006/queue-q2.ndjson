@@ -1,0 +1,4 @@
+{"type":"queued","position":1}
+{"type":"running"}
+{"type":"text","text":"OK"}
+{"type":"done","stopReason":"end_turn","model":"claude-haiku-4-5-20251001"}
