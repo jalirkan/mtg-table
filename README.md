@@ -125,6 +125,13 @@ and real checks of the coach and board through Justin's Claude Code and browser.
   (branch `c/evolve-rigor`).
 - ForgeCoach `src/cube/score.ts`, `src/cube/flatness.ts`: review fixes (branch
   `c/review-fixes`).
+- mtg-table `tools/cubelab/run.ts`, `queue.ts`, `tools/ml/matchup*`, the ai-ladder deck-set
+  seeds: the second review's fixes (branch `c/review2-fixes`).
+- mtg-table `POST /match` in `tools/coach-helper.mjs` (an `aiPolicy` field), plus ForgeCoach
+  `src/draft/launch.ts` and `src/ui/draft/Setup.tsx`: choosing the opponent AI (branch
+  `c/match-ai-policy`, a separate cloud session).
+- ForgeCoach `src/lab/ladder.ts` and the `#lab` page: the AI leaderboard (branch
+  `c/ladder-page`, a separate cloud session).
 
 ## Safety rules
 
