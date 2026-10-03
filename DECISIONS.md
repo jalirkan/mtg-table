@@ -14893,6 +14893,216 @@ every key added is one more thing to vet); a free-form `--ai-search` string
 `aiPolicy` mean `plain` (it would silently undo a `play.sh --ai-search` start
 for every client that predates this); the search as the default (D314).
 
+## D334 — The coach grader: a logged decision rebuilt from the viewer's redacted view, every option played out by Forge Default through the search AI's own rollout, on common random numbers with racing; regret is the best win rate minus the option's
+
+*Branch `c/coach-grader`; D334–D336, the next numbers free on `main` at push
+(D326–D330 may be other lanes'). ForgeCoach's half is its branch `c/coach-regret`.
+D336 refocuses it on live analysis.*
+
+**2026-10-03** (accepted from Justin's PC session's proposal: the coach bench's
+headline metric becomes each answer's *regret*, estimated with engine playouts)
+
+**Decision.** `tools/coach-grade.sh` (Java: `bridge/src/mtgtable/grade/`) grades
+one decision of a recorded game — a ForgeCoach bench moment, `live` (everything
+before frame N, `liveMoment`) or `review` (the state frame N, `extractDecisions`),
+indexed exactly as ForgeCoach's `log.ts` — for the viewing seat:
+
+- **The position** is rebuilt as a live Forge game with Forge's own `GameState`
+  loader (`Rebuild`): life, poison and player counters, mana pool, land drops this
+  turn (from the turn's `land` events), every visible card with its tapped,
+  summoning-sick, damage, counter (display name → `CounterEnumType`), attachment,
+  owner and attacking state, tokens by their token script, each card carrying
+  `Id:<wire id>` so the loader's own targeting speaks wire ids, and the live cards
+  are matched back to wire ids zone by zone.
+- **What it may use is the search AI's rule (D312):** everything public, the
+  viewer's own hand and deck list, and the opponent's deck list — or, when that is
+  unknown, a plausible deck drawn from a pool (a cube's list: spells of the
+  opponent's seen colours, basics for the rest of 17 in 40). Hidden hand, library
+  and unknown face-down cards are that list minus every card seen; each playout
+  then redeals them with its own seed (`Determinizer`). **The real hidden cards are
+  never read** — the log does not carry them (hard rule 8), and nothing asks.
+- **Fidelity is reported, not assumed.** `GameState` rebuilds cards, not history:
+  until-end-of-turn effects, "this turn" memories other than land drops, hidden
+  exile, emblems and most stack items are lost. Every loss the rebuild can see
+  goes into the result's `fidelity` list, and the rebuilt battlefield's power and
+  toughness are compared with the log's card by card. Two loader artefacts are
+  undone: triggers it fires again while declaring the logged attackers are removed
+  when the log's stack is empty, and the blocks its own advance into declare
+  blockers asked of the viewer's Forge controller are cleared.
+- **Options**, in the bench's tokens: `spell` — `pass` and `cast:<id>` for every
+  spell the engine lets the viewer cast and pay for now, aimed as Forge's AI aims
+  it (`canPlaySa`, else its mandatory targeting); with the land drop open, Forge's
+  choice of land is played first in every option (`--lands` grades land drops as
+  options instead), and copies of one card are one option listed under each token
+  (`alias`). `attack` — every legal attack on the opponent by creature class
+  (ForgeCoach's `classKey`: identical creatures are one choice), or above `--cap`
+  a shortlist (none, all, Forge's, Forge's with one class more or less, each class
+  alone, the case's own answers). `block` — every legal assignment by blocker
+  class, deduplicated by class, or a shortlist likewise. `target` — every id the
+  engine offered: for a spell or ability being cast, cast it with that target; for
+  a trigger of a permanent, its `Execute` SVar put on the stack with that target
+  above the logged spell(s) (`putonstack`). Forge Default's own choice is marked
+  (`forge`), so every grade also says how Forge itself would have done.
+- **Playouts reuse the search, not a fork of it.** `SearchPolicy`'s rollout became
+  `SearchPolicy.playout` (public, static) and its candidates public factories
+  (`priorityCand`, `attackCand`, `blockCand`); the search calls it with its old
+  limits, so its behaviour is unchanged. A playout copies the rebuilt game
+  (`LenientGameCopier`), forces the option as the viewer's first answer
+  (`RolloutController`), redeals the hidden cards, and lets Forge's Default AI play
+  both seats to the end of the game (or `--horizon T` turns and then
+  `SearchPolicy.leaf` through a logistic, an option for cheap passes) under the
+  round's seeded `MyRandom`. Won 1, lost 0, a draw or a 40-turn cap 0.5.
+- **Common random numbers and racing** (`Racer`, `GradeMath`). Round r has one
+  seed, a function of (run seed, decision, r) only; every option plays round r on
+  that seed — the same determinization and the same engine stream at the start —
+  so differences are paired. After `--initial` rounds (40) and every `--batch`
+  (20), an option whose paired difference to the current best is above zero at
+  99% stops; the rest play on to `--playouts` rounds (200), until one is left, or a
+  budget runs out. An option that fails in a fifth of its rounds is retired and
+  flagged.
+- **The table.** Per option: n, the win rate with Wilson's 95% interval (a draw a
+  half), and the regret — the best active option's mean minus this one's, as the
+  mean of the paired differences over the rounds both played, with a normal 95%
+  interval whose standard error is floored at 1/n, clipped to [0, 1]; the best's
+  own interval runs from 0 to the most another option might beat it by. The
+  table's `noise` is the median regret half-width. Honest numbers: at 200 playouts
+  a win rate near 50% is ±7 points (Wilson), a paired difference between close
+  options ±3–5.
+- **Threads**: a grading is one task on Forge's game pool, started with
+  `GameAction.invoke` on a scratch game and waited on with a latch, exactly as
+  `AiBench` starts its games (D309) — one task at a time per JVM; no
+  `invokeInGameThread`, no thread of ours, no `CardView`; the lint's lists are
+  unchanged. `batch --jobs K` runs K JVMs, each with its own Forge home (D129).
+- **Held by** `mtgtable.grade.GradeSelfTest` in `bridge/build.sh` (39 checks: CRN
+  seeds, Wilson, paired differences, the regret table on synthetic options with
+  known win rates — pairing narrows a close difference's interval below an
+  unpaired one's — racing retires the clearly worse options and spends its budget
+  on the close ones, budgets, failure retirement, enumeration by class, token
+  spelling, the log reader's moments) and `coach-grade.sh selftest` (the engine
+  smoke, ten playouts: the rebuild reproduces the log's life, hand size and every
+  battlefield card, one seed one spec, one round seed gives every option's copy the
+  same opponent library order and another seed another, a real grade).
+
+**Measured** in this container (4 shared cores, under load from other lanes; one
+JVM, never more than 20 playouts): a full-game playout from mid-game costs about
+4–6.5 s (a turn-3 spell decision, 9 playouts: 6.4 s each; a turn-9 target, 12:
+4.3 s), a playout to the end of the next turn 0.4–2 s. On the PC's 9700X with 6–7
+JVMs, a 5-option decision at 200 rounds with racing (roughly 600 playouts) is
+about 5–10 minutes per JVM; the PC jobs measure it.
+
+**Rejected.** Replaying the real game from its seed (it reads the hidden cards and
+library order, the cheat D312 forbids, and a human-seat game is not replayable);
+Forge's own simulation (`GameSimulator`: copies the real hidden zones, D311);
+writing a second rollout for the grader (two definitions of "play it out" would
+drift; the search's is already tested); independent sampling per option (pairing
+is what makes a few points measurable at a few hundred playouts); a learned
+evaluator as the default leaf (D316's model is per cube and approximate; to the
+end of the game is the yardstick, the horizon is a cheap-pass option); enumerating
+every attacker subset (2^n, mostly duplicates of identical creatures).
+
+## D335 — The coach bench's yardstick is "best against Forge Default"; every number carries its grading noise, everything is paired, about ten cases are held out, and a low-information table is reported as such
+
+**2026-10-03**
+
+**Decision.** A regret is measured against **Forge's Default AI playing both
+seats** from the decision on, the hidden cards redealt from what the player could
+know. Why that yardstick: it is the opponent ForgeCoach actually seats (the coach's
+job is to beat it); it is fixed and reproducible (a perfect-play oracle does not
+exist for Magic, and a stronger AI would itself move as it improves); and it is
+cheap enough to grade a bench. Its known limits, stated wherever regret is
+reported: it rewards lines that exploit Forge's weaknesses and can call a line
+that is right against a strong human wrong; the player's own later play is
+Forge's, not the player's; and the rebuild loses history (D334's fidelity list).
+
+The methodology rules, from the reviews of this proposal:
+
+- **Pair everything.** Options within a decision share each round's seed (D334);
+  two coach runs are compared case by case on the same tables (ForgeCoach
+  `--compare`: the paired bootstrap over cases, the headline once both runs carry
+  regret).
+- **Report grading noise next to every number.** A case's table carries its
+  `noise`; every graded answer carries its regret interval; ForgeCoach's report
+  prints the mean half-width beside mean regret, and its per-case table each
+  case's.
+- **Low information is said, not hidden.** An answer whose regret interval is
+  wider than ±0.08 (ForgeCoach `LOW_INFO_HALF_WIDTH`) is counted as
+  low-information; the report gives their number and the mean regret without
+  them. A mined case whose table is that noisy, or whose rebuild lost something
+  that changes the position, is written with `confidence: low` (run, not scored).
+- **Hold out about ten cases.** `bench:coach -- import-graded --write --holdout 10`
+  marks them (`holdout: true`), spread over decision types and chosen by a hash of
+  the id, never by results; a plain run leaves them out (`--split dev`), and
+  `--split holdout` runs them only to confirm a finished prompt change. The prompt
+  is never tuned on what they show.
+- **Format is not quality.** A missing, unparsable or illegal answer has no regret
+  and stays a format failure; a legal answer the table has no option for is
+  counted apart ("not in table").
+
+**Rejected.** Regret against the best option by a stronger engine (no stable
+reference, and the search AI is built on Forge Default anyway); scoring with the
+acceptable/unacceptable lists alone (coarse, hand-written, and blind to how much
+an answer costs); dropping noisy cases silently (the reader must see what was
+thin).
+
+## D336 — The grader's main use is a live engine analysis the coach explains: `coach-grade.sh serve` answers "analyse this decision" for the game in play inside a time budget; the bench's mining and large grading runs are dropped
+
+**2026-10-03** (Justin, mid-lane: cloud LLMs change often and outside our
+control, so heavy coach benchmarking is not worth the compute now)
+
+**Decision.** D334's grader is kept whole — the rebuild from the redacted view,
+the determinization, the options, the paired playouts on common random numbers,
+the per-option intervals and the racing — and its main purpose becomes an
+**engine analysis for live play**: for the decision in front of the player, the
+engine estimates each option's win rate, and (in a follow-up) the coach's
+prompt carries that table, so the model explains the engine's numbers instead
+of working the position out — cheaper, steadier across model updates, and
+within a small model's reach.
+
+- **`coach-grade.sh analyse`** grades one decision with the live settings: a
+  wall-clock budget (`--budget-ms`, default 3000) instead of a playout count,
+  at least `--min-rounds` 2 rounds whatever the budget says (an answer with no
+  numbers is no answer), playouts to the end of this turn (`--horizon 0`, the
+  search's own choice for a 1.5 s think, D312) scored by `SearchPolicy.leaf`
+  through a logistic — a pseudo win rate, marked `"measure": "leaf"` (a
+  to-the-end grade says `"wins"`) — racing from round 6, options capped at 12.
+  `--frame` defaults to the end of the log, so a live game's
+  `var/games/<id>/frames.jsonl` is read as it stands (a half-written last line
+  is skipped). A round the budget cuts short is dropped, so every option stays
+  paired over the same seeds.
+- **`coach-grade.sh serve`** keeps one booted engine (Forge's start costs ~10 s)
+  and answers requests one at a time: one JSON object per stdin line,
+  `{"id", "log", "type", "frame"?, "mode"?, "oppDeck"?, "oppPool"?, "deck"?,
+  "budgetMs"?, "horizon"?, "seed"?, "only"?, "minRounds"?}`, answered by one
+  JSON line on stdout (`{"ready":true}` first, Forge's own printing on stderr):
+  the request's `id`, `status` (`ok`, `trivial`, `unsupported`, `error`),
+  `measure`, `rounds`, `playouts`, `stop`, `best`, `forgeChoice`, `noise`,
+  `fidelity`, `notes`, `options[]` (`token`, `label`, `n`, `winRate`, `winLo`,
+  `winHi`, `regret`, `regretLo`, `regretHi`, `best`, `forge`, `alias`), `ms`,
+  `wallMs`. The tokens are the coach bench's (`cast:<id>`, `attack:<ids>`,
+  `block:<b>><a>`, `target:<id>`, `pass`) over the log's own card ids, so the
+  board and the prompt can name them. Wiring it into the coach helper and the
+  prompt is the follow-up; the helper owns the process, as `play.sh` owns the
+  bridge.
+- **Hidden information** is D334's rule unchanged: the request names the log
+  (the viewer's redacted view) and, at most, deck lists the player may know; the
+  engine never reads the bridge's live game.
+- **Dropped:** the turning-point miner and the large PC grading jobs. Kept, as
+  built: the bench's `Sample.regret` plumbing in ForgeCoach (cases may carry a
+  regret table; `import-graded --write`, `regrade`, `--split`) and `grade` /
+  `batch` here, for when a bench run is worth its compute again.
+
+**Measured** here (4 shared cores at a load average near 20, so every figure is
+several times the PC's): two decisions through one `serve` process, 3 s budget,
+minimum two rounds — a 2-option block in 7.5 s (4 playouts), a 6-option spell
+in 6.4 s (12 playouts); boot ~10 s once. The PC smoke job measures the real
+latency.
+
+**Rejected.** A JVM per question (a 10 s boot each time); full-game playouts
+for live use (seconds per playout: a few rounds in a budget, all noise); asking
+the bridge's live game for the analysis (it would read the real hidden cards,
+and a second engine user on the seat's game thread is D309's exclusion argument
+undone); a budget that may return no rounds (the coach would explain nothing).
+
 ## D346 — The coach helper caps thinking per question: `POST /coach` takes `"thinking": "off"|"low"|"default"`, set on the child through `MAX_THINKING_TOKENS` and `CLAUDE_CODE_EFFORT_LEVEL`, and `/health` advertises it
 
 *Branch `c/helper-thinking`; D346, the next number free of every lane's claim (open branches hold numbers up to about D345).*
