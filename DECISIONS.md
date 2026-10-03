@@ -14127,3 +14127,120 @@ and the profile as before (D105), and nothing of the search reaches a frame.
 decision, and the gate's recordings must stay Forge's); a new profile name
 (profiles are `.ai` files, D311); a ForgeCoach-side switch now (the launcher's
 contract is D303's, changed in both repositories or not at all — a follow-up).
+
+## D322 — Bridge drafts: a pool sampled afresh per draft from two or more cubes, each cube's share stratified by its sections, every card tagged with its source cube, the cubes' ratings put on one scale per draft
+
+*Branch `c/matchup-model`; D322–D324 (the next free numbers after the search
+AI's D312–D314, the lab recording's D315, the evaluator's D316–D317 and the
+ladder's D318–D321 on their branches).*
+
+**2026-10-03** (the owner's request: one model over every cube's cards, and
+"bridge drafts" between cubes)
+
+**Context.** Games inside one cube rank that cube's cards against each other
+and nothing else; the cubes' card scales float apart. A game between a deck
+drafted from cube A's cards and one from cube B's links the two scales, the
+way games across pools anchor an Elo ladder.
+
+**Decision.** `tools/cubelab.sh run --bridge a,b[,c]` (`tools/cubelab/bridge.ts`)
+drafts from a pool sampled for each draft from its seed (rng stream `bridge`;
+D294's rule, so a pool, its picks and its decks are a function of the seed):
+each cube gives its share (`--bridge-ratio`, equal by default) of
+`--bridge-size` (180) cards, apportioned over that cube's own sections by the
+largest remainder, so each half keeps its cube's colour balance; a card two
+cubes list is taken once and the next card of its section stands in. Every
+draft line carries `bridge: {sources, shares, from}`, `run.json` a `bridge`
+block and `cubeFile: bridge:<a>+<b>`; a run without `--bridge` writes what it
+wrote before (one added optional field in each type, one added term in the
+resume check). The cubes' ratings are on different scales, and drafters
+comparing them take mostly the stronger cube's cards (measured: 17–50% of a
+deck from Pauper in a Pauper + Vintage pool), so by default
+(`--bridge-ratings even`) each draft rescales each cube's cards to the pool's
+mean and SD — order within a cube kept, the halves weighed evenly (measured:
+41–56%); `own` keeps the raw ratings.
+
+**Rejected.** One pool per run (fewer contexts per night, and a run's
+`cards.json` is then one arbitrary sample); deck composition forced (one deck
+from each cube): it would test the cubes against each other, not mix them, and
+the drafters would no longer draft; leaving the ratings raw: the weaker cube's
+cards would seldom meet the stronger cube's, the link a bridge is for. The
+matchup model reads only what was played, so how a deck came to be does not
+bias it — it decides which cards meet.
+
+## D323 — The overnight queue: one root folder of normal and bridge drafts over every cube, drafts allocated by card uncertainty pooled by name, bridge pairs chosen for information, each pool key's seeds handed out once across nights
+
+**Decision.** `tools/cubelab.sh queue plan|run --night N --drafts D`
+(`tools/cubelab/queue.ts`). `--bridge-share` (0.2) of the drafts go to bridge
+pairs, the rest to the cubes' own drafts; in each half drafts follow weights.
+A cube's is Σ var_c / m_c over its cards — var_c the card's uncertainty
+(`--power`'s SD², else 1 / (16 + g_c/4) from its decisive games so far under
+the root, pooled by name across cubes), m_c the number of cubes listing it —
+so a card several cubes share is paid for once and a cube whose cards are
+covered elsewhere gets fewer drafts. A pair's is novelty (1 − shared / the
+smaller cube) × link (1.0 for adjacent power tiers, 0.7 for flat with powered,
+0.4 within a tier) × its cards' mean uncertainty; a pair under 0.25 before
+uncertainty is skipped (Omega + Vintage, 108 cards shared: 0.16; Fair Fight +
+Pauper, 99: 0.18). Each pool key (`normal/<cube>`, `bridge/<a>+<b>` in one
+order) has one run folder that nights append to; `queue.json` hands out its
+seeds once, a plan is refused if it repeats one, a written plan is re-read on
+a re-run, and `run` skips a seed already in `drafts.jsonl` — no deck pair is
+drafted twice and a resumed night replays no finished draft. Chunks of every
+key interleave, so a night cut short has some of everything; a failed chunk
+is reported and the night goes on. One engine lookup covers all cubes' cards
+(`engineFacts` now reuses a cached lookup that covers the names asked for).
+`--record-every N` is passed to every run for D315's in-worker recording, and
+the night stops if the lab does not record. The knobs are `QUEUE_DEFAULTS`
+and `TIERS`, with a row each in the guide.
+
+**Rejected.** Round-robin pairs (half the pairs re-draft nearly one pool);
+a separate night per model (the evaluator and the matchup model read one
+pooled recorded run); a per-cube rating pass (it rates a shared card again
+in every cube).
+
+## D324 — The matchup model: P(deck A beats deck B) over every cube's cards at once; the plain pooled Bradley-Terry first, bigger models only if they beat it on held-out drafts and cubes; priors and intervals by draft
+
+**Decision.** `tools/ml/matchup_data.py` reads cube lab run folders — no new
+lab output: `drafts.jsonl` already holds both played decks, the winner and the
+verified play side — into one record per decisive game (v1: `id, draft, pool,
+kind, cubes, seed, game, deckA, deckB, onPlay, winner, from?, run`), each game
+once (pool, seed, game and both decks), cards by name. `tools/ml/matchup.py
+train` fits a ladder: **M0**, a pooled Bradley-Terry on cards, logit P(A) =
+Σ (n_A − n_B)·p_c + β·play with p_c = w·f_c + b_c — one power per card, the
+card's features (mana value, colours, types, P/T, keywords, rules-text
+patterns, Forge's rank, from the lab's cached engine facts) as the prior mean
+so an unseen card gets a guess; **M1**, M0 + a per-cube deviation; **M2**, M0
++ embeddings, a deck term and an antisymmetric matchup term (torch, opt-in).
+Baselines: a coin with the play, plain Bradley-Terry, and the per-cube shrunk
+win rates as `meta.json` computes them. The prior widths are chosen by 5-fold
+cross-validation **grouped by draft**, never by the Laplace evidence, which
+counts a best of three's games as independent and picked too loose a prior
+(τ = 0.035) on the first real data; the split is by draft, held-out intervals
+bootstrap over drafts, a card's SD comes from refits on bootstrap resamples of
+the training drafts. Held-out cubes are scored with every game touching the
+cube removed. Outputs: `power.tsv` (one scale for every card, its SD, its
+feature prior), `cube-dev.tsv`, `balance.json` and `report.md` (the balance
+number: the SD across a cube's decks of their predicted win rate against the
+cube's other decks; bridge composition; overlap), `model.json`. `design`
+(`matchup_design.py`) is a prototype: in-class swaps under a swap budget,
+candidates from cubes at or below the target's power tier, every output marked
+PROPOSED BY MODEL, UNVERIFIED with the lab command that verifies it on fresh
+seeds.
+
+**Its place.** It is meant to become the one source of card value — to
+replace `meta.json`'s per-card win rates (deck value, confounded) and
+`learn.ts`'s per-cube fit (and its τ of 0.25, which implies 85/15 matchups
+from cards alone) — not to sit beside them. The switch (`meta.json`
+`value`/`valueSd`, then `evolve`'s cuts, ForgeCoach's `score.ts` and
+flatness) waits for data that shows card signal.
+
+**Measured** (`docs/evidence/matchup-model.md`): 285 decisive games, 143
+drafts. Out-of-fold by draft no model beats the coin (0.6925): M0 +0.012
+[−0.010, +0.037], M1 +0.014, the per-cube meta rates +0.086 [+0.002, +0.178],
+M2 +0.080 [+0.022, +0.145]; cross-validation picks τ = 0.002. That is the
+pipeline proven, not a card scale: the review's estimate is about 5,000 games
+a cube, which the PC's nights provide.
+
+**Rejected.** Starting with embeddings (they lost to M0 out-of-fold at this
+size, as D305's wide evaluators did); the per-cube ratings as the value (the
+confounding, and on these games they predict worse than a coin); a separate
+model per cube (72% of card-games here are of cards two or more cubes list).

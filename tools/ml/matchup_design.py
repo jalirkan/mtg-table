@@ -17,11 +17,18 @@ cube has them.  It minimises
   + wArch   * SD over the ten colour pairs of the pair's deck strength the archetypes even
   + wViable * pairs with fewer than 30 castable nonland cards           every archetype viable
   + wUnc    * mean bootstrap SD of the pool's cards                     prefer cards the data knows
+  + wSwap   * swaps from the target cube                                change only what the model is sure of
 
 where a pair's deck strength is the summed power of the 23 best nonland
 cards castable in it (its two colours, its gold cards, colourless) -- a
 proxy for the deck a drafter would build, not a drafted deck.  Simulated
-annealing over random in-class swaps, seeded, so a run is repeatable.
+annealing over random in-class swaps, seeded, so a run is repeatable, with at
+most `--max-swaps` (20) cards changed, candidates only from cubes at or below
+the target's power tier (TIER), and a small cost per swap.  Without those
+guards the first prototype rewrote 144 of synergy's 180 cards on powers that
+were noise, dropped its sacrifice theme and added Black Lotus.  The themes
+are not in the objective: a swap keeps a card's colour class, not its role,
+so read the swap table before playing a candidate.
 
 WHY IT IS ONLY A CANDIDATE.  An optimiser over a surrogate exploits the
 surrogate's errors (the optimiser's curse): it will favour cards whose power
@@ -43,7 +50,10 @@ import matchup_data as MD
 
 PAIRS = ["WU", "WB", "WR", "WG", "UB", "UR", "UG", "BR", "BG", "RG"]
 SECTION = {"W": "White", "U": "Blue", "B": "Black", "R": "Red", "G": "Green"}
-W = {"wTarget": 400.0, "wFlat": 4.0, "wArch": 1.5, "wViable": 1.0, "wUnc": 6.0}
+W = {"wTarget": 400.0, "wFlat": 4.0, "wArch": 1.5, "wViable": 1.0, "wUnc": 6.0, "wSwap": 0.0005}
+# Power tiers, as tools/cubelab/queue.ts's TIERS: a candidate comes from a cube at or below the target's tier, so a
+# card the model has not yet learned is strong (Black Lotus, with a handful of games) cannot slip into a flatter cube.
+TIER = {"pauper": 0, "peasant": 0, "fair-fight": 0, "synergy": 1, "modern-era": 1, "omega": 2, "vintage": 2}
 
 
 def colour_class(name: str, fact: Dict[str, Any], land: bool) -> str:
@@ -59,7 +69,8 @@ def colour_class(name: str, fact: Dict[str, Any], land: bool) -> str:
     return "multi"
 
 
-def objective(pool: List[str], power: Dict[str, float], sd: Dict[str, float], cls: Dict[str, str], target: float) -> Dict[str, float]:
+def objective(pool: List[str], power: Dict[str, float], sd: Dict[str, float], cls: Dict[str, str], target: float,
+              start: frozenset = frozenset()) -> Dict[str, float]:
     nl = [n for n in pool if cls[n] != "land"]
     ps = [power[n] for n in nl]
     mean = sum(ps) / len(ps)
@@ -73,8 +84,9 @@ def objective(pool: List[str], power: Dict[str, float], sd: Dict[str, float], cl
     ms = sum(strengths) / len(strengths)
     arch = math.sqrt(sum((x - ms) ** 2 for x in strengths) / (len(strengths) - 1))
     unc = sum(sd.get(n, 0.0) for n in nl) / len(nl)
-    total = W["wTarget"] * (mean - target) ** 2 + W["wFlat"] * flat + W["wArch"] * arch + W["wViable"] * short + W["wUnc"] * unc
-    return {"total": total, "meanPower": mean, "flatSd": flat, "archSd": arch, "shortPairs": short, "meanSd": unc,
+    swaps = sum(1 for n in pool if n not in start) if start else 0
+    total = W["wTarget"] * (mean - target) ** 2 + W["wFlat"] * flat + W["wArch"] * arch + W["wViable"] * short + W["wUnc"] * unc + W["wSwap"] * swaps
+    return {"total": total, "swaps": swaps, "meanPower": mean, "flatSd": flat, "archSd": arch, "shortPairs": short, "meanSd": unc,
             "pairStrength": dict(zip(PAIRS, [round(x, 3) for x in strengths]))}
 
 
@@ -85,7 +97,9 @@ def design_cmd(a) -> int:
     cubes = MD.cube_lists(a.repo)
     if a.target_cube not in cubes:
         raise SystemExit(f"no committed cube {a.target_cube} (have {', '.join(sorted(cubes))})")
-    population = sorted({n for v in cubes.values() for n in v if n in power and n not in MD.BASICS})
+    tier = TIER.get(a.target_cube, 1)
+    allowed = {c for c in cubes if TIER.get(c, 1) <= tier}
+    population = sorted({n for c in allowed for n in cubes[c] if n in power and n not in MD.BASICS} | {n for n in cubes[a.target_cube] if n in power})
     cls = {n: colour_class(n, facts.get(n) or {}, bool(land.get(n))) for n in population}
     start = [n for n in cubes[a.target_cube] if n in cls and cls[n] != "multi"]
     target = sum(power[n] for n in start if cls[n] != "land") / max(1, sum(cls[n] != "land" for n in start))
@@ -94,7 +108,8 @@ def design_cmd(a) -> int:
         by_class.setdefault(cls[n], []).append(n)
     rng = random.Random(a.seed)
     pool = list(start)
-    cur = objective(pool, power, sd, cls, target)
+    st = frozenset(start)
+    cur = objective(pool, power, sd, cls, target, st)
     first = dict(cur)
     temp = 0.05 * cur["total"]
     for it in range(a.iters):
@@ -104,7 +119,9 @@ def design_cmd(a) -> int:
             continue
         new = list(pool)
         new[i] = rng.choice(cands)
-        nxt = objective(new, power, sd, cls, target)
+        if sum(1 for n in new if n not in st) > a.max_swaps:
+            continue
+        nxt = objective(new, power, sd, cls, target, st)
         t = temp * (1 - it / a.iters) + 1e-9
         if nxt["total"] < cur["total"] or rng.random() < math.exp((cur["total"] - nxt["total"]) / t):
             pool, cur = new, nxt

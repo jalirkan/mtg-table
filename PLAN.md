@@ -413,6 +413,12 @@ villain identity's rebase, were removed at the same recount.)
 | [Draft learning](#fu-draft-learn) | 3 | open | Learned pairs are added on top of the theme term, which they partly re-count | `tools/cubelab/pick.ts` |
 | [Draft learning](#fu-draft-learn) | 4 | open | Under Winston, the learned seat's blind-card expectation is the baseline's | `tools/cubelab/selfplay.ts` |
 | [Draft learning](#fu-draft-learn) | 5 | open | The hand weights (synergy, lean, commitAt, the deck score's) are not learned | `tools/cubelab/weights.ts` |
+| [Matchup model](#fu-matchup) | 1 | open | No card-level signal yet: at 285 games no model beats a coin out-of-fold; the PC nights are the data | `tools/ml/matchup.py` |
+| [Matchup model](#fu-matchup) | 2 | open | Held-out Synergy: powers learned in the other cubes predicted it worse than a coin (+0.061 log-loss, [+0.022, +0.103]) | `tools/ml/matchup.py` |
+| [Matchup model](#fu-matchup) | 3 | open | The switch: `meta.json` `value`/`valueSd` from M0, then `evolve`'s cuts, ForgeCoach's `score.ts` and flatness read it | `tools/cubelab/meta.ts` |
+| [Matchup model](#fu-matchup) | 4 | open | `design`'s objective is a proxy (pair strength from the 23 best powers, no drafting, no themes) | `tools/ml/matchup_design.py` |
+| [Matchup model](#fu-matchup) | 5 | open | `--bridge-ratings even` is measured on 4 drafts; read the composition table after night 1 | `tools/cubelab/bridge.ts` |
+| [Matchup model](#fu-matchup) | 6 | open | A recorded bridge run's `cube.md` (D315) is the source cubes concatenated: check the evaluator's vocabulary reads it | `tools/cubelab/run.ts` |
 
 ### Questions only the owner can settle
 
@@ -10180,6 +10186,64 @@ D312–D314. Roadmap step 2 of D311 (and step 3, combat, with it).
 6. **ForgeCoach's match launcher cannot ask for the search yet**: `play.sh
    --ai-search` keeps it across launcher restarts, but `POST /match` has no field
    for it (D303's contract changes in both repositories at once).
+
+## The matchup model — one card scale across every cube, bridge drafts and the overnight queue (2026-10-03, D322–D324)
+
+**Status: built, tested, smoke-run (12 queue games, 6 bridge drafts, 4 more
+under `even` ratings) and trained on the 285 decisive games already on disk;
+the full gate was not run** (gate 12h runs the new tests through `discover`;
+nothing the gate plays changed). Branch `c/matchup-model`, off `main`'s
+`f8ea676`, `180ee08` merged in; D322–D324. The owner's request: one model over
+the whole card population of his cubes instead of a rating per cube, with
+bridge drafts between cubes. `docs/evidence/matchup-model.md` is what was run.
+
+```bash
+tools/cubelab.sh run --bridge pauper,modern-era --drafts 40 --games 1 --jobs 4     # D322
+tools/cubelab.sh queue plan --night 1 --drafts 40000 --jobs 7                       # D323
+tools/cubelab.sh queue run  --night 1 --drafts 40000 --jobs 7 --record-every 1
+python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup --holdout-cubes all   # D324
+python3 tools/ml/matchup.py design --model var/ml/matchup --target-cube synergy --out var/ml/design/synergy.md
+```
+
+Measured (285 games, 143 drafts, out-of-fold by draft): coin 0.6925, M0 0.7040
+(+0.012 [−0.010, +0.037]), M1 +0.014, the per-cube `meta.json` rates +0.086
+[+0.002, +0.178] (worse than a coin), embeddings +0.080. Cross-validation
+picks τ = 0.002 logits per card copy — no card signal at this sample, as the
+methodology review predicted (about 5,000 games a cube). The overlap: 722
+distinct cards in 1,260 slots, 72% of card-games are of a card two or more
+cubes list, so pooling needs about 57% of the games rating seven cubes apart
+would.
+
+<a id="fu-matchup"></a>
+### Matchup model follow-ups
+
+1. **No card-level signal yet.** Out-of-fold, no model beats a coin on 285
+   games; the PC's pooled recorded nights (`queue run --record-every 1`) are
+   the data, and the ladder's rule stands: M0 until a bigger model beats it on
+   held-out drafts and held-out cubes.
+2. **Held-out Synergy got worse than a coin** (+0.061 [+0.022, +0.103], 96
+   games): the other cubes' 189 games picked τ = 0.035 and their powers did
+   not transfer. Either noise or context (a card is another card in another
+   cube); M1's per-cube deviations are where context goes. Re-test on night 1.
+3. **The switch is not made.** The model is meant to replace `meta.json`'s
+   per-card win rates and `learn.ts`'s per-cube fit as the one card value.
+   What it touches: `meta.json` gains `value`/`valueSd` (schema 1 allows an
+   added field) from M0's `power.tsv`; `evolve.ts`'s dominant-by-wins and
+   dead cuts read it instead of `winRateShrunk`; ForgeCoach's
+   `src/cube/score.ts` (and through it the Draft-vs-AI drafter and the deck
+   assistant) and `src/cube/flatness.ts` read it; `learn.ts` and `selfplay`
+   take their prior from it. Decide after night 1 shows signal.
+4. **`design` is a prototype** whose objective is a proxy: a colour pair's
+   strength is the summed power of its 23 best castable cards, with no
+   drafting, no deckbuilding and no themes. Every output is a candidate the
+   lab must verify on fresh seeds; at today's sample its swaps are noise.
+5. **Bridge composition.** Under each cube's own ratings the weaker cube gave
+   17–50% of a deck's spells (Pauper + Vintage); `--bridge-ratings even`
+   (the default) gave 41–56% on four drafts. Read the composition table in
+   `report.md` after night 1.
+6. **A recorded bridge run** (`--record-every`, D315) copies the cube
+   markdown it hashed — the source cubes concatenated — to `cube.md`; check
+   that the evaluator's dataset reads it as one vocabulary.
 
 ## Deferred — out of scope for M0–M7
 

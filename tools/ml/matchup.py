@@ -15,7 +15,7 @@ other card in both decks and of the play/draw, so every game -- in any cube,
 or a bridge draft between two -- informs the same card parameters, keyed by
 the card's name.  It is meant to REPLACE the per-cube card win rates
 (meta.json's winRateShrunk) and learn.ts's per-cube fit as the one source of
-card value, not to sit beside them (D-matchup in DECISIONS.md).
+card value, not to sit beside them (D324).
 
 THE LADDER.  Simplest first; anything bigger must beat it on held-out drafts
 AND held-out cubes before it is used:
@@ -596,6 +596,23 @@ def train_cmd(a: argparse.Namespace) -> int:
     L += ["Calibration of M0 on the test split:", "", "| bin | games | predicted | observed |", "|---|---|---|---|"]
     L += [f"| {c[0]:.1f}-{c[0] + 0.1:.1f} | {c[1]} | {c[2]} | {c[3]} |" for c in mt["calibration"]] + [""]
 
+    # Out-of-fold over EVERY game: 5 folds by draft, each predicted by a ladder fitted on the other four (its prior
+    # widths chosen inside, by the same grouped cross-validation).  The test split above is a few dozen games; this
+    # uses them all, and is the number to read while the corpus is small.
+    oof: Dict[str, np.ndarray] = {}
+    if a.oof:
+        fold = np.array([int(hashlib.sha1(("oof" + dr).encode()).hexdigest()[:8], 16) % 5 for dr in data.drafts])
+        for k in range(5):
+            trk = data.idx(fold != k)
+            inner = np.array([split_of("in" + data.drafts[i]) == "val" for i in trk])
+            pk, _ = fit_ladder(X, data, trk[~inner], trk[inner], h, a.embed, a.seed + k)
+            for nm, p in pk.items():
+                oof.setdefault(nm, np.zeros(len(games)))[fold == k] = p[fold == k]
+        alli = np.arange(len(games))
+        L += table("Out-of-fold, every game (5 folds by draft)", oof, data, alli)
+        L += table("Out-of-fold, in-cube games", oof, data, alli[data.kind == "normal"])
+        L += table("Out-of-fold, bridge games", oof, data, alli[data.kind == "bridge"])
+
     held: Dict[str, Any] = {}
     hold = sorted(cubes) if a.holdout_cubes == "all" else [x for x in (a.holdout_cubes or "").split(",") if x]
     if hold:
@@ -686,6 +703,7 @@ def train_cmd(a: argparse.Namespace) -> int:
     with open(os.path.join(a.out, "balance.json"), "w", encoding="utf-8") as fh:
         json.dump({"sample": {"games": len(games), "bridgeGames": nb, "drafts": len(set(data.drafts)), "train": len(tr), "val": len(va), "test": len(te)},
                    "taus": {"m0": m0.taus, "m1": m1.taus, "bt": fit["bt"].taus}, "test": test, "heldOutCubes": held,
+                   "outOfFold": {k: {kk: vv for kk, vv in metrics(p, data.y).items() if kk != "calibration"} for k, p in oof.items()},
                    "balance": bal, "bridge": comp, "overlap": ov}, fh, indent=1)
     with open(os.path.join(a.out, "model.json"), "w", encoding="utf-8") as fh:
         json.dump({"vocab": vocab, "features": feat, "X": X.round(5).tolist(), "m0": {"theta": m0.theta.tolist(), "taus": m0.taus, "F": m0.F},
@@ -706,6 +724,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     t.add_argument("--holdout-cubes", default="")
     t.add_argument("--boot", type=int, default=DEFAULTS["boot"])
     t.add_argument("--embed", type=int, default=0, help="M2's embedding size (needs torch); 0 = off")
+    t.add_argument("--oof", type=int, default=1, help="1: also score every game out-of-fold (5 folds by draft); 0: the test split only")
     t.add_argument("--seed", type=int, default=1)
     t.add_argument("--repo", default=".")
     d = sub.add_parser("design")
@@ -713,6 +732,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     d.add_argument("--target-cube", required=True)
     d.add_argument("--size", type=int, default=180)
     d.add_argument("--iters", type=int, default=20000)
+    d.add_argument("--max-swaps", type=int, default=20, help="at most this many cards changed from the target cube")
     d.add_argument("--seed", type=int, default=1)
     d.add_argument("--out", required=True)
     d.add_argument("--repo", default=".")
