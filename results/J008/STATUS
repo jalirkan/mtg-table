@@ -1,4 +1,7 @@
-running
-started: 2026-10-03T11:36:34-04:00
+failed
+reason: pilot: two of the five pilot answers took under 5 s (4.78 s and 4.86 s), so "every answer takes 5-30 s" fails as written. Every other pilot check passed. Full run not started.
+started: 2026-10-03T11:36:40-04:00
+ended: 2026-10-03T11:38:29-04:00
 mtg-table: e54aa16 (worktree ~/code/mtg-table-main)
-ForgeCoach: (pilot pulling main)
+ForgeCoach: 2bf68d4
+failing command: npm run bench:coach -- --repeat 1 --type spell --label J008-pilot (exit 0; the latency check fails)

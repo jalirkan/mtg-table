@@ -1,0 +1,5 @@
+  ok    a phone's whole question: streamed, done
+  ok    loopback needs no token
+  ok    the LAN page origin from loopback (a rebinding name): 403
+  ok    the token is never logged
+coach-helper-selftest OK (67 checks)

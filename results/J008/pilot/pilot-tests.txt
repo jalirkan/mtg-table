@@ -1,0 +1,23 @@
+
+> forgecoach@0.1.0 typecheck
+> tsc --noEmit
+
+
+> forgecoach@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.3 /home/justin-a/code/ForgeCoach
+
+
+ Test Files  46 passed (46)
+      Tests  767 passed (767)
+   Start at  11:36:59
+   Duration  10.90s (tests 59%, transform 25%, import 15%, worker 1%)
+
+
+> forgecoach@0.1.0 bench:coach
+> node bench/coach/run.mjs --dry-run
+
+28 cases built: attack 4, block 5, choice 2, mulligan 4, pass 3, play_draw 2, spell 5, target 3
+All cases build and every answer is legal.

@@ -1,0 +1,1 @@
+{"ok":true,"helper":1,"claude":"2.1.288 (Claude Code)","models":["opus","sonnet","haiku"],"concurrency":1,"queue":{"max":4,"length":0},"running":0,"supersedes":1,"match":1,"engine":"running","engine_start":1}
