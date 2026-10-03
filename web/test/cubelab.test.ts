@@ -21,6 +21,8 @@
  *  - pick scoring: synergy grows with shared themes, colours commit after a
  *    third of the picks, a splash needs rating and sources, a dual in the pair
  *    is worth more; the ratings TSV round-trips; weights refuse unknown names;
+ *  - meta.json, ForgeCoach's schema 1 (D297): its keys, the shrinkage by
+ *    arithmetic, archetype ids, lands and splash, and meta.golden.json;
  *  - the report: fixtures/cubelab/mini/ (three hand-written drafts) aggregated
  *    and compared with summary.golden.json, a few of its numbers checked by
  *    arithmetic, and the HTML loads nothing from anywhere.
@@ -41,6 +43,7 @@ import { buildDeck, checkDeck, countNames } from '../../tools/cubelab/deck.ts';
 import { aiChooser, gridDraft, LINES, winstonDraft, type Chooser } from '../../tools/cubelab/draft.ts';
 import { scoreCard, synergyCount, topPair, type DrafterState } from '../../tools/cubelab/pick.ts';
 import { initialRating, parseRatings, ratingsTsv } from '../../tools/cubelab/ratings.ts';
+import { buildMeta, SHRINK_K, typesOf } from '../../tools/cubelab/meta.ts';
 import { aggregate, renderHtml, renderMarkdown, wilson, type CardInfo, type Recording } from '../../tools/cubelab/report.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 import type { DraftRecord, RunMeta } from '../../tools/cubelab/run.ts';
@@ -330,6 +333,12 @@ test('ratings: Forge rank or the unrated default; the TSV round-trips; weights r
 // ------------------------------------------------------------ the report
 
 const MINI = join(REPO, 'fixtures/cubelab/mini');
+function miniRaw() {
+  const meta = JSON.parse(readFileSync(join(MINI, 'run.json'), 'utf8')) as RunMeta;
+  const cards = JSON.parse(readFileSync(join(MINI, 'cards.json'), 'utf8')) as Record<string, CardInfo>;
+  const recs = readFileSync(join(MINI, 'drafts.jsonl'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord);
+  return { meta, cards, recs };
+}
 function mini() {
   const meta = JSON.parse(readFileSync(join(MINI, 'run.json'), 'utf8')) as RunMeta;
   const cards = JSON.parse(readFileSync(join(MINI, 'cards.json'), 'utf8')) as Record<string, CardInfo>;
@@ -378,4 +387,41 @@ test('report: the HTML is self-contained, and the Markdown names the recordings'
   const md = renderMarkdown(s, 1);
   assert.match(md, /\*\*Load file\*\*/);
   assert.match(md, /\| WU \(Azorius: Fliers\) \| 3 \| 1\/3 \| 2–5–1 \|/);
+});
+
+// ------------------------------------------------------------ meta.json (ForgeCoach, schema 1)
+
+test('meta.json: schema 1 keys, shrinkage, archetypes, lands and splash on the mini fixture', () => {
+  const { meta, cards, recs } = miniRaw();
+  const m = buildMeta(meta, cards, recs, null, { minPairGames: 2, maxPairs: 300 }) as Record<string, any>;
+  assert.equal(m.schema, 1);
+  assert.deepEqual(Object.keys(m).sort(), ['archetypes', 'cards', 'cube', 'lands', 'pairs', 'sample', 'schema', 'splash']);
+  assert.deepEqual(Object.keys(m.cube.cards[0]).sort(), ['colors', 'mv', 'name', 'themes', 'types']);
+  assert.deepEqual([m.sample.drafts, m.sample.games, m.sample.seedRange, m.sample.aiProfile], [3, 7, [1, 3], 'Default']);
+  const scout = m.cards['Wing Scout'];
+  assert.deepEqual(Object.keys(scout).sort(), ['avgPickIndex', 'ci', 'games', 'inDecks', 'inclusionRate', 'pickRate', 'picked', 'seen', 'winRate', 'winRateShrunk', 'wins']);
+  // Wing Scout: s1 A 2-1, s3 B 0-2 -> 2 wins in 5; shrunk toward the run's card mean with strength 20.
+  assert.deepEqual([scout.games, scout.wins, scout.picked, scout.seen, scout.inDecks], [5, 2, 2, 2, 2]);
+  const mean = m.sample.shrinkage.mean;
+  assert.ok(Math.abs(scout.winRateShrunk - (2 + SHRINK_K * mean) / (5 + SHRINK_K)) < 1e-4);
+  assert.equal(m.cards['Unseen Relic'].games, 0);
+  assert.ok(Math.abs(m.cards['Unseen Relic'].winRateShrunk - mean) < 1e-4, 'no games: the prior mean');
+  const ids = m.archetypes.map((a: { id: string }) => a.id).sort();
+  assert.deepEqual(ids, ['BG', 'BR-SAC', 'WU', 'WU-TOK']);
+  const br = m.archetypes.find((a: { id: string }) => a.id === 'BR-SAC');
+  assert.deepEqual([br.colors, br.primaryTheme, br.decks, br.games, br.avgLands], ['BR', 'SAC', 2, 5, 17]);
+  assert.deepEqual(Object.keys(br.avgCurve), ['1', '2', '3', '4', '5', '6+']);
+  assert.equal(br.sampleDecks[0].length, 19, 'a sample deck is its main list, card by card');
+  assert.deepEqual(Object.keys(m.lands.overall), ['17', '20']);
+  assert.deepEqual([m.splash.games, m.splash.winRate], [2, 0]);
+  assert.ok(m.pairs.every((p: { games: number }) => p.games >= 2));
+  assert.deepEqual(typesOf('Legendary Creature - Human Wizard'), ['Legendary', 'Creature']);
+});
+
+test('meta.json: the mini fixture matches meta.golden.json', () => {
+  const { meta, cards, recs } = miniRaw();
+  const text = `${JSON.stringify(buildMeta(meta, cards, recs, null), null, 1)}\n`;
+  const golden = join(MINI, 'meta.golden.json');
+  if (process.env.CUBELAB_GOLDEN_WRITE === '1' || !existsSync(golden)) writeFileSync(golden, text);
+  assert.equal(text, readFileSync(golden, 'utf8'), 'meta.json changed -- schema 1 is ForgeCoach\'s contract (D297); if on purpose, CUBELAB_GOLDEN_WRITE=1 and read the diff');
 });

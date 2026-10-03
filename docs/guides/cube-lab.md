@@ -249,10 +249,52 @@ output), `frames/` and `recordings.json` under `--record`, and
 
 `report <out>` reads the folder and writes `report.html` (one self-contained
 page: no script, font or style from anywhere), `report.md` (the headline
-numbers as text) and `summary.json` (everything the two show). Win rates there
+numbers as text), `summary.json` (everything the two show) and `meta.json`
+(below). Win rates there
 are over decisive games, with Wilson's 95% interval — with a few dozen games
 per colour pair, **the interval is the finding**; run more drafts before
 reading much into a difference inside it.
+
+## meta.json — for ForgeCoach's draft and deck assistant (D297)
+
+`report` also writes `<out>/meta.json`, and `tools/cubelab.sh meta <out> [--cube
+<cube.md>] [--min-pair-games 6] [--max-pairs 300]` writes it alone. ForgeCoach
+reads it; **schema 1 is a contract** — fields may be added, never renamed or
+redefined without a schema 2 on both sides.
+
+```jsonc
+{ "schema": 1,
+  "cube":   { "name", "file", "cards": [{ "name", "colors": ["W"], "mv": 1, "types": ["Creature"], "themes": ["ART"] }] },
+  "sample": { "drafts", "games", "seedRange": [1, 40], "aiProfile": "Default",
+              "format", "shrinkage": { "prior": "beta", "mean": 0.5, "strength": 20 } },   // the last two are extras
+  "cards":  { "<name>": { "picked", "seen", "pickRate", "avgPickIndex", "inDecks", "inclusionRate",
+                          "games", "wins", "winRate", "winRateShrunk", "ci": [lo, hi] } },
+  "archetypes": [{ "id": "BR-SAC", "colors": "BR", "primaryTheme": "SAC", "decks", "games", "winRate", "ci",
+                   "keyCards": ["…"], "avgLands", "avgCurve": { "1": 6.3, …, "6+": 1 }, "sampleDecks": [["…40 names…"]] }],
+  "pairs":  [{ "a", "b", "games", "winRateTogether", "lift" }],
+  "lands":  { "overall": { "16": { "games", "winRate" }, "17": {…} }, "byArchetype": { "<id>": {…} } },
+  "splash": { "games", "winRate", "vsNoSplash" } }
+```
+
+- **games / wins / winRate** are over decisive games of the decks a card (or
+  pair, archetype, land count) was played in; `ci` is Wilson's 95% interval
+  (`[0, 1]` with no games). `seen` is the drafts the card was dealt into;
+  `avgPickIndex` its average position among its drafter's takes (1 = first).
+- **winRateShrunk** = (wins + 20·m) / (games + 20): the mean of a Beta posterior
+  whose prior is centred on m, the run's mean over every card-game observation,
+  with the strength of 20 games. A 4–0 card moves to about 0.58, a 60–20 card
+  goes to 0.70, a card never played is m. Rank cards by it, not by winRate.
+- An **archetype** is a played deck's two colours plus its primary theme (the
+  theme ≥ 5 of its spells carry): `BR-SAC`, or `BR` alone. **keyCards** rank its
+  nonland cards by appearances × (the card's shrunk win rate inside those decks
+  − the archetype's rate), positive ones only, at most 12. `sampleDecks` are
+  its (up to three) winningest decks, card by card.
+- **pairs**: two nonland cards in the same played deck, at least
+  `--min-pair-games` decisive games together; **lift** = their shrunk win rate
+  together ÷ the mean of their two shrunk win rates (above 1: better together
+  than apart); the top `--max-pairs` by lift.
+- **lands**: win rate by the played deck's land count; **splash**: the
+  splashing decks' win rate, and `vsNoSplash` its difference from the rest.
 
 ## What it does not do
 

@@ -13283,3 +13283,40 @@ the report against `fixtures/cubelab/mini/summary.golden.json` — is
 and appending survives a kill). Win rates with draws as half a win (a timeout
 says nothing about which deck was better). A charting library in the report (the
 page must open from a folder with no network).
+
+## D297 — The cube lab writes `meta.json`, schema 1, for ForgeCoach's draft and deck assistant: per-card, per-archetype, per-pair, per-land-count and splash statistics, with win rates shrunk toward the run's mean by a Beta prior of 20 games
+
+**2026-10-03** (the coordinator's request, for ForgeCoach's new assistant; the
+same block's lane, the next number after D296)
+
+**Decision.** `tools/cubelab/meta.ts`'s `buildMeta` (pure) turns a run folder
+into `<out>/meta.json`; `report` writes it and `tools/cubelab.sh meta <out>
+[--cube <cube.md>]` writes it alone. The schema is ForgeCoach's, kept exactly
+(`schema: 1`; `cube`, `sample`, `cards`, `archetypes`, `pairs`, `lands`,
+`splash`; extra fields allowed — `sample.format` and `sample.shrinkage` are
+two), and `docs/guides/cube-lab.md`'s *meta.json* and the module's header say
+what every number means. The choices the schema left open:
+
+- **Shrinkage**: `winRateShrunk = (wins + k·m) / (games + k)`, the posterior
+  mean of a Beta(k·m, k·(1−m)) prior, k = 20 games, m = the run's mean over
+  every card-game observation (Σ wins / Σ games over all cards). It is the
+  number to rank by; `winRate` and Wilson's `ci` are there to see the raw.
+- **Archetype** = the played deck's pair plus its primary theme (`BR-SAC`, or
+  `BR` when no theme reaches 5 spells), so a cube without themes (Modern) has
+  pairs for archetypes. **keyCards** = appearances × (shrunk win rate within the
+  archetype − the archetype's rate), positive only, at most 12.
+- **lift** = the pair's shrunk win rate together ÷ the mean of the two cards'
+  shrunk rates; a pair needs `--min-pair-games` (6) decisive games together and
+  the top `--max-pairs` (300) are kept.
+- Every rate is over decisive games, like the report's.
+
+`fixtures/cubelab/mini/meta.golden.json` holds the output over the mini
+fixture, and `web/test/cubelab.test.ts` checks its keys and the shrinkage by
+arithmetic; gate 12g checks that a real run writes a schema-1 file over 180
+cards. `tools/CLAUDE.md`'s cube-lab rule 5 makes the schema a two-repository
+contract, as D292's rule 1 does for the coach helper.
+
+**Rejected.** Laplace smoothing (+1/+2: far too weak at 3–60 games a card);
+an empirical-Bayes prior strength fitted per run (it moves between runs of the
+same cube, so a card's shrunk rate would move for reasons that are not the
+card's); lift as a difference (a ratio reads the same at any base rate).

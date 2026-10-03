@@ -8,7 +8,8 @@
 //           [--seed S] [--profiles Default,Default] [--ratings <tsv>] [--record M]
 //           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
-//   report  <out> [--min-games N]           <out>/report.html and <out>/report.md
+//   report  <out> [--min-games N]           <out>/report.html, report.md, summary.json and meta.json
+//   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]   <out>/meta.json (ForgeCoach, D297)
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -19,6 +20,7 @@ import { parseCube } from './cube.ts';
 import { engineEnv, engineFacts } from './engine.ts';
 import { GUILD } from './cards.ts';
 import { initialRating, ratingsTsv } from './ratings.ts';
+import { buildMeta, DEFAULT_META } from './meta.ts';
 import { aggregate, renderHtml, renderMarkdown, type CardInfo, type Recording } from './report.ts';
 import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs } from './weights.ts';
@@ -35,6 +37,7 @@ function usage(msg?: string): never {
                         [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
                         [--weights <json>] [--weight name=value]...
        tools/cubelab.sh report <out> [--min-games N]
+       tools/cubelab.sh meta <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]
 `);
   process.exit(2);
 }
@@ -160,8 +163,22 @@ function report(out: string, f: Map<string, string[]>): number {
   fs.writeFileSync(path.join(out, 'report.html'), renderHtml(s));
   fs.writeFileSync(path.join(out, 'report.md'), renderMarkdown(s, int(f, 'min-games', 6)));
   fs.writeFileSync(path.join(out, 'summary.json'), `${JSON.stringify(s, null, 1)}\n`);
-  say(`${recs.length} draft(s): ${path.join(out, 'report.html')}, ${path.join(out, 'report.md')}`);
+  writeMeta(out, f);
+  say(`${recs.length} draft(s): ${path.join(out, 'report.html')}, ${path.join(out, 'report.md')}, ${path.join(out, 'meta.json')}`);
   return 0;
+}
+
+/** <out>/meta.json, ForgeCoach's draft and deck assistant's input (schema 1, D297). */
+function writeMeta(out: string, f: Map<string, string[]>): string {
+  const { meta, cards, recs } = readRun(out);
+  const cubeFile = one(f, 'cube') ?? path.join(REPO, meta.cubeFile);
+  const cube = fs.existsSync(cubeFile) ? parseCube(fs.readFileSync(cubeFile, 'utf8')) : null;
+  const doc = buildMeta(meta, cards, recs, cube, {
+    minPairGames: int(f, 'min-pair-games', DEFAULT_META.minPairGames), maxPairs: int(f, 'max-pairs', DEFAULT_META.maxPairs),
+  });
+  const file = path.join(out, 'meta.json');
+  fs.writeFileSync(file, `${JSON.stringify(doc)}\n`);
+  return file;
 }
 
 async function main(): Promise<number> {
@@ -172,6 +189,7 @@ async function main(): Promise<number> {
     case 'ratings': if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md>'); return ratingsInit(pos[1], one(f, 'out'), f.has('force'));
     case 'run': if (!pos[0]) usage('run needs a cube file'); return run(pos[0], f);
     case 'report': if (!pos[0]) usage('report needs a run directory'); return report(pos[0], f);
+    case 'meta': if (!pos[0]) usage('meta needs a run directory'); say(writeMeta(pos[0], f)); return 0;
     default: return usage(cmd ? `unknown command ${cmd}` : undefined);
   }
 }

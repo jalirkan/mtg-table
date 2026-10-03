@@ -301,7 +301,7 @@ built against, and four things about it are rules:
 `tools/cubelab.sh` drafts a two-player cube with two Forge AIs, builds their
 decks and plays them, for the owner's cube design; `docs/guides/cube-lab.md` is
 the manual (every flag, every weight, the JSONL), `docs/evidence/cube-lab.md`
-what was measured, PLAN.md's *The cube lab* the status. Four things about it
+what was measured, PLAN.md's *The cube lab* the status. Five things about it
 are rules:
 
 1. **The lab is a tool beside the game** (**D293**). Nothing the engine, the
@@ -326,6 +326,11 @@ are rules:
    `tools/cubelab/weights.ts`, documented in the guide's table and recorded in
    the run's `run.json`. A new knob is a weight, a row in that table and a line
    in the defaults, in the same change — never a literal in the logic.
+5. **`meta.json` schema 1 is ForgeCoach's contract** (**D297**). Its keys and
+   their meaning (`tools/cubelab/meta.ts`'s header; the guide's *meta.json*)
+   change in both repositories or not at all: a field may be added, while a
+   renamed, removed or redefined one is schema 2 and a change on ForgeCoach's
+   side in the same breath. `fixtures/cubelab/mini/meta.golden.json` holds it.
 
 ## The narrator
 

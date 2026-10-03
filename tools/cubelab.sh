@@ -7,7 +7,8 @@
 #   tools/cubelab.sh check   cubes/synergy-cube-180.md
 #   tools/cubelab.sh ratings init cubes/synergy-cube-180.md     # -> cubes/synergy-cube-180.ratings.tsv
 #   tools/cubelab.sh run     cubes/synergy-cube-180.md --format grid --drafts 40 --jobs 4 --seed 1 --record 3
-#   tools/cubelab.sh report  var/cubelab/runs/synergy-cube-180-grid-1
+#   tools/cubelab.sh report  var/cubelab/runs/synergy-cube-180-grid-1   # also writes meta.json
+#   tools/cubelab.sh meta    var/cubelab/runs/synergy-cube-180-grid-1 --cube cubes/synergy-cube-180.md
 #
 # Overnight, one command (resumable: run it again with the same --out and it
 # skips the drafts already in drafts.jsonl):
@@ -37,7 +38,7 @@ cd "$REPO_ROOT"
 [ $# -ge 1 ] || { node tools/cubelab/cli.ts; exit 2; }
 
 cmd="$1"
-if [ "$cmd" != "report" ]; then
+if [ "$cmd" != "report" ] && [ "$cmd" != "meta" ]; then
   [ -f "$FORGE_JAR" ] || { echo "cubelab: FORGE_JAR not found: $FORGE_JAR" >&2; exit 1; }
   if [ ! -f bridge/out/mtgtable/Bootstrap.class ]; then
     echo "cubelab: bridge/out is not built -- running ./bridge/build.sh first" >&2

@@ -1925,8 +1925,10 @@ s12g_cubelab() {
     }
     const html = fs.readFileSync(out + "/report.html", "utf8");
     if (!html.startsWith("<!doctype html>")) bad.push("report.html is not a page");
+    const meta = JSON.parse(fs.readFileSync(out + "/meta.json", "utf8"));
+    if (meta.schema !== 1 || meta.cube.cards.length !== 180 || meta.sample.drafts !== 2) bad.push("meta.json is not schema 1 over 180 cards and 2 drafts");
     if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
-    console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html written");
+    console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html and meta.json written");
   ' "$out" || die "the cube lab's smoke run is not what it should be (12g)"
 }
 
