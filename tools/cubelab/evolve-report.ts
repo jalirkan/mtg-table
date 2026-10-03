@@ -6,7 +6,7 @@
 // self-contained page (inline CSS, nothing loaded from anywhere), a section per
 // generation, light and dark.
 
-import type { Balance, CardStat, Decision, Group } from './evolve.ts';
+import { ruleWords, type Balance, type CardStat, type Confirmation, type Decision, type Group } from './evolve.ts';
 
 export interface GenSummary {
   gen: number;
@@ -14,11 +14,9 @@ export interface GenSummary {
   versionIn: number;
   versionOut: number;
   date: string;
-  /** Drafts the decision read: this generation's, plus those of the generations before it that drafted the same list. */
+  /** The discovery batch: this generation's own drafts (never pooled with another generation's, D331). */
   drafts: number;
   seeds: [number, number];
-  /** The first generation whose drafts were pooled (= gen when none were). */
-  pooledFrom?: number;
   games: number;
   decision: Decision;
   balance: Balance;
@@ -26,12 +24,28 @@ export interface GenSummary {
 }
 
 const r2 = (x: number): string => x.toFixed(2);
-const pooled = (g: GenSummary): string => (g.pooledFrom !== undefined && g.pooledFrom < g.gen ? ` (generations ${g.pooledFrom}–${g.gen} on the same list)` : '');
+const pv = (p: number): string => (p < 0.001 ? p.toExponential(1) : p.toFixed(3));
+const confirmHead = (g: GenSummary): string => {
+  const c = g.decision.confirmBatch;
+  return c ? `; confirmation ${c.drafts} fresh drafts, seeds ${c.seeds[0]}–${c.seeds[1]}, ${c.games} decisive games` : '';
+};
+
+/** What discovery vs confirmed means, in plain words (the changelog's and the page's preamble). */
+export const stagesInWords = (q: number): string => 'A card is cut on the AI\'s evidence only after two separate looks. **Discovery**: in this generation\'s drafts the card stands out by more than chance can explain, '
+  + 'allowing for the fact that some 180 cards are looked at at once (a false-discovery rate of ' + `${Math.round(q * 100)}%: of the cards flagged, at most about ${q > 0.5 ? `${Math.round(q * 100)}%` : `one in ${Math.round(1 / q)}`} could be a fluke` + '). A discovery is a *candidate*, not a verdict. '
+  + '**Confirmed**: the candidate stands out again, the same way, in a second batch of fresh drafts that played no part in finding it. Only confirmed cards are cut; a candidate that does not confirm stays, and is reported. '
+  + 'Win rates count each deck\'s match as one clump of games (the same deck against the same opponent), so their intervals are wider than a count of games would make them.';
+
+/** One candidate as a table row: card, rule, discovery numbers, confirmation numbers, the outcome. */
+function candidateRow(c: Confirmation): string[] {
+  return [c.name, c.rule, `${ruleWords(c.discovery)}${c.discovery.qValue !== undefined ? `, q ${pv(c.discovery.qValue)}` : ''}`,
+    c.confirm ? `${ruleWords(c.confirm)}, Holm p ${pv(c.holmP as number)}` : '—', c.confirmed ? 'confirmed' : `not confirmed: ${c.reason}`];
+}
 const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** The one line appended to the cube document's `## Iteration log`. */
 export function logEntry(g: GenSummary): string {
-  const head = `v${g.versionOut} (${g.date}, cube lab evolve generation ${g.gen}: ${g.drafts} grid drafts${pooled(g)}, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games)`;
+  const head = `v${g.versionOut} (${g.date}, cube lab evolve generation ${g.gen}: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games${confirmHead(g)})`;
   if (!g.decision.swaps.length) return `${head}: no swaps, v${g.versionIn} unchanged. ${g.decision.verdict}`;
   const sw = g.decision.swaps.map((s) => `**${s.out}** → **${s.in}** (${s.why}: ${s.evidence}; in: ${s.fit})`).join('; ');
   return `${head}: ${sw}.`;
@@ -46,8 +60,15 @@ export function changelogSection(g: GenSummary): string {
   const d = g.decision;
   const out: string[] = [];
   out.push(`## Generation ${g.gen} — v${g.versionIn} → v${g.versionOut} (${g.date})`, '');
-  out.push(`${g.drafts} grid drafts${pooled(g)}, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games; mean card win rate ${r2(g.balance.mean)}.`, '');
+  out.push(`Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games; mean card win rate ${r2(g.balance.mean)}; `
+    + `${d.discovery.family} tests at a false-discovery rate of ${d.discovery.q}; design effect of a card's games ${d.discovery.deff.toFixed(2)}${confirmHead(g)}.`, '');
   out.push(`**Verdict.** ${d.verdict}`, '');
+  if (d.confirmations.length) {
+    out.push(`**Discovered, then confirmed or not** (${d.discovery.candidates} candidate(s); ${d.confirmBatch ? `the confirmation batch was sized for ${d.plan.drafts} drafts${d.plan.underpowered.length ? `, under-powered for ${d.plan.underpowered.join(', ')}` : ''}` : `a ${d.plan.drafts}-draft confirmation batch is due`}):`, '',
+      '| Card | Rule | Discovery (this generation\'s drafts) | Confirmation (fresh drafts) | Outcome |', '|---|---|---|---|---|');
+    for (const c of d.confirmations) out.push(`| ${candidateRow(c).join(' | ')} |`);
+    out.push('');
+  }
   if (d.swaps.length) {
     out.push('| Out | Why | Evidence | In | Why this card |', '|---|---|---|---|---|');
     for (const s of d.swaps) out.push(`| ${s.out} (${s.outSection}) | ${s.why} | ${s.evidence} | ${s.in} (${s.inSection}) | ${s.fit} |`);
@@ -91,7 +112,8 @@ export function changelogSection(g: GenSummary): string {
 
 export function changelog(title: string, gens: GenSummary[]): string {
   return [`# ${title} — evolve changelog`, '',
-    'Written by `tools/cubelab.sh evolve` (D299–D300). Each generation plays its drafts on the cube going in and swaps only what the evidence supports; docs/guides/cube-lab.md *Evolve* says how.', '',
+    'Written by `tools/cubelab.sh evolve` (D299–D300, D331). Each generation plays its drafts on the cube going in and swaps only what the evidence supports; docs/guides/cube-lab.md *Evolve* says how.', '',
+    stagesInWords(gens[0]?.decision.discovery.q ?? 0.1), '',
     ...gens.map(changelogSection)].join('\n');
 }
 
@@ -104,8 +126,9 @@ export function htmlSection(g: GenSummary): string {
   const d = g.decision;
   const parts: string[] = [];
   parts.push(`<section><h2>Generation ${g.gen} <span class="dim">v${g.versionIn} → v${g.versionOut} · ${esc(g.date)}</span></h2>`);
-  parts.push(`<p class="dim">${g.drafts} grid drafts${esc(pooled(g))}, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}</p>`);
+  parts.push(`<p class="dim">Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}, ${d.discovery.family} tests at FDR ${d.discovery.q}, design effect ${d.discovery.deff.toFixed(2)}${esc(confirmHead(g))}</p>`);
   parts.push(`<p class="verdict">${esc(d.verdict)}</p>`);
+  if (d.confirmations.length) parts.push('<h3>Discovered, then confirmed or not</h3>', table(['Card', 'Rule', 'Discovery (this generation\'s drafts)', 'Confirmation (fresh drafts)', 'Outcome'], d.confirmations.map(candidateRow)));
   if (d.swaps.length) parts.push('<h3>Swaps</h3>', table(['Out', 'Why', 'Evidence', 'In', 'Why this card'], d.swaps.map((s) => [s.out, s.why, s.evidence, s.in, s.fit])));
   if (d.watch.length) parts.push('<h3>Insufficient data</h3>', table(['Card', 'Lean', 'Evidence', 'Drafts to settle'], d.watch.slice(0, 15).map((w) => [w.name, w.signal, w.evidence, String(w.draftsNeeded ?? '—')])));
   if (d.aiLimited.length) parts.push('<h3>AI-limited (never cut on AI stats)</h3>', table(['Card', 'Flag', 'Status', 'AI evidence says', 'Evidence'], d.aiLimited.map((a) => [a.name, a.aiFlag, a.status, a.signal, a.evidence])));
@@ -140,7 +163,8 @@ th{background:var(--head);font-weight:600}td:nth-child(n+2){font-variant-numeric
 .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}section{overflow-x:auto}
 </style></head><body>
 <h1>${esc(title)}</h1>
-<p class="dim">The cube lab's evolve loop (D299–D300): each generation drafts the cube going in, plays the decks on Forge, and swaps only what the evidence supports. Win rates are over decisive games with Wilson 95% intervals; "shrunk" is the Beta-shrunk rate of meta.json (prior 20 games at the mean).</p>
+<p class="dim">The cube lab's evolve loop (D299–D300, D331): each generation drafts the cube going in, plays the decks on Forge, and swaps only what the evidence supports. Win rates are over decisive games with Wilson 95% intervals; "shrunk" is the Beta-shrunk rate of meta.json (prior 20 games at the mean).</p>
+<p>${esc(stagesInWords(gens[0]?.decision.discovery.q ?? 0.1)).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>')}</p>
 ${gens.map(htmlSection).join('\n')}
 </body></html>
 `;
