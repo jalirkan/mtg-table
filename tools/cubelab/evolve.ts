@@ -58,7 +58,7 @@ import type { Cube, CubeCard } from './cube.ts';
 import { sectionFor } from './cubedoc.ts';
 import { SHRINK_K } from './meta.ts';
 import { initialRating } from './ratings.ts';
-import { wilson } from './report.ts';
+import { playedDeck, wilson, type CardInfo } from './report.ts';
 import type { DraftRecord } from './run.ts';
 
 export interface EvolveKnobs {
@@ -332,10 +332,38 @@ export function firstTakes(recs: DraftRecord[]): Map<string, number> {
   return out;
 }
 
-export function cardStats(meta: MetaDoc, recs: DraftRecord[]): Map<string, CardStat> {
+/**
+ * Every card's numbers.  meta.json counts a card's decks and games over a played
+ * deck's NONLAND cards (its pairs and key cards are about spells), so a land
+ * would read as never played; with `info` (cards.json), a land's decks, games
+ * and wins are counted from the played decks' full lists instead.
+ */
+export function cardStats(meta: MetaDoc, recs: DraftRecord[], info?: Record<string, CardInfo>): Map<string, CardStat> {
   const ft = firstTakes(recs);
+  const lands = new Map<string, { decks: number; games: number; wins: number }>();
+  if (info) {
+    for (const rec of recs) for (const k of [0, 1] as const) {
+      const me = k === 0 ? 'A' : 'B';
+      const decisive = rec.match.games.filter((g) => g.winner !== 'draw');
+      const won = decisive.filter((g) => g.winner === me).length;
+      for (const name of new Set(playedDeck(rec, k, info).main.map(([, n]) => n))) {
+        if (!info[name]?.land) continue;
+        const o = lands.get(name) ?? { decks: 0, games: 0, wins: 0 };
+        o.decks++; o.games += decisive.length; o.wins += won;
+        lands.set(name, o);
+      }
+    }
+  }
+  const m = meta.sample.shrinkage.mean;
   const out = new Map<string, CardStat>();
-  for (const [name, c] of Object.entries(meta.cards)) {
+  for (const [name, c0] of Object.entries(meta.cards)) {
+    let c = c0;
+    if (info?.[name]?.land) {
+      const o = lands.get(name) ?? { decks: 0, games: 0, wins: 0 };
+      const w = wilson(o.wins, o.games);
+      c = { ...c0, inDecks: o.decks, games: o.games, wins: o.wins, winRate: o.games ? o.wins / o.games : 0,
+        winRateShrunk: (o.wins + SHRINK_K * m) / (o.games + SHRINK_K), ci: [w.lo ?? 0, w.hi ?? 1] };
+    }
     const f = ft.get(name) ?? 0;
     out.set(name, {
       name, seen: c.seen, picked: c.picked, pickRate: c.pickRate, firstTakes: f, firstPickRate: c.seen ? f / c.seen : 0,

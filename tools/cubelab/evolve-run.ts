@@ -192,7 +192,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     const metaDoc = buildMeta(meta, info, recs, cube) as MetaDoc;
     fs.writeFileSync(path.join(runDir, 'meta.json'), `${JSON.stringify(metaDoc)}\n`);
     fs.writeFileSync(path.join(runDir, 'report.html'), renderHtml(aggregate(meta, info, recs, [], { pairs: GUILD, themes: cube.themeNames })));
-    const stats = cardStats(metaDoc, recs);
+    const stats = cardStats(metaDoc, recs, info);
     const balance = balanceOf(metaDoc);
     const notes: Map<string, Note> = notesText ? parseNotes(notesText) : new Map();
     const tabu = new Set(state.generations.flatMap((r) => r.swaps.map((s) => s.out)));

@@ -16,7 +16,8 @@
  *    (keep, cut, try), no AI:RemoveDeck:All card is auto-added, a card cut
  *    before is not re-added, a land the builder cannot use is not cut, and the
  *    same input gives the same decision;
- *  - first-line takes and card stats over the mini fixture, and the renderers.
+ *  - first-line takes and card stats over the mini fixture (a land's decks counted
+ *    from the played lists: meta.json counts spells only), and the renderers.
  */
 
 import assert from 'node:assert/strict';
@@ -304,7 +305,13 @@ test('first-line takes and card stats over the mini fixture; the settle estimate
   assert.equal(ft.get('Grave Imp'), 1);
   assert.equal(ft.get('Moss Beast'), undefined);
   const doc = buildMeta(meta, info, recs, null) as MetaDoc;
-  const st = cardStats(doc, recs);
+  // meta.json counts only nonland cards in a deck, so a land reads as never played...
+  assert.equal(cardStats(doc, recs).get('Mist Fountain')?.inDecks, 0);
+  // ...and with cards.json, a land's decks and games come from the played decks' full lists.
+  const st = cardStats(doc, recs, info);
+  const mf = st.get('Mist Fountain') as CardStat;
+  assert.deepEqual([mf.inDecks, mf.games, mf.wins], [1, 3, 2], 'seed 1 A played it: A won games 1 and 3');
+  assert.equal(st.get('Wing Scout')?.inDecks, cardStats(doc, recs).get('Wing Scout')?.inDecks, 'a spell is as meta.json counts it');
   const ws = st.get('Wing Scout') as CardStat;
   assert.equal(ws.firstTakes, 1);
   assert.equal(ws.deckRate, ws.inDecks / ws.seen);
