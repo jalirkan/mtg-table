@@ -1,0 +1,184 @@
+{
+ "schema": 1,
+ "updated": "2026-10-03T13:10:54-04:00",
+ "paused": false,
+ "host": {
+  "load1": 1.63,
+  "memUsedGb": 6.4,
+  "memTotalGb": 30.5,
+  "swapUsedMb": 934,
+  "pressure": 0,
+  "cpus": 16,
+  "budgetGb": 23.4
+ },
+ "running": [
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J009",
+   "title": "Omega evolve with discovery + confirmation (D331) and recording (replaces J004)",
+   "cpu": "heavy",
+   "phase": "prepare",
+   "started": "2026-10-03T13:10:54-04:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": null,
+   "pressureEvents": [],
+   "detail": "lab-J009-prepare"
+  }
+ ],
+ "queue": [
+  {
+   "publicTitle": "Lab runner shakedown",
+   "publicEst": "~25 min",
+   "id": "J010",
+   "title": "Lab runner shakedown on the PC: units, memory limits, pause, resize, resume",
+   "cpu": "heavy",
+   "est": "~25 min"
+  }
+ ],
+ "waiting": [],
+ "finished": [
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J003",
+   "title": "Search AI vs Forge Default, 400 deals per configuration",
+   "status": "done",
+   "finished": "2026-10-03T13:10:11-04:00",
+   "headline": "",
+   "numbers": {}
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J002",
+   "title": "PR #27 coach-bench comparison, run one question at a time",
+   "status": "done",
+   "finished": "2026-10-03T12:53:39-04:00",
+   "headline": "",
+   "numbers": {}
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J014",
+   "title": "[ANSWERED by its pilot, no full run] Light coach check: Sonnet vs Haiku with thinking off (and low) on the 28 bench cases, one answer each",
+   "status": "failed",
+   "finished": "2026-10-03T12:37:00-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "pilot: check 4 failed, Haiku-off median latency (7212 ms) is not below Sonnet (6597 ms); checks 1-3 passed; full job not run"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J013",
+   "title": "Why is Haiku 6× slower than Sonnet through the coach helper? (timing diagnosis)",
+   "status": "done",
+   "finished": "2026-10-03T12:04:45-04:00",
+   "headline": "",
+   "numbers": {}
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J012",
+   "title": "Light coach check: Sonnet vs Haiku on the 28 bench cases, one answer each",
+   "status": "failed",
+   "finished": "2026-10-03T11:51:29-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "pilot — every answer must take 1-30 s; Haiku took a median 45.5 s (mean 38.4, max 56.9)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J008",
+   "title": "(retry of J006) New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)",
+   "status": "failed",
+   "finished": "2026-10-03T11:36:40-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "pilot: two of the five pilot answers took under 5 s (4.78 s and 4.86 s), so \"every answer takes 5-30 s\" fails as written. Every other pilot check passed. Full run not started."
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J006",
+   "title": "New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)",
+   "status": "failed",
+   "finished": "2026-10-03T10:49:00-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "pilot: \"npm test\" failed (9 of 702, all in src/launcher.test.ts overnight); environmental: the tests see the live engine required by this job on 127.0.0.1:8642. All other pilot checks passed. Full run not started."
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J001",
+   "title": "Check the channel and describe the machine",
+   "status": "done",
+   "finished": "2026-10-03T09:51:45-04:00",
+   "headline": "",
+   "numbers": {}
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J004",
+   "title": "[SUPERSEDED by J009, skip] Omega evolve rerun, 1,200 drafts a generation (Justin's request)",
+   "status": "skipped",
+   "finished": null,
+   "headline": "",
+   "numbers": {},
+   "detail": "superseded by J009 (the job file says so); the 1,200-draft evolve was never started"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J005",
+   "title": "[SKIP: folded into the queue pilot] Recording overhead on the 9700X (wall clock), recording on vs off",
+   "status": "skipped",
+   "finished": null,
+   "headline": "",
+   "numbers": {},
+   "detail": "the job file says SKIP (folded into the queue pilot)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J007",
+   "title": "[SUPERSEDED by J012, skip] Coach latency experiments: Haiku on routine types; answer-first layout",
+   "status": "skipped",
+   "finished": null,
+   "headline": "",
+   "numbers": {},
+   "detail": "superseded by J012 (Justin, 2026-10-03: coach testing cut back)"
+  },
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J011",
+   "title": "[SUPERSEDED by J012, skip] (second retry of J006, after J008) New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)",
+   "status": "skipped",
+   "finished": null,
+   "headline": "",
+   "numbers": {},
+   "detail": "superseded by J012 (Justin, 2026-10-03: coach testing cut back)"
+  }
+ ],
+ "runner": {
+  "commit": "6fbcdea",
+  "started": "2026-10-03T13:10:50-04:00",
+  "dryRun": false
+ }
+}
