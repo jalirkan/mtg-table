@@ -6,7 +6,7 @@
 //   ratings init <cube.md> [--out <tsv>] [--force]
 //   run     <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K]
 //           [--seed S] [--profiles Default,Default] [--ratings <tsv>] [--record M]
-//           [--record-all | --record-every N]                  every game, both chairs, in the worker (D313)
+//           [--record-all | --record-every N]                  every game, both chairs, in the worker (D315)
 //           [--out <dir>] [--builder lab|forge] [--game-timeout <sec>]
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
 //           [--synergy <tsv>] [--deck-synergy on|off]          learned pairs (D301)

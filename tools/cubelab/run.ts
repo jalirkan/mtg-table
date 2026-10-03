@@ -12,7 +12,7 @@
 // 4. --record M: the first M drafts' decks played once more by
 //    mtgtable.RecordMatch, one game each, into <out>/frames/ (a ForgeCoach
 //    frame log, seat 0 = drafter A's view);
-//    --record-all / --record-every N (D313) instead record the games the
+//    --record-all / --record-every N (D315) instead record the games the
 //    workers PLAY, in the worker, both chairs, gzipped, into
 //    <out>/games/<seed>/g<n>-seat{0,1}.jsonl.gz, with the cube's markdown
 //    copied to <out>/cube.md (the ML dataset's vocabulary, tools/ml);
@@ -45,7 +45,7 @@ export interface RunOptions {
   profiles: [string, string];
   ratingsFile: string | null;
   record: number;
-  /** D313: record every game of every Nth draft (seed % N === 0) in the worker; 0 = off, 1 = every game. */
+  /** D315: record every game of every Nth draft (seed % N === 0) in the worker; 0 = off, 1 = every game. */
   recordEvery?: number;
   out: string;
   builder: 'lab' | 'forge';
@@ -98,7 +98,7 @@ export interface RunMeta {
   missing: string[];
   themeNames: Record<string, string>;
   archetypes: Record<string, string>;
-  /** D313: in-worker recording (absent when off): every game of a draft whose seed % every === 0. */
+  /** D315: in-worker recording (absent when off): every game of a draft whose seed % every === 0. */
   record?: { every: number; dir: 'games'; cubeCopy: 'cube.md' };
   /** D301-D302: the learned files this run drafted or built with (absent for a plain run). */
   learned?: {
@@ -177,7 +177,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     if (done.size > 0) say(`resuming: ${done.size} draft(s) already in ${jsonl}`);
   }
   fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
-  // D313: the cube as drafted, beside the recordings, so the dataset's vocabulary is this pool.
+  // D315: the cube as drafted, beside the recordings, so the dataset's vocabulary is this pool.
   const cubeCopy = path.join(o.out, 'cube.md');
   if (o.recordEvery) fs.writeFileSync(cubeCopy, text);
   // What the report needs to know about each card, as this run saw it.

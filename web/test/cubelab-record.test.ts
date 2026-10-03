@@ -1,4 +1,4 @@
-// mtg-table — the cube lab's in-worker recordings (D313) under the redaction checker.
+// mtg-table — the cube lab's in-worker recordings (D315) under the redaction checker.
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -6,7 +6,7 @@
 // lab's worker (`tools/cubelab.sh run ... --record-all`): both chairs, gzipped,
 // written by mtgtable.SeatRecorder -- RecordMatch's recorder reused, Snap's
 // redaction per seat.  tools/check-redaction.mjs must pass both logs (it reads
-// `.gz` since D313), and must FAIL a copy with one of the opponent's hand stubs
+// `.gz` since D315), and must FAIL a copy with one of the opponent's hand stubs
 // turned into a named card, so the pass means something.  Gate 12g runs the
 // checker over a fresh recording too.
 

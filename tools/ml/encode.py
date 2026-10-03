@@ -43,7 +43,7 @@ trainers add numpy.
         [--features-json features.json] [--phases main,combat]
     python3 tools/ml/encode.py --run-dir var/cubelab/runs/X [--out rows.jsonl]
 
---run-dir reads a cube-lab run folder (D313): its recordings under `games/`
+--run-dir reads a cube-lab run folder (D315): its recordings under `games/`
 (`run --record-all` / `--record-every N`, both chairs, `.jsonl.gz`) and
 `frames/` (`--record M`), with the cube the decks were drafted from as the
 vocabulary -- the run's own copy, `cube.md`, or else the `cubeFile` its
@@ -454,7 +454,7 @@ def _open(path: str):
 
 def _lines(path: str) -> Iterator[str]:
     """A log's lines.  A gzip that stops early -- a recorder killed mid-game
-    (the cube lab's are flushed in the deflater's own blocks, D313) -- yields
+    (the cube lab's are flushed in the deflater's own blocks, D315) -- yields
     the lines up to where it stops, like a plain file's torn last line."""
     with _open(path) as f:
         try:
@@ -875,7 +875,7 @@ def find_logs(paths: list[str]) -> list[str]:
 
 @dataclass
 class RunDir:
-    """What a cube-lab run folder hands the dataset (D313)."""
+    """What a cube-lab run folder hands the dataset (D315)."""
     path: str
     logs: list[str]
     vocab: str
@@ -933,7 +933,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("logs", nargs="*", help="frame logs or directories of them")
     ap.add_argument("--vocab", action="append", help="cube .md, .dck or plain list")
     ap.add_argument("--run-dir", action="append", default=[],
-                    help="a cube-lab run folder: its recordings, with its cube as the vocabulary (D313)")
+                    help="a cube-lab run folder: its recordings, with its cube as the vocabulary (D315)")
     ap.add_argument("--out", help="rows as JSONL (default: stdout)")
     ap.add_argument("--features-json", help="write the schema here")
     ap.add_argument("--phases", default="main,combat",

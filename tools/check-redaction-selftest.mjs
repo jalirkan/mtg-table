@@ -64,6 +64,11 @@ const REQUIRED = [
   ['m49-keyword-is-a-display-string.jsonl', 'fail'],
   ['m49-face-down-carries-keywords.jsonl', 'fail'],
   ['m49-keywords-half-present.jsonl', 'fail'],
+  // D315: a revealed library top (Courser of Kruphix) is public; two cards, or a
+  // private "may look" (Experimental Frenzy), are not.
+  ['a3-revealed-top-under-courser.jsonl', 'pass'],
+  ['a3-revealed-top-two-cards.jsonl', 'fail'],
+  ['a3-revealed-top-look-is-private.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

@@ -1910,7 +1910,7 @@ s12f_coach() {
 #      worker plays a game to a winner, the protocol between them, and that the
 #      worker homes save no preferences (cubelab.sh's own check).  Its homes are
 #      built under this job's home (CUBELAB_HOME_ROOT), its output is
-#      var/check-all-cubelab/.  Since D313 it passes --record-every 2, so the
+#      var/check-all-cubelab/.  Since D315 it passes --record-every 2, so the
 #      worker records seed 8's game from both chairs (gzipped, under the run's
 #      games/) and not seed 7's; this step checks those two logs itself --
 #      check-redaction.mjs and tools/ml/encode.py --run-dir -- so it is not one
@@ -1945,7 +1945,7 @@ s12g_cubelab() {
     if (!html.startsWith("<!doctype html>")) bad.push("report.html is not a page");
     const meta = JSON.parse(fs.readFileSync(out + "/meta.json", "utf8"));
     if (meta.schema !== 1 || meta.cube.cards.length !== 180 || meta.sample.drafts !== 2) bad.push("meta.json is not schema 1 over 180 cards and 2 drafts");
-    // D313: --record-every 2 records seed 8 (8 % 2 === 0), both chairs, and not seed 7.
+    // D315: --record-every 2 records seed 8 (8 % 2 === 0), both chairs, and not seed 7.
     for (const r of recs) {
       const g = r.match.games[0] || {};
       const want = r.seed % 2 === 0;
@@ -1960,12 +1960,12 @@ s12g_cubelab() {
     if (bad.length) { console.error(bad.join("\n")); process.exit(1); }
     console.log("12g: 2 drafts, 4 legal lab decks, 2 games, turn 1 as forced, report.html and meta.json written, seed 8 recorded from both chairs");
   ' "$out" || die "the cube lab's smoke run is not what it should be (12g)"
-  # D313: the worker's recordings are the bridge's redaction, per seat -- the
+  # D315: the worker's recordings are the bridge's redaction, per seat -- the
   # checker passes both chairs, and the dataset reads the run folder.
   node tools/check-redaction.mjs "$out"/games/8/g1-seat0.jsonl.gz "$out"/games/8/g1-seat1.jsonl.gz \
-    || die "a cube-lab recording failed the redaction checker (12g, D313)"
+    || die "a cube-lab recording failed the redaction checker (12g, D315)"
   python3 tools/ml/encode.py --run-dir "$out" --out /dev/null \
-    || die "tools/ml/encode.py could not read the cube lab's run folder (12g, D313)"
+    || die "tools/ml/encode.py could not read the cube lab's run folder (12g, D315)"
 }
 
 # 12h. D305: tools/ml/, the dataset pipeline for a learned position evaluator.

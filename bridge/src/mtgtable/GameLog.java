@@ -154,7 +154,7 @@ public final class GameLog implements AutoCloseable {
     }
 
     /**
-     * Open a log, gzipped when {@code gzip} is true (D313: the cube lab's
+     * Open a log, gzipped when {@code gzip} is true (D315: the cube lab's
      * in-process recordings, {@code .jsonl.gz}).  The deflater sits above the
      * byte counter, so {@link #bytes()} is the size on disk.  Lines are still
      * flushed one at a time to the deflater; without a sync flush the

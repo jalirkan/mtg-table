@@ -173,7 +173,7 @@ public final class GameLogSelfTest {
                && !got.get(0).contains("\"dir\""));
     }
 
-    /** D313: a gzipped log holds exactly the lines a plain one would, and bytes() is its size on disk. */
+    /** D315: a gzipped log holds exactly the lines a plain one would, and bytes() is its size on disk. */
     private static void gzipIsTheSameLines() throws IOException {
         final File plain = new File(dir, "same.jsonl");
         final File gz = new File(dir, "same.jsonl.gz");

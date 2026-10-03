@@ -9,7 +9,7 @@
         [--shard-rows 100000] [--phases main,combat] [--group-by game|match]
     python3 tools/ml/dataset.py --run-dir var/cubelab/runs/X [--run-dir ...] [--out DIR] [...]
 
---run-dir takes a cube-lab run folder (D313) -- its recordings under `games/`
+--run-dir takes a cube-lab run folder (D315) -- its recordings under `games/`
 and `frames/`, with the run's cube (`cube.md`, or `run.json`'s `cubeFile`) as
 the vocabulary -- and writes to `<run-dir>/dataset` unless --out says
 otherwise.  Several run folders (a week of nights) make one dataset when they
@@ -196,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--vocab", action="append")
     ap.add_argument("--out")
     ap.add_argument("--run-dir", action="append", default=[],
-                    help="a cube-lab run folder: its recordings, its cube as the vocabulary (D313)")
+                    help="a cube-lab run folder: its recordings, its cube as the vocabulary (D315)")
     ap.add_argument("--split", default="80,10,10", help="train,val,test weights")
     ap.add_argument("--salt", default="")
     ap.add_argument("--shard-rows", type=int, default=100_000)

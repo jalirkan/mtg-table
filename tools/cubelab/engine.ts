@@ -88,11 +88,11 @@ export interface MatchJob {
   poolB: string[];
   forgeDeckOutA: string;
   forgeDeckOutB: string;
-  /** D313: record every game of this match, both chairs, in the worker (`run --record-all|--record-every N`). */
+  /** D315: record every game of this match, both chairs, in the worker (`run --record-all|--record-every N`). */
   record?: RecordSpec;
 }
 
-/** Where and how a match's games are recorded (D313); CubeLab.java's `Recording` reads it. */
+/** Where and how a match's games are recorded (D315); CubeLab.java's `Recording` reads it. */
 export interface RecordSpec {
   /** The draft's folder, absolute: `<out>/games/<seed>`. */
   dir: string;
@@ -118,10 +118,10 @@ export interface GameRow {
   timeout: boolean;
   reason: string | null;
   error: string | null;
-  /** The worker JVM's CPU time over the game, all threads, and the game thread's own (D313; absent before it). */
+  /** The worker JVM's CPU time over the game, all threads, and the game thread's own (D315; absent before it). */
   cpuMs?: number;
   gameCpuMs?: number;
-  /** D313: the game's two frame logs (`<dir>/g<n>-seat{0,1}.jsonl.gz`), their bytes on disk, state frames, snapshot errors. */
+  /** D315: the game's two frame logs (`<dir>/g<n>-seat{0,1}.jsonl.gz`), their bytes on disk, state frames, snapshot errors. */
   recorded?: { dir: string; bytes: number; frames: number; errors: number };
 }
 

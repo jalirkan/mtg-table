@@ -162,7 +162,7 @@ and pick the `.jsonl`** — it replays like any recorded game (the other seat's
 hand stays hidden, as in every frame log). A recorded game is its own game of
 the same two decks, not one of the counted ones.
 
-### Recording every game, for the ML dataset (D313)
+### Recording every game, for the ML dataset (D315)
 
 `--record-all` records **the games the workers play**, in the worker, while
 they are played: every game of every draft, from **both chairs**, as two
@@ -213,7 +213,7 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 | `--profiles A,B` | `Default,Default` | the AI profile of each seat (`forge-home/res/ai/*.ai`) |
 | `--ratings <tsv>` | `<cube>.ratings.tsv` if present, else Forge's ranks | |
 | `--record M` | 0 | frame logs of M drafts' decks, in `<out>/frames/` |
-| `--record-all` | off | every game played, both chairs, gzipped, in `<out>/games/` (D313) |
+| `--record-all` | off | every game played, both chairs, gzipped, in `<out>/games/` (D315) |
 | `--record-every N` | 0 (off) | the same for each draft whose seed is a multiple of N |
 | `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes |
 | `--builder lab\|forge` | `lab` | which deck plays |
@@ -294,7 +294,7 @@ output), `frames/` and `recordings.json` under `--record`, `games/` and
   "match": { "games": [ { "n": 1, "onPlay": "B", "onPlayVerified": "B", "winner": "A",
                           "turns": 18, "ms": 11162, "timeout": false, "reason": "AllOpponentsLost",
                           "cpuMs": 21540, "gameCpuMs": 10870,       // the worker's CPU time, all threads / the game thread
-                          "recorded": { "dir": "games/7", "bytes": 125523, "frames": 683, "errors": 0 } } ],  // D313, when recorded
+                          "recorded": { "dir": "games/7", "bytes": 125523, "frames": 683, "errors": 0 } } ],  // D315, when recorded
              "winsA": 1, "winsB": 0, "winner": "A", "worker": 0 },
   "ms": { "draft": 15, "build": 20, "match": 24970 } }
 ```

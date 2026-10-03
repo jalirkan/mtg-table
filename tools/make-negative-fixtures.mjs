@@ -222,6 +222,48 @@ probe('a3-opponent-library-revealed.jsonl',
     }
   });
 
+// D315 (the cube lab's follow-up 1): Courser of Kruphix and its kind make the
+// top card of their controller's library PUBLIC, so the opponent's
+// library.cards may carry that one card while one is on their battlefield --
+// and not two cards, and not without the permanent (the probe above).
+const withRevealer = (fs, n, name = 'Courser of Kruphix') => {
+  for (const f of fs) {
+    if (f.type !== 'state') continue;
+    const opponent = f.body.players.find((p) => !isViewerSeat(p));
+    const proto = structuredClone(firstFull(fs).card);
+    Object.assign(proto, { id: 90010, name, controller: opponent.id, owner: opponent.id, zone: 'battlefield',
+      faceDown: false, alt: null, attachedToId: null, attachmentIds: [] });
+    opponent.zones.battlefield.cards.push(proto);
+    opponent.zones.battlefield.count = opponent.zones.battlefield.cards.length;
+    opponent.zones.library.cards = [];
+    for (let i = 0; i < n; i++) {
+      const donor = structuredClone(firstViewerNamed(fs).card);
+      Object.assign(donor, { id: 90011 + i, zone: 'library', controller: opponent.id, owner: opponent.id });
+      opponent.zones.library.cards.push(donor);
+    }
+    return;
+  }
+};
+{
+  const fs = slice();
+  withRevealer(fs, 1);
+  write('a3-revealed-top-under-courser.jsonl', fs);
+  manifest.push({
+    file: 'a3-revealed-top-under-courser.jsonl', level: 'pass', expect: 'PASS',
+    why: 'A3, D315: the opponent controls Courser of Kruphix, so their library\'s top card is public -- one ' +
+      'card in their library.cards is not a leak (the control for the two probes below)',
+  });
+  console.log('  PASS  a3-revealed-top-under-courser.jsonl  (a revealed top card, no defect)');
+}
+probe('a3-revealed-top-two-cards.jsonl',
+  'A3, D315: Courser reveals ONE card; a second card of the opponent\'s library is a leak',
+  'NOT the viewing seat',
+  (fs) => withRevealer(fs, 2));
+probe('a3-revealed-top-look-is-private.jsonl',
+  'A3, D315: Experimental Frenzy says "you may look" -- private, even though Forge scripts it MayLookAt$ Player',
+  'NOT the viewing seat',
+  (fs) => withRevealer(fs, 1, 'Experimental Frenzy'));
+
 // The other half of finding 5: an opponent-library reveal is TRANSIENT (the
 // search ends), so it must not confer a permanent name-before-reveal exemption.
 // Before the fix, adding an id to the opponent's library.cards whitelisted it in

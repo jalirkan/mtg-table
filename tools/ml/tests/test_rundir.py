@@ -1,4 +1,4 @@
-# mtg-table — tools/ml tests: a cube-lab run folder as the dataset's input (D313).
+# mtg-table — tools/ml tests: a cube-lab run folder as the dataset's input (D315).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The cube lab's in-worker recordings (`tools/cubelab.sh run --record-all`):

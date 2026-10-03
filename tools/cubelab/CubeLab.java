@@ -93,7 +93,7 @@ import mtgtable.SeatRecorder;
  *       {@code <out>/logs/}.</li>
  * </ol>
  *
- * <h2>Recording (D313)</h2>
+ * <h2>Recording (D315)</h2>
  *
  * A match line with a {@code record} block ({@code run --record-all} /
  * {@code --record-every N}) has every game of it written, while it is played,
@@ -478,16 +478,16 @@ public final class CubeLab {
         long ms;
         boolean timeout;
         boolean stuck;
-        long cpuMs;          // the worker JVM's CPU time over the game, every thread (D313's overhead measure)
+        long cpuMs;          // the worker JVM's CPU time over the game, every thread (D315's overhead measure)
         long gameCpuMs;      // the game thread's own CPU time
-        String recorded;     // the recording's folder, relative to the run (D313)
+        String recorded;     // the recording's folder, relative to the run (D315)
         long recordBytes;
         int recordFrames;
         int recordErrors;
     }
 
     /**
-     * What one recorded game's two logs say about it (D313).  The job's
+     * What one recorded game's two logs say about it (D315).  The job's
      * {@code record} block: {@code dir} (absolute: the draft's folder),
      * {@code rel} (that folder relative to the run), {@code run}, {@code cube},
      * {@code cubeFile}, {@code cubeSha}, {@code format} and the two deck names
@@ -571,7 +571,7 @@ public final class CubeLab {
         final Game game = match.createGame();
         final GameResult r = new GameResult();
         game.subscribeToEvents(new FirstPlayer(game, aOnPlay ? lpA : lpB, r));
-        // D313: both chairs' recorders, subscribed after FirstPlayer and before the game starts.
+        // D315: both chairs' recorders, subscribed after FirstPlayer and before the game starts.
         final List<SeatRecorder> recorders = new ArrayList<>();
         if (rec != null) {
             for (int s = 0; s < 2; s++) {

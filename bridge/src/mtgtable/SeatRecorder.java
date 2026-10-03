@@ -34,7 +34,7 @@ import forge.util.BuildInfo;
 import mtgtable.Json.JsonOut;
 
 /**
- * One seat's frame log of a game some OTHER program is running (D313): the
+ * One seat's frame log of a game some OTHER program is running (D315): the
  * cube lab's worker records every game it plays, both chairs, in the JVM that
  * plays it, instead of replaying the decks through a fresh {@link RecordMatch}
  * (a Forge boot, ~30 s, per game).
