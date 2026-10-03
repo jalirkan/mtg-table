@@ -19,6 +19,7 @@
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
 //   GET  /health  -> 200 {"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"]}
+//                 (+ "match": 0|1 and, with the launcher, "engine": "running"|"idle", D303/D308)
 //                    or 200 {"ok":false,"helper":1,"error":"<plain words>"} when `claude`
 //                    is missing or `claude --version` fails.  It does not prove a login:
 //                    only a real call can, and a logged-out CLI answers /coach with the
@@ -392,9 +393,10 @@ export function startHelper(opts) {
       if (req.method !== 'GET') { send(res, 405, { type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
       const info = await claudeInfo();
       const matchCap = match && match.available() ? 1 : 0;   // D303
+      const eng = matchCap ? match.engine() : null;           // D308: engine running | idle
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -410,6 +412,16 @@ export function startHelper(opts) {
       const r = await match.post(q);
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/engine/start') {
+      // D308: wake a sleeping engine (match-launcher.mjs `wake`).  The same gate.
+      if (!match) { send(res, 503, { ok: false, type: 'error', message: 'the match launcher is off: this helper was not started by scripts/play.sh' }, cors); say(503); return; }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (await readBody(req, res, 4096, '4 KB', cors, say) === null) return;
+      const r = await match.wake();
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 200 ? ` (${r.body.already ? 'already running' : r.body.ms + ' ms'})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path !== '/coach') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }

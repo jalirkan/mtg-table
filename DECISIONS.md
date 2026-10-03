@@ -13691,3 +13691,97 @@ block needs thousands of games before it pays.
   bare `python3` + numpy, in the gate and CI, before any GPU is involved.
 - **Features from `stack[].text` or `cast.text`** — engine strings that §3.6
   gates and sweeps; ids and public faces already say what is on the stack.
+
+
+## D308 — With the match launcher on, the engine exiting does not end `play.sh`: it sleeps with no JVM, keeps the coach helper, and the next `POST /match` starts the bridge
+
+*Branch `c/engine-stay-up`; D308 alone (D299–D307 are other lanes').*
+
+**2026-10-03** (the owner's request: a cube draft in ForgeCoach takes 30–90 minutes)
+
+**Problem.** ForgeCoach drafts, then calls the helper's `POST /match` (D303).
+The engine `play.sh --engine-only` started ends in two ordinary ways — a match
+over with nobody connected (M6's linger) and D286's hour with no `/ws` client —
+and `play.sh` exited with it, taking the helper and the launcher along. After a
+long draft, "Play this match" met a dead helper.
+
+**Decision.** In `--engine-only` and `--lan` (ForgeCoach's modes), when this
+`play.sh`'s helper serves `/match` (`MATCH_ON=1`) and the bridge exits for any
+reason, `play.sh` does not stop:
+
+- it prints the bridge's last lines and `engine asleep`, removes
+  `var/match/current.json`, writes `var/match/engine.json`
+  (`{"state":"idle","at","reason","exitsAt"}`), and waits in a one-second
+  `sleep`/`wait` loop, so SIGUSR1, INT and TERM are taken at once. No JVM runs
+  while asleep: D286's purpose (no hung JVM burning CPU or holding the seat) is
+  kept, because the engine still exits exactly as before;
+- the next `POST /match` (SIGUSR1, D303's whole mechanism, unchanged) takes the
+  asleep branch of `restart_match`: nothing to stop, the same port-quiet check,
+  the same flags and `--game-id`, `--lan` keeping its first token. A bridge that
+  will not start on the new decks leaves `play.sh` asleep (status `failed`,
+  `restored: false`) instead of "starting the previous match again" — the
+  previous match was over — and instead of stopping;
+- `GET /health` gains `"engine": "running" | "idle"` (with `idleSince` and
+  `exitsAt`, ISO, when idle; only while `"match": 1`), read from `engine.json`
+  by `tools/match-launcher.mjs`; `GET /match` says `"state": "idle"` and
+  `"match": null`. `docs/match-launcher.md` is the copyable contract;
+- `--idle-exit-after <minutes>` (default **240**, decimals allowed, `0` never):
+  asleep that long with no match request, `play.sh` stops everything and exits 0.
+  A draft is 30–90 minutes; four hours covers a long one and an evening's
+  forgetting, and bounds the next item;
+- Ctrl-C, SIGTERM and the launcher's Stop work asleep or not (`stop()` also
+  removes `engine.json`).
+
+**Unchanged on purpose.** A plain `./scripts/play.sh` (the vite board, which has
+nothing to wake it), `--no-match`, `--no-coach`, and a helper that belongs to
+another `play.sh` all keep the old exit with the bridge. An engine that dies
+mid-game (a crash, not an exit 0) also goes to sleep rather than taking the
+helper down; the next match request is the retry, and the log lines are printed.
+
+**What ForgeCoach's launcher sees.** `public/forgecoach.sh` there holds a
+`systemd-inhibit` sleep lock for as long as `play.sh` runs. `play.sh` is now
+alive while the engine sleeps, so the lock stays held until the idle exit — up
+to four hours after the last match by default. It matters only for power: the
+machine cannot suspend meanwhile (a laptop in a bag is the case to mind), and
+nothing is spinning. `--idle-exit-after` is the dial; the launcher can pass a
+smaller one, or poll `engine` and drop the lock itself. That repository is not
+changed here.
+
+**Plain Play and a second launch (added before the PR).** A plain Play has no
+decks to `POST /match`, and ForgeCoach's launcher runs `play.sh --engine-only`
+again on every menu click, so two more doors:
+
+- `POST /engine/start` (same gate; `/health` `"engine_start": 1`): wakes the
+  sleeping engine on the last match setup — the last `/match`'s decks, else the
+  startup decks — through the same `request.json` + SIGUSR1, as `{"wake":true}`;
+  `play.sh` re-uses `BRIDGE_ARGS` with a fresh `--game-id` (a repeated gameId is
+  a reconnect, §2.1). Reply: `POST /match`'s 200 plus `already:false`; the
+  engine already running is 200 `already:true`. Shares `/match`'s busy flag.
+- Before it checks, builds or binds anything, `play.sh --engine-only` probes its
+  coach port. Today (before this) a second `play.sh` started its own bridge on
+  the taken ws port and died with "the bridge exited before it was ready", or,
+  with the sleeper's port free, started a second bridge beside the first's
+  helper. Now, when `/health` says `match:1` and `engine:idle`, it `POST`s
+  `/engine/start`, prints `Engine ready…` and exits 0; when the engine is
+  running and the ws port answers it says so and exits 0. Not with `--port`,
+  `--no-coach` or `--no-match`. A probe that finds nothing leaves the old
+  start-up untouched.
+
+**Tested.** `tools/match-launcher-selftest.mjs` (fake engine with the bridge's
+own `--idle-timeout`): the engine exits on idle and `play.sh` stays up with
+`/health` `engine: idle`, `GET /match` idle with no match, no port answering;
+`POST /match` starts a fresh engine on the new decks, never two; it falls asleep
+again; Ctrl-C while asleep removes everything; `--idle-exit-after` ends
+`play.sh` by itself and a bad value is refused; `--no-match` keeps the exit with
+the engine. The harness's HTTP helper now sets `agent: false` — Node 22's
+keep-alive agent made the back-to-back-POST check fail with `socket hang up`
+on an unmodified tree.
+
+**Rejected.**
+
+- **A `--keep-alive` flag instead of a default** — the helper is already the
+  opt-in; a flag ForgeCoach's launcher must remember is the failure this fixes.
+- **Restarting the previous match when the engine exits** — a JVM held for a
+  match nobody is playing, which is what D286 ended.
+- **Keeping the JVM up and raising `--idle-timeout`** — a hung engine would
+  burn CPU for as long as the draft.
