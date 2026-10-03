@@ -54,6 +54,24 @@
     "why": "A3: an opponent library dumped as full cards -- reachable, but it must be declared"
   },
   {
+    "file": "a3-revealed-top-under-courser.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A3, D315: the opponent controls Courser of Kruphix, so their library's top card is public -- one card in their library.cards is not a leak (the control for the two probes below)"
+  },
+  {
+    "file": "a3-revealed-top-two-cards.jsonl",
+    "level": "fail",
+    "expect": "NOT the viewing seat",
+    "why": "A3, D315: Courser reveals ONE card; a second card of the opponent's library is a leak"
+  },
+  {
+    "file": "a3-revealed-top-look-is-private.jsonl",
+    "level": "fail",
+    "expect": "NOT the viewing seat",
+    "why": "A3, D315: Experimental Frenzy says \"you may look\" -- private, even though Forge scripts it MayLookAt$ Player"
+  },
+  {
     "file": "a6-library-reveal-is-not-a-whitelist.jsonl",
     "level": "fail",
     "expect": "nothing earlier in this log",

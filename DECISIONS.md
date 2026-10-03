@@ -14128,6 +14128,238 @@ decision, and the gate's recordings must stay Forge's); a new profile name
 (profiles are `.ai` files, D311); a ForgeCoach-side switch now (the launcher's
 contract is D303's, changed in both repositories or not at all — a follow-up).
 
+## D315 — The cube lab records the games it plays: `run --record-all` / `--record-every N` writes both chairs of every game, gzipped, from the worker JVM, through `RecordMatch`'s own recorder; `tools/ml` reads a run folder with `--run-dir`
+
+*Branch `c/lab-record`; D315 (written as D313 and renumbered before merge: the
+search AI holds D312–D314, the evaluator D316–D317).*
+
+**2026-10-03** (the owner's goal: every one of a night's ~50,000 cube-lab games
+becomes training data for the position evaluator of D305)
+
+**Decision.** `tools/cubelab.sh run … --record-all` (or `--record-every N`: every
+game of each draft whose seed is a multiple of N) makes the worker that plays a
+game write that game's frame log while it plays, once per seat:
+`<out>/games/<seed>/g<n>-seat0.jsonl.gz` (drafter A's view) and `-seat1`
+(drafter B's), with the cube's markdown copied to `<out>/cube.md`. Off by
+default; a run without the flags writes what it wrote before (its game rows
+gain only `cpuMs` and `gameCpuMs`, the worker's CPU time).
+
+- **One serialiser, reused, not a second one** (hard rule 8; the cube lab's
+  follow-up 2). `mtgtable.SeatRecorder` (new, in the bridge, names no
+  `CardView`) wraps `RecordMatch`'s `SpectatorGui`, a hand-registered
+  `GameEventForwarder` and `RecordMatch`'s unpaced `BoundaryFlusher`, and
+  writes `RecordMatch`'s session header and `hello_ok` with its match block.
+  Two recorders on one game are two viewers; each forwarder is registered
+  before its own flusher, which flushes only it. `CubeLab.java` attaches them
+  before the game starts and finishes them inside the same `GameAction.invoke`
+  body that runs `match.startGame` — the game thread, where `RecordMatch`
+  finishes its own — so the lab still makes no hop and starts no thread
+  (`GameLog`'s appender aside); the lint's `CardView` list stays three.
+  `RecordMatch`'s `unsupported` and `sha256` became package-private; its
+  behaviour is unchanged.
+- **Gzip in `GameLog`** (`new GameLog(file, true)`): the deflater sits above
+  the byte counter, so `bytes()` is the size on disk. No sync flush per line
+  (it would cost most of the compression), so a killed worker leaves a gzip
+  that ends early; `encode.py` reads it up to the cut, and with no `over` it
+  gives no rows. `GameLogSelfTest` holds the round trip.
+- **Metadata.** The header's `seed` is the game's seed; a `lab` block names
+  `run`, `cube`, `cubeFile`, `cubeSha`, `format`, `match`, `draftSeed`, `game`,
+  `gameSeed` and `onPlay`; `hello_ok.match` names the decks `cubelab <seed> A`
+  / `B` (the other chair's by name and count only, as always), so D305's split
+  keeps both chairs of a game in one group and `--group-by match` holds a
+  draft's decks out. The other chair's deck path is never in a log.
+- **`--run-dir`** on `encode.py` and `dataset.py`: the run's `games/` and
+  `frames/`, the run's own `cube.md` as the vocabulary (else `run.json`'s
+  `cubeFile`), refused when its sha256 is not the run's `cubeSha`; several run
+  folders make one dataset only when they drafted one cube; `dataset.py`
+  writes to `<run>/dataset/` unless `--out` says otherwise.
+- **The redaction checker reads `.gz`, and A3 learned the revealed library
+  top** (the cube lab's follow-up 1): while a player controls, face up, one of
+  the twelve "play with the top card of your library revealed" permanents in
+  the 2.0.14 jar (Courser of Kruphix is in the owner's cubes) or one of the
+  three that reveal every player's, ONE card of their library is public and
+  not a leak. Two cards still fail, and so does Experimental Frenzy, which
+  Forge scripts `MayLookAt$ Player` but whose Oracle text is a private look.
+  Three probes in `fixtures/negative/redaction/a3-revealed-top-*`.
+- **Held by:** gate 12g now runs `--record-every 2` (seed 8 recorded, seed 7
+  not), runs `check-redaction.mjs` over both chairs and `encode.py --run-dir`
+  over the run; `web/test/cubelab-record.test.ts` runs the checker over the
+  committed recording `fixtures/cubelab/recorded/` (one game, both chairs) with
+  a planted-leak negative control; `tools/ml/tests/test_rundir.py` reads that
+  run, scrambles its hidden zones (no feature moves), cuts a gzip short and
+  builds a dataset from it.
+- **Not done: the AI's chosen action** for a policy target. Forge's choices are
+  made inside `PlayerControllerAi`; logging them needs D309's controller seam
+  (`bridge/src/mtgtable/ai/`, the search AI's), so it is not cheap here. A
+  seat's own casts, land drops, attacks and blocks are already in its log's
+  `events` after each decision state, which is enough for a first policy
+  target; passes and target choices are not.
+
+**Measured** (this container: 4 shared cores at a load of 15–30, then 130;
+synergy cube, grid, seeds 101–108, one game each, `--jobs 2`, two rounds of
+each arm in turn). The recordings change no game: every seed played the same
+number of turns in all four runs (153 turns over the 8 games each time). Wall
+time could not be measured here — the arms differed by −37% and +117% per turn
+with the load — so CPU time per turn is the number: the worker's, off 1,338 /
+1,307 ms and on 1,307 / 1,654 ms (+12% over both rounds), the game thread's,
+off 383 / 385 ms and on 373 / 441 ms (+6%); within the 30% budget, and the
+wall-clock figure is the PC's to measure (`tools/ml/README.md`). Disk: 148 KiB
+a game for both chairs gzipped (median 142, max 252; 672 state frames, 7.7
+KiB a turn), so 50,000 games are about 7 GiB.
+
+**Rejected.**
+
+- **Replaying through `RecordMatch`** (`--record M`): a Forge boot a game, and a
+  game that is not the counted one.
+- **A recorder of the lab's own** — a second card serialiser (hard rule 8).
+- **One omniscient log per game** — a new redaction mode, and the dataset is
+  per viewer anyway.
+- **Plain `.jsonl`** — about 6× the disk at night scale.
+- **Recording a separate side file of every engine choice** — needs the AI
+  seam above.
+
+## D316 — The position evaluator: D305's rows -> P(the viewer wins) through pooled per-card embeddings, exported as versioned JSON, encoded and scored again in Java (`mtgtable.eval`) with golden parity on every build and a live parity check against `Snap`
+
+*Branch `c/evaluator`; D316–D317 (D312–D314 are the search AI's, D315 lab-record's).*
+
+**2026-10-03**
+
+**Decision.**
+
+- **The model** (`tools/ml/evalnet.py`, trained by `tools/ml/train_eval.py`):
+  the board columns standardised; the card block -- vocab x 17 counts --
+  **pooled through one learned embedding per card** (8 numbers by default),
+  shared by all 17 card states and both sides (`pooled[state] = sum_c count[c,
+  state] * E[c]`); then one 64-unit ReLU layer and a sigmoid. `E` starts at
+  zero with its own L2 (`--card-l2`, 100x the weights' by default), so an
+  unseen or rare card adds (nearly) nothing and D305's `types` block -- counts
+  and mana values by type and zone -- carries it. Early stopping on validation
+  log-loss; `--grid --time-budget` for an overnight search; numpy by default
+  (hand-written gradients, finite-difference tested; measured faster than CPU
+  torch on this narrow, sparse net), torch for a GPU.
+- **What the model does not read**: nine **live-unsafe** features, which a live
+  Forge game cannot reproduce as the log has them -- each side's
+  `abilities_turn` (the log counts `cast` events, triggers included),
+  `spells_cast_game`, `lands_played_game`, `mulligans` (no Forge counter), and
+  `stack.abilities` (`stack[].isAbility` is a comfort field, M36, absent from
+  every AI-vs-AI recording, so the training data reads 0) -- and every column
+  constant in training. The export lists both; Java refuses a model that reads
+  a live-unsafe feature for live use.
+- **The export** is one JSON file, `formatVersion` 1: schema id and version,
+  the vocabulary, board columns with mean and deviation, the embedding, the
+  layers. Java's `FeatureSchema` rebuilds D305's layout name for name from the
+  vocabulary and hashes it as Python does; a different schema id, feature count
+  or card-block offset is refused, and `PositionEvaluator.load(model, cube)`
+  refuses a model trained for another card list.
+- **Java** (`bridge/src/mtgtable/eval/`, a new package beside `mtgtable.ai`):
+  one `Position` (the subset of a `state` body the encoder reads), two
+  builders -- `JsonPosition` from a recorded frame, `GamePosition` from a live
+  `Game` -- one `FeatureEncoder` (encode.py's `encode_state`, statement for
+  statement), `EvalModel` (the forward pass in double), and
+  `PositionEvaluator.winProbability(game, viewer)` for the search's leaves.
+  `GamePosition` reads only the viewer's knowledge: every other hand and every
+  library is a size, a face-down card is its face-down body, a face-down exiled
+  card is concealed unless the viewer controls it. It names no `CardView` (lint
+  rule 5 unchanged); it reads engine objects, so it runs where the game is not
+  moving (the game thread, or a private copy). Two view rules it reproduces:
+  no combat at `COMBAT_BEGIN` (Forge's `CombatView` is refreshed at declare
+  attackers), and a stack source in a hidden zone is concealed.
+- **Parity, engine-free, on every build**: `mtgtable.eval.EvalSelfTest` (the
+  build's eighth self-test) against `fixtures/eval/` (`tools/ml/eval_golden.py`:
+  a small model and Python's rows for the 22 committed recordings): the same
+  rows, identical integer features (a hash per row, every tenth in full), P(win)
+  within 1e-9, Python's names for every cube and deck list, and D305's
+  hidden-zone scrambler in Java with its negative control.
+  `tools/ml/tests/test_eval.py` fails first when `encode.py` moves a feature.
+- **Parity, live, by hand** (`tools/ml/eval-live-check.sh`, boots Forge): at
+  every decision of both chairs it encodes `Snap.state` for that player and the
+  live `Game`, compares, then redeals the opponent's hand and library (and
+  shuffles the viewer's library) through `Zone.setCards`, requires the live
+  vector not to move, and restores them.
+
+**Why.** The card block is what overfit in D305; a weight per (card, state,
+unit) needs data per state, an embedding per card needs data per card, and
+what one state teaches transfers to the other sixteen. Hashing cards into
+type/mana-value buckets with a per-card bias was the alternative: the `types`
+block already is those buckets, and the embedding is the per-card residual in
+vector form. One JSON file is enough at this size (tens of thousands of
+numbers), readable with the Jetty parser the jar already ships, and diffable.
+Two builders over one `Position` keep the meaning of a feature in one place:
+the live path can only disagree about what the board is, and the live check
+measures exactly that.
+
+**Measured** (2026-10-03, the shared 4-core container at a load of 15 to 130;
+28 finished synergy-cube games, both chairs, 3 deck pairs, 2,718 rows --
+`record-pairs.sh` stopped at the coordinator's request; the rest are the owner's
+PC's, `tools/ml/README.md`):
+
+- Golden parity: 2,561 rows of 22 recordings, every feature identical, worst
+  |P_java - P_python| = 2.2e-16; scrambler: 2,561 rows unchanged, negative
+  control changes rows; a planted leak (the opponent's hand read in both
+  `JsonPosition` and the encoder) fails it.
+- Live parity, two games (seeds 11, 12 of `synergy-1003`): 341 and 467
+  decisions, 97.7% and 99.1% identical on every model-read feature; the rest is
+  the combat block only (the `CombatView` lags an attacker or blocker removed
+  mid-step until its next refresh: at most 4 decisions of 467). Hidden-zone
+  redeals: 808, features moved 0; the negative control changed 712 of 728.
+  `EvalLiveCheck` tolerates the combat lag up to 3% of decisions and fails
+  anything else.
+- Speed: encode 22-69 us and predict 12-22 us per position for the 3,133-feature
+  fixture model (`EvalSelfTest`, varying with load); the whole live call
+  (`GamePosition` + encode + predict, 3,456 features, 64 hidden) median 117-125
+  us, mean 0.4-0.7 ms, p99 12 ms (GC and load spikes).
+- **Accuracy: at three deck pairs the evaluator does not generalise.**
+  Leave-one-pair-out CV over the 28 games (log-loss, all rows): prior 0.692,
+  life 0.841, core (D305's twelve numbers) **0.649**, evaluator 1.542 (by-game
+  CV, D305's split: 0.658 / 1.049 / 0.731 -- by game flatters, D317). The
+  single pair split (1 train pair, 1 val, 1 test): test prior 0.691, life
+  0.561, core **0.516**, evaluator 0.695 (it kept epoch 1). Stronger
+  regularisation (16 units, L2 1e-2, card L2 1.0, dropout 0.3: 0.924) and no
+  hidden layer at all (0.839) do not fix it: the inner validation split cannot
+  be by pair with two training pairs, so early stopping cannot see pair
+  overfitting. With the 22 Marvel fixture games held out as a second card pool
+  (`holdout:fixtures/games`, both pools in the vocabulary): prior 0.677, life
+  **0.600**, core 0.809, evaluator 0.672. `train_eval.py` prints a verdict line
+  and says when the evaluator loses to a baseline; until the owner's PC run
+  says it wins, the search keeps its hand-written leaf.
+
+**Rejected.** A weight per card-state cell (D305 measured the overfit); an
+open, hashed vocabulary (the cube is closed, D305); a GPU-only trainer (the
+owner's PC may have none); ONNX or a binary format (a dependency for a few
+thousand floats); reading Forge's `CardView`s for the live encoder (a fourth
+`CardView` file for lint rule 5, and a search copy's views are not maintained);
+reproducing the four game-level tally counters by subscribing to the copy's
+events (the search copies games mid-turn; a model that does not read them is
+simpler and loses little).
+
+## D317 — The ML split is by deck pair by default, and every evaluator report says how many test rows come from a deck seen in training
+
+**2026-10-03** (the methodology review: a by-game split flatters, because the
+bench replays the same deck pairs over many seeds)
+
+**Decision.** `dataset.py --group-by match` is the default: every game of one
+deck pair -- one draft, in the cube lab -- is one split group; a log with no
+match block stays its own group; `--group-by game` keeps D305's split.
+`games.jsonl` records each game's `match` and `game_group`. `train_eval.py
+--split-by` re-splits a built dataset: `pair` (default; with fewer than 20
+pairs, at least one each in validation and test), `game` (D305's, for
+comparison), `holdout:REGEX` (every game whose deck names or log path match is
+the test split -- a whole cube held out, given a vocabulary over both cubes),
+and `dataset`. `--cv K` folds by pair (leave-one-pair-out when there are K
+pairs or fewer); early stopping inside a fold uses held-out games of the
+training pairs. Every report prints rows, games and pairs per split and the
+number of test rows from a deck the training split holds (0 under `pair` and
+`holdout`).
+
+**Why.** Measured on the same 28 games (D316): the evaluator's out-of-fold
+log-loss is 1.049 by game and 1.542 by pair, the core logistic's 0.731 and
+0.649 -- the split changes the ranking. The search will meet decks it never
+trained on every night; pairs are the unit of novelty.
+
+**Rejected.** Splitting by single deck (a pair's two decks always play each
+other in a bench, so a deck and its opponent would straddle splits); a random
+row split (D305).
+
 ## D322 — Bridge drafts: a pool sampled afresh per draft from two or more cubes, each cube's share stratified by its sections, every card tagged with its source cube, the cubes' ratings put on one scale per draft
 
 *Branch `c/matchup-model`; D322–D324 (the next free numbers after the search

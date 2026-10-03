@@ -396,8 +396,8 @@ villain identity's rebase, were removed at the same recount.)
 | [Observer socket](#fu-observe) | 3 | open | ForgeCoach's `live.ts` and README still say mtg-table has no observer endpoint (another repository, the owner's) | — |
 | [Test gaps](#fu-test-gaps) | 1 | open | `awaitNextGame`'s `sawClient` is per wait: a client that leaves between `over` and the wait costs a session the 30 s grace (10e, under load) | `bridge/src/mtgtable/MtgTable.java` |
 | [Test gaps](#fu-test-gaps) | 2 | open | Frames reach the socket out of `seq` order when two threads emit at once (5, 3, 4 seen); numbering and pushing are not one step | `bridge/src/mtgtable/WireGuiGame.java` |
-| [Cube lab](#fu-cube-lab) | 1 | open | `check-redaction.mjs`'s A3 fails a Courser of Kruphix's revealed top card, which is public | `tools/check-redaction.mjs` |
-| [Cube lab](#fu-cube-lab) | 2 | open | A `--record` game is a replay of the decks, not one of the counted games | `tools/cubelab/run.ts` |
+| [Cube lab](#fu-cube-lab) | 1 | done (D315) | `check-redaction.mjs`'s A3 fails a Courser of Kruphix's revealed top card, which is public | `tools/check-redaction.mjs` |
+| [Cube lab](#fu-cube-lab) | 2 | done (D315) | A `--record` game is a replay of the decks, not one of the counted games | `tools/cubelab/run.ts` |
 | [Cube lab](#fu-cube-lab) | 3 | open | The seeded ratings mix CubeCobra's scale with set files' halved one | `cubes/*.ratings.tsv` |
 | [Cube lab](#fu-cube-lab) | 4 | open | The watchdog's timeout, stuck-exit and restart paths have not fired on a real hang | `tools/cubelab/engine.ts` |
 | [Cube lab](#fu-cube-lab) | 5 | open | `motion.test.ts`'s film digest fails under Node 22, on `main` too | `web/test/motion.test.ts` |
@@ -418,7 +418,7 @@ villain identity's rebase, were removed at the same recount.)
 | [Matchup model](#fu-matchup) | 3 | open | The switch: `meta.json` `value`/`valueSd` from M0, then `evolve`'s cuts, ForgeCoach's `score.ts` and flatness read it | `tools/cubelab/meta.ts` |
 | [Matchup model](#fu-matchup) | 4 | open | `design`'s objective is a proxy (pair strength from the 23 best powers, no drafting, no themes) | `tools/ml/matchup_design.py` |
 | [Matchup model](#fu-matchup) | 5 | open | `--bridge-ratings even` is measured on 4 drafts; read the composition table after night 1 | `tools/cubelab/bridge.ts` |
-| [Matchup model](#fu-matchup) | 6 | open | A recorded bridge run's `cube.md` (D315) is the source cubes concatenated: check the evaluator's vocabulary reads it | `tools/cubelab/run.ts` |
+| [Matchup model](#fu-matchup) | 6 | closed | A recorded bridge run's `cube.md` (D315) is the source cubes concatenated: the encoder reads it as their union (measured) | `tools/cubelab/run.ts` |
 
 ### Questions only the owner can settle
 
@@ -9859,12 +9859,16 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    (Opposition Agent, Bribery, Gonti); Courser is in both cubes (and Future
    Sight's `MayLookAt` is the other shape it already knows). Teach A3 the
    revealed-top statics, with a fixture, before a cube recording goes into
-   `fixtures/`.
+   `fixtures/`. *Done (D315): A3 excuses one card of an opponent's library
+   while they control a "play with the top card revealed" permanent; three
+   probes in `fixtures/negative/redaction/a3-revealed-top-*`.*
 2. **A recorded game is not one of the counted games.** `RecordMatch` plays one
    game per process with its own coin flip, so `--record M` replays a draft's
    decks once more; the report's numbers never include it. Recording the counted
    games needs the worker to carry a recorder, which is a second serialiser
-   unless it is `RecordMatch`'s own (hard rule 8).
+   unless it is `RecordMatch`'s own (hard rule 8). *Done (D315): `run
+   --record-all` / `--record-every N`, `RecordMatch`'s own recorder in the
+   worker (`mtgtable.SeatRecorder`), both chairs.*
 3. **The seeded ratings mix two scales.** A card on CubeCobra's list scores
    about 80–99; a card ranked only by a set's file is halved by
    `CardRanker.getRawScore` (Birds of Paradise 49.6, Hengegate Pathway 18.4). The
@@ -10241,9 +10245,13 @@ would.
    17–50% of a deck's spells (Pauper + Vintage); `--bridge-ratings even`
    (the default) gave 41–56% on four drafts. Read the composition table in
    `report.md` after night 1.
-6. **A recorded bridge run** (`--record-every`, D315) copies the cube
+6. ~~**A recorded bridge run** (`--record-every`, D315) copies the cube
    markdown it hashed — the source cubes concatenated — to `cube.md`; check
-   that the evaluator's dataset reads it as one vocabulary.
+   that the evaluator's dataset reads it as one vocabulary.~~ **Closed** at the
+   merge of D315: `run --bridge pauper,synergy --record-all` (2 drafts) gave
+   both chairs' logs, `check-redaction.mjs` PASS on both, and `encode.py
+   --run-dir` 317 rows over 337 slots — the 328 cards of the two cubes' union
+   plus the basics and the three specials, each shared card once.
 
 ## Deferred — out of scope for M0–M7
 

@@ -5,7 +5,7 @@
 //   tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7      # writes and prints the plan, plays nothing
 //   tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7      # plays it (resumable: run the same line again)
 //       [--bridge-share 0.2] [--games 1] [--chunk 250] [--min-drafts 20] [--cubes a,b,...] [--power power.tsv]
-//       [--bridge-ratings even|own] [--record-every N]   (N = 1: every game, both chairs -- needs D315, the lab-record lane)
+//       [--bridge-ratings even|own] [--record-every N]   (N = 1: every game, both chairs, D315)
 //
 // One folder (`--root`, default var/cubelab/queue) holds every night: a run
 // folder per POOL KEY — `normal/<cube>` for a cube's own drafts,
@@ -305,8 +305,8 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
       o.bridge = bridgeOptions(repo, c.cubes.join(','), undefined, 180, plan.bridgeRatings ?? 'even');
       o.cubeFile = `bridge:${c.cubes.join('+')}`;
     }
-    // Recording every game in the worker is the lab-record lane's option (D315, `recordEvery`); the queue only passes it on.
-    if (recordEvery) Object.assign(o, { recordEvery });
+    // Recording every game in the worker, both chairs (D315): the evaluator's dataset and this model read one run.
+    if (recordEvery) o.recordEvery = recordEvery;
     say(`\n== chunk ${k}/${plan.chunks.length}: ${c.key}, seeds ${c.seed}..${c.seed + c.drafts - 1}`);
     // One chunk failing (an engine that would not boot under load, say) does not end the night: the
     // rest play, and running the same line again retries only what is missing.
@@ -314,10 +314,10 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
       await runLab(env, o, say);
       if (recordEvery) {
         const rj = JSON.parse(fs.readFileSync(path.join(o.out, 'run.json'), 'utf8')) as { record?: unknown };
-        if (!rj.record) throw new Error('--record-every was asked for, but this lab does not record in the worker (it needs D315, the lab-record lane) -- stopping the night');
+        if (!rj.record) throw new Error('--record-every was asked for, but the run did not record (D315) -- stopping the night');
       }
     } catch (e) {
-      if (e instanceof Error && /needs D315/.test(e.message)) throw e;
+      if (e instanceof Error && /did not record \(D315\)/.test(e.message)) throw e;
       failed.push(`${c.key} seeds ${c.seed}..${c.seed + c.drafts - 1}: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`);
       say(`chunk ${k} FAILED, carrying on: ${failed.at(-1)}`);
     }
