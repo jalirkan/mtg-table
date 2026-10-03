@@ -100,13 +100,19 @@ class DatasetTest(unittest.TestCase):
     def test_baseline_runs_and_reports(self):
         import baseline_eval as B
         r = B.run(self.out, epochs=30)
-        for m in ("prior", "life", "global", "full"):
+        for m in ("prior", "life", "core", "global", "full"):
             self.assertIn(m, r["models"])
             all_ = r["models"][m]["train"]["all"]
             self.assertTrue(np.isfinite(all_["logloss"]))
         # the full model fits its training split better than the prior does
         self.assertLess(r["models"]["full"]["train"]["all"]["logloss"],
                         r["models"]["prior"]["train"]["all"]["logloss"])
+
+    def test_cv_holds_each_game_out(self):
+        import baseline_eval as B
+        r = B.run_cv(self.out, folds=3, epochs=10)
+        self.assertEqual(r["models"]["prior"]["cv"]["all"]["rows"], self.summary["rows"])
+        self.assertTrue(np.isfinite(r["models"]["core"]["cv"]["all"]["logloss"]))
 
     def test_train_mlp_with_torch_trains(self):
         try:

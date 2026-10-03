@@ -5,13 +5,16 @@
 """Logistic regression on the dataset's features, numpy only (D305).
 
     python3 tools/ml/baseline_eval.py var/ml/data/synergy [--epochs 400] [--l2 1e-3]
-        [--lr 0.05] [--model out.json] [--json report.json]
+        [--lr 0.05] [--model out.json] [--json report.json] [--cv K]
 
 It proves the features carry signal before anything bigger is trained: the
 model ("who's winning from this board?") is compared on val and test against
 
   * prior    -- the training split's win rate, the same for every row;
   * life     -- a logistic regression on the life difference alone;
+  * core     -- on twelve numbers: ten me-minus-opp differences (life, hand,
+                library, graveyard, lands, mana available, creatures, power,
+                toughness, untapped power), the turn and whose turn it is;
   * global   -- logistic regression on every block but the per-card counts;
   * full     -- logistic regression on every feature.
 
@@ -20,7 +23,9 @@ standardised with the training split's mean and deviation.  Training is
 full-batch Adam with L2, the epoch kept being the one with the lowest
 validation log-loss (the last one when there is no validation split).
 Accuracy counts decided games only (a draw has no right side); log-loss and
-Brier count every row.  Every metric is also given per turn bucket, since an
+Brier count every row.  `--cv K` scores grouped K-fold out-of-fold
+predictions over every row instead (a game in one fold only) -- the honest
+number while the corpus is a few dozen games.  Every metric is also given per turn bucket, since an
 evaluator is worth more late than early -- and is easier late.
 """
 from __future__ import annotations
@@ -38,6 +43,19 @@ try:
     import numpy as np
 except ImportError:  # pragma: no cover
     np = None  # type: ignore
+
+# The "core" model: ten me-minus-opp differences and two plain features -- a
+# dozen numbers a player would name first, few enough to fit from a few games.
+CORE_DIFFS = ["life", "hand", "library", "graveyard", "lands", "mana_available", "board.creatures",
+              "board.power", "board.toughness", "board.untapped_power"]
+CORE_PLAIN = ["turn", "my_turn"]
+
+
+def core_matrix(X, names):
+    cols = [X[:, names.index(f"me.{f}")] - X[:, names.index(f"opp.{f}")] for f in CORE_DIFFS]
+    cols += [X[:, names.index(f)] for f in CORE_PLAIN]
+    return np.stack(cols, axis=1).astype(np.float64)
+
 
 BUCKETS = [(1, 4), (5, 8), (9, 12), (13, 16), (17, 10_000)]
 EPS = 1e-7
@@ -143,6 +161,7 @@ def run(data: str, epochs=400, lr=0.05, l2=1e-3, seed=0) -> dict[str, Any]:
         return (d["X"][:, li_me] - d["X"][:, li_opp])[:, None].astype(np.float64)
 
     feature_sets = {"life": life,
+                    "core": lambda d: core_matrix(d["X"], names),
                     "global": lambda d: d["X"][:, glob_cols].astype(np.float64),
                     "full": lambda d: d["X"].astype(np.float64)}
     report["models"]["prior"] = {"params": {"p": prior},
@@ -173,9 +192,53 @@ def run(data: str, epochs=400, lr=0.05, l2=1e-3, seed=0) -> dict[str, Any]:
     return report
 
 
+def run_cv(data: str, folds: int = 5, epochs=300, lr=0.05, l2=1e-2, seed=0) -> dict[str, Any]:
+    """Grouped K-fold cross-validation over EVERY split's rows: a game's split
+    group is in exactly one fold, each fold is predicted by models fitted on
+    the others (fixed epochs, no early stopping), and the out-of-fold
+    predictions are scored together.  For a small corpus, where one test split
+    of a few games says little."""
+    import hashlib
+    if np is None:
+        raise SystemExit("baseline_eval.py needs numpy")
+    with open(os.path.join(data, "features.json"), encoding="utf-8") as f:
+        schema = json.load(f)
+    with open(os.path.join(data, "games.jsonl"), encoding="utf-8") as f:
+        games = [json.loads(line) for line in f]
+    parts = [D.load(data, s) for s in D.SPLITS]
+    d = {k: np.concatenate([p[k] for p in parts]) for k in parts[0]}
+    fold_of_game = np.array([int(hashlib.sha256(f"cv|{g['split_group']}".encode()).hexdigest()[:8], 16) % folds
+                             for g in games])
+    fold = fold_of_game[d["game"]]
+    names = []
+    for b in schema["blocks"]:
+        names.extend([None] * b["length"] if b["name"] == "cards" else [x["name"] for x in b["features"]])
+    cb = next(b for b in schema["blocks"] if b["name"] == "cards")
+    glob_cols = np.array([i for i in range(schema["nFeatures"]) if not (cb["offset"] <= i < cb["offset"] + cb["length"])])
+    li_me, li_opp = names.index("me.life"), names.index("opp.life")
+    X = d["X"].astype(np.float64)
+    sets = {"life": (X[:, li_me] - X[:, li_opp])[:, None], "core": core_matrix(X, names),
+            "global": X[:, glob_cols], "full": X}
+    t = target(d["y"])
+    oof = {m: np.zeros(len(t)) for m in ("prior", *sets)}
+    for k in range(folds):
+        te, tr = fold == k, fold != k
+        if not te.any() or not tr.any():
+            continue
+        oof["prior"][te] = t[tr].mean()
+        for m, Xm in sets.items():
+            st = Standardiser(Xm[tr])
+            w, b, _ = fit_logistic(st(Xm[tr]), t[tr], None, None, epochs, lr, l2, seed)
+            oof[m][te] = sigmoid(st(Xm[te]) @ w + b)
+    return {"schemaId": schema["schemaId"], "folds": folds, "rows": int(len(t)),
+            "games": len(games), "groups": len({g["split_group"] for g in games}),
+            "models": {m: {"cv": metrics(p, d["y"], d["turn"])} for m, p in oof.items()}}
+
+
 def format_report(r: dict[str, Any]) -> str:
-    out = [f"baseline: schema {r['schemaId']}; rows {r['rows']}; games {r['games']}"]
-    for split in ("val", "test"):
+    out = [f"baseline: schema {r['schemaId']}; rows {r['rows']}; games {r['games']}"
+           + (f"; {r['folds']}-fold grouped CV over {r['groups']} groups" if "folds" in r else "")]
+    for split in (("cv",) if "folds" in r else ("val", "test")):
         out.append(f"\n{split}:")
         out.append(f"  {'model':7s} {'bucket':11s} {'rows':>6s} {'acc':>6s} {'logloss':>8s} {'brier':>6s}")
         for m, res in r["models"].items():
@@ -184,8 +247,9 @@ def format_report(r: dict[str, Any]) -> str:
                     continue
                 out.append(f"  {m:7s} {bucket:11s} {mt['rows']:6d} {mt['acc']:6.3f} {mt['logloss']:8.4f} "
                            f"{mt['brier']:6.3f}")
-    out.append("\nlargest |w| (full model, standardised features):")
-    for tw in r["topWeights"][:12]:
+    if "topWeights" in r:
+        out.append("\nlargest |w| (full model, standardised features):")
+    for tw in r.get("topWeights", [])[:12]:
         out.append(f"  {tw['w']:+.3f}  {tw['feature']}")
     return "\n".join(out)
 
@@ -199,7 +263,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--model", help="write the full model (mean, sd, w, b) as JSON")
     ap.add_argument("--json", help="write the report as JSON")
+    ap.add_argument("--cv", type=int, default=0, metavar="K",
+                    help="grouped K-fold cross-validation over every row instead of train/val/test")
     a = ap.parse_args(argv)
+    if a.cv:
+        r = run_cv(a.data, a.cv, a.epochs, a.lr, a.l2, a.seed)
+        if a.json:
+            with open(a.json, "w", encoding="utf-8") as f:
+                json.dump(r, f, indent=1)
+        print(format_report(r))
+        return 0
     r = run(a.data, a.epochs, a.lr, a.l2, a.seed)
     model = r.pop("_model")
     if a.model:
