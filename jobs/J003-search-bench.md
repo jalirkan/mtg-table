@@ -2,7 +2,7 @@ id: J003
 title: Search AI vs Forge Default, 400 deals per configuration
 cpu: heavy
 after: J001
-repos: mtg-table@main (ee4d127 or later)
+repos: mtg-table@ee4d127 (pinned; see below)
 est: ~2.5-3 h with JOBS=7
 
 **Priority (Justin, 2026-10-03):** run this BEFORE the Omega evolve rerun (J004). If your
@@ -12,13 +12,18 @@ queue and the pull and build.
 If you already started this from Justin's earlier message, don't restart it: let it finish
 and report it here.
 
+**Pinned to ee4d127.** A coming change makes ai-bench mirror every deal by default. That
+doubles the games and changes this experiment. Run J003 with `git checkout ee4d127` (a
+detached HEAD is fine) in place of `git checkout main && git pull`, then
+`./bridge/build.sh`. Afterwards, return the checkout to main for the next job.
+
 Use JOBS=7, no more. The search works to a wall-clock budget, so oversubscribing cores
 weakens it. Don't run any other heavy job alongside it.
 
 ## Pilot
 About 10 minutes: 2 deals per pair, control and search only.
 ```bash
-cd /home/justin-a/code/mtg-table && git checkout main && git pull && ./bridge/build.sh && ./tools/ai-bench.sh --selftest
+cd /home/justin-a/code/mtg-table && git fetch && git checkout ee4d127 && ./bridge/build.sh && ./tools/ai-bench.sh --selftest
 B=tools/ai-bench.sh
 $B play --pairs tools/ai-bench/pairs-cube.txt --games 2 --seed 7 --jobs 7 --run pilot-cube-control --a Default --b Default
 $B play --pairs tools/ai-bench/pairs-cube.txt --games 2 --seed 7 --jobs 7 --run pilot-cube-search --a Default+search --b Default
@@ -31,7 +36,7 @@ Checks:
 
 ## Commands
 ```bash
-cd /home/justin-a/code/mtg-table && git checkout main && git pull && ./bridge/build.sh && ./tools/ai-bench.sh --selftest
+cd /home/justin-a/code/mtg-table && git fetch && git checkout ee4d127 && ./bridge/build.sh && ./tools/ai-bench.sh --selftest
 JOBS=7 S=31 && B=tools/ai-bench.sh && \
 $B play --pairs tools/ai-bench/pairs-cube.txt --games 40 --seed $S --jobs $JOBS --run night-cube-control --a Default --b Default && \
 $B play --pairs tools/ai-bench/pairs-cube.txt --games 40 --seed $S --jobs $JOBS --run night-cube-search --a Default+search --b Default && \
