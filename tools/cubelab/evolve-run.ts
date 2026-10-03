@@ -4,11 +4,13 @@
 //
 //   tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] --generations G
 //       --drafts-per-gen N [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--evolve name=value]...
+//       [--record-all | --record-every N]
 //
 // <out>/
 //   evolve.json          the options, knobs, constraints (from the starting cube) and every generation's result
 //   gen-NN/input.md      the cube this generation drafted
-//   gen-NN/run/          the lab's run folder (run.ts): drafts.jsonl, decks, report.html, meta.json
+//   gen-NN/run/          the lab's run folder (run.ts): drafts.jsonl, decks, report.html, meta.json -- the DISCOVERY batch
+//   gen-NN/confirm/      a second run folder, only when discovery found candidates: the CONFIRMATION batch (D331)
 //   gen-NN/cube.md       the cube coming out: swaps applied, an iteration-log entry added
 //   gen-NN/stats.json    every card's numbers and assessment, the balance, the decision
 //   gen-NN/section.html  the generation as an HTML section
@@ -17,7 +19,11 @@
 //   changelog.md, index.html, <cube>.md (the latest cube)
 //
 // Generation g plays seeds S + (g−1)·N .. S + g·N − 1 (fresh drafts every
-// generation).  RESUMABLE: a generation whose result.json names the same input
+// generation); its confirmation batch, when there is one, seeds
+// S + confirmSeedOffset + (g−1)·confirmMaxDrafts onward -- a range no discovery
+// batch and no other generation's confirmation touches.  Nothing is pooled
+// across generations or across the two batches (D331).  --record-all /
+// --record-every N (D315) record both batches' games.  RESUMABLE: a generation whose result.json names the same input
 // is skipped; one without it resumes its run folder (run.ts skips the seeds
 // already played).  A folder made with other options or knobs is refused.
 // The drafts and decks are a function of the seed (D294) and the swaps a pure
@@ -32,8 +38,8 @@ import { parseCube } from './cube.ts';
 import { writeCubeDoc } from './cubedoc.ts';
 import { engineFacts, type EngineEnv } from './engine.ts';
 import {
-  applySwaps, balanceOf, cardStats, constraintsOf, enrichPool, evolveCards, parseNotes, parsePool, selectSwaps,
-  type Constraints, type EvolveKnobs, type MetaDoc, type Note, type Swap,
+  applySwaps, balanceOf, batchDeff, cardStats, constraintsOf, discoveryStage, enrichPool, evolveCards, parseNotes, parsePool, selectSwaps,
+  type ConfirmInput, type Constraints, type EvolveKnobs, type MetaDoc, type Note, type Swap,
 } from './evolve.ts';
 import { changelog, htmlPage, htmlSection, logEntry, type GenSummary } from './evolve-report.ts';
 import { buildMeta } from './meta.ts';
@@ -58,9 +64,16 @@ export interface EvolveOptions {
   weights: Weights;
   knobs: EvolveKnobs;
   date: string;
+  /** D315: record every game of each draft whose seed is a multiple of this, in both batches (0 = off). */
+  recordEvery?: number;
 }
 
-interface GenResult { gen: number; inputSha: string; outputSha: string; versionIn: number; versionOut: number; seeds: [number, number]; swaps: Swap[]; verdict: string; date: string; notesSha: string | null }
+interface GenResult {
+  gen: number; inputSha: string; outputSha: string; versionIn: number; versionOut: number; seeds: [number, number];
+  /** The confirmation batch's seeds (absent: discovery found no candidate). */
+  confirmSeeds?: [number, number];
+  swaps: Swap[]; verdict: string; date: string; notesSha: string | null;
+}
 interface State {
   v: 1;
   cube: string;
@@ -183,61 +196,75 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     // Re-deciding a generation (its result.json removed, e.g. after editing the notes or a knob): the
     // generation before it wrote a new log entry, so the input's text moved while its list did not.
     // The drafts are still this list's, so the run folder is told the new text.
-    const runJson = path.join(runDir, 'run.json');
-    if (fs.existsSync(inputFile) && fs.existsSync(runJson)) {
+    for (const runJson of [path.join(runDir, 'run.json'), path.join(dir, 'confirm', 'run.json')]) {
+      if (!fs.existsSync(inputFile) || !fs.existsSync(runJson)) continue;
       const old = fs.readFileSync(inputFile, 'utf8');
       if (old !== inputText && listKey(parseCube(old)) === listKey(cube)) {
         const rm = JSON.parse(fs.readFileSync(runJson, 'utf8')) as RunMeta;
         if (rm.cubeSha === sha(old)) {
           fs.writeFileSync(runJson, `${JSON.stringify({ ...rm, cubeSha: sha(inputText) }, null, 2)}\n`);
-          say(`generation ${g}: the input's prose changed but not its list; keeping the drafts already played`);
+          say(`generation ${g}: the input's prose changed but not its list; keeping the drafts already played in ${path.relative(o.out, path.dirname(runJson))}`);
         }
       }
     }
     fs.writeFileSync(inputFile, inputText);
     say(`== generation ${g}/${o.generations}: ${cube.title} (${cube.cards.length} cards), seeds ${seeds[0]}-${seeds[1]}`);
-    await runLab(env, {
-      cubeFile: inputFile, format: 'grid', drafts: o.drafts, games: o.games, jobs: o.jobs, seed: seeds[0], profiles: o.profiles,
-      ratingsFile: o.ratingsFile, record: 0, out: runDir, builder: 'lab', gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: o.weights,
+    const labRun = (drafts: number, seed: number, out: string): Promise<void> => runLab(env, {
+      cubeFile: inputFile, format: 'grid', drafts, games: o.games, jobs: o.jobs, seed, profiles: o.profiles,
+      ratingsFile: o.ratingsFile, record: 0, ...(o.recordEvery ? { recordEvery: o.recordEvery } : {}), out, builder: 'lab',
+      gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: o.weights,
     }, say);
-    const { meta, cards: info, recs: own } = readRunDir(runDir);
-    // The same list drafted by the generations just before (none of them swapped): their drafts are
-    // evidence about this list too, so they pool -- more power, no bias.
-    let recs = own;
-    let from = g;
-    for (let h = g - 1; h >= 1; h--) {
-      const prev = path.join(o.out, `gen-${pad(h)}`);
-      if (!fs.existsSync(path.join(prev, 'input.md')) || listKey(parseCube(fs.readFileSync(path.join(prev, 'input.md'), 'utf8'))) !== listKey(cube)) break;
-      recs = [...readRunDir(path.join(prev, 'run')).recs, ...recs];
-      from = h;
-    }
-    if (from < g) say(`generation ${g}: the list is the one ${from === g - 1 ? `generation ${from}` : `generations ${from}-${g - 1}`} drafted; pooling their ${recs.length - own.length} draft(s) with these ${own.length}`);
-    const pooledSeeds: [number, number] = [o.seed + (from - 1) * o.drafts, seeds[1]];
-    const metaDoc = buildMeta(meta, info, recs, cube) as MetaDoc;
-    fs.writeFileSync(path.join(runDir, 'meta.json'), `${JSON.stringify(metaDoc)}\n`);
-    fs.writeFileSync(path.join(runDir, 'report.html'), renderHtml(aggregate(meta, info, recs, [], { pairs: GUILD, themes: cube.themeNames })));
-    const stats = cardStats(metaDoc, recs, info);
+    /** A batch's run folder as the decision reads it: meta.json (written), stats, balance, design effect. */
+    const readBatch = (out: string): { recs: DraftRecord[]; metaDoc: MetaDoc; stats: ReturnType<typeof cardStats>; deff: number } => {
+      const { meta, cards: info, recs } = readRunDir(out);
+      const metaDoc = buildMeta(meta, info, recs, cube) as MetaDoc;
+      fs.writeFileSync(path.join(out, 'meta.json'), `${JSON.stringify(metaDoc)}\n`);
+      fs.writeFileSync(path.join(out, 'report.html'), renderHtml(aggregate(meta, info, recs, [], { pairs: GUILD, themes: cube.themeNames })));
+      return { recs, metaDoc, stats: cardStats(metaDoc, recs, info), deff: batchDeff(recs) };
+    };
+    // 1. Discovery: this generation's own drafts, never pooled with another generation's (D331).
+    await labRun(o.drafts, seeds[0], runDir);
+    const disc = readBatch(runDir);
+    const recs = disc.recs;
+    const metaDoc = disc.metaDoc;
+    const stats = disc.stats;
     const balance = balanceOf(metaDoc);
     const notes: Map<string, Note> = notesText ? parseNotes(notesText) : new Map();
     const tabu = new Set(state.generations.flatMap((r) => r.swaps.map((s) => s.out)));
-    const decision = selectSwaps({
-      cube, cards: evolveCards(cube, poolBy), pool, stats, balance, drafts: recs.length, constraints: state.constraints, notes, tabu, knobs: o.knobs,
-    });
+    const sel = {
+      cube, cards: evolveCards(cube, poolBy), pool, stats, balance, drafts: recs.length, constraints: state.constraints, notes, tabu, knobs: o.knobs, deff: disc.deff,
+    };
+    const first = discoveryStage(sel);
+    // 2. Confirmation: the candidates, tested again on a fresh, disjoint seed range, read on its own.
+    let confirmation: ConfirmInput | undefined;
+    let confirmSeeds: [number, number] | undefined;
+    if (first.plan.drafts > 0) {
+      const c0 = o.seed + o.knobs.confirmSeedOffset + (g - 1) * o.knobs.confirmMaxDrafts;
+      confirmSeeds = [c0, c0 + first.plan.drafts - 1];
+      say(`generation ${g}: ${first.candidates.length} candidate(s) at FDR ${o.knobs.fdrQ} (${first.candidates.map((a) => `${a.name}: ${a.status}`).join('; ')}); `
+        + `confirming on ${first.plan.drafts} fresh draft(s), seeds ${confirmSeeds[0]}-${confirmSeeds[1]}`
+        + (first.plan.underpowered.length ? ` (under-powered at the ${o.knobs.confirmMaxDrafts}-draft cap: ${first.plan.underpowered.join(', ')})` : ''));
+      const confirmDir = path.join(dir, 'confirm');
+      await labRun(first.plan.drafts, confirmSeeds[0], confirmDir);
+      const cb = readBatch(confirmDir);
+      confirmation = { stats: cb.stats, mean: cb.metaDoc.sample.shrinkage.mean, deff: cb.deff, drafts: cb.recs.length, seeds: confirmSeeds, games: cb.metaDoc.sample.games };
+    }
+    const decision = selectSwaps({ ...sel, ...(confirmation ? { confirmation } : {}) });
     const versionIn = versionOf(cube.title);
     const versionOut = decision.swaps.length ? versionIn + 1 : versionIn;
     const summary: GenSummary = {
-      gen: g, versionIn, versionOut, date: o.date, drafts: recs.length, seeds: pooledSeeds, pooledFrom: from, games: metaDoc.sample.games, decision, balance,
+      gen: g, versionIn, versionOut, date: o.date, drafts: recs.length, seeds, games: metaDoc.sample.games, decision, balance,
       stats: [...stats.values()].filter((s) => cube.cards.some((c) => c.name === s.name)),
     };
     const outText = writeCubeDoc(inputText, applySwaps(cube, decision.swaps, poolBy), { version: versionOut, logEntry: logEntry(summary) });
     const check = parseCube(outText);
     if (check.cards.length !== cube.cards.length || check.warnings.length) throw new Error(`generation ${g}: the written cube does not parse cleanly: ${check.warnings.join('; ')}`);
     fs.writeFileSync(path.join(dir, 'cube.md'), outText);
-    fs.writeFileSync(path.join(dir, 'stats.json'), `${JSON.stringify({ gen: g, drafts: recs.length, seeds: pooledSeeds, pooledFrom: from, mean: balance.mean, balance, decision, stats: summary.stats }, null, 1)}\n`);
+    fs.writeFileSync(path.join(dir, 'stats.json'), `${JSON.stringify({ gen: g, drafts: recs.length, seeds, confirmSeeds: confirmSeeds ?? null, mean: balance.mean, balance, decision, stats: summary.stats }, null, 1)}\n`);
     fs.writeFileSync(path.join(dir, 'summary.json'), `${JSON.stringify(summary)}\n`);
     fs.writeFileSync(path.join(dir, 'section.html'), `${htmlSection(summary)}\n`);
     const result: GenResult = {
-      gen: g, inputSha: sha(inputText), outputSha: sha(outText), versionIn, versionOut, seeds, swaps: decision.swaps, verdict: decision.verdict,
+      gen: g, inputSha: sha(inputText), outputSha: sha(outText), versionIn, versionOut, seeds, ...(confirmSeeds ? { confirmSeeds } : {}), swaps: decision.swaps, verdict: decision.verdict,
       date: o.date, notesSha: notesText ? sha(notesText) : null,
     };
     fs.writeFileSync(resultFile, `${JSON.stringify(result, null, 2)}\n`);

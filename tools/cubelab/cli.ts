@@ -20,7 +20,8 @@
 //   report  <out> [--min-games N]           <out>/report.html, report.md, summary.json and meta.json
 //   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]   <out>/meta.json (ForgeCoach, D297)
 //   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
-//           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300)
+//           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300, D331)
+//           [--record-all | --record-every N]                  record both batches' games (D315)
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -66,6 +67,7 @@ function usage(msg?: string): never {
        tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N]
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
+                        [--record-all | --record-every N]
 `);
   process.exit(2);
 }
@@ -244,14 +246,16 @@ async function evolveCmd(cubeFile: string, f: Map<string, string[]>): Promise<nu
   if (jobs > env.homes.length) usage(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
   const date = one(f, 'date') ?? new Date().toISOString().slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) usage(`--date wants YYYY-MM-DD, got ${date}`);
+  if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
+  const recordEvery = one(f, 'record-all') ? 1 : int(f, 'record-every', 0);
   const o = {
     cubeFile, poolFile, notesFile: fs.existsSync(notes) ? notes : null, generations: Math.max(1, int(f, 'generations', 1)),
     drafts: Math.max(1, int(f, 'drafts-per-gen', 30)), jobs, seed,
     out: one(f, 'out') ?? path.join('var/cubelab/evolve', `${path.basename(cubeFile, '.md')}-${seed}`),
     games: Math.max(1, int(f, 'games', 3)), profiles: [profiles[0] as string, profiles[1] as string] as [string, string],
-    ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date,
+    ratingsFile: one(f, 'ratings') ?? null, gameTimeoutSec: int(f, 'game-timeout', 300), weights, knobs, date, recordEvery,
   };
-  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}`);
+  say(`cube lab evolve: ${cubeFile}, pool ${poolFile}, notes ${o.notesFile ?? '(none)'}, ${o.generations} generation(s) x ${o.drafts} draft(s) from seed ${seed}, ${jobs} job(s), at most ${knobs.swaps} swap(s) a generation, out ${o.out}${recordEvery ? `, recording ${recordEvery === 1 ? 'every game' : `every game of every ${recordEvery}th draft`} (both chairs, both batches)` : ''}`);
   await evolve(env, o, say);
   return 0;
 }
