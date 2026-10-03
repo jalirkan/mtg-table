@@ -87,8 +87,9 @@ import mtgtable.Snap;
  *       [--model var/ml/models/synergy-eval.json]
  * </pre>
  *
- * Exits 1 on any hidden-information failure, any feature mismatch, or a game
- * that crashed.  It runs each game with {@code game.getAction().invoke} on
+ * Exits 1 on any hidden-information failure, any feature mismatch outside the
+ * combat block (and the combat block's view lag on more than 3% of decisions),
+ * or a game that crashed.  It runs each game with {@code game.getAction().invoke} on
  * Forge's own Game pool, one game at a time (RecordMatch's and AiBench's way);
  * every check runs inside the game's own event dispatch, on the game thread.
  */
@@ -97,6 +98,9 @@ public final class EvalLiveCheck {
     private EvalLiveCheck() { }
 
     private static final Set<String> SKIP = new HashSet<>(EvalModel.LIVE_UNSAFE);
+
+    /** The share of decisions on which the combat block may lag the live Combat. */
+    static final double COMBAT_LAG_MAX = 0.03;
 
     // results
     static int decisions;
@@ -200,7 +204,25 @@ public final class EvalLiveCheck {
                     sum / liveNanos.size() / 1000.0, liveNanos.get(liveNanos.size() / 2) / 1000.0,
                     liveNanos.get((int) (liveNanos.size() * 0.99)) / 1000.0, liveNanos.size()));
         }
-        final boolean fail = hiddenFailures > 0 || crashes > 0 || !mismatch.isEmpty()
+        // The log's combat is Forge's CombatView, refreshed only at fixed points
+        // (D316): once an attacker or blocker leaves combat mid-step the log keeps
+        // the stale band until the next refresh, while the live Combat is current.
+        // That lag is tolerated in the combat block up to COMBAT_LAG_MAX of the
+        // decisions; any other mismatch fails.
+        int lagged = 0;
+        boolean other = false;
+        for (final Map.Entry<String, int[]> e : mismatch.entrySet()) {
+            if (e.getKey().startsWith("combat.")) {
+                lagged = Math.max(lagged, e.getValue()[0]);
+            } else {
+                other = true;
+            }
+        }
+        final boolean lagOk = lagged <= COMBAT_LAG_MAX * Math.max(1, decisions);
+        System.out.println(String.format(Locale.ROOT, "combat view lag    = at most %d decision(s) (%.2f%%, "
+                + "tolerated up to %.0f%%)", lagged, decisions == 0 ? 0.0 : 100.0 * lagged / decisions,
+                100 * COMBAT_LAG_MAX));
+        final boolean fail = hiddenFailures > 0 || crashes > 0 || other || !lagOk
                 || (controlChecks > 0 && controlChanged == 0) || decisions == 0;
         System.out.println(fail ? "EVAL LIVE CHECK FAILED" : "EVAL LIVE CHECK OK");
         System.out.flush();

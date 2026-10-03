@@ -443,6 +443,7 @@ def run_train(a, hp, log) -> dict[str, Any]:
               "hyper": hp, "fit": {k: v for k, v in info.items() if k != "history"},
               "models": score_all(models, splits), "grid": grid_results}
     log(format_report(report))
+    log(verdict(report))
     if a.out:
         model = net.to_json(schema, names, {
             "excluded": info["excluded"],
@@ -535,7 +536,22 @@ def run_cv(a, hp, log) -> dict[str, Any]:
            "models": {m: {"cv": metrics(p[ok], allr.y[ok].astype(np.int64), allr.turn[ok].astype(np.int64))}
                       for m, p in oof.items()}}
     log(format_report(rep))
+    log(verdict(rep))
     return rep
+
+
+def verdict(r: dict[str, Any]) -> str:
+    """One line: does the model beat D305's baselines on the held-out split?
+    A model that does not should not replace a hand-written leaf (D316)."""
+    split = "cv" if "folds" in r else "test"
+    ll = {m: r["models"][m].get(split, {}).get("all", {}).get("logloss") for m in r["models"]}
+    if ll.get("eval") is None:
+        return "verdict: no held-out rows"
+    best = min((m for m in ll if m != "eval" and ll[m] is not None), key=lambda m: ll[m])
+    ok = ll["eval"] < ll[best]
+    return (f"verdict ({split}): eval log-loss {ll['eval']:.4f} vs best baseline {best} {ll[best]:.4f} -- "
+            + ("the evaluator wins" if ok else "the evaluator LOSES to a baseline: more games (more pairs), "
+               "not a bigger model; do not use it at the search's leaves yet"))
 
 
 def format_report(r: dict[str, Any]) -> str:
