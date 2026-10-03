@@ -30,6 +30,17 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-03 — `hello_ok.match` names the AI's policy
+
+Found by ForgeCoach: after a match setup chose the search AI, the board still
+said "Forge AI", because nothing on the wire said which AI the launcher had
+started. One row. Held by `tools/check-redaction.mjs` and its two `m56-*`
+controls, and by `web/test/reduce-match.test.ts`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M56 | §2.1, M44 | **`hello_ok.match` gains an optional `aiPolicy`: who answers for the AI seat**, exactly `MtgTable --ai-policy` — `"plain"` (Forge's own AI), `"outlets"` (with D310's sacrifice-outlet policy) or `"search"` (D312's look-ahead search; `--ai-search` alone implies it), the value `POST /match`'s `aiPolicy` (D333) restarts the engine with. One word of a fixed set: never the search's knobs (`--ai-search ms=…`), a path or a name. `mtgtable.MtgTable` writes it on every handshake, last in the object so M44's and M47's keys keep their positions; `mtgtable.RecordMatch` and the in-process recorders (`SeatRecorder`) do not — an AI-vs-AI recording names every seat's policy in its session header's `seats` (M55). **Optional**: absent from every stream before this amendment, and a reader must treat a missing key as "this stream does not say", never as `plain`. `tools/check-redaction.mjs` admits the key and fails any value but the three. The client's one reader is `aiPolicyOf()` in `web/src/protocol.ts`. | ForgeCoach |
+
 ### 2026-10-03 — decision records: an AI seat's choices, in its own recording
 
 Applied by the decision-records lane (branch `c/decision-records`), so recorded
@@ -500,6 +511,7 @@ name, the AI's profile, and how many games it is played to.
 | `aiProfile` | string | the Forge AI profile the other seat plays under — one `.ai` file of `forge-home/res/ai/`; `Default` unless `--ai-profile` said otherwise |
 | `games` | int ≥ 1 | `--games N`. **Always present**, unlike M41's `gameCount`, which is omitted for a one-game session |
 | `yourProfile` | string, **optional** | amendment **M47**: the **viewing seat's own** Forge AI profile. Only `mtgtable.RecordMatch` writes it (a spectated game), because only there is the viewing seat an AI; a stream whose `players[]` marks the viewer human must not carry it. Last in the object, so M44's keys keep their positions |
+| `aiPolicy` | string, **optional** | amendment **M56**: who answers for the other seat — `plain`, `outlets` or `search`, `MtgTable --ai-policy` (D314, D333). Written by `MtgTable` only; absent means the stream does not say. Read with `aiPolicyOf()` |
 
 **Optional, and absent from every recording made before 2026-09-27** — the whole
 committed corpus — so a reader must treat a missing `match` as "this stream does

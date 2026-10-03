@@ -156,6 +156,18 @@
     "why": "amendment M47: yourProfile is the base name of a .ai file, never a path"
   },
   {
+    "file": "m56-aipolicy-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M56: the baseline plus hello_ok.match.aiPolicy exactly as MtgTable writes it -- the control for the m56 probe"
+  },
+  {
+    "file": "m56-aipolicy-not-a-policy.jsonl",
+    "level": "fail",
+    "expect": "aiPolicy must be one of plain, outlets, search",
+    "why": "amendment M56: aiPolicy is one word of plain, outlets, search -- never a knob string or a path"
+  },
+  {
     "file": "m47-pace-not-a-number.jsonl",
     "level": "fail",
     "expect": "\"paceMs\" must be a positive integer",

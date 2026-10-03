@@ -1234,7 +1234,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
     stackItems: 0,
     maxTurn: 0,
-    hellos: 0, matchChecked: 0, yourProfileChecked: 0,
+    hellos: 0, matchChecked: 0, yourProfileChecked: 0, aiPolicyChecked: 0,
   };
   const seq = { s2c: 0, c2s: 0, ai: 0 };
   let sawState = false;
@@ -1367,10 +1367,23 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
      * they were playing under, i.e. an emitter describing a different match.
      */
     const hasYourProfile = Object.prototype.hasOwnProperty.call(m, 'yourProfile');
-    const matchKeys = ['yourDeck', 'aiDeck', 'aiProfile', 'games', ...(hasYourProfile ? ['yourProfile'] : [])];
+    // Amendment M56: `aiPolicy`, who answers for the AI seat (--ai-policy), is
+    // optional -- MtgTable writes it, RecordMatch and the in-process recorders
+    // do not -- and is one word of a fixed set, never a knob, a path or a name.
+    const hasAiPolicy = Object.prototype.hasOwnProperty.call(m, 'aiPolicy');
+    const matchKeys = ['yourDeck', 'aiDeck', 'aiProfile', 'games',
+      ...(hasYourProfile ? ['yourProfile'] : []), ...(hasAiPolicy ? ['aiPolicy'] : [])];
     if (!sameKeys(m, matchKeys)) {
       note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(m))}, expected exactly ` +
-        `yourDeck, aiDeck, aiProfile, games (and, amendment M47, yourProfile when the viewer is an AI)`);
+        `yourDeck, aiDeck, aiProfile, games (and, amendment M47, yourProfile when the viewer is an AI; ` +
+        `amendment M56, aiPolicy)`);
+    }
+    if (hasAiPolicy) {
+      stats.aiPolicyChecked++;
+      if (!['plain', 'outlets', 'search'].includes(m.aiPolicy)) {
+        note(lineNo, `${where}: aiPolicy must be one of plain, outlets, search (amendment M56), got ` +
+          `${JSON.stringify(m.aiPolicy)}`);
+      }
     }
     if (hasYourProfile) {
       stats.yourProfileChecked++;
@@ -2554,7 +2567,8 @@ for (const path of files) {
     console.log(stats.matchChecked > 0
       ? `      hello_ok.match checked on ${stats.matchChecked} of ${stats.hellos} hello_ok frame(s) `
         + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header`
-        + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''})`
+        + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''}`
+        + `${stats.aiPolicyChecked > 0 ? `; aiPolicy a known policy, M56` : ''})`
       : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
         + `before amendment M44, or AI vs AI without a match setup; section 2.1)`);
   }

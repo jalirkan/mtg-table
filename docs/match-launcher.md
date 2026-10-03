@@ -118,7 +118,7 @@ Content-Type: application/json
 | `cardName` | string | Forge's spelling (`Kongming, "Sleeping Dragon"`, `Fire // Ice`, `Lim-Dûl the Necromancer`), letters, digits, spaces and `' ’ " , . ! ? & ( ) + : / _ -`, at most 141 characters, optionally `\|SET` (2–8 of `A-Z0-9`). Checked against the engine's own card scripts when they are on disk — any case, accents folded |
 | `aiProfile` | string | optional, default `"Default"`; one of the engine's `.ai` files — `Default`, `Cautious`, `Reckless`, `Experimental` — any case. A profile is not a difficulty |
 | `games` | integer | optional, default `3`; 1–9: the match is played to this many games (`hello_ok.gameCount`) |
-| `aiPolicy` | string | optional (D333); exactly `"plain"` (Forge's own AI), `"outlets"` (with D310's sacrifice-outlet policy) or `"search"` (D312's look-ahead search behind it), passed as `MtgTable --ai-policy`. Absent: the AI `play.sh` was started with (`--ai-search` included) |
+| `aiPolicy` | string | optional (D333); exactly `"plain"` (Forge's own AI), `"outlets"` (with D310's sacrifice-outlet policy) or `"search"` (D312's look-ahead search behind it), passed as `MtgTable --ai-policy`. Absent: the AI `play.sh` was started with (`--ai-search` included); the seat reads it back in `hello_ok.match.aiPolicy` (amendment M56) |
 | `aiSearchMs` | integer | optional (D333), only with `"aiPolicy": "search"`; 500–5000, the search's budget per searched decision (`--ai-search ms=<n>`); absent: the bridge's default, 1500 |
 
 The body is at most **64 KB**. Unknown keys are ignored.
