@@ -31,7 +31,7 @@ Run these one after the other, never at the same time:
 ```bash
 tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 150 --games 1 --jobs 7 --seed 720001 --out var/cubelab/runs/j005-ovh-off
 tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 150 --games 1 --jobs 7 --seed 720001 --record-all --out var/cubelab/runs/j005-ovh-on
-python3 -c "import json;[print(a,*(lambda G:(len(G),round(sum(g['ms'] for g in G)/len(G)),round(sum(g['ms'] for g in G)/sum(g['turns'] for g in G)),round(sum(g['cpuMs'] for g in G)/sum(g['turns'] for g in G)),sum(g.get('recorded',{}).get('bytes',0) for g in G)//max(1,len(G))))([g for l in open(f'var/cubelab/runs/j005-j005-ovh-{a}/drafts.jsonl') for g in json.loads(l)['match']['games']])) for a in ('off','on')]"
+python3 -c "import json;[print(a,*(lambda G:(len(G),round(sum(g['ms'] for g in G)/len(G)),round(sum(g['ms'] for g in G)/sum(g['turns'] for g in G)),round(sum(g['cpuMs'] for g in G)/sum(g['turns'] for g in G)),sum(g.get('recorded',{}).get('bytes',0) for g in G)//max(1,len(G))))([g for l in open(f'var/cubelab/runs/j005-ovh-{a}/drafts.jsonl') for g in json.loads(l)['match']['games']])) for a in ('off','on')]"
 ```
 
 ## Abort if
