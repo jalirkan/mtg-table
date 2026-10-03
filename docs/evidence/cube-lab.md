@@ -89,6 +89,67 @@ worst under the AI. Never played: Expressive Iteration, March of Otherworldly
 Light. Pick % is 100% for every card in Winston by construction (the report says
 so).
 
+## 3b. Two more cubes: Vintage and Pauper (grid, 20 drafts each)
+
+Added on the coordinator's request after the first two runs: `cubes/vintage-cube-180.md`
+and `cubes/pauper-cube-180.md`, each with its own theme codes (Vintage: AGG SPL
+CTRL GY REAN FAT ART RAMP LND ETB SAC; Pauper: FLK EVA TOK SAC SPL GY ART RMP
+AGG), Vintage's lands as group lines with shared tags (`Fetchlands (LND GY): …`),
+Pauper's prices after the tags. The parser now keeps exactly a cube's own table
+codes, reads group lines, and keys pairs in WUBRG order (which also restored the
+Modern report's GW, RW and GU plans).
+
+`check`: both 180 / 180, no unsupported card, none unranked. Vintage: 5
+two-faced, 8 `AI:RemAIDeck` (Mystic Confluence, Toxic Deluge, Faithless Looting,
+Goblin Welder, Goblin Bombardment, Sylvan Library, Beast Within, Mishra's
+Bauble), ranks 155 CubeCobra / 25 set-only. Pauper: 4 two-faced, 9
+`AI:RemAIDeck` (Prismatic Strands, Ghostly Flicker, Tortured Existence, Bogardan
+Dragonheart, Faithless Looting, Utopia Sprawl, Fireblade Artist, Prophetic
+Prism, Chromatic Star), ranks only 76 CubeCobra / **104 set-only** — the mixed
+scale of follow-up 3 matters most here.
+
+```bash
+tools/cubelab.sh run cubes/vintage-cube-180.md --format grid --drafts 20 --games 3 --jobs 4 --seed 1 --out var/cubelab/runs/vintage-grid-20
+tools/cubelab.sh run cubes/pauper-cube-180.md  --format grid --drafts 20 --games 3 --jobs 4 --seed 1 --out var/cubelab/runs/pauper-grid-20
+```
+
+These two ran while another session's four benchmark JVMs shared the machine
+(load average 9–12), so their times are slower than the first two's.
+
+| | Vintage, grid, 20 | Pauper, grid, 20 |
+|---|---|---|
+| matches, 4 workers | 298 s (14.9 s a draft, wall) | 318 s (15.9 s a draft, wall) |
+| games / timeouts / engine errors | 51 / 0 / 0 | 49 / 0 / 0 |
+| a game | 15.7 turns, 18.9 s | 22.1 turns, 20.8 s |
+| on the play wins | 53% (40–66%) | 43% (30–57%) |
+| splash / stretched | 6 / 0 | 33 / 0 |
+| spells: lab / Forge's builder (same colours) | 23.3 / 21.7 (43%) | 23.2 / 21.9 (25%) |
+
+**Vintage.** WU was drafted most (15 of 40 decks) and won 44%; UR 67% (8–4), RG
+67%; BR 36%, BG 20%. Artifacts (24 decks) 55%. Mox Emerald 29–16, Karn, Scion of
+Urza 12–5, Craterhoof 8–3; Exhume 2–8, Thoughtseize 2–8, Recurring Nightmare
+3–8, Demonic Tutor 5–12, Thalia 6–13 — the reanimation and tutor cards need a
+plan Forge's AI does not have. 33 cards never played, among them Balance,
+Liliana of the Veil, Dark Confidant, Psychic Frog, Goblin Welder. Mystic
+Confluence (RemAIDeck) made 11 decks, 11–18.
+
+**Pauper.** Blue dominates the drafts (UB 14, UR 9, WU 9 of 40 decks); UR 62%
+and spells-matter 67% (24–12), blink (FLK, 19 decks) 36%, WU 29%. Rolling
+Thunder 8–0, Skewer the Critics 20–5, Fireball 10–2; Militia Bugler 2–14,
+Journey to Nowhere 2–10, Momentary Blink 3–9. 41 cards never played (Carrier
+Thrall, Ephemerate, Kuldotha Rebirth, Goblin Bushwhacker, …). Prophetic Prism
+(RemAIDeck) 16 decks, 12–27.
+
+## 3c. meta.json (D297)
+
+`report` now also writes `meta.json`; for the four runs above it is 127, 99,
+104 and 96 KB (synergy, modern, vintage, pauper). On the synergy run: the run's
+card-game mean is 0.4994; Mentor of the Meek is 33–12 (0.733) and shrinks to
+0.661; the largest archetype is `WU-ETB` (12 decks, 28 games, 64%); 300 pairs
+reach six games together (top lift 1.28, Emry + Tireless Tracker); 16-land
+decks 48% against 17-land 54%; splashing decks 35% (26 games), 18 points under
+the rest.
+
 ## 4. The recordings and ForgeCoach
 
 The three `--record 3` games, `frames/draft-{1,2,3}-g1.jsonl` (16 MB together),
@@ -117,7 +178,9 @@ is not a leak, and nothing in the bridge changed.
   hour earlier (A WU+g vs B UG; A UR+w vs B UG). With the forced coin flip inverted in
   `CubeLab.java` (a planted mutant) it failed: `seed 7: on the play B but turn 1
   was A`.
-- `web/test/cubelab.test.ts`: 16 tests, green.
+- `web/test/cubelab.test.ts`: 18 tests, green (16 before `meta.json` and the
+  two new cubes). 12g again after `meta.json` was added: green, 58.6 s under
+  the shared machine's load.
 - `./bridge/build.sh` (the lint, its self-test — 31 rules, 60 firing cases — and
   seven self-tests): green; `CubeLab.java` compiles with `-Xlint:all` and no
   warning.

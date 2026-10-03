@@ -489,7 +489,7 @@ at**. Total estimate ~13 evenings, first browser game at evening 7.
 | — | LAN play: ForgeCoach from a phone on the same Wi-Fi *(off the plan; on the owner's approval)* | ½ day | **built and verified, gate not run** on branch `c/lan-play` (2026-10-01), off `main`'s `e511c37` — `play.sh --lan` (implies `--engine-only`): the bridge binds `0.0.0.0` behind a per-run 128-bit pairing token every non-loopback request must carry (loopback needs none), serves ForgeCoach's built site (downloaded as a zip from its Pages site and cached a day under `var/forgecoach/`, or `--site-dir`) on the ws port, admits the page's own `http://<Host>` Origin from a non-loopback peer, and prints the phone URLs (and a QR code with `qrencode`) (amendment **M51**, **D287**–**D289**); `WsLanSelfTest` is the build's seventh self-test; *LAN play*, just above *Deferred* |
 | — | The test gaps: the observer, the idle limit and Node 22 in the gate *(off the plan; the follow-ups of D280–D289)* | ¼ day | **built and verified, gate not run** on branch `c/test-gaps` (2026-10-01), off `main`'s `0a32d1b`, `af0512a` merged in — 10c plays with two `/observe` followers (one from before the session, compared frame for frame with the bridge's log and the seat's; one opened while the seat holds an `ask`, which must be caught up on it), a new **10h** proves `--idle-timeout` both ways, `ws-smoke` and `ws-auto-play` survive Node 22's `WebSocket`, and `GATE_ONLY` runs named jobs alone (**D291**); two follow-ups; *The test gaps*, just above *Deferred* |
 | — | The coach helper: ForgeCoach coaches through the logged-in Claude Code CLI *(off the plan; on the owner's approval, for ForgeCoach)* | ¼ day | **built and verified, gate not run** on branch `c/coach-helper` (2026-10-01), off `main`'s `cb7d041` — `tools/coach-helper.mjs` on `coachPort` 8643: `GET /health`, `POST /coach` answered by `claude -p` with every tool off and streamed as NDJSON, M50's Origin list and M51's token; `play.sh` starts it beside the engine in every mode (`--no-coach`); the gate's `WSPORT` moves to 8644; gate step **12f** and CI run its self-test against a fake `claude` (**D292**); *The coach helper*, just above *Deferred* |
-| — | The cube lab: two Forge AIs draft a two-player cube, build decks and play them *(off the plan; the owner's request, for cube design)* | 1 day | **built, run and documented, gate not run** on branch `c/cube-lab` (2026-10-03), off `main`'s `4204bc6` — `tools/cubelab.sh check / ratings init / run / report` over `tools/cubelab/` (TypeScript) and one Java worker, `CubeLab.java`: Grid and Winston drafts with Forge's ranks as editable ratings plus theme synergy and late colour commitment, 40-card 16–17-land decks, a best of three per draft with the play alternating, sharded over `--jobs` JVMs with a watchdog, JSONL per draft, a self-contained HTML report; Justin's two cubes under `cubes/`; gate step **12g** (**D293–D296**); six follow-ups; *The cube lab*, just above *Deferred* |
+| — | The cube lab: two Forge AIs draft a two-player cube, build decks and play them *(off the plan; the owner's request, for cube design)* | 1 day | **built, run and documented, gate not run** on branch `c/cube-lab` (2026-10-03), off `main`'s `4204bc6` — `tools/cubelab.sh check / ratings init / run / report` over `tools/cubelab/` (TypeScript) and one Java worker, `CubeLab.java`: Grid and Winston drafts with Forge's ranks as editable ratings plus theme synergy and late colour commitment, 40-card 16–17-land decks, a best of three per draft with the play alternating, sharded over `--jobs` JVMs with a watchdog, JSONL per draft, a self-contained HTML report and ForgeCoach's `meta.json`; four cubes under `cubes/` (synergy, modern, vintage, pauper); gate step **12g** (**D293–D297**); six follow-ups; *The cube lab*, just above *Deferred* |
 
 **Off the milestone plan, 2026-09-27: the card library and the card browser**
 (**D90–D94**) — brought forward from the deferred list on the user's request, as
@@ -9791,11 +9791,11 @@ text; and a browser with local-network-access prompts (Chrome's newer
 replacement for private network access preflights) may ask the owner once
 before the github.io page reaches `127.0.0.1`.
 
-## The cube lab — two AIs draft a cube, build decks and play them (2026-10-03, D293–D296)
+## The cube lab — two AIs draft a cube, build decks and play them (2026-10-03, D293–D297)
 
 **Status: built, run for real and documented; the full gate was not run** (the
 new step, 12g, was run alone through the gate's runner, green and red under a
-planted mutant). Branch `c/cube-lab`, off `main`'s `4204bc6`; D293–D296. The
+planted mutant). Branch `c/cube-lab`, off `main`'s `4204bc6`; D293–D297. The
 owner designs two-player 180-card cubes and wants to see how decks come together
 under randomness and how cards perform, with the data kept for a later drafting
 AI and play AI — on his own machine, no tokens. `docs/guides/cube-lab.md` is the
@@ -9816,6 +9816,14 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
   tokens and sacrifice lead the themes, graveyard trails; 28 cards never played.
 - **Modern, Winston, 20 drafts**: 146 s, 47 games; Winston's thin pools made 34
   of 40 decks splash and 10 stretch; RG 6–0, WU 35%.
+- **Vintage and Pauper, grid, 20 drafts each** (added mid-lane, with each
+  cube's own theme codes): 51 and 49 games, no errors; Vintage's WU was drafted
+  most and won 44%, reanimation and tutors lose under the AI; Pauper's drafters
+  took blue in 32 of 40 decks, spells 67%, blink 36%.
+- **`meta.json`** (D297, schema 1) for ForgeCoach's draft and deck assistant:
+  `report` writes it, `tools/cubelab.sh meta <out>` alone; shrunk win rates
+  (Beta prior, 20 games), archetypes with key cards, pairs by lift, land counts,
+  splash.
 - **Three recorded games** read by ForgeCoach's own `parseLog` and
   `extractDecisions`; one fails `check-redaction.mjs` on a Courser of Kruphix's
   revealed top card (follow-up 1).
@@ -9841,7 +9849,8 @@ GATE_ONLY="12g-cubelab" ./tools/check-all.sh          # 27.1 s
    `CardRanker.getRawScore` (Birds of Paradise 49.6, Hengegate Pathway 18.4). The
    drafters undervalue the second kind until someone edits the TSV; a
    per-source rescale in `ratings init` is the likely fix, and the owner's
-   judgement the real one.
+   judgement the real one. The Pauper cube, 104 of whose cards are set-ranked
+   only, shows it most (blue in 32 of 40 decks).
 4. **The watchdog's two halves have not fired on a real hang.** No game timed
    out and no worker died in 142 games; the draw-at-deadline path, the `stuck`
    exit and the runner's restart are reasoned and typed, not seen. A probe deck

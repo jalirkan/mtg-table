@@ -296,7 +296,7 @@ built against, and four things about it are rules:
    usage and needs a login CI does not have, so it is measured by hand
    (D292's *Measured*).
 
-## The cube lab — the conventions D293–D296 added
+## The cube lab — the conventions D293–D297 added
 
 `tools/cubelab.sh` drafts a two-player cube with two Forge AIs, builds their
 decks and plays them, for the owner's cube design; `docs/guides/cube-lab.md` is

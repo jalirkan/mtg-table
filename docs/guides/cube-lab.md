@@ -8,7 +8,7 @@ and the raw data behind it, every pick with the cards that were on offer, for
 a drafting AI or a play AI to learn from later. No tokens, no network: Forge
 plays every game.
 
-The decisions are **D293–D296** in [`DECISIONS.md`](../../DECISIONS.md); what
+The decisions are **D293–D297** in [`DECISIONS.md`](../../DECISIONS.md); what
 was measured is [`docs/evidence/cube-lab.md`](../evidence/cube-lab.md).
 
 ## One command

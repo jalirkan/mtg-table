@@ -2579,7 +2579,7 @@ and `web/test/story-render.test.tsx` renders the page over every fixture to hold
 it to that. With no `?replay=`, `#story` says it needs a recorded game (a live
 seat's story is PLAN.md's follow-up).
 
-### The cube lab — two AIs draft your cube (D293–D296)
+### The cube lab — two AIs draft your cube (D293–D297)
 
 For designing a two-player cube: `tools/cubelab.sh` has two Forge AIs draft a
 cube markdown (Grid or Winston), builds each a 40-card deck from what it
@@ -2631,8 +2631,9 @@ mtg-table/
                              scripts/play.sh and scripts/spectate.sh only (D106,
                              D122); wsAllowedOrigins by the ws bridge (D281)
 
-  cubes/*.md                 Justin's two 180-card two-player cube designs (D293), as
-                             he wrote them; cubes/*.ratings.tsv the cube lab's pick
+  cubes/*.md                 four 180-card two-player cube designs (D293) — synergy,
+                             modern-era, vintage, pauper — as given; cubes/*.ratings.tsv
+                             the cube lab's pick
                              ratings beside each (tools/cubelab.sh ratings init, edit
                              freely)
 

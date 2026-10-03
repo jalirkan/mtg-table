@@ -42,7 +42,7 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `deck-smoke.sh` | Five games per AI deck with the AI piloting it; asserts it casts and attacks (D116, D117). | no | boots Forge |
 | `audit-deck.mjs` | Per card of a `.dck`: ok / missing / broken on the configured engine, in a throwaway home under `var/audit-deck/`; fails if a preferences file changes (D182). Needs `bridge/out`. | no | boots Forge |
 | `audit-deck/AuditDeck.java` | `audit-deck.mjs`'s Java half, compiled on demand into the throwaway home. Scanned by `lint-bridge.sh`. | no (linted at step 2) | boots Forge |
-| `cubelab.sh` | **The cube lab** (D293–D296): `check` a cube markdown against the engine's card database, `ratings init` its editable ratings from Forge's draft ranks, `run` N two-player drafts (Grid or Winston, both drafters AI) with deckbuilding and a best of three per draft on `--jobs` worker JVMs (each its own Forge home, a watchdog per game; resumable; `--record M` frame logs for ForgeCoach), and `report` a run folder as one self-contained HTML page, a Markdown summary and ForgeCoach's `meta.json` (`meta`, D297). `docs/guides/cube-lab.md` is the manual. | step 12g (two drafts, one game each) | boots Forge (`report` does not) |
+| `cubelab.sh` | **The cube lab** (D293–D297): `check` a cube markdown against the engine's card database, `ratings init` its editable ratings from Forge's draft ranks, `run` N two-player drafts (Grid or Winston, both drafters AI) with deckbuilding and a best of three per draft on `--jobs` worker JVMs (each its own Forge home, a watchdog per game; resumable; `--record M` frame logs for ForgeCoach), and `report` a run folder as one self-contained HTML page, a Markdown summary and ForgeCoach's `meta.json` (`meta`, D297). `docs/guides/cube-lab.md` is the manual. | step 12g (two drafts, one game each) | boots Forge (`report` does not) |
 | `cubelab/*.ts` | The lab's TypeScript: `cube.ts` (the markdown), `cards.ts`, `ratings.ts`, `weights.ts`, `pick.ts`, `draft.ts` (Grid, Winston), `deck.ts`, `lab.ts`, `engine.ts` (the facts call, the worker pool and its watchdog), `run.ts`, `report.ts`, `cli.ts`. Tested by `web/test/cubelab.test.ts`. | step 13 (`cubelab.test.ts`); CI | no |
 | `cubelab/CubeLab.java` | The lab's engine half: `facts` (each card in Forge's database, its best-ranked printing's draft score, the AI hints) and `play` (a worker: a match per stdin line, one-game Matches with the play alternating, Forge's builder for comparison). Compiled on demand into `var/cubelab/classes/`. Scanned by `lint-bridge.sh`. | step 12g; linted at step 2 | boots Forge |
 | `javap-seam-diff.sh` | The bridge's Forge API diffed between two jars, class by class — for the day an official release lands (D109, D110). | no | jar |
@@ -217,7 +217,7 @@ curl -sN http://127.0.0.1:8643/coach -H 'Content-Type: application/json' \
                                                     # NDJSON: {"type":"text",…} … then {"type":"done",…} or {"type":"error",…}
 ```
 
-### The cube lab (D293–D296)
+### The cube lab (D293–D297)
 
 ```bash
 tools/cubelab.sh check cubes/synergy-cube-180.md            # every card in Forge's DB? RemAIDeck and unranked cards
