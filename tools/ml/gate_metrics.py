@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: flat numbers about the evaluator gates' artefacts, for the lab runner's checks (D352).
+# mtg-table — tools/ml: flat numbers about the evaluator gates' artefacts, for the lab runner's checks (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """One flat JSON object of numbers on stdout (booleans as 1/0, a missing file

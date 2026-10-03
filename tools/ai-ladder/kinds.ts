@@ -131,7 +131,7 @@ export const KINDS: Record<string, Kind> = {
 };
 
 // The search with the learned evaluator at its leaves (D316's model through
-// D352's one search flag, `leaf=eval:<model.json>`).  `model` is the first 12
+// D354's one search flag, `leaf=eval:<model.json>`).  `model` is the first 12
 // hex of the model file's sha256, and the file is var/ml/models/eval-<model>.json
 // (tools/ml/gate_sprt.py puts it there and registers the player): the name and
 // the config hash then pin the exact model, and a file whose content does not
@@ -140,7 +140,7 @@ export const EVAL_MODEL_DIR = 'var/ml/models';
 export const evalModelPath = (hash: ParamValue): string => `${EVAL_MODEL_DIR}/eval-${hash}.json`;
 
 KINDS['search-eval'] = {
-  doc: "D312's search scoring the leaves of unfinished rollouts with D316's learned evaluator (D352): `model` is the 12-hex sha256 prefix of var/ml/models/eval-<model>.json.",
+  doc: "D312's search scoring the leaves of unfinished rollouts with D316's learned evaluator (D354): `model` is the 12-hex sha256 prefix of var/ml/models/eval-<model>.json.",
   params: { ...KINDS.search!.params, model: { type: 'text', default: '', doc: "the evaluator model's content hash (12 hex of its sha256)" } },
   cfg: (p) => {
     const { model, ...search } = p;
@@ -160,9 +160,9 @@ KINDS['search-eval'] = {
     const s = KINDS.search!.available(repo);
     if (s) return s;
     try {
-      if (!readFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8').includes('case "leaf"')) return 'the search has no leaf= flag in this checkout (D352)';
+      if (!readFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8').includes('case "leaf"')) return 'the search has no leaf= flag in this checkout (D354)';
     } catch {
-      return 'the search has no leaf= flag in this checkout (D352)';
+      return 'the search has no leaf= flag in this checkout (D354)';
     }
     return null;
   },

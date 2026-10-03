@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: gate 1 of the evaluator, the held-out fit (D352).
+# mtg-table — tools/ml: gate 1 of the evaluator, the held-out fit (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Gate 1 (D352): does the trained evaluator fit held-out drafts better than
+"""Gate 1 (D354): does the trained evaluator fit held-out drafts better than
 the baselines it would replace?  Prints PASS or FAIL against the pre-registered
 rule in gates.FIT_RULE; no flag loosens it.
 

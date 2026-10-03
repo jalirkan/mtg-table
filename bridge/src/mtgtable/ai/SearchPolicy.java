@@ -117,9 +117,9 @@ public final class SearchPolicy {
         this.leafEval = cfg.leafModel == null ? null : evaluator(cfg.leafModel);
     }
 
-    // ---- D352: the learned evaluator at the leaves (leaf=eval:<model.json>) ----
+    // ---- D354: the learned evaluator at the leaves (leaf=eval:<model.json>) ----
 
-    /** The evaluator the leaves use, or null for the hand-written leaf (D352). */
+    /** The evaluator the leaves use, or null for the hand-written leaf (D354). */
     private final mtgtable.eval.PositionEvaluator leafEval;
 
     private static final java.util.Map<String, mtgtable.eval.PositionEvaluator> EVALUATORS =
@@ -1079,7 +1079,7 @@ public final class SearchPolicy {
             this(deadline, horizonTurns, maxSteps, untapped, oracle, null);
         }
 
-        /** D352: the learned evaluator scores an unfinished copy instead of {@link #leaf}; null = the hand leaf. */
+        /** D354: the learned evaluator scores an unfinished copy instead of {@link #leaf}; null = the hand leaf. */
         public final mtgtable.eval.PositionEvaluator evaluator;
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
@@ -1196,7 +1196,7 @@ public final class SearchPolicy {
             }
             sink.add("search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
             final double leaf = lim.evaluator != null && !copy.isGameOver()
-                    ? evalLeaf(lim.evaluator, copy, aiCopy)   // D352
+                    ? evalLeaf(lim.evaluator, copy, aiCopy)   // D354
                     : leaf(copy, aiCopy, lim.untapped);
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {

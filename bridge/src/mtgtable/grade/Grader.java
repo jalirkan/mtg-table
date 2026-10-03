@@ -99,7 +99,7 @@ public final class Grader {
         /** Where {@link #leafScale} came from, for the answer's {@code config}. */
         public String leafScaleSource = "default";
         /**
-         * D352 (the evaluator gates): score a playout that stops at the horizon
+         * D354 (the evaluator gates): score a playout that stops at the horizon
          * with the learned evaluator instead of the hand leaf; null = the hand
          * leaf.  Its value is the evaluator's P(win) itself, not σ(leaf / leafScale).
          */
@@ -290,7 +290,7 @@ public final class Grader {
                 .n("interval", measure == GradeMath.Measure.LEAF ? "t, sample sd" : "normal, 1/n floor");
         if (measure == GradeMath.Measure.LEAF) {
             j.n("leafScale", set.leafScale).n("leafScaleSource", set.leafScaleSource);
-            j.n("leaf", set.leafEval == null ? "hand" : "eval:" + set.leafEvalSource);   // D352
+            j.n("leaf", set.leafEval == null ? "hand" : "eval:" + set.leafEvalSource);   // D354
         }
         j.end();
         j.key("counters").obj();
@@ -369,7 +369,7 @@ public final class Grader {
         if (set.horizon >= 0) {
             sink.add("grade.evaluated", 1);
             if (set.leafEval != null) {
-                return SearchPolicy.winOf(p);   // D352: the evaluator's P(win)
+                return SearchPolicy.winOf(p);   // D354: the evaluator's P(win)
             }
             return 1 / (1 + Math.exp(-p.leaf / set.leafScale));
         }

@@ -57,7 +57,7 @@ import java.util.Locale;
  *     ({@code MtgTable --ai-search}) parses with that.</li>
  * </ul>
  *
- * <p>{@code leaf} (the evaluator gates' one search flag, D352): {@code hand}
+ * <p>{@code leaf} (the evaluator gates' one search flag, D354): {@code hand}
  * (default: {@link SearchPolicy#leaf}, the hand-written score) or
  * {@code eval:<model.json>} -- a rollout that does not finish the game is scored
  * by D316's learned evaluator ({@code mtgtable.eval.PositionEvaluator}) instead,
@@ -91,7 +91,7 @@ public final class SearchConfig {
 
     /**
      * The learned evaluator's model file for the leaves, or null for the
-     * hand-written leaf (D352; {@code leaf=eval:<path>}).  Set only through
+     * hand-written leaf (D354; {@code leaf=eval:<path>}).  Set only through
      * {@link #withLeaf}, so the constructors above stay as they are.
      */
     public final String leafModel;
@@ -140,7 +140,7 @@ public final class SearchConfig {
         this.leafModel = null;
     }
 
-    /** D352: a copy of {@code base} whose leaves use the evaluator at {@code model} (null = the hand leaf). */
+    /** D354: a copy of {@code base} whose leaves use the evaluator at {@code model} (null = the hand leaf). */
     private SearchConfig(final SearchConfig base, final String model) {
         this.budgetMs = base.budgetMs;
         this.maxCandidates = base.maxCandidates;
@@ -161,7 +161,7 @@ public final class SearchConfig {
     }
 
     /**
-     * D352: this config with the leaf {@code hand} or {@code eval:<model.json>}.
+     * D354: this config with the leaf {@code hand} or {@code eval:<model.json>}.
      * A path with a comma or a plus cannot be spelled in a seat config.
      */
     public SearchConfig withLeaf(final String leaf) {
@@ -211,7 +211,7 @@ public final class SearchConfig {
         double z = 1.0;
         double untapped = 1.0;
         boolean oracle = false;
-        String leaf = "hand";   // D352
+        String leaf = "hand";   // D354
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -237,7 +237,7 @@ public final class SearchConfig {
                     }
                     oracle = "1".equals(p[1]);
                     break;
-                case "leaf": leaf = p[1]; break;   // D352: hand | eval:<model.json>
+                case "leaf": leaf = p[1]; break;   // D354: hand | eval:<model.json>
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle, leaf)");
                 }
@@ -273,7 +273,7 @@ public final class SearchConfig {
             sb.append(",oracle=1");
         }
         if (leafModel != null) {
-            sb.append(",leaf=eval:").append(leafModel);   // D352
+            sb.append(",leaf=eval:").append(leafModel);   // D354
         }
         return sb.toString();
     }

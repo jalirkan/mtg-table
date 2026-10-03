@@ -15839,9 +15839,9 @@ follow-up. Forge's own targeting inside effects it resolves without asking the
 controller, mode choices, cost choices (which creature to sacrifice) and the
 London mulligan's bottom cards are not recorded.
 
-## D352 — The learned evaluator is promoted only through three pre-registered gates: a held-out fit against the core baseline and the fitted leaf, a decision-level regret test against full-game truth tables, and an SPRT against the current search; the search gains one flag, `leaf=eval:<model.json>`
+## D354 — The learned evaluator is promoted only through three pre-registered gates: a held-out fit against the core baseline and the fitted leaf, a decision-level regret test against full-game truth tables, and an SPRT against the current search; the search gains one flag, `leaf=eval:<model.json>`
 
-*Branch `c/eval-gates`; D352, the next number free at push (D347–D351 are on
+*Branch `c/eval-gates`; D354, the next number free at push (D347–D351 are on
 `main`). The engine review's H4 and its week-2 roadmap (2026-10-03).*
 
 **2026-10-03**

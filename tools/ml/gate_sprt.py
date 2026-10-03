@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: gate 3 of the evaluator, the SPRT on the ladder (D352).
+# mtg-table — tools/ml: gate 3 of the evaluator, the SPRT on the ladder (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Gate 3 (D352): does the search with the evaluator at its leaves beat the
+"""Gate 3 (D354): does the search with the evaluator at its leaves beat the
 current search in games?  The ladder plays it (`ai-ladder.sh sprt`); this tool
 registers the player and reads the verdict.
 
@@ -44,7 +44,7 @@ def player_def(reg: dict[str, Any], sha12: str) -> dict[str, Any]:
         raise SystemExit(f"gate_sprt: the registry has no search player {G.SPRT_RULE['base']}")
     return {"name": f"{G.SPRT_RULE['base']}-eval-{sha12}", "kind": "search-eval",
             "params": dict(base["params"], model=sha12),
-            "note": f"D352 gate 3: {G.SPRT_RULE['base']} with the learned evaluator at its leaves "
+            "note": f"D354 gate 3: {G.SPRT_RULE['base']} with the learned evaluator at its leaves "
                     f"(leaf=eval:var/ml/models/eval-{sha12}.json); only the leaf differs."}
 
 

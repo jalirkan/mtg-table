@@ -78,7 +78,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *              --horizon T (-1 = to the end; else turns past this one, then the leaf evaluator)
  *              --max-turns T (40) --timeout-ms MS (per playout, 120000) --max-playouts N
  *              --max-ms MS (per decision) --cap N (24) --lands --only tok,tok --extra tok,tok
- *              --leaf hand|eval:MODEL.json (with --horizon >= 0: the learned evaluator scores the leaf; D352)
+ *              --leaf hand|eval:MODEL.json (with --horizon >= 0: the learned evaluator scores the leaf; D354)
  * </pre>
  *
  * <p>A moments line (ForgeCoach's {@code bench:coach -- moments}) is JSON with
@@ -261,7 +261,7 @@ public final class CoachGrade {
         if (f.v.containsKey("leaf-scale")) {
             leafScale(s, f.v.get("leaf-scale"));
         }
-        final String leaf = f.s("leaf", "hand");   // D352: hand | eval:<model.json> (the evaluator gates)
+        final String leaf = f.s("leaf", "hand");   // D354: hand | eval:<model.json> (the evaluator gates)
         if (!"hand".equals(leaf)) {
             if (!leaf.startsWith("eval:") || leaf.length() <= 5) {
                 throw new IllegalArgumentException("--leaf is hand or eval:<model.json>: " + leaf);

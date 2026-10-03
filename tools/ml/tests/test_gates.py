@@ -1,4 +1,4 @@
-# mtg-table — tools/ml tests: the evaluator gates (D352), on synthetic data.
+# mtg-table — tools/ml tests: the evaluator gates (D354), on synthetic data.
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """python3 -m unittest tools/ml/tests/test_gates.py   (from the repo root)

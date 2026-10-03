@@ -234,7 +234,7 @@ public final class EvalSelfTest {
                         + "model %s; checksum %.3f)",
                 tEnc / 1000.0 / n, tPred / 1000.0 / n, n, model.schema().size(), describe(model), sink % 1));
 
-        // ---- 5. D352: the search's one evaluator flag, leaf=eval:<model.json> (engine-free)
+        // ---- 5. D354: the search's one evaluator flag, leaf=eval:<model.json> (engine-free)
         final String mp = dir.resolve("model.json").toString();
         final mtgtable.ai.SearchConfig hand = mtgtable.ai.SearchConfig.parse("");
         final mtgtable.ai.SearchConfig withEval = mtgtable.ai.SearchConfig.parse("rounds=3,maxrounds=3,leaf=eval:" + mp);

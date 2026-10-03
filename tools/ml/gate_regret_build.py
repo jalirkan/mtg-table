@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: gate 2 of the evaluator, its fixed decision set (D352).
+# mtg-table — tools/ml: gate 2 of the evaluator, its fixed decision set (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Gate 2's decision set (D352): about 300 decisions the AI seats took in the
+"""Gate 2's decision set (D354): about 300 decisions the AI seats took in the
 queue's lab games, from deck pairs the evaluator never trained on, stratified
 by type, as `coach-grade.sh serve` requests in the LIVE hidden-information mode.
 
@@ -16,7 +16,7 @@ by type, as `coach-grade.sh serve` requests in the LIVE hidden-information mode.
     python3 tools/ml/gate_regret_build.py select --candidates var/ml/gates/regret/candidates.jsonl \\
         --screen var/ml/gates/regret/rank-hand-3.jsonl --out var/ml/gates/regret/set.jsonl
 
-ELIGIBLE (pre-registered, D352):
+ELIGIBLE (pre-registered, D354):
 
   * a game of a lab run folder under --logs with decision records (D347), a
     NORMAL draft (one cube: its list is the pool the player knows; bridge

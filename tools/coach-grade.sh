@@ -119,7 +119,7 @@ case "$mode" in
   serve)
     shift
     # COACH_GRADE_HOME: a Forge home of its own per serve JVM when several run
-    # side by side (D129; tools/ml/gate_regret_grade.py, D352).
+    # side by side (D129; tools/ml/gate_regret_grade.py, D354).
     jvm "$(home_for "${COACH_GRADE_HOME:-serve-home}")" serve "$@"
     ;;
   *)

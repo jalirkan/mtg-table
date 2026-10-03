@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mtg-table — tools/ml: the fit gate's leaf rows (D352).
+# mtg-table — tools/ml: the fit gate's leaf rows (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #

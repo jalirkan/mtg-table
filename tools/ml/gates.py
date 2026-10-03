@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: what the three evaluator gates share (D352).
+# mtg-table — tools/ml: what the three evaluator gates share (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The evaluator gates' shared parts (D352): the pre-registered rules as
+"""The evaluator gates' shared parts (D354): the pre-registered rules as
 constants, the held-out deck pairs of a trained model, paired bootstraps, and
 the version stamp every gate artefact carries.
 
-The rules live HERE, in one place, and DECISIONS.md D352 states the same
+The rules live HERE, in one place, and DECISIONS.md D354 states the same
 numbers: a gate script prints PASS or FAIL against them and never takes a flag
 that loosens one.  Changing a rule is a new decision, made before its run.
 
@@ -24,7 +24,7 @@ from typing import Any, Callable, Iterable, Sequence
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# ---------------------------------------------------------------- the pre-registered rules (D352)
+# ---------------------------------------------------------------- the pre-registered rules (D354)
 
 FIT_RULE = {
     # gate 1: the held-out test split of the model's own split (by deck pair, reserved decks dropped)

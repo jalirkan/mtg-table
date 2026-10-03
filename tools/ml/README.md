@@ -248,12 +248,12 @@ run, copied under the checkout). **Send back** the `.txt` reports
 At 50,000 games (~5 M rows) the dataset is a few GB of shards and training
 holds the card block sparse (~1.5 GB); `--batch 4096` is faster on the 9700X.
 
-## The evaluator's three gates (D352)
+## The evaluator's three gates (D354)
 
 The search uses the learned evaluator at its leaves (`SearchConfig`
 `leaf=eval:<model.json>`) only after three gates pass, in order. Each gate's
 rule is fixed in `gates.py` (`FIT_RULE`, `REGRET_RULE`, `SPRT_RULE`) and in
-D352. Each script prints `PASS` or `FAIL` and takes no flag that loosens the
+D354. Each script prints `PASS` or `FAIL` and takes no flag that loosens the
 rule. A failed gate is not lowered: collect another night and retry.
 
 ```bash

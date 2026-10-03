@@ -55,7 +55,7 @@ import mtgtable.grade.Rebuild;
 import mtgtable.grade.WireLog;
 
 /**
- * The fit gate's Java half (D352, {@code tools/ml/gate_fit.py}): for every
+ * The fit gate's Java half (D354, {@code tools/ml/gate_fit.py}): for every
  * recorded game in a list, every turn's last state -- the position a playout at
  * the search's live horizon ({@code turns=0}) stops in -- rebuilt from the
  * seat's redacted log exactly as {@code coach-grade.sh fit-scale} rebuilds it

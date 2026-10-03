@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: gate 2's grading driver, resumable, over K `coach-grade.sh serve` JVMs (D352).
+# mtg-table — tools/ml: gate 2's grading driver, resumable, over K `coach-grade.sh serve` JVMs (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Grade a request file through `tools/coach-grade.sh serve` -- the live
 analysis's own entry point, so every request goes through D348's
 hidden-information guard (pool mode; the opponent's deck list is refused) --
-on K JVMs at once, resumably.  Gate 2 (D352) runs it four ways:
+on K JVMs at once, resumably.  Gate 2 (D354) runs it four ways:
 
     # the truth: every option played to the END of the game, 200 rounds with racing
     python3 tools/ml/gate_regret_grade.py truth --requests set.jsonl --out truth.jsonl --jobs 7
@@ -67,7 +67,7 @@ def request_line(req: dict[str, Any], extra: dict[str, Any]) -> str:
     out = {k: req[k] for k in keep if k in req}
     out.update(extra)
     if "oppDeck" in req or "oppDeckPublic" in req:
-        raise SystemExit(f"request {req.get('id')}: gate 2 never sends the opponent's deck list (D348, D352)")
+        raise SystemExit(f"request {req.get('id')}: gate 2 never sends the opponent's deck list (D348, D354)")
     return json.dumps(out)
 
 

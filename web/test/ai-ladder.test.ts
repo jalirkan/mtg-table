@@ -455,7 +455,7 @@ test('experiment log: a start with no end is abandoned; ends join their starts',
   assert.deepEqual(rows.map((r) => r.status), ['finished', 'abandoned', 'running?']);
 });
 
-test('search-eval (D352): the search with leaf=eval:<model>, pinned to the model file by its content hash', async () => {
+test('search-eval (D354): the search with leaf=eval:<model>, pinned to the model file by its content hash', async () => {
   const { createHash } = await import('node:crypto');
   const repo = mkdtempSync(join(tmpdir(), 'ladder-eval-'));
   mkdirSync(join(repo, 'tools/ai-bench'), { recursive: true });

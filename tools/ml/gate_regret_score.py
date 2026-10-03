@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: gate 2 of the evaluator, the decision-level regret test (D352).
+# mtg-table — tools/ml: gate 2 of the evaluator, the decision-level regret test (D354).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Gate 2 (D352): does the evaluator at the search's leaves pick better moves
+"""Gate 2 (D354): does the evaluator at the search's leaves pick better moves
 than the hand-written leaf?  Prints PASS or FAIL against gates.REGRET_RULE.
 
     python3 tools/ml/gate_regret_score.py --set set.jsonl --truth truth.jsonl \\
