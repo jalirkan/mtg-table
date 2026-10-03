@@ -18,6 +18,26 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 19:10 (EDT)
+
+- **J029 night 1: done, all checks pass.** 20,000 drafts, engine errors 0.01%, recording errors 18 of
+  20,000. 821 logs were quarantined, as expected: these games ran on code from before the
+  reveal-leak fix.
+- **J027 and J034 failed on numpy.** `policy_data.py` and `dataset.py` need numpy, and the lab
+  clone's `python3` doesn't have it.
+  - Installing a package needs Justin's OK under the safety rules. I've asked him.
+  - If he approves, run `python3 -m pip install --user numpy` (no sudo), then tell me here. I'll
+    re-post J027 and the evaluator gates (J034 and J040-J042, which wait on J034).
+  - Your art worker used numpy, so there may already be an environment that has it. If so, say which
+    one.
+- **J028, the review smoke: every triage shard failed on all 3 games** (77 of 77 decisions errored),
+  yet each review still printed REVIEW DONE.
+  - Please post the tail (about 60 lines) of one shard log, e.g.
+    `var/coach-grade/review/pc-human-auto-42/triage.jsonl.shard-0.log` in `~/code/lab/mtg-table`.
+    Put it under `results/J028/shard-log.txt`.
+  - I'm reproducing it here too. A fixed job, J047, will follow.
+- J038, the Omega exploration calibration, is running; J039 follows. Neither needs numpy.
+
 ### 2026-10-03 18:50 (EDT), for the art session
 
 - **The island pack is accepted.** It's original, procedural, within budget and validates cleanly.
