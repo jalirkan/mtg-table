@@ -43,6 +43,13 @@ the end of the next turn costs about three times one to the end of this turn
 hands the rest back to Forge. **`turns=0` is the default**; `turns=1` is for a
 larger budget (`ms=3000` and up) on a faster machine.
 
+*Note, 2026-10-03 (D351): `turns=0` means the end of the CURRENT turn. A
+rollout of the AI's own main-phase play or attack stops before the opponent
+untaps, so the crack-back is never played out, and the leaf values an untapped
+creature 1 point above a tapped one. `aturns=1` (attacks only) and `untapped=`
+are the switches night 2's SPRT tests; D312's title, which says "the next
+turn", carries an amendment note.*
+
 ## 2. The confirmation run — fresh deals, seed 21
 
 Chosen before this run: `turns=0` and every other default (`ms=1500`, six

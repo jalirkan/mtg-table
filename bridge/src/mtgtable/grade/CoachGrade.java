@@ -67,8 +67,12 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *   analyse  --log F --type T [--frame N (default: the log's end)] [knowledge] [--budget-ms 3000]
  *   serve    [defaults]   (one booted engine; JSON requests on stdin, answers on stdout)
  *
- *   knowledge: --deck D (the viewer's list; default the log header's deck path)
+ *   knowledge: --deck D (the viewer's list; default the log header's deck path; its
+ *                [Sideboard] is the rest of their drafted pool)  --own-pool P
  *              --opp-deck D | --opp-pool P (a list of cards, a .dck, or "N Name" lines)
+ *              --opp-known "Name; 2 Name" | FILE (AI picks the player saw: drawn first)
+ *              --opp-deck-public "<reason>" (live modes only: the opponent's list is shared)
+ *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json]   (D349)
  *   settings:  --playouts N (rounds an option still in the race ends with; 200)
  *              --initial N (40) --batch N (20) --no-race --seed S (1)
  *              --horizon T (-1 = to the end; else turns past this one, then the leaf evaluator)
@@ -89,8 +93,19 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * {@code --min-rounds} 2 rounds whatever it says), playouts to the end of this
  * turn ({@code --horizon 0}) scored by the search's leaf evaluator
  * ({@code "measure": "leaf"}: a pseudo win rate, a logistic of the leaf
- * score, not a count of wins), racing from round 6.  The answer is the grade
+ * score, not a count of wins, at {@code SearchPolicy.LEAF_SCALE} leaf points
+ * per logit as fitted by {@code fit-scale}, D349), racing from round 4.  The answer is the grade
  * object below plus {@code frame} and {@code wallMs}.
+ *
+ * <p><b>Hidden information in the live modes</b> (D348, {@link HiddenPool}):
+ * {@code analyse} and {@code serve} refuse an opponent DECK list unless the
+ * request marks it public with a reason ({@code --opp-deck-public "<reason>"};
+ * {@code "oppDeckPublic": true, "oppDeckPublicReason": "..."}), refuse the
+ * match launcher's AI file or the header's opponent deck as a "pool", and
+ * refuse a pool under {@value HiddenPool#MIN_LIVE_POOL} cards; the default is
+ * pool mode (the cube list minus the viewer's deck and drafted pool and every
+ * public card, the AI picks the player saw first).  A refused request is
+ * answered {@code "status": "refused"} with the reason.
  *
  * <p>Threads: the grading runs as one task on Forge's game pool, started with
  * {@code GameAction.invoke} on a scratch game and waited on with a latch, as
@@ -124,6 +139,9 @@ public final class CoachGrade {
             case "serve":
                 exit = serve(rest);
                 break;
+            case "fit-scale":
+                exit = fitScale(rest);
+                break;
             default:
                 throw new IllegalArgumentException("unknown mode " + args[0]);
             }
@@ -151,7 +169,7 @@ public final class CoachGrade {
                     throw new IllegalArgumentException("unexpected argument " + a);
                 }
                 final String k = a.substring(2);
-                if (k.equals("no-race") || k.equals("lands")) {
+                if (k.equals("no-race") || k.equals("lands") || k.equals("live")) {
                     v.put(k, "true");
                 } else {
                     if (i + 1 >= argv.length) {
@@ -179,13 +197,14 @@ public final class CoachGrade {
      * The live analysis's defaults (D336): a time budget, not a playout count
      * (at least two rounds whatever it says); playouts to the end of this turn
      * scored by the search's leaf evaluator, its own choice for a 1.5 s think
-     * (D312) -- a full game costs seconds a playout; racing from round 6.
+     * (D312) -- a full game costs seconds a playout; racing from round 4, every
+     * 2 (D349; D336 raced from round 6, where the 1/n floor retired nothing).
      */
     static Grader.Settings liveSettings(final Flags f) {
         final Flags g = new Flags(new String[0]);
         g.v.put("playouts", "10000");
-        g.v.put("initial", "6");
-        g.v.put("batch", "3");
+        g.v.put("initial", "4");   // D349: with the leaf measure's t interval, racing retires at live round counts
+        g.v.put("batch", "2");
         g.v.put("horizon", "0");
         g.v.put("cap", "12");
         g.v.put("timeout-ms", "5000");
@@ -193,7 +212,35 @@ public final class CoachGrade {
         final Grader.Settings s = settings(g);
         s.budgetMs = g.l("budget-ms", 3000);
         s.race.minRounds = g.i("min-rounds", 2);
+        if (!g.v.containsKey("leaf-scale")) {
+            final File fitted = new File(Config.load().root(), FITTED_SCALE);
+            if (fitted.isFile()) {
+                leafScale(s, fitted.getPath());
+            }
+        }
         return s;
+    }
+
+    /** Where {@code fit-scale} writes its fit, and where the live modes look for one (D349). */
+    static final String FITTED_SCALE = "var/coach-grade/leaf-scale.json";
+
+    /** {@code --leaf-scale N} or {@code --leaf-scale FILE} (a {@code fit-scale} output): leaf points per logit. */
+    static void leafScale(final Grader.Settings s, final String v) {
+        if (v.matches("[0-9.]+")) {
+            s.leafScale = Double.parseDouble(v);
+            s.leafScaleSource = "flag";
+        } else {
+            try {
+                final Map<?, ?> m = (Map<?, ?>) Json.parse(Files.readString(new File(v).toPath(), StandardCharsets.UTF_8));
+                s.leafScale = ((Number) m.get("scale")).doubleValue();
+                s.leafScaleSource = v + " (" + m.get("games") + " games, " + m.get("rows") + " positions)";
+            } catch (final IOException | RuntimeException e) {
+                throw new IllegalArgumentException("cannot read a leaf scale from " + v + ": " + e);
+            }
+        }
+        if (!(s.leafScale > 0)) {
+            throw new IllegalArgumentException("a leaf scale must be positive: " + s.leafScale);
+        }
     }
 
     static Grader.Settings settings(final Flags f) {
@@ -210,6 +257,9 @@ public final class CoachGrade {
         s.playoutTimeoutMs = f.l("timeout-ms", 120_000);
         s.cap = f.i("cap", 24);
         s.lands = f.v.containsKey("lands");
+        if (f.v.containsKey("leaf-scale")) {
+            leafScale(s, f.v.get("leaf-scale"));
+        }
         if (f.v.containsKey("only")) {
             s.only = splitTokens(f.v.get("only"));
         }
@@ -232,8 +282,28 @@ public final class CoachGrade {
 
     static Rebuild.Knowledge knowledge(final Config cfg, final WireLog log, final String deck, final String oppDeck,
                                        final String oppPool) throws IOException {
+        final Flags f = new Flags(new String[0]);
+        put(f, "deck", deck);
+        put(f, "opp-deck", oppDeck);
+        put(f, "opp-pool", oppPool);
+        return knowledge(cfg.root(), log, f);
+    }
+
+    private static void put(final Flags f, final String k, final String v) {
+        if (v != null) {
+            f.v.put(k, v);
+        }
+    }
+
+    /**
+     * What the grader may know (D334; D348's pool mode): the viewer's deck
+     * (default: the log header's path for the viewer's seat -- never another
+     * seat's) and its sideboard as the rest of their pool, and the opponent's
+     * deck, or a pool with the AI picks the player saw.  Reads files only.
+     */
+    static Rebuild.Knowledge knowledge(final File root, final WireLog log, final Flags f) throws IOException {
         final Rebuild.Knowledge k = new Rebuild.Knowledge();
-        String own = deck;
+        String own = f.s("deck", null);
         if (own == null) {
             for (final Object o : WireLog.arr(log.header, "decks")) {
                 final Map<?, ?> d = (Map<?, ?>) o;
@@ -243,20 +313,43 @@ public final class CoachGrade {
             }
         }
         if (own != null) {
-            final File f = resolve(cfg, own);
-            if (f.isFile()) {
-                k.ownDeck = Rebuild.readList(f);
+            final File of = HiddenPool.resolve(root, own);
+            if (of.isFile()) {
+                k.ownDeck = HiddenPool.readList(of, false);
+                k.ownPool = HiddenPool.readList(of, true);
                 k.ownSource = "deck:" + own;
             }
         }
+        if (f.v.containsKey("own-pool")) {
+            k.ownPool = HiddenPool.readList(HiddenPool.resolve(root, f.v.get("own-pool")), true);
+        }
+        final String oppDeck = f.s("opp-deck", null);
+        final String oppPool = f.s("opp-pool", null);
         if (oppDeck != null) {
-            k.oppDeck = Rebuild.readList(resolve(cfg, oppDeck));
-            k.oppSource = "deck:" + oppDeck;
+            k.oppDeck = HiddenPool.readList(HiddenPool.resolve(root, oppDeck), false);
+            k.oppSource = "deck:" + oppDeck + (f.v.containsKey("opp-deck-public") ? " (public: " + f.v.get("opp-deck-public") + ")" : "");
         } else if (oppPool != null) {
-            k.oppPool = Rebuild.readList(resolve(cfg, oppPool));
-            k.oppSource = "pool:" + oppPool;
+            k.oppPool = HiddenPool.readList(HiddenPool.resolve(root, oppPool), false);
+            k.oppSource = "pool:" + oppPool + " minus the viewer's deck and pool and every public card";
+        }
+        final String known = f.s("opp-known", null);
+        if (known != null && !known.isBlank()) {
+            final File kf = HiddenPool.resolve(root, known);
+            k.oppKnown = kf.isFile() ? HiddenPool.readList(kf, true) : HiddenPool.parseNames(known);
+            if (k.oppPool != null) {
+                k.oppSource += "; " + HiddenPool.size(k.oppKnown) + " AI pick(s) the player saw drawn first";
+            }
         }
         return k;
+    }
+
+    /**
+     * The live modes' knowledge (D348): {@link HiddenPool#checkLive} first, so
+     * a refused list is never even read, then {@link #knowledge}.
+     */
+    static Rebuild.Knowledge liveKnowledge(final File root, final WireLog log, final Flags f) throws IOException {
+        HiddenPool.checkLive(f.v, log.header, log.seat, root);
+        return knowledge(root, log, f);
     }
 
     static File resolve(final Config cfg, final String path) {
@@ -345,7 +438,7 @@ public final class CoachGrade {
         final Config cfg = Config.load();
         final File logFile = resolve(cfg, logPath);
         final WireLog log = WireLog.read(logFile);
-        final Rebuild.Knowledge k = knowledge(cfg, log, f.s("deck", null), f.s("opp-deck", null), f.s("opp-pool", null));
+        final Rebuild.Knowledge k = knowledge(cfg.root(), log, f);
         final String line = gradeOne(cfg, logFile, f.i("frame", 0), f.s("mode", "live"), f.s("type", ""), k, settings(f),
                 f.l("max-ms", 0));
         final String outPath = f.s("out", null);
@@ -471,7 +564,12 @@ public final class CoachGrade {
         final File logFile = resolve(cfg, f.s("log", ""));
         final WireLog log = WireLog.read(logFile);
         final int frame = f.v.containsKey("frame") ? f.i("frame", 0) : log.frames.size();
-        final Rebuild.Knowledge k = knowledge(cfg, log, f.s("deck", null), f.s("opp-deck", null), f.s("opp-pool", null));
+        final Rebuild.Knowledge k;
+        try {
+            k = liveKnowledge(cfg.root(), log, f);
+        } catch (final HiddenPool.Refused e) {
+            return new Json.JsonOut().obj().n("v", 1).n("status", "refused").n("error", e.getMessage()).n("frame", frame).end().done();
+        }
         final long t0 = System.nanoTime();
         final String line = gradeOne(cfg, logFile, frame, f.s("mode", "live"), f.s("type", ""), k, liveSettings(f), 0);
         final long ms = (System.nanoTime() - t0) / 1_000_000L;
@@ -509,11 +607,13 @@ public final class CoachGrade {
                 f.v.putAll(defaults.v);
                 for (final String[] kf : new String[][] {{"log", "log"}, {"type", "type"}, {"frame", "frame"}, {"mode", "mode"},
                     {"oppDeck", "opp-deck"}, {"oppPool", "opp-pool"}, {"deck", "deck"}, {"budgetMs", "budget-ms"},
-                    {"horizon", "horizon"}, {"seed", "seed"}, {"only", "only"}, {"minRounds", "min-rounds"}}) {
+                    {"horizon", "horizon"}, {"seed", "seed"}, {"only", "only"}, {"minRounds", "min-rounds"},
+                    {"ownPool", "own-pool"}, {"leafScale", "leaf-scale"}}) {
                     if (req.get(kf[0]) != null) {
                         f.v.put(kf[1], String.valueOf(req.get(kf[0])));
                     }
                 }
+                serveKnowledge(req, f);
                 if (!f.v.containsKey("log") || !f.v.containsKey("type")) {
                     throw new IllegalArgumentException("a request needs log and type");
                 }
@@ -530,6 +630,250 @@ public final class CoachGrade {
             out.flush();
         }
         return 0;
+    }
+
+    /**
+     * A serve request's D348 knowledge fields onto flags: {@code oppKnown} (an
+     * array of names or one string), {@code oppDeckPublic} with
+     * {@code oppDeckPublicReason}.  A request's flags replace the defaults'
+     * knowledge entirely, so a server started with a public list cannot lend it
+     * to a request that did not say so.
+     */
+    static void serveKnowledge(final Map<?, ?> req, final Flags f) {
+        final Object known = req.get("oppKnown");
+        if (known instanceof Object[] || known instanceof List) {
+            final List<String> names = new ArrayList<>();
+            for (final Object o : known instanceof Object[] ? Arrays.asList((Object[]) known) : (List<?>) known) {
+                names.add(String.valueOf(o));
+            }
+            f.v.put("opp-known", String.join(";", names));
+        } else if (known != null) {
+            f.v.put("opp-known", String.valueOf(known));
+        }
+        if (Boolean.TRUE.equals(req.get("oppDeckPublic"))) {
+            final Object why = req.get("oppDeckPublicReason");
+            f.v.put("opp-deck-public", why == null ? "true" : String.valueOf(why));
+        } else {
+            f.v.remove("opp-deck-public");
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // fit-scale (D349): the leaf -> P(win) scale, fitted on recorded games
+    // ------------------------------------------------------------------
+
+    /**
+     * {@code fit-scale --logs DIR|FILE[,...] [--out FILE] [--bootstrap 200]}:
+     * every recorded game under the paths (frame logs, {@code .jsonl} or
+     * {@code .jsonl.gz}, one seat's view each, ending in {@code over} with a
+     * winner) gives one position per turn -- the last state of the turn, where a
+     * live analysis's playouts stop ({@code --horizon 0}) -- rebuilt from that
+     * seat's redacted view and scored with {@code SearchPolicy.leaf}.  The fit is
+     * {@code P(the viewer wins) = σ(leaf / scale)} by maximum likelihood (no
+     * intercept: the leaf is antisymmetric), with a percentile bootstrap over
+     * games; the two-parameter fit, the log-loss at 400 and at the fit, and a
+     * reliability table are reported beside it.  No game is played.
+     */
+    static int fitScale(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final List<File> logs = new ArrayList<>();
+        for (final String p : f.s("logs", "").split(",")) {
+            if (!p.isBlank()) {
+                collectLogs(new File(p.trim()), logs);
+            }
+        }
+        logs.sort(null);
+        if (logs.isEmpty()) {
+            throw new IllegalArgumentException("fit-scale needs --logs DIR|FILE[,...] holding recorded games");
+        }
+        boot();
+        final Config cfg = Config.load();
+        final List<double[]> rows = new ArrayList<>();   // {leaf, won, gameIndex}
+        final List<String> games = new ArrayList<>();
+        final int[] skipped = new int[3];   // no winner, rebuild failures, unreadable
+        final ByteArrayOutputStream noise = new ByteArrayOutputStream();
+        realOut = System.out;
+        System.setOut(new PrintStream(noise, true, "UTF-8"));
+        try {
+            onGameThread(() -> {
+                for (final File lf : logs) {
+                    final WireLog log;
+                    try {
+                        log = WireLog.read(lf);
+                    } catch (final IOException | RuntimeException e) {
+                        skipped[2]++;
+                        continue;
+                    }
+                    final Map<?, ?> over = lastOf(log, "over");
+                    if (over == null || !(((Map<?, ?>) over.get("body")).get("winner") instanceof Number)) {
+                        skipped[0]++;
+                        continue;
+                    }
+                    final double won = WireLog.num((Map<?, ?>) over.get("body"), "winner", -1) == log.seat ? 1 : 0;
+                    final String game = String.valueOf(WireLog.str(log.header, "gameId")) + "|"
+                            + WireLog.num(log.header, "seed", 0) + "|" + lf.getParentFile();
+                    int g = games.indexOf(game);
+                    if (g < 0) {
+                        games.add(game);
+                        g = games.size() - 1;
+                    }
+                    final Rebuild.Knowledge k;
+                    try {
+                        k = knowledge(cfg.root(), log, new Flags(new String[0]));
+                    } catch (final IOException e) {
+                        skipped[2]++;
+                        continue;
+                    }
+                    for (final int frame : turnEnds(log)) {
+                        try {
+                            final Rebuild rb = new Rebuild(log, log.review(frame), k);
+                            final Rebuild.Base b = rb.build(GradeMath.mix(frame), new Rebuild.Tweaks());
+                            rows.add(new double[] {mtgtable.ai.SearchPolicy.leaf(b.game, b.viewer), won, g});
+                        } catch (final RuntimeException | StackOverflowError e) {
+                            skipped[1]++;
+                        }
+                    }
+                }
+            }, 6L * 3600 * 1000);
+        } finally {
+            System.setOut(realOut);
+        }
+        final String json = fitReport(rows, games.size(), logs.size(), skipped, f.i("bootstrap", 200), f.s("logs", ""));
+        final File out = new File(f.s("out", new File(cfg.root(), FITTED_SCALE).getPath()));
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        Files.writeString(out.toPath(), json + "\n", StandardCharsets.UTF_8);
+        System.out.println(json);
+        System.err.println("[coach-grade] fit-scale -> " + out);
+        return rows.isEmpty() ? 1 : 0;
+    }
+
+    static void collectLogs(final File f, final List<File> out) {
+        if (f.isDirectory()) {
+            final File[] kids = f.listFiles();
+            if (kids != null) {
+                for (final File k : kids) {
+                    collectLogs(k, out);
+                }
+            }
+        } else if (f.isFile() && (f.getName().endsWith(".jsonl") || f.getName().endsWith(".jsonl.gz"))) {
+            out.add(f);
+        }
+    }
+
+    static Map<?, ?> lastOf(final WireLog log, final String type) {
+        for (int i = log.frames.size() - 1; i >= 0; i--) {
+            if (type.equals(log.frames.get(i).get("type"))) {
+                return log.frames.get(i);
+            }
+        }
+        return null;
+    }
+
+    /** The index of each turn's last state frame (before the game was over). */
+    static List<Integer> turnEnds(final WireLog log) {
+        final List<Integer> out = new ArrayList<>();
+        long turn = -1;
+        int last = -1;
+        for (int i = 0; i < log.frames.size(); i++) {
+            final Map<?, ?> fr = log.frames.get(i);
+            if (!"state".equals(fr.get("type"))) {
+                continue;
+            }
+            final Map<?, ?> st = (Map<?, ?>) fr.get("body");
+            if (st.get("gameOver") != null || st.get("phase") == null) {
+                continue;
+            }
+            final long t = WireLog.num(st, "turn", -1);
+            if (t != turn && last >= 0) {
+                out.add(last);
+            }
+            turn = t;
+            last = i;
+        }
+        return out;   // the final turn's end is the game's end: left out
+    }
+
+    /** The fit, its bootstrap over games and its reliability table, as one JSON object. Pure; the self-test runs it. */
+    static String fitReport(final List<double[]> rows, final int nGames, final int nLogs, final int[] skipped, final int boots,
+                            final String source) {
+        final int n = rows.size();
+        final double[] x = new double[n];
+        final double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = rows.get(i)[0];
+            y[i] = rows.get(i)[1];
+        }
+        final Json.JsonOut j = new Json.JsonOut().obj().n("v", 1).n("what", "P(viewer wins) = sigmoid(leaf / scale), end-of-turn positions")
+                .n("source", source).n("logs", nLogs).n("games", nGames).n("rows", n)
+                .n("skippedNoWinner", skipped[0]).n("skippedRebuild", skipped[1]).n("skippedUnreadable", skipped[2]);
+        if (n < 2) {
+            return j.n("scale", mtgtable.ai.SearchPolicy.LEAF_SCALE).n("fitted", false).end().done();
+        }
+        final double b = GradeMath.fitSlope(x, y);
+        final double[] ab = GradeMath.fitLogistic(x, y);
+        // Percentile bootstrap over games (a game's positions -- both seats' -- move together).
+        final Random rnd = new Random(20261003);
+        final List<List<Integer>> byGame = new ArrayList<>();
+        for (int g = 0; g < nGames; g++) {
+            byGame.add(new ArrayList<>());
+        }
+        for (int i = 0; i < n; i++) {
+            byGame.get((int) rows.get(i)[2]).add(i);
+        }
+        byGame.removeIf(List::isEmpty);
+        final double[] scales = new double[boots];
+        for (int r = 0; r < boots; r++) {
+            final List<Integer> idx = new ArrayList<>();
+            for (int g = 0; g < byGame.size(); g++) {
+                idx.addAll(byGame.get(rnd.nextInt(byGame.size())));
+            }
+            final double[] bx = new double[idx.size()];
+            final double[] by = new double[idx.size()];
+            for (int i = 0; i < idx.size(); i++) {
+                bx[i] = x[idx.get(i)];
+                by[i] = y[idx.get(i)];
+            }
+            scales[r] = 1 / GradeMath.fitSlope(bx, by);
+        }
+        Arrays.sort(scales);
+        final double lo = boots > 0 ? scales[(int) Math.floor(0.025 * (boots - 1))] : Double.NaN;
+        final double hi = boots > 0 ? scales[(int) Math.ceil(0.975 * (boots - 1))] : Double.NaN;
+        j.n("scale", Math.round(1 / b * 10) / 10.0).n("scaleLo", lo).n("scaleHi", hi).n("fitted", true)
+                .n("bootstrap", boots).n("interceptFit", true).n("a", ab[0]).n("b", ab[1])
+                .n("logLossFitted", GradeMath.logLoss(x, y, 0, b)).n("logLoss400", GradeMath.logLoss(x, y, 0, 1.0 / 400))
+                .n("logLossConstant", GradeMath.logLoss(x, y, 0, 0))
+                .n("brierFitted", brier(x, y, b)).n("brier400", brier(x, y, 1.0 / 400));
+        j.key("reliability").arr();
+        final double[] edges = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0001};
+        for (int e = 0; e + 1 < edges.length; e++) {
+            int c = 0;
+            double sp = 0;
+            double sy = 0;
+            for (int i = 0; i < n; i++) {
+                final double p = GradeMath.sigmoid(b * x[i]);
+                if (p >= edges[e] && p < edges[e + 1]) {
+                    c++;
+                    sp += p;
+                    sy += y[i];
+                }
+            }
+            if (c > 0) {
+                j.obj().n("lo", edges[e]).n("hi", Math.min(1, edges[e + 1])).n("n", c).n("predicted", sp / c)
+                        .n("observed", sy / c).end();
+            }
+        }
+        j.end();
+        return j.end().done();
+    }
+
+    private static double brier(final double[] x, final double[] y, final double b) {
+        double s = 0;
+        for (int i = 0; i < x.length; i++) {
+            s += Math.pow(GradeMath.sigmoid(b * x[i]) - y[i], 2);
+        }
+        return s / x.length;
     }
 
     // ------------------------------------------------------------------
@@ -555,7 +899,7 @@ public final class CoachGrade {
         final int frame = f.i("frame", 941);
         final String type = f.s("type", "attack");
         final WireLog log = WireLog.read(logFile);
-        final Rebuild.Knowledge k = knowledge(cfg, log, f.s("deck", null), f.s("opp-deck", "decks/morph-probe.dck"), null);
+        final Rebuild.Knowledge k = knowledge(cfg, log, f.s("deck", null), f.s("opp-deck", "decks/morph-probe.dck"), null);   // review, not live
         check(k.ownDeck != null && k.oppDeck != null, "the viewer's deck (from the log header) and the opponent's list are read");
         final WireLog.Moment m = log.live(frame);
         // 1. The rebuild, twice with one seed and once with another: public state identical, hidden from the seed only.

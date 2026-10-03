@@ -17,8 +17,9 @@
 #        [--opp-deck D | --opp-pool P] [--deck D] [--playouts 200] [--seed 1] ...
 #   ./tools/coach-grade.sh batch --moments M.jsonl --out OUT.jsonl [--jobs K] ...
 #   ./tools/coach-grade.sh selftest [--log F --frame N --type T --opp-deck D]
-#   ./tools/coach-grade.sh analyse --log F --type T [--frame N] [--opp-deck D] [--budget-ms 3000]
+#   ./tools/coach-grade.sh analyse --log F --type T [--frame N] [--opp-pool P] [--opp-known "N; N"] [--budget-ms 3000]
 #   ./tools/coach-grade.sh serve [defaults]      # JSON requests on stdin, one answer line each
+#   ./tools/coach-grade.sh fit-scale --logs DIR[,DIR] [--out F]   # D349: refit the leaf -> P(win) scale
 #
 # Every flag of grade / batch is mtgtable.grade.CoachGrade's (see its header):
 # --playouts N rounds an option still in the race ends with (200), --initial N
@@ -35,8 +36,15 @@
 # playouts to the end of this turn scored by the search's leaf evaluator, so a
 # coach can explain the engine's numbers.  serve keeps one booted engine (Forge
 # takes ~10 s to start) and answers one JSON request per stdin line:
-#   {"id","log","type","frame"?,"mode"?,"oppDeck"?,"oppPool"?,"deck"?,"budgetMs"?,"horizon"?,"seed"?,"only"?}
+#   {"id","log","type","frame"?,"mode"?,"oppPool"?,"oppKnown"?,"ownPool"?,"deck"?,"budgetMs"?,"horizon"?,"seed"?,
+#    "only"?,"leafScale"?,"oppDeck"?,"oppDeckPublic"?,"oppDeckPublicReason"?}
 # with one JSON line on stdout (`{"ready":true}` first); see CoachGrade's header.
+# Hidden information (D348): the live modes take POOL knowledge -- the cube list
+# minus your deck, your drafted pool and every public card, the AI picks you
+# saw (oppKnown) drawn first -- and REFUSE the AI's deck list ("status":
+# "refused") unless the request marks it public with a reason, for a match
+# whose lists both players share.  The leaf's pseudo win rate uses the scale
+# fit-scale fitted (var/coach-grade/leaf-scale.json when present).
 set -euo pipefail
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
@@ -103,6 +111,10 @@ case "$mode" in
   analyse)
     shift
     jvm "$(home_for analyse-home)" analyse "$@"
+    ;;
+  fit-scale)
+    shift
+    jvm "$(home_for fit-home)" fit-scale "$@"
     ;;
   serve)
     shift

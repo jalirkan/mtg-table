@@ -213,7 +213,7 @@ public final class MtgTable {
                         Bootstrap.aiProfiles(cfg.forgeHomeDir())) + ")" : ""));
         if (!"plain".equals(a.aiPolicy)) {
             System.out.println("ai policy     = " + a.aiPolicy + ("search".equals(a.aiPolicy)
-                    ? "  (" + SearchConfig.parse(a.aiSearch) + ")" : ""));
+                    ? "  (" + SearchConfig.parseLive(a.aiSearch) + ")" : ""));
         }
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
@@ -294,7 +294,7 @@ public final class MtgTable {
         final LobbyPlayer aiLobby = "plain".equals(a.aiPolicy)
                 ? Bootstrap.createAiPlayer(a.aiName, 0, aiProfile)
                 : Bootstrap.createAiSeat(a.aiName, 0, aiProfile, null, PolicyLobbyPlayerAi.Outlets.ON,
-                        "search".equals(a.aiPolicy) ? SearchConfig.parse(a.aiSearch) : null);
+                        "search".equals(a.aiPolicy) ? SearchConfig.parseLive(a.aiSearch) : null);
         ai.setPlayer(aiLobby);
         final List<RegisteredPlayer> seats = List.of(me, ai);
 
@@ -1007,7 +1007,7 @@ public final class MtgTable {
                 case "--ai-search":
                     a.aiSearch = need(argv, ++i, k);
                     a.aiPolicy = "search";
-                    SearchConfig.parse(a.aiSearch);   // fail now, not after the engine boots
+                    SearchConfig.parseLive(a.aiSearch);   // fail now, not after the engine boots
                     break;
                 case "--game-id":   a.gameId = need(argv, ++i, k); break;
                 case "--seat":      a.seat = Integer.parseInt(need(argv, ++i, k)); break;

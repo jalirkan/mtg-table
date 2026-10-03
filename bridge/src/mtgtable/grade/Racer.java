@@ -59,6 +59,8 @@ public final class Racer {
         public long deadline = Long.MAX_VALUE;
         /** Rounds played whatever the deadline says (a live answer with no numbers is no answer). */
         public int minRounds;
+        /** What a playout's number is: the paired standard error and critical value follow it (D349). */
+        public GradeMath.Measure measure = GradeMath.Measure.WINS;
     }
 
     public static final class Result {
@@ -124,7 +126,7 @@ public final class Racer {
             }
             res.rounds = r + 1;
             if (c.race && res.rounds >= c.initial && (res.rounds - c.initial) % Math.max(1, c.batch) == 0) {
-                res.active = GradeMath.race(res.x, res.active, c.zElim, c.initial);
+                res.active = GradeMath.race(res.x, res.active, c.zElim, c.initial, c.measure);
             }
             int left = 0;
             for (final boolean a : res.active) {
