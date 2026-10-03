@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T13:26:32-04:00",
+ "updated": "2026-10-03T13:26:45-04:00",
  "paused": false,
  "host": {
-  "load1": 0.2,
-  "memUsedGb": 6.5,
+  "load1": 0.83,
+  "memUsedGb": 6.7,
   "memTotalGb": 30.5,
   "swapUsedMb": 934,
   "pressure": 0,
@@ -18,21 +18,21 @@
    "id": "J010",
    "title": "Lab runner shakedown on the PC: units, memory limits, pause, resize, resume",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-03T13:26:32-04:00",
-   "elapsed": 0,
+   "elapsed": 13,
    "done": 0,
    "total": 56,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-03T13:26:32-04:00",
    "pressureEvents": [],
-   "detail": "lab-J010-prepare"
+   "detail": "lab-J010-pilot1"
   }
  ],
  "queue": [
