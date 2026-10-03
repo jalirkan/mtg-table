@@ -80,3 +80,21 @@ a Claude session to be awake.
 
 Every digest (08:07 and 20:07) reports the last 12 hours against the first two rows, in minutes, and
 says plainly when a target was missed and why.
+
+## Cadence ladder (Justin, 14:05: "issues will be front-loaded — be highly communicative now, slow down as it runs smoothly")
+
+Both sessions check often at first and earn longer intervals with clean running. Any incident drops
+the session that saw it back to step 1.
+
+| Step | PC session checks | Cloud session reads pc-results | Move up after |
+|---|---|---|---|
+| 1 (now) | every 10 minutes | every 15 minutes | 6 clean hours |
+| 2 | every 30 minutes | every 30 minutes | 24 more clean hours |
+| 3 | every hour | every 2 hours | steady state |
+
+An incident is: the machine idle more than 5 minutes; planned work blocked more than 30 minutes; a
+job failing for an infrastructure reason (runner, checkout, memory, a pilot's wording) rather than a
+real result; the runner restarting; a message that needed Justin to carry it. A job failing on a real
+finding is not an incident. Each side writes its current step and its clean-hours count in its
+heartbeat line (PC: HEARTBEAT.md; cloud: "NOTES TO THE PC" in the pc-jobs README), so either can see
+the other is awake. PC is at step 1 from 14:05, 0 clean hours.
