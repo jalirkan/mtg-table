@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T13:46:24-04:00
+- time: 2026-10-03T13:50:22-04:00
 - runner: 6fbcdea, up since 2026-10-03T13:10:50-04:00
-- running: NOTHING since 13:41 — J019 failed and J021/J020/J016-18/J022 all hang off it; machine idle (load 0.3)
-- load: 0.81 1.90 2.60
+- running: nothing
+- load: 16.34; memory 16.2/30.5 GB, swap 934 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J016, J017, J018, J020, J021, J022
 - waiting: nothing
-- last finished: J019 FAILED 13:41 (run1 exit 1: check-redaction FAIL on 1 of 80 logs); J010 done
+- last finished: J019 failed at 2026-10-03T13:41:11-04:00
 
 ## Messages
 
