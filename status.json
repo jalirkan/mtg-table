@@ -1,10 +1,10 @@
 {
  "schema": 1,
- "updated": "2026-10-03T14:29:49-04:00",
+ "updated": "2026-10-03T14:34:26-04:00",
  "paused": false,
  "host": {
-  "load1": 13.86,
-  "memUsedGb": 9.6,
+  "load1": 7.77,
+  "memUsedGb": 11.5,
   "memTotalGb": 30.5,
   "swapUsedMb": 1853,
   "pressure": 0,
@@ -20,7 +20,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-03T14:29:26-04:00",
-   "elapsed": 23,
+   "elapsed": 301,
    "done": 0,
    "total": 2400,
    "unit": "games",
