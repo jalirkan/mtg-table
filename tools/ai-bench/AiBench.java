@@ -1357,6 +1357,44 @@ public final class AiBench {
                             && ctl.counts().getOrDefault("search.oracleRollouts", 0) >= 2,
                             "the report: " + (rep == null ? "none" : rep.summary()) + " (" + ctl.counts() + ")");
                 });
+        // 7. D352–D354 (search week 3): the anytime search ranking a wide attack
+        //    list by its prior, the outlet policy inside the rollouts.  The report
+        //    says what was generated, kept and scored, and it reaches a verdict.
+        scenario("search-week3-attack", List.of(
+                "humanlife=9", "ailife=20", "turn=5", "activeplayer=ai", "activephase=COMBAT_DECLARE_ATTACKERS",
+                "humanbattlefield=Forest;Wall of Wood", "humanlibrary=Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp",
+                "aibattlefield=Grizzly Bears;Grizzly Bears;Hill Giant;Viscera Seer;Forest"), PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=4000,rounds=2,maxrounds=4,seed=7,what=a,anytime=1,rank=prior,cands=3,gen=12,rollout=both"),
+                (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
+                    ai.getGame().getPhaseHandler().setCombat(combat);
+                    combat.initConstraints();
+                    ctl.declareAttackers(ai, combat);
+                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
+                    final java.util.Map<String, Integer> c = ctl.counts();
+                    int scored = 0;
+                    for (int i = 0; rep != null && i < rep.prior.length; i++) {
+                        scored += Double.isNaN(rep.prior[i]) ? 0 : 1;
+                    }
+                    check(rep != null && rep.anytime && rep.generated > 3 && rep.cands.size() == 3 && scored >= 1
+                            && rep.fallback == null && rep.chosen >= 0 && c.getOrDefault("search.rolloutErrors", 0) == 0
+                            && c.getOrDefault("search.prior.playouts", 0) >= 1,
+                            "ranked anytime search: " + (rep == null ? "none" : rep.summary()) + " (" + c + ")");
+                });
+        // 8. The anytime search at a budget no full round fits: it still decides
+        //    on what it scored (or, with nothing scored, says "budget").
+        scenario("search-week3-tight", castBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=60,rounds=2,seed=7,anytime=1"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final long t0 = System.nanoTime();
+                    ctl.chooseSpellAbilityToPlay();
+                    final long ms = (System.nanoTime() - t0) / 1_000_000L;
+                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
+                    check(rep != null && rep.anytime && (rep.fallback == null ? rep.chosen >= 0
+                            : "budget".equals(rep.fallback) && rep.playouts <= 1) && ms < 60 + 1500,
+                            "a tight budget: " + ms + " ms, " + (rep == null ? "none" : rep.summary()));
+                });
     }
 
     static boolean targets(final forge.game.spellability.SpellAbility sa, final Player p) {

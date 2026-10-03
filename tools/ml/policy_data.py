@@ -22,7 +22,7 @@ option (playouts, mean leaf score, win estimate).  This tool turns them into:
                              game int32 (games.jsonl), label int8 (the game's outcome for that seat)
     <split>-NNNNN.jsonl      one target per row, the same order: kind, options, chosen, chosenIndex,
                              by, complete, hidden, atoms, parent, source, turn, phase, and `search`
-                             ({tokens, n, meanLeaf, win, rounds, playouts, overrode, timedOut, fallback}) or null
+                             ({tokens, n, meanLeaf, win, prior, generated, rounds, playouts, overrode, timedOut, fallback}) or null
     games.jsonl              every game: split, source, ver, seat, policy, profile, decisions, label, file
     stats.json               rows per split, kind and policy; searched rows; what was dropped and why
 
@@ -198,7 +198,8 @@ def target_of(rec: dict[str, Any]) -> dict[str, Any]:
         search = {"tokens": [o.get("token") for o in so], "n": [o.get("n") for o in so],
                   "meanLeaf": [o.get("meanLeaf") for o in so], "se": [o.get("se") for o in so],
                   "diff": [o.get("diff") for o in so], "seDiff": [o.get("seDiff") for o in so],
-                  "win": [o.get("win") for o in so], "horizon": s.get("horizon"), "rule": s.get("rule"),
+                  "win": [o.get("win") for o in so], "prior": [o.get("prior") for o in so],
+                  "generated": s.get("generated"), "horizon": s.get("horizon"), "rule": s.get("rule"),
                   "margin": s.get("margin"),
                   "rounds": s.get("rounds"), "playouts": s.get("playouts"), "overrode": s.get("overrode"),
                   "timedOut": s.get("timedOut"), "fallback": s.get("fallback"), "ms": s.get("ms"),

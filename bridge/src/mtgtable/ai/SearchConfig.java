@@ -56,6 +56,26 @@ import java.util.Locale;
  *     worth.  {@link #parseLive} refuses it, and the game's AI seat
  *     ({@code MtgTable --ai-search}) parses with that.</li>
  * </ul>
+ *
+ * <p>The week-3 upgrades (D352–D354), each off by default for the same reason:
+ * <ul>
+ * <li>{@code anytime=1} -- the search respects its budget: a round cut short by
+ *     the deadline keeps the rollouts it finished, candidates the remaining time
+ *     cannot carry to {@code rounds} are pruned worst-first, clearly worse ones
+ *     are retired by racing, and the verdict is taken on whatever paired
+ *     evidence exists.  Forge's answer is kept without a verdict only when no
+ *     alternative was scored at all (D352);</li>
+ * <li>{@code rank=prior} -- up to {@code gen} candidates (default 24) are
+ *     generated, each is applied once on one shared determinization and the
+ *     position after it is scored (the leaf, or the learned position evaluator
+ *     with {@code prior=eval} and {@code evalmodel=<path>}, D316), and the best
+ *     {@code cands} are kept: Forge's own answer and "pass" always, the rest by
+ *     that prior instead of by enumeration order (D353);</li>
+ * <li>{@code rollout=outlets} -- inside the rollouts the searching seat plays
+ *     Forge's AI with D310's sacrifice-outlet policy in front, instead of plain
+ *     Forge; {@code rollout=both} gives the opponent's seat the policy too
+ *     (D354).</li>
+ * </ul>
  */
 public final class SearchConfig {
 
@@ -81,6 +101,19 @@ public final class SearchConfig {
     /** Bench only: no determinization, the copies keep the real hidden cards (D350). */
     public final boolean oracle;
 
+    /** D352: keep partial rounds, prune to the budget, race, decide on what exists. */
+    public final boolean anytime;
+    /** D353: generate up to {@link #generate} candidates and keep the best {@link #maxCandidates} by a prior. */
+    public final boolean rankPrior;
+    /** D353: how many candidates are generated before the prior's cut (only with {@link #rankPrior}). */
+    public final int generate;
+    /** D353: the prior's scorer: "leaf" or "eval" (the learned position evaluator at {@link #evalModel}). */
+    public final String prior;
+    /** D353: the learned evaluator's model file for {@code prior=eval}; null = none. */
+    public final String evalModel;
+    /** D354: the rollouts' policy: "default" (plain Forge), "outlets" (our seat with D310's policy), "both". */
+    public final String rollout;
+
     /** The fewest complete rounds the {@code lcb} rule overrules Forge on (an sd from fewer is no sd). */
     public static final int LCB_MIN_ROUNDS = 3;
 
@@ -95,6 +128,15 @@ public final class SearchConfig {
                         final int margin, final int maxRounds, final boolean priority, final boolean attacks, final boolean blocks,
                         final long seed, final int attackTurns, final boolean lcb, final double z, final double untapped,
                         final boolean oracle) {
+        this(budgetMs, maxCandidates, horizonTurns, minRounds, margin, maxRounds, priority, attacks, blocks, seed,
+                attackTurns, lcb, z, untapped, oracle, false, false, Math.max(24, maxCandidates), "leaf", null, "default");
+    }
+
+    public SearchConfig(final int budgetMs, final int maxCandidates, final int horizonTurns, final int minRounds,
+                        final int margin, final int maxRounds, final boolean priority, final boolean attacks, final boolean blocks,
+                        final long seed, final int attackTurns, final boolean lcb, final double z, final double untapped,
+                        final boolean oracle, final boolean anytime, final boolean rankPrior, final int generate,
+                        final String prior, final String evalModel, final String rollout) {
         if (budgetMs < 50 || budgetMs > 60_000) {
             throw new IllegalArgumentException("search budget must be 50..60000 ms, got " + budgetMs);
         }
@@ -106,6 +148,18 @@ public final class SearchConfig {
         }
         if (!(z >= 0 && z <= 5) || !(untapped >= 0 && untapped <= 1000)) {
             throw new IllegalArgumentException("search z must be 0..5 and untapped 0..1000");
+        }
+        if (generate < maxCandidates || generate > 64) {
+            throw new IllegalArgumentException("search gen must be cands..64, got " + generate);
+        }
+        if (!"leaf".equals(prior) && !"eval".equals(prior)) {
+            throw new IllegalArgumentException("search prior= is leaf or eval: " + prior);
+        }
+        if ("eval".equals(prior) && (evalModel == null || evalModel.isEmpty())) {
+            throw new IllegalArgumentException("search prior=eval needs evalmodel=<model file> (D316)");
+        }
+        if (!"default".equals(rollout) && !"outlets".equals(rollout) && !"both".equals(rollout)) {
+            throw new IllegalArgumentException("search rollout= is default, outlets or both: " + rollout);
         }
         this.budgetMs = budgetMs;
         this.maxCandidates = maxCandidates;
@@ -122,6 +176,22 @@ public final class SearchConfig {
         this.z = z;
         this.untapped = untapped;
         this.oracle = oracle;
+        this.anytime = anytime;
+        this.rankPrior = rankPrior;
+        this.generate = generate;
+        this.prior = prior;
+        this.evalModel = evalModel;
+        this.rollout = rollout;
+    }
+
+    /** Whether the searching seat's rollouts play D310's outlet policy (D354). */
+    public boolean rolloutOutletsUs() {
+        return !"default".equals(rollout);
+    }
+
+    /** Whether the opponent's seat in the rollouts plays it too (D354). */
+    public boolean rolloutOutletsThem() {
+        return "both".equals(rollout);
     }
 
     /** The horizon for a decision of kind {@code p}, {@code a} or {@code b}. */
@@ -161,6 +231,12 @@ public final class SearchConfig {
         double z = 1.0;
         double untapped = 1.0;
         boolean oracle = false;
+        boolean anytime = false;
+        String rank = "order";
+        int gen = -1;
+        String prior = "leaf";
+        String evalModel = null;
+        String rollout = "default";
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -186,8 +262,20 @@ public final class SearchConfig {
                     }
                     oracle = "1".equals(p[1]);
                     break;
+                case "anytime":
+                    if (!p[1].matches("[01]")) {
+                        throw new IllegalArgumentException("search anytime= takes 0 or 1: " + p[1]);
+                    }
+                    anytime = "1".equals(p[1]);
+                    break;
+                case "rank": rank = p[1]; break;
+                case "gen": gen = Integer.parseInt(p[1]); break;
+                case "prior": prior = p[1]; break;
+                case "evalmodel": evalModel = p[1]; break;
+                case "rollout": rollout = p[1]; break;
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
-                        + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle)");
+                        + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
+                        + " anytime, rank, gen, prior, evalmodel, rollout)");
                 }
             }
         }
@@ -197,8 +285,12 @@ public final class SearchConfig {
         if (!override.matches("margin|lcb")) {
             throw new IllegalArgumentException("search override= is margin or lcb: " + override);
         }
+        if (!rank.matches("order|prior")) {
+            throw new IllegalArgumentException("search rank= is order or prior: " + rank);
+        }
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
-                what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle);
+                what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
+                "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout);
     }
 
     @Override
@@ -219,6 +311,19 @@ public final class SearchConfig {
         }
         if (oracle) {
             sb.append(",oracle=1");
+        }
+        // D352–D354's likewise.
+        if (anytime) {
+            sb.append(",anytime=1");
+        }
+        if (rankPrior) {
+            sb.append(",rank=prior,gen=").append(generate);
+            if (!"leaf".equals(prior)) {
+                sb.append(",prior=").append(prior).append(",evalmodel=").append(evalModel);
+            }
+        }
+        if (!"default".equals(rollout)) {
+            sb.append(",rollout=").append(rollout);
         }
         return sb.toString();
     }

@@ -362,6 +362,21 @@ test('search kind, D350–D351: the new switches stay out of the hash and the se
   for (const n of ['search-v1-fixed3-aturns1', 'search-v1-fixed3-lcb', 'search-v1-fixed3-oracle']) assert.ok(by.get(n)?.cfg, `${n} is registered and playable`);
 });
 
+test('search kind, D352–D354: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys', () => {
+  const plain = resolveParams('search', { budgetMs: 500 });
+  const explicit = resolveParams('search', { budgetMs: 500, anytime: 'off', rank: 'order', gen: 24, rollout: 'default' });
+  assert.deepEqual(explicit, plain, 'a switch at its default is the old config');
+  assert.equal(configHash('search', explicit), configHash('search', plain));
+  assert.match(KINDS.search!.cfg(resolveParams('search', { anytime: 'on' })), /,seed=0,anytime=1$/);
+  assert.match(KINDS.search!.cfg(resolveParams('search', { rank: 'prior' })), /,rank=prior,gen=24$/);
+  assert.match(KINDS.search!.cfg(resolveParams('search', { rank: 'prior', gen: 12 })), /,rank=prior,gen=12$/);
+  assert.match(KINDS.search!.cfg(resolveParams('search', { rollout: 'outlets' })), /,rollout=outlets$/);
+  assert.throws(() => resolveParams('search', { rollout: 'sometimes' }), /rollout must be one of/);
+  const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  for (const n of ['search-v1-anytime', 'search-v1-fixed3-ranked', 'search-v1-fixed3-routlets']) assert.ok(by.get(n)?.cfg, `${n} is registered and playable`);
+});
+
 test('addPlayer never overwrites', () => {
   const reg = parseRegistry(JSON.stringify({ version: 1, players: [{ name: 'forge-default', kind: 'forge', params: {} }, { name: 'x-t1', kind: 'forge', params: {} }] }));
   assert.equal(addPlayer(reg, { name: 'x-t1', kind: 'forge', params: { profile: 'Reckless' } }), 'x-t1-2');

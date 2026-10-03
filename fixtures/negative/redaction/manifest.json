@@ -232,5 +232,17 @@
     "level": "fail",
     "expect": "in a seat recording",
     "why": "amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log"
+  },
+  {
+    "file": "m56-search-prior-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M56: a decision record whose search ranked its candidates by a prior -- the control for the m56 probe"
+  },
+  {
+    "file": "m56-generated-is-not-a-count.jsonl",
+    "level": "fail",
+    "expect": "search generated",
+    "why": "amendment M56 / D353: `generated` is how many candidates were generated -- a positive integer, never a string"
   }
 ]

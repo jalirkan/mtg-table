@@ -703,5 +703,26 @@ probe('m55-frame-is-not-a-state.jsonl',
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 }
 
+// Amendment M56 (D353): the search's prior in M55's search block -- `prior` per
+// option and `generated` -- a control that passes and one malformed probe.
+{
+  const fs = slice();
+  const b = withDecision(fs);
+  b.search.options[0].prior = 410.5;
+  if (b.search.options[1]) b.search.options[1].prior = 388;
+  b.search.generated = 9;
+  write('m56-search-prior-present.jsonl', fs);
+  manifest.push({
+    file: 'm56-search-prior-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M56: a decision record whose search ranked its candidates by a prior -- the control for the m56 probe',
+  });
+  console.log('  PASS  m56-search-prior-present.jsonl  (a ranked search, no defect)');
+}
+
+probe('m56-generated-is-not-a-count.jsonl',
+  'amendment M56 / D353: `generated` is how many candidates were generated -- a positive integer, never a string',
+  'search generated',
+  (fs) => { withDecision(fs).search.generated = 'nine'; });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);
