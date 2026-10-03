@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T18:55:12-04:00
+- time: 2026-10-03T18:57:58-04:00
 - runner: 5e6ba2a, up since 2026-10-03T14:45:31-04:00
-- running: J027 (decision-records pilot re-run) on the runner; then J028, J034, J038, J039
-- load: 8.07 8.60 10.73
-- queue: J028, J034, J038, J039, J040, J041, J042, J043, J044, J045, J046
+- running: J028 prepare, 0/3 files, 1 worker(s)
+- load: 7.07; memory 8.1/30.5 GB, swap 2485 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J034, J038, J039, J040, J041, J042, J043, J044, J045, J046
 - waiting: nothing
-- last finished: J029 DONE 18:53 — 20,000 drafts / 19,999 games in 4 h 13 min, 1 engine error, 18 recording errors, 822 files quarantined (see results/J029/summary-pc.md; please confirm 822 is expected)
+- last finished: J027 failed at 2026-10-03T18:57:58-04:00
 
 ## Messages
 

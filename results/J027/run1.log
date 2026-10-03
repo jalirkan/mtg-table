@@ -1,0 +1,44 @@
+==== J027 run1 started 2026-10-03T18:54:05-04:00 in unit lab-J027-run1, 4 worker(s)
+ai-bench: run j027-bench, 4 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j027-bench
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J027.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+ai-bench: shard 3 starts in slot 3
+== Default+search vs Default
+  games 20: A 13, B 7, draws 0 (timeouts 0, engine errors 0)
+  A win rate 65.0% of 20 decisive  (95% Wilson CI 43.3-81.9%)
+  focus deck (first of each pair) win rate 35.0% of 20  (95% CI 18.1-56.7%)
+  game time mean 31.6 s, median 25.1 s, max 77.2 s; turns mean 17.6; AI eval timeouts 0 (0.00/game)
+  A vs the known 50%: 65.0% over 20 deal(s), 95% CI 43.5-86.5%, p = 0.171 (+108 Elo, CI -45 to +322)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {cast.Blood Artist=4, cast.Cauldron Familiar=3, cast.Grim Haruspex=1, cast.Zulaport Cutthroat=1, search.a.changed=22, search.a.considered=118, search.a.ms=146454, search.b.changed=6, search.b.considered=49, search.b.ms=56368, search.candidateUnmappable=2, search.copyUs=45001074, search.fallback.budget=36, search.fallback.unmappable=1, search.p.changed=69, search.p.changed.fromPass=34, search.p.changed.toOther=14, search.p.changed.toPass=21, search.p.considered=355, search.p.ms=373278, search.p.skipLand=148, search.playUs=488603794, search.rollouts=14465, search.rounds=4670, search.standInCards=410, search.standInDecisions=315}
+  B counters:     {activate.Carrion Feeder=7, cast.Blood Artist=2, cast.Carrion Feeder=1, cast.Priest of Forgotten Gods=1, cast.Village Rites=1, cast.Woe Strider=1, cast.Zulaport Cutthroat=1, forge.outletActivation=7}
+  focus counters: {activate.Carrion Feeder=7, cast.Blood Artist=2, cast.Carrion Feeder=1, cast.Cauldron Familiar=1, cast.Village Rites=1, cast.Woe Strider=1, cast.Zulaport Cutthroat=1, forge.outletActivation=7, search.a.changed=10, search.a.considered=63, search.a.ms=74378, search.b.changed=2, search.b.considered=24, search.b.ms=27305, search.candidateUnmappable=2, search.copyUs=21672125, search.fallback.budget=27, search.fallback.unmappable=1, search.p.changed=26, search.p.changed.fromPass=17, search.p.changed.toOther=6, search.p.changed.toPass=3, search.p.considered=188, search.p.ms=205179, search.p.skipLand=77, search.playUs=255792991, search.rollouts=7047, search.rounds=2380, search.standInCards=216, search.standInDecisions=166}
+cube lab: cubes/synergy-cube-180.md, grid, 20 draft(s) from seed 730101, best of 1, 4 job(s), AI mixed per drafter (Default:0.5,Reckless:0.25,Cautious:0.25), ratings cubes/synergy-cube-180.ratings.tsv, out var/cubelab/runs/j027-lab, recording every game (both chairs) into var/cubelab/runs/j027-lab/games
+drafted and built 20 draft(s) in 0.1 s; playing 1 game each on 4 worker(s)
+[1/20] seed 730104: A:WU 1-0 B:BG  games A
+[2/20] seed 730105: A:WG 1-0 B:UB  games A
+[3/20] seed 730103: A:UB 1-0 B:UR+g  games A
+[4/20] seed 730101: A:WU 0-1 B:WU  games B
+[5/20] seed 730108: A:UG 0-1 B:WU+g  games B
+[6/20] seed 730102: A:UG 0-1 B:WU+g  games B
+[7/20] seed 730107: A:RG 0-1 B:WU  games B
+[8/20] seed 730109: A:WU 0-1 B:UG  games B
+[9/20] seed 730106: A:BG 0-1 B:WU  games B
+[10/20] seed 730110: A:WG 1-0 B:UG  games A
+[11/20] seed 730111: A:WG 1-0 B:WU  games A
+[12/20] seed 730112: A:UG 0-1 B:WU  games B
+[13/20] seed 730115: A:UG 0-1 B:WU  games B
+[14/20] seed 730114: A:UG 0-1 B:WU  games B
+[15/20] seed 730118: A:WB 1-0 B:UR  games A
+[16/20] seed 730117: A:UG 0-1 B:WU  games B
+[17/20] seed 730119: A:UG 0-1 B:BR  games B
+[18/20] seed 730120: A:WU 0-1 B:UG  games B
+[19/20] seed 730116: A:UB+g 1-0 B:UG  games A
+[20/20] seed 730113: A:WG 0-1 B:WU  games B
+matches: 35 s for 20 (1.7 s a draft wall-clock on 4 worker(s))
+recorded: 20 game(s), both chairs, 3.6 MiB gzipped (185 KiB a game) under var/cubelab/runs/j027-lab/games
+done in 35 s -> var/cubelab/runs/j027-lab/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/runs/j027-lab
+policy_data.py needs numpy for the shards (pip install numpy), or --jsonl-only
