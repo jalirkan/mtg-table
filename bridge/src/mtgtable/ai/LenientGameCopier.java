@@ -55,8 +55,10 @@ import forge.game.zone.ZoneType;
  * (and the copy re-applies every static itself in {@code checkStateEffects}),
  * so stripping them from a stand-in is a no-op: the copy is the game it would
  * have been had the sideboard not been affected.  Cards in the seven copied
- * zones still go through Forge's own strict lookup, and after the copy is made
- * every lookup is strict again.  Every stand-in is counted ({@link #unmapped}),
+ * zones still go through Forge's own strict lookup first (one that fails all
+ * the same -- a token the zone's listing skips -- gets a stand-in too, marked
+ * {@code ?} in {@link #unmappedNames}), and after the copy is made every lookup
+ * is strict again.  Every stand-in is counted ({@link #unmapped}),
  * and the bench reports the rate.
  */
 public final class LenientGameCopier extends GameCopier {
@@ -99,12 +101,28 @@ public final class LenientGameCopier extends GameCopier {
             final Card c = (Card) o;
             final ZoneType z = c.getZone() == null ? null : c.getZone().getZoneType();
             if (z == null || !COPIED.contains(z)) {
-                return standIns.computeIfAbsent(c, k -> {
-                    unmappedNames.add(k.getName() + "@" + z);
-                    return new Card(k.getId(), k.getPaperCard(), getCopiedGame());
-                });
+                return standIn(c, String.valueOf(z));
+            }
+            try {
+                return super.find(o);
+            } catch (final RuntimeException e) {
+                // A card in a copied zone that the copier still did not copy: the
+                // bench met a Bird token (11 of 5,017 searched decisions before
+                // this branch) -- a card the zone's getCardsIn does not list, as a
+                // phased-out permanent is not.  The same stand-in, counted apart.
+                if (!String.valueOf(e.getMessage()).startsWith("Couldn't map")) {
+                    throw e;
+                }
+                return standIn(c, z + "?");
             }
         }
         return super.find(o);
+    }
+
+    private Card standIn(final Card c, final String where) {
+        return standIns.computeIfAbsent(c, k -> {
+            unmappedNames.add(k.getName() + "@" + where);
+            return new Card(k.getId(), k.getPaperCard(), getCopiedGame());
+        });
     }
 }

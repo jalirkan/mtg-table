@@ -654,6 +654,7 @@ public final class SearchPolicy {
         final double[] sum = new double[k];
         int rounds = 0;
         int errors = 0;
+        boolean retried = false;
         if (Determinizer.hiddenFaceDown(game, ai) > 0) {
             sink.add("search.oppFaceDownDecisions", 1);
         }
@@ -675,12 +676,14 @@ public final class SearchPolicy {
                         }
                         sink.add("search.candidateUnmappable", 1);
                         cands.remove(i);
+                        retried = true;   // the retry counts the time
                         return retryWithout(ai, cands, kind, t0);
                     } catch (final RuntimeException | StackOverflowError e) {
                         errors++;
                         sink.add("search.rolloutErrors", 1);
                         if (errors >= 3) {
-                            break rounds;
+                            sink.add("search.fallback.rolloutErrors", 1);
+                            return null;
                         }
                         continue rounds;
                     }
@@ -700,7 +703,9 @@ public final class SearchPolicy {
             sink.event("search " + kind + ": copy failed, Forge's answer: " + e.getCause());
             return null;
         } finally {
-            sink.add("search." + kind + ".ms", (int) ((System.nanoTime() - t0) / 1_000_000L));
+            if (!retried) {
+                sink.add("search." + kind + ".ms", (int) ((System.nanoTime() - t0) / 1_000_000L));
+            }
         }
         sink.add("search.rounds", rounds);
         if (rounds < cfg.minRounds) {
