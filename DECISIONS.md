@@ -14034,7 +14034,9 @@ Forge-drafted pairs, seed 21), `Default+search` against Default won **113 of
 paired, **37 deals gained and 18 lost, exact McNemar p = 0.015**. 25 searched
 decisions a game, 12.5% of them changed, 1.5 s each; 44 s a game against 7 s on
 this machine. A quarter of the searched decisions ran out of budget before two
-rounds and kept Forge's answer. The horizon was chosen on separate pilot deals:
+rounds and kept Forge's answer. On the sacrifice pairs, with D310's outlet policy on both seats,
+adding the search to one seat: 42 of 80 against 32 of 80 on the same deals,
+14 gained and 4 lost, p = 0.031 — the configuration `--ai-policy search` seats. The horizon was chosen on separate pilot deals:
 to the end of this turn (`turns=0`) rather than the next, because a next-turn
 rollout costs three times as much and at 1.5 s left half the decisions to Forge.
 

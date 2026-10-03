@@ -10142,6 +10142,12 @@ D312–D314. Roadmap step 2 of D311 (and step 3, combat, with it).
 ./scripts/play.sh --ai-search                      # play against it (outlet policy + search)
 ```
 
+- **Measured:** on 200 new cube deals the search wins 56.5% against Default's
+  47.0% in the same chair (37 deals gained, 18 lost, McNemar p = 0.015); on 80
+  sacrifice deals, outlet policy on both sides, 52.5% against 40.0% (14 / 4,
+  p = 0.031). 44–48 s a game against 7–8 s on this machine; copier errors 0.22%,
+  then 0 after the token fix; a quarter of searched decisions keep Forge's answer
+  for want of budget.
 - D312: `SearchPolicy` — at main-phase priority, attacks and blocks, Forge's
   answer plus up to five alternatives, each scored by rollouts on determinized
   copies (the opponent's hand and library redealt from their multiset), Default

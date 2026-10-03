@@ -97,7 +97,30 @@ pause at most main phases and combats.
 
 ## 3. The sacrifice decks — the outlet policy with and without the search
 
-RESULTS-SAC
+What the owner will play against is the outlet policy *and* the search
+(`--ai-policy search`). On the sacrifice pairs (two Rakdos sacrifice decks
+against five Forge-drafted opponents each), both seats run D310's policy; the
+treatment adds the search to seat A only, on the same 80 new deals (seed 21,
+8 games a pair), after the copier's token fix (`26563b1`):
+
+```bash
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-sac.txt --games 8 --seed 21 --jobs 2 --run sac-control --a Default+outlets --b Default+outlets
+./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-sac.txt --games 8 --seed 21 --jobs 2 --run sac-search  --a Default+outlets+search --b Default+outlets
+```
+
+| A (vs `Default+outlets`) | A wins of 80 | 95% CI | paired: gained / lost | exact p | s / game |
+|---|---|---|---|---|---|
+| `Default+outlets` (control) | 32 (40.0%) | 30.0–51.0% | — | — | 8.1 |
+| **`Default+outlets+search`** | **42 (52.5%)** | **41.7–63.1%** | **14 / 4** | **0.031** | 48.4 |
+
+The outlet policy stays in front and kept acting (per 80 games: 68 lethal
+all-ins, 45 doomed combatants, 21 answers to removal, 71 fodder payments, 35
+outlets cast that Forge hides); the search changed 211 of 1,936 searched
+decisions (156 priorities, 41 attacks, 14 blocks). **Copier errors: 0**; a
+stand-in on half the searched decisions; budget fallbacks 31% (the load here
+was about 4, against 1–3 for the cube runs). A's chair alternates between the
+sacrifice deck and its opponent, so this is the search's effect on both kinds of
+deck, with the policy on both sides.
 
 ## 4. The copier, and every fallback
 
