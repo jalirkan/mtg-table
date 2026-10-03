@@ -1,0 +1,52 @@
+# cubes/omega-notes.tsv — verdicts that override the cube lab's evolve loop for Omega (D299-D300).
+# card<TAB>verdict<TAB>note.  verdict: keep (never cut), cut (cut now if in the cube; never add if not), try (add when a cut makes room; may be an AI:RemoveDeck:All card).
+# Justin: add a line per card from your real games; your line wins over any AI number.
+# The cut lines below are not from games: they are v1's own design exclusions (omega-cube-180.md, *Power choices*), so the loop never auto-adds them.
+card	verdict	note
+Black Lotus	cut	v1 design: the Power Nine stay out
+Ancestral Recall	cut	v1 design: the Power Nine stay out
+Time Walk	cut	v1 design: the Power Nine stay out
+Timetwister	cut	v1 design: the Power Nine stay out
+Mox Pearl	cut	v1 design: the Power Nine stay out
+Mox Sapphire	cut	v1 design: the Power Nine stay out
+Mox Jet	cut	v1 design: the Power Nine stay out
+Mox Ruby	cut	v1 design: the Power Nine stay out
+Mox Emerald	cut	v1 design: the Power Nine stay out
+Mox Diamond	cut	v1 design: no fast mana
+Mox Opal	cut	v1 design: no fast mana
+Sol Ring	cut	v1 design: no fast mana
+Mana Crypt	cut	v1 design: no fast mana
+Mana Vault	cut	v1 design: no fast mana
+Oko, Thief of Crowns	cut	v1 design: a single pick that decides the draft
+The One Ring	cut	v1 design: a single pick that decides the draft
+Minsc & Boo, Timeless Heroes	cut	v1 design: a single pick that decides the draft
+Wrenn and Six	cut	v1 design: a single pick that decides the draft
+Nadu, Winged Wisdom	cut	v1 design: a single pick that decides the draft
+Urza's Saga	cut	v1 design: a single pick that decides the draft
+Balance	cut	v1 design: a single pick that decides the draft
+Tinker	cut	v1 design: a cheat plan or its target
+Sneak Attack	cut	v1 design: a cheat plan or its target
+Show and Tell	cut	v1 design: a cheat plan or its target
+Natural Order	cut	v1 design: a cheat plan or its target
+Survival of the Fittest	cut	v1 design: a cheat plan or its target
+Oath of Druids	cut	v1 design: a cheat plan or its target
+Channel	cut	v1 design: a cheat plan or its target
+Fastbond	cut	v1 design: a cheat plan or its target
+Entomb	cut	v1 design: a cheat plan or its target
+Faithless Looting	cut	v1 design: a cheat plan or its target
+Griselbrand	cut	v1 design: a cheat plan or its target
+Emrakul, the Aeons Torn	cut	v1 design: a cheat plan or its target
+Archon of Cruelty	cut	v1 design: a cheat plan or its target
+Atraxa, Grand Unifier	cut	v1 design: a cheat plan or its target
+Blightsteel Colossus	cut	v1 design: a cheat plan or its target
+Doomsday	cut	v1 design: a two-card or combo win
+Thassa's Oracle	cut	v1 design: a two-card or combo win
+Underworld Breach	cut	v1 design: a two-card or combo win
+Painter's Servant	cut	v1 design: a two-card or combo win
+Grindstone	cut	v1 design: a two-card or combo win
+Dark Depths	cut	v1 design: a two-card or combo win
+Thespian's Stage	cut	v1 design: a two-card or combo win
+Library of Alexandria	cut	v1 design: a land that decides the draft or ruins the fixing
+Bazaar of Baghdad	cut	v1 design: a land that decides the draft or ruins the fixing
+Strip Mine	cut	v1 design: a land that decides the draft or ruins the fixing
+Wasteland	cut	v1 design: a land that decides the draft or ruins the fixing
