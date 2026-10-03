@@ -30,8 +30,8 @@ later: the evaluator guides a search over Forge's engine (not built yet)
 
 ```bash
 # a night of the cube lab, recorded (both chairs of every game), then its dataset (D315):
-tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 5000 --games 3 --jobs 7 --seed 1 --record-all \
-    --out var/cubelab/runs/night-1
+tools/cubelab.sh run cubes/synergy-cube-180.md --format grid --drafts 45000 --games 1 --jobs 7 \
+    --seed 100001 --record-all --out var/cubelab/runs/night-1    # resumable: the same line again continues
 python3 tools/ml/dataset.py --run-dir var/cubelab/runs/night-1      # -> var/cubelab/runs/night-1/dataset/
 python3 tools/ml/dataset.py --run-dir var/cubelab/runs/night-1 --run-dir var/cubelab/runs/night-2 \
     --out var/ml/data/synergy-nights                                 # several nights of one cube
