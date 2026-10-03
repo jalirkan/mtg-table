@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-03T18:53:42-04:00",
- "heartbeat": "2026-10-03T18:53:42-04:00",
+ "updated": "2026-10-03T18:54:06-04:00",
+ "heartbeat": "2026-10-03T18:54:06-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.47,
-  "memUsedGb": 8.1,
+  "load1": 5.24,
+  "memUsedGb": 8.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 2485,
   "pressure": 0,
@@ -22,16 +22,16 @@
    "id": "J027",
    "title": "Decision records pilot, re-run after the reveal-leak fix (D352): 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded, redaction-checked mechanically",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/1",
    "started": "2026-10-03T18:53:28-04:00",
-   "elapsed": 14,
+   "elapsed": 38,
    "done": null,
    "total": null,
    "unit": null,
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
+   "workers": 4,
+   "workersMax": 4,
    "errors": 0,
    "paused": false,
    "dataUpdated": null,
@@ -56,7 +56,7 @@
     "bench.runs": 0,
     "bench.searched_decisions": 0,
     "bench.timeouts": 0,
-    "elapsed_s": 0,
+    "elapsed_s": 37,
     "engine_errors": 0,
     "lab.bridge_drafts": 0,
     "lab.cpu_ms_per_turn": 0,
@@ -76,7 +76,7 @@
     "lab.runs": 0,
     "lab.timeouts": 0,
     "metrics_errors": 4,
-    "pressure_events": 0
+    "midmove_failures": 0
    },
    "liveHeadline": [
     "recorded_logs",
@@ -86,7 +86,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J027-pilot1"
+   "detail": "lab-J027-run1"
   }
  ],
  "queue": [
