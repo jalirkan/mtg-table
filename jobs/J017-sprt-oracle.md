@@ -1,7 +1,7 @@
 id: J017
 title: Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference
 cpu: heavy
-after: J015
+after: J020
 repos: mtg-table@main (main once it merges)
 est: about one night (up to 1,500 games; the 20-vs-40 Elo test usually stops sooner)
 resumable: no
