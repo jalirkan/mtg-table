@@ -69,6 +69,16 @@ const REQUIRED = [
   ['a3-revealed-top-under-courser.jsonl', 'pass'],
   ['a3-revealed-top-two-cards.jsonl', 'fail'],
   ['a3-revealed-top-look-is-private.jsonl', 'fail'],
+  // Amendment M55 (D347): an AI seat's decision records, in its own log only;
+  // the planted leaks are another seat's record and an option naming a card
+  // the viewer cannot see.
+  ['m55-decisions-present.jsonl', 'pass'],
+  ['m55-decision-of-the-other-seat.jsonl', 'fail'],
+  ['m55-option-names-the-opponent-hand.jsonl', 'fail'],
+  ['m55-decision-carries-a-label.jsonl', 'fail'],
+  ['m55-chosen-is-not-an-option.jsonl', 'fail'],
+  ['m55-frame-is-not-a-state.jsonl', 'fail'],
+  ['m55-decision-in-a-seat-recording.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

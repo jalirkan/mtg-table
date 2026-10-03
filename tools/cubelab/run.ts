@@ -37,6 +37,7 @@ import type { CardInfo } from './report.ts';
 import type { Weights } from './weights.ts';
 import { assertRunSeeds } from './seeds.ts';
 import { labVersion, resumeVersions, type VersionEntry } from './versions.ts';
+import { mixText, pickProfiles, type MixEntry } from './profiles.ts';
 
 export interface RunOptions {
   cubeFile: string;
@@ -46,6 +47,8 @@ export interface RunOptions {
   jobs: number;
   seed: number;
   profiles: [string, string];
+  /** D347: each drafter's seat drawn per draft from this mix (`--profile-mix`), instead of `profiles`. */
+  profileMix?: MixEntry[];
   ratingsFile: string | null;
   record: number;
   /** D315: record every game of every Nth draft (seed % N === 0) in the worker; 0 = off, 1 = every game. */
@@ -89,6 +92,8 @@ export interface DraftRecord extends Omit<DraftOut, 'drafters' | 'ms'> {
   bridge?: BridgeTag;
   /** D341: the lab version (versions.ts) that drafted and played this line; absent on lines written before D341. */
   ver?: string;
+  /** D347: the two seats that played this draft (`--profile-mix`); absent when they are run.json's `profiles`. */
+  profiles?: [string, string];
 }
 
 export interface RunMeta {
@@ -120,6 +125,8 @@ export interface RunMeta {
   };
   /** A bridge run's source cubes, shares and pool size (bridge.ts; absent in a normal run). */
   bridge?: BridgeMeta;
+  /** D347: the profile mix the seats were drawn from (absent: every draft plays `profiles`). */
+  profileMix?: string;
   /** D341: every lab version that wrote to this folder, oldest first; the last is the current one (versions.ts). */
   versions?: VersionEntry[];
   /** D340: a deck-set run at reserved seeds (seeds.ts). */
@@ -185,6 +192,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     ...(bridge ? { bridge: bridge.meta } : {}),
     ...(o.recordEvery ? { record: { every: o.recordEvery, dir: 'games' as const, cubeCopy: 'cube.md' as const } } : {}),
     ...(o.deckset ? { deckset: true } : {}),
+    ...(o.profileMix ? { profileMix: mixText(o.profileMix) } : {}),
   };
   const version = labVersion(env.repo, {
     cubeShas: bridge ? bridge.meta.sources.map((x) => x.sha) : [meta.cubeSha],
@@ -198,7 +206,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   if (fs.existsSync(metaFile)) {
     const old = JSON.parse(fs.readFileSync(metaFile, 'utf8')) as RunMeta;
     const same = (k: (m: RunMeta) => unknown): boolean => JSON.stringify(k(old)) === JSON.stringify(k(meta));
-    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null, m.bridge ?? null])) {
+    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null, m.bridge ?? null, m.profileMix ?? null])) {
       throw new Error(`${o.out} holds a run with a different cube, format, games, profiles, builder, weights or learned files -- use a new --out`);
     }
     if (fs.existsSync(jsonl)) {
@@ -243,7 +251,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     });
     jobs.push({
       id: String(seed), seed, games: o.games, gameTimeoutSec: o.gameTimeoutSec,
-      profileA: o.profiles[0], profileB: o.profiles[1], builder: o.builder,
+      ...seatsOf(o, seed), builder: o.builder,
       deckA: sides[0] ?? null, deckB: sides[1] ?? null,
       poolA: d.drafters[0].pool, poolB: d.drafters[1].pool,
       forgeDeckOutA: path.resolve(deckPath('A', '-forge')), forgeDeckOutB: path.resolve(deckPath('B', '-forge')),
@@ -251,7 +259,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
         record: {
           dir: path.resolve(o.out, 'games', String(seed)), rel: path.join('games', String(seed)),
           run: path.basename(path.resolve(o.out)), cube: lc.cube.title, cubeFile: rel(cubeCopy), cubeSha: meta.cubeSha,
-          format: o.format, deckNameA: `cubelab ${seed} A`, deckNameB: `cubelab ${seed} B`,
+          format: o.format, deckNameA: `cubelab ${seed} A`, deckNameB: `cubelab ${seed} B`, ver: version.id,
         },
       } : {}),
     });
@@ -271,6 +279,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     for (const g of r.games) if (g.winner === 'A' || g.winner === 'B') wins[g.winner]++;
     const rec: DraftRecord = {
       v: 1, cube: lc.cube.title, ...d, ver: version.id,
+      ...(o.profileMix ? { profiles: [job.profileA, job.profileB] as [string, string] } : {}),
       drafters: d.drafters.map((dr, k): DrafterRecord => {
         const side = k === 0 ? 'A' : 'B';
         const fb = r.forge.find((f) => f.side === side);
@@ -315,6 +324,12 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   say(`done in ${((Date.now() - t0) / 1000).toFixed(0)} s -> ${jsonl}`);
 }
 
+/** The two seats of the draft at `seed`: drawn from the mix (D347), else `--profiles`. */
+export function seatsOf(o: Pick<RunOptions, 'profiles' | 'profileMix'>, seed: number): { profileA: string; profileB: string } {
+  const [a, b] = o.profileMix ? pickProfiles(o.profileMix, seed) : o.profiles;
+  return { profileA: a, profileB: b };
+}
+
 function deckLabel(d: DraftOut, k: 0 | 1): string {
   const deck = d.drafters[k].deck;
   return deck ? `${d.drafters[k].seat}:${deck.colors}${deck.splash ? `+${deck.splash.toLowerCase()}` : ''}` : `${d.drafters[k].seat}:forge`;
@@ -340,7 +355,8 @@ export function recordGames(env: EngineEnv, o: RunOptions, say: (s: string) => v
     const out = path.join(framesDir, `draft-${rec.seed}-g1.jsonl`);
     const t = Date.now();
     const r = spawnSync(path.join(env.repo, 'bridge/run.sh'), ['mtgtable.RecordMatch', '--deck', deckOf(0), '--ai-deck', deckOf(1),
-      '--profile', o.profiles[0], '--ai-profile', o.profiles[1], '--seed', String(rec.seed), '--out', path.resolve(out)],
+      // a mixed run's seats (D347); RecordMatch seats plain Forge, so only the profile half of a spec
+      '--profile', (rec.profiles ?? o.profiles)[0].split('+')[0] as string, '--ai-profile', (rec.profiles ?? o.profiles)[1].split('+')[0] as string, '--seed', String(rec.seed), '--out', path.resolve(out)],
     { cwd: env.repo, encoding: 'utf8', env: { ...process.env, MTG_TABLE_CONFIG: env.homes[0] }, timeout: (o.gameTimeoutSec + 120) * 1000, maxBuffer: 256 * 1024 * 1024 });
     const ok = r.status === 0 && fs.existsSync(out);
     fs.writeFileSync(path.join(o.out, 'logs', `record-${rec.seed}.log`), `${r.stdout ?? ''}\n${r.stderr ?? ''}`);

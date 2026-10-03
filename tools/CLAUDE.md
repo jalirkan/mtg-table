@@ -341,7 +341,8 @@ are rules:
    bridge, the wire, the board or the arena reads comes from it, and it opens no
    socket. Its one Java file, `tools/cubelab/CubeLab.java`, boots the engine
    through `mtgtable.Bootstrap`, seats every AI through
-   `Bootstrap.createAiPlayer`, reads decks with `DeckSerializer.fromFile`, names
+   `Bootstrap.createAiPlayer` (or `createAiSeat` when it records, for the
+   decision records, or a seat spec names a policy: D347), reads decks with `DeckSerializer.fromFile`, names
    no `CardView`, starts no thread and hops onto no game thread — each game is
    started from `main` with `GameAction.invoke`, as `RecordMatch` starts its
    one; the lint scans it like every `tools/**/*.java`. Everything else is

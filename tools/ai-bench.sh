@@ -10,7 +10,7 @@
 #
 #   ./tools/ai-bench.sh play --pairs tools/ai-bench/pairs-cube.txt \
 #        --a Experimental --b Default [--games 20] [--jobs 3] [--seed 1] \
-#        [--timeout 300] [--no-mirror] [--run NAME]
+#        [--timeout 300] [--no-mirror] [--run NAME] [--record-all|--record-every N]  # D347: <run>/games/
 #   ./tools/ai-bench.sh report var/ai-bench/<run>/*.jsonl [--by-pair]
 #   ./tools/ai-bench.sh paired --control var/ai-bench/<c>/shard-*.jsonl \
 #        --treatment var/ai-bench/<t>/shard-*.jsonl     # same --pairs/--seed/--games

@@ -35,6 +35,14 @@ on those decks; the evaluator must never have trained on them.
 `--keep-reserved` turns this off.  Each game's lab version (`ver`, D341) is in
 games.jsonl and `--ver` keeps only some.
 
+HUMAN GAMES (D347).  The owner's own games -- ForgeCoach's saved games and the
+bridge's `var/games/<id>/frames.jsonl` -- go under `var/ml/human/` (or any
+`--human DIR`).  Every game carries a stable `source` tag (`human`, `lab`,
+`bench`, `other`; policy_data.py's rule), and a human game is never trained on
+by default: its rows go to a fourth split, `human` (`human-NNNNN.npz`), which
+`train_eval.py --eval-human` scores separately.  `--train-human` splits them
+like every other game instead.
+
 Writes, under --out:
 
     features.json             the layout (encode.Schema.to_json)
@@ -84,25 +92,27 @@ def split_of(group: str, weights: tuple[int, int, int], salt: str = "") -> str:
 def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10), salt: str = "",
           shard_rows: int = 100_000, phases: list[str] | None = None, quiet: bool = False,
           group_by: str = "match", reserved: dict[str, str] | None = None,
-          vers: list[str] | None = None) -> dict[str, Any]:
+          vers: list[str] | None = None, human_dirs: list[str] | None = None,
+          train_human: bool = False) -> dict[str, Any]:
     if np is None:
         raise SystemExit("dataset.py needs numpy (pip install numpy)")
     vocab = E.Vocab.from_files(vocab_paths)
     schema = E.Schema(vocab)
     phases = phases or E.default_phases()
     os.makedirs(out, exist_ok=True)
+    import policy_data as P  # the source rule (D347), in one place
     for fn in os.listdir(out):  # a rebuild replaces the shards
-        if fn.endswith(".npz") and fn.split("-")[0] in SPLITS:
+        if fn.endswith(".npz") and fn.split("-")[0] in SPLITS + ("human",):
             os.remove(os.path.join(out, fn))
     with open(os.path.join(out, "features.json"), "w", encoding="utf-8") as f:
         json.dump(schema.to_json(phases), f, indent=1, ensure_ascii=False)
         f.write("\n")
 
-    buf: dict[str, list[E.Row]] = {s: [] for s in SPLITS}
-    shard_no = {s: 0 for s in SPLITS}
+    buf: dict[str, list[E.Row]] = {s: [] for s in SPLITS + ("human",)}
+    shard_no = {s: 0 for s in SPLITS + ("human",)}
     games: list[dict[str, Any]] = []
     stats: dict[str, Any] = {s: {"rows": 0, "games": 0, "labels": Counter(), "rowLabels": Counter()}
-                             for s in SPLITS}
+                             for s in SPLITS + ("human",)}
     skipped = Counter()
     game_index: dict[str, int] = {}
 
@@ -147,7 +157,8 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
             group = g.split_group
             if group_by == "match" and g.match_key():
                 group = "match:" + g.match_key()
-            s = split_of(group, weights, salt)
+            source = P.source_of(path, g.header, human_dirs or [])
+            s = "human" if source == "human" and not train_human else split_of(group, weights, salt)
             game_index[g.game_key] = len(games)
             last_turn = max(r.turn + r.turns_to_end for r in rows)
             games.append({"index": len(games), "game_key": g.game_key, "split_group": group,
@@ -157,7 +168,7 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
                           # game's own group, so a trainer can re-split by pair or hold decks out
                           "match": g.match_key(), "game_group": g.split_group,
                           # D341: the lab version that played it ('unversioned' outside the lab or before D341)
-                          "ver": ver})
+                          "ver": ver, "source": source})
             stats[s]["rows"] += len(rows)
             stats[s]["games"] += 1
             stats[s]["labels"][str(rows[0].label)] += 1
@@ -165,23 +176,26 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
                 stats[s]["rowLabels"][str(r.label)] += 1
             buf[s].extend(rows)
             flush(s)
-    for s in SPLITS:
+    for s in SPLITS + ("human",):
         flush(s, force=True)
 
     with open(os.path.join(out, "games.jsonl"), "w", encoding="utf-8") as f:
         for gm in games:
             f.write(json.dumps(gm) + "\n")
-    groups = {s: len({gm["split_group"] for gm in games if gm["split"] == s}) for s in SPLITS}
+    shown = SPLITS + (("human",) if stats["human"]["games"] else ())
+    groups = {s: len({gm["split_group"] for gm in games if gm["split"] == s}) for s in shown}
     summary = {
         "schemaId": schema.schema_id, "nFeatures": schema.n, "vocab": vocab.sources,
         "vocabSize": len(vocab), "phases": phases, "groupBy": group_by, "split": dict(zip(SPLITS, weights)), "salt": salt,
-        "rows": sum(stats[s]["rows"] for s in SPLITS), "games": len(games),
+        "rows": sum(stats[s]["rows"] for s in shown), "games": len(games),
         "skippedGames": dict(skipped),
         "reservedChecked": reserved is not None, "reservedDecks": len(reserved or {}), "reservedHits": dict(reserved_hits),
         "versions": dict(Counter(gm["ver"] for gm in games)),
+        "sources": dict(Counter(gm["source"] for gm in games)), "humanDirs": list(human_dirs or []),
+        "humanInTraining": train_human,
         "splits": {s: {"rows": stats[s]["rows"], "games": stats[s]["games"], "groups": groups[s],
                        "gameLabels": dict(stats[s]["labels"]), "rowLabels": dict(stats[s]["rowLabels"]),
-                       "shards": shard_no[s]} for s in SPLITS},
+                       "shards": shard_no[s]} for s in shown},
     }
     with open(os.path.join(out, "stats.json"), "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=1)
@@ -235,6 +249,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="keep games played with an AI-ladder dev/confirm deck (default: drop them, matched card for card; D340)")
     ap.add_argument("--ver", default="", help="only games of these lab versions (comma-separated `ver` ids; D341)")
     ap.add_argument("--repo", default=".", help="where tools/ai-bench/pairs-*.txt are (the reserved decks)")
+    ap.add_argument("--human", action="append", default=[],
+                    help="a directory of the owner's own games (default var/ml/human when it exists; D347): "
+                         "tagged source=human, kept out of training in the `human` split")
+    ap.add_argument("--train-human", action="store_true", help="split human games like the rest (D347)")
     ap.add_argument("--group-by", choices=("game", "match"), default="match",
                     help="match (default since D316): every game of one deck pair in one split -- the "
                          "test split is decks the model never saw; game: only the chairs of one "
@@ -249,13 +267,17 @@ def main(argv: list[str] | None = None) -> int:
         logs += run_logs
         vocab = vocab or [run_vocab]
         out = out or os.path.join(a.run_dir[0], "dataset")
+    import policy_data as P
+    humans = P.human_dirs_of(a.human, a.repo)
+    logs += [d for d in humans if d not in logs]
     if not logs:
         ap.error("no frame logs: give LOGDIRs, or a --run-dir whose run recorded games "
                  "(tools/cubelab.sh run ... --record-all)")
     if not vocab or not out:
         ap.error("--vocab and --out are required without --run-dir")
     build(logs, vocab, out, w, a.salt, a.shard_rows, E.parse_phases(a.phases), group_by=a.group_by,
-          reserved=None if a.keep_reserved else R.reserved_decks(a.repo), vers=[v for v in a.ver.split(",") if v] or None)
+          reserved=None if a.keep_reserved else R.reserved_decks(a.repo), vers=[v for v in a.ver.split(",") if v] or None,
+          human_dirs=humans, train_human=a.train_human)
     return 0
 
 

@@ -275,7 +275,8 @@ card arrives (`docs/guides/gpu-day.md`).
 *Items 1–4 and 6 are done by D315 (`run --record-all` / `--record-every N`,
 and `--run-dir` here, which takes the run's own `cube.md` as the vocabulary and
 refuses a cube whose sha256 is not the run's); 5 and the policy target below
-are still open.*
+are done by D347 (`--profile-mix`, and the decision records: *Policy targets*
+below).*
 
 1. **Every game, not the first M.** A position evaluator wants tens of
    thousands of games; `--record M` replays M drafts' decks through a fresh
@@ -294,9 +295,110 @@ are still open.*
    profiles, and later the search player itself, widen the positions seen.
 6. **Gzip** (`.jsonl.gz`) for storage: the reader takes both.
 
-Later, for a policy (not only a value): the seat's `act`/`answer` lines are in
-seat recordings already; AI-vs-AI recordings carry no actions, so a policy
-target needs the lab to log the AI's chosen action at each decision.
+For a policy (not only a value): every AI seat of a recorded lab or bench game
+now logs each decision it takes (D347, next section).
+
+## Policy targets — decision records (D347)
+
+A recording made by the cube lab (`--record-all`) or ai-bench (`play
+--record-all`) holds, **in each seat's own log only**, one `dir:"ai"`
+`decision` line per decision that seat took with more than one legal answer
+(protocol amendment M55):
+
+```json
+{"v":1,"seq":3,"t":1791047152050,"dir":"ai","type":"decision","body":{"seat":0,"n":2,"kind":"priority",
+ "frame":25,"stateSeq":24,"turn":2,"phase":"MAIN1","options":["pass","cast:18","cast:37"],
+ "chosen":"cast:18","by":"search",
+ "search":{"options":[{"token":"pass","n":2,"meanLeaf":40.0,"se":0.0,"diff":0.0,"seDiff":0.0,"win":0.525},
+                      {"token":"cast:18","n":2,"meanLeaf":80.0,"se":0.0,"diff":40.0,"seDiff":0.0,"win":0.5498}],
+           "forge":0,"best":1,"rounds":2,"playouts":4,"horizon":0,"rule":"margin","margin":20,
+           "ms":683,"budgetMs":30000,"timedOut":false,"overrode":true,"fallback":null}}}
+```
+
+(the search seat's third record in `fixtures/cubelab/decisions/`: Forge would
+have passed; two rounds of rollouts put casting card 18 40 leaf points ahead,
+past the 20-point margin, so the search overrode it.)
+
+- **kinds**: `priority` (pass, play a land, cast, activate), `attack`, `block`,
+  `target` (the targets of what the seat played: `parent` is that priority
+  decision's `n`; or of a trigger), `choice` (an effect's choice of cards or
+  players, yes/no, optional triggers), `mulligan`;
+- **options** are the legal answers as the coach bench's and the grader's
+  tokens over wire card ids; attacks and blocks list every combination while
+  there are at most 64 (each creature's legality is the engine's; whole-
+  declaration rules such as must-attack are not checked), else a shortlist with
+  `complete: false`, and `atoms` (who can attack; every legal `b>a` block);
+- **chosen** is one of them; **by** is the policy that chose (`forge`,
+  `outlets` — D310's outlet policy, its reason in `why` — or `search`);
+- **search** (when the search ran): each candidate's rounds (`n`), mean leaf
+  score and its standard error, the paired difference to Forge's answer and its
+  standard error (common random numbers: option 0 is Forge's), and win estimate
+  (a finished playout 1/0/½, else a logistic of the leaf at
+  `SearchPolicy.LEAF_SCALE` points per logit, D349's fitted 500, as the grader's live analysis);
+  the rounds, playouts, horizon, the override rule, margin and the statistic it compared (`stat`, and `z` under `override=lcb`); whether it
+  overrode Forge, whether the time budget cut it, and why it fell back to
+  Forge's answer (`budget`, `copyError`, `unmappable`, `rolloutErrors`,
+  `invalidAtEnd`) — `by` is `search` only when it reached a verdict;
+- **frame / stateSeq**: the `state` frame the decision was taken in (the
+  recorder flushes before each decision, so it is the position decided in);
+- a one-option decision (a forced pass) is counted in the `decisions` summary
+  line at the end, not written; the header's `seats` names each seat's
+  `profile` and `policy`.
+
+```bash
+python3 tools/ml/policy_data.py --run-dir var/cubelab/runs/night-1           # -> <run>/policy/
+python3 tools/ml/policy_data.py --vocab cubes/synergy-cube-180.md --out var/ml/policy/bench \
+    var/ai-bench/<run>/games --searched-only                                 # expert-iteration targets only
+```
+
+`policy_data.py` writes, per split, `<split>-NNNNN.npz` (`X` int16 — the
+decision state encoded for the deciding seat with D305's features — `game`,
+`label`) and `<split>-NNNNN.jsonl`, one target per row in the same order
+(`kind`, `options`, `chosen`, `chosenIndex`, `by`, `complete`, `atoms`,
+`parent`, `source` and `search` with the per-option `tokens`, `n`,
+`meanLeaf`, `se`, `diff`, `seDiff`, `win`), plus `games.jsonl` (each game's `source`, `ver`, `seat`,
+`profile`, `policy`) and `stats.json` (rows per kind and policy, searched and
+overriding rows, everything dropped and why). `--kinds` narrows the kinds,
+`--searched-only` keeps the search's decisions. The split is `dataset.py`'s
+(by deck pair). **D340 and D341 hold**: a game played with an AI-ladder
+dev/confirm deck is dropped with its other chair, card for card (a bench
+recording's two decks are read from the pairs file its header names), so is a
+lab draft at a reserved seed; `--keep-reserved` turns it off and says so;
+`--ver` keeps only some versions — a lab game's is its draft's `ver`, a bench
+game's the header's `bench.ver` (D341's fields over `bridge/src`,
+`tools/ai-bench` and `forge-home`, and the jar). Note that the ladder's own
+games are played ON the dev and confirm decks, so its recordings are dropped by
+default: record the search on other pairs (`pairs-cube.txt`, lab-drafted pairs
+at lab seeds) to make training data of it.
+
+Hidden information: the features are D305's encoder, which reads no hidden
+zone (`tests/test_policy.py` scrambles every hidden zone of the committed
+decision recording and requires no row to move), and a record of the other seat
+is never read (the redaction checker fails such a log; the reader refuses it
+too). Cost, measured (D347): three synergy-cube games, one worker, both chairs
+recorded — see the decision's *Measured*.
+
+## The owner's own games — the human test set (D347)
+
+Justin's games go under **`var/ml/human/`** (gitignored, like all of `var/`):
+copy in ForgeCoach's saved games (the review screen's frame logs) and the
+bridge's `var/games/<id>/frames.jsonl` for games played through it, one file
+per game, any names, `.jsonl` or `.jsonl.gz`. Every dataset builder tags each
+game with a stable **`source`** — `human` for anything under `var/ml/human/`
+(or a `--human DIR`), `lab`, `bench`, `other` — in `games.jsonl` and
+`stats.json`, and **never trains on a human game by default**: `dataset.py`
+writes their rows to a fourth split, `human` (`human-NNNNN.npz`), and
+
+```bash
+python3 tools/ml/dataset.py --run-dir var/cubelab/runs/night-1 --out var/ml/data/night-1   # picks up var/ml/human/
+python3 tools/ml/train_eval.py var/ml/data/night-1 --eval-human    # every model scored on the human games, apart
+```
+
+`--train-human` puts them into the normal split instead. A human seat's log
+carries no decision records (only an AI seat writes them), so `policy_data.py`
+counts human games and gives them no rows; the value evaluator's metrics on
+them are the first number. The vocabulary must cover the human games' cards
+(the cube they were drafted from); a card outside it is `<other>`.
 
 ## The matchup model — one card scale across every cube (D324)
 
