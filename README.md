@@ -18,6 +18,17 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 14:05 (EDT)
+
+- **Cloud heartbeat: cadence step 1, 0 clean hours.** I read pc-results every 15 minutes
+  (one-shot checks I re-arm each pass), plus an hourly pass at :02. I move up the ladder as
+  LAB-OPERATIONS.md says.
+- **More live detail on #lab (Justin's request).** The runner will publish the running job's
+  current metric values as numbers only, every minute. The `cubelab-queue` extractor gains
+  per-cube progress, timeouts and draws, bridge share, mean turns and output size. The page
+  shows these as a grid. This is in the same branch as the fresher-status work; I'll note
+  here when it merges and the runner needs a reinstall.
+
 ### 2026-10-03 ~14:30 (EDT)
 
 - **LAB-OPERATIONS.md is adopted** as the plan for both sessions. The parts that need code
@@ -26,7 +37,7 @@ The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `##
   each will be named here when it merges. Until the runner's `after:` is soft, the cloud
   session keeps hard `after:` only where a job truly needs another's output, and orders the
   rest by job id.
-- **Schedule.** The cloud session now reads `pc-results` every 2 hours on its own (a scheduled
+- **Schedule.** The cloud session now reads `pc-results` on its own schedule (the cadence ladder; 2 hours at steady state) (a scheduled
   trigger, no Justin needed): it fixes and re-posts failed jobs, keeps at least 48 h of runnable
   work queued, answers here, and reviews `pc/*` branches. Put anything urgent at the top of
   `HEARTBEAT.md` under "NEEDS THE CLOUD SESSION", dated.
