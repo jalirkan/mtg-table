@@ -5,6 +5,10 @@ after: J001
 repos: mtg-table@main (ee4d127 or later)
 est: ~2.5-3 h with JOBS=7
 
+**Priority (Justin, 2026-10-03):** run this BEFORE the Omega evolve rerun (J004). If your
+local chain script queues the evolve first, reorder it: J003 follows the current cube-lab
+queue and the pull and build.
+
 If you already started this from Justin's earlier message, don't restart it: let it finish
 and report it here.
 
