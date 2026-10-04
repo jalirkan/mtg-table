@@ -18,7 +18,7 @@ import { ANCHOR, addPlayer, nextName, resolvePlayer, writeRegistry, type Player 
 import { blockKey, type GameRecord } from './results.ts';
 import { choose, hostBase, mkey, SCHED_DEFAULTS, type SchedPlayer, type SchedState } from './schedule.ts';
 import { Session } from './session.ts';
-import { NI_DEFAULTS, niState, pairScores, sprtState, type NiParams, type SprtParams, type SprtState } from './sprt.ts';
+import { NI_DEFAULTS, niState, pairScores, SPRT_DEFAULTS, sprtState, verdictWords, type NiParams, type SprtParams, type SprtState } from './sprt.ts';
 import { grid, halving, sample, TUNE_DEFAULTS, type Tally } from './tune.ts';
 
 const REPO = resolve(fileURLToPath(new URL('../../', import.meta.url)));
@@ -33,10 +33,12 @@ const USAGE = `ai-ladder -- rate AI configs against each other and stock Forge (
   ai-ladder.sh run     --hours H [--jobs J] [--max-games N] [--players a,b,...]
   ai-ladder.sh ratings [--bootstrap N] [--set FILE|all]
   ai-ladder.sh sprt    A B [--elo0 0] [--elo1 20] [--alpha 0.05] [--beta 0.05] [--max-games 4000] [--jobs J]
+                       [--min-pairs 100] [--var-floor 0.05]   (D373; 8 and 0.01 were the old values)
   ai-ladder.sh tune    BASE --param k=v1,v2 [--param ...] [--pool a,b] [--sample K] [--eta 2]
                        [--blocks 1] [--max-rounds 6] [--name NEW] [--candidate] [--jobs J]
   ai-ladder.sh league  --hours H [--jobs J] [--pool-size 4] [--share 0.5] [--start NAME]
                        [--elo1 20] [--ni-margin 30] [--ni-alpha 0.05] [--ni-beta 0.1] [--max-games N]
+                       [--min-pairs 100] [--var-floor 0.05]
   ai-ladder.sh report  [--bootstrap N] [--out DIR] [--set FILE|all]
   ai-ladder.sh decksets [--per-cube N] [--seed S] [--cubes a,b,...]   (drafts with the cube lab, one JVM at a time)
   ai-ladder.sh experiments                                          (the committed experiment log)
@@ -221,6 +223,7 @@ function sprtLog(s: Session, id: string, a: Player, b: Player, p: SprtParams, st
   const line: SprtLog = {
     v: 1, at: new Date().toISOString(), id, host: s.host, a: a.name, b: b.name, ah: a.hash, bh: b.hash,
     elo0: p.elo0, elo1: p.elo1, alpha: p.alpha, beta: p.beta,
+    minPairs: p.minPairs ?? SPRT_DEFAULTS.minPairs, varFloor: p.varFloor ?? SPRT_DEFAULTS.varFloor,
     result: st.result === 'continue' ? 'stopped' : st.result,
     llr: Math.round(st.llr * 1000) / 1000, lower: Math.round(st.lower * 1000) / 1000, upper: Math.round(st.upper * 1000) / 1000,
     games: st.games, pairs: st.pairs, score: Math.round(st.score * 1000) / 1000, purpose,
@@ -234,7 +237,7 @@ async function cmdSprt(a: Args, argv: string[]): Promise<void> {
   if (!an || !bn) throw new Error('sprt wants two player names');
   const s = session(a, 2);
   const A = s.playable(an), B = s.playable(bn);
-  const p: SprtParams = { elo0: num(a, 'elo0', 0), elo1: num(a, 'elo1', 20), alpha: num(a, 'alpha', 0.05), beta: num(a, 'beta', 0.05), maxGames: num(a, 'max-games', 4000), minPairs: num(a, 'min-pairs', 8) };
+  const p: SprtParams = { elo0: num(a, 'elo0', 0), elo1: num(a, 'elo1', 20), alpha: num(a, 'alpha', 0.05), beta: num(a, 'beta', 0.05), maxGames: num(a, 'max-games', 4000), minPairs: num(a, 'min-pairs', SPRT_DEFAULTS.minPairs), varFloor: num(a, 'var-floor', SPRT_DEFAULTS.varFloor) };
   const prior = readJsonl<SprtLog>(join(s.opt.dir, 'sprt.jsonl')).length;
   const id = `${s.host}:${s.run}`;
   const purpose = `sprt:${id}`;
@@ -242,7 +245,7 @@ async function cmdSprt(a: Args, argv: string[]): Promise<void> {
   const finish = experiment(a, s, 'sprt', argv, [A, B], base, `${A.name} is stronger than ${B.name} by >= ${p.elo1} Elo (H1) vs <= ${p.elo0} (H0); alpha ${p.alpha}, beta ${p.beta}`, purposeOf(s));
   let state = sprtState([], p);
   let decided: SprtState | null = null;
-  console.log(`SPRT ${A.name} vs ${B.name} on ${s.set}: H1 "A is stronger by >= ${p.elo1}" vs H0 "<= ${p.elo0}", alpha ${p.alpha}, beta ${p.beta}; bounds ${state.lower.toFixed(2)} / ${state.upper.toFixed(2)}`);
+  console.log(`SPRT ${A.name} vs ${B.name} on ${s.set}: H1 "A is stronger by >= ${p.elo1}" vs H0 "<= ${p.elo0}", alpha ${p.alpha}, beta ${p.beta}; bounds ${state.lower.toFixed(2)} / ${state.upper.toFixed(2)}; no decision before ${p.minPairs} pairs, variance floor ${p.varFloor}`);
   await s.drive(deadlineOf(a), () => (decided || s.getEngine().stopped ? null : s.spec(A, B, purpose, base)), () => {
     state = sprtState(pairScores(sprtGames(s, s.recs, purpose, A)), p);
     console.log(`  LLR ${state.llr.toFixed(2)} after ${state.games} games (${state.pairs} pairs), A scores ${(state.score * 100).toFixed(1)}%`);
@@ -251,7 +254,7 @@ async function cmdSprt(a: Args, argv: string[]): Promise<void> {
   const fin: SprtState = decided ?? state;
   const line = sprtLog(s, id, A, B, p, fin, 'sprt');
   finish(line.result === 'stopped' ? 'stopped' : 'finished', { sprt: line.result, llr: line.llr, games: line.games, pairs: line.pairs, score: line.score });
-  console.log(`\nSPRT result: ${line.result === 'H1' ? `H1 accepted -- ${A.name} is stronger than ${B.name} by >= ${p.elo1} Elo` : line.result === 'H0' ? `H0 accepted -- ${A.name} is not stronger than ${B.name} by ${p.elo1} (<= ${p.elo0})` : line.result}`);
+  console.log(`\nSPRT result: ${verdictWords(line.result, A.name, B.name, p)}`);
   console.log(`games used: ${fin.games} (${fin.pairs} mirrored pairs); LLR ${fin.llr.toFixed(3)} in [${fin.lower.toFixed(3)}, ${fin.upper.toFixed(3)}]; ${A.name} scored ${(fin.score * 100).toFixed(1)}%`);
 }
 
@@ -360,7 +363,7 @@ async function cmdLeague(a: Args, argv: string[]): Promise<void> {
   const L = loadLeague(file, str(a, 'start', ANCHOR));
   const ni: NiParams = { ...NI_DEFAULTS, margin: num(a, 'ni-margin', NI_DEFAULTS.margin), alpha: num(a, 'ni-alpha', NI_DEFAULTS.alpha), beta: num(a, 'ni-beta', NI_DEFAULTS.beta), maxPairs: num(a, 'ni-max-pairs', NI_DEFAULTS.maxPairs ?? 3000) };
   const lo = { ...LEAGUE_DEFAULTS, poolSize: num(a, 'pool-size', LEAGUE_DEFAULTS.poolSize), share: num(a, 'share', LEAGUE_DEFAULTS.share), ni };
-  const sp: SprtParams = { elo0: num(a, 'elo0', 0), elo1: num(a, 'elo1', 20), alpha: num(a, 'alpha', 0.05), beta: num(a, 'beta', 0.05), maxGames: num(a, 'max-games-per-test', 4000), minPairs: 8 };
+  const sp: SprtParams = { elo0: num(a, 'elo0', 0), elo1: num(a, 'elo1', 20), alpha: num(a, 'alpha', 0.05), beta: num(a, 'beta', 0.05), maxGames: num(a, 'max-games-per-test', 4000), minPairs: num(a, 'min-pairs', SPRT_DEFAULTS.minPairs), varFloor: num(a, 'var-floor', SPRT_DEFAULTS.varFloor) };
   const anchor = s.playable(ANCHOR);
   // D350: a test-only player (the oracle reads hidden cards) is never a candidate.
   const pending = (): Player | null => s.available.find((p) => p.candidate && !testOnly(p.resolved) && !L.decided[p.name] && p.name !== L.best) ?? null;

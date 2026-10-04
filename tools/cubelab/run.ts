@@ -30,7 +30,7 @@ import type { Fact } from './cards.ts';
 import { loadBridge, type BridgeMeta, type BridgeOptions, type BridgeTag } from './bridge.ts';
 import { parseCube } from './cube.ts';
 import { dckText } from './deck.ts';
-import { engineFacts, runPool, type EngineEnv, type ForgeBuild, type GameRow, type MatchJob } from './engine.ts';
+import { engineFacts, runPool, type EngineEnv, type ForgeBuild, type GameRow, type MatchJob, type PoolLoad } from './engine.ts';
 import { loadCube, runDraft, type DrafterOut, type DraftOut, type Format, type LoadedCube } from './lab.ts';
 import { checkExploreOptions, exploreDraft, type ExploreOptions } from './explore.ts';
 import { parseSynergy } from './pairs.ts';
@@ -94,7 +94,8 @@ export interface DraftRecord extends Omit<DraftOut, 'drafters' | 'ms'> {
   v: 1;
   cube: string;
   drafters: [DrafterRecord, DrafterRecord];
-  match: { games: GameRow[]; winsA: number; winsB: number; winner: 'A' | 'B' | 'draw'; engineError?: string; worker: number };
+  /** D376 `load`: the pool when the match finished (matches in progress, JVMs alive, 1-min load average, cores); absent before D376. */
+  match: { games: GameRow[]; winsA: number; winsB: number; winner: 'A' | 'B' | 'draw'; engineError?: string; worker: number; load?: PoolLoad };
   ms: DraftOut['ms'] & { match: number };
   /** A bridge draft's pool: its source cubes and which cube each card came from (bridge.ts; absent in a normal run). */
   bridge?: BridgeTag;
@@ -307,7 +308,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
   const started = new Map<string, number>();
   for (const j of jobs) started.set(j.id, Date.now());
   const homes = env.homes.slice(0, Math.max(1, Math.min(o.jobs, jobs.length)));
-  await runPool({ ...env, homes }, jobs, path.join(o.out, 'logs'), (job, r, worker) => {
+  await runPool({ ...env, homes }, jobs, path.join(o.out, 'logs'), (job, r, worker, load) => {
     const d = outs.get(job.seed) as DraftOut;
     const wins = { A: 0, B: 0 };
     for (const g of r.games) if (g.winner === 'A' || g.winner === 'B') wins[g.winner]++;
@@ -331,6 +332,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
         games: r.games, winsA: wins.A, winsB: wins.B,
         winner: wins.A > wins.B ? 'A' : wins.B > wins.A ? 'B' : 'draw', worker,
         ...(r.engineError ? { engineError: r.engineError } : {}),
+        load,
       },
       ms: { ...d.ms, match: Date.now() - (started.get(job.id) ?? Date.now()) },
     };
