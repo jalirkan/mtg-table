@@ -1,0 +1,141 @@
+==== J048 pilot1 started 2026-10-03T21:30:05-04:00 in unit lab-J048-pilot1, 3 worker(s)
+lint-bridge-selftest OK: 31 rules, 60 firing cases (each fired its own rule and no other), 73 checks
+bridge lint OK (64 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 64 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 270 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2947 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:42724): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:42726): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:42738 (1 watching)
+WS CONNECT /127.0.0.1:42740 (connection #1)
+WS REFUSED /127.0.0.1:42742: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:42746 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:42746 (1 watching)
+WS DISCONNECT /127.0.0.1:42740 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:42760 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:42760 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:38280 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:43548 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:43548: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 31 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:60968: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:60978: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:60994: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:32778: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:32804: no valid pairing token
+WS SITE REFUSED /127.0.0.1:32934: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:32942: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:32954: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:32960: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:32962: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:32976: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:32980: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:32986: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33000: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33012: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:33026: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:33028: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:33040: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:33052: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:33068: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:33074 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:33074 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:33082 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:33082 (0 watching)
+WS CONNECT /127.0.0.1:33098 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:33098 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:33102): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:33110): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:33116 (1 watching)
+WS CONNECT /127.0.0.1:49954 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:49954 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:49970 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:49970 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:33615 (/127.0.0.1:49978): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:59646: a path that would leave the site
+WS CONNECT /127.0.0.1:48698 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:48698 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:48710): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:42643 (/127.0.0.1:48726): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 6.0 us + predict 3.0 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 112 check(s), 0 failure(s)
+decision selftest: 44 check(s), 0 failure(s)
+build OK
+bridge/run.sh: config /home/justin-a/code/lab/mtg-table/var/j048/home/config.json (from MTG_TABLE_CONFIG), not /home/justin-a/code/lab/mtg-table/config.json
+Language 'en-US' loaded successfully.
+(ThreadUtil first call): Running with priority 5
+Read cards: 33617 archived files in 0 ms (25 parts) using thread pool
+Read cards: 1 files in 0 ms (1 parts) using thread pool
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+The card A-Alrund's Epiphany was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Baba Lysaga, Night Witch was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Divide by Zero was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Esika's Chariot was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Faceless Haven was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Fires of Invention was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Goldspan Dragon was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Hullbreaker Horror was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Kumano Faces Kakkazan was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Luminarch Aspirant was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Monster Manual was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Omnath, Locus of Creation was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-The Meathook Massacre was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Unholy Heat was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Blinding Radiance was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Goblin Bruiser was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Ogre Painbringer was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Titanic Pelagosaur was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Treetop Recluse was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+Read cards: 836 files in 0 ms (8 parts) using thread pool
+REVEAL 6 library 1
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE FLUSH HELD: a "may look" effect outlives its source; the frame waits for checkStaticAbilities (D352)
+MID-MOVE HOLD GAVE UP: 8 flushes in a row held and the "may look" effect is still stale; frames go out again (D352)
+  ok   the cut fired exactly once, on the Oracle leaving the battlefield (1)
+  ok   MidMove.revealStale is true at the cut
+  ok   control: at the cut the Oracle is off seat 1's battlefield
+  ok   control: at the cut a bare Snap.state puts seat 1's top card in library.cards -- the J019 leak
+  ok   the log has at least two state frames (3)
+  ok   control: before the exile the Oracle is on seat 1's battlefield
+  ok   control: before the exile seat 1's library.cards is exactly the top card [6]
+  ok   the last frame has the Oracle off the battlefield
+  ok   the last frame's seat 1 library.cards is empty []
+  ok   no frame shows seat 1's top card once the Oracle has left (0 leak(s))
+  ok   the mid-move flush was held (1)
+  ok   the held events reached the log: the Oracle's zone event to exile
+  ok   valve: the stale game counted as stale
+  ok   valve: 8 holds, then it gives up (held 8 of 11)
+MidMoveSelfTest: 14 check(s), 0 failure(s)
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 730001, best of 1, 1 job(s), AI mixed per drafter (Default:0.5,Reckless:0.25,Default+search:0.25), ratings cubes/synergy-cube-180.ratings.tsv, out var/cubelab/runs/j048-pilot, recording every game (both chairs) into var/cubelab/runs/j048-pilot/games
+facts: booting the engine to look up 180 cards ...
+facts: 2.3 s
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+[1/2] seed 730001: A:WG 1-0 B:WU  games A
+[2/2] seed 730002: A:UG 0-1 B:WU  games B
+matches: 6 s for 2 (3.2 s a draft wall-clock on 1 worker(s))
+recorded: 2 game(s), both chairs, 0.3 MiB gzipped (135 KiB a game) under var/cubelab/runs/j048-pilot/games
+done in 9 s -> var/cubelab/runs/j048-pilot/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/runs/j048-pilot
