@@ -69,6 +69,7 @@ import { evaluate, parse as parseExpr, type Verdict } from './expr.ts';
 import { sanitiseLadder } from './ladder.ts';
 import { sanitiseWarehouse } from './warehouse.ts';
 import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from './jobfile.ts';
+import { followupMessage, LEDGER_MD_HEAD, ledgerEntry, ledgerJsonLine, ledgerKeys, ledgerMarkdown, withMessages, type LedgerEntry } from './ledger.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
 import { budget as budgetOf, DEFAULT_BUDGET, DEFAULT_PEAK_GB, PILOT_MAX_WORKERS, sizeWorkers, systemdRunLine, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
 import { formatStatus, isOurs, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
@@ -1496,6 +1497,7 @@ ${keep.trimEnd()}
       let old = '';
       try { old = fs.readFileSync(path.join(wt, 'HEARTBEAT.md'), 'utf8'); } catch { /* none */ }
       fs.writeFileSync(path.join(wt, 'HEARTBEAT.md'), this.heartbeat(doc, old));
+      const ledgered = this.appendLedger(wt);
       this.git(wt, 'add', '-A');
       if (this.git(wt, 'diff', '--cached', '--quiet').code !== 0) {
         const msg = changed.length ? `runner: ${changed.map((id) => `${id} ${parseStatus(this.runs.get(id)?.pendingStatus ?? '')?.state ?? ''}`).join(', ')}` : 'runner: heartbeat';
@@ -1505,10 +1507,75 @@ ${keep.trimEnd()}
         if (p.code !== 0) { this.sys.log(`publish: push refused (attempt ${attempt + 1}): ${p.stderr.trim().split('\n').at(-1)}`); continue; }
       }
       for (const id of changed) { const r = this.runs.get(id); if (r) { r.published = true; if (r.outcome) r.pendingStatus = null; this.save(r); } }
+      this.markLedgered(ledgered);
       if (changed.length) this.p.lastFetch = 0;      // read the STATUS just pushed back at the next tick, not a minute later
       return true;
     }
     return false;
+  }
+
+  // ------------------------------------------------------------------ the decision ledger (D366)
+
+  /**
+   * The ledger's own state (var/runner/ledger.json): `since`, the first time this runner kept a
+   * ledger (a job that ended before it is never backfilled), and the entries already pushed.
+   */
+  ledgerState(): { since: number; written: string[] } {
+    const s = this.readJson<{ since?: number; written?: string[] }>('ledger.json');
+    if (s && typeof s.since === 'number') return { since: s.since, written: Array.isArray(s.written) ? s.written : [] };
+    const fresh = { since: this.p.started, written: [] as string[] };
+    this.writeJson('ledger.json', fresh);
+    return fresh;
+  }
+
+  /**
+   * Into the pc-results worktree (just reset to origin): an entry in ledger.jsonl and LEDGER.md for
+   * every job that ended (done, failed, aborted) and is not in the ledger yet, and a FOLLOW-UP READY
+   * line in HEARTBEAT.md's `## Messages` for a done job's follow-up that is not on pc-jobs.  Returns
+   * the entries' keys, marked once the push went through (`markLedgered`); a refused push writes
+   * them again into the next attempt, and a key already in ledger.jsonl is never written twice.
+   */
+  appendLedger(wt: string): string[] {
+    const st = this.ledgerState();
+    const done = new Set(st.written);
+    const posted = new Map(this.jobs.map((j) => [j.file, j.after]));
+    const entries: LedgerEntry[] = [];
+    for (const r of [...this.runs.values()].sort((a, b) => (a.outcome?.at ?? 0) - (b.outcome?.at ?? 0))) {
+      if (!r.outcome || r.outcome.at < st.since) continue;
+      const job = this.jobs.find((j) => j.id === r.id) ?? this.retained.get(r.id) ?? null;
+      const e = ledgerEntry({
+        id: r.id, title: r.title, ledger: job?.ledger ?? null, state: r.outcome.state, reason: r.outcome.reason, finished: isoLocal(r.outcome.at),
+        headlineKeys: job?.headline ?? [], numbers: r.numbers, metrics: r.metrics, commits: r.shas, posted,
+      });
+      if (e && !done.has(e.key)) entries.push(e);
+    }
+    if (!entries.length) return [];
+    const jsonl = path.join(wt, 'ledger.jsonl');
+    const md = path.join(wt, 'LEDGER.md');
+    let have = new Set<string>();
+    try { have = ledgerKeys(fs.readFileSync(jsonl, 'utf8')); } catch { /* none yet */ }
+    const fresh = entries.filter((e) => !have.has(e.key));
+    if (fresh.length) {
+      fs.appendFileSync(jsonl, fresh.map(ledgerJsonLine).join(''));
+      if (!fs.existsSync(md)) fs.writeFileSync(md, LEDGER_MD_HEAD);
+      fs.appendFileSync(md, fresh.map((e) => `\n${ledgerMarkdown(e)}`).join(''));
+      const messages = fresh.map(followupMessage).filter((x): x is string => !!x);
+      if (messages.length) {
+        const hb = path.join(wt, 'HEARTBEAT.md');
+        let text = '';
+        try { text = fs.readFileSync(hb, 'utf8'); } catch { /* publishResults writes it first; a bare worktree may not */ }
+        fs.writeFileSync(hb, withMessages(text, messages));
+        for (const m of messages) this.sys.log(`ledger: ${m.slice(2)}`);
+      }
+    }
+    return entries.map((e) => e.key);
+  }
+
+  /** After a push: these ledger entries are on pc-results; never written again (a deleted message stays deleted). */
+  markLedgered(keys: string[]): void {
+    if (!keys.length) return;
+    const st = this.ledgerState();
+    this.writeJson('ledger.json', { since: st.since, written: [...new Set([...st.written, ...keys])].slice(-1000) });
   }
 
   /**

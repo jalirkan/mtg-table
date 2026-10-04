@@ -84,7 +84,9 @@ The runner checks every 10 seconds and fetches both branches every minute.
    `events.jsonl`; `failure.txt` (the exit code and the last 60 lines) on a failure; and
    the `collect:` files under 5 MB each. **The PC session writes `summary.md`** from those
    and from what the job's `## Report` section asks for. Large data stays in the lab
-   clone's `var/`.
+   clone's `var/`. At each job end (done, failed, aborted) the runner also appends an entry
+   to the **decision ledger**, `LEDGER.md` and `ledger.jsonl` at the root of `pc-results`
+   (*The decision ledger*, below).
 9. **Heartbeat.** Every 4–5 minutes and on every job state change, the runner pushes
    `status.json` (the progress page's data) and `HEARTBEAT.md`: the time, what runs with
    its progress, rate and ETA, the machine's load, memory and pressure, the queue, and the
@@ -232,6 +234,10 @@ control: yes | no                    the job's tools read the pool control file;
 public_title: Search AI bench        the title the PUBLIC #lab page may show; without it, the id only
 public_est: ~3 h                     likewise the estimate. Both: letters, digits, spaces and , : ; ( ) + % ~ # & - only
 public_cubes: yes | no               the public page may name the cubes in a queue's per-cube progress (default: "cube 1", ...)
+decides: promote evaluator v1 to the search (gate 2)    the decision this job informs (one line; the ledger)
+hypothesis: what we expect, and why                      (one line)
+rule: D354 gate 2 (gates.py REGRET_RULE)                 the pre-registered pass/fail rule, or a pointer to it
+followup: jobs/J062-x.md, morning-read                   what to post when this job is done: pc-jobs files, template names
 
 ## Pilot
 ```bash
@@ -350,6 +356,56 @@ The runner adds `elapsed_s`, `workers`, `pressure_events` and `peak_worker_rss_g
 `progress:` takes `aibench`, `cubelab`, `cubelab-queue` (its total from the night's plan),
 `evolve`, `lines`, `files` or `metric <name> [unit]`, then `of <total>` when the files
 don't say it.
+
+## The decision ledger
+
+A result with no decision attached gets read loosely, and a promised next step gets
+forgotten (night 1's morning read, promised in J029, waited a day for a job). So a job says
+what it is for, in four optional header lines (D366):
+
+| Line | What it holds |
+|---|---|
+| `decides:` | the decision this job's result informs, in one line |
+| `hypothesis:` | what we expect, and why |
+| `rule:` | the pass/fail rule written before the run, or where it is (a D-number, a `gates.py` / `EXAM_RULE` name) |
+| `followup:` | what comes next: job files under `jobs/` (`jobs/J###-name.md`) or template names (`morning-read`), comma-separated |
+
+~~~text
+id: J061
+title: Overnight queue, night 3
+cpu: heavy
+decides: whether night 4 keeps card-level allocation (with J062's read of tau)
+hypothesis: exploration in 15% of drafts costs under 10% of the draft rate and its logs pass redaction
+rule: D358; final checks below (engine errors <= 2%, recording errors <= 1%)
+followup: jobs/J066-matchup-read-night-3.md
+~~~
+
+`tools/runner.sh check` prints the four lines and warns when a heavy job has no
+`decides:`, when a `decides:` has no `rule:`, and when a follow-up file lying beside the
+checked file (a pc-jobs checkout) has no `after:` on this job. Warnings are not errors.
+
+**The ledger.** At each job end the runner appends one entry to `ledger.jsonl` (one JSON
+object a line) and `LEDGER.md` on `pc-results`, in the same commit as the STATUS: id,
+title, `decides`, `hypothesis`, `rule`, the outcome (`done`, `failed`, or `aborted` for an
+`abort:` line), the reason, the `headline:` numbers, the summary's path
+(`results/<id>/summary.md`), the finish time, the commits, and each follow-up's state. A job
+without the lines is still entered, saying so. A memory stop or a `needs: check` wait is not
+an end and has no entry. The ledger never goes to the public `lab-status` copy. The PC
+session's summary judges the result against the entry's `rule`.
+
+**Follow-ups.** The runner only reads pc-jobs, so it never posts a job. The simplest way is
+to post the follow-up together with its job, with `after:` on it, and name it in
+`followup:`; the queue then starts it when the job is done, and nothing else happens. A
+follow-up that is not on pc-jobs when the job ends `done` (a file to be written from the
+results, or a template name) gets a line at the top of HEARTBEAT.md's `## Messages`:
+
+~~~text
+- FOLLOW-UP READY [J061@2026-10-05T06:10:00-07:00] (the runner, for the cloud session): J061 is done; post jobs/J066-matchup-read-night-3.md to pc-jobs. ...
+~~~
+
+The cloud session posts it and deletes the line; the runner writes each line once and never
+again. A job that fails or is aborted asks for no follow-up; its ledger entry says the
+follow-up is not due, and a follow-up already posted with `after:` on it waits.
 
 `tools/runner/jobs/` on mtg-table's `main` has worked examples: J003 and J005 rewritten,
 and J010, the runner's own shakedown on the PC.

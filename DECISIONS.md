@@ -17825,6 +17825,62 @@ is not ReLU + sigmoid (refused by name, the win chance still served).
   depend on which frame the client asked about before; one baseline per model lets a
   client difference any two positions.
 
+## D366 — The decision ledger: a job may say what it decides, what we expect, its pre-registered rule and its follow-up; the runner appends every job end to `LEDGER.md` and `ledger.jsonl` on `pc-results`, and asks the cloud session in HEARTBEAT for a follow-up that is not on pc-jobs
+
+*Branch `c/decision-ledger`; D366, the first number free at push time (D362–D365 are held
+by other lanes).*
+
+**2026-10-04** (a methods review Justin approved)
+
+**The fault.** Lab jobs produced results with no decision attached, so their reading
+slipped. Night 1's pre-registered morning read (the matchup model answering three written
+questions) was promised in J029 as "a separate job" and was not queued for a day (J062).
+Results were summarised loosely, without the rule they were meant to be judged by.
+
+**Decided.**
+
+1. **Four optional header lines** (`tools/runner/jobfile.ts`, `parseLedgerHeaders`):
+   `decides:` (the decision the result informs), `hypothesis:`, `rule:` (the pass/fail rule
+   written before the run, or a pointer: a D-number, a `gates.py` / `EXAM_RULE` name), and
+   `followup:` (comma-separated job files `jobs/J###-name.md` or template names). Older job
+   files parse unchanged; a follow-up that is neither form, or names the job itself, is a
+   job-file error. `tools/runner.sh check` prints the four lines and warns about a heavy job
+   with no `decides:`, a `decides:` with no `rule:`, and a follow-up file beside the checked
+   one with no `after:` on it.
+2. **The ledger** (`tools/runner/ledger.ts`, `Runner.appendLedger`). Every job end, `done`,
+   `failed` or `aborted` (a failure whose reason is an `abort:` line), is one entry in
+   `ledger.jsonl` and `LEDGER.md` at the root of `pc-results`, written in the publish that
+   carries the job's STATUS: id, title, the three lines, the outcome and reason, the
+   `headline:` numbers, the summary's path, the finish time, the commits and each
+   follow-up's state. A job without the lines is entered too, saying so. A `waiting` (memory
+   stop, `needs: check`) or `skipped` job is not an end. An entry's key is `<id>@<finished>`:
+   a key already in `ledger.jsonl` is never appended again, so a refused push that is
+   retried writes it once, and pushed keys are kept in `var/runner/ledger.json`. Its `since`
+   is the first time a runner kept a ledger, so jobs that ended before the upgrade are not
+   backfilled. Like HEARTBEAT, the ledger goes to `pc-results` only, never to the public
+   `lab-status` copy, which stays numbers-only.
+3. **Follow-ups.** The runner only reads pc-jobs, so it never posts a job. The recommended
+   form is to post the follow-up together with its job, with `after:` on it, and to name it
+   in `followup:`: the queue starts it, and the ledger says `queued`. A follow-up that is not
+   on pc-jobs when its job ends `done` (a file to be written from the results, or a
+   template) gets one `FOLLOW-UP READY [<key>]` line at the top of HEARTBEAT.md's
+   `## Messages`, which the cloud session reads, posts and deletes; the runner writes each
+   line once and never again. A failed or aborted job asks for nothing (`not-due`).
+
+**Checked.** `web/test/lab-runner.test.ts`, five tests: the header lines and their errors;
+`check`'s lines and warnings, through the CLI on a pc-jobs-like folder; entries, markdown,
+the message and its placement; the runner end to end over real git (done, failed, a
+follow-up already queued with `after:`, a template and a file not posted; nothing on
+`lab-status`; no duplicate after more publishes; a deleted message not rewritten; no
+backfill); an aborted job.
+
+**Rejected.** The runner committing the follow-up to pc-jobs (it only reads that branch, and
+push access to pc-jobs is code execution on the PC: D337's review). Queuing a follow-up by
+STATUS on pc-results (a STATUS for a job file that does not exist yet means nothing to the
+queue). Making `decides:` required (every older job would be refused; a warning in `check`
+is enough). Publishing the ledger on `lab-status` (its lines are free text, which D337's
+review keeps off the public copy).
+
 ## D369 — The owner's games flow into the human test set by themselves: `play.sh` copies every finished human-vs-AI game from `var/games/` into `var/ml/human/` with a manifest, `human_eval.py` scores the evaluator there against prior, life and core with intervals over games, and the first check is pre-registered at 30 games
 
 *Branch `c/human-games`; D369, the next number free at push (D362–D368 are held by other
