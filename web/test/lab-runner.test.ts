@@ -43,13 +43,13 @@ import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubelabQueue, draftStats, eachCompleteLine, expandGlob, ladder, lines, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
 import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
-import { DEFAULT_CONFIG, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { blockSha, DEFAULT_CONFIG, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
 import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
-import { establishedOn, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
+import { establishedOn, oomJournalLine, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
 import { runPool, type MatchJob } from '../../tools/cubelab/engine.ts';
 import { drive, type BatchResult, type BatchSpec, type Engine } from '../../tools/ai-ladder/bench.ts';
 
@@ -203,6 +203,20 @@ test('schedule: id order, after:, one heavy and one light, Justin, holds, someon
   assert.deepEqual(r.blocked.filter((b) => ['J003', 'J006'].includes(b.id)).map((b) => b.code), ['needs-check', 'memory']);
   r = schedule({ ...base, statuses: new Map([['J003', st('done\n')], ['J005', st('done\n')], ['J006', st('waiting\nretry_after: 2026-10-03T11:50:00Z\n')]]) });
   assert.deepEqual(r.start.map((j) => j.id), ['J004', 'J006']);
+});
+
+test('job file: pilot_cores: and prepare_cores: (D365) are those steps\' widths; absent: null, the job\'s width', () => {
+  const j = parseJobFile('J050.md', 'id: J050\nrepos: mtg-table@main\nmax_workers: 7\npilot_cores: 2\nprepare_cores: 1\n## Pilot\n```bash\ntrue\n```\ncores: 3\n```bash\nwider\n```\n## Commands\n```bash\nwide\n```\n', parse);
+  assert.deepEqual(j.errors, []);
+  assert.deepEqual([j.pilotCores, j.prepareCores], [2, 1]);
+  const old = parseJobFile('J051.md', 'id: J051\nrepos: mtg-table@main\nmax_workers: 7\n', parse);
+  assert.deepEqual([old.pilotCores, old.prepareCores], [null, null]);
+  assert.equal(parseJobFile('J052.md', 'id: J052\nrepos: mtg-table@main\npilot_cores: 0\nprepare_cores: x\n', parse).errors.length, 2);
+  // The steps carry them: prepare 1, pilot1 2, pilot2 its own cores: 3 (a block's line wins), run1 the job's.
+  const w = world({ 'J050.md': 'id: J050\n' });
+  const steps = new Runner(w.cfg, w.sys).stepsFor(j, false);
+  assert.deepEqual(steps.filter((x) => x.kind === 'shell').map((x) => [x.name, x.cores ?? null]), [['prepare', 1], ['pilot1', 2], ['pilot2', 3], ['run1', null]]);
+  assert.deepEqual(new Runner(w.cfg, w.sys).stepsFor(old, false).filter((x) => x.kind === 'shell').map((x) => x.cores ?? null), [null]);
 });
 
 test('job file: cores: in the header is the job\'s width; a cores: line in a section sets the next block\'s', () => {
@@ -897,6 +911,10 @@ class FakeSys implements Sys {
   liveUnits(prefix: string): string[] | null { return this.live === null ? null : [...this.live, ...[...this.held.keys()].filter((u) => u.startsWith(prefix))]; }
   runInSlice(command: string, cwd: string) { this.inSlice.push(command); return this.run(['bash', '-c', command], { cwd }); }
   unitJavaPeaksGb(): number[] { return [1.6, 1.9]; }
+  /** What systemd or the journal say about an OOM kill in a unit (D365); null: nothing. */
+  oomEvidence: string | null = null;
+  oomAsked: string[] = [];
+  unitOomEvidence(unit: string): string | null { this.oomAsked.push(unit); return this.oomEvidence; }
   playing(): boolean { return this.isPlaying; }
   log(s: string): void { this.lines.push(s); }
 }
@@ -1307,6 +1325,78 @@ test('runner: co-scheduling end to end: a wide job waits, then starts beside a n
   assert.match(r2.blocked.find((x) => x.id === 'J061')?.reason ?? '', /needs 17\.5 GB; 6 of 21 GB free/);
 });
 
+
+test('runner: pilot_cores: (D365): a narrow pilot lets a narrow job start beside it; the main step waits for its width, and nothing new starts meanwhile', () => {
+  const job = (id: string, head: string): string => NARROW_JOB.replace('id: J060', `id: ${id}`).replace('max_workers: 7', head).replace(/p60/g, `p${id.slice(2)}`).replace(/j060/g, `j${id.slice(1)}`);
+  // J050: 7 wide, its pilot 2 wide (J050 on the PC: two JVMs in the pilot).  J051: 3 wide.  J052: 5 wide.
+  const w = world({ 'J050-a.md': job('J050', 'max_workers: 7\npilot_cores: 2'), 'J051-b.md': job('J051', 'cores: 3'), 'J052-c.md': job('J052', 'cores: 5') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  assert.deepEqual([...r.runs.keys()], ['J050']);
+  assert.deepEqual(r.holding(r.runs.get('J050')!).cores, 7);                    // prepare: no prepare_cores:, the job's width
+  w.sys.release('lab-J050-prepare', 'ok'); r.tick();
+  // The pilot holds 2 of 8: J051 (3) starts beside it; J052 (5) does not fit (2 + 3 + 5 > 8).
+  const a = r.runs.get('J050')!;
+  assert.equal(a.unit, 'lab-J050-pilot1');
+  assert.deepEqual(r.holding(a), { cores: 2, memGb: 4 });
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J050-pilot1')?.env.OMP_NUM_THREADS, '2');
+  assert.ok(Number(w.sys.started.find((u) => u.unit === 'lab-J050-pilot1')?.env.JOBS) <= 2);
+  assert.ok(r.runs.has('J051'));
+  assert.equal(r.runs.has('J052'), false);
+  assert.equal(r.blocked.find((x) => x.id === 'J052')?.code, 'cores');
+  // The pilot passes; run1 needs 7 but J051 holds 3: run1 waits, nothing is stopped.
+  w.sys.release('lab-J050-pilot1', 'ok'); r.tick();
+  assert.equal(w.sys.started.some((u) => u.unit === 'lab-J050-run1'), false);
+  assert.match(a.heldFor ?? '', /^needs 7 core\(s\) for run1; 5 of 8 free \(it waits for them; nothing is stopped\)$/);
+  assert.match(a.pendingStatus ?? '', /\nwaits: needs 7 core\(s\) for run1/);
+  assert.deepEqual(w.sys.stopped, []);
+  // While it waits it claims its full width: J052 (5) would fit in the 5 cores really free, but does not start (no starvation).
+  assert.equal(r.holding(a).cores, 7);
+  assert.equal(r.runs.has('J052'), false);
+  assert.match(r.blocked.find((x) => x.id === 'J052')?.reason ?? '', /needs 5 core\(s\); 0 of 8 free/);
+  // J051 runs to the end; then J050's run1 starts, 7 wide, and J052 still waits for it.
+  for (const u of ['prepare', 'pilot1', 'run1', 'run2']) { w.sys.release(`lab-J051-${u}`, 'ok'); r.tick(); }
+  assert.equal(r.runs.get('J051')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  r.tick();
+  assert.equal(a.unit, 'lab-J050-run1');
+  assert.equal(a.heldFor, null);
+  assert.doesNotMatch(a.pendingStatus ?? '', /\nwaits:/);
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J050-run1')?.env.OMP_NUM_THREADS, '7');
+  assert.equal(r.runs.has('J052'), false);
+  // J050's narrow run2 (cores: 1) leaves 7: J052 starts.
+  w.sys.release('lab-J050-run1', 'ok'); r.tick();
+  assert.equal(a.unit, 'lab-J050-run2');
+  assert.ok(r.runs.has('J052'));
+});
+
+test('runner: two jobs waiting to widen (D365) never wait for each other: the earlier goes first', () => {
+  const job = (id: string, head: string): string => NARROW_JOB.replace('id: J060', `id: ${id}`).replace('max_workers: 7', head).replace(/p60/g, `p${id.slice(2)}`).replace(/j060/g, `j${id.slice(1)}`);
+  // J050 and J051: 5 wide, 1-wide pilots; J052: 3 wide.  Budget 8.
+  const w = world({ 'J050-a.md': job('J050', 'max_workers: 5\npilot_cores: 1'), 'J051-b.md': job('J051', 'max_workers: 5\npilot_cores: 1'), 'J052-c.md': job('J052', 'cores: 3') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release('lab-J050-prepare', 'ok'); r.tick();          // J050's pilot (1): J051 (5) starts beside it
+  w.sys.release('lab-J051-prepare', 'ok'); r.tick();          // J051's pilot (1): J052 (3) starts, 1 + 1 + 3
+  assert.deepEqual([...r.runs.keys()].sort(), ['J050', 'J051', 'J052']);
+  w.sys.release('lab-J050-pilot1', 'ok'); r.tick();           // J050's run1 (5) waits: 1 + 3 + 5 > 8
+  w.sys.release('lab-J051-pilot1', 'ok'); r.tick();           // J051's run1 (5) waits: J050's 5 + 3 + 5 > 8
+  const a = r.runs.get('J050')!, b = r.runs.get('J051')!;
+  assert.match(a.heldFor ?? '', /^needs 5 core\(s\) for run1/);
+  assert.match(b.heldFor ?? '', /^needs 5 core\(s\) for run1; 0 of 8 free/);
+  // J052 ends: each claims 5, but the later one (J051) yields: J050 starts, J051 still waits.
+  for (const u of ['prepare', 'pilot1', 'run1', 'run2']) { w.sys.release(`lab-J052-${u}`, 'ok'); r.tick(); }
+  r.tick();
+  assert.equal(a.unit, 'lab-J050-run1');
+  assert.equal(w.sys.started.some((u) => u.unit === 'lab-J051-run1'), false);
+  assert.match(b.heldFor ?? '', /^needs 5 core\(s\) for run1; 3 of 8 free/);
+  // J050's narrow run2 (1) leaves room: J051's run1 starts.
+  w.sys.release('lab-J050-run1', 'ok'); r.tick();
+  assert.equal(b.unit, 'lab-J051-run1');
+});
 
 test('runner: the thread cap is the step\'s width (max_workers: 1, a 7-worker block, a cores: 1 block); plan shows it; a block\'s own export wins', () => {
   // J070: width 1 from max_workers: 1, no cores: line (a width the old cap, declared cores: only, missed).
@@ -1788,6 +1878,210 @@ test('review: sh: metrics run in the lab slice; a stale git lock in the runner\'
   const removed = r.clearStaleGitLocks();
   assert.ok(removed.includes(lockFile));
   assert.ok(!fs.existsSync(lockFile));
+});
+
+// ------------------------------------------------------------------ D365: retries resume at the stopped block; aside copies; OOM kills
+
+/** A non-resumable job of two blocks (an encode, then a fit), each with its own clean:, and a job-wide one. */
+const BLOCKS_JOB = `id: J090
+title: An encode, then a fit
+cpu: heavy
+repos: mtg-table@main
+resumable: no
+max_workers: 2
+mem_per_worker_gb: 1.5
+metrics: n = lines var/p90.jsonl
+clean: var/j90-all
+
+## Pilot
+\`\`\`bash
+mkdir -p var
+echo '{}' > var/p90.jsonl
+\`\`\`
+check: n == 1
+
+## Commands
+clean: var/j90-enc
+\`\`\`bash
+mkdir -p var/j90-enc var/j90-all
+echo enc >> var/j90-enc/out.txt
+echo enc >> var/j90-runs.txt
+\`\`\`
+clean: var/j90-fit
+\`\`\`bash
+mkdir -p var/j90-fit
+echo fit >> var/j90-fit/out.txt
+echo fit >> var/j90-runs.txt
+\`\`\`
+`;
+
+/** heldAtRun1, then run1 finishes and run2 is held with a partial output; returns the lab's var/. */
+function heldAtRun2(id: string, jobText: string): { w: World; r: Runner; vr: string } {
+  const { w, r } = heldAtRun1(id, jobText);
+  w.sys.release(`lab-${id}-run1`, 'ok');
+  r.tick();
+  assert.equal(r.runs.get(id)?.unit, `lab-${id}-run2`);
+  const vr = path.join(r.checkout('mtg-table', 'heavy'), 'var');
+  fs.mkdirSync(path.join(vr, 'j90-fit'), { recursive: true });
+  fs.writeFileSync(path.join(vr, 'j90-fit', 'partial.txt'), 'half a fit');
+  return { w, r, vr };
+}
+
+test('D365: job file: a clean: line before a ## Commands block is that block\'s; in ## Pilot, outside var/ or with no block, an error', () => {
+  const j = parseJobFile('J091.md', 'id: J091\nrepos: mtg-table@main\n## Commands\nclean: var/a var/b*\nclean: var/c\ncores: 1\n```bash\ntrue\n```\n```bash\ntrue\n```\n', parse);
+  assert.deepEqual(j.errors, []);
+  assert.deepEqual(j.commands?.blockClean, [['var/a', 'var/b*', 'var/c'], []]);
+  assert.deepEqual(j.commands?.blockCores, [1, null]);
+  const bad = parseJobFile('J092.md', 'id: J092\nrepos: mtg-table@main\n## Pilot\nclean: var/p\n```bash\ntrue\n```\n## Commands\nclean: /etc ../x\n```bash\ntrue\n```\nclean: var/late\n', parse);
+  assert.equal(bad.errors.length, 4, bad.errors.join('\n'));
+  assert.match(bad.errors.join('\n'), /## pilot: a clean: line before a block belongs in ## Commands/);
+  assert.match(bad.errors.join('\n'), /a cores:, mem_gb: or clean: line with no block after it/);
+  assert.equal(oomJournalLine('x\nlab-J1-run1.service: A process of this unit has been killed by the OOM killer.\ny'), 'lab-J1-run1.service: A process of this unit has been killed by the OOM killer.');
+  assert.equal(oomJournalLine("lab-J1-run1.service: Failed with result 'oom-kill'."), "lab-J1-run1.service: Failed with result 'oom-kill'.");
+  assert.equal(oomJournalLine('lab-J1-run1.service: Deactivated successfully.'), null);
+});
+
+test('D365: a memory-stop retry resumes at the block that was stopped; done blocks are skipped; only that block\'s clean: is moved aside', () => {
+  const job = parseJobFile('J090.md', BLOCKS_JOB, parse);
+  assert.deepEqual(job.errors, []);
+  assert.deepEqual(job.commands?.blockClean, [['var/j90-enc'], ['var/j90-fit']]);
+  assert.deepEqual(job.clean, ['var/j90-all']);
+  const { w, r, vr } = heldAtRun2('J090', BLOCKS_JOB);
+  const first = r.runs.get('J090')!;
+  assert.equal(first.blocksDone?.run1?.rc, 0);
+  w.sys.release('lab-J090-run2', 'killed');                 // no exit code, unit gone: a memory stop
+  w.sys.t += 10_000; r.tick();
+  assert.equal(r.runs.get('J090')?.outcome?.state, 'waiting');
+  const before = w.sys.started.length;
+  w.sys.t += 16 * 60_000; r.tick();                          // the retry: prepare (held)
+  const again = r.runs.get('J090')!;
+  assert.deepEqual(again.steps.map((x) => x.name), ['prepare', 'run2', 'final-checks', 'collect']);
+  w.sys.release('lab-J090-prepare', 'ok'); r.tick();
+  assert.deepEqual(w.sys.started.slice(before).map((u) => u.unit), ['lab-J090-prepare', 'lab-J090-run2']);
+  // run2's own output went aside; run1's and the job-wide path did not (a from-scratch restart would move them).
+  const names = fs.readdirSync(vr);
+  assert.ok(names.some((n) => /^\.restart-.*-j90-fit$/.test(n)), names.join(' '));
+  assert.ok(!names.some((n) => /^\.restart-.*-j90-(enc|all)$/.test(n)), names.join(' '));
+  assert.equal(fs.readFileSync(path.join(vr, 'j90-enc', 'out.txt'), 'utf8'), 'enc\n');
+  w.sys.release('lab-J090-run2', 'ok'); r.tick();
+  assert.equal(again.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.equal(fs.readFileSync(path.join(vr, 'j90-runs.txt'), 'utf8'), 'enc\nfit\n', 'the encode ran once');
+  const st = show(w.mtg, 'pc-results:results/J090/STATUS');
+  assert.match(st, /restarted: .*retry after "memory: .*resumes at run2 \(run1 done, exit 0\).*moved aside: var\/j90-fit/);
+  assert.match(st, /blocks_done: run1 exit 0 at \S+, run2 exit 0 at /);
+});
+
+test('D365: a stop retry resumes too; an old run.json (no blocksDone) and a resumable job; a changed block runs again', () => {
+  // `tools/runner.sh stop` during run2 of a resumable job: the retry goes straight to run2, nothing moved aside.
+  const res = BLOCKS_JOB.replace('resumable: no', 'resumable: yes');
+  const { w, r, vr } = heldAtRun2('J090', res);
+  fs.mkdirSync(path.join(r.cfg.stateDir, 'requests'), { recursive: true });
+  fs.writeFileSync(path.join(r.cfg.stateDir, 'requests', '1.json'), JSON.stringify({ op: 'stop', id: 'J090' }));
+  fs.writeFileSync(r.pausedFlag(), 'x');                     // what `tools/runner.sh stop` does too
+  w.sys.t += 10_000; r.tick();
+  w.sys.t += 10_000; r.tick();
+  assert.match(r.runs.get('J090')?.outcome?.reason ?? '', /^stopped: /);
+  // A run.json the installed runner wrote before D365 has no blocksDone: what it ran is read from its steps.
+  delete r.runs.get('J090')!.blocksDone;
+  fs.rmSync(r.pausedFlag());                                 // `tools/runner.sh resume`
+  w.sys.t += 10_000; r.tick();
+  const again = r.runs.get('J090')!;
+  assert.deepEqual(again.steps.map((x) => x.name), ['prepare', 'run2', 'final-checks', 'collect']);
+  assert.match(again.restarts.at(-1)?.why ?? '', /resumes at run2 \(run1 done, exit 0\); the tools skip what is done/);
+  assert.equal(again.restarts.at(-1)?.how, 'resumed');
+  assert.ok(!fs.readdirSync(vr).some((n) => n.startsWith('.restart-')), 'a resumable job is never cleaned');
+  // Where a retry starts: the first block not done with the same text.
+  const job = parseJobFile('J090.md', BLOCKS_JOB, parse);
+  const done = { run1: { rc: 0, at: 0, sha: blockSha(job.commands!.blocks[0]!) } };
+  assert.equal(r.resumeBlock(job, done).from, 1);
+  const edited = parseJobFile('J090.md', BLOCKS_JOB.replace('echo enc >> var/j90-enc/out.txt', 'echo enc2 >> var/j90-enc/out.txt'), parse);
+  assert.equal(r.resumeBlock(edited, done).from, 0, 'run1 was changed in the job file: it runs again');
+  assert.equal(r.resumeBlock(job, { run1: { rc: 0, at: 0, sha: blockSha(job.commands!.blocks[0]!) }, run2: { rc: 0, at: 0, sha: blockSha(job.commands!.blocks[1]!) } }).from, 2);
+});
+
+test('D365: an old job file (a job-wide clean:, no block clean:) retries from run1 as before; a restart resumes at its block', () => {
+  // The job-wide clean: names run1's output too, and nothing says which block made what: from scratch, all moved aside.
+  const old = BLOCKS_JOB.replace('clean: var/j90-all', 'clean: var/j90-all var/j90-enc var/j90-fit').replace(/^clean: var\/j90-(enc|fit)\n/gm, '');
+  assert.deepEqual(parseJobFile('x.md', old, parse).commands?.blockClean, [[], []]);
+  const { w, r, vr } = heldAtRun2('J090', old);
+  w.sys.release('lab-J090-run2', 'killed');
+  w.sys.t += 10_000; r.tick();
+  w.sys.t += 16 * 60_000; r.tick();
+  const again = r.runs.get('J090')!;
+  assert.deepEqual(again.steps.map((x) => x.name), ['prepare', 'run1', 'run2', 'final-checks', 'collect']);
+  assert.match(again.restarts.at(-1)?.why ?? '', /starts again at run1: run1 is done, but the job's clean: is job-wide.*moved aside: var\/j90-all, var\/j90-enc, var\/j90-fit/);
+  assert.ok(fs.readdirSync(vr).some((n) => /^\.restart-.*-j90-enc$/.test(n)));
+  // A runner restart that loses a non-resumable job's run2 (the machine went down): it starts again at run2.
+  const b = heldAtRun2('J090', BLOCKS_JOB);
+  b.w.sys.held.clear();
+  b.w.sys.states.clear();
+  const r2 = new Runner(b.w.cfg, b.w.sys);
+  r2.reconcile();
+  const run = r2.runs.get('J090')!;
+  assert.deepEqual(run.steps.map((x) => x.name), ['prepare', 'run2', 'final-checks', 'collect']);
+  assert.equal(run.stepIndex, 0);
+  assert.match(run.restarts.at(-1)?.why ?? '', /not resumable, so it starts again at run2 \(run1 done, exit 0\).*moved aside: var\/j90-fit/);
+  b.w.sys.mode = 'run';
+  r2.tick();
+  assert.equal(run.outcome?.state, 'done', b.w.sys.lines.join('\n'));
+  assert.equal(fs.readFileSync(path.join(b.vr, 'j90-runs.txt'), 'utf8'), 'enc\nfit\n');
+});
+
+test('D365: .restart-* copies are never deleted; STATUS says how many and how much disk they hold', () => {
+  const { w, r, vr } = heldAtRun2('J090', BLOCKS_JOB);
+  const run = r.runs.get('J090')!;
+  const job = parseJobFile('J090.md', BLOCKS_JOB, parse);
+  for (let i = 0; i < 4; i++) {
+    fs.mkdirSync(path.join(vr, 'j90-fit'), { recursive: true });
+    fs.writeFileSync(path.join(vr, 'j90-fit', 'x.bin'), Buffer.alloc(1000 * (i + 1)));
+    w.sys.t += 60_000;
+    assert.deepEqual(r.cleanAside(run, job, 1), ['var/j90-fit']);
+  }
+  const copies = fs.readdirSync(vr).filter((n) => /^\.restart-.*-j90-fit$/.test(n));
+  assert.equal(copies.length, 4, 'all four kept');
+  assert.deepEqual(r.asideUsage(run, job), { copies: 4, bytes: 10_000 + 'half a fit'.length });
+  r.setStatus(run, 'running', {});
+  assert.match(run.pendingStatus ?? '', /set_aside: 4 copies, 0\.00 GB beside the job's clean: paths \(never deleted: remove them by hand\)/);
+});
+
+test('D365: a step that exits 137 or 9 after an OOM kill is a memory stop, never a failure; without evidence it fails', () => {
+  const ended = (w: World, r: Runner, id: string, rc: string, oom: string | null): void => {
+    const run = r.runs.get(id)!;
+    fs.writeFileSync(path.join(r.jobDir(id), 'run1.sh.rc'), `${rc}\n`);
+    if (oom !== null) fs.writeFileSync(path.join(r.jobDir(id), 'run1.sh.oom'), oom);
+    w.sys.held.delete(run.unit as string);
+    w.sys.states.set(run.unit as string, 'gone');
+    w.sys.t += 10_000; r.tick();
+  };
+  // The wrapper's own read of the unit's memory.events: oom_kill 1.
+  let { w, r } = heldAtRun1('J092');
+  ended(w, r, 'J092', '137', 'oom_kill 1\n');
+  assert.equal(r.runs.get('J092')?.outcome?.state, 'waiting');
+  assert.match(r.runs.get('J092')?.outcome?.reason ?? '', /^memory: step run1 exited 137 after an OOM kill \(the unit's memory\.events: oom_kill 1\)/);
+  // An old wrapper (no .oom file): systemd's or the journal's word for it.
+  ({ w, r } = heldAtRun1('J093'));
+  w.sys.oomEvidence = 'journal: lab-J093-run1.service: A process of this unit has been killed by the OOM killer.';
+  ended(w, r, 'J093', '9', null);
+  assert.match(r.runs.get('J093')?.outcome?.reason ?? '', /^memory: step run1 exited 9 after an OOM kill \(journal: /);
+  assert.deepEqual(w.sys.oomAsked, ['lab-J093-run1']);
+  // 137 with no evidence (oom_kill 0, nothing in systemd or the journal): a kill -9 from someone, the job fails.
+  ({ w, r } = heldAtRun1('J094'));
+  ended(w, r, 'J094', '137', 'oom_kill 0\n');
+  assert.equal(r.runs.get('J094')?.outcome?.state, 'failed');
+  assert.equal(r.runs.get('J094')?.outcome?.reason, 'step run1 exited 137');
+  // Another exit code is never read as a memory stop, evidence or not.
+  ({ w, r } = heldAtRun1('J095'));
+  ended(w, r, 'J095', '1', 'oom_kill 2\n');
+  assert.equal(r.runs.get('J095')?.outcome?.state, 'failed');
+  // The wrapper writes the .oom file before the exit code, and an exit code whatever it reads.
+  const wrap = fs.readFileSync(path.join(r.jobDir('J095'), 'run1.sh.wrap'), 'utf8');
+  assert.match(wrap, /memory\.events[\s\S]*run1\.sh\.oom[\s\S]*run1\.sh\.rc/);
+  const d = tmp('wrap');
+  fs.writeFileSync(path.join(d, 's.sh'), 'exit 137\n');
+  fs.writeFileSync(path.join(d, 's.sh.wrap'), wrap.replaceAll(path.join(r.jobDir('J095'), 'run1.sh'), path.join(d, 's.sh')));
+  const res = spawnSync('bash', [path.join(d, 's.sh.wrap')]);
+  assert.equal(res.status, 137);
+  assert.equal(fs.readFileSync(path.join(d, 's.sh.rc'), 'utf8'), '137\n');
 });
 
 // ------------------------------------------------------------------ the public copy's clock, the local server
