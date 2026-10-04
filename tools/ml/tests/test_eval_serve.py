@@ -1,9 +1,9 @@
-# mtg-table — tools/ml tests: the evaluator served to the coach helper (eval_serve.py, D360).
+# mtg-table — tools/ml tests: the evaluator served to the coach helper (eval_serve.py, D361).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """python3 -m unittest discover -s tools/ml/tests   (from the repo root)
 
-Feature parity, the crux of D360: the coach helper scores ONE state a client
+Feature parity, the crux of D361: the coach helper scores ONE state a client
 sends (the viewing seat's redacted state, plus the earlier frames' events), and
 the vector it builds must be exactly the row dataset.py built from the same
 moment of the recording.
@@ -168,7 +168,7 @@ class DatasetParityTest(unittest.TestCase):
             p_rows = self.net.predict(self.N.features_to_rows(d["X"].astype(np.float64), self.srv.schema.card_offset))
             for gm in (g for g in self.games if g["split"] == split):
                 idx = np.nonzero(d["game"] == gm["index"])[0]
-                game = [g for g in E.read_games(os.path.join(ROOT, gm["file"])) if g.game_key == gm["game_key"]][0]
+                game = [g for g in E.read_games(os.path.abspath(gm["file"])) if g.game_key == gm["game_key"]][0]
                 rows = E.encode_game(game, self.srv.schema)
                 self.assertEqual(len(rows), len(idx), gm["file"])
                 for r, i in zip(rows, idx):

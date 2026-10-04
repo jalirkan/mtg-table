@@ -16961,10 +16961,10 @@ games either way. Our own rows are both chairs of every game, the deck pair the 
 other cubes; graveyard and exile partly rebuilt from 17Lands' cast and killed events; the user's skill
 buckets as a filter (the report carries them per game in `games.jsonl`).
 
-## D360 — The learned evaluator's win chance is served to ForgeCoach by the coach helper's `POST /eval`, from one child process that runs encode.py's own encoder and evalnet.py's own forward pass on the viewing seat's redacted state; nothing is ported, the model stays on the PC, and `/health` says `eval: 1` only once a model has loaded and passed its schema checks
+## D361 — The learned evaluator's win chance is served to ForgeCoach by the coach helper's `POST /eval`, from one child process that runs encode.py's own encoder and evalnet.py's own forward pass on the viewing seat's redacted state; nothing is ported, the model stays on the PC, and `/health` says `eval: 1` only once a model has loaded and passed its schema checks
 
-*Branch `c/eval-winchance`; D360, the next number free on a freshly fetched `main` (D359 the
-highest, the outside exam). ForgeCoach's side is its own branch `c/eval-winchance` (`src/evalClient.ts`,
+*Branch `c/eval-winchance`; D361: `main` holds D359 (the outside exam) and D360 is claimed by the
+Omega ratings PR (#52). ForgeCoach's side is its own branch `c/eval-winchance` (`src/evalClient.ts`,
 `src/winChance.ts`, `src/ui/winchance/`).*
 
 **2026-10-04** (the owner's request: show the evaluator's win chance in ForgeCoach now that

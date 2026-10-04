@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: the learned position evaluator, served to the coach helper (D360).
+# mtg-table — tools/ml: the learned position evaluator, served to the coach helper (D361).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The evaluator's win chance for ONE position, for ForgeCoach (D360).
+"""The evaluator's win chance for ONE position, for ForgeCoach (D361).
 
 The coach helper (tools/coach-helper.mjs, through tools/eval-runner.mjs) runs
 this as a child process and talks JSON lines to it: one request line in, one

@@ -3,7 +3,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The win chance's self-test (D360): tools/eval-runner.mjs and the coach
+// The win chance's self-test (D361): tools/eval-runner.mjs and the coach
 // helper's /eval route.
 //
 // Part 1, always: against a FAKE tools/ml/eval_serve.py (a small Node script

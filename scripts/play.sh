@@ -61,7 +61,7 @@
 #   ./scripts/play.sh --engine-only --no-coach   # no coach helper (D292), so no match launcher either
 #   ./scripts/play.sh --engine-only --no-match   # the coach helper without /match (D303)
 #   ./scripts/play.sh --coach-port 8653          # the coach helper on another port
-#   ./scripts/play.sh --engine-only --eval-model var/ml/models/night-1-eval.json   # D360: the win chance's model
+#   ./scripts/play.sh --engine-only --eval-model var/ml/models/night-1-eval.json   # D361: the win chance's model
 #                                                # (that path is the default when it exists; --no-eval: none)
 #   ./scripts/play.sh --engine-only --idle-exit-after 60   # give up 60 min after the engine sleeps (D308)
 #   ./scripts/play.sh --arena               # open the 3D arena instead of the board
@@ -238,7 +238,7 @@ IDLE_SINCE_S=0                   # D308: $SECONDS when it fell asleep
 IDLE_EXPIRED=0
 PORT_EXPLICIT=0                  # D308: --port given, so this is a second bridge on purpose
 PASSTHROUGH=()
-EVAL_ARGS=()                     # D360: the coach helper's /eval (--eval-model <path>, --no-eval)
+EVAL_ARGS=()                     # D361: the coach helper's /eval (--eval-model <path>, --no-eval)
 
 # D303: the coach helper's /match asks for a restart with SIGUSR1.  IGNORED
 # before anything else, because an untrapped USR1 would end this script, and
@@ -688,7 +688,7 @@ start_coach() {
   # D303: the match launcher -- the helper writes var/match/ and signals this script.
   [ "$MATCH" = "1" ] && args+=(--match-dir "$MATCH_DIR" --supervisor "$$")
   [ "$MATCH" = "1" ] && rm -f "$MATCH_DIR/engine.json" 2>/dev/null
-  # D360: the win chance -- the helper loads var/ml/models/night-1-eval.json by itself when it exists.
+  # D361: the win chance -- the helper loads var/ml/models/night-1-eval.json by itself when it exists.
   [ "${#EVAL_ARGS[@]}" -gt 0 ] && args+=("${EVAL_ARGS[@]}")
   : > "$COACH_LOG"
   COACH_HELPER_TOKEN="$token" node tools/coach-helper.mjs "${args[@]}" >>"$COACH_LOG" 2>&1 &

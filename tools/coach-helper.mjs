@@ -16,7 +16,7 @@
 //   COACH_HELPER_TOKEN=<T> node tools/coach-helper.mjs --lan [--ws-port 8642]
 //   node tools/coach-helper.mjs --lan --token <T>    # the same; the env keeps <T> off `ps`
 //   node tools/coach-helper.mjs --match-dir var/match --supervisor <play.sh's pid>   # D303, play.sh does this
-//   node tools/coach-helper.mjs --eval-model var/ml/models/night-1-eval.json        # D360 (that path is the default
+//   node tools/coach-helper.mjs --eval-model var/ml/models/night-1-eval.json        # D361 (that path is the default
 //                                                    when the file exists; --no-eval turns /eval off)
 //
 // THE CONTRACT (ForgeCoach is built against exactly this):
@@ -49,7 +49,7 @@
 //                 "review": 1 when the bridge is built (else 0), --no-review
 //                 turns it off, --review-jobs N (default: cores - 1, at most 7).
 //
-//   POST /eval    -- THE WIN CHANCE (D360): the learned position evaluator's
+//   POST /eval    -- THE WIN CHANCE (D361): the learned position evaluator's
 //                 P(the viewing seat wins) for one state ForgeCoach shows, from a model
 //                 on this machine (--eval-model; default var/ml/models/night-1-eval.json
 //                 when it exists).  tools/eval-runner.mjs's header is that contract;
@@ -482,7 +482,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
       const rv = review ? review.health() : { review: 0 };   // D353
-      const ev = evaluator ? evaluator.health() : { eval: 0 };   // D360
+      const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv, ...ev }, cors);
@@ -523,7 +523,7 @@ export function startHelper(opts) {
       return;
     }
     if (path === '/eval') {
-      // D360: the win chance (tools/eval-runner.mjs).  Behind the same gate as /coach.
+      // D361: the win chance (tools/eval-runner.mjs).  Behind the same gate as /coach.
       if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
       if (!evaluator) { send(res, 503, { ok: false, type: 'error', message: 'the win chance is off: this helper was started with --no-eval' }, cors); say(503); return; }
       const raw = await readBody(req, res, MAX_EVAL_BODY, '2 MB', cors, say);

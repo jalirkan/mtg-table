@@ -267,7 +267,7 @@ python3 tools/ml/train_eval.py var/ml/data/night-1 --split-by pair --grid --time
     --dry-load --report var/ml/reports/night-1-dry.json
 ```
 
-## The win chance in ForgeCoach (D360)
+## The win chance in ForgeCoach (D361)
 
 The coach helper serves the evaluator to ForgeCoach: `POST /eval` on port 8643
 (`tools/eval-runner.mjs`'s header is the contract) answers P(the viewing seat
