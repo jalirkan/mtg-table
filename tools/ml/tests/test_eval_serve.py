@@ -182,6 +182,28 @@ class DatasetParityTest(unittest.TestCase):
                     n += 1
         self.assertEqual(n, sum(g["rows"] for g in self.games))
 
+    def test_a_v2_model_is_served(self):
+        """D364: a model trained with v2's options (float32, the auxiliary head, subsampling, game weights)
+        exports the same format and schema, so it is served as v1 is; the aux head is not in the file."""
+        import train_eval as T
+        sch, names, splits = T.load_data(self.data, turns_to_end=True, compact=True)
+        hp = dict(T.DEFAULTS, hidden="8", dim=4, epochs=4, patience=4)
+        net, info = T.fit(splits["train"], splits["val"], names, hp, len(sch["vocab"]["cards"]), "numpy", 0,
+                          fast=True, weight_by="game", subsample=0.5, aux=0.1)
+        m = net.to_json(sch, names, {"excluded": info["excluded"], "training": {"note": "v2 test"}})
+        self.assertFalse(any("aux" in k.lower() for k in m))
+        path = os.path.join(self.tmp, "model-v2.json")
+        self.N.save_model(path, m)
+        srv = S.Served(path)
+        self.assertEqual(srv.schema.schema_id, self.srv.schema.schema_id)
+        g = next(E.read_games(os.path.join(FIXTURES, "g1.jsonl")))
+        for r in E.encode_game(g, srv.schema)[::9]:
+            req = S.request_for(g, r.seq)
+            seat, state, history = S.check_request(req)
+            vec = np.asarray(S.online_features(state, seat, history, srv.schema), np.float64)[None, :]
+            want = float(net.predict(self.N.features_to_rows(vec, srv.schema.card_offset))[0])
+            self.assertAlmostEqual(srv.evaluate(req)["p"], want, delta=1e-12)
+
     def test_the_served_process_answers_the_same(self):
         g = next(E.read_games(os.path.join(FIXTURES, "g1.jsonl")))
         rows = E.encode_game(g, self.srv.schema)[::7]

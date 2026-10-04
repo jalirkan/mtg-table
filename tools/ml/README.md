@@ -168,7 +168,8 @@ column constant in training (`excluded` in the export lists both).
 differences; it measured faster than CPU torch here), `--backend torch` for a
 GPU. Early stopping on the validation split's log-loss (`--patience`).
 `--grid --time-budget S` searches hidden size, embedding size, both L2s,
-dropout and learning rate in a fixed random order and exports the best.
+dropout and learning rate in a fixed random order and exports the best;
+`--search sha` searches the same space by successive halving (D364, below).
 `--cv K` scores every row out of fold, folds by deck pair (leave-one-pair-out
 when there are K pairs or fewer), early stopping on games held out inside each
 fold's training pairs. Every report has log-loss, Brier, accuracy, expected
@@ -266,6 +267,88 @@ pilot runs the fit's own command line with `--dry-load` and its own `--report`:
 python3 tools/ml/train_eval.py var/ml/data/night-1 --split-by pair --grid --time-budget 10800 --batch 4096 \
     --dry-load --report var/ml/reports/night-1-dry.json
 ```
+
+## Evaluator v2: more nights, a learning curve, a better search (D364)
+
+Night 1's model passed gate 1 (D354), but its grid tried 7 of 1,440 configurations in
+3 hours. v2 trains on nights 1-3 with a search that gives many more configurations a
+fair share of the hours, and is compared with v1 on the same held-out pairs. Every flag
+below is opt-in: without them `train_eval.py` and `dataset.py` do what they did, bit for
+bit (`tests/test_eval_v2.py` holds the new code to the old training and grid loops).
+
+```bash
+# 1. nights 1-3 of the queue, every cube, over night 1's own vocabulary (the same schema id,
+#    so v1 scores it); exploring games kept (D358); games.jsonl says each game's night
+python3 tools/ml/dataset.py --queue-root var/cubelab/queue --nights 1,2,3 --vocab-from var/ml/data/night-1 \
+    --out var/ml/data/nights-1-3 --shard-rows 5000 --jobs 7
+# 2. the split holds: no pair, draft or deck in two splits; night 1's games in the same splits as before
+python3 tools/ml/split_audit.py var/ml/data/nights-1-3 --reference var/ml/data/night-1 --report audit.json
+# 3. does more data still help?  one configuration on nested shares of the training pairs
+python3 tools/ml/train_eval.py var/ml/data/nights-1-3 --curve 0.25,0.5,1.0 --hidden 128 --dim 4 --batch 4096 \
+    --fast --jobs 3 --report var/ml/reports/curve.json
+# 4. v2: successive halving over GRID's space, 4 configurations at once
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python3 tools/ml/train_eval.py var/ml/data/nights-1-3 --split-by pair \
+    --search sha --time-budget 14400 --jobs 4 --fast --hidden 128 --dim 4 --batch 4096 \
+    --grid-log var/ml/reports/v2-search.jsonl --out var/ml/models/nights-1-3-eval.json --report var/ml/reports/v2.json
+# 5. v2 against v1 on the same test pairs (night 1's test pairs are the `reference` subset)
+python3 tools/ml/eval_compare.py var/ml/data/nights-1-3 --model var/ml/models/nights-1-3-eval.json \
+    --against var/ml/models/night-1-eval.json --reference var/ml/data/night-1 --report var/ml/reports/compare.json
+```
+
+- **The split across nights.** `--split-by pair` sends a deck pair to train, val or test by
+  a hash of the pair alone (from 20 pairs on), so adding nights never moves a pair: night
+  1's test pairs are test pairs of nights 1-3, v1 never trained on a test pair of the new
+  dataset, and v2 never trains on gate 1's test pairs. Nothing has to be pinned.
+  `split_audit.py` proves it on the data (pairs, draft folders and deck names each in one
+  split; with `--reference`, every night-1 game present and in its old split). A pair's
+  name is `cubelab <seed> A|B`; two pool keys may reuse a seed, which only joins two drafts
+  into one split group.
+- **`--train-fraction f`** trains on the training pairs `sha256("frac-v1|" + pair)` keeps
+  at share f: deterministic, nested (0.25's pairs are inside 0.5's), val and test
+  untouched; the dropped games are never loaded. **`--curve 0.25,0.5,1.0`** trains one
+  configuration at each share (in parallel with `--jobs`) and prints the test log-loss with
+  a 95% interval over test pairs, and each share's paired difference to the largest.
+- **`--search sha`** (`eval_search.py`): the base configuration (the command line's), then
+  GRID's space in its seeded order; rung 0 trains each for `--min-epochs` (2) epochs, each
+  rung keeps the best third (`--eta 3`) by validation log-loss and resumes them to three
+  times the epochs, and the last `--finalists` (3) train to early stopping exactly as a
+  plain fit. `--configs N` fixes N; otherwise a 20-batch probe times an epoch and N is the
+  largest whose plan fits 80% of `--time-budget` (printed: repeat with `--configs N`).
+  Results do not depend on `--jobs`. `--grid` is unchanged.
+- **`--fast`** trains in float32 (`evalnet.Fast32`): about twice as fast per batch; the
+  model is still exported and scored in float64, so Java parity is untouched.
+  `bench_epoch.py` times an epoch on synthetic rows of night 1's shape.
+- **What a held-out number is worth.** Rows of one game share its one outcome, so every
+  train report now ends with a `heldOut` block (report-only: the models and every other
+  number are unchanged): rows, games and deck pairs per split; on test, the eval model's
+  residuals' correlation within a game and within a pair, the design effect `1 + (m - 1) rho`
+  and the effective sample size; every model's test log-loss with a 95% interval over deck
+  pairs, row-weighted and game-weighted; and D358's exploring test games apart from the
+  plain ones. `eval_compare.py` compares on plain games only (exploring: its own subset).
+- **`--weight-by game`** gives every game the same total weight in the loss and in the
+  validation log-loss early stopping reads. `--curve-weights none,game` trains each share
+  both ways and reports the paired difference on the same test pairs, by row and by game.
+- **`--subsample s`**: each epoch trains on ceil(s x rows) of every game, a systematic draw
+  from a fresh random start (every stretch of the game is seen), so an epoch costs s of a
+  pass (`--patience` counts these short epochs).
+- **`--aux-turns w`**: a second, linear head on the last hidden layer predicts `turns_to_end`
+  (standardised squared error times w in the loss); reported as held-out MAE beside the
+  training mean's. Never exported: the model file is the win head, as before.
+- **`--soft-labels F.npz [--soft-weight w]`**: rollout-averaged labels for some training rows
+  (`game`, `rows_to_end`, `p` in [0, 1], optional `k`): the target there is
+  (1 - w) outcome + w p; validation and test always score against the outcome. The
+  producer (K playouts from a logged position, Forge Default both seats) is not built:
+  D364 says what it needs.
+- **`--compact`** holds the rows in about 0.35 KB instead of 0.62 (board columns that fit in
+  int8 as int8, int8 counts, int32 row pointers; `gate_fit.py score --compact` too). The
+  numbers are identical, bit for bit.
+- **`--jobs J`** forks J workers after loading: the rows are shared, each worker adds a few
+  hundred MB. `--dry-load --jobs J` measures the workers too (`peakWithWorkersGB`). The
+  matrices are small, so one BLAS thread per worker is right (four threads in one process measured slower than one): export
+  `OMP_NUM_THREADS` / `OPENBLAS_NUM_THREADS` in the job's block.
+- **On the play.** There is no explicit column, but `2 x round - turn` is 1 on the first
+  player's turns, so on the play is that parity XOR `my_turn`; an explicit column would change
+  the schema id (v1 could not score the new rows; Java's encoder and fixtures move with it).
 
 ## The win chance in ForgeCoach (D361)
 
