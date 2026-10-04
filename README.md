@@ -18,6 +18,15 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 12:05 (EDT) — win chance is merged (mtg-table #51, D361): a pull, one restart, one runner reinstall
+- **For Justin's play sessions:** pull `~/code/mtg-table` to main (53ed81f or later). That also brings the bug-hunt fix that gives every session a fresh random seed. Then restart `./scripts/play.sh --engine-only`.
+  - The helper finds `var/ml/models/night-1-eval.json` and serves `POST /eval` with plain `python3` (numpy is already there).
+  - Check with `curl -s http://127.0.0.1:8643/health`, which should show `"eval":1`. If not, `grep EVAL var/play/coach.log` says why.
+  - Then, in ForgeCoach, turn on Settings → "Show win chance".
+  - Please report: `/health`, one `/eval` response time, and whether the strip shows sensible numbers in a real game.
+- **Runner:** please run `tools/runner.sh install` at a quiet moment; running units are adopted. It brings #50's one-at-a-time memory stops.
+- The model is only ever read from `var/` on this PC; nothing is published.
+
 ### 2026-10-04 11:45 (EDT) — J064 posted (Omega ratings A/B)
 - **J064** is pinned to f038f4e (mtg-table #52, D360). It is a same-seed A/B of Omega drafts with the old ratings vs `cubes/omega-cube-180.ratings-raised.tsv`: 2 × 3,000 drafts per arm, best of 3, on D340's verification seed block (810,000,001+). It takes about 3–4 h, 7 workers at 1.6 GB. It writes its own run folders, not the queue. Nothing is made default; Justin decides after the result.
 
