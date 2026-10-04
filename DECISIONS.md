@@ -17367,6 +17367,138 @@ Synthetic lines compress better than real ones, and J065 and J066 measure the re
 - **Copying the cube parser into Python.** It would be a second parser to keep in step, so
   `cube_cards` runs `cube.ts` under Node, as `matchup_data.cube_lists` does.
 
+## D365 — Lab runner leftovers (amends D337 and D340): a retry starts at the block that was stopped, a block's own `clean:` says what it made, `.restart-*` copies are never deleted, an OOM kill inside a step is a memory stop, the reserved-deck filter fails closed on a lab game with unknown decks, a recorded queue night is not re-run unrecorded by accident, and a narrow pilot (`pilot_cores:`) lets another job start beside it while the main step waits for its width
+
+*Branch `c/runner-leftovers`; D365, the first number free at push time that the open lanes do
+not hold.*
+
+**2026-10-04** (the bug hunt of 2026-10-04: five confirmed or suspected issues; each was
+reproduced by a test before it was fixed)
+
+**1. A retry starts at the block that was stopped.** D337's retry after a memory stop or
+`tools/runner.sh stop` rebuilt the steps as `prepare, run1 … runN`, and a runner restart of a
+non-resumable job went back to step 0: whichever block had been stopped, the job ran again from
+`run1`, after moving every header `clean:` path aside. Last night a retry nearly redid a 4.5 h
+encode because the encode and the training were one block. Now every `## Commands` block that
+exits 0 is recorded in `run.json` (`blocksDone`: exit code, time, a hash of the block's text) and
+in STATUS (`blocks_done:`); a retry, and a restart of a non-resumable job, run `prepare` and then
+the first block not done (the passed pilot and the finished blocks skipped). A block the job file
+has changed since counts as not done, and so does every block after it. A `run.json` from the
+installed runner, which has no `blocksDone`, is read from its steps: every commands step before
+the one it stopped at finished with exit 0, because that is the only way a step advances.
+**`clean:` belongs to blocks.** A `clean:` line before a fenced block in `## Commands` (like
+`cores:` and `mem_gb:`) names what that block makes. A non-resumable retry that starts at block k
+moves aside the block `clean:` paths of blocks k … N only; the header's `clean:` is moved aside
+only when the job starts again from `run1`. **Compatibility:** a job file whose only `clean:` is
+the header's (every job file before this one) still starts again from `run1` with all of it moved
+aside, as before, because nothing says which block made which path and moving it all aside would
+lose the finished blocks' work (J063's header `clean:` lists its encode's dataset and its fit's
+model together). Resumable jobs are never cleaned; they now skip finished blocks too, and their
+stopped block runs again with its tools skipping what is done. Rejected: skipping the header's
+`clean:` whenever the retry starts past `run1` (an old file's later block would then run over its
+own half-written output with nothing moved aside); a per-path owner inferred from the block's
+text (guesswork); the old rule (hours of work redone).
+
+**2. `.restart-*` copies are never deleted.** D337's review added `pruneAside`, which kept the two
+newest copies beside each cleaned path and deleted the rest, while the job README said "moved aside
+first, never deleted". The README is the promise the PC session plans by, so the code now matches
+it: nothing is deleted, and STATUS's `set_aside:` line counts every `.restart-*` copy beside any of
+the job's `clean:` paths and their disk use, for a person to remove. This supersedes D337's review
+item "Old `.restart-*` copies are pruned to two". Rejected: keeping the oldest and the newest under
+a documented cap (still a deletion the runner decides alone, of data a person may not have read).
+
+**3. An OOM kill inside a step is a memory stop.** When the kernel kills one process of a step's
+unit (a JVM over the unit's `MemoryMax`), the script usually exits 137 and the wrapper writes that
+exit code, so the runner read an ordinary failure and failed the job instead of retrying it with a
+worker fewer. Now the wrapper, still inside the unit's cgroup, copies the `oom_kill` line of the
+unit's `memory.events` to `<step>.sh.oom` before it writes the exit code. An exit code of 137 or 9
+with evidence of an OOM kill (`oom_kill` above 0 there; or, for a wrapper from before this change,
+systemd's `Result=oom-kill` or a journal line of the unit saying a process was killed by the OOM
+killer) is a memory stop. A 137 without evidence still fails (someone's `kill -9`); any other exit
+code fails as before. systemd 255 exposes no `MemoryEvents` property on `systemctl show` (checked
+against its shared library's strings here), which is why the wrapper reads the cgroup file itself:
+with `--collect`, the unit and its cgroup are gone by the time the runner looks. Shown with the
+fake systemd; the real `memory.events` read and the journal's wording need the PC.
+
+**4. The reserved-deck filter fails closed on a lab game (amends D340).** `reserved.game_decks`
+traced a lab recording to both decks through its run's `drafts.jsonl`, and when that file had no
+line for the recording's seed (or was not there) it fell back to the viewer's own deck: a game
+whose opponent played a deck-set deck passed. Now a lab game, known by its folder layout
+(`games/<seed>/g<n>-seat<k>.jsonl[.gz]`, `frames/draft-<seed>-g<n>.jsonl`) or by the lab's deck
+names in `hello_ok` (`cubelab <seed> A`), whose decks cannot both be known is marked, and
+`reserved_hit` returns `UNKNOWN_DECK` for it, so every builder that drops a reserved-deck game drops
+it and counts it under that name (`reservedHits` in `stats.json`, `skippedGames` "reserved deck
+(D340)"). The callers are unchanged. A log that is not a lab game (a person's game, the
+`fixtures/games` recordings) never carries the other chair's deck by the hidden-information rule
+and is still checked by the viewer's deck; failing closed there would drop every human game, the
+owner's held-out set (D347). On the committed fixtures, with the filter on, the two games of
+`fixtures/cubelab/recorded` (seed 7, both chairs; that fixture has no `drafts.jsonl`) are now
+dropped as `UNKNOWN_DECK`; the other 27 games under `fixtures/games`, `fixtures/cubelab` and
+`fixtures/synthetic` are judged as before (none of them was a reserved-deck hit before or after).
+
+**5. A recorded queue night is not finished unrecorded by accident.** `queue run` re-reading a
+night's plan without `--record-every` played the remaining chunks unrecorded and said nothing. The
+plan now keeps the night's `recordEvery` (and each run's, in `runs`), and a re-run of a night that
+recorded, by the plan or (a plan written before this) by recordings of the night's own seeds under
+`<key>/games/<seed>/`, is refused without the flag. `--record-every 0` plays the rest unrecorded on
+purpose, with a warning; a different N is allowed with a warning. The check runs before the engine
+is touched.
+
+**6. Per-step widths: `pilot_cores:` and `prepare_cores:`** (a later addition the same day, from
+the PC). J050's pilot ran 2 JVMs for 45+ minutes while the job reserved its 7 cores, so the runner
+admitted nothing else and the PC sat at load 2 of 16. A job may now declare `pilot_cores: N` (the
+width of its `## Pilot` steps; a pilot block's own `cores:` line still wins) and `prepare_cores:
+N` (of `prepare`). While the job is in such a step, its holding, and so what co-scheduling counts,
+its threads cap and the pilot's `{workers}`, is that width, so a narrow job can be admitted beside
+it. Absent, both are the job's width: today's behaviour. When the job reaches a step wider than
+the cores the other heavy jobs leave, the step waits for them; nothing is stopped or killed. The
+starvation rule stays the same rule: a waiting job holds the waiting step's full width, so
+`schedule` admits nothing new beside it (as it admits nothing after the first job that does not
+fit), and the job starts as soon as its width is free. Two jobs waiting to widen could each count
+the other's claim and wait forever, so a job later in id order that is itself waiting does not
+count against an earlier one: the earlier goes first, as in the queue. And only a step wider than
+the job's previous one (for the first, than the width it was admitted at) waits: the job already
+held those cores, so the narrow job admitted beside a pilot never waits for the pilot's job, whose
+claim would otherwise stop it (the first version of this, in a test, did exactly that). A first `## Commands` block
+that waits is sized again when it starts (it was sized at the pilot's end against the memory the
+others held then). The wait applies to any step wider than what is free, not only after a narrow
+pilot: before this a wider later block started at once and could crowd a job beside it (the guide
+said "put a job's wide blocks first"); now it waits. A job alone never waits. Rejected: pre-empting
+or stopping the narrow job (the brief: no killing; its work would be lost); admitting a job at its
+pilot width (a newcomer would then often wait for its own main step: more waiting, not less);
+leaving a waiting job at its narrow holding (newer narrow jobs could keep it waiting indefinitely).
+STATUS says `waits: needs N core(s) for runK; F of B free …` while it waits.
+
+**For the jobs queued on the PC.** They run on the installed runner; nothing changes until
+`tools/runner.sh install` picks this up. After that, a retry of a job with more than one
+`## Commands` block skips its finished blocks: J059 and J061 (resumable, two blocks) no longer
+run a finished `run1` again. J063 (not resumable, three blocks, a header `clean:` and no block
+`clean:`) still starts again from `run1` on a retry, as now, until its file gives each block its
+own `clean:` line; J062 and J065 have one block each, so nothing changes for them. A running
+job's steps already started keep the wrapper they started with (no `.oom` file); a 137 from one
+of those is judged by systemd's word and the journal. No queued job declares `pilot_cores:` or
+`prepare_cores:` (the installed runner ignores an unknown header key, so a job file may add them
+before the reinstall); without them the one change is that a later block wider than what is free
+waits for the cores instead of crowding a job beside it.
+
+**Checked.** `web/test/lab-runner.test.ts`: a memory-stop retry of a two-block non-resumable job
+starts at `run2` with only `run2`'s `clean:` moved aside and the encode run once; a `stop` retry
+of a resumable job from a `run.json` without `blocksDone`; a changed block running again; an old
+job file retrying from `run1` with everything moved aside; a restart starting at the block that
+died; four `.restart-*` copies kept and their bytes in STATUS; exit 137 and 9 with evidence (the
+`.oom` file, the journal) a memory stop, 137 without it and 1 with it failures, and the wrapper
+writing the exit code whatever it reads; the per-block `clean:` parse and its errors.
+The per-step widths: `pilot_cores:` / `prepare_cores:` parsed and carried by the steps; a 2-wide
+pilot letting a 3-wide job start beside it, the 7-wide run1 waiting (no unit stopped), a 5-wide job
+that would fit the cores really free not admitted meanwhile, and run1 starting 7 wide once they
+are free; two jobs waiting to widen, the earlier starting first.
+`web/test/cubelab-bridge.test.ts`: the recording check, and `queue run` refusing before the
+engine. `tools/ml/tests/test_review2.py`: the fail-closed cases and the unchanged ones. Two
+older tests built datasets with the filter on over the `fixtures/cubelab/recorded` copy, which
+has no `drafts.jsonl`, and counted its two games as kept: `test_outside_exam`'s CLI test now
+expects them dropped as `UNKNOWN_DECK`, and `test_rundir`'s run-folder test checks that, then
+reads its defaults with `--keep-reserved`.
+
 ## D368 — The win chance says how sure it is and why: `/eval` serves an ensemble of one schema's models (their mean, `sd`, `n`), and `explain: true` adds exact integrated-gradient attributions in logit space, grouped into buckets a player reads; both are advertised on `/health` (`evalEnsemble`, `evalExplain`), and one model is served exactly as before
 
 *Branch `c/winchance-uncertainty`; D368 (D362–D367 are held by other open branches).

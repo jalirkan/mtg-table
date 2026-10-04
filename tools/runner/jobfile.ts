@@ -17,11 +17,14 @@
 //   max_workers: 7                   NEW: the most workers the job may use ({workers} never exceeds it)
 //   cores: 1                         NEW: the job's WIDTH, the cores it keeps busy (default: its workers);
 //                                    a narrow heavy job lets the runner start the next job beside it
+//   pilot_cores: 2                   NEW: the width while the job is in ## Pilot (default: the job's width);
+//   prepare_cores: 1                 NEW: and while it is in prepare. A narrow step lets another job start
+//                                    beside it; the main step then waits for its full width (D365)
 //   mem_per_worker_gb: 1.5           NEW: a floor for the pilot's measured peak per worker
 //   progress: aibench var/ai-bench/night-* of 2000      NEW: how done / total is counted
 //   metrics: [name =] <extractor> <args> | sh: <command>  NEW: the job's metrics (aborts, final checks)
 //   headline: games, control.a_win_rate                   NEW: the numbers the progress page shows when done
-//   clean: var/ai-bench/night-*      NEW: moved aside (never deleted) before a non-resumable job restarts
+//   clean: var/ai-bench/night-*      NEW: moved aside (never deleted) before a non-resumable job restarts from run1
 //   timeout: 8h                      NEW: a step running longer is stopped and the job fails
 //   control: yes | no                NEW: the job's tools read the pool control file (default: detected)
 //   public_title: Search AI bench    NEW: the title the PUBLIC status page may show (else the id only)
@@ -31,8 +34,11 @@
 //   ## Pilot      fenced bash blocks run in order; `metrics:` and `check:` lines; `progress:`
 //   ## Commands   fenced bash blocks; `metrics:`, `check:` (final checks), `progress:`;
 //                 a `cores: N` line sets the width of the NEXT block only (a single-process
-//                 step of a wide job: `cores: 1`; {workers} in that block is at most N), and a
-//                 `mem_gb: G` line the memory it reserves (default: width × per-worker peak)
+//                 step of a wide job: `cores: 1`; {workers} in that block is at most N), a
+//                 `mem_gb: G` line the memory it reserves (default: width × per-worker peak), and
+//                 a `clean: <paths under var/>` line what that block makes: moved aside before
+//                 a non-resumable retry runs the block again (D365; the header's clean: then
+//                 applies only to a retry from run1)
 //   ## Abort if   `abort:` lines (checked every minute while the job runs) and prose for people
 //   ## Report     prose for the PC session; `collect: <glob>` lines copy files into results/<id>/
 //
@@ -67,6 +73,8 @@ export interface Section {
   blockCores: Array<number | null>;
   /** Each block's own `mem_gb:` (its whole reservation), or null: width × per-worker peak. */
   blockMemGb: Array<number | null>;
+  /** Each block's own `clean:` paths (`## Commands` only): moved aside before a retry runs that block again (D365). */
+  blockClean: string[][];
   checks: string[];
   metrics: MetricSpec[];
   progress: ProgressSpec | null;
@@ -85,6 +93,10 @@ export interface JobFile {
   maxWorkers: number | null;
   /** `cores:`: the job's width (cores it keeps busy), or null: its workers. */
   cores: number | null;
+  /** `pilot_cores:`: the width while the job is in its pilot (a pilot block's own `cores:` wins), or null: the job's width (D365). */
+  pilotCores: number | null;
+  /** `prepare_cores:`: the width while the job is in prepare, or null: the job's width (D365). */
+  prepareCores: number | null;
   memPerWorkerGb: number | null;
   progress: ProgressSpec | null;
   metrics: MetricSpec[];
@@ -157,7 +169,7 @@ export function parseProgress(line: string): ProgressSpec {
 }
 
 function emptySection(): Section {
-  return { blocks: [], blockCores: [], blockMemGb: [], checks: [], metrics: [], progress: null, text: '' };
+  return { blocks: [], blockCores: [], blockMemGb: [], blockClean: [], checks: [], metrics: [], progress: null, text: '' };
 }
 
 const yes = (s: string | undefined): boolean => /^(yes|true|1)$/i.test((s ?? '').trim());
@@ -181,6 +193,16 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   /** A section's `cores:` line waiting for its block. */
   let nextCores: number | null = null;
   let nextMem: number | null = null;
+  let nextClean: string[] | null = null;
+  const cleanOf = (v: string, where: string): string[] => {
+    const out = v.split(/[,\s]+/).filter(Boolean);
+    for (const c of out) if (!/^var\/[^\s]+$/.test(c) || c.includes('..')) errors.push(`${where}clean: "${c}" is not a path under var/`);
+    return out;
+  };
+  const closeBlock = (sec: Section): void => {
+    sec.blocks.push(fence.join('\n')); sec.blockCores.push(nextCores); sec.blockMemGb.push(nextMem); sec.blockClean.push(nextClean ?? []);
+    nextCores = null; nextMem = null; nextClean = null;
+  };
   const coresOf = (v: string, where: string): number | null => {
     const n = Number(v.trim());
     if (!Number.isInteger(n) || n <= 0) { errors.push(`${where}cores: "${v}" is not a positive whole number`); return null; }
@@ -204,15 +226,16 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   for (const raw of text.split('\n')) {
     const line = raw.replace(/\r$/, '');
     if (cur && /^\s*```/.test(line)) {
-      if (inFence) { cur.blocks.push(fence.join('\n')); cur.blockCores.push(nextCores); cur.blockMemGb.push(nextMem); nextCores = null; nextMem = null; fence = []; inFence = false; } else { inFence = true; fence = []; }
+      if (inFence) { closeBlock(cur); fence = []; inFence = false; } else { inFence = true; fence = []; }
       continue;
     }
     if (inFence) { fence.push(line); continue; }
     const h = /^##\s+(.+?)\s*$/.exec(line);
     if (h) {
-      if (nextCores !== null || nextMem !== null) errors.push(`## ${curName}: a cores: or mem_gb: line with no block after it`);
+      if (nextCores !== null || nextMem !== null || nextClean !== null) errors.push(`## ${curName}: a cores:, mem_gb: or clean: line with no block after it`);
       nextCores = null;
       nextMem = null;
+      nextClean = null;
       curName = (h[1] as string).toLowerCase();
       cur = sections.get(curName) ?? emptySection();
       sections.set(curName, cur);
@@ -237,14 +260,22 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
       else nextMem = g;
       continue;
     }
+    if (kv && kv[1] === 'clean' && curName === 'commands') {
+      nextClean = [...(nextClean ?? []), ...cleanOf(kv[2] as string, '## commands: ')];
+      continue;
+    }
+    if (kv && kv[1] === 'clean' && curName === 'pilot') {
+      errors.push('## pilot: a clean: line before a block belongs in ## Commands (a retry never runs a passed pilot again)');
+      continue;
+    }
     if (kv && ['check', 'abort', 'metrics', 'progress', 'collect'].includes(kv[1] as string)) {
       machine(kv[1] as string, kv[2] as string, curName.startsWith('abort') || curName.startsWith('report') ? null : cur);
       continue;
     }
     cur.text += `${line}\n`;
   }
-  if (inFence && cur) { cur.blocks.push(fence.join('\n')); cur.blockCores.push(nextCores); cur.blockMemGb.push(nextMem); nextCores = null; nextMem = null; errors.push('a code block is never closed'); }
-  if (nextCores !== null || nextMem !== null) errors.push(`## ${curName}: a cores: or mem_gb: line with no block after it`);
+  if (inFence && cur) { closeBlock(cur); errors.push('a code block is never closed'); }
+  if (nextCores !== null || nextMem !== null || nextClean !== null) errors.push(`## ${curName}: a cores:, mem_gb: or clean: line with no block after it`);
 
   const id = header.id ?? (/\b(J\d{3,})/.exec(file)?.[1] ?? '');
   if (!/^J\d{3,}$/.test(id)) errors.push(`id: "${id}" is not J followed by three digits`);
@@ -258,11 +289,12 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   };
   const maxWorkers = intOf('max_workers');
   const cores = header.cores !== undefined ? coresOf(header.cores, '') : null;
+  const pilotCores = header.pilot_cores !== undefined ? coresOf(header.pilot_cores, 'pilot_') : null;
+  const prepareCores = header.prepare_cores !== undefined ? coresOf(header.prepare_cores, 'prepare_') : null;
   const timeoutSec = header.timeout !== undefined ? parseDuration(header.timeout) : null;
   if (header.timeout !== undefined && timeoutSec === null) errors.push(`timeout: "${header.timeout}" is not a duration (90m, 8h)`);
   if (header.resumable !== undefined && !/^(yes|no|true|false)$/i.test(header.resumable.trim())) errors.push(`resumable: "${header.resumable}" is not yes or no`);
-  const clean = (header.clean ?? '').split(/[,\s]+/).filter(Boolean);
-  for (const c of clean) if (!/^var\/[^\s]+$/.test(c) || c.includes('..')) errors.push(`clean: "${c}" is not a path under var/`);
+  const clean = header.clean !== undefined ? cleanOf(header.clean, '') : [];
 
   const PUBLIC_TEXT = /^[A-Za-z0-9 ,:;()+%~#&-]{1,80}$/;     // statusjson.ts's; no . / @ \ quotes or brackets
   for (const k of ['public_title', 'public_est']) {
@@ -285,6 +317,8 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     resumable: yes(header.resumable),
     maxWorkers: maxWorkers === null ? null : Math.floor(maxWorkers),
     cores,
+    pilotCores,
+    prepareCores,
     memPerWorkerGb: intOf('mem_per_worker_gb'),
     progress: commands?.progress ?? headerProgress,
     metrics: headerMetrics,
