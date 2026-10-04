@@ -224,6 +224,7 @@ draft's own cube.
 | `versions` | `run.json`'s `versions` (D341) | `source`, `key`, `id`, `git_sha`, `code_tree`, `dirty`, `diff_sha`, `forge_jar_sha256`, `ratings_sha256`, `cube_sha`, `weights_sha`, `node`, `since`, `first_seed`, `allowed_change` (JSON) |
 | `nights` | `night-N.json` | `night`, `file`, `drafts` (planned), `games`, `format`, `play_explore`, `chunks`, `keys`, `runs`, `first_run_at`, `last_run_at` |
 | `quarantine` | the redaction pass's lists, `<root>-quarantine-n<N>/failed.txt` (J061) | `night`, `list_file`, `path` (the recording), and from the path `key`, `seed`, `game`, `seat`, `draft_id` |
+| `cold_archives` | the cold tier's night manifests, `<root>/archive/cold-night-<N>.json` (`archive.py cold`, D378) | one row per tar.zst: `night`, `unit` (the archive's name), `kind` (`recordings` or `quarantine`), `key`, `file` (where it is, on the archive drive), `mirror_file`, `members`, `raw_bytes`, `hot_bytes`, `archive_bytes`, `sha256`, `vers`, `archived_at`, `restored_at`, `manifest` |
 | `sprt` | `sprt.jsonl` (D319, D321, D354's gate 3) | `file`, `ts`, `id`, `host`, `a`, `b`, `ah`, `bh`, `elo0`, `elo1`, `alpha`, `beta`, `result`, `llr`, `lower`, `upper`, `games`, `pairs`, `score`, `purpose` |
 | `experiments` | `docs/evidence/experiments.jsonl` | `file`, `id`, `kind` (`start` / `end`), `ts`, `host`, `cmd`, `purpose`, `hypothesis`, `status`, `games`, `git_sha`, `json` (the whole line) |
 | `gate_reports` | `var/ml/**/*.json` with a `gate` of `fit`, `regret` or `sprt` (D354) | `path`, `gate`, `pass`, `name`, `model`, `model_sha12`, `mtime`, `reasons` (JSON), `json` (the report without its per-row list) |
@@ -245,6 +246,14 @@ without a zone.
 | `decisive` | `winner` is `A` or `B` |
 | `won` | |
 | `turns`, `timeout`, `errored` | |
+
+### recording_location, a view
+
+`recording_location` has one row per recorded queue game. It says where the game's
+recordings are now: `draft_id`, `night`, `key`, `seed`, `game`, `rec_dir` (where the
+recorder wrote them), `tier` (`hot`, or `cold` once `archive.py cold` has moved the night),
+`archive_file` and `mirror_file` (the tar.zst holding them), and `restored_at`.
+`archive.py restore-night --night N` brings a cold night back.
 
 ## The public summary: warehouse.json
 
