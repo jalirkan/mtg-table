@@ -1,0 +1,450 @@
+==== J050 run1 started 2026-10-04T13:04:24-04:00 in unit lab-J050-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+{"eligible": 986, "picked": {"attack": 130, "spell": 130, "block": 130}, "testPairs": 333, "out": "var/ml/gates/regret/candidates.jsonl"}
+gate_regret_grade rank: 390 request(s), 0 already answered, 390 to go on 7 JVM(s); serve --playouts 3 --initial 3 --no-race --horizon 0 --budget-ms 0 --timeout-ms 20000 --cap 12 --seed 1 --leaf-scale 500 {"leaf": "hand"}
+[1/390] abf4cbc603236167 spell unsupported  playouts 227 ms
+[2/390] 795924baee2c1f19 spell ok 6 playouts 5286 ms
+[3/390] a05341ec6e88b897 spell ok 9 playouts 6024 ms
+[4/390] 4984379eac445eca spell ok 6 playouts 1311 ms
+[5/390] 772c8e4aa9b41a9e spell ok 6 playouts 2173 ms
+[6/390] 7158cd8d51d4d395 spell ok 6 playouts 1017 ms
+[7/390] bb8c74f4dc4bd536 spell ok 9 playouts 8618 ms
+[8/390] f88725816884ebcb block ok 36 playouts 10079 ms
+[9/390] d6e27bddf87a9b39 spell ok 6 playouts 2534 ms
+[10/390] ef968829d74a99b2 spell ok 6 playouts 616 ms
+[11/390] 82f30437d90ee521 spell ok 9 playouts 1539 ms
+[12/390] 522e461db1e6bf23 attack ok 30 playouts 12886 ms
+[13/390] e8d64694de93cd9f spell unsupported  playouts 99 ms
+[14/390] e0d9dd86b1fad591 attack ok 30 playouts 13784 ms
+[15/390] 02e9a7e3c335a53a attack ok 6 playouts 2089 ms
+[16/390] 05381514d7c86c77 spell ok 9 playouts 13599 ms
+[17/390] 4206564712a1e7ab spell ok 6 playouts 1096 ms
+[18/390] 8c0ed1b708a324dd spell ok 15 playouts 3563 ms
+[19/390] de709fad47daf7ec spell ok 18 playouts 6828 ms
+[20/390] fb59de870f634fd9 spell ok 9 playouts 4178 ms
+[21/390] a09422edf6444043 spell unsupported  playouts 87 ms
+[22/390] d3fa3ade5b1bce52 block ok 39 playouts 9946 ms
+[23/390] ee6e3c81c09db41f attack ok 6 playouts 1134 ms
+[24/390] 3e56071c90af4458 spell ok 6 playouts 4460 ms
+[25/390] 851be765bb6b3538 spell ok 9 playouts 10648 ms
+[26/390] 5924afbceada61ee spell ok 6 playouts 942 ms
+[27/390] 1e319344c8abdabe spell ok 9 playouts 1885 ms
+[28/390] fed3590889b50a34 attack ok 12 playouts 3556 ms
+[29/390] bf0ee77be58045b8 spell ok 12 playouts 1754 ms
+[30/390] 8f367ff98cd915af spell ok 6 playouts 1063 ms
+[31/390] 32ba14c2294d56a8 spell ok 18 playouts 8367 ms
+[32/390] 6c497293a4eb4722 spell unsupported  playouts 192 ms
+[33/390] 3101f4f6a1537111 spell unsupported  playouts 53 ms
+[34/390] faf4e74c6e40efbd spell ok 6 playouts 1542 ms
+[35/390] ed8f16a52db62803 spell ok 6 playouts 895 ms
+[36/390] c180533883a5a31b spell ok 6 playouts 455 ms
+[37/390] 1ffba83de7e4503e spell ok 15 playouts 1538 ms
+[38/390] 63bedde1ca33fabc block ok 6 playouts 1241 ms
+[39/390] 2772f4f6918ea35d spell unsupported  playouts 43 ms
+[40/390] 245edc0e227484f1 spell ok 18 playouts 5446 ms
+[41/390] 55ede192b8d73ccd spell ok 6 playouts 756 ms
+[42/390] 9b415e7363209d0b spell ok 12 playouts 4660 ms
+[43/390] 2774cdbb636120a2 spell ok 12 playouts 4021 ms
+[44/390] 930d83f0f5040cf0 spell unsupported  playouts 65 ms
+[45/390] b379fb287772c2a4 spell unsupported  playouts 298 ms
+[46/390] 49bdf8292892bc77 spell ok 18 playouts 3435 ms
+[47/390] 65fdc246bcabc0b5 spell ok 12 playouts 5559 ms
+[48/390] 26ecb14bbfcf4dba spell trivial  playouts 278 ms
+[49/390] 3432bece098dad85 spell ok 15 playouts 3375 ms
+[50/390] 0546545bcbaac2f9 spell ok 6 playouts 1741 ms
+[51/390] 966c3c77d5cf1efe attack ok 24 playouts 6123 ms
+[52/390] ce20345173498587 spell unsupported  playouts 41 ms
+[53/390] a5f9ad1c76c12a1a spell unsupported  playouts 94 ms
+[54/390] 969cc9455a3cd787 attack ok 27 playouts 4670 ms
+[55/390] 307cd502470787d9 spell unsupported  playouts 55 ms
+[56/390] 8938586e5ab71fa5 spell unsupported  playouts 138 ms
+[57/390] 120a61a46a8ce6e8 spell ok 6 playouts 885 ms
+[58/390] 5d465c551e4fc3da spell trivial  playouts 136 ms
+[59/390] 9a21a29ee123f0da spell unsupported  playouts 136 ms
+[60/390] a8d0acf8e8f81f64 spell unsupported  playouts 246 ms
+[61/390] 6581c411ed036514 attack ok 27 playouts 4891 ms
+[62/390] 76505635649b917a block ok 72 playouts 15202 ms
+[63/390] 557e1bee288205f4 spell unsupported  playouts 155 ms
+[64/390] 39c9d1e4673b611f spell ok 6 playouts 661 ms
+[65/390] 0a0896586f973d2d block ok 18 playouts 6763 ms
+[66/390] 246ec73cf22ab4e6 attack ok 6 playouts 543 ms
+[67/390] 086e9470619efee3 spell unsupported  playouts 87 ms
+[68/390] 991a8809f55ee740 spell unsupported  playouts 173 ms
+[69/390] 65196c0d95c73f67 spell unsupported  playouts 59 ms
+[70/390] 20ea219a71e119e3 attack ok 27 playouts 5187 ms
+[71/390] 6d4f96c97c27a8ec spell ok 6 playouts 222 ms
+[72/390] c15b8d9c1166aecc spell unsupported  playouts 81 ms
+[73/390] a83ce5fd9a202c79 spell unsupported  playouts 75 ms
+[74/390] 57c15cfc7c1c9df7 spell ok 12 playouts 1849 ms
+[75/390] c3148add821c1e31 spell unsupported  playouts 112 ms
+[76/390] 45785e9ec9110528 attack ok 12 playouts 4176 ms
+[77/390] 12db95a29ec2434f spell ok 6 playouts 1503 ms
+[78/390] e7ad206beb799dc5 spell unsupported  playouts 106 ms
+[79/390] c76865864b402d10 spell ok 12 playouts 2742 ms
+[80/390] 1ed7d987e3d1ba80 spell ok 12 playouts 1457 ms
+[81/390] e07efb0ebaa3cd60 spell ok 12 playouts 1319 ms
+[82/390] f3d7be15ad345210 spell ok 9 playouts 961 ms
+[83/390] d262a8a60a0a652d spell ok 9 playouts 769 ms
+[84/390] 36da39c30f8221c0 spell ok 9 playouts 4980 ms
+[85/390] f439c89c5c7728c7 spell unsupported  playouts 190 ms
+[86/390] f7f4928d80dae4bf spell ok 9 playouts 3664 ms
+[87/390] 14a1c257ff1cc250 spell ok 9 playouts 886 ms
+[88/390] b5e6f135e5b36ec4 attack ok 12 playouts 1338 ms
+[89/390] 1483ed0c9b38216e spell ok 12 playouts 1471 ms
+[90/390] 4e316fec363d41b2 spell ok 9 playouts 2901 ms
+[91/390] 59cf31409fac447b spell ok 12 playouts 741 ms
+[92/390] e6dea68b6805e6a6 spell ok 9 playouts 892 ms
+[93/390] 511b5fb680deed17 spell ok 6 playouts 2013 ms
+[94/390] 2eeb09957338278a attack ok 24 playouts 4171 ms
+[95/390] eb5ab1cc0a86d682 spell unsupported  playouts 82 ms
+[96/390] 49b3a4cc2b588278 spell unsupported  playouts 79 ms
+[97/390] c24f73d4cb06f00a block ok 6 playouts 642 ms
+[98/390] e9eba61fb3fe3375 spell unsupported  playouts 100 ms
+[99/390] 537b250013a1ac96 attack ok 12 playouts 2625 ms
+[100/390] 13b72c4b4e20df21 spell ok 12 playouts 1632 ms
+[101/390] 865ac2aef41978cb attack ok 24 playouts 4718 ms
+[102/390] 0e3d383466e79c80 block ok 6 playouts 536 ms
+[103/390] 36276a7c5dfe0c83 attack trivial  playouts 116 ms
+[104/390] ff1aea64d8e91a9b attack ok 24 playouts 5762 ms
+[105/390] a27adab371395791 attack ok 24 playouts 5427 ms
+[106/390] b6e01c927cbf333b attack ok 6 playouts 893 ms
+[107/390] 14a56010c98b86c1 spell ok 15 playouts 1807 ms
+[108/390] a64a5a4c7bfa50fe spell unsupported  playouts 152 ms
+[109/390] fcdb2d782e1ad664 spell ok 6 playouts 731 ms
+[110/390] 80253ec379b0313d spell ok 6 playouts 1549 ms
+[111/390] 5b9a7a4722b2b1b2 spell ok 6 playouts 941 ms
+[112/390] 7c86854f47ab78e8 spell ok 9 playouts 1544 ms
+[113/390] 0110efe3a6d2db15 spell ok 6 playouts 2658 ms
+[114/390] 69555360973e9143 spell ok 12 playouts 2573 ms
+[115/390] 64bb2ae4331b4158 spell ok 15 playouts 1474 ms
+[116/390] ad5ca158cfbd05e4 spell trivial  playouts 78 ms
+[117/390] e3b76b9efe62bc41 spell ok 6 playouts 975 ms
+[118/390] 373064c32c2d204b block ok 39 playouts 19696 ms
+[119/390] cc95ea04287c3dd0 attack ok 6 playouts 1393 ms
+[120/390] d5ca13dfab8f1c52 spell ok 6 playouts 1062 ms
+[121/390] cbf80987f74f47d2 spell unsupported  playouts 162 ms
+[122/390] 5153ad94a307078e attack ok 6 playouts 490 ms
+[123/390] e93bfb8f13e6662f spell unsupported  playouts 96 ms
+[124/390] 511d669c98af6912 spell ok 12 playouts 1583 ms
+[125/390] 2a5c5cf88d35e5d2 spell unsupported  playouts 28 ms
+[126/390] bb4e66410193de9a spell ok 6 playouts 1430 ms
+[127/390] 6865ac2d176c3160 spell ok 9 playouts 3132 ms
+[128/390] 3bcfbadeeb94d9c3 spell ok 6 playouts 387 ms
+[129/390] 32ace3bed20aa762 spell ok 18 playouts 3761 ms
+[130/390] 6c04f09758df65fc spell ok 6 playouts 3332 ms
+[131/390] 1efc90a006f1d077 spell ok 9 playouts 922 ms
+[132/390] a2069e7301bbef46 attack ok 27 playouts 6796 ms
+[133/390] 2103afe7cd4e5aee spell unsupported  playouts 85 ms
+[134/390] a7521657636c71d4 spell unsupported  playouts 45 ms
+[135/390] ecdda490df176115 block ok 9 playouts 1350 ms
+[136/390] 9bfe4dbcdde5d4ec spell ok 6 playouts 1312 ms
+[137/390] 1f908bc664e945df spell ok 9 playouts 538 ms
+[138/390] 87c2d2fc658f45ff spell ok 12 playouts 1439 ms
+[139/390] c73bb2e1f5bc33c4 spell unsupported  playouts 117 ms
+[140/390] 7628ebe6d5d01a08 spell ok 12 playouts 1072 ms
+[141/390] 98c418d94ec2dccc spell ok 6 playouts 380 ms
+[142/390] 39391d30372a4936 attack ok 12 playouts 1893 ms
+[143/390] 5070dc9eada4cebc attack ok 12 playouts 1117 ms
+[144/390] f21e4a26d0dd19ea spell ok 9 playouts 438 ms
+[145/390] 2ffc597e1610904a spell ok 18 playouts 1346 ms
+[146/390] 9830eefe12d2c128 spell ok 9 playouts 659 ms
+[147/390] 9e94f176b297088e spell ok 18 playouts 1705 ms
+[148/390] d26cf58c082e7e59 attack ok 6 playouts 852 ms
+[149/390] 5a08c021c97c49c1 spell ok 6 playouts 182 ms
+[150/390] 3762b47ee8bdb749 spell ok 9 playouts 799 ms
+[151/390] 389af0de9ca9626c attack ok 30 playouts 1522 ms
+[152/390] 3ce6107005bce9d3 attack ok 12 playouts 2525 ms
+[153/390] 62c5c101c073487a attack ok 24 playouts 1971 ms
+[154/390] 83585d55a67ed5aa block ok 48 playouts 5766 ms
+[155/390] 444d23c6deadf8e6 attack ok 6 playouts 424 ms
+[156/390] 2fda5e7a8d2bcded spell ok 6 playouts 1065 ms
+[157/390] fc1f89bfc9829ad6 spell unsupported  playouts 25 ms
+[158/390] 8dac325ed724ad42 spell ok 6 playouts 3547 ms
+[159/390] 6bff702ef11bb5e7 attack ok 24 playouts 3811 ms
+[160/390] 43b99b8efac7da60 attack ok 24 playouts 2992 ms
+[161/390] d66ed7fd6e7d9800 attack ok 12 playouts 1040 ms
+[162/390] 7baf9612d460f2a4 attack ok 12 playouts 1360 ms
+[163/390] caca16cd612d22c5 spell unsupported  playouts 95 ms
+[164/390] acae09668b400d0c attack ok 12 playouts 2772 ms
+[165/390] 756c7111d20f5183 attack ok 6 playouts 600 ms
+[166/390] 47402116d65cd1a3 attack ok 6 playouts 599 ms
+[167/390] c086d60c42fa82eb spell ok 9 playouts 458 ms
+[168/390] bb035e1317c8e10f spell ok 9 playouts 426 ms
+[169/390] 89917d2b1b4be98f attack ok 24 playouts 2830 ms
+[170/390] 778a20ff96ca0658 block ok 12 playouts 1165 ms
+[171/390] 4154912a485fc272 attack ok 24 playouts 3544 ms
+[172/390] 15b2bf8260130d09 attack ok 6 playouts 437 ms
+[173/390] 9edc0fd1535df643 attack unsupported  playouts 73 ms
+[174/390] 417252a912b25df0 attack ok 6 playouts 754 ms
+[175/390] a5d2e46fd0d5d854 spell ok 6 playouts 3818 ms
+[176/390] f9ab62eb75c4654d block ok 6 playouts 1056 ms
+[177/390] f0107c3dfc592730 spell ok 12 playouts 1010 ms
+[178/390] caa0f37c3ca7a1ae attack ok 27 playouts 2729 ms
+[179/390] 3088e9c8b689aca1 spell ok 6 playouts 653 ms
+[180/390] 152bc87dc2a08f18 attack ok 24 playouts 3284 ms
+[181/390] 0b06623aa3f595e4 attack ok 27 playouts 4154 ms
+[182/390] ef8758a88917b08c attack ok 6 playouts 335 ms
+[183/390] cfc54a7391a13c43 block ok 72 playouts 7572 ms
+[184/390] e7b7fb34412cc897 block ok 78 playouts 10982 ms
+[185/390] fabc1f92f2000ab9 attack ok 24 playouts 4081 ms
+[186/390] 67dfa29b20bb654c attack ok 6 playouts 495 ms
+[187/390] aa08ae8ebc2040b5 attack ok 27 playouts 2799 ms
+[188/390] c3dbd4f1701d8c62 attack ok 6 playouts 721 ms
+[189/390] 1f39f25068e8980b attack ok 12 playouts 673 ms
+[190/390] 90e6f0428bbbd0ee block ok 9 playouts 581 ms
+[191/390] dce195b22fea3d52 attack ok 6 playouts 460 ms
+[192/390] 43102fc81ab57e90 block ok 24 playouts 3120 ms
+[193/390] 6d215f13dbae9027 attack ok 12 playouts 989 ms
+[194/390] 554a40ef585b3085 attack ok 6 playouts 532 ms
+[195/390] a9ba2b367baaa51f attack ok 6 playouts 304 ms
+[196/390] 89872a4df7e2ec91 block ok 6 playouts 365 ms
+[197/390] 940689cf5432d0eb attack ok 6 playouts 423 ms
+[198/390] fa6c765214f7e935 attack ok 6 playouts 590 ms
+[199/390] 6ca3fb111480fe31 attack ok 30 playouts 7130 ms
+[200/390] a9d2df7b7195ca09 attack ok 12 playouts 1087 ms
+[201/390] b9eca3857fc726df attack ok 24 playouts 2302 ms
+[202/390] 83b7642c795ff84d attack ok 6 playouts 546 ms
+[203/390] 1ed06c4a4d945e8e attack ok 6 playouts 803 ms
+[204/390] 679c75c124728856 attack ok 12 playouts 695 ms
+[205/390] 112188d00543e57d block ok 15 playouts 755 ms
+[206/390] 0b00fc2e65cff5bc attack ok 6 playouts 386 ms
+[207/390] 1ccb20796c31d945 attack ok 6 playouts 747 ms
+[208/390] 55a4534fa6d4b313 attack ok 6 playouts 572 ms
+[209/390] 1592ec6a968ccc8e block ok 6 playouts 1083 ms
+[210/390] 78f245fb73df524e attack ok 6 playouts 1149 ms
+[211/390] 4c949045faa9d337 block ok 72 playouts 3501 ms
+[212/390] c440fcf43f19c886 block ok 6 playouts 870 ms
+[213/390] 9bf3943cb471d680 spell ok 12 playouts 37606 ms
+[214/390] 5b07353b2526e0de spell ok 9 playouts 770 ms
+[215/390] 991b165c114a07e1 attack ok 36 playouts 4495 ms
+[216/390] d43f1a0ed99cca51 spell ok 9 playouts 616 ms
+[217/390] 52f1f2bc4341780f attack ok 24 playouts 5849 ms
+[218/390] 0396a3571e5548b5 attack ok 33 playouts 5458 ms
+[219/390] e9903f7fb9a8b612 attack ok 24 playouts 4901 ms
+[220/390] 32758b581230475b attack ok 12 playouts 757 ms
+[221/390] 126b23c6d95f41a0 block ok 6 playouts 1180 ms
+[222/390] 68bff214970dcf3b attack ok 12 playouts 829 ms
+[223/390] b52a7bf117fbf4a3 spell ok 9 playouts 899 ms
+[224/390] 8fdd6b8fc3bba9b5 spell unsupported  playouts 87 ms
+[225/390] 1d7fdf9df4c9bde9 block ok 6 playouts 830 ms
+[226/390] 1d4a77e0b3edda82 attack ok 6 playouts 973 ms
+[227/390] 154ace0da15c2943 block ok 27 playouts 3472 ms
+[228/390] 7756c05362d4cbaa attack ok 42 playouts 6078 ms
+[229/390] f92a46f8c37ee7ca block ok 9 playouts 378 ms
+[230/390] f56fdee018edf763 attack ok 24 playouts 1193 ms
+[231/390] 4414f7db18729b5b block ok 6 playouts 546 ms
+[232/390] ef10f2fc82b0cfe7 attack ok 18 playouts 1573 ms
+[233/390] d494775aa6bac320 block unsupported  playouts 62 ms
+[234/390] 5d925201015abed0 attack ok 27 playouts 1861 ms
+[235/390] b8bbfcb24f2ccb9b block ok 6 playouts 1371 ms
+[236/390] 581b891b9d4efddc block ok 12 playouts 1374 ms
+[237/390] 16adb77db5f30a54 block ok 24 playouts 5188 ms
+[238/390] a8a89444602a50f1 block ok 9 playouts 1544 ms
+[239/390] e1793c6d447ab2a3 attack ok 6 playouts 568 ms
+[240/390] d5b9973dc07617c1 attack ok 12 playouts 1228 ms
+[241/390] 665e9357595d28ca attack ok 6 playouts 820 ms
+[242/390] 0b73104a12c102ab block ok 12 playouts 784 ms
+[243/390] 8ca5a97fa28fbc15 block ok 6 playouts 506 ms
+[244/390] f9633a1c7bf0d0db block ok 30 playouts 2964 ms
+[245/390] fe395c3587b54dd0 attack ok 12 playouts 987 ms
+[246/390] 43c4601d6879b8fb attack ok 36 playouts 3799 ms
+[247/390] 0edbdf0f1089c5a8 block ok 9 playouts 593 ms
+[248/390] ef3d7d105f1f1845 attack ok 6 playouts 339 ms
+[249/390] eebb84f32333a6cd block ok 6 playouts 327 ms
+[250/390] 71388a3984c261aa block ok 9 playouts 672 ms
+[251/390] 97d2003af79c68df attack ok 12 playouts 827 ms
+[252/390] a2ae9daeb7dd6314 block ok 9 playouts 718 ms
+[253/390] 2d8118d314853977 attack ok 27 playouts 10060 ms
+[254/390] 138b34d72c25e703 block ok 9 playouts 1847 ms
+[255/390] 57f37426a686fbec block ok 12 playouts 908 ms
+[256/390] 83876419d6fc4fe8 attack ok 12 playouts 1468 ms
+[257/390] 348a5adb1158ea93 block ok 78 playouts 14580 ms
+[258/390] ed1da2f2fdf254f4 attack trivial  playouts 58 ms
+[259/390] 0e819c29cd3c0795 block ok 12 playouts 785 ms
+[260/390] 2db6b897d908a7b3 block ok 48 playouts 3701 ms
+[261/390] fab80ff99725f58e attack ok 42 playouts 2101 ms
+[262/390] 9f3202724b7adf21 attack ok 36 playouts 6385 ms
+[263/390] cc999d263ad6d15a block ok 24 playouts 1490 ms
+[264/390] 1832461deb2c9d63 block ok 24 playouts 1916 ms
+[265/390] 0d189eebcffff622 block ok 6 playouts 407 ms
+[266/390] 00d54d82b7a3c888 attack ok 12 playouts 442 ms
+[267/390] fe0a41c17a39e00a attack ok 6 playouts 576 ms
+[268/390] 2c8e94367512e659 block ok 27 playouts 2102 ms
+[269/390] d53871d1c8fe72a8 attack ok 24 playouts 2250 ms
+[270/390] 882bc26e7a80ee8c attack ok 6 playouts 168 ms
+[271/390] 7d8bf180d233818e attack ok 6 playouts 666 ms
+[272/390] a239d4e24a3e63f6 attack ok 9 playouts 639 ms
+[273/390] 42a3dc59af86fe24 block ok 6 playouts 737 ms
+[274/390] 4f073782d64f7d70 attack ok 6 playouts 811 ms
+[275/390] b15ede7b3929c8d8 attack ok 6 playouts 260 ms
+[276/390] 5cf48ee45b4fb4e7 block ok 6 playouts 291 ms
+[277/390] 3489a1323e418713 block ok 27 playouts 1028 ms
+[278/390] 19ff78abd3a1fddd block ok 27 playouts 2162 ms
+[279/390] 9f4ad8bea467bceb attack ok 21 playouts 3120 ms
+[280/390] c3de75fdc9c27ed8 attack ok 6 playouts 451 ms
+[281/390] 0337289d92c9c2af block ok 24 playouts 1077 ms
+[282/390] fe8baccf36e1f92d attack ok 6 playouts 531 ms
+[283/390] 046bb44b69d2a7d7 block ok 12 playouts 356 ms
+[284/390] ba52681e3cb9de17 block ok 9 playouts 426 ms
+[285/390] 5fc4a0939a7263c8 attack ok 12 playouts 1443 ms
+[286/390] b53b9c76294e6985 attack ok 24 playouts 3304 ms
+[287/390] af1a6cc99b7b1acb block ok 27 playouts 1465 ms
+[288/390] 70ce91ac1521522d block ok 72 playouts 5398 ms
+[289/390] 2fa130c4518c3d75 block ok 12 playouts 1762 ms
+[290/390] b1543212881453c3 block ok 9 playouts 785 ms
+[291/390] b3c90db49e3b2108 attack ok 24 playouts 1367 ms
+[292/390] 44e23f590cdb3c3e block ok 24 playouts 1209 ms
+[293/390] 818cccc344972bdf block ok 6 playouts 402 ms
+[294/390] 18f8db006c06164c block unsupported  playouts 47 ms
+[295/390] 058e377241894b2f attack ok 42 playouts 34755 ms
+[296/390] b41fee48a639f95e block ok 18 playouts 1109 ms
+[297/390] e195d7dcd124bf39 attack ok 6 playouts 184 ms
+[298/390] 60a763e0282ed265 attack ok 36 playouts 2319 ms
+[299/390] 27e66329c1da7361 attack ok 6 playouts 255 ms
+[300/390] bad81beddb7d65f7 block ok 51 playouts 1970 ms
+[301/390] 5ddfc4c9f72b52e7 attack ok 6 playouts 284 ms
+[302/390] 09d72b592b822a91 block ok 6 playouts 399 ms
+[303/390] 3f293c0b81fed30c block trivial  playouts 84 ms
+[304/390] 52cf65849c935b8c block ok 15 playouts 767 ms
+[305/390] b7c2f88c4ae5f0f8 block ok 12 playouts 782 ms
+[306/390] 39d40c8ef4225366 block ok 6 playouts 238 ms
+[307/390] 4bc6224c08458699 attack ok 18 playouts 2263 ms
+[308/390] 09ff34a60dcb9dcc attack ok 27 playouts 1352 ms
+[309/390] d8cf89db5b8d4be7 block ok 6 playouts 291 ms
+[310/390] 3d23df92c238ed95 block ok 72 playouts 9528 ms
+[311/390] f6930d49ef99c283 block ok 6 playouts 495 ms
+[312/390] 16112f7e93cee090 attack ok 24 playouts 1333 ms
+[313/390] 6723b66b561df5f8 block ok 27 playouts 2127 ms
+[314/390] ebccca8368a952cd block ok 6 playouts 1048 ms
+[315/390] e97d750d8fdb79cf block ok 21 playouts 2056 ms
+[316/390] 045d71325391c30c block ok 12 playouts 1248 ms
+[317/390] 49fe62b9a6b7c2de block ok 51 playouts 5308 ms
+[318/390] c718b148fc9d179a block ok 30 playouts 3833 ms
+[319/390] 495845e92c4e8e35 block unsupported  playouts 53 ms
+[320/390] 11885c208ca6b1a1 attack ok 45 playouts 2212 ms
+[321/390] d4742dc876c78146 block ok 6 playouts 272 ms
+[322/390] 2ee9108e970ce7c4 block ok 6 playouts 1083 ms
+[323/390] 6a2e3825a78040be attack ok 12 playouts 803 ms
+[324/390] e563977640d756ea attack ok 6 playouts 255 ms
+[325/390] 19b31a47b4e75fae attack ok 12 playouts 593 ms
+[326/390] 5fb55a8c0a9c1d30 attack ok 6 playouts 297 ms
+[327/390] aece663603965a94 block ok 51 playouts 8371 ms
+[328/390] 1875548eb2639532 block ok 30 playouts 8051 ms
+[329/390] b524a9033a1b1bb8 block ok 12 playouts 1006 ms
+[330/390] d4bee71d0ad75a37 block ok 6 playouts 279 ms
+[331/390] 1441ddbf04a877ae block ok 6 playouts 746 ms
+[332/390] e68cdf82a6c80dd6 block ok 48 playouts 5638 ms
+[333/390] ad8fe26780e52039 block ok 9 playouts 727 ms
+[334/390] 1fd334dc27ef5925 block ok 6 playouts 839 ms
+[335/390] fdaf8ffec31aff60 block ok 12 playouts 524 ms
+[336/390] 70b43621f7bedc9d block ok 9 playouts 508 ms
+[337/390] dcbd10bacde5b452 block ok 24 playouts 1073 ms
+[338/390] 8f4b2e29f1d2bf56 block ok 12 playouts 500 ms
+[339/390] 9b9f7da69f555a5d block ok 42 playouts 6703 ms
+[340/390] f79da349a23c0c78 block ok 6 playouts 413 ms
+[341/390] 7ccf01aa27b98a89 block ok 72 playouts 5836 ms
+[342/390] e3629cfecfbccd9f attack ok 30 playouts 951 ms
+[343/390] 752ecd90c874eef4 block ok 24 playouts 970 ms
+[344/390] 6a6d66ee209052e2 block ok 12 playouts 642 ms
+[345/390] 85af307e6ac4979a block ok 9 playouts 388 ms
+[346/390] 34fe8468f53ed40c block ok 12 playouts 764 ms
+[347/390] 12e1c388ba14ca4d block ok 48 playouts 2648 ms
+[348/390] e0db6238130c02f4 block ok 12 playouts 504 ms
+[349/390] cb53960b2a37abef block ok 9 playouts 633 ms
+[350/390] f5213a4a73204050 block ok 18 playouts 832 ms
+[351/390] b1bab331ec7ef241 block ok 54 playouts 1145 ms
+[352/390] 52293c176a606bc3 block ok 6 playouts 147 ms
+[353/390] 7389578f89eed2d4 block ok 12 playouts 569 ms
+[354/390] 4f37078d6415c893 block ok 12 playouts 440 ms
+[355/390] 5a936b59dfe95075 block ok 9 playouts 391 ms
+[356/390] 3aa701c0fd51b06f block ok 12 playouts 279 ms
+[357/390] 1cf6bb2d9e1c8e9f block ok 6 playouts 161 ms
+[358/390] c6a854fadbfb31c1 block ok 36 playouts 1608 ms
+[359/390] 7fc8f1eb618be0ed block ok 6 playouts 339 ms
+[360/390] 6b8f32017d81af60 block ok 18 playouts 356 ms
+[361/390] 13b7f07b18a7a440 block ok 27 playouts 924 ms
+[362/390] 912c05b750087b3f attack ok 72 playouts 58912 ms
+[363/390] 8f570e411213c26a attack ok 12 playouts 476 ms
+[364/390] e15e5de12dfbe524 attack ok 27 playouts 1561 ms
+[365/390] 8564a1a203c3f814 block ok 12 playouts 463 ms
+[366/390] 151a300141bdf2e0 attack ok 12 playouts 230 ms
+[367/390] d5040e4372eab42b attack ok 18 playouts 918 ms
+[368/390] 777f13893d884f9f attack ok 33 playouts 928 ms
+[369/390] 6f291b7f3141e546 block ok 48 playouts 956 ms
+[370/390] fc339ba40b0a911a block ok 48 playouts 3913 ms
+[371/390] 45cb6515aaa2942b attack ok 6 playouts 118 ms
+[372/390] fcaf3c44a3d43f86 block ok 6 playouts 133 ms
+[373/390] 69f984cdba74703b attack ok 24 playouts 1444 ms
+[374/390] 6d865c6d58f735d6 block ok 9 playouts 142 ms
+[375/390] d94bd57f7fc05a59 attack ok 12 playouts 738 ms
+[376/390] 54fa106359f68c12 attack ok 12 playouts 661 ms
+[377/390] f62c69f88cffec81 attack ok 6 playouts 262 ms
+[378/390] 8f5428db888d8c67 attack ok 6 playouts 219 ms
+[379/390] da22b151c9188e28 block ok 6 playouts 182 ms
+[380/390] b80ccf5c7caffb38 attack ok 30 playouts 535 ms
+[381/390] 9e59fbbe9c7e2856 block ok 60 playouts 5444 ms
+[382/390] e4164b66c2fe48a3 block ok 6 playouts 199 ms
+[383/390] f9888e100848637b block ok 27 playouts 2043 ms
+[384/390] 7feb96c55a3d5ee7 block ok 72 playouts 3767 ms
+[385/390] 07dfa53794dc60a6 block ok 9 playouts 926 ms
+[386/390] b886f72f060fbd44 block ok 12 playouts 297 ms
+[387/390] e26af58085c1fa53 block ok 9 playouts 431 ms
+[388/390] b24680d944a2e151 block ok 18 playouts 848 ms
+[389/390] 7b88c00953a9103a block ok 6 playouts 148 ms
+[390/390] dc660305368b487b block ok 12 playouts 668 ms
+{"mode": "rank", "answered": 390, "of": 390, "status": {"ok": 344, "unsupported": 40, "trivial": 6}, "workerErrors": []}
+{"set": 291, "perType": {"attack": 100, "spell": 91, "block": 100}, "screenStatus": {"ok": 344, "unsupported": 40, "trivial": 6}}
+gate_regret_grade truth: 291 request(s), 0 already answered, 291 to go on 7 JVM(s); serve --playouts 200 --initial 40 --batch 20 --horizon -1 --budget-ms 2400000 --timeout-ms 180000 --cap 12 --seed 20261004 
+[1/291] 4206564712a1e7ab spell ok 80 playouts 100967 ms
+[2/291] 05381514d7c86c77 spell ok 600 playouts 496360 ms
+[3/291] 3e56071c90af4458 spell ok 400 playouts 1296820 ms
+[4/291] f88725816884ebcb block ok 960 playouts 1403470 ms
+[5/291] a05341ec6e88b897 spell ok 480 playouts 1521057 ms
+[6/291] bb8c74f4dc4bd536 spell ok 600 playouts 1535438 ms
+[7/291] ef968829d74a99b2 spell ok 400 playouts 178543 ms
+[8/291] 795924baee2c1f19 spell ok 400 playouts 1610659 ms
+[9/291] de709fad47daf7ec spell ok 1200 playouts 151440 ms
+[10/291] 4984379eac445eca spell ok 400 playouts 234271 ms
+[11/291] 851be765bb6b3538 spell ok 440 playouts 396865 ms
+[12/291] 8f367ff98cd915af spell ok 400 playouts 334273 ms
+[13/291] 57c15cfc7c1c9df7 spell ok 800 playouts 98974 ms
+[14/291] 82f30437d90ee521 spell ok 540 playouts 682599 ms
+[15/291] 7158cd8d51d4d395 spell ok 400 playouts 393234 ms
+[16/291] 02e9a7e3c335a53a attack ok 400 playouts 83180 ms
+[17/291] e0d9dd86b1fad591 attack ok 885 playouts 2400272 ms
+[18/291] 39c9d1e4673b611f spell ok 400 playouts 257238 ms
+[19/291] bf0ee77be58045b8 spell ok 800 playouts 642311 ms
+[20/291] fb59de870f634fd9 spell ok 600 playouts 39877 ms
+[21/291] 772c8e4aa9b41a9e spell ok 400 playouts 241747 ms
+[22/291] d6e27bddf87a9b39 spell ok 400 playouts 167134 ms
+[23/291] 522e461db1e6bf23 attack ok 517 playouts 2400084 ms
+[24/291] ed8f16a52db62803 spell ok 400 playouts 625982 ms
+[25/291] 5924afbceada61ee spell ok 400 playouts 299018 ms
+[26/291] faf4e74c6e40efbd spell ok 400 playouts 384824 ms
+[27/291] 9b415e7363209d0b spell ok 800 playouts 1364255 ms
+[28/291] f3d7be15ad345210 spell ok 600 playouts 1370129 ms
+[29/291] 8c0ed1b708a324dd spell ok 265 playouts 2400274 ms
+[30/291] 65fdc246bcabc0b5 spell ok 800 playouts 940311 ms
+[31/291] 0546545bcbaac2f9 spell ok 120 playouts 30489 ms
+[32/291] 1ffba83de7e4503e spell ok 620 playouts 1342455 ms
+[33/291] fed3590889b50a34 attack ok 360 playouts 210752 ms
+[34/291] 49bdf8292892bc77 spell ok 600 playouts 537340 ms
+[35/291] 12db95a29ec2434f spell ok 400 playouts 121664 ms
+[36/291] 0a0896586f973d2d block ok 640 playouts 746020 ms
+[37/291] 32ba14c2294d56a8 spell ok 1200 playouts 655846 ms
+[38/291] 63bedde1ca33fabc block ok 400 playouts 441863 ms
+[39/291] d3fa3ade5b1bce52 block ok 1358 playouts 2400098 ms
+[40/291] 36da39c30f8221c0 spell ok 460 playouts 791571 ms
+[41/291] 1483ed0c9b38216e spell ok 260 playouts 417043 ms
+[42/291] 6c04f09758df65fc spell ok 400 playouts 275797 ms
+[43/291] 1e319344c8abdabe spell ok 440 playouts 596101 ms
+[44/291] 76505635649b917a block ok 1630 playouts 2400120 ms
+[45/291] 969cc9455a3cd787 attack ok 733 playouts 2400072 ms
+[46/291] 80253ec379b0313d spell ok 400 playouts 585213 ms
+[47/291] 966c3c77d5cf1efe attack ok 1415 playouts 2400147 ms
+[48/291] 14a1c257ff1cc250 spell ok 600 playouts 518706 ms
+[49/291] 6d4f96c97c27a8ec spell ok 400 playouts 233570 ms
+[50/291] 120a61a46a8ce6e8 spell ok 400 playouts 548017 ms
+[51/291] e3b76b9efe62bc41 spell ok 400 playouts 131229 ms
+[52/291] ee6e3c81c09db41f attack ok 400 playouts 555895 ms
+[53/291] 32ace3bed20aa762 spell ok 360 playouts 241703 ms
+[54/291] 59cf31409fac447b spell ok 740 playouts 440578 ms
