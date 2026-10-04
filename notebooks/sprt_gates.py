@@ -17,6 +17,9 @@
 # - `nights` and `versions`: the queue's nights and the lab versions (D341) that wrote each folder.
 #
 # Any of them may be empty on a machine that has not run that tool; each cell says so.
+#
+# **Forge against Forge.** Every SPRT and gate here pits Forge AIs against each other: a pass says
+# one AI beats another in Forge, not that it plays better against a person.
 
 # %%
 import json

@@ -49,6 +49,7 @@ import argparse
 import glob
 import hashlib
 import json
+import math
 import os
 import re
 import resource
@@ -64,8 +65,8 @@ REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 STATE_VERSION = 1
 HEAD_BYTES = 4096
 INCREMENTAL = ("drafts", "games", "decks", "deck_cards", "picks")
-SMALL = ("cards", "cube_cards", "runs", "versions", "nights", "sprt", "experiments", "gate_reports", "ml_reports",
-         "matchup_power")
+SMALL = ("cards", "cube_cards", "runs", "versions", "nights", "quarantine", "sprt", "experiments", "gate_reports",
+         "ml_reports", "matchup_power")
 # tools/ml's report files kept whole in ml_reports (matchup.py's balance.json, dataset.py's stats.json, ...);
 # any other *.json under --ml whose first 4 KiB name a "gate" is read as a gate report (D354).
 REPORT_NAMES = ("balance.json", "stats.json", "summary.json", "report.json")
@@ -415,6 +416,8 @@ def schemas() -> Dict[str, Any]:
         "gate_reports": [("path", s), ("gate", s), ("pass", b), ("name", s), ("model", s), ("model_sha12", s), ("mtime", T),
                          ("reasons", s), ("json", s)],
         "ml_reports": [("path", s), ("kind", s), ("mtime", T), ("bytes", i), ("json", s)],
+        "quarantine": [("night", i), ("list_file", s), ("path", s), ("key", s), ("seed", i), ("game", i), ("seat", i),
+                       ("draft_id", s)],
         "matchup_power": [("path", s), ("name", s), ("card_id", s), ("power", f), ("sd_post", f), ("sd_boot", f), ("points", f),
                           ("prior", f), ("games", i), ("land", b), ("ai", s), ("cubes", L)],
     }
@@ -705,6 +708,31 @@ def build_runs(out: str, sources: List[Source]) -> None:
     write_small(out, "versions", vers)
 
 
+QUAR_RE = re.compile(r"(?P<key>(?:normal|bridge)/[^/]+)/games/(?P<seed>\d+)/g(?P<game>\d+)-seat(?P<seat>\d)\.jsonl\.gz$")
+
+
+def build_quarantine(out: str, root: Optional[str]) -> int:
+    """The recordings a queue night's redaction pass quarantined: `<root>-quarantine-n<N>/failed.txt`, one path a line (J061)."""
+    rows = []
+    if root:
+        base = os.path.abspath(root).rstrip(os.sep)
+        for f in sorted(glob.glob(base + "-quarantine-n*/failed.txt")):
+            m = re.search(r"-quarantine-n(\d+)$", os.path.dirname(f))
+            night = int(m.group(1)) if m else 0
+            with open(f, encoding="utf-8", errors="replace") as fh:
+                for line in fh:
+                    pth = line.strip()
+                    if not pth:
+                        continue
+                    q = QUAR_RE.search(pth)
+                    key = q.group("key") if q else None
+                    rows.append({"night": night, "list_file": rel(f), "path": pth, "key": key,
+                                 "seed": int(q.group("seed")) if q else None, "game": int(q.group("game")) if q else None,
+                                 "seat": int(q.group("seat")) if q else None,
+                                 "draft_id": draft_id("queue", key, q.group("seed")) if q else None})
+    return write_small(out, "quarantine", rows)
+
+
 def build_nights(out: str, plans: List[Tuple[int, str, Dict[str, Any]]]) -> None:
     rows = []
     for night, f, d in plans:
@@ -898,13 +926,14 @@ def ingest(a: argparse.Namespace, say=print) -> Dict[str, Any]:
         # 3. the small tables, the empty-table schemas, the views
         build_runs(out, sources)
         build_nights(out, plans)
+        n_quar = build_quarantine(out, a.root)
         res = build_results(out, a.ladder, a.experiments, a.ml)
         n_cards, n_cube_cards = build_cards(out, REPO, a.facts, a.cards_db, say)
         write_schemas(out)
         make_views(out)
         rep = {"sources": len(sources), "filesRead": totals["files_read"], "resets": len(resets), "lines": totals["lines"],
                "badLines": totals["bad"], "jsonlMB": round(totals["bytes"] / 1e6, 1), "rowsAdded": rows,
-               "cards": n_cards, "cubeCards": n_cube_cards, "results": res, "seconds": round(time.time() - t0, 1),
+               "cards": n_cards, "cubeCards": n_cube_cards, "quarantined": n_quar, "results": res, "seconds": round(time.time() - t0, 1),
                "peakMB": round(peak_mb(), 0)}
         say(json.dumps(rep))
         if getattr(a, "report", None):
@@ -1069,6 +1098,137 @@ def verify(out: str) -> Dict[str, Any]:
             "views": views, "peak_mb": round(peak_mb()), "by_source": by_source, "tables": tables}
 
 
+# ---------------------------------------------------------------- the public summary (warehouse.json)
+
+EXPORT_SCHEMA = 1
+EXPORT_MIN_CARD_GAMES = 100
+EXPORT_CARDS_EACH_END = 25
+NAME_MAX = 60
+
+
+def clean_text(x: Any, cap: int = NAME_MAX) -> Optional[str]:
+    """A string fit to publish: no control or format characters, one space between words, at most `cap` characters."""
+    if not isinstance(x, str):
+        return None
+    t = re.sub(r"\s+", " ", x)
+    t = "".join(ch for ch in t if unicodedata.category(ch)[0] != "C")
+    t = re.sub(r" +", " ", t).strip()
+    return t[:cap] or None
+
+
+def wilson(k: float, n: float, z: float = 1.96) -> Tuple[float, float]:
+    """Wilson's 95% interval for k wins in n games.  The rows within one draft (and both seats of one game) are
+    correlated, so treating every game as independent makes these intervals OPTIMISTIC -- narrower than the truth."""
+    if n <= 0:
+        return (0.0, 1.0)
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * math.sqrt(max(0.0, p * (1 - p) / n + z * z / (4 * n * n))) / d
+    return (max(0.0, c - h), min(1.0, c + h))
+
+
+def _r(x: Optional[float], nd: int = 4) -> Optional[float]:
+    return None if x is None or (isinstance(x, float) and math.isnan(x)) else round(float(x), nd)
+
+
+def export_summary(out: str, archive: Optional[str] = None) -> Dict[str, Any]:
+    """warehouse.json, schema 1: numbers and cube-document card names only, for ForgeCoach's #lab/data page.
+
+    No decks, seeds, picks, hands, recordings or paths.  Rates are in [0, 1]; lo/hi are Wilson's 95% interval over
+    GAMES (optimistic: games within a draft are correlated).  Every rate is over plain games (exploring drafts, D358,
+    left out) that someone won.  Cards: at least EXPORT_MIN_CARD_GAMES games, the top and bottom
+    EXPORT_CARDS_EACH_END per cube by win rate, named as the cube documents name them (cube_cards), nothing else.
+    """
+    require("duckdb")
+    import datetime as dt
+    import duckdb
+    out = os.path.abspath(out)
+    st = load_state(out)
+    ver = hashlib.sha1(json.dumps(sorted((k, v.get("offset", 0)) for k, v in st["files"].items())).encode()).hexdigest()[:12]
+    con = duckdb.connect(os.path.join(out, "lab.duckdb"), read_only=True)
+    try:
+        tables = []
+        for t in INCREMENTAL + SMALL:
+            files = part_files(out, t) if t in INCREMENTAL else glob.glob(os.path.join(out, t, f"{t}.parquet"))
+            rows = con.execute(f"select count(*) from {t}").fetchone()[0] if files or t in INCREMENTAL else 0
+            tables.append({"name": t, "rows": int(rows), "bytes": int(sum(os.path.getsize(f) for f in files))})
+        quar = dict(con.execute("select night, count(*) from quarantine group by night").fetchall())
+        nights = []
+        for night, drafts, games, recorded, errs in con.execute("""
+                select case when source = 'queue' and night > 0 then night else 0 end as n,
+                       count(distinct draft_id), count(*), sum(case when recorded then 1 else 0 end),
+                       sum(case when error is not null then 1 else 0 end)
+                from games group by n order by n""").fetchall():
+            derr = con.execute("""select count(*) from drafts where engine_error is not null
+                                  and (case when source = 'queue' and night > 0 then night else 0 end) = ?""", [night]).fetchone()[0]
+            nights.append({"night": int(night) if night else "other", "drafts": int(drafts), "games": int(games),
+                           "recorded": int(recorded or 0), "quarantined": int(quar.get(night, 0)) if night else 0,
+                           "engineErrors": int((errs or 0) + derr)})
+        for n, c in sorted(quar.items()):
+            if n and not any(x["night"] == n for x in nights):
+                nights.append({"night": int(n), "drafts": 0, "games": 0, "recorded": 0, "quarantined": int(c), "engineErrors": 0})
+        nights.sort(key=lambda x: (isinstance(x["night"], str), x["night"] if isinstance(x["night"], int) else 0))
+        cubes = []
+        for cube, drafts, games, turns, ow, od in con.execute("""
+                select g.cube, count(distinct g.draft_id), count(*),
+                       avg(case when not g.explore then g.turns end),
+                       sum(case when not g.explore and g.winner in ('A','B') and g.winner = coalesce(g.on_play_verified, g.on_play) then 1 else 0 end),
+                       sum(case when not g.explore and g.winner in ('A','B') and coalesce(g.on_play_verified, g.on_play) in ('A','B') then 1 else 0 end)
+                from games g group by g.cube order by g.cube""").fetchall():
+            c = clean_text(cube)
+            if c:
+                cubes.append({"cube": c, "drafts": int(drafts), "games": int(games), "avgTurns": _r(turns, 2),
+                              "onPlayWinRate": _r(ow / od) if od else None})
+        pairs = []
+        for cube, colors, games, wins in con.execute("""
+                select cube, colors, count(*), sum(case when won then 1 else 0 end) from seat_games
+                where not explore and decisive and not errored and colors is not null group by cube, colors""").fetchall():
+            pair = "".join(sorted(colors, key="WUBRG".index)) if colors and set(colors) <= set("WUBRG") else None
+            c = clean_text(cube)
+            if not pair or not c:
+                continue
+            lo, hi = wilson(wins, games)
+            pairs.append({"cube": c, "pair": pair, "games": int(games), "winRate": _r(wins / games), "lo": _r(lo), "hi": _r(hi)})
+        pairs.sort(key=lambda x: (x["cube"], -x["games"], x["pair"]))
+        rows = con.execute(f"""
+            with doc as (select card_id, any_value(name) as name from cube_cards group by card_id)
+            select sg.cube, doc.name, count(*) as games, sum(case when sg.won then 1 else 0 end) as wins
+            from deck_cards dc
+            join seat_games sg on sg.draft_id = dc.draft_id and sg.seat = dc.seat
+            join doc on doc.card_id = dc.card_id
+            where not sg.explore and sg.decisive and not sg.errored
+            group by sg.cube, doc.name having count(*) >= {EXPORT_MIN_CARD_GAMES}""").fetchall()
+        by_cube: Dict[str, List[Dict[str, Any]]] = {}
+        for cube, name, games, wins in rows:
+            c, nm = clean_text(cube), clean_text(name)
+            if not c or not nm:
+                continue
+            lo, hi = wilson(wins, games)
+            by_cube.setdefault(c, []).append({"cube": c, "card": nm, "games": int(games), "winRate": _r(wins / games), "lo": _r(lo), "hi": _r(hi)})
+        cards = []
+        for c in sorted(by_cube):
+            ranked = sorted(by_cube[c], key=lambda x: (-x["winRate"], -x["games"], x["card"]))
+            keep = ranked if len(ranked) <= 2 * EXPORT_CARDS_EACH_END else ranked[:EXPORT_CARDS_EACH_END] + ranked[-EXPORT_CARDS_EACH_END:]
+            cards.extend(keep)
+    finally:
+        con.close()
+    try:
+        du = shutil.disk_usage(out)
+        disk: Optional[Dict[str, Any]] = {"freeGB": round(du.free / 1e9, 1), "usedPct": round(100 * du.used / du.total, 1)}
+    except OSError:
+        disk = None
+    arch = None
+    if archive:
+        a = read_json(archive)
+        if isinstance(a, dict) and isinstance(a.get("gzipBytes"), int) and isinstance(a.get("zstdBytes"), int):
+            arch = {"gzipBytes": a["gzipBytes"], "zstdBytes": a["zstdBytes"]}
+    return {"schema": EXPORT_SCHEMA,
+            "generatedAt": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "warehouseVer": f"{EXPORT_SCHEMA}-{ver}", "tables": tables, "nights": nights, "archive": arch, "disk": disk,
+            "cubes": cubes, "pairs": pairs, "cards": cards}
+
+
 # ---------------------------------------------------------------- CLI
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -1091,7 +1251,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     s.add_argument("--out", default="var/warehouse")
     v = sub.add_parser("verify", help="row counts against the JSONL and table sizes, as JSON (exit 1 on a mismatch)")
     v.add_argument("--out", default="var/warehouse")
+    e = sub.add_parser("export", help="warehouse.json: the numbers-only public summary for ForgeCoach's #lab/data page")
+    e.add_argument("--out", default="var/warehouse")
+    e.add_argument("--to", default=None, help="where to write it (default <out>/warehouse.json)")
+    e.add_argument("--archive", default=None, help="a JSON file with gzipBytes and zstdBytes of a recordings archive (else archive is null)")
     a = ap.parse_args(argv)
+    if a.cmd == "export":
+        doc = export_summary(a.out, a.archive)
+        to = a.to or os.path.join(a.out, "warehouse.json")
+        with open(to + ".tmp", "w", encoding="utf-8") as fh:
+            json.dump(doc, fh, indent=1, ensure_ascii=False)
+            fh.write("\n")
+        os.replace(to + ".tmp", to)
+        print(json.dumps({"written": to, "tables": len(doc["tables"]), "nights": len(doc["nights"]), "cubes": len(doc["cubes"]),
+                          "pairs": len(doc["pairs"]), "cards": len(doc["cards"])}))
+        return 0
     if a.cmd == "ingest":
         if a.ladder is None:
             a.ladder = sorted(d for d in glob.glob("var/ai-ladder*") if os.path.isdir(d))

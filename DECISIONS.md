@@ -17260,6 +17260,32 @@ SQL and pandas.
    out of git. There are five: card win rates with Wilson intervals and the D343 caveat,
    colour-pair balance, exploring against plain games, SPRT and gate history, and pick-order
    heatmaps. Their test runs each one on the warehouse built from the committed fixtures.
+8. **Saved queries** (Justin's addition). `notebooks/sql/` holds five plain SQL files for the
+   questions he will ask most often: card win rates per cube with Wilson intervals and a games
+   threshold, colour-pair shares and rates night by night, game length and the on-play rate per
+   cube, pick order against deck inclusion, and each night's volume, recordings, quarantined
+   recordings and errors. `notebooks/saved_queries.py` runs them; the DuckDB command line runs
+   them with `.read`; thresholds are `set variable`s. Every query and notebook opens with the
+   **Forge-against-Forge caveat**: a card's win rate measures the card in Forge Default's hands.
+   The tests run each file on the fixture warehouse (SQL only, no Jupyter). The redaction
+   pass's quarantine lists (`<queue>-quarantine-n<N>/failed.txt`) are the `quarantine` table.
+9. **A numbers-only public summary** (Justin's addition). `warehouse.py export` writes
+   `var/warehouse/warehouse.json`, schema 1, fixed with ForgeCoach's `#lab/data` page: table
+   rows and bytes; per night drafts, games, recorded, quarantined and engine errors; the
+   recordings archive's gzip and zstd bytes (from a file, else null); free disk; per cube
+   drafts, games, mean turns and the on-play win rate; per cube and colour pair, and per cube
+   and card, games, win rate and Wilson's 95% interval over games. The games within a draft are
+   correlated, so the intervals are optimistic, and the code says so. A card appears only with
+   at least 100 games, in the top or bottom 25 of its cube, and named as the cube document
+   names it, cleaned and at most 60 characters. There are no decks, seeds, picks, hands,
+   recordings or paths. The runner publishes the file to ForgeCoach's `lab-status` branch beside
+   `status.json` and `ladder.json` when it changes, through its own allowlist,
+   `tools/runner/warehouse.ts`, as `ladder.ts` does for the ladder. Unknown keys are dropped,
+   and so is any row whose count is not a non-negative integer, whose rate is outside [0, 1] or
+   whose card name has a character outside letters, digits, spaces and card-name punctuation.
+   The local server serves it at `/public-warehouse.json`. `tools/lab/warehouse-sample.json`
+   (an export of the synthetic warehouse) is the page's sample, and the runner's test checks
+   that it passes the allowlist unchanged.
 
 **Measured** (synthetic: 45,000 fixture-shaped lines with real cube names, 884 MB, in this
 4-core container):
@@ -17267,7 +17293,8 @@ SQL and pandas.
 - a full ingest took 98 s with a peak RSS of 499 MB, and a no-op ingest 2 s;
 - 3,000 appended lines took 8 s;
 - a reset of a 7,500-line file took 17 s, with a peak of 516 MB;
-- the five tables took 26.7 MB.
+- the five tables took 26.7 MB;
+- `saved_queries.py` ran in 27 s with a peak RSS of 1.07 GB (DuckDB capped at 2 GB).
 
 Synthetic lines compress better than real ones, and J065 and J066 measure the real data.
 

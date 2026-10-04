@@ -24,6 +24,7 @@ is built again.
 python3 tools/lab/warehouse.py ingest     # read what is new, write Parquet, rewrite the views
 python3 tools/lab/warehouse.py verify     # every table's rows against the JSONL, and the sizes (JSON; exit 1 on a mismatch)
 python3 tools/lab/warehouse.py sql        # rewrite var/warehouse/lab.duckdb alone (ingest does it too)
+python3 tools/lab/warehouse.py export     # var/warehouse/warehouse.json: the numbers-only summary ForgeCoach's #lab/data shows
 duckdb var/warehouse/lab.duckdb           # the DuckDB command line
 ```
 
@@ -73,12 +74,34 @@ Open the file `read_only=True` from pandas and notebooks, so that an ingest can 
 they are open. An ingest writes a new `lab.duckdb` and renames it into place, so a session that
 is already open keeps the old views until it reconnects.
 
-`notebooks/` holds five starter notebooks: card win rates by cube, colour-pair balance,
-exploring against plain games, the SPRT and gate history, and pick-order heatmaps. Each is a
-plain `.py` file with `# %%` cells, which VS Code and Jupyter (through jupytext) open as a
-notebook, and `python3 notebooks/<name>.py` runs it top to bottom. They find
+`notebooks/` holds six notebooks: card win rates by cube, colour-pair balance, exploring
+against plain games, the SPRT and gate history, pick-order heatmaps, and `saved_queries.py`.
+Each is a plain `.py` file with `# %%` cells, which VS Code and Jupyter (through jupytext) open
+as a notebook, and `python3 notebooks/<name>.py` runs it top to bottom. They find
 `var/warehouse/lab.duckdb` from the working directory upwards. Set `LAB_WAREHOUSE` to point
 elsewhere. Files rather than `.ipynb` keep outputs out of git.
+
+### Saved queries
+
+`notebooks/sql/` holds the questions asked most often, one plain SQL file each.
+`saved_queries.py` runs all five, and the DuckDB command line runs any one of them:
+
+```bash
+duckdb var/warehouse/lab.duckdb -c "set variable min_games = 200" -c ".read notebooks/sql/card_win_rates.sql"
+```
+
+| file | answers | threshold (`set variable`) |
+|---|---|---|
+| `card_win_rates.sql` | each card's win rate per cube, with Wilson's 95% interval and the AI flag | `min_games`, default 100 |
+| `pair_trends.sql` | each colour pair's share and win rate per cube, night by night | `min_games`, default 1 |
+| `game_length.sql` | turns (mean, median, 90th percentile), draws, timeouts, errors and the on-play win rate per cube | |
+| `pick_vs_deck.sql` | when each card is taken (mean and median decision) and how often the taking seat's deck plays it | `min_taken`, default 1 |
+| `nightly_volume.sql` | each queue night's planned and arrived drafts, games, exploring drafts, recordings, quarantined recordings, timeouts, errors and versions | |
+
+Every rate is over plain games: exploring drafts (D358) are left out. Every file and notebook
+opens with the Forge-against-Forge caveat (below). `saved_queries.py` caps DuckDB at 2 GB
+(`LAB_DUCKDB_MEMORY`), because the lab runs beside it. The tests run every file on the
+warehouse built from the committed fixtures.
 
 ## How it stays current
 
@@ -101,7 +124,8 @@ first 4 KiB.
 **Nightly.** Add a last block to each queue-night job, after the night and its redaction pass:
 
 ```bash
-python3 tools/lab/warehouse.py ingest && python3 tools/lab/warehouse.py verify > var/warehouse/verify.json
+python3 tools/lab/warehouse.py ingest && python3 tools/lab/warehouse.py verify > var/warehouse/verify.json \
+  && python3 tools/lab/warehouse.py export
 ```
 
 Give it a `cores: 1` line before it. It reads only that night's lines. On synthetic data in a 4-core container, 3,000
@@ -199,6 +223,7 @@ draft's own cube.
 | `runs` | each folder's `run.json` | `source`, `key`, `folder`, `cube`, `cube_file`, `cube_sha`, `format`, `games`, `profiles`, `ratings_file`, `record_every`, `play_explore` (JSON), `bridge_sources`, `n_versions`, `version_changes` |
 | `versions` | `run.json`'s `versions` (D341) | `source`, `key`, `id`, `git_sha`, `code_tree`, `dirty`, `diff_sha`, `forge_jar_sha256`, `ratings_sha256`, `cube_sha`, `weights_sha`, `node`, `since`, `first_seed`, `allowed_change` (JSON) |
 | `nights` | `night-N.json` | `night`, `file`, `drafts` (planned), `games`, `format`, `play_explore`, `chunks`, `keys`, `runs`, `first_run_at`, `last_run_at` |
+| `quarantine` | the redaction pass's lists, `<root>-quarantine-n<N>/failed.txt` (J061) | `night`, `list_file`, `path` (the recording), and from the path `key`, `seed`, `game`, `seat`, `draft_id` |
 | `sprt` | `sprt.jsonl` (D319, D321, D354's gate 3) | `file`, `ts`, `id`, `host`, `a`, `b`, `ah`, `bh`, `elo0`, `elo1`, `alpha`, `beta`, `result`, `llr`, `lower`, `upper`, `games`, `pairs`, `score`, `purpose` |
 | `experiments` | `docs/evidence/experiments.jsonl` | `file`, `id`, `kind` (`start` / `end`), `ts`, `host`, `cmd`, `purpose`, `hypothesis`, `status`, `games`, `git_sha`, `json` (the whole line) |
 | `gate_reports` | `var/ml/**/*.json` with a `gate` of `fit`, `regret` or `sprt` (D354) | `path`, `gate`, `pass`, `name`, `model`, `model_sha12`, `mtime`, `reasons` (JSON), `json` (the report without its per-row list) |
@@ -221,7 +246,46 @@ without a zone.
 | `won` | |
 | `turns`, `timeout`, `errored` | |
 
+## The public summary: warehouse.json
+
+`export` writes `var/warehouse/warehouse.json` (`--to` elsewhere). It is a summary with
+numbers only, for ForgeCoach's `#lab/data` page. The runner publishes a sanitised copy beside
+`status.json` and `ladder.json` on ForgeCoach's `lab-status` branch whenever the file changes,
+and serves it locally at `/public-warehouse.json` (`docs/guides/lab-runner.md`). Its fields,
+schema 1, were agreed with the page:
+
+```
+schema: 1, generatedAt (ISO), warehouseVer
+tables[]  {name, rows, bytes}
+nights[]  {night (a number, or "other": run folders and lines outside a night plan), drafts, games, recorded, quarantined, engineErrors}
+archive   {gzipBytes, zstdBytes} | null     (from --archive FILE, a JSON with those two numbers)
+disk      {freeGB, usedPct} | null          (the disk that holds var/warehouse)
+cubes[]   {cube, drafts, games, avgTurns, onPlayWinRate}
+pairs[]   {cube, pair ("WU"), games, winRate, lo, hi}
+cards[]   {cube, card, games, winRate, lo, hi}
+```
+
+- Rates are in [0, 1], over plain decisive games without an error. `lo` and `hi` are Wilson's
+  95% interval over games. The games of one draft, and the two seats of one game, are
+  correlated, so the intervals are optimistic.
+- `cards` lists only cards with at least 100 games, the top 25 and the bottom 25 per cube by
+  win rate. Each card is named as the cube document names it (`cube_cards`), with control
+  characters removed and at most 60 characters.
+- There are no decks, seeds, picks, hands, recordings or paths.
+- The runner's allowlist (`tools/runner/warehouse.ts`) checks every field again. It drops
+  unknown keys, any row with a count that is not a non-negative integer or a rate outside
+  [0, 1], and any card name with a character outside letters, digits, spaces and card-name
+  punctuation.
+
+`tools/lab/warehouse-sample.json` is an export of the synthetic warehouse below (made-up
+results, real card names), which ForgeCoach copies as its sample.
+
 ## Reading the numbers
+
+- **Forge against Forge.** Every lab game is Forge Default against Forge Default. A card's win
+  rate measures the card in Forge Default's hands, in the decks the lab's drafters build. It
+  does not measure the card's strength for a person. The same holds for a colour pair's rate,
+  for game length and for the play/draw edge.
 
 - A card's deck win rate is not its strength. Good cards sit in good decks, and colours travel
   together. `matchup_power` is the matchup model's estimate adjusted for the rest of the deck
@@ -246,6 +310,7 @@ lines, with card names drawn from the real cubes and 15% exploring.
 | truncation reset of a 7,500-line file | 17 s, peak RSS 516 MB |
 | `verify` | 11 s |
 | each notebook | 1.4–2.5 s |
+| `saved_queries.py` | 27 s, peak RSS 1.07 GB (DuckDB capped at 2 GB) |
 
 The five tables took 26.7 MB, against 884 MB of JSONL:
 

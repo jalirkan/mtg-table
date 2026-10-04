@@ -14,6 +14,9 @@
 # `explore` in `drafts` and `games`; a game row carries the counts (`explore_randomised`,
 # `explore_changed`, `explore_close_calls`, `explore_by_kind`, ...). This compares the two kinds of
 # game: length, time, decisions recorded, and how many of them were randomised.
+#
+# **Forge against Forge.** Both kinds of game are Forge Default against Forge Default: the lengths
+# and rates are the AI's, not a person's.
 
 # %%
 import json

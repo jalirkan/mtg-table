@@ -14,6 +14,10 @@
 # builder wrote them (`decks.colors`, the played deck's; a splash is not a colour here).
 # Wilson's 95% interval beside every rate. The matchup model's de-biased balance number (D342) is
 # the better single figure for "is this cube balanced"; this is the plain table to look at first.
+#
+# **Forge against Forge.** These are Forge Default's decks played by Forge Default against Forge
+# Default: a pair's rate is the AI's with those colours, not the archetype's for a person. Games
+# within one draft are correlated, so the intervals are optimistic.
 
 # %%
 import math

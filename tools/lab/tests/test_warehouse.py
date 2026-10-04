@@ -157,6 +157,28 @@ class Pure(unittest.TestCase):
         self.assertEqual(m.night("bridge/a+b", 5), 2)
         self.assertEqual(m.night("normal/pauper", 1), 0)
 
+    def test_wilson_and_clean_text(self):
+        lo, hi = W.wilson(50, 100)
+        self.assertAlmostEqual(lo, 0.4038, places=3)
+        self.assertAlmostEqual(hi, 0.5962, places=3)
+        self.assertEqual(W.wilson(0, 0), (0.0, 1.0))
+        self.assertEqual(W.wilson(10, 10)[1], 1.0)
+        self.assertEqual(W.clean_text("  Fire //\tIce\u0000 "), "Fire // Ice")
+        self.assertEqual(len(W.clean_text("x" * 200)), W.NAME_MAX)
+        self.assertIsNone(W.clean_text("\u200b"))
+        self.assertIsNone(W.clean_text(7))
+
+    def test_saved_queries_carry_the_caveat(self):
+        files = sorted(glob.glob(os.path.join(ROOT, "notebooks", "sql", "*.sql"))) + \
+            sorted(glob.glob(os.path.join(ROOT, "notebooks", "*.py")))
+        self.assertEqual(len(files), 5 + 6)
+        for f in files:
+            with open(f, encoding="utf-8") as fh:
+                t = fh.read()
+            self.assertIn("SPDX-License-Identifier: GPL-3.0-or-later", t, f)
+            self.assertIn("Forge", t.split("Forge-vs-Forge", 1)[-1] if f.endswith(".sql") else t, f)
+            self.assertTrue("Forge-vs-Forge" in t or "Forge against Forge" in t, f)
+
 
 def build_queue(root: str):
     """A queue root: normal/synergy over nights 1 and 2, bridge/pauper+synergy on night 2, from the fixture lines."""
@@ -406,10 +428,121 @@ class Warehouse(unittest.TestCase):
         self.ingest()
         env = dict(os.environ, LAB_WAREHOUSE=os.path.join(self.out, "lab.duckdb"), MIN_GAMES="1", MPLBACKEND="agg")
         books = sorted(glob.glob(os.path.join(ROOT, "notebooks", "*.py")))
-        self.assertEqual(len(books), 5)
+        self.assertEqual(len(books), 6)
         for nb in books:
             r = subprocess.run([sys.executable, nb], cwd=self.tmp, env=env, capture_output=True, text=True, timeout=300)
             self.assertEqual(r.returncode, 0, f"{os.path.basename(nb)}:\n{r.stderr[-3000:]}")
+
+    def test_saved_sql_runs_on_the_fixture_warehouse(self):
+        """Every notebooks/sql/*.sql executes as a plain query, with and without its threshold variables."""
+        self.ingest()
+        con = duckdb.connect(os.path.join(self.out, "lab.duckdb"), read_only=True)
+        try:
+            out = {}
+            for f in sorted(glob.glob(os.path.join(ROOT, "notebooks", "sql", "*.sql"))):
+                with open(f, encoding="utf-8") as fh:
+                    out[os.path.basename(f)[:-4]] = con.sql(fh.read()).df()
+            self.assertEqual(set(out), {"card_win_rates", "pair_trends", "game_length", "pick_vs_deck", "nightly_volume"})
+            self.assertEqual(len(out["card_win_rates"]), 0)          # the default threshold is 100 games
+            con.execute("set variable min_games = 1")
+            with open(os.path.join(ROOT, "notebooks", "sql", "card_win_rates.sql"), encoding="utf-8") as fh:
+                cw = con.sql(fh.read()).df()
+            self.assertGreater(len(cw), 0)
+            self.assertTrue(((cw.lo <= cw.win_rate) & (cw.win_rate <= cw.hi) & (cw.lo >= 0) & (cw.hi <= 1)).all())
+            nv = out["nightly_volume"]
+            self.assertEqual(sorted(nv.night.tolist()), [0, 1, 2])
+            self.assertEqual(int(nv.drafts.sum()), self.all_expected()["drafts"])
+            self.assertEqual(int(nv.games.sum()), self.all_expected()["games"])
+            gl = out["game_length"]
+            plain = con.execute("select count(*) from games where not explore").fetchone()[0]
+            self.assertEqual(int(gl.games.sum()), plain)
+            self.assertGreater(len(out["pair_trends"]), 0)
+            self.assertTrue(set("".join(out["pair_trends"].pair)) <= set("WUBRG"))
+            self.assertTrue(((out["pick_vs_deck"].inclusion >= 0) & (out["pick_vs_deck"].inclusion <= 1)).all())
+        finally:
+            con.close()
+
+    def test_export_summary_numbers_only(self):
+        """warehouse.json, schema 1: exactly the agreed keys, rates in [0, 1], cards named only as the cube documents do."""
+        qdir = self.queue.rstrip(os.sep) + "-quarantine-n2"
+        os.makedirs(qdir)
+        with open(os.path.join(qdir, "failed.txt"), "w") as fh:
+            fh.write(os.path.join(self.queue, "normal", "synergy", "games", "5", "g1-seat0.jsonl.gz") + "\n\n")
+        self.ingest()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            self.assertEqual(W.main(["export", "--out", self.out]), 0)
+        with open(os.path.join(self.out, "warehouse.json"), encoding="utf-8") as fh:
+            doc = json.load(fh)
+        self.assertEqual(list(doc), ["schema", "generatedAt", "warehouseVer", "tables", "nights", "archive", "disk", "cubes",
+                                     "pairs", "cards"])
+        self.assertEqual(doc["schema"], 1)
+        self.assertRegex(doc["generatedAt"], r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+        self.assertIsNone(doc["archive"])
+        self.assertEqual({t["name"] for t in doc["tables"]}, set(W.INCREMENTAL) | set(W.SMALL))
+        for t in doc["tables"]:
+            self.assertEqual(set(t), {"name", "rows", "bytes"})
+        rows = {t["name"]: t["rows"] for t in doc["tables"]}
+        self.assertEqual({k: rows[k] for k in W.INCREMENTAL}, self.all_expected())
+        nights = {n["night"]: n for n in doc["nights"]}
+        self.assertEqual(set(nights), {1, 2, "other"})
+        self.assertEqual(nights[2]["quarantined"], 1)
+        self.assertEqual(sum(n["drafts"] for n in doc["nights"]), self.all_expected()["drafts"])
+        for n in doc["nights"]:
+            self.assertEqual(set(n), {"night", "drafts", "games", "recorded", "quarantined", "engineErrors"})
+        for c in doc["cubes"]:
+            self.assertEqual(set(c), {"cube", "drafts", "games", "avgTurns", "onPlayWinRate"})
+            self.assertTrue(c["onPlayWinRate"] is None or 0 <= c["onPlayWinRate"] <= 1)
+        self.assertGreater(len(doc["pairs"]), 0)
+        for r in doc["pairs"] + doc["cards"]:
+            self.assertTrue(0 <= r["lo"] <= r["winRate"] <= r["hi"] <= 1, r)
+        for r in doc["pairs"]:
+            self.assertRegex(r["pair"], r"^[WUBRG]+$")
+        # the fixtures have fewer than 100 games a card: no card is published
+        self.assertEqual(doc["cards"], [])
+        keys = set()
+
+        def walk(x):
+            if isinstance(x, dict):
+                keys.update(x)
+                for v in x.values():
+                    walk(v)
+            elif isinstance(x, list):
+                for v in x:
+                    walk(v)
+        walk(doc)
+        self.assertEqual(keys, {"schema", "generatedAt", "warehouseVer", "tables", "nights", "archive", "disk", "cubes", "pairs",
+                                "cards", "name", "rows", "bytes", "night", "drafts", "games", "recorded", "quarantined",
+                                "engineErrors", "freeGB", "usedPct", "cube", "avgTurns", "onPlayWinRate", "pair", "winRate",
+                                "lo", "hi"})
+        text = json.dumps(doc)
+        for bad in (self.tmp, "jsonl", "/"):
+            self.assertNotIn(bad, text)
+        # with the threshold lowered, every card published is a cube document's name, at most 25 + 25 a cube
+        old = W.EXPORT_MIN_CARD_GAMES
+        W.EXPORT_MIN_CARD_GAMES = 1
+        try:
+            doc = W.export_summary(self.out)
+        finally:
+            W.EXPORT_MIN_CARD_GAMES = old
+        con = duckdb.connect(os.path.join(self.out, "lab.duckdb"), read_only=True)
+        names = {r[0] for r in con.execute("select name from cube_cards").fetchall()}
+        con.close()
+        if names:                                          # node parsed the cube documents
+            self.assertGreater(len(doc["cards"]), 0)
+            self.assertTrue(all(c["card"] in names for c in doc["cards"]))
+        per_cube = {}
+        for c in doc["cards"]:
+            per_cube[c["cube"]] = per_cube.get(c["cube"], 0) + 1
+        self.assertTrue(all(v <= 2 * W.EXPORT_CARDS_EACH_END for v in per_cube.values()))
+
+    def test_committed_sample_is_schema_1(self):
+        with open(os.path.join(ROOT, "tools", "lab", "warehouse-sample.json"), encoding="utf-8") as fh:
+            doc = json.load(fh)
+        self.assertEqual(list(doc), ["schema", "generatedAt", "warehouseVer", "tables", "nights", "archive", "disk", "cubes",
+                                     "pairs", "cards"])
+        for c in doc["cards"]:
+            self.assertGreaterEqual(c["games"], W.EXPORT_MIN_CARD_GAMES)
 
 
 if __name__ == "__main__":

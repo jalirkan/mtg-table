@@ -22,6 +22,10 @@
 #   together. The matchup model (`tools/ml/matchup.py`, its `power.tsv`) adjusts for the rest of
 #   the deck; when the warehouse has one, the last cell sets the two side by side.
 # - A card in both decks of a game counts once for each seat, a win and a loss.
+#
+# **Forge against Forge.** Every lab game is Forge Default playing Forge Default: a card's win rate
+# measures the card **in Forge Default's hands**, in the decks the lab's drafters build, not its
+# strength for a person. Games within one draft are correlated, so the intervals are optimistic.
 
 # %%
 import math

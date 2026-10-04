@@ -16,6 +16,10 @@
 # drafters (D294) value a card: high early means they grab it when they see it. This is the
 # drafters' own judgement, before any game is played; the win-rate notebook says how it went.
 #
+# **Forge against Forge.** The drafters are the lab's drafting AI and every game after is Forge
+# Default against Forge Default: a pick order here is the AI's, and a card's later win rate is the
+# card in Forge Default's hands.
+#
 # `CUBE` picks the cube (default: the one with the most picks); `TOP` how many cards to show.
 
 # %%
