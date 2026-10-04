@@ -182,10 +182,10 @@ function approve(cfg: RunnerConfig, id: string, f: Map<string, string>): number 
   return 0;
 }
 
-/** The public copies on 127.0.0.1 (serve.ts): status.json as the runner last wrote it, ladder.json as the ladder last wrote it. */
+/** The public copies on 127.0.0.1 (serve.ts): status.json as the runner last wrote it, ladder.json and warehouse.json as last written. */
 function serve(cfg: RunnerConfig, r: Runner, port: number): void {
-  serveStatus(port, { status: () => readStatus(cfg), ladder: () => r.publicLadder() })
-    .then(() => console.log(`public status on http://${STATUS_HOST}:${port}/public-status.json (and /public-ladder.json)`))
+  serveStatus(port, { status: () => readStatus(cfg), ladder: () => r.publicLadder(), warehouse: () => r.publicWarehouse() })
+    .then(() => console.log(`public status on http://${STATUS_HOST}:${port}/public-status.json (and /public-ladder.json, /public-warehouse.json)`))
     .catch((e: Error) => console.error(`http: ${e.message}`));
 }
 
