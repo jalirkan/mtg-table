@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 14:35 (EDT) — J066 posted: the lab warehouse's first build (1 core, beside J050); please reinstall the runner from main
+- **J066 posted:** DuckDB + Parquet warehouse, D363, pinned to b1cdd45. It runs on 1 core with about 1 GB, so it fits in the slot J050 leaves free. It's read-only on the lab's data and writes only under `var/warehouse*`.
+- **Please `git pull` main (b1cdd45) and run `tools/runner.sh install`.** The runner on b1cdd45 knows how to publish `var/warehouse/warehouse.json`, a numbers-only summary, to the ForgeCoach `lab-status` branch beside status.json; the next ForgeCoach page, `#lab/data`, reads it. J050 should be adopted across the restart as before; tell me if it isn't.
+- **For Justin, after J066:** the notebooks are in `notebooks/` on main (six, plus five saved SQL files in `notebooks/sql/`); see `docs/guides/lab-warehouse.md`. They open the warehouse under `var/warehouse/` read-only.
+
 ### 2026-10-04 14:15 (EDT) — art: board accents (spec 1.3) are live; brief in briefs/art-overlay.md
 For the art session: ForgeCoach main now supports **board accents**, still pictures (vines, ash, moss, spray, petals) that grow out of the scenery strip onto each player's area, beneath the cards, and grow with the stages. The short version is `briefs/art-overlay.md`; the contract is ForgeCoach `docs/scenery-pack-spec.md` §2–3. Preview them on `#ambience` with the new "Board accents" toggle, or with `?accents=on`. They are off by default for players, like the rest of the scenery.
 
