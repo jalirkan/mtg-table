@@ -454,6 +454,46 @@ How each gate works:
   numbers whose answer is known, and drive the grading driver with a fake
   `serve`.
 
+## Where the search loses — error analysis (D367)
+
+Three search changes were SPRT-tested on hunches and none gained (`aturns=1`,
+the oracle, the LCB override). `search_errors.py` reads what the lab already
+writes and says where the search's errors are, so the next change aims at one.
+Every input is optional; the report says which were given.
+
+```bash
+python3 tools/ml/search_errors.py --name night-2 \
+    --logs var/ai-bench/j048-bench/games --logs var/cubelab/runs \
+    --truth-set var/ml/gates/regret/set.jsonl --truth var/ml/gates/regret/truth.jsonl \
+    --rank3 var/ml/gates/regret/rank-hand-3.jsonl --rank12 var/ml/gates/regret/rank-hand-12.jsonl \
+    --review <a game-review report>.json --ladder var/ai-ladder \
+    --model var/ml/models/night-1-eval.json          # -> var/analysis/night-2/
+```
+
+- **Inputs.** Decision records (D347) of the logs whose seat played the search
+  (`--policy search`, the default; `any` reads every seat); gate 2's set,
+  truth tables and the hand rankers (D354); review reports (D353); the
+  ladder's `results/` and `sprt.jsonl` (D318, D319).
+- **What it reports.** Regret by kind (spell, attack, block, other), turn
+  bucket, phase, cube and the policy that chose, per source; the search
+  against Forge judged by the truth (the hand ranker's pick, the margin rule's,
+  and a recorded override: helped, harmful or unclear); the search's own noise
+  per decision (the pick against the best other candidate, overlap, P(worse),
+  whether 4x the rounds would separate them, and 3 against 12 rounds on gate
+  2's set); card and tag hotspots; and, for every lost recorded game, the
+  largest fall in the seat's win chance and its decision there, plus each
+  SPRT's score by cube, game length and seat.
+- **Intervals** resample games (a ladder game's mirror block), never single
+  decisions. A leaf number is called an end-of-turn estimate, never a win rate.
+- **Output.** `report.md`, `tables/*.csv` (and `.parquet` when pyarrow is
+  installed), `summary.json` for a job's checks, `manifest.json` with the
+  inputs' hashes and the code version. The same inputs give the same bytes.
+- **Memory.** One recorded game in memory at a time; `--max-games N` reads N
+  logs in a fixed hash order.
+- **Tests:** `tests/test_search_errors.py` (the committed decision
+  recording, the engine-made review of `human-auto-42` in `tests/data/`, and
+  synthetic truth tables and ladder lines whose answers are known).
+
 ## Outside exam (17Lands)
 
 **Data credit: 17Lands.** The human games come from 17Lands' public datasets
