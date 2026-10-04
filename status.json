@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:41:15-04:00",
- "heartbeat": "2026-10-04T02:41:15-04:00",
+ "updated": "2026-10-04T02:41:29-04:00",
+ "heartbeat": "2026-10-04T02:41:29-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 11.42,
-  "memUsedGb": 5.7,
+  "load1": 10.41,
+  "memUsedGb": 6,
   "memTotalGb": 30.5,
   "swapUsedMb": 3927,
   "pressure": 0,
@@ -22,9 +22,9 @@
    "id": "J056",
    "title": "(was J026, earlier J022; retry of J015; hard after J029: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-04T02:41:15-04:00",
-   "elapsed": 0,
+   "elapsed": 14,
    "done": null,
    "total": null,
    "unit": null,
@@ -35,7 +35,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "elapsed_s": 0,
     "metrics_errors": 3,
@@ -46,7 +46,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J056-prepare"
+   "detail": "lab-J056-pilot1"
   }
  ],
  "queue": [
