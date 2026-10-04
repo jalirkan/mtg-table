@@ -50,7 +50,7 @@ export interface Decision {
 }
 
 export function decide(sprt: SprtState, ni: NiState, margin: number): Decision {
-  if (sprt.result === 'H0') return { verdict: 'reject', reason: `SPRT accepted H0 after ${sprt.games} games (LLR ${sprt.llr.toFixed(2)})` };
+  if (sprt.result === 'H0') return { verdict: 'reject', reason: `SPRT accepted H0 after ${sprt.games} games (LLR ${sprt.llr.toFixed(2)}): not shown to beat the best by the test's elo1 -- not "no gain"` };
   if (sprt.result === 'inconclusive') return { verdict: 'reject', reason: `SPRT inconclusive at its game limit (${sprt.games} games)` };
   const vs = `${ni.diffElo >= 0 ? '+' : ''}${ni.diffElo.toFixed(0)} Elo vs the best against forge-default over ${ni.pairs} shared deals`;
   if (ni.result === 'inferior') return { verdict: 'reject', reason: `forgets Forge: shown worse than the best by ${margin} Elo against forge-default (${vs})` };
