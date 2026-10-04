@@ -238,6 +238,23 @@ class RegretScoreTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertTrue(any("underpowered" in w for w in r["reasons"]))
 
+    def test_fail_wording_and_mde(self):
+        """D372: a FAIL is worded by its interval against the pre-registered MDE; PASS/FAIL unchanged."""
+        rule = G.REGRET_RULE
+        wide = {"estimate": 0.004, "lo": -0.003, "hi": 0.011 + G.REGRET_REPORT["mde"]}
+        r = RS.reading(False, wide, [0.0, 0.05, -0.04] * 100, rule)
+        self.assertIn("underpowered", r["reading"])
+        self.assertIn("not 'no gain'", r["reading"])
+        narrow = {"estimate": -0.001, "lo": -0.004, "hi": 0.002}
+        self.assertIn("ruled out", RS.reading(False, narrow, [0.0, 0.01, -0.01] * 100, rule)["reading"])
+        self.assertIn("underpowered", RS.reading(False, narrow, [0.0] * 10, rule)["reading"])
+        self.assertEqual(RS.reading(True, wide, [0.1] * 300, rule)["reading"], "PASS")
+        with tempfile.TemporaryDirectory() as d:
+            code, rep = self.run_score(regret_files(d))
+            self.assertEqual(code, 0)
+            self.assertEqual(rep["power"]["reading"], "PASS")
+            self.assertGreater(rep["power"]["realisedMde"], 0)
+
     def test_unusable_answers_are_unscored(self):
         truth = answer("x", [("a", 0.6, False), ("b", 0.5, True)])
         good = answer("x", [("a", 0.7, False), ("b", 0.6, True)], measure="leaf")

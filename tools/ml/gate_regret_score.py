@@ -98,6 +98,26 @@ def decide(diffs: list[float], rule: dict[str, Any]) -> tuple[bool, dict[str, An
     return not why, bs, why
 
 
+def reading(ok: bool, bs: dict[str, Any], diffs: list[float], rule: dict[str, Any],
+            report: dict[str, Any] = G.REGRET_REPORT) -> dict[str, Any]:
+    """D372: the verdict in words, and the realised minimum detectable effect.  It never changes
+    PASS or FAIL (REGRET_RULE decides those); it says what a FAIL does and does not show."""
+    n = len(diffs)
+    sd = (sum((d - sum(diffs) / n) ** 2 for d in diffs) / (n - 1)) ** 0.5 if n > 1 else float("nan")
+    realised = report["z"] * sd / n ** 0.5 if n > 1 else float("nan")
+    mde = report["mde"]
+    if ok:
+        words = "PASS"
+    elif n < rule["minScored"]:
+        words = f"FAIL, underpowered: {n} scored decisions < {rule['minScored']}; not 'no gain'"
+    elif not (bs["hi"] < mde):
+        words = (f"FAIL, underpowered: the interval reaches the pre-registered MDE {mde:.3f}, so a gain "
+                 f"of {mde:.3f} is not ruled out; not 'no gain'")
+    else:
+        words = f"FAIL: a mean regret gain of {mde:.3f} or more is ruled out (interval ends at {bs['hi']:+.4f})"
+    return {"mde": mde, "realisedMde": realised, "sd": sd, "power": report["power"], "reading": words}
+
+
 def load_meta(path: str) -> dict[str, Any] | None:
     p = path + ".meta.json"
     if not os.path.isfile(p):
@@ -186,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
         "regretForge": mean(r["forge"]["regret"] for r in rows if r["forge"]),
         "agree": mean(1.0 if r["hand"]["pick"] == r["eval"]["pick"] else 0.0 for r in rows),
         "diffHandMinusEval": bs, "byStratum": by, "versions": vers, "versionChanges": changed, "unstamped": unstamped,
-        "pass": ok, "reasons": why, "rows": rows,
+        "pass": ok, "reasons": why, "power": reading(ok, bs, diffs, rule), "rows": rows,
     }
     if "hand2" in ans:
         sec = [r["hand2"]["regret"] - r["eval2"]["regret"] for r in rows if "hand2" in r]
@@ -203,7 +223,12 @@ def main(argv: list[str] | None = None) -> int:
     if rep.get("secondary12") and rep["secondary12"]["diff"]:
         s2 = rep["secondary12"]["diff"]
         print(f"secondary (12 rounds, not gating): {s2['estimate']:+.4f} [{s2['lo']:+.4f}, {s2['hi']:+.4f}]")
+    pw = rep["power"]
+    if rows:
+        print(f"power (D372, reporting only): pre-registered MDE {pw['mde']:.3f}; realised MDE {pw['realisedMde']:.4f} "
+              f"at {pw['power']:.0%} power (sd of the paired difference {pw['sd']:.4f})")
     print(G.verdict_line("gate 2 (regret)", ok, why))
+    print(f"reading: {pw['reading']}")
     return 0 if ok else 1
 
 
