@@ -1,0 +1,5 @@
+PASS  fit.rows >= 100   [fit.rows = 10843]
+PASS  fit.scale between 50 and 5000   [fit.scale = 351.6]
+PASS  b1500.answers == 12 and b3000.answers == 12   [b1500.answers = 12, b3000.answers = 12]
+PASS  b1500.failed + b3000.failed <= 2   [b1500.failed = 0, b3000.failed = 0]
+PASS  b3000.median_halfwidth < 0.5   [b3000.median_halfwidth = 0.0023]
