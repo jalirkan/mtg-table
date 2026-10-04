@@ -1,0 +1,7 @@
+PASS  pc.lines >= 240   [pc.lines = 390]
+PASS  prank.answered == 6   [prank.answered = 6]
+PASS  prank.ok >= 3   [prank.ok = 6]
+PASS  prank.refused == 0   [prank.refused = 0]
+PASS  ptruth.answered == 2   [ptruth.answered = 2]
+PASS  ptruth.ok >= 1   [ptruth.ok = 2]
+PASS  ptruth.refused == 0   [ptruth.refused = 0]
