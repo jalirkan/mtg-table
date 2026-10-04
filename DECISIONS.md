@@ -17607,3 +17607,103 @@ interval. `tools/eval-runner-selftest.mjs` (12f): the lab-clone lookup.
 - **Reading the first check whenever the set grows**: optional stopping; one population, fixed
   in advance, read once.
 - **Searching the lab clone first**: a model Justin placed in his checkout on purpose must win.
+
+## D371 — The lab's A9 quarantines were the checker's, not a leak: a face-down card's face reaches exactly the seats Forge's `canFaceDownBeShownTo` allows, a look permission included; A9 now checks that rule in its own order, tighter in play and with one narrow, evidenced exemption in exile
+
+*Branch `c/facedown-alt-leak`.* The night-2 lab run (J059, on `d68f5ec`) quarantined 684
+of about 40k recordings; about 90 % failed rule A9 — "face-down card N is controlled by
+player 1 (owner 1), not the viewing seat 0, yet carries an `alt` block" — and about 10 %
+"the viewer's own hand card N has no name". 669 of the 684 involve the peasant cube.
+
+**A9: the cause.** The cube cards are **Gonti, Lord of Luxury** (peasant) and **Thief of
+Sanity** (modern-era): each exiles an *opponent's* card face down and lets its controller
+look at and cast it. Forge's script is `Dig | ExileFaceDown$ True | WithMayLook$ True`, and
+`DigEffect` (javap -c, pinned 2.0.14) moves the card to its **controller's** exile — the
+opponent's, since a library card's controller is its owner — then calls
+`turnFaceDown(true)` and `addMayLookFaceDownExile(activator)`. `CardView.canFaceDownBeShownTo`
+opens with `mayPlayerLook(viewer)` before the "in Battlefield/Stack/Sideboard and you
+control it" clause, so the Gonti player's seat gets the card's `alt` — owned and controlled
+by the opponent, in the opponent's exile. That is the rules (Gonti's controller may look at
+the card; Thief of Sanity says so) and it is `docs/protocol.md` §3.2's "a face-down card
+someone gave them permission to look at". The other seat, the card's owner, gets the
+five-key stub (`canBeShownTo` answers a face-down card in exile with the look permission
+alone). The examples the lab named (Sink into Stupor, Charging Monstrosaur, Vampire
+Nighthawk, Sword of Feast and Famine, Chandra, Torch of Defiance, Elspeth, Knight-Errant)
+are just the cards Gonti and Thief took, and the line repeats while the card stays in exile.
+**The bridge was right; A9 was wrong**: it read Forge's rule as "owner or controller", which
+is both too strict (it misses the look permission) and too lax (in play it let the owner of a
+stolen face-down creature see its face, which Forge does not).
+
+Reproduced in this container: a Gonti/Thief deck against a Bomat Courier/Watcher for
+Tomorrow deck (`RecordMatch`, seed 1, seat 0) failed A9 on 6 cards, every one traced by its
+`zone` event (library → exile) to a Gonti or Thief trigger of seat 0's on the stack in that
+frame or the one before.
+
+**What changed.**
+
+- `tools/check-redaction.mjs` A9, in Forge's order. **In play** (`battlefield`, `stack`)
+  an `alt` needs `controller == seat` — owner no longer counts. **Outside play**, an `alt` on
+  a card the seat neither owns nor controls is admitted only in the shape every look
+  permission in our cubes has: the card arrives in `exile` **from a library** (a `zone`
+  event in that frame) with its `alt` already there, while a stack item **the viewing seat
+  controls** is on the stack in that frame or the previous state frame; it keeps the `alt`
+  only while it stays in exile in consecutive frames. Anything else fails, as before. The
+  summary counts the admitted ones (`alt blocks=N (k an opponent's card exiled under a look
+  permission, A9)`). The six probes (`a9-*`): the Gonti control passes; no dig, the
+  opponent's trigger, an `alt` appearing a frame after the dig, an opponent's morph named,
+  and a stolen morph named for its owner all fail (the last passed the old rule).
+- `bridge/src/mtgtable/FaceDownSelfTest.java` (check-all step 12k, one engine boot): the
+  Gonti calls, a Bomat exile, a face-down permanent, both exiled cards back to hand, and
+  Kitesail Freebooter's own trigger resolved and the Freebooter put in the graveyard;
+  every frame and every `Snap.label` for both seats against `canFaceDownBeShownTo`.
+  28 checks.
+- `tools/requarantine.mjs` (and its self-test, in CI and gate step 12): re-checks a night's
+  quarantine with the current checker, reports per failure kind how many now pass, and
+  restores **only** the ones that pass every check to the queue, one manifest line per move
+  and `failed.txt` kept, with `undo`. The PC job that runs it over nights 1 and 2 is J074.
+- No bridge change. **No wire change, so no amendment**: §3.2 gains the Gonti example and
+  says that the in-play face is the controller's and that a face-down exiled card nobody may
+  look at is the stub.
+
+**"The viewer's own hand card has no name": not root-caused.** In a hand, `canBeShownTo` is
+`getController() == viewer`, so a stub there means Forge's view put another controller on
+a card in the viewer's hand (or gate 0 saw no zone). Tried and **not** reproducing it: a
+face-down exiled card returned to its owner's hand (Bomat Courier, Watcher for Tomorrow;
+also a real recorded game, seed 3 seat 1, three exile → hand moves, checker clean), a
+snapshot on every engine event during that move, Kitesail Freebooter's "until it leaves"
+return, and a creature stolen with a temp controller and bounced to its owner's hand. The
+three cubes it hit (fair-fight, synergy, a vintage bridge) share Kitesail Freebooter,
+Reflector Mage and Brazen Borrower (fair-fight), Tidehollow Sculler and Karn, Scion of Urza
+(synergy, vintage). The checker is not weakened; its message now says which shape the card
+was (a stub, with owner and controller, or a full card with an empty name) and the zone it
+was last seen in outside the hand, with a probe (`own-hand-card-redacted`), so the next
+quarantine names its cause.
+
+**Night 1** (`bf3dca7`, 822 quarantined, put down to D352's revealed library top): A9 on
+Gonti/Thief existed then too. At `bf3dca7` the peasant cube already lists Gonti, the
+modern-era cube Thief of Sanity, `Snap.card` already gated `alt` on
+`canFaceDownBeShownTo` (since `90b97bb`, 2026-09-28) and A9 already read "owner or
+controller", so some of the 822 were very likely this false positive.
+
+**Training.** `tools/ml/encode.py` never reads `alt`: a face-down card goes to the
+`<facedown>` slot and the board's `facedown` count (`card_slot`, `_board`), its name is
+`""`; `EvalSelfTest` (D354) already holds, in Java, D305's scrambler: rewriting a face-down card's `alt` changes no feature of any row. So the
+quarantined logs held nothing the encoder could have learned from, and A9's false positives
+only cost data. The quarantine itself is the lab runner's, which is not on `main`.
+
+**ForgeCoach** (its PR `c/facedown-alt-guard`): it shows an `alt` (the card tile, the zone
+lists) and puts it into coach prompts (`face-down <name>`). With the bridge right, no
+opponent's face-down permanent ever carried one. As defence in depth its readers (a file,
+the live follow, the seat) now drop the `alt` of a face-down card **in play** the seat does
+not control, and keep the exile permission so a Gonti player still sees the card they may
+cast.
+
+**Rejected.**
+
+- **Making the bridge drop the `alt` outside the controller's play zones**: it would hide
+  from a Gonti player the card the rules let them look at and cast.
+- **Exempting every exiled face-down `alt`**: a bridge that put a look permission on the
+  wrong seat would pass; the dig-and-trigger evidence is what ties the permission to the
+  viewer.
+- **Weakening the own-hand check** (e.g. passing stubs whose controller is the opponent):
+  unproven, and the over-redaction may be real.
