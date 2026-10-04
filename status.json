@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-04T15:15:57-04:00",
- "heartbeat": "2026-10-04T15:15:57-04:00",
+ "updated": "2026-10-04T15:20:29-04:00",
+ "heartbeat": "2026-10-04T15:20:29-04:00",
  "paused": false,
  "state": "idle",
  "idleSince": "2026-10-04T15:06:34-04:00",
  "idleReason": "memory backoff",
  "host": {
-  "load1": 9.35,
-  "memUsedGb": 13.7,
+  "load1": 10.07,
+  "memUsedGb": 13.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2081,
+  "swapUsedMb": 2072,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -66,6 +66,14 @@
    "title": "Omega ratings raise (D360): pre-registered A/B, old vs raised ratings, 2 x 3,000 drafts per arm, best of 3, unrecorded",
    "cpu": "heavy",
    "est": "~3-4 h on the 9700X (12,000 drafts best of 3; J039 ran 3,400-4,000 drafts an hour on 7 workers), plus a ~10 min pilot"
+  },
+  {
+   "publicTitle": "Quarantine re-check",
+   "publicEst": "~1 h",
+   "id": "J074",
+   "title": "Re-check nights 1 and 2's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
+   "cpu": "heavy",
+   "est": "~30-60 min on 2 cores (about 1,500 recordings; the checker reads one gzipped log in about a second; the old checker runs too, for the \"before\" kinds)"
   }
  ],
  "waiting": [
