@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-04T04:05:10-04:00
+- time: 2026-10-04T04:07:00-04:00
 - runner: d68f5ec, up since 2026-10-04T02:43:48-04:00
-- running: J054 commands 1/1, 0/1500 games, 7 worker(s), 7 core(s)
+- running: J054 commands 1/1, 32/1500 games, 227.2/h, ETA 2026-10-04T10:34:39-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.20 8.29 9.03
-- queue: J050, J051, J052, J055
+- load: 10.42; memory 13.2/30.5 GB, swap 3252 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J050, J051, J052, J055, J059
 - waiting: nothing
 - last finished: J058 done at 2026-10-04T03:58:32-04:00: sprt_games 552 · all.games 552 · all.errors 0 · all.timeouts 5
 
