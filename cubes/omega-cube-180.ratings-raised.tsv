@@ -1,0 +1,187 @@
+# cube lab ratings for: Omega — the greatest-hits cube, version 1 (180 cards, two-player)
+# Seeded by `tools/cubelab.sh ratings init` from Forge's draft ranks (CardRanker.getRawScore of the
+# best-ranked printing; source cube = CubeCobra's list, set = that set's rank file). A card Forge has no
+# rank for starts at 40. Edit the rating column; the other two say where it started.
+# name	rating	forge	source
+# D360 (2026-10-04): 30 rating(s) raised by `ratings apply --rule explore-eb` from J039's changelog.md (pc-results results/J039/changelog.md, blob 7dc5612) (pooled table as printed);
+# base Forge's ranks (as `ratings init` writes them). Every other line is the base's. The report beside this file lists each change with its evidence.
+Thraben Inspector	97	97	cube:2XM
+Mother of Runes	84.9	84.9	cube:ULG
+Thalia, Guardian of Thraben	91.1	91.1	cube:A25
+Adeline, Resplendent Cathar	92.7	92.7	cube:FCA
+Stoneforge Mystic	71.6	71.6	cube:WWK
+Luminarch Aspirant	96.1	96.1	cube:ZNR
+Blade Splicer	63	63	cube:NPH
+Brimaz, King of Oreskos	76.1	76.1	cube:BNG
+Flickerwisp	59.9	43.4	set:2X2
+Skyclave Apparition	96.7	96.7	cube:ZNR
+Hero of Bladehold	65.5	47.9	set:MBS
+Restoration Angel	48.5	48.5	set:2X2
+Exalted Angel	95.3	95.3	cube:ONS
+Baneslayer Angel	76.7	49.8	set:M21
+Swords to Plowshares	99.4	99.4	cube:C16
+Path to Exile	85.5	85.5	cube:E02
+Council's Judgment	59.8	46.2	set:CNS
+Wrath of God	68.3	68.3	cube:9ED
+Ephemerate	77.3	22.9	set:STA
+Wedding Announcement	86.6	86.6	cube:VOW
+Elspeth, Sun's Champion	91.3	91.3	cube:THS
+The Wandering Emperor	53.1	53.1	cube:NEO
+Sun Titan	64.8	64.8	cube:M11
+Solitude	98.6	98.6	cube:MH2
+Brainstorm	85	85	cube:C15
+Ponder	98.1	98.1	cube:MAR
+Preordain	85.3	85.3	cube:C15
+Counterspell	98.6	98.6	cube:30A
+Mana Leak	98.6	98.6	cube:STH
+Force of Will	99.6	99.6	cube:EMA
+Cryptic Command	61.9	54.3	cube:FCA
+Fact or Fiction	54.7	54.7	cube:DMR
+Delver of Secrets	84	19.7	set:ISD
+Snapcaster Mage	98.3	98.3	cube:UMA
+Jace, Vryn's Prodigy	98	98	cube:PIO
+Brazen Borrower	71.4	71.4	cube:ELD
+Vendilion Clique	88.2	88.2	cube:MM2
+Phantasmal Image	68.2	68.2	cube:SPG
+Man-o'-War	86.9	86.9	cube:DMR
+Mulldrifter	71.5	71.5	cube:2X2
+Control Magic	71.7	71.7	cube:4ED
+Sower of Temptation	95.7	95.7	cube:LRW
+Venser, Shaper Savant	83.9	83.9	cube:FUT
+Murktide Regent	93.5	93.5	cube:MH2
+Treasure Cruise	50.1	50.1	cube:C16
+Morphling	93.8	93.8	cube:USG
+Jace, the Mind Sculptor	98.8	98.8	cube:A25
+Consecrated Sphinx	85.4	85.4	cube:2X2
+Thoughtseize	99.4	99.4	cube:THS
+Hymn to Tourach	72.4	72.4	cube:FEM
+Dark Confidant	65.1	56	cube:MM2
+Bloodghast	62.4	40	set:ZEN
+Blood Artist	65.2	65.2	cube:C17
+Bitterblossom	84.8	84.8	cube:MOR
+Fatal Push	51	51	cube:AER
+Doom Blade	54.9	54.9	cube:M14
+Bone Shards	86.4	86.4	cube:MH2
+Demonic Tutor	99.6	99.6	cube:30A
+Hypnotic Specter	88.2	88.2	cube:9ED
+Vampire Nighthawk	94.3	94.3	cube:ZEN
+Orcish Bowmasters	99.7	99.7	cube:LTR
+Shriekmaw	72.2	58.5	cube:LRW
+Ravenous Chupacabra	53	53	cube:RIX
+Liliana of the Veil	59.2	59.2	cube:ISD
+Liliana, the Last Hope	86.4	86.4	cube:EMN
+Damnation	75	75	cube:PLC
+Phyrexian Arena	61.2	61.2	cube:HOP
+Animate Dead	98.8	98.8	cube:30A
+Reanimate	99	99	cube:ARC
+Grave Titan	49.6	49.6	set:M12
+Kokusho, the Evening Star	73.6	73.6	cube:CHK
+Sheoldred, the Apocalypse	99.3	99.3	cube:DMU
+Lightning Bolt	98.9	98.9	cube:LEB
+Chain Lightning	85.2	85.2	cube:LEG
+Incinerate	64.4	54	cube:ME2
+Arc Trail	79.7	79.7	cube:SOM
+Goblin Guide	56.8	56.8	cube:ZEN
+Monastery Swiftspear	87.2	87.2	cube:PIO
+Ragavan, Nimble Pilferer	99.6	99.6	cube:MH2
+Young Pyromancer	63.1	42.4	set:2X2
+Dragon's Rage Channeler	74.9	74.9	cube:MH2
+Goblin Rabblemaster	63.5	63.5	cube:PIO
+Flametongue Kavu	55.8	55.8	cube:DMR
+Bonecrusher Giant	85.1	85.1	cube:ELD
+Fable of the Mirror-Breaker	99.5	99.5	cube:NEO
+Seasoned Pyromancer	55.6	55.6	cube:MH1
+Ball Lightning	47.9	47.9	set:DRK
+Fury	98.5	98.5	cube:MH2
+Hellrider	60.3	46.6	set:MM3
+Siege-Gang Commander	71.5	49.3	set:M10
+Chandra, Torch of Defiance	52.1	52.1	cube:KLD
+Glorybringer	80.2	55.4	cube:AKR
+Goldspan Dragon	68.3	68.3	cube:KHM
+Thundermaw Hellkite	66.7	49.1	set:M13
+Shivan Dragon	49.9	49.9	set:5ED
+Inferno Titan	80.2	80.2	cube:M12
+Llanowar Elves	72.2	72.2	cube:C14
+Birds of Paradise	74.2	49.6	set:4ED
+Sakura-Tribe Elder	48.9	48.9	set:ARC
+Lotus Cobra	82.7	82.7	cube:ZNR
+Tarmogoyf	86	86	cube:MM2
+Scavenging Ooze	66.6	66.6	cube:FDN
+Eternal Witness	83.8	83.8	cube:CMA
+Tireless Tracker	83	83	cube:SPG
+Courser of Kruphix	92.6	92.6	cube:A25
+Thrun, the Last Troll	73	73	cube:MBS
+Questing Beast	58.3	47.4	set:ELD
+Vengevine	92.4	92.4	cube:ROE
+Rancor	46.8	46.8	set:A25
+Thragtusk	81.1	81.1	cube:2XM
+Polukranos, World Eater	49.1	49.1	set:THS
+Garruk Wildspeaker	49.8	49.8	set:LRW
+Garruk Relentless	64.6	49.8	set:ISD
+Acidic Slime	48.4	48.4	set:C13
+Nissa, Who Shakes the World	79.2	79.2	cube:WAR
+Rampaging Baloths	83	83	cube:ZEN
+Titania, Protector of Argoth	58.1	58.1	cube:MH2
+Primeval Titan	55.7	55.7	cube:MM2
+Avenger of Zendikar	67.5	67.5	cube:C13
+Craterhoof Behemoth	75.7	75.7	cube:MM3
+Teferi, Hero of Dominaria	71.9	71.9	cube:DOM
+Reflector Mage	32.5	32.5	set:OGW
+Psychic Frog	98.7	98.7	cube:MH3
+Baleful Strix	81.8	54	cube:E01
+Expressive Iteration	39.6	39.6	set:SOA
+Fire // Ice	43.1	43.1	set:UMA
+Kolaghan's Command	67.4	67.4	cube:DTK
+Falkenrath Aristocrat	48.1	48.1	set:DKA
+Bloodbraid Elf	81.3	81.3	cube:ARB
+Huntmaster of the Fells	47.2	47.2	set:DKA
+Knight of the Reliquary	43.4	43.4	set:MMA
+Voice of Resurgence	49.4	49.4	set:DGM
+Lingering Souls	80.7	80.7	cube:MM3
+Sorin, Lord of Innistrad	49.7	49.7	set:DKA
+Uro, Titan of Nature's Wrath	54.2	54.2	cube:THB
+Mystic Snake	44	44	set:A25
+Grist, the Hunger Tide	51.5	51.5	cube:MH2
+Maelstrom Pulse	48.3	48.3	set:ARB
+Lightning Helix	80.7	80.7	cube:RAV
+Figure of Destiny	77	49.4	set:EVE
+Umezawa's Jitte	97.8	97.8	cube:PZA
+Sword of Fire and Ice	69.5	54.3	cube:MMA
+Sword of Feast and Famine	71.8	51.8	cube:MBS
+Sword of Light and Shadow	64.7	49.7	set:DST
+Batterskull	79.8	49.7	set:NPH
+Skullclamp	99.1	99.1	cube:DST
+Walking Ballista	84.5	84.5	cube:2XM
+Hangarback Walker	52	52	cube:MPS_KLD
+Smuggler's Copter	63.3	49.3	set:FCA
+Mind Stone	60.4	60.4	cube:C14
+Everflowing Chalice	75.2	46.3	set:ARC
+Coalition Relic	65.2	53.5	cube:A25
+Solemn Simulacrum	54.7	54.7	cube:MPS_KLD
+Karn, Scion of Urza	79.2	58.3	cube:DOM
+Wurmcoil Engine	84.8	84.8	cube:2XM
+Platinum Angel	67.4	49.8	set:MRD
+Karn Liberated	65.1	65.1	cube:2XM
+Ugin, the Spirit Dragon	73.3	73.3	cube:UGF
+Tundra	97.8	97.8	cube:LEB
+Underground Sea	99	99	cube:3ED
+Badlands	98.1	98.1	cube:3ED
+Taiga	71.4	71.4	cube:LEA
+Savannah	95.7	95.7	cube:2ED
+Scrubland	97.4	97.4	cube:2ED
+Volcanic Island	98.8	98.8	cube:LEB
+Bayou	71.8	71.8	cube:2ED
+Plateau	85.2	85.2	cube:3ED
+Tropical Island	85.1	85.1	cube:LEB
+Flooded Strand	99.3	99.3	cube:EXP
+Polluted Delta	99.4	99.4	cube:EXP
+Bloodstained Mire	98.9	98.9	cube:EXP
+Wooded Foothills	98.7	98.7	cube:EXP
+Windswept Heath	98.7	98.7	cube:EXP
+Marsh Flats	98.7	98.7	cube:EXP
+Scalding Tarn	99.4	99.4	cube:EXP
+Verdant Catacombs	99	99	cube:EXP
+Arid Mesa	99.1	99.1	cube:EXP
+Misty Rainforest	99.1	99.1	cube:EXP
+Mishra's Factory	48.8	48.8	set:4ED
+Mutavault	45.3	45.3	set:MOR

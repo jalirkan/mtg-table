@@ -4,6 +4,8 @@
 //
 //   check   <cube.md>                       every card against the engine's database
 //   ratings init <cube.md> [--out <tsv>] [--force]
+//   ratings apply <cube.md> --from <evolve-dir|changelog.md> --rule explore-eb --out <tsv> [--base <tsv>] [--report <md>]
+//           raise the low-rated cards exploration found holding their own (D360, raisecmd.ts)
 //   run     <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K]
 //           [--seed S] [--profiles Default,Default] [--ratings <tsv>] [--record M]
 //           [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]  each drafter's AI drawn per draft, seeded (D347)
@@ -38,6 +40,7 @@ import { parseCube } from './cube.ts';
 import { engineEnv, engineFacts } from './engine.ts';
 import { GUILD } from './cards.ts';
 import { initialRating, ratingsTsv } from './ratings.ts';
+import { ratingsApply } from './raisecmd.ts';
 import { buildMeta, DEFAULT_META } from './meta.ts';
 import { aggregate, renderHtml, renderMarkdown, type CardInfo, type Recording } from './report.ts';
 import { defaultRatings, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
@@ -57,6 +60,8 @@ function usage(msg?: string): never {
   if (msg) process.stderr.write(`cubelab: ${msg}\n`);
   process.stderr.write(`usage: tools/cubelab.sh check <cube.md>
        tools/cubelab.sh ratings init <cube.md> [--out <tsv>] [--force]
+       tools/cubelab.sh ratings apply <cube.md> --from <evolve-dir|changelog.md> --rule explore-eb --out <tsv>
+                        [--base <tsv>] [--report <md>] [--raise name=value]... [--explore name=value]...   (D360)
        tools/cubelab.sh run <cube.md> [--format grid|winston] [--drafts N] [--games 3] [--jobs K] [--seed S]
                         [--profiles Default,Default] [--ratings <tsv>] [--record M] [--out <dir>]
                         [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   (seat specs: <Profile>[+outlets][+search[:k=v]])
@@ -306,7 +311,10 @@ async function main(): Promise<number> {
   const { pos, f } = flags(rest);
   switch (cmd) {
     case 'check': if (!pos[0]) usage('check needs a cube file'); return check(pos[0]);
-    case 'ratings': if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md>'); return ratingsInit(pos[1], one(f, 'out'), f.has('force'));
+    case 'ratings':
+      if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);
+      if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');
+      return ratingsInit(pos[1], one(f, 'out'), f.has('force'));
     case 'run': if (!pos[0] && !f.has('bridge')) usage('run needs a cube file (or --bridge a,b)'); return run(pos[0] ?? '', f);
     case 'queue': if (pos[0] !== 'plan' && pos[0] !== 'run') usage('queue plan|run --night N --drafts D'); return queueCommand(REPO, pos[0], f, say);
     case 'report': if (!pos[0]) usage('report needs a run directory'); return report(pos[0], f);

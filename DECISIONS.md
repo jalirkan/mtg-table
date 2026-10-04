@@ -16960,3 +16960,147 @@ games either way. Our own rows are both chairs of every game, the deck pair the 
 **Not done.** Training on 17Lands data (as pre-training or auxiliary data for a reduced model); the
 other cubes; graveyard and exile partly rebuilt from 17Lands' cast and killed events; the user's skill
 buckets as a filter (the report carries them per game in `games.jsonl`).
+
+## D360 — Exploration's "holds its own" cards get rated where the evidence puts them: the mean rating of the spells they replaced, plus a shrunk effect; capped under the top picks unless the interval is above 0; only raised; Omega's file is not the default until a pre-registered A/B (J064) reads it
+
+*Branch `c/omega-ratings-raise`; D360: D359 is the highest on a freshly fetched `main`, and the open branch `c/eval-winchance` holds a D359 of its own.
+Pre-registered: the rule and J064's reading were written before any game under the new ratings.*
+
+**2026-10-04** (Justin's approval to raise the AI's ratings of the cards J039 found underrated)
+
+**Finding.** J039 (Omega, `--generations 4 --drafts-per-gen 2000 --explore on`, seeds
+3,000,001–3,008,000) judged 66 low-rated targets in its pooled exploration table
+(`results/J039/changelog.md` on `pc-results`): **30 hold their own when played**, 30
+undecided, 5 too few forced decks, 1 weak (Fire // Ice). Read off the table itself, not a
+summary of it:
+
+- "Holds its own" is D356's **non-inferiority** verdict: "delta ≤ −0.10" rejected under
+  BH. It says the card is not much worse than the spell the builder chose instead; 8 of the
+  30 have a negative point estimate (Smuggler's Copter −0.03, Council's Judgment −0.03).
+  Only four have an interval above 0: Glorybringer +0.20 (+0.08 to +0.32), Baleful Strix
+  +0.15 (+0.01 to +0.30), Batterskull and Sword of Feast and Famine +0.07 (+0.01 / +0.02 to
+  +0.13). Deltas are win-rate differences (+0.20 is 20 points of win rate).
+- The 30 are not all *rating-limited* cards: 17 are; the other 13 (Glorybringer, Strix,
+  Karn, Scion of Urza, the three Swords, Smuggler's Copter, Hero of Bladehold, Baneslayer
+  Angel, Shriekmaw, Dark Confidant, Hellrider, Siege-Gang Commander) are rated under
+  `deadMinRating` (60) and so eligible targets, but were played often enough not to be dead.
+- **Omega had no ratings file.** Every other cube has `cubes/<cube>.ratings.tsv`; Omega's
+  drafters used Forge's ranks (`ratings init`'s values, computed from the engine's facts).
+  J039 ran without `--ratings`. `ratings init` on this branch writes Delver of Secrets 19.7
+  and Ephemerate 22.9, D356's numbers, and a draft-only replay of J039's 8,000 seeds on
+  them reproduces its 2,429 explored drafts and every target's forced decks and expected
+  count exactly: these are the ratings J039 drafted with.
+- Ratings drive the builder: a raised card is played far more. On 6,000 draft-only drafts
+  at J064's seeds (810,000,001+), the 30 cards' on-colour play rate goes from 0.39 to 0.75
+  (Delver of Secrets 0.01 → 1.00, Batterskull 0.28 → 0.99) and the pair mix moves (WR
+  10.5% → 13.5% of decks, WU 21.8% → 19.1%). That is the point, and also why the change is
+  verified before it becomes Omega's default.
+
+**Decision.** `tools/cubelab.sh ratings apply <cube.md> --from <evolve-dir | changelog.md>
+--rule explore-eb --out <tsv>` (`tools/cubelab/raise.ts`, `raisecmd.ts`), one rule:
+
+1. **Only `holds` moves.** Undecided, too few and weak keep their rating; so does any card
+   Forge flags `AI:RemoveDeck` All or Random, whatever its row says (D343: its games are
+   about Forge). Exploration already skips `AI:RemAIDeck` targets, so for J039 this guard
+   moves nothing; D356 says nothing that changes D343's handling, and this does not.
+2. **Shrink** each delta toward 0 ("as good as the builder's choice"): empirical Bayes over
+   every judged card (61 in J039), τ² by the method of moments about 0 over w = 1/se²,
+   shrunk = d·τ²/(τ² + se²). J039: τ = 0.028, so a delta keeps 13–51% of itself
+   (Glorybringer +0.20 → +0.034, Batterskull +0.07 → +0.031, Delver +0.05 → +0.016).
+3. **Anchor and target.** delta was measured against the spell the forced card replaced, so
+   the target is the **mean rating of the spells it replaced in its forced decks** plus K ×
+   shrunk delta, K = (top-pick line − mean anchor of the moved cards) / 0.10: a card shown
+   to beat the builder's choice by the evolve's `dominantEffect` is worth a top pick (J039:
+   K = (98.6 − 66.9) / 0.1 = 317 points per unit of win rate, so the evidence term is −3.6
+   to +10.9 points). The size of a raise thus follows what was measured, both terms: what
+   it held its own against, and by how much it beat it after shrinkage.
+4. **Cap.** Below the cube's top-pick line — the 90th percentile of its nonland ratings,
+   98.6 for Omega (17 cards at or above) — unless the 95% interval of delta is above 0, and
+   then at most the best nonland rating (99.7). Nothing in J039 reaches the cap (the highest
+   target is 84.0).
+5. **Only raise**, to 0.1. Fire // Ice is not lowered (below).
+
+**Evidence sources.** An evolve folder is read exactly (each generation's `summary.json`
+table pooled and judged as the changelog judges, and what each forced card replaced from
+`gen-NN/run/drafts.jsonl`). A changelog alone gives the pooled table as printed (two
+decimals; se = interval width / 3.92) and the generations' seeds; the anchors then come from
+a draft-only replay, which must reproduce the changelog's explored count and every row's
+forced and expected decks or the command refuses. The committed file was made the second
+way (the PC's folder is not in this repository); a folder run on the PC would differ only by
+the table's rounding, a few tenths of a point.
+
+**Result** (`docs/evidence/omega-ratings-raise.md`, `.json`), made by `tools/cubelab.sh ratings
+apply cubes/omega-cube-180.md --from <J039's changelog.md> --from-label "J039's changelog.md
+(pc-results results/J039/changelog.md, blob 7dc5612)" --rule explore-eb --out
+cubes/omega-cube-180.ratings-raised.tsv --report docs/evidence/omega-ratings-raise.md --date
+2026-10-04`, which reproduces the three files byte for byte (checked): 30 cards raised, by +7.6
+(Cryptic Command 54.3 → 61.9) to +64.3 (Delver of Secrets 19.7 → 84.0); Glorybringer 55.4 →
+80.2, Baleful Strix 54.0 → 81.8, Karn, Scion of Urza 58.3 → 79.2, Batterskull 49.7 → 79.8.
+Three of the 30 stay under 60 (Flickerwisp 59.9, Council's Judgment 59.8, Questing Beast
+58.3), so they stay explore targets; the other 27 leave the explore targets and the
+rating-limited class and are judged by the ordinary rules.
+
+**Where the file lives.** `cubes/omega-cube-180.ratings-raised.tsv`, **not** the default
+`cubes/omega-cube-180.ratings.tsv`. `run`, the queue's normal chunks and bridge drafts all
+read the beside-the-cube file by default (`defaultRatings`), so creating it would change
+every later Omega draft of the overnight queue (a D341 version change: refused without
+`--allow-version-change`, mixed into the folder with it) before anything has measured the
+new ratings in games. `run --ratings` and `evolve --ratings` take it explicitly; J064 is the
+A/B; when it reads as below, renaming the file to `omega-cube-180.ratings.tsv` is the
+promotion, and that is Justin's call.
+
+**Fire // Ice** stays at 43.1. It is the one card shown *weak when played*: 0.38 with it
+against 0.54 without, delta −0.16 (−0.29 to −0.03), 35 forced decks (88 games). D356's rule
+holds: a weak verdict is a human test for Justin's notes (`cubes/omega-notes.tsv`), never a
+cut or a rating move by the AI's evidence, because "weak when played" cannot tell a weak card
+from one Forge misplays.
+
+**Verification (PC job J064, pre-registered).** Arm A drafts Omega v1 with the old ratings
+(no file: Forge's ranks), arm B with `--ratings cubes/omega-cube-180.ratings-raised.tsv`, on
+the same fresh seeds in D340's verification block, two batches of 3,000 drafts per arm (A1/B1
+810,000,001–810,003,000; A2/B2 810,003,001–810,006,000), best of 3. Read by
+`node tools/cubelab/ratings-verify.ts`:
+
+1. *Played*: the 30 cards' pooled on-colour play rate in each arm. Expected from the replay:
+   about 0.39 → 0.75.
+2. *Performance in B*, by D357's pooled-confirmation statistics: per raised card, *weak*
+   (win rate shown under the batch mean − 0.05) and *dominant* (shown over mean + 0.05),
+   one-sided exact binomials on effective counts; look 1 = batch 1 alone at 0.05 (D331's
+   test), look 2 = both batches pooled (`pooledTest`) at 0.05 / 2; Holm over the cards and
+   both directions at each look. A card is weak or dominant if either look says so (chance
+   of misjudging a no-effect card at most 1.5 × 0.05). A weak card's raise is reverted to its
+   old rating; a dominant card's raise overshot and is the notes' question, not an automatic
+   cut. A card with under 100 games in B is reported as such, not judged.
+3. *Balance*: the colour pairs' spread (best minus worst shrunk rate, pairs with ≥ 100
+   games) and the de-noised between-pair SD, in each arm; J039's spread was 0.44–0.55.
+   `tools/ml/matchup_verify.py test` is run both ways (one look) as D344's formal test of
+   "more balanced"; balance *moved* if either direction accepts.
+
+Promotion (renaming the file) is proposed only if the played rate rises by at least 0.2, no
+raised card is weak, and balance did not get worse (`matchup_verify.py` with A as the
+candidate does not accept). A weak card does not block the others: its line goes back to the
+old rating and the rest are promoted.
+
+**Held by** `web/test/cubelab-ratings-raise.test.ts`: τ² about 0 by hand and never
+negative; a noisier delta moves less; only `holds` moves (undecided, too few, weak, AI-limited
+stay; weak is never lowered; no holder, no change); the target is anchor + K × shrunk with
+K auto or fixed, and τ² = 0 puts every holder at its anchor; the cap (one step under the line
+without strong evidence, the best card with it); only raise; anchors from seats; the
+changelog round trip against `exploreSection`'s own output within its two decimals; the
+replay check; the apply step on a hand-made evolve folder (exactly the holders' lines
+change); the A/B reading's played rates, look 1 and look 2's pooled and spent p, a design
+effect, and the pairs' spread and SD.
+
+**Rejected.**
+
+- **A flat bump** (every holder to 60, or +20): the evidence differs by card, and 60 is
+  under most of the spells these cards were measured against (anchors 56.6–79.0), so the
+  builder would still pass them over.
+- **The raw delta as the size**: Glorybringer's +0.20 on 25 forced decks would be worth 63
+  rating points by K; a sample of 61 judged cards with τ = 0.028 says most of that is noise.
+- **A rating relative to the card's old rating** (old + K × delta): the old ratings are what
+  exploration showed wrong (Delver 19.7 held its own against 1-drops rated 79).
+- **D301's `learn`** over the explored drafts: a whole-cube refit moves every card's rating
+  and the population the evolve measures; D356 already rejected it as the first step.
+- **Lowering Fire // Ice**: Justin's rule (above), and this decision only raises.
+- **Writing the default file now**: the queue would draft Omega on unverified ratings.

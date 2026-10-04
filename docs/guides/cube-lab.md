@@ -658,6 +658,42 @@ get 15–60 forced decks a generation and a gold one about 10; the rarest stay
 *too few*. Exploration is part of `run.json`, the folder check and the version
 stamp only when on, so a run without it is the old run.
 
+### Raising the ratings exploration vindicates: `ratings apply` (D360)
+
+A card that **holds its own when played** is rated too low for the builder to play it.
+`ratings apply` turns the pooled table into a ratings file by one rule, `explore-eb`:
+
+```bash
+tools/cubelab.sh ratings apply cubes/omega-cube-180.md --from var/cubelab/evolve/omega-explore-2000 \
+    --rule explore-eb --out cubes/omega-cube-180.ratings-raised.tsv      # an evolve folder: exact
+tools/cubelab.sh ratings apply cubes/omega-cube-180.md --from changelog.md \
+    --rule explore-eb --out cubes/omega-cube-180.ratings-raised.tsv      # a PC job's changelog: replays the drafts
+```
+
+- only `holds` moves; undecided, too few, weak and AI-limited (D343) cards keep their
+  rating, and a rating is only ever raised (a weak card is the notes' question);
+- each delta is shrunk toward 0 by empirical Bayes over every judged card;
+- the new rating is the mean rating of the spells the card replaced in its forced decks
+  (what delta was measured against) plus K × the shrunk delta, K = (top-pick line − the
+  mean of those anchors) / 0.1;
+- capped one step under the top-pick line (the 90th percentile of the cube's nonland
+  ratings) unless delta's 95% interval is above 0, and then at the best nonland rating.
+
+It writes the TSV (every other line the base's: `--base <tsv>`, or Forge's ranks as
+`ratings init` writes them), a report of every change with its evidence and every judged
+card left alone with why (`--report`, default beside the TSV), and the same as JSON. From a
+changelog alone the anchors come from replaying the generations' discovery seeds without
+games; the replay must match the changelog's explored drafts and every card's forced and
+expected decks, or the command refuses. `--raise effect=0.1,topQuantile=0.9,pointsPerWin=auto`
+and `--explore share=0.3,cap=4,gold=4,below=60` change the rule's and the replay's settings.
+
+Omega's raised file is `cubes/omega-cube-180.ratings-raised.tsv`, made from J039 (report:
+`docs/evidence/omega-ratings-raise.md`). It is **not** the default file beside the cube,
+which `run`, the queue and bridge drafts would pick up on their own: pass it with
+`--ratings` until the A/B (`node tools/cubelab/ratings-verify.ts --a <runs> --b <runs>
+--raised docs/evidence/omega-ratings-raise.json`, PC job J064, D360's pre-registered
+reading) says to promote it.
+
 ## Learning the drafters' values from the games (D301–D302)
 
 The ratings start as Forge's draft ranks and the synergy term is a hand
