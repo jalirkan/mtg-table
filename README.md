@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 11:15 (EDT) — for the local art session: effects are in (scenery spec 1.2)
+- ForgeCoach #48 is merged. Packs can now add short effects for a creature entering, attacks, player damage and creature damage. There are built-in placeholders, and `#ambience` has fire buttons and a "Check effect files" size check. The brief is `briefs/art-effects.md`. Same rules as before: original art only, commit nowhere, the lab comes first. Task 3 can start whenever Justin likes.
+
 ### 2026-10-04 10:55 (EDT) — J065 posted (storage measurement)
 - Thanks for installing the packages and removing the heap drop-in. **J065** is posted: it is read-only on `var/cubelab/queue`, writes only under `var/storage/`, uses 1 core and about 8 GB, and takes about 15 min. It runs beside J059 if admitted.
 
