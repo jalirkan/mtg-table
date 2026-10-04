@@ -45,23 +45,45 @@ absent means an older helper — treat it as running. `"engine_start": 1`
 `aiPolicy` and `aiSearchMs` (below). No `aiPolicies` key: an older helper — offer
 no choice and send neither key.
 
-## `POST /engine/start` (D308)
+## `POST /engine/start` (D308, D381)
 
 Wakes a sleeping engine **on the last match setup** — the decks, profile and
 games of the last `POST /match`, or `play.sh`'s own startup decks when there
-never was one — with a game id of its own. No body (anything sent is ignored,
-4 KB at most). The helper's own gate, exactly as `/match`; it goes through the
-same request file and SIGUSR1, so a wake and a `POST /match` never run at once
-(409 for the second). This is what ForgeCoach's ordinary **Play vs Forge**
-calls when `engine` is `"idle"`, then it connects to `/ws`.
+never was one — with a game id of its own. The helper's own gate, exactly as
+`/match`; it goes through the same request file and SIGUSR1, so a wake and a
+`POST /match` never run at once (409 for the second). This is what ForgeCoach's
+ordinary **Play vs Forge** calls when `engine` is `"idle"`, then it connects to
+`/ws`.
+
+**The body (D381)** is optional, 4 KB at most:
+
+- **none** (or only whitespace): the last setup exactly, as before D381;
+- **`{"aiProfile": "Cautious"}`**: the last setup, but the AI plays that
+  profile — one of the engine's `.ai` files (`Default`, `Cautious`,
+  `Reckless`, `Experimental`), any case, checked exactly as `/match`'s
+  `aiProfile`. It replaces the setup's profile and **stays the last setup's**:
+  a later wake with no body plays it again, until a `POST /match` or another
+  profile replaces it. No deck is named, sent or revealed: the AI's list stays
+  hidden information, which is why plain **Play vs Forge** uses this rather
+  than `/match`. `{}` and unknown keys are the no-body wake;
+- anything else (not JSON, not an object, an unknown profile): **400** with
+  `problems`, and nothing starts.
+
+`/health` says the helper takes the body with `"engine_start_profile": 1`
+(beside `"engine_start": 1`); an older helper ignores a body, so send one only
+when the key is there.
 
 200 — the engine is running: the `POST /match` 200's shape (`yourDeck`, `aiDeck`,
 `aiProfile`, `games`, `ms`, `warnings`; `yourDeck.path` is `null` for the startup
-decks) plus `"already": false`. The engine already running is also 200, at once:
+decks) plus `"already": false`; `aiProfile` is the profile the engine says it
+loaded. The engine already running is also 200, at once, and **nothing
+restarts**:
 `{"ok":true,"already":true,"yourDeck":…,"aiDeck":…,"aiProfile":…,"games":…}`
-(the current match, or just `"ok"` and `"already"` when none is known). Refusals
-are `/match`'s: 403 (gate), 405 (not POST), 409, 502 (`restored:false`: the
-engine stays asleep), 503 (no launcher), 504.
+(the current match, or just `"ok"` and `"already"` when none is known); when the
+body asked for another profile than the running match's, `"warnings"` says it
+was not applied. Refusals are `/match`'s: 400 (the body, D381), 403 (gate), 405
+(not POST), 409, 502 (`restored:false`: the engine stays asleep), 503 (no
+launcher), 504.
 
 **A second `play.sh` beside a sleeping one** (ForgeCoach's launcher runs
 `play.sh --engine-only` on every click of its menu entry): when the coach port
@@ -240,8 +262,10 @@ export interface MatchCurrent {
     games: number | null;
   };
 }
-// POST /engine/start -> MatchStarted & { already: false } | { ok: true, already: true, ...current }
-// GET /health gains: match: 0 | 1, engine_start?: 1, and (when match is 1) engine: 'running' | 'idle',
+// POST /engine/start, body none or EngineStartRequest (D381; only when /health has engine_start_profile: 1)
+//   -> MatchStarted & { already: false } | { ok: true, already: true, ...current, warnings?: string[] }
+export interface EngineStartRequest { aiProfile?: 'Default' | 'Cautious' | 'Reckless' | 'Experimental' }
+// GET /health gains: match: 0 | 1, engine_start?: 1, engine_start_profile?: 1 (D381), and (when match is 1) engine: 'running' | 'idle',
 // idleSince?: string, exitsAt?: string | null  (only when idle),
 // aiPolicies?: string[], aiSearchMs?: {min, max, default}  (D333, when match is 1)
 ```
@@ -259,6 +283,10 @@ export interface MatchCurrent {
    show `problems`.
 4. The decks' names are public at the table (`hello_ok.match`), so name the
    AI's deck by its archetype, not after a card in it.
+5. Plain **Play vs Forge** with the engine asleep: `POST /engine/start`, with
+   `{"aiProfile"}` when the player picked a profile and `/health` has
+   `engine_start_profile: 1` (D381); show `warnings` from an `already` reply
+   (the running match keeps its profile).
 
 ## Not covered
 

@@ -213,15 +213,15 @@
    "seen": 1,
    "pickRate": 1,
    "avgPickIndex": 4,
-   "inDecks": 0,
-   "inclusionRate": 0,
-   "games": 0,
-   "wins": 0,
-   "winRate": 0,
-   "winRateShrunk": 0.4848,
+   "inDecks": 1,
+   "inclusionRate": 1,
+   "games": 3,
+   "wins": 2,
+   "winRate": 0.6667,
+   "winRateShrunk": 0.5086,
    "ci": [
-    0,
-    1
+    0.208,
+    0.939
    ]
   },
   "Moss Beast": {

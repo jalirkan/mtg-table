@@ -235,14 +235,16 @@ which holds the recordings decompressed so that one zstd stream sees them all. T
 quarantine folder becomes `night-N/quarantine.tar.zst`, kept byte for byte as evidence.
 
 ```bash
-python3 tools/lab/archive.py cold --night 1 --dataset var/ml/data/nights-1-3 --dry-run   # checks, drive, estimate
-python3 tools/lab/archive.py cold --night 1 --dataset var/ml/data/nights-1-3 --jobs 4    # resumable
+python3 tools/lab/archive.py cold --night 1 --quarantine var/cubelab/queue-quarantine --dataset var/ml/data/nights-1-3 --dry-run   # checks, drive, estimate
+python3 tools/lab/archive.py cold --night 1 --quarantine var/cubelab/queue-quarantine --dataset var/ml/data/nights-1-3 --jobs 4    # resumable
 python3 tools/lab/archive.py restore-night --night 1                                     # back, verified
 ```
 
 It refuses (exit 3) unless all of these hold:
 - the night is closed;
-- the night's redaction pass ran;
+- the night's redaction pass ran (its quarantine folder exists: `--quarantine DIR`, else
+  `<root>-quarantine-nN`; night 1's is `var/cubelab/queue-quarantine`, with no suffix, and must be
+  named; the folder is walked for its recordings, and `failed.txt` is not trusted);
 - the warehouse ingested every line of the night;
 - a dataset encoded at least 90% of its recordings;
 - no hold in `tools/lab/archive-holds.json` names the night while a job the hold waits for is
@@ -432,9 +434,18 @@ redefined without a schema 2 on both sides.
   pair, archetype, land count) was played in; `ci` is Wilson's 95% interval
   (`[0, 1]` with no games). `seen` is the drafts the card was dealt into;
   `avgPickIndex` its average position among its drafter's takes (1 = first).
+- **Lands** (D380): a nonbasic land's `inDecks`, `games`, `wins` and rates are
+  counted like a spell's, over the played decks that ran it. The deckbuilder
+  plays a dual or fetchland only in its own pair's decks, so a land's win rate
+  measures its pair more than the land. Basics are not cube cards and have no
+  entry; pairs, key cards and curves stay nonland.
+- **picked, inDecks 0** is data, not a lost name (D380): a grid pick takes a
+  whole row or column, so `picked` counts every card of it, and the deckbuilder
+  chooses spells by rating, so a card rated low in the run's ratings rides along
+  in picks and is never built (evolve's `rating-limited`, below).
 - **winRateShrunk** = (wins + 20·m) / (games + 20): the mean of a Beta posterior
-  whose prior is centred on m, the run's mean over every card-game observation,
-  with the strength of 20 games. A 4–0 card moves to about 0.58, a 60–20 card
+  whose prior is centred on m, the run's mean over every nonland card-game
+  observation (lands do not move it), with the strength of 20 games. A 4–0 card moves to about 0.58, a 60–20 card
   goes to 0.70, a card never played is m. Rank cards by it, not by winRate.
 - An **archetype** is a played deck's two colours plus its primary theme (the
   theme ≥ 5 of its spells carry): `BR-SAC`, or `BR` alone. **keyCards** rank its
@@ -483,9 +494,8 @@ over seeds `S + (g−1)·N` .. `S + g·N − 1` (grid, best of three, the run's
 weights), then reads every card's numbers from the run's `meta.json` plus one
 more: how often it went in the **first line taken** from its grid (3 of 9 cards
 is the base rate, so a card that goes there every time is everyone's first
-pick). A land's decks and games are counted from the played decks' full lists
-(`meta.json` counts a deck's spells only, so there every land reads as never
-played). **Nothing is pooled across generations** (D331, which replaced
+pick). A land's decks and games are `meta.json`'s, which counts nonbasic lands
+like spells since D380. **Nothing is pooled across generations** (D331, which replaced
 D300's pooling): every decision reads one batch of drafts that no earlier
 decision has looked at. Each card is then assessed:
 

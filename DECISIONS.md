@@ -18465,7 +18465,12 @@ hibernated, and there is no sudo. D370's per-file zstd keeps the files on `/`.
    and a failed re-verify deletes nothing. `--keep-hot` archives and deletes nothing.
 4. **Refused (exit 3) unless:**
    - the night is closed (D370's rules);
-   - `redaction`: its redaction pass ran (`<root>-quarantine-nN/failed.txt`);
+   - `redaction`: its redaction pass ran: its quarantine folder exists (`--quarantine DIR`, else
+     `<root>-quarantine-nN`; night 1's is `<root>-quarantine`, with no suffix, and must be named).
+     The folder is walked for its recordings, as `tools/requarantine.mjs` does (D371);
+     `failed.txt` is not read, because night 1's was overwritten by its second run (J029).
+     *(Corrected after #66, which required `<root>-quarantine-nN/failed.txt` and so refused
+     night 1.)*
    - `warehouse`: the warehouse's `_state.json` offsets cover every `drafts.jsonl` line of
      the night;
    - `encoded`: a `--dataset` holds at least `--min-encoded` (90%) of its recordings;

@@ -192,7 +192,9 @@
 # every click of its menu entry.  When the coach port already answers with the
 # match launcher on, this script (before the gate, the build or any bind) asks the
 # helper to wake the sleeping engine -- POST /engine/start, which restarts the
-# last match setup -- prints "Engine ready", and exits 0, leaving the first
+# last match setup (D381: with the request's AI profile in place of the setup's
+# when its body names one; that profile is the last setup's from then on; the
+# second launch sends no body) -- prints "Engine ready", and exits 0, leaving the first
 # play.sh running; or, with the engine running, says so and exits 0.  Not with
 # --port, --no-coach or --no-match.
 #
@@ -830,7 +832,11 @@ restart_match() {
     const id = typeof r.id === "string" && /^m[0-9]{13}$/.test(r.id) ? r.id : "";
     const bad = (why) => { console.log("BAD"); console.log(id); console.log(why); process.exit(0); };
     if (!id) bad("no request id");
-    if (r.wake === true) { for (const x of ["WAKE", id, "", "", "", "", "", ""]) console.log(x); process.exit(0); }   // D308 /engine/start
+    if (r.wake === true) {   // D308 /engine/start; D381: an optional profile, a .ai name
+      if (r.aiProfile !== undefined && (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile))) bad("not a profile name");
+      for (const x of ["WAKE", id, "", "", r.aiProfile ?? "", "", "", ""]) console.log(x);
+      process.exit(0);
+    }
     const dir = process.argv[2];
     if (r.deck !== `${dir}/${id}/you.dck` || r.aiDeck !== `${dir}/${id}/ai.dck`) bad("deck paths are not <match dir>/<id>/you.dck and ai.dck");
     if (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile)) bad("not a profile name");
@@ -859,7 +865,7 @@ restart_match() {
     [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
     say "match $id — restarting the engine on ForgeCoach's decks (D303)"
   else
-    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)"
+    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)${req[4]:+, AI profile ${req[4]} (D381)}"
   fi
   match_write status "$id" restarting
   local prev=("${BRIDGE_ARGS[@]}") pass=() skip=0 a
@@ -882,16 +888,22 @@ restart_match() {
   local next=()
   if [ "$wake" = "1" ]; then
     # The last setup as it was (the previous match's decks, or the startup ones),
-    # but a game id of its own, for the same reason as below.
+    # but a game id of its own, for the same reason as below -- and, D381, the
+    # request's AI profile when it names one (then it replaces --ai-profile, and
+    # stays the last setup's from here on).
+    local wprof="${req[4]:-}"
     skip=0
     for a in "${BRIDGE_ARGS[@]}"; do
       if [ "$skip" = "1" ]; then skip=0; continue; fi
       case "$a" in
         --game-id) skip=1 ;;
         --game-id=*) : ;;
+        --ai-profile) if [ -n "$wprof" ]; then skip=1; else next+=("$a"); fi ;;
+        --ai-profile=*) [ -n "$wprof" ] || next+=("$a") ;;
         *) next+=("$a") ;;
       esac
     done
+    [ -n "$wprof" ] && next+=(--ai-profile "$wprof")
     next+=(--game-id "match-$id")
   else
     next=(--transport ws --port "$WS_PORT" --deck "${req[2]}" --ai-deck "${req[3]}" --ai-profile "${req[4]}")
