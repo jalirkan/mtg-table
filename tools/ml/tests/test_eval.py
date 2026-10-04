@@ -203,6 +203,91 @@ class EvalNetTest(unittest.TestCase):
         bigger = self.T.assign_pairs([f"p{i}" for i in range(400)])
         self.assertTrue(all(bigger[k] == v for k, v in big.items()))
 
+    def _old_splits(self, how):
+        """The loading before the memory fix: float32 rows per shard, concatenated, then re-split by
+        concatenating the three splits and taking each new one out."""
+        N, T = self.N, self.T
+        off = N.card_offset_of(self.schema)
+        old = {}
+        for s in ("train", "val", "test"):
+            parts = []
+            for f in sorted(f for f in os.listdir(self.data) if f.startswith(s + "-") and f.endswith(".npz")):
+                with np.load(os.path.join(self.data, f)) as z:
+                    parts.append(N.Rows.from_X(z["X"].astype(np.float32), off, z["y"], z["turn"], z["game"]))
+            old[s] = N.Rows.concat(parts)
+        if how == "dataset":
+            return old
+        allr = N.Rows.concat([old[s] for s in ("train", "val", "test")])
+        sg = np.array(T.game_splits(T.read_games(self.data), how))[allr.game]
+        return {s: allr.take(np.nonzero(sg == s)[0]) for s in ("train", "val", "test")}
+
+    def test_compact_loading_gives_the_old_rows_and_numbers(self):
+        """The memory fix changes no number: the rows (in order) of every re-split, the
+        standardisation, the network's predictions and the baselines' are the ones the float32,
+        concatenate-and-take loading and float64 densification gave."""
+        import baseline_eval as B
+        N, T = self.N, self.T
+        for how in ("dataset", "pair", "game", "holdout:villain-"):
+            _s, _n, new = T.load_data(self.data, how)
+            old = self._old_splits(how)
+            for s in ("train", "val", "test"):
+                a, b = new[s], old[s]
+                self.assertEqual(a.board.dtype, np.int16)
+                for k in ("board", "indptr", "slot", "state", "count", "y", "turn", "game"):
+                    self.assertTrue(np.array_equal(getattr(a, k), getattr(b, k)), (how, s, k))
+        # chunk boundaries inside a shard, the split changing mid-chunk
+        sog = T.game_splits(T.read_games(self.data), "pair")
+        small = N.load_splits(self.data, N.card_offset_of(self.schema), sog, chunk=7)
+        _s, _n, new = T.load_data(self.data, "pair")
+        for s in ("train", "val", "test"):
+            for k in ("board", "indptr", "slot", "count", "game"):
+                self.assertTrue(np.array_equal(getattr(small[s], k), getattr(new[s], k)), (s, k))
+        old = self._old_splits("pair")
+        tr, va, names = new["train"], new["val"], self.names
+        X = old["train"].board.astype(np.float64)
+        mean, sd = N.board_moments(tr.board, chunk=5)
+        self.assertTrue(np.array_equal(mean, X.mean(axis=0)) and np.array_equal(sd, X.std(axis=0)))
+        self.assertTrue(np.array_equal(tr.moments()[1], X.std(axis=0)))
+        core_old = np.stack([X[:, names.index(f"me.{f}")] - X[:, names.index(f"opp.{f}")] for f in B.CORE_DIFFS]
+                            + [X[:, names.index(f)] for f in B.CORE_PLAIN], axis=1)
+        self.assertTrue(np.array_equal(B.core_matrix(tr.board, names), core_old))
+        hp = dict(T.DEFAULTS, hidden="8", dim=4, epochs=4, patience=4, batch=64)
+        vocab = len(self.schema["vocab"]["cards"])
+        net_new, info_new = T.fit(tr, va, names, hp, vocab, "numpy", 3)
+        net_old, info_old = T.fit(old["train"], old["val"], names, hp, vocab, "numpy", 3)
+        self.assertEqual(info_new["valLogloss"], info_old["valLogloss"])
+        self.assertTrue(np.allclose(net_new.predict(new["test"]), net_old.predict(old["test"]), rtol=0, atol=1e-12))
+        bn, bo = T.fit_baselines(tr, va, names), T.fit_baselines(old["train"], old["val"], names)
+        for m in ("prior", "life", "core"):
+            self.assertTrue(np.allclose(bn[m](new["test"]), bo[m](old["test"]), rtol=0, atol=1e-12), m)
+
+    def test_dry_load_and_memory_lines(self):
+        tool = os.path.join(ROOT, "tools", "ml", "train_eval.py")
+        rep = os.path.join(self.tmp, "dry.json")
+        out = os.path.join(self.tmp, "dry-model.json")
+        p = subprocess.run([sys.executable, tool, self.data, "--dry-load", "--report", rep, "--out", out,
+                            "--hidden", "8", "--dim", "4"], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("memory: load: rss", p.stdout)
+        self.assertRegex(p.stdout, r"dry-load: \d+ rows .*; peak RSS \d+\.\d\d GB")
+        self.assertFalse(os.path.exists(out))   # nothing trained, nothing exported
+        with open(rep, encoding="utf-8") as f:
+            r = json.load(f)
+        self.assertTrue(r["dryLoad"])
+        self.assertEqual([m["stage"] for m in r["memory"]],
+                         ["load", "standardise", "one batch", "baselines (1 epoch)", "score"])
+        self.assertGreater(r["peakGB"], 0)
+        p = subprocess.run([sys.executable, tool, self.data, "--dry-load", "--cv", "3"], capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+        # a real run logs, and reports, the same lines
+        p = subprocess.run([sys.executable, tool, self.data, "--report", rep, "--epochs", "1", "--hidden", "4"],
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        for stage in ("load", "fit", "baselines", "score"):
+            self.assertIn(f"memory: {stage}: rss", p.stdout)
+        with open(rep, encoding="utf-8") as f:
+            self.assertEqual([m["stage"] for m in json.load(f)["memory"]], ["load", "fit", "baselines", "score"])
+
     def test_cli_train_cv_and_grid(self):
         out = os.path.join(self.tmp, "cli.json")
         rep = os.path.join(self.tmp, "rep.json")
