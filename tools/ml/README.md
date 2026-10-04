@@ -337,8 +337,31 @@ python3 tools/ml/eval_compare.py var/ml/data/nights-1-3 --model var/ml/models/ni
 - **`--soft-labels F.npz [--soft-weight w]`**: rollout-averaged labels for some training rows
   (`game`, `rows_to_end`, `p` in [0, 1], optional `k`): the target there is
   (1 - w) outcome + w p; validation and test always score against the outcome. The
-  producer (K playouts from a logged position, Forge Default both seats) is not built:
-  D364 says what it needs.
+  producer is `rollout_labels.py` with `tools/coach-grade.sh rollout` (D379, below).
+
+### Rollout labels (D379)
+
+`rollout_labels.py plan` samples training rows, stratified by cube and turn and at most
+`--per-game` a game, in a seeded random order. Each row maps to its state frame by
+re-encoding the game with the dataset's own schema. Rows with a stack, or in a combat damage
+step, are left out: the rebuild cannot restore those.
+
+`tools/coach-grade.sh rollout` plays each planned position out K times with Forge Default
+on both seats, from the viewer's redacted view, with nothing forced. The opponent's hidden
+cards are dealt from the cube's pool (D348's pool mode); a moment naming an opponent list is
+refused. Round r of a position runs on `roundSeed(seed, gameKey#frame, r)`.
+
+`rollout_labels.py pack` writes the `.npz` that `--soft-labels` reads. It refuses labels
+whose game key no longer matches the dataset's index. `summary` gives the cost and the
+statuses as one JSON line.
+
+```bash
+python3 tools/ml/rollout_labels.py plan --data var/ml/data/v2 --n 50000 --seed 1 --out var/ml/rollout/moments.jsonl
+tools/coach-grade.sh rollout --moments var/ml/rollout/moments.jsonl --out var/ml/rollout/labels.jsonl --jobs 7 --k 8
+python3 tools/ml/rollout_labels.py pack --data var/ml/data/v2 --results var/ml/rollout/labels.jsonl --out var/ml/rollout/soft.npz
+python3 tools/ml/train_eval.py --data var/ml/data/v2 --soft-labels var/ml/rollout/soft.npz ...
+tools/coach-grade.sh rollout-selftest      # the engine smoke: one position, the same seed twice, the refusals
+```
 - **`--compact`** holds the rows in about 0.35 KB instead of 0.62 (board columns that fit in
   int8 as int8, int8 counts, int32 row pointers; `gate_fit.py score --compact` too). The
   numbers are identical, bit for bit.

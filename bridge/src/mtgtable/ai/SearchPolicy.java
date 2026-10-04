@@ -184,6 +184,15 @@ public final class SearchPolicy {
         return new PriorityCand(saOrNullForPass);
     }
 
+    /**
+     * Forge's own answer: nothing is forced, the seat is only handed priority as
+     * a priority candidate would be, so Forge's Default AI plays both seats from
+     * the position (D378, the rollout labels: {@code mtgtable.grade.Rollout}).
+     */
+    public static Cand forgeCand() {
+        return new ForgeCand();
+    }
+
     /** Declare exactly these attackers (cards of the original game) at the next declare-attackers step. */
     public static Cand attackCand(final Map<Card, GameEntity> attackers) {
         return new AttackCand(attackers);
@@ -371,6 +380,9 @@ public final class SearchPolicy {
             }
             return Decision.blockToken(pairs);
         }
+        if (c instanceof ForgeCand) {
+            return "forge";
+        }
         throw new IllegalArgumentException("candidate " + c);
     }
 
@@ -452,6 +464,19 @@ public final class SearchPolicy {
             final PhaseHandler ph = copy.getPhaseHandler();
             ph.setPriority(aiCopy);
             ph.onStackResolved();   // public; the one way to say "this seat has priority now"
+        }
+    }
+
+    private static final class ForgeCand extends Cand {
+        ForgeCand() {
+            super("forge");
+        }
+
+        @Override
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutController rc) {
+            final PhaseHandler ph = copy.getPhaseHandler();
+            ph.setPriority(aiCopy);
+            ph.onStackResolved();   // as PriorityCand: this seat has priority now, and answers it as Forge would
         }
     }
 

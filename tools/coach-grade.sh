@@ -20,6 +20,9 @@
 #   ./tools/coach-grade.sh analyse --log F --type T [--frame N] [--opp-pool P] [--opp-known "N; N"] [--budget-ms 3000]
 #   ./tools/coach-grade.sh serve [defaults]      # JSON requests on stdin, one answer line each
 #   ./tools/coach-grade.sh fit-scale --logs DIR[,DIR] [--out F]   # D349: refit the leaf -> P(win) scale
+#   ./tools/coach-grade.sh rollout --moments M.jsonl --out OUT.jsonl [--jobs K] [--k 32] [--seed 1] \
+#        [--max-turns 40] [--timeout-ms 120000] [--max-ms 0]     # D378: rollout labels (tools/ml/rollout_labels.py)
+#   ./tools/coach-grade.sh rollout-selftest [--log F] [--cube C] [--k 4]   # D378: one position labelled, same seed twice
 #   ./tools/coach-grade.sh review --log F --seat N [--opp-pool P] [--opp-known "N; N"] [--jobs 7] \
 #        [--triage-s 15] [--deep-s 150] [--deep-k 6] [--out R.json]   # D353: the post-game review
 #   ./tools/coach-grade.sh review-smoke [--log F] [--jobs 2]   # D353: the review at tiny budgets, report checked (~2 min)
@@ -83,7 +86,11 @@ jvm() {
 # A Forge home of its own (D129) for one JVM of this run.
 home_for() { forge_home_make "$REPO_ROOT/var/coach-grade/$1"; }
 
-batch() {
+# batch / rollout --jobs K: K JVMs, each on every K-th moment with a Forge home of its own, then joined.
+batch() { sharded batch "$@"; }
+
+sharded() {
+  local what="$1"; shift
   local jobs=1 run="" out="" args=()
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -93,23 +100,33 @@ batch() {
       *) args+=("$1"); shift ;;
     esac
   done
-  [ -n "$out" ] || { echo "batch needs --out" >&2; exit 2; }
-  [ -n "$run" ] || run="batch-$(date +%Y%m%d-%H%M%S)-$$"
+  [ -n "$out" ] || { echo "$what needs --out" >&2; exit 2; }
+  [ -n "$run" ] || run="$what-$(date +%Y%m%d-%H%M%S)-$$"
   case "$run" in */*|.*) echo "--run must be a plain name" >&2; exit 2 ;; esac
   mkdir -p "$(dirname "$out")"
-  local pids=() i rc=0
+  local pids=() i rc=0 done_args=()
+  if [ "$what" = rollout ]; then
+    # D379: every shard's lines so far, so a retry under another --jobs labels no moment twice
+    cat "$out".shard-*.jsonl 2>/dev/null > "$out.done" || true
+    done_args=(--done "$out.done")
+  fi
   for ((i = 0; i < jobs; i++)); do
     local home; home="$(home_for "$run/home-$i")"
-    jvm "$home" batch "${args[@]}" --shard "$i/$jobs" --out "$out.shard-$i.jsonl" \
+    jvm "$home" "$what" "${args[@]}" ${done_args[@]+"${done_args[@]}"} --shard "$i/$jobs" --out "$out.shard-$i.jsonl" \
       > "$out.shard-$i.log" 2>&1 &
     pids+=("$!")
   done
   for p in "${pids[@]}"; do wait "$p" || rc=1; done
   : > "$out"
-  for ((i = 0; i < jobs; i++)); do
-    [ -f "$out.shard-$i.jsonl" ] && cat "$out.shard-$i.jsonl" >> "$out"
-  done
-  echo "coach-grade: $(wc -l < "$out") graded moment(s) -> $out"
+  if [ "$what" = rollout ]; then
+    # every shard file, an earlier run's under another --jobs included
+    for f in "$out".shard-*.jsonl; do [ -f "$f" ] && cat "$f" >> "$out"; done
+  else
+    for ((i = 0; i < jobs; i++)); do
+      [ -f "$out.shard-$i.jsonl" ] && cat "$out.shard-$i.jsonl" >> "$out"
+    done
+  fi
+  echo "coach-grade: $(wc -l < "$out") $([ "$what" = rollout ] && echo labelled || echo graded) moment(s) -> $out"
   [ "$rc" = 0 ] || echo "coach-grade: a shard failed -- see $out.shard-*.log" >&2
   return "$rc"
 }
@@ -257,6 +274,30 @@ case "$mode" in
   batch)
     shift
     batch "$@"
+    ;;
+  rollout)
+    shift
+    sharded rollout "$@"
+    ;;
+  rollout-selftest)
+    # D378: one decision row of the committed lab recording, labelled twice on one seed (the same
+    # results, playout by playout) and once on another, with the refusals; the pool is its cube's list.
+    shift
+    rs_log=fixtures/cubelab/recorded/games/7/g1-seat0.jsonl.gz
+    rs_cube=fixtures/cubelab/recorded/cube.md
+    rs_args=()
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --log) rs_log="$2"; shift 2 ;;
+        --cube) rs_cube="$2"; shift 2 ;;
+        *) rs_args+=("$1"); shift ;;
+      esac
+    done
+    mkdir -p var/coach-grade/rollout-selftest
+    python3 tools/ml/rollout_labels.py pool --cube "$rs_cube" --out var/coach-grade/rollout-selftest/pool.txt >/dev/null
+    rs_seq="$(python3 tools/ml/rollout_labels.py first-row --log "$rs_log" --min-turn 3)"
+    jvm "$(home_for rollout-selftest-home)" rollout-selftest --log "$rs_log" --seq "$rs_seq" \
+      --opp-pool var/coach-grade/rollout-selftest/pool.txt ${rs_args[@]+"${rs_args[@]}"}
     ;;
   analyse)
     shift
