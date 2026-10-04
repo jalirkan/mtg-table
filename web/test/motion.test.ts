@@ -290,7 +290,7 @@ function opLog(
  * twos ON (the default when only comic FX is unticked) the TIMING is stepped, the
  * vocabulary is the old one.
  */
-const PRE_LANE_FILM = { ops: 305737, sha256: '15c943859465f837e076937ac966573d0436f600e918be29c627f50f2798ddfd' } as const;
+const PRE_LANE_FILM = { ops: 305737, sha256: '361f8900a03cea54b8cf7b894731fa78cac756140182d26f4c8731a99467b82d' } as const;
 /*
  * **Re-derived for D220** (villain identity): the queue's rule 6 now plays a
  * land's two arrival events — its `zone` event onto the battlefield and its
@@ -302,6 +302,16 @@ const PRE_LANE_FILM = { ops: 305737, sha256: '15c943859465f837e076937ac966573d04
  * the 8 recordings with no doubled rise are op-for-op the pre-lane film, and the
  * 11 with one differ (docs/evidence/villain-identity.md §4). The pre-lane pin was
  * `{ ops: 310369, sha256: '3710d0b4…5f81' }`.
+ *
+ * **Re-derived again for the runtime** (2026-10-04): the cubic easings were
+ * `Math.pow(x, 3)`, whose last bit V8 changed between Node 22 and Node 24, so
+ * these pins held on CI's Node 24 and failed on Node 22. `stage.ts`'s `cube` is
+ * two multiplications, the same on every engine; every pin below and above is
+ * the film with it. Measured against the Node 24 film before the change, over
+ * all 23 recordings: the same ops and the same keys in the same order, and
+ * 10,023 of 3,408,273 numbers moved, by at most 4.4e-16. The pins were
+ * `15c94385…8ddfd` (above), and `99f600b0…54c9`, `cd3081ed…d158`,
+ * `bfc72626…467e` and `6b73640f…36de` (below).
  */
 
 /**
@@ -315,12 +325,12 @@ const PRE_LANE_FILM = { ops: 305737, sha256: '15c943859465f837e076937ac966573d04
  * PRE_LANE_FILM's own note says.
  */
 const POST_LANE_FILMS: Readonly<Record<string, { ops: number; sha256: string }>> = {
-  'games/villain-doom-248.jsonl': { ops: 45744, sha256: '99f600b04e46f3d34d421bd683f7943c86a1e1f22a5f57a47ad5a74d5f2854c9' },
+  'games/villain-doom-248.jsonl': { ops: 45744, sha256: '2368328cff655083ea49f0e5bdf078bbb79c75f615188d0db8461bf830fb29c4' },
   // More villain identity (D230): the three AI decks' recordings, each pinned to
   // the film this tree plays over it — its own cues.json rows (D231) included.
-  'games/villain-masters-of-evil-33.jsonl': { ops: 48367, sha256: 'cd3081ed6b534ebcfc718d58285e9c15a3aaabdfa51b5d80274c4e05ef95d158' },
-  'games/villain-hulk-family-261.jsonl': { ops: 34571, sha256: 'bfc72626304bdd2ee7d5f494e74e06baf0645781fff43bfd64d6c0ec9429467e' },
-  'games/villain-wakanda-232.jsonl': { ops: 44122, sha256: '6b73640f26aa72200a491d908f56f31f3097876fb1354517b949aa0bc91f36de' },
+  'games/villain-masters-of-evil-33.jsonl': { ops: 48367, sha256: '63b4a902412dbc12ee2c7f4597cd9fb2f644ab8b92c463ad167f01064086b3cb' },
+  'games/villain-hulk-family-261.jsonl': { ops: 34571, sha256: 'd78d28622ce1dccc9121468c16f5e272c9c05bc6991ed091f4d898aa7d7b17a5' },
+  'games/villain-wakanda-232.jsonl': { ops: 44122, sha256: 'ad422863f658c2f81f7d2fcb428c194a17ee156a7794a39deb8532df3184fe2e' },
 };
 
 test('motion: with comic FX off and on twos off, every recording plays the film it played before the lane — op for op, by digest', async () => {
@@ -353,6 +363,16 @@ test('motion: with comic FX off and on twos off, every recording plays the film 
     'comic FX off + on twos off is no longer the pre-lane film op for op — if a CLASSIC cue changed on purpose, re-derive PRE_LANE_FILM and say why',
   );
   assert.deepEqual(later, POST_LANE_FILMS, 'a later recording\'s classic film moved (or one is missing) — re-derive its pin and say why');
+});
+
+test('motion: the cue engine computes no power with Math.pow or ** — its last bit is the runtime\'s, not IEEE 754\'s', () => {
+  // V8 changed pow between Node 22 and Node 24: the pins above held on one and not
+  // the other. A product of doubles is the same on every engine (stage.ts's cube).
+  const dir = fileURLToPath(new URL('../src/arena/cues/', import.meta.url));
+  for (const name of readdirSync(dir).filter((n) => n.endsWith('.ts'))) {
+    const code = readFileSync(dir + name, 'utf8').split('\n').filter((l) => !/^\s*(\*|\/\/|\/\*)/.test(l)).join('\n');
+    assert.ok(!/Math\.pow\(|[\w)\]]\s*\*\*\s*[\w(-]/.test(code), `${name} raises to a power; use multiplication (stage.ts's cube)`);
+  }
 });
 
 test('motion: with comic FX on, the corpus plays the new vocabulary — and it all decays', () => {

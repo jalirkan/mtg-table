@@ -66,7 +66,10 @@ The runner checks every 10 seconds and fetches both branches every minute.
    runner), `Nice=10` and `KillMode=control-group`. Under memory pressure the runner first
    drops workers and then pauses new games, through the pool control file. Past the hard
    line it stops the job: `waiting`, reason `memory: …`, `retry_after:` 15 minutes later,
-   `workers_cap:` one fewer. The retry skips a pilot that passed. Every such event is a
+   `workers_cap:` one fewer. The retry skips a pilot that passed. Jobs side by side are
+   stopped for the host's pressure one at a time, a minute apart, so one stop can free
+   the memory before another job's work is thrown away (a job whose own memory is at its
+   unit's cap is stopped regardless). Every such event is a
    `pressure-<n>:` line in STATUS and an entry in `status.json`. After three memory stops the
    job is `failed` (`memory: stopped 3 times`) instead of being retried for ever. A retry, and
    a resume after a restart, checks out the commits the job first ran on, never where its

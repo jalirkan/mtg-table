@@ -1144,6 +1144,43 @@ test('runner: memory pressure drops workers through the control file, then stops
   assert.match(show(w.mtg, 'pc-results:results/J016/STATUS'), /resumed: .*retry after "memory/);
 });
 
+test('runner: memory pressure stops one co-scheduled job at a time, never every job at once', () => {
+  // Two one-worker heavy jobs side by side (a single-worker job cannot shed a worker: past the hard line it is stopped).
+  const one = (id: string): string => NEW_JOB.replace('id: J010', `id: ${id}`).replace('max_workers: 3', 'max_workers: 1\ncores: 1\ncontrol: yes').replace('resumable: yes', 'resumable: no');
+  const w = world({ 'J080-a.md': one('J080'), 'J081-b.md': one('J081') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  for (const step of ['prepare', 'pilot1']) { for (const id of ['J080', 'J081']) w.sys.release(`lab-${id}-${step}`, 'ok'); r.tick(); }
+  assert.deepEqual(['J080', 'J081'].map((id) => r.runs.get(id)?.unit), ['lab-J080-run1', 'lab-J081-run1']);
+  // The host's pressure goes past the hard line and stays there.
+  w.sys.some10 = 50;
+  const stoppedAt = new Map<string, number>();
+  const step = (): void => { w.sys.t += 10_000; r.tick(); for (const u of w.sys.stopped) if (!stoppedAt.has(u)) stoppedAt.set(u, w.sys.t); };
+  for (let i = 0; i < 4; i++) step();
+  assert.deepEqual(w.sys.stopped, ['lab-J080-run1'], 'one job stopped, the other keeps running while memory is freed');
+  assert.equal(r.runs.get('J081')?.unit, 'lab-J081-run1');
+  assert.equal(r.runs.get('J081')?.outcome, null);
+  assert.equal(r.runs.get('J080')?.outcome?.state, 'waiting');
+  assert.ok(w.sys.lines.some((l) => /^J081: memory stop held back \(J080 is stopping for memory\)/.test(l)), w.sys.lines.join('\n'));
+  // Pressure that stays high after the first has gone and settled stops the next, in its turn: not within a minute.
+  for (let i = 0; i < 12 && w.sys.stopped.length < 2; i++) step();
+  assert.deepEqual(w.sys.stopped, ['lab-J080-run1', 'lab-J081-run1']);
+  const gap = (stoppedAt.get('lab-J081-run1') ?? 0) - (stoppedAt.get('lab-J080-run1') ?? 0);
+  assert.ok(gap >= 60_000 && gap <= 100_000, `${gap} ms between the two stops`);
+  // A job whose OWN memory is at its unit's cap is stopped whatever the other does: no other stop relieves it.
+  const w2 = world({ 'J080-a.md': one('J080'), 'J081-b.md': one('J081') });
+  const r2 = new Runner(w2.cfg, w2.sys);
+  r2.reconcile();
+  w2.sys.mode = 'hold';
+  r2.tick();
+  for (const st of ['prepare', 'pilot1']) { for (const id of ['J080', 'J081']) w2.sys.release(`lab-${id}-${st}`, 'ok'); r2.tick(); }
+  w2.sys.unitMemoryGb = () => 20.5;     // past 95 % of the 21 GB MemoryMax
+  for (let i = 0; i < 4; i++) { w2.sys.t += 10_000; r2.tick(); }
+  assert.deepEqual(w2.sys.stopped, ['lab-J080-run1', 'lab-J081-run1']);
+});
+
 test('runner: Justin at the table holds a running heavy job and starts none', () => {
   // J018 is 7 wide: it would wait for cores beside J017 (3 + 7 > 8) anyway; while Justin plays, the reason is him.
   const w = world({ 'J017-x.md': NEW_JOB.replace('id: J010', 'id: J017'), 'J018-y.md': NEW_JOB.replace('id: J010', 'id: J018').replace('max_workers: 3', 'max_workers: 7') });
