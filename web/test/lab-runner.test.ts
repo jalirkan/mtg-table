@@ -49,6 +49,7 @@ import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holdi
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
 import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
+import { cardName, sanitiseWarehouse } from '../../tools/runner/warehouse.ts';
 import { establishedOn, oomJournalLine, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
 import { runPool, type MatchJob } from '../../tools/cubelab/engine.ts';
 import { drive, type BatchResult, type BatchSpec, type Engine } from '../../tools/ai-ladder/bench.ts';
@@ -820,6 +821,41 @@ test('public ladder.json: an allowlist of names, kinds, ratings, records and out
   assert.equal(sanitiseLadder('nope'), null);
 });
 
+const WAREHOUSE_SAMPLE = JSON.parse(fs.readFileSync(path.join(REPO, 'tools', 'lab', 'warehouse-sample.json'), 'utf8'));
+
+test('public warehouse.json (D363): schema 1 exactly, numbers in range, cube-document card names only', () => {
+  // warehouse.py export's own sample passes unchanged.
+  assert.deepEqual(sanitiseWarehouse(WAREHOUSE_SAMPLE), WAREHOUSE_SAMPLE);
+  assert.ok(WAREHOUSE_SAMPLE.cards.length > 0 && WAREHOUSE_SAMPLE.pairs.length > 0 && WAREHOUSE_SAMPLE.nights.length > 0);
+  const hostile = {
+    ...WAREHOUSE_SAMPLE, seeds: [7], decks: [{ main: [[1, 'Snapcaster Mage']] }], path: '/home/justin-a/code/mtg-table/var/cubelab/queue',
+    tables: [{ name: 'drafts', rows: 3, bytes: 9, path: '/x' }, { name: '../etc', rows: 1, bytes: 1 }, { name: 'picks', rows: -1, bytes: 1 }],
+    nights: [{ night: 3, drafts: 1, games: 1, recorded: 1, quarantined: 0, engineErrors: 0, seeds: [1, 2] }, { night: 'n/../4', drafts: 1, games: 1, recorded: 1, quarantined: 0, engineErrors: 0 }, { night: 'other', drafts: 1.5, games: 1, recorded: 1, quarantined: 0, engineErrors: 0 }],
+    archive: { gzipBytes: 10, zstdBytes: 5, dir: '/var' }, disk: { freeGB: 12.5, usedPct: 140 },
+    cubes: [{ cube: 'synergy', drafts: 1, games: 1, avgTurns: 12, onPlayWinRate: 0.5, title: 'x' }, { cube: 'Synergy Cube', drafts: 1, games: 1, avgTurns: 1, onPlayWinRate: 0.5 }],
+    pairs: [{ cube: 'synergy', pair: 'WU', games: 10, winRate: 0.5, lo: 0.2, hi: 0.8 }, { cube: 'synergy', pair: 'WX', games: 10, winRate: 0.5, lo: 0.2, hi: 0.8 }, { cube: 'synergy', pair: 'UB', games: 10, winRate: 1.2, lo: 0.2, hi: 0.8 }],
+    cards: [{ cube: 'synergy', card: 'Fire // Ice', games: 100, winRate: 0.5, lo: 0.4, hi: 0.6, seat: 'A' }, ...['/etc/passwd', 'justin@example.com', 'a\u0000b', 'x'.repeat(61), '../x', 'C:\\x'].map((card) => ({ cube: 'synergy', card, games: 100, winRate: 0.5, lo: 0.4, hi: 0.6 })),
+      { cube: 'synergy', card: 'Snapcaster Mage', games: 100, winRate: 0.5, lo: 0.7, hi: 0.6 }],
+  };
+  const p = sanitiseWarehouse(hostile)!;
+  assert.deepEqual(Object.keys(p), ['schema', 'generatedAt', 'warehouseVer', 'tables', 'nights', 'archive', 'disk', 'cubes', 'pairs', 'cards']);
+  assert.deepEqual(p.tables, [{ name: 'drafts', rows: 3, bytes: 9 }]);
+  assert.deepEqual(p.nights, [{ night: 3, drafts: 1, games: 1, recorded: 1, quarantined: 0, engineErrors: 0 }]);
+  assert.deepEqual(p.archive, { gzipBytes: 10, zstdBytes: 5 });
+  assert.equal(p.disk, null);
+  assert.deepEqual(p.cubes, [{ cube: 'synergy', drafts: 1, games: 1, avgTurns: 12, onPlayWinRate: 0.5 }]);
+  assert.deepEqual(p.pairs.map((x) => x.pair), ['WU']);
+  assert.deepEqual(p.cards.map((x) => x.card), ['Fire // Ice']);
+  const text = JSON.stringify(p);
+  for (const bad of ['/home', 'seeds', 'decks', 'justin', 'passwd', '"path"', '"dir"', '"title"', '"seat"']) assert.ok(!text.includes(bad), bad);
+  assert.equal(cardName("Jace, Vryn's Prodigy"), "Jace, Vryn's Prodigy");
+  assert.equal(cardName('Lim-Dûl the Necromancer'), 'Lim-Dûl the Necromancer');
+  assert.equal(cardName('a/b'), null);
+  assert.equal(sanitiseWarehouse({ ...WAREHOUSE_SAMPLE, schema: 2 }), null);
+  assert.equal(sanitiseWarehouse({ ...WAREHOUSE_SAMPLE, generatedAt: 'yesterday' }), null);
+  assert.equal(sanitiseWarehouse('nope'), null);
+});
+
 test('sys parsers: meminfo, physical cores, sockets on the bridge port', () => {
   const mi = readMeminfo('MemTotal:       31457280 kB\nMemAvailable:   15728640 kB\nSwapTotal:       8388608 kB\nSwapFree:        8388608 kB\n');
   assert.deepEqual(mi, { totalGb: 30, availGb: 15, swapTotalMb: 8192, swapFreeMb: 8192 });
@@ -968,7 +1004,9 @@ test('runner: a new-format job runs pilot, checks, sized commands, final checks 
   const w = world({ 'J010-test.md': NEW_JOB });
   const ladderFile = path.join(w.root, 'ladder.json');
   fs.writeFileSync(ladderFile, JSON.stringify(LADDER));
-  const r = new Runner({ ...w.cfg, ladderFile }, w.sys);
+  const warehouseFile = path.join(w.root, 'warehouse.json');
+  fs.writeFileSync(warehouseFile, JSON.stringify({ ...WAREHOUSE_SAMPLE, seeds: [1, 2], cards: [...WAREHOUSE_SAMPLE.cards, { cube: 'synergy', card: '/home/justin-a/x', games: 200, winRate: 0.5, lo: 0.4, hi: 0.6 }] }));
+  const r = new Runner({ ...w.cfg, ladderFile, warehouseFile }, w.sys);
   r.reconcile();
   r.tick();
   const run = r.runs.get('J010')!;
@@ -996,8 +1034,10 @@ test('runner: a new-format job runs pilot, checks, sized commands, final checks 
   assert.equal(doc.finished[0]?.id, 'J010');
   assert.deepEqual(doc.finished[0]?.numbers, { n: 3, 'final.w': 3 });
   // The public copy: one parentless commit on lab-status holding status.json only, sanitised.
-  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ladder.json\nstatus.json');
+  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ladder.json\nstatus.json\nwarehouse.json');
   assert.deepEqual(JSON.parse(show(w.fc, 'lab-status:ladder.json')), sanitiseLadder(LADDER));
+  // D363: the warehouse summary, sanitised: the sample passes whole; the extra key and the path-like card do not.
+  assert.deepEqual(JSON.parse(show(w.fc, 'lab-status:warehouse.json')), WAREHOUSE_SAMPLE);
   assert.equal(git(w.fc, 'rev-list', '--count', 'lab-status'), '1');
   const pub = JSON.parse(show(w.fc, 'lab-status:status.json')) as StatusDoc;
   assert.deepEqual(pub, sanitise(pub));
@@ -2239,7 +2279,9 @@ test('local server: only the public copies — status sanitised, ladder as sanit
   assert.equal(answer('GET', '/status.json', {}, SRC()).body, st.body, 'the old path is the same public copy');
   assert.equal(answer('GET', '/public-ladder.json', {}, SRC()).status, 404);
   assert.equal(answer('GET', '/public-ladder.json', {}, SRC('{"schema":1}\n')).body, '{"schema":1}');
-  for (const p of ['/status.public.json', '/runner.json', '/../status.json', '/jobs/J001/run1.log', '/ladder.json']) assert.equal(answer('GET', p, {}, SRC()).status, 404, p);
+  assert.equal(answer('GET', '/public-warehouse.json', {}, SRC()).status, 404);
+  assert.equal(answer('GET', '/public-warehouse.json', {}, { ...SRC(), warehouse: () => '{"schema":1}\n' }).body, '{"schema":1}');
+  for (const p of ['/warehouse.json', '/status.public.json', '/runner.json', '/../status.json', '/jobs/J001/run1.log', '/ladder.json']) assert.equal(answer('GET', p, {}, SRC()).status, 404, p);
   assert.equal(answer('POST', '/public-status.json', {}, SRC()).status, 405);
   assert.equal(answer('GET', '/public-status.json', {}, { status: () => null, ladder: () => null }).status, 503);
 });

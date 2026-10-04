@@ -350,6 +350,10 @@ are over decisive games, with Wilson's 95% interval — with a few dozen games
 per colour pair, **the interval is the finding**; run more drafts before
 reading much into a difference inside it.
 
+To query every run folder and the whole queue with SQL or pandas, `tools/lab/warehouse.py`
+(D363) copies `drafts.jsonl` into Parquet tables with a DuckDB file of views:
+`docs/guides/lab-warehouse.md`.
+
 ## meta.json — for ForgeCoach's draft and deck assistant (D297)
 
 `report` also writes `<out>/meta.json`, and `tools/cubelab.sh meta <out> [--cube
