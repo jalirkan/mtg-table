@@ -198,6 +198,9 @@ try {
   const first = starts();
   check('one engine started', first.length === 1);
   check('the first run had no inherited MTGTABLE_LAN_TOKEN', first[0]?.token === null);
+  const seed0 = argOf(first[0]?.argv ?? [], '--seed');
+  check('a bare play.sh gives the bridge a random --seed, once, and prints it (the bridge\'s own default is 0: one shuffle, one game id, every run)',
+    /^\d+$/.test(seed0 ?? '') && first[0].argv.filter((a) => a === '--seed').length === 1 && A.out().includes(`seed ${seed0} (random`), first[0]?.argv?.join(' '));
   r = await http({ port: A.coachPort, path: '/match' });
   check('GET /match: the configured match, names and counts only', r.status === 200 && r.json?.ok === true && r.json?.state === 'running'
     && typeof r.json?.match?.yourDeck?.name === 'string' && JSON.stringify(Object.keys(r.json.match.aiDeck)) === '["name","cards"]'
@@ -237,6 +240,7 @@ try {
   check('the engine was restarted once', s.length === 2);
   check('with the new decks, profile and games', argOf(second, '--deck') === r.json?.yourDeck?.path && argOf(second, '--ai-deck') === r.json?.yourDeck?.path.replace('you.dck', 'ai.dck')
     && argOf(second, '--ai-profile') === 'Reckless' && argOf(second, '--games') === '1', second.join(' '));
+  check('the new match has a random seed of its own, once', /^\d+$/.test(argOf(second, '--seed') ?? '') && second.filter((a) => a === '--seed').length === 1, second.join(' '));
   check('and every other flag kept (--transport ws, the port, --keep-open)', argOf(second, '--transport') === 'ws' && argOf(second, '--port') === String(A.port) && second.includes('--keep-open')
     && second.filter((a) => a === '--deck').length === 1 && second.filter((a) => a === '--games').length === 1, second.join(' '));
   check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
@@ -488,7 +492,9 @@ try {
   check("--idle-exit-after soon is refused", badArg === 1);
 
   console.log('== --no-match: the old behaviour, play.sh exits with the engine');
-  const M = await startPlay(['--no-match', '--', '--idle-timeout', '1'], 'nomatch');
+  const M = await startPlay(['--no-match', '--seed', '7', '--', '--idle-timeout', '1'], 'nomatch');
+  const mStart = starts().filter((e) => argOf(e.argv, '--port') === String(M.port)).at(-1)?.argv ?? [];
+  check('a --seed of the caller\'s is passed as given, and no random one beside it', argOf(mStart, '--seed') === '7' && mStart.filter((a) => a === '--seed').length === 1 && !/\(random;/.test(M.out()), mStart.join(' '));
   for (let i = 0; i < 100 && M.proc.exitCode === null; i++) await sleep(100);
   check('play.sh exited when the engine did (rc 1)', M.proc.exitCode === 1 && /the bridge exited \(1\)/.test(M.out()), `${M.proc.exitCode}\n${M.out().slice(-300)}`);
   check('no sleeping message', !/engine asleep/.test(M.out()));

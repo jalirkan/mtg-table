@@ -558,6 +558,13 @@ case " ${PASSTHROUGH[*]+${PASSTHROUGH[*]}} " in
   *" --games "*|*" --games="*) : ;;
   *) KEEP_ARGS+=(--games "$GAMES_DEFAULT") ;;
 esac
+# --seed: the caller's wins; otherwise a random one, printed so the game can be
+# replayed (as spectate.sh does).  Without it the bridge's seed is 0: every bare
+# play.sh would deal the same shuffle and name its game human-ws-0 every time.
+if ! passthrough_has --seed; then
+  KEEP_ARGS+=(--seed "$(( (RANDOM << 15 | RANDOM) % 100000 ))")
+  echo "seed ${KEEP_ARGS[-1]} (random; --seed ${KEEP_ARGS[-1]} replays this shuffle)"
+fi
 # BRIDGE_ARGS is the bridge's whole command line after the class; D303's restart
 # replaces it and keeps the previous one to fall back on.
 BRIDGE_ARGS=(--transport ws --port "$WS_PORT"
@@ -854,6 +861,9 @@ restart_match() {
     # Its own game id: with a --seed the bridge's default id would repeat, and a
     # client reads a repeated gameId as a reconnect (§2.1), not a new match.
     next+=(--games "${req[5]}" --game-id "match-$id" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}" "${pass[@]+"${pass[@]}"}")
+    # And a seed of its own unless the caller gave one (then it is in pass): without
+    # one the bridge's is 0, the same shuffle for every match on the same decks.
+    passthrough_has --seed || next+=(--seed "$(( (RANDOM << 15 | RANDOM) % 100000 ))")
   fi
 
   # Never two engines: the old one is gone, and its port quiet, before the next starts.
