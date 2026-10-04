@@ -1,5 +1,6 @@
 running
-runner: forgecoach-runner 53ed81f
+runner: forgecoach-runner 202c425
 started: 2026-10-04T15:03:00-04:00
 phase: prepare
 workers: 1
+adopted: 2026-10-04T15:04:00-04:00: the runner restarted; lab-J073-prepare was still running
