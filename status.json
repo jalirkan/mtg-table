@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:41:29-04:00",
- "heartbeat": "2026-10-04T02:41:29-04:00",
+ "updated": "2026-10-04T02:41:53-04:00",
+ "heartbeat": "2026-10-04T02:41:53-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 10.41,
-  "memUsedGb": 6,
+  "load1": 9.11,
+  "memUsedGb": 6.1,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3927,
+  "swapUsedMb": 3926,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4
@@ -22,9 +22,9 @@
    "id": "J056",
    "title": "(was J026, earlier J022; retry of J015; hard after J029: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/1",
    "started": "2026-10-04T02:41:15-04:00",
-   "elapsed": 14,
+   "elapsed": 38,
    "done": null,
    "total": null,
    "unit": null,
@@ -37,8 +37,19 @@
    "dataUpdated": null,
    "memGb": 0.01,
    "live": {
-    "elapsed_s": 0,
+    "elapsed_s": 38,
     "metrics_errors": 3,
+    "peak_worker_rss_gb": 0.77,
+    "pilot.answers": 2,
+    "pilot.decisions_with_drop": 0,
+    "pilot.failed": 0,
+    "pilot.max_halfwidth": 0.0023007924698231425,
+    "pilot.median_halfwidth": 0.0017022424235993857,
+    "pilot.median_rounds": 75,
+    "pilot.ok": 2,
+    "pilot.p90_wall_s": 3.031,
+    "pilot.refused": 0,
+    "pilot.retired": 0,
     "pressure_events": 0,
     "workers": 1
    },
@@ -46,7 +57,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J056-pilot1"
+   "detail": "lab-J056-run1"
   }
  ],
  "queue": [

@@ -1,0 +1,4 @@
+PASS  pilot.answers == 2   [pilot.answers = 2]
+PASS  pilot.ok == 2   [pilot.ok = 2]
+PASS  pilot.median_rounds >= 2   [pilot.median_rounds = 75]
+PASS  pilot.p90_wall_s < 60   [pilot.p90_wall_s = 3.031]
