@@ -164,8 +164,16 @@ class RunDirDatasetTest(unittest.TestCase):
     def test_dataset_cli_run_dir_defaults_out_into_the_run(self):
         with tempfile.TemporaryDirectory() as tmp:
             run = _copy_run(os.path.join(tmp, "r"))
+            # the fixture run has no drafts.jsonl, so its games' decks cannot both be known: the
+            # reserved-deck filter drops them (D365, fails closed) -- the defaults below are read without it
+            p0 = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "ml", "dataset.py"),
+                                 "--run-dir", run], capture_output=True, text=True, cwd=ROOT)
+            self.assertEqual(p0.returncode, 0, p0.stderr)
+            st0 = json.load(open(os.path.join(run, "dataset", "stats.json"), encoding="utf-8"))
+            import reserved as R
+            self.assertEqual((st0["games"], st0["reservedHits"]), (0, {R.UNKNOWN_DECK: 2}))
             p = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "ml", "dataset.py"),
-                                "--run-dir", run], capture_output=True, text=True, cwd=ROOT)
+                                "--run-dir", run, "--keep-reserved"], capture_output=True, text=True, cwd=ROOT)
             self.assertEqual(p.returncode, 0, p.stderr)
             out = os.path.join(run, "dataset")
             st = json.load(open(os.path.join(out, "stats.json"), encoding="utf-8"))
@@ -175,7 +183,7 @@ class RunDirDatasetTest(unittest.TestCase):
             self.assertEqual(len(groups), 1)  # both chairs, one game
             # a second build over the same run reads only the recordings, not its own output
             p2 = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "ml", "dataset.py"),
-                                 "--run-dir", run], capture_output=True, text=True, cwd=ROOT)
+                                 "--run-dir", run, "--keep-reserved"], capture_output=True, text=True, cwd=ROOT)
             self.assertEqual(p2.returncode, 0, p2.stderr)
             self.assertEqual(json.load(open(os.path.join(out, "stats.json"), encoding="utf-8")), st)
 
