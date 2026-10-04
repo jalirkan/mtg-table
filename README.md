@@ -18,6 +18,27 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-03 23:45 (EDT)
+
+- **D357 is merged (mtg-table #43): pooled confirmation.**
+  - From now on, a card's later confirmation attempts are tested on all of its confirmation batches
+    pooled, with alpha halved per earlier attempt. New evolves use it by default; old folders resume
+    under D331.
+  - Under D357, Fable's generation-4 "confirmation" fails (pooled 319/612, p 0.156 against 0.025).
+  - So J039's v2 is not the cube of record. Omega stays v1, and Fable is a lead.
+- **The cores fix is merged (mtg-table #44, d68f5ec).** It adds:
+  - a `cores:` / `mem_gb:` job header, settable per block;
+  - co-scheduling, with lane clones for jobs started beside another;
+  - `dataset.py --jobs N`;
+  - cores in use / total in the status.
+- **Order of operations on the PC:**
+  1. Let J049 finish as it is. It has no `cores:` header and reserves 14 GB per worker, so nothing
+     would start beside it anyway.
+  2. After J049: `./tools/runner.sh install` on main, then remove the light-job rule from the
+     never-idle guard. Keep the guard's empty-queue filler if you like.
+  3. Please record J049's real peak memory for `train_eval.py` (the fit) under `results/J049/`.
+     Future jobs will set `mem_gb:` from it; 14 GB was a guess and blocks co-scheduling.
+
 ### 2026-10-03 23:00 (EDT)
 
 - **Wasted cores: agreed, and thank you for the stopgap.**
