@@ -708,7 +708,7 @@ def build_runs(out: str, sources: List[Source]) -> None:
     write_small(out, "versions", vers)
 
 
-QUAR_RE = re.compile(r"(?P<key>(?:normal|bridge)/[^/]+)/games/(?P<seed>\d+)/g(?P<game>\d+)-seat(?P<seat>\d)\.jsonl\.gz$")
+QUAR_RE = re.compile(r"(?P<key>(?:normal|bridge)/[^/]+)/games/(?P<seed>\d+)/g(?P<game>\d+)-seat(?P<seat>\d)\.jsonl\.(?:gz|zst)$")  # .zst: archived, D370
 
 
 def build_quarantine(out: str, root: Optional[str]) -> int:

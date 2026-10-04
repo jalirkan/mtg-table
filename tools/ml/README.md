@@ -655,7 +655,9 @@ below).*
    which vocabulary a dataset used.
 5. **Varied play.** Forge's AI against itself is one policy; the four AI
    profiles, and later the search player itself, widen the positions seen.
-6. **Gzip** (`.jsonl.gz`) for storage: the reader takes both.
+6. **Gzip** (`.jsonl.gz`) for storage, and **zstd** (`.jsonl.zst`) for a finished
+   night archived by `tools/lab/archive.py` (D370): the reader (`fio.py`) takes all three
+   and lists a game once when both compressed files exist.
 
 For a policy (not only a value): every AI seat of a recorded lab or bench game
 now logs each decision it takes (D347, next section).

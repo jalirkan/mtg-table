@@ -17919,6 +17919,87 @@ interval. `tools/eval-runner-selftest.mjs` (12f): the lab-clone lookup.
   in advance, read once.
 - **Searching the lab clone first**: a model Justin placed in his checkout on purpose must win.
 
+## D370 — A zstd archive tier for finished lab nights: `tools/lab/archive.py` recompresses a closed queue night's recordings from gzip to zstd level 19, verified file by file; the Python and Node readers take `.jsonl.zst` as they take `.jsonl.gz` and prefer it; Java stays gzip-only and refuses a `.zst` with the restore command
+
+*Branch `c/zstd-archive`; D370 (D362–D369 are held by other open branches).*
+
+**2026-10-04** (the owner's request: the most data per byte of the PC's disk)
+
+**Context.** The cube lab's recordings (D315) are gzipped frame logs, about 165 KB a game;
+queue nights 1 and 2 hold 7.7 GB of them, the disk has about 42 GB free and a night adds
+4–5 GB. J065 measured, on 120 of those recordings, zstd level 19 at **4.4× smaller than
+gzip**, decompressing at about 6 GB/s of raw data; a dictionary trained on half the sample
+did not measurably help.
+
+**Decision.**
+
+1. **Two tiers.** Everything a browser or ForgeCoach opens directly stays gzip: human games,
+   samples, live recordings, every night still being written, and every recorder's output.
+   Only a CLOSED queue night (or a finished run folder) is recompressed, by
+   `python3 tools/lab/archive.py night --root var/cubelab/queue --night N` (`dir FOLDER` for
+   a run folder), to `X.jsonl.zst`, level 19, one file per worker process (`--jobs`). No
+   dictionary.
+2. **Closed means closed.** `night` refuses, exit 3, nothing touched, a night with no plan
+   (`night-N.json`), one not in `queue.json`'s `nights`, one a running `cubelab … queue run
+   --night N` names, one with a `.jsonl.gz` changed in the last 30 minutes, and one with a
+   planned draft that has no `drafts.jsonl` line (`--allow-incomplete` for a night cut short
+   and not to be resumed: only seeds with a line, whose matches are over, are touched).
+3. **Verify before delete.** Per file: gunzip whole (a cut-short gzip is left as it is and
+   counted `truncated`), SHA-256 of the raw bytes, the `.zst` written to `.tmp`, fsynced,
+   renamed, the folder fsynced; then read back FROM DISK, decompressed strictly (a stream
+   ending inside a frame fails) and its SHA-256 compared; only a match appends the file's
+   line (path, raw/gz/zst bytes, SHA-256) to `<root>/archive/night-N.files.jsonl`, fsynced,
+   and only then is the `.gz` deleted. A stop anywhere leaves the `.gz` alone, both (the
+   readers take the `.zst`; the next run re-verifies it and deletes the `.gz`), or the
+   `.zst` alone and logged. Re-running is resuming; a lock file keeps two runs apart.
+4. **The manifest** (`archive/night-N.json`): recordings, files (not kept, not truncated),
+   verified, failed, truncated, kept as gzip, bytes before and after, the ratio, the CPU
+   time and the redaction check. `--dry-run` measures 64 recordings in memory and writes
+   only `night-N.dryrun.json` (expected bytes after, CPU hours).
+5. **Hidden information.** Twelve of the night's logs go through
+   `tools/check-redaction.mjs` as gzip before and as zstd after; the verdicts and statistics
+   must be identical (path and byte count aside), else the run exits 1. That proves Node's
+   reader end to end on the real archive; the Python reader is proved by the verify step.
+6. **Readers.** One shared opener per language:
+   - Python: `tools/ml/fio.py` (`open_log`, `is_log`, `prefer_zst`, `key_name`,
+     `recorded`). `encode.py`'s `find_logs` / `read_games` (and so dataset.py,
+     policy_data.py, the gate builders, eval_serve's `--log`) take `.jsonl.zst`, list a game
+     once when both files exist (the `.zst`), open the `.zst` for a stored `.gz` path the
+     archive replaced, and keep a game's key (`game_key` hashes the recorded `.gz` name), so
+     a dataset built before and after the archive splits identically. `reserved.py` knows
+     the suffix. The gate lists a Java step reads (`gates.heldout`, the regret candidates)
+     name the recorded `.gz` path. The `zstandard` package is needed only to open a `.zst`;
+     without it that open says so.
+   - Node: `check-redaction.mjs` reads `.zst` with Node's own `zlib.zstdDecompressSync`
+     (Node 22.15+ / 23.8+; CI and the PC run 24); an older Node says what it needs. No new
+     dependency.
+   - Java: the pinned Forge jar has no zstd decoder (netty's `ZstdDecoder` needs zstd-jni,
+     which it does not ship), so `WireLog` (coach-grade.sh, leaf-rows.sh, the D354 gates)
+     stays `.jsonl` / `.jsonl.gz` and refuses a `.zst` (by name, by its magic bytes, or a
+     stored `.gz` path whose file is now a `.zst`) with `python3 tools/lab/archive.py
+     restore PATH`, which writes a verified `.gz` back. The archiver keeps as gzip every log
+     the gate lists under `var/ml/gates/` name (`heldout.txt`, the regret
+     `candidates.jsonl` / `set.jsonl`), plus any `--keep-gz LIST`.
+
+**Measured** (this container, the six committed lab recordings): 21.5 MB raw, 372 KB gzip,
+106 KB zstd 19: **3.51× smaller than gzip** (3.24–3.66× per file), 203× smaller than raw.
+J065's 4.4× is the PC's sample of real nights.
+
+**Order.** A job that reads an archived night's recordings must pin a commit with this
+decision; J070 (the archive of nights 1 and 2) runs after J062 and J063, which read them at
+older commits.
+
+**Rejected.**
+
+- **zstd for everything:** ForgeCoach and the board open `.gz` in the browser;
+  a browser-side zstd decoder is not something every browser has.
+- **A trained dictionary:** J065 saw no gain on real nights; here one trained on four committed
+  logs made the other two 1.5% smaller (519 bytes), less than its own 110 KB, and every reader would have to find the dictionary.
+- **zstd in Java** (zstd-jni or aircompressor): a new dependency beside the pinned jar for
+  the few logs a Java step reads, which the keep lists leave as gzip.
+- **Deleting the `.gz` once the `.zst` is written:** a write is not a verify; the file is
+  read back from disk first.
+
 ## D371 — The lab's A9 quarantines were the checker's, not a leak: a face-down card's face reaches exactly the seats Forge's `canFaceDownBeShownTo` allows, a look permission included; A9 now checks that rule in its own order, tighter in play and with one narrow, evidenced exemption in exile
 
 *Branch `c/facedown-alt-leak`.* The night-2 lab run (J059, on `d68f5ec`) quarantined 684
