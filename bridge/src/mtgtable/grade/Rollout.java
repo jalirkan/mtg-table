@@ -30,7 +30,7 @@ import mtgtable.Json;
 import mtgtable.ai.SearchPolicy;
 
 /**
- * The rollout labels (D380): one dataset position, played out K times by
+ * The rollout labels (D382): one dataset position, played out K times by
  * Forge's Default AI on both seats, from the viewer's redacted view of it.
  * The label is the viewer's mean result: a win 1, a loss 0, a draw or a game
  * still going at {@link Settings#maxTurns} a half.  {@code train_eval.py

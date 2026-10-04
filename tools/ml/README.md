@@ -337,9 +337,9 @@ python3 tools/ml/eval_compare.py var/ml/data/nights-1-3 --model var/ml/models/ni
 - **`--soft-labels F.npz [--soft-weight w]`**: rollout-averaged labels for some training rows
   (`game`, `rows_to_end`, `p` in [0, 1], optional `k`): the target there is
   (1 - w) outcome + w p; validation and test always score against the outcome. The
-  producer is `rollout_labels.py` with `tools/coach-grade.sh rollout` (D380, below).
+  producer is `rollout_labels.py` with `tools/coach-grade.sh rollout` (D382, below).
 
-### Rollout labels (D380)
+### Rollout labels (D382)
 
 `rollout_labels.py plan` samples training rows, stratified by cube and turn and at most
 `--per-game` a game, in a seeded random order. Each row maps to its state frame by

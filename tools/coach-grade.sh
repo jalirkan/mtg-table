@@ -21,8 +21,8 @@
 #   ./tools/coach-grade.sh serve [defaults]      # JSON requests on stdin, one answer line each
 #   ./tools/coach-grade.sh fit-scale --logs DIR[,DIR] [--out F]   # D349: refit the leaf -> P(win) scale
 #   ./tools/coach-grade.sh rollout --moments M.jsonl --out OUT.jsonl [--jobs K] [--k 32] [--seed 1] \
-#        [--max-turns 40] [--timeout-ms 120000] [--max-ms 0]     # D380: rollout labels (tools/ml/rollout_labels.py)
-#   ./tools/coach-grade.sh rollout-selftest [--log F] [--cube C] [--k 4]   # D380: one position labelled, same seed twice
+#        [--max-turns 40] [--timeout-ms 120000] [--max-ms 0]     # D382: rollout labels (tools/ml/rollout_labels.py)
+#   ./tools/coach-grade.sh rollout-selftest [--log F] [--cube C] [--k 4]   # D382: one position labelled, same seed twice
 #   ./tools/coach-grade.sh review --log F --seat N [--opp-pool P] [--opp-known "N; N"] [--jobs 7] \
 #        [--triage-s 15] [--deep-s 150] [--deep-k 6] [--out R.json]   # D353: the post-game review
 #   ./tools/coach-grade.sh review-smoke [--log F] [--jobs 2]   # D353: the review at tiny budgets, report checked (~2 min)
@@ -106,7 +106,7 @@ sharded() {
   mkdir -p "$(dirname "$out")"
   local pids=() i rc=0 done_args=()
   if [ "$what" = rollout ]; then
-    # D380: every shard's lines so far, so a retry under another --jobs labels no moment twice
+    # D382: every shard's lines so far, so a retry under another --jobs labels no moment twice
     cat "$out".shard-*.jsonl 2>/dev/null > "$out.done" || true
     done_args=(--done "$out.done")
   fi
@@ -280,7 +280,7 @@ case "$mode" in
     sharded rollout "$@"
     ;;
   rollout-selftest)
-    # D380: one decision row of the committed lab recording, labelled twice on one seed (the same
+    # D382: one decision row of the committed lab recording, labelled twice on one seed (the same
     # results, playout by playout) and once on another, with the refusals; the pool is its cube's list.
     shift
     rs_log=fixtures/cubelab/recorded/games/7/g1-seat0.jsonl.gz

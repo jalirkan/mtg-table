@@ -187,7 +187,7 @@ public final class SearchPolicy {
     /**
      * Forge's own answer: nothing is forced, the seat is only handed priority as
      * a priority candidate would be, so Forge's Default AI plays both seats from
-     * the position (D380, the rollout labels: {@code mtgtable.grade.Rollout}).
+     * the position (D382, the rollout labels: {@code mtgtable.grade.Rollout}).
      */
     public static Cand forgeCand() {
         return new ForgeCand();

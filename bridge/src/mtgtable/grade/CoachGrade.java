@@ -73,7 +73,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *              --opp-known "Name; 2 Name" | FILE (AI picks the player saw: drawn first)
  *              --opp-deck-public "<reason>" (live modes only: the opponent's list is shared)
  *   rollout  --moments M.jsonl --out OUT.jsonl [--shard I/K] [--k 32] [--seed 1] [--max-turns 40]
- *            [--timeout-ms 120000] [--max-ms 0]   (D380: rollout labels, pool knowledge only; see below)
+ *            [--timeout-ms 120000] [--max-ms 0]   (D382: rollout labels, pool knowledge only; see below)
  *   rollout-selftest --log F --seq N --opp-pool P [--k 4]   (engine smoke: the same seed twice, the same label)
  *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json] [--max-logs N] [--min-games 10]   (D349;
  *              a non-positive scale, or one from fewer games, is printed and NOT written: exit 3, D353 amended)
@@ -112,7 +112,7 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * public card, the AI picks the player saw first).  A refused request is
  * answered {@code "status": "refused"} with the reason.
  *
- * <p><b>Rollout labels</b> (D380, {@link Rollout}): {@code rollout} plays each
+ * <p><b>Rollout labels</b> (D382, {@link Rollout}): {@code rollout} plays each
  * moment -- a dataset row: {@code gameKey}, {@code log}, {@code seq} (the
  * state frame's), {@code game} and {@code rowsToEnd} (the dataset's index and
  * row key, copied through), {@code oppPool} (a card list: the cube's), and
@@ -1229,7 +1229,7 @@ public final class CoachGrade {
     }
 
     // ------------------------------------------------------------------
-    // Rollout labels (D380)
+    // Rollout labels (D382)
     // ------------------------------------------------------------------
 
     static Rollout.Settings rolloutSettings(final Flags f) {
@@ -1253,7 +1253,7 @@ public final class CoachGrade {
     static Rebuild.Knowledge rolloutKnowledge(final File root, final WireLog log, final Map<?, ?> mo) throws IOException {
         if (mo.get("oppDeck") != null || mo.get("oppDeckPublic") != null) {
             throw new HiddenPool.Refused("a rollout label never takes the opponent's deck list: its hidden cards are dealt from"
-                    + " the pool (D348, D380)");
+                    + " the pool (D348, D382)");
         }
         final String pool = WireLog.str(mo, "oppPool");
         if (pool == null) {
@@ -1333,7 +1333,7 @@ public final class CoachGrade {
         }
         for (final String no : new String[] {"opp-deck", "opp-deck-public"}) {
             if (f.v.containsKey(no)) {
-                throw new HiddenPool.Refused("rollout does not take --" + no + ": the opponent's hidden cards come from its pool (D348, D380)");
+                throw new HiddenPool.Refused("rollout does not take --" + no + ": the opponent's hidden cards come from its pool (D348, D382)");
             }
         }
         int shard = 0;
@@ -1409,7 +1409,7 @@ public final class CoachGrade {
     }
 
     /**
-     * The rollout's engine smoke (D380): one fixture position labelled twice on
+     * The rollout's engine smoke (D382): one fixture position labelled twice on
      * one seed and once on another, and the refusals.  The same seed must give
      * the same playout results, one by one (a label is a function of its seed);
      * the opponent's hidden cards come from the pool, never from a list.

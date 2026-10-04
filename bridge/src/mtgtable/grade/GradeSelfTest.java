@@ -72,7 +72,7 @@ public final class GradeSelfTest {
                 check(msg != null && msg.contains("archive.py restore") && msg.contains("D370"),
                         "WireLog refuses a zstd log with the restore command: " + f.getName() + " -> " + msg);
             }
-            // ... and still reads gzip (D370's four-byte sniff once left every .gz undecompressed; D380).
+            // ... and still reads gzip (D370's four-byte sniff once left every .gz undecompressed; D382).
             final java.io.File gz = dir.resolve("g1-seat0.jsonl.gz").toFile();
             final byte[] text = ("{\"v\":1,\"kind\":\"session\",\"seat\":1}\n"
                     + "{\"dir\":\"s2c\",\"seq\":1,\"type\":\"state\",\"body\":{\"turn\":3}}\n").getBytes(java.nio.charset.StandardCharsets.UTF_8);
@@ -95,7 +95,7 @@ public final class GradeSelfTest {
     }
 
     /**
-     * D380's rollout labels, the arithmetic and the keys (the engine half is
+     * D382's rollout labels, the arithmetic and the keys (the engine half is
      * {@code coach-grade.sh rollout-selftest}): a label counts wins, losses and
      * draws (a half) and leaves failed playouts out; a position's key is its
      * game's key and state frame, so its round seeds follow the game, not a

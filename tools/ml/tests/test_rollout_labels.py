@@ -1,4 +1,4 @@
-# mtg-table — tools/ml/tests: the rollout labels' driver (D380).
+# mtg-table — tools/ml/tests: the rollout labels' driver (D382).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """rollout_labels.py: the plan is a function of the dataset and the seed, stratified, at most --per-game
@@ -165,7 +165,7 @@ class PlanPackTest(unittest.TestCase):
             self.assertEqual(keys, sorted(keys))
         with open(out + ".json", encoding="utf-8") as f:
             man = json.load(f)
-        self.assertEqual((man["decision"], man["labels"], man["minK"]), ("D380", len(a) - 2, 8))
+        self.assertEqual((man["decision"], man["labels"], man["minK"]), ("D382", len(a) - 2, 8))
         self.assertIn("gitSha", man)
         self.assertIn("forgeJarSha256", man)
                 # the same input packs to the same bytes' content

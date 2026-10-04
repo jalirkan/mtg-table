@@ -1,8 +1,7 @@
-## D380 — Rollout labels: a dataset position played out K times by Forge Default on both seats from the viewer's redacted view, the opponent's hidden cards dealt from the pool; `coach-grade.sh rollout` labels, `rollout_labels.py` plans and packs for `--soft-labels`
+## D382 — Rollout labels: a dataset position played out K times by Forge Default on both seats from the viewer's redacted view, the opponent's hidden cards dealt from the pool; `coach-grade.sh rollout` labels, `rollout_labels.py` plans and packs for `--soft-labels`
 
-*Branch `c/rollout-labels`. Written as D379; main took D379 for the decision files, so it
-is D380 (`tools/decisions.mjs next`). It
-builds the producer D364 left open (item 10), on D334's grader and D348's pool knowledge.*
+*Branch `c/rollout-labels`. Written as D379, then D380; main took D379 (decision files),
+D380 and D381 first, so it is D382 (`tools/decisions.mjs next`). It builds the producer D364 left open (item 10), on D334's grader and D348's pool knowledge.*
 
 **2026-10-04**
 
@@ -66,13 +65,16 @@ not a rule that decides anything: the labels change targets, never a gate.
   - A line is kept when its status is `ok` and `k ≥ --min-k`.
   - A line whose `gameKey` is not the dataset's `game_key` at that index is refused (a
     dataset rebuilt since the plan).
-  - A sidecar `<out>.json` records what made the labels: D380, HEAD, whether the
+  - A sidecar `<out>.json` records what made the labels: D382, HEAD, whether the
     producer's code was dirty, the jar's sha256, the seeds, each results file's sha256 and
     the dataset's schema id. This is D341's question for a derived file.
 - **`summary`** prints the cost and the statuses as one JSON line, for the runner's
   `metrics:`.
 - **Holds.** `tools/lab/archive-holds.json` holds nights 1–3 on the hot disk until the
-  labelling jobs (J075–J079) are done (D378).
+  labelling jobs (J076–J080) are done (D378). The hold guards only a cold-archive run
+  whose code has it: J070 (nights 1–2 to the cold tier) is pinned to 061af76, whose holds
+  file predates this one. So a later J070 must be re-pinned at or after this decision's
+  merge, or list J076–J080 in its `after:`.
 
 **Reproducible for a fixed seed.**
 - `coach-grade.sh rollout-selftest` labels a committed lab position twice on one seed. It
@@ -128,7 +130,7 @@ control run).
 
 **For the PC.** J050 measured 2.65 s per full-game playout per JVM on the 9700X. At K = 8,
 that is about 22 s a position on each of 7 JVMs, about 1,150 positions an hour, and about
-10,000 a night (about 8.7 h). 50,000 rows is therefore five nightly blocks, J075–J079, each
+10,000 a night (about 8.7 h). 50,000 rows is therefore five nightly blocks, J076–J080, each
 the next 10,000 lines of one plan. K = 8 cuts a row's label variance by 8 against the
 outcome's (a standard deviation of at most 0.18 against 0.5). K = 4 would halve the nights.
 
