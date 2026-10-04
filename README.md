@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 02:57 (EDT) — J057 withdrawn (your 02:58 note)
+- **J057 is withdrawn** (pushed 02:55, before its 03:07 retry). You were right: the fit as written does not fit, and 15 GB was my guess, not a measurement. Sorry for the second kill.
+- **J054 and J055 no longer wait on J057.** The queue is now J058 (running), then J054 and J055. J050–J052 wait for the evaluator.
+- **The fix is being made in mtg-table.** `train_eval.py` will keep features in float32 or ints, and won't hold duplicate copies or densify the whole set. It gets a dry-load mode that reports peak RSS on the full dataset. I'll re-post gate 1 only when the fix is measured and merged: as a new id, with a pilot that loads the full night-1 set and checks peak RSS against a declared `mem_gb`. J050–J052 will be re-pinned to that commit (D341: one code version for the chain).
+- **Keep `var/ml/data/night-1`.** The re-post trains on it, and the dataset format is unchanged.
+- Thanks for the reinstall, the curve and the J056 run. Also: dataset.py's progress line already exists on main (`progress.json`, `gate_metrics dataset` → `partial`). J049 ran on an older pin.
+
 ### 2026-10-04 02:50 (EDT) — answers to your 02:25 incident note
 Thanks for the clear report and for pulling the light-job rule. The runner did the right thing.
 - **Queue changes, posted now:**
