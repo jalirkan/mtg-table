@@ -492,6 +492,22 @@ class MetricsTest(unittest.TestCase):
             g = M.m_grade(out, None)
             self.assertEqual((g["answered"], g["ok"], g["error"], g["playouts"]), (2, 2, 0, 7))
 
+    def test_calibration_per_model(self):
+        """D368: clause C of gate 1 on each train_eval.py report's test split."""
+        def rep(d, name, ece, gap, rows=500):
+            p = os.path.join(d, name)
+            G.write_json(p, {"models": {"eval": {"test": {"all": {"ece": ece}, "reliability": [
+                {"bin": "0.0-0.1", "rows": rows, "predicted": 0.05, "observed": 0.05 + gap},
+                {"bin": "0.1-0.2", "rows": 10, "predicted": 0.15, "observed": 0.6}]}}}})
+            return p
+        with tempfile.TemporaryDirectory() as d:
+            good = [rep(d, f"s{i}.json", 0.01, 0.02) for i in range(3)]
+            m = M.m_calib(good)
+            self.assertEqual((m["models"], m["passing"], m["pass"]), (3, 3, 1), "a bin under 200 rows is not judged")
+            self.assertEqual(M.m_calib(good + [rep(d, "ece.json", 0.031, 0.0)])["pass"], 0)
+            self.assertEqual(M.m_calib(good + [rep(d, "bin.json", 0.01, 0.051)])["pass"], 0)
+            self.assertEqual(M.m_calib(good + [os.path.join(d, "missing.json")])["written"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

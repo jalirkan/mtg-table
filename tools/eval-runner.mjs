@@ -10,11 +10,20 @@
 //
 // The model is a train_eval.py export (D316) that lives on this machine only
 // (var/ml/models/, gitignored): it is never served, and no weight leaves the
-// process.  The default is var/ml/models/night-1-eval.json when that file exists.
-// A relative model path (the default or --eval-model's) is looked up in this
-// checkout first, then in the lab runner's heavy clone, where the PC's jobs
-// write their models (D369; docs/guides/lab-runner.md): $MTGTABLE_LAB_ROOT, else
-// ../lab/mtg-table beside this checkout (~/code/mtg-table -> ~/code/lab/mtg-table).
+// process.  The default is var/ml/models/night-1-ensemble.json when that manifest
+// exists (D368), else var/ml/models/night-1-eval.json when that file exists.
+// A relative model path (a default or --eval-model's, each of an ensemble's) is
+// looked up in this checkout first, then in the lab runner's heavy clone, where
+// the PC's jobs write their models (D369; docs/guides/lab-runner.md):
+// $MTGTABLE_LAB_ROOT, else ../lab/mtg-table beside this checkout
+// (~/code/mtg-table -> ~/code/lab/mtg-table).  The ensemble default is searched
+// in both places before the single model's.
+//
+// AN ENSEMBLE (D368).  --eval-model may name several exports of one schema
+// (seeds of one training config): `a.json,b.json`, a directory, or an
+// `ensemble.json` manifest (tools/ml/eval_serve.py's header).  The answer's `p`
+// is then the members' mean, `sd` their sample standard deviation, `n` their
+// number.  `explain: true` adds the attributions (tools/ml/attribution.py).
 //
 // HOW.  One child process, tools/ml/eval_serve.py, holds the model and answers
 // JSON lines: it IS encode.py's encoder and evalnet.py's forward pass (nothing
@@ -27,17 +36,26 @@
 // THE CONTRACT (ForgeCoach's src/evalClient.ts is built against exactly this):
 //
 //   GET  /health  ->  ... "eval": 1, "evalModel": "<sha-256 of the model file, 12 hex>",
-//                         "evalSchema": "<schemaId, 16 hex>"
+//                         "evalSchema": "<schemaId, 16 hex>",
+//                         "evalEnsemble": <the number of models; 2+ means answers carry sd>,
+//                         "evalExplain": 1 | 0   (D368: whether "explain" is answered)
 //                  or ... "eval": 0, "evalError"?: "<plain words>"   (off, loading, or refused)
 //   POST /eval    {"seat": <the viewing seat's player id>,
 //                  "state": <a protocol state body, exactly as that seat received it>,
-//                  "history"?: [{"events": [...], "stack": [...]}, ...]}
+//                  "history"?: [{"events": [...], "stack": [...]}, ...],
+//                  "explain"?: true}       (D368; or POST /eval?explain=1)
 //                 (at most 2 MB; no other field)
-//                 -> 200 {"ok": true, "p": <0..1, P(seat wins)>, "model": "<12 hex>",
+//                 -> 200 {"ok": true, "p": <0..1, P(seat wins); an ensemble's mean>,
+//                         "n": <models>, "sd"?: <their sample sd, when n >= 2>,
+//                         "model": "<12 hex>",
 //                         "schema": "<16 hex>", "turn": <state.turn>,
 //                         "decision": <true when the state is a decision row as the
 //                                      training data picks them>,
-//                         "featureHash": "<16 hex>", "ms": <time taken>}
+//                         "featureHash": "<16 hex>", "ms": <time taken>,
+//                         "explain"?: {"method", "baseline": {"what", "p", "logit"}, "p", "logit",
+//                                      "members", "buckets": [{"key", "label", "pts", "logit"}, ...]}}
+//                 `buckets` is every bucket with a share, largest first; their `pts`
+//                 sum to 100 (p - baseline.p) and their `logit` to logit - baseline.logit.
 //                 400 a body that is not that, or a state not redacted for `seat`
 //                 413 too large; 429 too many waiting; 503 eval off / not ready;
 //                 504 no answer in time -- each {"ok": false, "type": "error", "message"}.
@@ -61,17 +79,21 @@ import { isAbsolute, resolve } from 'node:path';
 
 export const MAX_EVAL_BODY = 2 * 1024 * 1024;
 export const DEFAULT_EVAL_MODEL = 'var/ml/models/night-1-eval.json';
+export const DEFAULT_EVAL_ENSEMBLE = 'var/ml/models/night-1-ensemble.json';
 export const VENV_PYTHON = 'var/ml/venv/bin/python3';
 const MAX_WAITING = 32;
 const MAX_HISTORY = 20000;
 const MAX_RESTARTS = 3;
-const FIELDS = new Set(['seat', 'state', 'history']);
+const FIELDS = new Set(['seat', 'state', 'history', 'explain']);
+
+/** How many models a ready line says it serves (an older eval_serve.py says nothing: one). */
+const members = (o) => (Number.isInteger(o?.n) && o.n >= 1 ? o.n : 1);
 
 /** Plain checks of a /eval body; eval_serve.py checks the state itself. */
 export function validateEval(q) {
-  if (!q || typeof q !== 'object' || Array.isArray(q)) return { problem: 'the body must be a JSON object {seat, state, history?}' };
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return { problem: 'the body must be a JSON object {seat, state, history?, explain?}' };
   const extra = Object.keys(q).filter((k) => !FIELDS.has(k));
-  if (extra.length) return { problem: `unknown field${extra.length > 1 ? 's' : ''} ${extra.map((k) => JSON.stringify(k)).join(', ')}: the request is {seat, state, history?}` };
+  if (extra.length) return { problem: `unknown field${extra.length > 1 ? 's' : ''} ${extra.map((k) => JSON.stringify(k)).join(', ')}: the request is {seat, state, history?, explain?}` };
   if (!Number.isInteger(q.seat) || q.seat < 0 || q.seat > 64) return { problem: '"seat" must be the viewing seat\'s player id' };
   if (!q.state || typeof q.state !== 'object' || Array.isArray(q.state) || !Array.isArray(q.state.players)) return { problem: '"state" must be a protocol state body (with "players")' };
   if (q.history !== undefined && q.history !== null) {
@@ -83,7 +105,10 @@ export function validateEval(q) {
       if (h.stack !== undefined && h.stack !== null && !Array.isArray(h.stack)) return { problem: 'a history frame\'s "stack" must be a list' };
     }
   }
-  return { req: { seat: q.seat, state: q.state, history: q.history ?? [] } };
+  if (q.explain !== undefined && typeof q.explain !== 'boolean') return { problem: '"explain" must be true or false' };
+  const req = { seat: q.seat, state: q.state, history: q.history ?? [] };
+  if (q.explain === true) req.explain = true;
+  return { req };
 }
 
 /** The lab runner's heavy clone (D369): $MTGTABLE_LAB_ROOT, else ../lab/mtg-table beside this checkout. */
@@ -91,17 +116,35 @@ export function labRoot(repoRoot, env = process.env) {
   return env.MTGTABLE_LAB_ROOT ? resolve(env.MTGTABLE_LAB_ROOT) : resolve(repoRoot, '..', 'lab', 'mtg-table');
 }
 
-/** The model to load: the flag, else the default -- in this checkout, else in the lab clone (D369);
- *  a flag that is nowhere stays as given (the runner then says it is missing); no default anywhere is none. */
-export function resolveEvalModel(repoRoot, flag, env = process.env) {
-  const rel = flag || DEFAULT_EVAL_MODEL;
+/** One relative or absolute path: in this checkout, else in the lab clone (D369), else null. */
+function findModel(repoRoot, rel, env) {
   const here = resolve(repoRoot, rel);
   if (existsSync(here)) return here;
   if (!isAbsolute(rel)) {
     const lab = resolve(labRoot(repoRoot, env), rel);
     if (existsSync(lab)) return lab;
   }
-  return flag ? here : null;
+  return null;
+}
+
+/**
+ * The model to load.  The flag: one path, a comma-separated list (an ensemble,
+ * D368), a directory or a manifest, each path found in this checkout, else in the
+ * lab clone (D369); a path that is nowhere stays as given (the runner then says it
+ * is missing).  Without a flag: the default ensemble manifest (D368), else the
+ * default model, each looked for here and then in the lab clone; none anywhere is
+ * none.
+ */
+export function resolveEvalModel(repoRoot, flag, env = process.env) {
+  if (flag) {
+    return flag.split(',').map((p) => p.trim()).filter(Boolean)
+      .map((p) => findModel(repoRoot, p, env) ?? resolve(repoRoot, p)).join(',');
+  }
+  for (const d of [DEFAULT_EVAL_ENSEMBLE, DEFAULT_EVAL_MODEL]) {
+    const p = findModel(repoRoot, d, env);
+    if (p) return p;
+  }
+  return null;
 }
 
 /** The Python that runs eval_serve.py: the flag, else the repo's venv when present, else python3. */
@@ -189,7 +232,7 @@ export function createEvalRunner(opts) {
               ready = true;
               state = 'ready';
               info = o;
-              log(`EVAL ready: model ${o.model}, schema ${o.schema}, ${o.boardColumns} board columns, ${o.vocab} cards`);
+              log(`EVAL ready: model ${o.model}, schema ${o.schema}, ${o.boardColumns} board columns, ${o.vocab} cards${members(o) > 1 ? `, an ensemble of ${members(o)}` : ''}${o.explain === true ? ', explains' : ''}`);
               starting = null;
               done(true);
             } else {
@@ -205,7 +248,10 @@ export function createEvalRunner(opts) {
           clearTimeout(w.timer);
           const ms = Date.now() - w.t0;
           if (o.ok === true && typeof o.p === 'number' && o.p >= 0 && o.p <= 1) {
-            w.resolve({ status: 200, body: { ok: true, p: o.p, model: info.model, schema: info.schema, turn: o.turn, decision: o.decision === true, featureHash: o.featureHash, ms } });
+            const body = { ok: true, p: o.p, n: members(info), model: info.model, schema: info.schema, turn: o.turn, decision: o.decision === true, featureHash: o.featureHash, ms };
+            if (typeof o.sd === 'number' && Number.isFinite(o.sd) && o.sd >= 0) body.sd = o.sd;
+            if (o.explain && typeof o.explain === 'object' && Array.isArray(o.explain.buckets)) body.explain = o.explain;
+            w.resolve({ status: 200, body });
           } else {
             const status = o.status === 400 ? 400 : 500;
             w.resolve({ status, body: { ok: false, type: 'error', message: typeof o.error === 'string' ? o.error.slice(0, 400) : 'the evaluator failed' } });
@@ -238,12 +284,12 @@ export function createEvalRunner(opts) {
     start,
     available: () => state === 'ready',
     health() {
-      if (state === 'ready') return { eval: 1, evalModel: info.model, evalSchema: info.schema };
+      if (state === 'ready') return { eval: 1, evalModel: info.model, evalSchema: info.schema, evalEnsemble: members(info), evalExplain: info.explain === true ? 1 : 0 };
       return state === 'off' ? { eval: 0 } : { eval: 0, evalError: state === 'loading' ? 'loading the model' : error };
     },
     describe() {
       if (state === 'off') return `/eval off (${error})`;
-      if (state === 'ready') return `/eval on: model ${info.model}, schema ${info.schema}`;
+      if (state === 'ready') return `/eval on: model ${info.model}, schema ${info.schema}${members(info) > 1 ? `, ${members(info)} models (mean and sd)` : ''}${info.explain === true ? ', explain on' : ''}`;
       return `/eval ${state}${error ? `: ${error}` : ''}`;
     },
     async post(q) {
