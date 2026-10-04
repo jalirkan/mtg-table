@@ -1,0 +1,13 @@
+{
+ "pilot_ok": 1,
+ "pilot_fail": 0,
+ "scale.present": 1,
+ "scale.usable_before": 0,
+ "scale.scale": -10325,
+ "scale.games": 1,
+ "scale.usable_now": 1,
+ "elapsed_s": 57,
+ "workers": 3,
+ "pressure_events": 0,
+ "peak_worker_rss_gb": 1.13
+}

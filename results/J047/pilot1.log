@@ -1,0 +1,102 @@
+==== J047 pilot1 started 2026-10-03T21:20:12-04:00 in unit lab-J047-pilot1, 3 worker(s)
+lint-bridge-selftest OK: 31 rules, 60 firing cases (each fired its own rule and no other), 73 checks
+bridge lint OK (64 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 64 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 274 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2304 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:36594): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:36604): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:36614 (1 watching)
+WS CONNECT /127.0.0.1:36616 (connection #1)
+WS REFUSED /127.0.0.1:36632: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:36642 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:36642 (1 watching)
+WS DISCONNECT /127.0.0.1:36616 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:36652 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:36652 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:36662 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:42562 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:42562: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 30 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:57972: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:57976: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:57982: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:57984: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:58026: no valid pairing token
+WS SITE REFUSED /127.0.0.1:58164: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58180: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58184: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58200: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58204: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58220: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58222: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58224: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58236: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58244: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58246: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:58252: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:58260: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:58266: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:58274: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:58284 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:58284 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:58288 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:58288 (0 watching)
+WS CONNECT /127.0.0.1:58298 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:58298 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:58306): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:58310): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:58312 (1 watching)
+WS CONNECT /127.0.0.1:54732 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:54732 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:54738 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:54738 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:39915 (/127.0.0.1:54754): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:39422: a path that would leave the site
+WS CONNECT /127.0.0.1:53778 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:53778 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:53794): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:42183 (/127.0.0.1:53802): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 5.6 us + predict 3.5 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 112 check(s), 0 failure(s)
+decision selftest: 44 check(s), 0 failure(s)
+build OK
+J047 leaf scale: {"present":1,"usable_before":0,"scale":-10325,"games":1,"moved_to":"var/coach-grade/leaf-scale.json.unusable-2026-10-04T01-20-23-561Z","usable_now":1}
+REVIEW-SMOKE STAGE plan fixtures/games/human-trample-7.jsonl seat 0
+{"status":"ok","decisions":23,"jobs":3,"triageMsPerDecision":500,"gameId":"human-trample-7","frames":1155}
+REVIEW-SMOKE STAGE triage 23 decision(s) on 3 JVM(s), 500 ms each
+coach-grade: 23 graded moment(s) -> var/coach-grade/review/review-smoke-2999460/triage.jsonl
+REVIEW-SMOKE STAGE deepen 2 decision(s) on 2 JVM(s), 20000 ms each, horizon 1
+coach-grade: 2 graded moment(s) -> var/coach-grade/review/review-smoke-2999460/deep.jsonl
+REVIEW-SMOKE STAGE report
+review: 23 decision(s), 16 graded, 2 mistake(s), 8 close call(s), 2 deepened, 0 error(s) -> var/coach-grade/review/review-smoke-2999460/report.json
+REVIEW-SMOKE DONE var/coach-grade/review/review-smoke-2999460/report.json decisions=23 graded=16 errors=0 deepened=2
+ok   a game-review report, v1
+ok   23 decision(s), as the summary says
+ok   every decision has a graded type and its frames
+ok   clear exactly when the verdict is a mistake
+ok   a mistake has its regret interval above zero
+ok   a close call has its interval touching zero
+ok   one played option in every table that has it
+ok   win rates in [0, 1]
+ok   2 deepened, at most --deep-k
+ok   every key moment is a decision marked key
+ok   no pool given: the opponent model says basic lands
+ok   the triage graded: 16 decision(s) ok
+ok   0 error(s) of 23 decision(s): at most a quarter
+review-smoke: 13 check(s), 0 failure(s); timing {"planMs":171,"triageWallMs":7640,"deepWallMs":22954,"totalMs":30929,"triageGradeMs":3763,"deepGradeMs":19953}

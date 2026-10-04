@@ -1,0 +1,3 @@
+PASS  pilot_ok == 1   [pilot_ok = 1]
+PASS  pilot_fail == 0   [pilot_fail = 0]
+PASS  scale.usable_now == 1   [scale.usable_now = 1]
