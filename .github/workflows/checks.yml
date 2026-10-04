@@ -31,7 +31,8 @@
 #              (12d), the wire-drift comparison's self-test (step 6's), the
 #              workshop catalog check (12b) and the coach helper's self-test
 #              (12f, D292: a loopback HTTP server and a FAKE `claude` -- no real
-#              CLI, no login, no network) -- plain Node, no npm install.
+#              CLI, no login, no network), and the decision index's check and
+#              self-test (D379) -- plain Node, no npm install.
 #
 # Also local only: tools/arena-bench.mjs (a built dist, a preview server and a
 # headless Chromium), the card library's real build (Scryfall's bulk file),
@@ -175,6 +176,12 @@ jobs:
       # synthetic.  Never --pre-amendment, never --opponent-library-ok.
       - name: check-redaction.mjs over the committed fixtures
         run: node tools/check-redaction.mjs fixtures/games/*.jsonl fixtures/synthetic/*.jsonl
+      # D379: no decision number twice across DECISIONS.md and docs/decisions/,
+      # every docs/decisions/ file named and headed alike; then the tool's own controls.
+      - name: decisions.mjs check
+        run: node tools/decisions.mjs check
+      - name: decisions-selftest.mjs
+        run: node tools/decisions-selftest.mjs
       # Step 12: the checker must still reject every one-defect probe.
       - name: check-redaction-selftest.mjs
         run: node tools/check-redaction-selftest.mjs
