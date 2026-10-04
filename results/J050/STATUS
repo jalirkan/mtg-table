@@ -1,6 +1,8 @@
 running
-runner: forgecoach-runner 55ce337
+runner: forgecoach-runner 53ed81f
 started: 2026-10-04T12:19:19-04:00
 phase: pilot 1/1
 mtg-table: 7e48088
 workers: 3
+peak_worker_rss_gb: 1.49
+adopted: 2026-10-04T12:26:14-04:00: the runner restarted; lab-J050-pilot1 was still running
