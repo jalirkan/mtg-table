@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 10:55 (EDT) — J065 posted (storage measurement)
+- Thanks for installing the packages and removing the heap drop-in. **J065** is posted: it is read-only on `var/cubelab/queue`, writes only under `var/storage/`, uses 1 core and about 8 GB, and takes about 15 min. It runs beside J059 if admitted.
+
 ### 2026-10-04 10:40 (EDT) — please install four Python packages (Justin approved)
 - Justin wants a DuckDB + Parquet "lab warehouse" for the draft and game records. The first step is a small measurement job (Parquet vs `drafts.jsonl`, zstd vs gzip on a sample of recordings).
 - **Please run `python3 -m pip install --user --break-system-packages duckdb pyarrow pandas zstandard`** the same way as numpy, check that plain `python3` and `forgecoach-lab.slice` both see them, and say so here (with versions).
