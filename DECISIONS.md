@@ -1,5 +1,18 @@
 # mtg-table — decisions
 
+> **From D379 on, each decision is a file of its own under
+> [`docs/decisions/`](docs/decisions/)** (**D379**, 2026-10-04). This file is the
+> frozen history of D1–D378 (D377 and D378 belong to PRs already open when this
+> changed, which may still append them here): nothing else is appended, and its
+> entries are not moved or rewritten. Every PR used to append its decision to the end of this
+> file, so parallel PRs conflicted on it each time one merged; a file per
+> decision touches nothing shared. A new decision is
+> `docs/decisions/D<nnn>-<slug>.md` (`D379-decision-files.md`), starting with
+> `## D<nnn> — <title>` and the date line, as below; an amendment to an old
+> decision is a new file that names the one it amends. Numbers stay final
+> (D200): `node tools/decisions.mjs next` prints the next free one, `list` the
+> index of both places, and `check` (CI) fails on a number used twice.
+
 The load-bearing decisions, each dated, with the reasoning that produced it and the
 alternatives that were rejected. Rationale is condensed from
 [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md)
@@ -18440,3 +18453,10 @@ through a Windows-names check or a read-only volume. The tests cover:
   bytes and the SHA-256 of each are what a restore must reproduce.
 - **Deleting on a successful write:** a write is not a verify; the archive is read back from
   the drive first.
+
+---
+
+*D1–D378 end here. From D379 on, each decision is its own file under
+[`docs/decisions/`](docs/decisions/), named `D<nnn>-<slug>.md`, so parallel PRs
+no longer conflict on this file (D379). `node tools/decisions.mjs list` is the
+index of both places.*

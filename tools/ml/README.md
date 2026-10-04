@@ -816,7 +816,7 @@ on the first 30 human games by start time, log-loss(core) − log-loss(eval) for
 the model play.sh serves, 95% interval over games (2,000 resamples, seed
 20261004): above 0, better than core on human games; below 0, worse; across 0,
 no difference detectable. Every run prints it (`NOT YET` until game 30); it is
-read once and recorded in `DECISIONS.md`.
+read once and recorded as a decision under `docs/decisions/` (D379).
 
 **Where the models are.** The lab runner's jobs write models into the lab clone,
 `~/code/lab/mtg-table/var/ml/models/`, not into this checkout. The coach

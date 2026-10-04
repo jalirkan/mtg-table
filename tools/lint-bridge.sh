@@ -439,7 +439,8 @@ rule thread-builder check_thread_builders
 # ThreadUtil's static init), so a runnable handed to it lands on a SECOND
 # `Game-n` worker while `Game-0` runs the match -- and passes every
 # isGameThread() assert.  Each place the bridge does that needs a written
-# exclusion argument in DECISIONS.md, because a green run is not one.  There are
+# exclusion argument in DECISIONS.md or docs/decisions/ (D379), because a green
+# run is not one.  There are
 # three; a fourth needs a fourth argument (D181):
 #
 #   captureOutcome    D39's rationale: it hops only at game end
@@ -455,8 +456,9 @@ rule thread-builder check_thread_builders
 # be EXACTLY HOP_ALLOW.  Each mention must carry `// ALLOW hop: D<n> <method>`
 # on its own line; <method> must be the nearest method declaration above it (so
 # a tag cannot be copied onto a new hop elsewhere), and D<n> must be a heading
-# in DECISIONS.md.  A hop added, removed or moved fails the lint until this list,
-# the tag and hard rule 3 say the same thing.
+# in DECISIONS.md or in a docs/decisions/ file (has_decision).  A hop added,
+# removed or moved fails the lint until this list, the tag and hard rule 3 say
+# the same thing.
 #
 # It is the only way onto that pool from outside Forge: ThreadUtil's other
 # executors are named "Delayed" (delay), default-named (getComputingPool,
@@ -482,6 +484,18 @@ enclosing_method() {
   sed -nE "1,${2}{s/^[[:space:]]*(public|private|protected|static|final|synchronized|abstract|default)[[:space:]][^=;(]*[[:space:]]([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*\\(.*/\\2/p}" "$1" \
     | sed -n '$p'
 }
+# has_decision D<n>: D<n> is a decision heading, `## D<n> — ...`, in the frozen
+# DECISIONS.md (D1-D378) or in one of docs/decisions/'s files (D379 on, one
+# decision per file, the heading its first line).  tools/decisions.mjs is the
+# full resolver; this is its grep, so the lint keeps needing nothing but bash.
+has_decision() {
+  local f
+  if [ -f DECISIONS.md ] && grep -q "^## $1 " DECISIONS.md; then return 0; fi
+  for f in docs/decisions/D*.md; do
+    [ -f "$f" ] && head -n 1 "$f" | grep -q "^## $1 " && return 0
+  done
+  return 1
+}
 check_hops() {
   local hits hit file rest line text tag dec tagged method got="" want
   hits="$(grep_java -E '\binvokeInGameThread\b')"
@@ -493,7 +507,7 @@ check_hops() {
     text="${rest#*:}"
     tag="$(printf '%s' "$text" | sed -nE 's|.*// ALLOW hop: (D[0-9]+) ([A-Za-z_][A-Za-z0-9_]*).*|\1 \2|p')"
     if [ -z "$tag" ]; then
-      lint_fail "a game-thread hop with no \`// ALLOW hop: D<n> <method>\` tag -- ThreadUtil.invokeInGameThread runs on a SECOND Game-n thread beside Game-0 and passes every isGameThread() assert (hard rule 3). A hop needs a written exclusion argument in DECISIONS.md, a tag citing it, and a line in HOP_ALLOW."
+      lint_fail "a game-thread hop with no \`// ALLOW hop: D<n> <method>\` tag -- ThreadUtil.invokeInGameThread runs on a SECOND Game-n thread beside Game-0 and passes every isGameThread() assert (hard rule 3). A hop needs a written exclusion argument in DECISIONS.md or docs/decisions/, a tag citing it, and a line in HOP_ALLOW."
       echo "  $hit" >&2
       continue
     fi
@@ -504,8 +518,8 @@ check_hops() {
       lint_fail "a hop tagged \`$tagged\` sits in \`${method:-<no method declaration found>}\` -- the tag names the method the hop is in, so it cannot be copied onto another hop."
       echo "  $hit" >&2
     fi
-    if [ ! -f DECISIONS.md ] || ! grep -q "^## $dec " DECISIONS.md; then
-      lint_fail "a hop tag cites $dec, which is not a heading in DECISIONS.md -- the tag names the decision that argues the hop is safe."
+    if ! has_decision "$dec"; then
+      lint_fail "a hop tag cites $dec, which is not a decision heading in DECISIONS.md or docs/decisions/ -- the tag names the decision that argues the hop is safe."
       echo "  $hit" >&2
     fi
     got="$got$file $tagged $dec"$'\n'
@@ -513,7 +527,7 @@ check_hops() {
   got="$(printf '%s' "$got" | LC_ALL=C sort)"
   want="$(printf '%s\n' "$HOP_ALLOW" | LC_ALL=C sort)"
   if [ "$got" != "$want" ]; then
-    lint_fail "the game-thread hops are not HOP_ALLOW's three -- a fourth hop needs a fourth written argument in DECISIONS.md, a tag and a line in HOP_ALLOW; a hop removed or moved comes off the list (and out of hard rule 3) in the same change."
+    lint_fail "the game-thread hops are not HOP_ALLOW's three -- a fourth hop needs a fourth written argument (DECISIONS.md or docs/decisions/), a tag and a line in HOP_ALLOW; a hop removed or moved comes off the list (and out of hard rule 3) in the same change."
     diff <(printf '%s\n' "$want") <([ -z "$got" ] || printf '%s\n' "$got") | sed -n 's/^< /  listed, not found: /p; s/^> /  found, not listed: /p' >&2 || true
   fi
   return 0
