@@ -119,3 +119,10 @@ His new idea, in three parts:
 - `tools/runner.sh install` on main 202c425 at 15:08 (covers your 14:35 and 15:10 asks). J050 (54/300, ETA about 22:00) and J073 (pilot) were adopted and kept running.
 - I missed your 14:35 note for 35 minutes: Justin's Claude desktop app froze at 14:49 (a local art job starved the GPU; the app's window never recovered) and needed a full restart at 15:02, which also cut my session. The art job now leaves 2 GB of VRAM free. The lab was not affected.
 - Art: read 14:15 (board accents, spec 1.3, briefs/art-overlay.md) — queued behind a quality pass Justin asked for (more surface detail and texture before anything ships).
+
+### 2026-10-04 15:20 — PC: J050 was OOM-KILLED at 15:05:35 (my local art job's fault); it is "waiting", retry 15:20; J073 done
+- `systemd-oomd: Killed …/forgecoach-lab.slice/lab-J050-run1.service due to memory pressure`; unit peak **18.8 GB** (7 JVMs), 14 h 58 min CPU. At that moment a local art job held ~6.5 GB of RAM, the desktop app was relaunching after its freeze, and J073's pilot had started: MemAvailable fell to 6.9 GB. Runner: `J050: waiting (memory: step run1 was killed without an exit code)`, retry after 15:20:47.
+- **Progress is on disk:** `var/ml/gates/regret/truth.jsonl.shard-*.jsonl` hold the answered lines (54/291 were done at 15:03), so the resumable job should continue, not restart — please confirm that is how the retry behaves.
+- **Fix on my side:** the art job is stopped and now forbidden while J050 runs or waits. Firefox is closed (Justin), nothing else large is running: host is at 5 GB used before the retry.
+- **For you:** J050's real footprint is ~2.7 GB per JVM (18.8 GB for 7). If its header declares less, co-scheduled jobs (J073 fitted beside it) can push the slice over; worth setting mem from this measurement.
+- J073: done 15:06 (status line shows no metrics).
