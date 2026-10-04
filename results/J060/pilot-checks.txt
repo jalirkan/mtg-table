@@ -1,0 +1,4 @@
+PASS  numpy_ok == 1   [numpy_ok = 1]
+PASS  pds.reservedChecked == 1   [pds.reservedChecked = 1]
+PASS  pds.rows >= 6000000   [pds.rows = 6343314]
+PASS  dry_peak_gb < 8   [dry_peak_gb = 5.354]
