@@ -66,6 +66,7 @@
 #                                                # D368: a,b,c / a directory / a manifest is an ensemble, and
 #                                                # var/ml/models/night-1-ensemble.json is preferred when it exists)
 #   ./scripts/play.sh --engine-only --idle-exit-after 60   # give up 60 min after the engine sleeps (D308)
+#   ./scripts/play.sh --no-human-collect    # do not copy finished games into var/ml/human/ (D369, below)
 #   ./scripts/play.sh --arena               # open the 3D arena instead of the board
 #   ./scripts/play.sh --no-open             # do not launch a browser
 #   ./scripts/play.sh --no-keep-open        # close the socket the moment the match ends
@@ -199,6 +200,14 @@
 # the helper without the launcher; --no-coach starts no helper, so neither.  The
 # launcher works in every mode (bare, --engine-only, --lan).
 #
+# THE HUMAN TEST SET (D369).  Every game you finish against the AI is copied into
+# var/ml/human/ (tools/ml/human_collect.py: your seat's own log from
+# var/games/<gameId>/, plus a line in var/ml/human/manifest.json), so the
+# evaluator can be scored on human games (tools/ml/human_eval.py).  It runs at
+# start -- printing "human test set: N games" -- when the engine falls asleep
+# (D308) and at exit, takes well under a second when nothing is new, never stops
+# play.sh, and copies nothing twice.  --no-human-collect turns it off.
+#
 # The ports come from config.json (`wsPort`, `webPort`) and are overridable with
 # --port / --web-port.  The web port is vite's `strictPort: false`, so if 5173 is
 # busy vite picks another and prints it; the URL below is the one it was ASKED
@@ -241,6 +250,8 @@ IDLE_EXPIRED=0
 PORT_EXPLICIT=0                  # D308: --port given, so this is a second bridge on purpose
 PASSTHROUGH=()
 EVAL_ARGS=()                     # D361: the coach helper's /eval (--eval-model <path>, --no-eval)
+HUMAN_COLLECT=1                  # D369: copy finished games into var/ml/human/ at start, asleep and exit
+HUMAN_COLLECTED_AT_STOP=0
 
 # D303: the coach helper's /match asks for a restart with SIGUSR1.  IGNORED
 # before anything else, because an untrapped USR1 would end this script, and
@@ -313,6 +324,7 @@ while [ $# -gt 0 ]; do
     --eval-model) EVAL_ARGS+=(--eval-model "$2"); shift 2 ;;
     --no-eval)   EVAL_ARGS+=(--no-eval); shift ;;
     --idle-exit-after) IDLE_EXIT_MIN="${2:-}"; shift 2 ;;
+    --no-human-collect) HUMAN_COLLECT=0; shift ;;
     --help|-h)   sed -n '5,/^set -euo pipefail/p' "$0" | sed '$d'; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
@@ -325,6 +337,17 @@ esac
 IDLE_EXIT_SEC="$(node -e 'process.stdout.write(String(Math.round(Number(process.argv[1]) * 60)))' "$IDLE_EXIT_MIN")"
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
+
+# D369: the human test set -- finished human-vs-AI games from var/games/ into
+# var/ml/human/, one status line.  Never fails this script; not in the self-test.
+human_collect() {
+  [ "$HUMAN_COLLECT" = "1" ] && [ -z "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] || return 0
+  command -v python3 >/dev/null 2>&1 || { echo "human test set: python3 not found, games not collected (D369)"; return 0; }
+  local t=()
+  command -v timeout >/dev/null 2>&1 && t=(timeout 120)
+  "${t[@]+"${t[@]}"}" python3 tools/ml/human_collect.py --quiet 2>/dev/null \
+    || echo "human test set: the collector failed (run python3 tools/ml/human_collect.py to see why)"
+}
 die() { printf '\033[31mplay.sh: %s\033[0m\n' "$*" >&2; exit 1; }
 
 # --------------------------------------------------------------------------
@@ -416,6 +439,7 @@ else echo "AI:   a mirror of your deck  (--mirror, or config.json match.aiDeck i
 [ "${AI_SEARCH:-0}" = "1" ] && echo "AI policy: search (D312-D314: outlet policy + look-ahead search)"
 passthrough_has --ai-profile && echo "AI profile: (the --ai-profile after --)" \
   || echo "AI profile: $AI_PROFILE"
+human_collect
 
 # --------------------------------------------------------------------------
 # 0b: --lan's site (amendment M51, D289) -- before anything slow, so a missing
@@ -539,6 +563,11 @@ stop() {
   # D303: a match launcher with no play.sh behind it has no match to report.
   if [ "$MATCH_ON" = "1" ]; then
     rm -f "$MATCH_DIR/current.json" "$MATCH_DIR/request.json" "$MATCH_DIR/status.json" "$MATCH_DIR/engine.json" 2>/dev/null || true
+  fi
+  # D369: the games this session finished, now that the bridge has flushed its logs.
+  if [ "$HUMAN_COLLECTED_AT_STOP" = "0" ] && [ -n "${SERVER_LOG:-}" ]; then
+    HUMAN_COLLECTED_AT_STOP=1
+    human_collect
   fi
 }
 stop_bridge() {
@@ -1005,6 +1034,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       IDLE_SINCE_S=$SECONDS
       rm -f "$MATCH_DIR/current.json" 2>/dev/null || true
       engine_write idle "the engine exited with $SERVER_RC"
+      human_collect   # D369: the match that just ended
       if [ "$IDLE_EXIT_SEC" -gt 0 ]; then
         echo "engine asleep: play.sh and the coach helper stay up; a match request from ForgeCoach starts it again; play.sh exits after $IDLE_EXIT_MIN min with none (--idle-exit-after, 0 = never)"
       else

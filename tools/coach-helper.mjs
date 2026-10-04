@@ -24,7 +24,7 @@
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
 //   GET  /health  -> 200 {"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"],
-//                          "thinking":["off","low","default"]}         ("thinking": D346)
+//                          "thinking":["off","low","default"],"vision":1}   ("thinking": D346, "vision": D362)
 //                 (+ "match": 0|1 and, with the launcher, "engine": "running"|"idle", D303/D308)
 //                    or 200 {"ok":false,"helper":1,"error":"<plain words>"} when `claude`
 //                    is missing or `claude --version` fails.  It does not prove a login:
@@ -42,6 +42,17 @@
 //                 400 / 403 / 404 / 405 / 413 / 429 carry one {"type":"error","message":...}
 //                 JSON body.  A client that disconnects kills the `claude` process
 //                 and its whole process group.
+//
+//   POST /vision  {"system": string, "user": string, "images": [{"mediaType": "image/jpeg"|"image/png"
+//                  |"image/webp"|"image/gif", "data": "<base64>"}, ...1-8], "model"?, "supersedes"?,
+//                  "thinking"?}   -- PHOTOS (D362): the same question as /coach with images
+//                 beside the text (ForgeCoach's photo-to-pool reads a drafted pool off a photo).
+//                 Each image's data at most 5 MB of base64, the body at most 24 MB, else 413;
+//                 anything else wrong with "images" is 400.  The same queue, the same stream,
+//                 the same terminal line as /coach.  The images reach the CLI on STDIN, as
+//                 one stream-json user message (`--input-format stream-json`) of image
+//                 blocks and the text: never a file, never argv, and still no tool, so the
+//                 model sees the pictures and nothing else.  /health carries "vision": 1.
 //
 //   GET  /review, POST /review, GET /review/<id>  -- THE POST-GAME REVIEW (D353):
 //                 run tools/coach-grade.sh review on a game the engine wrote
@@ -142,6 +153,8 @@
 //          --tools "" --strict-mcp-config --no-session-persistence
 //          --permission-mode dontAsk --max-turns 1
 //          [--safe-mode] [--disable-slash-commands]       (when this CLI's --help has them)
+//          [--input-format stream-json]                   (/vision only, D362: stdin is one
+//                                                          {"type":"user","message":{...}} line)
 //
 //   with the user text on STDIN (never argv), in a fresh empty temp directory
 //   (removed afterwards), as the leader of its own process group.  NEVER
@@ -174,6 +187,11 @@ export function thinkingEnv(thinking) {
   return {};
 }
 export const MAX_BODY = 512 * 1024;
+// D362: /vision.  The API takes at most 5 MB an image; ForgeCoach sends JPEGs of about 0.3-0.6 MB.
+export const MAX_VISION_BODY = 24 * 1024 * 1024;
+export const MAX_VISION_IMAGES = 8;
+export const MAX_IMAGE_BASE64 = 5 * 1024 * 1024;
+export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 export const DEFAULT_QUEUE_MAX = 4;
 export const MAX_SUPERSEDE_KEY = 200;
 export const DEFAULT_ALLOWED_ORIGINS = ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'];
@@ -410,8 +428,30 @@ async function claudeInfo(maxAgeMs = 60_000) {
   return cliInfo;
 }
 
-export function claudeArgs({ model, systemArg, help }) {
-  const args = ['-p', '--output-format', 'stream-json', '--include-partial-messages', '--verbose',
+/** Why `images` is not a /vision body's images (D362), or null when it is. */
+export function imagesProblem(images) {
+  if (!Array.isArray(images) || images.length < 1 || images.length > MAX_VISION_IMAGES) return `"images" must be an array of 1-${MAX_VISION_IMAGES} images`;
+  for (const [i, im] of images.entries()) {
+    const n = i + 1;
+    if (!im || typeof im !== 'object' || Array.isArray(im)) return `image ${n} is not {"mediaType", "data"}`;
+    for (const k of Object.keys(im)) if (k !== 'mediaType' && k !== 'data') return `image ${n} has an unknown field "${k}"`;
+    if (!IMAGE_TYPES.includes(im.mediaType)) return `image ${n}: "mediaType" must be one of ${IMAGE_TYPES.join(', ')}`;
+    if (typeof im.data !== 'string' || im.data.length < 16) return `image ${n}: "data" must be base64`;
+    if (im.data.length > MAX_IMAGE_BASE64) return `image ${n} is too large (at most 5 MB of base64)`;
+    if (im.data.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(im.data)) return `image ${n}: "data" must be base64`;
+  }
+  return null;
+}
+
+/** The one stream-json line a /vision question is on the CLI's stdin (D362): its images, then its text. */
+export function visionInput(user, images) {
+  const content = images.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.mediaType, data: im.data } }));
+  content.push({ type: 'text', text: user });
+  return JSON.stringify({ type: 'user', message: { role: 'user', content } }) + '\n';
+}
+
+export function claudeArgs({ model, systemArg, help, streamInput = false }) {
+  const args = ['-p', ...(streamInput ? ['--input-format', 'stream-json'] : []), '--output-format', 'stream-json', '--include-partial-messages', '--verbose',
     '--model', model, ...systemArg,
     '--tools', '', '--strict-mcp-config', '--no-session-persistence',
     '--permission-mode', 'dontAsk', '--max-turns', '1'];
@@ -490,7 +530,7 @@ export function startHelper(opts) {
       const rv = review ? review.health() : { review: 0 };   // D353
       const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv, ...ev }
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv, ...ev }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
@@ -553,11 +593,12 @@ export function startHelper(opts) {
       say(r.status, r.status === 200 ? ` (${r.body.already ? 'already running' : r.body.ms + ' ms'})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
-    if (path !== '/coach') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+    if (path !== '/coach' && path !== '/vision') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
     if (req.method !== 'POST') { send(res, 405, { type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+    const vision = path === '/vision';   // D362: the same question, with images
 
-    // The body, at most MAX_BODY bytes.
-    const body = await readBody(req, res, MAX_BODY, '512 KB', cors, say);
+    // The body, at most MAX_BODY bytes (MAX_VISION_BODY for /vision).
+    const body = await readBody(req, res, vision ? MAX_VISION_BODY : MAX_BODY, vision ? '24 MB' : '512 KB', cors, say);
     if (body === null) return;
     let q;
     try { q = JSON.parse(body); } catch { send(res, 400, { type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
@@ -567,6 +608,9 @@ export function startHelper(opts) {
       say(400);
       return;
     }
+    const imgProblem = vision ? imagesProblem(q.images) : null;
+    if (imgProblem) { send(res, 400, { type: 'error', message: imgProblem }, cors); say(400, ` (${imgProblem})`); return; }
+    const nImages = vision ? q.images.length : 0;
     if (!MODELS.includes(model)) { send(res, 400, { type: 'error', message: `model must be one of ${MODELS.join(', ')}` }, cors); say(400); return; }
     const thinking = 'thinking' in q ? q.thinking : 'default';   // D346: absent only; null is not absent
     if (!THINKING.includes(thinking)) { send(res, 400, { type: 'error', message: `"thinking" must be one of ${THINKING.join(', ')}` }, cors); say(400); return; }
@@ -664,7 +708,7 @@ export function startHelper(opts) {
       writeFileSync(sp, q.system);
       systemArg = ['--system-prompt-file', sp];
     }
-    const args = claudeArgs({ model, systemArg, help: info.help });
+    const args = claudeArgs({ model, systemArg, help: info.help, streamInput: vision });
     let child;
     let stderr = '';
     let cancelled = false;
@@ -695,7 +739,7 @@ export function startHelper(opts) {
       if (!tr.finished) { cancelled = true; stopChild(); }
     });
     child.stdin.on('error', () => { /* a child that died before reading */ });
-    child.stdin.end(q.user);
+    child.stdin.end(vision ? visionInput(q.user, q.images) : q.user);
     let buf = '';
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', (d) => {
@@ -724,7 +768,7 @@ export function startHelper(opts) {
       }
       cleanup();
       finishSlot();
-      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}; ${Date.now() - t0} ms)`);
+      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}${vision ? `; ${nImages} image${nImages === 1 ? '' : 's'}` : ''}; ${Date.now() - t0} ms)`);
     });
     function cleanup() {
       rmSync(dir, { recursive: true, force: true });

@@ -12,6 +12,12 @@
 // (var/ml/models/, gitignored): it is never served, and no weight leaves the
 // process.  The default is var/ml/models/night-1-ensemble.json when that manifest
 // exists (D368), else var/ml/models/night-1-eval.json when that file exists.
+// A relative model path (a default or --eval-model's, each of an ensemble's) is
+// looked up in this checkout first, then in the lab runner's heavy clone, where
+// the PC's jobs write their models (D369; docs/guides/lab-runner.md):
+// $MTGTABLE_LAB_ROOT, else ../lab/mtg-table beside this checkout
+// (~/code/mtg-table -> ~/code/lab/mtg-table).  The ensemble default is searched
+// in both places before the single model's.
 //
 // AN ENSEMBLE (D368).  --eval-model may name several exports of one schema
 // (seeds of one training config): `a.json,b.json`, a directory, or an
@@ -69,7 +75,7 @@
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 
 export const MAX_EVAL_BODY = 2 * 1024 * 1024;
 export const DEFAULT_EVAL_MODEL = 'var/ml/models/night-1-eval.json';
@@ -105,16 +111,38 @@ export function validateEval(q) {
   return { req };
 }
 
+/** The lab runner's heavy clone (D369): $MTGTABLE_LAB_ROOT, else ../lab/mtg-table beside this checkout. */
+export function labRoot(repoRoot, env = process.env) {
+  return env.MTGTABLE_LAB_ROOT ? resolve(env.MTGTABLE_LAB_ROOT) : resolve(repoRoot, '..', 'lab', 'mtg-table');
+}
+
+/** One relative or absolute path: in this checkout, else in the lab clone (D369), else null. */
+function findModel(repoRoot, rel, env) {
+  const here = resolve(repoRoot, rel);
+  if (existsSync(here)) return here;
+  if (!isAbsolute(rel)) {
+    const lab = resolve(labRoot(repoRoot, env), rel);
+    if (existsSync(lab)) return lab;
+  }
+  return null;
+}
+
 /**
- * The model to load: the flag (one path, a comma-separated list, a directory or a
- * manifest; each path resolved against the repo), else the default ensemble manifest
- * when it exists, else the default model when it exists, else none.
+ * The model to load.  The flag: one path, a comma-separated list (an ensemble,
+ * D368), a directory or a manifest, each path found in this checkout, else in the
+ * lab clone (D369); a path that is nowhere stays as given (the runner then says it
+ * is missing).  Without a flag: the default ensemble manifest (D368), else the
+ * default model, each looked for here and then in the lab clone; none anywhere is
+ * none.
  */
-export function resolveEvalModel(repoRoot, flag) {
-  if (flag) return flag.split(',').map((p) => p.trim()).filter(Boolean).map((p) => resolve(repoRoot, p)).join(',');
+export function resolveEvalModel(repoRoot, flag, env = process.env) {
+  if (flag) {
+    return flag.split(',').map((p) => p.trim()).filter(Boolean)
+      .map((p) => findModel(repoRoot, p, env) ?? resolve(repoRoot, p)).join(',');
+  }
   for (const d of [DEFAULT_EVAL_ENSEMBLE, DEFAULT_EVAL_MODEL]) {
-    const p = resolve(repoRoot, d);
-    if (existsSync(p)) return p;
+    const p = findModel(repoRoot, d, env);
+    if (p) return p;
   }
   return null;
 }
