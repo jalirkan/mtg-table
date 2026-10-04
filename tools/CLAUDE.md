@@ -305,6 +305,11 @@ built against, and five things about it are rules:
    `code`) is a line an older client ignores, and anything it adds to `/health`
    is a new key: a D292 client must keep working unchanged.
 
+`POST /vision` (D362) is `/coach` with images, for ForgeCoach's photo to
+pool: the images go to the CLI on stdin as one stream-json user message
+(`--input-format stream-json`), so rules 2 to 5 hold for it unchanged — no
+tool, no file, nothing in argv, the same queue.
+
 The match launcher (D303, amendment M53) is the helper's second route:
 `GET`/`POST /match` in `tools/match-launcher.mjs`, contract
 `docs/match-launcher.md`. The first four rules above hold for it — rule 1 in
