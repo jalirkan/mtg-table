@@ -23,7 +23,10 @@
 // queue, --queue-max 0); "thinking" (D346: off and low reach the child as
 // MAX_THINKING_TOKENS and CLAUDE_CODE_EFFORT_LEVEL in its env, default and absent
 // leave the env alone, the argv is the same for all three, a bad value is 400 and
-// /health advertises the three); a client that disconnects kills the child and
+// /health advertises the three); /vision (D362: the images and the text as one
+// stream-json user message on stdin with --input-format stream-json, never argv,
+// every other flag as /coach's; bad images 400 with no child, the 24 MB body and
+// 5 MB image limits, /health's "vision": 1); a client that disconnects kills the child and
 // its grandchild; and in --lan mode, from this machine's non-loopback address,
 // the token rule (query or header, loopback exempt), the LAN page's origin, and
 // no Origin refused off loopback.  The LAN half is skipped, and says so, on a
@@ -299,6 +302,67 @@ try {
   r = await coach(P, { system: 's', user: 'MODE:oldcli' });
   evs = lines(r.body);
   check('an old CLI: one error line saying update', evs.length === 1 && evs[0].type === 'error' && /update Claude Code/.test(evs[0].message), r.body);
+
+  // ------------------------------------------------------------- /vision (D362)
+  console.log('== /vision, photos');
+  r = await http({ port: P });
+  check('/health advertises "vision": 1 (D362)', json(r.body)?.vision === 1, r.body);
+  check('/coach never reads stdin as stream-json', !JSON.parse(plainArgv).includes('--input-format'), plainArgv);
+  const IMG_A = Buffer.from('fake jpeg bytes, photo one').toString('base64');
+  const IMG_B = Buffer.from('fake png bytes, photo two!!').toString('base64');
+  const vis = (q, headers = {}) => http({ port: P, method: 'POST', path: '/vision', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(q) });
+  lastCall();
+  r = await vis({ system: 'You read cards.', user: 'Which cards? MODE:ok', model: 'sonnet',
+    images: [{ mediaType: 'image/jpeg', data: IMG_A }, { mediaType: 'image/png', data: IMG_B }] });
+  check('/vision: 200 application/x-ndjson, the stream, then done', r.status === 200 && r.headers['content-type'] === 'application/x-ndjson'
+    && lines(r.body).at(-1)?.type === 'done' && terminalCount(lines(r.body)) === 1, `${r.status} ${r.body}`);
+  c = lastCall();
+  check('/vision: -p --input-format stream-json, and otherwise /coach\'s argv', c.argv[0] === '-p' && c.argv[1] === '--input-format' && c.argv[2] === 'stream-json'
+    && JSON.stringify(c.argv.filter((_, i) => i !== 1 && i !== 2)) === plainArgv.replace('"sonnet"', '"sonnet"').replace('"--system-prompt","s"', '"--system-prompt","You read cards."'), c.argv.join(' '));
+  check('/vision: still every tool off, no MCP, dontAsk, one turn', c.argv[c.argv.indexOf('--tools') + 1] === '' && c.argv.includes('--strict-mcp-config')
+    && c.argv[c.argv.indexOf('--permission-mode') + 1] === 'dontAsk' && c.argv[c.argv.indexOf('--max-turns') + 1] === '1' && !c.argv.some((a) => /dangerously|bypass/i.test(a)));
+  const vin = c.stdin.split('\n').filter(Boolean);
+  const vmsg = json(vin[0] ?? '');
+  check('/vision: stdin is ONE stream-json user message: the images in order, then the text', vin.length === 1 && vmsg?.type === 'user' && vmsg.message?.role === 'user'
+    && JSON.stringify(vmsg.message.content) === JSON.stringify([
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: IMG_A } },
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: IMG_B } },
+      { type: 'text', text: 'Which cards? MODE:ok' }]), c.stdin.slice(0, 400));
+  check('/vision: no image data and no user text in argv', !c.argv.some((a) => a.includes(IMG_A) || a.includes('Which cards?')));
+  for (let i = 0; i < 40 && existsSync(c.cwd); i++) await sleep(50);
+  check('/vision: an empty temp working directory (no image file), removed afterwards', c.cwdEntries.length === 0 && !existsSync(c.cwd), `${c.cwdEntries}`);
+  for (let i = 0; i < 40 && !/; 2 images;/.test(h.log()); i++) await sleep(50);   // logged when the child has exited
+  check('the helper logs the image count, never the data', /; sonnet; 2 images;/.test(h.log()) && !h.log().includes(IMG_A), h.log().slice(-400));
+  r = await vis({ system: 's', user: 'MODE:auth', images: [{ mediaType: 'image/jpeg', data: IMG_A }] });
+  check('/vision logged out: the same one error line as /coach', lines(r.body).length === 1 && /not logged in/.test(lines(r.body)[0]?.message ?? ''), r.body);
+  r = await vis({ system: 's', user: 'MODE:ok', images: [{ mediaType: 'image/jpeg', data: IMG_A }], thinking: 'off' });
+  c = lastCall();
+  check('/vision takes "thinking" as /coach does', c.env.MAX_THINKING_TOKENS === '0' && lines(r.body).at(-1)?.type === 'done', JSON.stringify(c.env));
+  const badImages = [
+    ['no images', undefined], ['none', []], ['not an array', { mediaType: 'image/jpeg', data: IMG_A }],
+    ['nine', Array.from({ length: 9 }, () => ({ mediaType: 'image/jpeg', data: IMG_A }))],
+    ['a bad media type', [{ mediaType: 'image/svg+xml', data: IMG_A }]],
+    ['not base64', [{ mediaType: 'image/jpeg', data: 'this is not base64 at all!!' }]],
+    ['an unknown field', [{ mediaType: 'image/jpeg', data: IMG_A, path: '/etc/passwd' }]],
+    ['a URL instead of data', [{ mediaType: 'image/jpeg', url: 'https://example.com/a.jpg' }]],
+    ['an image over 5 MB', [{ mediaType: 'image/jpeg', data: 'A'.repeat(5 * 1024 * 1024 + 4) }]],
+  ];
+  for (const [what, images] of badImages) {
+    lastCall();
+    r = await vis({ system: 's', user: 'MODE:ok', ...(images === undefined ? {} : { images }) });
+    check(`/vision with ${what}: 400, no child started`, r.status === 400 && json(r.body)?.type === 'error' && readdirSync(CALLS).length === 0, `${r.status} ${r.body.slice(0, 200)}`);
+  }
+  r = await vis({ system: 's', user: '', images: [{ mediaType: 'image/jpeg', data: IMG_A }] });
+  check('/vision with no user text: 400', r.status === 400);
+  r = await http({ port: P, method: 'POST', path: '/vision', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: 's', user: 'u', images: Array.from({ length: 6 }, () => ({ mediaType: 'image/jpeg', data: 'A'.repeat(4.5 * 1024 * 1024) })) }) });
+  check('/vision over 24 MB: 413', r.status === 413 && json(r.body)?.type === 'error', `${r.status}`);
+  r = await http({ port: P, path: '/vision' });
+  check('GET /vision: 405', r.status === 405);
+  r = await http({ port: P, method: 'OPTIONS', path: '/vision', headers: { Origin: 'https://jalirkan.github.io', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Private-Network': 'true' } });
+  check('/vision preflight from ForgeCoach: 204', r.status === 204 && r.headers['access-control-allow-origin'] === 'https://jalirkan.github.io');
+  lastCall();
+  r = await vis({ system: 's', user: 'MODE:ok', images: [{ mediaType: 'image/jpeg', data: IMG_A }] }, { Origin: 'https://evil.example' });
+  check('another site may not POST /vision (no child started)', r.status === 403 && readdirSync(CALLS).length === 0);
 
   // ------------------------------------------------------------- requests
   console.log('== /coach, the request');
