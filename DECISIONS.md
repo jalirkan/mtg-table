@@ -18346,3 +18346,97 @@ evolve cuts and D360's raises (review rec. 8).
   `--first N` reads a discovery-sized slice, and `--flat` prints the runner's metrics.
   J072's draft (two Omega batches of 8,000 drafts, verify-block seeds) is this reader's
   job. It is not pushed to `pc-jobs` here.
+
+## D378 — A cold tier for finished queue nights: `archive.py cold` moves a night's recordings to the archive drive as one tar.zst per key folder (plus its quarantine folder), verified member by member before anything hot is deleted; nights a job still reads are held; `restore-night` brings them back
+
+*Branch `c/cold-archive`; D378 (D377 is held by an open branch). Builds on D370.*
+
+**2026-10-04** (the owner's request: a hot/cold split, with the archive on the PC's second drive)
+
+**Context.** The `/` disk has about 53 GB free, and each queue night adds about 4 GB in about
+40,000 small `.jsonl.gz` files. `/mnt/e` is a 1 TB SATA SSD with 534 GB free. It is mounted
+as NTFS through ntfs3 with `windows_names`, so names with `:` or a trailing dot are refused.
+It is slow with many small files, has no Linux permissions, comes up read-only if Windows
+hibernated, and there is no sudo. D370's per-file zstd keeps the files on `/`.
+
+**Decision.**
+
+1. **Hot and cold.** Hot (`/`) holds:
+   - the night being recorded;
+   - anything a queued or pinned job reads;
+   - the warehouse, the datasets and the models;
+   - every `drafts.jsonl`.
+
+   Cold is `labArchiveRoot` in `config.json` (`/mnt/e/forgecoach-archive`; else
+   `--archive-root` or `$LAB_ARCHIVE_ROOT`), with an optional second copy at
+   `labArchiveMirror`.
+2. **One file per key folder.** `archive.py cold --night N` writes
+   `night-N/<key>.tar.zst` for each key folder. It holds the night's finished seeds'
+   recordings, **decompressed**, in one zstd stream (level 19, 2^27 window, long-distance
+   matching, `--jobs` threads). The night's quarantine folder becomes
+   `night-N/quarantine.tar.zst`, byte for byte, as evidence. A cut-short gzip and any
+   non-recording file are also kept byte for byte.
+
+   Unit names are NTFS-safe: a key NTFS would refuse is cleaned and given a `-<sha8>`
+   suffix. Measured on the six committed lab recordings: 5.09× smaller than their gzip,
+   against 3.51× for D370's one zstd file each.
+3. **Verify, then delete.** A unit is written as `.tmp` on the drive, fsynced and renamed,
+   then read back from the drive. Every tar member is hashed, and the name, size and
+   SHA-256 must equal what was read from the source, with no member missing or extra. A
+   mirror's copy must hash equal to the primary. The members list and manifests are
+   written next:
+   - `<drive>/night-N/<unit>.members.jsonl`;
+   - `<drive>/night-N/manifest.json`;
+   - `<drive>/manifest.jsonl` (an index line per unit);
+   - the hot copies under `<root>/archive/cold-night-N*`.
+
+   Only after that is each source deleted, and only if its size and mtime are still the
+   ones archived. Empty seed folders go too. A lock keeps two runs apart. Re-running
+   resumes: an archived unit is re-verified before its remaining hot files are deleted,
+   and a failed re-verify deletes nothing. `--keep-hot` archives and deletes nothing.
+4. **Refused (exit 3) unless:**
+   - the night is closed (D370's rules);
+   - `redaction`: its redaction pass ran (`<root>-quarantine-nN/failed.txt`);
+   - `warehouse`: the warehouse's `_state.json` offsets cover every `drafts.jsonl` line of
+     the night;
+   - `encoded`: a `--dataset` holds at least `--min-encoded` (90%) of its recordings;
+   - `holds`: no hold in `tools/lab/archive-holds.json` names the night while a job it
+     waits for is not `done` on pc-results.
+
+   Nights 1 and 2 are held until J052, J062, J063, J064 and J074 are done, and nights 1–3
+   until J067. A STATUS that cannot be read holds the night. `--skip-check` and
+   `--release-hold` are explicit, and the manifest records them.
+5. **Skipped (exit 4)** with a warning, and nothing written, when:
+   - no archive root is configured;
+   - the root is on the hot disk's own filesystem (the drive is not mounted);
+   - a probe write fails (the drive is read-only).
+6. **Restore.** `archive.py restore-night --night N [--unit U] [--from-mirror] [--as
+   original|gz|zst|raw]` writes each member back where it lived, compressed as it was. It
+   checks the raw SHA-256 of what it wrote, never overwrites a file that differs, keeps
+   the archive, and marks the unit `restoredAt`.
+7. **The warehouse** reads the hot-side night manifests into a `cold_archives` table. Its
+   view `recording_location` says, per recorded queue game, whether the recordings are hot
+   or in which tar.zst they are.
+
+**Tested** (`tools/lab/tests/test_cold.py`): the drive is a temp folder whose creates go
+through a Windows-names check or a read-only volume. The tests cover:
+- the round trip (frames, game keys, the cut-short gzip and the quarantine bit for bit, a
+  D370 `.zst`);
+- every refusal by name, and its waiver;
+- an open night;
+- a read-only drive, a missing drive and no configured root, each skipping;
+- verify-before-delete, including a flipped byte caught on resume;
+- a killed run resumed, with a stale `.tmp` on the drive;
+- the lock;
+- the dry run;
+- the mirror restoring after the primary is lost;
+- the warehouse table.
+
+**Rejected.**
+
+- **One file per recording on the drive:** NTFS through ntfs3 is slow with 40,000 small
+  files a night, and per-file zstd is a third less dense.
+- **Storing the gzip members as they are:** zstd over gzip gains almost nothing; the raw
+  bytes and the SHA-256 of each are what a restore must reproduce.
+- **Deleting on a successful write:** a write is not a verify; the archive is read back from
+  the drive first.
