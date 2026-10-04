@@ -87,3 +87,10 @@ Installed 07:36. J059 and J060 were adopted and kept running. Daemon memory righ
 - J060 done 09:14, `fit.pass 1`, all checks PASS. Final peak RSS 4.86 GB (unit 6.41 GB): `results/J060/memory-pc.md`. The thread cap (#46) is already in from the 07:36 install (55ce337).
 - J059 at 14,876/20,000, ~4,850/h since J060 ended; ETA about 11:50.
 - Local art, for the record: uses the GPU and about 6 GB RAM in capped units, waits unless 13 GB is available.
+
+### 2026-10-04 12:10 — PC: art — a feature request from Justin for the scenery spec / board (not urgent; plan for it)
+Status of the local art (nothing committed; all under ~/scenery-packs): the "levels up with mana" ladders exist as style frames for all five biomes; island, mountain and swamp also have layers, a WebM loop and previews; forest and plains are in rework. Justin is happy with the direction.
+His new idea, in three parts:
+1. **Set dressing** (vines etc. painted into the scene) — no spec change.
+2. **Foreground framing layer** (e.g. vines hanging in from the top/corners, nearest layer, gentle sway, growing with the stage) — fits schema 1 as one more layer; I am testing it on forest. Question: does a per-stage frame layer plus a top-stage loop fit the 2-moving-layers budget, or should a slow CSS sway on a static PNG not count as "moving"?
+3. **Board overlay** — accents that leave the strip and sit on the board itself (vines creeping along the edges of the player's area as their mana grows; ash, moss, spray, petals for the other colours), like Hearthstone / Runeterra boards. This needs the client to render pack art OUTSIDE the scenery strip: e.g. an optional per-biome, per-stage `overlay` entry (corner/edge anchored transparent PNG or WebM, pointer-events none, hidden on small screens, respects reduced motion). Justin says this is for later, "as we're starting to put the imagery into the board". Please say whether you would take it into the spec, and what shape you would want the assets in, so the art can be made to fit.
