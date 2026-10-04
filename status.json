@@ -1,19 +1,21 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:41:53-04:00",
- "heartbeat": "2026-10-04T02:41:53-04:00",
+ "updated": "2026-10-04T02:43:49-04:00",
+ "heartbeat": "2026-10-04T02:43:49-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.11,
-  "memUsedGb": 6.1,
+  "load1": 2.94,
+  "memUsedGb": 6.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3926,
+  "swapUsedMb": 3446,
   "pressure": 0,
   "cpus": 16,
-  "budgetGb": 23.4
+  "budgetGb": 23.4,
+  "coresUsed": 2,
+  "coresTotal": 8
  },
  "running": [
   {
@@ -24,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/1",
    "started": "2026-10-04T02:41:15-04:00",
-   "elapsed": 38,
+   "elapsed": 153,
    "done": null,
    "total": null,
    "unit": null,
@@ -32,24 +34,15 @@
    "eta": null,
    "workers": 1,
    "workersMax": 1,
+   "cores": 1,
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 0.01,
+   "memGb": 1.52,
    "live": {
-    "elapsed_s": 38,
+    "elapsed_s": 123,
     "metrics_errors": 3,
     "peak_worker_rss_gb": 0.77,
-    "pilot.answers": 2,
-    "pilot.decisions_with_drop": 0,
-    "pilot.failed": 0,
-    "pilot.max_halfwidth": 0.0023007924698231425,
-    "pilot.median_halfwidth": 0.0017022424235993857,
-    "pilot.median_rounds": 75,
-    "pilot.ok": 2,
-    "pilot.p90_wall_s": 3.031,
-    "pilot.refused": 0,
-    "pilot.retired": 0,
     "pressure_events": 0,
     "workers": 1
    },
@@ -58,6 +51,39 @@
    "publicCubes": false,
    "pressureEvents": [],
    "detail": "lab-J056-run1"
+  },
+  {
+   "publicTitle": "Evaluator training and fit gate",
+   "publicEst": "~4 h",
+   "id": "J057",
+   "title": "(J049 resumed after its memory stop) Evaluator gate 1: train on the night-1 dataset J049 already built, and run the held-out fit gate (D354)",
+   "cpu": "heavy",
+   "phase": "prepare",
+   "started": "2026-10-04T02:43:49-04:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 1,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": null,
+   "memGb": null,
+   "live": {
+    "elapsed_s": 0,
+    "metrics_errors": 4,
+    "pressure_events": 0,
+    "workers": 1
+   },
+   "liveHeadline": [],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J057-prepare"
   }
  ],
  "queue": [
@@ -100,14 +126,6 @@
    "title": "(was J025, earlier J018) Night 2 SPRT: the noise-aware override (lower confidence bound) vs the mean margin",
    "cpu": "heavy",
    "est": "one to two nights (up to 2,400 games)"
-  },
-  {
-   "publicTitle": "Evaluator training and fit gate",
-   "publicEst": "~4 h",
-   "id": "J057",
-   "title": "(J049 resumed after its memory stop) Evaluator gate 1: train on the night-1 dataset J049 already built, and run the held-out fit gate (D354)",
-   "cpu": "heavy",
-   "est": "~4 h (the grid gets 3 h; the leaf rows about 30 min on one JVM; no encode: J049 wrote var/ml/data/night-1, 6,343,314 rows, at 02:11)"
   },
   {
    "publicTitle": null,
@@ -471,8 +489,8 @@
   }
  ],
  "runner": {
-  "commit": "5e6ba2a",
-  "started": "2026-10-03T19:48:28-04:00",
+  "commit": "d68f5ec",
+  "started": "2026-10-04T02:43:48-04:00",
   "dryRun": false
  }
 }
