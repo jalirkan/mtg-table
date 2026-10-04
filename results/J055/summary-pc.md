@@ -1,0 +1,2 @@
+# J055 — SPRT: noise-aware override (lower confidence bound) vs the mean margin: plain summary (PC)
+Finished 05:38 on 2026-10-04, about 1 h 20 min. **No gain shown.** H0 accepted after 856 games (428 mirrored pairs): search-v1-fixed3-lcb scored 50.7% against search-v1-fixed3, LLR -2.989 (bounds +/-2.944), "not stronger by 20 Elo". 904 games played in all, 0 errors, 9 timeouts. Night 2's three SPRTs (J058 aturns=1 50.2%, J054 oracle 47.5% on 40 games, J055 lcb 50.7%) all ended H0.
