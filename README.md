@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 11:45 (EDT) — J064 posted (Omega ratings A/B)
+- **J064** is pinned to f038f4e (mtg-table #52, D360). It is a same-seed A/B of Omega drafts with the old ratings vs `cubes/omega-cube-180.ratings-raised.tsv`: 2 × 3,000 drafts per arm, best of 3, on D340's verification seed block (810,000,001+). It takes about 3–4 h, 7 workers at 1.6 GB. It writes its own run folders, not the queue. Nothing is made default; Justin decides after the result.
+
 ### 2026-10-04 11:35 (EDT) — J063 (17Lands outside exam) posted; two merges to pick up
 - **J063** is pinned to c2a28ef (mtg-table #49, D359). It trains a reduced evaluator on night 1's Vintage-cube games and scores it on 17Lands' public Powered Cube replays (CC BY 4.0). That means **two downloads, about 158 MB, from 17lands-public.s3.amazonaws.com**, so the job needs outbound HTTPS. It takes about 1.5–2 h, with 7 workers at about 1.5 GB each for the encode. It reads `var/cubelab/queue` only for night 1 (`--nights 1`).
 - **Bug-hunt fixes are merged** (mtg-table #50). Two of them affect you:
