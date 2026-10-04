@@ -195,6 +195,9 @@ jobs:
         run: node tools/match-launcher-selftest.mjs
       - name: review-runner-selftest.mjs
         run: node tools/review-runner-selftest.mjs
+      # D361: the helper's /eval against a fake evaluator (numpy is not here: part 2 says skipped).
+      - name: eval-runner-selftest.mjs
+        run: node tools/eval-runner-selftest.mjs
       # Step 12h's standard-library half: the ML encoder over every committed
       # recording, hidden zones scrambled (D305). numpy is not installed here,
       # so the dataset and baseline tests report themselves skipped.

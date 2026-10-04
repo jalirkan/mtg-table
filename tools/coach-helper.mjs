@@ -16,6 +16,8 @@
 //   COACH_HELPER_TOKEN=<T> node tools/coach-helper.mjs --lan [--ws-port 8642]
 //   node tools/coach-helper.mjs --lan --token <T>    # the same; the env keeps <T> off `ps`
 //   node tools/coach-helper.mjs --match-dir var/match --supervisor <play.sh's pid>   # D303, play.sh does this
+//   node tools/coach-helper.mjs --eval-model var/ml/models/night-1-eval.json        # D361 (that path is the default
+//                                                    when the file exists; --no-eval turns /eval off)
 //
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
@@ -46,6 +48,15 @@
 //                 (docs/game-review.md the copyable form); /health carries
 //                 "review": 1 when the bridge is built (else 0), --no-review
 //                 turns it off, --review-jobs N (default: cores - 1, at most 7).
+//
+//   POST /eval    -- THE WIN CHANCE (D361): the learned position evaluator's
+//                 P(the viewing seat wins) for one state ForgeCoach shows, from a model
+//                 on this machine (--eval-model; default var/ml/models/night-1-eval.json
+//                 when it exists).  tools/eval-runner.mjs's header is that contract;
+//                 /health carries "eval": 1 (and "evalModel", "evalSchema") only once
+//                 the model has loaded and passed its schema checks, else "eval": 0.
+//                 --no-eval turns it off; --eval-python, --eval-schema <schemaId> (refuse
+//                 another), --eval-cube <cube.md> (refuse another card list).
 //
 //   GET  /match, POST /match  -- THE MATCH LAUNCHER (D303): start a match with two
 //                 decks the browser built.  tools/match-launcher.mjs's header is that
@@ -143,6 +154,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 import { MAX_REVIEW_BODY, createReviewRunner, cleanOld } from './review-runner.mjs';
+import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -331,7 +343,8 @@ function readConfig() {
 function parseArgs(argv) {
   const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
     matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined,
-    review: true, reviewJobs: undefined, reviewQueueMax: 2 };
+    review: true, reviewJobs: undefined, reviewQueueMax: 2,
+    eval: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
     const val = () => {
@@ -352,6 +365,11 @@ function parseArgs(argv) {
     else if (f === '--no-review') a.review = false;
     else if (f === '--review-jobs') a.reviewJobs = Number(val());
     else if (f === '--review-queue-max') a.reviewQueueMax = Number(val());
+    else if (f === '--no-eval') a.eval = false;
+    else if (f === '--eval-model') a.evalModel = val();
+    else if (f === '--eval-python') a.evalPython = val();
+    else if (f === '--eval-schema') a.evalSchema = val();
+    else if (f === '--eval-cube') a.evalCube = val();
     else if (f === '--help' || f === '-h') a.help = true;
     else throw new Error(`unknown flag ${f} (--help)`);
   }
@@ -401,7 +419,7 @@ export function claudeArgs({ model, systemArg, help }) {
 // ---------------------------------------------------------------------------
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, evaluator = null, log = (s) => console.log(s) } = opts;
   let active = null;          // { kill() } of the running question
   const queue = [];           // waiting questions, oldest first: { key, go(), supersede(), position(n) }
   const pump = () => {
@@ -464,9 +482,10 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
       const rv = review ? review.health() : { review: 0 };   // D353
+      const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv, ...ev }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}), ...rv, ...ev }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -501,6 +520,19 @@ export function startHelper(opts) {
       const r = path === '/review' ? review.list() : review.get(path.slice('/review/'.length));
       send(res, r.status, r.body, cors);
       say(r.status);
+      return;
+    }
+    if (path === '/eval') {
+      // D361: the win chance (tools/eval-runner.mjs).  Behind the same gate as /coach.
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (!evaluator) { send(res, 503, { ok: false, type: 'error', message: 'the win chance is off: this helper was started with --no-eval' }, cors); say(503); return; }
+      const raw = await readBody(req, res, MAX_EVAL_BODY, '2 MB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+      const r = await evaluator.post(q);
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 200 ? ` (p ${r.body.p.toFixed(3)}, turn ${r.body.turn}, ${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path === '/engine/start') {
@@ -728,6 +760,7 @@ export function startHelper(opts) {
     close: () => {
       for (const c of live) { try { process.kill(-c.pid, 'SIGKILL'); } catch { /* gone */ } }
       review?.close();
+      evaluator?.close();
       server.close();
       server.closeAllConnections?.();
     },
@@ -783,7 +816,16 @@ async function main() {
     cleanOld(cfg.repoRoot);
     review = createReviewRunner({ repoRoot: cfg.repoRoot, jobs, queueMax: a.reviewQueueMax, log: (s) => console.log(s) });
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review });
+  let evaluator = null;
+  if (a.eval) {
+    if (a.evalSchema !== undefined && !/^[0-9a-f]{16}$/.test(a.evalSchema)) { console.error('coach-helper: --eval-schema is a schemaId, 16 hex digits'); process.exit(2); }
+    evaluator = createEvalRunner({
+      repoRoot: cfg.repoRoot, model: resolveEvalModel(cfg.repoRoot, a.evalModel), python: resolveEvalPython(cfg.repoRoot, a.evalPython),
+      expectSchema: a.evalSchema ?? null, cube: a.evalCube ?? null, log: (s) => console.log(`COACH ${s}`),
+    });
+    void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}`));
+  }
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, evaluator });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -798,6 +840,7 @@ async function main() {
   console.log(!review ? 'COACH REVIEW    /review off (--no-review)'
     : review.available() ? 'COACH REVIEW    /review on: tools/coach-grade.sh review, one at a time'
     : 'COACH REVIEW    /review waits for the bridge build (./bridge/build.sh); /health says "review": 0 until then');
+  if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   const stop = () => { h.close(); process.exit(0); };
   process.on('SIGINT', stop);

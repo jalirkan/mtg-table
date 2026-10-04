@@ -17104,3 +17104,107 @@ effect, and the pairs' spread and SD.
   and the population the evolve measures; D356 already rejected it as the first step.
 - **Lowering Fire // Ice**: Justin's rule (above), and this decision only raises.
 - **Writing the default file now**: the queue would draft Omega on unverified ratings.
+
+## D361 — The learned evaluator's win chance is served to ForgeCoach by the coach helper's `POST /eval`, from one child process that runs encode.py's own encoder and evalnet.py's own forward pass on the viewing seat's redacted state; nothing is ported, the model stays on the PC, and `/health` says `eval: 1` only once a model has loaded and passed its schema checks
+
+*Branch `c/eval-winchance`; D361, the next number free on `main` (D359 the outside exam,
+D360 the Omega ratings). ForgeCoach's side is its own branch `c/eval-winchance` (`src/evalClient.ts`,
+`src/winChance.ts`, `src/ui/winchance/`).*
+
+**2026-10-04** (the owner's request: show the evaluator's win chance in ForgeCoach now that
+it passed D354's gate 1)
+
+**Context.** The position evaluator (D316) predicts P(the viewing player wins) from one
+decision row. It passed D354's first gate on the PC (`var/ml/models/night-1-eval.json`,
+schema `82815752c2f5e346`, about 900 KB, gitignored). ForgeCoach is a public static site
+and must never hold the model; the coach helper (D292) already runs on the PC beside the
+engine, on ForgeCoach's allowed origins and behind the LAN token (M50, M51). The hard part is
+**feature parity**: a number shown live is only the model's if the online features are
+exactly the rows `dataset.py` trained it on.
+
+**Decision.**
+
+1. **The route.** `tools/eval-runner.mjs`, imported by `coach-helper.mjs`: `POST /eval
+   {seat, state, history?}` → `{ok, p, model, schema, turn, decision, featureHash, ms}`;
+   400 / 405 / 413 (2 MB) / 429 / 503 / 504 with `{ok:false, type:"error", message}`. An
+   unknown field is 400: the request has no place for anything but the viewer's state.
+   `/health` carries `eval: 1, evalModel: <sha-256 of the file, 12 hex>, evalSchema`
+   once the model is ready, else `eval: 0` (with `evalError` when one was configured).
+   Flags: `--eval-model <path>` (default `var/ml/models/night-1-eval.json` when it exists),
+   `--no-eval`, `--eval-python` (default `var/ml/venv/bin/python3` when it exists, else
+   `python3`), `--eval-schema <id>` and `--eval-cube <cube.md>` (refuse anything else).
+   `scripts/play.sh` passes `--eval-model` and `--no-eval` through.
+2. **One implementation, in Python.** `tools/ml/eval_serve.py` is the helper's single
+   long-lived child, JSON lines in and out. It calls `encode.TurnTally` and
+   `encode.encode_state` -- the two functions inside `encode_game`, which is where
+   `dataset.py` gets every row -- and `evalnet.EvalNet` for the forward pass. Porting the
+   encoder to JavaScript would have made a third implementation (Python, Java's
+   `mtgtable.eval`, JS); calling into Python makes the online features the training
+   features by construction. `dataset.py` and `encode.py` are unchanged.
+3. **The request carries what the tally needs.** A training row's this-turn counters (land
+   drop, lands, spells: features the model reads) come from the `events` of every earlier
+   frame of the game, so `history` is those frames' `events` and `stack`. A client may omit
+   every frame with no `turn`, `land`, `cast` or `mulligan` event: `TurnTally.apply` does
+   nothing for it (a `zone` event only classifies a `cast` in its own frame). The largest
+   last-row request over the 22 committed recordings is 119 KB reduced (203 KB with every
+   frame).
+4. **`decision`.** The model learned from decision rows only (the viewer holding priority
+   in a main phase or combat, the game not over). `/eval` answers for any state and says
+   whether it is one; ForgeCoach asks only at decision rows.
+5. **Refusals at load.** The model is not served when the schema id `encode.py` computes
+   from the model's own vocabulary is not its `schemaId` (the encoder moved since it was
+   trained), when `vocabSha256`, `nFeatures`, `cardOffset` or the board columns' names
+   disagree with that schema, when `--eval-schema` or `--eval-cube` disagree, or when it
+   reads a live-unsafe feature (`evalnet.LIVE_UNSAFE`, as the Java loader refuses). Only
+   D305's full schema is served: a model whose `cardStates` are not D305's 17 (D359's r17
+   models of the outside exam, two states, end-of-half-turn rows) is refused by name, since
+   its rows are other positions than a board's decision rows.
+6. **Hidden information.** The evaluator reads nothing but the request's state, and the
+   state is the one the viewing seat's board holds: redacted by the bridge for that seat
+   (hard rule 8). It reads it exactly as a training row reads its own chair's log -- each
+   row is encoded from the log's own `seat`, so training never used one seat's view for the
+   other -- and encode.py is stricter than the log (the opponent's hand and both libraries
+   are counts, a stub is a count, a face-down card is `<facedown>`, no `alt`, no engine text
+   but name, types and mana cost). A state whose viewer's own hand holds a redacted stub (one
+   made for the other seat) is refused.
+
+**Parity, proven** (`tools/ml/tests/test_eval_serve.py`, gate 12h; `tools/eval-runner-selftest.mjs`, 12f):
+
+- standard library (also in CI): for each of the 2,561 decision rows of the 22 committed
+  recordings, the vector built from the request equals `encode_game`'s row, with the full
+  history and with the reduced one. D305's scrambler (opponent's hand named and shuffled,
+  libraries filled, stubs named, face-down `alt`s) moves no online feature. A request with the
+  other seat is refused;
+- numpy: `dataset.build` over the recordings, a small model trained on its train split
+  (`train_eval.fit`), and for every row of every split the online vector equals the
+  dataset's int16 row and the served P(win) equals the model's on that row to 1e-12, also
+  through the JSON-lines process. Schema, live-unsafe, board-column, `--expect-schema` and
+  `--cube` refusals are each checked;
+- the route: 275 decision rows of `g1` and `human-auto-42`, built in Node the way ForgeCoach
+  builds them, through `/eval` with `fixtures/eval/model.json` (the Java parity fixture):
+  every feature hash and P(win) equals `fixtures/eval/golden.json` (1e-9). ForgeCoach's
+  `src/testdata/winchance-requests.golden.json` is this reader's choice of rows and history
+  frames over its two sample logs (the same files as `fixtures/games/human-auto-42` and
+  `human-comfort-13`), and ForgeCoach's tests hold its request builder to it.
+
+**Measured** (this container). One answer from the parity model (3,133 features, 166
+board columns) took 4 ms in the helper. The PC's model is not measured here.
+
+**Known and inherited.** `TurnTally` treats a cast as a spell when the state's own stack
+item says `isAbility: false`; that field is in a seat's recording (ForgeCoach's live state)
+and not in an AI-vs-AI one (M36), so at a flush boundary a seat's `spells_cast_turn` can count
+a spell the lab's recording of the same moment would not. The model reads that feature;
+this is encode.py's behaviour on the human split too, and is left as it is.
+
+**Not done.** Scoring inside the bridge's own process (the Java evaluator could answer
+from the live game); a batch form of `/eval` (a replay sends one request per position, a few
+at a time); calibration on the owner's own games (`train_eval.py --eval-human`, D347).
+
+**Rejected.**
+
+- **A JavaScript port of the encoder and network**: a third implementation of encode.py
+  to keep in step.
+- **Sending only the state** (no history): this turn's land drop and spells would read zero,
+  and those are features the model reads.
+- **Serving the model file to the browser**: the model is the owner's and lives on the PC;
+  ForgeCoach is public.
