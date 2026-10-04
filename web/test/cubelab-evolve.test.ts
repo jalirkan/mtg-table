@@ -404,7 +404,7 @@ test('the log entry, the changelog and a self-contained page', () => {
   assert.match(cl, /## Generation 1 — v1 → v2[\s\S]*\| Doom Blade \(Black\) \| dead \|/);
   // Discovery and confirmation, in plain words and in numbers.
   assert.match(cl, /\*\*Discovery\*\*: in this generation's drafts[\s\S]*\*\*Confirmed\*\*: the candidate stands out again/);
-  assert.match(cl, /\| Doom Blade \| dead \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, q [\d.e-]+ \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, Holm p [\d.e-]+ \| confirmed \|/);
+  assert.match(cl, /\| Doom Blade \| dead \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, q [\d.e-]+ \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, Holm p [\d.e-]+ \| first attempt \| confirmed \|/);
   const html = htmlPage('Omega', [g]);
   assert.match(html, /<h3>Discovered, then confirmed or not<\/h3>/);
   assert.match(html, /<b>Confirmed<\/b>: the candidate stands out again/);

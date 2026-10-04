@@ -14735,6 +14735,10 @@ queue (the stream already reaches the asker).
 *Branch `c/evolve-rigor`; D331 rather than D326, because D326–D330 may be held by
 branches not yet pushed (main holds up to D325).*
 
+*(A repeat confirmation of the same card is judged by **D357** from 2026-10-04:
+its confirmation batches pooled, at a halved level per repeat. A first attempt
+is unchanged.)*
+
 **2026-10-03** (the methodology review's finding M2: "evolve's cuts are about
 180 simultaneous 95% tests, re-checked as data accumulates")
 
@@ -16407,3 +16411,153 @@ another seed range (learning from the drafts the evolve then judges is
 circular), and Justin's ratings TSV is where it lands. No ratings pass is
 needed for this decision; J038 is the exploration's calibration on the engine
 before J039, the four-generation run.
+
+## D357 — A repeat confirmation pools: a candidate confirmed again in a later generation is judged on all its confirmation batches on that rule, the failed ones included, at `confirmAlpha` / 2^(attempt−1); a first attempt is D331's test unchanged; knob `confirmPool`, on for new runs, off for folders started before
+
+*Branch `c/confirm-pool`; D357, the next number free on a freshly fetched `main`.
+Pre-registered: written before any run under it.*
+
+**2026-10-04**
+
+**Finding.** J039 (Omega, `--generations 4 --drafts-per-gen 2000 --explore on`,
+on Justin's PC). Fable of the Mirror-Breaker, rule `dominant-win`:
+
+| generation | discovery | confirmation (fresh drafts) | D331's outcome |
+|---|---|---|---|
+| 3 | 757 of 1,341 decisive games (0.56) | 140 of 296 (0.47) | not confirmed |
+| 4 | 761 of 1,382 (0.55) | 179 of 316 (0.57), Holm p 0.034 | confirmed, swapped out |
+| both confirmations | | 319 of 612 (0.52) | — |
+
+D331 tests each confirmation batch alone and forgets it afterwards. Each
+generation in which a card is a candidate again is one more independent chance
+to confirm by luck, and the batch that said no counts for nothing. D331's
+stated bound — a generation cuts a card with no effect with chance at most
+`confirmAlpha` — still holds per generation, but per card it does not: over
+j attempts it is 1 − (1 − α)^j. Measured (below): a no-effect card that is a
+candidate in every generation is cut 4.7% of the time after one attempt, 9.2%
+after two, 18% after four, 32% after eight. A card the loop's discovery keeps
+flagging (Fable's two discoveries are themselves strong) is exactly the card
+that gets those attempts.
+
+**Decision** (`tools/cubelab/evolve.ts` `confirmCandidates`, `pooledTest`,
+`priorAttempts`; option **(c)**, both):
+
+1. **Pool.** A candidate's j-th confirmation attempt on a rule (an attempt is a
+   confirmation batch that observed the card on that rule; the earlier ones
+   come from the generations' recorded decisions) is tested on every one of its
+   attempts' batches pooled, this one included. Each batch keeps its own null
+   boundary and design effect: the effective counts (a card's games and wins
+   over that batch's design effect) add, and the pooled boundary is the
+   effective-count-weighted mean of the batches' boundaries (`dominant-win`:
+   the batch means; `dominant-pick` and `dead`: the knobs, which do not move).
+   The test is the same one-sided binomial. Under H0 every batch's rate is at
+   most its boundary, and a sum of independent binomials has at most a
+   binomial's tail beyond its mean (Hoeffding 1956; for thresholds at least one
+   above the mean, which every rejection here is), so the pooled test is
+   valid, and conservative when the means differ.
+2. **Spend.** Its p is multiplied by 2^(j−1) (capped at 1) before Holm across
+   the generation's candidates: attempt j is tested at `confirmAlpha` /
+   2^(j−1). A cut at attempt j needs the pooled p ≤ α / 2^(j−1), so by the
+   union bound a card with no effect is cut, over **any number** of attempts,
+   with chance at most α(1 + 1/2 + 1/4 + …) = 2α. The geometric schedule needs
+   no number of looks fixed in advance — D331's reason for rejecting
+   alpha-spending (a resumable loop does not know how many generations it will
+   run) does not apply to it.
+3. **Size.** The size filter reads the pooled numbers: `dominant-win`'s rate
+   over all attempts at least the pooled boundary + `dominantMargin`;
+   `dominant-pick`'s shrunk win rate over all attempts' games at least their
+   games-weighted mean.
+4. **A first attempt is D331's test, bit for bit**: one attempt pooled is that
+   attempt (its recorded numbers and p, not a recomputation), and 2⁰ = 1. A run in which no
+   card is a candidate twice decides exactly as before; the decision objects
+   only gain fields.
+5. **What does not change.** Discovery is still never pooled (D331); the
+   confirmation batch's size (`confirmPlan`) is still the fresh batch's, at
+   Holm's first-step level. With the earlier batches pooled, the repeat
+   attempt's sample is larger than the plan assumes, which more than offsets
+   the halved level for a card at the effect that matters (+0.10: 96.8% cut at
+   the first attempt either way, 99.6% by the second, against 99.8%).
+
+**Versioning (D341).** The rule is a knob, `confirmPool` (1: this decision; 0:
+D331), recorded in `evolve.json` with the other knobs and in every decision
+as `confirmRule: 'D331' | 'D357'`. **It is the default for new runs**: D331's
+bound is per generation and the loop runs many generations, so the per-card
+error is what a cube owner reads a cut as. An `evolve.json` from before D357
+(no `confirmPool`) resumes with 0, said on stdout, so J039's folder and every
+older one re-decide exactly as they were decided; `--evolve confirmPool=0`
+reproduces D331 in a new folder. A knob `2` or anything else is refused.
+Evolve's knobs are not part of D341's run version (they decide swaps, not
+drafts), so no run folder's version id moves.
+
+**Reporting.** Every candidate row gains *Every confirmation attempt pooled*
+(`first attempt`, or `attempt 2 (g3, g4): won 319 of 612 … , tested at
+level / 2, Holm p …`), and a swap on a repeat attempt names the pooled numbers
+in its evidence. The changelog opens with **Confirmation history (every
+attempt, pooled)**: each card and rule ever confirmed or refused, every attempt
+with its own batch's numbers and outcome, every attempt pooled, and whether it
+was cut. Under `confirmPool` 0 the pooled column is printed and marked as
+reported, not used. A generation decided before D357 has no recorded attempt;
+its attempt is rebuilt from the confirmation test it recorded.
+
+**J039's Fable under D357.** Generation 3 is unchanged (a first attempt: not
+confirmed). Generation 4 is attempt 2: pooled 319 of 612 = 0.521 against a
+boundary of 0.50 (the confirmation batches' means were not posted; 0.50 is the
+run's), p 0.156, tested at 0.025 (spent p 0.31): **not confirmed, kept**. The
+verdict does not hang on the unknown means or design effects: for any batch mean
+from 0.472 up the pooled 0.521 fails the size filter (mean + 0.05), and from
+0.48 up it is not significant at 0.025 either, for a design effect of 1.0–1.2.
+Generation 4's own 0.566 passed the size filter, so its mean was at most 0.516.
+J039's swap of Fable would not have happened; the cube from generation 4 on
+would have differed by that one card (and whatever replaced it).
+
+**Measured** (a single candidate re-confirmed every generation on 300 decisive
+games, mean 0.50, no design effect, the real `confirmCandidates`; 20,000
+simulations under the null, 5,000 otherwise; cumulative chance of a cut by
+attempt 1, 2, 4, 6, 8):
+
+| true rate | D331, each batch alone | D357 |
+|---|---|---|
+| 0.50 (no effect) | 4.7%, 9.2%, 17.7%, 25.3%, 32.2% | 4.5%, 4.7%, 4.7%, 4.7%, 4.7% |
+| 0.55 (at the margin) | 51%, 77%, 95%, 99% (6) | 52%, 65%, 75%, 79% (6) |
+| 0.57 | 77%, 95%, 100%, 100% (6) | 77%, 90%, 96%, 99% (6) |
+| 0.60 (the effect that matters) | 97%, 99.8%, 100% | 97%, 99.6%, 100% |
+
+The null stays near one attempt's level rather than reaching 2α because the
+pooled size filter also has to pass. The price is paid only by a card right at
+the size margin (+0.05) that failed once: D331 cut it eventually because it
+kept rolling; D357 asks it to show the margin on all its batches.
+
+**Held by** `web/test/cubelab-confirm-pool.test.ts`: a first attempt is D331's
+test (the same confirm, Holm p, outcome and reason under `confirmPool` 0 and
+1, with or without unrelated history); `pooledTest`'s arithmetic against hand
+values (effective counts, weighted boundary, `dead` on the lower tail, one
+attempt returned as is); a failed attempt counts (48/100 then 66/100: D331
+cuts, D357 does not, at level / 2) and a strong card still confirms; **J039's
+Fable with exactly its numbers**: cut under D331, kept under D357 at mean 0.50
+(pooled 319 of 612, p 0.15–0.16, spent p over 0.3), and kept at every mean
+0.472–0.516 and design effect 1.0–1.2; a seeded simulation (null: one attempt
+under α + 0.015, D331 over 10% at six attempts, D357 at most 2α and under half
+of D331's; a +0.10 card still cut over 90% of the time in three); the
+changelog's history row and pooled column for Fable; `confirmPool` only 0 or
+1, default 1. `web/test/cubelab-evolve.test.ts`'s changelog row gains the new
+column.
+
+**Rejected.**
+
+- **(a) Pooling alone.** It makes a failure count, but re-testing a growing
+  sample at a fixed level is D300's optional stopping again: the per-card
+  chance of a cut still rises without bound as attempts accumulate (slowly,
+  like a group-sequential design with nominal levels).
+- **(b) Spending alone** (each batch alone at α / 2^(j−1)). It bounds the
+  error but throws the failed batch away: Fable's 0.47 would not count against
+  it, and its generation-4 batch alone (Holm p 0.034 > 0.025) would fail only
+  by where the threshold happens to fall.
+- **An O'Brien–Fleming or Pocock boundary over the pooled looks.** Both need
+  the number of looks fixed in advance, and both change the first look, which
+  this decision must not.
+- **Counting attempts per card across rules.** Different rules are different
+  tests on different counts; a card is a candidate on two rules rarely, and the
+  bound is then 2α per rule.
+- **Letting a confirmed-then-reverted or a re-added card start over.** A card
+  cut by evolve is tabu (it does not come back unless a note says `try`), so
+  its history cannot restart; a card re-added by a note is a human's decision.

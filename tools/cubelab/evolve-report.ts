@@ -6,7 +6,7 @@
 // self-contained page (inline CSS, nothing loaded from anywhere), a section per
 // generation, light and dark.
 
-import { ruleWords, type Balance, type CardStat, type Confirmation, type Decision, type Group } from './evolve.ts';
+import { pooledTest, priorAttempts, ruleWords, type Balance, type CardStat, type ConfirmAttempt, type Confirmation, type Decision, type Group } from './evolve.ts';
 import { exploreHealth, judgeExplored, mergeTables, type ExploreJudgeOptions, type ExploreTable } from './explore.ts';
 
 export interface GenSummary {
@@ -39,10 +39,49 @@ export const stagesInWords = (q: number): string => 'A card is cut on the AI\'s 
   + '**Confirmed**: the candidate stands out again, the same way, in a second batch of fresh drafts that played no part in finding it. Only confirmed cards are cut; a candidate that does not confirm stays, and is reported. '
   + 'Win rates count each deck\'s match as one clump of games (the same deck against the same opponent), so their intervals are wider than a count of games would make them.';
 
-/** One candidate as a table row: card, rule, discovery numbers, confirmation numbers, the outcome. */
-function candidateRow(c: Confirmation): string[] {
+/** A candidate's earlier attempts and this one pooled (D357), in words: "attempt 2 (g3, g4): won 319 of 612 (0.52 vs 0.50), p 0.15". */
+function pooledWords(c: Confirmation, rule: Decision['confirmRule']): string {
+  const j = c.attempt ?? (c.confirm ? 1 : 0);
+  if (j <= 1 || !c.pooled) return j === 1 ? 'first attempt' : '—';
+  const gens = [...(c.history ?? []).map((h) => `g${h.gen}`), c.thisAttempt ? `g${c.thisAttempt.gen}` : 'now'].join(', ');
+  return `attempt ${j} (${gens}): ${ruleWords(c.pooled)}${rule === 'D357' ? `, tested at level / ${2 ** (j - 1)}` : ' (reported only: D331 decides on this batch alone)'}`;
+}
+
+/** One candidate as a table row: card, rule, discovery numbers, confirmation numbers, every attempt pooled, the outcome. */
+function candidateRow(c: Confirmation, rule: Decision['confirmRule']): string[] {
   return [c.name, c.rule, `${ruleWords(c.discovery)}${c.discovery.qValue !== undefined ? `, q ${pv(c.discovery.qValue)}` : ''}`,
-    c.confirm ? `${ruleWords(c.confirm)}, Holm p ${pv(c.holmP as number)}` : '—', c.confirmed ? 'confirmed' : `not confirmed: ${c.reason}`];
+    c.confirm ? `${ruleWords(c.confirm)}${(c.attempt ?? 1) > 1 && rule === 'D357' ? '' : `, Holm p ${pv(c.holmP as number)}`}` : '—',
+    `${pooledWords(c, rule)}${(c.attempt ?? 1) > 1 && rule === 'D357' && c.holmP !== null ? `, Holm p ${pv(c.holmP)}` : ''}`,
+    c.confirmed ? 'confirmed' : `not confirmed: ${c.reason}`];
+}
+
+/**
+ * Every card's confirmation history over the run (D357): each attempt with its
+ * batch's own numbers and outcome, and every attempt pooled.  Empty when no
+ * candidate was ever confirmed or refused on a batch.
+ */
+export function confirmHistorySection(gens: GenSummary[]): string {
+  const all = priorAttempts(gens);
+  if (!all.length) return '';
+  const by = new Map<string, ConfirmAttempt[]>();
+  for (const a of all) by.set(`${a.name}|${a.rule}`, [...(by.get(`${a.name}|${a.rule}`) ?? []), a]);
+  const pooledRule = gens.some((g) => g.decision.confirmRule === 'D357');
+  const rows = [...by.values()].sort((a, b) => b.length - a.length || ((a[0] as ConfirmAttempt).name < (b[0] as ConfirmAttempt).name ? -1 : 1));
+  const out = ['## Confirmation history (every attempt, pooled)', '',
+    'Each generation gives a candidate a fresh confirmation batch, so a card that is a candidate again and again gets several chances to confirm by luck. '
+    + (pooledRule
+      ? 'Under D357 a repeat attempt is judged on every one of the card\'s confirmation batches pooled — a failed one counts against it — at a level halved for each earlier attempt (attempt j at the confirmation level / 2^(j−1)), so over any number of attempts a card with no real effect is cut with a chance of at most twice the level. A first attempt is judged exactly as before.'
+      : 'This run uses D331\'s rule (each batch alone); the pooled column is reported, not used.'),
+    '', '| Card | Rule | Attempts (each batch alone) | Every attempt pooled | Outcome |', '|---|---|---|---|---|'];
+  for (const r of rows) {
+    const first = r[0] as ConfirmAttempt;
+    const each = r.map((a) => `g${a.gen}: ${ruleWords({ rule: a.rule, n: a.n, x: a.x, rate: a.x / a.n, p0: a.p0, deff: a.deff, p: a.p })} — ${a.confirmed ? 'confirmed' : 'not confirmed'}`).join('; ');
+    const pooled = pooledTest(first.rule, r);
+    const cut = r.find((a) => a.confirmed);
+    out.push(`| ${first.name} | ${first.rule} | ${each} | ${pooled ? ruleWords(pooled) : '—'} (${r.length} attempt${r.length > 1 ? 's' : ''}) | ${cut ? `cut in generation ${cut.gen}` : 'kept'} |`);
+  }
+  out.push('');
+  return out.join('\n');
 }
 const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -73,8 +112,8 @@ export function changelogSection(g: GenSummary): string {
   out.push(`**Verdict.** ${d.verdict}`, '');
   if (d.confirmations.length) {
     out.push(`**Discovered, then confirmed or not** (${d.discovery.candidates} candidate(s); ${d.confirmBatch ? `the confirmation batch was sized for ${d.plan.drafts} drafts${d.plan.underpowered.length ? `, under-powered for ${d.plan.underpowered.join(', ')}` : ''}` : `a ${d.plan.drafts}-draft confirmation batch is due`}):`, '',
-      '| Card | Rule | Discovery (this generation\'s drafts) | Confirmation (fresh drafts) | Outcome |', '|---|---|---|---|---|');
-    for (const c of d.confirmations) out.push(`| ${candidateRow(c).join(' | ')} |`);
+      '| Card | Rule | Discovery (this generation\'s drafts) | Confirmation (fresh drafts) | Every confirmation attempt pooled | Outcome |', '|---|---|---|---|---|---|');
+    for (const c of d.confirmations) out.push(`| ${candidateRow(c, d.confirmRule).join(' | ')} |`);
     out.push('');
   }
   if (d.swaps.length) {
@@ -151,9 +190,11 @@ export function exploreSection(gens: GenSummary[], o: ExploreJudgeOptions & { sh
 
 export function changelog(title: string, gens: GenSummary[], explore?: ExploreJudgeOptions & { share: number; final: boolean }): string {
   const ex = explore ? exploreSection(gens, explore) : '';
+  const hist = confirmHistorySection(gens);
   return [`# ${title} — evolve changelog`, '',
-    'Written by `tools/cubelab.sh evolve` (D299–D300, D331). Each generation plays its drafts on the cube going in and swaps only what the evidence supports; docs/guides/cube-lab.md *Evolve* says how.', '',
+    'Written by `tools/cubelab.sh evolve` (D299–D300, D331, D357). Each generation plays its drafts on the cube going in and swaps only what the evidence supports; docs/guides/cube-lab.md *Evolve* says how.', '',
     stagesInWords(gens[0]?.decision.discovery.q ?? 0.1), '',
+    ...(hist ? [hist] : []),
     ...(ex ? [ex] : []),
     ...gens.map(changelogSection)].join('\n');
 }
@@ -169,7 +210,7 @@ export function htmlSection(g: GenSummary): string {
   parts.push(`<section><h2>Generation ${g.gen} <span class="dim">v${g.versionIn} → v${g.versionOut} · ${esc(g.date)}</span></h2>`);
   parts.push(`<p class="dim">Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}, ${d.discovery.family} tests at FDR ${d.discovery.q}, design effect ${d.discovery.deff.toFixed(2)}${esc(confirmHead(g))}</p>`);
   parts.push(`<p class="verdict">${esc(d.verdict)}</p>`);
-  if (d.confirmations.length) parts.push('<h3>Discovered, then confirmed or not</h3>', table(['Card', 'Rule', 'Discovery (this generation\'s drafts)', 'Confirmation (fresh drafts)', 'Outcome'], d.confirmations.map(candidateRow)));
+  if (d.confirmations.length) parts.push('<h3>Discovered, then confirmed or not</h3>', table(['Card', 'Rule', 'Discovery (this generation\'s drafts)', 'Confirmation (fresh drafts)', 'Every confirmation attempt pooled', 'Outcome'], d.confirmations.map((c) => candidateRow(c, d.confirmRule))));
   if (d.swaps.length) parts.push('<h3>Swaps</h3>', table(['Out', 'Why', 'Evidence', 'In', 'Why this card'], d.swaps.map((s) => [s.out, s.why, s.evidence, s.in, s.fit])));
   if (d.watch.length) parts.push('<h3>Insufficient data</h3>', table(['Card', 'Lean', 'Evidence', 'Drafts to settle'], d.watch.slice(0, 15).map((w) => [w.name, w.signal, w.evidence, String(w.draftsNeeded ?? '—')])));
   if (d.aiLimited.length) parts.push('<h3>AI-limited (never cut on AI stats)</h3>', table(['Card', 'Flag', 'Status', 'AI evidence says', 'Evidence'], d.aiLimited.map((a) => [a.name, a.aiFlag, a.status, a.signal, a.evidence])));
