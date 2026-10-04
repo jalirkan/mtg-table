@@ -106,6 +106,29 @@ class ReservedTest(unittest.TestCase):
         d, _ = R.game_decks("/nowhere/x.jsonl", {"match": {"yourDeck": {"path": "tools/ai-bench/decks/sets/x-900000001-A.dck"}}}, self.repo)
         self.assertIsNotNone(R.reserved_hit(d, R.reserved_decks(self.repo)))
 
+    def test_a_lab_game_with_unknown_decks_fails_closed(self):
+        """D365: a lab recording with no drafts.jsonl line for its seed is dropped, not checked by the viewer's deck alone."""
+        res = R.reserved_decks(self.repo)
+        # the viewer's deck is known and not reserved; the opponent's is not in the log
+        write_dck(os.path.join(self.repo, "decks/mine.dck"), {"Mine": 23, "Plains": 17})
+        own = {"match": {"yourDeck": {"name": "cubelab 9 A", "path": "decks/mine.dck"}, "aiDeck": {"name": "cubelab 9 B", "cards": 40}}}
+        # seed 9: the run folder's drafts.jsonl has no line for it (the opponent could be a confirm deck)
+        rec = os.path.join(self.run_dir, "games", "9", "g1-seat0.jsonl.gz")
+        decks, ver = R.game_decks(rec, own, self.repo)
+        self.assertEqual((len(decks), ver), (1, "unversioned"))
+        self.assertEqual(R.reserved_hit(decks, res), R.UNKNOWN_DECK)
+        self.assertEqual(R.reserved_hit(R.game_decks(os.path.join(self.run_dir, "frames", "draft-9-g1.jsonl"))[0], res), R.UNKNOWN_DECK)
+        # a lab layout with no drafts.jsonl at all; and a copied lab log known only by the lab's deck names
+        lone = os.path.join(self.tmp, "lone", "games", "3", "g1-seat1.jsonl.gz")
+        self.assertEqual(R.reserved_hit(R.game_decks(lone)[0], res), R.UNKNOWN_DECK)
+        self.assertEqual(R.reserved_hit(R.game_decks("/copied/x.jsonl", own, self.repo)[0], res), R.UNKNOWN_DECK)
+        # concatenation keeps the mark (policy_data adds an ai-bench game's decks this way)
+        self.assertEqual(R.reserved_hit(R.game_decks(lone)[0] + [{"Other": 23}], res), R.UNKNOWN_DECK)
+        # a known lab game, and a game that is not a lab game (a person's, a fixture), are judged as before
+        self.assertIsNone(R.reserved_hit(R.game_decks(os.path.join(self.run_dir, "games", "6", "g1-seat0.jsonl.gz"))[0], res))
+        self.assertIsNone(R.reserved_hit(R.game_decks("/nowhere/human.jsonl", {"match": {"aiDeck": {"name": "Doom Legion"}}})[0], res))
+        self.assertIsNone(R.reserved_hit(({"Other": 1}, {"Other": 2}), res))
+
     def test_doc_flags(self):
         flags = MD.doc_ai_flags(os.path.join(HERE, "..", "..", ".."))
         self.assertEqual(flags.get("Goblin Bombardment"), "All")

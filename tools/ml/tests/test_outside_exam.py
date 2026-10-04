@@ -389,7 +389,11 @@ class R17DatasetTest(unittest.TestCase):
                      "--out", out, "--human", self.nohuman])
         st = self.stats(out)
         self.assertEqual((st["schemaKind"], st["minTurn"], st["deckVocabMin"]), ("r17", 3, 0.5))
-        self.assertEqual(st["games"], 4)
+        # the normal/synergy copy (fixtures/cubelab/recorded) has no drafts.jsonl: its two games' decks
+        # cannot both be known, and the reserved-deck filter fails closed on them (D365)
+        self.assertEqual(st["games"], 2)
+        import reserved as R
+        self.assertEqual(st["reservedHits"], {R.UNKNOWN_DECK: 2})
         self.assertEqual(st["playExplore"]["mode"], "exclude")
         with open(os.path.join(out, "features.json")) as f:
             self.assertEqual(f.read().count('"cardStates"'), 1)

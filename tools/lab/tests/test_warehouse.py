@@ -425,6 +425,12 @@ class Warehouse(unittest.TestCase):
         con.close()
 
     def test_notebooks_run_on_the_fixture_warehouse(self):
+        # A passing gate report carries no "reasons" (null in the table): J066's pilot on the PC failed on that.
+        for gate, rep in (("fit", {"gate": "fit", "pass": True, "model": "m.json", "modelSha12": "abc"}),
+                          ("regret", {"gate": "regret", "pass": False, "model": "m.json", "modelSha12": "abc", "reasons": ["underpowered"]})):
+            os.makedirs(os.path.join(self.ml, "gates", gate))
+            with open(os.path.join(self.ml, "gates", gate, "report.json"), "w") as fh:
+                json.dump(rep, fh)
         self.ingest()
         env = dict(os.environ, LAB_WAREHOUSE=os.path.join(self.out, "lab.duckdb"), MIN_GAMES="1", MPLBACKEND="agg")
         books = sorted(glob.glob(os.path.join(ROOT, "notebooks", "*.py")))
