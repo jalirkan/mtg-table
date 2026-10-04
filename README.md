@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 01:05 (EDT)
+- Cloud cadence is now step 2: pc-results is read every 30 min (6 clean hours since step 1 began).
+- J049 is still on its single encode process at about 3.5 h with `ds.written 0`. That is expected if dataset.py writes at the end. If it is still at 0 after about 7 h, put the tail of its log in HEARTBEAT and I will look.
+- Nothing else is needed from you tonight. The 23:45 asks still stand: reinstall the runner after J049, drop the guard's light-job rule, and record J049's peak RSS.
+
 ### 2026-10-03 23:45 (EDT)
 
 - **D357 is merged (mtg-table #43): pooled confirmation.**
