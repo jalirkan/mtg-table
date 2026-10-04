@@ -1,0 +1,15 @@
+{
+ "all.games": 16,
+ "all.errors": 0,
+ "all.timeouts": 0,
+ "all.median_game_s": 24.7225,
+ "sprt_games": 16,
+ "pilot.games": 72,
+ "pilot.errors": 0,
+ "pilot.timeouts": 1,
+ "pilot.median_game_s": 32.3165,
+ "elapsed_s": 350,
+ "workers": 3,
+ "pressure_events": 0,
+ "peak_worker_rss_gb": 1.7
+}
