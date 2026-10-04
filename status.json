@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-04T05:38:38-04:00",
- "heartbeat": "2026-10-04T05:38:38-04:00",
+ "updated": "2026-10-04T05:39:01-04:00",
+ "heartbeat": "2026-10-04T05:39:01-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.17,
-  "memUsedGb": 5.1,
+  "load1": 1.88,
+  "memUsedGb": 5.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 3246,
   "pressure": 0,
@@ -24,21 +24,21 @@
    "id": "J059",
    "title": "Overnight queue, night 2: recorded normal + bridge drafts across all cubes, on main with the reveal-leak fix (D352)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-04T05:38:38-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": 0,
    "total": null,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "cores": 6,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-04T05:38:38-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "night.drafts": 0,
     "night.games": 0,
@@ -76,7 +76,7 @@
    "cubes": [],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J059-prepare"
+   "detail": "lab-J059-pilot1"
   },
   {
    "publicTitle": "Evaluator training and fit gate",
@@ -84,9 +84,9 @@
    "id": "J060",
    "title": "(J049/J057 again, with the fit-memory fix) Evaluator gate 1: train on the night-1 dataset on disk and run the held-out fit gate (D354)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-04T05:38:38-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": null,
    "total": null,
    "unit": null,
@@ -98,7 +98,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0,
    "live": {
     "ds.rows": 6343314,
     "ds.games": 39177,
@@ -126,7 +126,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J060-prepare"
+   "detail": "lab-J060-pilot1"
   }
  ],
  "queue": [
