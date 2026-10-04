@@ -579,6 +579,11 @@ class EvalV2Test(unittest.TestCase):
                          ("normal/vintage", "explore")):
             os.makedirs(os.path.dirname(os.path.join(root, key)), exist_ok=True)
             shutil.copytree(os.path.join(LAB, src), os.path.join(root, key))
+        # fixtures/cubelab/recorded carries its recordings but no drafts.jsonl, and D365's reserved-deck
+        # filter fails closed on a lab game whose decks are unknown (test_outside_exam holds that). Night 1
+        # gets the run's real draft line: seed 7 redrafted by the lab (a draft is a function of its seed, D294),
+        # every card either recording shows in that seat's deck.
+        shutil.copy(os.path.join(HERE, "data", "recorded-drafts.jsonl"), os.path.join(root, "normal/synergy", "drafts.jsonl"))
         plans = {1: [{"key": "normal/synergy", "seed": 1, "drafts": 50}],
                  2: [{"key": "bridge/synergy+vintage", "seed": 100, "drafts": 5}],
                  3: [{"key": "normal/vintage", "seed": 100, "drafts": 5}]}

@@ -7,7 +7,7 @@
 # engine-crash probe -- and it stays a LOCAL command, run before every commit
 # (CLAUDE.md, "Build and run").  Nothing here plays a game or starts an engine.
 # What this IS: every check that needs no running engine, on every push to main
-# and every pull request, in three jobs that run side by side:
+# and every pull request, in four jobs that run side by side:
 #
 #   web        npm ci, then `npm --prefix web run build` (tsc + vite) and
 #              `npm --prefix web test` (node --test, then vitest).  Hermetic by
@@ -33,6 +33,8 @@
 #              (12f, D292: a loopback HTTP server and a FAKE `claude` -- no real
 #              CLI, no login, no network), and the decision index's check and
 #              self-test (D379) -- plain Node, no npm install.
+#   ml         the whole tools/ml suite with numpy and zstandard in a venv (D383):
+#              the redaction job runs only its standard-library half.
 #
 # Also local only: tools/arena-bench.mjs (a built dist, a preview server and a
 # headless Chromium), the card library's real build (Scryfall's bulk file),
@@ -216,3 +218,32 @@ jobs:
       # its standard-library half runs (line flattening, offsets, resets); the rest says skipped.
       - name: tools/lab tests (the lab warehouse)
         run: python3 -m unittest discover -s tools/lab/tests
+
+  # D383: the tools/ml suite WITH numpy and zstandard.  The redaction job above runs only its
+  # standard-library half, so every numpy test -- the datasets, training, the gates, evaluator v2 --
+  # was skipped in CI, and test_eval_v2's queue-nights test failed on main from 58f3fa5 with CI
+  # green.  A venv, because ubuntu-latest's Python refuses a system pip install (PEP 668).
+  ml:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: numpy and zstandard in a venv
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ml"
+          "$RUNNER_TEMP/ml/bin/pip" install --quiet 'numpy>=2,<3' zstandard
+          "$RUNNER_TEMP/ml/bin/python" -c "import numpy, zstandard; print('numpy', numpy.__version__, 'zstandard', zstandard.__version__)"
+      - name: tools/ml tests, every one (12h in full)
+        shell: bash   # -eo pipefail: the tee below must not hide the suite's exit status
+        env:
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+        run: |
+          "$RUNNER_TEMP/ml/bin/python" -m unittest discover -v -s tools/ml/tests 2>&1 | tee "$RUNNER_TEMP/ml-tests.log"
+          # a test skipped for numpy or zstandard here is a test this job exists to run (-v prints the reasons)
+          if grep -E "skipped '(numpy is not installed|zstandard not installed)" "$RUNNER_TEMP/ml-tests.log"; then
+            echo "ml: a numpy or zstandard test was skipped in the job that installs them" >&2
+            exit 1
+          fi
