@@ -78,9 +78,9 @@ export function sanitiseWarehouse(raw: unknown): PublicWarehouse | null {
   const nights = arr(d.nights).slice(0, MAX.nights).flatMap((x) => {
     const n = obj(x);
     const night = count(n.night) ?? tok(n.night, NIGHT_WORD);
-    const v = [n.drafts, n.games, n.recorded, n.quarantined, n.engineErrors].map(count);
-    if (night === null || v.some((c) => c === null)) return [];
-    const [drafts, games, recorded, quarantined, engineErrors] = v as number[];
+    const drafts = count(n.drafts), games = count(n.games), recorded = count(n.recorded);
+    const quarantined = count(n.quarantined), engineErrors = count(n.engineErrors);
+    if (night === null || drafts === null || games === null || recorded === null || quarantined === null || engineErrors === null) return [];
     return [{ night, drafts, games, recorded, quarantined, engineErrors }];
   });
   const a = d.archive ? obj(d.archive) : null;
