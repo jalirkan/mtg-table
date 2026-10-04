@@ -82,6 +82,13 @@ const REQUIRED = [
   ['m55-chosen-is-not-an-option.jsonl', 'fail'],
   ['m55-frame-is-not-a-state.jsonl', 'fail'],
   ['m55-decision-in-a-seat-recording.jsonl', 'fail'],
+  // Amendment M57 (D358): play exploration's header and decision marks; the
+  // planted leak is a mark whose Forge answer names the opponent's hand card.
+  ['m57-explore-present.jsonl', 'pass'],
+  ['m57-explore-without-header.jsonl', 'fail'],
+  ['m57-explore-forge-names-the-opponent-hand.jsonl', 'fail'],
+  ['m57-explore-carries-a-label.jsonl', 'fail'],
+  ['m57-playexplore-in-a-seat-recording.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

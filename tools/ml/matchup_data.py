@@ -21,12 +21,22 @@ line per decisive game:
      "onPlay": "A" | "B", "winner": "A" | "B",
      "from": {"Lightning Bolt": "pauper", ...},      # bridge only: the cube each card of both decks came from
      "run": "<the run folder, relative to the repo>",
-     "ver": "<the lab version that drafted and played it>" | "unversioned"}   # D341, tools/cubelab/versions.ts
+     "ver": "<the lab version that drafted and played it>" | "unversioned",   # D341, tools/cubelab/versions.ts
+     "explore": true}                                # D358 only: the draft's games explored (absent otherwise;
+                                                     # the id then ends in "x": "<pool>#<seed>#g<n>x")
 
 `ver` is the lab version (code tree, jar, ratings, cube, weights) stamped on
 the draft's line since D341; `collect(..., vers=...)` keeps only some, and the
 model's report counts games per version, so a night run on other code can be
 split off rather than silently pooled.
+
+NO EXPLORING GAMES, BY DEFAULT (D358).  A draft whose games explored (the
+queue's `--play-explore`: a share of drafts in which each seat answers some
+decisions at random) carries `playExplore` on its drafts.jsonl line.  A random
+move is not the deck's strength, so such games would bias every card's
+rating: `collect` leaves them out (`stats["playExplore"]` counts them) unless
+`play_explore="include"` (or `"only"`, for an experiment), and a kept record
+says `"explore": true`.
 
 NO RESERVED DECKS.  A game whose deck A or B is, card for card, a deck of the
 AI ladder's dev or confirm set (tools/ai-bench/pairs-*.txt, reserved.py) is
@@ -146,24 +156,43 @@ def games_from_run(run_dir: str, rel_to: str = ".") -> Iterator[Dict[str, Any]]:
                      "deckA": a, "deckB": b, "onPlay": on, "winner": w, "run": run_rel, "ver": rec.get("ver") or "unversioned"}
                 if frm is not None:
                     r["from"] = frm
+                if rec.get("playExplore"):
+                    r["explore"] = True
+                    r["id"] += "x"  # D358: never the id of a plain game of the same draft
                 yield r
 
 
+PLAY_EXPLORE_MODES = ("exclude", "include", "only")
+
+
+def explore_kept(explored: bool, mode: str) -> bool:
+    """D358's filter: exclude (the default) drops exploring games, only keeps them alone, include keeps all."""
+    if mode not in PLAY_EXPLORE_MODES:
+        raise ValueError(f"play_explore is one of {PLAY_EXPLORE_MODES}, got {mode!r}")
+    return mode == "include" or explored == (mode == "only")
+
+
 def collect(paths: Iterable[str], rel_to: str = ".", reserved: Optional[Dict[str, str]] = None,
-            vers: Optional[Iterable[str]] = None) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+            vers: Optional[Iterable[str]] = None, play_explore: str = "exclude") -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """Every decisive game under these paths, each once.  Returns the records and counts of what was skipped.
 
     `reserved` (reserved.reserved_decks()): drop a game either of whose decks is one of these, card for card.
-    `vers`: keep only games of these lab versions (`unversioned` names lines from before D341)."""
+    `vers`: keep only games of these lab versions (`unversioned` names lines from before D341).
+    `play_explore`: exclude (default) | include | only the games of drafts that explored (D358)."""
     import reserved as R
     seen = set()
     out: List[Dict[str, Any]] = []
-    stats: Dict[str, Any] = {"runs": 0, "duplicates": 0, "reserved": 0, "reservedDecks": {}, "otherVersion": 0}
+    stats: Dict[str, Any] = {"runs": 0, "duplicates": 0, "reserved": 0, "reservedDecks": {}, "otherVersion": 0,
+                             "playExplore": 0}
     keep_vers = set(vers) if vers else None
     for run in find_runs(paths):
         stats["runs"] += 1
         for r in games_from_run(run, rel_to):
-            key = (r["pool"], r["seed"], r["game"], deck_hash(r["deckA"], r["deckB"]))
+            if not explore_kept(bool(r.get("explore")), play_explore):
+                stats["playExplore"] += 1
+                continue
+            # an exploring game and a plain one of the same draft are two different games (D358)
+            key = (r["pool"], r["seed"], r["game"], deck_hash(r["deckA"], r["deckB"]), bool(r.get("explore")))
             if key in seen:
                 stats["duplicates"] += 1
                 continue
@@ -186,7 +215,7 @@ def collect(paths: Iterable[str], rel_to: str = ".", reserved: Optional[Dict[str
     for r in out:
         if len(pairs[r["draft"]]) > 1:
             r["draft"] = f"{r['draft']}@{deck_hash(r['deckA'], r['deckB'])}"
-            r["id"] = f"{r['draft']}#g{r['game']}"
+            r["id"] = f"{r['draft']}#g{r['game']}" + ("x" if r.get("explore") else "")
     out.sort(key=lambda r: r["id"])
     return out, stats
 
@@ -446,11 +475,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--check", action="store_true", help="validate every record; exit 1 if any is bad (a pilot's check)")
     ap.add_argument("--keep-reserved", action="store_true", help="keep games played with an AI-ladder deck-set deck (default: drop them, D340)")
     ap.add_argument("--ver", default="", help="keep only these lab versions (comma-separated ids; `unversioned` = before D341)")
+    ap.add_argument("--play-explore", choices=PLAY_EXPLORE_MODES, default="exclude",
+                    help="games of drafts whose games explored (D358): left out by default")
     ap.add_argument("--repo", default=".")
     a = ap.parse_args(argv)
     import reserved as R
     games, st = collect(a.paths, reserved=None if a.keep_reserved else R.reserved_decks(a.repo),
-                        vers=[v for v in a.ver.split(",") if v] or None)
+                        vers=[v for v in a.ver.split(",") if v] or None, play_explore=a.play_explore)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as fh:
         for r in games:
@@ -460,7 +491,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
     print(f"{len(games)} decisive game(s) from {st['runs']} run(s), {len({r['draft'] for r in games})} draft(s) "
           f"({', '.join(f'{k} {v}' for k, v in sorted(kinds.items()))}); {st['duplicates']} duplicate(s) skipped; "
-          f"{st['reserved']} game(s) with a deck-set deck dropped; {st['otherVersion']} of other versions -> {a.out}")
+          f"{st['reserved']} game(s) with a deck-set deck dropped; {st['otherVersion']} of other versions; "
+          f"{st['playExplore']} exploring game(s) left out by --play-explore {a.play_explore} (D358) -> {a.out}")
     for v, n in sorted(version_counts(games).items()):
         print(f"  version {v}: {n} game(s)")
     if a.check:

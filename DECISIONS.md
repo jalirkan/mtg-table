@@ -16685,3 +16685,161 @@ column.
 - **Letting a confirmed-then-reverted or a re-added card start over.** A card
   cut by evolve is tabu (it does not come back unless a note says `try`), so
   its history cannot restart; a card re-added by a note is a human's decision.
+
+## D358 — Play exploration: a seeded share of the queue's drafts play games in which each decision may be answered by a random legal move (epsilon) or a coin between near-tied creature choices; every record says so, win rates leave those games out, the position dataset keeps them, the policy dataset drops the random moves
+
+*Branch `c/queue-exploration`; D358, the next number free on a freshly fetched `main` (D357 the highest).
+Protocol amendment M57.*
+
+**2026-10-04** (Justin's approval of three options for night 3: epsilon-random decisions,
+close-call exploration, varied openings)
+
+**Context.** Every queue game is Forge's AI against Forge's AI (D323), and Forge's AI is
+greedy and deterministic in its habits (D311): from a given position it plays the same
+line. The positions the queue records (D315) are the learned evaluator's training data
+(D305, D316, gated by D354), so they follow Forge's well-worn paths and the evaluator sees
+little of the positions a different move would have led to — exactly where the search
+(D312) asks it to judge. D356 explored the *decks*; this decision explores the *play*,
+cheaply and under control, on a share of the drafts.
+
+**Decision.**
+
+1. **Which drafts.** `queue run … --play-explore share=0.15,epsilon=0.05,closecall=0.02`
+   (and `run --play-explore`, the same grammar as D356's `--explore`: `on` or `name=value`,
+   repeated or comma-separated; `opening=on|off`). A draft explores with probability
+   `share`, drawn from its own stream `rng(seed, 'play-explore')`
+   (`tools/cubelab/playexplore.ts`): a pure function of the seed, so any `--jobs`, any
+   machine and a resumed night agree, and no other stream moves — the draft, the picks,
+   the decks, D347's profile mix and D356's deck exploration are what they would be
+   without it. A smaller share explores a subset of a larger one's drafts (one uniform
+   draw per seed). In an exploring draft both seats of every game explore.
+2. **Where it hooks in: D309's seam, no Forge patch.** `PolicyControllerAi` (the lab's
+   recorded seats, the ladder's `policy` and `search` kinds, the game's `--ai-policy`)
+   gains an optional `mtgtable.ai.Explorer`. It is offered each answer AFTER the seat's
+   own policy chose (Forge, the outlet policy, the search), so with no explorer nothing
+   changes, and a search seat's search still runs. `PolicyLobbyPlayerAi.setExplore(cfg,
+   seed)` arms it for the next game; `CubeLab.java` seats our controller for an exploring
+   match even when it is not recorded (D347: with no policy it plays as Forge's).
+3. **Epsilon-random.** Each decision of an explorable kind draws ONE coin; with
+   probability `epsilon` (default 0.05) its answer is replaced by one drawn uniformly
+   from the seat's LEGAL answers:
+   - **priority**: pass, each land it may play, Forge's own answer, and the search's
+     candidate list (D312: every spell or ability Forge's per-card judgment would play,
+     with the targets it chose, and every untargeted spell it can cast and pay for), one
+     entry per token;
+   - **attack**: a uniform subset of the creatures that can attack the opponent,
+     redrawn (up to 64 times) until Forge's `CombatUtil.validateAttackers` accepts it;
+   - **blocks**: each blocker on one attacker it can block, or none, redrawn until
+     `validateBlocks` accepts it;
+   - **targets**: each part of the played spell or trigger with exactly one target
+     chosen, of exactly one allowed, and none of the cross-target constraints (unique,
+     same or different controllers, divided damage, random): a uniform draw from the
+     legal targets the seat can see; the old target is put back if the engine says the
+     new one is not valid.
+   Mana payment, costs, modes, effect choices and the rest stay Forge's. A decision with
+   one legal answer is not counted. A pick that happens to be Forge's own answer counts
+   as randomised (`changed` counts those that differ).
+4. **Close calls.** Plain Forge exposes no per-option score for its priority, attack or
+   block choices (its priority list is ordered by a heuristic and it plays the first
+   acceptable spell; D311). Where it does choose by a score — a creature, as a single
+   target or a creature an effect asks for, ranked by `ComputerUtilCard.evaluateCreature`
+   — the legal creature of the same controller whose score is nearest Forge's choice is
+   a **close call** when the two are within `closecall` (default 0.02) of the larger, and
+   a fair coin picks between them. The search's own close calls (its per-candidate win
+   estimates) are not explored here: the queue's seats are plain Forge.
+5. **Openings** (`opening=on`, default off): who plays first is a fair coin from the
+   game's own stream instead of D295's alternation, and the seven-card mulligan decision
+   is an epsilon decision (keep or mulligan, uniformly).
+6. **Its own randomness.** Every draw comes from a `SplittableRandom` seeded by
+   `ExploreMath.seedFor(draft seed, game, seat)` (seat −1 for the play/draw coin), never
+   from Forge's `MyRandom`; the coin is drawn before anything is listed, and the engine
+   calls that list options run inside `Decisions.quiet` (D347), so exploring moves no
+   draw of the game's own stream. **Measured:** the same four exploring drafts (synergy,
+   seeds 101–104, epsilon 0.2, close call 0.05, opening on) played twice gave the same
+   decisions in both runs — every option list, every answer and every explore mark,
+   both chairs, 1,598 records — and the same turns and winners. (Only the recorder's
+   frame cuts and timings differed. Forge's AI also reads the wall clock — a 5 s
+   evaluation timeout, D311 — so a heavily loaded machine can still change a game; the
+   exploration draws themselves are a pure function of the seeds.)
+7. **Hidden information.** Every option comes from the engine's legality checks for the
+   deciding seat's own plays (the lists Forge's AI walks every priority), its creatures
+   and blockers on the battlefield, or a target list filtered to what the seat can see
+   (`Decisions.visible`); a score is read only from a face-up creature on the battlefield
+   or one the seat controls. No library, no other hand, no face-down identity. The
+   recorder and the checker are unchanged in what they audit; the new mark's token is
+   audited like every other (below).
+
+**Recording** (protocol amendment M57). An exploring recording's session header carries
+`playExplore: {epsilon, closeCall, opening}`; a decision the explorer answered carries
+`explore: {rule: "random" | "closeCall", forge: <token>}`, `forge` the answer the seat's
+policy had given; each seat's `decisions` summary gains `explore: {decisionsRandomised,
+changed, closeCalls, closeCallsChanged, coins, failures, byKind}`. The count cannot sit in
+the header, which is written before the game. `drafts.jsonl` tags an exploring draft
+(`playExplore: {epsilon, closeCall, opening}`) and each of its game rows (`playExplore`:
+both seats' counts, and `onPlayDrawn` with `opening`), recorded or not. `run.json` and the
+night's plan record the settings. `tools/check-redaction.mjs` admits the header key only
+in an AI-vs-AI log (never beside `transport`), with exactly its three keys; the mark only
+in a log whose header says it explored, with exactly its two keys, `forge` a token whose
+card ids its state frame must show the seat (D3, as for options); the summary's keys.
+Controls: five `m57-*` probes (one planted leak: a mark whose `forge` names the opponent's
+concealed hand card) and three cases over the committed `fixtures/cubelab/explore/`.
+
+**Versions (D341).** Play exploration changes the games, so its settings are folded into
+the version stamp's weights hash when on — as D356 folds deck exploration — and a run
+without it has the old id. Turning it on, off or changing it between nights of one key
+folder is therefore a version change: refused unless `--allow-version-change`, which
+`run.json` logs (`allowedChange`, `changed: ["weightsSha"]`); every draft line carries
+its `ver` and its `playExplore` tag. A re-run of a night uses the plan's settings, and a
+different `--play-explore` on it is refused.
+
+**How exploring data is read.**
+
+- **Win rates leave exploring drafts out by default**: `report` and `meta` (`readRun`),
+  `learn` (`readRunData`), the queue's coverage (`gamesByCard`),
+  `tools/ml/matchup_data.py` / `matchup.py train` (`--play-explore include|exclude|only`,
+  default exclude, `stats["playExplore"]` counts them), `matchup_verify.py`. A random move
+  is not the deck's strength. An exploring game is never a duplicate of a plain game of
+  the same draft (its matchup id ends in `x`).
+- **The position dataset keeps them** (`dataset.py --play-explore include`, the default;
+  `exclude` and `only` for experiments): the positions after a random move are real
+  positions and the outcome is a true outcome of play from them. `games.jsonl` marks
+  each such game `"explore": true` and `stats.json` counts them (`playExplore`).
+- **The policy dataset drops every randomised decision** (`policy_data.py`; counted in
+  `notes`): its `chosen` is not the seat's choice. The rest of the game's decisions stay
+  — from the next decision on the seat chose again. The mark keeps `forge`, so a later
+  dataset could relabel those rows with the policy's own answer; this one does not.
+- **Gate 2 (D354) leaves exploring games out** (`gate_regret_build.py`): its set was
+  registered as the AI's own decisions. Gate 1's dataset is `dataset.py`'s and so
+  includes them by default; whether the gate's test split should is an open question for
+  Justin (below), and `--play-explore exclude` reproduces the old population.
+
+**Measured** (this container, 4 shared cores; synergy cube, grid, one game a draft, both
+chairs recorded). Epsilon 0.2, close call 0.05, opening on, seeds 101–104: 14–28
+randomised decisions a game (of 424–1,021 coins: most coins fall on one-option
+priorities), 1 close call, 0 failures, 0 engine errors, `check-redaction.mjs` PASS on all
+eight logs, 505 KiB a game gzipped against 164 KiB for the same seeds unexplored (the
+explored games ran 16–30 turns against 16–19). The queue path at the night-3 settings
+(epsilon 0.05, close call 0.02, share 1, seeds 3–5, appended to a night-1 folder with
+`--allow-version-change`): 5–11 randomised decisions a game, 107–972 KiB a game (the
+largest a 23-turn game that ended with 76 permanents on the battlefield); the version
+change was refused without the flag and logged with it. These are seven games: what share and epsilon do to a night's disk and CPU is
+the PC's to measure on night 3.
+
+**Not done.** The search's own close calls; effect choices, modes, costs and multi-target
+spells; a `+explore` seat-spec option for ai-bench and the ladder (the controller seam
+would take it as is); varying the AI profile per draft in the queue (`run
+--profile-mix`, D347, exists; the queue does not pass it).
+
+**Rejected.**
+
+- **Random moves from Forge's `MyRandom`** — every draw would move the game's own stream
+  and make a re-run another game.
+- **Patching Forge's `AiController`** (its scored lists) — the jar is pinned and D309's
+  seam already sees every answer.
+- **Uniform over every legal ability activation**, targeted ones included — a targeted
+  ability Forge did not evaluate has no targets chosen; Forge's own judgment chooses
+  them for the search's candidates, so the same list is the random one's.
+- **Keeping exploring games in the win-rate tables** with a flag to drop them — the
+  default must be the unbiased table.
+- **Dropping exploring games from the position dataset** — the point of the exercise;
+  `exclude` is there for the experiment that asks whether they help.

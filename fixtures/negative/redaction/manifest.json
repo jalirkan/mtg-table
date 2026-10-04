@@ -244,5 +244,35 @@
     "level": "fail",
     "expect": "in a seat recording",
     "why": "amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log"
+  },
+  {
+    "file": "m57-explore-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M57: an exploring recording -- its header, one randomised decision and the summary's counts -- the control for the m57 probes"
+  },
+  {
+    "file": "m57-explore-without-header.jsonl",
+    "level": "fail",
+    "expect": "no playExplore",
+    "why": "amendment M57 / D358: an explore mark only in a recording whose header says it explored"
+  },
+  {
+    "file": "m57-explore-forge-names-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "amendment M57 / D358: the mark's Forge answer is a token like any other -- naming a card the viewer cannot see is a leak"
+  },
+  {
+    "file": "m57-explore-carries-a-label.jsonl",
+    "level": "fail",
+    "expect": "explore carries an unexpected key",
+    "why": "amendment M57 / D358: an explore mark is a rule and a token -- nothing else"
+  },
+  {
+    "file": "m57-playexplore-in-a-seat-recording.jsonl",
+    "level": "fail",
+    "expect": "both \"playExplore\" and \"transport\"",
+    "why": "amendment M57 / D358: a seat a person plays never explores"
   }
 ]

@@ -254,6 +254,7 @@ lowers it): a mix with search plays slower games.
 | `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes, under the same lab version only (D341) |
 | `--allow-version-change` | off | resume a folder another lab version (code, jar, ratings, cube, weights) wrote; logged in `run.json` (D341) |
 | `--deckset` | off | draft the AI ladder's deck sets at the reserved seeds; needs `--games 0` (`ai-ladder.sh decksets` passes it; D340) |
+| `--play-explore on \| name=value` | off | a seeded share of the drafts play games whose decisions explore (D358, *Play exploration* below): `share=0.15,epsilon=0.05,closecall=0.02,opening=off` |
 | `--builder lab\|forge` | `lab` | which deck plays |
 | `--game-timeout <sec>` | 300 | a game past it is a draw |
 | `--winston-cards N` | 90 | the size of the Winston stack |
@@ -832,6 +833,8 @@ tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7            # print
 tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7 --record-every 1   # play it; resumable
 python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup/night-1
 tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-1/power.tsv
+tools/cubelab.sh queue run  --night 3 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-2/power.tsv \
+    --play-explore share=0.15,epsilon=0.05,closecall=0.02 --allow-version-change   # D358, below
 ```
 
 | flag | default | |
@@ -847,6 +850,7 @@ tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 -
 | `--allow-version-change` | off | append to key folders another lab version wrote (D341; logged in each `run.json`) |
 | `--bridge-ratings even\|own` | `even` | as for `run` |
 | `--record-every N` | 0 | passed to every run: record every game of every Nth draft in the worker, both chairs (D315; the night stops if a run did not record) |
+| `--play-explore share=…,epsilon=…,closecall=…,opening=on\|off` | off | a seeded share of every chunk's drafts play games whose decisions explore (D358, *Play exploration* below); recorded in the night's plan, and a re-run of the night must not change it |
 | `--root <dir>` | `var/cubelab/queue` | |
 
 **No double work.** A draft is a function of its pool key (`normal/<cube>` or
@@ -887,6 +891,69 @@ plan file records them) and the tiers its `TIERS` table:
 | `minPairWeight` | 0.25 | a pair whose novelty × link is under this is skipped |
 | `tau` | 0.25 | the prior SD (logits) behind var_c from game counts when there is no `--power` |
 | `minDrafts` | 20 | a key under this many drafts gets none (`--min-drafts`) |
+
+### Play exploration (D358)
+
+Every queue game is Forge's AI against Forge's AI, and Forge plays the same line from
+the same position, so the positions the queue records for the learned evaluator follow
+Forge's well-worn paths. `--play-explore` (on `queue run` and on `run`) spends a share
+of the drafts on games that leave those paths a little:
+
+- a draft **explores** with probability `share`, drawn from its own stream of the
+  draft's seed (any `--jobs`, a resumed night, the same answer; the draft, picks and
+  decks are untouched). Both seats of every game of an exploring draft explore;
+- **epsilon**: each decision of an explorable kind -- what to play with a priority
+  (pass, a land, Forge's own answer, or any spell or ability Forge would play with the
+  targets it chose, or an untargeted spell it can cast), the attack, the blocks, and
+  each single target of what it plays or triggers -- is replaced with probability
+  `epsilon` by a uniformly random **legal** answer (an attack or a block redrawn until
+  Forge accepts it). Mana, costs, modes and other choices stay Forge's;
+- **closecall**: where Forge chose a creature by its own creature score (a target, or a
+  creature an effect asks for), the legal creature of the same controller whose score
+  is within `closecall` of it (relative) is a coin flip against it. Plain Forge scores
+  nothing else per option, so this is the only close call a plain seat has;
+- **opening=on** (off by default): who plays first is a coin instead of the
+  alternation, and the seven-card mulligan decision is an epsilon decision.
+
+Each seat's draws come from a generator seeded by the draft's seed, the game and the
+seat (`mtgtable.ai.ExploreMath.seedFor`), never from Forge's own random stream, so a
+re-run of the same draft plays the same decisions (measured: two runs of four exploring
+drafts, 1,598 decision records, identical). Everything chosen at random is among the
+seat's own legal options; nothing reads a hand, a library or a face-down card.
+
+| `--play-explore` | default | |
+|---|---|---|
+| `share` | 0.15 | the share of drafts whose games explore |
+| `epsilon` (`eps`) | 0.05 | per explorable decision, the chance of a random legal answer |
+| `closecall` (`cc`) | 0.02 | the relative margin of a creature close call; 0 = off |
+| `opening` | off | `on`: play/draw by a coin, the opening mulligan explorable |
+
+**What it writes.** An exploring draft's line in `drafts.jsonl` carries `playExplore:
+{epsilon, closeCall, opening}`, and each of its game rows `playExplore` with both seats'
+counts (`decisionsRandomised`, `changed` -- of those, the ones that differ from the
+seat's own answer -- `closeCalls`, `closeCallsChanged`, `coins`, `failures`, `byKind`,
+and `onPlayDrawn` with `opening`). A recording's header carries `playExplore`; each
+decision record the explorer answered carries `explore: {rule: random|closeCall, forge:
+<the seat's own answer>}`; each seat's `decisions` summary line its counts (protocol
+amendment M57). `run.json` and the night's plan record the settings.
+
+**How to read it.**
+
+- **Win rates leave exploring drafts out**: `report`, `meta`, `learn`, the queue's own
+  coverage and `tools/ml/matchup.py` (whose `--play-explore include|only` brings them
+  back for an experiment). A random move is not the deck's strength.
+- **The position dataset keeps them** (`tools/ml/dataset.py`; `--play-explore
+  exclude|only` to compare): the positions after a random move are real, and the game
+  was played out from them.
+- **The policy dataset drops every randomised decision** (`tools/ml/policy_data.py`),
+  and keeps the rest of the game.
+- Filter yourself with `playExplore` on a draft line or a recording's header, and
+  `explore` on a decision record.
+
+**Versions.** The settings are part of each folder's lab version (D341) when on: a night
+that turns exploration on, off or changes it appends a new version to every key folder,
+so it needs `--allow-version-change` (logged in `run.json`), and every line keeps its
+`ver` and its `playExplore` tag. Night 3 needs the flag anyway when the code changed.
 
 ### Seeds and versions (D340–D341)
 
@@ -931,4 +998,4 @@ fail the same way).
   report tags them.
 - Games are not byte-for-byte repeatable: Forge's AI runs on its own threads.
   The drafts and decks are (the same seed gives the same picks and decks on any
-  machine and any `--jobs`).
+  machine and any `--jobs`), and so are play exploration's draws (D358).

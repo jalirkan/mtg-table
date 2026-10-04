@@ -12,14 +12,17 @@
 //           [--winston-cards 90] [--weights <json>] [--weight name=value]...
 //           [--synergy <tsv>] [--deck-synergy on|off]          learned pairs (D301)
 //           [--allow-version-change]                           append to a folder another lab version wrote (D341)
+//           [--play-explore on | --play-explore name=value]... a share of drafts whose games explore (D358):
+//                                                              share=0.15 epsilon=0.05 closecall=0.02 opening=off
 //           [--deckset]                                        the AI ladder's deck sets: reserved seeds, --games 0 (D340)
 //   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
 //   queue   plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
 //   learn   <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...   (D301)
 //   selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N] [--deck-synergy on|off]
 //           [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>]   (D302; learncmd.ts has every flag)
-//   report  <out> [--min-games N]           <out>/report.html, report.md, summary.json and meta.json
-//   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]   <out>/meta.json (ForgeCoach, D297)
+//   report  <out> [--min-games N] [--play-explore include|exclude|only]   <out>/report.html, report.md, summary.json and meta.json
+//   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300] [--play-explore include|exclude|only]   <out>/meta.json (ForgeCoach, D297)
+//           (both leave drafts whose games explored OUT by default: D358)
 //   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
 //           [--seed S] [--out <dir>] [--swaps M] [--games 3] [--evolve name=value]...   (D299-D300, D331)
 //           [--record-all | --record-every N]                  record both batches' games (D315)
@@ -43,6 +46,7 @@ import { learnCommand, selfplayCommand } from './learncmd.ts';
 import { bridgeOptions } from './bridge.ts';
 import { checkProfiles, isSeatSpec, mixText, parseProfileMix } from './profiles.ts';
 import { queueCommand } from './queue.ts';
+import { filterPlayExplore, parsePlayExploreArgs, playExploreText } from './playexplore.ts';
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
 
@@ -60,15 +64,17 @@ function usage(msg?: string): never {
                         [--builder lab|forge] [--game-timeout <sec>] [--winston-cards 90]
                         [--weights <json>] [--weight name=value]... [--synergy <tsv>] [--deck-synergy on|off]
                         [--allow-version-change] [--deckset]   (seeds 900000000+ are the deck sets', seeds.ts)
+                        [--play-explore on | --play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   (D358)
        tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
                         [the flags above but --ratings]
        tools/cubelab.sh queue plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
                         [--cubes a,b,...] [--power <power.tsv>] [--chunk 250] [--allow-version-change]
+                        [--record-every N] [--play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   (D358)
        tools/cubelab.sh learn <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...
        tools/cubelab.sh selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N]
                         [--deck-synergy on|off] [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>] [--ratings <tsv>]
-       tools/cubelab.sh report <out> [--min-games N]
-       tools/cubelab.sh meta <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300]
+       tools/cubelab.sh report <out> [--min-games N] [--play-explore include|exclude|only]
+       tools/cubelab.sh meta <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300] [--play-explore include|exclude|only]
        tools/cubelab.sh evolve <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N]
                         [--jobs K] [--seed S] [--out <dir>] [--swaps M] [--games 3] [--profiles A,B]
                         [--ratings <tsv>] [--game-timeout <sec>] [--date YYYY-MM-DD] [--evolve name=value]...
@@ -184,6 +190,10 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     ...(f.has('deckset') ? { deckset: true } : {}),
     ...(f.has('allow-version-change') ? { allowVersionChange: true } : {}),
   };
+  try {
+    const pe = parsePlayExploreArgs(f.get('play-explore') ?? []);
+    if (pe) o.playExplore = pe;
+  } catch (e) { usage((e as Error).message); }
   if (one(f, 'deck-synergy') === 'on' && !one(f, 'synergy')) usage('--deck-synergy on needs --synergy <tsv>');
   const bridgeArg = one(f, 'bridge');
   if (bridgeArg) {
@@ -198,20 +208,31 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   // --games 0 drafts and builds only, plays nothing (the AI ladder's deck sets, D318); a report of such a run has no games
   if (o.games < 0) usage('--games must be 0 or more');
   if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
-  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profileMix ? `mixed per drafter (${mixText(o.profileMix)})` : o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}`);
+  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profileMix ? `mixed per drafter (${mixText(o.profileMix)})` : o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}${o.playExplore ? `, play exploration ${playExploreText(o.playExplore)} (D358)` : ''}`);
   await runLab(env, o, say);
   say(`next: tools/cubelab.sh report ${o.out}`);
   return 0;
 }
 
-export function readRun(out: string): { meta: RunMeta; cards: Record<string, CardInfo>; recs: DraftRecord[]; recordings: Recording[] } {
+/**
+ * A run folder's files.  Drafts whose games explored (D358) are left out unless `playExplore` says otherwise:
+ * a random move is not the deck's strength, so every win rate the report and meta.json print would be biased.
+ */
+export function readRun(out: string, playExplore: 'include' | 'exclude' | 'only' = 'exclude'): { meta: RunMeta; cards: Record<string, CardInfo>; recs: DraftRecord[]; recordings: Recording[]; playExploreDropped: number } {
   const meta = JSON.parse(fs.readFileSync(path.join(out, 'run.json'), 'utf8')) as RunMeta;
   const cards = JSON.parse(fs.readFileSync(path.join(out, 'cards.json'), 'utf8')) as Record<string, CardInfo>;
   const jsonl = path.join(out, 'drafts.jsonl');
-  const recs = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const all = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const { recs, dropped } = filterPlayExplore(all, playExplore);
   const rf = path.join(out, 'recordings.json');
   const recordings = fs.existsSync(rf) ? JSON.parse(fs.readFileSync(rf, 'utf8')) as Recording[] : [];
-  return { meta, cards, recs, recordings };
+  return { meta, cards, recs, recordings, playExploreDropped: dropped };
+}
+
+function playExploreMode(f: Map<string, string[]>): 'include' | 'exclude' | 'only' {
+  const m = one(f, 'play-explore') ?? 'exclude';
+  if (m !== 'include' && m !== 'exclude' && m !== 'only') usage(`--play-explore here is include, exclude or only, got ${m}`);
+  return m;
 }
 
 export function pairNames(meta: RunMeta): Record<string, string> {
@@ -224,7 +245,8 @@ export function pairNames(meta: RunMeta): Record<string, string> {
 }
 
 function report(out: string, f: Map<string, string[]>): number {
-  const { meta, cards, recs, recordings } = readRun(out);
+  const { meta, cards, recs, recordings, playExploreDropped } = readRun(out, playExploreMode(f));
+  if (playExploreDropped > 0) say(`${playExploreDropped} draft(s) whose games explored (D358) left out (--play-explore include keeps them)`);
   const s = aggregate(meta, cards, recs, recordings, { pairs: pairNames(meta), themes: meta.themeNames ?? {} });
   fs.writeFileSync(path.join(out, 'report.html'), renderHtml(s));
   fs.writeFileSync(path.join(out, 'report.md'), renderMarkdown(s, int(f, 'min-games', 6)));
@@ -236,7 +258,7 @@ function report(out: string, f: Map<string, string[]>): number {
 
 /** <out>/meta.json, ForgeCoach's draft and deck assistant's input (schema 1, D297). */
 function writeMeta(out: string, f: Map<string, string[]>): string {
-  const { meta, cards, recs } = readRun(out);
+  const { meta, cards, recs } = readRun(out, playExploreMode(f));
   const cubeFile = one(f, 'cube') ?? path.join(REPO, meta.cubeFile);
   const cube = fs.existsSync(cubeFile) ? parseCube(fs.readFileSync(cubeFile, 'utf8')) : null;
   const doc = buildMeta(meta, cards, recs, cube, {

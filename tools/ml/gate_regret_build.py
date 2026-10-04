@@ -22,7 +22,9 @@ ELIGIBLE (pre-registered, D354):
     NORMAL draft (one cube: its list is the pool the player knows; bridge
     drafts are left out), both decks outside the AI ladder's reserved dev and
     confirm sets and its draft seed outside the reserved range (D340, card for
-    card, both chairs);
+    card, both chairs), and not played with exploration (D358: a game whose
+    header carries `playExplore` is not the AI's own play; D354's set was
+    registered before exploration existed and keeps its population);
   * its deck pair in the TEST split of the model's own split (train_eval.py's
     rule on the model's dataset: decks the evaluator never saw);
   * a decision record of kind `priority` in a main phase with a `cast:` option
@@ -123,6 +125,10 @@ def scan(logs: list[str], test_pairs: set[str], reserved: dict[str, str] | None,
                 continue
             if is_bridge(pg.header, path):
                 counts["bridge draft (left out)"] += 1
+                continue
+            if isinstance(pg.header.get("playExplore"), dict):
+                # D358: gate 2's pre-registered set is the AI's own games; an exploring game is not one
+                counts["play-exploring game (left out, D358)"] += 1
                 continue
             m = P.game_meta(pg, repo, [])
             if reserved is not None and (R.reserved_hit(m["decks"], reserved)

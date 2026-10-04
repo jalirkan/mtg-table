@@ -402,7 +402,7 @@ public final class SearchPolicy {
             return forge;   // a land drop (or a multi-ability land list): Forge's
         }
         final long t0 = System.nanoTime();
-        final List<SpellAbility> alts = alternatives(ai, aic, forgeSa);
+        final List<SpellAbility> alts = alternatives(ai, aic, forgeSa, sink);
         if (alts.isEmpty() && forgeSa == null) {
             return forge;   // nothing to choose between
         }
@@ -460,8 +460,11 @@ public final class SearchPolicy {
      * play now, that Forge's own per-card judgment accepts (WillPlay, which also
      * chooses its targets) -- the RemAIDeck cards Forge hides included -- then
      * untargeted ones it declines, if affordable.  Distinct by card and text.
+     * Static, with its counters' sink passed in: play exploration (D358,
+     * {@link Explorer}) draws from the same list.
      */
-    private List<SpellAbility> alternatives(final Player ai, final AiController aic, final SpellAbility forgeSa) {
+    static List<SpellAbility> alternatives(final Player ai, final AiController aic, final SpellAbility forgeSa,
+                                           final Sink sink) {
         final List<SpellAbility> willPlay = new ArrayList<>();
         final List<SpellAbility> declined = new ArrayList<>();
         final Set<String> seen = new HashSet<>();
@@ -698,7 +701,7 @@ public final class SearchPolicy {
         configs.add(m);
     }
 
-    private static boolean legalAttack(final Combat combat, final Map<Card, GameEntity> m) {
+    static boolean legalAttack(final Combat combat, final Map<Card, GameEntity> m) {
         try {
             setAttack(combat, m);
             return CombatUtil.validateAttackers(combat);
@@ -707,7 +710,7 @@ public final class SearchPolicy {
         }
     }
 
-    private static void setAttack(final Combat combat, final Map<Card, GameEntity> m) {
+    static void setAttack(final Combat combat, final Map<Card, GameEntity> m) {
         combat.clearAttackers();
         for (final Map.Entry<Card, GameEntity> e : m.entrySet()) {
             combat.addAttacker(e.getKey(), e.getValue());
@@ -828,7 +831,7 @@ public final class SearchPolicy {
         configs.add(m);
     }
 
-    private static boolean legalBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
+    static boolean legalBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
         try {
             setBlock(combat, ai, m);
             return CombatUtil.validateBlocks(combat, ai) == null;
@@ -837,7 +840,7 @@ public final class SearchPolicy {
         }
     }
 
-    private static void setBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
+    static void setBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
         for (final Card b : new ArrayList<>(combat.getAllBlockers())) {
             if (b.getController() == ai) {
                 combat.undoBlockingAssignment(b);

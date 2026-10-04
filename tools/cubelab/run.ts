@@ -16,6 +16,8 @@
 //    workers PLAY, in the worker, both chairs, gzipped, into
 //    <out>/games/<seed>/g<n>-seat{0,1}.jsonl.gz, with the cube's markdown
 //    copied to <out>/cube.md (the ML dataset's vocabulary, tools/ml);
+//    --play-explore (D358, playexplore.ts): a seeded share of the drafts play
+//    games whose decisions explore; their lines carry `playExplore`;
 // 5. every worker's Forge home checked for a saved preferences file (hard rule
 //    11 / D107: a run must never save one).
 
@@ -39,6 +41,7 @@ import type { Weights } from './weights.ts';
 import { assertRunSeeds } from './seeds.ts';
 import { labVersion, resumeVersions, type VersionEntry } from './versions.ts';
 import { mixText, pickProfiles, type MixEntry } from './profiles.ts';
+import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExploreTag } from './playexplore.ts';
 
 export interface RunOptions {
   cubeFile: string;
@@ -73,6 +76,8 @@ export interface RunOptions {
   allowVersionChange?: boolean;
   /** D356: controlled exploration in the lab's deckbuilder (explore.ts); absent or share 0 = off, and the run is the old one. */
   explore?: ExploreOptions;
+  /** D358: a share of the drafts play games whose decisions explore (playexplore.ts); absent = none, and the run is the old one. */
+  playExplore?: PlayExploreOptions;
 }
 
 /** A drafter's line in drafts.jsonl: the draft side, plus which deck played and Forge's own build. */
@@ -97,6 +102,8 @@ export interface DraftRecord extends Omit<DraftOut, 'drafters' | 'ms'> {
   ver?: string;
   /** D347: the two seats that played this draft (`--profile-mix`); absent when they are run.json's `profiles`. */
   profiles?: [string, string];
+  /** D358: present when this draft's games explored (its settings); win-rate readers leave such lines out by default. */
+  playExplore?: PlayExploreTag;
 }
 
 export interface RunMeta {
@@ -136,6 +143,8 @@ export interface RunMeta {
   deckset?: boolean;
   /** D356: the exploration this run's drafts used (absent: none). */
   explore?: ExploreOptions;
+  /** D358: the play exploration of the drafts this run appended last (absent: none). A change is a version change (D341). */
+  playExplore?: PlayExploreOptions;
 }
 
 export const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
@@ -194,6 +203,11 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     draftOne = (seed) => exploreDraft(base(seed), explore, lc.byName, maxSplash);
     say(`exploring (D356): ${explore.share} of the drafts; a target rated under ${explore.below} forced with probability v / max(sum v, ${explore.cap}), v ${explore.gold} for gold`);
   }
+  const playExplore = o.playExplore && o.playExplore.share > 0 ? o.playExplore : null;
+  if (playExplore) {
+    if (o.games < 1) throw new Error('--play-explore explores games: it needs --games 1 or more');
+    say(`play exploration (D358): ${playExplore.share} of the drafts explore; epsilon ${playExplore.epsilon}, close call ${playExplore.closeCall}, opening ${playExplore.opening ? 'on' : 'off'}`);
+  }
   if (lc.missing.length > 0) say(`WARNING: ${lc.missing.length} card(s) not in the engine, drafted without them: ${lc.missing.map((m) => m.listed).join(', ')} (run check)`);
   const meta: RunMeta = {
     v: 1, cube: lc.cube.title, cubeFile: path.relative(env.repo, path.resolve(o.cubeFile)), cubeSha: sha(text),
@@ -208,12 +222,15 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     ...(o.deckset ? { deckset: true } : {}),
     ...(o.profileMix ? { profileMix: mixText(o.profileMix) } : {}),
     ...(explore ? { explore } : {}),
+    ...(playExplore ? { playExplore } : {}),
   };
   const version = labVersion(env.repo, {
     cubeShas: bridge ? bridge.meta.sources.map((x) => x.sha) : [meta.cubeSha],
     ratingsFiles: bridge ? bridge.meta.sources.map((x) => x.ratingsFile ? path.resolve(env.repo, x.ratingsFile) : null) : [o.ratingsFile],
     // D356: exploration changes the decks that play, so it is part of the version; off, the id is the old one.
-    weights: explore ? { ...o.weights, explore } : o.weights,
+    // D358: play exploration changes the games, so it is too (a change between nights of one folder is a
+    // version change: refused unless --allow-version-change, and logged); off, the id is the old one.
+    weights: explore || playExplore ? { ...o.weights, ...(explore ? { explore } : {}), ...(playExplore ? { playExplore } : {}) } : o.weights,
   });
   fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   const metaFile = path.join(o.out, 'run.json');
@@ -267,6 +284,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     });
     jobs.push({
       id: String(seed), seed, games: o.games, gameTimeoutSec: o.gameTimeoutSec,
+      ...(playExplore && draftExplores(seed, playExplore.share) ? { playExplore: playExploreTag(playExplore) } : {}),
       ...seatsOf(o, seed), builder: o.builder,
       deckA: sides[0] ?? null, deckB: sides[1] ?? null,
       poolA: d.drafters[0].pool, poolB: d.drafters[1].pool,
@@ -296,6 +314,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     const rec: DraftRecord = {
       v: 1, cube: lc.cube.title, ...d, ver: version.id,
       ...(o.profileMix ? { profiles: [job.profileA, job.profileB] as [string, string] } : {}),
+      ...(job.playExplore ? { playExplore: job.playExplore } : {}),
       drafters: d.drafters.map((dr, k): DrafterRecord => {
         const side = k === 0 ? 'A' : 'B';
         const fb = r.forge.find((f) => f.side === side);

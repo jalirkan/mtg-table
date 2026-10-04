@@ -35,6 +35,16 @@ on those decks; the evaluator must never have trained on them.
 `--keep-reserved` turns this off.  Each game's lab version (`ver`, D341) is in
 games.jsonl and `--ver` keeps only some.
 
+EXPLORING GAMES (D358).  A cube-lab game whose header carries `playExplore`
+was played with exploration: some of its decisions were answered by a
+uniformly random legal move (or a coin between two close calls) instead of
+the AI's choice.  Its positions and outcome are still true -- the game was
+played to the end from them -- so the position dataset KEEPS such games by
+default (`--play-explore include`); `exclude` drops them and `only` keeps
+them alone, for experiments.  games.jsonl marks each one `"explore": true`
+and stats.json counts them (`playExplore`).  The policy dataset drops the
+randomised decisions themselves (policy_data.py).
+
 HUMAN GAMES (D347).  The owner's own games -- ForgeCoach's saved games and the
 bridge's `var/games/<id>/frames.jsonl` -- go under `var/ml/human/` (or any
 `--human DIR`).  Every game carries a stable `source` tag (`human`, `lab`,
@@ -105,11 +115,19 @@ def split_of(group: str, weights: tuple[int, int, int], salt: str = "") -> str:
 _W: dict[str, Any] = {}
 
 
+PLAY_EXPLORE_MODES = ("include", "exclude", "only")
+
+
 def _init(vocab_paths: list[str], phases: list[str], reserved: dict[str, str] | None,
-          vers: list[str] | None, human_dirs: list[str] | None) -> None:
+          vers: list[str] | None, human_dirs: list[str] | None, play_explore: str = "include") -> None:
     _W.clear()
     _W.update(schema=E.Schema(E.Vocab.from_files(vocab_paths)), phases=phases, reserved=reserved,
-              vers=vers, human_dirs=human_dirs or [])
+              vers=vers, human_dirs=human_dirs or [], play_explore=play_explore)
+
+
+def explored(header: dict[str, Any]) -> bool:
+    """The game was played with exploration (D358): its session header carries `playExplore`."""
+    return isinstance(header.get("playExplore"), dict)
 
 
 def _encode_file(path: str) -> list[tuple]:
@@ -127,6 +145,11 @@ def _encode_file(path: str) -> list[tuple]:
             continue
         if vers and ver not in vers:
             out.append(("skip", "other lab version (D341)", None))
+            continue
+        ex = explored(g.header)
+        mode = _W.get("play_explore", "include")
+        if mode != "include" and ex != (mode == "only"):
+            out.append(("skip", f"play exploration: --play-explore {mode} (D358)", None))
             continue
         rows = E.encode_game(g, schema, phases)
         if not rows:
@@ -150,7 +173,7 @@ def _encode_file(path: str) -> list[tuple]:
                   "file": os.path.relpath(path), "seat": g.seat, "rows": len(rows), "label": rows[0].label,
                   "last_turn": max(r.turn + r.turns_to_end for r in rows), "ver": ver,
                   "source": P.source_of(path, g.header, _W["human_dirs"]),
-                  "rowLabels": dict(Counter(str(r.label) for r in rows))}
+                  "rowLabels": dict(Counter(str(r.label) for r in rows)), "explore": ex}
         out.append(("game", fields, arrays))
     return out
 
@@ -210,7 +233,8 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
           shard_rows: int = 100_000, phases: list[str] | None = None, quiet: bool = False,
           group_by: str = "match", reserved: dict[str, str] | None = None,
           vers: list[str] | None = None, human_dirs: list[str] | None = None,
-          train_human: bool = False, jobs: int = 1, progress_every_s: float = 10.0) -> dict[str, Any]:
+          train_human: bool = False, jobs: int = 1, progress_every_s: float = 10.0,
+          play_explore: str = "include") -> dict[str, Any]:
     """Encode every log and write the shards.  `jobs` > 1 encodes the recordings in that many
     processes; the writer still takes them in path order, so every file written (shards,
     games.jsonl, stats.json) is byte for byte the one `jobs=1` writes."""
@@ -263,7 +287,9 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
             print(f"dataset: {rows} rows, {len(games)} games, {files_done}/{len(paths)} files", file=sys.stderr, flush=True)
 
     reserved_hits: Counter = Counter()
-    init_args = (vocab_paths, phases, reserved, vers, human_dirs)
+    if play_explore not in PLAY_EXPLORE_MODES:
+        raise ValueError(f"play_explore is one of {PLAY_EXPLORE_MODES}, got {play_explore!r}")
+    init_args = (vocab_paths, phases, reserved, vers, human_dirs, play_explore)
     for files_done, results in enumerate(_encoded(paths, max(1, jobs), init_args), 1):
         for item in results:
             if item[0] == "skip":
@@ -285,7 +311,9 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
                           # game's own group, so a trainer can re-split by pair or hold decks out
                           "match": fd["match"], "game_group": fd["split_group"],
                           # D341: the lab version that played it ('unversioned' outside the lab or before D341)
-                          "ver": fd["ver"], "source": source})
+                          "ver": fd["ver"], "source": source,
+                          # D358: only on a game played with exploration (absent otherwise, as before)
+                          **({"explore": True} if fd.get("explore") else {})})
             stats[s]["rows"] += fd["rows"]
             stats[s]["games"] += 1
             stats[s]["labels"][str(fd["label"])] += 1
@@ -313,6 +341,8 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
         "versions": dict(Counter(gm["ver"] for gm in games)),
         "sources": dict(Counter(gm["source"] for gm in games)), "humanDirs": list(human_dirs or []),
         "humanInTraining": train_human,
+        # D358: the exploration filter and how many kept games explored
+        "playExplore": {"mode": play_explore, "games": sum(1 for gm in games if gm.get("explore"))},
         "splits": {s: {"rows": stats[s]["rows"], "games": stats[s]["games"], "groups": groups[s],
                        "gameLabels": dict(stats[s]["labels"]), "rowLabels": dict(stats[s]["rowLabels"]),
                        "shards": shard_no[s]} for s in shown},
@@ -333,6 +363,10 @@ def format_stats(st: dict[str, Any]) -> str:
              f"(schema {st['schemaId']}, vocab {st['vocabSize']} slots)"]
     if st["skippedGames"]:
         lines.append(f"  skipped games: {st['skippedGames']}")
+    pe = st.get("playExplore") or {}
+    if pe.get("games") or pe.get("mode", "include") != "include":
+        lines.append(f"  play exploration (D358): {pe.get('games', 0)} game(s) played with exploration kept "
+                     f"(--play-explore {pe.get('mode')})")
     for s, d in st["splits"].items():
         gl = d["gameLabels"]
         rl = d["rowLabels"]
@@ -379,6 +413,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="a directory of the owner's own games (default var/ml/human when it exists; D347): "
                          "tagged source=human, kept out of training in the `human` split")
     ap.add_argument("--train-human", action="store_true", help="split human games like the rest (D347)")
+    ap.add_argument("--play-explore", choices=PLAY_EXPLORE_MODES, default="include",
+                    help="games played with exploration (D358): kept by default (their outcomes are true), "
+                         "exclude drops them, only keeps them alone")
     ap.add_argument("--group-by", choices=("game", "match"), default="match",
                     help="match (default since D316): every game of one deck pair in one split -- the "
                          "test split is decks the model never saw; game: only the chairs of one "
@@ -403,7 +440,7 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("--vocab and --out are required without --run-dir")
     build(logs, vocab, out, w, a.salt, a.shard_rows, E.parse_phases(a.phases), group_by=a.group_by,
           reserved=None if a.keep_reserved else R.reserved_decks(a.repo), vers=[v for v in a.ver.split(",") if v] or None,
-          human_dirs=humans, train_human=a.train_human, jobs=max(1, a.jobs))
+          human_dirs=humans, train_human=a.train_human, jobs=max(1, a.jobs), play_explore=a.play_explore)
     return 0
 
 
