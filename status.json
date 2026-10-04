@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:43:49-04:00",
- "heartbeat": "2026-10-04T02:43:49-04:00",
+ "updated": "2026-10-04T02:44:12-04:00",
+ "heartbeat": "2026-10-04T02:44:12-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.94,
-  "memUsedGb": 6.6,
+  "load1": 4.22,
+  "memUsedGb": 7.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3446,
-  "pressure": 0,
+  "swapUsedMb": 3437,
+  "pressure": 5.87,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 2,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/1",
    "started": "2026-10-04T02:41:15-04:00",
-   "elapsed": 153,
+   "elapsed": 177,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 1.52,
+   "memGb": 1.99,
    "live": {
     "elapsed_s": 123,
     "metrics_errors": 3,
@@ -58,9 +58,9 @@
    "id": "J057",
    "title": "(J049 resumed after its memory stop) Evaluator gate 1: train on the night-1 dataset J049 already built, and run the held-out fit gate (D354)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-04T02:43:49-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": null,
    "total": null,
    "unit": null,
@@ -72,7 +72,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "elapsed_s": 0,
     "metrics_errors": 4,
@@ -83,7 +83,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J057-prepare"
+   "detail": "lab-J057-pilot1"
   }
  ],
  "queue": [
