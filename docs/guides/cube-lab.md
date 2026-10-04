@@ -235,14 +235,16 @@ which holds the recordings decompressed so that one zstd stream sees them all. T
 quarantine folder becomes `night-N/quarantine.tar.zst`, kept byte for byte as evidence.
 
 ```bash
-python3 tools/lab/archive.py cold --night 1 --dataset var/ml/data/nights-1-3 --dry-run   # checks, drive, estimate
-python3 tools/lab/archive.py cold --night 1 --dataset var/ml/data/nights-1-3 --jobs 4    # resumable
+python3 tools/lab/archive.py cold --night 1 --quarantine var/cubelab/queue-quarantine --dataset var/ml/data/nights-1-3 --dry-run   # checks, drive, estimate
+python3 tools/lab/archive.py cold --night 1 --quarantine var/cubelab/queue-quarantine --dataset var/ml/data/nights-1-3 --jobs 4    # resumable
 python3 tools/lab/archive.py restore-night --night 1                                     # back, verified
 ```
 
 It refuses (exit 3) unless all of these hold:
 - the night is closed;
-- the night's redaction pass ran;
+- the night's redaction pass ran (its quarantine folder exists: `--quarantine DIR`, else
+  `<root>-quarantine-nN`; night 1's is `var/cubelab/queue-quarantine`, with no suffix, and must be
+  named; the folder is walked for its recordings, and `failed.txt` is not trusted);
 - the warehouse ingested every line of the night;
 - a dataset encoded at least 90% of its recordings;
 - no hold in `tools/lab/archive-holds.json` names the night while a job the hold waits for is
