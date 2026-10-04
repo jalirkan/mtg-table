@@ -1,0 +1,23 @@
+{
+ "reports": 3,
+ "done": 3,
+ "failed": 0,
+ "warned": 0,
+ "timing.games": 3,
+ "timing.min_triage_graded": 22,
+ "timing.min_ok": 16,
+ "timing.errors": 0,
+ "timing.max_error_share": 0,
+ "timing.decisions": 77,
+ "timing.graded": 47,
+ "timing.deepened": 18,
+ "timing.shape_ok": 1,
+ "timing.max_total_s": 177.915,
+ "timing.max_triage_wall_s": 20.891,
+ "timing.max_triage_grade_s": 12.877,
+ "timing.max_deep_wall_s": 156.69,
+ "elapsed_s": 593,
+ "workers": 7,
+ "pressure_events": 0,
+ "peak_worker_rss_gb": 1.13
+}

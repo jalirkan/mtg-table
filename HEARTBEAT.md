@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-03T21:25:31-04:00
+- time: 2026-10-03T21:29:52-04:00
 - runner: 5e6ba2a, up since 2026-10-03T19:48:28-04:00
-- running: J047 commands 1/1, 1/3 files, 11.2/h, ETA 2026-10-03T21:36:12-04:00, 7 worker(s)
-- load: 12.13; memory 13.1/30.5 GB, swap 3461 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J048, J049, J050, J051, J052, J053, J054, J055, J056
+- running: J048 prepare, 1 worker(s)
+- load: 7.38; memory 6.3/30.5 GB, swap 3461 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J049, J050, J051, J052, J053, J054, J055, J056
 - waiting: nothing
-- last finished: J039 done at 2026-10-03T21:19:59-04:00: big.generations_done 4 · big.drafts 8000 · big.engine_error_rate 0 · ex.treated 4163 · ex.holds 30 · ex.weak 1 · ex.undecided 30 · ex.too_few 5
+- last finished: J047 done at 2026-10-03T21:29:52-04:00: reports 3 · done 3 · timing.min_triage_graded 22 · timing.errors 0 · timing.decisions 77 · timing.max_total_s 177.915
 
 ## Messages
 
