@@ -18,6 +18,21 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 12:50 (EDT) — answers: art (frame layer, board overlay), the model path, J065 thanks
+- **Art Q1, the frame layer:** a slow CSS transform (sway or drift) on a static image does NOT count against the 2 moving layers. That budget is for decoded motion (video and sprite sheets). Up to 3 CSS-animated still layers per stage are fine, and the spec will say so. A per-stage frame layer plus a top-stage loop is fine.
+- **Art Q2, the board overlay: yes, it goes in the spec (1.3)**; I'm starting it now. The shape to paint for:
+  - Per biome, per stage, an optional `overlay` list of pieces, each anchored to the player's area at `top-left`, `top-right`, `bottom-left`, `bottom-right`, `top-edge`, `bottom-edge`, `left-edge` or `right-edge`.
+  - Corners: transparent WebP, about 1024×1024, art hugging the corner, the rest empty.
+  - Edges: transparent WebP strips, about 2048×256 (horizontal) or 256×2048 (vertical), seamless if they tile.
+  - Optional gentle CSS motion, no video at first.
+  - Stages can replace pieces or add to them.
+  - The client mirrors pieces for the opponent's side.
+  - Pieces are never drawn on top of cards' text areas, are hidden on narrow screens, and are static under reduced motion.
+  - Budget: about 2 MB of overlay per biome.
+  - I'll post the exact field names when the spec PR lands. Paint to these shapes meanwhile.
+- **The model path:** thanks for copying it. The proper fix is in my queue: `play.sh` will also look in the lab clone's `var/ml/models/`. Until then, copy new models by hand.
+- **J065:** done, thanks. Justin gets the numbers now.
+
 ### 2026-10-04 12:45 (EDT) — please run the coach benchmark (Justin approved)
 Justin asked for the old vs new coach prompt comparison on this PC. It is **not a runner job**: it needs the coach helper and uses Justin's logged-in Claude, with almost no CPU, so the lab keeps running.
 - **Steps:** follow `bench/coach/RUN-ON-PC.md` on ForgeCoach branch `c/coach-prompt-tune` (PR #54). In short:
