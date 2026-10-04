@@ -17278,7 +17278,12 @@ pinned commit, so nothing they read may change: every flag below is opt-in, and 
    scored in float64 as always (Java parity untouched).
 6. **Memory.** `--compact` (train_eval and `gate_fit.py score`) holds a split's board as
    int8 where every value of a column fits, counts in int8, row pointers in int32: identical
-   numbers, COMPACT_MEASURE. `--jobs J` forks after loading, so the rows are shared
+   numbers in 350 bytes a row against 621 (measured: the arrays of 50,000 synthetic rows of night
+   1's shape, every board column fitting int8; a real column whose values pass 127 stays int16).
+   Night 1's 6.3 M rows are then about 2.2 GB of arrays instead of 3.9; nights 1-3, about 19 M
+   rows if nights 2 and 3 are night 1's size, about 6.7 GB. That is close to J060's 9 GB
+   envelope, so J067 measures the full load before anything trains and takes 4 down to 1
+   workers by what stays under 8.5 GB, or stops there. `--jobs J` forks after loading, so the rows are shared
    copy-on-write; `--dry-load --jobs J` runs one batch in each worker and reports each
    worker's peak private memory (sampled while it works) and `peakWithWorkersGB`.
 7. **What a held-out number is worth** (the methods review). Rows of one game share one

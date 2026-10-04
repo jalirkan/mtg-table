@@ -1161,7 +1161,7 @@ def main(argv: list[str] | None = None) -> int:
                                           "(D364)")
     ap.add_argument("--soft-weight", type=float, default=1.0, help="--soft-labels: w (default 1)")
     ap.add_argument("--compact", action="store_true",
-                    help="hold the rows in about 0.4 KB instead of 0.65 (board columns that fit in int8 as int8, "
+                    help="hold the rows in about 0.35 KB instead of 0.62 (board columns that fit in int8 as int8, "
                          "int8 counts, int32 row pointers); the same numbers (D364)")
     ap.add_argument("--subsample", type=float, default=1.0,
                     help="each epoch trains on ceil(s x a game's rows) of every game, drawn afresh (e.g. 0.125): "

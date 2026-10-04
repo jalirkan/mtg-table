@@ -295,7 +295,7 @@ def load_splits(data: str, card_offset: int, split_of_game=None, prefixes=SPLITS
     the auxiliary head's target (D364).  `compact` (D364, train_eval.py
     --compact) holds the board as a PackedBoard (int8 where a column's values
     all fit), counts in int8 when they fit and row pointers in int32: about
-    0.4 KB a row instead of 0.65; the first pass then also reads X, for the
+    0.35 KB a row instead of 0.62; the first pass then also reads X, for the
     columns' ranges."""
     files = [f for p in prefixes for f in sorted(f for f in os.listdir(data)
                                                  if f.startswith(p + "-") and f.endswith(".npz"))]

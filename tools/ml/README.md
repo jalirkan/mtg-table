@@ -339,7 +339,7 @@ python3 tools/ml/eval_compare.py var/ml/data/nights-1-3 --model var/ml/models/ni
   (1 - w) outcome + w p; validation and test always score against the outcome. The
   producer (K playouts from a logged position, Forge Default both seats) is not built:
   D364 says what it needs.
-- **`--compact`** holds the rows in about 0.4 KB instead of 0.65 (board columns that fit in
+- **`--compact`** holds the rows in about 0.35 KB instead of 0.62 (board columns that fit in
   int8 as int8, int8 counts, int32 row pointers; `gate_fit.py score --compact` too). The
   numbers are identical, bit for bit.
 - **`--jobs J`** forks J workers after loading: the rows are shared, each worker adds a few
