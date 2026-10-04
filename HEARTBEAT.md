@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-04T04:17:35-04:00
+- time: 2026-10-04T04:17:49-04:00
 - runner: d68f5ec, up since 2026-10-04T02:43:48-04:00
-- running: J055 prepare, 0/2400 games, 1 worker(s), 7 core(s)
+- running: J055 pilot 1/1, 0/2400 games, 3 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 1.32; memory 5.1/30.5 GB, swap 3247 MB, pressure 0% (lab budget 23.4 GB)
+- load: 2.05; memory 5.3/30.5 GB, swap 3247 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J050, J051, J052, J059
 - waiting: nothing
 - last finished: J054 done at 2026-10-04T04:17:35-04:00: sprt_games 88 · all.games 640 · all.errors 0 · all.timeouts 5
