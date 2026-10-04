@@ -53,6 +53,24 @@ by default: its rows go to a fourth split, `human` (`human-NNNNN.npz`), which
 `train_eval.py --eval-human` scores separately.  `--train-human` splits them
 like every other game instead.
 
+THE REDUCED SCHEMA r17 (D359, the outside exam).  `--schema r17` encodes
+r17.py's rows instead of D305's: one per END of a half-turn (the last state of
+each turn) from `--min-turn` (3) on, never a game's final half-turn, with only
+what 17Lands' replay data also records (turn, whose turn, play/draw, life and
+hand sizes, each battlefield as vocabulary card counts plus land, non-land,
+creature and off-vocabulary counts).  Exploring games are LEFT OUT by default
+under r17 (`--play-explore exclude`): the exam asks whether what Forge's own
+play taught carries over to humans.  `--queue-root ROOT --cube ID` reads the
+overnight queue's folders for one cube -- `normal/<ID>` and every
+`bridge/<a>+<b>` naming it -- with `cubes/<ID>-cube-180.md` as the vocabulary
+unless --vocab says otherwise; `--nights 1,2` keeps the drafts those nights'
+plans (`night-N.json`) handed out; `--deck-vocab-min X` drops a lab game when
+either deck's non-basic cards are less than X inside the vocabulary (default
+0.5 under r17: a bridge deck that drafted mostly the other cube).
+
+    python3 tools/ml/dataset.py --schema r17 --queue-root var/cubelab/queue --cube vintage \
+        --nights 1 --out var/ml/data/r17-vintage-n1 --jobs 7
+
 Writes, under --out:
 
     features.json             the layout (encode.Schema.to_json)
@@ -118,11 +136,26 @@ _W: dict[str, Any] = {}
 PLAY_EXPLORE_MODES = ("include", "exclude", "only")
 
 
+SCHEMAS = ("d305", "r17")
+
+
+def make_schema(vocab: "E.Vocab", schema_kind: str = "d305", min_turn: int | None = None):
+    """D305's full schema, or r17's reduced one (D359)."""
+    if schema_kind == "r17":
+        import r17 as R17
+        return R17.R17Schema(vocab, R17.MIN_TURN if min_turn is None else min_turn)
+    if schema_kind != "d305":
+        raise ValueError(f"schema is one of {SCHEMAS}, got {schema_kind!r}")
+    return E.Schema(vocab)
+
+
 def _init(vocab_paths: list[str], phases: list[str], reserved: dict[str, str] | None,
-          vers: list[str] | None, human_dirs: list[str] | None, play_explore: str = "include") -> None:
+          vers: list[str] | None, human_dirs: list[str] | None, play_explore: str = "include",
+          schema_kind: str = "d305", min_turn: int | None = None, deck_vocab_min: float | None = None) -> None:
     _W.clear()
-    _W.update(schema=E.Schema(E.Vocab.from_files(vocab_paths)), phases=phases, reserved=reserved,
-              vers=vers, human_dirs=human_dirs or [], play_explore=play_explore)
+    _W.update(schema=make_schema(E.Vocab.from_files(vocab_paths), schema_kind, min_turn), phases=phases,
+              reserved=reserved, vers=vers, human_dirs=human_dirs or [], play_explore=play_explore,
+              schema_kind=schema_kind, deck_vocab_min=deck_vocab_min)
 
 
 def explored(header: dict[str, Any]) -> bool:
@@ -151,7 +184,15 @@ def _encode_file(path: str) -> list[tuple]:
         if mode != "include" and ex != (mode == "only"):
             out.append(("skip", f"play exploration: --play-explore {mode} (D358)", None))
             continue
-        rows = E.encode_game(g, schema, phases)
+        if _W.get("schema_kind") == "r17":
+            import r17 as R17
+            dmin = _W.get("deck_vocab_min")
+            if dmin is not None and decks and min(R17.deck_vocab_share(d, schema) for d in decks) < dmin:
+                out.append(("skip", f"a deck under {dmin:g} inside the vocabulary (r17)", None))
+                continue
+            rows = R17.encode_game(g, schema)
+        else:
+            rows = E.encode_game(g, schema, phases)
         if not rows:
             _winner, _lt, labelled = E.game_outcome(g)
             out.append(("skip", "unlabelled" if not labelled else "no decision rows", None))
@@ -234,14 +275,15 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
           group_by: str = "match", reserved: dict[str, str] | None = None,
           vers: list[str] | None = None, human_dirs: list[str] | None = None,
           train_human: bool = False, jobs: int = 1, progress_every_s: float = 10.0,
-          play_explore: str = "include") -> dict[str, Any]:
+          play_explore: str = "include", schema_kind: str = "d305", min_turn: int | None = None,
+          deck_vocab_min: float | None = None) -> dict[str, Any]:
     """Encode every log and write the shards.  `jobs` > 1 encodes the recordings in that many
     processes; the writer still takes them in path order, so every file written (shards,
     games.jsonl, stats.json) is byte for byte the one `jobs=1` writes."""
     if np is None:
         raise SystemExit("dataset.py needs numpy (pip install numpy)")
     vocab = E.Vocab.from_files(vocab_paths)
-    schema = E.Schema(vocab)
+    schema = make_schema(vocab, schema_kind, min_turn)
     phases = phases or E.default_phases()
     os.makedirs(out, exist_ok=True)
     for fn in os.listdir(out):  # a rebuild replaces the shards; a stale stats.json would read as done
@@ -289,7 +331,7 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
     reserved_hits: Counter = Counter()
     if play_explore not in PLAY_EXPLORE_MODES:
         raise ValueError(f"play_explore is one of {PLAY_EXPLORE_MODES}, got {play_explore!r}")
-    init_args = (vocab_paths, phases, reserved, vers, human_dirs, play_explore)
+    init_args = (vocab_paths, phases, reserved, vers, human_dirs, play_explore, schema_kind, min_turn, deck_vocab_min)
     for files_done, results in enumerate(_encoded(paths, max(1, jobs), init_args), 1):
         for item in results:
             if item[0] == "skip":
@@ -334,6 +376,8 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
     groups = {s: len({gm["split_group"] for gm in games if gm["split"] == s}) for s in shown}
     summary = {
         "schemaId": schema.schema_id, "nFeatures": schema.n, "vocab": vocab.sources,
+        **({"schemaKind": "r17", "minTurn": schema.min_turn, "deckVocabMin": deck_vocab_min}
+           if schema_kind == "r17" else {}),
         "vocabSize": len(vocab), "phases": phases, "groupBy": group_by, "split": dict(zip(SPLITS, weights)), "salt": salt,
         "rows": sum(stats[s]["rows"] for s in shown), "games": len(games),
         "skippedGames": dict(skipped),
@@ -391,6 +435,41 @@ def load(out: str, split: str) -> dict[str, Any]:
     return {k: np.concatenate([p[k] for p in parts]) for k in keys}
 
 
+def queue_logs(root: str, cube: str, nights: list[int] | None = None) -> list[str]:
+    """The overnight queue's recordings for one cube (D323): `<root>/normal/<cube>/games/` and every
+    `<root>/bridge/<a>+<b>/games/` whose pair names it.  With `nights`, only the drafts those nights'
+    plans (`<root>/night-N.json`: chunks of key, first seed and drafts) handed out."""
+    keys = []
+    if os.path.isdir(os.path.join(root, "normal", cube)):
+        keys.append(f"normal/{cube}")
+    bdir = os.path.join(root, "bridge")
+    if os.path.isdir(bdir):
+        keys += [f"bridge/{d}" for d in sorted(os.listdir(bdir)) if cube in d.split("+")]
+    ranges: dict[str, list[tuple[int, int]]] | None = None
+    if nights:
+        ranges = {}
+        for n in nights:
+            pf = os.path.join(root, f"night-{n}.json")
+            if not os.path.isfile(pf):
+                raise SystemExit(f"--nights: {pf} does not exist")
+            with open(pf, encoding="utf-8") as fh:
+                for c in json.load(fh).get("chunks") or []:
+                    lo = int(c["seed"])
+                    ranges.setdefault(c["key"], []).append((lo, lo + int(c["drafts"])))
+    out: list[str] = []
+    for k in keys:
+        g = os.path.join(root, k, "games")
+        if not os.path.isdir(g):
+            continue
+        for path in E.find_logs([g]):
+            if ranges is not None:
+                seed = os.path.basename(os.path.dirname(path))
+                if not seed.isdigit() or not any(lo <= int(seed) < hi for lo, hi in ranges.get(k, [])):
+                    continue
+            out.append(path)
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("logs", nargs="*")
@@ -413,9 +492,21 @@ def main(argv: list[str] | None = None) -> int:
                     help="a directory of the owner's own games (default var/ml/human when it exists; D347): "
                          "tagged source=human, kept out of training in the `human` split")
     ap.add_argument("--train-human", action="store_true", help="split human games like the rest (D347)")
-    ap.add_argument("--play-explore", choices=PLAY_EXPLORE_MODES, default="include",
+    ap.add_argument("--play-explore", choices=PLAY_EXPLORE_MODES, default=None,
                     help="games played with exploration (D358): kept by default (their outcomes are true), "
-                         "exclude drops them, only keeps them alone")
+                         "exclude drops them, only keeps them alone; under --schema r17 the default is exclude (D359)")
+    ap.add_argument("--schema", choices=SCHEMAS, default="d305",
+                    help="d305 (default): the full decision-state rows; r17: the outside exam's reduced "
+                         "end-of-half-turn rows (r17.py, D359)")
+    ap.add_argument("--min-turn", type=int, default=None, help="r17: the first half-turn encoded (default 3)")
+    ap.add_argument("--deck-vocab-min", type=float, default=None,
+                    help="r17: drop a lab game when either deck's non-basic cards are less than this share inside "
+                         "the vocabulary (default 0.5 under r17)")
+    ap.add_argument("--queue-root", help="the overnight queue's root (D323); with --cube, its normal/<cube> and "
+                                         "bridge/<a>+<b> folders naming the cube")
+    ap.add_argument("--cube", help="with --queue-root: the cube id (vintage); the vocabulary defaults to "
+                                   "cubes/<id>-cube-180.md under --repo")
+    ap.add_argument("--nights", default="", help="with --queue-root: only these nights' drafts (1,2)")
     ap.add_argument("--group-by", choices=("game", "match"), default="match",
                     help="match (default since D316): every game of one deck pair in one split -- the "
                          "test split is decks the model never saw; game: only the chairs of one "
@@ -425,6 +516,15 @@ def main(argv: list[str] | None = None) -> int:
     if len(w) != 3 or sum(w) <= 0:
         ap.error("--split takes three weights")
     logs, vocab, out = list(a.logs), list(a.vocab or []), a.out
+    if a.queue_root:
+        if not a.cube:
+            ap.error("--queue-root needs --cube")
+        nights = [int(x) for x in a.nights.split(",") if x.strip()] or None
+        qlogs = queue_logs(a.queue_root, a.cube, nights)
+        if not qlogs:
+            ap.error(f"--queue-root {a.queue_root}: no recordings for cube {a.cube}")
+        logs += qlogs
+        vocab = vocab or [os.path.join(a.repo, "cubes", f"{a.cube}-cube-180.md")]
     if a.run_dir:
         run_logs, run_vocab = E.read_run_dirs(a.run_dir)
         logs += run_logs
@@ -440,7 +540,10 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("--vocab and --out are required without --run-dir")
     build(logs, vocab, out, w, a.salt, a.shard_rows, E.parse_phases(a.phases), group_by=a.group_by,
           reserved=None if a.keep_reserved else R.reserved_decks(a.repo), vers=[v for v in a.ver.split(",") if v] or None,
-          human_dirs=humans, train_human=a.train_human, jobs=max(1, a.jobs), play_explore=a.play_explore)
+          human_dirs=humans, train_human=a.train_human, jobs=max(1, a.jobs),
+          play_explore=a.play_explore or ("exclude" if a.schema == "r17" else "include"),
+          schema_kind=a.schema, min_turn=a.min_turn,
+          deck_vocab_min=(0.5 if a.deck_vocab_min is None else a.deck_vocab_min) if a.schema == "r17" else None)
     return 0
 
 

@@ -16843,3 +16843,120 @@ would take it as is); varying the AI profile per draft in the queue (`run
   default must be the unbiased table.
 - **Dropping exploring games from the position dataset** — the point of the exercise;
   `exclude` is there for the experiment that asks whether they help.
+
+## D359 — The outside exam: a reduced evaluator (`r17`) trained on our Vintage-cube games is scored on human games from 17Lands' Powered Cube replays against simple rules fitted on our data, by a rule written down before its run
+
+*Branch `c/outside-exam-17lands`; D359, the next number free on a freshly fetched `main` (D358 the highest).*
+
+**2026-10-04** (Justin's approval of an outside exam: does what the evaluator learned from
+Forge-vs-Forge games carry over to human games?)
+
+**Context.** The learned position evaluator (D316) passed gate 1 (D354): on held-out deck pairs it
+predicts the eventual winner at a test log-loss of 0.497 against the core baseline's 0.554. Every
+row it has seen is Forge's AI against Forge's AI, so a good fit may still be a model of Forge's
+habits. 17Lands publishes MTG Arena replay data under CC BY 4.0
+(https://www.17lands.com/public_datasets): one row per game with an end-of-turn snapshot of each
+half-turn. The only close overlap with our cubes is Arena's Powered Cube, which holds 152 of the
+Vintage cube's 180 cards (the research report of 2026-10-04: 266,117 PremierDraft games, 99.3% of
+them with a Vintage-cube card). The replay data has no tapped state, counters, graveyards, exile,
+stack, combat or decisions, so D316's model cannot be scored on it as is; grading it on masked
+inputs would measure the mask, not the model.
+
+**Decision.**
+
+1. **A reduced schema, `r17`** (`tools/ml/r17.py`): only what both sources say at the END of a
+   half-turn — the turn (protocol numbering), its round, whose turn it was, on the play or the draw
+   (+1 / −1, 0 unknown), both life totals, both hand SIZES (17Lands has a count for the opponent; the
+   user's own hand cards are never read, so the two sides are encoded alike), and per side the
+   lands, non-land permanents, creatures and non-land permanents outside the vocabulary (tokens and
+   face-down permanents included), plus a card block of vocabulary × 2 counts (each side's
+   battlefield). The vocabulary is `encode.Vocab`'s; its three special slots are never filled. One
+   `Position` and one `encode_position` serve both sources.
+2. **Our rows** (`dataset.py --schema r17`): the last state frame of every turn from turn 3 on, never
+   the game's final turn (it ended inside it, as 17Lands' last half-turn does), labelled from the
+   viewer's side as D305 labels every row (+1 won, −1 lost, 0 draw). `--queue-root ROOT --cube
+   vintage` reads `normal/vintage` and every `bridge/<a>+<b>` naming vintage, `--nights` keeps the
+   drafts those nights' plans handed out, `--deck-vocab-min` (0.5 under r17) drops a lab game whose
+   either deck has less than half of its non-basic cards in the vocabulary. D340's reserved decks
+   are dropped as for every dataset. **Exploring games are left out by default under r17**
+   (`--play-explore exclude`, where D358 keeps them for D305's rows): the exam asks what Forge's own
+   play taught, and a random move makes positions no human game reaches. The shards are D305's
+   format with two card states; `evalnet.py` and `train_eval.py` take the number of card states from
+   the schema (`cardStates`), so the same network and trainer fit an r17 model, with `prior`,
+   `life`, `board` (the non-land permanent difference) and r17's reduced `core` as its baselines.
+   D305's rows, models and reports are unchanged (17 states, as before). Java refuses an r17 model
+   (its schema id is not D305's).
+3. **The 17Lands reader** (`tools/ml/ext17l.py`): `fetch` downloads a Powered Cube replay file and
+   `cards.csv` (resumed with a Range request, the size checked against Content-Length; `--max-bytes`
+   for a range read); no API call. `rows` streams the gzip a megabyte at a time (a truncated file is
+   read to its last whole row), orders the half-turns by `on_play`, drops each game's final half-turn
+   and turns 1–2, and writes a position when at least `--min-share` (0.5) of its non-basic
+   permanents are vocabulary cards. The label is whether the 17Lands user won; the user is always
+   "me". `--perspective both` also writes each position from the opponent's side, label inverted.
+   Each game falls into a `dev` or `test` half by sha256("r17-exam-v1|" + game id).
+4. **The exam** (`tools/ml/outside_exam.py`): prior, life, board and core are fitted on OUR training
+   split with early stopping on our validation split, never on 17Lands data; the r17 evaluator is
+   trained by `train_eval.py --split-by pair` on our data. Every model is scored on our test split
+   and on the 17Lands rows: log-loss, Brier, accuracy, ECE and a reliability table, overall and by
+   turn bucket; each baseline's log-loss minus the evaluator's carries a percentile interval from a
+   bootstrap over games (deck pairs on our side), the same resamples for every baseline.
+
+**The rule, written down before its run** (`EXAM_RULE` in `outside_exam.py`; no flag changes it):
+
+- **Population:** Powered Cube PremierDraft's replay file, the `test` half, the user's rows, turn ≥ 3,
+  the final half-turn dropped, vocabulary share ≥ 0.5. TradDraft's file, the `dev` half, share ≥ 0.8,
+  both perspectives and all games are reported beside it, never as the verdict.
+- **b\*** is the best simple rule — the lowest log-loss among prior, life and board on those rows.
+  The reduced core is compared and reported, not gating.
+- **PASS** when log-loss(b\*) − log-loss(eval) > 0 and the lower end of its 95% percentile interval
+  (2,000 resamples over 17Lands games, seed 20261004) is above 0, on at least 2,000 games and 10,000
+  rows. Fewer is FAIL (underpowered), never PASS. Rows from a partial download, a `--max-games`
+  sample, another file or a stricter filter give NO VERDICT.
+- **The transfer gap**, reported: the evaluator's advantage over b\* on our test split (interval over
+  deck pairs) minus its advantage on 17Lands, in log-loss, and the share of it kept.
+- Nothing is tuned on 17Lands data: no model, threshold or hyperparameter reads it. The `dev` half is
+  for looking at. A changed rule is a new decision, made before its run.
+
+**Perspective.** 17Lands rows are the tracker user's games: an engaged, stronger-than-average
+population (54.2% of the qualifying test- and dev-half games were won by the user, measured below), so
+a model calibrated on Forge's symmetric games starts off by that shift; it costs every model on the
+same rows, the verdict compares models, and calibration is reported. Both-perspective rows cancel the
+shift but double perfectly anti-correlated rows; they are secondary, and the bootstrap resamples whole
+games either way. Our own rows are both chairs of every game, the deck pair the split unit (D317).
+
+**Measured** (this container; the sanity run the approval asked for; the download deleted afterwards):
+
+- `replay_data_public.Cube_-_Powered.PremierDraft.csv.gz` is 143,232,456 bytes (the server's
+  Content-Length; fetched whole in 3 s here), `cards.csv` 1,740,431 bytes.
+- The half-turn order holds on the real file: of the first 3,000 games, 1,489 of 1,530 on-the-play
+  games list no card drawn in the user's first turn (the other 41 list one, presumably from an
+  effect), and all 1,470 on-the-draw games list one. Past the game's end the number columns read `0.0` and the id lists are
+  empty, so a half-turn is "reached" when either battlefield lists a permanent.
+- **First 5,000 games** (`--max-games 5000`, 4.5 s): 4,980 with a position; 49,653 user-side positions
+  (turn ≥ 3, final half-turn dropped); qualifying at share ≥ 0.5: 5,436 (10.9%), at ≥ 0.8: 695
+  (1.4%); 1,829 games with a qualifying row; no unknown id.
+- **The whole file** (222–294 s on one process, by the container's load; a 0.40 GB peak):
+  266,117 games, 265,174 with a position; 2,667,602 user-side positions; qualifying at ≥ 0.5:
+  306,819 (11.5%), ≥ 0.7: 53,010 (2.0%), ≥ 0.8: 38,431 (1.4%), all in the vocabulary: 33,477 (1.3%). The rule's population is 154,302 rows from 51,161
+  test-half games (dev: 152,517 rows, 50,801 games). One unknown Arena id (2 occurrences).
+- A range read of the first 10 MB parsed 18,766 games and stopped cleanly at the cut.
+- The pipeline end to end with a toy model (trained on the committed recordings, which are not
+  Vintage-cube games: the night recordings are on the PC, so no verdict was taken here): the exam over
+  the whole file's rows took 85 s at a 0.46 GB peak, and printed every table, interval and the
+  verdict line.
+
+**Rejected.**
+
+- **Scoring D316's full model with the missing features zeroed** (the mask's error, not the model's).
+- **Fitting any baseline, threshold or calibration on 17Lands rows** (the exam would then measure
+  the fit, not the transfer).
+- **A cube other than Vintage** (every other cube's overlap is spread thinly over retail sets).
+- **Scraping the 17Lands API** (discouraged by 17Lands; the public files hold everything used here).
+- **The opponent's perspective as the primary population** (17Lands describes the user; the
+  mirror rows are a secondary table).
+- **Keeping exploring games in the r17 training rows by default** (the question is about Forge's
+  own play; `--play-explore include` remains for an experiment).
+
+**Not done.** Training on 17Lands data (as pre-training or auxiliary data for a reduced model); the
+other cubes; graveyard and exile partly rebuilt from 17Lands' cast and killed events; the user's skill
+buckets as a filter (the report carries them per game in `games.jsonl`).

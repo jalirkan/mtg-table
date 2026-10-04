@@ -11,6 +11,8 @@ only; never starts the engine.
     python3 tools/ml/gate_metrics.py grade var/ml/gates/regret/truth.jsonl var/ml/gates/regret/set.jsonl
     python3 tools/ml/gate_metrics.py lines var/ml/gates/fit/leaf-rows.jsonl
     python3 tools/ml/gate_metrics.py file var/ml/models/night-1-eval.json
+    python3 tools/ml/gate_metrics.py ext var/ml/17lands/rows-premier              # ext17l.py rows (D359)
+    python3 tools/ml/gate_metrics.py exam var/ml/reports/outside-exam.json        # outside_exam.py (D359)
 """
 from __future__ import annotations
 
@@ -74,6 +76,46 @@ def m_report(p: str) -> dict[str, float]:
     return out
 
 
+def m_ext(d: str) -> dict[str, float]:
+    """ext17l.py rows' stats.json: games read, user-side positions, how many qualify at 0.5 and 0.8, rows."""
+    p = os.path.join(d, "stats.json")
+    if not os.path.isfile(p):
+        return {"written": 0}
+    with open(p, encoding="utf-8") as f:
+        st = json.load(f)
+    c = (st.get("candidates") or {}).get("user") or {}
+    rows = st.get("rows") or {}
+    return {"written": 1, "games": st.get("games", 0), "gamesWithRows": st.get("gamesWithRows", 0),
+            "positions": c.get("positions", 0), "q50": c.get(">=0.5", 0), "q80": c.get(">=0.8", 0),
+            "rows": st.get("rowsTotal", 0), "testUserRows": rows.get("test.user", 0),
+            "unknownIds": st.get("unknownIds", 0), "partial": 1 if st.get("partialDownload") or st.get("maxGames") else 0,
+            **({"peakGB": st["peakGB"]} if isinstance(st.get("peakGB"), (int, float)) else {})}
+
+
+def m_exam(p: str) -> dict[str, float]:
+    """outside_exam.py's report: the verdict (pass 1/0; decided 0 for NO VERDICT), the primary population,
+    b*'s difference and interval, and the transfer gap."""
+    if not os.path.isfile(p):
+        return {"written": 0}
+    with open(p, encoding="utf-8") as f:
+        r = json.load(f)
+    v = r.get("verdict") or {}
+    d = v.get("delta") or {}
+    g = r.get("transferGap") or {}
+    out = {"written": 1, "pass": 1 if v.get("verdict") == "PASS" else 0,
+           "decided": 1 if v.get("verdict") in ("PASS", "FAIL") else 0,
+           "rows": (r.get("primary") or {}).get("rows", 0), "games": (r.get("primary") or {}).get("games", 0),
+           "oursRows": (r.get("ours") or {}).get("rows", 0)}
+    for k in ("mean", "lo", "hi"):
+        if isinstance(d.get(k), (int, float)) and d[k] == d[k]:
+            out[f"delta_{k}"] = d[k]
+    if isinstance(g.get("gap"), (int, float)):
+        out["gap"] = g["gap"]
+    if isinstance(r.get("peakGB"), (int, float)):
+        out["peakGB"] = r["peakGB"]
+    return out
+
+
 def m_grade(out: str, requests: str | None) -> dict[str, float]:
     ans: dict[str, dict[str, Any]] = {}
     for fn in sorted(glob.glob(out + ".shard-*.jsonl")):
@@ -101,6 +143,10 @@ def main(argv: list[str]) -> int:
         out = m_report(path)
     elif kind == "grade":
         out = m_grade(path, argv[2] if len(argv) > 2 else None)
+    elif kind == "ext":
+        out = m_ext(path)
+    elif kind == "exam":
+        out = m_exam(path)
     elif kind == "lines":
         out = {"lines": len(G.read_jsonl(path)) if os.path.isfile(path) else 0}
     elif kind == "file":
