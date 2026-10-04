@@ -17208,3 +17208,77 @@ at a time); calibration on the owner's own games (`train_eval.py --eval-human`, 
   and those are features the model reads.
 - **Serving the model file to the browser**: the model is the owner's and lives on the PC;
   ForgeCoach is public.
+
+## D367 — Search changes are aimed by error analysis: `tools/ml/search_errors.py` reads the decision records, gate 2's truth tables, review reports and the ladder, and says where the search loses, with intervals over games
+
+*Branch `c/search-error-analysis`; D367, the next number free at push (D362–D366
+are held by other open branches).*
+
+**2026-10-04** (a methods review the owner approved)
+
+**Context.** Three search tweaks were SPRT-tested on hunches and none gained:
+`aturns=1` (D351; 50.2% over 488 games), the oracle (D350; 47.5% over 40 games)
+and the LCB override (D350; 50.7% over 856 games). Each night spent on a tweak
+that does not touch a real failure mode is a night lost. The lab already
+records what an error analysis needs.
+
+**Decision.** Before the next search change is proposed, it is aimed with
+`tools/ml/search_errors.py` (standard library; numpy only for `--model`). It
+reads, each input optional:
+
+- decision records (D347) of the seats that played the search (`--policy`),
+  the search's per-candidate report (D350) included; a record answered by
+  exploration (D358) is left out;
+- gate 2's set and full-game truth tables (D354), with the hand rankers at 3
+  and 12 rounds;
+- post-game review reports (D353), their `leaf` regrets kept apart from their
+  `wins` regrets;
+- the AI ladder's `results/` and `sprt.jsonl` (D318, D319).
+
+It writes `var/analysis/<name>/`: `report.md`, CSV tables (Parquet when pyarrow
+is installed), `summary.json` for a job's checks and `manifest.json` (input
+hashes, code version). The same inputs give byte-identical report, tables and
+summary. The analyses:
+
+1. **Regret** by decision kind (spell, attack, block, other), turn bucket,
+   phase, cube and deciding policy, per source; a mistake is "clear" only when
+   the source's own paired interval excludes zero (D353's rule).
+2. **The search against Forge, judged by the truth.** Gate 2's hand ranker at
+   3 rounds is search-v1-fixed3's ranking without its margin rule, so the
+   truth adjudicates the search on every decision of the set, not only where a
+   recorded seat searched. Per variant (the ranker's pick, the margin rule read
+   through the win scale, a recorded override): truth(search) − truth(Forge),
+   whose noisy-maximum bias cancels, and the helped / harmful / unclear rates.
+3. **The search's own noise.** Per searched decision: the pick against the best
+   other candidate, its standard error (exact and paired when one of the two is
+   Forge's answer, else the unpaired approximation), overlap at 95%, P(the pick
+   is the worse of the two), whether 4× the rounds would separate them, and
+   decisions within noise of the margin; with both rankers, how often 12 rounds
+   pick differently from 3 and which pick the truth prefers.
+4. **Card hotspots.** A regret is credited to the chosen option's cards and,
+   when the best option was another, to its cards (`missed`); tags come from
+   the deciding seat's own view of the card (types, `{X}`, flash, an instant
+   cast in combat) and an optional tag file.
+5. **Loss forensics.** For each recorded game the analysed seat lost: its win
+   chance at each decision row (the evaluator through `eval_serve.py`'s own
+   encoder, or else the search's own end-of-turn estimate), the largest fall
+   and the seat's decision there; for each SPRT, A's score by cube, game length
+   and seat.
+
+**Honesty rules.** Intervals resample games (a ladder game's mirror block),
+never single decisions. A leaf number is an end-of-turn estimate, never called
+a win rate. A card is named only when the deciding seat's state shows its face.
+The report lists what it read and what it left out, and why.
+
+**Not done.** The LCB rule is not simulated on the truth set (the rankers do
+not report paired per-round differences). Ladder batches are not recorded today
+(`tools/ai-ladder/bench.ts` passes no `--record-*` flag), so a lost SPRT game has
+a result line but no frames; forensics reads recorded games (ai-bench
+`--record-all`, lab runs with search seats). Modal spells and combat tricks
+beyond "an instant cast in combat" need the tag file.
+
+**Rejected.** Another SPRT before the analysis (three hunches cost three nights
+and gained nothing); pooling decisions as independent (the decisions of one game
+share its deal); mixing the leaf and the full-game regrets in one table (they
+measure different things); a notebook (not runnable as a lab job, not
+deterministic).
