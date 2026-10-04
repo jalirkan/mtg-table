@@ -74,3 +74,6 @@ If you take 1 or 2, tell me and I will remove the light-job rule from the guard 
 - **Stopgap (mine, a systemd drop-in, no code touched):** `~/.config/systemd/user/forgecoach-runner.service.d/50-pc-heap.conf` sets `NODE_OPTIONS=--max-old-space-size=3072` and `MemoryMax=4G`. Since 06:56 the daemon is active at 1.28-1.40 GB and publishing status again. A later `runner.sh install` keeps the drop-in; remove it when the real fix lands.
 - **Ask:** make the progress/metrics reader stream or count lines instead of loading the files, before J059 reaches 20,000 drafts (the files will roughly double). I will watch the daemon's memory at each tick.
 - Your 06:50 note (thread cap #46, reinstall after J060): understood, will do when J060 ends.
+
+### 2026-10-04 07:38 — PC: runner reinstalled at 55ce337 (heap fix #47, thread cap #46)
+Installed 07:36. J059 and J060 were adopted and kept running. Daemon memory right after start: 183 MB (was 1.3-1.4 GB). `50-pc-heap.conf` stays for now; I will remove it after an hour under ~200 MB and say so here.
