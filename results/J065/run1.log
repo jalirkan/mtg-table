@@ -1,0 +1,56 @@
+==== J065 run1 started 2026-10-04T12:32:27-04:00 in unit lab-J065-run1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1, lane 2
+{
+ "drafts": {
+  "files": 26,
+  "drafts": 6192,
+  "games": 6191,
+  "picks": 222912,
+  "deckCards": 333121,
+  "jsonlBytes": 120018718,
+  "jsonParseSeconds": 1.8,
+  "parquetBytes": {
+   "drafts": 70827,
+   "games": 47489,
+   "picks": 3218347,
+   "deck_cards": 479623
+  },
+  "parquetTotal": 3816286,
+  "ratio": 31.4
+ },
+ "queries": {
+  "win_rate_by_cube": 0.024,
+  "card_pick_counts": 0.034,
+  "card_deck_win_rate": 0.01,
+  "game_lengths": 0.006
+ },
+ "recordings": {
+  "recordingsTotal": 78495,
+  "sampled": 120,
+  "gzipBytes": 11657838,
+  "rawBytes": 675917548,
+  "testGzipBytes": 5690868,
+  "zstd3": {
+   "bytes": 2126596,
+   "vsGzip": 2.68,
+   "compressMBps": 6038.7,
+   "decompressMBps": 4840.2
+  },
+  "zstd19": {
+   "bytes": 1288732,
+   "vsGzip": 4.42,
+   "compressMBps": 64.9,
+   "decompressMBps": 6339.1
+  },
+  "zstd19dict": {
+   "bytes": 1312864,
+   "vsGzip": 4.33,
+   "compressMBps": 75.6,
+   "decompressMBps": 5553.4
+  }
+ },
+ "peakGB": 1.66
+}
+7.7G	var/cubelab/queue
+560M	var/ml
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb2       218G  165G   42G  80% /

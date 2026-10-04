@@ -1,0 +1,4 @@
+7.7G	var/cubelab/queue
+560M	var/ml
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb2       218G  165G   42G  80% /

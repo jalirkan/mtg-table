@@ -1,6 +1,6 @@
-running
+done
 runner: forgecoach-runner 53ed81f
 started: 2026-10-04T12:31:40-04:00
-phase: commands 1/1
+finished: 2026-10-04T12:32:51-04:00
 mtg-table: c09ddfa
 workers: 1 (sized 1: min(cores 7, memory 1, max_workers 1); peak 3.00 GB per worker (declared), budget 3.9 GB)
