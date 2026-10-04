@@ -1,0 +1,2 @@
+PASS  pilot.games >= 4   [pilot.games = 48]
+PASS  pilot.errors + pilot.timeouts <= 1   [pilot.errors = 0, pilot.timeouts = 1]

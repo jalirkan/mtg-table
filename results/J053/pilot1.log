@@ -1,0 +1,176 @@
+==== J053 pilot1 started 2026-10-04T02:16:50-04:00 in unit lab-J053-pilot1, 3 worker(s)
+lint-bridge-selftest OK: 31 rules, 60 firing cases (each fired its own rule and no other), 73 checks
+bridge lint OK (64 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 64 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 285 frame(s) lost the race and were dropped
+OverRaceSelfTest: 3282 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:60202): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:60206): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:60216 (1 watching)
+WS CONNECT /127.0.0.1:60232 (connection #1)
+WS REFUSED /127.0.0.1:60244: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:60252 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:60252 (1 watching)
+WS DISCONNECT /127.0.0.1:60232 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:60258 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:60258 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:60266 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:60216 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:37194 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:37194: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 139 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:51990: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:52000: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:52012: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:52022: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:52046: no valid pairing token
+WS SITE REFUSED /127.0.0.1:52194: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52198: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52202: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52212: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52220: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52230: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52232: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52244: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52250: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52256: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:52272: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:52282: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:52294: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:52306: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:52316: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:52326 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:52326 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:52336 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:52336 (0 watching)
+WS CONNECT /127.0.0.1:52348 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:52348 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:52350): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:52362): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:52366 (1 watching)
+WS CONNECT /127.0.0.1:38158 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:38158 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:38166 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:38166 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:40647 (/127.0.0.1:38172): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:53578: a path that would leave the site
+WS CONNECT /127.0.0.1:57054 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:57054 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:57064): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:41985 (/127.0.0.1:57078): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 4.7 us + predict 3.0 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 112 check(s), 0 failure(s)
+decision selftest: 44 check(s), 0 failure(s)
+build OK
+== ai-bench selftest: statistics
+  ok   wilson(5,10) = [0.2366, 0.7634]
+  ok   wilson(0,10) = [0, 0.2775]
+  ok   wilson(81,100) = [0.7222, 0.8749]
+  ok   Cfg parses profile+sim+shadow
+  ok   Cfg refuses an unknown option
+  ok   plain seeds are unchanged
+  ok   --mirror: games 4k/4k+3 and 4k+1/4k+2 share a seed
+  ok   vs 50%: deals 1/2, 1/2, 2/2, 0/1 score 50%, p = 1, three mirrored
+  ok   phi and elo
+== ai-bench selftest: resume and the control file
+  ok   resume: complete lines of this shard and the others count
+  ok   resume: this shard's torn last line is cut off on disk
+  ok   resume: another shard's file is only read
+  ok   resume: a game's signature is its seed, configs and decks
+  ok   resume: one game with two different settings is refused
+  ok   control: unset or absent means play
+  ok   control: maxWorkers 2 keeps slots 0-1 and parks slot 2
+  ok   control: a torn file means no control
+  ok   control: a parked slot exits even while paused (its memory comes back); the hold itself is the smoke test's
+Language 'en-US' loaded successfully.
+(ThreadUtil first call): Running with priority 5
+Read cards: 33617 archived files in 0 ms (25 parts) using thread pool
+Read cards: 1 files in 0 ms (1 parts) using thread pool
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+The card A-Alrund's Epiphany was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Baba Lysaga, Night Witch was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Divide by Zero was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Esika's Chariot was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Faceless Haven was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Fires of Invention was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Goldspan Dragon was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Hullbreaker Horror was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Kumano Faces Kakkazan was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Luminarch Aspirant was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Monster Manual was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Omnath, Locus of Creation was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-The Meathook Massacre was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Unholy Heat was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Blinding Radiance was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Goblin Bruiser was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Ogre Painbringer was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Titanic Pelagosaur was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Treetop Recluse was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+Read cards: 836 files in 0 ms (8 parts) using thread pool
+== ai-bench selftest: outlet policy scenarios (engine)
+  ok   Murder on Grizzly Bears -> sacrifice the Bears to Viscera Seer (got THREATENED: Viscera Seer sacrificing Grizzly Bears (4))
+  ok   the controller answers Murder with Carrion Feeder (got [Sacrifice a creature: Put a +1/+1 counter on Carrion Feeder.])
+  ok   the Bears were sacrificed, not the Memnite Carrion Feeder's own preference would pick
+  ok   no steer miss counted
+  ok   OFF: Forge chooses to activate Carrion Feeder (got [Sacrifice a creature: Put a +1/+1 counter on Carrion Feeder.])
+  ok   OFF: it pays with Blood Artist (paid with Blood Artist)
+  ok   ON: Forge chooses to activate Carrion Feeder (got [Sacrifice a creature: Put a +1/+1 counter on Carrion Feeder.])
+  ok   ON: it pays with Gravecrawler (paid with Gravecrawler)
+  ok   Unsummon on Grizzly Bears -> keep it
+  ok   8 life vs Bombardment + Blood Artist + 3 Bears -> go, Bears first, at the face (got LETHAL: Goblin Bombardment sacrificing Grizzly Bears (4))
+  ok   9 life vs the same board -> hold
+  ok   8 life, but their Blood Artist gains 1 a death -> hold
+  ok   Forge's AiController with only Viscera Seer castable chooses nothing (RemAIDeck filter)
+  ok   the policy casts it (got CAST_OUTLET: Viscera Seer)
+  ok   control: the same board with Typhoid Rats instead -> Forge casts it (got [Typhoid Rats - Creature 1 / 1])
+  ok   control: the policy leaves an unflagged card to Forge
+  ok   a quiet board -> no sacrifice
+== ai-bench selftest: search plumbing (engine)
+hidden has neither ManaCost nor Color
+  ok   determinize-18 distinct opponent hands over 40 seeds
+  ok   determinize-18 distinct opponent hands over 40 seeds
+  ok   the same seeds give the same determinizations whatever the hidden split and order (first: Island,Lightning Bolt | Grizzly Bears,Shock,Forest | own hand Typhoid Rats)
+  ok   the AI's own hand is kept
+Couldn't map Grist, the Hunger Tide (5)/844747192
+  ok   control: Forge's own GameCopier fails on a sideboard card (Couldn't map Grist, the Hunger Tide (5)/844747192)
+  ok   LenientGameCopier copies it, 2 stand-in(s): [Grist, the Hunger Tide@Sideboard, Tarmogoyf@Sideboard]
+  ok   the copy holds the battlefield Tarmogoyf
+  ok   a copier error -> Forge's own play, Typhoid Rats (got [Typhoid Rats - Creature 1 / 1])
+  ok   and it is counted ({search.fallback.copyError=1, search.p.considered=1, search.p.ms=0})
+  ok   the search ran 24 rollout(s), 12 round(s), no errors ({search.copyUs=20958, search.p.considered=1, search.p.ms=139, search.playUs=114367, search.rollouts=24, search.rounds=12})
+  ok   inside its budget (140 ms for 3000)
+  ok   it answers Typhoid Rats or pass (got [Typhoid Rats - Creature 1 / 1])
+  ok   the real game is untouched: the opponent still holds its Lightning Bolt
+  ok   the attack search ran ({search.a.considered=1, search.a.ms=180, search.copyUs=34039, search.playUs=140277, search.rollouts=48, search.rounds=12})
+  ok   both Bears attack for lethal (got [Grizzly Bears (8), Grizzly Bears (9)]; [])
+  ok   the report: search a: 3 rounds, 12 playouts, 90 ms, horizon 1, rule lcb margin 0 z 1.00, forge 99500+-0 (d 0+-0); 424+-0 (d -99076+-0); 484+-0 (d -99016+-0); 484+-0 (d -99016+-0), kept Forge's ({search.a.considered=1, search.a.ms=90, search.copyUs=9028, search.lcb.none=1, search.oracleRollouts=12, search.playUs=79681, search.rollouts=12, search.rounds=3})
+ai-bench selftest: 51 check(s), 0 failure(s)
+SPRT search-v1-fixed3-aturns1 vs search-v1-fixed3 on tools/ai-bench/pairs-confirm.txt: H1 "A is stronger by >= 20" vs H0 "<= 0", alpha 0.05, beta 0.05; bounds -2.94 / 2.94
+  start  w0 search-v1-fixed3-aturns1 vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T061706-745741, seed 114601000, 2 pair(s))
+  start  w1 search-v1-fixed3-aturns1 vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T061706-745741, seed 114601001, 2 pair(s))
+  start  w2 search-v1-fixed3-aturns1 vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T061706-745741, seed 114601002, 2 pair(s))
+  done   w2 search-v1-fixed3-aturns1 4-4 search-v1-fixed3 (0 draws) in 564 s
+  LLR -0.01 after 8 games (4 pairs), A scores 50.0%
+  done   w0 search-v1-fixed3-aturns1 5-3 search-v1-fixed3 (0 draws) in 757 s
+  LLR 0.12 after 16 games (8 pairs), A scores 56.3%
+  done   w1 search-v1-fixed3-aturns1 4-4 search-v1-fixed3 (0 draws) in 1155 s
+  LLR 0.09 after 24 games (12 pairs), A scores 54.2%
+
+SPRT result: inconclusive
+games used: 8 (4 mirrored pairs); LLR -0.013 in [-2.944, 2.944]; search-v1-fixed3-aturns1 scored 50.0%
