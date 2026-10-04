@@ -1029,7 +1029,18 @@ exception:
 `cv.isFaceDown() && cv.canFaceDownBeShownTo(viewer)` — i.e. the viewer's own
 morph / manifest / cloak / disguise, and a face-down card someone gave them
 permission to look at. It is `null` in every other case, and the key is always
-present. This is the single sanctioned use of `getAlternateState()` in the whole
+present. The permission case is real and common in the cube lab (D371): Gonti,
+Lord of Luxury and Thief of Sanity exile an **opponent's** card face down and let
+their controller look at (and cast) it, so that card — owned and controlled by
+the opponent, in the opponent's `exile` — carries an `alt` for the seat whose
+effect exiled it (Forge's `DigEffect`: `turnFaceDown(true)`, then
+`addMayLookFaceDownExile(activator)`; `canFaceDownBeShownTo` opens with
+`mayPlayerLook(viewer)`). Hideaway is the same for the seat's own card. In play
+the face is the **controller's** only: the owner of a stolen face-down creature
+does not see it. A face-down card in exile that nobody may look at (Bomat
+Courier's "You can't look at it") is not a face-down full card at all but the
+five-key stub, for its owner too: `canBeShownTo` answers a face-down card in
+exile with the look permission alone. This is the single sanctioned use of `getAlternateState()` in the whole
 bridge; `tools/lint-bridge.sh` rejects the identifier anywhere else, because for
 an opponent's face-down permanent that accessor is the **real card** — name, mana
 cost, type line, P/T and oracle text (`CardView.java:1104-1109`).

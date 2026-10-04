@@ -43,12 +43,23 @@
 // the logs, the control files) so a restarted runner RECONCILES: a step whose
 // unit still runs is adopted; one that ended while the runner was down is read;
 // one that died with it is resumed (resumable: yes: the step runs again and
-// the tools skip what is done) or restarted from the top (resumable: no: the
-// `clean:` paths moved aside first), and the STATUS says which.
+// the tools skip what is done) or restarted (resumable: no: the `clean:` paths
+// moved aside first), and the STATUS says which.
+//
+// BLOCKS DONE (D365).  A retry (after a memory stop or `stop`) and a restart
+// begin at the `## Commands` block that was stopped: every block that finished
+// is recorded (`blocksDone`: its exit code and its text's hash) and skipped,
+// so long as the job file still has it unchanged.  A non-resumable job then
+// moves aside the `clean:` lines of the blocks it runs again (a `clean:` line
+// before a block); the header's `clean:` applies only when it starts from
+// run1.  A job whose only `clean:` is the header's (every job file before
+// D365) still starts from run1 when a later block stopped: the runner cannot
+// tell which block made which path.
 //
 // The runner writes FACTS: states, numbers, exit codes, log tails.  Judgement
 // (summary.md) stays with the PC's Claude session, which reads them.
 
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -105,6 +116,17 @@ export const DEFAULT_CONFIG: Omit<RunnerConfig, 'runnerDir' | 'stateDir' | 'labR
 };
 
 type StepKind = 'shell' | 'pilot-checks' | 'final-checks' | 'collect';
+
+/** A finished `## Commands` block (D365): its exit code, when it ended, and the hash of its text (blockSha). */
+export interface BlockDone { rc: number; at: number; sha: string }
+
+/** A block's identity for a retry: the hash of its text as the job file has it (before substitution). */
+export function blockSha(text: string): string {
+  return createHash('sha1').update(text).digest('hex').slice(0, 12);
+}
+
+/** The exit codes a process killed by SIGKILL leaves (bash: 128 + 9; a tool that reports the signal: 9). */
+export const OOM_EXIT_CODES: ReadonlySet<number> = new Set([137, 9]);
 interface Step {
   name: string; kind: StepKind; phase: 'prepare' | 'pilot' | 'commands' | 'checks' | 'collect'; block?: string; of?: string;
   /** The block's own `cores:` line: this step's width (and the most {workers} it gets). */
@@ -146,9 +168,17 @@ export interface JobRun {
   /** Full commits the first prepare checked out: a retry or resume checks these out again, never a branch that moved (D341's version refusal). */
   pinned?: Record<string, string>;
   restarts: Array<{ at: number; how: 'resumed' | 'restarted' | 'adopted'; why: string }>;
+  /** The `## Commands` blocks that finished (D365), by step name: exit code, when, and the block text's hash. */
+  blocksDone?: Record<string, BlockDone>;
+  /** The `.restart-*` copies beside the job's clean: paths, as last measured (never deleted, D365). */
+  aside?: { copies: number; bytes: number } | null;
   approved: boolean;
   /** Why the next step waits to start, when it does (for the log, once). */
   heldFor?: string | null;
+  /** The width the next step waits for, when it waits for cores other jobs hold (D365's per-step widths); null: not waiting. */
+  waitingCores?: number | null;
+  /** The width its last step started at (at first, the width it was admitted at): a step no wider never waits (D365). */
+  lastWidth?: number | null;
   /** The job's tools read the control file: `control:` as written, else detected after prepare (null: not known yet). */
   canControl: boolean | null;
   /** Memory stops so far, this run and the ones before it; at backoff.maxMemoryStops the job fails. */
@@ -374,10 +404,13 @@ export class Runner {
     if (prev && !prev.outcome) throw new Error(`${job.id} is already running`);
     const approved = !!st && st.state === 'waiting' && 'approved' in st.fields;
     const cap = st?.fields.workers_cap ? Number(st.fields.workers_cap) : null;
-    // A retry after a memory stop or a `stop`: a pilot that already passed is not run again.
+    // A retry after a memory stop or a `stop`: a pilot that already passed is not run again, and
+    // neither is a `## Commands` block that finished (D365): the retry starts at the block that was stopped.
     const retry = !!prev && prev.outcome?.state === 'waiting' && /^(memory|stopped)/.test(prev.outcome.reason) && !!prev.sizing;
-    const steps = this.stepsFor(job, approved || retry);
-    const moved = retry && !job.resumable ? this.cleanAside(prev as JobRun, job) : [];
+    const resume = retry ? this.resumeBlock(job, this.doneBlocks(prev as JobRun)) : null;
+    const from = resume?.from ?? 0;
+    const steps = this.stepsFor(job, approved || retry, from);
+    const moved = retry && !job.resumable ? this.cleanAside(prev as JobRun, job, from) : [];
     const lanes = new Set(this.active().filter((x) => x.cpu === 'heavy').map((x) => x.lane ?? 0));
     let lane = 0;
     while (job.cpu === 'heavy' && lanes.has(lane)) lane++;
@@ -389,8 +422,11 @@ export class Runner {
       pinned: retry ? prev?.pinned : undefined,
       peakRssGb: prev?.peakRssGb ?? null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null,
       metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null,
+      blocksDone: resume?.kept ?? {}, aside: prev?.aside ?? null, lastWidth: widthOf(job, this.machineBudget()),
     };
-    if (retry) r.restarts.push({ at: this.sys.now(), how: job.resumable ? 'resumed' : 'restarted', why: `retry after "${prev?.outcome?.reason}"; the pilot had passed${moved.length ? `; moved aside: ${moved.join(', ')}` : ''}${job.resumable ? '; the tools skip what is done' : ''}` });
+    if (retry) {
+      r.restarts.push({ at: this.sys.now(), how: job.resumable ? 'resumed' : 'restarted', why: `retry after "${prev?.outcome?.reason}"; the pilot had passed; ${resume?.why}${moved.length ? `; moved aside: ${moved.join(', ')}` : ''}${job.resumable ? '; the tools skip what is done' : ''}` });
+    }
     fs.rmSync(path.join(this.jobDir(job.id), 'out'), { recursive: true, force: true });
     fs.mkdirSync(path.join(this.jobDir(job.id), 'out'), { recursive: true });
     this.runs.set(job.id, r);
@@ -401,18 +437,52 @@ export class Runner {
     return r;
   }
 
-  stepsFor(job: JobFile, approved: boolean): Step[] {
-    const steps: Step[] = [{ name: 'prepare', kind: 'shell', phase: 'prepare' }];
+  /** The job's steps; `fromBlock` > 0: a retry that starts at that `## Commands` block (0-based), the ones before it done. */
+  stepsFor(job: JobFile, approved: boolean, fromBlock = 0): Step[] {
+    // prepare_cores: / pilot_cores: (D365): the width those steps hold beside other jobs; absent: the job's width.
+    const steps: Step[] = [{ name: 'prepare', kind: 'shell', phase: 'prepare', cores: job.prepareCores ?? null }];
     const pb = job.pilot?.blocks ?? [];
     if (!approved) {
-      pb.forEach((b, i) => steps.push({ name: `pilot${i + 1}`, kind: 'shell', phase: 'pilot', block: b, of: `${i + 1}/${pb.length}`, cores: job.pilot?.blockCores?.[i] ?? null, memGb: job.pilot?.blockMemGb?.[i] ?? null }));
+      pb.forEach((b, i) => steps.push({ name: `pilot${i + 1}`, kind: 'shell', phase: 'pilot', block: b, of: `${i + 1}/${pb.length}`, cores: job.pilot?.blockCores?.[i] ?? job.pilotCores ?? null, memGb: job.pilot?.blockMemGb?.[i] ?? null }));
       steps.push({ name: 'pilot-checks', kind: 'pilot-checks', phase: 'checks' });
     }
     const cb = job.commands?.blocks ?? [];
-    cb.forEach((b, i) => steps.push({ name: `run${i + 1}`, kind: 'shell', phase: 'commands', block: b, of: `${i + 1}/${cb.length}`, cores: job.commands?.blockCores?.[i] ?? null, memGb: job.commands?.blockMemGb?.[i] ?? null }));
+    cb.forEach((b, i) => { if (i >= fromBlock) steps.push({ name: `run${i + 1}`, kind: 'shell', phase: 'commands', block: b, of: `${i + 1}/${cb.length}`, cores: job.commands?.blockCores?.[i] ?? null, memGb: job.commands?.blockMemGb?.[i] ?? null }); });
     steps.push({ name: 'final-checks', kind: 'final-checks', phase: 'checks' });
     steps.push({ name: 'collect', kind: 'collect', phase: 'collect' });
     return steps;
+  }
+
+  /**
+   * The `## Commands` blocks a run finished (D365): its record, and -- a run.json written before
+   * D365 has none -- every commands step before the one it stopped at (a step is passed only on exit 0).
+   */
+  doneBlocks(r: JobRun): Record<string, BlockDone> {
+    const out: Record<string, BlockDone> = { ...(r.blocksDone ?? {}) };
+    r.steps.forEach((s, i) => {
+      if (i < r.stepIndex && s.phase === 'commands' && s.block !== undefined && !out[s.name]) out[s.name] = { rc: 0, at: r.startedAt, sha: blockSha(s.block) };
+    });
+    return out;
+  }
+
+  /**
+   * Where a retry starts (D365): the first `## Commands` block not done with the same text (0-based; 0 =
+   * from run1).  A non-resumable job whose only clean: is the header's starts from run1 whatever is done:
+   * nothing says which block made which path, and moving them all aside would lose the done blocks' work.
+   */
+  resumeBlock(job: JobFile, done: Record<string, BlockDone>): { from: number; kept: Record<string, BlockDone>; why: string } {
+    const blocks = job.commands?.blocks ?? [];
+    let from = 0;
+    while (from < blocks.length && done[`run${from + 1}`]?.rc === 0 && done[`run${from + 1}`]?.sha === blockSha(blocks[from] as string)) from++;
+    const list = (n: number): string => Array.from({ length: n }, (_, i) => `run${i + 1}`).join(', ');
+    const blockClean = (job.commands?.blockClean ?? []).some((c) => c.length > 0);
+    if (from > 0 && !job.resumable && job.clean.length && !blockClean) {
+      return { from: 0, kept: {}, why: `starts again at run1: ${list(from)} ${from > 1 ? 'are' : 'is'} done, but the job's clean: is job-wide (no clean: line before a block), so the runner cannot tell what they made` };
+    }
+    const kept = Object.fromEntries(Object.entries(done).filter(([n]) => Number(n.slice(3)) <= from));
+    if (from === 0) return { from, kept, why: 'starts again at run1' };
+    const at = from < blocks.length ? `resumes at run${from + 1}` : `resumes after run${from}, the last block: the checks run again`;
+    return { from, kept, why: `${at} (${list(from)} done, exit 0)` };
   }
 
   /** The job file: from the last read, or retained while it has been missing from fewer than two reads. */
@@ -449,6 +519,8 @@ export class Runner {
   }
 
   private rcFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.sh.rc`); }
+  /** The unit's memory.events `oom_kill` line, written by the wrapper before the exit code (D365). */
+  private oomFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.sh.oom`); }
   logFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.log`); }
 
   /**
@@ -479,6 +551,7 @@ export class Runner {
       return true;
     }
     if (rc === 0) {
+      if (step.phase === 'commands') r.blocksDone = { ...(r.blocksDone ?? {}), [step.name]: { rc: 0, at: this.sys.now(), sha: blockSha(step.block ?? '') } };
       r.stepIndex++;
       this.save(r);
       return true;
@@ -488,9 +561,27 @@ export class Runner {
       this.memoryStop(r, `step ${step.name} was killed without an exit code (oomd or the OOM killer?)`);
       return true;
     }
+    // SIGKILL's exit code, and evidence of an OOM kill in the unit: a memory stop, retried, not a failure (D365).
+    const oom = OOM_EXIT_CODES.has(rc) ? this.oomEvidence(r, step) : null;
+    if (oom) {
+      this.memoryStop(r, `step ${step.name} exited ${rc} after an OOM kill (${oom})`);
+      return true;
+    }
     this.writeOut(r, 'failure.txt', `step ${step.name} exited ${rc}\n\n${this.tail(this.logFile(r, step), 60)}`);
     this.finish(r, 'failed', `${step.phase === 'pilot' ? 'pilot: ' : step.phase === 'prepare' ? 'prepare: ' : ''}step ${step.name} exited ${rc}`, { exit: String(rc) });
     return true;
+  }
+
+  /**
+   * Evidence that the kernel's OOM killer killed a process in the step's unit (D365), or null: the
+   * wrapper's own read of the unit's memory.events (`oom_kill N`, N > 0) as the step ended, else (a
+   * wrapper from before D365, or a global OOM the counter missed) systemd's Result or the unit's journal.
+   */
+  oomEvidence(r: JobRun, step: Step): string | null {
+    let n = NaN;
+    try { n = Number(/^oom_kill\s+(\d+)/m.exec(fs.readFileSync(this.oomFile(r, step), 'utf8'))?.[1]); } catch { /* none */ }
+    if (n > 0) return `the unit's memory.events: oom_kill ${n}`;
+    return this.sys.unitOomEvidence(unitName(r.id, step.name), r.unitStartedAt);
   }
 
   /** A memory stop: waiting, retried later with one worker fewer — or failed, at the configured number of stops. */
@@ -666,7 +757,24 @@ export class Runner {
       if (r.heldFor !== hold) { r.heldFor = hold; this.sys.log(`${r.id}: ${step.name} waits: ${hold}`); this.save(r); }
       return false;
     }
+    // A step wider than the cores the other jobs leave (a narrow pilot_cores: pilot let one start beside
+    // this job) waits for them; nothing is stopped or killed (D365).
+    // The first commands step was sized at the pilot's end against the memory the others held then; one
+    // that waits for cores is sized again when it starts, so meanwhile it claims the job's full width.
+    if (r.cpu === 'heavy' && step.phase === 'commands' && r.sizing && r.stepIndex === r.steps.findIndex((s) => s.phase === 'commands') && this.coresWait(r, job, step)) r.sizing = null;
+    const need = this.coresWait(r, job, step);
+    if (need) {
+      const hold2 = `needs ${need.need} core(s) for ${step.name}; ${need.free} of ${need.total} free (it waits for them; nothing is stopped)`;
+      if (r.heldFor !== hold2) {
+        r.heldFor = hold2; r.waitingCores = need.need;
+        this.sys.log(`${r.id}: ${step.name} waits: ${hold2}`);
+        this.setStatus(r, 'running', { phase: this.phaseOf(r) });
+        this.save(r);
+      }
+      return false;
+    }
     r.heldFor = null;
+    r.waitingCores = null;
     const live = this.sys.liveUnits(`lab-${r.id}-`);
     if (live === null || live.length) {
       this.sys.log(`${r.id}: ${step.name} not started: ${live === null ? 'systemctl did not answer' : `${live.join(', ')} still alive`}`);
@@ -689,8 +797,10 @@ export class Runner {
     }
     fs.writeFileSync(u.script, script);
     const rc = this.rcFile(r, step);
+    const oom = this.oomFile(r, step);
     fs.rmSync(rc, { force: true });
-    fs.writeFileSync(`${u.script}.wrap`, `#!/usr/bin/env bash\nbash ${q(u.script)}\nrc=$?\nprintf '%s\\n' "$rc" > ${q(`${rc}.part`)} && mv ${q(`${rc}.part`)} ${q(rc)}\nexit "$rc"\n`);
+    fs.rmSync(oom, { force: true });
+    fs.writeFileSync(`${u.script}.wrap`, wrapScript(u.script, rc, oom));
     fs.appendFileSync(u.log, `==== ${r.id} ${step.name} started ${isoLocal(this.sys.now())} in unit ${u.unit}, ${this.stepWorkers(r, step)} worker(s), ${this.holding(r).cores} core(s), BLAS/OpenMP threads ${u.env.OMP_NUM_THREADS}${r.lane ? `, lane ${r.lane + 1}` : ''}\n`);
     const res = this.sys.startUnit(u);
     if (res.code !== 0) {
@@ -699,6 +809,7 @@ export class Runner {
     }
     r.unit = u.unit;
     r.unitStartedAt = this.sys.now();
+    r.lastWidth = this.stepWidth(r, step, job);
     this.setStatus(r, 'running', { phase: this.phaseOf(r) });
     this.save(r);
     return true;
@@ -711,8 +822,38 @@ export class Runner {
   heavyBudget(r: JobRun): number {
     const b = budgetOf(this.sys.machine(), this.cfg.budget);
     if (r.cpu === 'light') return b.lightGb;
-    const others = this.active().filter((x) => x.id !== r.id && x.cpu === 'heavy').reduce((a, x) => a + this.holding(x).memGb, 0);
+    const others = this.othersHolding(r).reduce((a, h) => a + h.memGb, 0);
     return Math.max(1, Math.round((b.heavyGb - others) * 10) / 10);
+  }
+
+  /**
+   * What the other heavy jobs hold, as `r` sees it before starting a step: their holdings, except a job
+   * later in order (by id) that is itself waiting for cores to widen (D365): it runs nothing, and the
+   * earlier job goes first, so two waiting jobs never wait for each other.
+   */
+  othersHolding(r: JobRun): Holding[] {
+    return this.active().filter((x) => x.id !== r.id && x.cpu === 'heavy' && !(x.waitingCores && idOrder(x.id, r.id) > 0)).map((x) => this.holding(x));
+  }
+
+  /**
+   * D365 (per-step widths): a heavy step needing more cores than the other heavy jobs leave waits, or null.
+   * Only when jobs run side by side; a job alone always has the machine.  While it waits, its holding is
+   * the waiting step's width, so the scheduler starts nothing new beside it (no starvation).
+   */
+  coresWait(r: JobRun, job: JobFile, step: Step): { need: number; free: number; total: number } | null {
+    if (r.cpu !== 'heavy') return null;
+    // Only a step WIDER than the one before it waits: the job already held those cores (or was admitted
+    // with them), so a job that is not widening never waits for one that is (no deadlock).  A run from
+    // before D365 has no lastWidth: it never waits, as before.
+    const need0 = this.stepWidth(r, step, job);
+    if (r.lastWidth == null || need0 <= r.lastWidth) return null;
+    const m = this.machineBudget();
+    if (!m.coSchedule) return null;
+    const others = this.othersHolding(r);
+    if (!others.length) return null;
+    const used = others.reduce((a, h) => a + h.cores, 0);
+    const need = need0;
+    return used + need > m.cores ? { need, free: Math.max(0, m.cores - used), total: m.cores } : null;
   }
 
   /** The workers a job may have: max_workers, and never more than its `cores:` width. */
@@ -1022,6 +1163,10 @@ export class Runner {
     if (r.peakRssGb !== null) f.peak_worker_rss_gb = (Math.round(r.peakRssGb * 100) / 100).toString();
     if (r.approved) f.approved = 'pilot approved; the runner skipped it';
     for (const x of r.restarts) f[x.how] = `${isoLocal(x.at)}: ${x.why}`;
+    const done = Object.entries(r.blocksDone ?? {}).sort((a, b) => Number(a[0].slice(3)) - Number(b[0].slice(3)));
+    if (done.length) f.blocks_done = done.map(([n, d]) => `${n} exit ${d.rc} at ${isoLocal(d.at)}`).join(', ');
+    if (r.heldFor && r.waitingCores) f.waits = r.heldFor;
+    if (r.aside?.copies) f.set_aside = `${r.aside.copies} cop${r.aside.copies === 1 ? 'y' : 'ies'}, ${(r.aside.bytes / 1024 ** 3).toFixed(2)} GB beside the job's clean: paths (never deleted: remove them by hand)`;
     r.events.slice(-30).forEach((e, i) => { f[`pressure-${i + 1}`] = `${e.at} ${e.kind}${e.workers !== null ? ` to ${e.workers} worker(s)` : ''}: ${e.why}`; });
     Object.assign(f, extra);
     const st: Status = { state: state as Status['state'], fields: f, order: ['reason', 'needs', 'runner', 'started', 'finished', 'phase', 'mtg-table', 'ForgeCoach', 'workers', 'peak_worker_rss_gb'] };
@@ -1059,11 +1204,16 @@ export class Runner {
         if (step.phase === 'commands') { r.cap = retryCap(r.backoff?.workers ?? r.workers); r.sizing = null; }
         r.restarts.push({ at: this.sys.now(), how: 'resumed', why: `the runner restarted during ${step.name}; it runs again${job.resumable ? ' and skips what is done' : ' (a pilot is short)'}${step.phase === 'commands' ? `, at most ${r.cap} worker(s)` : ''}` });
       } else {
-        const moved = this.cleanAside(r, job);
-        r.cap = step.phase === 'commands' ? retryCap(r.backoff?.workers ?? r.workers) : r.cap;
+        // A non-resumable job's commands block died with the runner: it starts again at that block (D365),
+        // after prepare, its pilot passed; what that block (and those after it) make is moved aside.
+        const resume = this.resumeBlock(job, this.doneBlocks(r));
+        const moved = this.cleanAside(r, job, resume.from);
+        r.cap = retryCap(r.backoff?.workers ?? r.workers);
+        r.steps = this.stepsFor(job, true, resume.from);
+        r.blocksDone = resume.kept;
         r.stepIndex = 0;
         r.sizing = null;
-        r.restarts.push({ at: this.sys.now(), how: 'restarted', why: `the runner restarted during ${step.name}; the job is not resumable, so it starts again from the top${moved.length ? ` (moved aside: ${moved.join(', ')})` : ''}` });
+        r.restarts.push({ at: this.sys.now(), how: 'restarted', why: `the runner restarted during ${step.name}; the job is not resumable, so it ${resume.from ? resume.why.replace(/^resumes (at|after)/, 'starts again $1') : 'starts again from the top'}${moved.length ? ` (moved aside: ${moved.join(', ')})` : ''}` });
       }
       this.setStatus(r, 'running', { phase: this.phaseOf(r) });
       this.save(r);
@@ -1080,34 +1230,60 @@ export class Runner {
     }
   }
 
-  /** `clean:` paths moved to `.restart-<time>-<name>` beside them, never deleted; only under the job's checkout's var/. */
-  cleanAside(r: JobRun, job: JobFile): string[] {
+  /**
+   * The clean: paths a restart at `fromBlock` (0-based) moves aside: from run1, the header's and every
+   * block's; from a later block, that block's and the ones after it (D365).
+   */
+  cleanPaths(job: JobFile, fromBlock = 0): string[] {
+    const blocks = (job.commands?.blockClean ?? []).filter((_, i) => i >= fromBlock).flat();
+    return [...new Set([...(fromBlock === 0 ? job.clean : []), ...blocks])];
+  }
+
+  /**
+   * `clean:` paths moved to `.restart-<time>-<name>` beside them, NEVER deleted (D365; the job README's
+   * promise); only under the job's checkout's var/.  Their disk use is in STATUS (`set_aside:`).
+   */
+  cleanAside(r: JobRun, job: JobFile, fromBlock = 0): string[] {
     const cwd = this.cwdOf(r, job);
     const moved: string[] = [];
     const stamp = isoLocal(this.sys.now()).replace(/[:]/g, '').slice(0, 17);
-    for (const c of job.clean) {
+    for (const c of this.cleanPaths(job, fromBlock)) {
       for (const p of expandGlob(cwd, c)) {
         const rel = path.relative(cwd, p);
         if (!rel.startsWith('var/') || rel.includes('..')) continue;
         // A dot name: the job's own globs (night-*) never match it again.
-        fs.renameSync(p, path.join(path.dirname(p), `.restart-${stamp}-${path.basename(p)}`));
+        let dest = path.join(path.dirname(p), `.restart-${stamp}-${path.basename(p)}`);
+        for (let k = 2; fs.existsSync(dest); k++) dest = path.join(path.dirname(p), `.restart-${stamp}.${k}-${path.basename(p)}`);
+        fs.renameSync(p, dest);
         moved.push(rel);
-        this.pruneAside(path.dirname(p), path.basename(p));
       }
     }
+    if (this.cleanPaths(job, 0).length) r.aside = this.asideUsage(r, job);
     return moved;
   }
 
-  /** Keep the two newest `.restart-*-<name>` copies beside a cleaned path; older ones go (inside var/ only). */
-  pruneAside(dir: string, name: string, keep = 2): void {
-    let ents: string[] = [];
-    try { ents = fs.readdirSync(dir); } catch { return; }
-    const old = ents.filter((e) => e.startsWith('.restart-') && e.endsWith(`-${name}`)).sort().reverse().slice(keep);
-    for (const e of old) {
-      const p = path.join(dir, e);
-      if (!path.relative(this.cfg.labRoot, p).split(path.sep).includes('var')) continue;
-      fs.rmSync(p, { recursive: true, force: true });
+  /** Every `.restart-*` copy beside any of the job's clean: paths (the header's and every block's), and their bytes. */
+  asideUsage(r: JobRun, job: JobFile): { copies: number; bytes: number } {
+    const cwd = this.cwdOf(r, job);
+    let copies = 0, bytes = 0;
+    const seen = new Set<string>();
+    for (const c of this.cleanPaths(job, 0)) {
+      const base = path.basename(c);
+      const re = new RegExp(`^\\.restart-[0-9T-]+(?:\\.\\d+)?-${base.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]')}$`);
+      const dirs = path.dirname(c) === '.' ? [cwd] : expandGlob(cwd, path.dirname(c));
+      for (const d of dirs) {
+        let ents: string[] = [];
+        try { ents = fs.readdirSync(d); } catch { continue; }
+        for (const e of ents) {
+          const p = path.join(d, e);
+          if (!re.test(e) || seen.has(p)) continue;
+          seen.add(p);
+          copies++;
+          bytes += diskBytes(p);
+        }
+      }
     }
+    return { copies, bytes };
   }
 
   /**
@@ -1505,6 +1681,35 @@ ${keep.trimEnd()}
       this.writeOut(r, `${step.name}.log`, (len < st.size ? `[... the first ${st.size - len} bytes are in var/runner on the PC]\n` : '') + buf.toString('utf8'));
     } catch { /* no log */ }
   }
+}
+
+/**
+ * A step's wrapper: runs the script, then -- still inside the unit's cgroup, before the exit code that says the
+ * step ended -- copies the unit's memory.events `oom_kill` line beside it (D365: a step whose java was killed by
+ * the OOM killer exits 137 and is a memory stop, not a failure), then writes the exit code.  A read that fails
+ * writes nothing; the exit code is written whatever happens.
+ */
+export function wrapScript(script: string, rc: string, oom: string): string {
+  return `#!/usr/bin/env bash
+bash ${q(script)}
+rc=$?
+cg=$(sed -n 's/^0:://p' /proc/self/cgroup 2>/dev/null)
+if [ -n "$cg" ] && [ -r "/sys/fs/cgroup$cg/memory.events" ]; then grep '^oom_kill ' "/sys/fs/cgroup$cg/memory.events" > ${q(`${oom}.part`)} 2>/dev/null && mv ${q(`${oom}.part`)} ${q(oom)} || rm -f ${q(`${oom}.part`)}; fi
+printf '%s\\n' "$rc" > ${q(`${rc}.part`)} && mv ${q(`${rc}.part`)} ${q(rc)}
+exit "$rc"
+`;
+}
+
+/** Bytes under a path (files' sizes, symlinks not followed); 0 when it is gone. */
+export function diskBytes(p: string): number {
+  let st: fs.Stats;
+  try { st = fs.lstatSync(p); } catch { return 0; }
+  if (!st.isDirectory()) return st.isFile() ? st.size : 0;
+  let n = 0;
+  let ents: string[] = [];
+  try { ents = fs.readdirSync(p); } catch { return 0; }
+  for (const e of ents) n += diskBytes(path.join(p, e));
+  return n;
 }
 
 /** The thread-pool variables the runner sets in every step's unit to the step's width. */

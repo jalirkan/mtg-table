@@ -104,9 +104,21 @@ systemd-run --user --unit=lab-J003-run1 --slice=forgecoach-lab.slice --collect -
 ```
 
 The wrapper runs the step's script (`bash -eo pipefail`) and writes its exit code to
-`<step>.sh.rc`. The runner polls the unit. When the unit ends, it reads the exit code, or
-finds none: the unit was killed from outside (oomd, the kernel, a reboot), which the
-runner treats as a memory stop. `tools/runner.sh plan J0NN` prints all of it.
+`<step>.sh.rc`. Just before that, still inside the unit's cgroup, it copies the `oom_kill`
+line of the unit's `memory.events` to `<step>.sh.oom`. The runner polls the unit. When the
+unit ends, it reads the exit code, or finds none: the unit was killed from outside (oomd,
+the kernel, a reboot), which the runner treats as a memory stop. `tools/runner.sh plan
+J0NN` prints all of it.
+
+**An OOM kill inside a step is a memory stop too** (D365). When the kernel kills one
+process of a step (a JVM over the unit's `MemoryMax`), the script usually goes on to exit
+137 (128 + SIGKILL), and the wrapper writes that exit code. An exit code of 137 or 9 is
+taken as a memory stop, retried like any other, when there is evidence of an OOM kill:
+`oom_kill` above 0 in `<step>.sh.oom`, or, for a unit whose wrapper predates D365,
+systemd's `Result=oom-kill` or a line of the unit's journal (`journalctl --user -u
+lab-<id>-<step>`) saying a process was killed by the OOM killer. Without that evidence, a
+137 is a failure as before (someone's `kill -9`). Any other exit code is a failure, OOM
+kill or not.
 
 The steps are: `prepare` (clone if needed, fetch, `checkout --force --detach <ref>`,
 `make-forge-home.sh` once, `bridge/build.sh`, and `npm ci` when ForgeCoach's lock file
@@ -147,8 +159,30 @@ Jobs side by side therefore share `var/` and must not write the same paths.
 
 **Sizing beside others.** A job started beside others is sized against the memory budget less
 what the others reserve, so it can get a worker fewer than it would alone. A job is admitted at
-its header width; a later block of a running job that is wider than what is free is still
-started (a step never waits for cores), so put a job's wide blocks first.
+its header width.
+
+**Per-step widths: a narrow pilot (D365).** `pilot_cores: N` in the header is the width of
+every `## Pilot` step (a pilot block's own `cores:` line wins), and `prepare_cores: N` that of
+`prepare`; absent, both are the job's width, as before. While the job is in that step the runner
+counts only that width toward co-scheduling, so a narrow job can be admitted beside it: J050's
+pilot ran 2 JVMs for 45+ minutes while the job reserved 7 cores and the PC sat at load 2 of 16.
+When the job reaches a step wider than the cores the other heavy jobs leave (its first
+`## Commands` block, or any block wider than the one before it), the step **waits** for them:
+nothing is stopped or killed. While it waits:
+
+- it holds the waiting step's full width, so the scheduler starts nothing new beside it: the
+  starvation rule above, applied to a job already running (STATUS `waits: needs 7 core(s) for
+  run1; 5 of 8 free …`);
+- a first `## Commands` block sized at the pilot's end is sized again when it starts, against
+  the memory the others leave then, so a short wait does not cost it workers for the whole run;
+- of two jobs waiting to widen, the earlier (by id) goes first: a later waiting job runs nothing
+  and does not count against it, so the two never wait for each other.
+- a job's step that is no wider than its previous step (or, for its first, than the width it
+  was admitted at) never waits: it already held those cores. So a job started beside a narrow
+  pilot never waits for the job whose main step is waiting.
+
+Before D365 a wider later block started at once and could briefly crowd a job beside it; it now
+waits instead. A job alone never waits.
 
 **Thread pools.** Every step's unit sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
 `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS` to the step's width:
@@ -200,7 +234,7 @@ reads `/proc/pressure/memory` (some avg10, %), the swap-in rate (`pswpin`), and 
 | Condition | Action |
 |---|---|
 | some avg10 ≥ 10%, swap-in ≥ 2000 pages/s, or the unit at 95% of its `MemoryMax`, 2 samples running | one worker fewer. The next drop waits until this one took effect (the unit's Java processes fell to the new cap, since a worker leaves only when its game ends) or 5 minutes, and never comes sooner than 1 minute. At 1 worker, pause new games |
-| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +15 min, `workers_cap` one fewer. The retry skips the passed pilot and checks out the same commits. The third memory stop fails the job |
+| some avg10 ≥ 40%, or the unit at 95% of its `MemoryMax`, 3 samples, with nothing gentler left (or 12 samples whatever) | stop the job (TERM): `waiting`, `memory: …`, `retry_after` +15 min, `workers_cap` one fewer. The retry skips the passed pilot and the `## Commands` blocks that finished (below), and checks out the same commits. The third memory stop fails the job |
 | some avg10 < 2% and swap-in < 100/s for 2 minutes | lift a pause, then one worker back (at most one per 5 minutes, never above the sized count) |
 
 Every event goes to STATUS (`pressure-<n>:`), `events.jsonl` and `status.json`
@@ -261,10 +295,40 @@ restart:
 - a step that ended while the runner was down is read normally. A unit without an exit
   code is taken as killed only once systemd says it is unloaded (`LoadState=not-found`);
 - a step that died with the runner: if the job is resumable, the step runs again
-  (`resumed:`), at one worker fewer. Otherwise the job starts again from `prepare`
-  (`restarted:`), after its `clean:` paths (under `var/` only) are moved aside to
-  `.restart-<time>-<name>`. The job's globs never match those, and only the two newest
-  copies of each are kept.
+  (`resumed:`), at one worker fewer. Otherwise the job starts again (`restarted:`): from
+  `prepare`, then at the block that died (below), after the `clean:` paths that block owns
+  (under `var/` only) are moved aside to `.restart-<time>-<name>`. The job's globs never
+  match those.
+
+**A retry starts at the block that was stopped** (D365). Every `## Commands` block that
+finishes is recorded in the job's `run.json` (`blocksDone`: its exit code, when, and a hash
+of its text) and in STATUS (`blocks_done: run1 exit 0 at …`). A retry after a memory stop or
+`tools/runner.sh stop`, and a restart of a non-resumable job, run `prepare` and then begin
+at the first block that is not done, skipping the passed pilot and the finished blocks. A
+block the job file has changed since it ran counts as not done, and so does every block
+after it. A `run.json` written by a runner from before D365 has no `blocksDone`; the blocks
+before the step it stopped at are taken as done (a step only advances on exit 0). This is
+what makes splitting a job worthwhile: an encode in one block and a fit in the next means a
+stop during the fit never runs the encode again.
+
+What a non-resumable retry moves aside depends on where it starts:
+
+- from `run1`: the header's `clean:` and every block's;
+- from a later block: only the `clean:` lines written before that block and the blocks after
+  it (`clean:` on its own line before a fenced block in `## Commands`, like `cores:`). The
+  header's `clean:` is left alone, since it may hold what the finished blocks made.
+
+A job whose only `clean:` is the header's (every job file written before D365) cannot say
+which block made which path, so a retry of it still starts from `run1`, with every `clean:`
+path moved aside, as before. To get the resume, give each block its own `clean:` line.
+A resumable job is never cleaned; its stopped block runs again and its tools skip what is
+done.
+
+**Moved aside, never deleted** (D365). The runner never deletes a `.restart-*` copy (the
+job README's promise). STATUS says what they hold: `set_aside: 3 copies, 12.40 GB beside
+the job's clean: paths (never deleted: remove them by hand)`, counted over every copy beside
+any of the job's `clean:` paths. Remove them by hand once you have looked:
+`ls -a var/…; rm -rf var/…/.restart-*`.
 
 **Code versions (D341).** The cube lab's `run`, `evolve` and `selfplay` refuse to resume a
 folder made by other code unless given `--allow-version-change`. A runner restart resumes a
@@ -448,7 +512,15 @@ In the cloud container (4 shared cores, no systemd user session):
   only one read; a script that still names Justin's checkout; a collected `STATUS`; globs
   with `[`; the sizing floor and the pilot cap; control detection; three memory stops
   failing a job, with the retries on the pinned commit; `approve` failing loudly; `sh:`
-  metrics in the slice; and stale git locks. The public-copy tests assert that no card name,
+  metrics in the slice; and stale git locks. Since D365: a memory-stop or `stop` retry, and
+  a restart, starting at the stopped block with the finished blocks skipped (also from a
+  pre-D365 `run.json`, and not past a block the job file changed); per-block `clean:` moving
+  aside only the re-run blocks' paths; an old job file with only a job-wide `clean:`
+  retrying from `run1` as before; `.restart-*` copies all kept, with their disk use in
+  STATUS; a `pilot_cores:` pilot letting a narrow job start beside it, its main step waiting
+  (holding its full width, so a job that would fit the cores really free does not start) and
+  starting when they are free; two jobs waiting to widen, the earlier going first; and a step exiting 137 or 9 after an OOM kill (the wrapper's `memory.events`, or
+  the fake systemd's journal line) stopped for memory, while 137 without evidence fails. The public-copy tests assert that no card name,
   e-mail address, host name or presence event survives. The cube-lab pool runs under the
   control file with a fake `java`, and the ladder's `drive` with a fake engine.
 - On Forge 2.0.14, one JVM at a time, 14 games in all: `ai-bench play` killed after 2 of 4
@@ -459,5 +531,7 @@ In the cloud container (4 shared cores, no systemd user session):
 - `tools/runner.sh plan` against the real `pc-jobs`, cloning from GitHub.
 
 Only the PC can show the systemd half: real units, the slice's limits, oomd, the measured
-peak, the backoff under real pressure, and adoption across a service restart. Job
+peak, the backoff under real pressure, and adoption across a service restart. That includes
+D365's OOM evidence: the wrapper's read of a real unit's `memory.events` and the journal's
+wording on the PC's systemd were not seen in the container (no systemd user session there). Job
 `tools/runner/jobs/J010-runner-shakedown.md` does that, with a few steps by hand.
