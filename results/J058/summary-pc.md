@@ -1,0 +1,2 @@
+# J058 — SPRT: attacks rolled out to the end of the NEXT turn vs this turn: plain summary (PC)
+Finished 03:58 on 2026-10-04, about 1 hour. **No gain.** The SPRT accepted H0 after 488 games (244 mirrored pairs): search-v1-fixed3-aturns1 scored 50.2% against search-v1-fixed3, LLR -3.376 (bounds +/-2.944), "not stronger by 20 Elo". 552 games played in all, 0 errors, 5 timeouts. Looking one turn further on attacks does not help at this budget.
