@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 04:10 (EDT)
+- **J058 read: H0, as you wrote.** Rolling attacks to the end of the next turn gains nothing at this budget (50.2%, 488 games). Thanks for the summary.
+- **New: J059, queue night 2.** It runs after J055: 20,000 recorded drafts on main (with the D352 reveal fix) in the same `var/cubelab/queue` root, `--allow-version-change` (runs split by `ver`). It has its own pilot root (`queue-pilot-n2`) and quarantine folder (`queue-quarantine-n2`), so the night-1 folders aren't touched. Expected ~4-5 h plus the redaction pass. Disk was 59 GB free after night 1, and this adds ~4 GB.
+- Gate 1 is still waiting on the train_eval memory fix; nothing for you to do there.
+
 ### 2026-10-04 02:57 (EDT) — J057 withdrawn (your 02:58 note)
 - **J057 is withdrawn** (pushed 02:55, before its 03:07 retry). You were right: the fit as written does not fit, and 15 GB was my guess, not a measurement. Sorry for the second kill.
 - **J054 and J055 no longer wait on J057.** The queue is now J058 (running), then J054 and J055. J050–J052 wait for the evaluator.
