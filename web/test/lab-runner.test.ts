@@ -41,6 +41,7 @@ import { decide, DEFAULT_BACKOFF, initialBackoff, parsePressure, retryCap, type 
 import { controlReader, parseControl, readControl, writeControl } from '../../tools/runner/control.ts';
 import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
+import { followupMessage, ledgerCheckLines, ledgerEntry, ledgerKeys, ledgerMarkdown, ledgerWarnings, withMessages } from '../../tools/runner/ledger.ts';
 import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubelabQueue, draftStats, eachCompleteLine, expandGlob, ladder, lines, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
 import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
 import { DEFAULT_CONFIG, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, type RunnerConfig } from '../../tools/runner/runner.ts';
@@ -1987,4 +1988,168 @@ test('runner: a running job publishes its live metrics (headline first), its mem
   assert.equal(job.memGb, 2);
   assert.deepEqual(job.cubes, []);
   assert.ok(!JSON.stringify(job).includes('lab-J061'), 'no unit name');
+});
+
+// ------------------------------------------------------------------ the decision ledger (D366)
+
+const LEDGER_LINES = `decides: promote evaluator v1 to the search (gate 2)
+hypothesis: the evaluator's leaf ranks options better than the hand leaf, because it was fitted on outcomes
+rule: D354 gate 2 (gates.py REGRET_RULE)
+`;
+/** NEW_JOB as another id, with the ledger's lines (or others) in its header. */
+const ledgerJob = (id: string, extra: string): string => NEW_JOB.replace('id: J010', `id: ${id}`).replace('headline: n, final.w\n', `headline: n, final.w\n${extra}`);
+
+test('ledger: decides, hypothesis, rule and followup parse; older files carry none; a bad followup is an error', () => {
+  const j = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J021-next.md, morning-read\n`), parse);
+  assert.deepEqual(j.errors, []);
+  assert.equal(j.ledger.decides, 'promote evaluator v1 to the search (gate 2)');
+  assert.match(j.ledger.hypothesis ?? '', /^the evaluator's leaf/);
+  assert.equal(j.ledger.rule, 'D354 gate 2 (gates.py REGRET_RULE)');
+  assert.deepEqual(j.ledger.followups, [{ kind: 'job', path: 'jobs/J021-next.md', id: 'J021' }, { kind: 'template', name: 'morning-read' }]);
+  // None of them: nulls and no follow-ups (every pc-jobs file parses without errors: the test above).
+  assert.deepEqual(parseJobFile('jobs/J010-x.md', NEW_JOB, parse).ledger, { decides: null, hypothesis: null, rule: null, followups: [] });
+  // A `rule:` in a section is prose, not the header's.
+  assert.equal(parseJobFile('jobs/J010-x.md', `${NEW_JOB}\nrule: not a header\n`, parse).ledger.rule, null);
+  for (const bad of ['../J021.md', 'jobs/../J021.md', 'J021-next.md', '/tmp/x', 'jobs/J020-x.md']) {
+    const b = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `followup: ${bad}\n`), parse);
+    assert.equal(b.errors.length, 1, `${bad}: ${b.errors.join('; ')}`);
+    assert.match(b.errors[0] ?? '', /^followup: /);
+  }
+});
+
+test('ledger: check prints the four lines and warns about a heavy job with no decides:, a decides: with no rule:, and a follow-up that does not wait', () => {
+  const heavy = parseJobFile('jobs/J020-x.md', NEW_JOB.replace('id: J010', 'id: J020'), parse);
+  assert.deepEqual(ledgerWarnings(heavy), ['a heavy job with no decides: line: name the decision its result informs']);
+  assert.deepEqual(ledgerWarnings(parseJobFile('jobs/J020-x.md', NEW_JOB.replace('cpu: heavy', 'cpu: light'), parse)), []);
+  const noRule = parseJobFile('jobs/J020-x.md', ledgerJob('J020', 'decides: something\n'), parse);
+  assert.match(ledgerWarnings(noRule).join('\n'), /decides: without rule:/);
+  const full = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J021-next.md, jobs/J022-other.md, morning-read\n`), parse);
+  const beside: Record<string, string> = { 'jobs/J021-next.md': 'id: J021\nafter: J020\ncpu: light\n', 'jobs/J022-other.md': 'id: J022\ncpu: light\n' };
+  const lines = ledgerCheckLines(full, (p) => beside[p] ?? null, (n, t) => parseJobFile(n, t, parse));
+  assert.equal(lines[0], 'decides: promote evaluator v1 to the search (gate 2)');
+  assert.equal(lines[3], 'followup: jobs/J021-next.md, jobs/J022-other.md, template morning-read');
+  assert.deepEqual(lines.slice(4), [
+    'note: followup morning-read is a template: when J020 is done, the runner asks the cloud session to write and post it (HEARTBEAT ## Messages)',
+    'WARNING: followup: jobs/J022-other.md is beside this file but has no after: J020; it may start before J020 is done',
+  ]);
+  // The command itself, on a pc-jobs-like folder: the follow-up beside it is read; exit 0 (warnings are not errors).
+  const dir = tmp('ledger-check');
+  fs.mkdirSync(path.join(dir, 'jobs'));
+  fs.writeFileSync(path.join(dir, 'jobs', 'J020-x.md'), ledgerJob('J020', 'followup: jobs/J022-other.md\n').replace(LEDGER_LINES, ''));
+  fs.writeFileSync(path.join(dir, 'jobs', 'J022-other.md'), beside['jobs/J022-other.md'] as string);
+  const cli = spawnSync(process.execPath, [path.join(REPO, 'tools/runner/cli.ts'), 'check', path.join(dir, 'jobs', 'J020-x.md'), '--state', path.join(dir, 'state')], { encoding: 'utf8' });
+  assert.equal(cli.status, 0, cli.stderr);
+  assert.match(cli.stdout, /^decides: -$/m);
+  assert.match(cli.stdout, /^WARNING: a heavy job with no decides: line/m);
+  assert.match(cli.stdout, /^WARNING: followup: jobs\/J022-other\.md is beside this file but has no after: J020/m);
+});
+
+test('ledger: entries, the markdown, the follow-up message and the Messages section', () => {
+  const ledger = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J021-next.md, jobs/J022-q.md, morning-read\n`), parse).ledger;
+  const base = { id: 'J020', title: 'A\ntitle', ledger, finished: '2026-10-05T03:00:00-07:00', headlineKeys: ['n', 'final.w', 'gone'], numbers: { n: 3 }, metrics: { 'final.w': 0.12345678, gone: 'x' }, commits: { 'mtg-table': 'abc1234' }, posted: new Map([['jobs/J022-q.md', ['J020']]]) };
+  const done = ledgerEntry({ ...base, state: 'done', reason: '' })!;
+  assert.equal(done.key, 'J020@2026-10-05T03:00:00-07:00');
+  assert.equal(done.title, 'A title');
+  assert.deepEqual(done.headline, { n: 3, 'final.w': 0.12345678 });
+  assert.deepEqual(done.followups.map((f) => f.state), ['ready', 'queued', 'ready']);
+  assert.equal(ledgerEntry({ ...base, state: 'failed', reason: 'aborted: n >= 3 (n = 3)' })?.outcome, 'aborted');
+  const failed = ledgerEntry({ ...base, state: 'failed', reason: 'check: n == 4 (n = 3)' })!;
+  assert.equal(failed.outcome, 'failed');
+  assert.deepEqual(failed.followups.map((f) => f.state), ['not-due', 'queued', 'not-due']);
+  assert.equal(followupMessage(failed), null);
+  assert.equal(ledgerEntry({ ...base, state: 'waiting', reason: 'memory: x' }), null);
+  assert.equal(ledgerEntry({ ...base, state: 'skipped', reason: 'gone' }), null);
+  const md = ledgerMarkdown(done);
+  assert.match(md, /^## J020 DONE: A title\n/);
+  assert.match(md, /^- rule: D354 gate 2 \(gates\.py REGRET_RULE\)$/m);
+  assert.match(md, /^- headline: n 3, final\.w 0\.1235$/m);
+  assert.match(md, /^- follow-up: jobs\/J022-q\.md: on pc-jobs with after: on this job/m);
+  assert.match(ledgerMarkdown({ ...done, decides: null, rule: null }), /^- decides: \(no decides: line in the job file\)$/m);
+  const msg = followupMessage(done)!;
+  assert.match(msg, /^- FOLLOW-UP READY \[J020@2026-10-05T03:00:00-07:00\] .*J020 is done; post jobs\/J021-next\.md to pc-jobs; write and post the template morning-read\. It decides: promote/);
+  // Under the heading, once; a section is added when there is none.
+  const hb = '# Heartbeat\n\n- time: x\n\n## Messages\n\nThe notes.\n- an older note\n';
+  const once = withMessages(hb, [msg]);
+  assert.equal(once, `# Heartbeat\n\n- time: x\n\n## Messages\n\n${msg}\n\nThe notes.\n- an older note\n`);
+  assert.equal(withMessages(once, [msg]), once);
+  assert.match(withMessages('# Heartbeat\n', [msg]), /\n## Messages\n\n- FOLLOW-UP READY/);
+  assert.deepEqual([...ledgerKeys(`{"key":"a"}\n{"key":"b"}\ntorn{\n`)], ['a', 'b']);
+});
+
+test('runner: the ledger on pc-results at each job end (done, failed), follow-ups announced or already queued; never on lab-status, never twice', () => {
+  const w = world({
+    // Done; one follow-up not on pc-jobs and a template: FOLLOW-UP READY.
+    'J020-done.md': ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J029-later.md, morning-read\n`),
+    // Fails its pilot: its follow-up is not due, and nothing is asked.
+    'J021-fails.md': ledgerJob('J021', 'decides: whether J021 passes\nrule: n == 4\nfollowup: jobs/J028-never.md\n').replace('check: n == 3', 'check: n == 4'),
+    // Done, its follow-up already posted with after: on it: nothing needed; the follow-up then runs (no ledger lines: an old-style job).
+    'J022-first.md': ledgerJob('J022', `${LEDGER_LINES}followup: jobs/J023-next.md\n`),
+    'J023-next.md': NEW_JOB.replace('id: J010', 'id: J023').replace('cpu: heavy', 'cpu: light\nafter: J022'),
+  });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  for (let i = 0; i < 4; i++) { r.tick(); w.sys.t += 60_000; }
+  assert.deepEqual(['J020', 'J021', 'J022', 'J023'].map((id) => r.runs.get(id)?.outcome?.state), ['done', 'failed', 'done', 'done'], w.sys.lines.join('\n'));
+  const jsonl = show(w.mtg, 'pc-results:ledger.jsonl').trim().split('\n').map((l) => JSON.parse(l) as { key: string; id: string; outcome: string; decides: string | null; rule: string | null; reason: string; headline: Record<string, number>; summary: string; followups: Array<{ followup: string; state: string }>; commits: Record<string, string> });
+  assert.deepEqual(jsonl.map((e) => `${e.id} ${e.outcome}`).sort(), ['J020 done', 'J021 failed', 'J022 done', 'J023 done']);
+  const e20 = jsonl.find((e) => e.id === 'J020')!;
+  assert.equal(e20.decides, 'promote evaluator v1 to the search (gate 2)');
+  assert.equal(e20.rule, 'D354 gate 2 (gates.py REGRET_RULE)');
+  assert.deepEqual(e20.headline, { n: 3, 'final.w': 3 });
+  assert.equal(e20.summary, 'results/J020/summary.md');
+  assert.match(e20.commits['mtg-table'] ?? '', /^[0-9a-f]{7}$/);
+  assert.deepEqual(e20.followups, [{ followup: 'jobs/J029-later.md', state: 'ready' }, { followup: 'template morning-read', state: 'ready' }]);
+  const e21 = jsonl.find((e) => e.id === 'J021')!;
+  assert.match(e21.reason, /^pilot: n == 4/);
+  assert.deepEqual(e21.followups, [{ followup: 'jobs/J028-never.md', state: 'not-due' }]);
+  assert.deepEqual(jsonl.find((e) => e.id === 'J022')?.followups, [{ followup: 'jobs/J023-next.md', state: 'queued' }]);
+  assert.equal(jsonl.find((e) => e.id === 'J023')?.decides, null);
+  const md = show(w.mtg, 'pc-results:LEDGER.md');
+  assert.match(md, /^# Decision ledger\n/);
+  assert.match(md, /^## J021 FAILED: A test job, new format\n[\s\S]*?^- outcome: failed \(pilot: n == 4/m);
+  assert.match(md, /^## J023 DONE[\s\S]*?^- decides: \(no decides: line in the job file\)$/m);
+  // HEARTBEAT: one FOLLOW-UP READY line, J020's; the PC's message is kept.
+  const hb = show(w.mtg, 'pc-results:HEARTBEAT.md');
+  assert.deepEqual(hb.split('\n').filter((l) => l.includes('FOLLOW-UP READY')).map((l) => /\[(J\d+)@/.exec(l)?.[1]), ['J020']);
+  assert.match(hb, /J020 is done; post jobs\/J029-later\.md to pc-jobs; write and post the template morning-read\./);
+  assert.match(hb, /hello from the PC/);
+  // Never public.
+  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'status.json');
+  // More publishes add nothing; a deleted message is not written again.
+  const seed = w.seed;
+  git(seed, 'fetch', '--quiet', w.mtg, 'pc-results');
+  git(seed, 'checkout', '--quiet', '--force', '-B', 'pc-results', 'FETCH_HEAD');
+  fs.writeFileSync(path.join(seed, 'HEARTBEAT.md'), fs.readFileSync(path.join(seed, 'HEARTBEAT.md'), 'utf8').split('\n').filter((l) => !l.includes('FOLLOW-UP READY')).join('\n'));
+  git(seed, 'commit', '--quiet', '-am', 'posted J029');
+  git(seed, 'push', '--quiet', w.mtg, 'HEAD:refs/heads/pc-results');
+  for (let i = 0; i < 2; i++) { r.p.dirty = true; r.tick(); w.sys.t += 60_000; }
+  assert.equal(show(w.mtg, 'pc-results:ledger.jsonl').trim().split('\n').length, 4);
+  assert.ok(!show(w.mtg, 'pc-results:HEARTBEAT.md').includes('FOLLOW-UP READY'));
+  // A job that ended before the runner kept a ledger is never backfilled.
+  const bare = tmp('ledger-bare');
+  fs.writeFileSync(path.join(w.cfg.stateDir, 'ledger.json'), JSON.stringify({ since: w.sys.t, written: [] }));
+  assert.deepEqual(r.appendLedger(bare), []);
+  assert.ok(!fs.existsSync(path.join(bare, 'ledger.jsonl')));
+});
+
+test('runner: an aborted job is in the ledger as aborted, and asks for no follow-up', () => {
+  const w = world({ 'J024-x.md': ledgerJob('J024', `${LEDGER_LINES}followup: morning-read\n`).replace('abort: n > 100', 'abort: n >= 3') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release('lab-J024-prepare', 'ok');
+  r.tick();
+  w.sys.release('lab-J024-pilot1', 'ok');
+  r.tick();
+  w.sys.t += 61_000;
+  r.tick();
+  r.tick();
+  assert.equal(r.runs.get('J024')?.outcome?.state, 'failed');
+  const e = JSON.parse(show(w.mtg, 'pc-results:ledger.jsonl').trim()) as { outcome: string; reason: string; followups: unknown };
+  assert.equal(e.outcome, 'aborted');
+  assert.match(e.reason, /^aborted: n >= 3/);
+  assert.deepEqual(e.followups, [{ followup: 'template morning-read', state: 'not-due' }]);
+  assert.ok(!show(w.mtg, 'pc-results:HEARTBEAT.md').includes('FOLLOW-UP READY'));
+  assert.match(show(w.mtg, 'pc-results:LEDGER.md'), /^## J024 ABORTED: /m);
 });

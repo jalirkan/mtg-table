@@ -27,6 +27,10 @@
 //   public_title: Search AI bench    NEW: the title the PUBLIC status page may show (else the id only)
 //   public_est: ~3 h                 NEW: the estimate it may show (letters, digits, space , : ; ( ) + % ~ # & - only)
 //   public_cubes: yes                NEW: the public page may name the cube ids in its per-cube progress (else "cube 1", ...)
+//   decides: promote evaluator v1 (gate 2)   NEW (D366): the decision this job informs (the ledger, ledger.ts)
+//   hypothesis: ...                  NEW (D366): what we expect, and why
+//   rule: D354 gate 2 (gates.py REGRET_RULE) NEW (D366): the pre-registered pass/fail rule, or a pointer to it
+//   followup: jobs/J062-x.md, morning-read   NEW (D366): what to post when this job is done (a pc-jobs file or a template name)
 //
 //   ## Pilot      fenced bash blocks run in order; `metrics:` and `check:` lines; `progress:`
 //   ## Commands   fenced bash blocks; `metrics:`, `check:` (final checks), `progress:`;
@@ -108,6 +112,8 @@ export interface JobFile {
   errors: string[];
   /** True when the pilot carries `check:` lines: the runner may go past it on its own. */
   machineChecked: boolean;
+  /** The decision ledger's lines (D366): `decides:`, `hypothesis:`, `rule:`, `followup:`; each optional. */
+  ledger: LedgerHeaders;
 }
 
 const KNOWN_REPOS = ['mtg-table', 'ForgeCoach'];
@@ -274,7 +280,10 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   const commands = sections.get('commands') ?? null;
   const repos = parseRepos(header.repos ?? '');
   if (!repos.length && (pilot?.blocks.length || commands?.blocks.length)) errors.push(`repos: names neither ${KNOWN_REPOS.join(' nor ')}`);
+  const { errors: ledgerErrors, ...ledger } = parseLedgerHeaders(header, id);
+  errors.push(...ledgerErrors);
   return {
+    ledger,
     id,
     file,
     title: header.title ?? id,
@@ -303,4 +312,44 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     errors,
     machineChecked: !!pilot && pilot.checks.length > 0,
   };
+}
+
+// ------------------------------------------------------------------ the decision ledger (D366)
+
+export type Followup =
+  | { kind: 'job'; path: string; id: string }
+  | { kind: 'template'; name: string };
+
+export interface LedgerHeaders {
+  decides: string | null;
+  hypothesis: string | null;
+  rule: string | null;
+  followups: Followup[];
+}
+
+/** A follow-up job file: a path under jobs/ on pc-jobs, `jobs/J###-name.md`. */
+const FOLLOWUP_JOB = /^jobs\/(J\d{3,})[A-Za-z0-9._-]*\.md$/;
+/** A named template the cloud session turns into a job: letters, digits, `.`, `_`, `-`; no slash, not a `.md` file. */
+const FOLLOWUP_TEMPLATE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+
+/** The ledger's header lines from a job file's header map (as parseJobFile keeps it), and the problems with them. */
+export function parseLedgerHeaders(header: Record<string, string>, ownId: string): LedgerHeaders & { errors: string[] } {
+  const errors: string[] = [];
+  const text = (k: string): string | null => {
+    const v = (header[k] ?? '').trim();
+    return v ? v : null;
+  };
+  const followups: Followup[] = [];
+  for (const raw of (header.followup ?? '').split(',').map((x) => x.trim()).filter(Boolean)) {
+    const job = FOLLOWUP_JOB.exec(raw);
+    if (job) {
+      if (job[1] === ownId) errors.push(`followup: "${raw}" is this job itself`);
+      else followups.push({ kind: 'job', path: raw, id: job[1] as string });
+    } else if (FOLLOWUP_TEMPLATE.test(raw) && !/\.md$/i.test(raw)) {
+      followups.push({ kind: 'template', name: raw });
+    } else {
+      errors.push(`followup: "${raw}" is neither a job file (jobs/J###-name.md) nor a template name (letters, digits, . _ -)`);
+    }
+  }
+  return { decides: text('decides'), hypothesis: text('hypothesis'), rule: text('rule'), followups, errors };
 }

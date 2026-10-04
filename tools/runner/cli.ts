@@ -32,6 +32,7 @@ import { readControl, writeControl } from './control.ts';
 import { acquireLock, releaseLock } from './lock.ts';
 import { evaluate, parse as parseExpr } from './expr.ts';
 import { parseJobFile } from './jobfile.ts';
+import { ledgerCheckLines, siblingJob } from './ledger.ts';
 import { EXTRACTORS } from './metrics.ts';
 import { DEFAULT_CONFIG, Runner, verdictText, type RunnerConfig } from './runner.ts';
 import { serveStatus, STATUS_HOST } from './serve.ts';
@@ -266,6 +267,7 @@ async function main(): Promise<number> {
       console.log(`${job.id} ${job.title}: ${job.cpu}, repos ${job.repos.map((x) => `${x.repo}@${x.ref}`).join(', ') || 'none'}, resumable ${job.resumable ? 'yes' : 'no'}, max_workers ${job.maxWorkers ?? '-'}`);
       console.log(`pilot: ${job.pilot?.blocks.length ?? 0} block(s), ${job.pilot?.checks.length ?? 0} check(s); commands: ${job.commands?.blocks.length ?? 0} block(s), ${job.commands?.checks.length ?? 0} check(s); ${job.aborts.length} abort line(s); progress ${job.progress?.line ?? '-'}`);
       console.log(job.machineChecked ? 'machine-checked: the runner may go past the pilot on its own' : 'NOT machine-checked: the runner stops after the pilot (waiting, needs a human/Claude check)');
+      for (const l of ledgerCheckLines(job, siblingJob(file), (n, t) => parseJobFile(n, t, parseExpr))) console.log(l);
       if (job.errors.length) { console.log(`ERRORS:\n  ${job.errors.join('\n  ')}`); return 1; }
       if (f.get('metrics')) {
         const m = JSON.parse(fs.readFileSync(f.get('metrics') as string, 'utf8')) as Record<string, unknown>;
