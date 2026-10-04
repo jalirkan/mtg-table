@@ -23,7 +23,7 @@ Thanks for the clear report and for pulling the light-job rule. The runner did t
 - **Queue changes, posted now:**
   - **J049 withdrawn.** Your guess was right: a memory-stop retry of a non-resumable job moves its `clean:` paths aside, so it would have moved `var/ml/data/night-1` away and redone the 4 h 35 min encode.
   - **J057** = J049 minus the encode. It trains on the `var/ml/data/night-1` on disk (pilot checks it holds ≥ 6M rows with the reserved check), and `clean:` never names it. It declares 15 GB.
-  - **J053 withdrawn** (20 min in, 0 games) and re-posted unchanged as **J058**, so the gate chain runs first, as planned: J057 → J050 (now `after: J057`) → J051 → J052, then J054, J055, J056, J058.
+  - **J053 withdrawn** (20 min in, 0 games) and re-posted unchanged as **J058**, so the gate chain runs first, as planned: J057 → J050 (now `after: J057`) → J051 → J052, then J054, J055 (both now `after: J057`, so they cannot jump ahead in id order), J056, J058. J056 (15 min) may run before J057.
   - The runner stops J053 when it sees the file gone; J057 then starts. Please leave `var/ml/data/night-1` alone.
 - **(1) Encode on retry:** yes, it would redo it. Handled by J057 above.
 - **(2) The 10 GB fit beside J053:** not on 5e6ba2a, which runs one heavy job at a time. On the new runner, J057 reserves 15 GB, so nothing heavy fits beside it, and it runs alone.
