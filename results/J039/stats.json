@@ -1,0 +1,7044 @@
+{
+ "gen": 1,
+ "drafts": 2000,
+ "seeds": [
+  3000001,
+  3002000
+ ],
+ "confirmSeeds": null,
+ "mean": 0.5,
+ "balance": {
+  "mean": 0.5,
+  "colours": [
+   {
+    "key": "U",
+    "decks": 1608,
+    "games": 4025,
+    "wins": 1951,
+    "rate": 0.48472049689440994,
+    "shrunk": 0.48479604449938196,
+    "ci": [
+     0.469,
+     0.5
+    ]
+   },
+   {
+    "key": "W",
+    "decks": 1317,
+    "games": 3292,
+    "wins": 1671,
+    "rate": 0.5075941676792224,
+    "shrunk": 0.5075483091787439,
+    "ci": [
+     0.491,
+     0.525
+    ]
+   },
+   {
+    "key": "B",
+    "decks": 990,
+    "games": 2475,
+    "wins": 1235,
+    "rate": 0.498989898989899,
+    "shrunk": 0.49899799599198397,
+    "ci": [
+     0.479,
+     0.519
+    ]
+   },
+   {
+    "key": "R",
+    "decks": 809,
+    "games": 2010,
+    "wins": 1034,
+    "rate": 0.5144278606965174,
+    "shrunk": 0.5142857142857142,
+    "ci": [
+     0.493,
+     0.536
+    ]
+   },
+   {
+    "key": "G",
+    "decks": 644,
+    "games": 1614,
+    "wins": 817,
+    "rate": 0.5061957868649318,
+    "shrunk": 0.5061199510403916,
+    "ci": [
+     0.482,
+     0.531
+    ]
+   }
+  ],
+  "pairs": [
+   {
+    "key": "WU",
+    "decks": 614,
+    "games": 1535,
+    "wins": 753,
+    "rate": 0.4905537459283388,
+    "shrunk": 0.4906752411575563,
+    "ci": [
+     0.466,
+     0.516
+    ]
+   },
+   {
+    "key": "UB",
+    "decks": 539,
+    "games": 1358,
+    "wins": 653,
+    "rate": 0.4808541973490427,
+    "shrunk": 0.4811320754716981,
+    "ci": [
+     0.454,
+     0.507
+    ]
+   },
+   {
+    "key": "UR",
+    "decks": 292,
+    "games": 723,
+    "wins": 363,
+    "rate": 0.5020746887966805,
+    "shrunk": 0.5020188425302826,
+    "ci": [
+     0.466,
+     0.538
+    ]
+   },
+   {
+    "key": "WR",
+    "decks": 285,
+    "games": 708,
+    "wins": 355,
+    "rate": 0.501412429378531,
+    "shrunk": 0.5013736263736264,
+    "ci": [
+     0.465,
+     0.538
+    ]
+   },
+   {
+    "key": "WB",
+    "decks": 217,
+    "games": 539,
+    "wins": 285,
+    "rate": 0.5287569573283859,
+    "shrunk": 0.5277280858676208,
+    "ci": [
+     0.487,
+     0.571
+    ]
+   },
+   {
+    "key": "WG",
+    "decks": 201,
+    "games": 510,
+    "wins": 278,
+    "rate": 0.5450980392156862,
+    "shrunk": 0.5433962264150943,
+    "ci": [
+     0.502,
+     0.588
+    ]
+   },
+   {
+    "key": "UG",
+    "decks": 163,
+    "games": 409,
+    "wins": 182,
+    "rate": 0.4449877750611247,
+    "shrunk": 0.44755244755244755,
+    "ci": [
+     0.398,
+     0.493
+    ]
+   },
+   {
+    "key": "BG",
+    "decks": 141,
+    "games": 347,
+    "wins": 169,
+    "rate": 0.48703170028818443,
+    "shrunk": 0.4877384196185286,
+    "ci": [
+     0.435,
+     0.539
+    ]
+   },
+   {
+    "key": "RG",
+    "decks": 139,
+    "games": 348,
+    "wins": 188,
+    "rate": 0.5402298850574713,
+    "shrunk": 0.5380434782608695,
+    "ci": [
+     0.488,
+     0.592
+    ]
+   },
+   {
+    "key": "BR",
+    "decks": 93,
+    "games": 231,
+    "wins": 128,
+    "rate": 0.5541125541125541,
+    "shrunk": 0.549800796812749,
+    "ci": [
+     0.49,
+     0.617
+    ]
+   }
+  ],
+  "themes": [
+   {
+    "key": "CTRL",
+    "decks": 640,
+    "games": 1605,
+    "wins": 770,
+    "rate": 0.4797507788161994,
+    "shrunk": 0.48,
+    "ci": [
+     0.455,
+     0.504
+    ]
+   },
+   {
+    "key": "AGG",
+    "decks": 577,
+    "games": 1419,
+    "wins": 755,
+    "rate": 0.5320648343904157,
+    "shrunk": 0.5316191799861014,
+    "ci": [
+     0.506,
+     0.558
+    ]
+   },
+   {
+    "key": "ART",
+    "decks": 492,
+    "games": 1250,
+    "wins": 644,
+    "rate": 0.5152,
+    "shrunk": 0.5149606299212598,
+    "ci": [
+     0.487,
+     0.543
+    ]
+   },
+   {
+    "key": "SPL",
+    "decks": 284,
+    "games": 705,
+    "wins": 335,
+    "rate": 0.475177304964539,
+    "shrunk": 0.47586206896551725,
+    "ci": [
+     0.439,
+     0.512
+    ]
+   },
+   {
+    "key": "ETB",
+    "decks": 247,
+    "games": 618,
+    "wins": 304,
+    "rate": 0.4919093851132686,
+    "shrunk": 0.49216300940438873,
+    "ci": [
+     0.453,
+     0.531
+    ]
+   },
+   {
+    "key": "GY",
+    "decks": 193,
+    "games": 488,
+    "wins": 224,
+    "rate": 0.45901639344262296,
+    "shrunk": 0.46062992125984253,
+    "ci": [
+     0.415,
+     0.503
+    ]
+   },
+   {
+    "key": "TOK",
+    "decks": 131,
+    "games": 325,
+    "wins": 161,
+    "rate": 0.49538461538461537,
+    "shrunk": 0.4956521739130435,
+    "ci": [
+     0.441,
+     0.549
+    ]
+   },
+   {
+    "key": "EVA",
+    "decks": 55,
+    "games": 138,
+    "wins": 70,
+    "rate": 0.5072463768115942,
+    "shrunk": 0.5063291139240507,
+    "ci": [
+     0.425,
+     0.589
+    ]
+   },
+   {
+    "key": "LND",
+    "decks": 33,
+    "games": 82,
+    "wins": 42,
+    "rate": 0.5121951219512195,
+    "shrunk": 0.5098039215686274,
+    "ci": [
+     0.406,
+     0.617
+    ]
+   },
+   {
+    "key": "LIFE",
+    "decks": 17,
+    "games": 39,
+    "wins": 23,
+    "rate": 0.5897435897435898,
+    "shrunk": 0.559322033898305,
+    "ci": [
+     0.434,
+     0.729
+    ]
+   },
+   {
+    "key": "SAC",
+    "decks": 7,
+    "games": 19,
+    "wins": 13,
+    "rate": 0.6842105263157895,
+    "shrunk": 0.5897435897435898,
+    "ci": [
+     0.46,
+     0.846
+    ]
+   },
+   {
+    "key": "FAT",
+    "decks": 4,
+    "games": 11,
+    "wins": 8,
+    "rate": 0.7272727272727273,
+    "shrunk": 0.5806451612903226,
+    "ci": [
+     0.434,
+     0.903
+    ]
+   },
+   {
+    "key": "RAMP",
+    "decks": 4,
+    "games": 9,
+    "wins": 5,
+    "rate": 0.5555555555555556,
+    "shrunk": 0.5172413793103449,
+    "ci": [
+     0.267,
+     0.811
+    ]
+   }
+  ]
+ },
+ "decision": {
+  "swaps": [],
+  "assessments": [
+   {
+    "name": "Acidic Slime",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1780, picked 779, first line 227, in 34 deck(s); on colour in 320 pool(s), played in 34 (0.11, CI 0.08–0.14); won 29 of 50 decisive games (0.58, CI 0.44–0.71 by deck, shrunk 0.56) vs mean 0.50; dead p 0.0e+0; rated 48.4, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 320,
+     "x": 34,
+     "rate": 0.10625,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Adeline, Resplendent Cathar",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1807, picked 1590, first line 1015, in 1125 deck(s); on colour in 1142 pool(s), played in 1125 (0.99, CI 0.98–0.99); won 956 of 1873 decisive games (0.51, CI 0.49–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Animate Dead",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1793, picked 1636, first line 1135, in 870 deck(s); on colour in 876 pool(s), played in 870 (0.99, CI 0.98–1.00); won 734 of 1488 decisive games (0.49, CI 0.47–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Arc Trail",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1802, picked 1342, first line 679, in 608 deck(s); on colour in 610 pool(s), played in 608 (1.00, CI 0.99–1.00); won 523 of 1021 decisive games (0.51, CI 0.48–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Arid Mesa",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1794, picked 1061, first line 462, in 183 deck(s); won 134 of 304 decisive games (0.44, CI 0.39–0.50 by deck, shrunk 0.44) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Avenger of Zendikar",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1788, picked 1185, first line 579, in 410 deck(s); on colour in 484 pool(s), played in 410 (0.85, CI 0.81–0.88); won 326 of 663 decisive games (0.49, CI 0.45–0.53 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Badlands",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1802, picked 945, first line 360, in 98 deck(s); won 76 of 147 decisive games (0.52, CI 0.44–0.60 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Baleful Strix",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1815, picked 994, first line 333, in 231 deck(s); on colour in 335 pool(s), played in 231 (0.69, CI 0.64–0.74); won 203 of 400 decisive games (0.51, CI 0.46–0.56 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Ball Lightning",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1794, picked 747, first line 222, in 44 deck(s); on colour in 316 pool(s), played in 44 (0.14, CI 0.10–0.18); won 48 of 86 decisive games (0.56, CI 0.45–0.66 by deck, shrunk 0.55) vs mean 0.50; dead p 0.0e+0; rated 47.9, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 316,
+     "x": 44,
+     "rate": 0.13924050632911392,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Baneslayer Angel",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1801, picked 946, first line 351, in 242 deck(s); on colour in 588 pool(s), played in 242 (0.41, CI 0.37–0.45); won 193 of 371 decisive games (0.52, CI 0.47–0.57 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Batterskull",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1785, picked 1070, first line 476, in 276 deck(s); on colour in 1070 pool(s), played in 276 (0.26, CI 0.23–0.28); won 257 of 491 decisive games (0.52, CI 0.48–0.57 by deck, shrunk 0.52) vs mean 0.50; dead p 6.3e-11; rated 49.7, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 1070,
+     "x": 276,
+     "rate": 0.25794392523364484,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 6.254785578363453e-11
+    }
+   },
+   {
+    "name": "Bayou",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1821, picked 832, first line 250, in 144 deck(s); won 113 of 247 decisive games (0.46, CI 0.40–0.52 by deck, shrunk 0.46) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Birds of Paradise",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1774, picked 857, first line 299, in 10 deck(s); on colour in 366 pool(s), played in 10 (0.03, CI 0.01–0.05); won 5 of 15 decisive games (0.33, CI 0.15–0.58 by deck, shrunk 0.43) vs mean 0.50; dead p 0.0e+0; rated 49.6, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 366,
+     "x": 10,
+     "rate": 0.0273224043715847,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Bitterblossom",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1809, picked 1556, first line 954, in 756 deck(s); on colour in 774 pool(s), played in 756 (0.98, CI 0.96–0.98); won 643 of 1242 decisive games (0.52, CI 0.49–0.55 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Blade Splicer",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1800, picked 1261, first line 604, in 835 deck(s); on colour in 863 pool(s), played in 835 (0.97, CI 0.95–0.98); won 743 of 1445 decisive games (0.51, CI 0.49–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Blood Artist",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1797, picked 1191, first line 517, in 594 deck(s); on colour in 643 pool(s), played in 594 (0.92, CI 0.90–0.94); won 489 of 995 decisive games (0.49, CI 0.46–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Bloodbraid Elf",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1793, picked 1312, first line 657, in 187 deck(s); on colour in 188 pool(s), played in 187 (0.99, CI 0.97–1.00); won 160 of 309 decisive games (0.52, CI 0.46–0.57 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Bloodghast",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1752, picked 825, first line 270, in 25 deck(s); on colour in 434 pool(s), played in 25 (0.06, CI 0.04–0.08); won 17 of 33 decisive games (0.52, CI 0.35–0.68 by deck, shrunk 0.51) vs mean 0.50; dead p 0.0e+0; rated 40, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 434,
+     "x": 25,
+     "rate": 0.0576036866359447,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Bloodstained Mire",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1799, picked 1011, first line 424, in 110 deck(s); won 88 of 177 decisive games (0.50, CI 0.42–0.57 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Bone Shards",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1813, picked 1545, first line 932, in 745 deck(s); on colour in 756 pool(s), played in 745 (0.99, CI 0.97–0.99); won 616 of 1298 decisive games (0.47, CI 0.45–0.50 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Bonecrusher Giant",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1833, picked 1460, first line 827, in 684 deck(s); on colour in 688 pool(s), played in 684 (0.99, CI 0.98–1.00); won 559 of 1136 decisive games (0.49, CI 0.46–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Brainstorm",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1823, picked 1492, first line 803, in 1039 deck(s); on colour in 1058 pool(s), played in 1039 (0.98, CI 0.97–0.99); won 793 of 1725 decisive games (0.46, CI 0.44–0.48 by deck, shrunk 0.46) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Brazen Borrower",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1801, picked 1308, first line 600, in 992 deck(s); on colour in 1019 pool(s), played in 992 (0.97, CI 0.96–0.98); won 787 of 1664 decisive games (0.47, CI 0.45–0.50 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Brimaz, King of Oreskos",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1790, picked 1338, first line 669, in 910 deck(s); on colour in 925 pool(s), played in 910 (0.98, CI 0.97–0.99); won 761 of 1495 decisive games (0.51, CI 0.48–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Chain Lightning",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1791, picked 1495, first line 883, in 641 deck(s); on colour in 644 pool(s), played in 641 (1.00, CI 0.99–1.00); won 564 of 1093 decisive games (0.52, CI 0.49–0.55 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Chandra, Torch of Defiance",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1823, picked 830, first line 286, in 118 deck(s); on colour in 334 pool(s), played in 118 (0.35, CI 0.30–0.41); won 114 of 202 decisive games (0.56, CI 0.49–0.63 by deck, shrunk 0.56) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Coalition Relic",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1779, picked 1251, first line 612, in 448 deck(s); on colour in 1251 pool(s), played in 448 (0.36, CI 0.33–0.39); won 391 of 775 decisive games (0.50, CI 0.47–0.54 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Consecrated Sphinx",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1793, picked 1517, first line 862, in 1144 deck(s); on colour in 1163 pool(s), played in 1144 (0.98, CI 0.97–0.99); won 971 of 1923 decisive games (0.50, CI 0.48–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Control Magic",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1784, picked 1190, first line 540, in 856 deck(s); on colour in 899 pool(s), played in 856 (0.95, CI 0.94–0.96); won 715 of 1422 decisive games (0.50, CI 0.48–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Council's Judgment",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1783, picked 794, first line 245, in 8 deck(s); on colour in 510 pool(s), played in 8 (0.02, CI 0.01–0.03); won 5 of 16 decisive games (0.31, CI 0.14–0.56 by deck, shrunk 0.42) vs mean 0.50; dead p 0.0e+0; rated 46.2, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 510,
+     "x": 8,
+     "rate": 0.01568627450980392,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Counterspell",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1807, picked 1605, first line 1032, in 1255 deck(s); on colour in 1265 pool(s), played in 1255 (0.99, CI 0.99–1.00); won 1064 of 2151 decisive games (0.49, CI 0.47–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Courser of Kruphix",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1802, picked 1442, first line 813, in 554 deck(s); on colour in 605 pool(s), played in 554 (0.92, CI 0.89–0.94); won 457 of 896 decisive games (0.51, CI 0.48–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Craterhoof Behemoth",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1814, picked 1345, first line 687, in 519 deck(s); on colour in 576 pool(s), played in 519 (0.90, CI 0.87–0.92); won 419 of 842 decisive games (0.50, CI 0.46–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Cryptic Command",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1780, picked 945, first line 348, in 146 deck(s); on colour in 722 pool(s), played in 146 (0.20, CI 0.17–0.23); won 117 of 253 decisive games (0.46, CI 0.40–0.52 by deck, shrunk 0.47) vs mean 0.50; dead p 0.0e+0; rated 54.3, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 722,
+     "x": 146,
+     "rate": 0.20221606648199447,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Damnation",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1803, picked 1272, first line 608, in 688 deck(s); on colour in 723 pool(s), played in 688 (0.95, CI 0.93–0.96); won 582 of 1183 decisive games (0.49, CI 0.46–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Dark Confidant",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1777, picked 982, first line 370, in 272 deck(s); on colour in 552 pool(s), played in 272 (0.49, CI 0.45–0.53); won 227 of 447 decisive games (0.51, CI 0.46–0.55 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Delver of Secrets",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1794, picked 622, first line 157, in 4 deck(s); on colour in 470 pool(s), played in 4 (0.01, CI 0.00–0.02); won 3 of 7 decisive games (0.43, CI 0.16–0.75 by deck, shrunk 0.48) vs mean 0.50; dead p 0.0e+0; rated 19.7, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 470,
+     "x": 4,
+     "rate": 0.00851063829787234,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Demonic Tutor",
+    "aiFlag": "Random",
+    "status": "ai-limited",
+    "signal": "none",
+    "evidence": "dealt 1817, picked 1654, first line 1147, in 886 deck(s); on colour in 890 pool(s), played in 886 (1.00, CI 0.99–1.00); won 741 of 1488 decisive games (0.50, CI 0.47–0.52 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Doom Blade",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1784, picked 838, first line 260, in 18 deck(s); on colour in 431 pool(s), played in 18 (0.04, CI 0.03–0.07); won 15 of 37 decisive games (0.41, CI 0.26–0.56 by deck, shrunk 0.44) vs mean 0.50; dead p 0.0e+0; rated 54.9, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 431,
+     "x": 18,
+     "rate": 0.04176334106728538,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Dragon's Rage Channeler",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1795, picked 1439, first line 796, in 611 deck(s); on colour in 618 pool(s), played in 611 (0.99, CI 0.98–0.99); won 524 of 1016 decisive games (0.52, CI 0.48–0.55 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Elspeth, Sun's Champion",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1805, picked 1559, first line 934, in 991 deck(s); on colour in 1008 pool(s), played in 991 (0.98, CI 0.97–0.99); won 851 of 1667 decisive games (0.51, CI 0.49–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Ephemerate",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1789, picked 559, first line 118, in 2 deck(s); on colour in 353 pool(s), played in 2 (0.01, CI 0.00–0.02); won 2 of 4 decisive games (0.50, CI 0.15–0.85 by deck, shrunk 0.50) vs mean 0.50; dead p 0.0e+0; rated 22.9, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 353,
+     "x": 2,
+     "rate": 0.0056657223796034,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Eternal Witness",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1777, picked 1370, first line 700, in 547 deck(s); on colour in 611 pool(s), played in 547 (0.90, CI 0.87–0.92); won 451 of 891 decisive games (0.51, CI 0.47–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Everflowing Chalice",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1803, picked 1046, first line 404, in 42 deck(s); on colour in 1046 pool(s), played in 42 (0.04, CI 0.03–0.05); won 32 of 58 decisive games (0.55, CI 0.42–0.67 by deck, shrunk 0.54) vs mean 0.50; dead p 0.0e+0; rated 46.3, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 1046,
+     "x": 42,
+     "rate": 0.040152963671128104,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Exalted Angel",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1787, picked 1567, first line 958, in 1036 deck(s); on colour in 1053 pool(s), played in 1036 (0.98, CI 0.97–0.99); won 912 of 1757 decisive games (0.52, CI 0.50–0.54 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Expressive Iteration",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1813, picked 523, first line 111, in 2 deck(s); on colour in 94 pool(s), played in 2 (0.02, CI 0.01–0.07); won 1 of 3 decisive games (0.33, CI 0.06–0.79 by deck, shrunk 0.48) vs mean 0.50; dead p 3.4e-15; rated 39.6, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 94,
+     "x": 2,
+     "rate": 0.02127659574468085,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 3.4416913763379853e-15
+    }
+   },
+   {
+    "name": "Fable of the Mirror-Breaker",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1788, picked 1664, first line 1180, in 750 deck(s); on colour in 750 pool(s), played in 750 (1.00, CI 0.99–1.00); won 657 of 1270 decisive games (0.52, CI 0.49–0.55 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Fact or Fiction",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1791, picked 1047, first line 432, in 410 deck(s); on colour in 804 pool(s), played in 410 (0.51, CI 0.47–0.54); won 305 of 650 decisive games (0.47, CI 0.43–0.51 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Falkenrath Aristocrat",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1787, picked 724, first line 180, in 29 deck(s); on colour in 68 pool(s), played in 29 (0.43, CI 0.32–0.55); won 25 of 51 decisive games (0.49, CI 0.36–0.62 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Fatal Push",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1817, picked 824, first line 250, in 6 deck(s); on colour in 416 pool(s), played in 6 (0.01, CI 0.01–0.03); won 10 of 11 decisive games (0.91, CI 0.62–0.98 by deck, shrunk 0.65) vs mean 0.50; dead p 0.0e+0; rated 51, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 416,
+     "x": 6,
+     "rate": 0.014423076923076924,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Figure of Destiny",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1777, picked 687, first line 177, in 4 deck(s); on colour in 109 pool(s), played in 4 (0.04, CI 0.01–0.09); won 4 of 5 decisive games (0.80, CI 0.38–0.96 by deck, shrunk 0.56) vs mean 0.50; dead p 2.0e-15; rated 49.4, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 109,
+     "x": 4,
+     "rate": 0.03669724770642202,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 1.9984014443252818e-15
+    }
+   },
+   {
+    "name": "Fire // Ice",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1809, picked 582, first line 113, in 2 deck(s); on colour in 103 pool(s), played in 2 (0.02, CI 0.01–0.07); won 2 of 3 decisive games (0.67, CI 0.21–0.94 by deck, shrunk 0.52) vs mean 0.50; dead p 1.1e-16; rated 43.1, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 103,
+     "x": 2,
+     "rate": 0.019417475728155338,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 1.1102230246251565e-16
+    }
+   },
+   {
+    "name": "Flametongue Kavu",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1810, picked 871, first line 273, in 175 deck(s); on colour in 384 pool(s), played in 175 (0.46, CI 0.41–0.51); won 148 of 303 decisive games (0.49, CI 0.43–0.55 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Flickerwisp",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1773, picked 833, first line 279, in 18 deck(s); on colour in 551 pool(s), played in 18 (0.03, CI 0.02–0.05); won 18 of 36 decisive games (0.50, CI 0.34–0.66 by deck, shrunk 0.50) vs mean 0.50; dead p 0.0e+0; rated 43.4, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 551,
+     "x": 18,
+     "rate": 0.032667876588021776,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Flooded Strand",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1808, picked 1085, first line 471, in 291 deck(s); won 250 of 487 decisive games (0.51, CI 0.47–0.56 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Force of Will",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1773, picked 1583, first line 1021, in 1208 deck(s); on colour in 1225 pool(s), played in 1208 (0.99, CI 0.98–0.99); won 936 of 1989 decisive games (0.47, CI 0.45–0.49 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Fury",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1816, picked 1567, first line 956, in 761 deck(s); on colour in 781 pool(s), played in 761 (0.97, CI 0.96–0.98); won 670 of 1273 decisive games (0.53, CI 0.50–0.55 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Garruk Relentless",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1803, picked 728, first line 201, in 35 deck(s); on colour in 282 pool(s), played in 35 (0.12, CI 0.09–0.17); won 28 of 57 decisive games (0.49, CI 0.37–0.62 by deck, shrunk 0.49) vs mean 0.50; dead p 0.0e+0; rated 49.8, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 282,
+     "x": 35,
+     "rate": 0.12411347517730496,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Garruk Wildspeaker",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1797, picked 812, first line 237, in 106 deck(s); on colour in 322 pool(s), played in 106 (0.33, CI 0.28–0.38); won 91 of 169 decisive games (0.54, CI 0.46–0.61 by deck, shrunk 0.53) vs mean 0.50; rated 49.8, under 60",
+    "strength": 0
+   },
+   {
+    "name": "Glorybringer",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1768, picked 896, first line 330, in 225 deck(s); on colour in 397 pool(s), played in 225 (0.57, CI 0.52–0.61); won 194 of 369 decisive games (0.53, CI 0.47–0.58 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Goblin Guide",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1778, picked 889, first line 291, in 47 deck(s); on colour in 387 pool(s), played in 47 (0.12, CI 0.09–0.16); won 40 of 71 decisive games (0.56, CI 0.45–0.67 by deck, shrunk 0.55) vs mean 0.50; dead p 0.0e+0; rated 56.8, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 387,
+     "x": 47,
+     "rate": 0.12144702842377261,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Goblin Rabblemaster",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1817, picked 1107, first line 454, in 515 deck(s); on colour in 531 pool(s), played in 515 (0.97, CI 0.95–0.98); won 435 of 834 decisive games (0.52, CI 0.49–0.56 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Goldspan Dragon",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1805, picked 1224, first line 591, in 571 deck(s); on colour in 593 pool(s), played in 571 (0.96, CI 0.94–0.97); won 487 of 949 decisive games (0.51, CI 0.48–0.55 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Grave Titan",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1804, picked 860, first line 301, in 37 deck(s); on colour in 453 pool(s), played in 37 (0.08, CI 0.06–0.11); won 23 of 53 decisive games (0.43, CI 0.31–0.57 by deck, shrunk 0.45) vs mean 0.50; dead p 0.0e+0; rated 49.6, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 453,
+     "x": 37,
+     "rate": 0.08167770419426049,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Grist, the Hunger Tide",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1805, picked 818, first line 260, in 63 deck(s); on colour in 77 pool(s), played in 63 (0.82, CI 0.72–0.89); won 54 of 112 decisive games (0.48, CI 0.39–0.57 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Hangarback Walker",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1808, picked 1269, first line 575, in 555 deck(s); on colour in 1269 pool(s), played in 555 (0.44, CI 0.41–0.47); won 490 of 920 decisive games (0.53, CI 0.50–0.56 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Hellrider",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1776, picked 769, first line 247, in 124 deck(s); on colour in 342 pool(s), played in 124 (0.36, CI 0.31–0.41); won 103 of 190 decisive games (0.54, CI 0.47–0.61 by deck, shrunk 0.54) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Hero of Bladehold",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1815, picked 901, first line 305, in 240 deck(s); on colour in 620 pool(s), played in 240 (0.39, CI 0.35–0.43); won 196 of 366 decisive games (0.54, CI 0.48–0.59 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Huntmaster of the Fells",
+    "aiFlag": "none",
+    "status": "watch",
+    "signal": "lean-dominant",
+    "evidence": "dealt 1793, picked 743, first line 205, in 36 deck(s); on colour in 81 pool(s), played in 36 (0.44, CI 0.34–0.55); won 39 of 55 decisive games (0.71, CI 0.58–0.81 by deck, shrunk 0.65) vs mean 0.50",
+    "strength": 0,
+    "draftsNeeded": 2549
+   },
+   {
+    "name": "Hymn to Tourach",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1804, picked 1138, first line 448, in 415 deck(s); on colour in 610 pool(s), played in 415 (0.68, CI 0.64–0.72); won 353 of 697 decisive games (0.51, CI 0.47–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Hypnotic Specter",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1794, picked 1475, first line 874, in 833 deck(s); on colour in 865 pool(s), played in 833 (0.96, CI 0.95–0.97); won 703 of 1390 decisive games (0.51, CI 0.48–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Incinerate",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1808, picked 815, first line 244, in 151 deck(s); on colour in 380 pool(s), played in 151 (0.40, CI 0.35–0.45); won 136 of 259 decisive games (0.53, CI 0.46–0.58 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Inferno Titan",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1802, picked 1327, first line 685, in 559 deck(s); on colour in 583 pool(s), played in 559 (0.96, CI 0.94–0.97); won 493 of 910 decisive games (0.54, CI 0.51–0.57 by deck, shrunk 0.54) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Jace, Vryn's Prodigy",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1802, picked 1680, first line 1197, in 1316 deck(s); on colour in 1316 pool(s), played in 1316 (1.00, CI 1.00–1.00); won 1067 of 2217 decisive games (0.48, CI 0.46–0.50 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Jace, the Mind Sculptor",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1807, picked 1665, first line 1112, in 1342 deck(s); on colour in 1354 pool(s), played in 1342 (0.99, CI 0.98–0.99); won 1083 of 2235 decisive games (0.48, CI 0.46–0.51 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Karn Liberated",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1812, picked 1330, first line 689, in 894 deck(s); on colour in 1330 pool(s), played in 894 (0.67, CI 0.65–0.70); won 737 of 1484 decisive games (0.50, CI 0.47–0.52 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Karn, Scion of Urza",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1817, picked 1313, first line 625, in 1127 deck(s); on colour in 1313 pool(s), played in 1127 (0.86, CI 0.84–0.88); won 1000 of 1912 decisive games (0.52, CI 0.50–0.55 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Knight of the Reliquary",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1801, picked 666, first line 150, in 0 deck(s); on colour in 94 pool(s), played in 0 (0.00, CI 0.00–0.04); no decisive games in a deck; dead p 0.0e+0; rated 43.4, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 94,
+     "x": 0,
+     "rate": 0,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Kokusho, the Evening Star",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1807, picked 1335, first line 653, in 690 deck(s); on colour in 728 pool(s), played in 690 (0.95, CI 0.93–0.96); won 587 of 1172 decisive games (0.50, CI 0.47–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Kolaghan's Command",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1794, picked 1042, first line 430, in 64 deck(s); on colour in 71 pool(s), played in 64 (0.90, CI 0.81–0.95); won 54 of 105 decisive games (0.51, CI 0.42–0.61 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Lightning Bolt",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1793, picked 1645, first line 1184, in 783 deck(s); on colour in 783 pool(s), played in 783 (1.00, CI 0.99–1.00); won 663 of 1308 decisive games (0.51, CI 0.48–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Lightning Helix",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1817, picked 1295, first line 589, in 221 deck(s); on colour in 228 pool(s), played in 221 (0.97, CI 0.94–0.98); won 188 of 367 decisive games (0.51, CI 0.46–0.56 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Liliana of the Veil",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1797, picked 1110, first line 458, in 495 deck(s); on colour in 610 pool(s), played in 495 (0.81, CI 0.78–0.84); won 422 of 865 decisive games (0.49, CI 0.46–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Liliana, the Last Hope",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1796, picked 1468, first line 846, in 820 deck(s); on colour in 856 pool(s), played in 820 (0.96, CI 0.94–0.97); won 733 of 1418 decisive games (0.52, CI 0.49–0.54 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Lingering Souls",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1805, picked 1571, first line 951, in 957 deck(s); on colour in 958 pool(s), played in 957 (1.00, CI 0.99–1.00); won 808 of 1593 decisive games (0.51, CI 0.48–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Llanowar Elves",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1784, picked 1193, first line 543, in 340 deck(s); on colour in 420 pool(s), played in 340 (0.81, CI 0.77–0.84); won 294 of 574 decisive games (0.51, CI 0.47–0.55 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Lotus Cobra",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1812, picked 1541, first line 917, in 620 deck(s); on colour in 625 pool(s), played in 620 (0.99, CI 0.98–1.00); won 526 of 1074 decisive games (0.49, CI 0.46–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Luminarch Aspirant",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1813, picked 1631, first line 1067, in 1108 deck(s); on colour in 1108 pool(s), played in 1108 (1.00, CI 1.00–1.00); won 975 of 1846 decisive games (0.53, CI 0.51–0.55 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Maelstrom Pulse",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1814, picked 600, first line 132, in 1 deck(s); on colour in 74 pool(s), played in 1 (0.01, CI 0.00–0.07); no decisive games in a deck; dead p 5.8e-13; rated 48.3, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 74,
+     "x": 1,
+     "rate": 0.013513513513513514,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 5.844214001626824e-13
+    }
+   },
+   {
+    "name": "Man-o'-War",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1791, picked 1515, first line 881, in 1126 deck(s); on colour in 1130 pool(s), played in 1126 (1.00, CI 0.99–1.00); won 895 of 1870 decisive games (0.48, CI 0.46–0.50 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Mana Leak",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1813, picked 1615, first line 1123, in 1215 deck(s); on colour in 1216 pool(s), played in 1215 (1.00, CI 0.99–1.00); won 994 of 2023 decisive games (0.49, CI 0.47–0.51 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Marsh Flats",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1821, picked 1113, first line 462, in 176 deck(s); won 154 of 288 decisive games (0.53, CI 0.48–0.59 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Mind Stone",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1813, picked 1283, first line 627, in 948 deck(s); on colour in 1283 pool(s), played in 948 (0.74, CI 0.71–0.76); won 811 of 1583 decisive games (0.51, CI 0.49–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Mishra's Factory",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1806, picked 614, first line 135, in 0 deck(s); no decisive games in a deck",
+    "strength": 0
+   },
+   {
+    "name": "Misty Rainforest",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1798, picked 1067, first line 447, in 173 deck(s); won 128 of 275 decisive games (0.47, CI 0.41–0.53 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Monastery Swiftspear",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1828, picked 1562, first line 944, in 688 deck(s); on colour in 691 pool(s), played in 688 (1.00, CI 0.99–1.00); won 597 of 1172 decisive games (0.51, CI 0.48–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Morphling",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1817, picked 1624, first line 1033, in 1284 deck(s); on colour in 1294 pool(s), played in 1284 (0.99, CI 0.99–1.00); won 995 of 2192 decisive games (0.45, CI 0.43–0.47 by deck, shrunk 0.45) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Mother of Runes",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1783, picked 1472, first line 834, in 916 deck(s); on colour in 932 pool(s), played in 916 (0.98, CI 0.97–0.99); won 786 of 1535 decisive games (0.51, CI 0.49–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Mulldrifter",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1781, picked 1421, first line 794, in 1099 deck(s); on colour in 1101 pool(s), played in 1099 (1.00, CI 0.99–1.00); won 869 of 1844 decisive games (0.47, CI 0.45–0.49 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Murktide Regent",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1803, picked 1653, first line 1086, in 1294 deck(s); on colour in 1310 pool(s), played in 1294 (0.99, CI 0.98–0.99); won 1019 of 2179 decisive games (0.47, CI 0.45–0.49 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Mutavault",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1791, picked 572, first line 124, in 0 deck(s); no decisive games in a deck",
+    "strength": 0
+   },
+   {
+    "name": "Mystic Snake",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1796, picked 618, first line 155, in 0 deck(s); on colour in 79 pool(s), played in 0 (0.00, CI 0.00–0.05); no decisive games in a deck; dead p 1.7e-15; rated 44, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 79,
+     "x": 0,
+     "rate": 0,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 1.6653345369377348e-15
+    }
+   },
+   {
+    "name": "Nissa, Who Shakes the World",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1807, picked 1249, first line 615, in 531 deck(s); on colour in 581 pool(s), played in 531 (0.91, CI 0.89–0.93); won 464 of 908 decisive games (0.51, CI 0.48–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Orcish Bowmasters",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1801, picked 1694, first line 1192, in 951 deck(s); on colour in 952 pool(s), played in 951 (1.00, CI 0.99–1.00); won 803 of 1601 decisive games (0.50, CI 0.48–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Path to Exile",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1807, picked 1512, first line 858, in 816 deck(s); on colour in 893 pool(s), played in 816 (0.91, CI 0.89–0.93); won 716 of 1408 decisive games (0.51, CI 0.48–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Phantasmal Image",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1793, picked 1182, first line 532, in 775 deck(s); on colour in 913 pool(s), played in 775 (0.85, CI 0.82–0.87); won 607 of 1283 decisive games (0.47, CI 0.45–0.50 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Phyrexian Arena",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1801, picked 1007, first line 395, in 288 deck(s); on colour in 569 pool(s), played in 288 (0.51, CI 0.47–0.55); won 234 of 489 decisive games (0.48, CI 0.43–0.52 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Plateau",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1793, picked 847, first line 295, in 143 deck(s); won 129 of 253 decisive games (0.51, CI 0.45–0.57 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Platinum Angel",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1818, picked 1151, first line 482, in 150 deck(s); on colour in 1151 pool(s), played in 150 (0.13, CI 0.11–0.15); won 135 of 266 decisive games (0.51, CI 0.45–0.57 by deck, shrunk 0.51) vs mean 0.50; dead p 0.0e+0; rated 49.8, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 1151,
+     "x": 150,
+     "rate": 0.13032145960034752,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Polluted Delta",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1791, picked 1131, first line 468, in 311 deck(s); won 260 of 561 decisive games (0.46, CI 0.42–0.51 by deck, shrunk 0.46) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Polukranos, World Eater",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1791, picked 736, first line 183, in 16 deck(s); on colour in 295 pool(s), played in 16 (0.05, CI 0.03–0.09); won 19 of 31 decisive games (0.61, CI 0.44–0.76 by deck, shrunk 0.57) vs mean 0.50; dead p 0.0e+0; rated 49.1, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 295,
+     "x": 16,
+     "rate": 0.05423728813559322,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Ponder",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1819, picked 1640, first line 1122, in 1208 deck(s); on colour in 1210 pool(s), played in 1208 (1.00, CI 0.99–1.00); won 959 of 2012 decisive games (0.48, CI 0.46–0.50 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Preordain",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1812, picked 1489, first line 806, in 1049 deck(s); on colour in 1059 pool(s), played in 1049 (0.99, CI 0.98–0.99); won 803 of 1745 decisive games (0.46, CI 0.44–0.48 by deck, shrunk 0.46) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Primeval Titan",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1777, picked 1004, first line 375, in 154 deck(s); on colour in 387 pool(s), played in 154 (0.40, CI 0.35–0.45); won 128 of 253 decisive games (0.51, CI 0.45–0.57 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Psychic Frog",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1776, picked 1639, first line 1138, in 555 deck(s); on colour in 555 pool(s), played in 555 (1.00, CI 0.99–1.00); won 451 of 950 decisive games (0.47, CI 0.44–0.51 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Questing Beast",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1799, picked 712, first line 199, in 23 deck(s); on colour in 283 pool(s), played in 23 (0.08, CI 0.06–0.12); won 19 of 36 decisive games (0.53, CI 0.37–0.68 by deck, shrunk 0.52) vs mean 0.50; dead p 0.0e+0; rated 47.4, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 283,
+     "x": 23,
+     "rate": 0.0812720848056537,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Ragavan, Nimble Pilferer",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1772, picked 1622, first line 1150, in 815 deck(s); on colour in 815 pool(s), played in 815 (1.00, CI 0.99–1.00); won 737 of 1399 decisive games (0.53, CI 0.50–0.55 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Rampaging Baloths",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1807, picked 1436, first line 770, in 547 deck(s); on colour in 603 pool(s), played in 547 (0.91, CI 0.88–0.93); won 465 of 911 decisive games (0.51, CI 0.48–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Rancor",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1803, picked 828, first line 261, in 40 deck(s); on colour in 329 pool(s), played in 40 (0.12, CI 0.09–0.16); won 29 of 73 decisive games (0.40, CI 0.29–0.51 by deck, shrunk 0.42) vs mean 0.50; dead p 0.0e+0; rated 46.8, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 329,
+     "x": 40,
+     "rate": 0.12158054711246201,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Ravenous Chupacabra",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1799, picked 899, first line 312, in 73 deck(s); on colour in 459 pool(s), played in 73 (0.16, CI 0.13–0.20); won 43 of 114 decisive games (0.38, CI 0.29–0.47 by deck, shrunk 0.40) vs mean 0.50; dead p 0.0e+0; rated 53, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 459,
+     "x": 73,
+     "rate": 0.15904139433551198,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Reanimate",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1782, picked 1653, first line 1177, in 835 deck(s); on colour in 839 pool(s), played in 835 (1.00, CI 0.99–1.00); won 679 of 1393 decisive games (0.49, CI 0.46–0.51 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Reflector Mage",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1805, picked 514, first line 94, in 3 deck(s); on colour in 186 pool(s), played in 3 (0.02, CI 0.01–0.05); won 2 of 8 decisive games (0.25, CI 0.07–0.59 by deck, shrunk 0.43) vs mean 0.50; dead p 0.0e+0; rated 32.5, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 186,
+     "x": 3,
+     "rate": 0.016129032258064516,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Restoration Angel",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1797, picked 936, first line 362, in 178 deck(s); on colour in 630 pool(s), played in 178 (0.28, CI 0.25–0.32); won 143 of 301 decisive games (0.48, CI 0.42–0.53 by deck, shrunk 0.48) vs mean 0.50; dead p 1.8e-4; rated 48.5, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 630,
+     "x": 178,
+     "rate": 0.28253968253968254,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0.00018317762170116936
+    }
+   },
+   {
+    "name": "Sakura-Tribe Elder",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1796, picked 1008, first line 357, in 207 deck(s); on colour in 406 pool(s), played in 207 (0.51, CI 0.46–0.56); won 185 of 346 decisive games (0.53, CI 0.48–0.59 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Savannah",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1796, picked 945, first line 344, in 183 deck(s); won 141 of 279 decisive games (0.51, CI 0.45–0.56 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Scalding Tarn",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1819, picked 1080, first line 432, in 161 deck(s); won 137 of 275 decisive games (0.50, CI 0.44–0.56 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Scavenging Ooze",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1814, picked 1117, first line 471, in 450 deck(s); on colour in 459 pool(s), played in 450 (0.98, CI 0.96–0.99); won 383 of 737 decisive games (0.52, CI 0.48–0.56 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Scrubland",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1796, picked 984, first line 376, in 155 deck(s); won 125 of 245 decisive games (0.51, CI 0.45–0.57 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Seasoned Pyromancer",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1789, picked 1009, first line 397, in 400 deck(s); on colour in 452 pool(s), played in 400 (0.88, CI 0.85–0.91); won 350 of 679 decisive games (0.52, CI 0.48–0.55 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Sheoldred, the Apocalypse",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1809, picked 1578, first line 1042, in 926 deck(s); on colour in 974 pool(s), played in 926 (0.95, CI 0.94–0.96); won 818 of 1541 decisive games (0.53, CI 0.51–0.56 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Shivan Dragon",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1812, picked 856, first line 266, in 28 deck(s); on colour in 365 pool(s), played in 28 (0.08, CI 0.05–0.11); won 31 of 57 decisive games (0.54, CI 0.42–0.67 by deck, shrunk 0.53) vs mean 0.50; dead p 0.0e+0; rated 49.9, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 365,
+     "x": 28,
+     "rate": 0.07671232876712329,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Shriekmaw",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1783, picked 952, first line 356, in 259 deck(s); on colour in 516 pool(s), played in 259 (0.50, CI 0.46–0.55); won 196 of 405 decisive games (0.48, CI 0.44–0.53 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Siege-Gang Commander",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1815, picked 939, first line 315, in 238 deck(s); on colour in 402 pool(s), played in 238 (0.59, CI 0.54–0.64); won 201 of 403 decisive games (0.50, CI 0.45–0.55 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Skullclamp",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1812, picked 1768, first line 1474, in 1768 deck(s); on colour in 1768 pool(s), played in 1768 (1.00, CI 1.00–1.00); won 1424 of 2974 decisive games (0.48, CI 0.46–0.50 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Skyclave Apparition",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1775, picked 1530, first line 977, in 1050 deck(s); on colour in 1064 pool(s), played in 1050 (0.99, CI 0.98–0.99); won 885 of 1740 decisive games (0.51, CI 0.48–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Smuggler's Copter",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1813, picked 1243, first line 557, in 804 deck(s); on colour in 1243 pool(s), played in 804 (0.65, CI 0.62–0.67); won 700 of 1369 decisive games (0.51, CI 0.48–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Snapcaster Mage",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1806, picked 1731, first line 1348, in 1373 deck(s); on colour in 1373 pool(s), played in 1373 (1.00, CI 1.00–1.00); won 1059 of 2288 decisive games (0.46, CI 0.44–0.48 by deck, shrunk 0.46) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Solemn Simulacrum",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1821, picked 1388, first line 771, in 1187 deck(s); on colour in 1388 pool(s), played in 1187 (0.86, CI 0.84–0.87); won 1030 of 2028 decisive games (0.51, CI 0.49–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Solitude",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1840, picked 1623, first line 1064, in 1164 deck(s); on colour in 1183 pool(s), played in 1164 (0.98, CI 0.97–0.99); won 981 of 1940 decisive games (0.51, CI 0.48–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Sorin, Lord of Innistrad",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1792, picked 733, first line 199, in 32 deck(s); on colour in 110 pool(s), played in 32 (0.29, CI 0.21–0.38); won 20 of 49 decisive games (0.41, CI 0.28–0.55 by deck, shrunk 0.43) vs mean 0.50; rated 49.7, under 60",
+    "strength": 0
+   },
+   {
+    "name": "Sower of Temptation",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1825, picked 1651, first line 1058, in 1294 deck(s); on colour in 1317 pool(s), played in 1294 (0.98, CI 0.97–0.99); won 1115 of 2183 decisive games (0.51, CI 0.49–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Stoneforge Mystic",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1800, picked 1455, first line 807, in 985 deck(s); on colour in 987 pool(s), played in 985 (1.00, CI 0.99–1.00); won 869 of 1671 decisive games (0.52, CI 0.50–0.54 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Sun Titan",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1801, picked 1273, first line 625, in 690 deck(s); on colour in 813 pool(s), played in 690 (0.85, CI 0.82–0.87); won 610 of 1161 decisive games (0.53, CI 0.50–0.55 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Sword of Feast and Famine",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1808, picked 1219, first line 524, in 495 deck(s); on colour in 1219 pool(s), played in 495 (0.41, CI 0.38–0.43); won 448 of 840 decisive games (0.53, CI 0.50–0.57 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Sword of Fire and Ice",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1792, picked 1225, first line 592, in 735 deck(s); on colour in 1225 pool(s), played in 735 (0.60, CI 0.57–0.63); won 644 of 1250 decisive games (0.52, CI 0.49–0.54 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Sword of Light and Shadow",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1802, picked 1225, first line 562, in 808 deck(s); on colour in 1225 pool(s), played in 808 (0.66, CI 0.63–0.69); won 673 of 1354 decisive games (0.50, CI 0.47–0.52 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Swords to Plowshares",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1822, picked 1591, first line 1008, in 993 deck(s); on colour in 996 pool(s), played in 993 (1.00, CI 0.99–1.00); won 875 of 1668 decisive games (0.52, CI 0.50–0.55 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Taiga",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1795, picked 766, first line 231, in 98 deck(s); won 109 of 180 decisive games (0.61, CI 0.53–0.67 by deck, shrunk 0.59) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Tarmogoyf",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1810, picked 1507, first line 872, in 657 deck(s); on colour in 658 pool(s), played in 657 (1.00, CI 0.99–1.00); won 518 of 1081 decisive games (0.48, CI 0.45–0.51 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Teferi, Hero of Dominaria",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1816, picked 1159, first line 517, in 364 deck(s); on colour in 414 pool(s), played in 364 (0.88, CI 0.84–0.91); won 298 of 597 decisive games (0.50, CI 0.46–0.54 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Thalia, Guardian of Thraben",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1789, picked 1548, first line 958, in 1036 deck(s); on colour in 1037 pool(s), played in 1036 (1.00, CI 0.99–1.00); won 871 of 1734 decisive games (0.50, CI 0.48–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "The Wandering Emperor",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1794, picked 1004, first line 388, in 374 deck(s); on colour in 667 pool(s), played in 374 (0.56, CI 0.52–0.60); won 317 of 641 decisive games (0.49, CI 0.46–0.53 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Thoughtseize",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1800, picked 1577, first line 963, in 764 deck(s); on colour in 779 pool(s), played in 764 (0.98, CI 0.97–0.99); won 621 of 1269 decisive games (0.49, CI 0.46–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Thraben Inspector",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1803, picked 1661, first line 1190, in 1120 deck(s); on colour in 1120 pool(s), played in 1120 (1.00, CI 1.00–1.00); won 965 of 1871 decisive games (0.52, CI 0.49–0.54 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Thragtusk",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1819, picked 1458, first line 799, in 614 deck(s); on colour in 614 pool(s), played in 614 (1.00, CI 0.99–1.00); won 505 of 1019 decisive games (0.50, CI 0.47–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Thrun, the Last Troll",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1814, picked 1101, first line 491, in 412 deck(s); on colour in 454 pool(s), played in 412 (0.91, CI 0.88–0.93); won 356 of 697 decisive games (0.51, CI 0.47–0.55 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Thundermaw Hellkite",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1788, picked 798, first line 264, in 119 deck(s); on colour in 353 pool(s), played in 119 (0.34, CI 0.29–0.39); won 102 of 185 decisive games (0.55, CI 0.48–0.62 by deck, shrunk 0.55) vs mean 0.50; rated 49.1, under 60",
+    "strength": 0
+   },
+   {
+    "name": "Tireless Tracker",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1813, picked 1487, first line 890, in 594 deck(s); on colour in 595 pool(s), played in 594 (1.00, CI 0.99–1.00); won 467 of 967 decisive games (0.48, CI 0.45–0.51 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Titania, Protector of Argoth",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1792, picked 1066, first line 429, in 390 deck(s); on colour in 458 pool(s), played in 390 (0.85, CI 0.82–0.88); won 317 of 651 decisive games (0.49, CI 0.45–0.53 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Treasure Cruise",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1805, picked 1024, first line 353, in 93 deck(s); on colour in 777 pool(s), played in 93 (0.12, CI 0.10–0.14); won 64 of 146 decisive games (0.44, CI 0.36–0.52 by deck, shrunk 0.45) vs mean 0.50; dead p 0.0e+0; rated 50.1, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 777,
+     "x": 93,
+     "rate": 0.11969111969111969,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 0
+    }
+   },
+   {
+    "name": "Tropical Island",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1819, picked 897, first line 293, in 133 deck(s); won 100 of 208 decisive games (0.48, CI 0.41–0.55 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Tundra",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1793, picked 1008, first line 379, in 281 deck(s); won 228 of 462 decisive games (0.49, CI 0.45–0.54 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Ugin, the Spirit Dragon",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1789, picked 1458, first line 825, in 1406 deck(s); on colour in 1458 pool(s), played in 1406 (0.96, CI 0.95–0.97); won 1196 of 2354 decisive games (0.51, CI 0.49–0.53 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Umezawa's Jitte",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1786, picked 1734, first line 1368, in 1734 deck(s); on colour in 1734 pool(s), played in 1734 (1.00, CI 1.00–1.00); won 1465 of 2904 decisive games (0.50, CI 0.49–0.52 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Underground Sea",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1784, picked 1012, first line 372, in 308 deck(s); won 252 of 521 decisive games (0.48, CI 0.44–0.53 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Uro, Titan of Nature's Wrath",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1787, picked 875, first line 277, in 86 deck(s); on colour in 127 pool(s), played in 86 (0.68, CI 0.59–0.75); won 75 of 145 decisive games (0.52, CI 0.44–0.60 by deck, shrunk 0.52) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Vampire Nighthawk",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1787, picked 1508, first line 888, in 856 deck(s); on colour in 893 pool(s), played in 856 (0.96, CI 0.94–0.97); won 719 of 1440 decisive games (0.50, CI 0.47–0.53 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Vendilion Clique",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1802, picked 1481, first line 808, in 1145 deck(s); on colour in 1157 pool(s), played in 1145 (0.99, CI 0.98–0.99); won 907 of 1933 decisive games (0.47, CI 0.45–0.49 by deck, shrunk 0.47) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Vengevine",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1791, picked 1507, first line 894, in 628 deck(s); on colour in 685 pool(s), played in 628 (0.92, CI 0.89–0.94); won 526 of 1072 decisive games (0.49, CI 0.46–0.52 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Venser, Shaper Savant",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1788, picked 1421, first line 821, in 1114 deck(s); on colour in 1126 pool(s), played in 1114 (0.99, CI 0.98–0.99); won 925 of 1886 decisive games (0.49, CI 0.47–0.51 by deck, shrunk 0.49) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Verdant Catacombs",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1808, picked 1101, first line 446, in 183 deck(s); won 137 of 319 decisive games (0.43, CI 0.38–0.48 by deck, shrunk 0.43) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Voice of Resurgence",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1810, picked 703, first line 191, in 23 deck(s); on colour in 103 pool(s), played in 23 (0.22, CI 0.15–0.31); won 17 of 32 decisive games (0.53, CI 0.36–0.69 by deck, shrunk 0.52) vs mean 0.50; rated 49.4, under 60",
+    "strength": 0
+   },
+   {
+    "name": "Volcanic Island",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1809, picked 971, first line 371, in 167 deck(s); won 148 of 276 decisive games (0.54, CI 0.48–0.59 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Walking Ballista",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1795, picked 1587, first line 1040, in 1582 deck(s); on colour in 1587 pool(s), played in 1582 (1.00, CI 0.99–1.00); won 1338 of 2670 decisive games (0.50, CI 0.48–0.52 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Wedding Announcement",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1783, picked 1564, first line 942, in 1008 deck(s); on colour in 1008 pool(s), played in 1008 (1.00, CI 1.00–1.00); won 865 of 1683 decisive games (0.51, CI 0.49–0.54 by deck, shrunk 0.51) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Windswept Heath",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1814, picked 1089, first line 459, in 177 deck(s); won 156 of 291 decisive games (0.54, CI 0.48–0.59 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Wooded Foothills",
+    "aiFlag": "none",
+    "status": "builder-limited",
+    "signal": "none",
+    "evidence": "dealt 1800, picked 1053, first line 413, in 143 deck(s); won 113 of 246 decisive games (0.46, CI 0.40–0.52 by deck, shrunk 0.46) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Wrath of God",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1820, picked 1170, first line 510, in 674 deck(s); on colour in 734 pool(s), played in 674 (0.92, CI 0.90–0.94); won 563 of 1162 decisive games (0.48, CI 0.46–0.51 by deck, shrunk 0.48) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Wurmcoil Engine",
+    "aiFlag": "none",
+    "status": "ok",
+    "signal": "none",
+    "evidence": "dealt 1810, picked 1662, first line 1149, in 1662 deck(s); on colour in 1662 pool(s), played in 1662 (1.00, CI 1.00–1.00); won 1453 of 2762 decisive games (0.53, CI 0.51–0.55 by deck, shrunk 0.53) vs mean 0.50",
+    "strength": 0
+   },
+   {
+    "name": "Young Pyromancer",
+    "aiFlag": "none",
+    "status": "rating-limited",
+    "signal": "dead",
+    "evidence": "dealt 1795, picked 784, first line 217, in 59 deck(s); on colour in 343 pool(s), played in 59 (0.17, CI 0.14–0.22); won 48 of 96 decisive games (0.50, CI 0.40–0.60 by deck, shrunk 0.50) vs mean 0.50; dead p 2.1e-13; rated 42.4, under 60",
+    "strength": 0,
+    "test": {
+     "rule": "dead",
+     "n": 343,
+     "x": 59,
+     "rate": 0.17201166180758018,
+     "p0": 0.35,
+     "deff": 1,
+     "p": 2.0605739337042905e-13
+    }
+   }
+  ],
+  "discovery": {
+   "drafts": 2000,
+   "family": 393,
+   "q": 0.1,
+   "cutoff": 7.355183026471418e-11,
+   "deff": 1.0011926058437686,
+   "candidates": 0
+  },
+  "plan": {
+   "drafts": 0,
+   "needs": [],
+   "underpowered": []
+  },
+  "confirmations": [],
+  "unmatched": [],
+  "watch": [
+   {
+    "name": "Huntmaster of the Fells",
+    "aiFlag": "none",
+    "status": "watch",
+    "signal": "lean-dominant",
+    "evidence": "dealt 1793, picked 743, first line 205, in 36 deck(s); on colour in 81 pool(s), played in 36 (0.44, CI 0.34–0.55); won 39 of 55 decisive games (0.71, CI 0.58–0.81 by deck, shrunk 0.65) vs mean 0.50",
+    "strength": 0,
+    "draftsNeeded": 2549
+   }
+  ],
+  "aiLimited": [
+   {
+    "name": "Demonic Tutor",
+    "aiFlag": "Random",
+    "status": "ai-limited",
+    "signal": "none",
+    "evidence": "dealt 1817, picked 1654, first line 1147, in 886 deck(s); on colour in 890 pool(s), played in 886 (1.00, CI 0.99–1.00); won 741 of 1488 decisive games (0.50, CI 0.47–0.52 by deck, shrunk 0.50) vs mean 0.50",
+    "strength": 0
+   }
+  ],
+  "humanTest": [
+   {
+    "name": "Gitaxian Probe",
+    "colors": "U",
+    "themes": [
+     "SPL"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 4.49 (rating 97.6, SPL)"
+   },
+   {
+    "name": "Mystic Confluence",
+    "colors": "U",
+    "themes": [
+     "CTRL",
+     "SPL"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 4.48 (rating 98, CTRL SPL)"
+   },
+   {
+    "name": "Tamiyo, Collector of Tales",
+    "colors": "UG",
+    "themes": [
+     "GY",
+     "CTRL"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 4.34 (rating 94.4, GY CTRL)"
+   },
+   {
+    "name": "Vampiric Tutor",
+    "colors": "B",
+    "themes": [
+     "REAN",
+     "CTRL"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 4.14 (rating 99.3, REAN CTRL)"
+   },
+   {
+    "name": "Fire Covenant",
+    "colors": "BR",
+    "themes": [],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.86 (rating 96.3)"
+   },
+   {
+    "name": "Prophetic Prism",
+    "colors": "C",
+    "themes": [
+     "ART",
+     "ETB"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.68 (rating 90.5, ART ETB)"
+   },
+   {
+    "name": "Masticore",
+    "colors": "C",
+    "themes": [
+     "ART"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.42 (rating 85.4, ART)"
+   },
+   {
+    "name": "Utopia Sprawl",
+    "colors": "G",
+    "themes": [
+     "RAMP"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.28 (rating 82.1, RAMP)"
+   },
+   {
+    "name": "Ghostly Flicker",
+    "colors": "U",
+    "themes": [
+     "ETB",
+     "SPL"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.24 (rating 69.2, ETB SPL)"
+   },
+   {
+    "name": "Goblin Bombardment",
+    "colors": "R",
+    "themes": [
+     "SAC",
+     "TOK"
+    ],
+    "why": "AI:RemoveDeck:All — the AI cannot judge it; fit 3.05 (rating 75.4, SAC TOK)"
+   }
+  ],
+  "pendingTries": [],
+  "verdict": "Insufficient data: no card was confirmed at 2000 drafts; 1 lead(s) to watch — about 2549 drafts per generation would find half of them. Run more drafts. 36 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+  "violationsBefore": [],
+  "violationsAfter": []
+ },
+ "stats": [
+  {
+   "name": "Thraben Inspector",
+   "seen": 1803,
+   "picked": 1661,
+   "pickRate": 0.9212,
+   "firstTakes": 1190,
+   "firstPickRate": 0.6600110926234054,
+   "inDecks": 1120,
+   "deckRate": 0.6211869107043816,
+   "onColour": 1120,
+   "onColourDecks": 1120,
+   "games": 1871,
+   "wins": 965,
+   "winRate": 0.5158,
+   "shrunk": 0.5156,
+   "ci": [
+    0.493,
+    0.538
+   ]
+  },
+  {
+   "name": "Mother of Runes",
+   "seen": 1783,
+   "picked": 1472,
+   "pickRate": 0.8256,
+   "firstTakes": 834,
+   "firstPickRate": 0.4677509814918676,
+   "inDecks": 916,
+   "deckRate": 0.5137408861469434,
+   "onColour": 932,
+   "onColourDecks": 916,
+   "games": 1535,
+   "wins": 786,
+   "winRate": 0.5121,
+   "shrunk": 0.5119,
+   "ci": [
+    0.487,
+    0.537
+   ]
+  },
+  {
+   "name": "Thalia, Guardian of Thraben",
+   "seen": 1789,
+   "picked": 1548,
+   "pickRate": 0.8653,
+   "firstTakes": 958,
+   "firstPickRate": 0.5354946897708217,
+   "inDecks": 1036,
+   "deckRate": 0.5790944661822247,
+   "onColour": 1037,
+   "onColourDecks": 1036,
+   "games": 1734,
+   "wins": 871,
+   "winRate": 0.5023,
+   "shrunk": 0.5023,
+   "ci": [
+    0.479,
+    0.526
+   ]
+  },
+  {
+   "name": "Adeline, Resplendent Cathar",
+   "seen": 1807,
+   "picked": 1590,
+   "pickRate": 0.8799,
+   "firstTakes": 1015,
+   "firstPickRate": 0.5617044825677919,
+   "inDecks": 1125,
+   "deckRate": 0.6225788599889319,
+   "onColour": 1142,
+   "onColourDecks": 1125,
+   "games": 1873,
+   "wins": 956,
+   "winRate": 0.5104,
+   "shrunk": 0.5103,
+   "ci": [
+    0.488,
+    0.533
+   ]
+  },
+  {
+   "name": "Stoneforge Mystic",
+   "seen": 1800,
+   "picked": 1455,
+   "pickRate": 0.8083,
+   "firstTakes": 807,
+   "firstPickRate": 0.4483333333333333,
+   "inDecks": 985,
+   "deckRate": 0.5472222222222223,
+   "onColour": 987,
+   "onColourDecks": 985,
+   "games": 1671,
+   "wins": 869,
+   "winRate": 0.52,
+   "shrunk": 0.5198,
+   "ci": [
+    0.496,
+    0.544
+   ]
+  },
+  {
+   "name": "Luminarch Aspirant",
+   "seen": 1813,
+   "picked": 1631,
+   "pickRate": 0.8996,
+   "firstTakes": 1067,
+   "firstPickRate": 0.5885273028130171,
+   "inDecks": 1108,
+   "deckRate": 0.6111417539988968,
+   "onColour": 1108,
+   "onColourDecks": 1108,
+   "games": 1846,
+   "wins": 975,
+   "winRate": 0.5282,
+   "shrunk": 0.5279,
+   "ci": [
+    0.505,
+    0.551
+   ]
+  },
+  {
+   "name": "Blade Splicer",
+   "seen": 1800,
+   "picked": 1261,
+   "pickRate": 0.7006,
+   "firstTakes": 604,
+   "firstPickRate": 0.33555555555555555,
+   "inDecks": 835,
+   "deckRate": 0.4638888888888889,
+   "onColour": 863,
+   "onColourDecks": 835,
+   "games": 1445,
+   "wins": 743,
+   "winRate": 0.5142,
+   "shrunk": 0.514,
+   "ci": [
+    0.488,
+    0.54
+   ]
+  },
+  {
+   "name": "Brimaz, King of Oreskos",
+   "seen": 1790,
+   "picked": 1338,
+   "pickRate": 0.7475,
+   "firstTakes": 669,
+   "firstPickRate": 0.37374301675977656,
+   "inDecks": 910,
+   "deckRate": 0.5083798882681564,
+   "onColour": 925,
+   "onColourDecks": 910,
+   "games": 1495,
+   "wins": 761,
+   "winRate": 0.509,
+   "shrunk": 0.5089,
+   "ci": [
+    0.484,
+    0.534
+   ]
+  },
+  {
+   "name": "Flickerwisp",
+   "seen": 1773,
+   "picked": 833,
+   "pickRate": 0.4698,
+   "firstTakes": 279,
+   "firstPickRate": 0.15736040609137056,
+   "inDecks": 18,
+   "deckRate": 0.01015228426395939,
+   "onColour": 551,
+   "onColourDecks": 18,
+   "games": 36,
+   "wins": 18,
+   "winRate": 0.5,
+   "shrunk": 0.5,
+   "ci": [
+    0.345,
+    0.655
+   ]
+  },
+  {
+   "name": "Skyclave Apparition",
+   "seen": 1775,
+   "picked": 1530,
+   "pickRate": 0.862,
+   "firstTakes": 977,
+   "firstPickRate": 0.5504225352112676,
+   "inDecks": 1050,
+   "deckRate": 0.5915492957746479,
+   "onColour": 1064,
+   "onColourDecks": 1050,
+   "games": 1740,
+   "wins": 885,
+   "winRate": 0.5086,
+   "shrunk": 0.5085,
+   "ci": [
+    0.485,
+    0.532
+   ]
+  },
+  {
+   "name": "Hero of Bladehold",
+   "seen": 1815,
+   "picked": 901,
+   "pickRate": 0.4964,
+   "firstTakes": 305,
+   "firstPickRate": 0.16804407713498623,
+   "inDecks": 240,
+   "deckRate": 0.1322314049586777,
+   "onColour": 620,
+   "onColourDecks": 240,
+   "games": 366,
+   "wins": 196,
+   "winRate": 0.5355,
+   "shrunk": 0.5337,
+   "ci": [
+    0.484,
+    0.586
+   ]
+  },
+  {
+   "name": "Restoration Angel",
+   "seen": 1797,
+   "picked": 936,
+   "pickRate": 0.5209,
+   "firstTakes": 362,
+   "firstPickRate": 0.20144685587089595,
+   "inDecks": 178,
+   "deckRate": 0.09905397885364496,
+   "onColour": 630,
+   "onColourDecks": 178,
+   "games": 301,
+   "wins": 143,
+   "winRate": 0.4751,
+   "shrunk": 0.4766,
+   "ci": [
+    0.419,
+    0.531
+   ]
+  },
+  {
+   "name": "Exalted Angel",
+   "seen": 1787,
+   "picked": 1567,
+   "pickRate": 0.8769,
+   "firstTakes": 958,
+   "firstPickRate": 0.536094012311136,
+   "inDecks": 1036,
+   "deckRate": 0.5797425853385563,
+   "onColour": 1053,
+   "onColourDecks": 1036,
+   "games": 1757,
+   "wins": 912,
+   "winRate": 0.5191,
+   "shrunk": 0.5189,
+   "ci": [
+    0.496,
+    0.542
+   ]
+  },
+  {
+   "name": "Baneslayer Angel",
+   "seen": 1801,
+   "picked": 946,
+   "pickRate": 0.5253,
+   "firstTakes": 351,
+   "firstPickRate": 0.1948917268184342,
+   "inDecks": 242,
+   "deckRate": 0.13436979455857856,
+   "onColour": 588,
+   "onColourDecks": 242,
+   "games": 371,
+   "wins": 193,
+   "winRate": 0.5202,
+   "shrunk": 0.5192,
+   "ci": [
+    0.469,
+    0.571
+   ]
+  },
+  {
+   "name": "Swords to Plowshares",
+   "seen": 1822,
+   "picked": 1591,
+   "pickRate": 0.8732,
+   "firstTakes": 1008,
+   "firstPickRate": 0.5532381997804611,
+   "inDecks": 993,
+   "deckRate": 0.5450054884742042,
+   "onColour": 996,
+   "onColourDecks": 993,
+   "games": 1668,
+   "wins": 875,
+   "winRate": 0.5246,
+   "shrunk": 0.5243,
+   "ci": [
+    0.501,
+    0.548
+   ]
+  },
+  {
+   "name": "Path to Exile",
+   "seen": 1807,
+   "picked": 1512,
+   "pickRate": 0.8367,
+   "firstTakes": 858,
+   "firstPickRate": 0.4748201438848921,
+   "inDecks": 816,
+   "deckRate": 0.45157719977863864,
+   "onColour": 893,
+   "onColourDecks": 816,
+   "games": 1408,
+   "wins": 716,
+   "winRate": 0.5085,
+   "shrunk": 0.5084,
+   "ci": [
+    0.482,
+    0.535
+   ]
+  },
+  {
+   "name": "Council's Judgment",
+   "seen": 1783,
+   "picked": 794,
+   "pickRate": 0.4453,
+   "firstTakes": 245,
+   "firstPickRate": 0.13740886146943354,
+   "inDecks": 8,
+   "deckRate": 0.00448681996634885,
+   "onColour": 510,
+   "onColourDecks": 8,
+   "games": 16,
+   "wins": 5,
+   "winRate": 0.3125,
+   "shrunk": 0.4167,
+   "ci": [
+    0.142,
+    0.556
+   ]
+  },
+  {
+   "name": "Wrath of God",
+   "seen": 1820,
+   "picked": 1170,
+   "pickRate": 0.6429,
+   "firstTakes": 510,
+   "firstPickRate": 0.2802197802197802,
+   "inDecks": 674,
+   "deckRate": 0.37032967032967035,
+   "onColour": 734,
+   "onColourDecks": 674,
+   "games": 1162,
+   "wins": 563,
+   "winRate": 0.4845,
+   "shrunk": 0.4848,
+   "ci": [
+    0.456,
+    0.513
+   ]
+  },
+  {
+   "name": "Ephemerate",
+   "seen": 1789,
+   "picked": 559,
+   "pickRate": 0.3125,
+   "firstTakes": 118,
+   "firstPickRate": 0.06595863610955842,
+   "inDecks": 2,
+   "deckRate": 0.0011179429849077697,
+   "onColour": 353,
+   "onColourDecks": 2,
+   "games": 4,
+   "wins": 2,
+   "winRate": 0.5,
+   "shrunk": 0.5,
+   "ci": [
+    0.15,
+    0.85
+   ]
+  },
+  {
+   "name": "Wedding Announcement",
+   "seen": 1783,
+   "picked": 1564,
+   "pickRate": 0.8772,
+   "firstTakes": 942,
+   "firstPickRate": 0.5283230510375772,
+   "inDecks": 1008,
+   "deckRate": 0.5653393157599551,
+   "onColour": 1008,
+   "onColourDecks": 1008,
+   "games": 1683,
+   "wins": 865,
+   "winRate": 0.514,
+   "shrunk": 0.5138,
+   "ci": [
+    0.49,
+    0.538
+   ]
+  },
+  {
+   "name": "Elspeth, Sun's Champion",
+   "seen": 1805,
+   "picked": 1559,
+   "pickRate": 0.8637,
+   "firstTakes": 934,
+   "firstPickRate": 0.5174515235457063,
+   "inDecks": 991,
+   "deckRate": 0.5490304709141274,
+   "onColour": 1008,
+   "onColourDecks": 991,
+   "games": 1667,
+   "wins": 851,
+   "winRate": 0.5105,
+   "shrunk": 0.5104,
+   "ci": [
+    0.487,
+    0.534
+   ]
+  },
+  {
+   "name": "The Wandering Emperor",
+   "seen": 1794,
+   "picked": 1004,
+   "pickRate": 0.5596,
+   "firstTakes": 388,
+   "firstPickRate": 0.21627647714604237,
+   "inDecks": 374,
+   "deckRate": 0.2084726867335563,
+   "onColour": 667,
+   "onColourDecks": 374,
+   "games": 641,
+   "wins": 317,
+   "winRate": 0.4945,
+   "shrunk": 0.4947,
+   "ci": [
+    0.456,
+    0.533
+   ]
+  },
+  {
+   "name": "Sun Titan",
+   "seen": 1801,
+   "picked": 1273,
+   "pickRate": 0.7068,
+   "firstTakes": 625,
+   "firstPickRate": 0.3470294280955025,
+   "inDecks": 690,
+   "deckRate": 0.38312048861743475,
+   "onColour": 813,
+   "onColourDecks": 690,
+   "games": 1161,
+   "wins": 610,
+   "winRate": 0.5254,
+   "shrunk": 0.525,
+   "ci": [
+    0.497,
+    0.554
+   ]
+  },
+  {
+   "name": "Solitude",
+   "seen": 1840,
+   "picked": 1623,
+   "pickRate": 0.8821,
+   "firstTakes": 1064,
+   "firstPickRate": 0.5782608695652174,
+   "inDecks": 1164,
+   "deckRate": 0.6326086956521739,
+   "onColour": 1183,
+   "onColourDecks": 1164,
+   "games": 1940,
+   "wins": 981,
+   "winRate": 0.5057,
+   "shrunk": 0.5056,
+   "ci": [
+    0.483,
+    0.528
+   ]
+  },
+  {
+   "name": "Brainstorm",
+   "seen": 1823,
+   "picked": 1492,
+   "pickRate": 0.8184,
+   "firstTakes": 803,
+   "firstPickRate": 0.44048272078990675,
+   "inDecks": 1039,
+   "deckRate": 0.5699396599012616,
+   "onColour": 1058,
+   "onColourDecks": 1039,
+   "games": 1725,
+   "wins": 793,
+   "winRate": 0.4597,
+   "shrunk": 0.4602,
+   "ci": [
+    0.436,
+    0.483
+   ]
+  },
+  {
+   "name": "Ponder",
+   "seen": 1819,
+   "picked": 1640,
+   "pickRate": 0.9016,
+   "firstTakes": 1122,
+   "firstPickRate": 0.616822429906542,
+   "inDecks": 1208,
+   "deckRate": 0.6641011544804838,
+   "onColour": 1210,
+   "onColourDecks": 1208,
+   "games": 2012,
+   "wins": 959,
+   "winRate": 0.4766,
+   "shrunk": 0.4769,
+   "ci": [
+    0.455,
+    0.498
+   ]
+  },
+  {
+   "name": "Preordain",
+   "seen": 1812,
+   "picked": 1489,
+   "pickRate": 0.8217,
+   "firstTakes": 806,
+   "firstPickRate": 0.4448123620309051,
+   "inDecks": 1049,
+   "deckRate": 0.5789183222958058,
+   "onColour": 1059,
+   "onColourDecks": 1049,
+   "games": 1745,
+   "wins": 803,
+   "winRate": 0.4602,
+   "shrunk": 0.4606,
+   "ci": [
+    0.437,
+    0.484
+   ]
+  },
+  {
+   "name": "Counterspell",
+   "seen": 1807,
+   "picked": 1605,
+   "pickRate": 0.8882,
+   "firstTakes": 1032,
+   "firstPickRate": 0.5711123408965135,
+   "inDecks": 1255,
+   "deckRate": 0.6945213060320974,
+   "onColour": 1265,
+   "onColourDecks": 1255,
+   "games": 2151,
+   "wins": 1064,
+   "winRate": 0.4947,
+   "shrunk": 0.4947,
+   "ci": [
+    0.474,
+    0.516
+   ]
+  },
+  {
+   "name": "Mana Leak",
+   "seen": 1813,
+   "picked": 1615,
+   "pickRate": 0.8908,
+   "firstTakes": 1123,
+   "firstPickRate": 0.619415333701048,
+   "inDecks": 1215,
+   "deckRate": 0.6701599558742416,
+   "onColour": 1216,
+   "onColourDecks": 1215,
+   "games": 2023,
+   "wins": 994,
+   "winRate": 0.4913,
+   "shrunk": 0.4914,
+   "ci": [
+    0.47,
+    0.513
+   ]
+  },
+  {
+   "name": "Force of Will",
+   "seen": 1773,
+   "picked": 1583,
+   "pickRate": 0.8928,
+   "firstTakes": 1021,
+   "firstPickRate": 0.5758601240834743,
+   "inDecks": 1208,
+   "deckRate": 0.6813310772701635,
+   "onColour": 1225,
+   "onColourDecks": 1208,
+   "games": 1989,
+   "wins": 936,
+   "winRate": 0.4706,
+   "shrunk": 0.4709,
+   "ci": [
+    0.449,
+    0.493
+   ]
+  },
+  {
+   "name": "Cryptic Command",
+   "seen": 1780,
+   "picked": 945,
+   "pickRate": 0.5309,
+   "firstTakes": 348,
+   "firstPickRate": 0.19550561797752808,
+   "inDecks": 146,
+   "deckRate": 0.08202247191011236,
+   "onColour": 722,
+   "onColourDecks": 146,
+   "games": 253,
+   "wins": 117,
+   "winRate": 0.4625,
+   "shrunk": 0.4652,
+   "ci": [
+    0.402,
+    0.524
+   ]
+  },
+  {
+   "name": "Fact or Fiction",
+   "seen": 1791,
+   "picked": 1047,
+   "pickRate": 0.5846,
+   "firstTakes": 432,
+   "firstPickRate": 0.24120603015075376,
+   "inDecks": 410,
+   "deckRate": 0.22892238972640983,
+   "onColour": 804,
+   "onColourDecks": 410,
+   "games": 650,
+   "wins": 305,
+   "winRate": 0.4692,
+   "shrunk": 0.4701,
+   "ci": [
+    0.431,
+    0.508
+   ]
+  },
+  {
+   "name": "Delver of Secrets",
+   "seen": 1794,
+   "picked": 622,
+   "pickRate": 0.3467,
+   "firstTakes": 157,
+   "firstPickRate": 0.0875139353400223,
+   "inDecks": 4,
+   "deckRate": 0.002229654403567447,
+   "onColour": 470,
+   "onColourDecks": 4,
+   "games": 7,
+   "wins": 3,
+   "winRate": 0.4286,
+   "shrunk": 0.4815,
+   "ci": [
+    0.158,
+    0.75
+   ]
+  },
+  {
+   "name": "Snapcaster Mage",
+   "seen": 1806,
+   "picked": 1731,
+   "pickRate": 0.9585,
+   "firstTakes": 1348,
+   "firstPickRate": 0.7464008859357697,
+   "inDecks": 1373,
+   "deckRate": 0.7602436323366556,
+   "onColour": 1373,
+   "onColourDecks": 1373,
+   "games": 2288,
+   "wins": 1059,
+   "winRate": 0.4628,
+   "shrunk": 0.4632,
+   "ci": [
+    0.442,
+    0.483
+   ]
+  },
+  {
+   "name": "Jace, Vryn's Prodigy",
+   "seen": 1802,
+   "picked": 1680,
+   "pickRate": 0.9323,
+   "firstTakes": 1197,
+   "firstPickRate": 0.6642619311875694,
+   "inDecks": 1316,
+   "deckRate": 0.730299667036626,
+   "onColour": 1316,
+   "onColourDecks": 1316,
+   "games": 2217,
+   "wins": 1067,
+   "winRate": 0.4813,
+   "shrunk": 0.4814,
+   "ci": [
+    0.461,
+    0.502
+   ]
+  },
+  {
+   "name": "Brazen Borrower",
+   "seen": 1801,
+   "picked": 1308,
+   "pickRate": 0.7263,
+   "firstTakes": 600,
+   "firstPickRate": 0.3331482509716824,
+   "inDecks": 992,
+   "deckRate": 0.5508051082731815,
+   "onColour": 1019,
+   "onColourDecks": 992,
+   "games": 1664,
+   "wins": 787,
+   "winRate": 0.473,
+   "shrunk": 0.4733,
+   "ci": [
+    0.449,
+    0.497
+   ]
+  },
+  {
+   "name": "Vendilion Clique",
+   "seen": 1802,
+   "picked": 1481,
+   "pickRate": 0.8219,
+   "firstTakes": 808,
+   "firstPickRate": 0.4483906770255272,
+   "inDecks": 1145,
+   "deckRate": 0.6354051054384018,
+   "onColour": 1157,
+   "onColourDecks": 1145,
+   "games": 1933,
+   "wins": 907,
+   "winRate": 0.4692,
+   "shrunk": 0.4695,
+   "ci": [
+    0.447,
+    0.492
+   ]
+  },
+  {
+   "name": "Phantasmal Image",
+   "seen": 1793,
+   "picked": 1182,
+   "pickRate": 0.6592,
+   "firstTakes": 532,
+   "firstPickRate": 0.2967094255437814,
+   "inDecks": 775,
+   "deckRate": 0.43223647518126046,
+   "onColour": 913,
+   "onColourDecks": 775,
+   "games": 1283,
+   "wins": 607,
+   "winRate": 0.4731,
+   "shrunk": 0.4735,
+   "ci": [
+    0.446,
+    0.5
+   ]
+  },
+  {
+   "name": "Man-o'-War",
+   "seen": 1791,
+   "picked": 1515,
+   "pickRate": 0.8459,
+   "firstTakes": 881,
+   "firstPickRate": 0.4919039642657733,
+   "inDecks": 1126,
+   "deckRate": 0.6286990508096035,
+   "onColour": 1130,
+   "onColourDecks": 1126,
+   "games": 1870,
+   "wins": 895,
+   "winRate": 0.4786,
+   "shrunk": 0.4788,
+   "ci": [
+    0.456,
+    0.501
+   ]
+  },
+  {
+   "name": "Mulldrifter",
+   "seen": 1781,
+   "picked": 1421,
+   "pickRate": 0.7979,
+   "firstTakes": 794,
+   "firstPickRate": 0.44581695676586186,
+   "inDecks": 1099,
+   "deckRate": 0.6170690623245367,
+   "onColour": 1101,
+   "onColourDecks": 1099,
+   "games": 1844,
+   "wins": 869,
+   "winRate": 0.4713,
+   "shrunk": 0.4716,
+   "ci": [
+    0.449,
+    0.494
+   ]
+  },
+  {
+   "name": "Control Magic",
+   "seen": 1784,
+   "picked": 1190,
+   "pickRate": 0.667,
+   "firstTakes": 540,
+   "firstPickRate": 0.30269058295964124,
+   "inDecks": 856,
+   "deckRate": 0.4798206278026906,
+   "onColour": 899,
+   "onColourDecks": 856,
+   "games": 1422,
+   "wins": 715,
+   "winRate": 0.5028,
+   "shrunk": 0.5028,
+   "ci": [
+    0.477,
+    0.529
+   ]
+  },
+  {
+   "name": "Sower of Temptation",
+   "seen": 1825,
+   "picked": 1651,
+   "pickRate": 0.9047,
+   "firstTakes": 1058,
+   "firstPickRate": 0.5797260273972603,
+   "inDecks": 1294,
+   "deckRate": 0.709041095890411,
+   "onColour": 1317,
+   "onColourDecks": 1294,
+   "games": 2183,
+   "wins": 1115,
+   "winRate": 0.5108,
+   "shrunk": 0.5107,
+   "ci": [
+    0.49,
+    0.532
+   ]
+  },
+  {
+   "name": "Venser, Shaper Savant",
+   "seen": 1788,
+   "picked": 1421,
+   "pickRate": 0.7947,
+   "firstTakes": 821,
+   "firstPickRate": 0.45917225950782997,
+   "inDecks": 1114,
+   "deckRate": 0.6230425055928411,
+   "onColour": 1126,
+   "onColourDecks": 1114,
+   "games": 1886,
+   "wins": 925,
+   "winRate": 0.4905,
+   "shrunk": 0.4906,
+   "ci": [
+    0.468,
+    0.513
+   ]
+  },
+  {
+   "name": "Murktide Regent",
+   "seen": 1803,
+   "picked": 1653,
+   "pickRate": 0.9168,
+   "firstTakes": 1086,
+   "firstPickRate": 0.6023294509151415,
+   "inDecks": 1294,
+   "deckRate": 0.7176927343316695,
+   "onColour": 1310,
+   "onColourDecks": 1294,
+   "games": 2179,
+   "wins": 1019,
+   "winRate": 0.4676,
+   "shrunk": 0.4679,
+   "ci": [
+    0.447,
+    0.489
+   ]
+  },
+  {
+   "name": "Treasure Cruise",
+   "seen": 1805,
+   "picked": 1024,
+   "pickRate": 0.5673,
+   "firstTakes": 353,
+   "firstPickRate": 0.1955678670360111,
+   "inDecks": 93,
+   "deckRate": 0.05152354570637119,
+   "onColour": 777,
+   "onColourDecks": 93,
+   "games": 146,
+   "wins": 64,
+   "winRate": 0.4384,
+   "shrunk": 0.4458,
+   "ci": [
+    0.36,
+    0.519
+   ]
+  },
+  {
+   "name": "Morphling",
+   "seen": 1817,
+   "picked": 1624,
+   "pickRate": 0.8938,
+   "firstTakes": 1033,
+   "firstPickRate": 0.5685195376995047,
+   "inDecks": 1284,
+   "deckRate": 0.7066593285635663,
+   "onColour": 1294,
+   "onColourDecks": 1284,
+   "games": 2192,
+   "wins": 995,
+   "winRate": 0.4539,
+   "shrunk": 0.4543,
+   "ci": [
+    0.433,
+    0.475
+   ]
+  },
+  {
+   "name": "Jace, the Mind Sculptor",
+   "seen": 1807,
+   "picked": 1665,
+   "pickRate": 0.9214,
+   "firstTakes": 1112,
+   "firstPickRate": 0.6153846153846154,
+   "inDecks": 1342,
+   "deckRate": 0.7426674045379081,
+   "onColour": 1354,
+   "onColourDecks": 1342,
+   "games": 2235,
+   "wins": 1083,
+   "winRate": 0.4846,
+   "shrunk": 0.4847,
+   "ci": [
+    0.464,
+    0.505
+   ]
+  },
+  {
+   "name": "Consecrated Sphinx",
+   "seen": 1793,
+   "picked": 1517,
+   "pickRate": 0.8461,
+   "firstTakes": 862,
+   "firstPickRate": 0.4807585052983826,
+   "inDecks": 1144,
+   "deckRate": 0.6380368098159509,
+   "onColour": 1163,
+   "onColourDecks": 1144,
+   "games": 1923,
+   "wins": 971,
+   "winRate": 0.5049,
+   "shrunk": 0.5049,
+   "ci": [
+    0.483,
+    0.527
+   ]
+  },
+  {
+   "name": "Thoughtseize",
+   "seen": 1800,
+   "picked": 1577,
+   "pickRate": 0.8761,
+   "firstTakes": 963,
+   "firstPickRate": 0.535,
+   "inDecks": 764,
+   "deckRate": 0.42444444444444446,
+   "onColour": 779,
+   "onColourDecks": 764,
+   "games": 1269,
+   "wins": 621,
+   "winRate": 0.4894,
+   "shrunk": 0.4895,
+   "ci": [
+    0.462,
+    0.517
+   ]
+  },
+  {
+   "name": "Hymn to Tourach",
+   "seen": 1804,
+   "picked": 1138,
+   "pickRate": 0.6308,
+   "firstTakes": 448,
+   "firstPickRate": 0.24833702882483372,
+   "inDecks": 415,
+   "deckRate": 0.23004434589800443,
+   "onColour": 610,
+   "onColourDecks": 415,
+   "games": 697,
+   "wins": 353,
+   "winRate": 0.5065,
+   "shrunk": 0.5063,
+   "ci": [
+    0.469,
+    0.543
+   ]
+  },
+  {
+   "name": "Dark Confidant",
+   "seen": 1777,
+   "picked": 982,
+   "pickRate": 0.5526,
+   "firstTakes": 370,
+   "firstPickRate": 0.20821609454136183,
+   "inDecks": 272,
+   "deckRate": 0.1530669667979741,
+   "onColour": 552,
+   "onColourDecks": 272,
+   "games": 447,
+   "wins": 227,
+   "winRate": 0.5078,
+   "shrunk": 0.5075,
+   "ci": [
+    0.462,
+    0.554
+   ]
+  },
+  {
+   "name": "Bloodghast",
+   "seen": 1752,
+   "picked": 825,
+   "pickRate": 0.4709,
+   "firstTakes": 270,
+   "firstPickRate": 0.1541095890410959,
+   "inDecks": 25,
+   "deckRate": 0.014269406392694063,
+   "onColour": 434,
+   "onColourDecks": 25,
+   "games": 33,
+   "wins": 17,
+   "winRate": 0.5152,
+   "shrunk": 0.5094,
+   "ci": [
+    0.352,
+    0.675
+   ]
+  },
+  {
+   "name": "Blood Artist",
+   "seen": 1797,
+   "picked": 1191,
+   "pickRate": 0.6628,
+   "firstTakes": 517,
+   "firstPickRate": 0.2877017250973845,
+   "inDecks": 594,
+   "deckRate": 0.330550918196995,
+   "onColour": 643,
+   "onColourDecks": 594,
+   "games": 995,
+   "wins": 489,
+   "winRate": 0.4915,
+   "shrunk": 0.4916,
+   "ci": [
+    0.46,
+    0.522
+   ]
+  },
+  {
+   "name": "Bitterblossom",
+   "seen": 1809,
+   "picked": 1556,
+   "pickRate": 0.8601,
+   "firstTakes": 954,
+   "firstPickRate": 0.527363184079602,
+   "inDecks": 756,
+   "deckRate": 0.417910447761194,
+   "onColour": 774,
+   "onColourDecks": 756,
+   "games": 1242,
+   "wins": 643,
+   "winRate": 0.5177,
+   "shrunk": 0.5174,
+   "ci": [
+    0.49,
+    0.545
+   ]
+  },
+  {
+   "name": "Fatal Push",
+   "seen": 1817,
+   "picked": 824,
+   "pickRate": 0.4535,
+   "firstTakes": 250,
+   "firstPickRate": 0.1375894331315355,
+   "inDecks": 6,
+   "deckRate": 0.003302146395156852,
+   "onColour": 416,
+   "onColourDecks": 6,
+   "games": 11,
+   "wins": 10,
+   "winRate": 0.9091,
+   "shrunk": 0.6452,
+   "ci": [
+    0.623,
+    0.984
+   ]
+  },
+  {
+   "name": "Doom Blade",
+   "seen": 1784,
+   "picked": 838,
+   "pickRate": 0.4697,
+   "firstTakes": 260,
+   "firstPickRate": 0.14573991031390135,
+   "inDecks": 18,
+   "deckRate": 0.010089686098654708,
+   "onColour": 431,
+   "onColourDecks": 18,
+   "games": 37,
+   "wins": 15,
+   "winRate": 0.4054,
+   "shrunk": 0.4386,
+   "ci": [
+    0.263,
+    0.565
+   ]
+  },
+  {
+   "name": "Bone Shards",
+   "seen": 1813,
+   "picked": 1545,
+   "pickRate": 0.8522,
+   "firstTakes": 932,
+   "firstPickRate": 0.5140650854936569,
+   "inDecks": 745,
+   "deckRate": 0.4109211252068395,
+   "onColour": 756,
+   "onColourDecks": 745,
+   "games": 1298,
+   "wins": 616,
+   "winRate": 0.4746,
+   "shrunk": 0.475,
+   "ci": [
+    0.448,
+    0.502
+   ]
+  },
+  {
+   "name": "Demonic Tutor",
+   "seen": 1817,
+   "picked": 1654,
+   "pickRate": 0.9103,
+   "firstTakes": 1147,
+   "firstPickRate": 0.6312603192074848,
+   "inDecks": 886,
+   "deckRate": 0.4876169510181618,
+   "onColour": 890,
+   "onColourDecks": 886,
+   "games": 1488,
+   "wins": 741,
+   "winRate": 0.498,
+   "shrunk": 0.498,
+   "ci": [
+    0.473,
+    0.523
+   ]
+  },
+  {
+   "name": "Hypnotic Specter",
+   "seen": 1794,
+   "picked": 1475,
+   "pickRate": 0.8222,
+   "firstTakes": 874,
+   "firstPickRate": 0.48717948717948717,
+   "inDecks": 833,
+   "deckRate": 0.46432552954292083,
+   "onColour": 865,
+   "onColourDecks": 833,
+   "games": 1390,
+   "wins": 703,
+   "winRate": 0.5058,
+   "shrunk": 0.5057,
+   "ci": [
+    0.479,
+    0.532
+   ]
+  },
+  {
+   "name": "Vampire Nighthawk",
+   "seen": 1787,
+   "picked": 1508,
+   "pickRate": 0.8439,
+   "firstTakes": 888,
+   "firstPickRate": 0.4969222160044768,
+   "inDecks": 856,
+   "deckRate": 0.4790151091214326,
+   "onColour": 893,
+   "onColourDecks": 856,
+   "games": 1440,
+   "wins": 719,
+   "winRate": 0.4993,
+   "shrunk": 0.4993,
+   "ci": [
+    0.474,
+    0.525
+   ]
+  },
+  {
+   "name": "Orcish Bowmasters",
+   "seen": 1801,
+   "picked": 1694,
+   "pickRate": 0.9406,
+   "firstTakes": 1192,
+   "firstPickRate": 0.6618545252637423,
+   "inDecks": 951,
+   "deckRate": 0.5280399777901166,
+   "onColour": 952,
+   "onColourDecks": 951,
+   "games": 1601,
+   "wins": 803,
+   "winRate": 0.5016,
+   "shrunk": 0.5015,
+   "ci": [
+    0.477,
+    0.526
+   ]
+  },
+  {
+   "name": "Shriekmaw",
+   "seen": 1783,
+   "picked": 952,
+   "pickRate": 0.5339,
+   "firstTakes": 356,
+   "firstPickRate": 0.19966348850252383,
+   "inDecks": 259,
+   "deckRate": 0.14526079641054404,
+   "onColour": 516,
+   "onColourDecks": 259,
+   "games": 405,
+   "wins": 196,
+   "winRate": 0.484,
+   "shrunk": 0.4847,
+   "ci": [
+    0.436,
+    0.533
+   ]
+  },
+  {
+   "name": "Ravenous Chupacabra",
+   "seen": 1799,
+   "picked": 899,
+   "pickRate": 0.4997,
+   "firstTakes": 312,
+   "firstPickRate": 0.1734296831573096,
+   "inDecks": 73,
+   "deckRate": 0.0405780989438577,
+   "onColour": 459,
+   "onColourDecks": 73,
+   "games": 114,
+   "wins": 43,
+   "winRate": 0.3772,
+   "shrunk": 0.3955,
+   "ci": [
+    0.294,
+    0.469
+   ]
+  },
+  {
+   "name": "Liliana of the Veil",
+   "seen": 1797,
+   "picked": 1110,
+   "pickRate": 0.6177,
+   "firstTakes": 458,
+   "firstPickRate": 0.2548692264885921,
+   "inDecks": 495,
+   "deckRate": 0.27545909849749584,
+   "onColour": 610,
+   "onColourDecks": 495,
+   "games": 865,
+   "wins": 422,
+   "winRate": 0.4879,
+   "shrunk": 0.4881,
+   "ci": [
+    0.455,
+    0.521
+   ]
+  },
+  {
+   "name": "Liliana, the Last Hope",
+   "seen": 1796,
+   "picked": 1468,
+   "pickRate": 0.8174,
+   "firstTakes": 846,
+   "firstPickRate": 0.4710467706013363,
+   "inDecks": 820,
+   "deckRate": 0.45657015590200445,
+   "onColour": 856,
+   "onColourDecks": 820,
+   "games": 1418,
+   "wins": 733,
+   "winRate": 0.5169,
+   "shrunk": 0.5167,
+   "ci": [
+    0.491,
+    0.543
+   ]
+  },
+  {
+   "name": "Damnation",
+   "seen": 1803,
+   "picked": 1272,
+   "pickRate": 0.7055,
+   "firstTakes": 608,
+   "firstPickRate": 0.3372157515252357,
+   "inDecks": 688,
+   "deckRate": 0.38158624514697725,
+   "onColour": 723,
+   "onColourDecks": 688,
+   "games": 1183,
+   "wins": 582,
+   "winRate": 0.492,
+   "shrunk": 0.4921,
+   "ci": [
+    0.464,
+    0.52
+   ]
+  },
+  {
+   "name": "Phyrexian Arena",
+   "seen": 1801,
+   "picked": 1007,
+   "pickRate": 0.5591,
+   "firstTakes": 395,
+   "firstPickRate": 0.21932259855635758,
+   "inDecks": 288,
+   "deckRate": 0.15991116046640755,
+   "onColour": 569,
+   "onColourDecks": 288,
+   "games": 489,
+   "wins": 234,
+   "winRate": 0.4785,
+   "shrunk": 0.4794,
+   "ci": [
+    0.435,
+    0.523
+   ]
+  },
+  {
+   "name": "Animate Dead",
+   "seen": 1793,
+   "picked": 1636,
+   "pickRate": 0.9124,
+   "firstTakes": 1135,
+   "firstPickRate": 0.6330172894590073,
+   "inDecks": 870,
+   "deckRate": 0.4852203011712214,
+   "onColour": 876,
+   "onColourDecks": 870,
+   "games": 1488,
+   "wins": 734,
+   "winRate": 0.4933,
+   "shrunk": 0.4934,
+   "ci": [
+    0.468,
+    0.519
+   ]
+  },
+  {
+   "name": "Reanimate",
+   "seen": 1782,
+   "picked": 1653,
+   "pickRate": 0.9276,
+   "firstTakes": 1177,
+   "firstPickRate": 0.6604938271604939,
+   "inDecks": 835,
+   "deckRate": 0.4685746352413019,
+   "onColour": 839,
+   "onColourDecks": 835,
+   "games": 1393,
+   "wins": 679,
+   "winRate": 0.4874,
+   "shrunk": 0.4876,
+   "ci": [
+    0.461,
+    0.514
+   ]
+  },
+  {
+   "name": "Grave Titan",
+   "seen": 1804,
+   "picked": 860,
+   "pickRate": 0.4767,
+   "firstTakes": 301,
+   "firstPickRate": 0.16685144124168513,
+   "inDecks": 37,
+   "deckRate": 0.020509977827051,
+   "onColour": 453,
+   "onColourDecks": 37,
+   "games": 53,
+   "wins": 23,
+   "winRate": 0.434,
+   "shrunk": 0.4521,
+   "ci": [
+    0.31,
+    0.567
+   ]
+  },
+  {
+   "name": "Kokusho, the Evening Star",
+   "seen": 1807,
+   "picked": 1335,
+   "pickRate": 0.7388,
+   "firstTakes": 653,
+   "firstPickRate": 0.36137244050913114,
+   "inDecks": 690,
+   "deckRate": 0.38184836745987827,
+   "onColour": 728,
+   "onColourDecks": 690,
+   "games": 1172,
+   "wins": 587,
+   "winRate": 0.5009,
+   "shrunk": 0.5008,
+   "ci": [
+    0.472,
+    0.529
+   ]
+  },
+  {
+   "name": "Sheoldred, the Apocalypse",
+   "seen": 1809,
+   "picked": 1578,
+   "pickRate": 0.8723,
+   "firstTakes": 1042,
+   "firstPickRate": 0.5760088446655611,
+   "inDecks": 926,
+   "deckRate": 0.5118850193477059,
+   "onColour": 974,
+   "onColourDecks": 926,
+   "games": 1541,
+   "wins": 818,
+   "winRate": 0.5308,
+   "shrunk": 0.5304,
+   "ci": [
+    0.506,
+    0.556
+   ]
+  },
+  {
+   "name": "Lightning Bolt",
+   "seen": 1793,
+   "picked": 1645,
+   "pickRate": 0.9175,
+   "firstTakes": 1184,
+   "firstPickRate": 0.660345789180145,
+   "inDecks": 783,
+   "deckRate": 0.43669827105409925,
+   "onColour": 783,
+   "onColourDecks": 783,
+   "games": 1308,
+   "wins": 663,
+   "winRate": 0.5069,
+   "shrunk": 0.5068,
+   "ci": [
+    0.48,
+    0.534
+   ]
+  },
+  {
+   "name": "Chain Lightning",
+   "seen": 1791,
+   "picked": 1495,
+   "pickRate": 0.8347,
+   "firstTakes": 883,
+   "firstPickRate": 0.49302065884980456,
+   "inDecks": 641,
+   "deckRate": 0.35790061418202124,
+   "onColour": 644,
+   "onColourDecks": 641,
+   "games": 1093,
+   "wins": 564,
+   "winRate": 0.516,
+   "shrunk": 0.5157,
+   "ci": [
+    0.486,
+    0.546
+   ]
+  },
+  {
+   "name": "Incinerate",
+   "seen": 1808,
+   "picked": 815,
+   "pickRate": 0.4508,
+   "firstTakes": 244,
+   "firstPickRate": 0.13495575221238937,
+   "inDecks": 151,
+   "deckRate": 0.08351769911504425,
+   "onColour": 380,
+   "onColourDecks": 151,
+   "games": 259,
+   "wins": 136,
+   "winRate": 0.5251,
+   "shrunk": 0.5233,
+   "ci": [
+    0.464,
+    0.585
+   ]
+  },
+  {
+   "name": "Arc Trail",
+   "seen": 1802,
+   "picked": 1342,
+   "pickRate": 0.7447,
+   "firstTakes": 679,
+   "firstPickRate": 0.376803551609323,
+   "inDecks": 608,
+   "deckRate": 0.3374028856825749,
+   "onColour": 610,
+   "onColourDecks": 608,
+   "games": 1021,
+   "wins": 523,
+   "winRate": 0.5122,
+   "shrunk": 0.512,
+   "ci": [
+    0.482,
+    0.543
+   ]
+  },
+  {
+   "name": "Goblin Guide",
+   "seen": 1778,
+   "picked": 889,
+   "pickRate": 0.5,
+   "firstTakes": 291,
+   "firstPickRate": 0.16366704161979753,
+   "inDecks": 47,
+   "deckRate": 0.026434195725534307,
+   "onColour": 387,
+   "onColourDecks": 47,
+   "games": 71,
+   "wins": 40,
+   "winRate": 0.5634,
+   "shrunk": 0.5494,
+   "ci": [
+    0.448,
+    0.673
+   ]
+  },
+  {
+   "name": "Monastery Swiftspear",
+   "seen": 1828,
+   "picked": 1562,
+   "pickRate": 0.8545,
+   "firstTakes": 944,
+   "firstPickRate": 0.5164113785557987,
+   "inDecks": 688,
+   "deckRate": 0.37636761487964987,
+   "onColour": 691,
+   "onColourDecks": 688,
+   "games": 1172,
+   "wins": 597,
+   "winRate": 0.5094,
+   "shrunk": 0.5092,
+   "ci": [
+    0.481,
+    0.538
+   ]
+  },
+  {
+   "name": "Ragavan, Nimble Pilferer",
+   "seen": 1772,
+   "picked": 1622,
+   "pickRate": 0.9153,
+   "firstTakes": 1150,
+   "firstPickRate": 0.6489841986455982,
+   "inDecks": 815,
+   "deckRate": 0.45993227990970653,
+   "onColour": 815,
+   "onColourDecks": 815,
+   "games": 1399,
+   "wins": 737,
+   "winRate": 0.5268,
+   "shrunk": 0.5264,
+   "ci": [
+    0.501,
+    0.553
+   ]
+  },
+  {
+   "name": "Young Pyromancer",
+   "seen": 1795,
+   "picked": 784,
+   "pickRate": 0.4368,
+   "firstTakes": 217,
+   "firstPickRate": 0.12089136490250696,
+   "inDecks": 59,
+   "deckRate": 0.03286908077994429,
+   "onColour": 343,
+   "onColourDecks": 59,
+   "games": 96,
+   "wins": 48,
+   "winRate": 0.5,
+   "shrunk": 0.5,
+   "ci": [
+    0.402,
+    0.598
+   ]
+  },
+  {
+   "name": "Dragon's Rage Channeler",
+   "seen": 1795,
+   "picked": 1439,
+   "pickRate": 0.8017,
+   "firstTakes": 796,
+   "firstPickRate": 0.4434540389972145,
+   "inDecks": 611,
+   "deckRate": 0.3403899721448468,
+   "onColour": 618,
+   "onColourDecks": 611,
+   "games": 1016,
+   "wins": 524,
+   "winRate": 0.5157,
+   "shrunk": 0.5154,
+   "ci": [
+    0.485,
+    0.546
+   ]
+  },
+  {
+   "name": "Goblin Rabblemaster",
+   "seen": 1817,
+   "picked": 1107,
+   "pickRate": 0.6092,
+   "firstTakes": 454,
+   "firstPickRate": 0.24986241056686848,
+   "inDecks": 515,
+   "deckRate": 0.28343423225096315,
+   "onColour": 531,
+   "onColourDecks": 515,
+   "games": 834,
+   "wins": 435,
+   "winRate": 0.5216,
+   "shrunk": 0.5211,
+   "ci": [
+    0.488,
+    0.555
+   ]
+  },
+  {
+   "name": "Flametongue Kavu",
+   "seen": 1810,
+   "picked": 871,
+   "pickRate": 0.4812,
+   "firstTakes": 273,
+   "firstPickRate": 0.15082872928176796,
+   "inDecks": 175,
+   "deckRate": 0.09668508287292818,
+   "onColour": 384,
+   "onColourDecks": 175,
+   "games": 303,
+   "wins": 148,
+   "winRate": 0.4884,
+   "shrunk": 0.4892,
+   "ci": [
+    0.433,
+    0.545
+   ]
+  },
+  {
+   "name": "Bonecrusher Giant",
+   "seen": 1833,
+   "picked": 1460,
+   "pickRate": 0.7965,
+   "firstTakes": 827,
+   "firstPickRate": 0.4511729405346427,
+   "inDecks": 684,
+   "deckRate": 0.37315875613747956,
+   "onColour": 688,
+   "onColourDecks": 684,
+   "games": 1136,
+   "wins": 559,
+   "winRate": 0.4921,
+   "shrunk": 0.4922,
+   "ci": [
+    0.463,
+    0.521
+   ]
+  },
+  {
+   "name": "Fable of the Mirror-Breaker",
+   "seen": 1788,
+   "picked": 1664,
+   "pickRate": 0.9306,
+   "firstTakes": 1180,
+   "firstPickRate": 0.6599552572706935,
+   "inDecks": 750,
+   "deckRate": 0.41946308724832215,
+   "onColour": 750,
+   "onColourDecks": 750,
+   "games": 1270,
+   "wins": 657,
+   "winRate": 0.5173,
+   "shrunk": 0.5171,
+   "ci": [
+    0.49,
+    0.545
+   ]
+  },
+  {
+   "name": "Seasoned Pyromancer",
+   "seen": 1789,
+   "picked": 1009,
+   "pickRate": 0.564,
+   "firstTakes": 397,
+   "firstPickRate": 0.2219116825041923,
+   "inDecks": 400,
+   "deckRate": 0.22358859698155395,
+   "onColour": 452,
+   "onColourDecks": 400,
+   "games": 679,
+   "wins": 350,
+   "winRate": 0.5155,
+   "shrunk": 0.515,
+   "ci": [
+    0.478,
+    0.553
+   ]
+  },
+  {
+   "name": "Ball Lightning",
+   "seen": 1794,
+   "picked": 747,
+   "pickRate": 0.4164,
+   "firstTakes": 222,
+   "firstPickRate": 0.12374581939799331,
+   "inDecks": 44,
+   "deckRate": 0.024526198439241916,
+   "onColour": 316,
+   "onColourDecks": 44,
+   "games": 86,
+   "wins": 48,
+   "winRate": 0.5581,
+   "shrunk": 0.5472,
+   "ci": [
+    0.453,
+    0.658
+   ]
+  },
+  {
+   "name": "Fury",
+   "seen": 1816,
+   "picked": 1567,
+   "pickRate": 0.8629,
+   "firstTakes": 956,
+   "firstPickRate": 0.526431718061674,
+   "inDecks": 761,
+   "deckRate": 0.41905286343612336,
+   "onColour": 781,
+   "onColourDecks": 761,
+   "games": 1273,
+   "wins": 670,
+   "winRate": 0.5263,
+   "shrunk": 0.5259,
+   "ci": [
+    0.499,
+    0.554
+   ]
+  },
+  {
+   "name": "Hellrider",
+   "seen": 1776,
+   "picked": 769,
+   "pickRate": 0.433,
+   "firstTakes": 247,
+   "firstPickRate": 0.13907657657657657,
+   "inDecks": 124,
+   "deckRate": 0.06981981981981981,
+   "onColour": 342,
+   "onColourDecks": 124,
+   "games": 190,
+   "wins": 103,
+   "winRate": 0.5421,
+   "shrunk": 0.5381,
+   "ci": [
+    0.471,
+    0.611
+   ]
+  },
+  {
+   "name": "Siege-Gang Commander",
+   "seen": 1815,
+   "picked": 939,
+   "pickRate": 0.5174,
+   "firstTakes": 315,
+   "firstPickRate": 0.17355371900826447,
+   "inDecks": 238,
+   "deckRate": 0.13112947658402205,
+   "onColour": 402,
+   "onColourDecks": 238,
+   "games": 403,
+   "wins": 201,
+   "winRate": 0.4988,
+   "shrunk": 0.4988,
+   "ci": [
+    0.45,
+    0.547
+   ]
+  },
+  {
+   "name": "Chandra, Torch of Defiance",
+   "seen": 1823,
+   "picked": 830,
+   "pickRate": 0.4553,
+   "firstTakes": 286,
+   "firstPickRate": 0.1568842567196928,
+   "inDecks": 118,
+   "deckRate": 0.06472846955567746,
+   "onColour": 334,
+   "onColourDecks": 118,
+   "games": 202,
+   "wins": 114,
+   "winRate": 0.5644,
+   "shrunk": 0.5586,
+   "ci": [
+    0.495,
+    0.631
+   ]
+  },
+  {
+   "name": "Glorybringer",
+   "seen": 1768,
+   "picked": 896,
+   "pickRate": 0.5068,
+   "firstTakes": 330,
+   "firstPickRate": 0.18665158371040724,
+   "inDecks": 225,
+   "deckRate": 0.12726244343891402,
+   "onColour": 397,
+   "onColourDecks": 225,
+   "games": 369,
+   "wins": 194,
+   "winRate": 0.5257,
+   "shrunk": 0.5244,
+   "ci": [
+    0.475,
+    0.576
+   ]
+  },
+  {
+   "name": "Goldspan Dragon",
+   "seen": 1805,
+   "picked": 1224,
+   "pickRate": 0.6781,
+   "firstTakes": 591,
+   "firstPickRate": 0.32742382271468146,
+   "inDecks": 571,
+   "deckRate": 0.31634349030470915,
+   "onColour": 593,
+   "onColourDecks": 571,
+   "games": 949,
+   "wins": 487,
+   "winRate": 0.5132,
+   "shrunk": 0.5129,
+   "ci": [
+    0.481,
+    0.545
+   ]
+  },
+  {
+   "name": "Thundermaw Hellkite",
+   "seen": 1788,
+   "picked": 798,
+   "pickRate": 0.4463,
+   "firstTakes": 264,
+   "firstPickRate": 0.1476510067114094,
+   "inDecks": 119,
+   "deckRate": 0.06655480984340045,
+   "onColour": 353,
+   "onColourDecks": 119,
+   "games": 185,
+   "wins": 102,
+   "winRate": 0.5514,
+   "shrunk": 0.5463,
+   "ci": [
+    0.479,
+    0.621
+   ]
+  },
+  {
+   "name": "Shivan Dragon",
+   "seen": 1812,
+   "picked": 856,
+   "pickRate": 0.4724,
+   "firstTakes": 266,
+   "firstPickRate": 0.1467991169977925,
+   "inDecks": 28,
+   "deckRate": 0.01545253863134658,
+   "onColour": 365,
+   "onColourDecks": 28,
+   "games": 57,
+   "wins": 31,
+   "winRate": 0.5439,
+   "shrunk": 0.5325,
+   "ci": [
+    0.416,
+    0.666
+   ]
+  },
+  {
+   "name": "Inferno Titan",
+   "seen": 1802,
+   "picked": 1327,
+   "pickRate": 0.7364,
+   "firstTakes": 685,
+   "firstPickRate": 0.38013318534961155,
+   "inDecks": 559,
+   "deckRate": 0.3102108768035516,
+   "onColour": 583,
+   "onColourDecks": 559,
+   "games": 910,
+   "wins": 493,
+   "winRate": 0.5418,
+   "shrunk": 0.5409,
+   "ci": [
+    0.509,
+    0.574
+   ]
+  },
+  {
+   "name": "Llanowar Elves",
+   "seen": 1784,
+   "picked": 1193,
+   "pickRate": 0.6687,
+   "firstTakes": 543,
+   "firstPickRate": 0.30437219730941706,
+   "inDecks": 340,
+   "deckRate": 0.1905829596412556,
+   "onColour": 420,
+   "onColourDecks": 340,
+   "games": 574,
+   "wins": 294,
+   "winRate": 0.5122,
+   "shrunk": 0.5118,
+   "ci": [
+    0.471,
+    0.553
+   ]
+  },
+  {
+   "name": "Birds of Paradise",
+   "seen": 1774,
+   "picked": 857,
+   "pickRate": 0.4831,
+   "firstTakes": 299,
+   "firstPickRate": 0.1685456595264938,
+   "inDecks": 10,
+   "deckRate": 0.005636978579481398,
+   "onColour": 366,
+   "onColourDecks": 10,
+   "games": 15,
+   "wins": 5,
+   "winRate": 0.3333,
+   "shrunk": 0.4286,
+   "ci": [
+    0.152,
+    0.583
+   ]
+  },
+  {
+   "name": "Sakura-Tribe Elder",
+   "seen": 1796,
+   "picked": 1008,
+   "pickRate": 0.5612,
+   "firstTakes": 357,
+   "firstPickRate": 0.1987750556792873,
+   "inDecks": 207,
+   "deckRate": 0.11525612472160357,
+   "onColour": 406,
+   "onColourDecks": 207,
+   "games": 346,
+   "wins": 185,
+   "winRate": 0.5347,
+   "shrunk": 0.5328,
+   "ci": [
+    0.482,
+    0.587
+   ]
+  },
+  {
+   "name": "Lotus Cobra",
+   "seen": 1812,
+   "picked": 1541,
+   "pickRate": 0.8504,
+   "firstTakes": 917,
+   "firstPickRate": 0.5060706401766004,
+   "inDecks": 620,
+   "deckRate": 0.34216335540838855,
+   "onColour": 625,
+   "onColourDecks": 620,
+   "games": 1074,
+   "wins": 526,
+   "winRate": 0.4898,
+   "shrunk": 0.4899,
+   "ci": [
+    0.46,
+    0.52
+   ]
+  },
+  {
+   "name": "Tarmogoyf",
+   "seen": 1810,
+   "picked": 1507,
+   "pickRate": 0.8326,
+   "firstTakes": 872,
+   "firstPickRate": 0.481767955801105,
+   "inDecks": 657,
+   "deckRate": 0.3629834254143646,
+   "onColour": 658,
+   "onColourDecks": 657,
+   "games": 1081,
+   "wins": 518,
+   "winRate": 0.4792,
+   "shrunk": 0.4796,
+   "ci": [
+    0.45,
+    0.509
+   ]
+  },
+  {
+   "name": "Scavenging Ooze",
+   "seen": 1814,
+   "picked": 1117,
+   "pickRate": 0.6158,
+   "firstTakes": 471,
+   "firstPickRate": 0.25964718853362734,
+   "inDecks": 450,
+   "deckRate": 0.24807056229327454,
+   "onColour": 459,
+   "onColourDecks": 450,
+   "games": 737,
+   "wins": 383,
+   "winRate": 0.5197,
+   "shrunk": 0.5192,
+   "ci": [
+    0.484,
+    0.556
+   ]
+  },
+  {
+   "name": "Eternal Witness",
+   "seen": 1777,
+   "picked": 1370,
+   "pickRate": 0.771,
+   "firstTakes": 700,
+   "firstPickRate": 0.3939223410241981,
+   "inDecks": 547,
+   "deckRate": 0.30782217220033764,
+   "onColour": 611,
+   "onColourDecks": 547,
+   "games": 891,
+   "wins": 451,
+   "winRate": 0.5062,
+   "shrunk": 0.506,
+   "ci": [
+    0.473,
+    0.539
+   ]
+  },
+  {
+   "name": "Tireless Tracker",
+   "seen": 1813,
+   "picked": 1487,
+   "pickRate": 0.8202,
+   "firstTakes": 890,
+   "firstPickRate": 0.49089906232763375,
+   "inDecks": 594,
+   "deckRate": 0.32763375620518476,
+   "onColour": 595,
+   "onColourDecks": 594,
+   "games": 967,
+   "wins": 467,
+   "winRate": 0.4829,
+   "shrunk": 0.4833,
+   "ci": [
+    0.452,
+    0.514
+   ]
+  },
+  {
+   "name": "Courser of Kruphix",
+   "seen": 1802,
+   "picked": 1442,
+   "pickRate": 0.8002,
+   "firstTakes": 813,
+   "firstPickRate": 0.451165371809101,
+   "inDecks": 554,
+   "deckRate": 0.3074361820199778,
+   "onColour": 605,
+   "onColourDecks": 554,
+   "games": 896,
+   "wins": 457,
+   "winRate": 0.51,
+   "shrunk": 0.5098,
+   "ci": [
+    0.477,
+    0.543
+   ]
+  },
+  {
+   "name": "Thrun, the Last Troll",
+   "seen": 1814,
+   "picked": 1101,
+   "pickRate": 0.6069,
+   "firstTakes": 491,
+   "firstPickRate": 0.27067254685777287,
+   "inDecks": 412,
+   "deckRate": 0.22712238147739802,
+   "onColour": 454,
+   "onColourDecks": 412,
+   "games": 697,
+   "wins": 356,
+   "winRate": 0.5108,
+   "shrunk": 0.5105,
+   "ci": [
+    0.474,
+    0.548
+   ]
+  },
+  {
+   "name": "Questing Beast",
+   "seen": 1799,
+   "picked": 712,
+   "pickRate": 0.3958,
+   "firstTakes": 199,
+   "firstPickRate": 0.11061700944969427,
+   "inDecks": 23,
+   "deckRate": 0.012784880489160644,
+   "onColour": 283,
+   "onColourDecks": 23,
+   "games": 36,
+   "wins": 19,
+   "winRate": 0.5278,
+   "shrunk": 0.5179,
+   "ci": [
+    0.37,
+    0.68
+   ]
+  },
+  {
+   "name": "Vengevine",
+   "seen": 1791,
+   "picked": 1507,
+   "pickRate": 0.8414,
+   "firstTakes": 894,
+   "firstPickRate": 0.4991624790619765,
+   "inDecks": 628,
+   "deckRate": 0.350642099385818,
+   "onColour": 685,
+   "onColourDecks": 628,
+   "games": 1072,
+   "wins": 526,
+   "winRate": 0.4907,
+   "shrunk": 0.4908,
+   "ci": [
+    0.461,
+    0.521
+   ]
+  },
+  {
+   "name": "Rancor",
+   "seen": 1803,
+   "picked": 828,
+   "pickRate": 0.4592,
+   "firstTakes": 261,
+   "firstPickRate": 0.1447587354409318,
+   "inDecks": 40,
+   "deckRate": 0.022185246810870772,
+   "onColour": 329,
+   "onColourDecks": 40,
+   "games": 73,
+   "wins": 29,
+   "winRate": 0.3973,
+   "shrunk": 0.4194,
+   "ci": [
+    0.293,
+    0.512
+   ]
+  },
+  {
+   "name": "Thragtusk",
+   "seen": 1819,
+   "picked": 1458,
+   "pickRate": 0.8015,
+   "firstTakes": 799,
+   "firstPickRate": 0.4392523364485981,
+   "inDecks": 614,
+   "deckRate": 0.33754810335349095,
+   "onColour": 614,
+   "onColourDecks": 614,
+   "games": 1019,
+   "wins": 505,
+   "winRate": 0.4956,
+   "shrunk": 0.4957,
+   "ci": [
+    0.465,
+    0.526
+   ]
+  },
+  {
+   "name": "Polukranos, World Eater",
+   "seen": 1791,
+   "picked": 736,
+   "pickRate": 0.4109,
+   "firstTakes": 183,
+   "firstPickRate": 0.10217755443886097,
+   "inDecks": 16,
+   "deckRate": 0.00893355667225014,
+   "onColour": 295,
+   "onColourDecks": 16,
+   "games": 31,
+   "wins": 19,
+   "winRate": 0.6129,
+   "shrunk": 0.5686,
+   "ci": [
+    0.438,
+    0.763
+   ]
+  },
+  {
+   "name": "Garruk Wildspeaker",
+   "seen": 1797,
+   "picked": 812,
+   "pickRate": 0.4519,
+   "firstTakes": 237,
+   "firstPickRate": 0.1318864774624374,
+   "inDecks": 106,
+   "deckRate": 0.05898720089037284,
+   "onColour": 322,
+   "onColourDecks": 106,
+   "games": 169,
+   "wins": 91,
+   "winRate": 0.5385,
+   "shrunk": 0.5344,
+   "ci": [
+    0.463,
+    0.612
+   ]
+  },
+  {
+   "name": "Garruk Relentless",
+   "seen": 1803,
+   "picked": 728,
+   "pickRate": 0.4038,
+   "firstTakes": 201,
+   "firstPickRate": 0.11148086522462562,
+   "inDecks": 35,
+   "deckRate": 0.019412090959511925,
+   "onColour": 282,
+   "onColourDecks": 35,
+   "games": 57,
+   "wins": 28,
+   "winRate": 0.4912,
+   "shrunk": 0.4935,
+   "ci": [
+    0.366,
+    0.617
+   ]
+  },
+  {
+   "name": "Acidic Slime",
+   "seen": 1780,
+   "picked": 779,
+   "pickRate": 0.4376,
+   "firstTakes": 227,
+   "firstPickRate": 0.12752808988764044,
+   "inDecks": 34,
+   "deckRate": 0.019101123595505618,
+   "onColour": 320,
+   "onColourDecks": 34,
+   "games": 50,
+   "wins": 29,
+   "winRate": 0.58,
+   "shrunk": 0.5571,
+   "ci": [
+    0.442,
+    0.706
+   ]
+  },
+  {
+   "name": "Nissa, Who Shakes the World",
+   "seen": 1807,
+   "picked": 1249,
+   "pickRate": 0.6912,
+   "firstTakes": 615,
+   "firstPickRate": 0.3403431101272828,
+   "inDecks": 531,
+   "deckRate": 0.29385722191477587,
+   "onColour": 581,
+   "onColourDecks": 531,
+   "games": 908,
+   "wins": 464,
+   "winRate": 0.511,
+   "shrunk": 0.5108,
+   "ci": [
+    0.479,
+    0.543
+   ]
+  },
+  {
+   "name": "Rampaging Baloths",
+   "seen": 1807,
+   "picked": 1436,
+   "pickRate": 0.7947,
+   "firstTakes": 770,
+   "firstPickRate": 0.42612064194798005,
+   "inDecks": 547,
+   "deckRate": 0.30271167681239625,
+   "onColour": 603,
+   "onColourDecks": 547,
+   "games": 911,
+   "wins": 465,
+   "winRate": 0.5104,
+   "shrunk": 0.5102,
+   "ci": [
+    0.478,
+    0.543
+   ]
+  },
+  {
+   "name": "Titania, Protector of Argoth",
+   "seen": 1792,
+   "picked": 1066,
+   "pickRate": 0.5949,
+   "firstTakes": 429,
+   "firstPickRate": 0.23939732142857142,
+   "inDecks": 390,
+   "deckRate": 0.21763392857142858,
+   "onColour": 458,
+   "onColourDecks": 390,
+   "games": 651,
+   "wins": 317,
+   "winRate": 0.4869,
+   "shrunk": 0.4873,
+   "ci": [
+    0.449,
+    0.525
+   ]
+  },
+  {
+   "name": "Primeval Titan",
+   "seen": 1777,
+   "picked": 1004,
+   "pickRate": 0.565,
+   "firstTakes": 375,
+   "firstPickRate": 0.21102982554867755,
+   "inDecks": 154,
+   "deckRate": 0.08666291502532358,
+   "onColour": 387,
+   "onColourDecks": 154,
+   "games": 253,
+   "wins": 128,
+   "winRate": 0.5059,
+   "shrunk": 0.5055,
+   "ci": [
+    0.445,
+    0.567
+   ]
+  },
+  {
+   "name": "Avenger of Zendikar",
+   "seen": 1788,
+   "picked": 1185,
+   "pickRate": 0.6628,
+   "firstTakes": 579,
+   "firstPickRate": 0.3238255033557047,
+   "inDecks": 410,
+   "deckRate": 0.22930648769574943,
+   "onColour": 484,
+   "onColourDecks": 410,
+   "games": 663,
+   "wins": 326,
+   "winRate": 0.4917,
+   "shrunk": 0.4919,
+   "ci": [
+    0.454,
+    0.53
+   ]
+  },
+  {
+   "name": "Craterhoof Behemoth",
+   "seen": 1814,
+   "picked": 1345,
+   "pickRate": 0.7415,
+   "firstTakes": 687,
+   "firstPickRate": 0.3787210584343991,
+   "inDecks": 519,
+   "deckRate": 0.2861080485115766,
+   "onColour": 576,
+   "onColourDecks": 519,
+   "games": 842,
+   "wins": 419,
+   "winRate": 0.4976,
+   "shrunk": 0.4977,
+   "ci": [
+    0.464,
+    0.531
+   ]
+  },
+  {
+   "name": "Teferi, Hero of Dominaria",
+   "seen": 1816,
+   "picked": 1159,
+   "pickRate": 0.6382,
+   "firstTakes": 517,
+   "firstPickRate": 0.28469162995594716,
+   "inDecks": 364,
+   "deckRate": 0.20044052863436124,
+   "onColour": 414,
+   "onColourDecks": 364,
+   "games": 597,
+   "wins": 298,
+   "winRate": 0.4992,
+   "shrunk": 0.4992,
+   "ci": [
+    0.459,
+    0.539
+   ]
+  },
+  {
+   "name": "Reflector Mage",
+   "seen": 1805,
+   "picked": 514,
+   "pickRate": 0.2848,
+   "firstTakes": 94,
+   "firstPickRate": 0.0520775623268698,
+   "inDecks": 3,
+   "deckRate": 0.0016620498614958448,
+   "onColour": 186,
+   "onColourDecks": 3,
+   "games": 8,
+   "wins": 2,
+   "winRate": 0.25,
+   "shrunk": 0.4286,
+   "ci": [
+    0.071,
+    0.591
+   ]
+  },
+  {
+   "name": "Psychic Frog",
+   "seen": 1776,
+   "picked": 1639,
+   "pickRate": 0.9229,
+   "firstTakes": 1138,
+   "firstPickRate": 0.6407657657657657,
+   "inDecks": 555,
+   "deckRate": 0.3125,
+   "onColour": 555,
+   "onColourDecks": 555,
+   "games": 950,
+   "wins": 451,
+   "winRate": 0.4747,
+   "shrunk": 0.4753,
+   "ci": [
+    0.443,
+    0.507
+   ]
+  },
+  {
+   "name": "Baleful Strix",
+   "seen": 1815,
+   "picked": 994,
+   "pickRate": 0.5477,
+   "firstTakes": 333,
+   "firstPickRate": 0.1834710743801653,
+   "inDecks": 231,
+   "deckRate": 0.12727272727272726,
+   "onColour": 335,
+   "onColourDecks": 231,
+   "games": 400,
+   "wins": 203,
+   "winRate": 0.5075,
+   "shrunk": 0.5071,
+   "ci": [
+    0.459,
+    0.556
+   ]
+  },
+  {
+   "name": "Expressive Iteration",
+   "seen": 1813,
+   "picked": 523,
+   "pickRate": 0.2885,
+   "firstTakes": 111,
+   "firstPickRate": 0.061224489795918366,
+   "inDecks": 2,
+   "deckRate": 0.0011031439602868175,
+   "onColour": 94,
+   "onColourDecks": 2,
+   "games": 3,
+   "wins": 1,
+   "winRate": 0.3333,
+   "shrunk": 0.4782,
+   "ci": [
+    0.061,
+    0.792
+   ]
+  },
+  {
+   "name": "Fire // Ice",
+   "seen": 1809,
+   "picked": 582,
+   "pickRate": 0.3217,
+   "firstTakes": 113,
+   "firstPickRate": 0.06246545052515202,
+   "inDecks": 2,
+   "deckRate": 0.001105583195135434,
+   "onColour": 103,
+   "onColourDecks": 2,
+   "games": 3,
+   "wins": 2,
+   "winRate": 0.6667,
+   "shrunk": 0.5217,
+   "ci": [
+    0.208,
+    0.939
+   ]
+  },
+  {
+   "name": "Kolaghan's Command",
+   "seen": 1794,
+   "picked": 1042,
+   "pickRate": 0.5808,
+   "firstTakes": 430,
+   "firstPickRate": 0.23968784838350055,
+   "inDecks": 64,
+   "deckRate": 0.03567447045707915,
+   "onColour": 71,
+   "onColourDecks": 64,
+   "games": 105,
+   "wins": 54,
+   "winRate": 0.5143,
+   "shrunk": 0.512,
+   "ci": [
+    0.42,
+    0.608
+   ]
+  },
+  {
+   "name": "Falkenrath Aristocrat",
+   "seen": 1787,
+   "picked": 724,
+   "pickRate": 0.4051,
+   "firstTakes": 180,
+   "firstPickRate": 0.10072747621712368,
+   "inDecks": 29,
+   "deckRate": 0.016228315612758813,
+   "onColour": 68,
+   "onColourDecks": 29,
+   "games": 51,
+   "wins": 25,
+   "winRate": 0.4902,
+   "shrunk": 0.493,
+   "ci": [
+    0.359,
+    0.623
+   ]
+  },
+  {
+   "name": "Bloodbraid Elf",
+   "seen": 1793,
+   "picked": 1312,
+   "pickRate": 0.7317,
+   "firstTakes": 657,
+   "firstPickRate": 0.3664249860568879,
+   "inDecks": 187,
+   "deckRate": 0.10429447852760736,
+   "onColour": 188,
+   "onColourDecks": 187,
+   "games": 309,
+   "wins": 160,
+   "winRate": 0.5178,
+   "shrunk": 0.5167,
+   "ci": [
+    0.462,
+    0.573
+   ]
+  },
+  {
+   "name": "Huntmaster of the Fells",
+   "seen": 1793,
+   "picked": 743,
+   "pickRate": 0.4144,
+   "firstTakes": 205,
+   "firstPickRate": 0.11433351924149471,
+   "inDecks": 36,
+   "deckRate": 0.020078081427774678,
+   "onColour": 81,
+   "onColourDecks": 36,
+   "games": 55,
+   "wins": 39,
+   "winRate": 0.7091,
+   "shrunk": 0.6533,
+   "ci": [
+    0.579,
+    0.812
+   ]
+  },
+  {
+   "name": "Knight of the Reliquary",
+   "seen": 1801,
+   "picked": 666,
+   "pickRate": 0.3698,
+   "firstTakes": 150,
+   "firstPickRate": 0.0832870627429206,
+   "inDecks": 0,
+   "deckRate": 0,
+   "onColour": 94,
+   "onColourDecks": 0,
+   "games": 0,
+   "wins": 0,
+   "winRate": 0,
+   "shrunk": 0.5,
+   "ci": [
+    0,
+    1
+   ]
+  },
+  {
+   "name": "Voice of Resurgence",
+   "seen": 1810,
+   "picked": 703,
+   "pickRate": 0.3884,
+   "firstTakes": 191,
+   "firstPickRate": 0.10552486187845304,
+   "inDecks": 23,
+   "deckRate": 0.01270718232044199,
+   "onColour": 103,
+   "onColourDecks": 23,
+   "games": 32,
+   "wins": 17,
+   "winRate": 0.5313,
+   "shrunk": 0.5192,
+   "ci": [
+    0.364,
+    0.691
+   ]
+  },
+  {
+   "name": "Lingering Souls",
+   "seen": 1805,
+   "picked": 1571,
+   "pickRate": 0.8704,
+   "firstTakes": 951,
+   "firstPickRate": 0.5268698060941829,
+   "inDecks": 957,
+   "deckRate": 0.5301939058171745,
+   "onColour": 958,
+   "onColourDecks": 957,
+   "games": 1593,
+   "wins": 808,
+   "winRate": 0.5072,
+   "shrunk": 0.5071,
+   "ci": [
+    0.483,
+    0.532
+   ]
+  },
+  {
+   "name": "Sorin, Lord of Innistrad",
+   "seen": 1792,
+   "picked": 733,
+   "pickRate": 0.409,
+   "firstTakes": 199,
+   "firstPickRate": 0.11104910714285714,
+   "inDecks": 32,
+   "deckRate": 0.017857142857142856,
+   "onColour": 110,
+   "onColourDecks": 32,
+   "games": 49,
+   "wins": 20,
+   "winRate": 0.4082,
+   "shrunk": 0.4348,
+   "ci": [
+    0.282,
+    0.548
+   ]
+  },
+  {
+   "name": "Uro, Titan of Nature's Wrath",
+   "seen": 1787,
+   "picked": 875,
+   "pickRate": 0.4896,
+   "firstTakes": 277,
+   "firstPickRate": 0.15500839395635144,
+   "inDecks": 86,
+   "deckRate": 0.048125349748181306,
+   "onColour": 127,
+   "onColourDecks": 86,
+   "games": 145,
+   "wins": 75,
+   "winRate": 0.5172,
+   "shrunk": 0.5151,
+   "ci": [
+    0.437,
+    0.597
+   ]
+  },
+  {
+   "name": "Mystic Snake",
+   "seen": 1796,
+   "picked": 618,
+   "pickRate": 0.3441,
+   "firstTakes": 155,
+   "firstPickRate": 0.08630289532293986,
+   "inDecks": 0,
+   "deckRate": 0,
+   "onColour": 79,
+   "onColourDecks": 0,
+   "games": 0,
+   "wins": 0,
+   "winRate": 0,
+   "shrunk": 0.5,
+   "ci": [
+    0,
+    1
+   ]
+  },
+  {
+   "name": "Grist, the Hunger Tide",
+   "seen": 1805,
+   "picked": 818,
+   "pickRate": 0.4532,
+   "firstTakes": 260,
+   "firstPickRate": 0.1440443213296399,
+   "inDecks": 63,
+   "deckRate": 0.034903047091412745,
+   "onColour": 77,
+   "onColourDecks": 63,
+   "games": 112,
+   "wins": 54,
+   "winRate": 0.4821,
+   "shrunk": 0.4848,
+   "ci": [
+    0.392,
+    0.574
+   ]
+  },
+  {
+   "name": "Maelstrom Pulse",
+   "seen": 1814,
+   "picked": 600,
+   "pickRate": 0.3308,
+   "firstTakes": 132,
+   "firstPickRate": 0.07276736493936053,
+   "inDecks": 1,
+   "deckRate": 0.0005512679162072767,
+   "onColour": 74,
+   "onColourDecks": 1,
+   "games": 0,
+   "wins": 0,
+   "winRate": 0,
+   "shrunk": 0.5,
+   "ci": [
+    0,
+    1
+   ]
+  },
+  {
+   "name": "Lightning Helix",
+   "seen": 1817,
+   "picked": 1295,
+   "pickRate": 0.7127,
+   "firstTakes": 589,
+   "firstPickRate": 0.32416070445789763,
+   "inDecks": 221,
+   "deckRate": 0.12162905888827738,
+   "onColour": 228,
+   "onColourDecks": 221,
+   "games": 367,
+   "wins": 188,
+   "winRate": 0.5123,
+   "shrunk": 0.5116,
+   "ci": [
+    0.461,
+    0.563
+   ]
+  },
+  {
+   "name": "Figure of Destiny",
+   "seen": 1777,
+   "picked": 687,
+   "pickRate": 0.3866,
+   "firstTakes": 177,
+   "firstPickRate": 0.0996060776589758,
+   "inDecks": 4,
+   "deckRate": 0.0022509848058525606,
+   "onColour": 109,
+   "onColourDecks": 4,
+   "games": 5,
+   "wins": 4,
+   "winRate": 0.8,
+   "shrunk": 0.56,
+   "ci": [
+    0.376,
+    0.964
+   ]
+  },
+  {
+   "name": "Umezawa's Jitte",
+   "seen": 1786,
+   "picked": 1734,
+   "pickRate": 0.9709,
+   "firstTakes": 1368,
+   "firstPickRate": 0.7659574468085106,
+   "inDecks": 1734,
+   "deckRate": 0.9708846584546472,
+   "onColour": 1734,
+   "onColourDecks": 1734,
+   "games": 2904,
+   "wins": 1465,
+   "winRate": 0.5045,
+   "shrunk": 0.5044,
+   "ci": [
+    0.486,
+    0.523
+   ]
+  },
+  {
+   "name": "Sword of Fire and Ice",
+   "seen": 1792,
+   "picked": 1225,
+   "pickRate": 0.6836,
+   "firstTakes": 592,
+   "firstPickRate": 0.33035714285714285,
+   "inDecks": 735,
+   "deckRate": 0.41015625,
+   "onColour": 1225,
+   "onColourDecks": 735,
+   "games": 1250,
+   "wins": 644,
+   "winRate": 0.5152,
+   "shrunk": 0.515,
+   "ci": [
+    0.487,
+    0.543
+   ]
+  },
+  {
+   "name": "Sword of Feast and Famine",
+   "seen": 1808,
+   "picked": 1219,
+   "pickRate": 0.6742,
+   "firstTakes": 524,
+   "firstPickRate": 0.28982300884955753,
+   "inDecks": 495,
+   "deckRate": 0.273783185840708,
+   "onColour": 1219,
+   "onColourDecks": 495,
+   "games": 840,
+   "wins": 448,
+   "winRate": 0.5333,
+   "shrunk": 0.5326,
+   "ci": [
+    0.5,
+    0.567
+   ]
+  },
+  {
+   "name": "Sword of Light and Shadow",
+   "seen": 1802,
+   "picked": 1225,
+   "pickRate": 0.6798,
+   "firstTakes": 562,
+   "firstPickRate": 0.3118756936736959,
+   "inDecks": 808,
+   "deckRate": 0.4483906770255272,
+   "onColour": 1225,
+   "onColourDecks": 808,
+   "games": 1354,
+   "wins": 673,
+   "winRate": 0.497,
+   "shrunk": 0.4971,
+   "ci": [
+    0.47,
+    0.524
+   ]
+  },
+  {
+   "name": "Batterskull",
+   "seen": 1785,
+   "picked": 1070,
+   "pickRate": 0.5994,
+   "firstTakes": 476,
+   "firstPickRate": 0.26666666666666666,
+   "inDecks": 276,
+   "deckRate": 0.1546218487394958,
+   "onColour": 1070,
+   "onColourDecks": 276,
+   "games": 491,
+   "wins": 257,
+   "winRate": 0.5234,
+   "shrunk": 0.5225,
+   "ci": [
+    0.479,
+    0.567
+   ]
+  },
+  {
+   "name": "Skullclamp",
+   "seen": 1812,
+   "picked": 1768,
+   "pickRate": 0.9757,
+   "firstTakes": 1474,
+   "firstPickRate": 0.8134657836644592,
+   "inDecks": 1768,
+   "deckRate": 0.9757174392935982,
+   "onColour": 1768,
+   "onColourDecks": 1768,
+   "games": 2974,
+   "wins": 1424,
+   "winRate": 0.4788,
+   "shrunk": 0.479,
+   "ci": [
+    0.461,
+    0.497
+   ]
+  },
+  {
+   "name": "Walking Ballista",
+   "seen": 1795,
+   "picked": 1587,
+   "pickRate": 0.8841,
+   "firstTakes": 1040,
+   "firstPickRate": 0.5793871866295265,
+   "inDecks": 1582,
+   "deckRate": 0.8813370473537604,
+   "onColour": 1587,
+   "onColourDecks": 1582,
+   "games": 2670,
+   "wins": 1338,
+   "winRate": 0.5011,
+   "shrunk": 0.5011,
+   "ci": [
+    0.482,
+    0.52
+   ]
+  },
+  {
+   "name": "Hangarback Walker",
+   "seen": 1808,
+   "picked": 1269,
+   "pickRate": 0.7019,
+   "firstTakes": 575,
+   "firstPickRate": 0.3180309734513274,
+   "inDecks": 555,
+   "deckRate": 0.3069690265486726,
+   "onColour": 1269,
+   "onColourDecks": 555,
+   "games": 920,
+   "wins": 490,
+   "winRate": 0.5326,
+   "shrunk": 0.5319,
+   "ci": [
+    0.5,
+    0.565
+   ]
+  },
+  {
+   "name": "Smuggler's Copter",
+   "seen": 1813,
+   "picked": 1243,
+   "pickRate": 0.6856,
+   "firstTakes": 557,
+   "firstPickRate": 0.30722559293987867,
+   "inDecks": 804,
+   "deckRate": 0.44346387203530063,
+   "onColour": 1243,
+   "onColourDecks": 804,
+   "games": 1369,
+   "wins": 700,
+   "winRate": 0.5113,
+   "shrunk": 0.5112,
+   "ci": [
+    0.485,
+    0.538
+   ]
+  },
+  {
+   "name": "Mind Stone",
+   "seen": 1813,
+   "picked": 1283,
+   "pickRate": 0.7077,
+   "firstTakes": 627,
+   "firstPickRate": 0.34583563154991726,
+   "inDecks": 948,
+   "deckRate": 0.5228902371759515,
+   "onColour": 1283,
+   "onColourDecks": 948,
+   "games": 1583,
+   "wins": 811,
+   "winRate": 0.5123,
+   "shrunk": 0.5122,
+   "ci": [
+    0.488,
+    0.537
+   ]
+  },
+  {
+   "name": "Everflowing Chalice",
+   "seen": 1803,
+   "picked": 1046,
+   "pickRate": 0.5801,
+   "firstTakes": 404,
+   "firstPickRate": 0.22407099278979478,
+   "inDecks": 42,
+   "deckRate": 0.02329450915141431,
+   "onColour": 1046,
+   "onColourDecks": 42,
+   "games": 58,
+   "wins": 32,
+   "winRate": 0.5517,
+   "shrunk": 0.5385,
+   "ci": [
+    0.425,
+    0.673
+   ]
+  },
+  {
+   "name": "Coalition Relic",
+   "seen": 1779,
+   "picked": 1251,
+   "pickRate": 0.7032,
+   "firstTakes": 612,
+   "firstPickRate": 0.3440134907251265,
+   "inDecks": 448,
+   "deckRate": 0.2518268690275436,
+   "onColour": 1251,
+   "onColourDecks": 448,
+   "games": 775,
+   "wins": 391,
+   "winRate": 0.5045,
+   "shrunk": 0.5044,
+   "ci": [
+    0.469,
+    0.54
+   ]
+  },
+  {
+   "name": "Solemn Simulacrum",
+   "seen": 1821,
+   "picked": 1388,
+   "pickRate": 0.7622,
+   "firstTakes": 771,
+   "firstPickRate": 0.4233937397034596,
+   "inDecks": 1187,
+   "deckRate": 0.6518396485447556,
+   "onColour": 1388,
+   "onColourDecks": 1187,
+   "games": 2028,
+   "wins": 1030,
+   "winRate": 0.5079,
+   "shrunk": 0.5078,
+   "ci": [
+    0.486,
+    0.53
+   ]
+  },
+  {
+   "name": "Karn, Scion of Urza",
+   "seen": 1817,
+   "picked": 1313,
+   "pickRate": 0.7226,
+   "firstTakes": 625,
+   "firstPickRate": 0.3439735828288387,
+   "inDecks": 1127,
+   "deckRate": 0.620253164556962,
+   "onColour": 1313,
+   "onColourDecks": 1127,
+   "games": 1912,
+   "wins": 1000,
+   "winRate": 0.523,
+   "shrunk": 0.5228,
+   "ci": [
+    0.501,
+    0.545
+   ]
+  },
+  {
+   "name": "Wurmcoil Engine",
+   "seen": 1810,
+   "picked": 1662,
+   "pickRate": 0.9182,
+   "firstTakes": 1149,
+   "firstPickRate": 0.6348066298342542,
+   "inDecks": 1662,
+   "deckRate": 0.918232044198895,
+   "onColour": 1662,
+   "onColourDecks": 1662,
+   "games": 2762,
+   "wins": 1453,
+   "winRate": 0.5261,
+   "shrunk": 0.5259,
+   "ci": [
+    0.507,
+    0.545
+   ]
+  },
+  {
+   "name": "Platinum Angel",
+   "seen": 1818,
+   "picked": 1151,
+   "pickRate": 0.6331,
+   "firstTakes": 482,
+   "firstPickRate": 0.26512651265126513,
+   "inDecks": 150,
+   "deckRate": 0.08250825082508251,
+   "onColour": 1151,
+   "onColourDecks": 150,
+   "games": 266,
+   "wins": 135,
+   "winRate": 0.5075,
+   "shrunk": 0.507,
+   "ci": [
+    0.448,
+    0.567
+   ]
+  },
+  {
+   "name": "Karn Liberated",
+   "seen": 1812,
+   "picked": 1330,
+   "pickRate": 0.734,
+   "firstTakes": 689,
+   "firstPickRate": 0.380242825607064,
+   "inDecks": 894,
+   "deckRate": 0.49337748344370863,
+   "onColour": 1330,
+   "onColourDecks": 894,
+   "games": 1484,
+   "wins": 737,
+   "winRate": 0.4966,
+   "shrunk": 0.4967,
+   "ci": [
+    0.471,
+    0.522
+   ]
+  },
+  {
+   "name": "Ugin, the Spirit Dragon",
+   "seen": 1789,
+   "picked": 1458,
+   "pickRate": 0.815,
+   "firstTakes": 825,
+   "firstPickRate": 0.461151481274455,
+   "inDecks": 1406,
+   "deckRate": 0.7859139183901621,
+   "onColour": 1458,
+   "onColourDecks": 1406,
+   "games": 2354,
+   "wins": 1196,
+   "winRate": 0.5081,
+   "shrunk": 0.508,
+   "ci": [
+    0.488,
+    0.528
+   ]
+  },
+  {
+   "name": "Tundra",
+   "seen": 1793,
+   "picked": 1008,
+   "pickRate": 0.5622,
+   "firstTakes": 379,
+   "firstPickRate": 0.21137757947573899,
+   "inDecks": 281,
+   "deckRate": 0.15672058003346348,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 462,
+   "wins": 228,
+   "winRate": 0.4935064935064935,
+   "shrunk": 0.49377593360995853,
+   "ci": [
+    0.448,
+    0.539
+   ]
+  },
+  {
+   "name": "Underground Sea",
+   "seen": 1784,
+   "picked": 1012,
+   "pickRate": 0.5673,
+   "firstTakes": 372,
+   "firstPickRate": 0.2085201793721973,
+   "inDecks": 308,
+   "deckRate": 0.1726457399103139,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 521,
+   "wins": 252,
+   "winRate": 0.4836852207293666,
+   "shrunk": 0.48428835489833644,
+   "ci": [
+    0.441,
+    0.527
+   ]
+  },
+  {
+   "name": "Badlands",
+   "seen": 1802,
+   "picked": 945,
+   "pickRate": 0.5244,
+   "firstTakes": 360,
+   "firstPickRate": 0.1997780244173141,
+   "inDecks": 98,
+   "deckRate": 0.05438401775804662,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 147,
+   "wins": 76,
+   "winRate": 0.5170068027210885,
+   "shrunk": 0.5149700598802395,
+   "ci": [
+    0.437,
+    0.596
+   ]
+  },
+  {
+   "name": "Taiga",
+   "seen": 1795,
+   "picked": 766,
+   "pickRate": 0.4267,
+   "firstTakes": 231,
+   "firstPickRate": 0.1286908077994429,
+   "inDecks": 98,
+   "deckRate": 0.05459610027855153,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 180,
+   "wins": 109,
+   "winRate": 0.6055555555555555,
+   "shrunk": 0.595,
+   "ci": [
+    0.533,
+    0.674
+   ]
+  },
+  {
+   "name": "Savannah",
+   "seen": 1796,
+   "picked": 945,
+   "pickRate": 0.5262,
+   "firstTakes": 344,
+   "firstPickRate": 0.1915367483296214,
+   "inDecks": 183,
+   "deckRate": 0.10189309576837416,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 279,
+   "wins": 141,
+   "winRate": 0.5053763440860215,
+   "shrunk": 0.5050167224080268,
+   "ci": [
+    0.447,
+    0.564
+   ]
+  },
+  {
+   "name": "Scrubland",
+   "seen": 1796,
+   "picked": 984,
+   "pickRate": 0.5479,
+   "firstTakes": 376,
+   "firstPickRate": 0.20935412026726058,
+   "inDecks": 155,
+   "deckRate": 0.08630289532293986,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 245,
+   "wins": 125,
+   "winRate": 0.5102040816326531,
+   "shrunk": 0.5094339622641509,
+   "ci": [
+    0.448,
+    0.572
+   ]
+  },
+  {
+   "name": "Volcanic Island",
+   "seen": 1809,
+   "picked": 971,
+   "pickRate": 0.5368,
+   "firstTakes": 371,
+   "firstPickRate": 0.205085682697623,
+   "inDecks": 167,
+   "deckRate": 0.09231619679380873,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 276,
+   "wins": 148,
+   "winRate": 0.5362318840579711,
+   "shrunk": 0.5337837837837838,
+   "ci": [
+    0.477,
+    0.594
+   ]
+  },
+  {
+   "name": "Bayou",
+   "seen": 1821,
+   "picked": 832,
+   "pickRate": 0.4569,
+   "firstTakes": 250,
+   "firstPickRate": 0.1372872048325096,
+   "inDecks": 144,
+   "deckRate": 0.07907742998352553,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 247,
+   "wins": 113,
+   "winRate": 0.4574898785425101,
+   "shrunk": 0.4606741573033708,
+   "ci": [
+    0.396,
+    0.52
+   ]
+  },
+  {
+   "name": "Plateau",
+   "seen": 1793,
+   "picked": 847,
+   "pickRate": 0.4724,
+   "firstTakes": 295,
+   "firstPickRate": 0.1645287228109314,
+   "inDecks": 143,
+   "deckRate": 0.07975460122699386,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 253,
+   "wins": 129,
+   "winRate": 0.5098814229249012,
+   "shrunk": 0.5091575091575091,
+   "ci": [
+    0.449,
+    0.571
+   ]
+  },
+  {
+   "name": "Tropical Island",
+   "seen": 1819,
+   "picked": 897,
+   "pickRate": 0.4931,
+   "firstTakes": 293,
+   "firstPickRate": 0.16107751511819682,
+   "inDecks": 133,
+   "deckRate": 0.0731170973062122,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 208,
+   "wins": 100,
+   "winRate": 0.4807692307692308,
+   "shrunk": 0.4824561403508772,
+   "ci": [
+    0.414,
+    0.548
+   ]
+  },
+  {
+   "name": "Flooded Strand",
+   "seen": 1808,
+   "picked": 1085,
+   "pickRate": 0.6001,
+   "firstTakes": 471,
+   "firstPickRate": 0.2605088495575221,
+   "inDecks": 291,
+   "deckRate": 0.1609513274336283,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 487,
+   "wins": 250,
+   "winRate": 0.5133470225872689,
+   "shrunk": 0.5128205128205128,
+   "ci": [
+    0.469,
+    0.557
+   ]
+  },
+  {
+   "name": "Polluted Delta",
+   "seen": 1791,
+   "picked": 1131,
+   "pickRate": 0.6315,
+   "firstTakes": 468,
+   "firstPickRate": 0.2613065326633166,
+   "inDecks": 311,
+   "deckRate": 0.1736460078168621,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 561,
+   "wins": 260,
+   "winRate": 0.46345811051693403,
+   "shrunk": 0.46471600688468157,
+   "ci": [
+    0.423,
+    0.505
+   ]
+  },
+  {
+   "name": "Bloodstained Mire",
+   "seen": 1799,
+   "picked": 1011,
+   "pickRate": 0.562,
+   "firstTakes": 424,
+   "firstPickRate": 0.235686492495831,
+   "inDecks": 110,
+   "deckRate": 0.061145080600333516,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 177,
+   "wins": 88,
+   "winRate": 0.4971751412429379,
+   "shrunk": 0.49746192893401014,
+   "ci": [
+    0.424,
+    0.57
+   ]
+  },
+  {
+   "name": "Wooded Foothills",
+   "seen": 1800,
+   "picked": 1053,
+   "pickRate": 0.585,
+   "firstTakes": 413,
+   "firstPickRate": 0.22944444444444445,
+   "inDecks": 143,
+   "deckRate": 0.07944444444444444,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 246,
+   "wins": 113,
+   "winRate": 0.45934959349593496,
+   "shrunk": 0.462406015037594,
+   "ci": [
+    0.398,
+    0.522
+   ]
+  },
+  {
+   "name": "Windswept Heath",
+   "seen": 1814,
+   "picked": 1089,
+   "pickRate": 0.6003,
+   "firstTakes": 459,
+   "firstPickRate": 0.25303197353914003,
+   "inDecks": 177,
+   "deckRate": 0.09757442116868799,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 291,
+   "wins": 156,
+   "winRate": 0.5360824742268041,
+   "shrunk": 0.5337620578778135,
+   "ci": [
+    0.479,
+    0.593
+   ]
+  },
+  {
+   "name": "Marsh Flats",
+   "seen": 1821,
+   "picked": 1113,
+   "pickRate": 0.6112,
+   "firstTakes": 462,
+   "firstPickRate": 0.25370675453047775,
+   "inDecks": 176,
+   "deckRate": 0.09665019220208676,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 288,
+   "wins": 154,
+   "winRate": 0.5347222222222222,
+   "shrunk": 0.5324675324675324,
+   "ci": [
+    0.477,
+    0.591
+   ]
+  },
+  {
+   "name": "Scalding Tarn",
+   "seen": 1819,
+   "picked": 1080,
+   "pickRate": 0.5937,
+   "firstTakes": 432,
+   "firstPickRate": 0.23749312809235845,
+   "inDecks": 161,
+   "deckRate": 0.08851017042330951,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 275,
+   "wins": 137,
+   "winRate": 0.49818181818181817,
+   "shrunk": 0.49830508474576274,
+   "ci": [
+    0.44,
+    0.557
+   ]
+  },
+  {
+   "name": "Verdant Catacombs",
+   "seen": 1808,
+   "picked": 1101,
+   "pickRate": 0.609,
+   "firstTakes": 446,
+   "firstPickRate": 0.24668141592920353,
+   "inDecks": 183,
+   "deckRate": 0.10121681415929204,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 319,
+   "wins": 137,
+   "winRate": 0.42946708463949845,
+   "shrunk": 0.4336283185840708,
+   "ci": [
+    0.376,
+    0.484
+   ]
+  },
+  {
+   "name": "Arid Mesa",
+   "seen": 1794,
+   "picked": 1061,
+   "pickRate": 0.5914,
+   "firstTakes": 462,
+   "firstPickRate": 0.25752508361204013,
+   "inDecks": 183,
+   "deckRate": 0.1020066889632107,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 304,
+   "wins": 134,
+   "winRate": 0.4407894736842105,
+   "shrunk": 0.4444444444444444,
+   "ci": [
+    0.386,
+    0.497
+   ]
+  },
+  {
+   "name": "Misty Rainforest",
+   "seen": 1798,
+   "picked": 1067,
+   "pickRate": 0.5934,
+   "firstTakes": 447,
+   "firstPickRate": 0.2486095661846496,
+   "inDecks": 173,
+   "deckRate": 0.09621802002224694,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 275,
+   "wins": 128,
+   "winRate": 0.46545454545454545,
+   "shrunk": 0.46779661016949153,
+   "ci": [
+    0.407,
+    0.524
+   ]
+  },
+  {
+   "name": "Mishra's Factory",
+   "seen": 1806,
+   "picked": 614,
+   "pickRate": 0.34,
+   "firstTakes": 135,
+   "firstPickRate": 0.07475083056478406,
+   "inDecks": 0,
+   "deckRate": 0,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 0,
+   "wins": 0,
+   "winRate": 0,
+   "shrunk": 0.5,
+   "ci": [
+    0,
+    1
+   ]
+  },
+  {
+   "name": "Mutavault",
+   "seen": 1791,
+   "picked": 572,
+   "pickRate": 0.3194,
+   "firstTakes": 124,
+   "firstPickRate": 0.06923506420993858,
+   "inDecks": 0,
+   "deckRate": 0,
+   "onColour": 0,
+   "onColourDecks": 0,
+   "games": 0,
+   "wins": 0,
+   "winRate": 0,
+   "shrunk": 0.5,
+   "ci": [
+    0,
+    1
+   ]
+  }
+ ],
+ "explore": {
+  "plain": 1342,
+  "health": {
+   "drafts": 2000,
+   "explored": 658,
+   "share": 0.329,
+   "shareZ": 2.830110211550746,
+   "treated": 1125,
+   "expected": 1122.25,
+   "treatedZ": 0.08208955223880597,
+   "pooledDelta": -0.0004059363072870248,
+   "pooledSe": 0.01175159519136186,
+   "balanceDiff": 0.039891299949616155
+  },
+  "judged": [
+   {
+    "name": "Acidic Slime",
+    "treatedDecks": 9,
+    "treatedGames": 23,
+    "treatedWins": 10,
+    "controlDecks": 74,
+    "expected": 13.252973415473411,
+    "withIt": 0.4189189189189189,
+    "without": 0.48074945010412884,
+    "delta": -0.061830531185209925,
+    "se": 0.11339769721294085,
+    "lo": -0.28409001772257403,
+    "hi": 0.16042895535215415,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Baleful Strix",
+    "treatedDecks": 8,
+    "treatedGames": 20,
+    "treatedWins": 8,
+    "controlDecks": 14,
+    "expected": 9.93852813852814,
+    "withIt": 0.42934782608695654,
+    "without": 0.3822124794488374,
+    "delta": 0.047135346638119135,
+    "se": 0.14860820619682244,
+    "lo": -0.24413673750765286,
+    "hi": 0.3384074307838911,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Ball Lightning",
+    "treatedDecks": 10,
+    "treatedGames": 23,
+    "treatedWins": 11,
+    "controlDecks": 74,
+    "expected": 12.415164002663992,
+    "withIt": 0.5337078651685393,
+    "without": 0.516366479272354,
+    "delta": 0.01734138589618528,
+    "se": 0.11365609658040901,
+    "lo": -0.20542456340141638,
+    "hi": 0.24010733519378694,
+    "pWeak": 0.560634359321506,
+    "pHolds": 0.15093657462645105,
+    "verdict": "undecided",
+    "qWeak": 0.8110857953800689,
+    "qHolds": 0.37034588125363116
+   },
+   {
+    "name": "Baneslayer Angel",
+    "treatedDecks": 16,
+    "treatedGames": 38,
+    "treatedWins": 22,
+    "controlDecks": 88,
+    "expected": 17.061588411588403,
+    "withIt": 0.5933609958506224,
+    "without": 0.5304918424705295,
+    "delta": 0.06286915338009291,
+    "se": 0.09236151903567487,
+    "lo": -0.11815942392982984,
+    "hi": 0.24389773069001566,
+    "pWeak": 0.7519648333575691,
+    "pHolds": 0.038917528629248244,
+    "verdict": "undecided",
+    "qWeak": 0.8670965367680084,
+    "qHolds": 0.20145544231610857
+   },
+   {
+    "name": "Batterskull",
+    "treatedDecks": 46,
+    "treatedGames": 115,
+    "treatedWins": 72,
+    "controlDecks": 222,
+    "expected": 44.2111485736486,
+    "withIt": 0.6229508196721312,
+    "without": 0.49540628129296105,
+    "delta": 0.12754453837917012,
+    "se": 0.0526556516247414,
+    "lo": 0.024339461194676976,
+    "hi": 0.23074961556366327,
+    "pWeak": 0.9922873869584699,
+    "pHolds": 0.000007758890611775371,
+    "verdict": "holds",
+    "qWeak": 0.9922873869584699,
+    "qHolds": 0.0006827823738362326
+   },
+   {
+    "name": "Birds of Paradise",
+    "treatedDecks": 15,
+    "treatedGames": 37,
+    "treatedWins": 20,
+    "controlDecks": 81,
+    "expected": 15.94826562326561,
+    "withIt": 0.5470085470085471,
+    "without": 0.49330170571414483,
+    "delta": 0.05370684129440223,
+    "se": 0.09813472686385688,
+    "lo": -0.13863722335875725,
+    "hi": 0.2460509059475617,
+    "pWeak": 0.7079056726701999,
+    "pHolds": 0.0586410958512279,
+    "verdict": "undecided",
+    "qWeak": 0.8533657423969533,
+    "qHolds": 0.2345643834049116
+   },
+   {
+    "name": "Bloodghast",
+    "treatedDecks": 22,
+    "treatedGames": 54,
+    "treatedWins": 27,
+    "controlDecks": 101,
+    "expected": 21.690920190920185,
+    "withIt": 0.5030674846625767,
+    "without": 0.4582960436681903,
+    "delta": 0.04477144099438635,
+    "se": 0.08205441238010551,
+    "lo": -0.11605520727062044,
+    "hi": 0.20559808925939313,
+    "pWeak": 0.7073402610963867,
+    "pHolds": 0.038837783656344826,
+    "verdict": "undecided",
+    "qWeak": 0.8533657423969533,
+    "qHolds": 0.20145544231610857
+   },
+   {
+    "name": "Chandra, Torch of Defiance",
+    "treatedDecks": 10,
+    "treatedGames": 28,
+    "treatedWins": 17,
+    "controlDecks": 53,
+    "expected": 9.247086247086246,
+    "withIt": 0.6387665198237885,
+    "without": 0.6342297463923222,
+    "delta": 0.004536773431466301,
+    "se": 0.08307421581239902,
+    "lo": -0.15828868956083578,
+    "hi": 0.16736223642376838,
+    "pWeak": 0.521775916703857,
+    "pHolds": 0.10413194510162382,
+    "verdict": "undecided",
+    "qWeak": 0.8110857953800689,
+    "qHolds": 0.3272718274622463
+   },
+   {
+    "name": "Coalition Relic",
+    "treatedDecks": 48,
+    "treatedGames": 114,
+    "treatedWins": 62,
+    "controlDecks": 214,
+    "expected": 42.93088578088586,
+    "withIt": 0.5332326283987915,
+    "without": 0.49070747872860676,
+    "delta": 0.042525149670184725,
+    "se": 0.05573293356132266,
+    "lo": -0.06671140011000769,
+    "hi": 0.15176169945037715,
+    "pWeak": 0.7772732981094074,
+    "pHolds": 0.005274621463492224,
+    "verdict": "holds",
+    "qWeak": 0.8670965367680084,
+    "qHolds": 0.0605216455291987
+   },
+   {
+    "name": "Council's Judgment",
+    "treatedDecks": 29,
+    "treatedGames": 71,
+    "treatedWins": 44,
+    "controlDecks": 141,
+    "expected": 29.947774447774453,
+    "withIt": 0.589873417721519,
+    "without": 0.5484763121886587,
+    "delta": 0.04139710553286036,
+    "se": 0.07611208041422617,
+    "lo": -0.10778257207902292,
+    "hi": 0.19057678314474363,
+    "pWeak": 0.7067437267633693,
+    "pHolds": 0.031602305236528405,
+    "verdict": "undecided",
+    "qWeak": 0.8533657423969533,
+    "qHolds": 0.1880561135845338
+   },
+   {
+    "name": "Cryptic Command",
+    "treatedDecks": 32,
+    "treatedGames": 78,
+    "treatedWins": 36,
+    "controlDecks": 155,
+    "expected": 32.1611555111555,
+    "withIt": 0.45617977528089887,
+    "without": 0.4068981508845204,
+    "delta": 0.049281624396378454,
+    "se": 0.06641181020111721,
+    "lo": -0.08088552359781126,
+    "hi": 0.17944877239056817,
+    "pWeak": 0.7709749257815832,
+    "pHolds": 0.012293877857400881,
+    "verdict": "undecided",
+    "qWeak": 0.8670965367680084,
+    "qHolds": 0.10818612514512775
+   },
+   {
+    "name": "Dark Confidant",
+    "treatedDecks": 11,
+    "treatedGames": 27,
+    "treatedWins": 11,
+    "controlDecks": 61,
+    "expected": 12.522767510267508,
+    "withIt": 0.36942675159235666,
+    "without": 0.5155757748791334,
+    "delta": -0.14614902328677676,
+    "se": 0.10815882672962936,
+    "lo": -0.3581403236768503,
+    "hi": 0.06584227710329676,
+    "pWeak": 0.08830861960379965,
+    "pHolds": 0.665193130257282,
+    "verdict": "undecided",
+    "qWeak": 0.3108463410053748,
+    "qHolds": 0.8533657423969533
+   },
+   {
+    "name": "Delver of Secrets",
+    "treatedDecks": 28,
+    "treatedGames": 68,
+    "treatedWins": 40,
+    "controlDecks": 112,
+    "expected": 25.77019924519924,
+    "withIt": 0.6213872832369942,
+    "without": 0.47315353573245966,
+    "delta": 0.14823374750453455,
+    "se": 0.07416153366092475,
+    "lo": 0.0028771415291220515,
+    "hi": 0.29359035347994705,
+    "pWeak": 0.9771848322937833,
+    "pHolds": 0.00040821153308667757,
+    "verdict": "holds",
+    "qWeak": 0.9884168418603786,
+    "qHolds": 0.01529752536943422
+   },
+   {
+    "name": "Doom Blade",
+    "treatedDecks": 13,
+    "treatedGames": 30,
+    "treatedWins": 11,
+    "controlDecks": 101,
+    "expected": 20.308019758019757,
+    "withIt": 0.3611111111111111,
+    "without": 0.4842324154357143,
+    "delta": -0.12312130432460322,
+    "se": 0.11133976635481216,
+    "lo": -0.34134724638003505,
+    "hi": 0.09510463773082861,
+    "pWeak": 0.13440311204636957,
+    "pHolds": 0.5822544563115901,
+    "verdict": "undecided",
+    "qWeak": 0.37034588125363116,
+    "qHolds": 0.8258558825995602
+   },
+   {
+    "name": "Ephemerate",
+    "treatedDecks": 17,
+    "treatedGames": 41,
+    "treatedWins": 15,
+    "controlDecks": 108,
+    "expected": 23.150444000443994,
+    "withIt": 0.3891625615763547,
+    "without": 0.5197253455750367,
+    "delta": -0.13056278399868199,
+    "se": 0.09628386701961285,
+    "lo": -0.31927916335712314,
+    "hi": 0.0581535953597592,
+    "pWeak": 0.08754657248699815,
+    "pHolds": 0.6245388784719371,
+    "verdict": "undecided",
+    "qWeak": 0.3108463410053748,
+    "qHolds": 0.8327185046292496
+   },
+   {
+    "name": "Everflowing Chalice",
+    "treatedDecks": 51,
+    "treatedGames": 123,
+    "treatedWins": 56,
+    "controlDecks": 262,
+    "expected": 55.52558968808981,
+    "withIt": 0.4442815249266862,
+    "without": 0.4876303774011322,
+    "delta": -0.043348852474445976,
+    "se": 0.053503328225956256,
+    "lo": -0.14821537579732025,
+    "hi": 0.06151767084842828,
+    "pWeak": 0.20891011260076087,
+    "pHolds": 0.14483770546341068,
+    "verdict": "undecided",
+    "qWeak": 0.4291322815496441,
+    "qHolds": 0.37034588125363116
+   },
+   {
+    "name": "Expressive Iteration",
+    "treatedDecks": 13,
+    "treatedGames": 32,
+    "treatedWins": 17,
+    "controlDecks": 14,
+    "expected": 12.202514152514155,
+    "withIt": 0.44964028776978415,
+    "without": 0.5630774597428063,
+    "delta": -0.11343717197302217,
+    "se": 0.12009285338596806,
+    "lo": -0.34881916460951956,
+    "hi": 0.12194482066347523,
+    "pWeak": 0.17243694692095923,
+    "pHolds": 0.5445446787869592,
+    "verdict": "undecided",
+    "qWeak": 0.3890884956165234,
+    "qHolds": 0.8110857953800689
+   },
+   {
+    "name": "Fact or Fiction",
+    "treatedDecks": 26,
+    "treatedGames": 58,
+    "treatedWins": 19,
+    "controlDecks": 90,
+    "expected": 17.651426351426334,
+    "withIt": 0.30526315789473685,
+    "without": 0.4939168176173542,
+    "delta": -0.18865365972261733,
+    "se": 0.08227965194475251,
+    "lo": -0.34992177753433223,
+    "hi": -0.027385541910902422,
+    "pWeak": 0.01092872514864407,
+    "pHolds": 0.8593642552067285,
+    "verdict": "undecided",
+    "qWeak": 0.10685864589785313,
+    "qHolds": 0.9222445665633183
+   },
+   {
+    "name": "Falkenrath Aristocrat",
+    "treatedDecks": 3,
+    "treatedGames": 7,
+    "treatedWins": 6,
+    "controlDecks": 5,
+    "expected": 3.1567987567987568,
+    "withIt": 0.875,
+    "without": 0.766491857576594,
+    "delta": 0.108508142423406,
+    "se": 0.11538856985889388,
+    "lo": -0.11765345450002601,
+    "hi": 0.334669739346838,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Fatal Push",
+    "treatedDecks": 27,
+    "treatedGames": 72,
+    "treatedWins": 34,
+    "controlDecks": 96,
+    "expected": 21.838437950937948,
+    "withIt": 0.47160493827160493,
+    "without": 0.5325092576952561,
+    "delta": -0.06090431942365121,
+    "se": 0.060307809611615,
+    "lo": -0.1791076262624166,
+    "hi": 0.05729898741511419,
+    "pWeak": 0.15627375030275226,
+    "pHolds": 0.2584054436781438,
+    "verdict": "undecided",
+    "qWeak": 0.37034588125363116,
+    "qHolds": 0.5053262009705922
+   },
+   {
+    "name": "Figure of Destiny",
+    "treatedDecks": 16,
+    "treatedGames": 39,
+    "treatedWins": 24,
+    "controlDecks": 11,
+    "expected": 13.814330114330115,
+    "withIt": 0.652317880794702,
+    "without": 0.48856811444773807,
+    "delta": 0.16374976634696392,
+    "se": 0.1209752702547533,
+    "lo": -0.07336176335235253,
+    "hi": 0.4008612960462804,
+    "pWeak": 0.9120648110945024,
+    "pHolds": 0.014621426983695729,
+    "verdict": "undecided",
+    "qWeak": 0.9442553338390144,
+    "qHolds": 0.11697141586956583
+   },
+   {
+    "name": "Fire // Ice",
+    "treatedDecks": 11,
+    "treatedGames": 29,
+    "treatedWins": 13,
+    "controlDecks": 19,
+    "expected": 13.174220224220226,
+    "withIt": 0.3879003558718861,
+    "without": 0.4842906928241769,
+    "delta": -0.09639033695229082,
+    "se": 0.11204794327772537,
+    "lo": -0.3160043057766325,
+    "hi": 0.1232236318720509,
+    "pWeak": 0.19482289101681427,
+    "pHolds": 0.4871501043894517,
+    "verdict": "undecided",
+    "qWeak": 0.4181564490116989,
+    "qHolds": 0.8088530035145614
+   },
+   {
+    "name": "Flametongue Kavu",
+    "treatedDecks": 9,
+    "treatedGames": 23,
+    "treatedWins": 12,
+    "controlDecks": 56,
+    "expected": 9.52824814074814,
+    "withIt": 0.46853146853146854,
+    "without": 0.5877135933344091,
+    "delta": -0.11918212480294055,
+    "se": 0.10910825371551033,
+    "lo": -0.3330343020853408,
+    "hi": 0.0946700524794597,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Flickerwisp",
+    "treatedDecks": 28,
+    "treatedGames": 67,
+    "treatedWins": 42,
+    "controlDecks": 137,
+    "expected": 27.76322566322567,
+    "withIt": 0.6176470588235294,
+    "without": 0.4794845778499618,
+    "delta": 0.13816248097356765,
+    "se": 0.072639477596534,
+    "lo": -0.004210895115638991,
+    "hi": 0.2805358570627743,
+    "pWeak": 0.9714164635769551,
+    "pHolds": 0.0005215065466852575,
+    "verdict": "holds",
+    "qWeak": 0.9884168418603786,
+    "qHolds": 0.01529752536943422
+   },
+   {
+    "name": "Garruk Relentless",
+    "treatedDecks": 11,
+    "treatedGames": 24,
+    "treatedWins": 11,
+    "controlDecks": 56,
+    "expected": 10.605144855144852,
+    "withIt": 0.4206896551724138,
+    "without": 0.4698195217274234,
+    "delta": -0.049129866555009616,
+    "se": 0.1259742147160109,
+    "lo": -0.29603932739839095,
+    "hi": 0.19777959428837172,
+    "pWeak": 0.3482685532378367,
+    "pHolds": 0.3431748508265764,
+    "verdict": "undecided",
+    "qWeak": 0.6254618915291761,
+    "qHolds": 0.6254618915291761
+   },
+   {
+    "name": "Garruk Wildspeaker",
+    "treatedDecks": 6,
+    "treatedGames": 16,
+    "treatedWins": 7,
+    "controlDecks": 48,
+    "expected": 7.493648018648017,
+    "withIt": 0.4803921568627451,
+    "without": 0.4963678519723129,
+    "delta": -0.01597569510956781,
+    "se": 0.1487783100621594,
+    "lo": -0.30758118283140023,
+    "hi": 0.2756297926122646,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Glorybringer",
+    "treatedDecks": 7,
+    "treatedGames": 17,
+    "treatedWins": 11,
+    "controlDecks": 45,
+    "expected": 7.123500111000111,
+    "withIt": 0.6417910447761194,
+    "without": 0.5408858025010829,
+    "delta": 0.1009052422750365,
+    "se": 0.09771118717227745,
+    "lo": -0.0906086845826273,
+    "hi": 0.2924191691327003,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Goblin Guide",
+    "treatedDecks": 16,
+    "treatedGames": 42,
+    "treatedWins": 15,
+    "controlDecks": 95,
+    "expected": 17.304886779886772,
+    "withIt": 0.3688212927756654,
+    "without": 0.5519645149935366,
+    "delta": -0.18314322221787122,
+    "se": 0.06437848162026463,
+    "lo": -0.3093250461935899,
+    "hi": -0.056961398242152544,
+    "pWeak": 0.0022221036174495667,
+    "pHolds": 0.9017304834645148,
+    "verdict": "weak",
+    "qWeak": 0.04888627958389047,
+    "qHolds": 0.9442553338390144
+   },
+   {
+    "name": "Grave Titan",
+    "treatedDecks": 23,
+    "treatedGames": 52,
+    "treatedWins": 25,
+    "controlDecks": 97,
+    "expected": 20.32644716394715,
+    "withIt": 0.5323741007194245,
+    "without": 0.5186906892938571,
+    "delta": 0.013683411425567393,
+    "se": 0.08736399742599439,
+    "lo": -0.1575500235293816,
+    "hi": 0.1849168463805164,
+    "pWeak": 0.5622299263430023,
+    "pHolds": 0.09658453812605361,
+    "verdict": "undecided",
+    "qWeak": 0.8110857953800689,
+    "qHolds": 0.3236577352026583
+   },
+   {
+    "name": "Grist, the Hunger Tide",
+    "treatedDecks": 1,
+    "treatedGames": 2,
+    "treatedWins": 2,
+    "controlDecks": 2,
+    "expected": 1.0021367521367521,
+    "withIt": 1,
+    "without": 0.4452054794520548,
+    "delta": 0.5547945205479452,
+    "se": 0.34930729995751286,
+    "lo": -0.12984778736878,
+    "hi": 1.2394368284646704,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Hangarback Walker",
+    "treatedDecks": 35,
+    "treatedGames": 83,
+    "treatedWins": 34,
+    "controlDecks": 203,
+    "expected": 38.13336385836389,
+    "withIt": 0.4391304347826087,
+    "without": 0.5579641125415563,
+    "delta": -0.1188336777589476,
+    "se": 0.07371848811250861,
+    "lo": -0.2633219144594645,
+    "hi": 0.02565455894156929,
+    "pWeak": 0.053481740800301214,
+    "pHolds": 0.6008241589876454,
+    "verdict": "undecided",
+    "qWeak": 0.23022474620632916,
+    "qHolds": 0.8261332186080125
+   },
+   {
+    "name": "Hellrider",
+    "treatedDecks": 5,
+    "treatedGames": 13,
+    "treatedWins": 7,
+    "controlDecks": 57,
+    "expected": 8.895498945498945,
+    "withIt": 0.5714285714285714,
+    "without": 0.5171382829415829,
+    "delta": 0.05429028848698847,
+    "se": 0.12265603350098842,
+    "lo": -0.18611553717494883,
+    "hi": 0.29469611414892577,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Hero of Bladehold",
+    "treatedDecks": 19,
+    "treatedGames": 48,
+    "treatedWins": 23,
+    "controlDecks": 97,
+    "expected": 17.834232434232415,
+    "withIt": 0.521875,
+    "without": 0.5204134901955332,
+    "delta": 0.0014615098044667985,
+    "se": 0.0789259747716404,
+    "lo": -0.1532334007479484,
+    "hi": 0.156156420356882,
+    "pWeak": 0.5073870199129615,
+    "pHolds": 0.09930407784627016,
+    "verdict": "undecided",
+    "qWeak": 0.8110857953800689,
+    "qHolds": 0.3236577352026583
+   },
+   {
+    "name": "Huntmaster of the Fells",
+    "treatedDecks": 1,
+    "treatedGames": 3,
+    "treatedWins": 1,
+    "controlDecks": 3,
+    "expected": 1.4790209790209792,
+    "withIt": 0.3333333333333333,
+    "without": 0.36974789915966394,
+    "delta": -0.036414565826330625,
+    "se": 0.12754783285274157,
+    "lo": -0.28640831821770407,
+    "hi": 0.21357918656504285,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Incinerate",
+    "treatedDecks": 11,
+    "treatedGames": 31,
+    "treatedWins": 14,
+    "controlDecks": 68,
+    "expected": 11.889803252303244,
+    "withIt": 0.47668393782383417,
+    "without": 0.5669229913929548,
+    "delta": -0.0902390535691206,
+    "se": 0.09027049455089396,
+    "lo": -0.2671692228888728,
+    "hi": 0.08669111575063157,
+    "pWeak": 0.15873955615738744,
+    "pHolds": 0.4569462432433734,
+    "verdict": "undecided",
+    "qWeak": 0.37034588125363116,
+    "qHolds": 0.7732936424118626
+   },
+   {
+    "name": "Karn, Scion of Urza",
+    "treatedDecks": 7,
+    "treatedGames": 17,
+    "treatedWins": 10,
+    "controlDecks": 55,
+    "expected": 8.265574703074702,
+    "withIt": 0.5862068965517241,
+    "without": 0.4359648681227046,
+    "delta": 0.15024202842901951,
+    "se": 0.12947241128461637,
+    "lo": -0.10352389768882858,
+    "hi": 0.4040079545468676,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Knight of the Reliquary",
+    "treatedDecks": 16,
+    "treatedGames": 41,
+    "treatedWins": 19,
+    "controlDecks": 9,
+    "expected": 11.480996780996783,
+    "withIt": 0.45507246376811594,
+    "without": 0.5641359397926823,
+    "delta": -0.10906347602456634,
+    "se": 0.15301240282935077,
+    "lo": -0.40896778557009383,
+    "hi": 0.19084083352096115,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Liliana of the Veil",
+    "treatedDecks": 3,
+    "treatedGames": 6,
+    "treatedWins": 2,
+    "controlDecks": 25,
+    "expected": 3.7042388167388163,
+    "withIt": 0.21052631578947367,
+    "without": 0.49780730513604654,
+    "delta": -0.28728098934657287,
+    "se": 0.21557947337179167,
+    "lo": -0.7098167571552845,
+    "hi": 0.1352547784621388,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Maelstrom Pulse",
+    "treatedDecks": 4,
+    "treatedGames": 10,
+    "treatedWins": 4,
+    "controlDecks": 7,
+    "expected": 5.027272727272727,
+    "withIt": 0.37362637362637363,
+    "without": 0.3807106598984772,
+    "delta": -0.007084286272103557,
+    "se": 0.19066470739975727,
+    "lo": -0.3807871127756278,
+    "hi": 0.3666185402314207,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Mystic Snake",
+    "treatedDecks": 10,
+    "treatedGames": 23,
+    "treatedWins": 6,
+    "controlDecks": 7,
+    "expected": 7.736696636696637,
+    "withIt": 0.25,
+    "without": 0.2355899419729207,
+    "delta": 0.014410058027079287,
+    "se": 0.11718535791082092,
+    "lo": -0.2152732434781297,
+    "hi": 0.24409335953228828,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Platinum Angel",
+    "treatedDecks": 57,
+    "treatedGames": 144,
+    "treatedWins": 77,
+    "controlDecks": 274,
+    "expected": 57.10847208347219,
+    "withIt": 0.5256257449344458,
+    "without": 0.5004807306832405,
+    "delta": 0.0251450142512053,
+    "se": 0.048089230431719254,
+    "lo": -0.06910987739496444,
+    "hi": 0.11939990589737504,
+    "pWeak": 0.6994719816798491,
+    "pHolds": 0.004629398226823289,
+    "verdict": "holds",
+    "qWeak": 0.8533657423969533,
+    "qHolds": 0.0605216455291987
+   },
+   {
+    "name": "Polukranos, World Eater",
+    "treatedDecks": 14,
+    "treatedGames": 34,
+    "treatedWins": 14,
+    "controlDecks": 65,
+    "expected": 12.51431207681207,
+    "withIt": 0.37,
+    "without": 0.4855464089416418,
+    "delta": -0.11554640894164181,
+    "se": 0.10619445508737088,
+    "lo": -0.32368754091288876,
+    "hi": 0.09259472302960511,
+    "pWeak": 0.13828337395684448,
+    "pHolds": 0.5581954997665184,
+    "verdict": "undecided",
+    "qWeak": 0.37034588125363116,
+    "qHolds": 0.8110857953800689
+   },
+   {
+    "name": "Primeval Titan",
+    "treatedDecks": 8,
+    "treatedGames": 21,
+    "treatedWins": 5,
+    "controlDecks": 64,
+    "expected": 10.436480186480185,
+    "withIt": 0.2608695652173913,
+    "without": 0.5160388160033177,
+    "delta": -0.2551692507859264,
+    "se": 0.05846555445140058,
+    "lo": -0.36976173751067154,
+    "hi": -0.14057676406118125,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Questing Beast",
+    "treatedDecks": 17,
+    "treatedGames": 42,
+    "treatedWins": 20,
+    "controlDecks": 71,
+    "expected": 14.47168525918525,
+    "withIt": 0.4698275862068966,
+    "without": 0.5086142951897836,
+    "delta": -0.03878670898288705,
+    "se": 0.07948246725197097,
+    "lo": -0.19457234479675015,
+    "hi": 0.11699892683097604,
+    "pWeak": 0.31277820075206225,
+    "pHolds": 0.22060588351089006,
+    "verdict": "undecided",
+    "qWeak": 0.585627269493223,
+    "qHolds": 0.4412117670217801
+   },
+   {
+    "name": "Rancor",
+    "treatedDecks": 16,
+    "treatedGames": 41,
+    "treatedWins": 17,
+    "controlDecks": 76,
+    "expected": 14.73563936063935,
+    "withIt": 0.4108527131782946,
+    "without": 0.43069120592600735,
+    "delta": -0.019838492747712766,
+    "se": 0.08058229240830565,
+    "lo": -0.17777978586799184,
+    "hi": 0.1381028003725663,
+    "pWeak": 0.40276792830409125,
+    "pHolds": 0.15992208508679528,
+    "verdict": "undecided",
+    "qWeak": 0.69497211158353,
+    "qHolds": 0.37034588125363116
+   },
+   {
+    "name": "Ravenous Chupacabra",
+    "treatedDecks": 20,
+    "treatedGames": 49,
+    "treatedWins": 25,
+    "controlDecks": 98,
+    "expected": 19.842793317793305,
+    "withIt": 0.5418060200668896,
+    "without": 0.5359054350217758,
+    "delta": 0.005900585045113815,
+    "se": 0.08866606326042056,
+    "lo": -0.16788489894531047,
+    "hi": 0.1796860690355381,
+    "pWeak": 0.5265294586740348,
+    "pHolds": 0.11616559701616047,
+    "verdict": "undecided",
+    "qWeak": 0.8110857953800689,
+    "qHolds": 0.35250250129041794
+   },
+   {
+    "name": "Reflector Mage",
+    "treatedDecks": 24,
+    "treatedGames": 61,
+    "treatedWins": 25,
+    "controlDecks": 27,
+    "expected": 25.903552003551997,
+    "withIt": 0.3885350318471338,
+    "without": 0.46046137403480136,
+    "delta": -0.07192634218766758,
+    "se": 0.08907304526424899,
+    "lo": -0.24650951090559559,
+    "hi": 0.10265682653026043,
+    "pWeak": 0.20968963757539427,
+    "pHolds": 0.37631420298318274,
+    "verdict": "undecided",
+    "qWeak": 0.4291322815496441,
+    "qHolds": 0.6623129972504016
+   },
+   {
+    "name": "Restoration Angel",
+    "treatedDecks": 21,
+    "treatedGames": 51,
+    "treatedWins": 28,
+    "controlDecks": 132,
+    "expected": 25.288095238095217,
+    "withIt": 0.5766666666666667,
+    "without": 0.509208384343733,
+    "delta": 0.06745828232293372,
+    "se": 0.08218650251950932,
+    "lo": -0.09362726261530455,
+    "hi": 0.22854382726117198,
+    "pWeak": 0.7941185729779587,
+    "pHolds": 0.020797913673711976,
+    "verdict": "undecided",
+    "qWeak": 0.8735304302757546,
+    "qHolds": 0.15251803360722116
+   },
+   {
+    "name": "Sakura-Tribe Elder",
+    "treatedDecks": 5,
+    "treatedGames": 12,
+    "treatedWins": 5,
+    "controlDecks": 52,
+    "expected": 7.998225385725387,
+    "withIt": 0.4050632911392405,
+    "without": 0.3633647264641729,
+    "delta": 0.041698564675067606,
+    "se": 0.16008233589492546,
+    "lo": -0.27206281367898627,
+    "hi": 0.3554599430291215,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Seasoned Pyromancer",
+    "treatedDecks": 2,
+    "treatedGames": 5,
+    "treatedWins": 4,
+    "controlDecks": 15,
+    "expected": 1.9461441336441339,
+    "withIt": 0.7346938775510204,
+    "without": 0.5731849654085494,
+    "delta": 0.1615089121424711,
+    "se": 0.11339960903216806,
+    "lo": -0.060754321560578306,
+    "hi": 0.3837721458455205,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Shivan Dragon",
+    "treatedDecks": 15,
+    "treatedGames": 34,
+    "treatedWins": 20,
+    "controlDecks": 104,
+    "expected": 19.194096181596173,
+    "withIt": 0.6206896551724138,
+    "without": 0.5928805093462397,
+    "delta": 0.02780914582617411,
+    "se": 0.12052670448469885,
+    "lo": -0.20842319496383563,
+    "hi": 0.2640414866161839,
+    "pWeak": 0.591237734133776,
+    "pHolds": 0.14447640463644285,
+    "verdict": "undecided",
+    "qWeak": 0.8258558825995602,
+    "qHolds": 0.37034588125363116
+   },
+   {
+    "name": "Shriekmaw",
+    "treatedDecks": 13,
+    "treatedGames": 29,
+    "treatedWins": 18,
+    "controlDecks": 65,
+    "expected": 11.754249916749908,
+    "withIt": 0.5303867403314917,
+    "without": 0.4906473187910937,
+    "delta": 0.039739421540398,
+    "se": 0.1261706692066684,
+    "lo": -0.20755509010467205,
+    "hi": 0.28703393318546805,
+    "pWeak": 0.6236060477343339,
+    "pHolds": 0.1340296964807005,
+    "verdict": "undecided",
+    "qWeak": 0.8327185046292496,
+    "qHolds": 0.37034588125363116
+   },
+   {
+    "name": "Siege-Gang Commander",
+    "treatedDecks": 8,
+    "treatedGames": 20,
+    "treatedWins": 10,
+    "controlDecks": 38,
+    "expected": 6.789352314352317,
+    "withIt": 0.48466257668711654,
+    "without": 0.5542751258652117,
+    "delta": -0.06961254917809512,
+    "se": 0.13009642043765424,
+    "lo": -0.3246015332358974,
+    "hi": 0.18537643487970717,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Smuggler's Copter",
+    "treatedDecks": 25,
+    "treatedGames": 66,
+    "treatedWins": 27,
+    "controlDecks": 107,
+    "expected": 21.9115884115884,
+    "withIt": 0.3988439306358382,
+    "without": 0.46307951877416503,
+    "delta": -0.06423558813832686,
+    "se": 0.06927702879254188,
+    "lo": -0.20001856457170894,
+    "hi": 0.07154738829505522,
+    "pWeak": 0.17690411282997198,
+    "pHolds": 0.3028391617276781,
+    "verdict": "undecided",
+    "qWeak": 0.38918904822593836,
+    "qHolds": 0.5793444833051233
+   },
+   {
+    "name": "Solemn Simulacrum",
+    "treatedDecks": 10,
+    "treatedGames": 23,
+    "treatedWins": 8,
+    "controlDecks": 58,
+    "expected": 10.625678488178487,
+    "withIt": 0.3194444444444444,
+    "without": 0.5290486831932985,
+    "delta": -0.20960423874885403,
+    "se": 0.11321311800117338,
+    "lo": -0.4315019500311539,
+    "hi": 0.012293472533445787,
+    "pWeak": 0.03205501936100008,
+    "pHolds": 0.8335085641753055,
+    "verdict": "undecided",
+    "qWeak": 0.1880561135845338,
+    "qHolds": 0.9055401684867517
+   },
+   {
+    "name": "Sorin, Lord of Innistrad",
+    "treatedDecks": 9,
+    "treatedGames": 21,
+    "treatedWins": 12,
+    "controlDecks": 9,
+    "expected": 7.8175047175047165,
+    "withIt": 0.54,
+    "without": 0.6933920704845816,
+    "delta": -0.1533920704845816,
+    "se": 0.16029662991651503,
+    "lo": -0.46757346512095105,
+    "hi": 0.16078932415178787,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Sword of Feast and Famine",
+    "treatedDecks": 40,
+    "treatedGames": 103,
+    "treatedWins": 57,
+    "controlDecks": 193,
+    "expected": 36.71838578088581,
+    "withIt": 0.5416058394160584,
+    "without": 0.5040799543355997,
+    "delta": 0.03752588508045873,
+    "se": 0.05408920837545926,
+    "lo": -0.06848896333544141,
+    "hi": 0.14354073349635887,
+    "pWeak": 0.7560892450493261,
+    "pHolds": 0.0055019677753817,
+    "verdict": "holds",
+    "qWeak": 0.8670965367680084,
+    "qHolds": 0.0605216455291987
+   },
+   {
+    "name": "Sword of Fire and Ice",
+    "treatedDecks": 30,
+    "treatedGames": 72,
+    "treatedWins": 36,
+    "controlDecks": 138,
+    "expected": 25.289183039183026,
+    "withIt": 0.5102459016393442,
+    "without": 0.4544310176854569,
+    "delta": 0.05581488395388734,
+    "se": 0.07973085972484045,
+    "lo": -0.10045760110679994,
+    "hi": 0.21208736901457462,
+    "pWeak": 0.7580492705635005,
+    "pHolds": 0.02533512943493832,
+    "verdict": "undecided",
+    "qWeak": 0.8670965367680084,
+    "qHolds": 0.17149933771342862
+   },
+   {
+    "name": "Sword of Light and Shadow",
+    "treatedDecks": 21,
+    "treatedGames": 53,
+    "treatedWins": 31,
+    "controlDecks": 110,
+    "expected": 19.75771728271726,
+    "withIt": 0.5643835616438356,
+    "without": 0.46296694222816565,
+    "delta": 0.10141661941566998,
+    "se": 0.07736796361356148,
+    "lo": -0.05022458926691051,
+    "hi": 0.2530578280982505,
+    "pWeak": 0.9050431422684384,
+    "pHolds": 0.004615790007560738,
+    "verdict": "holds",
+    "qWeak": 0.9442553338390144,
+    "qHolds": 0.0605216455291987
+   },
+   {
+    "name": "The Wandering Emperor",
+    "treatedDecks": 10,
+    "treatedGames": 25,
+    "treatedWins": 13,
+    "controlDecks": 91,
+    "expected": 14.252761127761115,
+    "withIt": 0.5370370370370371,
+    "without": 0.49061719953272853,
+    "delta": 0.04641983750430856,
+    "se": 0.10555114976821924,
+    "lo": -0.16046041604140113,
+    "hi": 0.2533000910500183,
+    "pWeak": 0.6699536391116849,
+    "pHolds": 0.08269148581871932,
+    "verdict": "undecided",
+    "qWeak": 0.8533657423969533,
+    "qHolds": 0.3108463410053748
+   },
+   {
+    "name": "Thundermaw Hellkite",
+    "treatedDecks": 16,
+    "treatedGames": 38,
+    "treatedWins": 24,
+    "controlDecks": 65,
+    "expected": 12.48952158952158,
+    "withIt": 0.6093023255813953,
+    "without": 0.5171187039943987,
+    "delta": 0.09218362158699656,
+    "se": 0.12020997190449241,
+    "lo": -0.14342792334580856,
+    "hi": 0.3277951665198017,
+    "pWeak": 0.7784162091440074,
+    "pHolds": 0.0549399962537831,
+    "verdict": "undecided",
+    "qWeak": 0.8670965367680084,
+    "qHolds": 0.23022474620632916
+   },
+   {
+    "name": "Titania, Protector of Argoth",
+    "treatedDecks": 0,
+    "treatedGames": 0,
+    "treatedWins": 0,
+    "controlDecks": 8,
+    "expected": 0.9615079365079364,
+    "withIt": null,
+    "without": 0.4640483764290889,
+    "delta": null,
+    "se": null,
+    "lo": null,
+    "hi": null,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Treasure Cruise",
+    "treatedDecks": 41,
+    "treatedGames": 96,
+    "treatedWins": 34,
+    "controlDecks": 168,
+    "expected": 36.18580586080587,
+    "withIt": 0.3741258741258741,
+    "without": 0.47788526481232124,
+    "delta": -0.10375939068644713,
+    "se": 0.0604682002029221,
+    "lo": -0.22227706308417444,
+    "hi": 0.014758281711280186,
+    "pWeak": 0.04308710348663669,
+    "pHolds": 0.524786887689844,
+    "verdict": "undecided",
+    "qWeak": 0.21064806149022383,
+    "qHolds": 0.8110857953800689
+   },
+   {
+    "name": "Uro, Titan of Nature's Wrath",
+    "treatedDecks": 3,
+    "treatedGames": 7,
+    "treatedWins": 4,
+    "controlDecks": 2,
+    "expected": 1.9904761904761905,
+    "withIt": 0.5753424657534246,
+    "without": 0.19999999999999998,
+    "delta": 0.37534246575342467,
+    "se": 0.2753179223052693,
+    "lo": -0.1642806619649032,
+    "hi": 0.9149655934717525,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Voice of Resurgence",
+    "treatedDecks": 10,
+    "treatedGames": 24,
+    "treatedWins": 14,
+    "controlDecks": 8,
+    "expected": 7.772527472527474,
+    "withIt": 0.5654008438818565,
+    "without": 0.5144400968883919,
+    "delta": 0.050960746993464645,
+    "se": 0.1756621691225499,
+    "lo": -0.2933371044867331,
+    "hi": 0.3952585984736624,
+    "pWeak": 1,
+    "pHolds": 1,
+    "verdict": "too-few"
+   },
+   {
+    "name": "Young Pyromancer",
+    "treatedDecks": 17,
+    "treatedGames": 41,
+    "treatedWins": 23,
+    "controlDecks": 78,
+    "expected": 14.980069930069922,
+    "withIt": 0.6137184115523465,
+    "without": 0.5665053772065196,
+    "delta": 0.04721303434582691,
+    "se": 0.09086928772616396,
+    "lo": -0.13089076959745444,
+    "hi": 0.22531683828910826,
+    "pWeak": 0.6983186569446997,
+    "pHolds": 0.052610472594780244,
+    "verdict": "undecided",
+    "qWeak": 0.8533657423969533,
+    "qHolds": 0.23022474620632916
+   }
+  ]
+ }
+}

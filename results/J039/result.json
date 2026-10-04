@@ -1,0 +1,29 @@
+{
+  "gen": 4,
+  "inputSha": "52f3d243e407e564850a71d21d99f01a0083aaa98e0a5dd7ba1c26b693c5bf3c",
+  "outputSha": "5382a62ad7a7cafcbb77c41c2e770d265fb0351d6a77febd98a49e7a92f5a09f",
+  "versionIn": 1,
+  "versionOut": 2,
+  "seeds": [
+    3006001,
+    3008000
+  ],
+  "confirmSeeds": [
+    4000901,
+    4001200
+  ],
+  "swaps": [
+    {
+      "out": "Fable of the Mirror-Breaker",
+      "outSection": "Red",
+      "in": "Gut, True Soul Zealot",
+      "inSection": "Red",
+      "why": "dominant-win",
+      "evidence": "discovery (2000 drafts): won 761 of 1382 decisive games (0.55 vs 0.50), p 9.4e-5, q 0.019; confirmed on fresh seeds 4000901–4001200 (300 drafts): won 179 of 316 decisive games (0.57 vs 0.50), p 0.011, Holm p 0.034",
+      "fit": "same colour class; shares TOK SAC ART; mv 3 for 3; rating 72.4; helps weak EVA (0.03)"
+    }
+  ],
+  "verdict": "1 swap(s): 1 card(s) found and then confirmed on fresh drafts. Discovery: 3 candidate(s) of 394 tests at a false-discovery rate of 0.1; confirmation on 300 fresh drafts: 1 confirmed, 2 not. 36 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+  "date": "2026-10-03",
+  "notesSha": "aca3679648a621fc6a8f7afc9a090f09a089fd579d461d744b499d99600696d5"
+}

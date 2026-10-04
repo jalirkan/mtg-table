@@ -1,0 +1,190 @@
+{
+  "v": 1,
+  "cube": "cubes/omega-cube-180.md",
+  "startSha": "f6432a75975ee05edd13318e96b53936ea8ea0722af206b20c21e77f1afb3fdc",
+  "pool": "cubes/omega-seed-pool.tsv",
+  "poolSha": "3488a075970443c193ba4c9d9dca52d67657804ef419fae8af90c70470eae0d3",
+  "drafts": 2000,
+  "seed": 3000001,
+  "games": 3,
+  "profiles": [
+    "Default",
+    "Default"
+  ],
+  "weights": {
+    "unrated": 40,
+    "landScale": 0.45,
+    "synergy": 4,
+    "synergyCap": 6,
+    "lean": 10,
+    "commitAt": 0.3333333333333333,
+    "offColour": 40,
+    "splash": 15,
+    "splashMinRating": 70,
+    "splashSources": 2,
+    "fixing": 12,
+    "setRest": 0.6,
+    "winstonMargin1": 10,
+    "winstonMargin2": 5,
+    "winstonMargin3": 0,
+    "remAIDeck": 0,
+    "playable": 45,
+    "deckPlayable": 2,
+    "deckTheme": 1.5,
+    "deckCurve": 1,
+    "deckCreatures": 1.5,
+    "creaturesMin": 13,
+    "deckSplash": 3,
+    "maxSplash": 3,
+    "maxSplashStretch": 7,
+    "deckThreeColour": 1.5,
+    "deckEighteenLands": 2,
+    "splashDeckSources": 3,
+    "buildSynergy": 3,
+    "sixteenLandsAt": 2.5
+  },
+  "knobs": {
+    "swaps": 6,
+    "minSeen": 15,
+    "minGames": 20,
+    "minOnColour": 8,
+    "deadPlayRateHi": 0.35,
+    "deadMinRating": 60,
+    "dominantMargin": 0.05,
+    "dominantFirstPickLo": 0.75,
+    "fdrQ": 0.1,
+    "confirmAlpha": 0.05,
+    "confirmPower": 0.8,
+    "dominantEffect": 0.1,
+    "deadEffect": 0.1,
+    "pickEffect": 0.9,
+    "confirmMinDrafts": 20,
+    "confirmMaxDrafts": 300,
+    "confirmSeedOffset": 1000000,
+    "watchWinMargin": 0.12,
+    "colourSlack": 2,
+    "minSignposts": 2,
+    "fitSameClass": 4,
+    "fitTheme": 3,
+    "fitRole": 2,
+    "fitMv": 1,
+    "fitRating": 4,
+    "fitBalance": 3,
+    "fitTry": 20,
+    "dominantReplaceRatio": 0.9,
+    "humanTest": 10
+  },
+  "constraints": {
+    "size": 180,
+    "colourTarget": {
+      "W": 32,
+      "U": 32,
+      "B": 31,
+      "R": 32,
+      "G": 32
+    },
+    "colourSlack": 2,
+    "lands": 22,
+    "fixingMin": 25,
+    "pairMin": {
+      "WU": 2,
+      "WB": 1,
+      "WR": 2,
+      "WG": 2,
+      "UB": 2,
+      "UR": 2,
+      "UG": 2,
+      "BR": 2,
+      "BG": 2,
+      "RG": 2
+    }
+  },
+  "date": "2026-10-03",
+  "generations": [
+    {
+      "gen": 1,
+      "inputSha": "f6432a75975ee05edd13318e96b53936ea8ea0722af206b20c21e77f1afb3fdc",
+      "outputSha": "cd9c752809d4e5c03a4854eca7fe5cd14eab3319a5faee094f3d10060834a1aa",
+      "versionIn": 1,
+      "versionOut": 1,
+      "seeds": [
+        3000001,
+        3002000
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 2000 drafts; 1 lead(s) to watch — about 2549 drafts per generation would find half of them. Run more drafts. 36 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-03",
+      "notesSha": "aca3679648a621fc6a8f7afc9a090f09a089fd579d461d744b499d99600696d5"
+    },
+    {
+      "gen": 2,
+      "inputSha": "cd9c752809d4e5c03a4854eca7fe5cd14eab3319a5faee094f3d10060834a1aa",
+      "outputSha": "14cecf3362cab8915d11da1fa40683fe149c465b980bcd4b3f3fdbdf43d66154",
+      "versionIn": 1,
+      "versionOut": 1,
+      "seeds": [
+        3002001,
+        3004000
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 2000 drafts; 1 lead(s) to watch — about 9427 drafts per generation would find half of them. Run more drafts. 36 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-03",
+      "notesSha": "aca3679648a621fc6a8f7afc9a090f09a089fd579d461d744b499d99600696d5"
+    },
+    {
+      "gen": 3,
+      "inputSha": "14cecf3362cab8915d11da1fa40683fe149c465b980bcd4b3f3fdbdf43d66154",
+      "outputSha": "52f3d243e407e564850a71d21d99f01a0083aaa98e0a5dd7ba1c26b693c5bf3c",
+      "versionIn": 1,
+      "versionOut": 1,
+      "seeds": [
+        3004001,
+        3006000
+      ],
+      "confirmSeeds": [
+        4000601,
+        4000900
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 2000 drafts; 1 lead(s) to watch — about 5967 drafts per generation would find half of them. Run more drafts. Discovery: 8 candidate(s) of 397 tests at a false-discovery rate of 0.1; confirmation on 300 fresh drafts: 0 confirmed, 8 not. 37 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-03",
+      "notesSha": "aca3679648a621fc6a8f7afc9a090f09a089fd579d461d744b499d99600696d5"
+    },
+    {
+      "gen": 4,
+      "inputSha": "52f3d243e407e564850a71d21d99f01a0083aaa98e0a5dd7ba1c26b693c5bf3c",
+      "outputSha": "5382a62ad7a7cafcbb77c41c2e770d265fb0351d6a77febd98a49e7a92f5a09f",
+      "versionIn": 1,
+      "versionOut": 2,
+      "seeds": [
+        3006001,
+        3008000
+      ],
+      "confirmSeeds": [
+        4000901,
+        4001200
+      ],
+      "swaps": [
+        {
+          "out": "Fable of the Mirror-Breaker",
+          "outSection": "Red",
+          "in": "Gut, True Soul Zealot",
+          "inSection": "Red",
+          "why": "dominant-win",
+          "evidence": "discovery (2000 drafts): won 761 of 1382 decisive games (0.55 vs 0.50), p 9.4e-5, q 0.019; confirmed on fresh seeds 4000901–4001200 (300 drafts): won 179 of 316 decisive games (0.57 vs 0.50), p 0.011, Holm p 0.034",
+          "fit": "same colour class; shares TOK SAC ART; mv 3 for 3; rating 72.4; helps weak EVA (0.03)"
+        }
+      ],
+      "verdict": "1 swap(s): 1 card(s) found and then confirmed on fresh drafts. Discovery: 3 candidate(s) of 394 tests at a false-discovery rate of 0.1; confirmation on 300 fresh drafts: 1 confirmed, 2 not. 36 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-03",
+      "notesSha": "aca3679648a621fc6a8f7afc9a090f09a089fd579d461d744b499d99600696d5"
+    }
+  ],
+  "explore": {
+    "share": 0.3,
+    "cap": 4,
+    "gold": 4,
+    "margin": 0.1,
+    "minDecks": 10
+  }
+}
