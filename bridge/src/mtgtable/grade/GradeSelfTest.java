@@ -72,6 +72,16 @@ public final class GradeSelfTest {
                 check(msg != null && msg.contains("archive.py restore") && msg.contains("D370"),
                         "WireLog refuses a zstd log with the restore command: " + f.getName() + " -> " + msg);
             }
+            // ... and still reads gzip (D370's four-byte sniff once left every .gz undecompressed).
+            final java.io.File gz = dir.resolve("g1-seat0.jsonl.gz").toFile();
+            final byte[] text = ("{\"v\":1,\"kind\":\"session\",\"seat\":1}\n"
+                    + "{\"dir\":\"s2c\",\"seq\":1,\"type\":\"state\",\"body\":{\"turn\":3}}\n").getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            try (java.util.zip.GZIPOutputStream z = new java.util.zip.GZIPOutputStream(new java.io.FileOutputStream(gz))) {
+                z.write(text);
+            }
+            final WireLog wl = WireLog.read(gz);
+            check(wl.seat == 1 && wl.frames.size() == 1 && WireLog.num(WireLog.map(wl.frames.get(0), "body"), "turn", -1) == 3,
+                    "WireLog reads a gzip log (" + wl.frames.size() + " frame(s), seat " + wl.seat + ")");
         } finally {
             for (final java.io.File f : dir.toFile().listFiles()) {
                 f.delete();
