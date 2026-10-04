@@ -17208,3 +17208,58 @@ at a time); calibration on the owner's own games (`train_eval.py --eval-human`, 
   and those are features the model reads.
 - **Serving the model file to the browser**: the model is the owner's and lives on the PC;
   ForgeCoach is public.
+
+## D362 — The coach helper reads photos: `POST /vision`, the same question as `/coach` with images, handed to the CLI on stdin as one stream-json user message (`--input-format stream-json`), still with every tool off; ForgeCoach's photo-to-pool is its only client
+
+*Branch `c/photo-pool`; D362, the next number free on `main` (D361 the win chance). ForgeCoach's
+side is its own branch `c/photo-pool` (`src/cube/photoPool.ts`, `src/ui/deck/PhotoSheet.tsx`).*
+
+**2026-10-04** (the owner's request: fill a paper cube draft's pool from photos of the cards)
+
+**Context.** Justin types his paper-draft picks into ForgeCoach's Draft & build. He wants to
+photograph the cards instead. ForgeCoach coaches through two sources (D292): the coach helper
+running the logged-in Claude Code CLI, or the player's own API key. The key path takes Messages
+API image blocks from the browser; the helper had no way to hand the CLI a picture.
+
+**Decision.**
+
+1. **The route.** `POST /vision {system, user, images: [{mediaType, data}] (1-8), model?,
+   supersedes?, thinking?}`. `mediaType` is one of `image/jpeg`, `image/png`, `image/webp`,
+   `image/gif`; `data` is base64, at most 5 MB of it an image (the API's own limit); the body
+   at most 24 MB (413). Anything else about `images` (missing, empty, nine, an unknown field, a
+   URL instead of data, not base64) is 400 and starts no child. Everything else is `/coach`'s:
+   the same Origin and token gate, the same queue (D325, one `claude` at a time across both
+   routes), `thinking` (D346), the same NDJSON stream with exactly one terminal line.
+   `/health` says `"vision": 1`; an older helper has no key and answers 404, which ForgeCoach
+   turns into "update mtg-table".
+2. **How the CLI sees the images.** `claude -p --input-format stream-json` with stdin one line,
+   `{"type":"user","message":{"role":"user","content":[<image blocks>…, {"type":"text"}]}}`. The
+   flags are otherwise `/coach`'s exactly (`--tools ""`, `--strict-mcp-config`,
+   `--no-session-persistence`, `--permission-mode dontAsk`, `--max-turns 1`, the empty temp
+   cwd). D292's rule 2 holds unchanged: the question is on stdin, and the model has no tool,
+   so it sees the pictures and the prompt and nothing else.
+3. **Nothing is kept.** The images exist in the request body and the child's stdin; no file is
+   written, nothing reaches argv, and the log line carries the image count only.
+
+**Measured** (this container, Claude Code 2.1.289, logged in). A 64-pixel red PNG through
+stream-json input with `--tools ""`: the model answered "Red", exit 0. Through the helper's
+`/vision`, the same image (thinking off): `text` "Red" then `done`. ForgeCoach's real
+photo prompt (the Vintage cube's 180 names) with two synthetic table photos made from Scryfall
+card images (17 cards placed, rotated and some sleeved, downscaled to 1568 px JPEG, 316 + 265 KB
+— composed by script, not phone photos): the helper's default model, thinking low, 6.0 s, valid JSON, all 14
+distinct cards named correctly, the basic Island ignored, the card placed in both photos listed
+once per photo and the duplicate in one photo counted 2. Real phone photos are not measured.
+
+**Self-test** (`tools/coach-helper-selftest.mjs`, gate 12f): `/health`'s `vision`; the argv
+(`--input-format stream-json` after `-p`, otherwise `/coach`'s, and `/coach` never has it); stdin
+is exactly one user message with the images in order and the text last; no image data or text
+in argv; the empty cwd; the log's image count and no data; logged-out and `thinking` as
+`/coach`; nine bad-`images` cases 400 with no child; 413 over 24 MB; 405; the preflight; another
+origin 403 with no child.
+
+**Rejected.**
+
+- **Writing the images to the temp directory and naming them in the prompt.** The CLI would
+  need its Read tool to open them, and D292's rule 2 is that the coach has no tool.
+- **Base64 in the prompt text.** The model would read it as text, not as an image.
+- **A separate queue for photos.** It is still one `claude` on the owner's account at a time.
