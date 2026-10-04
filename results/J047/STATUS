@@ -1,5 +1,6 @@
 running
 runner: forgecoach-runner 5e6ba2a
 started: 2026-10-03T21:19:59-04:00
-phase: prepare
-workers: 1
+phase: pilot 1/1
+mtg-table: 89f3e4e
+workers: 3
