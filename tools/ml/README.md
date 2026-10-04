@@ -337,9 +337,9 @@ python3 tools/ml/eval_compare.py var/ml/data/nights-1-3 --model var/ml/models/ni
 - **`--soft-labels F.npz [--soft-weight w]`**: rollout-averaged labels for some training rows
   (`game`, `rows_to_end`, `p` in [0, 1], optional `k`): the target there is
   (1 - w) outcome + w p; validation and test always score against the outcome. The
-  producer is `rollout_labels.py` with `tools/coach-grade.sh rollout` (D379, below).
+  producer is `rollout_labels.py` with `tools/coach-grade.sh rollout` (D380, below).
 
-### Rollout labels (D379)
+### Rollout labels (D380)
 
 `rollout_labels.py plan` samples training rows, stratified by cube and turn and at most
 `--per-game` a game, in a seeded random order. Each row maps to its state frame by
@@ -839,7 +839,7 @@ on the first 30 human games by start time, log-loss(core) − log-loss(eval) for
 the model play.sh serves, 95% interval over games (2,000 resamples, seed
 20261004): above 0, better than core on human games; below 0, worse; across 0,
 no difference detectable. Every run prints it (`NOT YET` until game 30); it is
-read once and recorded in `DECISIONS.md`.
+read once and recorded as a decision under `docs/decisions/` (D379).
 
 **Where the models are.** The lab runner's jobs write models into the lab clone,
 `~/code/lab/mtg-table/var/ml/models/`, not into this checkout. The coach

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: rollout labels for the position evaluator (D378).
+# mtg-table — tools/ml: rollout labels for the position evaluator (D380).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Soft labels for `train_eval.py --soft-labels` (D364): positions played out by Forge.
@@ -423,7 +423,7 @@ def pack(a: argparse.Namespace) -> int:
     # What made these labels (D341's question for a derived file): the code, the engine, the settings.
     with open(os.path.join(a.data, "features.json"), encoding="utf-8") as f:
         schema_id = json.load(f).get("schemaId")
-    manifest = {"decision": "D379", **rep, "data": a.data, "schemaId": schema_id, "minK": a.min_k,
+    manifest = {"decision": "D380", **rep, "data": a.data, "schemaId": schema_id, "minK": a.min_k,
                 "seeds": sorted({int(r["seed"]) for r in res if isinstance(r.get("seed"), int)}),
                 "results": [{"path": p, "sha256": _sha_file(p)} for p in
                             [f for path in a.results for f in result_files(path)]],

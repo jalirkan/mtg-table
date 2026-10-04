@@ -454,6 +454,20 @@ https://jalirkan.github.io/ForgeCoach/#lab?src=https://<machine>.<tailnet>.ts.ne
 arrive on loopback, so the server still binds 127.0.0.1 and still serves only the public
 copies. Without it, the phone reads `lab-status` on GitHub, as before.
 
+## The decision ledger
+
+Four optional header lines say what a job is for (D366): `decides:` (the decision its result
+informs), `hypothesis:`, `rule:` (the pre-registered pass/fail rule, or a pointer to it) and
+`followup:` (job files under `jobs/` or template names). `tools/runner.sh check` prints them
+and warns about a heavy job with no `decides:`. At each job end (done, failed, aborted) the
+runner appends an entry to `ledger.jsonl` and `LEDGER.md` at the root of `pc-results`, in the
+commit that carries the STATUS, never to `lab-status`. A done job's follow-up that is not on
+pc-jobs gets one `FOLLOW-UP READY [<id>@<finished>]` line at the top of HEARTBEAT.md's
+`## Messages`; a follow-up already posted with `after:` on the job needs nothing. Which entries
+are pushed is kept in `var/runner/ledger.json`, whose `since` is the first time a runner kept a
+ledger: jobs that ended before it are not backfilled. The pc-jobs README's *The decision
+ledger* has the format and an example; `tools/runner/ledger.ts` is the code.
+
 ## Security: who can run code on the PC
 
 **Whoever can push to `pc-jobs` can run code on Justin's PC.** A job file's blocks run as

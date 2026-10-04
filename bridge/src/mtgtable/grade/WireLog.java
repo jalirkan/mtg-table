@@ -90,7 +90,7 @@ public final class WireLog {
                 throw zstdRefusal(f);
             }
             // >= 2, not == 2: four bytes are read for the zstd check above (D370), so a gzip log's
-            // read returns 4, and == 2 left every .gz undecompressed (D379 found it)
+            // read returns 4, and == 2 left every .gz undecompressed (D380 found it)
             final InputStream body = got >= 2 && (magic[0] & 0xff) == 0x1f && (magic[1] & 0xff) == 0x8b
                     ? new GZIPInputStream(in) : in;
             final List<String> lines = new ArrayList<>();

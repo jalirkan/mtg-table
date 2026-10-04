@@ -67,11 +67,11 @@ code; if you think one is wrong, say so in prose first.
    (**D22**'s `inputGen` stamp, sound because it is only reached from inside a
    live input) and `refreshState` (**D39**: the stamp *plus* a positive
    "the engine is parked" predicate, because its four acts can arrive at any
-   time). **A fourth hop needs a fourth argument, in `DECISIONS.md`** — a green
-   run is not one, which is what *silently* means. **The lint counts them**
+   time). **A fourth hop needs a fourth argument, in a written decision** — a
+   green run is not one, which is what *silently* means. **The lint counts them**
    (**D181**): every `invokeInGameThread` under `bridge/src` and `tools/` must
    carry `// ALLOW hop: D<n> <method>` on its line — `<method>` the one it sits
-   in, `D<n>` a heading in `DECISIONS.md` — and the set must be exactly the
+   in, `D<n>` a decision heading (*Decision numbers*) — and the set must be exactly the
    lint's `HOP_ALLOW` (these three), so a fourth fails the build until its
    argument, its tag and that list are written. `ThreadUtil.invokeInGameThread`
    is the only public way onto the `Game` pool (javap); reflection onto it is
@@ -526,9 +526,17 @@ before it starts (the docs block's was D200–D204), writes its decisions inside
 keeps those numbers when it merges, whatever landed first; an unused number stays
 unused. Gaps between blocks are allowed, so a number says nothing about how many
 decisions there are, and **no document states a total** — point at
-`DECISIONS.md` and name the most recent block instead. The notes on older entries
+the decisions and name the most recent block instead. The notes on older entries
 that say a decision was *written as* another number and renumbered at a merge
 are history from before this rule, and stay.
+
+**From D379 on, each decision is a file of its own** (**D379**):
+`docs/decisions/D<nnn>-<slug>.md`, starting with `## D<nnn> — <title>` and the
+date line; an amendment is a new file naming the one it amends. `DECISIONS.md`
+is the frozen history of D1–D378 — never append to it — so parallel PRs no
+longer conflict on it. `node tools/decisions.mjs next` prints the next free
+number, `list` the index of both places, and `check` (CI) fails on a number
+used twice; anything that resolves a `D<n>` looks in both places.
 
 ## Where the docs live
 
@@ -556,11 +564,11 @@ are history from before this rule, and stay.
 | `docs/guides/personal-tier.md` | **The personal tier's manual** (D190–D198): the never-publish rule, the folder, the slug, the manifest, the three commands, `bones.json`, the Sketchfab click-through, the loader — how a model reaches the arena and the workshop from the dev server — and the relief cache (D225–D228: a depth map of every card's painting, in two layers, for the workshop's inspect view); `docs/evidence/personal-tier.md` is Doctor Doom and the seven others run through it, `docs/evidence/relief-window.md` the relief. |
 | `docs/evidence/*.md` | What was actually run, with real numbers — a file per milestone or lane; `gate-history.md` and `test-count-history.md` are the gate's timings and the web suite's counts over time. |
 | `PLAN.md` | The milestones and every lane since, each with its status, evidence and follow-ups; *Open now*, at the top, indexes every open follow-up and the questions only the owner can settle. |
-| `DECISIONS.md` | Every load-bearing decision, dated, with the alternatives rejected — see `DECISIONS.md`; the most recent blocks are the anchor resolver's D275, the GPU pass's D270–D273, the play-distance audit's D265–D267, the portrait standee's D260–D264, the arena caption's D255–D256, the sound cues' D250–D252, the arena polish's D240–D241, more villain identity's D230–D233, the relief window's D225–D228, villain identity's D220–D222, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D198 (a lane keeps the numbers it reserved, D200). |
+| `DECISIONS.md`, `docs/decisions/` | Every load-bearing decision, dated, with the alternatives rejected: D1–D378 in `DECISIONS.md`, D379 on a file each under `docs/decisions/` (*Decision numbers*); the older blocks include the anchor resolver's D275, the GPU pass's D270–D273, the play-distance audit's D265–D267, the portrait standee's D260–D264, the arena caption's D255–D256, the sound cues' D250–D252, the arena polish's D240–D241, more villain identity's D230–D233, the relief window's D225–D228, villain identity's D220–D222, the status layer's D210–D212, the docs block's D200–D202 and the personal tier's D190–D198 (a lane keeps the numbers it reserved, D200). |
 | `README.md` | What it is, how to run it, and the **NON-GOALS** list. |
 
 Cite these rather than re-deriving their findings. If you contradict one, add a
-new dated entry to `DECISIONS.md` — do not silently edit an old one.
+new dated decision under `docs/decisions/` — do not silently edit an old one.
 
 ## Scope
 
