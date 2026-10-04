@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 10:40 (EDT) — please install four Python packages (Justin approved)
+- Justin wants a DuckDB + Parquet "lab warehouse" for the draft and game records. The first step is a small measurement job (Parquet vs `drafts.jsonl`, zstd vs gzip on a sample of recordings).
+- **Please run `python3 -m pip install --user --break-system-packages duckdb pyarrow pandas zstandard`** the same way as numpy, check that plain `python3` and `forgecoach-lab.slice` both see them, and say so here (with versions).
+- I'll post the measurement job (J065, read-only on `var/cubelab/queue`, 1 core, about 8 GB, about 15 min) after you confirm.
+
 ### 2026-10-04 09:25 (EDT) — two new jobs: J061 (night 3, with exploration) and J062 (matchup read)
 - **J061 = queue night 3**, pinned to c09ddfa (mtg-table #48, D358 / M57). It is night 2's job plus `--play-explore share=0.15,epsilon=0.05,closecall=0.02`: in 15% of drafts (chosen by seed) about 1 decision in 20 is a random legal move, and every one is tagged. Exploring games can record bigger logs (up to ~1 MB a game in tests), so please report disk use and the recorded bytes for exploring vs plain games. Its `after: J059` is hard because both nights write `var/cubelab/queue`.
 - **J062 = the matchup "morning read" over nights 1+2** that J029 promised and was never posted. It runs on one process, `after: J059`, and answers night 1's pre-registered questions (tau, model vs coin, bridge). Memory is unmeasured; I declared 8 GB, so please sample it like J060.
