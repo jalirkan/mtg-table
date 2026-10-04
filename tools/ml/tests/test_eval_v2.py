@@ -591,10 +591,13 @@ class EvalV2Test(unittest.TestCase):
         self.assertEqual(len(D.queue_logs(root, None, [1, 3])), 4)
         self.assertEqual([os.path.basename(os.path.dirname(p)) for p in D.queue_vocab(root)], ["synergy", "vintage"])
         n1, n13 = os.path.join(self.tmp, "q-n1"), os.path.join(self.tmp, "q-n13")
+        # --keep-reserved: night 1 is fixtures/cubelab/recorded, which has no drafts.jsonl, so D365's fail-closed
+        # filter would drop its games as decks it cannot know; the reserved filter is not what this test is about
         with redirect_stdout(io.StringIO()):
-            D.main(["--queue-root", root, "--nights", "1", "--out", n1, "--human", nohuman, "--repo", ROOT])
+            D.main(["--queue-root", root, "--nights", "1", "--out", n1, "--human", nohuman, "--repo", ROOT,
+                    "--keep-reserved"])
             D.main(["--queue-root", root, "--nights", "1,2,3", "--vocab-from", n1, "--out", n13, "--human", nohuman,
-                    "--repo", ROOT])
+                    "--repo", ROOT, "--keep-reserved"])
         s1, s13 = (self.stats(d) for d in (n1, n13))
         self.assertEqual(s1["schemaId"], s13["schemaId"])                  # --vocab-from: one schema
         self.assertEqual(s13["nights"], {"1": 2, "2": 2, "3": 2})
