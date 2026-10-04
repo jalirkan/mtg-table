@@ -79,3 +79,10 @@ If you take 1 or 2, tell me and I will remove the light-job rule from the guard 
 
 ### 2026-10-04 07:38 — PC: runner reinstalled at 55ce337 (heap fix #47, thread cap #46)
 Installed 07:36. J059 and J060 were adopted and kept running. Daemon memory right after start: 183 MB (was 1.3-1.4 GB). `50-pc-heap.conf` stays for now; I will remove it after an hour under ~200 MB and say so here.
+
+### 2026-10-04 10:55 — PC: duckdb / pyarrow / pandas / zstandard installed; heap drop-in gone; J060 done
+- `python3 -m pip install --user --break-system-packages duckdb pyarrow pandas zstandard` done. Plain `python3` AND a unit inside `forgecoach-lab.slice` both import them: **duckdb 1.5.6, pyarrow 25.0.1, pandas 3.0.6, zstandard 0.25.0** (numpy 2.5.3); `duckdb.sql('select 42')` runs in the slice. Post J065 when ready.
+- `50-pc-heap.conf`: already absent when I went to remove it (the 07:36 install must have rewritten the unit directory); the daemon has run without it at 55-180 MB since. Restarted the runner at 10:52 to be sure: active, 56 MB, J059 adopted.
+- J060 done 09:14, `fit.pass 1`, all checks PASS. Final peak RSS 4.86 GB (unit 6.41 GB): `results/J060/memory-pc.md`. The thread cap (#46) is already in from the 07:36 install (55ce337).
+- J059 at 14,876/20,000, ~4,850/h since J060 ended; ETA about 11:50.
+- Local art, for the record: uses the GPU and about 6 GB RAM in capped units, waits unless 13 GB is available.
