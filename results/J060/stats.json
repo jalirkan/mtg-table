@@ -1,0 +1,116 @@
+{
+ "schemaId": "82815752c2f5e346",
+ "nFeatures": 12670,
+ "vocab": [
+  "cube.md",
+  "cube.md",
+  "cube.md",
+  "cube.md",
+  "cube.md",
+  "cube.md",
+  "cube.md"
+ ],
+ "vocabSize": 731,
+ "phases": [
+  "MAIN1",
+  "MAIN2",
+  "COMBAT_BEGIN",
+  "COMBAT_DECLARE_ATTACKERS",
+  "COMBAT_DECLARE_BLOCKERS",
+  "COMBAT_FIRST_STRIKE_DAMAGE",
+  "COMBAT_DAMAGE",
+  "COMBAT_END"
+ ],
+ "groupBy": "match",
+ "split": {
+  "train": 80,
+  "val": 10,
+  "test": 10
+ },
+ "salt": "",
+ "rows": 6343314,
+ "games": 39177,
+ "skippedGames": {
+  "unlabelled": 2
+ },
+ "reservedChecked": true,
+ "reservedDecks": 120,
+ "reservedHits": {},
+ "versions": {
+  "7951c64910f0": 518,
+  "3d8317d580f5": 344,
+  "b24f5ce1dd55": 214,
+  "549af8151a00": 476,
+  "4c6db1cd22ac": 384,
+  "58c1a435536a": 348,
+  "bbe420510a3e": 172,
+  "ef4f4f69be46": 386,
+  "3268aba6bc62": 616,
+  "22e2d10c1f31": 428,
+  "16299d2db66b": 224,
+  "a813fe263c19": 558,
+  "d03d56e3c09d": 438,
+  "e16ad065bee2": 577,
+  "a32da4d980b4": 383,
+  "614e801b7548": 547,
+  "b875654a0c18": 399,
+  "4e4f77eaeb83": 441,
+  "591750118db6": 446,
+  "48bac64aa4a0": 3954,
+  "64ebf7ebd1fc": 4189,
+  "7cb13252703a": 3753,
+  "46213876aec8": 5110,
+  "e4c1d36daaee": 5718,
+  "d1a920eb3155": 4411,
+  "f344baeba973": 4143
+ },
+ "sources": {
+  "lab": 39177
+ },
+ "humanDirs": [],
+ "humanInTraining": false,
+ "splits": {
+  "train": {
+   "rows": 5023976,
+   "games": 31079,
+   "groups": 2534,
+   "gameLabels": {
+    "-1": 15630,
+    "1": 15449
+   },
+   "rowLabels": {
+    "-1": 2507982,
+    "1": 2515994
+   },
+   "shards": 1005
+  },
+  "val": {
+   "rows": 725207,
+   "games": 4476,
+   "groups": 360,
+   "gameLabels": {
+    "1": 2224,
+    "-1": 2252
+   },
+   "rowLabels": {
+    "1": 363890,
+    "-1": 361317
+   },
+   "shards": 146
+  },
+  "test": {
+   "rows": 594131,
+   "games": 3622,
+   "groups": 296,
+   "gameLabels": {
+    "1": 1791,
+    "-1": 1831
+   },
+   "rowLabels": {
+    "1": 296907,
+    "-1": 297224
+   },
+   "shards": 119
+  }
+ }
+}

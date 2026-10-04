@@ -1,0 +1,95 @@
+memory: load: rss 4.38 GB, peak 4.47 GB
+split by pair: train 5016506 rows / 31015 games / 2528 pairs; val 695147 rows / 4233 games / 329 pairs; test 631661 rows / 3929 games / 333 pairs; test rows from a deck seen in training: 0
+train_eval: schema 82815752c2f5e346, 12670 features, vocab 731; rows train/val/test 5016506/695147/631661; games 31015/4233/3929; backend numpy
+grid   0: val 0.5223  epoch   1   780.1s  {"hidden": "64", "dim": 8, "l2": 0.0001, "card_l2": 0.01, "dropout": 0.1, "lr": 0.002}
+grid   1: val 0.5103  epoch   1   860.7s  {"hidden": "128", "dim": 4, "l2": 0.0001, "card_l2": 0.1, "dropout": 0.3, "lr": 0.001}
+grid   2: val 0.5565  epoch   1   984.7s  {"hidden": "128,32", "dim": 8, "l2": 1e-05, "card_l2": 1.0, "dropout": 0.0, "lr": 0.003}
+grid   3: val 0.5250  epoch  49  3464.9s  {"hidden": "32", "dim": 8, "l2": 0.01, "card_l2": 0.1, "dropout": 0.0, "lr": 0.001}
+grid   4: val 0.5268  epoch   1  1333.8s  {"hidden": "128,32", "dim": 16, "l2": 0.0001, "card_l2": 1.0, "dropout": 0.1, "lr": 0.003}
+grid   5: val 0.5071  epoch  20  2658.1s  {"hidden": "128", "dim": 4, "l2": 0.001, "card_l2": 0.01, "dropout": 0.3, "lr": 0.003}
+grid   6: val 0.5260  epoch  11   736.1s  {"hidden": "", "dim": 4, "l2": 1e-05, "card_l2": 1.0, "dropout": 0.3, "lr": 0.003}
+grid: time budget reached after 7 configuration(s)
+grid: best val logloss 0.5071 with {"hidden": "128", "dim": 4, "l2": 0.001, "card_l2": 0.01, "dropout": 0.3, "lr": 0.003}
+model: hidden [128], card dim 4, 39917 parameters, 219 board columns; best epoch 20 of 32 (2658.1 s), val logloss 0.5071
+memory: grid: rss 4.03 GB, peak 4.63 GB
+memory: baselines: rss 3.97 GB, peak 4.86 GB
+memory: score: rss 4.35 GB, peak 4.86 GB
+rows {'train': 5016506, 'val': 695147, 'test': 631661}; games {'train': 31015, 'val': 4233, 'test': 3929}
+
+val:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all         695147  0.500   0.6931  0.250  0.001
+  prior  turn 1-4    108117  0.496   0.6932  0.250  0.006
+  prior  turn 5-8    129468  0.501   0.6931  0.250  0.000
+  prior  turn 9-12   145027  0.502   0.6931  0.250  0.001
+  prior  turn 13-16  133461  0.502   0.6931  0.250  0.001
+  prior  turn 17+    179074  0.499   0.6932  0.250  0.002
+  life   all         695147  0.644   0.6148  0.213  0.017
+  life   turn 1-4    108117  0.515   0.6922  0.250  0.007
+  life   turn 5-8    129468  0.559   0.6780  0.243  0.009
+  life   turn 9-12   145027  0.643   0.6220  0.217  0.016
+  life   turn 13-16  133461  0.714   0.5598  0.189  0.022
+  life   turn 17+    179074  0.733   0.5575  0.184  0.030
+  core   all         695147  0.692   0.5561  0.190  0.017
+  core   turn 1-4    108117  0.529   0.6910  0.249  0.018
+  core   turn 5-8    129468  0.601   0.6561  0.233  0.007
+  core   turn 9-12   145027  0.701   0.5640  0.192  0.025
+  core   turn 13-16  133461  0.767   0.4787  0.158  0.028
+  core   turn 17+    179074  0.794   0.4535  0.145  0.023
+  eval   all         695147  0.729   0.5071  0.172  0.013
+  eval   turn 1-4    108117  0.592   0.6642  0.236  0.014
+  eval   turn 5-8    129468  0.645   0.6188  0.216  0.021
+  eval   turn 9-12   145027  0.733   0.5131  0.173  0.017
+  eval   turn 13-16  133461  0.794   0.4208  0.138  0.010
+  eval   turn 17+    179074  0.819   0.3909  0.126  0.013
+  reliability (eval, val): bin rows predicted observed
+    0.0-0.1   80153  0.040  0.041
+    0.1-0.2   51043  0.150  0.161
+    0.2-0.3   54597  0.251  0.263
+    0.3-0.4   68005  0.352  0.358
+    0.4-0.5   84477  0.451  0.467
+    0.5-0.6   89514  0.549  0.538
+    0.6-0.7   76101  0.648  0.622
+    0.7-0.8   59288  0.748  0.716
+    0.8-0.9   53840  0.850  0.837
+    0.9-1.0   78129  0.958  0.959
+
+test:
+  model  bucket        rows    acc  logloss  brier    ece
+  prior  all         631661  0.498   0.6932  0.250  0.003
+  prior  turn 1-4    100541  0.495   0.6932  0.250  0.006
+  prior  turn 5-8    120352  0.498   0.6932  0.250  0.004
+  prior  turn 9-12   134347  0.499   0.6932  0.250  0.003
+  prior  turn 13-16  121773  0.500   0.6931  0.250  0.001
+  prior  turn 17+    154648  0.500   0.6932  0.250  0.001
+  life   all         631661  0.645   0.6098  0.212  0.017
+  life   turn 1-4    100541  0.513   0.6931  0.250  0.007
+  life   turn 5-8    120352  0.566   0.6745  0.241  0.014
+  life   turn 9-12   134347  0.648   0.6132  0.213  0.019
+  life   turn 13-16  121773  0.709   0.5552  0.188  0.020
+  life   turn 17+    154648  0.737   0.5455  0.181  0.030
+  core   all         631661  0.699   0.5542  0.188  0.021
+  core   turn 1-4    100541  0.533   0.6910  0.249  0.014
+  core   turn 5-8    120352  0.614   0.6499  0.230  0.020
+  core   turn 9-12   134347  0.706   0.5559  0.189  0.029
+  core   turn 13-16  121773  0.778   0.4700  0.154  0.037
+  core   turn 17+    154648  0.804   0.4556  0.142  0.034
+  eval   all         631661  0.748   0.4969  0.166  0.009
+  eval   turn 1-4    100541  0.614   0.6535  0.231  0.016
+  eval   turn 5-8    120352  0.677   0.5978  0.206  0.012
+  eval   turn 9-12   134347  0.755   0.4987  0.166  0.006
+  eval   turn 13-16  121773  0.810   0.4175  0.134  0.010
+  eval   turn 17+    154648  0.837   0.3775  0.118  0.010
+  reliability (eval, test): bin rows predicted observed
+    0.0-0.1   75516  0.041  0.046
+    0.1-0.2   48000  0.150  0.156
+    0.2-0.3   49319  0.251  0.241
+    0.3-0.4   62569  0.352  0.334
+    0.4-0.5   75028  0.451  0.434
+    0.5-0.6   77236  0.550  0.547
+    0.6-0.7   68010  0.648  0.657
+    0.7-0.8   53370  0.748  0.756
+    0.8-0.9   49703  0.851  0.846
+    0.9-1.0   72910  0.957  0.949
+verdict (test): eval log-loss 0.4969 vs best baseline core 0.5542 -- the evaluator wins
+saved var/ml/models/night-1-eval.json (888114 bytes)

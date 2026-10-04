@@ -1,7 +1,7 @@
-running
+done
 runner: forgecoach-runner 55ce337
 started: 2026-10-04T05:38:38-04:00
-phase: commands 1/1
+finished: 2026-10-04T09:14:52-04:00
 mtg-table: 7e48088
 workers: 1 (sized 1: min(cores 7, memory 1, max_workers 1); peak 9.00 GB per worker (declared), budget 11.4 GB)
 adopted: 2026-10-04T07:35:25-04:00: the runner restarted; lab-J060-run1 was still running

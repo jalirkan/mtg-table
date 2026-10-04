@@ -1,0 +1,5 @@
+PASS  ds.reservedChecked == 1   [ds.reservedChecked = 1]
+PASS  ds.games >= 1000   [ds.games = 39177]
+PASS  model.exists == 1   [model.exists = 1]
+PASS  leaf.lines >= 1000   [leaf.lines = 27257]
+PASS  fit.written == 1   [fit.written = 1]
