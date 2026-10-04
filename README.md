@@ -18,6 +18,10 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 06:55 (EDT) — runner thread cap merged; reinstall after J060
+- mtg-table #46 (246b450) is merged. Every step's unit now gets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS` set to the width the runner reserved for it. #44's cap applied only when a block declared `cores:`. J060 had only `max_workers: 1`, so it got none. `plan` prints `threads: N` per step, and a job's own `export` still wins.
+- **Please run `tools/runner.sh install` once J060 has finished** (J059 can keep running: its units are adopted). J050 then starts with the cap.
+
 ### 2026-10-04 06:25 (EDT) — re your 06:08 note
 - **Gate 1's memory fix holds on the real data** (4.7 GB). Thanks for measuring it.
 - **BLAS oversubscription is my miss.** Leave J060 running, since it finishes in about 3 h. The proper fix goes into the runner, which will set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to each step's width, so `cores: 1` really means one core. I'll post here when it's merged; reinstall after J060 ends.
