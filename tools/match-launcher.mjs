@@ -22,10 +22,14 @@
 //                 "aiPolicies": ["plain","outlets","search"] and
 //                 "aiSearchMs": {"min":500,"max":5000,"default":1500}: POST /match takes them.
 //   POST /engine/start  (D308)  wake a sleeping engine on the last match setup (play.sh's
-//                 startup decks if there was no /match).  No body.  200 = the POST /match
-//                 200's shape plus "already": false; engine running already -> 200
-//                 {"ok":true,"already":true,"yourDeck","aiDeck","aiProfile","games"}; the same
-//                 refusals (409, 502, 503, 504).  /health carries "engine_start": 1.
+//                 startup decks if there was no /match).  No body, or (D381) the JSON
+//                 {"aiProfile"?: one of the .ai profiles, any case}: the woken engine plays
+//                 that profile, and it is part of the last setup from then on; no deck is
+//                 named or revealed.  200 = the POST /match 200's shape plus "already": false;
+//                 engine running already -> 200 {"ok":true,"already":true,"yourDeck","aiDeck",
+//                 "aiProfile","games"} (+ "warnings" when it plays another profile than asked:
+//                 nothing is restarted); the same refusals (400 for a bad body, 409, 502, 503,
+//                 504).  /health carries "engine_start": 1, and (D381) "engine_start_profile": 1.
 //   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","aiPolicy","games"}}
@@ -157,6 +161,23 @@ export function profileOf(s, profiles) {
 }
 
 /**
+ * D381: a POST /engine/start body.  Empty (or only whitespace) is the D308 wake:
+ * { aiProfile: null }.  Otherwise a JSON object whose optional "aiProfile" is one
+ * of `profiles`, any case (unknown keys ignored, as /match); anything else is a
+ * problem.  Returns { aiProfile, problems }.
+ */
+export function checkWake(raw, profiles = DEFAULT_PROFILES) {
+  if (raw === undefined || raw === null || String(raw).trim() === '') return { aiProfile: null, problems: [] };
+  let q;
+  try { q = JSON.parse(String(raw)); } catch { return { aiProfile: null, problems: ['the body is not JSON'] }; }
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return { aiProfile: null, problems: ['expected no body, or {"aiProfile"?: string}'] };
+  if (q.aiProfile === undefined) return { aiProfile: null, problems: [] };
+  const aiProfile = profileOf(q.aiProfile, profiles);
+  if (aiProfile === null) return { aiProfile: null, problems: [`aiProfile must be one of ${profiles.join(', ')}, got ${JSON.stringify(String(q.aiProfile)).slice(0, 40)}`] };
+  return { aiProfile, problems: [] };
+}
+
+/**
  * Checks a whole POST /match body.  `profiles` is the list of .ai names;
  * `known` is a Set of folded card names, or null to skip the card check.
  */
@@ -258,6 +279,7 @@ export function readProfiles(aiDir) {
 //
 //   var/match/<id>/you.dck, ai.dck   the decks (written here)
 //   var/match/request.json           {id, deck, aiDeck, aiProfile, games, aiPolicy?, aiSearchMs?}  (here, then SIGUSR1 to play.sh)
+//                                    or a wake: {id, wake: true, aiProfile?}  (D308; D381's profile)
 //   var/match/status.json            {id, state, error?, restored?, match?, ms?}  (play.sh)
 //   var/match/current.json           {id, match}  (play.sh, after every start)
 // ---------------------------------------------------------------------------
@@ -348,15 +370,23 @@ export function createMatchLauncher(opts) {
 
   // D308 POST /engine/start: wake a sleeping engine on the last match setup (or
   // play.sh's own startup decks).  Same request mechanism as /match, no decks:
-  // {"v","id","wake":true}.  Already running: 200 {"ok":true,"already":true}.
+  // {"v","id","wake":true}, plus D381's "aiProfile" when the body names one.
+  // Already running: 200 {"ok":true,"already":true}, and nothing restarts.
+  // `raw` is the request body as sent (a string; empty for none).
   let lastWakeId = 0;
-  const wake = async () => {
+  const wake = async (raw = '') => {
     if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
+    const { aiProfile, problems } = checkWake(raw, readProfiles(aiDir));
+    if (problems.length) return fail(400, 'the engine was not started: ' + problems[0], { problems });
     if (busy) return fail(409, 'a match is already being started — wait for it');
     const cur = engine();
     if (cur?.engine !== 'idle') {
       const m = publicMatch(readJson(join(dir, 'current.json'))?.match);
-      return { status: 200, body: { ok: true, already: true, ...(m ?? {}) } };
+      const body = { ok: true, already: true, ...(m ?? {}) };
+      if (aiProfile && m?.aiProfile && m.aiProfile.toLowerCase() !== aiProfile.toLowerCase()) {
+        body.warnings = [`the engine is already running against the ${m.aiProfile} profile; ${aiProfile} was not applied — nothing is restarted while a match runs`];
+      }
+      return { status: 200, body };
     }
     busy = true;
     const t0 = Date.now();
@@ -366,7 +396,7 @@ export function createMatchLauncher(opts) {
       let id = `m${n}`;
       while (existsSync(join(dir, id))) id = `m${++n}`;
       lastWakeId = n;
-      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true }) + '\n');
+      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true, ...(aiProfile ? { aiProfile } : {}) }) + '\n');
       try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) {
         return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
       }
