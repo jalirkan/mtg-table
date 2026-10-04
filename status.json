@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:13:19-04:00",
- "heartbeat": "2026-10-04T02:13:19-04:00",
+ "updated": "2026-10-04T02:16:21-04:00",
+ "heartbeat": "2026-10-04T02:16:21-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.81,
-  "memUsedGb": 19.7,
+  "load1": 25.6,
+  "memUsedGb": 27.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4037,
-  "pressure": 0,
+  "swapUsedMb": 7468,
+  "pressure": 57.93,
   "cpus": 16,
   "budgetGb": 23.4
  },
@@ -22,20 +22,20 @@
    "id": "J049",
    "title": "(re-post of J034, after numpy) Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
    "cpu": "heavy",
-   "phase": "commands 1/1",
+   "phase": "stopping",
    "started": "2026-10-03T21:35:34-04:00",
-   "elapsed": 16664,
+   "elapsed": 16847,
    "done": 6343314,
    "total": null,
    "unit": "rows",
-   "ratePerHour": 12890454.7,
+   "ratePerHour": 12985178.9,
    "eta": null,
    "workers": 1,
    "workersMax": 1,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-04T02:06:41-04:00",
-   "memGb": 7.46,
+   "memGb": 9.89,
    "live": {
     "ds.rows": 6343314,
     "ds.games": 39177,
@@ -49,7 +49,7 @@
     "ds.val_rows": 725207,
     "ds.versions": 26,
     "ds.written": 1,
-    "elapsed_s": 16654,
+    "elapsed_s": 16830,
     "fit.written": 0,
     "leaf.lines": 0,
     "model.bytes": 0,
@@ -64,7 +64,14 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
+   "pressureEvents": [
+    {
+     "at": "2026-10-04T02:16:21-04:00",
+     "kind": "stop",
+     "workers": 1,
+     "pressure": 57.9
+    }
+   ],
    "detail": "lab-J049-run1"
   }
  ],
