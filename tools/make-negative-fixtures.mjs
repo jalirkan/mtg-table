@@ -264,6 +264,118 @@ probe('a3-revealed-top-look-is-private.jsonl',
   'NOT the viewing seat',
   (fs) => withRevealer(fs, 1, 'Experimental Frenzy'));
 
+// D371 (the lab's night-2 A9 finding): who may see a face-down card's face.
+// Forge's canFaceDownBeShownTo is mayPlayerLook(viewer) first, then "in play
+// and you control it".  Gonti, Lord of Luxury and Thief of Sanity exile an
+// OPPONENT's card face down and let their controller look at it, so that card
+// carries an alt in the Gonti player's log -- legitimately.  The control: the
+// dig, while the viewer's trigger resolves, alt from the first frame on.  The
+// probes: the same alt with no dig, with the opponent's trigger, appearing
+// after the dig, and the in-play rule (an opponent's morph; a stolen morph,
+// whose OWNER does not see its face).
+const ELVES = { name: 'Llanowar Elves', manaCost: '{G}', types: 'Creature - Elf Druid', power: '1', toughness: '1' };
+const faceDownCard = (fs, id, zone, owner, controller, alt) => {
+  const c = structuredClone(firstFull(fs).card);
+  const inPlay = zone === 'battlefield';
+  Object.assign(c, {
+    id, name: '', setCode: '???', manaCost: null, types: inPlay ? 'Creature' : '',
+    power: inPlay ? '2' : null, toughness: inPlay ? '2' : null, loyalty: null,
+    damage: 0, counters: {}, tapped: false, sick: false, attacking: false, blocking: false,
+    faceDown: true, token: false, alt: alt ? { ...ELVES } : null,
+    attachedToId: null, attachmentIds: [], controller, owner, zone, abilities: [],
+  });
+  if ('keywords' in c) c.keywords = [];
+  return c;
+};
+const putCard = (player, zone, card) => {
+  player.zones[zone].cards.push(card);
+  player.zones[zone].count = player.zones[zone].cards.length;
+};
+/** Frame 0: a stack item (the viewer's or the opponent's); frame 1: the dig; frames 1-2: the card in exile. */
+const withGontiExile = (fs, { stackBy = 'viewer', dig = true, altFrom = 1 } = {}) => {
+  const sts = statesOf(fs);
+  const viewerOf = (f) => f.body.players.find((p) => isViewerSeat(p));
+  const opponentOf = (f) => f.body.players.find((p) => !isViewerSeat(p));
+  if (stackBy !== null) {
+    const me = viewerOf(sts[0]);
+    const source = me.zones.battlefield.cards.find((c) => c.hidden !== true);
+    sts[0].body.stack.push({
+      id: 90031, sourceCardId: source.id,
+      controller: stackBy === 'viewer' ? me.id : opponentOf(sts[0]).id,
+      text: 'When Gonti, Lord of Luxury enters, look at the top four cards of target opponent\'s library, ' +
+        'exile one of them face down, then put the rest on the bottom of that library in a random order.',
+      targetCardIds: [], targetPlayerIds: [opponentOf(sts[0]).id],
+    });
+  }
+  const them = opponentOf(sts[1]).id;
+  if (dig) {
+    sts[1].body.events.push({ kind: 'zone', cardId: 90030,
+      from: { zone: 'library', player: them }, to: { zone: 'exile', player: them } });
+  }
+  for (let i = 1; i < sts.length; i++) {
+    putCard(opponentOf(sts[i]), 'exile', faceDownCard(fs, 90030, 'exile', them, them, i >= altFrom));
+  }
+};
+{
+  const fs = slice();
+  withGontiExile(fs);
+  write('a9-look-permission-under-gonti.jsonl', fs);
+  manifest.push({
+    file: 'a9-look-permission-under-gonti.jsonl', level: 'pass', expect: 'PASS',
+    why: 'A9, D371: the viewer\'s Gonti exiled the opponent\'s top card face down and may look at it -- ' +
+      'an alt on an opponent-owned card in exile, dug from a library while the viewer\'s trigger resolved ' +
+      '(the control for the a9 probes below)',
+  });
+  console.log('  PASS  a9-look-permission-under-gonti.jsonl  (a look permission, no defect)');
+}
+probe('a9-exiled-face-down-named-without-a-dig.jsonl',
+  'A9, D371: an opponent\'s face-down card in exile with an alt, and no dig from a library behind it',
+  'only a look permission',
+  (fs) => withGontiExile(fs, { dig: false }));
+probe('a9-dig-by-the-opponent.jsonl',
+  'A9, D371: the dig was the OPPONENT\'s effect -- their look permission is not the viewer\'s',
+  'only a look permission',
+  (fs) => withGontiExile(fs, { stackBy: 'opponent' }));
+probe('a9-alt-appears-after-the-dig.jsonl',
+  'A9, D371: a look permission comes with the dig; an alt that appears a frame later has no source',
+  'only a look permission',
+  (fs) => withGontiExile(fs, { altFrom: 2 }));
+probe('a9-opponent-morph-named.jsonl',
+  'A9: the opponent\'s face-down permanent carries its face -- the leak canFaceDownBeShownTo exists for',
+  'not the viewing seat',
+  (fs) => {
+    const st = statesOf(fs)[1];
+    const them = st.body.players.find((p) => !isViewerSeat(p));
+    putCard(them, 'battlefield', faceDownCard(fs, 90032, 'battlefield', them.id, them.id, true));
+  });
+probe('a9-stolen-morph-named-for-its-owner.jsonl',
+  'A9, D371: in play a face-down card\'s face is its CONTROLLER\'s -- the owner of a stolen morph does not see it',
+  'not the viewing seat',
+  (fs) => {
+    const st = statesOf(fs)[1];
+    const me = st.body.players.find((p) => isViewerSeat(p));
+    const them = st.body.players.find((p) => !isViewerSeat(p));
+    putCard(them, 'battlefield', faceDownCard(fs, 90033, 'battlefield', me.id, them.id, true));
+  });
+
+// The other night-2 finding (D371): the viewer's own hand card as a stub.  It
+// must fail, and the message must say which shape it was -- the clue to the cause.
+probe('own-hand-card-redacted.jsonl',
+  'the viewer\'s own hand card served as a redacted stub: over-redaction, and the checker names the stub\'s controller',
+  'has no name -- redaction is too aggressive (it is a redacted stub',
+  (fs) => {
+    for (const f of statesOf(fs)) {
+      const me = f.body.players.find((p) => isViewerSeat(p));
+      const them = f.body.players.find((p) => !isViewerSeat(p));
+      const i = me.zones.hand.cards.findIndex((c) => c.hidden !== true);
+      if (i < 0) continue;
+      const c = me.zones.hand.cards[i];
+      me.zones.hand.cards[i] = { id: c.id, zone: 'hand', owner: me.id, controller: them.id, hidden: true };
+      return;
+    }
+    throw new Error('no named card in the viewer\'s hand');
+  });
+
 // The other half of finding 5: an opponent-library reveal is TRANSIENT (the
 // search ends), so it must not confer a permanent name-before-reveal exemption.
 // Before the fix, adding an id to the opponent's library.cards whitelisted it in
