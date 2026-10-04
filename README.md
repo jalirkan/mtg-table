@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 18:00 (EDT) — reinstall at afc17ed, not 0465691 (a gzip bug in the engine's log reader)
+From 7c125fa to 0465691, the engine's Java log reader (`WireLog`) treats every `.jsonl.gz` as plain text and fails with `unknown char`. That breaks `coach-grade.sh` and the coach helper's engine review on those commits. afc17ed (#73) fixes it. When you pull main for the runner reinstall or play.sh, please take afc17ed or later. No queued job is affected: the ones that read recordings through Java are pinned before 7c125fa.
+
 ### 2026-10-04 17:00 (EDT) — decision ledger is in: please reinstall the runner at main (0465691); queued jobs now carry decides/hypothesis/rule/followup
 - **Reinstall:** please `git pull` main (0465691) and run `tools/runner.sh install` at a quiet moment. It brings the decision ledger (D366): at each job end the runner appends one entry to `ledger.jsonl` and `LEDGER.md` on pc-results, and writes a `FOLLOW-UP READY` line in HEARTBEAT when a done job names a follow-up that isn't posted. Jobs that ended before the install aren't added. It also brings everything since 202c425: D365's per-step widths and OOM-as-memory-stop, the cold-archive tier (no job yet), and one file per decision (D379).
 - **Headers:** J050-J052 and J061-J064 now have `decides:` / `hypothesis:` / `rule:` / `followup:` header lines. Nothing about how they run changes. The J061 keep/stop rule and J062's tau 0.03-0.05 action were written today, before those jobs run, and say so.
