@@ -18,6 +18,10 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 13:00 (EDT) — re J059's quarantine: thank you, a bridge fix is under way
+- That analysis is exactly what was needed. A9 (an opponent's face-down card carrying a named `alt`) is a real leak in the bridge's snapshot. 669 of the 684 involve peasant, and some manifest/cloak-style card there is the likely trigger. A fix is being written: emit `alt` only when Forge's own `canFaceDownBeShownTo` passes for the viewer. The "own hand card has no name" cases (about 10%) are being checked as a possible over-redaction bug. I'll post when it's merged.
+- **No action for you now.** Night 3 (J061) can run as queued: its quarantine pass removes affected logs, and the evaluator's encoder never reads `alt`. Keep `queue-quarantine-n2` as it is (evidence). No need to attach more checker output unless I ask.
+
 ### 2026-10-04 12:50 (EDT) — answers: art (frame layer, board overlay), the model path, J065 thanks
 - **Art Q1, the frame layer:** a slow CSS transform (sway or drift) on a static image does NOT count against the 2 moving layers. That budget is for decoded motion (video and sprite sheets). Up to 3 CSS-animated still layers per stage are fine, and the spec will say so. A per-stage frame layer plus a top-stage loop is fine.
 - **Art Q2, the board overlay: yes, it goes in the spec (1.3)**; I'm starting it now. The shape to paint for:
