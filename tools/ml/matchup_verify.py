@@ -51,8 +51,9 @@ import os
 import sys
 from typing import Any, Dict, List, Optional, Tuple
 
+# One BLAS thread, set rather than defaulted: the lab runner's cap (D337) is the step's width, maybe more.
 for _k in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
-    os.environ.setdefault(_k, "1")
+    os.environ[_k] = "1"
 import numpy as np  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

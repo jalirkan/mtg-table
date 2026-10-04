@@ -42,7 +42,7 @@ import { controlReader, parseControl, readControl, writeControl } from '../../to
 import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expandGlob, progressOf, rateAndEta, readDrafts } from '../../tools/runner/metrics.ts';
-import { DEFAULT_CONFIG, publicSignature, Runner, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { DEFAULT_CONFIG, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
@@ -324,6 +324,17 @@ test('the unit: systemd-run --user in the lab slice, with the budget, Nice=10 an
   const a = systemdRunArgs(u);
   for (const x of ['--user', '--unit=lab-J003-run1', '--slice=forgecoach-lab.slice', '--collect', 'MemoryHigh=18.9G', 'MemoryMax=21G', 'Nice=10', 'KillMode=control-group', 'ManagedOOMPreference=none', 'StandardOutput=append:/s/run1.log', '--setenv=JOBS=6', '--setenv=LAB_CONTROL=/s/c.json']) assert.ok(a.includes(x), x);
   assert.deepEqual(a.slice(-2), ['/bin/bash', '/s/run1.sh.wrap']);
+});
+
+test('the unit: BLAS / OpenMP / numexpr / vecLib thread pools capped at the step\'s width', () => {
+  assert.deepEqual(THREAD_CAP_VARS, ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS']);
+  const args = (width: number): string[] => systemdRunArgs({ unit: 'lab-J060-run1', memoryHighGb: 18.9, memoryMaxGb: 21, script: '/s/run1.sh', log: '/s/run1.log', cwd: '/lab/mtg-table', env: { JOBS: String(width), ...threadCaps(width) } });
+  for (const [width, n] of [[1, '1'], [7, '7']] as const) {
+    const a = args(width);
+    for (const k of THREAD_CAP_VARS) assert.ok(a.includes(`--setenv=${k}=${n}`), `${k} at width ${width}`);
+    assert.equal(a.filter((x) => /_THREADS=/.test(x)).length, 5);
+  }
+  assert.deepEqual(threadCaps(0), threadCaps(1), 'never 0 (0 means "all" to some pools)');
 });
 
 // ------------------------------------------------------------------ backoff
@@ -1056,9 +1067,9 @@ test('runner: co-scheduling end to end: a wide job waits, then starts beside a n
   assert.equal(r.blocked.find((x) => x.id === 'J062')?.code, 'cores');
   assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run1')?.env.JOBS, '7');
   assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run2')?.env.JOBS, '1');
-  // A declared width caps numpy's BLAS / OpenMP threads; an undeclared one leaves them alone.
+  // Every step's BLAS / OpenMP threads are capped at its width: the narrow block's 1, the wide one's 7.
   assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run2')?.env.OMP_NUM_THREADS, '1');
-  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run1')?.env.OMP_NUM_THREADS, undefined);
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run1')?.env.OMP_NUM_THREADS, '7');
   const doc = r.statusDoc();
   assert.deepEqual([doc.host.coresUsed, doc.host.coresTotal], [8, 8]);
   assert.deepEqual(doc.running.map((x) => [x.id, x.cores]), [['J060', 1], ['J061', 7]]);
@@ -1100,6 +1111,36 @@ test('runner: co-scheduling end to end: a wide job waits, then starts beside a n
   assert.match(r2.blocked.find((x) => x.id === 'J061')?.reason ?? '', /needs 17\.5 GB; 6 of 21 GB free/);
 });
 
+
+test('runner: the thread cap is the step\'s width (max_workers: 1, a 7-worker block, a cores: 1 block); plan shows it; a block\'s own export wins', () => {
+  // J070: width 1 from max_workers: 1, no cores: line (a width the old cap, declared cores: only, missed).
+  const one = NARROW_JOB.replace('id: J060', 'id: J070').replace('max_workers: 7', 'max_workers: 1').replace(/p60/g, 'p70').replace(/j060/g, 'j070').replace(/cores: 1\n/, '')
+    .replace('echo "narrow {workers} $JOBS" >> var/j070.txt', 'echo "narrow $OMP_NUM_THREADS $VECLIB_MAXIMUM_THREADS" >> var/j070.txt\nexport OPENBLAS_NUM_THREADS=3\necho "own $OPENBLAS_NUM_THREADS" >> var/j070.txt');
+  const w = world({ 'J060-a.md': NARROW_JOB, 'J070-b.md': one });
+  const out: string[] = [];
+  assert.equal(new Runner(w.cfg, w.sys).plan('J060', (l) => out.push(l)), 0);
+  const text = out.join('\n');
+  const unitLine = (step: string): string => out.find((l) => l.startsWith('[dry-run] systemd-run') && l.includes(`--unit=lab-J060-${step} `)) ?? '';
+  for (const k of THREAD_CAP_VARS) {
+    assert.ok(unitLine('run1').includes(`--setenv=${k}=7 `), `run1 (7 workers): ${k}`);
+    assert.ok(unitLine('run2').includes(`--setenv=${k}=1 `), `run2 (cores: 1): ${k}`);
+    assert.ok(unitLine('pilot1').includes(`--setenv=${k}=7 `), `pilot1 (admitted at 7): ${k}`);
+  }
+  assert.match(text, /-- run1 [^\n]*\n(?:   \| [^\n]*\n)*   threads: 7 \(the step's width; OMP_NUM_THREADS, OPENBLAS_NUM_THREADS, MKL_NUM_THREADS, NUMEXPR_NUM_THREADS, VECLIB_MAXIMUM_THREADS; an export in the block wins\)/);
+  assert.match(text, /-- run2 [^\n]*\n(?:   \| [^\n]*\n)*   threads: 1 /);
+  // J070 (max_workers: 1) is width 1 in every step, and runs that way: the unit's caps reach the block, its own export wins.
+  const r = new Runner(w.cfg, w.sys);
+  const p70: string[] = [];
+  r.plan('J070', (l) => p70.push(l));
+  assert.ok(p70.filter((l) => l.startsWith('[dry-run] systemd-run')).every((l) => l.includes('--setenv=OMP_NUM_THREADS=1 ') && l.includes('--setenv=OPENBLAS_NUM_THREADS=1 ')));
+  r.reconcile();
+  for (let i = 0; i < 12 && !fs.existsSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j070.txt')); i++) { w.sys.t += 61_000; r.tick(); }
+  for (let i = 0; i < 12 && !/own/.test(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j070.txt'), 'utf8')); i++) { w.sys.t += 61_000; r.tick(); }
+  assert.equal(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j070.txt'), 'utf8'), 'wide 1 1\nnarrow 1 1\nown 3\n');
+  const started = w.sys.started.filter((u) => u.unit.startsWith('lab-J070-'));
+  assert.ok(started.length >= 3 && started.every((u) => u.env.OMP_NUM_THREADS === '1'), started.map((u) => `${u.unit} ${u.env.OMP_NUM_THREADS}`).join(', '));
+  assert.match(fs.readFileSync(path.join(r.jobDir('J070'), 'run2.log'), 'utf8'), /1 worker\(s\), 1 core\(s\), BLAS\/OpenMP threads 1/);
+});
 test('runner: a restart adopts a running unit, resumes a resumable step, restarts a non-resumable job (clean: moved aside)', () => {
   const NONRES = NEW_JOB.replace('id: J010', 'id: J021').replace('resumable: yes', 'resumable: no\nclean: var/out*');
   const w = world({ 'J020-x.md': NEW_JOB.replace('id: J010', 'id: J020'), 'J021-y.md': NONRES.replace('cpu: heavy', 'cpu: light') });

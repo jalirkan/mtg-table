@@ -34,8 +34,9 @@ import os
 import sys
 
 # One BLAS thread: the fits are small, and on a shared machine threads only contend (it was 50x slower here).
+# Set, not defaulted: the lab runner caps every step at its width (D337), which may be more than one.
 for _k in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
-    os.environ.setdefault(_k, "1")
+    os.environ[_k] = "1"
 from typing import Any, Dict, List
 
 import numpy as np

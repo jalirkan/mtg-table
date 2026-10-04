@@ -272,10 +272,11 @@ width × the per-worker peak (a single-process fit that loads the whole dataset)
 started beside it counts on memory it will use. A job is admitted at its header width; a later block that is wider than what is
 free still runs (it never waits for cores), so a job whose wide block comes after a narrow
 one can briefly crowd a job started beside it. Jobs side by side share `var/`: they must not
-write the same paths. A declared width (`cores:`, the job's or the block's) also sets
-`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS`, so numpy's linear algebra
-keeps to it. A job started beside another is sized against the memory the others
-leave, so it may get a worker fewer than it would alone.
+write the same paths. Every step's width, declared or not, also sets `OMP_NUM_THREADS`,
+`OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS`,
+so numpy and torch keep to it; a block that exports one of them keeps its own value. A job
+started beside another is sized against the memory the others leave, so it may get a worker
+fewer than it would alone.
 
 **Workers.** The pilot runs at most 3 workers. During the pilot the runner samples the peak
 resident size of every Java process in the step's unit. The full run gets

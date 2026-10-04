@@ -102,29 +102,8 @@ function lock(cfg: RunnerConfig): void {
 }
 
 function plan(cfg: RunnerConfig, only: string | null): number {
-  const sys = dryRunSys();
-  const r = new Runner({ ...cfg, push: false, stateDir: fs.mkdtempSync(path.join(os.tmpdir(), 'runner-plan-')) }, sys);
-  r.readQueue(true);
-  const st = r.statuses();
-  const jobs = only ? r.jobs.filter((j) => j.id === only) : r.jobs;
-  if (!jobs.length) { console.log(only ? `no job ${only} on origin/pc-jobs` : 'no jobs on origin/pc-jobs'); return 1; }
-  const m = sys.machine();
-  console.log(`machine: ${m.memTotalGb.toFixed(1)} GB, ${m.physicalCores} cores / ${m.threads} threads; lab budget ${JSON.stringify(budget(m, cfg.budget))}`);
-  for (const job of jobs) {
-    const s = st.get(job.id);
-    if (!only && s && s.state !== 'waiting') continue;
-    console.log(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
-    if (job.errors.length) { console.log(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
-    const run = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: Date.now(), steps: r.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: r.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
-    for (const step of run.steps) {
-      if (step.kind !== 'shell') { console.log(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
-      const u = r.unitSpec(run, job, step);
-      console.log(`\n-- ${step.name} (${u.script}):\n${r.stepScript(run, job, step).split('\n').map((l) => `   | ${l}`).join('\n')}`);
-      sys.startUnit(u);
-    }
-    if (job.aborts.length) console.log(`\n-- abort (every minute): ${job.aborts.join(' | ')}`);
-  }
-  return 0;
+  const r = new Runner({ ...cfg, push: false, stateDir: fs.mkdtempSync(path.join(os.tmpdir(), 'runner-plan-')) }, dryRunSys());
+  return r.plan(only, (l) => console.log(l));
 }
 
 function readStatus(cfg: RunnerConfig): StatusDoc | null {

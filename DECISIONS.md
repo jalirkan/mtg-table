@@ -15317,6 +15317,23 @@ runner starts the next job beside it), 3 (a parallel encode) and 4 (cores in use
   `stats.json` last, removing any stale one at the start, so `gate_metrics.py dataset`
   reports rows mid-run (`written: 0, partial: 1`) and a `progress: metric ds.rows` moves.
 
+**Amended 2026-10-04 (branch `c/runner-blas-threads`): every step's thread pools are capped
+at its width, declared or not.** Measured on J060: ~680% CPU at width 1 (`train_eval.py`, numpy);
+beside a co-scheduled 5-worker job the load average reached ~27 and that job ran ~13% slower.
+The `c/cores` cap set three variables, and only for a declared `cores:`, never for a width that
+comes from `max_workers` or the default. The runner now caps BLAS/OpenMP pools to the width: every step's unit gets
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and
+`VECLIB_MAXIMUM_THREADS` set to the step's width, the cores the runner reserves for it beside
+other jobs (the block's `cores:`, else the job's, else its sized workers, else the width it
+was admitted at). Not `{workers}`: the workers are what memory allows (a pilot runs at most 3)
+and say nothing of a step that runs no pool, while the width is what co-scheduling counts, so
+the cap makes that count true. Java ignores the variables, so a JVM-pool step at width N is
+unchanged. A block that exports one of them keeps its own value (the script runs after the
+unit's environment); `matchup_sim.py` and `matchup_verify.py` now set their one thread rather
+than default it. `tools/runner.sh plan` prints each step's `threads:` and the step log's start
+line says it. The PC picks this up on its next `tools/runner.sh install`; units already
+running keep the environment they started with.
+
 ## D340 — Draft seeds belong to someone: the lab keeps 1–799,999,999, verifications 800,000,000+, and the AI ladder's deck sets 900,000,000+, which `run` and the queue refuse; the dataset builders also drop any game played with a deck-set deck, matched card for card
 
 *Branch `c/review2-fixes`; D340–D344, past every number the open lanes hold or may hold (the lab runner, the coach grader D332–D334, the match launcher's D333, evolve-rigor's D331).*

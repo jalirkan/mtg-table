@@ -15,7 +15,7 @@ import os from 'node:os';
 
 import { parsePressure } from './backoff.ts';
 import type { Machine, UnitSpec } from './sizing.ts';
-import { SLICE, systemdRunArgs } from './sizing.ts';
+import { SLICE, systemdRunArgs, systemdRunLine } from './sizing.ts';
 
 export interface Run { code: number; stdout: string; stderr: string }
 
@@ -199,11 +199,10 @@ export function realSys(): Sys {
 /** The real machine for reading; every systemd action printed instead of done. */
 export function dryRunSys(print: (s: string) => void = (s) => process.stdout.write(`${s}\n`)): Sys {
   const r = realSys();
-  const q = (a: string): string => (/^[\w@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, `'\\''`)}'`);
   return {
     ...r,
     startUnit(u) {
-      print(`[dry-run] systemd-run ${systemdRunArgs(u).map(q).join(' ')}`);
+      print(`[dry-run] ${systemdRunLine(u)}`);
       return { code: 0, stdout: '', stderr: '' };
     },
     stopUnit(unit) {

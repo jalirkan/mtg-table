@@ -98,7 +98,9 @@ systemd-run --user --unit=lab-J003-run1 --slice=forgecoach-lab.slice --collect -
   -p MemoryHigh=18.9G -p MemoryMax=21G -p MemorySwapMax=1G -p Nice=10 -p KillMode=control-group \
   -p KillSignal=SIGTERM -p TimeoutStopSec=90 -p ManagedOOMPreference=none \
   -p WorkingDirectory=~/code/lab/mtg-table -p StandardOutput=append:<log> -p StandardError=append:<log> \
-  --setenv=JOBS=7 --setenv=LAB_WORKERS=7 --setenv=LAB_CONTROL=<control file> … /bin/bash <step>.sh.wrap
+  --setenv=JOBS=7 --setenv=LAB_CONTROL=<control file> … --setenv=LAB_WORKERS=7 … \
+  --setenv=MKL_NUM_THREADS=7 --setenv=NUMEXPR_NUM_THREADS=7 --setenv=OMP_NUM_THREADS=7 \
+  --setenv=OPENBLAS_NUM_THREADS=7 --setenv=VECLIB_MAXIMUM_THREADS=7 /bin/bash <step>.sh.wrap
 ```
 
 The wrapper runs the step's script (`bash -eo pipefail`) and writes its exit code to
@@ -117,8 +119,7 @@ A heavy job has a **width**, the cores it keeps busy: its `cores:` header, else 
 `max_workers`, else physical cores − 1. A `cores: N` line before a block in `## Pilot` or
 `## Commands` sets that block's width (and caps `{workers}` and `$JOBS` in it), and a
 `mem_gb: G` line its whole memory reservation, so a running job's width and memory are its
-current step's. A declared width also sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and
-`MKL_NUM_THREADS` in the step's unit, so numpy keeps to it. The **core budget** is the physical cores (8 on the 9700X;
+current step's. The **core budget** is the physical cores (8 on the 9700X;
 `--cores N`). The machine used to count as busy whenever one heavy job ran, however narrow
 (J049, a single-threaded encode, left 15 of 16 threads idle for hours); now a heavy job may
 start **beside** running heavy jobs (`schedule.ts`) when:
@@ -148,6 +149,19 @@ Jobs side by side therefore share `var/` and must not write the same paths.
 what the others reserve, so it can get a worker fewer than it would alone. A job is admitted at
 its header width; a later block of a running job that is wider than what is free is still
 started (a step never waits for cores), so put a job's wide blocks first.
+
+**Thread pools.** Every step's unit sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
+`MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS` to the step's width:
+the cores the runner reserved for it (the block's `cores:`, else the job's, else its sized
+workers, else the width it was admitted at, `max_workers` or physical cores − 1). So numpy,
+torch's CPU ops and numexpr keep to the width whether it was declared or not: J060's
+`train_eval.py`, at width 1, used about 680% CPU and slowed the job beside it by about 13%. It is the width, not `{workers}`: workers are what memory allows
+and mean nothing to a step that runs no pool, and the width is what co-scheduling counts. Java
+ignores these variables, so a step of N JVM workers is unaffected. To use more or fewer
+threads in a block, export the variable in the block (`export OMP_NUM_THREADS=4`): the script
+runs after the unit's environment, so its own value wins (keep it within the width, or declare
+a wider `cores:`). `tools/runner.sh plan` prints each step's `threads:`, and the step log's
+`==== … started` line says `BLAS/OpenMP threads N`.
 
 `status.json` says `host.coresUsed` of `host.coresTotal` (the running jobs' widths, a light
 job's included) and each running job's `cores`; the public copy keeps both.
