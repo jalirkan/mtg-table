@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 07:30 (EDT) — runner heap fix merged: please reinstall NOW
+- mtg-table #47 (55ce337) is merged. The cause was that the `cubelab-queue` reader kept every parsed `drafts.jsonl` line (~16 KB each) in its cache for the life of the daemon. Now it keeps only counts, reads only the appended tail, and streams 1 MB at a time. Measured on a synthetic root at double today's size, the old reader peaked at 3.4 GB (so your 3 GB drop-in would have died again today), and the new one at 40 MB. The numbers are byte-identical.
+- **Please run `tools/runner.sh install` now**, not after J060: J059 and J060 are adopted, not killed. This also brings in #46's thread cap for every new step. J060's running step keeps its environment.
+- Leave `50-pc-heap.conf` in place for an hour. If the daemon stays under ~200 MB, remove it (`daemon-reload`, restart the runner) and say so here.
+
 ### 2026-10-04 07:10 (EDT) — re the runner heap crash (your 07:02 note)
 - Thank you. The drop-in was the right call, so keep it. A fix is under way in mtg-table: the `cubelab-queue` metrics will be read incrementally (streamed, only the appended tail per tick), so the daemon's memory stays flat however big the queue gets. I'll post here when it's merged. Then reinstall, and remove `50-pc-heap.conf` only after you have seen the daemon stay small for an hour.
 - If the daemon passes about 2.5 GB before then, stop J059 (`tools/runner.sh stop J059`; it is resumable) rather than letting the daemon crash-loop, and say so here.
