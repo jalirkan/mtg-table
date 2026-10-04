@@ -1,133 +1,80 @@
 {
  "schema": 1,
- "updated": "2026-10-04T12:17:03-04:00",
- "heartbeat": "2026-10-04T12:17:03-04:00",
+ "updated": "2026-10-04T12:19:19-04:00",
+ "heartbeat": "2026-10-04T12:19:19-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.53,
-  "memUsedGb": 9.8,
+  "load1": 6.53,
+  "memUsedGb": 7.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 3520,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 5,
+  "coresUsed": 7,
   "coresTotal": 8
  },
  "running": [
-  {
-   "publicTitle": "Queue night 2",
-   "publicEst": "~5 h",
-   "id": "J059",
-   "title": "Overnight queue, night 2: recorded normal + bridge drafts across all cubes, on main with the reveal-leak fix (D352)",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-10-04T05:38:38-04:00",
-   "elapsed": 23905,
-   "done": 20000,
-   "total": 20000,
-   "unit": "drafts",
-   "ratePerHour": 2951.5,
-   "eta": null,
-   "workers": 5,
-   "workersMax": 5,
-   "cores": 5,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-04T12:13:03-04:00",
-   "memGb": 3.77,
-   "live": {
-    "night.drafts": 40000,
-    "night.games": 39998,
-    "night.engine_error_rate": 0.0001,
-    "elapsed_s": 23853,
-    "night.bridge_drafts": 8000,
-    "night.bridge_drafts_done": 4000,
-    "night.bridge_drafts_planned": 4000,
-    "night.bridge_share": 0.2,
-    "night.cpu_ms_per_turn": 334,
-    "night.drafts_per_h": 2951.5,
-    "night.draws": 10,
-    "night.engine_errors": 2,
-    "night.games_per_h": 2951.5,
-    "night.mean_game_ms": 4652,
-    "night.mean_game_s": 4.652,
-    "night.mean_turns": 19.3946,
-    "night.median_game_s": 2.659,
-    "night.ms_per_turn": 240,
-    "night.night_drafts_done": 20000,
-    "night.night_drafts_done_per_h": 2951.5,
-    "night.nights": 1,
-    "night.output_bytes": 7325848611,
-    "night.planned_drafts": 20000,
-    "night.recorded_bytes_per_game": 166548,
-    "night.recorded_errors": 18,
-    "night.recorded_games": 39998,
-    "night.runs": 26,
-    "night.timeouts": 9,
-    "peak_worker_rss_gb": 1.24,
-    "pressure_events": 0,
-    "workers": 5
-   },
-   "liveHeadline": [
-    "night.drafts",
-    "night.games",
-    "night.engine_error_rate"
-   ],
-   "cubes": [
-    {
-     "id": "fair-fight",
-     "done": 2080,
-     "planned": 2080
-    },
-    {
-     "id": "modern-era",
-     "done": 2034,
-     "planned": 2034
-    },
-    {
-     "id": "omega",
-     "done": 1794,
-     "planned": 1794
-    },
-    {
-     "id": "pauper",
-     "done": 3141,
-     "planned": 3141
-    },
-    {
-     "id": "peasant",
-     "done": 2774,
-     "planned": 2774
-    },
-    {
-     "id": "synergy",
-     "done": 2521,
-     "planned": 2521
-    },
-    {
-     "id": "vintage",
-     "done": 1656,
-     "planned": 1656
-    }
-   ],
-   "publicCubes": true,
-   "pressureEvents": [],
-   "detail": "lab-J059-run2"
-  }
- ],
- "queue": [
   {
    "publicTitle": "Regret gate truth grading",
    "publicEst": "~one night",
    "id": "J050",
    "title": "Evaluator gate 2: the decision set and its full-game truth tables (D354), resumable",
    "cpu": "heavy",
-   "est": "one night: ~300 decisions x ~5 options x 200 rounds x 0.6 (racing) = ~180k full-game playouts at 0.5-1.0 s = 25-50 core-hours, 4-7 h on 7 JVMs; the screen about 10 min"
-  },
+   "phase": "prepare",
+   "started": "2026-10-04T12:19:19-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": 300,
+   "unit": "lines",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": "2026-10-04T12:19:19-04:00",
+   "memGb": null,
+   "live": {
+    "set.lines": 0,
+    "truth.answered": 0,
+    "truth.ok": 0,
+    "truth.error": 0,
+    "truth.playouts": 0,
+    "elapsed_s": 0,
+    "pressure_events": 0,
+    "screen.answered": 0,
+    "screen.error": 0,
+    "screen.ok": 0,
+    "screen.playouts": 0,
+    "screen.refused": 0,
+    "screen.requests": 0,
+    "screen.trivial": 0,
+    "screen.unsupported": 0,
+    "truth.refused": 0,
+    "truth.requests": 0,
+    "truth.trivial": 0,
+    "truth.unsupported": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "set.lines",
+    "truth.answered",
+    "truth.ok",
+    "truth.error",
+    "truth.playouts"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J050-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Regret gate scoring",
    "publicEst": "~30 min",
@@ -187,6 +134,20 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Queue night 2",
+   "publicEst": "~5 h",
+   "id": "J059",
+   "title": "Overnight queue, night 2: recorded normal + bridge drafts across all cubes, on main with the reveal-leak fix (D352)",
+   "status": "done",
+   "finished": "2026-10-04T12:19:19-04:00",
+   "headline": "night.drafts 40000 · night.games 39998 · night.engine_error_rate 0",
+   "numbers": {
+    "night.drafts": 40000,
+    "night.games": 39998,
+    "night.engine_error_rate": 0.0001
+   }
+  },
   {
    "publicTitle": "Evaluator training and fit gate",
    "publicEst": "~4 h",
