@@ -5,10 +5,10 @@ public_est: ~15 min
 cpu: heavy
 cores: 1
 repos: mtg-table@c09ddfa
-est: ~10-20 min on one core (reads up to 300 MB of drafts.jsonl and 300 recordings)
+est: ~10-20 min on one core (reads up to 120 MB of drafts.jsonl and 120 recordings; sized at 3 GB so it fits beside a 7-worker job)
 resumable: no
 max_workers: 1
-mem_per_worker_gb: 8
+mem_per_worker_gb: 3
 timeout: 1h
 clean: var/storage
 metrics: rep = sh: python3 -c "import json; d=json.load(open('var/storage/storage-report.json')); print(json.dumps({'written':1,'ratio':d['drafts']['ratio'],'drafts':d['drafts']['drafts'],'zstd19':d['recordings'].get('zstd19',{}).get('vsGzip',0)}))" 2>/dev/null || echo '{"written":0}'
@@ -17,10 +17,10 @@ Justin asked for a DuckDB + Parquet "lab warehouse" for the draft and game recor
 before anything is built. It is READ-ONLY on `var/cubelab/queue`: it writes only under `var/storage/`.
 It reads only complete lines, so it is safe beside a running queue night.
 
-1. Up to 300 MB of `drafts.jsonl` (all keys) is flattened into drafts / games / picks / deck_cards
+1. Up to 120 MB of `drafts.jsonl` (all keys) is flattened into drafts / games / picks / deck_cards
    Parquet tables (zstd, dictionary-encoded card names), with sizes vs the JSONL, the JSON parse time,
    and four DuckDB query times.
-2. 300 random game recordings (`.jsonl.gz`) are re-compressed with zstd -3, -19 and -19 plus a trained
+2. 120 random game recordings (`.jsonl.gz`) are re-compressed with zstd -3, -19 and -19 plus a trained
    dictionary: ratio vs gzip, plus compression and decompression speed.
 
 ## Pilot
@@ -197,7 +197,7 @@ def main():
 if __name__ == "__main__":
     sys.exit(main())
 PY
-python3 var/storage/measure_storage.py var/cubelab/queue --out var/storage --limit-mb 300 --sample 300
+python3 var/storage/measure_storage.py var/cubelab/queue --out var/storage --limit-mb 120 --sample 120
 du -sh var/cubelab/queue var/ml 2>/dev/null | tee var/storage/du.txt
 df -h . | tee -a var/storage/du.txt
 rm -rf var/storage/parquet
