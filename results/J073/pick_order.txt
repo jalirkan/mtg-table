@@ -1,0 +1,109 @@
+                            cube format  decisions
+0                        peasant   grid     214776
+1                         pauper   grid     205056
+2                        synergy   grid     173160
+3                     modern-era   grid     149220
+4                     fair-fight   grid     146160
+5                        vintage   grid     134244
+6                          omega   grid     132192
+7       bridge:pauper+modern-era   grid      23040
+8          bridge:pauper+synergy   grid      21852
+9         bridge:peasant+synergy   grid      20772
+10     bridge:peasant+modern-era   grid      20736
+11  bridge:fair-fight+modern-era   grid      18756
+12     bridge:fair-fight+synergy   grid      17640
+13          bridge:synergy+omega   grid      16056
+14        bridge:synergy+vintage   grid      15876
+15         bridge:pauper+vintage   grid      15840
+16           bridge:pauper+omega   grid      15732
+17        bridge:peasant+vintage   grid      14004
+18          bridge:peasant+omega   grid      13824
+19     bridge:fair-fight+vintage   grid      13284
+20     bridge:modern-era+vintage   grid      12996
+21       bridge:fair-fight+omega   grid      12240
+22       bridge:modern-era+omega   grid      12168
+23         bridge:pauper+peasant   grid       8928
+24     bridge:fair-fight+peasant   grid       7956
+25     bridge:modern-era+synergy   grid       6300
+cube: peasant
+                       seen   taken  take_rate  mean_pick_n
+card                                                       
+Deep-Cavern Bat        6803  5191.0      0.763        9.563
+Marionette Apprentice  6822  5192.0      0.761        9.451
+Troll of Khazad-dûm    6847  5147.0      0.752        9.540
+Bonesplitter           6873  5133.0      0.747        9.589
+Lightning Bolt         6909  5155.0      0.746        9.514
+Mana Leak              6915  5149.0      0.745        9.608
+Consider               6944  5142.0      0.740        9.533
+Miscalculation         6977  5137.0      0.736        9.550
+Goblin Surprise        6967  5125.0      0.736        9.503
+Stock Up               7030  5170.0      0.735        9.534
+Ponder                 6991  5124.0      0.733        9.490
+Samurai's Katana       6982  5117.0      0.733        9.659
+Faithless Looting      7058  5124.0      0.726        9.553
+Animate Dead           7044  5104.0      0.725        9.504
+Reanimate              7053  5092.0      0.722        9.475
+Chart a Course         7077  5046.0      0.713        9.534
+Loxodon Warhammer      7106  5029.0      0.708        9.580
+Dance of the Dead      7234  5079.0      0.702        9.591
+Counterspell           7208  5011.0      0.695        9.433
+Thraben Inspector      7280  5033.0      0.691        9.453
+Writhing Chrysalis     7295  5032.0      0.690        9.407
+Lórien Revealed        7281  5017.0      0.689        9.378
+Morbid Opportunist     7355  5029.0      0.684        9.579
+Monastery Swiftspear   7338  5001.0      0.682        9.529
+Twinshot Sniper        7389  4977.0      0.674        9.515
+Kor Skyfisher          7388  4966.0      0.672        9.439
+Swords to Plowshares   7378  4946.0      0.670        9.338
+Spinewoods Armadillo   7438  4866.0      0.654        9.387
+Sink into Stupor       7607  4935.0      0.649        9.389
+Vampire Nighthawk      7581  4902.0      0.647        9.432
+n                        1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16    17    18
+card                                                                                                                             
+Deep-Cavern Bat        0.76  0.74  0.81  0.77  0.78  0.73  0.75  0.75  0.74  0.75  0.72  0.77  0.78  0.74  0.79  0.81  0.81  0.76
+Marionette Apprentice  0.75  0.73  0.75  0.76  0.79  0.74  0.75  0.74  0.75  0.77  0.76  0.74  0.79  0.77  0.75  0.79  0.78  0.79
+Troll of Khazad-dûm    0.77  0.72  0.77  0.76  0.79  0.69  0.73  0.72  0.73  0.74  0.74  0.74  0.75  0.80  0.76  0.76  0.77  0.78
+Bonesplitter           0.70  0.66  0.69  0.67  0.66  0.77  0.80  0.82  0.79  0.78  0.74  0.77  0.80  0.80  0.76  0.75  0.74  0.78
+Lightning Bolt         0.81  0.77  0.76  0.78  0.79  0.70  0.70  0.71  0.74  0.75  0.73  0.75  0.73  0.77  0.76  0.74  0.73  0.73
+Mana Leak              0.79  0.74  0.75  0.78  0.76  0.75  0.74  0.72  0.70  0.72  0.75  0.73  0.73  0.72  0.71  0.80  0.75  0.76
+Consider               0.73  0.68  0.75  0.74  0.77  0.69  0.72  0.75  0.72  0.76  0.77  0.74  0.75  0.72  0.76  0.75  0.77  0.74
+Miscalculation         0.79  0.73  0.76  0.76  0.79  0.71  0.68  0.72  0.74  0.73  0.71  0.73  0.74  0.76  0.74  0.69  0.76  0.75
+Goblin Surprise        0.66  0.70  0.71  0.76  0.79  0.71  0.69  0.71  0.72  0.72  0.71  0.72  0.77  0.78  0.76  0.81  0.77  0.78
+Stock Up               0.76  0.77  0.75  0.75  0.74  0.76  0.69  0.72  0.71  0.74  0.74  0.73  0.75  0.75  0.75  0.71  0.69  0.73
+Ponder                 0.76  0.76  0.74  0.75  0.79  0.69  0.69  0.70  0.73  0.73  0.71  0.73  0.75  0.73  0.72  0.74  0.77  0.73
+Samurai's Katana       0.72  0.73  0.75  0.77  0.70  0.71  0.72  0.74  0.70  0.71  0.71  0.76  0.73  0.73  0.74  0.74  0.77  0.76
+Faithless Looting      0.73  0.71  0.72  0.76  0.76  0.68  0.67  0.72  0.72  0.71  0.72  0.70  0.76  0.72  0.75  0.75  0.76  0.72
+Animate Dead           0.78  0.74  0.75  0.74  0.73  0.72  0.71  0.68  0.71  0.70  0.72  0.70  0.74  0.72  0.74  0.74  0.72  0.72
+Reanimate              0.80  0.78  0.76  0.74  0.74  0.67  0.68  0.69  0.69  0.71  0.73  0.69  0.72  0.70  0.72  0.73  0.74  0.74
+Chart a Course         0.71  0.71  0.68  0.68  0.73  0.71  0.67  0.72  0.71  0.67  0.74  0.72  0.71  0.73  0.74  0.77  0.71  0.73
+Loxodon Warhammer      0.68  0.63  0.63  0.61  0.63  0.76  0.75  0.78  0.75  0.74  0.76  0.73  0.72  0.73  0.71  0.73  0.75  0.70
+Dance of the Dead      0.75  0.74  0.70  0.68  0.72  0.67  0.68  0.72  0.69  0.71  0.69  0.71  0.72  0.70  0.67  0.70  0.70  0.70
+Counterspell           0.80  0.79  0.78  0.75  0.77  0.70  0.66  0.71  0.68  0.68  0.64  0.67  0.67  0.62  0.65  0.67  0.64  0.69
+Thraben Inspector      0.76  0.75  0.74  0.76  0.73  0.65  0.65  0.66  0.67  0.71  0.64  0.69  0.68  0.68  0.69  0.65  0.69  0.68
+Writhing Chrysalis     0.70  0.74  0.77  0.78  0.78  0.65  0.61  0.67  0.67  0.66  0.67  0.67  0.67  0.67  0.69  0.73  0.65  0.67
+Lórien Revealed        0.75  0.75  0.75  0.77  0.75  0.69  0.69  0.70  0.68  0.65  0.64  0.67  0.66  0.63  0.65  0.68  0.65  0.66
+Morbid Opportunist     0.69  0.66  0.69  0.74  0.66  0.64  0.68  0.69  0.68  0.68  0.68  0.67  0.69  0.70  0.67  0.69  0.70  0.68
+Monastery Swiftspear   0.66  0.64  0.70  0.65  0.67  0.66  0.65  0.67  0.71  0.65  0.70  0.70  0.69  0.72  0.71  0.70  0.71  0.69
+Twinshot Sniper        0.72  0.70  0.70  0.69  0.69  0.67  0.67  0.64  0.65  0.66  0.67  0.65  0.66  0.69  0.66  0.68  0.67  0.66
+Kor Skyfisher          0.70  0.68  0.70  0.67  0.72  0.66  0.64  0.63  0.65  0.70  0.66  0.65  0.68  0.69  0.67  0.65  0.69  0.67
+Swords to Plowshares   0.81  0.73  0.73  0.71  0.69  0.65  0.65  0.67  0.63  0.65  0.63  0.64  0.65  0.66  0.65  0.63  0.66  0.66
+Spinewoods Armadillo   0.74  0.68  0.72  0.66  0.71  0.72  0.64  0.64  0.65  0.67  0.64  0.61  0.64  0.64  0.59  0.61  0.60  0.63
+Sink into Stupor       0.71  0.68  0.71  0.68  0.66  0.64  0.66  0.64  0.67  0.62  0.65  0.64  0.64  0.60  0.59  0.62  0.63  0.65
+Vampire Nighthawk      0.72  0.67  0.71  0.71  0.74  0.63  0.62  0.65  0.63  0.61  0.67  0.61  0.62  0.62  0.61  0.60  0.61  0.63
+                         seen   taken  take_rate  mean_pick_n
+card                                                         
+Etched Cornfield        10294  1608.0      0.156        9.830
+Neglected Manor         10200  1753.0      0.172        9.953
+Rise of the Witch-king  10163  1780.0      0.175        8.937
+Strangled Cemetery      10233  1793.0      0.175       10.055
+Trumpeting Herd         10285  1805.0      0.175        9.315
+Raucous Carnival        10208  1809.0      0.177        9.980
+Bleeding Woods          10270  1842.0      0.179        9.772
+Razortrap Gorge         10250  1861.0      0.182       10.011
+Murky Sewer             10138  1861.0      0.184        9.990
+Peculiar Lighthouse     10139  1881.0      0.186       10.175
+Abandoned Campground    10145  1926.0      0.190        9.939
+Deceptive Landscape     10048  1952.0      0.194        9.974
+Lakeside Shack          10107  1971.0      0.195        9.842
+Coruscation Mage        10140  2006.0      0.198        9.673
+Goblin Plate Mail       10079  2029.0      0.201        8.974

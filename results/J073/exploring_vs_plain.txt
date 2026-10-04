@@ -1,0 +1,90 @@
+   explore  games  ...  mean_changed  mean_recorded_kib
+0    False  40076  ...           NaN            162.675
+
+[1 rows x 12 columns]
+                            cube  explore  ...  mean_decisions  mean_randomised
+0   bridge:fair-fight+modern-era    False  ...          257.13              NaN
+1        bridge:fair-fight+omega    False  ...          242.08              NaN
+2      bridge:fair-fight+peasant    False  ...          228.40              NaN
+3      bridge:fair-fight+synergy    False  ...          278.86              NaN
+4      bridge:fair-fight+vintage    False  ...          255.52              NaN
+5        bridge:modern-era+omega    False  ...          218.40              NaN
+6      bridge:modern-era+synergy    False  ...          252.61              NaN
+7      bridge:modern-era+vintage    False  ...          229.07              NaN
+8       bridge:pauper+modern-era    False  ...          261.93              NaN
+9            bridge:pauper+omega    False  ...          246.76              NaN
+10         bridge:pauper+peasant    False  ...          249.21              NaN
+11         bridge:pauper+synergy    False  ...          297.73              NaN
+12         bridge:pauper+vintage    False  ...          263.83              NaN
+13     bridge:peasant+modern-era    False  ...          207.70              NaN
+14          bridge:peasant+omega    False  ...          191.60              NaN
+15        bridge:peasant+synergy    False  ...          234.95              NaN
+16        bridge:peasant+vintage    False  ...          196.66              NaN
+17          bridge:synergy+omega    False  ...          237.90              NaN
+18        bridge:synergy+vintage    False  ...          243.11              NaN
+19                    fair-fight    False  ...          297.92              NaN
+20                    modern-era    False  ...          238.98              NaN
+21                         omega    False  ...          209.73              NaN
+22                        pauper    False  ...          326.85              NaN
+23                       peasant    False  ...          180.29              NaN
+24                       synergy    False  ...          295.18              NaN
+25                       vintage    False  ...          213.96              NaN
+
+[26 rows x 7 columns]
+explore  False
+turns         
+5            1
+6            3
+7           43
+8           51
+9          298
+10         343
+11        1118
+12        1067
+13        2281
+14        2286
+15        3120
+16        3058
+17        3234
+18        3245
+19        2891
+20        2807
+21        2296
+22        2133
+23        1643
+24        1556
+25        1154
+26        1066
+27         793
+28         718
+29         539
+30         452
+31         353
+32         285
+33         234
+34         191
+35         173
+36         135
+37          95
+38         101
+39          59
+40          60
+41          37
+42          28
+43          29
+44          19
+45          24
+46          16
+47          11
+48          11
+49           7
+50           3
+51           2
+52           2
+53           2
+54           1
+55           1
+56           1
+Series([], Name: randomised decisions, dtype: int64)
+   explore  games  a_win_rate  on_play_win_rate
+0    False  40066       0.498             0.515

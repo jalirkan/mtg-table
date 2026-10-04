@@ -1,0 +1,532 @@
+                            cube  drafts   games  exploring_drafts
+0                        peasant    5966  5966.0               0.0
+1                         pauper    5696  5696.0               0.0
+2                        synergy    4810  4809.0               0.0
+3                     modern-era    4145  4145.0               0.0
+4                     fair-fight    4060  4060.0               0.0
+5                        vintage    3729  3729.0               0.0
+6                          omega    3672  3672.0               0.0
+7       bridge:pauper+modern-era     640   640.0               0.0
+8          bridge:pauper+synergy     607   606.0               0.0
+9         bridge:peasant+synergy     577   577.0               0.0
+10     bridge:peasant+modern-era     576   576.0               0.0
+11  bridge:fair-fight+modern-era     521   521.0               0.0
+12     bridge:fair-fight+synergy     490   490.0               0.0
+13          bridge:synergy+omega     446   446.0               0.0
+14        bridge:synergy+vintage     441   441.0               0.0
+15         bridge:pauper+vintage     440   440.0               0.0
+16           bridge:pauper+omega     437   437.0               0.0
+17        bridge:peasant+vintage     389   389.0               0.0
+18          bridge:peasant+omega     384   384.0               0.0
+19     bridge:fair-fight+vintage     369   369.0               0.0
+20     bridge:modern-era+vintage     361   361.0               0.0
+21       bridge:fair-fight+omega     340   340.0               0.0
+22       bridge:modern-era+omega     338   338.0               0.0
+23         bridge:pauper+peasant     248   248.0               0.0
+24     bridge:fair-fight+peasant     221   221.0               0.0
+25     bridge:modern-era+synergy     175   175.0               0.0
+4703 card-cube rows with at least 30 plain decisive games
+
+== bridge:fair-fight+modern-era: 209 cards rated; best and worst by win rate (Wilson 95%)
+                     card  games  wins  win_rate     lo     hi
+6225  Liliana of the Veil     34  28.0     0.824  0.665  0.917
+4885    Swiftwater Cliffs     31  21.0     0.677  0.501  0.814
+1471      Rolling Thunder     50  32.0     0.640  0.501  0.759
+1885   Inspiring Overseer     93  58.0     0.624  0.522  0.715
+6690    Secure the Wastes     50  31.0     0.620  0.482  0.741
+649     Restoration Angel    126  78.0     0.619  0.532  0.699
+1070    Seeker of the Way     55  34.0     0.618  0.486  0.735
+1066          Flickerwisp     91  56.0     0.615  0.513  0.709
+327     Hengegate Pathway     31  19.0     0.613  0.438  0.763
+4003            Shriekmaw     95  58.0     0.611  0.510  0.702
+666       Wrenn's Resolve    121  45.0     0.372  0.291  0.461
+665     Hallowed Fountain     62  23.0     0.371  0.262  0.495
+2697    Ertai Resurrected     35  12.0     0.343  0.208  0.508
+269    Hordeling Outburst     44  15.0     0.341  0.219  0.489
+5770   Restless Ridgeline     33  11.0     0.333  0.198  0.504
+
+== bridge:fair-fight+omega: 169 cards rated; best and worst by win rate (Wilson 95%)
+                               card  games  wins  win_rate     lo     hi
+285       Sword of Light and Shadow     39  27.0     0.692  0.536  0.814
+4026          Sword of Fire and Ice     36  24.0     0.667  0.503  0.798
+5361                  Inferno Titan     68  45.0     0.662  0.543  0.763
+2290            Avenger of Zendikar     38  25.0     0.658  0.499  0.788
+6699             Courser of Kruphix     70  45.0     0.643  0.526  0.745
+283           Thrun, the Last Troll     44  28.0     0.636  0.489  0.762
+279               Orcish Bowmasters     85  52.0     0.612  0.505  0.708
+2707                    Flickerwisp     60  36.0     0.600  0.474  0.714
+669   Sentinel of the Nameless City     96  57.0     0.594  0.494  0.687
+4019                Momentary Blink     44  26.0     0.591  0.444  0.723
+2284                Fateful Absence     34  13.0     0.382  0.239  0.550
+280                          Tundra     32  12.0     0.375  0.229  0.547
+5371                       Badlands     33  12.0     0.364  0.222  0.534
+3549                    Gravedigger     47  17.0     0.362  0.240  0.505
+4452                Lingering Souls     87  31.0     0.356  0.264  0.461
+
+== bridge:fair-fight+peasant: 144 cards rated; best and worst by win rate (Wilson 95%)
+                       card  games  wins  win_rate     lo     hi
+6252    Recruitment Officer     36  25.0     0.694  0.531  0.820
+4926      All-Fates Stalker     39  26.0     0.667  0.510  0.794
+6248   Descendant of Storms     58  38.0     0.655  0.527  0.764
+4041    Sheltered by Ghosts     49  32.0     0.653  0.513  0.771
+1095     Inspiring Overseer     65  42.0     0.646  0.525  0.751
+4467            Ash Barrens     91  58.0     0.637  0.535  0.729
+289         Fateful Absence     33  21.0     0.636  0.466  0.778
+3169     Llanowar Visionary     32  20.0     0.625  0.453  0.771
+5386                 Abrade     32  20.0     0.625  0.453  0.771
+6719      Elite Spellbinder     45  28.0     0.622  0.476  0.749
+5794        Serrated Arrows     69  26.0     0.377  0.272  0.495
+3578  Gut, True Soul Zealot     54  19.0     0.352  0.238  0.485
+4040  Third Path Iconoclast     35  12.0     0.343  0.208  0.508
+691    Sheltering Landscape     30   8.0     0.267  0.142  0.444
+1104       Beetleback Chief     31   8.0     0.258  0.137  0.432
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Mishra's Bauble, Goblin Bombardment, Faithless Looting
+
+== bridge:fair-fight+synergy: 181 cards rated; best and worst by win rate (Wilson 95%)
+                             card  games   wins  win_rate     lo     hi
+2322          Recruitment Officer     73   54.0     0.740  0.629  0.827
+6732           Inspiring Overseer     69   49.0     0.710  0.594  0.804
+6730            Stoneforge Mystic    119   84.0     0.706  0.619  0.780
+5389  Adeline, Resplendent Cathar    159  112.0     0.704  0.629  0.770
+2327                  Marsh Flats     33   23.0     0.697  0.527  0.826
+5813          Ravenous Chupacabra     58   39.0     0.672  0.544  0.779
+2739      Elspeth, Sun's Champion    148   99.0     0.669  0.590  0.740
+5397                Blade Splicer    198  132.0     0.667  0.598  0.729
+5804               Flooded Strand     51   34.0     0.667  0.530  0.780
+3588              Murderous Rider     73   48.0     0.658  0.543  0.756
+5832   Chandra, Torch of Defiance     31   11.0     0.355  0.211  0.531
+6275            Springbloom Druid     82   28.0     0.341  0.248  0.449
+5810                  Jewel Thief     33   11.0     0.333  0.198  0.504
+2324            Cathartic Reunion     56   17.0     0.304  0.199  0.433
+704              Misty Rainforest     49   11.0     0.224  0.130  0.359
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Chromatic Star, Mishra's Bauble, Goblin Bombardment, Prophetic Prism, Faithless Looting
+
+== bridge:fair-fight+vintage: 177 cards rated; best and worst by win rate (Wilson 95%)
+                               card  games  wins  win_rate     lo     hi
+5976                Momentary Blink     40  27.0     0.675  0.520  0.799
+6420  Sentinel of the Nameless City     97  62.0     0.639  0.540  0.728
+3761                Lightning Helix     36  23.0     0.639  0.476  0.775
+2474                      Sun Titan     47  30.0     0.638  0.495  0.760
+3760            Saproling Migration     46  29.0     0.630  0.486  0.755
+3312                  Inferno Titan     49  30.0     0.612  0.472  0.736
+5542           Swords to Plowshares    146  88.0     0.603  0.522  0.679
+840                    Wrath of God     35  21.0     0.600  0.436  0.744
+5550             Inspiring Overseer     57  34.0     0.596  0.467  0.714
+3757                   Ocelot Pride    116  69.0     0.595  0.504  0.680
+5539            Spellstutter Sprite    101  38.0     0.376  0.288  0.474
+3751                    Bone Shards    102  38.0     0.373  0.285  0.469
+5090                      Reanimate     66  24.0     0.364  0.258  0.484
+5977           Collective Brutality     58  19.0     0.328  0.221  0.456
+4644             Writhing Chrysalis     36   9.0     0.250  0.138  0.411
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Mishra's Bauble, Faithless Looting, Mystic Confluence, Goblin Bombardment
+
+== bridge:modern-era+omega: 152 cards rated; best and worst by win rate (Wilson 95%)
+                              card  games  wins  win_rate     lo     hi
+1682                  Glorybringer     47  32.0     0.681  0.538  0.796
+3776      Gideon, Ally of Zendikar     39  26.0     0.667  0.510  0.794
+4652          Siege-Gang Commander     37  24.0     0.649  0.488  0.782
+857        Loran of the Third Path     56  36.0     0.643  0.512  0.755
+855           Teferi, Time Raveler     47  29.0     0.617  0.474  0.742
+5108  Uro, Titan of Nature's Wrath     31  19.0     0.613  0.438  0.763
+2914         Sword of Fire and Ice    130  78.0     0.600  0.514  0.680
+1257          Monastery Swiftspear    104  62.0     0.596  0.500  0.685
+4205   Thalia, Guardian of Thraben    141  84.0     0.596  0.513  0.673
+2919             Bonecrusher Giant    108  64.0     0.593  0.498  0.681
+3766           Bloodchief's Thirst     59  21.0     0.356  0.246  0.483
+2485                 Portable Hole     45  16.0     0.356  0.232  0.502
+2050                         Grief     53  18.0     0.340  0.227  0.474
+456           Oko, Thief of Crowns     30  10.0     0.333  0.192  0.512
+56                 Hero's Downfall     41  12.0     0.293  0.176  0.445
+
+== bridge:modern-era+synergy: 113 cards rated; best and worst by win rate (Wilson 95%)
+                           card  games  wins  win_rate     lo     hi
+4667         Luminarch Aspirant     75  52.0     0.693  0.582  0.786
+473             Lunarch Veteran     34  23.0     0.676  0.508  0.809
+1281        Craterhoof Behemoth     34  23.0     0.676  0.508  0.809
+6458                Soul Warden     34  23.0     0.676  0.508  0.809
+2075                 Reveillark     42  28.0     0.667  0.516  0.790
+6454             Rampant Growth     33  22.0     0.667  0.496  0.802
+5118          Thraben Inspector     80  53.0     0.662  0.554  0.757
+2067       Swords to Plowshares     59  39.0     0.661  0.534  0.769
+4660    Elspeth, Sun's Champion     73  48.0     0.658  0.543  0.756
+5999            Lingering Souls     70  46.0     0.657  0.540  0.758
+459                      Ponder    102  35.0     0.343  0.258  0.439
+4214                  Thragtusk     44  15.0     0.341  0.219  0.489
+6462                   Consider     79  26.0     0.329  0.236  0.439
+468         Unexpected Windfall     41  13.0     0.317  0.196  0.470
+83    Barrin, Tolarian Archmage     30   9.0     0.300  0.167  0.479
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Chromatic Star, Mishra's Bauble, Prophetic Prism, Goblin Bombardment, Faithless Looting
+
+== bridge:modern-era+vintage: 158 cards rated; best and worst by win rate (Wilson 95%)
+                              card  games  wins  win_rate     lo     hi
+3349        Elspeth, Knight-Errant     75  52.0     0.693  0.582  0.786
+3797         The Wandering Emperor     51  32.0     0.627  0.490  0.747
+2094  Phlage, Titan of Fire's Fury     40  25.0     0.625  0.470  0.758
+5588       Elspeth, Sun's Champion    146  88.0     0.603  0.522  0.679
+2086                   Mulldrifter     80  48.0     0.600  0.490  0.700
+4227                 Blade Splicer     32  19.0     0.594  0.423  0.745
+3350      Gideon, Ally of Zendikar     44  26.0     0.591  0.444  0.723
+1293          Teferi, Time Raveler     85  50.0     0.588  0.482  0.687
+4685                   Batterskull     82  48.0     0.585  0.477  0.686
+6021            Garruk Wildspeaker     36  21.0     0.583  0.422  0.729
+98                  Chart a Course    107  42.0     0.393  0.305  0.487
+6013             Go for the Throat     46  18.0     0.391  0.264  0.535
+877             Sakura-Tribe Elder     39  15.0     0.385  0.249  0.541
+2084                    Brainstorm    106  40.0     0.377  0.291  0.472
+2944             Thieving Skydiver     47  16.0     0.340  0.222  0.483
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Mystic Confluence, Mishra's Bauble, Goblin Bombardment, Faithless Looting
+
+== bridge:pauper+modern-era: 234 cards rated; best and worst by win rate (Wilson 95%)
+                             card  games  wins  win_rate     lo     hi
+5141                       Rancor     49  35.0     0.714  0.576  0.822
+3814             Mogg War Marshal     47  32.0     0.681  0.538  0.796
+3375               Bloodbraid Elf     36  24.0     0.667  0.503  0.798
+4242  Nissa, Who Shakes the World    108  71.0     0.657  0.564  0.740
+4695                Dragon Fodder    108  71.0     0.657  0.564  0.740
+6033             Ulamog's Crusher     35  23.0     0.657  0.492  0.792
+898               Rolling Thunder     84  55.0     0.655  0.548  0.748
+6492                     Myr Sire     40  26.0     0.650  0.495  0.779
+2956          Craterhoof Behemoth     92  59.0     0.641  0.539  0.732
+503              Darkbore Pathway     40  25.0     0.625  0.470  0.758
+3813             Rakdos Carnarium     32  12.0     0.375  0.229  0.547
+5151              Attended Knight     50  18.0     0.360  0.241  0.499
+1717               Sacred Foundry     63  22.0     0.349  0.243  0.472
+5152                  Steam Vents     66  22.0     0.333  0.232  0.453
+2106           Clearwater Pathway     44  14.0     0.318  0.200  0.466
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Utopia Sprawl, Tortured Existence, Chromatic Star, Faithless Looting, Prophetic Prism, Ghostly Flicker
+
+== bridge:pauper+omega: 203 cards rated; best and worst by win rate (Wilson 95%)
+                             card  games  wins  win_rate     lo     hi
+5165          Saproling Migration     65  42.0     0.646  0.525  0.751
+3826  Nissa, Who Shakes the World     56  36.0     0.643  0.512  0.755
+6518              Lingering Souls     96  60.0     0.625  0.525  0.715
+3389             Tireless Tracker     87  54.0     0.621  0.516  0.715
+937            Inspiring Overseer     60  37.0     0.617  0.490  0.729
+3386            Bonecrusher Giant     96  59.0     0.615  0.515  0.706
+911          Swords to Plowshares     95  58.0     0.611  0.510  0.702
+3388    Sword of Feast and Famine     40  24.0     0.600  0.446  0.737
+1757            Seeker of the Way     57  34.0     0.596  0.467  0.714
+4256              Mother of Runes     81  48.0     0.593  0.484  0.693
+2971             Misty Rainforest     51  20.0     0.392  0.270  0.529
+3380               Polluted Delta     59  23.0     0.390  0.276  0.517
+5159                Archaeomancer    127  49.0     0.386  0.306  0.473
+6515             Vicious Offering     57  21.0     0.368  0.255  0.498
+2121                      Plateau     40  14.0     0.350  0.221  0.505
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Prophetic Prism, Utopia Sprawl, Faithless Looting, Ghostly Flicker, Chromatic Star, Tortured Existence
+
+== bridge:pauper+peasant: 141 cards rated; best and worst by win rate (Wilson 95%)
+                        card  games  wins  win_rate     lo     hi
+3628               Snuff Out     77  53.0     0.688  0.578  0.781
+6759  Contaminated Landscape     32  22.0     0.688  0.514  0.820
+1567    Syr Konrad, the Grim     56  37.0     0.661  0.530  0.771
+1559      Inspiring Overseer     49  32.0     0.653  0.513  0.771
+2773         Combat Thresher     57  37.0     0.649  0.519  0.760
+1555        Falkenrath Noble     82  53.0     0.646  0.538  0.741
+1562          Battle Screech     38  24.0     0.632  0.473  0.766
+4081        Palace Sentinels     64  40.0     0.625  0.503  0.733
+4516           Path to Exile     44  27.0     0.614  0.466  0.743
+1948          Militia Bugler     36  22.0     0.611  0.449  0.752
+1566     Spellstutter Sprite     95  35.0     0.368  0.278  0.469
+5445      Sakura-Tribe Elder     30  11.0     0.367  0.219  0.545
+6765        Rakdos Carnarium     30  11.0     0.367  0.219  0.545
+4082        Firebrand Archer     67  24.0     0.358  0.254  0.478
+6755             Ash Barrens    101  35.0     0.347  0.261  0.443
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Tortured Existence, Ghostly Flicker, Prophetic Prism, Mishra's Bauble, Utopia Sprawl, Faithless Looting, Chromatic Star, Goblin Bombardment
+
+== bridge:pauper+synergy: 208 cards rated; best and worst by win rate (Wilson 95%)
+                             card  games   wins  win_rate     lo     hi
+757                   Soul Warden     73   59.0     0.808  0.703  0.882
+5864              Faith's Fetters     55   41.0     0.745  0.617  0.842
+780             Restoration Angel     30   22.0     0.733  0.556  0.858
+4538      Elspeth, Sun's Champion    140  100.0     0.714  0.635  0.783
+6781              Lunarch Veteran     84   60.0     0.714  0.610  0.800
+5454            Wind-Scarred Crag     30   21.0     0.700  0.521  0.833
+5859  Adeline, Resplendent Cathar    139   95.0     0.683  0.602  0.755
+3228              Scoured Barrens     41   28.0     0.683  0.530  0.804
+3647            Thraben Inspector    275  187.0     0.680  0.623  0.732
+1960           Inspiring Overseer     90   61.0     0.678  0.576  0.765
+3671                Krosan Tusker     41   15.0     0.366  0.236  0.519
+2805            Bloodwater Entity     33   12.0     0.364  0.222  0.534
+6805               Dimir Aqueduct     42   15.0     0.357  0.230  0.508
+5865                 Watery Grave     49   17.0     0.347  0.229  0.487
+4099                   Risen Reef    107   35.0     0.327  0.246  0.421
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Tortured Existence, Mishra's Bauble, Prophetic Prism, Chromatic Star, Goblin Bombardment, Ghostly Flicker, Utopia Sprawl, Faithless Looting
+
+== bridge:pauper+vintage: 188 cards rated; best and worst by win rate (Wilson 95%)
+                           card  games   wins  win_rate     lo     hi
+5464  Sheoldred, the Apocalypse     87   56.0     0.644  0.539  0.736
+787                 Guttersnipe     31   19.0     0.613  0.438  0.763
+5901            Momentary Blink     49   30.0     0.612  0.472  0.736
+5475                Ophiomancer     92   56.0     0.609  0.507  0.702
+1587                Black Lotus    189  115.0     0.608  0.537  0.675
+6792         Journey to Nowhere     43   26.0     0.605  0.456  0.736
+1192         Sakura-Tribe Elder     53   32.0     0.604  0.469  0.724
+4111           Misty Rainforest     30   18.0     0.600  0.423  0.754
+4560            Underground Sea     30   18.0     0.600  0.423  0.754
+6787          Archon of Cruelty    107   64.0     0.598  0.503  0.686
+2383            Treasure Cruise    100   39.0     0.390  0.300  0.488
+372                 Ash Barrens     95   37.0     0.389  0.298  0.490
+5474                Lotus Cobra     45   17.0     0.378  0.251  0.524
+6800                   Fireball     53   18.0     0.340  0.227  0.474
+1607          Swiftwater Cliffs     30   10.0     0.333  0.192  0.512
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Mishra's Bauble, Utopia Sprawl, Tortured Existence, Faithless Looting, Chromatic Star, Goblin Bombardment, Ghostly Flicker, Prophetic Prism, Mystic Confluence
+
+== bridge:peasant+modern-era: 234 cards rated; best and worst by win rate (Wilson 95%)
+                          card  games  wins  win_rate     lo     hi
+3930                  Firebolt     36  26.0     0.722  0.560  0.842
+6153        Spinewoods Paladin     42  29.0     0.690  0.540  0.809
+3485        Blightstep Pathway     33  22.0     0.667  0.496  0.802
+3056       Goblin Rabblemaster     76  50.0     0.658  0.546  0.755
+5697   Environmental Scientist     59  38.0     0.644  0.517  0.754
+6144          Darkbore Pathway     36  23.0     0.639  0.476  0.775
+3911   Elspeth, Sun's Champion    100  63.0     0.630  0.532  0.718
+3484  Ragavan, Nimble Pilferer    155  97.0     0.626  0.547  0.698
+1405           Honest Rutstein     55  34.0     0.618  0.486  0.735
+1825               Batterskull     34  21.0     0.618  0.450  0.761
+1414            Dinrova Horror     31  12.0     0.387  0.237  0.562
+1817      Oko, Thief of Crowns     73  28.0     0.384  0.281  0.498
+5254                  Consider    191  69.0     0.361  0.296  0.431
+606                Blood Crypt     34   9.0     0.265  0.146  0.431
+3071              Halo Forager     34   9.0     0.265  0.146  0.431
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Faithless Looting, Goblin Bombardment, Mishra's Bauble, Waker of Waves
+
+== bridge:peasant+omega: 202 cards rated; best and worst by win rate (Wilson 95%)
+                       card  games  wins  win_rate     lo     hi
+2232        Volcanic Island     38  26.0     0.684  0.525  0.809
+229    Umbral Collar Zealot     34  23.0     0.676  0.508  0.809
+6169      Malevolent Rumble     33  22.0     0.667  0.496  0.802
+1421                 Abrade     71  47.0     0.662  0.546  0.761
+5728       Marauding Sphinx     38  25.0     0.658  0.499  0.788
+4847        Coalition Relic     32  21.0     0.656  0.483  0.796
+3936  The Wandering Emperor     40  26.0     0.650  0.495  0.779
+2233         Bloodbraid Elf     54  35.0     0.648  0.515  0.762
+5288        Goldspan Dragon     73  47.0     0.644  0.529  0.744
+3077    Sheltered by Ghosts     66  42.0     0.636  0.516  0.742
+5279   Slickshot Lockpicker    123  48.0     0.390  0.309  0.479
+5292     Perilous Landscape     42  16.0     0.381  0.250  0.532
+1030     Seething Landscape     35  13.0     0.371  0.232  0.537
+2649         Flooded Strand     36  13.0     0.361  0.225  0.524
+3492     Curse of Predation     35  11.0     0.314  0.186  0.480
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Faithless Looting, Mishra's Bauble, Goblin Bombardment
+
+== bridge:peasant+synergy: 227 cards rated; best and worst by win rate (Wilson 95%)
+                               card  games  wins  win_rate     lo     hi
+3964              Restoration Angel     48  35.0     0.729  0.590  0.834
+641   Lita, Little Orphan Amphibian     59  43.0     0.729  0.604  0.826
+2245     The Last Ronin's Technique     45  32.0     0.711  0.566  0.823
+6198            Sheltered by Ghosts     64  45.0     0.703  0.582  0.801
+241                  Splitskin Doll     33  23.0     0.697  0.527  0.826
+1042            Skyclave Apparition    144  98.0     0.681  0.601  0.751
+639                   Path to Exile     99  67.0     0.677  0.580  0.761
+3096                     Reveillark    110  73.0     0.664  0.571  0.745
+1435              Mighty Mutanimals     95  63.0     0.663  0.563  0.750
+5300        Elspeth, Sun's Champion    147  97.0     0.660  0.580  0.732
+1439                   Halo Forager     36  12.0     0.333  0.202  0.497
+3506     Saheeli, Sublime Artificer     57  19.0     0.333  0.225  0.463
+5732                  Breeding Pool     45  15.0     0.333  0.214  0.479
+6666           Foreboding Landscape     52  15.0     0.288  0.183  0.423
+5739                  Scalding Tarn     69  19.0     0.275  0.184  0.390
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Goblin Bombardment, Chromatic Star, Faithless Looting, Prophetic Prism, Mishra's Bauble, Waker of Waves
+
+== bridge:peasant+vintage: 183 cards rated; best and worst by win rate (Wilson 95%)
+                       card  games  wins  win_rate     lo     hi
+3986           Lively Dirge     74  52.0     0.703  0.591  0.795
+3188     Luminarch Aspirant     87  58.0     0.667  0.562  0.757
+5758                    Six     48  32.0     0.667  0.525  0.783
+6210        Aerie Auxiliary     37  24.0     0.649  0.488  0.782
+4874            Flickerwisp     75  48.0     0.640  0.527  0.739
+5752    Sheltered by Ghosts     58  37.0     0.638  0.509  0.749
+4494              Sun Titan     51  32.0     0.627  0.490  0.747
+2262        Mother of Runes     64  40.0     0.625  0.503  0.733
+5411         Battle Screech     78  48.0     0.615  0.504  0.716
+2257            Unholy Heat     90  55.0     0.611  0.508  0.705
+252         Volcanic Island     44  16.0     0.364  0.238  0.511
+1457       Murmuring Mystic     76  27.0     0.355  0.257  0.467
+1061  Bothersome Noisemaker     51  15.0     0.294  0.187  0.430
+1532     Seething Landscape     31   9.0     0.290  0.161  0.466
+320       Smuggler's Copter     32   9.0     0.281  0.156  0.454
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Mishra's Bauble, Goblin Bombardment, Mystic Confluence, Faithless Looting
+
+== bridge:synergy+omega: 177 cards rated; best and worst by win rate (Wilson 95%)
+                      card  games   wins  win_rate     lo     hi
+5933       Lunarch Veteran     73   54.0     0.740  0.629  0.827
+8               Pia Nalaar     37   25.0     0.676  0.515  0.804
+1620             Sun Titan    132   89.0     0.674  0.590  0.748
+3262    Spirited Companion     95   64.0     0.674  0.574  0.760
+803    Skyclave Apparition    166  111.0     0.669  0.594  0.736
+403          Path to Exile     93   62.0     0.667  0.566  0.754
+2843            Reveillark     72   48.0     0.667  0.552  0.765
+2429  Wedding Announcement    153  100.0     0.654  0.575  0.724
+808         Deadly Dispute     60   39.0     0.650  0.524  0.758
+3700     Restoration Angel     47   30.0     0.638  0.495  0.760
+3709      Murmuring Mystic     72   26.0     0.361  0.260  0.476
+2849       Fact or Fiction     45   16.0     0.356  0.232  0.502
+395             Risen Reef     79   28.0     0.354  0.258  0.464
+811      Verdant Catacombs     37   12.0     0.324  0.196  0.485
+805       Misty Rainforest     68   21.0     0.309  0.212  0.426
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Mishra's Bauble, Goblin Bombardment, Prophetic Prism, Chromatic Star, Faithless Looting
+
+== bridge:synergy+vintage: 182 cards rated; best and worst by win rate (Wilson 95%)
+                            card  games  wins  win_rate     lo     hi
+819            Verdant Catacombs     34  23.0     0.676  0.508  0.809
+4176           Marionette Master     32  21.0     0.656  0.483  0.796
+415            Elite Spellbinder     92  59.0     0.641  0.539  0.732
+5533          Deep Forest Hermit     30  19.0     0.633  0.455  0.781
+1647             Windswept Heath     31  19.0     0.613  0.438  0.763
+1645           Solemn Simulacrum    136  83.0     0.610  0.526  0.688
+5948  Krenko, Tin Street Kingpin     59  36.0     0.610  0.483  0.724
+6383         Seasoned Pyromancer     87  53.0     0.609  0.504  0.705
+2437               Blade Splicer    111  66.0     0.595  0.502  0.681
+6391                 Scute Swarm     49  29.0     0.592  0.452  0.718
+3729            Murmuring Mystic     79  31.0     0.392  0.292  0.503
+5517            Champion of Wits    118  46.0     0.390  0.307  0.480
+5947           Thieving Skydiver     78  30.0     0.385  0.284  0.496
+3288               Thought Scour    134  51.0     0.381  0.303  0.465
+6385   Teferi, Hero of Dominaria     34  12.0     0.353  0.215  0.521
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Prophetic Prism, Goblin Bombardment, Faithless Looting, Mishra's Bauble, Mystic Confluence, Chromatic Star
+
+== fair-fight: 161 cards rated; best and worst by win rate (Wilson 95%)
+                          card  games   wins  win_rate     lo     hi
+2457           Charming Prince     52   34.0     0.654  0.518  0.768
+1233       Trostani Discordant    351  216.0     0.615  0.563  0.665
+1229              Vault Skirge     67   41.0     0.612  0.492  0.720
+3303  Kari Zev, Skyship Raider     52   30.0     0.577  0.442  0.701
+6405                 Cast Down    472  267.0     0.566  0.521  0.610
+1656           Selfless Spirit    397  224.0     0.564  0.515  0.612
+42      Nahiri, Storm of Stone     80   45.0     0.562  0.453  0.666
+827                     Rancor    373  208.0     0.558  0.507  0.607
+3297           Fateful Absence    793  442.0     0.557  0.523  0.592
+5961  Vraska, Swarm's Eminence     36   20.0     0.556  0.396  0.705
+1660            Augur of Bolas    249  105.0     0.422  0.362  0.484
+6407            Reflector Mage     36   15.0     0.417  0.271  0.578
+2031           Chittering Rats     34   14.0     0.412  0.264  0.578
+6408             Wall of Roots     67   26.0     0.388  0.280  0.508
+2890        Renegade Freighter     51   16.0     0.314  0.203  0.450
+
+== modern-era: 165 cards rated; best and worst by win rate (Wilson 95%)
+                              card  games    wins  win_rate     lo     hi
+6614                Ajani Vengeant     45    31.0     0.689  0.543  0.805
+4362    Eidolon of the Great Revel     44    28.0     0.636  0.489  0.762
+2205        Grist, the Hunger Tide    135    84.0     0.622  0.538  0.700
+6132                Bloodbraid Elf    368   228.0     0.620  0.569  0.668
+3045  Minsc & Boo, Timeless Heroes    516   319.0     0.618  0.576  0.659
+4812           Steel Leaf Champion    386   238.0     0.617  0.567  0.664
+5683           Needleverge Pathway    184   113.0     0.614  0.542  0.681
+5251           Voice of Resurgence    180   109.0     0.606  0.533  0.674
+590    Nissa, Who Shakes the World   1781  1070.0     0.601  0.578  0.623
+4354               Lightning Helix    205   123.0     0.600  0.532  0.665
+1810           Everflowing Chalice    180    72.0     0.400  0.331  0.473
+1388                  Watery Grave    418   155.0     0.371  0.326  0.418
+196                   Psychic Frog    803   292.0     0.364  0.331  0.397
+2624            Clearwater Pathway    306   108.0     0.353  0.302  0.408
+6134               Thief of Sanity     49    17.0     0.347  0.229  0.487
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Prismatic Ending, Embercleave, Beast Within, Adanto Vanguard
+
+== omega: 162 cards rated; best and worst by win rate (Wilson 95%)
+                          card  games   wins  win_rate     lo     hi
+2187  Sorin, Lord of Innistrad     65   40.0     0.615  0.494  0.724
+1781     Falkenrath Aristocrat     63   38.0     0.603  0.480  0.715
+6571    Grist, the Hunger Tide    123   73.0     0.593  0.505  0.676
+2587            Ball Lightning     67   39.0     0.582  0.463  0.693
+4791   Huntmaster of the Fells     78   45.0     0.577  0.466  0.680
+6569        Kolaghan's Command    120   69.0     0.575  0.486  0.660
+6565          Flametongue Kavu    373  213.0     0.571  0.520  0.620
+3017         Bloodstained Mire    209  119.0     0.569  0.502  0.635
+2601               Grave Titan     69   39.0     0.565  0.448  0.676
+1375       Voice of Resurgence     57   32.0     0.561  0.433  0.682
+4777           Cryptic Command    274  124.0     0.453  0.395  0.512
+5666             Shivan Dragon     62   28.0     0.452  0.334  0.575
+5230            Questing Beast     40   18.0     0.450  0.307  0.602
+3868           Tropical Island    247  111.0     0.449  0.389  0.512
+565        Everflowing Chalice    105   39.0     0.371  0.285  0.467
+
+== pauper: 149 cards rated; best and worst by win rate (Wilson 95%)
+                      card  games   wins  win_rate     lo     hi
+4320    Triplicate Spirits    183  130.0     0.710  0.641  0.771
+1366              Sunlance     50   35.0     0.700  0.562  0.809
+2185       Ancestral Blade    440  291.0     0.661  0.616  0.704
+5232     Ecstatic Awakener     87   57.0     0.655  0.551  0.747
+6588       Raise the Alarm     53   34.0     0.642  0.507  0.757
+177             Dog Walker     80   51.0     0.638  0.528  0.734
+568        Attended Knight    558  347.0     0.622  0.581  0.661
+5226    Stormfront Pegasus    171  104.0     0.608  0.533  0.678
+1788     Seeker of the Way    665  403.0     0.606  0.568  0.642
+5657  Search Party Captain    192  116.0     0.604  0.534  0.671
+5217     Wildheart Invoker    254  114.0     0.449  0.389  0.510
+2594              Werebear    388  174.0     0.448  0.400  0.498
+4324          Cavern Harpy    500  218.0     0.436  0.393  0.480
+4328         Krosan Tusker    506  217.0     0.429  0.386  0.472
+181         Desecrator Hag     47   20.0     0.426  0.295  0.567
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Bogardan Dragonheart, Tortured Existence, Faithless Looting, Utopia Sprawl, Chromatic Star, Fireblade Artist, Ghostly Flicker, Prophetic Prism
+
+== peasant: 162 cards rated; best and worst by win rate (Wilson 95%)
+                      card  games    wins  win_rate     lo     hi
+1771     Hero of the Dunes    290   193.0     0.666  0.609  0.717
+6111  Primordial Pachyderm     62    40.0     0.645  0.521  0.753
+6558     Momo, Playful Pet    233   150.0     0.644  0.580  0.702
+4304    Spinewoods Paladin    348   213.0     0.612  0.560  0.662
+552    Sheltered by Ghosts   1164   711.0     0.611  0.582  0.638
+3430     All-Fates Stalker    964   573.0     0.594  0.563  0.625
+2157        Battle Screech   1523   900.0     0.591  0.566  0.615
+5202         Elvish Mystic    708   417.0     0.589  0.552  0.625
+4770            Fatal Push    352   207.0     0.588  0.536  0.638
+2571     Mighty Mutanimals   1183   695.0     0.587  0.559  0.615
+3000      Sink into Stupor   3617  1507.0     0.417  0.401  0.433
+1789         Eddymurk Crab     65    27.0     0.415  0.304  0.537
+1349    Biomechan Engineer    234    97.0     0.415  0.353  0.479
+2598    Colossal Skyturtle    162    64.0     0.395  0.323  0.472
+6086   Rise from the Tides    299   116.0     0.388  0.334  0.444
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Faithless Looting, Goblin Bombardment, Mishra's Bauble, Waker of Waves, Spawning Pit
+
+== synergy: 151 cards rated; best and worst by win rate (Wilson 95%)
+                            card  games    wins  win_rate     lo     hi
+791            Ajani's Pridemate     32    26.0     0.812  0.647  0.911
+5008             Charming Prince     79    59.0     0.747  0.641  0.830
+5174             Conclave Mentor     51    38.0     0.745  0.611  0.845
+5907      Showdown of the Skalds     78    57.0     0.731  0.623  0.817
+4269     Elspeth, Sun's Champion   2487  1709.0     0.687  0.669  0.705
+525            Restoration Angel    799   549.0     0.687  0.654  0.718
+6529             Lunarch Veteran   1646  1128.0     0.685  0.662  0.707
+4268          Luminarch Aspirant   2511  1704.0     0.679  0.660  0.697
+2978     Brimaz, King of Oreskos   2107  1425.0     0.676  0.656  0.696
+1741              Battle Screech   2236  1510.0     0.675  0.656  0.694
+2135            Misty Rainforest    860   299.0     0.348  0.317  0.380
+2549               Breeding Pool    623   215.0     0.345  0.309  0.383
+4732  Saheeli, Sublime Artificer    467   151.0     0.323  0.283  0.367
+3835                  Risen Reef   1512   481.0     0.318  0.295  0.342
+3401      Lonis, Cryptozoologist     67    17.0     0.254  0.165  0.369
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Prismatic Ending, Mishra's Bauble, Chromatic Star, Prophetic Prism, Goblin Bombardment, Faithless Looting, Beast Within
+
+== vintage: 155 cards rated; best and worst by win rate (Wilson 95%)
+                       card  games    wins  win_rate     lo     hi
+1383       Young Pyromancer     35    22.0     0.629  0.463  0.768
+584       Restoration Angel    102    61.0     0.598  0.501  0.688
+5674              Arid Mesa    404   236.0     0.584  0.536  0.631
+2197  The Wandering Emperor    565   328.0     0.581  0.539  0.621
+1382            Batterskull    455   264.0     0.580  0.534  0.625
+4806        Lightning Helix    406   234.0     0.576  0.528  0.623
+3462               Savannah    194   111.0     0.572  0.502  0.640
+4801           Ocelot Pride   2006  1140.0     0.568  0.547  0.590
+4341                Balance    176   100.0     0.568  0.494  0.639
+5235          Palace Jailer   1985  1127.0     0.568  0.546  0.589
+3891        Treasure Cruise    150    63.0     0.420  0.344  0.500
+6615           Goblin Guide     41    17.0     0.415  0.278  0.566
+581                Badlands    161    66.0     0.410  0.337  0.487
+2190            Dark Ritual    605   247.0     0.408  0.370  0.448
+6118       Deathrite Shaman    130    51.0     0.392  0.313  0.478
+AI-limited (D343) -- Forge cannot play these; the rate is not the card's: Goblin Bombardment, Faithless Looting, Mishra's Bauble, Mystic Confluence, Sylvan Library, Toxic Deluge
+                              cube                    card  games  win_rate     lo     hi
+6225  bridge:fair-fight+modern-era     Liliana of the Veil     34     0.824  0.665  0.917
+791                        synergy       Ajani's Pridemate     32     0.812  0.647  0.911
+757          bridge:pauper+synergy             Soul Warden     73     0.808  0.703  0.882
+5008                       synergy         Charming Prince     79     0.747  0.641  0.830
+5864         bridge:pauper+synergy         Faith's Fetters     55     0.745  0.617  0.842
+...                            ...                     ...    ...       ...    ...    ...
+606      bridge:peasant+modern-era             Blood Crypt     34     0.265  0.146  0.431
+1104     bridge:fair-fight+peasant        Beetleback Chief     31     0.258  0.137  0.432
+3401                       synergy  Lonis, Cryptozoologist     67     0.254  0.165  0.369
+4644     bridge:fair-fight+vintage      Writhing Chrysalis     36     0.250  0.138  0.411
+704      bridge:fair-fight+synergy        Misty Rainforest     49     0.224  0.130  0.359
+
+[951 rows x 6 columns]
+no matchup_power rows: run tools/ml/matchup.py train, then ingest again

@@ -1,0 +1,119 @@
+{
+ "ok": 1,
+ "files": 33,
+ "jsonl_lines": 40078,
+ "jsonl_bytes": 665520042,
+ "bad_lines": 0,
+ "pending_lines": 0,
+ "parquet_bytes": 27022197,
+ "draft_tables_bytes": 26903483,
+ "ratio": 24.7,
+ "views": 17,
+ "peak_mb": 93,
+ "by_source": {
+  "queue": {
+   "files": 26,
+   "lines": 40000,
+   "pending": 0,
+   "bad": 0
+  },
+  "runs": {
+   "files": 7,
+   "lines": 78,
+   "pending": 0,
+   "bad": 0
+  }
+ },
+ "tables": {
+  "drafts": {
+   "rows": 40078,
+   "expected": 40078,
+   "ok": 1,
+   "files": 5,
+   "bytes": 610278
+  },
+  "games": {
+   "rows": 40076,
+   "expected": 40076,
+   "ok": 1,
+   "files": 5,
+   "bytes": 1069618
+  },
+  "decks": {
+   "rows": 80156,
+   "expected": 80156,
+   "ok": 1,
+   "files": 5,
+   "bytes": 1335586
+  },
+  "deck_cards": {
+   "rows": 2157482,
+   "expected": 2157482,
+   "ok": 1,
+   "files": 5,
+   "bytes": 5207354
+  },
+  "picks": {
+   "rows": 1442808,
+   "expected": 1442808,
+   "ok": 1,
+   "files": 5,
+   "bytes": 18680647
+  },
+  "cards": {
+   "rows": 727,
+   "files": 1,
+   "bytes": 24054
+  },
+  "cube_cards": {
+   "rows": 1260,
+   "files": 1,
+   "bytes": 22288
+  },
+  "runs": {
+   "rows": 33,
+   "files": 1,
+   "bytes": 7416
+  },
+  "versions": {
+   "rows": 59,
+   "files": 1,
+   "bytes": 9586
+  },
+  "nights": {
+   "rows": 2,
+   "files": 1,
+   "bytes": 3962
+  },
+  "quarantine": {
+   "rows": 684,
+   "files": 1,
+   "bytes": 11753
+  },
+  "sprt": {
+   "rows": 3,
+   "files": 1,
+   "bytes": 6490
+  },
+  "experiments": {
+   "rows": 10,
+   "files": 1,
+   "bytes": 9829
+  },
+  "gate_reports": {
+   "rows": 8,
+   "files": 1,
+   "bytes": 12985
+  },
+  "ml_reports": {
+   "rows": 3,
+   "files": 1,
+   "bytes": 8340
+  },
+  "matchup_power": {
+   "rows": 0,
+   "files": 1,
+   "bytes": 2011
+  }
+ }
+}

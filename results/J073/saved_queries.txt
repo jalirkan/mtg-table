@@ -1,0 +1,1051 @@
+2603 card-cube rows with at least 100 plain decisive games
+
+== bridge:fair-fight+modern-era: best and worst
+                          card ai_flag  games   wins  win_rate      lo      hi
+0            Restoration Angel     NaN    126   78.0    0.6190  0.5319  0.6991
+1    Sheoldred, the Apocalypse     NaN    138   82.0    0.5942  0.5108  0.6725
+2              Eternal Witness     NaN    151   89.0    0.5894  0.5097  0.6647
+3      Elspeth, Sun's Champion     NaN    123   72.0    0.5854  0.4970  0.6686
+4            Stoneforge Mystic     NaN    192  111.0    0.5781  0.5074  0.6458
+5                Blade Splicer     NaN    180  104.0    0.5778  0.5047  0.6476
+6          Eagles of the North     NaN    142   82.0    0.5775  0.4952  0.6556
+7            Elite Spellbinder     NaN    156   90.0    0.5769  0.4985  0.6517
+8       Elspeth, Knight-Errant     NaN    122   70.0    0.5738  0.4851  0.6580
+9               Esper Sentinel     NaN    123   70.0    0.5691  0.4808  0.6532
+106                        Opt     NaN    165   67.0    0.4061  0.3341  0.4823
+107                     Ponder     NaN    295  116.0    0.3932  0.3392  0.4500
+108                 Pestermite     NaN    146   57.0    0.3904  0.3151  0.4714
+109    Ninja of the Deep Hours     NaN    102   38.0    0.3725  0.2849  0.4694
+110            Wrenn's Resolve     NaN    121   45.0    0.3719  0.2910  0.4607
+
+== bridge:fair-fight+omega: best and worst
+                        card ai_flag  games   wins  win_rate      lo      hi
+111          Wurmcoil Engine     NaN    160   89.0    0.5563  0.4788  0.6310
+112  Jace, the Mind Sculptor     NaN    155   86.0    0.5548  0.4762  0.6308
+113                Thragtusk     NaN    123   68.0    0.5528  0.4647  0.6378
+114        Solemn Simulacrum     NaN    196  106.0    0.5408  0.4709  0.6091
+115     Swords to Plowshares     NaN    123   66.0    0.5366  0.4487  0.6223
+116                Mana Leak     NaN    196  105.0    0.5357  0.4659  0.6042
+117           Lightning Bolt     NaN    131   70.0    0.5344  0.4492  0.6176
+118        Stoneforge Mystic     NaN    150   80.0    0.5333  0.4537  0.6113
+119        Hangarback Walker     NaN    121   64.0    0.5289  0.4405  0.6156
+120              Bone Shards     NaN    104   54.0    0.5192  0.4242  0.6128
+167          Murktide Regent     NaN    148   64.0    0.4324  0.3553  0.5130
+168            Oblivion Ring     NaN    100   43.0    0.4300  0.3373  0.5278
+169                  Exclude     NaN    105   45.0    0.4286  0.3381  0.5241
+170     Jace, Vryn's Prodigy     NaN    155   66.0    0.4258  0.3507  0.5045
+171                  Repulse     NaN    135   55.0    0.4074  0.3282  0.4917
+
+== bridge:fair-fight+peasant: best and worst
+                     card ai_flag  games  wins  win_rate      lo      hi
+172     Thraben Inspector     NaN    106  65.0    0.6132  0.5181  0.7004
+173            Mind Stone     NaN    124  70.0    0.5645  0.4766  0.6485
+174             Preordain     NaN    118  64.0    0.5424  0.4526  0.6295
+175          Bonesplitter     NaN    160  84.0    0.5250  0.4479  0.6009
+176             Mana Leak     NaN    115  59.0    0.5130  0.4228  0.6025
+177              Stock Up     NaN    102  52.0    0.5098  0.4142  0.6047
+178      Murmuring Mystic     NaN    100  49.0    0.4900  0.3942  0.5865
+179       Chain Lightning     NaN    107  52.0    0.4860  0.3934  0.5795
+180           Mulldrifter     NaN    117  55.0    0.4701  0.3820  0.5600
+181          Counterspell     NaN    142  65.0    0.4577  0.3780  0.5397
+179       Chain Lightning     NaN    107  52.0    0.4860  0.3934  0.5795
+180           Mulldrifter     NaN    117  55.0    0.4701  0.3820  0.5600
+181          Counterspell     NaN    142  65.0    0.4577  0.3780  0.5397
+182  Monastery Swiftspear     NaN    106  47.0    0.4434  0.3524  0.5383
+183                Ponder     NaN    127  56.0    0.4409  0.3576  0.5278
+
+== bridge:fair-fight+synergy: best and worst
+                            card ai_flag  games   wins  win_rate      lo      hi
+184            Stoneforge Mystic     NaN    119   84.0    0.7059  0.6186  0.7803
+185  Adeline, Resplendent Cathar     NaN    159  112.0    0.7044  0.6293  0.7698
+186      Elspeth, Sun's Champion     NaN    148   99.0    0.6689  0.5897  0.7396
+187                Blade Splicer     NaN    198  132.0    0.6667  0.5984  0.7286
+188                    Sun Titan     NaN    122   80.0    0.6557  0.5678  0.7341
+189              Lingering Souls     NaN    138   90.0    0.6522  0.5696  0.7265
+190      Brimaz, King of Oreskos     NaN    137   87.0    0.6350  0.5518  0.7109
+191            Vampire Nighthawk     NaN    137   87.0    0.6350  0.5518  0.7109
+192           Luminarch Aspirant     NaN    160  101.0    0.6313  0.5542  0.7021
+193         Swords to Plowshares     NaN    196  123.0    0.6276  0.5580  0.6922
+282                Archaeomancer     NaN    134   54.0    0.4030  0.3238  0.4876
+283           Sakura-Tribe Elder     NaN    102   41.0    0.4020  0.3120  0.4990
+284     Emry, Lurker of the Loch     NaN    127   51.0    0.4016  0.3204  0.4885
+285              Scavenging Ooze     NaN    140   56.0    0.4000  0.3226  0.4828
+286             Thing in the Ice     NaN    149   58.0    0.3893  0.3147  0.4694
+
+== bridge:fair-fight+vintage: best and worst
+                     card ai_flag  games   wins  win_rate      lo      hi
+287  Swords to Plowshares     NaN    146   88.0    0.6027  0.5217  0.6785
+288          Ocelot Pride     NaN    116   69.0    0.5948  0.5038  0.6797
+289   Retrofitter Foundry     NaN    184  109.0    0.5924  0.5202  0.6608
+290       Wurmcoil Engine     NaN    148   87.0    0.5878  0.5073  0.6639
+291  Jace, Vryn's Prodigy     NaN    157   90.0    0.5732  0.4950  0.6480
+292       Umezawa's Jitte     NaN    170   97.0    0.5706  0.4954  0.6426
+293    Luminarch Aspirant     NaN    100   57.0    0.5700  0.4722  0.6627
+294               Mox Jet     NaN    173   98.0    0.5665  0.4920  0.6381
+295    Containment Priest     NaN    106   60.0    0.5660  0.4710  0.6564
+296      Tireless Tracker     NaN    117   66.0    0.5641  0.4736  0.6505
+350       Tolarian Terror     NaN    103   43.0    0.4175  0.3269  0.5140
+351            Mana Drain     NaN    156   65.0    0.4167  0.3422  0.4951
+352             Mana Leak     NaN    128   52.0    0.4063  0.3251  0.4929
+353   Spellstutter Sprite     NaN    101   38.0    0.3762  0.2879  0.4736
+354           Bone Shards     NaN    102   38.0    0.3725  0.2849  0.4694
+
+== bridge:modern-era+omega: best and worst
+                            card ai_flag  games   wins  win_rate      lo      hi
+355        Sword of Fire and Ice     NaN    130   78.0    0.6000  0.5141  0.6802
+356         Monastery Swiftspear     NaN    104   62.0    0.5962  0.5001  0.6854
+357  Thalia, Guardian of Thraben     NaN    141   84.0    0.5957  0.5132  0.6732
+358            Bonecrusher Giant     NaN    108   64.0    0.5926  0.4983  0.6805
+359                Path to Exile     NaN    119   70.0    0.5882  0.4984  0.6726
+360              Wurmcoil Engine     NaN    234  136.0    0.5812  0.5172  0.6426
+361     Ragavan, Nimble Pilferer     NaN    121   70.0    0.5785  0.4894  0.6628
+362      Elspeth, Sun's Champion     NaN    135   78.0    0.5778  0.4934  0.6578
+363               Lightning Bolt     NaN    123   70.0    0.5691  0.4808  0.6532
+364                Blade Splicer     NaN    113   64.0    0.5664  0.4743  0.6541
+419              Brazen Borrower     NaN    152   65.0    0.4276  0.3517  0.5071
+420                  Bone Shards     NaN    108   46.0    0.4259  0.3368  0.5201
+421    Sheoldred, the Apocalypse     NaN    117   49.0    0.4188  0.3334  0.5094
+422              Umezawa's Jitte     NaN    199   81.0    0.4070  0.3412  0.4764
+423            Vampire Nighthawk     NaN    111   45.0    0.4054  0.3187  0.4984
+
+== bridge:modern-era+synergy: best and worst
+                     card ai_flag  games  wins  win_rate      lo      hi
+424           Shadowspear     NaN    108  57.0    0.5278  0.4343  0.6194
+425      Walking Ballista     NaN    119  61.0    0.5126  0.4238  0.6006
+426  Jace, Vryn's Prodigy     NaN    111  50.0    0.4505  0.3611  0.5431
+427       Snapcaster Mage     NaN    106  41.0    0.3868  0.2996  0.4819
+428                Ponder     NaN    102  35.0    0.3431  0.2582  0.4395
+424           Shadowspear     NaN    108  57.0    0.5278  0.4343  0.6194
+425      Walking Ballista     NaN    119  61.0    0.5126  0.4238  0.6006
+426  Jace, Vryn's Prodigy     NaN    111  50.0    0.4505  0.3611  0.5431
+427       Snapcaster Mage     NaN    106  41.0    0.3868  0.2996  0.4819
+428                Ponder     NaN    102  35.0    0.3431  0.2582  0.4395
+
+== bridge:modern-era+vintage: best and worst
+                            card ai_flag  games   wins  win_rate      lo      hi
+429      Elspeth, Sun's Champion     NaN    146   88.0    0.6027  0.5217  0.6785
+430              Lingering Souls     NaN    119   69.0    0.5798  0.4900  0.6647
+431         Swords to Plowshares     NaN    136   78.0    0.5735  0.4895  0.6535
+432          Retrofitter Foundry     NaN    189  108.0    0.5714  0.5001  0.6399
+433                     Mox Ruby     NaN    191  109.0    0.5707  0.4998  0.6388
+434  Thalia, Guardian of Thraben     NaN    156   88.0    0.5641  0.4857  0.6395
+435            Thraben Inspector     NaN    172   96.0    0.5581  0.4835  0.6303
+436                     Solitude     NaN    155   86.0    0.5548  0.4762  0.6308
+437  Adeline, Resplendent Cathar     NaN    132   73.0    0.5530  0.4679  0.6352
+438           Containment Priest     NaN    124   68.0    0.5484  0.4607  0.6332
+493                 Counterspell     NaN    176   77.0    0.4375  0.3663  0.5114
+494                  Bone Shards     NaN    106   46.0    0.4340  0.3436  0.5290
+495            Archon of Cruelty     NaN    125   54.0    0.4320  0.3485  0.5196
+496               Chart a Course     NaN    107   42.0    0.3925  0.3053  0.4872
+497                   Brainstorm     NaN    106   40.0    0.3774  0.2909  0.4724
+
+== bridge:pauper+modern-era: best and worst
+                            card ai_flag  games   wins  win_rate      lo      hi
+498                Dragon Fodder     NaN    108   71.0    0.6574  0.5639  0.7401
+499  Nissa, Who Shakes the World     NaN    108   71.0    0.6574  0.5639  0.7401
+500                    Thragtusk     NaN    130   78.0    0.6000  0.5141  0.6802
+501                  Unholy Heat     NaN    137   82.0    0.5985  0.5149  0.6769
+502               Rampant Growth     NaN    107   64.0    0.5981  0.5034  0.6861
+503           Luminarch Aspirant     NaN    158   94.0    0.5949  0.5170  0.6683
+504                Inferno Titan     NaN    119   70.0    0.5882  0.4984  0.6726
+505         Swords to Plowshares     NaN    125   73.0    0.5840  0.4963  0.6666
+506                    Tarmogoyf     NaN    151   88.0    0.5828  0.5030  0.6584
+507                     Fireball     NaN    116   67.0    0.5776  0.4866  0.6636
+633              Tolarian Terror     NaN    270  112.0    0.4148  0.3576  0.4744
+634                        Grief     NaN    142   58.0    0.4085  0.3310  0.4907
+635              Ghostly Flicker     All    217   88.0    0.4055  0.3424  0.4720
+636          Spellstutter Sprite     NaN    223   90.0    0.4036  0.3414  0.4691
+637                Hard Evidence     NaN    233   91.0    0.3906  0.3302  0.4545
+
+== bridge:pauper+omega: best and worst
+                            card ai_flag  games   wins  win_rate      lo      hi
+638            Stoneforge Mystic     NaN    103   61.0    0.5922  0.4957  0.6822
+639  Adeline, Resplendent Cathar     NaN    102   60.0    0.5882  0.4912  0.6788
+640                Kor Skyfisher     NaN    124   72.0    0.5806  0.4926  0.6638
+641               Evolving Wilds     NaN    134   75.0    0.5597  0.4751  0.6409
+642                 Generous Ent     NaN    111   61.0    0.5495  0.4569  0.6389
+643         Wedding Announcement     NaN    106   58.0    0.5472  0.4524  0.6386
+644     Ragavan, Nimble Pilferer     NaN    117   64.0    0.5470  0.4567  0.6343
+645                   Man-o'-War     NaN    242  132.0    0.5455  0.4825  0.6070
+646             Falkenrath Noble     NaN    117   63.0    0.5385  0.4483  0.6261
+647             Walking Ballista     NaN    177   94.0    0.5311  0.4577  0.6032
+719               Chromatic Star     All    140   60.0    0.4286  0.3496  0.5114
+720                Deep Analysis     NaN    183   78.0    0.4262  0.3568  0.4987
+721              Treasure Cruise     NaN    110   45.0    0.4091  0.3218  0.5025
+722                      Exclude     NaN    142   56.0    0.3944  0.3178  0.4765
+723                Archaeomancer     NaN    127   49.0    0.3858  0.3057  0.4727
+
+== bridge:pauper+peasant: best and worst
+                     card ai_flag  games  wins  win_rate      lo      hi
+724     Loxodon Warhammer     NaN    115  68.0    0.5913  0.4999  0.6768
+725       Night's Whisper     NaN    111  63.0    0.5676  0.4747  0.6559
+726             Mana Leak     NaN    144  79.0    0.5486  0.4671  0.6276
+727          Bonesplitter     NaN    180  96.0    0.5333  0.4605  0.6048
+728  Monastery Swiftspear     NaN    122  65.0    0.5328  0.4446  0.6190
+729        Miscalculation     NaN    108  57.0    0.5278  0.4343  0.6194
+730     Floodpits Drowner     NaN    104  54.0    0.5192  0.4242  0.6128
+731      Murmuring Mystic     NaN    114  57.0    0.5000  0.4097  0.5903
+732      Sink into Stupor     NaN    107  53.0    0.4953  0.4024  0.5886
+733           Flayer Husk     NaN    104  51.0    0.4904  0.3964  0.5851
+743          Counterspell     NaN    135  58.0    0.4296  0.3492  0.5139
+744     Faithless Looting     All    136  58.0    0.4265  0.3465  0.5105
+745                Ponder     NaN    148  58.0    0.3919  0.3169  0.4723
+746              Stock Up     NaN    113  43.0    0.3805  0.2963  0.4726
+747           Ash Barrens     NaN    101  35.0    0.3465  0.2609  0.4434
+
+== bridge:pauper+synergy: best and worst
+                            card ai_flag  games   wins  win_rate      lo      hi
+748      Elspeth, Sun's Champion     NaN    140  100.0    0.7143  0.6345  0.7826
+749  Adeline, Resplendent Cathar     NaN    139   95.0    0.6835  0.6021  0.7550
+750            Thraben Inspector     NaN    275  187.0    0.6800  0.6227  0.7323
+751          Skyclave Apparition     NaN    132   89.0    0.6742  0.5903  0.7483
+752      Brimaz, King of Oreskos     NaN    128   85.0    0.6641  0.5785  0.7400
+753            Welcoming Vampire     NaN    153  101.0    0.6601  0.5820  0.7304
+754               Battle Screech     NaN    185  121.0    0.6541  0.5830  0.7188
+755             Palace Sentinels     NaN    195  126.0    0.6462  0.5768  0.7099
+756          Eagles of the North     NaN    159  102.0    0.6415  0.5644  0.7119
+757              Lingering Souls     NaN    136   87.0    0.6397  0.5562  0.7155
+868          Unexpected Windfall     NaN    122   49.0    0.4016  0.3189  0.4903
+869                Archaeomancer     NaN    182   73.0    0.4011  0.3326  0.4736
+870             Phantasmal Image     NaN    202   80.0    0.3960  0.3311  0.4648
+871           Sakura-Tribe Elder     NaN    140   55.0    0.3929  0.3159  0.4756
+872                   Risen Reef     NaN    107   35.0    0.3271  0.2455  0.4206
+
+== bridge:pauper+vintage: best and worst
+                           card ai_flag  games   wins  win_rate      lo      hi
+873                 Black Lotus     NaN    189  115.0    0.6085  0.5374  0.6752
+874           Archon of Cruelty     NaN    107   64.0    0.5981  0.5034  0.6861
+875  Laelia, the Blade Reforged     NaN    129   75.0    0.5814  0.4951  0.6630
+876                Animate Dead     NaN    100   58.0    0.5800  0.4821  0.6720
+877                     Mox Jet     NaN    202  117.0    0.5792  0.5103  0.6452
+878             Wurmcoil Engine     NaN    172   98.0    0.5698  0.4950  0.6414
+879         Retrofitter Foundry     NaN    206  117.0    0.5680  0.4997  0.6338
+880            Falkenrath Noble     NaN    115   65.0    0.5652  0.4740  0.6523
+881             Serrated Arrows     NaN    139   78.0    0.5612  0.4781  0.6409
+882                Ocelot Pride     NaN    133   74.0    0.5564  0.4716  0.6381
+959           Bonecrusher Giant     NaN    104   43.0    0.4135  0.3235  0.5095
+960                      Ponder     NaN    249  102.0    0.4096  0.3504  0.4716
+961           Mystic Confluence     All    171   69.0    0.4035  0.3329  0.4784
+962               Archaeomancer     NaN    125   50.0    0.4000  0.3183  0.4876
+963             Treasure Cruise     NaN    100   39.0    0.3900  0.3002  0.4880
+
+== bridge:peasant+modern-era: best and worst
+                           card ai_flag  games   wins  win_rate      lo      hi
+964     Elspeth, Sun's Champion     NaN    100   63.0    0.6300  0.5322  0.7182
+965    Ragavan, Nimble Pilferer     NaN    155   97.0    0.6258  0.5474  0.6981
+966                        Fury     NaN    149   90.0    0.6040  0.5238  0.6790
+967       Marionette Apprentice     NaN    153   92.0    0.6013  0.5222  0.6755
+968      Elspeth, Knight-Errant     NaN    101   59.0    0.5842  0.4867  0.6755
+969        Descendant of Storms     NaN    137   80.0    0.5839  0.5002  0.6631
+970                   Thragtusk     NaN    110   64.0    0.5818  0.4884  0.6697
+971                      Abrade     NaN    110   63.0    0.5727  0.4794  0.6612
+972              Battle Screech     NaN    117   67.0    0.5726  0.4821  0.6586
+973   Sheoldred, the Apocalypse     NaN    156   88.0    0.5641  0.4857  0.6395
+1087               Counterspell     NaN    305  128.0    0.4197  0.3656  0.4757
+1088           Phantasmal Image     NaN    148   61.0    0.4122  0.3361  0.4927
+1089       Slickshot Lockpicker     NaN    172   69.0    0.4012  0.3308  0.4758
+1090           Sink into Stupor     NaN    180   72.0    0.4000  0.3312  0.4729
+1091                   Consider     NaN    191   69.0    0.3613  0.2965  0.4315
+
+== bridge:peasant+omega: best and worst
+                           card ai_flag  games  wins  win_rate      lo      hi
+1092             Karn Liberated     NaN    123  76.0    0.6179  0.5297  0.6990
+1093  Sheoldred, the Apocalypse     NaN    117  71.0    0.6068  0.5163  0.6906
+1094       Monastery Swiftspear     NaN    142  85.0    0.5986  0.5164  0.6756
+1095           Samurai's Katana     NaN    110  64.0    0.5818  0.4884  0.6697
+1096             Lightning Bolt     NaN    159  92.0    0.5786  0.5009  0.6526
+1097       Swords to Plowshares     NaN    130  73.0    0.5615  0.4757  0.6439
+1098            Wurmcoil Engine     NaN    159  89.0    0.5597  0.4821  0.6346
+1099          Loxodon Warhammer     NaN    158  87.0    0.5506  0.4728  0.6261
+1100    Dragon's Rage Channeler     NaN    140  77.0    0.5500  0.4674  0.6300
+1101                       Fury     NaN    102  56.0    0.5490  0.4524  0.6421
+1158            Umezawa's Jitte     NaN    193  81.0    0.4197  0.3523  0.4902
+1159                  Mana Leak     NaN    201  84.0    0.4179  0.3519  0.4870
+1160                   Stock Up     NaN    140  56.0    0.4000  0.3226  0.4828
+1161             Chart a Course     NaN    152  60.0    0.3947  0.3205  0.4741
+1162       Slickshot Lockpicker     NaN    123  48.0    0.3902  0.3086  0.4785
+
+== bridge:peasant+synergy: best and worst
+                             card ai_flag  games   wins  win_rate      lo      hi
+1163          Skyclave Apparition     NaN    144   98.0    0.6806  0.6006  0.7512
+1164                   Reveillark     NaN    110   73.0    0.6636  0.5711  0.7451
+1165      Elspeth, Sun's Champion     NaN    147   97.0    0.6599  0.5801  0.7315
+1166               Battle Screech     NaN    190  124.0    0.6526  0.5825  0.7167
+1167                 Blood Artist     NaN    117   76.0    0.6496  0.5596  0.7300
+1168  Adeline, Resplendent Cathar     NaN    148   95.0    0.6419  0.5620  0.7146
+1169         Descendant of Storms     NaN    130   83.0    0.6385  0.5530  0.7160
+1170            Welcoming Vampire     NaN    146   93.0    0.6370  0.5564  0.7106
+1171         Swords to Plowshares     NaN    195  123.0    0.6308  0.5611  0.6954
+1172      Brimaz, King of Oreskos     NaN    144   90.0    0.6250  0.5436  0.6999
+1292        Third Path Iconoclast     NaN    118   44.0    0.3729  0.2909  0.4628
+1293                     Consider     NaN    302  112.0    0.3709  0.3183  0.4266
+1294             Sink into Stupor     NaN    166   60.0    0.3614  0.2923  0.4369
+1295                 Counterspell     NaN    184   66.0    0.3587  0.2929  0.4302
+1296         Slickshot Lockpicker     NaN    174   61.0    0.3506  0.2836  0.4240
+
+== bridge:peasant+vintage: best and worst
+                           card ai_flag  games  wins  win_rate      lo      hi
+1297           Cloudgoat Ranger     NaN    102  61.0    0.5980  0.5010  0.6880
+1298       Swords to Plowshares     NaN    118  70.0    0.5932  0.5030  0.6776
+1299          Orcish Bowmasters     NaN    105  62.0    0.5905  0.4948  0.6797
+1300  Sheoldred, the Apocalypse     NaN    100  58.0    0.5800  0.4821  0.6720
+1301           Myr Battlesphere     NaN    164  94.0    0.5732  0.4966  0.6463
+1302        Recurring Nightmare     NaN    103  59.0    0.5728  0.4764  0.6640
+1303            Lingering Souls     NaN    138  79.0    0.5725  0.4891  0.6519
+1304          Thraben Inspector     NaN    168  96.0    0.5714  0.4958  0.6438
+1305                Mulldrifter     NaN    115  65.0    0.5652  0.4740  0.6523
+1306            Wurmcoil Engine     NaN    156  88.0    0.5641  0.4857  0.6395
+1372                  Time Walk     NaN    113  46.0    0.4071  0.3210  0.4993
+1373    Emrakul, the Aeons Torn     NaN    145  58.0    0.4000  0.3238  0.4813
+1374          Mystic Confluence     All    128  51.0    0.3984  0.3178  0.4850
+1375            Chain Lightning     NaN    123  49.0    0.3984  0.3162  0.4867
+1376          Faithless Looting     All    157  59.0    0.3758  0.3039  0.4537
+
+== bridge:synergy+omega: best and worst
+                             card ai_flag  games   wins  win_rate      lo      hi
+1377                    Sun Titan     NaN    132   89.0    0.6742  0.5903  0.7483
+1378          Skyclave Apparition     NaN    166  111.0    0.6687  0.5940  0.7358
+1379         Wedding Announcement     NaN    153  100.0    0.6536  0.5753  0.7244
+1380         Swords to Plowshares     NaN    143   90.0    0.6294  0.5478  0.7042
+1381      Brimaz, King of Oreskos     NaN    134   84.0    0.6269  0.5425  0.7041
+1382                Blade Splicer     NaN    139   87.0    0.6259  0.5431  0.7019
+1383            Thraben Inspector     NaN    181  113.0    0.6243  0.5519  0.6916
+1384  Thalia, Guardian of Thraben     NaN    138   86.0    0.6232  0.5400  0.6997
+1385      Elspeth, Sun's Champion     NaN    167  103.0    0.6168  0.5412  0.6871
+1386              Lingering Souls     NaN    153   94.0    0.6144  0.5353  0.6878
+1460                Thought Scour     NaN    133   52.0    0.3910  0.3122  0.4759
+1461              Snapcaster Mage     NaN    251   98.0    0.3904  0.3322  0.4520
+1462              Brazen Borrower     NaN    129   50.0    0.3876  0.3079  0.4738
+1463         Jace, Vryn's Prodigy     NaN    240   93.0    0.3875  0.3281  0.4504
+1464            Ramunap Excavator     NaN    128   47.0    0.3672  0.2887  0.4534
+
+== bridge:synergy+vintage: best and worst
+                      card ai_flag  games  wins  win_rate      lo      hi
+1465     Solemn Simulacrum     NaN    136  83.0    0.6103  0.5264  0.6882
+1466         Blade Splicer     NaN    111  66.0    0.5946  0.5016  0.6813
+1467             Sun Titan     NaN    125  73.0    0.5840  0.4963  0.6666
+1468                   Six     NaN    101  58.0    0.5743  0.4768  0.6662
+1469       Lingering Souls     NaN    147  84.0    0.5714  0.4906  0.6486
+1470     Archon of Cruelty     NaN    128  73.0    0.5703  0.4837  0.6528
+1471   Avenger of Zendikar     NaN    106  60.0    0.5660  0.4710  0.6564
+1472    Spirited Companion     NaN    112  63.0    0.5625  0.4701  0.6508
+1473          Ocelot Pride     NaN    146  82.0    0.5616  0.4806  0.6395
+1474  Swords to Plowshares     NaN    138  77.0    0.5580  0.4747  0.6381
+1545       Brazen Borrower     NaN    105  43.0    0.4095  0.3203  0.5052
+1546            Brainstorm     NaN    175  71.0    0.4057  0.3357  0.4797
+1547         Force of Will     NaN    151  61.0    0.4040  0.3290  0.4837
+1548      Champion of Wits     NaN    118  46.0    0.3898  0.3066  0.4800
+1549         Thought Scour     NaN    134  51.0    0.3806  0.3028  0.4650
+
+== fair-fight: best and worst
+                     card ai_flag  games    wins  win_rate      lo      hi
+1550  Trostani Discordant     NaN    351   216.0    0.6154  0.5635  0.6648
+1551            Cast Down     NaN    472   267.0    0.5657  0.5206  0.6097
+1552      Selfless Spirit     NaN    397   224.0    0.5642  0.5151  0.6122
+1553               Rancor     NaN    373   208.0    0.5576  0.5069  0.6072
+1554      Fateful Absence     NaN    793   442.0    0.5574  0.5226  0.5916
+1555          Mire Triton     NaN    195   108.0    0.5538  0.4837  0.6219
+1556   Journey to Nowhere     NaN   1272   703.0    0.5527  0.5252  0.5798
+1557     Annoyed Altisaur     NaN    193   106.0    0.5492  0.4787  0.6178
+1558   Inspiring Overseer     NaN   1787   981.0    0.5490  0.5258  0.5719
+1559        Blade Splicer     NaN   2218  1213.0    0.5469  0.5261  0.5675
+1687  Spellstutter Sprite     NaN   2786  1206.0    0.4329  0.4146  0.4514
+1688      Bloodfell Caves     NaN    347   149.0    0.4294  0.3784  0.4820
+1689      Spectral Sailor     NaN    205    87.0    0.4244  0.3587  0.4928
+1690          Fire // Ice     NaN    187    79.0    0.4225  0.3539  0.4941
+1691       Augur of Bolas     NaN    249   105.0    0.4217  0.3620  0.4838
+
+== modern-era: best and worst
+                              card ai_flag  games    wins  win_rate      lo      hi
+1692        Grist, the Hunger Tide     NaN    135    84.0    0.6222  0.5381  0.6996
+1693                Bloodbraid Elf     NaN    368   228.0    0.6196  0.5690  0.6677
+1694  Minsc & Boo, Timeless Heroes     NaN    516   319.0    0.6182  0.5756  0.6591
+1695           Steel Leaf Champion     NaN    386   238.0    0.6166  0.5672  0.6637
+1696           Needleverge Pathway     NaN    184   113.0    0.6141  0.5421  0.6815
+1697           Voice of Resurgence     NaN    180   109.0    0.6056  0.5327  0.6740
+1698   Nissa, Who Shakes the World     NaN   1781  1070.0    0.6008  0.5778  0.6233
+1699               Lightning Helix     NaN    205   123.0    0.6000  0.5317  0.6646
+1700            Sakura-Tribe Elder     NaN    554   329.0    0.5939  0.5525  0.6340
+1701                Llanowar Elves     NaN   1495   886.0    0.5926  0.5675  0.6173
+1845      Rankle, Master of Pranks     NaN    276   113.0    0.4094  0.3530  0.4683
+1846           Everflowing Chalice     NaN    180    72.0    0.4000  0.3312  0.4729
+1847                  Watery Grave     NaN    418   155.0    0.3708  0.3259  0.4181
+1848                  Psychic Frog     NaN    803   292.0    0.3636  0.3311  0.3975
+1849            Clearwater Pathway     NaN    306   108.0    0.3529  0.3015  0.4080
+
+== omega: best and worst
+                              card ai_flag  games   wins  win_rate      lo      hi
+1850        Grist, the Hunger Tide     NaN    123   73.0    0.5935  0.5051  0.6762
+1851            Kolaghan's Command     NaN    120   69.0    0.5750  0.4856  0.6598
+1852              Flametongue Kavu     NaN    373  213.0    0.5710  0.5203  0.6203
+1853             Bloodstained Mire     NaN    209  119.0    0.5694  0.5016  0.6347
+1854                      Badlands     NaN    177   99.0    0.5593  0.4857  0.6304
+1855              Young Pyromancer     NaN    118   66.0    0.5593  0.4693  0.6456
+1856                  Glorybringer     NaN    423  235.0    0.5556  0.5079  0.6022
+1857           Ravenous Chupacabra     NaN    165   91.0    0.5515  0.4753  0.6254
+1858                 Inferno Titan     NaN   1013  555.0    0.5479  0.5171  0.5783
+1859   Fable of the Mirror-Breaker     NaN   1402  768.0    0.5478  0.5216  0.5737
+1995                   Mulldrifter     NaN   1979  911.0    0.4603  0.4385  0.4823
+1996  Uro, Titan of Nature's Wrath     NaN    169   77.0    0.4556  0.3824  0.5309
+1997               Cryptic Command     NaN    274  124.0    0.4526  0.3947  0.5117
+1998               Tropical Island     NaN    247  111.0    0.4494  0.3886  0.5117
+1999           Everflowing Chalice     NaN    105   39.0    0.3714  0.2851  0.4669
+
+== pauper: best and worst
+                      card ai_flag  games    wins  win_rate      lo      hi
+2000    Triplicate Spirits     NaN    183   130.0    0.7104  0.6409  0.7712
+2001       Ancestral Blade     NaN    440   291.0    0.6614  0.6159  0.7040
+2002       Attended Knight     NaN    558   347.0    0.6219  0.5809  0.6611
+2003    Stormfront Pegasus     NaN    171   104.0    0.6082  0.5334  0.6782
+2004     Seeker of the Way     NaN    665   403.0    0.6060  0.5684  0.6424
+2005  Search Party Captain     NaN    192   116.0    0.6042  0.5336  0.6706
+2006   Moon-Circuit Hacker     NaN    220   132.0    0.6000  0.5341  0.6625
+2007    Rally the Peasants     NaN    213   127.0    0.5962  0.5292  0.6599
+2008        Battle Screech     NaN   1415   841.0    0.5943  0.5685  0.6196
+2009       Faith's Fetters     NaN    495   293.0    0.5919  0.5481  0.6343
+2142        Chromatic Star     All   3092  1384.0    0.4476  0.4302  0.4652
+2143       Ghostly Flicker     All   4255  1886.0    0.4432  0.4284  0.4582
+2144       Prophetic Prism     All   5073  2241.0    0.4418  0.4281  0.4555
+2145          Cavern Harpy     NaN    500   218.0    0.4360  0.3932  0.4798
+2146         Krosan Tusker     NaN    506   217.0    0.4289  0.3864  0.4724
+
+== peasant: best and worst
+                     card ai_flag  games    wins  win_rate      lo      hi
+2147    Hero of the Dunes     NaN    290   193.0    0.6655  0.6094  0.7173
+2148    Momo, Playful Pet     NaN    233   150.0    0.6438  0.5804  0.7025
+2149   Spinewoods Paladin     NaN    348   213.0    0.6121  0.5599  0.6618
+2150  Sheltered by Ghosts     NaN   1164   711.0    0.6108  0.5825  0.6384
+2151    All-Fates Stalker     NaN    964   573.0    0.5944  0.5631  0.6250
+2152       Battle Screech     NaN   1523   900.0    0.5909  0.5660  0.6154
+2153        Elvish Mystic     NaN    708   417.0    0.5890  0.5524  0.6247
+2154           Fatal Push     NaN    352   207.0    0.5881  0.5360  0.6383
+2155    Mighty Mutanimals     NaN   1183   695.0    0.5875  0.5592  0.6152
+2156        Path to Exile     NaN   1507   884.0    0.5866  0.5615  0.6112
+2302      Lórien Revealed     NaN   3798  1600.0    0.4213  0.4057  0.4370
+2303     Sink into Stupor     NaN   3617  1507.0    0.4166  0.4007  0.4328
+2304   Biomechan Engineer     NaN    234    97.0    0.4145  0.3533  0.4785
+2305   Colossal Skyturtle     NaN    162    64.0    0.3951  0.3230  0.4719
+2306  Rise from the Tides     NaN    299   116.0    0.3880  0.3345  0.4443
+
+== synergy: best and worst
+                             card ai_flag  games    wins  win_rate      lo      hi
+2307      Elspeth, Sun's Champion     NaN   2487  1709.0    0.6872  0.6687  0.7051
+2308            Restoration Angel     NaN    799   549.0    0.6871  0.6541  0.7183
+2309              Lunarch Veteran     NaN   1646  1128.0    0.6853  0.6625  0.7073
+2310           Luminarch Aspirant     NaN   2511  1704.0    0.6786  0.6601  0.6966
+2311      Brimaz, King of Oreskos     NaN   2107  1425.0    0.6763  0.6560  0.6960
+2312               Battle Screech     NaN   2236  1510.0    0.6753  0.6556  0.6944
+2313  Adeline, Resplendent Cathar     NaN   2518  1691.0    0.6716  0.6530  0.6896
+2314                    Sun Titan     NaN   2026  1352.0    0.6673  0.6465  0.6875
+2315                Blade Splicer     NaN   2201  1468.0    0.6670  0.6470  0.6864
+2316         Swords to Plowshares     NaN   2393  1593.0    0.6657  0.6465  0.6843
+2447             Misty Rainforest     NaN    860   299.0    0.3477  0.3166  0.3801
+2448                Breeding Pool     NaN    623   215.0    0.3451  0.3088  0.3833
+2449   Saheeli, Sublime Artificer     NaN    467   151.0    0.3233  0.2825  0.3671
+2450                   Risen Reef     NaN   1512   481.0    0.3181  0.2951  0.3420
+2451                 Beast Within     All    105    33.0    0.3143  0.2334  0.4083
+
+== vintage: best and worst
+                         card ai_flag  games    wins  win_rate      lo      hi
+2452        Restoration Angel     NaN    102    61.0    0.5980  0.5010  0.6880
+2453                Arid Mesa     NaN    404   236.0    0.5842  0.5355  0.6312
+2454    The Wandering Emperor     NaN    565   328.0    0.5805  0.5394  0.6205
+2455              Batterskull     NaN    455   264.0    0.5802  0.5344  0.6247
+2456          Lightning Helix     NaN    406   234.0    0.5764  0.5278  0.6235
+2457                 Savannah     NaN    194   111.0    0.5722  0.5018  0.6397
+2458             Ocelot Pride     NaN   2006  1140.0    0.5683  0.5465  0.5898
+2459                  Balance     NaN    176   100.0    0.5682  0.4943  0.6391
+2460            Palace Jailer     NaN   1985  1127.0    0.5678  0.5459  0.5894
+2461  Loran of the Third Path  Random   1619   918.0    0.5670  0.5428  0.5910
+2598     Collective Brutality     NaN    976   410.0    0.4201  0.3895  0.4513
+2599          Treasure Cruise     NaN    150    63.0    0.4200  0.3440  0.5000
+2600                 Badlands     NaN    161    66.0    0.4099  0.3369  0.4871
+2601              Dark Ritual     NaN    605   247.0    0.4083  0.3698  0.4479
+2602         Deathrite Shaman     NaN    130    51.0    0.3923  0.3126  0.4782
+                            cube  night pair  games   share  win_rate      lo      hi
+0   bridge:fair-fight+modern-era      1   WU    106  0.2046    0.5283  0.4340  0.6207
+1   bridge:fair-fight+modern-era      2   WU    121  0.2309    0.4793  0.3923  0.5676
+2      bridge:fair-fight+synergy      1   WU    112  0.2353    0.5893  0.4967  0.6760
+3      bridge:fair-fight+synergy      2   WU    106  0.2103    0.5094  0.4156  0.6026
+4       bridge:pauper+modern-era      1   UB    128  0.2078    0.3750  0.2959  0.4614
+5       bridge:pauper+modern-era      2   UB    134  0.2018    0.3955  0.3168  0.4801
+6       bridge:pauper+modern-era      1   UR    118  0.1916    0.4915  0.4030  0.5806
+7       bridge:pauper+modern-era      2   UR    112  0.1687    0.5625  0.4701  0.6508
+8       bridge:pauper+modern-era      2   WU    121  0.1822    0.4298  0.3450  0.5188
+9            bridge:pauper+omega      2   UB    120  0.2691    0.4667  0.3798  0.5556
+10         bridge:pauper+synergy      1   UB    109  0.1953    0.5229  0.4300  0.6143
+11         bridge:pauper+synergy      2   UB    116  0.1774    0.4828  0.3938  0.5728
+12         bridge:pauper+synergy      1   UG    100  0.1792    0.3600  0.2727  0.4576
+13         bridge:pauper+synergy      1   UR    100  0.1792    0.3700  0.2818  0.4678
+14         bridge:pauper+synergy      2   UR    108  0.1651    0.3889  0.3023  0.4831
+15         bridge:pauper+synergy      2   WU    134  0.2049    0.5896  0.5049  0.6692
+16         bridge:pauper+vintage      2   UR    103  0.2330    0.3883  0.2999  0.4849
+17         bridge:pauper+vintage      2   WU    100  0.2262    0.5500  0.4524  0.6439
+18     bridge:peasant+modern-era      1   UR    107  0.1795    0.4673  0.3755  0.5613
+19     bridge:peasant+modern-era      2   UR    103  0.1853    0.4951  0.4005  0.5901
+20        bridge:peasant+synergy      1   UR    105  0.1829    0.4190  0.3292  0.5146
+21        bridge:peasant+synergy      2   UR    100  0.1724    0.3100  0.2278  0.4063
+22        bridge:synergy+vintage      2   WU    106  0.2431    0.4528  0.3614  0.5476
+23                    fair-fight      1   BG    115  0.0290    0.5391  0.4482  0.6275
+24                    fair-fight      2   BG    109  0.0262    0.5963  0.5025  0.6836
+25                    fair-fight      1   BR    115  0.0290    0.4870  0.3975  0.5772
+26                    fair-fight      2   BR    101  0.0243    0.5941  0.4965  0.6847
+27                    fair-fight      1   RG    105  0.0265    0.6000  0.5044  0.6886
+28                    fair-fight      2   RG    140  0.0337    0.4786  0.3975  0.5608
+29                    fair-fight      1   UB    774  0.1955    0.4393  0.4047  0.4745
+30                    fair-fight      2   UB    792  0.1904    0.4583  0.4239  0.4932
+31                    fair-fight      1   UG    310  0.0783    0.4613  0.4066  0.5169
+32                    fair-fight      2   UG    316  0.0760    0.4747  0.4203  0.5297
+33                    fair-fight      1   UR    637  0.1609    0.4458  0.4077  0.4847
+34                    fair-fight      2   UR    651  0.1565    0.4839  0.4457  0.5222
+35                    fair-fight      1   WB    301  0.0760    0.6047  0.5484  0.6582
+36                    fair-fight      2   WB    347  0.0834    0.5735  0.5209  0.6244
+37                    fair-fight      1   WG    240  0.0606    0.5750  0.5118  0.6359
+38                    fair-fight      2   WG    230  0.0553    0.6522  0.5886  0.7108
+39                    fair-fight      1   WR    208  0.0525    0.5962  0.5283  0.6605
+night                                 1     2
+cube                         pair            
+bridge:fair-fight+modern-era WU    0.53  0.48
+bridge:fair-fight+synergy    WU    0.59  0.51
+bridge:pauper+modern-era     UB    0.38  0.40
+                             UR    0.49  0.56
+                             WU     NaN  0.43
+bridge:pauper+omega          UB     NaN  0.47
+bridge:pauper+synergy        UB    0.52  0.48
+                             UG    0.36   NaN
+                             UR    0.37  0.39
+                             WU     NaN  0.59
+bridge:pauper+vintage        UR     NaN  0.39
+                             WU     NaN  0.55
+bridge:peasant+modern-era    UR    0.47  0.50
+bridge:peasant+synergy       UR    0.42  0.31
+bridge:synergy+vintage       WU     NaN  0.45
+fair-fight                   BG    0.54  0.60
+                             BR    0.49  0.59
+                             RG    0.60  0.48
+                             UB    0.44  0.46
+                             UG    0.46  0.47
+                             UR    0.45  0.48
+                             WB    0.60  0.57
+                             WG    0.57  0.65
+                             WR    0.60  0.58
+                             WU    0.51  0.46
+modern-era                   BG    0.58  0.53
+                             BR    0.49  0.51
+                             RG    0.64  0.62
+                             UB    0.36  0.35
+                             UG    0.51  0.53
+                             UR    0.50  0.45
+                             WB    0.41  0.49
+                             WG    0.63  0.62
+                             WR    0.61  0.59
+                             WU    0.45  0.46
+omega                        BG    0.55  0.48
+                             BR    0.60  0.59
+                             RG    0.52  0.54
+                             UB    0.46  0.50
+                             UG    0.44  0.43
+                            cube  games  timeouts  errors  draws  avg_turns  median_turns  p90_turns  on_play_games  on_play_win_rate      lo      hi
+0                        peasant   5966       5.0     0.0    5.0      17.63          17.0       24.0         5961.0            0.5216  0.5089  0.5342
+1                         pauper   5696       0.0     0.0    0.0      22.10          21.0       30.0         5696.0            0.5104  0.4974  0.5233
+2                        synergy   4809       4.0     0.0    5.0      19.36          19.0       26.0         4804.0            0.5219  0.5077  0.5360
+3                     modern-era   4145       0.0     0.0    0.0      19.73          19.0       27.0         4145.0            0.5023  0.4871  0.5175
+4                     fair-fight   4060       0.0     0.0    0.0      21.48          20.0       30.0         4060.0            0.5069  0.4915  0.5223
+5                        vintage   3729       0.0     0.0    0.0      16.76          16.0       24.0         3729.0            0.5042  0.4881  0.5202
+6                          omega   3672       0.0     0.0    0.0      18.72          18.0       26.0         3672.0            0.5240  0.5078  0.5401
+7       bridge:pauper+modern-era    640       0.0     0.0    0.0      20.43          20.0       28.0          640.0            0.5000  0.4614  0.5386
+8          bridge:pauper+synergy    606       0.0     0.0    0.0      20.13          19.0       28.0          606.0            0.5264  0.4866  0.5659
+9         bridge:peasant+synergy    577       0.0     0.0    0.0      18.64          18.0       25.0          577.0            0.4957  0.4550  0.5364
+10     bridge:peasant+modern-era    576       0.0     0.0    0.0      18.81          18.0       26.0          576.0            0.5365  0.4956  0.5768
+11  bridge:fair-fight+modern-era    521       0.0     0.0    0.0      20.59          20.0       29.0          521.0            0.5202  0.4773  0.5627
+12     bridge:fair-fight+synergy    490       0.0     0.0    0.0      19.94          19.0       28.0          490.0            0.5490  0.5047  0.5925
+13          bridge:synergy+omega    446       0.0     0.0    0.0      18.71          18.0       25.0          446.0            0.5314  0.4850  0.5772
+14        bridge:synergy+vintage    441       0.0     0.0    0.0      17.92          17.0       25.0          441.0            0.5397  0.4930  0.5857
+15         bridge:pauper+vintage    440       0.0     0.0    0.0      19.02          18.0       26.0          440.0            0.4977  0.4512  0.5443
+16           bridge:pauper+omega    437       0.0     0.0    0.0      19.24          18.0       26.0          437.0            0.4897  0.4431  0.5365
+17        bridge:peasant+vintage    389       0.0     0.0    0.0      17.04          16.0       23.0          389.0            0.5373  0.4876  0.5862
+18          bridge:peasant+omega    384       0.0     0.0    0.0      17.90          17.0       24.0          384.0            0.5651  0.5151  0.6138
+19     bridge:fair-fight+vintage    369       0.0     0.0    0.0      19.08          18.0       28.0          369.0            0.5583  0.5073  0.6081
+20     bridge:modern-era+vintage    361       0.0     0.0    0.0      17.81          17.0       25.0          361.0            0.4931  0.4418  0.5444
+21       bridge:fair-fight+omega    340       0.0     0.0    0.0      19.61          18.5       27.0          340.0            0.5206  0.4676  0.5732
+22       bridge:modern-era+omega    338       0.0     0.0    0.0      18.97          18.0       26.0          338.0            0.5355  0.4822  0.5880
+23         bridge:pauper+peasant    248       0.0     0.0    0.0      19.64          19.0       25.0          248.0            0.4597  0.3987  0.5218
+24     bridge:fair-fight+peasant    221       0.0     0.0    0.0      19.10          18.0       25.0          221.0            0.5158  0.4502  0.5809
+25     bridge:modern-era+synergy    175       0.0     0.0    0.0      18.61          18.0       25.0          175.0            0.6057  0.5318  0.6751
+
+== bridge:fair-fight+modern-era: the earliest quarter of picks, the least played first
+                            card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+3                   Abrupt Decay     58         8.14            6.0      0.0     0.0000
+7         Grist, the Hunger Tide    113         8.36            8.0      0.0     0.0000
+6     Eidolon of the Great Revel     94         8.34            7.0      0.0     0.0000
+4                   Beast Within    109         8.14            7.0      0.0     0.0000
+13       Knight of the Reliquary     76         8.50            8.0      0.0     0.0000
+20               Evolved Sleeper    127         8.60            8.0      0.0     0.0000
+25               Thief of Sanity     93         8.71            8.0      0.0     0.0000
+44                 Elvish Mystic    124         8.91            9.0      0.0     0.0000
+55           Voice of Resurgence     73         8.96           10.0      0.0     0.0000
+60           Rampaging Ferocidon    104         8.99            8.0      0.0     0.0000
+40                Ajani Vengeant     86         8.86            8.0      0.0     0.0000
+2   Uro, Titan of Nature's Wrath     96         8.09            7.0      1.0     0.0104
+10                   Ram Through     95         8.42            8.0      1.0     0.0105
+51             Anger of the Gods     93         8.96            9.0      1.0     0.0108
+74           Steel Leaf Champion     88         9.06            8.0      1.0     0.0114
+
+== bridge:fair-fight+omega: the earliest quarter of picks, the least played first
+                          card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+317               Mayhem Devil     58         7.45            5.0      0.0        0.0
+318   Sorin, Lord of Innistrad     68         7.53            6.0      0.0        0.0
+319  Davriel, Rogue Shadowmage     58         7.59            7.0      0.0        0.0
+320     Embereth Shieldbreaker     54         7.65            6.0      0.0        0.0
+321             Questing Beast     53         7.96            7.0      0.0        0.0
+323  Tibalt, Rakish Instigator     66         8.03            7.0      0.0        0.0
+328                Ram Through     53         8.21            7.0      0.0        0.0
+326       Expressive Iteration     46         8.20            7.5      0.0        0.0
+342           Qasali Pridemage     54         8.50            8.0      0.0        0.0
+344          Figure of Destiny     64         8.59            8.0      0.0        0.0
+337        Voice of Resurgence     66         8.38            7.5      0.0        0.0
+345    Knight of the Reliquary     63         8.59            7.0      0.0        0.0
+336              Shivan Dragon     84         8.37            7.0      0.0        0.0
+368          Garruk Relentless     74         8.86            9.0      0.0        0.0
+360            Maelstrom Pulse     55         8.80            8.0      0.0        0.0
+
+== bridge:fair-fight+peasant: the earliest quarter of picks, the least played first
+                              card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+627                    Ram Through     36         6.92            5.5      0.0     0.0000
+631                 Branching Bolt     36         7.75            6.5      0.0     0.0000
+633  Elas il-Kor, Sadistic Pilgrim     31         7.87            9.0      0.0     0.0000
+635                    Faerie Seer     29         8.00            7.0      0.0     0.0000
+638      Davriel, Rogue Shadowmage     35         8.03            8.0      0.0     0.0000
+639         Rise of the Witch-king     37         8.08            7.0      0.0     0.0000
+651                   Mayhem Devil     60         8.33            8.0      0.0     0.0000
+646              Goblin Plate Mail     27         8.22            7.0      0.0     0.0000
+653         Embereth Shieldbreaker     29         8.41            7.0      0.0     0.0000
+683        Lampad of Death's Vigil     40         8.85           10.0      0.0     0.0000
+700                Cathar Commando     66         8.95           10.0      0.0     0.0000
+702               Qasali Pridemage     38         8.97            8.0      0.0     0.0000
+697                        Unearth     47         8.89           10.0      1.0     0.0213
+674                Doomed Traveler     42         8.74            8.5      1.0     0.0238
+690                  Plaguecrafter     53         8.87           10.0      2.0     0.0377
+
+== bridge:fair-fight+synergy: the earliest quarter of picks, the least played first
+                           card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+953              Branching Bolt     84         7.61            6.5      0.0     0.0000
+955                Mayhem Devil    127         7.95            7.0      0.0     0.0000
+963     Grumgully, the Generous     91         8.36            8.0      0.0     0.0000
+977   Davriel, Rogue Shadowmage     85         8.65            8.0      0.0     0.0000
+1003           Qasali Pridemage     77         8.96            9.0      0.0     0.0000
+997             Conclave Mentor     87         8.93            8.0      0.0     0.0000
+990            Fervent Champion     88         8.86            8.0      0.0     0.0000
+985          Tidehollow Sculler     74         8.74            8.0      0.0     0.0000
+1022     Embereth Shieldbreaker     76         9.09            9.5      0.0     0.0000
+957                 Ram Through    112         8.01            7.0      1.0     0.0089
+967   Tibalt, Rakish Instigator    111         8.53            8.0      1.0     0.0090
+970          Zulaport Cutthroat    104         8.56            8.0      1.0     0.0096
+1019       Watcher for Tomorrow    101         9.05            9.0      1.0     0.0099
+954             Chittering Rats     90         7.87            7.5      1.0     0.0111
+981                     Unearth     90         8.67            8.0      1.0     0.0111
+
+== bridge:fair-fight+vintage: the earliest quarter of picks, the least played first
+                           card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+1259                  Fireblast     66         7.74            7.0      0.0     0.0000
+1260         Green Sun's Zenith     66         7.91            7.0      0.0     0.0000
+1272                Pyrokinesis     66         8.32            8.0      0.0     0.0000
+1273     Grist, the Hunger Tide     51         8.35            8.0      0.0     0.0000
+1299             Questing Beast     64         8.78            8.0      0.0     0.0000
+1297               Goblin Guide     76         8.72            8.5      0.0     0.0000
+1295              Goblin Welder     74         8.69            8.0      0.0     0.0000
+1292         Tidehollow Sculler     44         8.64            7.5      0.0     0.0000
+1319  Davriel, Rogue Shadowmage     68         8.94            9.0      0.0     0.0000
+1337             Infernal Grasp     73         9.05            9.0      0.0     0.0000
+1333           Qasali Pridemage     61         9.03            9.0      0.0     0.0000
+1278             Dark Confidant     80         8.46            8.0      1.0     0.0125
+1281  Tibalt, Rakish Instigator     77         8.47            9.0      1.0     0.0130
+1329             Primeval Titan     73         9.01            8.0      1.0     0.0137
+1276             Branching Bolt     69         8.43            8.0      1.0     0.0145
+
+== bridge:modern-era+omega: the earliest quarter of picks, the least played first
+                             card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+1584              Maelstrom Pulse     73         7.03            5.0      0.0     0.0000
+1585     Kari Zev, Skyship Raider     46         7.91            6.5      0.0     0.0000
+1586                 Abrupt Decay     49         8.02            6.0      0.0     0.0000
+1589     Rankle, Master of Pranks     61         8.18            8.0      0.0     0.0000
+1590   Eidolon of the Great Revel     55         8.29            7.0      0.0     0.0000
+1598  March of Otherworldly Light     53         8.58            9.0      0.0     0.0000
+1595               Reflector Mage     59         8.49            7.0      0.0     0.0000
+1592                 Hornet Queen     57         8.44            8.0      0.0     0.0000
+1596         Bloodsoaked Champion     66         8.55            8.5      0.0     0.0000
+1600         Expressive Iteration     92         8.66            8.0      0.0     0.0000
+1606            Figure of Destiny     89         8.73            7.0      0.0     0.0000
+1641           Tidehollow Sculler     48         9.02            8.5      0.0     0.0000
+1608                      Persist     72         8.76            8.0      1.0     0.0139
+1651              Evolved Sleeper     62         9.08            8.5      1.0     0.0161
+1594            Anger of the Gods     57         8.49            8.0      1.0     0.0175
+
+== bridge:modern-era+synergy: the earliest quarter of picks, the least played first
+                              card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+1857   March of Otherworldly Light     39         6.69            6.0      0.0        0.0
+1860                Ajani Vengeant     31         7.68            6.0      0.0        0.0
+1862                     Hellrider     34         7.82            7.0      0.0        0.0
+1865           Rampaging Ferocidon     36         7.94            7.0      0.0        0.0
+1867             Anger of the Gods     28         8.00            6.5      0.0        0.0
+1868       Knight of the Reliquary     22         8.00            7.5      0.0        0.0
+1879  Uro, Titan of Nature's Wrath     40         8.38            8.5      0.0        0.0
+1874                  Abrupt Decay     27         8.26            7.0      0.0        0.0
+1881           Dreadhorde Arcanist     40         8.40            8.5      0.0        0.0
+1878          Bloodsoaked Champion     33         8.36            7.0      0.0        0.0
+1883       Grumgully, the Generous     33         8.42            7.0      0.0        0.0
+1900               Evolved Sleeper     35         8.69            9.0      0.0        0.0
+1896                  Goblin Guide     37         8.65            8.0      0.0        0.0
+1919                 Village Rites     28         8.82            9.0      0.0        0.0
+1924                 Spell Queller     27         8.89           10.0      0.0        0.0
+
+== bridge:modern-era+vintage: the earliest quarter of picks, the least played first
+                          card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+2151      Expressive Iteration     78         8.22            8.0      0.0     0.0000
+2156  Kari Zev, Skyship Raider     47         8.36            8.0      0.0     0.0000
+2177        Council's Judgment    106         8.74            8.0      0.0     0.0000
+2171      Bloodsoaked Champion     74         8.66            7.5      0.0     0.0000
+2172                Ephemerate     77         8.70            8.0      0.0     0.0000
+2173              Abrupt Decay     43         8.72            9.0      0.0     0.0000
+2197               Pyrokinesis     80         8.91            8.0      0.0     0.0000
+2193         Anger of the Gods     62         8.87            8.0      0.0     0.0000
+2167        Tidehollow Sculler     87         8.61            8.0      1.0     0.0115
+2210                   Persist     70         9.03            9.5      1.0     0.0143
+2216       Rampaging Ferocidon     67         9.07            8.0      1.0     0.0149
+2212          Archmage's Charm     55         9.05            9.0      1.0     0.0182
+2185             Baleful Strix    120         8.82            9.0      3.0     0.0250
+2170           Evolved Sleeper     72         8.64            8.0      2.0     0.0278
+2158             Elvish Mystic     67         8.43            7.0      2.0     0.0299
+
+== bridge:pauper+modern-era: the earliest quarter of picks, the least played first
+                             card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+2437                 Abrupt Decay     77         8.42            8.0      0.0     0.0000
+2452                Spell Queller     98         8.63            8.0      0.0     0.0000
+2451              Selfless Spirit     97         8.62            9.0      0.0     0.0000
+2465                  Flickerwisp    110         8.80            9.0      0.0     0.0000
+2501         Expressive Iteration     94         9.02            9.5      0.0     0.0000
+2510             Archmage's Charm    107         9.08            9.0      0.0     0.0000
+2497  March of Otherworldly Light     87         9.00            7.0      0.0     0.0000
+2463              Thief of Sanity    122         8.76            8.0      1.0     0.0082
+2435          Steel Leaf Champion    120         8.40            7.5      1.0     0.0083
+2478                Village Rites    117         8.91            8.0      1.0     0.0085
+2449               Ajani Vengeant    111         8.60            8.0      1.0     0.0090
+2436          Voice of Resurgence    104         8.41            8.0      1.0     0.0096
+2473            Anger of the Gods    101         8.87            9.0      1.0     0.0099
+2474             Judge's Familiar    100         8.87            9.0      1.0     0.0100
+2439      Knight of the Reliquary     99         8.48            8.0      1.0     0.0101
+
+== bridge:pauper+omega: the earliest quarter of picks, the least played first
+                         card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+2773             Mystic Snake     62         7.56            5.5      0.0     0.0000
+2774        Figure of Destiny     78         7.78            6.5      0.0     0.0000
+2775           Questing Beast     85         8.02            7.0      0.0     0.0000
+2780  Knight of the Reliquary     65         8.29            7.0      0.0     0.0000
+2779      Voice of Resurgence     84         8.24            7.5      0.0     0.0000
+2788               Fatal Push     83         8.46            7.0      0.0     0.0000
+2798          Lone Missionary     82         8.59            8.5      0.0     0.0000
+2793     Expressive Iteration     60         8.52            8.0      0.0     0.0000
+2828      Fanatical Firebrand     93         8.85            8.0      0.0     0.0000
+2817             Body Dropper     90         8.78            8.0      0.0     0.0000
+2809       Faerie Guidemother     67         8.69            8.0      0.0     0.0000
+2829     Unwilling Ingredient     76         8.86            9.0      0.0     0.0000
+2805          Maelstrom Pulse     68         8.66            9.0      0.0     0.0000
+2826             Acidic Slime     96         8.84            8.0      1.0     0.0104
+2818               Bloodghast     96         8.79            8.0      1.0     0.0104
+
+== bridge:pauper+peasant: the earliest quarter of picks, the least played first
+                               card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+3115                Lone Missionary     33         6.79            6.0      0.0     0.0000
+3117              Goblin Plate Mail     30         6.97            4.5      0.0     0.0000
+3118  Elas il-Kor, Sadistic Pilgrim     35         7.11            5.0      0.0     0.0000
+3121               Qasali Pridemage     44         7.68            7.0      0.0     0.0000
+3125         Rise of the Witch-king     36         7.89            7.0      0.0     0.0000
+3127                Trumpeting Herd     46         8.00            6.0      0.0     0.0000
+3123       Arabella, Abandoned Doll     52         7.79            7.0      0.0     0.0000
+3146                  Village Rites     43         8.47            8.0      0.0     0.0000
+3155              Prismatic Strands     48         8.56            8.0      0.0     0.0000
+3162                   Body Dropper     46         8.65            8.5      0.0     0.0000
+3187             Faerie Guidemother     33         8.94            9.0      0.0     0.0000
+3181                Raise the Alarm     43         8.86            8.0      0.0     0.0000
+3167               Glowspore Shaman     60         8.68            7.5      1.0     0.0167
+3198                Plagued Rusalka     60         8.98            8.0      1.0     0.0167
+3119                    Ram Through     47         7.55            6.0      1.0     0.0213
+
+== bridge:pauper+synergy: the earliest quarter of picks, the least played first
+                          card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+3449           Conclave Mentor    106         7.92            7.0      0.0     0.0000
+3452   Grumgully, the Generous     92         8.08            8.0      0.0     0.0000
+3454              Body Dropper     98         8.13            7.0      0.0     0.0000
+3453       Winding Constrictor     90         8.11            8.0      0.0     0.0000
+3458            Prized Amalgam    106         8.27            8.0      0.0     0.0000
+3461              Mayhem Devil     96         8.36            8.0      0.0     0.0000
+3457          Judge's Familiar     88         8.25            7.5      0.0     0.0000
+3466          Qasali Pridemage    102         8.58            8.0      0.0     0.0000
+3469               Ram Through    158         8.62            8.0      0.0     0.0000
+3477           Plagued Rusalka    141         8.74            8.0      0.0     0.0000
+3497            Pelt Collector    122         8.89            9.0      0.0     0.0000
+3487          Knight of Autumn    123         8.80            9.0      0.0     0.0000
+3525         Intangible Virtue    109         9.08            8.0      0.0     0.0000
+3522  Kari Zev, Skyship Raider    138         9.07            9.0      1.0     0.0072
+3464              Beast Within    125         8.45            9.0      1.0     0.0080
+
+== bridge:pauper+vintage: the earliest quarter of picks, the least played first
+                         card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+3777              Ram Through     64         7.02            5.0      0.0        0.0
+3782               Fatal Push     76         8.09            7.0      0.0        0.0
+3788       Tidehollow Sculler     43         8.21            7.0      0.0        0.0
+3785  Knight of the Reliquary     66         8.11            6.0      0.0        0.0
+3801       Green Sun's Zenith     74         8.61            8.0      0.0        0.0
+3803                Endurance     86         8.63            8.0      0.0        0.0
+3808        Restoration Angel     93         8.66            7.0      0.0        0.0
+3806             Toxic Deluge     81         8.65            8.0      0.0        0.0
+3820            Village Rites     87         8.79            8.0      0.0        0.0
+3819       Council's Judgment     65         8.78            9.0      0.0        0.0
+3811            Baleful Strix     74         8.69            9.0      0.0        0.0
+3828             Beast Within     64         8.88            8.0      0.0        0.0
+3809          Lone Missionary     74         8.68            9.0      0.0        0.0
+3853           Questing Beast     63         9.00           10.0      0.0        0.0
+3845       Faerie Guidemother     84         8.96           10.0      0.0        0.0
+
+== bridge:peasant+modern-era: the earliest quarter of picks, the least played first
+                            card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+4123                Abrupt Decay     87         7.52            5.0      0.0     0.0000
+4124            Coruscation Mage     85         8.04            8.0      0.0     0.0000
+4125              Ajani Vengeant     97         8.14            6.0      0.0     0.0000
+4132      Grist, the Hunger Tide    110         8.44            8.0      0.0     0.0000
+4137             Trumpeting Herd     91         8.49            8.0      0.0     0.0000
+4147     Knight of the Reliquary     94         8.64            8.5      0.0     0.0000
+4165      Rise of the Witch-king     85         8.82            8.0      0.0     0.0000
+4160        Expressive Iteration     90         8.76            9.0      0.0     0.0000
+4183           Delver of Secrets     83         9.01            9.0      0.0     0.0000
+4181             Thief of Sanity    101         9.00            9.0      0.0     0.0000
+4196        Bloodsoaked Champion    122         9.08            9.0      1.0     0.0082
+4153                  Ephemerate    118         8.71            8.0      1.0     0.0085
+4128                Mayhem Devil    110         8.25            7.0      1.0     0.0091
+4178  Eidolon of the Great Revel    108         8.99            8.0      1.0     0.0093
+4126                Beast Within    105         8.14            7.0      1.0     0.0095
+
+== bridge:peasant+omega: the earliest quarter of picks, the least played first
+                           card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+4463               Mystic Snake     49         7.69            6.0      0.0     0.0000
+4475             Reflector Mage     64         8.41            7.0      0.0     0.0000
+4491           Coruscation Mage     52         8.67            8.0      0.0     0.0000
+4489            Maelstrom Pulse     62         8.60            9.0      0.0     0.0000
+4485                Fire // Ice     72         8.56            8.0      0.0     0.0000
+4494     Rise of the Witch-king     60         8.70            9.0      0.0     0.0000
+4521            Trumpeting Herd     57         8.93            8.0      0.0     0.0000
+4526             Questing Beast     69         8.96            9.0      0.0     0.0000
+4502          Figure of Destiny     75         8.76            8.0      1.0     0.0133
+4504           Sourbread Auntie     69         8.77            9.0      1.0     0.0145
+4476       Primordial Pachyderm     67         8.42            8.0      1.0     0.0149
+4492  Ka-Zar of the Savage Land     65         8.68            8.0      1.0     0.0154
+4493    Polukranos, World Eater     60         8.70            8.0      1.0     0.0167
+4501    Lampad of Death's Vigil     56         8.75            8.5      1.0     0.0179
+4464        Voice of Resurgence     87         7.80            7.0      2.0     0.0230
+
+== bridge:peasant+synergy: the earliest quarter of picks, the least played first
+                               card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+4796      Juri, Master of the Revue     89         7.69            7.0      0.0     0.0000
+4798               Coruscation Mage     75         8.05            7.0      0.0     0.0000
+4800    March of Otherworldly Light    118         8.16            7.0      0.0     0.0000
+4807  Elas il-Kor, Sadistic Pilgrim    100         8.50            8.0      0.0     0.0000
+4806              Sinister Starfish     75         8.48            8.0      0.0     0.0000
+4820             Tidehollow Sculler     92         8.74            8.0      0.0     0.0000
+4840                     Ephemerate    173         8.89            9.0      0.0     0.0000
+4832         Rise of the Witch-king     87         8.85            9.0      0.0     0.0000
+4844            Dreadhorde Arcanist    107         8.91            8.0      0.0     0.0000
+4839        Grumgully, the Generous    116         8.88            9.0      0.0     0.0000
+4827               Knight of Autumn    133         8.82            9.0      1.0     0.0075
+4814         Lonis, Cryptozoologist    116         8.69            8.0      1.0     0.0086
+4801            Winding Constrictor    112         8.25            8.0      1.0     0.0089
+4808                 Prized Amalgam    111         8.58            8.0      1.0     0.0090
+4795                 Reflector Mage    105         7.60            6.0      1.0     0.0095
+
+== bridge:peasant+vintage: the earliest quarter of picks, the least played first
+                         card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+5126         Coruscation Mage     56         7.20            7.0      0.0     0.0000
+5128          Trumpeting Herd     50         7.98            7.0      0.0     0.0000
+5129        Birds of Paradise     70         8.04            7.0      0.0     0.0000
+5134     Vitu-Ghazi Guildmage     63         8.27            8.0      0.0     0.0000
+5135  Knight of the Reliquary     62         8.29            6.5      0.0     0.0000
+5140     Primordial Pachyderm     60         8.40            7.0      0.0     0.0000
+5150      Voice of Resurgence     57         8.56            8.0      0.0     0.0000
+5152       Tidehollow Sculler     57         8.60            8.0      0.0     0.0000
+5187        Sinister Starfish     56         8.89            9.0      0.0     0.0000
+5189   Rise of the Witch-king     58         8.90            9.0      0.0     0.0000
+5171             Beast Within     60         8.78            9.0      0.0     0.0000
+5190     Bloodtithe Harvester     51         8.92            8.0      0.0     0.0000
+5183         Young Pyromancer     70         8.87            8.0      1.0     0.0143
+5158   Grist, the Hunger Tide     68         8.66            8.5      1.0     0.0147
+5169           Questing Beast     66         8.77            8.5      1.0     0.0152
+
+== bridge:synergy+omega: the earliest quarter of picks, the least played first
+                          card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+5465        Hordeling Outburst     95         7.66            6.0      0.0     0.0000
+5468       Winding Constrictor     80         8.14            7.0      0.0     0.0000
+5470               Fire // Ice     76         8.18            8.0      0.0     0.0000
+5476         Figure of Destiny     83         8.45            8.0      0.0     0.0000
+5487  Kari Zev, Skyship Raider     84         8.69            8.0      0.0     0.0000
+5490              Mayhem Devil     62         8.74            8.0      0.0     0.0000
+5483        Tidehollow Sculler     71         8.58            7.0      0.0     0.0000
+5497           Maelstrom Pulse     80         8.82            8.5      0.0     0.0000
+5515         Birds of Paradise     99         9.00            9.0      0.0     0.0000
+5518            Prized Amalgam     73         9.00            8.0      0.0     0.0000
+5524      Watcher for Tomorrow     85         9.01            8.0      0.0     0.0000
+5525       Dreadhorde Arcanist     68         9.03            9.0      0.0     0.0000
+5505      Expressive Iteration     60         8.90            8.0      0.0     0.0000
+5486            Reflector Mage    103         8.66            8.0      1.0     0.0097
+5512     Falkenrath Aristocrat     95         8.96            8.0      1.0     0.0105
+
+== bridge:synergy+vintage: the earliest quarter of picks, the least played first
+                         card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+5761                Endurance     73         7.42            6.0      0.0        0.0
+5764          Conclave Mentor     74         7.97            7.0      0.0        0.0
+5768           Pelt Collector     73         8.34            7.0      0.0        0.0
+5776     Bloodtithe Harvester     89         8.47            8.0      0.0        0.0
+5773        Ajani's Pridemate     74         8.42            6.0      0.0        0.0
+5782  Knight of the Reliquary     73         8.59            8.0      0.0        0.0
+5778     Expressive Iteration     71         8.52            8.0      0.0        0.0
+5777       Tidehollow Sculler     84         8.49            8.0      0.0        0.0
+5786           Reflector Mage     72         8.69            9.0      0.0        0.0
+5787  Grumgully, the Generous     70         8.70            8.0      0.0        0.0
+5792      Reckless Fireweaver     60         8.78            9.0      0.0        0.0
+5783             Toxic Deluge     97         8.62            8.0      0.0        0.0
+5781       Green Sun's Zenith    109         8.57            9.0      0.0        0.0
+5821        Intangible Virtue     68         9.06            9.0      0.0        0.0
+5794              Ram Through     49         8.80            9.0      0.0        0.0
+
+== fair-fight: the earliest quarter of picks, the least played first
+                           card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+6067  Davriel, Rogue Shadowmage   1458         8.85            9.0      1.0     0.0007
+6082            Satyr Wayfinder   1523         9.05            9.0      1.0     0.0007
+6072                Ram Through   1359         8.95            9.0      2.0     0.0015
+6060               Mayhem Devil   1299         8.33            8.0      2.0     0.0015
+6084     Embereth Shieldbreaker   1278         9.08            9.0      3.0     0.0023
+6061           Qasali Pridemage   1302         8.47            8.0      3.0     0.0023
+6059             Branching Bolt   1465         8.32            8.0      7.0     0.0048
+6085             Carrier Thrall   1577         9.10            9.0     10.0     0.0063
+6100                    Unearth   1564         9.20            9.0     20.0     0.0128
+6068        Thrashing Brontodon   1855         8.85            9.0     30.0     0.0162
+6066            Sweltering Suns   1685         8.84            8.0     33.0     0.0196
+6076            Chittering Rats   1621         9.00            9.0     34.0     0.0210
+6075              Plaguecrafter   1657         8.99            9.0     35.0     0.0211
+6062   Vraska, Swarm's Eminence   1695         8.64            8.0     36.0     0.0212
+6065               Primal Might   1807         8.81            9.0     39.0     0.0216
+
+== modern-era: the earliest quarter of picks, the least played first
+                            card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+6247          Tidehollow Sculler   1100         8.88            9.0      4.0     0.0036
+6241        Expressive Iteration   1193         8.60            8.0      7.0     0.0059
+6256        Bloodsoaked Champion   1520         9.06            9.0     10.0     0.0066
+6240     Knight of the Reliquary   1332         8.59            8.0     11.0     0.0083
+6265    Kari Zev, Skyship Raider   1361         9.13            9.0     13.0     0.0096
+6239                Abrupt Decay   1196         8.56            8.0     12.0     0.0100
+6252                  Bloodghast   1468         9.01            9.0     38.0     0.0259
+6259  Eidolon of the Great Revel   1533         9.07            9.0     44.0     0.0287
+6253           Anger of the Gods   1590         9.04            9.0     46.0     0.0289
+6242              Ajani Vengeant   1371         8.62            8.0     45.0     0.0328
+6243             Thief of Sanity   1314         8.66            8.0     49.0     0.0373
+6285            Young Pyromancer   1618         9.26            9.0     63.0     0.0389
+6273             Adanto Vanguard   1553         9.21            9.0     71.0     0.0457
+6248                Goblin Guide   2019         8.90            9.0    108.0     0.0535
+6263                 Flickerwisp   1608         9.11            9.0     89.0     0.0553
+
+== omega: the earliest quarter of picks, the least played first
+                          card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+6423              Mystic Snake   1057         8.68            8.0      0.0     0.0000
+6421      Expressive Iteration    964         8.63            8.0      1.0     0.0010
+6419           Maelstrom Pulse   1041         8.25            8.0      2.0     0.0019
+6426            Reflector Mage    886         8.78            8.0      3.0     0.0034
+6422               Fire // Ice   1071         8.68            8.0      4.0     0.0037
+6428   Knight of the Reliquary   1243         8.93            8.0      6.0     0.0048
+6420         Figure of Destiny   1301         8.57            8.0     13.0     0.0100
+6429              Acidic Slime   1424         8.97            9.0     19.0     0.0133
+6448                Doom Blade   1516         9.19            9.0     23.0     0.0152
+6440   Polukranos, World Eater   1248         9.11            9.0     27.0     0.0216
+6443            Questing Beast   1381         9.13            9.0     40.0     0.0290
+6430         Garruk Relentless   1397         8.97            9.0     60.0     0.0429
+6425       Voice of Resurgence   1276         8.75            9.0     57.0     0.0447
+6427  Sorin, Lord of Innistrad   1418         8.89            9.0     65.0     0.0458
+6431            Ball Lightning   1421         8.98            9.0     67.0     0.0471
+
+== pauper: the earliest quarter of picks, the least played first
+                  card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+6599  Qasali Pridemage   1868         8.12            7.0      0.0     0.0000
+6601      Body Dropper   1957         8.48            8.0      5.0     0.0026
+6632       Ram Through   1946         9.07            9.0      5.0     0.0026
+6605  Selesnya Evangel   2237         8.67            8.0      8.0     0.0036
+6602   Satyr Wayfinder   2074         8.48            8.0     10.0     0.0048
+6604  Judge's Familiar   1964         8.67            8.0     13.0     0.0066
+6627   Lone Missionary   1880         9.02            9.0     13.0     0.0069
+6618   Pulse of Murasa   2049         8.94            9.0     15.0     0.0073
+6633        Ephemerate   2123         9.08            9.0     19.0     0.0089
+6623   Doomed Traveler   2258         8.98            9.0     21.0     0.0093
+6617       Mother Bear   2261         8.93            9.0     25.0     0.0111
+6608  Glowspore Shaman   2444         8.80            8.0     28.0     0.0115
+6606  Fireblade Artist   2162         8.70            8.0     36.0     0.0167
+6600    Branching Bolt   2259         8.39            8.0     43.0     0.0190
+6609          Sunlance   2428         8.81            8.0     50.0     0.0206
+
+== peasant: the earliest quarter of picks, the least played first
+                               card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+6795                     Ephemerate   2136         8.95            9.0      4.0     0.0019
+6797              Goblin Plate Mail   2029         8.97            8.0      6.0     0.0030
+6794         Rise of the Witch-king   1780         8.94            9.0      6.0     0.0034
+6789             Veteran Beastrider   2334         8.87            8.0     24.0     0.0103
+6799                   Mayhem Devil   2137         8.99            9.0     22.0     0.0103
+6783           Vitu-Ghazi Guildmage   2329         8.77            8.0     31.0     0.0133
+6780  Elas il-Kor, Sadistic Pilgrim   2207         8.57            8.0     36.0     0.0163
+6779       Arabella, Abandoned Doll   2442         8.53            8.0     70.0     0.0287
+6796                Cathar Commando   2283         8.97            9.0     68.0     0.0298
+6785           Primordial Pachyderm   2043         8.80            9.0     63.0     0.0308
+6782            Thrashing Brontodon   2478         8.77            8.0    104.0     0.0420
+6791                Satyr Wayfinder   2338         8.92            9.0    121.0     0.0518
+6781                     Soulherder   2389         8.72            8.0    128.0     0.0536
+6803          Heroic Reinforcements   2619         9.04            9.0    144.0     0.0550
+6817             Colossal Skyturtle   2643         9.19            9.0    162.0     0.0613
+
+== synergy: the earliest quarter of picks, the least played first
+                          card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+6959              Mayhem Devil   1320         8.49            8.0      0.0     0.0000
+6974   Grumgully, the Generous   1544         9.01            9.0      0.0     0.0000
+6961        Tidehollow Sculler   1293         8.59            8.0      1.0     0.0008
+6980            Carrion Feeder   1574         9.09            9.0      8.0     0.0051
+6993        Hordeling Outburst   1756         9.17            9.0      9.0     0.0051
+6964            Reflector Mage   1435         8.76            8.0     10.0     0.0070
+6960       Winding Constrictor   1575         8.55            8.0     11.0     0.0070
+6966  Kari Zev, Skyship Raider   1570         8.84            9.0     13.0     0.0083
+6991              Viscera Seer   1877         9.16            9.0     16.0     0.0085
+6965            Prized Amalgam   1486         8.77            8.0     16.0     0.0108
+6967          Knight of Autumn   1799         8.86            9.0     26.0     0.0145
+6999            Pelt Collector   2055         9.23            9.0     44.0     0.0214
+6973           Conclave Mentor   1765         8.99            9.0     51.0     0.0289
+6977          Hanweir Garrison   1931         9.07            9.0     71.0     0.0368
+6968                Fatal Push   2149         8.89            9.0     80.0     0.0372
+
+== vintage: the earliest quarter of picks, the least played first
+                         card  taken  mean_pick_n  median_pick_n  in_deck  inclusion
+7147  Knight of the Reliquary   1071         9.01            9.0      1.0     0.0009
+7157       Tidehollow Sculler    924         9.07            9.0      1.0     0.0011
+7151     Expressive Iteration    895         9.02            9.0      2.0     0.0022
+7145     Bloodtithe Harvester   1244         8.99            9.0     10.0     0.0080
+7140       Green Sun's Zenith   1358         8.73            8.0     12.0     0.0088
+7144            Baleful Strix   1410         8.98            9.0     17.0     0.0121
+7139             Beast Within   1120         8.68            8.0     15.0     0.0134
+7146              Pyrokinesis   1179         9.00            9.0     21.0     0.0178
+7152   Grist, the Hunger Tide   1384         9.02            9.0     28.0     0.0202
+7143      Voice of Resurgence   1265         8.94            9.0     28.0     0.0221
+7176       Council's Judgment   1257         9.23            9.0     32.0     0.0255
+7162                Endurance   1199         9.10            9.0     44.0     0.0367
+7141           Questing Beast   1215         8.86            9.0     49.0     0.0403
+7158           Dark Confidant   1581         9.08            9.0     82.0     0.0519
+7161            Wrenn and Six   2372         9.09            9.0    124.0     0.0523
+   night  planned  drafts  exploring_drafts  games  recorded  quarantined  timeouts  engine_errors  versions  game_hours            first_run_at  \
+0      0     <NA>      78               0.0     78      66.0            0       0.0            0.0         4        0.11                     NaT   
+1      1    20000   20000               0.0  19999   19999.0            0       6.0            1.0        26       24.48 2026-10-03 18:06:11.136   
+2      2    20000   20000               0.0  19999   19999.0          684       3.0            1.0        26       27.21 2026-10-04 09:43:41.436   
+
+              last_run_at  
+0                     NaT  
+1 2026-10-03 18:41:18.150  
+2 2026-10-04 09:43:41.436  

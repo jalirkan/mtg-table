@@ -1,0 +1,27 @@
+{
+ "sources": 33,
+ "filesRead": 33,
+ "resets": 0,
+ "lines": 40078,
+ "badLines": 0,
+ "jsonlMB": 665.5,
+ "rowsAdded": {
+  "drafts": 40078,
+  "games": 40076,
+  "decks": 80156,
+  "deck_cards": 2157482,
+  "picks": 1442808
+ },
+ "cards": 727,
+ "cubeCards": 1260,
+ "quarantined": 684,
+ "results": {
+  "sprt": 3,
+  "experiments": 10,
+  "gate_reports": 8,
+  "ml_reports": 3,
+  "matchup_power": 0
+ },
+ "seconds": 23.8,
+ "peakMB": 473.0
+}

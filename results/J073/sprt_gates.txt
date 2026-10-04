@@ -1,0 +1,167 @@
+
+== SPRT lines: 3 row(s)
+                       ts purpose  ...  upper llr_share_of_bound
+0 2026-10-04 09:38:34.930    sprt  ...  2.944              -1.02
+1 2026-10-04 08:17:31.219    sprt  ...  2.944              -1.11
+2 2026-10-04 07:58:30.428    sprt  ...  2.944              -1.15
+
+[3 rows x 14 columns]
+
+== results by pair: 3 row(s)
+                          a                 b  tests   h1   h0  games
+0      search-v1-fixed3-lcb  search-v1-fixed3      1  0.0  1.0  856.0
+1  search-v1-fixed3-aturns1  search-v1-fixed3      1  0.0  1.0  488.0
+2   search-v1-fixed3-oracle  search-v1-fixed3      1  0.0  1.0   40.0
+
+== gate reports: 8 row(s)
+                    mtime  ...                                                   path
+0 2026-10-04 17:12:04.028  ...              var/ml/gates/regret/truth.jsonl.meta.json
+1 2026-10-04 17:12:03.995  ...                      var/ml/gates/regret/manifest.json
+2 2026-10-04 17:09:03.297  ...        var/ml/gates/regret/rank-hand-3.jsonl.meta.json
+3 2026-10-04 16:24:18.999  ...        var/ml/gates/pilot-regret/truth.jsonl.meta.json
+4 2026-10-04 16:24:09.544  ...  var/ml/gates/pilot-regret/rank-hand-3.jsonl.meta.json
+5 2026-10-04 16:24:09.426  ...                var/ml/gates/pilot-regret/manifest.json
+6 2026-10-04 13:14:43.629  ...                           var/ml/gates/fit/report.json
+7 2026-10-04 01:36:18.405  ...                     var/ml/gates/pilot-fit/report.json
+
+[8 rows x 7 columns]
+
+== experiments (a start with no end was abandoned): 5 row(s)
+                  started  ...                                   git_sha
+0 2026-10-03 14:04:17.747  ...  474b522e5aea74967f863efb46d39e4f0090ba15
+1 2026-10-03 14:01:50.375  ...  474b522e5aea74967f863efb46d39e4f0090ba15
+2 2026-10-03 14:00:40.523  ...  474b522e5aea74967f863efb46d39e4f0090ba15
+3 2026-10-03 13:07:36.000  ...                                   5b2961b
+4 2026-10-03 12:52:00.000  ...       e49800e (uncommitted --mirror hook)
+
+[5 rows x 8 columns]
+
+== nights: 2 row(s)
+   night  planned  chunks  ... runs            first_run_at             last_run_at
+0      1    20000      91  ...    2 2026-10-03 18:06:11.136 2026-10-03 18:41:18.150
+1      2    20000      94  ...    1 2026-10-04 09:43:41.436 2026-10-04 09:43:41.436
+
+[2 rows x 7 columns]
+
+== drafts per night and version: 56 row(s)
+   source  night           ver  drafts  exploring
+0   queue      1  16299d2db66b     116        0.0
+1   queue      1  22e2d10c1f31     214        0.0
+2   queue      1  3268aba6bc62     308        0.0
+3   queue      1  3d8317d580f5     172        0.0
+4   queue      1  46213876aec8    2555        0.0
+5   queue      1  48bac64aa4a0    1980        0.0
+6   queue      1  4c6db1cd22ac     192        0.0
+7   queue      1  4e4f77eaeb83     221        0.0
+8   queue      1  549af8151a00     238        0.0
+9   queue      1  58c1a435536a     174        0.0
+10  queue      1  591750118db6     223        0.0
+11  queue      1  614e801b7548     287        0.0
+12  queue      1  64ebf7ebd1fc    2111        0.0
+13  queue      1  7951c64910f0     259        0.0
+14  queue      1  7cb13252703a    1878        0.0
+15  queue      1  a32da4d980b4     202        0.0
+16  queue      1  a813fe263c19     279        0.0
+17  queue      1  b24f5ce1dd55     110        0.0
+18  queue      1  b875654a0c18     209        0.0
+19  queue      1  bbe420510a3e      86        0.0
+20  queue      1  d03d56e3c09d     219        0.0
+21  queue      1  d1a920eb3155    2211        0.0
+22  queue      1  e16ad065bee2     298        0.0
+23  queue      1  e4c1d36daaee    3192        0.0
+24  queue      1  ef4f4f69be46     193        0.0
+25  queue      1  f344baeba973    2073        0.0
+26  queue      2  048b63117d72     180        0.0
+27  queue      2  1bdf08b0307b     223        0.0
+28  queue      2  3b446c9f0196     290        0.0
+29  queue      2  3d82ac9bb608     278        0.0
+30  queue      2  413bc3d6efeb    2080        0.0
+31  queue      2  4cd7f1b5f21c      89        0.0
+32  queue      2  58d831539773     218        0.0
+33  queue      2  5a8f4691cdeb     164        0.0
+34  queue      2  7325a47fae61     221        0.0
+35  queue      2  73f9ea2a9e6d     182        0.0
+36  queue      2  7d28279b255a     168        0.0
+37  queue      2  800e5a09bcda    1656        0.0
+38  queue      2  84743def3b2d     328        0.0
+39  queue      2  9ec06c7c7820    1794        0.0
+40  queue      2  a08656d9deb3     132        0.0
+41  queue      2  a17cc166ed9c     252        0.0
+42  queue      2  a55d7666b9ad     332        0.0
+43  queue      2  b175b9ae864e     225        0.0
+44  queue      2  c8861eba0ec1    2521        0.0
+45  queue      2  c9a984a032f6    2034        0.0
+46  queue      2  cb8c9422aa36     262        0.0
+47  queue      2  d33b5598b2c2     111        0.0
+48  queue      2  e3f3371358fe    3141        0.0
+49  queue      2  e44397143492    2774        0.0
+50  queue      2  edbe34f8c8c2     177        0.0
+51  queue      2  f50edf5859cb     168        0.0
+52   runs      0  122964bf36e2      12        0.0
+53   runs      0  be6014e2f2ad      22        0.0
+54   runs      0  ca65d0ef4198      22        0.0
+55   runs      0  d1a920eb3155      22        0.0
+
+== versions: 59 row(s)
+   source  ...                                               allowed_change
+0    runs  ...                                                          NaN
+1    runs  ...                                                          NaN
+2    runs  ...                                                          NaN
+3   queue  ...                                                          NaN
+4   queue  ...                                                          NaN
+5   queue  ...                                                          NaN
+6   queue  ...                                                          NaN
+7   queue  ...                                                          NaN
+8   queue  ...                                                          NaN
+9   queue  ...                                                          NaN
+10  queue  ...                                                          NaN
+11  queue  ...                                                          NaN
+12  queue  ...                                                          NaN
+13  queue  ...                                                          NaN
+14  queue  ...                                                          NaN
+15  queue  ...                                                          NaN
+16  queue  ...                                                          NaN
+17  queue  ...                                                          NaN
+18  queue  ...                                                          NaN
+19  queue  ...                                                          NaN
+20  queue  ...                                                          NaN
+21  queue  ...                                                          NaN
+22  queue  ...                                                          NaN
+23  queue  ...                                                          NaN
+24  queue  ...                                                          NaN
+25  queue  ...                                                          NaN
+26  queue  ...                                                          NaN
+27  queue  ...                                                          NaN
+28  queue  ...                                                          NaN
+29   runs  ...                                                          NaN
+30   runs  ...                                                          NaN
+31   runs  ...                                                          NaN
+32   runs  ...                                                          NaN
+33  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+34  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+35  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+36  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+37  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+38  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+39  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+40  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+41  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+42  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+43  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+44  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+45  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+46  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+47  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+48  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+49  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+50  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+51  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+52  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+53  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+54  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+55  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+56  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+57  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+58  queue  ...  {"changed": ["codeTree"], "flag": "--allow-version-chang...
+
+[59 rows x 8 columns]
