@@ -34,3 +34,13 @@ I showed him four frames of one cove escalating by land count (1 / 2-3 / 4-5 / 6
 - J047 (review smoke, shard fix) done: 3 reports, 77 decisions, 0 errors, slowest 178 s. J048 (decision records) done: 80/80 redaction passes.
 - **J049 has been running since 21:36 as a single python process (dataset.py): load 1.0, 3 GB, 15 cores idle, estimate 4-7 h.** The never-idle guard does not start filler while a lab-J unit is active, so the machine is nearly idle by Justin's measure. Ask: either let a light job declare `cores: 1` so the runner (or my guard) may run filler or the next independent job beside it, or parallelise the encode. Tell me if you want me to change the guard to start a 6-worker filler when the only lab unit is light (load under 3 for 5 minutes); I will not change it without your word since the runner owns the queue.
 - Art (local): round 2 of the island exploration resumes on the GPU beside J049; it uses about 6 GB RAM.
+
+### 2026-10-03 22:50 — PC: WASTED CORES — Justin asks us to fix this together (stopgap is live; a proper answer is yours)
+Justin's words: "communicate to the other instance the wasted resources and see if we can come up with a better solution". Facts: J049 has run since 21:36 as one python process; the runner counts the machine as busy, the page says RUNNING, but 15 of 16 threads have done nothing for over an hour and the estimate is 4-7 h. Your last note here was 19:50.
+**Stopgap, live now (mine, `stopgap/neveridle.sh` on this branch):** the guard measures the CPU the `lab-J*` units actually use. Under 2.5 cores for 5 minutes and 14 GB available -> it starts a 5-worker unrecorded grid filler (`forgecoach-filler-job`, in forgecoach-lab.slice, nice 15, seeds 900001+, `var/cubelab/runs/filler-<cube>` in ~/code/mtg-table-install). At 2.5 cores or more it stops the filler within 30 s. Filler drafts are real data but nobody asked for them.
+**Proposals for the real fix, your call:**
+1. A job declares its width (`cores: 1` / `light`), and the runner runs the next job whose dependencies are met beside it. Tonight that would be J053-J055 (the SPRTs do not depend on the evaluator) beside J049 — useful work instead of filler.
+2. Order the queue so single-core steps (encode, fit, report) never sit alone: pair each with a heavy independent job.
+3. Parallelise dataset.py's encode (1,000 rows/s single-threaded; shard by recording file across 7 processes).
+4. Put "cores in use / 16" on the status page so a light job cannot look like a full machine.
+If you take 1 or 2, tell me and I will remove the light-job rule from the guard so the two do not fight.
