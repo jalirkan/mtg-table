@@ -17208,3 +17208,79 @@ at a time); calibration on the owner's own games (`train_eval.py --eval-human`, 
   and those are features the model reads.
 - **Serving the model file to the browser**: the model is the owner's and lives on the PC;
   ForgeCoach is public.
+
+## D363 — The lab warehouse: a derived, rebuildable copy of the lab's records as zstd Parquet tables, partitioned by source and night, with a DuckDB file of views, kept current by an incremental ingest that reads only complete appended lines and resets a file that shrank or was replaced
+
+*Branch `c/lab-warehouse`; D363.*
+
+**2026-10-04** (Justin's request: a DuckDB + Parquet warehouse on the PC so he can query
+everything the lab produces with SQL and pandas; J065 measures the storage beforehand)
+
+**Context.** The lab writes JSON lines in many places: the queue's key folders (D323), the run
+folders, the ladder's `sprt.jsonl` (D319), the experiment log, and the ML and gate reports
+(D324, D354). A draft line is about 16 KB and nests the drafters, their picks and decks, and
+the match with its games. Each reader parses it again: `report.ts`, `matchup_data.py`, the
+runner's extractors. Asking a new question (a card's rate when on the draw, exploring games
+by kind, pick order) means writing another parser. Justin is a data scientist and works in
+SQL and pandas.
+
+**Decision.** `tools/lab/warehouse.py` (Python; pyarrow and duckdb, which the PC has):
+
+1. **The raw data stays as it is.** The warehouse is a derived copy under `var/warehouse/`.
+   Deleting it or `ingest --rebuild` makes it again, and nothing in the lab reads it.
+2. **Tables.** The five per-draft tables are flattened from each line: `drafts`, `games`,
+   `decks` (the played deck per drafter), `deck_cards` and `picks` (`seen` and `took` as
+   lists). They are written as zstd Parquet with dictionary-encoded strings, partitioned as
+   `source=<queue|runs>/night=<N>`. The night comes from the `night-N.json` plan whose chunk
+   handed out the seed, and is 0 for a run folder. The small tables are rewritten whole on
+   every ingest:
+   - `cards`, one id per card across cubes: the card library's `normName`, with the oracle id
+     only from a local `cards.sqlite`, never the network, and the AI flag;
+   - `cube_cards`, through the cube lab's own parser under Node;
+   - `runs` and `versions` (D341), from `run.json`;
+   - `nights`;
+   - `sprt`, `experiments`, `gate_reports`, `ml_reports` and `matchup_power`.
+3. **Ids.** `draft_id` is `<source>/<key>#<seed>`, a pure function of where the draft is, so it
+   survives every rebuild. Every row carries `src_file`.
+4. **Incremental and idempotent.** Per file, the state is the offset read, the inode, the size,
+   the mtime and a hash of the first 4 KiB. Only complete lines are read, so an ingest is safe
+   beside a running night. A file that shrank, was replaced, was rewritten at its head or
+   vanished is reset: its rows are filtered out of the part files that hold them, and it is
+   read again. Each ingest writes its part files as `.tmp` files named by its run id, renames
+   them, and commits the run id to `_state.json` last. A part file of an uncommitted run is
+   deleted at the next start. A lock keeps two ingests apart.
+5. **Views, not a database.** `lab.duckdb` holds only views over the Parquet, read with
+   `union_by_name` and hive partitions, plus `seat_games`, one row per game and seat. It is
+   written to a temporary file and renamed. `verify` counts every table against the JSONL
+   independently, file by file, up to the committed offsets.
+6. **Exploring drafts (D358) are marked, never dropped**, on drafts and games. The notebooks
+   leave them out of win rates, as the lab's own readers do.
+7. **Starter notebooks** are `notebooks/*.py` percent scripts. Jupyter and VS Code open them as
+   notebooks, and `python3` runs them. The repo has no `.ipynb`, and a script keeps outputs
+   out of git. There are five: card win rates with Wilson intervals and the D343 caveat,
+   colour-pair balance, exploring against plain games, SPRT and gate history, and pick-order
+   heatmaps. Their test runs each one on the warehouse built from the committed fixtures.
+
+**Measured** (synthetic: 45,000 fixture-shaped lines with real cube names, 884 MB, in this
+4-core container):
+
+- a full ingest took 98 s with a peak RSS of 499 MB, and a no-op ingest 2 s;
+- 3,000 appended lines took 8 s;
+- a reset of a 7,500-line file took 17 s, with a peak of 516 MB;
+- the five tables took 26.7 MB.
+
+Synthetic lines compress better than real ones, and J065 and J066 measure the real data.
+
+**Rejected.**
+
+- **One DuckDB database holding the data.** It is one writer's file, so a notebook that holds
+  it open would block the nightly ingest, and a crash mid-write risks the whole file. Parquet
+  files with views over them have neither problem.
+- **Re-reading everything every night.** That cost grows with every night, and the queue
+  appends.
+- **One part file per source file.** Thousands of small files after a few weeks. Filtering a
+  reset file's rows out of shared part files is rare, and it is bounded by the row group.
+- **Recompressing or moving the recordings.** They are the evaluator's input, and J065 only
+  measures what zstd would save. The `games` table points at them by `rec_dir`.
+- **Copying the cube parser into Python.** It would be a second parser to keep in step, so
+  `cube_cards` runs `cube.ts` under Node, as `matchup_data.cube_lists` does.
