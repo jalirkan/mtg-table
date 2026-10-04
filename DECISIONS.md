@@ -17208,3 +17208,70 @@ at a time); calibration on the owner's own games (`train_eval.py --eval-human`, 
   and those are features the model reads.
 - **Serving the model file to the browser**: the model is the owner's and lives on the PC;
   ForgeCoach is public.
+
+## D372 — Gate 2's minimum detectable effect is written down before J051 reads: about 1 point of mean regret at 240 scored decisions; a FAIL whose interval still reaches 1.5 points is reported as "underpowered", never "no gain"; the gate rule itself is unchanged
+
+*Branch `c/review-fixes`; D372, the first number free after the blocks other open
+branches hold (D362–D371). The independent methods review of 2026-10-04, §2.3 and
+recommendation 6. Pre-registered: written while J050 (the truth tables) was running and
+before J051 (the scoring) had read anything.*
+
+**2026-10-04**
+
+**Context.** D354's gate 2 passes when the mean of d = truth(eval's pick) − truth(hand's
+pick) is above 0 and its 95% paired-bootstrap interval over decisions excludes 0, on at
+least 240 scored decisions of 300. The review pointed out that nothing says how large a
+gain that test can see, so a FAIL would be read as "no gain" when it may only be "too few
+decisions". This entry is the power statement, made before the data.
+
+**The arithmetic** (`docs/evidence/gate2-power.py`, closed form, nothing read from a
+result). MDE = (z₀.₉₇₅ + z₀.₈₀) · sd(d) / √n, and sd(d) has three parts:
+
+- where the two rankers pick the same option, d = 0 exactly (share *a*);
+- where they differ, the true gap between the two picks varies (spread *s_true*,
+  unknown before J051: 0.03–0.10 taken as the plausible range);
+- the truth table's own noise on that gap: 200 rounds per option when both picks stay in
+  the race gives 0.050 (p = 0.5, no credit for common random numbers); one pick retired
+  by racing at 40 rounds gives 0.087.
+
+| scored n | agree *a* | *s_true* | truth noise | MDE (points of win rate) |
+|---|---|---|---|---|
+| 240 | 0.5 | 0.06 | 0.050 | **1.02** (central case) |
+| 240 | 0.5 | 0.03 – 0.10 | 0.050 – 0.087 | 0.76 – 1.72 |
+| 240 | 0.7 | 0.03 – 0.10 | 0.050 – 0.087 | 0.60 – 1.36 |
+| 300 | 0.5 – 0.7 | 0.03 – 0.10 | 0.050 – 0.087 | 0.53 – 1.53 |
+
+The truth's noise alone (*s_true* = 0, worst case) costs 1.1 points at 240; the spread of
+real gaps matters about as much. More rounds shrink only the first part: **if gate 2 is
+underpowered, grow the set, not the rounds** (about 710 scored decisions bring the worst
+row to 1 point).
+
+**The reporting rule** (`gates.REGRET_REPORT`, read by `gate_regret_score.py`'s new
+`power` block and its `reading:` line):
+
+- The pre-registered MDE is **0.015** (1.5 points of mean regret): every plausible row
+  above but the worst detects it with 80% power at 240 decisions.
+- **PASS** is D354's rule, unchanged.
+- A **FAIL whose interval's upper end is at or above 0.015** is reported as "FAIL,
+  underpowered: a gain of 0.015 is not ruled out; not 'no gain'". So is a FAIL on fewer
+  than 240 scored decisions (D354 already calls that one underpowered).
+- A **FAIL whose interval ends below 0.015** is reported as "a mean regret gain of 0.015
+  or more is ruled out" — still not "no gain".
+- The report also carries the realised MDE from the realised sd(d), and the summary of
+  J051 quotes it next to the pre-registered one.
+
+J051 is pinned to `7e48088`, which predates this entry, so its own `verdict.txt` prints no
+`reading:` line. The person writing J051's summary applies this rule by hand from
+`report.json`'s `diffHandMinusEval` (`hi`), or reruns this commit's
+`gate_regret_score.py` over the same tables (the scorer is pure; it grades nothing).
+
+**Not changed.** `REGRET_RULE`: the set, the truth settings, the rankers, the interval, the
+240 minimum and PASS/FAIL. A FAIL still stops the evaluator before gate 3.
+
+**Rejected.**
+
+- **Lowering the bar to "mean above 0" or a one-sided 90% interval** for power: a rule
+  change after the truth started, which D354 forbids.
+- **More truth rounds**: they shrink the smallest part of sd(d).
+- **Waiting for J051 to measure sd(d) and then choosing the MDE**: that is choosing the
+  yardstick after seeing the data.
