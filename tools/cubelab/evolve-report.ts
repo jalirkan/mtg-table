@@ -39,6 +39,11 @@ export const stagesInWords = (q: number): string => 'A card is cut on the AI\'s 
   + '**Confirmed**: the candidate stands out again, the same way, in a second batch of fresh drafts that played no part in finding it. Only confirmed cards are cut; a candidate that does not confirm stays, and is reported. '
   + 'Win rates count each deck\'s match as one clump of games (the same deck against the same opponent), so their intervals are wider than a count of games would make them.';
 
+/** dominant-win's null in words: D377's colour pairs, or (absent, before D377) the batch mean. */
+function nullHead(d: Decision): string {
+  return d.winNull === 'colour' ? "; dominant-win against each card's colour pairs (D377)" : '';
+}
+
 /** A candidate's earlier attempts and this one pooled (D357), in words: "attempt 2 (g3, g4): won 319 of 612 (0.52 vs 0.50), p 0.15". */
 function pooledWords(c: Confirmation, rule: Decision['confirmRule']): string {
   const j = c.attempt ?? (c.confirm ? 1 : 0);
@@ -103,7 +108,7 @@ export function changelogSection(g: GenSummary): string {
   const out: string[] = [];
   out.push(`## Generation ${g.gen} — v${g.versionIn} → v${g.versionOut} (${g.date})`, '');
   out.push(`Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games; mean card win rate ${r2(g.balance.mean)}; `
-    + `${d.discovery.family} tests at a false-discovery rate of ${d.discovery.q}; design effect of a card's games ${d.discovery.deff.toFixed(2)}${confirmHead(g)}.`, '');
+    + `${d.discovery.family} tests at a false-discovery rate of ${d.discovery.q}; design effect of a card's games ${d.discovery.deff.toFixed(2)}${nullHead(d)}${confirmHead(g)}.`, '');
   if (g.explore) {
     const t = g.explore.table;
     const forced = Object.values(t.cells).reduce((s, c) => s + c.treated.decks, 0);
@@ -208,7 +213,7 @@ export function htmlSection(g: GenSummary): string {
   const d = g.decision;
   const parts: string[] = [];
   parts.push(`<section><h2>Generation ${g.gen} <span class="dim">v${g.versionIn} → v${g.versionOut} · ${esc(g.date)}</span></h2>`);
-  parts.push(`<p class="dim">Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}, ${d.discovery.family} tests at FDR ${d.discovery.q}, design effect ${d.discovery.deff.toFixed(2)}${esc(confirmHead(g))}</p>`);
+  parts.push(`<p class="dim">Discovery: ${g.drafts} grid drafts, seeds ${g.seeds[0]}–${g.seeds[1]}, ${g.games} decisive games, mean card win rate ${r2(g.balance.mean)}, ${d.discovery.family} tests at FDR ${d.discovery.q}, design effect ${d.discovery.deff.toFixed(2)}${esc(nullHead(d))}${esc(confirmHead(g))}</p>`);
   parts.push(`<p class="verdict">${esc(d.verdict)}</p>`);
   if (d.confirmations.length) parts.push('<h3>Discovered, then confirmed or not</h3>', table(['Card', 'Rule', 'Discovery (this generation\'s drafts)', 'Confirmation (fresh drafts)', 'Every confirmation attempt pooled', 'Outcome'], d.confirmations.map((c) => candidateRow(c, d.confirmRule))));
   if (d.swaps.length) parts.push('<h3>Swaps</h3>', table(['Out', 'Why', 'Evidence', 'In', 'Why this card'], d.swaps.map((s) => [s.out, s.why, s.evidence, s.in, s.fit])));

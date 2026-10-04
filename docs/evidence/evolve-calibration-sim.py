@@ -5,6 +5,7 @@
 #   python3 docs/evidence/evolve-calibration-sim.py extract <run1.log> <matches.json>
 #   python3 docs/evidence/evolve-calibration-sim.py hetero <matches.json>
 #   python3 docs/evidence/evolve-calibration-sim.py run <matches.json> <cards.json> [--gens 300] [--seed 1]
+#       [--rules mean,colour] [--scenarios null,colour,planted]
 #
 # Inputs are derived from pc-results results/J039 (see the evidence file):
 #   matches.json  every match line of run1.log: batch (d<gen> discovery, c<gen>
@@ -24,7 +25,22 @@
 #
 #   null      every pair equally strong, no card has an effect of its own;
 #   colour    each pair as strong as J039's four discovery batches pooled say,
-#             still no card effect of its own (the cards win as their decks do).
+#             still no card effect of its own (the cards win as their decks do);
+#   planted   colour, plus PLANT_N cards (seeded, spread over the colours) that
+#             raise their deck's win probability by +0.05, +0.10 or +0.15 at an
+#             even match (a logit shift of 4x that), so power can be read.
+#
+# Two rules (D377):
+#
+#   mean      D331's dominant-win, as above: the null boundary is the batch mean;
+#   colour    D377's colour-adjusted dominant-win (tools/cubelab/colour-null.ts):
+#             each card's null is the games-weighted mean of its decks' colour
+#             pairs' win rates in the same batch, each pair's rate with the
+#             card's own games left out and shrunk toward the batch's deck mean
+#             by COLOUR_NULL_K games; the test is one-sided normal on
+#             (rate - p0) / sqrt(p0(1-p0) deff / games + se0^2), se0 the
+#             baseline's own standard error.  The size filter is rate >= p0 +
+#             dominantMargin; confirmation runs the same rule on its own batch.
 #
 # Deck pairs come from J039's own matches (who drafted what against whom), so
 # the co-occurrence of cards through colours is the real one; within a colour
@@ -115,6 +131,8 @@ ap.add_argument('--plain', type=int, default=1400, help='plain drafts read by th
 ap.add_argument('--confirm', type=int, default=300)
 ap.add_argument('--deck-sd', type=float, default=0.25)
 ap.add_argument('--family', type=int, default=394)
+ap.add_argument('--rules', default='mean,colour')
+ap.add_argument('--scenarios', default='null,colour,planted')
 a = ap.parse_args()
 rng = np.random.default_rng(a.seed)
 
@@ -180,57 +198,97 @@ def holm(ps, alpha):
     return rej
 
 
-def batch(n_drafts, beta):
-    """One batch: card games and wins, the batch mean, the deck-level design effect."""
+# D377's constants (tools/cubelab/colour-null.ts COLOUR_NULL): pseudo-games of shrinkage toward the batch's deck mean.
+COLOUR_NULL_K = 20
+MARGIN = 0.05
+P = len(pairs)
+# Planted card effects: PLANT_N cards drawn once (seed 2026) from the cards played often enough to be tested.
+PLANT_N = 12
+PLANT_SIZES = [0.05, 0.10, 0.15]
+_prng = np.random.default_rng(2026)
+_often = np.nonzero(q * elig.sum(1) >= 0.05 * P)[0]
+plant_idx = _prng.choice(_often, PLANT_N, replace=False)
+plant_eff = np.zeros(len(cards))
+for j, i in enumerate(plant_idx): plant_eff[i] = PLANT_SIZES[j % len(PLANT_SIZES)]
+
+
+def batch(n_drafts, beta, eff):
+    """One batch: card games and wins (total and by the deck's pair), pair totals, the batch mean, the design effect."""
     mp = match_pairs[rng.integers(0, len(match_pairs), n_drafts)]
-    u = rng.normal(0, a.deck_sd, (n_drafts, 2))
-    th = beta[mp] + u
-    pA = 1 / (1 + np.exp(-(th[:, 0] - th[:, 1])))
-    # best of three: game 1, game 2, game 3 only at 1-1
-    g1 = rng.random(n_drafts) < pA; g2 = rng.random(n_drafts) < pA; g3 = rng.random(n_drafts) < pA
-    third = g1 != g2
-    winsA = g1.astype(int) + g2 + (third & g3)
-    games = 2 + third.astype(int)
-    dw = np.stack([winsA, games - winsA], 1)  # deck wins
-    dg = np.stack([games, games], 1)
-    # card membership: eligible in A or B (singleton: at most one deck)
+    # card membership first (a planted card changes its deck's strength): eligible in A or B, singleton
     eA = elig[:, mp[:, 0]]; eB = elig[:, mp[:, 1]]
     uu = rng.random((len(cards), n_drafts))
     inA = eA & (uu < q[:, None])
     inB = eB & ~inA & (uu >= q[:, None]) & (uu < 2 * q[:, None])
-    cg = inA @ dg[:, 0] + inB @ dg[:, 1]
-    cw = inA @ dw[:, 0] + inB @ dw[:, 1]
+    th = beta[mp] + rng.normal(0, a.deck_sd, (n_drafts, 2))
+    th[:, 0] += (4 * eff) @ inA; th[:, 1] += (4 * eff) @ inB
+    pA = 1 / (1 + np.exp(-(th[:, 0] - th[:, 1])))
+    g1 = rng.random(n_drafts) < pA; g2 = rng.random(n_drafts) < pA; g3 = rng.random(n_drafts) < pA
+    third = g1 != g2
+    winsA = g1.astype(int) + g2 + (third & g3)
+    games = 2 + third.astype(int)
+    dw = np.stack([winsA, games - winsA], 1)
+    dg = np.stack([games, games], 1)
+    OA = np.eye(P)[mp[:, 0]]; OB = np.eye(P)[mp[:, 1]]
+    cgP = (inA * dg[:, 0]) @ OA + (inB * dg[:, 1]) @ OB   # cards x pairs
+    cwP = (inA * dw[:, 0]) @ OA + (inB * dw[:, 1]) @ OB
+    GP = dg[:, 0] @ OA + dg[:, 1] @ OB
+    WP = dw[:, 0] @ OA + dw[:, 1] @ OB
+    # the opponents' games in the card's matches, by the opponent's pair (D377 leaves the card's whole matches out)
+    ogP = (inA * dg[:, 1]) @ OB + (inB * dg[:, 0]) @ OA
+    owP = (inA * dw[:, 1]) @ OB + (inB * dw[:, 0]) @ OA
+    cg = cgP.sum(1); cw = cwP.sum(1)
     mean = cw.sum() / cg.sum()
     W = dw.ravel(); G = dg.ravel(); pbar = W.sum() / G.sum()
     deff = max(1.0, ((W - pbar * G) ** 2).sum() / (pbar * (1 - pbar) * G.sum()))
-    colour_rate = {}
-    for c in 'WUBRG':
-        has = np.array([c in p for p in pairs])
-        mA = has[mp[:, 0]]; mB = has[mp[:, 1]]
-        colour_rate[c] = (dw[:, 0] @ mA + dw[:, 1] @ mB) / (dg[:, 0] @ mA + dg[:, 1] @ mB)
-    return cg, cw, mean, deff, colour_rate
+    red = np.array(['R' in p for p in pairs])
+    return dict(cg=cg, cw=cw, cgP=cgP, cwP=cwP, ogP=ogP, owP=owP, GP=GP, WP=WP, mean=mean, deck_mean=pbar, deff=deff, red=WP[red].sum() / GP[red].sum())
 
 
-def generation(beta):
-    cg, cw, mean, deff, colr = batch(a.plain, beta)
-    test = cg >= 20
-    p = np.where(test, bin_upper(cw / deff, cg / deff, mean), 1.0)
-    rate = np.where(cg > 0, cw / np.maximum(cg, 1), 0)
-    nwin = int(test.sum())
-    filler = rng.random(max(0, a.family - nwin))  # the pick and dead tests, null
-    fam = np.concatenate([p[test], filler])
+def colour_null(b):
+    """D377: each card's colour-adjusted p0 and its standard error (both decks of the card's matches left out of its pairs)."""
+    G = b['GP'][None, :] - b['cgP'] - b['ogP']; W = b['WP'][None, :] - b['cwP'] - b['owP']
+    r = (W + COLOUR_NULL_K * b['deck_mean']) / (G + COLOUR_NULL_K)
+    v = b['deff'] * r * (1 - r) / (G + COLOUR_NULL_K)
+    n = np.maximum(b['cg'], 1)[:, None]
+    w = b['cgP'] / n
+    return (w * r).sum(1), np.sqrt((w * w * v).sum(1))
+
+
+def test(b, rule, idx=None):
+    """p-values and the size filter for every card (or the cards in idx)."""
+    cg, cw = b['cg'], b['cw']
+    if idx is not None: cg, cw = cg[idx], cw[idx]
+    rate = cw / np.maximum(cg, 1)
+    if rule == 'mean':
+        p = bin_upper(cw / b['deff'], cg / b['deff'], b['mean'])
+        return np.where(cg > 0, p, 1.0), rate >= b['mean'] + MARGIN, np.full(len(cg), b['mean'])
+    p0, se0 = colour_null(b)
+    if idx is not None: p0, se0 = p0[idx], se0[idx]
+    sd = np.sqrt(p0 * (1 - p0) * b['deff'] / np.maximum(cg, 1) + se0 ** 2)
+    # continuity correction: half a win in effective counts (the exact test the mean rule uses counts the point mass)
+    cc = 0.5 * b['deff'] / np.maximum(cg, 1)
+    p = SS.norm.sf((rate - p0 - cc) / np.where(sd > 0, sd, 1))
+    return np.where(cg > 0, p, 1.0), rate >= p0 + MARGIN, p0
+
+
+def generation(beta, eff, rule):
+    b = batch(a.plain, beta, eff)
+    tested = b['cg'] >= 20
+    p, big, p0 = test(b, rule)
+    nwin = int(tested.sum())
+    fam = np.concatenate([p[tested], rng.random(max(0, a.family - nwin))])  # the pick and dead tests, null
     rej = bh(fam, 0.1)[:nwin]
-    idx = np.nonzero(test)[0][rej]
-    cand = [i for i in idx if rate[i] >= mean + 0.05]
-    out = dict(cands=len(cand), names=[names[i] for i in cand], minp=float(p[test].min()), n_p002=int((p[test] <= 0.002).sum()),
-               disc_rate=[float(rate[i]) for i in cand], deff=deff, red=colr['R'])
+    idx = np.nonzero(tested)[0][rej]
+    cand = [int(i) for i in idx if big[i]]
+    zero = tested & (eff == 0)
+    out = dict(cands=cand, n_p002=int((p[tested] <= 0.002).sum()), ntest=nwin, pnull=p[zero], deff=b['deff'], red=b['red'],
+               disc_rate=[float(b['cw'][i] / b['cg'][i]) for i in cand], disc_p0=[float(p0[i]) for i in cand], confirmed=[])
     if cand:
-        cg2, cw2, mean2, deff2, colr2 = batch(a.confirm, beta)
-        p2 = bin_upper(cw2[cand] / deff2, cg2[cand] / deff2, mean2)
-        p2 = np.where(cg2[cand] > 0, p2, 1.0)
-        r2 = cw2[cand] / np.maximum(cg2[cand], 1)
-        ok = holm(p2, 0.05) & (r2 >= mean2 + 0.05)
-        out.update(confirmed=int(ok.sum()), conf_games=int(cg2[cand].sum()), conf_wins=int(cw2[cand].sum()), red_conf=colr2['R'])
+        c = batch(a.confirm, beta, eff)
+        p2, big2, _ = test(c, rule, np.array(cand))
+        ok = holm(p2, 0.05) & big2 & (c['cg'][cand] > 0)
+        out.update(confirmed=[i for i, o in zip(cand, ok) if o], conf_games=int(c['cg'][cand].sum()), conf_wins=int(c['cw'][cand].sum()))
     return out
 
 
@@ -241,8 +299,8 @@ def pair_rates(beta, n):
     mp = match_pairs[rng.integers(0, len(match_pairs), n)]
     th = beta[mp] + rng.normal(0, a.deck_sd, (n, 2))
     pA = 1 / (1 + np.exp(-(th[:, 0] - th[:, 1])))
-    num = np.bincount(mp[:, 0], pA, len(pairs)) + np.bincount(mp[:, 1], 1 - pA, len(pairs))
-    den = np.bincount(mp[:, 0], None, len(pairs)) + np.bincount(mp[:, 1], None, len(pairs))
+    num = np.bincount(mp[:, 0], pA, P) + np.bincount(mp[:, 1], 1 - pA, P)
+    den = np.bincount(mp[:, 0], None, P) + np.bincount(mp[:, 1], None, P)
     return num / den
 
 
@@ -250,19 +308,39 @@ def pair_rates(beta, n):
 beta_c = logit(pair_wr)
 for _ in range(8): beta_c = beta_c + logit(pair_wr) - logit(pair_rates(beta_c, 200000))
 print('pair win rates, J039 vs simulated:', ', '.join(f'{p} {t:.3f}/{s:.3f}' for p, t, s in zip(pairs, pair_wr, pair_rates(beta_c, 200000))))
-for label, beta in [('null', np.zeros(len(pairs))), ('colour', beta_c)]:
-    res = [generation(beta) for _ in range(a.gens)]
-    c = np.array([r['cands'] for r in res])
-    n002 = np.array([r['n_p002'] for r in res])
-    conf = sum(r.get('confirmed', 0) for r in res)
-    cg = sum(r.get('conf_games', 0) for r in res); cw = sum(r.get('conf_wins', 0) for r in res)
-    dr = [x for r in res for x in r['disc_rate']]
-    cols = collections.Counter(colours[names.index(n)] or 'C' for r in res for n in r['names'])
-    ntests = np.mean([1 for _ in res])
-    print(f'== {label}: {a.gens} generations, {a.plain} plain drafts, deck sd {a.deck_sd}')
-    print(f'  design effect (deck level): mean {np.mean([r["deff"] for r in res]):.3f}')
-    print(f'  dominant-win tests with p <= 0.002 per generation: mean {n002.mean():.2f}, P(>=1) {np.mean(n002 >= 1):.2f}, P(>=5) {np.mean(n002 >= 5):.3f}')
-    print(f'  candidates per generation: mean {c.mean():.2f}; P(>=1) {np.mean(c >= 1):.2f}; P(>=3) {np.mean(c >= 3):.3f}; P(>=8) {np.mean(c >= 8):.3f}; by colour {dict(cols)}')
-    print(f'  red colour win rate per batch: mean {np.mean([r["red"] for r in res]):.3f} sd {np.std([r["red"] for r in res]):.4f}')
-    if c.sum():
-        print(f'  candidates\' discovery win rate: mean {np.mean(dr):.3f}; confirmation pooled {cw / max(1, cg):.3f} over {cg} card-games; confirmed {conf} of {c.sum()} ({conf / c.sum():.2f})')
+print('planted:', '; '.join(f'{names[i]} ({colours[i] or "C"}) +{plant_eff[i]:.2f}' for i in plant_idx))
+scen = {'null': (np.zeros(P), np.zeros(len(cards))), 'colour': (beta_c, np.zeros(len(cards))), 'planted': (beta_c, plant_eff)}
+summary = {}
+for label in a.scenarios.split(','):
+    beta, eff = scen[label]
+    for rule in a.rules.split(','):
+        res = [generation(beta, eff, rule) for _ in range(a.gens)]
+        false = np.array([sum(1 for i in r['cands'] if eff[i] == 0) for r in res])
+        conf_false = sum(1 for r in res for i in r['confirmed'] if eff[i] == 0)
+        n002 = np.array([r['n_p002'] for r in res]); ntest = np.mean([r['ntest'] for r in res])
+        pn = np.concatenate([r['pnull'] for r in res]); zn = SS.norm.isf(np.clip(pn, 1e-12, 1 - 1e-12))
+        cols = collections.Counter(colours[i] or 'C' for r in res for i in r['cands'] if eff[i] == 0)
+        allc = sum(len(r['cands']) for r in res)
+        cg = sum(r.get('conf_games', 0) for r in res); cw = sum(r.get('conf_wins', 0) for r in res)
+        print(f'== scenario {label}, rule {rule}: {a.gens} generations, {a.plain} plain drafts, deck sd {a.deck_sd}')
+        print(f'  design effect (deck level): mean {np.mean([r["deff"] for r in res]):.3f}; red win rate per batch mean {np.mean([r["red"] for r in res]):.3f}')
+        print(f'  dominant-win tests at p <= 0.002 per generation: mean {n002.mean():.2f} of {ntest:.0f} (a uniform null gives {0.002 * ntest:.2f})')
+        print(f'  cards with no effect of their own: share at p <= 0.05 {np.mean(pn <= 0.05):.4f}, <= 0.01 {np.mean(pn <= 0.01):.4f}, <= 0.002 {np.mean(pn <= 0.002):.4f}; '
+              f'z mean {zn.mean():+.3f} sd {zn.std():.3f} ({len(pn)} tests)')
+        print(f'  FALSE candidates (no planted effect) per generation: mean {false.mean():.3f}; P(>=1) {np.mean(false >= 1):.3f}; P(>=3) {np.mean(false >= 3):.3f}; '
+              f'P(>=8) {np.mean(false >= 8):.3f}; by colour {dict(cols)}; false cuts (confirmed) {conf_false} in {a.gens} generations')
+        if allc:
+            print(f'  every candidate: discovery rate {np.mean([x for r in res for x in r["disc_rate"]]):.3f} against its null {np.mean([x for r in res for x in r["disc_p0"]]):.3f}; '
+                  f'confirmation pooled {cw / max(1, cg):.3f} over {cg} card-games')
+        row = dict(p05=float(np.mean(pn <= 0.05)), p01=float(np.mean(pn <= 0.01)), p002=float(np.mean(pn <= 0.002)), z_sd=float(zn.std()), false_mean=float(false.mean()), false_p1=float(np.mean(false >= 1)), false_cuts=conf_false, n002=float(n002.mean()))
+        if eff.any():
+            for size in PLANT_SIZES:
+                ids = [i for i in plant_idx if plant_eff[i] == size]
+                found = np.mean([sum(1 for i in r['cands'] if i in ids) / len(ids) for r in res])
+                cut = np.mean([sum(1 for i in r['confirmed'] if i in ids) / len(ids) for r in res])
+                print(f'  planted +{size:.2f} ({len(ids)} cards): discovered in {found:.2f} of generations, confirmed (cut) in {cut:.2f}')
+                row[f'found_{size:.2f}'] = float(found); row[f'cut_{size:.2f}'] = float(cut)
+            for i in plant_idx:
+                print(f'    {names[i]} ({colours[i] or "C"}) +{plant_eff[i]:.2f}: discovered {np.mean([i in r["cands"] for r in res]):.2f}, cut {np.mean([i in r["confirmed"] for r in res]):.2f}')
+        summary[f'{label}/{rule}'] = row
+print(json.dumps(summary))
