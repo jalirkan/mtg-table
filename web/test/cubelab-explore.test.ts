@@ -175,7 +175,14 @@ test('batchStats: no exploration is exactly the old numbers; with it, counts fro
   const old = cardStats(buildMeta(META, INFO, plainRecs, null) as MetaDoc, plainRecs, INFO);
   const b0 = batchStats(META, INFO, plainRecs, null);
   assert.equal(b0.explore, null);
-  assert.deepEqual([...b0.stats.entries()], [...old.entries()]);
+  // D377 adds each played card's colour-adjusted null; everything else is the old numbers, and the null counts the same games.
+  assert.deepEqual([...b0.stats.entries()].map(([n, { colour: _c, ...rest }]) => [n, rest]), [...old.entries()]);
+  for (const s of b0.stats.values()) {
+    if (s.games === 0) { assert.equal(s.colour, undefined); continue; }
+    assert.ok(s.colour, `${s.name} has a colour baseline`);
+    assert.equal(s.colour.games, s.games, `${s.name}: the baseline weighs the card's own games`);
+    assert.equal(s.colour.wins, s.wins);
+  }
 
   const b = batchStats(META, INFO, explored, null);
   const nPlain = explored.filter(isPlain).length;
@@ -189,6 +196,7 @@ test('batchStats: no exploration is exactly the old numbers; with it, counts fro
     const g = gamesRef.get(name);
     assert.equal(s.games, g?.games ?? 0, `${name} games read the plain drafts`);
     assert.equal(s.wins, g?.wins ?? 0);
+    if (s.games) assert.equal(s.colour?.games, s.games, `${name}: the colour baseline reads the plain drafts too`);
   }
   assert.equal(b.metaDoc.sample.drafts, nPlain);
 });

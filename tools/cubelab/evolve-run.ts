@@ -25,7 +25,10 @@
 // pooled across generations or with confirmation (D331); a candidate's
 // confirmation batches are pooled with its earlier ones on the same rule, at a
 // level halved each repeat (D357, knob confirmPool 1, the default; a folder
-// started before D357 resumes under D331, confirmPool 0).  --record-all /
+// started before D357 resumes under D331, confirmPool 0).  dominant-win's null
+// is D377's colour-adjusted one (colour-null.ts) for a folder started after
+// D377, recorded as evolve.json's `winNull`; a folder without it was started
+// on D331's batch mean and keeps it, discovery and confirmation alike.  --record-all /
 // --record-every N (D315) record both batches' games.  RESUMABLE: a generation whose result.json names the same input
 // is skipped; one without it resumes its run folder (run.ts skips the seeds
 // already played).  A folder made with other options or knobs is refused.
@@ -46,6 +49,7 @@ import path from 'node:path';
 
 import { GUILD } from './cards.ts';
 import { parseCube } from './cube.ts';
+import { WIN_NULL_NEW_RUNS, type WinNull } from './colour-null.ts';
 import { writeCubeDoc } from './cubedoc.ts';
 import { engineFacts, type EngineEnv } from './engine.ts';
 import {
@@ -124,6 +128,8 @@ interface State {
   generations: GenResult[];
   /** D356: absent when the run does not explore (so an old folder's state reads the same). */
   explore?: EvolveExplore;
+  /** D377: dominant-win's null for every generation of this folder.  Absent: a folder started before D377, on the mean. */
+  winNull?: WinNull;
 }
 
 /** The notes file beside a cube: `cubes/omega-cube-180.md` -> `cubes/omega-notes.tsv`. */
@@ -193,6 +199,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     profiles: o.profiles, weights: o.weights, knobs: o.knobs, constraints: constraintsOf(evolveCards(startCube, poolBy), o.knobs),
     date: o.date, generations: [],
     ...(o.explore ? { explore: o.explore } : {}),
+    winNull: WIN_NULL_NEW_RUNS,
   };
   let state = fresh;
   if (fs.existsSync(stateFile)) {
@@ -202,6 +209,11 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
       old.knobs = { ...old.knobs, confirmPool: 0 };
       if (fresh.knobs.confirmPool !== 0) say(`${o.out} was started before D357: its confirmations stay D331's (each batch alone; confirmPool=0) -- use a new --out for the pooled rule`);
       fresh.knobs = { ...fresh.knobs, confirmPool: 0 };
+    }
+    // A folder from before D377 has no winNull: its dominant-win tests were against the batch mean, and it resumes on that.
+    if (old.winNull === undefined) {
+      old.winNull = 'mean';
+      say(`${o.out} was started before D377: dominant-win keeps D331's null (the batch mean) -- use a new --out for the colour-adjusted null`);
     }
     const key = (s: State): string => JSON.stringify([s.startSha, s.poolSha, s.drafts, s.seed, s.games, s.profiles, s.weights, s.explore ?? null]);
     if (key(old) !== key(fresh)) throw new Error(`${o.out} holds an evolve run with a different cube, pool, drafts, seed, games, profiles, weights or exploration -- use a new --out`);
@@ -279,6 +291,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     const tabu = new Set(state.generations.flatMap((r) => r.swaps.map((s) => s.out)));
     const sel = {
       cube, cards: evolveCards(cube, poolBy), pool, stats, balance, drafts: recs.length, constraints: state.constraints, notes, tabu, knobs: knobs, deff: disc.deff,
+      winNull: state.winNull ?? 'mean',
     };
     const first = discoveryStage(sel);
     // 2. Confirmation: the candidates, tested again on a fresh, disjoint seed range, read on its own.

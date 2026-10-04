@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { dispersion, loadSummary, type Tally } from '../../tools/cubelab/calibrate.ts';
+import { dispersion, firstDrafts, loadSummary, slicesOf, type Batch, type Tally } from '../../tools/cubelab/calibrate.ts';
 import type { DraftRecord } from '../../tools/cubelab/run.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 
@@ -55,4 +55,14 @@ test('calibrate (D376): the load summary reads the stamps and the games\' clocks
   assert.equal(s.timeouts, 1);
   assert.equal(s.games, 6);
   assert.equal(s.cpuShare, 0.5);
+});
+
+test('calibrate (D377): --first reads the first N drafts by seed; --slice cuts disjoint slices by seed and drops the remainder', () => {
+  const X = { dir: 'x', meta: {}, cards: {}, recs: [5, 1, 4, 2, 3, 7, 6].map((seed) => ({ seed })) } as unknown as Batch;
+  assert.deepEqual(firstDrafts(X, 3).recs.map((r) => r.seed), [1, 2, 3]);
+  assert.equal(firstDrafts(X), X);
+  const s = slicesOf(X, 3);
+  assert.deepEqual(s.map((b) => b.recs.map((r) => r.seed)), [[1, 2, 3], [4, 5, 6]]);
+  assert.deepEqual(s.map((b) => b.dir), ['x#1', 'x#2']);
+  assert.equal(slicesOf(X, 8).length, 0);
 });

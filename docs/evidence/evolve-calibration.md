@@ -129,6 +129,12 @@ has an effect of its own.** 1,000 generations, seed 7, 1,400 plain drafts each:
 In the colour scenario, 2,766 of the 3,090 candidates are mono-red cards; most of the rest
 are red or white golds.
 
+*(D377 note.)* The script now draws each deck's cards before its games, so a planted card
+can change its deck's strength. That moves the random stream. The same command now prints
+3.27 candidates a generation, 0.163 at 8 or more, a discovery rate of 0.571 and 248
+confirmed for the colour scenario's mean rule (§7). The numbers above are from the D376
+version of the script, and they agree within simulation noise.
+
 - **Under a true null the test is calibrated, even conservative.** At the deck level,
   BH and the size filter give about one false candidate per 25 generations, and
   confirmation catches it.
@@ -173,6 +179,82 @@ discovery rate under the stated null, and the stated null is false here.
    With the D376 stamps it also gives the first per-game AI timeout and worker-load
    numbers.
 
+## 7. The colour-adjusted null (D377)
+
+*Branch `c/colour-null`, 2026-10-04.* §6's first recommendation, built and simulated before
+any run uses it. The rule is `tools/cubelab/colour-null.ts`; the simulation is the same
+script, rule `colour`, on the same J039 extract.
+
+**The rule.** A card's null `p0` is the games-weighted mean, over its decks, of the deck's
+colour pair's win rate in the same batch. Each pair's rate:
+
+- leaves out **both decks of every match the card played**. Leaving out only the card's own
+  decks was tried first, and it is not enough. In a mirror match the opponent's games are in
+  the baseline and anticorrelated with the card's. The null z's sd came out at 1.06, and the
+  share at p ≤ 0.002 at 1.7× nominal (0.0035 against 0.002). Leaving out the whole matches
+  brings the sd to 0.98 and the share to 0.0022;
+- is shrunk toward the batch's deck mean by 20 pseudo-games (`SHRINK_K`, as in meta.ts).
+
+The test is one-sided normal on `(rate − p0 − 0.5·deff/n) / sqrt(p0(1−p0)·deff/n + se0²)`.
+`se0` is the baseline's own standard error, and the half win is a continuity correction (the
+exact binomial the old rule uses counts the point mass). The size filter is
+`rate ≥ p0 + dominantMargin`. Confirmation runs the same rule on its own batch. D357's
+pooling sums the attempts' effective excesses and both variances.
+
+**Simulation** (1,000 generations, seed 7, 1,400 plain drafts a generation, J039's matches,
+deck sd 0.25; `planted` is the colour scenario plus 12 cards that raise their deck's win
+probability by +0.05, +0.10 or +0.15, four each, drawn once with seed 2026 from the cards
+played often enough to test):
+
+| scenario | rule | share of no-effect tests at p ≤ 0.05 / 0.01 / 0.002 | z sd | false candidates / gen | P(≥ 1 false) | false cuts in 1,000 gens |
+|---|---|---|---|---|---|---|
+| null | mean (D331) | 0.045 / 0.009 / 0.0016 | 1.00 | 0.022 | 0.019 | 1 |
+| null | colour (D377) | 0.040 / 0.007 / 0.0014 | 0.97 | 0.034 | 0.032 | 1 |
+| **colour** | mean (D331) | 0.137 / 0.065 / 0.031 | 1.44 | **3.27** | 0.61 | **248** |
+| **colour** | **colour (D377)** | **0.050 / 0.010 / 0.0022** | **0.98** | **0.053** | **0.048** | **2** |
+| planted | mean (D331) | 0.268 / 0.193 / 0.153 | 3.47 | 23.1 | 1.00 | 6,106 |
+| planted | colour (D377) | 0.059 / 0.014 / 0.0037 | 1.04 | 0.65 | 0.46 | 2 |
+
+- **Under "colours matter, cards don't", the colour null is at nominal.** At each level the
+  per-test share is the level itself. False candidates fall from 3.27 a generation to 0.05.
+  P(any false candidate) is 0.048, under BH's q of 0.1. Two false cuts happen in 1,000
+  generations, against D331's 248. The remaining false candidates are spread over the
+  colours, not concentrated in red.
+- **Under a true null it is as calibrated as the old rule**, slightly conservative.
+- **With planted effects**, the colour null's false candidates rise to 0.65 a generation.
+  That is BH doing what it promises: with about 8.8 true discoveries a generation, its bar
+  rises, and the false share of candidates is 0.65 / 9.5 ≈ 7%, under q. The mean rule's
+  23 false candidates are the strong colours again, inflated by the planted cards' decks.
+  The no-effect z sd of 1.04 in this scenario is the planted cards' decks (they raise the
+  deck-level design effect to 1.14); it is not the rule.
+
+Planted cards, discovered / cut (fraction of generations):
+
+| planted | mean (D331) | colour (D377) |
+|---|---|---|
+| +0.05 (4 cards) | 0.15 / 0.01 | 0.47 / 0.05 |
+| +0.10 (4 cards) | 0.70 / 0.30 | 0.74 / 0.22 |
+| +0.15 (4 cards) | 1.00 / 0.68 | 0.99 / 0.55 |
+| blue planted cards (Morphling +0.05, Consecrated Sphinx +0.05, Jace +0.10) | 0.00 / 0.00 each | 0.74 / 0.09, 0.70 / 0.09, 1.00 / 0.52 |
+
+- **It still finds planted effects.** Discovery power is equal or higher at every size, and
+  much higher for a good card in a weak colour, which the mean rule cannot see (blue pairs
+  win 0.45–0.49).
+- **Confirmation is weaker.** The cut rate at +0.10 is 0.22 against 0.30, and at +0.15 0.55
+  against 0.68. A 300-draft confirmation batch must estimate the card's pair as well as the
+  card, and the colour null asks for 5 points over the card's colour rather than over 0.50.
+  The mean rule's higher cut rate comes from white cards in strong pairs: its +0.15 white
+  cards are cut every generation, and its blue cards never.
+  `confirmPlan` now sizes for the baseline's variance (`baselineInflation`), but the batch
+  stays capped at `confirmMaxDrafts` (300). Raising the cap is a separate knob decision, not
+  made here.
+
+A TypeScript version of the same check runs in the web suite
+(`web/test/cubelab-colour-null.test.ts`). It uses a synthetic five-pair cube with strong red
+pairs, through the real `colourBaselines`, `discover` and `confirmCandidates`. Over twelve
+batches the mean null flags red cards in every batch, and the colour null flags at most
+three no-effect cards in all twelve. A planted blue card is found, then confirmed.
+
 ## Reproduce
 
 ```bash
@@ -182,5 +264,6 @@ python3 docs/evidence/evolve-calibration-sim.py extract run1.log matches.json
 # evolve-calibration-cards.json (committed): J039 generation 1's stats.json cards (name, inDecks)
 #   with the Omega cube's colours and land flag
 python3 docs/evidence/evolve-calibration-sim.py run matches.json docs/evidence/evolve-calibration-cards.json --gens 1000 --seed 7
+#   rules mean (D331) and colour (D377), scenarios null, colour, planted (§4 and §7); about 50 s
 python3 docs/evidence/evolve-calibration-sim.py hetero matches.json   # §2's table
 ```
