@@ -1,8 +1,8 @@
 running
-runner: forgecoach-runner d68f5ec
+runner: forgecoach-runner 55ce337
 started: 2026-10-04T05:38:38-04:00
 phase: commands 1/2
 mtg-table: d68f5ec
 workers: 5 (sized 5: min(cores 7, memory 5, max_workers 6); peak 2.00 GB per worker (declared; measured 1.24), budget 12.4 GB)
 peak_worker_rss_gb: 1.24
-adopted: 2026-10-04T06:55:47-04:00: the runner restarted; lab-J059-run1 was still running
+adopted: 2026-10-04T07:35:25-04:00: the runner restarted; lab-J059-run1 was still running
