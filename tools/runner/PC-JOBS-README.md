@@ -22,16 +22,29 @@ The runner checks every 10 seconds and fetches both branches every minute.
    STATUS is `waiting`. Open jobs are taken in id order. A job whose `after:` jobs aren't
    all `done` waits. A `waiting` job with `needs: check`, or with a `retry_after:` still in
    the future, waits too.
-2. **One heavy job at a time.** `cpu: heavy` jobs (engine games, training) never overlap
-   each other. One `cpu: light` job (the coach bench, reports) may run beside one heavy job.
-   A `running` STATUS the runner did not write (no `runner:` line) counts as running.
+2. **Heavy jobs share the cores; they never crowd each other.** Every `cpu: heavy` job has a
+   **width**: the cores it keeps busy (`cores:`, else `max_workers`, else 7). The core budget
+   is the machine's physical cores (8 on the 9700X; `--cores N` on the runner). A heavy job
+   starts beside running heavy jobs only when the widths, its own included, fit in the
+   budget, their memory fits the lab's heavy budget (width × the per-worker peak:
+   `mem_per_worker_gb`, measured, or 2.5 GB), no running job is backing off for memory, and
+   Justin is not at the table. A running job's width is its current block's (a `cores:` line
+   before a block, below), so a wide job with a single-process step makes room while that
+   step runs. **Order is kept:** the first open heavy job that could run but does not fit
+   stops the queue; nothing after it starts beside the others, so a wide job is never
+   overtaken by narrow ones and gets the machine when the running jobs end. A job whose
+   `after:` jobs are not done does not stop the queue. One `cpu: light` job (the coach
+   bench, reports) may run beside the heavy ones, as before. A `running` STATUS the runner
+   did not write (no `runner:` line) counts as running and as filling the machine.
 3. **Justin comes first.** While someone is connected to the bridge (`play.sh`, port 8642),
    no heavy job starts, and a running heavy job is held: its pools finish the games in
    flight and start no new one until he leaves. `tools/runner.sh pause` holds everything the
    same way; `tools/runner.sh stop` stops the jobs cleanly (TERM) and holds.
 4. **Before running.** The runner checks the job's refs out in **its own clones** under
-   `~/code/lab/` (`mtg-table`, `ForgeCoach`; `-light` copies for a light job), never in
-   Justin's checkouts, and builds (`bridge/build.sh`; `npm ci` when ForgeCoach's lock file
+   `~/code/lab/` (`mtg-table`, `ForgeCoach`; `-light` copies for a light job; `-lane2`,
+   `-lane3` … for a heavy job started beside another, each at its own commit with its own
+   build, its `var/` a link to `mtg-table/var` so every job's outputs are in one place),
+   never in Justin's checkouts, and builds (`bridge/build.sh`; `npm ci` when ForgeCoach's lock file
    changed). A job's literal `/home/justin-a/code/<repo>` paths are rewritten to the lab
    clones. Then it pushes a STATUS of `running`.
 5. **Pilot first, always.** The `## Pilot` blocks run, then the pilot's `check:` lines are
@@ -195,6 +208,7 @@ repos: mtg-table@main, ForgeCoach@main   (a branch or a commit; text after the r
 est: ~3 h on the 9700X
 resumable: yes | no                  stopped and started again, it continues (default no)
 max_workers: 7                       {workers} never exceeds it
+cores: 1                             the job's width: the cores it keeps busy (default: its workers; {workers} never exceeds it)
 mem_per_worker_gb: 1.5               a floor under the pilot's measured peak per worker (optional)
 progress: aibench var/ai-bench/night-* of 2000     how done / total is counted
 metrics: [name =] <extractor> <paths…>             the job's metrics, for abort: and the final checks
@@ -221,6 +235,11 @@ check: pilot.median_game_s between 4 and 15
 ```bash
 …
 ```
+cores: 1                             this block's width only: a single-process step ({workers} is at most 1 in it)
+mem_gb: 12                           this block's whole memory reservation (default: width × the per-worker peak)
+```bash
+…
+```
 check: all.games == 2000             final checks, after the last block
 
 ## Abort if
@@ -244,9 +263,24 @@ environment holds `JOBS` and `LAB_WORKERS` (the sized workers), `LAB_CONTROL` (t
 file), `LAB_JOB`, `LAB_STEP`, `MTG_TABLE` and `FORGECOACH` (the clones). The placeholders
 `{workers}`, `{mtg-table}` and `{ForgeCoach}` are filled in.
 
+**Width (`cores:`).** Say how many cores a job keeps busy when it is not its workers: a
+single-process job (an encode, a fit, a report) is `cores: 1`, and the runner may start the
+next job beside it. A `cores:` line in `## Pilot` or `## Commands` applies to the next block
+only, so one job can have a wide step and a narrow one: put each in its own block, the wide
+ones first. A `mem_gb:` line beside it says what that block holds in memory when it is not
+width × the per-worker peak (a single-process fit that loads the whole dataset), so nothing
+started beside it counts on memory it will use. A job is admitted at its header width; a later block that is wider than what is
+free still runs (it never waits for cores), so a job whose wide block comes after a narrow
+one can briefly crowd a job started beside it. Jobs side by side share `var/`: they must not
+write the same paths. A declared width (`cores:`, the job's or the block's) also sets
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS`, so numpy's linear algebra
+keeps to it. A job started beside another is sized against the memory the others
+leave, so it may get a worker fewer than it would alone.
+
 **Workers.** The pilot runs at most 3 workers. During the pilot the runner samples the peak
 resident size of every Java process in the step's unit. The full run gets
-`min(max_workers, physical cores − 1, floor(budget / peak × 0.85))`, and at least 1. Here
+`min(max_workers, cores, physical cores − 1, floor(budget / peak × 0.85))`, and at least 1,
+where budget is the heavy memory budget less what the heavy jobs already running reserve. Here
 peak is the larger of the measured peak and `mem_per_worker_gb` (2.5 GB when not given),
 so a short pilot cannot size the full run too large.
 

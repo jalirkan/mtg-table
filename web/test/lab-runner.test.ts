@@ -13,6 +13,8 @@
  *  - job files: the new keys, every older job file still parses, bad lines are errors;
  *  - scheduling (id order, after:, one heavy + one light, Justin playing, needs: check,
  *    retry_after, someone else's running job), worker sizing, the unit's systemd-run line;
+ *  - co-scheduling: job widths (cores:), admission by cores and memory, memory backoff,
+ *    order and no starvation, lanes with a shared var/, cores in use in status.json;
  *  - the pressure backoff's decisions; the metric extractors over synthetic run folders,
  *    torn lines included; progress, rate and ETA;
  *  - status.json and the public sanitiser (no path, host or free text gets through);
@@ -42,7 +44,7 @@ import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expandGlob, progressOf, rateAndEta, readDrafts } from '../../tools/runner/metrics.ts';
 import { DEFAULT_CONFIG, publicSignature, Runner, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
-import { formatStatus, parseStatus, schedule, type Status } from '../../tools/runner/schedule.ts';
+import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
 import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
@@ -200,6 +202,103 @@ test('schedule: id order, after:, one heavy and one light, Justin, holds, someon
   assert.deepEqual(r.blocked.filter((b) => ['J003', 'J006'].includes(b.id)).map((b) => b.code), ['needs-check', 'memory']);
   r = schedule({ ...base, statuses: new Map([['J003', st('done\n')], ['J005', st('done\n')], ['J006', st('waiting\nretry_after: 2026-10-03T11:50:00Z\n')]]) });
   assert.deepEqual(r.start.map((j) => j.id), ['J004', 'J006']);
+});
+
+test('job file: cores: in the header is the job\'s width; a cores: line in a section sets the next block\'s', () => {
+  const j = parseJobFile('J060.md', 'id: J060\ncpu: heavy\nrepos: mtg-table@main\nmax_workers: 7\ncores: 2\n## Pilot\n```bash\ntrue\n```\n## Commands\n```bash\nwide\n```\ncores: 1\nmem_gb: 12\n```bash\nnarrow\n```\n```bash\nwide again\n```\n', parse);
+  assert.deepEqual(j.errors, []);
+  assert.equal(j.cores, 2);
+  assert.deepEqual(j.pilot?.blockCores, [null]);
+  assert.deepEqual(j.commands?.blockCores, [null, 1, null]);
+  assert.deepEqual(j.commands?.blockMemGb, [null, 12, null]);
+  assert.equal(parseJobFile('J061.md', 'id: J061\nrepos: mtg-table@main\n', parse).cores, null);
+  const bad = parseJobFile('J062.md', 'id: J062\ncores: two\nrepos: mtg-table@main\n## Commands\ncores: 0\nmem_gb: lots\n```bash\nx\n```\ncores: 1\n', parse);
+  assert.equal(bad.errors.length, 4, bad.errors.join('\n'));
+});
+
+test('co-scheduling: width and reservation defaults (cores:, else max_workers, else physical - 1; light 1; at most the budget)', () => {
+  const j = (h: string): ReturnType<typeof parseJobFile> => parseJobFile('J070.md', `id: J070\nrepos: mtg-table@main\n${h}`, parse);
+  const m = { cores: 8, defaultWidth: 7 };
+  assert.equal(widthOf(j('cpu: heavy\n'), m), 7);
+  assert.equal(widthOf(j('max_workers: 3\n'), m), 3);
+  assert.equal(widthOf(j('max_workers: 1\ncores: 4\n'), m), 4);         // one process, several threads
+  assert.equal(widthOf(j('cores: 12\n'), m), 8);
+  assert.equal(widthOf(j('cpu: light\n'), m), 1);
+  assert.equal(reservationOf(j('max_workers: 7\n'), 7), 17.5);              // 2.5 GB a worker by default
+  assert.equal(reservationOf(j('mem_per_worker_gb: 3\n'), 2), 6);
+  assert.equal(reservationOf(j('mem_per_worker_gb: 3\n'), 2, 4), 8);       // a measured peak above the floor counts
+});
+
+test('co-scheduling: a narrow running job lets the next job start beside it, within the cores and the memory', () => {
+  const job = (id: string, h = '', after = ''): ReturnType<typeof parseJobFile> =>
+    parseJobFile(`${id}.md`, `id: ${id}\ncpu: heavy\n${after ? `after: ${after}\n` : ''}repos: mtg-table@main\n${h}`, parse);
+  const now = Date.parse('2026-10-03T12:00:00Z');
+  const machine: MachineBudget = { cores: 8, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const run = (jobs: ReturnType<typeof parseJobFile>[], holdings: Record<string, Holding>, extra: Partial<Parameters<typeof schedule>[0]> = {}) => schedule({
+    jobs, statuses: new Map(Object.keys(holdings).map((id) => [id, st('running\nrunner: x\n')])),
+    active: new Map(Object.keys(holdings).map((id) => [id, 'heavy' as const])), holdings: new Map(Object.entries(holdings)),
+    machine, playing: false, paused: false, now, ...extra,
+  });
+  const starts = (r: ReturnType<typeof schedule>): string[] => r.start.map((x) => x.id);
+  const code = (r: ReturnType<typeof schedule>, id: string): string | undefined => r.blocked.find((b) => b.id === id)?.code;
+  // J049-like: one core, 3 GB.  The SPRT (7 wide, 17.5 GB) fits beside it: 8 of 8 cores, 20.5 of 21 GB.
+  const sprt = job('J053', 'max_workers: 7\n');
+  let r = run([job('J049', 'cores: 1\n'), job('J050', 'max_workers: 7\n', 'J049'), sprt], { J049: { cores: 1, memGb: 3 } });
+  assert.deepEqual(starts(r), ['J053']);
+  assert.equal(code(r, 'J050'), 'after');                   // its dependency is not done: it does not hold the queue
+  // Cores: two in use leave six; a seven-wide job waits.
+  r = run([sprt], { J049: { cores: 2, memGb: 3 } });
+  assert.deepEqual([starts(r), code(r, 'J053')], [[], 'cores']);
+  assert.match(r.blocked[0]?.reason ?? '', /needs 7 core\(s\); 6 of 8 free/);
+  // Memory: one core but 14 GB reserved; 14 + 17.5 > 21.
+  r = run([sprt], { J049: { cores: 1, memGb: 14 } });
+  assert.deepEqual([starts(r), code(r, 'J053')], [[], 'cores']);
+  assert.match(r.blocked[0]?.reason ?? '', /needs 17\.5 GB; 7 of 21 GB free/);
+  // A memory backoff on a running job: nothing starts beside it.
+  r = run([sprt], { J049: { cores: 1, memGb: 3 } }, { machine: { ...machine, memoryBackoff: true } });
+  assert.deepEqual([starts(r), r.blocked[0]?.reason], [[], 'a running job is in memory backoff']);
+  // Justin first, and pause: nothing heavy starts beside either.
+  assert.deepEqual(starts(run([sprt], { J049: { cores: 1, memGb: 3 } }, { playing: true })), []);
+  assert.deepEqual(starts(run([sprt], { J049: { cores: 1, memGb: 3 } }, { paused: true })), []);
+  // needs: check and retry_after still hold a job back (and it does not hold the queue).
+  r = schedule({ jobs: [sprt, job('J054', 'cores: 1\n')], statuses: new Map([['J049', st('running\nrunner: x\n')], ['J053', st('waiting\nretry_after: 2026-10-03T12:10:00Z\n')]]),
+    active: new Map([['J049', 'heavy']]), holdings: new Map([['J049', { cores: 1, memGb: 3 }]]), machine, playing: false, paused: false, now });
+  assert.deepEqual([starts(r), code(r, 'J053')], [['J054'], 'memory']);
+  // Someone else's running job (no holding): its width is unknown, so it fills the machine.
+  r = schedule({ jobs: [job('J054', 'cores: 1\n')], statuses: new Map([['J003', st('running\nstarted: x\n')]]), active: new Map(), machine, playing: false, paused: false, now });
+  assert.deepEqual([starts(r), code(r, 'J054')], [[], 'heavy-busy']);
+  // Co-scheduling off: one heavy job at a time.
+  r = run([job('J054', 'cores: 1\n')], { J049: { cores: 1, memGb: 3 } }, { machine: { ...machine, coSchedule: false } });
+  assert.deepEqual([starts(r), code(r, 'J054')], [[], 'heavy-busy']);
+  // No machine in the input: the old rule.
+  r = run([job('J054', 'cores: 1\n')], { J049: { cores: 1, memGb: 3 } }, { machine: undefined });
+  assert.deepEqual(starts(r), []);
+});
+
+test('co-scheduling: order is kept, and a wide job that is next is never overtaken by narrow ones (no starvation)', () => {
+  const job = (id: string, h = ''): ReturnType<typeof parseJobFile> => parseJobFile(`${id}.md`, `id: ${id}\ncpu: heavy\nrepos: mtg-table@main\n${h}`, parse);
+  const now = Date.parse('2026-10-03T12:00:00Z');
+  const machine: MachineBudget = { cores: 8, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const run = (jobs: ReturnType<typeof parseJobFile>[], holdings: Record<string, Holding>) => schedule({
+    jobs, statuses: new Map(Object.keys(holdings).map((id) => [id, st('running\nrunner: x\n')])),
+    active: new Map(Object.keys(holdings).map((id) => [id, 'heavy' as const])), holdings: new Map(Object.entries(holdings)),
+    machine, playing: false, paused: false, now,
+  });
+  // J031 (5 wide) does not fit beside 4 cores in use; J032 and J033 (1 wide) would, but they come after it: they wait.
+  let r = run([job('J031', 'max_workers: 5\n'), job('J032', 'cores: 1\n'), job('J033', 'cores: 1\n')], { J030: { cores: 4, memGb: 4 } });
+  assert.deepEqual(r.start, []);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J031', 'cores'], ['J032', 'heavy-busy'], ['J033', 'heavy-busy']]);
+  assert.match(r.blocked[1]?.reason ?? '', /after J031/);
+  // When the narrow job ends, the wide one gets the machine; the narrow ones fill what is left, in order.
+  r = run([job('J031', 'max_workers: 5\n'), job('J032', 'cores: 1\n'), job('J033', 'cores: 1\n'), job('J034', 'cores: 2\n'), job('J035', 'cores: 1\n')], {});
+  assert.deepEqual(r.start.map((x) => x.id), ['J031', 'J032', 'J033']);     // 5 + 1 + 1 = 7; J034 (2) does not fit,
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J034', 'cores'], ['J035', 'heavy-busy']]);  // and J035 waits behind it
+  // An earlier job that fits always starts before a later one.
+  r = run([job('J041', 'cores: 3\n'), job('J042', 'cores: 3\n')], { J040: { cores: 4, memGb: 4 } });
+  assert.deepEqual([r.start.map((x) => x.id), r.blocked.map((b) => b.id)], [['J041'], ['J042']]);
+  // A job wider than the machine runs alone, at the machine's width.
+  r = run([job('J050', 'cores: 16\n'), job('J051', 'cores: 1\n')], {});
+  assert.deepEqual(r.start.map((x) => x.id), ['J050']);
 });
 
 // ------------------------------------------------------------------ sizing and units
@@ -876,21 +975,129 @@ test('runner: memory pressure drops workers through the control file, then stops
 });
 
 test('runner: Justin at the table holds a running heavy job and starts none', () => {
-  const w = world({ 'J017-x.md': NEW_JOB.replace('id: J010', 'id: J017'), 'J018-y.md': NEW_JOB.replace('id: J010', 'id: J018') });
+  // J018 is 7 wide: it would wait for cores beside J017 (3 + 7 > 8) anyway; while Justin plays, the reason is him.
+  const w = world({ 'J017-x.md': NEW_JOB.replace('id: J010', 'id: J017'), 'J018-y.md': NEW_JOB.replace('id: J010', 'id: J018').replace('max_workers: 3', 'max_workers: 7') });
   const r = new Runner(w.cfg, w.sys);
   r.reconcile();
   w.sys.mode = 'hold';
+  w.sys.isPlaying = true;
   r.tick();
+  assert.equal(r.runs.size, 0);                 // nothing heavy starts while Justin plays
+  w.sys.isPlaying = false;
+  r.tick();
+  assert.deepEqual([...r.runs.keys()], ['J017']);
+  assert.equal(r.blocked.find((b) => b.id === 'J018')?.code, 'cores');
   w.sys.release('lab-J017-prepare', 'ok');
   r.tick();
   w.sys.isPlaying = true;
   r.tick();
   assert.deepEqual(JSON.parse(fs.readFileSync(r.controlFile('J017'), 'utf8')).paused, true);
   assert.equal(r.runs.get('J017')?.events.at(-1)?.kind, 'playing');
+  assert.equal(r.blocked.find((b) => b.id === 'J018')?.code, 'playing');
   w.sys.isPlaying = false;
   r.tick();
   assert.equal(JSON.parse(fs.readFileSync(r.controlFile('J017'), 'utf8')).paused, false);
-  assert.equal(r.runs.has('J018'), false);   // one heavy job at a time
+  assert.equal(r.runs.has('J018'), false);
+  // With co-scheduling off, one heavy job at a time, however narrow.
+  const w2 = world({ 'J017-x.md': NEW_JOB.replace('id: J010', 'id: J017'), 'J018-y.md': NEW_JOB.replace('id: J010', 'id: J018') });
+  const r2 = new Runner({ ...w2.cfg, coSchedule: false }, w2.sys);
+  r2.reconcile();
+  w2.sys.mode = 'hold';
+  r2.tick();
+  assert.deepEqual([...r2.runs.keys()], ['J017']);
+  assert.equal(r2.blocked.find((b) => b.id === 'J018')?.code, 'heavy-busy');
+});
+
+const NARROW_JOB = `id: J060
+title: A wide step, then a narrow one
+cpu: heavy
+repos: mtg-table@main
+max_workers: 7
+mem_per_worker_gb: 2
+metrics: n = lines var/p60.jsonl
+
+## Pilot
+\`\`\`bash
+mkdir -p var
+echo '{}' > var/p60.jsonl
+\`\`\`
+check: n == 1
+
+## Commands
+\`\`\`bash
+echo "wide {workers} $JOBS" >> var/j060.txt
+\`\`\`
+cores: 1
+\`\`\`bash
+echo "narrow {workers} $JOBS" >> var/j060.txt
+\`\`\`
+`;
+
+test('runner: co-scheduling end to end: a wide job waits, then starts beside a narrow step, in a lane of its own sharing var/', () => {
+  // J061: the same two blocks with no cores: line (both 7 wide), 2.5 GB a worker; J062: one core.
+  const wide = NARROW_JOB.replace('id: J060', 'id: J061').replace('mem_per_worker_gb: 2', 'mem_per_worker_gb: 2.5').replace(/p60/g, 'p61').replace(/j060/g, 'j061').replace(/cores: 1\n/, '');
+  const w = world({ 'J060-a.md': NARROW_JOB, 'J061-b.md': wide, 'J062-c.md': NARROW_JOB.replace('id: J060', 'id: J062').replace('max_workers: 7', 'cores: 1').replace(/p60/g, 'p62') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  // J060 starts alone, 7 wide: J061 (7) does not fit and J062 waits behind it (order, no starvation).
+  assert.deepEqual([...r.runs.keys()], ['J060']);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J061', 'cores'], ['J062', 'heavy-busy']]);
+  w.sys.release('lab-J060-prepare', 'ok'); r.tick();
+  w.sys.release('lab-J060-pilot1', 'ok'); r.tick();
+  assert.equal(r.runs.get('J060')?.unit, 'lab-J060-run1');
+  assert.equal(r.runs.has('J061'), false);
+  w.sys.release('lab-J060-run1', 'ok'); r.tick();
+  // J060's narrow step (cores: 1) leaves 7 of 8 cores, and 2 + 17.5 of 21 GB: J061 starts beside it, in lane 2.
+  const a = r.runs.get('J060')!, b = r.runs.get('J061')!;
+  assert.equal(a.unit, 'lab-J060-run2');
+  assert.equal(b.lane, 1);
+  assert.equal(r.blocked.find((x) => x.id === 'J062')?.code, 'cores');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run1')?.env.JOBS, '7');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run2')?.env.JOBS, '1');
+  // A declared width caps numpy's BLAS / OpenMP threads; an undeclared one leaves them alone.
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run2')?.env.OMP_NUM_THREADS, '1');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run1')?.env.OMP_NUM_THREADS, undefined);
+  const doc = r.statusDoc();
+  assert.deepEqual([doc.host.coresUsed, doc.host.coresTotal], [8, 8]);
+  assert.deepEqual(doc.running.map((x) => [x.id, x.cores]), [['J060', 1], ['J061', 7]]);
+  assert.deepEqual([sanitise(doc).host.coresUsed, sanitise(doc).host.coresTotal, sanitise(doc).running[1]?.cores], [8, 8, 7]);
+  // J061's prepare: its own clone, var/ a symlink to lane 1's.
+  const lane2 = path.join(w.cfg.labRoot, 'mtg-table-lane2');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J061-prepare')?.env.MTG_TABLE, lane2);
+  w.sys.release('lab-J061-prepare', 'ok'); r.tick();
+  assert.ok(fs.lstatSync(path.join(lane2, 'var')).isSymbolicLink());
+  assert.equal(fs.readlinkSync(path.join(lane2, 'var')), path.join(w.cfg.labRoot, 'mtg-table', 'var'));
+  assert.equal(git(lane2, 'status', '--porcelain'), '');                                  // the link is not an untracked file
+  w.sys.release('lab-J061-pilot1', 'ok'); r.tick();
+  assert.ok(fs.existsSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'p61.jsonl')));     // written through the symlink
+  // J061's pilot passed beside J060: it was sized against the memory J060 leaves (21 - 2 GB: 6 workers at 2.5 GB).
+  assert.equal(b.unit, 'lab-J061-run1');
+  assert.equal(b.workers, 6);
+  assert.match(b.sizing?.detail ?? '', /memory 6.*budget 19 GB/);
+  // Now J061 holds 6: J062 (one core) fits too (1 + 6 + 1 = 8), in a third lane.
+  assert.equal(r.runs.get('J062')?.lane, 2);
+  assert.deepEqual([r.statusDoc().host.coresUsed, r.statusDoc().running.length], [8, 3]);
+  w.sys.release('lab-J060-run2', 'ok'); r.tick();
+  assert.equal(a.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.equal(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j060.txt'), 'utf8'), 'wide 7 7\nnarrow 1 1\n');
+  w.sys.release('lab-J061-run1', 'ok'); r.tick();
+  w.sys.release('lab-J061-run2', 'ok'); r.tick();
+  assert.equal(b.outcome?.state, 'done', w.sys.lines.join('\n'));
+  // J061's second block has no cores: line of its own: its width and {workers} are the job's.
+  assert.equal(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j061.txt'), 'utf8'), 'wide 6 6\nnarrow 6 6\n');
+  // A narrow block that declares its memory (mem_gb: 15) reserves it: J061's 17.5 GB does not fit beside it.
+  const w2 = world({ 'J060-a.md': NARROW_JOB.replace('cores: 1\n', 'cores: 1\nmem_gb: 15\n'), 'J061-b.md': wide });
+  const r2 = new Runner(w2.cfg, w2.sys);
+  r2.reconcile();
+  w2.sys.mode = 'hold';
+  r2.tick();
+  for (const u of ['prepare', 'pilot1', 'run1']) { w2.sys.release(`lab-J060-${u}`, 'ok'); r2.tick(); }
+  assert.equal(r2.runs.get('J060')?.unit, 'lab-J060-run2');
+  assert.deepEqual(r2.holding(r2.runs.get('J060')!), { cores: 1, memGb: 15 });
+  assert.equal(r2.runs.has('J061'), false);
+  assert.match(r2.blocked.find((x) => x.id === 'J061')?.reason ?? '', /needs 17\.5 GB; 6 of 21 GB free/);
 });
 
 test('runner: a restart adopts a running unit, resumes a resumable step, restarts a non-resumable job (clean: moved aside)', () => {

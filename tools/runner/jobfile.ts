@@ -15,6 +15,8 @@
 //   est: ~3 h
 //   resumable: yes | no              NEW: a stopped run may be started again and continues
 //   max_workers: 7                   NEW: the most workers the job may use ({workers} never exceeds it)
+//   cores: 1                         NEW: the job's WIDTH, the cores it keeps busy (default: its workers);
+//                                    a narrow heavy job lets the runner start the next job beside it
 //   mem_per_worker_gb: 1.5           NEW: a floor for the pilot's measured peak per worker
 //   progress: aibench var/ai-bench/night-* of 2000      NEW: how done / total is counted
 //   metrics: [name =] <extractor> <args> | sh: <command>  NEW: the job's metrics (aborts, final checks)
@@ -27,7 +29,10 @@
 //   public_cubes: yes                NEW: the public page may name the cube ids in its per-cube progress (else "cube 1", ...)
 //
 //   ## Pilot      fenced bash blocks run in order; `metrics:` and `check:` lines; `progress:`
-//   ## Commands   fenced bash blocks; `metrics:`, `check:` (final checks), `progress:`
+//   ## Commands   fenced bash blocks; `metrics:`, `check:` (final checks), `progress:`;
+//                 a `cores: N` line sets the width of the NEXT block only (a single-process
+//                 step of a wide job: `cores: 1`; {workers} in that block is at most N), and a
+//                 `mem_gb: G` line the memory it reserves (default: width × per-worker peak)
 //   ## Abort if   `abort:` lines (checked every minute while the job runs) and prose for people
 //   ## Report     prose for the PC session; `collect: <glob>` lines copy files into results/<id>/
 //
@@ -58,6 +63,10 @@ export interface ProgressSpec {
 export interface Section {
   /** The fenced code blocks (bash), in order. */
   blocks: string[];
+  /** Each block's own `cores:` (the line before it), or null: the job's width. */
+  blockCores: Array<number | null>;
+  /** Each block's own `mem_gb:` (its whole reservation), or null: width × per-worker peak. */
+  blockMemGb: Array<number | null>;
   checks: string[];
   metrics: MetricSpec[];
   progress: ProgressSpec | null;
@@ -74,6 +83,8 @@ export interface JobFile {
   est: string;
   resumable: boolean;
   maxWorkers: number | null;
+  /** `cores:`: the job's width (cores it keeps busy), or null: its workers. */
+  cores: number | null;
   memPerWorkerGb: number | null;
   progress: ProgressSpec | null;
   metrics: MetricSpec[];
@@ -146,7 +157,7 @@ export function parseProgress(line: string): ProgressSpec {
 }
 
 function emptySection(): Section {
-  return { blocks: [], checks: [], metrics: [], progress: null, text: '' };
+  return { blocks: [], blockCores: [], blockMemGb: [], checks: [], metrics: [], progress: null, text: '' };
 }
 
 const yes = (s: string | undefined): boolean => /^(yes|true|1)$/i.test((s ?? '').trim());
@@ -167,6 +178,14 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   let headerProgress: ProgressSpec | null = null;
   const aborts: string[] = [];
   const collect: string[] = [];
+  /** A section's `cores:` line waiting for its block. */
+  let nextCores: number | null = null;
+  let nextMem: number | null = null;
+  const coresOf = (v: string, where: string): number | null => {
+    const n = Number(v.trim());
+    if (!Number.isInteger(n) || n <= 0) { errors.push(`${where}cores: "${v}" is not a positive whole number`); return null; }
+    return n;
+  };
 
   const machine = (key: string, val: string, where: Section | null): boolean => {
     try {
@@ -185,12 +204,15 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   for (const raw of text.split('\n')) {
     const line = raw.replace(/\r$/, '');
     if (cur && /^\s*```/.test(line)) {
-      if (inFence) { cur.blocks.push(fence.join('\n')); fence = []; inFence = false; } else { inFence = true; fence = []; }
+      if (inFence) { cur.blocks.push(fence.join('\n')); cur.blockCores.push(nextCores); cur.blockMemGb.push(nextMem); nextCores = null; nextMem = null; fence = []; inFence = false; } else { inFence = true; fence = []; }
       continue;
     }
     if (inFence) { fence.push(line); continue; }
     const h = /^##\s+(.+?)\s*$/.exec(line);
     if (h) {
+      if (nextCores !== null || nextMem !== null) errors.push(`## ${curName}: a cores: or mem_gb: line with no block after it`);
+      nextCores = null;
+      nextMem = null;
       curName = (h[1] as string).toLowerCase();
       cur = sections.get(curName) ?? emptySection();
       sections.set(curName, cur);
@@ -205,13 +227,24 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
       }
       continue;
     }
+    if (kv && kv[1] === 'cores' && (curName === 'pilot' || curName === 'commands')) {
+      nextCores = coresOf(kv[2] as string, `## ${curName}: `);
+      continue;
+    }
+    if (kv && kv[1] === 'mem_gb' && (curName === 'pilot' || curName === 'commands')) {
+      const g = Number((kv[2] as string).trim());
+      if (!Number.isFinite(g) || g <= 0) errors.push(`## ${curName}: mem_gb: "${kv[2]}" is not a positive number`);
+      else nextMem = g;
+      continue;
+    }
     if (kv && ['check', 'abort', 'metrics', 'progress', 'collect'].includes(kv[1] as string)) {
       machine(kv[1] as string, kv[2] as string, curName.startsWith('abort') || curName.startsWith('report') ? null : cur);
       continue;
     }
     cur.text += `${line}\n`;
   }
-  if (inFence && cur) { cur.blocks.push(fence.join('\n')); errors.push('a code block is never closed'); }
+  if (inFence && cur) { cur.blocks.push(fence.join('\n')); cur.blockCores.push(nextCores); cur.blockMemGb.push(nextMem); nextCores = null; nextMem = null; errors.push('a code block is never closed'); }
+  if (nextCores !== null || nextMem !== null) errors.push(`## ${curName}: a cores: or mem_gb: line with no block after it`);
 
   const id = header.id ?? (/\b(J\d{3,})/.exec(file)?.[1] ?? '');
   if (!/^J\d{3,}$/.test(id)) errors.push(`id: "${id}" is not J followed by three digits`);
@@ -224,6 +257,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     return n;
   };
   const maxWorkers = intOf('max_workers');
+  const cores = header.cores !== undefined ? coresOf(header.cores, '') : null;
   const timeoutSec = header.timeout !== undefined ? parseDuration(header.timeout) : null;
   if (header.timeout !== undefined && timeoutSec === null) errors.push(`timeout: "${header.timeout}" is not a duration (90m, 8h)`);
   if (header.resumable !== undefined && !/^(yes|no|true|false)$/i.test(header.resumable.trim())) errors.push(`resumable: "${header.resumable}" is not yes or no`);
@@ -250,6 +284,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     est: header.est ?? '',
     resumable: yes(header.resumable),
     maxWorkers: maxWorkers === null ? null : Math.floor(maxWorkers),
+    cores,
     memPerWorkerGb: intOf('mem_per_worker_gb'),
     progress: commands?.progress ?? headerProgress,
     metrics: headerMetrics,

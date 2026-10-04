@@ -28,6 +28,12 @@ MINI_CUBE = os.path.join(HERE, "data", "mini-cube.md")
 VOCAB = [os.path.join(ROOT, "decks", "pacho-shield.dck"), MINI_CUBE]
 
 
+def _sha(path: str) -> str:
+    import hashlib
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
 @unittest.skipIf(np is None, "numpy is not installed")
 class DatasetTest(unittest.TestCase):
     @classmethod
@@ -75,6 +81,45 @@ class DatasetTest(unittest.TestCase):
             a, b = self.D.load(self.out, s), self.D.load(out2, s)
             for k in a:
                 self.assertTrue(np.array_equal(a[k], b[k]), (s, k))
+
+    def test_jobs_3_writes_the_same_files_as_jobs_1(self):
+        """--jobs 3 (a process pool) against --jobs 1, through the CLI, on the committed fixtures:
+        every file written -- shards, games.jsonl, stats.json, features.json -- byte for byte."""
+        outs = {}
+        for jobs in (1, 3):
+            out = os.path.join(self.tmp, f"jobs-{jobs}")
+            p = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "ml", "dataset.py"), "--vocab", VOCAB[0],
+                                "--vocab", VOCAB[1], "--out", out, "--split", "60,20,20", "--shard-rows", "300",
+                                "--jobs", str(jobs), FIXTURES], capture_output=True, text=True, cwd=ROOT)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            outs[jobs] = {fn: _sha(os.path.join(out, fn)) for fn in sorted(os.listdir(out))}
+        self.assertEqual(outs[1], outs[3])
+        self.assertGreater(sum(fn.endswith(".npz") for fn in outs[1]), 3)
+        self.assertNotIn("progress.json", outs[1])            # removed once stats.json is written
+        # and the same rows as the in-process build (shard_rows aside, row order is shard-independent)
+        for s in self.D.SPLITS:
+            a, b = self.D.load(self.out, s), self.D.load(os.path.join(self.tmp, "jobs-3"), s)
+            for k in a:
+                self.assertTrue(np.array_equal(a[k], b[k]), (s, k))
+
+    def test_a_rebuild_is_byte_identical(self):
+        out2 = os.path.join(self.tmp, "c")
+        self.D.build([FIXTURES], VOCAB, out2, (60, 20, 20), shard_rows=700, quiet=True)
+        for fn in os.listdir(self.out):
+            if fn.endswith(".npz"):
+                self.assertEqual(_sha(os.path.join(self.out, fn)), _sha(os.path.join(out2, fn)), fn)
+
+    def test_progress_is_readable_mid_run(self):
+        import gate_metrics as GM
+        d = os.path.join(self.tmp, "partial")
+        os.makedirs(d, exist_ok=True)
+        self.assertEqual(GM.m_dataset(d), {"written": 0})
+        with open(os.path.join(d, "progress.json"), "w", encoding="utf-8") as f:
+            json.dump({"rows": 1234, "games": 7, "files": 3, "filesTotal": 9, "jobs": 3}, f)
+        self.assertEqual(GM.m_dataset(d), {"written": 0, "partial": 1, "rows": 1234, "games": 7, "files": 3, "filesTotal": 9})
+        m = GM.m_dataset(self.out)                              # complete: stats.json wins
+        self.assertEqual((m["written"], m["rows"]), (1, self.summary["rows"]))
+        self.assertFalse(os.path.exists(os.path.join(self.out, "progress.json")))
 
     def test_two_chairs_of_one_game_share_a_group(self):
         g0 = next(E.read_games(os.path.join(FIXTURES, "villain-doom-248.jsonl")))

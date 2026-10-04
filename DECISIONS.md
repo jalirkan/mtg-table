@@ -15262,6 +15262,57 @@ to the public branch (one commit, replaced, is the value; the history is on `pc-
   https page, and it would expose the server to every device at home), and pushing every
   minute regardless (a commit a minute while nothing moves).
 
+**Amended 2026-10-04 (branch `c/cores`): heavy jobs share the cores; a narrow job no longer
+holds the whole machine.** J049 (evaluator training) ran `dataset.py`, one Python process at
+about 1,000 rows/s, for hours while the runner counted the machine busy: 15 of 16 threads idle
+(the PC session's HEARTBEAT of 22:35 and 22:50, Justin: "see if we can come up with a better
+solution"). Of the PC session's four proposals this takes 1 (a job declares its width and the
+runner starts the next job beside it), 3 (a parallel encode) and 4 (cores in use on the page);
+2 (hand-ordering the queue) is not needed once 1 holds.
+
+- **Width.** A job's `cores: N` header is the cores it keeps busy; without it, its
+  `max_workers`, else physical cores − 1 (a light job: 1). A `cores: N` line before a block
+  in `## Pilot` or `## Commands` sets that block's width only, and caps `{workers}` and `$JOBS`
+  in it, so one job can hold a wide encode and a single-process fit; a `mem_gb: G` line there
+  is that block's whole memory reservation (a fit that loads the dataset is one core and many
+  GB). `{workers}` never exceeds the header's `cores:`. A declared width also sets
+  `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` for the step, so numpy's
+  linear algebra keeps to it (an undeclared width changes nothing).
+- **Co-scheduling** (`schedule.ts`). The core budget is the physical cores (`--cores N`; 8 on
+  the 9700X: a seven-worker job and a one-core job together, the SMT threads left to the
+  desktop). A heavy job starts beside running heavy jobs only when the widths sum within the
+  core budget; the memory reservations (a block's `mem_gb:`, else width × per-worker peak:
+  measured, `mem_per_worker_gb` or 2.5 GB) within the heavy memory budget; no running job is in memory backoff and host
+  pressure is under the high line; and Justin first, pause, `needs: check` and `retry_after`
+  hold as before. A light job keeps its own slot. Someone else's running job fills the
+  machine. `--co-schedule off` is the old rule.
+- **Order and starvation.** The first open heavy job that could run but does not fit stops
+  the queue: nothing after it starts beside the running jobs. A narrow job never overtakes a
+  wide one, and the wide one gets the machine when the running jobs end. A job waiting on its
+  `after:` does not stop the queue. Rejected: back-filling narrow jobs past a waiting wide one
+  (a stream of narrow jobs could keep a wide one out for ever), and shrinking a wide job to fit
+  the cores left (a night-long SPRT at two workers, with its dependants queued behind it).
+- **Lanes.** Jobs side by side never share a checkout: lane 1 is the clones as before, lane k
+  `<repo>-lane<k>`, each at its own pinned commit with its own build; a lane's mtg-table `var/`
+  is a symlink to lane 1's, so `after:` jobs, `clean:` and the ladder find every output where
+  they did. Jobs side by side share `var/` and must not write the same paths. Rejected: one
+  shared checkout (a `prepare` would check out and rebuild under a running job: J049 is pinned
+  to 9ca3329, J053 runs main).
+- **Sizing beside.** A job is admitted at its header width; its sizing after the pilot uses the
+  heavy budget less the others' reservations, so it may get a worker fewer than alone. A
+  running job's later, wider block is never held for cores (it could wait a night); it may
+  briefly crowd its neighbour, so wide blocks go first.
+- **The page.** `status.json` gains `host.coresUsed` / `host.coresTotal` (the running jobs'
+  widths of the budget) and each running job's `cores`, numbers the public copy keeps;
+  HEARTBEAT and `tools/runner.sh status` print them.
+- **The encode.** `tools/ml/dataset.py --jobs N` encodes the recordings in N processes, one
+  file each at a time, and writes them back in path order with at most 2 × N files in flight:
+  every file it writes is byte for byte what `--jobs 1` writes (the `.npz` members carry a
+  fixed time, where numpy's own stamps the clock), checked by `tests/test_dataset.py` on the
+  fixture recordings. It writes `progress.json` (rows, games, files) every 10 s and
+  `stats.json` last, removing any stale one at the start, so `gate_metrics.py dataset`
+  reports rows mid-run (`written: 0, partial: 1`) and a `progress: metric ds.rows` moves.
+
 ## D340 — Draft seeds belong to someone: the lab keeps 1–799,999,999, verifications 800,000,000+, and the AI ladder's deck sets 900,000,000+, which `run` and the queue refuse; the dataset builders also drop any game played with a deck-set deck, matched card for card
 
 *Branch `c/review2-fixes`; D340–D344, past every number the open lanes hold or may hold (the lab runner, the coach grader D332–D334, the match launcher's D333, evolve-rigor's D331).*
