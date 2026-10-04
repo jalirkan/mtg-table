@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-04T02:30:35-04:00
+- time: 2026-10-04T02:35:16-04:00
 - runner: 5e6ba2a, up since 2026-10-03T19:48:28-04:00
 - running: J053 pilot 1/1, 0/2400 games, 3 worker(s)
-- load: 2.39; memory 5.6/30.5 GB, swap 4525 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J050, J051, J052, J054, J055, J056
-- waiting: J049 (memory: some avg10 57.9%, swap-in 529/s, job 9.9/21.4 GB; retry after 2026-10-04T02:31:37-04:00)
+- load: 2.06; memory 6.6/30.5 GB, swap 4519 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J049, J050, J051, J052, J054, J055, J056
+- waiting: nothing
 - last finished: J048 done at 2026-10-03T21:35:34-04:00: redaction_fail 0 · redaction_pass 80 · recorded_logs 80 · bench.games 20 · lab.drafts 20 · bench_policy.rows 4692 · lab_policy.rows 5984
 
 ## Messages

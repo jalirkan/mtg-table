@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:30:35-04:00",
- "heartbeat": "2026-10-04T02:30:35-04:00",
+ "updated": "2026-10-04T02:35:16-04:00",
+ "heartbeat": "2026-10-04T02:35:16-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.39,
-  "memUsedGb": 5.6,
+  "load1": 2.06,
+  "memUsedGb": 6.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 4525,
+  "swapUsedMb": 4519,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4
@@ -24,7 +24,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-04T02:16:37-04:00",
-   "elapsed": 838,
+   "elapsed": 1119,
    "done": 0,
    "total": 2400,
    "unit": "games",
@@ -35,7 +35,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-04T02:16:37-04:00",
-   "memGb": 1.33,
+   "memGb": 1.26,
    "live": {
     "sprt_games": 0,
     "all.games": 0,
@@ -43,11 +43,11 @@
     "all.timeouts": 0,
     "all.games_per_h": 0,
     "all.median_game_s": 0,
-    "elapsed_s": 816,
+    "elapsed_s": 1066,
     "peak_worker_rss_gb": 1.38,
     "pilot.errors": 0,
     "pilot.games": 40,
-    "pilot.games_per_h": 76.9,
+    "pilot.games_per_h": 57.6,
     "pilot.median_game_s": 37.1365,
     "pilot.timeouts": 1,
     "pressure_events": 0,
@@ -66,6 +66,14 @@
   }
  ],
  "queue": [
+  {
+   "publicTitle": "Evaluator training and fit gate",
+   "publicEst": "~6 h",
+   "id": "J049",
+   "title": "(re-post of J034, after numpy) Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
+   "cpu": "heavy",
+   "est": "~4-7 h (encode about 1,000 rows/s single-threaded; the grid gets 3 h; the leaf rows about 30 min on one JVM)"
+  },
   {
    "publicTitle": "Regret gate truth grading",
    "publicEst": "~one night",
@@ -115,17 +123,7 @@
    "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
   }
  ],
- "waiting": [
-  {
-   "publicTitle": "Evaluator training and fit gate",
-   "publicEst": "~6 h",
-   "id": "J049",
-   "title": "(re-post of J034, after numpy) Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
-   "reason": "stopped for memory; will retry",
-   "est": "~4-7 h (encode about 1,000 rows/s single-threaded; the grid gets 3 h; the leaf rows about 30 min on one JVM)",
-   "detail": "memory: some avg10 57.9%, swap-in 529/s, job 9.9/21.4 GB; retry after 2026-10-04T02:31:37-04:00"
-  }
- ],
+ "waiting": [],
  "finished": [
   {
    "publicTitle": "Decision records pilot re-run",
