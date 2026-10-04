@@ -8,7 +8,7 @@ repos: mtg-table@7e48088 (main with the gates, #36, and the fit-memory fix, #45;
 est: one night: ~300 decisions x ~5 options x 200 rounds x 0.6 (racing) = ~180k full-game playouts at 0.5-1.0 s = 25-50 core-hours, 4-7 h on 7 JVMs; the screen about 10 min
 resumable: yes
 max_workers: 7
-mem_per_worker_gb: 2.5
+mem_per_worker_gb: 3
 timeout: 16h
 progress: lines var/ml/gates/regret/truth.jsonl.shard-*.jsonl of 300
 metrics: set = sh: python3 tools/ml/gate_metrics.py lines var/ml/gates/regret/set.jsonl
