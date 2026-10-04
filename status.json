@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:41:04-04:00",
- "heartbeat": "2026-10-04T02:41:04-04:00",
+ "updated": "2026-10-04T02:41:15-04:00",
+ "heartbeat": "2026-10-04T02:41:15-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 14.29,
-  "memUsedGb": 13.8,
+  "load1": 11.42,
+  "memUsedGb": 5.7,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3972,
+  "swapUsedMb": 3927,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4
@@ -19,45 +19,34 @@
   {
    "publicTitle": null,
    "publicEst": null,
-   "id": "J053",
-   "title": "(was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
+   "id": "J056",
+   "title": "(was J026, earlier J022; retry of J015; hard after J029: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
    "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-04T02:16:37-04:00",
-   "elapsed": 1466,
-   "done": 16,
-   "total": 2400,
-   "unit": "games",
-   "ratePerHour": 39.9,
-   "eta": "2026-10-06T14:26:25-04:00",
-   "workers": 7,
-   "workersMax": 7,
+   "phase": "prepare",
+   "started": "2026-10-04T02:41:15-04:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-04T02:40:41-04:00",
-   "memGb": 7.82,
+   "dataUpdated": null,
+   "memGb": null,
    "live": {
-    "sprt_games": 16,
-    "all.games": 16,
-    "all.errors": 0,
-    "all.timeouts": 0,
-    "all.games_per_h": 39.9,
-    "all.median_game_s": 24.7225,
-    "elapsed_s": 1444,
-    "peak_worker_rss_gb": 1.38,
+    "elapsed_s": 0,
+    "metrics_errors": 3,
     "pressure_events": 0,
-    "workers": 7
+    "workers": 1
    },
-   "liveHeadline": [
-    "sprt_games",
-    "all.games",
-    "all.errors",
-    "all.timeouts"
-   ],
+   "liveHeadline": [],
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J053-run1"
+   "detail": "lab-J056-prepare"
   }
  ],
  "queue": [
@@ -102,14 +91,6 @@
    "est": "one to two nights (up to 2,400 games)"
   },
   {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J056",
-   "title": "(was J026, earlier J022; retry of J015; hard after J029: it needs night 1's recordings) Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
-   "cpu": "heavy",
-   "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
-  },
-  {
    "publicTitle": "Evaluator training and fit gate",
    "publicEst": "~4 h",
    "id": "J057",
@@ -128,6 +109,17 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J053",
+   "title": "J053",
+   "status": "skipped",
+   "finished": "2026-10-04T02:41:15-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "the job file was removed from pc-jobs"
+  },
   {
    "publicTitle": "Decision records pilot re-run",
    "publicEst": "~60 min",
