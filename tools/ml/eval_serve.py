@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# mtg-table — tools/ml: the learned position evaluator, served to the coach helper (D359).
+# mtg-table — tools/ml: the learned position evaluator, served to the coach helper (D360).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The evaluator's win chance for ONE position, for ForgeCoach (D359).
+"""The evaluator's win chance for ONE position, for ForgeCoach (D360).
 
 The coach helper (tools/coach-helper.mjs, through tools/eval-runner.mjs) runs
 this as a child process and talks JSON lines to it: one request line in, one
@@ -32,7 +32,9 @@ header: the opponent's hand is a count, libraries are counts, a stub adds to a
 count, a face-down card is the `<facedown>` slot).  A request whose viewer's own
 hand holds a redacted stub is refused: that state was redacted for someone else.
 
-THE MODEL.  A train_eval.py export (evalnet.py, formatVersion 1).  It is
+THE MODEL.  A train_eval.py export (evalnet.py, formatVersion 1) on D305's
+full schema (17 card states).  An r17 model (the outside exam's reduced
+schema, D359) is refused: its rows are other positions.  It is also
 refused when the schema encode.py computes from the model's own vocabulary is
 not the model's `schemaId` (the encoder changed since it was trained), when
 `--expect-schema` names another id, when `--cube` is another card list, or
@@ -166,6 +168,11 @@ class Served:
             raise ModelError(f"{path} is not JSON: {e}") from None
         if not isinstance(m, dict) or m.get("format") != N.FORMAT or m.get("formatVersion") != N.FORMAT_VERSION:
             raise ModelError(f"{path} is not a {N.FORMAT} v{N.FORMAT_VERSION} model (train_eval.py --out)")
+        # D305's full schema only.  The outside exam's reduced r17 rows (D359, r17.py: 2 card states,
+        # end-of-half-turn rows) describe other positions than a board's decision rows: not served.
+        if list(m.get("cardStates") or []) != list(E.CARD_STATES) or m.get("schemaKind", "d305") != "d305":
+            raise ModelError("the model is not on D305's full schema (an r17 model of the outside exam, D359?): "
+                             "/eval serves D305 models only")
         vocab = E.Vocab(list(m.get("vocab") or []))
         schema = E.Schema(vocab)
         if schema.schema_id != m.get("schemaId"):

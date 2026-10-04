@@ -267,7 +267,7 @@ python3 tools/ml/train_eval.py var/ml/data/night-1 --split-by pair --grid --time
     --dry-load --report var/ml/reports/night-1-dry.json
 ```
 
-## The win chance in ForgeCoach (D359)
+## The win chance in ForgeCoach (D360)
 
 The coach helper serves the evaluator to ForgeCoach: `POST /eval` on port 8643
 (`tools/eval-runner.mjs`'s header is the contract) answers P(the viewing seat
@@ -310,7 +310,8 @@ node tools/coach-helper.mjs --eval-schema 82815752c2f5e346 --eval-cube cubes/syn
   `evalError`) when the schema id `encode.py` computes from the model's own
   vocabulary is not its `schemaId` (the encoder changed since training), when
   `--eval-schema` or `--eval-cube` disagree, or when it reads a live-unsafe
-  feature.
+  feature. Only D305's full schema is served: an r17 model (D359's outside exam)
+  is refused.
 - **Hidden information.** The evaluator reads only the request's state, and that
   state is what the viewing seat's board shows. It reads it the way the training
   rows read each chair's own log (each row is encoded from the log's own seat):
@@ -369,6 +370,82 @@ How each gate works:
 - **The tests** are `tests/test_gates.py`. They run every rule on synthetic
   numbers whose answer is known, and drive the grading driver with a fake
   `serve`.
+
+## Outside exam (17Lands)
+
+**Data credit: 17Lands.** The human games come from 17Lands' public datasets
+(https://www.17lands.com/public_datasets), licensed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/). What the exam reads is derived from them:
+filtered to Arena's Powered Cube and to mostly-Vintage-cube boards, and re-encoded as r17
+rows. 17Lands does not endorse this project. Only the published files are downloaded, never
+the API, and nothing of them is committed (`var/` is gitignored; NOTICE §8).
+
+**The question** (D359): the evaluator passed gate 1 on Forge-vs-Forge games — does what it
+learned carry over to human games, or is it a model of Forge's habits? Arena's Powered Cube
+shares 152 of the Vintage cube's 180 cards, and 17Lands' replay data records an end-of-turn
+snapshot of every half-turn of its users' games. So a **reduced evaluator** is trained on our
+Vintage-cube games with only the features both sources have, and scored on 17Lands' games
+against simple rules fitted on our data.
+
+**The reduced schema `r17`** (`r17.py`): at the end of each half-turn from turn 3 (never a
+game's final half-turn) — the turn, its round, whose turn it was, on the play or the draw, both
+life totals, both hand **sizes**, and per side the lands, non-land permanents, creatures and
+off-vocabulary non-land permanents (tokens and face-down ones included), plus each
+battlefield's vocabulary cards (a card block of vocabulary × 2). Missing on purpose: tapped
+state, counters, damage, P/T, graveyards, exile, libraries, the stack, combat and every
+decision. The net and trainer are D316's, pooling 2 card states instead of 17; an r17 model's
+baselines are `prior`, `life`, `board` (the non-land permanent difference) and r17's reduced
+`core`. Java refuses an r17 model.
+
+```bash
+# 1. our rows: the queue's Vintage-cube games (normal/vintage and the bridge folders naming vintage),
+#    end-of-half-turn states, reserved decks dropped (D340), exploring games left out (D358's flag)
+python3 tools/ml/dataset.py --schema r17 --queue-root var/cubelab/queue --cube vintage --nights 1 \
+    --out var/ml/data/r17-vintage-n1 --jobs 7
+# 2. the reduced evaluator, split by deck pair as gate 1's
+python3 tools/ml/train_eval.py var/ml/data/r17-vintage-n1 --split-by pair --grid --time-budget 3600 \
+    --out var/ml/models/r17-vintage-n1.json --report var/ml/reports/r17-vintage-n1.json
+# 3. 17Lands' Powered Cube replays (resumed, size-checked) and their r17 rows
+python3 tools/ml/ext17l.py fetch --set powered-premier --dir var/ml/17lands
+python3 tools/ml/ext17l.py rows var/ml/17lands/replay_data_public.Cube_-_Powered.PremierDraft.csv.gz \
+    --out var/ml/17lands/rows-premier --perspective both
+# 4. the exam: prints every table, the transfer gap and the verdict against EXAM_RULE
+python3 tools/ml/outside_exam.py --model var/ml/models/r17-vintage-n1.json --ext var/ml/17lands/rows-premier \
+    --report var/ml/reports/outside-exam.json
+```
+
+**The reader** (`ext17l.py`). A replay file has one row per game and column groups
+`user_turn_N_*` / `oppo_turn_N_*` for the user's and the opponent's N-th turn; cards are Arena
+ids named through `cards.csv` (cached; tokens have rarity `token`). The half-turns are ordered
+by `on_play` (on the play the user's N-th turn is half-turn 2N−1); a half-turn the game reached
+has a permanent on some battlefield at its end (past the end the number columns read `0.0`);
+the last one is dropped, its snapshot being half-written. A position is written when at least
+`--min-share` (0.5) of its non-basic permanents, both sides, are vocabulary cards; tokens and
+unknown ids count as outside. `stats.json` counts the positions qualifying at 0.5, 0.7, 0.8
+and 1.0. The file is streamed a megabyte at a time; `fetch --max-bytes N` takes only the
+first N bytes, which the reader reads up to the last whole row (the exam then gives no verdict).
+
+**Perspective.** A replay row is its 17Lands user's game, so the user is always "me" and the
+label is whether the user won. The users run the tracker — a stronger-than-average population
+that won 54% of the qualifying games — so every model starts with that calibration shift on
+the same rows. Only hand sizes are read, so the user's knowledge of their own hand never enters.
+`--perspective both` adds the opponent's mirror rows (label inverted) as a secondary table.
+
+**The rule** (`EXAM_RULE` in `outside_exam.py`, D359; written before the run, no flag changes
+it): on PremierDraft's `test` half (a hash of the game id), the user's rows, turn ≥ 3, share ≥
+0.5, take the best simple rule b\* among prior, life and board. **PASS** when log-loss(b\*) −
+log-loss(eval) > 0 with the lower end of its 95% interval from 2,000 resamples over 17Lands
+games above 0, on at least 2,000 games and 10,000 rows (fewer: FAIL, underpowered). Every
+simple rule is fitted on our training split only; nothing is tuned on 17Lands data, and the
+`dev` half is for looking at. Reported beside it: the reduced core, every model by turn bucket
+with Brier, accuracy and ECE, the dev half, share ≥ 0.8, both perspectives, TradDraft's file,
+and the **transfer gap** — the evaluator's advantage over b\* on our test split minus its
+advantage on 17Lands.
+
+**Measured** (D359, this container): the PremierDraft file is 143 MB; all 266,117 games read
+in 222–294 s on one process at a 0.40 GB peak; 2,667,602 user-side positions, of which 306,819
+(11.5%) qualify at share ≥ 0.5 and 38,431 (1.4%) at ≥ 0.8; the rule's population is 154,302
+rows from 51,161 games. The exam over those rows took 85 s at a 0.46 GB peak.
 
 ## Hardware: the owner's desktop
 

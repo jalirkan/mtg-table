@@ -190,6 +190,9 @@ export function publicSignature(doc: StatusDoc, ladderSig = ''): string {
 /** Names a `collect:` file may not take: they are the runner's own facts in results/<id>/. */
 export const RESERVED_OUTPUTS = new Set(['STATUS', 'summary.md', 'failure.txt', 'checks.txt', 'metrics.json', 'pilot-checks.txt', 'pilot-metrics.json', 'events.jsonl', 'collect-skipped.txt']);
 
+/** After a memory stop, how long before another job may be stopped for memory: the freed memory shows in avg10. */
+export const MEMORY_STOP_SETTLE_MS = 60_000;
+
 /** A network git call is cut off after this long, so one dead fetch or push never stalls the loop. */
 export const GIT_TIMEOUT_MS = 30_000;
 
@@ -209,6 +212,8 @@ export class Runner {
   /** Job files that vanished from a successful read of pc-jobs: the reads in a row they were missing, and their last text. */
   missing = new Map<string, number>();
   retained = new Map<string, JobFile>();
+  /** When the last memory stop was sent (one at a time: `apply`). */
+  lastMemoryStop = -Infinity;
 
   constructor(cfg: RunnerConfig, sys: Sys) {
     this.cfg = cfg;
@@ -796,7 +801,9 @@ export class Runner {
       r.memGb = this.sys.unitMemoryGb(r.unit);
       const { state, action } = decide(r.backoff, { at: now, some10: this.host.some10, swapIn: this.swapInRate, jobGb: r.memGb, jobMaxGb: maxGb, javaCount: this.sys.unitJavaCount(r.unit) }, canControl, this.cfg.backoff);
       r.backoff = state;
-      if (action) this.apply(r, action);
+      // The job's own memory at its cap is the job's alone: no other job's stop relieves it.
+      const ownHard = r.memGb !== null && r.memGb !== undefined && maxGb > 0 && r.memGb >= this.cfg.backoff.hardFraction * maxGb;
+      if (action) this.apply(r, action, ownHard);
     }
     this.writeEffectiveControl(r);
     if (now - r.metricsAt >= this.cfg.metricsEveryMs) {
@@ -810,8 +817,22 @@ export class Runner {
     this.save(r);
   }
 
-  private apply(r: JobRun, a: Action): void {
+  private apply(r: JobRun, a: Action, ownHard = false): void {
     const kind = a.kind;
+    if (kind === 'stop' && !ownHard) {
+      // One memory stop at a time.  The pressure is the host's, so jobs side by side reach
+      // the hard line in the same tick; stopping every one of them throws away all their
+      // work when stopping one frees the memory.  Another job stopping (or just stopped)
+      // for memory: this one waits, and its own hard line has to hold again from zero.
+      // (Not when this job's own memory is at its cap: only stopping it helps that.)
+      const now = this.sys.now();
+      const other = this.active().find((x) => x !== r && x.stopping?.why === 'memory');
+      if (other || now - this.lastMemoryStop < MEMORY_STOP_SETTLE_MS) {
+        this.sys.log(`${r.id}: memory stop held back (${other ? `${other.id} is stopping for memory` : 'a job was just stopped for memory'}): ${a.why}`);
+        return;
+      }
+    }
+    if (kind === 'stop') this.lastMemoryStop = this.sys.now();
     this.event(r, kind, a.why);
     if (kind === 'stop') this.stop(r, 'memory', a.why);
   }

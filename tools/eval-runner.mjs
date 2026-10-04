@@ -2,7 +2,7 @@
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// THE WIN CHANCE (D359): the coach helper's POST /eval -- the learned position
+// THE WIN CHANCE (D360): the coach helper's POST /eval -- the learned position
 // evaluator's P(the viewing seat wins) for one position ForgeCoach is showing.
 // Imported by tools/coach-helper.mjs (its --eval-model, --no-eval,
 // --eval-python, --eval-schema and --eval-cube); self-test

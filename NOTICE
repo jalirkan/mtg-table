@@ -459,7 +459,34 @@ data derived from the CC0 sources. The build adds no npm dependency of its own:
 its zip reader is its own code over Node's built-in zlib.
 
 
-8. Code that is deliberately NOT used
+8. 17Lands public datasets (the outside exam's human games)
+------------------------------------------------------------
+
+tools/ml/ext17l.py reads 17Lands' public replay data to score the position
+evaluator on human games (DECISIONS.md D359, tools/ml/README.md "Outside exam
+(17Lands)").
+
+    Source:   17Lands public datasets, https://www.17lands.com/public_datasets
+              (replay_data_public.Cube_-_Powered.PremierDraft.csv.gz and
+              .TradDraft.csv.gz, and analysis_data/cards/cards.csv)
+    Author:   17Lands
+    Licence:  Creative Commons Attribution 4.0 International (CC BY 4.0),
+              https://creativecommons.org/licenses/by/4.0/
+    Changes:  filtered to Arena's Powered Cube games and to positions whose
+              permanents are mostly Vintage-cube cards, and re-encoded as
+              reduced feature rows (r17); nothing else of the data is kept.
+
+The data is downloaded on the machine that runs the exam, into the gitignored
+var/, and is never committed here. The only 17Lands-format file in the
+repository, tools/ml/tests/data/17lands/sample.csv.gz, is made up by
+make_sample.py beside it and holds no 17Lands data. Derived numbers from the
+exam (its report) credit 17Lands as above. Neither 17Lands nor anyone at it
+endorses mtg-table; 17Lands' usage guidelines
+(https://www.17lands.com/usage_guidelines) place the public datasets under the
+licence, and this project uses only the published files, never the 17Lands API.
+
+
+9. Code that is deliberately NOT used
 -------------------------------------
 
     witchesofthehill/manabrew — AGPL-3.0-or-later

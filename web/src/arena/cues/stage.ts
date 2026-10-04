@@ -930,10 +930,19 @@ export type CueRegistry = ReadonlyMap<string, CueImpl>;
 
 export const clamp01 = (t: number): number => (t < 0 ? 0 : t > 1 ? 1 : t);
 
-export const easeOutCubic = (t: number): number => 1 - Math.pow(1 - clamp01(t), 3);
-export const easeInCubic = (t: number): number => Math.pow(clamp01(t), 3);
+/**
+ * x³ as two multiplications, never `Math.pow(x, 3)` or `x ** 3`: those are not
+ * the same number on every engine — V8 changed its pow between Node 22 and
+ * Node 24 (and Chrome versions with it), so the last bit of an eased value, and
+ * with it the classic film's digest (`web/test/motion.test.ts`), moved with the
+ * runtime. A product of doubles is IEEE 754's, the same everywhere.
+ */
+export const cube = (x: number): number => x * x * x;
+
+export const easeOutCubic = (t: number): number => 1 - cube(1 - clamp01(t));
+export const easeInCubic = (t: number): number => cube(clamp01(t));
 export const easeInOutCubic = (t: number): number =>
-  clamp01(t) < 0.5 ? 4 * Math.pow(clamp01(t), 3) : 1 - Math.pow(-2 * clamp01(t) + 2, 3) / 2;
+  clamp01(t) < 0.5 ? 4 * cube(clamp01(t)) : 1 - cube(-2 * clamp01(t) + 2) / 2;
 
 /** Overshoots and settles — the shape a tap and a landing card want. */
 export function easeOutBack(t: number, overshoot = 1.7): number {

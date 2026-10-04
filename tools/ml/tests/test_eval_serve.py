@@ -1,9 +1,9 @@
-# mtg-table — tools/ml tests: the evaluator served to the coach helper (eval_serve.py, D359).
+# mtg-table — tools/ml tests: the evaluator served to the coach helper (eval_serve.py, D360).
 # Copyright (C) 2026 mtg-table contributors.
 # SPDX-License-Identifier: GPL-3.0-or-later
 """python3 -m unittest discover -s tools/ml/tests   (from the repo root)
 
-Feature parity, the crux of D359: the coach helper scores ONE state a client
+Feature parity, the crux of D360: the coach helper scores ONE state a client
 sends (the viewing seat's redacted state, plus the earlier frames' events), and
 the vector it builds must be exactly the row dataset.py built from the same
 moment of the recording.
@@ -224,7 +224,13 @@ class DatasetParityTest(unittest.TestCase):
         def cols(m):
             m["input"]["boardNames"][0] = "opp.life"
 
-        for change, words in ((schema, "encoder changed"), (unsafe, "live-unsafe"), (cols, "board columns")):
+        def r17(m):
+            import r17 as R
+            m["cardStates"] = list(R.R17_STATES)
+            m["schemaKind"] = R.SCHEMA_KIND
+
+        for change, words in ((schema, "encoder changed"), (unsafe, "live-unsafe"), (cols, "board columns"),
+                              (r17, "D305's full schema")):
             with self.assertRaises(S.ModelError) as cm:
                 S.Served(self._variant(change))
             self.assertIn(words, str(cm.exception))
