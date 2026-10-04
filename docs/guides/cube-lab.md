@@ -390,7 +390,7 @@ redefined without a schema 2 on both sides.
 - **lands**: win rate by the played deck's land count; **splash**: the
   splashing decks' win rate, and `vsNoSplash` its difference from the rest.
 
-## Evolve: a cube that changes by simulation (D299–D300, D331)
+## Evolve: a cube that changes by simulation (D299–D300, D331, D357)
 
 `evolve` runs generations of the lab on a cube and swaps cards in from a seed
 pool where the evidence says a card is dead or dominating, writing the next
@@ -469,11 +469,27 @@ were pooled. Two looks fix it:
   the rate the card met observations in discovery, between `confirmMinDrafts`
   and `confirmMaxDrafts` drafts. A generation with no candidate plays no
   confirmation batch.
+- **A repeat attempt pools (D357).** Every generation gives a candidate a new
+  confirmation batch, so a card discovered again and again would get a fresh
+  chance to confirm by luck each time, and a failed batch would be forgotten
+  (J039's Fable of the Mirror-Breaker: 140 of 296 in generation 3, not
+  confirmed; 179 of 316 in generation 4, cut — 319 of 612 together). Now a
+  card's second, third… confirmation on the same rule is judged on **all** its
+  confirmation batches pooled, the failed ones included, and its p is doubled
+  for each earlier attempt before Holm (attempt j at `confirmAlpha` / 2^(j−1)),
+  so whatever the number of attempts a card with no real effect is cut with a
+  chance of at most 2·`confirmAlpha` (4.7% after eight attempts in the
+  simulation, against 32% for each batch alone). A **first** attempt is judged
+  exactly as before. The size filter reads the pooled rate. Knob
+  `confirmPool` (1, the default; 0 is D331's rule); a folder started before
+  D357 resumes under D331. Discovery is still never pooled.
 
 The changelog and `index.html` show both: each candidate's discovery numbers
 (with its p and BH q value) beside its confirmation numbers (with its
 Holm-adjusted p), and whether it was confirmed; a swap's evidence names both
-seed ranges.
+seed ranges. A *Confirmation history* table at the top of the changelog lists
+every card that was ever confirmed or refused: each attempt with its batch's
+own numbers and outcome, and every attempt pooled (D357).
 
 **A card's games come in clumps**: one deck, against one opponent, best of
 three (about 2.4 games). Win rates therefore count the deck's match as the
@@ -576,6 +592,7 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | `confirmMinDrafts` | 20 | the smallest confirmation batch |
 | `confirmMaxDrafts` | 300 | the largest (also the spacing of the generations' confirmation seed ranges) |
 | `confirmSeedOffset` | 1000000 | confirmation seeds start this far above `--seed` |
+| `confirmPool` | 1 | D357: a repeat confirmation pools the card's every confirmation batch on the rule, at `confirmAlpha` / 2^(attempt−1); 0 is D331 (each batch alone); a folder from before D357 resumes with 0 |
 | `watchWinMargin` | 0.12 | a win rate this far over the mean is a lead to watch |
 | `colourSlack` | 2 | each colour's nonland count may move this far from the start |
 | `minSignposts` | 2 | gold cards each colour pair keeps (or its starting count, if fewer) |

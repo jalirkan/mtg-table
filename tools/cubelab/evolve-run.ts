@@ -21,8 +21,11 @@
 // Generation g plays seeds S + (g−1)·N .. S + g·N − 1 (fresh drafts every
 // generation); its confirmation batch, when there is one, seeds
 // S + confirmSeedOffset + (g−1)·confirmMaxDrafts onward -- a range no discovery
-// batch and no other generation's confirmation touches.  Nothing is pooled
-// across generations or across the two batches (D331).  --record-all /
+// batch and no other generation's confirmation touches.  Discovery is never
+// pooled across generations or with confirmation (D331); a candidate's
+// confirmation batches are pooled with its earlier ones on the same rule, at a
+// level halved each repeat (D357, knob confirmPool 1, the default; a folder
+// started before D357 resumes under D331, confirmPool 0).  --record-all /
 // --record-every N (D315) record both batches' games.  RESUMABLE: a generation whose result.json names the same input
 // is skipped; one without it resumes its run folder (run.ts skips the seeds
 // already played).  A folder made with other options or knobs is refused.
@@ -46,7 +49,7 @@ import { parseCube } from './cube.ts';
 import { writeCubeDoc } from './cubedoc.ts';
 import { engineFacts, type EngineEnv } from './engine.ts';
 import {
-  applySwaps, balanceOf, batchStats, constraintsOf, discoveryStage, enrichPool, evolveCards, parseNotes, parsePool, selectSwaps,
+  applySwaps, balanceOf, batchStats, constraintsOf, discoveryStage, enrichPool, evolveCards, parseNotes, parsePool, priorAttempts, selectSwaps,
   type ConfirmInput, type Constraints, type EvolveKnobs, type MetaDoc, type Note, type Swap,
 } from './evolve.ts';
 import { exploreHealth, judgeExplored, type ExploreTable } from './explore.ts';
@@ -194,17 +197,25 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
   let state = fresh;
   if (fs.existsSync(stateFile)) {
     const old = JSON.parse(fs.readFileSync(stateFile, 'utf8')) as State;
+    // A folder from before D357 has no confirmPool: it was decided by D331's rule, and resumes under it.
+    if ((old.knobs as Partial<EvolveKnobs>).confirmPool === undefined) {
+      old.knobs = { ...old.knobs, confirmPool: 0 };
+      if (fresh.knobs.confirmPool !== 0) say(`${o.out} was started before D357: its confirmations stay D331's (each batch alone; confirmPool=0) -- use a new --out for the pooled rule`);
+      fresh.knobs = { ...fresh.knobs, confirmPool: 0 };
+    }
     const key = (s: State): string => JSON.stringify([s.startSha, s.poolSha, s.drafts, s.seed, s.games, s.profiles, s.weights, s.explore ?? null]);
     if (key(old) !== key(fresh)) throw new Error(`${o.out} holds an evolve run with a different cube, pool, drafts, seed, games, profiles, weights or exploration -- use a new --out`);
     // The knobs only decide the swaps: they may change while no generation has been decided under the old ones.
     old.generations = old.generations.filter((r) => fs.existsSync(path.join(o.out, `gen-${pad(r.gen)}`, 'result.json')));
-    const knobsMoved = JSON.stringify(old.knobs) !== JSON.stringify(fresh.knobs);
+    const sorted = (x: EvolveKnobs): string => JSON.stringify(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1)));
+    const knobsMoved = sorted(old.knobs) !== sorted(fresh.knobs);
     if (knobsMoved && old.generations.length > 0) throw new Error(`${o.out} has generation(s) decided under other knobs -- use a new --out, or delete their result.json files and the generations after them`);
     state = knobsMoved ? { ...old, knobs: fresh.knobs, constraints: fresh.constraints } : old;
     if (state.generations.length) say(`resuming: ${state.generations.length} generation(s) done in ${o.out}`);
   }
   const save = (): void => fs.writeFileSync(stateFile, `${JSON.stringify(state, null, 2)}\n`);
   save();
+  const knobs = state.knobs;
 
   const summaries: GenSummary[] = [];
   for (let g = 1; g <= o.generations; g++) {
@@ -246,7 +257,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
       cubeFile: inputFile, format: 'grid', drafts, games: o.games, jobs: o.jobs, seed, profiles: o.profiles,
       ratingsFile: o.ratingsFile, record: 0, ...(o.recordEvery ? { recordEvery: o.recordEvery } : {}), out, builder: 'lab',
       gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: o.weights,
-      ...(explore && o.explore ? { explore: { share: o.explore.share, cap: o.explore.cap, gold: o.explore.gold, below: o.knobs.deadMinRating } } : {}),
+      ...(explore && o.explore ? { explore: { share: o.explore.share, cap: o.explore.cap, gold: o.explore.gold, below: knobs.deadMinRating } } : {}),
     }, say);
     /** A batch's run folder as the decision reads it: meta.json (written; the plain drafts'), stats, balance, design effect. */
     const readBatch = (out: string): { recs: DraftRecord[]; metaDoc: MetaDoc; stats: ReturnType<typeof batchStats>['stats']; deff: number; explore: ExploreTable | null; plain: number } => {
@@ -267,22 +278,26 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     const notes: Map<string, Note> = notesText ? parseNotes(notesText) : new Map();
     const tabu = new Set(state.generations.flatMap((r) => r.swaps.map((s) => s.out)));
     const sel = {
-      cube, cards: evolveCards(cube, poolBy), pool, stats, balance, drafts: recs.length, constraints: state.constraints, notes, tabu, knobs: o.knobs, deff: disc.deff,
+      cube, cards: evolveCards(cube, poolBy), pool, stats, balance, drafts: recs.length, constraints: state.constraints, notes, tabu, knobs: knobs, deff: disc.deff,
     };
     const first = discoveryStage(sel);
     // 2. Confirmation: the candidates, tested again on a fresh, disjoint seed range, read on its own.
     let confirmation: ConfirmInput | undefined;
     let confirmSeeds: [number, number] | undefined;
     if (first.plan.drafts > 0) {
-      const c0 = o.seed + o.knobs.confirmSeedOffset + (g - 1) * o.knobs.confirmMaxDrafts;
+      const c0 = o.seed + knobs.confirmSeedOffset + (g - 1) * knobs.confirmMaxDrafts;
       confirmSeeds = [c0, c0 + first.plan.drafts - 1];
-      say(`generation ${g}: ${first.candidates.length} candidate(s) at FDR ${o.knobs.fdrQ} (${first.candidates.map((a) => `${a.name}: ${a.status}`).join('; ')}); `
+      say(`generation ${g}: ${first.candidates.length} candidate(s) at FDR ${knobs.fdrQ} (${first.candidates.map((a) => `${a.name}: ${a.status}`).join('; ')}); `
         + `confirming on ${first.plan.drafts} fresh draft(s), seeds ${confirmSeeds[0]}-${confirmSeeds[1]}`
-        + (first.plan.underpowered.length ? ` (under-powered at the ${o.knobs.confirmMaxDrafts}-draft cap: ${first.plan.underpowered.join(', ')})` : ''));
+        + (first.plan.underpowered.length ? ` (under-powered at the ${knobs.confirmMaxDrafts}-draft cap: ${first.plan.underpowered.join(', ')})` : ''));
       const confirmDir = path.join(dir, 'confirm');
       await labRun(first.plan.drafts, confirmSeeds[0], confirmDir, false);
       const cb = readBatch(confirmDir);
-      confirmation = { stats: cb.stats, mean: cb.metaDoc.sample.shrinkage.mean, deff: cb.deff, drafts: cb.recs.length, seeds: confirmSeeds, games: cb.metaDoc.sample.games };
+      confirmation = {
+        stats: cb.stats, mean: cb.metaDoc.sample.shrinkage.mean, deff: cb.deff, drafts: cb.recs.length, seeds: confirmSeeds, games: cb.metaDoc.sample.games,
+        // D357: every earlier generation's confirmation attempts (pooled per card and rule when confirmPool is 1; reported either way).
+        gen: g, history: priorAttempts(summaries),
+      };
     }
     const decision = selectSwaps({ ...sel, ...(confirmation ? { confirmation } : {}) });
     const versionIn = versionOf(cube.title);
@@ -298,7 +313,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     fs.writeFileSync(path.join(dir, 'cube.md'), outText);
     const exploreOut = disc.explore && o.explore ? {
       plain: disc.plain, health: exploreHealth(disc.explore, o.explore.share),
-      judged: judgeExplored(disc.explore, { margin: o.explore.margin, minDecks: o.explore.minDecks, q: o.knobs.fdrQ }),
+      judged: judgeExplored(disc.explore, { margin: o.explore.margin, minDecks: o.explore.minDecks, q: knobs.fdrQ }),
     } : null;
     fs.writeFileSync(path.join(dir, 'stats.json'), `${JSON.stringify({ gen: g, drafts: recs.length, seeds, confirmSeeds: confirmSeeds ?? null, mean: balance.mean, balance, decision, stats: summary.stats, ...(exploreOut ? { explore: exploreOut } : {}) }, null, 1)}\n`);
     fs.writeFileSync(path.join(dir, 'summary.json'), `${JSON.stringify(summary)}\n`);

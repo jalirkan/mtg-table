@@ -37,7 +37,10 @@
 // CONFIRMATION: the candidates are tested again, the same rule, on a batch of
 // fresh drafts with a disjoint seed range (sized by confirmPlan for the effect
 // that matters, at power confirmPower), with Holm at confirmAlpha across the
-// candidates.  Only a confirmed candidate is cut.
+// candidates.  Only a confirmed candidate is cut.  A card confirmed again in a
+// later generation (D357, knob confirmPool 1) is judged on every one of its
+// confirmation batches pooled -- a failed one counts against it -- at
+// confirmAlpha / 2^(attempt - 1); its first attempt is exactly the above.
 
 // A lead that does not pass is `watch` ("insufficient data"), with an estimate
 // of the drafts per generation it would take to discover.  Never cut:
@@ -105,6 +108,8 @@ export interface EvolveKnobs {
   confirmMinDrafts: number;
   confirmMaxDrafts: number;
   confirmSeedOffset: number;
+  /** D357: 1 pools a card's every confirmation batch on a rule and halves the level each repeat; 0 is D331 (each batch alone).  A folder from before D357 resumes as 0. */
+  confirmPool: number;
   watchWinMargin: number;
   colourSlack: number;
   minSignposts: number;
@@ -137,6 +142,7 @@ export const EVOLVE_DEFAULTS: EvolveKnobs = {
   confirmMinDrafts: 20,
   confirmMaxDrafts: 300,
   confirmSeedOffset: 1000000,
+  confirmPool: 1,
   watchWinMargin: 0.12,
   colourSlack: 2,
   minSignposts: 2,
@@ -160,6 +166,7 @@ export function mergeKnobs(base: EvolveKnobs, args: string[]): EvolveKnobs {
     if (!(k in base)) throw new Error(`--evolve: unknown knob ${k} (known: ${Object.keys(base).join(', ')})`);
     out[k] = Number(m[2]);
   }
+  if (out.confirmPool !== 0 && out.confirmPool !== 1) throw new Error(`--evolve confirmPool is 0 (D331) or 1 (D357), got ${out.confirmPool}`);
   return out;
 }
 
@@ -773,6 +780,34 @@ export interface ConfirmInput {
   drafts: number;
   seeds: [number, number];
   games: number;
+  /** The generation (1-based) the batch belongs to: an attempt's label in the history.  Absent: 0. */
+  gen?: number;
+  /** Every earlier confirmation attempt of every card (priorAttempts over the generations before this one; D357). */
+  history?: ConfirmAttempt[];
+}
+
+/**
+ * One confirmation attempt: a card's rule tested on one confirmation batch,
+ * that batch's own numbers (D357).  The batch's win numbers and mean ride along
+ * for dominant-pick's size filter on the pooled evidence.
+ */
+export interface ConfirmAttempt {
+  name: string;
+  rule: Rule;
+  gen: number;
+  seeds: [number, number];
+  /** The batch's own test: observations, successes, null boundary, design effect, p. */
+  n: number;
+  x: number;
+  p0: number;
+  deff: number;
+  p: number;
+  /** The card's decisive games and wins in that batch, and the batch's mean card win rate. */
+  games: number;
+  wins: number;
+  mean: number;
+  /** Whether the card was cut on that attempt. */
+  confirmed: boolean;
 }
 
 export interface Confirmation {
@@ -781,32 +816,128 @@ export interface Confirmation {
   discovery: RuleTest & { qValue?: number };
   /** The same test on the fresh seeds (null: no batch, or the card was never dealt there). */
   confirm: RuleTest | null;
-  /** Holm-adjusted p of the confirmation test. */
+  /** Holm-adjusted p of the test that decided: this batch's (D331), or the pooled one at its spent level (D357). */
   holmP: number | null;
   confirmed: boolean;
   /** Why not, in words, when not. */
   reason: string;
+  /** D357: which attempt on this rule this is (1 = the first; 0 = no observations, not an attempt). */
+  attempt?: number;
+  /** D357: the card's earlier attempts on this rule, oldest first. */
+  history?: ConfirmAttempt[];
+  /** D357: every attempt's batch pooled, this one included (equal to `confirm` on a first attempt). */
+  pooled?: RuleTest | null;
+  /** D357: the p that went into Holm: the pooled p times 2^(attempt-1) under confirmPool 1, this batch's p under 0. */
+  spentP?: number | null;
+  /** D357: this attempt as the next generation's history reads it (null: no observations). */
+  thisAttempt?: ConfirmAttempt | null;
 }
 
-/** Each candidate's rule on the fresh batch; Holm at confirmAlpha across them; the size filter again. */
+/**
+ * Every confirmation attempt the given generations made, oldest first (D357):
+ * each candidate whose confirmation batch observed it.  A generation decided
+ * before D357 has no `thisAttempt`; its attempt is rebuilt from the
+ * confirmation test it recorded (dominant-pick's size numbers are then the
+ * test's own, which no D331 decision reads).
+ */
+export function priorAttempts(gens: Array<{ gen: number; decision: Pick<Decision, 'confirmations' | 'confirmBatch'> }>): ConfirmAttempt[] {
+  const out: ConfirmAttempt[] = [];
+  for (const g of [...gens].sort((a, b) => a.gen - b.gen)) {
+    for (const c of g.decision.confirmations) {
+      if (c.thisAttempt) { out.push({ ...c.thisAttempt, gen: g.gen }); continue; }
+      if (c.thisAttempt === null || !c.confirm) continue;
+      const t = c.confirm;
+      out.push({ name: c.name, rule: c.rule, gen: g.gen, seeds: g.decision.confirmBatch?.seeds ?? [0, 0], n: t.n, x: t.x, p0: t.p0, deff: t.deff, p: t.p,
+        games: t.rule === 'dominant-win' ? t.n : 0, wins: t.rule === 'dominant-win' ? t.x : 0, mean: t.rule === 'dominant-win' ? t.p0 : 0, confirmed: c.confirmed });
+    }
+  }
+  return out;
+}
+
+/**
+ * One rule's test over several confirmation batches pooled (D357).  Each batch
+ * keeps its own null boundary and design effect: the effective counts (a
+ * card's games over its batch's design effect) add, and the boundary is their
+ * effective-count-weighted mean.  A sum of independent binomials with those
+ * rates has at most a binomial's tail beyond its mean (Hoeffding 1956), so the
+ * binomial test of the sum is valid, and conservative when the batches' means
+ * differ.  One attempt is that attempt's own test, unchanged.
+ */
+export function pooledTest(rule: Rule, attempts: Array<Pick<ConfirmAttempt, 'n' | 'x' | 'p0' | 'deff' | 'p'>>): RuleTest | null {
+  const a = attempts.filter((t) => t.n > 0);
+  if (!a.length) return null;
+  if (a.length === 1) {
+    const t = a[0] as ConfirmAttempt;
+    return { rule, n: t.n, x: t.x, rate: t.x / t.n, p0: t.p0, deff: t.deff, p: t.p };
+  }
+  const n = a.reduce((s, t) => s + t.n, 0);
+  const x = a.reduce((s, t) => s + t.x, 0);
+  const ne = a.reduce((s, t) => s + t.n / Math.max(1, t.deff), 0);
+  const xe = a.reduce((s, t) => s + t.x / Math.max(1, t.deff), 0);
+  const p0 = a.reduce((s, t) => s + (t.n / Math.max(1, t.deff)) * t.p0, 0) / ne;
+  const p = rule === 'dead' ? binomLower(xe, ne, p0) : binomUpper(xe, ne, p0);
+  return { rule, n, x, rate: x / n, p0, deff: n / ne, p };
+}
+
+/** The size filter on pooled attempts: dominant-win against the pooled boundary, dominant-pick by the pooled shrunk win rate against the pooled mean. */
+function pooledSize(t: RuleTest, a: ConfirmAttempt[], k: EvolveKnobs): boolean {
+  if (t.rule === 'dominant-win') return t.rate >= t.p0 + k.dominantMargin;
+  if (t.rule === 'dead') return true;
+  const games = a.reduce((s, x) => s + x.games, 0);
+  const wins = a.reduce((s, x) => s + x.wins, 0);
+  const mean = games ? a.reduce((s, x) => s + x.games * x.mean, 0) / games : a.reduce((s, x) => s + x.mean, 0) / a.length;
+  return (wins + SHRINK_K * mean) / (games + SHRINK_K) >= mean;
+}
+
+/**
+ * Each candidate's rule on the fresh batch; Holm at confirmAlpha across them;
+ * the size filter again.  D357 (`confirmPool` 1): a candidate that was tested
+ * on earlier confirmation batches is judged on all of them pooled with this
+ * one, a failed attempt included, and its p is doubled for every earlier
+ * attempt before Holm (attempt j tested at confirmAlpha / 2^(j-1)), so over any
+ * number of attempts a card with no effect is cut with probability at most
+ * 2·confirmAlpha.  A first attempt is exactly D331's test.
+ */
 export function confirmCandidates(candidates: Assessment[], cards: EvolveCard[], c: ConfirmInput | undefined, k: EvolveKnobs): Confirmation[] {
   const byName = new Map(cards.map((x) => [x.name, x]));
+  const pool = (k.confirmPool ?? 0) >= 1;
   const cands = candidates.filter((a) => a.test && (a.status === 'dominant-win' || a.status === 'dominant-pick' || a.status === 'dead'));
   const tests = cands.map((a) => {
     const s = c?.stats.get(a.name);
     return c && s && s.seen > 0 ? ruleTest(a.status as Rule, byName.get(a.name) as EvolveCard, s, c.mean, c.deff, k, false) : null;
   });
-  const h = holm(tests.map((t) => t?.p ?? 1), k.confirmAlpha);
+  const prior = cands.map((a) => (c?.history ?? []).filter((h) => h.name === a.name && h.rule === a.status && h.n > 0).sort((x, y) => x.gen - y.gen));
+  const now = cands.map((a, i): ConfirmAttempt | null => {
+    const t = tests[i];
+    const s = c?.stats.get(a.name);
+    return t && s && c ? { name: a.name, rule: t.rule, gen: c.gen ?? 0, seeds: c.seeds, n: t.n, x: t.x, p0: t.p0, deff: t.deff, p: t.p, games: s.games, wins: s.wins, mean: c.mean, confirmed: false } : null;
+  });
+  const pooled = cands.map((a, i) => { const t = now[i]; return t ? pooledTest(a.status as Rule, [...(prior[i] as ConfirmAttempt[]), t]) : null; });
+  const attemptOf = (i: number): number => (now[i] ? (prior[i] as ConfirmAttempt[]).length + 1 : 0);
+  const spent = cands.map((_, i) => {
+    const t = tests[i];
+    if (!t) return null;
+    return pool ? Math.min(1, (pooled[i] as RuleTest).p * 2 ** (attemptOf(i) - 1)) : t.p;
+  });
+  const h = holm(spent.map((p) => p ?? 1), k.confirmAlpha);
   return cands.map((a, i) => {
     const t = tests[i] ?? null;
     const s = c?.stats.get(a.name);
+    const j = attemptOf(i);
+    const pt = pooled[i] ?? null;
+    const repeat = pool && j > 1;
     const sig = !!t && (h.reject[i] as boolean);
-    const sized = !!t && !!s && !!c && passesSize(t, s, c.mean, k);
+    const sized = !!t && !!s && !!c && (repeat ? pooledSize(pt as RuleTest, [...(prior[i] as ConfirmAttempt[]), now[i] as ConfirmAttempt], k) : passesSize(t, s, c.mean, k));
     const confirmed = sig && sized;
+    const where = repeat ? `on all ${j} confirmation batches pooled (attempt ${j}, level ${k.confirmAlpha} / ${2 ** (j - 1)})` : 'on the fresh seeds';
     const reason = !c ? 'no confirmation batch was run' : !t ? 'no observations in the confirmation batch'
-      : !sig ? `not significant on the fresh seeds (Holm p ${pv(h.adjusted[i] as number)} > ${k.confirmAlpha})`
-        : !sized ? (a.status === 'dominant-win' ? `won ${pct(t.rate)}, under the mean + ${k.dominantMargin}` : 'its shrunk win rate fell under the mean') : '';
-    return { name: a.name, rule: a.status as Rule, discovery: a.test as RuleTest, confirm: t, holmP: t ? (h.adjusted[i] as number) : null, confirmed, reason };
+      : !sig ? `not significant ${where} (Holm p ${pv(h.adjusted[i] as number)} > ${k.confirmAlpha})`
+        : !sized ? (a.status === 'dominant-win' ? `won ${pct(repeat ? (pt as RuleTest).rate : t.rate)}${repeat ? ' pooled' : ''}, under the mean + ${k.dominantMargin}` : `its${repeat ? ' pooled' : ''} shrunk win rate fell under the mean`) : '';
+    const mine = now[i] ? { ...(now[i] as ConfirmAttempt), confirmed } : null;
+    return {
+      name: a.name, rule: a.status as Rule, discovery: a.test as RuleTest, confirm: t, holmP: t ? (h.adjusted[i] as number) : null, confirmed, reason,
+      attempt: j, history: prior[i] as ConfirmAttempt[], pooled: pt, spentP: spent[i] ?? null, thisAttempt: mine,
+    };
   });
 }
 
@@ -841,6 +972,8 @@ export interface Decision {
   confirmBatch?: { drafts: number; seeds: [number, number]; games: number; mean: number; deff: number };
   /** Every candidate, confirmed or not, with both batches' numbers. */
   confirmations: Confirmation[];
+  /** The confirmation rule that decided: D331 (each batch alone) or D357 (a card's batches pooled, the level halved each repeat).  Absent: D331. */
+  confirmRule?: 'D331' | 'D357';
   /** Cuts the evidence supported that found no replacement keeping the constraints. */
   unmatched: Array<{ name: string; why: Status; reason: string }>;
   /** Leads that did not pass their threshold. */
@@ -959,7 +1092,7 @@ export function selectSwaps(x: SelectInput): Decision {
     added.add(chosen.card.name);
     const conf = confirmed.get(a.name);
     const evidence = a.note ? `notes: ${a.note}; ${a.evidence}`
-      : conf && cb ? `discovery (${x.drafts} drafts): ${ruleWords(conf.discovery)}${conf.discovery.qValue !== undefined ? `, q ${pv(conf.discovery.qValue)}` : ''}; confirmed on fresh seeds ${cb.seeds[0]}–${cb.seeds[1]} (${cb.drafts} drafts): ${ruleWords(conf.confirm as RuleTest)}, Holm p ${pv(conf.holmP as number)}`
+      : conf && cb ? `discovery (${x.drafts} drafts): ${ruleWords(conf.discovery)}${conf.discovery.qValue !== undefined ? `, q ${pv(conf.discovery.qValue)}` : ''}; confirmed on fresh seeds ${cb.seeds[0]}–${cb.seeds[1]} (${cb.drafts} drafts): ${ruleWords(conf.confirm as RuleTest)}${(conf.attempt ?? 1) > 1 && k.confirmPool >= 1 && conf.pooled ? `; attempt ${conf.attempt as number}, every confirmation batch pooled: ${ruleWords(conf.pooled)}, tested at ${k.confirmAlpha} / ${2 ** ((conf.attempt as number) - 1)}` : ''}, Holm p ${pv(conf.holmP as number)}`
         : a.evidence;
     swaps.push({ out: cut.name, outSection: cut.section, in: chosen.card.name, inSection: chosen.card.section, why: a.status,
       evidence, fit: chosen.cand.parts });
@@ -992,7 +1125,7 @@ export function selectSwaps(x: SelectInput): Decision {
   return {
     swaps, assessments,
     discovery: { drafts: x.drafts, family: disc.family, q: k.fdrQ, cutoff: disc.cutoff, deff: disc.deff, candidates: candidates.length },
-    plan, ...(cb ? { confirmBatch: { drafts: cb.drafts, seeds: cb.seeds, games: cb.games, mean: cb.mean, deff: cb.deff } } : {}), confirmations,
+    plan, ...(cb ? { confirmBatch: { drafts: cb.drafts, seeds: cb.seeds, games: cb.games, mean: cb.mean, deff: cb.deff } } : {}), confirmations, confirmRule: k.confirmPool >= 1 ? 'D357' : 'D331',
     unmatched, watch, aiLimited, humanTest, pendingTries, verdict, violationsBefore: before, violationsAfter: violations(current, x.constraints),
   };
 }
