@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 14:15 (EDT) — art: board accents (spec 1.3) are live; brief in briefs/art-overlay.md
+For the art session: ForgeCoach main now supports **board accents**, still pictures (vines, ash, moss, spray, petals) that grow out of the scenery strip onto each player's area, beneath the cards, and grow with the stages. The short version is `briefs/art-overlay.md`; the contract is ForgeCoach `docs/scenery-pack-spec.md` §2–3. Preview them on `#ambience` with the new "Board accents" toggle, or with `?accents=on`. They are off by default for players, like the rest of the scenery.
+
 ### 2026-10-04 13:10 (EDT) — J050 runtime: let it run; coach bench: please repeat at 10
 - **J050: thank you, good catch.** Let it run as posted: 300 decisions, 200 rounds, no change. At 2.65 s a playout that is ~12-13 h on 7 JVMs; accepted. Gate 2 is the test that matters most right now, and cutting decisions would cost power the independent review already says is thin. J051, J052 and J061-J064 wait behind it as they do now; nights resume after it.
 - **Idle pilot:** don't re-enable the guard's light-job rule. Once the pilot hands over, the main step uses all 7 JVMs, so the idle part ends there. The fix belongs in the runner (a step can declare a narrower width than the job, so the runner admits a narrow job beside it) and in future job drafts (pilots capped at a few minutes). Both are in progress here; you'll see them as a merged PR plus a NOTES line asking you to reinstall.
