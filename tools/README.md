@@ -64,6 +64,8 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `ml/reserved.py` | The AI ladder's dev/confirm decks, keyed by card multiset; `matchup_data.py` and `dataset.py` drop every game played with one (D340). Standard library. | no (12h) | no |
 | `ml/record-pairs.sh` | AI-vs-AI games of deck pairs × seeds × seats through `RecordMatch --match`, each worker in its own Forge home, resumable. | no | boots Forge |
 | `ml/tests/` | The ML tests (`python3 -m unittest discover -s tools/ml/tests`): every committed recording encoded with its hidden zones scrambled and nothing changed, labels, determinism, the schema golden, the split; a cube-lab run folder read with `--run-dir` (D315). | step 12h; CI (the standard-library half) | no |
+| `lab/warehouse.py` | **The lab warehouse** (D363): `ingest` reads what the queue root, the run folders, the ladder's `sprt.jsonl`, `docs/evidence/experiments.jsonl` and `var/ml/`'s reports added since the last run (complete lines only; a truncated or replaced file is reset) into zstd Parquet tables under `var/warehouse/` (`drafts`, `games`, `decks`, `deck_cards`, `picks` partitioned by source and night; `cards`, `cube_cards`, `runs`, `versions`, `nights`, `sprt`, `experiments`, `gate_reports`, `ml_reports`, `matchup_power`), `sql` writes `var/warehouse/lab.duckdb` holding only views over them, `verify` counts every table against the JSONL. Needs pyarrow and duckdb; `notebooks/*.py` are its starter notebooks. `docs/guides/lab-warehouse.md` is the manual. | no (CI runs its tests) | no |
+| `lab/tests/` | The warehouse's tests (`python3 -m unittest discover -s tools/lab/tests`): exact row counts against the fixtures' JSONL, appends, truncation and replacement resets, a killed ingest, checkpoints, explore flags, the views, every notebook run on the fixture warehouse; the standard-library half runs without duckdb and pyarrow. | CI | no |
 | `build-deck.ts` | Writes every AI deck's `.dck` from `decks/specs/*.json`; `--check` fails when one differs (D116); `--pool RG` lists castable cards. Needs `var/cards/cards.sqlite`. | step 12e (`--check`, D183); not CI | no |
 | `check-deck.mjs` | Will the engine play this `.dck`, card for card? A static pass over Forge's scripts, then `Smoke` on the deck (`--no-engine` skips it), then `--scryfall`. | no | boots Forge (unless `--no-engine`) |
 | `deck-smoke.sh` | Five games per AI deck with the AI piloting it; asserts it casts and attacks (D116, D117). | no | boots Forge |
@@ -313,6 +315,7 @@ tools/cubelab.sh selfplay cubes/synergy-cube-180.md --iterations 2 --drafts-per-
 tools/cubelab.sh run --bridge pauper,modern-era --drafts 40 --games 1 --jobs 4      # D322: a pool mixed from two cubes
 tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7                       # D323: the night's mix, printed
 python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup --holdout-cubes all   # D324
+python3 tools/lab/warehouse.py ingest && duckdb var/warehouse/lab.duckdb   # D363: the lab warehouse, incremental; then SQL
 # overnight, resumable (the same --out skips the drafts already done):
 tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 1000 --jobs 4 --out var/cubelab/runs/overnight \
     && tools/cubelab.sh report var/cubelab/runs/overnight
