@@ -316,7 +316,9 @@ values of its `metrics:` as of the last minute's read (the same read `abort:` us
 files plus the recordings' bytes as their lines report them, no directory walk),
 `q.bridge_share`, and per cube `cubes: [{ id, done, planned }]` (from the night plan's
 `normal/<cube>` chunks). Each `drafts.jsonl` is read incrementally on that minute's tick,
-from the last complete line read before, and memoised by size and mtime. The public copy keeps a `live` key only in the
+from the last complete line read before, and memoised by size and mtime; the reader streams
+1 MB at a time and keeps a few numbers per game, never the lines, so the runner's heap stays
+in tens of MB whatever the files weigh (D337, amended for J059). The public copy keeps a `live` key only in the
 metric-name shape (never one with a `cubes.` segment) and a finite number for its value; it names the cubes only when the job
 file says `public_cubes: yes`, else `cube 1`, `cube 2` …. `running`
 includes a job someone else runs: a `running` STATUS without a `runner:` line, such as the

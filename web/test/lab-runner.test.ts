@@ -41,7 +41,8 @@ import { decide, DEFAULT_BACKOFF, initialBackoff, parsePressure, retryCap, type 
 import { controlReader, parseControl, readControl, writeControl } from '../../tools/runner/control.ts';
 import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
-import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expandGlob, progressOf, rateAndEta, readDrafts } from '../../tools/runner/metrics.ts';
+import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubelabQueue, draftStats, eachCompleteLine, expandGlob, ladder, lines, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
+import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
 import { DEFAULT_CONFIG, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
@@ -463,19 +464,177 @@ test('metrics: the queue per cube, bridge share, draws, turns, timeouts, recordi
   // The torn line completes and a new one lands: only the new bytes are read.
   const ff = path.join(q, 'normal/fair-fight/drafts.jsonl');
   fs.appendFileSync(ff, `"match":{"games":[]}}\n${JSON.stringify(draft(999, []))}\n`);
-  const before = readDrafts(ff);
-  assert.equal(before.length, 3);
-  assert.equal(readDrafts(ff), before, 'unchanged size: memoised');
+  const before = draftStats(ff);
+  assert.equal(before.drafts, 3);
+  assert.equal(draftStats(ff), before, 'unchanged size: memoised');
   assert.equal(cubelabQueue(d, ['q', 'night', '1'])['cubes.fair-fight.done'], 2);
   // Rewritten smaller (a fresh run): read again from the top.
   writeLines(ff, [draft(200, [])]);
-  assert.equal(readDrafts(ff).length, 1);
+  assert.equal(draftStats(ff).drafts, 1);
   // Rewritten at the same size (a new mtime): read again from the top too.
   const same = JSON.stringify(draft(201, []));
   fs.writeFileSync(ff, `${same}\n`);
   const t = new Date(Date.now() + 5000);
   fs.utimesSync(ff, t, t);
-  assert.equal(readDrafts(ff)[0]!.seed, 201);
+  assert.deepEqual([...draftStats(ff).seeds], [201]);
+});
+
+// A real drafts.jsonl line (run.ts's DraftRecord, ~16 KB of picks and decks), re-seeded and re-played.
+const DRAFT_TEMPLATE = JSON.parse(fs.readFileSync(path.join(REPO, 'fixtures/cubelab/decisions/drafts.jsonl'), 'utf8').split('\n')[0]!) as Record<string, unknown>;
+
+function realisticDraft(key: string, seed: number, i: number): Record<string, unknown> {
+  const games = Array.from({ length: 1 + (i % 3 === 0 ? 1 : 0) }, (_, n) => ({
+    n: n + 1, onPlay: 'A', onPlayVerified: 'A', winner: i % 17 === 0 ? 'draw' : i % 2 ? 'A' : 'B', turns: 6 + (i % 13),
+    // Some non-integer times: the sums must fold in the old order to give the old numbers.
+    ms: 8000 + ((i * 7919) % 90000) + (i % 5 === 0 ? 0.37 : 0), timeout: i % 23 === 0, reason: null, error: i % 31 === 0 ? 'boom' : null,
+    cpuMs: (i * 104729) % 200000, gameCpuMs: 100,
+    ...(i % 4 === 0 ? { recorded: { dir: `games/${seed}`, bytes: 100000 + i * 13, frames: 300, errors: i % 8 === 0 ? 1 : 0, decisions: 10, decisionErrors: 0 } } : {}),
+  }));
+  return {
+    ...DRAFT_TEMPLATE, cube: `${key} — “quoted”`, seed,
+    match: { games, winsA: 1, winsB: 0, winner: 'A', ...(i % 29 === 0 ? { engineError: 'worker died' } : {}), worker: i % 7 },
+    ...(key.startsWith('bridge/') ? { bridge: { sources: key.slice(7).split('+') } } : {}),
+  };
+}
+
+/** A queue root: two nights over normal and bridge keys, torn and unreadable lines, one file over CHUNK_BYTES. */
+function realisticQueue(d: string): string {
+  const q = path.join(d, 'q');
+  const keys: Array<[string, number]> = [['normal/omega', 90], ['normal/pauper', 25], ['normal/fair-fight', 12], ['bridge/omega+pauper', 15], ['bridge/pauper+vintage', 8]];
+  const n1: object[] = [], n2: object[] = [];
+  let i = 0;
+  for (const [key, n] of keys) {
+    const rows = Array.from({ length: n }, (_, k) => JSON.stringify(realisticDraft(key, k + 1, i++)));
+    rows.splice(3, 0, '', '{"seed": not json', JSON.stringify(realisticDraft(key, 777777, i++)));
+    const f = path.join(q, key, 'drafts.jsonl');
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, `${rows.join('\n')}\n{"seed":${n + 1},"match":{"ga`);
+    n1.push({ key, seed: 1, drafts: Math.floor(n / 2) });
+    n2.push({ key, seed: Math.floor(n / 2) + 1, drafts: n });
+  }
+  fs.writeFileSync(path.join(q, 'night-1.json'), JSON.stringify({ night: 1, chunks: n1 }));
+  fs.writeFileSync(path.join(q, 'night-2.json'), JSON.stringify({ night: 2, chunks: n2 }));
+  fs.writeFileSync(path.join(q, 'queue.json'), JSON.stringify({ games: 1, next: {} }));
+  assert.ok(fs.statSync(path.join(q, 'normal/omega/drafts.jsonl')).size > CHUNK_BYTES, 'one file spans several reads');
+  return q;
+}
+
+const QUEUE_ARGS = [['q'], ['q', 'night', '1'], ['q', 'night', '2']];
+
+test('metrics: the streamed extractors give the old numbers (same keys, same values) on a realistic queue, aibench, lines and count', () => {
+  const d = tmp('same');
+  realisticQueue(d);
+  for (const a of QUEUE_ARGS) {
+    const now = cubelabQueue(d, a);
+    assert.deepEqual(now, legacyCubelabQueue(d, a), a.join(' '));
+    assert.deepEqual(cubelabQueue(d, a), now, 'memoised: the same again');
+  }
+  const two = cubelabQueue(d, ['q', 'night', '2']);
+  assert.ok((two.games as number) > 100 && (two.engine_error_rate as number) > 0 && (two.recorded_errors as number) > 0 && (two.recorded_games as number) > 0);
+  // ai-bench shards and the generic counters, against the old readers too.
+  const b = path.join(d, 'var/ai-bench/n');
+  const g = (i: number) => ({ winner: ['A', 'B', 'draw'][i % 3], focusWon: i % 2 ? 'yes' : 'no', turns: 10 + (i % 7), ms: 1000 + i * 37.5, timeout: i % 11 === 0, error: i % 13 === 0 ? 'x' : '', aiEvalTimeouts: i % 2, aStats: { counts: { 'search.fallback.budget': i % 3, 'search.p.considered': 5 } }, pad: 'é'.repeat(3000) });
+  writeLines(path.join(b, 'shard-0.jsonl'), Array.from({ length: 400 }, (_, i) => g(i)), '{"winner":"A"');
+  writeLines(path.join(b, 'shard-1.jsonl'), Array.from({ length: 50 }, (_, i) => g(i + 400)));
+  fs.writeFileSync(path.join(b, 'shard-0.log'), "a\nCouldn't map x\n\nCouldn't map y\nCouldn't map torn");
+  assert.deepEqual(aibench(d, ['var/ai-bench/*']), legacyAibench(d, ['var/ai-bench/*']));
+  for (const a of [['var/ai-bench/n/*'], ['q/*/*/drafts.jsonl']]) assert.equal(lines(d, a), legacyLines(d, a));
+  assert.equal(count(d, ['var/ai-bench/n/*', "Couldn't map"]), legacyCount(d, ['var/ai-bench/n/*', "Couldn't map"]));
+  assert.equal(count(d, ['var/ai-bench/n/*', "Couldn't map"]), 2, 'the torn last line is not counted');
+  writeLines(path.join(d, 'lad/results/a.jsonl'), [{ ms: 3000, error: true }, { ms: 1000 }, { ms: 2000, timeout: true }], '{"ms":9');
+  assert.deepEqual(ladder(d, ['lad']), { games: 3, errors: 1, timeouts: 1, median_game_s: 2 });
+});
+
+test('metrics: drafts.jsonl appended to is read from where it stopped; truncated or replaced, from the top', () => {
+  const d = tmp('inc');
+  const q = realisticQueue(d);
+  const f = path.join(q, 'normal/omega/drafts.jsonl');
+  const a = ['q', 'night', '2'];
+  cubelabQueue(d, a);
+  const stats = draftStats(f);
+  const drafts0 = stats.drafts;
+  // The torn line completes and more land; at the same time, scribble over the first line in place.
+  // The size grew, so only the new bytes are read: the scribble is never seen.
+  const fd = fs.openSync(f, 'r+');
+  fs.writeSync(fd, Buffer.from('X'.repeat(20)), 0, 20, 0);
+  fs.closeSync(fd);
+  fs.appendFileSync(f, `ames":[]}}\n${[200, 201, 202].map((s, k) => JSON.stringify(realisticDraft('normal/omega', s, k))).join('\n')}\n`);
+  const after = draftStats(f);
+  assert.equal(after, stats, 'the same running counts, added to');
+  assert.equal(after.drafts, drafts0 + 4, 'the completed torn line and three new ones; the first line still counted');
+  assert.ok(after.seeds.has(91) && after.seeds.has(202));
+  // Put the first line back: from here on the old reader and the new agree again, append by append.
+  const fd2 = fs.openSync(f, 'r+');
+  fs.writeSync(fd2, Buffer.from(JSON.stringify(realisticDraft('normal/omega', 1, 0)).slice(0, 20)), 0, 20, 0);
+  fs.closeSync(fd2);
+  for (let k = 0; k < 3; k++) {
+    fs.appendFileSync(f, `${JSON.stringify(realisticDraft('normal/omega', 300 + k, k))}\n{"seed":`.slice(0, k === 1 ? undefined : -9));
+    assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), `append ${k}`);
+  }
+  // Truncated (a fresh run in the same folder): read again from the top.
+  const p = path.join(q, 'normal/pauper/drafts.jsonl');
+  cubelabQueue(d, a);
+  fs.truncateSync(p, 40_000);
+  assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), 'truncated');
+  assert.ok(draftStats(p).drafts < 5);
+  // Replaced by a new, larger file (rotation: a new inode): read again from the top.
+  const big = Array.from({ length: 40 }, (_, k) => JSON.stringify(realisticDraft('normal/pauper', k + 1, k + 50))).join('\n');
+  fs.writeFileSync(`${p}.new`, `${big}\n`);
+  fs.renameSync(`${p}.new`, p);
+  assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), 'replaced');
+  assert.equal(draftStats(p).drafts, 40);
+  // Gone: nothing, and no stale numbers.
+  fs.rmSync(p);
+  assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), 'removed');
+});
+
+test('metrics: the line reader decodes a character split across two reads and a line longer than a read', () => {
+  const d = tmp('utf');
+  const f = path.join(d, 'x.jsonl');
+  // "—" is three bytes; put its middle byte on the read boundary.
+  const first = `${'a'.repeat(CHUNK_BYTES - 1)}—b`;
+  const long = 'é'.repeat(CHUNK_BYTES);
+  fs.writeFileSync(f, `${first}\n\n${long}\nshort\ntorn`);
+  const got: string[] = [];
+  const end = eachCompleteLine(f, (l) => got.push(l));
+  assert.deepEqual(got.map((l) => l.length), [first.length, long.length, 5]);
+  assert.equal(got[0], first);
+  assert.equal(got[1], long);
+  assert.equal(end, fs.statSync(f).size - 4, 'stops after the last newline');
+  const rest: string[] = [];
+  fs.appendFileSync(f, 'ed\n');
+  eachCompleteLine(f, (l) => rest.push(l), end);
+  assert.deepEqual(rest, ['torned']);
+  assert.deepEqual(completeLines(f).length, 4);
+});
+
+test('metrics: the queue extractor stays in a small heap whatever the file size (a child node capped at 48 MB reads 48 MB of drafts)', () => {
+  const d = tmp('mem');
+  const q = path.join(d, 'q');
+  const f = path.join(q, 'normal/omega/drafts.jsonl');
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  const fd = fs.openSync(f, 'w');
+  let bytes = 0, n = 0;
+  while (bytes < 48 * 1024 * 1024) {
+    const block = Array.from({ length: 100 }, (_, k) => `${JSON.stringify(realisticDraft('normal/omega', n + k + 1, n + k))}\n`).join('');
+    fs.writeSync(fd, block);
+    bytes += Buffer.byteLength(block);
+    n += 100;
+  }
+  fs.closeSync(fd);
+  fs.writeFileSync(path.join(q, 'night-1.json'), JSON.stringify({ chunks: [{ key: 'normal/omega', seed: 1, drafts: n }] }));
+  // Parsed and kept whole, as before, these lines need several times their 48 MB of heap.
+  const script = `
+    const m = await import(${JSON.stringify(path.join(REPO, 'tools/runner/metrics.ts'))});
+    const r = m.cubelabQueue(${JSON.stringify(d)}, ['q', 'night', '1']);
+    globalThis.gc();
+    process.stdout.write(JSON.stringify({ drafts: r.drafts, done: r.night_drafts_done, heapMb: process.memoryUsage().heapUsed / 1048576 }));`;
+  const r = spawnSync(process.execPath, ['--max-old-space-size=48', '--expose-gc', '--input-type=module', '-e', script], { encoding: 'utf8', timeout: 120_000 });
+  assert.equal(r.status, 0, r.stderr.slice(-2000));
+  const out = JSON.parse(r.stdout) as { drafts: number; done: number; heapMb: number };
+  assert.equal(out.drafts, n);
+  assert.equal(out.done, n);
+  assert.ok(out.heapMb < 24, `retained heap ${out.heapMb.toFixed(1)} MB`);
 });
 
 test('live numbers: metrics split into per-cube progress and numbers, headline first; the public copy keeps safe keys and numbers only; cube ids only on opt-in', () => {
