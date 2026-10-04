@@ -1438,8 +1438,18 @@ ${keep.trimEnd()}
     r.published = false;
   }
 
+  /** The last n lines of a file, read from its last 4 MB at most (a step log can be large). */
   tail(file: string, n: number): string {
-    try { return fs.readFileSync(file, 'utf8').split('\n').slice(-n - 1).join('\n'); } catch { return ''; }
+    try {
+      const fd = fs.openSync(file, 'r');
+      try {
+        const size = fs.fstatSync(fd).size;
+        const len = Math.min(size, 4 << 20);
+        const buf = Buffer.alloc(len);
+        fs.readSync(fd, buf, 0, len, size - len);
+        return buf.toString('utf8').split('\n').slice(-n - 1).join('\n');
+      } finally { fs.closeSync(fd); }
+    } catch { return ''; }
   }
 
   /** A step's log into results/<id>/: whole up to 2 MB, else its last 2 MB. */

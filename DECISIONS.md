@@ -15334,6 +15334,42 @@ than default it. `tools/runner.sh plan` prints each step's `threads:` and the st
 line says it. The PC picks this up on its next `tools/runner.sh install`; units already
 running keep the environment they started with.
 
+**Amended 2026-10-04 (branch `c/runner-stream-metrics`): the extractors stream, and keep a few
+numbers per game, never the lines.** Measured on the PC: the daemon died with "JavaScript heap
+out of memory" at ~1 GB of heap during J059 (queue night 2, `metrics: night = cubelab-queue
+var/cubelab/queue night 2`), and again 6 s after its restart; under a drop-in raising the heap to
+3 GB it sat at 1.3–1.4 GB. The root holds nights 1 and 2: 364 MB of `drafts.jsonl` that day. The
+cause: `readDrafts` (above, `c/status-fresh`) read each file incrementally but kept EVERY parsed
+line, ~16 KB of picks and decks each, for the life of the process, and its first read after a
+start took a whole file in one buffer and split it. Parsed, a line costs about three times its
+bytes. Reproduced on a synthetic root shaped like the queue's (7 normal keys and 15 bridge
+keys, lines from `fixtures/cubelab/decisions/drafts.jsonl` re-seeded, `night-1.json`,
+`night-2.json`, `queue.json`), one `cubelabQueue` plus `progressOf` as on a tick, `node
+--trace-gc`'s largest heap: 600 MB of drafts took 1,758 MB (1,711 MB retained after a full GC;
+at a 1 GB cap it dies in `JSON.parse`, as the PC did), and 1,200 MB took 3,398 MB, so the PC's
+3 GB drop-in fails again once today's files have doubled. Now every reader goes through
+`eachCompleteLine`, a synchronous `readSync` loop of 1 MB chunks that decodes a line only once
+its newline is in (a UTF-8 character split across two reads stays whole) and returns the
+offset after the last newline. `draftStats` replaces `readDrafts`: each line is parsed and
+dropped, and the cache keeps counts, the seeds and five numbers per game (ms, turns, CPU ms,
+and a recording's bytes and errors), in file order, so every sum and median folds as before.
+The cache's rules are unchanged: keyed by inode, size and mtime, the appended tail read from
+the last offset, read again from the top when a file shrinks, is replaced or is rewritten at
+the same size. `aibench`, `ladder`, `lines` and `count` stream the same way (they read whole
+files on every tick), and `Runner.tail`, which read a whole step log for `failure.txt`, reads
+its last 4 MB. Same keys, same numbers: the 600 MB and 1,200 MB roots give byte-identical JSON
+under the old and new extractor, and `lab-runner.test.ts` checks the queue, `aibench`, `lines`
+and `count` against the old readers kept in `web/test/lab-runner-legacy-metrics.ts`, with
+appends, a scribble behind the offset that an append must not re-read, truncation, rotation
+and removal. After: 600 MB peaks at 24 MB of heap (10 MB retained) under a 64 MB cap, 1,200 MB
+at 33–40 MB (13 MB retained) under a 64 MB cap, a 3 GB cap or node's default; the first tick
+takes 3.7 s and 7 s there (14 s and 27 s before), a later tick under 0.1 s. A test runs the
+extractor in a child node capped at 48 MB over 48 MB of drafts (the old code dies there). Once
+the PC has run `tools/runner.sh install` with this, its drop-in
+`~/.config/systemd/user/forgecoach-runner.service.d/50-pc-heap.conf`
+(`NODE_OPTIONS=--max-old-space-size=3072`, `MemoryMax=4G`) can go; the restart adopts the
+running J059 and J060 units.
+
 ## D340 — Draft seeds belong to someone: the lab keeps 1–799,999,999, verifications 800,000,000+, and the AI ladder's deck sets 900,000,000+, which `run` and the queue refuse; the dataset builders also drop any game played with a deck-set deck, matched card for card
 
 *Branch `c/review2-fixes`; D340–D344, past every number the open lanes hold or may hold (the lab runner, the coach grader D332–D334, the match launcher's D333, evolve-rigor's D331).*
