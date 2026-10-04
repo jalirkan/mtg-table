@@ -72,6 +72,17 @@ const REQUIRED = [
   ['a3-revealed-top-under-courser.jsonl', 'pass'],
   ['a3-revealed-top-two-cards.jsonl', 'fail'],
   ['a3-revealed-top-look-is-private.jsonl', 'fail'],
+  // D371 (A9): an opponent's face-down card in exile may show its face to the
+  // seat whose effect dug it there with a look permission (Gonti, Thief of
+  // Sanity) -- and in no other shape; in play, the face is the controller's.
+  ['a9-look-permission-under-gonti.jsonl', 'pass'],
+  ['a9-exiled-face-down-named-without-a-dig.jsonl', 'fail'],
+  ['a9-dig-by-the-opponent.jsonl', 'fail'],
+  ['a9-alt-appears-after-the-dig.jsonl', 'fail'],
+  ['a9-opponent-morph-named.jsonl', 'fail'],
+  ['a9-stolen-morph-named-for-its-owner.jsonl', 'fail'],
+  // ... and the opposite direction: the viewer's own hand served as a stub.
+  ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
   // the planted leaks are another seat's record and an option naming a card
   // the viewer cannot see.

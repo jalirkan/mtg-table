@@ -178,6 +178,8 @@ jobs:
       # Step 12: the checker must still reject every one-defect probe.
       - name: check-redaction-selftest.mjs
         run: node tools/check-redaction-selftest.mjs
+      - name: requarantine-selftest.mjs
+        run: node tools/requarantine-selftest.mjs
       # Step 12d over the committed corpus (the gate adds its fresh logs).
       - name: narrate-selftest.mjs
         run: node tools/narrate-selftest.mjs

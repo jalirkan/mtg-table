@@ -72,6 +72,48 @@
     "why": "A3, D315: Experimental Frenzy says \"you may look\" -- private, even though Forge scripts it MayLookAt$ Player"
   },
   {
+    "file": "a9-look-permission-under-gonti.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D371: the viewer's Gonti exiled the opponent's top card face down and may look at it -- an alt on an opponent-owned card in exile, dug from a library while the viewer's trigger resolved (the control for the a9 probes below)"
+  },
+  {
+    "file": "a9-exiled-face-down-named-without-a-dig.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D371: an opponent's face-down card in exile with an alt, and no dig from a library behind it"
+  },
+  {
+    "file": "a9-dig-by-the-opponent.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D371: the dig was the OPPONENT's effect -- their look permission is not the viewer's"
+  },
+  {
+    "file": "a9-alt-appears-after-the-dig.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D371: a look permission comes with the dig; an alt that appears a frame later has no source"
+  },
+  {
+    "file": "a9-opponent-morph-named.jsonl",
+    "level": "fail",
+    "expect": "not the viewing seat",
+    "why": "A9: the opponent's face-down permanent carries its face -- the leak canFaceDownBeShownTo exists for"
+  },
+  {
+    "file": "a9-stolen-morph-named-for-its-owner.jsonl",
+    "level": "fail",
+    "expect": "not the viewing seat",
+    "why": "A9, D371: in play a face-down card's face is its CONTROLLER's -- the owner of a stolen morph does not see it"
+  },
+  {
+    "file": "own-hand-card-redacted.jsonl",
+    "level": "fail",
+    "expect": "has no name -- redaction is too aggressive (it is a redacted stub",
+    "why": "the viewer's own hand card served as a redacted stub: over-redaction, and the checker names the stub's controller"
+  },
+  {
     "file": "a6-library-reveal-is-not-a-whitelist.jsonl",
     "level": "fail",
     "expect": "nothing earlier in this log",
