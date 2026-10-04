@@ -11,7 +11,13 @@
 //   cards       per card: picked / seen (pickRate), average pick index (1 = the
 //               drafter's first card), decks it was played in / times picked
 //               (inclusionRate), decisive games played and won, winRate, the
-//               SHRUNK win rate and Wilson's 95% interval
+//               SHRUNK win rate and Wilson's 95% interval.  A nonbasic LAND is
+//               counted like a spell here (D380): it is a cube card the drafter
+//               took and the builder played.  Basics are not cube cards and
+//               have no entry.  A grid pick takes a whole row, so `picked`
+//               counts every card of it, wanted or not; a low-rated card the
+//               builder never plays reads picked > 0, inDecks 0, and that is data
+//               (D380), not a lost name.
 //   archetypes  a played deck's pair plus its primary theme ("BR-SAC", or "BR"
 //               with no theme): decks, games, win rate, key cards, average
 //               lands, average curve, up to three sample decks
@@ -22,10 +28,13 @@
 //   splash      splashing decks' win rate, and its difference from the rest
 //
 // Win rates are over decisive games (a draw counts in neither column).
+// Archetype key cards, pairs and curves stay NONLAND: every deck plays lands,
+// so a land in a pair or a key-card list says nothing about the deck.
 //
 // SHRINKAGE.  winRateShrunk = (wins + k·m) / (games + k): the posterior mean of
 // a Beta prior with mean m and strength k = 20 games, where m is the mean over
-// every card-game observation of the run (Σ wins / Σ games across all cards).
+// every NONLAND card-game observation of the run (Σ wins / Σ games across all
+// nonland cards; lands, counted since D380, do not move it).
 // A card seen in 4 games at 4–0 shrinks to (4 + 20·0.5) / 24 ≈ 0.58; one at
 // 60–20 to 0.70.  Sort by it, not by winRate.
 //
@@ -65,7 +74,8 @@ const ci = (w: number, g: number): [number, number] => {
 };
 
 interface Obs { wins: number; games: number }
-interface Played { id: string; colors: string; theme: string; splash: boolean; lands: number; names: string[]; main: Array<[number, string]>; wins: number; games: number }
+/** `names`: the deck's nonland cards (pairs, key cards); `cards`: every nonbasic card, lands too (per-card counts, D380). */
+interface Played { id: string; colors: string; theme: string; splash: boolean; lands: number; names: string[]; cards: string[]; main: Array<[number, string]>; wins: number; games: number }
 
 export function buildMeta(meta: RunMeta, info: Record<string, CardInfo>, recs: DraftRecord[], cube: Cube | null, opt: MetaOptions = DEFAULT_META): unknown {
   recs = [...recs].sort((a, b) => a.seed - b.seed);
@@ -83,7 +93,8 @@ export function buildMeta(meta: RunMeta, info: Record<string, CardInfo>, recs: D
       for (const p of dr.picks) for (const n of p.took) {
         i++;
         picked.set(n, (picked.get(n) ?? 0) + 1);
-        pickIdx.set(n, [...(pickIdx.get(n) ?? []), i]);
+        const at = pickIdx.get(n);
+        if (at) at.push(i); else pickIdx.set(n, [i]);
       }
     }
     for (const n of here) seen.set(n, (seen.get(n) ?? 0) + 1);
@@ -99,21 +110,22 @@ export function buildMeta(meta: RunMeta, info: Record<string, CardInfo>, recs: D
       const dr = rec.drafters[k];
       const lands = pd.source === 'lab' ? (dr.deck?.lands ?? 0)
         : pd.main.reduce((s, [n, name]) => s + (BASICS.has(name) || info[name]?.land ? n : 0), 0);
-      const names = pd.main.filter(([, name]) => !BASICS.has(name) && !info[name]?.land).map(([, name]) => name);
-      played.push({ id: pd.theme === 'none' ? pd.key : `${pd.key}-${pd.theme}`, colors: pd.key, theme: pd.theme, splash: pd.splash !== null, lands, names, main: pd.main, wins, games });
+      const cards = pd.main.filter(([, name]) => !BASICS.has(name)).map(([, name]) => name);
+      const names = cards.filter((name) => !info[name]?.land);
+      played.push({ id: pd.theme === 'none' ? pd.key : `${pd.key}-${pd.theme}`, colors: pd.key, theme: pd.theme, splash: pd.splash !== null, lands, names, cards, main: pd.main, wins, games });
     }
   }
   // ---- per card
   const cardObs = new Map<string, Obs>();
   const inDecks = new Map<string, number>();
-  for (const d of played) for (const n of new Set(d.names)) {
+  for (const d of played) for (const n of new Set(d.cards)) {
     const o = cardObs.get(n) ?? { wins: 0, games: 0 };
     o.wins += d.wins; o.games += d.games;
     cardObs.set(n, o);
     inDecks.set(n, (inDecks.get(n) ?? 0) + 1);
   }
   let tw = 0, tg = 0;
-  for (const o of cardObs.values()) { tw += o.wins; tg += o.games; }
+  for (const [n, o] of cardObs) if (!info[n]?.land) { tw += o.wins; tg += o.games; }
   const m = tg ? tw / tg : 0.5;
   const names = cube ? cube.cards.map((c) => c.name) : Object.keys(info).sort();
   const cards: Record<string, unknown> = {};
@@ -135,7 +147,10 @@ export function buildMeta(meta: RunMeta, info: Record<string, CardInfo>, recs: D
   }
   // ---- archetypes
   const byArch = new Map<string, Played[]>();
-  for (const d of played) byArch.set(d.id, [...(byArch.get(d.id) ?? []), d]);
+  for (const d of played) {
+    const at = byArch.get(d.id);
+    if (at) at.push(d); else byArch.set(d.id, [d]);
+  }
   const landTable = (ds: Played[]): Record<string, { games: number; winRate: number }> => {
     const t = new Map<number, Obs>();
     for (const d of ds) { const o = t.get(d.lands) ?? { wins: 0, games: 0 }; o.wins += d.wins; o.games += d.games; t.set(d.lands, o); }
