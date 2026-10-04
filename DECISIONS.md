@@ -16291,6 +16291,26 @@ measured here; an end-of-turn playout about 0.1 s there, 0.4 s here):
 - **A truth seed equal to the rankers'** (shared deals would correlate a
   ranker's pick with the truth's noise).
 
+**Amended 2026-10-04 (branch `c/fit-memory`): gate 1's fit runs within a declared memory
+budget.** On the PC, `train_eval.py --split-by pair --grid` over night-1 (6,343,314 rows,
+12,670 features) climbed past 19 GB in 7 minutes, and systemd-oomd killed it. The rows were
+widened to float32 on load. The re-split concatenated every split and then took each one out
+again. `make_net` and the `core` baseline each made a float64 copy of the whole training board.
+Now the rows keep the shards' int16, with the card block sparse in int16, int8 and int16. A
+re-split sends each row to its split as the shards are read (`evalnet.load_splits`: two
+passes, arrays allocated once). The standardisation is computed in chunks; its mean and
+deviation are bit for bit numpy's. The baselines turn only their own columns into float64.
+Peak RSS was measured with `getrusage` on synthetic data of night-1's shape (12,670
+features, 1,271 shards of 5,000 rows, 24 card cells a row). At 1 M rows it was 4,328 MiB
+before and 968 MiB after. At the full 6,343,314 rows it was 5,593 MiB after, through a
+`--grid` fit, the baselines, scoring and the export; `--dry-load` measured 5,580 MiB. The
+old code grows linearly with the rows, so at full size it would need about 27 GiB. The model, the
+splits, the gate's statistics and every reported number are unchanged. The report and the
+exported model were identical, byte for byte, to the old code's on the fixtures and on 20k
+synthetic rows. Every run now logs and reports `memory: STAGE: rss, peak`. `--dry-load`
+makes a real run's allocations at full size without training and prints the peak, for a
+job's pilot. No subsampling flag was needed.
+
 ## D355 — A game the watchdog ends records cleanly: a batch that reaches a recorder off the game thread is held for the game thread's final frame, never snapshotted and never counted as an error
 
 **2026-10-03**

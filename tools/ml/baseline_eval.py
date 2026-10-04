@@ -52,9 +52,15 @@ CORE_PLAIN = ["turn", "my_turn"]
 
 
 def core_matrix(X, names):
-    cols = [X[:, names.index(f"me.{f}")] - X[:, names.index(f"opp.{f}")] for f in CORE_DIFFS]
-    cols += [X[:, names.index(f)] for f in CORE_PLAIN]
-    return np.stack(cols, axis=1).astype(np.float64)
+    """The twelve core numbers in float64, a column at a time: X may be the
+    int16 board itself (the values are float64 differences either way), and
+    nothing wider than the (n, 12) result is ever made."""
+    out = np.empty((len(X), len(CORE_DIFFS) + len(CORE_PLAIN)))
+    for j, f in enumerate(CORE_DIFFS):
+        np.subtract(X[:, names.index(f"me.{f}")], X[:, names.index(f"opp.{f}")], out=out[:, j], dtype=np.float64)
+    for j, f in enumerate(CORE_PLAIN, len(CORE_DIFFS)):
+        out[:, j] = X[:, names.index(f)]
+    return out
 
 
 BUCKETS = [(1, 4), (5, 8), (9, 12), (13, 16), (17, 10_000)]

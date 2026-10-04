@@ -10,7 +10,7 @@ directory, compare it with D305's baselines, and export it for Java (D316).
         [--lr 2e-3] [--batch 256] [--epochs 200] [--patience 12] [--seed 0]
         [--backend auto|numpy|torch] [--threads N]
         [--grid] [--time-budget SECONDS] [--grid-log grid.jsonl]
-        [--cv K] [--report report.json]
+        [--cv K] [--report report.json] [--dry-load]
 
 The model is evalnet.py's (its header says what and why).  It trains on the
 `train` split and stops early on the `val` split's log-loss (patience epochs
@@ -31,6 +31,15 @@ best validation log-loss and exports that one.  `--cv K` instead scores every
 row out of fold (grouped K-fold over split groups, an inner validation split
 of each fold's training groups for early stopping) -- the honest number while
 the corpus is a few dozen games -- and exports nothing.
+
+Memory: the rows stay in the shards' int16 (the card block sparse), a re-split
+is made as the shards are read, the standardisation is computed in chunks and
+only the few columns a baseline reads go to float64 -- about 0.7 KB a row held
+at 24 card cells a row (5.5 GiB peak for 6.3 M rows, D354's amendment).  Every
+run logs `memory: STAGE: rss X GB, peak Y GB` (GiB) after loading, fitting, the
+baselines and scoring (also in the report); `--dry-load` makes every
+allocation of a real run at full size without training and prints the peak,
+for a job's pilot to check against its budget.
 
 Backends: numpy always works (float64, gradients by hand, checked against
 finite differences in the tests); torch, when installed, trains the same
@@ -68,6 +77,40 @@ GRID = {"hidden": ["", "32", "64", "128", "128,32"], "dim": [4, 8, 16],
 
 BUCKETS = [(1, 4), (5, 8), (9, 12), (13, 16), (17, 10_000)]
 EPS = 1e-7
+
+
+class Memory:
+    """Peak resident memory after each stage, logged as `memory: STAGE: rss X GB, peak Y GB`
+    (a job's pilot reads the peak; the report carries every line)."""
+
+    def __init__(self):
+        self.stages: list[dict[str, Any]] = []
+
+    @staticmethod
+    def now() -> tuple[float, float]:
+        """(current, peak) resident set in GB; nan where the platform does not say."""
+        cur = peak = float("nan")
+        try:
+            with open("/proc/self/status", encoding="ascii") as f:
+                cur = next(int(ln.split()[1]) for ln in f if ln.startswith("VmRSS:")) / 2 ** 20
+        except (OSError, StopIteration, ValueError):
+            pass
+        try:
+            import resource
+            ru = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            peak = ru / (2 ** 30 if sys.platform == "darwin" else 2 ** 20)
+        except (ImportError, OSError):
+            pass
+        return cur, peak
+
+    def note(self, stage: str, log) -> None:
+        cur, peak = self.now()
+        self.stages.append({"stage": stage, "rssGB": round(cur, 3), "peakGB": round(peak, 3)})
+        log(f"memory: {stage}: rss {cur:.2f} GB, peak {peak:.2f} GB")
+
+    @property
+    def peak(self) -> float:
+        return max((s["peakGB"] for s in self.stages), default=float("nan"))
 
 
 def parse_hidden(s: str) -> list[int]:
@@ -127,26 +170,32 @@ def metrics(p, y, turn) -> dict[str, Any]:
 
 # ---------------------------------------------------------------- baselines
 
-def fit_baselines(tr, va, names) -> dict[str, Any]:
+def fit_baselines(tr, va, names, epochs: int = 400) -> dict[str, Any]:
     """D305's three baselines fitted on `tr` (early stopping on `va`); returns
     name -> predict(rows)."""
     import baseline_eval as B
     li_me, li_opp = names.index("me.life"), names.index("opp.life")
 
+    # Only the columns a baseline reads go to float64, never the whole board
+    # (5 M training rows x 243 columns are 10 GB as float64).  Every feature is
+    # an integer, so the values are the ones a float board gave.
     def life(r):
-        return (r.board[:, li_me] - r.board[:, li_opp])[:, None].astype(np.float64)
+        return np.subtract(r.board[:, li_me], r.board[:, li_opp], dtype=np.float64)[:, None]
 
     def core(r):
-        return B.core_matrix(r.board.astype(np.float64), names)
+        return B.core_matrix(r.board, names)
 
     prior = float(tr.t.mean()) if len(tr) else 0.5
     models: dict[str, Any] = {"prior": lambda r: np.full(len(r), prior)}
     for name, fx in (("life", life), ("core", core)):
         Xtr = fx(tr)
         st = B.Standardiser(Xtr)
+        Xtr -= st.mean          # == st(Xtr), in place: one (n, 12) matrix, not two
+        Xtr /= st.sd
         has_va = len(va) > 0
-        w, b, _ep = B.fit_logistic(st(Xtr), tr.t, st(fx(va)) if has_va else None, va.t if has_va else None,
-                                   400, 0.05, 1e-3, 0)
+        w, b, _ep = B.fit_logistic(Xtr, tr.t, st(fx(va)) if has_va else None, va.t if has_va else None,
+                                   epochs, 0.05, 1e-3, 0)
+        del Xtr
         models[name] = (lambda st, w, b, fx: (lambda r: B.sigmoid(st(fx(r)) @ w + b)))(st, w, b, fx)
     return models
 
@@ -156,9 +205,7 @@ def fit_baselines(tr, va, names) -> dict[str, Any]:
 def make_net(tr, names, hp, vocab_size, seed):
     import evalnet as N
     excluded_unsafe = [i for i, n in enumerate(names) if n in N.LIVE_UNSAFE]
-    X = tr.board.astype(np.float64)
-    mean = X.mean(axis=0) if len(X) else np.zeros(len(names))
-    sd = X.std(axis=0) if len(X) else np.zeros(len(names))
+    mean, sd = tr.moments()   # chunked, cached across a grid's fits; == board.astype(float64).mean/std
     constant = [i for i in range(len(names)) if not sd[i] > 1e-9]
     cols = [i for i in range(len(names)) if i not in set(excluded_unsafe) | set(constant)]
     net = N.EvalNet(cols, mean[cols], sd[cols], vocab_size, int(hp["dim"]), parse_hidden(hp["hidden"]), seed)
@@ -229,10 +276,10 @@ def train_torch(net, tr, va, hp, seed, log=None, deadline=None):
 
     def forward(r, train):
         n = len(r)
-        xb = (torch.from_numpy(r.board).to(dev)[:, cols] - mean) / sd
+        xb = (torch.from_numpy(r.board.astype(np.float32)).to(dev)[:, cols] - mean) / sd
         flat = torch.from_numpy(r.row_of_nnz() * S + r.state.astype(np.int64)).to(dev)
         slot = torch.from_numpy(r.slot.astype(np.int64)).to(dev)
-        cnt = torch.from_numpy(r.count).to(dev)
+        cnt = torch.from_numpy(r.count.astype(np.float32)).to(dev)
         P = torch.zeros(n * S, net.dim, device=dev).index_add_(0, flat, cnt[:, None] * E[slot])
         h = torch.cat([xb, P.reshape(n, S * net.dim)], dim=1)
         for i in range(len(Ws) - 1):
@@ -304,15 +351,19 @@ def fit(tr, va, names, hp, vocab_size, backend, seed=0, log=None, deadline=None)
 # ---------------------------------------------------------------- the runs
 
 def load_data(data: str, split_by: str = "dataset"):
+    """The schema, the board names and the three splits.  A re-split (pair,
+    game, holdout:) sends each row to its split as the shards are read
+    (evalnet.load_splits): no copy of the whole corpus is ever concatenated
+    and taken apart, and the rows of a split are in the order they always were
+    (dataset.py's train, val, test shards, in turn)."""
     import evalnet as N
     schema = N.read_schema(data)
     reserved_warning(data)
     off = N.card_offset_of(schema)
     names = N.board_names(schema)
-    splits = {s: N.load_rows(data, s, off) for s in ("train", "val", "test")}
-    if split_by != "dataset":
-        splits = resplit(data, splits, split_by)
-    return schema, names, splits
+    sog = None if split_by == "dataset" else game_splits(read_games(data), split_by)
+    splits = N.load_splits(data, off, sog)
+    return schema, names, {s: splits[s] for s in ("train", "val", "test")}
 
 
 def reserved_warning(data: str) -> None:
@@ -362,15 +413,13 @@ def assign_pairs(keys: list[str], weights=(80, 10, 10)) -> dict[str, str]:
     return {k: ("test" if i < n_test else "val" if i < n_test + n_val else "train") for i, k in enumerate(keys)}
 
 
-def resplit(data: str, splits: dict[str, Any], how: str) -> dict[str, Any]:
-    """Re-split every row by deck pair (`pair`) or hold out the games whose decks
-    match a pattern -- a deck name or the log's path -- as the test split
-    (`holdout:REGEX`, e.g. a whole cube's `holdout:^modern-`); the rest go to train/val by pair.  No pair is ever in two
-    splits, so the test split is decks the model never saw."""
+def game_splits(games: list[dict[str, Any]], how: str) -> list[str]:
+    """Each game's split under a re-split by deck pair (`pair`), or holding out
+    the games whose decks match a pattern -- a deck name or the log's path -- as
+    the test split (`holdout:REGEX`, e.g. a whole cube's `holdout:^modern-`);
+    the rest go to train/val by pair.  No pair is ever in two splits, so the
+    test split is decks the model never saw."""
     import re
-    import evalnet as N
-    games = read_games(data)
-    allr = N.Rows.concat([splits[s] for s in ("train", "val", "test") if len(splits[s])])
     keys = [pair_key(g) for g in games]
     if how == "game":   # D305's by-game split, for comparison: it flatters (a pair's other games train)
         gk = [g.get("game_group") or g["split_group"] for g in games]
@@ -389,8 +438,7 @@ def resplit(data: str, splits: dict[str, Any], how: str) -> dict[str, Any]:
         split_of_game = ["test" if hd else where[k] for k, hd in zip(keys, held)]
     else:
         raise SystemExit(f"train_eval: --split-by {how}: pair, game, dataset or holdout:REGEX")
-    sg = np.array(split_of_game)[allr.game] if len(allr) else np.array([], dtype=str)
-    return {s: allr.take(np.nonzero(sg == s)[0]) for s in ("train", "val", "test")}
+    return split_of_game
 
 
 def split_summary(data: str, splits: dict[str, Any]) -> dict[str, Any]:
@@ -426,12 +474,16 @@ def score_all(models: dict[str, Any], splits: dict[str, Any]) -> dict[str, Any]:
 
 def run_train(a, hp, log) -> dict[str, Any]:
     import evalnet as N
+    mem = Memory()
     schema, names, splits = load_data(a.data, a.split_by)
+    mem.note("load", log)
     tr, va, te = splits["train"], splits["val"], splits["test"]
     if not len(tr):
         raise SystemExit("train_eval: no training rows")
     backend = pick_backend(a.backend)
     summary = split_summary(a.data, splits)
+    if a.dry_load:
+        return dry_load(a, schema, names, splits, summary, mem, log)
     log(f"split by {a.split_by}: " + "; ".join(
         f"{s} {summary[s]['rows']} rows / {summary[s]['games']} games / {summary[s]['pairs']} pairs"
         for s in ("train", "val", "test")) + f"; test rows from a deck seen in training: "
@@ -448,7 +500,9 @@ def run_train(a, hp, log) -> dict[str, Any]:
     log(f"model: hidden {net.hidden or 'none (logistic)'}, card dim {net.dim}, {net.n_params()} parameters, "
         f"{len(net.cols)} board columns; best epoch {info['bestEpoch']} of {info['epochsRun']} "
         f"({info['seconds']} s), val logloss {info['valLogloss']:.4f}")
+    mem.note("grid" if a.grid else "fit", log)
     models = fit_baselines(tr, va, names)
+    mem.note("baselines", log)
     models["eval"] = net.predict
     report = {"schemaId": schema["schemaId"], "data": os.path.abspath(a.data), "backend": backend,
               "splitBy": a.split_by, "splitSummary": summary,
@@ -456,6 +510,8 @@ def run_train(a, hp, log) -> dict[str, Any]:
               "games": {s: int(len(np.unique(r.game))) for s, r in splits.items()},
               "hyper": hp, "fit": {k: v for k, v in info.items() if k != "history"},
               "models": score_all(models, splits), "grid": grid_results}
+    mem.note("score", log)
+    report["memory"] = mem.stages
     log(format_report(report))
     log(verdict(report))
     if getattr(a, "eval_human", False):
@@ -472,6 +528,29 @@ def run_train(a, hp, log) -> dict[str, Any]:
         N.save_model(a.out, model)
         log(f"saved {a.out} ({os.path.getsize(a.out)} bytes)")
     return report
+
+
+def dry_load(a, schema, names, splits, summary, mem, log) -> dict[str, Any]:
+    """--dry-load: every allocation a real run makes, at the real size, and no
+    training -- the standardisation over the whole training split, one training
+    batch forward and back, the baselines' feature matrices (one epoch), and
+    every model scored on val and test -- then the peak, for a job's pilot."""
+    tr, va = splits["train"], splits["val"]
+    hp = {"hidden": a.hidden, "dim": a.dim, "dropout": a.dropout, "l2": a.l2, "card_l2": a.card_l2}
+    net, _excluded = make_net(tr, names, hp, len(schema["vocab"]["cards"]), a.seed)
+    mem.note("standardise", log)
+    rng = np.random.default_rng(a.seed)
+    net.loss_grad(tr.take(rng.permutation(len(tr))[:a.batch]), a.l2, a.card_l2, rng, a.dropout)
+    mem.note("one batch", log)
+    models = fit_baselines(tr, va, names, epochs=1)
+    mem.note("baselines (1 epoch)", log)
+    models["eval"] = net.predict
+    score_all(models, splits)
+    mem.note("score", log)
+    log(f"dry-load: {sum(len(r) for r in splits.values())} rows (train/val/test "
+        f"{'/'.join(str(summary[s]['rows']) for s in ('train', 'val', 'test'))}); peak RSS {mem.peak:.2f} GB")
+    return {"dryLoad": True, "data": os.path.abspath(a.data), "splitBy": a.split_by, "splitSummary": summary,
+            "rows": {s: len(r) for s, r in splits.items()}, "memory": mem.stages, "peakGB": mem.peak}
 
 
 def eval_human(data: str, schema: dict[str, Any], models: dict[str, Any], log) -> dict[str, Any]:
@@ -530,9 +609,13 @@ def grid_search(tr, va, names, base_hp, vocab_size, backend, a, log):
 
 def run_cv(a, hp, log) -> dict[str, Any]:
     import evalnet as N
-    schema, names, splits = load_data(a.data)
+    mem = Memory()
+    schema = N.read_schema(a.data)
+    reserved_warning(a.data)
+    names = N.board_names(schema)
     games = read_games(a.data)
-    allr = N.Rows.concat([splits[s] for s in ("train", "val", "test") if len(splits[s])])
+    allr = N.load_splits(a.data, N.card_offset_of(schema), ["all"] * len(games))["all"]
+    mem.note("load", log)
     group = [g["split_group"] if a.split_by == "dataset" else
              (g.get("game_group") or g["split_group"]) if a.split_by == "game" else pair_key(g) for g in games]
     h = lambda s: int(hashlib.sha256(s.encode()).hexdigest()[:8], 16)  # noqa: E731
@@ -562,11 +645,12 @@ def run_cv(a, hp, log) -> dict[str, Any]:
             oof[m][te_idx] = pred(te)
         log(f"fold {k}: {len(tr)} train / {len(va)} inner-val / {len(te)} held-out rows; "
             f"eval best epoch {info['bestEpoch']}")
+    mem.note("folds", log)
     ok = ~np.isnan(oof["prior"])
     rep = {"schemaId": schema["schemaId"], "folds": a.cv, "splitBy": a.split_by, "rows": int(ok.sum()), "games": len(games),
            "groups": len(set(group)), "backend": backend, "hyper": hp,
            "models": {m: {"cv": metrics(p[ok], allr.y[ok].astype(np.int64), allr.turn[ok].astype(np.int64))}
-                      for m, p in oof.items()}}
+                      for m, p in oof.items()}, "memory": mem.stages}
     log(format_report(rep))
     log(verdict(rep))
     return rep
@@ -637,6 +721,10 @@ def main(argv: list[str] | None = None) -> int:
                          "holdout:^modern-); game: D305's by-game split (flatters: shown for comparison); "
                          "dataset: dataset.py's own split")
     ap.add_argument("--verbose", action="store_true", help="print every epoch")
+    ap.add_argument("--dry-load", action="store_true",
+                    help="load and split the data, standardise, run one training batch, build the baselines' "
+                         "matrices and score once -- every allocation of a real run, no training -- then print "
+                         "the peak resident memory and exit (a job's pilot; --report gets the numbers)")
     ap.add_argument("--eval-human", action="store_true",
                     help="also score every model on the dataset's `human` split -- the owner's own games, never "
                          "trained on (dataset.py --human; D347)")
@@ -653,6 +741,8 @@ def main(argv: list[str] | None = None) -> int:
     hp = {"hidden": a.hidden, "dim": a.dim, "l2": a.l2, "card_l2": a.card_l2, "dropout": a.dropout, "lr": a.lr,
           "batch": a.batch, "epochs": a.epochs, "patience": a.patience}
     log = lambda s: print(s, flush=True)  # noqa: E731
+    if a.dry_load and a.cv:
+        raise SystemExit("train_eval: --dry-load measures a train run; drop --cv")
     rep = run_cv(a, hp, log) if a.cv else run_train(a, hp, log)
     if a.report:
         with open(a.report, "w", encoding="utf-8") as f:

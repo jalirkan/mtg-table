@@ -77,33 +77,44 @@ LIVE_UNSAFE.append("stack.abilities")
 # ---------------------------------------------------------------- data
 
 class Rows:
-    """A split held compactly: the board columns dense (float32), the card
-    block as CSR over rows (slot, state, count), and the labels."""
+    """A split held compactly: the board columns dense in the dataset's own
+    integer dtype (int16; float32 for a float X), the card block as CSR over
+    rows (slot, state, count), and the labels.  Nothing here is float64: a
+    caller converts a batch, or a few columns, when it needs them (6.3 M rows
+    of 243 board columns are 3 GB as int16 and 12 GB as float64)."""
 
     def __init__(self, board, indptr, slot, state, count, y, turn, game):
-        self.board = board          # (n, card_offset) float32
+        self.board = board          # (n, card_offset) int16 (float32 for a float X)
         self.indptr = indptr        # (n+1,) int64
-        self.slot = slot            # (nnz,) int32
+        self.slot = slot            # (nnz,) int16 (int32 past 32,767 slots)
         self.state = state          # (nnz,) int8
-        self.count = count          # (nnz,) float32
+        self.count = count          # (nnz,) int16 (float32 for a float X)
         self.y = y                  # (n,) int8: +1 / 0 / -1
         self.turn = turn            # (n,) int16
         self.game = game            # (n,) int32
         self.t = (y.astype(np.float64) + 1.0) / 2.0
+        self._moments = None
 
     def __len__(self) -> int:
         return len(self.y)
 
     @classmethod
     def from_X(cls, X, card_offset: int, y, turn, game) -> "Rows":
-        board = X[:, :card_offset].astype(np.float32)
+        bd, cd, sd = _dtypes(X, card_offset)
+        board = np.ascontiguousarray(X[:, :card_offset], dtype=bd)
         cb = X[:, card_offset:]
         r, c = np.nonzero(cb)
-        count = cb[r, c].astype(np.float32)
+        count = cb[r, c].astype(cd)
         indptr = np.zeros(len(X) + 1, np.int64)
         np.cumsum(np.bincount(r, minlength=len(X)), out=indptr[1:])
-        return cls(board, indptr, (c // N_STATES).astype(np.int32), (c % N_STATES).astype(np.int8), count,
+        return cls(board, indptr, (c // N_STATES).astype(sd), (c % N_STATES).astype(np.int8), count,
                    np.asarray(y, np.int8), np.asarray(turn, np.int16), np.asarray(game, np.int32))
+
+    @classmethod
+    def empty(cls, card_offset: int, board_dtype=np.float32, count_dtype=np.float32, slot_dtype=np.int32) -> "Rows":
+        return cls(np.zeros((0, card_offset), board_dtype), np.zeros(1, np.int64), np.zeros(0, slot_dtype),
+                   np.zeros(0, np.int8), np.zeros(0, count_dtype), np.zeros(0, np.int8), np.zeros(0, np.int16),
+                   np.zeros(0, np.int32))
 
     @classmethod
     def concat(cls, parts: list["Rows"]) -> "Rows":
@@ -129,20 +140,130 @@ class Rows:
     def row_of_nnz(self):
         return np.repeat(np.arange(len(self)), np.diff(self.indptr))
 
+    def moments(self, chunk: int = 16384):
+        """The board columns' mean and standard deviation in float64, a chunk
+        at a time, cached.  Bit for bit `board.astype(float64).mean(0)` and
+        `.std(0)`: numpy reduces over axis 0 row after row, and so does this,
+        carrying the running sum into each chunk's first row."""
+        if self._moments is None:
+            self._moments = board_moments(self.board, chunk)
+        return self._moments
+
+
+def board_moments(board, chunk: int = 16384):
+    n, d = board.shape
+    if not n:
+        return np.zeros(d), np.zeros(d)
+    acc = np.zeros(d)
+    for i in range(0, n, chunk):
+        c = board[i:i + chunk].astype(np.float64)
+        c[0] += acc
+        acc = np.add.reduce(c, axis=0)
+    mean = acc / n
+    acc = np.zeros(d)
+    for i in range(0, n, chunk):
+        c = board[i:i + chunk].astype(np.float64)
+        c -= mean
+        np.multiply(c, c, out=c)
+        c[0] += acc
+        acc = np.add.reduce(c, axis=0)
+    return mean, np.sqrt(acc / n)
+
+
+def _dtypes(X, card_offset: int):
+    """Board, count and slot dtypes for an X: an integer X (dataset.py writes
+    int16) keeps its dtype, a float one is float32 as before."""
+    integer = np.issubdtype(X.dtype, np.integer)
+    vd = X.dtype if integer else np.float32
+    slots = max(0, X.shape[1] - card_offset) // N_STATES
+    return vd, vd, (np.int16 if slots < 32768 else np.int32)
+
+
+SPLITS = ("train", "val", "test")
+
+
+def load_splits(data: str, card_offset: int, split_of_game=None, prefixes=SPLITS, chunk: int = 8192) -> dict[str, Rows]:
+    """The rows of the shards named `prefixes` (in that order, each prefix's
+    shards sorted), sent to a split each: the shard's own prefix, or
+    `split_of_game[row's game]` (games.jsonl order) when that is given -- a
+    re-split straight from the shards, never a whole copy concatenated and
+    taken apart.  A split's rows keep shard order.
+
+    Two passes: the first reads only each shard's `game` member to count the
+    rows of every split, so the dense arrays are allocated once, at their
+    size; the second fills them, a few thousand rows of one shard's dense X
+    at a time.  Peak memory is the result plus one shard's X."""
+    files = [f for p in prefixes for f in sorted(f for f in os.listdir(data)
+                                                 if f.startswith(p + "-") and f.endswith(".npz"))]
+    if split_of_game is None:
+        names = list(prefixes)
+        sog = None
+    else:
+        names = list(SPLITS) + sorted(set(split_of_game) - set(SPLITS))
+        sog = np.array([names.index(s) for s in split_of_game], np.int8)
+    code = {s: i for i, s in enumerate(names)}
+
+    def dest(f, game):
+        if sog is None:
+            return np.full(len(game), code[f.rsplit("-", 1)[0]], np.int8)
+        return sog[game]
+
+    n = np.zeros(len(names), np.int64)
+    for f in files:
+        with np.load(os.path.join(data, f)) as z:
+            n += np.bincount(dest(f, z["game"]), minlength=len(names))
+    if not files:
+        return {s: Rows.empty(card_offset) for s in names}
+    out: dict[int, dict[str, Any]] = {}
+    pos = np.zeros(len(names), np.int64)
+    for f in files:
+        with np.load(os.path.join(data, f)) as z:
+            X, y, turn, game = z["X"], z["y"], z["turn"], z["game"]
+        if not out:
+            bd, cd, sd = _dtypes(X, card_offset)
+            out = {k: {"board": np.empty((int(n[k]), card_offset), bd), "lens": np.empty(int(n[k]), np.int64),
+                       "y": np.empty(int(n[k]), np.int8), "turn": np.empty(int(n[k]), np.int16),
+                       "game": np.empty(int(n[k]), np.int32), "slot": [], "state": [], "count": []}
+                   for k in range(len(names))}
+        d = dest(f, game)
+        for i in range(0, len(X), chunk):
+            Xc, dc = X[i:i + chunk], d[i:i + chunk]
+            for k in np.unique(dc).tolist():
+                if (dc == k).all():
+                    sel, Xk = slice(i, i + len(Xc)), Xc
+                else:
+                    m = np.nonzero(dc == k)[0]
+                    sel, Xk = m + i, Xc[m]
+                o, p, cnt = out[k], int(pos[k]), len(Xk)
+                o["board"][p:p + cnt] = Xk[:, :card_offset]
+                cb = Xk[:, card_offset:]
+                r, c = np.nonzero(cb)
+                o["lens"][p:p + cnt] = np.bincount(r, minlength=cnt)
+                o["count"].append(cb[r, c].astype(cd))
+                o["slot"].append((c // N_STATES).astype(sd))
+                o["state"].append((c % N_STATES).astype(np.int8))
+                o["y"][p:p + cnt] = y[sel]
+                o["turn"][p:p + cnt] = turn[sel]
+                o["game"][p:p + cnt] = game[sel]
+                pos[k] += cnt
+        del X
+    res = {}
+    for k, s in enumerate(names):
+        o = out.pop(k)
+        indptr = np.zeros(int(n[k]) + 1, np.int64)
+        np.cumsum(o.pop("lens"), out=indptr[1:])
+        nnz = {}
+        for key in ("slot", "state", "count"):   # one field at a time: the parts and one result
+            dt = {"slot": sd, "state": np.int8, "count": cd}[key]
+            nnz[key] = np.concatenate(o[key]) if o[key] else np.zeros(0, dt)
+            o[key].clear()
+        res[s] = Rows(o["board"], indptr, nnz["slot"], nnz["state"], nnz["count"], o["y"], o["turn"], o["game"])
+    return res
+
 
 def load_rows(data: str, split: str, card_offset: int) -> Rows:
-    """Every shard of one split of a dataset.py directory, shard by shard (a
-    shard's dense X is ~0.6 GB at 100k rows; the Rows form is a few % of it)."""
-    files = sorted(f for f in os.listdir(data) if f.startswith(split + "-") and f.endswith(".npz"))
-    parts = []
-    for f in files:
-        z = np.load(os.path.join(data, f))
-        parts.append(Rows.from_X(z["X"], card_offset, z["y"], z["turn"], z["game"]))
-    if not parts:
-        return Rows(np.zeros((0, card_offset), np.float32), np.zeros(1, np.int64), np.zeros(0, np.int32),
-                    np.zeros(0, np.int8), np.zeros(0, np.float32), np.zeros(0, np.int8), np.zeros(0, np.int16),
-                    np.zeros(0, np.int32))
-    return Rows.concat(parts)
+    """Every shard of one split of a dataset.py directory (load_splits)."""
+    return load_splits(data, card_offset, prefixes=(split,))[split]
 
 
 def read_schema(data: str) -> dict[str, Any]:
@@ -209,8 +330,9 @@ class EvalNet:
         xb = (r.board[:, self.cols].astype(np.float64) - self.mean) / self.sd
         flat = r.row_of_nnz() * N_STATES + r.state.astype(np.int64)
         P = np.zeros((n * N_STATES, self.dim))
+        cnt = r.count.astype(np.float64)
         for d in range(self.dim):
-            P[:, d] = np.bincount(flat, weights=r.count * self.E[r.slot, d], minlength=n * N_STATES)
+            P[:, d] = np.bincount(flat, weights=cnt * self.E[r.slot, d], minlength=n * N_STATES)
         return np.concatenate([xb, P.reshape(n, N_STATES * self.dim)], axis=1), flat
 
     def logit(self, r: Rows, rng=None, dropout: float = 0.0):
@@ -263,8 +385,9 @@ class EvalNet:
         nb = len(self.cols)
         gP = g[:, nb:].reshape(n * N_STATES, self.dim)
         gE = np.zeros_like(self.E)
+        cnt = r.count.astype(np.float64)
         for d in range(self.dim):
-            gE[:, d] = np.bincount(r.slot, weights=r.count * gP[flat, d], minlength=len(self.E))
+            gE[:, d] = np.bincount(r.slot, weights=cnt * gP[flat, d], minlength=len(self.E))
         gE += card_l2 * self.E
         return loss, ce, [gE] + gW + gb
 

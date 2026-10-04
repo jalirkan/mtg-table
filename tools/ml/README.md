@@ -246,8 +246,26 @@ run, copied under the checkout). **Send back** the `.txt` reports
 (`night-1-cv`, `night-1`, `live-check`, `cube-holdout`), the dataset's
 `stats.json`, the last lines of `night-1-grid.jsonl`, and the model's
 `training` block (`python3 -c "import json;print(json.load(open('var/ml/models/synergy-eval.json'))['training'])"`).
-At 50,000 games (~5 M rows) the dataset is a few GB of shards and training
-holds the card block sparse (~1.5 GB); `--batch 4096` is faster on the 9700X.
+`--batch 4096` is faster on the 9700X.
+
+**Memory.** Training keeps the rows in the shards' int16 with the card block
+sparse, re-splits as it reads the shards, computes the standardisation in chunks
+and turns only the few columns a baseline reads into float64. That is about
+0.7 KB a row, whatever the stage. A synthetic dataset of night-1's shape
+(6,343,314 rows, 12,670 features, 24 card cells a row) peaked at 5.5 GiB through
+a grid fit, its baselines and scoring, against 4.2 GiB at 1 M rows before the fix
+(about 27 GiB at full size; D354's amendment). Every run logs
+`memory: STAGE: rss X GB, peak Y GB` after loading, fitting, the baselines and
+scoring, and the report carries the same numbers under `memory`. `--dry-load`
+makes every allocation of a real run at full size without training: it loads
+and splits the data, standardises, runs one batch, builds the baselines' matrices
+and scores once. Then it prints `dry-load: ... peak RSS X GB` and exits. A job's
+pilot runs the fit's own command line with `--dry-load` and its own `--report`:
+
+```bash
+python3 tools/ml/train_eval.py var/ml/data/night-1 --split-by pair --grid --time-budget 10800 --batch 4096 \
+    --dry-load --report var/ml/reports/night-1-dry.json
+```
 
 ## The evaluator's three gates (D354)
 
