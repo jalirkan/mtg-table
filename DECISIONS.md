@@ -1,5 +1,18 @@
 # mtg-table — decisions
 
+> **From D379 on, each decision is a file of its own under
+> [`docs/decisions/`](docs/decisions/)** (**D379**, 2026-10-04). This file is the
+> frozen history of D1–D378 (D377 and D378 belong to PRs already open when this
+> changed, which may still append them here): nothing else is appended, and its
+> entries are not moved or rewritten. Every PR used to append its decision to the end of this
+> file, so parallel PRs conflicted on it each time one merged; a file per
+> decision touches nothing shared. A new decision is
+> `docs/decisions/D<nnn>-<slug>.md` (`D379-decision-files.md`), starting with
+> `## D<nnn> — <title>` and the date line, as below; an amendment to an old
+> decision is a new file that names the one it amends. Numbers stay final
+> (D200): `node tools/decisions.mjs next` prints the next free one, `list` the
+> index of both places, and `check` (CI) fails on a number used twice.
+
 The load-bearing decisions, each dated, with the reasoning that produced it and the
 alternatives that were rejected. Rationale is condensed from
 [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md)
@@ -17812,6 +17825,62 @@ is not ReLU + sigmoid (refused by name, the win chance still served).
   depend on which frame the client asked about before; one baseline per model lets a
   client difference any two positions.
 
+## D366 — The decision ledger: a job may say what it decides, what we expect, its pre-registered rule and its follow-up; the runner appends every job end to `LEDGER.md` and `ledger.jsonl` on `pc-results`, and asks the cloud session in HEARTBEAT for a follow-up that is not on pc-jobs
+
+*Branch `c/decision-ledger`; D366, the first number free at push time (D362–D365 are held
+by other lanes).*
+
+**2026-10-04** (a methods review Justin approved)
+
+**The fault.** Lab jobs produced results with no decision attached, so their reading
+slipped. Night 1's pre-registered morning read (the matchup model answering three written
+questions) was promised in J029 as "a separate job" and was not queued for a day (J062).
+Results were summarised loosely, without the rule they were meant to be judged by.
+
+**Decided.**
+
+1. **Four optional header lines** (`tools/runner/jobfile.ts`, `parseLedgerHeaders`):
+   `decides:` (the decision the result informs), `hypothesis:`, `rule:` (the pass/fail rule
+   written before the run, or a pointer: a D-number, a `gates.py` / `EXAM_RULE` name), and
+   `followup:` (comma-separated job files `jobs/J###-name.md` or template names). Older job
+   files parse unchanged; a follow-up that is neither form, or names the job itself, is a
+   job-file error. `tools/runner.sh check` prints the four lines and warns about a heavy job
+   with no `decides:`, a `decides:` with no `rule:`, and a follow-up file beside the checked
+   one with no `after:` on it.
+2. **The ledger** (`tools/runner/ledger.ts`, `Runner.appendLedger`). Every job end, `done`,
+   `failed` or `aborted` (a failure whose reason is an `abort:` line), is one entry in
+   `ledger.jsonl` and `LEDGER.md` at the root of `pc-results`, written in the publish that
+   carries the job's STATUS: id, title, the three lines, the outcome and reason, the
+   `headline:` numbers, the summary's path, the finish time, the commits and each
+   follow-up's state. A job without the lines is entered too, saying so. A `waiting` (memory
+   stop, `needs: check`) or `skipped` job is not an end. An entry's key is `<id>@<finished>`:
+   a key already in `ledger.jsonl` is never appended again, so a refused push that is
+   retried writes it once, and pushed keys are kept in `var/runner/ledger.json`. Its `since`
+   is the first time a runner kept a ledger, so jobs that ended before the upgrade are not
+   backfilled. Like HEARTBEAT, the ledger goes to `pc-results` only, never to the public
+   `lab-status` copy, which stays numbers-only.
+3. **Follow-ups.** The runner only reads pc-jobs, so it never posts a job. The recommended
+   form is to post the follow-up together with its job, with `after:` on it, and to name it
+   in `followup:`: the queue starts it, and the ledger says `queued`. A follow-up that is not
+   on pc-jobs when its job ends `done` (a file to be written from the results, or a
+   template) gets one `FOLLOW-UP READY [<key>]` line at the top of HEARTBEAT.md's
+   `## Messages`, which the cloud session reads, posts and deletes; the runner writes each
+   line once and never again. A failed or aborted job asks for nothing (`not-due`).
+
+**Checked.** `web/test/lab-runner.test.ts`, five tests: the header lines and their errors;
+`check`'s lines and warnings, through the CLI on a pc-jobs-like folder; entries, markdown,
+the message and its placement; the runner end to end over real git (done, failed, a
+follow-up already queued with `after:`, a template and a file not posted; nothing on
+`lab-status`; no duplicate after more publishes; a deleted message not rewritten; no
+backfill); an aborted job.
+
+**Rejected.** The runner committing the follow-up to pc-jobs (it only reads that branch, and
+push access to pc-jobs is code execution on the PC: D337's review). Queuing a follow-up by
+STATUS on pc-results (a STATUS for a job file that does not exist yet means nothing to the
+queue). Making `decides:` required (every older job would be refused; a warning in `check`
+is enough). Publishing the ledger on `lab-status` (its lines are free text, which D337's
+review keeps off the public copy).
+
 ## D369 — The owner's games flow into the human test set by themselves: `play.sh` copies every finished human-vs-AI game from `var/games/` into `var/ml/human/` with a manifest, `human_eval.py` scores the evaluator there against prior, life and core with intervals over games, and the first check is pre-registered at 30 games
 
 *Branch `c/human-games`; D369, the next number free at push (D362–D368 are held by other
@@ -18347,120 +18416,6 @@ evolve cuts and D360's raises (review rec. 8).
   J072's draft (two Omega batches of 8,000 drafts, verify-block seeds) is this reader's
   job. It is not pushed to `pc-jobs` here.
 
-## D377 — Evolve's dominant-win tests a card against its colours, not the batch mean: a colour-adjusted null with the card's matches left out, pre-registered in code and simulated; evolve cuts and D360's raises stay on hold until J072 reads it
-
-*Branch `c/colour-null`. D376's first recommendation; the methods review of 2026-10-04,
-recommendation 8.*
-
-**2026-10-04**
-
-**Context.** D376 found that `dominant-win` (D331) tests each card against the batch's mean
-card win rate. In Omega, red decks win 0.53–0.55, so the rule flags red cards as a class. In
-J039's simulation, with no card effect at all, it found 3.1 candidates a generation, and 7%
-of them confirmed. A cut must answer a different question: does the card win more than its
-decks' colours would without it?
-
-**Decision.** From this decision on, a NEW evolve run tests `dominant-win` against the card's
-colour-adjusted null. The rule is `tools/cubelab/colour-null.ts`, and its constants are code,
-not knobs (`COLOUR_NULL`):
-
-- **The null `p0`**: the games-weighted mean, over the card's decisive games, of its deck's
-  colour pair's win rate in the same batch. The pair is `playedDeck(...).key`, the main
-  colours with the splash ignored.
-  - Each pair's rate leaves out **both decks of every match the card played**.
-  - Each pair's rate is shrunk toward the batch's deck mean by **20 pseudo-games**.
-- **Its standard error**: `se0 = sqrt(Σ_k w_k² · deff · r_k(1 − r_k) / (G_k + 20))`, where
-  `w_k` is the card's share of its games in pair k and `G_k` is the pair's left-in games.
-- **The test**: one-sided normal,
-  `z = (rate − p0 − 0.5·deff/n) / sqrt(p0(1 − p0)·deff/n + se0²)`.
-- **The size filter**: `rate ≥ p0 + dominantMargin`, the same knob (0.05), now measured from
-  `p0`.
-- **Confirmation** uses the same rule on its own batch, never pooled with discovery.
-- **D357's pooled confirmation** sums the attempts' effective excesses (n/deff · (rate − p0))
-  and both variances. `pooledTest` refuses to mix the two nulls.
-- **`confirmPlan`** sizes a colour candidate's batch at `p0 → p0 + dominantEffect`, with the
-  games inflated by `1 + se0² / (card variance)`, still capped at `confirmMaxDrafts`.
-- **`assess`'s `watch` lead** is measured from `p0` too.
-
-**Which run uses which null.**
-
-- `evolve.json` gains `winNull`. A new folder is written with `'colour'`
-  (`WIN_NULL_NEW_RUNS`).
-- A folder without the field was started on D331's mean. It resumes on the mean, for every
-  generation, discovery and confirmation alike, and the run says so. This follows D357's
-  `confirmPool` precedent.
-- The pure functions (`ruleTest`, `discover`, `confirmCandidates`, `discoveryStage`,
-  `selectSwaps`) take the null as an argument that defaults to the mean, so every earlier
-  caller and test reads as before.
-- Every decision records `winNull`, and the changelog's discovery line names D377.
-- There is no flag to choose the null. A different rule is a new decision.
-
-**Why these choices** (`docs/evidence/evolve-calibration.md` §7;
-`evolve-calibration-sim.py`, rule `colour`, 1,000 generations on J039's own matches):
-
-- **The card's whole matches are left out, not only its own decks.** With only its decks
-  left out, the null z's sd was 1.06, and the share at p ≤ 0.002 was 1.7× nominal. In a
-  mirror the opponent's games sit in the baseline, anticorrelated with the card's. With the
-  whole matches left out, the sd is 0.98.
-- **The continuity correction**: without it, the normal tail is lighter than the exact
-  binomial the old rule uses.
-- **20 pseudo-games**, so that a 300-draft confirmation batch's pairs (about 140 games
-  each) are pulled toward 0.50 by under a point.
-- **The baseline's own error is in the denominator**: without it, a card whose pair has
-  few other games would be tested against a noisy p0 as if it were exact.
-
-**Measured** (simulated; §7):
-
-- **Colours matter, cards don't** (J039's pair strengths):
-  - per-test shares at p ≤ 0.05 / 0.01 / 0.002: 0.050 / 0.010 / 0.0022;
-  - 0.053 false candidates a generation, against D331's 3.27;
-  - P(≥ 1) 0.048;
-  - 2 false cuts in 1,000 generations, against D331's 248.
-- **True null**: 0.034 a generation, calibrated.
-- **Planted effects** (12 cards, +0.05 / +0.10 / +0.15):
-  - discovered in 0.47 / 0.74 / 0.99 of generations, against D331's 0.15 / 0.70 / 1.00;
-  - blue planted cards, invisible to D331, found at 0.70–1.00;
-  - cut at 0.05 / 0.22 / 0.55, against D331's 0.01 / 0.30 / 0.68. The colour null's
-    confirmation is the weaker half (§7);
-  - 0.65 false candidates a generation, about 7% of candidates, under BH's q of 0.1.
-
-**The hold.** Evolve cuts and D360's ratings raise stay on hold until both of these hold:
-
-1. this rule is merged;
-2. **J072** (D376's calibration night, updated here) has been read by the rule below.
-
-Until then, no evolve run's cut is applied to a cube. D360's raised file stays out of the
-default, whatever J064 reads, and J064's reading is reported, not acted on. J039's
-generation-4 swap (Fable of the Mirror-Breaker out) remains a colour cut, not a card
-verdict.
-
-**J072, pre-registered here** (`calibrate.ts` on two disjoint-seed, nothing-changed Omega
-batches of 8,400 drafts each, `--slice 1400`, J039's plain-draft size, so 12 slices). The
-calibration holds when all three of these are true:
-
-1. **Few false candidates.** The colour null's candidates summed over the 12 slices
-   (`slice_false_colour_mean × slices`) are **at most 2**. The simulation expects 0.64
-   (0.053 a slice); P(≥ 3) is 2.7% under a calibrated rule.
-2. **A calibrated per-test rate.** In each full batch, the colour null's `dominant-win`
-   tests at p ≤ 0.05 are **at most 9%** of its tests (`colour_win_p05 / colour_win_tests`;
-   nominal 5%).
-3. **No batch drift.** The colour-pair dispersion between the batches
-   (`pairs_dispersion`) is **at most 1.5**. The null assumes a pair's rate is one number
-   within a batch, and D376 measured about 1.
-
-**If the calibration holds,** the hold on evolve cuts made under D377 lifts, for new folders
-only. D360's raise then goes back to J064's own pre-registered reading.
-
-**If it fails,** the hold stays, and the failure is written up as a new decision. Neither
-the rule nor its constants are tuned on J072's data.
-
-**Not done.**
-
-- `confirmMaxDrafts` stays 300, so the colour null confirms a +0.10 card about a fifth of
-  the time. A larger cap is a knob change with its own cost per generation, left to its own
-  decision.
-- D360's raise rule (`raise.ts`) reads exploration, not dominant-win, and is unchanged.
-
 ## D378 — A cold tier for finished queue nights: `archive.py cold` moves a night's recordings to the archive drive as one tar.zst per key folder (plus its quarantine folder), verified member by member before anything hot is deleted; nights a job still reads are held; `restore-night` brings them back
 
 *Branch `c/cold-archive`; D378 (D377 is held by an open branch). Builds on D370.*
@@ -18510,7 +18465,12 @@ hibernated, and there is no sudo. D370's per-file zstd keeps the files on `/`.
    and a failed re-verify deletes nothing. `--keep-hot` archives and deletes nothing.
 4. **Refused (exit 3) unless:**
    - the night is closed (D370's rules);
-   - `redaction`: its redaction pass ran (`<root>-quarantine-nN/failed.txt`);
+   - `redaction`: its redaction pass ran: its quarantine folder exists (`--quarantine DIR`, else
+     `<root>-quarantine-nN`; night 1's is `<root>-quarantine`, with no suffix, and must be named).
+     The folder is walked for its recordings, as `tools/requarantine.mjs` does (D371);
+     `failed.txt` is not read, because night 1's was overwritten by its second run (J029).
+     *(Corrected after #66, which required `<root>-quarantine-nN/failed.txt` and so refused
+     night 1.)*
    - `warehouse`: the warehouse's `_state.json` offsets cover every `drafts.jsonl` line of
      the night;
    - `encoded`: a `--dataset` holds at least `--min-encoded` (90%) of its recordings;
@@ -18554,3 +18514,10 @@ through a Windows-names check or a read-only volume. The tests cover:
   bytes and the SHA-256 of each are what a restore must reproduce.
 - **Deleting on a successful write:** a write is not a verify; the archive is read back from
   the drive first.
+
+---
+
+*D1–D378 end here. From D379 on, each decision is its own file under
+[`docs/decisions/`](docs/decisions/), named `D<nnn>-<slug>.md`, so parallel PRs
+no longer conflict on this file (D379). `node tools/decisions.mjs list` is the
+index of both places.*

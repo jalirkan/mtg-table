@@ -31,6 +31,10 @@
 // leaves play.sh and the helper up with /health "engine":"idle" and no current
 // match, a POST /match starts a fresh engine from there, Ctrl-C works while asleep,
 // --idle-exit-after ends play.sh by itself, and --no-match keeps the old exit.
+// D381: POST /engine/start with {"aiProfile"} wakes the engine on that profile
+// (canonical case, the only --ai-profile on its command line, every other flag as
+// the last setup's), and it stays the last setup's; a bad profile or body is a
+// 400 that starts nothing; while running, nothing restarts and a warning says so.
 //
 //   node tools/match-launcher-selftest.mjs      # exit 0 iff every check passes; ~30 s
 //
@@ -43,6 +47,8 @@ import { createServer, request } from 'node:http';
 import { connect } from 'node:net';
 import { delimiter, join, resolve } from 'node:path';
 import { deflateRawSync } from 'node:zlib';
+
+import { checkWake } from './match-launcher.mjs';
 
 const REL = 'var/match-launcher-selftest';
 const DIR = resolve(REL);
@@ -477,8 +483,55 @@ try {
   const w0 = onW()[0].argv.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id');
   const w1 = onW()[1]?.argv ?? [];
   check('with the same flags as the first start and a game id of its own', JSON.stringify(w1.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id')) === JSON.stringify(w0) && /^match-m\d{13}$/.test(argOf(w1, '--game-id') ?? ''), w1.join(' '));
+
+  // D381: the same wake, with the AI profile ForgeCoach's Setup picked (no decks).
+  console.log('== /engine/start with {"aiProfile"} (D381)');
+  check('checkWake: no body is the D308 wake', JSON.stringify(checkWake('')) === '{"aiProfile":null,"problems":[]}' && checkWake(undefined).aiProfile === null && checkWake('  \n').problems.length === 0);
+  check('checkWake: {} and unknown keys are the D308 wake', checkWake('{}').aiProfile === null && checkWake('{"x":1}').problems.length === 0);
+  check('checkWake: a profile in any case, canonical', checkWake('{"aiProfile":"cAuTiOuS"}').aiProfile === 'Cautious');
+  check('checkWake: a bad profile, JSON or shape is a problem', checkWake('{"aiProfile":"Hard"}').problems.length === 1 && checkWake('{"aiProfile":3}').problems.length === 1
+    && checkWake('nope').problems[0] === 'the body is not JSON' && checkWake('[1]').problems.length === 1 && checkWake('"Cautious"').problems.length === 1);
+  r = await http({ port: W.coachPort });
+  check('/health: engine_start_profile 1', r.json?.engine_start === 1 && r.json?.engine_start_profile === 1, r.body);
+  const wn = onW().length;
+  const wakeWith = (body, port = W.coachPort) => http({ port, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json', Origin: 'https://jalirkan.github.io' }, body });
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  // Refusals start nothing.
+  for (const [what, body] of [['an unknown profile', '{"aiProfile":"Hard"}'], ['a non-string profile', '{"aiProfile":["Cautious"]}'], ['a body that is not JSON', 'Cautious'], ['a JSON array', '["Cautious"]']]) {
+    r = await wakeWith(body);
+    check(`${what}: 400 with problems, nothing started`, r.status === 400 && r.json?.ok === false && Array.isArray(r.json?.problems) && onW().length === wn, `${r.status} ${r.body}`);
+  }
+  r = await http({ port: W.coachPort });
+  check('...still asleep', r.json?.engine === 'idle', r.body);
+  r = await wakeWith('{"aiProfile":"cautious","aiDeck":"ignored"}');
+  check('asleep, {"aiProfile":"cautious"}: 200, woken on Cautious', r.status === 200 && r.json?.already === false && r.json?.aiProfile === 'Cautious'
+    && JSON.stringify(Object.keys(r.json.aiDeck)) === '["name","cards"]', `${r.status} ${r.body}`);
+  const wp = onW().at(-1)?.argv ?? [];
+  const without = (v, f) => v.filter((a, i) => a !== f && v[i - 1] !== f);
+  check('...one --ai-profile, Cautious; every other flag as the last setup, a game id of its own', onW().length === wn + 1 && wp.filter((a) => a === '--ai-profile').length === 1
+    && argOf(wp, '--ai-profile') === 'Cautious' && JSON.stringify(without(without(wp, '--game-id'), '--ai-profile')) === JSON.stringify(without(without(w0, '--game-id'), '--ai-profile'))
+    && /^match-m\d{13}$/.test(argOf(wp, '--game-id') ?? '') && argOf(wp, '--game-id') !== argOf(w1, '--game-id'), wp.join(' '));
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
+  check('then a wake with no body keeps Cautious: it is the last setup now', r.status === 200 && r.json?.already === false && r.json?.aiProfile === 'Cautious'
+    && argOf(onW().at(-1)?.argv ?? [], '--ai-profile') === 'Cautious', `${r.status} ${r.body}`);
   W.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && W.proc.exitCode === null; i++) await sleep(50);
+  // While an engine runs (no idle limit here): nothing restarts, the profile is not applied, a warning says so.
+  const R = await startPlay([], 'wakerun');
+  const onR = () => starts().filter((e) => argOf(e.argv, '--port') === String(R.port));
+  const rn = onR().length;
+  r = await wakeWith('{"aiProfile":"Reckless"}', R.coachPort);
+  check('while running: 200 already, Default kept, a warning, no restart', r.status === 200 && r.json?.already === true && r.json?.aiProfile === 'Default'
+    && r.json?.warnings?.length === 1 && /Reckless was not applied/.test(r.json.warnings[0]) && onR().length === rn, `${r.status} ${r.body}`);
+  r = await wakeWith('{"aiProfile":"default"}', R.coachPort);
+  check('while running, the profile it plays: no warning', r.status === 200 && r.json?.already === true && r.json?.warnings === undefined && onR().length === rn, r.body);
+  r = await wakeWith('{"aiProfile":"Hard"}', R.coachPort);
+  check('while running, a bad profile: still 400', r.status === 400 && onR().length === rn, r.body);
+  R.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && R.proc.exitCode === null; i++) await sleep(50);
 
   console.log('== --idle-exit-after: play.sh gives up by itself');
   const X = await startPlay(['--idle-exit-after', '0.05', '--', '--idle-timeout', '1'], 'idlex');

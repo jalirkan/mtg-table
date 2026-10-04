@@ -42,7 +42,8 @@ for a human reader.
 ## What you may not add
 
 Contributions are welcome inside these lines. Each is a decision with its reasons
-in `DECISIONS.md`, and a change that crosses one will not be merged.
+in `DECISIONS.md` (D1–D378) or `docs/decisions/` (D379 on), and a change that
+crosses one will not be merged.
 
 - **Only CC0 assets, each with a written provenance** (**D54**): a model, clip or
   texture enters through `tools/assets-manifest.json` — its URL, bytes, sha256,
@@ -3089,7 +3090,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | The milestones M0..M7 and every lane since, the deferred list, and the questions only the user can settle; *Open now*, at the top, indexes every open follow-up and question. |
-| [`DECISIONS.md`](DECISIONS.md) | Every load-bearing decision, dated, with the alternatives that were rejected. A decision's number is final and gaps are allowed (**D200**); the most recent are **D200–D202**. |
+| [`DECISIONS.md`](DECISIONS.md), [`docs/decisions/`](docs/decisions/) | Every load-bearing decision, dated, with the alternatives that were rejected: D1–D378 in `DECISIONS.md`, and from **D379** on one file per decision under `docs/decisions/` (`node tools/decisions.mjs list` is the index of both). A decision's number is final and gaps are allowed (**D200**). |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the gate and the policies (commits, decision numbers); `bridge/`, `web/`, `web/src/arena/` and `tools/` each have a `CLAUDE.md` of their own for the conventions of that code. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow, the enum/nullability traps the wire format depends on, and (chapter 9) a map of `WireGuiGame.java` with one ask and one act followed through the threads. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |

@@ -22,7 +22,9 @@
  *    third of the picks, a splash needs rating and sources, a dual in the pair
  *    is worth more; the ratings TSV round-trips; weights refuse unknown names;
  *  - meta.json, ForgeCoach's schema 1 (D297): its keys, the shrinkage by
- *    arithmetic, archetype ids, lands and splash, and meta.golden.json;
+ *    arithmetic, archetype ids, lands and splash, and meta.golden.json; a
+ *    nonbasic land counted like a spell, and every played card counted under
+ *    its own name (D380);
  *  - the report: fixtures/cubelab/mini/ (three hand-written drafts) aggregated
  *    and compared with summary.golden.json, a few of its numbers checked by
  *    arithmetic, and the HTML loads nothing from anywhere.
@@ -449,6 +451,55 @@ test('meta.json: schema 1 keys, shrinkage, archetypes, lands and splash on the m
   assert.deepEqual([m.splash.games, m.splash.winRate], [2, 0]);
   assert.ok(m.pairs.every((p: { games: number }) => p.games >= 2));
   assert.deepEqual(typesOf('Legendary Creature - Human Wizard'), ['Legendary', 'Creature']);
+});
+
+test('meta.json: a nonbasic land is counted like a spell, and stays out of pairs and key cards (D380)', () => {
+  const { meta, cards, recs } = miniRaw();
+  const m = buildMeta(meta, cards, recs, null, { minPairGames: 1, maxPairs: 300 }) as Record<string, any>;
+  // Mist Fountain: seed 1 A's deck, 2-1 -> a land the builder played reads as played.
+  const f = m.cards['Mist Fountain'];
+  assert.deepEqual([f.picked, f.inDecks, f.inclusionRate, f.games, f.wins], [1, 1, 1, 3, 2]);
+  assert.ok(m.pairs.every((p: { a: string; b: string }) => p.a !== 'Mist Fountain' && p.b !== 'Mist Fountain'), 'pairs stay nonland');
+  assert.ok(m.archetypes.every((a: { keyCards: string[] }) => !a.keyCards.includes('Mist Fountain')), 'key cards stay nonland');
+  // The run's mean is over nonland observations only, so counting lands moved no spell's number.
+  let tw = 0, tg = 0;
+  for (const [n, c] of Object.entries(m.cards) as Array<[string, { wins: number; games: number }]>) if (!cards[n]?.land) { tw += c.wins; tg += c.games; }
+  assert.ok(Math.abs(m.sample.shrinkage.mean - tw / tg) < 1e-4);
+});
+
+test('meta.json: every played card is counted under its own name, once per deck (D380)', () => {
+  // ForgeCoach saw cards picked 10-22 times with inDecks 0 and suspected a lost
+  // name (an "A // B" face, an apostrophe, a comma) or a partial main.  Either
+  // would break one of these: no key outside the cube, and inDecks summing to
+  // the played decks' distinct nonbasic cards.
+  const { meta, cards, recs } = miniRaw();
+  const odd = { 'Delver of Secrets // Insectile Aberration': 'Wing Scout', "Ajani's Pridemate": 'Sky Herald', 'Lonis, Cryptozoologist': 'Tide Mage', 'Æther Vial': 'Grave Imp' };
+  const ren = (n: string): string => (Object.entries(odd).find(([, v]) => v === n)?.[0] ?? n);
+  const info: Record<string, CardInfo> = Object.fromEntries(Object.entries(cards).map(([n, c]) => [ren(n), c]));
+  const rn = (xs: string[]) => xs.map(ren);
+  const renamed = recs.map((r) => ({
+    ...r,
+    drafters: r.drafters.map((d) => ({
+      ...d,
+      pool: rn(d.pool),
+      picks: d.picks.map((p) => ({ ...p, seen: rn(p.seen), took: rn(p.took) })),
+      ...(d.deck ? { deck: { ...d.deck, main: d.deck.main.map(([k, n]) => [k, ren(n)] as [number, string]) } } : {}),
+      ...(d.forge ? { forge: { ...d.forge, main: d.forge.main?.map(([k, n]) => [k, ren(n)] as [number, string]) } } : {}),
+    })),
+  })) as DraftRecord[];
+  for (const [label, rs, ci] of [['plain', recs, cards], ['odd names', renamed, info]] as const) {
+    const m = buildMeta(meta, ci, rs as DraftRecord[], null) as Record<string, any>;
+    const cube = new Set(m.cube.cards.map((c: { name: string }) => c.name));
+    assert.deepEqual(Object.keys(m.cards).filter((n) => !cube.has(n)), [], `${label}: no card outside the cube`);
+    let slots = 0;
+    for (const r of rs as DraftRecord[]) for (const d of r.drafters) {
+      const main = d.played === 'lab' && d.deck ? d.deck.main : (d.forge?.main ?? []);
+      slots += new Set(main.map(([, n]) => n).filter((n) => !['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes'].includes(n))).size;
+    }
+    const sum = Object.values(m.cards).reduce((s: number, c: any) => s + c.inDecks, 0);
+    assert.equal(sum, slots, `${label}: inDecks sums to the played decks' distinct nonbasic cards`);
+    for (const n of Object.keys(odd)) if (label === 'odd names') assert.ok(m.cards[n].inDecks > 0, `${n} counted`);
+  }
 });
 
 test('meta.json: the mini fixture matches meta.golden.json', () => {
