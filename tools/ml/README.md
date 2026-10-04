@@ -267,6 +267,61 @@ python3 tools/ml/train_eval.py var/ml/data/night-1 --split-by pair --grid --time
     --dry-load --report var/ml/reports/night-1-dry.json
 ```
 
+## The win chance in ForgeCoach (D359)
+
+The coach helper serves the evaluator to ForgeCoach: `POST /eval` on port 8643
+(`tools/eval-runner.mjs`'s header is the contract) answers P(the viewing seat
+wins) for the position the board shows, and ForgeCoach draws it as a win-chance
+strip while you play and a line over a replay's timeline. The model stays on
+this machine: the helper reads it from `var/ml/` (gitignored) and only the
+number leaves the process.
+
+```bash
+./scripts/play.sh --engine-only                       # loads var/ml/models/night-1-eval.json when it exists
+./scripts/play.sh --engine-only --eval-model var/ml/models/<other>.json
+curl -s http://127.0.0.1:8643/health                  # ... "eval":1,"evalModel":"<sha12>","evalSchema":"<schemaId>"
+grep EVAL var/play/coach.log                          # why it is off, when it is
+python3 tools/ml/eval_serve.py --model var/ml/models/night-1-eval.json --log var/games/<id>/frames.jsonl
+node tools/coach-helper.mjs --eval-schema 82815752c2f5e346 --eval-cube cubes/synergy-cube-180.md   # stricter checks
+```
+
+- **One encoder.** `eval_serve.py` runs in one child process of the helper
+  (Python: `--eval-python`, else `var/ml/venv/bin/python3` when it exists, else
+  `python3`; it needs numpy). It calls `encode.py`'s `TurnTally` and
+  `encode_state` -- the functions behind `encode_game`, which is where
+  `dataset.py`'s rows come from -- and `evalnet.py`'s forward pass. Nothing is
+  ported.
+- **The request** is the board's own state (the viewing seat's redacted view) and
+  the game's earlier frames' `events` and `stack` (only those holding a `turn`,
+  `land`, `cast` or `mulligan` event are needed). The history feeds the counters
+  a training row carries: this turn's land drop, lands and spells.
+- **Parity, proven.** `tests/test_eval_serve.py` (12h):
+  - standard library: for every decision row of every committed recording, the
+    vector built from the request (full and reduced history) equals
+    `encode_game`'s row; the hidden-zone scrambler moves no online feature;
+  - numpy: `dataset.py` builds a dataset of the recordings, a small model is
+    trained on it, and for every row of every split the online vector equals the
+    dataset's int16 row and the served P(win) equals the model's on that row (to
+    1e-12), also through the JSON-lines process.
+  `tools/eval-runner-selftest.mjs` (12f) sends two recordings' decision rows
+  through the helper's `/eval`, built as ForgeCoach builds them, against
+  `fixtures/eval/golden.json` (hash and P(win) to 1e-9).
+- **Refusals.** The model is not served (and `/health` says `"eval": 0` with
+  `evalError`) when the schema id `encode.py` computes from the model's own
+  vocabulary is not its `schemaId` (the encoder changed since training), when
+  `--eval-schema` or `--eval-cube` disagree, or when it reads a live-unsafe
+  feature.
+- **Hidden information.** The evaluator reads only the request's state, and that
+  state is what the viewing seat's board shows. It reads it the way the training
+  rows read each chair's own log (each row is encoded from the log's own seat):
+  the opponent's hand and both libraries are counts, a stub adds to a count, a
+  face-down card is anonymous. A state whose viewer's own hand is redacted (made
+  for the other seat) is refused, and the request has no other field.
+- **Where it is trusted.** The model learned from decision rows (the viewer
+  holding priority in a main phase or combat, Forge's AI on both sides);
+  `/eval` says `"decision": false` for any other state, and ForgeCoach shows
+  only decision rows.
+
 ## The evaluator's three gates (D354)
 
 The search uses the learned evaluator at its leaves (`SearchConfig`

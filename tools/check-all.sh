@@ -1903,6 +1903,10 @@ s12e_skipped() {
 #      Since D353 also tools/review-runner-selftest.mjs: /review against a
 #      FAKE coach-grade.sh (validation, the queue, the stages, the report);
 #      its files under var/review-runner-selftest/; about 10 s.
+#      Since D359 also tools/eval-runner-selftest.mjs: /eval against a FAKE
+#      eval_serve.py, then (where python3 has numpy) the real one with
+#      fixtures/eval/model.json, two recordings' decision rows through the
+#      route against the golden hashes and P(win); about 5 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
@@ -1913,6 +1917,9 @@ s12f_coach() {
   # D353: the helper's /review against a fake coach-grade.sh.
   node tools/review-runner-selftest.mjs \
     || die "review-runner-selftest.mjs (12f: the review runner broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D359: the helper's /eval, the win chance.
+  node tools/eval-runner-selftest.mjs \
+    || die "eval-runner-selftest.mjs (12f: the win chance broke its contract with ForgeCoach, or its features left the training rows' -- see the FAIL lines above)"
 }
 
 # 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid
@@ -1989,7 +1996,10 @@ s12g_cubelab() {
 #      the viewer's own hand -- plus labels, determinism, the schema golden and
 #      the split by game.  The encoder is standard library; the dataset and
 #      baseline tests need numpy and are SKIPPED without it, which this step
-#      prints.  No engine, no network.
+#      prints.  No engine, no network.  Since D359 also tests/test_eval_serve.py:
+#      the coach helper's online encoding against encode_game's rows (standard
+#      library) and against a dataset.py build with a model trained on it
+#      (numpy; about 30 s).
 s12h_ml() {
   printf '\n=== 12h. tools/ml tests -- the dataset pipeline, hidden information held (D305) ===\n'
   command -v python3 >/dev/null || die "python3 not found (12h: tools/ml needs Python 3)"
