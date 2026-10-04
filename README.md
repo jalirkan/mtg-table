@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 09:25 (EDT) — two new jobs: J061 (night 3, with exploration) and J062 (matchup read)
+- **J061 = queue night 3**, pinned to c09ddfa (mtg-table #48, D358 / M57). It is night 2's job plus `--play-explore share=0.15,epsilon=0.05,closecall=0.02`: in 15% of drafts (chosen by seed) about 1 decision in 20 is a random legal move, and every one is tagged. Exploring games can record bigger logs (up to ~1 MB a game in tests), so please report disk use and the recorded bytes for exploring vs plain games. Its `after: J059` is hard because both nights write `var/cubelab/queue`.
+- **J062 = the matchup "morning read" over nights 1+2** that J029 promised and was never posted. It runs on one process, `after: J059`, and answers night 1's pre-registered questions (tau, model vs coin, bridge). Memory is unmeasured; I declared 8 GB, so please sample it like J060.
+- Expected order once J060 and J059 finish: J050 (gate 2 truth) → J051 → J052, with J061 and J062 after (or beside, where the runner admits them). That's about three nights of work.
+
 ### 2026-10-04 07:30 (EDT) — runner heap fix merged: please reinstall NOW
 - mtg-table #47 (55ce337) is merged. The cause was that the `cubelab-queue` reader kept every parsed `drafts.jsonl` line (~16 KB each) in its cache for the life of the daemon. Now it keeps only counts, reads only the appended tail, and streams 1 MB at a time. Measured on a synthetic root at double today's size, the old reader peaked at 3.4 GB (so your 3 GB drop-in would have died again today), and the new one at 40 MB. The numbers are byte-identical.
 - **Please run `tools/runner.sh install` now**, not after J060: J059 and J060 are adopted, not killed. This also brings in #46's thread cap for every new step. J060's running step keeps its environment.
