@@ -31,7 +31,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { join, resolve } from 'node:path';
-import { createEvalRunner, validateEval, MAX_EVAL_BODY } from './eval-runner.mjs';
+import { createEvalRunner, validateEval, MAX_EVAL_BODY, resolveEvalModel, labRoot, DEFAULT_EVAL_MODEL } from './eval-runner.mjs';
 import { startHelper } from './coach-helper.mjs';
 
 const REL = 'var/eval-runner-selftest';
@@ -107,6 +107,24 @@ async function helper(evaluator) {
 
 // --- part 1 --------------------------------------------------------------------
 console.log('eval-runner-selftest: part 1, a fake evaluator');
+
+// D369: the model is looked up in this checkout, then in the lab clone the PC's jobs write to.
+{
+  const home = join(DIR, 'code', 'mtg-table'), lab = join(DIR, 'code', 'lab', 'mtg-table');
+  mkdirSync(join(lab, 'var', 'ml', 'models'), { recursive: true });
+  mkdirSync(join(home, 'var', 'ml', 'models'), { recursive: true });
+  const env = {};
+  check(labRoot(home, env) === lab, 'the lab clone is ../lab/mtg-table beside the checkout');
+  check(labRoot(home, { MTGTABLE_LAB_ROOT: join(DIR, 'elsewhere') }) === join(DIR, 'elsewhere'), '$MTGTABLE_LAB_ROOT names another lab clone');
+  check(resolveEvalModel(home, undefined, env) === null, 'no model in either place: none (eval off)');
+  writeFileSync(join(lab, DEFAULT_EVAL_MODEL), '{}');
+  check(resolveEvalModel(home, undefined, env) === join(lab, DEFAULT_EVAL_MODEL), 'the default model only in the lab clone: the lab clone\'s');
+  writeFileSync(join(lab, 'var/ml/models/eval-abc.json'), '{}');
+  check(resolveEvalModel(home, 'var/ml/models/eval-abc.json', env) === join(lab, 'var/ml/models/eval-abc.json'), 'a relative --eval-model only in the lab clone: the lab clone\'s');
+  writeFileSync(join(home, DEFAULT_EVAL_MODEL), '{}');
+  check(resolveEvalModel(home, undefined, env) === join(home, DEFAULT_EVAL_MODEL), 'in both places: this checkout\'s wins');
+  check(resolveEvalModel(home, 'var/ml/models/missing.json', env) === join(home, 'var/ml/models/missing.json'), 'a flag that is nowhere stays as given (reported missing)');
+}
 
 check(!validateEval(null).req && !validateEval([]).req, 'validate: a body that is not an object is refused');
 check(/unknown field/.test(validateEval({ seat: 0, state: STATE, oppHand: [] }).problem ?? ''), 'validate: an unknown field (e.g. oppHand) is refused');

@@ -173,7 +173,9 @@ class Archive(unittest.TestCase):
             self.assertEqual(_frames(z), before[p])
             self.assertAlmostEqual(os.stat(z).st_mtime, OLD, delta=1)
         with open(os.path.join(self.root, "archive", "night-1.json")) as f:
-            self.assertEqual(json.load(f)["verified"], 2)
+            man = json.load(f)
+        self.assertEqual(man["verified"], 2)
+        self.assertEqual((man["gzipBytes"], man["zstdBytes"]), (man["gzBytesArchived"], man["zstBytes"]))   # warehouse export --archive
         # the dataset's listing of the run reads the archive
         logs = E.find_logs([os.path.join(self.key, "games")])
         self.assertEqual(sum(1 for p in logs if p.endswith(".zst")), 2)

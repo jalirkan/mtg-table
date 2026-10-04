@@ -48,7 +48,7 @@ the gate lists under var/ml/gates/ that exist (`--no-default-keep` turns that
 off).  `restore` turns a `.zst` back into a verified `.gz` for one.
 
 WRITES.  `<base>/archive/<scope>.json` (the manifest: counts and bytes before
-and after, the redaction check), `<scope>.files.jsonl` (one line per archived
+and after -- `gzipBytes` / `zstdBytes` for `warehouse.py export --archive` -- the redaction check), `<scope>.files.jsonl` (one line per archived
 file: path, raw/gz/zst bytes, SHA-256), `<scope>.lock`; `--dry-run` writes
 only `<scope>.dryrun.json`.  base = the root (scope `night-N`) or the folder
 (scope `dir`).
@@ -579,6 +579,7 @@ def summarize(scope: Scope, logged: dict[str, dict[str, Any]], kept: list[str], 
         "thisRun": counts,
         "bytesBefore": before, "bytesAfter": after, "savedBytes": before - after,
         "gzBytesArchived": gz_b_of_archived, "zstBytes": zst_b, "rawBytes": raw_b,
+        "gzipBytes": gz_b_of_archived, "zstdBytes": zst_b,   # what `warehouse.py export --archive` reads (D363)
         "ratio": round(gz_b_of_archived / zst_b, 3) if zst_b and not unlogged else None,
         "seconds": round(secs, 1),
         "redaction": red,

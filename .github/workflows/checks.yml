@@ -203,3 +203,7 @@ jobs:
       # so the dataset and baseline tests report themselves skipped.
       - name: tools/ml tests (encoder, hidden information)
         run: python3 -m unittest discover -s tools/ml/tests
+      # D363: the lab warehouse. duckdb, pyarrow and pandas are not installed here, so only
+      # its standard-library half runs (line flattening, offsets, resets); the rest says skipped.
+      - name: tools/lab tests (the lab warehouse)
+        run: python3 -m unittest discover -s tools/lab/tests
