@@ -129,6 +129,8 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
     private long recordNanos;
     private long buildNanos;
     private boolean decisionsOn;
+    /** The seat's own controller when it is ours: its explorer's counts go in the summary (D358). */
+    private PolicyControllerAi controller;
 
     private SeatRecorder(final GameLog log, final RecordMatch.SpectatorGui gui, final GameEventForwarder forwarder,
                          final int seatId) {
@@ -151,13 +153,25 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
     public static SeatRecorder attach(final Game game, final int seat, final File out, final String gameId,
                                       final long seed, final String forgeJarSha, final List<Seat> seats,
                                       final Map<String, Object> extra) throws IOException {
-        return attach(game, seat, out, gameId, seed, forgeJarSha, seats, "lab", extra);
+        return attach(game, seat, out, gameId, seed, forgeJarSha, seats, "lab", extra, null);
     }
 
     /** {@link #attach} with the header block's name: {@code lab} (the cube lab) or {@code bench} (ai-bench, D347). */
     public static SeatRecorder attach(final Game game, final int seat, final File out, final String gameId,
                                       final long seed, final String forgeJarSha, final List<Seat> seats,
                                       final String block, final Map<String, Object> extra) throws IOException {
+        return attach(game, seat, out, gameId, seed, forgeJarSha, seats, block, extra, null);
+    }
+
+    /**
+     * {@link #attach} with the header block's name and, for an exploring game
+     * (D358), the session header's {@code playExplore} object (numbers, booleans,
+     * strings; null = the game does not explore and the header has no such key).
+     */
+    public static SeatRecorder attach(final Game game, final int seat, final File out, final String gameId,
+                                      final long seed, final String forgeJarSha, final List<Seat> seats,
+                                      final String block, final Map<String, Object> extra,
+                                      final Map<String, Object> playExplore) throws IOException {
         final GameView gameView = game.getView();
         final List<PlayerView> players = new ArrayList<>();
         for (final PlayerView pv : gameView.getPlayers()) {
@@ -169,7 +183,7 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
         }
         final PlayerView viewer = players.get(seat);
         final GameLog log = new GameLog(out, out.getName().endsWith(".gz"));
-        log.header(header(gameId, seed, forgeJarSha, viewer, players, seats, block, extra));
+        log.header(header(gameId, seed, forgeJarSha, viewer, players, seats, block, extra, playExplore));
         final RecordMatch.SpectatorGui gui = new RecordMatch.SpectatorGui(gameId, game, gameView, viewer, log, false);
         gui.setGameView(null);      // HostedMatch's own two-step, as RecordMatch does
         gui.setGameView(gameView);
@@ -187,6 +201,7 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
             if (p.getId() == viewer.getId() && p.getController() instanceof PolicyControllerAi) {
                 ((PolicyControllerAi) p.getController()).setDecisionSink(rec);
                 rec.decisionsOn = true;
+                rec.controller = (PolicyControllerAi) p.getController();
             }
         }
         return rec;
@@ -279,6 +294,19 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
             }
             o.end();
         }
+        // D358: what play exploration did to this seat's decisions (absent when the game did not explore)
+        final mtgtable.ai.Explorer ex = controller == null ? null : controller.explorer();
+        if (ex != null) {
+            final mtgtable.ai.ExploreMath m = ex.math();
+            o.key("explore").obj().n("decisionsRandomised", (long) m.randomised()).n("changed", (long) m.changed())
+                    .n("closeCalls", (long) m.closeCalls()).n("closeCallsChanged", (long) m.closeCallsChanged())
+                    .n("coins", (long) m.coins()).n("failures", (long) m.failures());
+            o.key("byKind").obj();
+            for (final Map.Entry<String, int[]> e : m.byKind().entrySet()) {
+                o.n(e.getKey(), (long) e.getValue()[0]);
+            }
+            o.end().end();
+        }
         log.ai("decisions", o.end().done());
     }
 
@@ -319,7 +347,8 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
     /** {@link RecordMatch}'s session header (protocol section 8.1), plus the caller's {@code lab} block. */
     private static String header(final String gameId, final long seed, final String forgeJarSha,
                                  final PlayerView viewer, final List<PlayerView> players, final List<Seat> seats,
-                                 final String block, final Map<String, Object> extra) {
+                                 final String block, final Map<String, Object> extra,
+                                 final Map<String, Object> playExplore) {
         final JsonOut o = new JsonOut().obj();
         o.n("v", GameLog.PROTOCOL_VERSION);
         o.n("kind", "session");
@@ -361,6 +390,25 @@ public final class SeatRecorder implements AutoCloseable, DecisionSink {
                     o.nNull(e.getKey());
                 } else if (v instanceof Number) {
                     o.n(e.getKey(), ((Number) v).longValue());
+                } else {
+                    o.n(e.getKey(), v.toString());
+                }
+            }
+            o.end();
+        }
+        if (playExplore != null) {
+            // D358: this game explored -- its settings and seed; the counts are in each seat's `decisions` line
+            o.key("playExplore").obj();
+            for (final Map.Entry<String, Object> e : playExplore.entrySet()) {
+                final Object v = e.getValue();
+                if (v instanceof Double || v instanceof Float) {
+                    o.n(e.getKey(), ((Number) v).doubleValue());
+                } else if (v instanceof Number) {
+                    o.n(e.getKey(), ((Number) v).longValue());
+                } else if (v instanceof Boolean) {
+                    o.n(e.getKey(), (boolean) (Boolean) v);
+                } else if (v == null) {
+                    o.nNull(e.getKey());
                 } else {
                     o.n(e.getKey(), v.toString());
                 }

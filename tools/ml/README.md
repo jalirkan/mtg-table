@@ -449,6 +449,21 @@ is never read (the redaction checker fails such a log; the reader refuses it
 too). Cost, measured (D347): three synergy-cube games, one worker, both chairs
 recorded — see the decision's *Measured*.
 
+## Exploring games (D358)
+
+The queue's `--play-explore` (docs/guides/cube-lab.md, *Play exploration*) plays a
+seeded share of the drafts with each seat answering some decisions at random (a
+uniformly random legal move with probability epsilon, or a coin between two close
+creature choices). Such a recording's header carries `playExplore`, and each decision
+the explorer answered carries `explore: {rule, forge}` (`forge`: the seat's own answer).
+
+| reader | default | flag |
+|---|---|---|
+| `dataset.py` (positions, the evaluator) | **keeps** them: the positions and the outcome are real | `--play-explore include\|exclude\|only`; `games.jsonl` marks `"explore": true`, `stats.json` counts them |
+| `policy_data.py` (decision targets) | **drops every randomised decision** (counted in `notes`); keeps the rest of the game | -- |
+| `matchup_data.py` / `matchup.py train` (card ratings) | **leaves them out**: a random move is not the deck's strength | `--play-explore include\|exclude\|only` |
+| `matchup_verify.py`, `gate_regret_build.py` | leave them out | -- |
+
 ## The owner's own games — the human test set (D347)
 
 Justin's games go under **`var/ml/human/`** (gitignored, like all of `var/`):

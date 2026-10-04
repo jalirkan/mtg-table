@@ -30,6 +30,20 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-04 — play exploration marks an exploring recording and its random answers
+
+Applied by the queue-exploration lane (branch `c/queue-exploration`), so a dataset can
+tell the AI's own choices from the moves play exploration drew. One row. **No frame on
+the wire changes**: the keys are written by the in-process recorder
+(`mtgtable.SeatRecorder`, the cube lab's) into AI-vs-AI recordings only. Decision
+**D358**; held by `tools/check-redaction.mjs` and its five `m57-*` controls, by
+`web/test/cubelab-record.test.ts` over `fixtures/cubelab/explore/`, and by
+`mtgtable.ai.DecisionSelfTest` on every build.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M57 | §8.1, §8.2, M55 | **An exploring game says so.** The session header of an AI-vs-AI recording whose seats explored gains an optional **`playExplore: {epsilon, closeCall, opening}`** (two numbers in [0, 1] and a boolean; never beside `transport`: a seat a person plays never explores). A **`decision`** record (M55) the explorer answered gains **`explore: {rule, forge}`** — `rule` is `random` (a uniformly random legal answer, with probability `epsilon`) or `closeCall` (a fair coin between the seat's creature choice and its nearest rival on Forge's own score), `forge` the answer the seat's policy had given, as a token (audited like every option: its card ids must be ones the record's state frame shows the seat); `chosen` is the answer played. The **`decisions`** summary gains **`explore: {decisionsRandomised, changed, closeCalls, closeCallsChanged, coins, failures, byKind}`**. **Optional**: absent from every recording that did not explore and from every one before this amendment. A dataset must not learn a marked record's `chosen` as the seat's choice (`policy_data.py` drops them); the positions and the outcome that follow are true. | D358 |
+
 ### 2026-10-03 — `hello_ok.match` names the AI's policy
 
 Found by ForgeCoach: after a match setup chose the search AI, the board still

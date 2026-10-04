@@ -726,5 +726,69 @@ probe('m55-frame-is-not-a-state.jsonl',
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 }
 
+// ---------------------------------------------------------------------------
+// Amendment M57 (D358): play exploration.  An exploring recording's header
+// carries `playExplore` (epsilon, closeCall, opening); a decision the explorer
+// answered carries `explore: {rule, forge}`, `forge` the seat's own answer as a
+// token -- audited like every other token (the planted leak names the
+// opponent's concealed hand card there).
+// ---------------------------------------------------------------------------
+
+const exploreHeader = { ...header, playExplore: { epsilon: 0.05, closeCall: 0.02, opening: false } };
+
+/** withDecision, answered by the explorer: chosen a random legal option, Forge's own answer in the mark. */
+function withExplored(fs) {
+  const b = withDecision(fs);
+  b.explore = { rule: 'random', forge: b.chosen };
+  b.chosen = b.options[b.options.length - 1];
+  const sum = fs.find((f) => f.type === 'decisions');
+  sum.body.explore = { decisionsRandomised: 1, changed: 1, closeCalls: 0, closeCallsChanged: 0, coins: 20, failures: 0, byKind: { priority: 1 } };
+  return b;
+}
+
+const exploreProbe = (name, why, expect, mutate, headerOut = exploreHeader) => {
+  const fs = slice();
+  mutate(fs);
+  const bytes = write(name, fs, headerOut);
+  manifest.push({ file: name, level: 'fail', expect, why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+};
+
+{
+  const fs = slice();
+  withExplored(fs);
+  write('m57-explore-present.jsonl', fs, exploreHeader);
+  manifest.push({
+    file: 'm57-explore-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M57: an exploring recording -- its header, one randomised decision and the summary\'s counts -- the control for the m57 probes',
+  });
+  console.log('  PASS  m57-explore-present.jsonl  (an explored decision, no defect)');
+}
+
+exploreProbe('m57-explore-without-header.jsonl',
+  'amendment M57 / D358: an explore mark only in a recording whose header says it explored',
+  'no playExplore',
+  (fs) => { withExplored(fs); }, header);
+
+exploreProbe('m57-explore-forge-names-the-opponent-hand.jsonl',
+  'amendment M57 / D358: the mark\'s Forge answer is a token like any other -- naming a card the viewer cannot see is a leak',
+  'which its state frame does not show',
+  (fs) => {
+    const b = withExplored(fs);
+    const st = fs.find((f) => f.type === 'state');
+    const them = st.body.players.find((p) => p.id !== header.seat);
+    b.explore.forge = `cast:${them.zones.hand.cards.find((c) => c.hidden === true).id}`;
+  });
+
+exploreProbe('m57-explore-carries-a-label.jsonl',
+  'amendment M57 / D358: an explore mark is a rule and a token -- nothing else',
+  'explore carries an unexpected key',
+  (fs) => { withExplored(fs).explore.why = 'a coin said so'; });
+
+exploreProbe('m57-playexplore-in-a-seat-recording.jsonl',
+  'amendment M57 / D358: a seat a person plays never explores',
+  'both "playExplore" and "transport"',
+  () => {}, { ...exploreHeader, transport: 'ws' });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

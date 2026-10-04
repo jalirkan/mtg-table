@@ -7,6 +7,17 @@
 //       [--bridge-share 0.2] [--games 1] [--chunk 250] [--min-drafts 20] [--cubes a,b,...] [--power power.tsv]
 //       [--bridge-ratings even|own] [--record-every N]   (N = 1: every game, both chairs, D315)
 //       [--allow-version-change]   append to key folders another lab version wrote (D341; logged)
+//       [--play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   a seeded share of every
+//                                  chunk's drafts play games whose decisions explore (D358, playexplore.ts)
+//
+// PLAY EXPLORATION (D358).  With --play-explore the night's plan records the
+// settings (`playExplore`), every chunk passes them to `run`, and each draft
+// explores or not by its own seed (rng(seed, 'play-explore') < share).  The
+// settings are part of each key folder's lab version (D341): a night that
+// turns exploration on or off, or changes it, is a version change for every
+// folder it appends to, so it needs --allow-version-change, which run.json
+// logs.  A re-run of a night uses the plan's settings; a different flag is
+// refused.  The coverage below counts only drafts that did not explore.
 //
 // SEEDS (D340, seeds.ts): the ledger counts each key's seeds up from 1 and a
 // chunk must stay below 800,000,000; the AI ladder's deck sets live at
@@ -68,6 +79,7 @@ import { defaultRatings, runLab, type DraftRecord, type RunOptions } from './run
 import { DEFAULT_WEIGHTS } from './weights.ts';
 import { assertQueueSeeds } from './seeds.ts';
 import { codeVersion, fileSha } from './versions.ts';
+import { isPlayExplored, parsePlayExploreArgs, playExploreText, type PlayExploreOptions } from './playexplore.ts';
 
 /** Power tier of each cube: 0 flat, 1 middle, 2 powered.  A cube not listed is treated as middle. */
 export const TIERS: Record<string, { tier: number; why: string }> = {
@@ -160,6 +172,8 @@ export interface NightPlan {
   night: number; drafts: number; games: number; format: string; knobs: QueueKnobs; alloc: KeyAlloc[]; pairs: PairRow[]; chunks: Chunk[]; bridgeRatings?: 'even' | 'own';
   /** D341: one line per `queue run` of this night: when, the code and engine it ran on (each chunk's run.json has the full version). */
   runs?: Array<{ at: string; gitSha: string | null; codeTree: string | null; dirty: boolean; diffSha: string | null; forgeJarSha256: string | null; allowVersionChange: boolean }>;
+  /** D358: the night's play exploration (absent: none), passed to every chunk; a re-run must not change it. */
+  playExplore?: PlayExploreOptions;
 }
 export interface Ledger { v: 1; games: number; format: string; nextSeed: Record<string, number>; nights: number[] }
 
@@ -208,7 +222,10 @@ export function assertNoDuplicates(plans: NightPlan[]): number {
   return n;
 }
 
-/** Decisive games per card, pooled by name over every drafts.jsonl under these folders (played decks; basics left out). */
+/**
+ * Decisive games per card, pooled by name over every drafts.jsonl under these folders (played decks; basics left out).
+ * Drafts whose games explored (D358) are left out: the matchup model does not read them, so they cover nothing.
+ */
 export function gamesByCard(dirs: string[]): Map<string, number> {
   const g = new Map<string, number>();
   const visit = (d: string): void => {
@@ -218,6 +235,7 @@ export function gamesByCard(dirs: string[]): Map<string, number> {
       for (const line of fs.readFileSync(jl, 'utf8').split('\n')) {
         if (!line.trim()) continue;
         const rec = JSON.parse(line) as DraftRecord;
+        if (isPlayExplored(rec)) continue;
         const decisive = rec.match.games.filter((x) => x.winner === 'A' || x.winner === 'B').length;
         if (!decisive) continue;
         const names = new Set<string>();
@@ -263,6 +281,7 @@ export function readPowerSd(file: string): Map<string, number> {
 function renderPlan(p: NightPlan, root: string): string {
   const out: string[] = [];
   out.push(`night ${p.night}: ${p.drafts} drafts (${p.chunks.length} chunks), ${p.games} game(s) a draft, ${p.format}, bridge share ${p.knobs.bridgeShare}`);
+  if (p.playExplore) out.push(`play exploration (D358): ${playExploreText(p.playExplore)} -- about ${Math.round(p.drafts * p.playExplore.share)} drafts explore; win rates leave them out`);
   out.push('', 'pool key                         weight    drafts');
   for (const a of p.alloc) out.push(`${a.key.padEnd(32)} ${a.weight.toFixed(3).padStart(7)} ${String(a.drafts).padStart(9)}`);
   out.push('', 'bridge pairs (novelty = 1 - shared / smaller cube; link by power tier; unc = mean card variance / prior)');
@@ -290,9 +309,14 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
   let ledger: Ledger = fs.existsSync(ledgerFile) ? JSON.parse(fs.readFileSync(ledgerFile, 'utf8')) as Ledger : { v: 1, games, format, nextSeed: {}, nights: [] };
   if (ledger.games !== games || ledger.format !== format) throw new Error(`${root} was planned with --games ${ledger.games} --format ${ledger.format}; use those or a new --root`);
   let plan: NightPlan;
+  const playExplore = parsePlayExploreArgs(f.get('play-explore') ?? []);
   if (fs.existsSync(planFile)) {
     plan = JSON.parse(fs.readFileSync(planFile, 'utf8')) as NightPlan;
     for (const c of plan.chunks) assertQueueSeeds(c.key, c.seed, c.drafts);
+    // D358: the plan's exploration is the night's; a flag may repeat it, never change it
+    if (f.has('play-explore') && JSON.stringify(playExplore) !== JSON.stringify(plan.playExplore ?? null)) {
+      throw new Error(`night ${night} was planned with ${plan.playExplore ? `--play-explore ${playExploreText(plan.playExplore)}` : 'no --play-explore'}; re-run it with the same (or without the flag)`);
+    }
     say(`night ${night}: re-reading its plan (${planFile}); finished drafts are skipped`);
   } else {
     const drafts = num('drafts', NaN);
@@ -306,6 +330,7 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
     const br = one('bridge-ratings') ?? 'even';
     if (br !== 'even' && br !== 'own') throw new Error(`--bridge-ratings is even or own, got ${br}`);
     plan.bridgeRatings = br;
+    if (playExplore) plan.playExplore = playExplore;
     const others = ledger.nights.filter((n) => n !== night).map((n) => path.join(root, `night-${n}.json`)).filter((x) => fs.existsSync(x))
       .map((x) => JSON.parse(fs.readFileSync(x, 'utf8')) as NightPlan);
     assertNoDuplicates([...others, plan]);
@@ -344,6 +369,8 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
     }
     // Recording every game in the worker, both chairs (D315): the evaluator's dataset and this model read one run.
     if (recordEvery) o.recordEvery = recordEvery;
+    // D358: a seeded share of this chunk's drafts explore their games
+    if (plan.playExplore) o.playExplore = plan.playExplore;
     say(`\n== chunk ${k}/${plan.chunks.length}: ${c.key}, seeds ${c.seed}..${c.seed + c.drafts - 1}`);
     // One chunk failing (an engine that would not boot under load, say) does not end the night: the
     // rest play, and running the same line again retries only what is missing.

@@ -1197,6 +1197,31 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
   }
 
+  /*
+   * Amendment M57 (D358).  `playExplore` is OPTIONAL and says this AI-vs-AI
+   * recording explored: some decisions were answered by a random legal move or
+   * a close-call coin.  Exactly three keys -- epsilon, closeCall (numbers in
+   * [0, 1]) and opening (a boolean) -- and never beside `transport`: a seat a
+   * person plays never explores.
+   */
+  if (header.playExplore !== undefined) {
+    const pe = header.playExplore;
+    if (!pe || typeof pe !== 'object' || Array.isArray(pe)) {
+      note(1, `session header "playExplore" must be an object (M57), got ${JSON.stringify(pe)}`);
+    } else {
+      for (const [k, v] of Object.entries(pe)) {
+        if (!(k in PLAY_EXPLORE_HEADER)) note(1, `session header playExplore carries an unexpected key "${k}" (M57)`);
+        else if (typeof v !== PLAY_EXPLORE_HEADER[k] || (typeof v === 'number' && !(v >= 0 && v <= 1))) {
+          note(1, `session header playExplore.${k} = ${JSON.stringify(v)} (M57)`);
+        }
+      }
+      for (const k of Object.keys(PLAY_EXPLORE_HEADER)) if (!(k in pe)) note(1, `session header playExplore is missing "${k}" (M57)`);
+    }
+    if (header.transport !== undefined) {
+      note(1, 'session header carries both "playExplore" and "transport" -- only an AI-vs-AI recording explores (M57, D358)');
+    }
+  }
+
   if (!Array.isArray(header.decks)) {
     note(1, 'session header "decks" is not an array');
   } else {
@@ -2333,12 +2358,17 @@ const DECISION_KINDS = ['priority', 'attack', 'block', 'target', 'choice', 'mull
 const DECISION_BY = ['forge', 'outlets', 'search'];
 const DECISION_SOURCES = ['targets', 'trigger', 'chooseTargets', 'entity', 'cards', 'confirm'];
 const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn', 'phase', 'options', 'complete',
-  'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search']);
+  'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search', 'explore']);
+// M57 / D358: a decision play exploration answered: the rule, and the seat's own answer as a token.
+const EXPLORE_KEYS = new Set(['rule', 'forge']);
+const EXPLORE_RULES = ['random', 'closeCall'];
+const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCalls', 'closeCallsChanged', 'coins', 'failures', 'byKind']);
+const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z']);
 const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win']);
 const SEARCH_RULES = ['margin', 'lcb'];
-const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced']);
+const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced', 'explore']);
 const FALLBACKS = [null, 'budget', 'copyError', 'unmappable', 'rolloutErrors', 'invalidAtEnd'];
 
 /** The card ids a state shows its viewer: full cards in every zone but a hidden one, and stackCards. */
@@ -2389,6 +2419,17 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
           if (typeof v !== 'number') bad(lineNo, `decisions summary ${k}.${kk} is not a number`);
         }
       }
+      if (b.explore !== undefined) {
+        if (!header.playExplore) bad(lineNo, 'decisions summary carries "explore" but the session header has no playExplore (M57, D358)');
+        for (const [k, v] of Object.entries(b.explore ?? {})) {
+          if (!EXPLORE_SUMMARY_KEYS.has(k)) bad(lineNo, `decisions summary explore carries an unexpected key "${k}"`);
+          else if (k === 'byKind') {
+            for (const [kk, n] of Object.entries(v ?? {})) {
+              if (!DECISION_KINDS.includes(kk) || typeof n !== 'number') bad(lineNo, `decisions summary explore.byKind ${JSON.stringify(kk)}`);
+            }
+          } else if (typeof v !== 'number') bad(lineNo, `decisions summary explore.${k} is not a number`);
+        }
+      }
       continue;
     }
     if (f.type !== 'decision') {
@@ -2418,6 +2459,14 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
     for (const a of b.atoms ?? []) {
       if (typeof a !== 'string' || !/^\d+(>\d+)?$/.test(a)) bad(lineNo, `decision ${b.n} atom ${JSON.stringify(a)}`);
       else tokens.push(`atom:${a}`);
+    }
+    if (b.explore !== undefined) {
+      // M57 / D358: only in a game played with exploration; the seat's own answer is a token like any other
+      if (!header.playExplore) bad(lineNo, `decision ${b.n} carries an explore mark but the session header has no playExplore (M57, D358)`);
+      const ex = b.explore;
+      for (const k of Object.keys(ex ?? {})) if (!EXPLORE_KEYS.has(k)) bad(lineNo, `decision ${b.n} explore carries an unexpected key "${k}"`);
+      if (!EXPLORE_RULES.includes(ex?.rule)) bad(lineNo, `decision ${b.n} explore rule ${JSON.stringify(ex?.rule)}`);
+      if (ex?.forge !== null) checkToken(ex?.forge, 'explore forge');
     }
     if (b.search !== undefined) {
       const sb = b.search;

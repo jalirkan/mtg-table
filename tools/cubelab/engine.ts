@@ -32,6 +32,7 @@ import readline from 'node:readline';
 
 import type { Fact } from './cards.ts';
 import { controlReader } from '../runner/control.ts';
+import type { PlayExploreGame, PlayExploreTag } from './playexplore.ts';
 
 export interface EngineEnv { cp: string; homes: string[]; repo: string }
 
@@ -116,6 +117,8 @@ export interface MatchJob {
   forgeDeckOutB: string;
   /** D315: record every game of this match, both chairs, in the worker (`run --record-all|--record-every N`). */
   record?: RecordSpec;
+  /** D358: both seats of every game explore (playexplore.ts; CubeLab.java seeds each seat's draws). */
+  playExplore?: PlayExploreTag;
 }
 
 /** Where and how a match's games are recorded (D315); CubeLab.java's `Recording` reads it. */
@@ -151,6 +154,8 @@ export interface GameRow {
   gameCpuMs?: number;
   /** D315: the game's two frame logs (`<dir>/g<n>-seat{0,1}.jsonl.gz`), their bytes on disk, state frames, snapshot errors. */
   recorded?: { dir: string; bytes: number; frames: number; errors: number; decisions?: number; decisionErrors?: number };
+  /** D358: what play exploration did in this game, both seats (an exploring draft only). */
+  playExplore?: PlayExploreGame;
 }
 
 export interface ForgeBuild { side: 'A' | 'B'; colors?: string; spells?: number; lands?: number; value?: number; main?: Array<[number, string]>; error?: string }

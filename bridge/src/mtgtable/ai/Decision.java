@@ -86,6 +86,8 @@ public final class Decision {
     /** What raised it: targets (of a priority answer), trigger, chooseTargets, entity, cards, confirm. */
     public String source;
     public SearchStats search;
+    /** Set when play exploration (D358) answered this decision instead of the seat's policy; null otherwise. */
+    public Explore explore;
 
     public Decision(final String kind, final int turn, final String phase) {
         if (!KINDS.contains(kind)) {
@@ -99,6 +101,28 @@ public final class Decision {
     /** A decision is worth a record when there was something to choose. */
     public boolean forced() {
         return options.size() + hidden <= 1 && complete;
+    }
+
+    /**
+     * A decision play exploration answered (D358): {@code rule} is {@code random}
+     * (an epsilon draw over the legal answers) or {@code closeCall} (a fair coin
+     * between Forge's choice and its nearest rival on Forge's own score), and
+     * {@code forge} the answer the seat's policy had given.  A policy dataset
+     * must not learn {@code chosen} as the seat's choice (tools/ml/policy_data.py
+     * drops these); the game that follows is still a true game.
+     */
+    public static final class Explore {
+        public static final List<String> RULES = List.of("random", "closeCall");
+        public final String rule;
+        public final String forge;
+
+        public Explore(final String rule, final String forge) {
+            if (!RULES.contains(rule)) {
+                throw new IllegalArgumentException("explore rule " + rule);
+            }
+            this.rule = rule;
+            this.forge = forge;
+        }
     }
 
     /** What the search measured, per candidate (D312's loop; the grader's win estimate). */
@@ -207,6 +231,15 @@ public final class Decision {
                 o.nNull("fallback");
             } else {
                 o.n("fallback", s.fallback);
+            }
+            o.end();
+        }
+        if (explore != null) {
+            o.key("explore").obj().n("rule", explore.rule);
+            if (explore.forge == null) {
+                o.nNull("forge");
+            } else {
+                o.n("forge", check(explore.forge));
             }
             o.end();
         }

@@ -140,3 +140,42 @@ test('negative control: an option naming the opponent\'s concealed hand card FAI
   assert.equal(r.status, 1, r.out);
   assert.match(r.out, /which its state frame does not show/);
 });
+
+// D358: fixtures/cubelab/explore/ is one lab game played with play exploration
+// (`--play-explore share=1,epsilon=0.2,closecall=0.05,opening=on`), both chairs.
+// Both pass the checker with their marks; the planted leak is a mark whose
+// "Forge's answer" names a card of the opponent's concealed hand, and an explore
+// mark in a log whose header does not say it explored is refused.
+const EXP = join(REPO, 'fixtures/cubelab/explore');
+const EXP_LOGS = [0, 1].map((s) => join(EXP, `games/102/g1-seat${s}.jsonl.gz`));
+
+test('play exploration: both chairs pass, the header and the marks say the game explored', () => {
+  const r = check(EXP_LOGS);
+  assert.equal(r.status, 0, r.out);
+  for (const f of EXP_LOGS) {
+    const lines = linesOf(f);
+    assert.deepEqual(lines[0]!.playExplore, { epsilon: 0.2, closeCall: 0.05, opening: true });
+    const marked = lines.filter((l) => l.dir === 'ai' && l.type === 'decision' && l.body.explore);
+    assert.ok(marked.length > 0, f);
+    const summary = lines.find((l) => l.dir === 'ai' && l.type === 'decisions')!.body.explore;
+    assert.equal(marked.filter((l) => l.body.explore.rule === 'random').length, summary.decisionsRandomised);
+  }
+});
+
+test('negative control: an explore mark naming the opponent\'s concealed hand card FAILS the checker', () => {
+  const r = rewrite(EXP_LOGS[0] as string, (frames) => {
+    const rec = frames.find((f) => f.dir === 'ai' && f.type === 'decision' && f.body.explore && f.body.kind === 'priority')!;
+    const st = frames[rec.body.frame + 1]!;
+    assert.equal(st.type, 'state');
+    const opp = st.body.players.find((p: any) => p.id !== 0);
+    rec.body.explore.forge = `cast:${opp.zones.hand.cards.find((c: any) => c.hidden).id}`;
+  });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /which its state frame does not show/);
+});
+
+test('negative control: an explore mark in a log that did not explore FAILS the checker', () => {
+  const r = rewrite(EXP_LOGS[1] as string, (frames) => { delete frames[0]!.playExplore; });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /no playExplore/);
+});
