@@ -60,7 +60,12 @@
  *   A7  a hidden -> full transition with no `ask` behind it is WARNED about:
  *       continuous "may look" statics and mind-slave effects do that legally.
  *   A9  a face-down card names nothing unless this seat may flip it, and has no
- *       P/T outside the battlefield and the stack.
+ *       P/T outside the battlefield and the stack.  "May flip" is Forge's
+ *       canFaceDownBeShownTo: in play, the controller only; elsewhere, a look
+ *       permission (Gonti, Thief of Sanity, hideaway), admitted for an
+ *       opponent's card only when the log shows how it was granted -- dug from
+ *       a library into exile, alt and all, while the viewing seat's effect
+ *       resolves -- and only while the card stays there (D371).
  *   A10 an id in parentheses inside an engine-built prompt is warned about
  *       unless that id was revealed (the engine builds those strings, not us).
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
@@ -1254,7 +1259,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     cardsChecked: 0, redacted: 0, faceDown: 0, stackCards: 0,
     viewerHandNamed: 0, opponentHandCards: 0, events: 0, shapeChecks: 0,
     texts: 0, textsConcealed: 0,
-    libraryRevealed: 0, revealedTops: 0, altBlocks: 0, tokens: 0, asks: 0, promptsScanned: 0,
+    libraryRevealed: 0, revealedTops: 0, altBlocks: 0, altByLook: 0, tokens: 0, asks: 0, promptsScanned: 0,
     everRevealed: 0, answers: 0, answerKinds: new Set(), unanswered: 0,
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
     stackItems: 0,
@@ -1338,6 +1343,15 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
    * bridge served a name the seat was never shown.
    */
   const everRevealed = new Set();
+  /**
+   * A9 / D371 -- the ids of opponents' face-down cards in exile whose alt the
+   * previous state frame admitted under a look permission, and whether the
+   * viewing seat controlled a stack item in that frame.
+   */
+  let lookGrants = new Set();
+  /** id -> the last zone other than a hand a card was serialised in (the hand diagnostic, D371). */
+  const handLastSeen = new Map();
+  let viewerStackBefore = false;
   /** id -> was the last serialisation of this id concealed?  (A7) */
   const wasConcealed = new Map();
   /** Was an `ask` outstanding when this frame was written?  (A7) */
@@ -2023,6 +2037,19 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
 
     const revealedTops = revealedTopsOf(players);
+    // A9 / D371: the evidence for a look permission on an opponent's face-down
+    // card in exile -- what this frame dug out of a library into exile, and
+    // whether an effect of the viewing seat's is resolving.
+    const viewerStackNow = (body.stack ?? []).some((it) => plainObject(it) && it.controller === seat);
+    const viewerEffect = viewerStackNow || viewerStackBefore;
+    const dugToExile = new Set();
+    for (const ev of body.events ?? []) {
+      if (plainObject(ev) && ev.kind === 'zone' && ev.from?.zone === 'library' && ev.to?.zone === 'exile'
+          && num(ev.cardId)) {
+        dugToExile.add(ev.cardId);
+      }
+    }
+    const nextGrants = new Set();
     for (let pi = 0; pi < players.length; pi++) {
       const p = players[pi];
       const zones = p.zones || {};
@@ -2118,11 +2145,40 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
             }
             if (c.alt !== null && c.alt !== undefined) {
               stats.altBlocks++;
-              if (owner !== seat && c.controller !== seat) {
-                note(lineNo, `face-down card ${c.id} is controlled by player ${c.controller} ` +
+              // Forge's canFaceDownBeShownTo(viewer), in its own order (javap -c on
+              // the pinned jar): mayPlayerLook(viewer) || [mind-slave] ||
+              // isInZone(Battlefield, Stack, Sideboard) && getController() == viewer.
+              // D371: the zone half is checked as written -- in play, the face is
+              // the CONTROLLER's, never the owner's (an owner whose face-down
+              // creature was stolen does not see it).  The look half
+              // (mayPlayerLook) is a permission a log cannot show directly, so it
+              // is admitted only in the one shape every face-down-with-a-look
+              // effect has (DigEffect's ExileFaceDown + WithMayLook: Gonti, Lord
+              // of Luxury; Thief of Sanity; hideaway): the card arrives in exile
+              // FROM A LIBRARY with its alt in the same frame, while an effect the
+              // viewing seat controls is resolving (on the stack in this frame or
+              // the one before), and it keeps the alt only while it stays there.
+              const inPlay = zname === 'battlefield' || zname === 'stack';
+              const mine = owner === seat || c.controller === seat;
+              if (inPlay && c.controller !== seat) {
+                note(lineNo, `face-down card ${c.id} in ${zname} is controlled by player ${c.controller} ` +
                   `(owner ${owner}), not the viewing seat ${seat}, yet carries an "alt" block ` +
                   `naming it ${JSON.stringify(c.alt?.name)} -- canFaceDownBeShownTo ends ` +
                   `isInZone(Battlefield, Stack, Sideboard) && getController().equals(viewer) (A9)`);
+              } else if (!inPlay && !mine) {
+                const arrived = dugToExile.has(c.id) && zname === 'exile' && viewerEffect;
+                const stayed = lookGrants.has(c.id) && zname === 'exile';
+                if (arrived || stayed) {
+                  nextGrants.add(c.id);
+                  if (arrived) stats.altByLook++;
+                } else {
+                  note(lineNo, `face-down card ${c.id} in ${zname} is owned and controlled by player ` +
+                    `${c.controller}, not the viewing seat ${seat}, yet carries an "alt" block naming it ` +
+                    `${JSON.stringify(c.alt?.name)} -- outside play only a look permission ` +
+                    `(mayPlayerLook) shows a face-down card, and the only shape a log can show for ` +
+                    `one is a card exiled from a library, alt and all, while the viewing seat's ` +
+                    `effect resolves (Gonti, Thief of Sanity), kept while it stays in exile (A9, D371)`);
+                }
               }
             }
             if (zname !== 'battlefield' && zname !== 'stack') {
@@ -2217,9 +2273,28 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
             // by construction; that is Forge's face-down state, not redaction.
             stats.viewerHandNamed++;
           } else {
-            note(lineNo, `the viewer's own hand card ${c.id} has no name -- redaction is too aggressive`);
+            // D371: say WHICH shape it was and where the card was last seen, so
+            // the next quarantine names its cause (a stub means gate 0 or 1 said
+            // no to the viewer's own hand: canBeShownTo(Hand) is
+            // getController() == viewer, so the stub's controller is the clue).
+            const shape = c.hidden === true
+              ? `a redacted stub (owner ${c.owner}, controller ${c.controller}, zone ${JSON.stringify(c.zone)})`
+              : `a full card with name ${JSON.stringify(c.name)} (faceDown ${c.faceDown}, controller ${c.controller})`;
+            const last = handLastSeen.get(c.id);
+            const where = last ? `; last seen outside this hand in ${last.zone} at line ${last.line}` : '';
+            note(lineNo, `the viewer's own hand card ${c.id} has no name -- redaction is too aggressive ` +
+              `(it is ${shape}${where})`);
           }
         }
+      }
+    }
+
+    lookGrants = nextGrants;
+    viewerStackBefore = viewerStackNow;
+    for (const p of players) {
+      for (const [zname, z] of Object.entries(p.zones ?? {})) {
+        if (zname === 'hand') continue;
+        for (const c of z?.cards ?? []) if (num(c?.id)) handLastSeen.set(c.id, { zone: zname, line: lineNo });
       }
     }
 
@@ -2601,7 +2676,7 @@ for (const path of files) {
   console.log(`      engine strings=${stats.texts} (stack[].text + events[].cast.text), `
     + `concealed=${stats.textsConcealed}, none joinable to a card concealed in the same frame`);
   console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
-    + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}  tokens=${stats.tokens}  `
+    + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}  tokens=${stats.tokens}  `
     + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`);
   console.log(`      A12 answers=${stats.answers} (kinds: `
     + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
