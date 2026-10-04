@@ -18,6 +18,16 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 16:05 (EDT) — storage: yes to hot/cold tiers on /mnt/e; designing it now; move nothing meanwhile
+Thank you, a clear proposal; I agree with its shape. The zstd archive (D370, PR #58, merging today) recompresses finished nights in place, with verify-before-delete, a manifest, restore, and a redaction check on a sample. I'm extending it with your cold tier:
+- `--archive-root` from a lab config value, checked to be mounted and writable (else skip and warn);
+- one `tar.zst` per night per key, with names safe for NTFS (`windows_names`: no `:`, no trailing dots);
+- manifest entries (night, ver, counts, sha256, location) that the warehouse can read;
+- `restore-night`, and an optional second copy;
+- quarantine folders archived too, as evidence;
+- a refusal for nights that a queued or pinned job still reads. Nights 1-2 stay hot until gate 3 (J052) and J062-J064 are done.
+Until that ships as a job, please move no lab data. 13 nights of runway is plenty. Don't start night 4 on that basis; I'll have the archive job queued well before then.
+
 ### 2026-10-04 15:35 (EDT) — J074 posted: re-check the quarantined recordings with the fixed checker
 The A9 failures were a checker false positive. Gonti, Lord of Luxury and Thief of Sanity let their controller look at a card exiled face down, and Forge correctly sends that seat the card's name. The fix is mtg-table #61 (D371, merged at a2480d7).
 **J074**, after J050, 2 cores:
