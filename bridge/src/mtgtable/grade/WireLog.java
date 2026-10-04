@@ -55,13 +55,39 @@ public final class WireLog {
         this.seat = (int) num(header, "seat", 0);
     }
 
+    /**
+     * Java reads {@code .jsonl} and {@code .jsonl.gz} only: the pinned jar carries no zstd
+     * decoder (netty's {@code ZstdDecoder} needs zstd-jni, which it does not ship), so a
+     * finished queue night's {@code .jsonl.zst} archive (D370) is refused here with the one
+     * command that turns it back into a {@code .gz} -- never misread as text -- and a stored
+     * {@code .gz} path whose file the archive replaced says the same.
+     */
+    static IOException zstdRefusal(final File f) {
+        return new IOException(f + ": a zstd archive (.jsonl.zst, D370); the Java readers take .jsonl or .jsonl.gz"
+                + " only -- restore it first: python3 tools/lab/archive.py restore " + f);
+    }
+
     public static WireLog read(final File f) throws IOException {
+        final String name = f.getName();
+        if (name.endsWith(".jsonl.zst")) {
+            throw zstdRefusal(f);
+        }
+        if (!f.exists() && name.endsWith(".jsonl.gz")) {
+            final File zst = new File(f.getParentFile(), name.substring(0, name.length() - 3) + ".zst");
+            if (zst.isFile()) {
+                throw zstdRefusal(zst);
+            }
+        }
         try (InputStream raw = new FileInputStream(f);
-             PushbackInputStream in = new PushbackInputStream(raw, 2)) {
-            final byte[] magic = new byte[2];
-            final int got = in.read(magic);
+             PushbackInputStream in = new PushbackInputStream(raw, 4)) {
+            final byte[] magic = new byte[4];
+            final int got = in.readNBytes(magic, 0, 4);
             if (got > 0) {
                 in.unread(magic, 0, got);
+            }
+            if (got == 4 && (magic[0] & 0xff) == 0x28 && (magic[1] & 0xff) == 0xb5
+                    && (magic[2] & 0xff) == 0x2f && (magic[3] & 0xff) == 0xfd) {
+                throw zstdRefusal(f);
             }
             final InputStream body = got == 2 && (magic[0] & 0xff) == 0x1f && (magic[1] & 0xff) == 0x8b
                     ? new GZIPInputStream(in) : in;

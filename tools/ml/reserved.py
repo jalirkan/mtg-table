@@ -115,7 +115,7 @@ def log_draft(path: str) -> Optional[Tuple[str, int]]:
         run = os.path.dirname(d2)
         if os.path.exists(os.path.join(run, "drafts.jsonl")):
             return run, int(os.path.basename(d1))
-    m = re.match(r"^draft-(\d+)-g\d+\.jsonl(\.gz)?$", os.path.basename(p))
+    m = re.match(r"^draft-(\d+)-g\d+\.jsonl(\.gz|\.zst)?$", os.path.basename(p))
     if m and os.path.basename(d1) == "frames" and os.path.exists(os.path.join(d2, "drafts.jsonl")):
         return d2, int(m.group(1))
     return None

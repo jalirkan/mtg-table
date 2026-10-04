@@ -201,6 +201,30 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 `--record M` still exists for watching a game in ForgeCoach (a plain
 `.jsonl`, the `--record M` replay); `--record-all` is for training data.
 
+### Archiving a finished night to zstd (D370)
+
+A queue night's recordings are gzip while they are written and while anything
+may open them. Once the night is over, `tools/lab/archive.py` recompresses
+them to `.jsonl.zst` (level 19; J065 measured 4.4x smaller than gzip on the
+PC's nights, the committed fixtures 3.5x):
+
+```bash
+python3 tools/lab/archive.py night --root var/cubelab/queue --night 1 --dry-run   # expected savings only
+python3 tools/lab/archive.py night --root var/cubelab/queue --night 1 --jobs 4    # resumable; re-run to resume
+python3 tools/lab/archive.py dir var/cubelab/runs/X --jobs 4                      # a finished run folder
+python3 tools/lab/archive.py restore PATH...                                      # back to a verified .gz
+```
+
+It refuses (exit 3, nothing touched) a night that is still running or has
+unfinished drafts, deletes each `.gz` only after its `.zst` was read back from
+disk and its SHA-256 matched, runs a sample through `check-redaction.mjs`
+before and after, and writes `<root>/archive/night-N.json` (counts, bytes
+before and after). The dataset builders and `check-redaction.mjs` read `.zst`
+(Python needs the `zstandard` package, Node 22.15+); the Java readers
+(coach-grade, leaf rows) do not, so the logs the gate lists name stay gzip and
+`restore` brings back any other. A job reading an archived night must pin a
+commit with D370.
+
 ### Decision records and mixed AI styles (D347)
 
 A recorded game's seats are mtg-table's own AI controller (D309's, which with

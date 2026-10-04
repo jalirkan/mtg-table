@@ -23,6 +23,7 @@ import sys
 from typing import Any, Callable, Iterable, Sequence
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fio  # noqa: E402  -- a log's recorded name (D370)
 
 # ---------------------------------------------------------------- the pre-registered rules (D354)
 
@@ -102,7 +103,7 @@ def heldout(data: str, split_by: str) -> dict[str, Any]:
     train_pairs = {T.pair_key(g) for g, s in zip(games, sp) if s != "test"}
     if test_pairs & train_pairs:
         raise SystemExit("gates: a deck pair is in both the test split and training -- not a held-out split")
-    files = {os.path.normpath(g["file"]): T.pair_key(g) for g, s in zip(games, sp) if s == "test"}
+    files = {os.path.normpath(fio.recorded(g["file"])): T.pair_key(g) for g, s in zip(games, sp) if s == "test"}
     return {"pairs": test_pairs, "trainPairs": train_pairs, "files": files}
 
 
