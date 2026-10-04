@@ -78,7 +78,7 @@ if len(sprt):
 # %%
 gates = con.sql("select mtime, gate, pass, coalesce(name, model) as subject, model_sha12, reasons, path from gate_reports order by mtime desc").df()
 if len(gates):
-    gates["reasons"] = gates.reasons.map(lambda s: "; ".join(json.loads(s)) if s else "")
+    gates["reasons"] = gates.reasons.map(lambda s: "; ".join(json.loads(s)) if isinstance(s, str) and s else "")
 show("gate reports", gates)
 
 # %% [markdown]
