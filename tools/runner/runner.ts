@@ -56,6 +56,7 @@ import { DEFAULT_BACKOFF, decide, initialBackoff, retryCap, type Action, type Ba
 import { writeControl } from './control.ts';
 import { evaluate, parse as parseExpr, type Verdict } from './expr.ts';
 import { sanitiseLadder } from './ladder.ts';
+import { sanitiseWarehouse } from './warehouse.ts';
 import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from './jobfile.ts';
 import { followupMessage, LEDGER_MD_HEAD, ledgerEntry, ledgerJsonLine, ledgerKeys, ledgerMarkdown, withMessages, type LedgerEntry } from './ledger.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
@@ -91,6 +92,8 @@ export interface RunnerConfig {
   push: boolean;
   /** The AI ladder's ladder.json to publish (sanitised) beside status.json; null: <lab>/mtg-table/var/ai-ladder/ladder.json. */
   ladderFile?: string | null;
+  /** The lab warehouse's warehouse.json to publish (sanitised, D363); null: <lab>/mtg-table/var/warehouse/warehouse.json. */
+  warehouseFile?: string | null;
   /** The core budget heavy jobs side by side share (`--cores`); null: the physical cores. */
   cores?: number | null;
   /** Heavy jobs side by side while their widths and memory fit (`--co-schedule on|off`); default on. */
@@ -1442,7 +1445,9 @@ ${keep.trimEnd()}
       fs.writeFileSync(path.join(dir, 'status.json'), `${JSON.stringify(doc)}\n`);
       const ladder = this.publicLadder();
       if (ladder) fs.writeFileSync(path.join(dir, 'ladder.json'), ladder);
-      this.git(dir, 'add', 'status.json', ...(fs.existsSync(path.join(dir, 'ladder.json')) ? ['ladder.json'] : []));
+      const warehouse = this.publicWarehouse();
+      if (warehouse) fs.writeFileSync(path.join(dir, 'warehouse.json'), warehouse);
+      this.git(dir, 'add', 'status.json', ...['ladder.json', 'warehouse.json'].filter((f) => fs.existsSync(path.join(dir, f))));
       const id = ['-c', 'user.name=forgecoach-runner', '-c', 'user.email=runner@localhost'];
       // One commit, replaced each time: the branch is a value, not a history.
       const parentless = this.git(dir, ...id, 'commit-tree', this.git(dir, 'write-tree').stdout.trim(), '-m', `lab status ${doc.updated}`).stdout.trim();
@@ -1462,9 +1467,23 @@ ${keep.trimEnd()}
     return this.cfg.ladderFile ?? path.join(this.checkout('mtg-table', 'heavy'), 'var', 'ai-ladder', 'ladder.json');
   }
 
-  /** Size and mtime of the ladder's ladder.json: a change publishes. */
+  warehousePath(): string {
+    return this.cfg.warehouseFile ?? path.join(this.checkout('mtg-table', 'heavy'), 'var', 'warehouse', 'warehouse.json');
+  }
+
+  /** Size and mtime of the ladder's ladder.json and the warehouse's warehouse.json: a change to either publishes. */
   ladderSig(): string {
-    try { const st = fs.statSync(this.ladderPath()); return `${st.size}:${st.mtimeMs}`; } catch { return ''; }
+    const sig = (f: string): string => { try { const st = fs.statSync(f); return `${st.size}:${st.mtimeMs}`; } catch { return ''; } };
+    const w = sig(this.warehousePath());
+    return w ? `${sig(this.ladderPath())}|${w}` : sig(this.ladderPath());
+  }
+
+  /** The sanitised warehouse.json text (warehouse.ts's allowlist, D363), or null when there is none or it is not schema 1. */
+  publicWarehouse(): string | null {
+    try {
+      const doc = sanitiseWarehouse(JSON.parse(fs.readFileSync(this.warehousePath(), 'utf8')));
+      return doc ? `${JSON.stringify(doc)}\n` : null;
+    } catch { return null; }
   }
 
   /** The sanitised ladder.json text (ladder.ts's allowlist), or null when there is none or it is not schema 1. */
