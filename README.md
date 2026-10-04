@@ -514,7 +514,7 @@ declared attackers and blockers are a strip of their own.
 ### Continuous integration
 
 `.github/workflows/checks.yml` runs on every push to `main` and every pull
-request: **the half of the gate that needs no running engine**, in three jobs
+request: **the half of the gate that needs no running engine**, in four jobs
 side by side on GitHub's `ubuntu-latest`.
 
 | job | what it runs |
@@ -522,6 +522,7 @@ side by side on GitHub's `ubuntu-latest`.
 | `web` | `npm ci`, `npm --prefix web run build`, `npm --prefix web test` — Node 24. Hermetic as it is locally: `MTGTABLE_WS_LOGS` is unset, so the ws-log suite replays the committed fixtures, and there is no `web/public/art.json`, so every reader of it falls back to the empty index, as in a fresh checkout. Nothing calls Scryfall. |
 | `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its eight self-tests, on Temurin 21 |
 | `redaction` | `check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, `check-redaction-selftest.mjs`, `narrate-selftest.mjs`, `wire-drift-selftest.mjs` and `build-workshop-catalog.ts --check` — plain Node, no npm install |
+| `ml` | the whole `tools/ml` suite (gate step 12h in full) with numpy and zstandard in a venv; it fails if a numpy or zstandard test skips (D383) |
 
 **The engine in CI.** CI is the one place anything downloads Forge, and it
 downloads only what you would: the `forge-installer-2.0.14.tar.bz2` asset
