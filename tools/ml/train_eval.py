@@ -41,6 +41,12 @@ baselines and scoring (also in the report); `--dry-load` makes every
 allocation of a real run at full size without training and prints the peak,
 for a job's pilot to check against its budget.
 
+An r17 dataset (`dataset.py --schema r17`: the reduced end-of-half-turn rows of
+the outside exam, r17.py, D359) trains the same way: the net pools two card
+states instead of seventeen, and the baselines are `prior`, `life`, `board`
+(the non-land permanent difference) and r17's reduced `core`.  An r17 model is
+for outside_exam.py; Java refuses it (its schema id is not D305's).
+
 Backends: numpy always works (float64, gradients by hand, checked against
 finite differences in the tests); torch, when installed, trains the same
 network in float32 (`--backend torch`, worth it on a GPU or a wide net; on the
@@ -172,8 +178,10 @@ def metrics(p, y, turn) -> dict[str, Any]:
 
 def fit_baselines(tr, va, names, epochs: int = 400) -> dict[str, Any]:
     """D305's three baselines fitted on `tr` (early stopping on `va`); returns
-    name -> predict(rows)."""
+    name -> predict(rows).  On an r17 dataset (D359) `core` is r17's reduced
+    core and a fourth, `board` (the non-land permanent difference), joins them."""
     import baseline_eval as B
+    import r17 as R17
     li_me, li_opp = names.index("me.life"), names.index("opp.life")
 
     # Only the columns a baseline reads go to float64, never the whole board
@@ -182,12 +190,18 @@ def fit_baselines(tr, va, names, epochs: int = 400) -> dict[str, Any]:
     def life(r):
         return np.subtract(r.board[:, li_me], r.board[:, li_opp], dtype=np.float64)[:, None]
 
+    reduced = R17.is_r17(names)
+
     def core(r):
-        return B.core_matrix(r.board, names)
+        return R17.core_matrix(r.board, names) if reduced else B.core_matrix(r.board, names)
+
+    def board(r):
+        return R17.board_count_matrix(r.board, names)
 
     prior = float(tr.t.mean()) if len(tr) else 0.5
     models: dict[str, Any] = {"prior": lambda r: np.full(len(r), prior)}
-    for name, fx in (("life", life), ("core", core)):
+    rules = (("life", life), ("board", board), ("core", core)) if reduced else (("life", life), ("core", core))
+    for name, fx in rules:
         Xtr = fx(tr)
         st = B.Standardiser(Xtr)
         Xtr -= st.mean          # == st(Xtr), in place: one (n, 12) matrix, not two
@@ -208,7 +222,8 @@ def make_net(tr, names, hp, vocab_size, seed):
     mean, sd = tr.moments()   # chunked, cached across a grid's fits; == board.astype(float64).mean/std
     constant = [i for i in range(len(names)) if not sd[i] > 1e-9]
     cols = [i for i in range(len(names)) if i not in set(excluded_unsafe) | set(constant)]
-    net = N.EvalNet(cols, mean[cols], sd[cols], vocab_size, int(hp["dim"]), parse_hidden(hp["hidden"]), seed)
+    net = N.EvalNet(cols, mean[cols], sd[cols], vocab_size, int(hp["dim"]), parse_hidden(hp["hidden"]), seed,
+                    n_states=tr.n_states)
     excluded = {"liveUnsafe": [names[i] for i in excluded_unsafe],
                 "constantInTraining": [names[i] for i in constant if i not in excluded_unsafe]}
     return net, excluded
@@ -263,7 +278,7 @@ def train_torch(net, tr, va, hp, seed, log=None, deadline=None):
     import evalnet as N
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
-    S = N.N_STATES
+    S = net.n_states
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     E = torch.tensor(net.E, dtype=torch.float32, device=dev, requires_grad=True)
     Ws = [torch.tensor(w, dtype=torch.float32, device=dev, requires_grad=True) for w in net.W]
@@ -362,7 +377,7 @@ def load_data(data: str, split_by: str = "dataset"):
     off = N.card_offset_of(schema)
     names = N.board_names(schema)
     sog = None if split_by == "dataset" else game_splits(read_games(data), split_by)
-    splits = N.load_splits(data, off, sog)
+    splits = N.load_splits(data, off, sog, n_states=N.n_states_of(schema))
     return schema, names, {s: splits[s] for s in ("train", "val", "test")}
 
 
@@ -560,7 +575,7 @@ def eval_human(data: str, schema: dict[str, Any], models: dict[str, Any], log) -
     if not files:
         log("human games: none in this dataset (put them under var/ml/human/ or pass dataset.py --human DIR)")
         return {"rows": 0}
-    r = N.load_rows(data, "human", N.card_offset_of(schema))
+    r = N.load_rows(data, "human", N.card_offset_of(schema), N.n_states_of(schema))
     out: dict[str, Any] = {"rows": len(r), "games": int(len(np.unique(r.game)))}
     for m, pred in models.items():
         out[m] = metrics(pred(r), r.y.astype(np.int64), r.turn.astype(np.int64))
@@ -614,7 +629,7 @@ def run_cv(a, hp, log) -> dict[str, Any]:
     reserved_warning(a.data)
     names = N.board_names(schema)
     games = read_games(a.data)
-    allr = N.load_splits(a.data, N.card_offset_of(schema), ["all"] * len(games))["all"]
+    allr = N.load_splits(a.data, N.card_offset_of(schema), ["all"] * len(games), n_states=N.n_states_of(schema))["all"]
     mem.note("load", log)
     group = [g["split_group"] if a.split_by == "dataset" else
              (g.get("game_group") or g["split_group"]) if a.split_by == "game" else pair_key(g) for g in games]
@@ -629,7 +644,9 @@ def run_cv(a, hp, log) -> dict[str, Any]:
     # folds: with a handful of pairs a by-pair inner split would leave none
     inner = np.array([h(f"inner|{g.get('game_group') or g['split_group']}") % 5 == 0 for g in games])[allr.game]
     backend = pick_backend(a.backend)
-    oof = {m: np.full(len(allr), np.nan) for m in ("prior", "life", "core", "eval")}
+    import r17 as R17
+    base = ("prior", "life", "board", "core") if R17.is_r17(names) else ("prior", "life", "core")
+    oof = {m: np.full(len(allr), np.nan) for m in base + ("eval",)}
     for k in range(a.cv):
         te_idx = np.nonzero(fold == k)[0]
         tr_mask = fold != k
