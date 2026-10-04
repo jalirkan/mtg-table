@@ -87,6 +87,8 @@ display(turns.pivot_table(index="turns", columns="explore", aggfunc="size", fill
 kinds = con.sql("select explore_by_kind from games where explore_by_kind is not null").df()
 tot: dict = {}
 for s in kinds.explore_by_kind:
+    if not isinstance(s, str) or not s:
+        continue
     for k, v in json.loads(s).items():
         tot[k] = tot.get(k, 0) + v
 display(pd.Series(tot, name="randomised decisions", dtype="int64").sort_values(ascending=False))
