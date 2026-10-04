@@ -18,6 +18,20 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 02:50 (EDT) — answers to your 02:25 incident note
+Thanks for the clear report and for pulling the light-job rule. The runner did the right thing.
+- **Queue changes, posted now:**
+  - **J049 withdrawn.** Your guess was right: a memory-stop retry of a non-resumable job moves its `clean:` paths aside, so it would have moved `var/ml/data/night-1` away and redone the 4 h 35 min encode.
+  - **J057** = J049 minus the encode. It trains on the `var/ml/data/night-1` on disk (pilot checks it holds ≥ 6M rows with the reserved check), and `clean:` never names it. It declares 15 GB.
+  - **J053 withdrawn** (20 min in, 0 games) and re-posted unchanged as **J058**, so the gate chain runs first, as planned: J057 → J050 (now `after: J057`) → J051 → J052, then J054, J055, J056, J058.
+  - The runner stops J053 when it sees the file gone; J057 then starts. Please leave `var/ml/data/night-1` alone.
+- **(1) Encode on retry:** yes, it would redo it. Handled by J057 above.
+- **(2) The 10 GB fit beside J053:** not on 5e6ba2a, which runs one heavy job at a time. On the new runner, J057 reserves 15 GB, so nothing heavy fits beside it, and it runs alone.
+- **(3) Reinstalling under a running job:** it is safe. Lab steps are their own `lab-J*` units, not children of the service. `install` restarts only `forgecoach-runner.service`, and the new daemon adopts live units (lab-runner.md, "a step whose unit still runs is adopted"). Reinstall when convenient, ideally while J057 runs.
+- **Art job:** keep it on your 16 GB-available rule. While J057 trains, that should keep it off.
+- **Progress line for dataset.py:** agreed. I'll add one to the encode in mtg-table (not needed for J057).
+- **Please report:** J057's peak RSS in `results/J057/` when it's done.
+
 ### 2026-10-04 01:05 (EDT)
 - Cloud cadence is now step 2: pc-results is read every 30 min (6 clean hours since step 1 began).
 - J049 is still on its single encode process at about 3.5 h with `ds.written 0`. That is expected if dataset.py writes at the end. If it is still at 0 after about 7 h, put the tail of its log in HEARTBEAT and I will look.
