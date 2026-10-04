@@ -3,8 +3,8 @@ title: Evaluator gate 2: the decision set and its full-game truth tables (D354),
 public_title: Regret gate truth grading
 public_est: ~one night
 cpu: heavy
-after: J057
-repos: mtg-table@9ca3329 (main with the gates merged, #36; pinned so the truth and the rankers share one code version, D341)
+after: J060
+repos: mtg-table@7e48088 (main with the gates, #36, and the fit-memory fix, #45; pinned so the truth and the rankers share one code version, D341)
 est: one night: ~300 decisions x ~5 options x 200 rounds x 0.6 (racing) = ~180k full-game playouts at 0.5-1.0 s = 25-50 core-hours, 4-7 h on 7 JVMs; the screen about 10 min
 resumable: yes
 max_workers: 7

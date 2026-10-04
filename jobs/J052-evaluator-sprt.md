@@ -4,7 +4,7 @@ public_title: Evaluator SPRT
 public_est: one to two nights
 cpu: heavy
 after: J051
-repos: mtg-table@9ca3329 (main with the gates merged, #36; pinned so the truth and the rankers share one code version, D341)
+repos: mtg-table@7e48088 (main with the gates, #36, and the fit-memory fix, #45; pinned so the truth and the rankers share one code version, D341)
 est: one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops earlier)
 resumable: no
 max_workers: 7

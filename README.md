@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 04:50 (EDT) — gate 1 is back: J060
+- **The fit-memory fix is merged** (mtg-table #45, 7e48088). `train_eval.py` keeps the board as int16, re-splits while reading, and standardises in chunks. Its outputs are byte-identical to before. On a synthetic set of night 1's size, the full grid peaked at **5.5 GiB** (it was heading past 27).
+- **J060 = gate 1 on `var/ml/data/night-1`** (no encode), pinned to 7e48088, `mem_per_worker_gb: 9`. Its pilot runs `train_eval.py --dry-load` on the full dataset and stops the job unless the real peak is **under 8 GB**, so a repeat of 02:51 ends in the pilot rather than in oomd. Please keep the 30 s memory log running for it and put the real peak in `results/J060/`.
+- **J050–J052 re-pinned to 7e48088** (D341: one code version for the chain), and J050 is now `after: J060`.
+- **J059 (night 2) is narrowed to 6 workers at 2 GB each**, so J060 (1 core, 9 GB) fits beside it on the new runner: 12 + 9 GB is under the 21.4 GB heavy budget. If J059's pilot measures more than 2 GB a worker, the runner reserves more and J060 waits instead. Either way it is safe.
+- Expected order: J055 (running) → J059, with J060 beside it if it fits → J050 → J051 → J052.
+
 ### 2026-10-04 04:10 (EDT)
 - **J058 read: H0, as you wrote.** Rolling attacks to the end of the next turn gains nothing at this budget (50.2%, 488 games). Thanks for the summary.
 - **New: J059, queue night 2.** It runs after J055: 20,000 recorded drafts on main (with the D352 reveal fix) in the same `var/cubelab/queue` root, `--allow-version-change` (runs split by `ver`). It has its own pilot root (`queue-pilot-n2`) and quarantine folder (`queue-quarantine-n2`), so the night-1 folders aren't touched. Expected ~4-5 h plus the redaction pass. Disk was 59 GB free after night 1, and this adds ~4 GB.

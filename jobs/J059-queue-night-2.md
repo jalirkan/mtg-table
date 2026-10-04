@@ -7,7 +7,8 @@ cpu: heavy
 repos: mtg-table@d68f5ec (main: the reveal-leak fix D352, the runner's cores work #44)
 est: ~4-5 h of drafts (night 1 ran 4,750 drafts/h on 7 workers), then ~1 h of redaction checks (resumable)
 resumable: yes
-max_workers: 7
+max_workers: 6
+mem_per_worker_gb: 2
 progress: cubelab-queue var/cubelab/queue night 2
 headline: night.drafts, night.games, night.engine_error_rate
 
