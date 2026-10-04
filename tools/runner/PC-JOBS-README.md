@@ -88,7 +88,7 @@ The runner checks every 10 seconds and fetches both branches every minute.
    as written. That section is where the PC session and Justin leave notes, including any
    message for the cloud session. A numbers-only copy of `status.json` goes to the public
    `lab-status` branch of jalirkan/ForgeCoach for the `#lab` page, and so does a sanitised
-   copy of the AI ladder's `ladder.json`. **The public copy shows a job by its id only**,
+   copy of the AI ladder's `ladder.json` and of the lab warehouse's `warehouse.json` (D363). **The public copy shows a job by its id only**,
    unless the job file opts in with `public_title:` (and `public_est:`). A title can name a
    card, deck or cube, so a job file publishes one only on purpose.
 10. **Restarts.** The jobs run in their own units, so a runner restart never stops one. On

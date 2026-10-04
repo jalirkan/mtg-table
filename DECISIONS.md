@@ -17209,6 +17209,273 @@ at a time); calibration on the owner's own games (`train_eval.py --eval-human`, 
 - **Serving the model file to the browser**: the model is the owner's and lives on the PC;
   ForgeCoach is public.
 
+## D362 — The coach helper reads photos: `POST /vision`, the same question as `/coach` with images, handed to the CLI on stdin as one stream-json user message (`--input-format stream-json`), still with every tool off; ForgeCoach's photo-to-pool is its only client
+
+*Branch `c/photo-pool`; D362, the next number free on `main` (D361 the win chance). ForgeCoach's
+side is its own branch `c/photo-pool` (`src/cube/photoPool.ts`, `src/ui/deck/PhotoSheet.tsx`).*
+
+**2026-10-04** (the owner's request: fill a paper cube draft's pool from photos of the cards)
+
+**Context.** Justin types his paper-draft picks into ForgeCoach's Draft & build. He wants to
+photograph the cards instead. ForgeCoach coaches through two sources (D292): the coach helper
+running the logged-in Claude Code CLI, or the player's own API key. The key path takes Messages
+API image blocks from the browser; the helper had no way to hand the CLI a picture.
+
+**Decision.**
+
+1. **The route.** `POST /vision {system, user, images: [{mediaType, data}] (1-8), model?,
+   supersedes?, thinking?}`. `mediaType` is one of `image/jpeg`, `image/png`, `image/webp`,
+   `image/gif`; `data` is base64, at most 5 MB of it an image (the API's own limit); the body
+   at most 24 MB (413). Anything else about `images` (missing, empty, nine, an unknown field, a
+   URL instead of data, not base64) is 400 and starts no child. Everything else is `/coach`'s:
+   the same Origin and token gate, the same queue (D325, one `claude` at a time across both
+   routes), `thinking` (D346), the same NDJSON stream with exactly one terminal line.
+   `/health` says `"vision": 1`; an older helper has no key and answers 404, which ForgeCoach
+   turns into "update mtg-table".
+2. **How the CLI sees the images.** `claude -p --input-format stream-json` with stdin one line,
+   `{"type":"user","message":{"role":"user","content":[<image blocks>…, {"type":"text"}]}}`. The
+   flags are otherwise `/coach`'s exactly (`--tools ""`, `--strict-mcp-config`,
+   `--no-session-persistence`, `--permission-mode dontAsk`, `--max-turns 1`, the empty temp
+   cwd). D292's rule 2 holds unchanged: the question is on stdin, and the model has no tool,
+   so it sees the pictures and the prompt and nothing else.
+3. **Nothing is kept.** The images exist in the request body and the child's stdin; no file is
+   written, nothing reaches argv, and the log line carries the image count only.
+
+**Measured** (this container, Claude Code 2.1.289, logged in). A 64-pixel red PNG through
+stream-json input with `--tools ""`: the model answered "Red", exit 0. Through the helper's
+`/vision`, the same image (thinking off): `text` "Red" then `done`. ForgeCoach's real
+photo prompt (the Vintage cube's 180 names) with two synthetic table photos made from Scryfall
+card images (17 cards placed, rotated and some sleeved, downscaled to 1568 px JPEG, 316 + 265 KB
+— composed by script, not phone photos): the helper's default model, thinking low, 6.0 s, valid JSON, all 14
+distinct cards named correctly, the basic Island ignored, the card placed in both photos listed
+once per photo and the duplicate in one photo counted 2. Real phone photos are not measured.
+
+**Self-test** (`tools/coach-helper-selftest.mjs`, gate 12f): `/health`'s `vision`; the argv
+(`--input-format stream-json` after `-p`, otherwise `/coach`'s, and `/coach` never has it); stdin
+is exactly one user message with the images in order and the text last; no image data or text
+in argv; the empty cwd; the log's image count and no data; logged-out and `thinking` as
+`/coach`; nine bad-`images` cases 400 with no child; 413 over 24 MB; 405; the preflight; another
+origin 403 with no child.
+
+**Rejected.**
+
+- **Writing the images to the temp directory and naming them in the prompt.** The CLI would
+  need its Read tool to open them, and D292's rule 2 is that the coach has no tool.
+- **Base64 in the prompt text.** The model would read it as text, not as an image.
+- **A separate queue for photos.** It is still one `claude` on the owner's account at a time.
+
+## D363 — The lab warehouse: a derived, rebuildable copy of the lab's records as zstd Parquet tables, partitioned by source and night, with a DuckDB file of views, kept current by an incremental ingest that reads only complete appended lines and resets a file that shrank or was replaced
+
+*Branch `c/lab-warehouse`; D363.*
+
+**2026-10-04** (Justin's request: a DuckDB + Parquet warehouse on the PC so he can query
+everything the lab produces with SQL and pandas; J065 measures the storage beforehand)
+
+**Context.** The lab writes JSON lines in many places: the queue's key folders (D323), the run
+folders, the ladder's `sprt.jsonl` (D319), the experiment log, and the ML and gate reports
+(D324, D354). A draft line is about 16 KB and nests the drafters, their picks and decks, and
+the match with its games. Each reader parses it again: `report.ts`, `matchup_data.py`, the
+runner's extractors. Asking a new question (a card's rate when on the draw, exploring games
+by kind, pick order) means writing another parser. Justin is a data scientist and works in
+SQL and pandas.
+
+**Decision.** `tools/lab/warehouse.py` (Python; pyarrow and duckdb, which the PC has):
+
+1. **The raw data stays as it is.** The warehouse is a derived copy under `var/warehouse/`.
+   Deleting it or `ingest --rebuild` makes it again, and nothing in the lab reads it.
+2. **Tables.** The five per-draft tables are flattened from each line: `drafts`, `games`,
+   `decks` (the played deck per drafter), `deck_cards` and `picks` (`seen` and `took` as
+   lists). They are written as zstd Parquet with dictionary-encoded strings, partitioned as
+   `source=<queue|runs>/night=<N>`. The night comes from the `night-N.json` plan whose chunk
+   handed out the seed, and is 0 for a run folder. The small tables are rewritten whole on
+   every ingest:
+   - `cards`, one id per card across cubes: the card library's `normName`, with the oracle id
+     only from a local `cards.sqlite`, never the network, and the AI flag;
+   - `cube_cards`, through the cube lab's own parser under Node;
+   - `runs` and `versions` (D341), from `run.json`;
+   - `nights`;
+   - `sprt`, `experiments`, `gate_reports`, `ml_reports` and `matchup_power`.
+3. **Ids.** `draft_id` is `<source>/<key>#<seed>`, a pure function of where the draft is, so it
+   survives every rebuild. Every row carries `src_file`.
+4. **Incremental and idempotent.** Per file, the state is the offset read, the inode, the size,
+   the mtime and a hash of the first 4 KiB. Only complete lines are read, so an ingest is safe
+   beside a running night. A file that shrank, was replaced, was rewritten at its head or
+   vanished is reset: its rows are filtered out of the part files that hold them, and it is
+   read again. Each ingest writes its part files as `.tmp` files named by its run id, renames
+   them, and commits the run id to `_state.json` last. A part file of an uncommitted run is
+   deleted at the next start. A lock keeps two ingests apart.
+5. **Views, not a database.** `lab.duckdb` holds only views over the Parquet, read with
+   `union_by_name` and hive partitions, plus `seat_games`, one row per game and seat. It is
+   written to a temporary file and renamed. `verify` counts every table against the JSONL
+   independently, file by file, up to the committed offsets.
+6. **Exploring drafts (D358) are marked, never dropped**, on drafts and games. The notebooks
+   leave them out of win rates, as the lab's own readers do.
+7. **Starter notebooks** are `notebooks/*.py` percent scripts. Jupyter and VS Code open them as
+   notebooks, and `python3` runs them. The repo has no `.ipynb`, and a script keeps outputs
+   out of git. There are five: card win rates with Wilson intervals and the D343 caveat,
+   colour-pair balance, exploring against plain games, SPRT and gate history, and pick-order
+   heatmaps. Their test runs each one on the warehouse built from the committed fixtures.
+8. **Saved queries** (Justin's addition). `notebooks/sql/` holds five plain SQL files for the
+   questions he will ask most often: card win rates per cube with Wilson intervals and a games
+   threshold, colour-pair shares and rates night by night, game length and the on-play rate per
+   cube, pick order against deck inclusion, and each night's volume, recordings, quarantined
+   recordings and errors. `notebooks/saved_queries.py` runs them; the DuckDB command line runs
+   them with `.read`; thresholds are `set variable`s. Every query and notebook opens with the
+   **Forge-against-Forge caveat**: a card's win rate measures the card in Forge Default's hands.
+   The tests run each file on the fixture warehouse (SQL only, no Jupyter). The redaction
+   pass's quarantine lists (`<queue>-quarantine-n<N>/failed.txt`) are the `quarantine` table.
+9. **A numbers-only public summary** (Justin's addition). `warehouse.py export` writes
+   `var/warehouse/warehouse.json`, schema 1, fixed with ForgeCoach's `#lab/data` page: table
+   rows and bytes; per night drafts, games, recorded, quarantined and engine errors; the
+   recordings archive's gzip and zstd bytes (from a file, else null); free disk; per cube
+   drafts, games, mean turns and the on-play win rate; per cube and colour pair, and per cube
+   and card, games, win rate and Wilson's 95% interval over games. The games within a draft are
+   correlated, so the intervals are optimistic, and the code says so. A card appears only with
+   at least 100 games, in the top or bottom 25 of its cube, and named as the cube document
+   names it, cleaned and at most 60 characters. There are no decks, seeds, picks, hands,
+   recordings or paths. The runner publishes the file to ForgeCoach's `lab-status` branch beside
+   `status.json` and `ladder.json` when it changes, through its own allowlist,
+   `tools/runner/warehouse.ts`, as `ladder.ts` does for the ladder. Unknown keys are dropped,
+   and so is any row whose count is not a non-negative integer, whose rate is outside [0, 1] or
+   whose card name has a character outside letters, digits, spaces and card-name punctuation.
+   The local server serves it at `/public-warehouse.json`. `tools/lab/warehouse-sample.json`
+   (an export of the synthetic warehouse) is the page's sample, and the runner's test checks
+   that it passes the allowlist unchanged.
+
+**Measured** (synthetic: 45,000 fixture-shaped lines with real cube names, 884 MB, in this
+4-core container):
+
+- a full ingest took 98 s with a peak RSS of 499 MB, and a no-op ingest 2 s;
+- 3,000 appended lines took 8 s;
+- a reset of a 7,500-line file took 17 s, with a peak of 516 MB;
+- the five tables took 26.7 MB;
+- `saved_queries.py` ran in 27 s with a peak RSS of 1.07 GB (DuckDB capped at 2 GB).
+
+Synthetic lines compress better than real ones, and J065 and J066 measure the real data.
+
+**Rejected.**
+
+- **One DuckDB database holding the data.** It is one writer's file, so a notebook that holds
+  it open would block the nightly ingest, and a crash mid-write risks the whole file. Parquet
+  files with views over them have neither problem.
+- **Re-reading everything every night.** That cost grows with every night, and the queue
+  appends.
+- **One part file per source file.** Thousands of small files after a few weeks. Filtering a
+  reset file's rows out of shared part files is rare, and it is bounded by the row group.
+- **Recompressing or moving the recordings.** They are the evaluator's input, and J065 only
+  measures what zstd would save. The `games` table points at them by `rec_dir`.
+- **Copying the cube parser into Python.** It would be a second parser to keep in step, so
+  `cube_cards` runs `cube.ts` under Node, as `matchup_data.cube_lists` does.
+
+
+
+## D369 — The owner's games flow into the human test set by themselves: `play.sh` copies every finished human-vs-AI game from `var/games/` into `var/ml/human/` with a manifest, `human_eval.py` scores the evaluator there against prior, life and core with intervals over games, and the first check is pre-registered at 30 games
+
+*Branch `c/human-games`; D369, the next number free at push (D362–D368 are held by other
+open branches). A methods review the owner approved (2026-10-04).*
+
+**2026-10-04**
+
+**Context.** D347 made `var/ml/human/` the place for the owner's own games and kept them out
+of training; D361 shows the evaluator's win chance in ForgeCoach. Nothing yet says whether
+that number is right on HUMAN games: every measurement so far (D305, D316, D354's gate 1,
+D359's outside exam) is on Forge-vs-Forge games or 17Lands' players. The folder was filled by
+hand, so it was empty.
+
+**Decision.**
+
+1. **Where the games are.** `mtgtable.MtgTable` writes each game a seat plays to
+   `var/games/<gameId>/frames.jsonl` under the checkout it runs from. `play.sh` passes no
+   `--game-id`, so the id is MtgTable's default `human-ws-<seed>` (`-g<n>` for game n of a
+   match, M38); a ForgeCoach-launched match is `match-m<13 digits>[-g<n>]` (D303). The gate's
+   and the tools' runs write there too, always under ids of their own.
+2. **Collection, `tools/ml/human_collect.py`** (standard library). A game is taken when its
+   folder name is one of those two shapes, its session header's `transport` is `ws` or
+   `console` (a person's seat: `auto` and `null` are scripted, an AI-vs-AI recording has none),
+   the viewing seat (`seat` = `hello_ok.you`) is not an AI and the other player is, and it is
+   finished (an `over` or `gameOver` with a winner or a reason; a crash's null `over`, M46, is
+   not). It is copied byte for byte, gzipped without a timestamp, to
+   `var/ml/human/<gameId>-<seed>-<startedAt>.jsonl.gz`. `--from DIR` reads every
+   `*.jsonl[.gz]` under a folder (logs saved elsewhere) by the same rules, without the id
+   shapes. The key is game id + seed + `startedAt`: play.sh's fresh seed per session makes id
+   + seed one game; the start time separates a seed given twice on purpose, which reuses the
+   id. A key in the manifest is never copied again, so a second run copies nothing.
+3. **The manifest**, `var/ml/human/manifest.json` (not `.jsonl`: `dataset.py` reads every
+   `*.jsonl[.gz]` there as a game): per game the key, the file, game id, seed, start time and
+   date, seat, transport, result from the human's side, reason, turns, your deck (name, path,
+   sha256), the cube of `cubes/` holding at least 80% of your deck's non-basic cards when the
+   deck file is still there, the AI's deck by its public name and count (M44), the AI profile
+   and policy (M56), where it came from, the sha256 of the copy. `.collect-cache.json` beside
+   it remembers files already judged by size and mtime.
+4. **Triggered by `play.sh`**: at start (after the match lines, so a session killed hard
+   is collected the next time), when the engine falls asleep (D308: a match just ended) and in
+   `stop()` at exit (the bridge has flushed). Each prints one line, `human test set: N games (W
+   won, L lost)[, k new] -- var/ml/human/ (D369; descriptive until 30)`. It never fails
+   play.sh (`timeout 120`, a failure prints a line), it is skipped under the match launcher's
+   self-test seam, and `--no-human-collect` turns it off. **Not the coach helper**: the helper
+   sees no game end of its own (ForgeCoach talks to the bridge), and another lane is changing
+   it; play.sh already owns the engine's lifetime, so it is the least intrusive place.
+5. **Evaluation, `tools/ml/human_eval.py`** (numpy). The rows are `encode_game`'s decision rows
+   of each human game from its own (human) seat, each model encoding with its own vocabulary;
+   several `--model`s are each scored and their mean P(win) is `eval`. Beside it, train_eval's
+   `fit_baselines` (`prior`, `life`, `core`) fitted on the training split of the dataset the
+   model was trained on (its `--split-by`; `--baselines DATA`, by default the model's
+   `training.data`); without that dataset only `coin` (0.5). The numbers are train_eval's
+   `metrics` (log-loss, Brier, accuracy on decided games, ECE, the ten-bin reliability table,
+   overall and per turn bucket) and, per baseline and bucket, log-loss(baseline) −
+   log-loss(eval) with a 95% percentile interval from resampling whole games
+   (`outside_exam.grouped_bootstrap_many`). **Under 30 games the report says DESCRIPTIVE
+   ONLY** and draws no conclusion.
+6. **The first check, pre-registered here** (`FIRST_CHECK` in `human_eval.py`):
+   - the population: the first 30 human games by start time (the manifest's order; a later
+     game never changes it), every decision row of them;
+   - the model: the one `play.sh` serves when the 30th game is in;
+   - the statistic: log-loss(core) − log-loss(eval), `core` fitted as in 5;
+   - the interval: 95% percentile, 2,000 resamples of whole games, seed 20261004;
+   - the reading: interval above 0, **better than core on human games**; below 0, **worse than
+     core on them**; across 0, **no difference detectable at 30 games**.
+
+   Every run prints it (`NOT YET: n of the 30` before then). It is read once, its line is
+   recorded as an amendment to this entry, and it is not re-read on more games; later runs
+   are descriptive. What follows from a reading (a caveat beside the win chance in
+   ForgeCoach, or training on human games) is a new decision.
+7. **Where the models are** (a fix beside it). The lab runner's jobs write into the lab clone
+   (`~/code/lab/mtg-table/var/`, `docs/guides/lab-runner.md`), while the helper looked for its
+   default `var/ml/models/night-1-eval.json` in Justin's checkout only, so a new model needed
+   a hand copy. `eval-runner.mjs`'s `resolveEvalModel` (the default and a relative
+   `--eval-model`) and `human_eval.py --model` / `--baselines` now look in this checkout first,
+   then in the lab clone: `$MTGTABLE_LAB_ROOT`, else `../lab/mtg-table` beside the checkout.
+   This checkout's copy wins when both exist; a flag found nowhere is reported missing as
+   before.
+
+**Hidden information.** The copy is the human seat's own log, which the bridge redacted for
+that seat (hard rule 8); nothing of the AI's side is read or added, and the manifest carries the
+AI's deck as `hello_ok.match` does. The evaluator reads it through encode.py, stricter than the
+log (D305).
+
+**Tested** (`tools/ml/tests/test_human.py`, gate 12h): the committed seat recordings laid out as
+a person's games under `var/games/`; refused: a scripted seat, an AI-vs-AI recording under a
+match id, a gate id's folder, an unfinished game (taken once it ends); a second run copies
+nothing, with or without the cache; each copy equals its source byte for byte; the dedupe key
+across `var/games/` and `--from`; a file of two games; the manifest (cube, AI policy, the AI's
+deck as name and count). numpy: `human_eval.run` on those 12 games with the parity model and
+baselines fitted on a dataset of the fixtures (DESCRIPTIVE ONLY, intervals over 12 games, the
+first check NOT YET), an ensemble of a model with itself equal to the model, no baselines gives
+`coin`, and with 30 and then 31 games the first check reads the same 30 games and the same
+interval. `tools/eval-runner-selftest.mjs` (12f): the lab-clone lookup.
+
+**Rejected.**
+
+- **The coach helper collecting at `over`**: it does not see the game (ForgeCoach's socket is
+  the bridge's), and it is another lane's file.
+- **Copying every `var/games/` log with a `ws` transport**: the gate's socket steps play
+  scripted clients over `ws`; the id shapes are play.sh's own.
+- **Dedupe by content hash alone**: an unfinished copy and the finished game would be two;
+  the key names the game, and only finished games are taken.
+- **Reading the first check whenever the set grows**: optional stopping; one population, fixed
+  in advance, read once.
+- **Searching the lab clone first**: a model Justin placed in his checkout on purpose must win.
+
 ## D372 — Gate 2's minimum detectable effect is written down before J051 reads: about 1 point of mean regret at 240 scored decisions; a FAIL whose interval still reaches 1.5 points is reported as "underpowered", never "no gain"; the gate rule itself is unchanged
 
 *Branch `c/review-fixes`; D372, the first number free after the blocks other open

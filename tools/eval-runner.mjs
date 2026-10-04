@@ -11,6 +11,10 @@
 // The model is a train_eval.py export (D316) that lives on this machine only
 // (var/ml/models/, gitignored): it is never served, and no weight leaves the
 // process.  The default is var/ml/models/night-1-eval.json when that file exists.
+// A relative model path (the default or --eval-model's) is looked up in this
+// checkout first, then in the lab runner's heavy clone, where the PC's jobs
+// write their models (D369; docs/guides/lab-runner.md): $MTGTABLE_LAB_ROOT, else
+// ../lab/mtg-table beside this checkout (~/code/mtg-table -> ~/code/lab/mtg-table).
 //
 // HOW.  One child process, tools/ml/eval_serve.py, holds the model and answers
 // JSON lines: it IS encode.py's encoder and evalnet.py's forward pass (nothing
@@ -53,7 +57,7 @@
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 
 export const MAX_EVAL_BODY = 2 * 1024 * 1024;
 export const DEFAULT_EVAL_MODEL = 'var/ml/models/night-1-eval.json';
@@ -82,11 +86,22 @@ export function validateEval(q) {
   return { req: { seat: q.seat, state: q.state, history: q.history ?? [] } };
 }
 
-/** The model to load: the flag, else the default when it exists, else none. */
-export function resolveEvalModel(repoRoot, flag) {
-  if (flag) return resolve(repoRoot, flag);
-  const d = resolve(repoRoot, DEFAULT_EVAL_MODEL);
-  return existsSync(d) ? d : null;
+/** The lab runner's heavy clone (D369): $MTGTABLE_LAB_ROOT, else ../lab/mtg-table beside this checkout. */
+export function labRoot(repoRoot, env = process.env) {
+  return env.MTGTABLE_LAB_ROOT ? resolve(env.MTGTABLE_LAB_ROOT) : resolve(repoRoot, '..', 'lab', 'mtg-table');
+}
+
+/** The model to load: the flag, else the default -- in this checkout, else in the lab clone (D369);
+ *  a flag that is nowhere stays as given (the runner then says it is missing); no default anywhere is none. */
+export function resolveEvalModel(repoRoot, flag, env = process.env) {
+  const rel = flag || DEFAULT_EVAL_MODEL;
+  const here = resolve(repoRoot, rel);
+  if (existsSync(here)) return here;
+  if (!isAbsolute(rel)) {
+    const lab = resolve(labRoot(repoRoot, env), rel);
+    if (existsSync(lab)) return lab;
+  }
+  return flag ? here : null;
 }
 
 /** The Python that runs eval_serve.py: the flag, else the repo's venv when present, else python3. */
