@@ -63,6 +63,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 import time
 from typing import Any
@@ -456,25 +457,75 @@ def game_splits(games: list[dict[str, Any]], how: str) -> list[str]:
     return split_of_game
 
 
+LAB_DECK_NAME = re.compile(r"^cubelab \d+ [AB]$")
+
+
+def group_kind(keys) -> str:
+    """What a split group is.  The lab names every deck `cubelab <seed> A|B`
+    (tools/cubelab/run.ts), and the queue numbers seeds per cube folder, so a
+    lab log's "deck pair" is a SEED NUMBER, the same one in every cube: `seed`
+    when every group is one of those, else `deck-name` (named decks, or a mix)."""
+    ks = [k for k in keys if k]
+    if ks and all(len(k.split("|")) == 2 and all(LAB_DECK_NAME.match(d) for d in k.split("|")) for k in ks):
+        return "seed"
+    return "deck-name"
+
+
+def deck_keys_of(g: dict[str, Any]) -> list[str]:
+    """A game's decks by CARD MULTISET (reserved.deck_key): games.jsonl's `deckKeys`
+    (dataset.py writes it), else read again from the recording's run folder
+    (a dataset built before the field); [] when no deck can be known."""
+    if isinstance(g.get("deckKeys"), list):
+        return [str(k) for k in g["deckKeys"]]
+    import reserved as R
+    f = g.get("file")
+    if not f:
+        return []
+    decks, _ver = R.game_decks(f, None)
+    return sorted(R.deck_key(d) for d in decks)
+
+
 def split_summary(data: str, splits: dict[str, Any]) -> dict[str, Any]:
-    """Per split: games, deck pairs and decks -- and how many test rows come from
-    a deck the training split also holds (0 under pair and holdout splits)."""
+    """Per split: rows, games, split groups and decks -- and how many test rows come
+    from a deck the training split also holds, keyed on the decks' CARD MULTISETS
+    (reserved.deck_key).  The deck-name check this replaced could never fire on lab
+    logs, whose names are `cubelab <seed> A|B` (methods review, 2026-10-04); its
+    count stays in the report as `testRowsWithATrainingDeckName`, beside the content one."""
     games = read_games(data)
     out: dict[str, Any] = {}
-    decks: dict[str, set] = {}
+    names: dict[str, set] = {}
+    contents: dict[str, set] = {}
+    keys_of: dict[int, list[str]] = {}
     for s, r in splits.items():
         gi = sorted(set(r.game.tolist()))
-        ds = set()
+        ns, cs = set(), set()
         for i in gi:
-            ds |= set(d for d in (games[i].get("match") or "").split("|") if d)
-        decks[s] = ds
+            ns |= set(d for d in (games[i].get("match") or "").split("|") if d)
+            keys_of[i] = deck_keys_of(games[i])
+            cs |= set(keys_of[i])
+        names[s], contents[s] = ns, cs
         out[s] = {"rows": len(r), "games": len(gi), "pairs": len({pair_key(games[i]) for i in gi}),
-                  "decks": len(ds)}
-    te = splits["test"]
-    seen = sum(1 for i in te.game.tolist()
-               if set((games[i].get("match") or "").split("|")) & decks["train"] - {""})
-    out["testRowsWithATrainingDeck"] = seen
+                  "decks": len(cs) if cs else len(ns), "deckNames": len(ns), "decksByContent": len(cs)}
+    te = splits["test"].game.tolist()
+    out["groupKind"] = group_kind({pair_key(games[i]) for s in splits for i in set(splits[s].game.tolist())})
+    out["testRowsWithATrainingDeck"] = sum(1 for i in te if set(keys_of[i]) & contents["train"])
+    out["testRowsWithATrainingDeckName"] = sum(
+        1 for i in te if set((games[i].get("match") or "").split("|")) & names["train"] - {""})
+    out["testRowsDeckUnknown"] = sum(1 for i in te if not keys_of[i])
+    out["deckCheck"] = "card multiset (reserved.deck_key)"
     return out
+
+
+def summary_line(split_by: str, summary: dict[str, Any]) -> str:
+    """The log's split line: groups named for what they are, the deck check by content."""
+    kind = "seed groups (lab deck names are `cubelab <seed> A|B`: one seed number across cubes)" \
+        if summary.get("groupKind") == "seed" else "deck-name groups"
+    unknown = summary.get("testRowsDeckUnknown", 0)
+    return (f"split by {split_by}: " + "; ".join(
+        f"{s} {summary[s]['rows']} rows / {summary[s]['games']} games / {summary[s]['pairs']} groups"
+        for s in ("train", "val", "test")) + f"; groups are {kind}"
+        + f"; test rows from a deck seen in training, by card multiset: {summary['testRowsWithATrainingDeck']}"
+        + (f" ({unknown} test rows' decks unknown: not checked)" if unknown else ""))
 
 
 def score_all(models: dict[str, Any], splits: dict[str, Any]) -> dict[str, Any]:
@@ -499,10 +550,7 @@ def run_train(a, hp, log) -> dict[str, Any]:
     summary = split_summary(a.data, splits)
     if a.dry_load:
         return dry_load(a, schema, names, splits, summary, mem, log)
-    log(f"split by {a.split_by}: " + "; ".join(
-        f"{s} {summary[s]['rows']} rows / {summary[s]['games']} games / {summary[s]['pairs']} pairs"
-        for s in ("train", "val", "test")) + f"; test rows from a deck seen in training: "
-        f"{summary['testRowsWithATrainingDeck']}")
+    log(summary_line(a.split_by, summary))
     log(f"train_eval: schema {schema['schemaId']}, {schema['nFeatures']} features, vocab {len(schema['vocab']['cards'])}; "
         f"rows train/val/test {len(tr)}/{len(va)}/{len(te)}; games "
         f"{len(np.unique(tr.game))}/{len(np.unique(va.game))}/{len(np.unique(te.game))}; backend {backend}")

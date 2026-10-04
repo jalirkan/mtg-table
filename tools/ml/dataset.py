@@ -211,6 +211,10 @@ def _encode_file(path: str) -> list[tuple]:
             "active": np.asarray([r.active for r in rows], dtype=np.int8),
         }
         fields = {"game_key": g.game_key, "split_group": g.split_group, "match": g.match_key(),
+                  # the decks by card multiset (reserved.deck_key): train_eval's "deck seen in training" check
+                  "deckKeys": sorted(R.deck_key(d) for d in decks),
+                  # D375: the seats' AI when the lab drew them per draft (--profile-mix); null: Default vs Default
+                  "profiles": R.game_profiles(path),
                   "file": os.path.relpath(path), "seat": g.seat, "rows": len(rows), "label": rows[0].label,
                   "last_turn": max(r.turn + r.turns_to_end for r in rows), "ver": ver,
                   "source": P.source_of(path, g.header, _W["human_dirs"]),

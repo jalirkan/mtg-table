@@ -28,7 +28,8 @@ import { apportion, bridgePool, cubeId, mergeRatings, parseBridgeArgs, poolCube,
 import type { Fact } from '../../tools/cubelab/cards.ts';
 import { parseCube, type Cube } from '../../tools/cubelab/cube.ts';
 import { loadCube, runDraft } from '../../tools/cubelab/lab.ts';
-import { allocate, assertNoDuplicates, cubeWeights, planNight, scorePairs, type CubeSet, type Ledger } from '../../tools/cubelab/queue.ts';
+import { allocate, assertNoDuplicates, cubeWeights, nightProfileMix, planNight, scorePairs, seatOptions, type CubeSet, type Ledger } from '../../tools/cubelab/queue.ts';
+import { seatsOf } from '../../tools/cubelab/run.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 
 const REPO = join(fileURLToPath(new URL('.', import.meta.url)), '../..');
@@ -130,6 +131,25 @@ test('queue: pairs chosen for information, near-identical pools skipped', () => 
   assert.equal(row('pauper+modern-era')?.kept, true);
   // The top pairs chain a flat cube to a middle one.
   for (const r of rows.slice(0, 4)) assert.equal(r.gap, 1, `${r.key} leads`);
+});
+
+test('queue (D375): --profile-mix is off by default, recorded normalised, never changed on a re-run', () => {
+  assert.equal(nightProfileMix(undefined, undefined, 4), null, 'no flag: Default vs Default');
+  assert.deepEqual(seatOptions({}), { profiles: ['Default', 'Default'] });
+  const mix = nightProfileMix('Default:2,Reckless:1,Cautious:1', undefined, 4);
+  assert.equal(mix, 'Default:0.5,Reckless:0.25,Cautious:0.25');
+  assert.equal(nightProfileMix(undefined, mix, 4), mix, 'a re-run without the flag keeps the plan\'s mix');
+  assert.equal(nightProfileMix('Default:0.5,Reckless:0.25,Cautious:0.25', mix, 4), mix);
+  assert.throws(() => nightProfileMix('Default:1', mix, 4), /planned with --profile-mix/);
+  assert.throws(() => nightProfileMix('Default:1', null, 3), /planned with no --profile-mix/);
+  const o = seatOptions({ profileMix: mix as string });
+  assert.equal(o.profileMix?.length, 3);
+  // each draft's seats are a function of its seed, and both seats vary over a night
+  const seats = Array.from({ length: 400 }, (_, k) => seatsOf(o as Parameters<typeof seatsOf>[0], 1000 + k));
+  assert.deepEqual(seatsOf(o as Parameters<typeof seatsOf>[0], 1000), seats[0]);
+  const a = new Map<string, number>();
+  for (const s of seats) a.set(s.profileA, (a.get(s.profileA) ?? 0) + 1);
+  assert.ok((a.get('Default') ?? 0) > 150 && (a.get('Reckless') ?? 0) > 60 && (a.get('Cautious') ?? 0) > 60, JSON.stringify([...a]));
 });
 
 test('queue: a night honours the bridge share, and seeds are never planned twice', () => {

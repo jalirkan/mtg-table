@@ -101,7 +101,9 @@ def run_drafts(run_dir: str) -> Dict[int, Dict[str, Any]]:
                 except json.JSONDecodeError:
                     continue
                 out[int(rec["seed"])] = {"decks": [MD.as_counts(MD.played_main(d)) for d in rec["drafters"]],
-                                         "ver": rec.get("ver") or "unversioned"}
+                                         "ver": rec.get("ver") or "unversioned",
+                                         # D375: seat A's and B's AI under a --profile-mix run (absent: run.json's profiles)
+                                         "profiles": rec.get("profiles")}
     _RUN_CACHE[run_dir] = out
     return out
 
@@ -140,6 +142,17 @@ def game_decks(path: str, hello: Optional[Dict[str, Any]] = None, repo: str = ".
                     decks.append(dck_main(fh.read()))
                 break
     return decks, "unversioned"
+
+
+def game_profiles(path: str) -> Optional[list]:
+    """D375: a lab recording's two seats' AI ([A, B]) when its run drew them per draft (--profile-mix),
+    else None (the run's fixed profiles, Default vs Default for the queue)."""
+    hit = log_draft(path)
+    if hit:
+        d = run_drafts(hit[0]).get(hit[1])
+        if d and d.get("profiles"):
+            return list(d["profiles"])
+    return None
 
 
 def reserved_hit(decks: Iterable[Dict[str, int]], reserved: Dict[str, str]) -> Optional[str]:

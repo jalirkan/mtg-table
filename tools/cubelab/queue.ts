@@ -9,6 +9,19 @@
 //       [--allow-version-change]   append to key folders another lab version wrote (D341; logged)
 //       [--play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   a seeded share of every
 //                                  chunk's drafts play games whose decisions explore (D358, playexplore.ts)
+//       [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   each drafter's AI drawn per draft by
+//                                  its seed (D347's mix, profiles.ts); off by default (D375)
+//
+// PROFILE MIX (D375).  Without --profile-mix every chunk plays Default against
+// Default, as before.  With it the night's plan records the mix (`profileMix`,
+// normalised), every chunk passes it to `run`, and each draft's seats are a
+// pure function of its seed; every drafts.jsonl row of such a run carries
+// `profiles` (seat A's and B's), and tools/ml's games.jsonl copies them.  The
+// mix is part of each key folder's lab version (D341: run.ts compares
+// `profileMix`), so the first night with a mix appends to the folders only
+// with --allow-version-change; a re-run of a night uses the plan's mix, and a
+// different flag is refused.  The methods review (2026-10-04, rec. 5) asks for
+// it from night 4: one pilot's habits confound card power.
 //
 // PLAY EXPLORATION (D358).  With --play-explore the night's plan records the
 // settings (`playExplore`), every chunk passes them to `run`, and each draft
@@ -80,6 +93,7 @@ import { DEFAULT_WEIGHTS } from './weights.ts';
 import { assertQueueSeeds } from './seeds.ts';
 import { codeVersion, fileSha } from './versions.ts';
 import { isPlayExplored, parsePlayExploreArgs, playExploreText, type PlayExploreOptions } from './playexplore.ts';
+import { checkProfiles, mixText, parseProfileMix } from './profiles.ts';
 
 /** Power tier of each cube: 0 flat, 1 middle, 2 powered.  A cube not listed is treated as middle. */
 export const TIERS: Record<string, { tier: number; why: string }> = {
@@ -174,6 +188,8 @@ export interface NightPlan {
   runs?: Array<{ at: string; gitSha: string | null; codeTree: string | null; dirty: boolean; diffSha: string | null; forgeJarSha256: string | null; allowVersionChange: boolean }>;
   /** D358: the night's play exploration (absent: none), passed to every chunk; a re-run must not change it. */
   playExplore?: PlayExploreOptions;
+  /** D375: the night's --profile-mix, normalised (mixText); absent: Default vs Default. A re-run must not change it. */
+  profileMix?: string;
 }
 export interface Ledger { v: 1; games: number; format: string; nextSeed: Record<string, number>; nights: number[] }
 
@@ -206,6 +222,26 @@ export function planNight(night: number, total: number, cubes: CubeSet[], games:
   for (let i = 0; perKey.some((l) => i < l.length); i++) for (const l of perKey) if (l[i]) chunks.push(l[i] as Chunk);
   if (!ledger.nights.includes(night)) ledger.nights.push(night);
   return { night, drafts: total, games: ledger.games, format: ledger.format, knobs: k, alloc, pairs, chunks };
+}
+
+/**
+ * D375: the night's mix from the flag, normalised -- or null without one.  On a night already
+ * planned, `planned` is its plan's mix: a flag may repeat it, never change it.
+ */
+export function nightProfileMix(flag: string | undefined, planned: string | null | undefined, night: number): string | null {
+  const want = flag === undefined ? undefined : mixText(parseProfileMix(flag));
+  if (planned !== undefined) {
+    if (want !== undefined && want !== (planned ?? undefined)) {
+      throw new Error(`night ${night} was planned with ${planned ? `--profile-mix ${planned}` : 'no --profile-mix'}; re-run it with the same (or without the flag)`);
+    }
+    return planned ?? null;
+  }
+  return want ?? null;
+}
+
+/** D375: a chunk's seats: Default vs Default, or the night's mix (each draft's seats drawn by its seed; rows carry `profiles`). */
+export function seatOptions(plan: Pick<NightPlan, 'profileMix'>): Pick<RunOptions, 'profiles' | 'profileMix'> {
+  return plan.profileMix ? { profiles: ['Default', 'Default'], profileMix: parseProfileMix(plan.profileMix) } : { profiles: ['Default', 'Default'] };
 }
 
 /** Every (key, seed) of every plan, once: throws on a duplicate (it would be the same draft twice) or a seed out of the lab range (D340). */
@@ -281,6 +317,7 @@ export function readPowerSd(file: string): Map<string, number> {
 function renderPlan(p: NightPlan, root: string): string {
   const out: string[] = [];
   out.push(`night ${p.night}: ${p.drafts} drafts (${p.chunks.length} chunks), ${p.games} game(s) a draft, ${p.format}, bridge share ${p.knobs.bridgeShare}`);
+  if (p.profileMix) out.push(`AI seats (D375): each drafter drawn per draft from ${p.profileMix}; drafts.jsonl rows carry \`profiles\``);
   if (p.playExplore) out.push(`play exploration (D358): ${playExploreText(p.playExplore)} -- about ${Math.round(p.drafts * p.playExplore.share)} drafts explore; win rates leave them out`);
   out.push('', 'pool key                         weight    drafts');
   for (const a of p.alloc) out.push(`${a.key.padEnd(32)} ${a.weight.toFixed(3).padStart(7)} ${String(a.drafts).padStart(9)}`);
@@ -317,6 +354,8 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
     if (f.has('play-explore') && JSON.stringify(playExplore) !== JSON.stringify(plan.playExplore ?? null)) {
       throw new Error(`night ${night} was planned with ${plan.playExplore ? `--play-explore ${playExploreText(plan.playExplore)}` : 'no --play-explore'}; re-run it with the same (or without the flag)`);
     }
+    const mix = nightProfileMix(f.get('profile-mix')?.at(-1), plan.profileMix ?? null, night);
+    if (mix) plan.profileMix = mix;
     say(`night ${night}: re-reading its plan (${planFile}); finished drafts are skipped`);
   } else {
     const drafts = num('drafts', NaN);
@@ -331,6 +370,8 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
     if (br !== 'even' && br !== 'own') throw new Error(`--bridge-ratings is even or own, got ${br}`);
     plan.bridgeRatings = br;
     if (playExplore) plan.playExplore = playExplore;
+    const mix = nightProfileMix(f.get('profile-mix')?.at(-1), undefined, night);
+    if (mix) plan.profileMix = mix;
     const others = ledger.nights.filter((n) => n !== night).map((n) => path.join(root, `night-${n}.json`)).filter((x) => fs.existsSync(x))
       .map((x) => JSON.parse(fs.readFileSync(x, 'utf8')) as NightPlan);
     assertNoDuplicates([...others, plan]);
@@ -342,6 +383,11 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
   say(renderPlan(plan, root));
   if (mode === 'plan') { say('\n(plan only: nothing written; `queue run` with the same flags writes and plays it)'); return 0; }
 
+  if (plan.profileMix) {
+    const aiDir = path.join(repo, 'forge-home', 'res', 'ai');
+    checkProfiles(parseProfileMix(plan.profileMix).map((m) => m.spec),
+      fs.existsSync(aiDir) ? fs.readdirSync(aiDir).filter((n) => n.endsWith('.ai')).map((n) => n.slice(0, -3)) : null);
+  }
   const env = engineEnv(repo);
   // One engine lookup for every cube's cards; every chunk's own lookup is then a subset of it (engine.ts).
   engineFacts(env, [...new Set(cubes.flatMap((c) => c.cards))], say);
@@ -359,7 +405,7 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
     const cubeFile = c.kind === 'normal' ? resolveCube(c.cubes[0] as string, repo) : '';
     const o: RunOptions = {
       cubeFile, format: plan.format as 'grid' | 'winston', drafts: c.drafts, games: plan.games, jobs, seed: c.seed,
-      profiles: ['Default', 'Default'], ratingsFile: c.kind === 'normal' ? defaultRatings(cubeFile) : null, record: 0,
+      ...seatOptions(plan), ratingsFile: c.kind === 'normal' ? defaultRatings(cubeFile) : null, record: 0,
       out: path.join(root, c.key), builder: 'lab', gameTimeoutSec: num('game-timeout', 300), winstonCards: 90, weights: DEFAULT_WEIGHTS,
       ...(allowVersionChange ? { allowVersionChange: true } : {}),
     };
