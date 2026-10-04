@@ -17525,6 +17525,10 @@ frame or the one before.
   Kitesail Freebooter's own trigger resolved and the Freebooter put in the graveyard;
   every frame and every `Snap.label` for both seats against `canFaceDownBeShownTo`.
   28 checks.
+- `tools/requarantine.mjs` (and its self-test, in CI and gate step 12): re-checks a night's
+  quarantine with the current checker, reports per failure kind how many now pass, and
+  restores **only** the ones that pass every check to the queue, one manifest line per move
+  and `failed.txt` kept, with `undo`. The PC job that runs it over nights 1 and 2 is J074.
 - No bridge change. **No wire change, so no amendment**: §3.2 gains the Gonti example and
   says that the in-play face is the controller's and that a face-down exiled card nobody may
   look at is the stub.

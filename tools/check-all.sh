@@ -1766,6 +1766,7 @@ s11_fresh() {
 s12_selftest() {
   hdr 12 "check-redaction-selftest.mjs -- the checker's own negative controls"
   node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"
+  node tools/requarantine-selftest.mjs || die "requarantine-selftest.mjs (D371: re-checking and restoring a quarantined recording)"
 }
 
 # 12b. The workshop's catalog is GENERATED (D104) from decks/*.dck, the
