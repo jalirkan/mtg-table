@@ -3,6 +3,7 @@ title: Omega ratings raise (D360): pre-registered A/B, old vs raised ratings, 2 
 public_title: Omega ratings raise check
 public_est: ~4 h
 cpu: heavy
+after: J050
 repos: mtg-table@f038f4e
 est: ~3-4 h on the 9700X (12,000 drafts best of 3; J039 ran 3,400-4,000 drafts an hour on 7 workers), plus a ~10 min pilot
 resumable: yes

@@ -3,7 +3,7 @@ title: Morning read of nights 1 and 2: the matchup model on the queue's drafts (
 public_title: Matchup model read
 public_est: ~1 h
 cpu: heavy
-after: J059
+after: J050
 repos: mtg-table@c09ddfa
 est: ~30-90 min, one process (the matchup model is a few thousand parameters; the bootstrap is the cost)
 resumable: no

@@ -18,6 +18,16 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 12:35 (EDT) — queue order fix; question about J059's 684 quarantined recordings
+- **Queue:** J061–J064 now say `after: J050`. They couldn't run beside J050's 7 workers anyway, and as runnable heavy jobs they were stopping the queue, so J065 (1 core, 3 GB) never got its turn. J065 should now start beside J050. Order after J050 is unchanged: J051 → J052 / J061–J064 by id.
+- **J059 quarantined 684 recordings**, e.g. `normal/modern-era/games/3806/g1-seat0.jsonl.gz`. Night 2 runs on d68f5ec with the D352 reveal fix, so I expected close to 0. Please post, in `results/J059/redaction-sample.md`:
+  - (a) `node tools/check-redaction.mjs` output (the FAIL reason lines) for 5 of the quarantined files, from different cubes if possible. They are under `var/cubelab/queue-quarantine-n2/`.
+  - (b) the count by key (cube / bridge) and by seat.
+  - (c) whether any are night-1 files (seeds at or below night 1's range) that the `-newer` filter caught by mistake.
+
+  This decides whether there's a second leak to fix in the bridge. The evaluator only trains on recordings that passed, so nothing is contaminated.
+- **Coach benchmark (optional, Justin's call):** ForgeCoach PR #54 tunes the coach prompt. `bench/coach/RUN-ON-PC.md` on that branch has the old-vs-new run through the local helper (about 1.5–3 h of helper calls, light on CPU). Not a runner job; it needs `play.sh`'s helper. Only if Justin asks.
+
 ### 2026-10-04 12:05 (EDT) — win chance is merged (mtg-table #51, D361): a pull, one restart, one runner reinstall
 - **For Justin's play sessions:** pull `~/code/mtg-table` to main (53ed81f or later). That also brings the bug-hunt fix that gives every session a fresh random seed. Then restart `./scripts/play.sh --engine-only`.
   - The helper finds `var/ml/models/night-1-eval.json` and serves `POST /eval` with plain `python3` (numpy is already there).

@@ -8,7 +8,7 @@ repos: mtg-table@c09ddfa (main with play exploration, D358 / M57)
 est: ~4-5 h of drafts (night 1 ran 4,750 drafts/h on 7 workers), then ~1 h of redaction checks (resumable)
 resumable: yes
 max_workers: 7
-after: J059
+after: J050
 progress: cubelab-queue var/cubelab/queue night 3
 headline: night.drafts, night.games, night.engine_error_rate
 

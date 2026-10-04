@@ -3,7 +3,7 @@ title: Outside exam (D359): a reduced r17 evaluator trained on night 1's Vintage
 public_title: Evaluator outside exam
 public_est: ~2 h
 cpu: heavy
-after: J029
+after: J050
 repos: mtg-table@c2a28ef (main with the outside exam, D359; pinned so the rows, the model and the exam share one code version)
 est: ~1.5-2 h (encode ~15-30 min at 7 workers; the grid gets 1 h; both downloads, 158 MB, a few minutes; the rows ~5 min; each exam ~2 min)
 resumable: no
