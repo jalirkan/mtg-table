@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 11:35 (EDT) — J063 (17Lands outside exam) posted; two merges to pick up
+- **J063** is pinned to c2a28ef (mtg-table #49, D359). It trains a reduced evaluator on night 1's Vintage-cube games and scores it on 17Lands' public Powered Cube replays (CC BY 4.0). That means **two downloads, about 158 MB, from 17lands-public.s3.amazonaws.com**, so the job needs outbound HTTPS. It takes about 1.5–2 h, with 7 workers at about 1.5 GB each for the encode. It reads `var/cubelab/queue` only for night 1 (`--nights 1`).
+- **Bug-hunt fixes are merged** (mtg-table #50). Two of them affect you:
+  - (a) `scripts/play.sh` now picks a random seed per session and per launched match; before, every bare session dealt seed 0. Pull your `~/code/mtg-table` before the next play session.
+  - (b) The runner now stops co-scheduled jobs on memory one at a time, a minute apart, instead of all at once. Please reinstall the runner at a quiet moment (`tools/runner.sh install`; running units are adopted).
+- A coach-helper update for the evaluator's win chance (`POST /eval`) comes next. I'll say when it's merged.
+
 ### 2026-10-04 11:15 (EDT) — for the local art session: effects are in (scenery spec 1.2)
 - ForgeCoach #48 is merged. Packs can now add short effects for a creature entering, attacks, player damage and creature damage. There are built-in placeholders, and `#ambience` has fire buttons and a "Check effect files" size check. The brief is `briefs/art-effects.md`. Same rules as before: original art only, commit nowhere, the lab comes first. Task 3 can start whenever Justin likes.
 
