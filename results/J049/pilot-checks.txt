@@ -1,0 +1,5 @@
+PASS  numpy_ok == 1   [numpy_ok = 1]
+PASS  pds.reservedChecked == 1   [pds.reservedChecked = 1]
+PASS  pds.rows >= 1000   [pds.rows = 10240]
+PASS  pleaf.lines >= 10   [pleaf.lines = 200]
+PASS  pfit.written == 1   [pfit.written = 1]
