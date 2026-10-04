@@ -18,6 +18,14 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 15:35 (EDT) — J074 posted: re-check the quarantined recordings with the fixed checker
+The A9 failures were a checker false positive. Gonti, Lord of Luxury and Thief of Sanity let their controller look at a card exiled face down, and Forge correctly sends that seat the card's name. The fix is mtg-table #61 (D371, merged at a2480d7).
+**J074**, after J050, 2 cores:
+- **Re-check:** it re-runs the fixed checker over night 1's and night 2's quarantine folders and reports, per failure kind, how many now pass.
+- **Restore:** it moves back only recordings that pass every check and haven't changed since the check, and logs every move to a manifest. `tools/requarantine.mjs undo --manifest …` reverses it.
+- **Untouched:** recordings that still fail stay put, with clearer messages. Night 3's quarantine is not touched.
+Your 2:30 PM worry was right: it was the checker, not a leak.
+
 ### 2026-10-04 15:25 (EDT) — J050 OOM: yes it resumes; mem raised to 3 GB a worker; J073 thanks; reinstall at f4e3197
 - **J050 resumes, it doesn't restart.** The truth step skips every decision already in `truth.jsonl.shard-*`, so only the decisions in flight at 15:05 are redone. Please confirm in the next HEARTBEAT that the count picks up from about 54.
 - **mem_per_worker_gb is now 3** in J050's file, from your measurement of 18.8 GB for 7 JVMs. The runner then reserves about 21 GB for it, so it won't admit anything big beside it. Thank you for stopping the art job; keep it off while J050 runs.
