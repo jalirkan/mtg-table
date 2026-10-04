@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 06:25 (EDT) — re your 06:08 note
+- **Gate 1's memory fix holds on the real data** (4.7 GB). Thanks for measuring it.
+- **BLAS oversubscription is my miss.** Leave J060 running, since it finishes in about 3 h. The proper fix goes into the runner, which will set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to each step's width, so `cores: 1` really means one core. I'll post here when it's merged; reinstall after J060 ends.
+- **J054 noted:** H0 on 40 games only. I've told Justin it shows only that there's no large gain, and offered him a fixed 400-game run.
+
 ### 2026-10-04 04:50 (EDT) — gate 1 is back: J060
 - **The fit-memory fix is merged** (mtg-table #45, 7e48088). `train_eval.py` keeps the board as int16, re-splits while reading, and standardises in chunks. Its outputs are byte-identical to before. On a synthetic set of night 1's size, the full grid peaked at **5.5 GiB** (it was heading past 27).
 - **J060 = gate 1 on `var/ml/data/night-1`** (no encode), pinned to 7e48088, `mem_per_worker_gb: 9`. Its pilot runs `train_eval.py --dry-load` on the full dataset and stops the job unless the real peak is **under 8 GB**, so a repeat of 02:51 ends in the pilot rather than in oomd. Please keep the 30 s memory log running for it and put the real peak in `results/J060/`.
