@@ -50,7 +50,7 @@ import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec
 import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
 import { establishedOn, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
-import { runPool, type MatchJob } from '../../tools/cubelab/engine.ts';
+import { runPool, type MatchJob, type PoolLoad } from '../../tools/cubelab/engine.ts';
 import { drive, type BatchResult, type BatchSpec, type Engine } from '../../tools/ai-ladder/bench.ts';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -1424,7 +1424,7 @@ function matchJobs(n: number): MatchJob[] {
   return Array.from({ length: n }, (_, i) => ({ id: `m${i}`, seed: i, games: 1, gameTimeoutSec: 30, profileA: 'Default', profileB: 'Default', builder: 'lab', deckA: null, deckB: null, poolA: [], poolB: [], forgeDeckOutA: '', forgeDeckOutB: '' }));
 }
 
-async function poolRun(ctl: { paused: boolean; maxWorkers: number | null } | null, n: number, during?: (ctlFile: string, done: () => number) => Promise<void>): Promise<{ maxAlive: number; done: number; order: string[] }> {
+async function poolRun(ctl: { paused: boolean; maxWorkers: number | null } | null, n: number, during?: (ctlFile: string, done: () => number) => Promise<void>): Promise<{ maxAlive: number; done: number; order: string[]; loads: PoolLoad[] }> {
   const d = tmp('pool');
   const bin = fakeJava(d);
   const alive = path.join(d, 'alive');
@@ -1440,15 +1440,16 @@ async function poolRun(ctl: { paused: boolean; maxWorkers: number | null } | nul
   let maxAlive = 0;
   const sampler = setInterval(() => { maxAlive = Math.max(maxAlive, fs.readdirSync(alive).length); }, 10);
   const results: string[] = [];
+  const loads: PoolLoad[] = [];
   try {
-    const p = runPool({ cp: 'x', homes: ['h0', 'h1', 'h2'], repo: d }, matchJobs(n), path.join(d, 'logs'), (j) => { results.push(j.id); }, () => {});
+    const p = runPool({ cp: 'x', homes: ['h0', 'h1', 'h2'], repo: d }, matchJobs(n), path.join(d, 'logs'), (j, _r, _w, load) => { results.push(j.id); loads.push(load); }, () => {});
     if (during) await during(ctlFile, () => results.length);
     await p;
   } finally {
     clearInterval(sampler);
     for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
-  return { maxAlive, done: results.length, order: results };
+  return { maxAlive, done: results.length, order: results, loads };
 }
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
@@ -1457,6 +1458,13 @@ test('cube-lab pool: no control file = three workers, as before', async () => {
   const r = await poolRun(null, 9);
   assert.equal(r.done, 9);
   assert.equal(r.maxAlive, 3);
+  // D376: every result carries the pool's load when it finished
+  assert.equal(r.loads.length, 9);
+  for (const l of r.loads) {
+    assert.ok(l.busy >= 1 && l.busy <= 3, `busy ${l.busy}`);
+    assert.ok(l.alive >= 1 && l.alive <= 3, `alive ${l.alive}`);
+    assert.ok(l.cpus >= 1 && Number.isFinite(l.load1));
+  }
 });
 
 test('cube-lab pool: maxWorkers 1 runs one worker; raising it starts the parked ones', async () => {

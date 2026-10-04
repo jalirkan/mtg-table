@@ -17275,3 +17275,183 @@ J051 is pinned to `7e48088`, which predates this entry, so its own `verdict.txt`
 - **More truth rounds**: they shrink the smallest part of sd(d).
 - **Waiting for J051 to measure sd(d) and then choosing the MDE**: that is choosing the
   yardstick after seeing the data.
+
+## D373 — The SPRT decides nothing before 100 mirror pairs, floors the pair-score variance at 0.05, and says H0 as "not shown ≥ elo1 better", never "no gain"; the old 8 / 0.01 stay reachable only by flag
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §2.5 and recommendation 3.*
+
+**2026-10-04**
+
+**Finding.** `tools/ai-ladder/sprt.ts` took no decision before 8 pairs and floored the
+sample variance of the pair scores at 0.01. Mirrored search-vs-search pairs mostly split
+1–1, so their sample variance is tiny. At elo0 20 / elo1 40, twenty 1–1 pairs and one
+lopsided pair end a test as H0 at 42 games: J054's oracle stopped at 40. The summaries of
+J055 and J058 read H0 as "no gain". It means only that the configuration is not shown to be
+elo1 better; an effect between elo0 and elo1 is invisible to the test.
+
+**Measured** (`node docs/evidence/sprt-floor-check.ts 1000`). Synthetic mirror pairs: a
+share *c* of games is decided by the deal (the favoured seat wins whoever sits there), the
+rest by the true Elo. 1,000 runs a cell, nominal α = β = 0.05, at most 4,000 games:
+
+| elo0/elo1 | c | minPairs, floor | false H1 at elo0 | false H0 at elo1 | stopped by 60 games (at elo0 / elo1) |
+|---|---|---|---|---|---|
+| 0/20 | 0.5 | old 8, 0.01 | 0.050 | 0.048 | 0.000 / 0.001 |
+| 0/20 | 0.5 | new 100, 0.05 | 0.049 | 0.047 | 0 / 0 |
+| 0/20 | 0.9 | old | 0.040 | **0.111** | 0 / 0 |
+| 0/20 | 0.9 | new | 0.001 | 0.002 | 0 / 0 |
+| 20/40 | 0.8 | old | 0.045 | **0.107** | 0.058 / 0.028 |
+| 20/40 | 0.8 | new | 0.031 | 0.027 | 0 / 0 |
+| 20/40 | 0.9 | old | 0.024 | **0.374** | 0.172 / 0.067 |
+| 20/40 | 0.9 | new | 0.004 | 0.026 | 0 / 0 |
+
+- Where most pairs are tied, the old settings rejected a true elo1 gain up to 37% of the
+  time, and ended 17% of the tests within 60 games.
+- With the new settings both error rates stay at or under nominal. The price is a
+  conservative test when pairs are mostly tied (α 0.001–0.03), and more games: about 730
+  instead of 270–590.
+- With few tied pairs (c 0.5) the two settings agree.
+
+**Change.**
+
+- `SPRT_DEFAULTS = { minPairs: 100, varFloor: 0.05 }`, and `SprtParams.varFloor`. The
+  `sprt` and `league` commands take `--min-pairs` and `--var-floor`; the old behaviour is
+  `--min-pairs 8 --var-floor 0.01`.
+- Every `sprt.jsonl` line records both. A line written before this has neither and meant 8
+  and 0.01.
+- `verdictWords` is the one phrasing:
+  - H1: "A is stronger than B by ≥ elo1";
+  - H0: "A is not shown to be ≥ elo1 better than B (the data fit ≤ elo0 better than it; a
+    gain under elo1 is not ruled out)";
+  - inconclusive: neither.
+- The CLI, the league's reject reason and the report's table use it (the report:
+  "H0: not shown ≥ elo1 better").
+- The non-inferiority test's own floor (0.02, D321) is unchanged.
+
+**Jobs.** J052 (gate 3) and the night-2 SPRTs are pinned to earlier commits and keep 8 /
+0.01. A job pinned to this commit or later gets the new defaults. For gate 3 that only makes
+a false PASS rarer; `gates.SPRT_RULE` does not name either knob. The review's further
+advice, to compare policy tweaks decision by decision through the grader instead of by
+game-level Elo, is not done here.
+
+## D374 — Gate 1's split report keys "a deck seen in training" on card multisets, and calls a lab log's split group what it is, a seed group; the gate rules do not change
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §2.1 and recommendation 4.*
+
+**2026-10-04**
+
+**Finding.** `train_eval.split_summary` counted "test rows from a deck seen in training" by
+deck NAME. A lab deck is named `cubelab <seed> A|B` (`tools/cubelab/run.ts`), and the queue
+numbers seeds per cube folder, so a lab log's "deck pair" is a seed number shared by every
+cube. Under the pair split no name can be in two splits, so the count was 0 by construction
+and could never catch a content duplicate. Night 1's 3,190 groups are about 3,190 seed
+numbers of about 12 logs each. That is not a leak: every group's games are distinct
+drafts, and the group bootstrap is coarser than intended, so it is conservative. D340's
+card-multiset reserved-deck filter is the real guard and is sound. The report line was a
+false reassurance.
+
+**Change** (reporting only; `gates.py`'s rules, the split itself and every number gate 1
+computes are unchanged):
+
+- `dataset.py` writes each game's decks by card multiset (`deckKeys`, `reserved.deck_key`)
+  into `games.jsonl`. `train_eval.deck_keys_of` reads them, or rebuilds them from the
+  recording's run folder for a dataset built before the field.
+- `testRowsWithATrainingDeck` now counts test rows whose game has a deck whose card
+  multiset is also in the training split. The old name count stays beside it as
+  `testRowsWithATrainingDeckName`, and `testRowsDeckUnknown` counts test rows with no deck
+  known, which are said, not counted as clean.
+- `groupKind` is `seed` when every group key is a pair of lab names, else `deck-name`.
+  The log line says "seed groups (lab deck names are `cubelab <seed> A|B`: one seed number
+  across cubes)" instead of "pairs".
+- `tools/ml/tests/test_split_summary.py` plants the same deck under another seed in the
+  test split. The content check counts its rows; the name check says 0.
+
+**Not done.** The leaf-scale fit's population (J056's 600 games may include gate-1 test
+games, review §2.3) is not yet printed in the gate report. It biases toward the baseline,
+so it is conservative.
+
+## D375 — The queue takes `--profile-mix` (off by default); a night's mix is in its plan, a re-run cannot change it, and every row of such a run carries its seats' AI
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §3 and recommendation 5.*
+
+**2026-10-04**
+
+**Context.** D347 gave `run` a per-draft seat mix (`--profile-mix`, seeded by the draft),
+but the overnight queue always played Default against Default. Every card rating and the
+evaluator are then a model of one pilot's habits.
+
+**Change** (`tools/cubelab/queue.ts`):
+
+- `queue plan|run --profile-mix Default:0.5,Reckless:0.25,Cautious:0.25` records the mix,
+  normalised, in `night-<N>.json` (`profileMix`) and passes it to every chunk. Without the
+  flag nothing changes, so existing jobs are unaffected.
+- A re-run of a night uses its plan's mix. A different flag is refused, the same way
+  `--play-explore` is (D358).
+- The mix is part of a key folder's lab version (D341, `run.ts` already compares
+  `profileMix`). So the first night with a mix needs `--allow-version-change` to append to
+  the existing folders, and `run.json` logs that.
+- The seat specs are checked against Forge's `.ai` files before a chunk starts.
+- Rows: `run.ts` already stamps each drafts.jsonl row of a mixed run with `profiles` (seat
+  A's and B's). `reserved.run_drafts` now keeps that field. `dataset.py` copies it into
+  `games.jsonl` as `profiles` (null for an unmixed run), so the evaluator's games can be
+  stratified by pilot.
+
+**Not done.** Profile as a feature or stratum in `matchup.py` and in the evaluator. The
+night-4 job (from night 4 on, the review says) must pass the flag and
+`--allow-version-change`. That is the job's decision; the code is ready.
+
+## D376 — J039's regression to 0.50 is colour confounding plus selection, not an accounting bug; the lab stamps every match with the pool's load; a calibration reader for two nothing-changed batches
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §2.7 and recommendation 1.*
+
+**2026-10-04**
+
+**Finding** (`docs/evidence/evolve-calibration.md`, with
+`docs/evidence/evolve-calibration-sim.py`).
+
+- Discovery and confirmation count a card's games the same way, through one code path
+  (`readBatch` → `batchStats` → `cardStats`). They read the played lab decks and decisive
+  games, use each batch's own mean and design effect, and drop the same exclusions.
+  Discovery's plain-draft subset is coin-chosen.
+- J039's colour and colour-pair win rates do not move between its six batches beyond
+  binomial noise (pairs χ² 32.6 on 30 df). Batch-level archetype drift is ruled out.
+- But `dominant-win`'s null is the batch's mean card win rate (about 0.50), and red decks
+  win 0.53–0.55 in every batch. The rule therefore flags red cards as a class.
+  - J039's eleven candidates are within +0.4 to +11.5 points of their own colour (z ≤
+    2.5).
+  - In confirmation they track their colour's rate in that batch. Generation 3's
+    confirmation drew red at 0.488.
+  - The candidates share decks, so their "1,650 confirmation games" are about 428 red-deck
+    games.
+- Simulated with J039's own matches and colour strengths and no card effect at all, the
+  rule finds 3.1 candidates a generation (8 or more in 15%), at a discovery rate of 0.57.
+  They fall to 0.535 in confirmation, and 7% confirm.
+- Under a true null the test is calibrated: 0.04 candidates a generation.
+
+**Verdict:** the winner's curse on a confounded null. The p-values are right for the
+question they answer. That question ("better than the average card") is the wrong one for
+a cut. J039's one cut (Fable of the Mirror-Breaker) is consistent with a colour effect.
+Recommended, not done here: a colour-adjusted null (the expected rate of the card's decks'
+colour pairs) or a paired swap test, under its own pre-registered decision. Until then, hold
+evolve cuts and D360's raises (review rec. 8).
+
+**Change.**
+
+- `engine.ts` `runPool` passes each result the pool's load when it finished: `PoolLoad`
+  (`busy` matches in progress, `alive` worker JVMs, `load1`, `cpus`). `run.ts` stamps it
+  into every drafts.jsonl row as `match.load`.
+  - Cost: one `os.loadavg()` per match.
+  - Forge's wall-clock AI (D311) can now be related to load. The games already carry
+    `ms`, `cpuMs` and `gameCpuMs`.
+  - Forge's own AI-evaluation timeouts are not counted: that needs a hook inside Forge's
+    AI, which is not small. The watchdog's game `timeout` is counted.
+- `tools/cubelab/calibrate.ts` reads two run folders that differ only in seeds. It reports:
+  - the between-batch dispersion of card, colour and colour-pair win rates against the
+    binomial (mean z², 1 = binomial) and the RMS ratio;
+  - each batch's deck-level design effect;
+  - evolve's own `discoveryStage` on each batch, with every candidate's rate in the other
+    batch and its colour-pair expectation;
+  - the load stamps.
+
+  `--first N` reads a discovery-sized slice, and `--flat` prints the runner's metrics.
+  J072's draft (two Omega batches of 8,000 drafts, verify-block seeds) is this reader's
+  job. It is not pushed to `pc-jobs` here.
