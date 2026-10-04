@@ -31,17 +31,10 @@ tick(){ f="$SRC/var/usage-$(date +%F).txt"; read -r a b c < "$f" 2>/dev/null || 
 while true; do
   if runner_busy; then
     idle=0; tick runner
-    # LIGHT-JOB RULE (2026-10-03 22:45, Justin: "wasted resources"): a runner job that uses under 2.5 cores (J049 used ONE of
-    # sixteen for hours) may share the machine with a 5-worker filler. A heavy job (>= 2.5 cores) still stops the filler at once.
-    lab_cores10   # sets c10 (no subshell: lab_prev must persist)
-    if [ "$c10" -ge 25 ]; then light=0
-      systemctl --user is-active --quiet forgecoach-filler-job && { systemctl --user stop forgecoach-filler-job; say "runner job is heavy ($c10/10 cores): stopped filler"; }
-    else light=$((light + 1))
-      if [ "$light" -ge 10 ] && ! systemctl --user is-active --quiet forgecoach-filler-job; then
-        avail=$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)
-        [ "$avail" -ge 14 ] && start_filler 5 "runner job is light ($c10/10 cores for 5 min)"; light=0
-      fi
-    fi
+    # The light-job rule (filler beside a job under 2.5 cores) was REMOVED 2026-10-04 02:20: it judged by cores only, and when
+    # J049 moved from a 1.5 GB encode to a 10 GB one-core fit, filler + fit + the art job filled RAM and swap and the runner had to
+    # stop J049. The runner's own cores:/mem_gb: co-scheduling (mtg-table #44) replaces it.
+    systemctl --user is-active --quiet forgecoach-filler-job && { systemctl --user stop forgecoach-filler-job; say "runner has work: stopped filler"; }
   elif hand_busy; then idle=0; tick filler
   else
     idle=$((idle + 1)); tick idle

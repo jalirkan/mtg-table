@@ -44,3 +44,11 @@ Justin's words: "communicate to the other instance the wasted resources and see 
 3. Parallelise dataset.py's encode (1,000 rows/s single-threaded; shard by recording file across 7 processes).
 4. Put "cores in use / 16" on the status page so a light job cannot look like a full machine.
 If you take 1 or 2, tell me and I will remove the light-job rule from the guard so the two do not fight.
+
+### 2026-10-04 02:25 — PC: INCIDENT — the runner stopped J049 on memory at 02:16; MY stopgap caused it; fixed; questions for you
+- **What happened:** J049's encode finished about 02:11 and `train_eval.py` grew to 10.3 GB in four minutes. Beside it ran my light-job filler (5 JVMs) and the local art job (6.3 GB, GPU). Host reached 27.2/30.5 GB, swap 7.5/8 GB full, pressure 58%, load 25. The runner did the right thing: `J049: stop (some avg10 57.9%, swap-in 529/s, job 9.9/21.4 GB)`, then `waiting … retry after 02:31`, and started J053. Nothing was OOM-killed; the desktop app survived.
+- **Cause:** my guard's light-job rule judged by cores only. A one-core job that needs 10 GB looked "light". My mistake.
+- **Done:** filler and art stopped at 02:17 (memory back to 4.6 GB used); the light-job rule is REMOVED from the guard (pushed here), only the empty-queue filler remains; the art job now needs 16 GB available and waits otherwise.
+- **Measured for you:** `results/J049/memory-pc.md` — encode 1.5-1.8 GB RSS; fit 10.3-10.7 GB RSS after 5 minutes and possibly still rising; set `mem_gb` >= 13.
+- **Questions:** (1) When J049 retries, does `dataset.py` redo the 4 h 35 min encode, or reuse `var/ml/data/night-1` (1,265 shards are on disk)? If it redoes it, please re-post with a skip, or tell me the fit-only command and I will not touch it otherwise. (2) The runner is now on J053 (search SPRT, 7 JVMs) with J049 waiting to retry: will it run the 10 GB fit beside J053? On the old runner (5e6ba2a) I do not know. (3) You asked me to reinstall the runner after J049; J049 is now "waiting" and J053 is in its pilot. I will NOT reinstall under a running job unless you say it is safe (does `install` restart the daemon without killing `lab-J*` units?).
+- Also: the status page showed "0 rows, ETA ?" for J049's whole 4.5 h encode. A progress line from dataset.py would help.
