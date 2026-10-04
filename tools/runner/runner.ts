@@ -58,7 +58,7 @@ import { evaluate, parse as parseExpr, type Verdict } from './expr.ts';
 import { sanitiseLadder } from './ladder.ts';
 import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from './jobfile.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
-import { budget as budgetOf, DEFAULT_BUDGET, DEFAULT_PEAK_GB, PILOT_MAX_WORKERS, sizeWorkers, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
+import { budget as budgetOf, DEFAULT_BUDGET, DEFAULT_PEAK_GB, PILOT_MAX_WORKERS, sizeWorkers, systemdRunLine, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
 import { formatStatus, isOurs, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
 import { fit, headlineOf, idleReasonOf, isoLocal, liveOf, REASONS, sanitise, type FinishedItem, type PressureEvent, type RunningJob, type StatusDoc } from './statusjson.ts';
 import { GIT_ENV, LIVE_STATES, type HostSample, type Sys } from './sys.ts';
@@ -607,10 +607,40 @@ export class Runner {
       env: {
         JOBS: String(this.stepWorkers(r, step)), LAB_WORKERS: String(this.stepWorkers(r, step)), LAB_CONTROL: this.controlFile(r.id), LAB_JOB: r.id, LAB_STEP: step.name,
         MTG_TABLE: this.checkoutOf(r, 'mtg-table'), FORGECOACH: this.checkoutOf(r, 'ForgeCoach'),
-        // A declared width (a block's or the job's cores:) is kept: numpy's BLAS and OpenMP get that many threads, not all 16.
-        ...threadCaps(step.cores ?? job.cores),
+        // The step's width (the cores the runner reserved for it) caps BLAS / OpenMP / numexpr pools: numpy at
+        // width 1 gets one thread, not all 16 (J060).  Java ignores these; a block's own export wins.
+        ...threadCaps(this.stepWidth(r, step, job)),
       },
     };
+  }
+
+  /**
+   * `tools/runner.sh plan`: for each waiting job (or `only`), the scripts, the thread cap and the
+   * systemd-run line its next start would use.  Starts nothing.  Returns the exit code.
+   */
+  plan(only: string | null, print: (line: string) => void): number {
+    this.readQueue(true);
+    const st = this.statuses();
+    const jobs = only ? this.jobs.filter((j) => j.id === only) : this.jobs;
+    if (!jobs.length) { print(only ? `no job ${only} on origin/pc-jobs` : 'no jobs on origin/pc-jobs'); return 1; }
+    const m = this.sys.machine();
+    print(`machine: ${m.memTotalGb.toFixed(1)} GB, ${m.physicalCores} cores / ${m.threads} threads; lab budget ${JSON.stringify(budgetOf(m, this.cfg.budget))}`);
+    for (const job of jobs) {
+      const s = st.get(job.id);
+      if (!only && s && s.state !== 'waiting') continue;
+      print(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
+      if (job.errors.length) { print(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
+      const run: JobRun = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps: this.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: this.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
+      for (const step of run.steps) {
+        if (step.kind !== 'shell') { print(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
+        const u = this.unitSpec(run, job, step);
+        print(`\n-- ${step.name} (${u.script}):\n${this.stepScript(run, job, step).split('\n').map((l) => `   | ${l}`).join('\n')}`);
+        print(`   threads: ${u.env.OMP_NUM_THREADS} (the step's width; ${THREAD_CAP_VARS.join(', ')}; an export in the block wins)`);
+        print(`[dry-run] ${systemdRunLine(u)}`);
+      }
+      if (job.aborts.length) print(`\n-- abort (every minute): ${job.aborts.join(' | ')}`);
+    }
+    return 0;
   }
 
   /** Why a step may not start now (the runner is paused, Justin is at the table, the backoff paused the job), or null. */
@@ -653,7 +683,7 @@ export class Runner {
     const rc = this.rcFile(r, step);
     fs.rmSync(rc, { force: true });
     fs.writeFileSync(`${u.script}.wrap`, `#!/usr/bin/env bash\nbash ${q(u.script)}\nrc=$?\nprintf '%s\\n' "$rc" > ${q(`${rc}.part`)} && mv ${q(`${rc}.part`)} ${q(rc)}\nexit "$rc"\n`);
-    fs.appendFileSync(u.log, `==== ${r.id} ${step.name} started ${isoLocal(this.sys.now())} in unit ${u.unit}, ${this.stepWorkers(r, step)} worker(s), ${this.holding(r).cores} core(s)${r.lane ? `, lane ${r.lane + 1}` : ''}\n`);
+    fs.appendFileSync(u.log, `==== ${r.id} ${step.name} started ${isoLocal(this.sys.now())} in unit ${u.unit}, ${this.stepWorkers(r, step)} worker(s), ${this.holding(r).cores} core(s), BLAS/OpenMP threads ${u.env.OMP_NUM_THREADS}${r.lane ? `, lane ${r.lane + 1}` : ''}\n`);
     const res = this.sys.startUnit(u);
     if (res.code !== 0) {
       this.finish(r, 'failed', `systemd-run failed for ${u.unit}: ${(res.stderr || res.stdout).trim().split('\n').at(-1)}`);
@@ -706,15 +736,23 @@ export class Runner {
    */
   holding(r: JobRun): Holding {
     const job = this.jobOf(r);
-    const mb = { cores: Math.max(1, this.cfg.cores ?? this.sys.machine().physicalCores), defaultWidth: Math.max(1, this.sys.machine().physicalCores - 1) };
     const step = r.steps[r.stepIndex];
-    let cores: number;
-    if (step?.cores) cores = Math.min(step.cores, mb.cores);
-    else if (job?.cores) cores = Math.min(job.cores, mb.cores);
-    else if (r.sizing) cores = Math.min(r.sizing.workers, mb.cores);
-    else cores = job ? widthOf(job, mb) : mb.cores;
+    const cores = this.stepWidth(r, step, job);
     const peak = r.sizing?.peakGb ?? Math.max(r.peakRssGb ?? 0, job?.memPerWorkerGb ?? DEFAULT_PEAK_GB);
     return { cores, memGb: Math.round((step?.memGb ?? cores * peak) * 10) / 10 };
+  }
+
+  /**
+   * A step's width: the cores the runner reserves for it beside other jobs (`holding`) and the thread
+   * cap its unit gets — the block's `cores:`, else the job's, else its sized workers, else the width it
+   * was admitted at (max_workers, else physical cores − 1; light 1); at most the core budget.
+   */
+  stepWidth(r: JobRun, step: Step | undefined, job: JobFile | null = this.jobOf(r)): number {
+    const mb = { cores: Math.max(1, this.cfg.cores ?? this.sys.machine().physicalCores), defaultWidth: Math.max(1, this.sys.machine().physicalCores - 1) };
+    if (step?.cores) return Math.min(step.cores, mb.cores);
+    if (job?.cores) return Math.min(job.cores, mb.cores);
+    if (r.sizing) return Math.min(r.sizing.workers, mb.cores);
+    return job ? widthOf(job, mb) : mb.cores;
   }
 
   size(r: JobRun, job: JobFile): void {
@@ -1419,11 +1457,13 @@ ${keep.trimEnd()}
   }
 }
 
-/** OMP / OpenBLAS / MKL thread counts for a declared width; nothing when the width is not declared. */
-export function threadCaps(cores: number | null | undefined): Record<string, string> {
-  if (!cores) return {};
-  const n = String(cores);
-  return { OMP_NUM_THREADS: n, OPENBLAS_NUM_THREADS: n, MKL_NUM_THREADS: n };
+/** The thread-pool variables the runner sets in every step's unit to the step's width. */
+export const THREAD_CAP_VARS = ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS'] as const;
+
+/** Each of THREAD_CAP_VARS set to a step's width (at least 1). */
+export function threadCaps(width: number): Record<string, string> {
+  const n = String(Math.max(1, Math.floor(width) || 1));
+  return Object.fromEntries(THREAD_CAP_VARS.map((k) => [k, n]));
 }
 
 export function verdictText(vs: Verdict[]): string {
