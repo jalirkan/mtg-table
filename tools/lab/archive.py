@@ -636,7 +636,7 @@ def cmd_cold(a) -> int:
     except Refused as e:
         print(f"archive: REFUSED: {e}", file=sys.stderr)
         return EXIT_REFUSED
-    units = C.night_units(root, scope, a.night)
+    units = C.night_units(root, scope, a.night, a.quarantine)
     vers: set[str] = set()
     for key, seeds in C.night_seeds(root, a.night).items():
         d = os.path.join(root, key, "drafts.jsonl")
@@ -644,7 +644,7 @@ def cmd_cold(a) -> int:
             vers |= C.night_lines(d, seeds)[1]
     released = set(a.release_hold)
     tests = {
-        "redaction": lambda: C.check_redaction(root, a.night),
+        "redaction": lambda: C.check_redaction(root, a.night, a.quarantine),
         "warehouse": lambda: C.check_warehouse(root, a.night, a.warehouse),
         "encoded": lambda: C.check_encoded(units, a.dataset, a.min_encoded),
         "holds": lambda: C.check_holds(a.night, a.holds or C.HOLDS, a.results_dir, released,
@@ -742,6 +742,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     c = sub.add_parser("cold", help="a finished night to the cold drive: one tar.zst a key folder (tools/lab/cold.py, D378)")
     c.add_argument("--root", default="var/cubelab/queue")
     c.add_argument("--night", type=int, required=True)
+    c.add_argument("--quarantine", help="the night's redaction-pass folder (default <root>-quarantine-n<N>; "
+                   "night 1's is <root>-quarantine)")
     c.add_argument("--archive-root", help="the cold archive (else $LAB_ARCHIVE_ROOT, else config.json labArchiveRoot)")
     c.add_argument("--mirror", help="a second copy (else $LAB_ARCHIVE_MIRROR, else config.json labArchiveMirror)")
     c.add_argument("--level", type=int, default=19)

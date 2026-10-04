@@ -226,7 +226,7 @@ class Cold(unittest.TestCase):
             ntfs_open(self.drive)(os.path.join(self.drive, "bridge__a:b..tar.zst"), os.O_WRONLY | os.O_CREAT)
 
     def test_refusals_name_each_check(self):
-        os.unlink(os.path.join(self.n["q"], "failed.txt"))
+        shutil.rmtree(self.n["q"])                                        # the redaction pass never ran
         with open(os.path.join(self.n["wh"], "_state.json")) as f:
             st = json.load(f)
         for v in st["files"].values():
@@ -255,6 +255,38 @@ class Cold(unittest.TestCase):
         self.assertEqual(man["skippedChecks"], ["encoded", "redaction", "warehouse"])
         self.assertTrue(man["checks"]["holds"].startswith("ok"))
         self.assertEqual(self.hot_now(), set(self.n["hot"]))            # --keep-hot
+
+    def test_night_1_quarantine_has_no_suffix_and_its_failed_txt_is_not_trusted(self):
+        # night 1's folder is <root>-quarantine (J020/J029), and its failed.txt was overwritten by the second run
+        legacy = self.n["root"] + "-quarantine"
+        os.rename(self.n["q"], legacy)
+        extra = os.path.join(legacy, "normal/synergy/games/7")
+        os.makedirs(extra)
+        shutil.copy(LOGS[0], os.path.join(extra, "g4-seat0.jsonl.gz"))   # quarantined by the first run, unlisted now
+        with open(os.path.join(legacy, "failed.txt"), "w") as f:
+            f.write("")
+        rc = self.run_cli(self.argv())                                   # the -n1 default: refused, with the hint
+        self.assertEqual(rc, A.EXIT_REFUSED)
+        self.assertIn("(night 1's folder has no -n suffix): name it with --quarantine", self.out.getvalue())
+        self.assertEqual(self.hot_now(), set(self.n["hot"]))
+        want = {os.path.relpath(os.path.join(dp, n), legacy): sha(os.path.join(dp, n))
+                for dp, _dn, fn in os.walk(legacy) for n in fn}
+        rc = self.run_cli(self.argv("--quarantine", legacy))
+        self.assertEqual(rc, 0, self.out.getvalue())
+        self.assertIn("2 quarantined recording(s), counted by walking the folder", self.out.getvalue())
+        self.assertFalse(os.path.exists(legacy))
+        man = C.load_manifest(self.n["root"], 1)
+        q = next(u for u in man["units"] if u["kind"] == "quarantine")
+        self.assertEqual((q["key"], q["members"]), ("queue-quarantine", len(want)))   # the unlisted recording too
+        with contextlib.redirect_stdout(self.out):
+            self.assertEqual(A.main(["restore-night", "--night", "1", "--root", self.n["root"], "--unit", "quarantine"]), 0)
+        self.assertEqual({p: sha(os.path.join(legacy, p)) for p in want}, want)
+
+    def test_a_missing_failed_txt_does_not_refuse_a_quarantine_folder(self):
+        os.unlink(os.path.join(self.n["q"], "failed.txt"))
+        rc = self.run_cli(self.argv("--keep-hot"))
+        self.assertEqual(rc, 0, self.out.getvalue())
+        self.assertIn("1 quarantined recording(s)", self.out.getvalue())
 
     def test_an_open_night_is_refused(self):
         with open(os.path.join(self.n["root"], "normal/synergy/drafts.jsonl"), "w") as f:

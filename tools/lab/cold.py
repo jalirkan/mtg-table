@@ -28,8 +28,9 @@ DECOMPRESSED as `<key>/games/<seed>/<name>.jsonl`, so one zstd stream (level 19,
 window, long-distance matching) sees every game of the folder at once: on the six
 committed lab recordings that is 5.1x smaller than their gzip, against 3.5x for one zstd
 file each (D370).  Anything else -- a cut-short gzip, a stray file -- is stored byte for
-byte.  The `quarantine` unit is the night's redaction-pass folder
-(`<root>-quarantine-n<N>/`, J061), byte for byte: it is evidence.  A members line is
+byte.  The `quarantine` unit is the night's redaction-pass folder (`--quarantine DIR`, else
+`<root>-quarantine-n<N>/`; night 1's is `<root>-quarantine/`, which must be named), byte for
+byte: it is evidence.  A members line is
 {member, path (where it lived, relative to the unit's base), enc (gz | zst | asis), bytes,
 sha256 (the file as it was), rawBytes, rawSha256 (the member), mtime}.
 
@@ -44,7 +45,8 @@ command again (a lock keeps two runs apart); `--keep-hot` archives and deletes n
 REFUSED (exit 3, nothing written) unless every check holds: the night is closed (archive.py
 `night`'s rules: a plan, in the ledger, no live `queue run --night N`, nothing written in
 `--quiet-minutes`, every planned draft finished unless --allow-incomplete); `redaction` --
-the night's redaction pass ran (`<root>-quarantine-n<N>/failed.txt` exists); `warehouse` --
+the night's redaction pass ran (its quarantine folder exists; the recordings in it are counted
+by walking it, never from failed.txt, which night 1's second run overwrote); `warehouse` --
 the warehouse ingested every line of the night (`--warehouse`'s _state.json offsets cover
 them); `encoded` -- a dataset (`--dataset DIR`, repeatable; its games.jsonl) holds at least
 `--min-encoded` (90%) of the night's recordings; `holds` -- no hold in
@@ -244,11 +246,19 @@ def _files_under(d: str) -> list[str]:
     return out
 
 
-def quarantine_dir(root: str, night: int) -> str:
-    return os.path.abspath(root).rstrip(os.sep) + f"-quarantine-n{night}"
+def quarantine_dir(root: str, night: int, override: Optional[str] = None) -> str:
+    """The night's redaction-pass folder: `--quarantine`, else `<root>-quarantine-n<N>` (J059, J061).
+    Night 1's is `<root>-quarantine` with no suffix (J020/J029), so it must be named."""
+    return os.path.abspath(override) if override else os.path.abspath(root).rstrip(os.sep) + f"-quarantine-n{night}"
 
 
-def night_units(root: str, scope, night: int) -> list[Unit]:
+def quarantined_recordings(qdir: str) -> list[str]:
+    """The recordings under a quarantine folder, found by walking it (as tools/requarantine.mjs does, D371):
+    failed.txt is not a reliable list -- night 1's was overwritten by its second run (J029)."""
+    return sorted(p for p in _files_under(qdir) if p.endswith((".jsonl.gz", ".jsonl.zst")))
+
+
+def night_units(root: str, scope, night: int, quarantine: Optional[str] = None) -> list[Unit]:
     """A unit per key folder (the scope's finished seed folders under it) and the quarantine folder."""
     by_key: dict[str, list[str]] = {}
     for d in scope.seed_dirs:
@@ -258,7 +268,7 @@ def night_units(root: str, scope, night: int) -> list[Unit]:
             by_key[key] += [os.path.join(d, n) for n in os.listdir(d)
                             if os.path.isfile(os.path.join(d, n)) and not n.endswith(".tmp")]
     units = [Unit("recordings", k, root, v) for k, v in sorted(by_key.items())]
-    q = quarantine_dir(root, night)
+    q = quarantine_dir(root, night, quarantine)
     if os.path.isdir(q):
         units.append(Unit("quarantine", os.path.basename(q), os.path.dirname(q), _files_under(q)))
     names = [u.name for u in units]
@@ -302,16 +312,20 @@ def night_seeds(root: str, night: int) -> dict[str, set[int]]:
 REC_RE = re.compile(r"((?:normal|bridge)/[^/]+/games/\d+/[^/]+?\.jsonl)(?:\.gz|\.zst)?$")
 
 
-def check_redaction(root: str, night: int) -> str:
-    f = os.path.join(quarantine_dir(root, night), "failed.txt")
+def check_redaction(root: str, night: int, quarantine: Optional[str] = None) -> str:
+    """The night's redaction pass ran: its quarantine folder exists (the pass makes it before checking anything).
+    What it holds is counted by walking it; failed.txt is not read."""
+    q = quarantine_dir(root, night, quarantine)
     man = load_manifest(root, night) or {}
-    if not os.path.isfile(f) and any(u.get("kind") == "quarantine" for u in man.get("units") or []):
+    if not os.path.isdir(q) and any(u.get("kind") == "quarantine" for u in man.get("units") or []):
         return "the quarantine folder is already archived"
-    if not os.path.isfile(f):
-        raise AssertionError(f"no {f}: the night's redaction pass has not run")
-    with open(f, encoding="utf-8", errors="replace") as fh:
-        n = sum(1 for line in fh if line.strip())
-    return f"{f}: {n} quarantined"
+    if not os.path.isdir(q):
+        legacy = os.path.abspath(root).rstrip(os.sep) + "-quarantine"
+        hint = (f"; {legacy} exists (night 1's folder has no -n suffix): name it with --quarantine"
+                if not quarantine and os.path.isdir(legacy) else "")
+        raise AssertionError(f"no {q}: the night's redaction pass has not run{hint}")
+    n = len(quarantined_recordings(q))
+    return f"{q}: {n} quarantined recording(s), counted by walking the folder"
 
 
 def warehouse_rel(path: str) -> str:
