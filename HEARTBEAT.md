@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-04T03:53:51-04:00
+- time: 2026-10-04T03:58:33-04:00
 - runner: d68f5ec, up since 2026-10-04T02:43:48-04:00
-- running: J058 commands 1/1, 496/2400 games, 575/h, ETA 2026-10-04T07:12:32-04:00, 7 worker(s), 7 core(s)
+- running: J054 prepare, 0/1500 games, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.55; memory 15.1/30.5 GB, swap 3291 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J050, J051, J052, J054, J055
+- load: 2.26; memory 5.2/30.5 GB, swap 3291 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J050, J051, J052, J055
 - waiting: nothing
-- last finished: J056 done at 2026-10-04T02:45:26-04:00: fit.scale 351.6 · fit.scaleLo 312.409 · fit.scaleHi 409.794 · fit.games 600 · b1500.median_halfwidth 0.003 · b3000.median_halfwidth 0.002 · b1500.retired 4 · b3000.retired 7 · b3000.p90_wall_s 3.038
+- last finished: J058 done at 2026-10-04T03:58:32-04:00: sprt_games 552 · all.games 552 · all.errors 0 · all.timeouts 5
 
 ## Messages
 
