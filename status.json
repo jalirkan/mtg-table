@@ -1,23 +1,80 @@
 {
  "schema": 1,
- "updated": "2026-10-04T15:20:29-04:00",
- "heartbeat": "2026-10-04T15:20:29-04:00",
+ "updated": "2026-10-04T15:20:51-04:00",
+ "heartbeat": "2026-10-04T15:20:51-04:00",
  "paused": false,
- "state": "idle",
- "idleSince": "2026-10-04T15:06:34-04:00",
- "idleReason": "memory backoff",
+ "state": "running",
+ "idleSince": null,
+ "idleReason": null,
  "host": {
-  "load1": 10.07,
-  "memUsedGb": 13.6,
+  "load1": 9.3,
+  "memUsedGb": 13.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 2072,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 0,
+  "coresUsed": 7,
   "coresTotal": 8
  },
- "running": [],
+ "running": [
+  {
+   "publicTitle": "Regret gate truth grading",
+   "publicEst": "~one night",
+   "id": "J050",
+   "title": "Evaluator gate 2: the decision set and its full-game truth tables (D354), resumable",
+   "cpu": "heavy",
+   "phase": "prepare",
+   "started": "2026-10-04T15:20:51-04:00",
+   "elapsed": 0,
+   "done": 54,
+   "total": 300,
+   "unit": "lines",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": "2026-10-04T15:20:51-04:00",
+   "memGb": null,
+   "live": {
+    "set.lines": 291,
+    "truth.answered": 54,
+    "truth.ok": 54,
+    "truth.error": 0,
+    "truth.playouts": 30903,
+    "elapsed_s": 0,
+    "peak_worker_rss_gb": 1.64,
+    "pressure_events": 0,
+    "screen.answered": 390,
+    "screen.error": 0,
+    "screen.ok": 344,
+    "screen.playouts": 5649,
+    "screen.refused": 0,
+    "screen.requests": 390,
+    "screen.trivial": 6,
+    "screen.unsupported": 40,
+    "truth.refused": 0,
+    "truth.requests": 291,
+    "truth.trivial": 0,
+    "truth.unsupported": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "set.lines",
+    "truth.answered",
+    "truth.ok",
+    "truth.error",
+    "truth.playouts"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J050-prepare"
+  }
+ ],
  "queue": [
   {
    "publicTitle": "Regret gate scoring",
@@ -76,17 +133,7 @@
    "est": "~30-60 min on 2 cores (about 1,500 recordings; the checker reads one gzipped log in about a second; the old checker runs too, for the \"before\" kinds)"
   }
  ],
- "waiting": [
-  {
-   "publicTitle": "Regret gate truth grading",
-   "publicEst": "~one night",
-   "id": "J050",
-   "title": "Evaluator gate 2: the decision set and its full-game truth tables (D354), resumable",
-   "reason": "stopped for memory; will retry",
-   "est": "one night: ~300 decisions x ~5 options x 200 rounds x 0.6 (racing) = ~180k full-game playouts at 0.5-1.0 s = 25-50 core-hours, 4-7 h on 7 JVMs; the screen about 10 min",
-   "detail": "memory: step run1 was killed without an exit code (oomd or the OOM killer?); retry after 2026-10-04T15:20:47-04:00"
-  }
- ],
+ "waiting": [],
  "finished": [
   {
    "publicTitle": "Lab warehouse build",
