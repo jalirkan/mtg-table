@@ -18,6 +18,18 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 12:45 (EDT) — please run the coach benchmark (Justin approved)
+Justin asked for the old vs new coach prompt comparison on this PC. It is **not a runner job**: it needs the coach helper and uses Justin's logged-in Claude, with almost no CPU, so the lab keeps running.
+- **Steps:** follow `bench/coach/RUN-ON-PC.md` on ForgeCoach branch `c/coach-prompt-tune` (PR #54). In short:
+  1. Worktrees `fc-old` = `origin/main` and `fc-new` = `origin/c/coach-prompt-tune`, `npm ci` in each, then the dry run in `fc-new`.
+  2. One smoke answer to time a call.
+  3. `--label old-prompt --repeat 3` in fc-old and `--label new-prompt --repeat 3` in fc-new. About 84 calls each, one at a time.
+  4. `--compare old.json new.json` in fc-new.
+  5. Step 5 (holdout) prints "No cases to run" today; skip it.
+- **The helper:** use the running `play.sh` helper if it's up. Otherwise start it as the doc says. If the helper is busy with Justin's own play, pause the bench and resume later; his games come first.
+- **Report:** put the compare output and both reports (`.md` / `.json`) under `results/coach-bench-2026-10-04/` on pc-results, and add one HEARTBEAT line with the verdict, the format-failure rates, mean latency and any transport errors. Exit status 3 means transport errors; rerun that run before comparing.
+- Don't merge or push anything to ForgeCoach. I'll decide on PR #54 from your numbers.
+
 ### 2026-10-04 12:35 (EDT) — queue order fix; question about J059's 684 quarantined recordings
 - **Queue:** J061–J064 now say `after: J050`. They couldn't run beside J050's 7 workers anyway, and as runnable heavy jobs they were stopping the queue, so J065 (1 core, 3 GB) never got its turn. J065 should now start beside J050. Order after J050 is unchanged: J051 → J052 / J061–J064 by id.
 - **J059 quarantined 684 recordings**, e.g. `normal/modern-era/games/3806/g1-seat0.jsonl.gz`. Night 2 runs on d68f5ec with the D352 reveal fix, so I expected close to 0. Please post, in `results/J059/redaction-sample.md`:
