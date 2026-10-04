@@ -57,7 +57,8 @@ const say = (o) => process.stdout.write(JSON.stringify(o) + '\\n');
 if (kind === 'refused') { say({ ready: false, error: 'the model reads live-unsafe features' }); process.exit(2); }
 if (kind === 'never') { setInterval(() => {}, 1000); }
 else {
-  say({ ready: true, model: 'abcdef012345', schema: '0123456789abcdef', nFeatures: 10, boardColumns: 3, vocab: 4 });
+  const ens = kind === 'ens';
+  say({ ready: true, model: 'abcdef012345', schema: '0123456789abcdef', nFeatures: 10, boardColumns: 3, vocab: 4, ...(ens ? { n: 3, explain: true } : {}) });
   let buf = '';
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', (d) => {
@@ -69,7 +70,9 @@ else {
       if (kind === 'dies') process.exit(3);
       if (kind === 'mute') continue;
       if (q.state.players.length === 0) { say({ id: q.id, ok: false, status: 400, error: 'seat 0 is not a player of this state' }); continue; }
-      say({ id: q.id, ok: true, p: 0.25 + 0.5 * q.seat, turn: q.state.turn ?? 0, decision: q.history.length > 0, featureHash: '00000000000000aa' });
+      if (!ens && 'explain' in q) { say({ id: q.id, ok: false, status: 500, error: 'an old evaluator was sent explain' }); continue; }
+      const extra = ens ? { n: 3, sd: 0.04, ...(q.explain ? { explain: { method: 'x', baseline: { p: 0.5 }, buckets: [{ key: 'me.board', label: 'your board', pts: -9, logit: -0.4 }] } } : {}) } : {};
+      say({ id: q.id, ok: true, p: 0.25 + 0.5 * q.seat, turn: q.state.turn ?? 0, decision: q.history.length > 0, featureHash: '00000000000000aa', ...extra });
     }
   });
 }
@@ -114,6 +117,8 @@ check(!validateEval({ seat: -1, state: STATE }).req && !validateEval({ seat: 0.5
 check(!validateEval({ seat: 0, state: {} }).req && !validateEval({ seat: 0, state: [] }).req, 'validate: state must carry players');
 check(!validateEval({ seat: 0, state: STATE, history: {} }).req && !validateEval({ seat: 0, state: STATE, history: [{ events: 1 }] }).req
   && !validateEval({ seat: 0, state: STATE, history: [{ events: [], stack: 2 }] }).req, 'validate: history must be a list of {events, stack}');
+check(validateEval({ seat: 0, state: STATE, explain: true }).req?.explain === true && !('explain' in validateEval({ seat: 0, state: STATE, explain: false }).req)
+  && /explain/.test(validateEval({ seat: 0, state: STATE, explain: 1 }).problem ?? ''), 'validate (D368): explain is a boolean, passed on only when true');
 check(validateEval({ seat: 1, state: STATE }).req?.history.length === 0 && !!validateEval({ seat: 0, state: STATE, history: [{ events: [], stack: null }] }).req, 'validate: history may be absent, and a stack null');
 
 {
@@ -129,13 +134,31 @@ check(validateEval({ seat: 1, state: STATE }).req?.history.length === 0 && !!val
   check(await p === true, 'the fake model loads');
   const hl = r.health();
   check(hl.eval === 1 && hl.evalModel === 'abcdef012345' && hl.evalSchema === '0123456789abcdef', 'ready: eval 1 with the model sha and schema');
+  check(hl.evalEnsemble === 1 && hl.evalExplain === 0, 'an evaluator that says nothing of n or explain: evalEnsemble 1, evalExplain 0');
   const a = await r.post({ seat: 1, state: STATE, history: [{ events: [{ kind: 'turn' }], stack: [] }] });
   check(a.status === 200 && a.body.ok === true && a.body.p === 0.75 && a.body.turn === 3 && a.body.decision === true
     && a.body.model === 'abcdef012345' && a.body.schema === '0123456789abcdef' && typeof a.body.ms === 'number', 'POST: the answer with p, turn, decision, model, schema, ms');
+  check(a.body.n === 1 && !('sd' in a.body) && !('explain' in a.body), 'one model: n 1, no sd, no explain');
   const many = await Promise.all([0, 1, 0, 1].map((seat) => r.post({ seat, state: STATE })));
   check(many.map((x) => x.body.p).join() === '0.25,0.75,0.25,0.75', 'answers in flight together come back to their own requests');
   const bad = await r.post({ seat: 0, state: { players: [] } });
   check(bad.status === 400 && /not a player/.test(bad.body.message), "the evaluator's 400 is passed on");
+  r.close();
+}
+{
+  const r = fakeRunner('ens');
+  await r.start();
+  const hl = r.health();
+  check(hl.evalEnsemble === 3 && hl.evalExplain === 1, 'D368: an ensemble that explains: evalEnsemble 3, evalExplain 1');
+  const a = await r.post({ seat: 0, state: STATE });
+  check(a.status === 200 && a.body.n === 3 && a.body.sd === 0.04 && !('explain' in a.body), 'D368: the answer carries n and sd');
+  const e = await r.post({ seat: 0, state: STATE, explain: true });
+  check(e.status === 200 && e.body.explain?.buckets?.[0]?.label === 'your board', 'D368: explain: true passes the attributions on');
+  const { h, port } = await helper(r);
+  const q = await http(port, 'POST', '/eval?explain=1', { seat: 0, state: STATE });
+  check(q.status === 200 && Array.isArray(q.json.explain?.buckets), 'D368 route: ?explain=1 is explain: true');
+  check((await http(port, 'POST', '/eval', { seat: 0, state: STATE, explain: 'yes' })).status === 400, 'D368 route: explain that is not a boolean is 400');
+  h.close();
   r.close();
 }
 {
@@ -255,6 +278,42 @@ if (!numpy) {
   check(await t.start() === false && /encoder changed/.test(t.health().evalError), 'a model whose schema id is not the encoder\'s: eval 0, refused');
   const e = createEvalRunner({ repoRoot: ROOT, model: MODEL, python: 'python3', expectSchema: '82815752c2f5e346' });
   check(await e.start() === false && /not the expected/.test(e.health().evalError), '--eval-schema with another id: eval 0, refused');
+
+  // D368: an ensemble of the parity model and two copies with another output layer.
+  const paths = [MODEL];
+  for (const [i, sc] of [[1, 1.3], [2, 0.7]]) {
+    const v = JSON.parse(readFileSync(MODEL, 'utf8'));
+    const last = v.layers[v.layers.length - 1];
+    last.W = last.W.map((row) => (Array.isArray(row) ? row.map((w) => w * sc) : row * sc));
+    last.b = last.b.map((b) => b + 0.1 * i);
+    const p = join(DIR, `member-${i}.json`);
+    writeFileSync(p, JSON.stringify(v));
+    paths.push(p);
+  }
+  const en = createEvalRunner({ repoRoot: ROOT, model: paths.join(','), python: 'python3', readyTimeoutMs: 60_000 });
+  check(await en.start() === true && en.health().evalEnsemble === 3 && en.health().evalExplain === 1, 'D368: three models of one schema load as an ensemble; /health says evalEnsemble 3, evalExplain 1');
+  const one = createEvalRunner({ repoRoot: ROOT, model: MODEL, python: 'python3', readyTimeoutMs: 60_000 });
+  await one.start();
+  const reqs = requestsOf('fixtures/games/g1.jsonl');
+  const lg = golden.logs.find((x) => x.file === 'fixtures/games/g1.jsonl' && x.game === 0);
+  let worstSum = 0;
+  let sdOk = true;
+  let n2 = 0;
+  for (const w of lg.rows.filter((_, i) => i % 10 === 0)) {
+    const a = await en.post({ ...reqs.get(w.seq), explain: true });
+    const s = await one.post({ ...reqs.get(w.seq), explain: true });
+    n2++;
+    if (a.status !== 200 || s.status !== 200 || a.body.n !== 3 || !(a.body.sd > 0) || s.body.n !== 1 || 'sd' in s.body
+      || Math.abs(s.body.p - w.p) > 1e-9) sdOk = false;
+    for (const b of [a.body, s.body]) {
+      const sum = b.explain.buckets.reduce((t, x) => t + x.pts, 0);
+      worstSum = Math.max(worstSum, Math.abs(sum - 100 * (b.p - b.explain.baseline.p)));
+    }
+  }
+  check(n2 > 5 && sdOk, `D368: ${n2} rows: the ensemble answers n 3 and an sd; the single model still answers the golden P(win), n 1, no sd`);
+  check(worstSum < 1e-6, `D368: the attributions' points sum to 100 (p - baseline) on every answer (worst ${worstSum.toExponential(1)})`);
+  en.close();
+  one.close();
 }
 
 rmSync(DIR, { recursive: true, force: true });

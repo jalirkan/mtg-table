@@ -62,7 +62,9 @@
 #   ./scripts/play.sh --engine-only --no-match   # the coach helper without /match (D303)
 #   ./scripts/play.sh --coach-port 8653          # the coach helper on another port
 #   ./scripts/play.sh --engine-only --eval-model var/ml/models/night-1-eval.json   # D361: the win chance's model
-#                                                # (that path is the default when it exists; --no-eval: none)
+#                                                # (that path is the default when it exists; --no-eval: none;
+#                                                # D368: a,b,c / a directory / a manifest is an ensemble, and
+#                                                # var/ml/models/night-1-ensemble.json is preferred when it exists)
 #   ./scripts/play.sh --engine-only --idle-exit-after 60   # give up 60 min after the engine sleeps (D308)
 #   ./scripts/play.sh --arena               # open the 3D arena instead of the board
 #   ./scripts/play.sh --no-open             # do not launch a browser

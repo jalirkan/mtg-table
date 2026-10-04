@@ -17208,3 +17208,101 @@ at a time); calibration on the owner's own games (`train_eval.py --eval-human`, 
   and those are features the model reads.
 - **Serving the model file to the browser**: the model is the owner's and lives on the PC;
   ForgeCoach is public.
+
+## D368 — The win chance says how sure it is and why: `/eval` serves an ensemble of one schema's models (their mean, `sd`, `n`), and `explain: true` adds exact integrated-gradient attributions in logit space, grouped into buckets a player reads; both are advertised on `/health` (`evalEnsemble`, `evalExplain`), and one model is served exactly as before
+
+*Branch `c/winchance-uncertainty`; D368 (D362–D367 are held by other open branches).
+ForgeCoach's side is its own branch `c/winchance-uncertainty` (`src/evalClient.ts`,
+`src/winChance.ts`, `src/ui/winchance/`, a "why" line in the film room).*
+
+**2026-10-04** (a methods review the owner approved: make the win chance more honest
+and more useful for coaching)
+
+**Context.** D361 serves one model's P(win). A single number says nothing of how much
+another training run of the same config would disagree, and a fall of 9 points says
+where the game turned, not what the model saw change.
+
+**Decision.**
+
+1. **An ensemble.** `--eval-model` (helper) / `--model` (`eval_serve.py`) takes one export,
+   several comma-separated, a directory (its `ensemble.json`, else every `*.json`), or a
+   manifest `{"format": "mtgtable-position-eval-ensemble", "formatVersion": 1, "models":
+   [paths relative to it]}`; at most 16. Every member passes every D361 refusal, and all
+   must share the schema id, vocabulary (and its sha), feature count, card offset and card
+   states, or nothing is served; one file named twice is refused. `p` is the members'
+   mean, `sd` their sample standard deviation (n ≥ 2), `n` their number. `model` is a hash
+   of the members' shas; one member is served exactly as before (its own sha, its own
+   P(win), no `sd`). The default prefers `var/ml/models/night-1-ensemble.json` when it
+   exists, else D361's `night-1-eval.json`.
+2. **What `sd` means.** How far training runs that differ only in their seed disagree about
+   this position: the model's own uncertainty, not the game's luck. ForgeCoach says so in
+   its tooltip. No train_eval change is needed: `--seed` changes the initialisation and the
+   batches, not the `--split-by pair` split. Job J069 trains four more seeds of night 1's
+   chosen config and checks each one's calibration (gate 1's clause C on its own test
+   split, `gate_metrics.py calib`); a seed that fails stays out of the manifest.
+3. **Attributions** (`tools/ml/attribution.py`, `explain: true` or `/eval?explain=1`):
+   integrated gradients of the network's **logit** against one fixed baseline per model --
+   the training split's mean board (standardised columns at 0) and no card known by name
+   (the pooled card block at 0). The network is ReLU layers and a linear output, so along
+   the straight path it is piecewise linear: the path is walked segment by segment (the
+   next boundary is where the first unit crosses zero) and each constant gradient weighted
+   by its segment's length. The integral is a finite sum, exact, not a Riemann
+   approximation. The network's input is affine in D305's raw vector (standardisation, a
+   linear pooling of card counts through the embedding), so each raw feature's share is the
+   chain rule through that map. Completeness holds: the shares sum to logit − baseline
+   logit. Points of win chance are the shares times one factor, (p − p0)/(z − z0), so they
+   keep the shares' signs and proportions and sum to 100 (p − p0). An ensemble's
+   attribution is the members' mean, each against its own baseline.
+4. **Buckets.** Each board feature goes to one named bucket ("your board", "their life",
+   "cards in hand", "their hand size", "your mana and lands", "your graveyard and exile",
+   "your spells this turn", "the stack", "combat", "the turn and phase"); a card cell goes
+   to the card's own bucket ("your Glorybringer", "their face-down cards", "tokens"). A
+   card's own bucket is what the model knows of it beyond its type, size and mana value,
+   which sit in the board buckets. The answer lists every bucket with a share, largest
+   first, so a client can subtract two positions bucket by bucket: ForgeCoach's "why" of a
+   fall is the difference between the positions before and after it (the same baseline, so
+   the differences sum to the fall).
+5. **Hidden information.** An attribution is a function of the encoded vector only, and
+   that vector is encode.py's (D361 §6): a card cell that is 0 has a share of exactly 0 and
+   a card bucket is only reported when its card is in the vector, so a bucket can only
+   name a card the viewer sees.
+6. **Advertised.** `/health` adds `evalEnsemble` (the number of models) and `evalExplain`
+   (1 when every member's export is one attribution.py can differentiate: formatVersion 1,
+   ReLU hidden layers, one sigmoid output). An older `eval_serve.py` says neither: the
+   runner reports `evalEnsemble: 1, evalExplain: 0`. ForgeCoach sends `explain` only to a
+   helper that says `evalExplain: 1` (an older one refuses the unknown field) and shows the
+   ± only when an answer carries `sd`.
+
+**Verified** (this container, the parity model `fixtures/eval/model.json`, one hidden
+ReLU layer; `tools/ml/tests/test_attribution.py`, `tools/eval-runner-selftest.mjs`):
+
+- completeness on every decision row of the 22 committed recordings: |Σ shares − (z − z0)|
+  < 1e-9, |Σ points − 100 (p − p0)| < 1e-7; attribution.py's own logit gives the served
+  P(win) to 1e-12;
+- exactness: the walk equals a 4,000-point midpoint Riemann sum of the gradient (to 1e-3 of
+  the logit gap) on rows whose path crosses ReLU boundaries; with no hidden layer it is
+  gradient × input;
+- hidden information: D305's scrambler (the opponent's hand named, libraries filled, stubs
+  named, face-down `alt`s) changes no attribution, and every card a bucket names is shown
+  face up in the viewer's state;
+- the ensemble: mean, sample sd and n against the members' own P(win) (1e-12); a member of
+  another schema refused; the three ways to name an ensemble load the same one; through the
+  helper's route, a single model still answers the golden P(win) (1e-9), `n: 1`, no `sd`.
+- measured: over 865 decision rows, an answer took 5.6 ms on average, 10.4 ms with
+  `explain`; at most 30 path segments; a median of 27 buckets (at most 65).
+
+**Not done.** A night-1 ensemble (J069 trains it; the PC's numbers are not measured here);
+`sd` is not a calibrated interval and is not shown as one; attributions of an export that
+is not ReLU + sigmoid (refused by name, the win chance still served).
+
+**Rejected.**
+
+- **Gradient × input alone**: not complete for a network with hidden ReLUs, so the shares
+  would not add up to the number shown.
+- **A sampled Riemann sum for integrated gradients**: an approximation where an exact sum
+  is cheap.
+- **Shapley sampling over buckets**: dozens of forward passes per answer and a sampling
+  error, for a network whose exact path integral is a few dozen segments.
+- **The attributions' baseline as the previous position**: it would make each answer
+  depend on which frame the client asked about before; one baseline per model lets a
+  client difference any two positions.

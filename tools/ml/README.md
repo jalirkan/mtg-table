@@ -318,6 +318,42 @@ node tools/coach-helper.mjs --eval-schema 82815752c2f5e346 --eval-cube cubes/syn
   the opponent's hand and both libraries are counts, a stub adds to a count, a
   face-down card is anonymous. A state whose viewer's own hand is redacted (made
   for the other seat) is refused, and the request has no other field.
+
+### Uncertainty and "why" (D368)
+
+```bash
+# an ensemble: several seeds of one config, one schema (also: a directory, or a manifest)
+./scripts/play.sh --engine-only --eval-model var/ml/models/night-1-eval.json,var/ml/models/night-1-eval-s1.json
+./scripts/play.sh --engine-only               # prefers var/ml/models/night-1-ensemble.json when it exists
+curl -s http://127.0.0.1:8643/health          # ... "evalEnsemble":5,"evalExplain":1
+```
+
+- **The ensemble.** `--eval-model` takes several exports of one schema --
+  `a.json,b.json`, a directory (its `ensemble.json`, else every `*.json`), or a
+  manifest `{"format": "mtgtable-position-eval-ensemble", "formatVersion": 1,
+  "models": [paths relative to it]}`. Every member passes every refusal above,
+  and all must share the schema id, vocabulary, feature count, card offset and
+  card states. `/eval`'s `p` is the members' mean, `sd` their sample standard
+  deviation, `n` their number. `sd` is how much training runs that differ only in
+  their seed disagree about this position: the model's own uncertainty, not the
+  game's. One model is served exactly as before (its own sha, its own P(win)).
+  Training one needs nothing new: `train_eval.py` again with another `--seed`
+  (the split does not depend on it).
+- **The attributions** (`attribution.py`; `"explain": true` on `/eval`):
+  integrated gradients in logit space, computed exactly (the ReLU network is
+  piecewise linear along the path, walked segment by segment), against one
+  baseline per model -- the training split's mean board and no card known by
+  name. Each feature's share is grouped into a bucket ("your board", "their
+  life", "cards in hand", "your mana and lands", "your Glorybringer"...). The
+  shares sum to logit - baseline logit; points of win chance are the shares
+  times (p - p0) / (logit - logit0), so they sum to 100 (p - p0). A card's own
+  bucket is what the model knows of that card beyond its type, size and mana
+  value (those are in the board buckets). Only cards in the encoded vector get a
+  share, so only cards the viewer sees are ever named.
+  `tests/test_attribution.py` checks completeness on every committed decision row
+  (1e-9), the walk against a 4,000-point Riemann sum, gradient x input on a model
+  with no hidden layer, and that D305's hidden-zone scrambler changes no
+  attribution.
 - **Where it is trusted.** The model learned from decision rows (the viewer
   holding priority in a main phase or combat, Forge's AI on both sides);
   `/eval` says `"decision": false` for any other state, and ForgeCoach shows
