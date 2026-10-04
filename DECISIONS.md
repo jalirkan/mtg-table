@@ -17450,3 +17450,112 @@ list would have to travel with every dataset); random search with a short warm-u
 (halving gives the survivors the full training a warm-up does not); more BLAS threads per
 fit (measured slower at these sizes); a torch path for the new options (CPU torch measured
 slower than numpy here, D316).
+
+
+
+## D369 — The owner's games flow into the human test set by themselves: `play.sh` copies every finished human-vs-AI game from `var/games/` into `var/ml/human/` with a manifest, `human_eval.py` scores the evaluator there against prior, life and core with intervals over games, and the first check is pre-registered at 30 games
+
+*Branch `c/human-games`; D369, the next number free at push (D362–D368 are held by other
+open branches). A methods review the owner approved (2026-10-04).*
+
+**2026-10-04**
+
+**Context.** D347 made `var/ml/human/` the place for the owner's own games and kept them out
+of training; D361 shows the evaluator's win chance in ForgeCoach. Nothing yet says whether
+that number is right on HUMAN games: every measurement so far (D305, D316, D354's gate 1,
+D359's outside exam) is on Forge-vs-Forge games or 17Lands' players. The folder was filled by
+hand, so it was empty.
+
+**Decision.**
+
+1. **Where the games are.** `mtgtable.MtgTable` writes each game a seat plays to
+   `var/games/<gameId>/frames.jsonl` under the checkout it runs from. `play.sh` passes no
+   `--game-id`, so the id is MtgTable's default `human-ws-<seed>` (`-g<n>` for game n of a
+   match, M38); a ForgeCoach-launched match is `match-m<13 digits>[-g<n>]` (D303). The gate's
+   and the tools' runs write there too, always under ids of their own.
+2. **Collection, `tools/ml/human_collect.py`** (standard library). A game is taken when its
+   folder name is one of those two shapes, its session header's `transport` is `ws` or
+   `console` (a person's seat: `auto` and `null` are scripted, an AI-vs-AI recording has none),
+   the viewing seat (`seat` = `hello_ok.you`) is not an AI and the other player is, and it is
+   finished (an `over` or `gameOver` with a winner or a reason; a crash's null `over`, M46, is
+   not). It is copied byte for byte, gzipped without a timestamp, to
+   `var/ml/human/<gameId>-<seed>-<startedAt>.jsonl.gz`. `--from DIR` reads every
+   `*.jsonl[.gz]` under a folder (logs saved elsewhere) by the same rules, without the id
+   shapes. The key is game id + seed + `startedAt`: play.sh's fresh seed per session makes id
+   + seed one game; the start time separates a seed given twice on purpose, which reuses the
+   id. A key in the manifest is never copied again, so a second run copies nothing.
+3. **The manifest**, `var/ml/human/manifest.json` (not `.jsonl`: `dataset.py` reads every
+   `*.jsonl[.gz]` there as a game): per game the key, the file, game id, seed, start time and
+   date, seat, transport, result from the human's side, reason, turns, your deck (name, path,
+   sha256), the cube of `cubes/` holding at least 80% of your deck's non-basic cards when the
+   deck file is still there, the AI's deck by its public name and count (M44), the AI profile
+   and policy (M56), where it came from, the sha256 of the copy. `.collect-cache.json` beside
+   it remembers files already judged by size and mtime.
+4. **Triggered by `play.sh`**: at start (after the match lines, so a session killed hard
+   is collected the next time), when the engine falls asleep (D308: a match just ended) and in
+   `stop()` at exit (the bridge has flushed). Each prints one line, `human test set: N games (W
+   won, L lost)[, k new] -- var/ml/human/ (D369; descriptive until 30)`. It never fails
+   play.sh (`timeout 120`, a failure prints a line), it is skipped under the match launcher's
+   self-test seam, and `--no-human-collect` turns it off. **Not the coach helper**: the helper
+   sees no game end of its own (ForgeCoach talks to the bridge), and another lane is changing
+   it; play.sh already owns the engine's lifetime, so it is the least intrusive place.
+5. **Evaluation, `tools/ml/human_eval.py`** (numpy). The rows are `encode_game`'s decision rows
+   of each human game from its own (human) seat, each model encoding with its own vocabulary;
+   several `--model`s are each scored and their mean P(win) is `eval`. Beside it, train_eval's
+   `fit_baselines` (`prior`, `life`, `core`) fitted on the training split of the dataset the
+   model was trained on (its `--split-by`; `--baselines DATA`, by default the model's
+   `training.data`); without that dataset only `coin` (0.5). The numbers are train_eval's
+   `metrics` (log-loss, Brier, accuracy on decided games, ECE, the ten-bin reliability table,
+   overall and per turn bucket) and, per baseline and bucket, log-loss(baseline) −
+   log-loss(eval) with a 95% percentile interval from resampling whole games
+   (`outside_exam.grouped_bootstrap_many`). **Under 30 games the report says DESCRIPTIVE
+   ONLY** and draws no conclusion.
+6. **The first check, pre-registered here** (`FIRST_CHECK` in `human_eval.py`):
+   - the population: the first 30 human games by start time (the manifest's order; a later
+     game never changes it), every decision row of them;
+   - the model: the one `play.sh` serves when the 30th game is in;
+   - the statistic: log-loss(core) − log-loss(eval), `core` fitted as in 5;
+   - the interval: 95% percentile, 2,000 resamples of whole games, seed 20261004;
+   - the reading: interval above 0, **better than core on human games**; below 0, **worse than
+     core on them**; across 0, **no difference detectable at 30 games**.
+
+   Every run prints it (`NOT YET: n of the 30` before then). It is read once, its line is
+   recorded as an amendment to this entry, and it is not re-read on more games; later runs
+   are descriptive. What follows from a reading (a caveat beside the win chance in
+   ForgeCoach, or training on human games) is a new decision.
+7. **Where the models are** (a fix beside it). The lab runner's jobs write into the lab clone
+   (`~/code/lab/mtg-table/var/`, `docs/guides/lab-runner.md`), while the helper looked for its
+   default `var/ml/models/night-1-eval.json` in Justin's checkout only, so a new model needed
+   a hand copy. `eval-runner.mjs`'s `resolveEvalModel` (the default and a relative
+   `--eval-model`) and `human_eval.py --model` / `--baselines` now look in this checkout first,
+   then in the lab clone: `$MTGTABLE_LAB_ROOT`, else `../lab/mtg-table` beside the checkout.
+   This checkout's copy wins when both exist; a flag found nowhere is reported missing as
+   before.
+
+**Hidden information.** The copy is the human seat's own log, which the bridge redacted for
+that seat (hard rule 8); nothing of the AI's side is read or added, and the manifest carries the
+AI's deck as `hello_ok.match` does. The evaluator reads it through encode.py, stricter than the
+log (D305).
+
+**Tested** (`tools/ml/tests/test_human.py`, gate 12h): the committed seat recordings laid out as
+a person's games under `var/games/`; refused: a scripted seat, an AI-vs-AI recording under a
+match id, a gate id's folder, an unfinished game (taken once it ends); a second run copies
+nothing, with or without the cache; each copy equals its source byte for byte; the dedupe key
+across `var/games/` and `--from`; a file of two games; the manifest (cube, AI policy, the AI's
+deck as name and count). numpy: `human_eval.run` on those 12 games with the parity model and
+baselines fitted on a dataset of the fixtures (DESCRIPTIVE ONLY, intervals over 12 games, the
+first check NOT YET), an ensemble of a model with itself equal to the model, no baselines gives
+`coin`, and with 30 and then 31 games the first check reads the same 30 games and the same
+interval. `tools/eval-runner-selftest.mjs` (12f): the lab-clone lookup.
+
+**Rejected.**
+
+- **The coach helper collecting at `over`**: it does not see the game (ForgeCoach's socket is
+  the bridge's), and it is another lane's file.
+- **Copying every `var/games/` log with a `ws` transport**: the gate's socket steps play
+  scripted clients over `ws`; the id shapes are play.sh's own.
+- **Dedupe by content hash alone**: an unfinished copy and the finished game would be two;
+  the key names the game, and only finished games are taken.
+- **Reading the first check whenever the set grows**: optional stopping; one population, fixed
+  in advance, read once.
+- **Searching the lab clone first**: a model Justin placed in his checkout on purpose must win.

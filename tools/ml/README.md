@@ -701,6 +701,53 @@ counts human games and gives them no rows; the value evaluator's metrics on
 them are the first number. The vocabulary must cover the human games' cards
 (the cube they were drafted from); a card outside it is `<other>`.
 
+**Collected by itself (D369).** `scripts/play.sh` runs
+`tools/ml/human_collect.py` at start, when the engine falls asleep (D308) and at
+exit: every FINISHED game a person played against the AI on that machine is
+copied from `var/games/<gameId>/frames.jsonl` (play.sh's ids `human-ws-<seed>[-g<n>]`
+and ForgeCoach's launched matches `match-m<13 digits>[-g<n>]`; a session header
+with `transport` `ws` or `console`, the viewing seat human, the other seat AI)
+into `var/ml/human/<gameId>-<seed>-<startedAt>.jsonl.gz`, byte for byte, keyed by
+game id + seed + start time so nothing is copied twice, with a line in
+`var/ml/human/manifest.json` (date, your deck and the cube it came from, the AI's
+deck name, profile and policy, the result). play.sh prints `human test set: N
+games`; `--no-human-collect` turns it off. Logs saved anywhere else:
+
+```bash
+python3 tools/ml/human_collect.py --from ~/Downloads/forgecoach-logs    # any *.jsonl[.gz] with a session header
+python3 tools/ml/human_collect.py --status                               # the one line
+```
+
+The copy is the human seat's own log, redacted for that seat by the bridge; the
+manifest names the AI's deck by its public name and count only.
+
+**Scored by `human_eval.py` (D369).** The evaluator (or several, and the mean of
+their P(win)) on every decision row of those games, beside `prior`, `life` and
+`core` fitted on the training split of the dataset the model was trained on:
+log-loss, Brier, accuracy, ECE and the reliability table, by turn bucket, and
+log-loss(baseline) − log-loss(eval) with a 95% interval over GAMES. Under 30
+games it says *DESCRIPTIVE ONLY*.
+
+```bash
+python3 tools/ml/human_eval.py      # the served model (night-1-eval.json, here or in the lab clone) + its training data
+python3 tools/ml/human_eval.py --model A.json --model B.json --baselines var/ml/data/night-1 --report var/ml/reports/human.json
+```
+
+**The pre-registered first check** (`FIRST_CHECK` in `human_eval.py`; D369):
+on the first 30 human games by start time, log-loss(core) − log-loss(eval) for
+the model play.sh serves, 95% interval over games (2,000 resamples, seed
+20261004): above 0, better than core on human games; below 0, worse; across 0,
+no difference detectable. Every run prints it (`NOT YET` until game 30); it is
+read once and recorded in `DECISIONS.md`.
+
+**Where the models are.** The lab runner's jobs write models into the lab clone,
+`~/code/lab/mtg-table/var/ml/models/`, not into this checkout. The coach
+helper's `--eval-model` (and its default `var/ml/models/night-1-eval.json`) and
+`human_eval.py --model`, given a relative path, look in this checkout first and
+then in the lab clone: `$MTGTABLE_LAB_ROOT`, else `../lab/mtg-table` beside the
+checkout. A dataset built in the lab clone reads ITS `var/ml/human/`, which is
+empty: pass `--human ~/code/mtg-table/var/ml/human` there.
+
 ## The matchup model — one card scale across every cube (D324)
 
 A second, separate model: not "who's winning from this board" but **"which of
