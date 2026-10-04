@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "about": "Queue nights archive.py cold must leave on the hot disk until the named pc-results jobs are done (D378). A job that reads a night's recordings, posted or pinned, goes here.",
+  "holds": [
+    {
+      "nights": [1, 2],
+      "until": ["J052", "J062", "J063", "J064"],
+      "why": "gate 3 (J052) and the reads of nights 1-2 (J062 matchup, J063 outside exam, J064 Omega ratings): the owner, 2026-10-04"
+    },
+    {
+      "nights": [1, 2, 3],
+      "until": ["J067"],
+      "why": "evaluator v2 encodes nights 1-3 (J067, D364)"
+    },
+    {
+      "nights": [1, 2],
+      "until": ["J074"],
+      "why": "the re-check restores quarantined recordings of nights 1-2 into the queue (J074, D371)"
+    }
+  ]
+}

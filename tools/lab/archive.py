@@ -8,6 +8,8 @@
     python3 tools/lab/archive.py night --root var/cubelab/queue --night 1 --jobs 4    # archive it (resumable)
     python3 tools/lab/archive.py dir var/cubelab/runs/X --jobs 4                      # a run folder's games/
     python3 tools/lab/archive.py restore PATH...                                      # .zst -> .gz, for a Java reader
+    python3 tools/lab/archive.py cold --night 1 --dry-run                            # COLD: to the archive drive (cold.py, D378)
+    python3 tools/lab/archive.py restore-night --night 1                             # a cold night back, verified
 
 WHAT.  Every `games/<seed>/g<n>-seat<k>.jsonl.gz` of a night's finished drafts
 (D315) becomes `.jsonl.zst` at level 19 (`--level`, 1-22), in `--jobs`
@@ -71,6 +73,7 @@ import json
 import multiprocessing
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -80,7 +83,9 @@ from typing import Any, Iterable, Optional
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, os.path.join(REPO, "tools", "ml"))
+sys.path.insert(0, HERE)
 import fio  # noqa: E402
+import cold as C  # noqa: E402
 
 DEFAULT_KEEP = ("var/ml/gates/fit/heldout.txt", "var/ml/gates/regret/candidates.jsonl", "var/ml/gates/regret/set.jsonl")
 EXIT_REFUSED = 3
@@ -618,6 +623,99 @@ def restore(paths: list[str], say=print) -> int:
     return 1 if bad else 0
 
 
+# ---------------------------------------------------------------- the cold tier (tools/lab/cold.py)
+
+def cmd_cold(a) -> int:
+    fio.need_zstd()
+    say = print
+    root = os.path.abspath(a.root)
+    report: dict[str, Any] = {"schema": 1, "night": a.night, "dryRun": a.dry_run, "checks": {}, "refused": [], "skipped": None}
+    try:
+        scope = night_scope(root, a.night, a.allow_incomplete)
+        check_closed(scope, live_writers(queue_night_match(a.night)), a.quiet_minutes)
+    except Refused as e:
+        print(f"archive: REFUSED: {e}", file=sys.stderr)
+        return EXIT_REFUSED
+    units = C.night_units(root, scope, a.night)
+    vers: set[str] = set()
+    for key, seeds in C.night_seeds(root, a.night).items():
+        d = os.path.join(root, key, "drafts.jsonl")
+        if os.path.isfile(d):
+            vers |= C.night_lines(d, seeds)[1]
+    released = set(a.release_hold)
+    tests = {
+        "redaction": lambda: C.check_redaction(root, a.night),
+        "warehouse": lambda: C.check_warehouse(root, a.night, a.warehouse),
+        "encoded": lambda: C.check_encoded(units, a.dataset, a.min_encoded),
+        "holds": lambda: C.check_holds(a.night, a.holds or C.HOLDS, a.results_dir, released,
+                                       lambda j: C.job_state(j, a.results_dir)),
+    }
+    for name, fn in tests.items():
+        if name in a.skip_check:
+            report["checks"][name] = "SKIPPED by --skip-check"
+            continue
+        try:
+            report["checks"][name] = "ok: " + fn()
+        except AssertionError as e:
+            report["checks"][name] = f"REFUSED: {e}"
+            report["refused"].append(f"{name}: {e}")
+    if released:
+        report["checks"]["holds"] += f" (released: {', '.join(sorted(released))})"
+    files = sum(len(u.files) for u in units)
+    hot = sum(u.hot_bytes for u in units)
+    report.update({"units": [{"name": u.name, "kind": u.kind, "key": u.key, "files": len(u.files), "hotBytes": u.hot_bytes}
+                             for u in units], "files": files, "hotBytes": hot, "vers": sorted(vers)})
+    if report["refused"] and not a.dry_run:
+        for name, v in report["checks"].items():
+            say(f"  check {name}: {v}")
+        print("archive: REFUSED: " + "; ".join(report["refused"]), file=sys.stderr)
+        return EXIT_REFUSED
+    arch = C.config_value("labArchiveRoot", "LAB_ARCHIVE_ROOT", a.archive_root)
+    mirror = C.config_value("labArchiveMirror", "LAB_ARCHIVE_MIRROR", a.mirror)
+    report.update({"archiveRoot": arch, "mirror": mirror})
+    try:
+        if not arch:
+            raise C.Skipped("no archive root: --archive-root, $LAB_ARCHIVE_ROOT or config.json labArchiveRoot")
+        C.check_drive(arch, root, a.allow_same_device)
+        if mirror:
+            C.check_drive(mirror, root, a.allow_same_device)
+            if os.stat(C._existing(mirror)).st_dev == os.stat(C._existing(arch)).st_dev and not a.allow_same_device:
+                raise C.Skipped(f"the mirror {mirror} is on the archive's own drive: not a second copy")
+    except C.Skipped as e:
+        report["skipped"] = str(e)
+    for name, v in report["checks"].items():
+        say(f"  check {name}: {v}")
+    say(f"cold night {a.night}: {len(units)} unit(s), {files} file(s), {hot / 1e9:.3f} GB hot -> {arch}"
+        + (f" (+ mirror {mirror})" if mirror else ""))
+    if a.dry_run:
+        if units and not report["skipped"]:
+            est = C.estimate(units, a.level, a.jobs, a.dry_sample)
+            report["estimate"] = est
+            report["driveFreeBytes"] = shutil.disk_usage(C._existing(arch)).free
+            if est.get("ratio"):
+                say(f"dry run: sample of {est['sampled']}: {est['ratio']}x smaller than on the hot disk -> about "
+                    f"{est['expectedArchiveBytes'] / 1e9:.3f} GB on the drive ({report['driveFreeBytes'] / 1e9:.0f} GB free); "
+                    f"{est['cpuSecondsPerFile']} CPU s a file")
+        os.makedirs(os.path.join(root, "archive"), exist_ok=True)
+        _write_atomic(os.path.join(root, "archive", f"cold-night-{a.night}.dryrun.json"),
+                      (json.dumps(report, indent=1, sort_keys=True) + "\n").encode())
+    if report["refused"]:
+        print("archive: REFUSED: " + "; ".join(report["refused"]), file=sys.stderr)
+        return EXIT_REFUSED
+    if report["skipped"]:
+        print(f"archive: WARNING: cold archive SKIPPED: {report['skipped']}", file=sys.stderr)
+        return C.EXIT_SKIPPED
+    if a.dry_run:
+        return 0
+    skipped = sorted(set(a.skip_check)) + [f"holds released: {j}" for j in sorted(released)]
+    man = C.cold_night(root, a.night, units, archive_root=arch, mirror=mirror, level=a.level, threads=a.jobs,
+                       keep_hot=a.keep_hot, checks=report["checks"], skipped=skipped, vers=sorted(vers), say=say)
+    t = man["totals"]
+    say(f"cold night {a.night}: {man['verifiedUnits']} unit(s) verified, {len(man['failed'])} failed; {t['members']} file(s), "
+        f"{t['hotBytes'] / 1e9:.3f} GB hot -> {t['archiveBytes'] / 1e9:.3f} GB; {t['deletedHot']} deleted from the hot disk")
+    return 0 if not man["failed"] else 1
+
+
 # ---------------------------------------------------------------- CLI
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -641,9 +739,47 @@ def main(argv: Optional[list[str]] = None) -> int:
     d.add_argument("folder")
     r = sub.add_parser("restore", help=".zst -> verified .gz, for a Java reader")
     r.add_argument("paths", nargs="+")
+    c = sub.add_parser("cold", help="a finished night to the cold drive: one tar.zst a key folder (tools/lab/cold.py, D378)")
+    c.add_argument("--root", default="var/cubelab/queue")
+    c.add_argument("--night", type=int, required=True)
+    c.add_argument("--archive-root", help="the cold archive (else $LAB_ARCHIVE_ROOT, else config.json labArchiveRoot)")
+    c.add_argument("--mirror", help="a second copy (else $LAB_ARCHIVE_MIRROR, else config.json labArchiveMirror)")
+    c.add_argument("--level", type=int, default=19)
+    c.add_argument("--jobs", type=int, default=4, help="zstd threads")
+    c.add_argument("--dry-run", action="store_true", help="the checks, the drive and an estimate; writes only the dryrun report")
+    c.add_argument("--dry-sample", type=int, default=200)
+    c.add_argument("--warehouse", default="var/warehouse")
+    c.add_argument("--dataset", action="append", default=[], help="a dataset folder (games.jsonl) that encoded the night")
+    c.add_argument("--min-encoded", type=float, default=0.9)
+    c.add_argument("--holds", default=None, help="the holds file (default tools/lab/archive-holds.json)")
+    c.add_argument("--results-dir", help="a pc-results checkout, for the holds' job STATUS")
+    c.add_argument("--release-hold", action="append", default=[], help="treat this job as done for the holds")
+    c.add_argument("--skip-check", action="append", default=[], choices=("redaction", "warehouse", "encoded", "holds"))
+    c.add_argument("--allow-incomplete", action="store_true")
+    c.add_argument("--quiet-minutes", type=float, default=30)
+    c.add_argument("--allow-same-device", action="store_true", help="archive onto the hot disk's own filesystem (tests)")
+    c.add_argument("--keep-hot", action="store_true", help="archive and verify, delete nothing")
+    rn = sub.add_parser("restore-night", help="a cold night's units back where they lived, verified")
+    rn.add_argument("--root", default="var/cubelab/queue")
+    rn.add_argument("--night", type=int, required=True)
+    rn.add_argument("--archive-root")
+    rn.add_argument("--unit", action="append", default=[])
+    rn.add_argument("--from-mirror", action="store_true")
+    rn.add_argument("--as", dest="as_", default="original", choices=("original", "gz", "zst", "raw"))
     a = ap.parse_args(argv)
     if a.cmd == "restore":
         return restore(a.paths)
+    if a.cmd == "cold":
+        return cmd_cold(a)
+    if a.cmd == "restore-night":
+        fio.need_zstd()
+        try:
+            n = C.restore_night(a.root, a.night, archive_root=C.config_value("labArchiveRoot", "LAB_ARCHIVE_ROOT", a.archive_root),
+                                units=a.unit or None, from_mirror=a.from_mirror, as_=a.as_)
+        except (OSError, RuntimeError) as e:
+            print(f"archive: restore-night: {e}", file=sys.stderr)
+            return 1
+        return 0 if n["failed"] == 0 and n["conflict"] == 0 else 1
     if not 1 <= a.level <= 22:
         ap.error("--level is 1..22")
     fio.need_zstd()
