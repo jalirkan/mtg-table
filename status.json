@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:52:13-04:00",
- "heartbeat": "2026-10-04T02:52:13-04:00",
+ "updated": "2026-10-04T02:56:45-04:00",
+ "heartbeat": "2026-10-04T02:56:45-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 8.01,
-  "memUsedGb": 7,
+  "load1": 6.74,
+  "memUsedGb": 10.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3667,
-  "pressure": 2.29,
+  "swapUsedMb": 3610,
+  "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 7,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-04T02:51:59-04:00",
-   "elapsed": 14,
+   "elapsed": 286,
    "done": 16,
    "total": 2400,
    "unit": "games",
@@ -38,16 +38,23 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-04T02:52:00-04:00",
-   "memGb": 0.01,
+   "memGb": 1.22,
    "live": {
     "sprt_games": 16,
     "all.games": 16,
     "all.errors": 0,
     "all.timeouts": 0,
+    "all.games_per_h": 0,
     "all.median_game_s": 24.7225,
-    "elapsed_s": 0,
+    "elapsed_s": 254,
+    "peak_worker_rss_gb": 1.7,
+    "pilot.errors": 0,
+    "pilot.games": 64,
+    "pilot.games_per_h": 308.7,
+    "pilot.median_game_s": 32.578,
+    "pilot.timeouts": 1,
     "pressure_events": 0,
-    "workers": 1
+    "workers": 3
    },
    "liveHeadline": [
     "sprt_games",
@@ -103,17 +110,7 @@
    "est": "one to two nights (up to 2,400 games)"
   }
  ],
- "waiting": [
-  {
-   "publicTitle": "Evaluator training and fit gate",
-   "publicEst": "~4 h",
-   "id": "J057",
-   "title": "(J049 resumed after its memory stop) Evaluator gate 1: train on the night-1 dataset J049 already built, and run the held-out fit gate (D354)",
-   "reason": "stopped for memory; will retry",
-   "est": "~4 h (the grid gets 3 h; the leaf rows about 30 min on one JVM; no encode: J049 wrote var/ml/data/night-1, 6,343,314 rows, at 02:11)",
-   "detail": "memory: step run1 was killed without an exit code (oomd or the OOM killer?); retry after 2026-10-04T03:06:59-04:00"
-  }
- ],
+ "waiting": [],
  "finished": [
   {
    "publicTitle": null,
