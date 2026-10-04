@@ -201,6 +201,59 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 `--record M` still exists for watching a game in ForgeCoach (a plain
 `.jsonl`, the `--record M` replay); `--record-all` is for training data.
 
+### Archiving a finished night to zstd (D370)
+
+A queue night's recordings are gzip while they are written and while anything
+may open them. Once the night is over, `tools/lab/archive.py` recompresses
+them to `.jsonl.zst` (level 19; J065 measured 4.4x smaller than gzip on the
+PC's nights, the committed fixtures 3.5x):
+
+```bash
+python3 tools/lab/archive.py night --root var/cubelab/queue --night 1 --dry-run   # expected savings only
+python3 tools/lab/archive.py night --root var/cubelab/queue --night 1 --jobs 4    # resumable; re-run to resume
+python3 tools/lab/archive.py dir var/cubelab/runs/X --jobs 4                      # a finished run folder
+python3 tools/lab/archive.py restore PATH...                                      # back to a verified .gz
+```
+
+It refuses (exit 3, nothing touched) a night that is still running or has
+unfinished drafts, deletes each `.gz` only after its `.zst` was read back from
+disk and its SHA-256 matched, runs a sample through `check-redaction.mjs`
+before and after, and writes `<root>/archive/night-N.json` (counts, bytes
+before and after). The dataset builders and `check-redaction.mjs` read `.zst`
+(Python needs the `zstandard` package, Node 22.15+); the Java readers
+(coach-grade, leaf rows) do not, so the logs the gate lists name stay gzip and
+`restore` brings back any other. A job reading an archived night must pin a
+commit with D370.
+
+### The cold drive: finished nights off the hot disk (D378)
+
+Once nothing reads a night's recordings any more, `archive.py cold` moves them to the
+archive drive. The drive is `config.json`'s `labArchiveRoot` (on the PC,
+`/mnt/e/forgecoach-archive`, NTFS), or `--archive-root`, or `$LAB_ARCHIVE_ROOT`; an optional
+second copy goes to `labArchiveMirror`. Each key folder becomes one `night-N/<key>.tar.zst`,
+which holds the recordings decompressed so that one zstd stream sees them all. The night's
+quarantine folder becomes `night-N/quarantine.tar.zst`, kept byte for byte as evidence.
+
+```bash
+python3 tools/lab/archive.py cold --night 1 --dataset var/ml/data/nights-1-3 --dry-run   # checks, drive, estimate
+python3 tools/lab/archive.py cold --night 1 --dataset var/ml/data/nights-1-3 --jobs 4    # resumable
+python3 tools/lab/archive.py restore-night --night 1                                     # back, verified
+```
+
+It refuses (exit 3) unless all of these hold:
+- the night is closed;
+- the night's redaction pass ran;
+- the warehouse ingested every line of the night;
+- a dataset encoded at least 90% of its recordings;
+- no hold in `tools/lab/archive-holds.json` names the night while a job the hold waits for is
+  not `done`.
+
+It skips with a warning (exit 4) when the drive is missing or read-only. A hot file is deleted
+only after its archive has been read back from the drive and every member's SHA-256
+matched. The manifests are on both sides (`<root>/archive/cold-night-N.json` and
+`<drive>/night-N/manifest.json`), and the warehouse's `cold_archives` table and its
+`recording_location` view read them. The `drafts.jsonl` files stay hot.
+
 ### Decision records and mixed AI styles (D347)
 
 A recorded game's seats are mtg-table's own AI controller (D309's, which with

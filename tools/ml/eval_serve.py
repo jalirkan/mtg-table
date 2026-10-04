@@ -42,13 +42,27 @@ when it reads a live-unsafe feature (evalnet.LIVE_UNSAFE).
 
     python3 tools/ml/eval_serve.py --model var/ml/models/night-1-eval.json        # serve (stdin/stdout)
         [--expect-schema 82815752c2f5e346] [--cube cubes/synergy-cube-180.md]
+    python3 tools/ml/eval_serve.py --model a.json,b.json,c.json                   # an ensemble (also: a directory, a manifest)
     python3 tools/ml/eval_serve.py --model M --log var/games/<id>/frames.jsonl     # print a game's decision rows
 
+AN ENSEMBLE (D368).  --model may name several exports of one schema (seeds of
+one training config): comma-separated paths, a directory (its `ensemble.json`,
+else every *.json in it), or a manifest `{"format":
+"mtgtable-position-eval-ensemble", "formatVersion": 1, "models": [paths
+relative to it]}`.  Every member passes every check above, and all must share
+the schema id, vocabulary (and its sha), feature count, card offset and card
+states, or none is served.  The answer's `p` is the members' mean; `sd` their
+sample standard deviation (two or more members); `n` how many.  One member is
+served exactly as before: its own sha as `model`, its own P(win) as `p`.
+
 Serving: the first stdout line is {"ready": true, "model": <sha-256 of the file,
-12 hex>, "schema": <schemaId>, ...} or {"ready": false, "error": "..."} (then
-exit 2).  Each request line {"id": ..., "seat", "state", "history"?} gets
-{"id", "ok": true, "p", "turn", "decision", "featureHash"} or
-{"id", "ok": false, "status": 400|500, "error"}.  `decision` says whether the
+12 hex; for an ensemble, of its members' shas>, "schema": <schemaId>, "n",
+"explain", ...} or {"ready": false, "error": "..."} (then exit 2).  Each request
+line {"id": ..., "seat", "state", "history"?, "explain"?} gets {"id", "ok":
+true, "p", "n", "sd"?, "turn", "decision", "featureHash", "explain"?} or {"id",
+"ok": false, "status": 400|500, "error"}.  `explain: true` adds attribution.py's
+answer: the buckets of the position that moved P(win) away from the model's
+baseline, exact integrated gradients in logit space (that module's header).  `decision` says whether the
 state is a decision row as dataset.py picks them (the viewer holds priority in
 a main phase or a combat step, the game not over): the model was trained on
 those alone, so a client shows the others as out of range, or not at all.
@@ -153,8 +167,47 @@ def feature_hash(vec) -> str:
 
 # ------------------------------------------------------------ the model
 
-class Served:
-    """A loaded model and its schema, checked for live use."""
+ENSEMBLE_FORMAT = "mtgtable-position-eval-ensemble"
+MANIFEST = "ensemble.json"
+MAX_MEMBERS = 16
+
+
+def model_paths(spec: str) -> list[str]:
+    """The model files a --model names (D368): one export; several, comma-separated;
+    a directory (its `ensemble.json` when there is one, else every `*.json` in it,
+    sorted); or a manifest, {"format": ENSEMBLE_FORMAT, "formatVersion": 1,
+    "models": [paths relative to the manifest]}."""
+    parts = [p.strip() for p in spec.split(",") if p.strip()]
+    if len(parts) > 1:
+        return parts
+    path = parts[0] if parts else spec
+    if os.path.isdir(path):
+        man = os.path.join(path, MANIFEST)
+        if os.path.isfile(man):
+            return model_paths(man)
+        files = sorted(os.path.join(path, f) for f in os.listdir(path) if f.endswith(".json"))
+        if not files:
+            raise ModelError(f"{path} holds no model (*.json)")
+        return files
+    with open(path, "rb") as f:
+        head = f.read(4096)
+    if ENSEMBLE_FORMAT.encode() in head:
+        with open(path, encoding="utf-8") as f:
+            try:
+                man = json.load(f)
+            except json.JSONDecodeError as e:
+                raise ModelError(f"{path} is not JSON: {e}") from None
+        if isinstance(man, dict) and man.get("format") == ENSEMBLE_FORMAT:
+            if man.get("formatVersion") != 1 or not isinstance(man.get("models"), list) or not man["models"] \
+                    or not all(isinstance(m, str) and m for m in man["models"]):
+                raise ModelError(f"{path}: an ensemble manifest is {{format, formatVersion: 1, models: [paths]}}")
+            base = os.path.dirname(os.path.abspath(path))
+            return [m if os.path.isabs(m) else os.path.join(base, m) for m in man["models"]]
+    return [path]
+
+
+class Member:
+    """One loaded model file, checked for live use."""
 
     def __init__(self, path: str, expect_schema: str | None = None, cube: str | None = None):
         import evalnet as N  # numpy
@@ -198,24 +251,93 @@ class Served:
         unsafe = sorted(set(names) & set(N.LIVE_UNSAFE))
         if unsafe:
             raise ModelError(f"the model reads live-unsafe features ({', '.join(unsafe)}): refused for live use")
+        self.path = path
         self.model = m
         self.schema = schema
         self.net = N.EvalNet.from_json(m)
+        try:
+            import attribution as A
+            self.mlp: Any = A.Mlp(m, schema.card_offset, len(E.CARD_STATES))
+        except ValueError:   # AttributionUnavailable: served, but not explained
+            self.mlp = None
 
-    def describe(self) -> dict[str, Any]:
-        return {"model": self.sha12, "schema": self.schema.schema_id, "nFeatures": self.schema.n,
-                "boardColumns": len(self.net.cols), "vocab": len(self.schema.vocab)}
+    def layout(self) -> tuple:
+        m = self.model
+        return (m.get("schemaId"), m.get("vocabSha256"), m.get("nFeatures"), m.get("cardOffset"),
+                tuple(m.get("cardStates") or []), tuple(m.get("vocab") or []))
 
     def p_of(self, vec: list[float]) -> float:
         rows = self.N.features_to_rows([vec], self.schema.card_offset)
         return float(self.net.predict(rows)[0])
 
+
+class Served:
+    """The model, or the ensemble of models (D368), a --model names.  Every
+    member must be on the same schema, vocabulary and layout: one encoding
+    serves them all.  `p` is the members' mean P(win); with two or more, `sd`
+    is their sample standard deviation (the spread of the members, i.e. how far
+    the training runs disagree on this position -- not the game's own chance)."""
+
+    def __init__(self, spec: str, expect_schema: str | None = None, cube: str | None = None):
+        paths = model_paths(spec)
+        if len(paths) > MAX_MEMBERS:
+            raise ModelError(f"an ensemble holds at most {MAX_MEMBERS} models ({len(paths)} named)")
+        self.members = [Member(p, expect_schema, cube) for p in paths]
+        first = self.members[0]
+        for mb in self.members[1:]:
+            if mb.layout() != first.layout():
+                raise ModelError(f"{mb.path}: an ensemble's models must share one schema, vocabulary and layout "
+                                 f"({mb.model.get('schemaId')} vs {first.model.get('schemaId')})")
+        shas = [mb.sha12 for mb in self.members]
+        if len(set(shas)) != len(shas):
+            raise ModelError("the ensemble names one model file twice")
+        self.n = len(self.members)
+        self.sha12 = first.sha12 if self.n == 1 else \
+            hashlib.sha256(("ensemble|" + ",".join(shas)).encode()).hexdigest()[:12]
+        self.schema = first.schema
+        self.model = first.model
+        self.net = first.net
+        self.explainable = all(mb.mlp is not None for mb in self.members)
+
+    def describe(self) -> dict[str, Any]:
+        d = {"model": self.sha12, "schema": self.schema.schema_id, "nFeatures": self.schema.n,
+             "boardColumns": len(self.net.cols), "vocab": len(self.schema.vocab),
+             "n": self.n, "explain": self.explainable}
+        if self.n > 1:
+            d["members"] = [mb.sha12 for mb in self.members]
+        return d
+
+    def p_of(self, vec: list[float]) -> float:
+        return self.p_all(vec)[0]
+
+    def p_all(self, vec: list[float]) -> tuple[float, float | None]:
+        ps = [mb.p_of(vec) for mb in self.members]
+        if len(ps) == 1:
+            return ps[0], None
+        mean = sum(ps) / len(ps)
+        sd = (sum((p - mean) ** 2 for p in ps) / (len(ps) - 1)) ** 0.5
+        return mean, sd
+
     def evaluate(self, req: Any) -> dict[str, Any]:
         seat, state, history = check_request(req)
+        explain = req.get("explain", False)
+        if not isinstance(explain, bool):
+            raise RequestError("explain must be true or false")
         vec = online_features(state, seat, history, self.schema)
         turn = state.get("turn")
-        return {"p": self.p_of(vec), "turn": turn if isinstance(turn, int) else 0,
-                "decision": is_decision(state, seat), "featureHash": feature_hash(vec)}
+        p, sd = self.p_all(vec)
+        out: dict[str, Any] = {"p": p, "n": self.n}
+        if sd is not None:
+            out["sd"] = sd
+        out.update({"turn": turn if isinstance(turn, int) else 0,
+                    "decision": is_decision(state, seat), "featureHash": feature_hash(vec)})
+        if explain:
+            if not self.explainable:
+                raise RequestError("this model cannot be explained (attributions know ReLU layers and a sigmoid)")
+            import attribution as A
+            out["explain"] = A.explain([mb.mlp for mb in self.members], vec, self.schema.names,
+                                       self.schema.vocab.cards, list(E.CARD_STATES))
+        return out
 
 
 # ------------------------------------------------------------ the two modes
@@ -256,7 +378,8 @@ def print_log(srv: Served, path: str, out) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--model", required=True, help="a train_eval.py export (JSON)")
+    ap.add_argument("--model", required=True, help="a train_eval.py export (JSON); or several, comma-separated, "
+                    "a directory of them, or an ensemble.json manifest (D368)")
     ap.add_argument("--expect-schema", help="refuse a model whose schemaId is not this")
     ap.add_argument("--cube", help="refuse a model trained for another card list than this cube/deck/list")
     ap.add_argument("--log", help="print the win chance at every decision row of this frame log, then exit")
@@ -266,8 +389,8 @@ def main(argv: list[str] | None = None) -> int:
     except ImportError as e:
         msg = f"numpy is needed to serve the evaluator ({e}): python3 -m venv var/ml/venv && var/ml/venv/bin/pip install numpy"
         return _not_ready(msg, a.log)
-    except FileNotFoundError:
-        return _not_ready(f"no model file at {a.model}", a.log)
+    except FileNotFoundError as e:
+        return _not_ready(f"no model file at {e.filename or a.model}", a.log)
     except ModelError as e:
         return _not_ready(str(e), a.log)
     if a.log:

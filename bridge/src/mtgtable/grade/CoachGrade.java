@@ -1072,7 +1072,8 @@ public final class CoachGrade {
                     collectLogs(k, out);
                 }
             }
-        } else if (f.isFile() && (f.getName().endsWith(".jsonl") || f.getName().endsWith(".jsonl.gz"))) {
+        } else if (f.isFile() && (f.getName().endsWith(".jsonl") || f.getName().endsWith(".jsonl.gz")
+                || f.getName().endsWith(".jsonl.zst"))) {   // listed so WireLog refuses it loudly (D370)
             out.add(f);
         }
     }

@@ -17499,7 +17499,318 @@ has no `drafts.jsonl`, and counted its two games as kept: `test_outside_exam`'s 
 expects them dropped as `UNKNOWN_DECK`, and `test_rundir`'s run-folder test checks that, then
 reads its defaults with `--keep-reserved`.
 
+## D364 — Evaluator v2: one dataset over nights 1-3 split by a hash of the deck pair (night 1's held-out pairs stay held out, proved on the data), a learning curve over nested shares of the training pairs, successive halving in place of the time-boxed grid, float32 training, and honest sample sizes; every option opt-in, the default path bit for bit unchanged
 
+*Branch `c/eval-v2`; D364 as assigned (free on `main` at push). The job that uses it is the
+draft J067 (pc-jobs, after J061, night 3); not posted by this branch.*
+
+**2026-10-04**
+
+**Context.** Night 1's evaluator passed gate 1 (J060, D354): 6.3 M rows, 39 k games, test
+log-loss 0.497 against core's 0.554. Its grid (`--grid --time-budget 10800`) finished 7 of
+1,440 configurations in 3 h; 4 of the 7, at lr 0.003 and batch 4096, peaked at epoch 1 and
+several were cut after an epoch; the winner (hidden 128, card dim 4, 40 k parameters) peaked
+at epoch 20 of 32. Peak memory 4.9 GB. Nights 2 (plain) and 3 (15% exploring games, D358)
+add about twice as many games again. Gates 2 and 3 run on the night-1 model at their own
+pinned commit, so nothing they read may change: every flag below is opt-in, and without them
+`train_eval.py`, `dataset.py` and `gate_fit.py` produce the same files and numbers.
+
+**Decision.**
+
+1. **The split across nights needs no pinning.** `--split-by pair` (D317) already sends a
+   deck pair to train, val or test by `sha256("pair|" + pair)` alone once there are 20 pairs
+   or more (`assign_pairs`), so adding nights never moves a pair: night 1's test pairs are
+   test pairs of nights 1-3, v1 never trained on a test pair of the new dataset, and v2 never
+   trains on gate 1's test pairs. `tools/ml/split_audit.py` proves it on the data and exits
+   1 otherwise: every deck pair, draft folder (`games/<seed>/`) and deck name in one split;
+   pairs per night and split; with `--reference` (night 1's dataset) every reference game
+   present and in its old split, its test pairs DATA's test pairs, and no DATA test pair a
+   reference training or validation pair. A pair's name is `cubelab <seed> A|B`; two pool
+   keys may reuse a seed, which only joins two drafts into one split group (counted).
+2. **The dataset.** `dataset.py --queue-root R --nights 1,2,3` without `--cube` takes every
+   normal and bridge folder (every cube) and records each game's `night` in games.jsonl and
+   `nights` in stats.json (only when `--nights` is given). `--vocab-from DIR|MODEL` encodes
+   over that dataset's or model's own card list, card for card, so the schema id is v1's and
+   v1 scores the new rows (J067's pilot checks the id). Exploring games are kept by default
+   for the evaluator (D358, `--play-explore include`, as before).
+3. **`--train-fraction f`** keeps the training pairs with `sha256("frac-v1|" + pair) < f`
+   (`in_fraction`): deterministic, independent of the other pairs and nested (0.25's pairs
+   are inside 0.5's). Val and test are untouched and the dropped games are never loaded.
+   **`--curve 0.25,0.5,1.0`** trains one configuration at each share (in forked workers with
+   `--jobs`) and reports test log-loss with a 95% interval over test deck pairs (2,000
+   resamples), each share's paired difference to the largest, core's, and the verdict line
+   "more data still helps" only when the last step's interval is above 0.
+4. **`--search sha`** (`eval_search.py`): successive halving over `SHA_GRID` = GRID with the
+   learning rates 3e-4, 5e-4, 1e-3, 2e-3, 3e-3 (the review's point 4: J060's lr 0.003 at batch
+   4096 peaked at epoch 1). The base configuration (the command line's) first, then the space
+   in a seeded order. Rung 0 trains every configuration `--min-epochs` epochs; each rung keeps
+   the best 1/`--eta` (3) by best validation log-loss so far and RESUMES them (weights, Adam's
+   moments, generator) to eta times the epochs; the last `--finalists` (eta) train to early
+   stopping exactly as a plain fit (`EpochTrainer`, whose full run is the old `train_numpy`,
+   draw for draw). Every configuration compared in a rung has had the same epochs. `--configs
+   N` fixes N; otherwise a 20-batch probe times an epoch and N is the largest whose plan fits
+   80% of `--time-budget` (printed with "repeat with --configs N"). Results do not depend on
+   `--jobs` (each configuration its own generator; a rung is ranked when all of it is back).
+   The budget is also a deadline; a cut search says `cutByBudget` and is then not exactly
+   reproducible. `--grid` is unchanged (the tests hold it to the old loop).
+5. **Speed.** `bench_epoch.py` times an epoch on synthetic rows of night 1's shape (6,343,314
+   rows, D305's 243 board columns, 731 slots x 17 states, 24 card cells a row; hidden 128, dim
+   4, batch 4096). Measured in this container (4 cores shared with other work, load average
+   about 25; one BLAS thread): float64, the default, 219 s of wall time per training epoch
+   (85 s CPU), 23 k rows/s; **`--fast`** (`evalnet.Fast32`: float32 parameters, inputs and
+   products, the input layer's backward product only for the pooled card columns, the
+   standardised board written straight into the input matrix) 101.5 s (47 s CPU), 50 k rows/s:
+   2.2x. Two workers at once (`--jobs 2`, `--fast`) 66.6 k rows/s in all; four, on four
+   contended cores, 41 k. Four BLAS threads in one process were slower than one (955 s an
+   epoch under that load): the matrices are 4096 x ~300 x 128, too small to split, so the
+   cores go to workers, one BLAS thread each, not to threads. `--fast` is not bit for bit the
+   float64 numbers (rounding in the 7th digit), so it is opt-in; the model is exported and
+   scored in float64 as always (Java parity untouched).
+6. **Memory.** `--compact` (train_eval and `gate_fit.py score`) holds a split's board as
+   int8 where every value of a column fits, counts in int8, row pointers in int32: identical
+   numbers in 350 bytes a row against 621 (measured: the arrays of 50,000 synthetic rows of night
+   1's shape, every board column fitting int8; a real column whose values pass 127 stays int16).
+   Night 1's 6.3 M rows are then about 2.2 GB of arrays instead of 3.9; nights 1-3, about 19 M
+   rows if nights 2 and 3 are night 1's size, about 6.7 GB. That is close to J060's 9 GB
+   envelope, so J067 measures the full load before anything trains and takes 4 down to 1
+   workers by what stays under 8.5 GB, or stops there. `--jobs J` forks after loading, so the rows are shared
+   copy-on-write; `--dry-load --jobs J` runs one batch in each worker and reports each
+   worker's peak private memory (sampled while it works) and `peakWithWorkersGB`.
+7. **What a held-out number is worth** (the methods review). Rows of one game share one
+   outcome, so every train report ends with a `heldOut` block, report-only: rows, games and
+   deck pairs per split; on test, the eval model's residuals' intraclass correlation within a
+   game and within a pair, the design effect 1 + (m − 1)ρ (m the row-weighted mean group
+   size) and the effective sample size; every model's test log-loss with a 95% interval over
+   pairs, row-weighted and game-weighted; and D358's exploring test games apart from the
+   plain ones. `eval_compare.py` and the curve report the same.
+8. **`--weight-by game`**: every game the same total weight in the training loss and in the
+   validation log-loss early stopping reads. `--curve-weights none,game` trains each share
+   both ways and reports game-weighted minus unweighted on the same test pairs, by row and by
+   game. **`--subsample s`** (the independent review's point 1): each epoch trains on
+   ceil(s x c) rows of every c-row game, a systematic draw from a fresh random start, so an
+   epoch costs s of a pass and the search fits about 1/s as many epochs in its hours.
+9. **`--aux-turns w`** (point 2): a linear head on the last hidden layer predicts the row's
+   `turns_to_end` (standardised by the training split), its squared error times w in the
+   loss; reported as held-out MAE beside the training mean's. It is never exported: the model
+   file is the win head, and the gates read only that.
+10. **Lower-noise labels: the hook, not the producer.** `--soft-labels F.npz` (`game`,
+    `rows_to_end`, `p` in [0, 1], optional `k`) makes a training row's target
+    (1 − `--soft-weight`) outcome + w p; val and test always score against the outcome.
+    Tested on synthetic soft labels. **Left:** the producer. For a sampled decision row it
+    rebuilds the position from the viewer's redacted log with the hidden cards determinized
+    and plays it out K times with Forge Default on both seats, as `coach-grade.sh`
+    (`mtgtable.grade.CoachGrade`) does per option; what it lacks is a mode that plays the
+    position as it stands (Default choosing) instead of every option, and a batch over
+    (game, rows_to_end) keys that writes the .npz. Note that such a label is the value under
+    sampled hidden cards, not the real ones: for a viewer-side evaluator that is the right
+    target, and it is why the outcome label is noisier than K suggests.
+11. **v2 against v1** (`eval_compare.py`): both models on DATA's test split, plain games only
+    (exploring test games are their own subset), subsets `all`, `reference` (night 1's test
+    pairs) and `new`; log-loss, Brier, ECE and log-loss(old) − log-loss(new) with a 95%
+    interval over pairs; optionally gate 1's turn-end positions scored by both. It refuses a
+    comparison if either model trained or early-stopped on a test pair. **The rule, written
+    before the run:** v2 is BETTER on gate 1's pairs when, on `reference`, the difference is
+    above 0 with the interval's lower end above 0; otherwise "not shown better". It is a
+    report, not a gate: promotion is still D354's gates, gate 1 by `gate_fit.py` unchanged.
+
+**On the play** (the independent review's point 3). encode.py has no explicit on-the-play
+column, but the information is there: `turn` is the player-turn number and `round` is
+ceil(turn/2), so 2·round − turn is 1 on the first player's turns, and on the play = that
+parity XOR `my_turn` (extra turns aside). A hidden layer represents it. An explicit column
+would change the schema id, so v1 could not score the new rows (no same-pairs comparison),
+and Java's `GamePosition`, the parity fixtures and `eval_serve.py` would all move with it;
+not done here. A v3 that changes the schema anyway should add it.
+
+**Default unchanged, proven** (`tools/ml/tests/test_eval_v2.py`): the old `train_numpy`
+and grid loop are copied into the test verbatim from main before D364, and the new code
+gives the same weights, history and grid records, bit for bit, on the fixtures; a default
+CLI run's model file and report carry no new key but `heldOut`. Also tested: fraction
+determinism and nesting, the split's stability across made-up nights and the audit catching
+a leak, search determinism across `--jobs` and its fairness (equal epochs per rung), the
+budget plan, Fast32's gradients against float64, the ICC, game weights, the aux head (not
+exported), subsampling, soft labels, and the comparison end to end on a fixture queue.
+`eval_serve.py` serves v1 as before and serves v2 unchanged (same schema id, same export
+format: the aux head is never written).
+
+**Rejected.** Pinning the test split to night 1's list (the hash already does it, and a
+list would have to travel with every dataset); random search with a short warm-up only
+(halving gives the survivors the full training a warm-up does not); more BLAS threads per
+fit (measured slower at these sizes); a torch path for the new options (CPU torch measured
+slower than numpy here, D316).
+
+## D367 — Search changes are aimed by error analysis: `tools/ml/search_errors.py` reads the decision records, gate 2's truth tables, review reports and the ladder, and says where the search loses, with intervals over games
+
+*Branch `c/search-error-analysis`; D367, the next number free at push (D362–D366
+are held by other open branches).*
+
+**2026-10-04** (a methods review the owner approved)
+
+**Context.** Three search tweaks were SPRT-tested on hunches and none gained:
+`aturns=1` (D351; 50.2% over 488 games), the oracle (D350; 47.5% over 40 games)
+and the LCB override (D350; 50.7% over 856 games). Each night spent on a tweak
+that does not touch a real failure mode is a night lost. The lab already
+records what an error analysis needs.
+
+**Decision.** Before the next search change is proposed, it is aimed with
+`tools/ml/search_errors.py` (standard library; numpy only for `--model`). It
+reads, each input optional:
+
+- decision records (D347) of the seats that played the search (`--policy`),
+  the search's per-candidate report (D350) included; a record answered by
+  exploration (D358) is left out;
+- gate 2's set and full-game truth tables (D354), with the hand rankers at 3
+  and 12 rounds;
+- post-game review reports (D353), their `leaf` regrets kept apart from their
+  `wins` regrets;
+- the AI ladder's `results/` and `sprt.jsonl` (D318, D319).
+
+It writes `var/analysis/<name>/`: `report.md`, CSV tables (Parquet when pyarrow
+is installed), `summary.json` for a job's checks and `manifest.json` (input
+hashes, code version). The same inputs give byte-identical report, tables and
+summary. The analyses:
+
+1. **Regret** by decision kind (spell, attack, block, other), turn bucket,
+   phase, cube and deciding policy, per source; a mistake is "clear" only when
+   the source's own paired interval excludes zero (D353's rule).
+2. **The search against Forge, judged by the truth.** Gate 2's hand ranker at
+   3 rounds is search-v1-fixed3's ranking without its margin rule, so the
+   truth adjudicates the search on every decision of the set, not only where a
+   recorded seat searched. Per variant (the ranker's pick, the margin rule read
+   through the win scale, a recorded override): truth(search) − truth(Forge),
+   whose noisy-maximum bias cancels, and the helped / harmful / unclear rates.
+3. **The search's own noise.** Per searched decision: the pick against the best
+   other candidate, its standard error (exact and paired when one of the two is
+   Forge's answer, else the unpaired approximation), overlap at 95%, P(the pick
+   is the worse of the two), whether 4× the rounds would separate them, and
+   decisions within noise of the margin; with both rankers, how often 12 rounds
+   pick differently from 3 and which pick the truth prefers.
+4. **Card hotspots.** A regret is credited to the chosen option's cards and,
+   when the best option was another, to its cards (`missed`); tags come from
+   the deciding seat's own view of the card (types, `{X}`, flash, an instant
+   cast in combat) and an optional tag file.
+5. **Loss forensics.** For each recorded game the analysed seat lost: its win
+   chance at each decision row (the evaluator through `eval_serve.py`'s own
+   encoder, or else the search's own end-of-turn estimate), the largest fall
+   and the seat's decision there; for each SPRT, A's score by cube, game length
+   and seat.
+
+**Honesty rules.** Intervals resample games (a ladder game's mirror block),
+never single decisions. A leaf number is an end-of-turn estimate, never called
+a win rate. A card is named only when the deciding seat's state shows its face.
+The report lists what it read and what it left out, and why.
+
+**Not done.** The LCB rule is not simulated on the truth set (the rankers do
+not report paired per-round differences). Ladder batches are not recorded today
+(`tools/ai-ladder/bench.ts` passes no `--record-*` flag), so a lost SPRT game has
+a result line but no frames; forensics reads recorded games (ai-bench
+`--record-all`, lab runs with search seats). Modal spells and combat tricks
+beyond "an instant cast in combat" need the tag file.
+
+**Rejected.** Another SPRT before the analysis (three hunches cost three nights
+and gained nothing); pooling decisions as independent (the decisions of one game
+share its deal); mixing the leaf and the full-game regrets in one table (they
+measure different things); a notebook (not runnable as a lab job, not
+deterministic).
+
+## D368 — The win chance says how sure it is and why: `/eval` serves an ensemble of one schema's models (their mean, `sd`, `n`), and `explain: true` adds exact integrated-gradient attributions in logit space, grouped into buckets a player reads; both are advertised on `/health` (`evalEnsemble`, `evalExplain`), and one model is served exactly as before
+
+*Branch `c/winchance-uncertainty`; D368 (D362–D367 are held by other open branches).
+ForgeCoach's side is its own branch `c/winchance-uncertainty` (`src/evalClient.ts`,
+`src/winChance.ts`, `src/ui/winchance/`, a "why" line in the film room).*
+
+**2026-10-04** (a methods review the owner approved: make the win chance more honest
+and more useful for coaching)
+
+**Context.** D361 serves one model's P(win). A single number says nothing of how much
+another training run of the same config would disagree, and a fall of 9 points says
+where the game turned, not what the model saw change.
+
+**Decision.**
+
+1. **An ensemble.** `--eval-model` (helper) / `--model` (`eval_serve.py`) takes one export,
+   several comma-separated, a directory (its `ensemble.json`, else every `*.json`), or a
+   manifest `{"format": "mtgtable-position-eval-ensemble", "formatVersion": 1, "models":
+   [paths relative to it]}`; at most 16. Every member passes every D361 refusal, and all
+   must share the schema id, vocabulary (and its sha), feature count, card offset and card
+   states, or nothing is served; one file named twice is refused. `p` is the members'
+   mean, `sd` their sample standard deviation (n ≥ 2), `n` their number. `model` is a hash
+   of the members' shas; one member is served exactly as before (its own sha, its own
+   P(win), no `sd`). The default prefers `var/ml/models/night-1-ensemble.json` when it
+   exists, else D361's `night-1-eval.json`; each is looked for in this checkout and then in
+   the lab clone (D369's lookup), the ensemble in both places before the single model, and
+   each path of a comma list the same way.
+2. **What `sd` means.** How far training runs that differ only in their seed disagree about
+   this position: the model's own uncertainty, not the game's luck. ForgeCoach says so in
+   its tooltip. No train_eval change is needed: `--seed` changes the initialisation and the
+   batches, not the `--split-by pair` split. Job J069 trains four more seeds of night 1's
+   chosen config and checks each one's calibration (gate 1's clause C on its own test
+   split, `gate_metrics.py calib`); a seed that fails stays out of the manifest.
+3. **Attributions** (`tools/ml/attribution.py`, `explain: true` or `/eval?explain=1`):
+   integrated gradients of the network's **logit** against one fixed baseline per model --
+   the training split's mean board (standardised columns at 0) and no card known by name
+   (the pooled card block at 0). The network is ReLU layers and a linear output, so along
+   the straight path it is piecewise linear: the path is walked segment by segment (the
+   next boundary is where the first unit crosses zero) and each constant gradient weighted
+   by its segment's length. The integral is a finite sum, exact, not a Riemann
+   approximation. The network's input is affine in D305's raw vector (standardisation, a
+   linear pooling of card counts through the embedding), so each raw feature's share is the
+   chain rule through that map. Completeness holds: the shares sum to logit − baseline
+   logit. Points of win chance are the shares times one factor, (p − p0)/(z − z0), so they
+   keep the shares' signs and proportions and sum to 100 (p − p0). An ensemble's
+   attribution is the members' mean, each against its own baseline.
+4. **Buckets.** Each board feature goes to one named bucket ("your board", "their life",
+   "cards in hand", "their hand size", "your mana and lands", "your graveyard and exile",
+   "your spells this turn", "the stack", "combat", "the turn and phase"); a card cell goes
+   to the card's own bucket ("your Glorybringer", "their face-down cards", "tokens"). A
+   card's own bucket is what the model knows of it beyond its type, size and mana value,
+   which sit in the board buckets. The answer lists every bucket with a share, largest
+   first, so a client can subtract two positions bucket by bucket: ForgeCoach's "why" of a
+   fall is the difference between the positions before and after it (the same baseline, so
+   the differences sum to the fall).
+5. **Hidden information.** An attribution is a function of the encoded vector only, and
+   that vector is encode.py's (D361 §6): a card cell that is 0 has a share of exactly 0 and
+   a card bucket is only reported when its card is in the vector, so a bucket can only
+   name a card the viewer sees.
+6. **Advertised.** `/health` adds `evalEnsemble` (the number of models) and `evalExplain`
+   (1 when every member's export is one attribution.py can differentiate: formatVersion 1,
+   ReLU hidden layers, one sigmoid output). An older `eval_serve.py` says neither: the
+   runner reports `evalEnsemble: 1, evalExplain: 0`. ForgeCoach sends `explain` only to a
+   helper that says `evalExplain: 1` (an older one refuses the unknown field) and shows the
+   ± only when an answer carries `sd`.
+
+**Verified** (this container, the parity model `fixtures/eval/model.json`, one hidden
+ReLU layer; `tools/ml/tests/test_attribution.py`, `tools/eval-runner-selftest.mjs`):
+
+- completeness on every decision row of the 22 committed recordings: |Σ shares − (z − z0)|
+  < 1e-9, |Σ points − 100 (p − p0)| < 1e-7; attribution.py's own logit gives the served
+  P(win) to 1e-12;
+- exactness: the walk equals a 4,000-point midpoint Riemann sum of the gradient (to 1e-3 of
+  the logit gap) on rows whose path crosses ReLU boundaries; with no hidden layer it is
+  gradient × input;
+- hidden information: D305's scrambler (the opponent's hand named, libraries filled, stubs
+  named, face-down `alt`s) changes no attribution, and every card a bucket names is shown
+  face up in the viewer's state;
+- the ensemble: mean, sample sd and n against the members' own P(win) (1e-12); a member of
+  another schema refused; the three ways to name an ensemble load the same one; through the
+  helper's route, a single model still answers the golden P(win) (1e-9), `n: 1`, no `sd`.
+- measured: over 865 decision rows, an answer took 5.6 ms on average, 10.4 ms with
+  `explain`; at most 30 path segments; a median of 27 buckets (at most 65).
+
+**Not done.** A night-1 ensemble (J069 trains it; the PC's numbers are not measured here);
+`sd` is not a calibrated interval and is not shown as one; attributions of an export that
+is not ReLU + sigmoid (refused by name, the win chance still served).
+
+**Rejected.**
+
+- **Gradient × input alone**: not complete for a network with hidden ReLUs, so the shares
+  would not add up to the number shown.
+- **A sampled Riemann sum for integrated gradients**: an approximation where an exact sum
+  is cheap.
+- **Shapley sampling over buckets**: dozens of forward passes per answer and a sampling
+  error, for a network whose exact path integral is a few dozen segments.
+- **The attributions' baseline as the previous position**: it would make each answer
+  depend on which frame the client asked about before; one baseline per model lets a
+  client difference any two positions.
 
 ## D369 — The owner's games flow into the human test set by themselves: `play.sh` copies every finished human-vs-AI game from `var/games/` into `var/ml/human/` with a manifest, `human_eval.py` scores the evaluator there against prior, life and core with intervals over games, and the first check is pre-registered at 30 games
 
@@ -17607,6 +17918,87 @@ interval. `tools/eval-runner-selftest.mjs` (12f): the lab-clone lookup.
 - **Reading the first check whenever the set grows**: optional stopping; one population, fixed
   in advance, read once.
 - **Searching the lab clone first**: a model Justin placed in his checkout on purpose must win.
+
+## D370 — A zstd archive tier for finished lab nights: `tools/lab/archive.py` recompresses a closed queue night's recordings from gzip to zstd level 19, verified file by file; the Python and Node readers take `.jsonl.zst` as they take `.jsonl.gz` and prefer it; Java stays gzip-only and refuses a `.zst` with the restore command
+
+*Branch `c/zstd-archive`; D370 (D362–D369 are held by other open branches).*
+
+**2026-10-04** (the owner's request: the most data per byte of the PC's disk)
+
+**Context.** The cube lab's recordings (D315) are gzipped frame logs, about 165 KB a game;
+queue nights 1 and 2 hold 7.7 GB of them, the disk has about 42 GB free and a night adds
+4–5 GB. J065 measured, on 120 of those recordings, zstd level 19 at **4.4× smaller than
+gzip**, decompressing at about 6 GB/s of raw data; a dictionary trained on half the sample
+did not measurably help.
+
+**Decision.**
+
+1. **Two tiers.** Everything a browser or ForgeCoach opens directly stays gzip: human games,
+   samples, live recordings, every night still being written, and every recorder's output.
+   Only a CLOSED queue night (or a finished run folder) is recompressed, by
+   `python3 tools/lab/archive.py night --root var/cubelab/queue --night N` (`dir FOLDER` for
+   a run folder), to `X.jsonl.zst`, level 19, one file per worker process (`--jobs`). No
+   dictionary.
+2. **Closed means closed.** `night` refuses, exit 3, nothing touched, a night with no plan
+   (`night-N.json`), one not in `queue.json`'s `nights`, one a running `cubelab … queue run
+   --night N` names, one with a `.jsonl.gz` changed in the last 30 minutes, and one with a
+   planned draft that has no `drafts.jsonl` line (`--allow-incomplete` for a night cut short
+   and not to be resumed: only seeds with a line, whose matches are over, are touched).
+3. **Verify before delete.** Per file: gunzip whole (a cut-short gzip is left as it is and
+   counted `truncated`), SHA-256 of the raw bytes, the `.zst` written to `.tmp`, fsynced,
+   renamed, the folder fsynced; then read back FROM DISK, decompressed strictly (a stream
+   ending inside a frame fails) and its SHA-256 compared; only a match appends the file's
+   line (path, raw/gz/zst bytes, SHA-256) to `<root>/archive/night-N.files.jsonl`, fsynced,
+   and only then is the `.gz` deleted. A stop anywhere leaves the `.gz` alone, both (the
+   readers take the `.zst`; the next run re-verifies it and deletes the `.gz`), or the
+   `.zst` alone and logged. Re-running is resuming; a lock file keeps two runs apart.
+4. **The manifest** (`archive/night-N.json`): recordings, files (not kept, not truncated),
+   verified, failed, truncated, kept as gzip, bytes before and after, the ratio, the CPU
+   time and the redaction check. `--dry-run` measures 64 recordings in memory and writes
+   only `night-N.dryrun.json` (expected bytes after, CPU hours).
+5. **Hidden information.** Twelve of the night's logs go through
+   `tools/check-redaction.mjs` as gzip before and as zstd after; the verdicts and statistics
+   must be identical (path and byte count aside), else the run exits 1. That proves Node's
+   reader end to end on the real archive; the Python reader is proved by the verify step.
+6. **Readers.** One shared opener per language:
+   - Python: `tools/ml/fio.py` (`open_log`, `is_log`, `prefer_zst`, `key_name`,
+     `recorded`). `encode.py`'s `find_logs` / `read_games` (and so dataset.py,
+     policy_data.py, the gate builders, eval_serve's `--log`) take `.jsonl.zst`, list a game
+     once when both files exist (the `.zst`), open the `.zst` for a stored `.gz` path the
+     archive replaced, and keep a game's key (`game_key` hashes the recorded `.gz` name), so
+     a dataset built before and after the archive splits identically. `reserved.py` knows
+     the suffix. The gate lists a Java step reads (`gates.heldout`, the regret candidates)
+     name the recorded `.gz` path. The `zstandard` package is needed only to open a `.zst`;
+     without it that open says so.
+   - Node: `check-redaction.mjs` reads `.zst` with Node's own `zlib.zstdDecompressSync`
+     (Node 22.15+ / 23.8+; CI and the PC run 24); an older Node says what it needs. No new
+     dependency.
+   - Java: the pinned Forge jar has no zstd decoder (netty's `ZstdDecoder` needs zstd-jni,
+     which it does not ship), so `WireLog` (coach-grade.sh, leaf-rows.sh, the D354 gates)
+     stays `.jsonl` / `.jsonl.gz` and refuses a `.zst` (by name, by its magic bytes, or a
+     stored `.gz` path whose file is now a `.zst`) with `python3 tools/lab/archive.py
+     restore PATH`, which writes a verified `.gz` back. The archiver keeps as gzip every log
+     the gate lists under `var/ml/gates/` name (`heldout.txt`, the regret
+     `candidates.jsonl` / `set.jsonl`), plus any `--keep-gz LIST`.
+
+**Measured** (this container, the six committed lab recordings): 21.5 MB raw, 372 KB gzip,
+106 KB zstd 19: **3.51× smaller than gzip** (3.24–3.66× per file), 203× smaller than raw.
+J065's 4.4× is the PC's sample of real nights.
+
+**Order.** A job that reads an archived night's recordings must pin a commit with this
+decision; J070 (the archive of nights 1 and 2) runs after J062 and J063, which read them at
+older commits.
+
+**Rejected.**
+
+- **zstd for everything:** ForgeCoach and the board open `.gz` in the browser;
+  a browser-side zstd decoder is not something every browser has.
+- **A trained dictionary:** J065 saw no gain on real nights; here one trained on four committed
+  logs made the other two 1.5% smaller (519 bytes), less than its own 110 KB, and every reader would have to find the dictionary.
+- **zstd in Java** (zstd-jni or aircompressor): a new dependency beside the pinned jar for
+  the few logs a Java step reads, which the keep lists leave as gzip.
+- **Deleting the `.gz` once the `.zst` is written:** a write is not a verify; the file is
+  read back from disk first.
 
 ## D371 — The lab's A9 quarantines were the checker's, not a leak: a face-down card's face reaches exactly the seats Forge's `canFaceDownBeShownTo` allows, a look permission included; A9 now checks that rule in its own order, tighter in play and with one narrow, evidenced exemption in exile
 
@@ -18068,3 +18460,97 @@ the rule nor its constants are tuned on J072's data.
   the time. A larger cap is a knob change with its own cost per generation, left to its own
   decision.
 - D360's raise rule (`raise.ts`) reads exploration, not dominant-win, and is unchanged.
+
+## D378 — A cold tier for finished queue nights: `archive.py cold` moves a night's recordings to the archive drive as one tar.zst per key folder (plus its quarantine folder), verified member by member before anything hot is deleted; nights a job still reads are held; `restore-night` brings them back
+
+*Branch `c/cold-archive`; D378 (D377 is held by an open branch). Builds on D370.*
+
+**2026-10-04** (the owner's request: a hot/cold split, with the archive on the PC's second drive)
+
+**Context.** The `/` disk has about 53 GB free, and each queue night adds about 4 GB in about
+40,000 small `.jsonl.gz` files. `/mnt/e` is a 1 TB SATA SSD with 534 GB free. It is mounted
+as NTFS through ntfs3 with `windows_names`, so names with `:` or a trailing dot are refused.
+It is slow with many small files, has no Linux permissions, comes up read-only if Windows
+hibernated, and there is no sudo. D370's per-file zstd keeps the files on `/`.
+
+**Decision.**
+
+1. **Hot and cold.** Hot (`/`) holds:
+   - the night being recorded;
+   - anything a queued or pinned job reads;
+   - the warehouse, the datasets and the models;
+   - every `drafts.jsonl`.
+
+   Cold is `labArchiveRoot` in `config.json` (`/mnt/e/forgecoach-archive`; else
+   `--archive-root` or `$LAB_ARCHIVE_ROOT`), with an optional second copy at
+   `labArchiveMirror`.
+2. **One file per key folder.** `archive.py cold --night N` writes
+   `night-N/<key>.tar.zst` for each key folder. It holds the night's finished seeds'
+   recordings, **decompressed**, in one zstd stream (level 19, 2^27 window, long-distance
+   matching, `--jobs` threads). The night's quarantine folder becomes
+   `night-N/quarantine.tar.zst`, byte for byte, as evidence. A cut-short gzip and any
+   non-recording file are also kept byte for byte.
+
+   Unit names are NTFS-safe: a key NTFS would refuse is cleaned and given a `-<sha8>`
+   suffix. Measured on the six committed lab recordings: 5.09× smaller than their gzip,
+   against 3.51× for D370's one zstd file each.
+3. **Verify, then delete.** A unit is written as `.tmp` on the drive, fsynced and renamed,
+   then read back from the drive. Every tar member is hashed, and the name, size and
+   SHA-256 must equal what was read from the source, with no member missing or extra. A
+   mirror's copy must hash equal to the primary. The members list and manifests are
+   written next:
+   - `<drive>/night-N/<unit>.members.jsonl`;
+   - `<drive>/night-N/manifest.json`;
+   - `<drive>/manifest.jsonl` (an index line per unit);
+   - the hot copies under `<root>/archive/cold-night-N*`.
+
+   Only after that is each source deleted, and only if its size and mtime are still the
+   ones archived. Empty seed folders go too. A lock keeps two runs apart. Re-running
+   resumes: an archived unit is re-verified before its remaining hot files are deleted,
+   and a failed re-verify deletes nothing. `--keep-hot` archives and deletes nothing.
+4. **Refused (exit 3) unless:**
+   - the night is closed (D370's rules);
+   - `redaction`: its redaction pass ran (`<root>-quarantine-nN/failed.txt`);
+   - `warehouse`: the warehouse's `_state.json` offsets cover every `drafts.jsonl` line of
+     the night;
+   - `encoded`: a `--dataset` holds at least `--min-encoded` (90%) of its recordings;
+   - `holds`: no hold in `tools/lab/archive-holds.json` names the night while a job it
+     waits for is not `done` on pc-results.
+
+   Nights 1 and 2 are held until J052, J062, J063, J064 and J074 are done, and nights 1–3
+   until J067. A STATUS that cannot be read holds the night. `--skip-check` and
+   `--release-hold` are explicit, and the manifest records them.
+5. **Skipped (exit 4)** with a warning, and nothing written, when:
+   - no archive root is configured;
+   - the root is on the hot disk's own filesystem (the drive is not mounted);
+   - a probe write fails (the drive is read-only).
+6. **Restore.** `archive.py restore-night --night N [--unit U] [--from-mirror] [--as
+   original|gz|zst|raw]` writes each member back where it lived, compressed as it was. It
+   checks the raw SHA-256 of what it wrote, never overwrites a file that differs, keeps
+   the archive, and marks the unit `restoredAt`.
+7. **The warehouse** reads the hot-side night manifests into a `cold_archives` table. Its
+   view `recording_location` says, per recorded queue game, whether the recordings are hot
+   or in which tar.zst they are.
+
+**Tested** (`tools/lab/tests/test_cold.py`): the drive is a temp folder whose creates go
+through a Windows-names check or a read-only volume. The tests cover:
+- the round trip (frames, game keys, the cut-short gzip and the quarantine bit for bit, a
+  D370 `.zst`);
+- every refusal by name, and its waiver;
+- an open night;
+- a read-only drive, a missing drive and no configured root, each skipping;
+- verify-before-delete, including a flipped byte caught on resume;
+- a killed run resumed, with a stale `.tmp` on the drive;
+- the lock;
+- the dry run;
+- the mirror restoring after the primary is lost;
+- the warehouse table.
+
+**Rejected.**
+
+- **One file per recording on the drive:** NTFS through ntfs3 is slow with 40,000 small
+  files a night, and per-file zstd is a third less dense.
+- **Storing the gzip members as they are:** zstd over gzip gains almost nothing; the raw
+  bytes and the SHA-256 of each are what a restore must reproduce.
+- **Deleting on a successful write:** a write is not a verify; the archive is read back from
+  the drive first.

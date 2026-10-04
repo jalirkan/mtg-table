@@ -160,7 +160,7 @@
  */
 
 import { readFileSync, statSync } from 'node:fs';
-import { gunzipSync } from 'node:zlib';
+import * as zlib from 'node:zlib';
 
 const PROTOCOL_VERSION = 1;
 
@@ -1118,13 +1118,31 @@ function hasDir(line) {
   return /"dir"\s*:/.test(line);
 }
 
+/**
+ * A frame log's text, whatever its compression (by suffix): `.gz` through
+ * gunzip, `.zst` through Node's own zstd (zlib.zstdDecompressSync, Node 22.15+
+ * and 23.8+; CI and the PC run 24), anything else as UTF-8.
+ */
+function readLogText(path) {
+  const raw = readFileSync(path);
+  if (path.endsWith('.gz')) return zlib.gunzipSync(raw).toString('utf8');
+  if (path.endsWith('.zst')) {
+    if (typeof zlib.zstdDecompressSync !== 'function') {
+      throw new Error(`${path}: reading a .zst log needs Node's zlib zstd (Node >= 22.15 or 23.8; this is ${process.version}) -- D370`);
+    }
+    return zlib.zstdDecompressSync(raw).toString('utf8');
+  }
+  return raw.toString('utf8');
+}
+
 function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clientLog = false } = {}) {
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
 
-  // A `.gz` log (the cube lab's in-worker recordings, D315) is read whole and
-  // checked exactly as its plain text would be.
-  const text = path.endsWith('.gz') ? gunzipSync(readFileSync(path)).toString('utf8') : readFileSync(path, 'utf8');
+  // A `.gz` log (the cube lab's in-worker recordings, D315) or a `.zst` one
+  // (a finished queue night's archive, D370) is read whole and checked exactly
+  // as its plain text would be.
+  const text = readLogText(path);
   const lines = text.split('\n').filter((l) => l.length > 0);
   if (lines.length === 0) {
     return { problems: [`${path}: empty file`], stats: {} };

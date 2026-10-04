@@ -65,7 +65,7 @@ REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 STATE_VERSION = 1
 HEAD_BYTES = 4096
 INCREMENTAL = ("drafts", "games", "decks", "deck_cards", "picks")
-SMALL = ("cards", "cube_cards", "runs", "versions", "nights", "quarantine", "sprt", "experiments", "gate_reports",
+SMALL = ("cards", "cube_cards", "runs", "versions", "nights", "quarantine", "cold_archives", "sprt", "experiments", "gate_reports",
          "ml_reports", "matchup_power")
 # tools/ml's report files kept whole in ml_reports (matchup.py's balance.json, dataset.py's stats.json, ...);
 # any other *.json under --ml whose first 4 KiB name a "gate" is read as a gate report (D354).
@@ -418,6 +418,9 @@ def schemas() -> Dict[str, Any]:
         "ml_reports": [("path", s), ("kind", s), ("mtime", T), ("bytes", i), ("json", s)],
         "quarantine": [("night", i), ("list_file", s), ("path", s), ("key", s), ("seed", i), ("game", i), ("seat", i),
                        ("draft_id", s)],
+        "cold_archives": [("night", i), ("unit", s), ("kind", s), ("key", s), ("file", s), ("mirror_file", s),
+                          ("members", i), ("raw_bytes", i), ("hot_bytes", i), ("archive_bytes", i), ("sha256", s),
+                          ("vers", L), ("archived_at", T), ("restored_at", T), ("manifest", s)],
         "matchup_power": [("path", s), ("name", s), ("card_id", s), ("power", f), ("sd_post", f), ("sd_boot", f), ("points", f),
                           ("prior", f), ("games", i), ("land", b), ("ai", s), ("cubes", L)],
     }
@@ -708,7 +711,7 @@ def build_runs(out: str, sources: List[Source]) -> None:
     write_small(out, "versions", vers)
 
 
-QUAR_RE = re.compile(r"(?P<key>(?:normal|bridge)/[^/]+)/games/(?P<seed>\d+)/g(?P<game>\d+)-seat(?P<seat>\d)\.jsonl\.gz$")
+QUAR_RE = re.compile(r"(?P<key>(?:normal|bridge)/[^/]+)/games/(?P<seed>\d+)/g(?P<game>\d+)-seat(?P<seat>\d)\.jsonl\.(?:gz|zst)$")  # .zst: archived, D370
 
 
 def build_quarantine(out: str, root: Optional[str]) -> int:
@@ -731,6 +734,28 @@ def build_quarantine(out: str, root: Optional[str]) -> int:
                                  "seat": int(q.group("seat")) if q else None,
                                  "draft_id": draft_id("queue", key, q.group("seed")) if q else None})
     return write_small(out, "quarantine", rows)
+
+
+def build_cold(out: str, root: Optional[str]) -> int:
+    """The cold tier's units (archive.py cold, D378): `<root>/archive/cold-night-<N>.json`, one row a tar.zst."""
+    rows = []
+    if root:
+        for f in sorted(glob.glob(os.path.join(root, "archive", "cold-night-*.json"))):
+            if f.endswith(".dryrun.json"):
+                continue
+            d = read_json(f)
+            if not isinstance(d, dict):
+                continue
+            for u in d.get("units") or []:
+                if not isinstance(u, dict):
+                    continue
+                rows.append({"night": _int(d.get("night")), "unit": _str(u.get("name")), "kind": _str(u.get("kind")),
+                             "key": _str(u.get("key")), "file": _str(u.get("file")), "mirror_file": _str(u.get("mirrorFile")),
+                             "members": _int(u.get("members")), "raw_bytes": _int(u.get("rawBytes")),
+                             "hot_bytes": _int(u.get("hotBytes")), "archive_bytes": _int(u.get("archiveBytes")),
+                             "sha256": _str(u.get("sha256")), "vers": [str(v) for v in d.get("vers") or []],
+                             "archived_at": _ts(u.get("at")), "restored_at": _ts(u.get("restoredAt")), "manifest": rel(f)})
+    return write_small(out, "cold_archives", rows)
 
 
 def build_nights(out: str, plans: List[Tuple[int, str, Dict[str, Any]]]) -> None:
@@ -927,6 +952,7 @@ def ingest(a: argparse.Namespace, say=print) -> Dict[str, Any]:
         build_runs(out, sources)
         build_nights(out, plans)
         n_quar = build_quarantine(out, a.root)
+        build_cold(out, a.root)
         res = build_results(out, a.ladder, a.experiments, a.ml)
         n_cards, n_cube_cards = build_cards(out, REPO, a.facts, a.cards_db, say)
         write_schemas(out)
@@ -971,6 +997,14 @@ EXTRA_VIEWS = {
                d.colors, d.played, g.on_play = d.seat as on_play, g.winner in ('A', 'B') as decisive,
                g.winner = d.seat as won, g.turns, g.timeout, g.error is not null as errored
         from games g join decks d using (draft_id)""",
+    # where each recorded queue game's recordings are: hot (the queue folder) or a cold tar.zst (archive.py cold, D378)
+    "recording_location": """
+        select g.draft_id, g.night, g.key, g.seed, g.game, g.rec_dir,
+               case when c.file is null then 'hot' else 'cold' end as tier, c.file as archive_file,
+               c.mirror_file, c.restored_at
+        from games g left join cold_archives c
+          on c.kind = 'recordings' and c.night = g.night and c.key = g.key
+        where g.source = 'queue' and g.recorded""",
 }
 
 
@@ -1002,7 +1036,10 @@ def make_views(out: str) -> str:
                 continue
             con.execute(f"create or replace view {t} as {view_sql(out, t)}")
         for name, sql in EXTRA_VIEWS.items():
-            con.execute(f"create or replace view {name} as {sql}")
+            try:
+                con.execute(f"create or replace view {name} as {sql}")
+            except duckdb.CatalogException:
+                pass   # a table it reads is not built yet (an older warehouse before its next ingest)
         con.execute("checkpoint")
     finally:
         con.close()
