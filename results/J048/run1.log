@@ -1,0 +1,49 @@
+==== J048 run1 started 2026-10-03T21:30:30-04:00 in unit lab-J048-run1, 4 worker(s)
+ai-bench: run j048-bench, 4 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j048-bench
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J048.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+ai-bench: shard 3 starts in slot 3
+== Default+search vs Default
+  games 20: A 14, B 6, draws 0 (timeouts 0, engine errors 0)
+  A win rate 70.0% of 20 decisive  (95% Wilson CI 48.1-85.5%)
+  focus deck (first of each pair) win rate 40.0% of 20  (95% CI 21.9-61.3%)
+  game time mean 35.2 s, median 25.5 s, max 123.5 s; turns mean 18.2; AI eval timeouts 3 (0.15/game)
+  A vs the known 50%: 70.0% over 20 deal(s), 95% CI 49.3-90.7%, p = 0.058 (+147 Elo, CI -5 to +395)
+  RemAIDeck cards left in hand at game end: A 0, B 0
+  A counters:     {cast.Blood Artist=3, cast.Cauldron Familiar=3, cast.Deadly Dispute=1, cast.Grim Haruspex=1, cast.Zulaport Cutthroat=1, search.a.changed=24, search.a.considered=123, search.a.ms=156545, search.b.changed=5, search.b.considered=49, search.b.ms=57131, search.candidateUnmappable=2, search.copyUs=46781413, search.fallback.budget=57, search.oppFaceDownDecisions=13, search.p.changed=68, search.p.changed.fromPass=33, search.p.changed.toOther=15, search.p.changed.toPass=20, search.p.considered=378, search.p.ms=414083, search.p.skipLand=153, search.playUs=524917103, search.rollouts=14831, search.rounds=4827, search.standInCards=441, search.standInDecisions=344}
+  B counters:     {activate.Carrion Feeder=7, cast.Blood Artist=2, cast.Carrion Feeder=1, cast.Priest of Forgotten Gods=1, cast.Village Rites=1, cast.Woe Strider=1, cast.Zulaport Cutthroat=1, forge.outletActivation=7}
+  focus counters: {activate.Carrion Feeder=7, cast.Blood Artist=2, cast.Carrion Feeder=1, cast.Cauldron Familiar=1, cast.Village Rites=1, cast.Woe Strider=1, cast.Zulaport Cutthroat=1, forge.outletActivation=7, search.a.changed=10, search.a.considered=63, search.a.ms=76232, search.b.changed=2, search.b.considered=23, search.b.ms=26477, search.candidateUnmappable=2, search.copyUs=22586042, search.fallback.budget=34, search.p.changed=27, search.p.changed.fromPass=17, search.p.changed.toOther=7, search.p.changed.toPass=3, search.p.considered=192, search.p.ms=211126, search.p.skipLand=77, search.playUs=266348391, search.rollouts=7094, search.rounds=2432, search.standInCards=219, search.standInDecisions=170}
+cube lab: cubes/synergy-cube-180.md, grid, 20 draft(s) from seed 730101, best of 1, 4 job(s), AI mixed per drafter (Default:0.5,Reckless:0.25,Cautious:0.25), ratings cubes/synergy-cube-180.ratings.tsv, out var/cubelab/runs/j048-lab, recording every game (both chairs) into var/cubelab/runs/j048-lab/games
+drafted and built 20 draft(s) in 0.1 s; playing 1 game each on 4 worker(s)
+[1/20] seed 730104: A:WU 1-0 B:BG  games A
+[2/20] seed 730105: A:WG 1-0 B:UB  games A
+[3/20] seed 730103: A:UB 1-0 B:UR+g  games A
+[4/20] seed 730101: A:WU 0-1 B:WU  games B
+[5/20] seed 730108: A:UG 0-1 B:WU+g  games B
+[6/20] seed 730102: A:UG 0-1 B:WU+g  games B
+[7/20] seed 730107: A:RG 0-1 B:WU  games B
+[8/20] seed 730109: A:WU 0-1 B:UG  games B
+[9/20] seed 730106: A:BG 0-1 B:WU  games B
+[10/20] seed 730110: A:WG 1-0 B:UG  games A
+[11/20] seed 730111: A:WG 1-0 B:WU  games A
+[12/20] seed 730112: A:UG 0-1 B:WU  games B
+[13/20] seed 730114: A:UG 0-1 B:WU  games B
+[14/20] seed 730115: A:UG 0-1 B:WU  games B
+[15/20] seed 730118: A:WB 1-0 B:UR  games A
+[16/20] seed 730117: A:UG 0-1 B:WU  games B
+[17/20] seed 730119: A:UG 0-1 B:BR  games B
+[18/20] seed 730120: A:WU 0-1 B:UG  games B
+[19/20] seed 730116: A:UB+g 1-0 B:UG  games A
+[20/20] seed 730113: A:WG 0-1 B:WU  games B
+matches: 37 s for 20 (1.9 s a draft wall-clock on 4 worker(s))
+recorded: 20 game(s), both chairs, 3.6 MiB gzipped (185 KiB a game) under var/cubelab/runs/j048-lab/games
+done in 37 s -> var/cubelab/runs/j048-lab/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/runs/j048-lab
+policy dataset: 4692 decision rows from 40 games, 3456 state features (schema 213fb0af32a12b2a); sources {'bench': 40}; versions {'77a6437a2d63': 40}
+  test :    644 rows,    4 games; attack 31, block 22, choice 14, mulligan 5, priority 555, target 17; by forge 564, search 80; searched 92 (overrode 17)
+  train:   4048 rows,   36 games; attack 200, block 95, choice 44, mulligan 41, priority 3548, target 120; by forge 3586, search 462; searched 458 (overrode 80)
+policy dataset: 5984 decision rows from 40 games, 3456 state features (schema 213fb0af32a12b2a); sources {'lab': 40}; versions {'be6014e2f2ad': 40}
+  train:   5442 rows,   38 games; attack 256, block 84, choice 77, mulligan 44, priority 4851, target 130; by forge 5442; searched 0 (overrode 0)
+  val  :    542 rows,    2 games; attack 21, block 7, choice 1, mulligan 2, priority 488, target 23; by forge 542; searched 0 (overrode 0)

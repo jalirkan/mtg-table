@@ -1,0 +1,65 @@
+{
+ "kind": "policy",
+ "schemaId": "213fb0af32a12b2a",
+ "nFeatures": 3456,
+ "vocab": [
+  "cube.md"
+ ],
+ "groupBy": "match",
+ "split": {
+  "train": 80,
+  "val": 10,
+  "test": 10
+ },
+ "salt": "",
+ "kinds": [
+  "attack",
+  "block",
+  "choice",
+  "mulligan",
+  "priority",
+  "target"
+ ],
+ "searchedOnly": false,
+ "rows": 5984,
+ "games": 40,
+ "splits": {
+  "train": {
+   "games": 38,
+   "rows": 5442,
+   "kind:mulligan": 44,
+   "by:forge": 5442,
+   "kind:priority": 4851,
+   "kind:choice": 77,
+   "kind:attack": 256,
+   "incomplete": 179,
+   "kind:block": 84,
+   "kind:target": 130
+  },
+  "val": {
+   "games": 2,
+   "rows": 542,
+   "kind:mulligan": 2,
+   "by:forge": 542,
+   "kind:priority": 488,
+   "kind:attack": 21,
+   "kind:target": 23,
+   "incomplete": 29,
+   "kind:block": 7,
+   "kind:choice": 1
+  }
+ },
+ "skippedGames": {},
+ "notes": {},
+ "reservedChecked": true,
+ "reservedDecks": 120,
+ "reservedHits": {},
+ "versions": {
+  "be6014e2f2ad": 40
+ },
+ "sources": {
+  "lab": 40
+ },
+ "humanDirs": [],
+ "humanInTraining": false
+}
