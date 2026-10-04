@@ -1,0 +1,6 @@
+==== J049 run1 started 2026-10-03T21:36:22-04:00 in unit lab-J049-run1, 1 worker(s)
+dataset: 6343314 rows from 39177 games, 12670 features (schema 82815752c2f5e346, vocab 731 slots)
+  skipped games: {'unlabelled': 2}
+  train: 5023976 rows, 31079 games (2534 groups); games won/lost/drawn 15449/15630/0; rows +1/-1/0 2515994/2507982/0
+  val  : 725207 rows, 4476 games (360 groups); games won/lost/drawn 2224/2252/0; rows +1/-1/0 363890/361317/0
+  test : 594131 rows, 3622 games (296 groups); games won/lost/drawn 1791/1831/0; rows +1/-1/0 296907/297224/0

@@ -1,78 +1,61 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:16:21-04:00",
- "heartbeat": "2026-10-04T02:16:21-04:00",
+ "updated": "2026-10-04T02:16:37-04:00",
+ "heartbeat": "2026-10-04T02:16:37-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 25.6,
-  "memUsedGb": 27.2,
+  "load1": 21.69,
+  "memUsedGb": 7.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 7468,
-  "pressure": 57.93,
+  "swapUsedMb": 5732,
+  "pressure": 18.78,
   "cpus": 16,
   "budgetGb": 23.4
  },
  "running": [
   {
-   "publicTitle": "Evaluator training and fit gate",
-   "publicEst": "~6 h",
-   "id": "J049",
-   "title": "(re-post of J034, after numpy) Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
+   "publicTitle": null,
+   "publicEst": null,
+   "id": "J053",
+   "title": "(was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
    "cpu": "heavy",
-   "phase": "stopping",
-   "started": "2026-10-03T21:35:34-04:00",
-   "elapsed": 16847,
-   "done": 6343314,
-   "total": null,
-   "unit": "rows",
-   "ratePerHour": 12985178.9,
+   "phase": "prepare",
+   "started": "2026-10-04T02:16:37-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": 2400,
+   "unit": "games",
+   "ratePerHour": null,
    "eta": null,
    "workers": 1,
    "workersMax": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-04T02:06:41-04:00",
-   "memGb": 9.89,
+   "dataUpdated": "2026-10-04T02:16:37-04:00",
+   "memGb": null,
    "live": {
-    "ds.rows": 6343314,
-    "ds.games": 39177,
-    "ds.games_per_h": 0,
-    "ds.reservedChecked": 1,
-    "ds.test_games": 3622,
-    "ds.test_rows": 594131,
-    "ds.train_games": 31079,
-    "ds.train_rows": 5023976,
-    "ds.val_games": 4476,
-    "ds.val_rows": 725207,
-    "ds.versions": 26,
-    "ds.written": 1,
-    "elapsed_s": 16830,
-    "fit.written": 0,
-    "leaf.lines": 0,
-    "model.bytes": 0,
-    "model.exists": 0,
-    "peak_worker_rss_gb": 0.19,
+    "sprt_games": 0,
+    "all.games": 0,
+    "all.errors": 0,
+    "all.timeouts": 0,
+    "all.median_game_s": 0,
+    "elapsed_s": 0,
     "pressure_events": 0,
     "workers": 1
    },
    "liveHeadline": [
-    "ds.rows",
-    "ds.games"
+    "sprt_games",
+    "all.games",
+    "all.errors",
+    "all.timeouts"
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-10-04T02:16:21-04:00",
-     "kind": "stop",
-     "workers": 1,
-     "pressure": 57.9
-    }
-   ],
-   "detail": "lab-J049-run1"
+   "pressureEvents": [],
+   "detail": "lab-J053-prepare"
   }
  ],
  "queue": [
@@ -103,14 +86,6 @@
   {
    "publicTitle": null,
    "publicEst": null,
-   "id": "J053",
-   "title": "(was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
-   "cpu": "heavy",
-   "est": "one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops well before)"
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
    "id": "J054",
    "title": "(was J024, earlier J017) Night 2 SPRT (TEST ONLY): a search that sees the real hidden cards vs the honest one -- the value of inference",
    "cpu": "heavy",
@@ -133,7 +108,17 @@
    "est": "~15 min (one JVM: a scale fit over the lab's recordings, then 12 decisions at 1.5 s and 3 s)"
   }
  ],
- "waiting": [],
+ "waiting": [
+  {
+   "publicTitle": "Evaluator training and fit gate",
+   "publicEst": "~6 h",
+   "id": "J049",
+   "title": "(re-post of J034, after numpy) Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
+   "reason": "stopped for memory; will retry",
+   "est": "~4-7 h (encode about 1,000 rows/s single-threaded; the grid gets 3 h; the leaf rows about 30 min on one JVM)",
+   "detail": "memory: some avg10 57.9%, swap-in 529/s, job 9.9/21.4 GB; retry after 2026-10-04T02:31:37-04:00"
+  }
+ ],
  "finished": [
   {
    "publicTitle": "Decision records pilot re-run",
