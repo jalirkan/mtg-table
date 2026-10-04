@@ -18,6 +18,8 @@
 //   node tools/coach-helper.mjs --match-dir var/match --supervisor <play.sh's pid>   # D303, play.sh does this
 //   node tools/coach-helper.mjs --eval-model var/ml/models/night-1-eval.json        # D361 (that path is the default
 //                                                    when the file exists; --no-eval turns /eval off)
+//   node tools/coach-helper.mjs --eval-model a.json,b.json,c.json                   # D368: an ensemble (or a
+//                                                    directory, or an ensemble.json manifest): mean, sd, n
 //
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
@@ -66,6 +68,10 @@
 //                 when it exists).  tools/eval-runner.mjs's header is that contract;
 //                 /health carries "eval": 1 (and "evalModel", "evalSchema") only once
 //                 the model has loaded and passed its schema checks, else "eval": 0.
+//                 D368: --eval-model may name an ensemble (a,b,c / a directory / a
+//                 manifest; the default prefers var/ml/models/night-1-ensemble.json),
+//                 answers then carry "sd" and "n"; "explain": true (or ?explain=1)
+//                 adds the attributions; /health says "evalEnsemble" and "evalExplain".
 //                 --no-eval turns it off; --eval-python, --eval-schema <schemaId> (refuse
 //                 another), --eval-cube <cube.md> (refuse another card list).
 //
@@ -570,9 +576,11 @@ export function startHelper(opts) {
       if (raw === null) return;
       let q;
       try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+      // D368: ?explain=1 is the same as "explain": true in the body.
+      if (url.searchParams.get('explain') === '1' && q && typeof q === 'object' && !Array.isArray(q)) q.explain = true;
       const r = await evaluator.post(q);
       send(res, r.status, r.body, cors);
-      say(r.status, r.status === 200 ? ` (p ${r.body.p.toFixed(3)}, turn ${r.body.turn}, ${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      say(r.status, r.status === 200 ? ` (p ${r.body.p.toFixed(3)}${r.body.sd !== undefined ? ` sd ${r.body.sd.toFixed(3)}` : ''}${r.body.explain ? ', explained' : ''}, turn ${r.body.turn}, ${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path === '/engine/start') {

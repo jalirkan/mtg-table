@@ -13,6 +13,8 @@ only; never starts the engine.
     python3 tools/ml/gate_metrics.py file var/ml/models/night-1-eval.json
     python3 tools/ml/gate_metrics.py ext var/ml/17lands/rows-premier              # ext17l.py rows (D359)
     python3 tools/ml/gate_metrics.py exam var/ml/reports/outside-exam.json        # outside_exam.py (D359)
+    python3 tools/ml/gate_metrics.py calib var/ml/reports/night-1-s*.json         # gate 1's clause C per model (D368)
+    python3 tools/ml/gate_metrics.py ensemble var/ml/models/night-1-ensemble.json # the served ensemble loads (D368)
 """
 from __future__ import annotations
 
@@ -132,6 +134,43 @@ def m_grade(out: str, requests: str | None) -> dict[str, float]:
     return st
 
 
+def m_calib(paths: list[str]) -> dict[str, float]:
+    """Gate 1's clause C (gates.FIT_RULE: ECE and every bin of >= binMinRows rows) on
+    each train_eval.py --report's TEST split, as gate_fit.py's `calibration` reads the
+    same reliability bins: `models`, how many pass, the worst ECE and bin gap, and
+    `pass` (1 when every report is there and passes)."""
+    R = G.FIT_RULE
+    n = ok = 0
+    worst_ece = worst_gap = 0.0
+    for p in paths:
+        try:
+            with open(p, encoding="utf-8") as f:
+                ev = json.load(f)["models"]["eval"]["test"]
+        except (OSError, ValueError, KeyError, TypeError):
+            return {"written": 0, "models": n}
+        n += 1
+        ece = float(ev["all"]["ece"])
+        gaps = [abs(b["predicted"] - b["observed"]) for b in ev.get("reliability") or []
+                if b.get("rows", 0) >= R["binMinRows"]]
+        gap = max(gaps) if gaps else 0.0
+        worst_ece, worst_gap = max(worst_ece, ece), max(worst_gap, gap)
+        if ece <= R["eceMax"] and gap <= R["binTolerance"]:
+            ok += 1
+    return {"written": 1, "models": n, "passing": ok, "pass": 1 if n and ok == n else 0,
+            "maxEce": worst_ece, "maxBinGap": worst_gap}
+
+
+def m_ensemble(spec: str) -> dict[str, float]:
+    """eval_serve.py's own load of an ensemble (every refusal, and one layout)."""
+    import eval_serve as S
+    try:
+        srv = S.Served(spec)
+    except (OSError, ValueError, ImportError) as e:
+        print(f"gate_metrics: {e}", file=sys.stderr)
+        return {"loads": 0}
+    return {"loads": 1, "n": srv.n, "explain": 1 if srv.explainable else 0}
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
         print(__doc__, file=sys.stderr)
@@ -147,6 +186,10 @@ def main(argv: list[str]) -> int:
         out = m_ext(path)
     elif kind == "exam":
         out = m_exam(path)
+    elif kind == "calib":
+        out = m_calib(argv[1:])
+    elif kind == "ensemble":
+        out = m_ensemble(path)
     elif kind == "lines":
         out = {"lines": len(G.read_jsonl(path)) if os.path.isfile(path) else 0}
     elif kind == "file":

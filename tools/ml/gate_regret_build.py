@@ -50,6 +50,7 @@ from collections import Counter
 from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fio  # noqa: E402
 import gates as G  # noqa: E402
 
 MAIN = {"MAIN1", "MAIN2", "main1", "main2"}
@@ -115,7 +116,7 @@ def scan(logs: list[str], test_pairs: set[str], reserved: dict[str, str] | None,
     pools: dict[str, str] = {}
     best: dict[tuple[str, str], dict[str, Any]] = {}
     for path in E.find_logs(logs):
-        if only_files is not None and os.path.normpath(os.path.relpath(path)) not in only_files:
+        if only_files is not None and os.path.normpath(fio.recorded(os.path.relpath(path))) not in only_files:
             counts["log not in the model's test split (not read)"] += 1
             continue
         for pg in P.read_policy_games(path):
@@ -152,7 +153,7 @@ def scan(logs: list[str], test_pairs: set[str], reserved: dict[str, str] | None,
                 if st is None or not isinstance(b.get("frame"), int):
                     continue
                 counts[f"eligible {st}"] += 1
-                rel = os.path.relpath(path)
+                rel = fio.recorded(os.path.relpath(path))   # Java reads it: the .gz name (D370)
                 rid = hashlib.sha256(f"{rel}#{b['frame']}:{st}".encode()).hexdigest()[:16]
                 c = {"id": rid, "log": rel, "frame": b["frame"], "mode": "review", "type": st,
                      "oppPool": pool_file(rd, out_dir, pools),

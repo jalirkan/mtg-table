@@ -30,7 +30,9 @@
 //                 — the fit after each ladder run, cumulative, at most 60 points
 //   sprt[]        newest first: { at, id, a, b, elo0, elo1, alpha, beta,
 //                 result: "H1"|"H0"|"inconclusive"|"stopped", llr, lower, upper,
-//                 games, pairs, score, purpose: "sprt"|"league" }
+//                 games, pairs, score, purpose: "sprt"|"league",
+//                 minPairs?, varFloor? (D373; absent on lines written before it: 8 and 0.01) }
+//                 H0 reads "not shown >= elo1", never "no gain" (D373)
 //   tune[]        newest first: { at, id, base, vary, pool, eta, games,
 //                 winner: { label, params, hash, registeredAs },
 //                 rounds: [{ round, blocks, standings: [{ label, wins, losses, score }] }] }
@@ -53,6 +55,8 @@ export interface SprtLog {
   elo0: number; elo1: number; alpha: number; beta: number;
   result: 'H1' | 'H0' | 'inconclusive' | 'stopped'; llr: number; lower: number; upper: number;
   games: number; pairs: number; score: number; purpose: 'sprt' | 'league';
+  /** D373: the decision rule's minimum pairs and variance floor (absent before D373: 8 and 0.01). */
+  minPairs?: number; varFloor?: number;
 }
 
 export interface TuneLog {
@@ -265,7 +269,7 @@ export function renderHtml(doc: LadderDoc): string {
   const sprt = doc.sprt.length === 0 ? '<p class="dim">No SPRT run yet (<code>ai-ladder.sh sprt A B</code>).</p>'
     : `<div class="wrap"><table><thead><tr><th>when</th><th>A vs B</th><th>H1: A ≥ B +</th><th>result</th><th>LLR</th><th>bounds</th><th>games</th><th>A's score</th><th>via</th></tr></thead><tbody>`
       + doc.sprt.slice(0, 30).map((s) => `<tr><td class="dim">${esc(s.at.slice(0, 16).replace('T', ' '))}</td><td><b>${esc(s.a)}</b> vs ${esc(s.b)}</td><td>${s.elo1} <span class="dim">(H0 ≤ ${s.elo0}; α ${s.alpha}, β ${s.beta})</span></td>`
-        + `<td><span class="res ${s.result}">${s.result === 'H1' ? 'H1 accepted' : s.result === 'H0' ? 'H0 accepted' : esc(s.result)}</span></td><td>${s.llr.toFixed(2)}</td><td class="dim">${s.lower.toFixed(2)} / ${s.upper.toFixed(2)}</td><td>${s.games} <span class="dim">(${s.pairs} pairs)</span></td><td>${pct(s.score)}</td><td class="dim">${esc(s.purpose)}</td></tr>`).join('')
+        + `<td><span class="res ${s.result}">${s.result === 'H1' ? `H1: ≥ ${s.elo1} better` : s.result === 'H0' ? `H0: not shown ≥ ${s.elo1} better` : esc(s.result)}</span></td><td>${s.llr.toFixed(2)}</td><td class="dim">${s.lower.toFixed(2)} / ${s.upper.toFixed(2)}</td><td>${s.games} <span class="dim">(${s.pairs} pairs)</span></td><td>${pct(s.score)}</td><td class="dim">${esc(s.purpose)}</td></tr>`).join('')
       + '</tbody></table></div>';
   const tune = doc.tune.length === 0 ? '<p class="dim">No tuner run yet (<code>ai-ladder.sh tune &lt;base&gt; --param k=v1,v2</code>).</p>'
     : doc.tune.slice(0, 10).map((t) => {

@@ -147,8 +147,10 @@ decides "A is stronger than B by ≥ elo1" (H1) or "by ≤ elo0" (H0), or the ga
 limit says inconclusive. The unit of evidence is a mirrored pair (A's share of
 its decisive games: 0, ½ or 1) and the statistic is the generalized SPRT on
 those scores, `LLR = N((x̄−s0)² − (x̄−s1)²)/(2σ²)` with `s = 1/(1+10^(−elo/400))`,
-stopping at Wald's bounds `ln(β/(1−α))` and `ln((1−β)/α)`; no decision before 8
-pairs. It prints the games used, and appends a line to `var/ai-ladder/sprt.jsonl`.
+stopping at Wald's bounds `ln(β/(1−α))` and `ln((1−β)/α)`; σ² is the pairs' sample
+variance floored at 0.05, and no decision is taken before 100 pairs (D373; the old 8 pairs
+and 0.01 are `--min-pairs 8 --var-floor 0.01`). **H0 means "A is not shown to be ≥ elo1
+better", never "no gain"**: a gain between elo0 and elo1 is invisible to the test. It prints the games used, and appends a line to `var/ai-ladder/sprt.jsonl`.
 Its games are ladder games too. Elo is the logistic scale above, not
 "normalized" Elo. Rough cost: a true +70 decides in a few hundred games, a true
 +20 against `--elo1 20` in a few thousand.

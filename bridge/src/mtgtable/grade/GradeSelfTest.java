@@ -53,6 +53,33 @@ public final class GradeSelfTest {
         }
     }
 
+    /** D370: a .jsonl.zst archive (or a stored .gz path it replaced) is refused with the restore command, never misread. */
+    static void zstdRefused() throws java.io.IOException {
+        final java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("wirelog-zstd-");
+        try {
+            final byte[] zstd = {(byte) 0x28, (byte) 0xb5, (byte) 0x2f, (byte) 0xfd, 0, 0, 0, 0};
+            final java.io.File zst = dir.resolve("g1-seat0.jsonl.zst").toFile();
+            final java.io.File sniffed = dir.resolve("renamed.jsonl").toFile();
+            java.nio.file.Files.write(zst.toPath(), zstd);
+            java.nio.file.Files.write(sniffed.toPath(), zstd);
+            for (final java.io.File f : new java.io.File[] {zst, sniffed, dir.resolve("g1-seat0.jsonl.gz").toFile()}) {
+                String msg = null;
+                try {
+                    WireLog.read(f);
+                } catch (final java.io.IOException e) {
+                    msg = e.getMessage();
+                }
+                check(msg != null && msg.contains("archive.py restore") && msg.contains("D370"),
+                        "WireLog refuses a zstd log with the restore command: " + f.getName() + " -> " + msg);
+            }
+        } finally {
+            for (final java.io.File f : dir.toFile().listFiles()) {
+                f.delete();
+            }
+            dir.toFile().delete();
+        }
+    }
+
     static boolean near(final double a, final double b, final double tol) {
         return Math.abs(a - b) <= tol;
     }
@@ -73,6 +100,7 @@ public final class GradeSelfTest {
         hiddenPool();
         review();
         try {
+            zstdRefused();
             plantedLeak();
         } catch (final java.io.IOException e) {
             check(false, "the planted-leak test could not write its files: " + e);

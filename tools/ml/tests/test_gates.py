@@ -238,6 +238,23 @@ class RegretScoreTest(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertTrue(any("underpowered" in w for w in r["reasons"]))
 
+    def test_fail_wording_and_mde(self):
+        """D372: a FAIL is worded by its interval against the pre-registered MDE; PASS/FAIL unchanged."""
+        rule = G.REGRET_RULE
+        wide = {"estimate": 0.004, "lo": -0.003, "hi": 0.011 + G.REGRET_REPORT["mde"]}
+        r = RS.reading(False, wide, [0.0, 0.05, -0.04] * 100, rule)
+        self.assertIn("underpowered", r["reading"])
+        self.assertIn("not 'no gain'", r["reading"])
+        narrow = {"estimate": -0.001, "lo": -0.004, "hi": 0.002}
+        self.assertIn("ruled out", RS.reading(False, narrow, [0.0, 0.01, -0.01] * 100, rule)["reading"])
+        self.assertIn("underpowered", RS.reading(False, narrow, [0.0] * 10, rule)["reading"])
+        self.assertEqual(RS.reading(True, wide, [0.1] * 300, rule)["reading"], "PASS")
+        with tempfile.TemporaryDirectory() as d:
+            code, rep = self.run_score(regret_files(d))
+            self.assertEqual(code, 0)
+            self.assertEqual(rep["power"]["reading"], "PASS")
+            self.assertGreater(rep["power"]["realisedMde"], 0)
+
     def test_unusable_answers_are_unscored(self):
         truth = answer("x", [("a", 0.6, False), ("b", 0.5, True)])
         good = answer("x", [("a", 0.7, False), ("b", 0.6, True)], measure="leaf")
@@ -474,6 +491,22 @@ class MetricsTest(unittest.TestCase):
                 f.write(json.dumps({"id": "b", "status": "ok", "playouts": 2}) + "\n")
             g = M.m_grade(out, None)
             self.assertEqual((g["answered"], g["ok"], g["error"], g["playouts"]), (2, 2, 0, 7))
+
+    def test_calibration_per_model(self):
+        """D368: clause C of gate 1 on each train_eval.py report's test split."""
+        def rep(d, name, ece, gap, rows=500):
+            p = os.path.join(d, name)
+            G.write_json(p, {"models": {"eval": {"test": {"all": {"ece": ece}, "reliability": [
+                {"bin": "0.0-0.1", "rows": rows, "predicted": 0.05, "observed": 0.05 + gap},
+                {"bin": "0.1-0.2", "rows": 10, "predicted": 0.15, "observed": 0.6}]}}}})
+            return p
+        with tempfile.TemporaryDirectory() as d:
+            good = [rep(d, f"s{i}.json", 0.01, 0.02) for i in range(3)]
+            m = M.m_calib(good)
+            self.assertEqual((m["models"], m["passing"], m["pass"]), (3, 3, 1), "a bin under 200 rows is not judged")
+            self.assertEqual(M.m_calib(good + [rep(d, "ece.json", 0.031, 0.0)])["pass"], 0)
+            self.assertEqual(M.m_calib(good + [rep(d, "bin.json", 0.01, 0.051)])["pass"], 0)
+            self.assertEqual(M.m_calib(good + [os.path.join(d, "missing.json")])["written"], 0)
 
 
 if __name__ == "__main__":

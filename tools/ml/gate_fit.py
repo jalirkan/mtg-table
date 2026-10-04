@@ -165,7 +165,7 @@ def cmd_score(a) -> int:
     with open(os.path.join(data, "stats.json"), encoding="utf-8") as f:
         stats = json.load(f)
     model_json, net = N.load_model(a.model)
-    schema, names, splits = T.load_data(data, tr["splitBy"])
+    schema, names, splits = T.load_data(data, tr["splitBy"], compact=bool(getattr(a, "compact", False)))
     if model_json.get("schemaId") != schema["schemaId"]:
         raise SystemExit("gate_fit: the model's schema is not the dataset's")
     trn, va, te = splits["train"], splits["val"], splits["test"]
@@ -229,6 +229,8 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--leaf-rows", required=True)
     s.add_argument("--leaf-scale")
     s.add_argument("--report")
+    s.add_argument("--compact", action="store_true",
+                   help="hold the rows compactly (train_eval.py --compact, D364): less memory, the same numbers")
     a = ap.parse_args(argv)
     return cmd_heldout(a) if a.cmd == "heldout" else cmd_score(a)
 

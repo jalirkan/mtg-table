@@ -17,6 +17,16 @@ decks IS a deck-set deck, card for card:
 
 Both sets are reserved by default (training on dev decks would flatter a tune
 on them in the same way); `sets=("confirm",)` narrows it.  Standard library only.
+
+A lab game whose decks cannot both be known FAILS CLOSED (D365): a cube-lab
+recording (its run folder's layout, or the lab's deck names in hello_ok) with
+no line for its draft seed in its run's drafts.jsonl -- or no drafts.jsonl at
+all -- knows at most the viewer's own deck, and the opponent's could be a
+deck-set deck.  `game_decks` marks such a game (`Decks.unknown`) and
+`reserved_hit` then returns UNKNOWN_DECK, so every builder drops it and counts
+it under that name, as it drops and counts a reserved deck.  A log that is not
+a lab game (a person's game, a fixture) never carries the other chair's deck,
+by the hidden-information rule; it is checked by the viewer's deck as before.
 """
 from __future__ import annotations
 
@@ -101,9 +111,51 @@ def run_drafts(run_dir: str) -> Dict[int, Dict[str, Any]]:
                 except json.JSONDecodeError:
                     continue
                 out[int(rec["seed"])] = {"decks": [MD.as_counts(MD.played_main(d)) for d in rec["drafters"]],
-                                         "ver": rec.get("ver") or "unversioned"}
+                                         "ver": rec.get("ver") or "unversioned",
+                                         # D375: seat A's and B's AI under a --profile-mix run (absent: run.json's profiles)
+                                         "profiles": rec.get("profiles")}
     _RUN_CACHE[run_dir] = out
     return out
+
+
+UNKNOWN_DECK = "unknown deck: a lab game with no drafts.jsonl line for its seed (D365, fails closed)"
+
+_LAB_DECK_NAME = re.compile(r"^cubelab \d+ [AB]$")   # tools/cubelab/run.ts names every lab deck so
+
+
+class Decks(list):
+    """The decks `game_decks` found: a list of name -> count, and `unknown`, why a lab game's
+    decks could not both be known (None: nothing missing).  Concatenating keeps `unknown`."""
+
+    unknown: Optional[str] = None
+
+    def __add__(self, other):  # type: ignore[override]
+        out = Decks(list(self) + list(other))
+        out.unknown = self.unknown or getattr(other, "unknown", None)
+        return out
+
+
+def lab_layout(path: str) -> Optional[Tuple[str, int]]:
+    """Where the lab writes a recording, whether or not its drafts.jsonl is there: the run folder and seed."""
+    p = os.path.realpath(path)
+    d1, d2 = os.path.dirname(p), os.path.dirname(os.path.dirname(p))
+    if os.path.basename(d2) == "games" and os.path.basename(d1).isdigit() \
+            and re.match(r"^g\d+-seat\d+\.jsonl(\.gz)?$", os.path.basename(p)):
+        return os.path.dirname(d2), int(os.path.basename(d1))
+    m = re.match(r"^draft-(\d+)-g\d+\.jsonl(\.gz)?$", os.path.basename(p))
+    if m and os.path.basename(d1) == "frames":
+        return d2, int(m.group(1))
+    return None
+
+
+def lab_hello(hello: Optional[Dict[str, Any]]) -> bool:
+    """hello_ok names a deck the way the cube lab names its decks ("cubelab <seed> A")."""
+    match = (hello or {}).get("match") or {}
+    for k in ("yourDeck", "aiDeck"):
+        name = (match.get(k) or {}).get("name")
+        if isinstance(name, str) and _LAB_DECK_NAME.match(name.strip()):
+            return True
+    return False
 
 
 def log_draft(path: str) -> Optional[Tuple[str, int]]:
@@ -115,23 +167,29 @@ def log_draft(path: str) -> Optional[Tuple[str, int]]:
         run = os.path.dirname(d2)
         if os.path.exists(os.path.join(run, "drafts.jsonl")):
             return run, int(os.path.basename(d1))
-    m = re.match(r"^draft-(\d+)-g\d+\.jsonl(\.gz)?$", os.path.basename(p))
+    m = re.match(r"^draft-(\d+)-g\d+\.jsonl(\.gz|\.zst)?$", os.path.basename(p))
     if m and os.path.basename(d1) == "frames" and os.path.exists(os.path.join(d2, "drafts.jsonl")):
         return d2, int(m.group(1))
     return None
 
 
-def game_decks(path: str, hello: Optional[Dict[str, Any]] = None, repo: str = ".") -> Tuple[list, str]:
+def game_decks(path: str, hello: Optional[Dict[str, Any]] = None, repo: str = ".") -> Tuple["Decks", str]:
     """The main decks a recorded game was played with, as far as can be known, and its lab version.
 
     A lab recording: both decks, from its run's drafts.jsonl.  Any other log: the viewer's own deck, when
-    hello_ok.match.yourDeck names a .dck path that exists (the other chair's deck is never in a log)."""
+    hello_ok.match.yourDeck names a .dck path that exists (the other chair's deck is never in a log).
+    A lab game -- by its folder layout or by the lab's deck names in hello_ok -- whose drafts.jsonl has
+    no line for its seed (or is not there) is marked `unknown`: `reserved_hit` fails closed on it (D365)."""
     hit = log_draft(path)
     if hit:
         d = run_drafts(hit[0]).get(hit[1])
         if d:
-            return d["decks"], d["ver"]
-    decks = []
+            return Decks(d["decks"]), d["ver"]
+    decks = Decks()
+    lay = hit or lab_layout(path)
+    if lay or lab_hello(hello):
+        where = f"run {os.path.basename(lay[0])}, seed {lay[1]}" if lay else "the lab's deck names in hello_ok"
+        decks.unknown = f"{UNKNOWN_DECK} [{where}]"
     yd = (((hello or {}).get("match") or {}).get("yourDeck") or {}).get("path")
     if yd:
         for cand in (yd, os.path.join(repo, yd)):
@@ -142,8 +200,22 @@ def game_decks(path: str, hello: Optional[Dict[str, Any]] = None, repo: str = ".
     return decks, "unversioned"
 
 
+def game_profiles(path: str) -> Optional[list]:
+    """D375: a lab recording's two seats' AI ([A, B]) when its run drew them per draft (--profile-mix),
+    else None (the run's fixed profiles, Default vs Default for the queue)."""
+    hit = log_draft(path)
+    if hit:
+        d = run_drafts(hit[0]).get(hit[1])
+        if d and d.get("profiles"):
+            return list(d["profiles"])
+    return None
+
+
 def reserved_hit(decks: Iterable[Dict[str, int]], reserved: Dict[str, str]) -> Optional[str]:
-    """Where the first reserved deck among `decks` comes from, or None."""
+    """Where the first reserved deck among `decks` comes from, or None.  A lab game whose decks are
+    not both known (`Decks.unknown`, from game_decks) is UNKNOWN_DECK: dropped, never passed (D365)."""
+    if getattr(decks, "unknown", None):
+        return UNKNOWN_DECK
     for d in decks:
         w = reserved.get(deck_key(d))
         if w:

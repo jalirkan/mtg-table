@@ -149,11 +149,19 @@ def make_schema(vocab: "E.Vocab", schema_kind: str = "d305", min_turn: int | Non
     return E.Schema(vocab)
 
 
+def make_vocab(vocab_paths: list[str], vocab_cards: list[str] | None = None) -> "E.Vocab":
+    """The vocabulary: the files' card lists, or (--vocab-from, D364) a built dataset's or model's own list."""
+    if vocab_cards is not None:
+        return E.Vocab.from_names(vocab_cards, [os.path.basename(p) for p in vocab_paths])
+    return E.Vocab.from_files(vocab_paths)
+
+
 def _init(vocab_paths: list[str], phases: list[str], reserved: dict[str, str] | None,
           vers: list[str] | None, human_dirs: list[str] | None, play_explore: str = "include",
-          schema_kind: str = "d305", min_turn: int | None = None, deck_vocab_min: float | None = None) -> None:
+          schema_kind: str = "d305", min_turn: int | None = None, deck_vocab_min: float | None = None,
+          vocab_cards: list[str] | None = None) -> None:
     _W.clear()
-    _W.update(schema=make_schema(E.Vocab.from_files(vocab_paths), schema_kind, min_turn), phases=phases,
+    _W.update(schema=make_schema(make_vocab(vocab_paths, vocab_cards), schema_kind, min_turn), phases=phases,
               reserved=reserved, vers=vers, human_dirs=human_dirs or [], play_explore=play_explore,
               schema_kind=schema_kind, deck_vocab_min=deck_vocab_min)
 
@@ -211,6 +219,10 @@ def _encode_file(path: str) -> list[tuple]:
             "active": np.asarray([r.active for r in rows], dtype=np.int8),
         }
         fields = {"game_key": g.game_key, "split_group": g.split_group, "match": g.match_key(),
+                  # the decks by card multiset (reserved.deck_key): train_eval's "deck seen in training" check
+                  "deckKeys": sorted(R.deck_key(d) for d in decks),
+                  # D375: the seats' AI when the lab drew them per draft (--profile-mix); null: Default vs Default
+                  "profiles": R.game_profiles(path),
                   "file": os.path.relpath(path), "seat": g.seat, "rows": len(rows), "label": rows[0].label,
                   "last_turn": max(r.turn + r.turns_to_end for r in rows), "ver": ver,
                   "source": P.source_of(path, g.header, _W["human_dirs"]),
@@ -276,13 +288,14 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
           vers: list[str] | None = None, human_dirs: list[str] | None = None,
           train_human: bool = False, jobs: int = 1, progress_every_s: float = 10.0,
           play_explore: str = "include", schema_kind: str = "d305", min_turn: int | None = None,
-          deck_vocab_min: float | None = None) -> dict[str, Any]:
+          deck_vocab_min: float | None = None, vocab_cards: list[str] | None = None,
+          night_of: dict[str, int] | None = None) -> dict[str, Any]:
     """Encode every log and write the shards.  `jobs` > 1 encodes the recordings in that many
     processes; the writer still takes them in path order, so every file written (shards,
     games.jsonl, stats.json) is byte for byte the one `jobs=1` writes."""
     if np is None:
         raise SystemExit("dataset.py needs numpy (pip install numpy)")
-    vocab = E.Vocab.from_files(vocab_paths)
+    vocab = make_vocab(vocab_paths, vocab_cards)
     schema = make_schema(vocab, schema_kind, min_turn)
     phases = phases or E.default_phases()
     os.makedirs(out, exist_ok=True)
@@ -331,7 +344,8 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
     reserved_hits: Counter = Counter()
     if play_explore not in PLAY_EXPLORE_MODES:
         raise ValueError(f"play_explore is one of {PLAY_EXPLORE_MODES}, got {play_explore!r}")
-    init_args = (vocab_paths, phases, reserved, vers, human_dirs, play_explore, schema_kind, min_turn, deck_vocab_min)
+    init_args = (vocab_paths, phases, reserved, vers, human_dirs, play_explore, schema_kind, min_turn, deck_vocab_min,
+                 vocab_cards)
     for files_done, results in enumerate(_encoded(paths, max(1, jobs), init_args), 1):
         for item in results:
             if item[0] == "skip":
@@ -355,7 +369,9 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
                           # D341: the lab version that played it ('unversioned' outside the lab or before D341)
                           "ver": fd["ver"], "source": source,
                           # D358: only on a game played with exploration (absent otherwise, as before)
-                          **({"explore": True} if fd.get("explore") else {})})
+                          **({"explore": True} if fd.get("explore") else {}),
+                          # D364: the queue night that drafted it, only when the build was given --nights
+                          **({"night": night_of.get(fd["file"])} if night_of is not None else {})})
             stats[s]["rows"] += fd["rows"]
             stats[s]["games"] += 1
             stats[s]["labels"][str(fd["label"])] += 1
@@ -387,6 +403,9 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
         "humanInTraining": train_human,
         # D358: the exploration filter and how many kept games explored
         "playExplore": {"mode": play_explore, "games": sum(1 for gm in games if gm.get("explore"))},
+        **({"nights": {str(k): v for k, v in sorted(Counter(gm.get("night") for gm in games).items(),
+                                                    key=lambda kv: (kv[0] is None, kv[0] or 0))}}
+           if night_of is not None else {}),
         "splits": {s: {"rows": stats[s]["rows"], "games": stats[s]["games"], "groups": groups[s],
                        "gameLabels": dict(stats[s]["labels"]), "rowLabels": dict(stats[s]["rowLabels"]),
                        "shards": shard_no[s]} for s in shown},
@@ -435,17 +454,24 @@ def load(out: str, split: str) -> dict[str, Any]:
     return {k: np.concatenate([p[k] for p in parts]) for k in keys}
 
 
-def queue_logs(root: str, cube: str, nights: list[int] | None = None) -> list[str]:
+def queue_logs(root: str, cube: str | None, nights: list[int] | None = None,
+               night_of: dict[str, int] | None = None) -> list[str]:
     """The overnight queue's recordings for one cube (D323): `<root>/normal/<cube>/games/` and every
-    `<root>/bridge/<a>+<b>/games/` whose pair names it.  With `nights`, only the drafts those nights'
-    plans (`<root>/night-N.json`: chunks of key, first seed and drafts) handed out."""
+    `<root>/bridge/<a>+<b>/games/` whose pair names it -- or, with `cube` None, every normal and bridge
+    folder (all cubes, D364).  With `nights`, only the drafts those nights' plans (`<root>/night-N.json`:
+    chunks of key, first seed and drafts) handed out; `night_of`, when given, is filled with each kept
+    recording's night (by its path)."""
     keys = []
-    if os.path.isdir(os.path.join(root, "normal", cube)):
+    ndir = os.path.join(root, "normal")
+    if cube is None:
+        if os.path.isdir(ndir):
+            keys += [f"normal/{d}" for d in sorted(os.listdir(ndir)) if os.path.isdir(os.path.join(ndir, d))]
+    elif os.path.isdir(os.path.join(ndir, cube)):
         keys.append(f"normal/{cube}")
     bdir = os.path.join(root, "bridge")
     if os.path.isdir(bdir):
-        keys += [f"bridge/{d}" for d in sorted(os.listdir(bdir)) if cube in d.split("+")]
-    ranges: dict[str, list[tuple[int, int]]] | None = None
+        keys += [f"bridge/{d}" for d in sorted(os.listdir(bdir)) if cube is None or cube in d.split("+")]
+    ranges: dict[str, list[tuple[int, int, int]]] | None = None
     if nights:
         ranges = {}
         for n in nights:
@@ -455,7 +481,7 @@ def queue_logs(root: str, cube: str, nights: list[int] | None = None) -> list[st
             with open(pf, encoding="utf-8") as fh:
                 for c in json.load(fh).get("chunks") or []:
                     lo = int(c["seed"])
-                    ranges.setdefault(c["key"], []).append((lo, lo + int(c["drafts"])))
+                    ranges.setdefault(c["key"], []).append((lo, lo + int(c["drafts"]), n))
     out: list[str] = []
     for k in keys:
         g = os.path.join(root, k, "games")
@@ -464,10 +490,32 @@ def queue_logs(root: str, cube: str, nights: list[int] | None = None) -> list[st
         for path in E.find_logs([g]):
             if ranges is not None:
                 seed = os.path.basename(os.path.dirname(path))
-                if not seed.isdigit() or not any(lo <= int(seed) < hi for lo, hi in ranges.get(k, [])):
+                hit = [n for lo, hi, n in ranges.get(k, []) if seed.isdigit() and lo <= int(seed) < hi]
+                if not hit:
                     continue
+                if night_of is not None:
+                    night_of[os.path.relpath(path)] = hit[0]
             out.append(path)
     return out
+
+
+def queue_vocab(root: str) -> list[str]:
+    """Every normal folder's own cube list under a queue root, in folder-name order (the vocabulary of a
+    dataset over all of a queue's cubes, as night 1's: J049 named `normal/*/cube.md`)."""
+    ndir = os.path.join(root, "normal")
+    out = [os.path.join(ndir, d, "cube.md") for d in sorted(os.listdir(ndir)) if os.path.isdir(os.path.join(ndir, d))] \
+        if os.path.isdir(ndir) else []
+    return [p for p in out if os.path.isfile(p)]
+
+
+def vocab_from(path: str) -> list[str]:
+    """The card list of a built dataset (its features.json) or of a model (its JSON): a new dataset encoded
+    over exactly that vocabulary has the same schema id, so a model trained on the old one scores it (D364)."""
+    f = os.path.join(path, "features.json") if os.path.isdir(path) else path
+    with open(f, encoding="utf-8") as fh:
+        j = json.load(fh)
+    v = j["vocab"]
+    return list(v["cards"] if isinstance(v, dict) else v)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -505,7 +553,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--queue-root", help="the overnight queue's root (D323); with --cube, its normal/<cube> and "
                                          "bridge/<a>+<b> folders naming the cube")
     ap.add_argument("--cube", help="with --queue-root: the cube id (vintage); the vocabulary defaults to "
-                                   "cubes/<id>-cube-180.md under --repo")
+                                   "cubes/<id>-cube-180.md under --repo.  Without it, every normal and bridge "
+                                   "folder of the queue (all cubes), the vocabulary every normal folder's cube.md (D364)")
+    ap.add_argument("--vocab-from", help="the vocabulary of a built dataset (its directory) or a model (its JSON), "
+                                         "card for card: the same schema id, so that dataset's model scores this "
+                                         "one (D364)")
     ap.add_argument("--nights", default="", help="with --queue-root: only these nights' drafts (1,2)")
     ap.add_argument("--group-by", choices=("game", "match"), default="match",
                     help="match (default since D316): every game of one deck pair in one split -- the "
@@ -516,15 +568,24 @@ def main(argv: list[str] | None = None) -> int:
     if len(w) != 3 or sum(w) <= 0:
         ap.error("--split takes three weights")
     logs, vocab, out = list(a.logs), list(a.vocab or []), a.out
+    night_of: dict[str, int] | None = None
     if a.queue_root:
-        if not a.cube:
-            ap.error("--queue-root needs --cube")
         nights = [int(x) for x in a.nights.split(",") if x.strip()] or None
-        qlogs = queue_logs(a.queue_root, a.cube, nights)
+        night_of = {} if nights else None
+        qlogs = queue_logs(a.queue_root, a.cube or None, nights, night_of)
         if not qlogs:
-            ap.error(f"--queue-root {a.queue_root}: no recordings for cube {a.cube}")
+            ap.error(f"--queue-root {a.queue_root}: no recordings" + (f" for cube {a.cube}" if a.cube else ""))
         logs += qlogs
-        vocab = vocab or [os.path.join(a.repo, "cubes", f"{a.cube}-cube-180.md")]
+        if not vocab and not a.vocab_from:
+            vocab = [os.path.join(a.repo, "cubes", f"{a.cube}-cube-180.md")] if a.cube else queue_vocab(a.queue_root)
+    elif a.nights:
+        ap.error("--nights needs --queue-root")
+    vocab_cards = None
+    if a.vocab_from:
+        if a.vocab:
+            ap.error("--vocab-from replaces --vocab; give one")
+        vocab_cards = vocab_from(a.vocab_from)
+        vocab = [a.vocab_from]
     if a.run_dir:
         run_logs, run_vocab = E.read_run_dirs(a.run_dir)
         logs += run_logs
@@ -543,7 +604,8 @@ def main(argv: list[str] | None = None) -> int:
           human_dirs=humans, train_human=a.train_human, jobs=max(1, a.jobs),
           play_explore=a.play_explore or ("exclude" if a.schema == "r17" else "include"),
           schema_kind=a.schema, min_turn=a.min_turn,
-          deck_vocab_min=(0.5 if a.deck_vocab_min is None else a.deck_vocab_min) if a.schema == "r17" else None)
+          deck_vocab_min=(0.5 if a.deck_vocab_min is None else a.deck_vocab_min) if a.schema == "r17" else None,
+          vocab_cards=vocab_cards, night_of=night_of)
     return 0
 
 

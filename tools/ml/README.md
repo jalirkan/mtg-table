@@ -168,7 +168,8 @@ column constant in training (`excluded` in the export lists both).
 differences; it measured faster than CPU torch here), `--backend torch` for a
 GPU. Early stopping on the validation split's log-loss (`--patience`).
 `--grid --time-budget S` searches hidden size, embedding size, both L2s,
-dropout and learning rate in a fixed random order and exports the best.
+dropout and learning rate in a fixed random order and exports the best;
+`--search sha` searches the same space by successive halving (D364, below).
 `--cv K` scores every row out of fold, folds by deck pair (leave-one-pair-out
 when there are K pairs or fewer), early stopping on games held out inside each
 fold's training pairs. Every report has log-loss, Brier, accuracy, expected
@@ -267,6 +268,88 @@ python3 tools/ml/train_eval.py var/ml/data/night-1 --split-by pair --grid --time
     --dry-load --report var/ml/reports/night-1-dry.json
 ```
 
+## Evaluator v2: more nights, a learning curve, a better search (D364)
+
+Night 1's model passed gate 1 (D354), but its grid tried 7 of 1,440 configurations in
+3 hours. v2 trains on nights 1-3 with a search that gives many more configurations a
+fair share of the hours, and is compared with v1 on the same held-out pairs. Every flag
+below is opt-in: without them `train_eval.py` and `dataset.py` do what they did, bit for
+bit (`tests/test_eval_v2.py` holds the new code to the old training and grid loops).
+
+```bash
+# 1. nights 1-3 of the queue, every cube, over night 1's own vocabulary (the same schema id,
+#    so v1 scores it); exploring games kept (D358); games.jsonl says each game's night
+python3 tools/ml/dataset.py --queue-root var/cubelab/queue --nights 1,2,3 --vocab-from var/ml/data/night-1 \
+    --out var/ml/data/nights-1-3 --shard-rows 5000 --jobs 7
+# 2. the split holds: no pair, draft or deck in two splits; night 1's games in the same splits as before
+python3 tools/ml/split_audit.py var/ml/data/nights-1-3 --reference var/ml/data/night-1 --report audit.json
+# 3. does more data still help?  one configuration on nested shares of the training pairs
+python3 tools/ml/train_eval.py var/ml/data/nights-1-3 --curve 0.25,0.5,1.0 --hidden 128 --dim 4 --batch 4096 \
+    --fast --jobs 3 --report var/ml/reports/curve.json
+# 4. v2: successive halving over GRID's space, 4 configurations at once
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python3 tools/ml/train_eval.py var/ml/data/nights-1-3 --split-by pair \
+    --search sha --time-budget 14400 --jobs 4 --fast --hidden 128 --dim 4 --batch 4096 \
+    --grid-log var/ml/reports/v2-search.jsonl --out var/ml/models/nights-1-3-eval.json --report var/ml/reports/v2.json
+# 5. v2 against v1 on the same test pairs (night 1's test pairs are the `reference` subset)
+python3 tools/ml/eval_compare.py var/ml/data/nights-1-3 --model var/ml/models/nights-1-3-eval.json \
+    --against var/ml/models/night-1-eval.json --reference var/ml/data/night-1 --report var/ml/reports/compare.json
+```
+
+- **The split across nights.** `--split-by pair` sends a deck pair to train, val or test by
+  a hash of the pair alone (from 20 pairs on), so adding nights never moves a pair: night
+  1's test pairs are test pairs of nights 1-3, v1 never trained on a test pair of the new
+  dataset, and v2 never trains on gate 1's test pairs. Nothing has to be pinned.
+  `split_audit.py` proves it on the data (pairs, draft folders and deck names each in one
+  split; with `--reference`, every night-1 game present and in its old split). A pair's
+  name is `cubelab <seed> A|B`; two pool keys may reuse a seed, which only joins two drafts
+  into one split group.
+- **`--train-fraction f`** trains on the training pairs `sha256("frac-v1|" + pair)` keeps
+  at share f: deterministic, nested (0.25's pairs are inside 0.5's), val and test
+  untouched; the dropped games are never loaded. **`--curve 0.25,0.5,1.0`** trains one
+  configuration at each share (in parallel with `--jobs`) and prints the test log-loss with
+  a 95% interval over test pairs, and each share's paired difference to the largest.
+- **`--search sha`** (`eval_search.py`): the base configuration (the command line's), then
+  GRID's space in its seeded order; rung 0 trains each for `--min-epochs` (2) epochs, each
+  rung keeps the best third (`--eta 3`) by validation log-loss and resumes them to three
+  times the epochs, and the last `--finalists` (3) train to early stopping exactly as a
+  plain fit. `--configs N` fixes N; otherwise a 20-batch probe times an epoch and N is the
+  largest whose plan fits 80% of `--time-budget` (printed: repeat with `--configs N`).
+  Results do not depend on `--jobs`. `--grid` is unchanged.
+- **`--fast`** trains in float32 (`evalnet.Fast32`): about twice as fast per batch; the
+  model is still exported and scored in float64, so Java parity is untouched.
+  `bench_epoch.py` times an epoch on synthetic rows of night 1's shape.
+- **What a held-out number is worth.** Rows of one game share its one outcome, so every
+  train report now ends with a `heldOut` block (report-only: the models and every other
+  number are unchanged): rows, games and deck pairs per split; on test, the eval model's
+  residuals' correlation within a game and within a pair, the design effect `1 + (m - 1) rho`
+  and the effective sample size; every model's test log-loss with a 95% interval over deck
+  pairs, row-weighted and game-weighted; and D358's exploring test games apart from the
+  plain ones. `eval_compare.py` compares on plain games only (exploring: its own subset).
+- **`--weight-by game`** gives every game the same total weight in the loss and in the
+  validation log-loss early stopping reads. `--curve-weights none,game` trains each share
+  both ways and reports the paired difference on the same test pairs, by row and by game.
+- **`--subsample s`**: each epoch trains on ceil(s x rows) of every game, a systematic draw
+  from a fresh random start (every stretch of the game is seen), so an epoch costs s of a
+  pass (`--patience` counts these short epochs).
+- **`--aux-turns w`**: a second, linear head on the last hidden layer predicts `turns_to_end`
+  (standardised squared error times w in the loss); reported as held-out MAE beside the
+  training mean's. Never exported: the model file is the win head, as before.
+- **`--soft-labels F.npz [--soft-weight w]`**: rollout-averaged labels for some training rows
+  (`game`, `rows_to_end`, `p` in [0, 1], optional `k`): the target there is
+  (1 - w) outcome + w p; validation and test always score against the outcome. The
+  producer (K playouts from a logged position, Forge Default both seats) is not built:
+  D364 says what it needs.
+- **`--compact`** holds the rows in about 0.35 KB instead of 0.62 (board columns that fit in
+  int8 as int8, int8 counts, int32 row pointers; `gate_fit.py score --compact` too). The
+  numbers are identical, bit for bit.
+- **`--jobs J`** forks J workers after loading: the rows are shared, each worker adds a few
+  hundred MB. `--dry-load --jobs J` measures the workers too (`peakWithWorkersGB`). The
+  matrices are small, so one BLAS thread per worker is right (four threads in one process measured slower than one): export
+  `OMP_NUM_THREADS` / `OPENBLAS_NUM_THREADS` in the job's block.
+- **On the play.** There is no explicit column, but `2 x round - turn` is 1 on the first
+  player's turns, so on the play is that parity XOR `my_turn`; an explicit column would change
+  the schema id (v1 could not score the new rows; Java's encoder and fixtures move with it).
+
 ## The win chance in ForgeCoach (D361)
 
 The coach helper serves the evaluator to ForgeCoach: `POST /eval` on port 8643
@@ -318,6 +401,42 @@ node tools/coach-helper.mjs --eval-schema 82815752c2f5e346 --eval-cube cubes/syn
   the opponent's hand and both libraries are counts, a stub adds to a count, a
   face-down card is anonymous. A state whose viewer's own hand is redacted (made
   for the other seat) is refused, and the request has no other field.
+
+### Uncertainty and "why" (D368)
+
+```bash
+# an ensemble: several seeds of one config, one schema (also: a directory, or a manifest)
+./scripts/play.sh --engine-only --eval-model var/ml/models/night-1-eval.json,var/ml/models/night-1-eval-s1.json
+./scripts/play.sh --engine-only               # prefers var/ml/models/night-1-ensemble.json when it exists
+curl -s http://127.0.0.1:8643/health          # ... "evalEnsemble":5,"evalExplain":1
+```
+
+- **The ensemble.** `--eval-model` takes several exports of one schema --
+  `a.json,b.json`, a directory (its `ensemble.json`, else every `*.json`), or a
+  manifest `{"format": "mtgtable-position-eval-ensemble", "formatVersion": 1,
+  "models": [paths relative to it]}`. Every member passes every refusal above,
+  and all must share the schema id, vocabulary, feature count, card offset and
+  card states. `/eval`'s `p` is the members' mean, `sd` their sample standard
+  deviation, `n` their number. `sd` is how much training runs that differ only in
+  their seed disagree about this position: the model's own uncertainty, not the
+  game's. One model is served exactly as before (its own sha, its own P(win)).
+  Training one needs nothing new: `train_eval.py` again with another `--seed`
+  (the split does not depend on it).
+- **The attributions** (`attribution.py`; `"explain": true` on `/eval`):
+  integrated gradients in logit space, computed exactly (the ReLU network is
+  piecewise linear along the path, walked segment by segment), against one
+  baseline per model -- the training split's mean board and no card known by
+  name. Each feature's share is grouped into a bucket ("your board", "their
+  life", "cards in hand", "your mana and lands", "your Glorybringer"...). The
+  shares sum to logit - baseline logit; points of win chance are the shares
+  times (p - p0) / (logit - logit0), so they sum to 100 (p - p0). A card's own
+  bucket is what the model knows of that card beyond its type, size and mana
+  value (those are in the board buckets). Only cards in the encoded vector get a
+  share, so only cards the viewer sees are ever named.
+  `tests/test_attribution.py` checks completeness on every committed decision row
+  (1e-9), the walk against a 4,000-point Riemann sum, gradient x input on a model
+  with no hidden layer, and that D305's hidden-zone scrambler changes no
+  attribution.
 - **Where it is trusted.** The model learned from decision rows (the viewer
   holding priority in a main phase or combat, Forge's AI on both sides);
   `/eval` says `"decision": false` for any other state, and ForgeCoach shows
@@ -370,6 +489,46 @@ How each gate works:
 - **The tests** are `tests/test_gates.py`. They run every rule on synthetic
   numbers whose answer is known, and drive the grading driver with a fake
   `serve`.
+
+## Where the search loses — error analysis (D367)
+
+Three search changes were SPRT-tested on hunches and none gained (`aturns=1`,
+the oracle, the LCB override). `search_errors.py` reads what the lab already
+writes and says where the search's errors are, so the next change aims at one.
+Every input is optional; the report says which were given.
+
+```bash
+python3 tools/ml/search_errors.py --name night-2 \
+    --logs var/ai-bench/j048-bench/games --logs var/cubelab/runs \
+    --truth-set var/ml/gates/regret/set.jsonl --truth var/ml/gates/regret/truth.jsonl \
+    --rank3 var/ml/gates/regret/rank-hand-3.jsonl --rank12 var/ml/gates/regret/rank-hand-12.jsonl \
+    --review <a game-review report>.json --ladder var/ai-ladder \
+    --model var/ml/models/night-1-eval.json          # -> var/analysis/night-2/
+```
+
+- **Inputs.** Decision records (D347) of the logs whose seat played the search
+  (`--policy search`, the default; `any` reads every seat); gate 2's set,
+  truth tables and the hand rankers (D354); review reports (D353); the
+  ladder's `results/` and `sprt.jsonl` (D318, D319).
+- **What it reports.** Regret by kind (spell, attack, block, other), turn
+  bucket, phase, cube and the policy that chose, per source; the search
+  against Forge judged by the truth (the hand ranker's pick, the margin rule's,
+  and a recorded override: helped, harmful or unclear); the search's own noise
+  per decision (the pick against the best other candidate, overlap, P(worse),
+  whether 4x the rounds would separate them, and 3 against 12 rounds on gate
+  2's set); card and tag hotspots; and, for every lost recorded game, the
+  largest fall in the seat's win chance and its decision there, plus each
+  SPRT's score by cube, game length and seat.
+- **Intervals** resample games (a ladder game's mirror block), never single
+  decisions. A leaf number is called an end-of-turn estimate, never a win rate.
+- **Output.** `report.md`, `tables/*.csv` (and `.parquet` when pyarrow is
+  installed), `summary.json` for a job's checks, `manifest.json` with the
+  inputs' hashes and the code version. The same inputs give the same bytes.
+- **Memory.** One recorded game in memory at a time; `--max-games N` reads N
+  logs in a fixed hash order.
+- **Tests:** `tests/test_search_errors.py` (the committed decision
+  recording, the engine-made review of `human-auto-42` in `tests/data/`, and
+  synthetic truth tables and ladder lines whose answers are known).
 
 ## Outside exam (17Lands)
 
@@ -496,7 +655,9 @@ below).*
    which vocabulary a dataset used.
 5. **Varied play.** Forge's AI against itself is one policy; the four AI
    profiles, and later the search player itself, widen the positions seen.
-6. **Gzip** (`.jsonl.gz`) for storage: the reader takes both.
+6. **Gzip** (`.jsonl.gz`) for storage, and **zstd** (`.jsonl.zst`) for a finished
+   night archived by `tools/lab/archive.py` (D370): the reader (`fio.py`) takes all three
+   and lists a game once when both compressed files exist.
 
 For a policy (not only a value): every AI seat of a recorded lab or bench game
 now logs each decision it takes (D347, next section).
@@ -655,7 +816,7 @@ on the first 30 human games by start time, log-loss(core) − log-loss(eval) for
 the model play.sh serves, 95% interval over games (2,000 resamples, seed
 20261004): above 0, better than core on human games; below 0, worse; across 0,
 no difference detectable. Every run prints it (`NOT YET` until game 30); it is
-read once and recorded in `DECISIONS.md`.
+read once and recorded as a decision under `docs/decisions/` (D379).
 
 **Where the models are.** The lab runner's jobs write models into the lab clone,
 `~/code/lab/mtg-table/var/ml/models/`, not into this checkout. The coach

@@ -20,7 +20,8 @@
 #      a rule added to the lint without a case here FAILS this script.
 #   3. The real tree passes, and so does a pristine scratch copy of it (the
 #      copy is faithful, so a case's failure is the case's).
-#   4. Each case copies bridge/src, tools/**/*.java and DECISIONS.md into a
+#   4. Each case copies bridge/src, tools/**/*.java, DECISIONS.md and
+#      docs/decisions/ into a
 #      scratch tree under var/lint-selftest/, plants a minimal Java snippet (a
 #      new file, or a line injected into / edited in a real one), runs
 #      `tools/lint-bridge.sh --root <scratch>`, and requires exit 1 with THAT
@@ -103,6 +104,8 @@ while IFS= read -r f; do
   cp -a "$f" "$PRISTINE/$f"
 done < <(find tools -name '*.java' -type f)
 cp -a DECISIONS.md "$PRISTINE/DECISIONS.md"
+# D379: decisions from D379 on are files of their own; a hop tag resolves in either.
+if [ -d docs/decisions ]; then mkdir -p "$PRISTINE/docs"; cp -a docs/decisions "$PRISTINE/docs/decisions"; fi
 
 fresh() { rm -rf "$W"; cp -a "$PRISTINE" "$W"; }
 
@@ -214,7 +217,7 @@ real_tree_body() {
 }
 spawn real_tree_body
 nothing() { :; }
-passes "a pristine scratch copy of bridge/src, tools/**/*.java and DECISIONS.md" nothing
+passes "a pristine scratch copy of bridge/src, tools/**/*.java, DECISIONS.md and docs/decisions/" nothing
 
 # ---------------------------------------------------------------------------
 # 4. Every rule fires.  One function per case; the id is the rule's.
@@ -646,6 +649,13 @@ c_hop_wrong_method() { edit bridge/src/mtgtable/WireGuiGame.java 's|// ALLOW hop
 fires game-thread-hop "captureOutcome's tag naming refreshState: a tag copied onto another hop" c_hop_wrong_method
 c_hop_no_decision() { edit bridge/src/mtgtable/WireGuiGame.java 's|// ALLOW hop: D22 asyncAbilityMenu|// ALLOW hop: D9999 asyncAbilityMenu|'; }
 fires game-thread-hop 'a tag citing D9999, which DECISIONS.md does not have' c_hop_no_decision
+# D379: a docs/decisions/ file counts only when its FIRST line is that heading.
+c_hop_file_wrong_heading() {
+  edit bridge/src/mtgtable/WireGuiGame.java 's|// ALLOW hop: D22 asyncAbilityMenu|// ALLOW hop: D9999 asyncAbilityMenu|' || return 1
+  mkdir -p "$W/docs/decisions"
+  printf '## D9998 — a probe whose heading is not D9999\n\n**2026-10-04**\n' > "$W/docs/decisions/D9999-probe.md"
+}
+fires game-thread-hop 'a tag citing D9999, whose docs/decisions/D9999-*.md file is headed D9998' c_hop_file_wrong_heading
 
 c_pool_field() { probe bridge/src/mtgtable/LintProbe.java <<'JAVA'
     static Object pool() throws ReflectiveOperationException {
@@ -675,6 +685,15 @@ p_hosted() { probe bridge/src/mtgtable/LintProbe.java <<'JAVA'
 JAVA
 }
 passes 'hosted.getGame() on a HostedMatch (not a GameView)' p_hosted
+# D379: a D<n> that lives only in docs/decisions/ resolves.  D22's heading is
+# taken out of the scratch DECISIONS.md and written as a file of its own.
+p_hop_decision_file() {
+  edit DECISIONS.md 's|^## D22 — |## (moved) D22 — |m' || return 1
+  if grep -q '^## D22 ' "$W/DECISIONS.md"; then return 1; fi
+  mkdir -p "$W/docs/decisions"
+  printf '## D22 — a probe: the hop argument as a file of its own\n\n**2026-10-04**\n' > "$W/docs/decisions/D022-probe.md"
+}
+passes 'a hop tag citing D22 when D22 lives only in docs/decisions/' p_hop_decision_file
 p_entry() { probe tools/probe/LintProbe.java <<'JAVA'
     static String first(final java.util.Map<String, Integer> m) {
         for (final java.util.Map.Entry<String, Integer> e : m.entrySet()) {
