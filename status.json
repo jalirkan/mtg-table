@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-04T02:16:37-04:00",
- "heartbeat": "2026-10-04T02:16:37-04:00",
+ "updated": "2026-10-04T02:16:51-04:00",
+ "heartbeat": "2026-10-04T02:16:51-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 21.69,
-  "memUsedGb": 7.9,
+  "load1": 18.37,
+  "memUsedGb": 4.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 5732,
-  "pressure": 18.78,
+  "swapUsedMb": 4912,
+  "pressure": 5.05,
   "cpus": 16,
   "budgetGb": 23.4
  },
@@ -22,20 +22,20 @@
    "id": "J053",
    "title": "(was J023, earlier J016) Night 2 SPRT: attacks rolled out to the end of the NEXT turn (aturns=1) vs this turn",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-04T02:16:37-04:00",
-   "elapsed": 0,
+   "elapsed": 14,
    "done": 0,
    "total": 2400,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-04T02:16:37-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "sprt_games": 0,
     "all.games": 0,
@@ -55,7 +55,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J053-prepare"
+   "detail": "lab-J053-pilot1"
   }
  ],
  "queue": [
