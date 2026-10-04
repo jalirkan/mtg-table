@@ -18,7 +18,8 @@
 //
 // Options: --lab-root DIR (~/code/lab)  --state DIR (<runner>/var/runner)
 //   --home-mtg-table DIR --home-forgecoach DIR (Justin's checkouts, ~/code/<repo>)
-//   --reserve-gb N (7)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
+//   --reserve-gb N (7)  --cores N (the physical cores: the core budget heavy jobs side by side share)
+//   --co-schedule on|off (on: a heavy job may start beside narrow running ones)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
 //   --public-every-s N (60: the public copy when it changed, at most)  --public-heartbeat-s N (120: unchanged)
 //   --bridge-port N (8642)  --dry-run (once/daemon: same as plan)  --no-push (write nothing to git remotes)
 
@@ -82,6 +83,8 @@ function config(f: Map<string, string>): RunnerConfig {
     urls,
     bridgePort: Number(f.get('bridge-port') ?? 8642),
     budget: { ...DEFAULT_BUDGET, reserveGb: Number(f.get('reserve-gb') ?? DEFAULT_BUDGET.reserveGb) },
+    cores: Number(f.get('cores')) > 0 ? Math.floor(Number(f.get('cores'))) : null,
+    coSchedule: (f.get('co-schedule') ?? 'on') !== 'off',
     publicStatus: (f.get('public-status') ?? 'on') !== 'off',
     publicEveryMs: seconds(f.get('public-every-s')) ?? DEFAULT_CONFIG.publicEveryMs,
     publicHeartbeatMs: seconds(f.get('public-heartbeat-s')) ?? DEFAULT_CONFIG.publicHeartbeatMs,
@@ -112,7 +115,7 @@ function plan(cfg: RunnerConfig, only: string | null): number {
     if (!only && s && s.state !== 'waiting') continue;
     console.log(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
     if (job.errors.length) { console.log(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
-    const run = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: Date.now(), steps: r.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: job.maxWorkers ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
+    const run = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: Date.now(), steps: r.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: r.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
     for (const step of run.steps) {
       if (step.kind !== 'shell') { console.log(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
       const u = r.unitSpec(run, job, step);
@@ -175,7 +178,7 @@ function install(cfg: RunnerConfig, f: Map<string, string>): number {
   const b = budget(m, cfg.budget);
   const node = path.dirname(process.execPath);
   const args = [`--lab-root ${cfg.labRoot}`, `--reserve-gb ${cfg.budget.reserveGb}`, `--public-status ${cfg.publicStatus ? 'on' : 'off'}`,
-    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-every-s', 'public-heartbeat-s'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
+    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-every-s', 'public-heartbeat-s', 'cores', 'co-schedule'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
     ...(cfg.homeRepos.ForgeCoach ? [`--home-forgecoach ${cfg.homeRepos.ForgeCoach}`] : [])];
   write(path.join(unitDir, SLICE), sliceUnit(b));
   write(path.join(unitDir, SERVICE), serviceUnit({ runnerDir, node, args }));
@@ -212,9 +215,9 @@ function printStatus(cfg: RunnerConfig): number {
   if (!d) { console.log(`no ${path.join(cfg.stateDir, 'status.json')} yet (is the runner running? systemctl --user status ${SERVICE})`); return 1; }
   const age = Math.round((Date.now() - Date.parse(d.updated)) / 1000);
   console.log(`updated ${d.updated} (${age} s ago)${d.paused ? '  PAUSED' : ''}`);
-  console.log(`host: load ${d.host.load1}, memory ${d.host.memUsedGb}/${d.host.memTotalGb} GB, swap ${d.host.swapUsedMb} MB, pressure ${d.host.pressure}%, lab budget ${d.host.budgetGb} GB`);
+  console.log(`host: load ${d.host.load1}, cores ${d.host.coresUsed ?? '?'}/${d.host.coresTotal ?? '?'} in use, memory ${d.host.memUsedGb}/${d.host.memTotalGb} GB, swap ${d.host.swapUsedMb} MB, pressure ${d.host.pressure}%, lab budget ${d.host.budgetGb} GB`);
   for (const r of d.running) {
-    console.log(`running ${r.id} ${r.title}\n   ${r.phase}; ${r.done ?? '?'}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}; ${r.ratePerHour ?? '?'}/h; ETA ${r.eta ?? '?'}; ${r.workers ?? '?'} worker(s); errors ${r.errors ?? '?'}${r.paused ? '; PAUSED' : ''}${r.detail ? `; ${r.detail}` : ''}`);
+    console.log(`running ${r.id} ${r.title}\n   ${r.phase}; ${r.done ?? '?'}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}; ${r.ratePerHour ?? '?'}/h; ETA ${r.eta ?? '?'}; ${r.workers ?? '?'} worker(s), ${r.cores ?? '?'} core(s); errors ${r.errors ?? '?'}${r.paused ? '; PAUSED' : ''}${r.detail ? `; ${r.detail}` : ''}`);
     for (const e of r.pressureEvents.slice(-5)) console.log(`   ${e.at} ${e.kind} -> ${e.workers} worker(s), pressure ${e.pressure}%`);
   }
   for (const q of d.queue) console.log(`queued  ${q.id} ${q.title} (${q.cpu}${q.est ? `, ${q.est}` : ''})`);

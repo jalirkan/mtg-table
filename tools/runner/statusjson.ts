@@ -8,9 +8,10 @@
 // orphan branch `lab-status` of the PUBLIC jalirkan/ForgeCoach.  Schema 1:
 //
 //   { schema: 1, updated, heartbeat, paused, state (running|idle), idleSince, idleReason,
-//     host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus, budgetGb },
+//     host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus, budgetGb,
+//             coresUsed, coresTotal (the running jobs' widths out of the core budget, D337 amended) },
 //     running: [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,
-//                  workers, workersMax, errors, paused, dataUpdated, pressureEvents: [{ at, kind, workers, pressure }],
+//                  workers, workersMax, cores (its width now), errors, paused, dataUpdated, pressureEvents: [{ at, kind, workers, pressure }],
 //                  memGb, live: { <metric>: <number> }, cubes: [{ id, done, planned }] } ],
 //     queue:    [ { id, title, cpu, est } ],
 //     waiting:  [ { id, title, reason, est } ],
@@ -48,6 +49,8 @@ export interface RunningJob extends Publicly {
   eta: string | null;
   workers: number | null;
   workersMax: number | null;
+  /** The job's width now: the cores it keeps busy (null: not known, someone else's job). */
+  cores?: number | null;
   errors: number | null;
   paused: boolean;
   dataUpdated: string | null;
@@ -114,7 +117,7 @@ export interface StatusDoc {
   idleSince?: string | null;
   /** Why nothing runs (idleReasonOf; null while running). */
   idleReason?: string | null;
-  host: { load1: number; memUsedGb: number; memTotalGb: number; swapUsedMb: number; pressure: number; cpus: number; budgetGb: number };
+  host: { load1: number; memUsedGb: number; memTotalGb: number; swapUsedMb: number; pressure: number; cpus: number; budgetGb: number; coresUsed?: number; coresTotal?: number };
   running: RunningJob[];
   queue: QueueItem[];
   waiting: WaitingItem[];
@@ -155,6 +158,7 @@ export const REASONS: Record<string, string> = {
   after: 'waiting for an earlier job',
   'heavy-busy': 'after the running heavy job',
   'light-busy': 'after the running light job',
+  cores: 'waiting for free cores',
   playing: 'held',
   paused: 'the runner is paused',
   'needs-check': 'pilot done; needs a check',
@@ -237,7 +241,7 @@ export function sanitise(doc: StatusDoc): StatusDoc {
       phase: typeof r.phase === 'string' && PHASE.test(r.phase) ? r.phase : 'commands',
       started: iso(r.started), elapsed: num(r.elapsed) ?? 0,
       done: num(r.done), total: num(r.total), unit, ratePerHour: num(r.ratePerHour), eta: iso(r.eta),
-      workers: num(r.workers), workersMax: num(r.workersMax), errors: num(r.errors), paused: r.paused === true,
+      workers: num(r.workers), workersMax: num(r.workersMax), cores: num(r.cores), errors: num(r.errors), paused: r.paused === true,
       dataUpdated: iso(r.dataUpdated),
       memGb: num(r.memGb),
       live,
@@ -281,6 +285,7 @@ export function sanitise(doc: StatusDoc): StatusDoc {
     host: {
       load1: num(h.load1) ?? 0, memUsedGb: num(h.memUsedGb) ?? 0, memTotalGb: num(h.memTotalGb) ?? 0,
       swapUsedMb: num(h.swapUsedMb) ?? 0, pressure: num(h.pressure) ?? 0, cpus: num(h.cpus) ?? 0, budgetGb: num(h.budgetGb) ?? 0,
+      coresUsed: num(h.coresUsed) ?? 0, coresTotal: num(h.coresTotal) ?? 0,
     },
     running, queue, waiting, finished,
   };

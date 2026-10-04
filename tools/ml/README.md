@@ -41,6 +41,7 @@ tools/ml/record-pairs.sh --pairs var/ml/pairs.txt --seeds 1-4 --seats 0,1 --jobs
 # 2. the dataset (the vocabulary is the cube the decks were drafted from)
 python3 tools/ml/dataset.py --vocab cubes/synergy-cube-180.md --out var/ml/data/synergy var/ml/games
 python3 tools/ml/dataset.py ... --group-by match      # every game of a deck pair in one split
+python3 tools/ml/dataset.py ... --jobs 7              # 7 encoding processes; the same files as --jobs 1
 # 3. the baselines
 python3 tools/ml/baseline_eval.py var/ml/data/synergy --json var/ml/data/synergy/baseline.json
 python3 tools/ml/train_mlp.py var/ml/data/synergy --out var/ml/models/synergy-mlp.pt
@@ -306,7 +307,11 @@ card arrives (`docs/guides/gpu-day.md`).
   18–90 s of engine time in this branch's run, on a shared 4-core container at a
   load of ~15. Each JVM may grow to `-Xmx4096m` (hard rule 6), so `--jobs 6` is
   the most 30 GB holds with room for the desktop.
-- **Encoding** is about 1,000 rows a second per process, single-threaded.
+- **Encoding** is about 1,000 rows a second per process, single-threaded;
+  `dataset.py --jobs N` spreads the recordings over N processes (one file each at a
+  time, at most 2 × N in flight) and writes byte for byte what `--jobs 1` writes. While
+  it runs, `progress.json` in the output folder holds the rows so far
+  (`gate_metrics.py dataset` reads it until `stats.json`, written last, exists).
 - **Storage**: a 180-card cube's row is 6.9 KB as int16 before compression and
   mostly zeros, so `.npz` compression is large. A million rows is ~7 GB raw in
   memory; train from shards, or `--shard-rows` small and stream, past that.

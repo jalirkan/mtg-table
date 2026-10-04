@@ -38,9 +38,18 @@ def flat(d: dict[str, Any], prefix: str = "", out: dict[str, float] | None = Non
 
 
 def m_dataset(d: str) -> dict[str, float]:
+    """stats.json once the dataset is complete (`written: 1`); while dataset.py runs, its
+    progress.json (`written: 0, partial: 1` with rows / games / files so far), so a runner's
+    `progress: metric ds.rows` moves mid-run."""
     p = os.path.join(d, "stats.json")
     if not os.path.isfile(p):
-        return {"written": 0}
+        try:
+            with open(os.path.join(d, "progress.json"), encoding="utf-8") as f:
+                pr = json.load(f)
+        except (OSError, ValueError):
+            return {"written": 0}
+        return {"written": 0, "partial": 1, **{k: pr[k] for k in ("rows", "games", "files", "filesTotal")
+                                                if isinstance(pr.get(k), (int, float))}}
     with open(p, encoding="utf-8") as f:
         st = json.load(f)
     out = {"written": 1, "rows": st.get("rows", 0), "games": st.get("games", 0),

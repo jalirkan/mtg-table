@@ -55,6 +55,7 @@ above and `rm -rf ~/code/lab/runner`. Running jobs are units of their own:
 | `~/code/lab/runner/var/runner/` | its state: `status.json` (written every 10 s), `jobs/<id>/` (`run.json`, each step's `.sh`, `.sh.wrap`, `.log`, `.rc`, and `out/`), `control/<id>.json`, `paused`, `requests/` |
 | `~/code/lab/mtg-table/`, `~/code/lab/ForgeCoach/` | the heavy jobs' clones. Each job's refs are checked out here, and its `var/` data lives here |
 | `~/code/lab/mtg-table-light/`, `~/code/lab/ForgeCoach-light/` | the light jobs' clones, so a light job beside a heavy one never moves its checkout |
+| `~/code/lab/mtg-table-lane2/`, `…-lane3/` (and `ForgeCoach-lane<k>`) | the clones of a heavy job started beside another (co-scheduling, below): its own commit and build; its `var/` is a symlink to `~/code/lab/mtg-table/var`, so all outputs stay in one place |
 | `~/code/lab/pc-results/` | the runner's worktree of `pc-results` (branch `lab-pc-results`, pushed to `pc-results`) |
 | `~/code/lab/lab-status/` | the public copy: one orphan commit with `status.json` and `ladder.json`, force-pushed to `jalirkan/ForgeCoach` `lab-status` |
 
@@ -110,6 +111,47 @@ The steps are: `prepare` (clone if needed, fetch, `checkout --force --detach <re
 changed), then `pilot1…n`, then `pilot-checks` (the runner's own), then `run1…n`, then
 `final-checks` and `collect`.
 
+## Cores: a job's width, and heavy jobs side by side
+
+A heavy job has a **width**, the cores it keeps busy: its `cores:` header, else its
+`max_workers`, else physical cores − 1. A `cores: N` line before a block in `## Pilot` or
+`## Commands` sets that block's width (and caps `{workers}` and `$JOBS` in it), and a
+`mem_gb: G` line its whole memory reservation, so a running job's width and memory are its
+current step's. A declared width also sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and
+`MKL_NUM_THREADS` in the step's unit, so numpy keeps to it. The **core budget** is the physical cores (8 on the 9700X;
+`--cores N`). The machine used to count as busy whenever one heavy job ran, however narrow
+(J049, a single-threaded encode, left 15 of 16 threads idle for hours); now a heavy job may
+start **beside** running heavy jobs (`schedule.ts`) when:
+
+- the widths of the running heavy jobs and its own sum to at most the core budget;
+- their memory reservations (a block's `mem_gb:`, else width × per-worker peak: the measured
+  one, else `mem_per_worker_gb`, else 2.5 GB) sum to at most the heavy memory budget (below);
+- no running job is in memory backoff (a dropped worker or a pause), and the host's memory
+  pressure is under the backoff's high line;
+- Justin is not at the table, the runner is not paused, and the job is not held by
+  `needs: check` or `retry_after:`, as always.
+
+**Order and starvation.** Open jobs are taken in id order, and the first heavy job that could
+run but does not fit stops the queue: nothing after it starts beside the running jobs. So a
+narrow job never jumps ahead of a wide one, and a wide job gets the machine as soon as the
+running jobs end. A job waiting on its `after:` does not stop the queue (it cannot run).
+Someone else's running job (a STATUS without `runner:`) has no known width and fills the
+machine. `--co-schedule off` restores one heavy job at a time.
+
+**Lanes.** Each heavy job running beside another gets its own clones (`mtg-table-lane2`, …),
+checked out at its own pinned commit and built there, so a `prepare` never moves the code
+under a running job. `var/` in a lane is a symlink to the first clone's: a later job
+(`after:`) finds its predecessor's outputs and the ladder's `ladder.json` stays where it was.
+Jobs side by side therefore share `var/` and must not write the same paths.
+
+**Sizing beside others.** A job started beside others is sized against the memory budget less
+what the others reserve, so it can get a worker fewer than it would alone. A job is admitted at
+its header width; a later block of a running job that is wider than what is free is still
+started (a step never waits for cores), so put a job's wide blocks first.
+
+`status.json` says `host.coresUsed` of `host.coresTotal` (the running jobs' widths, a light
+job's included) and each running job's `cores`; the public copy keeps both.
+
 ## Memory: the budget, sizing, backoff
 
 **The budget.** The lab gets the machine minus a reserve for the OS, the desktop, the
@@ -130,8 +172,9 @@ sees a unit gone without an exit code, which is a memory stop like any other.
 
 **Workers from the pilot.** During the pilot the runner samples, every 10 s, the peak
 resident size (`VmHWM`) of every `java` process in the step's cgroup. The full run gets
-`workers = min(max_workers, physical cores − 1, floor(budget / peak × 0.85))`, at least 1,
-where peak = max(measured, `mem_per_worker_gb` or 2.5 GB). A short pilot whose JVMs never
+`workers = min(max_workers, cores, physical cores − 1, floor(budget / peak × 0.85))`, at least 1,
+where peak = max(measured, `mem_per_worker_gb` or 2.5 GB) and budget is the heavy budget
+less what the heavy jobs already running reserve. A short pilot whose JVMs never
 reached their working size cannot size the full run too large. A pilot runs at most 3
 workers. The jobs get the number as `{workers}` and `$JOBS`. STATUS records the sizing and
 the limit that decided it.
@@ -231,9 +274,10 @@ Schema 1 (`tools/runner/statusjson.ts`):
 ```
 { schema: 1, updated, heartbeat, paused,
   state: running|idle, idleSince, idleReason,
-  host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus (threads), budgetGb },
+  host: { load1, memUsedGb, memTotalGb, swapUsedMb, pressure (some avg10, %), cpus (threads), budgetGb,
+          coresUsed, coresTotal },
   running:  [ { id, title, cpu, phase, started, elapsed (s), done, total, unit, ratePerHour, eta,
-                workers, workersMax, errors, paused, dataUpdated, pressureEvents: [{ at, kind, workers, pressure }],
+                workers, workersMax, cores, errors, paused, dataUpdated, pressureEvents: [{ at, kind, workers, pressure }],
                 memGb, live: { <metric>: <number> }, liveHeadline: [ <metric> ], cubes: [ { id, done, planned } ] } ],
   queue:    [ { id, title, cpu, est } ],
   waiting:  [ { id, title, reason, est } ],
@@ -372,7 +416,9 @@ In the cloud container (4 shared cores, no systemd user session):
   collect, publish; an old-format job stopping after its pilot, then approved; a failed
   pilot; a failed command; an abort; a memory stop and its capped retry; Justin at the
   table; a restart that adopts, resumes and restarts; and a hand-run job blocking heavy
-  work. Since the review it also covers: an `unknown` unit state never orphaning a step; no
+  work. Co-scheduling: widths and reservations, admission by cores and by memory, memory
+  backoff, order and starvation, and end to end a wide job waiting, then starting beside a
+  narrow block in a lane of its own whose `var/` is the first clone's. Since the review it also covers: an `unknown` unit state never orphaning a step; no
   start beside a live unit; steps held while paused, playing or backoff-paused; a stale pid
   file; a dead network (the queue kept, publishing backing off); a job file missing from
   only one read; a script that still names Justin's checkout; a collected `STATUS`; globs
