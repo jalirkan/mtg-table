@@ -5,6 +5,10 @@ public_est: one to two nights
 cpu: heavy
 after: J051
 repos: mtg-table@7e48088 (main with the gates, #36, and the fit-memory fix, #45; pinned so the truth and the rankers share one code version, D341)
+decides: whether search-v1-fixed3 with the evaluator's leaves becomes a league candidate (D354 gate 3, then D321's league)
+hypothesis: evaluator leaves beat the hand leaf in games by at least the SPRT's elo1 of 20
+rule: gates.py SPRT_RULE (D354 gate 3): elo0 0, elo1 20, alpha = beta = 0.05, at most 2,400 games; H1 = PASS; H0 or inconclusive = FAIL
+followup: league-candidate
 est: one to two nights (up to 2,400 search-vs-search games at about 1,500 a night on 7 workers; an SPRT usually stops earlier)
 resumable: no
 max_workers: 7

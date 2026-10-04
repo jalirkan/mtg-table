@@ -5,6 +5,9 @@ public_est: ~1 h
 cpu: heavy
 after: J050
 repos: mtg-table@c09ddfa
+decides: J029's pre-registered questions: card-level vs archetype-level work (tau), matchup model vs coin, keep or cut the bridge share
+rule: J029 "Questions this night answers": tau >= 0.05 card level (+ one design verification), tau < 0.03 archetype level; M0 beats coin with the 95% interval excluding 0; bridge games improve held-out log-loss on the flat cubes, else cut the bridge share; 0.03 <= tau < 0.05 (written 2026-10-04 before the run): keep card-level work, no design verification
+followup: queue-night-4
 est: ~30-90 min, one process (the matchup model is a few thousand parameters; the bootstrap is the cost)
 resumable: no
 max_workers: 1

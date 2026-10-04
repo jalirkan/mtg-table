@@ -5,6 +5,10 @@ public_est: ~one night
 cpu: heavy
 after: J060
 repos: mtg-table@7e48088 (main with the gates, #36, and the fit-memory fix, #45; pinned so the truth and the rankers share one code version, D341)
+decides: gate 2 of promoting the learned evaluator (D354): the decision set and its truth tables, which J051 scores
+hypothesis: at least 240 of the 300 decisions get full-game truth tables, 80%+ ok, in one night, and D348's guard refuses nothing
+rule: D354 gate 2 data: the final checks (set >= 240, truth ok >= 0.8 x set, refused 0); the verdict is J051's (gates.py REGRET_RULE)
+followup: jobs/J051-regret-gate-score.md
 est: one night: ~300 decisions x ~5 options x 200 rounds x 0.6 (racing) = ~180k full-game playouts at 0.5-1.0 s = 25-50 core-hours, 4-7 h on 7 JVMs; the screen about 10 min
 resumable: yes
 max_workers: 7

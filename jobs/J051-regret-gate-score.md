@@ -5,6 +5,10 @@ public_est: ~30 min
 cpu: heavy
 after: J050
 repos: mtg-table@7e48088 (main with the gates, #36, and the fit-memory fix, #45; pinned so the truth and the rankers share one code version, D341)
+decides: promote evaluator v1 past gate 2 (D354), and so whether J052's SPRT runs
+hypothesis: the evaluator's leaf has lower regret than the hand leaf at the live horizon, because it beat the hand leaf on held-out log-loss in gate 1 (J060: +0.066 [0.052, 0.079])
+rule: gates.py REGRET_RULE (D354 gate 2): PASS when mean regret(hand) - regret(eval) > 0 and its paired bootstrap 95% interval excludes 0, on >= 240 scored decisions
+followup: jobs/J052-evaluator-sprt.md
 est: ~20-40 min (about 40k end-of-turn playouts at ~0.1 s on 7 JVMs, plus JVM boots)
 resumable: yes
 max_workers: 7

@@ -5,6 +5,9 @@ public_est: ~2 h
 cpu: heavy
 after: J050
 repos: mtg-table@c2a28ef (main with the outside exam, D359; pinned so the rows, the model and the exam share one code version)
+decides: whether the learned evaluator's win chance may be presented as transferring to human play (D361's coach win chance), or only as a model of Forge's games
+hypothesis: the r17 evaluator beats the best simple rule on 17Lands' human games, by less than on our data (a transfer gap)
+rule: outside_exam.py EXAM_RULE (D359): PASS when log-loss(b*) - log-loss(eval) > 0 with the 95% interval's lower end above 0, on >= 2,000 games and 10,000 rows; else FAIL; partial data = NO VERDICT
 est: ~1.5-2 h (encode ~15-30 min at 7 workers; the grid gets 1 h; both downloads, 158 MB, a few minutes; the rows ~5 min; each exam ~2 min)
 resumable: no
 max_workers: 7

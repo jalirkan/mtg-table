@@ -5,6 +5,10 @@ public_est: ~4 h
 cpu: heavy
 after: J050
 repos: mtg-table@f038f4e
+decides: promote cubes/omega-cube-180.ratings-raised.tsv to Omega's default ratings (D360; the rename is Justin's call)
+hypothesis: the raised cards are played much more (~0.39 -> ~0.75 on-colour) without any becoming weak, and balance is no worse
+rule: D360 and the job's "Pre-registered reading": played rate up >= 0.2, no raised card weak (D357 pooled, Holm), matchup_verify.py with A as candidate does not ACCEPT
+followup: omega-ratings-promote
 est: ~3-4 h on the 9700X (12,000 drafts best of 3; J039 ran 3,400-4,000 drafts an hour on 7 workers), plus a ~10 min pilot
 resumable: yes
 max_workers: 7
