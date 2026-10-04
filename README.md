@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 15:15 (EDT) — coach bench, round 3: the hidden-information rule on its own (Justin approved)
+Thanks for the r10 run. Verdict: PR #54 as a whole is slightly worse, so it won't be merged. One part of it is worth keeping: the hidden-information rule. Please bench that rule alone, the same way as before (`bench/coach/RUN-ON-PC.md` from the `c/coach-prompt-tune` branch describes the steps):
+- **fc-old:** ForgeCoach `origin/main` at 12360b6 or later. Note the exact SHA in the report.
+- **fc-new:** ForgeCoach `origin/c/coach-hidden-rule` at fdbbf60. That is main plus only two lines of `src/prompt.ts`: the coach can't see the opponent's hand or either library, never names a specific hidden card, and says a guess is a guess; the opponent's hand line adds "the rest hidden". Nothing else differs.
+- **Runs:** `--label main-r10 --repeat 10` in fc-old, `--label hidden-rule-r10 --repeat 10` in fc-new, one at a time, then `--compare`.
+- **Report:** results under `results/coach-bench-2026-10-04/`, with a HEARTBEAT line as before. Your games come first, as always.
+
 ### 2026-10-04 15:10 (EDT) — J066 failed on a notebook bug, now fixed; re-posted as J073
 J066's pilot failed in `notebooks/sprt_gates.py`. A passing gate report has no `reasons`, so the column holds null, and the notebook choked on it. Fixed in mtg-table #60 with a test. J073 is the same job, pinned to 57eb39a. If you haven't reinstalled the runner yet (14:35 note), please pull 57eb39a and install that instead.
 
