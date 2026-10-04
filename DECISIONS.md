@@ -17208,3 +17208,137 @@ at a time); calibration on the owner's own games (`train_eval.py --eval-human`, 
   and those are features the model reads.
 - **Serving the model file to the browser**: the model is the owner's and lives on the PC;
   ForgeCoach is public.
+
+## D364 — Evaluator v2: one dataset over nights 1-3 split by a hash of the deck pair (night 1's held-out pairs stay held out, proved on the data), a learning curve over nested shares of the training pairs, successive halving in place of the time-boxed grid, float32 training, and honest sample sizes; every option opt-in, the default path bit for bit unchanged
+
+*Branch `c/eval-v2`; D364 as assigned (free on `main` at push). The job that uses it is the
+draft J067 (pc-jobs, after J061, night 3); not posted by this branch.*
+
+**2026-10-04**
+
+**Context.** Night 1's evaluator passed gate 1 (J060, D354): 6.3 M rows, 39 k games, test
+log-loss 0.497 against core's 0.554. Its grid (`--grid --time-budget 10800`) finished 7 of
+1,440 configurations in 3 h; 4 of the 7, at lr 0.003 and batch 4096, peaked at epoch 1 and
+several were cut after an epoch; the winner (hidden 128, card dim 4, 40 k parameters) peaked
+at epoch 20 of 32. Peak memory 4.9 GB. Nights 2 (plain) and 3 (15% exploring games, D358)
+add about twice as many games again. Gates 2 and 3 run on the night-1 model at their own
+pinned commit, so nothing they read may change: every flag below is opt-in, and without them
+`train_eval.py`, `dataset.py` and `gate_fit.py` produce the same files and numbers.
+
+**Decision.**
+
+1. **The split across nights needs no pinning.** `--split-by pair` (D317) already sends a
+   deck pair to train, val or test by `sha256("pair|" + pair)` alone once there are 20 pairs
+   or more (`assign_pairs`), so adding nights never moves a pair: night 1's test pairs are
+   test pairs of nights 1-3, v1 never trained on a test pair of the new dataset, and v2 never
+   trains on gate 1's test pairs. `tools/ml/split_audit.py` proves it on the data and exits
+   1 otherwise: every deck pair, draft folder (`games/<seed>/`) and deck name in one split;
+   pairs per night and split; with `--reference` (night 1's dataset) every reference game
+   present and in its old split, its test pairs DATA's test pairs, and no DATA test pair a
+   reference training or validation pair. A pair's name is `cubelab <seed> A|B`; two pool
+   keys may reuse a seed, which only joins two drafts into one split group (counted).
+2. **The dataset.** `dataset.py --queue-root R --nights 1,2,3` without `--cube` takes every
+   normal and bridge folder (every cube) and records each game's `night` in games.jsonl and
+   `nights` in stats.json (only when `--nights` is given). `--vocab-from DIR|MODEL` encodes
+   over that dataset's or model's own card list, card for card, so the schema id is v1's and
+   v1 scores the new rows (J067's pilot checks the id). Exploring games are kept by default
+   for the evaluator (D358, `--play-explore include`, as before).
+3. **`--train-fraction f`** keeps the training pairs with `sha256("frac-v1|" + pair) < f`
+   (`in_fraction`): deterministic, independent of the other pairs and nested (0.25's pairs
+   are inside 0.5's). Val and test are untouched and the dropped games are never loaded.
+   **`--curve 0.25,0.5,1.0`** trains one configuration at each share (in forked workers with
+   `--jobs`) and reports test log-loss with a 95% interval over test deck pairs (2,000
+   resamples), each share's paired difference to the largest, core's, and the verdict line
+   "more data still helps" only when the last step's interval is above 0.
+4. **`--search sha`** (`eval_search.py`): successive halving over `SHA_GRID` = GRID with the
+   learning rates 3e-4, 5e-4, 1e-3, 2e-3, 3e-3 (the review's point 4: J060's lr 0.003 at batch
+   4096 peaked at epoch 1). The base configuration (the command line's) first, then the space
+   in a seeded order. Rung 0 trains every configuration `--min-epochs` epochs; each rung keeps
+   the best 1/`--eta` (3) by best validation log-loss so far and RESUMES them (weights, Adam's
+   moments, generator) to eta times the epochs; the last `--finalists` (eta) train to early
+   stopping exactly as a plain fit (`EpochTrainer`, whose full run is the old `train_numpy`,
+   draw for draw). Every configuration compared in a rung has had the same epochs. `--configs
+   N` fixes N; otherwise a 20-batch probe times an epoch and N is the largest whose plan fits
+   80% of `--time-budget` (printed with "repeat with --configs N"). Results do not depend on
+   `--jobs` (each configuration its own generator; a rung is ranked when all of it is back).
+   The budget is also a deadline; a cut search says `cutByBudget` and is then not exactly
+   reproducible. `--grid` is unchanged (the tests hold it to the old loop).
+5. **Speed.** `bench_epoch.py` times an epoch on synthetic rows of night 1's shape (6,343,314
+   rows, D305's 243 board columns, 731 slots x 17 states, 24 card cells a row; hidden 128, dim
+   4, batch 4096). Measured in this container (4 cores shared with other work, load average
+   about 25; one BLAS thread): float64, the default, 219 s of wall time per training epoch
+   (85 s CPU), 23 k rows/s; **`--fast`** (`evalnet.Fast32`: float32 parameters, inputs and
+   products, the input layer's backward product only for the pooled card columns, the
+   standardised board written straight into the input matrix) 101.5 s (47 s CPU), 50 k rows/s:
+   2.2x. Two workers at once (`--jobs 2`, `--fast`) 66.6 k rows/s in all; four, on four
+   contended cores, 41 k. Four BLAS threads in one process were slower than one (955 s an
+   epoch under that load): the matrices are 4096 x ~300 x 128, too small to split, so the
+   cores go to workers, one BLAS thread each, not to threads. `--fast` is not bit for bit the
+   float64 numbers (rounding in the 7th digit), so it is opt-in; the model is exported and
+   scored in float64 as always (Java parity untouched).
+6. **Memory.** `--compact` (train_eval and `gate_fit.py score`) holds a split's board as
+   int8 where every value of a column fits, counts in int8, row pointers in int32: identical
+   numbers, COMPACT_MEASURE. `--jobs J` forks after loading, so the rows are shared
+   copy-on-write; `--dry-load --jobs J` runs one batch in each worker and reports each
+   worker's peak private memory (sampled while it works) and `peakWithWorkersGB`.
+7. **What a held-out number is worth** (the methods review). Rows of one game share one
+   outcome, so every train report ends with a `heldOut` block, report-only: rows, games and
+   deck pairs per split; on test, the eval model's residuals' intraclass correlation within a
+   game and within a pair, the design effect 1 + (m − 1)ρ (m the row-weighted mean group
+   size) and the effective sample size; every model's test log-loss with a 95% interval over
+   pairs, row-weighted and game-weighted; and D358's exploring test games apart from the
+   plain ones. `eval_compare.py` and the curve report the same.
+8. **`--weight-by game`**: every game the same total weight in the training loss and in the
+   validation log-loss early stopping reads. `--curve-weights none,game` trains each share
+   both ways and reports game-weighted minus unweighted on the same test pairs, by row and by
+   game. **`--subsample s`** (the independent review's point 1): each epoch trains on
+   ceil(s x c) rows of every c-row game, a systematic draw from a fresh random start, so an
+   epoch costs s of a pass and the search fits about 1/s as many epochs in its hours.
+9. **`--aux-turns w`** (point 2): a linear head on the last hidden layer predicts the row's
+   `turns_to_end` (standardised by the training split), its squared error times w in the
+   loss; reported as held-out MAE beside the training mean's. It is never exported: the model
+   file is the win head, and the gates read only that.
+10. **Lower-noise labels: the hook, not the producer.** `--soft-labels F.npz` (`game`,
+    `rows_to_end`, `p` in [0, 1], optional `k`) makes a training row's target
+    (1 − `--soft-weight`) outcome + w p; val and test always score against the outcome.
+    Tested on synthetic soft labels. **Left:** the producer. For a sampled decision row it
+    rebuilds the position from the viewer's redacted log with the hidden cards determinized
+    and plays it out K times with Forge Default on both seats, as `coach-grade.sh`
+    (`mtgtable.grade.CoachGrade`) does per option; what it lacks is a mode that plays the
+    position as it stands (Default choosing) instead of every option, and a batch over
+    (game, rows_to_end) keys that writes the .npz. Note that such a label is the value under
+    sampled hidden cards, not the real ones: for a viewer-side evaluator that is the right
+    target, and it is why the outcome label is noisier than K suggests.
+11. **v2 against v1** (`eval_compare.py`): both models on DATA's test split, plain games only
+    (exploring test games are their own subset), subsets `all`, `reference` (night 1's test
+    pairs) and `new`; log-loss, Brier, ECE and log-loss(old) − log-loss(new) with a 95%
+    interval over pairs; optionally gate 1's turn-end positions scored by both. It refuses a
+    comparison if either model trained or early-stopped on a test pair. **The rule, written
+    before the run:** v2 is BETTER on gate 1's pairs when, on `reference`, the difference is
+    above 0 with the interval's lower end above 0; otherwise "not shown better". It is a
+    report, not a gate: promotion is still D354's gates, gate 1 by `gate_fit.py` unchanged.
+
+**On the play** (the independent review's point 3). encode.py has no explicit on-the-play
+column, but the information is there: `turn` is the player-turn number and `round` is
+ceil(turn/2), so 2·round − turn is 1 on the first player's turns, and on the play = that
+parity XOR `my_turn` (extra turns aside). A hidden layer represents it. An explicit column
+would change the schema id, so v1 could not score the new rows (no same-pairs comparison),
+and Java's `GamePosition`, the parity fixtures and `eval_serve.py` would all move with it;
+not done here. A v3 that changes the schema anyway should add it.
+
+**Default unchanged, proven** (`tools/ml/tests/test_eval_v2.py`): the old `train_numpy`
+and grid loop are copied into the test verbatim from main before D364, and the new code
+gives the same weights, history and grid records, bit for bit, on the fixtures; a default
+CLI run's model file and report carry no new key but `heldOut`. Also tested: fraction
+determinism and nesting, the split's stability across made-up nights and the audit catching
+a leak, search determinism across `--jobs` and its fairness (equal epochs per rung), the
+budget plan, Fast32's gradients against float64, the ICC, game weights, the aux head (not
+exported), subsampling, soft labels, and the comparison end to end on a fixture queue.
+`eval_serve.py` serves v1 as before and serves v2 unchanged (same schema id, same export
+format: the aux head is never written).
+
+**Rejected.** Pinning the test split to night 1's list (the hash already does it, and a
+list would have to travel with every dataset); random search with a short warm-up only
+(halving gives the survivors the full training a warm-up does not); more BLAS threads per
+fit (measured slower at these sizes); a torch path for the new options (CPU torch measured
+slower than numpy here, D316).
