@@ -5,7 +5,8 @@
 //   tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7      # writes and prints the plan, plays nothing
 //   tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7      # plays it (resumable: run the same line again)
 //       [--bridge-share 0.2] [--games 1] [--chunk 250] [--min-drafts 20] [--cubes a,b,...] [--power power.tsv]
-//       [--bridge-ratings even|own] [--record-every N]   (N = 1: every game, both chairs, D315)
+//       [--bridge-ratings even|own] [--record-every N]   (N = 1: every game, both chairs, D315; a night that
+//                                  recorded is refused a re-run without it, D365: --record-every 0 to stop on purpose)
 //       [--allow-version-change]   append to key folders another lab version wrote (D341; logged)
 //       [--play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   a seeded share of every
 //                                  chunk's drafts play games whose decisions explore (D358, playexplore.ts)
@@ -185,11 +186,13 @@ export interface Chunk { key: string; kind: 'normal' | 'bridge'; cubes: string[]
 export interface NightPlan {
   night: number; drafts: number; games: number; format: string; knobs: QueueKnobs; alloc: KeyAlloc[]; pairs: PairRow[]; chunks: Chunk[]; bridgeRatings?: 'even' | 'own';
   /** D341: one line per `queue run` of this night: when, the code and engine it ran on (each chunk's run.json has the full version). */
-  runs?: Array<{ at: string; gitSha: string | null; codeTree: string | null; dirty: boolean; diffSha: string | null; forgeJarSha256: string | null; allowVersionChange: boolean }>;
+  runs?: Array<{ at: string; gitSha: string | null; codeTree: string | null; dirty: boolean; diffSha: string | null; forgeJarSha256: string | null; allowVersionChange: boolean; recordEvery?: number }>;
   /** D358: the night's play exploration (absent: none), passed to every chunk; a re-run must not change it. */
   playExplore?: PlayExploreOptions;
   /** D375: the night's --profile-mix, normalised (mixText); absent: Default vs Default. A re-run must not change it. */
   profileMix?: string;
+  /** D365: the night records its games (`--record-every N`, D315); a re-run without the flag is refused. */
+  recordEvery?: number;
 }
 export interface Ledger { v: 1; games: number; format: string; nextSeed: Record<string, number>; nights: number[] }
 
@@ -314,6 +317,44 @@ export function readPowerSd(file: string): Map<string, number> {
   return m;
 }
 
+/**
+ * The `--record-every` this night has recorded at before, or 0: the plan's own `recordEvery` (written by
+ * every recording run since D365), else -- a plan written before that -- recordings already under
+ * `<root>/<key>/games/<seed>/` for a seed of this night's chunks (D315's layout).
+ */
+export function nightRecorded(plan: NightPlan, root: string): number {
+  if (plan.recordEvery && plan.recordEvery > 0) return plan.recordEvery;
+  const fromRuns = (plan.runs ?? []).map((r) => r.recordEvery ?? 0).find((n) => n > 0);
+  if (fromRuns) return fromRuns;
+  for (const c of plan.chunks) {
+    let ents: string[] = [];
+    try { ents = fs.readdirSync(path.join(root, c.key, 'games')); } catch { continue; }
+    for (const e of ents) {
+      const s = /^\d+$/.test(e) ? Number(e) : NaN;
+      if (s >= c.seed && s < c.seed + c.drafts) return -1;            // recorded, at a rate the old plan did not keep
+    }
+  }
+  return 0;
+}
+
+/**
+ * D365: a night that recorded its games, run again WITHOUT --record-every, would play its remaining chunks
+ * unrecorded and say nothing (the evaluator's dataset reads those recordings).  Refused, unless the flag is
+ * given: `--record-every 0` plays the rest unrecorded on purpose (said loudly); a different N is said too.
+ * Returns the warning to print, or null; throws the refusal.
+ */
+export function checkNightRecording(plan: NightPlan, root: string, flagGiven: boolean, recordEvery: number): string | null {
+  const before = nightRecorded(plan, root);
+  if (!before || recordEvery === before) return null;
+  const was = before > 0 ? `--record-every ${before}` : 'recording (the plan predates D365 and does not say at what rate)';
+  if (!flagGiven) {
+    throw new Error(`night ${plan.night} was played with ${was}, but this run has no --record-every: its remaining chunks would play unrecorded. ` +
+      `Run it again with ${before > 0 ? `--record-every ${before}` : 'the same --record-every'} (or --record-every 0 to play the rest unrecorded on purpose)`);
+  }
+  if (recordEvery === 0) return `WARNING: night ${plan.night} was played with ${was}; --record-every 0 plays the rest of it UNRECORDED, as asked`;
+  return before > 0 ? `WARNING: night ${plan.night} was played with --record-every ${before}; the rest records every ${recordEvery}, as asked` : null;
+}
+
 function renderPlan(p: NightPlan, root: string): string {
   const out: string[] = [];
   out.push(`night ${p.night}: ${p.drafts} drafts (${p.chunks.length} chunks), ${p.games} game(s) a draft, ${p.format}, bridge share ${p.knobs.bridgeShare}`);
@@ -382,6 +423,10 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
   }
   say(renderPlan(plan, root));
   if (mode === 'plan') { say('\n(plan only: nothing written; `queue run` with the same flags writes and plays it)'); return 0; }
+  const recordEvery = num('record-every', 0);
+  // D365: a recorded night is never finished unrecorded by a re-run that forgot the flag.
+  const recWarning = checkNightRecording(plan, root, f.has('record-every'), recordEvery);
+  if (recWarning) say(recWarning);
 
   if (plan.profileMix) {
     const aiDir = path.join(repo, 'forge-home', 'res', 'ai');
@@ -392,10 +437,10 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
   // One engine lookup for every cube's cards; every chunk's own lookup is then a subset of it (engine.ts).
   engineFacts(env, [...new Set(cubes.flatMap((c) => c.cards))], say);
   const jobs = Math.max(1, num('jobs', 1));
-  const recordEvery = num('record-every', 0);
   const allowVersionChange = f.has('allow-version-change');
   // D341: the night's plan records every run of it, with the code and engine (each chunk's run.json has the full version).
-  plan.runs = [...(plan.runs ?? []), { at: new Date().toISOString(), ...codeVersion(repo), forgeJarSha256: fileSha(process.env.FORGE_JAR ?? null), allowVersionChange }];
+  plan.runs = [...(plan.runs ?? []), { at: new Date().toISOString(), ...codeVersion(repo), forgeJarSha256: fileSha(process.env.FORGE_JAR ?? null), allowVersionChange, recordEvery }];
+  if (recordEvery) plan.recordEvery = recordEvery;
   fs.writeFileSync(planFile, `${JSON.stringify(plan, null, 1)}\n`);
   if (jobs > env.homes.length) throw new Error(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
   let k = 0;

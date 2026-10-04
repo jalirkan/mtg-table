@@ -15,11 +15,15 @@
  *  - the queue: Omega+Vintage and Fair Fight+Pauper are skipped as the same
  *    pool, pairs that chain the power tiers lead, the bridge share holds,
  *    every (pool key, seed) is planned once across nights, a cube whose cards
- *    already have games gets fewer drafts, and a shared card is paid for once.
+ *    already have games gets fewer drafts, and a shared card is paid for once;
+ *  - a night that recorded (--record-every) is refused a re-run without the
+ *    flag (D365), its plan's own record or, for an older plan, its recordings
+ *    on disk saying so; --record-every 0 plays the rest unrecorded on purpose.
  */
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -28,7 +32,7 @@ import { apportion, bridgePool, cubeId, mergeRatings, parseBridgeArgs, poolCube,
 import type { Fact } from '../../tools/cubelab/cards.ts';
 import { parseCube, type Cube } from '../../tools/cubelab/cube.ts';
 import { loadCube, runDraft } from '../../tools/cubelab/lab.ts';
-import { allocate, assertNoDuplicates, cubeWeights, nightProfileMix, planNight, scorePairs, seatOptions, type CubeSet, type Ledger } from '../../tools/cubelab/queue.ts';
+import { allocate, assertNoDuplicates, checkNightRecording, cubeWeights, nightProfileMix, nightRecorded, planNight, queueCommand, scorePairs, seatOptions, type CubeSet, type Ledger, type NightPlan } from '../../tools/cubelab/queue.ts';
 import { seatsOf } from '../../tools/cubelab/run.ts';
 import { DEFAULT_WEIGHTS } from '../../tools/cubelab/weights.ts';
 
@@ -168,6 +172,33 @@ test('queue: a night honours the bridge share, and seeds are never planned twice
   assert.equal(first(n2, 'normal/vintage'), last(n1, 'normal/vintage'));
   // Interleaved: the first chunks cover several keys.
   assert.ok(new Set(n1.chunks.slice(0, 7).map((c) => c.key)).size >= 5);
+});
+
+test('queue: a recorded night is refused a re-run without --record-every (D365); --record-every 0 says it loudly', async () => {
+  const ledger: Ledger = { v: 1, games: 1, format: 'grid', nextSeed: {}, nights: [] };
+  const plan: NightPlan = planNight(1, 100, sets().filter((c) => ['pauper', 'synergy'].includes(c.id)), new Map(), null, ledger, 50);
+  const root = mkdtempSync(join(tmpdir(), 'queue-rec-'));
+  assert.equal(nightRecorded(plan, root), 0);
+  assert.equal(checkNightRecording(plan, root, false, 0), null, 'a night that never recorded runs as before');
+  // A plan written since D365 says so itself.
+  const rec = { ...plan, recordEvery: 1 };
+  assert.throws(() => checkNightRecording(rec, root, false, 0), /night 1 was played with --record-every 1, but this run has no --record-every/);
+  assert.equal(checkNightRecording(rec, root, true, 1), null);
+  assert.match(checkNightRecording(rec, root, true, 0) ?? '', /WARNING: .*--record-every 0 plays the rest of it UNRECORDED/);
+  assert.match(checkNightRecording(rec, root, true, 4) ?? '', /the rest records every 4/);
+  // An older plan (no recordEvery): recordings of this night's seeds on disk say it recorded; another night's do not.
+  const c = plan.chunks[0]!;
+  mkdirSync(join(root, c.key, 'games', String(c.seed + c.drafts + 1000)), { recursive: true });
+  assert.equal(nightRecorded(plan, root), 0);
+  mkdirSync(join(root, c.key, 'games', String(c.seed + 1)), { recursive: true });
+  assert.equal(nightRecorded(plan, root), -1);
+  assert.throws(() => checkNightRecording(plan, root, false, 0), /recording \(the plan predates D365/);
+  // End to end: `queue run` on the re-read plan refuses before it touches the engine.
+  writeFileSync(join(root, 'night-1.json'), `${JSON.stringify(plan)}\n`);
+  writeFileSync(join(root, 'queue.json'), `${JSON.stringify(ledger)}\n`);
+  const said: string[] = [];
+  const flags = new Map<string, string[]>([['night', ['1']], ['root', [root]], ['cubes', ['pauper,synergy']]]);
+  await assert.rejects(() => queueCommand(REPO, 'run', flags, (x) => said.push(x)), /has no --record-every: its remaining chunks would play unrecorded/);
 });
 
 test('queue: coverage moves drafts away from cubes whose cards already have games; shared cards count once', () => {

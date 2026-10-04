@@ -66,7 +66,11 @@ The runner checks every 10 seconds and fetches both branches every minute.
    runner), `Nice=10` and `KillMode=control-group`. Under memory pressure the runner first
    drops workers and then pauses new games, through the pool control file. Past the hard
    line it stops the job: `waiting`, reason `memory: …`, `retry_after:` 15 minutes later,
-   `workers_cap:` one fewer. The retry skips a pilot that passed. Jobs side by side are
+   `workers_cap:` one fewer. The retry skips a pilot that passed and every `## Commands`
+   block that finished: it starts at the block that was stopped (`blocks_done:` in STATUS;
+   see *Blocks and `clean:`* below). A step that exits 137 or 9 because the kernel's OOM
+   killer killed one of its processes (the unit's `memory.events`, or systemd's journal,
+   says so) is a memory stop too, not a failure. Jobs side by side are
    stopped for the host's pressure one at a time, a minute apart, so one stop can free
    the memory before another job's work is thrown away (a job whose own memory is at its
    unit's cap is stopped regardless). Every such event is a
@@ -94,8 +98,10 @@ The runner checks every 10 seconds and fetches both branches every minute.
 10. **Restarts.** The jobs run in their own units, so a runner restart never stops one. On
    start the runner reconciles. A step whose unit still runs is adopted (`adopted:` in
    STATUS). A step that died with the machine runs again if the job is `resumable: yes`
-   (`resumed:`). Otherwise the job starts again from the top (`restarted:`), with its
-   `clean:` folders moved aside first, never deleted.
+   (`resumed:`). Otherwise the job starts again at that block (`restarted:`), after
+   `prepare`, with the block's `clean:` paths moved aside first. Moved-aside copies
+   (`.restart-<time>-<name>`) are never deleted; STATUS's `set_aside:` line says how many
+   there are and how much disk they hold, and a person removes them.
 
 ## The PC session's part
 
@@ -212,12 +218,14 @@ est: ~3 h on the 9700X
 resumable: yes | no                  stopped and started again, it continues (default no)
 max_workers: 7                       {workers} never exceeds it
 cores: 1                             the job's width: the cores it keeps busy (default: its workers; {workers} never exceeds it)
+pilot_cores: 2                       the width while the job is in its pilot (default: the job's width); a narrower pilot lets a job start beside it
+prepare_cores: 1                     the width while the job is in prepare (default: the job's width)
 mem_per_worker_gb: 1.5               a floor under the pilot's measured peak per worker (optional)
 progress: aibench var/ai-bench/night-* of 2000     how done / total is counted
 metrics: [name =] <extractor> <paths…>             the job's metrics, for abort: and the final checks
 metrics: [name =] sh: <command printing JSON or a number>
 headline: control.a_win_rate, all.games            the numbers the progress page shows when done
-clean: var/ai-bench/night-x var/ai-bench/night-y   moved aside before a non-resumable restart
+clean: var/ai-bench/night-x var/ai-bench/night-y   moved aside before a non-resumable restart from run1
 timeout: 8h                          a step running longer is stopped, and the job fails
 control: yes | no                    the job's tools read the pool control file; default: detected after prepare
                                      (the checkout has tools/runner/control.ts and the job runs ai-bench, the cube lab or the ladder)
@@ -240,6 +248,7 @@ check: pilot.median_game_s between 4 and 15
 ```
 cores: 1                             this block's width only: a single-process step ({workers} is at most 1 in it)
 mem_gb: 12                           this block's whole memory reservation (default: width × the per-worker peak)
+clean: var/ml/models/x.json          what this block makes: moved aside before a non-resumable retry runs it again
 ```bash
 …
 ```
@@ -272,14 +281,37 @@ next job beside it. A `cores:` line in `## Pilot` or `## Commands` applies to th
 only, so one job can have a wide step and a narrow one: put each in its own block, the wide
 ones first. A `mem_gb:` line beside it says what that block holds in memory when it is not
 width × the per-worker peak (a single-process fit that loads the whole dataset), so nothing
-started beside it counts on memory it will use. A job is admitted at its header width; a later block that is wider than what is
-free still runs (it never waits for cores), so a job whose wide block comes after a narrow
-one can briefly crowd a job started beside it. Jobs side by side share `var/`: they must not
+started beside it counts on memory it will use. A job is admitted at its header width. A
+later step that is wider than the cores the other jobs leave waits for them (D365): nothing is
+stopped or killed, the job holds its full width meanwhile so nothing new starts beside it, and
+of two jobs waiting to widen the earlier (by id) goes first. Before D365 such a step ran at
+once and could briefly crowd a job started beside it. Jobs side by side share `var/`: they must not
 write the same paths. Every step's width, declared or not, also sets `OMP_NUM_THREADS`,
 `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS`,
 so numpy and torch keep to it; a block that exports one of them keeps its own value. A job
 started beside another is sized against the memory the others leave, so it may get a worker
 fewer than it would alone.
+
+**Narrow pilot and prepare (`pilot_cores:`, `prepare_cores:`).** A pilot often runs two or
+three JVMs for most of an hour while the job's width is seven. `pilot_cores: 2` in the header
+makes the pilot's steps hold 2 cores, so the runner can start a narrow job beside it (a pilot
+block's own `cores:` line still wins); `prepare_cores: 1` does the same for `prepare`. When the
+job reaches its first `## Commands` block it needs its full width again: it waits until the
+cores are free (no stop, no kill), claims them while it waits so no newer job overtakes it, and
+is sized against the memory the others leave when it starts. Absent, both are the job's width,
+as before. {workers} in the pilot is at most `pilot_cores:`.
+
+**Blocks and `clean:`.** A retry (after a memory stop or `tools/runner.sh stop`) and a restart
+start at the `## Commands` block that was stopped. Blocks that finished are recorded with their
+exit codes (`blocks_done:` in STATUS) and are not run again, unless the job file has changed
+that block since. So split a long job into blocks: an encode in one, the fit in the next, and a
+stop during the fit never redoes the encode. For a `resumable: no` job, write what each block
+makes on a `clean:` line before it (like `cores:`). A retry moves aside only the `clean:` paths
+of the blocks it runs again; the header's `clean:` is moved aside only when the job starts again
+from `run1`. A job file with only the header's `clean:` (every job file written before this)
+still starts again from `run1` with all of it moved aside, because nothing says which block
+made what. Moved-aside copies are never deleted; STATUS's `set_aside:` says their count and
+disk use.
 
 **Workers.** The pilot runs at most 3 workers. During the pilot the runner samples the peak
 resident size of every Java process in the step's unit. The full run gets
