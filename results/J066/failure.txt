@@ -1,0 +1,32 @@
+step pilot1 exited 1
+
+==== J066 pilot1 started 2026-10-04T14:31:23-04:00 in unit lab-J066-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1, lane 2
+1.5.6 25.0.1 3.0.6
+{"sources": 26, "filesRead": 26, "resets": 0, "lines": 7544, "badLines": 0, "jsonlMB": 139.2, "rowsAdded": {"drafts": 7544, "games": 7544, "decks": 15088, "deck_cards": 404857, "picks": 271584}, "cards": 727, "cubeCards": 1260, "quarantined": 0, "results": {"sprt": 3, "experiments": 10, "gate_reports": 8, "ml_reports": 3, "matchup_power": 0}, "seconds": 8.5, "peakMB": 380.0}
+{"sources": 26, "filesRead": 0, "resets": 0, "lines": 0, "badLines": 0, "jsonlMB": 0.0, "rowsAdded": {"drafts": 0, "games": 0, "decks": 0, "deck_cards": 0, "picks": 0}, "cards": 727, "cubeCards": 1260, "quarantined": 0, "results": {"sprt": 3, "experiments": 10, "gate_reports": 8, "ml_reports": 3, "matchup_power": 0}, "seconds": 0.4, "peakMB": 175.0}
+Traceback (most recent call last):
+  File "/home/justin-a/code/lab/mtg-table-lane2/notebooks/sprt_gates.py", line 81, in <module>
+    gates["reasons"] = gates.reasons.map(lambda s: "; ".join(json.loads(s)) if s else "")
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/justin-a/.local/lib/python3.12/site-packages/pandas/core/series.py", line 4675, in map
+    new_values = self._map_values(func, na_action=na_action)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/justin-a/.local/lib/python3.12/site-packages/pandas/core/base.py", line 1020, in _map_values
+    return arr.map(mapper, na_action=na_action)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/justin-a/.local/lib/python3.12/site-packages/pandas/core/arrays/arrow/array.py", line 1827, in map
+    return super().map(mapper, na_action)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/justin-a/.local/lib/python3.12/site-packages/pandas/core/arrays/base.py", line 2745, in map
+    return map_array(self, mapper, na_action=na_action)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/justin-a/.local/lib/python3.12/site-packages/pandas/core/algorithms.py", line 1715, in map_array
+    return lib.map_infer(values, mapper)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pandas/_libs/lib.pyx", line 3071, in pandas._libs.lib.map_infer
+  File "/home/justin-a/code/lab/mtg-table-lane2/notebooks/sprt_gates.py", line 81, in <lambda>
+    gates["reasons"] = gates.reasons.map(lambda s: "; ".join(json.loads(s)) if s else "")
+                                                             ^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not float
