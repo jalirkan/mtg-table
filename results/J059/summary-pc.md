@@ -1,0 +1,2 @@
+# J059 — queue night 2: plain summary (PC)
+Finished 12:19 on 2026-10-04 (started 05:42; about 6 h 35 min, slowed for 3 h by J060's unpinned BLAS threads beside it — it ran ~1,700-2,000 drafts/h then and ~4,850/h afterwards). The queue root now holds **40,000 drafts / 39,998 games** across nights 1+2; engine error rate 0.0001; recorded errors 18 of 39,998 recorded games (under the 1% rule). All checks PASS.
