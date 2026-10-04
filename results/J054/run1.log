@@ -1,0 +1,39 @@
+==== J054 run1 started 2026-10-04T04:02:27-04:00 in unit lab-J054-run1, 7 worker(s), 7 core(s)
+SPRT search-v1-fixed3-oracle vs search-v1-fixed3 on tools/ai-bench/pairs-confirm.txt: H1 "A is stronger by >= 40" vs H0 "<= 20", alpha 0.05, beta 0.05; bounds -2.94 / 2.94
+  start  w0 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601000, 2 pair(s))
+  start  w1 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601001, 2 pair(s))
+  start  w2 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601002, 2 pair(s))
+  start  w3 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601003, 2 pair(s))
+  start  w4 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601004, 2 pair(s))
+  start  w5 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601005, 2 pair(s))
+  start  w6 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601006, 2 pair(s))
+  done   w4 search-v1-fixed3-oracle 4-4 search-v1-fixed3 (0 draws) in 118 s
+  LLR -0.49 after 8 games (4 pairs), A scores 50.0%
+  start  w4 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601007, 2 pair(s))
+  done   w5 search-v1-fixed3-oracle 4-4 search-v1-fixed3 (0 draws) in 248 s
+  LLR -0.98 after 16 games (8 pairs), A scores 50.0%
+  start  w5 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601008, 2 pair(s))
+  done   w4 search-v1-fixed3-oracle 4-4 search-v1-fixed3 (0 draws) in 137 s
+  LLR -1.47 after 24 games (12 pairs), A scores 50.0%
+  start  w4 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601009, 2 pair(s))
+  done   w6 search-v1-fixed3-oracle 4-4 search-v1-fixed3 (0 draws) in 265 s
+  LLR -1.97 after 32 games (16 pairs), A scores 50.0%
+  start  w6 search-v1-fixed3-oracle vs search-v1-fixed3 (sprt:justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840, seed 114601010, 2 pair(s))
+  done   w3 search-v1-fixed3-oracle 3-5 search-v1-fixed3 (0 draws) in 347 s
+  LLR -3.27 after 40 games (20 pairs), A scores 47.5%
+  done   w4 search-v1-fixed3-oracle 4-4 search-v1-fixed3 (0 draws) in 197 s
+  LLR -4.38 after 48 games (24 pairs), A scores 47.9%
+  done   w5 search-v1-fixed3-oracle 5-3 search-v1-fixed3 (0 draws) in 218 s
+  LLR -1.93 after 56 games (28 pairs), A scores 50.0%
+  done   w6 search-v1-fixed3-oracle 4-4 search-v1-fixed3 (0 draws) in 268 s
+  LLR -2.52 after 64 games (32 pairs), A scores 50.0%
+  done   w2 search-v1-fixed3-oracle 4-4 search-v1-fixed3 (0 draws) in 612 s
+  LLR -1.59 after 72 games (36 pairs), A scores 50.0%
+  done   w1 search-v1-fixed3-oracle 6-2 search-v1-fixed3 (0 draws) in 639 s
+  LLR -0.56 after 80 games (40 pairs), A scores 52.5%
+  done   w0 search-v1-fixed3-oracle 3-5 search-v1-fixed3 (0 draws) in 904 s
+  LLR -1.00 after 88 games (44 pairs), A scores 51.1%
+
+SPRT result: H0 accepted -- search-v1-fixed3-oracle is not stronger than search-v1-fixed3 by 40 (<= 20)
+games used: 40 (20 mirrored pairs); LLR -3.272 in [-2.944, 2.944]; search-v1-fixed3-oracle scored 47.5%
+{"v":1,"at":"2026-10-04T08:17:31.219Z","id":"justin-a-B650-GAMING-X-AX-V2:20261004T080227-1648840","host":"justin-a-B650-GAMING-X-AX-V2","a":"search-v1-fixed3-oracle","b":"search-v1-fixed3","ah":"52b7f1f5ef0e","bh":"78d20b4c1a93","elo0":20,"elo1":40,"alpha":0.05,"beta":0.05,"result":"H0","llr":-3.272,"lower":-2.944,"upper":2.944,"games":40,"pairs":20,"score":0.475,"purpose":"sprt"}

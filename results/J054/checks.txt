@@ -1,0 +1,2 @@
+PASS  sprt_games >= 1   [sprt_games = 88]
+PASS  all.errors + all.timeouts <= all.games / 20   [all.errors = 0, all.timeouts = 5, all.games = 640]
