@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T08:18:52-04:00",
- "heartbeat": "2026-10-05T08:18:52-04:00",
+ "updated": "2026-10-05T08:19:07-04:00",
+ "heartbeat": "2026-10-05T08:19:07-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.43,
-  "memUsedGb": 3.9,
+  "load1": 5.22,
+  "memUsedGb": 5.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 3273,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-05T08:18:33-04:00",
-   "elapsed": 19,
+   "elapsed": 34,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 0,
+   "memGb": 1.94,
    "live": {
     "audit.written": 0,
     "cmp.written": 0,
@@ -64,9 +64,9 @@
    "id": "J068",
    "title": "Search error analysis: where the search AI loses, by kind, turn, cube and card, judged by gate 2's truth tables (D367)",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-05T08:18:33-04:00",
-   "elapsed": 19,
+   "elapsed": 34,
    "done": null,
    "total": null,
    "unit": null,
@@ -78,7 +78,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0.04,
    "live": {
     "elapsed_s": 0,
     "metrics_errors": 1,
@@ -89,7 +89,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J068-prepare"
+   "detail": "lab-J068-pilot1"
   }
  ],
  "queue": [
