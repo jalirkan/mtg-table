@@ -40,3 +40,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J052/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 7e48088
 - follow-up: template league-candidate: not due (the job did not finish done)
+
+## J061 DONE: Overnight queue, night 3: recorded drafts with play exploration in 15% of drafts (D358)
+
+- finished: 2026-10-05T04:29:24-04:00
+- decides: whether D358's play exploration stays on at 15% for night 4, given its cost in draft rate, recording size and quarantined recordings
+- hypothesis: exploring drafts record larger logs (up to ~1 MB a game) and the night still keeps engine errors <= 2% and recording errors <= 1%; redaction quarantines close to nothing
+- rule: written 2026-10-04 before the run: keep exploration at 15% for night 4 if the draft rate falls by <= 25% vs night 2, recordings grow by <= 2.5x per game, engine errors <= 2% and recording errors <= 1%; otherwise halve the share (7.5%). Quarantines are judged with the D371 checker (re-run J074's tool on night 3), not the pinned one. Readings fixed 2026-10-05 before the run: "draft rate" is night 3's own drafts per hour against night 2's uncontended 4,850/h (not its 3,030/h average, which J060 slowed); "recordings grow" is night 3's mean recorded bytes per game against night 2's 168.1 kB (halve above 420 kB); all counts are night 3's own, not the runner's cumulative night totals; quarantines are judged by J071
+- outcome: done
+- headline: night.drafts 60000, night.games 59997, night.engine_error_rate 0.0001
+- summary: results/J061/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table c09ddfa
+- follow-up: template matchup-read-night-3: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

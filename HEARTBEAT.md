@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-05T04:28:30-04:00
+- time: 2026-10-05T04:29:24-04:00
 - runner: ef7e73f, up since 2026-10-04T21:59:21-04:00
-- running: J061 commands 2/2, 20000/20000 drafts, 3572.6/h, 7 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.46; memory 7.5/30.5 GB, swap 3432 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J062, J063, J064, J067, J068, J069, J070, J071, J072, J074, J075, J081
+- running: J062 prepare, 1 worker(s), 1 core(s); J063 prepare, 1 worker(s), 7 core(s)
+- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
+- load: 7.99; memory 5.1/30.5 GB, swap 3432 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J064, J067, J068, J069, J070, J071, J072, J074, J075, J081
 - waiting: nothing
-- last finished: J052 failed at 2026-10-04T23:51:46-04:00
+- last finished: J061 done at 2026-10-05T04:29:24-04:00: night.drafts 60000 · night.games 59997 · night.engine_error_rate 0
 
 ## Messages
+
+- FOLLOW-UP READY [J061@2026-10-05T04:29:24-04:00] (the runner, for the cloud session): J061 is done; write and post the template matchup-read-night-3. It decides: whether D358's play exploration stays on at 15% for night 4, given its cost in draft rate, recording size and quarantined recordings. Ledger: LEDGER.md. Delete this line once posted.
 
 The PC session's and Justin's notes, and messages for the cloud session. The runner keeps this section as written.
 

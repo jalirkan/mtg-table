@@ -1,132 +1,56 @@
 {
  "schema": 1,
- "updated": "2026-10-05T04:28:30-04:00",
- "heartbeat": "2026-10-05T04:28:30-04:00",
+ "updated": "2026-10-05T04:29:24-04:00",
+ "heartbeat": "2026-10-05T04:29:24-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.46,
-  "memUsedGb": 7.5,
+  "load1": 7.99,
+  "memUsedGb": 5.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 3432,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 8,
   "coresTotal": 8
  },
  "running": [
-  {
-   "publicTitle": "Queue night 3",
-   "publicEst": "~5 h",
-   "id": "J061",
-   "title": "Overnight queue, night 3: recorded drafts with play exploration in 15% of drafts (D358)",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-10-04T23:51:46-04:00",
-   "elapsed": 16604,
-   "done": 20000,
-   "total": 20000,
-   "unit": "drafts",
-   "ratePerHour": 3572.6,
-   "eta": null,
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-05T04:24:50-04:00",
-   "memGb": 4.6,
-   "live": {
-    "night.drafts": 60000,
-    "night.games": 59997,
-    "night.engine_error_rate": 0.0001,
-    "elapsed_s": 16571,
-    "night.bridge_drafts": 12000,
-    "night.bridge_drafts_done": 4000,
-    "night.bridge_drafts_planned": 4000,
-    "night.bridge_share": 0.2,
-    "night.cpu_ms_per_turn": 344,
-    "night.drafts_per_h": 3572.6,
-    "night.draws": 13,
-    "night.engine_errors": 3,
-    "night.games_per_h": 3572.6,
-    "night.mean_game_ms": 4578,
-    "night.mean_game_s": 4.5777,
-    "night.mean_turns": 19.4045,
-    "night.median_game_s": 2.645,
-    "night.ms_per_turn": 236,
-    "night.night_drafts_done": 20000,
-    "night.night_drafts_done_per_h": 3572.6,
-    "night.nights": 1,
-    "night.output_bytes": 10986607842,
-    "night.planned_drafts": 20000,
-    "night.recorded_bytes_per_game": 166504,
-    "night.recorded_errors": 18,
-    "night.recorded_games": 59997,
-    "night.runs": 26,
-    "night.timeouts": 12,
-    "peak_worker_rss_gb": 1.23,
-    "pressure_events": 0,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "night.drafts",
-    "night.games",
-    "night.engine_error_rate"
-   ],
-   "cubes": [
-    {
-     "id": "fair-fight",
-     "done": 2023,
-     "planned": 2023
-    },
-    {
-     "id": "modern-era",
-     "done": 1969,
-     "planned": 1969
-    },
-    {
-     "id": "omega",
-     "done": 1812,
-     "planned": 1812
-    },
-    {
-     "id": "pauper",
-     "done": 3081,
-     "planned": 3081
-    },
-    {
-     "id": "peasant",
-     "done": 2773,
-     "planned": 2773
-    },
-    {
-     "id": "synergy",
-     "done": 2654,
-     "planned": 2654
-    },
-    {
-     "id": "vintage",
-     "done": 1688,
-     "planned": 1688
-    }
-   ],
-   "publicCubes": true,
-   "pressureEvents": [],
-   "detail": "lab-J061-run2"
-  }
- ],
- "queue": [
   {
    "publicTitle": "Matchup model read",
    "publicEst": "~1 h",
    "id": "J062",
    "title": "Morning read of nights 1 and 2: the matchup model on the queue's drafts (exploring drafts left out), with the questions night 1 pre-registered",
    "cpu": "heavy",
-   "est": "~30-90 min, one process (the matchup model is a few thousand parameters; the bootstrap is the cost)"
+   "phase": "prepare",
+   "started": "2026-10-05T04:29:24-04:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 1,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": null,
+   "memGb": null,
+   "live": {
+    "done": 0,
+    "elapsed_s": 0,
+    "power": 0,
+    "pressure_events": 0,
+    "workers": 1
+   },
+   "liveHeadline": [],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J062-prepare"
   },
   {
    "publicTitle": "Evaluator outside exam",
@@ -134,8 +58,40 @@
    "id": "J063",
    "title": "Outside exam (D359): a reduced r17 evaluator trained on night 1's Vintage-cube games, scored on 17Lands' Powered Cube human games against simple rules",
    "cpu": "heavy",
-   "est": "~1.5-2 h (encode ~15-30 min at 7 workers; the grid gets 1 h; both downloads, 158 MB, a few minutes; the rows ~5 min; each exam ~2 min)"
-  },
+   "phase": "prepare",
+   "started": "2026-10-05T04:29:24-04:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": null,
+   "memGb": null,
+   "live": {
+    "ds.written": 0,
+    "elapsed_s": 0,
+    "exam.written": 0,
+    "ext.written": 0,
+    "model.bytes": 0,
+    "model.exists": 0,
+    "pressure_events": 0,
+    "trad.written": 0,
+    "workers": 1
+   },
+   "liveHeadline": [],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J063-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Omega ratings raise check",
    "publicEst": "~4 h",
@@ -219,6 +175,20 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Queue night 3",
+   "publicEst": "~5 h",
+   "id": "J061",
+   "title": "Overnight queue, night 3: recorded drafts with play exploration in 15% of drafts (D358)",
+   "status": "done",
+   "finished": "2026-10-05T04:29:24-04:00",
+   "headline": "night.drafts 60000 · night.games 59997 · night.engine_error_rate 0",
+   "numbers": {
+    "night.drafts": 60000,
+    "night.games": 59997,
+    "night.engine_error_rate": 0.0001
+   }
+  },
   {
    "publicTitle": "Evaluator SPRT",
    "publicEst": "one to two nights",
