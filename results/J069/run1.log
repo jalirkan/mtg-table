@@ -1,0 +1,20 @@
+==== J069 run1 started 2026-10-05T08:22:52-04:00 in unit lab-J069-run1, 1 worker(s), 6 core(s), BLAS/OpenMP threads 6
+==> var/ml/reports/night-1-s1.txt <==
+  test all (631661 rows, 3929 games, 333 pairs; 95% over pairs): prior 0.6932 [0.6931, 0.6932] by game 0.6932; life 0.6098 [0.5984, 0.6212] by game 0.5907; core 0.5542 [0.5421, 0.5665] by game 0.5289; eval 0.4995 [0.4858, 0.5137] by game 0.4705
+verdict (test): eval log-loss 0.4995 vs best baseline core 0.5542 -- the evaluator wins
+saved var/ml/models/night-1-eval-s1.json (889902 bytes)
+
+==> var/ml/reports/night-1-s2.txt <==
+  test all (631661 rows, 3929 games, 333 pairs; 95% over pairs): prior 0.6932 [0.6931, 0.6932] by game 0.6932; life 0.6098 [0.5984, 0.6212] by game 0.5907; core 0.5542 [0.5421, 0.5665] by game 0.5289; eval 0.5011 [0.4876, 0.5147] by game 0.4715
+verdict (test): eval log-loss 0.5011 vs best baseline core 0.5542 -- the evaluator wins
+saved var/ml/models/night-1-eval-s2.json (891572 bytes)
+
+==> var/ml/reports/night-1-s3.txt <==
+  test all (631661 rows, 3929 games, 333 pairs; 95% over pairs): prior 0.6932 [0.6931, 0.6932] by game 0.6932; life 0.6098 [0.5984, 0.6212] by game 0.5907; core 0.5542 [0.5421, 0.5665] by game 0.5289; eval 0.5030 [0.4888, 0.5176] by game 0.4715
+verdict (test): eval log-loss 0.5030 vs best baseline core 0.5542 -- the evaluator wins
+saved var/ml/models/night-1-eval-s3.json (894366 bytes)
+
+==> var/ml/reports/night-1-s4.txt <==
+  test all (631661 rows, 3929 games, 333 pairs; 95% over pairs): prior 0.6932 [0.6931, 0.6932] by game 0.6932; life 0.6098 [0.5984, 0.6212] by game 0.5907; core 0.5542 [0.5421, 0.5665] by game 0.5289; eval 0.4956 [0.4824, 0.5091] by game 0.4670
+verdict (test): eval log-loss 0.4956 vs best baseline core 0.5542 -- the evaluator wins
+saved var/ml/models/night-1-eval-s4.json (890797 bytes)
