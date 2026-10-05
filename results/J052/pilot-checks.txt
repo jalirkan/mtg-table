@@ -1,0 +1,4 @@
+PASS  g1.pass == 1   [g1.pass = 1]
+FAIL  g2.pass == 1   [g2.pass = 0]
+PASS  pilot.games >= 4   [pilot.games = 24]
+PASS  pilot.errors + pilot.timeouts <= 1   [pilot.errors = 0, pilot.timeouts = 0]

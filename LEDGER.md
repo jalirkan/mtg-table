@@ -28,3 +28,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J051/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 7e48088
 - follow-up: jobs/J052-evaluator-sprt.md: on pc-jobs with after: on this job; the runner starts it
+
+## J052 FAILED: Evaluator gate 3: SPRT search-v1-fixed3 with the evaluator's leaves vs search-v1-fixed3 (D354)
+
+- finished: 2026-10-04T23:51:46-04:00
+- decides: whether search-v1-fixed3 with the evaluator's leaves becomes a league candidate (D354 gate 3, then D321's league)
+- hypothesis: evaluator leaves beat the hand leaf in games by at least the SPRT's elo1 of 20
+- rule: gates.py SPRT_RULE (D354 gate 3): elo0 0, elo1 20, alpha = beta = 0.05, at most 2,400 games; H1 = PASS; H0 or inconclusive = FAIL
+- outcome: failed (pilot: g2.pass == 1 (g2.pass = 0))
+- headline: sprt_games 0, all.games 1544, all.errors 0, all.timeouts 9
+- summary: results/J052/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 7e48088
+- follow-up: template league-candidate: not due (the job did not finish done)

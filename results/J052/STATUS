@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: g2.pass == 1 (g2.pass = 0)
 runner: forgecoach-runner ef7e73f
 started: 2026-10-04T23:48:03-04:00
-phase: pilot 1/1
+finished: 2026-10-04T23:51:46-04:00
 mtg-table: 7e48088
 workers: 3
+peak_worker_rss_gb: 1.13
