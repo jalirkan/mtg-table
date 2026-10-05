@@ -1,0 +1,1 @@
+PASS  numpy_ok == 1   [numpy_ok = 1]
