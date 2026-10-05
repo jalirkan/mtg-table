@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-05T09:08:49-04:00",
- "heartbeat": "2026-10-05T09:08:49-04:00",
+ "updated": "2026-10-05T09:09:03-04:00",
+ "heartbeat": "2026-10-05T09:09:03-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.89,
-  "memUsedGb": 5.8,
+  "load1": 6.74,
+  "memUsedGb": 6.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 3256,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 10,
+  "coresUsed": 9,
   "coresTotal": 8
  },
  "running": [
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-05T09:07:31-04:00",
-   "elapsed": 78,
+   "elapsed": 92,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -97,7 +97,7 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-05T09:07:59-04:00",
-   "elapsed": 50,
+   "elapsed": 64,
    "done": null,
    "total": null,
    "unit": null,
@@ -109,10 +109,10 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 0.01,
+   "memGb": 0.55,
    "live": {
     "restored": 0,
-    "elapsed_s": 49,
+    "elapsed_s": 63,
     "left1": 821,
     "left2": 684,
     "n1.written": 0,
@@ -135,43 +135,6 @@
    "publicCubes": false,
    "pressureEvents": [],
    "detail": "lab-J074-run1"
-  },
-  {
-   "publicTitle": "Cube meta refresh",
-   "publicEst": "~15 min",
-   "id": "J075",
-   "title": "Regenerate ForgeCoach's four cube meta.json files (modern-era, pauper, synergy, vintage) from the queue's plain drafts, with D380's land counts (read-only on the queue)",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-05T09:08:00-04:00",
-   "elapsed": 49,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "memGb": 0.01,
-   "live": {
-    "m.written": 0,
-    "big": 128,
-    "elapsed_s": 48,
-    "folders": 4,
-    "pressure_events": 0,
-    "workers": 1
-   },
-   "liveHeadline": [
-    "m.written"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J075-run1"
   }
  ],
  "queue": [
@@ -218,6 +181,19 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Cube meta refresh",
+   "publicEst": "~15 min",
+   "id": "J075",
+   "title": "Regenerate ForgeCoach's four cube meta.json files (modern-era, pauper, synergy, vintage) from the queue's plain drafts, with D380's land counts (read-only on the queue)",
+   "status": "done",
+   "finished": "2026-10-05T09:09:03-04:00",
+   "headline": "m.written 4 · m.min_drafts 5167",
+   "numbers": {
+    "m.written": 4,
+    "m.min_drafts": 5167
+   }
+  },
   {
    "publicTitle": "Evaluator ensemble training",
    "publicEst": "~2 h",

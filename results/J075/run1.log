@@ -1,0 +1,13 @@
+==== J075 run1 started 2026-10-05T09:08:48-04:00 in unit lab-J075-run1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1, lane 3
+var/cubelab/meta-regen/modern-era/meta.json
+var/cubelab/meta-regen/pauper/meta.json
+var/cubelab/meta-regen/synergy/meta.json
+var/cubelab/meta-regen/vintage/meta.json
+| file | drafts | decisive games | lands played / in cube | nonland picked > 10, never built | keys outside the cube | Σ inDecks / deck | KB |
+|---|---|---|---|---|---|---|---|
+| modern-era-cube-180.meta.json | 5781 | 5781 | 20 / 20 | 0 | 0 | 23.83 | 106 |
+| pauper-cube-180.meta.json | 8314 | 8314 | 20 / 20 | 0 | 0 | 25.55 | 189 |
+| synergy-cube-180.meta.json | 6980 | 6971 | 20 / 20 | 2 | 0 | 24.48 | 204 |
+| vintage-cube-180.meta.json | 5167 | 5167 | 20 / 21 | 0 | 0 | 24.07 | 203 |
+
+totals: {"written":4,"min_drafts":5167,"orphans":0,"lands_counted":4,"bad_schema":0}

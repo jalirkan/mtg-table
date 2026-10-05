@@ -120,3 +120,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: calib.models 4, calib.passing 4, calib.maxEce 0.0137, ens.n 5
 - summary: results/J069/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 2ca065f
+
+## J075 DONE: Regenerate ForgeCoach's four cube meta.json files (modern-era, pauper, synergy, vintage) from the queue's plain drafts, with D380's land counts (read-only on the queue)
+
+- finished: 2026-10-05T09:09:03-04:00
+- decides: whether ForgeCoach's public/cubes metas are replaced by these four (the cloud session copies them)
+- hypothesis: every nonbasic land the builder played now has inDecks > 0 (D380), no key falls outside the cube, and each file rests on 100+ plain drafts
+- rule: D380; the final checks below (four files, schema 1, no orphan keys, a land counted in each, 100+ drafts)
+- outcome: done
+- headline: m.written 4, m.min_drafts 5167
+- summary: results/J075/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table af6f817

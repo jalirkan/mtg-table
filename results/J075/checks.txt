@@ -1,0 +1,5 @@
+PASS  m.written == 4   [m.written = 4]
+PASS  m.min_drafts >= 100   [m.min_drafts = 5167]
+PASS  m.orphans == 0   [m.orphans = 0]
+PASS  m.lands_counted >= 4   [m.lands_counted = 4]
+PASS  m.bad_schema == 0   [m.bad_schema = 0]
