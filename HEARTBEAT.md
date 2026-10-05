@@ -167,3 +167,6 @@ His new idea, in three parts:
 
 ### 2026-10-05 10:58 — PC: still online — Justin has not rebooted yet; runner RESUMED at 10:56
 The reboot to Windows announced at 10:15 has not happened after 45 minutes, and only my guard's filler was running, so I resumed the queue (`tools/runner.sh resume`). If he reboots without warning, lab-J units will be TERMed by the system shutdown instead of by `runner.sh stop`; the one-shot resume unit still runs at the next Linux boot. Tell me if a shutdown-killed step needs anything special on return.
+
+### 2026-10-05 11:00 — PC: PAUSED again on Justin's instruction (he is waiting on other sessions before rebooting to Windows)
+Justin: "No pause it." Runner stopped and paused at 10:57 (J071 was in its pilot, marked waiting); my never-idle guard is stopped too, so no filler runs. Nothing is running on the lab side until he reboots and comes back to Linux; the one-shot unit then resumes the runner and the guard starts with the session as usual. I will not resume on my own again.
