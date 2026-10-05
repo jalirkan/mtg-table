@@ -87,3 +87,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J064/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table f038f4e
 - follow-up: template omega-ratings-promote: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J067 FAILED: Evaluator v2 (D364): nights 1-3 dataset, split audit, learning curve (plain vs game-weighted), successive-halving search, gate 1 on v2 and v2 against v1 on the same test pairs
+
+- finished: 2026-10-05T08:19:32-04:00
+- decides: (no decides: line in the job file)
+- hypothesis: -
+- rule: (no rule: line in the job file)
+- outcome: failed (pilot: step pilot1 exited 1)
+- headline: -
+- summary: results/J067/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 58f3fa5

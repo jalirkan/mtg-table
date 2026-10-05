@@ -1,0 +1,62 @@
+step pilot1 exited 1
+
+  block  n 100  hand 0.1966  eval 0.0000  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1327 [+0.1217, +0.1434] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0154 at 80% power (sd of the paired difference 0.0955)
+gate 2 (regret): PASS
+reading: PASS
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.0000  eval 0.0000  forge 0.0997  (picks agree 100%)
+  attack n 100  hand 0.0000  eval 0.0000  agree 100%
+  block  n 100  hand 0.0000  eval 0.0000  agree 100%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.0000 [+0.0000, +0.0000] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0000 at 80% power (sd of the paired difference 0.0000)
+gate 2 (regret): FAIL -- mean regret(hand) - regret(eval) = +0.0000 is not above 0
+reading: FAIL: a mean regret gain of 0.015 or more is ruled out (interval ends at +0.0000)
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 150 of 150 decisions; unscored {}
+mean regret: hand 0.1335  eval 0.0000  forge 0.1006  (picks agree 33%)
+  attack n  50  hand 0.2022  eval 0.0000  agree 0%
+  block  n  50  hand 0.1984  eval 0.0000  agree 0%
+  spell  n  50  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1335 [+0.1178, +0.1485] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0221 at 80% power (sd of the paired difference 0.0964)
+gate 2 (regret): FAIL -- 150 scored decisions < 240 (underpowered)
+reading: FAIL, underpowered: 150 scored decisions < 240; not 'no gain'
+WARNING: no version stamp (<file>.meta.json) for eval: not graded by gate_regret_grade.py
+WARNING: no version stamp (<file>.meta.json) for eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.1327  eval 0.0000  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.2016  eval 0.0000  agree 0%
+  block  n 100  hand 0.1966  eval 0.0000  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: +0.1327 [+0.1217, +0.1434] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0154 at 80% power (sd of the paired difference 0.0955)
+gate 2 (regret): PASS
+reading: PASS
+WARNING: no version stamp (<file>.meta.json) for truth, hand, eval: not graded by gate_regret_grade.py
+scored 300 of 300 decisions; unscored {}
+mean regret: hand 0.0000  eval 0.1327  forge 0.0997  (picks agree 33%)
+  attack n 100  hand 0.0000  eval 0.2016  agree 0%
+  block  n 100  hand 0.0000  eval 0.1966  agree 0%
+  spell  n 100  hand 0.0000  eval 0.0000  agree 100%
+hand - eval: -0.1327 [-0.1434, -0.1217] (95%, 10000 resamples of decisions)
+power (D372, reporting only): pre-registered MDE 0.015; realised MDE 0.0154 at 80% power (sd of the paired difference 0.0955)
+gate 2 (regret): FAIL -- mean regret(hand) - regret(eval) = -0.1327 is not above 0
+reading: FAIL: a mean regret gain of 0.015 or more is ruled out (interval ends at -0.1217)
+search-v1-fixed3-eval-68163cb8b844
+search-v1-fixed3-eval-68163cb8b844
+{"result": "H1", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): PASS
+{"result": "H0", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): FAIL -- result H0
+{"result": "inconclusive", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): FAIL -- result inconclusive
+{"result": "stopped", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): NO VERDICT -- the SPRT is stopped
+{"result": "H1", "games": 900, "pairs": 450, "score": 0.55, "llr": 3.0}
+gate 3 (sprt): NO VERDICT -- the last SPRT of this pair used other elo0/elo1/alpha/beta than the rule's
