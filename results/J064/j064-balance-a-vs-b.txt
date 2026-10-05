@@ -1,0 +1,3 @@
+pre-registered: 6000 drafts per arm, 1 looks every 6000, one-sided alpha 0.05, O'Brien-Fleming bounds 1.65, futility z < 0 from look 2
+drafts in both arms on the same seeds: 6000 (orig 6000, cand 6000)
+look 1/1 on 6000 drafts per arm: archetype SD orig 3.9 pts, cand 3.0 pts; D = +0.00058 (variance), SE 0.00044, z +1.34 vs bound 1.65 -> REJECT

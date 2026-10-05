@@ -75,3 +75,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J062/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table c09ddfa
 - follow-up: template queue-night-4: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J064 DONE: Omega ratings raise (D360): pre-registered A/B, old vs raised ratings, 2 x 3,000 drafts per arm, best of 3, unrecorded
+
+- finished: 2026-10-05T08:18:51-04:00
+- decides: promote cubes/omega-cube-180.ratings-raised.tsv to Omega's default ratings (D360; the rename is Justin's call)
+- hypothesis: the raised cards are played much more (~0.39 -> ~0.75 on-colour) without any becoming weak, and balance is no worse
+- rule: D360 and the job's "Pre-registered reading": played rate up >= 0.2, no raised card weak (D357 pooled, Holm), matchup_verify.py with A as candidate does not ACCEPT
+- outcome: done
+- headline: a.drafts 6000, b.drafts 6000, a.engine_error_rate 0, b.engine_error_rate 0.0002
+- summary: results/J064/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table f038f4e
+- follow-up: template omega-ratings-promote: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

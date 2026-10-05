@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-05T08:18:33-04:00
+- time: 2026-10-05T08:18:52-04:00
 - runner: ef7e73f, up since 2026-10-04T21:59:21-04:00
-- running: J064 commands 2/2, 12000 drafts, 4617.9/h, 6 worker(s), 1 core(s); J067 prepare, 1 worker(s), 6 core(s); J068 prepare, 1 worker(s), 1 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.54; memory 4.2/30.5 GB, swap 3273 MB, pressure 0% (lab budget 23.4 GB)
+- running: J067 pilot 1/1, 3 worker(s), 6 core(s); J068 prepare, 1 worker(s), 1 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 5.43; memory 3.9/30.5 GB, swap 3273 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J069, J070, J071, J072, J074, J075, J081, J082
 - waiting: nothing
-- last finished: J062 done at 2026-10-05T05:51:13-04:00
+- last finished: J064 done at 2026-10-05T08:18:51-04:00: a.drafts 6000 · b.drafts 6000 · a.engine_error_rate 0 · b.engine_error_rate 0
 
 ## Messages
+
+- FOLLOW-UP READY [J064@2026-10-05T08:18:51-04:00] (the runner, for the cloud session): J064 is done; write and post the template omega-ratings-promote. It decides: promote cubes/omega-cube-180.ratings-raised.tsv to Omega's default ratings (D360; the rename is Justin's call). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J062@2026-10-05T05:51:13-04:00] (the runner, for the cloud session): J062 is done; write and post the template queue-night-4. It decides: J029's pre-registered questions: card-level vs archetype-level work (tau), matchup model vs coin, keep or cut the bridge share. Ledger: LEDGER.md. Delete this line once posted.
 
