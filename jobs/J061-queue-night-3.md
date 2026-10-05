@@ -8,7 +8,7 @@ repos: mtg-table@c09ddfa (main with play exploration, D358 / M57)
 decides: whether D358's play exploration stays on at 15% for night 4, given its cost in draft rate, recording size and quarantined recordings
 hypothesis: exploring drafts record larger logs (up to ~1 MB a game) and the night still keeps engine errors <= 2% and recording errors <= 1%; redaction quarantines close to nothing
 followup: matchup-read-night-3
-rule: written 2026-10-04 before the run: keep exploration at 15% for night 4 if the draft rate falls by <= 25% vs night 2, recordings grow by <= 2.5x per game, engine errors <= 2% and recording errors <= 1%; otherwise halve the share (7.5%). Quarantines are judged with the D371 checker (re-run J074's tool on night 3), not the pinned one
+rule: written 2026-10-04 before the run: keep exploration at 15% for night 4 if the draft rate falls by <= 25% vs night 2, recordings grow by <= 2.5x per game, engine errors <= 2% and recording errors <= 1%; otherwise halve the share (7.5%). Quarantines are judged with the D371 checker (re-run J074's tool on night 3), not the pinned one. Readings fixed 2026-10-05 before the run: "draft rate" is night 3's own drafts per hour against night 2's uncontended 4,850/h (not its 3,030/h average, which J060 slowed); "recordings grow" is night 3's mean recorded bytes per game against night 2's 168.1 kB (halve above 420 kB); all counts are night 3's own, not the runner's cumulative night totals; quarantines are judged by J071
 est: ~4-5 h of drafts (night 1 ran 4,750 drafts/h on 7 workers), then ~1 h of redaction checks (resumable)
 resumable: yes
 max_workers: 7
