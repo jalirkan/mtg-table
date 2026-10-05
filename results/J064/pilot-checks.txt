@@ -1,0 +1,8 @@
+PASS  pa.drafts == 20   [pa.drafts = 20]
+PASS  pb.drafts == 20   [pb.drafts = 20]
+PASS  pa.engine_errors == 0   [pa.engine_errors = 0]
+PASS  pb.engine_errors == 0   [pb.engine_errors = 0]
+PASS  pv.raised == 30   [pv.raised = 30]
+PASS  pv.a_drafts == 20   [pv.a_drafts = 20]
+PASS  pv.b_drafts == 20   [pv.b_drafts = 20]
+PASS  pv.b_played_rate > pv.a_played_rate   [pv.b_played_rate = 0.7306, pv.a_played_rate = 0.3561]
