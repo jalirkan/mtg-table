@@ -1,0 +1,5 @@
+PASS  pfx.written == 1   [pfx.written = 1]
+PASS  pfx.searched == 20   [pfx.searched = 20]
+PASS  pfx.noiseDecisions == 20   [pfx.noiseDecisions = 20]
+PASS  preal.written == 1   [preal.written = 1]
+PASS  preal.truthRows >= 1   [preal.truthRows = 252]
