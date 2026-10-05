@@ -49,7 +49,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 
 const argv = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -574,6 +574,13 @@ let releaseHold = null;
 const holdWaiters = [];
 const server = createServer((req, res) => {
   const url = new URL(req.url ?? '/', `http://127.0.0.1:${String(HTTP)}`);
+  // D386: this server is the encoder page's and nothing else's -- a request from
+  // any other page (an Origin that is not this server's) is refused.
+  const origin = req.headers.origin;
+  if (origin !== undefined && origin !== `http://127.0.0.1:${String(HTTP)}`) {
+    res.writeHead(403).end();
+    return;
+  }
   if (url.pathname === '/' || url.pathname === '/encode.html') {
     res.writeHead(200, { 'content-type': 'text/html' });
     res.end(`<!doctype html><meta charset="utf-8"><title>encode</title><script>${PAGE_JS}</script>`);
@@ -593,7 +600,10 @@ const server = createServer((req, res) => {
   }
   if (url.pathname.startsWith('/out/')) {
     try {
-      const bytes = readFileSync(join(OUT, url.pathname.slice(5)));
+      // D386: a file directly under OUT, or nothing.
+      const file = resolve(OUT, decodeURIComponent(url.pathname.slice(5)));
+      if (!file.startsWith(OUT + sep) || file.slice(OUT.length + 1).includes(sep)) throw new Error('outside');
+      const bytes = readFileSync(file);
       res.writeHead(200, { 'content-type': 'audio/ogg' });
       res.end(bytes);
     } catch {
@@ -603,9 +613,12 @@ const server = createServer((req, res) => {
   }
   if (url.pathname === '/report' && req.method === 'POST') {
     let body = '';
-    req.on('data', (c) => (body += String(c)));
+    req.on('data', (c) => {
+      body += String(c);
+      if (body.length > 8 << 20) req.destroy();   // D386: a report is a few KB
+    });
     req.on('end', () => {
-      report = JSON.parse(body);
+      try { report = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
       res.writeHead(204).end();
       releaseHold?.();
     });

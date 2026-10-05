@@ -74,8 +74,8 @@
 // Run from the repo root (hard rule 9).  Its self-test is
 // tools/match-launcher-selftest.mjs (a fake engine under play.sh; gate 12f, CI).
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve, sep } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import { inflateRawSync } from 'node:zlib';
 
 export const MATCH_VERSION = 1;
@@ -284,6 +284,28 @@ export function readProfiles(aiDir) {
 //   var/match/current.json           {id, match}  (play.sh, after every start)
 // ---------------------------------------------------------------------------
 
+/** A path with every symlink resolved, as far as it exists (the rest appended as written). */
+function realOf(p) {
+  let head = resolve(p);
+  const tail = [];
+  for (;;) {
+    try { return join(realpathSync(head), ...tail); } catch (e) {
+      if (e.code !== 'ENOENT' || dirname(head) === head) throw e;
+      tail.unshift(basename(head));
+      head = dirname(head);
+    }
+  }
+}
+
+/** D386: whether `p`, symlinks resolved, is `root` or under it (symlinks resolved too). */
+export function realInside(root, p) {
+  try {
+    const r = realOf(root);
+    const q = realOf(p);
+    return q === r || q.startsWith(r + sep);
+  } catch { return false; }
+}
+
 const readJson = (f) => { try { return JSON.parse(readFileSync(f, 'utf8')); } catch { return null; } };
 const writeAtomic = (f, text) => { writeFileSync(f + '.tmp', text); renameSync(f + '.tmp', f); };
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
@@ -303,6 +325,10 @@ export function createMatchLauncher(opts) {
   const dir = matchDir ? resolve(repoRoot, matchDir) : null;
   const varRoot = resolve(repoRoot, 'var') + sep;
   if (dir && !(dir + sep).startsWith(varRoot)) throw new Error(`--match-dir must be inside ${varRoot} (got ${dir})`);
+  // D386: and REALLY inside it -- no symlink on the way that leads out of var/.
+  // Checked at startup and again before every write (a link made later).
+  const stillInside = () => !dir || realInside(resolve(repoRoot, 'var'), dir);
+  if (!stillInside()) throw new Error(`--match-dir must be inside ${varRoot} (got ${dir}, which a symlink leads out of it)`);
   let busy = false;
   let index;          // undefined: not loaded; null: not available; Set: loaded
   let indexing = null;
@@ -388,6 +414,7 @@ export function createMatchLauncher(opts) {
       }
       return { status: 200, body };
     }
+    if (!stillInside()) return fail(500, 'the match directory is no longer inside var/ (a symlink leads out of it) — nothing was written');
     busy = true;
     const t0 = Date.now();
     try {
@@ -447,6 +474,7 @@ export function createMatchLauncher(opts) {
         const m = checked.match;
 
         // The files.  The id is ours; nothing the client sent is in a path.
+        if (!stillInside()) return fail(500, 'the match directory is no longer inside var/ (a symlink leads out of it) — nothing was written');
         mkdirSync(dir, { recursive: true });
         let id = `m${Date.now()}`;
         while (existsSync(join(dir, id))) id = `m${Number(id.slice(1)) + 1}`;

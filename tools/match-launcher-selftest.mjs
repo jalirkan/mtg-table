@@ -35,6 +35,8 @@
 // (canonical case, the only --ai-profile on its command line, every other flag as
 // the last setup's), and it stays the last setup's; a bad profile or body is a
 // 400 that starts nothing; while running, nothing restarts and a warning says so.
+// D386: a DNS-name Host from loopback (rebinding) is 403 on /match and
+// /engine/start, and a --match-dir whose symlinks lead out of var/ is refused.
 //
 //   node tools/match-launcher-selftest.mjs      # exit 0 iff every check passes; ~30 s
 //
@@ -42,13 +44,14 @@
 // helper's own self-test); CI's redaction job.
 
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer, request } from 'node:http';
 import { connect } from 'node:net';
+import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { deflateRawSync } from 'node:zlib';
 
-import { checkWake } from './match-launcher.mjs';
+import { checkWake, realInside } from './match-launcher.mjs';
 
 const REL = 'var/match-launcher-selftest';
 const DIR = resolve(REL);
@@ -300,6 +303,10 @@ try {
   check('another site may not POST /match: 403', r.status === 403 && !r.headers['access-control-allow-origin']);
   r = await http({ port: A.coachPort, method: 'OPTIONS', path: '/match', headers: { Origin: 'https://jalirkan.github.io', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Private-Network': 'true' } });
   check('the preflight from ForgeCoach: 204 with private network', r.status === 204 && r.headers['access-control-allow-private-network'] === 'true' && /POST/.test(r.headers['access-control-allow-methods'] ?? ''));
+  r = await http({ port: A.coachPort, path: '/match', headers: { Host: 'rebind.attacker.test' } });
+  check('GET /match with a DNS-name Host from loopback (rebinding): 403 (D386)', r.status === 403 && !r.json?.match, r.body);
+  r = await http({ port: A.coachPort, method: 'POST', path: '/engine/start', headers: { Host: 'rebind.attacker.test' } });
+  check('POST /engine/start with a DNS-name Host: 403 (D386)', r.status === 403);
   r = await http({ port: A.coachPort, method: 'PUT', path: '/match' });
   check('PUT /match: 405', r.status === 405);
   check('none of them restarted the engine', starts().length === before, `${starts().length} vs ${before}`);
@@ -615,6 +622,18 @@ try {
     const p = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', '0', '--match-dir', '/tmp', '--supervisor', String(process.pid)], { stdio: 'ignore' });
     p.on('exit', (code) => res(code === 2));
   }));
+  // D386: a symlink under var/ that leads out of it is outside, at startup and after.
+  const outside = mkdtempSync(join(tmpdir(), 'match-launcher-selftest-outside-'));
+  symlinkSync(outside, join(DIR, 'escape'));
+  check('realInside: a plain dir under var/, an absent one, var/ itself', realInside(resolve('var'), join(DIR, 'a')) && realInside(resolve('var'), join(DIR, 'nope', 'x')) && realInside(resolve('var'), resolve('var')));
+  check('realInside: through a symlink out of var/, "..", or a sibling with var as a prefix', !realInside(resolve('var'), join(DIR, 'escape', 'match'))
+    && !realInside(resolve('var'), join(DIR, '..', '..', 'tools')) && !realInside(resolve('var'), resolve('var-not')));
+  check('--match-dir through a symlink out of var/ is refused at startup (D386)', await new Promise((res) => {
+    const p = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', '0', '--match-dir', `${REL}/escape/match`, '--supervisor', String(process.pid)], { stdio: 'ignore' });
+    p.on('exit', (code) => res(code === 2));
+  }));
+  rmSync(join(DIR, 'escape'), { force: true });
+  rmSync(outside, { recursive: true, force: true });
 } catch (e) {
   failed++;
   console.log(`  FAIL  the self-test threw: ${e.stack}`);
