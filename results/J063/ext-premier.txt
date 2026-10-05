@@ -1,0 +1,3 @@
+ext17l: 266117 games read (265174 with positions, 101962 with rows; skipped none) in 83.0 s
+  user-side positions (turn >= 3, final half-turn dropped): 2667602; qualifying: >=0.5 306819 (11.5%), >=0.8 38431 (1.4%), >=0.7 53010 (2.0%), all in vocab 33477 (1.3%)
+  rows written (share >= 0.5, perspective both): 613638 {'test.user': 154302, 'test.oppo': 154302, 'dev.user': 152517, 'dev.oppo': 152517}; unknown ids 1 (2 occurrences); peak RSS 0.366 GB

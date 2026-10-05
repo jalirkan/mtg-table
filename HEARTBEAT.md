@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-05T05:21:02-04:00
+- time: 2026-10-05T05:23:31-04:00
 - runner: ef7e73f, up since 2026-10-04T21:59:21-04:00
-- running: J062 commands 1/1, 1 worker(s), 1 core(s); J063 commands 3/3, 7 worker(s), 1 core(s)
-- cores: 2 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.82; memory 6.7/30.5 GB, swap 3431 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J064, J067, J068, J069, J070, J071, J072, J074, J075, J081
+- running: J062 commands 1/1, 1 worker(s), 1 core(s); J064 prepare, 0 drafts, 1 worker(s), 7 core(s)
+- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
+- load: 2.87; memory 6.8/30.5 GB, swap 3425 MB, pressure 0.08% (lab budget 23.4 GB)
+- queue: J067, J068, J069, J070, J071, J072, J074, J075, J081
 - waiting: nothing
-- last finished: J061 done at 2026-10-05T04:29:24-04:00: night.drafts 60000 · night.games 59997 · night.engine_error_rate 0
+- last finished: J063 done at 2026-10-05T05:23:31-04:00: ds.rows 85436 · ds.games 5996 · ext.testUserRows 154302 · exam.decided 1 · exam.pass 1
 
 ## Messages
 

@@ -52,3 +52,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J061/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table c09ddfa
 - follow-up: template matchup-read-night-3: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J063 DONE: Outside exam (D359): a reduced r17 evaluator trained on night 1's Vintage-cube games, scored on 17Lands' Powered Cube human games against simple rules
+
+- finished: 2026-10-05T05:23:31-04:00
+- decides: whether the learned evaluator's win chance may be presented as transferring to human play (D361's coach win chance), or only as a model of Forge's games
+- hypothesis: the r17 evaluator beats the best simple rule on 17Lands' human games, by less than on our data (a transfer gap)
+- rule: outside_exam.py EXAM_RULE (D359): PASS when log-loss(b*) - log-loss(eval) > 0 with the 95% interval's lower end above 0, on >= 2,000 games and 10,000 rows; else FAIL; partial data = NO VERDICT
+- outcome: done
+- headline: ds.rows 85436, ds.games 5996, ext.testUserRows 154302, exam.decided 1, exam.pass 1
+- summary: results/J063/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table c2a28ef
