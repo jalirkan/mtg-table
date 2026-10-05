@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-05T09:08:34-04:00",
- "heartbeat": "2026-10-05T09:08:34-04:00",
+ "updated": "2026-10-05T09:08:49-04:00",
+ "heartbeat": "2026-10-05T09:08:49-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.47,
-  "memUsedGb": 8.4,
+  "load1": 6.89,
+  "memUsedGb": 5.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 3256,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 5,
+  "coresUsed": 10,
   "coresTotal": 8
  },
  "running": [
@@ -24,17 +24,17 @@
    "id": "J072",
    "title": "Evolve calibration night (D376, D377): two nothing-changed Omega batches of 8,400 drafts, read by calibrate.ts on both nulls",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/2",
    "started": "2026-10-05T09:07:31-04:00",
-   "elapsed": 63,
+   "elapsed": 78,
    "done": 0,
    "total": null,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "cores": 2,
+   "workers": 6,
+   "workersMax": 6,
+   "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-05T09:07:31-04:00",
@@ -87,8 +87,7 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J072-pilot1"
+   "pressureEvents": []
   },
   {
    "publicTitle": "Quarantine re-check",
@@ -96,9 +95,9 @@
    "id": "J074",
    "title": "Re-check nights 1 and 2's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/2",
    "started": "2026-10-05T09:07:59-04:00",
-   "elapsed": 35,
+   "elapsed": 50,
    "done": null,
    "total": null,
    "unit": null,
@@ -113,21 +112,21 @@
    "memGb": 0.01,
    "live": {
     "restored": 0,
-    "elapsed_s": 1,
+    "elapsed_s": 49,
     "left1": 821,
     "left2": 684,
     "n1.written": 0,
     "n2.written": 0,
     "noverdict": 0,
-    "pilot1.nowPass": 0,
-    "pilot1.recordings": 0,
-    "pilot1.written": 0,
-    "pilot2.nowPass": 0,
-    "pilot2.recordings": 0,
-    "pilot2.written": 0,
+    "pilot1.nowPass": 17,
+    "pilot1.recordings": 20,
+    "pilot1.written": 1,
+    "pilot2.nowPass": 15,
+    "pilot2.recordings": 20,
+    "pilot2.written": 1,
     "pilotmoves": 0,
     "pressure_events": 0,
-    "workers": 1
+    "workers": 2
    },
    "liveHeadline": [
     "restored"
@@ -135,7 +134,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J074-pilot1"
+   "detail": "lab-J074-run1"
   },
   {
    "publicTitle": "Cube meta refresh",
@@ -143,9 +142,9 @@
    "id": "J075",
    "title": "Regenerate ForgeCoach's four cube meta.json files (modern-era, pauper, synergy, vintage) from the queue's plain drafts, with D380's land counts (read-only on the queue)",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/1",
    "started": "2026-10-05T09:08:00-04:00",
-   "elapsed": 34,
+   "elapsed": 49,
    "done": null,
    "total": null,
    "unit": null,
@@ -160,7 +159,9 @@
    "memGb": 0.01,
    "live": {
     "m.written": 0,
-    "elapsed_s": 0,
+    "big": 128,
+    "elapsed_s": 48,
+    "folders": 4,
     "pressure_events": 0,
     "workers": 1
    },
@@ -170,7 +171,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J075-pilot1"
+   "detail": "lab-J075-run1"
   }
  ],
  "queue": [

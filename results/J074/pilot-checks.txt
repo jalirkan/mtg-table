@@ -1,0 +1,6 @@
+PASS  pilot1.written == 1   [pilot1.written = 1]
+PASS  pilot2.written == 1   [pilot2.written = 1]
+PASS  pilot1.recordings == 20   [pilot1.recordings = 20]
+PASS  pilot2.recordings == 20   [pilot2.recordings = 20]
+PASS  pilotmoves == 0   [pilotmoves = 0]
+PASS  noverdict == 0   [noverdict = 0]

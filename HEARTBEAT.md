@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-05T09:08:34-04:00
+- time: 2026-10-05T09:08:49-04:00
 - runner: ef7e73f, up since 2026-10-04T21:59:21-04:00
-- running: J072 pilot 1/1, 0 drafts, 3 worker(s), 2 core(s); J074 pilot 1/1, 2 worker(s), 2 core(s); J075 pilot 1/1, 1 worker(s), 1 core(s)
-- cores: 5 of 8 in use (the running jobs' widths; 16 threads)
-- load: 7.47; memory 8.4/30.5 GB, swap 3256 MB, pressure 0% (lab budget 23.4 GB)
+- running: J072 commands 1/2, 0 drafts, 6 worker(s), 7 core(s); J074 commands 1/2, 2 worker(s), 2 core(s); J075 commands 1/1, 1 worker(s), 1 core(s)
+- cores: 10 of 8 in use (the running jobs' widths; 16 threads)
+- load: 6.89; memory 5.8/30.5 GB, swap 3256 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J070, J071, J081, J082, J083
 - waiting: nothing
 - last finished: J069 done at 2026-10-05T09:07:45-04:00: calib.models 4 · calib.passing 4 · calib.maxEce 0.014 · ens.n 5

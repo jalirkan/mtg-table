@@ -1,0 +1,18 @@
+{
+ "pilot1.written": 1,
+ "pilot1.recordings": 20,
+ "pilot1.nowPass": 17,
+ "pilot2.written": 1,
+ "pilot2.recordings": 20,
+ "pilot2.nowPass": 15,
+ "pilotmoves": 0,
+ "noverdict": 0,
+ "n1.written": 0,
+ "n2.written": 0,
+ "restored": 0,
+ "left1": 821,
+ "left2": 684,
+ "elapsed_s": 49,
+ "workers": 2,
+ "pressure_events": 0
+}

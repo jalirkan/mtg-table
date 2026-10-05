@@ -1,0 +1,35 @@
+==== J075 pilot1 started 2026-10-05T09:08:34-04:00 in unit lab-J075-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1, lane 3
+✔ every committed cube parses to 180 cards in the sections its headings promise (6.505217ms)
+✔ themes, roles, gold pairs, prices and Pathways (2.74114ms)
+✔ pips and what a card can make (0.724502ms)
+✔ the generator is a function of its seed and stream (0.38047ms)
+✔ grid: 18 grids of 9 from 162, a line each, 3 then 2 or 3, first pick alternating (12.573667ms)
+✔ a draft and its decks are the same for the same seed (14.726523ms)
+✔ winston: always pass -> blind cards, then the last pile is forced; every card ends in a pool (4.579451ms)
+✔ winston: always take pile 1 -> it is replaced by exactly one card each time (14.193596ms)
+✔ winston with the AI chooser deals the whole stack (14.564006ms)
+✔ every AI-drafted deck is legal: 40 cards, 16-17 lands, two colours plus a legal splash (185.287357ms)
+✔ a thin pool builds three colours when no pair or splash reaches 23 spells (D298) (2.06517ms)
+✔ a thin pool plays 18 lands when its best pair has 22 spells (D298) (0.875407ms)
+✔ the deck checker rejects what is not a deck (0.278949ms)
+✔ synergy grows with shared themes; colours commit after a third; a splash needs rating and sources (0.329384ms)
+✔ ratings: Forge rank or the unrated default; the TSV round-trips; weights refuse unknown names (0.584968ms)
+✔ report: the mini fixture by arithmetic (2.638957ms)
+✔ report: the mini fixture matches summary.golden.json (0.709493ms)
+✔ report: the HTML is self-contained, and the Markdown names the recordings (1.413938ms)
+✔ meta.json: schema 1 keys, shrinkage, archetypes, lands and splash on the mini fixture (2.193082ms)
+✔ meta.json: a nonbasic land is counted like a spell, and stays out of pairs and key cards (D380) (0.653768ms)
+✔ meta.json: every played card is counted under its own name, once per deck (D380) (1.106154ms)
+✔ meta.json: the mini fixture matches meta.golden.json (0.540924ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 389.787438
+modern-era: 6114 lines, 94M
+pauper: 8777 lines, 129M
+synergy: 7386 lines, 114M
+vintage: 5417 lines, 82M

@@ -1,0 +1,33 @@
+==== J074 pilot1 started 2026-10-05T09:08:34-04:00 in unit lab-J074-pilot1, 2 worker(s), 2 core(s), BLAS/OpenMP threads 2
+  ok    kindOf reads the rule tag
+  ok    kindOf names the own-hand finding
+  ok    parseCheckerOutput reads verdicts and messages
+  ok    check: 2 recordings, 1 now passes (2, 1)
+  ok    check: by the old kind, A9 holds both and one now passes
+  ok    check moved nothing
+  ok    check wrote report.md
+  ok    restore --dry-run counts 1 and moves nothing
+  ok    restore moved the passing recording back to the queue
+  ok    the failing one stays quarantined
+  ok    one manifest line for the one move
+  ok    failed.txt lost the restored path and kept the other
+  ok    recheck.jsonl carries the new message of the one still failing
+  ok    a second restore moves nothing
+  ok    undo put it back into quarantine
+  ok    undo put failed.txt back
+  ok    restore refuses to overwrite a recording the queue already has
+requarantine self-test: 17 check(s), 0 failure(s)
+## Night 1: 20 quarantined recordings, 17 now pass, 3 still fail
+
+| failure kind (then) | recordings | now pass | still fail | still failing on |
+|---|---:|---:|---:|---|
+| A9 | 18 | 17 | 1 | own-hand-no-name 1 |
+| own-hand-no-name | 2 | 0 | 2 | own-hand-no-name 2 |
+{"night":1,"dryRun":true,"restored":17,"stillQuarantined":3,"skipped":[]}
+## Night 2: 20 quarantined recordings, 15 now pass, 5 still fail
+
+| failure kind (then) | recordings | now pass | still fail | still failing on |
+|---|---:|---:|---:|---|
+| A9 | 15 | 15 | 0 |  |
+| own-hand-no-name | 5 | 0 | 5 | own-hand-no-name 5 |
+{"night":2,"dryRun":true,"restored":15,"stillQuarantined":5,"skipped":[]}
