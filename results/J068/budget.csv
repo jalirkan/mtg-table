@@ -1,0 +1,2 @@
+decisions,flips,flipRate,flipLo,flipHi,flips12Better,flips12Worse,flipsEqual,regret3Minus12,regret3Minus12Lo,regret3Minus12Hi,flipsByKind
+249,11,0.044177,0.024844,0.07736,7,3,1,0.001115,-0.000472,0.003284,"{""attack"": 8, ""block"": 2, ""spell"": 1}"

@@ -1,0 +1,3 @@
+PASS  ea.written == 1   [ea.written = 1]
+PASS  ea.truthRows >= 200   [ea.truthRows = 252]
+PASS  ea.ladderGames >= 1   [ea.ladderGames = 1544]

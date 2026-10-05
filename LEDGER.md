@@ -98,3 +98,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: -
 - summary: results/J067/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 58f3fa5
+
+## J068 DONE: Search error analysis: where the search AI loses, by kind, turn, cube and card, judged by gate 2's truth tables (D367)
+
+- finished: 2026-10-05T08:22:24-04:00
+- decides: (no decides: line in the job file)
+- hypothesis: -
+- rule: (no rule: line in the job file)
+- outcome: done
+- headline: ea.searched 1632, ea.noiseDecisions 1559, ea.truthRows 252, ea.regret_truth_mean 0.0218, ea.ranker_argmax_differ 78, ea.ranker_argmax_harmful 9, ea.lostGames 21
+- summary: results/J068/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 9cf9538

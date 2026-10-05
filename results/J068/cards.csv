@@ -1,0 +1,187 @@
+source,key,decisions,games,totalRegret,meanRegret,meanRegretLo,meanRegretHi,clearMistakes,asChosen,asMissed,kinds,tags
+truth,Psychic Frog,2,2,0.4325,0.21625,0.0325,0.4,1,1,1,attack,creature
+truth,Thraben Inspector,5,5,0.40427,0.080854,0.021634,0.140074,2,3,2,"attack,block","artifact,creature"
+truth,Spirit Token,3,3,0.295724,0.098575,0.0,0.189474,1,3,0,"attack,block",creature
+truth,Bitter Triumph,1,1,0.275,0.275,,,1,0,1,spell,instant
+truth,Chart a Course,1,1,0.275,0.275,,,1,1,0,spell,sorcery
+truth,Champion of Wits,2,2,0.243333,0.121666,0.0,0.243333,1,1,1,"attack,block",creature
+truth,"Talrand, Sky Summoner",2,2,0.243333,0.121666,0.0,0.243333,1,1,1,block,creature
+truth,Lotus Cobra,4,4,0.218533,0.054633,0.0,0.149194,1,3,1,"attack,block",creature
+truth,Luminarch Aspirant,6,6,0.216667,0.036111,0.005833,0.081667,2,3,4,"attack,block",creature
+truth,Kor Skyfisher,8,8,0.209464,0.026183,0.0,0.059085,2,7,3,"attack,block,spell",creature
+truth,Bird Token,3,3,0.205,0.068333,0.01,0.185,1,2,3,"attack,block",creature
+truth,Charging Monstrosaur,1,1,0.205,0.205,,,1,1,0,attack,creature
+truth,Rabbit Battery,1,1,0.205,0.205,,,1,1,0,attack,"artifact,creature"
+truth,Courser of Kruphix,2,2,0.198925,0.099462,0.0,0.198925,1,2,1,attack,"creature,enchantment"
+truth,Monastery Swiftspear,10,10,0.198434,0.019843,0.004469,0.041952,2,8,3,"attack,block,spell",creature
+truth,Solemn Simulacrum,4,4,0.192692,0.048173,0.014423,0.0675,1,4,2,"attack,block","artifact,creature"
+truth,Phyrexian Germ Token,5,5,0.191071,0.038214,0.0,0.104643,1,4,1,"attack,block",creature
+truth,Griselbrand,1,1,0.189474,0.189474,,,0,1,1,block,creature
+truth,Snapcaster Mage,5,5,0.189474,0.037895,0.0,0.113684,0,5,0,"block,spell","creature,flash"
+truth,Vendilion Clique,1,1,0.189474,0.189474,,,0,1,0,block,"creature,flash"
+truth,Slickshot Lockpicker,2,2,0.185,0.0925,0.0,0.185,1,1,1,block,creature
+truth,Snake Token,3,3,0.175217,0.058406,0.005682,0.139535,1,3,2,attack,creature
+truth,Militia Bugler,1,1,0.165,0.165,,,1,0,1,attack,creature
+truth,Mulldrifter,3,3,0.165,0.055,0.0,0.165,1,3,0,"attack,spell",creature
+truth,Goblin Token,7,6,0.158889,0.022698,0.0,0.056111,1,6,1,"attack,block",creature
+truth,"Jace, the Mind Sculptor",3,3,0.1475,0.049167,0.005,0.1,1,1,2,spell,planeswalker
+truth,Lunarch Veteran,2,2,0.145185,0.072593,0.01,0.135185,1,1,1,"attack,spell",creature
+truth,Perilous Myr,7,7,0.142974,0.020425,0.004512,0.044393,1,2,5,"attack,block,spell","artifact,creature"
+truth,Oracle of Mul Daya,2,2,0.1425,0.07125,0.0425,0.1,1,1,1,spell,creature
+truth,"Thalia, Guardian of Thraben",2,2,0.141667,0.070833,0.0,0.141667,1,1,1,"attack,block",creature
+truth,Myr Sire,1,1,0.14,0.14,,,1,1,1,attack,"artifact,creature"
+truth,Rimrock Knight,1,1,0.14,0.14,,,1,1,0,attack,creature
+truth,Grim Haruspex,1,1,0.139535,0.139535,,,1,0,1,attack,creature
+truth,Thopter Token,4,4,0.132692,0.033173,0.0,0.066346,1,4,0,"attack,block","artifact,creature"
+truth,Servo Token,7,7,0.13,0.018571,0.0,0.047143,1,6,1,"attack,block","artifact,creature"
+truth,Llanowar Visionary,2,2,0.113889,0.056944,0.025,0.088889,1,1,2,attack,creature
+truth,"Brimaz, King of Oreskos",3,3,0.111111,0.037037,0.0,0.111111,0,3,1,"attack,block",creature
+truth,Murmuring Mystic,3,3,0.111111,0.037037,0.0,0.111111,0,2,1,"attack,block",creature
+truth,Eagles of the North,2,2,0.10875,0.054375,0.02,0.08875,1,1,1,spell,creature
+truth,Myr Battlesphere,3,3,0.10625,0.035417,0.0,0.10625,1,3,0,"attack,block","artifact,creature"
+truth,Eldrazi Spawn Token,4,4,0.104547,0.026137,0.00125,0.067292,1,1,3,"attack,block",creature
+truth,Dragon's Rage Channeler,3,3,0.1,0.033333,0.0,0.1,1,2,1,"attack,block",creature
+truth,Deadly Dispute,1,1,0.0975,0.0975,,,1,0,1,spell,instant
+truth,Eternal Witness,5,5,0.096923,0.019385,0.003846,0.038615,0,3,3,"attack,block",creature
+truth,Marionette Apprentice,3,3,0.09,0.03,0.0,0.08,0,2,1,"attack,block","artifact,creature"
+truth,Conclave Naturalists,2,2,0.088889,0.044444,0.0,0.088889,1,2,1,"attack,block",creature
+truth,"Gut, True Soul Zealot",1,1,0.08,0.08,,,0,1,1,block,creature
+truth,Morbid Opportunist,2,2,0.08,0.04,0.0,0.08,0,2,0,block,creature
+truth,"Syr Konrad, the Grim",1,1,0.08,0.08,,,0,1,0,block,creature
+truth,Twinshot Sniper,1,1,0.08,0.08,,,0,1,0,block,"artifact,creature"
+truth,Wurmcoil Engine,3,3,0.08,0.026667,0.0,0.075,1,2,1,"attack,block,spell","artifact,creature"
+truth,Ledger Shredder,3,3,0.0775,0.025833,0.0,0.0775,1,3,0,"attack,spell",creature
+truth,Lingering Souls,1,1,0.0775,0.0775,,,1,0,1,spell,sorcery
+truth,Man-o'-War,6,6,0.076238,0.012706,0.002137,0.025413,0,4,3,"attack,block",creature
+truth,Loran of the Third Path,1,1,0.075,0.075,,,1,0,1,block,creature
+truth,Deep-Cavern Bat,3,3,0.07375,0.024583,0.0,0.07375,1,3,0,attack,creature
+truth,Beast Token,1,1,0.07,0.07,,,0,1,0,block,creature
+truth,Construct Token,2,2,0.07,0.035,0.0,0.07,0,2,0,"attack,block","artifact,creature"
+truth,Containment Priest,1,1,0.07,0.07,,,0,1,1,block,"creature,flash"
+truth,Goblin Rabblemaster,1,1,0.07,0.07,,,1,1,0,block,creature
+truth,Springbloom Druid,1,1,0.07,0.07,,,1,0,1,block,creature
+truth,Thing in the Ice,1,1,0.0675,0.0675,,,1,1,0,spell,creature
+truth,Hangarback Walker,7,7,0.065,0.009286,0.0,0.027857,0,7,0,"attack,block","artifact,creature,x-spell"
+truth,Noble Hierarch,1,1,0.055,0.055,,,1,0,1,block,creature
+truth,Arc Trail,1,1,0.0525,0.0525,,,1,0,1,spell,sorcery
+truth,Goblin Bombardment,1,1,0.05,0.05,,,0,0,1,spell,enchantment
+truth,"Jace, Vryn's Prodigy",1,1,0.0475,0.0475,,,0,1,0,spell,creature
+truth,Walking Ballista,3,3,0.0475,0.015833,0.0,0.0325,0,2,2,"attack,block","artifact,creature,x-spell"
+truth,Skyclave Apparition,2,2,0.04,0.02,0.0,0.04,0,2,0,"attack,block",creature
+truth,Witch Enchanter,1,1,0.035,0.035,,,0,0,1,spell,creature
+truth,Recruitment Officer,2,2,0.032828,0.016414,0.0,0.032828,1,1,1,"attack,block",creature
+truth,Restoration Angel,4,4,0.032828,0.008207,0.0,0.024621,1,4,1,"attack,block","creature,flash"
+truth,Dusk Legion Zealot,2,2,0.0325,0.01625,0.0,0.0325,0,1,1,block,creature
+truth,Ninja of the Deep Hours,1,1,0.0325,0.0325,,,0,1,0,spell,creature
+truth,Scute Swarm,1,1,0.0325,0.0325,,,0,0,1,block,creature
+truth,Shadowspear,1,1,0.0325,0.0325,,,0,0,1,spell,artifact
+truth,Treasure Cruise,1,1,0.0325,0.0325,,,0,0,1,spell,sorcery
+truth,Battle Screech,1,1,0.03,0.03,,,0,0,1,spell,sorcery
+truth,Phyrexian Golem Token,2,2,0.029608,0.014804,0.01,0.019608,0,2,2,attack,"artifact,creature"
+truth,Cauldron Familiar,2,2,0.025,0.0125,0.0,0.025,0,2,0,block,creature
+truth,Chain Lightning,1,1,0.025,0.025,,,0,0,1,spell,sorcery
+truth,Ocelot Pride,2,2,0.025,0.0125,0.0,0.025,0,1,1,block,creature
+truth,Preordain,1,1,0.025,0.025,,,1,0,1,spell,sorcery
+truth,Augur of Bolas,3,3,0.022346,0.007449,0.0,0.022346,0,2,1,attack,creature
+truth,Boo,1,1,0.02,0.02,,,0,1,0,attack,creature
+truth,Flayer Husk,1,1,0.02,0.02,,,0,1,0,spell,artifact
+truth,Spiteful Prankster,2,2,0.02,0.01,0.0,0.02,0,2,0,"attack,block",creature
+truth,Welcoming Vampire,3,3,0.019608,0.006536,0.0,0.019608,0,3,1,attack,creature
+truth,Faithless Looting,1,1,0.015,0.015,,,0,0,1,spell,sorcery
+truth,Khenra Spellspear,1,1,0.015,0.015,,,0,0,1,spell,creature
+truth,Gurmag Angler,3,3,0.014085,0.004695,0.0,0.014085,0,2,1,block,creature
+truth,Vampire Nighthawk,5,5,0.012563,0.002513,0.0,0.007538,0,4,1,"attack,block,spell",creature
+truth,Solitude,3,3,0.010682,0.003561,0.0,0.005682,0,2,2,attack,"creature,flash"
+truth,Blade Splicer,1,1,0.01,0.01,,,0,0,1,attack,creature
+truth,Bothersome Noisemaker,1,1,0.01,0.01,,,0,1,1,attack,creature
+truth,Goblin Army Token,1,1,0.01,0.01,,,0,0,1,attack,creature
+truth,Spellstutter Sprite,3,3,0.01,0.003333,0.0,0.005,0,1,2,"block,spell","creature,flash"
+truth,Sword of Light and Shadow,1,1,0.01,0.01,,,0,0,1,spell,artifact
+truth,Troll of Khazad-dûm,1,1,0.01,0.01,,,0,1,1,attack,creature
+truth,Umezawa's Jitte,1,1,0.01,0.01,,,0,0,1,spell,artifact
+truth,Snap,1,1,0.0075,0.0075,,,0,0,1,spell,instant
+truth,Ophiomancer,1,1,0.005682,0.005682,,,0,1,0,attack,creature
+truth,Crab Token,1,1,0.005,0.005,,,0,0,1,attack,creature
+truth,Elder Gargaroth,2,2,0.005,0.0025,0.0,0.005,0,1,1,"attack,block",creature
+truth,Elemental Token,1,1,0.005,0.005,,,0,0,1,attack,creature
+truth,Faerie Mastermind,2,2,0.005,0.0025,0.0,0.005,0,1,1,"block,spell","creature,flash"
+truth,Illusion Token,3,3,0.005,0.001667,0.0,0.005,0,2,1,"attack,block",creature
+truth,Rampant Growth,1,1,0.005,0.005,,,0,1,0,spell,sorcery
+truth,Sower of Temptation,1,1,0.005,0.005,,,0,0,1,block,creature
+truth,Stock Up,1,1,0.005,0.005,,,0,1,0,spell,sorcery
+truth,Tinker,1,1,0.005,0.005,,,0,1,0,spell,sorcery
+truth,Tireless Tracker,5,5,0.005,0.001,0.0,0.003,0,4,1,"attack,block",creature
+truth,"Adeline, Resplendent Cathar",4,4,0.0,0.0,0.0,0.0,0,4,0,"attack,block",creature
+truth,Amethyst Dragon,1,1,0.0,0.0,,,0,1,0,spell,creature
+truth,Archaeomancer,2,2,0.0,0.0,0.0,0.0,0,2,0,block,creature
+truth,Archon of Cruelty,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Avenger of Zendikar,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Bird Illusion Token,2,2,0.0,0.0,0.0,0.0,0,2,0,attack,creature
+truth,Bloodbraid Elf,1,1,0.0,0.0,,,0,1,0,spell,creature
+truth,Bonecrusher Giant,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Bonesplitter,2,2,0.0,0.0,0.0,0.0,0,1,1,spell,artifact
+truth,Brainstorm,2,2,0.0,0.0,0.0,0.0,0,2,0,spell,instant
+truth,Brazen Borrower,1,1,0.0,0.0,,,0,1,1,attack,"creature,flash"
+truth,Cloudkin Seer,2,2,0.0,0.0,0.0,0.0,0,2,0,attack,creature
+truth,Craterhoof Behemoth,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Dauntless Scrapbot,1,1,0.0,0.0,,,0,1,0,attack,"artifact,creature"
+truth,Elite Spellbinder,2,2,0.0,0.0,0.0,0.0,0,2,0,"attack,block",creature
+truth,Evolution Sage,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Falkenrath Noble,4,4,0.0,0.0,0.0,0.0,0,4,0,"attack,block",creature
+truth,Firebrand Archer,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Floodpits Drowner,1,1,0.0,0.0,,,0,1,0,block,"creature,flash"
+truth,Generous Ent,3,3,0.0,0.0,0.0,0.0,0,3,0,"attack,block",creature
+truth,"Gonti, Lord of Luxury",1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Grafted Wargear,1,1,0.0,0.0,,,0,1,0,spell,artifact
+truth,Gravecrawler,1,1,0.0,0.0,,,0,1,0,spell,creature
+truth,Grief,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Guttersnipe,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Inspiring Overseer,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Jewel Thief,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Kappa Cannoneer,2,2,0.0,0.0,0.0,0.0,0,2,0,block,"artifact,creature"
+truth,Kitesail Freebooter,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Knight Ally Token,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,"Krenko, Tin Street Kingpin",2,2,0.0,0.0,0.0,0.0,0,2,0,attack,creature
+truth,Mentor of the Meek,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Mist Raven,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Murktide Regent,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Mutant Token,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Myr Token,2,2,0.0,0.0,0.0,0.0,0,2,0,"attack,block","artifact,creature"
+truth,Oblivion Ring,1,1,0.0,0.0,,,0,1,0,spell,enchantment
+truth,Orc Army Token,2,2,0.0,0.0,0.0,0.0,0,2,0,block,creature
+truth,Orcish Bowmasters,3,3,0.0,0.0,0.0,0.0,0,3,0,"block,spell","creature,flash"
+truth,Owlbear,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Palace Sentinels,2,2,0.0,0.0,0.0,0.0,0,2,0,attack,creature
+truth,Pestermite,2,2,0.0,0.0,0.0,0.0,0,2,1,attack,"creature,flash"
+truth,Phyrexian Wurm Token,2,2,0.0,0.0,0.0,0.0,0,2,0,block,"artifact,creature"
+truth,Pia Nalaar,2,2,0.0,0.0,0.0,0.0,0,2,0,block,creature
+truth,Pia and Kiran Nalaar,2,2,0.0,0.0,0.0,0.0,0,2,0,attack,creature
+truth,Prosperous Innkeeper,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Ramunap Excavator,1,1,0.0,0.0,,,0,1,0,spell,creature
+truth,Reanimate,1,1,0.0,0.0,,,0,1,0,spell,sorcery
+truth,"Sai, Master Thopterist",1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Samurai Token,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Sentinel of the Nameless City,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Silver Drake,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Six,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Soldier Token,5,5,0.0,0.0,0.0,0.0,0,5,0,"attack,block","artifact,creature"
+truth,Soulherder,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Spider Token,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Spyglass Siren,2,2,0.0,0.0,0.0,0.0,0,2,0,"attack,spell",creature
+truth,Squirrel Token,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Stoneforge Mystic,2,2,0.0,0.0,0.0,0.0,0,2,0,"attack,block",creature
+truth,Sun Titan,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Tarmogoyf,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,The Mightstone and Weakstone,1,1,0.0,0.0,,,0,1,0,spell,artifact
+truth,Thieving Skydiver,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Third Path Iconoclast,2,2,0.0,0.0,0.0,0.0,0,2,0,block,creature
+truth,Thorn of the Black Rose,1,1,0.0,0.0,,,0,1,0,attack,creature
+truth,Thragtusk,3,3,0.0,0.0,0.0,0.0,0,3,0,"block,spell",creature
+truth,Tolarian Terror,6,6,0.0,0.0,0.0,0.0,0,6,0,"attack,block,spell",creature
+truth,Torrential Gearhulk,1,1,0.0,0.0,,,0,1,0,attack,"artifact,creature,flash"
+truth,"Urza, Lord High Artificer",1,1,0.0,0.0,,,0,1,0,block,creature
+truth,Wedding Announcement,1,1,0.0,0.0,,,0,1,0,spell,enchantment
+truth,Whirler Rogue,2,2,0.0,0.0,0.0,0.0,0,2,0,block,creature
+truth,Wildheart Invoker,1,1,0.0,0.0,,,0,1,0,block,creature
+truth,"Yahenni, Undying Partisan",2,1,0.0,0.0,,,0,2,1,"attack,block",creature
+truth,Yavimaya Elder,1,1,0.0,0.0,,,0,1,0,block,creature

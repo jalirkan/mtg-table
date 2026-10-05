@@ -1,0 +1,9 @@
+source,key,decisions,games,totalRegret,meanRegret,meanRegretLo,meanRegretHi,clearMistakes,asChosen,asMissed,kinds,tags
+truth,creature,170,133,4.813327,0.028314,0.020946,0.036786,27,282,96,"attack,block,spell","artifact,creature,enchantment,flash,x-spell"
+truth,artifact,50,47,1.296524,0.02593,0.015299,0.038093,7,52,18,"attack,block,spell","artifact,creature,flash,x-spell"
+truth,sorcery,12,12,0.5475,0.045625,0.015625,0.089792,4,5,7,spell,sorcery
+truth,instant,5,5,0.38,0.076,0.0015,0.1845,2,2,3,spell,instant
+truth,flash,23,21,0.317984,0.013825,0.001136,0.029923,1,23,9,"attack,block,spell","artifact,creature,flash"
+truth,enchantment,5,5,0.248925,0.049785,0.0,0.129355,1,4,2,"attack,spell","creature,enchantment"
+truth,planeswalker,3,3,0.1475,0.049167,0.005,0.1,1,1,2,spell,planeswalker
+truth,x-spell,10,10,0.1125,0.01125,0.0015,0.02575,0,9,2,"attack,block","artifact,creature,x-spell"
