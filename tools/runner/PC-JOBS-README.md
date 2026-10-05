@@ -94,7 +94,7 @@ The runner checks every 10 seconds and fetches both branches every minute.
    as written. That section is where the PC session and Justin leave notes, including any
    message for the cloud session. A numbers-only copy of `status.json` goes to the public
    `lab-status` branch of jalirkan/ForgeCoach for the `#lab` page, and so does a sanitised
-   copy of the AI ladder's `ladder.json` and of the lab warehouse's `warehouse.json` (D363). **The public copy shows a job by its id only**,
+   copy of the AI ladder's `ladder.json`, of the lab warehouse's `warehouse.json` (D363) and of the decision ledger, `ledger.json` (D384). **The public copy shows a job by its id only**,
    unless the job file opts in with `public_title:` (and `public_est:`). A title can name a
    card, deck or cube, so a job file publishes one only on purpose.
 10. **Restarts.** The jobs run in their own units, so a runner restart never stops one. On
@@ -234,6 +234,7 @@ control: yes | no                    the job's tools read the pool control file;
 public_title: Search AI bench        the title the PUBLIC #lab page may show; without it, the id only
 public_est: ~3 h                     likewise the estimate. Both: letters, digits, spaces and , : ; ( ) + % ~ # & - only
 public_cubes: yes | no               the public page may name the cubes in a queue's per-cube progress (default: "cube 1", ...)
+public_decides: Keep card-level allocation    the decision the PUBLIC ledger.json may show (D384); without it, none. Same characters as public_title
 decides: promote evaluator v1 to the search (gate 2)    the decision this job informs (one line; the ledger)
 hypothesis: what we expect, and why                      (one line)
 rule: D354 gate 2 (gates.py REGRET_RULE)                 the pre-registered pass/fail rule, or a pointer to it
@@ -390,8 +391,21 @@ title, `decides`, `hypothesis`, `rule`, the outcome (`done`, `failed`, or `abort
 `abort:` line), the reason, the `headline:` numbers, the summary's path
 (`results/<id>/summary.md`), the finish time, the commits, and each follow-up's state. A job
 without the lines is still entered, saying so. A memory stop or a `needs: check` wait is not
-an end and has no entry. The ledger never goes to the public `lab-status` copy. The PC
+an end and has no entry. The ledger itself never goes to the public `lab-status` copy. The PC
 session's summary judges the result against the entry's `rule`.
+
+**The public copy, `ledger.json`** (D384). For ForgeCoach's morning report page the runner
+publishes a numbers-only copy of the newest 100 entries beside `status.json` on `lab-status`,
+rebuilt field by field from an allowlist (`tools/runner/ledgerpublic.ts`): the id; the job's
+`public_title:` and `public_decides:` if it has them (else null; the private title and
+`decides:` never go); the rule cut down to its D-numbers, `gate N` and `*_RULE` names
+(`D354, gate 2, REGRET_RULE`) and whether there was a `rule:` at all; the outcome; for a failed
+job only a cause word from the reason's prefix (`check`, `pilot`, `timeout`, `step`, `memory`,
+`other`), never the reason itself; whether the job had `check:` lines; the headline numbers;
+the finish time; and each follow-up's state with only a job id or a template name, never a
+path. The hypothesis, the summary path, the commits and any other words stay on `pc-results`.
+So a job whose decision may be shown says so in `public_decides:`, written with letters,
+digits, spaces and `, : ; ( ) + % ~ # & -` only.
 
 **Follow-ups.** The runner only reads pc-jobs, so it never posts a job. The simplest way is
 to post the follow-up together with its job, with `after:` on it, and name it in

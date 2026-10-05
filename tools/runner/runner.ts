@@ -68,6 +68,7 @@ import { writeControl } from './control.ts';
 import { evaluate, parse as parseExpr, type Verdict } from './expr.ts';
 import { sanitiseLadder } from './ladder.ts';
 import { sanitiseWarehouse } from './warehouse.ts';
+import { sanitiseLedger } from './ledgerpublic.ts';
 import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from './jobfile.ts';
 import { followupMessage, LEDGER_MD_HEAD, ledgerEntry, ledgerJsonLine, ledgerKeys, ledgerMarkdown, withMessages, type LedgerEntry } from './ledger.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
@@ -1546,6 +1547,8 @@ ${keep.trimEnd()}
       const e = ledgerEntry({
         id: r.id, title: r.title, ledger: job?.ledger ?? null, state: r.outcome.state, reason: r.outcome.reason, finished: isoLocal(r.outcome.at),
         headlineKeys: job?.headline ?? [], numbers: r.numbers, metrics: r.metrics, commits: r.shas, posted,
+        publicTitle: job?.publicTitle ?? null, publicDecides: job?.publicDecides ?? null,
+        checks: (job?.pilot?.checks.length ?? 0) + (job?.commands?.checks.length ?? 0),
       });
       if (e && !done.has(e.key)) entries.push(e);
     }
@@ -1623,7 +1626,9 @@ ${keep.trimEnd()}
       if (ladder) fs.writeFileSync(path.join(dir, 'ladder.json'), ladder);
       const warehouse = this.publicWarehouse();
       if (warehouse) fs.writeFileSync(path.join(dir, 'warehouse.json'), warehouse);
-      this.git(dir, 'add', 'status.json', ...['ladder.json', 'warehouse.json'].filter((f) => fs.existsSync(path.join(dir, f))));
+      const ledger = this.publicLedgerText();
+      if (ledger) fs.writeFileSync(path.join(dir, 'ledger.json'), ledger);
+      this.git(dir, 'add', 'status.json', ...['ladder.json', 'warehouse.json', 'ledger.json'].filter((f) => fs.existsSync(path.join(dir, f))));
       const id = ['-c', 'user.name=forgecoach-runner', '-c', 'user.email=runner@localhost'];
       // One commit, replaced each time: the branch is a value, not a history.
       const parentless = this.git(dir, ...id, 'commit-tree', this.git(dir, 'write-tree').stdout.trim(), '-m', `lab status ${doc.updated}`).stdout.trim();
@@ -1647,11 +1652,26 @@ ${keep.trimEnd()}
     return this.cfg.warehouseFile ?? path.join(this.checkout('mtg-table', 'heavy'), 'var', 'warehouse', 'warehouse.json');
   }
 
-  /** Size and mtime of the ladder's ladder.json and the warehouse's warehouse.json: a change to either publishes. */
+  /** The private ledger.jsonl in the pc-results worktree, which the public ledger.json is made from (D384). */
+  ledgerPath(): string {
+    return path.join(this.resultsDir(), 'ledger.jsonl');
+  }
+
+  /** Size and mtime of the ladder's ladder.json, the warehouse's warehouse.json and the private ledger.jsonl: a change to any publishes. */
   ladderSig(): string {
     const sig = (f: string): string => { try { const st = fs.statSync(f); return `${st.size}:${st.mtimeMs}`; } catch { return ''; } };
     const w = sig(this.warehousePath());
-    return w ? `${sig(this.ladderPath())}|${w}` : sig(this.ladderPath());
+    const l = sig(this.ledgerPath());
+    const base = w ? `${sig(this.ladderPath())}|${w}` : sig(this.ladderPath());
+    return l ? `${base}|ledger ${l}` : base;
+  }
+
+  /** The public ledger.json text (ledgerpublic.ts's allowlist, D384), or null when the private ledger has no publishable entry. */
+  publicLedgerText(): string | null {
+    try {
+      const doc = sanitiseLedger(fs.readFileSync(this.ledgerPath(), 'utf8'), isoLocal(this.sys.now()));
+      return doc ? `${JSON.stringify(doc)}\n` : null;
+    } catch { return null; }
   }
 
   /** The sanitised warehouse.json text (warehouse.ts's allowlist, D363), or null when there is none or it is not schema 1. */

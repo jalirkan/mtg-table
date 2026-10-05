@@ -30,6 +30,8 @@
 //   public_title: Search AI bench    NEW: the title the PUBLIC status page may show (else the id only)
 //   public_est: ~3 h                 NEW: the estimate it may show (letters, digits, space , : ; ( ) + % ~ # & - only)
 //   public_cubes: yes                NEW: the public page may name the cube ids in its per-cube progress (else "cube 1", ...)
+//   public_decides: Keep night 4 allocation     NEW (D384): the decision the PUBLIC ledger.json may show (PUBLIC_TEXT,
+//                                    as public_title; else null there); the private `decides:` is never published
 //   decides: promote evaluator v1 (gate 2)   NEW (D366): the decision this job informs (the ledger, ledger.ts)
 //   hypothesis: ...                  NEW (D366): what we expect, and why
 //   rule: D354 gate 2 (gates.py REGRET_RULE) NEW (D366): the pre-registered pass/fail rule, or a pointer to it
@@ -110,6 +112,8 @@ export interface JobFile {
   /** The public copy's title and estimate, opted in; null: the id only. */
   publicTitle: string | null;
   publicEst: string | null;
+  /** `public_decides:` (D384): the decision the public ledger.json may show; null: none. */
+  publicDecides: string | null;
   /** `public_cubes: yes`: the cube ids may appear in the public per-cube progress. */
   publicCubes: boolean;
   /** `control:` as written: true / false, or null (the runner detects it after prepare). */
@@ -303,7 +307,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
   const clean = header.clean !== undefined ? cleanOf(header.clean, '') : [];
 
   const PUBLIC_TEXT = /^[A-Za-z0-9 ,:;()+%~#&-]{1,80}$/;     // statusjson.ts's; no . / @ \ quotes or brackets
-  for (const k of ['public_title', 'public_est']) {
+  for (const k of ['public_title', 'public_est', 'public_decides']) {
     if (header[k] !== undefined && !PUBLIC_TEXT.test(header[k] as string)) errors.push(`${k}: "${header[k]}" may hold only letters, digits, spaces and , : ; ( ) + % ~ # & - (80 at most)`);
   }
   if (header.public_cubes !== undefined && !/^(yes|no)$/i.test(header.public_cubes.trim())) errors.push(`public_cubes: "${header.public_cubes}" is not yes or no`);
@@ -336,6 +340,7 @@ export function parseJobFile(file: string, text: string, checkParse: (src: strin
     timeoutSec,
     publicTitle: header.public_title !== undefined && PUBLIC_TEXT.test(header.public_title) ? header.public_title : null,
     publicEst: header.public_est !== undefined && PUBLIC_TEXT.test(header.public_est) ? header.public_est : null,
+    publicDecides: header.public_decides !== undefined && PUBLIC_TEXT.test(header.public_decides) ? header.public_decides : null,
     publicCubes: /^yes$/i.test((header.public_cubes ?? '').trim()),
     control: header.control === undefined ? null : /^yes$/i.test(header.control.trim()),
     pilot,
