@@ -30,7 +30,7 @@
 //   public_title: Search AI bench    NEW: the title the PUBLIC status page may show (else the id only)
 //   public_est: ~3 h                 NEW: the estimate it may show (letters, digits, space , : ; ( ) + % ~ # & - only)
 //   public_cubes: yes                NEW: the public page may name the cube ids in its per-cube progress (else "cube 1", ...)
-//   public_decides: Keep night 4 allocation     NEW (D384): the decision the PUBLIC ledger.json may show (PUBLIC_TEXT,
+//   public_decides: Keep night 4 allocation     NEW (D387): the decision the PUBLIC ledger.json may show (PUBLIC_TEXT,
 //                                    as public_title; else null there); the private `decides:` is never published
 //   decides: promote evaluator v1 (gate 2)   NEW (D366): the decision this job informs (the ledger, ledger.ts)
 //   hypothesis: ...                  NEW (D366): what we expect, and why
@@ -112,7 +112,7 @@ export interface JobFile {
   /** The public copy's title and estimate, opted in; null: the id only. */
   publicTitle: string | null;
   publicEst: string | null;
-  /** `public_decides:` (D384): the decision the public ledger.json may show; null: none. */
+  /** `public_decides:` (D387): the decision the public ledger.json may show; null: none. */
   publicDecides: string | null;
   /** `public_cubes: yes`: the cube ids may appear in the public per-cube progress. */
   publicCubes: boolean;

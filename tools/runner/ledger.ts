@@ -12,7 +12,7 @@
 // At each job END (done, failed, aborted) the runner appends one entry to `ledger.jsonl` and
 // `LEDGER.md` at the root of pc-results, in the commit that carries the job's STATUS.  The
 // ledger itself is never part of the public lab-status copy; only ledgerpublic.ts's allowlisted,
-// numbers-only `ledger.json` is (D384, amending D366), and a job's words reach it only through
+// numbers-only `ledger.json` is (D387, amending D366), and a job's words reach it only through
 // its opt-in `public_title:` / `public_decides:` lines.
 //
 // FOLLOW-UPS.  The runner only reads pc-jobs, so it never posts a job.  When a job with
@@ -111,10 +111,10 @@ export interface LedgerEntry {
   followups: FollowupState[];
   /** The commits the job ran on. */
   commits: Record<string, string>;
-  /** The job file's opt-in public words (`public_title:`, `public_decides:`), for ledgerpublic.ts (D384); absent in older entries. */
+  /** The job file's opt-in public words (`public_title:`, `public_decides:`), for ledgerpublic.ts (D387); absent in older entries. */
   publicTitle?: string | null;
   publicDecides?: string | null;
-  /** How many `check:` lines the job file had (its pilot's and its commands'), D384; absent in older entries. */
+  /** How many `check:` lines the job file had (its pilot's and its commands'), D387; absent in older entries. */
   checks?: number;
 }
 

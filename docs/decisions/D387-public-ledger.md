@@ -1,6 +1,6 @@
-## D384 — The decision ledger gets one public copy: an allowlisted, numbers-only `ledger.json` on ForgeCoach's `lab-status`; the private ledger stays private
+## D387 — The decision ledger gets one public copy: an allowlisted, numbers-only `ledger.json` on ForgeCoach's `lab-status`; the private ledger stays private
 
-*Branch `c/ledger-public`.* Amends D366. D382 is held by the open rollout-labels PR (#69).
+*Branch `c/ledger-public`.* Amends D366. D387, the first number free at push: D382 is held by the rollout-labels PR (#69), D384 by the wake-seed PR (#75), D385 by the auto-review PR (#77) and D386 by the endpoint PR (#76).
 
 **2026-10-05**
 

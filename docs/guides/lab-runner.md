@@ -418,7 +418,7 @@ bottom 25 cards by win rate. Counts must be non-negative integers and rates in [
 with one outside is dropped); a table, cube or pair is a token; a card name is letters,
 digits, spaces and card-name punctuation, at most 60 characters, with `/` only as a split
 card's ` // `. Any other key is dropped. It too is published whenever the file changes.
-`ledger.json` (D384) is the decision ledger's public copy, made from `ledger.jsonl` in the
+`ledger.json` (D387) is the decision ledger's public copy, made from `ledger.jsonl` in the
 pc-results worktree through `tools/runner/ledgerpublic.ts`, for ForgeCoach's morning report:
 the newest 100 entries, each with its id, the opt-in `public_title:` / `public_decides:` (else
 null), the rule's D-numbers, `gate N` and `*_RULE` names only, the outcome, a cause word for a
@@ -470,7 +470,7 @@ informs), `hypothesis:`, `rule:` (the pre-registered pass/fail rule, or a pointe
 and warns about a heavy job with no `decides:`. At each job end (done, failed, aborted) the
 runner appends an entry to `ledger.jsonl` and `LEDGER.md` at the root of `pc-results`, in the
 commit that carries the STATUS, never to `lab-status`; only its allowlisted public copy,
-`ledger.json`, goes there (D384, *The public copy* above). A done job's follow-up that is not on
+`ledger.json`, goes there (D387, *The public copy* above). A done job's follow-up that is not on
 pc-jobs gets one `FOLLOW-UP READY [<id>@<finished>]` line at the top of HEARTBEAT.md's
 `## Messages`; a follow-up already posted with `after:` on the job needs nothing. Which entries
 are pushed is kept in `var/runner/ledger.json`, whose `since` is the first time a runner kept a

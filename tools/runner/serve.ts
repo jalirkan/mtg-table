@@ -12,7 +12,7 @@
 //   GET /public-status.json   the public status.json (also at /status.json, its old path)
 //   GET /public-ladder.json   the public ladder.json, 404 when there is none
 //   GET /public-warehouse.json   the public warehouse.json (D363), 404 when there is none
-//   GET /public-ledger.json   the public ledger.json (D384), 404 when there is none
+//   GET /public-ledger.json   the public ledger.json (D387), 404 when there is none
 //
 // CORS names the site's origin and localhost dev origins only, never `*`; an
 // Origin outside the list is refused (403).  A request without an Origin
@@ -43,7 +43,7 @@ export interface StatusSource {
   ladder(): string | null;
   /** The sanitised warehouse.json text, or null (optional: absent, never served). */
   warehouse?(): string | null;
-  /** The public ledger.json text (D384), or null (optional: absent, never served). */
+  /** The public ledger.json text (D387), or null (optional: absent, never served). */
   ledger?(): string | null;
 }
 

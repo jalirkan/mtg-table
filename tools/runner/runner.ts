@@ -1652,7 +1652,7 @@ ${keep.trimEnd()}
     return this.cfg.warehouseFile ?? path.join(this.checkout('mtg-table', 'heavy'), 'var', 'warehouse', 'warehouse.json');
   }
 
-  /** The private ledger.jsonl in the pc-results worktree, which the public ledger.json is made from (D384). */
+  /** The private ledger.jsonl in the pc-results worktree, which the public ledger.json is made from (D387). */
   ledgerPath(): string {
     return path.join(this.resultsDir(), 'ledger.jsonl');
   }
@@ -1666,7 +1666,7 @@ ${keep.trimEnd()}
     return l ? `${base}|ledger ${l}` : base;
   }
 
-  /** The public ledger.json text (ledgerpublic.ts's allowlist, D384), or null when the private ledger has no publishable entry. */
+  /** The public ledger.json text (ledgerpublic.ts's allowlist, D387), or null when the private ledger has no publishable entry. */
   publicLedgerText(): string | null {
     try {
       const doc = sanitiseLedger(fs.readFileSync(this.ledgerPath(), 'utf8'), isoLocal(this.sys.now()));

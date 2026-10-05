@@ -1,9 +1,9 @@
-// mtg-table — the lab runner: the public, numbers-only copy of the decision ledger (D384).
+// mtg-table — the lab runner: the public, numbers-only copy of the decision ledger (D387).
 // Copyright (C) 2026 mtg-table contributors.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // The decision ledger (D366, ledger.ts) is private: ledger.jsonl and LEDGER.md on pc-results.
-// D384 adds ONE public copy of it, `ledger.json`, which the runner publishes beside status.json,
+// D387 adds ONE public copy of it, `ledger.json`, which the runner publishes beside status.json,
 // ladder.json and warehouse.json on ForgeCoach's public `lab-status` branch, for the morning
 // report page.  This module is that copy's ALLOWLIST, as warehouse.ts and ladder.ts are theirs.
 // The private ledger itself stays private.
