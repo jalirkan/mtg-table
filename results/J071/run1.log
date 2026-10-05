@@ -1,0 +1,8 @@
+==== J071 run1 started 2026-10-05T10:55:19-04:00 in unit lab-J071-run1, 2 worker(s), 2 core(s), BLAS/OpenMP threads 2
+## Night 3: 704 quarantined recordings, 660 now pass, 44 still fail
+
+| failure kind (then) | recordings | now pass | still fail | still failing on |
+|---|---:|---:|---:|---|
+| A9 | 660 | 660 | 0 |  |
+| own-hand-no-name | 43 | 0 | 43 | own-hand-no-name 43 |
+| M55 | 1 | 0 | 1 | M55 1 |
