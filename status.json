@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T04:29:24-04:00",
- "heartbeat": "2026-10-05T04:29:24-04:00",
+ "updated": "2026-10-05T04:29:48-04:00",
+ "heartbeat": "2026-10-05T04:29:48-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.99,
-  "memUsedGb": 5.1,
+  "load1": 6.62,
+  "memUsedGb": 5.4,
   "memTotalGb": 30.5,
   "swapUsedMb": 3432,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J062",
    "title": "Morning read of nights 1 and 2: the matchup model on the queue's drafts (exploring drafts left out), with the questions night 1 pre-registered",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-05T04:29:24-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0,
    "live": {
     "done": 0,
     "elapsed_s": 0,
@@ -50,7 +50,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J062-prepare"
+   "detail": "lab-J062-pilot1"
   },
   {
    "publicTitle": "Evaluator outside exam",
@@ -58,21 +58,21 @@
    "id": "J063",
    "title": "Outside exam (D359): a reduced r17 evaluator trained on night 1's Vintage-cube games, scored on 17Lands' Powered Cube human games against simple rules",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-05T04:29:24-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": null,
    "total": null,
    "unit": null,
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "ds.written": 0,
     "elapsed_s": 0,
@@ -88,7 +88,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J063-prepare"
+   "detail": "lab-J063-pilot1"
   }
  ],
  "queue": [
