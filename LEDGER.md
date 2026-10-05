@@ -109,3 +109,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: ea.searched 1632, ea.noiseDecisions 1559, ea.truthRows 252, ea.regret_truth_mean 0.0218, ea.ranker_argmax_differ 78, ea.ranker_argmax_harmful 9, ea.lostGames 21
 - summary: results/J068/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 9cf9538
+
+## J069 DONE: Evaluator ensemble (D368): train 4 more seeds of night 1's chosen config on the night-1 dataset, check each one's calibration (gate 1, clause C), and write the ensemble manifest the coach helper serves
+
+- finished: 2026-10-05T09:07:45-04:00
+- decides: whether the coach's win chance shows an uncertainty band from a 5-model ensemble of evaluator v1 (D368)
+- hypothesis: 4 more night-1 seeds give per-position sd small enough to show a useful +/- band, with calibration no worse than one model
+- rule: D368's ensemble report (gate_metrics.py ensemble and calib); the band ships only if calibration (gate 1 clause C) holds for the ensemble mean
+- outcome: done
+- headline: calib.models 4, calib.passing 4, calib.maxEce 0.0137, ens.n 5
+- summary: results/J069/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 2ca065f

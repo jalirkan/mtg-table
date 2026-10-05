@@ -1,0 +1,11 @@
+{
+ "format": "mtgtable-position-eval-ensemble",
+ "formatVersion": 1,
+ "models": [
+  "night-1-eval.json",
+  "night-1-eval-s1.json",
+  "night-1-eval-s2.json",
+  "night-1-eval-s3.json",
+  "night-1-eval-s4.json"
+ ]
+}

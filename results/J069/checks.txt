@@ -1,0 +1,6 @@
+PASS  ds.reservedChecked == 1   [ds.reservedChecked = 1]
+PASS  calib.written == 1   [calib.written = 1]
+PASS  calib.models == 4   [calib.models = 4]
+PASS  ens.loads == 1   [ens.loads = 1]
+PASS  ens.n >= 3   [ens.n = 5]
+PASS  ens.explain == 1   [ens.explain = 1]

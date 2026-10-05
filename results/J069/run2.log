@@ -1,0 +1,12 @@
+==== J069 run2 started 2026-10-05T09:07:31-04:00 in unit lab-J069-run2, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+seed 1: ECE 0.013691198617924888, worst bin 0.035815959709697365, clause C PASS
+seed 2: ECE 0.009579190630449446, worst bin 0.022641512890267446, clause C PASS
+seed 3: ECE 0.012757603716538776, worst bin 0.02464635106708124, clause C PASS
+seed 4: ECE 0.00910835874150659, worst bin 0.028035596192355627, clause C PASS
+ensemble: night-1-eval.json, night-1-eval-s1.json, night-1-eval-s2.json, night-1-eval-s3.json, night-1-eval-s4.json
+{"ready": true, "model": "76f6dc509a4f", "schema": "82815752c2f5e346", "nFeatures": 12670, "boardColumns": 219, "vocab": 731, "n": 5, "explain": true, "members": ["7ac722a95597", "5b6b954ce5d3", "d8674be1c37d", "83cbe4c65fbe", "4826f961067f"]}
+7ac722a95597a6134d8ab7abed54eea9092ec84937a7b52c1ae3adcc9a3ae6c5  var/ml/models/night-1-eval.json
+5b6b954ce5d3c1f2a958afa8f5a77fa95c581b6fcfad932e1f1db4bac9c0e9b5  var/ml/models/night-1-eval-s1.json
+d8674be1c37d26a4abb047460f4d920333f5e740de00af7ffc46227acb9b9351  var/ml/models/night-1-eval-s2.json
+83cbe4c65fbe1052f1f8fc17261d83c65dc923d250a055f3ede0c8ca2587eaec  var/ml/models/night-1-eval-s3.json
+4826f961067f559fefce6527e3c02294902d3c11a645355d31129ef7f9a63d13  var/ml/models/night-1-eval-s4.json
