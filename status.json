@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-05T09:09:18-04:00",
- "heartbeat": "2026-10-05T09:09:18-04:00",
+ "updated": "2026-10-05T09:10:13-04:00",
+ "heartbeat": "2026-10-05T09:10:13-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 5.89,
-  "memUsedGb": 5.9,
+  "load1": 4.04,
+  "memUsedGb": 5.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3256,
+  "swapUsedMb": 3255,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-05T09:07:31-04:00",
-   "elapsed": 107,
+   "elapsed": 162,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -95,9 +95,9 @@
    "id": "J074",
    "title": "Re-check nights 1 and 2's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-10-05T09:07:59-04:00",
-   "elapsed": 79,
+   "elapsed": 134,
    "done": null,
    "total": null,
    "unit": null,
@@ -109,13 +109,16 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 0.65,
+   "memGb": 0.01,
    "live": {
+    "n1.nowPass": 731,
     "restored": 0,
-    "elapsed_s": 63,
+    "elapsed_s": 124,
     "left1": 821,
     "left2": 684,
-    "n1.written": 0,
+    "n1.recordings": 821,
+    "n1.stillFail": 90,
+    "n1.written": 1,
     "n2.written": 0,
     "noverdict": 0,
     "pilot1.nowPass": 17,
@@ -129,12 +132,13 @@
     "workers": 2
    },
    "liveHeadline": [
+    "n1.nowPass",
     "restored"
    ],
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J074-run1"
+   "detail": "lab-J074-run2"
   }
  ],
  "queue": [
