@@ -61,6 +61,13 @@
 //                 (docs/game-review.md the copyable form); /health carries
 //                 "review": 1 when the bridge is built (else 0), --no-review
 //                 turns it off, --review-jobs N (default: cores - 1, at most 7).
+//                 AUTOMATIC (D385, tools/auto-review.mjs): every human game the bridge
+//                 finishes in var/games/ is reviewed without a request, one at a time,
+//                 at low priority, only while the lab runner is idle or below its core
+//                 budget; its reviews are in GET /review with "auto": true.  /health then
+//                 carries "autoReview": 1 and "autoReviewQueue": {"pending","running","gate"}.
+//                 config.json `coach.autoReview` (default true) or --no-auto-review turn
+//                 it off; --runner-status <status.json> names the lab runner's status.
 //
 //   POST /eval    -- THE WIN CHANCE (D361): the learned position evaluator's
 //                 P(the viewing seat wins) for one state ForgeCoach shows, from a model
@@ -184,6 +191,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 import { MAX_REVIEW_BODY, createReviewRunner, cleanOld } from './review-runner.mjs';
+import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
 
 export const HELPER_VERSION = 1;
@@ -429,13 +437,18 @@ function readConfig() {
   for (const o of origins) {
     if (typeof o !== 'string' || !ORIGIN_ENTRY.test(o)) throw new Error(`"wsAllowedOrigins" in ${file} holds a bad entry: ${JSON.stringify(o)}`);
   }
-  return { file, coachPort: c.coachPort, wsPort: c.wsPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
+  // D385: config.json `coach.autoReview` (default true).
+  const coach = c.coach ?? {};
+  if (typeof coach !== 'object' || Array.isArray(coach) || coach === null) throw new Error(`"coach" in ${file} is not an object`);
+  const autoReview = coach.autoReview ?? true;
+  if (typeof autoReview !== 'boolean') throw new Error(`"coach.autoReview" in ${file} is not true or false`);
+  return { file, autoReview, coachPort: c.coachPort, wsPort: c.wsPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
 }
 
 function parseArgs(argv) {
   const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
     matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined,
-    review: true, reviewJobs: undefined, reviewQueueMax: 2,
+    review: true, reviewJobs: undefined, reviewQueueMax: 2, autoReview: undefined, runnerStatus: undefined,
     eval: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
@@ -457,6 +470,8 @@ function parseArgs(argv) {
     else if (f === '--no-review') a.review = false;
     else if (f === '--review-jobs') a.reviewJobs = Number(val());
     else if (f === '--review-queue-max') a.reviewQueueMax = Number(val());
+    else if (f === '--no-auto-review') a.autoReview = false;   // D385
+    else if (f === '--runner-status') a.runnerStatus = val();
     else if (f === '--no-eval') a.eval = false;
     else if (f === '--eval-model') a.evalModel = val();
     else if (f === '--eval-python') a.evalPython = val();
@@ -533,7 +548,7 @@ export function claudeArgs({ model, systemArg, help, streamInput = false }) {
 // ---------------------------------------------------------------------------
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, evaluator = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, log = (s) => console.log(s) } = opts;
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
   // helper on 0.0.0.0, to prove admit() refuses a non-loopback peer by its
   // address and not by the bind); the CLI never does.
@@ -595,7 +610,7 @@ export function startHelper(opts) {
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
-      const rv = review ? review.health() : { review: 0 };   // D353
+      const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
       const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }
@@ -880,6 +895,7 @@ export function startHelper(opts) {
     }),
     close: () => {
       for (const c of live) { try { process.kill(-c.pid, 'SIGKILL'); } catch { /* gone */ } }
+      auto?.stop();
       review?.close();
       evaluator?.close();
       server.close();
@@ -936,6 +952,12 @@ async function main() {
     if (!Number.isInteger(a.reviewQueueMax) || a.reviewQueueMax < 0 || a.reviewQueueMax > 16) { console.error('coach-helper: --review-queue-max must be a whole number, 0-16'); process.exit(2); }
     cleanOld(cfg.repoRoot);
     review = createReviewRunner({ repoRoot: cfg.repoRoot, jobs, queueMax: a.reviewQueueMax, log: (s) => console.log(s) });
+    review.restore();   // D385: the newest finished reports on disk, served again
+  }
+  let auto = null;
+  if (review && (a.autoReview ?? cfg.autoReview)) {
+    auto = createAutoReview({ repoRoot: cfg.repoRoot, review, statusFile: a.runnerStatus ? resolve(a.runnerStatus) : runnerStatusFile(cfg.repoRoot),
+      log: (s) => console.log(`COACH ${s}`) });
   }
   let evaluator = null;
   if (a.eval) {
@@ -946,7 +968,7 @@ async function main() {
     });
     void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}`));
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, evaluator });
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -961,6 +983,8 @@ async function main() {
   console.log(!review ? 'COACH REVIEW    /review off (--no-review)'
     : review.available() ? 'COACH REVIEW    /review on: tools/coach-grade.sh review, one at a time'
     : 'COACH REVIEW    /review waits for the bridge build (./bridge/build.sh); /health says "review": 0 until then');
+  if (review && !auto) console.log(`COACH AUTO      automatic reviews off (${a.autoReview === false ? '--no-auto-review' : 'config.json coach.autoReview'})`);
+  auto?.start();   // D385: after LISTENING, so its first scan never delays the port
   if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   const stop = () => { h.close(); process.exit(0); };
