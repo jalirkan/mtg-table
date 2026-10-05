@@ -47,7 +47,8 @@
 // the same validation, the same log, seat and knowledge rules -- with three
 // things only the helper can ask for: low priority (the spawn prefixed with
 // `nice` / `ionice`), a narrower --jobs, and a callback at its end.  Its
-// reviews carry "auto": true in GET /review and GET /review/<id>.  A review
+// reviews carry "auto": true in GET /review and GET /review/<id> (and an `auto`
+// file in the review's folder, so restore() keeps the mark).  A review
 // asked for over HTTP PREEMPTS a running automatic one: that one is stopped,
 // dropped from the list and handed back to the automatic queue, which runs it
 // again later.  `restore()` (at the helper's start) lists the newest finished
@@ -166,6 +167,13 @@ export function readLogText(abs, maxBytes = Infinity) {
   return buf.toString('utf8');
 }
 
+/** A finished review's report that counts as one: a game-review whose decisions are not every one an error or refused (exit 4). */
+export function isUsableReport(report) {
+  if (!report || report.kind !== 'game-review') return false;
+  const ds = Array.isArray(report.decisions) ? report.decisions : [];
+  return !(ds.length && ds.every((d) => d && (d.status === 'error' || d.status === 'refused')));
+}
+
 /** The log of a game the engine wrote, or { error, status }: inside gamesDir, a regular file (frames.jsonl, else frames.jsonl.gz). */
 export function gameLog(repoRoot, gamesDir, gameId) {
   const root = resolve(repoRoot, gamesDir);
@@ -251,6 +259,7 @@ export function createReviewRunner(opts) {
     const dir = join(workDir, r.id);
     const absDir = resolve(repoRoot, dir);
     mkdirSync(absDir, { recursive: true });
+    if (r.auto) writeFileSync(join(absDir, 'auto'), 'D385: an automatic review\n');   // restore() keeps "auto": true
     const args = [script, 'review', '--log', r.log, '--seat', String(r.seat), '--run', r.id,
       '--out', join(dir, 'report.json'), '--jobs', String(r.jobs ?? jobs)];
     if (r.req.triageS !== null) args.push('--triage-s', String(r.req.triageS));
@@ -409,12 +418,10 @@ export function createReviewRunner(opts) {
         let report;
         let st;
         try { st = statSync(file); report = JSON.parse(readFileSync(file, 'utf8')); } catch { continue; }
-        if (!report || report.kind !== 'game-review' || typeof report.gameId !== 'string') continue;
-        const ds = Array.isArray(report.decisions) ? report.decisions : [];
-        if (ds.length && ds.every((d) => d && (d.status === 'error' || d.status === 'refused'))) continue;
+        if (!isUsableReport(report) || typeof report.gameId !== 'string') continue;
         const t = Number(id.slice(1));
         reviews.set(id, { id, gameId: report.gameId, log: typeof report.log === 'string' ? report.log : null, seat: report.seat, state: 'done', restored: true,
-          createdAt: new Date(t).toISOString(), endedAt: st.mtime.toISOString(), report });
+          ...(existsSync(join(abs, id, 'auto')) ? { auto: true } : {}), createdAt: new Date(t).toISOString(), endedAt: st.mtime.toISOString(), report });
         if (t > lastId) lastId = t;
         n++;
       }

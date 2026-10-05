@@ -22,11 +22,18 @@ review runner:
   in the viewing seat and only AIs elsewhere, and its `over` names a winner or
   a reason (`human_collect.py`'s test, D369). The gate's, the smoke runs', the
   lab's and the cube lab's games have other ids or other directories;
-  spectating writes `var/spectate/`; a scripted seat, an AI-vs-AI recording, a
-  crash's null `over` (M46) and a game in progress fail the test. An unchanged
-  log (size and mtime) is not read again, and a plain log's last 64 KB must
-  hold `"over"` before the whole of it is parsed. Only logs written after the
-  queue was first made count, so turning it on reviews no history.
+  spectating writes `var/spectate/`; a scripted seat under transport `auto`,
+  an AI-vs-AI recording, a crash's null `over` (M46) and a game in progress
+  fail the test. What the header cannot tell apart is a scripted client
+  driving the `ws` seat under the default `human-ws-<seed>` id: its log looks
+  exactly like a person's, and is reviewed as one. A plain log's last 64 KB
+  must hold `"over"` before the whole of it is parsed. Every log judged is
+  remembered in the queue file (`seen`: its path, size and mtime, and the
+  verdict), so a restart reads only the logs that changed, and a scan reads
+  at most 4 whole logs before it yields the event loop, newest first, the rest
+  on its next turn (an 8 MB log is about 95 ms to judge: a backlog must not
+  stall the helper that `play.sh` is polling for `/health`). Only logs written
+  after the queue was first made count, so turning it on reviews no history.
 - **It goes through the runner's own `post`** with no knowledge fields: the
   same validation, `gameLog` path rules, header seat and D348 guard as a
   request, and the report lands in the runner's list — `GET /review/<id>`, and
@@ -42,7 +49,10 @@ review runner:
   job), or below its core budget (`host.coresTotal − host.coresUsed ≥ 1`; the
   review's `--jobs` is then at most the free cores), or the runner is not
   running (no file, or a `heartbeat` — else `updated`, else the file's mtime —
-  over 2 minutes old: it writes one every 10 s tick). The spawn is prefixed
+  over 2 minutes old: it writes one every 10 s tick). A `running` job with
+  `cores: null` is one the runner shows but does not run (the PC session's
+  own unit: "not run by the runner"); its width is unknown and `coresUsed`
+  counts it as 0, so it closes the gate. The spawn is prefixed
   with `nice -n 19` and `ionice -c 3 -t`, each only where a probe of it runs
   (`-t`: run anyway where the class cannot be set); without `nice` the runner
   calls `os.setPriority`. Every JVM `coach-grade.sh` starts inherits both. A
@@ -50,24 +60,37 @@ review runner:
   it only takes idle cycles.
 - **A request preempts it.** A `POST /review` while an automatic review runs
   stops that review (its process group), drops it from the list (it is not a
-  failure) and hands it back to the queue, which runs it again later unless
-  the request reviewed the same game.
+  failure) and hands it back to the queue without spending an attempt, which
+  runs it again later unless the request reviewed the same game.
 - **Never twice; crash-safe.** The queue is
   `var/coach-grade/auto-review/queue.json`: written to a temporary file,
-  fsynced, the old file renamed to `.bak`, the new one renamed into place;
-  read from the file, else the `.bak`, else a fresh queue (a file that is not
-  a queue is moved aside, never trusted). Each game's key is
-  `gameId|seed|startedAt` (D369's), so a reused id is a new game. A `running`
-  item is `pending` again after a restart (a review is not resumable, D353),
-  and `failed` once it has been started 3 times. Before an item is queued and
-  again before it starts, any existing review of the same log — in the
-  runner's list, asked for or automatic, or a `report.json` on disk naming the
-  log and newer than it — makes it `skipped`, so a lost queue file cannot
-  cause a second review either. A finished review is not retried.
+  fsynced, the old file renamed to `.bak`, the new one renamed into place,
+  the directory fsynced where it can be opened; read from the file, else the
+  `.bak`, else a fresh queue (a file that is not a queue is moved aside, never
+  trusted). A `var/` it cannot write turns the automatic review off for the
+  session, logged once, and `/health` says `"autoReview": 0`; the helper
+  keeps running. Each game's key is `gameId|seed|startedAt` (D369's), so a
+  reused id is a new game — and because a replayed seed (`play.sh --seed 42`
+  again) truncates and rewrites the same `frames.jsonl`, the log is judged
+  again just before its review starts and must still carry the item's key;
+  otherwise the item is `skipped` ("log replaced") and the new game, once
+  finished, is queued as its own. `attempts` counts only crashes: a review
+  stopped by a request or by the helper shutting down (its `stop()` puts the
+  running item back to `pending` on disk at once) gives its attempt back; a
+  `running` item found at load — the helper died under it — is `pending`
+  again (a review is not resumable, D353), and `failed` the third time. Before
+  an item is queued and again before it starts, any existing review of the
+  same log — queued, running or done in the runner's list, asked for or
+  automatic (a failed one does not count), or a `report.json` on disk naming
+  the log, newer than it and not every decision an error — makes it
+  `skipped`, so a lost queue file cannot cause a second review either; after
+  a skip the next item is tried in the same tick. A finished review is not
+  retried.
 - **Reports outlive a restart.** The review runner's new `restore()` lists the
   newest finished reports on disk (`var/coach-grade/review/r*/report.json`, not
   one whose every decision is an error) again at the helper's start, so a
-  `GET /review/<id>` keeps answering.
+  `GET /review/<id>` keeps answering; an automatic review's folder holds an
+  `auto` file, so it keeps its `"auto": true`.
 - **gzip.** `gameLog` takes `frames.jsonl.gz` when there is no
   `frames.jsonl`, and the header seat is read through the gzip (a two-byte
   magic sniff, as `WireLog` does since #73); a zstd archive (D370) is not read.
@@ -78,7 +101,9 @@ review runner:
   self-test's fake engine (as D369's collector is skipped there), and the
   helper self-tests run with it off. `/health` gains `"autoReview": 1|0` (0
   wherever `"review"` is 0) and, with 1, `"autoReviewQueue": {"pending",
-  "running", "gate": "open"|"review-busy"|"lab-busy"}`.
+  "running", "gate": "open"|"review-busy"|"lab-busy"}` — only those three
+  words (the bridge not being built when it last looked reads
+  `review-busy`).
 
 **Versions.** New `/health` keys and a new `"auto"` key on a review are
 additions, which an older ForgeCoach ignores (tools/CLAUDE.md's coach-helper
@@ -90,10 +115,15 @@ them, so no lab folder changes version.
 over scratch games and a scratch runner `status.json`, the real review runner
 driving a fake `coach-grade.sh` — which games are taken, the lab gate in each
 state, the prefix and the spawn under it, `--jobs` narrowed, newest first, one
-at a time, `"auto": true` in both GETs, a `.jsonl.gz` log and its seat, dedupe
-across ticks, a restart, a request and a lost queue file, preemption and the
-rerun, the switch, the queue file torn, foreign and resumed, `restore()`, and
-the helper's `/health`. `coach-helper-selftest.mjs` checks `"autoReview": 0`
+at a time, `"auto": true` in both GETs and after `restore()`, a `.jsonl.gz`
+log and its seat, dedupe across ticks, a restart, a request and a lost queue
+file, a failed request not counting, preemption (its process group dead) and
+the rerun without a spent attempt, a clean stop three sessions running, a
+replayed seed's log skipped and the next item started in the same tick, the
+scan remembered (a second start reads nothing unchanged) and sliced, a
+`cores: null` job, the runner's status writer still naming the fields the gate
+reads, `/health`'s three words, an unwritable `var/`, the switch, the queue
+file torn, foreign and resumed, and the helper's `/health`. `coach-helper-selftest.mjs` checks `"autoReview": 0`
 with the switch off.
 
 **Rejected.**
