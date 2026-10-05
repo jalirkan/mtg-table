@@ -194,7 +194,8 @@
 # helper to wake the sleeping engine -- POST /engine/start, which restarts the
 # last match setup (D381: with the request's AI profile in place of the setup's
 # when its body names one; that profile is the last setup's from then on; the
-# second launch sends no body) -- prints "Engine ready", and exits 0, leaving the first
+# second launch sends no body; D384: each wake a fresh --seed, or the body's
+# {"seed"}, or a --seed play.sh was started with) -- prints "Engine ready", and exits 0, leaving the first
 # play.sh running; or, with the engine running, says so and exits 0.  Not with
 # --port, --no-coach or --no-match.
 #
@@ -528,8 +529,14 @@ fi
 # --------------------------------------------------------------------------
 
 mkdir -p "$PLAY_VAR"
+# D386: server.log carries the --lan pairing token (the phone's URL line, which
+# this script reads back for the helper and a restart), so the folder is the
+# owner's alone: another account on this machine cannot read the token.
+chmod 700 "$PLAY_VAR" 2>/dev/null || true
 SERVER_LOG="$PLAY_VAR/server.log"
 : > "$SERVER_LOG"
+# D386: the log's last lines for the terminal, the --lan token cut out of them.
+server_tail() { tail -"$1" "$SERVER_LOG" | sed 's/token=[A-Za-z0-9_-]*/token=…/g'; }
 
 SERVER_PID=""
 VITE_PID=""
@@ -655,10 +662,10 @@ say "waiting for GET http://127.0.0.1:$WS_PORT/health"
 READY=0
 wait_ready || READY=$?
 if [ "$READY" = "1" ]; then
-  tail -30 "$SERVER_LOG" >&2
+  server_tail 30 >&2
   die "the bridge exited before it was ready (full log: $SERVER_LOG)"
 fi
-[ "$READY" = "0" ] || { tail -30 "$SERVER_LOG" >&2; die "no /health after 60 s (full log: $SERVER_LOG)"; }
+[ "$READY" = "0" ] || { server_tail 30 >&2; die "no /health after 60 s (full log: $SERVER_LOG)"; }
 echo "ready"
 
 # --------------------------------------------------------------------------
@@ -723,6 +730,9 @@ start_coach() {
   [ "$MATCH" = "1" ] && rm -f "$MATCH_DIR/engine.json" 2>/dev/null
   # D361: the win chance -- the helper loads var/ml/models/night-1-eval.json by itself when it exists.
   [ "${#EVAL_ARGS[@]}" -gt 0 ] && args+=("${EVAL_ARGS[@]}")
+  # D385: the automatic review (config.json coach.autoReview) -- never under a self-test's fake engine,
+  # whose helper would otherwise queue the real var/games/ (as D369's collector is skipped there).
+  [ -n "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] && args+=(--no-auto-review)
   : > "$COACH_LOG"
   COACH_HELPER_TOKEN="$token" node tools/coach-helper.mjs "${args[@]}" >>"$COACH_LOG" 2>&1 &
   COACH_PID=$!
@@ -778,6 +788,7 @@ match_write() {
     const loaded = () => {
       const you = last(/^deck you\s+= (.*) \((\d+) cards\)\s*$/), ai = last(/^deck ai\s+= (.*) \((\d+) cards\)\s*$/);
       const prof = last(/^ai profile\s+= (\S+)/), pol = last(/^ai policy\s+= (\S+)/), games = last(/^games\/match\s+= (\d+)/), p = last(/^deck \(you\)\s+= (.*?)\s*$/);
+      const seed = last(/^seed\s+= (-?\d+)\s*$/);   // D384: the shuffle the engine dealt (a caller --seed may be negative)
       let rel = p ? p[1] : null;
       if (rel && rel.startsWith(root + path.sep)) rel = rel.slice(root.length + 1);
       return {
@@ -785,6 +796,7 @@ match_write() {
         aiDeck: ai ? { name: ai[1], cards: Number(ai[2]) } : null,          // M44: a name and a count, never a list
         aiProfile: prof ? prof[1] : null, games: games ? Number(games[1]) : null,
         aiPolicy: pol ? pol[1] : prof ? "plain" : null,   // D333: the bridge prints no policy line for plain
+        seed: seed && Number.isSafeInteger(Number(seed[1])) ? Number(seed[1]) : null,
       };
     };
     const o = kind === "current" ? { id, match: loaded(), at: new Date().toISOString() } : { id, state };
@@ -832,9 +844,10 @@ restart_match() {
     const id = typeof r.id === "string" && /^m[0-9]{13}$/.test(r.id) ? r.id : "";
     const bad = (why) => { console.log("BAD"); console.log(id); console.log(why); process.exit(0); };
     if (!id) bad("no request id");
-    if (r.wake === true) {   // D308 /engine/start; D381: an optional profile, a .ai name
+    if (r.wake === true) {   // D308 /engine/start; D381: an optional profile, a .ai name; D384: an optional seed
       if (r.aiProfile !== undefined && (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile))) bad("not a profile name");
-      for (const x of ["WAKE", id, "", "", r.aiProfile ?? "", "", "", ""]) console.log(x);
+      if (r.seed !== undefined && (!Number.isSafeInteger(r.seed) || r.seed < 0)) bad("seed is not a non-negative safe integer");
+      for (const x of ["WAKE", id, "", "", r.aiProfile ?? "", "", "", "", r.seed === undefined ? "" : String(r.seed)]) console.log(x);
       process.exit(0);
     }
     const dir = process.argv[2];
@@ -865,7 +878,7 @@ restart_match() {
     [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
     say "match $id — restarting the engine on ForgeCoach's decks (D303)"
   else
-    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)${req[4]:+, AI profile ${req[4]} (D381)}"
+    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)${req[4]:+, AI profile ${req[4]} (D381)}${req[8]:+, seed ${req[8]} (D384)}"
   fi
   match_write status "$id" restarting
   local prev=("${BRIDGE_ARGS[@]}") pass=() skip=0 a
@@ -890,20 +903,30 @@ restart_match() {
     # The last setup as it was (the previous match's decks, or the startup ones),
     # but a game id of its own, for the same reason as below -- and, D381, the
     # request's AI profile when it names one (then it replaces --ai-profile, and
-    # stays the last setup's from here on).
-    local wprof="${req[4]:-}"
+    # stays the last setup's from here on).  D384: and a shuffle of its own -- the
+    # request's seed, else a --seed play.sh was started with (as /match keeps it),
+    # else a fresh random one: never the last wake's seed again.
+    local wprof="${req[4]:-}" wseed="${req[8]:-}"
     skip=0
     for a in "${BRIDGE_ARGS[@]}"; do
       if [ "$skip" = "1" ]; then skip=0; continue; fi
       case "$a" in
-        --game-id) skip=1 ;;
-        --game-id=*) : ;;
+        --game-id|--seed) skip=1 ;;
+        --game-id=*|--seed=*) : ;;
         --ai-profile) if [ -n "$wprof" ]; then skip=1; else next+=("$a"); fi ;;
         --ai-profile=*) [ -n "$wprof" ] || next+=("$a") ;;
         *) next+=("$a") ;;
       esac
     done
     [ -n "$wprof" ] && next+=(--ai-profile "$wprof")
+    if [ -z "$wseed" ] && passthrough_has --seed; then
+      skip=0
+      for a in "${PASSTHROUGH[@]}"; do
+        if [ "$skip" = "1" ]; then skip=0; wseed="$a"; continue; fi
+        case "$a" in --seed) skip=1 ;; --seed=*) wseed="${a#--seed=}" ;; esac
+      done
+    fi
+    next+=(--seed "${wseed:-$(( (RANDOM << 15 | RANDOM) % 100000 ))}")
     next+=(--game-id "match-$id")
   else
     next=(--transport ws --port "$WS_PORT" --deck "${req[2]}" --ai-deck "${req[3]}" --ai-profile "${req[4]}")
@@ -966,7 +989,7 @@ restart_match() {
     return 0
   fi
   match_write status "$id" failed "$why: $tail_txt (and the previous match did not start again)" 0
-  tail -30 "$SERVER_LOG" >&2
+  server_tail 30 >&2
   die "neither the new match nor the previous one started (logs: $PLAY_VAR/server.failed.log, $SERVER_LOG)"
 }
 
@@ -1040,7 +1063,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       # the linger closed, D286's idle limit, or a crash) must not take the helper
       # with it: a draft takes longer than either limit.  No JVM runs while asleep.
       say "the bridge exited ($SERVER_RC) — its last lines:"
-      tail -20 "$SERVER_LOG"
+      server_tail 20
       SERVER_PID=""
       IDLE=1
       IDLE_SINCE_S=$SECONDS
@@ -1062,7 +1085,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
     exit 0
   fi
   say "the bridge exited ($SERVER_RC) — its last lines:"
-  tail -20 "$SERVER_LOG"
+  server_tail 20
   stop
   exit "$SERVER_RC"
 fi
@@ -1120,7 +1143,7 @@ while kill -0 "$VITE_PID" 2>/dev/null; do
   [ "$MATCH_PENDING" = "1" ] && restart_match   # D303
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then
     say "the bridge exited — its last lines:"
-    tail -20 "$SERVER_LOG"
+    server_tail 20
     break
   fi
   usr1_on; sleep 1; usr1_off
