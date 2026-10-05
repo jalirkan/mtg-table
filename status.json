@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T18:59:24-04:00",
- "heartbeat": "2026-10-05T18:59:24-04:00",
+ "updated": "2026-10-05T18:59:38-04:00",
+ "heartbeat": "2026-10-05T18:59:38-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.6,
-  "memUsedGb": 6.3,
+  "load1": 6.43,
+  "memUsedGb": 6.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 0,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J084",
    "title": "Re-check night 3's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/2",
    "started": "2026-10-05T18:59:00-04:00",
-   "elapsed": 24,
+   "elapsed": 38,
    "done": null,
    "total": null,
    "unit": null,
@@ -43,17 +43,17 @@
     "n3.recordings": 704,
     "n3.nowPass": 660,
     "restored": 660,
-    "elapsed_s": 0,
+    "elapsed_s": 37,
     "left3": 44,
     "n3.stillFail": 44,
     "n3.written": 1,
     "noverdict": 0,
     "pilot3.nowPass": 0,
-    "pilot3.recordings": 0,
-    "pilot3.written": 0,
+    "pilot3.recordings": 20,
+    "pilot3.written": 1,
     "pilotmoves": 0,
     "pressure_events": 0,
-    "workers": 1
+    "workers": 2
    },
    "liveHeadline": [
     "n3.recordings",
@@ -63,7 +63,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J084-pilot1"
+   "detail": "lab-J084-run1"
   }
  ],
  "queue": [
