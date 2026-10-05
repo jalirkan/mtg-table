@@ -35,6 +35,8 @@
 // (canonical case, the only --ai-profile on its command line, every other flag as
 // the last setup's), and it stays the last setup's; a bad profile or body is a
 // 400 that starts nothing; while running, nothing restarts and a warning says so.
+// D384: every wake deals a fresh --seed (two bare wakes, two seeds, each echoed in
+// the 200), {"seed": n} is honoured exactly, and a bad seed is a 400 that starts nothing.
 //
 //   node tools/match-launcher-selftest.mjs      # exit 0 iff every check passes; ~30 s
 //
@@ -93,6 +95,7 @@ console.log('ai profile    = ' + (flag('--ai-profile') || 'Default'));
 let pol = 'plain';
 argv.forEach((a, i) => { if (a === '--ai-policy') pol = argv[i + 1]; else if (a === '--ai-search') pol = 'search'; });
 if (pol !== 'plain') console.log('ai policy     = ' + pol + (pol === 'search' ? '  (' + (flag('--ai-search') || 'ms=1500') + ')' : ''));
+console.log('seed          = ' + (flag('--seed') || '0'));
 console.log('games/match   = ' + (flag('--games') || '1'));
 if (you.name.startsWith('Crash') || ai.name.startsWith('Crash')) { console.error('ENGINE CRASHED (a fake one)'); ev({ crashed: true }); bye(1); }
 console.log('deck you      = ' + you.name + ' (' + you.cards + ' cards)');
@@ -480,25 +483,35 @@ try {
   check('asleep', r.json?.engine === 'idle', r.body);
   r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
   check('POST /engine/start: 200 on the startup decks', r.status === 200 && r.json?.already === false && typeof r.json?.yourDeck?.name === 'string' && r.json?.yourDeck?.cards > 0, `${r.status} ${r.body}`);
-  const w0 = onW()[0].argv.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id');
+  const without = (v, f) => v.filter((a, i) => a !== f && v[i - 1] !== f);
+  const w0 = without(without(onW()[0].argv, '--game-id'), '--seed');
   const w1 = onW()[1]?.argv ?? [];
-  check('with the same flags as the first start and a game id of its own', JSON.stringify(w1.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id')) === JSON.stringify(w0) && /^match-m\d{13}$/.test(argOf(w1, '--game-id') ?? ''), w1.join(' '));
+  check('with the same flags as the first start, a game id of its own and (D384) a seed of its own', JSON.stringify(without(without(w1, '--game-id'), '--seed')) === JSON.stringify(w0)
+    && /^match-m\d{13}$/.test(argOf(w1, '--game-id') ?? '') && w1.filter((a) => a === '--seed').length === 1 && /^\d+$/.test(argOf(w1, '--seed') ?? ''), w1.join(' '));
+  check('...and the 200 says which seed the engine dealt', r.json?.seed === Number(argOf(w1, '--seed')), r.body);
 
   // D381: the same wake, with the AI profile ForgeCoach's Setup picked (no decks).
   console.log('== /engine/start with {"aiProfile"} (D381)');
-  check('checkWake: no body is the D308 wake', JSON.stringify(checkWake('')) === '{"aiProfile":null,"problems":[]}' && checkWake(undefined).aiProfile === null && checkWake('  \n').problems.length === 0);
+  check('checkWake: no body is the D308 wake', JSON.stringify(checkWake('')) === '{"aiProfile":null,"seed":null,"problems":[]}' && checkWake(undefined).aiProfile === null && checkWake('  \n').problems.length === 0);
   check('checkWake: {} and unknown keys are the D308 wake', checkWake('{}').aiProfile === null && checkWake('{"x":1}').problems.length === 0);
   check('checkWake: a profile in any case, canonical', checkWake('{"aiProfile":"cAuTiOuS"}').aiProfile === 'Cautious');
   check('checkWake: a bad profile, JSON or shape is a problem', checkWake('{"aiProfile":"Hard"}').problems.length === 1 && checkWake('{"aiProfile":3}').problems.length === 1
     && checkWake('nope').problems[0] === 'the body is not JSON' && checkWake('[1]').problems.length === 1 && checkWake('"Cautious"').problems.length === 1);
+  check('checkWake (D384): a seed is a non-negative safe integer', checkWake('{"seed":0}').seed === 0 && checkWake('{"seed":9007199254740991,"aiProfile":"reckless"}').seed === Number.MAX_SAFE_INTEGER
+    && checkWake('{"seed":42}').aiProfile === null && checkWake('{}').seed === null);
+  check('checkWake (D384): a negative, fractional, string, too-large or null seed is a problem', ['-1', '1.5', '"7"', '9007199254740992', '1e300', 'null', 'true'].every((v) => {
+    const c = checkWake(`{"seed":${v}}`);
+    return c.problems.length === 1 && /^seed must be a whole number/.test(c.problems[0]) && c.seed === null;
+  }) && checkWake('{"seed":-1,"aiProfile":"Hard"}').problems.length === 2);
   r = await http({ port: W.coachPort });
-  check('/health: engine_start_profile 1', r.json?.engine_start === 1 && r.json?.engine_start_profile === 1, r.body);
+  check('/health: engine_start_profile 1, engine_start_seed 1', r.json?.engine_start === 1 && r.json?.engine_start_profile === 1 && r.json?.engine_start_seed === 1, r.body);
   const wn = onW().length;
   const wakeWith = (body, port = W.coachPort) => http({ port, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json', Origin: 'https://jalirkan.github.io' }, body });
   for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
   await untilIdle(W.coachPort);
   // Refusals start nothing.
-  for (const [what, body] of [['an unknown profile', '{"aiProfile":"Hard"}'], ['a non-string profile', '{"aiProfile":["Cautious"]}'], ['a body that is not JSON', 'Cautious'], ['a JSON array', '["Cautious"]']]) {
+  for (const [what, body] of [['an unknown profile', '{"aiProfile":"Hard"}'], ['a non-string profile', '{"aiProfile":["Cautious"]}'], ['a body that is not JSON', 'Cautious'], ['a JSON array', '["Cautious"]'],
+    ['a negative seed (D384)', '{"seed":-1}'], ['a fractional seed (D384)', '{"seed":2.5}'], ['a string seed (D384)', '{"seed":"42"}'], ['an unsafe seed (D384)', '{"seed":18446744073709551615}']]) {
     r = await wakeWith(body);
     check(`${what}: 400 with problems, nothing started`, r.status === 400 && r.json?.ok === false && Array.isArray(r.json?.problems) && onW().length === wn, `${r.status} ${r.body}`);
   }
@@ -508,15 +521,25 @@ try {
   check('asleep, {"aiProfile":"cautious"}: 200, woken on Cautious', r.status === 200 && r.json?.already === false && r.json?.aiProfile === 'Cautious'
     && JSON.stringify(Object.keys(r.json.aiDeck)) === '["name","cards"]', `${r.status} ${r.body}`);
   const wp = onW().at(-1)?.argv ?? [];
-  const without = (v, f) => v.filter((a, i) => a !== f && v[i - 1] !== f);
   check('...one --ai-profile, Cautious; every other flag as the last setup, a game id of its own', onW().length === wn + 1 && wp.filter((a) => a === '--ai-profile').length === 1
-    && argOf(wp, '--ai-profile') === 'Cautious' && JSON.stringify(without(without(wp, '--game-id'), '--ai-profile')) === JSON.stringify(without(without(w0, '--game-id'), '--ai-profile'))
+    && argOf(wp, '--ai-profile') === 'Cautious' && JSON.stringify(without(without(without(wp, '--game-id'), '--ai-profile'), '--seed')) === JSON.stringify(without(w0, '--ai-profile'))
     && /^match-m\d{13}$/.test(argOf(wp, '--game-id') ?? '') && argOf(wp, '--game-id') !== argOf(w1, '--game-id'), wp.join(' '));
   for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
   await untilIdle(W.coachPort);
   r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
   check('then a wake with no body keeps Cautious: it is the last setup now', r.status === 200 && r.json?.already === false && r.json?.aiProfile === 'Cautious'
     && argOf(onW().at(-1)?.argv ?? [], '--ai-profile') === 'Cautious', `${r.status} ${r.body}`);
+  // D384: a fresh shuffle on every wake (two random seeds collide 1 time in 100,000).
+  const wakeSeeds = [w1, wp, onW().at(-1)?.argv ?? []].map((v) => argOf(v, '--seed'));
+  check('D384: two bare wakes deal different seeds, one --seed each, the 200 echoing it', wakeSeeds[0] !== wakeSeeds[2] && /^\d+$/.test(wakeSeeds[2] ?? '')
+    && onW().at(-1).argv.filter((a) => a === '--seed').length === 1 && r.json?.seed === Number(wakeSeeds[2]), `${wakeSeeds.join(' ')} ${r.body}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  const wsn = onW().length;
+  r = await wakeWith('{"seed":4242}');
+  const ws = onW().at(-1)?.argv ?? [];
+  check('D384: {"seed":4242} is honoured: one --seed 4242, the 200 says 4242, Cautious kept', r.status === 200 && r.json?.already === false && r.json?.seed === 4242
+    && onW().length === wsn + 1 && argOf(ws, '--seed') === '4242' && ws.filter((a) => a === '--seed').length === 1 && argOf(ws, '--ai-profile') === 'Cautious', `${r.status} ${r.body} | ${ws.join(' ')}`);
   W.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && W.proc.exitCode === null; i++) await sleep(50);
   // While an engine runs (no idle limit here): nothing restarts, the profile is not applied, a warning says so.
@@ -530,6 +553,11 @@ try {
   check('while running, the profile it plays: no warning', r.status === 200 && r.json?.already === true && r.json?.warnings === undefined && onR().length === rn, r.body);
   r = await wakeWith('{"aiProfile":"Hard"}', R.coachPort);
   check('while running, a bad profile: still 400', r.status === 400 && onR().length === rn, r.body);
+  r = await wakeWith('{"seed":7}', R.coachPort);
+  check('while running, a seed (D384): 200 already, a warning that it was not applied, no restart', r.status === 200 && r.json?.already === true
+    && r.json?.warnings?.length === 1 && /seed 7 was not applied/.test(r.json.warnings[0]) && onR().length === rn, r.body);
+  r = await wakeWith('{"seed":-7}', R.coachPort);
+  check('while running, a bad seed (D384): still 400', r.status === 400 && onR().length === rn, r.body);
   R.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && R.proc.exitCode === null; i++) await sleep(50);
 

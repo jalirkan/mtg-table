@@ -30,6 +30,11 @@
 //                 "aiProfile","games"} (+ "warnings" when it plays another profile than asked:
 //                 nothing is restarted); the same refusals (400 for a bad body, 409, 502, 503,
 //                 504).  /health carries "engine_start": 1, and (D381) "engine_start_profile": 1.
+//                 (D384) Every wake deals a fresh shuffle: play.sh gives it a random --seed,
+//                 as it does a POST /match, unless the body names {"seed": n} (a non-negative
+//                 safe integer; a --seed play.sh was started with also holds, as for /match).
+//                 The 200 carries "seed", the one the engine says it started with;
+//                 /health carries "engine_start_seed": 1.
 //   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","aiPolicy","games"}}
@@ -162,19 +167,24 @@ export function profileOf(s, profiles) {
 
 /**
  * D381: a POST /engine/start body.  Empty (or only whitespace) is the D308 wake:
- * { aiProfile: null }.  Otherwise a JSON object whose optional "aiProfile" is one
- * of `profiles`, any case (unknown keys ignored, as /match); anything else is a
- * problem.  Returns { aiProfile, problems }.
+ * { aiProfile: null, seed: null }.  Otherwise a JSON object whose optional
+ * "aiProfile" is one of `profiles`, any case, and (D384) whose optional "seed" is a
+ * non-negative safe integer (unknown keys ignored, as /match); anything else is a
+ * problem.  Returns { aiProfile, seed, problems }; seed null = a fresh one.
  */
 export function checkWake(raw, profiles = DEFAULT_PROFILES) {
-  if (raw === undefined || raw === null || String(raw).trim() === '') return { aiProfile: null, problems: [] };
+  const none = { aiProfile: null, seed: null };
+  if (raw === undefined || raw === null || String(raw).trim() === '') return { ...none, problems: [] };
   let q;
-  try { q = JSON.parse(String(raw)); } catch { return { aiProfile: null, problems: ['the body is not JSON'] }; }
-  if (!q || typeof q !== 'object' || Array.isArray(q)) return { aiProfile: null, problems: ['expected no body, or {"aiProfile"?: string}'] };
-  if (q.aiProfile === undefined) return { aiProfile: null, problems: [] };
-  const aiProfile = profileOf(q.aiProfile, profiles);
-  if (aiProfile === null) return { aiProfile: null, problems: [`aiProfile must be one of ${profiles.join(', ')}, got ${JSON.stringify(String(q.aiProfile)).slice(0, 40)}`] };
-  return { aiProfile, problems: [] };
+  try { q = JSON.parse(String(raw)); } catch { return { ...none, problems: ['the body is not JSON'] }; }
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return { ...none, problems: ['expected no body, or {"aiProfile"?: string, "seed"?: number}'] };
+  const problems = [];
+  const aiProfile = q.aiProfile === undefined ? null : profileOf(q.aiProfile, profiles);
+  if (q.aiProfile !== undefined && aiProfile === null) problems.push(`aiProfile must be one of ${profiles.join(', ')}, got ${JSON.stringify(String(q.aiProfile)).slice(0, 40)}`);
+  const seed = q.seed === undefined ? null : q.seed;
+  if (q.seed !== undefined && (!Number.isSafeInteger(seed) || seed < 0)) problems.push(`seed must be a whole number 0-${Number.MAX_SAFE_INTEGER}, got ${JSON.stringify(q.seed)}`.slice(0, 120));
+  if (problems.length) return { ...none, problems };
+  return { aiProfile, seed, problems };
 }
 
 /**
@@ -361,6 +371,7 @@ export function createMatchLauncher(opts) {
       aiProfile: got.aiProfile ?? m?.aiProfile ?? null,
       aiPolicy: got.aiPolicy ?? m?.aiPolicy ?? null,
       games: got.games ?? m?.games ?? null,
+      seed: got.seed ?? null,   // D384: the shuffle, as the engine says it started (hello_ok carries it too)
       ms: Date.now() - t0,
       warnings,
     };
@@ -370,13 +381,14 @@ export function createMatchLauncher(opts) {
 
   // D308 POST /engine/start: wake a sleeping engine on the last match setup (or
   // play.sh's own startup decks).  Same request mechanism as /match, no decks:
-  // {"v","id","wake":true}, plus D381's "aiProfile" when the body names one.
+  // {"v","id","wake":true}, plus D381's "aiProfile" and D384's "seed" when the body
+  // names them (no seed: play.sh deals a fresh one, as for /match).
   // Already running: 200 {"ok":true,"already":true}, and nothing restarts.
   // `raw` is the request body as sent (a string; empty for none).
   let lastWakeId = 0;
   const wake = async (raw = '') => {
     if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
-    const { aiProfile, problems } = checkWake(raw, readProfiles(aiDir));
+    const { aiProfile, seed, problems } = checkWake(raw, readProfiles(aiDir));
     if (problems.length) return fail(400, 'the engine was not started: ' + problems[0], { problems });
     if (busy) return fail(409, 'a match is already being started — wait for it');
     const cur = engine();
@@ -386,6 +398,7 @@ export function createMatchLauncher(opts) {
       if (aiProfile && m?.aiProfile && m.aiProfile.toLowerCase() !== aiProfile.toLowerCase()) {
         body.warnings = [`the engine is already running against the ${m.aiProfile} profile; ${aiProfile} was not applied — nothing is restarted while a match runs`];
       }
+      if (seed !== null) (body.warnings ??= []).push(`the engine is already running; seed ${seed} was not applied — nothing is restarted while a match runs`);
       return { status: 200, body };
     }
     busy = true;
@@ -396,7 +409,7 @@ export function createMatchLauncher(opts) {
       let id = `m${n}`;
       while (existsSync(join(dir, id))) id = `m${++n}`;
       lastWakeId = n;
-      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true, ...(aiProfile ? { aiProfile } : {}) }) + '\n');
+      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true, ...(aiProfile ? { aiProfile } : {}), ...(seed !== null ? { seed } : {}) }) + '\n');
       try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) {
         return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
       }

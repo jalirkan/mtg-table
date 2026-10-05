@@ -45,17 +45,18 @@ absent means an older helper — treat it as running. `"engine_start": 1`
 `aiPolicy` and `aiSearchMs` (below). No `aiPolicies` key: an older helper — offer
 no choice and send neither key.
 
-## `POST /engine/start` (D308, D381)
+## `POST /engine/start` (D308, D381, D384)
 
 Wakes a sleeping engine **on the last match setup** — the decks, profile and
 games of the last `POST /match`, or `play.sh`'s own startup decks when there
-never was one — with a game id of its own. The helper's own gate, exactly as
-`/match`; it goes through the same request file and SIGUSR1, so a wake and a
+never was one — with a game id of its own and **a fresh shuffle** (D384): a
+random `--seed`, as `POST /match` gets, never the last wake's again. The
+helper's own gate, exactly as `/match`; it goes through the same request file and SIGUSR1, so a wake and a
 `POST /match` never run at once (409 for the second). This is what ForgeCoach's
 ordinary **Play vs Forge** calls when `engine` is `"idle"`, then it connects to
 `/ws`.
 
-**The body (D381)** is optional, 4 KB at most:
+**The body (D381, D384)** is optional, 4 KB at most:
 
 - **none** (or only whitespace): the last setup exactly, as before D381;
 - **`{"aiProfile": "Cautious"}`**: the last setup, but the AI plays that
@@ -66,22 +67,29 @@ ordinary **Play vs Forge** calls when `engine` is `"idle"`, then it connects to
   profile replaces it. No deck is named, sent or revealed: the AI's list stays
   hidden information, which is why plain **Play vs Forge** uses this rather
   than `/match`. `{}` and unknown keys are the no-body wake;
-- anything else (not JSON, not an object, an unknown profile): **400** with
+- **`{"seed": 4242}`** (D384, with or without `aiProfile`): that shuffle
+  instead of a fresh one — for tests and for replaying a game. A non-negative
+  safe integer (0 to 2^53 − 1); it holds for this wake only, and the next wake
+  without one deals a fresh seed again. A `--seed` `play.sh` was started with
+  holds for every wake without one, as it does for `POST /match`;
+- anything else (not JSON, not an object, an unknown profile, a seed that is
+  negative, fractional, a string, `null` or past 2^53 − 1): **400** with
   `problems`, and nothing starts.
 
 `/health` says the helper takes the body with `"engine_start_profile": 1`
-(beside `"engine_start": 1`); an older helper ignores a body, so send one only
-when the key is there.
+(beside `"engine_start": 1`), and the seed with `"engine_start_seed": 1`
+(D384); an older helper ignores a body, so send one only when the key is there.
 
 200 — the engine is running: the `POST /match` 200's shape (`yourDeck`, `aiDeck`,
-`aiProfile`, `games`, `ms`, `warnings`; `yourDeck.path` is `null` for the startup
+`aiProfile`, `games`, `seed`, `ms`, `warnings`; `yourDeck.path` is `null` for the startup
 decks) plus `"already": false`; `aiProfile` is the profile the engine says it
-loaded. The engine already running is also 200, at once, and **nothing
-restarts**:
+loaded, and `seed` (D384) the shuffle it says it dealt — the same number
+`hello_ok.seed` and the recording's session header carry. The engine already
+running is also 200, at once, and **nothing restarts**:
 `{"ok":true,"already":true,"yourDeck":…,"aiDeck":…,"aiProfile":…,"games":…}`
 (the current match, or just `"ok"` and `"already"` when none is known); when the
-body asked for another profile than the running match's, `"warnings"` says it
-was not applied. Refusals are `/match`'s: 400 (the body, D381), 403 (gate), 405
+body asked for another profile than the running match's, or named a seed,
+`"warnings"` says it was not applied. Refusals are `/match`'s: 400 (the body, D381), 403 (gate), 405
 (not POST), 409, 502 (`restored:false`: the engine stays asleep), 503 (no
 launcher), 504.
 
@@ -163,12 +171,15 @@ ready: usually 10–20 s (a cold engine boot), up to 180 s on a busy machine.
   "aiProfile": "Default",
   "aiPolicy": "plain",
   "games": 3,
+  "seed": 48213,
   "ms": 14210,
   "warnings": []
 }
 ```
 
-`cards` is the main-deck count **as the engine loaded it**. When it is lower
+`seed` (D384) is the shuffle the engine dealt (`hello_ok.seed`): a random one
+unless `play.sh` was started with `--seed`. `cards` is the main-deck count **as
+the engine loaded it**. When it is lower
 than what you sent, the engine left out a card it does not know, and
 `warnings` says so in plain words, e.g. `"the engine loaded 39 of the 40
 main-deck cards of your deck — a card it does not know was left out"`.
@@ -241,6 +252,7 @@ export interface MatchStarted {
   aiProfile: string;
   aiPolicy?: string | null; // D333
   games: number;
+  seed?: number | null; // D384: the engine's --seed (null: its log did not say)
   ms: number;
   warnings: string[];
 }
@@ -264,8 +276,11 @@ export interface MatchCurrent {
 }
 // POST /engine/start, body none or EngineStartRequest (D381; only when /health has engine_start_profile: 1)
 //   -> MatchStarted & { already: false } | { ok: true, already: true, ...current, warnings?: string[] }
-export interface EngineStartRequest { aiProfile?: 'Default' | 'Cautious' | 'Reckless' | 'Experimental' }
-// GET /health gains: match: 0 | 1, engine_start?: 1, engine_start_profile?: 1 (D381), and (when match is 1) engine: 'running' | 'idle',
+export interface EngineStartRequest {
+  aiProfile?: 'Default' | 'Cautious' | 'Reckless' | 'Experimental';
+  seed?: number; // D384: 0..2^53-1; only when /health has engine_start_seed: 1; absent = a fresh shuffle
+}
+// GET /health gains: match: 0 | 1, engine_start?: 1, engine_start_profile?: 1 (D381), engine_start_seed?: 1 (D384), and (when match is 1) engine: 'running' | 'idle',
 // idleSince?: string, exitsAt?: string | null  (only when idle),
 // aiPolicies?: string[], aiSearchMs?: {min, max, default}  (D333, when match is 1)
 ```
