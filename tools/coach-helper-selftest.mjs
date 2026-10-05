@@ -340,6 +340,7 @@ try {
   check('the helper logs the image count, never the data', /; sonnet; 2 images;/.test(h.log()) && !h.log().includes(IMG_A), h.log().slice(-400));
   r = await vis({ system: 's', user: 'MODE:auth', images: [{ mediaType: 'image/jpeg', data: IMG_A }] });
   check('/vision logged out: the same one error line as /coach', lines(r.body).length === 1 && /not logged in/.test(lines(r.body)[0]?.message ?? ''), r.body);
+  lastCall();   // drop the logged-out call: call-<pid>.json files are read in directory order, not call order
   r = await vis({ system: 's', user: 'MODE:ok', images: [{ mediaType: 'image/jpeg', data: IMG_A }], thinking: 'off' });
   c = lastCall();
   check('/vision takes "thinking" as /coach does', c.env.MAX_THINKING_TOKENS === '0' && lines(r.body).at(-1)?.type === 'done', JSON.stringify(c.env));
