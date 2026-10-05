@@ -118,6 +118,17 @@ is preflighted; the preflight answers 204 with
 `{"type":"error","message":"origin not allowed"}` (or `"pairing token missing
 or wrong"`) and starts nothing.
 
+D386 added two refusals in front of those, both 403 with the same body shape:
+a caller whose socket address is not loopback, on a helper started without
+`--lan` (`"origin refused: this coach helper answers this machine only …"`),
+whatever the bind; and a loopback caller whose `Host` is not `localhost` (or
+`*.localhost`) or a loopback IP literal (`"origin refused: Host is not a
+loopback name …"`) — a page that rebound its name to 127.0.0.1, a tunnel, or a
+port relay that kept its client's `Host`. ForgeCoach calls
+`http://127.0.0.1:8643` from this machine and `http://<LAN IP>:8643` (a
+non-loopback caller, with the token) from a phone, so neither refusal touches
+it. `docs/security/endpoints.md` is every port and its door.
+
 ## `POST /match`
 
 ```http
@@ -201,7 +212,7 @@ plus a key where the table says:
 | status | when | extra |
 |---|---|---|
 | 400 | the body is not JSON, or a field breaks a rule above, or a card name the engine's scripts do not know (`"aiDeck: 2 card names the engine does not know: Black Lotus; Moxen Galore"`) | `problems: string[]`, every one found |
-| 403 | another `Origin`, or a LAN caller without the token | (the gate's body: `type`, `message`) |
+| 403 | another `Origin`, a LAN caller without the token, a non-loopback caller of a non-LAN helper, or a DNS-name `Host` from loopback (D386) | (the gate's body: `type`, `message`) |
 | 405 | not `GET`/`POST` | |
 | 409 | a match is already being started | |
 | 413 | over 64 KB | |

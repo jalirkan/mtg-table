@@ -529,8 +529,14 @@ fi
 # --------------------------------------------------------------------------
 
 mkdir -p "$PLAY_VAR"
+# D386: server.log carries the --lan pairing token (the phone's URL line, which
+# this script reads back for the helper and a restart), so the folder is the
+# owner's alone: another account on this machine cannot read the token.
+chmod 700 "$PLAY_VAR" 2>/dev/null || true
 SERVER_LOG="$PLAY_VAR/server.log"
 : > "$SERVER_LOG"
+# D386: the log's last lines for the terminal, the --lan token cut out of them.
+server_tail() { tail -"$1" "$SERVER_LOG" | sed 's/token=[A-Za-z0-9_-]*/token=…/g'; }
 
 SERVER_PID=""
 VITE_PID=""
@@ -656,10 +662,10 @@ say "waiting for GET http://127.0.0.1:$WS_PORT/health"
 READY=0
 wait_ready || READY=$?
 if [ "$READY" = "1" ]; then
-  tail -30 "$SERVER_LOG" >&2
+  server_tail 30 >&2
   die "the bridge exited before it was ready (full log: $SERVER_LOG)"
 fi
-[ "$READY" = "0" ] || { tail -30 "$SERVER_LOG" >&2; die "no /health after 60 s (full log: $SERVER_LOG)"; }
+[ "$READY" = "0" ] || { server_tail 30 >&2; die "no /health after 60 s (full log: $SERVER_LOG)"; }
 echo "ready"
 
 # --------------------------------------------------------------------------
@@ -980,7 +986,7 @@ restart_match() {
     return 0
   fi
   match_write status "$id" failed "$why: $tail_txt (and the previous match did not start again)" 0
-  tail -30 "$SERVER_LOG" >&2
+  server_tail 30 >&2
   die "neither the new match nor the previous one started (logs: $PLAY_VAR/server.failed.log, $SERVER_LOG)"
 }
 
@@ -1054,7 +1060,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       # the linger closed, D286's idle limit, or a crash) must not take the helper
       # with it: a draft takes longer than either limit.  No JVM runs while asleep.
       say "the bridge exited ($SERVER_RC) — its last lines:"
-      tail -20 "$SERVER_LOG"
+      server_tail 20
       SERVER_PID=""
       IDLE=1
       IDLE_SINCE_S=$SECONDS
@@ -1076,7 +1082,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
     exit 0
   fi
   say "the bridge exited ($SERVER_RC) — its last lines:"
-  tail -20 "$SERVER_LOG"
+  server_tail 20
   stop
   exit "$SERVER_RC"
 fi
@@ -1134,7 +1140,7 @@ while kill -0 "$VITE_PID" 2>/dev/null; do
   [ "$MATCH_PENDING" = "1" ] && restart_match   # D303
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then
     say "the bridge exited — its last lines:"
-    tail -20 "$SERVER_LOG"
+    server_tail 20
     break
   fi
   usr1_on; sleep 1; usr1_off
