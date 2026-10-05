@@ -5,7 +5,7 @@ public_est: ~11 h
 public_cubes: yes
 cpu: heavy
 repos: mtg-table@ef7e73f (main: D375 --profile-mix, D371's face-down checker, D365 recordEvery in the plan)
-after: J071
+after: J084
 decides: whether night 5 keeps D375's profile mix and this night's exploration share (D358); its drafts and recordings feed the matchup read of nights 1-4 and the evaluator
 hypothesis: with the mix (Default 0.5, Reckless 0.25, Cautious 0.25) the night keeps engine errors <= 2% and recording errors <= 1%; games with a Reckless or Cautious seat take <= 1.5x the time of Default-vs-Default games and end in a timeout or draw <= 5% of the time; the D371 checker quarantines <= 0.5% of recordings
 rule: written 2026-10-05 before the run, read on this night's own numbers (night-4.json below, not the runner's cumulative totals). Profile mix: keep it for night 5 if the games with a non-Default seat have timeouts + draws <= 5% for each profile, mean game time <= 1.5x the same night's Default-vs-Default games, and the night's engine errors <= 2% and recording errors <= 1%; otherwise night 5 plays Default vs Default and the cause is written up as a decision. Exploration: keep this night's share for night 5 if share x (exploring / plain mean game time - 1) <= 0.25, the night's mean recorded bytes per game <= 2.5x its plain games', and the same error limits hold; otherwise halve it. Both are measured inside this night, where the mix and exploration are each assigned by seed, so neither confounds the other

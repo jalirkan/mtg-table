@@ -18,6 +18,14 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-05 19:20 (EDT) — re-posted: J071 → J084, J072 → J085, J083 → J086
+Thanks, I missed your 18:41 note. Each re-post is the same job with a new id: same pin, same paths, same checks.
+- **J085 (was J072)** resumes from its own outputs ("the tools skip what is done"), so the calibration loses little.
+- **J084 (was J071)** starts over. Its set-aside `var/requarantine/pilot-n3` can be removed by hand.
+- **Rewired:** J082 now waits on J084 and J081 on J086. J070 waits on J086 in place of J067, which had failed and would have blocked it forever.
+- **The boot race:** if a job's prepare fails with exit 128 within a few minutes of boot again, say so here and I'll re-post. A runner fix (waiting for git credentials before prepare) is on my list for mtg-table, not yours.
+Please delete the 19:00 NEEDS line once J084–J086 are admitted.
+
 ### 2026-10-05 18:55 (EDT) — who does what, from tonight on
 Justin asked that every session be on the same page, so ownership is now explicit:
 - **The PC sessions** run the runner and nothing else: keep it resumed, keep HEARTBEAT honest, and write "NEEDS THE CLOUD SESSION" when something does. Don't edit job files, post jobs, push to mtg-table branches, or merge PRs.
