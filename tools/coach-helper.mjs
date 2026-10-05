@@ -130,10 +130,14 @@
 //     (a logged path is cut at its `?`).  A loopback peer never needs it.  An
 //     OPTIONS preflight needs no token (a browser cannot add one to it), only an
 //     allowed Origin.
-//   - Host (D386): a loopback peer's Host must be localhost (or *.localhost) or an
-//     IP literal, any port; a DNS name is 403 -- a page that rebound its name to
-//     127.0.0.1, whose same-origin GETs carry no Origin, or a tunnel's hostname.
-//     admit() is the whole door as one decision.
+//   - Host (D386): a loopback peer's Host must be localhost (or *.localhost) or a
+//     loopback IP literal (127.0.0.0/8, [::1], [::ffff:127.x.x.x]), any valid
+//     port; anything else is 403 -- a page that rebound its name to 127.0.0.1,
+//     whose same-origin GETs carry no Origin, a tunnel's hostname, or a port
+//     relay (socat, ssh -L) that kept its client's Host.  admit() is the whole
+//     door as one decision.  Both refusals' messages start "origin refused:" so a
+//     client that sorts refusals by the word "origin" (ForgeCoach's
+//     refusedMessage) does not call them a token problem.
 //   - Origin: allowed if it matches config.json's `wsAllowedOrigins` (the bridge's
 //     M50 list, read the same way: MTG_TABLE_CONFIG, else the repo's config.json;
 //     default http://127.0.0.1:*, http://localhost:*, https://jalirkan.github.io).
@@ -174,7 +178,7 @@ import { execFile, spawn } from 'node:child_process';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { isIP } from 'node:net';
+import { BlockList, isIP } from 'node:net';
 import { availableParallelism, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -261,21 +265,29 @@ export function tokenMatches(given, token) {
 
 /**
  * D386: a Host header a LOOPBACK peer may send -- `localhost` (or a name under
- * `.localhost`, which browsers resolve to loopback themselves), or an IP
- * literal (`127.0.0.1:8643`, `[::1]:8643`), with an optional port.  A DNS name
- * is refused: from a loopback peer it is either a page that rebound its own name
- * to 127.0.0.1 (a same-origin GET carries no Origin, so the Origin rule alone
- * let it read /health, /match and /review) or a tunnel's public hostname, and
- * neither may reach this port.  A missing Host is refused too.
+ * `.localhost`, which browsers resolve to loopback themselves), or a LOOPBACK
+ * IP literal (`127.0.0.0/8`, `[::1]`, `[::ffff:127.x.x.x]`), with an optional
+ * port of at most 65535.  A DNS name is refused: from a loopback peer it is
+ * either a page that rebound its own name to 127.0.0.1 (a same-origin GET
+ * carries no Origin, so the Origin rule alone let it read /health, /match and
+ * /review) or a tunnel's public hostname, and neither may reach this port.  Any
+ * other IP literal (`192.168.1.5:9000`, `0.0.0.0`) is refused too: a port relay
+ * (socat, `ssh -L`) also arrives from loopback, and keeps the Host its client
+ * typed.  A missing Host is refused.
  */
+const LOOPBACK_IPS = new BlockList();
+LOOPBACK_IPS.addSubnet('127.0.0.0', 8, 'ipv4');
+LOOPBACK_IPS.addAddress('::1', 'ipv6');   // also matches ::ffff:127.x.x.x
+
 export function loopbackHostOk(hostHeader) {
   if (typeof hostHeader !== 'string') return false;
   const h = hostHeader.trim().toLowerCase();
-  const v6 = /^\[([0-9a-f:.]+)\](?::[0-9]{1,5})?$/.exec(h);
-  if (v6) return isIP(v6[1]) === 6;
-  const m = /^([a-z0-9.-]+)(?::[0-9]{1,5})?$/.exec(h);
-  if (!m) return false;
-  return m[1] === 'localhost' || m[1].endsWith('.localhost') || isIP(m[1]) === 4;
+  const m = /^(?:\[([0-9a-f:.]+)\]|([a-z0-9.-]+))(?::([0-9]{1,5}))?$/.exec(h);
+  if (!m || (m[3] !== undefined && Number(m[3]) > 65535)) return false;
+  if (m[1] !== undefined) return isIP(m[1]) === 6 && LOOPBACK_IPS.check(m[1], 'ipv6');
+  const name = m[2];
+  if (name === 'localhost' || name.endsWith('.localhost')) return true;
+  return isIP(name) === 4 && LOOPBACK_IPS.check(name, 'ipv4');
 }
 
 /**
@@ -287,7 +299,7 @@ export function loopbackHostOk(hostHeader) {
  *   - a non-loopback peer is refused unless this is a --lan helper (the bind is
  *     127.0.0.1 then, so this only matters if the bind ever changes -- or for a
  *     proxy in front of it -- and it is checked on the socket's REMOTE address);
- *   - a loopback peer must name the host as localhost or an IP literal
+ *   - a loopback peer must name the host as localhost or a loopback IP literal
  *     (loopbackHostOk: DNS rebinding, and a tunnel's hostname);
  *   - Origin: the allowlist; with --lan, a non-loopback peer also the bridge's own
  *     LAN page (lanOwnOrigin); no Origin from loopback only;
@@ -295,8 +307,8 @@ export function loopbackHostOk(hostHeader) {
  *   - with --lan, every other request from a non-loopback peer needs the token.
  */
 export function admit({ loop, lan, host, origin, origins, wsPort, method, given, token }) {
-  if (!loop && !lan) return { ok: false, status: 403, why: 'peer', message: 'this coach helper answers this machine only (play.sh --lan for a phone)' };
-  if (loop && !loopbackHostOk(host)) return { ok: false, status: 403, why: 'host', message: 'host not allowed: call http://127.0.0.1 or http://localhost' };
+  if (!loop && !lan) return { ok: false, status: 403, why: 'peer', message: 'origin refused: this coach helper answers this machine only (play.sh --lan for a phone)' };
+  if (loop && !loopbackHostOk(host)) return { ok: false, status: 403, why: 'host', message: 'origin refused: Host is not a loopback name (call http://127.0.0.1 or http://localhost)' };
   const originOk = origin === undefined ? loop
     : originAllowed(origin, origins) || (lan && !loop && lanOwnOrigin(origin, host, wsPort));
   const cors = originOk && origin !== undefined ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};

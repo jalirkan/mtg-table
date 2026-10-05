@@ -415,7 +415,7 @@ try {
   // ------------------------------------------------------------- D386: the peer and its Host
   console.log('== D386: the peer, its Host, and admit() as a table');
   r = await http({ port: P, headers: { Host: `evil.example:${P}` } });
-  check('a DNS name as Host from loopback (rebinding, no Origin): 403 host', r.status === 403 && /host not allowed/.test(json(r.body)?.message ?? ''), r.body);
+  check('a DNS name as Host from loopback (rebinding, no Origin): 403 host', r.status === 403 && /^origin refused: Host is not a loopback name/.test(json(r.body)?.message ?? ''), r.body);
   r = await http({ port: P, path: '/match', headers: { Host: 'rebind.attacker.test' } });
   check('...on /match too', r.status === 403);
   r = await http({ port: P, path: '/review', headers: { Host: 'rebind.attacker.test' } });
@@ -429,8 +429,15 @@ try {
   r = await http({ port: P, method: 'OPTIONS', path: '/coach', headers: { Host: 'evil.example', Origin: 'https://jalirkan.github.io', 'Access-Control-Request-Method': 'POST' } });
   check('a preflight with a DNS-name Host: 403', r.status === 403);
   check('403 bodies carry nosniff', r.headers['x-content-type-options'] === 'nosniff');
-  check('loopbackHostOk: localhost, *.localhost, IPv4 and [IPv6] literals, any port', ['localhost', 'LOCALHOST:8643', 'app.localhost:1', '127.0.0.1', '127.0.0.1:8643', '[::1]:8643', '[::1]', '192.168.1.5:8643'].every(loopbackHostOk));
-  check('loopbackHostOk: DNS names, junk, missing', !['evil.example', 'localhost.evil.example', '127.0.0.1.nip.io', 'a b', '', '[::g]', '[evil]:1', 'localhost:99999999'].some(loopbackHostOk) && !loopbackHostOk(undefined));
+  r = await http({ port: P, headers: { Host: '192.168.1.5:9000' } });
+  check('a port relay (socat, ssh -L) keeping a LAN Host, from loopback: 403 host', r.status === 403 && /^origin refused:/.test(json(r.body)?.message ?? ''), r.body);
+  r = await http({ port: P, headers: { Host: `127.0.0.2:${P}` } });
+  check('Host 127.0.0.2:<port> (127.0.0.0/8): 200', r.status === 200);
+  check('loopbackHostOk: localhost, *.localhost, loopback IPv4 and [IPv6] literals, any valid port', ['localhost', 'LOCALHOST:8643', 'app.localhost:1', '127.0.0.1', '127.0.0.1:8643', '127.0.0.2', '127.255.0.9:65535', '[::1]:8643', '[::1]', '[::ffff:127.0.0.1]:8643'].every(loopbackHostOk));
+  check('loopbackHostOk: DNS names, non-loopback literals, 0.0.0.0, bad ports, junk, missing', !['evil.example', 'localhost.evil.example', '127.0.0.1.nip.io', 'a b', '', '[::g]', '[evil]:1', 'localhost:99999999',
+    '192.168.1.5:9000', '192.168.1.5:8643', '10.0.0.1', '0.0.0.0', '0.0.0.0:8643', '[::]:8643', '[::ffff:10.0.0.1]', '[fe80::1]', '127.0.0.1:65536', 'localhost:70000'].some(loopbackHostOk) && !loopbackHostOk(undefined));
+  check('admit: both new refusals say "origin refused:" (ForgeCoach sorts refusals by /origin/i)', /^origin refused:/.test(admit({ lan: false, origins: [], wsPort: 8642, method: 'GET', token: '', loop: false, host: 'x' }).message)
+    && /^origin refused:/.test(admit({ lan: false, origins: [], wsPort: 8642, method: 'GET', token: '', loop: true, host: '10.0.0.1' }).message));
   const base = { lan: false, host: '127.0.0.1:8643', origin: undefined, origins: ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'], wsPort: 8642, method: 'GET', given: undefined, token: '' };
   const A = (o) => admit({ ...base, ...o });
   check('admit: loopback, no Origin: ok', A({ loop: true }).ok);

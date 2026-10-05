@@ -32,15 +32,28 @@ that releases every inbound frame unread. Four gaps were not:
 - **`admit()` is the coach helper's whole door, as one pure function**, in
   order: (a) a peer whose socket address is not loopback is 403 unless the
   helper runs `--lan` — the remote address, not the bind; (b) a loopback peer's
-  `Host` must be `localhost`, a name under `.localhost`, or an IP literal
-  (`loopbackHostOk`), else 403 — a rebinding name and a tunnel's hostname are
-  both DNS names; (c) then M51's order as before: the Origin for a preflight,
+  `Host` must be `localhost`, a name under `.localhost`, or a loopback IP
+  literal (`127.0.0.0/8`, `[::1]`, `[::ffff:127.x.x.x]`) with a port of at most
+  65535 (`loopbackHostOk`), else 403 — a rebinding name and a tunnel's hostname
+  are DNS names, and a port relay (`socat`, `ssh -L`) arrives from loopback
+  keeping its client's `Host`, which a LAN client types as the LAN address
+  (`192.168.1.5:9000`; `0.0.0.0` is refused too). A relay whose client end is
+  itself loopback, or a forwarder that rewrites `Host` to `127.0.0.1`, still
+  passes: the check stops what names another address, not every forwarder; (c) then M51's order as before: the Origin for a preflight,
   the token for a non-loopback peer under `--lan`, the Origin for the rest.
-  Every 403 carries `X-Content-Type-Options: nosniff`. `/match`,
+  Every 403 carries `X-Content-Type-Options: nosniff`. The two new refusals'
+  messages start `origin refused:` (`… Host is not a loopback name …`, `… this
+  coach helper answers this machine only …`): ForgeCoach's `refusedMessage`
+  sorts a 401/403 by `/origin/i` alone and calls anything else a pairing-token
+  problem, which these are not. The "wrong address" branch is the honest one
+  for both, so the helper's words choose it without a ForgeCoach release. `/match`,
   `/engine/start`, `/review`, `/eval`, `/coach` and `/vision` all sit behind it,
   so the match launcher's routes get it too.
 - **The match dir's REAL path must be under `var/`** (`realInside`): at startup
-  (exit 2) and again before every write (a 500 that writes nothing).
+  (exit 2) and again before every write (a 500 that writes nothing). The check
+  and the write are two steps, so a process that swaps `var/match` for a
+  symlink between them wins the race; only a process running as the owner can,
+  and it could write there anyway, so the race is accepted.
 - **`play.sh` makes `var/play/` mode 700** and cuts `token=` out of every log
   tail it prints (`server_tail`), as the 502 path already did.
 - **`tools/build-sounds.mjs`'s run-long server** answers its own page only
@@ -71,14 +84,31 @@ calls the helper by that same name. `live.ts` opens `ws://127.0.0.1:8642/observe
 and sends nothing. Bodies stay far below the caps (a /vision JPEG is about
 0.3-0.6 MB of the 5 MB per image).
 
-**Measured.** `node tools/coach-helper-selftest.mjs`: 128 checks, among them a
+**Measured.** `node tools/coach-helper-selftest.mjs`: 131 checks, among them a
 DNS-name `Host` refused on `/health`, `/match`, `/review` and a preflight, a
-tunnel hostname refused even with an allowed `Origin`, `admit()` as a table, and
+tunnel hostname refused even with an allowed `Origin`, a relay's
+`Host: 192.168.1.5:9000` refused and `127.0.0.2` admitted, `admit()` as a table, and
 a non-LAN helper bound to `0.0.0.0` by a test-only `bindHost` answering this
 machine's non-loopback address 403. `node tools/match-launcher-selftest.mjs`:
 148 checks against the real `play.sh`, among them a rebinding `Host` on `/match`
 and `/engine/start` and a `--match-dir` through a symlink out of `var/` refused
 at startup.
+
+**Follow-ups for ForgeCoach** (its repository; nothing here edits it):
+
+- (a) `refusedMessage` (`src/coachHelper.ts`) should recognise the peer and
+  `Host` refusals explicitly (or read a `why` field the helper could add as a
+  new key) rather than rely on the word "origin" in the body.
+- (b) `helperTarget`'s `?coach=<url>` override keeps the token it would send
+  to the engine's own helper: on a page served by the engine, a link
+  `http://<LAN IP>:8642/?coach=https://evil.example` sends the phone's stored
+  pairing token to that host in `X-ForgeCoach-Token`. Drop the token whenever
+  the override is used.
+- (c) `src/live.ts` and the README suggest `npx http-server <dir> -p 8650
+  --cors` for live mode's HTTP fallback, which binds `0.0.0.0` with
+  `Access-Control-Allow-Origin: *` and serves `frames.jsonl` — the owner's
+  hand — to the LAN. Suggest `-a 127.0.0.1`
+  (`docs/security/endpoints.md`, headline risk 6).
 
 **Rejected.**
 

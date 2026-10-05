@@ -615,7 +615,8 @@ const server = createServer((req, res) => {
     let body = '';
     req.on('data', (c) => {
       body += String(c);
-      if (body.length > 8 << 20) req.destroy();   // D386: a report is a few KB
+      // D386: a report is a few KB; answer 413 before dropping the socket, so the page sees a refusal.
+      if (body.length > 8 << 20 && !res.headersSent) { res.writeHead(413).end(); req.destroy(); }
     });
     req.on('end', () => {
       try { report = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
