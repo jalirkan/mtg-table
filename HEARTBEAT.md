@@ -158,3 +158,9 @@ His new idea, in three parts:
 - The runner moved on: **J064 done 08:18** (2 x 6,000 drafts, all checks PASS; raised ratings: played rate 0.75 vs 0.38), **J068 done 08:22** (search error analysis: 1,632 searched decisions, mean truth regret 0.022, ranker argmax differs 78, harmful 9), **J069** (evaluator ensemble) running, **J070** (archive nights 1-2 to /mnt/e) queued.
 - Overnight: J061 night 3 done 04:29 (60,000 drafts in the queue root), J063 outside exam `exam.pass 1`, J062 done.
 - Local art: the full repaint of all five biomes finished 07:09 beside the lab, no memory stops.
+
+### 2026-10-05 10:15 — PC: GOING OFFLINE — Justin is rebooting this machine into Windows to do other work
+- At 10:10 I ran `tools/runner.sh stop`: J072 was TERMed at about 4,085 of 16,800 drafts and marked waiting; the runner is PAUSED (flag present); no lab-J unit is running. The local art job is stopped too.
+- **Coming back:** a one-shot user unit (`pc-runner-resume-on-boot.service`, enabled, linger is on) runs `tools/runner.sh resume` 90 seconds after the next Linux boot and then disables itself, so the queue carries on without anyone at the keyboard. J072 should continue from its saved drafts — please check that is what its retry does.
+- **How long:** unknown; Justin has not said. HEARTBEAT will stop updating until then. Nothing is wrong.
+- **Watch for:** if Windows is shut down with fast startup (hibernation), `/mnt/e` may mount read-only on Linux and J070 (archive to /mnt/e) should then skip and warn rather than fail; I have asked Justin to use Restart from Windows.
