@@ -5,4 +5,4 @@ phase: commands 1/2
 mtg-table: 369f613
 workers: 6
 peak_worker_rss_gb: 2.11
-waits: needs 7 core(s) for run1; 5 of 8 free (it waits for them; nothing is stopped)
+waits: needs 7 core(s) for run1; 6 of 8 free (it waits for them; nothing is stopped)
