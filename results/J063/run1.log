@@ -1,0 +1,13 @@
+==== J063 run1 started 2026-10-05T04:30:16-04:00 in unit lab-J063-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7, lane 2
+dataset: 16 rows, 1 games, 1/6196 files
+dataset: 15932 rows, 1015 games, 1139/6196 files
+dataset: 30874 rows, 2033 games, 2233/6196 files
+dataset: 47320 rows, 3215 games, 3415/6196 files
+dataset: 63546 rows, 4413 games, 4613/6196 files
+dataset: 80332 rows, 5632 games, 5832/6196 files
+dataset: 85436 rows from 5996 games, 394 features (schema aa9d28f669f8bbbe, vocab 189 slots)
+  skipped games: {'a deck under 0.5 inside the vocabulary (r17)': 200}
+  play exploration (D358): 0 game(s) played with exploration kept (--play-explore exclude)
+  train:  67716 rows, 4759 games (1653 groups); games won/lost/drawn 2379/2380/0; rows +1/-1/0 33847/33869/0
+  val  :   9973 rows,  695 games (230 groups); games won/lost/drawn 347/348/0; rows +1/-1/0 4987/4986/0
+  test :   7747 rows,  542 games (190 groups); games won/lost/drawn 271/271/0; rows +1/-1/0 3869/3878/0
