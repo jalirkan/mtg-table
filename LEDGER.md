@@ -173,3 +173,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: -
 - summary: results/J083/summary.md (the PC session's; judge it against the rule)
 - follow-up: jobs/J081-gate2-v2.md: on pc-jobs with after: on this job; the runner starts it
+
+## J084 FAILED: Re-check night 3's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check
+
+- finished: 2026-10-05T19:00:04-04:00
+- decides: which of night 3's quarantined recordings are false positives, so J061's keep/stop rule and night 4 read quarantines with the D371 checker (J061's rule says so)
+- hypothesis: night 3 ran on c09ddfa (before D371), so most of its quarantine is the Gonti / Thief of Sanity false positive and now passes; D352's A3 leak and "own hand card has no name" are the only kinds expected to stay
+- rule: none for a verdict: night 4 is not posted if a still-failing kind other than those two appears (night-4 plan, written 2026-10-05 before J061 ran)
+- outcome: failed (check: left3 == n3.stillFail (left3 = 44, n3.stillFail = 45))
+- headline: n3.recordings 45, n3.nowPass 0, restored 0
+- summary: results/J084/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table a2480d7

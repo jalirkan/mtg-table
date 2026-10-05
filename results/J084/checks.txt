@@ -1,0 +1,5 @@
+PASS  n3.written == 1   [n3.written = 1]
+PASS  noverdict == 0   [noverdict = 0]
+PASS  n3.recordings >= 1   [n3.recordings = 45]
+PASS  restored == n3.nowPass   [restored = 0, n3.nowPass = 0]
+FAIL  left3 == n3.stillFail   [left3 = 44, n3.stillFail = 45]
