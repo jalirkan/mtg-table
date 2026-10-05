@@ -1,0 +1,3 @@
+PASS  prank.answered == 3   [prank.answered = 3]
+PASS  prank.ok >= 2   [prank.ok = 3]
+PASS  prank.refused == 0   [prank.refused = 0]
