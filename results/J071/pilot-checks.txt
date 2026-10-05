@@ -1,0 +1,4 @@
+PASS  pilot3.written == 1   [pilot3.written = 1]
+PASS  pilot3.recordings >= 1   [pilot3.recordings = 20]
+PASS  pilotmoves == 0   [pilotmoves = 0]
+PASS  noverdict == 0   [noverdict = 0]
