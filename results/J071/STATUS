@@ -1,7 +1,8 @@
-running
+waiting
+reason: stopped: tools/runner.sh stop
 runner: forgecoach-runner ef7e73f
 started: 2026-10-05T10:54:28-04:00
-phase: commands 2/2
+finished: 2026-10-05T10:56:09-04:00
 mtg-table: a2480d7
 workers: 2 (sized 2: min(cores 7, memory 18, max_workers 2); peak 1.00 GB per worker (declared), budget 21.4 GB)
 blocks_done: run1 exit 0 at 2026-10-05T10:55:55-04:00
