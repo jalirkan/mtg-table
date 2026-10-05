@@ -1,0 +1,79 @@
+==== J064 prepare started 2026-10-05T05:23:31-04:00 in unit lab-J064-prepare, 1 worker(s), 7 core(s), BLAS/OpenMP threads 7, lane 2
+lab: mtg-table at f038f4ef8d06450e48d5993f86a606093f5ad089
+lint-bridge-selftest OK: 31 rules, 60 firing cases (each fired its own rule and no other), 73 checks
+bridge lint OK (66 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 66 file(s) -> /home/justin-a/code/lab/mtg-table-lane2/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table-lane2/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 275 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2580 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:33888): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:33892): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:33896 (1 watching)
+WS CONNECT /127.0.0.1:33912 (connection #1)
+WS REFUSED /127.0.0.1:33916: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:33922 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:33922 (1 watching)
+WS DISCONNECT /127.0.0.1:33912 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:33924 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:33924 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:40604 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:57918 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:57918: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 32 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:48550: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:48556: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:48562: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:48566: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:48590: no valid pairing token
+WS SITE REFUSED /127.0.0.1:48722: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48738: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48750: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48762: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48764: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48768: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48782: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48788: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48802: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48812: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48822: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:48828: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:48832: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:48840: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:48852: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:48864 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:48864 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:48878 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:48878 (0 watching)
+WS CONNECT /127.0.0.1:48880 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:48880 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:48884): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:48892): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:48898 (1 watching)
+WS CONNECT /127.0.0.1:40718 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:40718 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:40734 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:40734 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:40025 (/127.0.0.1:40742): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:36398: a path that would leave the site
+WS CONNECT /127.0.0.1:41638 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:41638 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:41644): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:34997 (/127.0.0.1:41656): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 7.5 us + predict 3.6 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 112 check(s), 0 failure(s)
+decision selftest: 69 check(s), 0 failure(s)
+build OK
