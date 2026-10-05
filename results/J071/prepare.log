@@ -77,3 +77,5 @@ eval selftest OK (8039 checks)
 grade selftest: 112 check(s), 0 failure(s)
 decision selftest: 69 check(s), 0 failure(s)
 build OK
+==== J071 prepare started 2026-10-05T18:38:39-04:00 in unit lab-J071-prepare, 1 worker(s), 2 core(s), BLAS/OpenMP threads 2
+fatal: could not read Username for 'https://github.com': No such device or address

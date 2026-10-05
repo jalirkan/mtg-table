@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-05T11:10:04-04:00
-- runner: ef7e73f, up since 2026-10-04T21:59:21-04:00, PAUSED (tools/runner.sh resume)
+- time: 2026-10-05T18:40:57-04:00
+- runner: ef7e73f, up since 2026-10-05T18:37:08-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 0.52; memory 4.4/30.5 GB, swap 2969 MB, pressure 0% (lab budget 23.4 GB)
+- load: 1.12; memory 4.7/30.5 GB, swap 0 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J070, J081, J082
-- waiting: J071 (the runner is paused); J072 (the runner is paused); J083 (the runner is paused)
-- last finished: J074 done at 2026-10-05T09:10:27-04:00: n1.nowPass 731 · n2.nowPass 640 · restored 1371
+- waiting: nothing
+- last finished: J083 failed at 2026-10-05T18:39:16-04:00
 
 ## Messages
 

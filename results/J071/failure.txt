@@ -1,0 +1,62 @@
+step prepare exited 128
+
+WS OBSERVER CONNECT /127.0.0.1:35530 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:35530 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:35544 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:55852 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:55852: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 43 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:58608: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:58618: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:58628: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:58632: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:58664: no valid pairing token
+WS SITE REFUSED /127.0.0.1:58786: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58796: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58804: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58814: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58826: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58834: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58842: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58854: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58862: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58876: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:58890: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:58902: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:58908: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:58924: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:58928: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:58940 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:58940 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:58952 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:58952 (0 watching)
+WS CONNECT /127.0.0.1:58964 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:58964 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:58978): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:58988): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:58994 (1 watching)
+WS CONNECT /127.0.0.1:38910 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:38910 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:38922 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:38922 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:41295 (/127.0.0.1:38924): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:44284: a path that would leave the site
+WS CONNECT /127.0.0.1:50688 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:50688 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:50702): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:45205 (/127.0.0.1:50708): not in wsAllowedOrigins
+WsLanSelfTest: 160 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 11.2 us + predict 4.1 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 112 check(s), 0 failure(s)
+decision selftest: 69 check(s), 0 failure(s)
+build OK
+==== J071 prepare started 2026-10-05T18:38:39-04:00 in unit lab-J071-prepare, 1 worker(s), 2 core(s), BLAS/OpenMP threads 2
+fatal: could not read Username for 'https://github.com': No such device or address

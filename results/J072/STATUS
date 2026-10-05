@@ -1,8 +1,9 @@
-waiting
-reason: stopped: tools/runner.sh stop
+failed
+reason: prepare: step prepare exited 128
 runner: forgecoach-runner ef7e73f
-started: 2026-10-05T09:07:31-04:00
-finished: 2026-10-05T10:07:23-04:00
-mtg-table: 369f613
-workers: 7 (sized 7: min(cores 7, memory 8, max_workers 7); peak 2.11 GB per worker (measured), budget 21.4 GB)
+started: 2026-10-05T18:38:49-04:00
+finished: 2026-10-05T18:39:06-04:00
+workers: 1
 peak_worker_rss_gb: 2.11
+resumed: 2026-10-05T18:38:49-04:00: retry after "stopped: tools/runner.sh stop"; the pilot had passed; starts again at run1; the tools skip what is done
+exit: 128

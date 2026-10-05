@@ -1,0 +1,4 @@
+step prepare exited 128
+
+==== J083 prepare started 2026-10-05T18:39:06-04:00 in unit lab-J083-prepare, 1 worker(s), 6 core(s), BLAS/OpenMP threads 6
+fatal: could not read Username for 'https://github.com': No such device or address

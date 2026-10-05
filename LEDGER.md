@@ -142,3 +142,34 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: n1.nowPass 731, n2.nowPass 640, restored 1371
 - summary: results/J074/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table a2480d7
+
+## J071 FAILED: Re-check night 3's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check
+
+- finished: 2026-10-05T18:38:49-04:00
+- decides: which of night 3's quarantined recordings are false positives, so J061's keep/stop rule and night 4 read quarantines with the D371 checker (J061's rule says so)
+- hypothesis: night 3 ran on c09ddfa (before D371), so most of its quarantine is the Gonti / Thief of Sanity false positive and now passes; D352's A3 leak and "own hand card has no name" are the only kinds expected to stay
+- rule: none for a verdict: night 4 is not posted if a still-failing kind other than those two appears (night-4 plan, written 2026-10-05 before J061 ran)
+- outcome: failed (prepare: step prepare exited 128)
+- headline: n3.recordings 704, n3.nowPass 660, restored 660
+- summary: results/J071/summary.md (the PC session's; judge it against the rule)
+
+## J072 FAILED: Evolve calibration night (D376, D377): two nothing-changed Omega batches of 8,400 drafts, read by calibrate.ts on both nulls
+
+- finished: 2026-10-05T18:39:06-04:00
+- decides: whether the hold on evolve cuts and D360's ratings raise lifts for new D377 folders (D376, D377; the lift itself is Justin's call)
+- hypothesis: D377's colour-adjusted null is calibrated on real games: about 0.6 false candidates over 12 discovery-sized slices, against about 3.3 a slice for D331's mean null
+- rule: D377 (below, "Pre-registered reading"): calibrated when the colour null's false candidates over the 12 slices are <= 2, each batch's colour dominant-win share at p <= 0.05 is <= 9%, and the pair dispersion is <= 1.5
+- outcome: failed (prepare: step prepare exited 128)
+- headline: a.drafts 4103, b.drafts 0
+- summary: results/J072/summary.md (the PC session's; judge it against the rule)
+
+## J083 FAILED: Evaluator v2 (D364): nights 1-3 dataset, split audit, learning curve (plain vs game-weighted), successive-halving search, gate 1 on v2 and v2 against v1 on the same test pairs
+
+- finished: 2026-10-05T18:39:16-04:00
+- decides: whether evaluator v2 (nights 1-3, D364) replaces v1 as the candidate for gate 2 (J081) and the coach's win chance
+- hypothesis: three nights of data and the successive-halving search give v2 a lower held-out log-loss than v1 on the same test pairs, and it passes gate 1
+- rule: gates.py gate 1 (D354) on v2, and eval_compare.py's paired difference v1 - v2 on the same held-out pairs with its 95% interval excluding 0 (D364)
+- outcome: failed (prepare: step prepare exited 128)
+- headline: -
+- summary: results/J083/summary.md (the PC session's; judge it against the rule)
+- follow-up: jobs/J081-gate2-v2.md: on pc-jobs with after: on this job; the runner starts it

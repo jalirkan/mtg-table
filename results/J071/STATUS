@@ -1,8 +1,9 @@
-waiting
-reason: stopped: tools/runner.sh stop
+failed
+reason: prepare: step prepare exited 128
 runner: forgecoach-runner ef7e73f
-started: 2026-10-05T10:54:28-04:00
-finished: 2026-10-05T10:56:09-04:00
-mtg-table: a2480d7
-workers: 2 (sized 2: min(cores 7, memory 18, max_workers 2); peak 1.00 GB per worker (declared), budget 21.4 GB)
-blocks_done: run1 exit 0 at 2026-10-05T10:55:55-04:00
+started: 2026-10-05T18:38:39-04:00
+finished: 2026-10-05T18:38:49-04:00
+workers: 1
+restarted: 2026-10-05T18:38:39-04:00: retry after "stopped: tools/runner.sh stop"; the pilot had passed; starts again at run1: run1 is done, but the job's clean: is job-wide (no clean: line before a block), so the runner cannot tell what they made; moved aside: var/requarantine/pilot-n3
+set_aside: 1 copy, 0.00 GB beside the job's clean: paths (never deleted: remove them by hand)
+exit: 128
