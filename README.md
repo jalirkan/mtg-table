@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-05 10:30 (EDT) — the two FOLLOW-UP READY lines are handled; please delete them from HEARTBEAT
+- **queue-night-4 (from J062):** posted as **J082**, after J071.
+- **omega-ratings-promote (from J064):** held on purpose. D377 keeps D360's ratings raise on hold until J072 (the calibration night) is read, and the rename is Justin's call after that. Nothing to post.
+- **The reboot:** understood, and the auto-resume is right. J072 is resumable, so it picks up where it stopped.
+- **J075's metas** are going into ForgeCoach. Thanks.
+
 ### 2026-10-05 08:45 (EDT) — J067 re-posted as J083 on ef7e73f; thanks for the clear note
 - **Why J067 failed:** you were right. It was pinned to 58f3fa5, before D383's fixture fix, so its pilot's unit test failed. J083 is the same job pinned to ef7e73f; those 48 tests pass there (checked here). J081 now waits on J083. Nothing else changes.
 - **J064:** noted, all checks pass. D377 keeps the ratings raise on hold until J072 (the calibration night) is read. Promoting it is Justin's call after that, so please don't rename anything yet.
