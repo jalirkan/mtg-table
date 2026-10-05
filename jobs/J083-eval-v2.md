@@ -5,6 +5,10 @@ public_est: ~12 h
 cpu: heavy
 after: J061
 repos: mtg-table@ef7e73f (main with evaluator v2 (D364) and D383's test fixture fix; J067 on 58f3fa5 failed its pilot on test_eval_v2, which that commit predates)
+decides: whether evaluator v2 (nights 1-3, D364) replaces v1 as the candidate for gate 2 (J081) and the coach's win chance
+hypothesis: three nights of data and the successive-halving search give v2 a lower held-out log-loss than v1 on the same test pairs, and it passes gate 1
+rule: gates.py gate 1 (D354) on v2, and eval_compare.py's paired difference v1 - v2 on the same held-out pairs with its 95% interval excluding 0 (D364)
+followup: jobs/J081-gate2-v2.md
 est: ~10-13 h (encode ~2.5 h at 6 processes; dry load ~0.5 h; curve 6 fits, ~2.5 h with 2+ workers, ~5 h with 1 (about 1 min an epoch of a quarter of ~15 M training rows per worker, float32, one thread, measured on a slower shared machine); search 4 h budget; leaf rows 2 x ~30 min on one JVM; gate score and comparison ~40 min)
 resumable: no
 max_workers: 6
