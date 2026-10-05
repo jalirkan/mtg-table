@@ -530,8 +530,8 @@ export function startHelper(opts) {
       const rv = review ? review.health() : { review: 0 };   // D353
       const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1 } : {}), ...rv, ...ev }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1 } : {}), ...rv, ...ev }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -584,12 +584,12 @@ export function startHelper(opts) {
       return;
     }
     if (path === '/engine/start') {
-      // D308: wake a sleeping engine (match-launcher.mjs `wake`); D381: on an optional {"aiProfile"}.  The same gate.
+      // D308: wake a sleeping engine (match-launcher.mjs `wake`); D381/D384: on an optional {"aiProfile", "seed"}.  The same gate.
       if (!match) { send(res, 503, { ok: false, type: 'error', message: 'the match launcher is off: this helper was not started by scripts/play.sh' }, cors); say(503); return; }
       if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
       const raw = await readBody(req, res, 4096, '4 KB', cors, say);
       if (raw === null) return;
-      const r = await match.wake(raw);   // D381: no body, or {"aiProfile"}
+      const r = await match.wake(raw);   // D381: no body, or {"aiProfile"}; D384: {"seed"}
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (${r.body.already ? 'already running' : r.body.ms + ' ms'})` : ` (${r.body.message.slice(0, 160)})`);
       return;
