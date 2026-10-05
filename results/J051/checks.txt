@@ -1,0 +1,5 @@
+PASS  re3.answered == set.lines   [re3.answered = 291, set.lines = 291]
+PASS  re12.answered == set.lines   [re12.answered = 291, set.lines = 291]
+PASS  rh12.answered == set.lines   [rh12.answered = 291, set.lines = 291]
+PASS  g2.written == 1   [g2.written = 1]
+PASS  g2.scored >= 1   [g2.scored = 291]

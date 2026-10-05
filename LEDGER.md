@@ -16,3 +16,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J050/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 7e48088
 - follow-up: jobs/J051-regret-gate-score.md: on pc-jobs with after: on this job; the runner starts it
+
+## J051 DONE: Evaluator gate 2: rank the set with the hand leaf and the evaluator at the live horizon, and score the regret (D354)
+
+- finished: 2026-10-04T23:48:02-04:00
+- decides: promote evaluator v1 past gate 2 (D354), and so whether J052's SPRT runs
+- hypothesis: the evaluator's leaf has lower regret than the hand leaf at the live horizon, because it beat the hand leaf on held-out log-loss in gate 1 (J060: +0.066 [0.052, 0.079])
+- rule: gates.py REGRET_RULE (D354 gate 2): PASS when mean regret(hand) - regret(eval) > 0 and its paired bootstrap 95% interval excludes 0, on >= 240 scored decisions
+- outcome: done
+- headline: g2.scored 291, g2.regretHand 0.0208, g2.regretEval 0.0192, g2.diffHandMinusEval_estimate 0.0017, g2.diffHandMinusEval_lo -0.0036, g2.pass 0
+- summary: results/J051/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 7e48088
+- follow-up: jobs/J052-evaluator-sprt.md: on pc-jobs with after: on this job; the runner starts it
