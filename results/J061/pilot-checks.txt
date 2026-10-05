@@ -1,0 +1,3 @@
+PASS  pilot.drafts >= 50   [pilot.drafts = 60]
+PASS  pilot.engine_error_rate <= 2%   [pilot.engine_error_rate = 0]
+PASS  pilot.recorded_errors <= 0.01 * pilot.recorded_games   [pilot.recorded_errors = 0, pilot.recorded_games = 60]
