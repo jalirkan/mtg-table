@@ -331,7 +331,8 @@ starts the bridge again on the next `POST /match`; `/health` says `"engine":
 (240; 0 never), and Ctrl-C and SIGTERM stop everything as before. Without the
 launcher (`--no-match`, `--no-coach`) and in the bare board mode the old exit
 stays. `POST /engine/start` wakes it on the last setup (plain Play; D381: an
-optional `{"aiProfile"}` body swaps the setup's profile, never its decks), and a
+optional `{"aiProfile"}` body swaps the setup's profile, never its decks; D384:
+every wake a fresh `--seed` unless the body names `{"seed"}`), and a
 second `play.sh --engine-only` beside a live helper wakes the first and exits 0
 instead of clashing on its ports. The self-test's fake engine takes the bridge's own `--idle-timeout` to
 exit on cue.
