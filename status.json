@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-05T18:59:38-04:00",
- "heartbeat": "2026-10-05T18:59:38-04:00",
+ "updated": "2026-10-05T18:59:51-04:00",
+ "heartbeat": "2026-10-05T18:59:51-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.43,
+  "load1": 5.14,
   "memUsedGb": 6.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 0,
@@ -24,9 +24,9 @@
    "id": "J084",
    "title": "Re-check night 3's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
    "cpu": "heavy",
-   "phase": "commands 1/2",
+   "phase": "commands 2/2",
    "started": "2026-10-05T18:59:00-04:00",
-   "elapsed": 38,
+   "elapsed": 52,
    "done": null,
    "total": null,
    "unit": null,
@@ -63,7 +63,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J084-run1"
+   "detail": "lab-J084-run2"
   }
  ],
  "queue": [
