@@ -332,8 +332,9 @@ export function createMatchLauncher(opts) {
   const fail = (status, message, extra = {}) => ({ status, body: { ok: false, type: 'error', message, ...extra } });
 
   // Waits for play.sh's status on request `id` and shapes the 200 / refusal.
-  // `m` is the checked request (to count cards against), or null for a wake.
-  const ask = async (id, t0, m, youPath) => {
+  // `m` is the checked request (to count cards against), or null for a wake;
+  // `wantSeed` (D384) the seed a wake's body named, or null.
+  const ask = async (id, t0, m, youPath, wantSeed = null) => {
     // play.sh stops the engine, starts the new one, and says how it went.
     // play.sh takes SIGUSR1 only while it waits (it ignores it the rest of the
     // time: a bash 5.2 trap mid-$( ) killed it), so a signal can be lost; it is
@@ -375,6 +376,9 @@ export function createMatchLauncher(opts) {
       ms: Date.now() - t0,
       warnings,
     };
+    // D384: play.sh found an engine already running (the race the check in wake()
+    // cannot close) and restarted nothing, so the requested seed was not dealt.
+    if (wantSeed !== null && reply.seed !== wantSeed) warnings.push(`the engine is running on seed ${reply.seed ?? 'unknown'}; seed ${wantSeed} was not applied — nothing is restarted while a match runs`);
     log(`MATCH started ${id}: you ${reply.yourDeck.name} (${reply.yourDeck.cards}), AI ${reply.aiDeck.name} (${reply.aiDeck.cards}), ${reply.aiProfile}, ${reply.aiPolicy ?? 'policy as started'}, ${reply.games} game(s), ${reply.ms} ms`);
     return { status: 200, body: reply };
   };
@@ -413,7 +417,7 @@ export function createMatchLauncher(opts) {
       try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) {
         return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
       }
-      const r = await ask(id, t0, null, null);
+      const r = await ask(id, t0, null, null, seed);
       if (r.status === 200) r.body = { ...r.body, already: false };
       return r;
     } finally {

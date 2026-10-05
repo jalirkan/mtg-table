@@ -36,7 +36,9 @@
 // the last setup's), and it stays the last setup's; a bad profile or body is a
 // 400 that starts nothing; while running, nothing restarts and a warning says so.
 // D384: every wake deals a fresh --seed (two bare wakes, two seeds, each echoed in
-// the 200), {"seed": n} is honoured exactly, and a bad seed is a 400 that starts nothing.
+// the 200), {"seed": n} is honoured exactly and for that wake only, a --seed play.sh was
+// started with holds for every wake, a seed a wake that lost the race to a running
+// engine could not apply is a warning, and a bad seed is a 400 that starts nothing.
 //
 //   node tools/match-launcher-selftest.mjs      # exit 0 iff every check passes; ~30 s
 //
@@ -232,7 +234,7 @@ try {
   };
   const t0 = Date.now();
   r = await post(A.coachPort, req1, { Origin: 'https://jalirkan.github.io' });
-  check('POST /match: 200 with the new decks', r.status === 200 && r.json?.ok === true, `${r.status} ${r.body}`);
+  check('POST /match: 200 with the new decks, and (D384) the seed the engine dealt', r.status === 200 && r.json?.ok === true && Number.isSafeInteger(r.json?.seed), `${r.status} ${r.body}`);
   check('the reply names your deck and its path', r.json?.yourDeck?.name === NAME && /^var\/match-launcher-selftest\/a\/match\/m\d{13}\/you\.dck$/.test(r.json?.yourDeck?.path ?? '') && r.json?.yourDeck?.cards === 40, r.body);
   check("the reply's aiDeck is {name, cards} and nothing else", JSON.stringify(r.json?.aiDeck) === '{"name":"AI Draft","cards":40}', r.body);
   check('the profile is canonical, the games as asked, no warnings', r.json?.aiProfile === 'Reckless' && r.json?.games === 1 && Array.isArray(r.json?.warnings) && r.json.warnings.length === 0, r.body);
@@ -249,7 +251,8 @@ try {
   check('the engine was restarted once', s.length === 2);
   check('with the new decks, profile and games', argOf(second, '--deck') === r.json?.yourDeck?.path && argOf(second, '--ai-deck') === r.json?.yourDeck?.path.replace('you.dck', 'ai.dck')
     && argOf(second, '--ai-profile') === 'Reckless' && argOf(second, '--games') === '1', second.join(' '));
-  check('the new match has a random seed of its own, once', /^\d+$/.test(argOf(second, '--seed') ?? '') && second.filter((a) => a === '--seed').length === 1, second.join(' '));
+  check('the new match has a random seed of its own, once, the one the 200 named', /^\d+$/.test(argOf(second, '--seed') ?? '') && second.filter((a) => a === '--seed').length === 1
+    && r.json?.seed === Number(argOf(second, '--seed')), second.join(' '));
   check('and every other flag kept (--transport ws, the port, --keep-open)', argOf(second, '--transport') === 'ws' && argOf(second, '--port') === String(A.port) && second.includes('--keep-open')
     && second.filter((a) => a === '--deck').length === 1 && second.filter((a) => a === '--games').length === 1, second.join(' '));
   check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
@@ -540,8 +543,32 @@ try {
   const ws = onW().at(-1)?.argv ?? [];
   check('D384: {"seed":4242} is honoured: one --seed 4242, the 200 says 4242, Cautious kept', r.status === 200 && r.json?.already === false && r.json?.seed === 4242
     && onW().length === wsn + 1 && argOf(ws, '--seed') === '4242' && ws.filter((a) => a === '--seed').length === 1 && argOf(ws, '--ai-profile') === 'Cautious', `${r.status} ${r.body} | ${ws.join(' ')}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
+  const wa = onW().at(-1)?.argv ?? [];
+  check('D384: {"seed"} held for that wake only: the next bare wake deals a fresh one, the 200 echoing it', r.status === 200 && r.json?.already === false && onW().length === wsn + 2
+    && /^\d+$/.test(argOf(wa, '--seed') ?? '') && argOf(wa, '--seed') !== '4242' && wa.filter((a) => a === '--seed').length === 1 && r.json?.seed === Number(argOf(wa, '--seed')), `${r.status} ${r.body} | ${wa.join(' ')}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
   W.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && W.proc.exitCode === null; i++) await sleep(50);
+  // D384: a --seed play.sh was started with holds for every wake without one, as for /match.
+  const P = await startPlay(['--seed', '31337', '--', '--idle-timeout', '1'], 'wakeseed');
+  const onP = () => starts().filter((e) => argOf(e.argv, '--port') === String(P.port));
+  const pSeeds = [];
+  for (let k = 0; k < 2; k++) {
+    for (let i = 0; i < 100 && alive(onP().at(-1)?.pid); i++) await sleep(100);
+    await untilIdle(P.coachPort);
+    r = await http({ port: P.coachPort, method: 'POST', path: '/engine/start' });
+    const pa = onP().at(-1)?.argv ?? [];
+    pSeeds.push(r.status === 200 && r.json?.already === false && r.json?.seed === 31337 && pa.filter((a) => a === '--seed').length === 1 ? argOf(pa, '--seed') : `${r.status} ${r.body}`);
+  }
+  check('D384: play.sh --seed 31337, woken twice: --seed 31337 both times, the 200 saying so', onP().length === 3 && argOf(onP()[0].argv, '--seed') === '31337' && pSeeds.every((x) => x === '31337'), pSeeds.join(' | '));
+  for (let i = 0; i < 100 && alive(onP().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(P.coachPort);
+  P.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && P.proc.exitCode === null; i++) await sleep(50);
   // While an engine runs (no idle limit here): nothing restarts, the profile is not applied, a warning says so.
   const R = await startPlay([], 'wakerun');
   const onR = () => starts().filter((e) => argOf(e.argv, '--port') === String(R.port));
@@ -598,6 +625,11 @@ try {
     const dir = process.argv[1];
     process.on('SIGUSR1', () => {
       const r = JSON.parse(fs.readFileSync(path.join(dir, 'request.json'), 'utf8'));
+      if (r.wake) {   // D384: the race -- play.sh found an engine running, and says "ready" with its match
+        const match = { yourDeck: { name: 'Running', path: null, cards: 40 }, aiDeck: { name: 'AI', cards: 40 }, aiProfile: 'Default', games: 3, seed: 99 };
+        fs.writeFileSync(path.join(dir, 'status.json'), JSON.stringify({ id: r.id, state: 'ready', match }));
+        return;
+      }
       const cards = (f) => fs.readFileSync(f, 'utf8').split('[main]')[1].split('[sideboard]')[0].split('\\n').reduce((n, l) => n + (Number((/^(\\d+) /.exec(l) || [])[1]) || 0), 0);
       const name = (f) => /^Name=(.*)$/m.exec(fs.readFileSync(f, 'utf8'))[1];
       const match = { yourDeck: { name: name(r.deck), path: r.deck, cards: cards(r.deck) }, aiDeck: { name: name(r.aiDeck), cards: cards(r.aiDeck) }, aiProfile: r.aiProfile, games: r.games };
@@ -621,6 +653,17 @@ try {
   r = await post(cp, { deck: deck('Known', LAND), aiDeck: deck('AI', [...LAND, [1, 'Black Lotus'], [2, 'Moxen Galore']]) });
   check('an unknown card: 400 naming it and the deck', r.status === 400 && /aiDeck: 2 card names the engine does not know: Black Lotus; Moxen Galore/.test(r.json?.message ?? ''), r.body);
   // Seven names from the zip (Fire, Ice and "Fire // Ice" among them), plus D14's custom card.
+  // D384: a wake that loses the race to an engine already running (play.sh restarts
+  // nothing and says "ready"): the requested seed was not dealt, and a warning says so.
+  writeFileSync(join(supDir, 'engine.json'), JSON.stringify({ state: 'idle', at: new Date().toISOString(), exitsAt: null }) + '\n');
+  r = await http({ port: cp, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json' }, body: '{"seed":4242}' });
+  check('D384: a seed asked for, another seed dealt (the race): 200, the running seed, a warning', r.status === 200 && r.json?.already === false && r.json?.seed === 99
+    && r.json?.warnings?.length === 1 && /seed 4242 was not applied/.test(r.json.warnings[0]), `${r.status} ${r.body}`);
+  r = await http({ port: cp, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json' }, body: '{"seed":99}' });
+  check('...the seed asked for is the one dealt: no warning', r.status === 200 && r.json?.seed === 99 && r.json?.warnings?.length === 0, `${r.status} ${r.body}`);
+  r = await http({ port: cp, method: 'POST', path: '/engine/start' });
+  check('...no seed asked for: no warning', r.status === 200 && r.json?.seed === 99 && r.json?.warnings?.length === 0, `${r.status} ${r.body}`);
+  rmSync(join(supDir, 'engine.json'));
   check('the card index was read from the zip', /card index: \d+ names from .*cardsfolder\.zip/.test(hlog) && Number(/card index: (\d+)/.exec(hlog)?.[1]) >= 7, hlog);
 
   // ------------------------------------------------------------- no supervisor

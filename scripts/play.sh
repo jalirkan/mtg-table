@@ -779,7 +779,7 @@ match_write() {
     const loaded = () => {
       const you = last(/^deck you\s+= (.*) \((\d+) cards\)\s*$/), ai = last(/^deck ai\s+= (.*) \((\d+) cards\)\s*$/);
       const prof = last(/^ai profile\s+= (\S+)/), pol = last(/^ai policy\s+= (\S+)/), games = last(/^games\/match\s+= (\d+)/), p = last(/^deck \(you\)\s+= (.*?)\s*$/);
-      const seed = last(/^seed\s+= (\d+)\s*$/);   // D384: the shuffle the engine dealt
+      const seed = last(/^seed\s+= (-?\d+)\s*$/);   // D384: the shuffle the engine dealt (a caller --seed may be negative)
       let rel = p ? p[1] : null;
       if (rel && rel.startsWith(root + path.sep)) rel = rel.slice(root.length + 1);
       return {

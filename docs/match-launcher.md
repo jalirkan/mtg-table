@@ -50,7 +50,8 @@ no choice and send neither key.
 Wakes a sleeping engine **on the last match setup** — the decks, profile and
 games of the last `POST /match`, or `play.sh`'s own startup decks when there
 never was one — with a game id of its own and **a fresh shuffle** (D384): a
-random `--seed`, as `POST /match` gets, never the last wake's again. The
+random `--seed`, as `POST /match` gets, never the last wake's again (unless
+`play.sh` was started with `--seed`). The
 helper's own gate, exactly as `/match`; it goes through the same request file and SIGUSR1, so a wake and a
 `POST /match` never run at once (409 for the second). This is what ForgeCoach's
 ordinary **Play vs Forge** calls when `engine` is `"idle"`, then it connects to
@@ -89,7 +90,9 @@ running is also 200, at once, and **nothing restarts**:
 `{"ok":true,"already":true,"yourDeck":…,"aiDeck":…,"aiProfile":…,"games":…}`
 (the current match, or just `"ok"` and `"already"` when none is known); when the
 body asked for another profile than the running match's, or named a seed,
-`"warnings"` says it was not applied. Refusals are `/match`'s: 400 (the body, D381), 403 (gate), 405
+`"warnings"` says it was not applied (a seed also when an engine started
+between the check and `play.sh` taking the wake up: then the 200 carries the
+running engine's `seed`). Refusals are `/match`'s: 400 (the body, D381), 403 (gate), 405
 (not POST), 409, 502 (`restored:false`: the engine stays asleep), 503 (no
 launcher), 504.
 
