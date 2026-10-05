@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T09:10:27-04:00",
- "heartbeat": "2026-10-05T09:10:27-04:00",
+ "updated": "2026-10-05T09:10:41-04:00",
+ "heartbeat": "2026-10-05T09:10:41-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.64,
-  "memUsedGb": 5.4,
+  "load1": 2.98,
+  "memUsedGb": 3.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 3213,
   "pressure": 0,
@@ -26,19 +26,19 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-05T09:07:31-04:00",
-   "elapsed": 176,
+   "elapsed": 190,
    "done": 0,
    "total": null,
    "unit": "drafts",
-   "ratePerHour": null,
+   "ratePerHour": 0,
    "eta": null,
-   "workers": 6,
-   "workersMax": 6,
+   "workers": 7,
+   "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-05T09:07:31-04:00",
-   "memGb": 2.84,
+   "memGb": 0,
    "live": {
     "a.drafts": 0,
     "b.drafts": 0,
@@ -87,7 +87,8 @@
    ],
    "cubes": [],
    "publicCubes": false,
-   "pressureEvents": []
+   "pressureEvents": [],
+   "detail": "lab-J072-run1"
   }
  ],
  "queue": [
