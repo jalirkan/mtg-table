@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-05T05:47:53-04:00
+- time: 2026-10-05T05:51:13-04:00
 - runner: ef7e73f, up since 2026-10-04T21:59:21-04:00
-- running: J062 commands 1/1, 1 worker(s), 1 core(s); J064 commands 1/2, 1450 drafts, 3572.7/h, 6 worker(s), 6 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.77; memory 14.4/30.5 GB, swap 3424 MB, pressure 0% (lab budget 23.4 GB)
+- running: J064 commands 1/2, 1632 drafts, 3557.9/h, 6 worker(s), 6 core(s)
+- cores: 6 of 8 in use (the running jobs' widths; 16 threads)
+- load: 10.43; memory 12.5/30.5 GB, swap 3424 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J067, J068, J069, J070, J071, J072, J074, J075, J081
 - waiting: nothing
-- last finished: J063 done at 2026-10-05T05:23:31-04:00: ds.rows 85436 · ds.games 5996 · ext.testUserRows 154302 · exam.decided 1 · exam.pass 1
+- last finished: J062 done at 2026-10-05T05:51:13-04:00
 
 ## Messages
+
+- FOLLOW-UP READY [J062@2026-10-05T05:51:13-04:00] (the runner, for the cloud session): J062 is done; write and post the template queue-night-4. It decides: J029's pre-registered questions: card-level vs archetype-level work (tau), matchup model vs coin, keep or cut the bridge share. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J061@2026-10-05T04:29:24-04:00] (the runner, for the cloud session): J061 is done; write and post the template matchup-read-night-3. It decides: whether D358's play exploration stays on at 15% for night 4, given its cost in draft rate, recording size and quarantined recordings. Ledger: LEDGER.md. Delete this line once posted.
 

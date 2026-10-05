@@ -63,3 +63,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: ds.rows 85436, ds.games 5996, ext.testUserRows 154302, exam.decided 1, exam.pass 1
 - summary: results/J063/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table c2a28ef
+
+## J062 DONE: Morning read of nights 1 and 2: the matchup model on the queue's drafts (exploring drafts left out), with the questions night 1 pre-registered
+
+- finished: 2026-10-05T05:51:13-04:00
+- decides: J029's pre-registered questions: card-level vs archetype-level work (tau), matchup model vs coin, keep or cut the bridge share
+- hypothesis: -
+- rule: J029 "Questions this night answers": tau >= 0.05 card level (+ one design verification), tau < 0.03 archetype level; M0 beats coin with the 95% interval excluding 0; bridge games improve held-out log-loss on the flat cubes, else cut the bridge share; 0.03 <= tau < 0.05 (written 2026-10-04 before the run): keep card-level work, no design verification
+- outcome: done
+- headline: -
+- summary: results/J062/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table c09ddfa
+- follow-up: template queue-night-4: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

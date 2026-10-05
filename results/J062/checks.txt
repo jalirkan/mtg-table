@@ -1,0 +1,2 @@
+PASS  done == 1   [done = 1]
+PASS  power == 1   [power = 1]

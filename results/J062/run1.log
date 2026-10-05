@@ -1,0 +1,194 @@
+==== J062 run1 started 2026-10-05T04:30:02-04:00 in unit lab-J062-run1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+reserved decks (D340): 120 deck-set decks; 0 game(s) played with one dropped; 0 game(s) of other lab versions left out; 3084 game(s) of exploring drafts left out by --play-explore exclude (D358)
+56900 games (11383 bridge), 56900 drafts; train 39781 / val 8421 / test 8698; 727 cards (5 without engine facts)
+# Matchup model: held-out results
+
+**Sample:** 56900 decisive games (11383 bridge) from 56900 drafts in 26 run folder(s); 0 duplicate game(s) skipped. Split by draft: 39781 train, 8421 validation, 8698 test games. 727 cards, 5 of them without engine facts. Deck-set decks (D340): 0 game(s) dropped. Lab versions (D341): `048b63117d72` 180, `131c2207096e` 2245, `16299d2db66b` 116, `1bdf08b0307b` 223, `22e2d10c1f31` 214, `3268aba6bc62` 308, `3364108f8368` 1438, `3b446c9f0196` 290, `3c068a846f74` 233, `3d82ac9bb608` 278, `3d8317d580f5` 172, `410a9f1ff3d3` 216, `413bc3d6efeb` 2080, `46213876aec8` 2555, `48bac64aa4a0` 1980, `4c6db1cd22ac` 192, `4cd7f1b5f21c` 89, `4d489bdfe6fc` 141, `4e4f77eaeb83` 221, `549af8151a00` 238, `58c1a435536a` 174, `58d831539773` 218, `591750118db6` 223, `5a8f4691cdeb` 164, `614e801b7548` 287, `64ebf7ebd1fc` 2111, `7325a47fae61` 221, `73f9ea2a9e6d` 182, `780e9251ce63` 217, `791adee50cb7` 192, `792249248766` 108, `7951c64910f0` 259, `7b68d3279036` 150, `7cb13252703a` 1878, `7d28279b255a` 168, `800e5a09bcda` 1656, `84743def3b2d` 327, `87145dd16ee2` 276, `94af37d798d2` 249, `98e581e49464` 156, `9ec06c7c7820` 1794, `a08656d9deb3` 132, `a17cc166ed9c` 252, `a32da4d980b4` 202, `a55d7666b9ad` 332, `a813fe263c19` 279, `ad8faa6623cd` 1636, `b175b9ae864e` 225, `b215b9c488f4` 1542, `b24f5ce1dd55` 110, `b538f6120993` 74, `b76bf43cd8a6` 283, `b875654a0c18` 209, `bba97678b5f3` 93, `bbe420510a3e` 86, `c5ce4b25753d` 187, `c8861eba0ec1` 2519, `c9a984a032f6` 2034, `cb8c9422aa36` 262, `cc7efb199e87` 2618, `d03d56e3c09d` 219, `d1a920eb3155` 2207, `d33b5598b2c2` 111, `d73cf4eafc22` 2364, `d947d26bc674` 156, `e16ad065bee2` 298, `e3f3371358fe` 3141, `e44397143492` 2772, `e4c1d36daaee` 3189, `e5cb4c72d4f5` 1685, `e6d3136b7c51` 136, `ec8e28e9ec08` 187, `edbe34f8c8c2` 177, `ef4f4f69be46` 193, `f344baeba973` 2073, `f41330bc2380` 132, `f50edf5859cb` 168, `f649ec734f7c` 198. AI-limited (Forge AI:RemoveDeck:All, D343): 22 card(s) not rated, one shared column instead (their per-copy effect in Forge's games: -0.207 logits).
+
+**Prior widths by the Laplace evidence (one game per draft, D342):** M0 tau = 0.06 logits per card copy (deck-difference prior SD 0.41), tauW = 0.003; M1 tauCube = 0.03; plain BT tau = 0.07. Play/draw: beta = +0.067 logits.
+
+### Held-out drafts, all games (test split)
+
+8698 games from 8698 drafts.
+
+| model | log-loss | Brier | accuracy | ECE | log-loss minus coin [95% CI, bootstrap over drafts] |
+|---|---|---|---|---|---|
+| (a) coin | 0.6926 | 0.2497 | 0.517 | 0.011 |  |
+| (b) additive: Bradley-Terry on cards | 0.6526 | 0.2305 | 0.616 | 0.011 | -0.0400 [-0.0454, -0.0341] |
+| (c) per-cube shrunk win rates (meta.json) | 0.6690 | 0.2383 | 0.579 | 0.013 | -0.0236 [-0.0281, -0.0193] |
+| M0 pooled BT + feature prior | 0.6525 | 0.2305 | 0.615 | 0.012 | -0.0401 [-0.0456, -0.0342] |
+| M1 = M0 + per-cube deviations | 0.6521 | 0.2303 | 0.615 | 0.012 | -0.0405 [-0.0461, -0.0347] |
+
+### Held-out drafts, in-cube games
+
+6991 games from 6991 drafts.
+
+| model | log-loss | Brier | accuracy | ECE | log-loss minus coin [95% CI, bootstrap over drafts] |
+|---|---|---|---|---|---|
+| (a) coin | 0.6925 | 0.2497 | 0.519 | 0.008 |  |
+| (b) additive: Bradley-Terry on cards | 0.6531 | 0.2308 | 0.616 | 0.008 | -0.0393 [-0.0455, -0.0328] |
+| (c) per-cube shrunk win rates (meta.json) | 0.6679 | 0.2378 | 0.581 | 0.011 | -0.0246 [-0.0295, -0.0194] |
+| M0 pooled BT + feature prior | 0.6531 | 0.2307 | 0.614 | 0.008 | -0.0394 [-0.0454, -0.0329] |
+| M1 = M0 + per-cube deviations | 0.6519 | 0.2302 | 0.615 | 0.010 | -0.0406 [-0.0468, -0.0338] |
+
+### Held-out drafts, bridge games
+
+1707 games from 1707 drafts.
+
+| model | log-loss | Brier | accuracy | ECE | log-loss minus coin [95% CI, bootstrap over drafts] |
+|---|---|---|---|---|---|
+| (a) coin | 0.6930 | 0.2499 | 0.510 | 0.023 |  |
+| (b) additive: Bradley-Terry on cards | 0.6505 | 0.2295 | 0.617 | 0.025 | -0.0425 [-0.0552, -0.0296] |
+| (c) per-cube shrunk win rates (meta.json) | 0.6735 | 0.2404 | 0.574 | 0.021 | -0.0195 [-0.0289, -0.0100] |
+| M0 pooled BT + feature prior | 0.6501 | 0.2293 | 0.619 | 0.031 | -0.0429 [-0.0558, -0.0302] |
+| M1 = M0 + per-cube deviations | 0.6529 | 0.2306 | 0.615 | 0.024 | -0.0401 [-0.0533, -0.0269] |
+
+Calibration of M0 on the test split:
+
+| bin | games | predicted | observed |
+|---|---|---|---|
+| 0.1-0.2 | 99 | 0.169 | 0.162 |
+| 0.2-0.3 | 595 | 0.259 | 0.267 |
+| 0.3-0.4 | 1463 | 0.356 | 0.349 |
+| 0.4-0.5 | 2236 | 0.452 | 0.43 |
+| 0.5-0.6 | 2266 | 0.547 | 0.541 |
+| 0.6-0.7 | 1397 | 0.644 | 0.635 |
+| 0.7-0.8 | 557 | 0.741 | 0.743 |
+| 0.8-0.9 | 83 | 0.829 | 0.916 |
+| 0.9-1.0 | 2 | 0.911 | 0.5 |
+
+### Out-of-fold, every game (5 folds by draft)
+
+56900 games from 56900 drafts.
+
+| model | log-loss | Brier | accuracy | ECE | log-loss minus coin [95% CI, bootstrap over drafts] |
+|---|---|---|---|---|---|
+| (a) coin | 0.6926 | 0.2497 | 0.516 | 0.002 |  |
+| (b) additive: Bradley-Terry on cards | 0.6542 | 0.2313 | 0.610 | 0.004 | -0.0385 [-0.0405, -0.0363] |
+| (c) per-cube shrunk win rates (meta.json) | 0.6710 | 0.2392 | 0.582 | 0.010 | -0.0217 [-0.0235, -0.0198] |
+| M0 pooled BT + feature prior | 0.6540 | 0.2312 | 0.609 | 0.005 | -0.0386 [-0.0407, -0.0365] |
+| M1 = M0 + per-cube deviations | 0.6531 | 0.2308 | 0.610 | 0.005 | -0.0395 [-0.0416, -0.0374] |
+
+### Out-of-fold, in-cube games
+
+45517 games from 45517 drafts.
+
+| model | log-loss | Brier | accuracy | ECE | log-loss minus coin [95% CI, bootstrap over drafts] |
+|---|---|---|---|---|---|
+| (a) coin | 0.6927 | 0.2498 | 0.515 | 0.003 |  |
+| (b) additive: Bradley-Terry on cards | 0.6541 | 0.2312 | 0.609 | 0.006 | -0.0386 [-0.0411, -0.0362] |
+| (c) per-cube shrunk win rates (meta.json) | 0.6702 | 0.2389 | 0.583 | 0.012 | -0.0225 [-0.0245, -0.0205] |
+| M0 pooled BT + feature prior | 0.6539 | 0.2312 | 0.608 | 0.007 | -0.0388 [-0.0412, -0.0364] |
+| M1 = M0 + per-cube deviations | 0.6528 | 0.2306 | 0.610 | 0.006 | -0.0400 [-0.0424, -0.0375] |
+
+### Out-of-fold, bridge games
+
+11383 games from 11383 drafts.
+
+| model | log-loss | Brier | accuracy | ECE | log-loss minus coin [95% CI, bootstrap over drafts] |
+|---|---|---|---|---|---|
+| (a) coin | 0.6923 | 0.2496 | 0.522 | 0.006 |  |
+| (b) additive: Bradley-Terry on cards | 0.6545 | 0.2314 | 0.613 | 0.005 | -0.0378 [-0.0426, -0.0329] |
+| (c) per-cube shrunk win rates (meta.json) | 0.6740 | 0.2406 | 0.577 | 0.009 | -0.0183 [-0.0218, -0.0148] |
+| M0 pooled BT + feature prior | 0.6542 | 0.2312 | 0.613 | 0.004 | -0.0381 [-0.0429, -0.0331] |
+| M1 = M0 + per-cube deviations | 0.6544 | 0.2313 | 0.612 | 0.006 | -0.0379 [-0.0428, -0.0329] |
+
+## Cubes held out entirely
+
+A fit with every game touching the cube removed (its drafts and its bridges), scored on all of the cube's in-cube games. Its cards are known only from other cubes' games and from their features. (c) cannot rate an unseen cube.
+
+| cube | games | drafts | coin | additive | M0 | M1 | M0 minus coin [95% CI] |
+|---|---|---|---|---|---|---|---|
+| fair-fight | 5745 | 5745 | 0.6933 | 0.6727 | 0.6713 | 0.6714 | -0.0220 [-0.0279, -0.0162] |
+| modern-era | 5781 | 5781 | 0.6934 | 0.6743 | 0.6726 | 0.6735 | -0.0208 [-0.0259, -0.0161] |
+| omega | 5214 | 5214 | 0.6925 | 0.7163 | 0.7142 | 0.7143 | +0.0217 [+0.0137, +0.0302] |
+| pauper | 8314 | 8314 | 0.6932 | 0.6626 | 0.6601 | 0.6599 | -0.0331 [-0.0372, -0.0286] |
+| peasant | 8325 | 8325 | 0.6920 | 0.6685 | 0.6669 | 0.6668 | -0.0251 [-0.0303, -0.0197] |
+| synergy | 6971 | 6971 | 0.6922 | 0.6235 | 0.6245 | 0.6247 | -0.0677 [-0.0732, -0.0623] |
+| vintage | 5167 | 5167 | 0.6931 | 0.6921 | 0.6899 | 0.6919 | -0.0033 [-0.0114, +0.0049] |
+
+## Balance: the predicted win-rate spread of the decks each cube produces
+
+Every deck the cube produced in the data, against the cube's other decks (at most 400 of them), play and draw averaged; the SD across decks in win-rate points. **SD** is de-biased for shrinkage (D342): sqrt of the mean, over 200 draws from M1's Laplace posterior, of the squared SD, with the 2.5-97.5% of the draws as its interval. **Shrunk** is the old number, the SD of the MAP's predictions, which is biased toward "balanced" by an amount that depends on the games a cube has. **Reliability** = shrunk^2 / SD^2, the share of the spread the data has pinned down: **compare two cubes only when their reliabilities are alike** -- otherwise the ranking is partly a ranking by sample size.
+
+| cube | decks | SD (points) | 95% interval | shrunk | reliability | a deck's posterior SD | best deck | worst deck |
+|---|---|---|---|---|---|---|---|---|
+| fair-fight | 11490 | 7.6 | 7.1-8.1 | 6.9 | 0.83 | 3.2 | 74.1% | 27.2% |
+| modern-era | 11562 | 8.7 | 8.1-9.2 | 8.1 | 0.88 | 3.2 | 75.4% | 24.4% |
+| omega | 10428 | 6.4 | 5.8-6.9 | 5.5 | 0.75 | 3.3 | 70.5% | 31.7% |
+| pauper | 16628 | 8.3 | 7.8-8.7 | 7.8 | 0.88 | 3.0 | 76.8% | 20.6% |
+| peasant | 16650 | 9.1 | 8.6-9.5 | 8.6 | 0.90 | 3.2 | 76.5% | 21.7% |
+| synergy | 13942 | 12.2 | 11.6-12.6 | 11.9 | 0.96 | 2.8 | 83.7% | 20.1% |
+| vintage | 10334 | 8.2 | 7.7-8.7 | 7.6 | 0.86 | 3.2 | 73.1% | 25.0% |
+
+## Bridge decks: how much of each deck came from each cube
+
+`first` is the pair's lower-power cube (queue.ts orders pairs that way). A share near 0 means the drafters took the stronger cube's cards.
+
+| pair | decks | mean share from first cube | decks >75% one side | distinct cards played per cube |
+|---|---|---|---|---|
+| fair-fight+modern-era | 1474 | 0.551 | 9 | {'fair-fight': 177, 'modern-era': 160} |
+| fair-fight+omega | 952 | 0.509 | 0 | {'fair-fight': 165, 'omega': 161} |
+| fair-fight+peasant | 628 | 0.517 | 0 | {'fair-fight': 169, 'peasant': 164} |
+| fair-fight+synergy | 1414 | 0.475 | 0 | {'fair-fight': 171, 'synergy': 163} |
+| fair-fight+vintage | 1038 | 0.479 | 5 | {'fair-fight': 167, 'vintage': 157} |
+| modern-era+omega | 940 | 0.464 | 3 | {'modern-era': 167, 'omega': 170} |
+| modern-era+synergy | 498 | 0.427 | 4 | {'modern-era': 155, 'synergy': 167} |
+| modern-era+vintage | 1004 | 0.438 | 10 | {'modern-era': 171, 'vintage': 169} |
+| pauper+modern-era | 1832 | 0.547 | 8 | {'pauper': 176, 'modern-era': 169} |
+| pauper+omega | 1248 | 0.502 | 3 | {'pauper': 169, 'omega': 161} |
+| pauper+peasant | 712 | 0.515 | 0 | {'pauper': 164, 'peasant': 169} |
+| pauper+synergy | 1778 | 0.467 | 4 | {'pauper': 173, 'synergy': 162} |
+| pauper+vintage | 1254 | 0.473 | 5 | {'pauper': 167, 'vintage': 160} |
+| peasant+modern-era | 1618 | 0.543 | 3 | {'peasant': 175, 'modern-era': 169} |
+| peasant+omega | 1080 | 0.49 | 2 | {'peasant': 172, 'omega': 167} |
+| peasant+synergy | 1652 | 0.459 | 7 | {'peasant': 175, 'synergy': 168} |
+| peasant+vintage | 1090 | 0.465 | 4 | {'peasant': 169, 'vintage': 163} |
+| synergy+omega | 1288 | 0.537 | 3 | {'synergy': 164, 'omega': 170} |
+| synergy+vintage | 1266 | 0.503 | 7 | {'synergy': 167, 'vintage': 167} |
+
+## Overlap
+
+```
+{
+ "cubes": 7,
+ "cardSlots": 1260,
+ "distinctCards": 722,
+ "slotsPerCard": 1.745,
+ "games": 56900,
+ "gamesWithASharedCard": 56900,
+ "cardGames": 2816288,
+ "sharedCardGames": 1927921,
+ "sharedShare": 0.6846,
+ "cubeSlotsInformedPerCardGame": 2.814,
+ "gamesNeededRatio": 0.573
+}
+```
+
+## Strongest and weakest cards (M0 power; x25 for win-rate points)
+
+AI-limited cards are not ranked (D343). sdPost is the posterior SD; act on a card only where it is below about tau/2 (review 2, N7).
+
+| card | power | sdPost | sdBoot | prior | games | cubes |
+|---|---|---|---|---|---|---|
+| Sheoldred, the Apocalypse | +0.226 | 0.031 | 0.024 | +0.078 | 7304 | modern-era,omega,vintage |
+| Nissa, Who Shakes the World | +0.213 | 0.032 | 0.027 | +0.031 | 5155 | modern-era,omega,vintage |
+| Elder Gargaroth | +0.191 | 0.040 | 0.031 | +0.117 | 2567 | modern-era |
+| Sower of Temptation | +0.186 | 0.033 | 0.026 | +0.029 | 3853 | omega |
+| Sword of Fire and Ice | +0.164 | 0.029 | 0.020 | +0.021 | 4227 | modern-era,omega |
+| Urza, Lord High Artificer | +0.154 | 0.033 | 0.021 | +0.040 | 4031 | vintage |
+| Marauding Sphinx | +0.149 | 0.048 | 0.039 | +0.080 | 1026 | peasant |
+| Whirler Rogue | +0.135 | 0.034 | 0.020 | +0.030 | 3434 | peasant |
+| Retrofitter Foundry | +0.131 | 0.019 | 0.017 | -0.020 | 11426 | synergy,vintage |
+| Wurmcoil Engine | +0.124 | 0.017 | 0.021 | +0.070 | 14212 | modern-era,omega,vintage |
+| Consecrated Sphinx | +0.124 | 0.034 | 0.025 | +0.029 | 3407 | omega |
+| Sentinel of the Nameless City | +0.119 | 0.034 | 0.021 | +0.040 | 3173 | fair-fight |
+| Momentary Blink | -0.134 | 0.036 | 0.027 | -0.050 | 2943 | fair-fight,pauper |
+| Krosan Tusker | -0.144 | 0.046 | 0.036 | -0.050 | 1328 | fair-fight,pauper |
+| Spellstutter Sprite | -0.149 | 0.021 | 0.022 | +0.008 | 10304 | fair-fight,pauper |
+| Sneak Attack | -0.152 | 0.040 | 0.031 | -0.011 | 2199 | vintage |
+| Unbreakable Formation | -0.155 | 0.044 | 0.033 | -0.022 | 1231 | fair-fight |
+| Collective Brutality | -0.193 | 0.035 | 0.033 | -0.051 | 3955 | modern-era,vintage |
+
+AI-limited, not rated (22 with games): Adanto Vanguard · Beast Within · Bogardan Dragonheart · Chromatic Star · Embercleave · Faithless Looting · Fireblade Artist · Ghostly Flicker · Goblin Bombardment · Goblin Welder · Mishra's Bauble · Mystic Confluence · Prismatic Ending · Prismatic Strands · Prophetic Prism · Spawning Pit · Sylvan Library · Tortured Existence · Toxic Deluge · Utopia Sprawl · Viscera Seer · Waker of Waves
+

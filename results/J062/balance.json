@@ -1,0 +1,575 @@
+{
+ "sample": {
+  "games": 56900,
+  "bridgeGames": 11383,
+  "drafts": 56900,
+  "train": 39781,
+  "val": 8421,
+  "test": 8698
+ },
+ "taus": {
+  "m0": [
+   0.06,
+   0.003,
+   1.0
+  ],
+  "m1": [
+   0.06,
+   0.003,
+   0.03
+  ],
+  "bt": [
+   0.07,
+   1.0,
+   1.0
+  ]
+ },
+ "test": {
+  "(a) coin": {
+   "n": 8698,
+   "logloss": 0.692577827864756,
+   "brier": 0.24971537700767377,
+   "acc": 0.5169004368820419,
+   "ece": 0.011084162450719052
+  },
+  "(b) additive: Bradley-Terry on cards": {
+   "n": 8698,
+   "logloss": 0.6526158771923076,
+   "brier": 0.23051283125952338,
+   "acc": 0.6158887100482869,
+   "ece": 0.011128296232395423
+  },
+  "(c) per-cube shrunk win rates (meta.json)": {
+   "n": 8698,
+   "logloss": 0.669013294606299,
+   "brier": 0.23830849193984546,
+   "acc": 0.5793285812830535,
+   "ece": 0.012799338667968934
+  },
+  "M0 pooled BT + feature prior": {
+   "n": 8698,
+   "logloss": 0.6524854716132917,
+   "brier": 0.2304532043033487,
+   "acc": 0.6153138652563808,
+   "ece": 0.011681443083697023
+  },
+  "M1 = M0 + per-cube deviations": {
+   "n": 8698,
+   "logloss": 0.6521140484112411,
+   "brier": 0.23028691211064198,
+   "acc": 0.6150839273396183,
+   "ece": 0.012129840990099524
+  }
+ },
+ "heldOutCubes": {
+  "fair-fight": {
+   "games": 5745,
+   "drafts": 5745,
+   "logloss": {
+    "(a) coin": 0.6932812381053407,
+    "(b) additive: Bradley-Terry on cards": 0.6726513010888105,
+    "M0 pooled BT + feature prior": 0.6712756851155293,
+    "M1 = M0 + per-cube deviations": 0.6714239114124959
+   },
+   "m0VsCoin": [
+    -0.022005552989811546,
+    -0.027921346962007355,
+    -0.01623562087741778
+   ]
+  },
+  "modern-era": {
+   "games": 5781,
+   "drafts": 5781,
+   "logloss": {
+    "(a) coin": 0.6933892585660557,
+    "(b) additive: Bradley-Terry on cards": 0.6742917103242599,
+    "M0 pooled BT + feature prior": 0.672613096757062,
+    "M1 = M0 + per-cube deviations": 0.6734944001697413
+   },
+   "m0VsCoin": [
+    -0.020776161808993682,
+    -0.025914967747290046,
+    -0.016052526890473772
+   ]
+  },
+  "omega": {
+   "games": 5214,
+   "drafts": 5214,
+   "logloss": {
+    "(a) coin": 0.6925457608504366,
+    "(b) additive: Bradley-Terry on cards": 0.716259397636744,
+    "M0 pooled BT + feature prior": 0.7142011094238319,
+    "M1 = M0 + per-cube deviations": 0.7143013161928686
+   },
+   "m0VsCoin": [
+    0.02165534857339514,
+    0.013748616148684173,
+    0.030169605718488337
+   ]
+  },
+  "pauper": {
+   "games": 8314,
+   "drafts": 8314,
+   "logloss": {
+    "(a) coin": 0.6932184024931056,
+    "(b) additive: Bradley-Terry on cards": 0.6626249278749201,
+    "M0 pooled BT + feature prior": 0.6601459784160404,
+    "M1 = M0 + per-cube deviations": 0.6598842016270245
+   },
+   "m0VsCoin": [
+    -0.0330724240770653,
+    -0.03717070499488379,
+    -0.028603021401044686
+   ]
+  },
+  "peasant": {
+   "games": 8325,
+   "drafts": 8325,
+   "logloss": {
+    "(a) coin": 0.6920124253837632,
+    "(b) additive: Bradley-Terry on cards": 0.6684758314606785,
+    "M0 pooled BT + feature prior": 0.6669322848349285,
+    "M1 = M0 + per-cube deviations": 0.6667904206361261
+   },
+   "m0VsCoin": [
+    -0.025080140548834458,
+    -0.030325893449668663,
+    -0.019744536657682263
+   ]
+  },
+  "synergy": {
+   "games": 6971,
+   "drafts": 6971,
+   "logloss": {
+    "(a) coin": 0.692182460483741,
+    "(b) additive: Bradley-Terry on cards": 0.6235425367630921,
+    "M0 pooled BT + feature prior": 0.6245301434957299,
+    "M1 = M0 + per-cube deviations": 0.6247157560568607
+   },
+   "m0VsCoin": [
+    -0.06765231698801097,
+    -0.07316984888821285,
+    -0.062315835806351236
+   ]
+  },
+  "vintage": {
+   "games": 5167,
+   "drafts": 5167,
+   "logloss": {
+    "(a) coin": 0.69313860207104,
+    "(b) additive: Bradley-Terry on cards": 0.692116082707613,
+    "M0 pooled BT + feature prior": 0.689863730713949,
+    "M1 = M0 + per-cube deviations": 0.6919369422084919
+   },
+   "m0VsCoin": [
+    -0.003274871357090976,
+    -0.011351023813478293,
+    0.0049279224383991195
+   ]
+  }
+ },
+ "outOfFold": {
+  "(a) coin": {
+   "n": 56900,
+   "logloss": 0.6926392858380744,
+   "brier": 0.24974609400845177,
+   "acc": 0.5160105448154657,
+   "ece": 0.002401732327915524
+  },
+  "(b) additive: Bradley-Terry on cards": {
+   "n": 56900,
+   "logloss": 0.6541687139499364,
+   "brier": 0.23125347637616842,
+   "acc": 0.6098945518453427,
+   "ece": 0.004489329836223477
+  },
+  "(c) per-cube shrunk win rates (meta.json)": {
+   "n": 56900,
+   "logloss": 0.6709515264708777,
+   "brier": 0.23920979049997707,
+   "acc": 0.5820035149384886,
+   "ece": 0.009585278880884498
+  },
+  "M0 pooled BT + feature prior": {
+   "n": 56900,
+   "logloss": 0.6539916131114173,
+   "brier": 0.2311708994300742,
+   "acc": 0.6093497363796133,
+   "ece": 0.005086428337035628
+  },
+  "M1 = M0 + per-cube deviations": {
+   "n": 56900,
+   "logloss": 0.6530945056789759,
+   "brier": 0.23077603678138303,
+   "acc": 0.6102284710017575,
+   "ece": 0.00514207986627156
+  }
+ },
+ "balance": {
+  "fair-fight": {
+   "decks": 11490,
+   "sd": 0.07592827323836321,
+   "iqr": 0.0974365488833453,
+   "best": 0.740651811676233,
+   "worst": 0.27163844013605226,
+   "sdShrunk": 0.0692476313885516,
+   "sdLo": 0.07095704484622817,
+   "sdHi": 0.0810261090273651,
+   "deckSdPost": 0.032148112444845375,
+   "reliability": 0.8317691325930859,
+   "draws": 200
+  },
+  "modern-era": {
+   "decks": 11562,
+   "sd": 0.0867354900580495,
+   "iqr": 0.11117199586656024,
+   "best": 0.7539885330738508,
+   "worst": 0.24387898637385327,
+   "sdShrunk": 0.08135594920133814,
+   "sdLo": 0.08121571657612849,
+   "sdHi": 0.09203590727491975,
+   "deckSdPost": 0.03204989201414224,
+   "reliability": 0.8798020300504055,
+   "draws": 200
+  },
+  "omega": {
+   "decks": 10428,
+   "sd": 0.06364729140732209,
+   "iqr": 0.07532655915549075,
+   "best": 0.7050623699499923,
+   "worst": 0.3174281672853441,
+   "sdShrunk": 0.054978066411283076,
+   "sdLo": 0.05845416578478201,
+   "sdHi": 0.06859394068624339,
+   "deckSdPost": 0.03314047576315384,
+   "reliability": 0.7461378480855358,
+   "draws": 200
+  },
+  "pauper": {
+   "decks": 16628,
+   "sd": 0.08279562141890065,
+   "iqr": 0.10597392531579497,
+   "best": 0.7679884911575,
+   "worst": 0.2062134524158858,
+   "sdShrunk": 0.07758663021773944,
+   "sdLo": 0.07847522348577186,
+   "sdHi": 0.08701908661083996,
+   "deckSdPost": 0.02968742783383411,
+   "reliability": 0.878130454908673,
+   "draws": 200
+  },
+  "peasant": {
+   "decks": 16650,
+   "sd": 0.0907456182006341,
+   "iqr": 0.12178810525597505,
+   "best": 0.7649299206724851,
+   "worst": 0.21677202135655235,
+   "sdShrunk": 0.08586755197804485,
+   "sdLo": 0.08583234225755863,
+   "sdHi": 0.09489224195263425,
+   "deckSdPost": 0.031846815367797175,
+   "reliability": 0.8953788593383687,
+   "draws": 200
+  },
+  "synergy": {
+   "decks": 13942,
+   "sd": 0.12156628256334036,
+   "iqr": 0.19310603820258393,
+   "best": 0.8374955487145728,
+   "worst": 0.2011433794275853,
+   "sdShrunk": 0.11892022770144957,
+   "sdLo": 0.11616025612455631,
+   "sdHi": 0.12587449076394872,
+   "deckSdPost": 0.02766231797338898,
+   "reliability": 0.9569410642166357,
+   "draws": 200
+  },
+  "vintage": {
+   "decks": 10334,
+   "sd": 0.08182971437272335,
+   "iqr": 0.10626209579696755,
+   "best": 0.730509895559903,
+   "worst": 0.24962070301948217,
+   "sdShrunk": 0.07583029568151574,
+   "sdLo": 0.07727259397204427,
+   "sdHi": 0.08654684053598383,
+   "deckSdPost": 0.03200923484208464,
+   "reliability": 0.8587434317194602,
+   "draws": 200
+  }
+ },
+ "bridge": {
+  "fair-fight+modern-era": {
+   "decks": 1474,
+   "firstCubeShareMean": 0.551,
+   "decksOver75FromOneSide": 9,
+   "distinctCardsPlayed": {
+    "fair-fight": 177,
+    "modern-era": 160
+   }
+  },
+  "fair-fight+omega": {
+   "decks": 952,
+   "firstCubeShareMean": 0.509,
+   "decksOver75FromOneSide": 0,
+   "distinctCardsPlayed": {
+    "fair-fight": 165,
+    "omega": 161
+   }
+  },
+  "fair-fight+peasant": {
+   "decks": 628,
+   "firstCubeShareMean": 0.517,
+   "decksOver75FromOneSide": 0,
+   "distinctCardsPlayed": {
+    "fair-fight": 169,
+    "peasant": 164
+   }
+  },
+  "fair-fight+synergy": {
+   "decks": 1414,
+   "firstCubeShareMean": 0.475,
+   "decksOver75FromOneSide": 0,
+   "distinctCardsPlayed": {
+    "fair-fight": 171,
+    "synergy": 163
+   }
+  },
+  "fair-fight+vintage": {
+   "decks": 1038,
+   "firstCubeShareMean": 0.479,
+   "decksOver75FromOneSide": 5,
+   "distinctCardsPlayed": {
+    "fair-fight": 167,
+    "vintage": 157
+   }
+  },
+  "modern-era+omega": {
+   "decks": 940,
+   "firstCubeShareMean": 0.464,
+   "decksOver75FromOneSide": 3,
+   "distinctCardsPlayed": {
+    "modern-era": 167,
+    "omega": 170
+   }
+  },
+  "modern-era+synergy": {
+   "decks": 498,
+   "firstCubeShareMean": 0.427,
+   "decksOver75FromOneSide": 4,
+   "distinctCardsPlayed": {
+    "modern-era": 155,
+    "synergy": 167
+   }
+  },
+  "modern-era+vintage": {
+   "decks": 1004,
+   "firstCubeShareMean": 0.438,
+   "decksOver75FromOneSide": 10,
+   "distinctCardsPlayed": {
+    "modern-era": 171,
+    "vintage": 169
+   }
+  },
+  "pauper+modern-era": {
+   "decks": 1832,
+   "firstCubeShareMean": 0.547,
+   "decksOver75FromOneSide": 8,
+   "distinctCardsPlayed": {
+    "pauper": 176,
+    "modern-era": 169
+   }
+  },
+  "pauper+omega": {
+   "decks": 1248,
+   "firstCubeShareMean": 0.502,
+   "decksOver75FromOneSide": 3,
+   "distinctCardsPlayed": {
+    "pauper": 169,
+    "omega": 161
+   }
+  },
+  "pauper+peasant": {
+   "decks": 712,
+   "firstCubeShareMean": 0.515,
+   "decksOver75FromOneSide": 0,
+   "distinctCardsPlayed": {
+    "pauper": 164,
+    "peasant": 169
+   }
+  },
+  "pauper+synergy": {
+   "decks": 1778,
+   "firstCubeShareMean": 0.467,
+   "decksOver75FromOneSide": 4,
+   "distinctCardsPlayed": {
+    "pauper": 173,
+    "synergy": 162
+   }
+  },
+  "pauper+vintage": {
+   "decks": 1254,
+   "firstCubeShareMean": 0.473,
+   "decksOver75FromOneSide": 5,
+   "distinctCardsPlayed": {
+    "pauper": 167,
+    "vintage": 160
+   }
+  },
+  "peasant+modern-era": {
+   "decks": 1618,
+   "firstCubeShareMean": 0.543,
+   "decksOver75FromOneSide": 3,
+   "distinctCardsPlayed": {
+    "peasant": 175,
+    "modern-era": 169
+   }
+  },
+  "peasant+omega": {
+   "decks": 1080,
+   "firstCubeShareMean": 0.49,
+   "decksOver75FromOneSide": 2,
+   "distinctCardsPlayed": {
+    "peasant": 172,
+    "omega": 167
+   }
+  },
+  "peasant+synergy": {
+   "decks": 1652,
+   "firstCubeShareMean": 0.459,
+   "decksOver75FromOneSide": 7,
+   "distinctCardsPlayed": {
+    "peasant": 175,
+    "synergy": 168
+   }
+  },
+  "peasant+vintage": {
+   "decks": 1090,
+   "firstCubeShareMean": 0.465,
+   "decksOver75FromOneSide": 4,
+   "distinctCardsPlayed": {
+    "peasant": 169,
+    "vintage": 163
+   }
+  },
+  "synergy+omega": {
+   "decks": 1288,
+   "firstCubeShareMean": 0.537,
+   "decksOver75FromOneSide": 3,
+   "distinctCardsPlayed": {
+    "synergy": 164,
+    "omega": 170
+   }
+  },
+  "synergy+vintage": {
+   "decks": 1266,
+   "firstCubeShareMean": 0.503,
+   "decksOver75FromOneSide": 7,
+   "distinctCardsPlayed": {
+    "synergy": 167,
+    "vintage": 167
+   }
+  }
+ },
+ "overlap": {
+  "cubes": 7,
+  "cardSlots": 1260,
+  "distinctCards": 722,
+  "slotsPerCard": 1.745,
+  "games": 56900,
+  "gamesWithASharedCard": 56900,
+  "cardGames": 2816288,
+  "sharedCardGames": 1927921,
+  "sharedShare": 0.6846,
+  "cubeSlotsInformedPerCardGame": 2.814,
+  "gamesNeededRatio": 0.573
+ },
+ "reserved": {
+  "games": 0,
+  "decks": {}
+ },
+ "versions": {
+  "7951c64910f0": 259,
+  "cb8c9422aa36": 262,
+  "410a9f1ff3d3": 216,
+  "3d8317d580f5": 172,
+  "7d28279b255a": 168,
+  "e6d3136b7c51": 136,
+  "b24f5ce1dd55": 110,
+  "d33b5598b2c2": 111,
+  "bba97678b5f3": 93,
+  "549af8151a00": 238,
+  "a17cc166ed9c": 252,
+  "780e9251ce63": 217,
+  "4c6db1cd22ac": 192,
+  "edbe34f8c8c2": 177,
+  "7b68d3279036": 150,
+  "58c1a435536a": 174,
+  "5a8f4691cdeb": 164,
+  "f41330bc2380": 132,
+  "bbe420510a3e": 86,
+  "4cd7f1b5f21c": 89,
+  "b538f6120993": 74,
+  "ef4f4f69be46": 193,
+  "f50edf5859cb": 168,
+  "4d489bdfe6fc": 141,
+  "3268aba6bc62": 308,
+  "a55d7666b9ad": 332,
+  "87145dd16ee2": 276,
+  "22e2d10c1f31": 214,
+  "1bdf08b0307b": 223,
+  "c5ce4b25753d": 187,
+  "16299d2db66b": 116,
+  "a08656d9deb3": 132,
+  "792249248766": 108,
+  "a813fe263c19": 279,
+  "84743def3b2d": 327,
+  "b76bf43cd8a6": 283,
+  "d03d56e3c09d": 219,
+  "7325a47fae61": 221,
+  "ec8e28e9ec08": 187,
+  "e16ad065bee2": 298,
+  "3d82ac9bb608": 278,
+  "3c068a846f74": 233,
+  "a32da4d980b4": 202,
+  "73f9ea2a9e6d": 182,
+  "98e581e49464": 156,
+  "614e801b7548": 287,
+  "3b446c9f0196": 290,
+  "94af37d798d2": 249,
+  "b875654a0c18": 209,
+  "048b63117d72": 180,
+  "d947d26bc674": 156,
+  "4e4f77eaeb83": 221,
+  "b175b9ae864e": 225,
+  "f649ec734f7c": 198,
+  "591750118db6": 223,
+  "58d831539773": 218,
+  "791adee50cb7": 192,
+  "48bac64aa4a0": 1980,
+  "413bc3d6efeb": 2080,
+  "e5cb4c72d4f5": 1685,
+  "64ebf7ebd1fc": 2111,
+  "c9a984a032f6": 2034,
+  "ad8faa6623cd": 1636,
+  "7cb13252703a": 1878,
+  "9ec06c7c7820": 1794,
+  "b215b9c488f4": 1542,
+  "46213876aec8": 2555,
+  "e3f3371358fe": 3141,
+  "cc7efb199e87": 2618,
+  "e4c1d36daaee": 3189,
+  "e44397143492": 2772,
+  "d73cf4eafc22": 2364,
+  "d1a920eb3155": 2207,
+  "c8861eba0ec1": 2519,
+  "131c2207096e": 2245,
+  "f344baeba973": 2073,
+  "800e5a09bcda": 1656,
+  "3364108f8368": 1438
+ },
+ "aiLimited": {
+  "cards": 22,
+  "coef": -0.20651625911087954
+ }
+}
