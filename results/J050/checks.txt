@@ -1,0 +1,4 @@
+PASS  set.lines >= 240   [set.lines = 291]
+PASS  truth.answered == set.lines   [truth.answered = 291, set.lines = 291]
+PASS  truth.ok >= set.lines * 0.8   [truth.ok = 291, set.lines = 291]
+PASS  truth.refused == 0   [truth.refused = 0]

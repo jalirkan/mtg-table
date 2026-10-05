@@ -1,0 +1,79 @@
+{
+ "gate": "regret",
+ "step": "candidates",
+ "rule": {
+  "perType": 100,
+  "types": [
+   "spell",
+   "attack",
+   "block"
+  ],
+  "candidatesPerType": 130,
+  "salt": "gate2-v1",
+  "onePerGameAndType": true,
+  "truthSeed": 20261004,
+  "truthPlayouts": 200,
+  "truthInitial": 40,
+  "truthBatch": 20,
+  "truthBudgetMs": 2400000,
+  "truthTimeoutMs": 180000,
+  "cap": 12,
+  "rankSeed": 1,
+  "rankHorizon": 0,
+  "rankRounds": 3,
+  "rankRoundsSecondary": 12,
+  "leafScale": 500,
+  "bootstrap": 10000,
+  "ci": 0.95,
+  "bootSeed": 20261004,
+  "minScored": 240
+ },
+ "model": "var/ml/models/night-1-eval.json",
+ "modelSha12": "7ac722a95597",
+ "data": "var/ml/data/night-1",
+ "splitBy": "pair",
+ "testPairs": 333,
+ "logs": [
+  "var/cubelab/queue"
+ ],
+ "counts": {
+  "log not in the model's test split (not read)": 74592,
+  "games": 3929,
+  "bridge draft (left out)": 664,
+  "eligible spell": 108698,
+  "eligible attack": 18404,
+  "eligible block": 5942
+ },
+ "eligible": 986,
+ "picked": {
+  "attack": 130,
+  "spell": 130,
+  "block": 130
+ },
+ "candidatesSha": "d5e5d3d68569904b0dca1db197bfde53e2e66b78880c0cf10381f79c70ca7230",
+ "versions": {
+  "d1a920eb3155": 51,
+  "f344baeba973": 50,
+  "64ebf7ebd1fc": 44,
+  "48bac64aa4a0": 59,
+  "e4c1d36daaee": 66,
+  "46213876aec8": 81,
+  "7cb13252703a": 39
+ },
+ "reservedChecked": true,
+ "select": {
+  "set": "var/ml/gates/regret/set.jsonl",
+  "setSha": "032a747058d1ad25e8facb7e50b3e60ce3d0daeee9244c9a7e999734a1c294f9",
+  "perType": {
+   "attack": 100,
+   "spell": 91,
+   "block": 100
+  },
+  "screenStatus": {
+   "ok": 344,
+   "unsupported": 40,
+   "trivial": 6
+  },
+  "screen": "var/ml/gates/regret/rank-hand-3.jsonl"
+ }
+}

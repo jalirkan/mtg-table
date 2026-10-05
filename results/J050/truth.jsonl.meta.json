@@ -1,0 +1,33 @@
+{
+ "gate": "regret",
+ "mode": "truth",
+ "serveFlags": [
+  "--playouts",
+  "200",
+  "--initial",
+  "40",
+  "--batch",
+  "20",
+  "--horizon",
+  "-1",
+  "--budget-ms",
+  "2400000",
+  "--timeout-ms",
+  "180000",
+  "--cap",
+  "12",
+  "--seed",
+  "20261004"
+ ],
+ "extra": {},
+ "requests": "var/ml/gates/regret/set.jsonl",
+ "requestsSha": "032a747058d1ad25e8facb7e50b3e60ce3d0daeee9244c9a7e999734a1c294f9",
+ "modelSha": null,
+ "version": {
+  "head": "7e48088a4c070bcfc0ecd6c25100e04840aa6bc8",
+  "bridgeTree": "dc7c308ea52b2663602fc2407b905bf694945c64",
+  "bridgeDirty": false,
+  "jarSha": null
+ },
+ "changes": []
+}

@@ -1,0 +1,23 @@
+{
+ "set.lines": 291,
+ "screen.answered": 390,
+ "screen.ok": 344,
+ "screen.unsupported": 40,
+ "screen.trivial": 6,
+ "screen.error": 0,
+ "screen.refused": 0,
+ "screen.requests": 390,
+ "screen.playouts": 5649,
+ "truth.answered": 291,
+ "truth.ok": 291,
+ "truth.error": 0,
+ "truth.unsupported": 0,
+ "truth.trivial": 0,
+ "truth.refused": 0,
+ "truth.requests": 291,
+ "truth.playouts": 233204,
+ "elapsed_s": 29490,
+ "workers": 6,
+ "pressure_events": 0,
+ "peak_worker_rss_gb": 1.64
+}
