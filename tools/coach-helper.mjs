@@ -129,12 +129,22 @@
 //
 // WHO MAY CALL IT (amendments M50 and M51's rules, applied to this port):
 //
-//   - It binds 127.0.0.1; with --lan, 0.0.0.0, and then every request from a
-//     non-loopback peer must carry the pairing token -- `?token=<T>` or the header
-//     `X-ForgeCoach-Token` -- or is 403.  Compared as SHA-256 digests with
-//     crypto.timingSafeEqual; never logged (a logged path is cut at its `?`).
-//     A loopback peer never needs it.  An OPTIONS preflight needs no token (a
-//     browser cannot add one to it), only an allowed Origin.
+//   - It binds 127.0.0.1, and (D386) refuses 403 any request whose socket's
+//     remote address is not loopback, whatever the bind; with --lan it binds
+//     0.0.0.0, and then every request from a non-loopback peer must carry the
+//     pairing token -- `?token=<T>` or the header `X-ForgeCoach-Token` -- or is
+//     403.  Compared as SHA-256 digests with crypto.timingSafeEqual; never logged
+//     (a logged path is cut at its `?`).  A loopback peer never needs it.  An
+//     OPTIONS preflight needs no token (a browser cannot add one to it), only an
+//     allowed Origin.
+//   - Host (D386): a loopback peer's Host must be localhost (or *.localhost) or a
+//     loopback IP literal (127.0.0.0/8, [::1], [::ffff:127.x.x.x]), any valid
+//     port; anything else is 403 -- a page that rebound its name to 127.0.0.1,
+//     whose same-origin GETs carry no Origin, a tunnel's hostname, or a port
+//     relay (socat, ssh -L) that kept its client's Host.  admit() is the whole
+//     door as one decision.  Both refusals' messages start "origin refused:" so a
+//     client that sorts refusals by the word "origin" (ForgeCoach's
+//     refusedMessage) does not call them a token problem.
 //   - Origin: allowed if it matches config.json's `wsAllowedOrigins` (the bridge's
 //     M50 list, read the same way: MTG_TABLE_CONFIG, else the repo's config.json;
 //     default http://127.0.0.1:*, http://localhost:*, https://jalirkan.github.io).
@@ -175,6 +185,7 @@ import { execFile, spawn } from 'node:child_process';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { BlockList, isIP } from 'node:net';
 import { availableParallelism, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -258,6 +269,63 @@ export function tokenMatches(given, token) {
   if (typeof given !== 'string' || typeof token !== 'string' || token === '') return false;
   const d = (s) => createHash('sha256').update(s, 'utf8').digest();
   return timingSafeEqual(d(given), d(token));
+}
+
+/**
+ * D386: a Host header a LOOPBACK peer may send -- `localhost` (or a name under
+ * `.localhost`, which browsers resolve to loopback themselves), or a LOOPBACK
+ * IP literal (`127.0.0.0/8`, `[::1]`, `[::ffff:127.x.x.x]`), with an optional
+ * port of at most 65535.  A DNS name is refused: from a loopback peer it is
+ * either a page that rebound its own name to 127.0.0.1 (a same-origin GET
+ * carries no Origin, so the Origin rule alone let it read /health, /match and
+ * /review) or a tunnel's public hostname, and neither may reach this port.  Any
+ * other IP literal (`192.168.1.5:9000`, `0.0.0.0`) is refused too: a port relay
+ * (socat, `ssh -L`) also arrives from loopback, and keeps the Host its client
+ * typed.  A missing Host is refused.
+ */
+const LOOPBACK_IPS = new BlockList();
+LOOPBACK_IPS.addSubnet('127.0.0.0', 8, 'ipv4');
+LOOPBACK_IPS.addAddress('::1', 'ipv6');   // also matches ::ffff:127.x.x.x
+
+export function loopbackHostOk(hostHeader) {
+  if (typeof hostHeader !== 'string') return false;
+  const h = hostHeader.trim().toLowerCase();
+  const m = /^(?:\[([0-9a-f:.]+)\]|([a-z0-9.-]+))(?::([0-9]{1,5}))?$/.exec(h);
+  if (!m || (m[3] !== undefined && Number(m[3]) > 65535)) return false;
+  if (m[1] !== undefined) return isIP(m[1]) === 6 && LOOPBACK_IPS.check(m[1], 'ipv6');
+  const name = m[2];
+  if (name === 'localhost' || name.endsWith('.localhost')) return true;
+  return isIP(name) === 4 && LOOPBACK_IPS.check(name, 'ipv4');
+}
+
+/**
+ * D386: the whole door of this port as one pure decision, in order -- the peer,
+ * its Host, then (M51's order) the Origin for a preflight, the token, the Origin
+ * for the rest.  Returns { ok: true, cors, preflight } or { ok: false, status,
+ * why, message }.  `given` is the token the request presented (query or header).
+ *
+ *   - a non-loopback peer is refused unless this is a --lan helper (the bind is
+ *     127.0.0.1 then, so this only matters if the bind ever changes -- or for a
+ *     proxy in front of it -- and it is checked on the socket's REMOTE address);
+ *   - a loopback peer must name the host as localhost or a loopback IP literal
+ *     (loopbackHostOk: DNS rebinding, and a tunnel's hostname);
+ *   - Origin: the allowlist; with --lan, a non-loopback peer also the bridge's own
+ *     LAN page (lanOwnOrigin); no Origin from loopback only;
+ *   - an OPTIONS preflight needs only the Origin (a browser cannot add a token);
+ *   - with --lan, every other request from a non-loopback peer needs the token.
+ */
+export function admit({ loop, lan, host, origin, origins, wsPort, method, given, token }) {
+  if (!loop && !lan) return { ok: false, status: 403, why: 'peer', message: 'origin refused: this coach helper answers this machine only (play.sh --lan for a phone)' };
+  if (loop && !loopbackHostOk(host)) return { ok: false, status: 403, why: 'host', message: 'origin refused: Host is not a loopback name (call http://127.0.0.1 or http://localhost)' };
+  const originOk = origin === undefined ? loop
+    : originAllowed(origin, origins) || (lan && !loop && lanOwnOrigin(origin, host, wsPort));
+  const cors = originOk && origin !== undefined ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+  if (method === 'OPTIONS') {
+    return originOk ? { ok: true, cors, preflight: true } : { ok: false, status: 403, why: 'origin', message: 'origin not allowed' };
+  }
+  if (lan && !loop && !tokenMatches(given, token)) return { ok: false, status: 403, why: 'token', message: 'pairing token missing or wrong' };
+  if (!originOk) return { ok: false, status: 403, why: 'origin', message: 'origin not allowed' };
+  return { ok: true, cors, preflight: false };
 }
 
 /** Plain words for a failed call, from whatever the CLI said. */
@@ -481,6 +549,10 @@ export function claudeArgs({ model, systemArg, help, streamInput = false }) {
 
 export function startHelper(opts) {
   const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, log = (s) => console.log(s) } = opts;
+  // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
+  // helper on 0.0.0.0, to prove admit() refuses a non-loopback peer by its
+  // address and not by the bind); the CLI never does.
+  const bindHost = opts.bindHost ?? (lan ? '0.0.0.0' : '127.0.0.1');
   let active = null;          // { kill() } of the running question
   const queue = [];           // waiting questions, oldest first: { key, go(), supersede(), position(n) }
   const pump = () => {
@@ -494,7 +566,7 @@ export function startHelper(opts) {
 
   const send = (res, status, obj, headers = {}) => {
     const body = JSON.stringify(obj);
-    res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(body), ...headers });
+    res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Length': Buffer.byteLength(body), ...headers });
     res.end(body);
   };
 
@@ -507,13 +579,18 @@ export function startHelper(opts) {
     const origin = req.headers.origin;
     const say = (status, extra = '') => log(`COACH ${req.method} ${path} from ${peer}${origin ? ` origin ${origin}` : ''} -> ${status}${extra}`);
 
-    // Origin first for a preflight (it carries no token); token first for the rest (M51's order).
-    const originOk = origin === undefined ? loop
-      : originAllowed(origin, origins) || (lan && !loop && lanOwnOrigin(origin, req.headers.host, wsPort));
-    const cors = originOk && origin !== undefined ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+    // D386: the peer and its Host, then M51's order -- Origin first for a
+    // preflight (it carries no token), token first for the rest (admit()).
+    const gate = admit({ loop, lan, host: req.headers.host, origin, origins, wsPort, method: req.method,
+      given: url.searchParams.get('token') ?? req.headers['x-forgecoach-token'], token });
+    if (!gate.ok) {
+      send(res, gate.status, { type: 'error', message: gate.message });
+      say(gate.status, ` (${gate.why})`);
+      return;
+    }
+    const cors = gate.cors;
 
-    if (req.method === 'OPTIONS') {
-      if (!originOk) { send(res, 403, { type: 'error', message: 'origin not allowed' }); say(403, ' (origin)'); return; }
+    if (gate.preflight) {
       res.writeHead(204, {
         ...cors,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -526,15 +603,6 @@ export function startHelper(opts) {
       say(204);
       return;
     }
-    if (lan && !loop) {
-      const given = url.searchParams.get('token') ?? req.headers['x-forgecoach-token'];
-      if (!tokenMatches(given, token)) {
-        send(res, 403, { type: 'error', message: 'pairing token missing or wrong' });
-        say(403, ' (token)');
-        return;
-      }
-    }
-    if (!originOk) { send(res, 403, { type: 'error', message: 'origin not allowed' }); say(403, ' (origin)'); return; }
 
     if (path === '/health') {
       if (req.method !== 'GET') { send(res, 405, { type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
@@ -545,8 +613,8 @@ export function startHelper(opts) {
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
       const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1 } : {}), ...rv, ...ev }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1 } : {}), ...rv, ...ev }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -599,12 +667,12 @@ export function startHelper(opts) {
       return;
     }
     if (path === '/engine/start') {
-      // D308: wake a sleeping engine (match-launcher.mjs `wake`); D381: on an optional {"aiProfile"}.  The same gate.
+      // D308: wake a sleeping engine (match-launcher.mjs `wake`); D381/D384: on an optional {"aiProfile", "seed"}.  The same gate.
       if (!match) { send(res, 503, { ok: false, type: 'error', message: 'the match launcher is off: this helper was not started by scripts/play.sh' }, cors); say(503); return; }
       if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
       const raw = await readBody(req, res, 4096, '4 KB', cors, say);
       if (raw === null) return;
-      const r = await match.wake(raw);   // D381: no body, or {"aiProfile"}
+      const r = await match.wake(raw);   // D381: no body, or {"aiProfile"}; D384: {"seed"}
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (${r.body.already ? 'already running' : r.body.ms + ' ms'})` : ` (${r.body.message.slice(0, 160)})`);
       return;
@@ -823,7 +891,7 @@ export function startHelper(opts) {
     server,
     listen: () => new Promise((resolve, reject) => {
       server.once('error', reject);
-      server.listen(port, lan ? '0.0.0.0' : '127.0.0.1', () => resolve(server.address().port));
+      server.listen(port, bindHost, () => resolve(server.address().port));
     }),
     close: () => {
       for (const c of live) { try { process.kill(-c.pid, 'SIGKILL'); } catch { /* gone */ } }
