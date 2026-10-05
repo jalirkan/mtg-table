@@ -3,7 +3,7 @@ title: Evaluator gate 2 on v2 (D354): rank J050's set with evaluator v2 at the l
 public_title: Regret gate scoring v2
 public_est: ~20 min
 cpu: heavy
-after: J067
+after: J083
 repos: mtg-table@7e48088 (a commit whose bridge/src tree is dc7c308, the tree J050's truth and hand ranker were graded with: 7e48088, J050/J051's own pin, unless a later one has the same tree; the pilot refuses any other, D341)
 decides: promote evaluator v2 (J067's var/ml/models/nights-1-3-eval.json) past gate 2 (D354), and so whether a gate-3 SPRT on v2 is posted
 hypothesis: v2's leaf has lower regret than the hand leaf at the live horizon; expected small, since v1 scored only +0.0017 [-0.0036, +0.0075] on this set (J051) and v2 is the same kind of model trained on about three times the data
