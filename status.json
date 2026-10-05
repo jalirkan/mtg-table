@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T08:22:24-04:00",
- "heartbeat": "2026-10-05T08:22:24-04:00",
+ "updated": "2026-10-05T08:22:38-04:00",
+ "heartbeat": "2026-10-05T08:22:38-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.14,
-  "memUsedGb": 3.6,
+  "load1": 1.37,
+  "memUsedGb": 3.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 3273,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J069",
    "title": "Evaluator ensemble (D368): train 4 more seeds of night 1's chosen config on the night-1 dataset, check each one's calibration (gate 1, clause C), and write the ensemble manifest the coach helper serves",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-05T08:22:24-04:00",
-   "elapsed": 0,
+   "elapsed": 14,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0,
    "live": {
     "ds.games": 39177,
     "ds.reservedChecked": 1,
@@ -60,7 +60,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J069-prepare"
+   "detail": "lab-J069-pilot1"
   }
  ],
  "queue": [
