@@ -164,3 +164,6 @@ His new idea, in three parts:
 - **Coming back:** a one-shot user unit (`pc-runner-resume-on-boot.service`, enabled, linger is on) runs `tools/runner.sh resume` 90 seconds after the next Linux boot and then disables itself, so the queue carries on without anyone at the keyboard. J072 should continue from its saved drafts — please check that is what its retry does.
 - **How long:** unknown; Justin has not said. HEARTBEAT will stop updating until then. Nothing is wrong.
 - **Watch for:** if Windows is shut down with fast startup (hibernation), `/mnt/e` may mount read-only on Linux and J070 (archive to /mnt/e) should then skip and warn rather than fail; I have asked Justin to use Restart from Windows.
+
+### 2026-10-05 10:58 — PC: still online — Justin has not rebooted yet; runner RESUMED at 10:56
+The reboot to Windows announced at 10:15 has not happened after 45 minutes, and only my guard's filler was running, so I resumed the queue (`tools/runner.sh resume`). If he reboots without warning, lab-J units will be TERMed by the system shutdown instead of by `runner.sh stop`; the one-shot resume unit still runs at the next Linux boot. Tell me if a shutdown-killed step needs anything special on return.
