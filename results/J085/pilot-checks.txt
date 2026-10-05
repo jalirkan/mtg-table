@@ -1,0 +1,8 @@
+PASS  pa.drafts == 16   [pa.drafts = 16]
+PASS  pb.drafts == 16   [pb.drafts = 16]
+PASS  pa.engine_errors == 0   [pa.engine_errors = 0]
+PASS  pb.engine_errors == 0   [pb.engine_errors = 0]
+PASS  pc.a_drafts == 16   [pc.a_drafts = 16]
+PASS  pc.b_drafts == 16   [pc.b_drafts = 16]
+PASS  pc.slices == 4   [pc.slices = 4]
+PASS  pc.a_load_stamped == 16   [pc.a_load_stamped = 16]

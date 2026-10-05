@@ -1,0 +1,35 @@
+==== J085 pilot1 started 2026-10-05T19:00:18-04:00 in unit lab-J085-pilot1, 2 worker(s), 2 core(s), BLAS/OpenMP threads 2
+cube lab: cubes/omega-cube-180.md, grid, 16 draft(s) from seed 820900001, best of 1, 2 job(s), AI Default vs Default, ratings Forge's ranks, out var/cubelab/runs/j072-pilot-a
+facts: booting the engine to look up 180 cards ...
+facts: 2.4 s
+resuming: 16 draft(s) already in var/cubelab/runs/j072-pilot-a/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 3 s -> var/cubelab/runs/j072-pilot-a/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/runs/j072-pilot-a
+cube lab: cubes/omega-cube-180.md, grid, 16 draft(s) from seed 820900101, best of 1, 2 job(s), AI Default vs Default, ratings Forge's ranks, out var/cubelab/runs/j072-pilot-b
+resuming: 16 draft(s) already in var/cubelab/runs/j072-pilot-b/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/runs/j072-pilot-b/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/runs/j072-pilot-b
+var/cubelab/runs/j072-pilot-a: 16 drafts (16 plain), seeds 820900001-820900016; mean 0.500, deck-level design effect 1.000; discovery: 0 candidate(s) of 80 tests, 0 dominant-win test(s) at p <= 0.002 of 0
+  colour-adjusted null (D377): 0 FALSE candidate(s) of 80 tests; dominant-win tests at p <= 0.05: 0 of 0 (uniform: 0.0), at p <= 0.002: 0 (uniform: 0.00)
+  load (D376): 16 of 16 matches stamped; busy 1.938, load1/core mean 0.354 max 0.422; 0 watchdog timeout(s) in 16 games; game-thread CPU / wall 0.712
+var/cubelab/runs/j072-pilot-b: 16 drafts (16 plain), seeds 820900101-820900116; mean 0.500, deck-level design effect 1.000; discovery: 0 candidate(s) of 90 tests, 0 dominant-win test(s) at p <= 0.002 of 0
+  colour-adjusted null (D377): 0 FALSE candidate(s) of 90 tests; dominant-win tests at p <= 0.05: 0 of 0 (uniform: 0.0), at p <= 0.002: 0 (uniform: 0.00)
+  load (D376): 16 of 16 matches stamped; busy 1.938, load1/core mean 0.463 max 0.467; 0 watchdog timeout(s) in 16 games; game-thread CPU / wall 0.728
+cards: 65 groups with >= 5 games in both; dispersion (mean z^2, 1 = binomial) 1.177; RMS difference 0.278 vs binomial 0.247 (ratio 1.123)
+    Adeline, Resplendent Cathar: 0.800 (10) vs 0.125 (8), z 2.85
+    Lingering Souls: 0.600 (10) vs 0.000 (6), z 2.40
+    Inferno Titan: 0.143 (7) vs 0.800 (5), z -2.28
+    Demonic Tutor: 0.750 (8) vs 0.167 (6), z 2.16
+colours: 5 groups with >= 5 games in both; dispersion (mean z^2, 1 = binomial) 1.084; RMS difference 0.231 vs binomial 0.202 (ratio 1.146)
+    R: 0.300 (10) vs 0.750 (8), z -1.90
+    W: 0.600 (15) vs 0.412 (17), z 1.06
+    G: 0.700 (10) vs 0.545 (11), z 0.73
+    U: 0.353 (17) vs 0.412 (17), z -0.35
+pairs: 1 groups with >= 5 games in both; dispersion (mean z^2, 1 = binomial) 0.737; RMS difference 0.238 vs binomial 0.277 (ratio 0.858)
+    UB: 0.571 (7) vs 0.333 (6), z 0.86
+slice var/cubelab/runs/j072-pilot-a#1: 8 drafts, seeds 820900001-820900008, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
+slice var/cubelab/runs/j072-pilot-a#2: 8 drafts, seeds 820900009-820900016, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
+slice var/cubelab/runs/j072-pilot-b#1: 8 drafts, seeds 820900101-820900108, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
+slice var/cubelab/runs/j072-pilot-b#2: 8 drafts, seeds 820900109-820900116, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
