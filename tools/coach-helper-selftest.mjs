@@ -216,6 +216,9 @@ const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { retu
 writeFileSync(join(DIR, 'config.json'), JSON.stringify({
   coachPort: 8643, wsPort: 8642,
   wsAllowedOrigins: ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'],
+  // D385: these helpers run over the checkout's own var/games/; the automatic review stays off here
+  // (tools/auto-review-selftest.mjs tests it over scratch games).
+  coach: { autoReview: false },
 }));
 
 try {
@@ -226,6 +229,7 @@ try {
   let r = await http({ port: P });
   check('ok with the CLI there', r.status === 200 && json(r.body)?.ok === true && json(r.body)?.helper === 1
     && json(r.body)?.claude === '9.9.9 (Claude Code)' && JSON.stringify(json(r.body)?.models) === '["opus","sonnet","haiku"]', r.body);
+  check('config.json coach.autoReview false: /health says "autoReview": 0 (D385)', json(r.body)?.autoReview === 0, r.body);
   check('/health advertises "thinking": off, low, default (D346)', JSON.stringify(json(r.body)?.thinking) === '["off","low","default"]', r.body);
 
   const hMissing = await startHelper([], { PATH: NODE_ONLY });

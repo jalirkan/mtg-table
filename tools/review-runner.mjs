@@ -43,12 +43,25 @@
 //   - One review at a time (it is several JVMs); up to `queueMax` wait.  A
 //     review that runs past `timeoutMs` is stopped (its process group).
 //
+// THE AUTOMATIC REVIEW (D385, tools/auto-review.mjs) goes through `post` too --
+// the same validation, the same log, seat and knowledge rules -- with three
+// things only the helper can ask for: low priority (the spawn prefixed with
+// `nice` / `ionice`), a narrower --jobs, and a callback at its end.  Its
+// reviews carry "auto": true in GET /review and GET /review/<id>.  A review
+// asked for over HTTP PREEMPTS a running automatic one: that one is stopped,
+// dropped from the list and handed back to the automatic queue, which runs it
+// again later.  `restore()` (at the helper's start) lists the newest finished
+// reports on disk again, so GET /review/<id> outlives a restart.  A game's log
+// may be `frames.jsonl` or, when that is absent, `frames.jsonl.gz`.
+//
 // Its self-test is tools/review-runner-selftest.mjs (a fake coach-grade.sh;
-// gate 12f, CI).
+// gate 12f, CI); the automatic half's is tools/auto-review-selftest.mjs.
 
 import { spawn } from 'node:child_process';
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { setPriority } from 'node:os';
 import { join, relative, resolve, sep } from 'node:path';
+import { constants as zc, gunzipSync } from 'node:zlib';
 import { cardNameOf } from './match-launcher.mjs';
 
 export const REVIEW_VERSION = 1;
@@ -127,10 +140,37 @@ export function validateReview(q) {
   return problems.length ? { req: null, problems } : { req: { gameId, seat, pool, known, ...num }, problems };
 }
 
-/** The log of a game the engine wrote, or { error, status }: inside gamesDir, a regular file. */
+/**
+ * A log's text, plain or gzip by its magic (as WireLog.read sniffs it, #73: two
+ * bytes are enough).  A gzip cut short (a killed recorder) gives the lines it
+ * holds.  `maxBytes` reads only the file's start (the header).  null for a
+ * zstd archive (D370: restore it first) or an unreadable file.
+ */
+export function readLogText(abs, maxBytes = Infinity) {
+  let buf;
+  try {
+    if (Number.isFinite(maxBytes)) {
+      const fd = openSync(abs, 'r');
+      try {
+        const b = Buffer.alloc(maxBytes);
+        buf = b.subarray(0, readSync(fd, b, 0, b.length, 0));
+      } finally { closeSync(fd); }
+    } else {
+      buf = readFileSync(abs);
+    }
+  } catch { return null; }
+  if (buf.length >= 4 && buf[0] === 0x28 && buf[1] === 0xb5 && buf[2] === 0x2f && buf[3] === 0xfd) return null;
+  if (buf.length >= 2 && buf[0] === 0x1f && buf[1] === 0x8b) {
+    try { return gunzipSync(buf, { finishFlush: zc.Z_SYNC_FLUSH }).toString('utf8'); } catch { return null; }
+  }
+  return buf.toString('utf8');
+}
+
+/** The log of a game the engine wrote, or { error, status }: inside gamesDir, a regular file (frames.jsonl, else frames.jsonl.gz). */
 export function gameLog(repoRoot, gamesDir, gameId) {
   const root = resolve(repoRoot, gamesDir);
-  const rel = join(gamesDir, gameId, 'frames.jsonl');
+  let rel = join(gamesDir, gameId, 'frames.jsonl');
+  if (!existsSync(resolve(repoRoot, rel)) && existsSync(resolve(repoRoot, `${rel}.gz`))) rel = `${rel}.gz`;
   const abs = resolve(repoRoot, rel);
   if (!existsSync(abs)) return { status: 404, error: `no game "${gameId}" here (${rel} does not exist)` };
   let real;
@@ -146,11 +186,8 @@ export function gameLog(repoRoot, gamesDir, gameId) {
 /** The log header's seat (line 0), or null. */
 export function headerSeat(abs) {
   try {
-    const fd = openSync(abs, 'r');
-    const buf = Buffer.alloc(64 * 1024);
-    const n = readSync(fd, buf, 0, buf.length, 0);
-    closeSync(fd);
-    const text = buf.subarray(0, n).toString('utf8');
+    const text = readLogText(abs, 64 * 1024);
+    if (text === null) return null;
     const h = JSON.parse(text.slice(0, text.indexOf('\n') < 0 ? text.length : text.indexOf('\n')));
     return h && h.kind === 'session' && Number.isInteger(h.seat) ? h.seat : null;
   } catch { return null; }
@@ -186,6 +223,7 @@ export function createReviewRunner(opts) {
     if (r.startedAt) o.startedAt = r.startedAt;
     if (r.endedAt) o.endedAt = r.endedAt;
     if (r.error) o.error = r.error;
+    if (r.auto) o.auto = true;   // D385: queued by the helper itself after the game
     if (withReport && r.state === 'done' && r.report) o.report = r.report;
     return o;
   };
@@ -214,7 +252,7 @@ export function createReviewRunner(opts) {
     const absDir = resolve(repoRoot, dir);
     mkdirSync(absDir, { recursive: true });
     const args = [script, 'review', '--log', r.log, '--seat', String(r.seat), '--run', r.id,
-      '--out', join(dir, 'report.json'), '--jobs', String(jobs)];
+      '--out', join(dir, 'report.json'), '--jobs', String(r.jobs ?? jobs)];
     if (r.req.triageS !== null) args.push('--triage-s', String(r.req.triageS));
     if (r.req.deepS !== null) args.push('--deep-s', String(r.req.deepS));
     if (r.req.deepK !== null) args.push('--deep-k', String(r.req.deepK));
@@ -226,13 +264,18 @@ export function createReviewRunner(opts) {
       writeFileSync(join(absDir, 'known.txt'), r.req.known.map((n) => `1 ${n}`).join('\n') + '\n');
       args.push('--opp-known', join(dir, 'known.txt'));
     }
+    // D385: an automatic review runs under its prefix (nice -n 19 [ionice -c 3 -t]), which every
+    // JVM coach-grade.sh starts inherits; with no prefix (no `nice` here) the priority is set after.
+    const prefix = r.prefix ?? [];
     let child;
     try {
-      child = spawnImpl('bash', args, { cwd: repoRoot, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawnImpl(prefix.length ? prefix[0] : 'bash', [...prefix.slice(1), ...(prefix.length ? ['bash'] : []), ...args],
+        { cwd: repoRoot, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (e) {
       finish(r, 'failed', `could not start the review: ${e.message}`);
       return;
     }
+    if (r.auto && prefix[0] !== 'nice' && child.pid) { try { setPriority(child.pid, 19); } catch { /* best effort */ } }
     r.child = child;
     let out = '';
     let lastLines = [];
@@ -261,6 +304,7 @@ export function createReviewRunner(opts) {
       r.child = null;
       const file = resolve(absDir, 'report.json');
       if (r.timedOut) { finish(r, 'failed', `the review ran past ${Math.round(timeoutMs / 60000)} min and was stopped`); return; }
+      if (r.preempted) { finish(r, 'failed', 'preempted: a review was asked for; this automatic one runs again later'); return; }
       if (r.cancelled) { finish(r, 'failed', 'stopped: the helper is shutting down'); return; }
       if (code === 0 && existsSync(file)) {
         try {
@@ -288,6 +332,8 @@ export function createReviewRunner(opts) {
     if (error) r.error = error;
     log(`REVIEW ${r.id} ${r.gameId} -> ${state}${error ? `: ${error}` : ''}`);
     if (running === r.id) running = null;
+    if (r.preempted) reviews.delete(r.id);   // D385: handed back to the automatic queue, never listed as failed
+    try { r.onEnd?.({ id: r.id, state, error: error ?? null, preempted: !!r.preempted, cancelled: !!r.cancelled }); } catch (e) { log(`REVIEW ${r.id} onEnd: ${e.message}`); }
     prune();
     pump();
   }
@@ -298,7 +344,12 @@ export function createReviewRunner(opts) {
       const on = available() ? 1 : 0;
       return on ? { review: 1, reviewQueue: { max: queueMax, length: queue.length, running: running ? 1 : 0 } } : { review: 0 };
     },
-    post(q) {
+    /**
+     * POST /review.  `opts` is the helper's own (D385), never a request's: { auto, prefix, jobs, onEnd }.
+     * An automatic review is posted only when nothing runs or waits (`busy()`), so it never takes a
+     * queue slot a person's request needs; a person's request preempts a running automatic one.
+     */
+    post(q, opts = {}) {
       if (!available()) return { status: 503, body: { ok: false, type: 'error', message: 'the review is off here: the bridge is not built (./bridge/build.sh)' } };
       const { req, problems } = validateReview(q);
       if (!req) return { status: 400, body: { ok: false, type: 'error', message: problems[0], problems } };
@@ -309,16 +360,70 @@ export function createReviewRunner(opts) {
       if (req.seat !== null && req.seat !== seat) {
         return { status: 400, body: { ok: false, type: 'error', message: `this game's log is seat ${seat}'s view; a review of seat ${req.seat} needs that seat's own log` } };
       }
-      if (queue.length >= queueMax && running) {
+      const auto = opts.auto === true;
+      if (auto && (running || queue.length)) {
+        return { status: 429, body: { ok: false, type: 'error', message: 'a review is running or queued; the automatic one waits' } };
+      }
+      const cur = running ? reviews.get(running) : null;
+      const preempt = !auto && cur && cur.auto && cur.child;
+      if (queue.length >= queueMax && running && !preempt) {
         return { status: 429, body: { ok: false, type: 'error', message: 'reviews are queued already — try again when one finishes' } };
       }
       const id = newId();
       const r = { id, gameId: req.gameId, log: g.rel, seat, req, state: 'queued', createdAt: new Date(now()).toISOString() };
+      if (auto) {
+        r.auto = true;
+        if (Array.isArray(opts.prefix)) r.prefix = opts.prefix;
+        if (Number.isInteger(opts.jobs) && opts.jobs >= 1) r.jobs = Math.min(opts.jobs, jobs);
+        if (typeof opts.onEnd === 'function') r.onEnd = opts.onEnd;
+      }
       reviews.set(id, r);
       queue.push(id);
-      log(`REVIEW ${id} ${req.gameId} queued`);
+      log(`REVIEW ${id} ${req.gameId} queued${auto ? ' (automatic, low priority)' : ''}`);
+      if (preempt) {
+        // D385: a person's request goes first; the automatic review is stopped and handed back.
+        cur.preempted = true;
+        log(`REVIEW ${cur.id} ${cur.gameId} preempted by ${id}`);
+        killGroup(cur.child);
+      }
       pump();
       return { status: 202, body: view(r, false) };
+    },
+    /** D385: something runs or waits. */
+    busy() { return !!running || queue.length > 0; },
+    /** D385: every review of this log path (newest first): { id, state, auto, createdAt } -- for the automatic queue's dedupe. */
+    reviewsOfLog(rel) {
+      return [...reviews.values()].reverse().filter((r) => r.log === rel).map((r) => ({ id: r.id, state: r.state, auto: !!r.auto, createdAt: r.createdAt }));
+    },
+    /**
+     * D385: the newest `keep` finished reports on disk listed again as done (a helper restarted keeps
+     * serving GET /review/<id>).  A report whose every decision is an error or refused (exit 4) is not one.
+     */
+    restore() {
+      const abs = resolve(repoRoot, workDir);
+      if (!existsSync(abs)) return 0;
+      const ids = readdirSync(abs).filter((n) => REVIEW_ID.test(n) && !reviews.has(n)).sort().slice(-keep);
+      let n = 0;
+      for (const id of ids) {
+        const file = join(abs, id, 'report.json');
+        let report;
+        let st;
+        try { st = statSync(file); report = JSON.parse(readFileSync(file, 'utf8')); } catch { continue; }
+        if (!report || report.kind !== 'game-review' || typeof report.gameId !== 'string') continue;
+        const ds = Array.isArray(report.decisions) ? report.decisions : [];
+        if (ds.length && ds.every((d) => d && (d.status === 'error' || d.status === 'refused'))) continue;
+        const t = Number(id.slice(1));
+        reviews.set(id, { id, gameId: report.gameId, log: typeof report.log === 'string' ? report.log : null, seat: report.seat, state: 'done', restored: true,
+          createdAt: new Date(t).toISOString(), endedAt: st.mtime.toISOString(), report });
+        if (t > lastId) lastId = t;
+        n++;
+      }
+      // Insertion order is the list's order: keep it by id (time).
+      const sorted = [...reviews.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      reviews.clear();
+      for (const r of sorted) reviews.set(r.id, r);
+      prune();
+      return n;
     },
     get(id) {
       if (typeof id !== 'string' || !REVIEW_ID.test(id) || !reviews.has(id)) {
@@ -327,7 +432,7 @@ export function createReviewRunner(opts) {
       return { status: 200, body: view(reviews.get(id), true) };
     },
     list() {
-      const all = [...reviews.values()].reverse().map((r) => ({ id: r.id, gameId: r.gameId, state: r.state }));
+      const all = [...reviews.values()].reverse().map((r) => ({ id: r.id, gameId: r.gameId, state: r.state, ...(r.auto ? { auto: true } : {}) }));
       return { status: 200, body: { ok: true, reviews: all } };
     },
     close() {

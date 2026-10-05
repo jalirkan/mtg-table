@@ -1907,6 +1907,10 @@ s12e_skipped() {
 #      Since D353 also tools/review-runner-selftest.mjs: /review against a
 #      FAKE coach-grade.sh (validation, the queue, the stages, the report);
 #      its files under var/review-runner-selftest/; about 10 s.
+#      Since D385 also tools/auto-review-selftest.mjs: the automatic review
+#      after every human game against the same fake (which games, the lab
+#      runner's gate, low priority, dedupe, the crash-safe queue file, gzip
+#      logs); its files under var/auto-review-selftest/; about 8 s.
 #      Since D361 also tools/eval-runner-selftest.mjs: /eval against a FAKE
 #      eval_serve.py, then (where python3 has numpy) the real one with
 #      fixtures/eval/model.json, two recordings' decision rows through the
@@ -1921,6 +1925,9 @@ s12f_coach() {
   # D353: the helper's /review against a fake coach-grade.sh.
   node tools/review-runner-selftest.mjs \
     || die "review-runner-selftest.mjs (12f: the review runner broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D385: the automatic review after every human game, against the same fake.
+  node tools/auto-review-selftest.mjs \
+    || die "auto-review-selftest.mjs (12f: the automatic review broke its rules -- see the FAIL lines above)"
   # D361: the helper's /eval, the win chance.
   node tools/eval-runner-selftest.mjs \
     || die "eval-runner-selftest.mjs (12f: the win chance broke its contract with ForgeCoach, or its features left the training rows' -- see the FAIL lines above)"

@@ -184,3 +184,37 @@ gate (Origin, LAN token), exactly as `/coach` and `/match`.
 - One review runs at a time; up to `--review-queue-max` (2) wait; past that 429.
   Refusals are `{"ok":false,"type":"error","message":"…"}` with 400 / 404 / 405 /
   413 (over 256 KB) / 429 / 503 (review off).
+
+## The automatic review (D385)
+
+The helper also reviews every **human game the bridge finishes** without being
+asked (`tools/auto-review.mjs`): a log in `var/games/` under a person's game id
+(`human-ws-<seed>`, `human-console-<seed>`, `match-m<13 digits>`, each with an
+optional `-g<n>`), whose header's `transport` is `ws` or `console`, whose
+`hello_ok` puts a person in the seat against the AI, and which holds an `over`
+naming a winner or a reason. It goes through the same `POST /review` code path
+with no knowledge fields — so the D348 rules hold unchanged and, with no pool,
+`knowledge.opponentModel` is `basic-lands` and the screen must say the numbers
+flatter the player. A request carrying the cube pool can still ask for a
+review of the same game; it preempts a running automatic review.
+
+- **Where the results are**: the runner's own list. `GET /review` and
+  `GET /review/<id>` carry `"auto": true` on an automatic review; find one by
+  its `gameId` in `GET /review`. After a helper restart the newest finished
+  reports on disk are listed again, so an id keeps answering.
+- **When it runs**: one at a time, newest game first, only when the review
+  runner has nothing running or waiting and the lab runner's `status.json`
+  says it is idle, below its core budget (the review's `--jobs` is then at
+  most the free cores), or not running (no file, or a heartbeat over 2 min
+  old); under `nice -n 19` and `ionice -c 3 -t` where they work.
+- **Never twice**: its queue (`var/coach-grade/auto-review/queue.json`,
+  written by rename, a `.bak` beside it) keeps every game's key, and a game
+  that already has a review — asked for, automatic, or a report on disk — is
+  skipped. Only games finished after the queue was first made are taken.
+- **The switch**: `config.json` `"coach": {"autoReview": true}` (the default;
+  `false` turns it off), or `--no-auto-review`. `/health` carries
+  `"autoReview": 1|0` and, with 1, `"autoReviewQueue": {"pending", "running",
+  "gate": "open"|"review-busy"|"lab-busy"}`.
+
+A game's log may also be `var/games/<gameId>/frames.jsonl.gz` when there is no
+`frames.jsonl` (`WireLog` reads gzip; GradeSelfTest holds it, #73).

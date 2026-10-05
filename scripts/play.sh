@@ -723,6 +723,9 @@ start_coach() {
   [ "$MATCH" = "1" ] && rm -f "$MATCH_DIR/engine.json" 2>/dev/null
   # D361: the win chance -- the helper loads var/ml/models/night-1-eval.json by itself when it exists.
   [ "${#EVAL_ARGS[@]}" -gt 0 ] && args+=("${EVAL_ARGS[@]}")
+  # D385: the automatic review (config.json coach.autoReview) -- never under a self-test's fake engine,
+  # whose helper would otherwise queue the real var/games/ (as D369's collector is skipped there).
+  [ -n "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] && args+=(--no-auto-review)
   : > "$COACH_LOG"
   COACH_HELPER_TOKEN="$token" node tools/coach-helper.mjs "${args[@]}" >>"$COACH_LOG" 2>&1 &
   COACH_PID=$!

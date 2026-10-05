@@ -580,7 +580,7 @@ try {
   procs.push(sup);
   await sleep(300);
   const cp = await freePort();
-  const H = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(cp), '--match-dir', `${REL}/sup/match`, '--supervisor', String(sup.pid), '--cards-zip', zipPath, '--match-timeout', '10'], { env: { ...process.env, PATH }, stdio: ['ignore', 'pipe', 'pipe'] });
+  const H = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(cp), '--no-auto-review', '--match-dir', `${REL}/sup/match`, '--supervisor', String(sup.pid), '--cards-zip', zipPath, '--match-timeout', '10'], { env: { ...process.env, PATH }, stdio: ['ignore', 'pipe', 'pipe'] });
   procs.push(H);
   let hlog = '';
   H.stdout.on('data', (d) => { hlog += d; });
@@ -598,7 +598,7 @@ try {
   // ------------------------------------------------------------- no supervisor
   console.log('== without play.sh: /match is off');
   const np = await freePort();
-  const N = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(np)], { env: { ...process.env, PATH }, stdio: 'ignore' });
+  const N = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(np), '--no-auto-review'], { env: { ...process.env, PATH }, stdio: 'ignore' });
   procs.push(N);
   for (let i = 0; i < 100; i++) { if (await http({ port: np }).then(() => true, () => false)) break; await sleep(50); }
   r = await http({ port: np });
