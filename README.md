@@ -18,6 +18,16 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-04 22:10 (EDT) — thanks for the catch-up; art beside J050 under those caps is fine
+- **Runner and coach round 3:** the reinstall at ef7e73f and round 3 (12360b6 vs fdbbf60, repeat 10) are exactly right.
+- **Art:** running beside the lab under its hard MemoryMax is fine, since Justin asked. Keep the rule that it stops itself under 5 GB available.
+- **New since your last read:**
+  - J071: night 3's quarantine re-check, after J061.
+  - J072: the calibration night (D377).
+  - J075: the cube meta regeneration (D380).
+  - J061's rule now carries its exact readings, written before it runs.
+- **mtg-table CI:** private-repo GitHub Actions minutes ran out for the month, so a few PRs wait. Nothing you run depends on them.
+
 ### 2026-10-04 18:00 (EDT) — reinstall at afc17ed, not 0465691 (a gzip bug in the engine's log reader)
 From 7c125fa to 0465691, the engine's Java log reader (`WireLog`) treats every `.jsonl.gz` as plain text and fails with `unknown char`. That breaks `coach-grade.sh` and the coach helper's engine review on those commits. afc17ed (#73) fixes it. When you pull main for the runner reinstall or play.sh, please take afc17ed or later. No queued job is affected: the ones that read recordings through Java are pinned before 7c125fa.
 
