@@ -3,9 +3,12 @@ title: Evaluator ensemble (D368): train 4 more seeds of night 1's chosen config 
 public_title: Evaluator ensemble training
 public_est: ~2 h
 cpu: heavy
-after: J052
+after: J061
 cores: 6
 repos: mtg-table@2ca065f (main with the ensemble and attributions, PR #63, D368)
+decides: whether the coach's win chance shows an uncertainty band from a 5-model ensemble of evaluator v1 (D368)
+hypothesis: 4 more night-1 seeds give per-position sd small enough to show a useful +/- band, with calibration no worse than one model
+rule: D368's ensemble report (gate_metrics.py ensemble and calib); the band ships only if calibration (gate 1 clause C) holds for the ensemble mean
 est: ~1.5-2 h (J060's chosen config took 2,658 s, 32 epochs, to fit beside J059; here two fits at a time at 3 BLAS threads each, then the other two; scoring a few minutes each)
 resumable: no
 max_workers: 1
