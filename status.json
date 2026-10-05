@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-05T09:10:13-04:00",
- "heartbeat": "2026-10-05T09:10:13-04:00",
+ "updated": "2026-10-05T09:10:27-04:00",
+ "heartbeat": "2026-10-05T09:10:27-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.04,
-  "memUsedGb": 5.6,
+  "load1": 3.64,
+  "memUsedGb": 5.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3255,
+  "swapUsedMb": 3213,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 9,
+  "coresUsed": 7,
   "coresTotal": 8
  },
  "running": [
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-05T09:07:31-04:00",
-   "elapsed": 162,
+   "elapsed": 176,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -88,57 +88,6 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": []
-  },
-  {
-   "publicTitle": "Quarantine re-check",
-   "publicEst": "~1 h",
-   "id": "J074",
-   "title": "Re-check nights 1 and 2's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
-   "cpu": "heavy",
-   "phase": "commands 2/2",
-   "started": "2026-10-05T09:07:59-04:00",
-   "elapsed": 134,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 2,
-   "workersMax": 2,
-   "cores": 2,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "memGb": 0.01,
-   "live": {
-    "n1.nowPass": 731,
-    "restored": 0,
-    "elapsed_s": 124,
-    "left1": 821,
-    "left2": 684,
-    "n1.recordings": 821,
-    "n1.stillFail": 90,
-    "n1.written": 1,
-    "n2.written": 0,
-    "noverdict": 0,
-    "pilot1.nowPass": 17,
-    "pilot1.recordings": 20,
-    "pilot1.written": 1,
-    "pilot2.nowPass": 15,
-    "pilot2.recordings": 20,
-    "pilot2.written": 1,
-    "pilotmoves": 0,
-    "pressure_events": 0,
-    "workers": 2
-   },
-   "liveHeadline": [
-    "n1.nowPass",
-    "restored"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J074-run2"
   }
  ],
  "queue": [
@@ -185,6 +134,20 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Quarantine re-check",
+   "publicEst": "~1 h",
+   "id": "J074",
+   "title": "Re-check nights 1 and 2's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
+   "status": "done",
+   "finished": "2026-10-05T09:10:27-04:00",
+   "headline": "n1.nowPass 731 · n2.nowPass 640 · restored 1371",
+   "numbers": {
+    "n1.nowPass": 731,
+    "n2.nowPass": 640,
+    "restored": 1371
+   }
+  },
   {
    "publicTitle": "Cube meta refresh",
    "publicEst": "~15 min",

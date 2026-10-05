@@ -1,0 +1,3 @@
+==== J074 run2 started 2026-10-05T09:10:13-04:00 in unit lab-J074-run2, 2 worker(s), 2 core(s), BLAS/OpenMP threads 2
+{"night":1,"dryRun":false,"restored":731,"stillQuarantined":90,"skipped":[]}
+{"night":2,"dryRun":false,"restored":640,"stillQuarantined":44,"skipped":[]}

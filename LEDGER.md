@@ -131,3 +131,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: m.written 4, m.min_drafts 5167
 - summary: results/J075/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table af6f817
+
+## J074 DONE: Re-check nights 1 and 2's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check
+
+- finished: 2026-10-05T09:10:27-04:00
+- decides: (no decides: line in the job file)
+- hypothesis: -
+- rule: (no rule: line in the job file)
+- outcome: done
+- headline: n1.nowPass 731, n2.nowPass 640, restored 1371
+- summary: results/J074/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table a2480d7
