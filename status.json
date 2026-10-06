@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-05T22:04:44-04:00",
- "heartbeat": "2026-10-05T22:04:44-04:00",
+ "updated": "2026-10-05T22:04:58-04:00",
+ "heartbeat": "2026-10-05T22:04:58-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.74,
-  "memUsedGb": 9,
+  "load1": 7.03,
+  "memUsedGb": 8.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 2,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 6,
   "coresTotal": 8
  },
  "running": [
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/4",
    "started": "2026-10-05T22:00:26-04:00",
-   "elapsed": 258,
+   "elapsed": 272,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 3.06,
+   "memGb": 3.2,
    "live": {
     "ds.rows": 1002886,
     "ds.games": 6071,
@@ -66,43 +66,6 @@
    "publicCubes": false,
    "pressureEvents": [],
    "detail": "lab-J087-run1"
-  },
-  {
-   "publicTitle": "Night 3 quarantine messages",
-   "publicEst": "~2 min",
-   "id": "J091",
-   "title": "Collect the messages of night 3's still-quarantined recordings (the one M55 failure and the stray non-recording file), so a person can judge night 4's stop row",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-05T22:04:04-04:00",
-   "elapsed": 40,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "memGb": 0,
-   "live": {
-    "gz": 44,
-    "elapsed_s": 39,
-    "pfiles": 1,
-    "pressure_events": 0,
-    "workers": 1,
-    "written": 0
-   },
-   "liveHeadline": [
-    "gz"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J091-run1"
   }
  ],
  "queue": [
@@ -141,6 +104,18 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Night 3 quarantine messages",
+   "publicEst": "~2 min",
+   "id": "J091",
+   "title": "Collect the messages of night 3's still-quarantined recordings (the one M55 failure and the stray non-recording file), so a person can judge night 4's stop row",
+   "status": "done",
+   "finished": "2026-10-05T22:04:58-04:00",
+   "headline": "gz 44",
+   "numbers": {
+    "gz": 44
+   }
+  },
   {
    "publicTitle": "Evolve calibration night",
    "publicEst": "~5 h",
@@ -793,17 +768,6 @@
    "finished": "2026-10-03T12:04:45-04:00",
    "headline": "",
    "numbers": {}
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J012",
-   "title": "Light coach check: Sonnet vs Haiku on the 28 bench cases, one answer each",
-   "status": "failed",
-   "finished": "2026-10-03T11:51:29-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "pilot — every answer must take 1-30 s; Haiku took a median 45.5 s (mean 38.4, max 56.9)"
   }
  ],
  "runner": {

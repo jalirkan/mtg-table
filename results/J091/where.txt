@@ -1,0 +1,16 @@
+pwd: /home/justin-a/code/lab/mtg-table
+drwxrwxr-x 21 justin-a justin-a 4096 Oct  5 22:04 var
+drwxrwxr-x 15 justin-a justin-a 4096 Oct  5 19:00 var/cubelab
+var/cubelab/queue-quarantine
+var/cubelab/queue-quarantine-n2
+var/cubelab/queue-quarantine-n3
+var/requarantine/check-redaction-n1.mjs
+var/requarantine/check-redaction-n2.mjs
+var/requarantine/check-redaction-n3.mjs
+var/requarantine/n1
+var/requarantine/n2
+var/requarantine/n3
+var/requarantine/pilot-n1
+var/requarantine/pilot-n2
+var/requarantine/pilot-n3
+quarantine: var/cubelab/queue-quarantine-n3
