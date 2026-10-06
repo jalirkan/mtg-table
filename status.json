@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-06T08:05:42-04:00",
- "heartbeat": "2026-10-06T08:05:42-04:00",
+ "updated": "2026-10-06T08:06:16-04:00",
+ "heartbeat": "2026-10-06T08:06:16-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.7,
-  "memUsedGb": 13.9,
+  "load1": 7.43,
+  "memUsedGb": 4.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 2058,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J097",
    "title": "Gate 2's truth read over every option (D395): pairwise ordering accuracy, rank correlations and a discordant sign test for the hand leaf against evaluators v1 and v2 on J050's truth tables; no playouts",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-06T08:05:41-04:00",
-   "elapsed": 1,
+   "elapsed": 35,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "elapsed_s": 0,
     "inp.hand12": 291,
@@ -60,7 +60,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J097-prepare"
+   "detail": "lab-J097-pilot1"
   },
   {
    "publicTitle": "Card ratings vs human results",
@@ -68,9 +68,9 @@
    "id": "J098",
    "title": "The lab's card strengths against human results (D396): J062's M0 power and the Vintage meta win rates against 17Lands' Powered Cube GIH WR, by Spearman with a bootstrap interval, the biggest disagreements and colour groups; no Forge",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-06T08:05:41-04:00",
-   "elapsed": 0,
+   "elapsed": 35,
    "done": null,
    "total": null,
    "unit": null,
@@ -82,7 +82,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0,
    "live": {
     "elapsed_s": 0,
     "meta_ok": 1,
@@ -97,7 +97,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J098-prepare"
+   "detail": "lab-J098-pilot1"
   }
  ],
  "queue": [
