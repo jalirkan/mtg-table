@@ -15,7 +15,9 @@
  *  - the scheduler (new players first, the anchor share, the most informative
  *    pair, fixed deal slots), the league's promotion rule, the registry (hashes,
  *    unknown kinds unavailable, never overwrite), the results log (ai-bench line
- *    mapping, dedup, torn lines, mirror blocks) and ladder.json's schema 1 keys.
+ *    mapping, dedup, torn lines, mirror blocks) and ladder.json's schema 1 keys;
+ *  - the fixed-size match (D398): its pair-score interval and Elo ends, the
+ *    interval's coverage, and the search counters with a game-clustered rate.
  */
 
 import assert from 'node:assert/strict';
@@ -37,6 +39,7 @@ import { appendResults, blockKey, fromBench, hashIndex, outcomes, readResults, t
 import { batchPairs, choose, hostBase, mkey, type SchedPlayer, type SchedState } from '../../tools/ai-ladder/schedule.ts';
 import { bounds, NI_DEFAULTS, niPairsNeeded, niState, pairScores, scoreDelta, SPRT_DEFAULTS, sprtState, verdictWords, type SprtParams } from '../../tools/ai-ladder/sprt.ts';
 import { grid, halving, sample, scoreOf, type Tally } from '../../tools/ai-ladder/tune.ts';
+import { budgetRate, eloOf, emptyTally, matchSummary, pairsForHalfWidth, tallyBatch, tallyLine } from '../../tools/ai-ladder/match.ts';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -519,4 +522,87 @@ test('search-eval (D354): the search with leaf=eval:<model>, pinned to the model
   writeFileSync(join(repo, `var/ml/models/eval-${hash}.json`), body + ' ');
   assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo).unavailable!, /hashes to/);
   assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: 'abc' } }, repo).unavailable!, /12 hex/);
+});
+
+// ------------------------------------------------------------ match (D398)
+
+test('match (D398): the pair-score interval, in Elo too; no interval under 2 pairs', () => {
+  const ps = [...Array(60).fill({ x: 1, games: 2 }), ...Array(40).fill({ x: 0, games: 2 }), ...Array(100).fill({ x: 0.5, games: 2 })];
+  const m = matchSummary(ps);
+  assert.equal(m.pairs, 200);
+  assert.equal(m.games, 400);
+  assert.ok(Math.abs(m.score - 0.55) < 1e-12);
+  // pair scores 1 (60), 0 (40), ½ (100): sample variance 0.1231..., se = sqrt(v/200)
+  const v = (60 * 0.45 ** 2 + 40 * 0.55 ** 2 + 100 * 0.05 ** 2) / 199;
+  assert.ok(Math.abs(m.se! - Math.sqrt(v / 200)) < 1e-12);
+  assert.ok(Math.abs(m.lo! - (0.55 - 1.96 * m.se!)) < 1e-12 && Math.abs(m.hi! - (0.55 + 1.96 * m.se!)) < 1e-12);
+  assert.ok(Math.abs(m.elo - 34.86) < 0.01, `55% is about +35 Elo, got ${m.elo}`);
+  assert.ok(m.eloLo! < m.elo && m.elo < m.eloHi!, 'the Elo interval holds the point');
+  assert.ok(Math.abs(eloOf(m.lo!) - m.eloLo!) < 1e-9, 'the Elo ends are the score ends mapped');
+  assert.equal(eloOf(0.5), 0);
+  assert.equal(eloOf(1), Infinity);
+  const one = matchSummary([{ x: 1, games: 2 }]);
+  assert.equal(one.se, null);
+  assert.equal(one.lo, null);
+  assert.equal(matchSummary([]).pairs, 0);
+  // a 95% interval of +-20 Elo at a pair SD of 0.35 needs ~570 pairs (1,140 games); +-30 under half that
+  assert.ok(pairsForHalfWidth(20, 0.35) > 520 && pairsForHalfWidth(20, 0.35) < 620);
+  assert.ok(pairsForHalfWidth(30, 0.35) < pairsForHalfWidth(20, 0.35) / 2);
+});
+
+test('match (D398): the interval covers the truth about 95% of the time on mirrored synthetic pairs', () => {
+  const r = rng(77, 'match-coverage');
+  const truth = expected(1535, 1500);
+  let covered = 0;
+  const runs = 400;
+  for (let k = 0; k < runs; k++) {
+    const ps = [];
+    for (let i = 0; i < 300; i++) {
+      const tilt = 0.6 * (r.next() - 0.5);
+      const w1 = r.next() < truth + tilt ? 1 : 0, w2 = r.next() < truth - tilt ? 1 : 0;
+      ps.push({ x: (w1 + w2) / 2, games: 2 });
+    }
+    const m = matchSummary(ps);
+    if (m.lo! <= truth && truth <= m.hi!) covered++;
+  }
+  assert.ok(covered / runs > 0.92 && covered / runs < 0.98, `coverage ${covered / runs}`);
+});
+
+test('match (D398): search counters from ai-bench lines -- searched, changed, fallbacks by reason, a game-clustered budget rate', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ladder-match-'));
+  const f = join(dir, 'b0.jsonl');
+  const line = (a: Record<string, number> | null, b: Record<string, number> | null): string =>
+    JSON.stringify({ pair: 0, game: 0, winner: 'A', aStats: a ? { counts: a } : {}, bStats: b ? { counts: b } : {} });
+  writeFileSync(f, [
+    line({ 'search.p.considered': 8, 'search.a.considered': 2, 'search.p.changed': 1, 'search.fallback.budget': 2, 'search.fallback.rolloutErrors': 1 }, { 'policy.x': 3 }),
+    line({ 'search.p.considered': 10, 'search.fallback.budget': 0 }, null),
+    line({ 'search.b.considered': 5, 'search.b.changed': 2, 'search.fallback.budget': 3 }, null),
+    '{"pair":0,"game":3,"aSt',   // a torn last line
+  ].join('\n'));
+  const a = emptyTally(), b = emptyTally();
+  tallyBatch(f, a, b);
+  tallyBatch(join(dir, 'missing.jsonl'), a, b);
+  assert.equal(a.games, 3);
+  assert.equal(a.searched, 25);
+  assert.equal(a.changed, 3);
+  assert.deepEqual(a.fallback, { budget: 5, rolloutErrors: 1 });
+  assert.equal(b.games, 0, 'a seat that never searched is not a searching game');
+  const br = budgetRate(a);
+  assert.ok(Math.abs(br.rate - 5 / 25) < 1e-12);
+  assert.ok(br.lo! < br.rate && br.rate < br.hi!);
+  // clustered variance by hand: residuals b_i - r c_i = 2-2, 0-2, 3-1
+  const v = ((0) ** 2 + (-2) ** 2 + 2 ** 2) / (25 * 25) * (3 / 2);
+  assert.ok(Math.abs(br.hi! - (0.2 + 1.96 * Math.sqrt(v))) < 1e-12);
+  const tl = tallyLine(a);
+  assert.equal(tl.budgetRate, 0.2);
+  assert.equal(budgetRate(b).lo, null);
+});
+
+test('the registry (D398): search-v1-reckless is search-v1 on Reckless.ai and nothing else', () => {
+  const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const rk = by.get('search-v1-reckless')!, v1 = by.get('search-v1')!;
+  assert.ok(rk.cfg, 'registered and playable');
+  assert.equal(rk.cfg, v1.cfg!.replace(/^Default\+/, 'Reckless+'));
+  assert.notEqual(rk.hash, v1.hash);
 });
