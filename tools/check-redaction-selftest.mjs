@@ -54,6 +54,13 @@ const REQUIRED = [
   // Amendment M47 (spectating): the viewer's own profile, only on an AI viewer,
   // and the paced header's one key.
   ['m47-spectated-present.jsonl', 'pass'],
+  // Amendment M60 (D406, D407): a best of three at a table of two, and a seat's consent.
+  ['m60-best-of-three-present.jsonl', 'pass'],
+  ['m60-score-in-a-one-game-match.jsonl', 'fail'],
+  ['m60-score-not-a-count.jsonl', 'fail'],
+  ['m60-score-ahead-of-the-game.jsonl', 'fail'],
+  ['m60-record-not-a-boolean.jsonl', 'fail'],
+  ['m60-record-against-the-ai.jsonl', 'fail'],
   ['m47-yourprofile-on-a-human-seat.jsonl', 'fail'],
   ['m47-yourprofile-is-a-path.jsonl', 'fail'],
   ['m47-pace-not-a-number.jsonl', 'fail'],

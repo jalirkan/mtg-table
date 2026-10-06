@@ -51,6 +51,23 @@ your deck's non-basic cards, when your deck file is still on disk), `aiDeck`
 `.collect-cache.json` beside it remembers files already judged (size + mtime) so
 play.sh's call costs milliseconds.
 
+GAMES BETWEEN TWO PEOPLE (D407).  A table of two (D402) writes one log per seat,
+`var/games/friend-m<13 digits>-seat<N>/`, and the draft room asks each player, game
+by game, whether their seat may be recorded (the default is the room owner's
+choice); the bridge writes that seat's answer into its session header as
+`record` (amendment M60).  A seat's log is taken only when its header says
+`humans: 2` and `record: true`, its transport is `ws`, both players are people
+and it is finished -- so a player who opted out is never copied, and a game in
+which only one player agreed gives exactly that player's seat.  ONE SEAT IS A
+WHOLE TEST GAME: the rows are the viewing seat's own decisions over its own
+redacted view (encode.py), exactly as for a game against the AI, so a seat is
+usable without the other.  These games go to a set of their own,
+`var/ml/human-friends/` (same manifest, plus `opponent: "human"`,
+`opponentDeck` {name, cards} and `match` {game, of, score}), never into
+`var/ml/human/`: D369's pre-registered first check is over the owner's games
+against Forge's AI, and a game against a person is another population.
+`human_eval.py --human var/ml/human-friends` scores them on their own.
+
 Standard library only (no numpy): play.sh runs it at start and at exit.
 """
 from __future__ import annotations
@@ -73,11 +90,14 @@ import encode as E  # noqa: E402
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 DEFAULT_GAMES = os.path.join("var", "games")
 DEFAULT_OUT = os.path.join("var", "ml", "human")
+DEFAULT_FRIENDS_OUT = os.path.join("var", "ml", "human-friends")
 MANIFEST = "manifest.json"
 CACHE = ".collect-cache.json"
 HUMAN_TRANSPORTS = ("ws", "console")
 # play.sh's own ids (MtgTable's default human-<transport>-<seed>) and D303's launched matches.
 GAME_ID = re.compile(r"^(human-(ws|console)-\d+|match-m\d{13})(-g\d+)?$")
+# D407: one seat's log of a game between two people (play.sh's table ids, TableMatch's -seat<N>).
+FRIEND_GAME_ID = re.compile(r"^friend-m\d{13}-seat[01]$")
 CUBE_MIN_SHARE = 0.8
 
 
@@ -103,9 +123,37 @@ def _raw_segments(path: str) -> list[list[str]]:
     return groups
 
 
+def judge_friend(game: E.Game) -> str | None:
+    """D407: None when this seat of a game between two people may be taken (its player agreed), else why not."""
+    h = game.header
+    if h.get("humans") != 2:
+        return "not a seat at a table of two"
+    if h.get("record") is not True:
+        return "the player did not agree to recording this game (D407)"
+    if h.get("transport") != "ws":
+        return f"transport {h.get('transport')!r} is not a person's seat"
+    hello = game.hello
+    if not hello:
+        return "no hello_ok"
+    seat = h.get("seat")
+    if hello.get("you") != seat:
+        return "the header's seat is not hello_ok.you"
+    players = hello.get("players") or []
+    if len(players) != 2 or any(p.get("isAi") is not False for p in players):
+        return "a table of two whose players are not both people"
+    if ((hello.get("match") or {}).get("opponent")) != "human":
+        return "hello_ok.match does not say the opponent is a person"
+    _w, _t, labelled = E.game_outcome(game)
+    if not labelled:
+        return "not finished"
+    return None
+
+
 def judge(game: E.Game) -> str | None:
     """None when the game belongs in the human test set, else why not."""
     h = game.header
+    if h.get("humans") == 2:
+        return "a game between two people (D407: var/ml/human-friends/)"
     if h.get("transport") not in HUMAN_TRANSPORTS:
         return f"transport {h.get('transport')!r} is not a person's seat"
     hello = game.hello
@@ -133,6 +181,8 @@ def key_of(h: dict[str, Any]) -> str:
 
 def file_name(h: dict[str, Any]) -> str:
     gid = re.sub(r"[^A-Za-z0-9_.-]", "_", str(h.get("gameId") or "game"))
+    if h.get("humans") == 2:
+        gid += f"-seat{h.get('seat')}"   # D407: both seats of a table share a game id
     started = re.sub(r"[^0-9]", "", str(h.get("startedAt") or ""))[:17] or "0"
     return f"{gid}-{h.get('seed')}-{started}.jsonl.gz"
 
@@ -211,6 +261,14 @@ def entry_of(game: E.Game, raw: str, origin: str, repo: str) -> dict[str, Any]:
     ai = match.get("aiDeck") or {}
     cube, share = guess_cube(mine.get("path") or you.get("path"), repo)
     started = str(h.get("startedAt") or "")
+    friend = h.get("humans") == 2
+    extra: dict[str, Any] = {}
+    if friend:
+        od = match.get("opponentDeck") or {}
+        sc = match.get("score") if isinstance(match.get("score"), dict) else None
+        extra = {"opponent": "human", "opponentDeck": {"name": od.get("name"), "cards": od.get("cards")},
+                 "match": {"game": (game.hello or {}).get("gameNumber"), "of": match.get("games"), "score": sc},
+                 "record": True}
     return {
         "key": key_of(h), "file": file_name(h), "gameId": h.get("gameId"), "seed": h.get("seed"),
         "startedAt": started or None, "date": started[:10] or None, "seat": seat, "transport": h.get("transport"),
@@ -224,6 +282,7 @@ def entry_of(game: E.Game, raw: str, origin: str, repo: str) -> dict[str, Any]:
         "aiProfile": match.get("aiProfile"), "aiPolicy": match.get("aiPolicy"),
         "origin": origin, "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
         "collectedAt": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime()),
+        **extra,
     }
 
 
@@ -257,13 +316,13 @@ def _write_gz(path: str, raw: str) -> None:
     os.replace(tmp, path)
 
 
-def candidates(games_dir: str | None, from_dirs: list[str]) -> list[tuple[str, str]]:
+def candidates(games_dir: str | None, from_dirs: list[str], ids: re.Pattern[str] = GAME_ID) -> list[tuple[str, str]]:
     """(path, origin): var/games/<id>/frames.jsonl for play.sh's id shapes, and every log under --from."""
     out: list[tuple[str, str]] = []
     if games_dir and os.path.isdir(games_dir):
         for d in sorted(os.listdir(games_dir)):
             p = os.path.join(games_dir, d, "frames.jsonl")
-            if GAME_ID.match(d) and os.path.isfile(p):
+            if ids.match(d) and os.path.isfile(p):
                 out.append((p, "var/games"))
     for d in from_dirs:
         out += [(p, "from") for p in E.find_logs([d])]
@@ -271,9 +330,12 @@ def candidates(games_dir: str | None, from_dirs: list[str]) -> list[tuple[str, s
 
 
 def collect(games_dir: str | None, out: str, from_dirs: list[str] | None = None, repo: str = REPO,
-            dry_run: bool = False) -> dict[str, Any]:
-    """Copy what is new; returns {added, games, skipped: {why: n}, entries}."""
+            dry_run: bool = False, friends: bool = False) -> dict[str, Any]:
+    """Copy what is new; returns {added, games, skipped: {why: n}, entries}.  `friends` (D407): the
+    seats of games between two people whose player agreed, into their own set."""
     from_dirs = from_dirs or []
+    ids = FRIEND_GAME_ID if friends else GAME_ID
+    judge_one = judge_friend if friends else judge
     man = read_manifest(out)
     by_key = {g["key"]: g for g in man["games"] if isinstance(g, dict) and "key" in g}
     try:
@@ -285,7 +347,7 @@ def collect(games_dir: str | None, out: str, from_dirs: list[str] | None = None,
     skipped: dict[str, int] = {}
     new_cache: dict[str, Any] = {}
     out_real = os.path.realpath(out)
-    for path, origin in candidates(games_dir, from_dirs):
+    for path, origin in candidates(games_dir, from_dirs, ids):
         real = os.path.realpath(path)
         if real == out_real or real.startswith(out_real + os.sep):
             continue  # --from pointed at the set itself
@@ -310,8 +372,10 @@ def collect(games_dir: str | None, out: str, from_dirs: list[str] | None = None,
         if not parsed:
             whys.append("no session header")
         for game, seg in zip(parsed, segments):
-            why = judge(game)
-            if why is None and origin == "var/games" and not GAME_ID.match(str(game.header.get("gameId") or "")):
+            why = judge_one(game)
+            gid = str(game.header.get("gameId") or "")
+            if why is None and origin == "var/games" and not (FRIEND_GAME_ID.match(os.path.basename(os.path.dirname(path)))
+                                                              if friends else GAME_ID.match(gid)):
                 why = "not a play.sh game id"
             if why:
                 whys.append(why)
@@ -336,11 +400,25 @@ def collect(games_dir: str | None, out: str, from_dirs: list[str] | None = None,
     games = sorted((g for g in by_key.values() if dry_run or os.path.isfile(os.path.join(out, g["file"]))),
                    key=lambda g: (str(g.get("startedAt") or ""), g["key"]))
     if not dry_run and (added or len(games) != len(man["games"]) or os.path.isdir(out)):
-        man = {"version": 1, "about": "the owner's own games against Forge's AI, the human test set (D347, D369); "
-                                      "written by tools/ml/human_collect.py", "games": games}
+        about = ("games between two people at a table (D402), one seat each, every one with its player's consent "
+                 "(D407); kept apart from the human test set; written by tools/ml/human_collect.py") if friends else \
+                ("the owner's own games against Forge's AI, the human test set (D347, D369); "
+                 "written by tools/ml/human_collect.py")
+        man = {"version": 1, "about": about, "games": games}
         _write_json(os.path.join(out, MANIFEST), man)
         _write_json(os.path.join(out, CACHE), new_cache)
     return {"added": len(added), "games": len(games), "skipped": skipped, "entries": games, "new": added}
+
+
+def friends_line(entries: list[dict[str, Any]], added: int | None = None, out: str = DEFAULT_FRIENDS_OUT) -> str:
+    """D407: the games-between-two-people set, one clause for the status line (empty when there are none)."""
+    n = len(entries)
+    if not n and not added:
+        return ""
+    s = f"; {n} seat{'s' if n != 1 else ''} of games between two people"
+    if added:
+        s += f" ({added} new)"
+    return s + f" -- {out}/ (D407)"
 
 
 def status_line(entries: list[dict[str, Any]], added: int | None = None, out: str = DEFAULT_OUT) -> str:
@@ -360,6 +438,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--games-dir", default=None, help=f"where the bridge writes games (default <repo>/{DEFAULT_GAMES})")
     ap.add_argument("--out", default=None, help=f"the human test set (default <repo>/{DEFAULT_OUT})")
+    ap.add_argument("--friends-out", default=None,
+                    help=f"D407: the seats of games between two people whose player agreed (default <repo>/{DEFAULT_FRIENDS_OUT})")
     ap.add_argument("--from", dest="from_dirs", action="append", default=[],
                     help="also read every *.jsonl[.gz] under this folder (ForgeCoach-saved logs); "
                          "with --from, var/games/ is read only when --games-dir is given too")
@@ -369,24 +449,38 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--json", action="store_true", help="print the result as JSON")
     a = ap.parse_args(argv)
     out = a.out or os.path.join(REPO, DEFAULT_OUT)
+    # D407: beside --out when that is given (a scratch set gets a scratch friends' set), else the repo's.
+    fout = a.friends_out or (os.path.join(os.path.dirname(os.path.abspath(out)), "human-friends") if a.out
+                             else os.path.join(REPO, DEFAULT_FRIENDS_OUT))
     shown = os.path.relpath(out, REPO) if out.startswith(REPO + os.sep) else out
+    fshown = os.path.relpath(fout, REPO) if fout.startswith(REPO + os.sep) else fout
     if a.status:
         man = read_manifest(out)
-        print(status_line([g for g in man["games"] if os.path.isfile(os.path.join(out, g.get("file", "")))],
-                          out=shown))
+        fman = read_manifest(fout)
+        print(status_line([g for g in man["games"] if os.path.isfile(os.path.join(out, g.get("file", "")))], out=shown)
+              + friends_line([g for g in fman["games"] if os.path.isfile(os.path.join(fout, g.get("file", "")))], out=fshown))
         return 0
     games_dir = a.games_dir or (None if a.from_dirs else os.path.join(REPO, DEFAULT_GAMES))
     r = collect(games_dir, out, a.from_dirs, REPO, a.dry_run)
+    # D407: the seats of games between two people whose player agreed -- var/games/ only, into their own set.
+    f = collect(games_dir, fout, [], REPO, a.dry_run, friends=True) if games_dir else \
+        {"added": 0, "games": 0, "skipped": {}, "entries": [], "new": []}
     if a.json:
-        print(json.dumps({k: v for k, v in r.items() if k != "entries"}, indent=1))
+        print(json.dumps({**{k: v for k, v in r.items() if k != "entries"},
+                          "friends": {k: v for k, v in f.items() if k != "entries"}}, indent=1))
         return 0
     if not a.quiet:
         for e in r["new"]:
             print(f"{'would copy' if a.dry_run else 'copied'} {e['gameId']} (seed {e['seed']}, {e['date']}): "
                   f"{e['result']} in {e['turns']} turns vs {(e['aiDeck'] or {}).get('name') or 'the AI'} -> {e['file']}")
+        for e in f["new"]:
+            print(f"{'would copy' if a.dry_run else 'copied'} {e['gameId']} seat {e['seat']} (a game between two people, "
+                  f"{e['date']}): {e['result']} in {e['turns']} turns -> {fshown}/{e['file']}")
         for why, n in sorted(r["skipped"].items()):
             print(f"  not taken: {n} x {why}")
-    print(status_line(r["entries"], r["added"], shown))
+        for why, n in sorted(f["skipped"].items()):
+            print(f"  not taken (two people): {n} x {why}")
+    print(status_line(r["entries"], r["added"], shown) + friends_line(f["entries"], f["added"], fshown))
     return 0
 
 

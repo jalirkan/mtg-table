@@ -255,7 +255,8 @@ async function localDoors(host, ports, roomId, gameSeat, t, add, ok) {
     }
   }
   // The bridge: it trusts loopback by design, so the config's rules keep the tunnel off it -- and, since
-  // D402's TunnelGate, it refuses anything carrying Cloudflare's headers, whatever the Host.
+  // D402's TunnelGate, it refuses anything carrying Cloudflare's headers, whatever the Host; at a table of
+  // two its port (/health alone) refuses them as well (TableServer's TableDoor).
   const bridge = await ask({ host, port: ports.ws, path: '/health', timeoutMs: t });
   if (bridge.error) add('PASS', `bridge 127.0.0.1:${ports.ws}`, `not answering (${bridge.error})`);
   else {
@@ -263,9 +264,10 @@ async function localDoors(host, ports, roomId, gameSeat, t, add, ok) {
       const r = await ask({ host: `127.0.0.1:${ports.ws}`, port: ports.ws, path: '/health', headers: { [h]: CF_VALUE[h] }, timeoutMs: t });
       if (r.status === 403) { add('PASS', `bridge, Host 127.0.0.1, ${h}`, '403: it refuses what came through Cloudflare (D402)'); continue; }
       if (r.error) { add('FAIL', `bridge, Host 127.0.0.1, ${h}`, r.error); continue; }
-      // A table of two (D402): the bridge's own port is a loopback /health and nothing else, without the gate.
+      // A table of two (D402): the bridge's own port is a loopback /health and nothing else -- and since D406's
+      // lane it refuses a tunnel's headers there too.  Answering is a FAIL in every mode.
       const table = r.status === 200 && /game between two people/.test((await ask({ host: `127.0.0.1:${ports.ws}`, port: ports.ws, path: '/', headers: { [h]: CF_VALUE[h] }, timeoutMs: t })).body ?? '');
-      if (table) add('WARN', `bridge, Host 127.0.0.1, ${h}`, `${r.status}: at a table of two the bridge's port answers /health ("ok") even to a tunnel's headers -- it serves nothing else there, and no rule may name it (docs/security/endpoints.md, D408)`);
+      if (table) add('FAIL', `bridge, Host 127.0.0.1, ${h}`, `${r.status}: at a table of two this bridge's port answered /health to a request carrying ${h} -- it predates the table's tunnel refusal (D406's lane; rebuild: ./bridge/build.sh)`);
       else add('FAIL', `bridge, Host 127.0.0.1, ${h}`, `${r.status} -- it answered a request carrying ${h}: this bridge predates D402's TunnelGate (rebuild: ./bridge/build.sh)`);
     }
   }

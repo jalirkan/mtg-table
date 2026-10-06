@@ -39,7 +39,7 @@
 
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -85,6 +85,9 @@ const sha = (t) => createHash('sha256').update(t, 'utf8').digest('hex');
 const seatsFile = join(ROOT, 'var', 'two-humans', `${GAME_ID}.seats.json`);
 mkdirSync(dirname(seatsFile), { recursive: true });
 writeFileSync(seatsFile, JSON.stringify({ names: ['Ana', 'Ben'], tokenSha256: tokens.map(sha) }));
+// D406: the bridge writes the game's result beside the seats file; none may be left from a run before.
+const resultFile = join(dirname(seatsFile), 'result.json');
+rmSync(resultFile, { force: true });
 
 const bridgeArgs = ['mtgtable.MtgTable', '--humans', '2', '--transport', 'ws',
   '--deck', 'decks/pacho-shield.dck', '--deck2', 'decks/doom-legion.dck',
@@ -465,6 +468,11 @@ async function finish() {
     });
     if (await run('check-redaction.mjs', logs) !== 0) fail('check-redaction failed on a seat log');
     if (await run('check-seat-pair.mjs', logs) !== 0) fail('check-seat-pair failed');
+    // D406: result.json names seat 0, the winner of every scenario (a concede and a claimed win are losses).
+    let res = null;
+    try { res = JSON.parse(readFileSync(resultFile, 'utf8')); } catch { /* checked below */ }
+    if (!res || res.winnerSeat !== 0 || res.gameId !== GAME_ID) fail(`result.json does not name seat 0 the winner: ${JSON.stringify(res)}`);
+    else say(`result.json: seat 0 won (${res.reason}, from ${res.from})`);
   }
   if (failure) {
     console.error(`[two] ${args.scenario}: FAILED -- ${failure.why}`);

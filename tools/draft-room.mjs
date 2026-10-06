@@ -53,7 +53,8 @@
 //
 //   On the coach helper (8643, the owner's door):
 //   POST /room  {"cubeId": "synergy", "cubeTitle"?: string, "cards": [names, document order],
-//                "name"?: string, "firstSeat"?: 0|1}            (body at most 256 KB)
+//                "name"?: string, "firstSeat"?: 0|1, "record"?: bool (D407: the default for
+//                recording each seat's games; false when absent)}   (body at most 256 KB)
 //               -> 201 {ok, id, seat: 0, token, friendToken, roomPort, bases: {local, lan[], public},
 //                       cube: {id, title, hash, size}, expiresAt}
 //               400 bad body, 429 {code:"full"} (16 live rooms)
@@ -78,6 +79,16 @@
 //                               400 {code:"deck", problems, state}: this seat's deck for the next game,
 //                               checked against THIS seat's picks (basic lands free).  When both seats have
 //                               one in, the room starts a game between them (the bridge's --humans 2, D402)
+//   POST /room/<id>/record   (D407) {"record": bool} -> 200 state: this seat's consent to recording its seat of
+//                               the NEXT game the room starts (the human test set, D369, and the automatic
+//                               engine review, D385); a deck may carry "record" too.  The default is the room's
+//                               (POST /room's "record", the owner's choice; false when absent)
+//   GET  /room/<id>/review/<matchId>  (D407) -> 200 {ok, matchId, game, state, report?, why?}: THIS seat's own
+//                               engine review of that game of this room -- never the other seat's, whose log
+//                               holds that player's hand; state off|waiting|queued|running|done|failed
+//   GET  /room/<id>/log/<matchId>  (D407) -> 200 application/x-ndjson: THIS seat's own frame log of that
+//                               game (the bridge's, redacted for this seat), when this seat was recorded --
+//                               the review's frame numbers are this file's; 404 otherwise
 //   OPTIONS                  preflight (Allow-Private-Network, X-Room-Token)
 //   GET  /, /assets/...      the site, when --room-site-dir is given (else 404)
 //
@@ -87,7 +98,21 @@
 //            decks:[{ready, name, cards}x2]  (D404: the other seat's deck by name and count only),
 //            yourDeck: {name, main, sideboard} | null  (this seat's own, to this seat alone),
 //            game: null | {n, state:"starting"|"ready"|"failed"|"unavailable", error, matchId,
-//                          tablePort, token}  (token: THIS seat's seat token, only when ready)}
+//                          tablePort, token, game, result}  (token: THIS seat's seat token, only when ready;
+//                          D406: game = its number in the match, result = null | {winner: 0|1|null, reason}),
+//            match: null | {n, bestOf: 3, wins: [a, b], over, winner, next: {game, chooser}}  (D406),
+//            games: [{match, game, matchId, winner, reason, recorded, review}]  (D406/D407: every finished
+//                   game, newest last; `recorded` and `review` are THIS seat's own),
+//            record: {you: bool, default: bool}  (D407: this seat's consent for the next game)}
+//
+// BEST OF THREE (D406): the room runs the match, one engine start per game.  Game 1 starts when both
+// decks are in; when it ends the bridge's result.json (beside the seats file) names the winning seat, the
+// room scores it, and the next game starts when both players have handed in a deck again -- the same one,
+// or sideboarded: any deck of their own picks plus basic lands, checked exactly as D404's.  The previous
+// game's loser chooses to play or draw (Forge's own rule for a later game of a match; the seats file's
+// `chooser`); game 1 is Forge's coin toss.  A game with no winner (a draw) is played again under the
+// same number; a game that ended without a result (the engine stopped) does not count.  Two wins take the
+// match; the next pair of decks starts a new one.  Concede and a claimed win are losses (Forge's outcome).
 //
 // ROOMS LIVE IN MEMORY AND ON DISK: <room dir>/rooms.json (default var/draft-room/,
 // whose real path must stay under var/), mode 600, token DIGESTS only, rewritten
@@ -118,6 +143,12 @@ export const MAX_ROOMS = 16;
 export const MAX_CREATE_BODY = 256 * 1024;
 export const MAX_SEAT_BODY = 1024;
 export const MAX_DECK_BODY = 16 * 1024;
+/** D406: a match between the two seats is a best of three. */
+export const BEST_OF = 3;
+/** D406: the finished games a room remembers (every match's), oldest dropped first. */
+export const MAX_GAMES_KEPT = 24;
+/** D406: how often the room looks for a game's result and a review's progress. */
+export const POLL_MS = 2_000;
 /** The basic lands a deck may hold any number of (D404): not drafted, as at a paper table. */
 export const BASIC_LANDS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes',
   'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'];
@@ -245,7 +276,7 @@ export function cleanText(s, max) {
 /** Why a POST /room body is not a room, or null; `out` gets the cleaned fields. */
 export function checkCreate(body, out = {}) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return 'the body must be a JSON object';
-  for (const k of Object.keys(body)) if (!['cubeId', 'cubeTitle', 'cards', 'name', 'firstSeat'].includes(k)) return `unknown field "${k}"`;
+  for (const k of Object.keys(body)) if (!['cubeId', 'cubeTitle', 'cards', 'name', 'firstSeat', 'record'].includes(k)) return `unknown field "${k}"`;
   if (typeof body.cubeId !== 'string' || !CUBE_ID.test(body.cubeId)) return '"cubeId" must be a cube id (lowercase letters, digits, dashes)';
   out.cubeId = body.cubeId;
   out.cubeTitle = body.cubeTitle === undefined ? body.cubeId : cleanText(body.cubeTitle, 80);
@@ -260,6 +291,9 @@ export function checkCreate(body, out = {}) {
   if (out.name === null) return `"name" must be 1-${MAX_SEAT_NAME} characters`;
   if (body.firstSeat !== undefined && body.firstSeat !== 0 && body.firstSeat !== 1) return '"firstSeat" must be 0 or 1';
   out.firstSeat = body.firstSeat;
+  // D407: the owner's default for recording the room's games (each seat may still opt out, game by game).
+  if (body.record !== undefined && typeof body.record !== 'boolean') return '"record" must be true or false';
+  out.record = body.record === true;
   return null;
 }
 
@@ -280,8 +314,10 @@ const BASIC_FOLDED = new Set(BASIC_LANDS.map(foldName));
  */
 export function checkRoomDeck(body, picks) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return { problems: ['the body must be a JSON object'] };
-  for (const k of Object.keys(body)) if (!['name', 'main', 'sideboard'].includes(k)) return { problems: [`unknown field "${k}"`] };
-  const c = checkDeck(body, 'deck');
+  for (const k of Object.keys(body)) if (!['name', 'main', 'sideboard', 'record'].includes(k)) return { problems: [`unknown field "${k}"`] };
+  if (body.record !== undefined && typeof body.record !== 'boolean') return { problems: ['"record" must be true or false'] };
+  const { record: _record, ...deckBody } = body;
+  const c = checkDeck(deckBody, 'deck');
   if (c.problems.length) return { problems: c.problems };
   const have = new Map();
   for (const p of picks ?? []) { const k = foldName(p); have.set(k, (have.get(k) ?? 0) + 1); }
@@ -333,7 +369,10 @@ function realUnder(root, p) {
  * opts: { dir (folder for rooms.json, or null for memory only), varRoot (dir's real path must stay
  * under it), now(), log(), maxRooms, idleMs, lifeMs, rounds,
  * startGame (D404: async ({roomId, decks, names, digests}) -> {ok, matchId, tablePort} | {ok: false, message};
- *            null when no engine can be started here), gameRunning (D404: matchId -> bool) }
+ *            null when no engine can be started here), gameRunning (D404: matchId -> bool),
+ * gameResult (D406: matchId -> {winnerSeat, draw, reason, finished} | null, the bridge's result.json),
+ * reviewOf (D407: a seat log's gameId -> {state, report?, why?}: that log's automatic engine review),
+ * seatLog (D407: a seat log's gameId -> its text, or null) }
  */
 export function createRoomStore(opts = {}) {
   const now = opts.now ?? Date.now;
@@ -351,13 +390,35 @@ export function createRoomStore(opts = {}) {
   const gameTokens = new Map();  // id -> [token0, token1]
   const startGame = opts.startGame ?? null;
   const gameRunning = opts.gameRunning ?? (() => true);
+  const gameResult = opts.gameResult ?? (() => null);
+  const reviewOf = opts.reviewOf ?? null;
+  const seatLogOf = opts.seatLog ?? (() => null);
+  // D407: each finished game's review, per seat, as last seen ("<matchId>/<seat>" -> state word): memory only.
+  const reviewSeen = new Map();
   /** A room from before D404, or from disk: the game fields it may lack. */
   const withGame = (r) => {
     if (!Array.isArray(r.decks) || r.decks.length !== 2) r.decks = [null, null];
     if (!Array.isArray(r.ready) || r.ready.length !== 2) r.ready = [false, false];
     if (r.game === undefined) r.game = null;
+    // D406 / D407: a room from before the best of three.
+    if (r.match === undefined) r.match = null;
+    if (!Array.isArray(r.games)) r.games = [];
+    if (typeof r.recordDefault !== 'boolean') r.recordDefault = false;
+    if (!Array.isArray(r.record) || r.record.length !== 2) r.record = [r.recordDefault, r.recordDefault];
     return r;
   };
+  /** D406: what the next game of a room's match would be -- its number, who chooses to play or draw. */
+  const nextGame = (r) => {
+    const m = r.match && !r.match.over ? r.match : null;
+    if (!m) return { fresh: true, game: 1, chooser: null };
+    const mine = r.games.filter((g) => g.match === m.n);
+    const scored = mine.filter((g) => g.winner !== null).length;
+    const last = mine[mine.length - 1];
+    return { fresh: false, game: scored + 1, chooser: last && last.winner !== null ? 1 - last.winner : null };
+  };
+  const seatLog = (matchId, seat) => `friend-${matchId}-seat${seat}`;
+  /** D407: this seat's review of a finished game, as a word. */
+  const reviewWord = (g, seat) => (!g.record?.[seat] ? 'off' : reviewSeen.get(`${g.matchId}/${seat}`) ?? 'waiting');
 
   const expiresAt = (r) => Math.min(r.createdAt + lifeMs, r.activeAt + idleMs);
 
@@ -407,7 +468,20 @@ export function createRoomStore(opts = {}) {
       game: r.game ? {
         n: r.game.n, state: r.game.state, error: r.game.error ?? null, matchId: r.game.matchId ?? null, tablePort: r.game.tablePort ?? null,
         token: r.game.state === 'ready' ? (gameTokens.get(r.id)?.[seat] ?? null) : null,
+        // D406: its number in the match, and how it ended (null while it is being played).
+        game: r.game.gameNo ?? null,
+        result: r.game.result ? { winner: r.game.result.winner, reason: r.game.result.reason ?? null } : null,
       } : null,
+      // D406: the match between the two seats, and what the next game is.
+      match: r.match ? (() => {
+        const nx = nextGame(r);
+        return { n: r.match.n, bestOf: r.match.bestOf, wins: [...r.match.wins], over: r.match.over, winner: r.match.winner,
+          next: nx.fresh ? { game: 1, chooser: null, newMatch: true } : { game: nx.game, chooser: nx.chooser, newMatch: false } };
+      })() : null,
+      // D406/D407: every finished game; whether THIS seat was recorded, and THIS seat's own review.
+      games: r.games.map((g) => ({ match: g.match, game: g.game, matchId: g.matchId, winner: g.winner, reason: g.reason ?? null,
+        recorded: !!g.record?.[seat], review: reviewWord(g, seat) })),
+      record: { you: !!r.record[seat], default: !!r.recordDefault },
     };
   };
 
@@ -425,28 +499,86 @@ export function createRoomStore(opts = {}) {
       return;
     }
     const tokens = [newToken(), newToken()];
-    r.game = { n, state: 'starting', error: null, matchId: null, tablePort: null };
-    log(`ROOM ${r.id} game ${n} starting`);
+    // D406: game 1 of a new match, or the next game of this one; D407: each seat's consent, as it is now.
+    const nx = nextGame(r);
+    if (nx.fresh) r.match = { n: (r.match?.n ?? 0) + 1, bestOf: BEST_OF, wins: [0, 0], over: false, winner: null };
+    const record = [!!r.record[0], !!r.record[1]];
+    r.game = { n, state: 'starting', error: null, matchId: null, tablePort: null, matchNo: r.match.n, gameNo: nx.game, chooser: nx.chooser, record, result: null };
+    log(`ROOM ${r.id} game ${n} starting (match ${r.match.n}, game ${nx.game} of ${BEST_OF}${nx.chooser === null ? ', a coin toss' : `, seat ${nx.chooser} chooses play or draw`})`);
     Promise.resolve()
       // The launcher's request shape: [count, card] pairs (checkDeck's [n, card, name] triples are its normal form, not its input).
       .then(() => startGame({ roomId: r.id, decks: r.decks.map((d) => ({ name: d.name, main: d.main.map(([n, card]) => [n, card]), sideboard: d.sideboard.map(([n, card]) => [n, card]) })),
-        names: r.seats.map((x) => x.name), digests: tokens.map((t) => digest(t).toString('hex')) }))
+        names: r.seats.map((x) => x.name), digests: tokens.map((t) => digest(t).toString('hex')),
+        match: { bestOf: BEST_OF, game: nx.game, wins: [...r.match.wins] }, ...(nx.chooser === null ? {} : { chooser: nx.chooser }), record }))
       .then((res) => res, (e) => ({ ok: false, message: e.message }))
       .then((res) => {
         const cur = rooms.get(r.id);
         if (cur !== r || r.game?.n !== n) return;
         if (res?.ok) {
           gameTokens.set(r.id, tokens);
-          r.game = { n, state: 'ready', error: null, matchId: res.matchId ?? null, tablePort: res.tablePort ?? null, at: now() };
+          r.game = { ...r.game, n, state: 'ready', error: null, matchId: res.matchId ?? null, tablePort: res.tablePort ?? null, at: now() };
           log(`ROOM ${r.id} game ${n} ready (${res.matchId}, table port ${res.tablePort})`);
         } else {
-          r.game = { n, state: 'failed', error: String(res?.message ?? 'the engine did not start').slice(0, 600), matchId: null, tablePort: null };
+          r.game = { ...r.game, n, state: 'failed', error: String(res?.message ?? 'the engine did not start').slice(0, 600), matchId: null, tablePort: null };
           log(`ROOM ${r.id} game ${n} failed: ${r.game.error.slice(0, 200)}`);
         }
         r.version++;
         save();
         broadcast(r);
       });
+  };
+
+  /** D406: a game's result, scored into the room's match (a draw is played again; two wins take the match). */
+  const score = (r, res) => {
+    const g = r.game;
+    const winner = res.winnerSeat === 0 || res.winnerSeat === 1 ? res.winnerSeat : null;
+    g.result = { winner, reason: typeof res.reason === 'string' ? res.reason.slice(0, 40) : null };
+    r.games.push({ match: g.matchNo, game: g.gameNo, matchId: g.matchId, winner, reason: g.result.reason, record: g.record ?? [false, false], at: new Date(now()).toISOString() });
+    if (r.games.length > MAX_GAMES_KEPT) r.games.splice(0, r.games.length - MAX_GAMES_KEPT);
+    const m = r.match;
+    if (m && m.n === g.matchNo && winner !== null) {
+      m.wins[winner]++;
+      if (m.wins[winner] > m.bestOf / 2) { m.over = true; m.winner = winner; }
+    }
+    log(`ROOM ${r.id} game ${g.n} (match ${g.matchNo}, game ${g.gameNo}) over: ${winner === null ? 'no winner, played again' : `seat ${winner} won`}${m ? `; ${m.wins[0]}-${m.wins[1]}${m.over ? `, match to seat ${m.winner}` : ''}` : ''}`);
+  };
+
+  /**
+   * D406/D407, every POLL_MS: a game being played that has a result is scored; one whose engine stopped
+   * without one does not count; and every recorded seat's review is looked at again.  Both seats are told.
+   */
+  const poll = () => {
+    for (const r of rooms.values()) {
+      let changed = false;
+      let moved = false;
+      const g = r.game;
+      if (g && g.state === 'ready' && !g.result && g.matchId) {
+        let res = gameResult(g.matchId);
+        if (!res && !gameRunning(g.matchId)) res = gameResult(g.matchId) ?? { none: true };
+        if (res && !res.none && (res.winnerSeat === 0 || res.winnerSeat === 1 || res.draw === true)) { score(r, res); moved = true; }
+        else if (res) {
+          r.game = { ...g, state: 'failed', error: 'the game ended without a result (the engine stopped) — it does not count: hand in both decks to play it again' };
+          gameTokens.delete(r.id);
+          log(`ROOM ${r.id} game ${g.n} ended without a result`);
+          moved = true;
+        }
+      }
+      if (reviewOf) {
+        for (const pg of r.games) {
+          for (const seat of [0, 1]) {
+            if (!pg.record?.[seat]) continue;
+            const k = `${pg.matchId}/${seat}`;
+            const was = reviewSeen.get(k);
+            if (was === 'done' || was === 'failed' || was === 'off') continue;
+            let st;
+            try { st = reviewOf(seatLog(pg.matchId, seat))?.state ?? 'waiting'; } catch { st = 'waiting'; }
+            if (st !== was) { reviewSeen.set(k, st); changed = true; }
+          }
+        }
+      }
+      if (moved) { r.version++; save(); }
+      if (moved || changed) broadcast(r);
+    }
   };
 
   const sweep = () => {
@@ -484,6 +616,8 @@ export function createRoomStore(opts = {}) {
         ...grid, version: 1, createdAt: t, activeAt: t,
         seats: [{ name: c.name, joined: true, tokenHash: digest(tokens[0]).toString('hex') }, { name: 'Player 2', joined: false, tokenHash: digest(tokens[1]).toString('hex') }],
         decks: [null, null], ready: [false, false], game: null,
+        // D406 / D407: the match, every finished game, the owner's recording default and each seat's consent.
+        match: null, games: [], recordDefault: c.record === true, record: [c.record === true, c.record === true],
       };
       rooms.set(id, r);
       save();
@@ -542,11 +676,12 @@ export function createRoomStore(opts = {}) {
       if (!r) return null;
       withGame(r);
       if (!r.done) return { code: 'drafting', message: 'the draft is not over yet', state: viewFor(r, seat) };
-      if (r.game && (r.game.state === 'starting' || (r.game.state === 'ready' && gameRunning(r.game.matchId)))) {
+      if (r.game && (r.game.state === 'starting' || (r.game.state === 'ready' && !r.game.result && gameRunning(r.game.matchId)))) {
         return { code: 'playing', message: 'a game between you is starting or being played; a deck for the next one goes in after it', state: viewFor(r, seat) };
       }
       const c = checkRoomDeck(body, r.picks[seat]);
       if (c.problems.length) return { code: 'deck', message: c.problems[0], problems: c.problems, state: viewFor(r, seat) };
+      if (typeof body.record === 'boolean') r.record[seat] = body.record;   // D407: consent for the game this deck is for
       r.decks[seat] = { ...c.deck, at: new Date(now()).toISOString() };
       r.ready[seat] = true;
       r.version++;
@@ -557,6 +692,49 @@ export function createRoomStore(opts = {}) {
       broadcast(r);
       return { state: viewFor(r, seat) };
     },
+    /** D407: this seat's consent to recording its seat of the next game.  {state}. */
+    record(id, seat, value) {
+      const r = rooms.get(id);
+      if (!r) return null;
+      withGame(r);
+      if (r.record[seat] !== value) {
+        r.record[seat] = value;
+        r.activeAt = now();
+        log(`ROOM ${id} seat ${seat} ${value ? 'agrees to' : 'opts out of'} recording its next game (D407)`);
+        save();
+        broadcast(r);
+      }
+      return { state: viewFor(r, seat) };
+    },
+    /**
+     * D407: THIS seat's engine review of one of the room's finished games -- its own seat log's, never
+     * the other's.  {status, body}.
+     */
+    review(id, seat, matchId) {
+      const r = rooms.get(id);
+      if (!r) return { status: 404, body: { ok: false, code: 'gone', message: 'no such room' } };
+      withGame(r);
+      const g = r.games.find((x) => x.matchId === matchId);
+      if (!g) return { status: 404, body: { ok: false, code: 'game', message: 'no finished game of this room has that id' } };
+      const base = { ok: true, matchId, match: g.match, game: g.game };
+      if (!g.record?.[seat]) return { status: 200, body: { ...base, state: 'off', why: 'you did not agree to recording this game, so it was not reviewed' } };
+      if (!reviewOf) return { status: 200, body: { ...base, state: 'off', why: 'the automatic review is off on the room’s computer' } };
+      let rv;
+      try { rv = reviewOf(seatLog(matchId, seat)) ?? { state: 'waiting' }; } catch (e) { rv = { state: 'failed', why: e.message }; }
+      reviewSeen.set(`${matchId}/${seat}`, rv.state);
+      return { status: 200, body: { ...base, state: rv.state, ...(rv.stage ? { stage: rv.stage } : {}), ...(rv.why ? { why: String(rv.why).slice(0, 300) } : {}), ...(rv.state === 'done' && rv.report ? { report: rv.report } : {}) } };
+    },
+    /** D407: THIS seat's own frame log of a recorded game of the room (the review's frames are its), or null. */
+    seatLog(id, seat, matchId) {
+      const r = rooms.get(id);
+      if (!r) return null;
+      withGame(r);
+      const g = r.games.find((x) => x.matchId === matchId);
+      if (!g || !g.record?.[seat]) return null;
+      try { return seatLogOf(seatLog(matchId, seat)) ?? null; } catch { return null; }
+    },
+    /** D406/D407: results and reviews (the room server calls it every POLL_MS). */
+    poll,
     /**
      * A stream: send(state) now and after every change, send(null) when the room goes; revoke() (D408)
      * when this seat's link was replaced by the owner.  Returns unsubscribe.
@@ -796,6 +974,9 @@ export function startRoomServer(opts) {
   const open = new Set();
   const sweeper = setInterval(() => store.sweep(), 60_000);
   sweeper.unref();
+  // D406/D407: a game's result and a review's progress reach both seats within POLL_MS.
+  const poller = store.poll ? setInterval(() => { try { store.poll(); } catch (e) { log(`ROOM poll failed: ${e.message}`); } }, opts.pollMs ?? POLL_MS) : null;
+  poller?.unref();
 
   const base = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' };
   const send = (res, status, obj, headers = {}) => {
@@ -843,9 +1024,10 @@ export function startRoomServer(opts) {
       }
       if (!all.take('all')) { send(res, 429, { ok: false, code: 'slow', message: 'the room is busy — try again in a moment' }, { ...cors, 'Retry-After': '5' }); say(429, ' (all)'); return; }
       if (fails.empty(who)) { send(res, 429, { ok: false, code: 'slow', message: 'too many wrong links from this address — wait a minute' }, { ...cors, 'Retry-After': '60' }); say(429, ' (failures)'); return; }
-      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck))?$/.exec(path);
+      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log)(?:\/(m[0-9]{13}))?)?$/.exec(path);
       if (!m || !ROOM_ID.test(m[1])) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
-      const [, id, action] = m;
+      const [, id, action, sub] = m;
+      if ((action === 'review' || action === 'log') !== (sub !== undefined)) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
       const seat = store.auth(id, req.headers[TOKEN_HEADER]);
       if (seat === 'gone' || seat === 'token') {
         fails.take(who);
@@ -860,6 +1042,25 @@ export function startRoomServer(opts) {
         if (method !== 'GET') { send(res, 405, { ok: false, code: 'method', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
         send(res, 200, store.view(id, seat), cors);
         say(200);
+        return;
+      }
+      if (action === 'review') {
+        // D407: this seat's own engine review of one finished game of the room.
+        if (method !== 'GET') { send(res, 405, { ok: false, code: 'method', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
+        const r = store.review(id, seat, sub);
+        send(res, r.status, r.body, cors);
+        say(r.status, ` (seat ${seat} review ${r.body.state ?? r.body.code})`);
+        return;
+      }
+      if (action === 'log') {
+        // D407: this seat's own log of a recorded game -- the frames its review numbers.
+        if (method !== 'GET') { send(res, 405, { ok: false, code: 'method', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
+        const text = store.seatLog(id, seat, sub);
+        if (text === null) { send(res, 404, { ok: false, code: 'log', message: 'no recorded log of yours for that game' }, cors); say(404, ` (seat ${seat} log)`); return; }
+        const body = Buffer.from(text, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', ...base, ...cors, 'Content-Length': body.length });
+        res.end(body);
+        say(200, ` (seat ${seat} log, ${body.length} bytes)`);
         return;
       }
       if (action === 'events') {
@@ -907,6 +1108,12 @@ export function startRoomServer(opts) {
         if (q.name !== undefined && name === null) { send(res, 400, { ok: false, code: 'bad', message: `a name is 1-${MAX_SEAT_NAME} characters` }, cors); say(400); return; }
         send(res, 200, store.join(id, seat, name), cors);
         say(200, ` (seat ${seat})`);
+        return;
+      }
+      if (action === 'record') {
+        if (typeof q.record !== 'boolean' || Object.keys(q).some((k) => k !== 'record')) { send(res, 400, { ok: false, code: 'bad', message: 'expected {"record": true or false}' }, cors); say(400); return; }
+        send(res, 200, store.record(id, seat, q.record).state, cors);
+        say(200, ` (seat ${seat} record ${q.record})`);
         return;
       }
       if (action === 'deck') {
@@ -1002,6 +1209,7 @@ export function startRoomServer(opts) {
     }),
     close: () => {
       clearInterval(sweeper);
+      if (poller) clearInterval(poller);
       for (const end of [...open]) end();
       server.close();
       server.closeAllConnections?.();

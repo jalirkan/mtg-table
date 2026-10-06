@@ -91,8 +91,10 @@ finishable. Anything on this list is a closed question, not a backlog item.
   **D402** and **D403**, on the owner's request:* the two drafted decks may be
   played against each other — `MtgTable --humans 2`, two human seats and no AI,
   each its own redacted stream on a table port where every seat needs its own
-  per-game token (amendment M59). One game at a time, two people, no spectators:
-  a lobby, a third seat and a view of both hands are still a no.
+  per-game token (amendment M59), a best of three that the room runs one game at
+  a time (D406), each seat recorded only with its player's consent (D407). Two
+  people, no spectators: a lobby, a third seat and a view of both hands are still
+  a no.
 - **No deck builder.** Decks are `.dck` files you already have. Editing them is
   Forge's job, or a text editor's.
 - **No card-library package.** Nothing published, nothing the engine, the bridge

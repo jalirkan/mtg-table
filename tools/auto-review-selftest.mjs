@@ -49,7 +49,7 @@ import {
   GATE_WORDS, HUMAN_GAME_ID, MAX_ATTEMPTS, createAutoReview, judgeHumanGame, labGate, loadQueue, lowPriorityPrefix, saveQueue,
 } from './auto-review.mjs';
 import { createReviewRunner, gameLog, headerSeat, readLogText } from './review-runner.mjs';
-import { startHelper } from './coach-helper.mjs';
+import { seatReviewOf, startHelper } from './coach-helper.mjs';
 
 const REL = 'var/auto-review-selftest';
 const DIR = resolve(REL);
@@ -72,10 +72,13 @@ const until = async (fn, ms = 8000) => {
 
 // --- logs -----------------------------------------------------------------------
 const T0 = Date.parse('2026-10-04T12:00:00Z');
-const logText = ({ id, seat = 0, transport = 'ws', aiSeat = 1 - seat, viewerAi = false, over = { winner: 1, reason: 'AllOpponentsLost' }, seed = 7, startedAt = `2026-10-04T12:00:0${seed % 10}Z` }) => {
+const logText = ({ id, seat = 0, transport = 'ws', aiSeat = 1 - seat, viewerAi = false, over = { winner: 1, reason: 'AllOpponentsLost' }, seed = 7, startedAt = `2026-10-04T12:00:0${seed % 10}Z`, table = null }) => {
+  // D407: `table` = {record?: bool, otherAi?: bool} -- one seat's log of a game between two people.
+  const tableHead = table ? { humans: 2, ...(table.record !== undefined ? { record: table.record } : {}) } : {};
+  const other = table ? { id: aiSeat, name: 'Sam', isAi: table.otherAi === true } : { id: aiSeat, name: 'Forge AI', isAi: true };
   const lines = [
-    { v: 1, kind: 'session', gameId: id, startedAt, seed, seat, ...(transport ? { transport } : {}), decks: [] },
-    { v: 1, seq: 1, dir: 's2c', type: 'hello_ok', body: { gameId: id, you: seat, players: [{ id: seat, name: 'You', isAi: viewerAi }, { id: aiSeat, name: 'Forge AI', isAi: true }] } },
+    { v: 1, kind: 'session', gameId: id, startedAt, seed, seat, ...(transport ? { transport } : {}), decks: [], ...tableHead },
+    { v: 1, seq: 1, dir: 's2c', type: 'hello_ok', body: { gameId: id, you: seat, players: [{ id: seat, name: 'You', isAi: viewerAi }, other], ...(table ? { match: { opponent: 'human' } } : {}) } },
     { v: 1, seq: 2, dir: 's2c', type: 'state', body: {} },
   ];
   if (over !== 'none') lines.push({ v: 1, seq: 3, dir: 's2c', type: 'over', body: over });
@@ -147,7 +150,9 @@ const flag = (av, f) => av[av.indexOf(f) + 1];
 // 1. Which games.
 console.log('which games');
 for (const id of ['human-ws-1', 'human-ws-17-g2', 'human-console-3', 'match-m1234567890123', 'match-m1234567890123-g3']) check(HUMAN_GAME_ID.test(id), `a person's game id: ${id}`);
-for (const id of ['human-auto-42', 'check-all-ws-3g', 'smoke-doom-1', 'human-ws-x', 'match-m12', 'drift-42', 'cubelab-1', 'friend-m1234567890123-seat0', 'friend-m1234567890123-seat1', 'friend-ws-5-seat0']) check(!HUMAN_GAME_ID.test(id), `not a person's game id: ${id}`);
+for (const id of ['human-auto-42', 'check-all-ws-3g', 'smoke-doom-1', 'human-ws-x', 'match-m12', 'drift-42', 'cubelab-1', 'friend-ws-5-seat0', 'friend-m1234567890123', 'friend-m1234567890123-seat2']) check(!HUMAN_GAME_ID.test(id), `not a person's game id: ${id}`);
+// D407: a seat of a game between two people is a candidate; its header decides.
+for (const id of ['friend-m1234567890123-seat0', 'friend-m1234567890123-seat1']) check(HUMAN_GAME_ID.test(id), `a seat at a table of two is a candidate: ${id}`);
 check(judgeHumanGame(logText({ id: 'a' })).ok, 'a ws seat against the AI, over with a winner: taken');
 check(judgeHumanGame(logText({ id: 'a', transport: 'console' })).ok, 'a console seat: taken');
 check(judgeHumanGame(logText({ id: 'a', over: { winner: null, reason: 'Draw' } })).ok, 'a draw (a reason, no winner): taken');
@@ -157,6 +162,10 @@ check(!judgeHumanGame(logText({ id: 'a', viewerAi: true })).ok, 'an AI viewing s
 check(/not finished/.test(judgeHumanGame(logText({ id: 'a', over: 'none' })).why), 'a game in progress: not taken');
 check(/not finished/.test(judgeHumanGame(logText({ id: 'a', over: null })).why), "an engine crash's null over (M46): not taken");
 check(!judgeHumanGame('not json\n').ok && !judgeHumanGame('').ok, 'no header: not taken');
+check(judgeHumanGame(logText({ id: 'f', table: { record: true } })).ok, 'D407: a seat at a table of two whose player agreed: taken');
+check(/did not agree/.test(judgeHumanGame(logText({ id: 'f', table: { record: false } })).why), 'D407: a seat whose player opted out: not taken');
+check(/did not agree/.test(judgeHumanGame(logText({ id: 'f', table: {} })).why), 'D407: a seat whose header says nothing (Phase 2): not taken');
+check(!judgeHumanGame(logText({ id: 'f', table: { record: true, otherAi: true } })).ok, 'D407: a "table" whose other player is an AI: not taken');
 
 // 2. The lab gate.
 console.log('the lab gate');
@@ -445,14 +454,15 @@ check(off.health().autoReview === 0 && off.health().autoReviewQueue === undefine
 check(mkAuto(mkRunner({ available: () => false })).health().autoReview === 0, 'the bridge not built: "autoReview": 0 (as "review" is)');
 
 // 7. The helper's /health.
-const call = (port, path) => new Promise((res, rej) => {
-  const r = request({ host: '127.0.0.1', port, method: 'GET', path }, (resp) => {
+const call = (port, path, body) => new Promise((res, rej) => {
+  const data = body === undefined ? null : JSON.stringify(body);
+  const r = request({ host: '127.0.0.1', port, method: data ? 'POST' : 'GET', path, headers: data ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } : {} }, (resp) => {
     let t = '';
     resp.on('data', (x) => { t += x; });
     resp.on('end', () => res({ status: resp.statusCode, body: JSON.parse(t) }));
   });
   r.on('error', rej);
-  r.end();
+  r.end(data ?? undefined);
 });
 seedQueue();
 const hr = mkRunner();
@@ -480,6 +490,39 @@ writeFileSync(join(DIR, 'z.jsonl.zst'), Buffer.from([0x28, 0xb5, 0x2f, 0xfd, 0, 
 check(readLogText(join(DIR, 'z.jsonl.zst')) === null, 'a zstd archive (D370) is not read as text');
 const gst = readFileSync('bridge/src/mtgtable/grade/GradeSelfTest.java', 'utf8');
 check(gst.includes('WireLog reads a gzip log'), "the Java reader's gzip check is in GradeSelfTest (bridge/build.sh, #73)");
+
+// 9. D407: a game between two people -- each consenting seat reviewed, its review served to that seat only.
+console.log('two people (D407)');
+{
+  fresh();
+  rmSync(STATUS, { force: true });
+  const now = Date.now();
+  game({ id: 'friend-m1791306948840-seat0', seat: 0, seed: 3, table: { record: true }, over: { winner: 1, reason: 'Conceded' } }, now - 2000);
+  game({ id: 'friend-m1791306948840-seat1', seat: 1, aiSeat: 0, seed: 3, startedAt: '2026-10-04T12:00:04Z', table: { record: false }, over: { winner: 1, reason: 'Conceded' } }, now - 1000);
+  const fr = mkRunner();
+  const fa = mkAuto(fr).start();
+  const done = await until(() => fa.items().find((i) => i.gameId === 'friend-m1791306948840-seat0' && i.state === 'done'), 15000);
+  check(!!done, 'the seat whose player agreed is reviewed', fa.items());
+  check(!fa.items().some((i) => i.gameId === 'friend-m1791306948840-seat1'), 'the seat whose player opted out is never queued', fa.items());
+  check(/did not agree/.test(fa.seen()['friend-m1791306948840-seat1']?.verdict ?? ''), "the opted-out seat's verdict says why", fa.seen());
+  const f0 = fa.find('friend-m1791306948840-seat0');
+  check(f0?.state === 'done' && /^r\d{13}$/.test(f0.reviewId ?? ''), 'find(): the seat log\'s review id', f0);
+  check(fa.find('friend-m1791306948840-seat1') === null, 'find(): nothing for the opted-out seat');
+  const mine = seatReviewOf({ review: fr, auto: fa }, 'friend-m1791306948840-seat0');
+  check(mine.state === 'done' && mine.report?.gameId === 'friend-m1791306948840-seat0', "seatReviewOf: the seat's own report, for the room", mine);
+  check(seatReviewOf({ review: fr, auto: fa }, 'friend-m1791306948840-seat1').state === 'waiting', 'seatReviewOf: the other seat has none');
+  check(seatReviewOf({ review: fr, auto: null }, 'friend-m1791306948840-seat0').state === 'off', 'seatReviewOf: no automatic review here: off');
+  // The helper's own door never serves it: GET /review, GET /review/<id>, POST /review.
+  const hf = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins: ['http://127.0.0.1:*'], timeoutS: 5, review: fr, auto: fa, log: () => {} });
+  const pf = await hf.listen();
+  const listed = (await call(pf, '/review')).body.reviews ?? [];
+  check(!listed.some((r) => /^friend-/.test(r.gameId)), "GET /review on the owner's door leaves a friend's seat out", listed);
+  check((await call(pf, `/review/${f0.reviewId}`)).status === 404, "GET /review/<id> of a friend's seat: 404 on the owner's door");
+  const post = await call(pf, '/review', { gameId: 'friend-m1791306948840-seat1' });
+  check(post.status === 403 && /two people/.test(post.body.message ?? ''), "POST /review of a friend's seat: 403 (only the automatic review, with consent)", post);
+  hf.close();
+  fa.stop();
+}
 
 console.log(`auto-review-selftest ${failures ? 'FAILED' : 'OK'} (${checks} checks, ${failures} failure(s))`);
 if (existsSync(DIR) && !failures) rmSync(DIR, { recursive: true, force: true });
