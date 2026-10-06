@@ -581,7 +581,10 @@ dev-server tools — still no package, no production route, no proxy of Scryfall
 and nothing the engine, the bridge or the board depends on. **D287**–**D289**
 lifted the localhost line in part: `play.sh --lan` binds every interface behind a
 per-run pairing token for a phone on the home network, and nothing else leaves
-loopback but the coach helper beside it under the same token (**D292**); `bridge/CLAUDE.md` has the rule.) The research reports describe a much
+loopback but the coach helper beside it under the same token (**D292**); `bridge/CLAUDE.md` has the rule.
+D400 lifted the multiplayer line in part, for a draft only: the coach helper's
+draft room lets two people grid-draft a cube, on a listener of its own where every
+route needs a seat token, loopback included; `docs/draft-room.md`.) The research reports describe a much
 larger system than we are building. Anything not on the straight line from
 `IGuiGame` to a DOM node is an issue, not a file.
 

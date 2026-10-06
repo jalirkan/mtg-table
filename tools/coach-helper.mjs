@@ -88,6 +88,18 @@
 //                 when scripts/play.sh started this helper (--match-dir, --supervisor):
 //                 play.sh owns the engine and restarts it.
 //
+//   GET  /room, POST /room  -- THE DRAFT ROOM (D400): two people grid-draft a cube from
+//                 their own browsers.  tools/draft-room.mjs's header is that contract
+//                 (docs/draft-room.md the copyable form).  Only with --draft-room: this
+//                 port (the owner's door) MAKES a room (POST, 256 KB) and lists them (GET);
+//                 the players use the room listener on --room-port (config.json `roomPort`,
+//                 8644), a port of its own whose every room route needs a seat token --
+//                 never loopback alone, so a tunnel may carry it and never this port.
+//                 /health then carries "draftRoom": 1, "roomPort", "rooms" (no key without
+//                 the flag).  --room-dir (var/draft-room), --room-site-dir <ForgeCoach build>
+//                 (served at the room listener's /), --room-origin <origin> (repeatable: an
+//                 extra page allowed to call it, e.g. a tunnel's https://), --room-public-url.
+//
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
 //   first out, up to --queue-max (default 4) waiting; past that it is answered
@@ -183,7 +195,7 @@
 
 import { execFile, spawn } from 'node:child_process';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { BlockList, isIP } from 'node:net';
 import { availableParallelism, tmpdir } from 'node:os';
@@ -193,6 +205,7 @@ import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 import { MAX_REVIEW_BODY, createReviewRunner, cleanOld } from './review-runner.mjs';
 import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
+import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -442,14 +455,15 @@ function readConfig() {
   if (typeof coach !== 'object' || Array.isArray(coach) || coach === null) throw new Error(`"coach" in ${file} is not an object`);
   const autoReview = coach.autoReview ?? true;
   if (typeof autoReview !== 'boolean') throw new Error(`"coach.autoReview" in ${file} is not true or false`);
-  return { file, autoReview, coachPort: c.coachPort, wsPort: c.wsPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
+  return { file, autoReview, coachPort: c.coachPort, wsPort: c.wsPort, roomPort: c.roomPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
 }
 
 function parseArgs(argv) {
   const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
     matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined,
     review: true, reviewJobs: undefined, reviewQueueMax: 2, autoReview: undefined, runnerStatus: undefined,
-    eval: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined };
+    eval: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined,
+    draftRoom: false, roomPort: undefined, roomDir: 'var/draft-room', roomSiteDir: undefined, roomOrigins: [], roomPublicUrl: null };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
     const val = () => {
@@ -477,6 +491,12 @@ function parseArgs(argv) {
     else if (f === '--eval-python') a.evalPython = val();
     else if (f === '--eval-schema') a.evalSchema = val();
     else if (f === '--eval-cube') a.evalCube = val();
+    else if (f === '--draft-room') a.draftRoom = true;   // D400
+    else if (f === '--room-port') a.roomPort = Number(val());
+    else if (f === '--room-dir') a.roomDir = val();
+    else if (f === '--room-site-dir') a.roomSiteDir = val();
+    else if (f === '--room-origin') a.roomOrigins.push(val());
+    else if (f === '--room-public-url') a.roomPublicUrl = val();
     else if (f === '--help' || f === '-h') a.help = true;
     else throw new Error(`unknown flag ${f} (--help)`);
   }
@@ -548,7 +568,7 @@ export function claudeArgs({ model, systemArg, help, streamInput = false }) {
 // ---------------------------------------------------------------------------
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, room = null, log = (s) => console.log(s) } = opts;
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
   // helper on 0.0.0.0, to prove admit() refuses a non-loopback peer by its
   // address and not by the bind); the CLI never does.
@@ -611,7 +631,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
-      const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
+      const ev = { ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}) };   // D361; D400 (no key without --draft-room)
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }, cors);
@@ -664,6 +684,20 @@ export function startHelper(opts) {
       const r = await evaluator.post(q);
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (p ${r.body.p.toFixed(3)}${r.body.sd !== undefined ? ` sd ${r.body.sd.toFixed(3)}` : ''}${r.body.explain ? ', explained' : ''}, turn ${r.body.turn}, ${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/room') {
+      // D400: the owner makes a draft room (tools/draft-room.mjs).  Behind this port's door, never the room listener's.
+      if (!room) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+      if (req.method === 'GET') { const r = room.list(); send(res, r.status, r.body, cors); say(r.status); return; }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use GET or POST' }, { ...cors, Allow: 'GET, POST, OPTIONS' }); say(405); return; }
+      const raw = await readBody(req, res, MAX_CREATE_BODY, '256 KB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+      const r = room.post(q);
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 201 ? ` (room ${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path === '/engine/start') {
@@ -968,7 +1002,31 @@ async function main() {
     });
     void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}`));
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator });
+  // D400: the draft room -- its store and its own listener, before the helper's port opens.
+  let room = null;
+  let roomServer = null;
+  let roomPort = null;
+  if (a.draftRoom) {
+    roomPort = a.roomPort ?? (Number.isInteger(cfg.roomPort) ? cfg.roomPort : DEFAULT_ROOM_PORT);
+    if (!Number.isInteger(roomPort) || roomPort < 0 || roomPort > 65535 || (roomPort === port && port !== 0)) { console.error('coach-helper: --room-port must be a port number other than the helper\'s'); process.exit(2); }
+    for (const o of a.roomOrigins) if (!ORIGIN_ENTRY.test(o)) { console.error(`coach-helper: --room-origin ${JSON.stringify(o)} is not an origin like https://draft.example.com`); process.exit(2); }
+    if (a.roomPublicUrl !== null && !/^https?:\/\/[a-z0-9.-]+(:[0-9]{1,5})?$/i.test(a.roomPublicUrl)) { console.error('coach-helper: --room-public-url must be an origin like https://draft.example.com'); process.exit(2); }
+    if (a.roomSiteDir !== undefined && !existsSync(join(a.roomSiteDir, 'index.html'))) { console.error(`coach-helper: --room-site-dir ${a.roomSiteDir} has no index.html`); process.exit(2); }
+    let store;
+    try {
+      store = createRoomStore({ dir: resolve(cfg.repoRoot, a.roomDir), varRoot: resolve(cfg.repoRoot, 'var'), log: (s) => console.log(s) });
+    } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
+    const kept = store.load();
+    roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,
+      siteDir: a.roomSiteDir ? resolve(a.roomSiteDir) : null, log: (s) => console.log(s) });
+    try { roomPort = await roomServer.listen(); } catch (e) {
+      console.error(e.code === 'EADDRINUSE' ? `coach-helper: the draft room's port ${roomPort} is in use (--room-port, or config.json roomPort)` : `coach-helper: ${e.message}`);
+      process.exit(1);
+    }
+    room = createRoomOwner({ store, roomPort, lan: a.lan, publicUrl: a.roomPublicUrl });
+    console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
+  }
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator, room });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -987,7 +1045,8 @@ async function main() {
   auto?.start();   // D385: after LISTENING, so its first scan never delays the port
   if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
-  const stop = () => { h.close(); process.exit(0); };
+  console.log(room ? `COACH ROOM      /room on: POST makes a draft room; players use port ${roomPort} (D400)` : 'COACH ROOM      /room off (--draft-room)');
+  const stop = () => { h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }

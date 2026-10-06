@@ -82,6 +82,7 @@ import { budget as budgetOf, DEFAULT_BUDGET, DEFAULT_PEAK_GB, PILOT_MAX_WORKERS,
 import { formatStatus, isOurs, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
 import { fit, headlineOf, idleReasonOf, isoLocal, liveOf, REASONS, sanitise, type FinishedItem, type PressureEvent, type RunningJob, type StatusDoc } from './statusjson.ts';
 import { GIT_ENV, LIVE_STATES, type HostSample, type Sys } from './sys.ts';
+import { activeHolds, holdReason } from './holds.ts';
 
 export interface RunnerConfig {
   /** The runner's own checkout (its commit is reported). */
@@ -452,7 +453,7 @@ export class Runner {
     const { start, blocked } = schedule({
       jobs: this.jobs, statuses: st, active: new Map(this.active().map((r) => [r.id, r.cpu])),
       holdings: new Map(this.active().map((r) => [r.id, this.holding(r)])), machine: this.machineBudget(),
-      playing: this.sys.playing(this.cfg.bridgePort), paused: this.isPaused(), now: this.sys.now(),
+      playing: this.sys.playing(this.cfg.bridgePort), paused: this.isPaused(), held: holdReason(activeHolds(this.cfg.stateDir)), now: this.sys.now(),
     });
     this.blocked = blocked;
     if (start.length && !this.gitReachable()) {

@@ -75,6 +75,8 @@
 #   ./scripts/play.sh --engine-only --lan   # ...and play from a phone on the same Wi-Fi (below)
 #   ./scripts/play.sh --lan --refresh-site  # ...re-downloading ForgeCoach's site first
 #   ./scripts/play.sh --lan --site-dir ../ForgeCoach/dist   # ...serving a local ForgeCoach build
+#   ./scripts/play.sh --engine-only --lan --draft-room   # D400: grid-draft a cube with a friend on your Wi-Fi (below)
+#   ./scripts/play.sh --engine-only --pause-lab          # D401: the lab starts no new job while this runs (below)
 #
 # Everything after `--` goes to `mtgtable.MtgTable` untouched, so a flag this
 # script has never heard of still reaches the bridge:
@@ -199,6 +201,34 @@
 # play.sh running; or, with the engine running, says so and exits 0.  Not with
 # --port, --no-coach or --no-match.
 #
+# THE DRAFT ROOM (D400, docs/draft-room.md).  --draft-room starts the coach helper
+# with its draft room even when `claude` is not on PATH: ForgeCoach's Draft -> Draft
+# with a friend makes a room through the helper (POST /room on the coach port, this
+# machine's door) and gives you a link for your friend.  Both players then use the
+# room listener on config.json's `roomPort` (8644, --room-port <n>), a port of its
+# own where every room route needs that seat's token -- this machine included,
+# so a tunnel may carry that port one day and never the coach helper's.  The
+# listener also serves ForgeCoach's site (the same download as --lan, or
+# --site-dir), so the friend's link is a page on it:
+#
+#   ./scripts/play.sh --engine-only --lan --draft-room
+#       the friend, on the same Wi-Fi, opens the link the page shows
+#       (http://<this machine's LAN IP>:8644/#draft/friend/join?...); you draft from
+#       https://jalirkan.github.io/ForgeCoach/ (or http://127.0.0.1:8644/) as ever.
+#
+# Without --lan the room listener answers this machine only (127.0.0.1).  Rooms
+# live in var/draft-room/ (token digests only) and survive a restart; one expires a
+# day after its last pick.  Needs the coach helper: not with --no-coach.
+#
+# PLAY MODE FOR THE LAB (D401).  --pause-lab holds the lab runner's ADMISSIONS
+# while this script runs: `tools/runner.sh hold --pid <this script>` at start,
+# `tools/runner.sh release` at exit.  No new lab job starts; a running one is never
+# stopped, paused or killed (its pool keeps its workers -- unlike `runner.sh
+# pause`).  The hold is this script's pid, so a play.sh killed -9 holds nothing
+# once it is gone, and a `runner.sh pause` you made by hand is never resumed by it.
+# The installed runner reads holds from D401 on (`tools/runner.sh install` updates
+# it; `hold` says so when it is older).
+#
 # The previous run's log is kept as var/play/server.prev.log.  --no-match starts
 # the helper without the launcher; --no-coach starts no helper, so neither.  The
 # launcher works in every mode (bare, --engine-only, --lan).
@@ -255,6 +285,12 @@ PASSTHROUGH=()
 EVAL_ARGS=()                     # D361: the coach helper's /eval (--eval-model <path>, --no-eval)
 HUMAN_COLLECT=1                  # D369: copy finished games into var/ml/human/ at start, asleep and exit
 HUMAN_COLLECTED_AT_STOP=0
+DRAFT_ROOM=0                     # D400: the draft room, in the coach helper, on its own port
+ROOM_PORT="$(cfg_get roomPort || echo 8644)"
+ROOM_SITE=""                     # D400: the site the room listener serves (the --lan download, or --site-dir)
+ROOM_LINE=""
+PAUSE_LAB=0                      # D401: hold the lab runner's admissions while this script runs
+LAB_HELD=0
 
 # D303: the coach helper's /match asks for a restart with SIGUSR1.  IGNORED
 # before anything else, because an untrapped USR1 would end this script, and
@@ -328,6 +364,9 @@ while [ $# -gt 0 ]; do
     --no-eval)   EVAL_ARGS+=(--no-eval); shift ;;
     --idle-exit-after) IDLE_EXIT_MIN="${2:-}"; shift 2 ;;
     --no-human-collect) HUMAN_COLLECT=0; shift ;;
+    --draft-room) DRAFT_ROOM=1; shift ;;
+    --room-port) ROOM_PORT="$2"; shift 2 ;;
+    --pause-lab) PAUSE_LAB=1; shift ;;
     --help|-h)   sed -n '5,/^set -euo pipefail/p' "$0" | sed '$d'; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
@@ -340,6 +379,8 @@ esac
 IDLE_EXIT_SEC="$(node -e 'process.stdout.write(String(Math.round(Number(process.argv[1]) * 60)))' "$IDLE_EXIT_MIN")"
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
+[ "$DRAFT_ROOM" = "1" ] && [ "$COACH" != "1" ] && { printf 'play.sh: --draft-room runs in the coach helper: drop --no-coach\n' >&2; exit 1; }
+case "$ROOM_PORT" in ''|*[!0-9]*) printf 'play.sh: --room-port wants a port number (got "%s")\n' "$ROOM_PORT" >&2; exit 1 ;; esac
 
 # D369: the human test set -- finished human-vs-AI games from var/games/ into
 # var/ml/human/, one status line.  Never fails this script; not in the self-test.
@@ -475,7 +516,11 @@ fetch_site() {
       fresh=1
     else
       rm -f "$zip.part"
-      [ -f "$zip" ] || die "could not download $SITE_URL and there is no cached copy in $zip -- check the network (or curl), or pass --site-dir <a built ForgeCoach>"
+      if [ ! -f "$zip" ]; then
+        # D400: only the draft room wants it -- it runs without a site (the friend then has no page to open).
+        [ "${1:-}" = "soft" ] && { echo "  could not download $SITE_URL and there is no cached copy: the draft room runs without ForgeCoach's site (pass --site-dir <a built ForgeCoach>)"; return 1; }
+        die "could not download $SITE_URL and there is no cached copy in $zip -- check the network (or curl), or pass --site-dir <a built ForgeCoach>"
+      fi
       echo "  could not download it; using the cached copy of $(date -r "$zip" '+%Y-%m-%d %H:%M')"
     fi
   else
@@ -493,16 +538,48 @@ fetch_site() {
   SITE_DIR="$site"
 }
 SITE_ARGS=()
-if [ "$LAN" = "1" ] || [ -n "$SITE_DIR" ]; then
+SITE_FOR_BRIDGE=0
+{ [ "$LAN" = "1" ] || [ -n "$SITE_DIR" ]; } && SITE_FOR_BRIDGE=1
+if [ "$SITE_FOR_BRIDGE" = "1" ] || [ "$DRAFT_ROOM" = "1" ]; then
   say "ForgeCoach's site"
+  SITE_OK=1
   if [ -n "$SITE_DIR" ]; then
     [ -f "$SITE_DIR/index.html" ] || die "--site-dir $SITE_DIR has no index.html at its root -- build ForgeCoach with --base ./ first"
     echo "serving $SITE_DIR (--site-dir)"
-  else
+  elif [ "$SITE_FOR_BRIDGE" = "1" ]; then
     fetch_site
+  else
+    fetch_site soft || SITE_OK=0   # D400: the draft room alone
   fi
-  SITE_ARGS+=(--site-dir "$SITE_DIR")
-  [ "$LAN" = "1" ] && SITE_ARGS+=(--lan)
+  if [ "$SITE_FOR_BRIDGE" = "1" ]; then
+    SITE_ARGS+=(--site-dir "$SITE_DIR")
+    [ "$LAN" = "1" ] && SITE_ARGS+=(--lan)
+  fi
+  # D400: the room listener serves the same site (the bridge's flags are unchanged by --draft-room).
+  [ "$DRAFT_ROOM" = "1" ] && [ "$SITE_OK" = "1" ] && ROOM_SITE="$SITE_DIR"
+fi
+
+# --------------------------------------------------------------------------
+# 0c: --pause-lab (D401) -- the lab runner admits no new job while this runs
+# --------------------------------------------------------------------------
+RUNNER_STATE_ARGS=()
+# A TEST SEAM like MTGTABLE_TEST_VAR: the self-test's own runner state folder, never the installed one.
+if [ -n "$FAKE_ENGINE" ] && [ -n "${MTGTABLE_TEST_RUNNER_STATE:-}" ]; then RUNNER_STATE_ARGS=(--state "$MTGTABLE_TEST_RUNNER_STATE"); fi
+lab_release() {
+  [ "$LAB_HELD" = "1" ] || return 0
+  LAB_HELD=0
+  ./tools/runner.sh release --pid "$$" "${RUNNER_STATE_ARGS[@]+"${RUNNER_STATE_ARGS[@]}"}" >/dev/null 2>&1 \
+    && echo "lab: new jobs may start again (--pause-lab released)" \
+    || echo "lab: could not release the hold (it ends by itself now this script is gone)"
+}
+if [ "$PAUSE_LAB" = "1" ]; then
+  say "lab"
+  if out="$(./tools/runner.sh hold --pid "$$" --by "play.sh --pause-lab" "${RUNNER_STATE_ARGS[@]+"${RUNNER_STATE_ARGS[@]}"}" 2>&1)"; then
+    LAB_HELD=1
+    printf '%s\n' "$out"
+  else
+    echo "lab: could not hold the runner's admissions (${out##*$'\n'}) -- playing on anyway"
+  fi
 fi
 
 # --------------------------------------------------------------------------
@@ -573,6 +650,7 @@ stop() {
   if [ "$MATCH_ON" = "1" ]; then
     rm -f "$MATCH_DIR/current.json" "$MATCH_DIR/request.json" "$MATCH_DIR/status.json" "$MATCH_DIR/engine.json" 2>/dev/null || true
   fi
+  lab_release   # D401
   # D369: the games this session finished, now that the bridge has flushed its logs.
   if [ "$HUMAN_COLLECTED_AT_STOP" = "0" ] && [ -n "${SERVER_LOG:-}" ]; then
     HUMAN_COLLECTED_AT_STOP=1
@@ -704,7 +782,8 @@ start_coach() {
   fi
   command -v claude >/dev/null 2>&1 || has_claude=0
   # D303: without claude the helper still runs, for /match; with --no-match too, nothing to run.
-  if [ "$has_claude" = "0" ] && [ "$MATCH" != "1" ]; then
+  # D400: and for the draft room.
+  if [ "$has_claude" = "0" ] && [ "$MATCH" != "1" ] && [ "$DRAFT_ROOM" != "1" ]; then
     COACH_LINE="Coach: claude CLI not found — $NO_COACH_TAIL"
     MATCH_LINE="Match launcher: off (--no-match)"; return 0
   fi
@@ -716,6 +795,7 @@ start_coach() {
         *) COACH_LINE="Coach: claude CLI not found or not working (the helper already running at $url says so) — $NO_COACH_TAIL" ;;
       esac
       MATCH_LINE="Match launcher: the helper already running at $url belongs to another play.sh — its /match restarts THAT engine, not this one"
+      [ "$DRAFT_ROOM" = "1" ] && ROOM_LINE="Draft room: the helper already running at $url belongs to another play.sh — its draft room is that one's (started with --draft-room?)"
       return 0 ;;
   esac
   local args=(--port "$COACH_PORT")
@@ -730,6 +810,12 @@ start_coach() {
   [ "$MATCH" = "1" ] && rm -f "$MATCH_DIR/engine.json" 2>/dev/null
   # D361: the win chance -- the helper loads var/ml/models/night-1-eval.json by itself when it exists.
   [ "${#EVAL_ARGS[@]}" -gt 0 ] && args+=("${EVAL_ARGS[@]}")
+  # D400: the draft room, on its own port, with the site.
+  if [ "$DRAFT_ROOM" = "1" ]; then
+    args+=(--draft-room --room-port "$ROOM_PORT")
+    [ -n "$ROOM_SITE" ] && args+=(--room-site-dir "$ROOM_SITE")
+    [ -n "$FAKE_ENGINE" ] && [ -n "${MTGTABLE_TEST_VAR:-}" ] && args+=(--room-dir "$MTGTABLE_TEST_VAR/draft-room")
+  fi
   # D385: the automatic review (config.json coach.autoReview) -- never under a self-test's fake engine,
   # whose helper would otherwise queue the real var/games/ (as D369's collector is skipped there).
   [ -n "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] && args+=(--no-auto-review)
@@ -759,6 +845,12 @@ start_coach() {
       COACH_PID=""
       return 0 ;;
   esac
+  if [ "$DRAFT_ROOM" = "1" ]; then
+    case "$body" in
+      *'"draftRoom":1'*) ROOM_LINE="Draft room: on — ForgeCoach → Draft → Draft with a friend makes a room and shows your friend's link; players use port $ROOM_PORT$([ "$LAN" = "1" ] && [ -n "$token" ] && echo " (and from your Wi-Fi)" || echo " (this machine only: add --lan for a friend on your Wi-Fi)")$([ -n "$ROOM_SITE" ] || echo "; NO site to serve, so the friend has no page")" ;;
+      *) ROOM_LINE="Draft room: did not start ($(grep -m1 'room' "$COACH_LOG" 2>/dev/null || tail -1 "$COACH_LOG" 2>/dev/null))" ;;
+    esac
+  fi
   if [ "$MATCH" = "1" ]; then
     MATCH_ON=1
     MATCH_LINE="Match launcher: ForgeCoach's Play this match restarts this engine on its decks — POST $url/match (D303)"
@@ -1009,6 +1101,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
   echo "  keep every mtg-table board tab closed: the first /ws client takes the seat"
   echo "$COACH_LINE"
   echo "$MATCH_LINE"
+  [ -n "$ROOM_LINE" ] && echo "$ROOM_LINE"
   if [ "$LAN" = "1" ]; then
     # The bridge prints one `WS LAN PAGE` line per address, best guess first,
     # just after the readiness flip; give it a moment to land in the log.
@@ -1038,6 +1131,10 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       fi
     fi
     echo "  this desktop needs no token: http://127.0.0.1:$WS_PORT/ or https://jalirkan.github.io/ForgeCoach/"
+    if [ "$DRAFT_ROOM" = "1" ] && [ "${#PAGES[@]}" -gt 0 ]; then
+      # D400: the room listener on the same addresses; the page you draft from shows the friend's full link.
+      echo "  draft room: a friend on this Wi-Fi joins at $(printf '%s' "${PAGES[0]}" | sed 's#^\(http://[^/]*\):[0-9]*/.*#\1#'):$ROOM_PORT/ (the link from Draft with a friend carries their seat)"
+    fi
     echo "  the token is the only lock -- for a home network you trust; the next run has a new one"
   fi
   SERVER_RC=0
@@ -1103,6 +1200,7 @@ URL="http://127.0.0.1:$WEB_PORT/?ws=1"
 say "$([ "$ARENA" = "1" ] && echo "arena" || echo "board") — $URL"
 echo "$COACH_LINE"
 echo "$MATCH_LINE"
+[ -n "$ROOM_LINE" ] && echo "$ROOM_LINE"
 cat <<EOF
   Space  press the button the engine FOCUSED (input.buttons.focus, amendment
          M39 — its label is Forge's: OK / Auto / …). "Space = OK" was never a

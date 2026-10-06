@@ -39,6 +39,7 @@ import { fileURLToPath } from 'node:url';
 
 import { decide, DEFAULT_BACKOFF, initialBackoff, parsePressure, retryCap, type BackoffState } from '../../tools/runner/backoff.ts';
 import { controlReader, parseControl, readControl, writeControl } from '../../tools/runner/control.ts';
+import { activeHolds, holdReason, holdsDir, releaseHold, takeHold } from '../../tools/runner/holds.ts';
 import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { followupMessage, ledgerCheckLines, ledgerEntry, ledgerKeys, ledgerMarkdown, ledgerWarnings, withMessages } from '../../tools/runner/ledger.ts';
@@ -206,6 +207,48 @@ test('schedule: id order, after:, one heavy and one light, Justin, holds, someon
   assert.deepEqual(r.blocked.filter((b) => ['J003', 'J006'].includes(b.id)).map((b) => b.code), ['needs-check', 'memory']);
   r = schedule({ ...base, statuses: new Map([['J003', st('done\n')], ['J005', st('done\n')], ['J006', st('waiting\nretry_after: 2026-10-03T11:50:00Z\n')]]) });
   assert.deepEqual(r.start.map((j) => j.id), ['J004', 'J006']);
+});
+
+test('holds (D401): play.sh --pause-lab stops admissions only; a dead holder holds nothing', () => {
+  const job = (id: string, cpu: 'heavy' | 'light'): ReturnType<typeof parseJobFile> => parseJobFile(`${id}.md`, `id: ${id}\ncpu: ${cpu}\nrepos: mtg-table@main\n`, parse);
+  const base = { jobs: [job('J003', 'heavy'), job('J006', 'light')], active: new Map<string, 'heavy' | 'light'>(), statuses: new Map(), playing: false, paused: false, now: 0 };
+  assert.deepEqual(schedule(base).start.map((j) => j.id), ['J003', 'J006'], 'no hold: both start');
+  assert.deepEqual(schedule({ ...base, held: null }).start.map((j) => j.id), ['J003', 'J006'], 'held null: both start');
+  const r = schedule({ ...base, held: 'new jobs held by play.sh (pid 9)' });
+  assert.deepEqual(r.start, [], 'held: neither a heavy nor a light job is admitted');
+  assert.deepEqual(r.blocked.map((b) => [b.code, b.reason]), [['playing', 'new jobs held by play.sh (pid 9)'], ['playing', 'new jobs held by play.sh (pid 9)']]);
+  assert.equal(idleReasonOf(r.blocked, false), 'Justin playing', 'privately: someone is playing');
+  // A running job is not the schedule's business: it stays in `active` and nothing stops it.
+  const running = schedule({ ...base, active: new Map([['J003', 'heavy' as const]]), statuses: new Map([['J003', parseStatus('running\nrunner: x\n') as Status]]), held: 'x' });
+  assert.deepEqual(running.start, []);
+  assert.ok(!running.blocked.some((b) => b.id === 'J003'), 'the running job is not blocked, stopped or held');
+  // The files.
+  const dir = tmp('holds');
+  const live = new Set([process.pid, 4242]);
+  const alive = (pid: number): boolean => live.has(pid);
+  assert.deepEqual(activeHolds(dir, alive), [], 'no holds folder: no holds');
+  takeHold(dir, process.pid, 'play.sh --pause-lab', Date.parse('2026-10-06T10:00:00Z'));
+  takeHold(dir, 4242, 'play.sh', Date.parse('2026-10-06T11:00:00Z'));
+  takeHold(dir, 777777, 'killed -9', Date.parse('2026-10-06T09:00:00Z'));
+  fs.writeFileSync(path.join(holdsDir(dir), '5.json'), '{torn');
+  assert.deepEqual(activeHolds(dir, alive).map((h) => [h.pid, h.by]), [[process.pid, 'play.sh --pause-lab'], [4242, 'play.sh']], 'two live holds, oldest first');
+  assert.ok(!fs.existsSync(path.join(holdsDir(dir), '777777.json')) && !fs.existsSync(path.join(holdsDir(dir), '5.json')), 'a dead holder\'s file and a torn one are removed');
+  assert.match(holdReason(activeHolds(dir, alive)) ?? '', /play\.sh --pause-lab \(pid \d+\), play\.sh \(pid 4242\): running jobs carry on/);
+  assert.equal(releaseHold(dir, 4242), true);
+  assert.equal(releaseHold(dir, 4242), false, 'releasing twice is harmless');
+  assert.deepEqual(activeHolds(dir, alive).map((h) => h.pid), [process.pid], 'one holder\'s release leaves the other\'s hold');
+  assert.equal(holdReason([]), null);
+  assert.throws(() => takeHold(dir, 1, 'x'), /pid/);
+  // The CLI, against this state folder: hold for a live pid, status shows it, release; a manual pause is untouched.
+  fs.writeFileSync(path.join(dir, 'paused'), 'by hand\n');
+  const cli = (...a: string[]) => spawnSync(process.execPath, [path.join(REPO, 'tools', 'runner', 'cli.ts'), ...a, '--state', dir], { encoding: 'utf8' });
+  const h = cli('hold', '--pid', String(process.pid), '--by', 'play.sh');
+  assert.equal(h.status, 0, h.stderr);
+  assert.match(h.stdout, /held: the lab starts no new job while pid \d+ runs; running jobs carry on/);
+  const rel = cli('release', '--pid', String(process.pid));
+  assert.match(rel.stdout, /released/);
+  assert.ok(fs.existsSync(path.join(dir, 'paused')), 'release never resumes a pause it did not make');
+  assert.notEqual(cli('hold', '--pid', 'x').status, 0, 'a bad pid is refused');
 });
 
 test('job file: pilot_cores: and prepare_cores: (D365) are those steps\' widths; absent: null, the job\'s width', () => {
