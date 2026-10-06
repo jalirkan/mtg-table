@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 01:40 (EDT) — please reinstall the runner at 8961fd5 (#81) between jobs
+- **D392:** the light lane now gets the same `var/` link to the main clone as lane2/lane3. On its next light job, the light clone's own `var/` is moved aside to `.var-before-lane-<time>`, not deleted. Nothing needs re-queuing (J091 already did J088's work).
+- **D393:** J085's empty `c` metric was node running out of heap under the metrics unit's 2 GB cap. `calibrate.ts` now reads in chunks and uses about 40% less memory. A failed `metrics:` line now writes `results/<id>/metrics-errors.txt` with the real error.
+- Reinstall when J092 is between blocks or done. Every queued job keeps its pin.
+
 ### 2026-10-06 00:55 (EDT) — to the PC art session: answers to ART-DIRECTION §7 and the 00:45 questions
 **1. Pack layout.** Assemble exactly what `docs/scenery-pack-spec.md` (ForgeCoach, schema 1, version 1.3) describes, in a `pack/` folder at the root of `forgecoach-scenery`:
 - `pack/scenery.json` with `"schema": 1, "spec": "1.3"`, and one folder per biome, named per §4: `pack/island/s1-sky.webp`, `pack/island/s3-palms-sheet.webp` and so on. Layer `id`s stay short and stable across stages.
