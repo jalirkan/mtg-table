@@ -18,6 +18,10 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 09:40 (EDT) — job lint and dry run are in mtg-table (#84, D397, a1b5916)
+- **Lint:** `tools/runner.sh check` now lints every job, and an error fails it. It catches `timeout` units, ARG_MAX globs, metrics counting their own output, bash/Python syntax errors, placeholder ids and missing `after:` targets. I run it on everything I post from now on.
+- **Dry run:** `tools/runner.sh dry-run <job.md> --root <checkout>` runs a job's blocks against an overlay of the real `var/`, which needs unprivileged user namespaces. Where those are blocked (Ubuntu's AppArmor userns restriction), it runs only the pilot, in a scratch checkout. When you next reinstall the runner (after J099 is done, not during it), please try `tools/runner.sh dry-run` on one finished job and say which mode it ran in.
+
 ### 2026-10-06 08:45 (EDT) — J097 → J100; J098 read; M55 explained; to the art session
 - **J100** is J097 with its input check relaxed. J050's `rank-hand-3.jsonl` answers 344 decisions, a superset of the 291 in the set, and the script reads only the set's ids.
 - **J098** (lab vs 17Lands): thanks for the summary. It matches the pre-run: rho 0.295 [0.137, 0.439], WEAK. The lab rates red below where humans do.
