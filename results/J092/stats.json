@@ -1,0 +1,173 @@
+{
+ "schemaId": "82815752c2f5e346",
+ "nFeatures": 12670,
+ "vocab": [
+  "night-1"
+ ],
+ "vocabSize": 731,
+ "phases": [
+  "MAIN1",
+  "MAIN2",
+  "COMBAT_BEGIN",
+  "COMBAT_DECLARE_ATTACKERS",
+  "COMBAT_DECLARE_BLOCKERS",
+  "COMBAT_FIRST_STRIKE_DAMAGE",
+  "COMBAT_DAMAGE",
+  "COMBAT_END"
+ ],
+ "groupBy": "match",
+ "split": {
+  "train": 80,
+  "val": 10,
+  "test": 10
+ },
+ "salt": "",
+ "rows": 19517006,
+ "games": 119816,
+ "skippedGames": {
+  "unlabelled": 6
+ },
+ "reservedChecked": true,
+ "reservedDecks": 120,
+ "reservedHits": {},
+ "versions": {
+  "7951c64910f0": 518,
+  "cb8c9422aa36": 521,
+  "410a9f1ff3d3": 512,
+  "3d8317d580f5": 344,
+  "7d28279b255a": 336,
+  "e6d3136b7c51": 329,
+  "b24f5ce1dd55": 220,
+  "d33b5598b2c2": 221,
+  "bba97678b5f3": 220,
+  "549af8151a00": 476,
+  "a17cc166ed9c": 504,
+  "780e9251ce63": 510,
+  "4c6db1cd22ac": 384,
+  "edbe34f8c8c2": 353,
+  "7b68d3279036": 350,
+  "58c1a435536a": 348,
+  "5a8f4691cdeb": 328,
+  "f41330bc2380": 321,
+  "bbe420510a3e": 172,
+  "4cd7f1b5f21c": 178,
+  "b538f6120993": 180,
+  "ef4f4f69be46": 386,
+  "f50edf5859cb": 336,
+  "4d489bdfe6fc": 332,
+  "3268aba6bc62": 616,
+  "a55d7666b9ad": 664,
+  "87145dd16ee2": 652,
+  "22e2d10c1f31": 428,
+  "1bdf08b0307b": 446,
+  "c5ce4b25753d": 440,
+  "16299d2db66b": 231,
+  "a08656d9deb3": 262,
+  "792249248766": 262,
+  "a813fe263c19": 558,
+  "84743def3b2d": 654,
+  "b76bf43cd8a6": 664,
+  "d03d56e3c09d": 438,
+  "7325a47fae61": 442,
+  "ec8e28e9ec08": 438,
+  "e16ad065bee2": 593,
+  "3d82ac9bb608": 554,
+  "3c068a846f74": 547,
+  "a32da4d980b4": 404,
+  "73f9ea2a9e6d": 364,
+  "98e581e49464": 364,
+  "614e801b7548": 571,
+  "3b446c9f0196": 577,
+  "94af37d798d2": 595,
+  "b875654a0c18": 418,
+  "048b63117d72": 359,
+  "d947d26bc674": 362,
+  "4e4f77eaeb83": 441,
+  "b175b9ae864e": 450,
+  "f649ec734f7c": 462,
+  "591750118db6": 446,
+  "58d831539773": 436,
+  "791adee50cb7": 450,
+  "48bac64aa4a0": 3954,
+  "413bc3d6efeb": 4156,
+  "e5cb4c72d4f5": 4039,
+  "64ebf7ebd1fc": 4192,
+  "c9a984a032f6": 4065,
+  "ad8faa6623cd": 3936,
+  "7cb13252703a": 3753,
+  "9ec06c7c7820": 3588,
+  "b215b9c488f4": 3624,
+  "46213876aec8": 5110,
+  "e3f3371358fe": 6282,
+  "cc7efb199e87": 6162,
+  "e4c1d36daaee": 6353,
+  "e44397143492": 5525,
+  "d73cf4eafc22": 5522,
+  "d1a920eb3155": 4411,
+  "c8861eba0ec1": 5041,
+  "131c2207096e": 5305,
+  "f344baeba973": 4143,
+  "800e5a09bcda": 3312,
+  "3364108f8368": 3376
+ },
+ "sources": {
+  "lab": 119816
+ },
+ "humanDirs": [],
+ "humanInTraining": false,
+ "playExplore": {
+  "mode": "include",
+  "games": 6161
+ },
+ "nights": {
+  "1": 39908,
+  "2": 39954,
+  "3": 39954
+ },
+ "splits": {
+  "train": {
+   "rows": 15436925,
+   "games": 94849,
+   "groups": 7009,
+   "gameLabels": {
+    "-1": 47419,
+    "1": 47428,
+    "0": 2
+   },
+   "rowLabels": {
+    "-1": 7657690,
+    "1": 7778695,
+    "0": 540
+   },
+   "shards": 3088
+  },
+  "val": {
+   "rows": 2122755,
+   "games": 13016,
+   "groups": 916,
+   "gameLabels": {
+    "1": 6509,
+    "-1": 6507
+   },
+   "rowLabels": {
+    "1": 1069787,
+    "-1": 1052968
+   },
+   "shards": 425
+  },
+  "test": {
+   "rows": 1957326,
+   "games": 11951,
+   "groups": 852,
+   "gameLabels": {
+    "1": 5973,
+    "-1": 5978
+   },
+   "rowLabels": {
+    "1": 986196,
+    "-1": 971130
+   },
+   "shards": 392
+  }
+ }
+}

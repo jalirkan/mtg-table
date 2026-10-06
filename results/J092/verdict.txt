@@ -1,0 +1,5 @@
+test split (pair): 2044995 rows, 916 deck pairs; reserved decks dropped: True
+A  decision rows: eval 0.4915  core 0.5566  core-eval +0.0651 [+0.0588, +0.0717]
+B  turn-end positions (27628 of 1500 games; scale 351.6 from ./var/coach-grade/leaf-scale.json): eval 0.5201  leaf 0.6027  leaf-eval +0.0826 [+0.0671, +0.0980]
+C  calibration: ECE 0.0062, worst bin (>= 200 rows) off by 0.021
+gate 1 (fit): PASS

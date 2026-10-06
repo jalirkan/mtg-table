@@ -1,0 +1,73 @@
+==== J092 run4 started 2026-10-06T03:53:41-04:00 in unit lab-J092-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"testPairs": 916, "testLogs": 12537, "listed": 1500, "out": "var/ml/gates/fit-v2/heldout.txt"}
+bridge/run.sh: config /home/justin-a/code/lab/mtg-table/var/ml/homes/leaf-rows/config.json (from MTG_TABLE_CONFIG), not /home/justin-a/code/lab/mtg-table/config.json
+Language 'en-US' loaded successfully.
+(ThreadUtil first call): Running with priority 5
+Read cards: 33617 archived files in 0 ms (25 parts) using thread pool
+Read cards: 1 files in 0 ms (1 parts) using thread pool
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+The card A-Alrund's Epiphany was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Baba Lysaga, Night Witch was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Divide by Zero was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Esika's Chariot was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Faceless Haven was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Fires of Invention was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Goldspan Dragon was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Hullbreaker Horror was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Kumano Faces Kakkazan was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Luminarch Aspirant was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Monster Manual was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Omnath, Locus of Creation was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-The Meathook Massacre was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Unholy Heat was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Blinding Radiance was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Goblin Bruiser was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Ogre Painbringer was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Titanic Pelagosaur was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Treetop Recluse was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+Read cards: 836 files in 0 ms (8 parts) using thread pool
+[leaf-rows] FModel.initialize 2239 ms
+[leaf-rows] 27628 position(s) from 1500 file(s); 0 file(s) skipped, 31 rebuild failure(s) -> var/ml/gates/fit-v2/leaf-rows.jsonl
+{"positions":27628,"files":1500,"skippedFiles":0,"rebuildFailures":31}
+bridge/run.sh: config /home/justin-a/code/lab/mtg-table/var/ml/homes/leaf-rows/config.json (from MTG_TABLE_CONFIG), not /home/justin-a/code/lab/mtg-table/config.json
+Language 'en-US' loaded successfully.
+(ThreadUtil first call): Running with priority 5
+Read cards: 33617 archived files in 0 ms (25 parts) using thread pool
+Read cards: 1 files in 0 ms (1 parts) using thread pool
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+The card A-Alrund's Epiphany was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Baba Lysaga, Night Witch was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Divide by Zero was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Esika's Chariot was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Faceless Haven was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Fires of Invention was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Goldspan Dragon was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Hullbreaker Horror was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Kumano Faces Kakkazan was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Luminarch Aspirant was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Monster Manual was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Omnath, Locus of Creation was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-The Meathook Massacre was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card A-Unholy Heat was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Blinding Radiance was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Goblin Bruiser was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Ogre Painbringer was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Titanic Pelagosaur was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+The card Treetop Recluse was not assigned to any set. Adding it to UNKNOWN set... to fix see res/editions/ folder. 
+Upcoming set Star Trek (TRK) dated in the future. All `upcoming` cards will be added to this set with unknown rarity.
+Read cards: 836 files in 0 ms (8 parts) using thread pool
+[leaf-rows] FModel.initialize 1948 ms
+[leaf-rows] 27628 position(s) from 1500 file(s); 0 file(s) skipped, 31 rebuild failure(s) -> var/ml/gates/fit-v2/leaf-rows-v1.jsonl
+{"positions":27628,"files":1500,"skippedFiles":0,"rebuildFailures":31}
+test split (pair): 2044995 rows, 916 deck pairs; reserved decks dropped: True
+A  decision rows: eval 0.4915  core 0.5566  core-eval +0.0651 [+0.0588, +0.0717]
+B  turn-end positions (27628 of 1500 games; scale 351.6 from ./var/coach-grade/leaf-scale.json): eval 0.5201  leaf 0.6027  leaf-eval +0.0826 [+0.0671, +0.0980]
+C  calibration: ECE 0.0062, worst bin (>= 200 rows) off by 0.021
+gate 1 (fit): PASS
+all      : 1925816 rows, 11821 games (effective n 13012), 873 pairs; old 0.5065 new 0.4912; old - new +0.0153 [+0.0120, +0.0187]; ECE old 0.0062 new 0.0063
+reference: 1124648 rows, 6988 games (effective n 7768), 333 pairs; old 0.5006 new 0.4872; old - new +0.0134 [+0.0089, +0.0180]; ECE old 0.0054 new 0.0059
+new      : 801168 rows, 4833 games (effective n 5252), 540 pairs; old 0.5147 new 0.4967; old - new +0.0180 [+0.0126, +0.0235]; ECE old 0.0092 new 0.0087
+exploring: 119179 rows, 716 games (effective n 779), 100 pairs; old 0.5043 new 0.4968; old - new +0.0075 [-0.0034, +0.0188]; ECE old 0.0062 new 0.0082
+turn-end : 27628 positions, 1500 games; old 0.5331 new 0.5201; old - new +0.0130 [+0.0058, +0.0201]
+compare: the new model is BETTER than the old one on gate 1's test pairs (D364's rule)

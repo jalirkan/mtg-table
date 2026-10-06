@@ -1,0 +1,4 @@
+split audit (pair): 119816 games; pairs per split {'train': 6957, 'val': 904, 'test': 916}; pairs / drafts / decks in two splits: 0 / 0 / 0
+  pairs per night and split: night 1: {'train': 2530, 'val': 329, 'test': 333}; night 2: {'train': 3665, 'val': 484, 'test': 493}; night 3: {'train': 4661, 'test': 621, 'val': 614}; pairs with games from several nights: 4488
+  reference var/ml/data/night-1: 39177 games, missing 0, moved 0; its 333 test pairs: 333 are DATA test pairs; DATA test pairs it trained on: 0; new games 80639, new test pairs 583
+split audit: PASS

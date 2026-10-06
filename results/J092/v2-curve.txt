@@ -1,0 +1,17 @@
+memory: load: rss 9.58 GB, peak 9.69 GB
+memory: fit: rss 9.79 GB, peak 9.79 GB
+memory: score: rss 9.90 GB, peak 12.65 GB
+learning curve (pair split; test 2044995 rows, 12537 games, 916 deck pairs; within-game residual correlation 0.764, design effect 146.2, effective n 13983; 95% intervals over test pairs, 2000 resamples):
+  share weight  pairs      rows epoch               test logloss          minus largest share              core minus eval  by game
+   0.25   none   1687   3747090     1 0.5110 [0.5026, 0.5200] +0.0159 [+0.0120, +0.0196] +0.0456 [+0.0397, +0.0516]   0.4770
+   0.50   none   3423   7506536     2 0.5043 [0.4954, 0.5134] +0.0093 [+0.0061, +0.0123] +0.0523 [+0.0462, +0.0585]   0.4680
+   1.00   none   6957  15417966     5 0.4951 [0.4868, 0.5036] +0.0000 [+0.0000, +0.0000] +0.0616 [+0.0558, +0.0675]   0.4614
+   0.25   game   1687   3747090     2 0.5130 [0.5033, 0.5230] +0.0168 [+0.0131, +0.0204] +0.0436 [+0.0375, +0.0497]   0.4711
+   0.50   game   3423   7506536     4 0.5040 [0.4943, 0.5140] +0.0078 [+0.0048, +0.0109] +0.0526 [+0.0460, +0.0593]   0.4616
+   1.00   game   6957  15417966    11 0.4962 [0.4872, 0.5055] +0.0000 [+0.0000, +0.0000] +0.0604 [+0.0542, +0.0665]   0.4553
+  core (all training rows): 0.5566 [0.5495, 0.5639]
+  share 0.25: game-weighted minus unweighted training, test log-loss +0.0020 [-0.0008, +0.0048] by row, -0.0059 [-0.0081, -0.0037] by game (below 0: weighting helps)
+  share 0.50: game-weighted minus unweighted training, test log-loss -0.0003 [-0.0026, +0.0023] by row, -0.0064 [-0.0083, -0.0043] by game (below 0: weighting helps)
+  share 1.00: game-weighted minus unweighted training, test log-loss +0.0012 [-0.0014, +0.0038] by row, -0.0061 [-0.0081, -0.0041] by game (below 0: weighting helps)
+curve (none): going from 0.50 to 1.00 of the pairs lowered the test log-loss by 0.0093 (interval above 0): more data still helps
+curve (game): going from 0.50 to 1.00 of the pairs lowered the test log-loss by 0.0078 (interval above 0): more data still helps

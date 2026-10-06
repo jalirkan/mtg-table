@@ -1,0 +1,6 @@
+all      : 1925816 rows, 11821 games (effective n 13012), 873 pairs; old 0.5065 new 0.4912; old - new +0.0153 [+0.0120, +0.0187]; ECE old 0.0062 new 0.0063
+reference: 1124648 rows, 6988 games (effective n 7768), 333 pairs; old 0.5006 new 0.4872; old - new +0.0134 [+0.0089, +0.0180]; ECE old 0.0054 new 0.0059
+new      : 801168 rows, 4833 games (effective n 5252), 540 pairs; old 0.5147 new 0.4967; old - new +0.0180 [+0.0126, +0.0235]; ECE old 0.0092 new 0.0087
+exploring: 119179 rows, 716 games (effective n 779), 100 pairs; old 0.5043 new 0.4968; old - new +0.0075 [-0.0034, +0.0188]; ECE old 0.0062 new 0.0082
+turn-end : 27628 positions, 1500 games; old 0.5331 new 0.5201; old - new +0.0130 [+0.0058, +0.0201]
+compare: the new model is BETTER than the old one on gate 1's test pairs (D364's rule)

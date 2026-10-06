@@ -1,0 +1,378 @@
+{
+ "curve": true,
+ "data": "/home/justin-a/code/lab/mtg-table/var/ml/data/nights-1-3",
+ "splitBy": "pair",
+ "hyper": {
+  "hidden": "128",
+  "dim": 4,
+  "l2": 0.0001,
+  "card_l2": 0.01,
+  "dropout": 0.1,
+  "lr": 0.002,
+  "batch": 4096,
+  "epochs": 200,
+  "patience": 24
+ },
+ "fast": true,
+ "weightings": [
+  "none",
+  "game"
+ ],
+ "seed": 0,
+ "testRows": 2044995,
+ "testGames": 12537,
+ "testPairs": 916,
+ "effectiveN": {
+  "byGame": {
+   "groups": 12537,
+   "meanRows": 191.2,
+   "rho": 0.7637,
+   "designEffect": 146.25,
+   "nEff": 13982.8
+  },
+  "byPair": {
+   "groups": 916,
+   "meanRows": 3530.55,
+   "rho": 0.0025,
+   "designEffect": 9.98,
+   "nEff": 204848.3
+  }
+ },
+ "boots": 2000,
+ "points": [
+  {
+   "fraction": 0.25,
+   "weightBy": "none",
+   "trainRows": 3747090,
+   "trainGames": 23102,
+   "trainPairs": 1687,
+   "bestEpoch": 1,
+   "epochsRun": 25,
+   "valLogloss": 0.5139793218649881,
+   "seconds": 171.7,
+   "testLogloss": {
+    "estimate": 0.5110028543273739,
+    "lo": 0.5025754871344437,
+    "hi": 0.5199573375913161
+   },
+   "minusLargest": {
+    "estimate": 0.015929934395151935,
+    "lo": 0.012040178738864876,
+    "hi": 0.019608044260264183
+   },
+   "coreMinusEval": {
+    "estimate": 0.045627902917142506,
+    "lo": 0.03972536776380045,
+    "hi": 0.05162176287048411
+   },
+   "gameMinusNone": {
+    "estimate": 0.001984723074801847,
+    "lo": -0.000833542442463816,
+    "hi": 0.0048036435919647
+   },
+   "testLoglossByGame": {
+    "estimate": 0.4770070547239415,
+    "lo": 0.47032329393605343,
+    "hi": 0.48400388241586767
+   },
+   "minusLargestByGame": {
+    "estimate": 0.015558287362940607,
+    "lo": 0.012813485354307467,
+    "hi": 0.018283629556215694
+   },
+   "coreMinusEvalByGame": {
+    "estimate": 0.05237964901876734,
+    "lo": 0.04798345814504028,
+    "hi": 0.0568373460985461
+   },
+   "gameMinusNoneByGame": {
+    "estimate": -0.005891504570959167,
+    "lo": -0.008134609805198778,
+    "hi": -0.003669968560749389
+   }
+  },
+  {
+   "fraction": 0.5,
+   "weightBy": "none",
+   "trainRows": 7506536,
+   "trainGames": 46178,
+   "trainPairs": 3423,
+   "bestEpoch": 2,
+   "epochsRun": 26,
+   "valLogloss": 0.5030719275598774,
+   "seconds": 259.1,
+   "testLogloss": {
+    "estimate": 0.504347528055866,
+    "lo": 0.49535703399224296,
+    "hi": 0.5133563233507507
+   },
+   "minusLargest": {
+    "estimate": 0.009274608123644308,
+    "lo": 0.00610416299353348,
+    "hi": 0.01228747358775011
+   },
+   "coreMinusEval": {
+    "estimate": 0.052283229188650006,
+    "lo": 0.046203441253813336,
+    "hi": 0.05852075946839561
+   },
+   "gameMinusNone": {
+    "estimate": -0.00031722839891398585,
+    "lo": -0.002639591440027007,
+    "hi": 0.00233639277845166
+   },
+   "testLoglossByGame": {
+    "estimate": 0.46803395912022494,
+    "lo": 0.46125865861222454,
+    "hi": 0.4752185219921511
+   },
+   "minusLargestByGame": {
+    "estimate": 0.006585191759225395,
+    "lo": 0.004252289475292764,
+    "hi": 0.008799939982180099
+   },
+   "coreMinusEvalByGame": {
+    "estimate": 0.06135274462248256,
+    "lo": 0.05669258222935259,
+    "hi": 0.065774938187708
+   },
+   "gameMinusNoneByGame": {
+    "estimate": -0.006423462059082467,
+    "lo": -0.008332175337423874,
+    "hi": -0.004293858564250883
+   }
+  },
+  {
+   "fraction": 1.0,
+   "weightBy": "none",
+   "trainRows": 15417966,
+   "trainGames": 94752,
+   "trainPairs": 6957,
+   "bestEpoch": 5,
+   "epochsRun": 29,
+   "valLogloss": 0.49423033186284365,
+   "seconds": 469.7,
+   "testLogloss": {
+    "estimate": 0.4950729199322214,
+    "lo": 0.48680650132278774,
+    "hi": 0.5036027679045503
+   },
+   "minusLargest": {
+    "estimate": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   },
+   "coreMinusEval": {
+    "estimate": 0.06155783731229442,
+    "lo": 0.05577550933243085,
+    "hi": 0.06745694354542223
+   },
+   "gameMinusNone": {
+    "estimate": 0.0011609255422993126,
+    "lo": -0.0014445547277108157,
+    "hi": 0.0037809266363264342
+   },
+   "testLoglossByGame": {
+    "estimate": 0.46144876736100077,
+    "lo": 0.4549249243844083,
+    "hi": 0.4682550164349665
+   },
+   "minusLargestByGame": {
+    "estimate": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   },
+   "coreMinusEvalByGame": {
+    "estimate": 0.06793793638170796,
+    "lo": 0.06349455165952154,
+    "hi": 0.0723530356182416
+   },
+   "gameMinusNoneByGame": {
+    "estimate": -0.006101162072461956,
+    "lo": -0.008145362415473669,
+    "hi": -0.00407521787286299
+   }
+  },
+  {
+   "fraction": 0.25,
+   "weightBy": "game",
+   "trainRows": 3747090,
+   "trainGames": 23102,
+   "trainPairs": 1687,
+   "bestEpoch": 2,
+   "epochsRun": 26,
+   "valLogloss": 0.47272519963458415,
+   "seconds": 261.4,
+   "testLogloss": {
+    "estimate": 0.5129875774021762,
+    "lo": 0.5032707155425805,
+    "hi": 0.5230166626959313
+   },
+   "minusLargest": {
+    "estimate": 0.016753731927654458,
+    "lo": 0.013070218290687347,
+    "hi": 0.02040263613081722
+   },
+   "coreMinusEval": {
+    "estimate": 0.04364317984234052,
+    "lo": 0.03746198263240971,
+    "hi": 0.04966175735345617
+   },
+   "gameMinusNone": {
+    "estimate": 0.001984723074801847,
+    "lo": -0.000833542442463816,
+    "hi": 0.0048036435919647
+   },
+   "testLoglossByGame": {
+    "estimate": 0.4711155501529811,
+    "lo": 0.4632749976634397,
+    "hi": 0.47894249586836524
+   },
+   "minusLargestByGame": {
+    "estimate": 0.01576794486444342,
+    "lo": 0.013006518082251048,
+    "hi": 0.01847591002525281
+   },
+   "coreMinusEvalByGame": {
+    "estimate": 0.058271153589726524,
+    "lo": 0.053457196655334493,
+    "hi": 0.06313111524805357
+   },
+   "gameMinusNoneByGame": {
+    "estimate": -0.005891504570959167,
+    "lo": -0.008134609805198778,
+    "hi": -0.003669968560749389
+   }
+  },
+  {
+   "fraction": 0.5,
+   "weightBy": "game",
+   "trainRows": 7506536,
+   "trainGames": 46178,
+   "trainPairs": 3423,
+   "bestEpoch": 4,
+   "epochsRun": 28,
+   "valLogloss": 0.4646632471998475,
+   "seconds": 265.6,
+   "testLogloss": {
+    "estimate": 0.5040302996569525,
+    "lo": 0.4943050597535182,
+    "hi": 0.5139792041822949
+   },
+   "minusLargest": {
+    "estimate": 0.007796454182431023,
+    "lo": 0.004789691493885891,
+    "hi": 0.010932768179158371
+   },
+   "coreMinusEval": {
+    "estimate": 0.05260045758756403,
+    "lo": 0.04597121811522625,
+    "hi": 0.05928609776278238
+   },
+   "gameMinusNone": {
+    "estimate": -0.00031722839891398585,
+    "lo": -0.002639591440027007,
+    "hi": 0.00233639277845166
+   },
+   "testLoglossByGame": {
+    "estimate": 0.46161049706114327,
+    "lo": 0.4541166865705992,
+    "hi": 0.46969226242611145
+   },
+   "minusLargestByGame": {
+    "estimate": 0.00626289177260488,
+    "lo": 0.00405322674768495,
+    "hi": 0.008585439343359105
+   },
+   "coreMinusEvalByGame": {
+    "estimate": 0.06777620668156503,
+    "lo": 0.06262873180608966,
+    "hi": 0.07259609846508627
+   },
+   "gameMinusNoneByGame": {
+    "estimate": -0.006423462059082467,
+    "lo": -0.008332175337423874,
+    "hi": -0.004293858564250883
+   }
+  },
+  {
+   "fraction": 1.0,
+   "weightBy": "game",
+   "trainRows": 15417966,
+   "trainGames": 94752,
+   "trainPairs": 6957,
+   "bestEpoch": 11,
+   "epochsRun": 35,
+   "valLogloss": 0.45659185754065185,
+   "seconds": 604.6,
+   "testLogloss": {
+    "estimate": 0.4962338454745211,
+    "lo": 0.48724470964633027,
+    "hi": 0.5054581547125045
+   },
+   "minusLargest": {
+    "estimate": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   },
+   "coreMinusEval": {
+    "estimate": 0.060396911769994954,
+    "lo": 0.05420540841497078,
+    "hi": 0.06652651507242724
+   },
+   "gameMinusNone": {
+    "estimate": 0.0011609255422993126,
+    "lo": -0.0014445547277108157,
+    "hi": 0.0037809266363264342
+   },
+   "testLoglossByGame": {
+    "estimate": 0.455347605288538,
+    "lo": 0.44825382465733393,
+    "hi": 0.4627579945569789
+   },
+   "minusLargestByGame": {
+    "estimate": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   },
+   "coreMinusEvalByGame": {
+    "estimate": 0.07403909845417003,
+    "lo": 0.0692516543618353,
+    "hi": 0.07866122457957272
+   },
+   "gameMinusNoneByGame": {
+    "estimate": -0.006101162072461956,
+    "lo": -0.008145362415473669,
+    "hi": -0.00407521787286299
+   }
+  }
+ ],
+ "core": {
+  "estimate": 0.5566307572445164,
+  "lo": 0.5494565801448731,
+  "hi": 0.5638842654546095
+ },
+ "coreByGame": {
+  "estimate": 0.5293867037427084,
+  "lo": 0.5243937824591074,
+  "hi": 0.5344451225844055
+ },
+ "seconds": 1179.7,
+ "memory": [
+  {
+   "stage": "load",
+   "rssGB": 9.583,
+   "peakGB": 9.695
+  },
+  {
+   "stage": "fit",
+   "rssGB": 9.787,
+   "peakGB": 9.792
+  },
+  {
+   "stage": "score",
+   "rssGB": 9.899,
+   "peakGB": 12.655
+  }
+ ]
+}
