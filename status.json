@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T22:00:56-04:00",
- "heartbeat": "2026-10-05T22:00:56-04:00",
+ "updated": "2026-10-05T22:01:00-04:00",
+ "heartbeat": "2026-10-05T22:01:00-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.5,
-  "memUsedGb": 7.6,
+  "load1": 5.26,
+  "memUsedGb": 7.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 2,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-05T22:00:26-04:00",
-   "elapsed": 30,
+   "elapsed": 34,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 0,
+   "memGb": 0.51,
    "live": {
     "audit.written": 0,
     "cmp.written": 0,
@@ -761,8 +761,8 @@
   }
  ],
  "runner": {
-  "commit": "ef7e73f",
-  "started": "2026-10-05T18:37:08-04:00",
+  "commit": "8b3d2cb",
+  "started": "2026-10-05T22:01:00-04:00",
   "dryRun": false
  }
 }

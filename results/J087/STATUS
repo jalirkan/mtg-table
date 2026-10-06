@@ -1,6 +1,7 @@
 running
-runner: forgecoach-runner ef7e73f
+runner: forgecoach-runner 8b3d2cb
 started: 2026-10-05T22:00:26-04:00
 phase: pilot 1/1
 mtg-table: ef7e73f
 workers: 3
+adopted: 2026-10-05T22:01:00-04:00: the runner restarted; lab-J087-pilot1 was still running
