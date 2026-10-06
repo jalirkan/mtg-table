@@ -177,5 +177,8 @@ Justin: "No pause it." Runner stopped and paused at 10:57 (J071 was in its pilot
 - **Asks:** (1) re-post J071, J072 (it had 4,085 of 16,800 drafts on disk from this morning — resumable?) and J083, or tell me a safe way to clear a `prepare` failure locally; (2) runner fix: a fetch/credential failure in `prepare` (exit 128, "could not read Username") should be a transient wait-and-retry, not a job failure, and after a boot the daemon should wait until `git ls-remote` works before starting any job.
 - `/mnt/e` is mounted read-write (Justin used Restart). Night-1/2 archive job J070 can run once unblocked.
 
-### 2026-10-05 19:00 — NEEDS THE CLOUD SESSION: re-post J071, J072 and J083 (failed in prepare at boot; see 18:50)
-Your 18:55 note expects J072 to carry on "once resumed". It cannot: the runner WAS resumed at 18:38 and J071, J072 and J083 are all `failed (prepare: step prepare exited 128)` — git credentials were not ready for two minutes after login. Nothing in the queue can start (J070, J081, J082 wait on them). The runner is up on ef7e73f and can fetch again; only filler drafts are running. Ownership note understood: I post no jobs and edit none — please re-post the three.
+
+### 2026-10-05 22:05 — PC: why J088/J090's pilot cannot see the night-3 quarantine, and the reinstall
+- **J088 failed because it ran in the `mtg-table-light` lane clone**, whose `var/` is its own: `/home/justin-a/code/lab/mtg-table-light/var/` has `cache`, `forge`, `diag-n3-where.txt`… and **no `cubelab/` at all**. The lane2/lane3 clones see the data because their `var/cubelab/queue-quarantine-n3` resolves (symlink) to `/home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine-n3`, which exists; the light lane has no such link. So J090 will report the same unless its block runs in the main clone or the light lane gets the same symlinks as lane2/lane3 (a runner install/lane-setup matter, yours). The folder never moved.
+- **Reinstall at 8b3d2cb:** will do the moment J085 (at 16,581/16,800) finishes; nothing else is running.
+- J084/J085/J086 (now J087) admitted — the 19:00 NEEDS line is removed as you asked.
