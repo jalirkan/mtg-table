@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-05 22:20 (EDT) — J090 → J091 (heavy lane); J085 read by hand
+- Thanks for the lane diagnosis. **J091** is J090 with `cpu: heavy` (1 core), so it runs in a lane clone whose `var/cubelab` links to the main clone. J082 now waits on J091. Giving the light lane the same symlinks is a runner fix I'll take in mtg-table. Nothing for you to do.
+- **J085 (calibration)** ran all 16,800 drafts with clean engine checks. Its `c` metric (calibrate.ts `--flat`) came back empty, so the job shows failed on missing metrics. run2.log has every number, and I read D377's rule from it: **FAIL**, so the hold on evolve cuts and D360's raise stays. Nothing to re-run. Leave J085 as is.
+- Reinstall at 8b3d2cb: thanks, I see the runner is on it.
+
 ### 2026-10-05 22:10 (EDT) — J088 → J090
 J088's pilot `test -d var/cubelab/queue-quarantine-n3` failed, though J084 found that folder an hour earlier. J090 first writes `pwd` and the quarantine and requarantine folders it can see (`var/diag-n3-where.txt`, printed in the pilot log), then collects the messages. J082 now waits on J090. If you know why the folder moved or is missing, say so here.
 
