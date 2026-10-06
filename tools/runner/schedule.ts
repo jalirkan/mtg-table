@@ -115,6 +115,8 @@ export interface ScheduleInput {
   machine?: MachineBudget;
   playing: boolean;
   paused: boolean;
+  /** D401: admissions held (tools/runner/holds.ts, `play.sh --pause-lab`): no job starts, running ones carry on. The words why, or null. */
+  held?: string | null;
   now: number;
 }
 
@@ -175,6 +177,8 @@ export function schedule(inp: ScheduleInput): { start: JobFile[]; blocked: Block
     const notDone = job.after.filter((a) => inp.statuses.get(a)?.state !== 'done');
     if (notDone.length) { b('after', `after ${notDone.join(', ')}`); continue; }
     if (inp.paused) { b('paused', 'the runner is paused'); continue; }
+    // D401: people are playing (play.sh --pause-lab): no admission, heavy or light; the public copy says "held".
+    if (inp.held) { b('playing', inp.held); continue; }
     if (job.cpu === 'heavy') {
       if (inp.playing) { b('playing', 'Justin is playing'); continue; }
       if (busy('heavy')) {

@@ -11,6 +11,9 @@
 //   status                what runs, the queue, the machine (var/runner/status.json)
 //   pause | resume        hold every job's pool (games in flight finish) and start nothing / carry on
 //   stop    [J###]        stop the running job(s) cleanly (TERM) and hold; `resume` carries on
+//   hold    [--pid N] [--by S]   D401: admit no new job while process N lives (default: the calling shell);
+//                         running jobs carry on untouched.  `scripts/play.sh --pause-lab` does this
+//   release [--pid N]     give that hold back (a hold whose process is gone holds nothing anyway)
 //   logs    [J###] [-n N] [-f]   the current step's log
 //   approve J###          after an old-format pilot: let the runner run the commands (STATUS approved)
 //   check   <job.md> [--metrics m.json] [--jobs-dir DIR] [--var DIR] [--no-lint]
@@ -35,6 +38,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { readControl, writeControl } from './control.ts';
+import { activeHolds, holdReason, releaseHold, takeHold } from './holds.ts';
 import { acquireLock, releaseLock } from './lock.ts';
 import { evaluate, parse as parseExpr } from './expr.ts';
 import { parseJobFile } from './jobfile.ts';
@@ -210,6 +214,8 @@ function printStatus(cfg: RunnerConfig): number {
   if (!d) { console.log(`no ${path.join(cfg.stateDir, 'status.json')} yet (is the runner running? systemctl --user status ${SERVICE})`); return 1; }
   const age = Math.round((Date.now() - Date.parse(d.updated)) / 1000);
   console.log(`updated ${d.updated} (${age} s ago)${d.paused ? '  PAUSED' : ''}`);
+  const holds = activeHolds(cfg.stateDir);
+  if (holds.length) console.log(`HELD: ${holdReason(holds)} (D401)`);
   console.log(`host: load ${d.host.load1}, cores ${d.host.coresUsed ?? '?'}/${d.host.coresTotal ?? '?'} in use, memory ${d.host.memUsedGb}/${d.host.memTotalGb} GB, swap ${d.host.swapUsedMb} MB, pressure ${d.host.pressure}%, lab budget ${d.host.budgetGb} GB`);
   for (const r of d.running) {
     console.log(`running ${r.id} ${r.title}\n   ${r.phase}; ${r.done ?? '?'}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}; ${r.ratePerHour ?? '?'}/h; ETA ${r.eta ?? '?'}; ${r.workers ?? '?'} worker(s), ${r.cores ?? '?'} core(s); errors ${r.errors ?? '?'}${r.paused ? '; PAUSED' : ''}${r.detail ? `; ${r.detail}` : ''}`);
@@ -264,6 +270,23 @@ async function main(): Promise<number> {
     case 'status': return printStatus(cfg);
     case 'pause': setPaused(cfg, true); console.log('paused: games in flight finish, nothing new starts. tools/runner.sh resume to carry on.'); return 0;
     case 'resume': setPaused(cfg, false); console.log('resumed.'); return 0;
+    case 'hold': case 'release': {
+      // D401: admissions only.  The holder is a pid: its hold ends when it does, whatever happens to it.
+      const pid = f.has('pid') ? Number(f.get('pid')) : process.ppid;
+      if (!Number.isInteger(pid) || pid <= 1) throw new Error(`--pid must be a process id (got ${f.get('pid')})`);
+      if (cmd === 'release') {
+        console.log(releaseHold(cfg.stateDir, pid) ? `released: the lab may start new jobs again${activeHolds(cfg.stateDir).length ? ' once the other holds end' : ''}.` : `no hold for pid ${pid}.`);
+        return 0;
+      }
+      takeHold(cfg.stateDir, pid, f.get('by') ?? 'tools/runner.sh hold');
+      console.log(`held: the lab starts no new job while pid ${pid} runs; running jobs carry on (tools/runner.sh release --pid ${pid}).`);
+      // The daemon reads holds only from D401 on: an older installed runner would ignore the file.
+      const installed = path.resolve(cfg.stateDir, '..', '..');
+      if (fs.existsSync(path.join(installed, 'tools', 'runner')) && !fs.existsSync(path.join(installed, 'tools', 'runner', 'holds.ts'))) {
+        console.log(`note: the installed runner (${installed}) predates holds and will ignore this one -- run tools/runner.sh install to update it.`);
+      }
+      return 0;
+    }
     case 'stop': {
       setPaused(cfg, true);
       const dir = path.join(cfg.stateDir, 'requests');

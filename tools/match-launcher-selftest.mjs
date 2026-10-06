@@ -179,12 +179,12 @@ function deck(name, main, sideboard) {
 const RED = [[17, 'Mountain'], [4, 'Lightning Bolt'], [4, 'Shock'], [15, 'Goblin Piker']];
 const BLUE = [[17, 'Island'], [4, 'Counterspell'], [4, 'Opt'], [15, 'Wind Drake']];
 
-async function startPlay(extra, label) {
+async function startPlay(extra, label, env = {}) {
   const port = await freePort();
   const coachPort = await freePort();
   const p = spawn('bash', ['scripts/play.sh', '--engine-only', '--port', String(port), '--coach-port', String(coachPort), ...extra], {
     env: { ...process.env, PATH, MTGTABLE_TEST_FAKE_ENGINE: join(DIR, 'fake-engine.cjs'), MTGTABLE_TEST_VAR: `${REL}/${label}`,
-      FAKE_EVENTS: EVENTS, FAKE_ALIVE: ALIVE, MTGTABLE_LAN_TOKEN: 'inheritedTokenMustBeDropped00' },
+      FAKE_EVENTS: EVENTS, FAKE_ALIVE: ALIVE, MTGTABLE_LAN_TOKEN: 'inheritedTokenMustBeDropped00', ...env },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   procs.push(p);
@@ -672,6 +672,42 @@ try {
   check('...no seed asked for: no warning', r.status === 200 && r.json?.seed === 99 && r.json?.warnings?.length === 0, `${r.status} ${r.body}`);
   rmSync(join(supDir, 'engine.json'));
   check('the card index was read from the zip', /card index: \d+ names from .*cardsfolder\.zip/.test(hlog) && Number(/card index: (\d+)/.exec(hlog)?.[1]) >= 7, hlog);
+
+  // ------------------------------------------------------------- D400, D401
+  console.log('== play.sh --draft-room --pause-lab: the room listener with the site; the lab held, then released');
+  {
+    const site = join(DIR, 'dr-site');
+    mkdirSync(site, { recursive: true });
+    writeFileSync(join(site, 'index.html'), '<!doctype html><title>ForgeCoach room site</title>');
+    const runnerState = join(DIR, 'dr-runner');
+    mkdirSync(runnerState, { recursive: true });
+    writeFileSync(join(runnerState, 'paused'), 'by hand\n');   // a manual pause: --pause-lab must leave it alone
+    const rp = await freePort();
+    const D = await startPlay(['--draft-room', '--room-port', String(rp), '--site-dir', site, '--pause-lab'], 'dr', { MTGTABLE_TEST_RUNNER_STATE: runnerState });
+    for (let i = 0; i < 40 && !/Draft room:/.test(D.out()); i++) await sleep(50);
+    check('play.sh prints the draft room line', /Draft room: on — .*port \d+ \(this machine only/.test(D.out()), D.out());
+    r = await http({ port: D.coachPort });
+    check('/health: draftRoom 1 on the room port', r.json?.draftRoom === 1 && r.json?.roomPort === rp, r.body);
+    r = await http({ port: rp, path: '/' });
+    check('the room listener serves the site', r.status === 200 && /ForgeCoach room site/.test(r.body), `${r.status} ${r.body}`);
+    const cardsList = Array.from({ length: 20 }, (_, i) => `Card ${i}`);
+    r = await http({ port: D.coachPort, method: 'POST', path: '/room', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cubeId: 'synergy', cards: cardsList }) });
+    check('POST /room through play.sh\'s helper: 201', r.status === 201 && r.json?.roomPort === rp, r.body);
+    const rid = r.json?.id;
+    const ft = r.json?.friendToken;
+    r = await http({ port: rp, path: `/room/${rid}`, headers: { 'X-Room-Token': ft } });
+    check('the friend\'s token opens seat 2 on the room port', r.status === 200 && r.json?.you === 1, r.body);
+    r = await http({ port: rp, path: `/room/${rid}` });
+    check('...and no token from loopback is 403', r.status === 403, r.body);
+    check('the room is kept under the test\'s var/ folder', existsSync(join(DIR, 'dr', 'draft-room', 'rooms.json')));
+    const holdFile = join(runnerState, 'holds', `${D.proc.pid}.json`);
+    check('--pause-lab: a hold for play.sh\'s pid', existsSync(holdFile) && /play\.sh --pause-lab/.test(readFileSync(holdFile, 'utf8')) && /held: the lab starts no new job/.test(D.out()), D.out());
+    D.proc.kill('SIGTERM');
+    await new Promise((res) => (D.proc.exitCode !== null ? res() : D.proc.on('exit', res)));
+    check('play.sh\'s exit releases the hold', !existsSync(holdFile) && /new jobs may start again/.test(D.out()), D.out());
+    check('...and leaves a manual pause alone', existsSync(join(runnerState, 'paused')));
+    check('...and the room listener is gone with the helper', await http({ port: rp }).then(() => false, () => true));
+  }
 
   // ------------------------------------------------------------- no supervisor
   console.log('== without play.sh: /match is off');

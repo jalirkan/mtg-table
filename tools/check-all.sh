@@ -1917,6 +1917,10 @@ s12e_skipped() {
 #      eval_serve.py, then (where python3 has numpy) the real one with
 #      fixtures/eval/model.json, two recordings' decision rows through the
 #      route against the golden hashes and P(win); about 5 s.
+#      Since D400 also tools/draft-room-selftest.mjs: the draft room -- the
+#      Grid rules against ForgeCoach's golden draft, the room listener's door
+#      (tokens always, never loopback alone), two simulated players through a
+#      full 18-grid draft, restart, expiry, the limits and the site; about 3 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
@@ -1930,6 +1934,9 @@ s12f_coach() {
   # D385: the automatic review after every human game, against the same fake.
   node tools/auto-review-selftest.mjs \
     || die "auto-review-selftest.mjs (12f: the automatic review broke its rules -- see the FAIL lines above)"
+  # D400: the draft room, end to end.
+  node tools/draft-room-selftest.mjs \
+    || die "draft-room-selftest.mjs (12f: the draft room broke its rules or its door -- see the FAIL lines above)"
   # D361: the helper's /eval, the win chance.
   node tools/eval-runner-selftest.mjs \
     || die "eval-runner-selftest.mjs (12f: the win chance broke its contract with ForgeCoach, or its features left the training rows' -- see the FAIL lines above)"

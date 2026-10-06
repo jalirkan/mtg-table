@@ -73,6 +73,8 @@ tools/runner.sh status                 # what runs (phase, done/total, rate, ETA
 tools/runner.sh pause                  # every job's pool finishes the games in flight and holds; nothing new starts
 tools/runner.sh resume
 tools/runner.sh stop [J###]            # TERM the running job(s) cleanly, mark them waiting, and pause; `resume` carries on
+tools/runner.sh hold [--pid N]         # D401: start no new job while process N (default: this shell) lives; running jobs carry on
+tools/runner.sh release [--pid N]      # give that hold back; scripts/play.sh --pause-lab does both for its own life
 tools/runner.sh logs [J###] [-f] [-n N]   # the current step's log
 tools/runner.sh once                   # one loop iteration in the foreground (testing; refuses while the service runs)
 tools/runner.sh plan [J###]            # the dry run: every script and systemd-run line the job would get; runs nothing

@@ -206,6 +206,9 @@ jobs:
         run: node tools/match-launcher-selftest.mjs
       - name: review-runner-selftest.mjs
         run: node tools/review-runner-selftest.mjs
+      # D400: the draft room -- the Grid rules against ForgeCoach's golden draft, its door, a full draft.
+      - name: draft-room-selftest.mjs
+        run: node tools/draft-room-selftest.mjs
       # D385: the automatic review after every human game (a fake coach-grade.sh, a fake runner status).
       - name: auto-review-selftest.mjs
         run: node tools/auto-review-selftest.mjs

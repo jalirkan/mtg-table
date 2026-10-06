@@ -82,7 +82,11 @@ finishable. Anything on this list is a closed question, not a backlog item.
   is a read-only copy of the seat's own frames for any number of local followers
   (ForgeCoach), which can never act, answer or hold the seat (amendment M50).
   Still a no: a second seat, a second human, a lobby, and any view the seat
-  itself is not shown.
+  itself is not shown. *Lifted in part on 2026-10-06 by **D400**, on the owner's
+  request:* two people may grid-draft a cube from their own browsers through the
+  coach helper's draft room (`play.sh --draft-room`, `docs/draft-room.md`), on a
+  port of its own where every route needs a seat token. A draft only: a game still
+  has one human seat.
 - **No deck builder.** Decks are `.dck` files you already have. Editing them is
   Forge's job, or a text editor's.
 - **No card-library package.** Nothing published, nothing the engine, the bridge
