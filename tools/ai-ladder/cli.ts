@@ -5,13 +5,14 @@
 // docs/guides/ai-ladder.md is the manual; DECISIONS.md D318–D321 are why.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { BatchSpec } from './bench.ts';
 import { draftsOf, split, writeSets } from './decksets.ts';
 import { append, endLine, joinLog, readLog, startLine, type ExpStart } from './experiments.ts';
 import { KINDS, parseValue, testOnly, type ParamValue } from './kinds.ts';
+import { emptyTally, matchSummary, tallyBatch, tallyLine } from './match.ts';
 import { decide, LEAGUE_DEFAULTS, loadLeague, poolOf, saveLeague, type LeagueState } from './league.ts';
 import { buildLadder, renderHtml, type SprtLog, type TuneLog } from './report.ts';
 import { ANCHOR, addPlayer, nextName, resolvePlayer, writeRegistry, type Player } from './registry.ts';
@@ -34,6 +35,7 @@ const USAGE = `ai-ladder -- rate AI configs against each other and stock Forge (
   ai-ladder.sh ratings [--bootstrap N] [--set FILE|all]
   ai-ladder.sh sprt    A B [--elo0 0] [--elo1 20] [--alpha 0.05] [--beta 0.05] [--max-games 4000] [--jobs J]
                        [--min-pairs 100] [--var-floor 0.05]   (D373; 8 and 0.01 were the old values)
+  ai-ladder.sh match   A B --games N [--jobs J] [--out FILE]   (a fixed-size paired match, no stopping rule; score, 95% CI, Elo, search fallbacks: D398)
   ai-ladder.sh tune    BASE --param k=v1,v2 [--param ...] [--pool a,b] [--sample K] [--eta 2]
                        [--blocks 1] [--max-rounds 6] [--name NEW] [--candidate] [--jobs J]
   ai-ladder.sh league  --hours H [--jobs J] [--pool-size 4] [--share 0.5] [--start NAME]
@@ -256,6 +258,64 @@ async function cmdSprt(a: Args, argv: string[]): Promise<void> {
   finish(line.result === 'stopped' ? 'stopped' : 'finished', { sprt: line.result, llr: line.llr, games: line.games, pairs: line.pairs, score: line.score });
   console.log(`\nSPRT result: ${verdictWords(line.result, A.name, B.name, p)}`);
   console.log(`games used: ${fin.games} (${fin.pairs} mirrored pairs); LLR ${fin.llr.toFixed(3)} in [${fin.lower.toFixed(3)}, ${fin.upper.toFixed(3)}]; ${A.name} scored ${(fin.score * 100).toFixed(1)}%`);
+}
+
+/**
+ * match A B --games N (D398): N games (rounded up to whole batches) of A vs B in
+ * mirrored deals, no stopping rule; A's score over the mirror pairs with a 95%
+ * interval, in Elo too, and each side's search counters.  A line goes to
+ * <dir>/match.jsonl, and with --out the same JSON to FILE (for a job's metrics).
+ */
+async function cmdMatch(a: Args, argv: string[]): Promise<void> {
+  const [an, bn] = a.pos;
+  if (!an || !bn) throw new Error('match wants two player names');
+  if (an === bn) throw new Error('match wants two different players');
+  const target = num(a, 'games', NaN);
+  if (!Number.isInteger(target) || target < 1) throw new Error('match wants --games N (a positive integer)');
+  const s = session(a, 2);
+  const A = s.playable(an), B = s.playable(bn);
+  const id = `${s.host}:${s.run}`;
+  const purpose = `match:${id}`;
+  const base = hostBase(s.host) + 900_000;
+  const perBatch = 4 * Math.min(s.opt.pairsPerBatch, s.nPairs);
+  const batches = Math.ceil(target / perBatch);
+  const finish = experiment(a, s, 'match', argv, [A, B], base, `${A.name} vs ${B.name}: a fixed ${batches * perBatch}-game paired match, reported as a score with a 95% interval (no stopping rule)`, purposeOf(s));
+  const ta = emptyTally(), tb = emptyTally();
+  let started = 0;
+  console.log(`match ${A.name} vs ${B.name} on ${s.set}: ${batches} batch(es) of ${perBatch} games (${batches * perBatch} games, ${batches * perBatch / 2} mirrored pairs), no stopping rule`);
+  await s.drive(deadlineOf(a), () => (started >= batches || s.getEngine().stopped ? null : (started++, s.spec(A, B, purpose, base))), (r) => {
+    tallyBatch(join(s.opt.dir, 'batches', s.run, `b${r.batch}.jsonl`), ta, tb);
+    const m = matchSummary(pairScores(sprtGames(s, s.recs, purpose, A)));
+    console.log(`  ${m.games} decisive games (${m.pairs} pairs): ${A.name} scores ${(m.score * 100).toFixed(1)}%`);
+  });
+  const recs = s.recs.filter((r) => r.purpose === purpose);
+  const m = matchSummary(pairScores(sprtGames(s, recs, purpose, A)));
+  const r4 = (x: number | null): number | null => (x === null || !Number.isFinite(x) ? x : Math.round(x * 1e4) / 1e4);
+  const r1 = (x: number | null): number | null => (x === null || !Number.isFinite(x) ? x : Math.round(x * 10) / 10);
+  const complete = started >= batches && !s.getEngine().stopped;
+  const line = {
+    v: 1, at: new Date().toISOString(), id, host: s.host, a: A.name, b: B.name, ah: A.hash, bh: B.hash, set: s.set,
+    target, planned: batches * perBatch, complete,
+    played: recs.length, draws: recs.filter((r) => r.w === 'd').length, errors: recs.filter((r) => r.error).length, timeouts: recs.filter((r) => r.timeout).length,
+    decisive: m.games, pairs: m.pairs, aWins: recs.filter((r) => r.w !== 'd' && (r.w === 'a') === (s.side(r, 'a') === A.name)).length,
+    score: r4(m.score), se: r4(m.se), lo: r4(m.lo), hi: r4(m.hi), elo: r1(m.elo), eloLo: r1(m.eloLo), eloHi: r1(m.eloHi),
+    aSearch: tallyLine(ta), bSearch: tallyLine(tb),
+  };
+  s.logLine('match.jsonl', line);
+  if (a.flags.has('out')) {
+    const out = resolve(REPO, str(a, 'out', ''));
+    mkdirSync(dirname(out), { recursive: true });
+    writeFileSync(out, JSON.stringify(line, null, 1) + '\n');
+  }
+  finish(complete ? 'finished' : 'stopped', { score: line.score, lo: line.lo, hi: line.hi, elo: line.elo, eloLo: line.eloLo, eloHi: line.eloHi, pairs: line.pairs, games: line.played });
+  const pct = (x: number | null): string => (x === null ? 'n/a' : `${(x * 100).toFixed(1)}%`);
+  const elo = (x: number | null): string => (x === null ? 'n/a' : Number.isFinite(x) ? `${x >= 0 ? '+' : ''}${x.toFixed(0)}` : String(x));
+  console.log(`\nmatch ${complete ? 'finished' : 'STOPPED EARLY'}: ${line.played} of ${line.planned} games (${line.draws} draws, ${line.errors} engine errors, ${line.timeouts} timeouts), ${line.pairs} mirrored pairs`);
+  console.log(`${A.name} scores ${pct(line.score)} [95% ${pct(line.lo)}, ${pct(line.hi)}] = ${elo(line.elo)} Elo [${elo(line.eloLo)}, ${elo(line.eloHi)}] against ${B.name}`);
+  for (const [who, t] of [[A.name, line.aSearch], [B.name, line.bSearch]] as const) {
+    if (t.searched === 0) { console.log(`${who}: no searched decisions`); continue; }
+    console.log(`${who}: ${t.searched} decisions searched in ${t.games} games, ${t.changed} changed Forge's answer (${pct(t.changed / t.searched)}); budget fallbacks ${t.fallback.budget ?? 0} = ${pct(t.budgetRate)} [95% ${pct(t.budgetLo)}, ${pct(t.budgetHi)}]; other fallbacks ${JSON.stringify(Object.fromEntries(Object.entries(t.fallback).filter(([k]) => k !== 'budget')))}`);
+  }
 }
 
 async function cmdTune(a: Args, argv: string[]): Promise<void> {
@@ -540,6 +600,7 @@ async function main(): Promise<number> {
     case 'run': await cmdRun(a, rest); break;
     case 'ratings': printRatings(session(a, 10, existsSync(resolve(REPO, CONFIRM_SET)) ? CONFIRM_SET : 'tools/ai-bench/pairs-cube.txt'), num(a, 'bootstrap', 0)); break;
     case 'sprt': await cmdSprt(a, rest); break;
+    case 'match': await cmdMatch(a, rest); break;
     case 'tune': await cmdTune(a, rest); break;
     case 'league': await cmdLeague(a, rest); break;
     case 'report': cmdReport(a); break;

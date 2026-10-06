@@ -7,6 +7,7 @@
 #   tools/ai-ladder.sh list                                  # the registry, and what is unavailable here
 #   tools/ai-ladder.sh run --hours 8 --jobs 7                # spend a time budget where it is most informative
 #   tools/ai-ladder.sh sprt policy-outlet forge-default --elo0 0 --elo1 20 --jobs 7
+#   tools/ai-ladder.sh match search-v1-anytime search-v1 --games 1200 --jobs 7   # fixed N, a 95% interval (D398)
 #   tools/ai-ladder.sh tune policy-outlet --param profile=Default,Cautious,Reckless,Experimental \
 #                           --param outlets=on,off --jobs 7
 #   tools/ai-ladder.sh league --hours 8 --jobs 7             # the self-play loop
@@ -61,7 +62,7 @@ case "$cmd" in
     done
     exec node tools/ai-ladder/cli.ts decksets-collect "${dirs[@]}" --note "$per drafts per cube from seed $seed: $cubes"
     ;;
-  run|sprt|tune|league)
+  run|sprt|match|tune|league)
     [ -f "$FORGE_JAR" ] || { echo "ai-ladder: FORGE_JAR not found: $FORGE_JAR" >&2; exit 1; }
     if [ ! -f bridge/out/mtgtable/ai/PolicyLobbyPlayerAi.class ]; then
       echo "ai-ladder: bridge/out is not built -- running ./bridge/build.sh first" >&2

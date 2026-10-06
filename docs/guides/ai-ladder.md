@@ -74,7 +74,8 @@ uses `--seed` = the host's base + k and a fixed set of pairs for k, so "x vs
 z, batch 3" and "y vs z, batch 3" are the same deals — x's and y's results
 against a common opponent are paired, as in the bench. Each host has its own
 base (a hash of its name), so a second PC deals different games. SPRT, tuner
-and league tests use their own seed ranges.
+and league tests use their own seed ranges; `match` starts at the host base + 900,000, so two
+matches against a common opponent (`x vs z`, `y vs z`) are played on the same deals.
 
 Every game becomes one line of `var/ai-ladder/results/<host>.jsonl` (the
 `GameRecord` in `tools/ai-ladder/results.ts`). **The log is append-only and one
@@ -154,6 +155,22 @@ better", never "no gain"**: a gain between elo0 and elo1 is invisible to the tes
 Its games are ladder games too. Elo is the logistic scale above, not
 "normalized" Elo. Rough cost: a true +70 decides in a few hundred games, a true
 +20 against `--elo1 20` in a few thousand.
+
+## `match A B --games N [--out FILE]`
+
+A **fixed-size** paired match (D398): N games of A against B on the confirm set, rounded up
+to whole batches of `--batch-pairs` (2: 8 games), in mirrored deals like `sprt`, and **no
+stopping rule**. Use it when the question is "how big", or when the plausible effect is below
+any elo1 worth an SPRT (an SPRT would spend its game limit to say H0). It reports A's score
+over the mirror pairs with a 95% interval (x̄ ± 1.96·s/√N on the pair scores), the same in Elo
+(the two ends mapped through the logistic scale, so not symmetric), the draws, errors and
+timeouts, and **each side's search counters** read from the batches' ai-bench lines: decisions
+searched, answers changed, fallbacks to Forge's answer by reason, and the budget-fallback rate
+with a 95% interval clustered by game. A line goes to `var/ai-ladder/match.jsonl` (with
+`--out FILE`, the same JSON to FILE, for a job's metrics); the games are ladder games too.
+Planning: at a pair-score SD of about 0.35, ±20 Elo takes about 570 pairs (1,140 games),
+±30 about 250 (`pairsForHalfWidth` in `tools/ai-ladder/match.ts`). Stopped early (the
+deadline, a signal), the line says `complete: false` and the interval is over what was played.
 
 ## `tune <base> --param k=v1,v2 [--param ...]`
 
