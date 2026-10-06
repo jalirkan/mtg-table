@@ -59,11 +59,18 @@
 //                       cube: {id, title, hash, size}, expiresAt}
 //               400 bad body, 429 {code:"full"} (16 live rooms)
 //   GET  /room  -> 200 {ok, rooms: [{id, cubeId, joined: [bool, bool], grid, done, expiresAt}]}
+//   POST /room/<id>/close        (D408) -> 200 {ok, id, closed: true}: the room is gone for both seats, on
+//                                disk too; its streams get `event: gone`.  404 {code:"gone"}
+//   POST /room/<id>/friend-link  (D408) -> 200 {ok, id, seat: 1, friendToken, roomPort, bases}: a new token
+//                                for the friend's seat (name, picks and deck kept); the old link is 403 at
+//                                once, after a restart too, and its streams get `event: revoked`.  404 gone
 //
 //   On the room listener (8644):
 //   GET  /room/<id>          -> 200 state
 //   GET  /room/<id>/events   -> 200 text/event-stream: `event: state` + `data: <state>` now and
 //                               after every change; `: ping` every 15 s; `event: gone` when it expires
+//                               or its owner closes it; `event: revoked` (D408) when the owner made a
+//                               new link for this seat
 //   POST /room/<id>/join     {"name"?: string}  -> 200 state (idempotent; renames)
 //   POST /room/<id>/pick     {"line": 0-5, "expect": <state.version>}  -> 200 state, or
 //                               409 {code:"stale"|"turn"|"waiting"|"done", state}, 400 {code:"illegal"}
@@ -728,11 +735,14 @@ export function createRoomStore(opts = {}) {
     },
     /** D406/D407: results and reviews (the room server calls it every POLL_MS). */
     poll,
-    /** A stream: send(state) now and after every change, send(null) when the room goes. Returns unsubscribe. */
-    listen(id, seat, send) {
+    /**
+     * A stream: send(state) now and after every change, send(null) when the room goes; revoke() (D408)
+     * when this seat's link was replaced by the owner.  Returns unsubscribe.
+     */
+    listen(id, seat, send, revoke = null) {
       const r = rooms.get(id);
       if (!r) return null;
-      const l = { seat, send };
+      const l = { seat, send, revoke };
       if (!listeners.has(id)) listeners.set(id, new Set());
       listeners.get(id).add(l);
       broadcast(r);   // its "online" changed, for both seats (this one included: its first state)
@@ -759,6 +769,47 @@ export function createRoomStore(opts = {}) {
         if (!best || g.at > best.at) best = { port: g.tablePort, at: g.at ?? 0 };
       }
       return best ? best.port : null;
+    },
+    /**
+     * D408, the owner's door only: close a room for good -- it leaves memory and rooms.json at once, its
+     * streams are told it is gone, and both links (and its game's seat tokens) stop working.  A game
+     * between the two that is being played keeps its table until it ends (the table's tokens are its own);
+     * the room's port stops passing /ws to it.  true, or false when there is no such room.
+     */
+    closeRoom(id) {
+      const r = rooms.get(id);
+      if (!r) return false;
+      rooms.delete(id);
+      gameTokens.delete(id);
+      for (const l of listeners.get(id) ?? []) l.send(null);
+      listeners.delete(id);
+      save();
+      log(`ROOM ${id} closed by its owner`);
+      return true;
+    },
+    /**
+     * D408, the owner's door only: a new link for one seat (the friend's, 1, by default).  The seat keeps
+     * its name, picks and deck; its old token stops working at once, on disk too (rooms.json holds the
+     * digest), and its open streams are ended with `revoked`.  {token} (the only time it exists in clear),
+     * or null when there is no such room.
+     */
+    rotateSeat(id, seat = 1) {
+      const r = rooms.get(id);
+      if (!r || expiresAt(r) <= now() || (seat !== 0 && seat !== 1)) return null;
+      const token = newToken();
+      r.seats[seat].tokenHash = digest(token).toString('hex');
+      r.version++;
+      save();
+      const set = listeners.get(id);
+      for (const l of [...(set ?? [])]) {
+        if (l.seat !== seat) continue;
+        set.delete(l);
+        if (l.revoke) l.revoke(); else l.send(null);
+      }
+      if (set && !set.size) listeners.delete(id);
+      broadcast(r);
+      log(`ROOM ${id} seat ${seat} has a new link (the old one no longer works)`);
+      return { token };
     },
     close() { for (const set of listeners.values()) for (const l of set) l.send(null); listeners.clear(); },
   };
@@ -1021,7 +1072,7 @@ export function startRoomServer(opts) {
         off = store.listen(id, seat, (state) => {
           if (state === null) { write('event: gone\ndata: {}\n\n'); end(); return; }
           write(`event: state\ndata: ${JSON.stringify(state)}\n\n`);
-        });
+        }, () => { write('event: revoked\ndata: {}\n\n'); end(); });   // D408: the owner made a new link for this seat
         res.on('close', end);
         say(200, ' (stream)');
         return;
@@ -1154,10 +1205,10 @@ export function startRoomServer(opts) {
 // The owner's half, routed by the coach helper (its door, D386).
 // ---------------------------------------------------------------------------
 
-/** { post(body) -> {status, body}, list() -> {status, body}, health() } for tools/coach-helper.mjs. */
+/** { post(body), list(), close(id), friendLink(id) -> {status, body}; health() } for tools/coach-helper.mjs. */
 export function createRoomOwner({ store, roomPort, lan = false, publicUrl = null, interfaces }) {
   return {
-    health: () => ({ draftRoom: 1, roomPort, rooms: store.size(), roomGames: 1 }),   // D404: rooms take decks and start games
+    health: () => ({ draftRoom: 1, roomPort, rooms: store.size(), roomGames: 1, roomRevoke: 1 }),   // D404: rooms take decks and start games; D408: close / new friend link
     post(body) {
       const c = {};
       const why = checkCreate(body, c);
@@ -1167,5 +1218,16 @@ export function createRoomOwner({ store, roomPort, lan = false, publicUrl = null
       return { status: 201, body: { ...r.body, roomPort, bases: roomBases({ port: roomPort, lan, publicUrl, interfaces }) } };
     },
     list: () => ({ status: 200, body: { ok: true, rooms: store.list() } }),
+    /** D408: POST /room/<id>/close -- the room is gone for both seats, now and after a restart. */
+    close(id) {
+      if (!ROOM_ID.test(id) || !store.closeRoom(id)) return { status: 404, body: { ok: false, type: 'error', code: 'gone', message: 'no such room' } };
+      return { status: 200, body: { ok: true, id, closed: true } };
+    },
+    /** D408: POST /room/<id>/friend-link -- a new seat token for the friend's seat; the old link stops working. */
+    friendLink(id) {
+      const r = ROOM_ID.test(id) ? store.rotateSeat(id, 1) : null;
+      if (!r) return { status: 404, body: { ok: false, type: 'error', code: 'gone', message: 'no such room' } };
+      return { status: 200, body: { ok: true, id, seat: 1, friendToken: r.token, roomPort, bases: roomBases({ port: roomPort, lan, publicUrl, interfaces }) } };
+    },
   };
 }

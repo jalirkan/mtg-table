@@ -49,6 +49,13 @@ export const ROOM = Object.freeze({ name: 'draft room (D400)', port: 8644 });
  */
 export const GAME_SEAT = Object.freeze({ name: 'game seat (D402)', port: 8646, path: '^/ws$', placeholder: false });
 
+/**
+ * The headers only Cloudflare adds (D405's change 4, met in Phase 2): the bridge's port (D402's TunnelGate)
+ * and the coach helper (D404's `admit`) answer 403 to a request carrying any one of them, whatever its Host.
+ * The same list as WsTransport.TUNNEL_HEADERS and coach-helper.mjs's TUNNEL_HEADERS.
+ */
+export const TUNNEL_HEADERS = Object.freeze(['cf-connecting-ip', 'cf-ray', 'cf-access-jwt-assertion']);
+
 /** Ports a tunnel rule must never name, and why. */
 export const NEVER_PORTS = Object.freeze([
   { port: 8642, name: 'bridge (wsPort)', why: 'LanGate admits any loopback peer with no token, so a tunnel here hands the seat, /observe (your hand) and the site to anyone' },

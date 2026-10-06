@@ -25,6 +25,9 @@
 //      sideboarded decks between games, the loser chooses play or draw, a draw
 //      played again, a game with no result not counted, two wins take the match
 //      and the next decks start another; each seat's consent and its own review.
+//   8. revoking (D408): the owner's door closes a room or gives the friend's seat a
+//      new link; the old link is refused at once and after a restart; open streams
+//      are told; the room listener and a tunnel's Host cannot do either.
 //
 // Its files are under var/draft-room-selftest/.  No network, no engine, no claude.
 
@@ -189,6 +192,7 @@ function stream(base, id, token) {
             const data = /^data: (.*)$/m.exec(block)?.[1];
             if (ev === 'state') s.states.push(JSON.parse(data));
             if (ev === 'gone') s.gone = true;
+            if (ev === 'revoked') s.revoked = true;   // D408
             for (const w of s.waiters.splice(0)) w();
           }
         }
@@ -727,6 +731,73 @@ section('7. the CLI: coach-helper.mjs --draft-room');
   const h3 = await call(`http://127.0.0.1:${hp3}`, '/health');
   ok(!('draftRoom' in h3.json) && (await call(`http://127.0.0.1:${hp3}`, '/room', { method: 'POST', body: { cubeId: 'x', cards } })).status === 404, 'without --draft-room: no /health key, /room is 404 (nothing changes by default)');
   plain.p.kill('SIGTERM');
+}
+
+// ---------------------------------------------------------------------------
+section('8. revoking (D408): close a room, or a new link for the friend, on the owner\'s door only');
+{
+  const dir = join(VAR, 'revoke');
+  const rlog = [];
+  const st = createRoomStore({ dir, varRoot: join(ROOT, 'var'), log: (x) => rlog.push(x) });
+  const srv = startRoomServer({ store: st, port: 0, origins: ORIGINS, log: () => {} });
+  const rport = await srv.listen();
+  const own = createRoomOwner({ store: st, roomPort: rport, lan: false, publicUrl: 'https://play.example.org' });
+  const hlp = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins: ORIGINS, queueMax: 1, timeoutS: 5, room: own, review: null, evaluator: null, log: () => {} });
+  const HP = `http://127.0.0.1:${await hlp.listen()}`;
+  const RP = `http://127.0.0.1:${rport}`;
+  eq((await call(HP, '/health')).json.roomRevoke, 1, '/health: roomRevoke 1');
+  const a = (await call(HP, '/room', { method: 'POST', body: { cubeId: 'synergy', cards, name: 'Justin', firstSeat: 0 } })).json;
+  const b = (await call(HP, '/room', { method: 'POST', body: { cubeId: 'synergy', cards, name: 'Justin' } })).json;
+  eq((await call(RP, `/room/${a.id}/join`, { method: 'POST', token: a.friendToken, body: { name: 'Sam' } })).status, 200, 'the friend joins room A');
+  const f1 = stream(RP, a.id, a.friendToken);
+  const o1 = stream(RP, a.id, a.token);
+  await f1.ready;
+  await o1.ready;
+  // The doors that must not revoke.
+  eq((await call(RP, `/room/${a.id}/friend-link`, { method: 'POST', token: a.token, body: {} })).status, 404, 'the room listener has no friend-link route, even for the owner\'s seat token');
+  eq((await call(RP, `/room/${a.id}/close`, { method: 'POST', token: a.token, body: {} })).status, 404, 'nor a close route');
+  eq((await call(HP, `/room/${a.id}/friend-link`, { method: 'POST', host: 'play.example.org', body: {} })).status, 403, 'a tunnel\'s Host on the helper: 403 (D386)');
+  eq((await call(HP, `/room/${a.id}/close`, { method: 'POST', origin: 'https://evil.example', body: {} })).status, 403, 'a foreign Origin on the helper: 403');
+  eq((await call(HP, `/room/${a.id}/close`)).status, 405, 'GET close: 405 (a GET never changes anything)');
+  eq((await call(HP, '/room/rAAAAAAAA/friend-link', { method: 'POST', body: {} })).status, 404, 'an unknown room: 404');
+  eq((await call(HP, '/room/../x/close', { method: 'POST', body: {} })).status, 404, 'a malformed id: 404');
+  // A new link for the friend.
+  const nl = await call(HP, `/room/${a.id}/friend-link`, { method: 'POST', body: {} });
+  ok(nl.status === 200 && /^[A-Za-z0-9_-]{22}$/.test(nl.json.friendToken) && nl.json.friendToken !== a.friendToken && nl.json.seat === 1, 'POST /room/<id>/friend-link: 200, a new 128-bit token for seat 1');
+  eq([nl.json.bases.public, nl.json.roomPort], ['https://play.example.org', rport], 'with the bases, so the page can show the new links (Over the internet included)');
+  eq([(await call(RP, `/room/${a.id}`, { token: a.friendToken })).status, (await call(RP, `/room/${a.id}`, { token: nl.json.friendToken })).json?.you], [403, 1], 'the old link: 403 at once; the new one is seat 2');
+  const kept = (await call(RP, `/room/${a.id}`, { token: nl.json.friendToken })).json;
+  eq([kept.seats[1].name, kept.seats[1].joined], ['Sam', true], 'the seat keeps its name (and picks): only the key changed');
+  eq((await call(RP, `/room/${a.id}`, { token: a.token })).status, 200, 'the owner\'s own link still works');
+  await f1.until((x) => x.closed);
+  ok(f1.revoked && !f1.gone, 'the friend\'s open stream on the old link is ended with `revoked`');
+  ok(!o1.closed, 'the owner\'s stream stays open');
+  const disk = readFileSync(join(dir, 'rooms.json'), 'utf8');
+  ok(!disk.includes(nl.json.friendToken) && !disk.includes(a.friendToken), 'rooms.json holds neither token in clear');
+  const re = createRoomStore({ dir, varRoot: join(ROOT, 'var') });
+  eq(re.load(), 2, 'a restarted helper reads both rooms back');
+  eq([re.auth(a.id, a.friendToken), re.auth(a.id, nl.json.friendToken), re.auth(a.id, a.token)], ['token', 1, 0], 'after a restart the old link is still refused, the new one and the owner\'s work');
+  // Closing a room.
+  const cl = await call(HP, `/room/${a.id}/close`, { method: 'POST', body: {} });
+  eq([cl.status, cl.json.closed], [200, true], 'POST /room/<id>/close: 200');
+  await o1.until((x) => x.closed);
+  ok(o1.gone, 'the owner\'s open stream is told the room is gone');
+  eq([(await call(RP, `/room/${a.id}`, { token: a.token })).status, (await call(RP, `/room/${a.id}`, { token: nl.json.friendToken })).status], [404, 404], 'both links: 404 gone');
+  eq((await call(HP, `/room/${a.id}/close`, { method: 'POST', body: {} })).status, 404, 'closing it again: 404');
+  eq((await call(HP, '/room')).json.rooms.map((r) => r.id), [b.id], 'GET /room lists only the other room');
+  eq((await call(RP, `/room/${b.id}`, { token: b.friendToken })).status, 200, 'the other room is untouched');
+  const re2 = createRoomStore({ dir, varRoot: join(ROOT, 'var') });
+  eq([re2.load(), re2.auth(a.id, a.token), re2.auth(b.id, b.token)], [1, 'gone', 0], 'after a restart the closed room stays closed');
+  ok(!JSON.stringify(rlog).includes(nl.json.friendToken), 'no token in the log');
+  // Off by default: a helper with no room has neither route.
+  const bare = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins: ORIGINS, queueMax: 1, timeoutS: 5, room: null, review: null, evaluator: null, log: () => {} });
+  const BP = `http://127.0.0.1:${await bare.listen()}`;
+  eq((await call(BP, `/room/${b.id}/close`, { method: 'POST', body: {} })).status, 404, 'without --draft-room: 404');
+  ok(!('roomRevoke' in (await call(BP, '/health')).json), 'without --draft-room: no roomRevoke key');
+  bare.close();
+  hlp.close();
+  srv.close();
+  st.close();
 }
 
 helper.close();

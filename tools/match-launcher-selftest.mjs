@@ -121,6 +121,8 @@ const token = lan ? (process.env.MTGTABLE_LAN_TOKEN || crypto.randomBytes(16).to
 if (lan) ev({ lanToken: token });
 const sockets = new Set();
 const server = http.createServer((req, res) => {
+  // D402's TunnelGate, as the bridge has it: anything carrying Cloudflare's headers is 403 (D408's tunnel-check asks).
+  if (['cf-connecting-ip', 'cf-ray', 'cf-access-jwt-assertion'].some((h) => req.headers[h] !== undefined)) { res.statusCode = 403; res.end('this port is never tunnelled'); return; }
   if (req.url.startsWith('/health')) { res.end('ok'); return; }
   seated = true; ev({ seat: req.url });   // a "seat": held open until this engine dies
 });
@@ -784,6 +786,61 @@ try {
     check('gameResult: not a match id, no result (no path from outside)', tl.gameResult('../../etc') === null && tl.gameResult('m12') === null);
     T.proc.kill('SIGTERM');
     await new Promise((res) => (T.proc.exitCode !== null ? res() : T.proc.on('exit', res)));
+  }
+
+  // ------------------------------------------------------------- D408: play.sh --tunnel
+  console.log('== D408: play.sh --tunnel -- the draft room with its public URL, tunnel-check before and after, the friend\'s two steps');
+  {
+    const site = join(DIR, 'tn-site');
+    mkdirSync(site, { recursive: true });
+    writeFileSync(join(site, 'index.html'), '<!doctype html><title>ForgeCoach tunnel site</title>');
+    // The cloudflared template, filled in as Justin would (scripts/tunnel/config.yml.example).
+    const fill = (t) => t.replaceAll('<TUNNEL-UUID>', '6ff42ae2-765d-4adf-8112-31c55c1551ef').replaceAll('play.example.com', 'play.example.org')
+      .replace('teamName: your-team', 'teamName: jteam').replace('<AUD-TAG>', 'a1b2c3d4e5f6');
+    const template = readFileSync('scripts/tunnel/config.yml.example', 'utf8');
+    const good = join(DIR, 'tn-config.yml');
+    writeFileSync(good, fill(template));
+    const rp = await freePort();
+    const tp = await freePort();
+    const nStart = starts().length;
+    const U = await startPlay(['--tunnel', 'https://play.example.org/', '--tunnel-config', good, '--site-dir', site, '--room-port', String(rp), '--table-port', String(tp)], 'tn');
+    for (let i = 0; i < 200 && !/Run the outside check/.test(U.out()); i++) await sleep(50);
+    const out = U.out();
+    check('--tunnel: the pre-session check ran before the engine, on the given config, and passed', /tunnel-check \(before the start\): play\.example\.org/.test(out)
+      && out.indexOf('tunnel-check (before the start)') < out.indexOf('Engine ready on') && /PASS\s+config .*tn-config\.yml/.test(out), out);
+    check('...and again once the room listens: every door, nothing failed', /tunnel-check \(the doors\)/.test(out) && /PASS\s+room listener \/room\/<id> with no token/.test(out)
+      && /PASS\s+coach helper, Host 127\.0\.0\.1, cf-ray/.test(out) && /PASS\s+bridge, Host 127\.0\.0\.1, cf-access-jwt-assertion/.test(out) && !/\bFAIL\b/.test(out), out);
+    check('--tunnel is --engine-only --draft-room: one engine, the room on loopback', starts().length === nStart + 1 && /Draft room: on — .*\(this machine only/.test(out), out);
+    check('the friend\'s two steps: the bare URL first, then the join link', /Send your friend https:\/\/play\.example\.org\/ FIRST/.test(out) && /drops everything after #/.test(out)
+      && /"Over the internet" link it shows \(https:\/\/play\.example\.org\/#draft\/friend\/join/.test(out), out);
+    r = await http({ port: U.coachPort, method: 'POST', path: '/room', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cubeId: 'synergy', cards: Array.from({ length: 20 }, (_, i) => `Card ${i}`) }) });
+    check('POST /room: bases.public is the tunnel\'s URL (ForgeCoach\'s "Over the internet" link)', r.status === 201 && r.json?.bases?.public === 'https://play.example.org' && r.json?.roomPort === rp, r.body);
+    const rid = r.json?.id;
+    const ft = r.json?.friendToken;
+    r = await http({ port: U.coachPort, method: 'POST', path: `/room/${rid}/friend-link`, headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    check('D408: a new friend link through play.sh\'s helper', r.status === 200 && r.json?.friendToken && r.json.friendToken !== ft && r.json?.bases?.public === 'https://play.example.org', r.body);
+    r = await http({ port: rp, path: `/room/${rid}`, headers: { 'X-Room-Token': ft } });
+    check('...the old link is refused on the room port', r.status === 403, r.body);
+    r = await http({ port: rp, path: '/', headers: { Host: 'play.example.org' } });
+    check('the room listener serves the site to the tunnel\'s Host', r.status === 200 && /tunnel site/.test(r.body), `${r.status}`);
+    U.proc.kill('SIGTERM');
+    await new Promise((res) => (U.proc.exitCode !== null ? res() : U.proc.on('exit', res)));
+
+    // A config that points the tunnel at the coach helper: play.sh stops before the engine starts.
+    const bad = join(DIR, 'tn-bad.yml');
+    writeFileSync(bad, fill(template).replace('service: http://127.0.0.1:8644', 'service: http://127.0.0.1:8643'));
+    const nBefore = starts().length;
+    const B = spawn('bash', ['scripts/play.sh', '--tunnel', 'https://play.example.org', '--tunnel-config', bad, '--port', String(await freePort()), '--coach-port', String(await freePort()), '--room-port', String(await freePort())], {
+      env: { ...process.env, PATH, MTGTABLE_TEST_FAKE_ENGINE: join(DIR, 'fake-engine.cjs'), MTGTABLE_TEST_VAR: `${REL}/tnbad`, FAKE_EVENTS: EVENTS, FAKE_ALIVE: ALIVE },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    procs.push(B);
+    let bout = '';
+    B.stdout.on('data', (d) => { bout += d; });
+    B.stderr.on('data', (d) => { bout += d; });
+    await new Promise((res) => (B.exitCode !== null ? res() : B.on('exit', res)));
+    check('a config that names the coach helper: play.sh --tunnel exits 1 before any engine or helper starts', B.exitCode === 1 && /8643 is the coach helper/.test(bout)
+      && /tunnel-check failed \(the config\)/.test(bout) && starts().length === nBefore && !/Engine ready/.test(bout), `${B.exitCode}\n${bout}`);
   }
 
   // ------------------------------------------------------------- no supervisor

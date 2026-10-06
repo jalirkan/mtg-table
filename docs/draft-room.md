@@ -43,6 +43,7 @@ its last pick, and 72 hours after it was made.
 | Listener | Route | Door |
 |---|---|---|
 | Coach helper (8643) | `POST /room`, `GET /room` | The owner's door (D386): loopback with a loopback `Host`, or the `--lan` pairing token. It is never tunnelled. Only the owner makes rooms. |
+| Coach helper (8643) | `POST /room/<id>/close`, `POST /room/<id>/friend-link` (D408) | The same owner's door. Only the owner closes a room or replaces the friend's link; the room listener has no such route. |
 | Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
 | Room listener (8644) | `GET /`, `GET /assets/…` | No token. These are ForgeCoach's public build (`--room-site-dir`, which play.sh fills with the `--lan` download or `--site-dir`). Only GET and HEAD are allowed, and a path cannot leave the folder: `..`, encoded separators and symlinks are refused. |
 
@@ -94,6 +95,21 @@ for a tunnel later. Errors: `400 {code:"bad"}` and `429 {code:"full"}`.
 `GET /room` returns `{ok, rooms: [{id, cubeId, joined: [bool, bool], grid, done, expiresAt}]}`.
 It carries no tokens.
 
+### Revoking (D408, coach helper)
+
+- `POST /room/<id>/close` → `200 {ok, id, closed: true}`. The room leaves memory
+  and `rooms.json` at once: both links are `404 gone`, now and after a restart,
+  and every open stream gets `event: gone`. A game between the two that is being
+  played keeps its table until it ends (its seat tokens are per game); the room's
+  port stops passing `/ws` to it.
+- `POST /room/<id>/friend-link` → `200 {ok, id, seat: 1, friendToken, roomPort, bases}`.
+  The friend's seat gets a new token: the old link is `403 token` at once, and
+  after a restart (`rooms.json` holds the new digest), and the friend's open
+  streams on it get `event: revoked`. The seat keeps its name, picks and deck.
+  ForgeCoach shows the new links from `bases`, as after `POST /room`.
+- Both are `404 {code: "gone"}` for an unknown room, POST only, with a body of at
+  most 1 KB (ignored). `/health` says `"roomRevoke": 1`.
+
 ### The seat's state (room listener)
 
 ```json
@@ -122,8 +138,9 @@ It carries no tokens.
 - `GET /room/<id>/events` → `200 text/event-stream`. It sends `event: state` with
   `data: <state>` straight away and after every change (including the other
   seat's `online` flag), a `: ping` comment every 15 s, and `event: gone` when the
-  room expires. The client reads it with `fetch()`, because `EventSource` cannot
-  send a header.
+  room expires or its owner closes it, and `event: revoked` when the owner made a
+  new link for this seat (D408). The client reads it with `fetch()`, because
+  `EventSource` cannot send a header.
 - `POST /room/<id>/join` `{"name"?: string}` → `200` state. It is idempotent, and
   sending a new name renames the seat.
 - `POST /room/<id>/pick` `{"line": 0-5, "expect": <state.version>}` → `200` state,
@@ -289,9 +306,11 @@ this machine.
   (8643) never serves a game between two people at all (`POST` 403, `GET` 404,
   left out of the list).
 
-## What is not built (Phase 4)
+## The tunnel (Phase 4, D405, D408)
 
-- A tunnel (Phase 4): the room listener and the table port are built to be
-  tunnelled (no loopback exemption, `https://` origins, the table serving `/ws`
-  only), and `docs/cloudflare.md` (D405) is the runbook: cloudflared checks
-  Access itself. Handing the room its public URL (`play.sh`) is still to come.
+The room listener and the table port are built to be tunnelled (no loopback
+exemption, `https://` origins, the table serving `/ws` only), and
+`docs/cloudflare.md` is the runbook: cloudflared checks Access itself.
+`./scripts/play.sh --tunnel https://<host>` (D408) hands the room its public URL,
+so the page shows the "Over the internet" link. A review and a seat log go out
+only to their own seat, over the room listener, like everything else in the room.
