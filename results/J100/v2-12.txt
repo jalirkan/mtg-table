@@ -1,0 +1,15 @@
+regret_rank (v2-12): 291 of 291 decisions read; unread {}
+pairwise accuracy  hand 0.712  eval 0.685  eval - hand -0.0278 [-0.0642, +0.0083]  (n 228)
+  confident pairs  hand 0.863  eval 0.859  eval - hand -0.0048 [-0.0536, +0.0428]  (n 96)
+Spearman rho       hand 0.464  eval 0.412  eval - hand -0.0513 [-0.1252, +0.0208]  (n 219)
+Kendall tau-b      hand 0.430  eval 0.374  eval - hand -0.0559 [-0.1290, +0.0160]  (n 219)
+picks agree 76%; discordant 69: eval better 25, hand better 29, equal 15 (sign test p 0.683); clear only: eval 7, hand 9, unclear 53 (p 0.804)
+truth noise: 232029 playouts; per option median n 200 (p10 40, p90 200); best 200, retired 58; median se 0.022 (best 0.023); 90% of option pairs within 1.96 se; median reliability 0.06; regret se hand 0.0233, eval 0.0231; mean regret hand 0.0204, eval 0.0209
+  stratum attack n 100  pairwise hand 0.775 eval 0.775 diff +0.0000 [-0.0468, +0.0440]  rho hand 0.572 eval 0.570  discordant 23 (7:8:8)
+  stratum block  n 100  pairwise hand 0.682 eval 0.670 diff -0.0120 [-0.0735, +0.0470]  rho hand 0.394 eval 0.378  discordant 23 (10:7:6)
+  stratum spell  n  91  pairwise hand 0.668 eval 0.594 diff -0.0737 [-0.1541, +0.0021]  rho hand 0.393 eval 0.242  discordant 23 (8:14:1)
+  options 2      n 100  pairwise hand 0.706 eval 0.656 diff -0.0500 [-0.1250, +0.0250]  rho hand 0.452 eval 0.342  discordant 14 (3:7:4)
+  options 3-4    n  96  pairwise hand 0.707 eval 0.676 diff -0.0309 [-0.0880, +0.0250]  rho hand 0.454 eval 0.416  discordant 21 (9:11:1)
+  options 5-8    n  40  pairwise hand 0.705 eval 0.702 diff -0.0027 [-0.0641, +0.0569]  rho hand 0.438 eval 0.431  discordant 17 (7:8:2)
+  options 9+     n  55  pairwise hand 0.749 eval 0.758 diff +0.0093 [-0.0499, +0.0589]  rho hand 0.540 eval 0.543  discordant 17 (6:3:8)
+rank rule (D395): NO EDGE -- ranked with {'hand': 12, 'eval': 12} rounds, not the rule's 3: descriptive only; 228 decisions with an ordered pair < 240 (underpowered); pairwise accuracy eval - hand -0.0278 [-0.0642, +0.0083]: the interval does not lie above 0; the leaf track stays stopped

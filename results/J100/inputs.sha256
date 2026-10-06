@@ -1,0 +1,8 @@
+032a747058d1ad25e8facb7e50b3e60ce3d0daeee9244c9a7e999734a1c294f9  var/ml/gates/regret/set.jsonl
+0df9dadbb0f868549ef6417a1add5d74a6faef1abb2c64b35f98c91a89fb3d96  var/ml/gates/regret/truth.jsonl
+59060d73c6782dfd817a5ac3950197224b9fe9de9f496a339ca23420030fbc6d  var/ml/gates/regret/rank-hand-3.jsonl
+24bd5b63f752fff22cdb3da3243eeb0f1e8962ff9a436aea08a70194df2d89c4  var/ml/gates/regret/rank-hand-12.jsonl
+3c55e3f3c8fd7f542001b0ea9f259229d22f2d125181ac14dce4d715d9b47186  var/ml/gates/regret/rank-eval-3.jsonl
+4f4519927b743c8abfbd2414bff3815ca08098e408335f351b01300805718299  var/ml/gates/regret/rank-eval-12.jsonl
+20e1a6100a450081d2e22ff5b1224d2716a5c6e479b28572dbdf949c63de9fc3  var/ml/gates/regret-v2/rank-eval-3.jsonl
+42e43686bd621f42e2a56117b9ce103f00c9bbf441425e0a9a98a0e3dcb60fa0  var/ml/gates/regret-v2/rank-eval-12.jsonl

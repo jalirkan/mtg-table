@@ -1,0 +1,15 @@
+regret_rank (v1): 291 of 291 decisions read; unread {}
+pairwise accuracy  hand 0.711  eval 0.698  eval - hand -0.0131 [-0.0459, +0.0197]  (n 228)
+  confident pairs  hand 0.870  eval 0.871  eval - hand +0.0009 [-0.0430, +0.0434]  (n 96)
+Spearman rho       hand 0.475  eval 0.441  eval - hand -0.0341 [-0.1032, +0.0328]  (n 215)
+Kendall tau-b      hand 0.437  eval 0.400  eval - hand -0.0366 [-0.1043, +0.0281]  (n 215)
+picks agree 75%; discordant 72: eval better 26, hand better 28, equal 18 (sign test p 0.892); clear only: eval 6, hand 5, unclear 61 (p 1.000)
+truth noise: 232029 playouts; per option median n 200 (p10 40, p90 200); best 200, retired 58; median se 0.022 (best 0.023); 90% of option pairs within 1.96 se; median reliability 0.06; regret se hand 0.0229, eval 0.0227; mean regret hand 0.0208, eval 0.0192
+  stratum attack n 100  pairwise hand 0.757 eval 0.751 diff -0.0065 [-0.0468, +0.0337]  rho hand 0.541 eval 0.525  discordant 22 (8:8:6)
+  stratum block  n 100  pairwise hand 0.697 eval 0.683 diff -0.0138 [-0.0763, +0.0413]  rho hand 0.427 eval 0.416  discordant 30 (11:8:11)
+  stratum spell  n  91  pairwise hand 0.672 eval 0.652 diff -0.0202 [-0.0930, +0.0477]  rho hand 0.434 eval 0.350  discordant 20 (7:12:1)
+  options 2      n 100  pairwise hand 0.713 eval 0.694 diff -0.0187 [-0.0813, +0.0375]  rho hand 0.486 eval 0.429  discordant 8 (2:4:2)
+  options 3-4    n  96  pairwise hand 0.702 eval 0.677 diff -0.0252 [-0.0829, +0.0309]  rho hand 0.454 eval 0.405  discordant 28 (11:15:2)
+  options 5-8    n  40  pairwise hand 0.706 eval 0.706 diff +0.0001 [-0.0603, +0.0572]  rho hand 0.458 eval 0.433  discordant 13 (5:6:2)
+  options 9+     n  55  pairwise hand 0.738 eval 0.756 diff +0.0177 [-0.0489, +0.0817]  rho hand 0.520 eval 0.563  discordant 23 (8:3:12)
+rank rule (D395): NO EDGE -- 228 decisions with an ordered pair < 240 (underpowered); pairwise accuracy eval - hand -0.0131 [-0.0459, +0.0197]: the interval does not lie above 0; the leaf track stays stopped

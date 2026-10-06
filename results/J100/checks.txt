@@ -1,0 +1,4 @@
+PASS  r2.written == 1 and r2.ruled == 1   [r2.written = 1, r2.ruled = 1]
+PASS  r2.decisions >= 240   [r2.decisions = 291]
+PASS  r1.written == 1 and s2.written == 1 and s1.written == 1   [r1.written = 1, s2.written = 1, s1.written = 1]
+PASS  s2.ruled == 0 and s1.ruled == 0   [s2.ruled = 0, s1.ruled = 0]

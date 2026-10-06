@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-06T08:30:53-04:00
+- time: 2026-10-06T08:31:29-04:00
 - runner: 8961fd5, up since 2026-10-06T01:31:40-04:00
-- running: J099 commands 1/3, 1750/38000 drafts, 4321.3/h, ETA 2026-10-06T16:54:12-04:00, 7 worker(s), 7 core(s); J100 commands 1/1, 1 worker(s), 1 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 22.26; memory 10.1/30.5 GB, swap 2047 MB, pressure 0% (lab budget 23.4 GB)
+- running: J099 commands 1/3, 1750/38000 drafts, 4321.3/h, ETA 2026-10-06T16:54:48-04:00, 7 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 24.43; memory 14.3/30.5 GB, swap 2047 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J098 done at 2026-10-06T08:07:03-04:00: p.compared 147 · p.nonland 126 · p.rho 0.295 · p.lo 0.137 · p.hi 0.439 · p.reading 1 · p.R_mean -0.736 · p.cheapCreature_mean -0.347
+- last finished: J100 done at 2026-10-06T08:31:29-04:00: r2.decisions 291 · r2.pairwise_hand 0.711 · r2.pairwise_eval 0.68 · r2.pairwise_diff_estimate -0.031 · r2.pairwise_diff_lo -0.067 · r2.pairwise_diff_hi 0.004 · r2.sign_discordant 70 · r2.edge 0
 
 ## Messages
 
