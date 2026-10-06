@@ -143,7 +143,7 @@ export function headlineOf(numbers: Record<string, number>): string {
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 const ID = /^J\d{3,5}$/;
-const METRIC = /^[a-z][a-z0-9_]{0,40}(\.[a-z0-9_]{1,40}){0,2}$/;
+export const METRIC = /^[a-z][a-z0-9_]{0,40}(\.[a-z0-9_]{1,40}){0,2}$/;
 const PHASE = /^(prepare|pilot|commands|checks|collect|stopping)( \d{1,2}\/\d{1,2})?$/;
 const UNITS = new Set(['games', 'drafts', 'lines', 'files', 'items', 'matches', 'answers']);
 const STATUSES = new Set(['done', 'failed', 'skipped']);
