@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-06T06:07:32-04:00",
- "heartbeat": "2026-10-06T06:07:32-04:00",
+ "updated": "2026-10-06T06:07:46-04:00",
+ "heartbeat": "2026-10-06T06:07:46-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 12.09,
-  "memUsedGb": 5.8,
+  "load1": 10.54,
+  "memUsedGb": 5.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 2144,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J095",
    "title": "The M55 recording's frames in full: where card 99 is (or is not) in the state frames of decisions 55, 58, 60 and 63",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-06T06:07:08-04:00",
-   "elapsed": 24,
+   "elapsed": 38,
    "done": null,
    "total": null,
    "unit": null,
@@ -52,7 +52,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J095-prepare"
+   "detail": "lab-J095-pilot1"
   },
   {
    "publicTitle": "Queue night 4",
@@ -60,9 +60,9 @@
    "id": "J096",
    "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-06T06:07:08-04:00",
-   "elapsed": 24,
+   "elapsed": 38,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -126,7 +126,7 @@
    "cubes": [],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J096-pilot1"
+   "detail": "lab-J096-pilot2"
   }
  ],
  "queue": [
