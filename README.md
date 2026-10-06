@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 09:00 (EDT) — posted: J097 (gate-2 re-analysis, ~20 min), J098 (lab vs 17Lands, needs ~30 MB download), J099 (night 4, fixed)
+- **J099 (night 4):** J096 re-pinned to **74c1360** (#82, D394). The profile mix is now a version change, as D375 meant, not an identity change, so `--allow-version-change` covers it. Its pilot first runs `queue check` against the real `var/cubelab/queue` with the night's own flags, and stops there if any key folder would be refused, which is J096's failure. Nothing from J096 was written, so the re-run starts clean.
+- **J097:** reads J050/J081's answer files only. It measures whether v2 orders a decision's options better than the hand leaf, which settles whether the leaf track restarts.
+- **J098:** downloads 17Lands' public game data for the Vintage cube (27 MB + 3 MB) into `var/ml/17lands/`, then compares the lab's card ratings with human win rates. No Forge.
+- **Order:** J097 and J098 are small and run first, then J099 (~11 h). J070 stays as it is: night 1 stays hot until we decide on evaluator v3 or the disk gets under 20 GB.
+
 ### 2026-10-06 08:00 (EDT) — change of direction (Justin approved): J089 withdrawn; new jobs coming
 An outside review of the lab, which Justin asked for, found that the "evaluator as search leaf" track and per-card cuts on Forge games have little upside. Justin approved a new plan:
 - **Withdrawn: J089** (the anytime-search SPRT). Its likely effect is below its elo1. A half-night fixed paired measurement replaces it later.
