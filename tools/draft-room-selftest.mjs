@@ -25,11 +25,14 @@
 // Its files are under var/draft-room-selftest/.  No network, no engine, no claude.
 
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
+import { connect as netConnect, createServer as createNetServer } from 'node:net';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startHelper } from './coach-helper.mjs';
+import { checkDeck } from './match-launcher.mjs';
 import {
   applyPick, checkCreate, cleanText, createRoomOwner, createRoomStore, dealGrid, legalLines, newGrid, ownOrigin,
   rng, roomAdmit, roomBases, sitePath, startRoomServer, toAct,
@@ -203,7 +206,11 @@ function stream(base, id, token) {
 // ---------------------------------------------------------------------------
 section('3. end to end: the helper makes the room, two players draft all 18 grids');
 const logs = [];
-const store = createRoomStore({ dir: join(VAR, 'rooms'), varRoot: join(ROOT, 'var'), log: (s) => logs.push(s) });
+// D404: a stand-in for the match launcher's startTable -- what it was asked, and what it answers next.
+const games = { calls: [], next: [], running: false };
+const store = createRoomStore({ dir: join(VAR, 'rooms'), varRoot: join(ROOT, 'var'), log: (s) => logs.push(s),
+  startGame: async (g) => { games.calls.push(g); await new Promise((r) => setTimeout(r, 20)); return games.next.shift() ?? { ok: true, matchId: `m${1000000000000 + games.calls.length}`, tablePort: 8646 }; },
+  gameRunning: () => games.running });
 const roomSrv = startRoomServer({ store, port: 0, origins: ORIGINS, log: (s) => logs.push(s) });
 const roomPort = await roomSrv.listen();
 const owner = createRoomOwner({ store, roomPort, lan: false });
@@ -329,6 +336,92 @@ eq([after.status, after.json.code], [409, 'done'], 'a pick after the end: 409 do
 eq((await call(R, `/room/${id}`, { token: T1 })).json.seats[0].name, 'Justin', 'picks so far: GET /room/<id> any time');
 
 // ---------------------------------------------------------------------------
+section('3b. D404: each seat hands in a deck from its own picks; both in, the room starts a game');
+{
+  const pk = [end0.seats[0].picks, end0.seats[1].picks];
+  const deckOf = (picks, n = 23, extra = []) => ({ name: 'My Deck', main: [...picks.slice(0, n).map((c) => [1, c]), [40 - n, 'Plains'], ...extra] });
+  const mem = createRoomStore({ dir: null });
+  const mm = mem.create({ cubeId: 'c', cubeTitle: 'c', cards, name: 'A' });
+  eq(mem.deck(mm.body.id, 0, deckOf(cards)).code, 'drafting', 'a deck before the draft is over: drafting (409)');
+  const notMine = await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: deckOf(pk[1]) });
+  eq([notMine.status, notMine.json.code], [400, 'deck'], "a deck of the OTHER seat's picks: 400 deck");
+  ok(/is not one of your picks/.test(notMine.json.message) && Array.isArray(notMine.json.problems), 'it says which card is not this seat\'s', notMine.json.message);
+  const twice = await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: { name: 'Twice', main: [[2, pk[0][0]], ...pk[0].slice(1, 22).map((c) => [1, c]), [17, 'Plains']] } });
+  eq([twice.status, /2 in the deck, 1 in your picks/.test(twice.json.message)], [400, true], 'two copies of a card drafted once: 400', twice.json.message);
+  const side = await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: { ...deckOf(pk[0]), sideboard: [[1, pk[0][0]]] } });
+  eq(side.status, 400, 'a card in the main deck AND the sideboard counts twice: 400');
+  eq((await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: { name: 'Short', main: [[1, pk[0][0]], [38, 'Plains']] } })).status, 400, '39 cards: 400');
+  eq((await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: { ...deckOf(pk[0]), cheat: true } })).status, 400, 'an unknown field: 400');
+  eq((await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: { name: 'Bad\nName', main: deckOf(pk[0]).main } })).status, 400, 'a deck name with a newline: 400');
+  eq((await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, raw: 'x'.repeat(17 * 1024), body: {} })).status, 413, 'a deck over 16 KB: 413');
+  eq((await call(R, `/room/${id}/deck`, { method: 'POST', token: 'B'.repeat(22), body: deckOf(pk[0]) })).status, 403, 'a deck with a wrong token: 403');
+  eq(games.calls.length, 0, 'nothing started yet');
+
+  const p0 = stream(R, id, T0);
+  const p1 = stream(R, id, T1);
+  await Promise.all([p0.ready, p1.ready]);
+  // Every basic on a line of its own and the rest of the picks in the sideboard: a body over 1 KB.
+  const d0 = { name: 'My Deck', main: [...pk[0].slice(0, 23).map((c) => [1, c]), ...Array.from({ length: 17 }, () => [1, 'Plains'])], sideboard: pk[0].slice(23).map((c) => [1, c]) };
+  const in0 = await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: d0 });
+  eq(in0.status, 200, "seat 0's deck from its own picks, the rest in its sideboard, 17 basics: 200");
+  ok(JSON.stringify(d0).length > 1024, `a deck body over the seat routes' 1 KB is taken (${JSON.stringify(d0).length} bytes)`);
+  eq([in0.json.decks[0], in0.json.decks[1]], [{ ready: true, name: 'My Deck', cards: 40 }, { ready: false, name: null, cards: null }], 'seat 0: its deck is in, the other not yet');
+  eq(in0.json.yourDeck?.main?.length, 40, "seat 0's state carries its own list");
+  await p1.until((x) => x.latest()?.decks?.[0]?.ready === true);
+  const seen1 = p1.latest();
+  eq([seen1.decks[0], seen1.yourDeck], [{ ready: true, name: 'My Deck', cards: 40 }, null], "seat 1 sees seat 0's deck by name and count only, and no list of its own yet");
+  ok(!JSON.stringify(seen1).includes('"main"'), "nothing in seat 1's stream is seat 0's main deck");
+  const d1 = { name: 'Their Deck', main: [...pk[1].slice(0, 24).map((c) => [1, c]), [16, 'Island']] };
+  const in1 = await call(R, `/room/${id}/deck`, { method: 'POST', token: T1, body: d1 });
+  eq([in1.status, in1.json.game?.state], [200, 'starting'], 'the second deck in: 200, and a game is starting');
+  await p0.until((x) => x.latest()?.game?.state === 'ready');
+  await p1.until((x) => x.latest()?.game?.state === 'ready');
+  eq(games.calls.length, 1, 'the launcher was asked once');
+  const g = games.calls[0];
+  eq([g.roomId, g.names, g.decks.map((d) => [d.name, d.main.reduce((t, [n]) => t + n, 0)])], [id, ['Justin', end0.seats[1].name], [['My Deck', 40], ['Their Deck', 40]]], 'with the room, both names and both decks in seat order');
+  // The launcher re-checks each deck with its own checkDeck: the room must hand it the request shape, not its normal form.
+  eq(g.decks.map((d, i) => checkDeck(d, `seat ${i}`).problems), [[], []], "both decks pass the launcher's own checkDeck ([count, card] pairs)");
+  const v0 = p0.latest().game;
+  const v1 = p1.latest().game;
+  ok(/^[A-Za-z0-9_-]{22}$/.test(v0.token ?? '') && /^[A-Za-z0-9_-]{22}$/.test(v1.token ?? '') && v0.token !== v1.token, 'each seat gets a seat token of its own for the game');
+  const sha = (t) => createHash('sha256').update(t, 'utf8').digest('hex');
+  eq([sha(v0.token), sha(v1.token)], g.digests, "the launcher got the two tokens' digests, in seat order, never the tokens");
+  ok(!JSON.stringify(g).includes(v0.token) && !JSON.stringify(g).includes(v1.token), 'no token reached the launcher');
+  ok(!JSON.stringify(p0.states).includes(v1.token) && !JSON.stringify(p1.states).includes(v0.token), "neither seat's stream ever carried the other's token");
+  eq([v0.tablePort, v0.matchId, v0.n], [8646, g.digests && 'm1000000000001', 1], 'the table port and the match id, game 1');
+  ok(T0 !== v0.token && T1 !== v1.token, 'a game token is not the room token');
+  const diskNow = readFileSync(join(VAR, 'rooms', 'rooms.json'), 'utf8');
+  ok(!diskNow.includes(v0.token) && !diskNow.includes(v1.token), 'rooms.json holds no game token (memory only)');
+  ok(!JSON.stringify(logs).includes(v0.token) && !JSON.stringify(logs).includes(v1.token), 'no game token in the log');
+  eq([p0.latest().decks[0].ready, p0.latest().decks[1].ready], [false, false], 'the decks are spent on this game: neither seat is ready for the next');
+
+  games.running = true;
+  const during = await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: d0 });
+  eq([during.status, during.json.code], [409, 'playing'], 'a deck while the game is played: 409 playing');
+  eq(store.tablePort(), 8646, "while it is played, /ws on the room's port goes to its table port");
+  games.running = false;
+  eq(store.tablePort(), null, 'once it is over, /ws on the room port goes nowhere');
+  games.next.push({ ok: false, status: 502, message: 'the engine did not start on these decks: boom' });
+  await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: d0 });
+  await call(R, `/room/${id}/deck`, { method: 'POST', token: T1, body: d1 });
+  await p0.until((x) => x.latest()?.game?.state === 'failed');
+  eq([p0.latest().game.n, p0.latest().game.token, /boom/.test(p0.latest().game.error)], [2, null, true], 'a game that does not start: failed, with why, and no token');
+  await call(R, `/room/${id}/deck`, { method: 'POST', token: T1, body: d1 });
+  await call(R, `/room/${id}/deck`, { method: 'POST', token: T0, body: d0 });
+  await p1.until((x) => x.latest()?.game?.state === 'ready' && x.latest()?.game?.n === 3);
+  ok(p1.latest().game.token !== v1.token, 'a rematch: game 3 with fresh tokens');
+  p0.close();
+  p1.close();
+  const reread = createRoomStore({ dir: join(VAR, 'rooms'), varRoot: join(ROOT, 'var') });
+  reread.load();
+  eq([reread.view(id, 0).game.state, reread.view(id, 0).game.token], ['ready', null], 'a helper restart keeps the game but not its tokens (the players keep theirs)');
+  const bare = createRoomStore({ dir: null });
+  const bm = bare.create({ cubeId: 'c', cubeTitle: 'c', cards, name: 'A' });
+  const r2 = bare.view(bm.body.id, 0);
+  eq([r2.decks, r2.yourDeck, r2.game], [[{ ready: false, name: null, cards: null }, { ready: false, name: null, cards: null }], null, null], 'a new room: no decks, no game');
+}
+
+// ---------------------------------------------------------------------------
 section('4. what lasts: a second store over the same folder; expiry');
 {
   let t = Date.now();
@@ -426,6 +519,62 @@ section('6. the site');
   const nb = await call(`http://127.0.0.1:${await bare.listen()}`, '/');
   ok(nb.status === 404 && /no site here/.test(nb.text), 'no --room-site-dir: / says so (404)');
   bare.close();
+}
+
+// ---------------------------------------------------------------------------
+section('6b. the game seat on the room\'s own origin: /ws passed through to the table port (D404, D405)');
+{
+  // A stand-in for the table port: records each upgrade's request head, answers 101, then echoes.
+  const heads = [];
+  const table = createNetServer((c) => {
+    let buf = '';
+    const onData = (d) => {
+      buf += d.toString('latin1');
+      const i = buf.indexOf('\r\n\r\n');
+      if (i < 0) return;
+      c.off('data', onData);
+      heads.push(buf.slice(0, i));
+      c.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n');
+      const rest = buf.slice(i + 4);
+      if (rest) c.write(rest);
+      c.pipe(c);
+    };
+    c.on('data', onData);
+    c.on('error', () => {});
+  });
+  await new Promise((r) => table.listen(0, '127.0.0.1', r));
+  const tport = table.address().port;
+  const st = createRoomStore({ dir: null });
+  const up = (srvPort, target, extra = '') => new Promise((res) => {
+    const c = netConnect(srvPort, '127.0.0.1');
+    let got = '';
+    c.on('connect', () => c.write(`GET ${target} HTTP/1.1\r\nHost: 127.0.0.1:${srvPort}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nOrigin: http://127.0.0.1:${srvPort}\r\n${extra}\r\n`));
+    c.on('data', (d) => {
+      got += d.toString('latin1');
+      if (/^HTTP\/1\.1 101/.test(got) && !got.includes('ping')) { c.write('ping'); return; }
+      if (got.includes('ping') || /^HTTP\/1\.1 [45]/.test(got)) { c.destroy(); res(got); }
+    });
+    c.on('error', () => res(got));
+    c.on('close', () => res(got));
+  });
+  const srv = startRoomServer({ store: st, port: 0, origins: ORIGINS, log: () => {}, tablePort: tport });
+  const sp = await srv.listen();
+  const a = await up(sp, '/ws?seat=AbCdEfGhIjKlMnOpQrStUv');
+  ok(/^HTTP\/1\.1 101/.test(a) && a.endsWith('ping'), '/ws upgrades through the room port, and bytes flow both ways');
+  ok(heads[0]?.startsWith('GET /ws?seat=AbCdEfGhIjKlMnOpQrStUv HTTP/1.1') && heads[0].includes(`Host: 127.0.0.1:${sp}`) && heads[0].includes(`Origin: http://127.0.0.1:${sp}`),
+    'the table gets the request as sent: the token, the page\'s Host and Origin (it checks them itself)');
+  ok(/\r\nCF-Connecting-IP: 127\.0\.0\.1$/.test(heads[0] ?? ''), 'the client\'s address goes along as CF-Connecting-IP (the table\'s wrong-token limit keys on it)');
+  await up(sp, '/ws?seat=x', 'CF-Connecting-IP: 198.51.100.9\r\n');
+  ok((heads[1] ?? '').match(/CF-Connecting-IP/gi)?.length === 1 && heads[1].includes('CF-Connecting-IP: 198.51.100.9'), 'a loopback peer\'s own CF-Connecting-IP (a tunnel daemon) is kept, once');
+  ok(/^HTTP\/1\.1 404/.test(await up(sp, '/observe')) && heads.length === 2, 'any other upgrade path: 404, nothing reaches the table');
+  srv.close();
+  table.close();
+  const down = startRoomServer({ store: st, port: 0, origins: ORIGINS, log: () => {}, tablePort: tport });
+  ok(/^HTTP\/1\.1 502/.test(await up(await down.listen(), '/ws?seat=x')), 'the table not answering: 502');
+  down.close();
+  const idle = startRoomServer({ store: st, port: 0, origins: ORIGINS, log: () => {} });
+  ok(/^HTTP\/1\.1 404/.test(await up(await idle.listen(), '/ws?seat=x')), 'no game being played here: /ws is 404');
+  idle.close();
 }
 
 // ---------------------------------------------------------------------------

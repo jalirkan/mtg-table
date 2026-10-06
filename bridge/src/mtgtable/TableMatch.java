@@ -289,18 +289,8 @@ final class TableMatch implements WireGuiGame.Table {
             server = new TableServer(s.tablePort, s.healthPort, s.lan, s.cfg.wsAllowedOrigins(), s.tableOrigins,
                     s.digests, ws);
             server.start();
-        }
-        for (int i = 0; i < 2; i++) {
-            transports[i].start(gui[i], gui[i].pool());
-        }
-        EngineCrash.install(e -> {
-            gui[0].engineCrashed(e);
-            gui[1].engineCrashed(e);
-        });
-
-        final long tGame = System.nanoTime();
-        hosted.startMatch(rules, EnumSet.of(GameType.Constructed), List.of(rp[0], rp[1]), guis, null);
-        if (server != null) {
+            // Printed at the bind, before the game exists: /health turns 200 only once both seats have
+            // their hello_ok, so a reader that waits for /health (play.sh) always finds these lines.
             final String bind = server.lan() ? WsTransport.LAN_BIND : WsTransport.LOOPBACK_BIND;
             System.out.println("TABLE LISTENING ws://" + bind + ":" + server.port()
                     + "/ws?seat=<the seat's token> -- two seats, a token each, no loopback exemption (M59)");
@@ -312,6 +302,16 @@ final class TableMatch implements WireGuiGame.Table {
             }
             System.out.flush();
         }
+        for (int i = 0; i < 2; i++) {
+            transports[i].start(gui[i], gui[i].pool());
+        }
+        EngineCrash.install(e -> {
+            gui[0].engineCrashed(e);
+            gui[1].engineCrashed(e);
+        });
+
+        final long tGame = System.nanoTime();
+        hosted.startMatch(rules, EnumSet.of(GameType.Constructed), List.of(rp[0], rp[1]), guis, null);
 
         final boolean finished = awaitOver();
         final long gameMs = (System.nanoTime() - tGame) / 1_000_000L;

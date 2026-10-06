@@ -48,6 +48,7 @@
 // helper's own self-test); CI's redaction job.
 
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer, request } from 'node:http';
 import { connect } from 'node:net';
@@ -55,7 +56,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { deflateRawSync } from 'node:zlib';
 
-import { checkWake, realInside } from './match-launcher.mjs';
+import { checkWake, createMatchLauncher, realInside } from './match-launcher.mjs';
 
 const REL = 'var/match-launcher-selftest';
 const DIR = resolve(REL);
@@ -92,8 +93,16 @@ const deckOf = (p) => {
   if (name.startsWith('Drop One')) cards -= 1;
   return { name, cards };
 };
-const you = deckOf(flag('--deck')), ai = deckOf(flag('--ai-deck') || flag('--deck'));
-ev({ start: true, argv, token: process.env.MTGTABLE_LAN_TOKEN ?? null });
+const humans = flag('--humans') === '2';   // D402/D404: a game between two people
+const you = deckOf(flag('--deck')), ai = deckOf(flag('--ai-deck') || flag('--deck2') || flag('--deck'));
+ev({ start: true, argv, token: process.env.MTGTABLE_LAN_TOKEN ?? null, seats: humans ? JSON.parse(fs.readFileSync(flag('--seats-file'), 'utf8')) : null });
+if (humans) {
+  console.log('seed          = ' + (flag('--seed') || '0'));
+  console.log('table         = two people (amendment M59): seat 0 A, seat 1 B');
+  console.log('deck seat 0   = ' + you.name + ' (' + you.cards + ' cards)');
+  console.log('deck seat 1   = ' + ai.name + ' (' + ai.cards + ' cards)');
+  console.log('TABLE LISTENING ws://127.0.0.1:' + flag('--table-port') + '/ws?seat=<the seat token> -- two seats');
+}
 console.log('deck (you)    = ' + path.resolve(flag('--deck')));
 console.log('ai profile    = ' + (flag('--ai-profile') || 'Default'));
 // D333: as the bridge, a policy line only when it is not plain (--ai-search implies search; the last flag wins).
@@ -103,8 +112,10 @@ if (pol !== 'plain') console.log('ai policy     = ' + pol + (pol === 'search' ? 
 console.log('seed          = ' + (flag('--seed') || '0'));
 console.log('games/match   = ' + (flag('--games') || '1'));
 if (you.name.startsWith('Crash') || ai.name.startsWith('Crash')) { console.error('ENGINE CRASHED (a fake one)'); ev({ crashed: true }); bye(1); }
-console.log('deck you      = ' + you.name + ' (' + you.cards + ' cards)');
-console.log('deck ai       = ' + ai.name + ' (' + ai.cards + ' cards)');
+if (!humans) {
+  console.log('deck you      = ' + you.name + ' (' + you.cards + ' cards)');
+  console.log('deck ai       = ' + ai.name + ' (' + ai.cards + ' cards)');
+}
 const lan = argv.includes('--lan');
 const token = lan ? (process.env.MTGTABLE_LAN_TOKEN || crypto.randomBytes(16).toString('base64url')) : null;
 if (lan) ev({ lanToken: token });
@@ -707,6 +718,48 @@ try {
     check('play.sh\'s exit releases the hold', !existsSync(holdFile) && /new jobs may start again/.test(D.out()), D.out());
     check('...and leaves a manual pause alone', existsSync(join(runnerState, 'paused')));
     check('...and the room listener is gone with the helper', await http({ port: rp }).then(() => false, () => true));
+  }
+
+  // ------------------------------------------------------------- D404: a game between two people
+  console.log('== D404: a game between two people, through the launcher the draft room calls');
+  {
+    const TP = await freePort();
+    const T = await startPlay(['--table-port', String(TP), '--', '--idle-timeout', '3'], 't');
+    const tl = createMatchLauncher({ repoRoot: process.cwd(), matchDir: `${REL}/t/match`, supervisorPid: T.proc.pid, cardsZip: null, customCardsDir: null, aiDir: 'forge-home/res/ai', timeoutMs: 60_000 });
+    const nStart = starts().length;
+    const dg = [createHash('sha256').update('seat-zero-token-abcdefgh').digest('hex'), createHash('sha256').update('seat-one-token-abcdefghi').digest('hex')];
+    const g = await tl.startTable({ roomId: 'rTestRoom1', decks: [deck('Red Pile', RED), deck('Blue Pile', BLUE, [[1, 'Opt']])], names: ['Ana', 'Ben'], digests: dg });
+    check('startTable: ok, a match id, the table port play.sh was given', g.ok === true && /^m\d{13}$/.test(g.matchId ?? '') && g.tablePort === TP, JSON.stringify(g));
+    check('startTable: both decks by name and count, as the engine loaded them', JSON.stringify(g.seats) === '[{"name":"Red Pile","cards":40},{"name":"Blue Pile","cards":40}]', JSON.stringify(g));
+    const tst = starts().slice(nStart);
+    const targv = tst[0]?.argv ?? [];
+    check('one engine, with --humans 2 and both seat decks', tst.length === 1 && argOf(targv, '--humans') === '2'
+      && argOf(targv, '--deck') === `${REL}/t/match/${g.matchId}/seat0.dck` && argOf(targv, '--deck2') === `${REL}/t/match/${g.matchId}/seat1.dck`, targv.join(' '));
+    check('...the seats file, the table port, one game, a friend-<id> game id', argOf(targv, '--seats-file') === `${REL}/t/match/${g.matchId}/seats.json`
+      && argOf(targv, '--table-port') === String(TP) && argOf(targv, '--games') === '1' && argOf(targv, '--game-id') === `friend-${g.matchId}`, targv.join(' '));
+    check('...no AI deck, profile, policy or site, and the caller\'s --idle-timeout kept', !targv.includes('--ai-deck') && !targv.includes('--ai-profile')
+      && !targv.includes('--ai-policy') && !targv.includes('--site-dir') && argOf(targv, '--idle-timeout') === '3', targv.join(' '));
+    check('the seats file is the two names and the two digests, and nothing else', JSON.stringify(tst[0]?.seats) === JSON.stringify({ names: ['Ana', 'Ben'], tokenSha256: dg }), JSON.stringify(tst[0]?.seats));
+    check('no name reached a command line', !targv.some((a) => a.includes('Ana') || a.includes('Pile')));
+    const mdirT = join(DIR, 't', 'match', g.matchId ?? 'none');
+    check('seat1.dck is exactly the deck, sideboard and all', existsSync(mdirT) && readFileSync(join(mdirT, 'seat1.dck'), 'utf8') === [
+      '[metadata]', 'Name=Blue Pile', '[main]', '17 Island', '4 Counterspell', '4 Opt', '15 Wind Drake', '[sideboard]', '1 Opt', ''].join('\n'));
+    r = await http({ port: T.coachPort, path: '/match' });
+    check('GET /match while it runs: running', r.status === 200 && r.json?.state === 'running', r.body);
+    r = await post(T.coachPort, req1);
+    check('POST /match while a game between two people runs: 409, nothing restarted', r.status === 409 && /two people/.test(r.json?.message ?? '') && starts().length === nStart + 1, r.body);
+    const busy = await tl.startTable({ roomId: 'x', decks: [deck('A', RED)], names: ['A', 'B'], digests: dg });
+    check('startTable with one deck: refused', busy.ok === false && busy.status === 400, JSON.stringify(busy));
+    // The fake's --idle-timeout 3: nobody takes a seat, the engine exits, play.sh sleeps (D308).
+    await untilIdle(T.coachPort);
+    r = await http({ port: T.coachPort });
+    check('the table engine ended and the engine sleeps', r.json?.engine === 'idle', r.body);
+    r = await http({ port: T.coachPort, method: 'POST', path: '/engine/start' });
+    const wargv = starts().at(-1)?.argv ?? [];
+    check('a wake after the game between two people starts the last match against the AI, not the table', r.status === 200 && r.json?.ok === true
+      && !wargv.includes('--humans') && !wargv.includes('--seats-file') && argOf(wargv, '--ai-profile') !== undefined, `${r.body} ${wargv.join(' ')}`);
+    T.proc.kill('SIGTERM');
+    await new Promise((res) => (T.proc.exitCode !== null ? res() : T.proc.on('exit', res)));
   }
 
   // ------------------------------------------------------------- no supervisor

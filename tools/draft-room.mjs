@@ -66,12 +66,21 @@
 //   POST /room/<id>/join     {"name"?: string}  -> 200 state (idempotent; renames)
 //   POST /room/<id>/pick     {"line": 0-5, "expect": <state.version>}  -> 200 state, or
 //                               409 {code:"stale"|"turn"|"waiting"|"done", state}, 400 {code:"illegal"}
+//   POST /room/<id>/deck     (D404) {"name": string, "main": [[n, card]...], "sideboard"?: [[n, card]...]}
+//                               (body at most 16 KB) -> 200 state, or 409 {code:"drafting"|"playing", state},
+//                               400 {code:"deck", problems, state}: this seat's deck for the next game,
+//                               checked against THIS seat's picks (basic lands free).  When both seats have
+//                               one in, the room starts a game between them (the bridge's --humans 2, D402)
 //   OPTIONS                  preflight (Allow-Private-Network, X-Room-Token)
 //   GET  /, /assets/...      the site, when --room-site-dir is given (else 404)
 //
 //   state = {v:1, id, version, you, format:"grid", cube:{id,title,hash,size}, grids, g, slots[9],
 //            firstLine, firstSeat, toAct (0|1|null), done, seats:[{name, joined, online, picks}x2],
-//            log:[{n, seat, grid, line, cards}], createdAt, expiresAt, seed (null until done)}
+//            log:[{n, seat, grid, line, cards}], createdAt, expiresAt, seed (null until done),
+//            decks:[{ready, name, cards}x2]  (D404: the other seat's deck by name and count only),
+//            yourDeck: {name, main, sideboard} | null  (this seat's own, to this seat alone),
+//            game: null | {n, state:"starting"|"ready"|"failed"|"unavailable", error, matchId,
+//                          tablePort, token}  (token: THIS seat's seat token, only when ready)}
 //
 // ROOMS LIVE IN MEMORY AND ON DISK: <room dir>/rooms.json (default var/draft-room/,
 // whose real path must stay under var/), mode 600, token DIGESTS only, rewritten
@@ -79,15 +88,21 @@
 // every link.  A room expires 24 h after its last join or pick, and 72 h after it
 // was made, whichever is first.
 //
-// PHASE 2 (not built): the room already knows both seats and both tokens, so each
-// player's deck can be handed to the room (privately, by seat) and the room can
-// hand both to the bridge with a seat token each; see docs/draft-room.md.
+// PHASE 2 (D404): each player hands the room their deck (POST /room/<id>/deck),
+// privately, checked against that seat's own picks.  When both are in, the room
+// mints a seat token per seat for this game, gives the bridge their digests only
+// (the match launcher writes var/match/<id>/seats.json; play.sh restarts the
+// engine with --humans 2, D402), and hands each seat its own token in its own
+// state.  Tokens of a game live in memory only, never in rooms.json.
 
 import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { connect as netConnect } from 'node:net';
 import { networkInterfaces } from 'node:os';
 import { extname, join, resolve, sep } from 'node:path';
+
+import { checkDeck } from './match-launcher.mjs';
 
 export const ROOM_VERSION = 1;
 export const DEFAULT_ROOM_PORT = 8644;
@@ -95,6 +110,10 @@ export const GRID_ROUNDS = 18;
 export const MAX_ROOMS = 16;
 export const MAX_CREATE_BODY = 256 * 1024;
 export const MAX_SEAT_BODY = 1024;
+export const MAX_DECK_BODY = 16 * 1024;
+/** The basic lands a deck may hold any number of (D404): not drafted, as at a paper table. */
+export const BASIC_LANDS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes',
+  'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'];
 export const MAX_CARDS = 2000;
 export const MAX_CARD_NAME = 150;
 export const MAX_SEAT_NAME = 24;
@@ -242,6 +261,40 @@ export function cubeHash(cards) {
   return createHash('sha256').update([...new Set(cards)].join('\n'), 'utf8').digest('hex');
 }
 
+const foldName = (s) => String(s).normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+const BASIC_FOLDED = new Set(BASIC_LANDS.map(foldName));
+
+/**
+ * D404: a seat's deck against that seat's own picks.  The shape is the match
+ * launcher's (checkDeck: a name, 40-250 main-deck cards, strict card names);
+ * then every card the main deck and the sideboard hold together, by name
+ * without its |SET and folded, must be one this seat drafted, as many times as
+ * it drafted it -- basic lands excepted.  Returns {deck, problems}.
+ */
+export function checkRoomDeck(body, picks) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return { problems: ['the body must be a JSON object'] };
+  for (const k of Object.keys(body)) if (!['name', 'main', 'sideboard'].includes(k)) return { problems: [`unknown field "${k}"`] };
+  const c = checkDeck(body, 'deck');
+  if (c.problems.length) return { problems: c.problems };
+  const have = new Map();
+  for (const p of picks ?? []) { const k = foldName(p); have.set(k, (have.get(k) ?? 0) + 1); }
+  const used = new Map();
+  for (const [n, , name] of [...c.deck.main, ...c.deck.sideboard]) {
+    const k = foldName(name);
+    const u = used.get(k) ?? { n: 0, name };
+    u.n += n;
+    used.set(k, u);
+  }
+  const problems = [];
+  for (const [k, u] of used) {
+    if (BASIC_FOLDED.has(k)) continue;
+    const got = have.get(k) ?? 0;
+    if (u.n > got) problems.push(got === 0 ? `${u.name} is not one of your picks` : `${u.name}: ${u.n} in the deck, ${got} in your picks`);
+  }
+  if (problems.length) return { problems };
+  return { deck: c.deck, problems: [] };
+}
+
 const digest = (s) => createHash('sha256').update(String(s), 'utf8').digest();
 const newToken = () => randomBytes(16).toString('base64url');
 const newRoomId = () => `r${randomBytes(6).toString('base64url')}`;
@@ -271,7 +324,9 @@ function realUnder(root, p) {
 
 /**
  * opts: { dir (folder for rooms.json, or null for memory only), varRoot (dir's real path must stay
- * under it), now(), log(), maxRooms, idleMs, lifeMs, rounds }
+ * under it), now(), log(), maxRooms, idleMs, lifeMs, rounds,
+ * startGame (D404: async ({roomId, decks, names, digests}) -> {ok, matchId, tablePort} | {ok: false, message};
+ *            null when no engine can be started here), gameRunning (D404: matchId -> bool) }
  */
 export function createRoomStore(opts = {}) {
   const now = opts.now ?? Date.now;
@@ -285,6 +340,17 @@ export function createRoomStore(opts = {}) {
   const file = dir ? join(dir, 'rooms.json') : null;
   const rooms = new Map();
   const listeners = new Map();   // id -> Set<{seat, send(state|null)}>
+  // D404: each room's current game's two seat tokens, in clear -- in memory ONLY, never in rooms.json.
+  const gameTokens = new Map();  // id -> [token0, token1]
+  const startGame = opts.startGame ?? null;
+  const gameRunning = opts.gameRunning ?? (() => true);
+  /** A room from before D404, or from disk: the game fields it may lack. */
+  const withGame = (r) => {
+    if (!Array.isArray(r.decks) || r.decks.length !== 2) r.decks = [null, null];
+    if (!Array.isArray(r.ready) || r.ready.length !== 2) r.ready = [false, false];
+    if (r.game === undefined) r.game = null;
+    return r;
+  };
 
   const expiresAt = (r) => Math.min(r.createdAt + lifeMs, r.activeAt + idleMs);
 
@@ -306,6 +372,10 @@ export function createRoomStore(opts = {}) {
     for (const r of doc.rooms) {
       if (!r || typeof r.id !== 'string' || !ROOM_ID.test(r.id) || !Array.isArray(r.seats) || r.seats.length !== 2) continue;
       if (expiresAt(r) <= now()) continue;
+      withGame(r);
+      // A game that was starting when the helper stopped never got its answer; one that was running
+      // keeps running, but its tokens were in memory only: the players keep theirs in their browsers.
+      if (r.game?.state === 'starting') r.game = { ...r.game, state: 'failed', error: 'the coach helper restarted while the game was starting' };
       rooms.set(r.id, r);
     }
     return rooms.size;
@@ -324,6 +394,13 @@ export function createRoomStore(opts = {}) {
       log: r.log.map((e) => ({ ...e, cards: [...e.cards] })),
       createdAt: new Date(r.createdAt).toISOString(), expiresAt: new Date(expiresAt(r)).toISOString(),
       seed: r.done ? r.seed : null,
+      // D404: the other seat's deck by name and count only; this seat's own in full, to this seat alone.
+      decks: r.decks.map((d, i) => ({ ready: !!r.ready[i], name: d ? d.name : null, cards: d ? d.mainCount : null })),
+      yourDeck: r.decks[seat] ? { name: r.decks[seat].name, main: r.decks[seat].main.map(([n, card]) => [n, card]), sideboard: r.decks[seat].sideboard.map(([n, card]) => [n, card]) } : null,
+      game: r.game ? {
+        n: r.game.n, state: r.game.state, error: r.game.error ?? null, matchId: r.game.matchId ?? null, tablePort: r.game.tablePort ?? null,
+        token: r.game.state === 'ready' ? (gameTokens.get(r.id)?.[seat] ?? null) : null,
+      } : null,
     };
   };
 
@@ -331,11 +408,46 @@ export function createRoomStore(opts = {}) {
     for (const l of listeners.get(r.id) ?? []) l.send(viewFor(r, l.seat));
   };
 
+  /** D404: both decks are in -- a game between the two seats, with a seat token each for it. */
+  const begin = (r) => {
+    const n = (r.game?.n ?? 0) + 1;
+    r.ready = [false, false];
+    gameTokens.delete(r.id);
+    if (!startGame) {
+      r.game = { n, state: 'unavailable', error: 'no engine can be started from this coach helper (scripts/play.sh --engine-only --draft-room starts one)', matchId: null, tablePort: null };
+      return;
+    }
+    const tokens = [newToken(), newToken()];
+    r.game = { n, state: 'starting', error: null, matchId: null, tablePort: null };
+    log(`ROOM ${r.id} game ${n} starting`);
+    Promise.resolve()
+      // The launcher's request shape: [count, card] pairs (checkDeck's [n, card, name] triples are its normal form, not its input).
+      .then(() => startGame({ roomId: r.id, decks: r.decks.map((d) => ({ name: d.name, main: d.main.map(([n, card]) => [n, card]), sideboard: d.sideboard.map(([n, card]) => [n, card]) })),
+        names: r.seats.map((x) => x.name), digests: tokens.map((t) => digest(t).toString('hex')) }))
+      .then((res) => res, (e) => ({ ok: false, message: e.message }))
+      .then((res) => {
+        const cur = rooms.get(r.id);
+        if (cur !== r || r.game?.n !== n) return;
+        if (res?.ok) {
+          gameTokens.set(r.id, tokens);
+          r.game = { n, state: 'ready', error: null, matchId: res.matchId ?? null, tablePort: res.tablePort ?? null, at: now() };
+          log(`ROOM ${r.id} game ${n} ready (${res.matchId}, table port ${res.tablePort})`);
+        } else {
+          r.game = { n, state: 'failed', error: String(res?.message ?? 'the engine did not start').slice(0, 600), matchId: null, tablePort: null };
+          log(`ROOM ${r.id} game ${n} failed: ${r.game.error.slice(0, 200)}`);
+        }
+        r.version++;
+        save();
+        broadcast(r);
+      });
+  };
+
   const sweep = () => {
     let n = 0;
     for (const r of [...rooms.values()]) {
       if (expiresAt(r) > now()) continue;
       rooms.delete(r.id);
+      gameTokens.delete(r.id);
       for (const l of listeners.get(r.id) ?? []) l.send(null);
       listeners.delete(r.id);
       log(`ROOM ${r.id} expired`);
@@ -364,6 +476,7 @@ export function createRoomStore(opts = {}) {
         id, cubeId: c.cubeId, cubeTitle: c.cubeTitle, cubeHash: cubeHash(c.cards), cubeSize: new Set(c.cards).size,
         ...grid, version: 1, createdAt: t, activeAt: t,
         seats: [{ name: c.name, joined: true, tokenHash: digest(tokens[0]).toString('hex') }, { name: 'Player 2', joined: false, tokenHash: digest(tokens[1]).toString('hex') }],
+        decks: [null, null], ready: [false, false], game: null,
       };
       rooms.set(id, r);
       save();
@@ -413,6 +526,30 @@ export function createRoomStore(opts = {}) {
       if (r.done) log(`ROOM ${id} draft complete`);
       return { state: viewFor(r, seat) };
     },
+    /**
+     * D404: this seat's deck for the next game.  {state} or {code, message, problems?, state}.  When both
+     * seats have one in, the game starts (startGame, not awaited) and both are told through their streams.
+     */
+    deck(id, seat, body) {
+      const r = rooms.get(id);
+      if (!r) return null;
+      withGame(r);
+      if (!r.done) return { code: 'drafting', message: 'the draft is not over yet', state: viewFor(r, seat) };
+      if (r.game && (r.game.state === 'starting' || (r.game.state === 'ready' && gameRunning(r.game.matchId)))) {
+        return { code: 'playing', message: 'a game between you is starting or being played; a deck for the next one goes in after it', state: viewFor(r, seat) };
+      }
+      const c = checkRoomDeck(body, r.picks[seat]);
+      if (c.problems.length) return { code: 'deck', message: c.problems[0], problems: c.problems, state: viewFor(r, seat) };
+      r.decks[seat] = { ...c.deck, at: new Date(now()).toISOString() };
+      r.ready[seat] = true;
+      r.version++;
+      r.activeAt = now();
+      log(`ROOM ${id} seat ${seat} handed in a deck (${c.deck.mainCount} cards)`);
+      if (r.ready[0] && r.ready[1]) begin(r);
+      save();
+      broadcast(r);
+      return { state: viewFor(r, seat) };
+    },
     /** A stream: send(state) now and after every change, send(null) when the room goes. Returns unsubscribe. */
     listen(id, seat, send) {
       const r = rooms.get(id);
@@ -435,6 +572,16 @@ export function createRoomStore(opts = {}) {
       return n;
     },
     totalStreams() { let n = 0; for (const s of listeners.values()) n += s.size; return n; },
+    /** D404: the table port of the game being played here (the newest ready one the launcher says runs), or null. */
+    tablePort() {
+      let best = null;
+      for (const r of rooms.values()) {
+        const g = r.game;
+        if (!g || g.state !== 'ready' || !Number.isInteger(g.tablePort) || !gameRunning(g.matchId)) continue;
+        if (!best || g.at > best.at) best = { port: g.tablePort, at: g.at ?? 0 };
+      }
+      return best ? best.port : null;
+    },
     close() { for (const set of listeners.values()) for (const l of set) l.send(null); listeners.clear(); },
   };
 }
@@ -564,7 +711,8 @@ export function roomBases({ port, lan, publicUrl = null, interfaces = networkInt
 
 /**
  * opts: { store, port, bindHost, origins, extraOrigins, siteDir, log, now, limits: {apiPerMin, apiBurst,
- * sitePerMin, failPerMin, streamsPerSeat, streamsTotal}, pingMs }
+ * sitePerMin, failPerMin, streamsPerSeat, streamsTotal}, pingMs, tablePort (a test's fixed `/ws` target;
+ * default: the store's running game's) }
  */
 export function startRoomServer(opts) {
   const { store, port = DEFAULT_ROOM_PORT, bindHost = '127.0.0.1', origins = [], extraOrigins = [], siteDir = null, log = (s) => console.log(s) } = opts;
@@ -626,7 +774,7 @@ export function startRoomServer(opts) {
       }
       if (!all.take('all')) { send(res, 429, { ok: false, code: 'slow', message: 'the room is busy — try again in a moment' }, { ...cors, 'Retry-After': '5' }); say(429, ' (all)'); return; }
       if (fails.empty(who)) { send(res, 429, { ok: false, code: 'slow', message: 'too many wrong links from this address — wait a minute' }, { ...cors, 'Retry-After': '60' }); say(429, ' (failures)'); return; }
-      const m = /^\/room\/([^/]+)(?:\/(events|join|pick))?$/.exec(path);
+      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck))?$/.exec(path);
       if (!m || !ROOM_ID.test(m[1])) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
       const [, id, action] = m;
       const seat = store.auth(id, req.headers[TOKEN_HEADER]);
@@ -678,8 +826,9 @@ export function startRoomServer(opts) {
         return;
       }
       if (method !== 'POST') { send(res, 405, { ok: false, code: 'method', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
-      const raw = await readBody(req, MAX_SEAT_BODY);
-      if (raw.tooLarge) { send(res, 413, { ok: false, code: 'size', message: 'request too large (at most 1 KB)' }, { ...cors, Connection: 'close' }); say(413); req.destroy(); return; }
+      const cap = action === 'deck' ? MAX_DECK_BODY : MAX_SEAT_BODY;   // D404: a deck is a few KB
+      const raw = await readBody(req, cap);
+      if (raw.tooLarge) { send(res, 413, { ok: false, code: 'size', message: `request too large (at most ${cap / 1024} KB)` }, { ...cors, Connection: 'close' }); say(413); req.destroy(); return; }
       if (raw.broken) return;
       let q;
       try { q = raw.text === '' ? {} : JSON.parse(raw.text); } catch { send(res, 400, { ok: false, code: 'bad', message: 'the body is not JSON' }, cors); say(400); return; }
@@ -689,6 +838,17 @@ export function startRoomServer(opts) {
         if (q.name !== undefined && name === null) { send(res, 400, { ok: false, code: 'bad', message: `a name is 1-${MAX_SEAT_NAME} characters` }, cors); say(400); return; }
         send(res, 200, store.join(id, seat, name), cors);
         say(200, ` (seat ${seat})`);
+        return;
+      }
+      if (action === 'deck') {
+        const r = store.deck(id, seat, q);
+        if (r.code) {
+          send(res, r.code === 'deck' ? 400 : 409, { ok: false, code: r.code, message: r.message, ...(r.problems ? { problems: r.problems } : {}), state: r.state }, cors);
+          say(r.code === 'deck' ? 400 : 409, ` (${r.code})`);
+          return;
+        }
+        send(res, 200, r.state, cors);
+        say(200, ` (seat ${seat} deck)`);
         return;
       }
       // pick
@@ -724,6 +884,45 @@ export function startRoomServer(opts) {
       'Cache-Control': hashed ? 'public, max-age=31536000, immutable' : 'no-cache', 'Content-Length': data.length });
     res.end(req.method === 'HEAD' ? undefined : data);
   });
+  // D404 (and D405's one hostname): the game seat on the room's own origin.  A `/ws` upgrade is passed,
+  // byte for byte, to the table port of the game being played here (on loopback; the table checks the
+  // seat token and the Origin itself, before any handshake).  The client's address goes along as
+  // CF-Connecting-IP -- the table keys its wrong-token limit on it for a loopback peer -- replacing any the
+  // client sent, unless the client is itself a loopback peer (a tunnel daemon) that named one.
+  server.on('upgrade', (req, socket, head) => {
+    const peer = req.socket.remoteAddress ?? '?';
+    const refuse = (status, text) => {
+      socket.end(`HTTP/1.1 ${status}\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: ${Buffer.byteLength(text)}\r\nConnection: close\r\n\r\n${text}`);
+      log(`ROOM UPGRADE ${(req.url ?? '').split('?')[0]} from ${peer} -> ${status.split(' ')[0]}`);
+    };
+    let path = '';
+    try { path = new URL(req.url ?? '/', 'http://room.invalid').pathname; } catch { /* refused below */ }
+    if (path !== '/ws' || req.method !== 'GET') { refuse('404 Not Found', 'not found'); return; }
+    const tablePort = opts.tablePort !== undefined ? opts.tablePort : store.tablePort?.() ?? null;
+    if (!tablePort) { refuse('404 Not Found', 'no game is being played here: the room starts one when both decks are in'); return; }
+    const loop = /^(::ffff:)?127\.|^::1$/.test(peer);
+    const cf = req.headers['cf-connecting-ip'];
+    const who = loop && typeof cf === 'string' && /^[0-9a-f.:]{2,45}$/i.test(cf) ? cf : peer.replace(/^::ffff:/, '');
+    const lines = [`GET ${req.url} HTTP/1.1`];
+    for (let i = 0; i < req.rawHeaders.length; i += 2) {
+      if (req.rawHeaders[i].toLowerCase() === 'cf-connecting-ip') continue;
+      lines.push(`${req.rawHeaders[i]}: ${req.rawHeaders[i + 1]}`);
+    }
+    lines.push(`CF-Connecting-IP: ${who}`);
+    const up = netConnect(tablePort, '127.0.0.1');
+    let connected = false;
+    up.on('connect', () => {
+      connected = true;
+      up.write(`${lines.join('\r\n')}\r\n\r\n`);
+      if (head?.length) up.write(head);
+      up.pipe(socket);
+      socket.pipe(up);
+    });
+    up.on('error', () => { if (!connected) refuse('502 Bad Gateway', 'the game is not answering'); else socket.destroy(); });
+    socket.on('error', () => up.destroy());
+    up.on('close', () => socket.destroy());
+    socket.on('close', () => up.destroy());
+  });
   server.on('clientError', (err, socket) => { socket.destroy(); });
   server.headersTimeout = 20_000;
   server.requestTimeout = 30_000;
@@ -750,7 +949,7 @@ export function startRoomServer(opts) {
 /** { post(body) -> {status, body}, list() -> {status, body}, health() } for tools/coach-helper.mjs. */
 export function createRoomOwner({ store, roomPort, lan = false, publicUrl = null, interfaces }) {
   return {
-    health: () => ({ draftRoom: 1, roomPort, rooms: store.size() }),
+    health: () => ({ draftRoom: 1, roomPort, rooms: store.size(), roomGames: 1 }),   // D404: rooms take decks and start games
     post(body) {
       const c = {};
       const why = checkCreate(body, c);

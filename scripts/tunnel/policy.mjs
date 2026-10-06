@@ -19,8 +19,8 @@
 // tunnel forwards arrives as loopback.  The bridge's LanGate and the coach
 // helper both trust loopback.  So the tunnel may point only at a listener that
 // trusts nobody by address: the draft room's (8644, D400: a seat token on every
-// room route) and, once Phase 2 lands, the table's game seat (a token per seat
-// per game, its own port -- a PLACEHOLDER below until it is merged).
+// room route) and the table's game seat (D402: a token per seat per game, checked
+// before any handshake, on a port that serves `/ws` and nothing else).
 //
 // One hostname, path-routed: the Access cookie is per hostname, and a WebSocket
 // upgrade cannot follow Access's login redirect, so the friend's page, its room
@@ -36,12 +36,18 @@ export const HOST_PLACEHOLDER = 'play.example.com';
 export const ROOM = Object.freeze({ name: 'draft room (D400)', port: 8644 });
 
 /**
- * The game seat (Phase 2).  A PLACEHOLDER: the port and path are the Phase 2
- * branch's plan (`tablePort` 8646, `/ws` with a per-seat token) and are
- * confirmed only when that lands.  The template carries the rule commented out
- * between the GAME SEAT markers; nothing routes to it until it is uncommented.
+ * The game seat (Phase 2: D402's table port, `config.json` `tablePort` 8646).
+ * It serves `/ws` and nothing else (every other path 404), refuses a missing or
+ * wrong seat token before the handshake, has no loopback exemption, and accepts
+ * the Origin `https://<Host>` -- the page on this one hostname, port 443.  It
+ * listens only while a game between two people runs.  The friend's page opens
+ * `wss://<this hostname>/ws?seat=<token>` (ForgeCoach builds it from the page's
+ * origin); the draft room's own port passes `/ws` through to it too (D404), so
+ * on a LAN the same URL works on the room's origin.  The template carries the
+ * rule between the GAME SEAT markers; a config from before it (no such rule)
+ * still passes -- the edge then answers `/ws` 404.
  */
-export const GAME_SEAT = Object.freeze({ name: 'game seat (Phase 2, placeholder)', port: 8646, path: '^/ws$', placeholder: true });
+export const GAME_SEAT = Object.freeze({ name: 'game seat (D402)', port: 8646, path: '^/ws$', placeholder: false });
 
 /** Ports a tunnel rule must never name, and why. */
 export const NEVER_PORTS = Object.freeze([
@@ -77,7 +83,7 @@ const svc = (port) => `http://127.0.0.1:${port}`;
 export const DENY_SERVICE = 'http_status:404';
 
 /** The ingress rules in order, without the catch-all: [{hostname, path, service}]. */
-export function expectedIngress(hostname, { gameSeat = false } = {}) {
+export function expectedIngress(hostname, { gameSeat = true } = {}) {
   const rules = [];
   if (gameSeat) rules.push({ hostname, path: GAME_SEAT.path, service: svc(GAME_SEAT.port) });
   rules.push({ hostname, path: denyPath(), service: DENY_SERVICE });
@@ -107,7 +113,7 @@ export const NEVER_PATHS = Object.freeze([
   { method: 'GET', path: '/spectate/', why: 'your recordings' },
 ]);
 
-/** The template marks the Phase 2 rule; enableGameSeat uncomments it (the test and the runbook's step). */
+/** The template marks the game-seat rule; enableGameSeat uncomments it in a config copied while it was commented out. */
 export const GAME_SEAT_BEGIN = '# >>> GAME SEAT (Phase 2)';
 export const GAME_SEAT_END = '# <<< GAME SEAT';
 

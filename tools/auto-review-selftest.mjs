@@ -147,7 +147,7 @@ const flag = (av, f) => av[av.indexOf(f) + 1];
 // 1. Which games.
 console.log('which games');
 for (const id of ['human-ws-1', 'human-ws-17-g2', 'human-console-3', 'match-m1234567890123', 'match-m1234567890123-g3']) check(HUMAN_GAME_ID.test(id), `a person's game id: ${id}`);
-for (const id of ['human-auto-42', 'check-all-ws-3g', 'smoke-doom-1', 'human-ws-x', 'match-m12', 'drift-42', 'cubelab-1']) check(!HUMAN_GAME_ID.test(id), `not a person's game id: ${id}`);
+for (const id of ['human-auto-42', 'check-all-ws-3g', 'smoke-doom-1', 'human-ws-x', 'match-m12', 'drift-42', 'cubelab-1', 'friend-m1234567890123-seat0', 'friend-m1234567890123-seat1', 'friend-ws-5-seat0']) check(!HUMAN_GAME_ID.test(id), `not a person's game id: ${id}`);
 check(judgeHumanGame(logText({ id: 'a' })).ok, 'a ws seat against the AI, over with a winner: taken');
 check(judgeHumanGame(logText({ id: 'a', transport: 'console' })).ok, 'a console seat: taken');
 check(judgeHumanGame(logText({ id: 'a', over: { winner: null, reason: 'Draw' } })).ok, 'a draw (a reason, no winner): taken');

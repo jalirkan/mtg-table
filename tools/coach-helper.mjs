@@ -88,7 +88,7 @@
 //                 when scripts/play.sh started this helper (--match-dir, --supervisor):
 //                 play.sh owns the engine and restarts it.
 //
-//   GET  /room, POST /room  -- THE DRAFT ROOM (D400): two people grid-draft a cube from
+//   GET  /room, POST /room  -- THE DRAFT ROOM (D400; D404: decks and a game between the two) -- two people grid-draft a cube from
 //                 their own browsers.  tools/draft-room.mjs's header is that contract
 //                 (docs/draft-room.md the copyable form).  Only with --draft-room: this
 //                 port (the owner's door) MAKES a room (POST, 256 KB) and lists them (GET);
@@ -311,6 +311,11 @@ export function loopbackHostOk(hostHeader) {
   return isIP(name) === 4 && LOOPBACK_IPS.check(name, 'ipv4');
 }
 
+/** D405: the request headers a Cloudflare tunnel (or its Access) adds on the way to an origin. */
+export const TUNNEL_HEADERS = ['cf-connecting-ip', 'cf-ray', 'cf-access-jwt-assertion'];
+/** Did this request (node's lower-cased headers) come through a tunnel? */
+export const viaTunnel = (headers) => TUNNEL_HEADERS.some((h) => headers?.[h] !== undefined);
+
 /**
  * D386: the whole door of this port as one pure decision, in order -- the peer,
  * its Host, then (M51's order) the Origin for a preflight, the token, the Origin
@@ -327,7 +332,10 @@ export function loopbackHostOk(hostHeader) {
  *   - an OPTIONS preflight needs only the Origin (a browser cannot add a token);
  *   - with --lan, every other request from a non-loopback peer needs the token.
  */
-export function admit({ loop, lan, host, origin, origins, wsPort, method, given, token }) {
+export function admit({ loop, lan, host, origin, origins, wsPort, method, given, token, tunnelled = false }) {
+  // D405: this port is on the tunnel policy's NEVER list; a request a tunnel delivered (it carries the
+  // tunnel's headers) is refused whatever else it shows.
+  if (tunnelled) return { ok: false, status: 403, why: 'tunnel', message: 'origin refused: this coach helper is never reached through a tunnel' };
   if (!loop && !lan) return { ok: false, status: 403, why: 'peer', message: 'origin refused: this coach helper answers this machine only (play.sh --lan for a phone)' };
   if (loop && !loopbackHostOk(host)) return { ok: false, status: 403, why: 'host', message: 'origin refused: Host is not a loopback name (call http://127.0.0.1 or http://localhost)' };
   const originOk = origin === undefined ? loop
@@ -602,7 +610,7 @@ export function startHelper(opts) {
     // D386: the peer and its Host, then M51's order -- Origin first for a
     // preflight (it carries no token), token first for the rest (admit()).
     const gate = admit({ loop, lan, host: req.headers.host, origin, origins, wsPort, method: req.method,
-      given: url.searchParams.get('token') ?? req.headers['x-forgecoach-token'], token });
+      given: url.searchParams.get('token') ?? req.headers['x-forgecoach-token'], token, tunnelled: viaTunnel(req.headers) });
     if (!gate.ok) {
       send(res, gate.status, { type: 'error', message: gate.message });
       say(gate.status, ` (${gate.why})`);
@@ -1014,7 +1022,11 @@ async function main() {
     if (a.roomSiteDir !== undefined && !existsSync(join(a.roomSiteDir, 'index.html'))) { console.error(`coach-helper: --room-site-dir ${a.roomSiteDir} has no index.html`); process.exit(2); }
     let store;
     try {
-      store = createRoomStore({ dir: resolve(cfg.repoRoot, a.roomDir), varRoot: resolve(cfg.repoRoot, 'var'), log: (s) => console.log(s) });
+      store = createRoomStore({ dir: resolve(cfg.repoRoot, a.roomDir), varRoot: resolve(cfg.repoRoot, 'var'), log: (s) => console.log(s),
+        // D404: a room whose two decks are in starts a game between the two seats -- through the match launcher,
+        // when play.sh supervises this helper; without it the room says no engine can be started here.
+        startGame: match ? (g) => match.startTable(g) : null,
+        gameRunning: (matchId) => !!match && match.tableRunning()?.id === matchId });
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,

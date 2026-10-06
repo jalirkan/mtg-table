@@ -5,8 +5,8 @@
  * The Cloudflare Tunnel policy (D405, docs/cloudflare.md), offline:
  *
  *  - scripts/tunnel/config.yml.example's ingress list IS scripts/tunnel/policy.mjs's
- *    `expectedIngress()` -- with the Phase 2 game seat commented out, and again with it
- *    uncommented -- so the template and the allowlist cannot drift apart;
+ *    `expectedIngress()` -- with the game seat (D402), and again without it (a config
+ *    copied before Phase 2) -- so the template and the allowlist cannot drift apart;
  *  - checkConfig() refuses every way a config goes wrong: a never-port (the bridge, the
  *    coach helper, Vite), `localhost`, a second or wildcard hostname, no catch-all 404, a
  *    Host rewrite, warp-routing, no Access check in cloudflared, a dropped edge-deny rule;
@@ -92,20 +92,35 @@ test('the template\'s ingress list is exactly the policy\'s, and passes the chec
   const r = P.checkConfig(TEMPLATE, { template: true });
   assert.deepEqual(r.problems, []);
   assert.deepEqual(r.warnings, []);
-  assert.equal(r.gameSeat, false);
+  assert.equal(r.gameSeat, true);
   const doc = P.parseYaml(TEMPLATE) as { ingress: Array<Record<string, unknown>> };
   assert.deepEqual(doc.ingress.at(-1), { service: 'http_status:404' });
 });
 
-test('the commented Phase 2 game seat, uncommented, is the policy\'s game-seat ingress and still passes', () => {
-  assert.ok(P.GAME_SEAT.placeholder, 'the game seat is a placeholder until Phase 2 lands');
-  const on = P.enableGameSeat(TEMPLATE);
-  assert.notEqual(on, TEMPLATE);
-  assert.deepEqual(rulesOf(on), P.expectedIngress(P.HOST_PLACEHOLDER, { gameSeat: true }));
-  const r = P.checkConfig(on, { template: true });
+/** The template as it was before Phase 2: the GAME SEAT block's lines commented out. */
+function commentGameSeat(text: string): string {
+  let inside = false;
+  return text.split('\n').map((line) => {
+    const t = line.trim();
+    if (t.startsWith('# >>> GAME SEAT')) { inside = true; return line; }
+    if (t.startsWith('# <<< GAME SEAT')) { inside = false; return line; }
+    return inside && !t.startsWith('#') ? line.replace(/^(\s*)/, '$1# ') : line;
+  }).join('\n');
+}
+
+test('the game seat (D402) is on: /ws first, to the table port; a config from before it still passes, and enableGameSeat turns it on', () => {
+  assert.equal(P.GAME_SEAT.placeholder, false, 'Phase 2 confirmed the table port and its /ws');
+  assert.deepEqual([P.GAME_SEAT.port, P.GAME_SEAT.path], [8646, '^/ws$']);
+  assert.equal(rulesOf(TEMPLATE)[0]!.path, P.GAME_SEAT.path, 'the /ws rule comes before the edge deny that lists ws');
+  assert.equal(rulesOf(TEMPLATE)[0]!.service, `http://127.0.0.1:${P.GAME_SEAT.port}`);
+  const off = commentGameSeat(TEMPLATE);
+  assert.notEqual(off, TEMPLATE);
+  assert.deepEqual(rulesOf(off), P.expectedIngress(P.HOST_PLACEHOLDER, { gameSeat: false }));
+  const r = P.checkConfig(off, { template: true });
   assert.deepEqual(r.problems, []);
-  assert.equal(r.gameSeat, true);
-  assert.equal(rulesOf(on)[0]!.path, P.GAME_SEAT.path, 'the /ws rule comes before the edge deny that lists ws');
+  assert.equal(r.gameSeat, false);
+  assert.equal(P.enableGameSeat(off), TEMPLATE, 'uncommenting the old block gives exactly the template');
+  assert.equal(P.enableGameSeat(TEMPLATE), TEMPLATE, 'and an uncommented one is left as it is');
 });
 
 test('the template names no never-port in a service, and mentions each one it warns about', () => {
@@ -150,7 +165,7 @@ const BROKEN: Array<[string, (t: string) => string, RegExp]> = [
   ['the edge deny dropped', (t) => t.replace(/ {2}- hostname: \S+\n {4}path: \^\/\(coach[^\n]*\n {4}service: http_status:404\n/, ''), /not the policy's/],
   ['the room-root deny dropped', (t) => t.replace(/ {2}- hostname: \S+\n {4}path: \^\/room\/\?\$\n {4}service: http_status:404\n/, ''), /not the policy's/],
   ['a path on the room rule', (t) => t.replace(`- hostname: ${HOST}\n    ${ROOM_SVC}`, `- hostname: ${HOST}\n    path: ^/room/.*$\n    ${ROOM_SVC}`), /not the policy's/],
-  ['/ws routed to the room', (t) => t.replace(`# - hostname: ${HOST}\n  #   path: ^/ws$\n  #   service: http://127.0.0.1:${P.GAME_SEAT.port}`, `- hostname: ${HOST}\n    path: ^/ws$\n    ${ROOM_SVC}`), /not the policy's/],
+  ['/ws routed to the room', (t) => t.replace(`- hostname: ${HOST}\n    path: ^/ws$\n    service: http://127.0.0.1:${P.GAME_SEAT.port}`, `- hostname: ${HOST}\n    path: ^/ws$\n    ${ROOM_SVC}`), /not the policy's/],
   ['an unknown rule key', (t) => t.replace(`- hostname: ${HOST}\n    ${ROOM_SVC}`, `- hostname: ${HOST}\n    ${ROOM_SVC}\n    extra: 1`), /unexpected key "extra"/],
   ['a YAML anchor', (t) => t.replace('teamName: jteam', 'teamName: &t jteam'), /cannot read the config/],
 ];

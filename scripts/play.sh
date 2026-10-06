@@ -220,6 +220,18 @@
 # live in var/draft-room/ (token digests only) and survive a restart; one expires a
 # day after its last pick.  Needs the coach helper: not with --no-coach.
 #
+# A GAME BETWEEN THE TWO DRAFTERS (D402-D404).  When both players of a draft room
+# have handed in a deck, the room (in the coach helper) asks for a game between
+# them through the same request file and SIGUSR1 as /match: var/match/<id>/
+# seat0.dck, seat1.dck and seats.json (the two names and the digests of the two
+# seat tokens -- never a token).  This script restarts the bridge with
+# `--humans 2 --deck .../seat0.dck --deck2 .../seat1.dck --seats-file .../seats.json
+# --table-port <tablePort> --games 1 --game-id friend-<id>` (and --lan when this
+# run has it), so each player connects to the table port with their own token.
+# The game ends the bridge; the engine then sleeps (D308), and the next wake
+# (Play vs Forge) starts the last match against the AI, never a friend's game.
+#   --table-port <n>          the table's port (config.json tablePort, else 8646)
+#
 # PLAY MODE FOR THE LAB (D401).  --pause-lab holds the lab runner's ADMISSIONS
 # while this script runs: `tools/runner.sh hold --pid <this script>` at start,
 # `tools/runner.sh release` at exit.  No new lab job starts; a running one is never
@@ -287,6 +299,7 @@ HUMAN_COLLECT=1                  # D369: copy finished games into var/ml/human/ 
 HUMAN_COLLECTED_AT_STOP=0
 DRAFT_ROOM=0                     # D400: the draft room, in the coach helper, on its own port
 ROOM_PORT="$(cfg_get roomPort || echo 8644)"
+TABLE_PORT="$(cfg_get tablePort || echo 8646)"   # D402: a game between two people's seats (the draft room starts one, D404)
 ROOM_SITE=""                     # D400: the site the room listener serves (the --lan download, or --site-dir)
 ROOM_LINE=""
 PAUSE_LAB=0                      # D401: hold the lab runner's admissions while this script runs
@@ -366,6 +379,7 @@ while [ $# -gt 0 ]; do
     --no-human-collect) HUMAN_COLLECT=0; shift ;;
     --draft-room) DRAFT_ROOM=1; shift ;;
     --room-port) ROOM_PORT="$2"; shift 2 ;;
+    --table-port) TABLE_PORT="$2"; shift 2 ;;
     --pause-lab) PAUSE_LAB=1; shift ;;
     --help|-h)   sed -n '5,/^set -euo pipefail/p' "$0" | sed '$d'; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
@@ -381,6 +395,7 @@ IDLE_EXIT_SEC="$(node -e 'process.stdout.write(String(Math.round(Number(process.
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 [ "$DRAFT_ROOM" = "1" ] && [ "$COACH" != "1" ] && { printf 'play.sh: --draft-room runs in the coach helper: drop --no-coach\n' >&2; exit 1; }
 case "$ROOM_PORT" in ''|*[!0-9]*) printf 'play.sh: --room-port wants a port number (got "%s")\n' "$ROOM_PORT" >&2; exit 1 ;; esac
+case "$TABLE_PORT" in ''|*[!0-9]*) printf 'play.sh: --table-port wants a port number (got "%s")\n' "$TABLE_PORT" >&2; exit 1 ;; esac
 
 # D369: the human test set -- finished human-vs-AI games from var/games/ into
 # var/ml/human/, one status line.  Never fails this script; not in the self-test.
@@ -695,6 +710,8 @@ BRIDGE_ARGS=(--transport ws --port "$WS_PORT"
     "${KEEP_ARGS[@]+"${KEEP_ARGS[@]}"}" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}"
     "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}")
 LAN_TOKEN=""                     # D303: the first run's pairing token, for a restart
+LAST_AI_ARGS=("${BRIDGE_ARGS[@]}")   # D404: what a wake restarts -- the last match against the AI, never a table
+CUR_IS_TABLE=0                   # D404: the running bridge is a game between two people
 start_bridge() {   # start_bridge ARGS... -- the bridge in the background, SERVER_PID
   usr1_on            # so the bridge starts with USR1 at its default, not ignored
   if [ -n "$LAN_TOKEN" ]; then
@@ -881,6 +898,17 @@ match_write() {
       const you = last(/^deck you\s+= (.*) \((\d+) cards\)\s*$/), ai = last(/^deck ai\s+= (.*) \((\d+) cards\)\s*$/);
       const prof = last(/^ai profile\s+= (\S+)/), pol = last(/^ai policy\s+= (\S+)/), games = last(/^games\/match\s+= (\d+)/), p = last(/^deck \(you\)\s+= (.*?)\s*$/);
       const seed = last(/^seed\s+= (-?\d+)\s*$/);   // D384: the shuffle the engine dealt (a caller --seed may be negative)
+      // D404: a game between two people names both decks by seat and the table port, and no AI.
+      if (last(/^table\s+= two people/)) {
+        const s0 = last(/^deck seat 0\s+= (.*) \((\d+) cards\)\s*$/), s1 = last(/^deck seat 1\s+= (.*) \((\d+) cards\)\s*$/);
+        const tp = last(/^TABLE LISTENING ws:\/\/[^:]+:(\d+)\/ws/);
+        return {
+          humans: 2,
+          seats: [s0, s1].map((x) => (x ? { name: x[1], cards: Number(x[2]) } : null)),
+          tablePort: tp ? Number(tp[1]) : null, games: 1,
+          seed: seed && Number.isSafeInteger(Number(seed[1])) ? Number(seed[1]) : null,
+        };
+      }
       let rel = p ? p[1] : null;
       if (rel && rel.startsWith(root + path.sep)) rel = rel.slice(root.length + 1);
       return {
@@ -943,6 +971,13 @@ restart_match() {
       process.exit(0);
     }
     const dir = process.argv[2];
+    if (r.humans === 2) {   // D404: a game between two people -- three files of ours, one game
+      if (r.deck !== `${dir}/${id}/seat0.dck` || r.deck2 !== `${dir}/${id}/seat1.dck` || r.seats !== `${dir}/${id}/seats.json`) bad("table paths are not <match dir>/<id>/seat0.dck, seat1.dck and seats.json");
+      if (r.games !== 1) bad("a table plays one game");
+      for (const x of ["TABLE", id, r.deck, r.deck2, r.seats]) console.log(x);
+      process.exit(0);
+    }
+    if (r.humans !== undefined) bad("humans is 2 or absent");
     if (r.deck !== `${dir}/${id}/you.dck` || r.aiDeck !== `${dir}/${id}/ai.dck`) bad("deck paths are not <match dir>/<id>/you.dck and ai.dck");
     if (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile)) bad("not a profile name");
     if (!Number.isInteger(r.games) || r.games < 1 || r.games > 9) bad("games is not 1-9");
@@ -952,7 +987,9 @@ restart_match() {
     for (const x of ["OK", id, r.deck, r.aiDeck, r.aiProfile, String(r.games), r.aiPolicy ?? "", r.aiSearchMs === undefined ? "" : String(r.aiSearchMs)]) console.log(x);
   ' "$MATCH_DIR/request.json" "$MATCH_DIR" 2>/dev/null) || true
   [ "${req[0]:-}" = "WAKE" ] && wake=1
-  if [ "${req[0]:-}" != "OK" ] && [ "$wake" = "0" ]; then
+  local table=0 prev_table="$CUR_IS_TABLE"
+  [ "${req[0]:-}" = "TABLE" ] && table=1
+  if [ "${req[0]:-}" != "OK" ] && [ "$wake" = "0" ] && [ "$table" = "0" ]; then
     echo "match launcher: request refused: ${req[2]:-no answer from node}" >&2
     [ -n "${req[1]:-}" ] && match_write status "${req[1]}" failed "play.sh refused the request: ${req[2]:-}" 1
     return 0
@@ -966,7 +1003,10 @@ restart_match() {
     match_write status "$id" ready
     return 0
   fi
-  if [ "$wake" = "0" ]; then
+  if [ "$table" = "1" ]; then
+    [ -f "${req[2]}" ] && [ -f "${req[3]}" ] && [ -f "${req[4]}" ] || { match_write status "$id" failed "the table's files are missing" 1; return 0; }
+    say "match $id — a game between the two drafters (D402, D404): restarting the engine with two seats"
+  elif [ "$wake" = "0" ]; then
     [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
     say "match $id — restarting the engine on ForgeCoach's decks (D303)"
   else
@@ -1000,7 +1040,7 @@ restart_match() {
     # else a fresh random one: never the last wake's seed again.
     local wprof="${req[4]:-}" wseed="${req[8]:-}"
     skip=0
-    for a in "${BRIDGE_ARGS[@]}"; do
+    for a in "${LAST_AI_ARGS[@]}"; do   # D404: the last match against the AI, never a table
       if [ "$skip" = "1" ]; then skip=0; continue; fi
       case "$a" in
         --game-id|--seed) skip=1 ;;
@@ -1020,6 +1060,23 @@ restart_match() {
     fi
     next+=(--seed "${wseed:-$(( (RANDOM << 15 | RANDOM) % 100000 ))}")
     next+=(--game-id "match-$id")
+  elif [ "$table" = "1" ]; then
+    # D402/D404: two people, no AI.  Only the table's own knobs pass through (a caller's
+    # --decision-timeout, --seat-grace, --idle-timeout, --table-origin, --seed); no site:
+    # the friend's page is the draft room's.
+    next=(--transport ws --port "$WS_PORT" --humans 2 --deck "${req[2]}" --deck2 "${req[3]}" --seats-file "${req[4]}"
+          --table-port "$TABLE_PORT" --games 1 --game-id "friend-$id")
+    [ "$KEEP_OPEN" = "1" ] && next+=(--keep-open)
+    [ "$LAN" = "1" ] && next+=(--lan)
+    skip=0
+    local keepnext=0
+    for a in "${PASSTHROUGH[@]+"${PASSTHROUGH[@]}"}"; do
+      if [ "$keepnext" = "1" ]; then keepnext=0; next+=("$a"); continue; fi
+      case "$a" in
+        --decision-timeout|--seat-grace|--idle-timeout|--table-origin|--seed) next+=("$a"); keepnext=1 ;;
+      esac
+    done
+    passthrough_has --seed || next+=(--seed "$(( (RANDOM << 15 | RANDOM) % 100000 ))")
   else
     next=(--transport ws --port "$WS_PORT" --deck "${req[2]}" --ai-deck "${req[3]}" --ai-profile "${req[4]}")
     [ "$KEEP_OPEN" = "1" ] && next+=(--keep-open)
@@ -1048,22 +1105,36 @@ restart_match() {
   rc=0; wait_ready || rc=$?
   if [ "$rc" = "0" ]; then
     BRIDGE_ARGS=("${next[@]}")
+    CUR_IS_TABLE="$table"
+    [ "$table" = "1" ] || LAST_AI_ARGS=("${next[@]}")
     IDLE=0
     engine_write running
     CUR_MATCH_ID="$id"
     match_write current "$id"
     match_write status "$id" ready
-    echo "ready — you: $(sed -n 's/^deck you *= //p' "$SERVER_LOG" | tail -1) · AI: $(sed -n 's/^deck ai *= //p' "$SERVER_LOG" | tail -1)"
+    if [ "$table" = "1" ]; then
+      echo "ready — a game between two people on the table port $TABLE_PORT: $(sed -n 's/^deck seat 0 *= //p' "$SERVER_LOG" | tail -1) · $(sed -n 's/^deck seat 1 *= //p' "$SERVER_LOG" | tail -1)"
+    else
+      echo "ready — you: $(sed -n 's/^deck you *= //p' "$SERVER_LOG" | tail -1) · AI: $(sed -n 's/^deck ai *= //p' "$SERVER_LOG" | tail -1)"
+    fi
     return 0
   fi
   [ "$rc" = "1" ] && why="the bridge exited before it was ready" || why="no /health after 60 s"
   tail_txt="$(tail -8 "$SERVER_LOG" | sed 's/token=[A-Za-z0-9_-]*/token=…/g' | tr '\n' ' ')"
-  if [ "$was_idle" = "1" ]; then
+  if [ "$was_idle" = "1" ] || [ "$prev_table" = "1" ]; then
     # D308: nothing to put back -- the previous match was over.  Stay asleep.
+    # D404: nor when it was a game between two people (its seats are spent).
     echo "$why — the engine stays asleep (this log: $PLAY_VAR/server.failed.log)" >&2
     stop_bridge
     SERVER_PID=""
     cp -f "$SERVER_LOG" "$PLAY_VAR/server.failed.log" 2>/dev/null || true
+    if [ "$was_idle" != "1" ]; then
+      IDLE=1
+      IDLE_SINCE_S=$SECONDS
+      CUR_IS_TABLE=0
+      rm -f "$MATCH_DIR/current.json" 2>/dev/null || true
+      engine_write idle "a game between two people did not start"
+    fi
     match_write status "$id" failed "$why: $tail_txt" 0
     return 0
   fi
@@ -1164,6 +1235,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       SERVER_PID=""
       IDLE=1
       IDLE_SINCE_S=$SECONDS
+      CUR_IS_TABLE=0
       rm -f "$MATCH_DIR/current.json" 2>/dev/null || true
       engine_write idle "the engine exited with $SERVER_RC"
       human_collect   # D369: the match that just ended
