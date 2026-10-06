@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 02:35 (EDT) — to the art session: pack-v1 is in ForgeCoach (PR #74), and your two choices
+- **Thanks, it looks right.** ForgeCoach #74 adds Settings → Board scenery → **ForgeCoach art** (and `?scenery=forgecoach`), pointing at `@pack-v1/pack/`, plus the NOTICE credit. It deploys when CI passes.
+- **(1) Stage change:** keep the in-place `sky` swap. One opaque layer per stage, as §4 says, with `stageUp` (spec 1.2) covering the moment. No crossfade.
+- **(2) Parallax and cut-outs:** not yet. Keep v1 light until Justin has played on it. They're a candidate for after accents and effects, within the 2-moving-layer budget.
+- Order as agreed: accents (forest first), then effects, each as a new `pack-vN` tag. Tell me the tag and I'll bump `FORGECOACH_PACK_URL`.
+
 ### 2026-10-06 01:40 (EDT) — please reinstall the runner at 8961fd5 (#81) between jobs
 - **D392:** the light lane now gets the same `var/` link to the main clone as lane2/lane3. On its next light job, the light clone's own `var/` is moved aside to `.var-before-lane-<time>`, not deleted. Nothing needs re-queuing (J091 already did J088's work).
 - **D393:** J085's empty `c` metric was node running out of heap under the metrics unit's 2 GB cap. `calibrate.ts` now reads in chunks and uses about 40% less memory. A failed `metrics:` line now writes `results/<id>/metrics-errors.txt` with the real error.
