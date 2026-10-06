@@ -1,0 +1,318 @@
+==== J093 pilot2 started 2026-10-06T05:00:26-04:00 in unit lab-J093-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+night 4: re-reading its plan (var/cubelab/queue-pilot-n4/night-4.json); finished drafts are skipped
+night 4: 60 drafts (30 chunks), 1 game(s) a draft, grid, bridge share 0.2
+AI seats (D375): each drafter drawn per draft from Default:0.5,Reckless:0.25,Cautious:0.25; drafts.jsonl rows carry `profiles`
+play exploration (D358): share=0.5,epsilon=0.05,closecall=0.02,opening=off -- about 30 drafts explore; win rates leave them out
+
+pool key                         weight    drafts
+normal/fair-fight                  0.182         6
+normal/modern-era                  0.186         6
+normal/omega                       0.161         6
+normal/pauper                      0.224         8
+normal/peasant                     0.284        10
+normal/synergy                     0.194         7
+normal/vintage                     0.154         5
+bridge/pauper+modern-era           0.025         1
+bridge/peasant+modern-era          0.024         1
+bridge/peasant+synergy             0.024         1
+bridge/pauper+synergy              0.023         1
+bridge/fair-fight+modern-era       0.021         1
+bridge/fair-fight+synergy          0.019         1
+bridge/synergy+omega               0.018         1
+bridge/synergy+vintage             0.017         1
+bridge/pauper+omega                0.017         1
+bridge/pauper+vintage              0.017         1
+bridge/peasant+omega               0.016         1
+bridge/peasant+vintage             0.016         1
+bridge/fair-fight+vintage          0.015         0
+bridge/modern-era+vintage          0.015         0
+bridge/fair-fight+omega            0.014         0
+bridge/modern-era+omega            0.014         0
+bridge/pauper+peasant              0.010         0
+bridge/fair-fight+peasant          0.009         0
+bridge/modern-era+synergy          0.007         0
+
+bridge pairs (novelty = 1 - shared / smaller cube; link by power tier; unc = mean card variance / prior)
+  keep pauper+modern-era        novelty 0.91 link 1.0 unc 0.03 weight 0.025  adjacent tiers: chains the power levels; 17 cards shared
+  keep peasant+modern-era       novelty 0.88 link 1.0 unc 0.03 weight 0.024  adjacent tiers: chains the power levels; 22 cards shared
+  keep peasant+synergy          novelty 0.84 link 1.0 unc 0.03 weight 0.024  adjacent tiers: chains the power levels; 28 cards shared
+  keep pauper+synergy           novelty 0.82 link 1.0 unc 0.03 weight 0.023  adjacent tiers: chains the power levels; 32 cards shared
+  keep fair-fight+modern-era    novelty 0.76 link 1.0 unc 0.03 weight 0.021  adjacent tiers: chains the power levels; 43 cards shared
+  keep fair-fight+synergy       novelty 0.70 link 1.0 unc 0.03 weight 0.019  adjacent tiers: chains the power levels; 54 cards shared
+  keep synergy+omega            novelty 0.65 link 1.0 unc 0.03 weight 0.018  adjacent tiers: chains the power levels; 63 cards shared
+  keep synergy+vintage          novelty 0.66 link 1.0 unc 0.03 weight 0.017  adjacent tiers: chains the power levels; 62 cards shared
+  keep pauper+omega             novelty 0.90 link 0.7 unc 0.03 weight 0.017  flat with powered: lopsided games; 18 cards shared
+  keep pauper+vintage           novelty 0.92 link 0.7 unc 0.03 weight 0.017  flat with powered: lopsided games; 14 cards shared
+  keep peasant+omega            novelty 0.85 link 0.7 unc 0.03 weight 0.016  flat with powered: lopsided games; 27 cards shared
+  keep peasant+vintage          novelty 0.88 link 0.7 unc 0.03 weight 0.016  flat with powered: lopsided games; 22 cards shared
+  keep fair-fight+vintage       novelty 0.81 link 0.7 unc 0.03 weight 0.015  flat with powered: lopsided games; 35 cards shared
+  keep modern-era+vintage       novelty 0.57 link 1.0 unc 0.03 weight 0.015  adjacent tiers: chains the power levels; 78 cards shared
+  keep fair-fight+omega         novelty 0.72 link 0.7 unc 0.03 weight 0.014  flat with powered: lopsided games; 50 cards shared
+  keep modern-era+omega         novelty 0.51 link 1.0 unc 0.03 weight 0.014  adjacent tiers: chains the power levels; 88 cards shared
+  keep pauper+peasant           novelty 0.86 link 0.4 unc 0.03 weight 0.010  same power tier; 26 cards shared
+  keep fair-fight+peasant       novelty 0.81 link 0.4 unc 0.03 weight 0.009  same power tier; 34 cards shared
+  keep modern-era+synergy       novelty 0.63 link 0.4 unc 0.03 weight 0.007  same power tier; 66 cards shared
+  skip fair-fight+pauper        novelty 0.45 link 0.4 unc 0.03 weight 0.005  same power tier; 99 cards shared -- skipped: novelty × link 0.18 < 0.25, mostly the same pool
+  skip omega+vintage            novelty 0.40 link 0.4 unc 0.03 weight 0.004  same power tier; 108 cards shared -- skipped: novelty × link 0.16 < 0.25, mostly the same pool
+
+folders: var/cubelab/queue-pilot-n4/normal/<cube>, var/cubelab/queue-pilot-n4/bridge/<a>+<b>
+facts: booting the engine to look up 722 cards ...
+facts: 6.2 s
+
+== chunk 1/30: normal/fair-fight, seeds 7400001..7400003
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n4/normal/fair-fight/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/fair-fight/drafts.jsonl
+
+== chunk 2/30: normal/modern-era, seeds 7400001..7400003
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n4/normal/modern-era/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/modern-era/drafts.jsonl
+
+== chunk 3/30: normal/omega, seeds 7400001..7400003
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n4/normal/omega/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/omega/drafts.jsonl
+
+== chunk 4/30: normal/pauper, seeds 7400001..7400003
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 8 draft(s) already in var/cubelab/queue-pilot-n4/normal/pauper/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/pauper/drafts.jsonl
+
+== chunk 5/30: normal/peasant, seeds 7400001..7400003
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 10 draft(s) already in var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+
+== chunk 6/30: normal/synergy, seeds 7400001..7400003
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 7 draft(s) already in var/cubelab/queue-pilot-n4/normal/synergy/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/synergy/drafts.jsonl
+
+== chunk 7/30: normal/vintage, seeds 7400001..7400003
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 5 draft(s) already in var/cubelab/queue-pilot-n4/normal/vintage/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/vintage/drafts.jsonl
+
+== chunk 8/30: bridge/pauper+modern-era, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/pauper+modern-era/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/pauper+modern-era/drafts.jsonl
+
+== chunk 9/30: bridge/peasant+modern-era, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/peasant+modern-era/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/peasant+modern-era/drafts.jsonl
+
+== chunk 10/30: bridge/peasant+synergy, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/peasant+synergy/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/peasant+synergy/drafts.jsonl
+
+== chunk 11/30: bridge/pauper+synergy, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/pauper+synergy/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/pauper+synergy/drafts.jsonl
+
+== chunk 12/30: bridge/fair-fight+modern-era, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/fair-fight+modern-era/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/fair-fight+modern-era/drafts.jsonl
+
+== chunk 13/30: bridge/fair-fight+synergy, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/fair-fight+synergy/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/fair-fight+synergy/drafts.jsonl
+
+== chunk 14/30: bridge/synergy+omega, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/synergy+omega/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/synergy+omega/drafts.jsonl
+
+== chunk 15/30: bridge/synergy+vintage, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/synergy+vintage/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/synergy+vintage/drafts.jsonl
+
+== chunk 16/30: bridge/pauper+omega, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/pauper+omega/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/pauper+omega/drafts.jsonl
+
+== chunk 17/30: bridge/pauper+vintage, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/pauper+vintage/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/pauper+vintage/drafts.jsonl
+
+== chunk 18/30: bridge/peasant+omega, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/peasant+omega/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/peasant+omega/drafts.jsonl
+
+== chunk 19/30: bridge/peasant+vintage, seeds 7400001..7400001
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 1 draft(s) already in var/cubelab/queue-pilot-n4/bridge/peasant+vintage/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/bridge/peasant+vintage/drafts.jsonl
+
+== chunk 20/30: normal/fair-fight, seeds 7400004..7400006
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n4/normal/fair-fight/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/fair-fight/drafts.jsonl
+
+== chunk 21/30: normal/modern-era, seeds 7400004..7400006
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n4/normal/modern-era/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/modern-era/drafts.jsonl
+
+== chunk 22/30: normal/omega, seeds 7400004..7400006
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n4/normal/omega/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/omega/drafts.jsonl
+
+== chunk 23/30: normal/pauper, seeds 7400004..7400006
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 8 draft(s) already in var/cubelab/queue-pilot-n4/normal/pauper/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/pauper/drafts.jsonl
+
+== chunk 24/30: normal/peasant, seeds 7400004..7400006
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 10 draft(s) already in var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+
+== chunk 25/30: normal/synergy, seeds 7400004..7400006
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 7 draft(s) already in var/cubelab/queue-pilot-n4/normal/synergy/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/synergy/drafts.jsonl
+
+== chunk 26/30: normal/vintage, seeds 7400004..7400005
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 5 draft(s) already in var/cubelab/queue-pilot-n4/normal/vintage/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/vintage/drafts.jsonl
+
+== chunk 27/30: normal/pauper, seeds 7400007..7400008
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 8 draft(s) already in var/cubelab/queue-pilot-n4/normal/pauper/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/pauper/drafts.jsonl
+
+== chunk 28/30: normal/peasant, seeds 7400007..7400009
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 10 draft(s) already in var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+
+== chunk 29/30: normal/synergy, seeds 7400007..7400007
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 7 draft(s) already in var/cubelab/queue-pilot-n4/normal/synergy/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/synergy/drafts.jsonl
+
+== chunk 30/30: normal/peasant, seeds 7400010..7400010
+play exploration (D358): 0.5 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 10 draft(s) already in var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+drafted and built 0 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+done in 0 s -> var/cubelab/queue-pilot-n4/normal/peasant/drafts.jsonl
+
+night 4 done. Next: python3 tools/ml/matchup.py train var/cubelab/queue-pilot-n4 --out var/ml/matchup
+nightstats: nights [4], night 4: 19 keys -> var/cubelab/queue-pilot-n4-stats
+23 decisive game(s) from 19 run(s), 23 draft(s) (normal 23); 0 duplicate(s) skipped; 0 game(s) with a deck-set deck dropped; 0 of other versions; 37 exploring game(s) left out by --play-explore exclude (D358) -> var/ml/matchup-pilot-n4/games.jsonl
+  version 21e10255a7eb: 3 game(s)
+  version 6fceff66c6ad: 4 game(s)
+  version 960f9cf14d9b: 5 game(s)
+  version 9f9cf41a4354: 3 game(s)
+  version a5bac7857a1f: 3 game(s)
+  version ce8afb50a758: 3 game(s)
+  version e65c4d8007e4: 2 game(s)
+check: 23/23 records valid; kinds ['normal']
+PASS  var/cubelab/queue-pilot-n4/bridge/fair-fight+modern-era/games/7400001/g1-seat0.jsonl.gz
+      frames=596 (state=458, other=2)  bytes=82292  events=1632
+      cards checked=12606  redacted=886  face-down=0  stack cards=23  opponent-hand cards=886  viewer-hand named=2346
+      shape-checked state bodies=458 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=53 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=43  library cards revealed=12  alt blocks=0  tokens=339  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/queue-pilot-n4/bridge/fair-fight+modern-era/games/7400001/g1-seat1.jsonl.gz
+      frames=495 (state=410, other=2)  bytes=62712  events=1632
+      cards checked=10503  redacted=2208  face-down=0  stack cards=17  opponent-hand cards=2208  viewer-hand named=1014
+      shape-checked state bodies=410 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=48 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=41  library cards revealed=14 (14 an opponent's top card revealed by a permanent, A3)  alt blocks=0  tokens=243  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/queue-pilot-n4/bridge/fair-fight+synergy/games/7400001/g1-seat0.jsonl.gz
+      frames=347 (state=281, other=2)  bytes=50097  events=1258
+      cards checked=7773  redacted=1279  face-down=0  stack cards=17  opponent-hand cards=1279  viewer-hand named=1970
+      shape-checked state bodies=281 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=46 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=47  library cards revealed=0  alt blocks=0  tokens=666  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/queue-pilot-n4/bridge/fair-fight+synergy/games/7400001/g1-seat1.jsonl.gz
+      frames=371 (state=294, other=2)  bytes=47223  events=1258
+      cards checked=7640  redacted=2026  face-down=0  stack cards=16  opponent-hand cards=2026  viewer-hand named=1427
+      shape-checked state bodies=294 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=45 (stack[].text + events[].cast.text), concealed=4, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=42  library cards revealed=0  alt blocks=0  tokens=548  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/queue-pilot-n4/bridge/pauper+modern-era/games/7400001/g1-seat0.jsonl.gz
+      frames=569 (state=444, other=2)  bytes=87122  events=1947
+      cards checked=12859  redacted=954  face-down=0  stack cards=33  opponent-hand cards=954  viewer-hand named=2011
+      shape-checked state bodies=444 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=91 (stack[].text + events[].cast.text), concealed=0, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=52  library cards revealed=0  alt blocks=0  tokens=80  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)
+PASS  var/cubelab/queue-pilot-n4/bridge/pauper+modern-era/games/7400001/g1-seat1.jsonl.gz
+      frames=537 (state=428, other=2)  bytes=78600  events=1947
+      cards checked=12203  redacted=1928  face-down=0  stack cards=23  opponent-hand cards=1928  viewer-hand named=937
+      shape-checked state bodies=428 (exact key set + runtime type of every key, docs/protocol.md section 3)
+      engine strings=81 (stack[].text + events[].cast.text), concealed=3, none joinable to a card concealed in the same frame
+      A6 ever-revealed ids=51  library cards revealed=0  alt blocks=0  tokens=70  asks=0  prompts scanned=0
+      A12 answers=0 (kinds: none), value shape checked against the matching ask.kind, unanswered asks=0
+      shape-checked ask bodies=0 (exact key set + declared nullability, section 5.2)  notices=0 (both strings swept and scanned, section 6)  over frames=1
+      hello_ok.match checked on 1 of 1 hello_ok frame(s) (exact key sets; aiDeck held to {name, cards}; cross-checked against the session header; yourProfile on an AI viewer, M47)
+      M49 keywords present on every full card (Keyword constants only, [] when face down)
+      M6 comfort fields absent: isAbility, isOptionalTrigger, phaseStops, undo, yield, yieldKey, yielded (legitimate -- no seat, or recorded before M6; protocol section 3.1)

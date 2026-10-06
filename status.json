@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-06T05:00:27-04:00",
- "heartbeat": "2026-10-06T05:00:27-04:00",
+ "updated": "2026-10-06T05:00:42-04:00",
+ "heartbeat": "2026-10-06T05:00:42-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.28,
-  "memUsedGb": 4.6,
+  "load1": 2.83,
+  "memUsedGb": 4.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 2146,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 4,
+  "coresUsed": 8,
   "coresTotal": 8
  },
  "running": [
@@ -24,21 +24,21 @@
    "id": "J093",
    "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "pilot 2/2",
+   "phase": "commands 1/3",
    "started": "2026-10-06T04:59:58-04:00",
-   "elapsed": 29,
+   "elapsed": 44,
    "done": 0,
    "total": null,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "cores": 3,
+   "workers": 7,
+   "workersMax": 7,
+   "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-06T04:59:58-04:00",
-   "memGb": 0.01,
+   "memGb": 0,
    "live": {
     "night.night_drafts_done": 0,
     "night.planned_drafts": 0,
@@ -79,7 +79,7 @@
     "base.timeouts": 12,
     "base.turns": 1164211,
     "base.written": 1,
-    "elapsed_s": 0
+    "elapsed_s": 44
    },
    "liveHeadline": [
     "night.night_drafts_done",
@@ -87,10 +87,46 @@
     "night.bridge_share",
     "quarantined"
    ],
-   "cubes": [],
+   "cubes": [
+    {
+     "id": "fair-fight",
+     "done": 6,
+     "planned": 6
+    },
+    {
+     "id": "modern-era",
+     "done": 6,
+     "planned": 6
+    },
+    {
+     "id": "omega",
+     "done": 6,
+     "planned": 6
+    },
+    {
+     "id": "pauper",
+     "done": 8,
+     "planned": 8
+    },
+    {
+     "id": "peasant",
+     "done": 10,
+     "planned": 10
+    },
+    {
+     "id": "synergy",
+     "done": 7,
+     "planned": 7
+    },
+    {
+     "id": "vintage",
+     "done": 5,
+     "planned": 5
+    }
+   ],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J093-pilot2"
+   "detail": "lab-J093-run1"
   },
   {
    "publicTitle": "M55 root-cause extract",
@@ -98,9 +134,9 @@
    "id": "J094",
    "title": "Extract the one M55 failure (night 3, modern-era+omega game 354 g1 seat 1, decision 58 names land:99) so its cause can be found",
    "cpu": "heavy",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/1",
    "started": "2026-10-06T04:59:58-04:00",
-   "elapsed": 29,
+   "elapsed": 44,
    "done": null,
    "total": null,
    "unit": null,
@@ -112,10 +148,10 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0,
    "live": {
     "written": 0,
-    "elapsed_s": 0,
+    "elapsed_s": 44,
     "found": 1,
     "pressure_events": 0,
     "workers": 1
@@ -126,7 +162,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J094-pilot1"
+   "detail": "lab-J094-run1"
   }
  ],
  "queue": [
