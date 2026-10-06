@@ -1,0 +1,7 @@
+==== J082 pilot1 started 2026-10-05T23:38:50-04:00 in unit lab-J082-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+night 3 quarantine (J071): 45 recordings, 0 now pass, 45 still fail
+M55	1	NEW: night 4 waits
+other	2	NEW: night 4 waits
+own-hand-no-name	43	known
+shape	2	NEW: night 4 waits
+nightstats: nights [1, 2, 3], night 4: 26 keys -> var/cubelab/queue-night-4-stats

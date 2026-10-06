@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T23:38:50-04:00",
- "heartbeat": "2026-10-05T23:38:50-04:00",
+ "updated": "2026-10-05T23:39:04-04:00",
+ "heartbeat": "2026-10-05T23:39:04-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.23,
-  "memUsedGb": 6.8,
+  "load1": 1.25,
+  "memUsedGb": 6.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 3,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J082",
    "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-05T23:38:26-04:00",
-   "elapsed": 24,
+   "elapsed": 38,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -82,7 +82,7 @@
    "cubes": [],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J082-pilot1"
+   "detail": "lab-J082-pilot2"
   }
  ],
  "queue": [
