@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-06T03:39:50-04:00
+- time: 2026-10-06T03:44:23-04:00
 - runner: 8961fd5, up since 2026-10-06T01:31:40-04:00
 - running: J092 commands 3/4, 6 worker(s), 6 core(s)
 - cores: 6 of 8 in use (the running jobs' widths; 16 threads)
-- load: 3; memory 20/30.5 GB, swap 2144 MB, pressure 0% (lab budget 23.4 GB)
+- load: 1.39; memory 20/30.5 GB, swap 2144 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J070, J081, J089, J093, J094
 - waiting: nothing
 - last finished: J082 failed at 2026-10-05T23:43:06-04:00
