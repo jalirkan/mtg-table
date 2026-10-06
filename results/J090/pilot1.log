@@ -1,0 +1,6 @@
+==== J090 pilot1 started 2026-10-05T21:17:14-04:00 in unit lab-J090-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+pwd: /home/justin-a/code/lab/mtg-table-light
+ls: cannot access 'var/cubelab': No such file or directory
+drwxrwxr-x 8 justin-a justin-a 4096 Oct  5 21:17 var
+ls: cannot access 'var/cubelab/queue-quarantine*': No such file or directory
+ls: cannot access 'var/requarantine/*': No such file or directory
