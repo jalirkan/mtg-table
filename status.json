@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-06T00:11:10-04:00",
- "heartbeat": "2026-10-06T00:11:10-04:00",
+ "updated": "2026-10-06T00:15:51-04:00",
+ "heartbeat": "2026-10-06T00:15:51-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.11,
-  "memUsedGb": 6.9,
+  "load1": 1.1,
+  "memUsedGb": 6,
   "memTotalGb": 30.5,
   "swapUsedMb": 3,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 2/4",
    "started": "2026-10-06T00:05:14-04:00",
-   "elapsed": 356,
+   "elapsed": 637,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 0.34,
+   "memGb": 0.35,
    "live": {
     "ds.rows": 19517006,
     "ds.games": 119816,
@@ -124,6 +124,14 @@
    "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
    "est": "~8.5-10 h of drafts (38000 drafts: 8.5 h at night 3's measured 4,490 drafts/h, exploration kept), then ~1 h of redaction checks (resumable)"
+  },
+  {
+   "publicTitle": "M55 root-cause extract",
+   "publicEst": "~2 min",
+   "id": "J094",
+   "title": "Extract the one M55 failure (night 3, modern-era+omega game 354 g1 seat 1, decision 58 names land:99) so its cause can be found",
+   "cpu": "heavy",
+   "est": "~2 min"
   }
  ],
  "waiting": [],
