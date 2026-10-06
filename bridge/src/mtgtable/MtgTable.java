@@ -272,9 +272,18 @@ public final class MtgTable {
             ts.deckFiles = new File[] {deck1File, deck2File};
             ts.decks = new Deck[] {deck1, deck2};
             if (a.seatsFile != null) {
-                final TableMatch.SeatsFile sf = TableMatch.readSeatsFile(resolve(cfg, a.seatsFile));
+                final File seatsFile = resolve(cfg, a.seatsFile);
+                final TableMatch.SeatsFile sf = TableMatch.readSeatsFile(seatsFile);
                 ts.names = sf.names;
                 ts.digests = sf.digests;
+                // D406 / D407: where this game stands in the room's best of three, who chooses to play
+                // or draw, each seat's consent to recording; the result goes back beside the seats file.
+                ts.bestOf = sf.bestOf;
+                ts.gameNo = sf.gameNo;
+                ts.wins = sf.wins;
+                ts.chooser = sf.chooser;
+                ts.record = sf.record;
+                ts.resultFile = new File(seatsFile.getAbsoluteFile().getParentFile(), "result.json");
             } else {
                 ts.names = new String[] {"Player 1", "Player 2"};
             }
@@ -1140,7 +1149,8 @@ public final class MtgTable {
                             + "automated seats the gate plays)");
                 }
                 if (a.games != 1) {
-                    throw new IllegalArgumentException("--humans 2 plays one game: best of three is not built yet");
+                    throw new IllegalArgumentException("--humans 2 plays one game per engine start: the draft "
+                            + "room runs a best of three, one start per game, with --seats-file's match (D406)");
                 }
                 if ("ws".equals(a.transport) && a.seatsFile == null) {
                     throw new IllegalArgumentException("--humans 2 --transport ws needs --seats-file: each seat's "

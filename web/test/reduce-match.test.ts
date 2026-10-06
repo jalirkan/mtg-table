@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
 import { initialState, reduce } from '../src/reduce.ts';
-import { aiPolicyOf, matchupOf, opponentIsHuman, seatMatchOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
+import { aiPolicyOf, matchupOf, opponentIsHuman, seatMatchOf, tableScoreOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 function frame(overrides: Record<string, unknown>): Frame {
@@ -262,4 +262,20 @@ test('amendment M59: a table of two -- the opponent is a person, their deck a na
   const before = s.framesApplied;
   s = reduce(s, frame({ type: 'table', seq: 2, body: { you: 1, seats: [], decisionTimeoutMs: 0, graceMs: 0, claimWinAt: null, canClaimWin: false } }));
   assert.equal(s.framesApplied, before + 1);
+});
+
+test('M60: a best of three at a table of two -- tableScoreOf reads match.score, and nothing else', () => {
+  const players = [{ id: 0, name: 'Ana', isAi: false }, { id: 1, name: 'Ben', isAi: false }];
+  const yourDeck = { name: 'Ana deck', path: 'var/match/m1/seat0.dck', cards: 40 };
+  const g2 = { gameId: 'friend-m1', you: 0, gameNumber: 2, gameCount: 3, players,
+    match: { yourDeck, opponentDeck: { name: 'Ben deck', cards: 40 }, opponent: 'human', games: 3, score: { you: 0, opponent: 1 } } } as unknown as HelloOkBody;
+  assert.deepEqual(tableScoreOf(g2), { you: 0, opponent: 1 });
+  assert.equal(opponentIsHuman(g2), true);
+  const one = { ...g2, match: { ...g2.match, games: 1, score: undefined } } as unknown as HelloOkBody;
+  assert.equal(tableScoreOf(one), null);
+  assert.equal(tableScoreOf({ ...g2, match: { ...g2.match, score: { you: 'one', opponent: 0 } } } as unknown as HelloOkBody), null);
+  assert.equal(tableScoreOf(null), null);
+  // The reducer folds it like any other handshake.
+  const s = reduce(initialState(), frame({ type: 'hello_ok', seq: 1, body: g2 }));
+  assert.ok(s.framesApplied >= 1);
 });

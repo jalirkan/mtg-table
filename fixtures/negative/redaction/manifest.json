@@ -328,5 +328,41 @@
     "level": "fail",
     "expect": "search generated",
     "why": "amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string"
+  },
+  {
+    "file": "m60-best-of-three-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M60: one seat of game 2 of a best of three at a table of two, its consent in the header -- the control for the m60 probes"
+  },
+  {
+    "file": "m60-score-in-a-one-game-match.jsonl",
+    "level": "fail",
+    "expect": "expected exactly yourDeck, opponentDeck, opponent, games",
+    "why": "amendment M60: score belongs to a best of three; a one-game table carries exactly M59's four keys"
+  },
+  {
+    "file": "m60-score-not-a-count.jsonl",
+    "level": "fail",
+    "expect": "score must be exactly {you, opponent}",
+    "why": "amendment M60: score is the games each side won before this one, 0 or 1 each -- never a list or a name"
+  },
+  {
+    "file": "m60-score-ahead-of-the-game.jsonl",
+    "level": "fail",
+    "expect": "is more games than came before game 2",
+    "why": "amendment M60: game 2 follows exactly one game, so the score cannot add up to two"
+  },
+  {
+    "file": "m60-record-not-a-boolean.jsonl",
+    "level": "fail",
+    "expect": "\"record\" must be true or false",
+    "why": "amendment M60 / D407: record is a seat's consent, true or false"
+  },
+  {
+    "file": "m60-record-against-the-ai.jsonl",
+    "level": "fail",
+    "expect": "\"record\" without \"humans\": 2",
+    "why": "amendment M60 / D407: only a seat at a table of two says whether it may be recorded"
   }
 ]

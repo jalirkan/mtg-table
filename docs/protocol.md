@@ -30,6 +30,22 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-06 — a best of three at a table of two, and each seat's consent to recording
+
+Applied by the play-with-a-friend lane's third phase (branch `c/friend-bo3`;
+decisions **D406** and **D407**). A table's process still plays one game: the
+draft room runs the match, one engine start per game (D406). What changes on the
+wire is only ever sent at a table of two whose seats file asks for it, so no
+stream against the AI changes by a byte, and a table without those keys is
+M59's. Held by `tools/check-redaction.mjs` (the `score` key and its range, the
+header's `record`; six controls in `fixtures/negative/redaction/m60-*`),
+`mtgtable.TableSelfTest` (the seats file) and gate step 10i (an automated game 2
+of 3: who chose, who went first, both handshakes, both headers, `result.json`).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M60 | §2.1, §8.1, M41, M59 | **A best of three at a table of two (D406), and each seat's consent (D407).** **(1) `hello_ok`** of a game of a best of three carries M41's `gameNumber` (1–3) and `gameCount` (3), and `match` becomes `{yourDeck, opponentDeck, opponent, games: 3, score}` — `score` is `{you, opponent}`, the games each side won **before** this one, from the viewing seat's side (0 or 1 each, never more than `gameNumber − 1` together). A one-game table is M59's exactly (`games: 1`, no `score`, no `gameNumber`). **(2) Play or draw**: from game 2 on, the seat that lost the previous game is asked Forge's own later-game question, an `input` with OK `Play` and Cancel `Draw` and the prompt "*<name>*, you lost the last game. Would you like to play or draw?"; the other seat is asked nothing. Game 1, and a game after a draw, is Forge's coin toss as before. **(3) The session header's `record`** (§8.1): `true` or `false`, this seat's consent to the human test set (D369) and the automatic review (D385) for this game; only beside `humans: 2`; absent on a table that did not ask (M59's), which is read as not consented. **(4) `newGame` is still refused at a table** (M59 (8)): the next game is the room's (a new engine start with new decks and new seat tokens), not the session's. **(5) Off the wire**: the bridge writes `result.json` beside `--seats-file` when the game ends — `{v: 1, gameId, finished, winnerSeat: 0\|1\|null, draw, reason, from: "outcome"\|"claimWin"\|"concede"\|"none", turns}`, no card and nothing either seat did not see — which the room scores; the seats file gains the optional `match: {bestOf, game, wins}`, `chooser` and `record: [bool, bool]` (`docs/draft-room.md`). | D406, D407 |
+
 ### 2026-10-06 — a table of two: two people, two seats, one game
 
 Applied by the play-with-a-friend lane (branch `c/two-humans`; decisions
@@ -553,11 +569,12 @@ name, the AI's profile, and how many games it is played to.
 | `yourDeck` | `{name, path, cards}` | the **viewing seat's** deck: its `.dck` `Name=` (the file's base name when it has none), its repo-relative path (the same string §8.1's header carries for this seat) and its main-deck card count |
 | `aiDeck` | `{name, cards}` | the **other seat's** deck: name and card count **only** — never `path`, `sha256` or a list (§8.1, hard rule 8). A mirror match names the same deck twice |
 | `aiProfile` | string | the Forge AI profile the other seat plays under — one `.ai` file of `forge-home/res/ai/`; `Default` unless `--ai-profile` said otherwise |
-| `games` | int ≥ 1 | `--games N`. **Always present**, unlike M41's `gameCount`, which is omitted for a one-game session |
+| `games` | int ≥ 1 | `--games N`. **Always present**, unlike M41's `gameCount`, which is omitted for a one-game session. At a table of two: 1, or 3 for a game of the draft room's best of three (amendment **M60**) |
 | `yourProfile` | string, **optional** | amendment **M47**: the **viewing seat's own** Forge AI profile. Only `mtgtable.RecordMatch` writes it (a spectated game), because only there is the viewing seat an AI; a stream whose `players[]` marks the viewer human must not carry it. Last in the object, so M44's keys keep their positions |
 | `aiPolicy` | string, **optional** | amendment **M56**: who answers for the other seat — `plain`, `outlets` or `search`, `MtgTable --ai-policy` (D314, D333). Written by `MtgTable` only; absent means the stream does not say. Read with `aiPolicyOf()` |
 | `opponentDeck` | `{name, cards}`, **a table of two** | amendment **M59**: the other PERSON's deck, name and card count only, exactly as `aiDeck`. At a table of two the object is exactly `{yourDeck, opponentDeck, opponent, games}` — no `aiDeck`, `aiProfile` or `aiPolicy` — and `games` is 1. Read with `seatMatchOf()` / `opponentIsHuman()` |
 | `opponent` | `"human"`, **a table of two** | amendment **M59**: the other seat is a person (`MtgTable --humans 2`). Absent whenever it is the AI |
+| `score` | `{you, opponent}`, **a best of three at a table of two** | amendment **M60**: the games each side won BEFORE this one, from the viewing seat's side; 0 or 1 each. Present exactly when `games` is 3, beside M41's `gameNumber` / `gameCount` |
 
 **Optional, and absent from every recording made before 2026-09-27** — the whole
 committed corpus — so a reader must treat a missing `match` as "this stream does
@@ -2100,6 +2117,7 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `recordedBy` | `"client"` on a log a **client** wrote (`tools/ws-auto-play.mjs --log`); **absent** means the bridge wrote it. `tools/check-redaction.mjs` reads it and relaxes the `seq` continuity rule, and nothing else: a client legitimately sees a frame re-delivered verbatim and real forward gaps, both amendment **M10** (M17). |
 | `paceMs` | **Optional** (amendment **M47**). Present only on a PACED AI-vs-AI recording — `mtgtable.RecordMatch --pace <ms>`, which `./scripts/spectate.sh` passes in follow mode: the engine dwelt `paceMs` at every phase boundary (a quarter of it after a frame that only moved the phase strip), so the `t` gaps are the watcher's pace, not the engine's. It changes nothing else — a paced and an unpaced recording of one seed are the same frames (§8.7). A positive integer; `tools/check-redaction.mjs` fails it beside `transport`, because a seat's pace is its player's. |
 | `humans` | **Optional** (amendment **M59**). `2` on each seat's log at a table of two (`MtgTable --humans 2`): the other seat is a person, so `hello_ok.match` takes its two-person form and `table` frames appear. Only beside `transport`. Each seat writes its own log, `var/games/<gameId>-seat<N>/frames.jsonl`. |
+| `record` | **Optional** (amendment **M60**, D407). `true` or `false`: this seat's player agreed (or not) to this game going into the human test set (D369, `var/ml/human-friends/`) and the automatic engine review (D385, that player's own). Only beside `humans: 2`; absent means not agreed. |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
 
 **A frame produced before the header is held, not dropped** (amendment M9). The

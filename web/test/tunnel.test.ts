@@ -392,13 +392,42 @@ test("Cloudflare's headers are one list: the policy's, the coach helper's and th
   assert.deepEqual(m[1]!.split(',').map((x) => x.trim().replace(/^"|"$/g, '')), [...P.TUNNEL_HEADERS]);
 });
 
-/** A stand-in for the bridge's port (8642): D402's TunnelGate, then /health. */
-function bridgeLike(gate: boolean) {
+/**
+ * A stand-in for the bridge's port (8642): D402's TunnelGate, then /health.  `table`: the port at a table of
+ * two (TableServer's health port), /health and nothing else.
+ */
+function bridgeLike(gate: boolean, table = false) {
   return listen((req, res) => {
     if (gate && viaTunnel(req.headers)) { res.statusCode = 403; res.end('this port is never tunnelled'); return; }
+    if (table && req.url !== '/health') { res.statusCode = 404; res.end('this bridge is playing a game between two people: its seats are on the table port'); return; }
     res.end(req.url === '/health' ? 'ok' : 'site');
   });
 }
+
+test('tunnel-check --local: at a table of two the bridge\'s port refuses every Cloudflare header too; one that answers /health fails (no WARN)', async () => {
+  const cfg = join(scratch, 'config-table-health.yml');
+  writeFileSync(cfg, FILLED);
+  const gated = await bridgeLike(true, true);
+  const open = await bridgeLike(false, true);
+  const dead = await deadPort();
+  const base = { hostname: HOST, local: true, configPath: cfg, cloudflared: null, ss: false, timeoutMs: 3000 };
+  try {
+    const good = await C.runChecks({ ...base, ports: { room: dead, coach: dead, ws: gated.port, seat: dead } });
+    for (const h of P.TUNNEL_HEADERS) assert.ok(good.some((r) => r.level === 'PASS' && r.name === `bridge, Host 127.0.0.1, ${h}`), `the table's health port refuses ${h}`);
+    const bad = await C.runChecks({ ...base, ports: { room: dead, coach: dead, ws: open.port, seat: dead } });
+    assert.deepEqual(bad.filter((r) => r.level === 'FAIL').map((r) => r.name), P.TUNNEL_HEADERS.map((h) => `bridge, Host 127.0.0.1, ${h}`), 'a table bridge that answers /health fails once per header');
+    assert.equal(bad.filter((r) => r.level === 'WARN' && r.name.startsWith('bridge,')).length, 0, 'never a WARN');
+  } finally {
+    gated.server.close();
+    open.server.close();
+  }
+});
+
+test('the bridge refuses a tunnel\'s headers at a table of two: TableServer\'s health port checks them first', () => {
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/TableServer.java'), 'utf8');
+  assert.match(java, /if \(healthOnly && WsTransport\.viaTunnel\(req\.headers\(\)\.names\(\)\)\)/);
+  assert.ok(java.indexOf('WsTransport.viaTunnel(') < java.indexOf('"/health".equals(path)'), 'before /health is answered');
+});
 
 /**
  * A stand-in for the table port (D402's TableDoor): /ws by token and nothing else.  `lax` answers /health and

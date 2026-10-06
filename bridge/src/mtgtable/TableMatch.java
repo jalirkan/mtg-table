@@ -27,17 +27,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 
+import forge.LobbyPlayer;
 import forge.deck.Deck;
+import forge.game.Game;
 import forge.game.GameRules;
 import forge.game.GameType;
+import forge.game.player.Player;
 import forge.game.player.PlayerView;
 import forge.game.player.RegisteredPlayer;
 import forge.gamemodes.match.HostedMatch;
 import forge.gui.interfaces.IGuiGame;
 import forge.player.LobbyPlayerHuman;
+import forge.player.PlayerControllerHuman;
 import forge.util.BuildInfo;
+import forge.util.GuiDisplayUtil;
 
 import mtgtable.Json.JsonOut;
 
@@ -69,9 +75,26 @@ import mtgtable.Json.JsonOut;
  *
  * <p>Logs: {@code var/games/<gameId>-seat<N>/frames.jsonl}, one per seat, each
  * redacted for its seat.  The game id is {@code friend-…} (play.sh writes
- * {@code friend-m<13 digits>}), which neither the human test set (D369) nor the
- * automatic review (D385) picks up: recording both seats, with each player's
- * opt-out, is a later lane.
+ * {@code friend-m<13 digits>}).  The human test set (D369) and the automatic
+ * review (D385) read a seat's log only when its header says {@code record: true}:
+ * that player agreed to it for this game (D407).
+ *
+ * <p><b>Best of three (D406, amendment M60).</b>  A process still plays ONE
+ * game: the draft room runs the match, one engine start per game, with the
+ * decks each player handed it for that game (sideboarding is a deck handed in
+ * again, checked by the room against that player's picks, D404).  The seats
+ * file tells this game where it stands -- {@code match: {bestOf, game, wins}},
+ * which the handshake repeats ({@code gameNumber}, {@code gameCount},
+ * {@code match.games}, {@code match.score}) -- and {@code chooser}, the seat
+ * that lost the previous game: Forge's own rule for a later game of a match is
+ * that the loser chooses to play or draw ({@code GameAction}'s
+ * {@code determineFirstTurnPlayer}), and a fresh process has no previous game,
+ * so {@link TableController} hands the coin-toss winner's
+ * {@code chooseStartingPlayer} to the chooser's own "You lost the last game:
+ * play or draw?".  When the game ends, {@code result.json} beside the seats
+ * file names the winning seat for the room.  D407: {@code record}, each seat's
+ * consent to recording this game, goes into that seat's session header, where
+ * the human test set's collector and the automatic review read it.
  */
 final class TableMatch implements WireGuiGame.Table {
 
@@ -107,17 +130,43 @@ final class TableMatch implements WireGuiGame.Table {
         long gameTimeoutSec;
         boolean keepOpen;
         boolean manaLostPrompt;
+        /** D406: best of how many (1 or 3), which game of it this is, and the games each seat has won before it. */
+        int bestOf = 1;
+        int gameNo = 1;
+        int[] wins = {0, 0};
+        /** D406: the seat that chooses to play or draw (the previous game's loser), or -1: Forge's coin toss. */
+        int chooser = -1;
+        /** D407: each seat's consent to recording this game, or null (the seats file did not say). */
+        boolean[] record;
+        /** D406: where the result goes ({@code result.json} beside the seats file), or null. */
+        File resultFile;
     }
 
-    /** The seats file (D404): {@code {"names": [a, b], "tokenSha256": [hex, hex]}} and nothing else. */
+    /**
+     * The seats file (D404): {@code {"names": [a, b], "tokenSha256": [hex, hex]}}, and since D406/D407
+     * optionally {@code "match": {"bestOf": 1|3, "game": n, "wins": [a, b]}}, {@code "chooser": 0|1} and
+     * {@code "record": [bool, bool]}.  Nothing else.
+     */
     static final class SeatsFile {
         final String[] names;
         final byte[][] digests;
+        int bestOf = 1;
+        int gameNo = 1;
+        int[] wins = {0, 0};
+        int chooser = -1;
+        boolean[] record;
 
         SeatsFile(final String[] names, final byte[][] digests) {
             this.names = names;
             this.digests = digests;
         }
+    }
+
+    private static int intIn(final Object v, final int lo, final int hi, final String what) {
+        if (!(v instanceof Long) || (Long) v < lo || (Long) v > hi) {
+            throw new IllegalArgumentException("--seats-file: " + what + " must be a whole number " + lo + "-" + hi);
+        }
+        return ((Long) v).intValue();
     }
 
     /** A player's name: 1-24 characters, no control characters (the draft room's rule, D400). */
@@ -140,7 +189,7 @@ final class TableMatch implements WireGuiGame.Table {
         }
         final Map<?, ?> m = (Map<?, ?>) parsed;
         for (final Object k : m.keySet()) {
-            if (!"names".equals(k) && !"tokenSha256".equals(k)) {
+            if (!List.of("names", "tokenSha256", "match", "chooser", "record").contains(k)) {
                 throw new IllegalArgumentException("--seats-file has an unknown key " + k);
             }
         }
@@ -153,7 +202,49 @@ final class TableMatch implements WireGuiGame.Table {
         final String[] n = {checkName(((Object[]) names)[0]), checkName(((Object[]) names)[1])};
         final byte[][] d = {TableServer.hexDigest(String.valueOf(((Object[]) digests)[0])),
                             TableServer.hexDigest(String.valueOf(((Object[]) digests)[1]))};
-        return new SeatsFile(n, d);
+        final SeatsFile sf = new SeatsFile(n, d);
+        // D406: where this game stands in a best of three.
+        if (m.containsKey("match")) {
+            if (!(m.get("match") instanceof Map)) {
+                throw new IllegalArgumentException("--seats-file: match must be {bestOf, game, wins}");
+            }
+            final Map<?, ?> mm = (Map<?, ?>) m.get("match");
+            for (final Object k : mm.keySet()) {
+                if (!List.of("bestOf", "game", "wins").contains(k)) {
+                    throw new IllegalArgumentException("--seats-file: match has an unknown key " + k);
+                }
+            }
+            sf.bestOf = intIn(mm.get("bestOf"), 1, 3, "match.bestOf");
+            if (sf.bestOf != 1 && sf.bestOf != 3) {
+                throw new IllegalArgumentException("--seats-file: match.bestOf is 1 or 3");
+            }
+            sf.gameNo = intIn(mm.get("game"), 1, sf.bestOf, "match.game");
+            final Object w = mm.get("wins");
+            if (!(w instanceof Object[]) || ((Object[]) w).length != 2) {
+                throw new IllegalArgumentException("--seats-file: match.wins is [a, b]");
+            }
+            final int need = sf.bestOf / 2 + 1;
+            sf.wins = new int[] {intIn(((Object[]) w)[0], 0, need - 1, "match.wins[0]"),
+                                 intIn(((Object[]) w)[1], 0, need - 1, "match.wins[1]")};
+            if (sf.wins[0] + sf.wins[1] > sf.gameNo - 1) {
+                throw new IllegalArgumentException("--seats-file: match.wins add up to more games than came before game " + sf.gameNo);
+            }
+        }
+        if (m.containsKey("chooser")) {
+            sf.chooser = intIn(m.get("chooser"), 0, 1, "chooser");
+            if (sf.gameNo < 2) {
+                throw new IllegalArgumentException("--seats-file: chooser is the previous game's loser -- game 1 has none");
+            }
+        }
+        if (m.containsKey("record")) {
+            final Object r = m.get("record");
+            if (!(r instanceof Object[]) || ((Object[]) r).length != 2
+                    || !(((Object[]) r)[0] instanceof Boolean) || !(((Object[]) r)[1] instanceof Boolean)) {
+                throw new IllegalArgumentException("--seats-file: record is [bool, bool]");
+            }
+            sf.record = new boolean[] {(Boolean) ((Object[]) r)[0], (Boolean) ((Object[]) r)[1]};
+        }
+        return sf;
     }
 
     /** Two distinct names: Forge names a player in its own strings, and two Sams read as one. */
@@ -179,6 +270,13 @@ final class TableMatch implements WireGuiGame.Table {
     private final int[] expiries = new int[2];
     private final String[] lastTable = new String[2];
     private volatile boolean claimed;
+    /** D406: the seat that claimed the win, or -1. */
+    private volatile int claimedBy = -1;
+    /** D406: which seats sent {@code act: concede} (1), for a result the engine never published. */
+    private final AtomicIntegerArray conceded = new AtomicIntegerArray(2);
+    /** D406: each seat's controller, made by its {@link TableLobbyPlayer} on the game thread. */
+    private final TableController[] controllers = new TableController[2];
+    private final RegisteredPlayer[] registered = new RegisteredPlayer[2];
     private int tableFrames;
 
     private TableMatch(final Setup s) {
@@ -196,6 +294,82 @@ final class TableMatch implements WireGuiGame.Table {
 
     private int index(final WireGuiGame g) {
         return g == gui[0] ? 0 : g == gui[1] ? 1 : -1;
+    }
+
+    @Override
+    public void conceded(final WireGuiGame seat) {
+        final int i = index(seat);
+        if (i >= 0) {
+            conceded.set(i, 1);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // D406: the loser of the previous game chooses to play or draw
+    // ------------------------------------------------------------------
+
+    /**
+     * Each seat's lobby player: Forge's own {@code LobbyPlayerHuman}, whose
+     * in-game player is driven by a {@link TableController} instead of a plain
+     * {@code PlayerControllerHuman} -- the same body as
+     * {@code LobbyPlayerHuman.createIngamePlayer} in the pinned 2.0.14 jar
+     * (javap), one class swapped.
+     */
+    private static final class TableLobbyPlayer extends LobbyPlayerHuman {
+        private final TableMatch table;
+        private final int seat;
+
+        TableLobbyPlayer(final String name, final TableMatch table, final int seat) {
+            super(name);
+            this.table = table;
+            this.seat = seat;
+        }
+
+        @Override
+        public Player createIngamePlayer(final Game game, final int id) {
+            final Player p = new Player(GuiDisplayUtil.personalizeHuman(getName()), game, id);
+            final TableController c = new TableController(game, p, this, table);
+            table.controllers[seat] = c;
+            p.setFirstController(c);
+            return p;
+        }
+    }
+
+    /**
+     * A seat's controller at a table: {@code PlayerControllerHuman} with one
+     * method changed.  Forge decides who goes first in
+     * {@code GameAction.determineFirstTurnPlayer}: game 1 of a match by a coin
+     * toss whose winner is asked "play or draw?", a later game by asking the
+     * loser of the game before, "You lost the last game: play or draw?".  A
+     * table's process plays one game, so Forge always sees a game 1; when the
+     * seats file names a {@code chooser} (the room's previous game's loser,
+     * D406) the coin-toss winner's question is handed to that seat's
+     * controller with Forge's later-game wording.  Game thread only (it is
+     * where Forge calls it), and the chooser's input goes up on its own queue
+     * exactly as Forge's own later-game question would.
+     */
+    static final class TableController extends PlayerControllerHuman {
+        private final TableMatch table;
+
+        TableController(final Game game, final Player p, final LobbyPlayer lp, final TableMatch table) {
+            super(game, p, lp);
+            this.table = table;
+        }
+
+        @Override
+        public Player chooseStartingPlayer(final boolean isFirstGame) {
+            final int who = table.s.chooser;
+            final TableController chooser = who < 0 ? null : table.controllers[who];
+            if (chooser == null) {
+                return super.chooseStartingPlayer(isFirstGame);
+            }
+            if (chooser != this) {
+                System.err.println("TABLE PLAY OR DRAW: seat " + who + " lost the previous game, so it chooses (D406)");
+                awaitNextInput();
+                return chooser.chooseStartingPlayer(isFirstGame);
+            }
+            return super.chooseStartingPlayer(false);
+        }
     }
 
     @Override
@@ -221,6 +395,7 @@ final class TableMatch implements WireGuiGame.Table {
             return;
         }
         claimed = true;
+        claimedBy = me;
         final long mins = (System.currentTimeMillis() - away) / 60_000L;
         System.err.println("TABLE CLAIM: seat " + me + " claimed the win; seat " + opp + " away " + mins
                 + " min (D403)");
@@ -239,12 +414,23 @@ final class TableMatch implements WireGuiGame.Table {
                 + "; away grace " + s.graceSec + " s (D403)");
 
         final GameRules rules = new GameRules(GameType.Constructed);
-        rules.setGamesPerMatch(1);           // best of three is not built (D402)
+        rules.setGamesPerMatch(1);           // one game per process: the room runs a best of three (D406)
         rules.setWarnAboutAICards(false);    // M54: no AI here, and nothing of a deck is revealed before the game
         final RegisteredPlayer[] rp = new RegisteredPlayer[2];
         for (int i = 0; i < 2; i++) {
             rp[i] = new RegisteredPlayer(s.decks[i]);
-            rp[i].setPlayer(new LobbyPlayerHuman(names[i]));
+            rp[i].setPlayer(new TableLobbyPlayer(names[i], this, i));
+            registered[i] = rp[i];
+        }
+        if (s.bestOf > 1) {
+            System.out.println("match         = game " + s.gameNo + " of a best of " + s.bestOf + ", "
+                    + names[0] + " " + s.wins[0] + " - " + s.wins[1] + " " + names[1] + " (D406)");
+        }
+        System.out.println("play or draw  = " + (s.chooser < 0 ? "a coin toss, its winner chooses (Forge's game 1)"
+                : names[s.chooser] + " chooses: they lost the previous game (D406)"));
+        if (s.record != null) {
+            System.out.println("recording     = seat 0 " + (s.record[0] ? "yes" : "no") + ", seat 1 "
+                    + (s.record[1] ? "yes" : "no") + " (each player's consent, D407)");
         }
 
         final HostedMatch hosted = new HostedMatch();
@@ -315,6 +501,7 @@ final class TableMatch implements WireGuiGame.Table {
 
         final boolean finished = awaitOver();
         final long gameMs = (System.nanoTime() - tGame) / 1_000_000L;
+        writeResult(hosted, finished);
         if (finished && s.keepOpen && server != null) {
             linger();
         }
@@ -518,6 +705,9 @@ final class TableMatch implements WireGuiGame.Table {
         }
         o.end();
         o.n("humans", 2);                    // M59: the other seat is a person, not the AI
+        if (s.record != null) {
+            o.n("record", s.record[seat]);   // D407: this seat's consent to the human test set and the review
+        }
         return o.end().done();
     }
 
@@ -531,6 +721,11 @@ final class TableMatch implements WireGuiGame.Table {
         o.n("gameId", s.gameId);
         o.n("you", viewer.getId());
         o.n("seed", s.seed);
+        if (s.bestOf > 1) {
+            // M41's keys, from the room's match rather than this process's count (D406, M60).
+            o.n("gameNumber", s.gameNo);
+            o.n("gameCount", s.bestOf);
+        }
         o.n("forgeVersion", BuildInfo.getVersionString());
         o.n("forgeJarSha256", MtgTable.sha256(s.cfg.forgeJar()));
         o.key("unsupportedCards").arr();
@@ -554,9 +749,81 @@ final class TableMatch implements WireGuiGame.Table {
                 .n("cards", s.decks[1 - seat].getMain().countAll())
                 .end();
         o.n("opponent", "human");
-        o.n("games", 1);
+        o.n("games", s.bestOf);
+        if (s.bestOf > 1) {
+            // M60: the games each of you won before this one, from your side of the table.
+            o.key("score").obj().n("you", s.wins[seat]).n("opponent", s.wins[1 - seat]).end();
+        }
         o.end();
         return o.end().done();
+    }
+
+    /**
+     * D406: {@code result.json} beside the seats file -- which seat won, for the
+     * room's score.  Forge's outcome when it published one; else a claimed win
+     * (D403) or a lone concede, which M11 can end before any outcome exists;
+     * else no winner.  Names no card and nothing either seat did not see.
+     * Written whole to a temporary file and renamed into place.
+     */
+    private void writeResult(final HostedMatch hosted, final boolean finished) {
+        if (s.resultFile == null) {
+            return;
+        }
+        int winner = -1;
+        String reason = null;
+        String how = "none";
+        boolean draw = false;
+        final Game g = hosted.getGame();
+        final forge.game.GameOutcome o = g == null ? null : g.getOutcome();
+        if (o != null) {
+            how = "outcome";
+            reason = o.getWinCondition() == null ? null : String.valueOf(o.getWinCondition());
+            draw = o.isDraw();
+            final LobbyPlayer w = o.isDraw() ? null : o.getWinningLobbyPlayer();
+            for (int i = 0; i < 2 && w != null; i++) {
+                if (w == registered[i].getPlayer() || w.getName().equals(registered[i].getPlayer().getName())) {
+                    winner = i;
+                }
+            }
+        } else if (claimedBy >= 0) {
+            how = "claimWin";
+            winner = claimedBy;
+            reason = "Conceded";
+        } else if (conceded.get(0) != conceded.get(1)) {
+            how = "concede";
+            winner = conceded.get(0) == 1 ? 1 : 0;
+            reason = "Conceded";
+        }
+        final JsonOut j = new JsonOut().obj();
+        j.n("v", 1L);
+        j.n("gameId", s.gameId);
+        j.n("finished", finished);
+        j.key("winnerSeat");
+        if (winner >= 0) {
+            j.v((long) winner);
+        } else {
+            j.vNull();
+        }
+        j.n("draw", draw);
+        j.key("reason");
+        if (reason != null) {
+            j.v(reason);
+        } else {
+            j.vNull();
+        }
+        j.n("from", how);
+        j.n("turns", (long) (g == null ? 0 : g.getPhaseHandler().getTurn()));
+        final String text = j.end().done() + "\n";
+        try {
+            final File tmp = new File(s.resultFile.getPath() + ".tmp");
+            Files.write(tmp.toPath(), text.getBytes(StandardCharsets.UTF_8));
+            Files.move(tmp.toPath(), s.resultFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                    java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            System.out.println("result        = " + (winner >= 0 ? "seat " + winner + " won" : draw ? "a draw" : "no winner")
+                    + " (" + how + ") -> " + MtgTable.rel(s.cfg, s.resultFile));
+        } catch (final java.io.IOException e) {
+            System.err.println("TABLE RESULT not written: " + e);
+        }
     }
 
     private void summary(final HostedMatch hosted, final boolean finished, final long gameMs, final long t0) {
@@ -591,7 +858,8 @@ final class TableMatch implements WireGuiGame.Table {
         if (server != null) {
             System.out.println("table door     = " + server.admitted() + " admitted, " + server.tokenRefusals()
                     + " refused for want of a seat token, " + server.originRefusals() + " by Origin, "
-                    + server.limited() + " rate-limited, " + server.observeRefusals() + " observers refused");
+                    + server.limited() + " rate-limited, " + server.observeRefusals() + " observers refused, "
+                    + server.tunnelRefusals() + " tunnelled request(s) refused on the health port (D408)");
         }
         System.out.println("REVEAL count   = " + Snap.reveals() + " (full card in a hidden zone we do not own)");
         System.out.println("game wall time = " + gameMs + " ms");

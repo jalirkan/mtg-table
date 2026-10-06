@@ -923,5 +923,87 @@ probe('m58-generated-is-not-a-count.jsonl',
   'search generated',
   (fs) => { withDecision(fs).search.generated = 'nine'; });
 
+/*
+ * Amendment M60 (D406, D407) -- a game of a best of three at a table of two.
+ * The control is the baseline as one seat of such a table writes it: a session
+ * header with `humans: 2` and `record` (this seat's consent), both players
+ * people, and `hello_ok.match` in its two-person form with `games: 3` and
+ * `score`, beside M41's `gameNumber` / `gameCount`.  Four one-defect probes.
+ */
+const tableHeader = (edit = () => {}) => {
+  const h = { ...structuredClone(header), transport: 'ws', humans: 2, record: true };
+  edit(h);
+  return h;
+};
+const withTableMatch = (fs, edit = () => {}) => {
+  const hello = fs.find((f) => f.type === 'hello_ok');
+  const mine = header.decks.find((d) => d.player === header.seat);
+  const theirs = header.decks.find((d) => d.player !== header.seat);
+  hello.body.gameNumber = 2;
+  hello.body.gameCount = 3;
+  for (const p of hello.body.players) p.isAi = false;
+  const m = {
+    yourDeck: { name: 'Pacho SHIELD (Marvel Super Heroes)', path: mine.path, cards: mine.cards },
+    opponentDeck: { name: 'Doom Legion (Marvel Super Heroes villains)', cards: theirs.cards },
+    opponent: 'human',
+    games: 3,
+    score: { you: 0, opponent: 1 },
+  };
+  edit(m, hello.body);
+  hello.body.match = m;
+};
+const tableProbe = (name, why, expect, mutate, headerOut = tableHeader()) => {
+  const fs = slice();
+  withTableMatch(fs, mutate);
+  const bytes = write(name, fs, headerOut);
+  manifest.push({ file: name, level: 'fail', expect, why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+};
+{
+  const fs = slice();
+  withTableMatch(fs);
+  write('m60-best-of-three-present.jsonl', fs, tableHeader());
+  manifest.push({
+    file: 'm60-best-of-three-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M60: one seat of game 2 of a best of three at a table of two, its consent in the header -- ' +
+      'the control for the m60 probes',
+  });
+  console.log('  PASS  m60-best-of-three-present.jsonl  (a well-formed best-of-three seat, no defect)');
+}
+
+tableProbe('m60-score-in-a-one-game-match.jsonl',
+  'amendment M60: score belongs to a best of three; a one-game table carries exactly M59\'s four keys',
+  'expected exactly yourDeck, opponentDeck, opponent, games',
+  (m, hello) => { m.games = 1; delete hello.gameNumber; delete hello.gameCount; });
+
+tableProbe('m60-score-not-a-count.jsonl',
+  'amendment M60: score is the games each side won before this one, 0 or 1 each -- never a list or a name',
+  'score must be exactly {you, opponent}',
+  (m) => { m.score = { you: 0, opponent: ['Doctor Doom'] }; });
+
+tableProbe('m60-score-ahead-of-the-game.jsonl',
+  'amendment M60: game 2 follows exactly one game, so the score cannot add up to two',
+  'is more games than came before game 2',
+  (m) => { m.score = { you: 1, opponent: 1 }; });
+
+{
+  const name = 'm60-record-not-a-boolean.jsonl';
+  const fs = slice();
+  withTableMatch(fs);
+  const bytes = write(name, fs, tableHeader((h) => { h.record = 'yes'; }));
+  const why = 'amendment M60 / D407: record is a seat\'s consent, true or false';
+  manifest.push({ file: name, level: 'fail', expect: '"record" must be true or false', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+}
+
+{
+  const name = 'm60-record-against-the-ai.jsonl';
+  const fs = slice();
+  const bytes = write(name, fs, { ...structuredClone(header), transport: 'ws', record: true });
+  const why = 'amendment M60 / D407: only a seat at a table of two says whether it may be recorded';
+  manifest.push({ file: name, level: 'fail', expect: '"record" without "humans": 2', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+}
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

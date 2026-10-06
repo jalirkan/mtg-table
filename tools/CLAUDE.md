@@ -170,7 +170,10 @@ holds idle for twice the limit must end in its concede's `over`; about 25 s, on
 `WSPORT+7`. **10i** (**D402**, **D403**, amendment M59) is a table of two: two
 automated seats (`--humans 2 --transport auto`) play a whole game, both seat
 logs through `check-redaction.mjs` and then `tools/check-seat-pair.mjs` against
-each other, and `tools/ws-two-humans.mjs` plays three scripted two-client games
+each other (since D406 that game is game 2 of a best of three: the previous
+game's loser is the one asked to play or draw and takes turn 1, both handshakes
+say 2 of 3 with the score from their side, the headers carry each seat's
+consent and `result.json` names the winner), and `tools/ws-two-humans.mjs` plays three scripted two-client games
 on the table port (`concede`, `claim`, `timeout`), each auditing its pair the
 same way; about two and a half minutes. Each of 10a–10g and 10h's second session is asserted for exactly one `over`,
 `over` last, and its log through `check-redaction.mjs` — including the CLIENT

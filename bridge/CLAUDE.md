@@ -122,7 +122,12 @@ where **every upgrade needs a seat's token, loopback included** — never give i
 the same token replaces the first (4002); a table seat's ask never times out and
 a disconnect cancels nothing, because an away player is waited for, not answered
 for. `/observe` is refused there. `--transport auto` and `null` seat two
-automated players for the gate (step 10i).
+automated players for the gate (step 10i). Since D406 a table's process is one
+game of the draft room's best of three: the seats file says where the match
+stands, `TableMatch.TableController` hands the coin-toss winner's play-or-draw
+question to the previous game's loser (Forge's own later-game rule), and
+`result.json` beside the seats file names the winning seat for the room; the
+header's `record` is that seat's consent (D407, amendment M60).
 
 **Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
 sent the instant `over` arrives is QUEUED** (**D114**, amendment **M45**): `over`

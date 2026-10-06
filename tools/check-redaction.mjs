@@ -1255,6 +1255,15 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     if (header.humans !== 2) note(1, `session header "humans" must be 2 when present (M59), got ${JSON.stringify(header.humans)}`);
     if (header.transport === undefined) note(1, 'session header "humans" without "transport" -- only a seat a person plays sits at a table of two (M59)');
   }
+  /*
+   * Amendment M60 (D407).  `record` is OPTIONAL and is this seat's consent to the
+   * human test set and the automatic review for this game: a boolean, and only at
+   * a table of two (a game against the AI is the owner's own, D369).
+   */
+  if (header.record !== undefined) {
+    if (typeof header.record !== 'boolean') note(1, `session header "record" must be true or false (M60), got ${JSON.stringify(header.record)}`);
+    if (!tableOfTwo) note(1, 'session header "record" without "humans": 2 -- only a seat at a table of two says whether it may be recorded (M60)');
+  }
 
   if (!Array.isArray(header.decks)) {
     note(1, 'session header "decks" is not an array');
@@ -1532,8 +1541,24 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   function auditTableMatch(body, m, lineNo, where) {
     stats.tableMatchChecked++;
     if (!tableOfTwo) note(lineNo, `${where}: a two-person match (opponent: "human") in a log whose session header has no humans: 2 (M59)`);
-    if (!sameKeys(m, ['yourDeck', 'opponentDeck', 'opponent', 'games'])) {
-      note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(m))}, expected exactly yourDeck, opponentDeck, opponent, games at a table of two (M59)`);
+    // Amendment M60 (D406): a game of a best of three adds `score`, the games each side won before it.
+    const bo3 = m.games === 3;
+    if (!sameKeys(m, ['yourDeck', 'opponentDeck', 'opponent', 'games', ...(bo3 ? ['score'] : [])])) {
+      note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(m))}, expected exactly yourDeck, opponentDeck, opponent, games at a table of two (M59)` +
+        (bo3 ? ', and score in a best of three (M60)' : ''));
+    }
+    if (bo3) {
+      const sc = m.score;
+      const won = (v) => Number.isInteger(v) && v >= 0 && v <= 1;
+      if (!plainObject(sc) || !sameKeys(sc, ['you', 'opponent']) || !won(sc.you) || !won(sc.opponent)) {
+        note(lineNo, `${where}: score must be exactly {you, opponent}, each 0 or 1 -- the games won before this one (M60), got ${JSON.stringify(sc)}`);
+      }
+      const n = body.gameNumber;
+      if (!Number.isInteger(n) || n < 1 || n > 3 || body.gameCount !== 3) {
+        note(lineNo, `${where}: a best of three's hello_ok carries gameNumber 1-3 and gameCount 3 (M41, M60), got ${JSON.stringify([n, body.gameCount])}`);
+      } else if (plainObject(sc) && won(sc.you) && won(sc.opponent) && sc.you + sc.opponent > n - 1) {
+        note(lineNo, `${where}: score ${sc.you}-${sc.opponent} is more games than came before game ${n} (M60)`);
+      }
     }
     if (m.opponent !== 'human') note(lineNo, `${where}: opponent must be "human" (M59), got ${JSON.stringify(m.opponent)}`);
     const count = (v) => Number.isInteger(v) && v >= 0;
@@ -1547,7 +1572,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       note(lineNo, `${where}: opponentDeck must be exactly {name, cards} -- the other person's decklist is ` +
         `hidden information (hard rule 8, M59), got ${JSON.stringify(od)}`);
     }
-    if (m.games !== 1) note(lineNo, `${where}: games must be 1 at a table of two (M59), got ${JSON.stringify(m.games)}`);
+    if (m.games !== 1 && m.games !== 3) note(lineNo, `${where}: games must be 1, or 3 for a best of three, at a table of two (M59, M60), got ${JSON.stringify(m.games)}`);
     if (!Array.isArray(body.players) || body.players.some((p) => !plainObject(p) || p.isAi !== false)) {
       note(lineNo, `${where}: every player at a table of two is a person (isAi: false) (M59)`);
     }
