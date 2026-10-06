@@ -1,0 +1,885 @@
+==== J096 run1 started 2026-10-06T06:07:59-04:00 in unit lab-J096-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7, lane 2
+coverage: 717 card(s) with games under var/cubelab/queue; uncertainty from var/ml/matchup/nights-1-2/power.tsv
+night 4: 38000 drafts (165 chunks), 1 game(s) a draft, grid, bridge share 0.2
+AI seats (D375): each drafter drawn per draft from Default:0.5,Reckless:0.25,Cautious:0.25; drafts.jsonl rows carry `profiles`
+play exploration (D358): share=0.15,epsilon=0.05,closecall=0.02,opening=off -- about 5700 drafts explore; win rates leave them out
+
+pool key                         weight    drafts
+normal/fair-fight                  0.182      4002
+normal/modern-era                  0.186      4084
+normal/omega                       0.161      3541
+normal/pauper                      0.224      4926
+normal/peasant                     0.284      6228
+normal/synergy                     0.194      4248
+normal/vintage                     0.154      3371
+bridge/pauper+modern-era           0.025       588
+bridge/peasant+modern-era          0.024       580
+bridge/peasant+synergy             0.024       557
+bridge/pauper+synergy              0.023       540
+bridge/fair-fight+modern-era       0.021       506
+bridge/fair-fight+synergy          0.019       456
+bridge/synergy+omega               0.018       415
+bridge/synergy+vintage             0.017       402
+bridge/pauper+omega                0.017       402
+bridge/pauper+vintage              0.017       396
+bridge/peasant+omega               0.016       389
+bridge/peasant+vintage             0.016       386
+bridge/fair-fight+vintage          0.015       352
+bridge/modern-era+vintage          0.015       347
+bridge/fair-fight+omega            0.014       332
+bridge/modern-era+omega            0.014       331
+bridge/pauper+peasant              0.010       236
+bridge/fair-fight+peasant          0.009       222
+bridge/modern-era+synergy          0.007       163
+
+bridge pairs (novelty = 1 - shared / smaller cube; link by power tier; unc = mean card variance / prior)
+  keep pauper+modern-era        novelty 0.91 link 1.0 unc 0.03 weight 0.025  adjacent tiers: chains the power levels; 17 cards shared
+  keep peasant+modern-era       novelty 0.88 link 1.0 unc 0.03 weight 0.024  adjacent tiers: chains the power levels; 22 cards shared
+  keep peasant+synergy          novelty 0.84 link 1.0 unc 0.03 weight 0.024  adjacent tiers: chains the power levels; 28 cards shared
+  keep pauper+synergy           novelty 0.82 link 1.0 unc 0.03 weight 0.023  adjacent tiers: chains the power levels; 32 cards shared
+  keep fair-fight+modern-era    novelty 0.76 link 1.0 unc 0.03 weight 0.021  adjacent tiers: chains the power levels; 43 cards shared
+  keep fair-fight+synergy       novelty 0.70 link 1.0 unc 0.03 weight 0.019  adjacent tiers: chains the power levels; 54 cards shared
+  keep synergy+omega            novelty 0.65 link 1.0 unc 0.03 weight 0.018  adjacent tiers: chains the power levels; 63 cards shared
+  keep synergy+vintage          novelty 0.66 link 1.0 unc 0.03 weight 0.017  adjacent tiers: chains the power levels; 62 cards shared
+  keep pauper+omega             novelty 0.90 link 0.7 unc 0.03 weight 0.017  flat with powered: lopsided games; 18 cards shared
+  keep pauper+vintage           novelty 0.92 link 0.7 unc 0.03 weight 0.017  flat with powered: lopsided games; 14 cards shared
+  keep peasant+omega            novelty 0.85 link 0.7 unc 0.03 weight 0.016  flat with powered: lopsided games; 27 cards shared
+  keep peasant+vintage          novelty 0.88 link 0.7 unc 0.03 weight 0.016  flat with powered: lopsided games; 22 cards shared
+  keep fair-fight+vintage       novelty 0.81 link 0.7 unc 0.03 weight 0.015  flat with powered: lopsided games; 35 cards shared
+  keep modern-era+vintage       novelty 0.57 link 1.0 unc 0.03 weight 0.015  adjacent tiers: chains the power levels; 78 cards shared
+  keep fair-fight+omega         novelty 0.72 link 0.7 unc 0.03 weight 0.014  flat with powered: lopsided games; 50 cards shared
+  keep modern-era+omega         novelty 0.51 link 1.0 unc 0.03 weight 0.014  adjacent tiers: chains the power levels; 88 cards shared
+  keep pauper+peasant           novelty 0.86 link 0.4 unc 0.03 weight 0.010  same power tier; 26 cards shared
+  keep fair-fight+peasant       novelty 0.81 link 0.4 unc 0.03 weight 0.009  same power tier; 34 cards shared
+  keep modern-era+synergy       novelty 0.63 link 0.4 unc 0.03 weight 0.007  same power tier; 66 cards shared
+  skip fair-fight+pauper        novelty 0.45 link 0.4 unc 0.03 weight 0.005  same power tier; 99 cards shared -- skipped: novelty × link 0.18 < 0.25, mostly the same pool
+  skip omega+vintage            novelty 0.40 link 0.4 unc 0.03 weight 0.004  same power tier; 108 cards shared -- skipped: novelty × link 0.16 < 0.25, mostly the same pool
+
+folders: var/cubelab/queue/normal/<cube>, var/cubelab/queue/bridge/<a>+<b>
+
+== chunk 1/165: normal/fair-fight, seeds 6084..6333
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 1 FAILED, carrying on: normal/fair-fight seeds 6084..6333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 2/165: normal/modern-era, seeds 6115..6364
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 2 FAILED, carrying on: normal/modern-era seeds 6115..6364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 3/165: normal/omega, seeds 5485..5734
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 3 FAILED, carrying on: normal/omega seeds 5485..5734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 4/165: normal/pauper, seeds 8778..9027
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 4 FAILED, carrying on: normal/pauper seeds 8778..9027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 5/165: normal/peasant, seeds 8740..8989
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 5 FAILED, carrying on: normal/peasant seeds 8740..8989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 6/165: normal/synergy, seeds 7387..7636
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 6 FAILED, carrying on: normal/synergy seeds 7387..7636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 7/165: normal/vintage, seeds 5418..5667
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 7 FAILED, carrying on: normal/vintage seeds 5418..5667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 8/165: bridge/pauper+modern-era, seeds 967..1216
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 8 FAILED, carrying on: bridge/pauper+modern-era seeds 967..1216: var/cubelab/queue/bridge/pauper+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 9/165: bridge/peasant+modern-era, seeds 852..1101
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 9 FAILED, carrying on: bridge/peasant+modern-era seeds 852..1101: var/cubelab/queue/bridge/peasant+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 10/165: bridge/peasant+synergy, seeds 876..1125
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 10 FAILED, carrying on: bridge/peasant+synergy seeds 876..1125: var/cubelab/queue/bridge/peasant+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 11/165: bridge/pauper+synergy, seeds 940..1189
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 11 FAILED, carrying on: bridge/pauper+synergy seeds 940..1189: var/cubelab/queue/bridge/pauper+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 12/165: bridge/fair-fight+modern-era, seeds 778..1027
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 12 FAILED, carrying on: bridge/fair-fight+modern-era seeds 778..1027: var/cubelab/queue/bridge/fair-fight+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 13/165: bridge/fair-fight+synergy, seeds 746..995
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 13 FAILED, carrying on: bridge/fair-fight+synergy seeds 746..995: var/cubelab/queue/bridge/fair-fight+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 14/165: bridge/synergy+omega, seeds 678..927
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 14 FAILED, carrying on: bridge/synergy+omega seeds 678..927: var/cubelab/queue/bridge/synergy+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 15/165: bridge/synergy+vintage, seeds 667..916
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 15 FAILED, carrying on: bridge/synergy+vintage seeds 667..916: var/cubelab/queue/bridge/synergy+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 16/165: bridge/pauper+omega, seeds 658..907
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 16 FAILED, carrying on: bridge/pauper+omega seeds 658..907: var/cubelab/queue/bridge/pauper+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 17/165: bridge/pauper+vintage, seeds 660..909
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 17 FAILED, carrying on: bridge/pauper+vintage seeds 660..909: var/cubelab/queue/bridge/pauper+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 18/165: bridge/peasant+omega, seeds 567..816
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 18 FAILED, carrying on: bridge/peasant+omega seeds 567..816: var/cubelab/queue/bridge/peasant+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 19/165: bridge/peasant+vintage, seeds 571..820
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 19 FAILED, carrying on: bridge/peasant+vintage seeds 571..820: var/cubelab/queue/bridge/peasant+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 20/165: bridge/fair-fight+vintage, seeds 545..794
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 20 FAILED, carrying on: bridge/fair-fight+vintage seeds 545..794: var/cubelab/queue/bridge/fair-fight+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 21/165: bridge/modern-era+vintage, seeds 528..777
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 21 FAILED, carrying on: bridge/modern-era+vintage seeds 528..777: var/cubelab/queue/bridge/modern-era+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 22/165: bridge/fair-fight+omega, seeds 506..755
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 22 FAILED, carrying on: bridge/fair-fight+omega seeds 506..755: var/cubelab/queue/bridge/fair-fight+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 23/165: bridge/modern-era+omega, seeds 500..749
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 23 FAILED, carrying on: bridge/modern-era+omega seeds 500..749: var/cubelab/queue/bridge/modern-era+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 24/165: bridge/pauper+peasant, seeds 381..616
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 24 FAILED, carrying on: bridge/pauper+peasant seeds 381..616: var/cubelab/queue/bridge/pauper+peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 25/165: bridge/fair-fight+peasant, seeds 333..554
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 25 FAILED, carrying on: bridge/fair-fight+peasant seeds 333..554: var/cubelab/queue/bridge/fair-fight+peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 26/165: bridge/modern-era+synergy, seeds 266..428
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 26 FAILED, carrying on: bridge/modern-era+synergy seeds 266..428: var/cubelab/queue/bridge/modern-era+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 27/165: normal/fair-fight, seeds 6334..6583
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 27 FAILED, carrying on: normal/fair-fight seeds 6334..6583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 28/165: normal/modern-era, seeds 6365..6614
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 28 FAILED, carrying on: normal/modern-era seeds 6365..6614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 29/165: normal/omega, seeds 5735..5984
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 29 FAILED, carrying on: normal/omega seeds 5735..5984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 30/165: normal/pauper, seeds 9028..9277
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 30 FAILED, carrying on: normal/pauper seeds 9028..9277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 31/165: normal/peasant, seeds 8990..9239
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 31 FAILED, carrying on: normal/peasant seeds 8990..9239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 32/165: normal/synergy, seeds 7637..7886
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 32 FAILED, carrying on: normal/synergy seeds 7637..7886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 33/165: normal/vintage, seeds 5668..5917
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 33 FAILED, carrying on: normal/vintage seeds 5668..5917: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 34/165: bridge/pauper+modern-era, seeds 1217..1466
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 34 FAILED, carrying on: bridge/pauper+modern-era seeds 1217..1466: var/cubelab/queue/bridge/pauper+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 35/165: bridge/peasant+modern-era, seeds 1102..1351
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 35 FAILED, carrying on: bridge/peasant+modern-era seeds 1102..1351: var/cubelab/queue/bridge/peasant+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 36/165: bridge/peasant+synergy, seeds 1126..1375
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 36 FAILED, carrying on: bridge/peasant+synergy seeds 1126..1375: var/cubelab/queue/bridge/peasant+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 37/165: bridge/pauper+synergy, seeds 1190..1439
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 37 FAILED, carrying on: bridge/pauper+synergy seeds 1190..1439: var/cubelab/queue/bridge/pauper+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 38/165: bridge/fair-fight+modern-era, seeds 1028..1277
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 38 FAILED, carrying on: bridge/fair-fight+modern-era seeds 1028..1277: var/cubelab/queue/bridge/fair-fight+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 39/165: bridge/fair-fight+synergy, seeds 996..1201
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 39 FAILED, carrying on: bridge/fair-fight+synergy seeds 996..1201: var/cubelab/queue/bridge/fair-fight+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 40/165: bridge/synergy+omega, seeds 928..1092
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 40 FAILED, carrying on: bridge/synergy+omega seeds 928..1092: var/cubelab/queue/bridge/synergy+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 41/165: bridge/synergy+vintage, seeds 917..1068
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 41 FAILED, carrying on: bridge/synergy+vintage seeds 917..1068: var/cubelab/queue/bridge/synergy+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 42/165: bridge/pauper+omega, seeds 908..1059
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 42 FAILED, carrying on: bridge/pauper+omega seeds 908..1059: var/cubelab/queue/bridge/pauper+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 43/165: bridge/pauper+vintage, seeds 910..1055
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 43 FAILED, carrying on: bridge/pauper+vintage seeds 910..1055: var/cubelab/queue/bridge/pauper+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 44/165: bridge/peasant+omega, seeds 817..955
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 44 FAILED, carrying on: bridge/peasant+omega seeds 817..955: var/cubelab/queue/bridge/peasant+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 45/165: bridge/peasant+vintage, seeds 821..956
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 45 FAILED, carrying on: bridge/peasant+vintage seeds 821..956: var/cubelab/queue/bridge/peasant+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 46/165: bridge/fair-fight+vintage, seeds 795..896
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 46 FAILED, carrying on: bridge/fair-fight+vintage seeds 795..896: var/cubelab/queue/bridge/fair-fight+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 47/165: bridge/modern-era+vintage, seeds 778..874
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 47 FAILED, carrying on: bridge/modern-era+vintage seeds 778..874: var/cubelab/queue/bridge/modern-era+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 48/165: bridge/fair-fight+omega, seeds 756..837
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 48 FAILED, carrying on: bridge/fair-fight+omega seeds 756..837: var/cubelab/queue/bridge/fair-fight+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 49/165: bridge/modern-era+omega, seeds 750..830
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 49 FAILED, carrying on: bridge/modern-era+omega seeds 750..830: var/cubelab/queue/bridge/modern-era+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 50/165: normal/fair-fight, seeds 6584..6833
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 50 FAILED, carrying on: normal/fair-fight seeds 6584..6833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 51/165: normal/modern-era, seeds 6615..6864
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 51 FAILED, carrying on: normal/modern-era seeds 6615..6864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 52/165: normal/omega, seeds 5985..6234
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 52 FAILED, carrying on: normal/omega seeds 5985..6234: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 53/165: normal/pauper, seeds 9278..9527
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 53 FAILED, carrying on: normal/pauper seeds 9278..9527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 54/165: normal/peasant, seeds 9240..9489
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 54 FAILED, carrying on: normal/peasant seeds 9240..9489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 55/165: normal/synergy, seeds 7887..8136
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 55 FAILED, carrying on: normal/synergy seeds 7887..8136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 56/165: normal/vintage, seeds 5918..6167
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 56 FAILED, carrying on: normal/vintage seeds 5918..6167: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 57/165: bridge/pauper+modern-era, seeds 1467..1554
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 57 FAILED, carrying on: bridge/pauper+modern-era seeds 1467..1554: var/cubelab/queue/bridge/pauper+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 58/165: bridge/peasant+modern-era, seeds 1352..1431
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 58 FAILED, carrying on: bridge/peasant+modern-era seeds 1352..1431: var/cubelab/queue/bridge/peasant+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 59/165: bridge/peasant+synergy, seeds 1376..1432
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 59 FAILED, carrying on: bridge/peasant+synergy seeds 1376..1432: var/cubelab/queue/bridge/peasant+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 60/165: bridge/pauper+synergy, seeds 1440..1479
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 60 FAILED, carrying on: bridge/pauper+synergy seeds 1440..1479: var/cubelab/queue/bridge/pauper+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 61/165: bridge/fair-fight+modern-era, seeds 1278..1283
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 61 FAILED, carrying on: bridge/fair-fight+modern-era seeds 1278..1283: var/cubelab/queue/bridge/fair-fight+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 62/165: normal/fair-fight, seeds 6834..7083
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 62 FAILED, carrying on: normal/fair-fight seeds 6834..7083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 63/165: normal/modern-era, seeds 6865..7114
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 63 FAILED, carrying on: normal/modern-era seeds 6865..7114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 64/165: normal/omega, seeds 6235..6484
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 64 FAILED, carrying on: normal/omega seeds 6235..6484: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 65/165: normal/pauper, seeds 9528..9777
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 65 FAILED, carrying on: normal/pauper seeds 9528..9777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 66/165: normal/peasant, seeds 9490..9739
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 66 FAILED, carrying on: normal/peasant seeds 9490..9739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 67/165: normal/synergy, seeds 8137..8386
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 67 FAILED, carrying on: normal/synergy seeds 8137..8386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 68/165: normal/vintage, seeds 6168..6417
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 68 FAILED, carrying on: normal/vintage seeds 6168..6417: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 69/165: normal/fair-fight, seeds 7084..7333
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 69 FAILED, carrying on: normal/fair-fight seeds 7084..7333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 70/165: normal/modern-era, seeds 7115..7364
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 70 FAILED, carrying on: normal/modern-era seeds 7115..7364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 71/165: normal/omega, seeds 6485..6734
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 71 FAILED, carrying on: normal/omega seeds 6485..6734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 72/165: normal/pauper, seeds 9778..10027
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 72 FAILED, carrying on: normal/pauper seeds 9778..10027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 73/165: normal/peasant, seeds 9740..9989
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 73 FAILED, carrying on: normal/peasant seeds 9740..9989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 74/165: normal/synergy, seeds 8387..8636
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 74 FAILED, carrying on: normal/synergy seeds 8387..8636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 75/165: normal/vintage, seeds 6418..6667
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 75 FAILED, carrying on: normal/vintage seeds 6418..6667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 76/165: normal/fair-fight, seeds 7334..7583
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 76 FAILED, carrying on: normal/fair-fight seeds 7334..7583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 77/165: normal/modern-era, seeds 7365..7614
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 77 FAILED, carrying on: normal/modern-era seeds 7365..7614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 78/165: normal/omega, seeds 6735..6984
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 78 FAILED, carrying on: normal/omega seeds 6735..6984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 79/165: normal/pauper, seeds 10028..10277
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 79 FAILED, carrying on: normal/pauper seeds 10028..10277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 80/165: normal/peasant, seeds 9990..10239
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 80 FAILED, carrying on: normal/peasant seeds 9990..10239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 81/165: normal/synergy, seeds 8637..8886
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 81 FAILED, carrying on: normal/synergy seeds 8637..8886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 82/165: normal/vintage, seeds 6668..6917
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 82 FAILED, carrying on: normal/vintage seeds 6668..6917: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 83/165: normal/fair-fight, seeds 7584..7833
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 83 FAILED, carrying on: normal/fair-fight seeds 7584..7833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 84/165: normal/modern-era, seeds 7615..7864
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 84 FAILED, carrying on: normal/modern-era seeds 7615..7864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 85/165: normal/omega, seeds 6985..7234
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 85 FAILED, carrying on: normal/omega seeds 6985..7234: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 86/165: normal/pauper, seeds 10278..10527
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 86 FAILED, carrying on: normal/pauper seeds 10278..10527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 87/165: normal/peasant, seeds 10240..10489
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 87 FAILED, carrying on: normal/peasant seeds 10240..10489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 88/165: normal/synergy, seeds 8887..9136
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 88 FAILED, carrying on: normal/synergy seeds 8887..9136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 89/165: normal/vintage, seeds 6918..7167
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 89 FAILED, carrying on: normal/vintage seeds 6918..7167: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 90/165: normal/fair-fight, seeds 7834..8083
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 90 FAILED, carrying on: normal/fair-fight seeds 7834..8083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 91/165: normal/modern-era, seeds 7865..8114
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 91 FAILED, carrying on: normal/modern-era seeds 7865..8114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 92/165: normal/omega, seeds 7235..7484
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 92 FAILED, carrying on: normal/omega seeds 7235..7484: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 93/165: normal/pauper, seeds 10528..10777
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 93 FAILED, carrying on: normal/pauper seeds 10528..10777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 94/165: normal/peasant, seeds 10490..10739
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 94 FAILED, carrying on: normal/peasant seeds 10490..10739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 95/165: normal/synergy, seeds 9137..9386
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 95 FAILED, carrying on: normal/synergy seeds 9137..9386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 96/165: normal/vintage, seeds 7168..7417
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 96 FAILED, carrying on: normal/vintage seeds 7168..7417: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 97/165: normal/fair-fight, seeds 8084..8333
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 97 FAILED, carrying on: normal/fair-fight seeds 8084..8333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 98/165: normal/modern-era, seeds 8115..8364
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 98 FAILED, carrying on: normal/modern-era seeds 8115..8364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 99/165: normal/omega, seeds 7485..7734
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 99 FAILED, carrying on: normal/omega seeds 7485..7734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 100/165: normal/pauper, seeds 10778..11027
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 100 FAILED, carrying on: normal/pauper seeds 10778..11027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 101/165: normal/peasant, seeds 10740..10989
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 101 FAILED, carrying on: normal/peasant seeds 10740..10989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 102/165: normal/synergy, seeds 9387..9636
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 102 FAILED, carrying on: normal/synergy seeds 9387..9636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 103/165: normal/vintage, seeds 7418..7667
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 103 FAILED, carrying on: normal/vintage seeds 7418..7667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 104/165: normal/fair-fight, seeds 8334..8583
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 104 FAILED, carrying on: normal/fair-fight seeds 8334..8583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 105/165: normal/modern-era, seeds 8365..8614
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 105 FAILED, carrying on: normal/modern-era seeds 8365..8614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 106/165: normal/omega, seeds 7735..7984
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 106 FAILED, carrying on: normal/omega seeds 7735..7984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 107/165: normal/pauper, seeds 11028..11277
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 107 FAILED, carrying on: normal/pauper seeds 11028..11277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 108/165: normal/peasant, seeds 10990..11239
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 108 FAILED, carrying on: normal/peasant seeds 10990..11239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 109/165: normal/synergy, seeds 9637..9886
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 109 FAILED, carrying on: normal/synergy seeds 9637..9886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 110/165: normal/vintage, seeds 7668..7917
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 110 FAILED, carrying on: normal/vintage seeds 7668..7917: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 111/165: normal/fair-fight, seeds 8584..8833
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 111 FAILED, carrying on: normal/fair-fight seeds 8584..8833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 112/165: normal/modern-era, seeds 8615..8864
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 112 FAILED, carrying on: normal/modern-era seeds 8615..8864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 113/165: normal/omega, seeds 7985..8234
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 113 FAILED, carrying on: normal/omega seeds 7985..8234: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 114/165: normal/pauper, seeds 11278..11527
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 114 FAILED, carrying on: normal/pauper seeds 11278..11527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 115/165: normal/peasant, seeds 11240..11489
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 115 FAILED, carrying on: normal/peasant seeds 11240..11489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 116/165: normal/synergy, seeds 9887..10136
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 116 FAILED, carrying on: normal/synergy seeds 9887..10136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 117/165: normal/vintage, seeds 7918..8167
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 117 FAILED, carrying on: normal/vintage seeds 7918..8167: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 118/165: normal/fair-fight, seeds 8834..9083
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 118 FAILED, carrying on: normal/fair-fight seeds 8834..9083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 119/165: normal/modern-era, seeds 8865..9114
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 119 FAILED, carrying on: normal/modern-era seeds 8865..9114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 120/165: normal/omega, seeds 8235..8484
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 120 FAILED, carrying on: normal/omega seeds 8235..8484: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 121/165: normal/pauper, seeds 11528..11777
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 121 FAILED, carrying on: normal/pauper seeds 11528..11777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 122/165: normal/peasant, seeds 11490..11739
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 122 FAILED, carrying on: normal/peasant seeds 11490..11739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 123/165: normal/synergy, seeds 10137..10386
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 123 FAILED, carrying on: normal/synergy seeds 10137..10386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 124/165: normal/vintage, seeds 8168..8417
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 124 FAILED, carrying on: normal/vintage seeds 8168..8417: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 125/165: normal/fair-fight, seeds 9084..9333
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 125 FAILED, carrying on: normal/fair-fight seeds 9084..9333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 126/165: normal/modern-era, seeds 9115..9364
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 126 FAILED, carrying on: normal/modern-era seeds 9115..9364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 127/165: normal/omega, seeds 8485..8734
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 127 FAILED, carrying on: normal/omega seeds 8485..8734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 128/165: normal/pauper, seeds 11778..12027
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 128 FAILED, carrying on: normal/pauper seeds 11778..12027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 129/165: normal/peasant, seeds 11740..11989
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 129 FAILED, carrying on: normal/peasant seeds 11740..11989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 130/165: normal/synergy, seeds 10387..10636
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 130 FAILED, carrying on: normal/synergy seeds 10387..10636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 131/165: normal/vintage, seeds 8418..8667
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 131 FAILED, carrying on: normal/vintage seeds 8418..8667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 132/165: normal/fair-fight, seeds 9334..9583
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 132 FAILED, carrying on: normal/fair-fight seeds 9334..9583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 133/165: normal/modern-era, seeds 9365..9614
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 133 FAILED, carrying on: normal/modern-era seeds 9365..9614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 134/165: normal/omega, seeds 8735..8984
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 134 FAILED, carrying on: normal/omega seeds 8735..8984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 135/165: normal/pauper, seeds 12028..12277
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 135 FAILED, carrying on: normal/pauper seeds 12028..12277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 136/165: normal/peasant, seeds 11990..12239
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 136 FAILED, carrying on: normal/peasant seeds 11990..12239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 137/165: normal/synergy, seeds 10637..10886
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 137 FAILED, carrying on: normal/synergy seeds 10637..10886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 138/165: normal/vintage, seeds 8668..8788
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 138 FAILED, carrying on: normal/vintage seeds 8668..8788: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 139/165: normal/fair-fight, seeds 9584..9833
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 139 FAILED, carrying on: normal/fair-fight seeds 9584..9833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 140/165: normal/modern-era, seeds 9615..9864
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 140 FAILED, carrying on: normal/modern-era seeds 9615..9864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 141/165: normal/omega, seeds 8985..9025
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 141 FAILED, carrying on: normal/omega seeds 8985..9025: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 142/165: normal/pauper, seeds 12278..12527
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 142 FAILED, carrying on: normal/pauper seeds 12278..12527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 143/165: normal/peasant, seeds 12240..12489
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 143 FAILED, carrying on: normal/peasant seeds 12240..12489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 144/165: normal/synergy, seeds 10887..11136
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 144 FAILED, carrying on: normal/synergy seeds 10887..11136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 145/165: normal/fair-fight, seeds 9834..10083
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 145 FAILED, carrying on: normal/fair-fight seeds 9834..10083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 146/165: normal/modern-era, seeds 9865..10114
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 146 FAILED, carrying on: normal/modern-era seeds 9865..10114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 147/165: normal/pauper, seeds 12528..12777
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 147 FAILED, carrying on: normal/pauper seeds 12528..12777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 148/165: normal/peasant, seeds 12490..12739
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 148 FAILED, carrying on: normal/peasant seeds 12490..12739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 149/165: normal/synergy, seeds 11137..11386
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 149 FAILED, carrying on: normal/synergy seeds 11137..11386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 150/165: normal/fair-fight, seeds 10084..10085
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 150 FAILED, carrying on: normal/fair-fight seeds 10084..10085: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 151/165: normal/modern-era, seeds 10115..10198
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 151 FAILED, carrying on: normal/modern-era seeds 10115..10198: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 152/165: normal/pauper, seeds 12778..13027
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 152 FAILED, carrying on: normal/pauper seeds 12778..13027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 153/165: normal/peasant, seeds 12740..12989
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 153 FAILED, carrying on: normal/peasant seeds 12740..12989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 154/165: normal/synergy, seeds 11387..11634
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 154 FAILED, carrying on: normal/synergy seeds 11387..11634: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 155/165: normal/pauper, seeds 13028..13277
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 155 FAILED, carrying on: normal/pauper seeds 13028..13277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 156/165: normal/peasant, seeds 12990..13239
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 156 FAILED, carrying on: normal/peasant seeds 12990..13239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 157/165: normal/pauper, seeds 13278..13527
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 157 FAILED, carrying on: normal/pauper seeds 13278..13527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 158/165: normal/peasant, seeds 13240..13489
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 158 FAILED, carrying on: normal/peasant seeds 13240..13489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 159/165: normal/pauper, seeds 13528..13703
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 159 FAILED, carrying on: normal/pauper seeds 13528..13703: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 160/165: normal/peasant, seeds 13490..13739
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 160 FAILED, carrying on: normal/peasant seeds 13490..13739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 161/165: normal/peasant, seeds 13740..13989
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 161 FAILED, carrying on: normal/peasant seeds 13740..13989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 162/165: normal/peasant, seeds 13990..14239
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 162 FAILED, carrying on: normal/peasant seeds 13990..14239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 163/165: normal/peasant, seeds 14240..14489
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 163 FAILED, carrying on: normal/peasant seeds 14240..14489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 164/165: normal/peasant, seeds 14490..14739
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 164 FAILED, carrying on: normal/peasant seeds 14490..14739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+== chunk 165/165: normal/peasant, seeds 14740..14967
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+chunk 165 FAILED, carrying on: normal/peasant seeds 14740..14967: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+
+night 4: 165 chunk(s) failed -- run the same line again to retry them:
+  normal/fair-fight seeds 6084..6333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 6115..6364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 5485..5734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 8778..9027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 8740..8989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 7387..7636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 5418..5667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+modern-era seeds 967..1216: var/cubelab/queue/bridge/pauper+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+modern-era seeds 852..1101: var/cubelab/queue/bridge/peasant+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+synergy seeds 876..1125: var/cubelab/queue/bridge/peasant+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+synergy seeds 940..1189: var/cubelab/queue/bridge/pauper+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+modern-era seeds 778..1027: var/cubelab/queue/bridge/fair-fight+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+synergy seeds 746..995: var/cubelab/queue/bridge/fair-fight+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/synergy+omega seeds 678..927: var/cubelab/queue/bridge/synergy+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/synergy+vintage seeds 667..916: var/cubelab/queue/bridge/synergy+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+omega seeds 658..907: var/cubelab/queue/bridge/pauper+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+vintage seeds 660..909: var/cubelab/queue/bridge/pauper+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+omega seeds 567..816: var/cubelab/queue/bridge/peasant+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+vintage seeds 571..820: var/cubelab/queue/bridge/peasant+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+vintage seeds 545..794: var/cubelab/queue/bridge/fair-fight+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/modern-era+vintage seeds 528..777: var/cubelab/queue/bridge/modern-era+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+omega seeds 506..755: var/cubelab/queue/bridge/fair-fight+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/modern-era+omega seeds 500..749: var/cubelab/queue/bridge/modern-era+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+peasant seeds 381..616: var/cubelab/queue/bridge/pauper+peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+peasant seeds 333..554: var/cubelab/queue/bridge/fair-fight+peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/modern-era+synergy seeds 266..428: var/cubelab/queue/bridge/modern-era+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 6334..6583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 6365..6614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 5735..5984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 9028..9277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 8990..9239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 7637..7886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 5668..5917: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+modern-era seeds 1217..1466: var/cubelab/queue/bridge/pauper+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+modern-era seeds 1102..1351: var/cubelab/queue/bridge/peasant+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+synergy seeds 1126..1375: var/cubelab/queue/bridge/peasant+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+synergy seeds 1190..1439: var/cubelab/queue/bridge/pauper+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+modern-era seeds 1028..1277: var/cubelab/queue/bridge/fair-fight+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+synergy seeds 996..1201: var/cubelab/queue/bridge/fair-fight+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/synergy+omega seeds 928..1092: var/cubelab/queue/bridge/synergy+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/synergy+vintage seeds 917..1068: var/cubelab/queue/bridge/synergy+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+omega seeds 908..1059: var/cubelab/queue/bridge/pauper+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+vintage seeds 910..1055: var/cubelab/queue/bridge/pauper+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+omega seeds 817..955: var/cubelab/queue/bridge/peasant+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+vintage seeds 821..956: var/cubelab/queue/bridge/peasant+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+vintage seeds 795..896: var/cubelab/queue/bridge/fair-fight+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/modern-era+vintage seeds 778..874: var/cubelab/queue/bridge/modern-era+vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+omega seeds 756..837: var/cubelab/queue/bridge/fair-fight+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/modern-era+omega seeds 750..830: var/cubelab/queue/bridge/modern-era+omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 6584..6833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 6615..6864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 5985..6234: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 9278..9527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 9240..9489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 7887..8136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 5918..6167: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+modern-era seeds 1467..1554: var/cubelab/queue/bridge/pauper+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+modern-era seeds 1352..1431: var/cubelab/queue/bridge/peasant+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/peasant+synergy seeds 1376..1432: var/cubelab/queue/bridge/peasant+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/pauper+synergy seeds 1440..1479: var/cubelab/queue/bridge/pauper+synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  bridge/fair-fight+modern-era seeds 1278..1283: var/cubelab/queue/bridge/fair-fight+modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 6834..7083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 6865..7114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 6235..6484: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 9528..9777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 9490..9739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 8137..8386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 6168..6417: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 7084..7333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 7115..7364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 6485..6734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 9778..10027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 9740..9989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 8387..8636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 6418..6667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 7334..7583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 7365..7614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 6735..6984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 10028..10277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 9990..10239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 8637..8886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 6668..6917: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 7584..7833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 7615..7864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 6985..7234: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 10278..10527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 10240..10489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 8887..9136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 6918..7167: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 7834..8083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 7865..8114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 7235..7484: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 10528..10777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 10490..10739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 9137..9386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 7168..7417: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 8084..8333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 8115..8364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 7485..7734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 10778..11027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 10740..10989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 9387..9636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 7418..7667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 8334..8583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 8365..8614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 7735..7984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 11028..11277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 10990..11239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 9637..9886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 7668..7917: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 8584..8833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 8615..8864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 7985..8234: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 11278..11527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 11240..11489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 9887..10136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 7918..8167: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 8834..9083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 8865..9114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 8235..8484: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 11528..11777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 11490..11739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 10137..10386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 8168..8417: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 9084..9333: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 9115..9364: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 8485..8734: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 11778..12027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 11740..11989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 10387..10636: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 8418..8667: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 9334..9583: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 9365..9614: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 8735..8984: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 12028..12277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 11990..12239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 10637..10886: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/vintage seeds 8668..8788: var/cubelab/queue/normal/vintage holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 9584..9833: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 9615..9864: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/omega seeds 8985..9025: var/cubelab/queue/normal/omega holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 12278..12527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 12240..12489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 10887..11136: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 9834..10083: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 9865..10114: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 12528..12777: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 12490..12739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 11137..11386: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/fair-fight seeds 10084..10085: var/cubelab/queue/normal/fair-fight holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/modern-era seeds 10115..10198: var/cubelab/queue/normal/modern-era holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 12778..13027: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 12740..12989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/synergy seeds 11387..11634: var/cubelab/queue/normal/synergy holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 13028..13277: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 12990..13239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 13278..13527: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 13240..13489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/pauper seeds 13528..13703: var/cubelab/queue/normal/pauper holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 13490..13739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 13740..13989: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 13990..14239: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 14240..14489: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 14490..14739: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
+  normal/peasant seeds 14740..14967: var/cubelab/queue/normal/peasant holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out
