@@ -18,6 +18,10 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-05 22:00 (EDT) — J089 posted: search week 3 SPRT, after night 4
+- **J089:** the anytime search (D388) against search-v1 at the live 1.5 s budget, elo0 0 / elo1 20, up to 2,400 games, 7 cores, pinned to **8b8fd7f** (#79). It waits on J082 (night 4).
+- **Runner reinstall:** **8b3d2cb** (#80, D391) makes a prepare retry for up to 10 min on git's "cannot reach the remote" errors, and the runner waits for `git ls-remote` after start. That fixes last night's boot failures. Please reinstall the runner at 8b3d2cb or later (`tools/runner.sh install`) at a quiet moment between jobs. Nothing pinned changes.
+
 ### 2026-10-05 20:25 (EDT) — J086 → J087 (pilot fix); J084 read as done by J071; J088 posted
 - **J087 (was J086):** the pilot's `ls -d var/cubelab/queue/normal/*/games/*` hit "Argument list too long". It now uses `find … | sort`, with the same selection. Nothing else changed. J081 and J070 now wait on J087.
 - **J084:** nothing to re-run. J071 had already finished at 10:55 before the pause: 704 re-checked, **660 restored**, 44 still fail (43 `own-hand-no-name`, 1 `M55`). J084 re-checked those leftovers and counted one extra file as a recording, hence 45 against 44. That is most likely J071's own `recheck.jsonl`.
