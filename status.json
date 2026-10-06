@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-06T13:58:29-04:00",
- "heartbeat": "2026-10-06T13:58:29-04:00",
+ "updated": "2026-10-06T14:03:05-04:00",
+ "heartbeat": "2026-10-06T14:03:05-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 10.37,
-  "memUsedGb": 15.9,
+  "load1": 18.08,
+  "memUsedGb": 14.8,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2911,
+  "swapUsedMb": 2912,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,23 +26,23 @@
    "cpu": "heavy",
    "phase": "commands 1/3",
    "started": "2026-10-06T08:06:30-04:00",
-   "elapsed": 21119,
-   "done": 26504,
+   "elapsed": 21395,
+   "done": 26940,
    "total": 38000,
    "unit": "drafts",
-   "ratePerHour": 3514.6,
-   "eta": "2026-10-06T17:14:44-04:00",
+   "ratePerHour": 4237.6,
+   "eta": "2026-10-06T16:39:41-04:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-06T13:57:36-04:00",
-   "memGb": 11.62,
+   "dataUpdated": "2026-10-06T14:02:55-04:00",
+   "memGb": 10.77,
    "live": {
-    "night.night_drafts_done": 26504,
+    "night.night_drafts_done": 26940,
     "night.planned_drafts": 38000,
-    "night.bridge_share": 0.2867,
+    "night.bridge_share": 0.2821,
     "quarantined": 0,
     "base.bytes_ratio_explore_plain": 1.010364,
     "base.drafts": 60000,
@@ -90,7 +90,7 @@
    "cubes": [
     {
      "id": "fair-fight",
-     "done": 2750,
+     "done": 2840,
      "planned": 4002
     },
     {
@@ -115,12 +115,12 @@
     },
     {
      "id": "synergy",
-     "done": 2654,
+     "done": 2750,
      "planned": 4248
     },
     {
      "id": "vintage",
-     "done": 2500,
+     "done": 2750,
      "planned": 3371
     }
    ],
