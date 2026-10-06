@@ -11,7 +11,9 @@
 //
 // At each job END (done, failed, aborted) the runner appends one entry to `ledger.jsonl` and
 // `LEDGER.md` at the root of pc-results, in the commit that carries the job's STATUS.  The
-// ledger is never part of the public lab-status copy.
+// ledger itself is never part of the public lab-status copy; only ledgerpublic.ts's allowlisted,
+// numbers-only `ledger.json` is (D387, amending D366), and a job's words reach it only through
+// its opt-in `public_title:` / `public_decides:` lines.
 //
 // FOLLOW-UPS.  The runner only reads pc-jobs, so it never posts a job.  When a job with
 // `followup:` ends `done`:
@@ -109,6 +111,11 @@ export interface LedgerEntry {
   followups: FollowupState[];
   /** The commits the job ran on. */
   commits: Record<string, string>;
+  /** The job file's opt-in public words (`public_title:`, `public_decides:`), for ledgerpublic.ts (D387); absent in older entries. */
+  publicTitle?: string | null;
+  publicDecides?: string | null;
+  /** How many `check:` lines the job file had (its pilot's and its commands'), D387; absent in older entries. */
+  checks?: number;
 }
 
 /** The ledger's outcome for a runner outcome, or null when it is not an end (waiting, skipped). */
@@ -135,6 +142,7 @@ export function followupStates(id: string, outcome: LedgerOutcome, followups: Fo
 export function ledgerEntry(o: {
   id: string; title: string; ledger: LedgerHeaders | null; state: string; reason: string; finished: string;
   headlineKeys: string[]; numbers: Record<string, number>; metrics: Record<string, unknown>; commits: Record<string, string>; posted: PostedJobs;
+  publicTitle?: string | null; publicDecides?: string | null; checks?: number;
 }): LedgerEntry | null {
   const outcome = ledgerOutcome(o.state, o.reason);
   if (!outcome) return null;
@@ -148,6 +156,7 @@ export function ledgerEntry(o: {
     key: `${o.id}@${o.finished}`, id: o.id, title: oneLine(o.title), decides: l?.decides ?? null, hypothesis: l?.hypothesis ?? null, rule: l?.rule ?? null,
     outcome, reason: outcome === 'done' ? '' : oneLine(o.reason), headline, summary: `results/${o.id}/summary.md`, finished: o.finished,
     followups: followupStates(o.id, outcome, l?.followups ?? [], o.posted), commits: { ...o.commits },
+    publicTitle: o.publicTitle ?? null, publicDecides: o.publicDecides ?? null, checks: o.checks ?? 0,
   };
 }
 

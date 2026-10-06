@@ -12,6 +12,7 @@
 //   GET /public-status.json   the public status.json (also at /status.json, its old path)
 //   GET /public-ladder.json   the public ladder.json, 404 when there is none
 //   GET /public-warehouse.json   the public warehouse.json (D363), 404 when there is none
+//   GET /public-ledger.json   the public ledger.json (D387), 404 when there is none
 //
 // CORS names the site's origin and localhost dev origins only, never `*`; an
 // Origin outside the list is refused (403).  A request without an Origin
@@ -42,6 +43,8 @@ export interface StatusSource {
   ladder(): string | null;
   /** The sanitised warehouse.json text, or null (optional: absent, never served). */
   warehouse?(): string | null;
+  /** The public ledger.json text (D387), or null (optional: absent, never served). */
+  ledger?(): string | null;
 }
 
 export interface Reply { status: number; headers: Record<string, string>; body: string }
@@ -72,6 +75,10 @@ export function answer(method: string, url: string, headers: Record<string, stri
   if (p === '/public-warehouse.json') {
     const text = src.warehouse?.() ?? null;
     return text ? { status: 200, headers: h, body: text.trimEnd() } : { status: 404, headers: h, body: '{"error":"no warehouse summary"}' };
+  }
+  if (p === '/public-ledger.json') {
+    const text = src.ledger?.() ?? null;
+    return text ? { status: 200, headers: h, body: text.trimEnd() } : { status: 404, headers: h, body: '{"error":"no ledger"}' };
   }
   return { status: 404, headers: h, body: '{}' };
 }

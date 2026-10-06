@@ -57,7 +57,7 @@ above and `rm -rf ~/code/lab/runner`. Running jobs are units of their own:
 | `~/code/lab/mtg-table-light/`, `~/code/lab/ForgeCoach-light/` | the light jobs' clones, so a light job beside a heavy one never moves its checkout |
 | `~/code/lab/mtg-table-lane2/`, `…-lane3/` (and `ForgeCoach-lane<k>`) | the clones of a heavy job started beside another (co-scheduling, below): its own commit and build; its `var/` is a symlink to `~/code/lab/mtg-table/var`, so all outputs stay in one place |
 | `~/code/lab/pc-results/` | the runner's worktree of `pc-results` (branch `lab-pc-results`, pushed to `pc-results`) |
-| `~/code/lab/lab-status/` | the public copy: one orphan commit with `status.json`, `ladder.json` and `warehouse.json`, force-pushed to `jalirkan/ForgeCoach` `lab-status` |
+| `~/code/lab/lab-status/` | the public copy: one orphan commit with `status.json`, `ladder.json`, `warehouse.json` and `ledger.json`, force-pushed to `jalirkan/ForgeCoach` `lab-status` |
 
 Justin's checkouts (`~/code/mtg-table`, `~/code/ForgeCoach`) are never checked out, built
 or written. They are only the reference the clones borrow objects from
@@ -391,7 +391,7 @@ copy adds `detail` fields (unit names, reasons) and `runner`.
 
 **The public copy** goes to the orphan branch `lab-status` of the public
 `jalirkan/ForgeCoach`. It is one commit, replaced on each push, holding `status.json`,
-`ladder.json` and `warehouse.json`, for the `#lab` pages. `--public-status off` turns it off. `status.json` is
+`ladder.json`, `warehouse.json` and `ledger.json`, for the `#lab` pages. `--public-status off` turns it off. `status.json` is
 rebuilt field by field from an allowlist (`sanitise`): job ids, numbers, timestamps, and
 words from fixed sets (phase, status, reason, event kind). **A job's title and estimate
 appear only when its file opts in** with `public_title:` / `public_est:`, written with
@@ -417,13 +417,21 @@ counts, archive and disk sizes, and per cube its counts, colour-pair rates and t
 bottom 25 cards by win rate. Counts must be non-negative integers and rates in [0, 1] (a row
 with one outside is dropped); a table, cube or pair is a token; a card name is letters,
 digits, spaces and card-name punctuation, at most 60 characters, with `/` only as a split
-card's ` // `. Any other key is dropped. It too is published whenever the file changes. A
+card's ` // `. Any other key is dropped. It too is published whenever the file changes.
+`ledger.json` (D387) is the decision ledger's public copy, made from `ledger.jsonl` in the
+pc-results worktree through `tools/runner/ledgerpublic.ts`, for ForgeCoach's morning report:
+the newest 100 entries, each with its id, the opt-in `public_title:` / `public_decides:` (else
+null), the rule's D-numbers, `gate N` and `*_RULE` names only, the outcome, a cause word for a
+failure (never the reason), whether it had `check:` lines, its headline numbers, its finish
+time and its follow-ups as job ids or template names. It is written only when there is an
+entry, and published whenever `ledger.jsonl` changes. A
 field a page starts to need is a line in both allowlists, in the same change.
 
 **The local server.** The daemon also serves the public copies, and only those, on
 `http://127.0.0.1:8645` (`--http-port`, 0 turns it off; `tools/runner/serve.ts`):
 `/public-status.json` (also at its old path `/status.json`), `/public-ladder.json`
-(404 when there is no ladder) and `/public-warehouse.json` (404 when there is no summary). They are the same sanitised documents `lab-status` carries,
+(404 when there is no ladder), `/public-warehouse.json` (404 when there is no summary) and
+`/public-ledger.json` (404 when there is no ledger entry). They are the same sanitised documents `lab-status` carries,
 made fresh on each request, so the `#lab` page opened on the PC itself reads them first and
 shows what the runner wrote seconds ago. The server binds 127.0.0.1 and nothing else. CORS
 names `https://jalirkan.github.io` and the localhost dev origins (`http://localhost:<port>`,
@@ -461,7 +469,8 @@ informs), `hypothesis:`, `rule:` (the pre-registered pass/fail rule, or a pointe
 `followup:` (job files under `jobs/` or template names). `tools/runner.sh check` prints them
 and warns about a heavy job with no `decides:`. At each job end (done, failed, aborted) the
 runner appends an entry to `ledger.jsonl` and `LEDGER.md` at the root of `pc-results`, in the
-commit that carries the STATUS, never to `lab-status`. A done job's follow-up that is not on
+commit that carries the STATUS, never to `lab-status`; only its allowlisted public copy,
+`ledger.json`, goes there (D387, *The public copy* above). A done job's follow-up that is not on
 pc-jobs gets one `FOLLOW-UP READY [<id>@<finished>]` line at the top of HEARTBEAT.md's
 `## Messages`; a follow-up already posted with `after:` on the job needs nothing. Which entries
 are pushed is kept in `var/runner/ledger.json`, whose `since` is the first time a runner kept a

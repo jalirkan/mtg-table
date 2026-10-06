@@ -51,6 +51,7 @@ import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec
 import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
 import { cardName, sanitiseWarehouse } from '../../tools/runner/warehouse.ts';
+import { causeOf, LEDGER_PUBLIC_MAX, ruleShort, sanitiseLedger, type PublicLedger } from '../../tools/runner/ledgerpublic.ts';
 import { establishedOn, oomJournalLine, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
 import { runPool, type MatchJob, type PoolLoad } from '../../tools/cubelab/engine.ts';
 import { drive, type BatchResult, type BatchSpec, type Engine } from '../../tools/ai-ladder/bench.ts';
@@ -1034,8 +1035,8 @@ test('runner: a new-format job runs pilot, checks, sized commands, final checks 
   const doc = JSON.parse(show(w.mtg, 'pc-results:status.json')) as StatusDoc;
   assert.equal(doc.finished[0]?.id, 'J010');
   assert.deepEqual(doc.finished[0]?.numbers, { n: 3, 'final.w': 3 });
-  // The public copy: one parentless commit on lab-status holding status.json only, sanitised.
-  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ladder.json\nstatus.json\nwarehouse.json');
+  // The public copy: one parentless commit on lab-status holding the sanitised copies (D387: the ledger's too).
+  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ladder.json\nledger.json\nstatus.json\nwarehouse.json');
   assert.deepEqual(JSON.parse(show(w.fc, 'lab-status:ladder.json')), sanitiseLadder(LADDER));
   // D363: the warehouse summary, sanitised: the sample passes whole; the extra key and the path-like card do not.
   assert.deepEqual(JSON.parse(show(w.fc, 'lab-status:warehouse.json')), WAREHOUSE_SAMPLE);
@@ -2420,7 +2421,7 @@ test('ledger: entries, the markdown, the follow-up message and the Messages sect
   assert.deepEqual([...ledgerKeys(`{"key":"a"}\n{"key":"b"}\ntorn{\n`)], ['a', 'b']);
 });
 
-test('runner: the ledger on pc-results at each job end (done, failed), follow-ups announced or already queued; never on lab-status, never twice', () => {
+test('runner: the ledger on pc-results at each job end (done, failed), follow-ups announced or already queued; only its sanitised ledger.json on lab-status, never twice', () => {
   const w = world({
     // Done; one follow-up not on pc-jobs and a template: FOLLOW-UP READY.
     'J020-done.md': ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J029-later.md, morning-read\n`),
@@ -2457,8 +2458,16 @@ test('runner: the ledger on pc-results at each job end (done, failed), follow-up
   assert.deepEqual(hb.split('\n').filter((l) => l.includes('FOLLOW-UP READY')).map((l) => /\[(J\d+)@/.exec(l)?.[1]), ['J020']);
   assert.match(hb, /J020 is done; post jobs\/J029-later\.md to pc-jobs; write and post the template morning-read\./);
   assert.match(hb, /hello from the PC/);
-  // Never public.
-  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'status.json');
+  // The private ledger is never public: lab-status carries only the allowlisted ledger.json (D387).
+  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ledger.json\nstatus.json');
+  const pubLedger = JSON.parse(show(w.fc, 'lab-status:ledger.json')) as PublicLedger;
+  assert.deepEqual(pubLedger, sanitiseLedger(show(w.mtg, 'pc-results:ledger.jsonl'), pubLedger.generatedAt));
+  assert.deepEqual(pubLedger.entries.map((e) => `${e.id} ${e.outcome} ${e.cause}`).sort(), ['J020 done null', 'J021 failed pilot', 'J022 done null', 'J023 done null']);
+  const p20 = pubLedger.entries.find((e) => e.id === 'J020')!;
+  assert.deepEqual({ rule: p20.rule, ruleWritten: p20.ruleWritten, checked: p20.checked, decides: p20.decides, title: p20.title }, { rule: 'D354, gate 2, REGRET_RULE', ruleWritten: true, checked: true, decides: null, title: null });
+  assert.deepEqual(p20.followups, [{ job: 'J029', template: null, state: 'ready' }, { job: null, template: 'morning-read', state: 'ready' }]);
+  const pubText = JSON.stringify(pubLedger);
+  for (const secret of ['hypothesis', 'evaluator', 'J029-later', 'summary.md', 'n == 4', 'commits']) assert.ok(!pubText.includes(secret), secret);
   // More publishes add nothing; a deleted message is not written again.
   const seed = w.seed;
   git(seed, 'fetch', '--quiet', w.mtg, 'pc-results');
@@ -2496,4 +2505,119 @@ test('runner: an aborted job is in the ledger as aborted, and asks for no follow
   assert.deepEqual(e.followups, [{ followup: 'template morning-read', state: 'not-due' }]);
   assert.ok(!show(w.mtg, 'pc-results:HEARTBEAT.md').includes('FOLLOW-UP READY'));
   assert.match(show(w.mtg, 'pc-results:LEDGER.md'), /^## J024 ABORTED: /m);
+});
+
+// ------------------------------------------------------------------ the public ledger.json (D387)
+
+const PRIVATE_ENTRY = {
+  key: 'J061@2026-10-05T06:10:00-07:00', id: 'J061', title: 'Overnight queue night 3 on the secret-cube with Lightning Bolt',
+  decides: 'whether the private plan for the secret-cube keeps Lightning Bolt',
+  hypothesis: 'exploration costs under 10% because of /home/justin-a/code/lab secrets',
+  rule: 'D358; D354 gate 2 (gates.py REGRET_RULE), D358 again, see /home/justin-a/notes.md', outcome: 'failed',
+  reason: 'check: engine_errors <= 0.02 (engine_errors = 0.05) in /home/justin-a/code/lab/var/x.log',
+  headline: { n: 3, 'final.w': 0.12345678, 'cubes.secret-cube.done': 4 }, summary: 'results/J061/summary.md', finished: '2026-10-05T06:10:00-07:00',
+  followups: [{ followup: 'jobs/J066-secret-slug.md', state: 'not-due' }, { followup: 'template morning-read', state: 'not-due' }],
+  commits: { 'mtg-table': 'deadbee', ForgeCoach: 'cafef00' }, publicTitle: 'Overnight queue night 3', publicDecides: 'Keep card-level allocation', checks: 3, extra: 'unknown field',
+};
+const ENTRY_KEYS = ['id', 'title', 'decides', 'rule', 'ruleWritten', 'outcome', 'cause', 'checked', 'headline', 'finished', 'followups'];
+const GEN = '2026-10-05T07:00:00-07:00';
+const jsonlOf = (...es: unknown[]): string => es.map((e) => `${JSON.stringify(e)}\n`).join('');
+
+test('public ledger.json (D387): only the allowlisted fields, and none of the private ledger\'s words', () => {
+  const pub = sanitiseLedger(jsonlOf(PRIVATE_ENTRY), GEN)!;
+  assert.deepEqual(Object.keys(pub).sort(), ['entries', 'generatedAt', 'schema']);
+  assert.equal(pub.schema, 1);
+  assert.equal(pub.generatedAt, GEN);
+  for (const e of pub.entries) {
+    assert.deepEqual(Object.keys(e).sort(), [...ENTRY_KEYS].sort());
+    for (const f of e.followups) assert.deepEqual(Object.keys(f).sort(), ['job', 'state', 'template']);
+  }
+  assert.deepEqual(pub.entries, [{
+    id: 'J061', title: 'Overnight queue night 3', decides: 'Keep card-level allocation', rule: 'D358, D354, gate 2, REGRET_RULE', ruleWritten: true,
+    outcome: 'failed', cause: 'check', checked: true, headline: { n: 3, 'final.w': 0.123 }, finished: '2026-10-05T06:10:00-07:00',
+    followups: [{ job: 'J066', template: null, state: 'not-due' }, { job: null, template: 'morning-read', state: 'not-due' }],
+  }]);
+  const text = JSON.stringify(pub);
+  for (const secret of ['hypothesis', 'exploration', '/home', 'justin', 'secret', 'Lightning', 'private plan', 'engine_errors', 'summary.md', 'results/', 'deadbee', 'cafef00', 'commits', 'key', 'J061@', 'unknown field', 'notes.md', 'gates.py', 'cubes.']) {
+    assert.ok(!text.includes(secret), `${secret} leaked: ${text}`);
+  }
+  // An older entry (no publicTitle / publicDecides / checks): nulls and false; a bad public text is dropped.
+  const old = sanitiseLedger(jsonlOf({ ...PRIVATE_ENTRY, publicTitle: undefined, publicDecides: 'a/path', checks: undefined, rule: null }), GEN)!.entries[0]!;
+  assert.deepEqual({ title: old.title, decides: old.decides, checked: old.checked, rule: old.rule, ruleWritten: old.ruleWritten }, { title: null, decides: null, checked: false, rule: null, ruleWritten: false });
+});
+
+test('public ledger.json (D387): the rule\'s short form and the cause from the reason\'s prefix', () => {
+  assert.equal(ruleShort('D354 gate 2 (gates.py REGRET_RULE)'), 'D354, gate 2, REGRET_RULE');
+  assert.equal(ruleShort('D358; final checks below (engine errors <= 2%)'), 'D358');
+  assert.equal(ruleShort('EXAM_RULE then D12, D12345, gate 3, gate 4, D99'), 'EXAM_RULE, D12, gate 3, gate 4');
+  assert.equal(ruleShort('n == 4'), null);
+  assert.equal(ruleShort('Gate 2, D1, _RULE, xD358'), null);
+  assert.equal(ruleShort(null), null);
+  const cases: Array<[string, string, string | null]> = [
+    ['done', '', null],
+    ['aborted', 'aborted: n >= 3 (n = 3)', null],
+    ['failed', 'check: n == 4 (n = 3)', 'check'],
+    ['failed', 'pilot: n == 4 (n = 3); m > 1 (missing)', 'pilot'],
+    ['failed', 'pilot: step pilot1 exited 2', 'step'],
+    ['failed', 'prepare: step prepare exited 1', 'step'],
+    ['failed', 'step run2 exited 137', 'step'],
+    ['failed', 'timeout: step run1 ran past 8h', 'timeout'],
+    ['failed', 'memory: stopped 3 times (last: step run1 exited 137 after an OOM kill)', 'memory'],
+    ['failed', 'systemd-run failed for lab-J010-run1: /home/x', 'other'],
+    ['failed', '', 'other'],
+  ];
+  for (const [outcome, reason, cause] of cases) assert.equal(causeOf(outcome, reason), cause, `${outcome} ${reason}`);
+});
+
+test('public ledger.json (D387): bad ids, outcomes, times and templates dropped; headline keys filtered and rounded; the newest 100, oldest first', () => {
+  const base = { ...PRIVATE_ENTRY, outcome: 'done', reason: '' };
+  const pub = sanitiseLedger([
+    'torn {',
+    '{"foreign": true}',
+    JSON.stringify({ ...base, id: 'J12' }),
+    JSON.stringify({ ...base, id: 'J061x' }),
+    JSON.stringify({ ...base, id: '../J061' }),
+    JSON.stringify({ ...base, outcome: 'waiting' }),
+    JSON.stringify({ ...base, finished: '2026-10-05 06:10' }),
+    JSON.stringify({ ...base, id: 'J062', headline: { n: 2, 'Bad.Key': 1, 'a/b': 2, 'x.cubes.omega.done': 3, inf: Infinity, s: '4', 'y.z': 1.23456, nan: null },
+      followups: [
+        { followup: 'template Morning-Read', state: 'ready' }, { followup: 'template ../x', state: 'ready' }, { followup: 'jobs/J1-x.md', state: 'ready' },
+        { followup: '/tmp/J066.md', state: 'ready' }, { followup: 'jobs/J066-x.md', state: 'done' }, { followup: 'template ok-name', state: 'posted' },
+      ] }),
+  ].join('\n'), GEN)!;
+  assert.deepEqual(pub.entries.map((e) => e.id), ['J062']);
+  assert.deepEqual(pub.entries[0]!.headline, { n: 2, 'y.z': 1.235 });
+  assert.deepEqual(pub.entries[0]!.followups, [{ job: null, template: 'ok-name', state: 'posted' }]);
+  // At most 12 headline numbers and 10 follow-ups.
+  const many = sanitiseLedger(jsonlOf({ ...base, headline: Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`k${i}`, i])), followups: Array.from({ length: 15 }, () => ({ followup: 'template t', state: 'ready' })) }), GEN)!.entries[0]!;
+  assert.equal(Object.keys(many.headline).length, 12);
+  assert.equal(many.followups.length, 10);
+  // Nothing publishable, or a bad generatedAt: null.
+  assert.equal(sanitiseLedger('torn\n{"id":"J1"}\n', GEN), null);
+  assert.equal(sanitiseLedger('', GEN), null);
+  assert.equal(sanitiseLedger(jsonlOf(base), 'yesterday'), null);
+  // 130 entries, written out of order: the newest 100, oldest first.
+  const t0 = Date.parse('2026-10-01T00:00:00Z');
+  const lines = Array.from({ length: 130 }, (_, i) => ({ ...base, id: `J${String(100 + i)}`, finished: isoLocal(t0 + i * 3_600_000, -420) }));
+  const capped = sanitiseLedger(jsonlOf(...lines.slice(65), ...lines.slice(0, 65)), GEN)!;
+  assert.equal(capped.entries.length, LEDGER_PUBLIC_MAX);
+  assert.equal(capped.entries[0]!.id, 'J130');
+  assert.equal(capped.entries.at(-1)!.id, 'J229');
+  assert.deepEqual(capped.entries.map((e) => e.id), lines.slice(30).map((e) => e.id));
+});
+
+test('job file: public_decides (D387) opts in, only in the strict character set', () => {
+  const ok = parseJobFile('jobs/J010-x.md', NEW_JOB.replace('headline: n, final.w\n', 'headline: n, final.w\npublic_decides: Keep card-level allocation (night 4)\n'), parse);
+  assert.deepEqual(ok.errors, []);
+  assert.equal(ok.publicDecides, 'Keep card-level allocation (night 4)');
+  assert.equal(parseJobFile('jobs/J010-x.md', NEW_JOB, parse).publicDecides, null);
+  const bad = parseJobFile('jobs/J010-x.md', NEW_JOB.replace('headline: n, final.w\n', 'headline: n, final.w\npublic_decides: see jobs/J066.md\n'), parse);
+  assert.equal(bad.publicDecides, null);
+  assert.match(bad.errors.join('\n'), /^public_decides: /m);
+});
+
+test('local server: /public-ledger.json serves the public ledger, 404 without one (D387)', () => {
+  const src = { status: () => null, ladder: () => null, ledger: () => '{"schema":1}\n' };
+  assert.deepEqual([answer('GET', '/public-ledger.json', {}, src).status, answer('GET', '/public-ledger.json', {}, src).body], [200, '{"schema":1}']);
+  assert.equal(answer('GET', '/public-ledger.json', {}, { status: () => null, ladder: () => null }).status, 404);
 });
