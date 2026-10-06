@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-05T21:17:28-04:00",
- "heartbeat": "2026-10-05T21:17:28-04:00",
+ "updated": "2026-10-05T21:17:41-04:00",
+ "heartbeat": "2026-10-05T21:17:41-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 12.85,
-  "memUsedGb": 16.5,
+  "load1": 14.15,
+  "memUsedGb": 18.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 2,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 8,
+  "coresUsed": 7,
   "coresTotal": 8
  },
  "running": [
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/2",
    "started": "2026-10-05T19:00:05-04:00",
-   "elapsed": 8243,
+   "elapsed": 8257,
    "done": 13807,
    "total": null,
    "unit": "drafts",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-05T21:16:52-04:00",
-   "memGb": 9.01,
+   "memGb": 10.85,
    "live": {
     "a.drafts": 8400,
     "b.drafts": 5398,
@@ -92,43 +92,6 @@
    "publicCubes": false,
    "pressureEvents": [],
    "detail": "lab-J085-run1"
-  },
-  {
-   "publicTitle": "Night 3 quarantine messages",
-   "publicEst": "~2 min",
-   "id": "J090",
-   "title": "Collect the messages of night 3's still-quarantined recordings (the one M55 failure and the stray non-recording file), so a person can judge night 4's stop row",
-   "cpu": "light",
-   "phase": "commands 1/1",
-   "started": "2026-10-05T21:16:30-04:00",
-   "elapsed": 58,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "memGb": null,
-   "live": {
-    "gz": 0,
-    "elapsed_s": 57,
-    "pfiles": 1,
-    "pressure_events": 0,
-    "workers": 1,
-    "written": 0
-   },
-   "liveHeadline": [
-    "gz"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J090-run1"
   }
  ],
  "queue": [
@@ -175,6 +138,17 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Night 3 quarantine messages",
+   "publicEst": "~2 min",
+   "id": "J090",
+   "title": "Collect the messages of night 3's still-quarantined recordings (the one M55 failure and the stray non-recording file), so a person can judge night 4's stop row",
+   "status": "failed",
+   "finished": "2026-10-05T21:17:41-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "step run1 exited 2"
+  },
   {
    "publicTitle": "Night 3 quarantine messages",
    "publicEst": "~2 min",
@@ -824,17 +798,6 @@
    "headline": "",
    "numbers": {},
    "detail": "pilot: two of the five pilot answers took under 5 s (4.78 s and 4.86 s), so \"every answer takes 5-30 s\" fails as written. Every other pilot check passed. Full run not started."
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J006",
-   "title": "New coach baseline with the queueing helper (the prompt now asks for Rule and Confidence)",
-   "status": "failed",
-   "finished": "2026-10-03T10:49:00-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "pilot: \"npm test\" failed (9 of 702, all in src/launcher.test.ts overnight); environmental: the tests see the live engine required by this job on 127.0.0.1:8642. All other pilot checks passed. Full run not started."
   }
  ],
  "runner": {

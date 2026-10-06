@@ -207,3 +207,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: gz 0
 - summary: results/J088/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table a2480d7
+
+## J090 FAILED: Collect the messages of night 3's still-quarantined recordings (the one M55 failure and the stray non-recording file), so a person can judge night 4's stop row
+
+- finished: 2026-10-05T21:17:41-04:00
+- decides: (no decides: line in the job file)
+- hypothesis: -
+- rule: (no rule: line in the job file)
+- outcome: failed (step run1 exited 2)
+- headline: gz 0
+- summary: results/J090/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table a2480d7
