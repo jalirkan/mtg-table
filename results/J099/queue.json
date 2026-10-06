@@ -1,0 +1,39 @@
+{
+ "v": 1,
+ "games": 1,
+ "format": "grid",
+ "nextSeed": {
+  "normal/fair-fight": 10086,
+  "normal/modern-era": 10199,
+  "normal/omega": 9026,
+  "normal/pauper": 13704,
+  "normal/peasant": 14968,
+  "normal/synergy": 11635,
+  "normal/vintage": 8789,
+  "bridge/pauper+modern-era": 1555,
+  "bridge/peasant+modern-era": 1432,
+  "bridge/peasant+synergy": 1433,
+  "bridge/pauper+synergy": 1480,
+  "bridge/fair-fight+modern-era": 1284,
+  "bridge/fair-fight+synergy": 1202,
+  "bridge/synergy+vintage": 1069,
+  "bridge/synergy+omega": 1093,
+  "bridge/pauper+vintage": 1056,
+  "bridge/pauper+omega": 1060,
+  "bridge/peasant+vintage": 957,
+  "bridge/peasant+omega": 956,
+  "bridge/modern-era+vintage": 875,
+  "bridge/fair-fight+vintage": 897,
+  "bridge/modern-era+omega": 831,
+  "bridge/fair-fight+omega": 838,
+  "bridge/pauper+peasant": 617,
+  "bridge/fair-fight+peasant": 555,
+  "bridge/modern-era+synergy": 429
+ },
+ "nights": [
+  1,
+  2,
+  3,
+  4
+ ]
+}

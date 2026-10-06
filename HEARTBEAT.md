@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-06T16:23:58-04:00
+- time: 2026-10-06T16:24:13-04:00
 - runner: 8961fd5, up since 2026-10-06T01:31:40-04:00
-- running: J099 commands 3/3, 38000/38000 drafts, 4394.3/h, 7 worker(s), 1 core(s); J101 prepare, 0/9400 games, 1 worker(s), 7 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.53; memory 4.8/30.5 GB, swap 2989 MB, pressure 0% (lab budget 23.4 GB)
+- running: J101 prepare, 0/9400 games, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 7.21; memory 5.3/30.5 GB, swap 2989 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J102
 - waiting: nothing
-- last finished: J100 done at 2026-10-06T08:31:29-04:00: r2.decisions 291 · r2.pairwise_hand 0.711 · r2.pairwise_eval 0.68 · r2.pairwise_diff_estimate -0.031 · r2.pairwise_diff_lo -0.067 · r2.pairwise_diff_hi 0.004 · r2.sign_discordant 70 · r2.edge 0
+- last finished: J099 done at 2026-10-06T16:24:13-04:00: night.night_drafts_done 38000 · night.planned_drafts 38000 · night.bridge_share 0.2 · ns.engine_error_rate 0 · ns.mixed_time_ratio 0.957 · quarantined 82
 
 ## Messages
+
+- FOLLOW-UP READY [J099@2026-10-06T16:24:13-04:00] (the runner, for the cloud session): J099 is done; write and post the template matchup-read-nights-1-4; write and post the template design-verify. It decides: whether night 5 keeps D375's profile mix and this night's exploration share (D358); its drafts and recordings feed the matchup read of nights 1-4 and the evaluator. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J064@2026-10-05T08:18:51-04:00] (the runner, for the cloud session): J064 is done; write and post the template omega-ratings-promote. It decides: promote cubes/omega-cube-180.ratings-raised.tsv to Omega's default ratings (D360; the rename is Justin's call). Ledger: LEDGER.md. Delete this line once posted.
 

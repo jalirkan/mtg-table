@@ -1,0 +1,59 @@
+night 4: re-reading its plan (var/cubelab/queue/night-4.json); finished drafts are skipped
+night 4: 38000 drafts (165 chunks), 1 game(s) a draft, grid, bridge share 0.2
+AI seats (D375): each drafter drawn per draft from Default:0.5,Reckless:0.25,Cautious:0.25; drafts.jsonl rows carry `profiles`
+play exploration (D358): share=0.15,epsilon=0.05,closecall=0.02,opening=off -- about 5700 drafts explore; win rates leave them out
+
+pool key                         weight    drafts
+normal/fair-fight                  0.182      4002
+normal/modern-era                  0.186      4084
+normal/omega                       0.161      3541
+normal/pauper                      0.224      4926
+normal/peasant                     0.284      6228
+normal/synergy                     0.194      4248
+normal/vintage                     0.154      3371
+bridge/pauper+modern-era           0.025       588
+bridge/peasant+modern-era          0.024       580
+bridge/peasant+synergy             0.024       557
+bridge/pauper+synergy              0.023       540
+bridge/fair-fight+modern-era       0.021       506
+bridge/fair-fight+synergy          0.019       456
+bridge/synergy+omega               0.018       415
+bridge/synergy+vintage             0.017       402
+bridge/pauper+omega                0.017       402
+bridge/pauper+vintage              0.017       396
+bridge/peasant+omega               0.016       389
+bridge/peasant+vintage             0.016       386
+bridge/fair-fight+vintage          0.015       352
+bridge/modern-era+vintage          0.015       347
+bridge/fair-fight+omega            0.014       332
+bridge/modern-era+omega            0.014       331
+bridge/pauper+peasant              0.010       236
+bridge/fair-fight+peasant          0.009       222
+bridge/modern-era+synergy          0.007       163
+
+bridge pairs (novelty = 1 - shared / smaller cube; link by power tier; unc = mean card variance / prior)
+  keep pauper+modern-era        novelty 0.91 link 1.0 unc 0.03 weight 0.025  adjacent tiers: chains the power levels; 17 cards shared
+  keep peasant+modern-era       novelty 0.88 link 1.0 unc 0.03 weight 0.024  adjacent tiers: chains the power levels; 22 cards shared
+  keep peasant+synergy          novelty 0.84 link 1.0 unc 0.03 weight 0.024  adjacent tiers: chains the power levels; 28 cards shared
+  keep pauper+synergy           novelty 0.82 link 1.0 unc 0.03 weight 0.023  adjacent tiers: chains the power levels; 32 cards shared
+  keep fair-fight+modern-era    novelty 0.76 link 1.0 unc 0.03 weight 0.021  adjacent tiers: chains the power levels; 43 cards shared
+  keep fair-fight+synergy       novelty 0.70 link 1.0 unc 0.03 weight 0.019  adjacent tiers: chains the power levels; 54 cards shared
+  keep synergy+omega            novelty 0.65 link 1.0 unc 0.03 weight 0.018  adjacent tiers: chains the power levels; 63 cards shared
+  keep synergy+vintage          novelty 0.66 link 1.0 unc 0.03 weight 0.017  adjacent tiers: chains the power levels; 62 cards shared
+  keep pauper+omega             novelty 0.90 link 0.7 unc 0.03 weight 0.017  flat with powered: lopsided games; 18 cards shared
+  keep pauper+vintage           novelty 0.92 link 0.7 unc 0.03 weight 0.017  flat with powered: lopsided games; 14 cards shared
+  keep peasant+omega            novelty 0.85 link 0.7 unc 0.03 weight 0.016  flat with powered: lopsided games; 27 cards shared
+  keep peasant+vintage          novelty 0.88 link 0.7 unc 0.03 weight 0.016  flat with powered: lopsided games; 22 cards shared
+  keep fair-fight+vintage       novelty 0.81 link 0.7 unc 0.03 weight 0.015  flat with powered: lopsided games; 35 cards shared
+  keep modern-era+vintage       novelty 0.57 link 1.0 unc 0.03 weight 0.015  adjacent tiers: chains the power levels; 78 cards shared
+  keep fair-fight+omega         novelty 0.72 link 0.7 unc 0.03 weight 0.014  flat with powered: lopsided games; 50 cards shared
+  keep modern-era+omega         novelty 0.51 link 1.0 unc 0.03 weight 0.014  adjacent tiers: chains the power levels; 88 cards shared
+  keep pauper+peasant           novelty 0.86 link 0.4 unc 0.03 weight 0.010  same power tier; 26 cards shared
+  keep fair-fight+peasant       novelty 0.81 link 0.4 unc 0.03 weight 0.009  same power tier; 34 cards shared
+  keep modern-era+synergy       novelty 0.63 link 0.4 unc 0.03 weight 0.007  same power tier; 66 cards shared
+  skip fair-fight+pauper        novelty 0.45 link 0.4 unc 0.03 weight 0.005  same power tier; 99 cards shared -- skipped: novelty × link 0.18 < 0.25, mostly the same pool
+  skip omega+vintage            novelty 0.40 link 0.4 unc 0.03 weight 0.004  same power tier; 108 cards shared -- skipped: novelty × link 0.16 < 0.25, mostly the same pool
+
+folders: var/cubelab/queue/normal/<cube>, var/cubelab/queue/bridge/<a>+<b>
+
+(plan only: nothing written; `queue run` with the same flags writes and plays it)
