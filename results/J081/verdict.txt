@@ -1,0 +1,8 @@
+scored 291 of 291 decisions; unscored {}
+mean regret: hand 0.0208  eval 0.0217  forge 0.0223  (picks agree 76%)
+  attack n 100  hand 0.0253  eval 0.0218  agree 81%
+  block  n 100  hand 0.0220  eval 0.0199  agree 73%
+  spell  n  91  hand 0.0147  eval 0.0237  agree 74%
+hand - eval: -0.0009 [-0.0063, +0.0047] (95%, 10000 resamples of decisions)
+secondary (12 rounds, not gating): -0.0005 [-0.0058, +0.0051]
+gate 2 (regret): FAIL -- mean regret(hand) - regret(eval) = -0.0009 is not above 0

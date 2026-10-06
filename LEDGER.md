@@ -277,3 +277,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J092/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table ef7e73f
 - follow-up: jobs/J081-gate2-v2.md: on pc-jobs with after: on this job; the runner starts it
+
+## J081 DONE: Evaluator gate 2 on v2 (D354): rank J050's set with evaluator v2 at the live horizon and score it against J050's truth tables, no new truth
+
+- finished: 2026-10-06T04:59:00-04:00
+- decides: promote evaluator v2 (J067's var/ml/models/nights-1-3-eval.json) past gate 2 (D354), and so whether a gate-3 SPRT on v2 is posted
+- hypothesis: v2's leaf has lower regret than the hand leaf at the live horizon; expected small, since v1 scored only +0.0017 [-0.0036, +0.0075] on this set (J051) and v2 is the same kind of model trained on about three times the data
+- rule: gates.py REGRET_RULE (D354 gate 2), unchanged: PASS when mean regret(hand) - regret(eval) > 0 and its paired bootstrap 95% interval (10,000 resamples of decisions, seed 20261004) excludes 0, on >= 240 scored decisions; worded by D372's reporting rule (REGRET_REPORT, MDE 0.015): a FAIL whose interval reaches 0.015 is "underpowered, not 'no gain'", a FAIL whose interval ends below 0.015 "rules out a gain of 0.015 or more", never "no gain"
+- outcome: done
+- headline: g2.scored 291, g2.regretHand 0.0208, g2.regretEval 0.0217, g2.diffHandMinusEval_estimate -0.0009, g2.diffHandMinusEval_lo -0.0063, g2.diffHandMinusEval_hi 0.0047, power.realisedMde 0.0077, g2.pass 0
+- summary: results/J081/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 7e48088

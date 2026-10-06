@@ -1,85 +1,61 @@
 {
  "schema": 1,
- "updated": "2026-10-06T04:54:47-04:00",
- "heartbeat": "2026-10-06T04:54:47-04:00",
+ "updated": "2026-10-06T04:59:00-04:00",
+ "heartbeat": "2026-10-06T04:59:00-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 15.38,
-  "memUsedGb": 15.4,
+  "load1": 4.18,
+  "memUsedGb": 5,
   "memTotalGb": 30.5,
   "swapUsedMb": 2146,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 4,
   "coresTotal": 8
  },
  "running": [
-  {
-   "publicTitle": "Regret gate scoring v2",
-   "publicEst": "~20 min",
-   "id": "J081",
-   "title": "Evaluator gate 2 on v2 (D354): rank J050's set with evaluator v2 at the live horizon and score it against J050's truth tables, no new truth",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-06T04:49:30-04:00",
-   "elapsed": 317,
-   "done": 291,
-   "total": 291,
-   "unit": "lines",
-   "ratePerHour": 3306.9,
-   "eta": null,
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-06T04:52:41-04:00",
-   "memGb": 10.11,
-   "live": {
-    "elapsed_s": 317,
-    "g2.written": 0,
-    "peak_worker_rss_gb": 0.67,
-    "power.written": 0,
-    "pressure_events": 0,
-    "re12.answered": 155,
-    "re12.error": 0,
-    "re12.ok": 155,
-    "re12.playouts": 8244,
-    "re12.refused": 0,
-    "re12.requests": 291,
-    "re12.trivial": 0,
-    "re12.unsupported": 0,
-    "re3.answered": 291,
-    "re3.error": 0,
-    "re3.ok": 291,
-    "re3.playouts": 4824,
-    "re3.refused": 0,
-    "re3.requests": 291,
-    "re3.trivial": 0,
-    "re3.unsupported": 0,
-    "set.lines": 291,
-    "workers": 7
-   },
-   "liveHeadline": [],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J081-run1"
-  }
- ],
- "queue": [
   {
    "publicTitle": "Archive nights 1 and 2",
    "publicEst": "~6 h",
    "id": "J070",
    "title": "Move queue nights 1 and 2 to the cold drive: one verified tar.zst a key folder plus each night's quarantine folder, on /mnt/e/forgecoach-archive, then free the hot disk (D378)",
    "cpu": "heavy",
-   "est": "~2-4 h a night on 4 cores (about 40,000 recordings and 4 GB of gzip a night, decompressed and packed with zstd level 19 and a 128 MB window; the dry run measures the CPU per file), plus reading every archive back to verify it"
-  },
+   "phase": "prepare",
+   "started": "2026-10-06T04:59:00-04:00",
+   "elapsed": 0,
+   "done": null,
+   "total": null,
+   "unit": null,
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 4,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": null,
+   "memGb": null,
+   "live": {
+    "dry1.written": 0,
+    "dry2.written": 0,
+    "elapsed_s": 0,
+    "n1.written": 0,
+    "n2.written": 0,
+    "pressure_events": 0,
+    "workers": 1
+   },
+   "liveHeadline": [],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J070-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Search week 3 SPRT",
    "publicEst": "one to two nights",
@@ -107,6 +83,25 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Regret gate scoring v2",
+   "publicEst": "~20 min",
+   "id": "J081",
+   "title": "Evaluator gate 2 on v2 (D354): rank J050's set with evaluator v2 at the live horizon and score it against J050's truth tables, no new truth",
+   "status": "done",
+   "finished": "2026-10-06T04:59:00-04:00",
+   "headline": "g2.scored 291 · g2.regretHand 0.021 · g2.regretEval 0.022 · g2.diffHandMinusEval_estimate -0.001 · g2.diffHandMinusEval_lo -0.006 · g2.diffHandMinusEval_hi 0.005 · power.realisedMde 0.008 · g2.pass 0",
+   "numbers": {
+    "g2.scored": 291,
+    "g2.regretHand": 0.020838213575982197,
+    "g2.regretEval": 0.02172763392156204,
+    "g2.diffHandMinusEval_estimate": -0.000889420345579845,
+    "g2.diffHandMinusEval_lo": -0.006280462747258762,
+    "g2.diffHandMinusEval_hi": 0.004725781434777197,
+    "power.realisedMde": 0.007738467264903555,
+    "g2.pass": 0
+   }
+  },
   {
    "publicTitle": "Evaluator v2 training",
    "publicEst": "~12 h",
@@ -768,16 +763,6 @@
     "parked_lines": 8,
     "peak_worker_rss_gb": 1.03
    }
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J003",
-   "title": "Search AI vs Forge Default, 400 deals per configuration",
-   "status": "done",
-   "finished": "2026-10-03T13:10:11-04:00",
-   "headline": "",
-   "numbers": {}
   }
  ],
  "runner": {

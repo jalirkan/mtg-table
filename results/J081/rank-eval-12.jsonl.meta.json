@@ -1,0 +1,36 @@
+{
+ "gate": "regret",
+ "mode": "rank",
+ "serveFlags": [
+  "--playouts",
+  "12",
+  "--initial",
+  "12",
+  "--no-race",
+  "--horizon",
+  "0",
+  "--budget-ms",
+  "0",
+  "--timeout-ms",
+  "20000",
+  "--cap",
+  "12",
+  "--seed",
+  "1",
+  "--leaf-scale",
+  "500"
+ ],
+ "extra": {
+  "leaf": "eval:var/ml/models/nights-1-3-eval.json"
+ },
+ "requests": "var/ml/gates/regret/set.jsonl",
+ "requestsSha": "032a747058d1ad25e8facb7e50b3e60ce3d0daeee9244c9a7e999734a1c294f9",
+ "modelSha": "dcdae3745b84",
+ "version": {
+  "head": "7e48088a4c070bcfc0ecd6c25100e04840aa6bc8",
+  "bridgeTree": "dc7c308ea52b2663602fc2407b905bf694945c64",
+  "bridgeDirty": false,
+  "jarSha": null
+ },
+ "changes": []
+}

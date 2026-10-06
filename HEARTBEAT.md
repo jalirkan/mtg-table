@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-06T04:54:47-04:00
+- time: 2026-10-06T04:59:00-04:00
 - runner: 8961fd5, up since 2026-10-06T01:31:40-04:00
-- running: J081 commands 1/1, 291/291 lines, 3306.9/h, 7 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 15.38; memory 15.4/30.5 GB, swap 2146 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J070, J089, J093, J094
+- running: J070 prepare, 1 worker(s), 4 core(s)
+- cores: 4 of 8 in use (the running jobs' widths; 16 threads)
+- load: 4.18; memory 5/30.5 GB, swap 2146 MB, pressure 0% (lab budget 23.4 GB)
+- queue: J089, J093, J094
 - waiting: nothing
-- last finished: J092 done at 2026-10-06T04:49:30-04:00: ds.rows 19517006 · ds.games 119816 · audit.pass 1 · fit.pass 1 · cmp.better 1
+- last finished: J081 done at 2026-10-06T04:59:00-04:00: g2.scored 291 · g2.regretHand 0.021 · g2.regretEval 0.022 · g2.diffHandMinusEval_estimate -0.001 · g2.diffHandMinusEval_lo -0.006 · g2.diffHandMinusEval_hi 0.005 · power.realisedMde 0.008 · g2.pass 0
 
 ## Messages
 
