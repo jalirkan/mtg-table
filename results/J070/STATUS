@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: step pilot1 exited 3
 runner: forgecoach-runner 8961fd5
 started: 2026-10-06T04:59:00-04:00
-phase: pilot 1/1
+finished: 2026-10-06T04:59:58-04:00
 mtg-table: 061af76
 workers: 3
+exit: 3

@@ -288,3 +288,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: g2.scored 291, g2.regretHand 0.0208, g2.regretEval 0.0217, g2.diffHandMinusEval_estimate -0.0009, g2.diffHandMinusEval_lo -0.0063, g2.diffHandMinusEval_hi 0.0047, power.realisedMde 0.0077, g2.pass 0
 - summary: results/J081/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 7e48088
+
+## J070 FAILED: Move queue nights 1 and 2 to the cold drive: one verified tar.zst a key folder plus each night's quarantine folder, on /mnt/e/forgecoach-archive, then free the hot disk (D378)
+
+- finished: 2026-10-06T04:59:58-04:00
+- decides: whether nights 1-2 move to the cold tier on /mnt/e (D378), freeing ~7.7 GB on the system drive
+- hypothesis: every member verifies by SHA-256 before deletion and the archives are ~5x smaller than gzip
+- rule: D378's refusals and the job's checks; any verify mismatch stops the job with nothing deleted
+- outcome: failed (pilot: step pilot1 exited 3)
+- headline: -
+- summary: results/J070/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 061af76

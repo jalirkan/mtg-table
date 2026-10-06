@@ -1,0 +1,17 @@
+==== J070 pilot1 started 2026-10-06T04:59:24-04:00 in unit lab-J070-pilot1, 3 worker(s), 4 core(s), BLAS/OpenMP threads 4
+zstandard 0.25.0
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb2       218G  164G   44G  80% /
+/dev/sda4       931G  416G  516G  45% /mnt/e
+12G	var/cubelab/queue
+14M	var/cubelab/queue-quarantine
+7.1M	var/cubelab/queue-quarantine-n2
+     90 queue-quarantine
+     44 queue-quarantine-n2
+archive: REFUSED: holds: night 1 is held hot until J052 (failed) -- gate 3 (J052) and the reads of nights 1-2 (J062 matchup, J063 outside exam, J064 Omega ratings): the owner, 2026-10-04
+  check redaction: ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine: 90 quarantined recording(s), counted by walking the folder
+  check warehouse: ok: 20000 drafts lines ingested
+  check encoded: ok: 39908 of 39910 recordings encoded (100.0%)
+  check holds: REFUSED: night 1 is held hot until J052 (failed) -- gate 3 (J052) and the reads of nights 1-2 (J062 matchup, J063 outside exam, J064 Omega ratings): the owner, 2026-10-04
+cold night 1: 27 unit(s), 40003 file(s), 3.302 GB hot -> /mnt/e/forgecoach-archive
+dry run: sample of 200: 4.923x smaller than on the hot disk -> about 0.671 GB on the drive (554 GB free); 0.097 CPU s a file
