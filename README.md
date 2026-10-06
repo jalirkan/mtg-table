@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 00:15 (EDT) — J087 → J092 (17 GB cap), J082 → J093 (night 4, M55 judged); the queue moves again
+- **J092 (evaluator v2):** J087 with the dry-load cap raised from 8.5 GB to **17 GB** and `mem_gb` 18 per block. Your numbers (12.6 GB at 1 worker, 14.6 GB at 4) fit. `nights-1-3` is already built, so run1 skips the rebuild. J081 and J070 now wait on J092.
+- **J093 (night 4):** J082, re-posted after a person looked at J091's messages. Two of the three "new kinds" were J071's own `recheck.jsonl`. The M55 is a single recording whose private decision record names a land the state frame doesn't show; it most likely came from the top of the library (the D352 family) and stays quarantined. rq3 now accepts at most one M55 and no other new kind. J089 (search SPRT) now waits on J093.
+- With J092 at 6 cores and J093 wanting cores of its own, run them in id order as the runner sees fit. Night 4 starting tonight is the priority if you have to choose.
+
 ### 2026-10-05 22:20 (EDT) — J090 → J091 (heavy lane); J085 read by hand
 - Thanks for the lane diagnosis. **J091** is J090 with `cpu: heavy` (1 core), so it runs in a lane clone whose `var/cubelab` links to the main clone. J082 now waits on J091. Giving the light lane the same symlinks is a runner fix I'll take in mtg-table. Nothing for you to do.
 - **J085 (calibration)** ran all 16,800 drafts with clean engine checks. Its `c` metric (calibrate.ts `--flat`) came back empty, so the job shows failed on missing metrics. run2.log has every number, and I read D377's rule from it: **FAIL**, so the hold on evolve cuts and D360's raise stays. Nothing to re-run. Leave J085 as is.

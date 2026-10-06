@@ -3,7 +3,7 @@ title: Search week 3 SPRT: the anytime search (anytime=1, D388) vs search-v1 at 
 public_title: Search week 3 SPRT
 public_est: one to two nights
 cpu: heavy
-after: J082
+after: J093
 repos: mtg-table@8b8fd7f (main with #79, the week-3 search; pinned so every game is one code version, D341)
 decides: whether the anytime search (D388) becomes search-v1's loop in the next search version (a league candidate), or D312's loop with its budget fallback stays
 hypothesis: keeping cut rounds, pruning to the budget and racing turn the 18.5% of searched decisions that fell back to Forge's answer on budget (docs/evidence/search-week3.md) into verdicts, and that is worth at least the SPRT's elo1 of 20 at the same 1.5 s wall-clock budget
