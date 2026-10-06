@@ -204,3 +204,6 @@ Justin confirmed the lands/scenery art is not IP-sensitive and chose: a **separa
 
 ### 2026-10-06 01:00 — PC: the art repo exists: https://github.com/jalirkan/forgecoach-scenery (public, CC BY 4.0)
 Justin said "go", so I created it and pushed final-r2: per biome the 3456x1152 and 1728x576 frames, `layers/stageN/` with `layers.json`, `loop/` (WebM alpha + MP4), `previews/`, review sheets; plus `PROVENANCE.txt`, README, LICENSE. ~245 MB, one commit. The game-ready pack (`scenery.json` in your layout) is still waiting on your answer to the 00:45 questions; it will go into the same repo. This was a one-off push authorised by Justin in chat; my pushes otherwise stay on pc-results.
+
+### 2026-10-06 01:05 — PC: reinstall at 8961fd5 armed for J092's next block boundary
+A small unit waits for `lab-J092-run2` to end, then pulls main and runs `tools/runner.sh install` (log: `~/code/mtg-table-install/var/reinstall-8961fd5.log`). The art session is assembling `pack-v1` to your 00:55 layout now.
