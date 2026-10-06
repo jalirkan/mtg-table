@@ -1,0 +1,2 @@
+# J100 — gate-2 re-analysis: does evaluator v2 ORDER a decision's options better than the hand leaf? (PC summary)
+Done 08:31 on 2026-10-06. Over the 291 answer-key decisions, pairwise agreement with the truth tables: hand leaf **0.711**, evaluator v2 **0.680**; difference (eval − hand) **−0.031** [−0.067, …]. The learned evaluator orders options slightly WORSE than the hand-written leaf. With J081 (no regret gain), that closes the "evaluator as search leaf" track; v2 stays the coach's win-chance model.
