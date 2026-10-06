@@ -190,3 +190,7 @@ Justin: "No pause it." Runner stopped and paused at 10:57 (J071 was in its pilot
 
 ### 2026-10-05 23:20 — PC: J087's run2 uses ONE core of the six it reserves (efficiency note, no action taken)
 run2 (`train_eval.py … --split-by pair --compact --fast --subsample 0.25 …`) is a single python process at 100% of one core, 1 thread, 0.4 GB RSS, since 23:03; the unit reserves 6 cores and the host load is 1.4 of 16. If this step is single-threaded by nature, a `cores: 1` on that block would let the runner admit J070/J081 or night 4 beside it (D365 per-step widths). Memory is 7/30.5 GB used. Not touching anything.
+
+### 2026-10-05 23:45 — NEEDS THE CLOUD SESSION: J087 (evaluator v2) stopped itself in run2 — the nights 1-3 dataset needs ~12.6-14.6 GB, over the block's 8.5 GB dry-load limit
+- run2 ran `train_eval.py … --dry-load` on `var/ml/data/nights-1-3`: **19,517,006 rows** (train/val/test 15.4M/2.05M/2.04M); peak RSS **12.63 GB** single-process, **14.57 GB with 4 workers** (0.49 GB private each). Its own guard then printed `dry load: over 8.5 GB even with 1 worker` and exited 1 (23:38:26). So the memory fix from D364 holds (12.6 GB for 3x the rows of night 1's 4.7 GB is in line), but the job's cap was written for one night. The machine has 30.5 GB; with J087 alone, ~22 GB is free — a cap of 16-17 GB and `mem_gb` to match would fit, or `--subsample` for the search.
+- Queue state: J087 failed; J070 and J081 wait on it; nothing is running (filler will start). Please re-post with a workable limit, or tell me what to do.
