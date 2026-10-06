@@ -1,4 +1,4 @@
-# The search's week-3 upgrades — measured (D354–D356)
+# The search's week-3 upgrades — measured (D388–D390)
 
 *2026-10-03, branch `c/search-week3`, in a shared 4-core cloud container with
 Forge 2.0.14 fetched from the tagged release (sha256 `3c0a7c38…8e5dd9`). Smoke
@@ -27,7 +27,7 @@ Counters are the searching seat's (`aStats.counts`), summed.
 
 The win column is 12 games and means nothing; it is there to show nothing broke.
 
-**The budget (D354).** D312's loop kept Forge's answer on 18.5% of searched
+**The budget (D388).** D312's loop kept Forge's answer on 18.5% of searched
 decisions because two complete rounds did not fit in 1.5 s. A larger, earlier
 run of the same "before" config on the dev set (156 games, stopped early)
 gave 11.7% (464 of 3,974): the rate depends on the load as much as on the
@@ -44,13 +44,13 @@ errors ended the search. Since that run a candidate is retired on its second
 error and only Forge's own answer erroring (three times) or errors on every
 candidate fall back; the row "after the fix" is that build.
 
-**The prior (D355).** Ranking ran on 25 of 324 decisions (the others generated
+**The prior (D389).** Ranking ran on 25 of 324 decisions (the others generated
 `cands` or fewer candidates): 143 candidates scored, 100 cut, 393 ms per
 ranking, 16 rankings stopped by their 30% share of the budget. The decisions
 it ran on are the wide ones: attacks and blocks with many creatures, main
 phases with many plays.
 
-**Outlets in the rollouts (D356).** Per rollout, with exactly three rounds per
+**Outlets in the rollouts (D390).** Per rollout, with exactly three rounds per
 decision: 136.3 ms of play against 135.3 (+0.7%), within noise. The policy
 costs nothing measurable; whether it values sacrifice lines better is the
 SPRT's question (J025).
@@ -60,12 +60,12 @@ SPRT's question (J025).
 - `bridge/build.sh`: green; `DecisionSelfTest` 68 checks (44 before): the
   week-3 switches' parse, round trip and refusals, `fillStats` on complete and
   NaN rounds, the anytime order, racing, pruning and verdict on synthetic
-  rounds, and M56's record keys.
+  rounds, and M58's record keys.
 - `./tools/ai-bench.sh --selftest`: 53 checks (42 before) — a ranked anytime
   attack search with `rollout=both` on a five-creature board (6 generated, 3
   kept, priors scored, 2 raced out, a verdict), and the anytime search at a
   60 ms budget.
-- `node tools/check-redaction-selftest.mjs`: the M56 control passes, the M56
+- `node tools/check-redaction-selftest.mjs`: the M58 control passes, the M58
   probe (`generated` a string) fails as it must.
 - An independent review of the diff (all switches off: rollout for rollout the
   old search; findings fixed: the prior's cut on a copy failure, pending

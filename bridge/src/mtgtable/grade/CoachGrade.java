@@ -72,12 +72,17 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *              --opp-deck D | --opp-pool P (a list of cards, a .dck, or "N Name" lines)
  *              --opp-known "Name; 2 Name" | FILE (AI picks the player saw: drawn first)
  *              --opp-deck-public "<reason>" (live modes only: the opponent's list is shared)
- *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json] [--max-logs N]   (D349)
+ *   rollout  --moments M.jsonl --out OUT.jsonl [--shard I/K] [--k 32] [--seed 1] [--max-turns 40]
+ *            [--timeout-ms 120000] [--max-ms 0]   (D382: rollout labels, pool knowledge only; see below)
+ *   rollout-selftest --log F --seq N --opp-pool P [--k 4]   (engine smoke: the same seed twice, the same label)
+ *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json] [--max-logs N] [--min-games 10]   (D349;
+ *              a non-positive scale, or one from fewer games, is printed and NOT written: exit 3, D353 amended)
  *   settings:  --playouts N (rounds an option still in the race ends with; 200)
  *              --initial N (40) --batch N (20) --no-race --seed S (1)
  *              --horizon T (-1 = to the end; else turns past this one, then the leaf evaluator)
  *              --max-turns T (40) --timeout-ms MS (per playout, 120000) --max-playouts N
  *              --max-ms MS (per decision) --cap N (24) --lands --only tok,tok --extra tok,tok
+ *              --leaf hand|eval:MODEL.json (with --horizon >= 0: the learned evaluator scores the leaf; D354)
  * </pre>
  *
  * <p>A moments line (ForgeCoach's {@code bench:coach -- moments}) is JSON with
@@ -106,6 +111,18 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * pool mode (the cube list minus the viewer's deck and drafted pool and every
  * public card, the AI picks the player saw first).  A refused request is
  * answered {@code "status": "refused"} with the reason.
+ *
+ * <p><b>Rollout labels</b> (D382, {@link Rollout}): {@code rollout} plays each
+ * moment -- a dataset row: {@code gameKey}, {@code log}, {@code seq} (the
+ * state frame's), {@code game} and {@code rowsToEnd} (the dataset's index and
+ * row key, copied through), {@code oppPool} (a card list: the cube's), and
+ * optionally {@code deck} / {@code ownPool} / {@code oppKnown} -- out
+ * {@code --k} times from that state with Forge Default on both seats, nothing
+ * forced, and writes the viewer's mean result.  Its knowledge is the LIVE
+ * guard's (D348, {@link HiddenPool#checkLive}) and stricter: an opponent deck
+ * list is refused even when marked public ({@code "status": "refused"}), so
+ * the opponent's hidden cards are always dealt from the pool.  A run resumes:
+ * keys already in {@code --out} are skipped.
  *
  * <p>Threads: the grading runs as one task on Forge's game pool, started with
  * {@code GameAction.invoke} on a scratch game and waited on with a latch, as
@@ -141,6 +158,21 @@ public final class CoachGrade {
                 break;
             case "fit-scale":
                 exit = fitScale(rest);
+                break;
+            case "rollout":
+                exit = rollout(rest);
+                break;
+            case "rollout-selftest":
+                exit = rolloutSelftest(rest);
+                break;
+            case "review-plan":
+                exit = reviewPlan(rest);
+                break;
+            case "review-select":
+                exit = reviewSelect(rest);
+                break;
+            case "review-report":
+                exit = reviewReport(rest);
                 break;
             default:
                 throw new IllegalArgumentException("unknown mode " + args[0]);
@@ -238,8 +270,9 @@ public final class CoachGrade {
                 throw new IllegalArgumentException("cannot read a leaf scale from " + v + ": " + e);
             }
         }
-        if (!(s.leafScale > 0)) {
-            throw new IllegalArgumentException("a leaf scale must be positive: " + s.leafScale);
+        if (!(s.leafScale > 0) || Double.isInfinite(s.leafScale)) {
+            throw new IllegalArgumentException("a leaf scale must be positive: " + s.leafScale + " from " + v
+                    + (v.matches("[0-9.]+") ? "" : " (refit it with coach-grade.sh fit-scale on enough games, or move the file aside)"));
         }
     }
 
@@ -257,8 +290,18 @@ public final class CoachGrade {
         s.playoutTimeoutMs = f.l("timeout-ms", 120_000);
         s.cap = f.i("cap", 24);
         s.lands = f.v.containsKey("lands");
+        s.race.minRounds = f.i("min-rounds", s.race.minRounds);
+        s.maxOptions = f.i("max-options", 0);
         if (f.v.containsKey("leaf-scale")) {
             leafScale(s, f.v.get("leaf-scale"));
+        }
+        final String leaf = f.s("leaf", "hand");   // D354: hand | eval:<model.json> (the evaluator gates)
+        if (!"hand".equals(leaf)) {
+            if (!leaf.startsWith("eval:") || leaf.length() <= 5) {
+                throw new IllegalArgumentException("--leaf is hand or eval:<model.json>: " + leaf);
+            }
+            s.leafEval = mtgtable.ai.SearchPolicy.evaluator(leaf.substring(5));
+            s.leafEvalSource = leaf.substring(5);
         }
         if (f.v.containsKey("only")) {
             s.only = splitTokens(f.v.get("only"));
@@ -463,8 +506,23 @@ public final class CoachGrade {
             shard = Integer.parseInt(p[0]);
             shards = Integer.parseInt(p[1]);
         }
+        // --claim DIR (the review, D353): the JVMs take the next unclaimed moment instead of every K-th,
+        // so one slow decision does not hold up the moments queued behind it.
+        final File claim = f.v.containsKey("claim") ? new File(f.v.get("claim")) : null;
+        if (claim != null) {
+            claim.mkdirs();
+        }
+        // --guard live (the review, D353): every moment's knowledge passes D348's live guard.
+        final boolean guarded = "live".equals(f.s("guard", ""));
+        if (f.v.containsKey("guard") && !guarded) {
+            throw new IllegalArgumentException("--guard takes live");
+        }
         boot();
         final Config cfg = Config.load();
+        // The run's own settings, read once BEFORE any moment is claimed (D353, amended after the PC's
+        // J028): a bad flag -- an unusable leaf scale -- fails this JVM here, with nothing claimed, instead of
+        // after it has claimed a moment it then never grades.
+        settings(f);
         final File out = new File(outPath);
         final Set<String> done = new HashSet<>();
         if (out.isFile()) {
@@ -487,7 +545,7 @@ public final class CoachGrade {
                     continue;
                 }
                 idx++;
-                if (idx % shards != shard) {
+                if (claim == null ? idx % shards != shard : !claim(claim, idx)) {
                     continue;
                 }
                 final Map<?, ?> mo = (Map<?, ?>) Json.parse(raw);
@@ -508,22 +566,36 @@ public final class CoachGrade {
                 if (WireLog.bool(mo, "lands")) {
                     s.lands = true;   // a spell case that offers the land drop (ForgeCoach's lands: true)
                 }
+                if (WireLog.str(mo, "played") != null) {
+                    s.played = WireLog.str(mo, "played");   // the review's moments (D353)
+                }
+                if (WireLog.arr(mo, "only").length > 0) {
+                    final List<String> only = new ArrayList<>();
+                    for (final Object t : WireLog.arr(mo, "only")) {
+                        only.add(String.valueOf(t));
+                    }
+                    s.only = only;   // a deepened decision plays its shortlist again (D353)
+                }
                 String line;
                 final long t0 = System.nanoTime();
                 try {
                     final File logFile = resolve(cfg, logPath);
                     final WireLog log = WireLog.read(logFile);
-                    final Rebuild.Knowledge k = knowledge(cfg, log,
+                    final Rebuild.Knowledge k = guarded
+                            ? liveKnowledge(cfg.root(), log, guardFlags(f, mo))
+                            : knowledge(cfg, log,
                             WireLog.str(mo, "deck") != null ? WireLog.str(mo, "deck") : f.s("deck", null),
                             WireLog.str(mo, "oppDeck") != null ? WireLog.str(mo, "oppDeck") : f.s("opp-deck", null),
                             WireLog.str(mo, "oppPool") != null ? WireLog.str(mo, "oppPool") : f.s("opp-pool", null));
                     line = gradeOne(cfg, logFile, frame, mode, type, k, s, f.l("max-ms", 0));
+                } catch (final HiddenPool.Refused e) {
+                    line = new Json.JsonOut().obj().n("v", 1).n("status", "refused").n("error", e.getMessage()).end().done();
                 } catch (final Exception e) {
                     line = new Json.JsonOut().obj().n("v", 1).n("status", "error").n("error", String.valueOf(e)).end().done();
                 }
                 // The moment's own fields in front of the grade.
                 final Json.JsonOut head = new Json.JsonOut().obj().n("momentKey", mkey).n("log", logPath).n("frame", frame)
-                        .n("mode", mode).n("type", type);
+                        .n("mode", mode).n("type", type).n("shard", shard);
                 for (final String kf : new String[] {"id", "label", "source", "deck", "oppDeck", "oppPool"}) {
                     if (WireLog.str(mo, kf) != null) {
                         head.n(kf, WireLog.str(mo, kf));
@@ -540,6 +612,225 @@ public final class CoachGrade {
             }
         }
         System.err.println("[coach-grade] batch shard " + shard + "/" + shards + ": " + graded + " graded");
+        return 0;
+    }
+
+    /** Claim moment {@code idx} for this JVM: true when no other JVM has (an atomic file create). */
+    static boolean claim(final File dir, final int idx) throws IOException {
+        return new File(dir, Integer.toString(idx)).createNewFile();
+    }
+
+    /**
+     * A guarded batch moment's knowledge flags (D353): the run's own flags, a
+     * moment's {@code deck} / {@code oppPool} over them -- and a moment's
+     * {@code oppDeck} too, so the guard refuses it rather than it slipping past.
+     */
+    static Flags guardFlags(final Flags f, final Map<?, ?> mo) {
+        final Flags g = new Flags(new String[0]);
+        for (final String k : new String[] {"deck", "own-pool", "opp-deck", "opp-pool", "opp-known", "opp-deck-public"}) {
+            if (f.v.containsKey(k)) {
+                g.v.put(k, f.v.get(k));
+            }
+        }
+        for (final String[] kf : new String[][] {{"deck", "deck"}, {"oppDeck", "opp-deck"}, {"oppPool", "opp-pool"}}) {
+            if (WireLog.str(mo, kf[0]) != null) {
+                g.v.put(kf[1], WireLog.str(mo, kf[0]));
+            }
+        }
+        return g;
+    }
+
+    // ------------------------------------------------------------------
+    // The post-game review (D353): the engine-free steps around two batches
+    // ------------------------------------------------------------------
+
+    /**
+     * {@code review-plan --log F --seat N --out plan.jsonl [knowledge]}: the
+     * log's graded decisions as moments lines.  Refuses a seat that is not the
+     * log's own (the log is one seat's redacted view) and, before any grading,
+     * knowledge the live guard refuses.  Prints {@code {"decisions": n, ...}}.
+     */
+    static int reviewPlan(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final String logPath = f.s("log", null);
+        final String outPath = f.s("out", null);
+        if (logPath == null || outPath == null || !f.v.containsKey("seat")) {
+            throw new IllegalArgumentException("review-plan needs --log, --seat and --out");
+        }
+        final Config cfg = Config.load();
+        final File logFile = resolve(cfg, logPath);
+        final WireLog log = WireLog.read(logFile);
+        final int seat = f.i("seat", -1);
+        if (seat != log.seat) {
+            System.out.println(new Json.JsonOut().obj().n("status", "refused").n("error", "this log is seat " + log.seat
+                    + "'s view; a review of seat " + seat + " needs that seat's own log").end().done());
+            return 3;
+        }
+        try {
+            HiddenPool.checkLive(f.v, log.header, log.seat, cfg.root());
+        } catch (final HiddenPool.Refused e) {
+            System.out.println(new Json.JsonOut().obj().n("status", "refused").n("error", e.getMessage()).end().done());
+            return 3;
+        }
+        if (f.v.containsKey("leaf-scale")) {
+            // The scale the triage and the deepening will read (D353, amended): an unusable one fails the
+            // review here, in plain words, rather than every triage JVM after it has claimed a decision.
+            try {
+                leafScale(new Grader.Settings(), f.v.get("leaf-scale"));
+            } catch (final IllegalArgumentException e) {
+                System.out.println(new Json.JsonOut().obj().n("status", "error").n("error", e.getMessage()).end().done());
+                return 3;
+            }
+        }
+        final List<Review.Planned> plan = Review.plan(log);
+        final File out = new File(outPath);
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        Files.write(out.toPath(), Review.momentLines(plan, logPath), StandardCharsets.UTF_8);
+        final int jobs = f.i("jobs", 1);
+        final long budget = Review.triageBudgetMs(plan.size(), jobs, f.l("triage-ms", 15_000),
+                f.l("triage-min-ms", 1500), f.l("triage-max-ms", 6000));
+        System.out.println(new Json.JsonOut().obj().n("status", "ok").n("decisions", plan.size())
+                .n("jobs", Math.max(1, Math.min(jobs, plan.size()))).n("triageMsPerDecision", budget)
+                .n("gameId", String.valueOf(WireLog.str(log.header, "gameId"))).n("frames", log.frames.size()).end().done());
+        return 0;
+    }
+
+    static List<Map<?, ?>> readLines(final String path) throws IOException {
+        final List<Map<?, ?>> out = new ArrayList<>();
+        if (path == null || !new File(path).isFile()) {
+            return out;
+        }
+        for (final String l : Files.readAllLines(new File(path).toPath(), StandardCharsets.UTF_8)) {
+            if (!l.isBlank()) {
+                out.add((Map<?, ?>) Json.parse(l));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * {@code review-select --plan P --triage T --out deep.jsonl --k 6 --jobs 7 --deep-ms 150000
+     * [--deep-horizon -1] [--full-min-ms 60000]}: the moments to grade again
+     * ({@link Review#select}) and how ({@link Review#allocate}); prints the
+     * allocation as JSON.
+     */
+    static int reviewSelect(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final List<Map<?, ?>> triage = readLines(f.s("triage", null));
+        final List<Review.Pick> picks = Review.select(triage, f.i("k", 6));
+        final Map<String, Map<?, ?>> byKey = new java.util.HashMap<>();
+        for (final Map<?, ?> t : triage) {
+            byKey.put(WireLog.str(t, "momentKey"), t);
+        }
+        final Set<String> keys = new HashSet<>();
+        for (final Review.Pick p : picks) {
+            keys.add(p.key);
+        }
+        final List<String> out = new ArrayList<>();
+        for (final String l : Files.readAllLines(new File(f.s("plan", "")).toPath(), StandardCharsets.UTF_8)) {
+            if (l.isBlank()) {
+                continue;
+            }
+            final Map<?, ?> mo = (Map<?, ?>) Json.parse(l);
+            final String key = WireLog.str(mo, "log") + "#live" + WireLog.num(mo, "frame", -1) + ":" + WireLog.str(mo, "type");
+            if (keys.contains(key)) {
+                final List<String> only = Review.deepOptions(byKey.get(key), f.i("deep-options", 5));
+                final Json.JsonOut oj = new Json.JsonOut().arr();
+                for (final String t : only) {
+                    oj.v(t);
+                }
+                out.add(l.substring(0, l.lastIndexOf('}')) + ",\"only\":" + oj.end().done() + "}");
+            }
+        }
+        Files.write(new File(f.s("out", "")).toPath(), out, StandardCharsets.UTF_8);
+        final Review.Alloc a = Review.allocate(out.size(), f.i("jobs", 1), f.l("deep-ms", 150_000), f.i("deep-horizon", -1),
+                f.l("full-min-ms", 60_000));
+        final Json.JsonOut j = new Json.JsonOut().obj().n("k", out.size()).n("jobs", a.jobs).n("perJvm", a.perJvm)
+                .n("msPerDecision", a.msPerDecision).n("horizon", a.horizon);
+        j.key("picks").arr();
+        for (final Review.Pick p : picks) {
+            j.obj().n("key", p.key).n("reason", p.reason).end();
+        }
+        System.out.println(j.end().end().done());
+        return 0;
+    }
+
+    /**
+     * {@code review-report --log F --plan P --triage T [--deep D --picks S] --out R
+     * [--config JSON] [--timing JSON] [--triage-jobs J --deep-jobs J]}: the one report
+     * ({@link Review#report}).
+     */
+    static int reviewReport(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final Config cfg = Config.load();
+        final String logPath = f.s("log", "");
+        final WireLog log = WireLog.read(resolve(cfg, logPath));
+        final List<Review.Planned> plan = new ArrayList<>();
+        final List<String> order = new ArrayList<>();
+        for (final Map<?, ?> mo : readLines(f.s("plan", null))) {
+            final Review.Planned p = new Review.Planned();
+            p.frame = (int) WireLog.num(mo, "frame", -1);
+            p.stateFrame = (int) WireLog.num(mo, "stateFrame", -1);
+            p.type = WireLog.str(mo, "type");
+            p.played = WireLog.str(mo, "played");
+            p.turn = WireLog.num(mo, "turn", 0);
+            p.round = WireLog.num(mo, "round", 0);
+            p.phase = WireLog.str(mo, "phase");
+            plan.add(p);
+            order.add(p.momentKey(logPath));
+        }
+        final List<Map<?, ?>> triage = readLines(f.s("triage", null));
+        final List<Map<?, ?>> deep = readLines(f.s("deep", null));
+        final List<Review.Pick> picks = new ArrayList<>();
+        if (f.v.containsKey("picks")) {
+            final Map<?, ?> sel = (Map<?, ?>) Json.parse(Files.readString(new File(f.s("picks", "")).toPath(), StandardCharsets.UTF_8));
+            for (final Object o : WireLog.arr(sel, "picks")) {
+                picks.add(new Review.Pick(WireLog.str((Map<?, ?>) o, "key"), WireLog.str((Map<?, ?>) o, "reason")));
+            }
+        }
+        final List<String> deepOrder = new ArrayList<>();
+        for (final String k : order) {
+            for (final Review.Pick p : picks) {
+                if (p.key.equals(k)) {
+                    deepOrder.add(k);
+                }
+            }
+        }
+        final Review.Meta m = new Review.Meta();
+        m.log = logPath;
+        m.gameId = String.valueOf(WireLog.str(log.header, "gameId"));
+        m.seat = log.seat;
+        m.frames = log.frames.size();
+        m.createdAt = java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString();
+        m.config = f.s("config", "{}");
+        String timing = f.s("timing", "{}").trim();
+        final long tg = Review.gradeMs(triage, order, f.i("triage-jobs", 1));
+        final long dg = Review.gradeMs(deep, deepOrder, f.i("deep-jobs", 1));
+        timing = (timing.equals("{}") ? "{" : timing.substring(0, timing.length() - 1) + ",")
+                + "\"triageGradeMs\":" + tg + ",\"deepGradeMs\":" + dg + "}";
+        m.timing = timing;
+        Json.parse(m.config);   // both must be JSON objects
+        Json.parse(m.timing);
+        final String report = Review.report(m, plan, triage, deep, picks);
+        final File out = new File(f.s("out", ""));
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        Files.writeString(out.toPath(), report + "\n", StandardCharsets.UTF_8);
+        final Map<?, ?> rep = (Map<?, ?>) Json.parse(report);
+        final Map<?, ?> sum = WireLog.map(rep, "summary");
+        System.out.println("review: " + WireLog.num(sum, "decisions", 0) + " decision(s), " + WireLog.num(sum, "graded", 0)
+                + " graded, " + WireLog.num(sum, "mistakes", 0) + " mistake(s), " + WireLog.num(sum, "closeCalls", 0)
+                + " close call(s), " + WireLog.num(sum, "deepened", 0) + " deepened, " + Review.errors(rep) + " error(s) -> " + out);
+        // D353, amended: a report in which every decision is an error is written (it is the evidence) but is
+        // not a review: exit 4 and say why, so coach-grade.sh ends REVIEW FAILED instead of REVIEW DONE.
+        final String failed = Review.failure(rep);
+        if (failed != null) {
+            System.out.println("failed: " + failed);
+            return 4;
+        }
         return 0;
     }
 
@@ -608,7 +899,7 @@ public final class CoachGrade {
                 for (final String[] kf : new String[][] {{"log", "log"}, {"type", "type"}, {"frame", "frame"}, {"mode", "mode"},
                     {"oppDeck", "opp-deck"}, {"oppPool", "opp-pool"}, {"deck", "deck"}, {"budgetMs", "budget-ms"},
                     {"horizon", "horizon"}, {"seed", "seed"}, {"only", "only"}, {"minRounds", "min-rounds"},
-                    {"ownPool", "own-pool"}, {"leafScale", "leaf-scale"}}) {
+                    {"ownPool", "own-pool"}, {"leafScale", "leaf-scale"}, {"leaf", "leaf"}}) {
                     if (req.get(kf[0]) != null) {
                         f.v.put(kf[1], String.valueOf(req.get(kf[0])));
                     }
@@ -751,6 +1042,15 @@ public final class CoachGrade {
         }
         final String json = fitReport(rows, games.size(), logs.size(), skipped, f.i("bootstrap", 200), f.s("logs", ""));
         final File out = new File(f.s("out", new File(cfg.root(), FITTED_SCALE).getPath()));
+        // D353, amended after the PC's J015 / J028: a fit on one game came out at -10325, was written as the
+        // live scale, and every later triage, analyse and serve refused it.  Such a fit is printed, never written.
+        final String problem = fitProblem((Map<?, ?>) Json.parse(json), f.i("min-games", FIT_MIN_GAMES));
+        if (problem != null) {
+            System.out.println(json);
+            System.err.println("[coach-grade] fit-scale: NOT written to " + out + ": " + problem
+                    + (out.isFile() ? " (the file there is left as it was)" : ""));
+            return 3;
+        }
         if (out.getParentFile() != null) {
             out.getParentFile().mkdirs();
         }
@@ -758,6 +1058,31 @@ public final class CoachGrade {
         System.out.println(json);
         System.err.println("[coach-grade] fit-scale -> " + out);
         return rows.isEmpty() ? 1 : 0;
+    }
+
+    /** The fewest games a fitted scale may come from before {@code fit-scale} writes it (D353, amended). */
+    static final int FIT_MIN_GAMES = 10;
+
+    /**
+     * Why a {@code fit-scale} report must not be written as the live scale, or null: a fitted scale that
+     * is not a positive number (the readers refuse it), or one fitted on fewer than {@code minGames} games
+     * (one game's positions all share one result: the slope is noise, often negative).  An unfitted report
+     * (fewer than two positions: the default scale, {@code "fitted": false}) is not a problem.
+     */
+    static String fitProblem(final Map<?, ?> fit, final int minGames) {
+        if (!Boolean.TRUE.equals(fit.get("fitted"))) {
+            return null;
+        }
+        final Object sc = fit.get("scale");
+        final double scale = sc instanceof Number ? ((Number) sc).doubleValue() : Double.NaN;
+        if (!(scale > 0) || Double.isInfinite(scale)) {
+            return "the fitted scale is " + sc + ", not a positive number";
+        }
+        final long games = WireLog.num(fit, "games", 0);
+        if (games < minGames) {
+            return "fitted on " + games + " game(s), fewer than --min-games " + minGames;
+        }
+        return null;
     }
 
     static void collectLogs(final File f, final List<File> out) {
@@ -768,7 +1093,8 @@ public final class CoachGrade {
                     collectLogs(k, out);
                 }
             }
-        } else if (f.isFile() && (f.getName().endsWith(".jsonl") || f.getName().endsWith(".jsonl.gz"))) {
+        } else if (f.isFile() && (f.getName().endsWith(".jsonl") || f.getName().endsWith(".jsonl.gz")
+                || f.getName().endsWith(".jsonl.zst"))) {   // listed so WireLog refuses it loudly (D370)
             out.add(f);
         }
     }
@@ -900,6 +1226,242 @@ public final class CoachGrade {
             failures++;
         }
         System.err.println((ok ? "ok   " : "FAIL ") + what);
+    }
+
+    // ------------------------------------------------------------------
+    // Rollout labels (D382)
+    // ------------------------------------------------------------------
+
+    static Rollout.Settings rolloutSettings(final Flags f) {
+        final Rollout.Settings s = new Rollout.Settings();
+        s.k = f.i("k", 32);
+        s.seed = f.l("seed", 1);
+        s.maxTurns = f.i("max-turns", 40);
+        s.playoutTimeoutMs = f.l("timeout-ms", 120_000);
+        s.maxMs = f.l("max-ms", 0);
+        if (s.k < 1) {
+            throw new IllegalArgumentException("--k is at least 1");
+        }
+        return s;
+    }
+
+    /**
+     * A moment's knowledge for a rollout: pool mode only (D348, stricter than
+     * the live guard -- no opponent list, public or not), then
+     * {@link HiddenPool#checkLive} on the pool, then {@link #knowledge}.
+     */
+    static Rebuild.Knowledge rolloutKnowledge(final File root, final WireLog log, final Map<?, ?> mo) throws IOException {
+        if (mo.get("oppDeck") != null || mo.get("oppDeckPublic") != null) {
+            throw new HiddenPool.Refused("a rollout label never takes the opponent's deck list: its hidden cards are dealt from"
+                    + " the pool (D348, D382)");
+        }
+        final String pool = WireLog.str(mo, "oppPool");
+        if (pool == null) {
+            throw new HiddenPool.Refused("a rollout needs the opponent's pool (oppPool: the cube's card list)");
+        }
+        final Flags f = new Flags(new String[0]);
+        put(f, "opp-pool", pool);
+        put(f, "deck", WireLog.str(mo, "deck"));
+        put(f, "own-pool", WireLog.str(mo, "ownPool"));
+        put(f, "opp-known", WireLog.str(mo, "oppKnown"));
+        HiddenPool.checkLive(f.v, log.header, log.seat, root);
+        return knowledge(root, log, f);
+    }
+
+    /** One moment's label line (Forge's printing swallowed); a refused or unreadable moment gets its status line. */
+    static String rolloutOne(final Config cfg, final Map<?, ?> mo, final Rollout.Settings s) throws Exception {
+        final String logPath = WireLog.str(mo, "log");
+        final String gameKey = WireLog.str(mo, "gameKey");
+        final Map<String, Object> extra = new java.util.LinkedHashMap<>();
+        for (final String k : new String[] {"id", "gameKey", "log"}) {
+            if (mo.get(k) != null) {
+                extra.put(k, String.valueOf(mo.get(k)));
+            }
+        }
+        for (final String k : new String[] {"game", "rowsToEnd", "seq", "outcome"}) {
+            if (mo.get(k) instanceof Number) {
+                extra.put(k, mo.get(k));
+            }
+        }
+        final java.util.function.BiFunction<String, String, String> bad = (status, why) -> {
+            final Json.JsonOut j = new Json.JsonOut().obj().n("v", 1).n("key", gameKey + "#?");
+            for (final Map.Entry<String, Object> e : extra.entrySet()) {
+                if (e.getValue() instanceof Number) {
+                    j.n(e.getKey(), ((Number) e.getValue()).longValue());
+                } else {
+                    j.n(e.getKey(), String.valueOf(e.getValue()));
+                }
+            }
+            return j.n("status", status).n("error", why).end().done();
+        };
+        if (logPath == null || gameKey == null || !(mo.get("seq") instanceof Number)) {
+            return bad.apply("error", "a rollout moment needs log, gameKey and seq");
+        }
+        final File logFile = resolve(cfg, logPath);
+        final WireLog log = WireLog.read(logFile);
+        final Rebuild.Knowledge k;
+        try {
+            k = rolloutKnowledge(cfg.root(), log, mo);
+        } catch (final HiddenPool.Refused e) {
+            return bad.apply("refused", e.getMessage());
+        }
+        final int frame = Rollout.frameOfSeq(log, WireLog.num(mo, "seq", -1));
+        if (frame < 0) {
+            return bad.apply("error", "no state frame with seq " + WireLog.num(mo, "seq", -1) + " in " + logPath);
+        }
+        final WireLog.Moment m = log.review(frame);
+        final String key = Rollout.key(gameKey, frame);
+        final String[] out = new String[1];
+        final ByteArrayOutputStream noise = new ByteArrayOutputStream();
+        realOut = System.out;
+        System.setOut(new PrintStream(noise, true, "UTF-8"));   // Forge prints a lot during a game
+        try {
+            final long wait = s.maxMs > 0 ? s.maxMs + 600_000 : (long) s.k * s.playoutTimeoutMs + 600_000;
+            onGameThread(() -> out[0] = Rollout.run(log, m, k, s, key, extra), wait);
+        } finally {
+            System.setOut(realOut);
+        }
+        return out[0];
+    }
+
+    static int rollout(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final String movesPath = f.s("moments", null);
+        final String outPath = f.s("out", null);
+        if (movesPath == null || outPath == null) {
+            throw new IllegalArgumentException("rollout needs --moments and --out");
+        }
+        for (final String no : new String[] {"opp-deck", "opp-deck-public"}) {
+            if (f.v.containsKey(no)) {
+                throw new HiddenPool.Refused("rollout does not take --" + no + ": the opponent's hidden cards come from its pool (D348, D382)");
+            }
+        }
+        int shard = 0;
+        int shards = 1;
+        if (f.v.containsKey("shard")) {
+            final String[] p = f.v.get("shard").split("/");
+            shard = Integer.parseInt(p[0]);
+            shards = Integer.parseInt(p[1]);
+        }
+        final Rollout.Settings s = rolloutSettings(f);   // a bad flag fails here, before the engine boots
+        boot();
+        final Config cfg = Config.load();
+        final File out = new File(outPath);
+        final Set<String> done = new HashSet<>();
+        // --done FILE: every shard's lines so far (coach-grade.sh joins them), so a retry with another
+        // --jobs does not label a moment twice.
+        for (final File d : new File[] {out, f.v.containsKey("done") ? new File(f.v.get("done")) : null}) {
+            if (d == null || !d.isFile()) {
+                continue;
+            }
+            for (final String l : Files.readAllLines(d.toPath(), StandardCharsets.UTF_8)) {
+                if (!l.isBlank()) {
+                    try {
+                        done.add(String.valueOf(((Map<?, ?>) Json.parse(l)).get("id")));
+                    } catch (final RuntimeException e) {
+                        // a torn last line of a killed shard: that moment is labelled again
+                    }
+                }
+            }
+        }
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        final List<String> lines = Files.readAllLines(new File(movesPath).toPath(), StandardCharsets.UTF_8);
+        int idx = -1;
+        int labelled = 0;
+        final long t0 = System.nanoTime();
+        try (Writer w = new OutputStreamWriter(new FileOutputStream(out, true), StandardCharsets.UTF_8)) {
+            for (final String raw : lines) {
+                if (raw.isBlank()) {
+                    continue;
+                }
+                idx++;
+                if (idx % shards != shard) {
+                    continue;
+                }
+                final Map<?, ?> mo = (Map<?, ?>) Json.parse(raw);
+                final String id = String.valueOf(mo.get("id"));
+                if (mo.get("id") == null) {
+                    throw new IllegalArgumentException("moment " + idx + " has no id");
+                }
+                if (done.contains(id)) {
+                    continue;
+                }
+                String line;
+                try {
+                    line = rolloutOne(cfg, mo, s);
+                } catch (final Exception e) {
+                    line = new Json.JsonOut().obj().n("v", 1).n("id", id).n("status", "error").n("error", String.valueOf(e)).end().done();
+                }
+                w.write(line);
+                w.write('\n');
+                w.flush();
+                labelled++;
+                if (labelled % 10 == 0) {
+                    System.err.printf(java.util.Locale.ROOT, "[coach-grade] rollout shard %d/%d: %d labelled, %.1f s each%n", shard, shards,
+                            labelled, (System.nanoTime() - t0) / 1e9 / labelled);
+                }
+            }
+        }
+        System.err.println("[coach-grade] rollout shard " + shard + "/" + shards + ": " + labelled + " labelled -> " + outPath);
+        return 0;
+    }
+
+    /**
+     * The rollout's engine smoke (D382): one fixture position labelled twice on
+     * one seed and once on another, and the refusals.  The same seed must give
+     * the same playout results, one by one (a label is a function of its seed);
+     * the opponent's hidden cards come from the pool, never from a list.
+     */
+    static int rolloutSelftest(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final String logPath = f.s("log", null);
+        final String pool = f.s("opp-pool", null);
+        if (logPath == null || pool == null || !f.v.containsKey("seq")) {
+            throw new IllegalArgumentException("rollout-selftest needs --log, --seq and --opp-pool");
+        }
+        boot();
+        final Config cfg = Config.load();
+        final Rollout.Settings s = rolloutSettings(f);
+        if (!f.v.containsKey("k")) {
+            s.k = 4;
+        }
+        final Map<String, Object> mo = new java.util.LinkedHashMap<>();
+        mo.put("id", "selftest");
+        mo.put("gameKey", f.s("game-key", "selftest"));
+        mo.put("log", logPath);
+        mo.put("seq", (long) f.i("seq", -1));
+        mo.put("oppPool", pool);
+        final String a = rolloutOne(cfg, mo, s);
+        final String b = rolloutOne(cfg, mo, s);
+        System.out.println(a);
+        final Map<?, ?> ja = (Map<?, ?>) Json.parse(a);
+        final Map<?, ?> jb = (Map<?, ?>) Json.parse(b);
+        check("ok".equals(ja.get("status")), "the position was labelled (" + ja.get("status") + (ja.get("error") != null ? ": " + ja.get("error") : "") + ")");
+        check(WireLog.num(ja, "k", 0) == s.k, ja.get("k") + " of " + s.k + " playouts scored");
+        check(String.valueOf(ja.get("opponent")).startsWith("pool:"), "the opponent's hidden cards come from the pool: " + ja.get("opponent"));
+        check(java.util.Arrays.equals(WireLog.arr(ja, "results"), WireLog.arr(jb, "results")),
+                "the same seed twice: the same results, playout by playout (" + java.util.Arrays.toString(WireLog.arr(ja, "results")) + ")");
+        check(String.valueOf(ja.get("p")).equals(String.valueOf(jb.get("p"))), "the same seed twice: the same label (" + ja.get("p") + ")");
+        final Rollout.Settings s2 = rolloutSettings(f);
+        s2.k = s.k;
+        s2.seed = s.seed + 1;
+        final Map<?, ?> jc = (Map<?, ?>) Json.parse(rolloutOne(cfg, mo, s2));
+        check("ok".equals(jc.get("status")), "another seed labels it too (p " + jc.get("p") + ")");
+        // The refusals: an opponent list, public or not, and the opponent's own deck file as a "pool".
+        final Map<String, Object> withDeck = new java.util.LinkedHashMap<>(mo);
+        withDeck.put("oppDeck", pool);
+        check("refused".equals(((Map<?, ?>) Json.parse(rolloutOne(cfg, withDeck, s))).get("status")), "an opponent deck list is refused");
+        final Map<String, Object> pub = new java.util.LinkedHashMap<>(mo);
+        pub.put("oppDeckPublic", "a shared list");
+        check("refused".equals(((Map<?, ?>) Json.parse(rolloutOne(cfg, pub, s))).get("status")), "even marked public");
+        final Map<String, Object> noPool = new java.util.LinkedHashMap<>(mo);
+        noPool.remove("oppPool");
+        check("refused".equals(((Map<?, ?>) Json.parse(rolloutOne(cfg, noPool, s))).get("status")), "a moment with no pool is refused");
+        System.out.println("rollout selftest: " + checks + " check(s), " + failures + " failure(s); "
+                + ja.get("msPerPlayout") + " ms a playout, " + ja.get("ms") + " ms for " + ja.get("k") + " playouts");
+        return failures == 0 ? 0 : 1;
     }
 
     static int selftest(final String[] argv) throws Exception {

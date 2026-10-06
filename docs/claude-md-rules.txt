@@ -61,6 +61,7 @@
 - **The personal tier is never committed**: Tier 3's likeness models and anything
 **D190** and `docs/guides/personal-tier.md`, and `tools/CLAUDE.md`'s *The
 **A decision's number is final** (**D200**). A lane reserves a block of numbers
+**From D379 on, each decision is a file of its own** (**D379**):
 **The socket's own two rules.** The ask timeout over ws is **0 — infinite —
 **A human seat has no wall clock** (**D286**). `--transport ws` and `console` put no
 **`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
@@ -273,7 +274,7 @@ span: Never touch `forge.GuiDesktop`
 span: `IGuiBase.isGuiThread()` must be `"mtg-table-EDT".equals(Thread.currentThread().getName())`,
 span: The Forge view graph (`GameView` / `PlayerView` / `CardView`, `Tracker`) is walked ONLY on the game thread
 span: `isGameThread()` is not the whole rule.
-span: A fourth hop needs a fourth argument, in `DECISIONS.md`
+span: A fourth hop needs a fourth argument, in a written decision
 span: The lint counts them
 span: Never call `FModel.getDecks()`
 span: Do not call `Game.setNoGUIUser()`
@@ -347,6 +348,7 @@ span: Never touch `~/forge` or `~/.forge`
 span: The personal tier is never committed
 span: A decision's number is final
 span: no document states a total
+span: From D379 on, each decision is a file of its own
 span: The living wire spec.
 span: verified headless boot recipe (§4)
 span: the spec the card library was built to

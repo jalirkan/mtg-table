@@ -57,6 +57,9 @@ const REQUIRED = [
   ['m47-yourprofile-on-a-human-seat.jsonl', 'fail'],
   ['m47-yourprofile-is-a-path.jsonl', 'fail'],
   ['m47-pace-not-a-number.jsonl', 'fail'],
+  // Amendment M56: the AI seat's policy, one word of a fixed set.
+  ['m56-aipolicy-present.jsonl', 'pass'],
+  ['m56-aipolicy-not-a-policy.jsonl', 'fail'],
   // Amendment M49 (the status layer): a full card's keywords -- constants only,
   // [] when face down, never on a stub, and on every full card or none.
   ['m49-keywords-present.jsonl', 'pass'],
@@ -69,6 +72,17 @@ const REQUIRED = [
   ['a3-revealed-top-under-courser.jsonl', 'pass'],
   ['a3-revealed-top-two-cards.jsonl', 'fail'],
   ['a3-revealed-top-look-is-private.jsonl', 'fail'],
+  // D371 (A9): an opponent's face-down card in exile may show its face to the
+  // seat whose effect dug it there with a look permission (Gonti, Thief of
+  // Sanity) -- and in no other shape; in play, the face is the controller's.
+  ['a9-look-permission-under-gonti.jsonl', 'pass'],
+  ['a9-exiled-face-down-named-without-a-dig.jsonl', 'fail'],
+  ['a9-dig-by-the-opponent.jsonl', 'fail'],
+  ['a9-alt-appears-after-the-dig.jsonl', 'fail'],
+  ['a9-opponent-morph-named.jsonl', 'fail'],
+  ['a9-stolen-morph-named-for-its-owner.jsonl', 'fail'],
+  // ... and the opposite direction: the viewer's own hand served as a stub.
+  ['own-hand-card-redacted.jsonl', 'fail'],
   // Amendment M55 (D347): an AI seat's decision records, in its own log only;
   // the planted leaks are another seat's record and an option naming a card
   // the viewer cannot see.
@@ -79,6 +93,13 @@ const REQUIRED = [
   ['m55-chosen-is-not-an-option.jsonl', 'fail'],
   ['m55-frame-is-not-a-state.jsonl', 'fail'],
   ['m55-decision-in-a-seat-recording.jsonl', 'fail'],
+  // Amendment M57 (D358): play exploration's header and decision marks; the
+  // planted leak is a mark whose Forge answer names the opponent's hand card.
+  ['m57-explore-present.jsonl', 'pass'],
+  ['m57-explore-without-header.jsonl', 'fail'],
+  ['m57-explore-forge-names-the-opponent-hand.jsonl', 'fail'],
+  ['m57-explore-carries-a-label.jsonl', 'fail'],
+  ['m57-playexplore-in-a-seat-recording.jsonl', 'fail'],
 ];
 for (const [file, level] of REQUIRED) {
   const entry = manifest.find((e) => e.file === file);

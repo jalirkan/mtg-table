@@ -173,6 +173,13 @@
 #                                 Then 12i: MidMoveSelfTest (D352) -- a "may
 #                                 look" revealer leaves play and no frame shows
 #                                 the top card it revealed (one engine boot)
+#                                 Then 12j: TimeoutSelfTest (D355) -- a game the
+#                                 watchdog ends records cleanly: no snapshot
+#                                 error, its outcome in the last frame, `over`
+#                                 last (one engine boot)
+#                                 Then 12k: FaceDownSelfTest (D371) -- a
+#                                 face-down card's alt only where Forge's
+#                                 canFaceDownBeShownTo says (one engine boot)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -1759,6 +1766,7 @@ s11_fresh() {
 s12_selftest() {
   hdr 12 "check-redaction-selftest.mjs -- the checker's own negative controls"
   node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"
+  node tools/requarantine-selftest.mjs || die "requarantine-selftest.mjs (D371: re-checking and restoring a quarantined recording)"
 }
 
 # 12b. The workshop's catalog is GENERATED (D104) from decks/*.dck, the
@@ -1896,6 +1904,17 @@ s12e_skipped() {
 #      /match and scripts/play.sh's restart, the real play.sh driven against a
 #      FAKE engine (MTGTABLE_TEST_FAKE_ENGINE; no Forge, no build) on free
 #      ports, its files under var/match-launcher-selftest/; about 25 s.
+#      Since D353 also tools/review-runner-selftest.mjs: /review against a
+#      FAKE coach-grade.sh (validation, the queue, the stages, the report);
+#      its files under var/review-runner-selftest/; about 10 s.
+#      Since D385 also tools/auto-review-selftest.mjs: the automatic review
+#      after every human game against the same fake (which games, the lab
+#      runner's gate, low priority, dedupe, the crash-safe queue file, gzip
+#      logs); its files under var/auto-review-selftest/; about 8 s.
+#      Since D361 also tools/eval-runner-selftest.mjs: /eval against a FAKE
+#      eval_serve.py, then (where python3 has numpy) the real one with
+#      fixtures/eval/model.json, two recordings' decision rows through the
+#      route against the golden hashes and P(win); about 5 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
@@ -1903,6 +1922,15 @@ s12f_coach() {
   # D303: the helper's /match and play.sh's restart, against a fake engine.
   node tools/match-launcher-selftest.mjs \
     || die "match-launcher-selftest.mjs (12f: the match launcher broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D353: the helper's /review against a fake coach-grade.sh.
+  node tools/review-runner-selftest.mjs \
+    || die "review-runner-selftest.mjs (12f: the review runner broke its contract with ForgeCoach -- see the FAIL lines above)"
+  # D385: the automatic review after every human game, against the same fake.
+  node tools/auto-review-selftest.mjs \
+    || die "auto-review-selftest.mjs (12f: the automatic review broke its rules -- see the FAIL lines above)"
+  # D361: the helper's /eval, the win chance.
+  node tools/eval-runner-selftest.mjs \
+    || die "eval-runner-selftest.mjs (12f: the win chance broke its contract with ForgeCoach, or its features left the training rows' -- see the FAIL lines above)"
 }
 
 # 12g. D293-D296: the cube lab (tools/cubelab.sh) at its smallest -- two grid
@@ -1979,7 +2007,10 @@ s12g_cubelab() {
 #      the viewer's own hand -- plus labels, determinism, the schema golden and
 #      the split by game.  The encoder is standard library; the dataset and
 #      baseline tests need numpy and are SKIPPED without it, which this step
-#      prints.  No engine, no network.
+#      prints.  No engine, no network.  Since D361 also tests/test_eval_serve.py:
+#      the coach helper's online encoding against encode_game's rows (standard
+#      library) and against a dataset.py build with a model trained on it
+#      (numpy; about 30 s).
 s12h_ml() {
   printf '\n=== 12h. tools/ml tests -- the dataset pipeline, hidden information held (D305) ===\n'
   command -v python3 >/dev/null || die "python3 not found (12h: tools/ml needs Python 3)"
@@ -2007,6 +2038,46 @@ s12i_midmove() {
   if [ "$rc" != "0" ]; then
     capped "$rc" && die "MidMoveSelfTest did not finish within ${GAME_TIMEOUT}s"
     die "MidMoveSelfTest exited $rc: a frame can show a top card its revealer no longer reveals (12i, D352; log: var/check-all-midmove.log)"
+  fi
+}
+
+# 12j. D355: a game the watchdog ends (Game.setGameOver from main, as the cube
+#      lab, ai-bench and RecordMatch do at a deadline) records cleanly.
+#      bridge/src/mtgtable/TimeoutSelfTest.java plays one game with both chairs
+#      recorded by SeatRecorder, parks the game thread at turn 3, ends the game
+#      from main and holds that neither seat counted a snapshot error, the
+#      outcome event reached the log and `over` is the last frame; then the
+#      redaction checker reads both logs.  One engine boot, about 15 s, writes
+#      var/check-all-timeout/.
+s12j_timeout() {
+  printf '\n=== 12j. TimeoutSelfTest -- a game ended by the watchdog records with no errors (D355) ===\n'
+  rc=0
+  rm -rf var/check-all-timeout
+  jvm ./bridge/run.sh mtgtable.TimeoutSelfTest var/check-all-timeout > var/check-all-timeout.log 2>&1 || rc=$?
+  grep -E '^(  ok|  FAIL|TimeoutSelfTest)' var/check-all-timeout.log || true
+  if [ "$rc" != "0" ]; then
+    capped "$rc" && die "TimeoutSelfTest did not finish within ${GAME_TIMEOUT}s"
+    die "TimeoutSelfTest exited $rc: a timed-out game's recording is not clean (12j, D355; log: var/check-all-timeout.log)"
+  fi
+  node tools/check-redaction.mjs var/check-all-timeout/timeout-seat0.jsonl var/check-all-timeout/timeout-seat1.jsonl \
+    || die "check-redaction.mjs on the timed-out game's recordings (12j)"
+}
+
+# 12k. D371: who may see a face-down card's face.  bridge/src/mtgtable/
+#      FaceDownSelfTest.java exiles an opponent's card face down with a look
+#      permission (DigEffect's own calls for Gonti / Thief of Sanity), one with
+#      none (Bomat Courier), turns a permanent face down, and returns cards to
+#      their owners' hands (exile -> hand, Kitesail Freebooter's "until it
+#      leaves"), and holds every frame and label to canFaceDownBeShownTo for
+#      both seats.  One engine boot, about 30 s.
+s12k_facedown() {
+  printf '\n=== 12k. FaceDownSelfTest -- a face-down card face only for the seats Forge allows (D371) ===\n'
+  rc=0
+  jvm ./bridge/run.sh mtgtable.FaceDownSelfTest > var/check-all-facedown.log 2>&1 || rc=$?
+  grep -E '^(  ok|  FAIL|FaceDownSelfTest)' var/check-all-facedown.log || true
+  if [ "$rc" != "0" ]; then
+    capped "$rc" && die "FaceDownSelfTest did not finish within ${GAME_TIMEOUT}s"
+    die "FaceDownSelfTest exited $rc: a face-down card's face reached a seat Forge does not show it to, or a hand card lost its name (12k, D371; log: var/check-all-facedown.log)"
   fi
 }
 
@@ -2148,6 +2219,8 @@ job 12f-coach     12 both     s12f_coach        "$PRE"
 job 12g-cubelab   12 both     s12g_cubelab      "$PRE"
 job 12h-ml        12 both     s12h_ml           "$PRE"
 job 12i-midmove   12 both     s12i_midmove      "$PRE"
+job 12j-timeout   12 both     s12j_timeout      "$PRE"
+job 12k-facedown  12 both     s12k_facedown     "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else

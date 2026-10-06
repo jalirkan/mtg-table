@@ -22,10 +22,19 @@
 //                 "aiPolicies": ["plain","outlets","search"] and
 //                 "aiSearchMs": {"min":500,"max":5000,"default":1500}: POST /match takes them.
 //   POST /engine/start  (D308)  wake a sleeping engine on the last match setup (play.sh's
-//                 startup decks if there was no /match).  No body.  200 = the POST /match
-//                 200's shape plus "already": false; engine running already -> 200
-//                 {"ok":true,"already":true,"yourDeck","aiDeck","aiProfile","games"}; the same
-//                 refusals (409, 502, 503, 504).  /health carries "engine_start": 1.
+//                 startup decks if there was no /match).  No body, or (D381) the JSON
+//                 {"aiProfile"?: one of the .ai profiles, any case}: the woken engine plays
+//                 that profile, and it is part of the last setup from then on; no deck is
+//                 named or revealed.  200 = the POST /match 200's shape plus "already": false;
+//                 engine running already -> 200 {"ok":true,"already":true,"yourDeck","aiDeck",
+//                 "aiProfile","games"} (+ "warnings" when it plays another profile than asked:
+//                 nothing is restarted); the same refusals (400 for a bad body, 409, 502, 503,
+//                 504).  /health carries "engine_start": 1, and (D381) "engine_start_profile": 1.
+//                 (D384) Every wake deals a fresh shuffle: play.sh gives it a random --seed,
+//                 as it does a POST /match, unless the body names {"seed": n} (a non-negative
+//                 safe integer; a --seed play.sh was started with also holds, as for /match).
+//                 The 200 carries "seed", the one the engine says it started with;
+//                 /health carries "engine_start_seed": 1.
 //   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","aiPolicy","games"}}
@@ -70,8 +79,8 @@
 // Run from the repo root (hard rule 9).  Its self-test is
 // tools/match-launcher-selftest.mjs (a fake engine under play.sh; gate 12f, CI).
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve, sep } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import { inflateRawSync } from 'node:zlib';
 
 export const MATCH_VERSION = 1;
@@ -154,6 +163,28 @@ export function checkDeck(d, who) {
 export function profileOf(s, profiles) {
   if (typeof s !== 'string') return null;
   return profiles.find((p) => p.toLowerCase() === s.toLowerCase()) ?? null;
+}
+
+/**
+ * D381: a POST /engine/start body.  Empty (or only whitespace) is the D308 wake:
+ * { aiProfile: null, seed: null }.  Otherwise a JSON object whose optional
+ * "aiProfile" is one of `profiles`, any case, and (D384) whose optional "seed" is a
+ * non-negative safe integer (unknown keys ignored, as /match); anything else is a
+ * problem.  Returns { aiProfile, seed, problems }; seed null = a fresh one.
+ */
+export function checkWake(raw, profiles = DEFAULT_PROFILES) {
+  const none = { aiProfile: null, seed: null };
+  if (raw === undefined || raw === null || String(raw).trim() === '') return { ...none, problems: [] };
+  let q;
+  try { q = JSON.parse(String(raw)); } catch { return { ...none, problems: ['the body is not JSON'] }; }
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return { ...none, problems: ['expected no body, or {"aiProfile"?: string, "seed"?: number}'] };
+  const problems = [];
+  const aiProfile = q.aiProfile === undefined ? null : profileOf(q.aiProfile, profiles);
+  if (q.aiProfile !== undefined && aiProfile === null) problems.push(`aiProfile must be one of ${profiles.join(', ')}, got ${JSON.stringify(String(q.aiProfile)).slice(0, 40)}`);
+  const seed = q.seed === undefined ? null : q.seed;
+  if (q.seed !== undefined && (!Number.isSafeInteger(seed) || seed < 0)) problems.push(`seed must be a whole number 0-${Number.MAX_SAFE_INTEGER}, got ${JSON.stringify(q.seed)}`.slice(0, 120));
+  if (problems.length) return { ...none, problems };
+  return { aiProfile, seed, problems };
 }
 
 /**
@@ -258,9 +289,32 @@ export function readProfiles(aiDir) {
 //
 //   var/match/<id>/you.dck, ai.dck   the decks (written here)
 //   var/match/request.json           {id, deck, aiDeck, aiProfile, games, aiPolicy?, aiSearchMs?}  (here, then SIGUSR1 to play.sh)
+//                                    or a wake: {id, wake: true, aiProfile?}  (D308; D381's profile)
 //   var/match/status.json            {id, state, error?, restored?, match?, ms?}  (play.sh)
 //   var/match/current.json           {id, match}  (play.sh, after every start)
 // ---------------------------------------------------------------------------
+
+/** A path with every symlink resolved, as far as it exists (the rest appended as written). */
+function realOf(p) {
+  let head = resolve(p);
+  const tail = [];
+  for (;;) {
+    try { return join(realpathSync(head), ...tail); } catch (e) {
+      if (e.code !== 'ENOENT' || dirname(head) === head) throw e;
+      tail.unshift(basename(head));
+      head = dirname(head);
+    }
+  }
+}
+
+/** D386: whether `p`, symlinks resolved, is `root` or under it (symlinks resolved too). */
+export function realInside(root, p) {
+  try {
+    const r = realOf(root);
+    const q = realOf(p);
+    return q === r || q.startsWith(r + sep);
+  } catch { return false; }
+}
 
 const readJson = (f) => { try { return JSON.parse(readFileSync(f, 'utf8')); } catch { return null; } };
 const writeAtomic = (f, text) => { writeFileSync(f + '.tmp', text); renameSync(f + '.tmp', f); };
@@ -281,6 +335,10 @@ export function createMatchLauncher(opts) {
   const dir = matchDir ? resolve(repoRoot, matchDir) : null;
   const varRoot = resolve(repoRoot, 'var') + sep;
   if (dir && !(dir + sep).startsWith(varRoot)) throw new Error(`--match-dir must be inside ${varRoot} (got ${dir})`);
+  // D386: and REALLY inside it -- no symlink on the way that leads out of var/.
+  // Checked at startup and again before every write (a link made later).
+  const stillInside = () => !dir || realInside(resolve(repoRoot, 'var'), dir);
+  if (!stillInside()) throw new Error(`--match-dir must be inside ${varRoot} (got ${dir}, which a symlink leads out of it)`);
   let busy = false;
   let index;          // undefined: not loaded; null: not available; Set: loaded
   let indexing = null;
@@ -300,8 +358,9 @@ export function createMatchLauncher(opts) {
   const fail = (status, message, extra = {}) => ({ status, body: { ok: false, type: 'error', message, ...extra } });
 
   // Waits for play.sh's status on request `id` and shapes the 200 / refusal.
-  // `m` is the checked request (to count cards against), or null for a wake.
-  const ask = async (id, t0, m, youPath) => {
+  // `m` is the checked request (to count cards against), or null for a wake;
+  // `wantSeed` (D384) the seed a wake's body named, or null.
+  const ask = async (id, t0, m, youPath, wantSeed = null) => {
     // play.sh stops the engine, starts the new one, and says how it went.
     // play.sh takes SIGUSR1 only while it waits (it ignores it the rest of the
     // time: a bash 5.2 trap mid-$( ) killed it), so a signal can be lost; it is
@@ -339,25 +398,40 @@ export function createMatchLauncher(opts) {
       aiProfile: got.aiProfile ?? m?.aiProfile ?? null,
       aiPolicy: got.aiPolicy ?? m?.aiPolicy ?? null,
       games: got.games ?? m?.games ?? null,
+      seed: got.seed ?? null,   // D384: the shuffle, as the engine says it started (hello_ok carries it too)
       ms: Date.now() - t0,
       warnings,
     };
+    // D384: play.sh found an engine already running (the race the check in wake()
+    // cannot close) and restarted nothing, so the requested seed was not dealt.
+    if (wantSeed !== null && reply.seed !== wantSeed) warnings.push(`the engine is running on seed ${reply.seed ?? 'unknown'}; seed ${wantSeed} was not applied — nothing is restarted while a match runs`);
     log(`MATCH started ${id}: you ${reply.yourDeck.name} (${reply.yourDeck.cards}), AI ${reply.aiDeck.name} (${reply.aiDeck.cards}), ${reply.aiProfile}, ${reply.aiPolicy ?? 'policy as started'}, ${reply.games} game(s), ${reply.ms} ms`);
     return { status: 200, body: reply };
   };
 
   // D308 POST /engine/start: wake a sleeping engine on the last match setup (or
   // play.sh's own startup decks).  Same request mechanism as /match, no decks:
-  // {"v","id","wake":true}.  Already running: 200 {"ok":true,"already":true}.
+  // {"v","id","wake":true}, plus D381's "aiProfile" and D384's "seed" when the body
+  // names them (no seed: play.sh deals a fresh one, as for /match).
+  // Already running: 200 {"ok":true,"already":true}, and nothing restarts.
+  // `raw` is the request body as sent (a string; empty for none).
   let lastWakeId = 0;
-  const wake = async () => {
+  const wake = async (raw = '') => {
     if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
+    const { aiProfile, seed, problems } = checkWake(raw, readProfiles(aiDir));
+    if (problems.length) return fail(400, 'the engine was not started: ' + problems[0], { problems });
     if (busy) return fail(409, 'a match is already being started — wait for it');
     const cur = engine();
     if (cur?.engine !== 'idle') {
       const m = publicMatch(readJson(join(dir, 'current.json'))?.match);
-      return { status: 200, body: { ok: true, already: true, ...(m ?? {}) } };
+      const body = { ok: true, already: true, ...(m ?? {}) };
+      if (aiProfile && m?.aiProfile && m.aiProfile.toLowerCase() !== aiProfile.toLowerCase()) {
+        body.warnings = [`the engine is already running against the ${m.aiProfile} profile; ${aiProfile} was not applied — nothing is restarted while a match runs`];
+      }
+      if (seed !== null) (body.warnings ??= []).push(`the engine is already running; seed ${seed} was not applied — nothing is restarted while a match runs`);
+      return { status: 200, body };
     }
+    if (!stillInside()) return fail(500, 'the match directory is no longer inside var/ (a symlink leads out of it) — nothing was written');
     busy = true;
     const t0 = Date.now();
     try {
@@ -366,11 +440,11 @@ export function createMatchLauncher(opts) {
       let id = `m${n}`;
       while (existsSync(join(dir, id))) id = `m${++n}`;
       lastWakeId = n;
-      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true }) + '\n');
+      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true, ...(aiProfile ? { aiProfile } : {}), ...(seed !== null ? { seed } : {}) }) + '\n');
       try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) {
         return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
       }
-      const r = await ask(id, t0, null, null);
+      const r = await ask(id, t0, null, null, seed);
       if (r.status === 200) r.body = { ...r.body, already: false };
       return r;
     } finally {
@@ -417,6 +491,7 @@ export function createMatchLauncher(opts) {
         const m = checked.match;
 
         // The files.  The id is ours; nothing the client sent is in a path.
+        if (!stillInside()) return fail(500, 'the match directory is no longer inside var/ (a symlink leads out of it) — nothing was written');
         mkdirSync(dir, { recursive: true });
         let id = `m${Date.now()}`;
         while (existsSync(join(dir, id))) id = `m${Number(id.slice(1)) + 1}`;

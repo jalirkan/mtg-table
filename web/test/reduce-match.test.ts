@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
 import { initialState, reduce } from '../src/reduce.ts';
-import { matchupOf, seatMatchOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
+import { aiPolicyOf, matchupOf, seatMatchOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 function frame(overrides: Record<string, unknown>): Frame {
@@ -72,6 +72,20 @@ test('seatMatchOf: a stream without `match` says nothing — it is optional (M44
   assert.equal(seatMatchOf(undefined, 0), null);
   const nulled = reduce(initialState(), frame({ type: 'hello_ok', body: hello('g1', { match: null }) }));
   assert.equal(seatMatchOf(nulled.hello, 1), null);
+});
+
+test('aiPolicyOf: the AI seat\'s policy when the handshake names one of the three (M56)', () => {
+  for (const p of ['plain', 'outlets', 'search'] as const) {
+    const state = reduce(initialState(), frame({ type: 'hello_ok', body: hello('g1', { match: { ...MATCH, aiPolicy: p } }) }));
+    assert.equal(aiPolicyOf(state.hello), p);
+  }
+  // Older streams (no key, no match at all) say nothing -- never a guessed `plain`.
+  assert.equal(aiPolicyOf(reduce(initialState(), frame({ type: 'hello_ok', body: hello('g1', { match: MATCH }) })).hello), null);
+  assert.equal(aiPolicyOf(reduce(initialState(), frame({ type: 'hello_ok', body: hello('g1') })).hello), null);
+  assert.equal(aiPolicyOf(null), null);
+  // An unknown word is not echoed.
+  const odd = hello('g1', { match: { ...MATCH, aiPolicy: 'search ms=3000' } });
+  assert.equal(aiPolicyOf(odd as unknown as HelloOkBody), null);
 });
 
 test('seatMatchOf: the profile belongs to a seat marked isAi, never to yours', () => {

@@ -51,6 +51,7 @@ public final class JsonSelfTest {
         nestingErrors();
         parsing();
         blockersEvent();
+        noticeNames();
 
         System.out.println("JsonSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -60,6 +61,20 @@ public final class JsonSelfTest {
     }
 
     // ------------------------------------------------------------------
+
+    /**
+     * {@code Snap.noticeName}: the "Not selectable" notice names a card only
+     * when its gated label says the viewer may see it -- a concealed card
+     * ({@code "???"}) or one missing from the last frame is its id alone.
+     */
+    private static void noticeNames() {
+        eq("noticeName: a visible card by name", "Grizzly Bears", Snap.noticeName(41, "Grizzly Bears"));
+        eq("noticeName: a visible face-down card stays generic", "Face-down card",
+           Snap.noticeName(41, "Face-down card"));
+        eq("noticeName: a concealed card is its id, never a name", "card 41", Snap.noticeName(41, "???"));
+        eq("noticeName: a card not in the last frame is its id", "card 41", Snap.noticeName(41, null));
+        eq("noticeName: an empty label is its id", "card 41", Snap.noticeName(41, ""));
+    }
 
     private static void writerBasics() {
         eq("empty object", "{}", new JsonOut().obj().end().done());

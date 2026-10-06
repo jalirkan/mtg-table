@@ -165,6 +165,12 @@ export function systemdRunArgs(u: UnitSpec): string[] {
   return args;
 }
 
+/** The systemd-run command line for one step, shell-quoted (what `plan` and --dry-run print). */
+export function systemdRunLine(u: UnitSpec): string {
+  const q = (a: string): string => (/^[\w@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, `'\\''`)}'`);
+  return `systemd-run ${systemdRunArgs(u).map(q).join(' ')}`;
+}
+
 /** A unit name systemd accepts: lab-J003-pilot1. */
 export function unitName(id: string, step: string): string {
   return `lab-${id}-${step}`.replace(/[^A-Za-z0-9_.-]/g, '-');

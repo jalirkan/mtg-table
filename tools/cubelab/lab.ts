@@ -11,6 +11,7 @@ import { labCard, type Fact, type LabCard } from './cards.ts';
 import type { Cube } from './cube.ts';
 import { buildDeck, checkDeck, type DeckBuild } from './deck.ts';
 import { aiChooser, gridDraft, winstonDraft, type DraftResult, type PickRecord } from './draft.ts';
+import type { ExploreRecord } from './explore.ts';
 import type { PairTable } from './pairs.ts';
 import { initialRating } from './ratings.ts';
 import { rng } from './rng.ts';
@@ -63,6 +64,8 @@ export interface DraftOut {
   aOpens: boolean;
   drafters: [DrafterOut, DrafterOut];
   ms: { draft: number; build: number };
+  /** D356: present on an explored draft only (explore.ts); each drafter's `deck` is then the deck that played. */
+  explore?: ExploreRecord;
 }
 
 export function runDraft(lc: LoadedCube, format: Format, seed: number, w: Weights, winstonCards = 90): DraftOut {

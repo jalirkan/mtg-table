@@ -16,11 +16,15 @@
 //   COACH_HELPER_TOKEN=<T> node tools/coach-helper.mjs --lan [--ws-port 8642]
 //   node tools/coach-helper.mjs --lan --token <T>    # the same; the env keeps <T> off `ps`
 //   node tools/coach-helper.mjs --match-dir var/match --supervisor <play.sh's pid>   # D303, play.sh does this
+//   node tools/coach-helper.mjs --eval-model var/ml/models/night-1-eval.json        # D361 (that path is the default
+//                                                    when the file exists; --no-eval turns /eval off)
+//   node tools/coach-helper.mjs --eval-model a.json,b.json,c.json                   # D368: an ensemble (or a
+//                                                    directory, or an ensemble.json manifest): mean, sd, n
 //
 // THE CONTRACT (ForgeCoach is built against exactly this):
 //
 //   GET  /health  -> 200 {"ok":true,"helper":1,"claude":"<claude --version>","models":["opus","sonnet","haiku"],
-//                          "thinking":["off","low","default"]}         ("thinking": D346)
+//                          "thinking":["off","low","default"],"vision":1}   ("thinking": D346, "vision": D362)
 //                 (+ "match": 0|1 and, with the launcher, "engine": "running"|"idle", D303/D308)
 //                    or 200 {"ok":false,"helper":1,"error":"<plain words>"} when `claude`
 //                    is missing or `claude --version` fails.  It does not prove a login:
@@ -38,6 +42,45 @@
 //                 400 / 403 / 404 / 405 / 413 / 429 carry one {"type":"error","message":...}
 //                 JSON body.  A client that disconnects kills the `claude` process
 //                 and its whole process group.
+//
+//   POST /vision  {"system": string, "user": string, "images": [{"mediaType": "image/jpeg"|"image/png"
+//                  |"image/webp"|"image/gif", "data": "<base64>"}, ...1-8], "model"?, "supersedes"?,
+//                  "thinking"?}   -- PHOTOS (D362): the same question as /coach with images
+//                 beside the text (ForgeCoach's photo-to-pool reads a drafted pool off a photo).
+//                 Each image's data at most 5 MB of base64, the body at most 24 MB, else 413;
+//                 anything else wrong with "images" is 400.  The same queue, the same stream,
+//                 the same terminal line as /coach.  The images reach the CLI on STDIN, as
+//                 one stream-json user message (`--input-format stream-json`) of image
+//                 blocks and the text: never a file, never argv, and still no tool, so the
+//                 model sees the pictures and nothing else.  /health carries "vision": 1.
+//
+//   GET  /review, POST /review, GET /review/<id>  -- THE POST-GAME REVIEW (D353):
+//                 run tools/coach-grade.sh review on a game the engine wrote
+//                 (var/games/<gameId>/frames.jsonl), one at a time, and fetch its
+//                 report.  tools/review-runner.mjs's header is that contract
+//                 (docs/game-review.md the copyable form); /health carries
+//                 "review": 1 when the bridge is built (else 0), --no-review
+//                 turns it off, --review-jobs N (default: cores - 1, at most 7).
+//                 AUTOMATIC (D385, tools/auto-review.mjs): every human game the bridge
+//                 finishes in var/games/ is reviewed without a request, one at a time,
+//                 at low priority, only while the lab runner is idle or below its core
+//                 budget; its reviews are in GET /review with "auto": true.  /health then
+//                 carries "autoReview": 1 and "autoReviewQueue": {"pending","running","gate"}.
+//                 config.json `coach.autoReview` (default true) or --no-auto-review turn
+//                 it off; --runner-status <status.json> names the lab runner's status.
+//
+//   POST /eval    -- THE WIN CHANCE (D361): the learned position evaluator's
+//                 P(the viewing seat wins) for one state ForgeCoach shows, from a model
+//                 on this machine (--eval-model; default var/ml/models/night-1-eval.json
+//                 when it exists).  tools/eval-runner.mjs's header is that contract;
+//                 /health carries "eval": 1 (and "evalModel", "evalSchema") only once
+//                 the model has loaded and passed its schema checks, else "eval": 0.
+//                 D368: --eval-model may name an ensemble (a,b,c / a directory / a
+//                 manifest; the default prefers var/ml/models/night-1-ensemble.json),
+//                 answers then carry "sd" and "n"; "explain": true (or ?explain=1)
+//                 adds the attributions; /health says "evalEnsemble" and "evalExplain".
+//                 --no-eval turns it off; --eval-python, --eval-schema <schemaId> (refuse
+//                 another), --eval-cube <cube.md> (refuse another card list).
 //
 //   GET  /match, POST /match  -- THE MATCH LAUNCHER (D303): start a match with two
 //                 decks the browser built.  tools/match-launcher.mjs's header is that
@@ -86,12 +129,22 @@
 //
 // WHO MAY CALL IT (amendments M50 and M51's rules, applied to this port):
 //
-//   - It binds 127.0.0.1; with --lan, 0.0.0.0, and then every request from a
-//     non-loopback peer must carry the pairing token -- `?token=<T>` or the header
-//     `X-ForgeCoach-Token` -- or is 403.  Compared as SHA-256 digests with
-//     crypto.timingSafeEqual; never logged (a logged path is cut at its `?`).
-//     A loopback peer never needs it.  An OPTIONS preflight needs no token (a
-//     browser cannot add one to it), only an allowed Origin.
+//   - It binds 127.0.0.1, and (D386) refuses 403 any request whose socket's
+//     remote address is not loopback, whatever the bind; with --lan it binds
+//     0.0.0.0, and then every request from a non-loopback peer must carry the
+//     pairing token -- `?token=<T>` or the header `X-ForgeCoach-Token` -- or is
+//     403.  Compared as SHA-256 digests with crypto.timingSafeEqual; never logged
+//     (a logged path is cut at its `?`).  A loopback peer never needs it.  An
+//     OPTIONS preflight needs no token (a browser cannot add one to it), only an
+//     allowed Origin.
+//   - Host (D386): a loopback peer's Host must be localhost (or *.localhost) or a
+//     loopback IP literal (127.0.0.0/8, [::1], [::ffff:127.x.x.x]), any valid
+//     port; anything else is 403 -- a page that rebound its name to 127.0.0.1,
+//     whose same-origin GETs carry no Origin, a tunnel's hostname, or a port
+//     relay (socat, ssh -L) that kept its client's Host.  admit() is the whole
+//     door as one decision.  Both refusals' messages start "origin refused:" so a
+//     client that sorts refusals by the word "origin" (ForgeCoach's
+//     refusedMessage) does not call them a token problem.
 //   - Origin: allowed if it matches config.json's `wsAllowedOrigins` (the bridge's
 //     M50 list, read the same way: MTG_TABLE_CONFIG, else the repo's config.json;
 //     default http://127.0.0.1:*, http://localhost:*, https://jalirkan.github.io).
@@ -117,6 +170,8 @@
 //          --tools "" --strict-mcp-config --no-session-persistence
 //          --permission-mode dontAsk --max-turns 1
 //          [--safe-mode] [--disable-slash-commands]       (when this CLI's --help has them)
+//          [--input-format stream-json]                   (/vision only, D362: stdin is one
+//                                                          {"type":"user","message":{...}} line)
 //
 //   with the user text on STDIN (never argv), in a fresh empty temp directory
 //   (removed afterwards), as the leader of its own process group.  NEVER
@@ -130,10 +185,14 @@ import { execFile, spawn } from 'node:child_process';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { tmpdir } from 'node:os';
+import { BlockList, isIP } from 'node:net';
+import { availableParallelism, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
+import { MAX_REVIEW_BODY, createReviewRunner, cleanOld } from './review-runner.mjs';
+import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
+import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -147,6 +206,11 @@ export function thinkingEnv(thinking) {
   return {};
 }
 export const MAX_BODY = 512 * 1024;
+// D362: /vision.  The API takes at most 5 MB an image; ForgeCoach sends JPEGs of about 0.3-0.6 MB.
+export const MAX_VISION_BODY = 24 * 1024 * 1024;
+export const MAX_VISION_IMAGES = 8;
+export const MAX_IMAGE_BASE64 = 5 * 1024 * 1024;
+export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 export const DEFAULT_QUEUE_MAX = 4;
 export const MAX_SUPERSEDE_KEY = 200;
 export const DEFAULT_ALLOWED_ORIGINS = ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'];
@@ -205,6 +269,63 @@ export function tokenMatches(given, token) {
   if (typeof given !== 'string' || typeof token !== 'string' || token === '') return false;
   const d = (s) => createHash('sha256').update(s, 'utf8').digest();
   return timingSafeEqual(d(given), d(token));
+}
+
+/**
+ * D386: a Host header a LOOPBACK peer may send -- `localhost` (or a name under
+ * `.localhost`, which browsers resolve to loopback themselves), or a LOOPBACK
+ * IP literal (`127.0.0.0/8`, `[::1]`, `[::ffff:127.x.x.x]`), with an optional
+ * port of at most 65535.  A DNS name is refused: from a loopback peer it is
+ * either a page that rebound its own name to 127.0.0.1 (a same-origin GET
+ * carries no Origin, so the Origin rule alone let it read /health, /match and
+ * /review) or a tunnel's public hostname, and neither may reach this port.  Any
+ * other IP literal (`192.168.1.5:9000`, `0.0.0.0`) is refused too: a port relay
+ * (socat, `ssh -L`) also arrives from loopback, and keeps the Host its client
+ * typed.  A missing Host is refused.
+ */
+const LOOPBACK_IPS = new BlockList();
+LOOPBACK_IPS.addSubnet('127.0.0.0', 8, 'ipv4');
+LOOPBACK_IPS.addAddress('::1', 'ipv6');   // also matches ::ffff:127.x.x.x
+
+export function loopbackHostOk(hostHeader) {
+  if (typeof hostHeader !== 'string') return false;
+  const h = hostHeader.trim().toLowerCase();
+  const m = /^(?:\[([0-9a-f:.]+)\]|([a-z0-9.-]+))(?::([0-9]{1,5}))?$/.exec(h);
+  if (!m || (m[3] !== undefined && Number(m[3]) > 65535)) return false;
+  if (m[1] !== undefined) return isIP(m[1]) === 6 && LOOPBACK_IPS.check(m[1], 'ipv6');
+  const name = m[2];
+  if (name === 'localhost' || name.endsWith('.localhost')) return true;
+  return isIP(name) === 4 && LOOPBACK_IPS.check(name, 'ipv4');
+}
+
+/**
+ * D386: the whole door of this port as one pure decision, in order -- the peer,
+ * its Host, then (M51's order) the Origin for a preflight, the token, the Origin
+ * for the rest.  Returns { ok: true, cors, preflight } or { ok: false, status,
+ * why, message }.  `given` is the token the request presented (query or header).
+ *
+ *   - a non-loopback peer is refused unless this is a --lan helper (the bind is
+ *     127.0.0.1 then, so this only matters if the bind ever changes -- or for a
+ *     proxy in front of it -- and it is checked on the socket's REMOTE address);
+ *   - a loopback peer must name the host as localhost or a loopback IP literal
+ *     (loopbackHostOk: DNS rebinding, and a tunnel's hostname);
+ *   - Origin: the allowlist; with --lan, a non-loopback peer also the bridge's own
+ *     LAN page (lanOwnOrigin); no Origin from loopback only;
+ *   - an OPTIONS preflight needs only the Origin (a browser cannot add a token);
+ *   - with --lan, every other request from a non-loopback peer needs the token.
+ */
+export function admit({ loop, lan, host, origin, origins, wsPort, method, given, token }) {
+  if (!loop && !lan) return { ok: false, status: 403, why: 'peer', message: 'origin refused: this coach helper answers this machine only (play.sh --lan for a phone)' };
+  if (loop && !loopbackHostOk(host)) return { ok: false, status: 403, why: 'host', message: 'origin refused: Host is not a loopback name (call http://127.0.0.1 or http://localhost)' };
+  const originOk = origin === undefined ? loop
+    : originAllowed(origin, origins) || (lan && !loop && lanOwnOrigin(origin, host, wsPort));
+  const cors = originOk && origin !== undefined ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+  if (method === 'OPTIONS') {
+    return originOk ? { ok: true, cors, preflight: true } : { ok: false, status: 403, why: 'origin', message: 'origin not allowed' };
+  }
+  if (lan && !loop && !tokenMatches(given, token)) return { ok: false, status: 403, why: 'token', message: 'pairing token missing or wrong' };
+  if (!originOk) return { ok: false, status: 403, why: 'origin', message: 'origin not allowed' };
+  return { ok: true, cors, preflight: false };
 }
 
 /** Plain words for a failed call, from whatever the CLI said. */
@@ -316,12 +437,19 @@ function readConfig() {
   for (const o of origins) {
     if (typeof o !== 'string' || !ORIGIN_ENTRY.test(o)) throw new Error(`"wsAllowedOrigins" in ${file} holds a bad entry: ${JSON.stringify(o)}`);
   }
-  return { file, coachPort: c.coachPort, wsPort: c.wsPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
+  // D385: config.json `coach.autoReview` (default true).
+  const coach = c.coach ?? {};
+  if (typeof coach !== 'object' || Array.isArray(coach) || coach === null) throw new Error(`"coach" in ${file} is not an object`);
+  const autoReview = coach.autoReview ?? true;
+  if (typeof autoReview !== 'boolean') throw new Error(`"coach.autoReview" in ${file} is not true or false`);
+  return { file, autoReview, coachPort: c.coachPort, wsPort: c.wsPort, origins, forgeHome: typeof c.forgeHome === 'string' ? c.forgeHome : 'forge-home', repoRoot: typeof c.repoRoot === 'string' ? c.repoRoot : fileURLToPath(new URL('..', import.meta.url)) };
 }
 
 function parseArgs(argv) {
   const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
-    matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined };
+    matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined,
+    review: true, reviewJobs: undefined, reviewQueueMax: 2, autoReview: undefined, runnerStatus: undefined,
+    eval: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
     const val = () => {
@@ -339,6 +467,16 @@ function parseArgs(argv) {
     else if (f === '--supervisor') a.supervisor = Number(val());
     else if (f === '--match-timeout') a.matchTimeoutS = Number(val());
     else if (f === '--cards-zip') a.cardsZip = val();
+    else if (f === '--no-review') a.review = false;
+    else if (f === '--review-jobs') a.reviewJobs = Number(val());
+    else if (f === '--review-queue-max') a.reviewQueueMax = Number(val());
+    else if (f === '--no-auto-review') a.autoReview = false;   // D385
+    else if (f === '--runner-status') a.runnerStatus = val();
+    else if (f === '--no-eval') a.eval = false;
+    else if (f === '--eval-model') a.evalModel = val();
+    else if (f === '--eval-python') a.evalPython = val();
+    else if (f === '--eval-schema') a.evalSchema = val();
+    else if (f === '--eval-cube') a.evalCube = val();
     else if (f === '--help' || f === '-h') a.help = true;
     else throw new Error(`unknown flag ${f} (--help)`);
   }
@@ -373,8 +511,30 @@ async function claudeInfo(maxAgeMs = 60_000) {
   return cliInfo;
 }
 
-export function claudeArgs({ model, systemArg, help }) {
-  const args = ['-p', '--output-format', 'stream-json', '--include-partial-messages', '--verbose',
+/** Why `images` is not a /vision body's images (D362), or null when it is. */
+export function imagesProblem(images) {
+  if (!Array.isArray(images) || images.length < 1 || images.length > MAX_VISION_IMAGES) return `"images" must be an array of 1-${MAX_VISION_IMAGES} images`;
+  for (const [i, im] of images.entries()) {
+    const n = i + 1;
+    if (!im || typeof im !== 'object' || Array.isArray(im)) return `image ${n} is not {"mediaType", "data"}`;
+    for (const k of Object.keys(im)) if (k !== 'mediaType' && k !== 'data') return `image ${n} has an unknown field "${k}"`;
+    if (!IMAGE_TYPES.includes(im.mediaType)) return `image ${n}: "mediaType" must be one of ${IMAGE_TYPES.join(', ')}`;
+    if (typeof im.data !== 'string' || im.data.length < 16) return `image ${n}: "data" must be base64`;
+    if (im.data.length > MAX_IMAGE_BASE64) return `image ${n} is too large (at most 5 MB of base64)`;
+    if (im.data.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(im.data)) return `image ${n}: "data" must be base64`;
+  }
+  return null;
+}
+
+/** The one stream-json line a /vision question is on the CLI's stdin (D362): its images, then its text. */
+export function visionInput(user, images) {
+  const content = images.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.mediaType, data: im.data } }));
+  content.push({ type: 'text', text: user });
+  return JSON.stringify({ type: 'user', message: { role: 'user', content } }) + '\n';
+}
+
+export function claudeArgs({ model, systemArg, help, streamInput = false }) {
+  const args = ['-p', ...(streamInput ? ['--input-format', 'stream-json'] : []), '--output-format', 'stream-json', '--include-partial-messages', '--verbose',
     '--model', model, ...systemArg,
     '--tools', '', '--strict-mcp-config', '--no-session-persistence',
     '--permission-mode', 'dontAsk', '--max-turns', '1'];
@@ -388,7 +548,11 @@ export function claudeArgs({ model, systemArg, help }) {
 // ---------------------------------------------------------------------------
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, log = (s) => console.log(s) } = opts;
+  // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
+  // helper on 0.0.0.0, to prove admit() refuses a non-loopback peer by its
+  // address and not by the bind); the CLI never does.
+  const bindHost = opts.bindHost ?? (lan ? '0.0.0.0' : '127.0.0.1');
   let active = null;          // { kill() } of the running question
   const queue = [];           // waiting questions, oldest first: { key, go(), supersede(), position(n) }
   const pump = () => {
@@ -402,7 +566,7 @@ export function startHelper(opts) {
 
   const send = (res, status, obj, headers = {}) => {
     const body = JSON.stringify(obj);
-    res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(body), ...headers });
+    res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Length': Buffer.byteLength(body), ...headers });
     res.end(body);
   };
 
@@ -415,13 +579,18 @@ export function startHelper(opts) {
     const origin = req.headers.origin;
     const say = (status, extra = '') => log(`COACH ${req.method} ${path} from ${peer}${origin ? ` origin ${origin}` : ''} -> ${status}${extra}`);
 
-    // Origin first for a preflight (it carries no token); token first for the rest (M51's order).
-    const originOk = origin === undefined ? loop
-      : originAllowed(origin, origins) || (lan && !loop && lanOwnOrigin(origin, req.headers.host, wsPort));
-    const cors = originOk && origin !== undefined ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+    // D386: the peer and its Host, then M51's order -- Origin first for a
+    // preflight (it carries no token), token first for the rest (admit()).
+    const gate = admit({ loop, lan, host: req.headers.host, origin, origins, wsPort, method: req.method,
+      given: url.searchParams.get('token') ?? req.headers['x-forgecoach-token'], token });
+    if (!gate.ok) {
+      send(res, gate.status, { type: 'error', message: gate.message });
+      say(gate.status, ` (${gate.why})`);
+      return;
+    }
+    const cors = gate.cors;
 
-    if (req.method === 'OPTIONS') {
-      if (!originOk) { send(res, 403, { type: 'error', message: 'origin not allowed' }); say(403, ' (origin)'); return; }
+    if (gate.preflight) {
       res.writeHead(204, {
         ...cors,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -434,15 +603,6 @@ export function startHelper(opts) {
       say(204);
       return;
     }
-    if (lan && !loop) {
-      const given = url.searchParams.get('token') ?? req.headers['x-forgecoach-token'];
-      if (!tokenMatches(given, token)) {
-        send(res, 403, { type: 'error', message: 'pairing token missing or wrong' });
-        say(403, ' (token)');
-        return;
-      }
-    }
-    if (!originOk) { send(res, 403, { type: 'error', message: 'origin not allowed' }); say(403, ' (origin)'); return; }
 
     if (path === '/health') {
       if (req.method !== 'GET') { send(res, 405, { type: 'error', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
@@ -450,9 +610,11 @@ export function startHelper(opts) {
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
+      const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
+      const ev = evaluator ? evaluator.health() : { eval: 0 };   // D361
       send(res, 200, info.ok
-        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }
-        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1 } : {}) }, cors);
+        ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }
+        : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }, cors);
       say(200, info.ok ? '' : ' (claude unavailable)');
       return;
     }
@@ -470,21 +632,57 @@ export function startHelper(opts) {
       say(r.status, r.status === 200 ? ` (${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
+    if (path === '/review' || path.startsWith('/review/')) {
+      // D353: the post-game review (tools/review-runner.mjs).  Behind the same gate as /coach.
+      if (!review) { send(res, 503, { ok: false, type: 'error', message: 'the review is off: this helper was started with --no-review' }, cors); say(503); return; }
+      if (path === '/review' && req.method === 'POST') {
+        const raw = await readBody(req, res, MAX_REVIEW_BODY, '256 KB', cors, say);
+        if (raw === null) return;
+        let q;
+        try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+        const r = review.post(q);
+        send(res, r.status, r.body, cors);
+        say(r.status, r.status === 202 ? ` (${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
+        return;
+      }
+      if (req.method !== 'GET') { send(res, 405, { ok: false, type: 'error', message: path === '/review' ? 'use GET or POST' : 'use GET' }, { ...cors, Allow: path === '/review' ? 'GET, POST, OPTIONS' : 'GET, OPTIONS' }); say(405); return; }
+      const r = path === '/review' ? review.list() : review.get(path.slice('/review/'.length));
+      send(res, r.status, r.body, cors);
+      say(r.status);
+      return;
+    }
+    if (path === '/eval') {
+      // D361: the win chance (tools/eval-runner.mjs).  Behind the same gate as /coach.
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (!evaluator) { send(res, 503, { ok: false, type: 'error', message: 'the win chance is off: this helper was started with --no-eval' }, cors); say(503); return; }
+      const raw = await readBody(req, res, MAX_EVAL_BODY, '2 MB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+      // D368: ?explain=1 is the same as "explain": true in the body.
+      if (url.searchParams.get('explain') === '1' && q && typeof q === 'object' && !Array.isArray(q)) q.explain = true;
+      const r = await evaluator.post(q);
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 200 ? ` (p ${r.body.p.toFixed(3)}${r.body.sd !== undefined ? ` sd ${r.body.sd.toFixed(3)}` : ''}${r.body.explain ? ', explained' : ''}, turn ${r.body.turn}, ${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
     if (path === '/engine/start') {
-      // D308: wake a sleeping engine (match-launcher.mjs `wake`).  The same gate.
+      // D308: wake a sleeping engine (match-launcher.mjs `wake`); D381/D384: on an optional {"aiProfile", "seed"}.  The same gate.
       if (!match) { send(res, 503, { ok: false, type: 'error', message: 'the match launcher is off: this helper was not started by scripts/play.sh' }, cors); say(503); return; }
       if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
-      if (await readBody(req, res, 4096, '4 KB', cors, say) === null) return;
-      const r = await match.wake();
+      const raw = await readBody(req, res, 4096, '4 KB', cors, say);
+      if (raw === null) return;
+      const r = await match.wake(raw);   // D381: no body, or {"aiProfile"}; D384: {"seed"}
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (${r.body.already ? 'already running' : r.body.ms + ' ms'})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
-    if (path !== '/coach') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+    if (path !== '/coach' && path !== '/vision') { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
     if (req.method !== 'POST') { send(res, 405, { type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+    const vision = path === '/vision';   // D362: the same question, with images
 
-    // The body, at most MAX_BODY bytes.
-    const body = await readBody(req, res, MAX_BODY, '512 KB', cors, say);
+    // The body, at most MAX_BODY bytes (MAX_VISION_BODY for /vision).
+    const body = await readBody(req, res, vision ? MAX_VISION_BODY : MAX_BODY, vision ? '24 MB' : '512 KB', cors, say);
     if (body === null) return;
     let q;
     try { q = JSON.parse(body); } catch { send(res, 400, { type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
@@ -494,6 +692,9 @@ export function startHelper(opts) {
       say(400);
       return;
     }
+    const imgProblem = vision ? imagesProblem(q.images) : null;
+    if (imgProblem) { send(res, 400, { type: 'error', message: imgProblem }, cors); say(400, ` (${imgProblem})`); return; }
+    const nImages = vision ? q.images.length : 0;
     if (!MODELS.includes(model)) { send(res, 400, { type: 'error', message: `model must be one of ${MODELS.join(', ')}` }, cors); say(400); return; }
     const thinking = 'thinking' in q ? q.thinking : 'default';   // D346: absent only; null is not absent
     if (!THINKING.includes(thinking)) { send(res, 400, { type: 'error', message: `"thinking" must be one of ${THINKING.join(', ')}` }, cors); say(400); return; }
@@ -591,7 +792,7 @@ export function startHelper(opts) {
       writeFileSync(sp, q.system);
       systemArg = ['--system-prompt-file', sp];
     }
-    const args = claudeArgs({ model, systemArg, help: info.help });
+    const args = claudeArgs({ model, systemArg, help: info.help, streamInput: vision });
     let child;
     let stderr = '';
     let cancelled = false;
@@ -622,7 +823,7 @@ export function startHelper(opts) {
       if (!tr.finished) { cancelled = true; stopChild(); }
     });
     child.stdin.on('error', () => { /* a child that died before reading */ });
-    child.stdin.end(q.user);
+    child.stdin.end(vision ? visionInput(q.user, q.images) : q.user);
     let buf = '';
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', (d) => {
@@ -651,7 +852,7 @@ export function startHelper(opts) {
       }
       cleanup();
       finishSlot();
-      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}; ${Date.now() - t0} ms)`);
+      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}${vision ? `; ${nImages} image${nImages === 1 ? '' : 's'}` : ''}; ${Date.now() - t0} ms)`);
     });
     function cleanup() {
       rmSync(dir, { recursive: true, force: true });
@@ -690,10 +891,13 @@ export function startHelper(opts) {
     server,
     listen: () => new Promise((resolve, reject) => {
       server.once('error', reject);
-      server.listen(port, lan ? '0.0.0.0' : '127.0.0.1', () => resolve(server.address().port));
+      server.listen(port, bindHost, () => resolve(server.address().port));
     }),
     close: () => {
       for (const c of live) { try { process.kill(-c.pid, 'SIGKILL'); } catch { /* gone */ } }
+      auto?.stop();
+      review?.close();
+      evaluator?.close();
       server.close();
       server.closeAllConnections?.();
     },
@@ -741,7 +945,30 @@ async function main() {
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
   }
   if (!Number.isInteger(a.queueMax) || a.queueMax < 0 || a.queueMax > 64) { console.error('coach-helper: --queue-max must be a whole number, 0-64'); process.exit(2); }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match });
+  let review = null;
+  if (a.review) {
+    const jobs = a.reviewJobs ?? Math.max(1, Math.min(7, availableParallelism() - 1));
+    if (!Number.isInteger(jobs) || jobs < 1 || jobs > 32) { console.error('coach-helper: --review-jobs must be a whole number, 1-32'); process.exit(2); }
+    if (!Number.isInteger(a.reviewQueueMax) || a.reviewQueueMax < 0 || a.reviewQueueMax > 16) { console.error('coach-helper: --review-queue-max must be a whole number, 0-16'); process.exit(2); }
+    cleanOld(cfg.repoRoot);
+    review = createReviewRunner({ repoRoot: cfg.repoRoot, jobs, queueMax: a.reviewQueueMax, log: (s) => console.log(s) });
+    review.restore();   // D385: the newest finished reports on disk, served again
+  }
+  let auto = null;
+  if (review && (a.autoReview ?? cfg.autoReview)) {
+    auto = createAutoReview({ repoRoot: cfg.repoRoot, review, statusFile: a.runnerStatus ? resolve(a.runnerStatus) : runnerStatusFile(cfg.repoRoot),
+      log: (s) => console.log(`COACH ${s}`) });
+  }
+  let evaluator = null;
+  if (a.eval) {
+    if (a.evalSchema !== undefined && !/^[0-9a-f]{16}$/.test(a.evalSchema)) { console.error('coach-helper: --eval-schema is a schemaId, 16 hex digits'); process.exit(2); }
+    evaluator = createEvalRunner({
+      repoRoot: cfg.repoRoot, model: resolveEvalModel(cfg.repoRoot, a.evalModel), python: resolveEvalPython(cfg.repoRoot, a.evalPython),
+      expectSchema: a.evalSchema ?? null, cube: a.evalCube ?? null, log: (s) => console.log(`COACH ${s}`),
+    });
+    void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}`));
+  }
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -753,6 +980,12 @@ async function main() {
   console.log(`COACH CLAUDE    ${info.ok ? info.version : info.error}`);
   console.log(`COACH QUEUE     one question at a time; up to ${a.queueMax} more wait in line (--queue-max)`);
   console.log(`COACH ORIGINS   ${cfg.origins.join(' ')}  (from ${cfg.file})`);
+  console.log(!review ? 'COACH REVIEW    /review off (--no-review)'
+    : review.available() ? 'COACH REVIEW    /review on: tools/coach-grade.sh review, one at a time'
+    : 'COACH REVIEW    /review waits for the bridge build (./bridge/build.sh); /health says "review": 0 until then');
+  if (review && !auto) console.log(`COACH AUTO      automatic reviews off (${a.autoReview === false ? '--no-auto-review' : 'config.json coach.autoReview'})`);
+  auto?.start();   // D385: after LISTENING, so its first scan never delays the port
+  if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
   const stop = () => { h.close(); process.exit(0); };
   process.on('SIGINT', stop);

@@ -10,7 +10,8 @@
 //     backoff, Justin at the table, the timeout; every minute: progress,
 //     metrics and the `abort:` lines); a step's unit that ended is READ (its
 //     exit code file) and the next step starts;
-//  3. start what the schedule allows (schedule.ts), one heavy and one light;
+//  3. start what the schedule allows (schedule.ts): one heavy and one light, or
+//     more heavy jobs side by side while their widths and memory fit (co-scheduling);
 //  4. write var/runner/status.json; publish to pc-results every 4.5 minutes and
 //     on every job state change; the public lab-status copy on its own clock:
 //     on a state change, at most every minute when its content changed, and
@@ -31,16 +32,34 @@
 //   final-checks  the `## Commands` section's `check:` lines;
 //   collect   `collect:` files and the logs into results/<id>/, the headline numbers.
 //
+// LANES.  Heavy jobs side by side never share a checkout: each running heavy job
+// has a lane, lane 1 the clones as before (~/code/lab/<repo>), lane k > 1
+// `<repo>-lane<k>`, its own checkout at its own pinned commit with its own build.
+// A lane's mtg-table `var/` is a symlink to lane 1's, so every job's outputs land
+// in the one var/ the next job (after:) and the ladder read.  Jobs side by side
+// therefore share var/: they must not write the same paths.
+//
 // The runner's state lives in var/runner/ (jobs/<id>/run.json, the scripts,
 // the logs, the control files) so a restarted runner RECONCILES: a step whose
 // unit still runs is adopted; one that ended while the runner was down is read;
 // one that died with it is resumed (resumable: yes: the step runs again and
-// the tools skip what is done) or restarted from the top (resumable: no: the
-// `clean:` paths moved aside first), and the STATUS says which.
+// the tools skip what is done) or restarted (resumable: no: the `clean:` paths
+// moved aside first), and the STATUS says which.
+//
+// BLOCKS DONE (D365).  A retry (after a memory stop or `stop`) and a restart
+// begin at the `## Commands` block that was stopped: every block that finished
+// is recorded (`blocksDone`: its exit code and its text's hash) and skipped,
+// so long as the job file still has it unchanged.  A non-resumable job then
+// moves aside the `clean:` lines of the blocks it runs again (a `clean:` line
+// before a block); the header's `clean:` applies only when it starts from
+// run1.  A job whose only `clean:` is the header's (every job file before
+// D365) still starts from run1 when a later block stopped: the runner cannot
+// tell which block made which path.
 //
 // The runner writes FACTS: states, numbers, exit codes, log tails.  Judgement
 // (summary.md) stays with the PC's Claude session, which reads them.
 
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -48,10 +67,13 @@ import { DEFAULT_BACKOFF, decide, initialBackoff, retryCap, type Action, type Ba
 import { writeControl } from './control.ts';
 import { evaluate, parse as parseExpr, type Verdict } from './expr.ts';
 import { sanitiseLadder } from './ladder.ts';
+import { sanitiseWarehouse } from './warehouse.ts';
+import { sanitiseLedger } from './ledgerpublic.ts';
 import { parseJobFile, type JobFile, type MetricSpec, type ProgressSpec } from './jobfile.ts';
+import { followupMessage, LEDGER_MD_HEAD, ledgerEntry, ledgerJsonLine, ledgerKeys, ledgerMarkdown, withMessages, type LedgerEntry } from './ledger.ts';
 import { EXTRACTORS, expandGlob, flatten, place, progressOf, rateAndEta, type Flat, type RateSample } from './metrics.ts';
-import { budget as budgetOf, DEFAULT_BUDGET, PILOT_MAX_WORKERS, sizeWorkers, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
-import { formatStatus, isOurs, parseStatus, schedule, idOrder, type Blocked, type Status } from './schedule.ts';
+import { budget as budgetOf, DEFAULT_BUDGET, DEFAULT_PEAK_GB, PILOT_MAX_WORKERS, sizeWorkers, systemdRunLine, unitName, type BudgetOptions, type Sizing, type UnitSpec } from './sizing.ts';
+import { formatStatus, isOurs, parseStatus, schedule, idOrder, widthOf, type Blocked, type Holding, type MachineBudget, type Status } from './schedule.ts';
 import { fit, headlineOf, idleReasonOf, isoLocal, liveOf, REASONS, sanitise, type FinishedItem, type PressureEvent, type RunningJob, type StatusDoc } from './statusjson.ts';
 import { GIT_ENV, LIVE_STATES, type HostSample, type Sys } from './sys.ts';
 
@@ -82,21 +104,46 @@ export interface RunnerConfig {
   push: boolean;
   /** The AI ladder's ladder.json to publish (sanitised) beside status.json; null: <lab>/mtg-table/var/ai-ladder/ladder.json. */
   ladderFile?: string | null;
+  /** The lab warehouse's warehouse.json to publish (sanitised, D363); null: <lab>/mtg-table/var/warehouse/warehouse.json. */
+  warehouseFile?: string | null;
+  /** The core budget heavy jobs side by side share (`--cores`); null: the physical cores. */
+  cores?: number | null;
+  /** Heavy jobs side by side while their widths and memory fit (`--co-schedule on|off`); default on. */
+  coSchedule?: boolean;
 }
 
 export const DEFAULT_CONFIG: Omit<RunnerConfig, 'runnerDir' | 'stateDir' | 'labRoot' | 'homeRepos' | 'urls' | 'commit'> = {
-  bridgePort: 8642, budget: DEFAULT_BUDGET, backoff: DEFAULT_BACKOFF, publicStatus: true,
+  bridgePort: 8642, budget: DEFAULT_BUDGET, backoff: DEFAULT_BACKOFF, publicStatus: true, cores: null, coSchedule: true,
   publishEveryMs: 4.5 * 60_000, publicEveryMs: 60_000, publicHeartbeatMs: 2 * 60_000, fetchEveryMs: 60_000, metricsEveryMs: 60_000, push: true,
 };
 
 type StepKind = 'shell' | 'pilot-checks' | 'final-checks' | 'collect';
-interface Step { name: string; kind: StepKind; phase: 'prepare' | 'pilot' | 'commands' | 'checks' | 'collect'; block?: string; of?: string }
+
+/** A finished `## Commands` block (D365): its exit code, when it ended, and the hash of its text (blockSha). */
+export interface BlockDone { rc: number; at: number; sha: string }
+
+/** A block's identity for a retry: the hash of its text as the job file has it (before substitution). */
+export function blockSha(text: string): string {
+  return createHash('sha1').update(text).digest('hex').slice(0, 12);
+}
+
+/** The exit codes a process killed by SIGKILL leaves (bash: 128 + 9; a tool that reports the signal: 9). */
+export const OOM_EXIT_CODES: ReadonlySet<number> = new Set([137, 9]);
+interface Step {
+  name: string; kind: StepKind; phase: 'prepare' | 'pilot' | 'commands' | 'checks' | 'collect'; block?: string; of?: string;
+  /** The block's own `cores:` line: this step's width (and the most {workers} it gets). */
+  cores?: number | null;
+  /** The block's own `mem_gb:` line: this step's whole memory reservation. */
+  memGb?: number | null;
+}
 
 export interface JobRun {
   id: string;
   title: string;
   cpu: 'heavy' | 'light';
   file: string;
+  /** A heavy job's lane: 0 the clones as before, k > 0 `<repo>-lane<k+1>` (absent in an older run.json: 0). */
+  lane?: number;
   startedAt: number;
   steps: Step[];
   stepIndex: number;
@@ -123,9 +170,17 @@ export interface JobRun {
   /** Full commits the first prepare checked out: a retry or resume checks these out again, never a branch that moved (D341's version refusal). */
   pinned?: Record<string, string>;
   restarts: Array<{ at: number; how: 'resumed' | 'restarted' | 'adopted'; why: string }>;
+  /** The `## Commands` blocks that finished (D365), by step name: exit code, when, and the block text's hash. */
+  blocksDone?: Record<string, BlockDone>;
+  /** The `.restart-*` copies beside the job's clean: paths, as last measured (never deleted, D365). */
+  aside?: { copies: number; bytes: number } | null;
   approved: boolean;
   /** Why the next step waits to start, when it does (for the log, once). */
   heldFor?: string | null;
+  /** The width the next step waits for, when it waits for cores other jobs hold (D365's per-step widths); null: not waiting. */
+  waitingCores?: number | null;
+  /** The width its last step started at (at first, the width it was admitted at): a step no wider never waits (D365). */
+  lastWidth?: number | null;
   /** The job's tools read the control file: `control:` as written, else detected after prepare (null: not known yet). */
   canControl: boolean | null;
   /** Memory stops so far, this run and the ones before it; at backoff.maxMemoryStops the job fails. */
@@ -170,6 +225,9 @@ export function publicSignature(doc: StatusDoc, ladderSig = ''): string {
 /** Names a `collect:` file may not take: they are the runner's own facts in results/<id>/. */
 export const RESERVED_OUTPUTS = new Set(['STATUS', 'summary.md', 'failure.txt', 'checks.txt', 'metrics.json', 'pilot-checks.txt', 'pilot-metrics.json', 'events.jsonl', 'collect-skipped.txt']);
 
+/** After a memory stop, how long before another job may be stopped for memory: the freed memory shows in avg10. */
+export const MEMORY_STOP_SETTLE_MS = 60_000;
+
 /** A network git call is cut off after this long, so one dead fetch or push never stalls the loop. */
 export const GIT_TIMEOUT_MS = 30_000;
 
@@ -189,6 +247,8 @@ export class Runner {
   /** Job files that vanished from a successful read of pc-jobs: the reads in a row they were missing, and their last text. */
   missing = new Map<string, number>();
   retained = new Map<string, JobFile>();
+  /** When the last memory stop was sent (one at a time: `apply`). */
+  lastMemoryStop = -Infinity;
 
   constructor(cfg: RunnerConfig, sys: Sys) {
     this.cfg = cfg;
@@ -206,7 +266,11 @@ export class Runner {
 
   jobDir(id: string): string { return path.join(this.cfg.stateDir, 'jobs', id); }
   controlFile(id: string): string { return path.join(this.cfg.stateDir, 'control', `${id}.json`); }
-  checkout(repo: string, cpu: 'heavy' | 'light'): string { return path.join(this.cfg.labRoot, cpu === 'light' ? `${repo}-light` : repo); }
+  checkout(repo: string, cpu: 'heavy' | 'light', lane = 0): string {
+    return path.join(this.cfg.labRoot, cpu === 'light' ? `${repo}-light` : lane > 0 ? `${repo}-lane${lane + 1}` : repo);
+  }
+  /** A run's own checkout of a repo: its cpu class and its lane. */
+  checkoutOf(r: Pick<JobRun, 'cpu' | 'lane'>, repo: string): string { return this.checkout(repo, r.cpu, r.cpu === 'heavy' ? r.lane ?? 0 : 0); }
   resultsDir(): string { return path.join(this.cfg.labRoot, 'pc-results'); }
   publicDir(): string { return path.join(this.cfg.labRoot, 'lab-status'); }
   /** The clone the queue is read from: the heavy mtg-table clone. */
@@ -321,6 +385,7 @@ export class Runner {
     const st = this.statuses();
     const { start, blocked } = schedule({
       jobs: this.jobs, statuses: st, active: new Map(this.active().map((r) => [r.id, r.cpu])),
+      holdings: new Map(this.active().map((r) => [r.id, this.holding(r)])), machine: this.machineBudget(),
       playing: this.sys.playing(this.cfg.bridgePort), paused: this.isPaused(), now: this.sys.now(),
     });
     this.blocked = blocked;
@@ -341,41 +406,85 @@ export class Runner {
     if (prev && !prev.outcome) throw new Error(`${job.id} is already running`);
     const approved = !!st && st.state === 'waiting' && 'approved' in st.fields;
     const cap = st?.fields.workers_cap ? Number(st.fields.workers_cap) : null;
-    // A retry after a memory stop or a `stop`: a pilot that already passed is not run again.
+    // A retry after a memory stop or a `stop`: a pilot that already passed is not run again, and
+    // neither is a `## Commands` block that finished (D365): the retry starts at the block that was stopped.
     const retry = !!prev && prev.outcome?.state === 'waiting' && /^(memory|stopped)/.test(prev.outcome.reason) && !!prev.sizing;
-    const steps = this.stepsFor(job, approved || retry);
-    const moved = retry && !job.resumable ? this.cleanAside(prev as JobRun, job) : [];
+    const resume = retry ? this.resumeBlock(job, this.doneBlocks(prev as JobRun)) : null;
+    const from = resume?.from ?? 0;
+    const steps = this.stepsFor(job, approved || retry, from);
+    const moved = retry && !job.resumable ? this.cleanAside(prev as JobRun, job, from) : [];
+    const lanes = new Set(this.active().filter((x) => x.cpu === 'heavy').map((x) => x.lane ?? 0));
+    let lane = 0;
+    while (job.cpu === 'heavy' && lanes.has(lane)) lane++;
     const r: JobRun = {
+      lane: job.cpu === 'heavy' ? lane : 0,
       canControl: job.control, memoryStops: prev?.outcome?.state === 'waiting' ? prev.memoryStops ?? 0 : 0,
       id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps, stepIndex: 0,
       unit: null, unitStartedAt: 0, workers: 1, sizing: null, cap: Number.isFinite(cap) ? cap : null,
       pinned: retry ? prev?.pinned : undefined,
       peakRssGb: prev?.peakRssGb ?? null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null,
       metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null,
+      blocksDone: resume?.kept ?? {}, aside: prev?.aside ?? null, lastWidth: widthOf(job, this.machineBudget()),
     };
-    if (retry) r.restarts.push({ at: this.sys.now(), how: job.resumable ? 'resumed' : 'restarted', why: `retry after "${prev?.outcome?.reason}"; the pilot had passed${moved.length ? `; moved aside: ${moved.join(', ')}` : ''}${job.resumable ? '; the tools skip what is done' : ''}` });
+    if (retry) {
+      r.restarts.push({ at: this.sys.now(), how: job.resumable ? 'resumed' : 'restarted', why: `retry after "${prev?.outcome?.reason}"; the pilot had passed; ${resume?.why}${moved.length ? `; moved aside: ${moved.join(', ')}` : ''}${job.resumable ? '; the tools skip what is done' : ''}` });
+    }
     fs.rmSync(path.join(this.jobDir(job.id), 'out'), { recursive: true, force: true });
     fs.mkdirSync(path.join(this.jobDir(job.id), 'out'), { recursive: true });
     this.runs.set(job.id, r);
-    this.sys.log(`${job.id}: start (${job.cpu}; ${steps.map((s) => s.name).join(', ')})`);
+    this.sys.log(`${job.id}: start (${job.cpu}${lane ? `, lane ${lane + 1}` : ''}; ${steps.map((s) => s.name).join(', ')})`);
     this.setStatus(r, 'running', { phase: 'prepare' });
     this.save(r);
     this.advance(r);
     return r;
   }
 
-  stepsFor(job: JobFile, approved: boolean): Step[] {
-    const steps: Step[] = [{ name: 'prepare', kind: 'shell', phase: 'prepare' }];
+  /** The job's steps; `fromBlock` > 0: a retry that starts at that `## Commands` block (0-based), the ones before it done. */
+  stepsFor(job: JobFile, approved: boolean, fromBlock = 0): Step[] {
+    // prepare_cores: / pilot_cores: (D365): the width those steps hold beside other jobs; absent: the job's width.
+    const steps: Step[] = [{ name: 'prepare', kind: 'shell', phase: 'prepare', cores: job.prepareCores ?? null }];
     const pb = job.pilot?.blocks ?? [];
     if (!approved) {
-      pb.forEach((b, i) => steps.push({ name: `pilot${i + 1}`, kind: 'shell', phase: 'pilot', block: b, of: `${i + 1}/${pb.length}` }));
+      pb.forEach((b, i) => steps.push({ name: `pilot${i + 1}`, kind: 'shell', phase: 'pilot', block: b, of: `${i + 1}/${pb.length}`, cores: job.pilot?.blockCores?.[i] ?? job.pilotCores ?? null, memGb: job.pilot?.blockMemGb?.[i] ?? null }));
       steps.push({ name: 'pilot-checks', kind: 'pilot-checks', phase: 'checks' });
     }
     const cb = job.commands?.blocks ?? [];
-    cb.forEach((b, i) => steps.push({ name: `run${i + 1}`, kind: 'shell', phase: 'commands', block: b, of: `${i + 1}/${cb.length}` }));
+    cb.forEach((b, i) => { if (i >= fromBlock) steps.push({ name: `run${i + 1}`, kind: 'shell', phase: 'commands', block: b, of: `${i + 1}/${cb.length}`, cores: job.commands?.blockCores?.[i] ?? null, memGb: job.commands?.blockMemGb?.[i] ?? null }); });
     steps.push({ name: 'final-checks', kind: 'final-checks', phase: 'checks' });
     steps.push({ name: 'collect', kind: 'collect', phase: 'collect' });
     return steps;
+  }
+
+  /**
+   * The `## Commands` blocks a run finished (D365): its record, and -- a run.json written before
+   * D365 has none -- every commands step before the one it stopped at (a step is passed only on exit 0).
+   */
+  doneBlocks(r: JobRun): Record<string, BlockDone> {
+    const out: Record<string, BlockDone> = { ...(r.blocksDone ?? {}) };
+    r.steps.forEach((s, i) => {
+      if (i < r.stepIndex && s.phase === 'commands' && s.block !== undefined && !out[s.name]) out[s.name] = { rc: 0, at: r.startedAt, sha: blockSha(s.block) };
+    });
+    return out;
+  }
+
+  /**
+   * Where a retry starts (D365): the first `## Commands` block not done with the same text (0-based; 0 =
+   * from run1).  A non-resumable job whose only clean: is the header's starts from run1 whatever is done:
+   * nothing says which block made which path, and moving them all aside would lose the done blocks' work.
+   */
+  resumeBlock(job: JobFile, done: Record<string, BlockDone>): { from: number; kept: Record<string, BlockDone>; why: string } {
+    const blocks = job.commands?.blocks ?? [];
+    let from = 0;
+    while (from < blocks.length && done[`run${from + 1}`]?.rc === 0 && done[`run${from + 1}`]?.sha === blockSha(blocks[from] as string)) from++;
+    const list = (n: number): string => Array.from({ length: n }, (_, i) => `run${i + 1}`).join(', ');
+    const blockClean = (job.commands?.blockClean ?? []).some((c) => c.length > 0);
+    if (from > 0 && !job.resumable && job.clean.length && !blockClean) {
+      return { from: 0, kept: {}, why: `starts again at run1: ${list(from)} ${from > 1 ? 'are' : 'is'} done, but the job's clean: is job-wide (no clean: line before a block), so the runner cannot tell what they made` };
+    }
+    const kept = Object.fromEntries(Object.entries(done).filter(([n]) => Number(n.slice(3)) <= from));
+    if (from === 0) return { from, kept, why: 'starts again at run1' };
+    const at = from < blocks.length ? `resumes at run${from + 1}` : `resumes after run${from}, the last block: the checks run again`;
+    return { from, kept, why: `${at} (${list(from)} done, exit 0)` };
   }
 
   /** The job file: from the last read, or retained while it has been missing from fewer than two reads. */
@@ -412,6 +521,8 @@ export class Runner {
   }
 
   private rcFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.sh.rc`); }
+  /** The unit's memory.events `oom_kill` line, written by the wrapper before the exit code (D365). */
+  private oomFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.sh.oom`); }
   logFile(r: JobRun, step: Step): string { return path.join(this.jobDir(r.id), `${step.name}.log`); }
 
   /**
@@ -442,6 +553,7 @@ export class Runner {
       return true;
     }
     if (rc === 0) {
+      if (step.phase === 'commands') r.blocksDone = { ...(r.blocksDone ?? {}), [step.name]: { rc: 0, at: this.sys.now(), sha: blockSha(step.block ?? '') } };
       r.stepIndex++;
       this.save(r);
       return true;
@@ -451,9 +563,27 @@ export class Runner {
       this.memoryStop(r, `step ${step.name} was killed without an exit code (oomd or the OOM killer?)`);
       return true;
     }
+    // SIGKILL's exit code, and evidence of an OOM kill in the unit: a memory stop, retried, not a failure (D365).
+    const oom = OOM_EXIT_CODES.has(rc) ? this.oomEvidence(r, step) : null;
+    if (oom) {
+      this.memoryStop(r, `step ${step.name} exited ${rc} after an OOM kill (${oom})`);
+      return true;
+    }
     this.writeOut(r, 'failure.txt', `step ${step.name} exited ${rc}\n\n${this.tail(this.logFile(r, step), 60)}`);
     this.finish(r, 'failed', `${step.phase === 'pilot' ? 'pilot: ' : step.phase === 'prepare' ? 'prepare: ' : ''}step ${step.name} exited ${rc}`, { exit: String(rc) });
     return true;
+  }
+
+  /**
+   * Evidence that the kernel's OOM killer killed a process in the step's unit (D365), or null: the
+   * wrapper's own read of the unit's memory.events (`oom_kill N`, N > 0) as the step ended, else (a
+   * wrapper from before D365, or a global OOM the counter missed) systemd's Result or the unit's journal.
+   */
+  oomEvidence(r: JobRun, step: Step): string | null {
+    let n = NaN;
+    try { n = Number(/^oom_kill\s+(\d+)/m.exec(fs.readFileSync(this.oomFile(r, step), 'utf8'))?.[1]); } catch { /* none */ }
+    if (n > 0) return `the unit's memory.events: oom_kill ${n}`;
+    return this.sys.unitOomEvidence(unitName(r.id, step.name), r.unitStartedAt);
   }
 
   /** A memory stop: waiting, retried later with one worker fewer — or failed, at the configured number of stops. */
@@ -474,7 +604,7 @@ export class Runner {
    * events would be fiction, and memory pressure can only stop the job.
    */
   detectControl(r: JobRun, job: JobFile): boolean {
-    const mtg = this.checkout('mtg-table', r.cpu);
+    const mtg = this.checkoutOf(r, 'mtg-table');
     const has = fs.existsSync(path.join(mtg, 'tools', 'runner', 'control.ts'));
     const blocks = [...(job.pilot?.blocks ?? []), ...(job.commands?.blocks ?? [])].join('\n');
     return has && /\b(ai-bench\.sh|cubelab\.sh|ai-ladder\.sh)\b/.test(blocks);
@@ -483,7 +613,7 @@ export class Runner {
   private readShas(r: JobRun, job: JobFile): void {
     r.pinned ??= {};
     for (const { repo } of job.repos) {
-      const sha = this.git(this.checkout(repo, r.cpu), 'rev-parse', 'HEAD').stdout.trim();
+      const sha = this.git(this.checkoutOf(r, repo), 'rev-parse', 'HEAD').stdout.trim();
       if (!sha) continue;
       r.shas[repo] = sha.slice(0, 7);
       r.pinned[repo] ??= sha;
@@ -493,17 +623,17 @@ export class Runner {
   /** The cwd for a job's commands: the mtg-table checkout when the job names it, else its first repo's. */
   cwdOf(r: JobRun, job: JobFile): string {
     const repo = job.repos.find((x) => x.repo === 'mtg-table')?.repo ?? job.repos[0]?.repo ?? 'mtg-table';
-    return this.checkout(repo, r.cpu);
+    return this.checkoutOf(r, repo);
   }
 
   /**
    * {workers}, {mtg-table}, {ForgeCoach}, and Justin's own checkout paths rewritten to the lab's:
    * the literal path, `~/code/<repo>`, `$HOME/code/<repo>` and `${HOME}/code/<repo>`.
    */
-  substitute(text: string, r: JobRun): string {
-    let t = text.replace(/\{workers\}/g, String(r.workers));
+  substitute(text: string, r: JobRun, step?: Step): string {
+    let t = text.replace(/\{workers\}/g, String(this.stepWorkers(r, step)));
     for (const repo of ['mtg-table', 'ForgeCoach']) {
-      const lab = this.checkout(repo, r.cpu);
+      const lab = this.checkoutOf(r, repo);
       t = t.split(`{${repo}}`).join(lab);
       const home = this.cfg.homeRepos[repo];
       const esc = (x: string): string => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -532,12 +662,19 @@ export class Runner {
       // A retry or a restart checks out the commit the job first ran on, not where its branch is now.
       const ref = r.pinned?.[repo] ?? asked;
       if (!/^[A-Za-z0-9._/-]+$/.test(ref)) throw new Error(`a ref the runner will not pass to git: ${ref}`);
-      const dest = this.checkout(repo, r.cpu);
+      const dest = this.checkoutOf(r, repo);
       const home = this.cfg.homeRepos[repo];
       const url = this.cfg.urls[repo] ?? (home ? this.sys.run(['git', '-C', home, 'remote', 'get-url', 'origin']).stdout.trim() : '');
       lines.push(`# ${repo}@${ref}`,
         `if [ ! -d ${q(dest)}/.git ]; then git clone --quiet ${home ? `--reference-if-able ${q(home)} --dissociate ` : ''}${q(url)} ${q(dest)}; fi`,
         `cd ${q(dest)}`,
+        // A lane's var/ is lane 1's: every job's outputs in one place (the header's LANES).
+        ...(repo === 'mtg-table' && r.cpu === 'heavy' && (r.lane ?? 0) > 0 ? [
+          `mkdir -p ${q(path.join(this.checkout(repo, 'heavy'), 'var'))}`,
+          `if [ ! -L var ]; then if [ -e var ]; then mv var ".var-before-lane-$(date +%Y%m%d%H%M%S)"; fi; ln -s ${q(path.join(this.checkout(repo, 'heavy'), 'var'))} var; fi`,
+          // .gitignore's `var/` matches a directory, not a symlink: keep the tree clean for the version stamps.
+          `grep -qx var .git/info/exclude 2>/dev/null || echo var >> .git/info/exclude`,
+        ] : []),
         `git fetch --quiet origin '+refs/heads/*:refs/remotes/origin/*'`,
         `if git rev-parse -q --verify ${q(`origin/${ref}^{commit}`)} >/dev/null; then sha=$(git rev-parse ${q(`origin/${ref}^{commit}`)}); else sha=$(git rev-parse --verify ${q(`${ref}^{commit}`)}); fi`,
         `git checkout --quiet --force --detach "$sha"`,
@@ -550,10 +687,10 @@ export class Runner {
 
   stepScript(r: JobRun, job: JobFile, step: Step): string {
     if (step.phase !== 'prepare') {
-      const found = this.homeReference(this.substitute(step.block ?? '', r));
+      const found = this.homeReference(this.substitute(step.block ?? '', r, step));
       if (found) throw new Error(`step ${step.name} still names Justin's checkout (${found}) after rewriting it to the lab's clones; the runner never runs a job there`);
     }
-    const body = step.phase === 'prepare' ? this.prepareScript(r, job) : `set -eo pipefail\ncd ${q(this.cwdOf(r, job))}\n${this.substitute(step.block ?? '', r)}`;
+    const body = step.phase === 'prepare' ? this.prepareScript(r, job) : `set -eo pipefail\ncd ${q(this.cwdOf(r, job))}\n${this.substitute(step.block ?? '', r, step)}`;
     return `#!/usr/bin/env bash\n# lab runner: ${r.id} ${step.name} (generated from ${job.file}; do not edit)\n${body}\n`;
   }
 
@@ -569,10 +706,42 @@ export class Runner {
       log: this.logFile(r, step),
       cwd: step.phase === 'prepare' ? this.cfg.labRoot : this.cwdOf(r, job),
       env: {
-        JOBS: String(r.workers), LAB_WORKERS: String(r.workers), LAB_CONTROL: this.controlFile(r.id), LAB_JOB: r.id, LAB_STEP: step.name,
-        MTG_TABLE: this.checkout('mtg-table', r.cpu), FORGECOACH: this.checkout('ForgeCoach', r.cpu),
+        JOBS: String(this.stepWorkers(r, step)), LAB_WORKERS: String(this.stepWorkers(r, step)), LAB_CONTROL: this.controlFile(r.id), LAB_JOB: r.id, LAB_STEP: step.name,
+        MTG_TABLE: this.checkoutOf(r, 'mtg-table'), FORGECOACH: this.checkoutOf(r, 'ForgeCoach'),
+        // The step's width (the cores the runner reserved for it) caps BLAS / OpenMP / numexpr pools: numpy at
+        // width 1 gets one thread, not all 16 (J060).  Java ignores these; a block's own export wins.
+        ...threadCaps(this.stepWidth(r, step, job)),
       },
     };
+  }
+
+  /**
+   * `tools/runner.sh plan`: for each waiting job (or `only`), the scripts, the thread cap and the
+   * systemd-run line its next start would use.  Starts nothing.  Returns the exit code.
+   */
+  plan(only: string | null, print: (line: string) => void): number {
+    this.readQueue(true);
+    const st = this.statuses();
+    const jobs = only ? this.jobs.filter((j) => j.id === only) : this.jobs;
+    if (!jobs.length) { print(only ? `no job ${only} on origin/pc-jobs` : 'no jobs on origin/pc-jobs'); return 1; }
+    const m = this.sys.machine();
+    print(`machine: ${m.memTotalGb.toFixed(1)} GB, ${m.physicalCores} cores / ${m.threads} threads; lab budget ${JSON.stringify(budgetOf(m, this.cfg.budget))}`);
+    for (const job of jobs) {
+      const s = st.get(job.id);
+      if (!only && s && s.state !== 'waiting') continue;
+      print(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
+      if (job.errors.length) { print(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
+      const run: JobRun = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: this.sys.now(), steps: this.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: this.maxWorkersOf(job) ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
+      for (const step of run.steps) {
+        if (step.kind !== 'shell') { print(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
+        const u = this.unitSpec(run, job, step);
+        print(`\n-- ${step.name} (${u.script}):\n${this.stepScript(run, job, step).split('\n').map((l) => `   | ${l}`).join('\n')}`);
+        print(`   threads: ${u.env.OMP_NUM_THREADS} (the step's width; ${THREAD_CAP_VARS.join(', ')}; an export in the block wins)`);
+        print(`[dry-run] ${systemdRunLine(u)}`);
+      }
+      if (job.aborts.length) print(`\n-- abort (every minute): ${job.aborts.join(' | ')}`);
+    }
+    return 0;
   }
 
   /** Why a step may not start now (the runner is paused, Justin is at the table, the backoff paused the job), or null. */
@@ -590,14 +759,31 @@ export class Runner {
       if (r.heldFor !== hold) { r.heldFor = hold; this.sys.log(`${r.id}: ${step.name} waits: ${hold}`); this.save(r); }
       return false;
     }
+    // A step wider than the cores the other jobs leave (a narrow pilot_cores: pilot let one start beside
+    // this job) waits for them; nothing is stopped or killed (D365).
+    // The first commands step was sized at the pilot's end against the memory the others held then; one
+    // that waits for cores is sized again when it starts, so meanwhile it claims the job's full width.
+    if (r.cpu === 'heavy' && step.phase === 'commands' && r.sizing && r.stepIndex === r.steps.findIndex((s) => s.phase === 'commands') && this.coresWait(r, job, step)) r.sizing = null;
+    const need = this.coresWait(r, job, step);
+    if (need) {
+      const hold2 = `needs ${need.need} core(s) for ${step.name}; ${need.free} of ${need.total} free (it waits for them; nothing is stopped)`;
+      if (r.heldFor !== hold2) {
+        r.heldFor = hold2; r.waitingCores = need.need;
+        this.sys.log(`${r.id}: ${step.name} waits: ${hold2}`);
+        this.setStatus(r, 'running', { phase: this.phaseOf(r) });
+        this.save(r);
+      }
+      return false;
+    }
     r.heldFor = null;
+    r.waitingCores = null;
     const live = this.sys.liveUnits(`lab-${r.id}-`);
     if (live === null || live.length) {
       this.sys.log(`${r.id}: ${step.name} not started: ${live === null ? 'systemctl did not answer' : `${live.join(', ')} still alive`}`);
       return false;
     }
     if (step.phase === 'pilot' && r.stepIndex === r.steps.findIndex((s) => s.phase === 'pilot')) {
-      r.workers = Math.min(PILOT_MAX_WORKERS, sizeWorkers({ budgetGb: this.heavyBudget(r), physicalCores: this.sys.machine().physicalCores, maxWorkers: job.maxWorkers, measuredPeakGb: null, memPerWorkerGb: job.memPerWorkerGb, cap: r.cap }).workers);
+      r.workers = Math.min(PILOT_MAX_WORKERS, sizeWorkers({ budgetGb: this.heavyBudget(r), physicalCores: this.sys.machine().physicalCores, maxWorkers: this.maxWorkersOf(job), measuredPeakGb: null, memPerWorkerGb: job.memPerWorkerGb, cap: r.cap }).workers);
     }
     if (step.phase === 'commands' && !r.sizing) this.size(r, job);
     if (step.phase !== 'prepare') {
@@ -613,9 +799,11 @@ export class Runner {
     }
     fs.writeFileSync(u.script, script);
     const rc = this.rcFile(r, step);
+    const oom = this.oomFile(r, step);
     fs.rmSync(rc, { force: true });
-    fs.writeFileSync(`${u.script}.wrap`, `#!/usr/bin/env bash\nbash ${q(u.script)}\nrc=$?\nprintf '%s\\n' "$rc" > ${q(`${rc}.part`)} && mv ${q(`${rc}.part`)} ${q(rc)}\nexit "$rc"\n`);
-    fs.appendFileSync(u.log, `==== ${r.id} ${step.name} started ${isoLocal(this.sys.now())} in unit ${u.unit}, ${r.workers} worker(s)\n`);
+    fs.rmSync(oom, { force: true });
+    fs.writeFileSync(`${u.script}.wrap`, wrapScript(u.script, rc, oom));
+    fs.appendFileSync(u.log, `==== ${r.id} ${step.name} started ${isoLocal(this.sys.now())} in unit ${u.unit}, ${this.stepWorkers(r, step)} worker(s), ${this.holding(r).cores} core(s), BLAS/OpenMP threads ${u.env.OMP_NUM_THREADS}${r.lane ? `, lane ${r.lane + 1}` : ''}\n`);
     const res = this.sys.startUnit(u);
     if (res.code !== 0) {
       this.finish(r, 'failed', `systemd-run failed for ${u.unit}: ${(res.stderr || res.stdout).trim().split('\n').at(-1)}`);
@@ -623,18 +811,103 @@ export class Runner {
     }
     r.unit = u.unit;
     r.unitStartedAt = this.sys.now();
+    r.lastWidth = this.stepWidth(r, step, job);
     this.setStatus(r, 'running', { phase: this.phaseOf(r) });
     this.save(r);
     return true;
   }
 
+  /**
+   * The memory a run is sized against: a light job's share; a heavy job's budget less what
+   * the other heavy jobs running beside it reserve (co-scheduling), at least 1 GB.
+   */
   heavyBudget(r: JobRun): number {
     const b = budgetOf(this.sys.machine(), this.cfg.budget);
-    return r.cpu === 'light' ? b.lightGb : b.heavyGb;
+    if (r.cpu === 'light') return b.lightGb;
+    const others = this.othersHolding(r).reduce((a, h) => a + h.memGb, 0);
+    return Math.max(1, Math.round((b.heavyGb - others) * 10) / 10);
+  }
+
+  /**
+   * What the other heavy jobs hold, as `r` sees it before starting a step: their holdings, except a job
+   * later in order (by id) that is itself waiting for cores to widen (D365): it runs nothing, and the
+   * earlier job goes first, so two waiting jobs never wait for each other.
+   */
+  othersHolding(r: JobRun): Holding[] {
+    return this.active().filter((x) => x.id !== r.id && x.cpu === 'heavy' && !(x.waitingCores && idOrder(x.id, r.id) > 0)).map((x) => this.holding(x));
+  }
+
+  /**
+   * D365 (per-step widths): a heavy step needing more cores than the other heavy jobs leave waits, or null.
+   * Only when jobs run side by side; a job alone always has the machine.  While it waits, its holding is
+   * the waiting step's width, so the scheduler starts nothing new beside it (no starvation).
+   */
+  coresWait(r: JobRun, job: JobFile, step: Step): { need: number; free: number; total: number } | null {
+    if (r.cpu !== 'heavy') return null;
+    // Only a step WIDER than the one before it waits: the job already held those cores (or was admitted
+    // with them), so a job that is not widening never waits for one that is (no deadlock).  A run from
+    // before D365 has no lastWidth: it never waits, as before.
+    const need0 = this.stepWidth(r, step, job);
+    if (r.lastWidth == null || need0 <= r.lastWidth) return null;
+    const m = this.machineBudget();
+    if (!m.coSchedule) return null;
+    const others = this.othersHolding(r);
+    if (!others.length) return null;
+    const used = others.reduce((a, h) => a + h.cores, 0);
+    const need = need0;
+    return used + need > m.cores ? { need, free: Math.max(0, m.cores - used), total: m.cores } : null;
+  }
+
+  /** The workers a job may have: max_workers, and never more than its `cores:` width. */
+  maxWorkersOf(job: JobFile): number | null {
+    const c = [job.maxWorkers, job.cores].filter((x): x is number => typeof x === 'number');
+    return c.length ? Math.min(...c) : null;
+  }
+
+  /** {workers} (and JOBS) in a step: the run's workers, at most the block's own `cores:`. */
+  stepWorkers(r: JobRun, step: Step | undefined = r.steps[r.stepIndex]): number {
+    return step?.cores ? Math.max(1, Math.min(r.workers, step.cores)) : r.workers;
+  }
+
+  /** The core budget heavy jobs share, the memory they share, and whether one may start beside another now. */
+  machineBudget(): MachineBudget {
+    const m = this.sys.machine();
+    const backoff = this.active().some((r) => !!r.backoff && (r.backoff.paused || r.backoff.workers < r.backoff.sized))
+      || (this.host?.some10 ?? 0) >= this.cfg.backoff.highSome;
+    return {
+      cores: Math.max(1, this.cfg.cores ?? m.physicalCores), memGb: budgetOf(m, this.cfg.budget).heavyGb,
+      defaultWidth: Math.max(1, m.physicalCores - 1), memoryBackoff: backoff, coSchedule: this.cfg.coSchedule !== false,
+    };
+  }
+
+  /**
+   * What a running job holds now: its width — its current step's `cores:`, else its `cores:` header, else
+   * its workers (sized, or what it may be sized to) — and its memory: the step's `mem_gb:`, else that many
+   * workers at its per-worker peak.
+   */
+  holding(r: JobRun): Holding {
+    const job = this.jobOf(r);
+    const step = r.steps[r.stepIndex];
+    const cores = this.stepWidth(r, step, job);
+    const peak = r.sizing?.peakGb ?? Math.max(r.peakRssGb ?? 0, job?.memPerWorkerGb ?? DEFAULT_PEAK_GB);
+    return { cores, memGb: Math.round((step?.memGb ?? cores * peak) * 10) / 10 };
+  }
+
+  /**
+   * A step's width: the cores the runner reserves for it beside other jobs (`holding`) and the thread
+   * cap its unit gets — the block's `cores:`, else the job's, else its sized workers, else the width it
+   * was admitted at (max_workers, else physical cores − 1; light 1); at most the core budget.
+   */
+  stepWidth(r: JobRun, step: Step | undefined, job: JobFile | null = this.jobOf(r)): number {
+    const mb = { cores: Math.max(1, this.cfg.cores ?? this.sys.machine().physicalCores), defaultWidth: Math.max(1, this.sys.machine().physicalCores - 1) };
+    if (step?.cores) return Math.min(step.cores, mb.cores);
+    if (job?.cores) return Math.min(job.cores, mb.cores);
+    if (r.sizing) return Math.min(r.sizing.workers, mb.cores);
+    return job ? widthOf(job, mb) : mb.cores;
   }
 
   size(r: JobRun, job: JobFile): void {
-    r.sizing = sizeWorkers({ budgetGb: this.heavyBudget(r), physicalCores: this.sys.machine().physicalCores, maxWorkers: job.maxWorkers, measuredPeakGb: r.peakRssGb, memPerWorkerGb: job.memPerWorkerGb, cap: r.cap });
+    r.sizing = sizeWorkers({ budgetGb: this.heavyBudget(r), physicalCores: this.sys.machine().physicalCores, maxWorkers: this.maxWorkersOf(job), measuredPeakGb: r.peakRssGb, memPerWorkerGb: job.memPerWorkerGb, cap: r.cap });
     r.workers = r.sizing.workers;
     r.backoff = initialBackoff(r.workers);
   }
@@ -674,7 +947,9 @@ export class Runner {
       r.memGb = this.sys.unitMemoryGb(r.unit);
       const { state, action } = decide(r.backoff, { at: now, some10: this.host.some10, swapIn: this.swapInRate, jobGb: r.memGb, jobMaxGb: maxGb, javaCount: this.sys.unitJavaCount(r.unit) }, canControl, this.cfg.backoff);
       r.backoff = state;
-      if (action) this.apply(r, action);
+      // The job's own memory at its cap is the job's alone: no other job's stop relieves it.
+      const ownHard = r.memGb !== null && r.memGb !== undefined && maxGb > 0 && r.memGb >= this.cfg.backoff.hardFraction * maxGb;
+      if (action) this.apply(r, action, ownHard);
     }
     this.writeEffectiveControl(r);
     if (now - r.metricsAt >= this.cfg.metricsEveryMs) {
@@ -688,8 +963,22 @@ export class Runner {
     this.save(r);
   }
 
-  private apply(r: JobRun, a: Action): void {
+  private apply(r: JobRun, a: Action, ownHard = false): void {
     const kind = a.kind;
+    if (kind === 'stop' && !ownHard) {
+      // One memory stop at a time.  The pressure is the host's, so jobs side by side reach
+      // the hard line in the same tick; stopping every one of them throws away all their
+      // work when stopping one frees the memory.  Another job stopping (or just stopped)
+      // for memory: this one waits, and its own hard line has to hold again from zero.
+      // (Not when this job's own memory is at its cap: only stopping it helps that.)
+      const now = this.sys.now();
+      const other = this.active().find((x) => x !== r && x.stopping?.why === 'memory');
+      if (other || now - this.lastMemoryStop < MEMORY_STOP_SETTLE_MS) {
+        this.sys.log(`${r.id}: memory stop held back (${other ? `${other.id} is stopping for memory` : 'a job was just stopped for memory'}): ${a.why}`);
+        return;
+      }
+    }
+    if (kind === 'stop') this.lastMemoryStop = this.sys.now();
     this.event(r, kind, a.why);
     if (kind === 'stop') this.stop(r, 'memory', a.why);
   }
@@ -704,7 +993,8 @@ export class Runner {
 
   writeEffectiveControl(r: JobRun): void {
     const paused = this.isPaused() || r.playingHeld || !!r.backoff?.paused;
-    const maxWorkers = r.backoff?.workers ?? r.workers;
+    const step = r.steps[r.stepIndex];
+    const maxWorkers = Math.min(r.backoff?.workers ?? r.workers, step?.cores ?? Infinity);
     const f = this.controlFile(r.id);
     let cur = '';
     try { cur = fs.readFileSync(f, 'utf8'); } catch { /* none yet */ }
@@ -875,6 +1165,10 @@ export class Runner {
     if (r.peakRssGb !== null) f.peak_worker_rss_gb = (Math.round(r.peakRssGb * 100) / 100).toString();
     if (r.approved) f.approved = 'pilot approved; the runner skipped it';
     for (const x of r.restarts) f[x.how] = `${isoLocal(x.at)}: ${x.why}`;
+    const done = Object.entries(r.blocksDone ?? {}).sort((a, b) => Number(a[0].slice(3)) - Number(b[0].slice(3)));
+    if (done.length) f.blocks_done = done.map(([n, d]) => `${n} exit ${d.rc} at ${isoLocal(d.at)}`).join(', ');
+    if (r.heldFor && r.waitingCores) f.waits = r.heldFor;
+    if (r.aside?.copies) f.set_aside = `${r.aside.copies} cop${r.aside.copies === 1 ? 'y' : 'ies'}, ${(r.aside.bytes / 1024 ** 3).toFixed(2)} GB beside the job's clean: paths (never deleted: remove them by hand)`;
     r.events.slice(-30).forEach((e, i) => { f[`pressure-${i + 1}`] = `${e.at} ${e.kind}${e.workers !== null ? ` to ${e.workers} worker(s)` : ''}: ${e.why}`; });
     Object.assign(f, extra);
     const st: Status = { state: state as Status['state'], fields: f, order: ['reason', 'needs', 'runner', 'started', 'finished', 'phase', 'mtg-table', 'ForgeCoach', 'workers', 'peak_worker_rss_gb'] };
@@ -912,11 +1206,16 @@ export class Runner {
         if (step.phase === 'commands') { r.cap = retryCap(r.backoff?.workers ?? r.workers); r.sizing = null; }
         r.restarts.push({ at: this.sys.now(), how: 'resumed', why: `the runner restarted during ${step.name}; it runs again${job.resumable ? ' and skips what is done' : ' (a pilot is short)'}${step.phase === 'commands' ? `, at most ${r.cap} worker(s)` : ''}` });
       } else {
-        const moved = this.cleanAside(r, job);
-        r.cap = step.phase === 'commands' ? retryCap(r.backoff?.workers ?? r.workers) : r.cap;
+        // A non-resumable job's commands block died with the runner: it starts again at that block (D365),
+        // after prepare, its pilot passed; what that block (and those after it) make is moved aside.
+        const resume = this.resumeBlock(job, this.doneBlocks(r));
+        const moved = this.cleanAside(r, job, resume.from);
+        r.cap = retryCap(r.backoff?.workers ?? r.workers);
+        r.steps = this.stepsFor(job, true, resume.from);
+        r.blocksDone = resume.kept;
         r.stepIndex = 0;
         r.sizing = null;
-        r.restarts.push({ at: this.sys.now(), how: 'restarted', why: `the runner restarted during ${step.name}; the job is not resumable, so it starts again from the top${moved.length ? ` (moved aside: ${moved.join(', ')})` : ''}` });
+        r.restarts.push({ at: this.sys.now(), how: 'restarted', why: `the runner restarted during ${step.name}; the job is not resumable, so it ${resume.from ? resume.why.replace(/^resumes (at|after)/, 'starts again $1') : 'starts again from the top'}${moved.length ? ` (moved aside: ${moved.join(', ')})` : ''}` });
       }
       this.setStatus(r, 'running', { phase: this.phaseOf(r) });
       this.save(r);
@@ -933,34 +1232,60 @@ export class Runner {
     }
   }
 
-  /** `clean:` paths moved to `.restart-<time>-<name>` beside them, never deleted; only under the job's checkout's var/. */
-  cleanAside(r: JobRun, job: JobFile): string[] {
+  /**
+   * The clean: paths a restart at `fromBlock` (0-based) moves aside: from run1, the header's and every
+   * block's; from a later block, that block's and the ones after it (D365).
+   */
+  cleanPaths(job: JobFile, fromBlock = 0): string[] {
+    const blocks = (job.commands?.blockClean ?? []).filter((_, i) => i >= fromBlock).flat();
+    return [...new Set([...(fromBlock === 0 ? job.clean : []), ...blocks])];
+  }
+
+  /**
+   * `clean:` paths moved to `.restart-<time>-<name>` beside them, NEVER deleted (D365; the job README's
+   * promise); only under the job's checkout's var/.  Their disk use is in STATUS (`set_aside:`).
+   */
+  cleanAside(r: JobRun, job: JobFile, fromBlock = 0): string[] {
     const cwd = this.cwdOf(r, job);
     const moved: string[] = [];
     const stamp = isoLocal(this.sys.now()).replace(/[:]/g, '').slice(0, 17);
-    for (const c of job.clean) {
+    for (const c of this.cleanPaths(job, fromBlock)) {
       for (const p of expandGlob(cwd, c)) {
         const rel = path.relative(cwd, p);
         if (!rel.startsWith('var/') || rel.includes('..')) continue;
         // A dot name: the job's own globs (night-*) never match it again.
-        fs.renameSync(p, path.join(path.dirname(p), `.restart-${stamp}-${path.basename(p)}`));
+        let dest = path.join(path.dirname(p), `.restart-${stamp}-${path.basename(p)}`);
+        for (let k = 2; fs.existsSync(dest); k++) dest = path.join(path.dirname(p), `.restart-${stamp}.${k}-${path.basename(p)}`);
+        fs.renameSync(p, dest);
         moved.push(rel);
-        this.pruneAside(path.dirname(p), path.basename(p));
       }
     }
+    if (this.cleanPaths(job, 0).length) r.aside = this.asideUsage(r, job);
     return moved;
   }
 
-  /** Keep the two newest `.restart-*-<name>` copies beside a cleaned path; older ones go (inside var/ only). */
-  pruneAside(dir: string, name: string, keep = 2): void {
-    let ents: string[] = [];
-    try { ents = fs.readdirSync(dir); } catch { return; }
-    const old = ents.filter((e) => e.startsWith('.restart-') && e.endsWith(`-${name}`)).sort().reverse().slice(keep);
-    for (const e of old) {
-      const p = path.join(dir, e);
-      if (!path.relative(this.cfg.labRoot, p).split(path.sep).includes('var')) continue;
-      fs.rmSync(p, { recursive: true, force: true });
+  /** Every `.restart-*` copy beside any of the job's clean: paths (the header's and every block's), and their bytes. */
+  asideUsage(r: JobRun, job: JobFile): { copies: number; bytes: number } {
+    const cwd = this.cwdOf(r, job);
+    let copies = 0, bytes = 0;
+    const seen = new Set<string>();
+    for (const c of this.cleanPaths(job, 0)) {
+      const base = path.basename(c);
+      const re = new RegExp(`^\\.restart-[0-9T-]+(?:\\.\\d+)?-${base.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]')}$`);
+      const dirs = path.dirname(c) === '.' ? [cwd] : expandGlob(cwd, path.dirname(c));
+      for (const d of dirs) {
+        let ents: string[] = [];
+        try { ents = fs.readdirSync(d); } catch { continue; }
+        for (const e of ents) {
+          const p = path.join(d, e);
+          if (!re.test(e) || seen.has(p)) continue;
+          seen.add(p);
+          copies++;
+          bytes += diskBytes(p);
+        }
+      }
     }
+    return { copies, bytes };
   }
 
   /**
@@ -1029,7 +1354,7 @@ export class Runner {
         ...this.publicOf(r.id),
         id: r.id, title: r.title, cpu: r.cpu, phase: this.phaseOf(r), started: isoLocal(r.startedAt), elapsed: Math.round((now - r.startedAt) / 1000),
         done: r.progress.at(-1)?.done ?? null, total: r.total, unit: r.progressUnit, ratePerHour, eta: eta ? isoLocal(eta) : null,
-        workers: r.backoff?.workers ?? r.workers, workersMax: r.sizing?.workers ?? r.workers, errors: errors ?? null,
+        workers: r.backoff?.workers ?? r.workers, workersMax: r.sizing?.workers ?? r.workers, cores: this.holding(r).cores, errors: errors ?? null,
         paused: this.isPaused() || r.playingHeld || !!r.backoff?.paused,
         dataUpdated: r.dataUpdated ? isoLocal(r.dataUpdated) : null,
         memGb: typeof r.memGb === 'number' ? Math.round(r.memGb * 100) / 100 : null,
@@ -1045,9 +1370,9 @@ export class Runner {
       const job = this.jobs.find((j) => j.id === id);
       const started = Date.parse(st.fields.started ?? '');
       running.push({ ...this.publicOf(id), id, title: job?.title ?? id, cpu: job?.cpu ?? 'heavy', phase: 'commands', started: Number.isFinite(started) ? isoLocal(started) : null, elapsed: Number.isFinite(started) ? Math.round((now - started) / 1000) : 0,
-        done: null, total: null, unit: null, ratePerHour: null, eta: null, workers: null, workersMax: null, errors: null, paused: false, dataUpdated: null, pressureEvents: [], detail: 'not run by the runner' });
+        done: null, total: null, unit: null, ratePerHour: null, eta: null, workers: null, workersMax: null, cores: null, errors: null, paused: false, dataUpdated: null, pressureEvents: [], detail: 'not run by the runner' });
     }
-    const queueCodes = new Set(['after', 'heavy-busy', 'light-busy', 'queued']);
+    const queueCodes = new Set(['after', 'heavy-busy', 'light-busy', 'cores', 'queued']);
     if (running.length) this.p.idleSince = null;
     else this.p.idleSince ??= now;
     const finished: FinishedItem[] = [];
@@ -1071,6 +1396,8 @@ export class Runner {
       host: {
         load1: Math.round(h.load1 * 100) / 100, memUsedGb: Math.round(h.memUsedGb * 10) / 10, memTotalGb: Math.round(h.memTotalGb * 10) / 10,
         swapUsedMb: Math.round(h.swapUsedMb), pressure: Math.round(h.some10 * 100) / 100, cpus: m.threads, budgetGb: b.labGb,
+        // Cores in use: the widths of the jobs this runner runs (a light job's too), out of the core budget.
+        coresUsed: running.reduce((a, x) => a + (x.cores ?? 0), 0), coresTotal: this.machineBudget().cores,
       },
       running,
       queue: this.blocked.filter((x) => queueCodes.has(x.code)).map((x) => ({ ...this.publicOf(x.id), id: x.id, title: x.title, cpu: x.cpu, est: x.est })),
@@ -1096,7 +1423,7 @@ export class Runner {
   heartbeat(doc: StatusDoc, old: string): string {
     const keep = /^## Messages[\s\S]*$/m.exec(old)?.[0]
       ?? `## Messages\n\nThe PC session's and Justin's notes, and messages for the cloud session. The runner keeps this section as written.\n${(/^- message for the cloud session:.*$/m.exec(old)?.[0] ?? '').replace(/^- /, '\n- ')}\n`;
-    const run = doc.running.map((r) => `${r.id} ${r.phase}${r.done !== null ? `, ${r.done}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}` : ''}${r.ratePerHour ? `, ${r.ratePerHour}/h` : ''}${r.eta ? `, ETA ${r.eta}` : ''}${r.workers ? `, ${r.workers} worker(s)` : ''}${r.paused ? ', PAUSED' : ''}${r.detail === 'not run by the runner' ? ' (not run by the runner)' : ''}`);
+    const run = doc.running.map((r) => `${r.id} ${r.phase}${r.done !== null ? `, ${r.done}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}` : ''}${r.ratePerHour ? `, ${r.ratePerHour}/h` : ''}${r.eta ? `, ETA ${r.eta}` : ''}${r.workers ? `, ${r.workers} worker(s)` : ''}${r.cores ? `, ${r.cores} core(s)` : ''}${r.paused ? ', PAUSED' : ''}${r.detail === 'not run by the runner' ? ' (not run by the runner)' : ''}`);
     const last = doc.finished[0];
     return `# Heartbeat
 
@@ -1105,6 +1432,7 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - time: ${doc.updated}
 - runner: ${this.cfg.commit}, up since ${isoLocal(this.p.started)}${doc.paused ? ', PAUSED (tools/runner.sh resume)' : ''}
 - running: ${run.length ? run.join('; ') : 'nothing'}
+- cores: ${doc.host.coresUsed ?? '?'} of ${doc.host.coresTotal ?? '?'} in use (the running jobs' widths; ${doc.host.cpus} threads)
 - load: ${doc.host.load1}; memory ${doc.host.memUsedGb}/${doc.host.memTotalGb} GB, swap ${doc.host.swapUsedMb} MB, pressure ${doc.host.pressure}% (lab budget ${doc.host.budgetGb} GB)
 - queue: ${doc.queue.map((x) => x.id).join(', ') || 'empty'}
 - waiting: ${doc.waiting.map((w) => `${w.id} (${w.detail ?? w.reason})`).join('; ') || 'nothing'}
@@ -1170,6 +1498,7 @@ ${keep.trimEnd()}
       let old = '';
       try { old = fs.readFileSync(path.join(wt, 'HEARTBEAT.md'), 'utf8'); } catch { /* none */ }
       fs.writeFileSync(path.join(wt, 'HEARTBEAT.md'), this.heartbeat(doc, old));
+      const ledgered = this.appendLedger(wt);
       this.git(wt, 'add', '-A');
       if (this.git(wt, 'diff', '--cached', '--quiet').code !== 0) {
         const msg = changed.length ? `runner: ${changed.map((id) => `${id} ${parseStatus(this.runs.get(id)?.pendingStatus ?? '')?.state ?? ''}`).join(', ')}` : 'runner: heartbeat';
@@ -1179,10 +1508,77 @@ ${keep.trimEnd()}
         if (p.code !== 0) { this.sys.log(`publish: push refused (attempt ${attempt + 1}): ${p.stderr.trim().split('\n').at(-1)}`); continue; }
       }
       for (const id of changed) { const r = this.runs.get(id); if (r) { r.published = true; if (r.outcome) r.pendingStatus = null; this.save(r); } }
+      this.markLedgered(ledgered);
       if (changed.length) this.p.lastFetch = 0;      // read the STATUS just pushed back at the next tick, not a minute later
       return true;
     }
     return false;
+  }
+
+  // ------------------------------------------------------------------ the decision ledger (D366)
+
+  /**
+   * The ledger's own state (var/runner/ledger.json): `since`, the first time this runner kept a
+   * ledger (a job that ended before it is never backfilled), and the entries already pushed.
+   */
+  ledgerState(): { since: number; written: string[] } {
+    const s = this.readJson<{ since?: number; written?: string[] }>('ledger.json');
+    if (s && typeof s.since === 'number') return { since: s.since, written: Array.isArray(s.written) ? s.written : [] };
+    const fresh = { since: this.p.started, written: [] as string[] };
+    this.writeJson('ledger.json', fresh);
+    return fresh;
+  }
+
+  /**
+   * Into the pc-results worktree (just reset to origin): an entry in ledger.jsonl and LEDGER.md for
+   * every job that ended (done, failed, aborted) and is not in the ledger yet, and a FOLLOW-UP READY
+   * line in HEARTBEAT.md's `## Messages` for a done job's follow-up that is not on pc-jobs.  Returns
+   * the entries' keys, marked once the push went through (`markLedgered`); a refused push writes
+   * them again into the next attempt, and a key already in ledger.jsonl is never written twice.
+   */
+  appendLedger(wt: string): string[] {
+    const st = this.ledgerState();
+    const done = new Set(st.written);
+    const posted = new Map(this.jobs.map((j) => [j.file, j.after]));
+    const entries: LedgerEntry[] = [];
+    for (const r of [...this.runs.values()].sort((a, b) => (a.outcome?.at ?? 0) - (b.outcome?.at ?? 0))) {
+      if (!r.outcome || r.outcome.at < st.since) continue;
+      const job = this.jobs.find((j) => j.id === r.id) ?? this.retained.get(r.id) ?? null;
+      const e = ledgerEntry({
+        id: r.id, title: r.title, ledger: job?.ledger ?? null, state: r.outcome.state, reason: r.outcome.reason, finished: isoLocal(r.outcome.at),
+        headlineKeys: job?.headline ?? [], numbers: r.numbers, metrics: r.metrics, commits: r.shas, posted,
+        publicTitle: job?.publicTitle ?? null, publicDecides: job?.publicDecides ?? null,
+        checks: (job?.pilot?.checks.length ?? 0) + (job?.commands?.checks.length ?? 0),
+      });
+      if (e && !done.has(e.key)) entries.push(e);
+    }
+    if (!entries.length) return [];
+    const jsonl = path.join(wt, 'ledger.jsonl');
+    const md = path.join(wt, 'LEDGER.md');
+    let have = new Set<string>();
+    try { have = ledgerKeys(fs.readFileSync(jsonl, 'utf8')); } catch { /* none yet */ }
+    const fresh = entries.filter((e) => !have.has(e.key));
+    if (fresh.length) {
+      fs.appendFileSync(jsonl, fresh.map(ledgerJsonLine).join(''));
+      if (!fs.existsSync(md)) fs.writeFileSync(md, LEDGER_MD_HEAD);
+      fs.appendFileSync(md, fresh.map((e) => `\n${ledgerMarkdown(e)}`).join(''));
+      const messages = fresh.map(followupMessage).filter((x): x is string => !!x);
+      if (messages.length) {
+        const hb = path.join(wt, 'HEARTBEAT.md');
+        let text = '';
+        try { text = fs.readFileSync(hb, 'utf8'); } catch { /* publishResults writes it first; a bare worktree may not */ }
+        fs.writeFileSync(hb, withMessages(text, messages));
+        for (const m of messages) this.sys.log(`ledger: ${m.slice(2)}`);
+      }
+    }
+    return entries.map((e) => e.key);
+  }
+
+  /** After a push: these ledger entries are on pc-results; never written again (a deleted message stays deleted). */
+  markLedgered(keys: string[]): void {
+    if (!keys.length) return;
+    const st = this.ledgerState();
+    this.writeJson('ledger.json', { since: st.since, written: [...new Set([...st.written, ...keys])].slice(-1000) });
   }
 
   /**
@@ -1228,7 +1624,11 @@ ${keep.trimEnd()}
       fs.writeFileSync(path.join(dir, 'status.json'), `${JSON.stringify(doc)}\n`);
       const ladder = this.publicLadder();
       if (ladder) fs.writeFileSync(path.join(dir, 'ladder.json'), ladder);
-      this.git(dir, 'add', 'status.json', ...(fs.existsSync(path.join(dir, 'ladder.json')) ? ['ladder.json'] : []));
+      const warehouse = this.publicWarehouse();
+      if (warehouse) fs.writeFileSync(path.join(dir, 'warehouse.json'), warehouse);
+      const ledger = this.publicLedgerText();
+      if (ledger) fs.writeFileSync(path.join(dir, 'ledger.json'), ledger);
+      this.git(dir, 'add', 'status.json', ...['ladder.json', 'warehouse.json', 'ledger.json'].filter((f) => fs.existsSync(path.join(dir, f))));
       const id = ['-c', 'user.name=forgecoach-runner', '-c', 'user.email=runner@localhost'];
       // One commit, replaced each time: the branch is a value, not a history.
       const parentless = this.git(dir, ...id, 'commit-tree', this.git(dir, 'write-tree').stdout.trim(), '-m', `lab status ${doc.updated}`).stdout.trim();
@@ -1248,9 +1648,38 @@ ${keep.trimEnd()}
     return this.cfg.ladderFile ?? path.join(this.checkout('mtg-table', 'heavy'), 'var', 'ai-ladder', 'ladder.json');
   }
 
-  /** Size and mtime of the ladder's ladder.json: a change publishes. */
+  warehousePath(): string {
+    return this.cfg.warehouseFile ?? path.join(this.checkout('mtg-table', 'heavy'), 'var', 'warehouse', 'warehouse.json');
+  }
+
+  /** The private ledger.jsonl in the pc-results worktree, which the public ledger.json is made from (D387). */
+  ledgerPath(): string {
+    return path.join(this.resultsDir(), 'ledger.jsonl');
+  }
+
+  /** Size and mtime of the ladder's ladder.json, the warehouse's warehouse.json and the private ledger.jsonl: a change to any publishes. */
   ladderSig(): string {
-    try { const st = fs.statSync(this.ladderPath()); return `${st.size}:${st.mtimeMs}`; } catch { return ''; }
+    const sig = (f: string): string => { try { const st = fs.statSync(f); return `${st.size}:${st.mtimeMs}`; } catch { return ''; } };
+    const w = sig(this.warehousePath());
+    const l = sig(this.ledgerPath());
+    const base = w ? `${sig(this.ladderPath())}|${w}` : sig(this.ladderPath());
+    return l ? `${base}|ledger ${l}` : base;
+  }
+
+  /** The public ledger.json text (ledgerpublic.ts's allowlist, D387), or null when the private ledger has no publishable entry. */
+  publicLedgerText(): string | null {
+    try {
+      const doc = sanitiseLedger(fs.readFileSync(this.ledgerPath(), 'utf8'), isoLocal(this.sys.now()));
+      return doc ? `${JSON.stringify(doc)}\n` : null;
+    } catch { return null; }
+  }
+
+  /** The sanitised warehouse.json text (warehouse.ts's allowlist, D363), or null when there is none or it is not schema 1. */
+  publicWarehouse(): string | null {
+    try {
+      const doc = sanitiseWarehouse(JSON.parse(fs.readFileSync(this.warehousePath(), 'utf8')));
+      return doc ? `${JSON.stringify(doc)}\n` : null;
+    } catch { return null; }
   }
 
   /** The sanitised ladder.json text (ladder.ts's allowlist), or null when there is none or it is not schema 1. */
@@ -1312,8 +1741,18 @@ ${keep.trimEnd()}
     r.published = false;
   }
 
+  /** The last n lines of a file, read from its last 4 MB at most (a step log can be large). */
   tail(file: string, n: number): string {
-    try { return fs.readFileSync(file, 'utf8').split('\n').slice(-n - 1).join('\n'); } catch { return ''; }
+    try {
+      const fd = fs.openSync(file, 'r');
+      try {
+        const size = fs.fstatSync(fd).size;
+        const len = Math.min(size, 4 << 20);
+        const buf = Buffer.alloc(len);
+        fs.readSync(fd, buf, 0, len, size - len);
+        return buf.toString('utf8').split('\n').slice(-n - 1).join('\n');
+      } finally { fs.closeSync(fd); }
+    } catch { return ''; }
   }
 
   /** A step's log into results/<id>/: whole up to 2 MB, else its last 2 MB. */
@@ -1329,6 +1768,44 @@ ${keep.trimEnd()}
       this.writeOut(r, `${step.name}.log`, (len < st.size ? `[... the first ${st.size - len} bytes are in var/runner on the PC]\n` : '') + buf.toString('utf8'));
     } catch { /* no log */ }
   }
+}
+
+/**
+ * A step's wrapper: runs the script, then -- still inside the unit's cgroup, before the exit code that says the
+ * step ended -- copies the unit's memory.events `oom_kill` line beside it (D365: a step whose java was killed by
+ * the OOM killer exits 137 and is a memory stop, not a failure), then writes the exit code.  A read that fails
+ * writes nothing; the exit code is written whatever happens.
+ */
+export function wrapScript(script: string, rc: string, oom: string): string {
+  return `#!/usr/bin/env bash
+bash ${q(script)}
+rc=$?
+cg=$(sed -n 's/^0:://p' /proc/self/cgroup 2>/dev/null)
+if [ -n "$cg" ] && [ -r "/sys/fs/cgroup$cg/memory.events" ]; then grep '^oom_kill ' "/sys/fs/cgroup$cg/memory.events" > ${q(`${oom}.part`)} 2>/dev/null && mv ${q(`${oom}.part`)} ${q(oom)} || rm -f ${q(`${oom}.part`)}; fi
+printf '%s\\n' "$rc" > ${q(`${rc}.part`)} && mv ${q(`${rc}.part`)} ${q(rc)}
+exit "$rc"
+`;
+}
+
+/** Bytes under a path (files' sizes, symlinks not followed); 0 when it is gone. */
+export function diskBytes(p: string): number {
+  let st: fs.Stats;
+  try { st = fs.lstatSync(p); } catch { return 0; }
+  if (!st.isDirectory()) return st.isFile() ? st.size : 0;
+  let n = 0;
+  let ents: string[] = [];
+  try { ents = fs.readdirSync(p); } catch { return 0; }
+  for (const e of ents) n += diskBytes(path.join(p, e));
+  return n;
+}
+
+/** The thread-pool variables the runner sets in every step's unit to the step's width. */
+export const THREAD_CAP_VARS = ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS'] as const;
+
+/** Each of THREAD_CAP_VARS set to a step's width (at least 1). */
+export function threadCaps(width: number): Record<string, string> {
+  const n = String(Math.max(1, Math.floor(width) || 1));
+  return Object.fromEntries(THREAD_CAP_VARS.map((k) => [k, n]));
 }
 
 export function verdictText(vs: Verdict[]): string {

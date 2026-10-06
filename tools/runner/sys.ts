@@ -15,7 +15,7 @@ import os from 'node:os';
 
 import { parsePressure } from './backoff.ts';
 import type { Machine, UnitSpec } from './sizing.ts';
-import { SLICE, systemdRunArgs } from './sizing.ts';
+import { SLICE, systemdRunArgs, systemdRunLine } from './sizing.ts';
 
 export interface Run { code: number; stdout: string; stderr: string }
 
@@ -61,6 +61,11 @@ export interface Sys {
   runInSlice(command: string, cwd: string, timeoutMs: number): Run;
   /** Peak resident set (VmHWM, GB) of every java process in the unit's cgroup now. */
   unitJavaPeaksGb(unit: string): number[];
+  /**
+   * What systemd says about an OOM kill in an ended unit (D365), or null: its `Result=oom-kill` while it is
+   * still loaded, else a line of its journal since `sinceMs` saying a process was killed by the OOM killer.
+   */
+  unitOomEvidence(unit: string, sinceMs: number): string | null;
   /** Someone holds a socket to the bridge (Justin playing, or watching). */
   playing(port: number): boolean;
   log(s: string): void;
@@ -97,6 +102,12 @@ export function establishedOn(tables: string[], port: number): number {
     }
   }
   return n;
+}
+
+/** The first line of a unit's journal that says the OOM killer acted in it (systemd's own words), trimmed; or null. */
+export function oomJournalLine(journal: string): string | null {
+  const l = journal.split('\n').find((x) => /killed by the OOM killer|Failed with result 'oom-kill'|oom-kill/i.test(x));
+  return l ? l.trim().slice(0, 200) : null;
 }
 
 /** Every pid in a unit's cgroup (its sub-cgroups too); null when the unit has none or systemctl did not answer. */
@@ -191,6 +202,13 @@ export function realSys(): Sys {
       }
       return out;
     },
+    unitOomEvidence(unit, sinceMs) {
+      if (systemctlShow(unit, ['Result'])?.Result === 'oom-kill') return 'systemd: Result=oom-kill';
+      const since = Number.isFinite(sinceMs) && sinceMs > 0 ? [`--since=@${Math.floor(sinceMs / 1000)}`] : [];
+      const j = run(['journalctl', '--user', '-u', unit, ...since, '-o', 'cat', '--no-pager', '-q'], { timeoutMs: 15_000 });
+      const line = oomJournalLine(j.stdout);
+      return line ? `journal: ${line}` : null;
+    },
     playing: (port) => establishedOn([readOr('/proc/net/tcp'), readOr('/proc/net/tcp6')], port) > 0,
     log: (s) => process.stdout.write(`${new Date().toISOString()} ${s}\n`),
   };
@@ -199,11 +217,10 @@ export function realSys(): Sys {
 /** The real machine for reading; every systemd action printed instead of done. */
 export function dryRunSys(print: (s: string) => void = (s) => process.stdout.write(`${s}\n`)): Sys {
   const r = realSys();
-  const q = (a: string): string => (/^[\w@%+=:,./-]+$/.test(a) ? a : `'${a.replace(/'/g, `'\\''`)}'`);
   return {
     ...r,
     startUnit(u) {
-      print(`[dry-run] systemd-run ${systemdRunArgs(u).map(q).join(' ')}`);
+      print(`[dry-run] ${systemdRunLine(u)}`);
       return { code: 0, stdout: '', stderr: '' };
     },
     stopUnit(unit) {
@@ -211,6 +228,7 @@ export function dryRunSys(print: (s: string) => void = (s) => process.stdout.wri
       return { code: 0, stdout: '', stderr: '' };
     },
     unitState: () => 'gone',
+    unitOomEvidence: () => null,
     liveUnits: () => [],
   };
 }

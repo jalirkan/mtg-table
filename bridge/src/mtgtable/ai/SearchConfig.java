@@ -57,24 +57,32 @@ import java.util.Locale;
  *     ({@code MtgTable --ai-search}) parses with that.</li>
  * </ul>
  *
- * <p>The week-3 upgrades (D354–D356), each off by default for the same reason:
+ * <p>{@code leaf} (the evaluator gates' one search flag, D354): {@code hand}
+ * (default: {@link SearchPolicy#leaf}, the hand-written score) or
+ * {@code eval:<model.json>} -- a rollout that does not finish the game is scored
+ * by D316's learned evaluator ({@code mtgtable.eval.PositionEvaluator}) instead,
+ * mapped onto the leaf's scale as {@code LEAF_SCALE · logit(P(win))}, so the
+ * margin, the reports and their win estimates keep their meaning.  The model
+ * reads only the searching seat's knowledge, so a live seat may use it.
+ *
+ * <p>The week-3 upgrades (D388–D390), each off by default for the same reason:
  * <ul>
  * <li>{@code anytime=1} -- the search respects its budget: a round cut short by
  *     the deadline keeps the rollouts it finished, candidates the remaining time
  *     cannot carry to {@code rounds} are pruned worst-first, clearly worse ones
  *     are retired by racing, and the verdict is taken on whatever paired
  *     evidence exists.  Forge's answer is kept without a verdict only when no
- *     alternative was scored at all (D354);</li>
+ *     alternative was scored at all (D388);</li>
  * <li>{@code rank=prior} -- up to {@code gen} candidates (default 24) are
  *     generated, each is applied once on one shared determinization and the
  *     position after it is scored (the leaf, or the learned position evaluator
  *     with {@code prior=eval} and {@code evalmodel=<path>}, D316), and the best
  *     {@code cands} are kept: Forge's own answer and "pass" always, the rest by
- *     that prior instead of by enumeration order (D355);</li>
+ *     that prior instead of by enumeration order (D389);</li>
  * <li>{@code rollout=outlets} -- inside the rollouts the searching seat plays
  *     Forge's AI with D310's sacrifice-outlet policy in front, instead of plain
  *     Forge; {@code rollout=both} gives the opponent's seat the policy too
- *     (D356).</li>
+ *     (D390).</li>
  * </ul>
  */
 public final class SearchConfig {
@@ -101,18 +109,24 @@ public final class SearchConfig {
     /** Bench only: no determinization, the copies keep the real hidden cards (D350). */
     public final boolean oracle;
 
-    /** D354: keep partial rounds, prune to the budget, race, decide on what exists. */
+    /** D388: keep partial rounds, prune to the budget, race, decide on what exists. */
     public final boolean anytime;
-    /** D355: generate up to {@link #generate} candidates and keep the best {@link #maxCandidates} by a prior. */
+    /** D389: generate up to {@link #generate} candidates and keep the best {@link #maxCandidates} by a prior. */
     public final boolean rankPrior;
-    /** D355: how many candidates are generated before the prior's cut (only with {@link #rankPrior}). */
+    /** D389: how many candidates are generated before the prior's cut (only with {@link #rankPrior}). */
     public final int generate;
-    /** D355: the prior's scorer: "leaf" or "eval" (the learned position evaluator at {@link #evalModel}). */
+    /** D389: the prior's scorer: "leaf" or "eval" (the learned position evaluator at {@link #evalModel}). */
     public final String prior;
-    /** D355: the learned evaluator's model file for {@code prior=eval}; null = none. */
+    /** D389: the learned evaluator's model file for {@code prior=eval}; null = none. */
     public final String evalModel;
-    /** D356: the rollouts' policy: "default" (plain Forge), "outlets" (our seat with D310's policy), "both". */
+    /** D390: the rollouts' policy: "default" (plain Forge), "outlets" (our seat with D310's policy), "both". */
     public final String rollout;
+    /**
+     * The learned evaluator's model file for the leaves, or null for the
+     * hand-written leaf (D354; {@code leaf=eval:<path>}).  Set only through
+     * {@link #withLeaf}, so the constructors above stay as they are.
+     */
+    public final String leafModel;
 
     /** The fewest complete rounds the {@code lcb} rule overrules Forge on (an sd from fewer is no sd). */
     public static final int LCB_MIN_ROUNDS = 3;
@@ -182,16 +196,57 @@ public final class SearchConfig {
         this.prior = prior;
         this.evalModel = evalModel;
         this.rollout = rollout;
+        this.leafModel = null;
     }
 
-    /** Whether the searching seat's rollouts play D310's outlet policy (D356). */
+    /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
     public boolean rolloutOutletsUs() {
         return !"default".equals(rollout);
     }
 
-    /** Whether the opponent's seat in the rollouts plays it too (D356). */
+    /** Whether the opponent's seat in the rollouts plays it too (D390). */
     public boolean rolloutOutletsThem() {
         return "both".equals(rollout);
+    }
+
+    /** D354: a copy of {@code base} whose leaves use the evaluator at {@code model} (null = the hand leaf). */
+    private SearchConfig(final SearchConfig base, final String model) {
+        this.budgetMs = base.budgetMs;
+        this.maxCandidates = base.maxCandidates;
+        this.horizonTurns = base.horizonTurns;
+        this.minRounds = base.minRounds;
+        this.margin = base.margin;
+        this.maxRounds = base.maxRounds;
+        this.priority = base.priority;
+        this.attacks = base.attacks;
+        this.blocks = base.blocks;
+        this.seed = base.seed;
+        this.attackTurns = base.attackTurns;
+        this.lcb = base.lcb;
+        this.z = base.z;
+        this.untapped = base.untapped;
+        this.oracle = base.oracle;
+        this.anytime = base.anytime;
+        this.rankPrior = base.rankPrior;
+        this.generate = base.generate;
+        this.prior = base.prior;
+        this.evalModel = base.evalModel;
+        this.rollout = base.rollout;
+        this.leafModel = model;
+    }
+
+    /**
+     * D354: this config with the leaf {@code hand} or {@code eval:<model.json>}.
+     * A path with a comma or a plus cannot be spelled in a seat config.
+     */
+    public SearchConfig withLeaf(final String leaf) {
+        if (leaf == null || leaf.isEmpty() || "hand".equals(leaf)) {
+            return leafModel == null ? this : new SearchConfig(this, null);
+        }
+        if (!leaf.startsWith("eval:") || leaf.length() <= 5 || leaf.matches(".*[,+\\s].*")) {
+            throw new IllegalArgumentException("search leaf= is hand or eval:<model.json> (no comma, plus or space): " + leaf);
+        }
+        return new SearchConfig(this, leaf.substring(5));
     }
 
     /** The horizon for a decision of kind {@code p}, {@code a} or {@code b}. */
@@ -237,6 +292,7 @@ public final class SearchConfig {
         String prior = "leaf";
         String evalModel = null;
         String rollout = "default";
+        String leaf = "hand";   // D354
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -273,9 +329,10 @@ public final class SearchConfig {
                 case "prior": prior = p[1]; break;
                 case "evalmodel": evalModel = p[1]; break;
                 case "rollout": rollout = p[1]; break;
+                case "leaf": leaf = p[1]; break;   // D354: hand | eval:<model.json>
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
-                        + " anytime, rank, gen, prior, evalmodel, rollout)");
+                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout)");
                 }
             }
         }
@@ -290,7 +347,7 @@ public final class SearchConfig {
         }
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
-                "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout);
+                "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf);
         // gen is read only under rank=prior (and validated there).
     }
 
@@ -313,7 +370,7 @@ public final class SearchConfig {
         if (oracle) {
             sb.append(",oracle=1");
         }
-        // D354–D356's likewise.
+        // D388–D390's likewise.
         if (anytime) {
             sb.append(",anytime=1");
         }
@@ -325,6 +382,9 @@ public final class SearchConfig {
         }
         if (!"default".equals(rollout)) {
             sb.append(",rollout=").append(rollout);
+        }
+        if (leafModel != null) {
+            sb.append(",leaf=eval:").append(leafModel);   // D354
         }
         return sb.toString();
     }

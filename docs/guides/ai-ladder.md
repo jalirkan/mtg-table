@@ -38,7 +38,7 @@ One line per player: `{"name", "kind", "params", "anchor"?, "note"?, "from"?, "c
 |---|---|---|---|
 | `forge` | `profile` (Default \| Cautious \| Reckless \| Experimental), `sim` (none \| full \| hybrid) | `Reckless`, `Default+sim` | always |
 | `policy` | `profile`, `outlets` (on \| off \| shadow; on) | `Default+outlets` | always (D309/D310) |
-| `search` | `profile`, `outlets`, `budgetMs` (1500), `cands` (6), `turns` (0 = to the end of THIS turn), `rounds` (2), `margin` (20), `maxRounds` (12), `what` (pab), `seed` (0 = clock); D350–D351's switches, out of the hash and the seat config while at their defaults: `aturns` (-1: attacks' own horizon), `override` (margin \| lcb) with `z`, `untapped` (1), `oracle` (off \| on: TEST ONLY); D354–D356's likewise: `anytime` (off \| on), `rank` (order \| prior) with `gen` (24), `rollout` (default \| outlets \| both) | `Default+outlets+search:ms=1500,cands=6,...` | yes (D312–D314): `search-v1` is the game's `--ai-policy search`; `search-v1-fixed3` is the fixed-rollout benchmark mode; `search-v1-fixed3-aturns1`, `-lcb` and `-oracle` are night 2's SPRT entrants (D350–D351); `search-v1-anytime` (against `search-v1`, wall clock on purpose), `search-v1-fixed3-ranked` and `search-v1-fixed3-routlets` are the week-3 search upgrades' (D354–D356). An `oracle` player reads the real hidden cards: `run` rates it only when `--players` names it, the league never takes it as a candidate, and the game's seat refuses `oracle=1` |
+| `search` | `profile`, `outlets`, `budgetMs` (1500), `cands` (6), `turns` (0 = to the end of THIS turn), `rounds` (2), `margin` (20), `maxRounds` (12), `what` (pab), `seed` (0 = clock); D350–D351's switches, out of the hash and the seat config while at their defaults: `aturns` (-1: attacks' own horizon), `override` (margin \| lcb) with `z`, `untapped` (1), `oracle` (off \| on: TEST ONLY); D388–D390's likewise: `anytime` (off \| on), `rank` (order \| prior) with `gen` (24), `rollout` (default \| outlets \| both) | `Default+outlets+search:ms=1500,cands=6,...` | yes (D312–D314): `search-v1` is the game's `--ai-policy search`; `search-v1-fixed3` is the fixed-rollout benchmark mode; `search-v1-fixed3-aturns1`, `-lcb` and `-oracle` are night 2's SPRT entrants (D350–D351); `search-v1-anytime` (against `search-v1`, wall clock on purpose), `search-v1-fixed3-ranked` and `search-v1-fixed3-routlets` are the week-3 search upgrades' (D388–D390). An `oracle` player reads the real hidden cards: `run` rates it only when `--players` names it, the league never takes it as a candidate, and the game's seat refuses `oracle=1` |
 | `search-eval` | the search's, plus `model` (a model hash) | — | not yet: the evaluator has no bench option (branch c/evaluator) |
 
 - **A name is permanent.** A player's identity in the results is its **config
@@ -147,8 +147,10 @@ decides "A is stronger than B by ≥ elo1" (H1) or "by ≤ elo0" (H0), or the ga
 limit says inconclusive. The unit of evidence is a mirrored pair (A's share of
 its decisive games: 0, ½ or 1) and the statistic is the generalized SPRT on
 those scores, `LLR = N((x̄−s0)² − (x̄−s1)²)/(2σ²)` with `s = 1/(1+10^(−elo/400))`,
-stopping at Wald's bounds `ln(β/(1−α))` and `ln((1−β)/α)`; no decision before 8
-pairs. It prints the games used, and appends a line to `var/ai-ladder/sprt.jsonl`.
+stopping at Wald's bounds `ln(β/(1−α))` and `ln((1−β)/α)`; σ² is the pairs' sample
+variance floored at 0.05, and no decision is taken before 100 pairs (D373; the old 8 pairs
+and 0.01 are `--min-pairs 8 --var-floor 0.01`). **H0 means "A is not shown to be ≥ elo1
+better", never "no gain"**: a gain between elo0 and elo1 is invisible to the test. It prints the games used, and appends a line to `var/ai-ladder/sprt.jsonl`.
 Its games are ladder games too. Elo is the logistic scale above, not
 "normalized" Elo. Rough cost: a true +70 decides in a few hundred games, a true
 +20 against `--elo1 20` in a few thousand.

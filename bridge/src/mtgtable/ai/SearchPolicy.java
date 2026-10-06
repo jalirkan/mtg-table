@@ -79,7 +79,7 @@ import mtgtable.eval.PositionEvaluator;
  * throws, a candidate that cannot be mapped into the copy, a budget too short
  * for the rounds -- is Forge's answer, counted.
  *
- * <p>Week 3's switches (D354–D356, each off by default): {@code anytime=1}
+ * <p>Week 3's switches (D388–D390, each off by default): {@code anytime=1}
  * ({@link #searchAnytime}: partial rounds kept, pruning to the budget, racing,
  * a verdict on whatever paired evidence exists); {@code rank=prior}
  * ({@link #rank}: generate up to {@code gen}, keep the best {@code cands} by
@@ -126,11 +126,12 @@ public final class SearchPolicy {
         this.cfg = cfg;
         this.sink = sink;
         this.rng = new Random(cfg.seed != 0 ? cfg.seed : System.nanoTime());
-        this.evaluator = cfg.rankPrior && "eval".equals(cfg.prior) ? loadEvaluator(cfg.evalModel, sink) : null;
+        this.leafEval = cfg.leafModel == null ? null : evaluator(cfg.leafModel);
+        this.priorEval = cfg.rankPrior && "eval".equals(cfg.prior) ? loadEvaluator(cfg.evalModel, sink) : null;
     }
 
-    /** D355's learned prior (D316's evaluator), or null: the leaf is the prior. */
-    private final PositionEvaluator evaluator;
+    /** D389's learned prior (D316's evaluator), or null: the leaf is the prior. */
+    private final PositionEvaluator priorEval;
 
     private static PositionEvaluator loadEvaluator(final String model, final Sink sink) {
         try {
@@ -142,6 +143,39 @@ public final class SearchPolicy {
             sink.event("search prior=eval: " + model + " unusable, ranking by the leaf (" + e.getMessage() + ")");
             return null;
         }
+    }
+
+    // ---- D354: the learned evaluator at the leaves (leaf=eval:<model.json>) ----
+
+    /** The evaluator the leaves use, or null for the hand-written leaf (D354). */
+    private final mtgtable.eval.PositionEvaluator leafEval;
+
+    private static final java.util.Map<String, mtgtable.eval.PositionEvaluator> EVALUATORS =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * One loaded evaluator per model path, shared by every seat and thread (it
+     * is immutable, D316).  A model that cannot be loaded is an error now, not
+     * a silent hand leaf.
+     */
+    public static mtgtable.eval.PositionEvaluator evaluator(final String model) {
+        return EVALUATORS.computeIfAbsent(model, m -> {
+            try {
+                return mtgtable.eval.PositionEvaluator.load(java.nio.file.Path.of(m));
+            } catch (final java.io.IOException e) {
+                throw new IllegalArgumentException("search leaf=eval:" + m + ": " + e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
+     * The evaluator's P(win) on the leaf's scale: {@code LEAF_SCALE · logit(p)},
+     * p clipped to [1e-6, 1 − 1e-6], so {@link #winOf} gives p back and the
+     * margin keeps its D349 meaning (20 points ≈ 1 point of win rate at 50%).
+     */
+    public static double evalLeaf(final mtgtable.eval.PositionEvaluator ev, final Game g, final Player ai) {
+        final double p = Math.min(1 - 1e-6, Math.max(1e-6, ev.winProbability(g, ai)));
+        return LEAF_SCALE * Math.log(p / (1 - p));
     }
 
     public SearchConfig config() {
@@ -176,6 +210,15 @@ public final class SearchPolicy {
     /** Play {@code sa} (its targets and choices as set on the original) first; null = pass priority. */
     public static Cand priorityCand(final SpellAbility saOrNullForPass) {
         return new PriorityCand(saOrNullForPass);
+    }
+
+    /**
+     * Forge's own answer: nothing is forced, the seat is only handed priority as
+     * a priority candidate would be, so Forge's Default AI plays both seats from
+     * the position (D382, the rollout labels: {@code mtgtable.grade.Rollout}).
+     */
+    public static Cand forgeCand() {
+        return new ForgeCand();
     }
 
     /** Declare exactly these attackers (cards of the original game) at the next declare-attackers step. */
@@ -225,7 +268,7 @@ public final class SearchPolicy {
         /**
          * Per candidate: the rounds it was scored in.  Every candidate shares
          * them (CRN) unless {@code anytime=1} cut a round short, pruned it or
-         * retired it (D354): then each counts its own, and its paired
+         * retired it (D388): then each counts its own, and its paired
          * difference to Forge's answer is over the rounds both were scored in.
          */
         public int[] n = new int[0];
@@ -262,7 +305,7 @@ public final class SearchPolicy {
         /** The statistic the rule compared with the margin: the mean difference, or its lower bound. */
         public double stat = Double.NaN;
         /**
-         * D355 ({@code rank=prior}): per candidate, the prior that ranked it --
+         * D389 ({@code rank=prior}): per candidate, the prior that ranked it --
          * the leaf (or the learned evaluator's logit times {@link #LEAF_SCALE})
          * of the position after it was applied once -- NaN when not scored
          * (Forge's own answer and "pass" are kept unranked and never scored; a
@@ -271,7 +314,7 @@ public final class SearchPolicy {
          */
         public double[] prior = new double[0];
         public int generated;
-        /** D354: the anytime search ran; candidates it pruned to the budget, and retired by racing. */
+        /** D388: the anytime search ran; candidates it pruned to the budget, and retired by racing. */
         public boolean anytime;
         public int pruned;
         public int retired;
@@ -303,7 +346,7 @@ public final class SearchPolicy {
 
         /**
          * Means, standard errors and paired differences to candidate 0.  A NaN
-         * leaf is a rollout that was not played (D354's partial rounds, pruned or
+         * leaf is a rollout that was not played (D388's partial rounds, pruned or
          * retired candidates): each mean is over that candidate's own rounds and
          * each difference over the rounds both it and Forge's answer were scored
          * in.  On complete rounds (no NaN) this is D350's computation exactly.
@@ -412,6 +455,9 @@ public final class SearchPolicy {
             }
             return Decision.blockToken(pairs);
         }
+        if (c instanceof ForgeCand) {
+            return "forge";
+        }
         throw new IllegalArgumentException("candidate " + c);
     }
 
@@ -443,7 +489,7 @@ public final class SearchPolicy {
             return forge;   // a land drop (or a multi-ability land list): Forge's
         }
         final long t0 = System.nanoTime();
-        final List<SpellAbility> alts = alternatives(ai, aic, forgeSa);
+        final List<SpellAbility> alts = alternatives(ai, aic, forgeSa, sink);
         if (alts.isEmpty() && forgeSa == null) {
             return forge;   // nothing to choose between
         }
@@ -497,13 +543,29 @@ public final class SearchPolicy {
         }
     }
 
+    private static final class ForgeCand extends Cand {
+        ForgeCand() {
+            super("forge");
+        }
+
+        @Override
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
+            final PhaseHandler ph = copy.getPhaseHandler();
+            ph.setPriority(aiCopy);
+            ph.onStackResolved();   // as PriorityCand: this seat has priority now, and answers it as Forge would
+        }
+    }
+
     /**
      * Other plays than Forge's: every spell or non-mana ability the AI could
      * play now, that Forge's own per-card judgment accepts (WillPlay, which also
      * chooses its targets) -- the RemAIDeck cards Forge hides included -- then
      * untargeted ones it declines, if affordable.  Distinct by card and text.
+     * Static, with its counters' sink passed in: play exploration (D358,
+     * {@link Explorer}) draws from the same list.
      */
-    private List<SpellAbility> alternatives(final Player ai, final AiController aic, final SpellAbility forgeSa) {
+    static List<SpellAbility> alternatives(final Player ai, final AiController aic, final SpellAbility forgeSa,
+                                           final Sink sink) {
         final List<SpellAbility> willPlay = new ArrayList<>();
         final List<SpellAbility> declined = new ArrayList<>();
         final Set<String> seen = new HashSet<>();
@@ -741,7 +803,7 @@ public final class SearchPolicy {
         configs.add(m);
     }
 
-    private static boolean legalAttack(final Combat combat, final Map<Card, GameEntity> m) {
+    static boolean legalAttack(final Combat combat, final Map<Card, GameEntity> m) {
         try {
             setAttack(combat, m);
             return CombatUtil.validateAttackers(combat);
@@ -750,7 +812,7 @@ public final class SearchPolicy {
         }
     }
 
-    private static void setAttack(final Combat combat, final Map<Card, GameEntity> m) {
+    static void setAttack(final Combat combat, final Map<Card, GameEntity> m) {
         combat.clearAttackers();
         for (final Map.Entry<Card, GameEntity> e : m.entrySet()) {
             combat.addAttacker(e.getKey(), e.getValue());
@@ -872,7 +934,7 @@ public final class SearchPolicy {
         configs.add(m);
     }
 
-    private static boolean legalBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
+    static boolean legalBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
         try {
             setBlock(combat, ai, m);
             return CombatUtil.validateBlocks(combat, ai) == null;
@@ -881,7 +943,7 @@ public final class SearchPolicy {
         }
     }
 
-    private static void setBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
+    static void setBlock(final Combat combat, final Player ai, final Map<Card, Card> m) {
         for (final Card b : new ArrayList<>(combat.getAllBlockers())) {
             if (b.getController() == ai) {
                 combat.undoBlockingAssignment(b);
@@ -927,7 +989,7 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
-    // The prior (D355)
+    // The prior (D389)
     // ==================================================================
 
     /** How many candidates to generate: {@code gen} under {@code rank=prior}, else the {@code cands} cut itself. */
@@ -966,7 +1028,7 @@ public final class SearchPolicy {
         final Map<Cand, Double> prior = new java.util.IdentityHashMap<>();
         final List<Cand> drop = new ArrayList<>();
         final Limits lim = new Limits(deadline, 0, 2_000, cfg.untapped, cfg.oracle, cfg.rolloutOutletsUs(),
-                cfg.rolloutOutletsThem(), true, evaluator == null ? null : (g, p) -> evaluator.logit(g, p) * LEAF_SCALE);
+                cfg.rolloutOutletsThem(), true, priorEval == null ? null : (g, p) -> priorEval.logit(g, p) * LEAF_SCALE, leafEval);
         int scored = 0;
         for (int i = keep; i < cands.size(); i++) {
             if (System.nanoTime() > deadline) {
@@ -1034,7 +1096,7 @@ public final class SearchPolicy {
         }
     }
 
-    /** The ranking's priors, aligned with {@code cands}, into the report (D355). */
+    /** The ranking's priors, aligned with {@code cands}, into the report (D389). */
     private void attachPrior(final Report rep, final List<Cand> cands) {
         rep.prior = new double[cands.size()];
         Arrays.fill(rep.prior, Double.NaN);
@@ -1169,7 +1231,7 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
-    // The anytime search (D354)
+    // The anytime search (D388)
     // ==================================================================
 
     /**
@@ -1413,7 +1475,7 @@ public final class SearchPolicy {
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
                             final boolean first, final int horizon) {
         return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle,
-                cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null), sink, first, failCopyForTest);
+                cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null, leafEval), sink, first, failCopyForTest);
     }
 
     /** How far a {@link #playout} may run. */
@@ -1429,12 +1491,12 @@ public final class SearchPolicy {
         public final double untapped;
         /** Bench only: skip the determinization, so the copy keeps the real hidden cards (D350's oracle). */
         public final boolean oracle;
-        /** D356: the searching seat plays D310's outlet policy in the copy; and the other seat too. */
+        /** D390: the searching seat plays D310's outlet policy in the copy; and the other seat too. */
         public final boolean outletsUs;
         public final boolean outletsThem;
-        /** D355's prior: stop as soon as the candidate has been played out ({@link RolloutForcing#applied}). */
+        /** D389's prior: stop as soon as the candidate has been played out ({@link RolloutForcing#applied}). */
         public final boolean untilApplied;
-        /** D355: score an unfinished copy with this instead of {@link #leaf} (the learned evaluator); null = the leaf. */
+        /** D389: score an unfinished copy with this instead of {@link #leaf} (the learned evaluator); null = the leaf. */
         public final java.util.function.ToDoubleBiFunction<Game, Player> score;
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps) {
@@ -1443,12 +1505,21 @@ public final class SearchPolicy {
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
                       final boolean oracle) {
-            this(deadline, horizonTurns, maxSteps, untapped, oracle, false, false, false, null);
+            this(deadline, horizonTurns, maxSteps, untapped, oracle, null);
+        }
+
+        /** D354: the learned evaluator scores an unfinished copy instead of {@link #leaf}; null = the hand leaf. */
+        public final mtgtable.eval.PositionEvaluator evaluator;
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
+                      final boolean oracle, final mtgtable.eval.PositionEvaluator evaluator) {
+            this(deadline, horizonTurns, maxSteps, untapped, oracle, false, false, false, null, evaluator);
         }
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
                       final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
-                      final java.util.function.ToDoubleBiFunction<Game, Player> score) {
+                      final java.util.function.ToDoubleBiFunction<Game, Player> score,
+                      final mtgtable.eval.PositionEvaluator evaluator) {
             this.deadline = deadline;
             this.horizonTurns = horizonTurns;
             this.maxSteps = maxSteps;
@@ -1458,6 +1529,7 @@ public final class SearchPolicy {
             this.outletsThem = outletsThem;
             this.untilApplied = untilApplied;
             this.score = score;
+            this.evaluator = evaluator;
         }
     }
 
@@ -1576,6 +1648,7 @@ public final class SearchPolicy {
             }
             sink.add(lim.untilApplied ? "search.prior.playUs" : "search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
             final double leaf = lim.score != null && !copy.isGameOver() ? lim.score.applyAsDouble(copy, aiCopy)
+                    : lim.evaluator != null && !copy.isGameOver() ? evalLeaf(lim.evaluator, copy, aiCopy)   // D354
                     : leaf(copy, aiCopy, lim.untapped);
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {

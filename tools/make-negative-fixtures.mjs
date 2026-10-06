@@ -264,6 +264,118 @@ probe('a3-revealed-top-look-is-private.jsonl',
   'NOT the viewing seat',
   (fs) => withRevealer(fs, 1, 'Experimental Frenzy'));
 
+// D371 (the lab's night-2 A9 finding): who may see a face-down card's face.
+// Forge's canFaceDownBeShownTo is mayPlayerLook(viewer) first, then "in play
+// and you control it".  Gonti, Lord of Luxury and Thief of Sanity exile an
+// OPPONENT's card face down and let their controller look at it, so that card
+// carries an alt in the Gonti player's log -- legitimately.  The control: the
+// dig, while the viewer's trigger resolves, alt from the first frame on.  The
+// probes: the same alt with no dig, with the opponent's trigger, appearing
+// after the dig, and the in-play rule (an opponent's morph; a stolen morph,
+// whose OWNER does not see its face).
+const ELVES = { name: 'Llanowar Elves', manaCost: '{G}', types: 'Creature - Elf Druid', power: '1', toughness: '1' };
+const faceDownCard = (fs, id, zone, owner, controller, alt) => {
+  const c = structuredClone(firstFull(fs).card);
+  const inPlay = zone === 'battlefield';
+  Object.assign(c, {
+    id, name: '', setCode: '???', manaCost: null, types: inPlay ? 'Creature' : '',
+    power: inPlay ? '2' : null, toughness: inPlay ? '2' : null, loyalty: null,
+    damage: 0, counters: {}, tapped: false, sick: false, attacking: false, blocking: false,
+    faceDown: true, token: false, alt: alt ? { ...ELVES } : null,
+    attachedToId: null, attachmentIds: [], controller, owner, zone, abilities: [],
+  });
+  if ('keywords' in c) c.keywords = [];
+  return c;
+};
+const putCard = (player, zone, card) => {
+  player.zones[zone].cards.push(card);
+  player.zones[zone].count = player.zones[zone].cards.length;
+};
+/** Frame 0: a stack item (the viewer's or the opponent's); frame 1: the dig; frames 1-2: the card in exile. */
+const withGontiExile = (fs, { stackBy = 'viewer', dig = true, altFrom = 1 } = {}) => {
+  const sts = statesOf(fs);
+  const viewerOf = (f) => f.body.players.find((p) => isViewerSeat(p));
+  const opponentOf = (f) => f.body.players.find((p) => !isViewerSeat(p));
+  if (stackBy !== null) {
+    const me = viewerOf(sts[0]);
+    const source = me.zones.battlefield.cards.find((c) => c.hidden !== true);
+    sts[0].body.stack.push({
+      id: 90031, sourceCardId: source.id,
+      controller: stackBy === 'viewer' ? me.id : opponentOf(sts[0]).id,
+      text: 'When Gonti, Lord of Luxury enters, look at the top four cards of target opponent\'s library, ' +
+        'exile one of them face down, then put the rest on the bottom of that library in a random order.',
+      targetCardIds: [], targetPlayerIds: [opponentOf(sts[0]).id],
+    });
+  }
+  const them = opponentOf(sts[1]).id;
+  if (dig) {
+    sts[1].body.events.push({ kind: 'zone', cardId: 90030,
+      from: { zone: 'library', player: them }, to: { zone: 'exile', player: them } });
+  }
+  for (let i = 1; i < sts.length; i++) {
+    putCard(opponentOf(sts[i]), 'exile', faceDownCard(fs, 90030, 'exile', them, them, i >= altFrom));
+  }
+};
+{
+  const fs = slice();
+  withGontiExile(fs);
+  write('a9-look-permission-under-gonti.jsonl', fs);
+  manifest.push({
+    file: 'a9-look-permission-under-gonti.jsonl', level: 'pass', expect: 'PASS',
+    why: 'A9, D371: the viewer\'s Gonti exiled the opponent\'s top card face down and may look at it -- ' +
+      'an alt on an opponent-owned card in exile, dug from a library while the viewer\'s trigger resolved ' +
+      '(the control for the a9 probes below)',
+  });
+  console.log('  PASS  a9-look-permission-under-gonti.jsonl  (a look permission, no defect)');
+}
+probe('a9-exiled-face-down-named-without-a-dig.jsonl',
+  'A9, D371: an opponent\'s face-down card in exile with an alt, and no dig from a library behind it',
+  'only a look permission',
+  (fs) => withGontiExile(fs, { dig: false }));
+probe('a9-dig-by-the-opponent.jsonl',
+  'A9, D371: the dig was the OPPONENT\'s effect -- their look permission is not the viewer\'s',
+  'only a look permission',
+  (fs) => withGontiExile(fs, { stackBy: 'opponent' }));
+probe('a9-alt-appears-after-the-dig.jsonl',
+  'A9, D371: a look permission comes with the dig; an alt that appears a frame later has no source',
+  'only a look permission',
+  (fs) => withGontiExile(fs, { altFrom: 2 }));
+probe('a9-opponent-morph-named.jsonl',
+  'A9: the opponent\'s face-down permanent carries its face -- the leak canFaceDownBeShownTo exists for',
+  'not the viewing seat',
+  (fs) => {
+    const st = statesOf(fs)[1];
+    const them = st.body.players.find((p) => !isViewerSeat(p));
+    putCard(them, 'battlefield', faceDownCard(fs, 90032, 'battlefield', them.id, them.id, true));
+  });
+probe('a9-stolen-morph-named-for-its-owner.jsonl',
+  'A9, D371: in play a face-down card\'s face is its CONTROLLER\'s -- the owner of a stolen morph does not see it',
+  'not the viewing seat',
+  (fs) => {
+    const st = statesOf(fs)[1];
+    const me = st.body.players.find((p) => isViewerSeat(p));
+    const them = st.body.players.find((p) => !isViewerSeat(p));
+    putCard(them, 'battlefield', faceDownCard(fs, 90033, 'battlefield', me.id, them.id, true));
+  });
+
+// The other night-2 finding (D371): the viewer's own hand card as a stub.  It
+// must fail, and the message must say which shape it was -- the clue to the cause.
+probe('own-hand-card-redacted.jsonl',
+  'the viewer\'s own hand card served as a redacted stub: over-redaction, and the checker names the stub\'s controller',
+  'has no name -- redaction is too aggressive (it is a redacted stub',
+  (fs) => {
+    for (const f of statesOf(fs)) {
+      const me = f.body.players.find((p) => isViewerSeat(p));
+      const them = f.body.players.find((p) => !isViewerSeat(p));
+      const i = me.zones.hand.cards.findIndex((c) => c.hidden !== true);
+      if (i < 0) continue;
+      const c = me.zones.hand.cards[i];
+      me.zones.hand.cards[i] = { id: c.id, zone: 'hand', owner: me.id, controller: them.id, hidden: true };
+      return;
+    }
+    throw new Error('no named card in the viewer\'s hand');
+  });
+
 // The other half of finding 5: an opponent-library reveal is TRANSIENT (the
 // search ends), so it must not confer a permanent name-before-reveal exemption.
 // Before the fix, adding an id to the opponent's library.cards whitelisted it in
@@ -538,6 +650,29 @@ probe('m47-yourprofile-is-a-path.jsonl',
   'yourProfile must be a Forge AI profile name',
   (fs) => withMatch(fs, (m) => { m.yourProfile = 'forge-home/res/ai/Default.ai'; }));
 
+/*
+ * Amendment M56 -- `hello_ok.match.aiPolicy`, who answers for the AI seat
+ * (MtgTable --ai-policy: plain | outlets | search).  Optional, so the control
+ * adds it as the bridge writes it; the probe puts a knob string there, the
+ * shape a flag smuggled through the launcher would take.
+ */
+{
+  const fs = slice();
+  withMatch(fs, (m) => { m.aiPolicy = 'search'; });
+  write('m56-aipolicy-present.jsonl', fs);
+  manifest.push({
+    file: 'm56-aipolicy-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M56: the baseline plus hello_ok.match.aiPolicy exactly as MtgTable writes it -- ' +
+      'the control for the m56 probe',
+  });
+  console.log('  PASS  m56-aipolicy-present.jsonl  (a well-formed hello_ok.match.aiPolicy, no defect)');
+}
+
+probe('m56-aipolicy-not-a-policy.jsonl',
+  'amendment M56: aiPolicy is one word of plain, outlets, search -- never a knob string or a path',
+  'aiPolicy must be one of plain, outlets, search',
+  (fs) => withMatch(fs, (m) => { m.aiPolicy = 'search ms=3000'; }));
+
 {
   const name = 'm47-pace-not-a-number.jsonl';
   const fs = slice();
@@ -703,24 +838,88 @@ probe('m55-frame-is-not-a-state.jsonl',
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 }
 
-// Amendment M56 (D355): the search's prior in M55's search block -- `prior` per
+// ---------------------------------------------------------------------------
+// Amendment M57 (D358): play exploration.  An exploring recording's header
+// carries `playExplore` (epsilon, closeCall, opening); a decision the explorer
+// answered carries `explore: {rule, forge}`, `forge` the seat's own answer as a
+// token -- audited like every other token (the planted leak names the
+// opponent's concealed hand card there).
+// ---------------------------------------------------------------------------
+
+const exploreHeader = { ...header, playExplore: { epsilon: 0.05, closeCall: 0.02, opening: false } };
+
+/** withDecision, answered by the explorer: chosen a random legal option, Forge's own answer in the mark. */
+function withExplored(fs) {
+  const b = withDecision(fs);
+  b.explore = { rule: 'random', forge: b.chosen };
+  b.chosen = b.options[b.options.length - 1];
+  const sum = fs.find((f) => f.type === 'decisions');
+  sum.body.explore = { decisionsRandomised: 1, changed: 1, closeCalls: 0, closeCallsChanged: 0, coins: 20, failures: 0, byKind: { priority: 1 } };
+  return b;
+}
+
+const exploreProbe = (name, why, expect, mutate, headerOut = exploreHeader) => {
+  const fs = slice();
+  mutate(fs);
+  const bytes = write(name, fs, headerOut);
+  manifest.push({ file: name, level: 'fail', expect, why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+};
+
+{
+  const fs = slice();
+  withExplored(fs);
+  write('m57-explore-present.jsonl', fs, exploreHeader);
+  manifest.push({
+    file: 'm57-explore-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M57: an exploring recording -- its header, one randomised decision and the summary\'s counts -- the control for the m57 probes',
+  });
+  console.log('  PASS  m57-explore-present.jsonl  (an explored decision, no defect)');
+}
+
+exploreProbe('m57-explore-without-header.jsonl',
+  'amendment M57 / D358: an explore mark only in a recording whose header says it explored',
+  'no playExplore',
+  (fs) => { withExplored(fs); }, header);
+
+exploreProbe('m57-explore-forge-names-the-opponent-hand.jsonl',
+  'amendment M57 / D358: the mark\'s Forge answer is a token like any other -- naming a card the viewer cannot see is a leak',
+  'which its state frame does not show',
+  (fs) => {
+    const b = withExplored(fs);
+    const st = fs.find((f) => f.type === 'state');
+    const them = st.body.players.find((p) => p.id !== header.seat);
+    b.explore.forge = `cast:${them.zones.hand.cards.find((c) => c.hidden === true).id}`;
+  });
+
+exploreProbe('m57-explore-carries-a-label.jsonl',
+  'amendment M57 / D358: an explore mark is a rule and a token -- nothing else',
+  'explore carries an unexpected key',
+  (fs) => { withExplored(fs).explore.why = 'a coin said so'; });
+
+exploreProbe('m57-playexplore-in-a-seat-recording.jsonl',
+  'amendment M57 / D358: a seat a person plays never explores',
+  'both "playExplore" and "transport"',
+  () => {}, { ...exploreHeader, transport: 'ws' });
+
+// Amendment M58 (D389): the search's prior in M55's search block -- `prior` per
 // option and `generated` -- a control that passes and one malformed probe.
 {
   const fs = slice();
   const b = withDecision(fs);
-  // Forge's own answer (options[0]) is never scored by the prior (M56).
+  // Forge's own answer (options[0]) is never scored by the prior (M58).
   if (b.search.options[1]) b.search.options[1].prior = 388;
   b.search.generated = 9;
-  write('m56-search-prior-present.jsonl', fs);
+  write('m58-search-prior-present.jsonl', fs);
   manifest.push({
-    file: 'm56-search-prior-present.jsonl', level: 'pass', expect: 'PASS',
-    why: 'amendment M56: a decision record whose search ranked its candidates by a prior -- the control for the m56 probe',
+    file: 'm58-search-prior-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M58: a decision record whose search ranked its candidates by a prior -- the control for the m58 probe',
   });
-  console.log('  PASS  m56-search-prior-present.jsonl  (a ranked search, no defect)');
+  console.log('  PASS  m58-search-prior-present.jsonl  (a ranked search, no defect)');
 }
 
-probe('m56-generated-is-not-a-count.jsonl',
-  'amendment M56 / D355: `generated` is how many candidates were generated -- a positive integer, never a string',
+probe('m58-generated-is-not-a-count.jsonl',
+  'amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string',
   'search generated',
   (fs) => { withDecision(fs).search.generated = 'nine'; });
 

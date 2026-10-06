@@ -60,7 +60,12 @@
  *   A7  a hidden -> full transition with no `ask` behind it is WARNED about:
  *       continuous "may look" statics and mind-slave effects do that legally.
  *   A9  a face-down card names nothing unless this seat may flip it, and has no
- *       P/T outside the battlefield and the stack.
+ *       P/T outside the battlefield and the stack.  "May flip" is Forge's
+ *       canFaceDownBeShownTo: in play, the controller only; elsewhere, a look
+ *       permission (Gonti, Thief of Sanity, hideaway), admitted for an
+ *       opponent's card only when the log shows how it was granted -- dug from
+ *       a library into exile, alt and all, while the viewing seat's effect
+ *       resolves -- and only while the card stays there (D371).
  *   A10 an id in parentheses inside an engine-built prompt is warned about
  *       unless that id was revealed (the engine builds those strings, not us).
  *   A11 every `ask.kind` is one of the ELEVEN documented kinds, and none of
@@ -155,7 +160,7 @@
  */
 
 import { readFileSync, statSync } from 'node:fs';
-import { gunzipSync } from 'node:zlib';
+import * as zlib from 'node:zlib';
 
 const PROTOCOL_VERSION = 1;
 
@@ -1113,13 +1118,31 @@ function hasDir(line) {
   return /"dir"\s*:/.test(line);
 }
 
+/**
+ * A frame log's text, whatever its compression (by suffix): `.gz` through
+ * gunzip, `.zst` through Node's own zstd (zlib.zstdDecompressSync, Node 22.15+
+ * and 23.8+; CI and the PC run 24), anything else as UTF-8.
+ */
+function readLogText(path) {
+  const raw = readFileSync(path);
+  if (path.endsWith('.gz')) return zlib.gunzipSync(raw).toString('utf8');
+  if (path.endsWith('.zst')) {
+    if (typeof zlib.zstdDecompressSync !== 'function') {
+      throw new Error(`${path}: reading a .zst log needs Node's zlib zstd (Node >= 22.15 or 23.8; this is ${process.version}) -- D370`);
+    }
+    return zlib.zstdDecompressSync(raw).toString('utf8');
+  }
+  return raw.toString('utf8');
+}
+
 function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clientLog = false } = {}) {
   const problems = [];
   const note = (line, msg) => problems.push(`${path}:${line}: ${msg}`);
 
-  // A `.gz` log (the cube lab's in-worker recordings, D315) is read whole and
-  // checked exactly as its plain text would be.
-  const text = path.endsWith('.gz') ? gunzipSync(readFileSync(path)).toString('utf8') : readFileSync(path, 'utf8');
+  // A `.gz` log (the cube lab's in-worker recordings, D315) or a `.zst` one
+  // (a finished queue night's archive, D370) is read whole and checked exactly
+  // as its plain text would be.
+  const text = readLogText(path);
   const lines = text.split('\n').filter((l) => l.length > 0);
   if (lines.length === 0) {
     return { problems: [`${path}: empty file`], stats: {} };
@@ -1197,6 +1220,31 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
   }
 
+  /*
+   * Amendment M57 (D358).  `playExplore` is OPTIONAL and says this AI-vs-AI
+   * recording explored: some decisions were answered by a random legal move or
+   * a close-call coin.  Exactly three keys -- epsilon, closeCall (numbers in
+   * [0, 1]) and opening (a boolean) -- and never beside `transport`: a seat a
+   * person plays never explores.
+   */
+  if (header.playExplore !== undefined) {
+    const pe = header.playExplore;
+    if (!pe || typeof pe !== 'object' || Array.isArray(pe)) {
+      note(1, `session header "playExplore" must be an object (M57), got ${JSON.stringify(pe)}`);
+    } else {
+      for (const [k, v] of Object.entries(pe)) {
+        if (!(k in PLAY_EXPLORE_HEADER)) note(1, `session header playExplore carries an unexpected key "${k}" (M57)`);
+        else if (typeof v !== PLAY_EXPLORE_HEADER[k] || (typeof v === 'number' && !(v >= 0 && v <= 1))) {
+          note(1, `session header playExplore.${k} = ${JSON.stringify(v)} (M57)`);
+        }
+      }
+      for (const k of Object.keys(PLAY_EXPLORE_HEADER)) if (!(k in pe)) note(1, `session header playExplore is missing "${k}" (M57)`);
+    }
+    if (header.transport !== undefined) {
+      note(1, 'session header carries both "playExplore" and "transport" -- only an AI-vs-AI recording explores (M57, D358)');
+    }
+  }
+
   if (!Array.isArray(header.decks)) {
     note(1, 'session header "decks" is not an array');
   } else {
@@ -1229,12 +1277,12 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     cardsChecked: 0, redacted: 0, faceDown: 0, stackCards: 0,
     viewerHandNamed: 0, opponentHandCards: 0, events: 0, shapeChecks: 0,
     texts: 0, textsConcealed: 0,
-    libraryRevealed: 0, revealedTops: 0, altBlocks: 0, tokens: 0, asks: 0, promptsScanned: 0,
+    libraryRevealed: 0, revealedTops: 0, altBlocks: 0, altByLook: 0, tokens: 0, asks: 0, promptsScanned: 0,
     everRevealed: 0, answers: 0, answerKinds: new Set(), unanswered: 0,
     askShapeChecks: 0, notices: 0, overs: 0, nullDefaults: 0,
     stackItems: 0,
     maxTurn: 0,
-    hellos: 0, matchChecked: 0, yourProfileChecked: 0,
+    hellos: 0, matchChecked: 0, yourProfileChecked: 0, aiPolicyChecked: 0,
   };
   const seq = { s2c: 0, c2s: 0, ai: 0 };
   let sawState = false;
@@ -1313,6 +1361,15 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
    * bridge served a name the seat was never shown.
    */
   const everRevealed = new Set();
+  /**
+   * A9 / D371 -- the ids of opponents' face-down cards in exile whose alt the
+   * previous state frame admitted under a look permission, and whether the
+   * viewing seat controlled a stack item in that frame.
+   */
+  let lookGrants = new Set();
+  /** id -> the last zone other than a hand a card was serialised in (the hand diagnostic, D371). */
+  const handLastSeen = new Map();
+  let viewerStackBefore = false;
   /** id -> was the last serialisation of this id concealed?  (A7) */
   const wasConcealed = new Map();
   /** Was an `ask` outstanding when this frame was written?  (A7) */
@@ -1367,10 +1424,23 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
      * they were playing under, i.e. an emitter describing a different match.
      */
     const hasYourProfile = Object.prototype.hasOwnProperty.call(m, 'yourProfile');
-    const matchKeys = ['yourDeck', 'aiDeck', 'aiProfile', 'games', ...(hasYourProfile ? ['yourProfile'] : [])];
+    // Amendment M56: `aiPolicy`, who answers for the AI seat (--ai-policy), is
+    // optional -- MtgTable writes it, RecordMatch and the in-process recorders
+    // do not -- and is one word of a fixed set, never a knob, a path or a name.
+    const hasAiPolicy = Object.prototype.hasOwnProperty.call(m, 'aiPolicy');
+    const matchKeys = ['yourDeck', 'aiDeck', 'aiProfile', 'games',
+      ...(hasYourProfile ? ['yourProfile'] : []), ...(hasAiPolicy ? ['aiPolicy'] : [])];
     if (!sameKeys(m, matchKeys)) {
       note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(m))}, expected exactly ` +
-        `yourDeck, aiDeck, aiProfile, games (and, amendment M47, yourProfile when the viewer is an AI)`);
+        `yourDeck, aiDeck, aiProfile, games (and, amendment M47, yourProfile when the viewer is an AI; ` +
+        `amendment M56, aiPolicy)`);
+    }
+    if (hasAiPolicy) {
+      stats.aiPolicyChecked++;
+      if (!['plain', 'outlets', 'search'].includes(m.aiPolicy)) {
+        note(lineNo, `${where}: aiPolicy must be one of plain, outlets, search (amendment M56), got ` +
+          `${JSON.stringify(m.aiPolicy)}`);
+      }
     }
     if (hasYourProfile) {
       stats.yourProfileChecked++;
@@ -1985,6 +2055,19 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
 
     const revealedTops = revealedTopsOf(players);
+    // A9 / D371: the evidence for a look permission on an opponent's face-down
+    // card in exile -- what this frame dug out of a library into exile, and
+    // whether an effect of the viewing seat's is resolving.
+    const viewerStackNow = (body.stack ?? []).some((it) => plainObject(it) && it.controller === seat);
+    const viewerEffect = viewerStackNow || viewerStackBefore;
+    const dugToExile = new Set();
+    for (const ev of body.events ?? []) {
+      if (plainObject(ev) && ev.kind === 'zone' && ev.from?.zone === 'library' && ev.to?.zone === 'exile'
+          && num(ev.cardId)) {
+        dugToExile.add(ev.cardId);
+      }
+    }
+    const nextGrants = new Set();
     for (let pi = 0; pi < players.length; pi++) {
       const p = players[pi];
       const zones = p.zones || {};
@@ -2080,11 +2163,40 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
             }
             if (c.alt !== null && c.alt !== undefined) {
               stats.altBlocks++;
-              if (owner !== seat && c.controller !== seat) {
-                note(lineNo, `face-down card ${c.id} is controlled by player ${c.controller} ` +
+              // Forge's canFaceDownBeShownTo(viewer), in its own order (javap -c on
+              // the pinned jar): mayPlayerLook(viewer) || [mind-slave] ||
+              // isInZone(Battlefield, Stack, Sideboard) && getController() == viewer.
+              // D371: the zone half is checked as written -- in play, the face is
+              // the CONTROLLER's, never the owner's (an owner whose face-down
+              // creature was stolen does not see it).  The look half
+              // (mayPlayerLook) is a permission a log cannot show directly, so it
+              // is admitted only in the one shape every face-down-with-a-look
+              // effect has (DigEffect's ExileFaceDown + WithMayLook: Gonti, Lord
+              // of Luxury; Thief of Sanity; hideaway): the card arrives in exile
+              // FROM A LIBRARY with its alt in the same frame, while an effect the
+              // viewing seat controls is resolving (on the stack in this frame or
+              // the one before), and it keeps the alt only while it stays there.
+              const inPlay = zname === 'battlefield' || zname === 'stack';
+              const mine = owner === seat || c.controller === seat;
+              if (inPlay && c.controller !== seat) {
+                note(lineNo, `face-down card ${c.id} in ${zname} is controlled by player ${c.controller} ` +
                   `(owner ${owner}), not the viewing seat ${seat}, yet carries an "alt" block ` +
                   `naming it ${JSON.stringify(c.alt?.name)} -- canFaceDownBeShownTo ends ` +
                   `isInZone(Battlefield, Stack, Sideboard) && getController().equals(viewer) (A9)`);
+              } else if (!inPlay && !mine) {
+                const arrived = dugToExile.has(c.id) && zname === 'exile' && viewerEffect;
+                const stayed = lookGrants.has(c.id) && zname === 'exile';
+                if (arrived || stayed) {
+                  nextGrants.add(c.id);
+                  if (arrived) stats.altByLook++;
+                } else {
+                  note(lineNo, `face-down card ${c.id} in ${zname} is owned and controlled by player ` +
+                    `${c.controller}, not the viewing seat ${seat}, yet carries an "alt" block naming it ` +
+                    `${JSON.stringify(c.alt?.name)} -- outside play only a look permission ` +
+                    `(mayPlayerLook) shows a face-down card, and the only shape a log can show for ` +
+                    `one is a card exiled from a library, alt and all, while the viewing seat's ` +
+                    `effect resolves (Gonti, Thief of Sanity), kept while it stays in exile (A9, D371)`);
+                }
               }
             }
             if (zname !== 'battlefield' && zname !== 'stack') {
@@ -2179,9 +2291,28 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
             // by construction; that is Forge's face-down state, not redaction.
             stats.viewerHandNamed++;
           } else {
-            note(lineNo, `the viewer's own hand card ${c.id} has no name -- redaction is too aggressive`);
+            // D371: say WHICH shape it was and where the card was last seen, so
+            // the next quarantine names its cause (a stub means gate 0 or 1 said
+            // no to the viewer's own hand: canBeShownTo(Hand) is
+            // getController() == viewer, so the stub's controller is the clue).
+            const shape = c.hidden === true
+              ? `a redacted stub (owner ${c.owner}, controller ${c.controller}, zone ${JSON.stringify(c.zone)})`
+              : `a full card with name ${JSON.stringify(c.name)} (faceDown ${c.faceDown}, controller ${c.controller})`;
+            const last = handLastSeen.get(c.id);
+            const where = last ? `; last seen outside this hand in ${last.zone} at line ${last.line}` : '';
+            note(lineNo, `the viewer's own hand card ${c.id} has no name -- redaction is too aggressive ` +
+              `(it is ${shape}${where})`);
           }
         }
+      }
+    }
+
+    lookGrants = nextGrants;
+    viewerStackBefore = viewerStackNow;
+    for (const p of players) {
+      for (const [zname, z] of Object.entries(p.zones ?? {})) {
+        if (zname === 'hand') continue;
+        for (const c of z?.cards ?? []) if (num(c?.id)) handLastSeen.set(c.id, { zone: zname, line: lineNo });
       }
     }
 
@@ -2320,12 +2451,17 @@ const DECISION_KINDS = ['priority', 'attack', 'block', 'target', 'choice', 'mull
 const DECISION_BY = ['forge', 'outlets', 'search'];
 const DECISION_SOURCES = ['targets', 'trigger', 'chooseTargets', 'entity', 'cards', 'confirm'];
 const DECISION_KEYS = new Set(['seat', 'n', 'kind', 'frame', 'stateSeq', 'turn', 'phase', 'options', 'complete',
-  'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search']);
+  'atoms', 'hidden', 'chosen', 'by', 'why', 'parent', 'source', 'search', 'explore']);
+// M57 / D358: a decision play exploration answered: the rule, and the seat's own answer as a token.
+const EXPLORE_KEYS = new Set(['rule', 'forge']);
+const EXPLORE_RULES = ['random', 'closeCall'];
+const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCalls', 'closeCallsChanged', 'coins', 'failures', 'byKind']);
+const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
   'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);
 const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior']);
 const SEARCH_RULES = ['margin', 'lcb'];
-const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced']);
+const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced', 'explore']);
 const FALLBACKS = [null, 'budget', 'copyError', 'unmappable', 'rolloutErrors', 'invalidAtEnd'];
 
 /** The card ids a state shows its viewer: full cards in every zone but a hidden one, and stackCards. */
@@ -2376,6 +2512,17 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
           if (typeof v !== 'number') bad(lineNo, `decisions summary ${k}.${kk} is not a number`);
         }
       }
+      if (b.explore !== undefined) {
+        if (!header.playExplore) bad(lineNo, 'decisions summary carries "explore" but the session header has no playExplore (M57, D358)');
+        for (const [k, v] of Object.entries(b.explore ?? {})) {
+          if (!EXPLORE_SUMMARY_KEYS.has(k)) bad(lineNo, `decisions summary explore carries an unexpected key "${k}"`);
+          else if (k === 'byKind') {
+            for (const [kk, n] of Object.entries(v ?? {})) {
+              if (!DECISION_KINDS.includes(kk) || typeof n !== 'number') bad(lineNo, `decisions summary explore.byKind ${JSON.stringify(kk)}`);
+            }
+          } else if (typeof v !== 'number') bad(lineNo, `decisions summary explore.${k} is not a number`);
+        }
+      }
       continue;
     }
     if (f.type !== 'decision') {
@@ -2405,6 +2552,14 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
     for (const a of b.atoms ?? []) {
       if (typeof a !== 'string' || !/^\d+(>\d+)?$/.test(a)) bad(lineNo, `decision ${b.n} atom ${JSON.stringify(a)}`);
       else tokens.push(`atom:${a}`);
+    }
+    if (b.explore !== undefined) {
+      // M57 / D358: only in a game played with exploration; the seat's own answer is a token like any other
+      if (!header.playExplore) bad(lineNo, `decision ${b.n} carries an explore mark but the session header has no playExplore (M57, D358)`);
+      const ex = b.explore;
+      for (const k of Object.keys(ex ?? {})) if (!EXPLORE_KEYS.has(k)) bad(lineNo, `decision ${b.n} explore carries an unexpected key "${k}"`);
+      if (!EXPLORE_RULES.includes(ex?.rule)) bad(lineNo, `decision ${b.n} explore rule ${JSON.stringify(ex?.rule)}`);
+      if (ex?.forge !== null) checkToken(ex?.forge, 'explore forge');
     }
     if (b.search !== undefined) {
       const sb = b.search;
@@ -2540,7 +2695,7 @@ for (const path of files) {
   console.log(`      engine strings=${stats.texts} (stack[].text + events[].cast.text), `
     + `concealed=${stats.textsConcealed}, none joinable to a card concealed in the same frame`);
   console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
-    + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}  tokens=${stats.tokens}  `
+    + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}  tokens=${stats.tokens}  `
     + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`);
   console.log(`      A12 answers=${stats.answers} (kinds: `
     + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
@@ -2555,7 +2710,8 @@ for (const path of files) {
     console.log(stats.matchChecked > 0
       ? `      hello_ok.match checked on ${stats.matchChecked} of ${stats.hellos} hello_ok frame(s) `
         + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header`
-        + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''})`
+        + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''}`
+        + `${stats.aiPolicyChecked > 0 ? `; aiPolicy a known policy, M56` : ''})`
       : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
         + `before amendment M44, or AI vs AI without a match setup; section 2.1)`);
   }

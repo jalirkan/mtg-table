@@ -19,15 +19,31 @@
 // floored, and no decision is taken before `minPairs`, so the first few pairs
 // (σ² ≈ 0) cannot end a test by themselves.  Elo here is the logistic scale the
 // ratings use (rating.ts), not "normalized" Elo.
+//
+// D373: the defaults are minPairs 100 and a variance floor of 0.05.  Mirrored
+// search-vs-search pairs mostly split 1-1, so the sample variance of the first
+// pairs is tiny and, at the old 8 pairs and 0.01, one lopsided pair moved the
+// LLR by about 3 and could end a test at 40 games (J054).  The old values stay
+// reachable as explicit options (`--min-pairs 8 --var-floor 0.01`).
+//
+// WHAT A RESULT MEANS (D373).  H0 accepted says "A is not shown to be >= elo1
+// better than B": it is not "no gain", and an effect between elo0 and elo1 is
+// invisible to the test.  `verdictWords` is the one phrasing every reader prints.
 
 export interface SprtParams {
   elo0: number;
   elo1: number;
   alpha: number;
   beta: number;
+  /** No decision before this many pairs (default SPRT_DEFAULTS.minPairs). */
   minPairs?: number;
   maxGames?: number;
+  /** Floor on the pair scores' sample variance (default SPRT_DEFAULTS.varFloor). */
+  varFloor?: number;
 }
+
+/** D373's defaults: at least 100 pairs, the pair-score variance floored at 0.05 (was 8 and 0.01). */
+export const SPRT_DEFAULTS = { minPairs: 100, varFloor: 0.05 } as const;
 
 export interface PairScore {
   /** A's share of the pair's decisive games: 0, 0.5 or 1. */
@@ -47,7 +63,7 @@ export interface SprtState {
 }
 
 export const score = (elo: number): number => 1 / (1 + Math.pow(10, -elo / 400));
-const VAR_FLOOR = 0.01;
+const VAR_FLOOR = SPRT_DEFAULTS.varFloor;
 
 export function bounds(p: Pick<SprtParams, 'alpha' | 'beta'>): { lower: number; upper: number } {
   return { lower: Math.log(p.beta / (1 - p.alpha)), upper: Math.log((1 - p.beta) / p.alpha) };
@@ -58,7 +74,7 @@ export function llr(xs: number[], elo0: number, elo1: number): number {
 }
 
 /** The GSPRT statistic for "the mean of xs is mu1" against "it is mu0" (normal approximation, sample variance floored). */
-export function llrMeans(xs: number[], mu0: number, mu1: number, varFloor = VAR_FLOOR): number {
+export function llrMeans(xs: number[], mu0: number, mu1: number, varFloor: number = VAR_FLOOR): number {
   const N = xs.length;
   if (N === 0) return 0;
   const m = xs.reduce((s, x) => s + x, 0) / N;
@@ -70,15 +86,26 @@ export function sprtState(pairs: PairScore[], p: SprtParams): SprtState {
   const { lower, upper } = bounds(p);
   const xs = pairs.map((q) => q.x);
   const games = pairs.reduce((s, q) => s + q.games, 0);
-  const L = llr(xs, p.elo0, p.elo1);
+  const L = llrMeans(xs, score(p.elo0), score(p.elo1), p.varFloor ?? SPRT_DEFAULTS.varFloor);
   const mean = xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0.5;
   let result: SprtState['result'] = 'continue';
-  if (xs.length >= (p.minPairs ?? 8)) {
+  if (xs.length >= (p.minPairs ?? SPRT_DEFAULTS.minPairs)) {
     if (L >= upper) result = 'H1';
     else if (L <= lower) result = 'H0';
   }
   if (result === 'continue' && p.maxGames !== undefined && games >= p.maxGames) result = 'inconclusive';
   return { llr: L, lower, upper, pairs: xs.length, games, score: mean, result };
+}
+
+/**
+ * A result in words (D373).  H0 is "not shown to be >= elo1 better", never "no
+ * gain": the test cannot see an effect between elo0 and elo1.
+ */
+export function verdictWords(result: SprtState['result'] | 'stopped', a: string, b: string, p: Pick<SprtParams, 'elo0' | 'elo1'>): string {
+  if (result === 'H1') return `H1 accepted -- ${a} is stronger than ${b} by >= ${p.elo1} Elo`;
+  if (result === 'H0') return `H0 accepted -- ${a} is not shown to be >= ${p.elo1} Elo better than ${b} (the data fit <= ${p.elo0} better than it; a gain under ${p.elo1} is not ruled out)`;
+  if (result === 'inconclusive') return `inconclusive -- the game limit came first; ${a} is neither shown >= ${p.elo1} nor <= ${p.elo0} Elo better than ${b}`;
+  return result === 'continue' ? 'continuing' : 'stopped before a decision';
 }
 
 /** Group A-vs-B games (from A's side: s = 1 when A won) into mirror-pair scores. Draws are dropped. */

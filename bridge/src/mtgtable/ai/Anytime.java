@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The anytime search's scheduling (D354), pure -- numbers in, numbers out, no
+ * The anytime search's scheduling (D388), pure -- numbers in, numbers out, no
  * Forge class -- so {@code DecisionSelfTest} checks it on synthetic rounds.
  * {@code leaves.get(round)[candidate]} is a leaf, NaN for a rollout not played;
  * candidate 0 is always Forge's own answer, which is never pruned or retired.
@@ -31,7 +31,7 @@ public final class Anytime {
 
     private Anytime() { }
 
-    /** Racing (D354): from this many paired rounds, a candidate clearly worse than the leader is retired. */
+    /** Racing (D388): from this many paired rounds, a candidate clearly worse than the leader is retired. */
     static final int RACE_FROM = 3;
     /** The racing bound's multiplier: retire when mean + Z·se of the paired difference to the leader is below 0. */
     static final double RACE_Z = 2.0;

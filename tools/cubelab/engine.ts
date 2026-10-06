@@ -27,11 +27,13 @@
 import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
 
 import type { Fact } from './cards.ts';
 import { controlReader } from '../runner/control.ts';
+import type { PlayExploreGame, PlayExploreTag } from './playexplore.ts';
 
 export interface EngineEnv { cp: string; homes: string[]; repo: string }
 
@@ -116,6 +118,8 @@ export interface MatchJob {
   forgeDeckOutB: string;
   /** D315: record every game of this match, both chairs, in the worker (`run --record-all|--record-every N`). */
   record?: RecordSpec;
+  /** D358: both seats of every game explore (playexplore.ts; CubeLab.java seeds each seat's draws). */
+  playExplore?: PlayExploreTag;
 }
 
 /** Where and how a match's games are recorded (D315); CubeLab.java's `Recording` reads it. */
@@ -151,6 +155,8 @@ export interface GameRow {
   gameCpuMs?: number;
   /** D315: the game's two frame logs (`<dir>/g<n>-seat{0,1}.jsonl.gz`), their bytes on disk, state frames, snapshot errors. */
   recorded?: { dir: string; bytes: number; frames: number; errors: number; decisions?: number; decisionErrors?: number };
+  /** D358: what play exploration did in this game, both seats (an exploring draft only). */
+  playExplore?: PlayExploreGame;
 }
 
 export interface ForgeBuild { side: 'A' | 'B'; colors?: string; spells?: number; lands?: number; value?: number; main?: Array<[number, string]>; error?: string }
@@ -180,11 +186,19 @@ interface Slot {
 }
 
 /**
+ * D376: the pool's load when a match finished: matches in progress at that moment (this one
+ * included), worker JVMs alive, and the machine's 1-minute load average over its cores.
+ * Forge's AI is wall-clock dependent (D311), so a game's outcome may depend on these.
+ */
+export interface PoolLoad { busy: number; alive: number; load1: number; cpus: number }
+
+/**
  * Run every job on `env.homes.length` workers.  `onResult` gets each match as
- * it finishes (never in a promised order).  Resolves when every job has a result.
+ * it finishes (never in a promised order), with the pool's load then (D376).
+ * Resolves when every job has a result.
  */
 export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
-  onResult: (job: MatchJob, r: MatchResult, worker: number) => void, say: (s: string) => void): Promise<void> {
+  onResult: (job: MatchJob, r: MatchResult, worker: number, load: PoolLoad) => void, say: (s: string) => void): Promise<void> {
   fs.mkdirSync(logDir, { recursive: true });
   const queue = [...jobs];
   let pending = jobs.length;
@@ -194,6 +208,8 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
   const control = controlReader();
   const cap = (): number => Math.min(slots.length, control().maxWorkers ?? slots.length);
   const alive = (): number => slots.filter((x) => x.proc).length;
+  /** Called while the finished match's slot still holds its job. */
+  const loadNow = (): PoolLoad => ({ busy: slots.filter((x) => x.job).length, alive: alive(), load1: Math.round((os.loadavg()[0] ?? 0) * 100) / 100, cpus: os.cpus().length });
 
   return new Promise<void>((resolve, reject) => {
     const finish = (): void => {
@@ -228,10 +244,11 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
 
     const fail = (s: Slot, why: string): void => {
       const j = s.job;
+      const load = loadNow();
       s.job = null;
       if (j) {
         say(`worker ${s.k}: ${why} during ${j.id}; recorded as an engine error, starting a fresh worker`);
-        onResult(j, { type: 'match', id: j.id, forge: [], games: [], engineError: why }, s.k);
+        onResult(j, { type: 'match', id: j.id, forge: [], games: [], engineError: why }, s.k, load);
         pending--;
       }
       if (pending === 0) { finish(); return; }
@@ -267,9 +284,10 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
             s.last = r;
             return;
           }
+          const load = loadNow();
           s.job = null;
           pending--;
-          onResult(j, r, s.k);
+          onResult(j, r, s.k, load);
           if (pending === 0) { finish(); return; }
           giveWork(s);
         }
@@ -285,7 +303,7 @@ export async function runPool(env: EngineEnv, jobs: MatchJob[], logDir: string,
           if (s.last && s.last.id === j.id) {
             s.job = null;
             pending--;
-            onResult(j, { ...s.last, engineError: 'a game thread would not stop after its timeout; the worker was restarted' }, s.k);
+            onResult(j, { ...s.last, engineError: 'a game thread would not stop after its timeout; the worker was restarted' }, s.k, loadNow());
             s.last = null;
             if (pending === 0) { finish(); return; }
             if (queue.length > 0) restart(s);

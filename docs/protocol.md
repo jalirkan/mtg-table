@@ -30,17 +30,42 @@ A browser is not one.
 
 ## Amendments
 
-### 2026-10-03 — the search's prior in decision records
+### 2026-10-06 — the search's prior in decision records
 
-Applied by the search week-3 lane (branch `c/search-week3`). One row. **No
+Applied by the search week-3 lane (branch `c/search-week3`; written as M56, renumbered: M56 and M57 went to `hello_ok.match.aiPolicy` and play exploration first). One row. **No
 frame on the wire changes**: two optional keys inside M55's `search` block,
-written only when the search ran with `rank=prior` (D355). Held by
+written only when the search ran with `rank=prior` (D389). Held by
 `tools/check-redaction.mjs` (the key sets and their types) and by
 `mtgtable.ai.DecisionSelfTest`.
 
 | # | Section | Change | Source |
 |---|---|---|---|
-| M56 | §8.2 | **M55's `search` block may carry the prior that ranked the candidates.** Each `search.options[]` entry may carry **`prior`** (a number: the leaf, or the learned evaluator's logit × 500, of the position after that candidate was applied once; absent when that option was not scored, as Forge's own answer and `pass` never are), and the block may carry **`generated`** (an integer: how many candidates were generated before the prior kept `options.length` of them). Both are absent when the search did not rank (its default), so an M55 record is unchanged. Under `anytime=1` (D354) each option's `n` is its own rounds rather than a shared count, and `diff`/`seDiff` are over the rounds it shares with Forge's answer — the same keys, already per option. | search week 3 |
+| M58 | §8.2 | **M55's `search` block may carry the prior that ranked the candidates.** Each `search.options[]` entry may carry **`prior`** (a number: the leaf, or the learned evaluator's logit × 500, of the position after that candidate was applied once; absent when that option was not scored, as Forge's own answer and `pass` never are), and the block may carry **`generated`** (an integer: how many candidates were generated before the prior kept `options.length` of them). Both are absent when the search did not rank (its default), so an M55 record is unchanged. Under `anytime=1` (D388) each option's `n` is its own rounds rather than a shared count, and `diff`/`seDiff` are over the rounds it shares with Forge's answer — the same keys, already per option. | search week 3 |
+
+### 2026-10-04 — play exploration marks an exploring recording and its random answers
+
+Applied by the queue-exploration lane (branch `c/queue-exploration`), so a dataset can
+tell the AI's own choices from the moves play exploration drew. One row. **No frame on
+the wire changes**: the keys are written by the in-process recorder
+(`mtgtable.SeatRecorder`, the cube lab's) into AI-vs-AI recordings only. Decision
+**D358**; held by `tools/check-redaction.mjs` and its five `m57-*` controls, by
+`web/test/cubelab-record.test.ts` over `fixtures/cubelab/explore/`, and by
+`mtgtable.ai.DecisionSelfTest` on every build.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M57 | §8.1, §8.2, M55 | **An exploring game says so.** The session header of an AI-vs-AI recording whose seats explored gains an optional **`playExplore: {epsilon, closeCall, opening}`** (two numbers in [0, 1] and a boolean; never beside `transport`: a seat a person plays never explores). A **`decision`** record (M55) the explorer answered gains **`explore: {rule, forge}`** — `rule` is `random` (a uniformly random legal answer, with probability `epsilon`) or `closeCall` (a fair coin between the seat's creature choice and its nearest rival on Forge's own score), `forge` the answer the seat's policy had given, as a token (audited like every option: its card ids must be ones the record's state frame shows the seat); `chosen` is the answer played. The **`decisions`** summary gains **`explore: {decisionsRandomised, changed, closeCalls, closeCallsChanged, coins, failures, byKind}`**. **Optional**: absent from every recording that did not explore and from every one before this amendment. A dataset must not learn a marked record's `chosen` as the seat's choice (`policy_data.py` drops them); the positions and the outcome that follow are true. | D358 |
+
+### 2026-10-03 — `hello_ok.match` names the AI's policy
+
+Found by ForgeCoach: after a match setup chose the search AI, the board still
+said "Forge AI", because nothing on the wire said which AI the launcher had
+started. One row. Held by `tools/check-redaction.mjs` and its two `m56-*`
+controls, and by `web/test/reduce-match.test.ts`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M56 | §2.1, M44 | **`hello_ok.match` gains an optional `aiPolicy`: who answers for the AI seat**, exactly `MtgTable --ai-policy` — `"plain"` (Forge's own AI), `"outlets"` (with D310's sacrifice-outlet policy) or `"search"` (D312's look-ahead search; `--ai-search` alone implies it), the value `POST /match`'s `aiPolicy` (D333) restarts the engine with. One word of a fixed set: never the search's knobs (`--ai-search ms=…`), a path or a name. `mtgtable.MtgTable` writes it on every handshake, last in the object so M44's and M47's keys keep their positions; `mtgtable.RecordMatch` and the in-process recorders (`SeatRecorder`) do not — an AI-vs-AI recording names every seat's policy in its session header's `seats` (M55). **Optional**: absent from every stream before this amendment, and a reader must treat a missing key as "this stream does not say", never as `plain`. `tools/check-redaction.mjs` admits the key and fails any value but the three. The client's one reader is `aiPolicyOf()` in `web/src/protocol.ts`. | ForgeCoach |
 
 ### 2026-10-03 — decision records: an AI seat's choices, in its own recording
 
@@ -512,6 +537,7 @@ name, the AI's profile, and how many games it is played to.
 | `aiProfile` | string | the Forge AI profile the other seat plays under — one `.ai` file of `forge-home/res/ai/`; `Default` unless `--ai-profile` said otherwise |
 | `games` | int ≥ 1 | `--games N`. **Always present**, unlike M41's `gameCount`, which is omitted for a one-game session |
 | `yourProfile` | string, **optional** | amendment **M47**: the **viewing seat's own** Forge AI profile. Only `mtgtable.RecordMatch` writes it (a spectated game), because only there is the viewing seat an AI; a stream whose `players[]` marks the viewer human must not carry it. Last in the object, so M44's keys keep their positions |
+| `aiPolicy` | string, **optional** | amendment **M56**: who answers for the other seat — `plain`, `outlets` or `search`, `MtgTable --ai-policy` (D314, D333). Written by `MtgTable` only; absent means the stream does not say. Read with `aiPolicyOf()` |
 
 **Optional, and absent from every recording made before 2026-09-27** — the whole
 committed corpus — so a reader must treat a missing `match` as "this stream does
@@ -1015,7 +1041,18 @@ exception:
 `cv.isFaceDown() && cv.canFaceDownBeShownTo(viewer)` — i.e. the viewer's own
 morph / manifest / cloak / disguise, and a face-down card someone gave them
 permission to look at. It is `null` in every other case, and the key is always
-present. This is the single sanctioned use of `getAlternateState()` in the whole
+present. The permission case is real and common in the cube lab (D371): Gonti,
+Lord of Luxury and Thief of Sanity exile an **opponent's** card face down and let
+their controller look at (and cast) it, so that card — owned and controlled by
+the opponent, in the opponent's `exile` — carries an `alt` for the seat whose
+effect exiled it (Forge's `DigEffect`: `turnFaceDown(true)`, then
+`addMayLookFaceDownExile(activator)`; `canFaceDownBeShownTo` opens with
+`mayPlayerLook(viewer)`). Hideaway is the same for the seat's own card. In play
+the face is the **controller's** only: the owner of a stolen face-down creature
+does not see it. A face-down card in exile that nobody may look at (Bomat
+Courier's "You can't look at it") is not a face-down full card at all but the
+five-key stub, for its owner too: `canBeShownTo` answers a face-down card in
+exile with the look permission alone. This is the single sanctioned use of `getAlternateState()` in the whole
 bridge; `tools/lint-bridge.sh` rejects the identifier anywhere else, because for
 an opponent's face-down permanent that accessor is the **real card** — name, mana
 cost, type line, P/T and oracle text (`CardView.java:1104-1109`).

@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+# mtg-table — tools/ml: flat numbers about the evaluator gates' artefacts, for the lab runner's checks (D354).
+# Copyright (C) 2026 mtg-table contributors.
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""One flat JSON object of numbers on stdout (booleans as 1/0, a missing file
+as `written: 0`), for a pc-jobs `metrics: name = sh: ...` line.  Reads files
+only; never starts the engine.
+
+    python3 tools/ml/gate_metrics.py dataset var/ml/data/night-1
+    python3 tools/ml/gate_metrics.py report var/ml/gates/fit/report.json        # any gate report
+    python3 tools/ml/gate_metrics.py grade var/ml/gates/regret/truth.jsonl var/ml/gates/regret/set.jsonl
+    python3 tools/ml/gate_metrics.py lines var/ml/gates/fit/leaf-rows.jsonl
+    python3 tools/ml/gate_metrics.py file var/ml/models/night-1-eval.json
+    python3 tools/ml/gate_metrics.py ext var/ml/17lands/rows-premier              # ext17l.py rows (D359)
+    python3 tools/ml/gate_metrics.py exam var/ml/reports/outside-exam.json        # outside_exam.py (D359)
+    python3 tools/ml/gate_metrics.py calib var/ml/reports/night-1-s*.json         # gate 1's clause C per model (D368)
+    python3 tools/ml/gate_metrics.py ensemble var/ml/models/night-1-ensemble.json # the served ensemble loads (D368)
+"""
+from __future__ import annotations
+
+import glob
+import json
+import os
+import sys
+from typing import Any
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gates as G  # noqa: E402
+
+
+def flat(d: dict[str, Any], prefix: str = "", out: dict[str, float] | None = None, depth: int = 0) -> dict[str, float]:
+    out = {} if out is None else out
+    for k, v in d.items():
+        key = f"{prefix}{k}"
+        if isinstance(v, bool):
+            out[key] = 1 if v else 0
+        elif isinstance(v, (int, float)) and v == v:
+            out[key] = v
+        elif isinstance(v, dict) and depth < 2:
+            flat(v, key + "_", out, depth + 1)
+    return out
+
+
+def m_dataset(d: str) -> dict[str, float]:
+    """stats.json once the dataset is complete (`written: 1`); while dataset.py runs, its
+    progress.json (`written: 0, partial: 1` with rows / games / files so far), so a runner's
+    `progress: metric ds.rows` moves mid-run."""
+    p = os.path.join(d, "stats.json")
+    if not os.path.isfile(p):
+        try:
+            with open(os.path.join(d, "progress.json"), encoding="utf-8") as f:
+                pr = json.load(f)
+        except (OSError, ValueError):
+            return {"written": 0}
+        return {"written": 0, "partial": 1, **{k: pr[k] for k in ("rows", "games", "files", "filesTotal")
+                                                if isinstance(pr.get(k), (int, float))}}
+    with open(p, encoding="utf-8") as f:
+        st = json.load(f)
+    out = {"written": 1, "rows": st.get("rows", 0), "games": st.get("games", 0),
+           "reservedChecked": 1 if st.get("reservedChecked") else 0, "versions": len(st.get("versions") or {})}
+    for s, v in (st.get("splits") or {}).items():
+        out[f"{s}_rows"] = v.get("rows", 0)
+        out[f"{s}_games"] = v.get("games", 0)
+    return out
+
+
+def m_report(p: str) -> dict[str, float]:
+    if not os.path.isfile(p):
+        return {"written": 0}
+    with open(p, encoding="utf-8") as f:
+        r = json.load(f)
+    r.pop("rows", None)
+    r.pop("rule", None)
+    out = flat(r)
+    out["written"] = 1
+    if "leafRows" in r:
+        out["leafPositions"] = r["leafRows"].get("positions", 0)
+    return out
+
+
+def m_ext(d: str) -> dict[str, float]:
+    """ext17l.py rows' stats.json: games read, user-side positions, how many qualify at 0.5 and 0.8, rows."""
+    p = os.path.join(d, "stats.json")
+    if not os.path.isfile(p):
+        return {"written": 0}
+    with open(p, encoding="utf-8") as f:
+        st = json.load(f)
+    c = (st.get("candidates") or {}).get("user") or {}
+    rows = st.get("rows") or {}
+    return {"written": 1, "games": st.get("games", 0), "gamesWithRows": st.get("gamesWithRows", 0),
+            "positions": c.get("positions", 0), "q50": c.get(">=0.5", 0), "q80": c.get(">=0.8", 0),
+            "rows": st.get("rowsTotal", 0), "testUserRows": rows.get("test.user", 0),
+            "unknownIds": st.get("unknownIds", 0), "partial": 1 if st.get("partialDownload") or st.get("maxGames") else 0,
+            **({"peakGB": st["peakGB"]} if isinstance(st.get("peakGB"), (int, float)) else {})}
+
+
+def m_exam(p: str) -> dict[str, float]:
+    """outside_exam.py's report: the verdict (pass 1/0; decided 0 for NO VERDICT), the primary population,
+    b*'s difference and interval, and the transfer gap."""
+    if not os.path.isfile(p):
+        return {"written": 0}
+    with open(p, encoding="utf-8") as f:
+        r = json.load(f)
+    v = r.get("verdict") or {}
+    d = v.get("delta") or {}
+    g = r.get("transferGap") or {}
+    out = {"written": 1, "pass": 1 if v.get("verdict") == "PASS" else 0,
+           "decided": 1 if v.get("verdict") in ("PASS", "FAIL") else 0,
+           "rows": (r.get("primary") or {}).get("rows", 0), "games": (r.get("primary") or {}).get("games", 0),
+           "oursRows": (r.get("ours") or {}).get("rows", 0)}
+    for k in ("mean", "lo", "hi"):
+        if isinstance(d.get(k), (int, float)) and d[k] == d[k]:
+            out[f"delta_{k}"] = d[k]
+    if isinstance(g.get("gap"), (int, float)):
+        out["gap"] = g["gap"]
+    if isinstance(r.get("peakGB"), (int, float)):
+        out["peakGB"] = r["peakGB"]
+    return out
+
+
+def m_grade(out: str, requests: str | None) -> dict[str, float]:
+    ans: dict[str, dict[str, Any]] = {}
+    for fn in sorted(glob.glob(out + ".shard-*.jsonl")):
+        for a in G.read_jsonl(fn):
+            ans[str(a.get("id"))] = a
+    st: dict[str, float] = {"answered": len(ans)}
+    for a in ans.values():
+        k = str(a.get("status", "unknown"))
+        st[k] = st.get(k, 0) + 1
+    for k in ("ok", "error", "unsupported", "trivial", "refused"):
+        st.setdefault(k, 0)
+    st["requests"] = len(G.read_jsonl(requests)) if requests else 0
+    st["playouts"] = sum(int(a.get("playouts") or 0) for a in ans.values())
+    return st
+
+
+def m_calib(paths: list[str]) -> dict[str, float]:
+    """Gate 1's clause C (gates.FIT_RULE: ECE and every bin of >= binMinRows rows) on
+    each train_eval.py --report's TEST split, as gate_fit.py's `calibration` reads the
+    same reliability bins: `models`, how many pass, the worst ECE and bin gap, and
+    `pass` (1 when every report is there and passes)."""
+    R = G.FIT_RULE
+    n = ok = 0
+    worst_ece = worst_gap = 0.0
+    for p in paths:
+        try:
+            with open(p, encoding="utf-8") as f:
+                ev = json.load(f)["models"]["eval"]["test"]
+        except (OSError, ValueError, KeyError, TypeError):
+            return {"written": 0, "models": n}
+        n += 1
+        ece = float(ev["all"]["ece"])
+        gaps = [abs(b["predicted"] - b["observed"]) for b in ev.get("reliability") or []
+                if b.get("rows", 0) >= R["binMinRows"]]
+        gap = max(gaps) if gaps else 0.0
+        worst_ece, worst_gap = max(worst_ece, ece), max(worst_gap, gap)
+        if ece <= R["eceMax"] and gap <= R["binTolerance"]:
+            ok += 1
+    return {"written": 1, "models": n, "passing": ok, "pass": 1 if n and ok == n else 0,
+            "maxEce": worst_ece, "maxBinGap": worst_gap}
+
+
+def m_ensemble(spec: str) -> dict[str, float]:
+    """eval_serve.py's own load of an ensemble (every refusal, and one layout)."""
+    import eval_serve as S
+    try:
+        srv = S.Served(spec)
+    except (OSError, ValueError, ImportError) as e:
+        print(f"gate_metrics: {e}", file=sys.stderr)
+        return {"loads": 0}
+    return {"loads": 1, "n": srv.n, "explain": 1 if srv.explainable else 0}
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        print(__doc__, file=sys.stderr)
+        return 2
+    kind, path = argv[0], argv[1]
+    if kind == "dataset":
+        out = m_dataset(path)
+    elif kind == "report":
+        out = m_report(path)
+    elif kind == "grade":
+        out = m_grade(path, argv[2] if len(argv) > 2 else None)
+    elif kind == "ext":
+        out = m_ext(path)
+    elif kind == "exam":
+        out = m_exam(path)
+    elif kind == "calib":
+        out = m_calib(argv[1:])
+    elif kind == "ensemble":
+        out = m_ensemble(path)
+    elif kind == "lines":
+        out = {"lines": len(G.read_jsonl(path)) if os.path.isfile(path) else 0}
+    elif kind == "file":
+        out = {"exists": 1 if os.path.isfile(path) else 0, "bytes": os.path.getsize(path) if os.path.isfile(path) else 0}
+    else:
+        print(f"gate_metrics: unknown kind {kind}", file=sys.stderr)
+        return 2
+    print(json.dumps(out))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

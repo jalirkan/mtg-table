@@ -68,6 +68,9 @@ import mtgtable.Config;
 import mtgtable.Json;
 import mtgtable.Json.JsonOut;
 import mtgtable.SeatRecorder;
+import mtgtable.ai.ExploreMath;
+import mtgtable.ai.PolicyControllerAi;
+import mtgtable.ai.PolicyLobbyPlayerAi;
 import mtgtable.ai.SeatSpec;
 
 /**
@@ -105,6 +108,19 @@ import mtgtable.ai.SeatSpec;
  * subscribed before the game starts and finished inside the same
  * {@code GameAction.invoke} body that runs the game, so this file still makes
  * no hop and names no {@code CardView}.
+ *
+ * <h2>Play exploration (D358)</h2>
+ *
+ * A match line with a {@code playExplore} block ({@code epsilon},
+ * {@code closeCall}, {@code opening}; the queue's {@code --play-explore}) has
+ * both seats explore every game of it: each seat is our controller with an
+ * {@code Explorer} whose generator is seeded by
+ * {@link ExploreMath#seedFor}(draft seed, game, seat), so a re-run draws the
+ * same coins.  With {@code opening} on, who plays first is a fair coin from the
+ * game's own stream (seat -1) instead of D295's alternation.  Each game row
+ * gains {@code playExplore}: the two seats' counts.  A recording's session
+ * header carries {@code playExplore} (the settings), and each seat's
+ * {@code decisions} summary line its own counts.
  *
  * <h2>The rules it keeps</h2>
  *
@@ -380,17 +396,32 @@ public final class CubeLab {
 
         final Map<?, ?> record = job.get("record") instanceof Map ? (Map<?, ?>) job.get("record") : null;
         final SeatSpec specA = SeatSpec.parse(profA), specB = SeatSpec.parse(profB);
-        final LobbyPlayer lpA = seat("Drafter A", 0, specA, record != null);
-        final LobbyPlayer lpB = seat("Drafter B", 1, specB, record != null);
+        final ExploreMath.Config explore = ExploreMath.Config.of(job.get("playExplore"));
+        final LobbyPlayer lpA = seat("Drafter A", 0, specA, record != null || explore != null);
+        final LobbyPlayer lpB = seat("Drafter B", 1, specB, record != null || explore != null);
         int winsA = 0, winsB = 0;
         final int need = games / 2 + 1;
         res.key("games").arr();
         for (int g = 1; g <= games && winsA < need && winsB < need; g++) {
             // Alternate who is on the play; the draft's seed decides game 1, so it alternates across drafts too.
-            final boolean aOnPlay = ((seed + g) % 2L) == 1L;
+            // D358: an exploring game with `opening` on draws who plays first instead.
+            final boolean aOnPlay = explore != null && explore.opening
+                    ? new ExploreMath(explore, ExploreMath.seedFor(seed, g, -1)).fair()
+                    : ((seed + g) % 2L) == 1L;
             final long gameSeed = seed * 1000003L + g;
+            Map<String, Object> exploreHeader = null;
+            if (explore != null) {
+                ((PolicyLobbyPlayerAi) lpA).setExplore(explore, ExploreMath.seedFor(seed, g, 0));
+                ((PolicyLobbyPlayerAi) lpB).setExplore(explore, ExploreMath.seedFor(seed, g, 1));
+                exploreHeader = new LinkedHashMap<>();
+                exploreHeader.put("epsilon", explore.epsilon);
+                exploreHeader.put("closeCall", explore.closeCall);
+                exploreHeader.put("opening", explore.opening);
+                // no seed: each seat's is ExploreMath.seedFor(lab.draftSeed, lab.game, seat), and one seat's log
+                // need not carry what decides the other seat's draws
+            }
             final Recording rec = record == null ? null
-                    : new Recording(record, id, seed, g, gameSeed, aOnPlay, decks, deckFiles, specA, specB);
+                    : new Recording(record, id, seed, g, gameSeed, aOnPlay, decks, deckFiles, specA, specB, exploreHeader);
             final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec);
             if (r.stuck) {
                 res.end().n("stuck", true).end();
@@ -407,11 +438,45 @@ public final class CubeLab {
                    .n("frames", (long) r.recordFrames).n("errors", (long) r.recordErrors)
                    .n("decisions", (long) r.recordDecisions).n("decisionErrors", (long) r.recordDecisionErrors).end();
             }
+            if (explore != null) {
+                exploreRow(res, aOnPlay, (PolicyLobbyPlayerAi) lpA, (PolicyLobbyPlayerAi) lpB, explore);
+            }
             res.end();
         }
         res.end().n("winsA", (long) winsA).n("winsB", (long) winsB).end();
         emit(res.done());
         return 0;
+    }
+
+    /**
+     * A game row's {@code playExplore} (D358): both seats' counts summed --
+     * decisions answered at random, how many of those differ from the seat's own
+     * answer, close calls (and how many were swapped), coins drawn, failures --
+     * and the opening's draw.
+     */
+    static void exploreRow(final JsonOut res, final boolean aOnPlay, final PolicyLobbyPlayerAi a,
+                           final PolicyLobbyPlayerAi b, final ExploreMath.Config cfg) {
+        long rnd = 0, changed = 0, cc = 0, ccChanged = 0, coins = 0, failures = 0;
+        final Map<String, Long> byKind = new java.util.TreeMap<>();
+        for (final PolicyLobbyPlayerAi lp : List.of(a, b)) {
+            final PolicyControllerAi c = lp.lastController();
+            if (c == null || c.explorer() == null) continue;
+            final ExploreMath m = c.explorer().math();
+            rnd += m.randomised();
+            changed += m.changed();
+            cc += m.closeCalls();
+            ccChanged += m.closeCallsChanged();
+            coins += m.coins();
+            failures += m.failures();
+            for (final Map.Entry<String, int[]> e : m.byKind().entrySet()) byKind.merge(e.getKey(), (long) e.getValue()[0], Long::sum);
+        }
+        res.key("playExplore").obj().n("decisionsRandomised", rnd).n("changed", changed).n("closeCalls", cc)
+           .n("closeCallsChanged", ccChanged).n("coins", coins).n("failures", failures);
+        res.key("byKind").obj();
+        for (final Map.Entry<String, Long> e : byKind.entrySet()) res.n(e.getKey(), (long) e.getValue());
+        res.end();
+        if (cfg.opening) res.n("onPlayDrawn", aOnPlay ? "A" : "B");
+        res.end();
     }
 
     /**
@@ -521,10 +586,13 @@ public final class CubeLab {
         final long gameSeed;
         final List<SeatRecorder.Seat> seats = new ArrayList<>();
         final Map<String, Object> lab = new LinkedHashMap<>();
+        /** D358: the header's playExplore object, or null for a game that does not explore. */
+        final Map<String, Object> playExplore;
 
         Recording(final Map<?, ?> rec, final String id, final long seed, final int g, final long gameSeed,
                   final boolean aOnPlay, final Deck[] decks, final File[] deckFiles,
-                  final SeatSpec specA, final SeatSpec specB) {
+                  final SeatSpec specA, final SeatSpec specB, final Map<String, Object> playExplore) {
+            this.playExplore = playExplore;
             this.dir = new File(str(rec, "dir"));
             this.rel = str(rec, "rel");
             this.gameId = id + "-g" + g;
@@ -602,7 +670,7 @@ public final class CubeLab {
         if (rec != null) {
             for (int s = 0; s < 2; s++) {
                 recorders.add(SeatRecorder.attach(game, s, rec.out(s), rec.gameId, rec.gameSeed, jarSha(),
-                        rec.seats, rec.lab));
+                        rec.seats, "lab", rec.lab, rec.playExplore));
             }
         }
         final CountDownLatch done = new CountDownLatch(1);

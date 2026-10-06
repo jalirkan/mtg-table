@@ -34,6 +34,16 @@ bench recording's two decks are read from the pairs file its header names), and
 so is a lab game whose draft seed is in the reserved range; `--ver` keeps only
 some lab versions and every game carries its `ver`.
 
+EXPLORATION (D358).  In a cube-lab game played with exploration (its session
+header carries `playExplore`), some decisions were answered by a uniformly
+random legal move, or by a coin between Forge's choice and a close rival,
+instead of the seat's policy; their records carry `explore: {rule, forge}`
+(`forge` = the answer the policy had given).  Such a record's `chosen` is not
+the seat's choice, so it is DROPPED and counted (`notes`); every other
+decision of the game is kept (from the next decision on, the seat chose again,
+in the position the random move led to).  games.jsonl marks the game
+`"explore": true`.
+
 SOURCES.  Every game is tagged `source`: `lab` (a cube-lab recording), `bench`
 (ai-bench), `human` (a log under a `--human` directory -- by default
 `var/ml/human/`, where Justin's own games go: ForgeCoach's saved games and the
@@ -239,6 +249,10 @@ def encode_decisions(pg: PolicyGame, schema: E.Schema, kinds: set[str], searched
             continue
         if b.get("kind") not in kinds or (searched_only and not b.get("search")):
             continue
+        if b.get("explore"):
+            # D358: play exploration answered it, not the seat's policy -- never an imitation target
+            counts["randomised decision dropped (D358)"] += 1
+            continue
         fr = b.get("frame")
         if not isinstance(fr, int) or fr not in states:
             counts["no state frame"] += 1
@@ -353,7 +367,8 @@ def build(logs: list[str], vocab_paths: list[str], out: str, weights=(80, 10, 10
                           "source": m["source"], "ver": m["ver"], "file": os.path.relpath(path),
                           "seat": pg.seat, "profile": info.get("profile"), "policy": info.get("policy"),
                           "decisions": len(rows), "label": label if labelled else None,
-                          "match": pg.game.match_key()})
+                          "match": pg.game.match_key(),
+                          **({"explore": True} if isinstance(pg.header.get("playExplore"), dict) else {})})
             c = per.setdefault(s, Counter())
             c["games"] += 1
             for feats, t in rows:

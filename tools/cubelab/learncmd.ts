@@ -26,6 +26,7 @@ import { parseRatings } from './ratings.ts';
 import { defaultRatings, loadForRun, runLab, type DraftRecord, type RunMeta, type RunOptions } from './run.ts';
 import { deckQuality, gamesForHalfWidth, headToHead, pairedVsControl, reRated, writeJson, type DeckQuality, type H2H, type Paired } from './selfplay.ts';
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs, type Weights } from './weights.ts';
+import { filterPlayExplore } from './playexplore.ts';
 
 type Flags = Map<string, string[]>;
 const one = (f: Flags, k: string): string | undefined => f.get(k)?.at(-1);
@@ -59,14 +60,16 @@ export function weightsOf(f: Flags): Weights {
   return mergeWeights(w, parseWeightArgs(f.get('weight') ?? []));
 }
 
-interface RunData { dir: string; meta: RunMeta; cards: Record<string, { rating: number; remAIDeck: boolean; land: boolean }>; recs: DraftRecord[] }
+interface RunData { dir: string; meta: RunMeta; cards: Record<string, { rating: number; remAIDeck: boolean; land: boolean }>; recs: DraftRecord[]; playExploreDropped: number }
 
+/** A run folder's drafts, those whose games explored (D358) left out: `learn` fits card values from who won. */
 export function readRunData(dir: string): RunData {
   const meta = JSON.parse(fs.readFileSync(path.join(dir, 'run.json'), 'utf8')) as RunMeta;
   const cards = JSON.parse(fs.readFileSync(path.join(dir, 'cards.json'), 'utf8')) as RunData['cards'];
   const jsonl = path.join(dir, 'drafts.jsonl');
-  const recs = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
-  return { dir, meta, cards, recs };
+  const all = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const { recs, dropped } = filterPlayExplore(all, 'exclude');
+  return { dir, meta, cards, recs, playExploreDropped: dropped };
 }
 
 /** The files `learn` writes next to `out` (x.ratings.tsv -> x.synergy.tsv, x.learn.md, x.learn.json). */
@@ -84,6 +87,8 @@ export function learnFromRuns(repo: string, dirs: string[], prior: string | null
   const priors = priorsFrom(priorFile && fs.existsSync(priorFile) ? fs.readFileSync(priorFile, 'utf8') : null, cards);
   const games: Game[] = [];
   for (const r of runs) games.push(...gamesOf(r.recs, `${path.basename(r.dir)}:`));
+  const dropped = runs.reduce((n, r) => n + r.playExploreDropped, 0);
+  if (dropped > 0) say(`learn: ${dropped} draft(s) whose games explored (D358) left out`);
   if (games.length === 0) throw new Error(`no decisive game in ${dirs.join(', ')}`);
   const l = learn(games, priors, o);
   const title = runs[0]?.meta.cube ?? '';

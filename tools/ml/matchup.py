@@ -58,9 +58,10 @@ error 2-15x for the least-seen cards (methodology review 2, N1).  The prior
 widths come from the Laplace evidence when every draft has one game
 (`--tau-by auto`; the queue's default), else the grouped cross-validation.
 
-LEFT OUT (D340, D341, D343).  Games played with an AI-ladder deck-set deck,
+LEFT OUT (D340, D341, D343, D358).  Games played with an AI-ladder deck-set deck,
 matched card for card (reserved.py); with `--ver`, games of other lab
-versions.  AI-LIMITED cards (Forge's AI:RemoveDeck:All) are not rated: they
+versions; games of drafts whose games explored (the queue's `--play-explore`:
+random moves are not a deck's strength) unless `--play-explore include|only`.  AI-LIMITED cards (Forge's AI:RemoveDeck:All) are not rated: they
 stay at their feature prior and one shared column takes their dead weight.
 
 BALANCE (D342).  Each deck's predicted win rate against the cube's other
@@ -710,9 +711,11 @@ def train_cmd(a: argparse.Namespace) -> int:
     os.makedirs(a.out, exist_ok=True)
     import reserved as R
     res = {} if a.keep_reserved else R.reserved_decks(a.repo)
-    games, st = MD.collect(a.paths, reserved=res, vers=[v for v in a.ver.split(",") if v] or None)
+    games, st = MD.collect(a.paths, reserved=res, vers=[v for v in a.ver.split(",") if v] or None,
+                           play_explore=a.play_explore)
     print(f"reserved decks (D340): {len(res)} deck-set decks; {st['reserved']} game(s) played with one dropped; "
-          f"{st['otherVersion']} game(s) of other lab versions left out")
+          f"{st['otherVersion']} game(s) of other lab versions left out; {st['playExplore']} game(s) of exploring "
+          f"drafts left out by --play-explore {a.play_explore} (D358)")
     if len(games) < 20:
         print(f"matchup.py: only {len(games)} decisive games -- need more")
         return 1
@@ -910,6 +913,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     t.add_argument("--repo", default=".")
     t.add_argument("--keep-reserved", action="store_true", help="keep games played with an AI-ladder deck-set deck (default: drop them, D340)")
     t.add_argument("--ver", default="", help="train on these lab versions only (comma-separated ids from drafts.jsonl's `ver`; D341)")
+    t.add_argument("--play-explore", choices=MD.PLAY_EXPLORE_MODES, default="exclude",
+                   help="games of drafts whose games explored (D358): random moves bias card ratings, so left out by default")
     t.add_argument("--rate-ai-limited", action="store_true", help="rate AI:RemoveDeck:All cards like any other (default: not rated, D343)")
     t.add_argument("--tau-by", choices=("auto", "cv", "evidence"), default="auto",
                    help="how the prior widths are chosen: evidence (type-II ML; sound with one game per draft), cv (grouped by draft; "

@@ -55,6 +55,9 @@ public final class PolicyLobbyPlayerAi extends LobbyPlayerAi {
     private final Outlets outlets;
     private final SearchConfig search;
     private PolicyControllerAi last;
+    /** Play exploration for the NEXT game this lobby player sits in (D358), and its seed; null = none. */
+    private ExploreMath.Config explore;
+    private long exploreSeed;
 
     public PolicyLobbyPlayerAi(final String name, final AIOption sim, final Outlets outlets) {
         this(name, sim, outlets, null);
@@ -79,6 +82,17 @@ public final class PolicyLobbyPlayerAi extends LobbyPlayerAi {
 
     public AIOption simulation() {
         return sim;
+    }
+
+    /**
+     * Explore the next game's decisions (D358) with a generator seeded by
+     * {@code seed} ({@link ExploreMath#seedFor}); null = play as the seat's
+     * policy says.  Read when the game creates its players, so set it before
+     * {@code Match.createGame}.
+     */
+    public void setExplore(final ExploreMath.Config cfg, final long seed) {
+        this.explore = cfg;
+        this.exploreSeed = seed;
     }
 
     /** The controller of the most recent game this lobby player sat in, for its counters. */
@@ -110,6 +124,9 @@ public final class PolicyLobbyPlayerAi extends LobbyPlayerAi {
         }
         final Player ai = new Player(getName(), game, id);
         last = createControllerFor(ai);
+        if (explore != null) {
+            last.setExplorer(new Explorer(new ExploreMath(explore, exploreSeed)));
+        }
         ai.setFirstController(last);
         return ai;
     }

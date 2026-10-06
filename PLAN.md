@@ -9946,6 +9946,13 @@ node --test web/test/cubelab-evolve.test.ts        # 17 tests
    pass them over and the loop can only call them rating-limited. A ratings TSV
    for Omega (`tools/cubelab.sh ratings init cubes/omega-cube-180.md`, then the
    owner's edits, then `evolve … --ratings`) is what lets the loop judge them.
+   **2026-10-03, D356 (branch `c/ratings`):** `evolve --explore on` judges them
+   without a ratings change — a seeded 30% of the discovery drafts force one
+   eligible low-rated card into a deck with a recorded probability, the cut
+   rules read only what they read before, and a weighted forced-vs-not
+   comparison gives each card *holds its own* / *weak when played* /
+   *undecided* / *too few* (never a cut). PC jobs J038 (calibration, 400
+   drafts) and J039 (4 × 2,000 drafts) are written, not posted.
 2. **BR is never drafted**: 0 of 60 decks. Whether that is the drafters' colour
    logic or the BR cards' ratings is unmeasured; the changelog reports it.
 3. **The notes file's `cut` lines are v1's design exclusions, written by the

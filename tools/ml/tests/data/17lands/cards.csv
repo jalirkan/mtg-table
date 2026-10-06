@@ -1,0 +1,14 @@
+id,expansion,name,rarity,color_identity,mana_value,types,is_booster
+101,TST,Plains,basic,W,0,Basic Land - Plains,True
+102,TST,Island,basic,U,0,Basic Land - Island,True
+103,TST,Hallowed Fountain,rare,WU,0,Land - Plains Island,True
+104,TST,Thraben Inspector,common,W,1,Creature - Human Soldier,True
+105,TST,Reflector Mage,uncommon,WU,3,Creature - Human Wizard,True
+106,TST,Soulherder,uncommon,WU,2,Creature - Spirit,True
+107,TST,Lightning Bolt,common,R,1,Instant,True
+108,TST,Clearwater Pathway // Murkwater Pathway,rare,UB,0,Land,True
+201,TST,Grizzly Bears,common,G,2,Creature - Bear,True
+202,TST,Sol Ring,uncommon,,1,Artifact,True
+203,TST,Forest,basic,G,0,Basic Land - Forest,True
+301,TTST,Clue,token,,0,Token Artifact - Clue,False
+302,TTST,"Bird, Soldier",token,W,0,Token Creature - Bird Soldier,False

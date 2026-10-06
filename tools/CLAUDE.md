@@ -221,7 +221,7 @@ exposed to.
 
 **CI runs the gate's engine-free half, and only that**
 (`.github/workflows/checks.yml`, on every push to `main` and every pull request;
-README's *Continuous integration*). Three jobs on `ubuntu-latest`: **`web`**
+README's *Continuous integration*). Four jobs on `ubuntu-latest`: **`web`**
 (`npm ci`, `npm --prefix web run build`, `npm --prefix web test` on Node 24 —
 hermetic because `MTGTABLE_WS_LOGS` is unset and `web/public/art.json` is absent,
 and every reader of it already falls back to the empty index), **`bridge`**
@@ -232,7 +232,8 @@ to) and **`redaction`** (`check-redaction.mjs` over `fixtures/games/` and `fixtu
 checker's selftest, 12d's `narrate-selftest.mjs`, step 6's
 `wire-drift-selftest.mjs`, 12b's catalog check, 12f's coach helper and 12h's
 standard-library half; not 12e, whose card index only
-the network build makes — D183). **It is the one place anything
+the network build makes — D183) and `ml` (12h in full: the `tools/ml` suite with
+numpy and zstandard in a venv, failing if one of their tests skips — D383). **It is the one place anything
 downloads the engine, and the pin still holds there**: the bridge job fetches
 `forge-installer-2.0.14.tar.bz2` (301,832,993 bytes) from Forge's tagged
 `forge-2.0.14` release — never `daily-snapshots` (D109, D110) — checks it against
@@ -305,6 +306,11 @@ built against, and five things about it are rules:
    `code`) is a line an older client ignores, and anything it adds to `/health`
    is a new key: a D292 client must keep working unchanged.
 
+`POST /vision` (D362) is `/coach` with images, for ForgeCoach's photo to
+pool: the images go to the CLI on stdin as one stream-json user message
+(`--input-format stream-json`), so rules 2 to 5 hold for it unchanged — no
+tool, no file, nothing in argv, the same queue.
+
 The match launcher (D303, amendment M53) is the helper's second route:
 `GET`/`POST /match` in `tools/match-launcher.mjs`, contract
 `docs/match-launcher.md`. The first four rules above hold for it — rule 1 in
@@ -324,7 +330,9 @@ starts the bridge again on the next `POST /match`; `/health` says `"engine":
 "running"|"idle"`. It gives up by itself after `--idle-exit-after <minutes>`
 (240; 0 never), and Ctrl-C and SIGTERM stop everything as before. Without the
 launcher (`--no-match`, `--no-coach`) and in the bare board mode the old exit
-stays. `POST /engine/start` wakes it on the last setup (plain Play), and a
+stays. `POST /engine/start` wakes it on the last setup (plain Play; D381: an
+optional `{"aiProfile"}` body swaps the setup's profile, never its decks; D384:
+every wake a fresh `--seed` unless the body names `{"seed"}`), and a
 second `play.sh --engine-only` beside a live helper wakes the first and exits 0
 instead of clashing on its ports. The self-test's fake engine takes the bridge's own `--idle-timeout` to
 exit on cue.

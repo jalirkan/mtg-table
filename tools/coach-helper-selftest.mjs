@@ -23,11 +23,17 @@
 // queue, --queue-max 0); "thinking" (D346: off and low reach the child as
 // MAX_THINKING_TOKENS and CLAUDE_CODE_EFFORT_LEVEL in its env, default and absent
 // leave the env alone, the argv is the same for all three, a bad value is 400 and
-// /health advertises the three); a client that disconnects kills the child and
+// /health advertises the three); /vision (D362: the images and the text as one
+// stream-json user message on stdin with --input-format stream-json, never argv,
+// every other flag as /coach's; bad images 400 with no child, the 24 MB body and
+// 5 MB image limits, /health's "vision": 1); a client that disconnects kills the child and
 // its grandchild; and in --lan mode, from this machine's non-loopback address,
 // the token rule (query or header, loopback exempt), the LAN page's origin, and
-// no Origin refused off loopback.  The LAN half is skipped, and says so, on a
-// machine with no non-loopback IPv4 address.
+// no Origin refused off loopback.  D386: a loopback peer's Host must be
+// localhost or an IP literal (a rebinding name or a tunnel's hostname is 403),
+// admit() as a table, and a NON-LAN helper bound wide by the test seam still
+// refuses a non-loopback peer by its address.  The LAN halves are skipped, and
+// say so, on a machine with no non-loopback IPv4 address.
 //
 //   node tools/coach-helper-selftest.mjs      # exit 0 iff every check passes; ~5 s
 //
@@ -38,6 +44,8 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, sy
 import { request } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
+
+import { admit, loopbackHostOk, startHelper as startInProcess } from './coach-helper.mjs';
 
 const DIR = resolve('var/coach-helper-selftest');
 const BIN = join(DIR, 'bin');
@@ -213,6 +221,9 @@ const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { retu
 writeFileSync(join(DIR, 'config.json'), JSON.stringify({
   coachPort: 8643, wsPort: 8642,
   wsAllowedOrigins: ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'],
+  // D385: these helpers run over the checkout's own var/games/; the automatic review stays off here
+  // (tools/auto-review-selftest.mjs tests it over scratch games).
+  coach: { autoReview: false },
 }));
 
 try {
@@ -223,6 +234,7 @@ try {
   let r = await http({ port: P });
   check('ok with the CLI there', r.status === 200 && json(r.body)?.ok === true && json(r.body)?.helper === 1
     && json(r.body)?.claude === '9.9.9 (Claude Code)' && JSON.stringify(json(r.body)?.models) === '["opus","sonnet","haiku"]', r.body);
+  check('config.json coach.autoReview false: /health says "autoReview": 0 (D385)', json(r.body)?.autoReview === 0, r.body);
   check('/health advertises "thinking": off, low, default (D346)', JSON.stringify(json(r.body)?.thinking) === '["off","low","default"]', r.body);
 
   const hMissing = await startHelper([], { PATH: NODE_ONLY });
@@ -300,6 +312,68 @@ try {
   evs = lines(r.body);
   check('an old CLI: one error line saying update', evs.length === 1 && evs[0].type === 'error' && /update Claude Code/.test(evs[0].message), r.body);
 
+  // ------------------------------------------------------------- /vision (D362)
+  console.log('== /vision, photos');
+  r = await http({ port: P });
+  check('/health advertises "vision": 1 (D362)', json(r.body)?.vision === 1, r.body);
+  check('/coach never reads stdin as stream-json', !JSON.parse(plainArgv).includes('--input-format'), plainArgv);
+  const IMG_A = Buffer.from('fake jpeg bytes, photo one').toString('base64');
+  const IMG_B = Buffer.from('fake png bytes, photo two!!').toString('base64');
+  const vis = (q, headers = {}) => http({ port: P, method: 'POST', path: '/vision', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(q) });
+  lastCall();
+  r = await vis({ system: 'You read cards.', user: 'Which cards? MODE:ok', model: 'sonnet',
+    images: [{ mediaType: 'image/jpeg', data: IMG_A }, { mediaType: 'image/png', data: IMG_B }] });
+  check('/vision: 200 application/x-ndjson, the stream, then done', r.status === 200 && r.headers['content-type'] === 'application/x-ndjson'
+    && lines(r.body).at(-1)?.type === 'done' && terminalCount(lines(r.body)) === 1, `${r.status} ${r.body}`);
+  c = lastCall();
+  check('/vision: -p --input-format stream-json, and otherwise /coach\'s argv', c.argv[0] === '-p' && c.argv[1] === '--input-format' && c.argv[2] === 'stream-json'
+    && JSON.stringify(c.argv.filter((_, i) => i !== 1 && i !== 2)) === plainArgv.replace('"sonnet"', '"sonnet"').replace('"--system-prompt","s"', '"--system-prompt","You read cards."'), c.argv.join(' '));
+  check('/vision: still every tool off, no MCP, dontAsk, one turn', c.argv[c.argv.indexOf('--tools') + 1] === '' && c.argv.includes('--strict-mcp-config')
+    && c.argv[c.argv.indexOf('--permission-mode') + 1] === 'dontAsk' && c.argv[c.argv.indexOf('--max-turns') + 1] === '1' && !c.argv.some((a) => /dangerously|bypass/i.test(a)));
+  const vin = c.stdin.split('\n').filter(Boolean);
+  const vmsg = json(vin[0] ?? '');
+  check('/vision: stdin is ONE stream-json user message: the images in order, then the text', vin.length === 1 && vmsg?.type === 'user' && vmsg.message?.role === 'user'
+    && JSON.stringify(vmsg.message.content) === JSON.stringify([
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: IMG_A } },
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: IMG_B } },
+      { type: 'text', text: 'Which cards? MODE:ok' }]), c.stdin.slice(0, 400));
+  check('/vision: no image data and no user text in argv', !c.argv.some((a) => a.includes(IMG_A) || a.includes('Which cards?')));
+  for (let i = 0; i < 40 && existsSync(c.cwd); i++) await sleep(50);
+  check('/vision: an empty temp working directory (no image file), removed afterwards', c.cwdEntries.length === 0 && !existsSync(c.cwd), `${c.cwdEntries}`);
+  for (let i = 0; i < 40 && !/; 2 images;/.test(h.log()); i++) await sleep(50);   // logged when the child has exited
+  check('the helper logs the image count, never the data', /; sonnet; 2 images;/.test(h.log()) && !h.log().includes(IMG_A), h.log().slice(-400));
+  r = await vis({ system: 's', user: 'MODE:auth', images: [{ mediaType: 'image/jpeg', data: IMG_A }] });
+  check('/vision logged out: the same one error line as /coach', lines(r.body).length === 1 && /not logged in/.test(lines(r.body)[0]?.message ?? ''), r.body);
+  lastCall();   // drop the logged-out call: call-<pid>.json files are read in directory order, not call order
+  r = await vis({ system: 's', user: 'MODE:ok', images: [{ mediaType: 'image/jpeg', data: IMG_A }], thinking: 'off' });
+  c = lastCall();
+  check('/vision takes "thinking" as /coach does', c.env.MAX_THINKING_TOKENS === '0' && lines(r.body).at(-1)?.type === 'done', JSON.stringify(c.env));
+  const badImages = [
+    ['no images', undefined], ['none', []], ['not an array', { mediaType: 'image/jpeg', data: IMG_A }],
+    ['nine', Array.from({ length: 9 }, () => ({ mediaType: 'image/jpeg', data: IMG_A }))],
+    ['a bad media type', [{ mediaType: 'image/svg+xml', data: IMG_A }]],
+    ['not base64', [{ mediaType: 'image/jpeg', data: 'this is not base64 at all!!' }]],
+    ['an unknown field', [{ mediaType: 'image/jpeg', data: IMG_A, path: '/etc/passwd' }]],
+    ['a URL instead of data', [{ mediaType: 'image/jpeg', url: 'https://example.com/a.jpg' }]],
+    ['an image over 5 MB', [{ mediaType: 'image/jpeg', data: 'A'.repeat(5 * 1024 * 1024 + 4) }]],
+  ];
+  for (const [what, images] of badImages) {
+    lastCall();
+    r = await vis({ system: 's', user: 'MODE:ok', ...(images === undefined ? {} : { images }) });
+    check(`/vision with ${what}: 400, no child started`, r.status === 400 && json(r.body)?.type === 'error' && readdirSync(CALLS).length === 0, `${r.status} ${r.body.slice(0, 200)}`);
+  }
+  r = await vis({ system: 's', user: '', images: [{ mediaType: 'image/jpeg', data: IMG_A }] });
+  check('/vision with no user text: 400', r.status === 400);
+  r = await http({ port: P, method: 'POST', path: '/vision', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: 's', user: 'u', images: Array.from({ length: 6 }, () => ({ mediaType: 'image/jpeg', data: 'A'.repeat(4.5 * 1024 * 1024) })) }) });
+  check('/vision over 24 MB: 413', r.status === 413 && json(r.body)?.type === 'error', `${r.status}`);
+  r = await http({ port: P, path: '/vision' });
+  check('GET /vision: 405', r.status === 405);
+  r = await http({ port: P, method: 'OPTIONS', path: '/vision', headers: { Origin: 'https://jalirkan.github.io', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Private-Network': 'true' } });
+  check('/vision preflight from ForgeCoach: 204', r.status === 204 && r.headers['access-control-allow-origin'] === 'https://jalirkan.github.io');
+  lastCall();
+  r = await vis({ system: 's', user: 'MODE:ok', images: [{ mediaType: 'image/jpeg', data: IMG_A }] }, { Origin: 'https://evil.example' });
+  check('another site may not POST /vision (no child started)', r.status === 403 && readdirSync(CALLS).length === 0);
+
   // ------------------------------------------------------------- requests
   console.log('== /coach, the request');
   r = await http({ port: P, method: 'POST', path: '/coach', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: 's', user: 'x'.repeat(600 * 1024) }) });
@@ -342,6 +416,61 @@ try {
     && r.headers['access-control-allow-private-network'] === 'true', JSON.stringify(r.headers));
   r = await http({ port: P, method: 'OPTIONS', path: '/coach', headers: { Origin: 'https://evil.example', 'Access-Control-Request-Method': 'POST' } });
   check('preflight from another site: 403', r.status === 403 && !r.headers['access-control-allow-private-network']);
+
+  // ------------------------------------------------------------- D386: the peer and its Host
+  console.log('== D386: the peer, its Host, and admit() as a table');
+  r = await http({ port: P, headers: { Host: `evil.example:${P}` } });
+  check('a DNS name as Host from loopback (rebinding, no Origin): 403 host', r.status === 403 && /^origin refused: Host is not a loopback name/.test(json(r.body)?.message ?? ''), r.body);
+  r = await http({ port: P, path: '/match', headers: { Host: 'rebind.attacker.test' } });
+  check('...on /match too', r.status === 403);
+  r = await http({ port: P, path: '/review', headers: { Host: 'rebind.attacker.test' } });
+  check('...and /review', r.status === 403);
+  r = await http({ port: P, headers: { Host: `my-tunnel.example.com`, Origin: 'https://jalirkan.github.io' } });
+  check('a tunnel hostname with an allowed Origin: still 403', r.status === 403);
+  r = await http({ port: P, headers: { Host: `localhost:${P}`, Origin: 'http://localhost:5173' } });
+  check('Host localhost:<port>: 200', r.status === 200);
+  r = await http({ port: P, headers: { Host: `127.0.0.1:${P}` } });
+  check('Host 127.0.0.1:<port>: 200', r.status === 200);
+  r = await http({ port: P, method: 'OPTIONS', path: '/coach', headers: { Host: 'evil.example', Origin: 'https://jalirkan.github.io', 'Access-Control-Request-Method': 'POST' } });
+  check('a preflight with a DNS-name Host: 403', r.status === 403);
+  check('403 bodies carry nosniff', r.headers['x-content-type-options'] === 'nosniff');
+  r = await http({ port: P, headers: { Host: '192.168.1.5:9000' } });
+  check('a port relay (socat, ssh -L) keeping a LAN Host, from loopback: 403 host', r.status === 403 && /^origin refused:/.test(json(r.body)?.message ?? ''), r.body);
+  r = await http({ port: P, headers: { Host: `127.0.0.2:${P}` } });
+  check('Host 127.0.0.2:<port> (127.0.0.0/8): 200', r.status === 200);
+  check('loopbackHostOk: localhost, *.localhost, loopback IPv4 and [IPv6] literals, any valid port', ['localhost', 'LOCALHOST:8643', 'app.localhost:1', '127.0.0.1', '127.0.0.1:8643', '127.0.0.2', '127.255.0.9:65535', '[::1]:8643', '[::1]', '[::ffff:127.0.0.1]:8643'].every(loopbackHostOk));
+  check('loopbackHostOk: DNS names, non-loopback literals, 0.0.0.0, bad ports, junk, missing', !['evil.example', 'localhost.evil.example', '127.0.0.1.nip.io', 'a b', '', '[::g]', '[evil]:1', 'localhost:99999999',
+    '192.168.1.5:9000', '192.168.1.5:8643', '10.0.0.1', '0.0.0.0', '0.0.0.0:8643', '[::]:8643', '[::ffff:10.0.0.1]', '[fe80::1]', '127.0.0.1:65536', 'localhost:70000'].some(loopbackHostOk) && !loopbackHostOk(undefined));
+  check('admit: both new refusals say "origin refused:" (ForgeCoach sorts refusals by /origin/i)', /^origin refused:/.test(admit({ lan: false, origins: [], wsPort: 8642, method: 'GET', token: '', loop: false, host: 'x' }).message)
+    && /^origin refused:/.test(admit({ lan: false, origins: [], wsPort: 8642, method: 'GET', token: '', loop: true, host: '10.0.0.1' }).message));
+  const base = { lan: false, host: '127.0.0.1:8643', origin: undefined, origins: ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'], wsPort: 8642, method: 'GET', given: undefined, token: '' };
+  const A = (o) => admit({ ...base, ...o });
+  check('admit: loopback, no Origin: ok', A({ loop: true }).ok);
+  check('admit: a non-loopback peer without --lan: 403 peer, even with an allowed Origin', A({ loop: false, origin: 'https://jalirkan.github.io' }).why === 'peer'
+    && A({ loop: false, method: 'OPTIONS', origin: 'https://jalirkan.github.io' }).why === 'peer');
+  const T = 'aTokenOfSixteenPlus0123';
+  check('admit --lan: a phone with the token and the LAN page origin: ok', A({ loop: false, lan: true, token: T, given: T, host: 'desk.local:8643', origin: 'http://desk.local:8642' }).ok);
+  check('admit --lan: a phone without it: 403 token', A({ loop: false, lan: true, token: T, given: 'x', host: '10.0.0.2:8643', origin: 'http://10.0.0.2:8642' }).why === 'token');
+  check('admit --lan: a loopback peer still needs a loopback Host', A({ loop: true, lan: true, token: T, host: 'evil.example' }).why === 'host');
+  check('admit: an allowed Origin echoed, Vary set', A({ loop: true, origin: 'https://jalirkan.github.io' }).cors['Access-Control-Allow-Origin'] === 'https://jalirkan.github.io');
+  {
+    const ip0 = Object.values(networkInterfaces()).flat().find((a) => a && a.family === 'IPv4' && !a.internal)?.address;
+    if (!ip0) {
+      console.log('  SKIP  the non-loopback peer against a non-LAN helper: no non-loopback IPv4 address');
+    } else {
+      // A non-LAN helper bound to every interface by the test seam: the refusal is
+      // by the peer's address, not by the bind (D386).
+      const logs = [];
+      const wide = startInProcess({ port: 0, lan: false, token: '', wsPort: 8642, origins: base.origins, timeoutS: 5, bindHost: '0.0.0.0', log: (l) => logs.push(l) });
+      const WP = await wide.listen();
+      r = await http({ host: ip0, port: WP, localAddress: ip0, headers: { Origin: 'https://jalirkan.github.io' } });
+      check(`a non-LAN helper answers ${ip0} 403 even when bound wide (remote address, not bind)`, r.status === 403 && /this machine only/.test(json(r.body)?.message ?? ''), r.body);
+      r = await http({ host: ip0, port: WP, localAddress: ip0, method: 'POST', path: '/match', headers: { Origin: 'https://jalirkan.github.io', 'Content-Type': 'application/json' }, body: '{}' });
+      check('...and POST /match from it: 403', r.status === 403);
+      check('...logged as a peer refusal', logs.some((l) => / -> 403 \(peer\)/.test(l)), logs.join(' | '));
+      wide.close();
+    }
+  }
 
   // ------------------------------------------------------------- one at a time, the queue (D325), disconnect
   console.log('== one question at a time; the queue; superseding; a client that leaves');

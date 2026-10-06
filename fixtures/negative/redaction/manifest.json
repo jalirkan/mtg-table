@@ -72,6 +72,48 @@
     "why": "A3, D315: Experimental Frenzy says \"you may look\" -- private, even though Forge scripts it MayLookAt$ Player"
   },
   {
+    "file": "a9-look-permission-under-gonti.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "A9, D371: the viewer's Gonti exiled the opponent's top card face down and may look at it -- an alt on an opponent-owned card in exile, dug from a library while the viewer's trigger resolved (the control for the a9 probes below)"
+  },
+  {
+    "file": "a9-exiled-face-down-named-without-a-dig.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D371: an opponent's face-down card in exile with an alt, and no dig from a library behind it"
+  },
+  {
+    "file": "a9-dig-by-the-opponent.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D371: the dig was the OPPONENT's effect -- their look permission is not the viewer's"
+  },
+  {
+    "file": "a9-alt-appears-after-the-dig.jsonl",
+    "level": "fail",
+    "expect": "only a look permission",
+    "why": "A9, D371: a look permission comes with the dig; an alt that appears a frame later has no source"
+  },
+  {
+    "file": "a9-opponent-morph-named.jsonl",
+    "level": "fail",
+    "expect": "not the viewing seat",
+    "why": "A9: the opponent's face-down permanent carries its face -- the leak canFaceDownBeShownTo exists for"
+  },
+  {
+    "file": "a9-stolen-morph-named-for-its-owner.jsonl",
+    "level": "fail",
+    "expect": "not the viewing seat",
+    "why": "A9, D371: in play a face-down card's face is its CONTROLLER's -- the owner of a stolen morph does not see it"
+  },
+  {
+    "file": "own-hand-card-redacted.jsonl",
+    "level": "fail",
+    "expect": "has no name -- redaction is too aggressive (it is a redacted stub",
+    "why": "the viewer's own hand card served as a redacted stub: over-redaction, and the checker names the stub's controller"
+  },
+  {
     "file": "a6-library-reveal-is-not-a-whitelist.jsonl",
     "level": "fail",
     "expect": "nothing earlier in this log",
@@ -156,6 +198,18 @@
     "why": "amendment M47: yourProfile is the base name of a .ai file, never a path"
   },
   {
+    "file": "m56-aipolicy-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M56: the baseline plus hello_ok.match.aiPolicy exactly as MtgTable writes it -- the control for the m56 probe"
+  },
+  {
+    "file": "m56-aipolicy-not-a-policy.jsonl",
+    "level": "fail",
+    "expect": "aiPolicy must be one of plain, outlets, search",
+    "why": "amendment M56: aiPolicy is one word of plain, outlets, search -- never a knob string or a path"
+  },
+  {
     "file": "m47-pace-not-a-number.jsonl",
     "level": "fail",
     "expect": "\"paceMs\" must be a positive integer",
@@ -234,15 +288,45 @@
     "why": "amendment M55 / D347: decision records belong to AI-vs-AI recordings, never a human seat's log"
   },
   {
-    "file": "m56-search-prior-present.jsonl",
+    "file": "m57-explore-present.jsonl",
     "level": "pass",
     "expect": "PASS",
-    "why": "amendment M56: a decision record whose search ranked its candidates by a prior -- the control for the m56 probe"
+    "why": "amendment M57: an exploring recording -- its header, one randomised decision and the summary's counts -- the control for the m57 probes"
   },
   {
-    "file": "m56-generated-is-not-a-count.jsonl",
+    "file": "m57-explore-without-header.jsonl",
+    "level": "fail",
+    "expect": "no playExplore",
+    "why": "amendment M57 / D358: an explore mark only in a recording whose header says it explored"
+  },
+  {
+    "file": "m57-explore-forge-names-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "which its state frame does not show",
+    "why": "amendment M57 / D358: the mark's Forge answer is a token like any other -- naming a card the viewer cannot see is a leak"
+  },
+  {
+    "file": "m57-explore-carries-a-label.jsonl",
+    "level": "fail",
+    "expect": "explore carries an unexpected key",
+    "why": "amendment M57 / D358: an explore mark is a rule and a token -- nothing else"
+  },
+  {
+    "file": "m57-playexplore-in-a-seat-recording.jsonl",
+    "level": "fail",
+    "expect": "both \"playExplore\" and \"transport\"",
+    "why": "amendment M57 / D358: a seat a person plays never explores"
+  },
+  {
+    "file": "m58-search-prior-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M58: a decision record whose search ranked its candidates by a prior -- the control for the m58 probe"
+  },
+  {
+    "file": "m58-generated-is-not-a-count.jsonl",
     "level": "fail",
     "expect": "search generated",
-    "why": "amendment M56 / D355: `generated` is how many candidates were generated -- a positive integer, never a string"
+    "why": "amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string"
   }
 ]

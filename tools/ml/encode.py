@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Encode frame logs into training rows for a position evaluator (D305).
 
-Reads `frames.jsonl` / `.jsonl.gz` frame logs (docs/protocol.md §8) -- seat
+Reads `frames.jsonl` / `.jsonl.gz` / `.jsonl.zst` frame logs (docs/protocol.md §8) -- seat
 recordings and AI-vs-AI recordings alike -- and emits one row per
 decision-relevant state: a `state` frame in which the VIEWING seat (the
 header's `seat`) holds priority in a main phase or a combat step, the game not
@@ -56,16 +56,17 @@ allowed).  Several --vocab files are merged in order.
 from __future__ import annotations
 
 import argparse
-import gzip
 import hashlib
 import json
 import os
 import re
 import sys
 import unicodedata
-import zlib
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Iterator
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fio  # noqa: E402  -- .jsonl / .gz / .zst (D370)
 
 SCHEMA_VERSION = 1
 
@@ -412,7 +413,7 @@ class Game:
     def game_key(self) -> str:
         """Unique per recorded game: file, game id, start time, seat."""
         h = self.header
-        raw = f"{os.path.basename(self.path)}|{self.index}|{h.get('gameId')}|{h.get('startedAt')}|{h.get('seat')}"
+        raw = f"{fio.key_name(self.path)}|{self.index}|{h.get('gameId')}|{h.get('startedAt')}|{h.get('seat')}"
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     @property
@@ -447,9 +448,7 @@ class Game:
 
 
 def _open(path: str):
-    if path.endswith(".gz"):
-        return gzip.open(path, "rt", encoding="utf-8")
-    return open(path, encoding="utf-8")
+    return fio.open_log(path)   # .jsonl, .jsonl.gz or .jsonl.zst (D370)
 
 
 def _lines(path: str) -> Iterator[str]:
@@ -459,7 +458,7 @@ def _lines(path: str) -> Iterator[str]:
     with _open(path) as f:
         try:
             yield from f
-        except (EOFError, zlib.error):
+        except fio.TRUNCATED:
             return
 
 
@@ -847,7 +846,7 @@ def encode_game(game: Game, schema: Schema, phases: list[str] | None = None) -> 
         if prev is not None and vec == prev:
             continue  # an identical consecutive decision state
         prev = vec
-        rows.append(Row(game.game_key, game.split_group, os.path.basename(game.path),
+        rows.append(Row(game.game_key, game.split_group, fio.key_name(game.path),
                         str(st.get("gameId") or game.header.get("gameId")), int(f.get("seq") or 0),
                         int(st.get("turn") or 0), str(st.get("phase")),
                         1 if st.get("activePlayer") == seat else 0, label,
@@ -858,17 +857,18 @@ def encode_game(game: Game, schema: Schema, phases: list[str] | None = None) -> 
 
 
 def find_logs(paths: list[str]) -> list[str]:
-    """Files named, and every *.jsonl / *.jsonl.gz under a directory named, sorted."""
+    """Files named, and every *.jsonl / *.jsonl.gz / *.jsonl.zst under a directory named, sorted;
+    a game archived to .zst is listed once, as its .zst (D370)."""
     out: list[str] = []
     for p in paths:
         if os.path.isdir(p):
             for root, _dirs, files in os.walk(p):
                 for fn in files:
-                    if fn.endswith(".jsonl") or fn.endswith(".jsonl.gz"):
+                    if fio.is_log(fn):
                         out.append(os.path.join(root, fn))
         else:
             out.append(p)
-    return sorted(set(out))
+    return fio.prefer_zst(out)
 
 
 # ---------------------------------------------------------------- a cube-lab run folder

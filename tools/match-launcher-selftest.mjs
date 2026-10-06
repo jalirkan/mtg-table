@@ -31,6 +31,16 @@
 // leaves play.sh and the helper up with /health "engine":"idle" and no current
 // match, a POST /match starts a fresh engine from there, Ctrl-C works while asleep,
 // --idle-exit-after ends play.sh by itself, and --no-match keeps the old exit.
+// D381: POST /engine/start with {"aiProfile"} wakes the engine on that profile
+// (canonical case, the only --ai-profile on its command line, every other flag as
+// the last setup's), and it stays the last setup's; a bad profile or body is a
+// 400 that starts nothing; while running, nothing restarts and a warning says so.
+// D384: every wake deals a fresh --seed (two bare wakes, two seeds, each echoed in
+// the 200), {"seed": n} is honoured exactly and for that wake only, a --seed play.sh was
+// started with holds for every wake, a seed a wake that lost the race to a running
+// engine could not apply is a warning, and a bad seed is a 400 that starts nothing.
+// D386: a DNS-name Host from loopback (rebinding) is 403 on /match and
+// /engine/start, and a --match-dir whose symlinks lead out of var/ is refused.
 //
 //   node tools/match-launcher-selftest.mjs      # exit 0 iff every check passes; ~30 s
 //
@@ -38,11 +48,14 @@
 // helper's own self-test); CI's redaction job.
 
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer, request } from 'node:http';
 import { connect } from 'node:net';
+import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { deflateRawSync } from 'node:zlib';
+
+import { checkWake, realInside } from './match-launcher.mjs';
 
 const REL = 'var/match-launcher-selftest';
 const DIR = resolve(REL);
@@ -87,6 +100,7 @@ console.log('ai profile    = ' + (flag('--ai-profile') || 'Default'));
 let pol = 'plain';
 argv.forEach((a, i) => { if (a === '--ai-policy') pol = argv[i + 1]; else if (a === '--ai-search') pol = 'search'; });
 if (pol !== 'plain') console.log('ai policy     = ' + pol + (pol === 'search' ? '  (' + (flag('--ai-search') || 'ms=1500') + ')' : ''));
+console.log('seed          = ' + (flag('--seed') || '0'));
 console.log('games/match   = ' + (flag('--games') || '1'));
 if (you.name.startsWith('Crash') || ai.name.startsWith('Crash')) { console.error('ENGINE CRASHED (a fake one)'); ev({ crashed: true }); bye(1); }
 console.log('deck you      = ' + you.name + ' (' + you.cards + ' cards)');
@@ -198,6 +212,9 @@ try {
   const first = starts();
   check('one engine started', first.length === 1);
   check('the first run had no inherited MTGTABLE_LAN_TOKEN', first[0]?.token === null);
+  const seed0 = argOf(first[0]?.argv ?? [], '--seed');
+  check('a bare play.sh gives the bridge a random --seed, once, and prints it (the bridge\'s own default is 0: one shuffle, one game id, every run)',
+    /^\d+$/.test(seed0 ?? '') && first[0].argv.filter((a) => a === '--seed').length === 1 && A.out().includes(`seed ${seed0} (random`), first[0]?.argv?.join(' '));
   r = await http({ port: A.coachPort, path: '/match' });
   check('GET /match: the configured match, names and counts only', r.status === 200 && r.json?.ok === true && r.json?.state === 'running'
     && typeof r.json?.match?.yourDeck?.name === 'string' && JSON.stringify(Object.keys(r.json.match.aiDeck)) === '["name","cards"]'
@@ -220,7 +237,7 @@ try {
   };
   const t0 = Date.now();
   r = await post(A.coachPort, req1, { Origin: 'https://jalirkan.github.io' });
-  check('POST /match: 200 with the new decks', r.status === 200 && r.json?.ok === true, `${r.status} ${r.body}`);
+  check('POST /match: 200 with the new decks, and (D384) the seed the engine dealt', r.status === 200 && r.json?.ok === true && Number.isSafeInteger(r.json?.seed), `${r.status} ${r.body}`);
   check('the reply names your deck and its path', r.json?.yourDeck?.name === NAME && /^var\/match-launcher-selftest\/a\/match\/m\d{13}\/you\.dck$/.test(r.json?.yourDeck?.path ?? '') && r.json?.yourDeck?.cards === 40, r.body);
   check("the reply's aiDeck is {name, cards} and nothing else", JSON.stringify(r.json?.aiDeck) === '{"name":"AI Draft","cards":40}', r.body);
   check('the profile is canonical, the games as asked, no warnings', r.json?.aiProfile === 'Reckless' && r.json?.games === 1 && Array.isArray(r.json?.warnings) && r.json.warnings.length === 0, r.body);
@@ -237,6 +254,8 @@ try {
   check('the engine was restarted once', s.length === 2);
   check('with the new decks, profile and games', argOf(second, '--deck') === r.json?.yourDeck?.path && argOf(second, '--ai-deck') === r.json?.yourDeck?.path.replace('you.dck', 'ai.dck')
     && argOf(second, '--ai-profile') === 'Reckless' && argOf(second, '--games') === '1', second.join(' '));
+  check('the new match has a random seed of its own, once, the one the 200 named', /^\d+$/.test(argOf(second, '--seed') ?? '') && second.filter((a) => a === '--seed').length === 1
+    && r.json?.seed === Number(argOf(second, '--seed')), second.join(' '));
   check('and every other flag kept (--transport ws, the port, --keep-open)', argOf(second, '--transport') === 'ws' && argOf(second, '--port') === String(A.port) && second.includes('--keep-open')
     && second.filter((a) => a === '--deck').length === 1 && second.filter((a) => a === '--games').length === 1, second.join(' '));
   check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
@@ -290,6 +309,10 @@ try {
   check('another site may not POST /match: 403', r.status === 403 && !r.headers['access-control-allow-origin']);
   r = await http({ port: A.coachPort, method: 'OPTIONS', path: '/match', headers: { Origin: 'https://jalirkan.github.io', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Private-Network': 'true' } });
   check('the preflight from ForgeCoach: 204 with private network', r.status === 204 && r.headers['access-control-allow-private-network'] === 'true' && /POST/.test(r.headers['access-control-allow-methods'] ?? ''));
+  r = await http({ port: A.coachPort, path: '/match', headers: { Host: 'rebind.attacker.test' } });
+  check('GET /match with a DNS-name Host from loopback (rebinding): 403 (D386)', r.status === 403 && !r.json?.match, r.body);
+  r = await http({ port: A.coachPort, method: 'POST', path: '/engine/start', headers: { Host: 'rebind.attacker.test' } });
+  check('POST /engine/start with a DNS-name Host: 403 (D386)', r.status === 403);
   r = await http({ port: A.coachPort, method: 'PUT', path: '/match' });
   check('PUT /match: 405', r.status === 405);
   check('none of them restarted the engine', starts().length === before, `${starts().length} vs ${before}`);
@@ -470,11 +493,107 @@ try {
   check('asleep', r.json?.engine === 'idle', r.body);
   r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
   check('POST /engine/start: 200 on the startup decks', r.status === 200 && r.json?.already === false && typeof r.json?.yourDeck?.name === 'string' && r.json?.yourDeck?.cards > 0, `${r.status} ${r.body}`);
-  const w0 = onW()[0].argv.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id');
+  const without = (v, f) => v.filter((a, i) => a !== f && v[i - 1] !== f);
+  const w0 = without(without(onW()[0].argv, '--game-id'), '--seed');
   const w1 = onW()[1]?.argv ?? [];
-  check('with the same flags as the first start and a game id of its own', JSON.stringify(w1.filter((a, i, v) => a !== '--game-id' && v[i - 1] !== '--game-id')) === JSON.stringify(w0) && /^match-m\d{13}$/.test(argOf(w1, '--game-id') ?? ''), w1.join(' '));
+  check('with the same flags as the first start, a game id of its own and (D384) a seed of its own', JSON.stringify(without(without(w1, '--game-id'), '--seed')) === JSON.stringify(w0)
+    && /^match-m\d{13}$/.test(argOf(w1, '--game-id') ?? '') && w1.filter((a) => a === '--seed').length === 1 && /^\d+$/.test(argOf(w1, '--seed') ?? ''), w1.join(' '));
+  check('...and the 200 says which seed the engine dealt', r.json?.seed === Number(argOf(w1, '--seed')), r.body);
+
+  // D381: the same wake, with the AI profile ForgeCoach's Setup picked (no decks).
+  console.log('== /engine/start with {"aiProfile"} (D381)');
+  check('checkWake: no body is the D308 wake', JSON.stringify(checkWake('')) === '{"aiProfile":null,"seed":null,"problems":[]}' && checkWake(undefined).aiProfile === null && checkWake('  \n').problems.length === 0);
+  check('checkWake: {} and unknown keys are the D308 wake', checkWake('{}').aiProfile === null && checkWake('{"x":1}').problems.length === 0);
+  check('checkWake: a profile in any case, canonical', checkWake('{"aiProfile":"cAuTiOuS"}').aiProfile === 'Cautious');
+  check('checkWake: a bad profile, JSON or shape is a problem', checkWake('{"aiProfile":"Hard"}').problems.length === 1 && checkWake('{"aiProfile":3}').problems.length === 1
+    && checkWake('nope').problems[0] === 'the body is not JSON' && checkWake('[1]').problems.length === 1 && checkWake('"Cautious"').problems.length === 1);
+  check('checkWake (D384): a seed is a non-negative safe integer', checkWake('{"seed":0}').seed === 0 && checkWake('{"seed":9007199254740991,"aiProfile":"reckless"}').seed === Number.MAX_SAFE_INTEGER
+    && checkWake('{"seed":42}').aiProfile === null && checkWake('{}').seed === null);
+  check('checkWake (D384): a negative, fractional, string, too-large or null seed is a problem', ['-1', '1.5', '"7"', '9007199254740992', '1e300', 'null', 'true'].every((v) => {
+    const c = checkWake(`{"seed":${v}}`);
+    return c.problems.length === 1 && /^seed must be a whole number/.test(c.problems[0]) && c.seed === null;
+  }) && checkWake('{"seed":-1,"aiProfile":"Hard"}').problems.length === 2);
+  r = await http({ port: W.coachPort });
+  check('/health: engine_start_profile 1, engine_start_seed 1', r.json?.engine_start === 1 && r.json?.engine_start_profile === 1 && r.json?.engine_start_seed === 1, r.body);
+  const wn = onW().length;
+  const wakeWith = (body, port = W.coachPort) => http({ port, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json', Origin: 'https://jalirkan.github.io' }, body });
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  // Refusals start nothing.
+  for (const [what, body] of [['an unknown profile', '{"aiProfile":"Hard"}'], ['a non-string profile', '{"aiProfile":["Cautious"]}'], ['a body that is not JSON', 'Cautious'], ['a JSON array', '["Cautious"]'],
+    ['a negative seed (D384)', '{"seed":-1}'], ['a fractional seed (D384)', '{"seed":2.5}'], ['a string seed (D384)', '{"seed":"42"}'], ['an unsafe seed (D384)', '{"seed":18446744073709551615}']]) {
+    r = await wakeWith(body);
+    check(`${what}: 400 with problems, nothing started`, r.status === 400 && r.json?.ok === false && Array.isArray(r.json?.problems) && onW().length === wn, `${r.status} ${r.body}`);
+  }
+  r = await http({ port: W.coachPort });
+  check('...still asleep', r.json?.engine === 'idle', r.body);
+  r = await wakeWith('{"aiProfile":"cautious","aiDeck":"ignored"}');
+  check('asleep, {"aiProfile":"cautious"}: 200, woken on Cautious', r.status === 200 && r.json?.already === false && r.json?.aiProfile === 'Cautious'
+    && JSON.stringify(Object.keys(r.json.aiDeck)) === '["name","cards"]', `${r.status} ${r.body}`);
+  const wp = onW().at(-1)?.argv ?? [];
+  check('...one --ai-profile, Cautious; every other flag as the last setup, a game id of its own', onW().length === wn + 1 && wp.filter((a) => a === '--ai-profile').length === 1
+    && argOf(wp, '--ai-profile') === 'Cautious' && JSON.stringify(without(without(without(wp, '--game-id'), '--ai-profile'), '--seed')) === JSON.stringify(without(w0, '--ai-profile'))
+    && /^match-m\d{13}$/.test(argOf(wp, '--game-id') ?? '') && argOf(wp, '--game-id') !== argOf(w1, '--game-id'), wp.join(' '));
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
+  check('then a wake with no body keeps Cautious: it is the last setup now', r.status === 200 && r.json?.already === false && r.json?.aiProfile === 'Cautious'
+    && argOf(onW().at(-1)?.argv ?? [], '--ai-profile') === 'Cautious', `${r.status} ${r.body}`);
+  // D384: a fresh shuffle on every wake (two random seeds collide 1 time in 100,000).
+  const wakeSeeds = [w1, wp, onW().at(-1)?.argv ?? []].map((v) => argOf(v, '--seed'));
+  check('D384: two bare wakes deal different seeds, one --seed each, the 200 echoing it', wakeSeeds[0] !== wakeSeeds[2] && /^\d+$/.test(wakeSeeds[2] ?? '')
+    && onW().at(-1).argv.filter((a) => a === '--seed').length === 1 && r.json?.seed === Number(wakeSeeds[2]), `${wakeSeeds.join(' ')} ${r.body}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  const wsn = onW().length;
+  r = await wakeWith('{"seed":4242}');
+  const ws = onW().at(-1)?.argv ?? [];
+  check('D384: {"seed":4242} is honoured: one --seed 4242, the 200 says 4242, Cautious kept', r.status === 200 && r.json?.already === false && r.json?.seed === 4242
+    && onW().length === wsn + 1 && argOf(ws, '--seed') === '4242' && ws.filter((a) => a === '--seed').length === 1 && argOf(ws, '--ai-profile') === 'Cautious', `${r.status} ${r.body} | ${ws.join(' ')}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
+  const wa = onW().at(-1)?.argv ?? [];
+  check('D384: {"seed"} held for that wake only: the next bare wake deals a fresh one, the 200 echoing it', r.status === 200 && r.json?.already === false && onW().length === wsn + 2
+    && /^\d+$/.test(argOf(wa, '--seed') ?? '') && argOf(wa, '--seed') !== '4242' && wa.filter((a) => a === '--seed').length === 1 && r.json?.seed === Number(argOf(wa, '--seed')), `${r.status} ${r.body} | ${wa.join(' ')}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
   W.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && W.proc.exitCode === null; i++) await sleep(50);
+  // D384: a --seed play.sh was started with holds for every wake without one, as for /match.
+  const P = await startPlay(['--seed', '31337', '--', '--idle-timeout', '1'], 'wakeseed');
+  const onP = () => starts().filter((e) => argOf(e.argv, '--port') === String(P.port));
+  const pSeeds = [];
+  for (let k = 0; k < 2; k++) {
+    for (let i = 0; i < 100 && alive(onP().at(-1)?.pid); i++) await sleep(100);
+    await untilIdle(P.coachPort);
+    r = await http({ port: P.coachPort, method: 'POST', path: '/engine/start' });
+    const pa = onP().at(-1)?.argv ?? [];
+    pSeeds.push(r.status === 200 && r.json?.already === false && r.json?.seed === 31337 && pa.filter((a) => a === '--seed').length === 1 ? argOf(pa, '--seed') : `${r.status} ${r.body}`);
+  }
+  check('D384: play.sh --seed 31337, woken twice: --seed 31337 both times, the 200 saying so', onP().length === 3 && argOf(onP()[0].argv, '--seed') === '31337' && pSeeds.every((x) => x === '31337'), pSeeds.join(' | '));
+  for (let i = 0; i < 100 && alive(onP().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(P.coachPort);
+  P.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && P.proc.exitCode === null; i++) await sleep(50);
+  // While an engine runs (no idle limit here): nothing restarts, the profile is not applied, a warning says so.
+  const R = await startPlay([], 'wakerun');
+  const onR = () => starts().filter((e) => argOf(e.argv, '--port') === String(R.port));
+  const rn = onR().length;
+  r = await wakeWith('{"aiProfile":"Reckless"}', R.coachPort);
+  check('while running: 200 already, Default kept, a warning, no restart', r.status === 200 && r.json?.already === true && r.json?.aiProfile === 'Default'
+    && r.json?.warnings?.length === 1 && /Reckless was not applied/.test(r.json.warnings[0]) && onR().length === rn, `${r.status} ${r.body}`);
+  r = await wakeWith('{"aiProfile":"default"}', R.coachPort);
+  check('while running, the profile it plays: no warning', r.status === 200 && r.json?.already === true && r.json?.warnings === undefined && onR().length === rn, r.body);
+  r = await wakeWith('{"aiProfile":"Hard"}', R.coachPort);
+  check('while running, a bad profile: still 400', r.status === 400 && onR().length === rn, r.body);
+  r = await wakeWith('{"seed":7}', R.coachPort);
+  check('while running, a seed (D384): 200 already, a warning that it was not applied, no restart', r.status === 200 && r.json?.already === true
+    && r.json?.warnings?.length === 1 && /seed 7 was not applied/.test(r.json.warnings[0]) && onR().length === rn, r.body);
+  r = await wakeWith('{"seed":-7}', R.coachPort);
+  check('while running, a bad seed (D384): still 400', r.status === 400 && onR().length === rn, r.body);
+  R.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && R.proc.exitCode === null; i++) await sleep(50);
 
   console.log('== --idle-exit-after: play.sh gives up by itself');
   const X = await startPlay(['--idle-exit-after', '0.05', '--', '--idle-timeout', '1'], 'idlex');
@@ -488,7 +607,9 @@ try {
   check("--idle-exit-after soon is refused", badArg === 1);
 
   console.log('== --no-match: the old behaviour, play.sh exits with the engine');
-  const M = await startPlay(['--no-match', '--', '--idle-timeout', '1'], 'nomatch');
+  const M = await startPlay(['--no-match', '--seed', '7', '--', '--idle-timeout', '1'], 'nomatch');
+  const mStart = starts().filter((e) => argOf(e.argv, '--port') === String(M.port)).at(-1)?.argv ?? [];
+  check('a --seed of the caller\'s is passed as given, and no random one beside it', argOf(mStart, '--seed') === '7' && mStart.filter((a) => a === '--seed').length === 1 && !/\(random;/.test(M.out()), mStart.join(' '));
   for (let i = 0; i < 100 && M.proc.exitCode === null; i++) await sleep(100);
   check('play.sh exited when the engine did (rc 1)', M.proc.exitCode === 1 && /the bridge exited \(1\)/.test(M.out()), `${M.proc.exitCode}\n${M.out().slice(-300)}`);
   check('no sleeping message', !/engine asleep/.test(M.out()));
@@ -511,6 +632,11 @@ try {
     const dir = process.argv[1];
     process.on('SIGUSR1', () => {
       const r = JSON.parse(fs.readFileSync(path.join(dir, 'request.json'), 'utf8'));
+      if (r.wake) {   // D384: the race -- play.sh found an engine running, and says "ready" with its match
+        const match = { yourDeck: { name: 'Running', path: null, cards: 40 }, aiDeck: { name: 'AI', cards: 40 }, aiProfile: 'Default', games: 3, seed: 99 };
+        fs.writeFileSync(path.join(dir, 'status.json'), JSON.stringify({ id: r.id, state: 'ready', match }));
+        return;
+      }
       const cards = (f) => fs.readFileSync(f, 'utf8').split('[main]')[1].split('[sideboard]')[0].split('\\n').reduce((n, l) => n + (Number((/^(\\d+) /.exec(l) || [])[1]) || 0), 0);
       const name = (f) => /^Name=(.*)$/m.exec(fs.readFileSync(f, 'utf8'))[1];
       const match = { yourDeck: { name: name(r.deck), path: r.deck, cards: cards(r.deck) }, aiDeck: { name: name(r.aiDeck), cards: cards(r.aiDeck) }, aiProfile: r.aiProfile, games: r.games };
@@ -521,7 +647,7 @@ try {
   procs.push(sup);
   await sleep(300);
   const cp = await freePort();
-  const H = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(cp), '--match-dir', `${REL}/sup/match`, '--supervisor', String(sup.pid), '--cards-zip', zipPath, '--match-timeout', '10'], { env: { ...process.env, PATH }, stdio: ['ignore', 'pipe', 'pipe'] });
+  const H = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(cp), '--no-auto-review', '--match-dir', `${REL}/sup/match`, '--supervisor', String(sup.pid), '--cards-zip', zipPath, '--match-timeout', '10'], { env: { ...process.env, PATH }, stdio: ['ignore', 'pipe', 'pipe'] });
   procs.push(H);
   let hlog = '';
   H.stdout.on('data', (d) => { hlog += d; });
@@ -534,12 +660,23 @@ try {
   r = await post(cp, { deck: deck('Known', LAND), aiDeck: deck('AI', [...LAND, [1, 'Black Lotus'], [2, 'Moxen Galore']]) });
   check('an unknown card: 400 naming it and the deck', r.status === 400 && /aiDeck: 2 card names the engine does not know: Black Lotus; Moxen Galore/.test(r.json?.message ?? ''), r.body);
   // Seven names from the zip (Fire, Ice and "Fire // Ice" among them), plus D14's custom card.
+  // D384: a wake that loses the race to an engine already running (play.sh restarts
+  // nothing and says "ready"): the requested seed was not dealt, and a warning says so.
+  writeFileSync(join(supDir, 'engine.json'), JSON.stringify({ state: 'idle', at: new Date().toISOString(), exitsAt: null }) + '\n');
+  r = await http({ port: cp, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json' }, body: '{"seed":4242}' });
+  check('D384: a seed asked for, another seed dealt (the race): 200, the running seed, a warning', r.status === 200 && r.json?.already === false && r.json?.seed === 99
+    && r.json?.warnings?.length === 1 && /seed 4242 was not applied/.test(r.json.warnings[0]), `${r.status} ${r.body}`);
+  r = await http({ port: cp, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json' }, body: '{"seed":99}' });
+  check('...the seed asked for is the one dealt: no warning', r.status === 200 && r.json?.seed === 99 && r.json?.warnings?.length === 0, `${r.status} ${r.body}`);
+  r = await http({ port: cp, method: 'POST', path: '/engine/start' });
+  check('...no seed asked for: no warning', r.status === 200 && r.json?.seed === 99 && r.json?.warnings?.length === 0, `${r.status} ${r.body}`);
+  rmSync(join(supDir, 'engine.json'));
   check('the card index was read from the zip', /card index: \d+ names from .*cardsfolder\.zip/.test(hlog) && Number(/card index: (\d+)/.exec(hlog)?.[1]) >= 7, hlog);
 
   // ------------------------------------------------------------- no supervisor
   console.log('== without play.sh: /match is off');
   const np = await freePort();
-  const N = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(np)], { env: { ...process.env, PATH }, stdio: 'ignore' });
+  const N = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', String(np), '--no-auto-review'], { env: { ...process.env, PATH }, stdio: 'ignore' });
   procs.push(N);
   for (let i = 0; i < 100; i++) { if (await http({ port: np }).then(() => true, () => false)) break; await sleep(50); }
   r = await http({ port: np });
@@ -556,6 +693,18 @@ try {
     const p = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', '0', '--match-dir', '/tmp', '--supervisor', String(process.pid)], { stdio: 'ignore' });
     p.on('exit', (code) => res(code === 2));
   }));
+  // D386: a symlink under var/ that leads out of it is outside, at startup and after.
+  const outside = mkdtempSync(join(tmpdir(), 'match-launcher-selftest-outside-'));
+  symlinkSync(outside, join(DIR, 'escape'));
+  check('realInside: a plain dir under var/, an absent one, var/ itself', realInside(resolve('var'), join(DIR, 'a')) && realInside(resolve('var'), join(DIR, 'nope', 'x')) && realInside(resolve('var'), resolve('var')));
+  check('realInside: through a symlink out of var/, "..", or a sibling with var as a prefix', !realInside(resolve('var'), join(DIR, 'escape', 'match'))
+    && !realInside(resolve('var'), join(DIR, '..', '..', 'tools')) && !realInside(resolve('var'), resolve('var-not')));
+  check('--match-dir through a symlink out of var/ is refused at startup (D386)', await new Promise((res) => {
+    const p = spawn(process.execPath, ['tools/coach-helper.mjs', '--port', '0', '--match-dir', `${REL}/escape/match`, '--supervisor', String(process.pid)], { stdio: 'ignore' });
+    p.on('exit', (code) => res(code === 2));
+  }));
+  rmSync(join(DIR, 'escape'), { force: true });
+  rmSync(outside, { recursive: true, force: true });
 } catch (e) {
   failed++;
   console.log(`  FAIL  the self-test threw: ${e.stack}`);

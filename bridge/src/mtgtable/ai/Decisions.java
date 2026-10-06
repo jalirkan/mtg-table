@@ -291,10 +291,17 @@ public final class Decisions {
      * and the decision marked incomplete.
      */
     public static List<Decision> targets(final SpellAbility sa, final Player ai, final String source) {
-        return quiet(() -> targets0(sa, ai, source));
+        return targets(sa, ai, source, null);
     }
 
-    private static List<Decision> targets0(final SpellAbility sa, final Player ai, final String source) {
+    /** {@link #targets(SpellAbility, Player, String)}, each part play exploration changed carrying its mark (D358). */
+    public static List<Decision> targets(final SpellAbility sa, final Player ai, final String source,
+                                         final java.util.Map<SpellAbility, Decision.Explore> marks) {
+        return quiet(() -> targets0(sa, ai, source, marks));
+    }
+
+    private static List<Decision> targets0(final SpellAbility sa, final Player ai, final String source,
+                                           final java.util.Map<SpellAbility, Decision.Explore> marks) {
         final List<Decision> out = new ArrayList<>();
         for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
             if (!s.usesTargeting()) {
@@ -302,6 +309,7 @@ public final class Decisions {
             }
             final Decision d = base("target", ai);
             d.source = source;
+            d.explore = marks == null ? null : marks.get(s);
             final Set<String> opts = new LinkedHashSet<>();
             final TargetRestrictions tr = s.getTargetRestrictions();
             if (tr != null) {

@@ -42,7 +42,8 @@ for a human reader.
 ## What you may not add
 
 Contributions are welcome inside these lines. Each is a decision with its reasons
-in `DECISIONS.md`, and a change that crosses one will not be merged.
+in `DECISIONS.md` (D1–D378) or `docs/decisions/` (D379 on), and a change that
+crosses one will not be merged.
 
 - **Only CC0 assets, each with a written provenance** (**D54**): a model, clip or
   texture enters through `tools/assets-manifest.json` — its URL, bytes, sha256,
@@ -513,7 +514,7 @@ declared attackers and blockers are a strip of their own.
 ### Continuous integration
 
 `.github/workflows/checks.yml` runs on every push to `main` and every pull
-request: **the half of the gate that needs no running engine**, in three jobs
+request: **the half of the gate that needs no running engine**, in four jobs
 side by side on GitHub's `ubuntu-latest`.
 
 | job | what it runs |
@@ -521,6 +522,7 @@ side by side on GitHub's `ubuntu-latest`.
 | `web` | `npm ci`, `npm --prefix web run build`, `npm --prefix web test` — Node 24. Hermetic as it is locally: `MTGTABLE_WS_LOGS` is unset, so the ws-log suite replays the committed fixtures, and there is no `web/public/art.json`, so every reader of it falls back to the empty index, as in a fresh checkout. Nothing calls Scryfall. |
 | `bridge` | `tools/lint-bridge-selftest.sh` and `tools/lint-bridge.sh` (no engine needed), then the pinned engine (below), `tools/check-forge.sh` and `./bridge/build.sh` — javac and its eight self-tests, on Temurin 21 |
 | `redaction` | `check-redaction.mjs` over `fixtures/games/` and `fixtures/synthetic/`, `check-redaction-selftest.mjs`, `narrate-selftest.mjs`, `wire-drift-selftest.mjs` and `build-workshop-catalog.ts --check` — plain Node, no npm install |
+| `ml` | the whole `tools/ml` suite (gate step 12h in full) with numpy and zstandard in a venv; it fails if a numpy or zstandard test skips (D383) |
 
 **The engine in CI.** CI is the one place anything downloads Forge, and it
 downloads only what you would: the `forge-installer-2.0.14.tar.bz2` asset
@@ -3089,7 +3091,7 @@ mtg-table/
 |---|---|
 | [`docs/protocol.md`](docs/protocol.md) | **The wire spec.** The Java emitter and the TypeScript reducer are both written against it. Change it first. Its *Amendments* list at the top says what changed and why. |
 | [`PLAN.md`](PLAN.md) | The milestones M0..M7 and every lane since, the deferred list, and the questions only the user can settle; *Open now*, at the top, indexes every open follow-up and question. |
-| [`DECISIONS.md`](DECISIONS.md) | Every load-bearing decision, dated, with the alternatives that were rejected. A decision's number is final and gaps are allowed (**D200**); the most recent are **D200–D202**. |
+| [`DECISIONS.md`](DECISIONS.md), [`docs/decisions/`](docs/decisions/) | Every load-bearing decision, dated, with the alternatives that were rejected: D1–D378 in `DECISIONS.md`, and from **D379** on one file per decision under `docs/decisions/` (`node tools/decisions.mjs list` is the index of both). A decision's number is final and gaps are allowed (**D200**). |
 | [`CLAUDE.md`](CLAUDE.md) | Working conventions: the hard rules, the environment, the gate and the policies (commits, decision numbers); `bridge/`, `web/`, `web/src/arena/` and `tools/` each have a `CLAUDE.md` of their own for the conventions of that code. |
 | [`docs/guides/java-for-typescript-people.md`](docs/guides/java-for-typescript-people.md) | The Java this repo actually uses, explained from TypeScript — plus the `javap`-first workflow, the enum/nullability traps the wire format depends on, and (chapter 9) a map of `WireGuiGame.java` with one ask and one act followed through the threads. |
 | [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md) | The architecture spec the whole plan rests on. |

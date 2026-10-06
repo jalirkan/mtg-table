@@ -61,7 +61,12 @@
 #   ./scripts/play.sh --engine-only --no-coach   # no coach helper (D292), so no match launcher either
 #   ./scripts/play.sh --engine-only --no-match   # the coach helper without /match (D303)
 #   ./scripts/play.sh --coach-port 8653          # the coach helper on another port
+#   ./scripts/play.sh --engine-only --eval-model var/ml/models/night-1-eval.json   # D361: the win chance's model
+#                                                # (that path is the default when it exists; --no-eval: none;
+#                                                # D368: a,b,c / a directory / a manifest is an ensemble, and
+#                                                # var/ml/models/night-1-ensemble.json is preferred when it exists)
 #   ./scripts/play.sh --engine-only --idle-exit-after 60   # give up 60 min after the engine sleeps (D308)
+#   ./scripts/play.sh --no-human-collect    # do not copy finished games into var/ml/human/ (D369, below)
 #   ./scripts/play.sh --arena               # open the 3D arena instead of the board
 #   ./scripts/play.sh --no-open             # do not launch a browser
 #   ./scripts/play.sh --no-keep-open        # close the socket the moment the match ends
@@ -99,7 +104,9 @@
 #     that says so) and the bridge serves it at / (--site-dir <path> serves a local
 #     ForgeCoach build instead, e.g. its dist/ built with --base ./);
 #   - prints the phone URL for every non-loopback IPv4 address, best guess first,
-#     and a QR code of the first if `qrencode` is installed.
+#     and a QR code of the first if `qrencode` is installed.  With the coach
+#     helper off its default port (--coach-port), the URL also carries
+#     `&coachPort=<n>`, which tells ForgeCoach's page where the helper is.
 #
 # THE TOKEN IS THE ONLY LOCK.  It is for a home network you trust: anyone on the
 # same network who sees the URL can take the seat.  Ctrl-C stops it, and the next
@@ -185,13 +192,24 @@
 # every click of its menu entry.  When the coach port already answers with the
 # match launcher on, this script (before the gate, the build or any bind) asks the
 # helper to wake the sleeping engine -- POST /engine/start, which restarts the
-# last match setup -- prints "Engine ready", and exits 0, leaving the first
+# last match setup (D381: with the request's AI profile in place of the setup's
+# when its body names one; that profile is the last setup's from then on; the
+# second launch sends no body; D384: each wake a fresh --seed, or the body's
+# {"seed"}, or a --seed play.sh was started with) -- prints "Engine ready", and exits 0, leaving the first
 # play.sh running; or, with the engine running, says so and exits 0.  Not with
 # --port, --no-coach or --no-match.
 #
 # The previous run's log is kept as var/play/server.prev.log.  --no-match starts
 # the helper without the launcher; --no-coach starts no helper, so neither.  The
 # launcher works in every mode (bare, --engine-only, --lan).
+#
+# THE HUMAN TEST SET (D369).  Every game you finish against the AI is copied into
+# var/ml/human/ (tools/ml/human_collect.py: your seat's own log from
+# var/games/<gameId>/, plus a line in var/ml/human/manifest.json), so the
+# evaluator can be scored on human games (tools/ml/human_eval.py).  It runs at
+# start -- printing "human test set: N games" -- when the engine falls asleep
+# (D308) and at exit, takes well under a second when nothing is new, never stops
+# play.sh, and copies nothing twice.  --no-human-collect turns it off.
 #
 # The ports come from config.json (`wsPort`, `webPort`) and are overridable with
 # --port / --web-port.  The web port is vite's `strictPort: false`, so if 5173 is
@@ -234,6 +252,9 @@ IDLE_SINCE_S=0                   # D308: $SECONDS when it fell asleep
 IDLE_EXPIRED=0
 PORT_EXPLICIT=0                  # D308: --port given, so this is a second bridge on purpose
 PASSTHROUGH=()
+EVAL_ARGS=()                     # D361: the coach helper's /eval (--eval-model <path>, --no-eval)
+HUMAN_COLLECT=1                  # D369: copy finished games into var/ml/human/ at start, asleep and exit
+HUMAN_COLLECTED_AT_STOP=0
 
 # D303: the coach helper's /match asks for a restart with SIGUSR1.  IGNORED
 # before anything else, because an untrapped USR1 would end this script, and
@@ -303,7 +324,10 @@ while [ $# -gt 0 ]; do
     --no-coach)  COACH=0; shift ;;
     --coach-port) COACH_PORT="$2"; shift 2 ;;
     --no-match)  MATCH=0; shift ;;
+    --eval-model) EVAL_ARGS+=(--eval-model "$2"); shift 2 ;;
+    --no-eval)   EVAL_ARGS+=(--no-eval); shift ;;
     --idle-exit-after) IDLE_EXIT_MIN="${2:-}"; shift 2 ;;
+    --no-human-collect) HUMAN_COLLECT=0; shift ;;
     --help|-h)   sed -n '5,/^set -euo pipefail/p' "$0" | sed '$d'; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
@@ -316,6 +340,17 @@ esac
 IDLE_EXIT_SEC="$(node -e 'process.stdout.write(String(Math.round(Number(process.argv[1]) * 60)))' "$IDLE_EXIT_MIN")"
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
+
+# D369: the human test set -- finished human-vs-AI games from var/games/ into
+# var/ml/human/, one status line.  Never fails this script; not in the self-test.
+human_collect() {
+  [ "$HUMAN_COLLECT" = "1" ] && [ -z "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] || return 0
+  command -v python3 >/dev/null 2>&1 || { echo "human test set: python3 not found, games not collected (D369)"; return 0; }
+  local t=()
+  command -v timeout >/dev/null 2>&1 && t=(timeout 120)
+  "${t[@]+"${t[@]}"}" python3 tools/ml/human_collect.py --quiet 2>/dev/null \
+    || echo "human test set: the collector failed (run python3 tools/ml/human_collect.py to see why)"
+}
 die() { printf '\033[31mplay.sh: %s\033[0m\n' "$*" >&2; exit 1; }
 
 # --------------------------------------------------------------------------
@@ -407,6 +442,7 @@ else echo "AI:   a mirror of your deck  (--mirror, or config.json match.aiDeck i
 [ "${AI_SEARCH:-0}" = "1" ] && echo "AI policy: search (D312-D314: outlet policy + look-ahead search)"
 passthrough_has --ai-profile && echo "AI profile: (the --ai-profile after --)" \
   || echo "AI profile: $AI_PROFILE"
+human_collect
 
 # --------------------------------------------------------------------------
 # 0b: --lan's site (amendment M51, D289) -- before anything slow, so a missing
@@ -493,8 +529,14 @@ fi
 # --------------------------------------------------------------------------
 
 mkdir -p "$PLAY_VAR"
+# D386: server.log carries the --lan pairing token (the phone's URL line, which
+# this script reads back for the helper and a restart), so the folder is the
+# owner's alone: another account on this machine cannot read the token.
+chmod 700 "$PLAY_VAR" 2>/dev/null || true
 SERVER_LOG="$PLAY_VAR/server.log"
 : > "$SERVER_LOG"
+# D386: the log's last lines for the terminal, the --lan token cut out of them.
+server_tail() { tail -"$1" "$SERVER_LOG" | sed 's/token=[A-Za-z0-9_-]*/token=…/g'; }
 
 SERVER_PID=""
 VITE_PID=""
@@ -531,6 +573,11 @@ stop() {
   if [ "$MATCH_ON" = "1" ]; then
     rm -f "$MATCH_DIR/current.json" "$MATCH_DIR/request.json" "$MATCH_DIR/status.json" "$MATCH_DIR/engine.json" 2>/dev/null || true
   fi
+  # D369: the games this session finished, now that the bridge has flushed its logs.
+  if [ "$HUMAN_COLLECTED_AT_STOP" = "0" ] && [ -n "${SERVER_LOG:-}" ]; then
+    HUMAN_COLLECTED_AT_STOP=1
+    human_collect
+  fi
 }
 stop_bridge() {
   # The JVM gets a moment to close the socket and flush its frame log; the
@@ -556,6 +603,13 @@ case " ${PASSTHROUGH[*]+${PASSTHROUGH[*]}} " in
   *" --games "*|*" --games="*) : ;;
   *) KEEP_ARGS+=(--games "$GAMES_DEFAULT") ;;
 esac
+# --seed: the caller's wins; otherwise a random one, printed so the game can be
+# replayed (as spectate.sh does).  Without it the bridge's seed is 0: every bare
+# play.sh would deal the same shuffle and name its game human-ws-0 every time.
+if ! passthrough_has --seed; then
+  KEEP_ARGS+=(--seed "$(( (RANDOM << 15 | RANDOM) % 100000 ))")
+  echo "seed ${KEEP_ARGS[-1]} (random; --seed ${KEEP_ARGS[-1]} replays this shuffle)"
+fi
 # BRIDGE_ARGS is the bridge's whole command line after the class; D303's restart
 # replaces it and keeps the previous one to fall back on.
 BRIDGE_ARGS=(--transport ws --port "$WS_PORT"
@@ -608,10 +662,10 @@ say "waiting for GET http://127.0.0.1:$WS_PORT/health"
 READY=0
 wait_ready || READY=$?
 if [ "$READY" = "1" ]; then
-  tail -30 "$SERVER_LOG" >&2
+  server_tail 30 >&2
   die "the bridge exited before it was ready (full log: $SERVER_LOG)"
 fi
-[ "$READY" = "0" ] || { tail -30 "$SERVER_LOG" >&2; die "no /health after 60 s (full log: $SERVER_LOG)"; }
+[ "$READY" = "0" ] || { server_tail 30 >&2; die "no /health after 60 s (full log: $SERVER_LOG)"; }
 echo "ready"
 
 # --------------------------------------------------------------------------
@@ -674,6 +728,11 @@ start_coach() {
   # D303: the match launcher -- the helper writes var/match/ and signals this script.
   [ "$MATCH" = "1" ] && args+=(--match-dir "$MATCH_DIR" --supervisor "$$")
   [ "$MATCH" = "1" ] && rm -f "$MATCH_DIR/engine.json" 2>/dev/null
+  # D361: the win chance -- the helper loads var/ml/models/night-1-eval.json by itself when it exists.
+  [ "${#EVAL_ARGS[@]}" -gt 0 ] && args+=("${EVAL_ARGS[@]}")
+  # D385: the automatic review (config.json coach.autoReview) -- never under a self-test's fake engine,
+  # whose helper would otherwise queue the real var/games/ (as D369's collector is skipped there).
+  [ -n "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] && args+=(--no-auto-review)
   : > "$COACH_LOG"
   COACH_HELPER_TOKEN="$token" node tools/coach-helper.mjs "${args[@]}" >>"$COACH_LOG" 2>&1 &
   COACH_PID=$!
@@ -729,6 +788,7 @@ match_write() {
     const loaded = () => {
       const you = last(/^deck you\s+= (.*) \((\d+) cards\)\s*$/), ai = last(/^deck ai\s+= (.*) \((\d+) cards\)\s*$/);
       const prof = last(/^ai profile\s+= (\S+)/), pol = last(/^ai policy\s+= (\S+)/), games = last(/^games\/match\s+= (\d+)/), p = last(/^deck \(you\)\s+= (.*?)\s*$/);
+      const seed = last(/^seed\s+= (-?\d+)\s*$/);   // D384: the shuffle the engine dealt (a caller --seed may be negative)
       let rel = p ? p[1] : null;
       if (rel && rel.startsWith(root + path.sep)) rel = rel.slice(root.length + 1);
       return {
@@ -736,6 +796,7 @@ match_write() {
         aiDeck: ai ? { name: ai[1], cards: Number(ai[2]) } : null,          // M44: a name and a count, never a list
         aiProfile: prof ? prof[1] : null, games: games ? Number(games[1]) : null,
         aiPolicy: pol ? pol[1] : prof ? "plain" : null,   // D333: the bridge prints no policy line for plain
+        seed: seed && Number.isSafeInteger(Number(seed[1])) ? Number(seed[1]) : null,
       };
     };
     const o = kind === "current" ? { id, match: loaded(), at: new Date().toISOString() } : { id, state };
@@ -783,7 +844,12 @@ restart_match() {
     const id = typeof r.id === "string" && /^m[0-9]{13}$/.test(r.id) ? r.id : "";
     const bad = (why) => { console.log("BAD"); console.log(id); console.log(why); process.exit(0); };
     if (!id) bad("no request id");
-    if (r.wake === true) { for (const x of ["WAKE", id, "", "", "", "", "", ""]) console.log(x); process.exit(0); }   // D308 /engine/start
+    if (r.wake === true) {   // D308 /engine/start; D381: an optional profile, a .ai name; D384: an optional seed
+      if (r.aiProfile !== undefined && (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile))) bad("not a profile name");
+      if (r.seed !== undefined && (!Number.isSafeInteger(r.seed) || r.seed < 0)) bad("seed is not a non-negative safe integer");
+      for (const x of ["WAKE", id, "", "", r.aiProfile ?? "", "", "", "", r.seed === undefined ? "" : String(r.seed)]) console.log(x);
+      process.exit(0);
+    }
     const dir = process.argv[2];
     if (r.deck !== `${dir}/${id}/you.dck` || r.aiDeck !== `${dir}/${id}/ai.dck`) bad("deck paths are not <match dir>/<id>/you.dck and ai.dck");
     if (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile)) bad("not a profile name");
@@ -812,7 +878,7 @@ restart_match() {
     [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
     say "match $id — restarting the engine on ForgeCoach's decks (D303)"
   else
-    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)"
+    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)${req[4]:+, AI profile ${req[4]} (D381)}${req[8]:+, seed ${req[8]} (D384)}"
   fi
   match_write status "$id" restarting
   local prev=("${BRIDGE_ARGS[@]}") pass=() skip=0 a
@@ -835,16 +901,32 @@ restart_match() {
   local next=()
   if [ "$wake" = "1" ]; then
     # The last setup as it was (the previous match's decks, or the startup ones),
-    # but a game id of its own, for the same reason as below.
+    # but a game id of its own, for the same reason as below -- and, D381, the
+    # request's AI profile when it names one (then it replaces --ai-profile, and
+    # stays the last setup's from here on).  D384: and a shuffle of its own -- the
+    # request's seed, else a --seed play.sh was started with (as /match keeps it),
+    # else a fresh random one: never the last wake's seed again.
+    local wprof="${req[4]:-}" wseed="${req[8]:-}"
     skip=0
     for a in "${BRIDGE_ARGS[@]}"; do
       if [ "$skip" = "1" ]; then skip=0; continue; fi
       case "$a" in
-        --game-id) skip=1 ;;
-        --game-id=*) : ;;
+        --game-id|--seed) skip=1 ;;
+        --game-id=*|--seed=*) : ;;
+        --ai-profile) if [ -n "$wprof" ]; then skip=1; else next+=("$a"); fi ;;
+        --ai-profile=*) [ -n "$wprof" ] || next+=("$a") ;;
         *) next+=("$a") ;;
       esac
     done
+    [ -n "$wprof" ] && next+=(--ai-profile "$wprof")
+    if [ -z "$wseed" ] && passthrough_has --seed; then
+      skip=0
+      for a in "${PASSTHROUGH[@]}"; do
+        if [ "$skip" = "1" ]; then skip=0; wseed="$a"; continue; fi
+        case "$a" in --seed) skip=1 ;; --seed=*) wseed="${a#--seed=}" ;; esac
+      done
+    fi
+    next+=(--seed "${wseed:-$(( (RANDOM << 15 | RANDOM) % 100000 ))}")
     next+=(--game-id "match-$id")
   else
     next=(--transport ws --port "$WS_PORT" --deck "${req[2]}" --ai-deck "${req[3]}" --ai-profile "${req[4]}")
@@ -852,6 +934,9 @@ restart_match() {
     # Its own game id: with a --seed the bridge's default id would repeat, and a
     # client reads a repeated gameId as a reconnect (§2.1), not a new match.
     next+=(--games "${req[5]}" --game-id "match-$id" "${SITE_ARGS[@]+"${SITE_ARGS[@]}"}" "${pass[@]+"${pass[@]}"}")
+    # And a seed of its own unless the caller gave one (then it is in pass): without
+    # one the bridge's is 0, the same shuffle for every match on the same decks.
+    passthrough_has --seed || next+=(--seed "$(( (RANDOM << 15 | RANDOM) % 100000 ))")
   fi
 
   # Never two engines: the old one is gone, and its port quiet, before the next starts.
@@ -904,7 +989,7 @@ restart_match() {
     return 0
   fi
   match_write status "$id" failed "$why: $tail_txt (and the previous match did not start again)" 0
-  tail -30 "$SERVER_LOG" >&2
+  server_tail 30 >&2
   die "neither the new match nor the previous one started (logs: $PLAY_VAR/server.failed.log, $SERVER_LOG)"
 }
 
@@ -933,6 +1018,13 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       [ "${#PAGES[@]}" -gt 0 ] && break
       sleep 0.25
     done
+    # The page ForgeCoach serves from the bridge finds the coach helper on its
+    # own host at 8643; a helper elsewhere (--coach-port, config.json coachPort)
+    # is named in the link, `&coachPort=<n>`, which ForgeCoach's helperTarget
+    # reads.  Absent means 8643, so a default run's link is unchanged.
+    if [ "$COACH_PORT" != "8643" ]; then
+      for i in "${!PAGES[@]}"; do PAGES[i]="${PAGES[i]}&coachPort=$COACH_PORT"; done
+    fi
     say "LAN — open this on your phone (same Wi-Fi), then click Play"
     if [ "${#PAGES[@]}" -eq 0 ]; then
       echo "  no non-loopback IPv4 address found -- is this machine on a network? (log: $SERVER_LOG)"
@@ -971,12 +1063,13 @@ if [ "$ENGINE_ONLY" = "1" ]; then
       # the linger closed, D286's idle limit, or a crash) must not take the helper
       # with it: a draft takes longer than either limit.  No JVM runs while asleep.
       say "the bridge exited ($SERVER_RC) — its last lines:"
-      tail -20 "$SERVER_LOG"
+      server_tail 20
       SERVER_PID=""
       IDLE=1
       IDLE_SINCE_S=$SECONDS
       rm -f "$MATCH_DIR/current.json" 2>/dev/null || true
       engine_write idle "the engine exited with $SERVER_RC"
+      human_collect   # D369: the match that just ended
       if [ "$IDLE_EXIT_SEC" -gt 0 ]; then
         echo "engine asleep: play.sh and the coach helper stay up; a match request from ForgeCoach starts it again; play.sh exits after $IDLE_EXIT_MIN min with none (--idle-exit-after, 0 = never)"
       else
@@ -992,7 +1085,7 @@ if [ "$ENGINE_ONLY" = "1" ]; then
     exit 0
   fi
   say "the bridge exited ($SERVER_RC) — its last lines:"
-  tail -20 "$SERVER_LOG"
+  server_tail 20
   stop
   exit "$SERVER_RC"
 fi
@@ -1050,7 +1143,7 @@ while kill -0 "$VITE_PID" 2>/dev/null; do
   [ "$MATCH_PENDING" = "1" ] && restart_match   # D303
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then
     say "the bridge exited — its last lines:"
-    tail -20 "$SERVER_LOG"
+    server_tail 20
     break
   fi
   usr1_on; sleep 1; usr1_off

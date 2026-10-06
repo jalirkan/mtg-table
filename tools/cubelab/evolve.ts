@@ -20,7 +20,12 @@
 //                  one opponent, ~2.4 games a match), so the counts are divided
 //                  by the generation's design effect first (evolve-stats.ts).
 //                  Tested once it played minGames games; a rejection counts only
-//                  when its rate is at least dominantMargin over the mean;
+//                  when its rate is at least dominantMargin over the mean.
+//                  FROM D377 (a new run; a folder started before keeps the mean):
+//                  the null is the card's colour-adjusted expectation -- its
+//                  decks' colour pairs' win rates in the same batch, its own
+//                  matches left out, shrunk (colour-null.ts) -- and the size
+//                  filter is dominantMargin over that;
 //   dominant-pick  H0: the share of its grids in which it went in the FIRST line
 //                  taken is at most dominantFirstPickLo (tested once dealt in
 //                  minSeen drafts); counts only when its shrunk win rate is at
@@ -37,7 +42,10 @@
 // CONFIRMATION: the candidates are tested again, the same rule, on a batch of
 // fresh drafts with a disjoint seed range (sized by confirmPlan for the effect
 // that matters, at power confirmPower), with Holm at confirmAlpha across the
-// candidates.  Only a confirmed candidate is cut.
+// candidates.  Only a confirmed candidate is cut.  A card confirmed again in a
+// later generation (D357, knob confirmPool 1) is judged on every one of its
+// confirmation batches pooled -- a failed one counts against it -- at
+// confirmAlpha / 2^(attempt - 1); its first attempt is exactly the above.
 
 // A lead that does not pass is `watch` ("insufficient data"), with an estimate
 // of the drafts per generation it would take to discover.  Never cut:
@@ -80,11 +88,13 @@ import type { Fact } from './cards.ts';
 import { producesOf } from './cards.ts';
 import type { Cube, CubeCard } from './cube.ts';
 import { sectionFor } from './cubedoc.ts';
-import { SHRINK_K } from './meta.ts';
+import { choiceRecord, exploreTable, isPlain, type ExploreTable } from './explore.ts';
+import { colourBaselines, colourTest, type ColourBaseline, type WinNull } from './colour-null.ts';
+import { buildMeta, SHRINK_K } from './meta.ts';
 import { initialRating } from './ratings.ts';
 import { benjaminiHochberg, binomLower, binomUpper, designEffect, holm, requiredN, type DeckGames } from './evolve-stats.ts';
 import { playedDeck, wilson, type CardInfo } from './report.ts';
-import type { DraftRecord } from './run.ts';
+import type { DraftRecord, RunMeta } from './run.ts';
 
 export interface EvolveKnobs {
   swaps: number;
@@ -104,6 +114,8 @@ export interface EvolveKnobs {
   confirmMinDrafts: number;
   confirmMaxDrafts: number;
   confirmSeedOffset: number;
+  /** D357: 1 pools a card's every confirmation batch on a rule and halves the level each repeat; 0 is D331 (each batch alone).  A folder from before D357 resumes as 0. */
+  confirmPool: number;
   watchWinMargin: number;
   colourSlack: number;
   minSignposts: number;
@@ -136,6 +148,7 @@ export const EVOLVE_DEFAULTS: EvolveKnobs = {
   confirmMinDrafts: 20,
   confirmMaxDrafts: 300,
   confirmSeedOffset: 1000000,
+  confirmPool: 1,
   watchWinMargin: 0.12,
   colourSlack: 2,
   minSignposts: 2,
@@ -159,6 +172,7 @@ export function mergeKnobs(base: EvolveKnobs, args: string[]): EvolveKnobs {
     if (!(k in base)) throw new Error(`--evolve: unknown knob ${k} (known: ${Object.keys(base).join(', ')})`);
     out[k] = Number(m[2]);
   }
+  if (out.confirmPool !== 0 && out.confirmPool !== 1) throw new Error(`--evolve confirmPool is 0 (D331) or 1 (D357), got ${out.confirmPool}`);
   return out;
 }
 
@@ -363,6 +377,8 @@ export interface CardStat {
   winRate: number;
   shrunk: number;
   ci: [number, number];
+  /** D377: the card's colour-adjusted null on this batch (batchStats; absent where nothing computed it). */
+  colour?: ColourBaseline;
 }
 
 /** For each card, how often it went in the first line taken from its grid (grid drafts only). */
@@ -383,20 +399,16 @@ export function firstTakes(recs: DraftRecord[]): Map<string, number> {
 }
 
 /**
- * Every card's numbers.  meta.json counts a card's decks and games over a played
- * deck's NONLAND cards (its pairs and key cards are about spells), so a land
- * would read as never played; with `info` (cards.json), a land's decks, games
- * and wins are counted from the played decks' full lists instead.
+ * Every card's numbers, from meta.json, which counts a nonbasic land's decks and
+ * games like a spell's since D380 (before it, this function counted lands from
+ * the played decks' full lists itself, to the same numbers).  With `info`
+ * (cards.json), each nonland card's on-colour pools and decks too.
  */
 export function cardStats(meta: MetaDoc, recs: DraftRecord[], info?: Record<string, CardInfo>): Map<string, CardStat> {
   const ft = firstTakes(recs);
-  const lands = new Map<string, { decks: number; games: number; wins: number }>();
   const onCol = new Map<string, { pools: number; decks: number }>();
   if (info) {
     for (const rec of recs) for (const k of [0, 1] as const) {
-      const me = k === 0 ? 'A' : 'B';
-      const decisive = rec.match.games.filter((g) => g.winner !== 'draw');
-      const won = decisive.filter((g) => g.winner === me).length;
       const pd = playedDeck(rec, k, info);
       const main = new Set(pd.main.map(([, n]) => n));
       const cols = `${pd.key}${pd.splash ?? ''}`;
@@ -408,24 +420,10 @@ export function cardStats(meta: MetaDoc, recs: DraftRecord[], info?: Record<stri
         if (main.has(name)) o.decks++;
         onCol.set(name, o);
       }
-      for (const name of main) {
-        if (!info[name]?.land) continue;
-        const o = lands.get(name) ?? { decks: 0, games: 0, wins: 0 };
-        o.decks++; o.games += decisive.length; o.wins += won;
-        lands.set(name, o);
-      }
     }
   }
-  const m = meta.sample.shrinkage.mean;
   const out = new Map<string, CardStat>();
-  for (const [name, c0] of Object.entries(meta.cards)) {
-    let c = c0;
-    if (info?.[name]?.land) {
-      const o = lands.get(name) ?? { decks: 0, games: 0, wins: 0 };
-      const w = wilson(o.wins, o.games);
-      c = { ...c0, inDecks: o.decks, games: o.games, wins: o.wins, winRate: o.games ? o.wins / o.games : 0,
-        winRateShrunk: (o.wins + SHRINK_K * m) / (o.games + SHRINK_K), ci: [w.lo ?? 0, w.hi ?? 1] };
-    }
+  for (const [name, c] of Object.entries(meta.cards)) {
     const f = ft.get(name) ?? 0;
     out.set(name, {
       name, seen: c.seen, picked: c.picked, pickRate: c.pickRate, firstTakes: f, firstPickRate: c.seen ? f / c.seen : 0,
@@ -451,6 +449,49 @@ export function deckGamesOf(recs: DraftRecord[]): DeckGames[] {
 
 /** The design effect of a batch's card win rates (evolve-stats.ts's designEffect over its played decks). */
 export const batchDeff = (recs: DraftRecord[]): number => designEffect(deckGamesOf(recs));
+
+/** A batch as the decision reads it (D356 when some drafts were explored). */
+export interface BatchStats {
+  /** meta.json: the PLAIN drafts' (with no exploration, every draft's). */
+  metaDoc: MetaDoc;
+  stats: Map<string, CardStat>;
+  /** The design effect of the plain drafts' games. */
+  deff: number;
+  drafts: number;
+  plain: number;
+  /** The explored drafts' randomised comparisons (null: nothing explored). */
+  explore: ExploreTable | null;
+}
+
+/**
+ * Every card's numbers for a batch.  With no explored draft this is exactly
+ * cardStats over buildMeta, as before D356.  With some: the counting rules
+ * (dealt, picked, first line, played decks, on-colour pools) read every
+ * draft's CHOICE decks -- an unexplored run's numbers -- and the game numbers
+ * (games, wins, win rates, the mean, the balance, the design effect) read the
+ * PLAIN drafts only, a coin-chosen subset of an unexplored run's.
+ */
+export function batchStats(meta: RunMeta, info: Record<string, CardInfo>, recs: DraftRecord[], cube: Cube | null): BatchStats {
+  const plain = recs.filter(isPlain);
+  const metaPlain = buildMeta(meta, info, plain, cube) as MetaDoc;
+  const sPlain = cardStats(metaPlain, plain, info);
+  const deff = batchDeff(plain);
+  // D377: every card's colour-adjusted null, from the same plain drafts its games come from.
+  const colour = colourBaselines(plain, info, deff);
+  const withColour = (name: string, c: CardStat): CardStat => {
+    const b = colour.get(name);
+    return b && c.games > 0 ? { ...c, colour: b } : c;
+  };
+  if (plain.length === recs.length) return { metaDoc: metaPlain, stats: new Map([...sPlain].map(([n, c]) => [n, withColour(n, c)])), deff, drafts: recs.length, plain: plain.length, explore: null };
+  const choice = recs.map(choiceRecord);
+  const sChoice = cardStats(buildMeta(meta, info, choice, cube) as MetaDoc, choice, info);
+  const stats = new Map<string, CardStat>();
+  for (const [name, c] of sChoice) {
+    const p = sPlain.get(name);
+    stats.set(name, withColour(name, { ...c, games: p?.games ?? 0, wins: p?.wins ?? 0, winRate: p?.winRate ?? 0, shrunk: p?.shrunk ?? metaPlain.sample.shrinkage.mean, ci: p?.ci ?? [0, 1] }));
+  }
+  return { metaDoc: metaPlain, stats, deff, drafts: recs.length, plain: plain.length, explore: exploreTable(recs) };
+}
 
 export interface Group { key: string; decks: number; games: number; wins: number; rate: number; shrunk: number; ci: [number, number] }
 export interface Balance { mean: number; colours: Group[]; pairs: Group[]; themes: Group[] }
@@ -497,19 +538,32 @@ export interface RuleTest {
   x: number;
   /** x / n. */
   rate: number;
-  /** The null's boundary: the mean (win), dominantFirstPickLo (pick), deadPlayRateHi (dead). */
+  /** The null's boundary: the mean (win; D377: the card's colour-adjusted expectation), dominantFirstPickLo (pick), deadPlayRateHi (dead). */
   p0: number;
   /** The design effect the counts were divided by (games only; 1 otherwise). */
   deff: number;
   /** P(a result at least this extreme | the boundary). */
   p: number;
+  /** D377 (dominant-win on the colour null): the boundary's own standard error; absent on D331's mean. */
+  se0?: number;
 }
 
-/** A rule's test of a card's numbers; `gate` false skips the minimum-sample check (confirmation tests at any size). */
-export function ruleTest(rule: Rule, card: { land: boolean }, s: CardStat, mean: number, deff: number, k: EvolveKnobs, gate = true): RuleTest | null {
+/**
+ * A rule's test of a card's numbers; `gate` false skips the minimum-sample
+ * check (confirmation tests at any size).  `nul` is dominant-win's null: D331's
+ * batch mean (exact binomial on counts over the design effect) or D377's
+ * colour-adjusted one (colour-null.ts's normal test, which needs the card's
+ * `colour` baseline: a card with games and none is not tested).
+ */
+export function ruleTest(rule: Rule, card: { land: boolean }, s: CardStat, mean: number, deff: number, k: EvolveKnobs, gate = true, nul: WinNull = 'mean'): RuleTest | null {
   const d = Math.max(1, deff);
   if (rule === 'dominant-win') {
     if (s.games === 0 || (gate && s.games < k.minGames)) return null;
+    if (nul === 'colour') {
+      if (!s.colour) return null;
+      const c = colourTest([{ n: s.games, x: s.wins, p0: s.colour.p0, se0: s.colour.se0, deff: d }]);
+      return { rule, n: s.games, x: s.wins, rate: s.wins / s.games, p0: s.colour.p0, deff: d, p: c.p, se0: s.colour.se0 };
+    }
     return { rule, n: s.games, x: s.wins, rate: s.wins / s.games, p0: mean, deff: d, p: binomUpper(s.wins / d, s.games / d, mean) };
   }
   if (rule === 'dominant-pick') {
@@ -520,9 +574,9 @@ export function ruleTest(rule: Rule, card: { land: boolean }, s: CardStat, mean:
   return { rule, n: s.onColour, x: s.onColourDecks, rate: s.onColourDecks / s.onColour, p0: k.deadPlayRateHi, deff: 1, p: binomLower(s.onColourDecks, s.onColour, k.deadPlayRateHi) };
 }
 
-/** The size filter a significant test must also pass: a dominant card wins dominantMargin over the mean; a first-pick card wins at least the mean. */
+/** The size filter a significant test must also pass: a dominant card wins dominantMargin over its null (the mean; D377: its colour expectation); a first-pick card wins at least the mean. */
 export function passesSize(t: RuleTest, s: CardStat, mean: number, k: EvolveKnobs): boolean {
-  if (t.rule === 'dominant-win') return t.rate >= mean + k.dominantMargin;
+  if (t.rule === 'dominant-win') return t.rate >= t.p0 + k.dominantMargin;
   if (t.rule === 'dominant-pick') return s.shrunk >= mean;
   return true;
 }
@@ -552,17 +606,19 @@ export interface Discovery {
   tests: Map<string, RuleTest & { qValue: number; reject: boolean }>;
   /** Tests outside the family (AI-limited, lands, noted, low-rated), for the report only. */
   outside: Map<string, RuleTest>;
+  /** dominant-win's null (D331's mean, or D377's colour pairs). */
+  winNull: WinNull;
 }
 
 /** Discovery: every card's tests on this batch, and BH over the ones a cut could follow from. */
-export function discover(cards: EvolveCard[], stats: Map<string, CardStat>, mean: number, deff: number, notes: Map<string, Note>, k: EvolveKnobs): Discovery {
+export function discover(cards: EvolveCard[], stats: Map<string, CardStat>, mean: number, deff: number, notes: Map<string, Note>, k: EvolveKnobs, nul: WinNull = 'mean'): Discovery {
   const fam: Array<{ key: string; t: RuleTest }> = [];
   const outside = new Map<string, RuleTest>();
   for (const c of cards) {
     const s = stats.get(c.name);
     if (!s || s.seen === 0) continue;
     for (const rule of RULES) {
-      const t = ruleTest(rule, c, s, mean, deff, k);
+      const t = ruleTest(rule, c, s, mean, deff, k, true, nul);
       if (!t) continue;
       if (cuttable(c, notes.get(c.name), rule, k)) fam.push({ key: `${c.name}|${rule}`, t });
       else outside.set(`${c.name}|${rule}`, t);
@@ -570,7 +626,7 @@ export function discover(cards: EvolveCard[], stats: Map<string, CardStat>, mean
   }
   const bh = benjaminiHochberg(fam.map((f) => f.t.p), k.fdrQ);
   const tests = new Map(fam.map((f, i) => [f.key, { ...f.t, qValue: bh.q[i] as number, reject: bh.reject[i] as boolean }]));
-  return { family: fam.length, q: k.fdrQ, cutoff: bh.cutoff, deff, tests, outside };
+  return { family: fam.length, q: k.fdrQ, cutoff: bh.cutoff, deff, tests, outside, winNull: nul };
 }
 
 /** Would a test outside the family have been a discovery?  Its p at or under the family's cutoff, or under the lone-test BH bar. */
@@ -625,12 +681,14 @@ export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, 
   }
   const d = disc ?? discover([card], new Map([[card.name, s]]), mean, 1, note ? new Map([[card.name, note]]) : new Map(), k);
   const deff = d.deff;
+  // dominant-win's boundary for this card: the mean, or (D377) its colour-adjusted expectation.
+  const nullRate = d.winNull === 'colour' && s.colour ? s.colour.p0 : mean;
   const play = wilson(s.onColourDecks, s.onColour);
   const playRate = s.onColour ? s.onColourDecks / s.onColour : 0;
   const ci = clusteredCi(s.wins, s.games, deff);
   const ev = `dealt ${s.seen}, picked ${s.picked}, first line ${s.firstTakes}, in ${s.inDecks} deck(s); `
     + (card.land ? '' : s.onColour ? `on colour in ${s.onColour} pool(s), played in ${s.onColourDecks} (${pct(playRate)}, CI ${pct(play.lo ?? 0)}–${pct(play.hi ?? 1)}); ` : 'never in a pool whose deck could cast it; ')
-    + (s.games ? `won ${s.wins} of ${s.games} decisive games (${pct(s.winRate)}, CI ${pct(ci[0])}–${pct(ci[1])} by deck${deff > 1.005 ? `, design effect ${deff.toFixed(2)}` : ''}, shrunk ${pct(s.shrunk)}) vs mean ${pct(mean)}` : 'no decisive games in a deck');
+    + (s.games ? `won ${s.wins} of ${s.games} decisive games (${pct(s.winRate)}, CI ${pct(ci[0])}–${pct(ci[1])} by deck${deff > 1.005 ? `, design effect ${deff.toFixed(2)}` : ''}, shrunk ${pct(s.shrunk)}) vs mean ${pct(mean)}${d.winNull === 'colour' && s.colour ? `, its colour pairs ${pct(s.colour.p0)} (D377)` : ''}` : 'no decisive games in a deck');
   // What the AI evidence says: the first rule whose test is a discovery and passes its size filter.
   let signal: Assessment['signal'] = 'none';
   let strength = 0;
@@ -652,10 +710,10 @@ export function assess(card: EvolveCard, s: CardStat | undefined, mean: number, 
   }
   // A lead that is not (yet) a discovery: the drafts a generation would need for it to pass BH's bar for one discovery.
   const alphaOne = k.fdrQ / Math.max(1, d.family);
-  if (signal === 'none' && s.games > 0 && s.winRate >= mean + k.watchWinMargin) {
+  if (signal === 'none' && s.games > 0 && s.winRate >= nullRate + k.watchWinMargin) {
     signal = 'lean-dominant';
     const perDraft = s.games / Math.max(1, drafts);
-    const n = requiredN(mean, Math.min(0.999, s.winRate), alphaOne, 0.5) * Math.max(1, deff);
+    const n = requiredN(nullRate, Math.min(0.999, s.winRate), alphaOne, 0.5) * Math.max(1, deff) * baselineInflation(s, d.winNull, deff);
     draftsNeeded = !Number.isFinite(n) || perDraft === 0 ? null : Math.max(Math.ceil(Math.max(n, k.minGames) / perDraft), drafts + 1);
   } else if (signal === 'none' && !card.land && s.onColour > 0 && playRate <= k.deadPlayRateHi) {
     signal = 'lean-dead';
@@ -705,7 +763,10 @@ export interface ConfirmPlan {
  * deadEffect.  Observations per draft come from the discovery batch (games,
  * grids dealt, on-colour pools); a card's games are counted at the design
  * effect.  The effect is the knob's, never the discovery's estimate, which is
- * biased upward by having been selected.
+ * biased upward by having been selected.  On D377's colour null the boundary
+ * is the card's colour expectation, and the games are inflated by the share of
+ * the variance its baseline adds (baselineInflation): both scale as 1/drafts,
+ * so the discovery batch's ratio holds for the confirmation batch too.
  */
 export function confirmPlan(candidates: Assessment[], stats: Map<string, CardStat>, drafts: number, mean: number, deff: number, k: EvolveKnobs): ConfirmPlan {
   const cands = candidates.filter((a) => a.status === 'dominant-win' || a.status === 'dominant-pick' || a.status === 'dead');
@@ -714,7 +775,8 @@ export function confirmPlan(candidates: Assessment[], stats: Map<string, CardSta
   const needs = cands.map((a): ConfirmNeed => {
     const rule = a.status as Rule;
     const s = stats.get(a.name) as CardStat;
-    const [p0, p1, perDraft, d] = rule === 'dominant-win' ? [mean, Math.min(0.99, mean + k.dominantEffect), s.games / Math.max(1, drafts), Math.max(1, deff)]
+    const w0 = a.test?.se0 !== undefined ? a.test.p0 : mean;
+    const [p0, p1, perDraft, d] = rule === 'dominant-win' ? [w0, Math.min(0.99, w0 + k.dominantEffect), s.games / Math.max(1, drafts), Math.max(1, deff) * baselineInflation(s, a.test?.se0 !== undefined ? 'colour' : 'mean', deff)]
       : rule === 'dominant-pick' ? [k.dominantFirstPickLo, k.pickEffect, s.seen / Math.max(1, drafts), 1]
         : [k.deadPlayRateHi, k.deadEffect, s.onColour / Math.max(1, drafts), 1];
     const n = requiredN(p0, p1, alpha, k.confirmPower) * d;
@@ -728,6 +790,13 @@ export function confirmPlan(candidates: Assessment[], stats: Map<string, CardSta
   };
 }
 
+/** D377: how much the colour baseline's own error widens a card's test (1 on the mean): (card variance + se0^2) / card variance. */
+export function baselineInflation(s: CardStat, nul: WinNull, deff: number): number {
+  if (nul !== 'colour' || !s.colour || s.games === 0) return 1;
+  const v = (s.colour.p0 * (1 - s.colour.p0) * Math.max(1, deff)) / s.games;
+  return v > 0 ? 1 + (s.colour.se0 * s.colour.se0) / v : 1;
+}
+
 /** The confirmation batch as the decision reads it: its own stats, mean and design effect, never pooled with discovery. */
 export interface ConfirmInput {
   stats: Map<string, CardStat>;
@@ -736,6 +805,36 @@ export interface ConfirmInput {
   drafts: number;
   seeds: [number, number];
   games: number;
+  /** The generation (1-based) the batch belongs to: an attempt's label in the history.  Absent: 0. */
+  gen?: number;
+  /** Every earlier confirmation attempt of every card (priorAttempts over the generations before this one; D357). */
+  history?: ConfirmAttempt[];
+}
+
+/**
+ * One confirmation attempt: a card's rule tested on one confirmation batch,
+ * that batch's own numbers (D357).  The batch's win numbers and mean ride along
+ * for dominant-pick's size filter on the pooled evidence.
+ */
+export interface ConfirmAttempt {
+  name: string;
+  rule: Rule;
+  gen: number;
+  seeds: [number, number];
+  /** The batch's own test: observations, successes, null boundary, design effect, p. */
+  n: number;
+  x: number;
+  p0: number;
+  deff: number;
+  p: number;
+  /** D377: the boundary's standard error (dominant-win on the colour null); absent on D331's mean. */
+  se0?: number;
+  /** The card's decisive games and wins in that batch, and the batch's mean card win rate. */
+  games: number;
+  wins: number;
+  mean: number;
+  /** Whether the card was cut on that attempt. */
+  confirmed: boolean;
 }
 
 export interface Confirmation {
@@ -744,32 +843,137 @@ export interface Confirmation {
   discovery: RuleTest & { qValue?: number };
   /** The same test on the fresh seeds (null: no batch, or the card was never dealt there). */
   confirm: RuleTest | null;
-  /** Holm-adjusted p of the confirmation test. */
+  /** Holm-adjusted p of the test that decided: this batch's (D331), or the pooled one at its spent level (D357). */
   holmP: number | null;
   confirmed: boolean;
   /** Why not, in words, when not. */
   reason: string;
+  /** D357: which attempt on this rule this is (1 = the first; 0 = no observations, not an attempt). */
+  attempt?: number;
+  /** D357: the card's earlier attempts on this rule, oldest first. */
+  history?: ConfirmAttempt[];
+  /** D357: every attempt's batch pooled, this one included (equal to `confirm` on a first attempt). */
+  pooled?: RuleTest | null;
+  /** D357: the p that went into Holm: the pooled p times 2^(attempt-1) under confirmPool 1, this batch's p under 0. */
+  spentP?: number | null;
+  /** D357: this attempt as the next generation's history reads it (null: no observations). */
+  thisAttempt?: ConfirmAttempt | null;
 }
 
-/** Each candidate's rule on the fresh batch; Holm at confirmAlpha across them; the size filter again. */
-export function confirmCandidates(candidates: Assessment[], cards: EvolveCard[], c: ConfirmInput | undefined, k: EvolveKnobs): Confirmation[] {
+/**
+ * Every confirmation attempt the given generations made, oldest first (D357):
+ * each candidate whose confirmation batch observed it.  A generation decided
+ * before D357 has no `thisAttempt`; its attempt is rebuilt from the
+ * confirmation test it recorded (dominant-pick's size numbers are then the
+ * test's own, which no D331 decision reads).
+ */
+export function priorAttempts(gens: Array<{ gen: number; decision: Pick<Decision, 'confirmations' | 'confirmBatch'> }>): ConfirmAttempt[] {
+  const out: ConfirmAttempt[] = [];
+  for (const g of [...gens].sort((a, b) => a.gen - b.gen)) {
+    for (const c of g.decision.confirmations) {
+      if (c.thisAttempt) { out.push({ ...c.thisAttempt, gen: g.gen }); continue; }
+      if (c.thisAttempt === null || !c.confirm) continue;
+      const t = c.confirm;
+      out.push({ name: c.name, rule: c.rule, gen: g.gen, seeds: g.decision.confirmBatch?.seeds ?? [0, 0], n: t.n, x: t.x, p0: t.p0, deff: t.deff, p: t.p, ...(t.se0 !== undefined ? { se0: t.se0 } : {}),
+        games: t.rule === 'dominant-win' ? t.n : 0, wins: t.rule === 'dominant-win' ? t.x : 0, mean: t.rule === 'dominant-win' ? t.p0 : 0, confirmed: c.confirmed });
+    }
+  }
+  return out;
+}
+
+/**
+ * One rule's test over several confirmation batches pooled (D357).  Each batch
+ * keeps its own null boundary and design effect: the effective counts (a
+ * card's games over its batch's design effect) add, and the boundary is their
+ * effective-count-weighted mean.  A sum of independent binomials with those
+ * rates has at most a binomial's tail beyond its mean (Hoeffding 1956), so the
+ * binomial test of the sum is valid, and conservative when the batches' means
+ * differ.  One attempt is that attempt's own test, unchanged.  D377's colour
+ * null (attempts carrying se0) pools as colour-null.ts's colourTest: the
+ * effective excesses and both variances add.  A card's attempts all carry se0
+ * or none do: a run's null is fixed when it starts (evolve-run.ts).
+ */
+export function pooledTest(rule: Rule, attempts: Array<Pick<ConfirmAttempt, 'n' | 'x' | 'p0' | 'deff' | 'p' | 'se0'>>): RuleTest | null {
+  const a = attempts.filter((t) => t.n > 0);
+  if (!a.length) return null;
+  if (a.length === 1) {
+    const t = a[0] as ConfirmAttempt;
+    return { rule, n: t.n, x: t.x, rate: t.x / t.n, p0: t.p0, deff: t.deff, p: t.p, ...(t.se0 !== undefined ? { se0: t.se0 } : {}) };
+  }
+  const n = a.reduce((s, t) => s + t.n, 0);
+  const x = a.reduce((s, t) => s + t.x, 0);
+  if (rule === 'dominant-win' && a.some((t) => t.se0 !== undefined)) {
+    if (!a.every((t) => t.se0 !== undefined)) throw new Error('pooledTest: a card\'s confirmation attempts mix the mean null and the colour null (D377)');
+    const c = colourTest(a.map((t) => ({ n: t.n, x: t.x, p0: t.p0, se0: t.se0 as number, deff: t.deff })));
+    const ne = a.reduce((s, t) => s + t.n / Math.max(1, t.deff), 0);
+    return { rule, n, x, rate: x / n, p0: c.p0, deff: n / ne, p: c.p, se0: c.se0 };
+  }
+  const ne = a.reduce((s, t) => s + t.n / Math.max(1, t.deff), 0);
+  const xe = a.reduce((s, t) => s + t.x / Math.max(1, t.deff), 0);
+  const p0 = a.reduce((s, t) => s + (t.n / Math.max(1, t.deff)) * t.p0, 0) / ne;
+  const p = rule === 'dead' ? binomLower(xe, ne, p0) : binomUpper(xe, ne, p0);
+  return { rule, n, x, rate: x / n, p0, deff: n / ne, p };
+}
+
+/** The size filter on pooled attempts: dominant-win against the pooled boundary, dominant-pick by the pooled shrunk win rate against the pooled mean. */
+function pooledSize(t: RuleTest, a: ConfirmAttempt[], k: EvolveKnobs): boolean {
+  if (t.rule === 'dominant-win') return t.rate >= t.p0 + k.dominantMargin;
+  if (t.rule === 'dead') return true;
+  const games = a.reduce((s, x) => s + x.games, 0);
+  const wins = a.reduce((s, x) => s + x.wins, 0);
+  const mean = games ? a.reduce((s, x) => s + x.games * x.mean, 0) / games : a.reduce((s, x) => s + x.mean, 0) / a.length;
+  return (wins + SHRINK_K * mean) / (games + SHRINK_K) >= mean;
+}
+
+/**
+ * Each candidate's rule on the fresh batch; Holm at confirmAlpha across them;
+ * the size filter again.  D357 (`confirmPool` 1): a candidate that was tested
+ * on earlier confirmation batches is judged on all of them pooled with this
+ * one, a failed attempt included, and its p is doubled for every earlier
+ * attempt before Holm (attempt j tested at confirmAlpha / 2^(j-1)), so over any
+ * number of attempts a card with no effect is cut with probability at most
+ * 2·confirmAlpha.  A first attempt is exactly D331's test.
+ */
+export function confirmCandidates(candidates: Assessment[], cards: EvolveCard[], c: ConfirmInput | undefined, k: EvolveKnobs, nul: WinNull = 'mean'): Confirmation[] {
   const byName = new Map(cards.map((x) => [x.name, x]));
+  const pool = (k.confirmPool ?? 0) >= 1;
   const cands = candidates.filter((a) => a.test && (a.status === 'dominant-win' || a.status === 'dominant-pick' || a.status === 'dead'));
   const tests = cands.map((a) => {
     const s = c?.stats.get(a.name);
-    return c && s && s.seen > 0 ? ruleTest(a.status as Rule, byName.get(a.name) as EvolveCard, s, c.mean, c.deff, k, false) : null;
+    return c && s && s.seen > 0 ? ruleTest(a.status as Rule, byName.get(a.name) as EvolveCard, s, c.mean, c.deff, k, false, nul) : null;
   });
-  const h = holm(tests.map((t) => t?.p ?? 1), k.confirmAlpha);
+  const prior = cands.map((a) => (c?.history ?? []).filter((h) => h.name === a.name && h.rule === a.status && h.n > 0).sort((x, y) => x.gen - y.gen));
+  const now = cands.map((a, i): ConfirmAttempt | null => {
+    const t = tests[i];
+    const s = c?.stats.get(a.name);
+    return t && s && c ? { name: a.name, rule: t.rule, gen: c.gen ?? 0, seeds: c.seeds, n: t.n, x: t.x, p0: t.p0, deff: t.deff, p: t.p, ...(t.se0 !== undefined ? { se0: t.se0 } : {}), games: s.games, wins: s.wins, mean: c.mean, confirmed: false } : null;
+  });
+  const pooled = cands.map((a, i) => { const t = now[i]; return t ? pooledTest(a.status as Rule, [...(prior[i] as ConfirmAttempt[]), t]) : null; });
+  const attemptOf = (i: number): number => (now[i] ? (prior[i] as ConfirmAttempt[]).length + 1 : 0);
+  const spent = cands.map((_, i) => {
+    const t = tests[i];
+    if (!t) return null;
+    return pool ? Math.min(1, (pooled[i] as RuleTest).p * 2 ** (attemptOf(i) - 1)) : t.p;
+  });
+  const h = holm(spent.map((p) => p ?? 1), k.confirmAlpha);
   return cands.map((a, i) => {
     const t = tests[i] ?? null;
     const s = c?.stats.get(a.name);
+    const j = attemptOf(i);
+    const pt = pooled[i] ?? null;
+    const repeat = pool && j > 1;
     const sig = !!t && (h.reject[i] as boolean);
-    const sized = !!t && !!s && !!c && passesSize(t, s, c.mean, k);
+    const sized = !!t && !!s && !!c && (repeat ? pooledSize(pt as RuleTest, [...(prior[i] as ConfirmAttempt[]), now[i] as ConfirmAttempt], k) : passesSize(t, s, c.mean, k));
     const confirmed = sig && sized;
+    const where = repeat ? `on all ${j} confirmation batches pooled (attempt ${j}, level ${k.confirmAlpha} / ${2 ** (j - 1)})` : 'on the fresh seeds';
     const reason = !c ? 'no confirmation batch was run' : !t ? 'no observations in the confirmation batch'
-      : !sig ? `not significant on the fresh seeds (Holm p ${pv(h.adjusted[i] as number)} > ${k.confirmAlpha})`
-        : !sized ? (a.status === 'dominant-win' ? `won ${pct(t.rate)}, under the mean + ${k.dominantMargin}` : 'its shrunk win rate fell under the mean') : '';
-    return { name: a.name, rule: a.status as Rule, discovery: a.test as RuleTest, confirm: t, holmP: t ? (h.adjusted[i] as number) : null, confirmed, reason };
+      : !sig ? `not significant ${where} (Holm p ${pv(h.adjusted[i] as number)} > ${k.confirmAlpha})`
+        : !sized ? (a.status === 'dominant-win' ? `won ${pct(repeat ? (pt as RuleTest).rate : t.rate)}${repeat ? ' pooled' : ''}, under ${nul === 'colour' ? `its colour pairs' ${pct(repeat ? (pt as RuleTest).p0 : t.p0)}` : 'the mean'} + ${k.dominantMargin}` : `its${repeat ? ' pooled' : ''} shrunk win rate fell under the mean`) : '';
+    const mine = now[i] ? { ...(now[i] as ConfirmAttempt), confirmed } : null;
+    return {
+      name: a.name, rule: a.status as Rule, discovery: a.test as RuleTest, confirm: t, holmP: t ? (h.adjusted[i] as number) : null, confirmed, reason,
+      attempt: j, history: prior[i] as ConfirmAttempt[], pooled: pt, spentP: spent[i] ?? null, thisAttempt: mine,
+    };
   });
 }
 
@@ -804,6 +1008,10 @@ export interface Decision {
   confirmBatch?: { drafts: number; seeds: [number, number]; games: number; mean: number; deff: number };
   /** Every candidate, confirmed or not, with both batches' numbers. */
   confirmations: Confirmation[];
+  /** The confirmation rule that decided: D331 (each batch alone) or D357 (a card's batches pooled, the level halved each repeat).  Absent: D331. */
+  confirmRule?: 'D331' | 'D357';
+  /** dominant-win's null: D331's batch mean, or D377's colour-adjusted expectation.  Absent: the mean. */
+  winNull?: WinNull;
   /** Cuts the evidence supported that found no replacement keeping the constraints. */
   unmatched: Array<{ name: string; why: Status; reason: string }>;
   /** Leads that did not pass their threshold. */
@@ -833,6 +1041,8 @@ export interface SelectInput {
   deff?: number;
   /** The confirmation batch: fresh seeds, read on their own.  Absent: the candidates stay candidates. */
   confirmation?: ConfirmInput;
+  /** dominant-win's null, discovery and confirmation alike: D331's mean (absent), or D377's colour pairs (a run started after D377). */
+  winNull?: WinNull;
 }
 
 interface Candidate { card: PoolCard; score: number; parts: string }
@@ -864,10 +1074,10 @@ function fit(cut: EvolveCard, why: Status, cand: PoolCard, need: { theme: Map<st
 const CUT_ORDER: Status[] = ['note-cut', 'dominant-win', 'dominant-pick', 'dead'];
 
 /** The first stage alone: every card assessed on the discovery batch, the candidates, and the confirmation batch they call for. */
-export function discoveryStage(x: Pick<SelectInput, 'cards' | 'stats' | 'balance' | 'drafts' | 'notes' | 'knobs' | 'deff'>): { disc: Discovery; assessments: Assessment[]; candidates: Assessment[]; plan: ConfirmPlan } {
+export function discoveryStage(x: Pick<SelectInput, 'cards' | 'stats' | 'balance' | 'drafts' | 'notes' | 'knobs' | 'deff' | 'winNull'>): { disc: Discovery; assessments: Assessment[]; candidates: Assessment[]; plan: ConfirmPlan } {
   const k = x.knobs;
   const mean = x.balance.mean;
-  const disc = discover(x.cards, x.stats, mean, x.deff ?? 1, x.notes, k);
+  const disc = discover(x.cards, x.stats, mean, x.deff ?? 1, x.notes, k, x.winNull ?? 'mean');
   const assessments = x.cards.map((c) => assess(c, x.stats.get(c.name), mean, x.drafts, x.notes.get(c.name), k, disc))
     .sort((a, b) => (a.name < b.name ? -1 : 1));
   const candidates = assessments.filter((a) => a.status === 'dominant-win' || a.status === 'dominant-pick' || a.status === 'dead');
@@ -878,7 +1088,7 @@ export function selectSwaps(x: SelectInput): Decision {
   const k = x.knobs;
   const mean = x.balance.mean;
   const { disc, assessments, candidates, plan } = discoveryStage(x);
-  const confirmations = confirmCandidates(candidates, x.cards, x.confirmation, k);
+  const confirmations = confirmCandidates(candidates, x.cards, x.confirmation, k, x.winNull ?? 'mean');
   const confirmed = new Map(confirmations.filter((c) => c.confirmed).map((c) => [c.name, c]));
   const byName = new Map(x.cards.map((c) => [c.name, c]));
   const cb = x.confirmation;
@@ -922,7 +1132,7 @@ export function selectSwaps(x: SelectInput): Decision {
     added.add(chosen.card.name);
     const conf = confirmed.get(a.name);
     const evidence = a.note ? `notes: ${a.note}; ${a.evidence}`
-      : conf && cb ? `discovery (${x.drafts} drafts): ${ruleWords(conf.discovery)}${conf.discovery.qValue !== undefined ? `, q ${pv(conf.discovery.qValue)}` : ''}; confirmed on fresh seeds ${cb.seeds[0]}–${cb.seeds[1]} (${cb.drafts} drafts): ${ruleWords(conf.confirm as RuleTest)}, Holm p ${pv(conf.holmP as number)}`
+      : conf && cb ? `discovery (${x.drafts} drafts): ${ruleWords(conf.discovery)}${conf.discovery.qValue !== undefined ? `, q ${pv(conf.discovery.qValue)}` : ''}; confirmed on fresh seeds ${cb.seeds[0]}–${cb.seeds[1]} (${cb.drafts} drafts): ${ruleWords(conf.confirm as RuleTest)}${(conf.attempt ?? 1) > 1 && k.confirmPool >= 1 && conf.pooled ? `; attempt ${conf.attempt as number}, every confirmation batch pooled: ${ruleWords(conf.pooled)}, tested at ${k.confirmAlpha} / ${2 ** ((conf.attempt as number) - 1)}` : ''}, Holm p ${pv(conf.holmP as number)}`
         : a.evidence;
     swaps.push({ out: cut.name, outSection: cut.section, in: chosen.card.name, inSection: chosen.card.section, why: a.status,
       evidence, fit: chosen.cand.parts });
@@ -955,7 +1165,7 @@ export function selectSwaps(x: SelectInput): Decision {
   return {
     swaps, assessments,
     discovery: { drafts: x.drafts, family: disc.family, q: k.fdrQ, cutoff: disc.cutoff, deff: disc.deff, candidates: candidates.length },
-    plan, ...(cb ? { confirmBatch: { drafts: cb.drafts, seeds: cb.seeds, games: cb.games, mean: cb.mean, deff: cb.deff } } : {}), confirmations,
+    plan, ...(cb ? { confirmBatch: { drafts: cb.drafts, seeds: cb.seeds, games: cb.games, mean: cb.mean, deff: cb.deff } } : {}), confirmations, confirmRule: k.confirmPool >= 1 ? 'D357' : 'D331', winNull: x.winNull ?? 'mean',
     unmatched, watch, aiLimited, humanTest, pendingTries, verdict, violationsBefore: before, violationsAfter: violations(current, x.constraints),
   };
 }

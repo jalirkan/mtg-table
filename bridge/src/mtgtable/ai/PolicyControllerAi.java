@@ -62,6 +62,14 @@ import forge.util.collect.FCollectionView;
  * search's statistics.  The record is built AFTER the answer (it cannot steer
  * it) and a failure to build one is counted, never thrown into the game.  With
  * no sink, none of it runs.
+ *
+ * <p><b>Play exploration (D358).</b>  With an {@link Explorer} set (an exploring
+ * cube-lab game), each answer -- priority, attack, blocks, single targets, a
+ * close call on a creature, the opening mulligan -- is offered to it AFTER the
+ * seat's own policy chose, and it may replace the answer with a legal one drawn
+ * by its own seeded generator.  The decision record then carries the mark
+ * ({@code explore: {rule, forge}}), so a policy dataset can leave it out.  With
+ * no explorer, nothing changes.
  */
 public class PolicyControllerAi extends PlayerControllerAi {
 
@@ -85,6 +93,21 @@ public class PolicyControllerAi extends PlayerControllerAi {
     /** Whose answer the last {@link #choose} returned, and the outlet policy's reason. */
     private String lastBy = "forge";
     private String lastWhy;
+
+    /** Play exploration (D358), or null: the seat plays its policy's answers. */
+    private Explorer explorer;
+    /** The targets exploration changed in the answer being played (D358), by part. */
+    private final Map<SpellAbility, Decision.Explore> targetMarks = new java.util.IdentityHashMap<>();
+
+    /** Explore this seat's decisions (D358); null = off.  Set before the game starts. */
+    public void setExplorer(final Explorer e) {
+        this.explorer = e;
+    }
+
+    /** The explorer, or null. */
+    public Explorer explorer() {
+        return explorer;
+    }
 
     /** Record this seat's decisions into {@code sink} (its own recording only); null = off. */
     public void setDecisionSink(final DecisionSink sink) {
@@ -148,12 +171,13 @@ public class PolicyControllerAi extends PlayerControllerAi {
     @Override
     public List<SpellAbility> chooseSpellAbilityToPlay() {
         if (decisions == null) {
-            return choose();
+            return explored(choose());
         }
         if (search != null) {
             search.takeReport();
         }
-        final List<SpellAbility> r = choose();
+        final List<SpellAbility> r = explored(choose());
+        final Decision.Explore explored = explorer == null ? null : explorer.takeMark();
         final long t0 = System.nanoTime();
         try {
             final SpellAbility sa = r == null || r.isEmpty() ? null : r.get(0);
@@ -165,6 +189,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
             }
             d.by = lastBy;
             d.why = lastWhy;
+            d.explore = explored;
             final SearchPolicy.Report rep = search == null ? null : search.takeReport();
             if (rep != null) {
                 d.search = Decisions.stats(rep);
@@ -178,7 +203,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 final int[] mark = decisions.mark();
                 final int n = decisions.write(d, mark);
                 if (sa != null) {
-                    for (final Decision t : Decisions.targets(sa, player, "targets")) {
+                    for (final Decision t : Decisions.targets(sa, player, "targets", targetMarks)) {
                         t.parent = n;
                         t.by = lastBy;
                         writeOrCount(t, mark);
@@ -190,6 +215,29 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
         decisions.cost(System.nanoTime() - t0);
         return r;
+    }
+
+    /**
+     * The priority answer after play exploration (D358): the explorer may draw
+     * another legal play, then each single target of the play is offered to it.
+     * Its marks wait in the explorer and {@link #targetMarks} for the records.
+     */
+    private List<SpellAbility> explored(final List<SpellAbility> r) {
+        targetMarks.clear();
+        if (explorer == null) {
+            return r;
+        }
+        final List<SpellAbility> e = explorer.priority(player, getAi(), r);
+        final SpellAbility sa = e == null || e.isEmpty() ? null : e.get(0);
+        if (sa != null && !sa.isLandAbility()) {
+            explorer.targets(sa, player, targetMarks);
+        }
+        if (e != r) {
+            // a play the explorer drew is not the outlet policy's to steer
+            steerSa = null;
+            steerVictim = null;
+        }
+        return e;
     }
 
     private void writeOrCount(final Decision d, final int[] mark) {
@@ -286,6 +334,10 @@ public class PolicyControllerAi extends PlayerControllerAi {
             if (search != null && attacker == player) {
                 search.chooseAttack(player, combat);
             }
+            if (explorer != null && attacker == player) {
+                explorer.attack(player, combat);
+                explorer.takeMark();
+            }
             return;
         }
         final int[] mark = decisions.mark();
@@ -296,6 +348,11 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (search != null) {
             search.chooseAttack(player, combat);
         }
+        Decision.Explore explored = null;
+        if (explorer != null) {
+            explorer.attack(player, combat);
+            explored = explorer.takeMark();
+        }
         try {
             final List<Integer> chosen = new ArrayList<>();
             for (final Card c : combat.getAttackers()) {
@@ -305,6 +362,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
             }
             final Decision d = Decisions.attack(player, Decisions.attackers(player, combat), chosen);
             combatBy(d);
+            d.explore = explored;
             writeOrCount(d, mark);
         } catch (final RuntimeException e) {
             decisions.error("attack", e);
@@ -317,6 +375,10 @@ public class PolicyControllerAi extends PlayerControllerAi {
             super.declareBlockers(defender, combat);
             if (search != null && defender == player) {
                 search.chooseBlock(player, combat);
+            }
+            if (explorer != null && defender == player) {
+                explorer.block(player, combat);
+                explorer.takeMark();
             }
             return;
         }
@@ -334,12 +396,18 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (search != null) {
             search.chooseBlock(player, combat);
         }
+        Decision.Explore explored = null;
+        if (explorer != null) {
+            explorer.block(player, combat);
+            explored = explorer.takeMark();
+        }
         if (pairs == null) {
             return;
         }
         try {
             final Decision d = Decisions.block(player, pairs, Decisions.blocksOf(player, combat));
             combatBy(d);
+            d.explore = explored;
             writeOrCount(d, mark);
         } catch (final RuntimeException e) {
             decisions.error("block", e);
@@ -357,12 +425,20 @@ public class PolicyControllerAi extends PlayerControllerAi {
     @Override
     public boolean mulliganKeepHand(final Player firstPlayer, final int cardsToReturn) {
         if (decisions == null) {
-            return super.mulliganKeepHand(firstPlayer, cardsToReturn);
+            final boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
+            return explorer == null ? keep : explorer.mulligan(keep, cardsToReturn);
         }
         final int[] mark = decisions.mark();
-        final boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
+        boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
+        Decision.Explore em = null;
+        if (explorer != null) {
+            keep = explorer.mulligan(keep, cardsToReturn);
+            em = explorer.takeMark();
+        }
         try {
-            decisions.write(Decisions.mulligan(player, keep), mark);
+            final Decision d = Decisions.mulligan(player, keep);
+            d.explore = em;
+            decisions.write(d, mark);
         } catch (final RuntimeException e) {
             decisions.error("mulligan", e);
         }
@@ -373,16 +449,19 @@ public class PolicyControllerAi extends PlayerControllerAi {
     public <T extends GameEntity> T chooseSingleEntityForEffect(final FCollectionView<T> optionList,
             final DelayedReveal delayedReveal, final SpellAbility sa, final String title, final boolean isOptional,
             final Player targetedPlayer, final java.util.Map<String, Object> params) {
+        final T forge = super.chooseSingleEntityForEffect(optionList, delayedReveal, sa, title, isOptional,
+                targetedPlayer, params);
+        final T r = explorer == null || optionList == null ? forge : explorer.entity(player, optionList, forge);
+        final Decision.Explore em = explorer == null ? null : explorer.takeMark();
         if (decisions == null) {
-            return super.chooseSingleEntityForEffect(optionList, delayedReveal, sa, title, isOptional, targetedPlayer,
-                    params);
+            return r;
         }
-        final T r = super.chooseSingleEntityForEffect(optionList, delayedReveal, sa, title, isOptional, targetedPlayer,
-                params);
         try {
             // the choice is applied after this returns: the log is made current only for a written record
-            writeOrCount(Decisions.entities(player, optionList, isOptional, r == null ? List.of() : List.of(r),
-                    "entity"), null);
+            final Decision d = Decisions.entities(player, optionList, isOptional, r == null ? List.of() : List.of(r),
+                    "entity");
+            d.explore = em;
+            writeOrCount(d, null);
         } catch (final RuntimeException e) {
             decisions.error("entity", e);
         }
@@ -443,14 +522,25 @@ public class PolicyControllerAi extends PlayerControllerAi {
     @Override
     public boolean playTrigger(final Card host, final WrappedAbility wrapperAbility, final boolean isMandatory) {
         if (decisions == null) {
-            return super.playTrigger(host, wrapperAbility, isMandatory);
+            final boolean r = super.playTrigger(host, wrapperAbility, isMandatory);
+            if (r && explorer != null) {
+                final SpellAbility inner = wrapperAbility.getWrappedAbility();
+                targetMarks.clear();
+                explorer.targets(inner == null ? wrapperAbility : inner, player, targetMarks);
+            }
+            return r;
         }
         final int[] mark = decisions.mark();
         final boolean r = super.playTrigger(host, wrapperAbility, isMandatory);
         if (r) {
             try {
                 final SpellAbility inner = wrapperAbility.getWrappedAbility();
-                for (final Decision t : Decisions.targets(inner == null ? wrapperAbility : inner, player, "trigger")) {
+                targetMarks.clear();
+                if (explorer != null) {
+                    explorer.targets(inner == null ? wrapperAbility : inner, player, targetMarks);
+                }
+                for (final Decision t : Decisions.targets(inner == null ? wrapperAbility : inner, player, "trigger",
+                        targetMarks)) {
                     writeOrCount(t, mark);
                 }
             } catch (final RuntimeException e) {

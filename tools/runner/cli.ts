@@ -18,7 +18,8 @@
 //
 // Options: --lab-root DIR (~/code/lab)  --state DIR (<runner>/var/runner)
 //   --home-mtg-table DIR --home-forgecoach DIR (Justin's checkouts, ~/code/<repo>)
-//   --reserve-gb N (7)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
+//   --reserve-gb N (7)  --cores N (the physical cores: the core budget heavy jobs side by side share)
+//   --co-schedule on|off (on: a heavy job may start beside narrow running ones)  --public-status on|off (on)  --http-port N (8645; 0 = off; always 127.0.0.1)
 //   --public-every-s N (60: the public copy when it changed, at most)  --public-heartbeat-s N (120: unchanged)
 //   --bridge-port N (8642)  --dry-run (once/daemon: same as plan)  --no-push (write nothing to git remotes)
 
@@ -31,6 +32,7 @@ import { readControl, writeControl } from './control.ts';
 import { acquireLock, releaseLock } from './lock.ts';
 import { evaluate, parse as parseExpr } from './expr.ts';
 import { parseJobFile } from './jobfile.ts';
+import { ledgerCheckLines, siblingJob } from './ledger.ts';
 import { EXTRACTORS } from './metrics.ts';
 import { DEFAULT_CONFIG, Runner, verdictText, type RunnerConfig } from './runner.ts';
 import { serveStatus, STATUS_HOST } from './serve.ts';
@@ -82,6 +84,8 @@ function config(f: Map<string, string>): RunnerConfig {
     urls,
     bridgePort: Number(f.get('bridge-port') ?? 8642),
     budget: { ...DEFAULT_BUDGET, reserveGb: Number(f.get('reserve-gb') ?? DEFAULT_BUDGET.reserveGb) },
+    cores: Number(f.get('cores')) > 0 ? Math.floor(Number(f.get('cores'))) : null,
+    coSchedule: (f.get('co-schedule') ?? 'on') !== 'off',
     publicStatus: (f.get('public-status') ?? 'on') !== 'off',
     publicEveryMs: seconds(f.get('public-every-s')) ?? DEFAULT_CONFIG.publicEveryMs,
     publicHeartbeatMs: seconds(f.get('public-heartbeat-s')) ?? DEFAULT_CONFIG.publicHeartbeatMs,
@@ -99,29 +103,8 @@ function lock(cfg: RunnerConfig): void {
 }
 
 function plan(cfg: RunnerConfig, only: string | null): number {
-  const sys = dryRunSys();
-  const r = new Runner({ ...cfg, push: false, stateDir: fs.mkdtempSync(path.join(os.tmpdir(), 'runner-plan-')) }, sys);
-  r.readQueue(true);
-  const st = r.statuses();
-  const jobs = only ? r.jobs.filter((j) => j.id === only) : r.jobs;
-  if (!jobs.length) { console.log(only ? `no job ${only} on origin/pc-jobs` : 'no jobs on origin/pc-jobs'); return 1; }
-  const m = sys.machine();
-  console.log(`machine: ${m.memTotalGb.toFixed(1)} GB, ${m.physicalCores} cores / ${m.threads} threads; lab budget ${JSON.stringify(budget(m, cfg.budget))}`);
-  for (const job of jobs) {
-    const s = st.get(job.id);
-    if (!only && s && s.state !== 'waiting') continue;
-    console.log(`\n== ${job.id} ${job.title} (${job.cpu}; STATUS ${s?.state ?? 'none'})`);
-    if (job.errors.length) { console.log(`   job file errors:\n     ${job.errors.join('\n     ')}`); continue; }
-    const run = { id: job.id, title: job.title, cpu: job.cpu, file: job.file, startedAt: Date.now(), steps: r.stepsFor(job, !!s && 'approved' in s.fields), stepIndex: 0, canControl: job.control, memoryStops: 0, unit: null, unitStartedAt: 0, workers: job.maxWorkers ?? Math.max(1, m.physicalCores - 1), sizing: null, cap: null, peakRssGb: null, backoff: null, playingHeld: false, events: [], progress: [], total: null, progressUnit: null, dataUpdated: null, metrics: {}, metricsAt: 0, shas: {}, restarts: [], approved: false, stopping: null, outcome: null, numbers: {}, published: false, pendingStatus: null };
-    for (const step of run.steps) {
-      if (step.kind !== 'shell') { console.log(`\n-- ${step.name}: the runner's own step${step.kind === 'pilot-checks' ? `: ${job.pilot?.checks.length ? job.pilot.checks.join(' | ') : 'NO check: lines -> waiting, needs a human/Claude check'}` : step.kind === 'final-checks' ? `: ${job.commands?.checks.join(' | ') || 'none'}` : ''}`); continue; }
-      const u = r.unitSpec(run, job, step);
-      console.log(`\n-- ${step.name} (${u.script}):\n${r.stepScript(run, job, step).split('\n').map((l) => `   | ${l}`).join('\n')}`);
-      sys.startUnit(u);
-    }
-    if (job.aborts.length) console.log(`\n-- abort (every minute): ${job.aborts.join(' | ')}`);
-  }
-  return 0;
+  const r = new Runner({ ...cfg, push: false, stateDir: fs.mkdtempSync(path.join(os.tmpdir(), 'runner-plan-')) }, dryRunSys());
+  return r.plan(only, (l) => console.log(l));
 }
 
 function readStatus(cfg: RunnerConfig): StatusDoc | null {
@@ -175,7 +158,7 @@ function install(cfg: RunnerConfig, f: Map<string, string>): number {
   const b = budget(m, cfg.budget);
   const node = path.dirname(process.execPath);
   const args = [`--lab-root ${cfg.labRoot}`, `--reserve-gb ${cfg.budget.reserveGb}`, `--public-status ${cfg.publicStatus ? 'on' : 'off'}`,
-    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-every-s', 'public-heartbeat-s'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
+    `--http-port ${f.get('http-port') ?? 8645}`, ...['public-every-s', 'public-heartbeat-s', 'cores', 'co-schedule'].filter((k) => f.has(k)).map((k) => `--${k} ${f.get(k)}`), ...(cfg.homeRepos['mtg-table'] ? [`--home-mtg-table ${cfg.homeRepos['mtg-table']}`] : []),
     ...(cfg.homeRepos.ForgeCoach ? [`--home-forgecoach ${cfg.homeRepos.ForgeCoach}`] : [])];
   write(path.join(unitDir, SLICE), sliceUnit(b));
   write(path.join(unitDir, SERVICE), serviceUnit({ runnerDir, node, args }));
@@ -200,10 +183,10 @@ function approve(cfg: RunnerConfig, id: string, f: Map<string, string>): number 
   return 0;
 }
 
-/** The public copies on 127.0.0.1 (serve.ts): status.json as the runner last wrote it, ladder.json as the ladder last wrote it. */
+/** The public copies on 127.0.0.1 (serve.ts): status.json as the runner last wrote it, ladder.json and warehouse.json as last written. */
 function serve(cfg: RunnerConfig, r: Runner, port: number): void {
-  serveStatus(port, { status: () => readStatus(cfg), ladder: () => r.publicLadder() })
-    .then(() => console.log(`public status on http://${STATUS_HOST}:${port}/public-status.json (and /public-ladder.json)`))
+  serveStatus(port, { status: () => readStatus(cfg), ladder: () => r.publicLadder(), warehouse: () => r.publicWarehouse(), ledger: () => r.publicLedgerText() })
+    .then(() => console.log(`public status on http://${STATUS_HOST}:${port}/public-status.json (and /public-ladder.json, /public-warehouse.json)`))
     .catch((e: Error) => console.error(`http: ${e.message}`));
 }
 
@@ -212,9 +195,9 @@ function printStatus(cfg: RunnerConfig): number {
   if (!d) { console.log(`no ${path.join(cfg.stateDir, 'status.json')} yet (is the runner running? systemctl --user status ${SERVICE})`); return 1; }
   const age = Math.round((Date.now() - Date.parse(d.updated)) / 1000);
   console.log(`updated ${d.updated} (${age} s ago)${d.paused ? '  PAUSED' : ''}`);
-  console.log(`host: load ${d.host.load1}, memory ${d.host.memUsedGb}/${d.host.memTotalGb} GB, swap ${d.host.swapUsedMb} MB, pressure ${d.host.pressure}%, lab budget ${d.host.budgetGb} GB`);
+  console.log(`host: load ${d.host.load1}, cores ${d.host.coresUsed ?? '?'}/${d.host.coresTotal ?? '?'} in use, memory ${d.host.memUsedGb}/${d.host.memTotalGb} GB, swap ${d.host.swapUsedMb} MB, pressure ${d.host.pressure}%, lab budget ${d.host.budgetGb} GB`);
   for (const r of d.running) {
-    console.log(`running ${r.id} ${r.title}\n   ${r.phase}; ${r.done ?? '?'}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}; ${r.ratePerHour ?? '?'}/h; ETA ${r.eta ?? '?'}; ${r.workers ?? '?'} worker(s); errors ${r.errors ?? '?'}${r.paused ? '; PAUSED' : ''}${r.detail ? `; ${r.detail}` : ''}`);
+    console.log(`running ${r.id} ${r.title}\n   ${r.phase}; ${r.done ?? '?'}${r.total ? `/${r.total}` : ''} ${r.unit ?? ''}; ${r.ratePerHour ?? '?'}/h; ETA ${r.eta ?? '?'}; ${r.workers ?? '?'} worker(s), ${r.cores ?? '?'} core(s); errors ${r.errors ?? '?'}${r.paused ? '; PAUSED' : ''}${r.detail ? `; ${r.detail}` : ''}`);
     for (const e of r.pressureEvents.slice(-5)) console.log(`   ${e.at} ${e.kind} -> ${e.workers} worker(s), pressure ${e.pressure}%`);
   }
   for (const q of d.queue) console.log(`queued  ${q.id} ${q.title} (${q.cpu}${q.est ? `, ${q.est}` : ''})`);
@@ -284,6 +267,7 @@ async function main(): Promise<number> {
       console.log(`${job.id} ${job.title}: ${job.cpu}, repos ${job.repos.map((x) => `${x.repo}@${x.ref}`).join(', ') || 'none'}, resumable ${job.resumable ? 'yes' : 'no'}, max_workers ${job.maxWorkers ?? '-'}`);
       console.log(`pilot: ${job.pilot?.blocks.length ?? 0} block(s), ${job.pilot?.checks.length ?? 0} check(s); commands: ${job.commands?.blocks.length ?? 0} block(s), ${job.commands?.checks.length ?? 0} check(s); ${job.aborts.length} abort line(s); progress ${job.progress?.line ?? '-'}`);
       console.log(job.machineChecked ? 'machine-checked: the runner may go past the pilot on its own' : 'NOT machine-checked: the runner stops after the pilot (waiting, needs a human/Claude check)');
+      for (const l of ledgerCheckLines(job, siblingJob(file), (n, t) => parseJobFile(n, t, parseExpr))) console.log(l);
       if (job.errors.length) { console.log(`ERRORS:\n  ${job.errors.join('\n  ')}`); return 1; }
       if (f.get('metrics')) {
         const m = JSON.parse(fs.readFileSync(f.get('metrics') as string, 'utf8')) as Record<string, unknown>;

@@ -1,5 +1,18 @@
 # mtg-table — decisions
 
+> **From D379 on, each decision is a file of its own under
+> [`docs/decisions/`](docs/decisions/)** (**D379**, 2026-10-04). This file is the
+> frozen history of D1–D378 (D377 and D378 belong to PRs already open when this
+> changed, which may still append them here): nothing else is appended, and its
+> entries are not moved or rewritten. Every PR used to append its decision to the end of this
+> file, so parallel PRs conflicted on it each time one merged; a file per
+> decision touches nothing shared. A new decision is
+> `docs/decisions/D<nnn>-<slug>.md` (`D379-decision-files.md`), starting with
+> `## D<nnn> — <title>` and the date line, as below; an amendment to an old
+> decision is a new file that names the one it amends. Numbers stay final
+> (D200): `node tools/decisions.mjs next` prints the next free one, `list` the
+> index of both places, and `check` (CI) fails on a number used twice.
+
 The load-bearing decisions, each dated, with the reasoning that produced it and the
 alternatives that were rejected. Rationale is condensed from
 [`docs/research/05-architecture-synthesis.md`](docs/research/05-architecture-synthesis.md)
@@ -14735,6 +14748,10 @@ queue (the stream already reaches the asker).
 *Branch `c/evolve-rigor`; D331 rather than D326, because D326–D330 may be held by
 branches not yet pushed (main holds up to D325).*
 
+*(A repeat confirmation of the same card is judged by **D357** from 2026-10-04:
+its confirmation batches pooled, at a halved level per repeat. A first attempt
+is unchanged.)*
+
 **2026-10-03** (the methodology review's finding M2: "evolve's cuts are about
 180 simultaneous 95% tests, re-checked as data accumulates")
 
@@ -15261,6 +15278,110 @@ to the public branch (one commit, replaced, is the value; the history is on `pc-
   (the lab-runner guide). Rejected: binding the LAN (plain http is mixed content on the
   https page, and it would expose the server to every device at home), and pushing every
   minute regardless (a commit a minute while nothing moves).
+
+**Amended 2026-10-04 (branch `c/cores`): heavy jobs share the cores; a narrow job no longer
+holds the whole machine.** J049 (evaluator training) ran `dataset.py`, one Python process at
+about 1,000 rows/s, for hours while the runner counted the machine busy: 15 of 16 threads idle
+(the PC session's HEARTBEAT of 22:35 and 22:50, Justin: "see if we can come up with a better
+solution"). Of the PC session's four proposals this takes 1 (a job declares its width and the
+runner starts the next job beside it), 3 (a parallel encode) and 4 (cores in use on the page);
+2 (hand-ordering the queue) is not needed once 1 holds.
+
+- **Width.** A job's `cores: N` header is the cores it keeps busy; without it, its
+  `max_workers`, else physical cores − 1 (a light job: 1). A `cores: N` line before a block
+  in `## Pilot` or `## Commands` sets that block's width only, and caps `{workers}` and `$JOBS`
+  in it, so one job can hold a wide encode and a single-process fit; a `mem_gb: G` line there
+  is that block's whole memory reservation (a fit that loads the dataset is one core and many
+  GB). `{workers}` never exceeds the header's `cores:`. A declared width also sets
+  `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` for the step, so numpy's
+  linear algebra keeps to it (an undeclared width changes nothing).
+- **Co-scheduling** (`schedule.ts`). The core budget is the physical cores (`--cores N`; 8 on
+  the 9700X: a seven-worker job and a one-core job together, the SMT threads left to the
+  desktop). A heavy job starts beside running heavy jobs only when the widths sum within the
+  core budget; the memory reservations (a block's `mem_gb:`, else width × per-worker peak:
+  measured, `mem_per_worker_gb` or 2.5 GB) within the heavy memory budget; no running job is in memory backoff and host
+  pressure is under the high line; and Justin first, pause, `needs: check` and `retry_after`
+  hold as before. A light job keeps its own slot. Someone else's running job fills the
+  machine. `--co-schedule off` is the old rule.
+- **Order and starvation.** The first open heavy job that could run but does not fit stops
+  the queue: nothing after it starts beside the running jobs. A narrow job never overtakes a
+  wide one, and the wide one gets the machine when the running jobs end. A job waiting on its
+  `after:` does not stop the queue. Rejected: back-filling narrow jobs past a waiting wide one
+  (a stream of narrow jobs could keep a wide one out for ever), and shrinking a wide job to fit
+  the cores left (a night-long SPRT at two workers, with its dependants queued behind it).
+- **Lanes.** Jobs side by side never share a checkout: lane 1 is the clones as before, lane k
+  `<repo>-lane<k>`, each at its own pinned commit with its own build; a lane's mtg-table `var/`
+  is a symlink to lane 1's, so `after:` jobs, `clean:` and the ladder find every output where
+  they did. Jobs side by side share `var/` and must not write the same paths. Rejected: one
+  shared checkout (a `prepare` would check out and rebuild under a running job: J049 is pinned
+  to 9ca3329, J053 runs main).
+- **Sizing beside.** A job is admitted at its header width; its sizing after the pilot uses the
+  heavy budget less the others' reservations, so it may get a worker fewer than alone. A
+  running job's later, wider block is never held for cores (it could wait a night); it may
+  briefly crowd its neighbour, so wide blocks go first.
+- **The page.** `status.json` gains `host.coresUsed` / `host.coresTotal` (the running jobs'
+  widths of the budget) and each running job's `cores`, numbers the public copy keeps;
+  HEARTBEAT and `tools/runner.sh status` print them.
+- **The encode.** `tools/ml/dataset.py --jobs N` encodes the recordings in N processes, one
+  file each at a time, and writes them back in path order with at most 2 × N files in flight:
+  every file it writes is byte for byte what `--jobs 1` writes (the `.npz` members carry a
+  fixed time, where numpy's own stamps the clock), checked by `tests/test_dataset.py` on the
+  fixture recordings. It writes `progress.json` (rows, games, files) every 10 s and
+  `stats.json` last, removing any stale one at the start, so `gate_metrics.py dataset`
+  reports rows mid-run (`written: 0, partial: 1`) and a `progress: metric ds.rows` moves.
+
+**Amended 2026-10-04 (branch `c/runner-blas-threads`): every step's thread pools are capped
+at its width, declared or not.** Measured on J060: ~680% CPU at width 1 (`train_eval.py`, numpy);
+beside a co-scheduled 5-worker job the load average reached ~27 and that job ran ~13% slower.
+The `c/cores` cap set three variables, and only for a declared `cores:`, never for a width that
+comes from `max_workers` or the default. The runner now caps BLAS/OpenMP pools to the width: every step's unit gets
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and
+`VECLIB_MAXIMUM_THREADS` set to the step's width, the cores the runner reserves for it beside
+other jobs (the block's `cores:`, else the job's, else its sized workers, else the width it
+was admitted at). Not `{workers}`: the workers are what memory allows (a pilot runs at most 3)
+and say nothing of a step that runs no pool, while the width is what co-scheduling counts, so
+the cap makes that count true. Java ignores the variables, so a JVM-pool step at width N is
+unchanged. A block that exports one of them keeps its own value (the script runs after the
+unit's environment); `matchup_sim.py` and `matchup_verify.py` now set their one thread rather
+than default it. `tools/runner.sh plan` prints each step's `threads:` and the step log's start
+line says it. The PC picks this up on its next `tools/runner.sh install`; units already
+running keep the environment they started with.
+
+**Amended 2026-10-04 (branch `c/runner-stream-metrics`): the extractors stream, and keep a few
+numbers per game, never the lines.** Measured on the PC: the daemon died with "JavaScript heap
+out of memory" at ~1 GB of heap during J059 (queue night 2, `metrics: night = cubelab-queue
+var/cubelab/queue night 2`), and again 6 s after its restart; under a drop-in raising the heap to
+3 GB it sat at 1.3–1.4 GB. The root holds nights 1 and 2: 364 MB of `drafts.jsonl` that day. The
+cause: `readDrafts` (above, `c/status-fresh`) read each file incrementally but kept EVERY parsed
+line, ~16 KB of picks and decks each, for the life of the process, and its first read after a
+start took a whole file in one buffer and split it. Parsed, a line costs about three times its
+bytes. Reproduced on a synthetic root shaped like the queue's (7 normal keys and 15 bridge
+keys, lines from `fixtures/cubelab/decisions/drafts.jsonl` re-seeded, `night-1.json`,
+`night-2.json`, `queue.json`), one `cubelabQueue` plus `progressOf` as on a tick, `node
+--trace-gc`'s largest heap: 600 MB of drafts took 1,758 MB (1,711 MB retained after a full GC;
+at a 1 GB cap it dies in `JSON.parse`, as the PC did), and 1,200 MB took 3,398 MB, so the PC's
+3 GB drop-in fails again once today's files have doubled. Now every reader goes through
+`eachCompleteLine`, a synchronous `readSync` loop of 1 MB chunks that decodes a line only once
+its newline is in (a UTF-8 character split across two reads stays whole) and returns the
+offset after the last newline. `draftStats` replaces `readDrafts`: each line is parsed and
+dropped, and the cache keeps counts, the seeds and five numbers per game (ms, turns, CPU ms,
+and a recording's bytes and errors), in file order, so every sum and median folds as before.
+The cache's rules are unchanged: keyed by inode, size and mtime, the appended tail read from
+the last offset, read again from the top when a file shrinks, is replaced or is rewritten at
+the same size. `aibench`, `ladder`, `lines` and `count` stream the same way (they read whole
+files on every tick), and `Runner.tail`, which read a whole step log for `failure.txt`, reads
+its last 4 MB. Same keys, same numbers: the 600 MB and 1,200 MB roots give byte-identical JSON
+under the old and new extractor, and `lab-runner.test.ts` checks the queue, `aibench`, `lines`
+and `count` against the old readers kept in `web/test/lab-runner-legacy-metrics.ts`, with
+appends, a scribble behind the offset that an append must not re-read, truncation, rotation
+and removal. After: 600 MB peaks at 24 MB of heap (10 MB retained) under a 64 MB cap, 1,200 MB
+at 33–40 MB (13 MB retained) under a 64 MB cap, a 3 GB cap or node's default; the first tick
+takes 3.7 s and 7 s there (14 s and 27 s before), a later tick under 0.1 s. A test runs the
+extractor in a child node capped at 48 MB over 48 MB of drafts (the old code dies there). Once
+the PC has run `tools/runner.sh install` with this, its drop-in
+`~/.config/systemd/user/forgecoach-runner.service.d/50-pc-heap.conf`
+(`NODE_OPTIONS=--max-old-space-size=3072`, `MemoryMax=4G`) can go; the restart adopts the
+running J059 and J060 units.
 
 ## D340 — Draft seeds belong to someone: the lab keeps 1–799,999,999, verifications 800,000,000+, and the AI ladder's deck sets 900,000,000+, which `run` and the queue refuse; the dataset builders also drop any game played with a deck-set deck, matched card for card
 
@@ -15913,120 +16034,2490 @@ card was no longer public in that state, so the checker's verdict stands.
 Filtering in `Snap.library`: Snap walks views only and cannot see the static
 effect's source on the live game (hard rule 3). Forcing `checkStaticAbilities`
 from the hook: the recorder would change the game it records.
+## D353 — The post-game review: every graded decision triaged at the live settings, the ones most likely to matter graded again to the end of the game, one report with a verdict that never calls a close call a mistake; the helper's `/review` runs it on a game the engine wrote
 
-## D354 — The search respects its budget: `anytime=1` keeps a cut round's rollouts, prunes candidates to the time left, races out the clearly worse, and decides on the paired evidence that exists
-
-*Branch `c/search-week3`; D354–D356, the next numbers free at push (D352 is
-main's, D353 `c/game-review`'s). The engine review's week-3 search upgrades, each behind a
-`SearchConfig` switch that is off by default, so `search-v1` and
-`search-v1-fixed3` are unchanged rollout for rollout and the ladder can SPRT
-each one.*
+*Branch `c/game-review`; ForgeCoach's half is its branch `c/game-review`. The
+contract is `docs/game-review.md`.*
 
 **2026-10-03**
 
-**Decision.** `SearchConfig` gains `anytime=1`. Under it, `SearchPolicy`'s
-search loop (`searchAnytime`, scheduling in the pure `mtgtable.ai.Anytime`):
+**Decision.** `coach-grade.sh review --log F --seat N` reviews one game for the
+seat whose redacted log it is (another seat is refused: the log is that seat's
+view), in four steps; `Review.java` holds the engine-free ones and
+`GradeSelfTest` holds `Review`:
 
-- **never throws work away**: a round the deadline cuts short keeps the
-  rollouts it finished (a NaN for each one not played), and every statistic is
-  per candidate over its own rounds, its paired difference to Forge's answer
-  over the rounds both were scored in (`Report.fillStats`, NaN-aware; on
-  complete rounds it is D350's arithmetic exactly);
-- **plays what matters first**: round 0 plays Forge's answer, then the rest in
-  the order they came (the prior's, D355); later rounds Forge's, then the rest
-  best-first by their paired difference;
-- **prunes to the budget**: before each later round, the measured time per
-  rollout says how many candidates the time left can carry to `rounds` rounds,
-  and the worst are pruned to fit (never Forge's answer, never below two);
-- **races**: from 3 paired rounds, an alternative whose paired difference to
-  the current leader is below zero by 2 standard errors is retired; the search
-  stops when only Forge's answer is left (a verdict, not a fallback);
-- **retires a candidate whose copies keep throwing** (its second error) instead
-  of abandoning the search; only Forge's own answer erroring three times, or
-  errors on every candidate, falls back (`rolloutErrors`);
-- **decides on what exists**: the best is the alternative with the highest
-  paired difference among those with `min(rounds, most)` paired rounds, and
-  the override rule (D312's margin or D350's lcb) decides as always. Forge's
-  answer is kept without a verdict (`fallback: budget`) only when no
-  alternative was scored against it at all.
+- **Plan** (`Review.plan`). A human-seat log: the first act of each decision —
+  the viewer's main phase at a priority prompt with an empty stack (`spell`,
+  once per main phase), the attack prompt, the block prompt, each target prompt
+  answered with a click (a cancelled one is no decision). An AI-vs-AI
+  recording: the first state of each of the viewer's main phases,
+  declare-attackers steps and declare-blockers steps where something attacks
+  them. What the player did comes from the engine's public events after the
+  decision (the first spell cast from the hand the moment shows; the
+  `attackers` / `blockers` event, the bridge's self-listed unblocked attacker
+  dropped) or the player's own target click. `Grader` adds the played token to
+  its shortlist and answers `playedOption`: the option it is, by class
+  (identical creatures, another copy of a card), or null.
+- **Triage.** Every planned decision with the live analysis's settings (D336,
+  D349: to the end of this turn, the leaf measure, racing from round 4, at
+  least 2 rounds), a per-decision budget of `--triage-s × jobs / decisions`
+  clamped to 1.5–6 s, on `--jobs` JVMs that each claim the next unclaimed
+  decision (`batch --claim`: an atomic file create), so one slow decision does
+  not hold up the rest.
+- **Deepen** (`Review.select`, `Review.allocate`, `Review.deepOptions`). The
+  candidates are the decisions graded `ok` whose played option has numbers and
+  is not the best; they are ranked by the upper end of the played option's
+  regret interval (what the choice might have cost: large regrets and wide
+  close calls both rank high), ties by the point regret; the first
+  `--deep-k` (6) are graded again from scratch with playouts to the end of the
+  game when each gets at least 60 s, else to the end of the next turn. One
+  decision per JVM when `k ≤ jobs`; a deepened decision plays only its
+  shortlist (the player's option, the triage's best, Forge's, then by the
+  triage's win rate, 5 at most), every option every round, so the comparison
+  stays paired.
+- **Report** (`Review.report`): per decision the final table (the deepened
+  grade where there is one), the played and best options, Forge's choice, the
+  played option's regret with its 95% interval, and the verdict — `best`,
+  `mistake` only when the regret interval excludes zero (`clear`), `close`
+  when it includes zero, `not-graded` (one option, no table, the choice outside
+  it, or no numbers). Key moments: deepened mistakes by regret, deepened close
+  calls with a point regret of at least 0.02 (a tie is not a moment that
+  mattered), then clear triage mistakes. `knowledge.opponentModel` says
+  whether the opponent's hidden cards came from a pool, a public deck, or
+  nothing (`basic-lands`: every number flatters the player, and the screen
+  says so).
 
-The `Report` says so: `anytime`, `pruned`, `retired`, per-candidate `n`;
-counters `search.anytime.{pruned,retired,short,erroredOut}` (`short`: a
-verdict on fewer rounds than `rounds`, where D312 would have fallen back).
-Ladder player `search-v1-anytime` (search-v1 + `anytime=1`), SPRT against
-`search-v1`: both wall clock on purpose, since the budget behaviour is what is
-measured.
+**Hidden information** is the live guard's (D348), not D334's review rule:
+the review runs right after a game the player may play again, against the
+same AI. `review-plan` runs `HiddenPool.checkLive` before anything is graded
+and `batch --guard live` runs it on every moment (a moment line's `oppDeck` is
+refused too, not just the run's flags). The default is pool mode.
 
-**Measured** (`docs/evidence/search-week3.md`): 12 games on three dev deck
-pairs, the same deals, search at 1.5 s against Default+outlets, three JVMs on
-the shared 4-core container. Budget fallbacks **18.5% → 0.9%** of searched
-decisions (55 of 297 → 3 of 316), all fallbacks 19.5% → 4.4%; with the
-erroring-candidate rule, **0 fallbacks of any kind in 302 searched decisions**
-(five candidates retired on errors); 1,407 → 1,208 ms per searched decision. On 156 games of the larger dev set, D312's
-loop fell back on budget in 11.7%; the review cites 26–37% (another machine
-and load; a budget fallback rate is a property of the CPU as much as the search).
+**The helper's `/review`** (`tools/review-runner.mjs`): `POST /review
+{"gameId", "seat"?, "oppPool"?, "oppKnown"?, "deepK"?, "triageS"?, "deepS"?}`
+→ 202 with an id, `GET /review/<id>` for its state, stage and report. Only
+`var/games/<gameId>/frames.jsonl` (a plain id, its real path inside
+`var/games/`), the seat checked against the log header, the pool and known
+picks written to files of the review's own (the match launcher's card-name
+pattern; a pool under 80 cards refused), the argv an array, one review at a
+time with a queue of 2, a 30-minute limit. There is no field for the
+opponent's deck, and unknown fields are refused. `/health` carries
+`"review": 1` once the bridge is built (`--no-review` turns it off).
 
-**Rejected.** Lowering `rounds` to 1 (it removes the fallback by making every
-verdict a one-round one, not only the cut ones); a fixed larger budget (a
-think the player waits for); D334's grader schedule as is (`mtgtable.grade`
-depends on `mtgtable.ai`, not the other way, and its racing starts at 40
-rounds); requiring `rounds` paired rounds before an override (it is D312's
-fallback again, under another name). **Known risk**, left to the SPRT: under
-the margin rule an override may rest on a single paired round when the budget
-cut everything else (`search.anytime.short` counts them); `override=lcb` needs
-3.
+**Held by** `GradeSelfTest` (the plan of a synthetic human log and an AI-vs-AI
+one, the budgets, the selection's order and exclusions, the deep shortlist,
+the verdict rules, the report's shape and counts, the guard on the review's
+knowledge), `tools/review-runner-selftest.mjs` (gate 12f, CI: validation,
+traversal by symlink, the seat, the queue and 429, the stages, the report,
+failure and timeout, the argv, the helper route) and `coach-grade.sh
+review-smoke` (the engine smoke at tiny budgets, the report checked; not in
+the gate, it boots Forge).
 
-## D355 — Wider candidates ranked by a one-step prior: `rank=prior` generates up to `gen`, applies each once on a shared determinization, and keeps the best `cands` by the position after it
+**Measured** in this cloud container (4 shared cores, the UI lane's tests
+running beside it; every figure several times the PC's). One human-seat game
+(`human-auto-42`, 32 decisions, 14 of them a single option), a 390-card pool,
+3 JVMs, `--triage-s 15 --deep-s 150 --deep-k 6`: plan 0.5 s; triage 56 s wall,
+of which the busiest JVM graded for 36 s (the rest is three JVMs booting on
+four cores) — the 15 s target is missed here, because 2 rounds are the floor
+and a late-game decision with many options costs more than its budget; deepen
+6 decisions, 2 per JVM at 75 s each to the end of the game, 164 s wall (151 s
+grading); 3.7 min in all. The deepened tables are honest and wide (3–20
+rounds: ±20–50 points), so all six came out best or close calls, none a
+mistake. An AI-vs-AI recording (`villain-doom-248`, 40 decisions) at the
+smoke's tiny budgets: triage's busiest JVM 144 s, 100 s after
+`--max-options 8` and a 2.5 s playout timeout. `review-smoke` on
+`human-trample-7` (23 decisions, 2 JVMs): 58 s. Through the helper,
+ForgeCoach's own client (`runReview`) against `/review` on the same game at
+`triageS 5, deepS 30, deepK 2`: done in 63 s, the report accepted by its
+validator. On the PC (7 JVMs, a 9700X) the targets — triage ≈ 15 s, 6
+decisions deepened ≈ 2.5 min — are the budgets' defaults; the PC job measures
+them.
+
+**Rejected.** D334's review knowledge (the AI's real list) for a game the
+player may replay against the same AI; grading every decision to the end of
+the game (minutes each: a whole game is an hour on seven JVMs); splitting one
+decision's options across JVMs (pairing holds only if every option plays the
+same seeds, and racing needs one view of all of them: one decision per JVM is
+both); calling every decision whose interval reaches above zero a mistake (at
+triage budgets nearly all would be); a JVM per decision (a 10 s boot each);
+streaming the report over one long HTTP response (a phone or a closed tab
+loses it; a polled id survives both).
+
+**Amended 2026-10-03 (branch `c/review-shards`, after the PC's job J028).** On
+the PC every triage JVM of all three fixture reviews died, the report held 77
+errors of 77 decisions, and the review still printed `REVIEW DONE`; the pilot
+`review-smoke` had passed. The cause: the PC's `var/coach-grade/leaf-scale.json`
+held a scale of −10325 — J015 had run `fit-scale` when its recordings folder was
+empty, so it fitted the one fixture game (one result for every position: the
+slope is noise) and wrote it. `review` passes that file to the triage as
+`--leaf-scale`; `CoachGrade.batch` read its settings per moment *after*
+claiming the moment and outside its try, so each JVM claimed one decision,
+threw "a leaf scale must be positive", and exited with nothing written. Not the
+cause: Forge homes (each shard has its own, D129), the claims, or the budget
+arithmetic (32 decisions on 7 JVMs is 5 each, 15 s / 5 = 3 s, as specified).
+The smoke passed because it read the same file, failed the same way, and none of
+its 11 checks required a decision to be graded. Now:
+
+- `fit-scale` never writes a fitted scale that is not a positive number, or one
+  fitted on fewer than `--min-games` (10) games: it prints the fit and exits 3
+  (`CoachGrade.fitProblem`). An unusable file says how to fix it.
+- `review-plan` checks the leaf scale first: an unusable one is
+  `REVIEW FAILED plan` (exit 3) before any JVM grades.
+- `batch` reads its settings once, before it claims anything.
+- `review` ends with exactly one of `REVIEW DONE <report> decisions=N graded=G
+  errors=E deepened=D` or `REVIEW FAILED <stage>: <why>`. A triage that graded
+  nothing is `REVIEW FAILED triage` (exit 4) with the first `COACH-GRADE FAILED`
+  line of its shard logs; a report whose every decision is an error or refused
+  is written but is `REVIEW FAILED report` (exit 4; `Review.failure`). A dying
+  shard's `REVIEW WARN` line carries its reason, so a job's log keeps it.
+- A rerun under the same `--run` starts clean (the claims and shard files go):
+  a review is not resumable, and stale claims would have kept the decisions an
+  earlier run died on from ever being graded.
+- `review-smoke` prints `REVIEW-SMOKE …` (J028's check counted the smoke's
+  `REVIEW DONE` with the reviews'), and two new checks: at least one decision
+  graded `ok`, errors at most a quarter of the decisions (13 checks).
+
+Held by `GradeSelfTest` (`fitProblem`, a negative scale file refused with its
+remedy, `Review.failure` / `errors`) and the smoke. Rejected: ignoring an
+unusable scale file silently (the live coach's numbers would change meaning
+without a word); a failed review's report marked done with an error count (the
+helper would serve a screen of errors as a review).
+## D354 — The learned evaluator is promoted only through three pre-registered gates: a held-out fit against the core baseline and the fitted leaf, a decision-level regret test against full-game truth tables, and an SPRT against the current search; the search gains one flag, `leaf=eval:<model.json>`
+
+*Branch `c/eval-gates`; D354, the next number free at push (D347–D351 are on
+`main`). The engine review's H4 and its week-2 roadmap (2026-10-03).*
 
 **2026-10-03**
 
-**Decision.** With `rank=prior` (and `gen`, default `max(24, cands)`), the
-three candidate builders enumerate up to `gen` instead of stopping at `cands`.
-When more than `cands` were generated, `SearchPolicy.rank` plays each
-candidate except the kept ones (Forge's answer, and pass for a priority
-decision) through `playout` with `Limits.untilApplied`: one copy each, the SAME
-determinization and engine seed for all (common random numbers, the AI still
-never sees hidden cards), stopped as soon as the candidate has been played out
-(`RolloutForcing.applied`: the priority answer taken, the stack empty and no
-simultaneous trigger waiting; a forced combat declaration made and that
-combat's damage dealt; or the turn over). The position is scored by the leaf,
-or by D316's learned evaluator (`prior=eval,evalmodel=<model.json>`; logit ×
-`LEAF_SCALE`; an unusable model is counted and the leaf ranks). The best by
-that score fill the remaining slots; the prior gets 30% of the budget, and
-what it does not reach ranks after the scored ones in enumeration order. The
-record carries each option's `prior` and the `generated` count (protocol
-amendment **M56**). Ladder player `search-v1-fixed3-ranked`
-(`rank=prior,gen=24` in fixed-rollout mode), SPRT against `search-v1-fixed3`.
+**Context.** D316's evaluator loses to the twelve-number logistic at three deck
+pairs, and night 1 (J020) brings thousands. A better log-loss does not
+guarantee better moves: the search takes the maximum over candidates, so it
+seeks out the positions where the evaluator is most wrong, and its leaves
+(the end of this turn) are sparse in the decision-state rows it trains on. The
+review asked for three gates, in order, each written down before it is run.
+This entry is that writing-down. The numbers are `tools/ml/gates.py`'s
+`FIT_RULE`, `REGRET_RULE` and `SPRT_RULE`; the scripts print PASS or FAIL
+against them and take no flag that loosens one. A changed rule is a new
+decision, made before its run. A gate that fails is not lowered: collect
+another night and retry (the review's rule).
 
-**Measured**: with `anytime=1` on the same 12 games, ranking ran on 25 of 324
-searched decisions (the rest generated `cands` or fewer), scored 143
-candidates and cut 100, at 393 ms per ranking; 16 rankings hit the 30% share
-before scoring every candidate. Budget fallbacks 0.9%, 1,217 ms per decision.
+**Gate 1, the fit** (`tools/ml/gate_fit.py`; the Java half
+`mtgtable.eval.LeafRows`, `tools/ml/leaf-rows.sh`). It uses the model's own
+split (`train_eval.py --split-by pair`, D317) on a dataset built with D340's
+reserved decks dropped, and reads only its TEST split. PASS needs all four:
 
-**Rejected.** Ranking by Forge's own `AiPlayDecision` (it only accepts or
-declines); a full rollout as the prior (it is the search itself); ranking
-without a shared determinization (the prior's noise would rank the deals).
+- **A.** On the test decision rows, log-loss(core) − log-loss(eval) > 0, with
+  the 95% percentile bootstrap interval over deck pairs (2,000 resamples)
+  above 0. `core` is D305's twelve-number logistic, fitted on the same
+  training rows.
+- **B.** On turn-end positions of the held-out logs (each turn's last state,
+  where a playout at the live horizon stops, rebuilt in Java as `fit-scale`
+  does), log-loss(σ(leaf / scale)) − log-loss(eval) > 0, with the interval over
+  games above 0. `scale` is D349's fitted one (`var/coach-grade/leaf-scale.json`,
+  else 500). The evaluator is scored on the rebuilt game, through
+  `PositionEvaluator.winProbability`: the path the search's leaves take. At
+  most 1,500 held-out logs are used, evenly spaced.
+- **C.** Calibration on the test decision rows: ECE ≤ 0.03, and every
+  reliability bin holding at least 200 rows within ±0.05.
+- **D.** Power: at least 50 held-out deck pairs and 2,000 turn-end positions.
+  Less is a FAIL ("underpowered"), never a PASS.
 
-## D356 — The outlet policy inside the rollouts: `rollout=outlets` plays the searching seat with D310's policy in front of Forge, `rollout=both` the opponent too
+**Gate 2, regret** (`gate_regret_build.py`, `gate_regret_grade.py`,
+`gate_regret_score.py`). This is the test that matters.
+
+- **The set.** Decisions the AI seats took in the queue's lab games, with
+  decision records (D347).
+  - Normal drafts only: a bridge draft's pool is not one cube list.
+  - Decks outside the reserved sets, card for card, with the draft seed below
+    the reserved range (D340).
+  - The deck pair in the model's test split.
+  - Kinds: `priority` in a main phase with a `cast:` option (type `spell`),
+    `attack` and `block`, each with at least two options.
+  - At most one decision per game and type, chosen in the order of
+    sha256("gate2-v1|" + id).
+  - Up to 130 candidates per type. The set is the first 100 per type, in that
+    order, whose hand-ranker answer is `ok` with two or more options. That is a
+    rebuild check, never a result.
+- **The truth.** For each decision, every option's win rate when it is played
+  and Forge Default plays both seats to the end of the game. This is
+  `coach-grade.sh serve`, the live entry point, so D348's guard holds. The
+  knowledge is POOL mode: the run's cube list as `oppPool`; the opponent's
+  deck list is never sent. Settings:
+  - 200 rounds, racing from 40 every 20, seed 20261004;
+  - options in full up to 12;
+  - 180 s per playout, 40 min per decision.
+- **The rankers.** The same rollouts to the end of THIS turn (the live horizon
+  of `search-v1-fixed3`: `turns=0`, `aturns` unset), 3 rounds on common random
+  numbers with no racing, seed 1. The two rankers differ only in the leaf:
+  - **hand:** σ(leaf / 500), with `SearchPolicy.LEAF_SCALE` pinned;
+  - **evaluator:** its P(win), through the grader's new `--leaf eval:<model>`.
+
+  Each ranker's pick is the option with the highest mean. Ties go to Forge's
+  own choice, then to the table's order. The rankers ignore the search's
+  margin rule: the gate compares the leaves, not the override rule.
+- **The rule.** Regret(r) is the truth's best win rate minus the truth's win
+  rate of r's pick, over the options all three tables share. Take the mean of
+  regret(hand) − regret(eval) over the scored decisions. Its 95% percentile
+  interval comes from a paired bootstrap over decisions (10,000 resamples,
+  seed fixed).
+  - **PASS:** the mean is above 0 and the interval excludes 0, on at least
+    240 scored decisions.
+  - A decision is scored when the truth (`measure: wins`) and both ranker
+    answers are `ok`, with two or more shared options.
+  - The difference equals truth(eval's pick) − truth(hand's pick), so the
+    upward bias of the truth's noisy maximum cancels.
+  - Reported, not gated: the same rankers at 12 rounds, Forge's own regret,
+    the per-type table and the pick agreement.
+
+**Gate 3, the SPRT** (`tools/ml/gate_sprt.py`, the ladder's kind
+`search-eval`).
+
+- The player is `search-v1-fixed3-eval-<sha12>`: `search-v1-fixed3`'s params
+  plus `model`, the model file's 12-hex sha256.
+- Its seat config is `search-v1-fixed3`'s plus `,leaf=eval:var/ml/models/eval-<sha12>.json`,
+  and a file whose content does not hash to its name makes the player
+  unavailable.
+- It plays `ai-ladder.sh sprt` against `search-v1-fixed3` on the confirm set:
+  elo0 0, elo1 20, α = β = 0.05, at most 2,400 games.
+- **PASS** = H1. H0, or inconclusive at 2,400 games, is a FAIL.
+- It runs only after gates 1 and 2 pass (the job's pilot checks them).
+- Promotion past this gate is D321's league rule, not this one.
+
+**The search's one flag.** `SearchConfig` `leaf=hand|eval:<model.json>`
+(default `hand`, printed only when set).
+
+- It is set through `withLeaf` and a copy constructor, so the existing
+  constructors and every other key are untouched (`c/search-week3` edits the
+  search beside this).
+- `SearchPolicy` loads the model once per path (`SearchPolicy.evaluator`,
+  shared). A playout that does not finish the game is scored as
+  `LEAF_SCALE · logit(P(win))`, with p clipped to [1e-6, 1 − 1e-6]. Through
+  `winOf` that gives back p itself, and the margin keeps D349's meaning: 20
+  points is about 1 point of win rate at 50%.
+- A finished copy keeps the hand leaf's ±WIN.
+- A live seat may use the flag: the evaluator reads only its own seat's
+  knowledge (D316).
+- The grader takes the same evaluator as `--leaf` / `"leaf"` in `serve`
+  (`Grader.Settings.leafEval`; its value is P(win), its `config.leaf` says
+  which).
+- `coach-grade.sh serve` takes `COACH_GRADE_HOME` for a Forge home per JVM
+  (D129).
+- `EvalSelfTest` holds the flag engine-free:
+  - parse and round-trip;
+  - refusals;
+  - one shared instance per path;
+  - a missing model is an error, never a silent hand leaf.
+
+**Versions (D341's rule for these artefacts).** Every grading output has a
+`.meta.json` stamp:
+
+- the tree hash of `bridge/src`, its uncommitted changes and the jar's sha256
+  (all compared);
+- the serve flags, the requests' sha256 and the model's sha256.
+
+A resume under another stamp is refused unless `--allow-version-change`, which
+is recorded. The scorer refuses tables graded by different code. The PC jobs
+pin one commit of this branch so the truth and the rankers share it.
+
+**Cost** (the PC: 9700X, 7 JVMs; a full-game playout 0.5–1.0 s there, 4.7 s
+measured here; an end-of-turn playout about 0.1 s there, 0.4 s here):
+
+- **Truth:** 300 decisions × about 5 options × 200 rounds × 0.6 (racing) is
+  about 180k playouts, or 25–50 core-hours. That is **4–7 h on 7 JVMs**, one
+  night, resumable per decision.
+- **Rankers:** about 40k end-of-turn playouts over the four runs plus the
+  screen, about 1–2 core-hours, under 30 min.
+- **Leaf rows:** about 15k positions with no playouts, 15–40 min on one JVM.
+- **Training:** encoding about 1,000 rows/s, then the grid for 3 h.
+- **SPRT:** one search night (1,400–2,400 games).
+
+**Measured here** (smoke, one JVM, 16 playouts in all):
+
+- On the committed decision recording, the set builder picked one spell, one
+  attack and one block.
+- The attack decision was graded by the hand ranker (6 playouts, 2.6 s), the
+  evaluator ranker with the fixture model (6 playouts, 3.2 s:
+  `grade.evaluated` 6, `config.leaf` `eval:…`) and a 2-round truth to the end
+  of the game (4 playouts, 4.7 s each).
+- `LeafRows` rebuilt and scored both chairs' 22 turn ends with no failure.
+- The scorer and the metrics read the real answers.
+
+**Rejected.**
+
+- **Log-loss alone** (the optimizer's curse, above).
+- **Ranking with the search's margin rule** (it confounds the leaf with the
+  override rule, which D350 tests separately).
+- **The opponent's real deck in the truth.** The decisions are graded as the
+  live coach would see them, which is D348's rule. The search itself also
+  never sees it.
+- **`batch` for the truth** (its knowledge path has no live guard).
+- **Grading every candidate to the end** (the screen costs minutes, the truth
+  a night).
+- **Bridge drafts** (no single pool list).
+- **A truth seed equal to the rankers'** (shared deals would correlate a
+  ranker's pick with the truth's noise).
+
+**Amended 2026-10-04 (branch `c/fit-memory`): gate 1's fit runs within a declared memory
+budget.** On the PC, `train_eval.py --split-by pair --grid` over night-1 (6,343,314 rows,
+12,670 features) climbed past 19 GB in 7 minutes, and systemd-oomd killed it. The rows were
+widened to float32 on load. The re-split concatenated every split and then took each one out
+again. `make_net` and the `core` baseline each made a float64 copy of the whole training board.
+Now the rows keep the shards' int16, with the card block sparse in int16, int8 and int16. A
+re-split sends each row to its split as the shards are read (`evalnet.load_splits`: two
+passes, arrays allocated once). The standardisation is computed in chunks; its mean and
+deviation are bit for bit numpy's. The baselines turn only their own columns into float64.
+Peak RSS was measured with `getrusage` on synthetic data of night-1's shape (12,670
+features, 1,271 shards of 5,000 rows, 24 card cells a row). At 1 M rows it was 4,328 MiB
+before and 968 MiB after. At the full 6,343,314 rows it was 5,593 MiB after, through a
+`--grid` fit, the baselines, scoring and the export; `--dry-load` measured 5,580 MiB. The
+old code grows linearly with the rows, so at full size it would need about 27 GiB. The model, the
+splits, the gate's statistics and every reported number are unchanged. The report and the
+exported model were identical, byte for byte, to the old code's on the fixtures and on 20k
+synthetic rows. Every run now logs and reports `memory: STAGE: rss, peak`. `--dry-load`
+makes a real run's allocations at full size without training and prints the peak, for a
+job's pilot. No subsampling flag was needed.
+
+## D355 — A game the watchdog ends records cleanly: a batch that reaches a recorder off the game thread is held for the game thread's final frame, never snapshotted and never counted as an error
 
 **2026-10-03**
 
-**Decision.** `playout` seats `RolloutController.Outlets` (a
-`PolicyControllerAi` with an acting `OutletPolicy`, no search, no decision
-sink, the candidate still forced first through the shared `RolloutForcing`)
-for the searching seat when `Limits.outletsUs`, and a `PolicyControllerAi`
-with the policy for the other seat when `outletsThem`. `SearchConfig`'s
-`rollout=default|outlets|both` sets them; the coach grader's
-`Limits(deadline, horizon, maxSteps)` keeps plain Forge (its lane may take the
-switch later). Ladder player `search-v1-fixed3-routlets` (`rollout=outlets`),
-SPRT against `search-v1-fixed3`.
+*Branch `c/followups`; D355, the next number free at push.*
 
-**Measured** (fixed three rounds, the same 12 games): **136.3 ms of play per
-rollout against 135.3** with plain Forge (+0.7%), copies 9.4 against 9.1 ms;
-41.0 and 40.2 s a game. At the 1.5 s budget, 73.9 against 73.2 ms. The policy
-costs nothing measurable per rollout; whether it values sacrifice lines better
-is the SPRT's question.
+**Finding.** In the overnight queue one game hit the cube lab's deadline
+(normal/peasant, seed 77, 16 turns, reason `Timeout`), and its `recorded` row
+said `errors: 2, decisionErrors: 0`; every other game said 0. The two logs were
+complete — final `state`, `over` last — but each seat had counted one snapshot
+failure. The watchdog (`CubeLab.playGame`, and the same call in
+`AiBench` and `RecordMatch`) ends the game with `Game.setGameOver(Draw)` from
+its MAIN thread, and `setGameOver` fires `GameEventGameOutcome` on the calling
+thread (javap, 2.0.14: `fireEvent` at offset 158). Each recorder's
+`BoundaryFlusher` flushes on that event, so `SpectatorGui.handleGameEvents` ran
+on `main`, `Snap.state` refused the off-thread walk (hard rule 3), and the batch
+— the outcome event — was dropped with one error per seat.
+`TimeoutSelfTest` reproduces it deterministically: the game thread parks at
+turn 3, main ends the game, and before this change both seats count 1.
 
-**Rejected.** The opponent on the policy by default (what the opponent plays is
-not ours to assume; a human opponent is not D310's policy); the full
-`--ai-policy search` seat inside rollouts (recursion).
+**Decision.** `SpectatorGui.handleGameEvents` checks `ThreadUtil.isGameThread()`
+first; off it, the batch goes into the same `held` list D352 uses (now guarded
+by its own monitor, because this writer is not the game thread) and nothing is
+walked. The game thread's own `finish()` — `startGame` returns once the game is
+over — flushes, prepends the held events to the final `state` frame and writes
+`over`, exactly as for a game that ended by the rules. A timeout is therefore a
+normal end in the recording (the frame log has no `Timeout` reason; the lab's
+row keeps `timeout: true` and `reason: "Timeout"`), and `errors` again means
+"a snapshot failed, the log is incomplete". `SeatRecorder.offThreadBatches()`
+counts the held batches for the self-test. Gate step 12j runs it and the
+redaction checker on both logs.
+
+**Rejected.** Ending the game on the game thread: the watchdog fires because
+that thread is busy, and a hop onto Forge's `Game` pool is a fourth hop (hard
+rule 3). Skipping only `BoundaryFlusher`'s off-thread flush: the forwarder's own
+500 ms clock flushes from `receiveGameEvent` on the same thread, so the guard
+belongs where the walk would start. Subtracting timeouts from `errors` in the
+lab: it would hide the dropped outcome event, and any other off-thread flush.
+
+## D356 — The evolve loop judges the low-rated cards by a logged, seeded experiment: a share of its drafts force one eligible low-rated card into a deck with a recorded probability, the old rules read only the evidence they read before, and a weighted forced-versus-not comparison judges the card; it never cuts
+
+**2026-10-03**
+
+*Branch `c/ratings`; D356, the next number free on a freshly fetched `main`.*
+
+**Finding.** The PC's Omega evolve (`--generations 4 --drafts-per-gen 600
+--games 3 --seed 20001`) swapped nothing. Its report gave two reasons: 600 drafts
+a generation is too few (its estimates want about 1,200–3,400), and 33–40 cards
+were `rating-limited` — rarely played on colour, but rated under
+`deadMinRating` (60). The cause is the lab's deckbuilder, not its drafters:
+`deck.ts`'s `buildOne` ranks every candidate spell by `x.card.rating` plus
+synergy (`tools/cubelab/deck.ts:105`), so a card rated 19.7 (Delver of Secrets)
+sits in on-colour pools and is not played, and `evolve.ts`'s `assess` can only
+park it (`tools/cubelab/evolve.ts:710` on this branch, 673 before it: `rating-limited`, D299's protection).
+The grid puts these cards in pools anyway (three cards a line): over 2,000
+draft-only Omega drafts (seeds 3,000,001+, the real facts, no engine) 36 such
+cards sat on colour 80–1,125 times and were played 0–295 times — Delver 0 of
+477, Ephemerate 0 of 342, Mystic Snake 0 of 80, Reflector Mage 1 of 157. More
+drafts multiply both numbers by the same factor: it is a ratings question, as
+the report said.
+
+**What was rejected first.**
+- *(a) Ratings from evidence alone* (D301's `learn`, or a blend like
+  ForgeCoach's `cube/score.ts`). The evidence is games in a deck, and these
+  cards have almost none, so a shrunk estimate stays at the prior: the blind
+  spot reproduces itself. It also changes what the drafters think is good for
+  every card, which moves the whole population the evolve measures. It becomes
+  useful once exploration has made games; it is a later, separate step (below).
+- *Exploring picks.* The cards are already in pools; picks feed
+  `dominant-pick`, which would then need correcting.
+- *Uniform exploration over the eligible cards.* Measured on the same 2,000
+  drafts it gives a gold card (Mystic Snake, Maelstrom Pulse) about 3 forced
+  decks a generation, and its probability 1/m depends on how many cards are
+  eligible — thin pools force more often, and they are the weaker decks, so a
+  plain forced-versus-not comparison is biased (the test below shows it).
+- *Mixing explored games into `dominant-win`.* A forced card changes its deck
+  and its opponent's match; every bias that follows would need a model.
+
+**Decision.** `tools/cubelab/explore.ts`, behind `evolve --explore name=value`
+(off by default; `run.ts` takes it as `RunOptions.explore`):
+
+1. A discovery draft is **explored** with probability `share` (0.3), from its
+   own stream `rng(seed, 'explore')`; otherwise it is **plain**. Confirmation
+   batches never explore.
+2. In an explored draft each seat's deck is built as always (the **choice**
+   deck). Its **eligible targets** are pool cards that are not lands, are rated
+   under `deadMinRating` (the cards the rating-limited rule protects, chosen by
+   attribute before any game), are not `AI:RemAIDeck` (D301: their outcome is
+   about Forge's AI), are castable in the deck's main colours and are not in it.
+3. At most one is **forced**: card c with probability v_c / max(Σv, `cap`),
+   v = `gold` (4) for a multicolour card and 1 otherwise, `cap` 4, from the
+   seat's own stream `rng(seed, 'explore:A'|'explore:B')`. Each eligible card's
+   probability is written down with the eligible list.
+4. The forced card replaces the lowest-rated spell of its mana-value bucket
+   (the lowest-rated spell when the bucket has none; ties, the one chosen last);
+   lands stay; the deck is re-checked by `checkDeck` and an illegal one throws.
+5. `drafts.jsonl`'s `deck` is the deck that **played** (so `report`, `meta`,
+   `learn` and the ML datasets read the truth); `explore.seats[k]` keeps the
+   eligible list with probabilities, `in`, `out` and the **choice** deck.
+6. `run.json` records `explore`, it is part of the resume check, and it is
+   folded into the D341 version stamp's weights — **only when on**, so a run
+   without it has the same version id, folder check and bytes as before; the
+   same holds for `evolve.json` (`explore` absent when off, and in the resume
+   key as `null`). Seeds stay in D340's lab range.
+
+**How it is read** (`evolve.ts`'s `batchStats`, `explore.ts`'s `exploreTable`,
+`judgeExplored`):
+- The **counting rules** — dealt, picked, first line (`dominant-pick`), played
+  decks, on-colour pools (`dead`) — read every draft with its choice decks put
+  back. Exploration draws come from streams of their own after the builder is
+  done, so the drafts, picks and choice decks are bit for bit those of an
+  unexplored run at the same seeds (tested), and so are these counts.
+- The **game rules** — `dominant-win`, the mean, the balance, the design effect,
+  `meta.json` — read the **plain** drafts only: a coin-chosen subset of an
+  unexplored run's drafts, so unbiased; the price is 30% of their games.
+  `confirmPlan` still divides a card's games by all the drafts, which slightly
+  over-sizes a confirmation batch (which never explores): conservative.
+- Each target's **explored evidence** is a randomised comparison inside the
+  explored drafts: the decks it was forced into against the decks where it was
+  eligible and not forced, weighted by 1/p and 1/(1−p) (Hájek), a deck's match
+  as the unit, the variance by linearisation (so the 2–3-game clumps need no
+  design effect). Both groups meet opponents from the same explored drafts.
+  *delta* is "this card instead of the builder's lowest choice", in win rate.
+  Because the probability is recorded per deck, the weighting removes the
+  thin-pool bias above; a simulated batch where it biases the raw comparison by
+  more than 0.02 recovers the true effect within 3 standard errors (tested).
+- **Verdicts**, once a card has `minDecks` (10) forced and 10 control decks:
+  *holds its own when played* when "delta ≤ −`margin` (0.10)" is rejected,
+  *weak when played* when "delta ≥ 0" is rejected — both one-sided, Benjamini–
+  Hochberg at the loop's `fdrQ` over every judged card's two tests — else
+  *undecided*. The changelog pools every generation (the sums add) in one table
+  at its top, marked provisional until the last generation: that is the one
+  look. Per-generation tables are in `stats.json`.
+- **No verdict cuts a card.** `assess` and `selectSwaps` are unchanged, so the
+  swaps are what they were. A card that holds its own is evidence for raising
+  its rating; a weak one goes to Justin's notes, which override every number
+  (his rule), and a card the AI plays badly stays if it is good (his other
+  rule: "weak when played" cannot tell a weak card from one Forge misplays).
+  Making the verdicts a cut rule would need its own discovery and confirmation
+  and is not part of this decision.
+
+**Why these sizes.** On the 2,000 draft-only drafts at share 0.3: 658 drafts
+explored, 1,125 forced decks against 1,122 expected (z 0.08), the choice-deck
+mean rating 0.04 points apart between forced and not (balance), 66 targets;
+Delver 28 forced decks a generation, Ephemerate 17, Mystic Snake 10 (gold
+weight), the rarest about 1. Over J039's four generations that is about 110,
+70 and 40 decks — enough to see an effect of about 0.10 for the common ones,
+not for the rarest; they stay *too few* or *undecided*, which is the honest
+answer. `dominant-win` keeps 1,400 plain drafts a generation of 2,000.
+
+**What would show it broken** (pre-registered; J038 and J039 check them):
+1. A choice deck that is not the builder's deck for that seed (unit test).
+2. The explored share outside its binomial interval: |z| > 4.
+3. Forced decks against the sum of recorded probabilities: |z| > 4 — the draw
+   or its bookkeeping is wrong.
+4. The balance check: the choice-deck mean rating of forced and control decks
+   more than 2 rating points apart — the randomisation is not random.
+5. Every forced card pooled: delta outside −0.15..+0.10 — the swap is breaking
+   decks (a land or a key spell going) or the arithmetic is wrong.
+6. More engine errors or timeouts than an unexplored run (an explored deck
+   Forge cannot play).
+7. The plain drafts' design effect over 2.0, or their mean card win rate
+   outside 0.45–0.55 — the split went wrong.
+
+**Later, not here.** A ratings pass from evidence — D301's `learn` over the
+explored drafts, or the pooled deltas as rating changes — is now possible
+because the cards have games. It must be fitted on one batch and tested on
+another seed range (learning from the drafts the evolve then judges is
+circular), and Justin's ratings TSV is where it lands. No ratings pass is
+needed for this decision; J038 is the exploration's calibration on the engine
+before J039, the four-generation run.
+
+## D357 — A repeat confirmation pools: a candidate confirmed again in a later generation is judged on all its confirmation batches on that rule, the failed ones included, at `confirmAlpha` / 2^(attempt−1); a first attempt is D331's test unchanged; knob `confirmPool`, on for new runs, off for folders started before
+
+*Branch `c/confirm-pool`; D357, the next number free on a freshly fetched `main`.
+Pre-registered: written before any run under it.*
+
+**2026-10-04**
+
+**Finding.** J039 (Omega, `--generations 4 --drafts-per-gen 2000 --explore on`,
+on Justin's PC). Fable of the Mirror-Breaker, rule `dominant-win`:
+
+| generation | discovery | confirmation (fresh drafts) | D331's outcome |
+|---|---|---|---|
+| 3 | 757 of 1,341 decisive games (0.56) | 140 of 296 (0.47) | not confirmed |
+| 4 | 761 of 1,382 (0.55) | 179 of 316 (0.57), Holm p 0.034 | confirmed, swapped out |
+| both confirmations | | 319 of 612 (0.52) | — |
+
+D331 tests each confirmation batch alone and forgets it afterwards. Each
+generation in which a card is a candidate again is one more independent chance
+to confirm by luck, and the batch that said no counts for nothing. D331's
+stated bound — a generation cuts a card with no effect with chance at most
+`confirmAlpha` — still holds per generation, but per card it does not: over
+j attempts it is 1 − (1 − α)^j. Measured (below): a no-effect card that is a
+candidate in every generation is cut 4.7% of the time after one attempt, 9.2%
+after two, 18% after four, 32% after eight. A card the loop's discovery keeps
+flagging (Fable's two discoveries are themselves strong) is exactly the card
+that gets those attempts.
+
+**Decision** (`tools/cubelab/evolve.ts` `confirmCandidates`, `pooledTest`,
+`priorAttempts`; option **(c)**, both):
+
+1. **Pool.** A candidate's j-th confirmation attempt on a rule (an attempt is a
+   confirmation batch that observed the card on that rule; the earlier ones
+   come from the generations' recorded decisions) is tested on every one of its
+   attempts' batches pooled, this one included. Each batch keeps its own null
+   boundary and design effect: the effective counts (a card's games and wins
+   over that batch's design effect) add, and the pooled boundary is the
+   effective-count-weighted mean of the batches' boundaries (`dominant-win`:
+   the batch means; `dominant-pick` and `dead`: the knobs, which do not move).
+   The test is the same one-sided binomial. Under H0 every batch's rate is at
+   most its boundary, and a sum of independent binomials has at most a
+   binomial's tail beyond its mean (Hoeffding 1956; for thresholds at least one
+   above the mean, which every rejection here is), so the pooled test is
+   valid, and conservative when the means differ.
+2. **Spend.** Its p is multiplied by 2^(j−1) (capped at 1) before Holm across
+   the generation's candidates: attempt j is tested at `confirmAlpha` /
+   2^(j−1). A cut at attempt j needs the pooled p ≤ α / 2^(j−1), so by the
+   union bound a card with no effect is cut, over **any number** of attempts,
+   with chance at most α(1 + 1/2 + 1/4 + …) = 2α. The geometric schedule needs
+   no number of looks fixed in advance — D331's reason for rejecting
+   alpha-spending (a resumable loop does not know how many generations it will
+   run) does not apply to it.
+3. **Size.** The size filter reads the pooled numbers: `dominant-win`'s rate
+   over all attempts at least the pooled boundary + `dominantMargin`;
+   `dominant-pick`'s shrunk win rate over all attempts' games at least their
+   games-weighted mean.
+4. **A first attempt is D331's test, bit for bit**: one attempt pooled is that
+   attempt (its recorded numbers and p, not a recomputation), and 2⁰ = 1. A run in which no
+   card is a candidate twice decides exactly as before; the decision objects
+   only gain fields.
+5. **What does not change.** Discovery is still never pooled (D331); the
+   confirmation batch's size (`confirmPlan`) is still the fresh batch's, at
+   Holm's first-step level. With the earlier batches pooled, the repeat
+   attempt's sample is larger than the plan assumes, which more than offsets
+   the halved level for a card at the effect that matters (+0.10: 96.8% cut at
+   the first attempt either way, 99.6% by the second, against 99.8%).
+
+**Versioning (D341).** The rule is a knob, `confirmPool` (1: this decision; 0:
+D331), recorded in `evolve.json` with the other knobs and in every decision
+as `confirmRule: 'D331' | 'D357'`. **It is the default for new runs**: D331's
+bound is per generation and the loop runs many generations, so the per-card
+error is what a cube owner reads a cut as. An `evolve.json` from before D357
+(no `confirmPool`) resumes with 0, said on stdout, so J039's folder and every
+older one re-decide exactly as they were decided; `--evolve confirmPool=0`
+reproduces D331 in a new folder. A knob `2` or anything else is refused.
+Evolve's knobs are not part of D341's run version (they decide swaps, not
+drafts), so no run folder's version id moves.
+
+**Reporting.** Every candidate row gains *Every confirmation attempt pooled*
+(`first attempt`, or `attempt 2 (g3, g4): won 319 of 612 … , tested at
+level / 2, Holm p …`), and a swap on a repeat attempt names the pooled numbers
+in its evidence. The changelog opens with **Confirmation history (every
+attempt, pooled)**: each card and rule ever confirmed or refused, every attempt
+with its own batch's numbers and outcome, every attempt pooled, and whether it
+was cut. Under `confirmPool` 0 the pooled column is printed and marked as
+reported, not used. A generation decided before D357 has no recorded attempt;
+its attempt is rebuilt from the confirmation test it recorded.
+
+**J039's Fable under D357.** Generation 3 is unchanged (a first attempt: not
+confirmed). Generation 4 is attempt 2: pooled 319 of 612 = 0.521 against a
+boundary of 0.50 (the confirmation batches' means were not posted; 0.50 is the
+run's), p 0.156, tested at 0.025 (spent p 0.31): **not confirmed, kept**. The
+verdict does not hang on the unknown means or design effects: for any batch mean
+from 0.472 up the pooled 0.521 fails the size filter (mean + 0.05), and from
+0.48 up it is not significant at 0.025 either, for a design effect of 1.0–1.2.
+Generation 4's own 0.566 passed the size filter, so its mean was at most 0.516.
+J039's swap of Fable would not have happened; the cube from generation 4 on
+would have differed by that one card (and whatever replaced it).
+
+**Measured** (a single candidate re-confirmed every generation on 300 decisive
+games, mean 0.50, no design effect, the real `confirmCandidates`; 20,000
+simulations under the null, 5,000 otherwise; cumulative chance of a cut by
+attempt 1, 2, 4, 6, 8):
+
+| true rate | D331, each batch alone | D357 |
+|---|---|---|
+| 0.50 (no effect) | 4.7%, 9.2%, 17.7%, 25.3%, 32.2% | 4.5%, 4.7%, 4.7%, 4.7%, 4.7% |
+| 0.55 (at the margin) | 51%, 77%, 95%, 99% (6) | 52%, 65%, 75%, 79% (6) |
+| 0.57 | 77%, 95%, 100%, 100% (6) | 77%, 90%, 96%, 99% (6) |
+| 0.60 (the effect that matters) | 97%, 99.8%, 100% | 97%, 99.6%, 100% |
+
+The null stays near one attempt's level rather than reaching 2α because the
+pooled size filter also has to pass. The price is paid only by a card right at
+the size margin (+0.05) that failed once: D331 cut it eventually because it
+kept rolling; D357 asks it to show the margin on all its batches.
+
+**Held by** `web/test/cubelab-confirm-pool.test.ts`: a first attempt is D331's
+test (the same confirm, Holm p, outcome and reason under `confirmPool` 0 and
+1, with or without unrelated history); `pooledTest`'s arithmetic against hand
+values (effective counts, weighted boundary, `dead` on the lower tail, one
+attempt returned as is); a failed attempt counts (48/100 then 66/100: D331
+cuts, D357 does not, at level / 2) and a strong card still confirms; **J039's
+Fable with exactly its numbers**: cut under D331, kept under D357 at mean 0.50
+(pooled 319 of 612, p 0.15–0.16, spent p over 0.3), and kept at every mean
+0.472–0.516 and design effect 1.0–1.2; a seeded simulation (null: one attempt
+under α + 0.015, D331 over 10% at six attempts, D357 at most 2α and under half
+of D331's; a +0.10 card still cut over 90% of the time in three); the
+changelog's history row and pooled column for Fable; `confirmPool` only 0 or
+1, default 1. `web/test/cubelab-evolve.test.ts`'s changelog row gains the new
+column.
+
+**Rejected.**
+
+- **(a) Pooling alone.** It makes a failure count, but re-testing a growing
+  sample at a fixed level is D300's optional stopping again: the per-card
+  chance of a cut still rises without bound as attempts accumulate (slowly,
+  like a group-sequential design with nominal levels).
+- **(b) Spending alone** (each batch alone at α / 2^(j−1)). It bounds the
+  error but throws the failed batch away: Fable's 0.47 would not count against
+  it, and its generation-4 batch alone (Holm p 0.034 > 0.025) would fail only
+  by where the threshold happens to fall.
+- **An O'Brien–Fleming or Pocock boundary over the pooled looks.** Both need
+  the number of looks fixed in advance, and both change the first look, which
+  this decision must not.
+- **Counting attempts per card across rules.** Different rules are different
+  tests on different counts; a card is a candidate on two rules rarely, and the
+  bound is then 2α per rule.
+- **Letting a confirmed-then-reverted or a re-added card start over.** A card
+  cut by evolve is tabu (it does not come back unless a note says `try`), so
+  its history cannot restart; a card re-added by a note is a human's decision.
+
+## D358 — Play exploration: a seeded share of the queue's drafts play games in which each decision may be answered by a random legal move (epsilon) or a coin between near-tied creature choices; every record says so, win rates leave those games out, the position dataset keeps them, the policy dataset drops the random moves
+
+*Branch `c/queue-exploration`; D358, the next number free on a freshly fetched `main` (D357 the highest).
+Protocol amendment M57.*
+
+**2026-10-04** (Justin's approval of three options for night 3: epsilon-random decisions,
+close-call exploration, varied openings)
+
+**Context.** Every queue game is Forge's AI against Forge's AI (D323), and Forge's AI is
+greedy and deterministic in its habits (D311): from a given position it plays the same
+line. The positions the queue records (D315) are the learned evaluator's training data
+(D305, D316, gated by D354), so they follow Forge's well-worn paths and the evaluator sees
+little of the positions a different move would have led to — exactly where the search
+(D312) asks it to judge. D356 explored the *decks*; this decision explores the *play*,
+cheaply and under control, on a share of the drafts.
+
+**Decision.**
+
+1. **Which drafts.** `queue run … --play-explore share=0.15,epsilon=0.05,closecall=0.02`
+   (and `run --play-explore`, the same grammar as D356's `--explore`: `on` or `name=value`,
+   repeated or comma-separated; `opening=on|off`). A draft explores with probability
+   `share`, drawn from its own stream `rng(seed, 'play-explore')`
+   (`tools/cubelab/playexplore.ts`): a pure function of the seed, so any `--jobs`, any
+   machine and a resumed night agree, and no other stream moves — the draft, the picks,
+   the decks, D347's profile mix and D356's deck exploration are what they would be
+   without it. A smaller share explores a subset of a larger one's drafts (one uniform
+   draw per seed). In an exploring draft both seats of every game explore.
+2. **Where it hooks in: D309's seam, no Forge patch.** `PolicyControllerAi` (the lab's
+   recorded seats, the ladder's `policy` and `search` kinds, the game's `--ai-policy`)
+   gains an optional `mtgtable.ai.Explorer`. It is offered each answer AFTER the seat's
+   own policy chose (Forge, the outlet policy, the search), so with no explorer nothing
+   changes, and a search seat's search still runs. `PolicyLobbyPlayerAi.setExplore(cfg,
+   seed)` arms it for the next game; `CubeLab.java` seats our controller for an exploring
+   match even when it is not recorded (D347: with no policy it plays as Forge's).
+3. **Epsilon-random.** Each decision of an explorable kind draws ONE coin; with
+   probability `epsilon` (default 0.05) its answer is replaced by one drawn uniformly
+   from the seat's LEGAL answers:
+   - **priority**: pass, each land it may play, Forge's own answer, and the search's
+     candidate list (D312: every spell or ability Forge's per-card judgment would play,
+     with the targets it chose, and every untargeted spell it can cast and pay for), one
+     entry per token;
+   - **attack**: a uniform subset of the creatures that can attack the opponent,
+     redrawn (up to 64 times) until Forge's `CombatUtil.validateAttackers` accepts it;
+   - **blocks**: each blocker on one attacker it can block, or none, redrawn until
+     `validateBlocks` accepts it;
+   - **targets**: each part of the played spell or trigger with exactly one target
+     chosen, of exactly one allowed, and none of the cross-target constraints (unique,
+     same or different controllers, divided damage, random): a uniform draw from the
+     legal targets the seat can see; the old target is put back if the engine says the
+     new one is not valid.
+   Mana payment, costs, modes, effect choices and the rest stay Forge's. A decision with
+   one legal answer is not counted. A pick that happens to be Forge's own answer counts
+   as randomised (`changed` counts those that differ).
+4. **Close calls.** Plain Forge exposes no per-option score for its priority, attack or
+   block choices (its priority list is ordered by a heuristic and it plays the first
+   acceptable spell; D311). Where it does choose by a score — a creature, as a single
+   target or a creature an effect asks for, ranked by `ComputerUtilCard.evaluateCreature`
+   — the legal creature of the same controller whose score is nearest Forge's choice is
+   a **close call** when the two are within `closecall` (default 0.02) of the larger, and
+   a fair coin picks between them. The search's own close calls (its per-candidate win
+   estimates) are not explored here: the queue's seats are plain Forge.
+5. **Openings** (`opening=on`, default off): who plays first is a fair coin from the
+   game's own stream instead of D295's alternation, and the seven-card mulligan decision
+   is an epsilon decision (keep or mulligan, uniformly).
+6. **Its own randomness.** Every draw comes from a `SplittableRandom` seeded by
+   `ExploreMath.seedFor(draft seed, game, seat)` (seat −1 for the play/draw coin), never
+   from Forge's `MyRandom`; the coin is drawn before anything is listed, and the engine
+   calls that list options run inside `Decisions.quiet` (D347), so exploring moves no
+   draw of the game's own stream. **Measured:** the same four exploring drafts (synergy,
+   seeds 101–104, epsilon 0.2, close call 0.05, opening on) played twice gave the same
+   decisions in both runs — every option list, every answer and every explore mark,
+   both chairs, 1,598 records — and the same turns and winners. (Only the recorder's
+   frame cuts and timings differed. Forge's AI also reads the wall clock — a 5 s
+   evaluation timeout, D311 — so a heavily loaded machine can still change a game; the
+   exploration draws themselves are a pure function of the seeds.)
+7. **Hidden information.** Every option comes from the engine's legality checks for the
+   deciding seat's own plays (the lists Forge's AI walks every priority), its creatures
+   and blockers on the battlefield, or a target list filtered to what the seat can see
+   (`Decisions.visible`); a score is read only from a face-up creature on the battlefield
+   or one the seat controls. No library, no other hand, no face-down identity. The
+   recorder and the checker are unchanged in what they audit; the new mark's token is
+   audited like every other (below).
+
+**Recording** (protocol amendment M57). An exploring recording's session header carries
+`playExplore: {epsilon, closeCall, opening}`; a decision the explorer answered carries
+`explore: {rule: "random" | "closeCall", forge: <token>}`, `forge` the answer the seat's
+policy had given; each seat's `decisions` summary gains `explore: {decisionsRandomised,
+changed, closeCalls, closeCallsChanged, coins, failures, byKind}`. The count cannot sit in
+the header, which is written before the game. `drafts.jsonl` tags an exploring draft
+(`playExplore: {epsilon, closeCall, opening}`) and each of its game rows (`playExplore`:
+both seats' counts, and `onPlayDrawn` with `opening`), recorded or not. `run.json` and the
+night's plan record the settings. `tools/check-redaction.mjs` admits the header key only
+in an AI-vs-AI log (never beside `transport`), with exactly its three keys; the mark only
+in a log whose header says it explored, with exactly its two keys, `forge` a token whose
+card ids its state frame must show the seat (D3, as for options); the summary's keys.
+Controls: five `m57-*` probes (one planted leak: a mark whose `forge` names the opponent's
+concealed hand card) and three cases over the committed `fixtures/cubelab/explore/`.
+
+**Versions (D341).** Play exploration changes the games, so its settings are folded into
+the version stamp's weights hash when on — as D356 folds deck exploration — and a run
+without it has the old id. Turning it on, off or changing it between nights of one key
+folder is therefore a version change: refused unless `--allow-version-change`, which
+`run.json` logs (`allowedChange`, `changed: ["weightsSha"]`); every draft line carries
+its `ver` and its `playExplore` tag. A re-run of a night uses the plan's settings, and a
+different `--play-explore` on it is refused.
+
+**How exploring data is read.**
+
+- **Win rates leave exploring drafts out by default**: `report` and `meta` (`readRun`),
+  `learn` (`readRunData`), the queue's coverage (`gamesByCard`),
+  `tools/ml/matchup_data.py` / `matchup.py train` (`--play-explore include|exclude|only`,
+  default exclude, `stats["playExplore"]` counts them), `matchup_verify.py`. A random move
+  is not the deck's strength. An exploring game is never a duplicate of a plain game of
+  the same draft (its matchup id ends in `x`).
+- **The position dataset keeps them** (`dataset.py --play-explore include`, the default;
+  `exclude` and `only` for experiments): the positions after a random move are real
+  positions and the outcome is a true outcome of play from them. `games.jsonl` marks
+  each such game `"explore": true` and `stats.json` counts them (`playExplore`).
+- **The policy dataset drops every randomised decision** (`policy_data.py`; counted in
+  `notes`): its `chosen` is not the seat's choice. The rest of the game's decisions stay
+  — from the next decision on the seat chose again. The mark keeps `forge`, so a later
+  dataset could relabel those rows with the policy's own answer; this one does not.
+- **Gate 2 (D354) leaves exploring games out** (`gate_regret_build.py`): its set was
+  registered as the AI's own decisions. Gate 1's dataset is `dataset.py`'s and so
+  includes them by default; whether the gate's test split should is an open question for
+  Justin (below), and `--play-explore exclude` reproduces the old population.
+
+**Measured** (this container, 4 shared cores; synergy cube, grid, one game a draft, both
+chairs recorded). Epsilon 0.2, close call 0.05, opening on, seeds 101–104: 14–28
+randomised decisions a game (of 424–1,021 coins: most coins fall on one-option
+priorities), 1 close call, 0 failures, 0 engine errors, `check-redaction.mjs` PASS on all
+eight logs, 505 KiB a game gzipped against 164 KiB for the same seeds unexplored (the
+explored games ran 16–30 turns against 16–19). The queue path at the night-3 settings
+(epsilon 0.05, close call 0.02, share 1, seeds 3–5, appended to a night-1 folder with
+`--allow-version-change`): 5–11 randomised decisions a game, 107–972 KiB a game (the
+largest a 23-turn game that ended with 76 permanents on the battlefield); the version
+change was refused without the flag and logged with it. These are seven games: what share and epsilon do to a night's disk and CPU is
+the PC's to measure on night 3.
+
+**Not done.** The search's own close calls; effect choices, modes, costs and multi-target
+spells; a `+explore` seat-spec option for ai-bench and the ladder (the controller seam
+would take it as is); varying the AI profile per draft in the queue (`run
+--profile-mix`, D347, exists; the queue does not pass it).
+
+**Rejected.**
+
+- **Random moves from Forge's `MyRandom`** — every draw would move the game's own stream
+  and make a re-run another game.
+- **Patching Forge's `AiController`** (its scored lists) — the jar is pinned and D309's
+  seam already sees every answer.
+- **Uniform over every legal ability activation**, targeted ones included — a targeted
+  ability Forge did not evaluate has no targets chosen; Forge's own judgment chooses
+  them for the search's candidates, so the same list is the random one's.
+- **Keeping exploring games in the win-rate tables** with a flag to drop them — the
+  default must be the unbiased table.
+- **Dropping exploring games from the position dataset** — the point of the exercise;
+  `exclude` is there for the experiment that asks whether they help.
+
+## D359 — The outside exam: a reduced evaluator (`r17`) trained on our Vintage-cube games is scored on human games from 17Lands' Powered Cube replays against simple rules fitted on our data, by a rule written down before its run
+
+*Branch `c/outside-exam-17lands`; D359, the next number free on a freshly fetched `main` (D358 the highest).*
+
+**2026-10-04** (Justin's approval of an outside exam: does what the evaluator learned from
+Forge-vs-Forge games carry over to human games?)
+
+**Context.** The learned position evaluator (D316) passed gate 1 (D354): on held-out deck pairs it
+predicts the eventual winner at a test log-loss of 0.497 against the core baseline's 0.554. Every
+row it has seen is Forge's AI against Forge's AI, so a good fit may still be a model of Forge's
+habits. 17Lands publishes MTG Arena replay data under CC BY 4.0
+(https://www.17lands.com/public_datasets): one row per game with an end-of-turn snapshot of each
+half-turn. The only close overlap with our cubes is Arena's Powered Cube, which holds 152 of the
+Vintage cube's 180 cards (the research report of 2026-10-04: 266,117 PremierDraft games, 99.3% of
+them with a Vintage-cube card). The replay data has no tapped state, counters, graveyards, exile,
+stack, combat or decisions, so D316's model cannot be scored on it as is; grading it on masked
+inputs would measure the mask, not the model.
+
+**Decision.**
+
+1. **A reduced schema, `r17`** (`tools/ml/r17.py`): only what both sources say at the END of a
+   half-turn — the turn (protocol numbering), its round, whose turn it was, on the play or the draw
+   (+1 / −1, 0 unknown), both life totals, both hand SIZES (17Lands has a count for the opponent; the
+   user's own hand cards are never read, so the two sides are encoded alike), and per side the
+   lands, non-land permanents, creatures and non-land permanents outside the vocabulary (tokens and
+   face-down permanents included), plus a card block of vocabulary × 2 counts (each side's
+   battlefield). The vocabulary is `encode.Vocab`'s; its three special slots are never filled. One
+   `Position` and one `encode_position` serve both sources.
+2. **Our rows** (`dataset.py --schema r17`): the last state frame of every turn from turn 3 on, never
+   the game's final turn (it ended inside it, as 17Lands' last half-turn does), labelled from the
+   viewer's side as D305 labels every row (+1 won, −1 lost, 0 draw). `--queue-root ROOT --cube
+   vintage` reads `normal/vintage` and every `bridge/<a>+<b>` naming vintage, `--nights` keeps the
+   drafts those nights' plans handed out, `--deck-vocab-min` (0.5 under r17) drops a lab game whose
+   either deck has less than half of its non-basic cards in the vocabulary. D340's reserved decks
+   are dropped as for every dataset. **Exploring games are left out by default under r17**
+   (`--play-explore exclude`, where D358 keeps them for D305's rows): the exam asks what Forge's own
+   play taught, and a random move makes positions no human game reaches. The shards are D305's
+   format with two card states; `evalnet.py` and `train_eval.py` take the number of card states from
+   the schema (`cardStates`), so the same network and trainer fit an r17 model, with `prior`,
+   `life`, `board` (the non-land permanent difference) and r17's reduced `core` as its baselines.
+   D305's rows, models and reports are unchanged (17 states, as before). Java refuses an r17 model
+   (its schema id is not D305's).
+3. **The 17Lands reader** (`tools/ml/ext17l.py`): `fetch` downloads a Powered Cube replay file and
+   `cards.csv` (resumed with a Range request, the size checked against Content-Length; `--max-bytes`
+   for a range read); no API call. `rows` streams the gzip a megabyte at a time (a truncated file is
+   read to its last whole row), orders the half-turns by `on_play`, drops each game's final half-turn
+   and turns 1–2, and writes a position when at least `--min-share` (0.5) of its non-basic
+   permanents are vocabulary cards. The label is whether the 17Lands user won; the user is always
+   "me". `--perspective both` also writes each position from the opponent's side, label inverted.
+   Each game falls into a `dev` or `test` half by sha256("r17-exam-v1|" + game id).
+4. **The exam** (`tools/ml/outside_exam.py`): prior, life, board and core are fitted on OUR training
+   split with early stopping on our validation split, never on 17Lands data; the r17 evaluator is
+   trained by `train_eval.py --split-by pair` on our data. Every model is scored on our test split
+   and on the 17Lands rows: log-loss, Brier, accuracy, ECE and a reliability table, overall and by
+   turn bucket; each baseline's log-loss minus the evaluator's carries a percentile interval from a
+   bootstrap over games (deck pairs on our side), the same resamples for every baseline.
+
+**The rule, written down before its run** (`EXAM_RULE` in `outside_exam.py`; no flag changes it):
+
+- **Population:** Powered Cube PremierDraft's replay file, the `test` half, the user's rows, turn ≥ 3,
+  the final half-turn dropped, vocabulary share ≥ 0.5. TradDraft's file, the `dev` half, share ≥ 0.8,
+  both perspectives and all games are reported beside it, never as the verdict.
+- **b\*** is the best simple rule — the lowest log-loss among prior, life and board on those rows.
+  The reduced core is compared and reported, not gating.
+- **PASS** when log-loss(b\*) − log-loss(eval) > 0 and the lower end of its 95% percentile interval
+  (2,000 resamples over 17Lands games, seed 20261004) is above 0, on at least 2,000 games and 10,000
+  rows. Fewer is FAIL (underpowered), never PASS. Rows from a partial download, a `--max-games`
+  sample, another file or a stricter filter give NO VERDICT.
+- **The transfer gap**, reported: the evaluator's advantage over b\* on our test split (interval over
+  deck pairs) minus its advantage on 17Lands, in log-loss, and the share of it kept.
+- Nothing is tuned on 17Lands data: no model, threshold or hyperparameter reads it. The `dev` half is
+  for looking at. A changed rule is a new decision, made before its run.
+
+**Perspective.** 17Lands rows are the tracker user's games: an engaged, stronger-than-average
+population (54.2% of the qualifying test- and dev-half games were won by the user, measured below), so
+a model calibrated on Forge's symmetric games starts off by that shift; it costs every model on the
+same rows, the verdict compares models, and calibration is reported. Both-perspective rows cancel the
+shift but double perfectly anti-correlated rows; they are secondary, and the bootstrap resamples whole
+games either way. Our own rows are both chairs of every game, the deck pair the split unit (D317).
+
+**Measured** (this container; the sanity run the approval asked for; the download deleted afterwards):
+
+- `replay_data_public.Cube_-_Powered.PremierDraft.csv.gz` is 143,232,456 bytes (the server's
+  Content-Length; fetched whole in 3 s here), `cards.csv` 1,740,431 bytes.
+- The half-turn order holds on the real file: of the first 3,000 games, 1,489 of 1,530 on-the-play
+  games list no card drawn in the user's first turn (the other 41 list one, presumably from an
+  effect), and all 1,470 on-the-draw games list one. Past the game's end the number columns read `0.0` and the id lists are
+  empty, so a half-turn is "reached" when either battlefield lists a permanent.
+- **First 5,000 games** (`--max-games 5000`, 4.5 s): 4,980 with a position; 49,653 user-side positions
+  (turn ≥ 3, final half-turn dropped); qualifying at share ≥ 0.5: 5,436 (10.9%), at ≥ 0.8: 695
+  (1.4%); 1,829 games with a qualifying row; no unknown id.
+- **The whole file** (222–294 s on one process, by the container's load; a 0.40 GB peak):
+  266,117 games, 265,174 with a position; 2,667,602 user-side positions; qualifying at ≥ 0.5:
+  306,819 (11.5%), ≥ 0.7: 53,010 (2.0%), ≥ 0.8: 38,431 (1.4%), all in the vocabulary: 33,477 (1.3%). The rule's population is 154,302 rows from 51,161
+  test-half games (dev: 152,517 rows, 50,801 games). One unknown Arena id (2 occurrences).
+- A range read of the first 10 MB parsed 18,766 games and stopped cleanly at the cut.
+- The pipeline end to end with a toy model (trained on the committed recordings, which are not
+  Vintage-cube games: the night recordings are on the PC, so no verdict was taken here): the exam over
+  the whole file's rows took 85 s at a 0.46 GB peak, and printed every table, interval and the
+  verdict line.
+
+**Rejected.**
+
+- **Scoring D316's full model with the missing features zeroed** (the mask's error, not the model's).
+- **Fitting any baseline, threshold or calibration on 17Lands rows** (the exam would then measure
+  the fit, not the transfer).
+- **A cube other than Vintage** (every other cube's overlap is spread thinly over retail sets).
+- **Scraping the 17Lands API** (discouraged by 17Lands; the public files hold everything used here).
+- **The opponent's perspective as the primary population** (17Lands describes the user; the
+  mirror rows are a secondary table).
+- **Keeping exploring games in the r17 training rows by default** (the question is about Forge's
+  own play; `--play-explore include` remains for an experiment).
+
+**Not done.** Training on 17Lands data (as pre-training or auxiliary data for a reduced model); the
+other cubes; graveyard and exile partly rebuilt from 17Lands' cast and killed events; the user's skill
+buckets as a filter (the report carries them per game in `games.jsonl`).
+
+## D360 — Exploration's "holds its own" cards get rated where the evidence puts them: the mean rating of the spells they replaced, plus a shrunk effect; capped under the top picks unless the interval is above 0; only raised; Omega's file is not the default until a pre-registered A/B (J064) reads it
+
+*Branch `c/omega-ratings-raise`; D360: D359 is the highest on a freshly fetched `main`, and the open branch `c/eval-winchance` holds a D359 of its own.
+Pre-registered: the rule and J064's reading were written before any game under the new ratings.*
+
+**2026-10-04** (Justin's approval to raise the AI's ratings of the cards J039 found underrated)
+
+**Finding.** J039 (Omega, `--generations 4 --drafts-per-gen 2000 --explore on`, seeds
+3,000,001–3,008,000) judged 66 low-rated targets in its pooled exploration table
+(`results/J039/changelog.md` on `pc-results`): **30 hold their own when played**, 30
+undecided, 5 too few forced decks, 1 weak (Fire // Ice). Read off the table itself, not a
+summary of it:
+
+- "Holds its own" is D356's **non-inferiority** verdict: "delta ≤ −0.10" rejected under
+  BH. It says the card is not much worse than the spell the builder chose instead; 8 of the
+  30 have a negative point estimate (Smuggler's Copter −0.03, Council's Judgment −0.03).
+  Only four have an interval above 0: Glorybringer +0.20 (+0.08 to +0.32), Baleful Strix
+  +0.15 (+0.01 to +0.30), Batterskull and Sword of Feast and Famine +0.07 (+0.01 / +0.02 to
+  +0.13). Deltas are win-rate differences (+0.20 is 20 points of win rate).
+- The 30 are not all *rating-limited* cards: 17 are; the other 13 (Glorybringer, Strix,
+  Karn, Scion of Urza, the three Swords, Smuggler's Copter, Hero of Bladehold, Baneslayer
+  Angel, Shriekmaw, Dark Confidant, Hellrider, Siege-Gang Commander) are rated under
+  `deadMinRating` (60) and so eligible targets, but were played often enough not to be dead.
+- **Omega had no ratings file.** Every other cube has `cubes/<cube>.ratings.tsv`; Omega's
+  drafters used Forge's ranks (`ratings init`'s values, computed from the engine's facts).
+  J039 ran without `--ratings`. `ratings init` on this branch writes Delver of Secrets 19.7
+  and Ephemerate 22.9, D356's numbers, and a draft-only replay of J039's 8,000 seeds on
+  them reproduces its 2,429 explored drafts and every target's forced decks and expected
+  count exactly: these are the ratings J039 drafted with.
+- Ratings drive the builder: a raised card is played far more. On 6,000 draft-only drafts
+  at J064's seeds (810,000,001+), the 30 cards' on-colour play rate goes from 0.39 to 0.75
+  (Delver of Secrets 0.01 → 1.00, Batterskull 0.28 → 0.99) and the pair mix moves (WR
+  10.5% → 13.5% of decks, WU 21.8% → 19.1%). That is the point, and also why the change is
+  verified before it becomes Omega's default.
+
+**Decision.** `tools/cubelab.sh ratings apply <cube.md> --from <evolve-dir | changelog.md>
+--rule explore-eb --out <tsv>` (`tools/cubelab/raise.ts`, `raisecmd.ts`), one rule:
+
+1. **Only `holds` moves.** Undecided, too few and weak keep their rating; so does any card
+   Forge flags `AI:RemoveDeck` All or Random, whatever its row says (D343: its games are
+   about Forge). Exploration already skips `AI:RemAIDeck` targets, so for J039 this guard
+   moves nothing; D356 says nothing that changes D343's handling, and this does not.
+2. **Shrink** each delta toward 0 ("as good as the builder's choice"): empirical Bayes over
+   every judged card (61 in J039), τ² by the method of moments about 0 over w = 1/se²,
+   shrunk = d·τ²/(τ² + se²). J039: τ = 0.028, so a delta keeps 13–51% of itself
+   (Glorybringer +0.20 → +0.034, Batterskull +0.07 → +0.031, Delver +0.05 → +0.016).
+3. **Anchor and target.** delta was measured against the spell the forced card replaced, so
+   the target is the **mean rating of the spells it replaced in its forced decks** plus K ×
+   shrunk delta, K = (top-pick line − mean anchor of the moved cards) / 0.10: a card shown
+   to beat the builder's choice by the evolve's `dominantEffect` is worth a top pick (J039:
+   K = (98.6 − 66.9) / 0.1 = 317 points per unit of win rate, so the evidence term is −3.6
+   to +10.9 points). The size of a raise thus follows what was measured, both terms: what
+   it held its own against, and by how much it beat it after shrinkage.
+4. **Cap.** Below the cube's top-pick line — the 90th percentile of its nonland ratings,
+   98.6 for Omega (17 cards at or above) — unless the 95% interval of delta is above 0, and
+   then at most the best nonland rating (99.7). Nothing in J039 reaches the cap (the highest
+   target is 84.0).
+5. **Only raise**, to 0.1. Fire // Ice is not lowered (below).
+
+**Evidence sources.** An evolve folder is read exactly (each generation's `summary.json`
+table pooled and judged as the changelog judges, and what each forced card replaced from
+`gen-NN/run/drafts.jsonl`). A changelog alone gives the pooled table as printed (two
+decimals; se = interval width / 3.92) and the generations' seeds; the anchors then come from
+a draft-only replay, which must reproduce the changelog's explored count and every row's
+forced and expected decks or the command refuses. The committed file was made the second
+way (the PC's folder is not in this repository); a folder run on the PC would differ only by
+the table's rounding, a few tenths of a point.
+
+**Result** (`docs/evidence/omega-ratings-raise.md`, `.json`), made by `tools/cubelab.sh ratings
+apply cubes/omega-cube-180.md --from <J039's changelog.md> --from-label "J039's changelog.md
+(pc-results results/J039/changelog.md, blob 7dc5612)" --rule explore-eb --out
+cubes/omega-cube-180.ratings-raised.tsv --report docs/evidence/omega-ratings-raise.md --date
+2026-10-04`, which reproduces the three files byte for byte (checked): 30 cards raised, by +7.6
+(Cryptic Command 54.3 → 61.9) to +64.3 (Delver of Secrets 19.7 → 84.0); Glorybringer 55.4 →
+80.2, Baleful Strix 54.0 → 81.8, Karn, Scion of Urza 58.3 → 79.2, Batterskull 49.7 → 79.8.
+Three of the 30 stay under 60 (Flickerwisp 59.9, Council's Judgment 59.8, Questing Beast
+58.3), so they stay explore targets; the other 27 leave the explore targets and the
+rating-limited class and are judged by the ordinary rules.
+
+**Where the file lives.** `cubes/omega-cube-180.ratings-raised.tsv`, **not** the default
+`cubes/omega-cube-180.ratings.tsv`. `run`, the queue's normal chunks and bridge drafts all
+read the beside-the-cube file by default (`defaultRatings`), so creating it would change
+every later Omega draft of the overnight queue (a D341 version change: refused without
+`--allow-version-change`, mixed into the folder with it) before anything has measured the
+new ratings in games. `run --ratings` and `evolve --ratings` take it explicitly; J064 is the
+A/B; when it reads as below, renaming the file to `omega-cube-180.ratings.tsv` is the
+promotion, and that is Justin's call.
+
+**Fire // Ice** stays at 43.1. It is the one card shown *weak when played*: 0.38 with it
+against 0.54 without, delta −0.16 (−0.29 to −0.03), 35 forced decks (88 games). D356's rule
+holds: a weak verdict is a human test for Justin's notes (`cubes/omega-notes.tsv`), never a
+cut or a rating move by the AI's evidence, because "weak when played" cannot tell a weak card
+from one Forge misplays.
+
+**Verification (PC job J064, pre-registered).** Arm A drafts Omega v1 with the old ratings
+(no file: Forge's ranks), arm B with `--ratings cubes/omega-cube-180.ratings-raised.tsv`, on
+the same fresh seeds in D340's verification block, two batches of 3,000 drafts per arm (A1/B1
+810,000,001–810,003,000; A2/B2 810,003,001–810,006,000), best of 3. Read by
+`node tools/cubelab/ratings-verify.ts`:
+
+1. *Played*: the 30 cards' pooled on-colour play rate in each arm. Expected from the replay:
+   about 0.39 → 0.75.
+2. *Performance in B*, by D357's pooled-confirmation statistics: per raised card, *weak*
+   (win rate shown under the batch mean − 0.05) and *dominant* (shown over mean + 0.05),
+   one-sided exact binomials on effective counts; look 1 = batch 1 alone at 0.05 (D331's
+   test), look 2 = both batches pooled (`pooledTest`) at 0.05 / 2; Holm over the cards and
+   both directions at each look. A card is weak or dominant if either look says so (chance
+   of misjudging a no-effect card at most 1.5 × 0.05). A weak card's raise is reverted to its
+   old rating; a dominant card's raise overshot and is the notes' question, not an automatic
+   cut. A card with under 100 games in B is reported as such, not judged.
+3. *Balance*: the colour pairs' spread (best minus worst shrunk rate, pairs with ≥ 100
+   games) and the de-noised between-pair SD, in each arm; J039's spread was 0.44–0.55.
+   `tools/ml/matchup_verify.py test` is run both ways (one look) as D344's formal test of
+   "more balanced"; balance *moved* if either direction accepts.
+
+Promotion (renaming the file) is proposed only if the played rate rises by at least 0.2, no
+raised card is weak, and balance did not get worse (`matchup_verify.py` with A as the
+candidate does not accept). A weak card does not block the others: its line goes back to the
+old rating and the rest are promoted.
+
+**Held by** `web/test/cubelab-ratings-raise.test.ts`: τ² about 0 by hand and never
+negative; a noisier delta moves less; only `holds` moves (undecided, too few, weak, AI-limited
+stay; weak is never lowered; no holder, no change); the target is anchor + K × shrunk with
+K auto or fixed, and τ² = 0 puts every holder at its anchor; the cap (one step under the line
+without strong evidence, the best card with it); only raise; anchors from seats; the
+changelog round trip against `exploreSection`'s own output within its two decimals; the
+replay check; the apply step on a hand-made evolve folder (exactly the holders' lines
+change); the A/B reading's played rates, look 1 and look 2's pooled and spent p, a design
+effect, and the pairs' spread and SD.
+
+**Rejected.**
+
+- **A flat bump** (every holder to 60, or +20): the evidence differs by card, and 60 is
+  under most of the spells these cards were measured against (anchors 56.6–79.0), so the
+  builder would still pass them over.
+- **The raw delta as the size**: Glorybringer's +0.20 on 25 forced decks would be worth 63
+  rating points by K; a sample of 61 judged cards with τ = 0.028 says most of that is noise.
+- **A rating relative to the card's old rating** (old + K × delta): the old ratings are what
+  exploration showed wrong (Delver 19.7 held its own against 1-drops rated 79).
+- **D301's `learn`** over the explored drafts: a whole-cube refit moves every card's rating
+  and the population the evolve measures; D356 already rejected it as the first step.
+- **Lowering Fire // Ice**: Justin's rule (above), and this decision only raises.
+- **Writing the default file now**: the queue would draft Omega on unverified ratings.
+
+## D361 — The learned evaluator's win chance is served to ForgeCoach by the coach helper's `POST /eval`, from one child process that runs encode.py's own encoder and evalnet.py's own forward pass on the viewing seat's redacted state; nothing is ported, the model stays on the PC, and `/health` says `eval: 1` only once a model has loaded and passed its schema checks
+
+*Branch `c/eval-winchance`; D361, the next number free on `main` (D359 the outside exam,
+D360 the Omega ratings). ForgeCoach's side is its own branch `c/eval-winchance` (`src/evalClient.ts`,
+`src/winChance.ts`, `src/ui/winchance/`).*
+
+**2026-10-04** (the owner's request: show the evaluator's win chance in ForgeCoach now that
+it passed D354's gate 1)
+
+**Context.** The position evaluator (D316) predicts P(the viewing player wins) from one
+decision row. It passed D354's first gate on the PC (`var/ml/models/night-1-eval.json`,
+schema `82815752c2f5e346`, about 900 KB, gitignored). ForgeCoach is a public static site
+and must never hold the model; the coach helper (D292) already runs on the PC beside the
+engine, on ForgeCoach's allowed origins and behind the LAN token (M50, M51). The hard part is
+**feature parity**: a number shown live is only the model's if the online features are
+exactly the rows `dataset.py` trained it on.
+
+**Decision.**
+
+1. **The route.** `tools/eval-runner.mjs`, imported by `coach-helper.mjs`: `POST /eval
+   {seat, state, history?}` → `{ok, p, model, schema, turn, decision, featureHash, ms}`;
+   400 / 405 / 413 (2 MB) / 429 / 503 / 504 with `{ok:false, type:"error", message}`. An
+   unknown field is 400: the request has no place for anything but the viewer's state.
+   `/health` carries `eval: 1, evalModel: <sha-256 of the file, 12 hex>, evalSchema`
+   once the model is ready, else `eval: 0` (with `evalError` when one was configured).
+   Flags: `--eval-model <path>` (default `var/ml/models/night-1-eval.json` when it exists),
+   `--no-eval`, `--eval-python` (default `var/ml/venv/bin/python3` when it exists, else
+   `python3`), `--eval-schema <id>` and `--eval-cube <cube.md>` (refuse anything else).
+   `scripts/play.sh` passes `--eval-model` and `--no-eval` through.
+2. **One implementation, in Python.** `tools/ml/eval_serve.py` is the helper's single
+   long-lived child, JSON lines in and out. It calls `encode.TurnTally` and
+   `encode.encode_state` -- the two functions inside `encode_game`, which is where
+   `dataset.py` gets every row -- and `evalnet.EvalNet` for the forward pass. Porting the
+   encoder to JavaScript would have made a third implementation (Python, Java's
+   `mtgtable.eval`, JS); calling into Python makes the online features the training
+   features by construction. `dataset.py` and `encode.py` are unchanged.
+3. **The request carries what the tally needs.** A training row's this-turn counters (land
+   drop, lands, spells: features the model reads) come from the `events` of every earlier
+   frame of the game, so `history` is those frames' `events` and `stack`. A client may omit
+   every frame with no `turn`, `land`, `cast` or `mulligan` event: `TurnTally.apply` does
+   nothing for it (a `zone` event only classifies a `cast` in its own frame). The largest
+   last-row request over the 22 committed recordings is 119 KB reduced (203 KB with every
+   frame).
+4. **`decision`.** The model learned from decision rows only (the viewer holding priority
+   in a main phase or combat, the game not over). `/eval` answers for any state and says
+   whether it is one; ForgeCoach asks only at decision rows.
+5. **Refusals at load.** The model is not served when the schema id `encode.py` computes
+   from the model's own vocabulary is not its `schemaId` (the encoder moved since it was
+   trained), when `vocabSha256`, `nFeatures`, `cardOffset` or the board columns' names
+   disagree with that schema, when `--eval-schema` or `--eval-cube` disagree, or when it
+   reads a live-unsafe feature (`evalnet.LIVE_UNSAFE`, as the Java loader refuses). Only
+   D305's full schema is served: a model whose `cardStates` are not D305's 17 (D359's r17
+   models of the outside exam, two states, end-of-half-turn rows) is refused by name, since
+   its rows are other positions than a board's decision rows.
+6. **Hidden information.** The evaluator reads nothing but the request's state, and the
+   state is the one the viewing seat's board holds: redacted by the bridge for that seat
+   (hard rule 8). It reads it exactly as a training row reads its own chair's log -- each
+   row is encoded from the log's own `seat`, so training never used one seat's view for the
+   other -- and encode.py is stricter than the log (the opponent's hand and both libraries
+   are counts, a stub is a count, a face-down card is `<facedown>`, no `alt`, no engine text
+   but name, types and mana cost). A state whose viewer's own hand holds a redacted stub (one
+   made for the other seat) is refused.
+
+**Parity, proven** (`tools/ml/tests/test_eval_serve.py`, gate 12h; `tools/eval-runner-selftest.mjs`, 12f):
+
+- standard library (also in CI): for each of the 2,561 decision rows of the 22 committed
+  recordings, the vector built from the request equals `encode_game`'s row, with the full
+  history and with the reduced one. D305's scrambler (opponent's hand named and shuffled,
+  libraries filled, stubs named, face-down `alt`s) moves no online feature. A request with the
+  other seat is refused;
+- numpy: `dataset.build` over the recordings, a small model trained on its train split
+  (`train_eval.fit`), and for every row of every split the online vector equals the
+  dataset's int16 row and the served P(win) equals the model's on that row to 1e-12, also
+  through the JSON-lines process. Schema, live-unsafe, board-column, `--expect-schema` and
+  `--cube` refusals are each checked;
+- the route: 275 decision rows of `g1` and `human-auto-42`, built in Node the way ForgeCoach
+  builds them, through `/eval` with `fixtures/eval/model.json` (the Java parity fixture):
+  every feature hash and P(win) equals `fixtures/eval/golden.json` (1e-9). ForgeCoach's
+  `src/testdata/winchance-requests.golden.json` is this reader's choice of rows and history
+  frames over its two sample logs (the same files as `fixtures/games/human-auto-42` and
+  `human-comfort-13`), and ForgeCoach's tests hold its request builder to it.
+
+**Measured** (this container). One answer from the parity model (3,133 features, 166
+board columns) took 4 ms in the helper. The PC's model is not measured here.
+
+**Known and inherited.** `TurnTally` treats a cast as a spell when the state's own stack
+item says `isAbility: false`; that field is in a seat's recording (ForgeCoach's live state)
+and not in an AI-vs-AI one (M36), so at a flush boundary a seat's `spells_cast_turn` can count
+a spell the lab's recording of the same moment would not. The model reads that feature;
+this is encode.py's behaviour on the human split too, and is left as it is.
+
+**Not done.** Scoring inside the bridge's own process (the Java evaluator could answer
+from the live game); a batch form of `/eval` (a replay sends one request per position, a few
+at a time); calibration on the owner's own games (`train_eval.py --eval-human`, D347).
+
+**Rejected.**
+
+- **A JavaScript port of the encoder and network**: a third implementation of encode.py
+  to keep in step.
+- **Sending only the state** (no history): this turn's land drop and spells would read zero,
+  and those are features the model reads.
+- **Serving the model file to the browser**: the model is the owner's and lives on the PC;
+  ForgeCoach is public.
+
+## D362 — The coach helper reads photos: `POST /vision`, the same question as `/coach` with images, handed to the CLI on stdin as one stream-json user message (`--input-format stream-json`), still with every tool off; ForgeCoach's photo-to-pool is its only client
+
+*Branch `c/photo-pool`; D362, the next number free on `main` (D361 the win chance). ForgeCoach's
+side is its own branch `c/photo-pool` (`src/cube/photoPool.ts`, `src/ui/deck/PhotoSheet.tsx`).*
+
+**2026-10-04** (the owner's request: fill a paper cube draft's pool from photos of the cards)
+
+**Context.** Justin types his paper-draft picks into ForgeCoach's Draft & build. He wants to
+photograph the cards instead. ForgeCoach coaches through two sources (D292): the coach helper
+running the logged-in Claude Code CLI, or the player's own API key. The key path takes Messages
+API image blocks from the browser; the helper had no way to hand the CLI a picture.
+
+**Decision.**
+
+1. **The route.** `POST /vision {system, user, images: [{mediaType, data}] (1-8), model?,
+   supersedes?, thinking?}`. `mediaType` is one of `image/jpeg`, `image/png`, `image/webp`,
+   `image/gif`; `data` is base64, at most 5 MB of it an image (the API's own limit); the body
+   at most 24 MB (413). Anything else about `images` (missing, empty, nine, an unknown field, a
+   URL instead of data, not base64) is 400 and starts no child. Everything else is `/coach`'s:
+   the same Origin and token gate, the same queue (D325, one `claude` at a time across both
+   routes), `thinking` (D346), the same NDJSON stream with exactly one terminal line.
+   `/health` says `"vision": 1`; an older helper has no key and answers 404, which ForgeCoach
+   turns into "update mtg-table".
+2. **How the CLI sees the images.** `claude -p --input-format stream-json` with stdin one line,
+   `{"type":"user","message":{"role":"user","content":[<image blocks>…, {"type":"text"}]}}`. The
+   flags are otherwise `/coach`'s exactly (`--tools ""`, `--strict-mcp-config`,
+   `--no-session-persistence`, `--permission-mode dontAsk`, `--max-turns 1`, the empty temp
+   cwd). D292's rule 2 holds unchanged: the question is on stdin, and the model has no tool,
+   so it sees the pictures and the prompt and nothing else.
+3. **Nothing is kept.** The images exist in the request body and the child's stdin; no file is
+   written, nothing reaches argv, and the log line carries the image count only.
+
+**Measured** (this container, Claude Code 2.1.289, logged in). A 64-pixel red PNG through
+stream-json input with `--tools ""`: the model answered "Red", exit 0. Through the helper's
+`/vision`, the same image (thinking off): `text` "Red" then `done`. ForgeCoach's real
+photo prompt (the Vintage cube's 180 names) with two synthetic table photos made from Scryfall
+card images (17 cards placed, rotated and some sleeved, downscaled to 1568 px JPEG, 316 + 265 KB
+— composed by script, not phone photos): the helper's default model, thinking low, 6.0 s, valid JSON, all 14
+distinct cards named correctly, the basic Island ignored, the card placed in both photos listed
+once per photo and the duplicate in one photo counted 2. Real phone photos are not measured.
+
+**Self-test** (`tools/coach-helper-selftest.mjs`, gate 12f): `/health`'s `vision`; the argv
+(`--input-format stream-json` after `-p`, otherwise `/coach`'s, and `/coach` never has it); stdin
+is exactly one user message with the images in order and the text last; no image data or text
+in argv; the empty cwd; the log's image count and no data; logged-out and `thinking` as
+`/coach`; nine bad-`images` cases 400 with no child; 413 over 24 MB; 405; the preflight; another
+origin 403 with no child.
+
+**Rejected.**
+
+- **Writing the images to the temp directory and naming them in the prompt.** The CLI would
+  need its Read tool to open them, and D292's rule 2 is that the coach has no tool.
+- **Base64 in the prompt text.** The model would read it as text, not as an image.
+- **A separate queue for photos.** It is still one `claude` on the owner's account at a time.
+
+## D363 — The lab warehouse: a derived, rebuildable copy of the lab's records as zstd Parquet tables, partitioned by source and night, with a DuckDB file of views, kept current by an incremental ingest that reads only complete appended lines and resets a file that shrank or was replaced
+
+*Branch `c/lab-warehouse`; D363.*
+
+**2026-10-04** (Justin's request: a DuckDB + Parquet warehouse on the PC so he can query
+everything the lab produces with SQL and pandas; J065 measures the storage beforehand)
+
+**Context.** The lab writes JSON lines in many places: the queue's key folders (D323), the run
+folders, the ladder's `sprt.jsonl` (D319), the experiment log, and the ML and gate reports
+(D324, D354). A draft line is about 16 KB and nests the drafters, their picks and decks, and
+the match with its games. Each reader parses it again: `report.ts`, `matchup_data.py`, the
+runner's extractors. Asking a new question (a card's rate when on the draw, exploring games
+by kind, pick order) means writing another parser. Justin is a data scientist and works in
+SQL and pandas.
+
+**Decision.** `tools/lab/warehouse.py` (Python; pyarrow and duckdb, which the PC has):
+
+1. **The raw data stays as it is.** The warehouse is a derived copy under `var/warehouse/`.
+   Deleting it or `ingest --rebuild` makes it again, and nothing in the lab reads it.
+2. **Tables.** The five per-draft tables are flattened from each line: `drafts`, `games`,
+   `decks` (the played deck per drafter), `deck_cards` and `picks` (`seen` and `took` as
+   lists). They are written as zstd Parquet with dictionary-encoded strings, partitioned as
+   `source=<queue|runs>/night=<N>`. The night comes from the `night-N.json` plan whose chunk
+   handed out the seed, and is 0 for a run folder. The small tables are rewritten whole on
+   every ingest:
+   - `cards`, one id per card across cubes: the card library's `normName`, with the oracle id
+     only from a local `cards.sqlite`, never the network, and the AI flag;
+   - `cube_cards`, through the cube lab's own parser under Node;
+   - `runs` and `versions` (D341), from `run.json`;
+   - `nights`;
+   - `sprt`, `experiments`, `gate_reports`, `ml_reports` and `matchup_power`.
+3. **Ids.** `draft_id` is `<source>/<key>#<seed>`, a pure function of where the draft is, so it
+   survives every rebuild. Every row carries `src_file`.
+4. **Incremental and idempotent.** Per file, the state is the offset read, the inode, the size,
+   the mtime and a hash of the first 4 KiB. Only complete lines are read, so an ingest is safe
+   beside a running night. A file that shrank, was replaced, was rewritten at its head or
+   vanished is reset: its rows are filtered out of the part files that hold them, and it is
+   read again. Each ingest writes its part files as `.tmp` files named by its run id, renames
+   them, and commits the run id to `_state.json` last. A part file of an uncommitted run is
+   deleted at the next start. A lock keeps two ingests apart.
+5. **Views, not a database.** `lab.duckdb` holds only views over the Parquet, read with
+   `union_by_name` and hive partitions, plus `seat_games`, one row per game and seat. It is
+   written to a temporary file and renamed. `verify` counts every table against the JSONL
+   independently, file by file, up to the committed offsets.
+6. **Exploring drafts (D358) are marked, never dropped**, on drafts and games. The notebooks
+   leave them out of win rates, as the lab's own readers do.
+7. **Starter notebooks** are `notebooks/*.py` percent scripts. Jupyter and VS Code open them as
+   notebooks, and `python3` runs them. The repo has no `.ipynb`, and a script keeps outputs
+   out of git. There are five: card win rates with Wilson intervals and the D343 caveat,
+   colour-pair balance, exploring against plain games, SPRT and gate history, and pick-order
+   heatmaps. Their test runs each one on the warehouse built from the committed fixtures.
+8. **Saved queries** (Justin's addition). `notebooks/sql/` holds five plain SQL files for the
+   questions he will ask most often: card win rates per cube with Wilson intervals and a games
+   threshold, colour-pair shares and rates night by night, game length and the on-play rate per
+   cube, pick order against deck inclusion, and each night's volume, recordings, quarantined
+   recordings and errors. `notebooks/saved_queries.py` runs them; the DuckDB command line runs
+   them with `.read`; thresholds are `set variable`s. Every query and notebook opens with the
+   **Forge-against-Forge caveat**: a card's win rate measures the card in Forge Default's hands.
+   The tests run each file on the fixture warehouse (SQL only, no Jupyter). The redaction
+   pass's quarantine lists (`<queue>-quarantine-n<N>/failed.txt`) are the `quarantine` table.
+9. **A numbers-only public summary** (Justin's addition). `warehouse.py export` writes
+   `var/warehouse/warehouse.json`, schema 1, fixed with ForgeCoach's `#lab/data` page: table
+   rows and bytes; per night drafts, games, recorded, quarantined and engine errors; the
+   recordings archive's gzip and zstd bytes (from a file, else null); free disk; per cube
+   drafts, games, mean turns and the on-play win rate; per cube and colour pair, and per cube
+   and card, games, win rate and Wilson's 95% interval over games. The games within a draft are
+   correlated, so the intervals are optimistic, and the code says so. A card appears only with
+   at least 100 games, in the top or bottom 25 of its cube, and named as the cube document
+   names it, cleaned and at most 60 characters. There are no decks, seeds, picks, hands,
+   recordings or paths. The runner publishes the file to ForgeCoach's `lab-status` branch beside
+   `status.json` and `ladder.json` when it changes, through its own allowlist,
+   `tools/runner/warehouse.ts`, as `ladder.ts` does for the ladder. Unknown keys are dropped,
+   and so is any row whose count is not a non-negative integer, whose rate is outside [0, 1] or
+   whose card name has a character outside letters, digits, spaces and card-name punctuation.
+   The local server serves it at `/public-warehouse.json`. `tools/lab/warehouse-sample.json`
+   (an export of the synthetic warehouse) is the page's sample, and the runner's test checks
+   that it passes the allowlist unchanged.
+
+**Measured** (synthetic: 45,000 fixture-shaped lines with real cube names, 884 MB, in this
+4-core container):
+
+- a full ingest took 98 s with a peak RSS of 499 MB, and a no-op ingest 2 s;
+- 3,000 appended lines took 8 s;
+- a reset of a 7,500-line file took 17 s, with a peak of 516 MB;
+- the five tables took 26.7 MB;
+- `saved_queries.py` ran in 27 s with a peak RSS of 1.07 GB (DuckDB capped at 2 GB).
+
+Synthetic lines compress better than real ones, and J065 and J066 measure the real data.
+
+**Rejected.**
+
+- **One DuckDB database holding the data.** It is one writer's file, so a notebook that holds
+  it open would block the nightly ingest, and a crash mid-write risks the whole file. Parquet
+  files with views over them have neither problem.
+- **Re-reading everything every night.** That cost grows with every night, and the queue
+  appends.
+- **One part file per source file.** Thousands of small files after a few weeks. Filtering a
+  reset file's rows out of shared part files is rare, and it is bounded by the row group.
+- **Recompressing or moving the recordings.** They are the evaluator's input, and J065 only
+  measures what zstd would save. The `games` table points at them by `rec_dir`.
+- **Copying the cube parser into Python.** It would be a second parser to keep in step, so
+  `cube_cards` runs `cube.ts` under Node, as `matchup_data.cube_lists` does.
+
+## D365 — Lab runner leftovers (amends D337 and D340): a retry starts at the block that was stopped, a block's own `clean:` says what it made, `.restart-*` copies are never deleted, an OOM kill inside a step is a memory stop, the reserved-deck filter fails closed on a lab game with unknown decks, a recorded queue night is not re-run unrecorded by accident, and a narrow pilot (`pilot_cores:`) lets another job start beside it while the main step waits for its width
+
+*Branch `c/runner-leftovers`; D365, the first number free at push time that the open lanes do
+not hold.*
+
+**2026-10-04** (the bug hunt of 2026-10-04: five confirmed or suspected issues; each was
+reproduced by a test before it was fixed)
+
+**1. A retry starts at the block that was stopped.** D337's retry after a memory stop or
+`tools/runner.sh stop` rebuilt the steps as `prepare, run1 … runN`, and a runner restart of a
+non-resumable job went back to step 0: whichever block had been stopped, the job ran again from
+`run1`, after moving every header `clean:` path aside. Last night a retry nearly redid a 4.5 h
+encode because the encode and the training were one block. Now every `## Commands` block that
+exits 0 is recorded in `run.json` (`blocksDone`: exit code, time, a hash of the block's text) and
+in STATUS (`blocks_done:`); a retry, and a restart of a non-resumable job, run `prepare` and then
+the first block not done (the passed pilot and the finished blocks skipped). A block the job file
+has changed since counts as not done, and so does every block after it. A `run.json` from the
+installed runner, which has no `blocksDone`, is read from its steps: every commands step before
+the one it stopped at finished with exit 0, because that is the only way a step advances.
+**`clean:` belongs to blocks.** A `clean:` line before a fenced block in `## Commands` (like
+`cores:` and `mem_gb:`) names what that block makes. A non-resumable retry that starts at block k
+moves aside the block `clean:` paths of blocks k … N only; the header's `clean:` is moved aside
+only when the job starts again from `run1`. **Compatibility:** a job file whose only `clean:` is
+the header's (every job file before this one) still starts again from `run1` with all of it moved
+aside, as before, because nothing says which block made which path and moving it all aside would
+lose the finished blocks' work (J063's header `clean:` lists its encode's dataset and its fit's
+model together). Resumable jobs are never cleaned; they now skip finished blocks too, and their
+stopped block runs again with its tools skipping what is done. Rejected: skipping the header's
+`clean:` whenever the retry starts past `run1` (an old file's later block would then run over its
+own half-written output with nothing moved aside); a per-path owner inferred from the block's
+text (guesswork); the old rule (hours of work redone).
+
+**2. `.restart-*` copies are never deleted.** D337's review added `pruneAside`, which kept the two
+newest copies beside each cleaned path and deleted the rest, while the job README said "moved aside
+first, never deleted". The README is the promise the PC session plans by, so the code now matches
+it: nothing is deleted, and STATUS's `set_aside:` line counts every `.restart-*` copy beside any of
+the job's `clean:` paths and their disk use, for a person to remove. This supersedes D337's review
+item "Old `.restart-*` copies are pruned to two". Rejected: keeping the oldest and the newest under
+a documented cap (still a deletion the runner decides alone, of data a person may not have read).
+
+**3. An OOM kill inside a step is a memory stop.** When the kernel kills one process of a step's
+unit (a JVM over the unit's `MemoryMax`), the script usually exits 137 and the wrapper writes that
+exit code, so the runner read an ordinary failure and failed the job instead of retrying it with a
+worker fewer. Now the wrapper, still inside the unit's cgroup, copies the `oom_kill` line of the
+unit's `memory.events` to `<step>.sh.oom` before it writes the exit code. An exit code of 137 or 9
+with evidence of an OOM kill (`oom_kill` above 0 there; or, for a wrapper from before this change,
+systemd's `Result=oom-kill` or a journal line of the unit saying a process was killed by the OOM
+killer) is a memory stop. A 137 without evidence still fails (someone's `kill -9`); any other exit
+code fails as before. systemd 255 exposes no `MemoryEvents` property on `systemctl show` (checked
+against its shared library's strings here), which is why the wrapper reads the cgroup file itself:
+with `--collect`, the unit and its cgroup are gone by the time the runner looks. Shown with the
+fake systemd; the real `memory.events` read and the journal's wording need the PC.
+
+**4. The reserved-deck filter fails closed on a lab game (amends D340).** `reserved.game_decks`
+traced a lab recording to both decks through its run's `drafts.jsonl`, and when that file had no
+line for the recording's seed (or was not there) it fell back to the viewer's own deck: a game
+whose opponent played a deck-set deck passed. Now a lab game, known by its folder layout
+(`games/<seed>/g<n>-seat<k>.jsonl[.gz]`, `frames/draft-<seed>-g<n>.jsonl`) or by the lab's deck
+names in `hello_ok` (`cubelab <seed> A`), whose decks cannot both be known is marked, and
+`reserved_hit` returns `UNKNOWN_DECK` for it, so every builder that drops a reserved-deck game drops
+it and counts it under that name (`reservedHits` in `stats.json`, `skippedGames` "reserved deck
+(D340)"). The callers are unchanged. A log that is not a lab game (a person's game, the
+`fixtures/games` recordings) never carries the other chair's deck by the hidden-information rule
+and is still checked by the viewer's deck; failing closed there would drop every human game, the
+owner's held-out set (D347). On the committed fixtures, with the filter on, the two games of
+`fixtures/cubelab/recorded` (seed 7, both chairs; that fixture has no `drafts.jsonl`) are now
+dropped as `UNKNOWN_DECK`; the other 27 games under `fixtures/games`, `fixtures/cubelab` and
+`fixtures/synthetic` are judged as before (none of them was a reserved-deck hit before or after).
+
+**5. A recorded queue night is not finished unrecorded by accident.** `queue run` re-reading a
+night's plan without `--record-every` played the remaining chunks unrecorded and said nothing. The
+plan now keeps the night's `recordEvery` (and each run's, in `runs`), and a re-run of a night that
+recorded, by the plan or (a plan written before this) by recordings of the night's own seeds under
+`<key>/games/<seed>/`, is refused without the flag. `--record-every 0` plays the rest unrecorded on
+purpose, with a warning; a different N is allowed with a warning. The check runs before the engine
+is touched.
+
+**6. Per-step widths: `pilot_cores:` and `prepare_cores:`** (a later addition the same day, from
+the PC). J050's pilot ran 2 JVMs for 45+ minutes while the job reserved its 7 cores, so the runner
+admitted nothing else and the PC sat at load 2 of 16. A job may now declare `pilot_cores: N` (the
+width of its `## Pilot` steps; a pilot block's own `cores:` line still wins) and `prepare_cores:
+N` (of `prepare`). While the job is in such a step, its holding, and so what co-scheduling counts,
+its threads cap and the pilot's `{workers}`, is that width, so a narrow job can be admitted beside
+it. Absent, both are the job's width: today's behaviour. When the job reaches a step wider than
+the cores the other heavy jobs leave, the step waits for them; nothing is stopped or killed. The
+starvation rule stays the same rule: a waiting job holds the waiting step's full width, so
+`schedule` admits nothing new beside it (as it admits nothing after the first job that does not
+fit), and the job starts as soon as its width is free. Two jobs waiting to widen could each count
+the other's claim and wait forever, so a job later in id order that is itself waiting does not
+count against an earlier one: the earlier goes first, as in the queue. And only a step wider than
+the job's previous one (for the first, than the width it was admitted at) waits: the job already
+held those cores, so the narrow job admitted beside a pilot never waits for the pilot's job, whose
+claim would otherwise stop it (the first version of this, in a test, did exactly that). A first `## Commands` block
+that waits is sized again when it starts (it was sized at the pilot's end against the memory the
+others held then). The wait applies to any step wider than what is free, not only after a narrow
+pilot: before this a wider later block started at once and could crowd a job beside it (the guide
+said "put a job's wide blocks first"); now it waits. A job alone never waits. Rejected: pre-empting
+or stopping the narrow job (the brief: no killing; its work would be lost); admitting a job at its
+pilot width (a newcomer would then often wait for its own main step: more waiting, not less);
+leaving a waiting job at its narrow holding (newer narrow jobs could keep it waiting indefinitely).
+STATUS says `waits: needs N core(s) for runK; F of B free …` while it waits.
+
+**For the jobs queued on the PC.** They run on the installed runner; nothing changes until
+`tools/runner.sh install` picks this up. After that, a retry of a job with more than one
+`## Commands` block skips its finished blocks: J059 and J061 (resumable, two blocks) no longer
+run a finished `run1` again. J063 (not resumable, three blocks, a header `clean:` and no block
+`clean:`) still starts again from `run1` on a retry, as now, until its file gives each block its
+own `clean:` line; J062 and J065 have one block each, so nothing changes for them. A running
+job's steps already started keep the wrapper they started with (no `.oom` file); a 137 from one
+of those is judged by systemd's word and the journal. No queued job declares `pilot_cores:` or
+`prepare_cores:` (the installed runner ignores an unknown header key, so a job file may add them
+before the reinstall); without them the one change is that a later block wider than what is free
+waits for the cores instead of crowding a job beside it.
+
+**Checked.** `web/test/lab-runner.test.ts`: a memory-stop retry of a two-block non-resumable job
+starts at `run2` with only `run2`'s `clean:` moved aside and the encode run once; a `stop` retry
+of a resumable job from a `run.json` without `blocksDone`; a changed block running again; an old
+job file retrying from `run1` with everything moved aside; a restart starting at the block that
+died; four `.restart-*` copies kept and their bytes in STATUS; exit 137 and 9 with evidence (the
+`.oom` file, the journal) a memory stop, 137 without it and 1 with it failures, and the wrapper
+writing the exit code whatever it reads; the per-block `clean:` parse and its errors.
+The per-step widths: `pilot_cores:` / `prepare_cores:` parsed and carried by the steps; a 2-wide
+pilot letting a 3-wide job start beside it, the 7-wide run1 waiting (no unit stopped), a 5-wide job
+that would fit the cores really free not admitted meanwhile, and run1 starting 7 wide once they
+are free; two jobs waiting to widen, the earlier starting first.
+`web/test/cubelab-bridge.test.ts`: the recording check, and `queue run` refusing before the
+engine. `tools/ml/tests/test_review2.py`: the fail-closed cases and the unchanged ones. Two
+older tests built datasets with the filter on over the `fixtures/cubelab/recorded` copy, which
+has no `drafts.jsonl`, and counted its two games as kept: `test_outside_exam`'s CLI test now
+expects them dropped as `UNKNOWN_DECK`, and `test_rundir`'s run-folder test checks that, then
+reads its defaults with `--keep-reserved`.
+
+## D364 — Evaluator v2: one dataset over nights 1-3 split by a hash of the deck pair (night 1's held-out pairs stay held out, proved on the data), a learning curve over nested shares of the training pairs, successive halving in place of the time-boxed grid, float32 training, and honest sample sizes; every option opt-in, the default path bit for bit unchanged
+
+*Branch `c/eval-v2`; D364 as assigned (free on `main` at push). The job that uses it is the
+draft J067 (pc-jobs, after J061, night 3); not posted by this branch.*
+
+**2026-10-04**
+
+**Context.** Night 1's evaluator passed gate 1 (J060, D354): 6.3 M rows, 39 k games, test
+log-loss 0.497 against core's 0.554. Its grid (`--grid --time-budget 10800`) finished 7 of
+1,440 configurations in 3 h; 4 of the 7, at lr 0.003 and batch 4096, peaked at epoch 1 and
+several were cut after an epoch; the winner (hidden 128, card dim 4, 40 k parameters) peaked
+at epoch 20 of 32. Peak memory 4.9 GB. Nights 2 (plain) and 3 (15% exploring games, D358)
+add about twice as many games again. Gates 2 and 3 run on the night-1 model at their own
+pinned commit, so nothing they read may change: every flag below is opt-in, and without them
+`train_eval.py`, `dataset.py` and `gate_fit.py` produce the same files and numbers.
+
+**Decision.**
+
+1. **The split across nights needs no pinning.** `--split-by pair` (D317) already sends a
+   deck pair to train, val or test by `sha256("pair|" + pair)` alone once there are 20 pairs
+   or more (`assign_pairs`), so adding nights never moves a pair: night 1's test pairs are
+   test pairs of nights 1-3, v1 never trained on a test pair of the new dataset, and v2 never
+   trains on gate 1's test pairs. `tools/ml/split_audit.py` proves it on the data and exits
+   1 otherwise: every deck pair, draft folder (`games/<seed>/`) and deck name in one split;
+   pairs per night and split; with `--reference` (night 1's dataset) every reference game
+   present and in its old split, its test pairs DATA's test pairs, and no DATA test pair a
+   reference training or validation pair. A pair's name is `cubelab <seed> A|B`; two pool
+   keys may reuse a seed, which only joins two drafts into one split group (counted).
+2. **The dataset.** `dataset.py --queue-root R --nights 1,2,3` without `--cube` takes every
+   normal and bridge folder (every cube) and records each game's `night` in games.jsonl and
+   `nights` in stats.json (only when `--nights` is given). `--vocab-from DIR|MODEL` encodes
+   over that dataset's or model's own card list, card for card, so the schema id is v1's and
+   v1 scores the new rows (J067's pilot checks the id). Exploring games are kept by default
+   for the evaluator (D358, `--play-explore include`, as before).
+3. **`--train-fraction f`** keeps the training pairs with `sha256("frac-v1|" + pair) < f`
+   (`in_fraction`): deterministic, independent of the other pairs and nested (0.25's pairs
+   are inside 0.5's). Val and test are untouched and the dropped games are never loaded.
+   **`--curve 0.25,0.5,1.0`** trains one configuration at each share (in forked workers with
+   `--jobs`) and reports test log-loss with a 95% interval over test deck pairs (2,000
+   resamples), each share's paired difference to the largest, core's, and the verdict line
+   "more data still helps" only when the last step's interval is above 0.
+4. **`--search sha`** (`eval_search.py`): successive halving over `SHA_GRID` = GRID with the
+   learning rates 3e-4, 5e-4, 1e-3, 2e-3, 3e-3 (the review's point 4: J060's lr 0.003 at batch
+   4096 peaked at epoch 1). The base configuration (the command line's) first, then the space
+   in a seeded order. Rung 0 trains every configuration `--min-epochs` epochs; each rung keeps
+   the best 1/`--eta` (3) by best validation log-loss so far and RESUMES them (weights, Adam's
+   moments, generator) to eta times the epochs; the last `--finalists` (eta) train to early
+   stopping exactly as a plain fit (`EpochTrainer`, whose full run is the old `train_numpy`,
+   draw for draw). Every configuration compared in a rung has had the same epochs. `--configs
+   N` fixes N; otherwise a 20-batch probe times an epoch and N is the largest whose plan fits
+   80% of `--time-budget` (printed with "repeat with --configs N"). Results do not depend on
+   `--jobs` (each configuration its own generator; a rung is ranked when all of it is back).
+   The budget is also a deadline; a cut search says `cutByBudget` and is then not exactly
+   reproducible. `--grid` is unchanged (the tests hold it to the old loop).
+5. **Speed.** `bench_epoch.py` times an epoch on synthetic rows of night 1's shape (6,343,314
+   rows, D305's 243 board columns, 731 slots x 17 states, 24 card cells a row; hidden 128, dim
+   4, batch 4096). Measured in this container (4 cores shared with other work, load average
+   about 25; one BLAS thread): float64, the default, 219 s of wall time per training epoch
+   (85 s CPU), 23 k rows/s; **`--fast`** (`evalnet.Fast32`: float32 parameters, inputs and
+   products, the input layer's backward product only for the pooled card columns, the
+   standardised board written straight into the input matrix) 101.5 s (47 s CPU), 50 k rows/s:
+   2.2x. Two workers at once (`--jobs 2`, `--fast`) 66.6 k rows/s in all; four, on four
+   contended cores, 41 k. Four BLAS threads in one process were slower than one (955 s an
+   epoch under that load): the matrices are 4096 x ~300 x 128, too small to split, so the
+   cores go to workers, one BLAS thread each, not to threads. `--fast` is not bit for bit the
+   float64 numbers (rounding in the 7th digit), so it is opt-in; the model is exported and
+   scored in float64 as always (Java parity untouched).
+6. **Memory.** `--compact` (train_eval and `gate_fit.py score`) holds a split's board as
+   int8 where every value of a column fits, counts in int8, row pointers in int32: identical
+   numbers in 350 bytes a row against 621 (measured: the arrays of 50,000 synthetic rows of night
+   1's shape, every board column fitting int8; a real column whose values pass 127 stays int16).
+   Night 1's 6.3 M rows are then about 2.2 GB of arrays instead of 3.9; nights 1-3, about 19 M
+   rows if nights 2 and 3 are night 1's size, about 6.7 GB. That is close to J060's 9 GB
+   envelope, so J067 measures the full load before anything trains and takes 4 down to 1
+   workers by what stays under 8.5 GB, or stops there. `--jobs J` forks after loading, so the rows are shared
+   copy-on-write; `--dry-load --jobs J` runs one batch in each worker and reports each
+   worker's peak private memory (sampled while it works) and `peakWithWorkersGB`.
+7. **What a held-out number is worth** (the methods review). Rows of one game share one
+   outcome, so every train report ends with a `heldOut` block, report-only: rows, games and
+   deck pairs per split; on test, the eval model's residuals' intraclass correlation within a
+   game and within a pair, the design effect 1 + (m − 1)ρ (m the row-weighted mean group
+   size) and the effective sample size; every model's test log-loss with a 95% interval over
+   pairs, row-weighted and game-weighted; and D358's exploring test games apart from the
+   plain ones. `eval_compare.py` and the curve report the same.
+8. **`--weight-by game`**: every game the same total weight in the training loss and in the
+   validation log-loss early stopping reads. `--curve-weights none,game` trains each share
+   both ways and reports game-weighted minus unweighted on the same test pairs, by row and by
+   game. **`--subsample s`** (the independent review's point 1): each epoch trains on
+   ceil(s x c) rows of every c-row game, a systematic draw from a fresh random start, so an
+   epoch costs s of a pass and the search fits about 1/s as many epochs in its hours.
+9. **`--aux-turns w`** (point 2): a linear head on the last hidden layer predicts the row's
+   `turns_to_end` (standardised by the training split), its squared error times w in the
+   loss; reported as held-out MAE beside the training mean's. It is never exported: the model
+   file is the win head, and the gates read only that.
+10. **Lower-noise labels: the hook, not the producer.** `--soft-labels F.npz` (`game`,
+    `rows_to_end`, `p` in [0, 1], optional `k`) makes a training row's target
+    (1 − `--soft-weight`) outcome + w p; val and test always score against the outcome.
+    Tested on synthetic soft labels. **Left:** the producer. For a sampled decision row it
+    rebuilds the position from the viewer's redacted log with the hidden cards determinized
+    and plays it out K times with Forge Default on both seats, as `coach-grade.sh`
+    (`mtgtable.grade.CoachGrade`) does per option; what it lacks is a mode that plays the
+    position as it stands (Default choosing) instead of every option, and a batch over
+    (game, rows_to_end) keys that writes the .npz. Note that such a label is the value under
+    sampled hidden cards, not the real ones: for a viewer-side evaluator that is the right
+    target, and it is why the outcome label is noisier than K suggests.
+11. **v2 against v1** (`eval_compare.py`): both models on DATA's test split, plain games only
+    (exploring test games are their own subset), subsets `all`, `reference` (night 1's test
+    pairs) and `new`; log-loss, Brier, ECE and log-loss(old) − log-loss(new) with a 95%
+    interval over pairs; optionally gate 1's turn-end positions scored by both. It refuses a
+    comparison if either model trained or early-stopped on a test pair. **The rule, written
+    before the run:** v2 is BETTER on gate 1's pairs when, on `reference`, the difference is
+    above 0 with the interval's lower end above 0; otherwise "not shown better". It is a
+    report, not a gate: promotion is still D354's gates, gate 1 by `gate_fit.py` unchanged.
+
+**On the play** (the independent review's point 3). encode.py has no explicit on-the-play
+column, but the information is there: `turn` is the player-turn number and `round` is
+ceil(turn/2), so 2·round − turn is 1 on the first player's turns, and on the play = that
+parity XOR `my_turn` (extra turns aside). A hidden layer represents it. An explicit column
+would change the schema id, so v1 could not score the new rows (no same-pairs comparison),
+and Java's `GamePosition`, the parity fixtures and `eval_serve.py` would all move with it;
+not done here. A v3 that changes the schema anyway should add it.
+
+**Default unchanged, proven** (`tools/ml/tests/test_eval_v2.py`): the old `train_numpy`
+and grid loop are copied into the test verbatim from main before D364, and the new code
+gives the same weights, history and grid records, bit for bit, on the fixtures; a default
+CLI run's model file and report carry no new key but `heldOut`. Also tested: fraction
+determinism and nesting, the split's stability across made-up nights and the audit catching
+a leak, search determinism across `--jobs` and its fairness (equal epochs per rung), the
+budget plan, Fast32's gradients against float64, the ICC, game weights, the aux head (not
+exported), subsampling, soft labels, and the comparison end to end on a fixture queue.
+`eval_serve.py` serves v1 as before and serves v2 unchanged (same schema id, same export
+format: the aux head is never written).
+
+**Rejected.** Pinning the test split to night 1's list (the hash already does it, and a
+list would have to travel with every dataset); random search with a short warm-up only
+(halving gives the survivors the full training a warm-up does not); more BLAS threads per
+fit (measured slower at these sizes); a torch path for the new options (CPU torch measured
+slower than numpy here, D316).
+
+## D367 — Search changes are aimed by error analysis: `tools/ml/search_errors.py` reads the decision records, gate 2's truth tables, review reports and the ladder, and says where the search loses, with intervals over games
+
+*Branch `c/search-error-analysis`; D367, the next number free at push (D362–D366
+are held by other open branches).*
+
+**2026-10-04** (a methods review the owner approved)
+
+**Context.** Three search tweaks were SPRT-tested on hunches and none gained:
+`aturns=1` (D351; 50.2% over 488 games), the oracle (D350; 47.5% over 40 games)
+and the LCB override (D350; 50.7% over 856 games). Each night spent on a tweak
+that does not touch a real failure mode is a night lost. The lab already
+records what an error analysis needs.
+
+**Decision.** Before the next search change is proposed, it is aimed with
+`tools/ml/search_errors.py` (standard library; numpy only for `--model`). It
+reads, each input optional:
+
+- decision records (D347) of the seats that played the search (`--policy`),
+  the search's per-candidate report (D350) included; a record answered by
+  exploration (D358) is left out;
+- gate 2's set and full-game truth tables (D354), with the hand rankers at 3
+  and 12 rounds;
+- post-game review reports (D353), their `leaf` regrets kept apart from their
+  `wins` regrets;
+- the AI ladder's `results/` and `sprt.jsonl` (D318, D319).
+
+It writes `var/analysis/<name>/`: `report.md`, CSV tables (Parquet when pyarrow
+is installed), `summary.json` for a job's checks and `manifest.json` (input
+hashes, code version). The same inputs give byte-identical report, tables and
+summary. The analyses:
+
+1. **Regret** by decision kind (spell, attack, block, other), turn bucket,
+   phase, cube and deciding policy, per source; a mistake is "clear" only when
+   the source's own paired interval excludes zero (D353's rule).
+2. **The search against Forge, judged by the truth.** Gate 2's hand ranker at
+   3 rounds is search-v1-fixed3's ranking without its margin rule, so the
+   truth adjudicates the search on every decision of the set, not only where a
+   recorded seat searched. Per variant (the ranker's pick, the margin rule read
+   through the win scale, a recorded override): truth(search) − truth(Forge),
+   whose noisy-maximum bias cancels, and the helped / harmful / unclear rates.
+3. **The search's own noise.** Per searched decision: the pick against the best
+   other candidate, its standard error (exact and paired when one of the two is
+   Forge's answer, else the unpaired approximation), overlap at 95%, P(the pick
+   is the worse of the two), whether 4× the rounds would separate them, and
+   decisions within noise of the margin; with both rankers, how often 12 rounds
+   pick differently from 3 and which pick the truth prefers.
+4. **Card hotspots.** A regret is credited to the chosen option's cards and,
+   when the best option was another, to its cards (`missed`); tags come from
+   the deciding seat's own view of the card (types, `{X}`, flash, an instant
+   cast in combat) and an optional tag file.
+5. **Loss forensics.** For each recorded game the analysed seat lost: its win
+   chance at each decision row (the evaluator through `eval_serve.py`'s own
+   encoder, or else the search's own end-of-turn estimate), the largest fall
+   and the seat's decision there; for each SPRT, A's score by cube, game length
+   and seat.
+
+**Honesty rules.** Intervals resample games (a ladder game's mirror block),
+never single decisions. A leaf number is an end-of-turn estimate, never called
+a win rate. A card is named only when the deciding seat's state shows its face.
+The report lists what it read and what it left out, and why.
+
+**Not done.** The LCB rule is not simulated on the truth set (the rankers do
+not report paired per-round differences). Ladder batches are not recorded today
+(`tools/ai-ladder/bench.ts` passes no `--record-*` flag), so a lost SPRT game has
+a result line but no frames; forensics reads recorded games (ai-bench
+`--record-all`, lab runs with search seats). Modal spells and combat tricks
+beyond "an instant cast in combat" need the tag file.
+
+**Rejected.** Another SPRT before the analysis (three hunches cost three nights
+and gained nothing); pooling decisions as independent (the decisions of one game
+share its deal); mixing the leaf and the full-game regrets in one table (they
+measure different things); a notebook (not runnable as a lab job, not
+deterministic).
+
+## D368 — The win chance says how sure it is and why: `/eval` serves an ensemble of one schema's models (their mean, `sd`, `n`), and `explain: true` adds exact integrated-gradient attributions in logit space, grouped into buckets a player reads; both are advertised on `/health` (`evalEnsemble`, `evalExplain`), and one model is served exactly as before
+
+*Branch `c/winchance-uncertainty`; D368 (D362–D367 are held by other open branches).
+ForgeCoach's side is its own branch `c/winchance-uncertainty` (`src/evalClient.ts`,
+`src/winChance.ts`, `src/ui/winchance/`, a "why" line in the film room).*
+
+**2026-10-04** (a methods review the owner approved: make the win chance more honest
+and more useful for coaching)
+
+**Context.** D361 serves one model's P(win). A single number says nothing of how much
+another training run of the same config would disagree, and a fall of 9 points says
+where the game turned, not what the model saw change.
+
+**Decision.**
+
+1. **An ensemble.** `--eval-model` (helper) / `--model` (`eval_serve.py`) takes one export,
+   several comma-separated, a directory (its `ensemble.json`, else every `*.json`), or a
+   manifest `{"format": "mtgtable-position-eval-ensemble", "formatVersion": 1, "models":
+   [paths relative to it]}`; at most 16. Every member passes every D361 refusal, and all
+   must share the schema id, vocabulary (and its sha), feature count, card offset and card
+   states, or nothing is served; one file named twice is refused. `p` is the members'
+   mean, `sd` their sample standard deviation (n ≥ 2), `n` their number. `model` is a hash
+   of the members' shas; one member is served exactly as before (its own sha, its own
+   P(win), no `sd`). The default prefers `var/ml/models/night-1-ensemble.json` when it
+   exists, else D361's `night-1-eval.json`; each is looked for in this checkout and then in
+   the lab clone (D369's lookup), the ensemble in both places before the single model, and
+   each path of a comma list the same way.
+2. **What `sd` means.** How far training runs that differ only in their seed disagree about
+   this position: the model's own uncertainty, not the game's luck. ForgeCoach says so in
+   its tooltip. No train_eval change is needed: `--seed` changes the initialisation and the
+   batches, not the `--split-by pair` split. Job J069 trains four more seeds of night 1's
+   chosen config and checks each one's calibration (gate 1's clause C on its own test
+   split, `gate_metrics.py calib`); a seed that fails stays out of the manifest.
+3. **Attributions** (`tools/ml/attribution.py`, `explain: true` or `/eval?explain=1`):
+   integrated gradients of the network's **logit** against one fixed baseline per model --
+   the training split's mean board (standardised columns at 0) and no card known by name
+   (the pooled card block at 0). The network is ReLU layers and a linear output, so along
+   the straight path it is piecewise linear: the path is walked segment by segment (the
+   next boundary is where the first unit crosses zero) and each constant gradient weighted
+   by its segment's length. The integral is a finite sum, exact, not a Riemann
+   approximation. The network's input is affine in D305's raw vector (standardisation, a
+   linear pooling of card counts through the embedding), so each raw feature's share is the
+   chain rule through that map. Completeness holds: the shares sum to logit − baseline
+   logit. Points of win chance are the shares times one factor, (p − p0)/(z − z0), so they
+   keep the shares' signs and proportions and sum to 100 (p − p0). An ensemble's
+   attribution is the members' mean, each against its own baseline.
+4. **Buckets.** Each board feature goes to one named bucket ("your board", "their life",
+   "cards in hand", "their hand size", "your mana and lands", "your graveyard and exile",
+   "your spells this turn", "the stack", "combat", "the turn and phase"); a card cell goes
+   to the card's own bucket ("your Glorybringer", "their face-down cards", "tokens"). A
+   card's own bucket is what the model knows of it beyond its type, size and mana value,
+   which sit in the board buckets. The answer lists every bucket with a share, largest
+   first, so a client can subtract two positions bucket by bucket: ForgeCoach's "why" of a
+   fall is the difference between the positions before and after it (the same baseline, so
+   the differences sum to the fall).
+5. **Hidden information.** An attribution is a function of the encoded vector only, and
+   that vector is encode.py's (D361 §6): a card cell that is 0 has a share of exactly 0 and
+   a card bucket is only reported when its card is in the vector, so a bucket can only
+   name a card the viewer sees.
+6. **Advertised.** `/health` adds `evalEnsemble` (the number of models) and `evalExplain`
+   (1 when every member's export is one attribution.py can differentiate: formatVersion 1,
+   ReLU hidden layers, one sigmoid output). An older `eval_serve.py` says neither: the
+   runner reports `evalEnsemble: 1, evalExplain: 0`. ForgeCoach sends `explain` only to a
+   helper that says `evalExplain: 1` (an older one refuses the unknown field) and shows the
+   ± only when an answer carries `sd`.
+
+**Verified** (this container, the parity model `fixtures/eval/model.json`, one hidden
+ReLU layer; `tools/ml/tests/test_attribution.py`, `tools/eval-runner-selftest.mjs`):
+
+- completeness on every decision row of the 22 committed recordings: |Σ shares − (z − z0)|
+  < 1e-9, |Σ points − 100 (p − p0)| < 1e-7; attribution.py's own logit gives the served
+  P(win) to 1e-12;
+- exactness: the walk equals a 4,000-point midpoint Riemann sum of the gradient (to 1e-3 of
+  the logit gap) on rows whose path crosses ReLU boundaries; with no hidden layer it is
+  gradient × input;
+- hidden information: D305's scrambler (the opponent's hand named, libraries filled, stubs
+  named, face-down `alt`s) changes no attribution, and every card a bucket names is shown
+  face up in the viewer's state;
+- the ensemble: mean, sample sd and n against the members' own P(win) (1e-12); a member of
+  another schema refused; the three ways to name an ensemble load the same one; through the
+  helper's route, a single model still answers the golden P(win) (1e-9), `n: 1`, no `sd`.
+- measured: over 865 decision rows, an answer took 5.6 ms on average, 10.4 ms with
+  `explain`; at most 30 path segments; a median of 27 buckets (at most 65).
+
+**Not done.** A night-1 ensemble (J069 trains it; the PC's numbers are not measured here);
+`sd` is not a calibrated interval and is not shown as one; attributions of an export that
+is not ReLU + sigmoid (refused by name, the win chance still served).
+
+**Rejected.**
+
+- **Gradient × input alone**: not complete for a network with hidden ReLUs, so the shares
+  would not add up to the number shown.
+- **A sampled Riemann sum for integrated gradients**: an approximation where an exact sum
+  is cheap.
+- **Shapley sampling over buckets**: dozens of forward passes per answer and a sampling
+  error, for a network whose exact path integral is a few dozen segments.
+- **The attributions' baseline as the previous position**: it would make each answer
+  depend on which frame the client asked about before; one baseline per model lets a
+  client difference any two positions.
+
+## D366 — The decision ledger: a job may say what it decides, what we expect, its pre-registered rule and its follow-up; the runner appends every job end to `LEDGER.md` and `ledger.jsonl` on `pc-results`, and asks the cloud session in HEARTBEAT for a follow-up that is not on pc-jobs
+
+*Branch `c/decision-ledger`; D366, the first number free at push time (D362–D365 are held
+by other lanes).*
+
+**2026-10-04** (a methods review Justin approved)
+
+**The fault.** Lab jobs produced results with no decision attached, so their reading
+slipped. Night 1's pre-registered morning read (the matchup model answering three written
+questions) was promised in J029 as "a separate job" and was not queued for a day (J062).
+Results were summarised loosely, without the rule they were meant to be judged by.
+
+**Decided.**
+
+1. **Four optional header lines** (`tools/runner/jobfile.ts`, `parseLedgerHeaders`):
+   `decides:` (the decision the result informs), `hypothesis:`, `rule:` (the pass/fail rule
+   written before the run, or a pointer: a D-number, a `gates.py` / `EXAM_RULE` name), and
+   `followup:` (comma-separated job files `jobs/J###-name.md` or template names). Older job
+   files parse unchanged; a follow-up that is neither form, or names the job itself, is a
+   job-file error. `tools/runner.sh check` prints the four lines and warns about a heavy job
+   with no `decides:`, a `decides:` with no `rule:`, and a follow-up file beside the checked
+   one with no `after:` on it.
+2. **The ledger** (`tools/runner/ledger.ts`, `Runner.appendLedger`). Every job end, `done`,
+   `failed` or `aborted` (a failure whose reason is an `abort:` line), is one entry in
+   `ledger.jsonl` and `LEDGER.md` at the root of `pc-results`, written in the publish that
+   carries the job's STATUS: id, title, the three lines, the outcome and reason, the
+   `headline:` numbers, the summary's path, the finish time, the commits and each
+   follow-up's state. A job without the lines is entered too, saying so. A `waiting` (memory
+   stop, `needs: check`) or `skipped` job is not an end. An entry's key is `<id>@<finished>`:
+   a key already in `ledger.jsonl` is never appended again, so a refused push that is
+   retried writes it once, and pushed keys are kept in `var/runner/ledger.json`. Its `since`
+   is the first time a runner kept a ledger, so jobs that ended before the upgrade are not
+   backfilled. Like HEARTBEAT, the ledger goes to `pc-results` only, never to the public
+   `lab-status` copy, which stays numbers-only.
+3. **Follow-ups.** The runner only reads pc-jobs, so it never posts a job. The recommended
+   form is to post the follow-up together with its job, with `after:` on it, and to name it
+   in `followup:`: the queue starts it, and the ledger says `queued`. A follow-up that is not
+   on pc-jobs when its job ends `done` (a file to be written from the results, or a
+   template) gets one `FOLLOW-UP READY [<key>]` line at the top of HEARTBEAT.md's
+   `## Messages`, which the cloud session reads, posts and deletes; the runner writes each
+   line once and never again. A failed or aborted job asks for nothing (`not-due`).
+
+**Checked.** `web/test/lab-runner.test.ts`, five tests: the header lines and their errors;
+`check`'s lines and warnings, through the CLI on a pc-jobs-like folder; entries, markdown,
+the message and its placement; the runner end to end over real git (done, failed, a
+follow-up already queued with `after:`, a template and a file not posted; nothing on
+`lab-status`; no duplicate after more publishes; a deleted message not rewritten; no
+backfill); an aborted job.
+
+**Rejected.** The runner committing the follow-up to pc-jobs (it only reads that branch, and
+push access to pc-jobs is code execution on the PC: D337's review). Queuing a follow-up by
+STATUS on pc-results (a STATUS for a job file that does not exist yet means nothing to the
+queue). Making `decides:` required (every older job would be refused; a warning in `check`
+is enough). Publishing the ledger on `lab-status` (its lines are free text, which D337's
+review keeps off the public copy).
+
+## D369 — The owner's games flow into the human test set by themselves: `play.sh` copies every finished human-vs-AI game from `var/games/` into `var/ml/human/` with a manifest, `human_eval.py` scores the evaluator there against prior, life and core with intervals over games, and the first check is pre-registered at 30 games
+
+*Branch `c/human-games`; D369, the next number free at push (D362–D368 are held by other
+open branches). A methods review the owner approved (2026-10-04).*
+
+**2026-10-04**
+
+**Context.** D347 made `var/ml/human/` the place for the owner's own games and kept them out
+of training; D361 shows the evaluator's win chance in ForgeCoach. Nothing yet says whether
+that number is right on HUMAN games: every measurement so far (D305, D316, D354's gate 1,
+D359's outside exam) is on Forge-vs-Forge games or 17Lands' players. The folder was filled by
+hand, so it was empty.
+
+**Decision.**
+
+1. **Where the games are.** `mtgtable.MtgTable` writes each game a seat plays to
+   `var/games/<gameId>/frames.jsonl` under the checkout it runs from. `play.sh` passes no
+   `--game-id`, so the id is MtgTable's default `human-ws-<seed>` (`-g<n>` for game n of a
+   match, M38); a ForgeCoach-launched match is `match-m<13 digits>[-g<n>]` (D303). The gate's
+   and the tools' runs write there too, always under ids of their own.
+2. **Collection, `tools/ml/human_collect.py`** (standard library). A game is taken when its
+   folder name is one of those two shapes, its session header's `transport` is `ws` or
+   `console` (a person's seat: `auto` and `null` are scripted, an AI-vs-AI recording has none),
+   the viewing seat (`seat` = `hello_ok.you`) is not an AI and the other player is, and it is
+   finished (an `over` or `gameOver` with a winner or a reason; a crash's null `over`, M46, is
+   not). It is copied byte for byte, gzipped without a timestamp, to
+   `var/ml/human/<gameId>-<seed>-<startedAt>.jsonl.gz`. `--from DIR` reads every
+   `*.jsonl[.gz]` under a folder (logs saved elsewhere) by the same rules, without the id
+   shapes. The key is game id + seed + `startedAt`: play.sh's fresh seed per session makes id
+   + seed one game; the start time separates a seed given twice on purpose, which reuses the
+   id. A key in the manifest is never copied again, so a second run copies nothing.
+3. **The manifest**, `var/ml/human/manifest.json` (not `.jsonl`: `dataset.py` reads every
+   `*.jsonl[.gz]` there as a game): per game the key, the file, game id, seed, start time and
+   date, seat, transport, result from the human's side, reason, turns, your deck (name, path,
+   sha256), the cube of `cubes/` holding at least 80% of your deck's non-basic cards when the
+   deck file is still there, the AI's deck by its public name and count (M44), the AI profile
+   and policy (M56), where it came from, the sha256 of the copy. `.collect-cache.json` beside
+   it remembers files already judged by size and mtime.
+4. **Triggered by `play.sh`**: at start (after the match lines, so a session killed hard
+   is collected the next time), when the engine falls asleep (D308: a match just ended) and in
+   `stop()` at exit (the bridge has flushed). Each prints one line, `human test set: N games (W
+   won, L lost)[, k new] -- var/ml/human/ (D369; descriptive until 30)`. It never fails
+   play.sh (`timeout 120`, a failure prints a line), it is skipped under the match launcher's
+   self-test seam, and `--no-human-collect` turns it off. **Not the coach helper**: the helper
+   sees no game end of its own (ForgeCoach talks to the bridge), and another lane is changing
+   it; play.sh already owns the engine's lifetime, so it is the least intrusive place.
+5. **Evaluation, `tools/ml/human_eval.py`** (numpy). The rows are `encode_game`'s decision rows
+   of each human game from its own (human) seat, each model encoding with its own vocabulary;
+   several `--model`s are each scored and their mean P(win) is `eval`. Beside it, train_eval's
+   `fit_baselines` (`prior`, `life`, `core`) fitted on the training split of the dataset the
+   model was trained on (its `--split-by`; `--baselines DATA`, by default the model's
+   `training.data`); without that dataset only `coin` (0.5). The numbers are train_eval's
+   `metrics` (log-loss, Brier, accuracy on decided games, ECE, the ten-bin reliability table,
+   overall and per turn bucket) and, per baseline and bucket, log-loss(baseline) −
+   log-loss(eval) with a 95% percentile interval from resampling whole games
+   (`outside_exam.grouped_bootstrap_many`). **Under 30 games the report says DESCRIPTIVE
+   ONLY** and draws no conclusion.
+6. **The first check, pre-registered here** (`FIRST_CHECK` in `human_eval.py`):
+   - the population: the first 30 human games by start time (the manifest's order; a later
+     game never changes it), every decision row of them;
+   - the model: the one `play.sh` serves when the 30th game is in;
+   - the statistic: log-loss(core) − log-loss(eval), `core` fitted as in 5;
+   - the interval: 95% percentile, 2,000 resamples of whole games, seed 20261004;
+   - the reading: interval above 0, **better than core on human games**; below 0, **worse than
+     core on them**; across 0, **no difference detectable at 30 games**.
+
+   Every run prints it (`NOT YET: n of the 30` before then). It is read once, its line is
+   recorded as an amendment to this entry, and it is not re-read on more games; later runs
+   are descriptive. What follows from a reading (a caveat beside the win chance in
+   ForgeCoach, or training on human games) is a new decision.
+7. **Where the models are** (a fix beside it). The lab runner's jobs write into the lab clone
+   (`~/code/lab/mtg-table/var/`, `docs/guides/lab-runner.md`), while the helper looked for its
+   default `var/ml/models/night-1-eval.json` in Justin's checkout only, so a new model needed
+   a hand copy. `eval-runner.mjs`'s `resolveEvalModel` (the default and a relative
+   `--eval-model`) and `human_eval.py --model` / `--baselines` now look in this checkout first,
+   then in the lab clone: `$MTGTABLE_LAB_ROOT`, else `../lab/mtg-table` beside the checkout.
+   This checkout's copy wins when both exist; a flag found nowhere is reported missing as
+   before.
+
+**Hidden information.** The copy is the human seat's own log, which the bridge redacted for
+that seat (hard rule 8); nothing of the AI's side is read or added, and the manifest carries the
+AI's deck as `hello_ok.match` does. The evaluator reads it through encode.py, stricter than the
+log (D305).
+
+**Tested** (`tools/ml/tests/test_human.py`, gate 12h): the committed seat recordings laid out as
+a person's games under `var/games/`; refused: a scripted seat, an AI-vs-AI recording under a
+match id, a gate id's folder, an unfinished game (taken once it ends); a second run copies
+nothing, with or without the cache; each copy equals its source byte for byte; the dedupe key
+across `var/games/` and `--from`; a file of two games; the manifest (cube, AI policy, the AI's
+deck as name and count). numpy: `human_eval.run` on those 12 games with the parity model and
+baselines fitted on a dataset of the fixtures (DESCRIPTIVE ONLY, intervals over 12 games, the
+first check NOT YET), an ensemble of a model with itself equal to the model, no baselines gives
+`coin`, and with 30 and then 31 games the first check reads the same 30 games and the same
+interval. `tools/eval-runner-selftest.mjs` (12f): the lab-clone lookup.
+
+**Rejected.**
+
+- **The coach helper collecting at `over`**: it does not see the game (ForgeCoach's socket is
+  the bridge's), and it is another lane's file.
+- **Copying every `var/games/` log with a `ws` transport**: the gate's socket steps play
+  scripted clients over `ws`; the id shapes are play.sh's own.
+- **Dedupe by content hash alone**: an unfinished copy and the finished game would be two;
+  the key names the game, and only finished games are taken.
+- **Reading the first check whenever the set grows**: optional stopping; one population, fixed
+  in advance, read once.
+- **Searching the lab clone first**: a model Justin placed in his checkout on purpose must win.
+
+## D370 — A zstd archive tier for finished lab nights: `tools/lab/archive.py` recompresses a closed queue night's recordings from gzip to zstd level 19, verified file by file; the Python and Node readers take `.jsonl.zst` as they take `.jsonl.gz` and prefer it; Java stays gzip-only and refuses a `.zst` with the restore command
+
+*Branch `c/zstd-archive`; D370 (D362–D369 are held by other open branches).*
+
+**2026-10-04** (the owner's request: the most data per byte of the PC's disk)
+
+**Context.** The cube lab's recordings (D315) are gzipped frame logs, about 165 KB a game;
+queue nights 1 and 2 hold 7.7 GB of them, the disk has about 42 GB free and a night adds
+4–5 GB. J065 measured, on 120 of those recordings, zstd level 19 at **4.4× smaller than
+gzip**, decompressing at about 6 GB/s of raw data; a dictionary trained on half the sample
+did not measurably help.
+
+**Decision.**
+
+1. **Two tiers.** Everything a browser or ForgeCoach opens directly stays gzip: human games,
+   samples, live recordings, every night still being written, and every recorder's output.
+   Only a CLOSED queue night (or a finished run folder) is recompressed, by
+   `python3 tools/lab/archive.py night --root var/cubelab/queue --night N` (`dir FOLDER` for
+   a run folder), to `X.jsonl.zst`, level 19, one file per worker process (`--jobs`). No
+   dictionary.
+2. **Closed means closed.** `night` refuses, exit 3, nothing touched, a night with no plan
+   (`night-N.json`), one not in `queue.json`'s `nights`, one a running `cubelab … queue run
+   --night N` names, one with a `.jsonl.gz` changed in the last 30 minutes, and one with a
+   planned draft that has no `drafts.jsonl` line (`--allow-incomplete` for a night cut short
+   and not to be resumed: only seeds with a line, whose matches are over, are touched).
+3. **Verify before delete.** Per file: gunzip whole (a cut-short gzip is left as it is and
+   counted `truncated`), SHA-256 of the raw bytes, the `.zst` written to `.tmp`, fsynced,
+   renamed, the folder fsynced; then read back FROM DISK, decompressed strictly (a stream
+   ending inside a frame fails) and its SHA-256 compared; only a match appends the file's
+   line (path, raw/gz/zst bytes, SHA-256) to `<root>/archive/night-N.files.jsonl`, fsynced,
+   and only then is the `.gz` deleted. A stop anywhere leaves the `.gz` alone, both (the
+   readers take the `.zst`; the next run re-verifies it and deletes the `.gz`), or the
+   `.zst` alone and logged. Re-running is resuming; a lock file keeps two runs apart.
+4. **The manifest** (`archive/night-N.json`): recordings, files (not kept, not truncated),
+   verified, failed, truncated, kept as gzip, bytes before and after, the ratio, the CPU
+   time and the redaction check. `--dry-run` measures 64 recordings in memory and writes
+   only `night-N.dryrun.json` (expected bytes after, CPU hours).
+5. **Hidden information.** Twelve of the night's logs go through
+   `tools/check-redaction.mjs` as gzip before and as zstd after; the verdicts and statistics
+   must be identical (path and byte count aside), else the run exits 1. That proves Node's
+   reader end to end on the real archive; the Python reader is proved by the verify step.
+6. **Readers.** One shared opener per language:
+   - Python: `tools/ml/fio.py` (`open_log`, `is_log`, `prefer_zst`, `key_name`,
+     `recorded`). `encode.py`'s `find_logs` / `read_games` (and so dataset.py,
+     policy_data.py, the gate builders, eval_serve's `--log`) take `.jsonl.zst`, list a game
+     once when both files exist (the `.zst`), open the `.zst` for a stored `.gz` path the
+     archive replaced, and keep a game's key (`game_key` hashes the recorded `.gz` name), so
+     a dataset built before and after the archive splits identically. `reserved.py` knows
+     the suffix. The gate lists a Java step reads (`gates.heldout`, the regret candidates)
+     name the recorded `.gz` path. The `zstandard` package is needed only to open a `.zst`;
+     without it that open says so.
+   - Node: `check-redaction.mjs` reads `.zst` with Node's own `zlib.zstdDecompressSync`
+     (Node 22.15+ / 23.8+; CI and the PC run 24); an older Node says what it needs. No new
+     dependency.
+   - Java: the pinned Forge jar has no zstd decoder (netty's `ZstdDecoder` needs zstd-jni,
+     which it does not ship), so `WireLog` (coach-grade.sh, leaf-rows.sh, the D354 gates)
+     stays `.jsonl` / `.jsonl.gz` and refuses a `.zst` (by name, by its magic bytes, or a
+     stored `.gz` path whose file is now a `.zst`) with `python3 tools/lab/archive.py
+     restore PATH`, which writes a verified `.gz` back. The archiver keeps as gzip every log
+     the gate lists under `var/ml/gates/` name (`heldout.txt`, the regret
+     `candidates.jsonl` / `set.jsonl`), plus any `--keep-gz LIST`.
+
+**Measured** (this container, the six committed lab recordings): 21.5 MB raw, 372 KB gzip,
+106 KB zstd 19: **3.51× smaller than gzip** (3.24–3.66× per file), 203× smaller than raw.
+J065's 4.4× is the PC's sample of real nights.
+
+**Order.** A job that reads an archived night's recordings must pin a commit with this
+decision; J070 (the archive of nights 1 and 2) runs after J062 and J063, which read them at
+older commits.
+
+**Rejected.**
+
+- **zstd for everything:** ForgeCoach and the board open `.gz` in the browser;
+  a browser-side zstd decoder is not something every browser has.
+- **A trained dictionary:** J065 saw no gain on real nights; here one trained on four committed
+  logs made the other two 1.5% smaller (519 bytes), less than its own 110 KB, and every reader would have to find the dictionary.
+- **zstd in Java** (zstd-jni or aircompressor): a new dependency beside the pinned jar for
+  the few logs a Java step reads, which the keep lists leave as gzip.
+- **Deleting the `.gz` once the `.zst` is written:** a write is not a verify; the file is
+  read back from disk first.
+
+## D371 — The lab's A9 quarantines were the checker's, not a leak: a face-down card's face reaches exactly the seats Forge's `canFaceDownBeShownTo` allows, a look permission included; A9 now checks that rule in its own order, tighter in play and with one narrow, evidenced exemption in exile
+
+*Branch `c/facedown-alt-leak`.* The night-2 lab run (J059, on `d68f5ec`) quarantined 684
+of about 40k recordings; about 90 % failed rule A9 — "face-down card N is controlled by
+player 1 (owner 1), not the viewing seat 0, yet carries an `alt` block" — and about 10 %
+"the viewer's own hand card N has no name". 669 of the 684 involve the peasant cube.
+
+**A9: the cause.** The cube cards are **Gonti, Lord of Luxury** (peasant) and **Thief of
+Sanity** (modern-era): each exiles an *opponent's* card face down and lets its controller
+look at and cast it. Forge's script is `Dig | ExileFaceDown$ True | WithMayLook$ True`, and
+`DigEffect` (javap -c, pinned 2.0.14) moves the card to its **controller's** exile — the
+opponent's, since a library card's controller is its owner — then calls
+`turnFaceDown(true)` and `addMayLookFaceDownExile(activator)`. `CardView.canFaceDownBeShownTo`
+opens with `mayPlayerLook(viewer)` before the "in Battlefield/Stack/Sideboard and you
+control it" clause, so the Gonti player's seat gets the card's `alt` — owned and controlled
+by the opponent, in the opponent's exile. That is the rules (Gonti's controller may look at
+the card; Thief of Sanity says so) and it is `docs/protocol.md` §3.2's "a face-down card
+someone gave them permission to look at". The other seat, the card's owner, gets the
+five-key stub (`canBeShownTo` answers a face-down card in exile with the look permission
+alone). The examples the lab named (Sink into Stupor, Charging Monstrosaur, Vampire
+Nighthawk, Sword of Feast and Famine, Chandra, Torch of Defiance, Elspeth, Knight-Errant)
+are just the cards Gonti and Thief took, and the line repeats while the card stays in exile.
+**The bridge was right; A9 was wrong**: it read Forge's rule as "owner or controller", which
+is both too strict (it misses the look permission) and too lax (in play it let the owner of a
+stolen face-down creature see its face, which Forge does not).
+
+Reproduced in this container: a Gonti/Thief deck against a Bomat Courier/Watcher for
+Tomorrow deck (`RecordMatch`, seed 1, seat 0) failed A9 on 6 cards, every one traced by its
+`zone` event (library → exile) to a Gonti or Thief trigger of seat 0's on the stack in that
+frame or the one before.
+
+**What changed.**
+
+- `tools/check-redaction.mjs` A9, in Forge's order. **In play** (`battlefield`, `stack`)
+  an `alt` needs `controller == seat` — owner no longer counts. **Outside play**, an `alt` on
+  a card the seat neither owns nor controls is admitted only in the shape every look
+  permission in our cubes has: the card arrives in `exile` **from a library** (a `zone`
+  event in that frame) with its `alt` already there, while a stack item **the viewing seat
+  controls** is on the stack in that frame or the previous state frame; it keeps the `alt`
+  only while it stays in exile in consecutive frames. Anything else fails, as before. The
+  summary counts the admitted ones (`alt blocks=N (k an opponent's card exiled under a look
+  permission, A9)`). The six probes (`a9-*`): the Gonti control passes; no dig, the
+  opponent's trigger, an `alt` appearing a frame after the dig, an opponent's morph named,
+  and a stolen morph named for its owner all fail (the last passed the old rule).
+- `bridge/src/mtgtable/FaceDownSelfTest.java` (check-all step 12k, one engine boot): the
+  Gonti calls, a Bomat exile, a face-down permanent, both exiled cards back to hand, and
+  Kitesail Freebooter's own trigger resolved and the Freebooter put in the graveyard;
+  every frame and every `Snap.label` for both seats against `canFaceDownBeShownTo`.
+  28 checks.
+- `tools/requarantine.mjs` (and its self-test, in CI and gate step 12): re-checks a night's
+  quarantine with the current checker, reports per failure kind how many now pass, and
+  restores **only** the ones that pass every check to the queue, one manifest line per move
+  and `failed.txt` kept, with `undo`. The PC job that runs it over nights 1 and 2 is J074.
+- No bridge change. **No wire change, so no amendment**: §3.2 gains the Gonti example and
+  says that the in-play face is the controller's and that a face-down exiled card nobody may
+  look at is the stub.
+
+**"The viewer's own hand card has no name": not root-caused.** In a hand, `canBeShownTo` is
+`getController() == viewer`, so a stub there means Forge's view put another controller on
+a card in the viewer's hand (or gate 0 saw no zone). Tried and **not** reproducing it: a
+face-down exiled card returned to its owner's hand (Bomat Courier, Watcher for Tomorrow;
+also a real recorded game, seed 3 seat 1, three exile → hand moves, checker clean), a
+snapshot on every engine event during that move, Kitesail Freebooter's "until it leaves"
+return, and a creature stolen with a temp controller and bounced to its owner's hand. The
+three cubes it hit (fair-fight, synergy, a vintage bridge) share Kitesail Freebooter,
+Reflector Mage and Brazen Borrower (fair-fight), Tidehollow Sculler and Karn, Scion of Urza
+(synergy, vintage). The checker is not weakened; its message now says which shape the card
+was (a stub, with owner and controller, or a full card with an empty name) and the zone it
+was last seen in outside the hand, with a probe (`own-hand-card-redacted`), so the next
+quarantine names its cause.
+
+**Night 1** (`bf3dca7`, 822 quarantined, put down to D352's revealed library top): A9 on
+Gonti/Thief existed then too. At `bf3dca7` the peasant cube already lists Gonti, the
+modern-era cube Thief of Sanity, `Snap.card` already gated `alt` on
+`canFaceDownBeShownTo` (since `90b97bb`, 2026-09-28) and A9 already read "owner or
+controller", so some of the 822 were very likely this false positive.
+
+**Training.** `tools/ml/encode.py` never reads `alt`: a face-down card goes to the
+`<facedown>` slot and the board's `facedown` count (`card_slot`, `_board`), its name is
+`""`; `EvalSelfTest` (D354) already holds, in Java, D305's scrambler: rewriting a face-down card's `alt` changes no feature of any row. So the
+quarantined logs held nothing the encoder could have learned from, and A9's false positives
+only cost data. The quarantine itself is the lab runner's, which is not on `main`.
+
+**ForgeCoach** (its PR `c/facedown-alt-guard`): it shows an `alt` (the card tile, the zone
+lists) and puts it into coach prompts (`face-down <name>`). With the bridge right, no
+opponent's face-down permanent ever carried one. As defence in depth its readers (a file,
+the live follow, the seat) now drop the `alt` of a face-down card **in play** the seat does
+not control, and keep the exile permission so a Gonti player still sees the card they may
+cast.
+
+**Rejected.**
+
+- **Making the bridge drop the `alt` outside the controller's play zones**: it would hide
+  from a Gonti player the card the rules let them look at and cast.
+- **Exempting every exiled face-down `alt`**: a bridge that put a look permission on the
+  wrong seat would pass; the dig-and-trigger evidence is what ties the permission to the
+  viewer.
+- **Weakening the own-hand check** (e.g. passing stubs whose controller is the opponent):
+  unproven, and the over-redaction may be real.
+
+## D372 — Gate 2's minimum detectable effect is written down before J051 reads: about 1 point of mean regret at 240 scored decisions; a FAIL whose interval still reaches 1.5 points is reported as "underpowered", never "no gain"; the gate rule itself is unchanged
+
+*Branch `c/review-fixes`; D372, the first number free after the blocks other open
+branches hold (D362–D371). The independent methods review of 2026-10-04, §2.3 and
+recommendation 6. Pre-registered: written while J050 (the truth tables) was running and
+before J051 (the scoring) had read anything.*
+
+**2026-10-04**
+
+**Context.** D354's gate 2 passes when the mean of d = truth(eval's pick) − truth(hand's
+pick) is above 0 and its 95% paired-bootstrap interval over decisions excludes 0, on at
+least 240 scored decisions of 300. The review pointed out that nothing says how large a
+gain that test can see, so a FAIL would be read as "no gain" when it may only be "too few
+decisions". This entry is the power statement, made before the data.
+
+**The arithmetic** (`docs/evidence/gate2-power.py`, closed form, nothing read from a
+result). MDE = (z₀.₉₇₅ + z₀.₈₀) · sd(d) / √n, and sd(d) has three parts:
+
+- where the two rankers pick the same option, d = 0 exactly (share *a*);
+- where they differ, the true gap between the two picks varies (spread *s_true*,
+  unknown before J051: 0.03–0.10 taken as the plausible range);
+- the truth table's own noise on that gap: 200 rounds per option when both picks stay in
+  the race gives 0.050 (p = 0.5, no credit for common random numbers); one pick retired
+  by racing at 40 rounds gives 0.087.
+
+| scored n | agree *a* | *s_true* | truth noise | MDE (points of win rate) |
+|---|---|---|---|---|
+| 240 | 0.5 | 0.06 | 0.050 | **1.02** (central case) |
+| 240 | 0.5 | 0.03 – 0.10 | 0.050 – 0.087 | 0.76 – 1.72 |
+| 240 | 0.7 | 0.03 – 0.10 | 0.050 – 0.087 | 0.60 – 1.36 |
+| 300 | 0.5 – 0.7 | 0.03 – 0.10 | 0.050 – 0.087 | 0.53 – 1.53 |
+
+The truth's noise alone (*s_true* = 0, worst case) costs 1.1 points at 240; the spread of
+real gaps matters about as much. More rounds shrink only the first part: **if gate 2 is
+underpowered, grow the set, not the rounds** (about 710 scored decisions bring the worst
+row to 1 point).
+
+**The reporting rule** (`gates.REGRET_REPORT`, read by `gate_regret_score.py`'s new
+`power` block and its `reading:` line):
+
+- The pre-registered MDE is **0.015** (1.5 points of mean regret): every plausible row
+  above but the worst detects it with 80% power at 240 decisions.
+- **PASS** is D354's rule, unchanged.
+- A **FAIL whose interval's upper end is at or above 0.015** is reported as "FAIL,
+  underpowered: a gain of 0.015 is not ruled out; not 'no gain'". So is a FAIL on fewer
+  than 240 scored decisions (D354 already calls that one underpowered).
+- A **FAIL whose interval ends below 0.015** is reported as "a mean regret gain of 0.015
+  or more is ruled out" — still not "no gain".
+- The report also carries the realised MDE from the realised sd(d), and the summary of
+  J051 quotes it next to the pre-registered one.
+
+J051 is pinned to `7e48088`, which predates this entry, so its own `verdict.txt` prints no
+`reading:` line. The person writing J051's summary applies this rule by hand from
+`report.json`'s `diffHandMinusEval` (`hi`), or reruns this commit's
+`gate_regret_score.py` over the same tables (the scorer is pure; it grades nothing).
+
+**Not changed.** `REGRET_RULE`: the set, the truth settings, the rankers, the interval, the
+240 minimum and PASS/FAIL. A FAIL still stops the evaluator before gate 3.
+
+**Rejected.**
+
+- **Lowering the bar to "mean above 0" or a one-sided 90% interval** for power: a rule
+  change after the truth started, which D354 forbids.
+- **More truth rounds**: they shrink the smallest part of sd(d).
+- **Waiting for J051 to measure sd(d) and then choosing the MDE**: that is choosing the
+  yardstick after seeing the data.
+
+## D373 — The SPRT decides nothing before 100 mirror pairs, floors the pair-score variance at 0.05, and says H0 as "not shown ≥ elo1 better", never "no gain"; the old 8 / 0.01 stay reachable only by flag
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §2.5 and recommendation 3.*
+
+**2026-10-04**
+
+**Finding.** `tools/ai-ladder/sprt.ts` took no decision before 8 pairs and floored the
+sample variance of the pair scores at 0.01. Mirrored search-vs-search pairs mostly split
+1–1, so their sample variance is tiny. At elo0 20 / elo1 40, twenty 1–1 pairs and one
+lopsided pair end a test as H0 at 42 games: J054's oracle stopped at 40. The summaries of
+J055 and J058 read H0 as "no gain". It means only that the configuration is not shown to be
+elo1 better; an effect between elo0 and elo1 is invisible to the test.
+
+**Measured** (`node docs/evidence/sprt-floor-check.ts 1000`). Synthetic mirror pairs: a
+share *c* of games is decided by the deal (the favoured seat wins whoever sits there), the
+rest by the true Elo. 1,000 runs a cell, nominal α = β = 0.05, at most 4,000 games:
+
+| elo0/elo1 | c | minPairs, floor | false H1 at elo0 | false H0 at elo1 | stopped by 60 games (at elo0 / elo1) |
+|---|---|---|---|---|---|
+| 0/20 | 0.5 | old 8, 0.01 | 0.050 | 0.048 | 0.000 / 0.001 |
+| 0/20 | 0.5 | new 100, 0.05 | 0.049 | 0.047 | 0 / 0 |
+| 0/20 | 0.9 | old | 0.040 | **0.111** | 0 / 0 |
+| 0/20 | 0.9 | new | 0.001 | 0.002 | 0 / 0 |
+| 20/40 | 0.8 | old | 0.045 | **0.107** | 0.058 / 0.028 |
+| 20/40 | 0.8 | new | 0.031 | 0.027 | 0 / 0 |
+| 20/40 | 0.9 | old | 0.024 | **0.374** | 0.172 / 0.067 |
+| 20/40 | 0.9 | new | 0.004 | 0.026 | 0 / 0 |
+
+- Where most pairs are tied, the old settings rejected a true elo1 gain up to 37% of the
+  time, and ended 17% of the tests within 60 games.
+- With the new settings both error rates stay at or under nominal. The price is a
+  conservative test when pairs are mostly tied (α 0.001–0.03), and more games: about 730
+  instead of 270–590.
+- With few tied pairs (c 0.5) the two settings agree.
+
+**Change.**
+
+- `SPRT_DEFAULTS = { minPairs: 100, varFloor: 0.05 }`, and `SprtParams.varFloor`. The
+  `sprt` and `league` commands take `--min-pairs` and `--var-floor`; the old behaviour is
+  `--min-pairs 8 --var-floor 0.01`.
+- Every `sprt.jsonl` line records both. A line written before this has neither and meant 8
+  and 0.01.
+- `verdictWords` is the one phrasing:
+  - H1: "A is stronger than B by ≥ elo1";
+  - H0: "A is not shown to be ≥ elo1 better than B (the data fit ≤ elo0 better than it; a
+    gain under elo1 is not ruled out)";
+  - inconclusive: neither.
+- The CLI, the league's reject reason and the report's table use it (the report:
+  "H0: not shown ≥ elo1 better").
+- The non-inferiority test's own floor (0.02, D321) is unchanged.
+
+**Jobs.** J052 (gate 3) and the night-2 SPRTs are pinned to earlier commits and keep 8 /
+0.01. A job pinned to this commit or later gets the new defaults. For gate 3 that only makes
+a false PASS rarer; `gates.SPRT_RULE` does not name either knob. The review's further
+advice, to compare policy tweaks decision by decision through the grader instead of by
+game-level Elo, is not done here.
+
+## D374 — Gate 1's split report keys "a deck seen in training" on card multisets, and calls a lab log's split group what it is, a seed group; the gate rules do not change
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §2.1 and recommendation 4.*
+
+**2026-10-04**
+
+**Finding.** `train_eval.split_summary` counted "test rows from a deck seen in training" by
+deck NAME. A lab deck is named `cubelab <seed> A|B` (`tools/cubelab/run.ts`), and the queue
+numbers seeds per cube folder, so a lab log's "deck pair" is a seed number shared by every
+cube. Under the pair split no name can be in two splits, so the count was 0 by construction
+and could never catch a content duplicate. Night 1's 3,190 groups are about 3,190 seed
+numbers of about 12 logs each. That is not a leak: every group's games are distinct
+drafts, and the group bootstrap is coarser than intended, so it is conservative. D340's
+card-multiset reserved-deck filter is the real guard and is sound. The report line was a
+false reassurance.
+
+**Change** (reporting only; `gates.py`'s rules, the split itself and every number gate 1
+computes are unchanged):
+
+- `dataset.py` writes each game's decks by card multiset (`deckKeys`, `reserved.deck_key`)
+  into `games.jsonl`. `train_eval.deck_keys_of` reads them, or rebuilds them from the
+  recording's run folder for a dataset built before the field.
+- `testRowsWithATrainingDeck` now counts test rows whose game has a deck whose card
+  multiset is also in the training split. The old name count stays beside it as
+  `testRowsWithATrainingDeckName`, and `testRowsDeckUnknown` counts test rows with no deck
+  known, which are said, not counted as clean.
+- `groupKind` is `seed` when every group key is a pair of lab names, else `deck-name`.
+  The log line says "seed groups (lab deck names are `cubelab <seed> A|B`: one seed number
+  across cubes)" instead of "pairs".
+- `tools/ml/tests/test_split_summary.py` plants the same deck under another seed in the
+  test split. The content check counts its rows; the name check says 0.
+
+**Not done.** The leaf-scale fit's population (J056's 600 games may include gate-1 test
+games, review §2.3) is not yet printed in the gate report. It biases toward the baseline,
+so it is conservative.
+
+## D375 — The queue takes `--profile-mix` (off by default); a night's mix is in its plan, a re-run cannot change it, and every row of such a run carries its seats' AI
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §3 and recommendation 5.*
+
+**2026-10-04**
+
+**Context.** D347 gave `run` a per-draft seat mix (`--profile-mix`, seeded by the draft),
+but the overnight queue always played Default against Default. Every card rating and the
+evaluator are then a model of one pilot's habits.
+
+**Change** (`tools/cubelab/queue.ts`):
+
+- `queue plan|run --profile-mix Default:0.5,Reckless:0.25,Cautious:0.25` records the mix,
+  normalised, in `night-<N>.json` (`profileMix`) and passes it to every chunk. Without the
+  flag nothing changes, so existing jobs are unaffected.
+- A re-run of a night uses its plan's mix. A different flag is refused, the same way
+  `--play-explore` is (D358).
+- The mix is part of a key folder's lab version (D341, `run.ts` already compares
+  `profileMix`). So the first night with a mix needs `--allow-version-change` to append to
+  the existing folders, and `run.json` logs that.
+- The seat specs are checked against Forge's `.ai` files before a chunk starts.
+- Rows: `run.ts` already stamps each drafts.jsonl row of a mixed run with `profiles` (seat
+  A's and B's). `reserved.run_drafts` now keeps that field. `dataset.py` copies it into
+  `games.jsonl` as `profiles` (null for an unmixed run), so the evaluator's games can be
+  stratified by pilot.
+
+**Not done.** Profile as a feature or stratum in `matchup.py` and in the evaluator. The
+night-4 job (from night 4 on, the review says) must pass the flag and
+`--allow-version-change`. That is the job's decision; the code is ready.
+
+## D376 — J039's regression to 0.50 is colour confounding plus selection, not an accounting bug; the lab stamps every match with the pool's load; a calibration reader for two nothing-changed batches
+
+*Branch `c/review-fixes`. The methods review of 2026-10-04, §2.7 and recommendation 1.*
+
+**2026-10-04**
+
+**Finding** (`docs/evidence/evolve-calibration.md`, with
+`docs/evidence/evolve-calibration-sim.py`).
+
+- Discovery and confirmation count a card's games the same way, through one code path
+  (`readBatch` → `batchStats` → `cardStats`). They read the played lab decks and decisive
+  games, use each batch's own mean and design effect, and drop the same exclusions.
+  Discovery's plain-draft subset is coin-chosen.
+- J039's colour and colour-pair win rates do not move between its six batches beyond
+  binomial noise (pairs χ² 32.6 on 30 df). Batch-level archetype drift is ruled out.
+- But `dominant-win`'s null is the batch's mean card win rate (about 0.50), and red decks
+  win 0.53–0.55 in every batch. The rule therefore flags red cards as a class.
+  - J039's eleven candidates are within +0.4 to +11.5 points of their own colour (z ≤
+    2.5).
+  - In confirmation they track their colour's rate in that batch. Generation 3's
+    confirmation drew red at 0.488.
+  - The candidates share decks, so their "1,650 confirmation games" are about 428 red-deck
+    games.
+- Simulated with J039's own matches and colour strengths and no card effect at all, the
+  rule finds 3.1 candidates a generation (8 or more in 15%), at a discovery rate of 0.57.
+  They fall to 0.535 in confirmation, and 7% confirm.
+- Under a true null the test is calibrated: 0.04 candidates a generation.
+
+**Verdict:** the winner's curse on a confounded null. The p-values are right for the
+question they answer. That question ("better than the average card") is the wrong one for
+a cut. J039's one cut (Fable of the Mirror-Breaker) is consistent with a colour effect.
+Recommended, not done here: a colour-adjusted null (the expected rate of the card's decks'
+colour pairs) or a paired swap test, under its own pre-registered decision. Until then, hold
+evolve cuts and D360's raises (review rec. 8).
+
+**Change.**
+
+- `engine.ts` `runPool` passes each result the pool's load when it finished: `PoolLoad`
+  (`busy` matches in progress, `alive` worker JVMs, `load1`, `cpus`). `run.ts` stamps it
+  into every drafts.jsonl row as `match.load`.
+  - Cost: one `os.loadavg()` per match.
+  - Forge's wall-clock AI (D311) can now be related to load. The games already carry
+    `ms`, `cpuMs` and `gameCpuMs`.
+  - Forge's own AI-evaluation timeouts are not counted: that needs a hook inside Forge's
+    AI, which is not small. The watchdog's game `timeout` is counted.
+- `tools/cubelab/calibrate.ts` reads two run folders that differ only in seeds. It reports:
+  - the between-batch dispersion of card, colour and colour-pair win rates against the
+    binomial (mean z², 1 = binomial) and the RMS ratio;
+  - each batch's deck-level design effect;
+  - evolve's own `discoveryStage` on each batch, with every candidate's rate in the other
+    batch and its colour-pair expectation;
+  - the load stamps.
+
+  `--first N` reads a discovery-sized slice, and `--flat` prints the runner's metrics.
+  J072's draft (two Omega batches of 8,000 drafts, verify-block seeds) is this reader's
+  job. It is not pushed to `pc-jobs` here.
+
+## D378 — A cold tier for finished queue nights: `archive.py cold` moves a night's recordings to the archive drive as one tar.zst per key folder (plus its quarantine folder), verified member by member before anything hot is deleted; nights a job still reads are held; `restore-night` brings them back
+
+*Branch `c/cold-archive`; D378 (D377 is held by an open branch). Builds on D370.*
+
+**2026-10-04** (the owner's request: a hot/cold split, with the archive on the PC's second drive)
+
+**Context.** The `/` disk has about 53 GB free, and each queue night adds about 4 GB in about
+40,000 small `.jsonl.gz` files. `/mnt/e` is a 1 TB SATA SSD with 534 GB free. It is mounted
+as NTFS through ntfs3 with `windows_names`, so names with `:` or a trailing dot are refused.
+It is slow with many small files, has no Linux permissions, comes up read-only if Windows
+hibernated, and there is no sudo. D370's per-file zstd keeps the files on `/`.
+
+**Decision.**
+
+1. **Hot and cold.** Hot (`/`) holds:
+   - the night being recorded;
+   - anything a queued or pinned job reads;
+   - the warehouse, the datasets and the models;
+   - every `drafts.jsonl`.
+
+   Cold is `labArchiveRoot` in `config.json` (`/mnt/e/forgecoach-archive`; else
+   `--archive-root` or `$LAB_ARCHIVE_ROOT`), with an optional second copy at
+   `labArchiveMirror`.
+2. **One file per key folder.** `archive.py cold --night N` writes
+   `night-N/<key>.tar.zst` for each key folder. It holds the night's finished seeds'
+   recordings, **decompressed**, in one zstd stream (level 19, 2^27 window, long-distance
+   matching, `--jobs` threads). The night's quarantine folder becomes
+   `night-N/quarantine.tar.zst`, byte for byte, as evidence. A cut-short gzip and any
+   non-recording file are also kept byte for byte.
+
+   Unit names are NTFS-safe: a key NTFS would refuse is cleaned and given a `-<sha8>`
+   suffix. Measured on the six committed lab recordings: 5.09× smaller than their gzip,
+   against 3.51× for D370's one zstd file each.
+3. **Verify, then delete.** A unit is written as `.tmp` on the drive, fsynced and renamed,
+   then read back from the drive. Every tar member is hashed, and the name, size and
+   SHA-256 must equal what was read from the source, with no member missing or extra. A
+   mirror's copy must hash equal to the primary. The members list and manifests are
+   written next:
+   - `<drive>/night-N/<unit>.members.jsonl`;
+   - `<drive>/night-N/manifest.json`;
+   - `<drive>/manifest.jsonl` (an index line per unit);
+   - the hot copies under `<root>/archive/cold-night-N*`.
+
+   Only after that is each source deleted, and only if its size and mtime are still the
+   ones archived. Empty seed folders go too. A lock keeps two runs apart. Re-running
+   resumes: an archived unit is re-verified before its remaining hot files are deleted,
+   and a failed re-verify deletes nothing. `--keep-hot` archives and deletes nothing.
+4. **Refused (exit 3) unless:**
+   - the night is closed (D370's rules);
+   - `redaction`: its redaction pass ran: its quarantine folder exists (`--quarantine DIR`, else
+     `<root>-quarantine-nN`; night 1's is `<root>-quarantine`, with no suffix, and must be named).
+     The folder is walked for its recordings, as `tools/requarantine.mjs` does (D371);
+     `failed.txt` is not read, because night 1's was overwritten by its second run (J029).
+     *(Corrected after #66, which required `<root>-quarantine-nN/failed.txt` and so refused
+     night 1.)*
+   - `warehouse`: the warehouse's `_state.json` offsets cover every `drafts.jsonl` line of
+     the night;
+   - `encoded`: a `--dataset` holds at least `--min-encoded` (90%) of its recordings;
+   - `holds`: no hold in `tools/lab/archive-holds.json` names the night while a job it
+     waits for is not `done` on pc-results.
+
+   Nights 1 and 2 are held until J052, J062, J063, J064 and J074 are done, and nights 1–3
+   until J067. A STATUS that cannot be read holds the night. `--skip-check` and
+   `--release-hold` are explicit, and the manifest records them.
+5. **Skipped (exit 4)** with a warning, and nothing written, when:
+   - no archive root is configured;
+   - the root is on the hot disk's own filesystem (the drive is not mounted);
+   - a probe write fails (the drive is read-only).
+6. **Restore.** `archive.py restore-night --night N [--unit U] [--from-mirror] [--as
+   original|gz|zst|raw]` writes each member back where it lived, compressed as it was. It
+   checks the raw SHA-256 of what it wrote, never overwrites a file that differs, keeps
+   the archive, and marks the unit `restoredAt`.
+7. **The warehouse** reads the hot-side night manifests into a `cold_archives` table. Its
+   view `recording_location` says, per recorded queue game, whether the recordings are hot
+   or in which tar.zst they are.
+
+**Tested** (`tools/lab/tests/test_cold.py`): the drive is a temp folder whose creates go
+through a Windows-names check or a read-only volume. The tests cover:
+- the round trip (frames, game keys, the cut-short gzip and the quarantine bit for bit, a
+  D370 `.zst`);
+- every refusal by name, and its waiver;
+- an open night;
+- a read-only drive, a missing drive and no configured root, each skipping;
+- verify-before-delete, including a flipped byte caught on resume;
+- a killed run resumed, with a stale `.tmp` on the drive;
+- the lock;
+- the dry run;
+- the mirror restoring after the primary is lost;
+- the warehouse table.
+
+**Rejected.**
+
+- **One file per recording on the drive:** NTFS through ntfs3 is slow with 40,000 small
+  files a night, and per-file zstd is a third less dense.
+- **Storing the gzip members as they are:** zstd over gzip gains almost nothing; the raw
+  bytes and the SHA-256 of each are what a restore must reproduce.
+- **Deleting on a successful write:** a write is not a verify; the archive is read back from
+  the drive first.
+
+---
+
+*D1–D378 end here. From D379 on, each decision is its own file under
+[`docs/decisions/`](docs/decisions/), named `D<nnn>-<slug>.md`, so parallel PRs
+no longer conflict on this file (D379). `node tools/decisions.mjs list` is the
+index of both places.*

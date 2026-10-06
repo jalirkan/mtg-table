@@ -13,6 +13,8 @@
  *  - job files: the new keys, every older job file still parses, bad lines are errors;
  *  - scheduling (id order, after:, one heavy + one light, Justin playing, needs: check,
  *    retry_after, someone else's running job), worker sizing, the unit's systemd-run line;
+ *  - co-scheduling: job widths (cores:), admission by cores and memory, memory backoff,
+ *    order and no starvation, lanes with a shared var/, cores in use in status.json;
  *  - the pressure backoff's decisions; the metric extractors over synthetic run folders,
  *    torn lines included; progress, rate and ETA;
  *  - status.json and the public sanitiser (no path, host or free text gets through);
@@ -39,15 +41,19 @@ import { decide, DEFAULT_BACKOFF, initialBackoff, parsePressure, retryCap, type 
 import { controlReader, parseControl, readControl, writeControl } from '../../tools/runner/control.ts';
 import { evaluate, names, parse } from '../../tools/runner/expr.ts';
 import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
-import { aibench, coachbench, completeLines, count, cubelab, cubelabQueue, expandGlob, progressOf, rateAndEta, readDrafts } from '../../tools/runner/metrics.ts';
-import { DEFAULT_CONFIG, publicSignature, Runner, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { followupMessage, ledgerCheckLines, ledgerEntry, ledgerKeys, ledgerMarkdown, ledgerWarnings, withMessages } from '../../tools/runner/ledger.ts';
+import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubelabQueue, draftStats, eachCompleteLine, expandGlob, ladder, lines, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
+import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
+import { blockSha, DEFAULT_CONFIG, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
-import { formatStatus, parseStatus, schedule, type Status } from '../../tools/runner/schedule.ts';
+import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
 import { idleReasonOf, isoLocal, LIVE_MAX, liveOf, PUBLIC_TEXT, REASONS, sanitise, type RunningJob, type StatusDoc } from '../../tools/runner/statusjson.ts';
 import { sanitiseLadder } from '../../tools/runner/ladder.ts';
-import { establishedOn, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
-import { runPool, type MatchJob } from '../../tools/cubelab/engine.ts';
+import { cardName, sanitiseWarehouse } from '../../tools/runner/warehouse.ts';
+import { causeOf, LEDGER_PUBLIC_MAX, ruleShort, sanitiseLedger, type PublicLedger } from '../../tools/runner/ledgerpublic.ts';
+import { establishedOn, oomJournalLine, physicalCores, readMeminfo, type HostSample, type Sys, type UnitState } from '../../tools/runner/sys.ts';
+import { runPool, type MatchJob, type PoolLoad } from '../../tools/cubelab/engine.ts';
 import { drive, type BatchResult, type BatchSpec, type Engine } from '../../tools/ai-ladder/bench.ts';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -202,6 +208,117 @@ test('schedule: id order, after:, one heavy and one light, Justin, holds, someon
   assert.deepEqual(r.start.map((j) => j.id), ['J004', 'J006']);
 });
 
+test('job file: pilot_cores: and prepare_cores: (D365) are those steps\' widths; absent: null, the job\'s width', () => {
+  const j = parseJobFile('J050.md', 'id: J050\nrepos: mtg-table@main\nmax_workers: 7\npilot_cores: 2\nprepare_cores: 1\n## Pilot\n```bash\ntrue\n```\ncores: 3\n```bash\nwider\n```\n## Commands\n```bash\nwide\n```\n', parse);
+  assert.deepEqual(j.errors, []);
+  assert.deepEqual([j.pilotCores, j.prepareCores], [2, 1]);
+  const old = parseJobFile('J051.md', 'id: J051\nrepos: mtg-table@main\nmax_workers: 7\n', parse);
+  assert.deepEqual([old.pilotCores, old.prepareCores], [null, null]);
+  assert.equal(parseJobFile('J052.md', 'id: J052\nrepos: mtg-table@main\npilot_cores: 0\nprepare_cores: x\n', parse).errors.length, 2);
+  // The steps carry them: prepare 1, pilot1 2, pilot2 its own cores: 3 (a block's line wins), run1 the job's.
+  const w = world({ 'J050.md': 'id: J050\n' });
+  const steps = new Runner(w.cfg, w.sys).stepsFor(j, false);
+  assert.deepEqual(steps.filter((x) => x.kind === 'shell').map((x) => [x.name, x.cores ?? null]), [['prepare', 1], ['pilot1', 2], ['pilot2', 3], ['run1', null]]);
+  assert.deepEqual(new Runner(w.cfg, w.sys).stepsFor(old, false).filter((x) => x.kind === 'shell').map((x) => x.cores ?? null), [null]);
+});
+
+test('job file: cores: in the header is the job\'s width; a cores: line in a section sets the next block\'s', () => {
+  const j = parseJobFile('J060.md', 'id: J060\ncpu: heavy\nrepos: mtg-table@main\nmax_workers: 7\ncores: 2\n## Pilot\n```bash\ntrue\n```\n## Commands\n```bash\nwide\n```\ncores: 1\nmem_gb: 12\n```bash\nnarrow\n```\n```bash\nwide again\n```\n', parse);
+  assert.deepEqual(j.errors, []);
+  assert.equal(j.cores, 2);
+  assert.deepEqual(j.pilot?.blockCores, [null]);
+  assert.deepEqual(j.commands?.blockCores, [null, 1, null]);
+  assert.deepEqual(j.commands?.blockMemGb, [null, 12, null]);
+  assert.equal(parseJobFile('J061.md', 'id: J061\nrepos: mtg-table@main\n', parse).cores, null);
+  const bad = parseJobFile('J062.md', 'id: J062\ncores: two\nrepos: mtg-table@main\n## Commands\ncores: 0\nmem_gb: lots\n```bash\nx\n```\ncores: 1\n', parse);
+  assert.equal(bad.errors.length, 4, bad.errors.join('\n'));
+});
+
+test('co-scheduling: width and reservation defaults (cores:, else max_workers, else physical - 1; light 1; at most the budget)', () => {
+  const j = (h: string): ReturnType<typeof parseJobFile> => parseJobFile('J070.md', `id: J070\nrepos: mtg-table@main\n${h}`, parse);
+  const m = { cores: 8, defaultWidth: 7 };
+  assert.equal(widthOf(j('cpu: heavy\n'), m), 7);
+  assert.equal(widthOf(j('max_workers: 3\n'), m), 3);
+  assert.equal(widthOf(j('max_workers: 1\ncores: 4\n'), m), 4);         // one process, several threads
+  assert.equal(widthOf(j('cores: 12\n'), m), 8);
+  assert.equal(widthOf(j('cpu: light\n'), m), 1);
+  assert.equal(reservationOf(j('max_workers: 7\n'), 7), 17.5);              // 2.5 GB a worker by default
+  assert.equal(reservationOf(j('mem_per_worker_gb: 3\n'), 2), 6);
+  assert.equal(reservationOf(j('mem_per_worker_gb: 3\n'), 2, 4), 8);       // a measured peak above the floor counts
+});
+
+test('co-scheduling: a narrow running job lets the next job start beside it, within the cores and the memory', () => {
+  const job = (id: string, h = '', after = ''): ReturnType<typeof parseJobFile> =>
+    parseJobFile(`${id}.md`, `id: ${id}\ncpu: heavy\n${after ? `after: ${after}\n` : ''}repos: mtg-table@main\n${h}`, parse);
+  const now = Date.parse('2026-10-03T12:00:00Z');
+  const machine: MachineBudget = { cores: 8, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const run = (jobs: ReturnType<typeof parseJobFile>[], holdings: Record<string, Holding>, extra: Partial<Parameters<typeof schedule>[0]> = {}) => schedule({
+    jobs, statuses: new Map(Object.keys(holdings).map((id) => [id, st('running\nrunner: x\n')])),
+    active: new Map(Object.keys(holdings).map((id) => [id, 'heavy' as const])), holdings: new Map(Object.entries(holdings)),
+    machine, playing: false, paused: false, now, ...extra,
+  });
+  const starts = (r: ReturnType<typeof schedule>): string[] => r.start.map((x) => x.id);
+  const code = (r: ReturnType<typeof schedule>, id: string): string | undefined => r.blocked.find((b) => b.id === id)?.code;
+  // J049-like: one core, 3 GB.  The SPRT (7 wide, 17.5 GB) fits beside it: 8 of 8 cores, 20.5 of 21 GB.
+  const sprt = job('J053', 'max_workers: 7\n');
+  let r = run([job('J049', 'cores: 1\n'), job('J050', 'max_workers: 7\n', 'J049'), sprt], { J049: { cores: 1, memGb: 3 } });
+  assert.deepEqual(starts(r), ['J053']);
+  assert.equal(code(r, 'J050'), 'after');                   // its dependency is not done: it does not hold the queue
+  // Cores: two in use leave six; a seven-wide job waits.
+  r = run([sprt], { J049: { cores: 2, memGb: 3 } });
+  assert.deepEqual([starts(r), code(r, 'J053')], [[], 'cores']);
+  assert.match(r.blocked[0]?.reason ?? '', /needs 7 core\(s\); 6 of 8 free/);
+  // Memory: one core but 14 GB reserved; 14 + 17.5 > 21.
+  r = run([sprt], { J049: { cores: 1, memGb: 14 } });
+  assert.deepEqual([starts(r), code(r, 'J053')], [[], 'cores']);
+  assert.match(r.blocked[0]?.reason ?? '', /needs 17\.5 GB; 7 of 21 GB free/);
+  // A memory backoff on a running job: nothing starts beside it.
+  r = run([sprt], { J049: { cores: 1, memGb: 3 } }, { machine: { ...machine, memoryBackoff: true } });
+  assert.deepEqual([starts(r), r.blocked[0]?.reason], [[], 'a running job is in memory backoff']);
+  // Justin first, and pause: nothing heavy starts beside either.
+  assert.deepEqual(starts(run([sprt], { J049: { cores: 1, memGb: 3 } }, { playing: true })), []);
+  assert.deepEqual(starts(run([sprt], { J049: { cores: 1, memGb: 3 } }, { paused: true })), []);
+  // needs: check and retry_after still hold a job back (and it does not hold the queue).
+  r = schedule({ jobs: [sprt, job('J054', 'cores: 1\n')], statuses: new Map([['J049', st('running\nrunner: x\n')], ['J053', st('waiting\nretry_after: 2026-10-03T12:10:00Z\n')]]),
+    active: new Map([['J049', 'heavy']]), holdings: new Map([['J049', { cores: 1, memGb: 3 }]]), machine, playing: false, paused: false, now });
+  assert.deepEqual([starts(r), code(r, 'J053')], [['J054'], 'memory']);
+  // Someone else's running job (no holding): its width is unknown, so it fills the machine.
+  r = schedule({ jobs: [job('J054', 'cores: 1\n')], statuses: new Map([['J003', st('running\nstarted: x\n')]]), active: new Map(), machine, playing: false, paused: false, now });
+  assert.deepEqual([starts(r), code(r, 'J054')], [[], 'heavy-busy']);
+  // Co-scheduling off: one heavy job at a time.
+  r = run([job('J054', 'cores: 1\n')], { J049: { cores: 1, memGb: 3 } }, { machine: { ...machine, coSchedule: false } });
+  assert.deepEqual([starts(r), code(r, 'J054')], [[], 'heavy-busy']);
+  // No machine in the input: the old rule.
+  r = run([job('J054', 'cores: 1\n')], { J049: { cores: 1, memGb: 3 } }, { machine: undefined });
+  assert.deepEqual(starts(r), []);
+});
+
+test('co-scheduling: order is kept, and a wide job that is next is never overtaken by narrow ones (no starvation)', () => {
+  const job = (id: string, h = ''): ReturnType<typeof parseJobFile> => parseJobFile(`${id}.md`, `id: ${id}\ncpu: heavy\nrepos: mtg-table@main\n${h}`, parse);
+  const now = Date.parse('2026-10-03T12:00:00Z');
+  const machine: MachineBudget = { cores: 8, memGb: 21, defaultWidth: 7, memoryBackoff: false, coSchedule: true };
+  const run = (jobs: ReturnType<typeof parseJobFile>[], holdings: Record<string, Holding>) => schedule({
+    jobs, statuses: new Map(Object.keys(holdings).map((id) => [id, st('running\nrunner: x\n')])),
+    active: new Map(Object.keys(holdings).map((id) => [id, 'heavy' as const])), holdings: new Map(Object.entries(holdings)),
+    machine, playing: false, paused: false, now,
+  });
+  // J031 (5 wide) does not fit beside 4 cores in use; J032 and J033 (1 wide) would, but they come after it: they wait.
+  let r = run([job('J031', 'max_workers: 5\n'), job('J032', 'cores: 1\n'), job('J033', 'cores: 1\n')], { J030: { cores: 4, memGb: 4 } });
+  assert.deepEqual(r.start, []);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J031', 'cores'], ['J032', 'heavy-busy'], ['J033', 'heavy-busy']]);
+  assert.match(r.blocked[1]?.reason ?? '', /after J031/);
+  // When the narrow job ends, the wide one gets the machine; the narrow ones fill what is left, in order.
+  r = run([job('J031', 'max_workers: 5\n'), job('J032', 'cores: 1\n'), job('J033', 'cores: 1\n'), job('J034', 'cores: 2\n'), job('J035', 'cores: 1\n')], {});
+  assert.deepEqual(r.start.map((x) => x.id), ['J031', 'J032', 'J033']);     // 5 + 1 + 1 = 7; J034 (2) does not fit,
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J034', 'cores'], ['J035', 'heavy-busy']]);  // and J035 waits behind it
+  // An earlier job that fits always starts before a later one.
+  r = run([job('J041', 'cores: 3\n'), job('J042', 'cores: 3\n')], { J040: { cores: 4, memGb: 4 } });
+  assert.deepEqual([r.start.map((x) => x.id), r.blocked.map((b) => b.id)], [['J041'], ['J042']]);
+  // A job wider than the machine runs alone, at the machine's width.
+  r = run([job('J050', 'cores: 16\n'), job('J051', 'cores: 1\n')], {});
+  assert.deepEqual(r.start.map((x) => x.id), ['J050']);
+});
+
 // ------------------------------------------------------------------ sizing and units
 
 test('sizing: the budget, min(max, cores - 1, budget / peak x 0.85), caps and floors', () => {
@@ -225,6 +342,17 @@ test('the unit: systemd-run --user in the lab slice, with the budget, Nice=10 an
   const a = systemdRunArgs(u);
   for (const x of ['--user', '--unit=lab-J003-run1', '--slice=forgecoach-lab.slice', '--collect', 'MemoryHigh=18.9G', 'MemoryMax=21G', 'Nice=10', 'KillMode=control-group', 'ManagedOOMPreference=none', 'StandardOutput=append:/s/run1.log', '--setenv=JOBS=6', '--setenv=LAB_CONTROL=/s/c.json']) assert.ok(a.includes(x), x);
   assert.deepEqual(a.slice(-2), ['/bin/bash', '/s/run1.sh.wrap']);
+});
+
+test('the unit: BLAS / OpenMP / numexpr / vecLib thread pools capped at the step\'s width', () => {
+  assert.deepEqual(THREAD_CAP_VARS, ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS']);
+  const args = (width: number): string[] => systemdRunArgs({ unit: 'lab-J060-run1', memoryHighGb: 18.9, memoryMaxGb: 21, script: '/s/run1.sh', log: '/s/run1.log', cwd: '/lab/mtg-table', env: { JOBS: String(width), ...threadCaps(width) } });
+  for (const [width, n] of [[1, '1'], [7, '7']] as const) {
+    const a = args(width);
+    for (const k of THREAD_CAP_VARS) assert.ok(a.includes(`--setenv=${k}=${n}`), `${k} at width ${width}`);
+    assert.equal(a.filter((x) => /_THREADS=/.test(x)).length, 5);
+  }
+  assert.deepEqual(threadCaps(0), threadCaps(1), 'never 0 (0 means "all" to some pools)');
 });
 
 // ------------------------------------------------------------------ backoff
@@ -353,19 +481,177 @@ test('metrics: the queue per cube, bridge share, draws, turns, timeouts, recordi
   // The torn line completes and a new one lands: only the new bytes are read.
   const ff = path.join(q, 'normal/fair-fight/drafts.jsonl');
   fs.appendFileSync(ff, `"match":{"games":[]}}\n${JSON.stringify(draft(999, []))}\n`);
-  const before = readDrafts(ff);
-  assert.equal(before.length, 3);
-  assert.equal(readDrafts(ff), before, 'unchanged size: memoised');
+  const before = draftStats(ff);
+  assert.equal(before.drafts, 3);
+  assert.equal(draftStats(ff), before, 'unchanged size: memoised');
   assert.equal(cubelabQueue(d, ['q', 'night', '1'])['cubes.fair-fight.done'], 2);
   // Rewritten smaller (a fresh run): read again from the top.
   writeLines(ff, [draft(200, [])]);
-  assert.equal(readDrafts(ff).length, 1);
+  assert.equal(draftStats(ff).drafts, 1);
   // Rewritten at the same size (a new mtime): read again from the top too.
   const same = JSON.stringify(draft(201, []));
   fs.writeFileSync(ff, `${same}\n`);
   const t = new Date(Date.now() + 5000);
   fs.utimesSync(ff, t, t);
-  assert.equal(readDrafts(ff)[0]!.seed, 201);
+  assert.deepEqual([...draftStats(ff).seeds], [201]);
+});
+
+// A real drafts.jsonl line (run.ts's DraftRecord, ~16 KB of picks and decks), re-seeded and re-played.
+const DRAFT_TEMPLATE = JSON.parse(fs.readFileSync(path.join(REPO, 'fixtures/cubelab/decisions/drafts.jsonl'), 'utf8').split('\n')[0]!) as Record<string, unknown>;
+
+function realisticDraft(key: string, seed: number, i: number): Record<string, unknown> {
+  const games = Array.from({ length: 1 + (i % 3 === 0 ? 1 : 0) }, (_, n) => ({
+    n: n + 1, onPlay: 'A', onPlayVerified: 'A', winner: i % 17 === 0 ? 'draw' : i % 2 ? 'A' : 'B', turns: 6 + (i % 13),
+    // Some non-integer times: the sums must fold in the old order to give the old numbers.
+    ms: 8000 + ((i * 7919) % 90000) + (i % 5 === 0 ? 0.37 : 0), timeout: i % 23 === 0, reason: null, error: i % 31 === 0 ? 'boom' : null,
+    cpuMs: (i * 104729) % 200000, gameCpuMs: 100,
+    ...(i % 4 === 0 ? { recorded: { dir: `games/${seed}`, bytes: 100000 + i * 13, frames: 300, errors: i % 8 === 0 ? 1 : 0, decisions: 10, decisionErrors: 0 } } : {}),
+  }));
+  return {
+    ...DRAFT_TEMPLATE, cube: `${key} — “quoted”`, seed,
+    match: { games, winsA: 1, winsB: 0, winner: 'A', ...(i % 29 === 0 ? { engineError: 'worker died' } : {}), worker: i % 7 },
+    ...(key.startsWith('bridge/') ? { bridge: { sources: key.slice(7).split('+') } } : {}),
+  };
+}
+
+/** A queue root: two nights over normal and bridge keys, torn and unreadable lines, one file over CHUNK_BYTES. */
+function realisticQueue(d: string): string {
+  const q = path.join(d, 'q');
+  const keys: Array<[string, number]> = [['normal/omega', 90], ['normal/pauper', 25], ['normal/fair-fight', 12], ['bridge/omega+pauper', 15], ['bridge/pauper+vintage', 8]];
+  const n1: object[] = [], n2: object[] = [];
+  let i = 0;
+  for (const [key, n] of keys) {
+    const rows = Array.from({ length: n }, (_, k) => JSON.stringify(realisticDraft(key, k + 1, i++)));
+    rows.splice(3, 0, '', '{"seed": not json', JSON.stringify(realisticDraft(key, 777777, i++)));
+    const f = path.join(q, key, 'drafts.jsonl');
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, `${rows.join('\n')}\n{"seed":${n + 1},"match":{"ga`);
+    n1.push({ key, seed: 1, drafts: Math.floor(n / 2) });
+    n2.push({ key, seed: Math.floor(n / 2) + 1, drafts: n });
+  }
+  fs.writeFileSync(path.join(q, 'night-1.json'), JSON.stringify({ night: 1, chunks: n1 }));
+  fs.writeFileSync(path.join(q, 'night-2.json'), JSON.stringify({ night: 2, chunks: n2 }));
+  fs.writeFileSync(path.join(q, 'queue.json'), JSON.stringify({ games: 1, next: {} }));
+  assert.ok(fs.statSync(path.join(q, 'normal/omega/drafts.jsonl')).size > CHUNK_BYTES, 'one file spans several reads');
+  return q;
+}
+
+const QUEUE_ARGS = [['q'], ['q', 'night', '1'], ['q', 'night', '2']];
+
+test('metrics: the streamed extractors give the old numbers (same keys, same values) on a realistic queue, aibench, lines and count', () => {
+  const d = tmp('same');
+  realisticQueue(d);
+  for (const a of QUEUE_ARGS) {
+    const now = cubelabQueue(d, a);
+    assert.deepEqual(now, legacyCubelabQueue(d, a), a.join(' '));
+    assert.deepEqual(cubelabQueue(d, a), now, 'memoised: the same again');
+  }
+  const two = cubelabQueue(d, ['q', 'night', '2']);
+  assert.ok((two.games as number) > 100 && (two.engine_error_rate as number) > 0 && (two.recorded_errors as number) > 0 && (two.recorded_games as number) > 0);
+  // ai-bench shards and the generic counters, against the old readers too.
+  const b = path.join(d, 'var/ai-bench/n');
+  const g = (i: number) => ({ winner: ['A', 'B', 'draw'][i % 3], focusWon: i % 2 ? 'yes' : 'no', turns: 10 + (i % 7), ms: 1000 + i * 37.5, timeout: i % 11 === 0, error: i % 13 === 0 ? 'x' : '', aiEvalTimeouts: i % 2, aStats: { counts: { 'search.fallback.budget': i % 3, 'search.p.considered': 5 } }, pad: 'é'.repeat(3000) });
+  writeLines(path.join(b, 'shard-0.jsonl'), Array.from({ length: 400 }, (_, i) => g(i)), '{"winner":"A"');
+  writeLines(path.join(b, 'shard-1.jsonl'), Array.from({ length: 50 }, (_, i) => g(i + 400)));
+  fs.writeFileSync(path.join(b, 'shard-0.log'), "a\nCouldn't map x\n\nCouldn't map y\nCouldn't map torn");
+  assert.deepEqual(aibench(d, ['var/ai-bench/*']), legacyAibench(d, ['var/ai-bench/*']));
+  for (const a of [['var/ai-bench/n/*'], ['q/*/*/drafts.jsonl']]) assert.equal(lines(d, a), legacyLines(d, a));
+  assert.equal(count(d, ['var/ai-bench/n/*', "Couldn't map"]), legacyCount(d, ['var/ai-bench/n/*', "Couldn't map"]));
+  assert.equal(count(d, ['var/ai-bench/n/*', "Couldn't map"]), 2, 'the torn last line is not counted');
+  writeLines(path.join(d, 'lad/results/a.jsonl'), [{ ms: 3000, error: true }, { ms: 1000 }, { ms: 2000, timeout: true }], '{"ms":9');
+  assert.deepEqual(ladder(d, ['lad']), { games: 3, errors: 1, timeouts: 1, median_game_s: 2 });
+});
+
+test('metrics: drafts.jsonl appended to is read from where it stopped; truncated or replaced, from the top', () => {
+  const d = tmp('inc');
+  const q = realisticQueue(d);
+  const f = path.join(q, 'normal/omega/drafts.jsonl');
+  const a = ['q', 'night', '2'];
+  cubelabQueue(d, a);
+  const stats = draftStats(f);
+  const drafts0 = stats.drafts;
+  // The torn line completes and more land; at the same time, scribble over the first line in place.
+  // The size grew, so only the new bytes are read: the scribble is never seen.
+  const fd = fs.openSync(f, 'r+');
+  fs.writeSync(fd, Buffer.from('X'.repeat(20)), 0, 20, 0);
+  fs.closeSync(fd);
+  fs.appendFileSync(f, `ames":[]}}\n${[200, 201, 202].map((s, k) => JSON.stringify(realisticDraft('normal/omega', s, k))).join('\n')}\n`);
+  const after = draftStats(f);
+  assert.equal(after, stats, 'the same running counts, added to');
+  assert.equal(after.drafts, drafts0 + 4, 'the completed torn line and three new ones; the first line still counted');
+  assert.ok(after.seeds.has(91) && after.seeds.has(202));
+  // Put the first line back: from here on the old reader and the new agree again, append by append.
+  const fd2 = fs.openSync(f, 'r+');
+  fs.writeSync(fd2, Buffer.from(JSON.stringify(realisticDraft('normal/omega', 1, 0)).slice(0, 20)), 0, 20, 0);
+  fs.closeSync(fd2);
+  for (let k = 0; k < 3; k++) {
+    fs.appendFileSync(f, `${JSON.stringify(realisticDraft('normal/omega', 300 + k, k))}\n{"seed":`.slice(0, k === 1 ? undefined : -9));
+    assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), `append ${k}`);
+  }
+  // Truncated (a fresh run in the same folder): read again from the top.
+  const p = path.join(q, 'normal/pauper/drafts.jsonl');
+  cubelabQueue(d, a);
+  fs.truncateSync(p, 40_000);
+  assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), 'truncated');
+  assert.ok(draftStats(p).drafts < 5);
+  // Replaced by a new, larger file (rotation: a new inode): read again from the top.
+  const big = Array.from({ length: 40 }, (_, k) => JSON.stringify(realisticDraft('normal/pauper', k + 1, k + 50))).join('\n');
+  fs.writeFileSync(`${p}.new`, `${big}\n`);
+  fs.renameSync(`${p}.new`, p);
+  assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), 'replaced');
+  assert.equal(draftStats(p).drafts, 40);
+  // Gone: nothing, and no stale numbers.
+  fs.rmSync(p);
+  assert.deepEqual(cubelabQueue(d, a), legacyCubelabQueue(d, a), 'removed');
+});
+
+test('metrics: the line reader decodes a character split across two reads and a line longer than a read', () => {
+  const d = tmp('utf');
+  const f = path.join(d, 'x.jsonl');
+  // "—" is three bytes; put its middle byte on the read boundary.
+  const first = `${'a'.repeat(CHUNK_BYTES - 1)}—b`;
+  const long = 'é'.repeat(CHUNK_BYTES);
+  fs.writeFileSync(f, `${first}\n\n${long}\nshort\ntorn`);
+  const got: string[] = [];
+  const end = eachCompleteLine(f, (l) => got.push(l));
+  assert.deepEqual(got.map((l) => l.length), [first.length, long.length, 5]);
+  assert.equal(got[0], first);
+  assert.equal(got[1], long);
+  assert.equal(end, fs.statSync(f).size - 4, 'stops after the last newline');
+  const rest: string[] = [];
+  fs.appendFileSync(f, 'ed\n');
+  eachCompleteLine(f, (l) => rest.push(l), end);
+  assert.deepEqual(rest, ['torned']);
+  assert.deepEqual(completeLines(f).length, 4);
+});
+
+test('metrics: the queue extractor stays in a small heap whatever the file size (a child node capped at 48 MB reads 48 MB of drafts)', () => {
+  const d = tmp('mem');
+  const q = path.join(d, 'q');
+  const f = path.join(q, 'normal/omega/drafts.jsonl');
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  const fd = fs.openSync(f, 'w');
+  let bytes = 0, n = 0;
+  while (bytes < 48 * 1024 * 1024) {
+    const block = Array.from({ length: 100 }, (_, k) => `${JSON.stringify(realisticDraft('normal/omega', n + k + 1, n + k))}\n`).join('');
+    fs.writeSync(fd, block);
+    bytes += Buffer.byteLength(block);
+    n += 100;
+  }
+  fs.closeSync(fd);
+  fs.writeFileSync(path.join(q, 'night-1.json'), JSON.stringify({ chunks: [{ key: 'normal/omega', seed: 1, drafts: n }] }));
+  // Parsed and kept whole, as before, these lines need several times their 48 MB of heap.
+  const script = `
+    const m = await import(${JSON.stringify(path.join(REPO, 'tools/runner/metrics.ts'))});
+    const r = m.cubelabQueue(${JSON.stringify(d)}, ['q', 'night', '1']);
+    globalThis.gc();
+    process.stdout.write(JSON.stringify({ drafts: r.drafts, done: r.night_drafts_done, heapMb: process.memoryUsage().heapUsed / 1048576 }));`;
+  const r = spawnSync(process.execPath, ['--max-old-space-size=48', '--expose-gc', '--input-type=module', '-e', script], { encoding: 'utf8', timeout: 120_000 });
+  assert.equal(r.status, 0, r.stderr.slice(-2000));
+  const out = JSON.parse(r.stdout) as { drafts: number; done: number; heapMb: number };
+  assert.equal(out.drafts, n);
+  assert.equal(out.done, n);
+  assert.ok(out.heapMb < 24, `retained heap ${out.heapMb.toFixed(1)} MB`);
 });
 
 test('live numbers: metrics split into per-cube progress and numbers, headline first; the public copy keeps safe keys and numbers only; cube ids only on opt-in', () => {
@@ -537,6 +823,41 @@ test('public ladder.json: an allowlist of names, kinds, ratings, records and out
   assert.equal(sanitiseLadder('nope'), null);
 });
 
+const WAREHOUSE_SAMPLE = JSON.parse(fs.readFileSync(path.join(REPO, 'tools', 'lab', 'warehouse-sample.json'), 'utf8'));
+
+test('public warehouse.json (D363): schema 1 exactly, numbers in range, cube-document card names only', () => {
+  // warehouse.py export's own sample passes unchanged.
+  assert.deepEqual(sanitiseWarehouse(WAREHOUSE_SAMPLE), WAREHOUSE_SAMPLE);
+  assert.ok(WAREHOUSE_SAMPLE.cards.length > 0 && WAREHOUSE_SAMPLE.pairs.length > 0 && WAREHOUSE_SAMPLE.nights.length > 0);
+  const hostile = {
+    ...WAREHOUSE_SAMPLE, seeds: [7], decks: [{ main: [[1, 'Snapcaster Mage']] }], path: '/home/justin-a/code/mtg-table/var/cubelab/queue',
+    tables: [{ name: 'drafts', rows: 3, bytes: 9, path: '/x' }, { name: '../etc', rows: 1, bytes: 1 }, { name: 'picks', rows: -1, bytes: 1 }],
+    nights: [{ night: 3, drafts: 1, games: 1, recorded: 1, quarantined: 0, engineErrors: 0, seeds: [1, 2] }, { night: 'n/../4', drafts: 1, games: 1, recorded: 1, quarantined: 0, engineErrors: 0 }, { night: 'other', drafts: 1.5, games: 1, recorded: 1, quarantined: 0, engineErrors: 0 }],
+    archive: { gzipBytes: 10, zstdBytes: 5, dir: '/var' }, disk: { freeGB: 12.5, usedPct: 140 },
+    cubes: [{ cube: 'synergy', drafts: 1, games: 1, avgTurns: 12, onPlayWinRate: 0.5, title: 'x' }, { cube: 'Synergy Cube', drafts: 1, games: 1, avgTurns: 1, onPlayWinRate: 0.5 }],
+    pairs: [{ cube: 'synergy', pair: 'WU', games: 10, winRate: 0.5, lo: 0.2, hi: 0.8 }, { cube: 'synergy', pair: 'WX', games: 10, winRate: 0.5, lo: 0.2, hi: 0.8 }, { cube: 'synergy', pair: 'UB', games: 10, winRate: 1.2, lo: 0.2, hi: 0.8 }],
+    cards: [{ cube: 'synergy', card: 'Fire // Ice', games: 100, winRate: 0.5, lo: 0.4, hi: 0.6, seat: 'A' }, ...['/etc/passwd', 'justin@example.com', 'a\u0000b', 'x'.repeat(61), '../x', 'C:\\x'].map((card) => ({ cube: 'synergy', card, games: 100, winRate: 0.5, lo: 0.4, hi: 0.6 })),
+      { cube: 'synergy', card: 'Snapcaster Mage', games: 100, winRate: 0.5, lo: 0.7, hi: 0.6 }],
+  };
+  const p = sanitiseWarehouse(hostile)!;
+  assert.deepEqual(Object.keys(p), ['schema', 'generatedAt', 'warehouseVer', 'tables', 'nights', 'archive', 'disk', 'cubes', 'pairs', 'cards']);
+  assert.deepEqual(p.tables, [{ name: 'drafts', rows: 3, bytes: 9 }]);
+  assert.deepEqual(p.nights, [{ night: 3, drafts: 1, games: 1, recorded: 1, quarantined: 0, engineErrors: 0 }]);
+  assert.deepEqual(p.archive, { gzipBytes: 10, zstdBytes: 5 });
+  assert.equal(p.disk, null);
+  assert.deepEqual(p.cubes, [{ cube: 'synergy', drafts: 1, games: 1, avgTurns: 12, onPlayWinRate: 0.5 }]);
+  assert.deepEqual(p.pairs.map((x) => x.pair), ['WU']);
+  assert.deepEqual(p.cards.map((x) => x.card), ['Fire // Ice']);
+  const text = JSON.stringify(p);
+  for (const bad of ['/home', 'seeds', 'decks', 'justin', 'passwd', '"path"', '"dir"', '"title"', '"seat"']) assert.ok(!text.includes(bad), bad);
+  assert.equal(cardName("Jace, Vryn's Prodigy"), "Jace, Vryn's Prodigy");
+  assert.equal(cardName('Lim-Dûl the Necromancer'), 'Lim-Dûl the Necromancer');
+  assert.equal(cardName('a/b'), null);
+  assert.equal(sanitiseWarehouse({ ...WAREHOUSE_SAMPLE, schema: 2 }), null);
+  assert.equal(sanitiseWarehouse({ ...WAREHOUSE_SAMPLE, generatedAt: 'yesterday' }), null);
+  assert.equal(sanitiseWarehouse('nope'), null);
+});
+
 test('sys parsers: meminfo, physical cores, sockets on the bridge port', () => {
   const mi = readMeminfo('MemTotal:       31457280 kB\nMemAvailable:   15728640 kB\nSwapTotal:       8388608 kB\nSwapFree:        8388608 kB\n');
   assert.deepEqual(mi, { totalGb: 30, availGb: 15, swapTotalMb: 8192, swapFreeMb: 8192 });
@@ -628,6 +949,10 @@ class FakeSys implements Sys {
   liveUnits(prefix: string): string[] | null { return this.live === null ? null : [...this.live, ...[...this.held.keys()].filter((u) => u.startsWith(prefix))]; }
   runInSlice(command: string, cwd: string) { this.inSlice.push(command); return this.run(['bash', '-c', command], { cwd }); }
   unitJavaPeaksGb(): number[] { return [1.6, 1.9]; }
+  /** What systemd or the journal say about an OOM kill in a unit (D365); null: nothing. */
+  oomEvidence: string | null = null;
+  oomAsked: string[] = [];
+  unitOomEvidence(unit: string): string | null { this.oomAsked.push(unit); return this.oomEvidence; }
   playing(): boolean { return this.isPlaying; }
   log(s: string): void { this.lines.push(s); }
 }
@@ -681,7 +1006,9 @@ test('runner: a new-format job runs pilot, checks, sized commands, final checks 
   const w = world({ 'J010-test.md': NEW_JOB });
   const ladderFile = path.join(w.root, 'ladder.json');
   fs.writeFileSync(ladderFile, JSON.stringify(LADDER));
-  const r = new Runner({ ...w.cfg, ladderFile }, w.sys);
+  const warehouseFile = path.join(w.root, 'warehouse.json');
+  fs.writeFileSync(warehouseFile, JSON.stringify({ ...WAREHOUSE_SAMPLE, seeds: [1, 2], cards: [...WAREHOUSE_SAMPLE.cards, { cube: 'synergy', card: '/home/justin-a/x', games: 200, winRate: 0.5, lo: 0.4, hi: 0.6 }] }));
+  const r = new Runner({ ...w.cfg, ladderFile, warehouseFile }, w.sys);
   r.reconcile();
   r.tick();
   const run = r.runs.get('J010')!;
@@ -708,9 +1035,11 @@ test('runner: a new-format job runs pilot, checks, sized commands, final checks 
   const doc = JSON.parse(show(w.mtg, 'pc-results:status.json')) as StatusDoc;
   assert.equal(doc.finished[0]?.id, 'J010');
   assert.deepEqual(doc.finished[0]?.numbers, { n: 3, 'final.w': 3 });
-  // The public copy: one parentless commit on lab-status holding status.json only, sanitised.
-  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ladder.json\nstatus.json');
+  // The public copy: one parentless commit on lab-status holding the sanitised copies (D387: the ledger's too).
+  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ladder.json\nledger.json\nstatus.json\nwarehouse.json');
   assert.deepEqual(JSON.parse(show(w.fc, 'lab-status:ladder.json')), sanitiseLadder(LADDER));
+  // D363: the warehouse summary, sanitised: the sample passes whole; the extra key and the path-like card do not.
+  assert.deepEqual(JSON.parse(show(w.fc, 'lab-status:warehouse.json')), WAREHOUSE_SAMPLE);
   assert.equal(git(w.fc, 'rev-list', '--count', 'lab-status'), '1');
   const pub = JSON.parse(show(w.fc, 'lab-status:status.json')) as StatusDoc;
   assert.deepEqual(pub, sanitise(pub));
@@ -875,24 +1204,271 @@ test('runner: memory pressure drops workers through the control file, then stops
   assert.match(show(w.mtg, 'pc-results:results/J016/STATUS'), /resumed: .*retry after "memory/);
 });
 
-test('runner: Justin at the table holds a running heavy job and starts none', () => {
-  const w = world({ 'J017-x.md': NEW_JOB.replace('id: J010', 'id: J017'), 'J018-y.md': NEW_JOB.replace('id: J010', 'id: J018') });
+test('runner: memory pressure stops one co-scheduled job at a time, never every job at once', () => {
+  // Two one-worker heavy jobs side by side (a single-worker job cannot shed a worker: past the hard line it is stopped).
+  const one = (id: string): string => NEW_JOB.replace('id: J010', `id: ${id}`).replace('max_workers: 3', 'max_workers: 1\ncores: 1\ncontrol: yes').replace('resumable: yes', 'resumable: no');
+  const w = world({ 'J080-a.md': one('J080'), 'J081-b.md': one('J081') });
   const r = new Runner(w.cfg, w.sys);
   r.reconcile();
   w.sys.mode = 'hold';
   r.tick();
+  for (const step of ['prepare', 'pilot1']) { for (const id of ['J080', 'J081']) w.sys.release(`lab-${id}-${step}`, 'ok'); r.tick(); }
+  assert.deepEqual(['J080', 'J081'].map((id) => r.runs.get(id)?.unit), ['lab-J080-run1', 'lab-J081-run1']);
+  // The host's pressure goes past the hard line and stays there.
+  w.sys.some10 = 50;
+  const stoppedAt = new Map<string, number>();
+  const step = (): void => { w.sys.t += 10_000; r.tick(); for (const u of w.sys.stopped) if (!stoppedAt.has(u)) stoppedAt.set(u, w.sys.t); };
+  for (let i = 0; i < 4; i++) step();
+  assert.deepEqual(w.sys.stopped, ['lab-J080-run1'], 'one job stopped, the other keeps running while memory is freed');
+  assert.equal(r.runs.get('J081')?.unit, 'lab-J081-run1');
+  assert.equal(r.runs.get('J081')?.outcome, null);
+  assert.equal(r.runs.get('J080')?.outcome?.state, 'waiting');
+  assert.ok(w.sys.lines.some((l) => /^J081: memory stop held back \(J080 is stopping for memory\)/.test(l)), w.sys.lines.join('\n'));
+  // Pressure that stays high after the first has gone and settled stops the next, in its turn: not within a minute.
+  for (let i = 0; i < 12 && w.sys.stopped.length < 2; i++) step();
+  assert.deepEqual(w.sys.stopped, ['lab-J080-run1', 'lab-J081-run1']);
+  const gap = (stoppedAt.get('lab-J081-run1') ?? 0) - (stoppedAt.get('lab-J080-run1') ?? 0);
+  assert.ok(gap >= 60_000 && gap <= 100_000, `${gap} ms between the two stops`);
+  // A job whose OWN memory is at its unit's cap is stopped whatever the other does: no other stop relieves it.
+  const w2 = world({ 'J080-a.md': one('J080'), 'J081-b.md': one('J081') });
+  const r2 = new Runner(w2.cfg, w2.sys);
+  r2.reconcile();
+  w2.sys.mode = 'hold';
+  r2.tick();
+  for (const st of ['prepare', 'pilot1']) { for (const id of ['J080', 'J081']) w2.sys.release(`lab-${id}-${st}`, 'ok'); r2.tick(); }
+  w2.sys.unitMemoryGb = () => 20.5;     // past 95 % of the 21 GB MemoryMax
+  for (let i = 0; i < 4; i++) { w2.sys.t += 10_000; r2.tick(); }
+  assert.deepEqual(w2.sys.stopped, ['lab-J080-run1', 'lab-J081-run1']);
+});
+
+test('runner: Justin at the table holds a running heavy job and starts none', () => {
+  // J018 is 7 wide: it would wait for cores beside J017 (3 + 7 > 8) anyway; while Justin plays, the reason is him.
+  const w = world({ 'J017-x.md': NEW_JOB.replace('id: J010', 'id: J017'), 'J018-y.md': NEW_JOB.replace('id: J010', 'id: J018').replace('max_workers: 3', 'max_workers: 7') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  w.sys.isPlaying = true;
+  r.tick();
+  assert.equal(r.runs.size, 0);                 // nothing heavy starts while Justin plays
+  w.sys.isPlaying = false;
+  r.tick();
+  assert.deepEqual([...r.runs.keys()], ['J017']);
+  assert.equal(r.blocked.find((b) => b.id === 'J018')?.code, 'cores');
   w.sys.release('lab-J017-prepare', 'ok');
   r.tick();
   w.sys.isPlaying = true;
   r.tick();
   assert.deepEqual(JSON.parse(fs.readFileSync(r.controlFile('J017'), 'utf8')).paused, true);
   assert.equal(r.runs.get('J017')?.events.at(-1)?.kind, 'playing');
+  assert.equal(r.blocked.find((b) => b.id === 'J018')?.code, 'playing');
   w.sys.isPlaying = false;
   r.tick();
   assert.equal(JSON.parse(fs.readFileSync(r.controlFile('J017'), 'utf8')).paused, false);
-  assert.equal(r.runs.has('J018'), false);   // one heavy job at a time
+  assert.equal(r.runs.has('J018'), false);
+  // With co-scheduling off, one heavy job at a time, however narrow.
+  const w2 = world({ 'J017-x.md': NEW_JOB.replace('id: J010', 'id: J017'), 'J018-y.md': NEW_JOB.replace('id: J010', 'id: J018') });
+  const r2 = new Runner({ ...w2.cfg, coSchedule: false }, w2.sys);
+  r2.reconcile();
+  w2.sys.mode = 'hold';
+  r2.tick();
+  assert.deepEqual([...r2.runs.keys()], ['J017']);
+  assert.equal(r2.blocked.find((b) => b.id === 'J018')?.code, 'heavy-busy');
 });
 
+const NARROW_JOB = `id: J060
+title: A wide step, then a narrow one
+cpu: heavy
+repos: mtg-table@main
+max_workers: 7
+mem_per_worker_gb: 2
+metrics: n = lines var/p60.jsonl
+
+## Pilot
+\`\`\`bash
+mkdir -p var
+echo '{}' > var/p60.jsonl
+\`\`\`
+check: n == 1
+
+## Commands
+\`\`\`bash
+echo "wide {workers} $JOBS" >> var/j060.txt
+\`\`\`
+cores: 1
+\`\`\`bash
+echo "narrow {workers} $JOBS" >> var/j060.txt
+\`\`\`
+`;
+
+test('runner: co-scheduling end to end: a wide job waits, then starts beside a narrow step, in a lane of its own sharing var/', () => {
+  // J061: the same two blocks with no cores: line (both 7 wide), 2.5 GB a worker; J062: one core.
+  const wide = NARROW_JOB.replace('id: J060', 'id: J061').replace('mem_per_worker_gb: 2', 'mem_per_worker_gb: 2.5').replace(/p60/g, 'p61').replace(/j060/g, 'j061').replace(/cores: 1\n/, '');
+  const w = world({ 'J060-a.md': NARROW_JOB, 'J061-b.md': wide, 'J062-c.md': NARROW_JOB.replace('id: J060', 'id: J062').replace('max_workers: 7', 'cores: 1').replace(/p60/g, 'p62') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  // J060 starts alone, 7 wide: J061 (7) does not fit and J062 waits behind it (order, no starvation).
+  assert.deepEqual([...r.runs.keys()], ['J060']);
+  assert.deepEqual(r.blocked.map((b) => [b.id, b.code]), [['J061', 'cores'], ['J062', 'heavy-busy']]);
+  w.sys.release('lab-J060-prepare', 'ok'); r.tick();
+  w.sys.release('lab-J060-pilot1', 'ok'); r.tick();
+  assert.equal(r.runs.get('J060')?.unit, 'lab-J060-run1');
+  assert.equal(r.runs.has('J061'), false);
+  w.sys.release('lab-J060-run1', 'ok'); r.tick();
+  // J060's narrow step (cores: 1) leaves 7 of 8 cores, and 2 + 17.5 of 21 GB: J061 starts beside it, in lane 2.
+  const a = r.runs.get('J060')!, b = r.runs.get('J061')!;
+  assert.equal(a.unit, 'lab-J060-run2');
+  assert.equal(b.lane, 1);
+  assert.equal(r.blocked.find((x) => x.id === 'J062')?.code, 'cores');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run1')?.env.JOBS, '7');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run2')?.env.JOBS, '1');
+  // Every step's BLAS / OpenMP threads are capped at its width: the narrow block's 1, the wide one's 7.
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run2')?.env.OMP_NUM_THREADS, '1');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J060-run1')?.env.OMP_NUM_THREADS, '7');
+  const doc = r.statusDoc();
+  assert.deepEqual([doc.host.coresUsed, doc.host.coresTotal], [8, 8]);
+  assert.deepEqual(doc.running.map((x) => [x.id, x.cores]), [['J060', 1], ['J061', 7]]);
+  assert.deepEqual([sanitise(doc).host.coresUsed, sanitise(doc).host.coresTotal, sanitise(doc).running[1]?.cores], [8, 8, 7]);
+  // J061's prepare: its own clone, var/ a symlink to lane 1's.
+  const lane2 = path.join(w.cfg.labRoot, 'mtg-table-lane2');
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J061-prepare')?.env.MTG_TABLE, lane2);
+  w.sys.release('lab-J061-prepare', 'ok'); r.tick();
+  assert.ok(fs.lstatSync(path.join(lane2, 'var')).isSymbolicLink());
+  assert.equal(fs.readlinkSync(path.join(lane2, 'var')), path.join(w.cfg.labRoot, 'mtg-table', 'var'));
+  assert.equal(git(lane2, 'status', '--porcelain'), '');                                  // the link is not an untracked file
+  w.sys.release('lab-J061-pilot1', 'ok'); r.tick();
+  assert.ok(fs.existsSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'p61.jsonl')));     // written through the symlink
+  // J061's pilot passed beside J060: it was sized against the memory J060 leaves (21 - 2 GB: 6 workers at 2.5 GB).
+  assert.equal(b.unit, 'lab-J061-run1');
+  assert.equal(b.workers, 6);
+  assert.match(b.sizing?.detail ?? '', /memory 6.*budget 19 GB/);
+  // Now J061 holds 6: J062 (one core) fits too (1 + 6 + 1 = 8), in a third lane.
+  assert.equal(r.runs.get('J062')?.lane, 2);
+  assert.deepEqual([r.statusDoc().host.coresUsed, r.statusDoc().running.length], [8, 3]);
+  w.sys.release('lab-J060-run2', 'ok'); r.tick();
+  assert.equal(a.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.equal(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j060.txt'), 'utf8'), 'wide 7 7\nnarrow 1 1\n');
+  w.sys.release('lab-J061-run1', 'ok'); r.tick();
+  w.sys.release('lab-J061-run2', 'ok'); r.tick();
+  assert.equal(b.outcome?.state, 'done', w.sys.lines.join('\n'));
+  // J061's second block has no cores: line of its own: its width and {workers} are the job's.
+  assert.equal(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j061.txt'), 'utf8'), 'wide 6 6\nnarrow 6 6\n');
+  // A narrow block that declares its memory (mem_gb: 15) reserves it: J061's 17.5 GB does not fit beside it.
+  const w2 = world({ 'J060-a.md': NARROW_JOB.replace('cores: 1\n', 'cores: 1\nmem_gb: 15\n'), 'J061-b.md': wide });
+  const r2 = new Runner(w2.cfg, w2.sys);
+  r2.reconcile();
+  w2.sys.mode = 'hold';
+  r2.tick();
+  for (const u of ['prepare', 'pilot1', 'run1']) { w2.sys.release(`lab-J060-${u}`, 'ok'); r2.tick(); }
+  assert.equal(r2.runs.get('J060')?.unit, 'lab-J060-run2');
+  assert.deepEqual(r2.holding(r2.runs.get('J060')!), { cores: 1, memGb: 15 });
+  assert.equal(r2.runs.has('J061'), false);
+  assert.match(r2.blocked.find((x) => x.id === 'J061')?.reason ?? '', /needs 17\.5 GB; 6 of 21 GB free/);
+});
+
+
+test('runner: pilot_cores: (D365): a narrow pilot lets a narrow job start beside it; the main step waits for its width, and nothing new starts meanwhile', () => {
+  const job = (id: string, head: string): string => NARROW_JOB.replace('id: J060', `id: ${id}`).replace('max_workers: 7', head).replace(/p60/g, `p${id.slice(2)}`).replace(/j060/g, `j${id.slice(1)}`);
+  // J050: 7 wide, its pilot 2 wide (J050 on the PC: two JVMs in the pilot).  J051: 3 wide.  J052: 5 wide.
+  const w = world({ 'J050-a.md': job('J050', 'max_workers: 7\npilot_cores: 2'), 'J051-b.md': job('J051', 'cores: 3'), 'J052-c.md': job('J052', 'cores: 5') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  assert.deepEqual([...r.runs.keys()], ['J050']);
+  assert.deepEqual(r.holding(r.runs.get('J050')!).cores, 7);                    // prepare: no prepare_cores:, the job's width
+  w.sys.release('lab-J050-prepare', 'ok'); r.tick();
+  // The pilot holds 2 of 8: J051 (3) starts beside it; J052 (5) does not fit (2 + 3 + 5 > 8).
+  const a = r.runs.get('J050')!;
+  assert.equal(a.unit, 'lab-J050-pilot1');
+  assert.deepEqual(r.holding(a), { cores: 2, memGb: 4 });
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J050-pilot1')?.env.OMP_NUM_THREADS, '2');
+  assert.ok(Number(w.sys.started.find((u) => u.unit === 'lab-J050-pilot1')?.env.JOBS) <= 2);
+  assert.ok(r.runs.has('J051'));
+  assert.equal(r.runs.has('J052'), false);
+  assert.equal(r.blocked.find((x) => x.id === 'J052')?.code, 'cores');
+  // The pilot passes; run1 needs 7 but J051 holds 3: run1 waits, nothing is stopped.
+  w.sys.release('lab-J050-pilot1', 'ok'); r.tick();
+  assert.equal(w.sys.started.some((u) => u.unit === 'lab-J050-run1'), false);
+  assert.match(a.heldFor ?? '', /^needs 7 core\(s\) for run1; 5 of 8 free \(it waits for them; nothing is stopped\)$/);
+  assert.match(a.pendingStatus ?? '', /\nwaits: needs 7 core\(s\) for run1/);
+  assert.deepEqual(w.sys.stopped, []);
+  // While it waits it claims its full width: J052 (5) would fit in the 5 cores really free, but does not start (no starvation).
+  assert.equal(r.holding(a).cores, 7);
+  assert.equal(r.runs.has('J052'), false);
+  assert.match(r.blocked.find((x) => x.id === 'J052')?.reason ?? '', /needs 5 core\(s\); 0 of 8 free/);
+  // J051 runs to the end; then J050's run1 starts, 7 wide, and J052 still waits for it.
+  for (const u of ['prepare', 'pilot1', 'run1', 'run2']) { w.sys.release(`lab-J051-${u}`, 'ok'); r.tick(); }
+  assert.equal(r.runs.get('J051')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  r.tick();
+  assert.equal(a.unit, 'lab-J050-run1');
+  assert.equal(a.heldFor, null);
+  assert.doesNotMatch(a.pendingStatus ?? '', /\nwaits:/);
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J050-run1')?.env.OMP_NUM_THREADS, '7');
+  assert.equal(r.runs.has('J052'), false);
+  // J050's narrow run2 (cores: 1) leaves 7: J052 starts.
+  w.sys.release('lab-J050-run1', 'ok'); r.tick();
+  assert.equal(a.unit, 'lab-J050-run2');
+  assert.ok(r.runs.has('J052'));
+});
+
+test('runner: two jobs waiting to widen (D365) never wait for each other: the earlier goes first', () => {
+  const job = (id: string, head: string): string => NARROW_JOB.replace('id: J060', `id: ${id}`).replace('max_workers: 7', head).replace(/p60/g, `p${id.slice(2)}`).replace(/j060/g, `j${id.slice(1)}`);
+  // J050 and J051: 5 wide, 1-wide pilots; J052: 3 wide.  Budget 8.
+  const w = world({ 'J050-a.md': job('J050', 'max_workers: 5\npilot_cores: 1'), 'J051-b.md': job('J051', 'max_workers: 5\npilot_cores: 1'), 'J052-c.md': job('J052', 'cores: 3') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release('lab-J050-prepare', 'ok'); r.tick();          // J050's pilot (1): J051 (5) starts beside it
+  w.sys.release('lab-J051-prepare', 'ok'); r.tick();          // J051's pilot (1): J052 (3) starts, 1 + 1 + 3
+  assert.deepEqual([...r.runs.keys()].sort(), ['J050', 'J051', 'J052']);
+  w.sys.release('lab-J050-pilot1', 'ok'); r.tick();           // J050's run1 (5) waits: 1 + 3 + 5 > 8
+  w.sys.release('lab-J051-pilot1', 'ok'); r.tick();           // J051's run1 (5) waits: J050's 5 + 3 + 5 > 8
+  const a = r.runs.get('J050')!, b = r.runs.get('J051')!;
+  assert.match(a.heldFor ?? '', /^needs 5 core\(s\) for run1/);
+  assert.match(b.heldFor ?? '', /^needs 5 core\(s\) for run1; 0 of 8 free/);
+  // J052 ends: each claims 5, but the later one (J051) yields: J050 starts, J051 still waits.
+  for (const u of ['prepare', 'pilot1', 'run1', 'run2']) { w.sys.release(`lab-J052-${u}`, 'ok'); r.tick(); }
+  r.tick();
+  assert.equal(a.unit, 'lab-J050-run1');
+  assert.equal(w.sys.started.some((u) => u.unit === 'lab-J051-run1'), false);
+  assert.match(b.heldFor ?? '', /^needs 5 core\(s\) for run1; 3 of 8 free/);
+  // J050's narrow run2 (1) leaves room: J051's run1 starts.
+  w.sys.release('lab-J050-run1', 'ok'); r.tick();
+  assert.equal(b.unit, 'lab-J051-run1');
+});
+
+test('runner: the thread cap is the step\'s width (max_workers: 1, a 7-worker block, a cores: 1 block); plan shows it; a block\'s own export wins', () => {
+  // J070: width 1 from max_workers: 1, no cores: line (a width the old cap, declared cores: only, missed).
+  const one = NARROW_JOB.replace('id: J060', 'id: J070').replace('max_workers: 7', 'max_workers: 1').replace(/p60/g, 'p70').replace(/j060/g, 'j070').replace(/cores: 1\n/, '')
+    .replace('echo "narrow {workers} $JOBS" >> var/j070.txt', 'echo "narrow $OMP_NUM_THREADS $VECLIB_MAXIMUM_THREADS" >> var/j070.txt\nexport OPENBLAS_NUM_THREADS=3\necho "own $OPENBLAS_NUM_THREADS" >> var/j070.txt');
+  const w = world({ 'J060-a.md': NARROW_JOB, 'J070-b.md': one });
+  const out: string[] = [];
+  assert.equal(new Runner(w.cfg, w.sys).plan('J060', (l) => out.push(l)), 0);
+  const text = out.join('\n');
+  const unitLine = (step: string): string => out.find((l) => l.startsWith('[dry-run] systemd-run') && l.includes(`--unit=lab-J060-${step} `)) ?? '';
+  for (const k of THREAD_CAP_VARS) {
+    assert.ok(unitLine('run1').includes(`--setenv=${k}=7 `), `run1 (7 workers): ${k}`);
+    assert.ok(unitLine('run2').includes(`--setenv=${k}=1 `), `run2 (cores: 1): ${k}`);
+    assert.ok(unitLine('pilot1').includes(`--setenv=${k}=7 `), `pilot1 (admitted at 7): ${k}`);
+  }
+  assert.match(text, /-- run1 [^\n]*\n(?:   \| [^\n]*\n)*   threads: 7 \(the step's width; OMP_NUM_THREADS, OPENBLAS_NUM_THREADS, MKL_NUM_THREADS, NUMEXPR_NUM_THREADS, VECLIB_MAXIMUM_THREADS; an export in the block wins\)/);
+  assert.match(text, /-- run2 [^\n]*\n(?:   \| [^\n]*\n)*   threads: 1 /);
+  // J070 (max_workers: 1) is width 1 in every step, and runs that way: the unit's caps reach the block, its own export wins.
+  const r = new Runner(w.cfg, w.sys);
+  const p70: string[] = [];
+  r.plan('J070', (l) => p70.push(l));
+  assert.ok(p70.filter((l) => l.startsWith('[dry-run] systemd-run')).every((l) => l.includes('--setenv=OMP_NUM_THREADS=1 ') && l.includes('--setenv=OPENBLAS_NUM_THREADS=1 ')));
+  r.reconcile();
+  for (let i = 0; i < 12 && !fs.existsSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j070.txt')); i++) { w.sys.t += 61_000; r.tick(); }
+  for (let i = 0; i < 12 && !/own/.test(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j070.txt'), 'utf8')); i++) { w.sys.t += 61_000; r.tick(); }
+  assert.equal(fs.readFileSync(path.join(w.cfg.labRoot, 'mtg-table', 'var', 'j070.txt'), 'utf8'), 'wide 1 1\nnarrow 1 1\nown 3\n');
+  const started = w.sys.started.filter((u) => u.unit.startsWith('lab-J070-'));
+  assert.ok(started.length >= 3 && started.every((u) => u.env.OMP_NUM_THREADS === '1'), started.map((u) => `${u.unit} ${u.env.OMP_NUM_THREADS}`).join(', '));
+  assert.match(fs.readFileSync(path.join(r.jobDir('J070'), 'run2.log'), 'utf8'), /1 worker\(s\), 1 core\(s\), BLAS\/OpenMP threads 1/);
+});
 test('runner: a restart adopts a running unit, resumes a resumable step, restarts a non-resumable job (clean: moved aside)', () => {
   const NONRES = NEW_JOB.replace('id: J010', 'id: J021').replace('resumable: yes', 'resumable: no\nclean: var/out*');
   const w = world({ 'J020-x.md': NEW_JOB.replace('id: J010', 'id: J020'), 'J021-y.md': NONRES.replace('cpu: heavy', 'cpu: light') });
@@ -980,7 +1556,7 @@ function matchJobs(n: number): MatchJob[] {
   return Array.from({ length: n }, (_, i) => ({ id: `m${i}`, seed: i, games: 1, gameTimeoutSec: 30, profileA: 'Default', profileB: 'Default', builder: 'lab', deckA: null, deckB: null, poolA: [], poolB: [], forgeDeckOutA: '', forgeDeckOutB: '' }));
 }
 
-async function poolRun(ctl: { paused: boolean; maxWorkers: number | null } | null, n: number, during?: (ctlFile: string, done: () => number) => Promise<void>): Promise<{ maxAlive: number; done: number; order: string[] }> {
+async function poolRun(ctl: { paused: boolean; maxWorkers: number | null } | null, n: number, during?: (ctlFile: string, done: () => number) => Promise<void>): Promise<{ maxAlive: number; done: number; order: string[]; loads: PoolLoad[] }> {
   const d = tmp('pool');
   const bin = fakeJava(d);
   const alive = path.join(d, 'alive');
@@ -996,15 +1572,16 @@ async function poolRun(ctl: { paused: boolean; maxWorkers: number | null } | nul
   let maxAlive = 0;
   const sampler = setInterval(() => { maxAlive = Math.max(maxAlive, fs.readdirSync(alive).length); }, 10);
   const results: string[] = [];
+  const loads: PoolLoad[] = [];
   try {
-    const p = runPool({ cp: 'x', homes: ['h0', 'h1', 'h2'], repo: d }, matchJobs(n), path.join(d, 'logs'), (j) => { results.push(j.id); }, () => {});
+    const p = runPool({ cp: 'x', homes: ['h0', 'h1', 'h2'], repo: d }, matchJobs(n), path.join(d, 'logs'), (j, _r, _w, load) => { results.push(j.id); loads.push(load); }, () => {});
     if (during) await during(ctlFile, () => results.length);
     await p;
   } finally {
     clearInterval(sampler);
     for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
-  return { maxAlive, done: results.length, order: results };
+  return { maxAlive, done: results.length, order: results, loads };
 }
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
@@ -1013,6 +1590,13 @@ test('cube-lab pool: no control file = three workers, as before', async () => {
   const r = await poolRun(null, 9);
   assert.equal(r.done, 9);
   assert.equal(r.maxAlive, 3);
+  // D376: every result carries the pool's load when it finished
+  assert.equal(r.loads.length, 9);
+  for (const l of r.loads) {
+    assert.ok(l.busy >= 1 && l.busy <= 3, `busy ${l.busy}`);
+    assert.ok(l.alive >= 1 && l.alive <= 3, `alive ${l.alive}`);
+    assert.ok(l.cpus >= 1 && Number.isFinite(l.load1));
+  }
 });
 
 test('cube-lab pool: maxWorkers 1 runs one worker; raising it starts the parked ones', async () => {
@@ -1346,6 +1930,210 @@ test('review: sh: metrics run in the lab slice; a stale git lock in the runner\'
   assert.ok(!fs.existsSync(lockFile));
 });
 
+// ------------------------------------------------------------------ D365: retries resume at the stopped block; aside copies; OOM kills
+
+/** A non-resumable job of two blocks (an encode, then a fit), each with its own clean:, and a job-wide one. */
+const BLOCKS_JOB = `id: J090
+title: An encode, then a fit
+cpu: heavy
+repos: mtg-table@main
+resumable: no
+max_workers: 2
+mem_per_worker_gb: 1.5
+metrics: n = lines var/p90.jsonl
+clean: var/j90-all
+
+## Pilot
+\`\`\`bash
+mkdir -p var
+echo '{}' > var/p90.jsonl
+\`\`\`
+check: n == 1
+
+## Commands
+clean: var/j90-enc
+\`\`\`bash
+mkdir -p var/j90-enc var/j90-all
+echo enc >> var/j90-enc/out.txt
+echo enc >> var/j90-runs.txt
+\`\`\`
+clean: var/j90-fit
+\`\`\`bash
+mkdir -p var/j90-fit
+echo fit >> var/j90-fit/out.txt
+echo fit >> var/j90-runs.txt
+\`\`\`
+`;
+
+/** heldAtRun1, then run1 finishes and run2 is held with a partial output; returns the lab's var/. */
+function heldAtRun2(id: string, jobText: string): { w: World; r: Runner; vr: string } {
+  const { w, r } = heldAtRun1(id, jobText);
+  w.sys.release(`lab-${id}-run1`, 'ok');
+  r.tick();
+  assert.equal(r.runs.get(id)?.unit, `lab-${id}-run2`);
+  const vr = path.join(r.checkout('mtg-table', 'heavy'), 'var');
+  fs.mkdirSync(path.join(vr, 'j90-fit'), { recursive: true });
+  fs.writeFileSync(path.join(vr, 'j90-fit', 'partial.txt'), 'half a fit');
+  return { w, r, vr };
+}
+
+test('D365: job file: a clean: line before a ## Commands block is that block\'s; in ## Pilot, outside var/ or with no block, an error', () => {
+  const j = parseJobFile('J091.md', 'id: J091\nrepos: mtg-table@main\n## Commands\nclean: var/a var/b*\nclean: var/c\ncores: 1\n```bash\ntrue\n```\n```bash\ntrue\n```\n', parse);
+  assert.deepEqual(j.errors, []);
+  assert.deepEqual(j.commands?.blockClean, [['var/a', 'var/b*', 'var/c'], []]);
+  assert.deepEqual(j.commands?.blockCores, [1, null]);
+  const bad = parseJobFile('J092.md', 'id: J092\nrepos: mtg-table@main\n## Pilot\nclean: var/p\n```bash\ntrue\n```\n## Commands\nclean: /etc ../x\n```bash\ntrue\n```\nclean: var/late\n', parse);
+  assert.equal(bad.errors.length, 4, bad.errors.join('\n'));
+  assert.match(bad.errors.join('\n'), /## pilot: a clean: line before a block belongs in ## Commands/);
+  assert.match(bad.errors.join('\n'), /a cores:, mem_gb: or clean: line with no block after it/);
+  assert.equal(oomJournalLine('x\nlab-J1-run1.service: A process of this unit has been killed by the OOM killer.\ny'), 'lab-J1-run1.service: A process of this unit has been killed by the OOM killer.');
+  assert.equal(oomJournalLine("lab-J1-run1.service: Failed with result 'oom-kill'."), "lab-J1-run1.service: Failed with result 'oom-kill'.");
+  assert.equal(oomJournalLine('lab-J1-run1.service: Deactivated successfully.'), null);
+});
+
+test('D365: a memory-stop retry resumes at the block that was stopped; done blocks are skipped; only that block\'s clean: is moved aside', () => {
+  const job = parseJobFile('J090.md', BLOCKS_JOB, parse);
+  assert.deepEqual(job.errors, []);
+  assert.deepEqual(job.commands?.blockClean, [['var/j90-enc'], ['var/j90-fit']]);
+  assert.deepEqual(job.clean, ['var/j90-all']);
+  const { w, r, vr } = heldAtRun2('J090', BLOCKS_JOB);
+  const first = r.runs.get('J090')!;
+  assert.equal(first.blocksDone?.run1?.rc, 0);
+  w.sys.release('lab-J090-run2', 'killed');                 // no exit code, unit gone: a memory stop
+  w.sys.t += 10_000; r.tick();
+  assert.equal(r.runs.get('J090')?.outcome?.state, 'waiting');
+  const before = w.sys.started.length;
+  w.sys.t += 16 * 60_000; r.tick();                          // the retry: prepare (held)
+  const again = r.runs.get('J090')!;
+  assert.deepEqual(again.steps.map((x) => x.name), ['prepare', 'run2', 'final-checks', 'collect']);
+  w.sys.release('lab-J090-prepare', 'ok'); r.tick();
+  assert.deepEqual(w.sys.started.slice(before).map((u) => u.unit), ['lab-J090-prepare', 'lab-J090-run2']);
+  // run2's own output went aside; run1's and the job-wide path did not (a from-scratch restart would move them).
+  const names = fs.readdirSync(vr);
+  assert.ok(names.some((n) => /^\.restart-.*-j90-fit$/.test(n)), names.join(' '));
+  assert.ok(!names.some((n) => /^\.restart-.*-j90-(enc|all)$/.test(n)), names.join(' '));
+  assert.equal(fs.readFileSync(path.join(vr, 'j90-enc', 'out.txt'), 'utf8'), 'enc\n');
+  w.sys.release('lab-J090-run2', 'ok'); r.tick();
+  assert.equal(again.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.equal(fs.readFileSync(path.join(vr, 'j90-runs.txt'), 'utf8'), 'enc\nfit\n', 'the encode ran once');
+  const st = show(w.mtg, 'pc-results:results/J090/STATUS');
+  assert.match(st, /restarted: .*retry after "memory: .*resumes at run2 \(run1 done, exit 0\).*moved aside: var\/j90-fit/);
+  assert.match(st, /blocks_done: run1 exit 0 at \S+, run2 exit 0 at /);
+});
+
+test('D365: a stop retry resumes too; an old run.json (no blocksDone) and a resumable job; a changed block runs again', () => {
+  // `tools/runner.sh stop` during run2 of a resumable job: the retry goes straight to run2, nothing moved aside.
+  const res = BLOCKS_JOB.replace('resumable: no', 'resumable: yes');
+  const { w, r, vr } = heldAtRun2('J090', res);
+  fs.mkdirSync(path.join(r.cfg.stateDir, 'requests'), { recursive: true });
+  fs.writeFileSync(path.join(r.cfg.stateDir, 'requests', '1.json'), JSON.stringify({ op: 'stop', id: 'J090' }));
+  fs.writeFileSync(r.pausedFlag(), 'x');                     // what `tools/runner.sh stop` does too
+  w.sys.t += 10_000; r.tick();
+  w.sys.t += 10_000; r.tick();
+  assert.match(r.runs.get('J090')?.outcome?.reason ?? '', /^stopped: /);
+  // A run.json the installed runner wrote before D365 has no blocksDone: what it ran is read from its steps.
+  delete r.runs.get('J090')!.blocksDone;
+  fs.rmSync(r.pausedFlag());                                 // `tools/runner.sh resume`
+  w.sys.t += 10_000; r.tick();
+  const again = r.runs.get('J090')!;
+  assert.deepEqual(again.steps.map((x) => x.name), ['prepare', 'run2', 'final-checks', 'collect']);
+  assert.match(again.restarts.at(-1)?.why ?? '', /resumes at run2 \(run1 done, exit 0\); the tools skip what is done/);
+  assert.equal(again.restarts.at(-1)?.how, 'resumed');
+  assert.ok(!fs.readdirSync(vr).some((n) => n.startsWith('.restart-')), 'a resumable job is never cleaned');
+  // Where a retry starts: the first block not done with the same text.
+  const job = parseJobFile('J090.md', BLOCKS_JOB, parse);
+  const done = { run1: { rc: 0, at: 0, sha: blockSha(job.commands!.blocks[0]!) } };
+  assert.equal(r.resumeBlock(job, done).from, 1);
+  const edited = parseJobFile('J090.md', BLOCKS_JOB.replace('echo enc >> var/j90-enc/out.txt', 'echo enc2 >> var/j90-enc/out.txt'), parse);
+  assert.equal(r.resumeBlock(edited, done).from, 0, 'run1 was changed in the job file: it runs again');
+  assert.equal(r.resumeBlock(job, { run1: { rc: 0, at: 0, sha: blockSha(job.commands!.blocks[0]!) }, run2: { rc: 0, at: 0, sha: blockSha(job.commands!.blocks[1]!) } }).from, 2);
+});
+
+test('D365: an old job file (a job-wide clean:, no block clean:) retries from run1 as before; a restart resumes at its block', () => {
+  // The job-wide clean: names run1's output too, and nothing says which block made what: from scratch, all moved aside.
+  const old = BLOCKS_JOB.replace('clean: var/j90-all', 'clean: var/j90-all var/j90-enc var/j90-fit').replace(/^clean: var\/j90-(enc|fit)\n/gm, '');
+  assert.deepEqual(parseJobFile('x.md', old, parse).commands?.blockClean, [[], []]);
+  const { w, r, vr } = heldAtRun2('J090', old);
+  w.sys.release('lab-J090-run2', 'killed');
+  w.sys.t += 10_000; r.tick();
+  w.sys.t += 16 * 60_000; r.tick();
+  const again = r.runs.get('J090')!;
+  assert.deepEqual(again.steps.map((x) => x.name), ['prepare', 'run1', 'run2', 'final-checks', 'collect']);
+  assert.match(again.restarts.at(-1)?.why ?? '', /starts again at run1: run1 is done, but the job's clean: is job-wide.*moved aside: var\/j90-all, var\/j90-enc, var\/j90-fit/);
+  assert.ok(fs.readdirSync(vr).some((n) => /^\.restart-.*-j90-enc$/.test(n)));
+  // A runner restart that loses a non-resumable job's run2 (the machine went down): it starts again at run2.
+  const b = heldAtRun2('J090', BLOCKS_JOB);
+  b.w.sys.held.clear();
+  b.w.sys.states.clear();
+  const r2 = new Runner(b.w.cfg, b.w.sys);
+  r2.reconcile();
+  const run = r2.runs.get('J090')!;
+  assert.deepEqual(run.steps.map((x) => x.name), ['prepare', 'run2', 'final-checks', 'collect']);
+  assert.equal(run.stepIndex, 0);
+  assert.match(run.restarts.at(-1)?.why ?? '', /not resumable, so it starts again at run2 \(run1 done, exit 0\).*moved aside: var\/j90-fit/);
+  b.w.sys.mode = 'run';
+  r2.tick();
+  assert.equal(run.outcome?.state, 'done', b.w.sys.lines.join('\n'));
+  assert.equal(fs.readFileSync(path.join(b.vr, 'j90-runs.txt'), 'utf8'), 'enc\nfit\n');
+});
+
+test('D365: .restart-* copies are never deleted; STATUS says how many and how much disk they hold', () => {
+  const { w, r, vr } = heldAtRun2('J090', BLOCKS_JOB);
+  const run = r.runs.get('J090')!;
+  const job = parseJobFile('J090.md', BLOCKS_JOB, parse);
+  for (let i = 0; i < 4; i++) {
+    fs.mkdirSync(path.join(vr, 'j90-fit'), { recursive: true });
+    fs.writeFileSync(path.join(vr, 'j90-fit', 'x.bin'), Buffer.alloc(1000 * (i + 1)));
+    w.sys.t += 60_000;
+    assert.deepEqual(r.cleanAside(run, job, 1), ['var/j90-fit']);
+  }
+  const copies = fs.readdirSync(vr).filter((n) => /^\.restart-.*-j90-fit$/.test(n));
+  assert.equal(copies.length, 4, 'all four kept');
+  assert.deepEqual(r.asideUsage(run, job), { copies: 4, bytes: 10_000 + 'half a fit'.length });
+  r.setStatus(run, 'running', {});
+  assert.match(run.pendingStatus ?? '', /set_aside: 4 copies, 0\.00 GB beside the job's clean: paths \(never deleted: remove them by hand\)/);
+});
+
+test('D365: a step that exits 137 or 9 after an OOM kill is a memory stop, never a failure; without evidence it fails', () => {
+  const ended = (w: World, r: Runner, id: string, rc: string, oom: string | null): void => {
+    const run = r.runs.get(id)!;
+    fs.writeFileSync(path.join(r.jobDir(id), 'run1.sh.rc'), `${rc}\n`);
+    if (oom !== null) fs.writeFileSync(path.join(r.jobDir(id), 'run1.sh.oom'), oom);
+    w.sys.held.delete(run.unit as string);
+    w.sys.states.set(run.unit as string, 'gone');
+    w.sys.t += 10_000; r.tick();
+  };
+  // The wrapper's own read of the unit's memory.events: oom_kill 1.
+  let { w, r } = heldAtRun1('J092');
+  ended(w, r, 'J092', '137', 'oom_kill 1\n');
+  assert.equal(r.runs.get('J092')?.outcome?.state, 'waiting');
+  assert.match(r.runs.get('J092')?.outcome?.reason ?? '', /^memory: step run1 exited 137 after an OOM kill \(the unit's memory\.events: oom_kill 1\)/);
+  // An old wrapper (no .oom file): systemd's or the journal's word for it.
+  ({ w, r } = heldAtRun1('J093'));
+  w.sys.oomEvidence = 'journal: lab-J093-run1.service: A process of this unit has been killed by the OOM killer.';
+  ended(w, r, 'J093', '9', null);
+  assert.match(r.runs.get('J093')?.outcome?.reason ?? '', /^memory: step run1 exited 9 after an OOM kill \(journal: /);
+  assert.deepEqual(w.sys.oomAsked, ['lab-J093-run1']);
+  // 137 with no evidence (oom_kill 0, nothing in systemd or the journal): a kill -9 from someone, the job fails.
+  ({ w, r } = heldAtRun1('J094'));
+  ended(w, r, 'J094', '137', 'oom_kill 0\n');
+  assert.equal(r.runs.get('J094')?.outcome?.state, 'failed');
+  assert.equal(r.runs.get('J094')?.outcome?.reason, 'step run1 exited 137');
+  // Another exit code is never read as a memory stop, evidence or not.
+  ({ w, r } = heldAtRun1('J095'));
+  ended(w, r, 'J095', '1', 'oom_kill 2\n');
+  assert.equal(r.runs.get('J095')?.outcome?.state, 'failed');
+  // The wrapper writes the .oom file before the exit code, and an exit code whatever it reads.
+  const wrap = fs.readFileSync(path.join(r.jobDir('J095'), 'run1.sh.wrap'), 'utf8');
+  assert.match(wrap, /memory\.events[\s\S]*run1\.sh\.oom[\s\S]*run1\.sh\.rc/);
+  const d = tmp('wrap');
+  fs.writeFileSync(path.join(d, 's.sh'), 'exit 137\n');
+  fs.writeFileSync(path.join(d, 's.sh.wrap'), wrap.replaceAll(path.join(r.jobDir('J095'), 'run1.sh'), path.join(d, 's.sh')));
+  const res = spawnSync('bash', [path.join(d, 's.sh.wrap')]);
+  assert.equal(res.status, 137);
+  assert.equal(fs.readFileSync(path.join(d, 's.sh.rc'), 'utf8'), '137\n');
+});
+
 // ------------------------------------------------------------------ the public copy's clock, the local server
 
 /** A FakeSys whose load can be moved, so the public copy's content changes without a state change. */
@@ -1501,7 +2289,9 @@ test('local server: only the public copies — status sanitised, ladder as sanit
   assert.equal(answer('GET', '/status.json', {}, SRC()).body, st.body, 'the old path is the same public copy');
   assert.equal(answer('GET', '/public-ladder.json', {}, SRC()).status, 404);
   assert.equal(answer('GET', '/public-ladder.json', {}, SRC('{"schema":1}\n')).body, '{"schema":1}');
-  for (const p of ['/status.public.json', '/runner.json', '/../status.json', '/jobs/J001/run1.log', '/ladder.json']) assert.equal(answer('GET', p, {}, SRC()).status, 404, p);
+  assert.equal(answer('GET', '/public-warehouse.json', {}, SRC()).status, 404);
+  assert.equal(answer('GET', '/public-warehouse.json', {}, { ...SRC(), warehouse: () => '{"schema":1}\n' }).body, '{"schema":1}');
+  for (const p of ['/warehouse.json', '/status.public.json', '/runner.json', '/../status.json', '/jobs/J001/run1.log', '/ladder.json']) assert.equal(answer('GET', p, {}, SRC()).status, 404, p);
   assert.equal(answer('POST', '/public-status.json', {}, SRC()).status, 405);
   assert.equal(answer('GET', '/public-status.json', {}, { status: () => null, ladder: () => null }).status, 503);
 });
@@ -1543,4 +2333,291 @@ test('runner: a running job publishes its live metrics (headline first), its mem
   assert.equal(job.memGb, 2);
   assert.deepEqual(job.cubes, []);
   assert.ok(!JSON.stringify(job).includes('lab-J061'), 'no unit name');
+});
+
+// ------------------------------------------------------------------ the decision ledger (D366)
+
+const LEDGER_LINES = `decides: promote evaluator v1 to the search (gate 2)
+hypothesis: the evaluator's leaf ranks options better than the hand leaf, because it was fitted on outcomes
+rule: D354 gate 2 (gates.py REGRET_RULE)
+`;
+/** NEW_JOB as another id, with the ledger's lines (or others) in its header. */
+const ledgerJob = (id: string, extra: string): string => NEW_JOB.replace('id: J010', `id: ${id}`).replace('headline: n, final.w\n', `headline: n, final.w\n${extra}`);
+
+test('ledger: decides, hypothesis, rule and followup parse; older files carry none; a bad followup is an error', () => {
+  const j = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J021-next.md, morning-read\n`), parse);
+  assert.deepEqual(j.errors, []);
+  assert.equal(j.ledger.decides, 'promote evaluator v1 to the search (gate 2)');
+  assert.match(j.ledger.hypothesis ?? '', /^the evaluator's leaf/);
+  assert.equal(j.ledger.rule, 'D354 gate 2 (gates.py REGRET_RULE)');
+  assert.deepEqual(j.ledger.followups, [{ kind: 'job', path: 'jobs/J021-next.md', id: 'J021' }, { kind: 'template', name: 'morning-read' }]);
+  // None of them: nulls and no follow-ups (every pc-jobs file parses without errors: the test above).
+  assert.deepEqual(parseJobFile('jobs/J010-x.md', NEW_JOB, parse).ledger, { decides: null, hypothesis: null, rule: null, followups: [] });
+  // A `rule:` in a section is prose, not the header's.
+  assert.equal(parseJobFile('jobs/J010-x.md', `${NEW_JOB}\nrule: not a header\n`, parse).ledger.rule, null);
+  for (const bad of ['../J021.md', 'jobs/../J021.md', 'J021-next.md', '/tmp/x', 'jobs/J020-x.md']) {
+    const b = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `followup: ${bad}\n`), parse);
+    assert.equal(b.errors.length, 1, `${bad}: ${b.errors.join('; ')}`);
+    assert.match(b.errors[0] ?? '', /^followup: /);
+  }
+});
+
+test('ledger: check prints the four lines and warns about a heavy job with no decides:, a decides: with no rule:, and a follow-up that does not wait', () => {
+  const heavy = parseJobFile('jobs/J020-x.md', NEW_JOB.replace('id: J010', 'id: J020'), parse);
+  assert.deepEqual(ledgerWarnings(heavy), ['a heavy job with no decides: line: name the decision its result informs']);
+  assert.deepEqual(ledgerWarnings(parseJobFile('jobs/J020-x.md', NEW_JOB.replace('cpu: heavy', 'cpu: light'), parse)), []);
+  const noRule = parseJobFile('jobs/J020-x.md', ledgerJob('J020', 'decides: something\n'), parse);
+  assert.match(ledgerWarnings(noRule).join('\n'), /decides: without rule:/);
+  const full = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J021-next.md, jobs/J022-other.md, morning-read\n`), parse);
+  const beside: Record<string, string> = { 'jobs/J021-next.md': 'id: J021\nafter: J020\ncpu: light\n', 'jobs/J022-other.md': 'id: J022\ncpu: light\n' };
+  const lines = ledgerCheckLines(full, (p) => beside[p] ?? null, (n, t) => parseJobFile(n, t, parse));
+  assert.equal(lines[0], 'decides: promote evaluator v1 to the search (gate 2)');
+  assert.equal(lines[3], 'followup: jobs/J021-next.md, jobs/J022-other.md, template morning-read');
+  assert.deepEqual(lines.slice(4), [
+    'note: followup morning-read is a template: when J020 is done, the runner asks the cloud session to write and post it (HEARTBEAT ## Messages)',
+    'WARNING: followup: jobs/J022-other.md is beside this file but has no after: J020; it may start before J020 is done',
+  ]);
+  // The command itself, on a pc-jobs-like folder: the follow-up beside it is read; exit 0 (warnings are not errors).
+  const dir = tmp('ledger-check');
+  fs.mkdirSync(path.join(dir, 'jobs'));
+  fs.writeFileSync(path.join(dir, 'jobs', 'J020-x.md'), ledgerJob('J020', 'followup: jobs/J022-other.md\n').replace(LEDGER_LINES, ''));
+  fs.writeFileSync(path.join(dir, 'jobs', 'J022-other.md'), beside['jobs/J022-other.md'] as string);
+  const cli = spawnSync(process.execPath, [path.join(REPO, 'tools/runner/cli.ts'), 'check', path.join(dir, 'jobs', 'J020-x.md'), '--state', path.join(dir, 'state')], { encoding: 'utf8' });
+  assert.equal(cli.status, 0, cli.stderr);
+  assert.match(cli.stdout, /^decides: -$/m);
+  assert.match(cli.stdout, /^WARNING: a heavy job with no decides: line/m);
+  assert.match(cli.stdout, /^WARNING: followup: jobs\/J022-other\.md is beside this file but has no after: J020/m);
+});
+
+test('ledger: entries, the markdown, the follow-up message and the Messages section', () => {
+  const ledger = parseJobFile('jobs/J020-x.md', ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J021-next.md, jobs/J022-q.md, morning-read\n`), parse).ledger;
+  const base = { id: 'J020', title: 'A\ntitle', ledger, finished: '2026-10-05T03:00:00-07:00', headlineKeys: ['n', 'final.w', 'gone'], numbers: { n: 3 }, metrics: { 'final.w': 0.12345678, gone: 'x' }, commits: { 'mtg-table': 'abc1234' }, posted: new Map([['jobs/J022-q.md', ['J020']]]) };
+  const done = ledgerEntry({ ...base, state: 'done', reason: '' })!;
+  assert.equal(done.key, 'J020@2026-10-05T03:00:00-07:00');
+  assert.equal(done.title, 'A title');
+  assert.deepEqual(done.headline, { n: 3, 'final.w': 0.12345678 });
+  assert.deepEqual(done.followups.map((f) => f.state), ['ready', 'queued', 'ready']);
+  assert.equal(ledgerEntry({ ...base, state: 'failed', reason: 'aborted: n >= 3 (n = 3)' })?.outcome, 'aborted');
+  const failed = ledgerEntry({ ...base, state: 'failed', reason: 'check: n == 4 (n = 3)' })!;
+  assert.equal(failed.outcome, 'failed');
+  assert.deepEqual(failed.followups.map((f) => f.state), ['not-due', 'queued', 'not-due']);
+  assert.equal(followupMessage(failed), null);
+  assert.equal(ledgerEntry({ ...base, state: 'waiting', reason: 'memory: x' }), null);
+  assert.equal(ledgerEntry({ ...base, state: 'skipped', reason: 'gone' }), null);
+  const md = ledgerMarkdown(done);
+  assert.match(md, /^## J020 DONE: A title\n/);
+  assert.match(md, /^- rule: D354 gate 2 \(gates\.py REGRET_RULE\)$/m);
+  assert.match(md, /^- headline: n 3, final\.w 0\.1235$/m);
+  assert.match(md, /^- follow-up: jobs\/J022-q\.md: on pc-jobs with after: on this job/m);
+  assert.match(ledgerMarkdown({ ...done, decides: null, rule: null }), /^- decides: \(no decides: line in the job file\)$/m);
+  const msg = followupMessage(done)!;
+  assert.match(msg, /^- FOLLOW-UP READY \[J020@2026-10-05T03:00:00-07:00\] .*J020 is done; post jobs\/J021-next\.md to pc-jobs; write and post the template morning-read\. It decides: promote/);
+  // Under the heading, once; a section is added when there is none.
+  const hb = '# Heartbeat\n\n- time: x\n\n## Messages\n\nThe notes.\n- an older note\n';
+  const once = withMessages(hb, [msg]);
+  assert.equal(once, `# Heartbeat\n\n- time: x\n\n## Messages\n\n${msg}\n\nThe notes.\n- an older note\n`);
+  assert.equal(withMessages(once, [msg]), once);
+  assert.match(withMessages('# Heartbeat\n', [msg]), /\n## Messages\n\n- FOLLOW-UP READY/);
+  assert.deepEqual([...ledgerKeys(`{"key":"a"}\n{"key":"b"}\ntorn{\n`)], ['a', 'b']);
+});
+
+test('runner: the ledger on pc-results at each job end (done, failed), follow-ups announced or already queued; only its sanitised ledger.json on lab-status, never twice', () => {
+  const w = world({
+    // Done; one follow-up not on pc-jobs and a template: FOLLOW-UP READY.
+    'J020-done.md': ledgerJob('J020', `${LEDGER_LINES}followup: jobs/J029-later.md, morning-read\n`),
+    // Fails its pilot: its follow-up is not due, and nothing is asked.
+    'J021-fails.md': ledgerJob('J021', 'decides: whether J021 passes\nrule: n == 4\nfollowup: jobs/J028-never.md\n').replace('check: n == 3', 'check: n == 4'),
+    // Done, its follow-up already posted with after: on it: nothing needed; the follow-up then runs (no ledger lines: an old-style job).
+    'J022-first.md': ledgerJob('J022', `${LEDGER_LINES}followup: jobs/J023-next.md\n`),
+    'J023-next.md': NEW_JOB.replace('id: J010', 'id: J023').replace('cpu: heavy', 'cpu: light\nafter: J022'),
+  });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  for (let i = 0; i < 4; i++) { r.tick(); w.sys.t += 60_000; }
+  assert.deepEqual(['J020', 'J021', 'J022', 'J023'].map((id) => r.runs.get(id)?.outcome?.state), ['done', 'failed', 'done', 'done'], w.sys.lines.join('\n'));
+  const jsonl = show(w.mtg, 'pc-results:ledger.jsonl').trim().split('\n').map((l) => JSON.parse(l) as { key: string; id: string; outcome: string; decides: string | null; rule: string | null; reason: string; headline: Record<string, number>; summary: string; followups: Array<{ followup: string; state: string }>; commits: Record<string, string> });
+  assert.deepEqual(jsonl.map((e) => `${e.id} ${e.outcome}`).sort(), ['J020 done', 'J021 failed', 'J022 done', 'J023 done']);
+  const e20 = jsonl.find((e) => e.id === 'J020')!;
+  assert.equal(e20.decides, 'promote evaluator v1 to the search (gate 2)');
+  assert.equal(e20.rule, 'D354 gate 2 (gates.py REGRET_RULE)');
+  assert.deepEqual(e20.headline, { n: 3, 'final.w': 3 });
+  assert.equal(e20.summary, 'results/J020/summary.md');
+  assert.match(e20.commits['mtg-table'] ?? '', /^[0-9a-f]{7}$/);
+  assert.deepEqual(e20.followups, [{ followup: 'jobs/J029-later.md', state: 'ready' }, { followup: 'template morning-read', state: 'ready' }]);
+  const e21 = jsonl.find((e) => e.id === 'J021')!;
+  assert.match(e21.reason, /^pilot: n == 4/);
+  assert.deepEqual(e21.followups, [{ followup: 'jobs/J028-never.md', state: 'not-due' }]);
+  assert.deepEqual(jsonl.find((e) => e.id === 'J022')?.followups, [{ followup: 'jobs/J023-next.md', state: 'queued' }]);
+  assert.equal(jsonl.find((e) => e.id === 'J023')?.decides, null);
+  const md = show(w.mtg, 'pc-results:LEDGER.md');
+  assert.match(md, /^# Decision ledger\n/);
+  assert.match(md, /^## J021 FAILED: A test job, new format\n[\s\S]*?^- outcome: failed \(pilot: n == 4/m);
+  assert.match(md, /^## J023 DONE[\s\S]*?^- decides: \(no decides: line in the job file\)$/m);
+  // HEARTBEAT: one FOLLOW-UP READY line, J020's; the PC's message is kept.
+  const hb = show(w.mtg, 'pc-results:HEARTBEAT.md');
+  assert.deepEqual(hb.split('\n').filter((l) => l.includes('FOLLOW-UP READY')).map((l) => /\[(J\d+)@/.exec(l)?.[1]), ['J020']);
+  assert.match(hb, /J020 is done; post jobs\/J029-later\.md to pc-jobs; write and post the template morning-read\./);
+  assert.match(hb, /hello from the PC/);
+  // The private ledger is never public: lab-status carries only the allowlisted ledger.json (D387).
+  assert.equal(git(w.fc, 'ls-tree', '--name-only', 'lab-status'), 'ledger.json\nstatus.json');
+  const pubLedger = JSON.parse(show(w.fc, 'lab-status:ledger.json')) as PublicLedger;
+  assert.deepEqual(pubLedger, sanitiseLedger(show(w.mtg, 'pc-results:ledger.jsonl'), pubLedger.generatedAt));
+  assert.deepEqual(pubLedger.entries.map((e) => `${e.id} ${e.outcome} ${e.cause}`).sort(), ['J020 done null', 'J021 failed pilot', 'J022 done null', 'J023 done null']);
+  const p20 = pubLedger.entries.find((e) => e.id === 'J020')!;
+  assert.deepEqual({ rule: p20.rule, ruleWritten: p20.ruleWritten, checked: p20.checked, decides: p20.decides, title: p20.title }, { rule: 'D354, gate 2, REGRET_RULE', ruleWritten: true, checked: true, decides: null, title: null });
+  assert.deepEqual(p20.followups, [{ job: 'J029', template: null, state: 'ready' }, { job: null, template: 'morning-read', state: 'ready' }]);
+  const pubText = JSON.stringify(pubLedger);
+  for (const secret of ['hypothesis', 'evaluator', 'J029-later', 'summary.md', 'n == 4', 'commits']) assert.ok(!pubText.includes(secret), secret);
+  // More publishes add nothing; a deleted message is not written again.
+  const seed = w.seed;
+  git(seed, 'fetch', '--quiet', w.mtg, 'pc-results');
+  git(seed, 'checkout', '--quiet', '--force', '-B', 'pc-results', 'FETCH_HEAD');
+  fs.writeFileSync(path.join(seed, 'HEARTBEAT.md'), fs.readFileSync(path.join(seed, 'HEARTBEAT.md'), 'utf8').split('\n').filter((l) => !l.includes('FOLLOW-UP READY')).join('\n'));
+  git(seed, 'commit', '--quiet', '-am', 'posted J029');
+  git(seed, 'push', '--quiet', w.mtg, 'HEAD:refs/heads/pc-results');
+  for (let i = 0; i < 2; i++) { r.p.dirty = true; r.tick(); w.sys.t += 60_000; }
+  assert.equal(show(w.mtg, 'pc-results:ledger.jsonl').trim().split('\n').length, 4);
+  assert.ok(!show(w.mtg, 'pc-results:HEARTBEAT.md').includes('FOLLOW-UP READY'));
+  // A job that ended before the runner kept a ledger is never backfilled.
+  const bare = tmp('ledger-bare');
+  fs.writeFileSync(path.join(w.cfg.stateDir, 'ledger.json'), JSON.stringify({ since: w.sys.t, written: [] }));
+  assert.deepEqual(r.appendLedger(bare), []);
+  assert.ok(!fs.existsSync(path.join(bare, 'ledger.jsonl')));
+});
+
+test('runner: an aborted job is in the ledger as aborted, and asks for no follow-up', () => {
+  const w = world({ 'J024-x.md': ledgerJob('J024', `${LEDGER_LINES}followup: morning-read\n`).replace('abort: n > 100', 'abort: n >= 3') });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'hold';
+  r.tick();
+  w.sys.release('lab-J024-prepare', 'ok');
+  r.tick();
+  w.sys.release('lab-J024-pilot1', 'ok');
+  r.tick();
+  w.sys.t += 61_000;
+  r.tick();
+  r.tick();
+  assert.equal(r.runs.get('J024')?.outcome?.state, 'failed');
+  const e = JSON.parse(show(w.mtg, 'pc-results:ledger.jsonl').trim()) as { outcome: string; reason: string; followups: unknown };
+  assert.equal(e.outcome, 'aborted');
+  assert.match(e.reason, /^aborted: n >= 3/);
+  assert.deepEqual(e.followups, [{ followup: 'template morning-read', state: 'not-due' }]);
+  assert.ok(!show(w.mtg, 'pc-results:HEARTBEAT.md').includes('FOLLOW-UP READY'));
+  assert.match(show(w.mtg, 'pc-results:LEDGER.md'), /^## J024 ABORTED: /m);
+});
+
+// ------------------------------------------------------------------ the public ledger.json (D387)
+
+const PRIVATE_ENTRY = {
+  key: 'J061@2026-10-05T06:10:00-07:00', id: 'J061', title: 'Overnight queue night 3 on the secret-cube with Lightning Bolt',
+  decides: 'whether the private plan for the secret-cube keeps Lightning Bolt',
+  hypothesis: 'exploration costs under 10% because of /home/justin-a/code/lab secrets',
+  rule: 'D358; D354 gate 2 (gates.py REGRET_RULE), D358 again, see /home/justin-a/notes.md', outcome: 'failed',
+  reason: 'check: engine_errors <= 0.02 (engine_errors = 0.05) in /home/justin-a/code/lab/var/x.log',
+  headline: { n: 3, 'final.w': 0.12345678, 'cubes.secret-cube.done': 4 }, summary: 'results/J061/summary.md', finished: '2026-10-05T06:10:00-07:00',
+  followups: [{ followup: 'jobs/J066-secret-slug.md', state: 'not-due' }, { followup: 'template morning-read', state: 'not-due' }],
+  commits: { 'mtg-table': 'deadbee', ForgeCoach: 'cafef00' }, publicTitle: 'Overnight queue night 3', publicDecides: 'Keep card-level allocation', checks: 3, extra: 'unknown field',
+};
+const ENTRY_KEYS = ['id', 'title', 'decides', 'rule', 'ruleWritten', 'outcome', 'cause', 'checked', 'headline', 'finished', 'followups'];
+const GEN = '2026-10-05T07:00:00-07:00';
+const jsonlOf = (...es: unknown[]): string => es.map((e) => `${JSON.stringify(e)}\n`).join('');
+
+test('public ledger.json (D387): only the allowlisted fields, and none of the private ledger\'s words', () => {
+  const pub = sanitiseLedger(jsonlOf(PRIVATE_ENTRY), GEN)!;
+  assert.deepEqual(Object.keys(pub).sort(), ['entries', 'generatedAt', 'schema']);
+  assert.equal(pub.schema, 1);
+  assert.equal(pub.generatedAt, GEN);
+  for (const e of pub.entries) {
+    assert.deepEqual(Object.keys(e).sort(), [...ENTRY_KEYS].sort());
+    for (const f of e.followups) assert.deepEqual(Object.keys(f).sort(), ['job', 'state', 'template']);
+  }
+  assert.deepEqual(pub.entries, [{
+    id: 'J061', title: 'Overnight queue night 3', decides: 'Keep card-level allocation', rule: 'D358, D354, gate 2, REGRET_RULE', ruleWritten: true,
+    outcome: 'failed', cause: 'check', checked: true, headline: { n: 3, 'final.w': 0.123 }, finished: '2026-10-05T06:10:00-07:00',
+    followups: [{ job: 'J066', template: null, state: 'not-due' }, { job: null, template: 'morning-read', state: 'not-due' }],
+  }]);
+  const text = JSON.stringify(pub);
+  for (const secret of ['hypothesis', 'exploration', '/home', 'justin', 'secret', 'Lightning', 'private plan', 'engine_errors', 'summary.md', 'results/', 'deadbee', 'cafef00', 'commits', 'key', 'J061@', 'unknown field', 'notes.md', 'gates.py', 'cubes.']) {
+    assert.ok(!text.includes(secret), `${secret} leaked: ${text}`);
+  }
+  // An older entry (no publicTitle / publicDecides / checks): nulls and false; a bad public text is dropped.
+  const old = sanitiseLedger(jsonlOf({ ...PRIVATE_ENTRY, publicTitle: undefined, publicDecides: 'a/path', checks: undefined, rule: null }), GEN)!.entries[0]!;
+  assert.deepEqual({ title: old.title, decides: old.decides, checked: old.checked, rule: old.rule, ruleWritten: old.ruleWritten }, { title: null, decides: null, checked: false, rule: null, ruleWritten: false });
+});
+
+test('public ledger.json (D387): the rule\'s short form and the cause from the reason\'s prefix', () => {
+  assert.equal(ruleShort('D354 gate 2 (gates.py REGRET_RULE)'), 'D354, gate 2, REGRET_RULE');
+  assert.equal(ruleShort('D358; final checks below (engine errors <= 2%)'), 'D358');
+  assert.equal(ruleShort('EXAM_RULE then D12, D12345, gate 3, gate 4, D99'), 'EXAM_RULE, D12, gate 3, gate 4');
+  assert.equal(ruleShort('n == 4'), null);
+  assert.equal(ruleShort('Gate 2, D1, _RULE, xD358'), null);
+  assert.equal(ruleShort(null), null);
+  const cases: Array<[string, string, string | null]> = [
+    ['done', '', null],
+    ['aborted', 'aborted: n >= 3 (n = 3)', null],
+    ['failed', 'check: n == 4 (n = 3)', 'check'],
+    ['failed', 'pilot: n == 4 (n = 3); m > 1 (missing)', 'pilot'],
+    ['failed', 'pilot: step pilot1 exited 2', 'step'],
+    ['failed', 'prepare: step prepare exited 1', 'step'],
+    ['failed', 'step run2 exited 137', 'step'],
+    ['failed', 'timeout: step run1 ran past 8h', 'timeout'],
+    ['failed', 'memory: stopped 3 times (last: step run1 exited 137 after an OOM kill)', 'memory'],
+    ['failed', 'systemd-run failed for lab-J010-run1: /home/x', 'other'],
+    ['failed', '', 'other'],
+  ];
+  for (const [outcome, reason, cause] of cases) assert.equal(causeOf(outcome, reason), cause, `${outcome} ${reason}`);
+});
+
+test('public ledger.json (D387): bad ids, outcomes, times and templates dropped; headline keys filtered and rounded; the newest 100, oldest first', () => {
+  const base = { ...PRIVATE_ENTRY, outcome: 'done', reason: '' };
+  const pub = sanitiseLedger([
+    'torn {',
+    '{"foreign": true}',
+    JSON.stringify({ ...base, id: 'J12' }),
+    JSON.stringify({ ...base, id: 'J061x' }),
+    JSON.stringify({ ...base, id: '../J061' }),
+    JSON.stringify({ ...base, outcome: 'waiting' }),
+    JSON.stringify({ ...base, finished: '2026-10-05 06:10' }),
+    JSON.stringify({ ...base, id: 'J062', headline: { n: 2, 'Bad.Key': 1, 'a/b': 2, 'x.cubes.omega.done': 3, inf: Infinity, s: '4', 'y.z': 1.23456, nan: null },
+      followups: [
+        { followup: 'template Morning-Read', state: 'ready' }, { followup: 'template ../x', state: 'ready' }, { followup: 'jobs/J1-x.md', state: 'ready' },
+        { followup: '/tmp/J066.md', state: 'ready' }, { followup: 'jobs/J066-x.md', state: 'done' }, { followup: 'template ok-name', state: 'posted' },
+      ] }),
+  ].join('\n'), GEN)!;
+  assert.deepEqual(pub.entries.map((e) => e.id), ['J062']);
+  assert.deepEqual(pub.entries[0]!.headline, { n: 2, 'y.z': 1.235 });
+  assert.deepEqual(pub.entries[0]!.followups, [{ job: null, template: 'ok-name', state: 'posted' }]);
+  // At most 12 headline numbers and 10 follow-ups.
+  const many = sanitiseLedger(jsonlOf({ ...base, headline: Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`k${i}`, i])), followups: Array.from({ length: 15 }, () => ({ followup: 'template t', state: 'ready' })) }), GEN)!.entries[0]!;
+  assert.equal(Object.keys(many.headline).length, 12);
+  assert.equal(many.followups.length, 10);
+  // Nothing publishable, or a bad generatedAt: null.
+  assert.equal(sanitiseLedger('torn\n{"id":"J1"}\n', GEN), null);
+  assert.equal(sanitiseLedger('', GEN), null);
+  assert.equal(sanitiseLedger(jsonlOf(base), 'yesterday'), null);
+  // 130 entries, written out of order: the newest 100, oldest first.
+  const t0 = Date.parse('2026-10-01T00:00:00Z');
+  const lines = Array.from({ length: 130 }, (_, i) => ({ ...base, id: `J${String(100 + i)}`, finished: isoLocal(t0 + i * 3_600_000, -420) }));
+  const capped = sanitiseLedger(jsonlOf(...lines.slice(65), ...lines.slice(0, 65)), GEN)!;
+  assert.equal(capped.entries.length, LEDGER_PUBLIC_MAX);
+  assert.equal(capped.entries[0]!.id, 'J130');
+  assert.equal(capped.entries.at(-1)!.id, 'J229');
+  assert.deepEqual(capped.entries.map((e) => e.id), lines.slice(30).map((e) => e.id));
+});
+
+test('job file: public_decides (D387) opts in, only in the strict character set', () => {
+  const ok = parseJobFile('jobs/J010-x.md', NEW_JOB.replace('headline: n, final.w\n', 'headline: n, final.w\npublic_decides: Keep card-level allocation (night 4)\n'), parse);
+  assert.deepEqual(ok.errors, []);
+  assert.equal(ok.publicDecides, 'Keep card-level allocation (night 4)');
+  assert.equal(parseJobFile('jobs/J010-x.md', NEW_JOB, parse).publicDecides, null);
+  const bad = parseJobFile('jobs/J010-x.md', NEW_JOB.replace('headline: n, final.w\n', 'headline: n, final.w\npublic_decides: see jobs/J066.md\n'), parse);
+  assert.equal(bad.publicDecides, null);
+  assert.match(bad.errors.join('\n'), /^public_decides: /m);
+});
+
+test('local server: /public-ledger.json serves the public ledger, 404 without one (D387)', () => {
+  const src = { status: () => null, ladder: () => null, ledger: () => '{"schema":1}\n' };
+  assert.deepEqual([answer('GET', '/public-ledger.json', {}, src).status, answer('GET', '/public-ledger.json', {}, src).body], [200, '{"schema":1}']);
+  assert.equal(answer('GET', '/public-ledger.json', {}, { status: () => null, ladder: () => null }).status, 404);
 });

@@ -7,7 +7,7 @@
 # engine-crash probe -- and it stays a LOCAL command, run before every commit
 # (CLAUDE.md, "Build and run").  Nothing here plays a game or starts an engine.
 # What this IS: every check that needs no running engine, on every push to main
-# and every pull request, in three jobs that run side by side:
+# and every pull request, in four jobs that run side by side:
 #
 #   web        npm ci, then `npm --prefix web run build` (tsc + vite) and
 #              `npm --prefix web test` (node --test, then vitest).  Hermetic by
@@ -31,7 +31,10 @@
 #              (12d), the wire-drift comparison's self-test (step 6's), the
 #              workshop catalog check (12b) and the coach helper's self-test
 #              (12f, D292: a loopback HTTP server and a FAKE `claude` -- no real
-#              CLI, no login, no network) -- plain Node, no npm install.
+#              CLI, no login, no network), and the decision index's check and
+#              self-test (D379) -- plain Node, no npm install.
+#   ml         the whole tools/ml suite with numpy and zstandard in a venv (D383):
+#              the redaction job runs only its standard-library half.
 #
 # Also local only: tools/arena-bench.mjs (a built dist, a preview server and a
 # headless Chromium), the card library's real build (Scryfall's bulk file),
@@ -175,9 +178,17 @@ jobs:
       # synthetic.  Never --pre-amendment, never --opponent-library-ok.
       - name: check-redaction.mjs over the committed fixtures
         run: node tools/check-redaction.mjs fixtures/games/*.jsonl fixtures/synthetic/*.jsonl
+      # D379: no decision number twice across DECISIONS.md and docs/decisions/,
+      # every docs/decisions/ file named and headed alike; then the tool's own controls.
+      - name: decisions.mjs check
+        run: node tools/decisions.mjs check
+      - name: decisions-selftest.mjs
+        run: node tools/decisions-selftest.mjs
       # Step 12: the checker must still reject every one-defect probe.
       - name: check-redaction-selftest.mjs
         run: node tools/check-redaction-selftest.mjs
+      - name: requarantine-selftest.mjs
+        run: node tools/requarantine-selftest.mjs
       # Step 12d over the committed corpus (the gate adds its fresh logs).
       - name: narrate-selftest.mjs
         run: node tools/narrate-selftest.mjs
@@ -193,8 +204,49 @@ jobs:
       # Step 12f's second half (D303): the match launcher, play.sh against a fake engine.
       - name: match-launcher-selftest.mjs
         run: node tools/match-launcher-selftest.mjs
+      - name: review-runner-selftest.mjs
+        run: node tools/review-runner-selftest.mjs
+      # D385: the automatic review after every human game (a fake coach-grade.sh, a fake runner status).
+      - name: auto-review-selftest.mjs
+        run: node tools/auto-review-selftest.mjs
+      # D361: the helper's /eval against a fake evaluator (numpy is not here: part 2 says skipped).
+      - name: eval-runner-selftest.mjs
+        run: node tools/eval-runner-selftest.mjs
       # Step 12h's standard-library half: the ML encoder over every committed
       # recording, hidden zones scrambled (D305). numpy is not installed here,
       # so the dataset and baseline tests report themselves skipped.
       - name: tools/ml tests (encoder, hidden information)
         run: python3 -m unittest discover -s tools/ml/tests
+      # D363: the lab warehouse. duckdb, pyarrow and pandas are not installed here, so only
+      # its standard-library half runs (line flattening, offsets, resets); the rest says skipped.
+      - name: tools/lab tests (the lab warehouse)
+        run: python3 -m unittest discover -s tools/lab/tests
+
+  # D383: the tools/ml suite WITH numpy and zstandard.  The redaction job above runs only its
+  # standard-library half, so every numpy test -- the datasets, training, the gates, evaluator v2 --
+  # was skipped in CI, and test_eval_v2's queue-nights test failed on main from 58f3fa5 with CI
+  # green.  A venv, because ubuntu-latest's Python refuses a system pip install (PEP 668).
+  ml:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: numpy and zstandard in a venv
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ml"
+          "$RUNNER_TEMP/ml/bin/pip" install --quiet 'numpy>=2,<3' zstandard
+          "$RUNNER_TEMP/ml/bin/python" -c "import numpy, zstandard; print('numpy', numpy.__version__, 'zstandard', zstandard.__version__)"
+      - name: tools/ml tests, every one (12h in full)
+        shell: bash   # -eo pipefail: the tee below must not hide the suite's exit status
+        env:
+          OMP_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+        run: |
+          "$RUNNER_TEMP/ml/bin/python" -m unittest discover -v -s tools/ml/tests 2>&1 | tee "$RUNNER_TEMP/ml-tests.log"
+          # a test skipped for numpy or zstandard here is a test this job exists to run (-v prints the reasons)
+          if grep -E "skipped '(numpy is not installed|zstandard not installed)" "$RUNNER_TEMP/ml-tests.log"; then
+            echo "ml: a numpy or zstandard test was skipped in the job that installs them" >&2
+            exit 1
+          fi

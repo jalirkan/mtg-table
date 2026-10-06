@@ -371,9 +371,8 @@ test('first-line takes and card stats over the mini fixture; the settle estimate
   assert.equal(ft.get('Grave Imp'), 1);
   assert.equal(ft.get('Moss Beast'), undefined);
   const doc = buildMeta(meta, info, recs, null) as MetaDoc;
-  // meta.json counts only nonland cards in a deck, so a land reads as never played...
-  assert.equal(cardStats(doc, recs).get('Mist Fountain')?.inDecks, 0);
-  // ...and with cards.json, a land's decks and games come from the played decks' full lists.
+  // meta.json counts a nonbasic land's decks and games like a spell's (D380), with or without cards.json.
+  assert.equal(cardStats(doc, recs).get('Mist Fountain')?.inDecks, 1);
   const st = cardStats(doc, recs, info);
   const mf = st.get('Mist Fountain') as CardStat;
   assert.deepEqual([mf.inDecks, mf.games, mf.wins], [1, 3, 2], 'seed 1 A played it: A won games 1 and 3');
@@ -404,7 +403,7 @@ test('the log entry, the changelog and a self-contained page', () => {
   assert.match(cl, /## Generation 1 — v1 → v2[\s\S]*\| Doom Blade \(Black\) \| dead \|/);
   // Discovery and confirmation, in plain words and in numbers.
   assert.match(cl, /\*\*Discovery\*\*: in this generation's drafts[\s\S]*\*\*Confirmed\*\*: the candidate stands out again/);
-  assert.match(cl, /\| Doom Blade \| dead \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, q [\d.e-]+ \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, Holm p [\d.e-]+ \| confirmed \|/);
+  assert.match(cl, /\| Doom Blade \| dead \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, q [\d.e-]+ \| played in 0 of 30 on-colour pools \(0.00 vs 0.35\), p [\d.e-]+, Holm p [\d.e-]+ \| first attempt \| confirmed \|/);
   const html = htmlPage('Omega', [g]);
   assert.match(html, /<h3>Discovered, then confirmed or not<\/h3>/);
   assert.match(html, /<b>Confirmed<\/b>: the candidate stands out again/);

@@ -35,7 +35,7 @@ import { addPlayer, configHash, parseRegistry, players, resolvePlayer, type Play
 import { buildLadder, renderHtml } from '../../tools/ai-ladder/report.ts';
 import { appendResults, blockKey, fromBench, hashIndex, outcomes, readResults, type GameRecord, type Outcome } from '../../tools/ai-ladder/results.ts';
 import { batchPairs, choose, hostBase, mkey, type SchedPlayer, type SchedState } from '../../tools/ai-ladder/schedule.ts';
-import { bounds, NI_DEFAULTS, niPairsNeeded, niState, pairScores, scoreDelta, sprtState, type SprtParams } from '../../tools/ai-ladder/sprt.ts';
+import { bounds, NI_DEFAULTS, niPairsNeeded, niState, pairScores, scoreDelta, SPRT_DEFAULTS, sprtState, verdictWords, type SprtParams } from '../../tools/ai-ladder/sprt.ts';
 import { grid, halving, sample, scoreOf, type Tally } from '../../tools/ai-ladder/tune.ts';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
@@ -113,7 +113,8 @@ test('bootstrap over mirror blocks: intervals cover the truth and are in the Hes
 
 // ------------------------------------------------------------ SPRT
 
-const P: SprtParams = { elo0: 0, elo1: 20, alpha: 0.05, beta: 0.05, minPairs: 8, maxGames: 20000 };
+// D373's defaults (minPairs 100, variance floor 0.05): nothing set here.
+const P: SprtParams = { elo0: 0, elo1: 20, alpha: 0.05, beta: 0.05, maxGames: 20000 };
 
 function runSprt(trueElo: number, seed: number, corr = 0.3): ReturnType<typeof sprtState> {
   const r = rng(seed, 'sprt');
@@ -160,11 +161,34 @@ test('SPRT: at the H0 boundary (A = B), H1 is accepted about as rarely as alpha'
 });
 
 test('SPRT: the game limit gives inconclusive; too few pairs never decide', () => {
-  const st = sprtState(Array.from({ length: 5 }, () => ({ x: 1, games: 2 })), P);
-  assert.equal(st.result, 'continue', 'five perfect pairs are not enough (minPairs 8)');
+  const st = sprtState(Array.from({ length: 99 }, () => ({ x: 1, games: 2 })), P);
+  assert.equal(st.result, 'continue', '99 perfect pairs are not enough (minPairs 100, D373)');
+  assert.equal(sprtState(Array.from({ length: 100 }, () => ({ x: 1, games: 2 })), P).result, 'H1');
   const lim = sprtState(Array.from({ length: 50 }, (_, k) => ({ x: k % 2, games: 2 })), { ...P, maxGames: 100 });
   assert.equal(lim.result, 'inconclusive');
   assert.equal(lim.games, 100);
+});
+
+test('SPRT (D373): defaults are 100 pairs and a 0.05 floor; the old 8 / 0.01 stay reachable when asked for', () => {
+  assert.deepEqual({ ...SPRT_DEFAULTS }, { minPairs: 100, varFloor: 0.05 });
+  // J054's shape at elo0 20 / elo1 40: mirror pairs that split 1-1, then one lopsided pair against A
+  const pairs = [...Array.from({ length: 20 }, () => ({ x: 0.5, games: 2 })), { x: 0, games: 2 }];
+  const old = sprtState(pairs, { elo0: 20, elo1: 40, alpha: 0.05, beta: 0.05, minPairs: 8, varFloor: 0.01 });
+  assert.equal(old.result, 'H0', 'the old floor ends this at 42 games');
+  const now = sprtState(pairs, { elo0: 20, elo1: 40, alpha: 0.05, beta: 0.05 });
+  assert.equal(now.result, 'continue', 'D373 does not');
+  assert.ok(Math.abs(now.llr) < Math.abs(old.llr) / 3, `the floor damps the LLR (${now.llr.toFixed(2)} vs ${old.llr.toFixed(2)})`);
+});
+
+test('SPRT (D373): H0 reads "not shown >= elo1 better", never "no gain"', () => {
+  const p = { elo0: 0, elo1: 20 };
+  const h0 = verdictWords('H0', 'a', 'b', p);
+  assert.match(h0, /not shown to be >= 20 Elo better/);
+  assert.match(h0, /not ruled out/);
+  assert.doesNotMatch(h0.toLowerCase(), /no gain/);
+  assert.match(verdictWords('H1', 'a', 'b', p), /stronger than b by >= 20/);
+  assert.match(verdictWords('inconclusive', 'a', 'b', p), /neither/);
+  assert.match(decide({ llr: -3, lower: -2.9, upper: 2.9, pairs: 200, games: 400, score: 0.5, result: 'H0' }, { result: 'continue' } as never, 30).reason, /not "no gain"/);
 });
 
 test('pairScores: two games of a block are one observation; draws drop out', () => {
@@ -362,7 +386,7 @@ test('search kind, D350–D351: the new switches stay out of the hash and the se
   for (const n of ['search-v1-fixed3-aturns1', 'search-v1-fixed3-lcb', 'search-v1-fixed3-oracle']) assert.ok(by.get(n)?.cfg, `${n} is registered and playable`);
 });
 
-test('search kind, D354–D356: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys', () => {
+test('search kind, D388–D390: the week-3 switches stay out of the hash at their defaults and map onto SearchConfig keys', () => {
   const plain = resolveParams('search', { budgetMs: 500 });
   const explicit = resolveParams('search', { budgetMs: 500, anytime: 'off', rank: 'order', gen: 24, rollout: 'default' });
   assert.deepEqual(explicit, plain, 'a switch at its default is the old config');
@@ -468,4 +492,31 @@ test('experiment log: a start with no end is abandoned; ends join their starts',
   ];
   const rows = joinLog(lines, Date.parse('2026-10-03T12:00:00.000Z'));
   assert.deepEqual(rows.map((r) => r.status), ['finished', 'abandoned', 'running?']);
+});
+
+test('search-eval (D354): the search with leaf=eval:<model>, pinned to the model file by its content hash', async () => {
+  const { createHash } = await import('node:crypto');
+  const repo = mkdtempSync(join(tmpdir(), 'ladder-eval-'));
+  mkdirSync(join(repo, 'tools/ai-bench'), { recursive: true });
+  mkdirSync(join(repo, 'bridge/src/mtgtable/ai'), { recursive: true });
+  mkdirSync(join(repo, 'var/ml/models'), { recursive: true });
+  writeFileSync(join(repo, 'tools/ai-bench/AiBench.java'), '// +search');
+  const params = { profile: 'Default', outlets: 'on', budgetMs: 60000, rounds: 3, maxRounds: 3, seed: 1 } as const;
+  // a checkout whose search has no leaf= flag: unavailable, not a crash
+  writeFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'class SearchConfig {}');
+  const body = '{"format":"mtgtable-position-eval"}\n';
+  const hash = createHash('sha256').update(body).digest('hex').slice(0, 12);
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo).unavailable!, /no leaf= flag/);
+  writeFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'case "leaf": leaf = p[1];');
+  // the model file missing, then present, then changed
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo).unavailable!, /is not here/);
+  writeFileSync(join(repo, `var/ml/models/eval-${hash}.json`), body);
+  const p = resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo);
+  assert.equal(p.unavailable, null);
+  assert.equal(p.cfg, `Default+outlets+search:ms=60000,cands=6,turns=0,rounds=3,margin=20,maxrounds=3,what=pab,seed=1,leaf=eval:var/ml/models/eval-${hash}.json`);
+  const fixed3 = resolvePlayer({ name: 'f', kind: 'search', params }, repo);
+  assert.equal(p.cfg, `${fixed3.cfg},leaf=eval:var/ml/models/eval-${hash}.json`, 'the same search, only the leaf differs');
+  writeFileSync(join(repo, `var/ml/models/eval-${hash}.json`), body + ' ');
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: hash } }, repo).unavailable!, /hashes to/);
+  assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: 'abc' } }, repo).unavailable!, /12 hex/);
 });

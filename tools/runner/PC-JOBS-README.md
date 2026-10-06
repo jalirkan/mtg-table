@@ -22,16 +22,29 @@ The runner checks every 10 seconds and fetches both branches every minute.
    STATUS is `waiting`. Open jobs are taken in id order. A job whose `after:` jobs aren't
    all `done` waits. A `waiting` job with `needs: check`, or with a `retry_after:` still in
    the future, waits too.
-2. **One heavy job at a time.** `cpu: heavy` jobs (engine games, training) never overlap
-   each other. One `cpu: light` job (the coach bench, reports) may run beside one heavy job.
-   A `running` STATUS the runner did not write (no `runner:` line) counts as running.
+2. **Heavy jobs share the cores; they never crowd each other.** Every `cpu: heavy` job has a
+   **width**: the cores it keeps busy (`cores:`, else `max_workers`, else 7). The core budget
+   is the machine's physical cores (8 on the 9700X; `--cores N` on the runner). A heavy job
+   starts beside running heavy jobs only when the widths, its own included, fit in the
+   budget, their memory fits the lab's heavy budget (width × the per-worker peak:
+   `mem_per_worker_gb`, measured, or 2.5 GB), no running job is backing off for memory, and
+   Justin is not at the table. A running job's width is its current block's (a `cores:` line
+   before a block, below), so a wide job with a single-process step makes room while that
+   step runs. **Order is kept:** the first open heavy job that could run but does not fit
+   stops the queue; nothing after it starts beside the others, so a wide job is never
+   overtaken by narrow ones and gets the machine when the running jobs end. A job whose
+   `after:` jobs are not done does not stop the queue. One `cpu: light` job (the coach
+   bench, reports) may run beside the heavy ones, as before. A `running` STATUS the runner
+   did not write (no `runner:` line) counts as running and as filling the machine.
 3. **Justin comes first.** While someone is connected to the bridge (`play.sh`, port 8642),
    no heavy job starts, and a running heavy job is held: its pools finish the games in
    flight and start no new one until he leaves. `tools/runner.sh pause` holds everything the
    same way; `tools/runner.sh stop` stops the jobs cleanly (TERM) and holds.
 4. **Before running.** The runner checks the job's refs out in **its own clones** under
-   `~/code/lab/` (`mtg-table`, `ForgeCoach`; `-light` copies for a light job), never in
-   Justin's checkouts, and builds (`bridge/build.sh`; `npm ci` when ForgeCoach's lock file
+   `~/code/lab/` (`mtg-table`, `ForgeCoach`; `-light` copies for a light job; `-lane2`,
+   `-lane3` … for a heavy job started beside another, each at its own commit with its own
+   build, its `var/` a link to `mtg-table/var` so every job's outputs are in one place),
+   never in Justin's checkouts, and builds (`bridge/build.sh`; `npm ci` when ForgeCoach's lock file
    changed). A job's literal `/home/justin-a/code/<repo>` paths are rewritten to the lab
    clones. Then it pushes a STATUS of `running`.
 5. **Pilot first, always.** The `## Pilot` blocks run, then the pilot's `check:` lines are
@@ -53,7 +66,14 @@ The runner checks every 10 seconds and fetches both branches every minute.
    runner), `Nice=10` and `KillMode=control-group`. Under memory pressure the runner first
    drops workers and then pauses new games, through the pool control file. Past the hard
    line it stops the job: `waiting`, reason `memory: …`, `retry_after:` 15 minutes later,
-   `workers_cap:` one fewer. The retry skips a pilot that passed. Every such event is a
+   `workers_cap:` one fewer. The retry skips a pilot that passed and every `## Commands`
+   block that finished: it starts at the block that was stopped (`blocks_done:` in STATUS;
+   see *Blocks and `clean:`* below). A step that exits 137 or 9 because the kernel's OOM
+   killer killed one of its processes (the unit's `memory.events`, or systemd's journal,
+   says so) is a memory stop too, not a failure. Jobs side by side are
+   stopped for the host's pressure one at a time, a minute apart, so one stop can free
+   the memory before another job's work is thrown away (a job whose own memory is at its
+   unit's cap is stopped regardless). Every such event is a
    `pressure-<n>:` line in STATUS and an entry in `status.json`. After three memory stops the
    job is `failed` (`memory: stopped 3 times`) instead of being retried for ever. A retry, and
    a resume after a restart, checks out the commits the job first ran on, never where its
@@ -64,7 +84,9 @@ The runner checks every 10 seconds and fetches both branches every minute.
    `events.jsonl`; `failure.txt` (the exit code and the last 60 lines) on a failure; and
    the `collect:` files under 5 MB each. **The PC session writes `summary.md`** from those
    and from what the job's `## Report` section asks for. Large data stays in the lab
-   clone's `var/`.
+   clone's `var/`. At each job end (done, failed, aborted) the runner also appends an entry
+   to the **decision ledger**, `LEDGER.md` and `ledger.jsonl` at the root of `pc-results`
+   (*The decision ledger*, below).
 9. **Heartbeat.** Every 4–5 minutes and on every job state change, the runner pushes
    `status.json` (the progress page's data) and `HEARTBEAT.md`: the time, what runs with
    its progress, rate and ETA, the machine's load, memory and pressure, the queue, and the
@@ -72,14 +94,16 @@ The runner checks every 10 seconds and fetches both branches every minute.
    as written. That section is where the PC session and Justin leave notes, including any
    message for the cloud session. A numbers-only copy of `status.json` goes to the public
    `lab-status` branch of jalirkan/ForgeCoach for the `#lab` page, and so does a sanitised
-   copy of the AI ladder's `ladder.json`. **The public copy shows a job by its id only**,
+   copy of the AI ladder's `ladder.json`, of the lab warehouse's `warehouse.json` (D363) and of the decision ledger, `ledger.json` (D387). **The public copy shows a job by its id only**,
    unless the job file opts in with `public_title:` (and `public_est:`). A title can name a
    card, deck or cube, so a job file publishes one only on purpose.
 10. **Restarts.** The jobs run in their own units, so a runner restart never stops one. On
    start the runner reconciles. A step whose unit still runs is adopted (`adopted:` in
    STATUS). A step that died with the machine runs again if the job is `resumable: yes`
-   (`resumed:`). Otherwise the job starts again from the top (`restarted:`), with its
-   `clean:` folders moved aside first, never deleted.
+   (`resumed:`). Otherwise the job starts again at that block (`restarted:`), after
+   `prepare`, with the block's `clean:` paths moved aside first. Moved-aside copies
+   (`.restart-<time>-<name>`) are never deleted; STATUS's `set_aside:` line says how many
+   there are and how much disk they hold, and a person removes them.
 
 ## The PC session's part
 
@@ -195,18 +219,26 @@ repos: mtg-table@main, ForgeCoach@main   (a branch or a commit; text after the r
 est: ~3 h on the 9700X
 resumable: yes | no                  stopped and started again, it continues (default no)
 max_workers: 7                       {workers} never exceeds it
+cores: 1                             the job's width: the cores it keeps busy (default: its workers; {workers} never exceeds it)
+pilot_cores: 2                       the width while the job is in its pilot (default: the job's width); a narrower pilot lets a job start beside it
+prepare_cores: 1                     the width while the job is in prepare (default: the job's width)
 mem_per_worker_gb: 1.5               a floor under the pilot's measured peak per worker (optional)
 progress: aibench var/ai-bench/night-* of 2000     how done / total is counted
 metrics: [name =] <extractor> <paths…>             the job's metrics, for abort: and the final checks
 metrics: [name =] sh: <command printing JSON or a number>
 headline: control.a_win_rate, all.games            the numbers the progress page shows when done
-clean: var/ai-bench/night-x var/ai-bench/night-y   moved aside before a non-resumable restart
+clean: var/ai-bench/night-x var/ai-bench/night-y   moved aside before a non-resumable restart from run1
 timeout: 8h                          a step running longer is stopped, and the job fails
 control: yes | no                    the job's tools read the pool control file; default: detected after prepare
                                      (the checkout has tools/runner/control.ts and the job runs ai-bench, the cube lab or the ladder)
 public_title: Search AI bench        the title the PUBLIC #lab page may show; without it, the id only
 public_est: ~3 h                     likewise the estimate. Both: letters, digits, spaces and , : ; ( ) + % ~ # & - only
 public_cubes: yes | no               the public page may name the cubes in a queue's per-cube progress (default: "cube 1", ...)
+public_decides: Keep card-level allocation    the decision the PUBLIC ledger.json may show (D387); without it, none. Same characters as public_title
+decides: promote evaluator v1 to the search (gate 2)    the decision this job informs (one line; the ledger)
+hypothesis: what we expect, and why                      (one line)
+rule: D354 gate 2 (gates.py REGRET_RULE)                 the pre-registered pass/fail rule, or a pointer to it
+followup: jobs/J062-x.md, morning-read                   what to post when this job is done: pc-jobs files, template names
 
 ## Pilot
 ```bash
@@ -218,6 +250,12 @@ check: pilot.errors + pilot.timeouts == 0
 check: pilot.median_game_s between 4 and 15
 
 ## Commands
+```bash
+…
+```
+cores: 1                             this block's width only: a single-process step ({workers} is at most 1 in it)
+mem_gb: 12                           this block's whole memory reservation (default: width × the per-worker peak)
+clean: var/ml/models/x.json          what this block makes: moved aside before a non-resumable retry runs it again
 ```bash
 …
 ```
@@ -244,9 +282,48 @@ environment holds `JOBS` and `LAB_WORKERS` (the sized workers), `LAB_CONTROL` (t
 file), `LAB_JOB`, `LAB_STEP`, `MTG_TABLE` and `FORGECOACH` (the clones). The placeholders
 `{workers}`, `{mtg-table}` and `{ForgeCoach}` are filled in.
 
+**Width (`cores:`).** Say how many cores a job keeps busy when it is not its workers: a
+single-process job (an encode, a fit, a report) is `cores: 1`, and the runner may start the
+next job beside it. A `cores:` line in `## Pilot` or `## Commands` applies to the next block
+only, so one job can have a wide step and a narrow one: put each in its own block, the wide
+ones first. A `mem_gb:` line beside it says what that block holds in memory when it is not
+width × the per-worker peak (a single-process fit that loads the whole dataset), so nothing
+started beside it counts on memory it will use. A job is admitted at its header width. A
+later step that is wider than the cores the other jobs leave waits for them (D365): nothing is
+stopped or killed, the job holds its full width meanwhile so nothing new starts beside it, and
+of two jobs waiting to widen the earlier (by id) goes first. Before D365 such a step ran at
+once and could briefly crowd a job started beside it. Jobs side by side share `var/`: they must not
+write the same paths. Every step's width, declared or not, also sets `OMP_NUM_THREADS`,
+`OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` and `VECLIB_MAXIMUM_THREADS`,
+so numpy and torch keep to it; a block that exports one of them keeps its own value. A job
+started beside another is sized against the memory the others leave, so it may get a worker
+fewer than it would alone.
+
+**Narrow pilot and prepare (`pilot_cores:`, `prepare_cores:`).** A pilot often runs two or
+three JVMs for most of an hour while the job's width is seven. `pilot_cores: 2` in the header
+makes the pilot's steps hold 2 cores, so the runner can start a narrow job beside it (a pilot
+block's own `cores:` line still wins); `prepare_cores: 1` does the same for `prepare`. When the
+job reaches its first `## Commands` block it needs its full width again: it waits until the
+cores are free (no stop, no kill), claims them while it waits so no newer job overtakes it, and
+is sized against the memory the others leave when it starts. Absent, both are the job's width,
+as before. {workers} in the pilot is at most `pilot_cores:`.
+
+**Blocks and `clean:`.** A retry (after a memory stop or `tools/runner.sh stop`) and a restart
+start at the `## Commands` block that was stopped. Blocks that finished are recorded with their
+exit codes (`blocks_done:` in STATUS) and are not run again, unless the job file has changed
+that block since. So split a long job into blocks: an encode in one, the fit in the next, and a
+stop during the fit never redoes the encode. For a `resumable: no` job, write what each block
+makes on a `clean:` line before it (like `cores:`). A retry moves aside only the `clean:` paths
+of the blocks it runs again; the header's `clean:` is moved aside only when the job starts again
+from `run1`. A job file with only the header's `clean:` (every job file written before this)
+still starts again from `run1` with all of it moved aside, because nothing says which block
+made what. Moved-aside copies are never deleted; STATUS's `set_aside:` says their count and
+disk use.
+
 **Workers.** The pilot runs at most 3 workers. During the pilot the runner samples the peak
 resident size of every Java process in the step's unit. The full run gets
-`min(max_workers, physical cores − 1, floor(budget / peak × 0.85))`, and at least 1. Here
+`min(max_workers, cores, physical cores − 1, floor(budget / peak × 0.85))`, and at least 1,
+where budget is the heavy memory budget less what the heavy jobs already running reserve. Here
 peak is the larger of the measured peak and `mem_per_worker_gb` (2.5 GB when not given),
 so a short pilot cannot size the full run too large.
 
@@ -280,6 +357,69 @@ The runner adds `elapsed_s`, `workers`, `pressure_events` and `peak_worker_rss_g
 `progress:` takes `aibench`, `cubelab`, `cubelab-queue` (its total from the night's plan),
 `evolve`, `lines`, `files` or `metric <name> [unit]`, then `of <total>` when the files
 don't say it.
+
+## The decision ledger
+
+A result with no decision attached gets read loosely, and a promised next step gets
+forgotten (night 1's morning read, promised in J029, waited a day for a job). So a job says
+what it is for, in four optional header lines (D366):
+
+| Line | What it holds |
+|---|---|
+| `decides:` | the decision this job's result informs, in one line |
+| `hypothesis:` | what we expect, and why |
+| `rule:` | the pass/fail rule written before the run, or where it is (a D-number, a `gates.py` / `EXAM_RULE` name) |
+| `followup:` | what comes next: job files under `jobs/` (`jobs/J###-name.md`) or template names (`morning-read`), comma-separated |
+
+~~~text
+id: J061
+title: Overnight queue, night 3
+cpu: heavy
+decides: whether night 4 keeps card-level allocation (with J062's read of tau)
+hypothesis: exploration in 15% of drafts costs under 10% of the draft rate and its logs pass redaction
+rule: D358; final checks below (engine errors <= 2%, recording errors <= 1%)
+followup: jobs/J066-matchup-read-night-3.md
+~~~
+
+`tools/runner.sh check` prints the four lines and warns when a heavy job has no
+`decides:`, when a `decides:` has no `rule:`, and when a follow-up file lying beside the
+checked file (a pc-jobs checkout) has no `after:` on this job. Warnings are not errors.
+
+**The ledger.** At each job end the runner appends one entry to `ledger.jsonl` (one JSON
+object a line) and `LEDGER.md` on `pc-results`, in the same commit as the STATUS: id,
+title, `decides`, `hypothesis`, `rule`, the outcome (`done`, `failed`, or `aborted` for an
+`abort:` line), the reason, the `headline:` numbers, the summary's path
+(`results/<id>/summary.md`), the finish time, the commits, and each follow-up's state. A job
+without the lines is still entered, saying so. A memory stop or a `needs: check` wait is not
+an end and has no entry. The ledger itself never goes to the public `lab-status` copy. The PC
+session's summary judges the result against the entry's `rule`.
+
+**The public copy, `ledger.json`** (D387). For ForgeCoach's morning report page the runner
+publishes a numbers-only copy of the newest 100 entries beside `status.json` on `lab-status`,
+rebuilt field by field from an allowlist (`tools/runner/ledgerpublic.ts`): the id; the job's
+`public_title:` and `public_decides:` if it has them (else null; the private title and
+`decides:` never go); the rule cut down to its D-numbers, `gate N` and `*_RULE` names
+(`D354, gate 2, REGRET_RULE`) and whether there was a `rule:` at all; the outcome; for a failed
+job only a cause word from the reason's prefix (`check`, `pilot`, `timeout`, `step`, `memory`,
+`other`), never the reason itself; whether the job had `check:` lines; the headline numbers;
+the finish time; and each follow-up's state with only a job id or a template name, never a
+path. The hypothesis, the summary path, the commits and any other words stay on `pc-results`.
+So a job whose decision may be shown says so in `public_decides:`, written with letters,
+digits, spaces and `, : ; ( ) + % ~ # & -` only.
+
+**Follow-ups.** The runner only reads pc-jobs, so it never posts a job. The simplest way is
+to post the follow-up together with its job, with `after:` on it, and name it in
+`followup:`; the queue then starts it when the job is done, and nothing else happens. A
+follow-up that is not on pc-jobs when the job ends `done` (a file to be written from the
+results, or a template name) gets a line at the top of HEARTBEAT.md's `## Messages`:
+
+~~~text
+- FOLLOW-UP READY [J061@2026-10-05T06:10:00-07:00] (the runner, for the cloud session): J061 is done; post jobs/J066-matchup-read-night-3.md to pc-jobs. ...
+~~~
+
+The cloud session posts it and deletes the line; the runner writes each line once and never
+again. A job that fails or is aborted asks for no follow-up; its ledger entry says the
+follow-up is not due, and a follow-up already posted with `after:` on it waits.
 
 `tools/runner/jobs/` on mtg-table's `main` has worked examples: J003 and J005 rewritten,
 and J010, the runner's own shakedown on the PC.

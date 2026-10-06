@@ -818,7 +818,9 @@ public final class MtgTable {
      * <b>Both are omitted for a {@code --games 1} session</b> -- see below.
      *
      * <p>{@code match} is amendment <b>M44</b>: each seat's deck by NAME, the
-     * AI's profile and the match length.  The AI's deck is {@code {name, cards}}
+     * AI's profile and the match length; amendment <b>M56</b> adds the AI
+     * seat's policy ({@code aiPolicy}), so the board can name the AI the
+     * player chose.  The AI's deck is {@code {name, cards}}
      * and nothing else -- a path or a hash identifies a decklist exactly, which
      * is why {@link #sessionHeader} nulls both for that seat, and hard rule 8
      * says the opponent's library is hidden.  The name is the {@code .dck}'s own
@@ -873,6 +875,10 @@ public final class MtgTable {
                 .end();
         o.n("aiProfile", aiProfile);
         o.n("games", a.games);
+        // Amendment M56: who answers for the AI seat -- `--ai-policy`, plain |
+        // outlets | search (D314, D333).  Last, so M44's keys keep their
+        // positions.  A word from a fixed set, never a knob or a path.
+        o.n("aiPolicy", a.aiPolicy);
         o.end();
         return o.end().done();
     }

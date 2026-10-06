@@ -30,7 +30,7 @@ import forge.game.spellability.SpellAbility;
  * ({@link SearchPolicy.Cand#install}), then play on.  Two controllers
  * implement it: {@link RolloutController} (plain Forge after the forced
  * answer) and {@link RolloutController.Outlets} (D310's outlet policy in front
- * of Forge, D356).
+ * of Forge, D390).
  */
 interface RolloutForcing {
     void forcePriority(SpellAbility saOrNullForPass);
@@ -40,7 +40,7 @@ interface RolloutForcing {
     void forceBlock(Map<Card, Card> blocks);
 
     /**
-     * D355's prior: the forced answer has been played out -- a priority
+     * D389's prior: the forced answer has been played out -- a priority
      * answer taken and the stack empty again, or a forced combat
      * declaration made and that combat's damage dealt (or the turn over).
      */

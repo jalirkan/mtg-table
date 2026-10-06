@@ -12,6 +12,11 @@
   "wsPort": 8642,
   "wsAllowedOrigins": ["http://127.0.0.1:*", "http://localhost:*", "https://jalirkan.github.io"],
   "coachPort": 8643,
+  "coach": {
+    "autoReview": true
+  },
   "webPort": 5173,
+  "labArchiveRoot": "/mnt/e/forgecoach-archive",
+  "labArchiveMirror": null,
   "scryfallUserAgent": "mtg-table/0.1 (local hobby client; github.com/jalirkan/mtg-table)"
 }

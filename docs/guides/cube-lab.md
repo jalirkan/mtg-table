@@ -201,6 +201,61 @@ python3 tools/ml/dataset.py --run-dir var/cubelab/runs/overnight    # -> <run>/d
 `--record M` still exists for watching a game in ForgeCoach (a plain
 `.jsonl`, the `--record M` replay); `--record-all` is for training data.
 
+### Archiving a finished night to zstd (D370)
+
+A queue night's recordings are gzip while they are written and while anything
+may open them. Once the night is over, `tools/lab/archive.py` recompresses
+them to `.jsonl.zst` (level 19; J065 measured 4.4x smaller than gzip on the
+PC's nights, the committed fixtures 3.5x):
+
+```bash
+python3 tools/lab/archive.py night --root var/cubelab/queue --night 1 --dry-run   # expected savings only
+python3 tools/lab/archive.py night --root var/cubelab/queue --night 1 --jobs 4    # resumable; re-run to resume
+python3 tools/lab/archive.py dir var/cubelab/runs/X --jobs 4                      # a finished run folder
+python3 tools/lab/archive.py restore PATH...                                      # back to a verified .gz
+```
+
+It refuses (exit 3, nothing touched) a night that is still running or has
+unfinished drafts, deletes each `.gz` only after its `.zst` was read back from
+disk and its SHA-256 matched, runs a sample through `check-redaction.mjs`
+before and after, and writes `<root>/archive/night-N.json` (counts, bytes
+before and after). The dataset builders and `check-redaction.mjs` read `.zst`
+(Python needs the `zstandard` package, Node 22.15+); the Java readers
+(coach-grade, leaf rows) do not, so the logs the gate lists name stay gzip and
+`restore` brings back any other. A job reading an archived night must pin a
+commit with D370.
+
+### The cold drive: finished nights off the hot disk (D378)
+
+Once nothing reads a night's recordings any more, `archive.py cold` moves them to the
+archive drive. The drive is `config.json`'s `labArchiveRoot` (on the PC,
+`/mnt/e/forgecoach-archive`, NTFS), or `--archive-root`, or `$LAB_ARCHIVE_ROOT`; an optional
+second copy goes to `labArchiveMirror`. Each key folder becomes one `night-N/<key>.tar.zst`,
+which holds the recordings decompressed so that one zstd stream sees them all. The night's
+quarantine folder becomes `night-N/quarantine.tar.zst`, kept byte for byte as evidence.
+
+```bash
+python3 tools/lab/archive.py cold --night 1 --quarantine var/cubelab/queue-quarantine --dataset var/ml/data/nights-1-3 --dry-run   # checks, drive, estimate
+python3 tools/lab/archive.py cold --night 1 --quarantine var/cubelab/queue-quarantine --dataset var/ml/data/nights-1-3 --jobs 4    # resumable
+python3 tools/lab/archive.py restore-night --night 1                                     # back, verified
+```
+
+It refuses (exit 3) unless all of these hold:
+- the night is closed;
+- the night's redaction pass ran (its quarantine folder exists: `--quarantine DIR`, else
+  `<root>-quarantine-nN`; night 1's is `var/cubelab/queue-quarantine`, with no suffix, and must be
+  named; the folder is walked for its recordings, and `failed.txt` is not trusted);
+- the warehouse ingested every line of the night;
+- a dataset encoded at least 90% of its recordings;
+- no hold in `tools/lab/archive-holds.json` names the night while a job the hold waits for is
+  not `done`.
+
+It skips with a warning (exit 4) when the drive is missing or read-only. A hot file is deleted
+only after its archive has been read back from the drive and every member's SHA-256
+matched. The manifests are on both sides (`<root>/archive/cold-night-N.json` and
+`<drive>/night-N/manifest.json`), and the warehouse's `cold_archives` table and its
+`recording_location` view read them. The `drafts.jsonl` files stay hot.
+
 ### Decision records and mixed AI styles (D347)
 
 A recorded game's seats are mtg-table's own AI controller (D309's, which with
@@ -254,6 +309,7 @@ lowers it): a mix with search plays slower games.
 | `--out <dir>` | `var/cubelab/runs/<cube>-<format>-<seed>` | the same `--out` resumes, under the same lab version only (D341) |
 | `--allow-version-change` | off | resume a folder another lab version (code, jar, ratings, cube, weights) wrote; logged in `run.json` (D341) |
 | `--deckset` | off | draft the AI ladder's deck sets at the reserved seeds; needs `--games 0` (`ai-ladder.sh decksets` passes it; D340) |
+| `--play-explore on \| name=value` | off | a seeded share of the drafts play games whose decisions explore (D358, *Play exploration* below): `share=0.15,epsilon=0.05,closecall=0.02,opening=off` |
 | `--builder lab\|forge` | `lab` | which deck plays |
 | `--game-timeout <sec>` | 300 | a game past it is a draw |
 | `--winston-cards N` | 90 | the size of the Winston stack |
@@ -349,6 +405,10 @@ are over decisive games, with Wilson's 95% interval — with a few dozen games
 per colour pair, **the interval is the finding**; run more drafts before
 reading much into a difference inside it.
 
+To query every run folder and the whole queue with SQL or pandas, `tools/lab/warehouse.py`
+(D363) copies `drafts.jsonl` into Parquet tables with a DuckDB file of views:
+`docs/guides/lab-warehouse.md`.
+
 ## meta.json — for ForgeCoach's draft and deck assistant (D297)
 
 `report` also writes `<out>/meta.json`, and `tools/cubelab.sh meta <out> [--cube
@@ -374,9 +434,18 @@ redefined without a schema 2 on both sides.
   pair, archetype, land count) was played in; `ci` is Wilson's 95% interval
   (`[0, 1]` with no games). `seen` is the drafts the card was dealt into;
   `avgPickIndex` its average position among its drafter's takes (1 = first).
+- **Lands** (D380): a nonbasic land's `inDecks`, `games`, `wins` and rates are
+  counted like a spell's, over the played decks that ran it. The deckbuilder
+  plays a dual or fetchland only in its own pair's decks, so a land's win rate
+  measures its pair more than the land. Basics are not cube cards and have no
+  entry; pairs, key cards and curves stay nonland.
+- **picked, inDecks 0** is data, not a lost name (D380): a grid pick takes a
+  whole row or column, so `picked` counts every card of it, and the deckbuilder
+  chooses spells by rating, so a card rated low in the run's ratings rides along
+  in picks and is never built (evolve's `rating-limited`, below).
 - **winRateShrunk** = (wins + 20·m) / (games + 20): the mean of a Beta posterior
-  whose prior is centred on m, the run's mean over every card-game observation,
-  with the strength of 20 games. A 4–0 card moves to about 0.58, a 60–20 card
+  whose prior is centred on m, the run's mean over every nonland card-game
+  observation (lands do not move it), with the strength of 20 games. A 4–0 card moves to about 0.58, a 60–20 card
   goes to 0.70, a card never played is m. Rank cards by it, not by winRate.
 - An **archetype** is a played deck's two colours plus its primary theme (the
   theme ≥ 5 of its spells carry): `BR-SAC`, or `BR` alone. **keyCards** rank its
@@ -390,7 +459,7 @@ redefined without a schema 2 on both sides.
 - **lands**: win rate by the played deck's land count; **splash**: the
   splashing decks' win rate, and `vsNoSplash` its difference from the rest.
 
-## Evolve: a cube that changes by simulation (D299–D300, D331)
+## Evolve: a cube that changes by simulation (D299–D300, D331, D357)
 
 `evolve` runs generations of the lab on a cube and swaps cards in from a seed
 pool where the evidence says a card is dead or dominating, writing the next
@@ -425,21 +494,20 @@ over seeds `S + (g−1)·N` .. `S + g·N − 1` (grid, best of three, the run's
 weights), then reads every card's numbers from the run's `meta.json` plus one
 more: how often it went in the **first line taken** from its grid (3 of 9 cards
 is the base rate, so a card that goes there every time is everyone's first
-pick). A land's decks and games are counted from the played decks' full lists
-(`meta.json` counts a deck's spells only, so there every land reads as never
-played). **Nothing is pooled across generations** (D331, which replaced
+pick). A land's decks and games are `meta.json`'s, which counts nonbasic lands
+like spells since D380. **Nothing is pooled across generations** (D331, which replaced
 D300's pooling): every decision reads one batch of drafts that no earlier
 decision has looked at. Each card is then assessed:
 
 | status | when |
 |---|---|
 | `dead` | a **candidate** (below): it sat in a drafter's pool whose played deck could cast it (its colours within the deck's, splash included) ≥ `minOnColour` times, and the test "at least `deadPlayRateHi` of those decks play it" fails — passed over when it was there to play. A gold card of a pair nobody drafted is not dead — it never had the chance (the changelog names such pairs) |
-| `dominant-win` | a **candidate**: ≥ `minGames` decisive games in played decks, the test "it wins no more than the run's mean" fails (its games counted by deck, below), and it won at least `dominantMargin` over the mean |
+| `dominant-win` | a **candidate**: ≥ `minGames` decisive games in played decks, the test "it wins no more than its null" fails (its games counted by deck, below), and it won at least `dominantMargin` over that null. **The null (D377)**: in a run started after D377, the card's colour-adjusted expectation — the games-weighted win rate of its decks' colour pairs in the same batch, with both decks of its own matches left out and each pair shrunk 20 games toward the batch's deck mean (`tools/cubelab/colour-null.ts`; a normal test that adds the baseline's own error). A folder started before D377 keeps D331's null, the run's mean card win rate, for every generation (`evolve.json`'s `winNull`). Confirmation uses the same null on its own batch. |
 | `dominant-pick` | a **candidate**: dealt in ≥ `minSeen` drafts, the test "it goes in the first line taken at most `dominantFirstPickLo` of the time" fails, and its shrunk win rate is at least the mean |
 | `note-cut` / `note-keep` | the notes file says `cut` / `keep` (or `try` for a card already in) |
 | `ai-limited` | Forge marks it `AI:RemoveDeck:All` or `:Random` (the pool's `forge_ai_flag`, or the engine's own facts): its numbers are reported, the status the AI evidence alone would give is shown beside them, and **only a note can cut it** |
 | `builder-limited` | every land: the lab's deckbuilder plays a dual or fetchland only in its own pair's decks and a colourless land (Mutavault) never, so a land's deck rate and win rate measure its pair, not the land; a land goes only by a note (the changelog lists the lands never played) |
-| `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the drafters pick by rating, so the data cannot tell a weak card from an underrated one; **never cut** — raise its rating in a ratings TSV (`tools/cubelab.sh ratings init`, edit, then `evolve … --ratings <tsv>`; the loop then judges every rating, the pool's too, by that file) to test it |
+| `rating-limited` | dead (or leaning dead) but rated under `deadMinRating`: the deckbuilder plays by rating, so the data cannot tell a weak card from an underrated one; **never cut** — `--explore` (below, D356) judges it by forcing it into decks at random, or raise its rating in a ratings TSV (`tools/cubelab.sh ratings init`, edit, then `evolve … --ratings <tsv>`; the loop then judges every rating, the pool's too, by that file) |
 | `watch` | a lead — an on-colour play rate at or under `deadPlayRateHi`, or a win rate `watchWinMargin` over the mean — that has **not** passed its test: *insufficient data*, with the drafts per generation at which it would likely be discovered |
 
 **Discovery, then confirmation (D331).** About 180 cards are looked at every
@@ -469,11 +537,27 @@ were pooled. Two looks fix it:
   the rate the card met observations in discovery, between `confirmMinDrafts`
   and `confirmMaxDrafts` drafts. A generation with no candidate plays no
   confirmation batch.
+- **A repeat attempt pools (D357).** Every generation gives a candidate a new
+  confirmation batch, so a card discovered again and again would get a fresh
+  chance to confirm by luck each time, and a failed batch would be forgotten
+  (J039's Fable of the Mirror-Breaker: 140 of 296 in generation 3, not
+  confirmed; 179 of 316 in generation 4, cut — 319 of 612 together). Now a
+  card's second, third… confirmation on the same rule is judged on **all** its
+  confirmation batches pooled, the failed ones included, and its p is doubled
+  for each earlier attempt before Holm (attempt j at `confirmAlpha` / 2^(j−1)),
+  so whatever the number of attempts a card with no real effect is cut with a
+  chance of at most 2·`confirmAlpha` (4.7% after eight attempts in the
+  simulation, against 32% for each batch alone). A **first** attempt is judged
+  exactly as before. The size filter reads the pooled rate. Knob
+  `confirmPool` (1, the default; 0 is D331's rule); a folder started before
+  D357 resumes under D331. Discovery is still never pooled.
 
 The changelog and `index.html` show both: each candidate's discovery numbers
 (with its p and BH q value) beside its confirmation numbers (with its
 Holm-adjusted p), and whether it was confirmed; a swap's evidence names both
-seed ranges.
+seed ranges. A *Confirmation history* table at the top of the changelog lists
+every card that was ever confirmed or refused: each attempt with its batch's
+own numbers and outcome, and every attempt pooled (D357).
 
 **A card's games come in clumps**: one deck, against one opponent, best of
 three (about 2.4 games). Win rates therefore count the deck's match as the
@@ -576,6 +660,7 @@ the evolve loop's own, not draft weights, so they do not touch `run.json`.
 | `confirmMinDrafts` | 20 | the smallest confirmation batch |
 | `confirmMaxDrafts` | 300 | the largest (also the spacing of the generations' confirmation seed ranges) |
 | `confirmSeedOffset` | 1000000 | confirmation seeds start this far above `--seed` |
+| `confirmPool` | 1 | D357: a repeat confirmation pools the card's every confirmation batch on the rule, at `confirmAlpha` / 2^(attempt−1); 0 is D331 (each batch alone); a folder from before D357 resumes with 0 |
 | `watchWinMargin` | 0.12 | a win rate this far over the mean is a lead to watch |
 | `colourSlack` | 2 | each colour's nonland count may move this far from the start |
 | `minSignposts` | 2 | gold cards each colour pair keeps (or its starting count, if fewer) |
@@ -595,6 +680,86 @@ the family almost nothing passes; the changelog's *insufficient data* table
 says how many drafts would find the rest. Two hundred drafts a generation
 finds the dead cards; dominance by wins needs 400–600 (above). An evolve
 folder made before D331 is refused (its knobs differ): start a new `--out`.
+
+### Judging the low-rated cards: `--explore` (D356)
+
+The deckbuilder ranks spells by rating, so a card rated low (Delver of Secrets
+19.7, Ephemerate 22.9) sits in on-colour pools and is not played: the loop can
+only call it `rating-limited`, at any number of drafts. `--explore on` (or
+`--explore share=0.3 --explore cap=4 …`) runs a seeded, logged experiment in
+the **discovery** batches (confirmation batches never explore):
+
+- a draft is *explored* with probability `share`; in it each seat's deck is
+  built as always (the *choice* deck), and at most one *eligible target* — a
+  nonland pool card rated under `deadMinRating`, not AI:RemAIDeck, castable in
+  the deck's main colours, not chosen — is forced in, card c with probability
+  v_c / max(Σv, `cap`) (v = `gold` for a multicolour card, else 1), replacing
+  the lowest-rated spell of its mana value. `drafts.jsonl`'s `deck` is the deck
+  that played; `explore.seats[k]` keeps the eligible list with its
+  probabilities, `in`, `out` and the choice deck;
+- the play and pick rules read every draft's **choice** decks (an unexplored
+  run's numbers: the drafts, picks and choice decks are identical at the same
+  seed), the win-rate rules, the mean, the balance and `meta.json` read the
+  **plain** drafts only (a random subset of an unexplored run's), so no cut
+  changes meaning;
+- each target's *delta* compares the decks it was forced into with the decks
+  where it was eligible and was not, weighted by the recorded probabilities
+  (so a thin pool forcing more often biases nothing), a deck's match as the
+  unit. The changelog's table at the top pools every generation: **holds its
+  own when played** (delta shown above −`margin`), **weak when played** (shown
+  below 0; a human test — the notes decide), *undecided*, or *too few* forced
+  decks (under `minDecks`). **No verdict cuts a card**; `stats.json` has each
+  generation's table and the health numbers (explored share, forced against
+  expected, the balance of the choice decks' mean rating).
+
+| `--explore` | default | what it does |
+|---|---|---|
+| `share` | 0.3 | the share of discovery drafts explored (the win-rate rules keep the rest) |
+| `cap` | 4 | a target is forced with probability v / max(Σv, cap): one eligible mono card, 1/4 |
+| `gold` | 4 | v of a multicolour target (its pair's decks are about a fifth as many) |
+| `margin` | 0.1 | *holds its own*: delta shown above −margin |
+| `minDecks` | 10 | forced (and control) decks before a card is judged |
+
+At 2,000 drafts a generation and share 0.3, Omega's common low-rated cards
+get 15–60 forced decks a generation and a gold one about 10; the rarest stay
+*too few*. Exploration is part of `run.json`, the folder check and the version
+stamp only when on, so a run without it is the old run.
+
+### Raising the ratings exploration vindicates: `ratings apply` (D360)
+
+A card that **holds its own when played** is rated too low for the builder to play it.
+`ratings apply` turns the pooled table into a ratings file by one rule, `explore-eb`:
+
+```bash
+tools/cubelab.sh ratings apply cubes/omega-cube-180.md --from var/cubelab/evolve/omega-explore-2000 \
+    --rule explore-eb --out cubes/omega-cube-180.ratings-raised.tsv      # an evolve folder: exact
+tools/cubelab.sh ratings apply cubes/omega-cube-180.md --from changelog.md \
+    --rule explore-eb --out cubes/omega-cube-180.ratings-raised.tsv      # a PC job's changelog: replays the drafts
+```
+
+- only `holds` moves; undecided, too few, weak and AI-limited (D343) cards keep their
+  rating, and a rating is only ever raised (a weak card is the notes' question);
+- each delta is shrunk toward 0 by empirical Bayes over every judged card;
+- the new rating is the mean rating of the spells the card replaced in its forced decks
+  (what delta was measured against) plus K × the shrunk delta, K = (top-pick line − the
+  mean of those anchors) / 0.1;
+- capped one step under the top-pick line (the 90th percentile of the cube's nonland
+  ratings) unless delta's 95% interval is above 0, and then at the best nonland rating.
+
+It writes the TSV (every other line the base's: `--base <tsv>`, or Forge's ranks as
+`ratings init` writes them), a report of every change with its evidence and every judged
+card left alone with why (`--report`, default beside the TSV), and the same as JSON. From a
+changelog alone the anchors come from replaying the generations' discovery seeds without
+games; the replay must match the changelog's explored drafts and every card's forced and
+expected decks, or the command refuses. `--raise effect=0.1,topQuantile=0.9,pointsPerWin=auto`
+and `--explore share=0.3,cap=4,gold=4,below=60` change the rule's and the replay's settings.
+
+Omega's raised file is `cubes/omega-cube-180.ratings-raised.tsv`, made from J039 (report:
+`docs/evidence/omega-ratings-raise.md`). It is **not** the default file beside the cube,
+which `run`, the queue and bridge drafts would pick up on their own: pass it with
+`--ratings` until the A/B (`node tools/cubelab/ratings-verify.ts --a <runs> --b <runs>
+--raised docs/evidence/omega-ratings-raise.json`, PC job J064, D360's pre-registered
+reading) says to promote it.
 
 ## Learning the drafters' values from the games (D301–D302)
 
@@ -771,6 +936,8 @@ tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7            # print
 tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7 --record-every 1   # play it; resumable
 python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup/night-1
 tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-1/power.tsv
+tools/cubelab.sh queue run  --night 3 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-2/power.tsv \
+    --play-explore share=0.15,epsilon=0.05,closecall=0.02 --allow-version-change   # D358, below
 ```
 
 | flag | default | |
@@ -786,6 +953,7 @@ tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 -
 | `--allow-version-change` | off | append to key folders another lab version wrote (D341; logged in each `run.json`) |
 | `--bridge-ratings even\|own` | `even` | as for `run` |
 | `--record-every N` | 0 | passed to every run: record every game of every Nth draft in the worker, both chairs (D315; the night stops if a run did not record) |
+| `--play-explore share=…,epsilon=…,closecall=…,opening=on\|off` | off | a seeded share of every chunk's drafts play games whose decisions explore (D358, *Play exploration* below); recorded in the night's plan, and a re-run of the night must not change it |
 | `--root <dir>` | `var/cubelab/queue` | |
 
 **No double work.** A draft is a function of its pool key (`normal/<cube>` or
@@ -826,6 +994,69 @@ plan file records them) and the tiers its `TIERS` table:
 | `minPairWeight` | 0.25 | a pair whose novelty × link is under this is skipped |
 | `tau` | 0.25 | the prior SD (logits) behind var_c from game counts when there is no `--power` |
 | `minDrafts` | 20 | a key under this many drafts gets none (`--min-drafts`) |
+
+### Play exploration (D358)
+
+Every queue game is Forge's AI against Forge's AI, and Forge plays the same line from
+the same position, so the positions the queue records for the learned evaluator follow
+Forge's well-worn paths. `--play-explore` (on `queue run` and on `run`) spends a share
+of the drafts on games that leave those paths a little:
+
+- a draft **explores** with probability `share`, drawn from its own stream of the
+  draft's seed (any `--jobs`, a resumed night, the same answer; the draft, picks and
+  decks are untouched). Both seats of every game of an exploring draft explore;
+- **epsilon**: each decision of an explorable kind -- what to play with a priority
+  (pass, a land, Forge's own answer, or any spell or ability Forge would play with the
+  targets it chose, or an untargeted spell it can cast), the attack, the blocks, and
+  each single target of what it plays or triggers -- is replaced with probability
+  `epsilon` by a uniformly random **legal** answer (an attack or a block redrawn until
+  Forge accepts it). Mana, costs, modes and other choices stay Forge's;
+- **closecall**: where Forge chose a creature by its own creature score (a target, or a
+  creature an effect asks for), the legal creature of the same controller whose score
+  is within `closecall` of it (relative) is a coin flip against it. Plain Forge scores
+  nothing else per option, so this is the only close call a plain seat has;
+- **opening=on** (off by default): who plays first is a coin instead of the
+  alternation, and the seven-card mulligan decision is an epsilon decision.
+
+Each seat's draws come from a generator seeded by the draft's seed, the game and the
+seat (`mtgtable.ai.ExploreMath.seedFor`), never from Forge's own random stream, so a
+re-run of the same draft plays the same decisions (measured: two runs of four exploring
+drafts, 1,598 decision records, identical). Everything chosen at random is among the
+seat's own legal options; nothing reads a hand, a library or a face-down card.
+
+| `--play-explore` | default | |
+|---|---|---|
+| `share` | 0.15 | the share of drafts whose games explore |
+| `epsilon` (`eps`) | 0.05 | per explorable decision, the chance of a random legal answer |
+| `closecall` (`cc`) | 0.02 | the relative margin of a creature close call; 0 = off |
+| `opening` | off | `on`: play/draw by a coin, the opening mulligan explorable |
+
+**What it writes.** An exploring draft's line in `drafts.jsonl` carries `playExplore:
+{epsilon, closeCall, opening}`, and each of its game rows `playExplore` with both seats'
+counts (`decisionsRandomised`, `changed` -- of those, the ones that differ from the
+seat's own answer -- `closeCalls`, `closeCallsChanged`, `coins`, `failures`, `byKind`,
+and `onPlayDrawn` with `opening`). A recording's header carries `playExplore`; each
+decision record the explorer answered carries `explore: {rule: random|closeCall, forge:
+<the seat's own answer>}`; each seat's `decisions` summary line its counts (protocol
+amendment M57). `run.json` and the night's plan record the settings.
+
+**How to read it.**
+
+- **Win rates leave exploring drafts out**: `report`, `meta`, `learn`, the queue's own
+  coverage and `tools/ml/matchup.py` (whose `--play-explore include|only` brings them
+  back for an experiment). A random move is not the deck's strength.
+- **The position dataset keeps them** (`tools/ml/dataset.py`; `--play-explore
+  exclude|only` to compare): the positions after a random move are real, and the game
+  was played out from them.
+- **The policy dataset drops every randomised decision** (`tools/ml/policy_data.py`),
+  and keeps the rest of the game.
+- Filter yourself with `playExplore` on a draft line or a recording's header, and
+  `explore` on a decision record.
+
+**Versions.** The settings are part of each folder's lab version (D341) when on: a night
+that turns exploration on, off or changes it appends a new version to every key folder,
+so it needs `--allow-version-change` (logged in `run.json`), and every line keeps its
+`ver` and its `playExplore` tag. Night 3 needs the flag anyway when the code changed.
 
 ### Seeds and versions (D340–D341)
 
@@ -870,4 +1101,4 @@ fail the same way).
   report tags them.
 - Games are not byte-for-byte repeatable: Forge's AI runs on its own threads.
   The drafts and decks are (the same seed gives the same picks and decks on any
-  machine and any `--jobs`).
+  machine and any `--jobs`), and so are play exploration's draws (D358).

@@ -52,21 +52,58 @@ export function expandGlob(cwd: string, pattern: string): string[] {
   return cur.sort();
 }
 
-/** The complete lines of a file (up to its last newline). */
-export function completeLines(file: string): string[] {
-  let text: string;
-  try { text = fs.readFileSync(file, 'utf8'); } catch { return []; }
-  const end = text.lastIndexOf('\n');
-  if (end < 0) return [];
-  return text.slice(0, end).split('\n').filter((l) => l.trim() !== '');
+/** Bytes a line reader asks for at a time: memory stays at this plus the longest line, whatever the file's size. */
+export const CHUNK_BYTES = 1 << 20;
+
+/**
+ * Call `onLine` with each complete, non-blank line of `file` from byte `from` up to `to`
+ * (default: its size now), reading CHUNK_BYTES at a time; a line is decoded only once its
+ * newline is in, so a UTF-8 character split across two reads is whole.  Returns the offset
+ * just past the last newline read (`from` if none), where the next read starts: a torn last
+ * line is left for later.  Synchronous, like the runner's tick.
+ */
+export function eachCompleteLine(file: string, onLine: (line: string) => void, from = 0, to?: number): number {
+  let fd: number;
+  try { fd = fs.openSync(file, 'r'); } catch { return from; }
+  try {
+    const end = to ?? fs.fstatSync(fd).size;
+    const buf = Buffer.allocUnsafe(CHUNK_BYTES);
+    let pos = from, consumed = from;
+    let carry: Buffer[] = [];
+    while (pos < end) {
+      const n = fs.readSync(fd, buf, 0, Math.min(CHUNK_BYTES, end - pos), pos);
+      if (n <= 0) break;
+      pos += n;
+      let start = 0;
+      for (let nl = buf.indexOf(0x0a, 0); nl >= 0 && nl < n; nl = buf.indexOf(0x0a, start)) {
+        const piece = buf.subarray(start, nl);
+        const line = (carry.length ? Buffer.concat([...carry, piece]) : piece).toString('utf8');
+        carry = [];
+        consumed = pos - n + nl + 1;
+        start = nl + 1;
+        if (line.trim() !== '') onLine(line);
+      }
+      if (start < n) carry.push(Buffer.from(buf.subarray(start, n)));
+    }
+    return consumed;
+  } finally {
+    fs.closeSync(fd);
+  }
 }
 
-function jsonLines(file: string): Array<Record<string, unknown>> {
-  const out: Array<Record<string, unknown>> = [];
-  for (const l of completeLines(file)) {
-    try { out.push(JSON.parse(l) as Record<string, unknown>); } catch { /* a line we cannot read is not a game */ }
-  }
+/** The complete lines of a file (up to its last newline).  Holds them all: for small files and tests; the extractors stream. */
+export function completeLines(file: string): string[] {
+  const out: string[] = [];
+  eachCompleteLine(file, (l) => out.push(l));
   return out;
+}
+
+function eachJsonLine(file: string, onRow: (row: Record<string, unknown>) => void): void {
+  eachCompleteLine(file, (l) => {
+    let row: unknown;
+    try { row = JSON.parse(l); } catch { return; /* a line we cannot read is not a game */ }
+    onRow(row as Record<string, unknown>);
+  });
 }
 
 const median = (xs: number[]): number => {
@@ -85,28 +122,38 @@ function dirsOf(cwd: string, args: string[]): string[] {
 
 // ---------------------------------------------------------------- ai-bench
 
-/** ai-bench run folders: shard-*.jsonl lines (AiBench.java's play), copier errors from shard-*.log. */
+/** ai-bench run folders: shard-*.jsonl lines (AiBench.java's play), copier errors from shard-*.log.  Streamed: a game is a few numbers. */
 export function aibench(cwd: string, args: string[]): Flat {
-  const games: Array<Record<string, unknown>> = [];
   let copier = 0;
+  let n = 0, aw = 0, bw = 0, yes = 0, no = 0, errors = 0, timeouts = 0, msSum = 0, msMax = -Infinity, turns = 0, evalTimeouts = 0;
+  let fallback = 0, considered = 0;
+  const ms: number[] = [];
   const dirs = dirsOf(cwd, args);
   for (const d of dirs) {
-    for (const f of expandGlob(d, 'shard-*.jsonl')) games.push(...jsonLines(f));
-    for (const f of expandGlob(d, 'shard-*.log')) for (const l of completeLines(f)) if (l.includes("Couldn't map")) copier++;
-  }
-  const n = games.length;
-  const ms = games.map((g) => numOr(g.ms));
-  const aw = games.filter((g) => g.winner === 'A').length;
-  const bw = games.filter((g) => g.winner === 'B').length;
-  const errors = games.filter((g) => typeof g.error === 'string' && g.error !== '').length;
-  const timeouts = games.filter((g) => g.timeout === true).length;
-  let fallback = 0, considered = 0;
-  for (const g of games) {
-    for (const side of ['aStats', 'bStats']) {
-      const counts = ((g[side] as Record<string, unknown> | undefined)?.counts ?? {}) as Record<string, unknown>;
-      fallback += numOr(counts['search.fallback.budget']);
-      for (const k of ['search.a.considered', 'search.b.considered', 'search.p.considered']) considered += numOr(counts[k]);
+    for (const f of expandGlob(d, 'shard-*.jsonl')) {
+      eachJsonLine(f, (g) => {
+        if (g === null) return; // not a game, and the old reader threw on it
+        n++;
+        const m = numOr(g.ms);
+        ms.push(m);
+        msSum += m;
+        if (m > msMax) msMax = m;
+        if (g.winner === 'A') aw++;
+        else if (g.winner === 'B') bw++;
+        if (g.focusWon === 'yes') yes++;
+        else if (g.focusWon === 'no') no++;
+        if (typeof g.error === 'string' && g.error !== '') errors++;
+        if (g.timeout === true) timeouts++;
+        turns += numOr(g.turns);
+        evalTimeouts += numOr(g.aiEvalTimeouts);
+        for (const side of ['aStats', 'bStats']) {
+          const counts = ((g[side] as Record<string, unknown> | undefined)?.counts ?? {}) as Record<string, unknown>;
+          fallback += numOr(counts['search.fallback.budget']);
+          for (const k of ['search.a.considered', 'search.b.considered', 'search.p.considered']) considered += numOr(counts[k]);
+        }
+      });
     }
+    for (const f of expandGlob(d, 'shard-*.log')) eachCompleteLine(f, (l) => { if (l.includes("Couldn't map")) copier++; });
   }
   const out: Flat = {
     runs: dirs.length,
@@ -115,16 +162,16 @@ export function aibench(cwd: string, args: string[]): Flat {
     b_wins: bw,
     draws: n - aw - bw,
     a_win_rate: aw + bw ? r4(aw / (aw + bw)) : 0,
-    focus_win_rate: (() => { const y = games.filter((g) => g.focusWon === 'yes').length, no = games.filter((g) => g.focusWon === 'no').length; return y + no ? r4(y / (y + no)) : 0; })(),
+    focus_win_rate: yes + no ? r4(yes / (yes + no)) : 0,
     errors,
     timeouts,
     error_rate: n ? r4((errors + timeouts) / n) : 0,
     copier_errors: copier,
-    mean_game_s: n ? r4(sum(ms) / n / 1000) : 0,
+    mean_game_s: n ? r4(msSum / n / 1000) : 0,
     median_game_s: r4(median(ms) / 1000),
-    max_game_s: n ? r4(Math.max(...ms) / 1000) : 0,
-    mean_turns: n ? r4(sum(games.map((g) => numOr(g.turns))) / n) : 0,
-    ai_eval_timeouts: sum(games.map((g) => numOr(g.aiEvalTimeouts))),
+    max_game_s: n ? r4(msMax / 1000) : 0,
+    mean_turns: n ? r4(turns / n) : 0,
+    ai_eval_timeouts: evalTimeouts,
     searched_decisions: considered,
   };
   if (considered > 0) out.fallback_rate = r4(fallback / considered);
@@ -137,37 +184,79 @@ interface GameRow { ms?: number; turns?: number; cpuMs?: number; timeout?: boole
 interface DraftLine { seed?: number; bridge?: unknown; match?: { games?: GameRow[]; engineError?: string } }
 
 /**
- * drafts.jsonl grows all night: each file is read INCREMENTALLY, from the end of its last
- * complete line read before, and memoised by size and mtime.  A file that shrank or was
- * replaced (its size below the offset, a different inode, or rewritten at the same size) is
- * read again from the top.  The runner calls this on its minute metrics tick only.
+ * What the extractors need from one drafts.jsonl, and nothing else: counts, the draft seeds,
+ * and a few numbers per game (kept per game, in file order, so every sum, mean and median is
+ * computed exactly as it was from the parsed lines).  A real line is ~16 KB of picks and
+ * decks; this is ~50 bytes a game.
  */
-const draftCache = new Map<string, { ino: number; offset: number; size: number; mtimeMs: number; lines: DraftLine[] }>();
+export interface DraftStats {
+  drafts: number;
+  /** Drafts whose match ended in an engineError. */
+  engineErrorDrafts: number;
+  bridgeDrafts: number;
+  seeds: Set<unknown>;
+  /** Per game, in file order. */
+  ms: number[];
+  turns: number[];
+  cpuMs: number[];
+  gameErrors: number;
+  timeouts: number;
+  draws: number;
+  /** Per recorded game, in file order. */
+  recBytes: number[];
+  recErrors: number[];
+}
 
-export function readDrafts(file: string): DraftLine[] {
-  let st: fs.Stats;
-  try { st = fs.statSync(file); } catch { draftCache.delete(file); return []; }
-  let c = draftCache.get(file);
-  if (c && c.ino === st.ino && c.size === st.size && c.mtimeMs === st.mtimeMs) return c.lines;
-  if (!c || c.ino !== st.ino || st.size < c.offset || (st.size === c.size && st.mtimeMs !== c.mtimeMs)) c = { ino: st.ino, offset: 0, size: 0, mtimeMs: 0, lines: [] };
-  const len = st.size - c.offset;
-  if (len > 0) {
-    const buf = Buffer.alloc(len);
-    const fd = fs.openSync(file, 'r');
-    try { fs.readSync(fd, buf, 0, len, c.offset); } finally { fs.closeSync(fd); }
-    const end = buf.lastIndexOf(0x0a);
-    if (end >= 0) {
-      for (const l of buf.subarray(0, end).toString('utf8').split('\n')) {
-        if (!l.trim()) continue;
-        try { c.lines.push(JSON.parse(l) as DraftLine); } catch { /* a line we cannot read is not a draft */ }
-      }
-      c.offset += end + 1;
+const emptyStats = (): DraftStats => ({ drafts: 0, engineErrorDrafts: 0, bridgeDrafts: 0, seeds: new Set(), ms: [], turns: [], cpuMs: [], gameErrors: 0, timeouts: 0, draws: 0, recBytes: [], recErrors: [] });
+
+function addDraft(st: DraftStats, d: DraftLine): void {
+  st.drafts++;
+  st.seeds.add(d.seed);
+  if (d.match?.engineError) st.engineErrorDrafts++;
+  if (d.bridge) st.bridgeDrafts++;
+  const games = d.match?.games;
+  for (const g of Array.isArray(games) ? games : []) {
+    if (g === null || typeof g !== 'object') continue;
+    st.ms.push(numOr(g.ms));
+    st.turns.push(numOr(g.turns));
+    st.cpuMs.push(numOr(g.cpuMs));
+    if (g.error) st.gameErrors++;
+    if (g.timeout) st.timeouts++;
+    if (g.winner === 'draw') st.draws++;
+    if (g.recorded) {
+      st.recBytes.push(numOr(g.recorded.bytes));
+      st.recErrors.push(numOr(g.recorded.errors));
     }
   }
+}
+
+/**
+ * drafts.jsonl grows all night: each file is read INCREMENTALLY, from the end of its last
+ * complete line read before, CHUNK_BYTES at a time, and memoised by size and mtime.  Each
+ * line is parsed and dropped at once; only its DraftStats survive, so memory follows the
+ * games, not the bytes.  A file that shrank or was replaced (its size below the offset, a
+ * different inode, or rewritten at the same size) is read again from the top.  The runner
+ * calls this on its minute metrics tick only (D337, amended for J059's heap).
+ */
+const draftCache = new Map<string, { ino: number; offset: number; size: number; mtimeMs: number; stats: DraftStats }>();
+
+export function draftStats(file: string): DraftStats {
+  let st: fs.Stats;
+  try { st = fs.statSync(file); } catch { draftCache.delete(file); return emptyStats(); }
+  let c = draftCache.get(file);
+  if (c && c.ino === st.ino && c.size === st.size && c.mtimeMs === st.mtimeMs) return c.stats;
+  if (!c || c.ino !== st.ino || st.size < c.offset || (st.size === c.size && st.mtimeMs !== c.mtimeMs)) c = { ino: st.ino, offset: 0, size: 0, mtimeMs: 0, stats: emptyStats() };
+  const stats = c.stats;
+  c.offset = eachCompleteLine(file, (l) => {
+    let d: DraftLine;
+    try { d = JSON.parse(l) as DraftLine; } catch { return; /* a line we cannot read is not a draft */ }
+    if (d === null) return; // not a draft, and the old reader threw on it
+    addDraft(stats, d);
+  }, c.offset, st.size);
   c.size = st.size;
   c.mtimeMs = st.mtimeMs;
   draftCache.set(file, c);
-  return c.lines;
+  return stats;
 }
 
 function draftFiles(cwd: string, args: string[]): string[] {
@@ -185,31 +274,38 @@ function draftFiles(cwd: string, args: string[]): string[] {
 }
 
 export function cubelabOf(files: string[]): Flat {
-  const drafts = files.flatMap((f) => readDrafts(f));
-  const games = drafts.flatMap((d) => d.match?.games ?? []);
-  const ms = games.map((g) => numOr(g.ms));
-  const turns = sum(games.map((g) => numOr(g.turns)));
-  const rec = games.filter((g) => g.recorded);
+  const all = files.map((f) => draftStats(f));
+  const drafts = sum(all.map((x) => x.drafts));
+  const engineErrorDrafts = sum(all.map((x) => x.engineErrorDrafts));
+  // Left folds over every game in file order, as the old flatMap-then-sum did.
+  const fold = (pick: (x: DraftStats) => number[]): number => { let t = 0; for (const x of all) for (const v of pick(x)) t += v; return t; };
+  const games = sum(all.map((x) => x.ms.length));
+  const msSum = fold((x) => x.ms);
+  const turns = fold((x) => x.turns);
+  const recGames = sum(all.map((x) => x.recBytes.length));
+  const recBytes = fold((x) => x.recBytes);
+  const ms: number[] = [];
+  for (const x of all) for (const v of x.ms) ms.push(v);
   return {
     runs: files.length,
-    drafts: drafts.length,
-    games: games.length,
-    engine_errors: drafts.filter((d) => d.match?.engineError).length + games.filter((g) => g.error).length,
-    engine_error_rate: drafts.length ? r4(drafts.filter((d) => d.match?.engineError).length / drafts.length) : 0,
-    timeouts: games.filter((g) => g.timeout).length,
-    mean_game_s: games.length ? r4(sum(ms) / games.length / 1000) : 0,
+    drafts,
+    games,
+    engine_errors: engineErrorDrafts + sum(all.map((x) => x.gameErrors)),
+    engine_error_rate: drafts ? r4(engineErrorDrafts / drafts) : 0,
+    timeouts: sum(all.map((x) => x.timeouts)),
+    mean_game_s: games ? r4(msSum / games / 1000) : 0,
     median_game_s: r4(median(ms) / 1000),
-    mean_game_ms: games.length ? Math.round(sum(ms) / games.length) : 0,
-    ms_per_turn: turns ? Math.round(sum(ms) / turns) : 0,
-    cpu_ms_per_turn: turns ? Math.round(sum(games.map((g) => numOr(g.cpuMs))) / turns) : 0,
-    recorded_games: rec.length,
-    recorded_errors: sum(rec.map((g) => numOr(g.recorded?.errors))),
-    recorded_bytes_per_game: rec.length ? Math.round(sum(rec.map((g) => numOr(g.recorded?.bytes))) / rec.length) : 0,
-    draws: games.filter((g) => g.winner === 'draw').length,
-    mean_turns: games.length ? r4(turns / games.length) : 0,
-    bridge_drafts: drafts.filter((d) => d.bridge).length,
+    mean_game_ms: games ? Math.round(msSum / games) : 0,
+    ms_per_turn: turns ? Math.round(msSum / turns) : 0,
+    cpu_ms_per_turn: turns ? Math.round(fold((x) => x.cpuMs) / turns) : 0,
+    recorded_games: recGames,
+    recorded_errors: fold((x) => x.recErrors),
+    recorded_bytes_per_game: recGames ? Math.round(recBytes / recGames) : 0,
+    draws: sum(all.map((x) => x.draws)),
+    mean_turns: games ? r4(turns / games) : 0,
+    bridge_drafts: sum(all.map((x) => x.bridgeDrafts)),
     // The output on disk, cheaply: the drafts.jsonl files and the recordings their lines say they wrote.
-    output_bytes: sum(files.map((f) => { try { return fs.statSync(f).size; } catch { return 0; } })) + sum(rec.map((g) => numOr(g.recorded?.bytes))),
+    output_bytes: sum(files.map((f) => { try { return fs.statSync(f).size; } catch { return 0; } })) + recBytes,
   };
 }
 
@@ -233,7 +329,7 @@ export function cubelabQueue(cwd: string, args: string[]): Flat {
       planned += c.drafts;
       const f = path.join(root, c.key, 'drafts.jsonl');
       files.add(f);
-      const seeds = new Set(readDrafts(f).map((d) => d.seed));
+      const seeds = draftStats(f).seeds;
       let got = 0;
       for (let s = c.seed; s < c.seed + c.drafts; s++) if (seeds.has(s)) got++;
       done += got;
@@ -309,19 +405,26 @@ export function coachbench(cwd: string, args: string[]): Flat {
 
 export function ladder(cwd: string, args: string[]): Flat {
   const dir = path.resolve(cwd, args[0] ?? 'var/ai-ladder');
-  const recs = expandGlob(dir, 'results/*.jsonl').flatMap(jsonLines);
-  return {
-    games: recs.length,
-    errors: recs.filter((r) => r.error === true).length,
-    timeouts: recs.filter((r) => r.timeout === true).length,
-    median_game_s: r4(median(recs.map((r) => numOr(r.ms))) / 1000),
-  };
+  let games = 0, errors = 0, timeouts = 0;
+  const ms: number[] = [];
+  for (const f of expandGlob(dir, 'results/*.jsonl')) {
+    eachJsonLine(f, (r) => {
+      if (r === null) return;
+      games++;
+      if (r.error === true) errors++;
+      if (r.timeout === true) timeouts++;
+      ms.push(numOr(r.ms));
+    });
+  }
+  return { games, errors, timeouts, median_game_s: r4(median(ms) / 1000) };
 }
 
 // ---------------------------------------------------------------- generic
 
 export function lines(cwd: string, args: string[]): number {
-  return sum(args.flatMap((a) => expandGlob(cwd, a)).map((f) => completeLines(f).length));
+  let n = 0;
+  for (const f of args.flatMap((a) => expandGlob(cwd, a))) eachCompleteLine(f, () => { n++; });
+  return n;
 }
 
 export function files(cwd: string, args: string[]): number {
@@ -331,7 +434,9 @@ export function files(cwd: string, args: string[]): number {
 export function count(cwd: string, args: string[]): number {
   const text = args.at(-1) ?? '';
   if (!text) return 0;
-  return sum(args.slice(0, -1).flatMap((a) => expandGlob(cwd, a)).map((f) => completeLines(f).filter((l) => l.includes(text)).length));
+  let n = 0;
+  for (const f of args.slice(0, -1).flatMap((a) => expandGlob(cwd, a))) eachCompleteLine(f, (l) => { if (l.includes(text)) n++; });
+  return n;
 }
 
 export const EXTRACTORS: Record<string, (cwd: string, args: string[]) => Flat | number> = {

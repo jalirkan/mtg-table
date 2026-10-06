@@ -83,6 +83,7 @@ import forge.util.BuildInfo;
 import forge.util.FSerializableFunction;
 import forge.util.ITriggerEvent;
 import forge.util.MyRandom;
+import forge.util.ThreadUtil;
 
 import mtgtable.Json.JsonOut;
 
@@ -446,6 +447,8 @@ public final class RecordMatch {
         private final Set<String> unimpl = new LinkedHashSet<>();
         private final AtomicInteger frames = new AtomicInteger();
         private final AtomicInteger errors = new AtomicInteger();
+        /** Batches that reached {@link #handleGameEvents} off the game thread (D355). */
+        private final AtomicInteger offThread = new AtomicInteger();
         private boolean overEmitted;
         /**
          * Did the last {@code state} frame only move the phase strip?  Written
@@ -474,7 +477,11 @@ public final class RecordMatch {
         private final Game game;
         /** D352: holds a flush cut while a "may look" effect outlives its source. */
         private final MidMove midMove = new MidMove();
-        /** Batches {@link MidMove#hold} kept back; the next {@link #snapshot} prepends them (D352). */
+        /**
+         * Batches {@link MidMove#hold} kept back (D352), and batches that arrived
+         * off the game thread (D355); the next {@link #snapshot} prepends them.
+         * Guarded by its own monitor: the D355 writer is not the game thread.
+         */
         private final List<GameEvent> held = new ArrayList<>();
 
         SpectatorGui(final String gameId, final Game game, final GameView gameView,
@@ -495,6 +502,10 @@ public final class RecordMatch {
             return errors.get();
         }
 
+        int offThreadBatches() {
+            return offThread.get();
+        }
+
         Collection<String> unimplemented() {
             return unimpl;
         }
@@ -506,11 +517,27 @@ public final class RecordMatch {
          */
         @Override
         public void handleGameEvents(final List<GameEvent> events) {
+            if (!ThreadUtil.isGameThread()) {
+                // D355: a watchdog ended the game -- Game.setGameOver from the
+                // caller's main thread fires GameEventGameOutcome THERE, and the
+                // flusher (or the forwarder's 500 ms clock) lands the batch here.
+                // Snapshotting would walk the view graph off the game thread
+                // (hard rule 3; Snap refuses, and each seat counted an error).
+                // Hold the batch: the game thread's own finish() ships it in the
+                // final frame, before `over`, as for any other game.
+                offThread.incrementAndGet();
+                synchronized (held) {
+                    held.addAll(events);
+                }
+                return;
+            }
             if (midMove.hold(game)) {
                 // D352: cut inside changeZone (or SBAs), before Forge re-ran its
                 // statics -- a "may look" effect still outlives its source.  The
                 // next flush ships these events with its own.
-                held.addAll(events);
+                synchronized (held) {
+                    held.addAll(events);
+                }
                 return;
             }
             snapshot(events);
@@ -519,12 +546,14 @@ public final class RecordMatch {
         /** Build and log one {@code state} frame, with any held batches first.  Game thread only. */
         void snapshot(final List<GameEvent> batch) {
             final List<GameEvent> events;
-            if (held.isEmpty()) {
-                events = batch;
-            } else {
-                events = new ArrayList<>(held);
-                events.addAll(batch);
-                held.clear();
+            synchronized (held) {      // D355: an off-thread batch may have been parked here
+                if (held.isEmpty()) {
+                    events = batch;
+                } else {
+                    events = new ArrayList<>(held);
+                    events.addAll(batch);
+                    held.clear();
+                }
             }
             if (paced) {
                 lastFrameQuiet = quiet(events);
