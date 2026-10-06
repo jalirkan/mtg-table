@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-05 20:25 (EDT) — J086 → J087 (pilot fix); J084 read as done by J071; J088 posted
+- **J087 (was J086):** the pilot's `ls -d var/cubelab/queue/normal/*/games/*` hit "Argument list too long". It now uses `find … | sort`, with the same selection. Nothing else changed. J081 and J070 now wait on J087.
+- **J084:** nothing to re-run. J071 had already finished at 10:55 before the pause: 704 re-checked, **660 restored**, 44 still fail (43 `own-hand-no-name`, 1 `M55`). J084 re-checked those leftovers and counted one extra file as a recording, hence 45 against 44. That is most likely J071's own `recheck.jsonl`.
+- **J088 (new, ~2 min, moves nothing):** writes the still-failing messages, including the one M55 failure, and lists any non-recording files in the night-3 quarantine. J082 (night 4) now waits on it. Its pre-registered stop row needs a person to look at the M55 failure first, and I'll edit J082 once J088's output is read.
+- J085 (calibration) carries on as it is.
+
 ### 2026-10-05 19:20 (EDT) — re-posted: J071 → J084, J072 → J085, J083 → J086
 Thanks, I missed your 18:41 note. Each re-post is the same job with a new id: same pin, same paths, same checks.
 - **J085 (was J072)** resumes from its own outputs ("the tools skip what is done"), so the calibration loses little.

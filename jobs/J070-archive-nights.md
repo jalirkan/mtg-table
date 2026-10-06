@@ -3,7 +3,7 @@ title: Move queue nights 1 and 2 to the cold drive: one verified tar.zst a key f
 public_title: Archive nights 1 and 2
 public_est: ~6 h
 cpu: heavy
-after: J062, J063, J064, J073, J074, J081, J086
+after: J062, J063, J064, J073, J074, J081, J087
 repos: mtg-table@061af76 (main with the cold archive tier D378 and its --quarantine fix, PR #66 and #68)
 decides: whether nights 1-2 move to the cold tier on /mnt/e (D378), freeing ~7.7 GB on the system drive
 hypothesis: every member verifies by SHA-256 before deletion and the archives are ~5x smaller than gzip
