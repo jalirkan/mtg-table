@@ -14,7 +14,9 @@
 #   tools/runner.sh install [--reserve-gb 7] [--public-status on|off] [--dry-run]
 #   tools/runner.sh status | pause | resume | stop [J###] | logs [J###] [-f] | once | plan [J###]
 #   tools/runner.sh approve J###                 # an old-format job: run its commands after a pilot a person checked
-#   tools/runner.sh check jobs/J003-x.md [--metrics m.json]
+#   tools/runner.sh check jobs/J003-x.md [--metrics m.json]   # parse and lint (D397: a lint error fails)
+#   tools/runner.sh lint jobs/*.md [--jobs-dir jobs]          # the lint alone
+#   tools/runner.sh dry-run jobs/J003-x.md --root <checkout> [--max-seconds 60]   # blocks over an overlay of var/
 #   tools/runner.sh metrics aibench var/ai-bench/night-*
 #   tools/runner.sh daemon [...]                 # what the service runs
 #
