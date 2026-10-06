@@ -253,6 +253,8 @@ echo '{"id":"1","log":"…","type":"spell","oppPool":"…","budgetMs":3000}' | .
 ./scripts/play.sh --engine-only --lan --draft-room --pause-lab   # D400 + D401: draft with a friend on the Wi-Fi, the lab held
 ./scripts/play.sh --tunnel https://play.example.com             # D408: draft and play with a friend over a Cloudflare tunnel (docs/cloudflare.md)
 ./scripts/tunnel/tunnel-check.sh --local play.example.com       # D405: the pre-session check (play.sh --tunnel runs it); without --local, from outside
+./scripts/play.sh --funnel --pause-lab                          # D409: draft and play with a friend over Tailscale Funnel (docs/tailscale-funnel.md)
+./scripts/tunnel/tunnel-check.sh --local --funnel pc.tail1234.ts.net   # D409: Funnel's routing and the doors (play.sh --funnel runs it)
 ./tools/runner.sh check jobs/J005-x.md      # a job file: its steps, its checks (--metrics m.json evaluates them)
 ./tools/ai-ladder.sh check                   # a pilot's data checks (mirrors, draws, errors, load)
 ./tools/ai-ladder.sh decksets --per-cube 10                # regenerate the dev/confirm deck sets (no games; reserved seeds 900000000+, D340)

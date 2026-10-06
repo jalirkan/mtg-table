@@ -1613,10 +1613,12 @@ public final class WsTransport implements Transport {
 
     /**
      * The request headers a Cloudflare tunnel (or its Access) adds on the way
-     * to an origin (D405, docs/cloudflare.md).  A port that must never be
-     * tunnelled refuses any request carrying one.
+     * to an origin (D405, docs/cloudflare.md), and those tailscaled's
+     * serve/funnel proxy adds (D409, docs/tailscale-funnel.md).  A port that
+     * must never be tunnelled refuses any request carrying one.
      */
-    static final List<String> TUNNEL_HEADERS = List.of("cf-connecting-ip", "cf-ray", "cf-access-jwt-assertion");
+    static final List<String> TUNNEL_HEADERS = List.of("cf-connecting-ip", "cf-ray", "cf-access-jwt-assertion",
+            "tailscale-funnel-request", "tailscale-user-login", "x-forwarded-for", "x-forwarded-host");
 
     /** Does a request with these header names look like it came through a tunnel (D405)? */
     static boolean viaTunnel(final Iterable<String> headerNames) {

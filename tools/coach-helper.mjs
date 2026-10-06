@@ -314,8 +314,12 @@ export function loopbackHostOk(hostHeader) {
   return isIP(name) === 4 && LOOPBACK_IPS.check(name, 'ipv4');
 }
 
-/** D405: the request headers a Cloudflare tunnel (or its Access) adds on the way to an origin. */
-export const TUNNEL_HEADERS = ['cf-connecting-ip', 'cf-ray', 'cf-access-jwt-assertion'];
+/**
+ * D405: the request headers a Cloudflare tunnel (or its Access) adds on the way to an origin; D409: and the ones
+ * tailscaled's `serve`/`funnel` proxy adds (Tailscale-Funnel-Request on a Funnel request, Tailscale-User-Login for
+ * a tailnet user, X-Forwarded-For and X-Forwarded-Host on every one -- ipn/ipnlocal/serve.go).
+ */
+export const TUNNEL_HEADERS = ['cf-connecting-ip', 'cf-ray', 'cf-access-jwt-assertion', 'tailscale-funnel-request', 'tailscale-user-login', 'x-forwarded-for', 'x-forwarded-host'];
 /** Did this request (node's lower-cased headers) come through a tunnel? */
 export const viaTunnel = (headers) => TUNNEL_HEADERS.some((h) => headers?.[h] !== undefined);
 

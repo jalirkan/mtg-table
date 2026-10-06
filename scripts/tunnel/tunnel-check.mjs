@@ -39,6 +39,14 @@
 //       (passed to the table, D404) opens nothing without a token either;
 //     - which ports listen beyond loopback (--lan is not needed for a tunnel).
 //
+//   tunnel-check.sh --local --funnel <machine>.<tailnet>.ts.net   TAILSCALE FUNNEL (D409,
+//   docs/tailscale-funnel.md), on this machine: no cloudflared config; instead
+//   `tailscale serve status --json` must route the Funnel name to the room listener
+//   alone (`/` -> http://127.0.0.1:8644, nothing else on any Funnel port, no TCP
+//   forward, no handler naming a never-port), then the same doors as above, with
+//   the ts.net Host and https:// Origin tailscaled passes through.  Funnel has no
+//   login gate: the seat tokens are the only lock.
+//
 // Exit 0 when nothing FAILed, 1 when something did, 2 on a usage error.  Wrong-
 // token probes are few (4) because the room listener counts 10 a minute per
 // address before it answers 429.
@@ -158,6 +166,16 @@ export async function runChecks(opts) {
   const t = opts.timeoutMs ?? 8000;
   const env = opts.env ?? process.env;
 
+  if (opts.funnel) {
+    // D409: Tailscale Funnel -- tailscaled's own routing instead of a cloudflared config.
+    const r = opts.serveStatus !== undefined ? { json: opts.serveStatus } : serveStatus(opts.tailscale ?? 'tailscale');
+    if (r.error) add('FAIL', 'tailscale serve status', r.error);
+    else for (const x of funnelRules(r.json, host, ports.room)) add(x.level, x.name, x.note);
+    await localDoors(host, ports, roomId, false, t, add, ok);
+    if (opts.ss !== false) binds(ports, add);
+    return out;
+  }
+
   // --- the config (always when there is one; required with --local) ---
   const cfgPath = opts.configPath ?? join(homedir(), '.cloudflared', 'config.yml');
   let gameSeat = !!opts.gameSeat;
@@ -275,10 +293,66 @@ async function localDoors(host, ports, roomId, gameSeat, t, add, ok) {
   }
 }
 
+/** `tailscale serve status --json`, parsed: {json} or {error}. */
+function serveStatus(bin) {
+  const r = spawnSync(bin, ['serve', 'status', '--json'], { encoding: 'utf8', timeout: 10000 });
+  if (r.error) return { error: `${bin}: ${r.error.code === 'ENOENT' ? 'not installed' : r.error.message}` };
+  if (r.status !== 0) return { error: (r.stderr || r.stdout || `exit ${r.status}`).trim().split('\n').pop() };
+  const text = r.stdout.trim();
+  if (text === '' || text === '{}') return { json: {} };
+  try { return { json: JSON.parse(text) }; } catch { return { error: 'its output is not JSON (an old tailscale? 1.52 or later is needed)' }; }
+}
+
+/**
+ * D409: Tailscale Funnel's routing (tailscaled's ServeConfig, from `tailscale serve status --json`, the background
+ * config and every foreground session's) against the policy: on each host:port Funnel is on for, exactly one
+ * handler, `/` -> http://127.0.0.1:<room> (or localhost), and no TCP forward; the name asked about among them; no
+ * handler anywhere (Funnel or tailnet-only) naming a never-port.  [{level, name, note}].
+ */
+export function funnelRules(sc, host, roomPort) {
+  const out = [];
+  const configs = [sc ?? {}, ...Object.values(sc?.Foreground ?? {})];
+  const funnel = new Set();
+  for (const c of configs) for (const [hp, on] of Object.entries(c.AllowFunnel ?? {})) if (on) funnel.add(hp.toLowerCase());
+  const never = new Set(NEVER_PORTS.map((x) => x.port));
+  const portOf = (target) => {
+    const m = /^(?:https?(?:\+insecure)?:\/\/)?(?:[^/:]+|\[[^\]]+\])?:?(\d+)?/i.exec(String(target ?? ''));
+    return m?.[1] ? Number(m[1]) : /^\d+$/.test(String(target)) ? Number(target) : null;
+  };
+  const roomTarget = new RegExp(`^http://(127\\.0\\.0\\.1|localhost):${roomPort}/?$`, 'i');
+  let routed = false;
+  for (const c of configs) {
+    for (const [port, tcp] of Object.entries(c.TCP ?? {})) {
+      const fwd = tcp?.TCPForward;
+      if (!fwd) continue;
+      const p = portOf(fwd);
+      const onFunnel = [...funnel].some((hp) => hp.endsWith(`:${port}`));
+      if (onFunnel || never.has(p)) out.push({ level: 'FAIL', name: `funnel TCP :${port}`, note: `a raw TCP forward to ${fwd}${never.has(p) ? ' -- a never-port' : ''}; the policy routes HTTPS / to the room listener only` });
+    }
+    for (const [hp, web] of Object.entries(c.Web ?? {})) {
+      const onFunnel = funnel.has(hp.toLowerCase());
+      for (const [path, h] of Object.entries(web?.Handlers ?? {})) {
+        const target = h?.Proxy ?? (h?.Path ? `file ${h.Path}` : h?.Text !== undefined ? 'text' : '?');
+        const p = h?.Proxy ? portOf(h.Proxy) : null;
+        if (p !== null && never.has(p)) { out.push({ level: 'FAIL', name: `serve ${hp}${path}`, note: `-> ${target}: a never-port (${NEVER_PORTS.find((x) => x.port === p).name})${onFunnel ? ', on the public internet' : ''}` }); continue; }
+        if (!onFunnel) continue;
+        if (path === '/' && h?.Proxy && roomTarget.test(h.Proxy)) {
+          if (hp.toLowerCase() === `${host}:443`) routed = true;
+          out.push({ level: 'PASS', name: `funnel ${hp}${path}`, note: `-> ${h.Proxy}, the room listener` });
+        } else out.push({ level: 'FAIL', name: `funnel ${hp}${path}`, note: `-> ${target}: Funnel may carry / -> http://127.0.0.1:${roomPort} and nothing else` });
+      }
+    }
+  }
+  if (!routed) out.push({ level: 'FAIL', name: `funnel https://${host}/`, note: `not routed to http://127.0.0.1:${roomPort} (run: tailscale funnel ${roomPort})` });
+  return out;
+}
+
 /** Paths the table port must answer 404 (D402): it serves `/ws` and nothing else. */
 export const TABLE_NEVER = Object.freeze(['/', '/health', '/observe', '/index.html']);
 /** Made-up values for Cloudflare's headers, as a tunnel daemon would add them. */
-const CF_VALUE = { 'cf-connecting-ip': '203.0.113.7', 'cf-ray': '8c0ffee000000000-AMS', 'cf-access-jwt-assertion': 'eyJhbGciOiJSUzI1NiJ9.e30.x' };
+const CF_VALUE = { 'cf-connecting-ip': '203.0.113.7', 'cf-ray': '8c0ffee000000000-AMS', 'cf-access-jwt-assertion': 'eyJhbGciOiJSUzI1NiJ9.e30.x',
+  // D409: what tailscaled's serve/funnel proxy adds.
+  'tailscale-funnel-request': '?1', 'tailscale-user-login': 'friend@example.com', 'x-forwarded-for': '203.0.113.7', 'x-forwarded-host': 'pc.tail1234.ts.net' };
 
 async function outside(host, roomId, gameSeat, ip, t, env, add, ok) {
   let addrs = [];
@@ -397,6 +471,9 @@ const USAGE = `usage: scripts/tunnel/tunnel-check.sh [--local] <hostname> [optio
   <hostname>           the public name, e.g. play.example.com
   --local              check this machine only (the config, cloudflared's routing, each door
                        with the tunnel's Host); default: probe from outside through Cloudflare
+  --funnel             with --local: Tailscale Funnel instead of Cloudflare (D409) -- tailscaled's
+                       routing (tailscale serve status --json) and the doors; <hostname> is the ts.net name
+  --tailscale <path>   the tailscale CLI (default: the one on PATH)
   --config <path>      the cloudflared config (default ~/.cloudflared/config.yml)
   --room <id>          a live room's id (from the friend's link, room=...): its routes must refuse no token
   --game-seat          the Phase 2 game seat is routed (on by itself when the config routes /ws)
@@ -418,12 +495,14 @@ function which(cmd) {
 }
 
 export function parseArgs(argv) {
-  const a = { local: false, hostname: null, configPath: undefined, room: undefined, gameSeat: false, ip: null, cloudflared: undefined, timeoutMs: 8000, ports: {} };
+  const a = { local: false, funnel: false, tailscale: undefined, hostname: null, configPath: undefined, room: undefined, gameSeat: false, ip: null, cloudflared: undefined, timeoutMs: 8000, ports: {} };
   const port = (v, f) => { const n = Number(v); if (!Number.isInteger(n) || n < 1 || n > 65535) throw new Error(`${f} wants a port`); return n; };
   for (let i = 0; i < argv.length; i++) {
     const f = argv[i];
     const val = () => { if (i + 1 >= argv.length) throw new Error(`${f} needs a value`); return argv[++i]; };
     if (f === '--local') a.local = true;
+    else if (f === '--funnel') a.funnel = true;   // D409
+    else if (f === '--tailscale') a.tailscale = val();
     else if (f === '--config') a.configPath = val();
     else if (f === '--room') a.room = val();
     else if (f === '--game-seat') a.gameSeat = true;
@@ -440,6 +519,7 @@ export function parseArgs(argv) {
     else throw new Error(`one hostname only (got ${a.hostname} and ${f})`);
   }
   if (!a.hostname) throw new Error('give the public hostname, e.g. play.example.com');
+  if (a.funnel && !a.local) throw new Error('--funnel checks this machine: add --local (an outside check through Funnel is not built)');
   a.hostname = a.hostname.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase();
   if (!/^[a-z0-9.-]+$/.test(a.hostname) || !a.hostname.includes('.')) throw new Error(`${a.hostname} is not a hostname`);
   if (a.room !== undefined && !/^r[A-Za-z0-9_-]{8}$/.test(a.room)) throw new Error('--room wants a room id like rAbC12_xY (the room= of a link)');
@@ -458,13 +538,13 @@ async function main() {
   }
   if (a.help) { console.log(USAGE); return; }
   const cloudflared = a.cloudflared ?? which('cloudflared');
-  console.log(`tunnel-check: ${a.local ? 'this machine, as the tunnel reaches it' : 'from outside, through Cloudflare'} -- ${a.hostname}\n`);
+  console.log(`tunnel-check: ${a.funnel ? 'this machine, as Tailscale Funnel reaches it' : a.local ? 'this machine, as the tunnel reaches it' : 'from outside, through Cloudflare'} -- ${a.hostname}\n`);
   const results = await runChecks({ ...a, cloudflared });
   const width = Math.min(52, Math.max(...results.map((r) => r.name.length)));
   for (const r of results) console.log(`${r.level.padEnd(4)}  ${r.name.padEnd(width)}  ${r.note}`);
   const fails = results.filter((r) => r.level === 'FAIL').length;
   const warns = results.filter((r) => r.level === 'WARN').length;
-  console.log(`\n${fails ? `${fails} FAILED` : 'nothing failed'}${warns ? `, ${warns} warning${warns === 1 ? '' : 's'}` : ''}.${fails ? ' Do not send the link until these pass (docs/cloudflare.md, "Security checklist").' : ''}`);
+  console.log(`\n${fails ? `${fails} FAILED` : 'nothing failed'}${warns ? `, ${warns} warning${warns === 1 ? '' : 's'}` : ''}.${fails ? ` Do not send the link until these pass (${a.funnel ? 'docs/tailscale-funnel.md' : 'docs/cloudflare.md, "Security checklist"'}).` : ''}`);
   process.exit(fails ? 1 : 0);
 }
 

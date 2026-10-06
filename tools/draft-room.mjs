@@ -744,6 +744,25 @@ export function sitePath(root, urlPath) {
 // The room listener.
 // ---------------------------------------------------------------------------
 
+/**
+ * The address a limit counts (and the /ws pass-through names to the table as CF-Connecting-IP).  A remote peer is
+ * its own address.  A loopback peer is a tunnel daemon or this machine: through Tailscale Funnel (D409) tailscaled
+ * marks the request `Tailscale-Funnel-Request` and SETS `X-Forwarded-For` to the public client (it overwrites
+ * whatever the client sent) -- while a funnelled client may send any CF-Connecting-IP it likes, so on a Funnel
+ * request that header is never read; otherwise (cloudflared) a well-formed CF-Connecting-IP names the client.
+ */
+export function clientKey(peer, headers = {}) {
+  const loop = /^(::ffff:)?127\.|^::1$/.test(peer);
+  if (!loop) return peer;
+  const ip = (v) => (typeof v === 'string' && /^[0-9a-f.:]{2,45}$/i.test(v.trim()) ? v.trim() : null);
+  if (headers['tailscale-funnel-request'] !== undefined) {
+    const xff = ip(headers['x-forwarded-for']);
+    return xff ? `ts:${xff}` : 'ts:?';
+  }
+  const cf = ip(headers['cf-connecting-ip']);
+  return cf ? `cf:${cf}` : peer;
+}
+
 /** The page addresses a friend can reach this listener at: loopback, each LAN IPv4 (with --lan), a public URL. */
 export function roomBases({ port, lan, publicUrl = null, interfaces = networkInterfaces() }) {
   const lanList = [];
@@ -804,8 +823,7 @@ export function startRoomServer(opts) {
     const peer = req.socket.remoteAddress ?? '?';
     // The address a limit counts: a tunnel daemon connects from loopback and names its client in
     // CF-Connecting-IP (only a process on this machine can reach loopback, so it cannot be forged from outside).
-    const cf = req.headers['cf-connecting-ip'];
-    const who = /^(::ffff:)?127\.|^::1$/.test(peer) && typeof cf === 'string' && /^[0-9a-f.:]{2,45}$/i.test(cf) ? `cf:${cf}` : peer;
+    const who = clientKey(peer, req.headers);
     let url;
     try { url = new URL(req.url ?? '/', 'http://room.invalid'); } catch { send(res, 400, { ok: false, code: 'bad', message: 'bad request' }); return; }
     const path = url.pathname;
@@ -951,9 +969,7 @@ export function startRoomServer(opts) {
     if (path !== '/ws' || req.method !== 'GET') { refuse('404 Not Found', 'not found'); return; }
     const tablePort = opts.tablePort !== undefined ? opts.tablePort : store.tablePort?.() ?? null;
     if (!tablePort) { refuse('404 Not Found', 'no game is being played here: the room starts one when both decks are in'); return; }
-    const loop = /^(::ffff:)?127\.|^::1$/.test(peer);
-    const cf = req.headers['cf-connecting-ip'];
-    const who = loop && typeof cf === 'string' && /^[0-9a-f.:]{2,45}$/i.test(cf) ? cf : peer.replace(/^::ffff:/, '');
+    const who = clientKey(peer, req.headers).replace(/^(cf|ts):/, '').replace(/^::ffff:/, '');
     const lines = [`GET ${req.url} HTTP/1.1`];
     for (let i = 0; i < req.rawHeaders.length; i += 2) {
       if (req.rawHeaders[i].toLowerCase() === 'cf-connecting-ip') continue;

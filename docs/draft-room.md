@@ -243,5 +243,8 @@ the bridge is given only their SHA-256 digests (`var/match/<id>/seats.json`).
 - A tunnel (Phase 4): the room listener and the table port are built to be
   tunnelled (no loopback exemption, `https://` origins, the table serving `/ws`
   only), and `docs/cloudflare.md` (D405) is the runbook: cloudflared checks
-  Access itself. `./scripts/play.sh --tunnel https://<host>` (D408) hands the
+  Access itself. Tailscale Funnel is the no-domain alternative:
+  `./scripts/play.sh --funnel` (D409, `docs/tailscale-funnel.md`) routes the PC's
+  `https://<machine>.<tailnet>.ts.net` to the room listener alone, with no login
+  gate in front. `./scripts/play.sh --tunnel https://<host>` (D408) hands the
   room its public URL, so the page shows the "Over the internet" link.

@@ -85,7 +85,9 @@ finishable. Anything on this list is a closed question, not a backlog item.
   itself is not shown. *Lifted in part on 2026-10-06 by **D400**, on the owner's
   request:* two people may grid-draft a cube from their own browsers through the
   coach helper's draft room (`play.sh --draft-room`, `docs/draft-room.md`), on a
-  port of its own where every route needs a seat token. *And again the same day by
+  port of its own where every route needs a seat token — on the Wi-Fi, through a
+  Cloudflare tunnel (`docs/cloudflare.md`) or through Tailscale Funnel
+  (`./scripts/play.sh --funnel`, `docs/tailscale-funnel.md`, D409). *And again the same day by
   **D402** and **D403**, on the owner's request:* the two drafted decks may be
   played against each other — `MtgTable --humans 2`, two human seats and no AI,
   each its own redacted stream on a table port where every seat needs its own
