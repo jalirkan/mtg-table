@@ -123,6 +123,9 @@ public final class TableSelfTest {
             // A tunnel (D405): one hostname, path-routed; cloudflared passes the page's Host through.
             { "https://play.example.com",            "play.example.com",           true },
             { "https://play.example.com",            "play.example.com:443",       true },
+            // Tailscale Funnel (D409): tailscaled keeps the Host it was asked for, https on 443.
+            { "https://pc.tail1234.ts.net",          "pc.tail1234.ts.net",         true },
+            { "https://other.tail1234.ts.net",       "pc.tail1234.ts.net",         false },
             { "https://evil.example.com",            "play.example.com",           false },
             // The draft room's /ws proxy (D404) keeps the page's Host.
             { "http://192.168.1.5:8644",             "192.168.1.5:8644",           true },

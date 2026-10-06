@@ -61,6 +61,7 @@ interface Check {
   bindsFrom(ssText: string, ports: number[]): Map<number, string[]>;
   inCloudflareV4(ip: string): boolean | null;
   parseArgs(argv: string[]): Record<string, unknown>;
+  funnelRules(sc: unknown, host: string, roomPort: number): Result[];
 }
 interface HelperLib {
   TUNNEL_HEADERS: readonly string[];
@@ -542,4 +543,22 @@ test('play.sh: --tunnel refuses --lan and a non-https address; --room-public-url
     assert.match(r.stderr, want, args.join(' '));
     assert.doesNotMatch(r.stdout, /== check-forge|== build/, `${args.join(' ')} got as far as the build`);
   }
+});
+
+test('tunnel-check --funnel (D409): Tailscale Funnel may route its name\'s / to the room listener and nothing else', () => {
+  const host = 'pc.tail1234.ts.net';
+  const fg = (handlers: Record<string, unknown>, extra: Record<string, unknown> = {}) =>
+    ({ Foreground: { s: { TCP: { 443: { HTTPS: true } }, Web: { [`${host}:443`]: { Handlers: handlers } }, AllowFunnel: { [`${host}:443`]: true }, ...extra } } });
+  const levels = (r: Result[]) => r.map((x) => `${x.level} ${x.name}`);
+  assert.deepEqual(levels(C.funnelRules(fg({ '/': { Proxy: 'http://127.0.0.1:8644' } }), host, 8644)), [`PASS funnel ${host}:443/`]);
+  assert.deepEqual(levels(C.funnelRules({ Web: { [`${host}:443`]: { Handlers: { '/': { Proxy: 'http://localhost:8644' } } } }, AllowFunnel: { [`${host}:443`]: true } }, host, 8644)),
+    [`PASS funnel ${host}:443/`], 'the background config reads the same');
+  assert.ok(levels(C.funnelRules(fg({ '/': { Proxy: 'http://127.0.0.1:8644' }, '/coach': { Proxy: 'http://127.0.0.1:8643' } }), host, 8644)).includes(`FAIL serve ${host}:443/coach`), 'a never-port');
+  assert.ok(levels(C.funnelRules(fg({ '/': { Proxy: 'http://127.0.0.1:8642' } }), host, 8644)).includes(`FAIL funnel https://${host}/`), 'the bridge instead of the room');
+  assert.ok(levels(C.funnelRules(fg({ '/': { Proxy: 'http://127.0.0.1:8644' }, '/x': { Path: '/home' } }), host, 8644)).includes(`FAIL funnel ${host}:443/x`), 'anything else on Funnel');
+  assert.ok(levels(C.funnelRules(fg({ '/': { Proxy: 'http://127.0.0.1:8644' } }, { TCP: { 443: { HTTPS: true }, 10000: { TCPForward: '127.0.0.1:8643' } }, AllowFunnel: { [`${host}:443`]: true, [`${host}:10000`]: true } }), host, 8644)).includes('FAIL funnel TCP :10000'), 'a raw TCP forward');
+  assert.deepEqual(levels(C.funnelRules({}, host, 8644)), [`FAIL funnel https://${host}/`], 'not routed at all');
+  assert.ok(levels(C.funnelRules({ Web: { [`${host}:443`]: { Handlers: { '/': { Proxy: 'http://127.0.0.1:8643' } } } } }, host, 8644)).includes(`FAIL serve ${host}:443/`), 'a tailnet-only serve of the coach helper fails too');
+  assert.throws(() => C.parseArgs(['--funnel', host]), /--local/);
+  assert.equal(C.parseArgs(['--local', '--funnel', host]).funnel, true);
 });

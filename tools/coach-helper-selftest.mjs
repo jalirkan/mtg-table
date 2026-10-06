@@ -427,6 +427,14 @@ try {
   check('...and /review', r.status === 403);
   r = await http({ port: P, headers: { Host: `my-tunnel.example.com`, Origin: 'https://jalirkan.github.io' } });
   check('a tunnel hostname with an allowed Origin: still 403', r.status === 403);
+  // D409: Tailscale Funnel reaches a loopback port from 127.0.0.1 with Host <machine>.<tailnet>.ts.net -- and even with a
+  // loopback Host (a forwarder that rewrote it), the headers tailscaled adds are refused first.
+  r = await http({ port: P, headers: { Host: 'pc.tail1234.ts.net', Origin: 'https://pc.tail1234.ts.net', 'Tailscale-Funnel-Request': '?1', 'X-Forwarded-For': '203.0.113.7' } });
+  check('a Funnel request (ts.net Host, its headers): 403', r.status === 403);
+  r = await http({ port: P, headers: { Host: `127.0.0.1:${P}`, 'Tailscale-Funnel-Request': '?1' } });
+  check('Tailscale-Funnel-Request with a loopback Host: 403', r.status === 403);
+  r = await http({ port: P, headers: { Host: `127.0.0.1:${P}`, 'X-Forwarded-For': '100.101.102.103' } });
+  check('X-Forwarded-For (tailscale serve to a tailnet peer) with a loopback Host: 403', r.status === 403);
   r = await http({ port: P, headers: { Host: `localhost:${P}`, Origin: 'http://localhost:5173' } });
   check('Host localhost:<port>: 200', r.status === 200);
   r = await http({ port: P, headers: { Host: `127.0.0.1:${P}` } });
@@ -450,6 +458,9 @@ try {
     && /^origin refused:/.test(A({ loop: true, host: '127.0.0.1:8643', tunnelled: true }).message));
   check('viaTunnel: CF-Connecting-IP, CF-Ray or Cf-Access-Jwt-Assertion, and nothing else', viaTunnel({ 'cf-connecting-ip': '1.2.3.4' }) && viaTunnel({ 'cf-ray': 'x' })
     && viaTunnel({ 'cf-access-jwt-assertion': 'x' }) && !viaTunnel({ host: 'x', 'x-cf-ray-like': 'y' }) && !viaTunnel(undefined));
+  check('viaTunnel (D409): what tailscaled\'s serve/funnel proxy adds -- Tailscale-Funnel-Request, Tailscale-User-Login, X-Forwarded-For, X-Forwarded-Host',
+    viaTunnel({ 'tailscale-funnel-request': '?1' }) && viaTunnel({ 'tailscale-user-login': 'a@b' }) && viaTunnel({ 'x-forwarded-for': '203.0.113.7' }) && viaTunnel({ 'x-forwarded-host': 'pc.tail1234.ts.net' })
+    && !viaTunnel({ 'tailscale-funnel': 'x', 'x-forwarded': 'y' }));
   check('admit: loopback, no Origin: ok', A({ loop: true }).ok);
   check('admit: a non-loopback peer without --lan: 403 peer, even with an allowed Origin', A({ loop: false, origin: 'https://jalirkan.github.io' }).why === 'peer'
     && A({ loop: false, method: 'OPTIONS', origin: 'https://jalirkan.github.io' }).why === 'peer');

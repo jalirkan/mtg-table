@@ -41,7 +41,7 @@ import { fileURLToPath } from 'node:url';
 import { startHelper } from './coach-helper.mjs';
 import { checkDeck } from './match-launcher.mjs';
 import {
-  applyPick, checkCreate, cleanText, createRoomOwner, createRoomStore, dealGrid, legalLines, lineCards, newGrid, ownOrigin,
+  applyPick, checkCreate, cleanText, clientKey, createRoomOwner, createRoomStore, dealGrid, legalLines, lineCards, newGrid, ownOrigin,
   rng, roomAdmit, roomBases, sitePath, startRoomServer, toAct,
 } from './draft-room.mjs';
 
@@ -126,6 +126,14 @@ section('2. the pure pieces');
   ok(roomAdmit({ origin: 'https://jalirkan.github.io', host: '127.0.0.1:8644', origins: ORIGINS }).ok, 'github.io: admitted');
   ok(roomAdmit({ origin: 'http://192.168.1.5:8644', host: '192.168.1.5:8644', origins: ORIGINS }).ok, 'the page this listener served (LAN): admitted');
   ok(roomAdmit({ origin: 'https://draft.example.com', host: 'draft.example.com', origins: ORIGINS }).ok, 'a tunnel page on its own host: admitted');
+  ok(roomAdmit({ origin: 'https://pc.tail1234.ts.net', host: 'pc.tail1234.ts.net', origins: ORIGINS }).ok, 'a Tailscale Funnel page on its own host (D409): admitted');
+  ok(!roomAdmit({ origin: 'https://other.tail1234.ts.net', host: 'pc.tail1234.ts.net', origins: ORIGINS }).ok, 'another ts.net page: refused');
+  // Whom a limit counts (D409): tailscaled SETS X-Forwarded-For on a Funnel request; a funnelled client's own CF-Connecting-IP is never read.
+  eq(clientKey('203.0.113.7', { 'cf-connecting-ip': '198.51.100.1' }), '203.0.113.7', 'clientKey: a remote peer is its address');
+  eq(clientKey('127.0.0.1', { 'cf-connecting-ip': '198.51.100.1' }), 'cf:198.51.100.1', 'clientKey: cloudflared (loopback, CF-Connecting-IP)');
+  eq(clientKey('::ffff:127.0.0.1', { 'tailscale-funnel-request': '?1', 'x-forwarded-for': '198.51.100.2', 'cf-connecting-ip': '198.51.100.99' }), 'ts:198.51.100.2', 'clientKey: Funnel -- X-Forwarded-For, and a forged CF-Connecting-IP ignored');
+  eq(clientKey('127.0.0.1', { 'tailscale-funnel-request': '?1', 'x-forwarded-for': '1.2.3.4, 5.6.7.8' }), 'ts:?', 'clientKey: Funnel with a malformed X-Forwarded-For: one shared bucket, never the client\'s pick');
+  eq(clientKey('127.0.0.1', { 'x-forwarded-for': '198.51.100.3' }), '127.0.0.1', 'clientKey: X-Forwarded-For without the Funnel mark is not read');
   ok(!roomAdmit({ origin: 'https://evil.example', host: '127.0.0.1:8644', origins: ORIGINS }).ok, 'a foreign page: refused');
   ok(!roomAdmit({ origin: 'http://192.168.1.5:9999', host: '192.168.1.5:8644', origins: ORIGINS }).ok, 'the right host on another port: refused');
   ok(roomAdmit({ origin: 'https://draft.example.com', host: '127.0.0.1:8644', origins: ORIGINS, extraOrigins: ['https://draft.example.com'] }).ok, 'a --room-origin: admitted');
@@ -259,6 +267,9 @@ const pre = await call(R, `/room/${id}/pick`, { method: 'OPTIONS', origin: 'http
 ok(pre.status === 204 && /X-Room-Token/.test(pre.headers['access-control-allow-headers']) && pre.headers['access-control-allow-private-network'] === 'true', 'a preflight: 204, X-Room-Token allowed, private network');
 const tunnelled = await call(R, `/room/${id}`, { token: T1, host: 'draft.example.com', origin: 'https://draft.example.com' });
 eq(tunnelled.status, 200, 'a tunnel\'s Host and its own https Origin with the token: 200');
+const funnelled = await call(R, `/room/${id}`, { token: T1, host: 'pc.tail1234.ts.net', origin: 'https://pc.tail1234.ts.net' });
+eq(funnelled.status, 200, 'Tailscale Funnel (D409): its ts.net Host and https Origin with the token: 200');
+eq((await call(R, `/room/${id}`, { host: 'pc.tail1234.ts.net', origin: 'https://pc.tail1234.ts.net' })).status, 403, 'Tailscale Funnel without a token: 403');
 
 let s0v = await call(R, `/room/${id}`, { token: T0 });
 eq([s0v.json.you, s0v.json.toAct, s0v.json.g, s0v.json.slots.length, s0v.json.seed, s0v.json.seats[1].joined], [0, 0, 0, 9, null, false], 'seat 0 sees grid 1, its own move, no seed yet, seat 2 not joined');
@@ -688,7 +699,10 @@ section('6b. the game seat on the room\'s own origin: /ws passed through to the 
   ok(/\r\nCF-Connecting-IP: 127\.0\.0\.1$/.test(heads[0] ?? ''), 'the client\'s address goes along as CF-Connecting-IP (the table\'s wrong-token limit keys on it)');
   await up(sp, '/ws?seat=x', 'CF-Connecting-IP: 198.51.100.9\r\n');
   ok((heads[1] ?? '').match(/CF-Connecting-IP/gi)?.length === 1 && heads[1].includes('CF-Connecting-IP: 198.51.100.9'), 'a loopback peer\'s own CF-Connecting-IP (a tunnel daemon) is kept, once');
-  ok(/^HTTP\/1\.1 404/.test(await up(sp, '/observe')) && heads.length === 2, 'any other upgrade path: 404, nothing reaches the table');
+  // D409: through Tailscale Funnel -- a ts.net Host and Origin pass as sent; the client named is X-Forwarded-For, not its own CF header.
+  await up(sp, '/ws?seat=x', 'Tailscale-Funnel-Request: ?1\r\nX-Forwarded-For: 198.51.100.44\r\nCF-Connecting-IP: 198.51.100.99\r\n');
+  ok((heads[2] ?? '').match(/CF-Connecting-IP/gi)?.length === 1 && /\r\nCF-Connecting-IP: 198\.51\.100\.44$/.test(heads[2] ?? ''), 'Funnel: the table is told X-Forwarded-For\'s client, once; the client\'s own CF-Connecting-IP is dropped');
+  ok(/^HTTP\/1\.1 404/.test(await up(sp, '/observe')) && heads.length === 3, 'any other upgrade path: 404, nothing reaches the table');
   srv.close();
   table.close();
   const down = startRoomServer({ store: st, port: 0, origins: ORIGINS, log: () => {}, tablePort: tport });

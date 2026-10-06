@@ -78,6 +78,7 @@
 #   ./scripts/play.sh --engine-only --lan --draft-room   # D400: grid-draft a cube with a friend on your Wi-Fi (below)
 #   ./scripts/play.sh --engine-only --pause-lab          # D401: the lab starts no new job while this runs (below)
 #   ./scripts/play.sh --tunnel https://play.example.com  # D408: a friend over the internet, through Cloudflare (below)
+#   ./scripts/play.sh --funnel                           # D409: a friend over the internet, through Tailscale Funnel (below)
 #
 # Everything after `--` goes to `mtgtable.MtgTable` untouched, so a flag this
 # script has never heard of still reaches the bridge:
@@ -255,6 +256,27 @@
 #                             --draft-room; --tunnel sets it
 #   --tunnel-config <path>    the cloudflared config to check (default ~/.cloudflared/config.yml)
 #
+# A FRIEND OVER TAILSCALE FUNNEL (D409, docs/tailscale-funnel.md).  Only this
+# machine runs Tailscale (`sudo tailscale up`, HTTPS certificates and the Funnel
+# node attribute on, once); the friend opens one https:// link in a plain browser:
+#
+#   ./scripts/play.sh --funnel
+#
+# which is --engine-only --draft-room --room-public-url https://<this machine's
+# ts.net name> (from `tailscale status --json`, Self.DNSName), and:
+#   - refuses --lan and --tunnel, and stops at once when Tailscale is not up;
+#   - once the room listens, runs `tailscale funnel <roomPort>` in the FOREGROUND
+#     mode as a child (log: var/play/funnel.log): https://<name>/ -> the room
+#     listener on 127.0.0.1 and nothing else (the room passes /ws to a game's
+#     table itself).  Foreground means tailscaled drops the route the moment that
+#     child ends -- Ctrl-C, a crash or kill -9 of this script alike;
+#   - then runs scripts/tunnel/tunnel-check.sh --local --funnel <name>: tailscaled's
+#     routing (the Funnel name to the room alone, no handler naming a never-port)
+#     and every door as Funnel reaches it; a FAIL stops everything;
+#   - prints the friend's one step: open the "Over the internet" link.
+# Funnel has NO login gate: anyone who has the link has the seat, so the seat
+# tokens are the only lock.  Close the room (or make a new link) afterwards.
+#
 # PLAY MODE FOR THE LAB (D401).  --pause-lab holds the lab runner's ADMISSIONS
 # while this script runs: `tools/runner.sh hold --pid <this script>` at start,
 # `tools/runner.sh release` at exit.  No new lab job starts; a running one is never
@@ -329,6 +351,9 @@ PAUSE_LAB=0                      # D401: hold the lab runner's admissions while 
 ROOM_PUBLIC_URL=""               # D408: the draft room's "Over the internet" base (the helper's --room-public-url)
 TUNNEL_URL=""                    # D408: --tunnel <https://host>, see the header
 TUNNEL_CONFIG=""                 # D408: the cloudflared config tunnel-check reads (default ~/.cloudflared/config.yml)
+FUNNEL=0                         # D409: --funnel, see the header
+FUNNEL_HOST=""                   # D409: this machine's <machine>.<tailnet>.ts.net
+FUNNEL_PID=""                    # D409: the foreground `tailscale funnel` child
 LAB_HELD=0
 
 # D303: the coach helper's /match asks for a restart with SIGUSR1.  IGNORED
@@ -410,6 +435,7 @@ while [ $# -gt 0 ]; do
     --room-public-url) ROOM_PUBLIC_URL="${2:-}"; shift 2 ;;
     --tunnel)    TUNNEL_URL="${2:-}"; shift 2 ;;
     --tunnel-config) TUNNEL_CONFIG="${2:-}"; shift 2 ;;
+    --funnel)    FUNNEL=1; shift ;;
     --help|-h)   sed -n '5,/^set -euo pipefail/p' "$0" | sed '$d'; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
@@ -430,6 +456,27 @@ if [ -n "$TUNNEL_URL" ]; then
     || { printf 'play.sh: --tunnel wants your tunnel'"'"'s https:// address and nothing else, e.g. https://play.example.com (got "%s")\n' "$TUNNEL_URL" >&2; exit 1; }
   [ -n "$ROOM_PUBLIC_URL" ] && [ "${ROOM_PUBLIC_URL%/}" != "$TUNNEL_URL" ] && { printf 'play.sh: --tunnel %s and --room-public-url %s disagree: give one\n' "$TUNNEL_URL" "$ROOM_PUBLIC_URL" >&2; exit 1; }
   ROOM_PUBLIC_URL="$TUNNEL_URL"
+  ENGINE_ONLY=1
+  DRAFT_ROOM=1
+fi
+# D409: --funnel is --engine-only --draft-room --room-public-url https://<this machine's ts.net name>.
+if [ "$FUNNEL" = "1" ]; then
+  [ "$LAN" = "1" ] && { printf 'play.sh: --funnel and --lan do not mix: Funnel reaches this machine on loopback, and --lan would also open every port to your Wi-Fi (docs/tailscale-funnel.md)\n' >&2; exit 1; }
+  [ -n "$TUNNEL_URL" ] && { printf 'play.sh: --funnel and --tunnel are two ways to the same place: pick one\n' >&2; exit 1; }
+  command -v node >/dev/null 2>&1 || { printf 'play.sh: --funnel needs node\n' >&2; exit 1; }
+  command -v tailscale >/dev/null 2>&1 || { printf 'play.sh: --funnel needs Tailscale on this machine, and it is not installed:\n  curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up\n  (docs/tailscale-funnel.md, "Once")\n' >&2; exit 1; }
+  FUNNEL_HOST="$(tailscale status --json 2>/dev/null | node -e '
+    let t = ""; process.stdin.on("data", (d) => { t += d; }).on("end", () => {
+      let j; try { j = JSON.parse(t); } catch { console.error("tailscale status --json said nothing readable -- is tailscaled running? (sudo systemctl start tailscaled, or the userspace command in docs/tailscale-funnel.md)"); process.exit(1); }
+      if (j.BackendState !== "Running") { console.error(`Tailscale is not up (it says ${j.BackendState || "nothing"}): run  sudo tailscale up  and log in, then try again`); process.exit(1); }
+      const name = String(j.Self?.DNSName ?? "").replace(/\.$/, "").toLowerCase();
+      if (!/^[a-z0-9-]+(\.[a-z0-9-]+)*\.ts\.net$/.test(name)) { console.error(`this machine has no *.ts.net name (got "${name}"): turn on MagicDNS in the admin console (DNS page)`); process.exit(1); }
+      const certs = (j.CertDomains ?? []).map((d) => String(d).toLowerCase());
+      if (!certs.includes(name)) { console.error(`HTTPS certificates are off for this tailnet, and Funnel needs them: admin console -> DNS -> HTTPS Certificates -> Enable (docs/tailscale-funnel.md)`); process.exit(1); }
+      process.stdout.write(name);
+    });')" || { printf 'play.sh: --funnel: see the line above\n' >&2; exit 1; }
+  [ -n "$ROOM_PUBLIC_URL" ] && [ "${ROOM_PUBLIC_URL%/}" != "https://$FUNNEL_HOST" ] && { printf 'play.sh: --funnel is https://%s, and --room-public-url %s disagrees: drop it\n' "$FUNNEL_HOST" "$ROOM_PUBLIC_URL" >&2; exit 1; }
+  ROOM_PUBLIC_URL="https://$FUNNEL_HOST"
   ENGINE_ONLY=1
   DRAFT_ROOM=1
 fi
@@ -557,6 +604,7 @@ fi
 say "match"
 [ "$ENGINE_ONLY" = "1" ] && echo "mode: engine only (no vite, no browser) — D285"
 [ -n "$TUNNEL_URL" ] && echo "mode: tunnel — a friend over the internet at $TUNNEL_URL, through Cloudflare (D405, D408); the engine and the room on loopback only"
+[ "$FUNNEL" = "1" ] && echo "mode: Tailscale Funnel — a friend over the internet at https://$FUNNEL_HOST, the room alone (D409); the engine and the room on loopback only"
 [ "$LAN" = "1" ] && echo "mode: LAN — a phone on the same network, behind a pairing token (amendment M51)"
 if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
   echo "you:  $(deck_name "$DECK")  [$DECK]"; fi
@@ -706,6 +754,19 @@ COACH_LOG="$PLAY_VAR/coach.log"
 stop() {
   # Idempotent: this runs from the trap AND from the normal exit path.
   trap - INT TERM EXIT
+  # D409: the foreground funnel first, so nothing public outlives the room.  tailscaled drops a foreground
+  # route when its CLI goes, however it goes.
+  if [ -n "$FUNNEL_PID" ] && kill -0 "$FUNNEL_PID" 2>/dev/null; then
+    kill "$FUNNEL_PID" 2>/dev/null || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      kill -0 "$FUNNEL_PID" 2>/dev/null || break
+      sleep 0.2
+    done
+    kill -9 "$FUNNEL_PID" 2>/dev/null || true
+    wait "$FUNNEL_PID" 2>/dev/null || true
+    echo "Tailscale Funnel: off (https://$FUNNEL_HOST/ answers nothing now)"
+  fi
+  FUNNEL_PID=""
   if [ -n "$COACH_PID" ] && kill -0 "$COACH_PID" 2>/dev/null; then
     # SIGTERM: the helper kills a running `claude` (its whole process group) and exits.
     kill "$COACH_PID" 2>/dev/null || true
@@ -1258,6 +1319,47 @@ if [ "$ENGINE_ONLY" = "1" ]; then
     echo "     Then send them the \"Over the internet\" link it shows ($TUNNEL_URL/#draft/friend/join?…), privately, to open in the same browser."
     echo "  Revoke: that room's page has \"New link for your friend\" (the old link stops working) and \"Close room\"; Ctrl-C cloudflared shuts everyone out at once."
     echo "  Run the outside check from another network before you send anything:  ./scripts/tunnel/tunnel-check.sh $TUNNEL_HOST"
+  fi
+  if [ "$FUNNEL" = "1" ]; then
+    # D409: the room first, then the public route to it, then every door as Funnel reaches it.
+    say "Tailscale Funnel — https://$FUNNEL_HOST/ → the draft room on 127.0.0.1:$ROOM_PORT, nothing else"
+    case "$ROOM_LINE" in
+      'Draft room: on'*) : ;;
+      *) echo "  the draft room is not running here, so Funnel stays off (see the Draft room line above)"; stop; exit 1 ;;
+    esac
+    FUNNEL_LOG="$PLAY_VAR/funnel.log"
+    : > "$FUNNEL_LOG"
+    # Foreground mode (no --bg): the route lives exactly as long as this child.
+    tailscale funnel "$ROOM_PORT" >>"$FUNNEL_LOG" 2>&1 &
+    FUNNEL_PID=$!
+    routed=0 shown=0
+    for i in $(seq 1 240); do      # 240 x 0.5 s: time to click an "enable Funnel" link the CLI prints
+      kill -0 "$FUNNEL_PID" 2>/dev/null || break
+      if tailscale serve status --json 2>/dev/null | grep -q "127.0.0.1:$ROOM_PORT\|localhost:$ROOM_PORT"; then routed=1; break; fi
+      if [ "$i" = "8" ] && [ -s "$FUNNEL_LOG" ]; then shown=1; echo "  tailscale says:"; sed 's/^/    /' "$FUNNEL_LOG"; fi
+      sleep 0.5
+    done
+    if [ "$routed" != "1" ]; then
+      printf '\033[31mplay.sh: Tailscale Funnel did not start\033[0m\n' >&2
+      [ "$shown" = "1" ] || sed 's/^/    /' "$FUNNEL_LOG" >&2
+      grep -qi 'access denied\|operator' "$FUNNEL_LOG" && echo "  once, so this account may run it:  sudo tailscale set --operator=\$USER" >&2
+      grep -qi 'not enabled\|funnel.*attr\|login.tailscale.com/f/' "$FUNNEL_LOG" && echo "  Funnel is not enabled for this machine yet: open the link above, or add the funnel nodeAttr (docs/tailscale-funnel.md, \"Once\")" >&2
+      stop; exit 1
+    fi
+    say "tunnel-check --funnel (the routing and the doors): $FUNNEL_HOST"
+    rc=0
+    ./scripts/tunnel/tunnel-check.sh --local --funnel "$FUNNEL_HOST" \
+      --room-port "$ROOM_PORT" --coach-port "$COACH_PORT" --ws-port "$WS_PORT" --seat-port "$TABLE_PORT" 2>&1 | sed 's/^/  /' || rc=$?
+    if [ "$rc" != "0" ]; then
+      printf '\033[31mplay.sh: tunnel-check --funnel failed -- Funnel is off again; fix what it says FAIL (docs/tailscale-funnel.md)\033[0m\n' >&2
+      stop; exit 1
+    fi
+    say "Tailscale Funnel — your friend, over the internet"
+    echo "  1. Make the room: https://jalirkan.github.io/ForgeCoach/ (or http://127.0.0.1:$ROOM_PORT/) → Draft → Draft with a friend → Create room."
+    echo "  2. Send your friend the \"Over the internet\" link it shows (https://$FUNNEL_HOST/#draft/friend/join?…), privately."
+    echo "     That one link is all they need: a plain browser, nothing to install, no sign-in."
+    echo "  No login gate: whoever has that link has the seat. Afterwards press \"Close room\" (or \"New link for your friend\" if it leaked)."
+    echo "  Ctrl-C here turns Funnel off and stops everything."
   fi
   if [ "$LAN" = "1" ]; then
     # The bridge prints one `WS LAN PAGE` line per address, best guess first,

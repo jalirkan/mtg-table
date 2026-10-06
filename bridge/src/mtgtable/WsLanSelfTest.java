@@ -202,6 +202,12 @@ public final class WsLanSelfTest {
         eq("viaTunnel: cf-ray", true, WsTransport.viaTunnel(List.of("cf-ray")));
         eq("viaTunnel: Cf-Access-Jwt-Assertion", true, WsTransport.viaTunnel(List.of("Cf-Access-Jwt-Assertion")));
         eq("viaTunnel: a look-alike", false, WsTransport.viaTunnel(List.of("X-CF-Ray-Like")));
+        // D409: what tailscaled's serve/funnel proxy adds (ipn/ipnlocal/serve.go).
+        eq("viaTunnel: Tailscale-Funnel-Request", true, WsTransport.viaTunnel(List.of("Host", "Tailscale-Funnel-Request")));
+        eq("viaTunnel: Tailscale-User-Login", true, WsTransport.viaTunnel(List.of("Tailscale-User-Login")));
+        eq("viaTunnel: X-Forwarded-For", true, WsTransport.viaTunnel(List.of("X-Forwarded-For")));
+        eq("viaTunnel: x-forwarded-host", true, WsTransport.viaTunnel(List.of("x-forwarded-host")));
+        eq("viaTunnel: a Tailscale look-alike", false, WsTransport.viaTunnel(List.of("Tailscale-Funnel", "X-Forwarded")));
         eq("queryToken reads ?token=", TOKEN, WsTransport.queryToken("/?a=1&token=" + TOKEN));
         eq("queryToken: none", null, WsTransport.queryToken("/ws"));
         eq("cookieToken reads the cookie", TOKEN,
@@ -403,6 +409,9 @@ public final class WsLanSelfTest {
             // D405: a tunnel's headers (the extra header rides in after the Cookie line) on a port never tunnelled.
             eq("no --lan: /health through a tunnel is 403", 403, get(port, "/health", "a=b\r\nCF-Connecting-IP: 198.51.100.7").status);
             eq("no --lan: /ws through Access is 403", 403, get(port, "/ws", "a=b\r\nCf-Access-Jwt-Assertion: x").status);
+            // D409: Tailscale Funnel reaches loopback too; its headers are refused the same way.
+            eq("no --lan: /health through Tailscale Funnel is 403", 403, get(port, "/health", "a=b\r\nTailscale-Funnel-Request: ?1\r\nX-Forwarded-For: 203.0.113.7").status);
+            eq("no --lan: /ws through tailscale serve (X-Forwarded-For alone) is 403", 403, get(port, "/ws", "a=b\r\nX-Forwarded-For: 100.101.102.103").status);
             eq("no --lan: /ws is M50's", 101, upgrade(port, "/ws", null, null, null));
             eq("no --lan: a foreign Origin is still 403", 403,
                     upgrade(port, "/ws", "https://evil.example", "127.0.0.1:" + port, null));

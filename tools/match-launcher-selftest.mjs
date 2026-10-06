@@ -49,7 +49,7 @@
 
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer, request } from 'node:http';
 import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -122,7 +122,7 @@ if (lan) ev({ lanToken: token });
 const sockets = new Set();
 const server = http.createServer((req, res) => {
   // D402's TunnelGate, as the bridge has it: anything carrying Cloudflare's headers is 403 (D408's tunnel-check asks).
-  if (['cf-connecting-ip', 'cf-ray', 'cf-access-jwt-assertion'].some((h) => req.headers[h] !== undefined)) { res.statusCode = 403; res.end('this port is never tunnelled'); return; }
+  if (['cf-connecting-ip', 'cf-ray', 'cf-access-jwt-assertion', 'tailscale-funnel-request', 'tailscale-user-login', 'x-forwarded-for', 'x-forwarded-host'].some((h) => req.headers[h] !== undefined)) { res.statusCode = 403; res.end('this port is never tunnelled'); return; }
   if (req.url.startsWith('/health')) { res.end('ok'); return; }
   seated = true; ev({ seat: req.url });   // a "seat": held open until this engine dies
 });
@@ -841,6 +841,95 @@ try {
     await new Promise((res) => (B.exitCode !== null ? res() : B.on('exit', res)));
     check('a config that names the coach helper: play.sh --tunnel exits 1 before any engine or helper starts', B.exitCode === 1 && /8643 is the coach helper/.test(bout)
       && /tunnel-check failed \(the config\)/.test(bout) && starts().length === nBefore && !/Engine ready/.test(bout), `${B.exitCode}\n${bout}`);
+  }
+
+  // ------------------------------------------------------------- D409: play.sh --funnel
+  console.log('== D409: play.sh --funnel -- Tailscale Funnel to the room alone, checked, and off again with play.sh');
+  {
+    // A fake `tailscale` CLI: `status --json`, a foreground `funnel <port>` that holds its route until it ends,
+    // and `serve status --json` reading that route back.  FAKE_TS_STATE=Stopped, FAKE_TS_EVIL=1 (also routes 8643's path).
+    const tsBin = join(DIR, 'ts-bin');
+    const tsDir = join(DIR, 'ts-state');
+    mkdirSync(tsBin, { recursive: true });
+    mkdirSync(tsDir, { recursive: true });
+    writeFileSync(join(tsBin, 'tailscale'), '#!/bin/sh\nexec node "$(dirname "$0")/tailscale.cjs" "$@"\n');
+    writeFileSync(join(tsBin, 'tailscale.cjs'), String.raw`const fs = require('fs'); const path = require('path');
+const dir = ${JSON.stringify(tsDir)}; const cfg = path.join(dir, 'serve.json'); const host = 'pc.tail1234.ts.net';
+const a = process.argv.slice(2);
+if (a[0] === 'status' && a[1] === '--json') {
+  process.stdout.write(JSON.stringify({ BackendState: process.env.FAKE_TS_STATE || 'Running', Self: { DNSName: host + '.' }, CertDomains: [host] }));
+} else if (a[0] === 'serve' && a[1] === 'status') {
+  process.stdout.write(fs.existsSync(cfg) ? fs.readFileSync(cfg, 'utf8') : '{}');
+} else if (a[0] === 'funnel' && /^[0-9]+$/.test(a[1] || '')) {
+  const h = { '/': { Proxy: 'http://127.0.0.1:' + a[1] } };
+  if (process.env.FAKE_TS_EVIL) h['/coach'] = { Proxy: 'http://127.0.0.1:8643' };
+  fs.writeFileSync(cfg, JSON.stringify({ Foreground: { s1: { TCP: { '443': { HTTPS: true } }, Web: { [host + ':443']: { Handlers: h } }, AllowFunnel: { [host + ':443']: true } } } }));
+  fs.appendFileSync(path.join(dir, 'calls'), a.join(' ') + '\n');
+  console.log('Available on the internet:\nhttps://' + host + '/\n|-- proxy http://127.0.0.1:' + a[1] + '\nPress Ctrl+C to exit.');
+  const off = () => { try { fs.unlinkSync(cfg); } catch {} fs.appendFileSync(path.join(dir, 'calls'), 'off\n'); process.exit(0); };
+  process.on('SIGTERM', off); process.on('SIGINT', off);
+  setInterval(() => {}, 1000);
+} else { console.error('fake tailscale: ' + a.join(' ')); process.exit(1); }
+`);
+    chmodSync(join(tsBin, 'tailscale'), 0o755);
+    const TSPATH = [tsBin, PATH].join(delimiter);
+    const site = join(DIR, 'fn-site');
+    mkdirSync(site, { recursive: true });
+    writeFileSync(join(site, 'index.html'), '<!doctype html><title>ForgeCoach funnel site</title>');
+    const rp = await freePort();
+    const nStart = starts().length;
+    const fnRunner = join(DIR, 'fn-runner-state');   // the self-test's own runner state, never the installed one
+    mkdirSync(fnRunner, { recursive: true });
+    const U = await startPlay(['--funnel', '--pause-lab', '--site-dir', site, '--room-port', String(rp), '--table-port', String(await freePort())], 'fn', { PATH: TSPATH, MTGTABLE_TEST_RUNNER_STATE: fnRunner });
+    for (let i = 0; i < 200 && !/Ctrl-C here turns Funnel off/.test(U.out()); i++) await sleep(50);
+    const out = U.out();
+    check('--funnel: the ts.net name from tailscale status, one engine, the room on loopback', /mode: Tailscale Funnel .*https:\/\/pc\.tail1234\.ts\.net/.test(out) && starts().length === nStart + 1 && /Draft room: on/.test(out), out);
+    check('...a foreground `tailscale funnel <room port>` after the room listens', readFileSync(join(tsDir, 'calls'), 'utf8').split('\n')[0] === `funnel ${rp}`, readFileSync(join(tsDir, 'calls'), 'utf8'));
+    check('...tunnel-check --funnel: the route to the room, Tailscale\'s headers refused by the helper and the bridge, nothing failed',
+      /PASS\s+funnel pc\.tail1234\.ts\.net:443\//.test(out) && /PASS\s+coach helper, Host 127\.0\.0\.1, tailscale-funnel-request/.test(out)
+      && /PASS\s+bridge, Host 127\.0\.0\.1, x-forwarded-for/.test(out) && /PASS\s+room listener \/room\/<id> with no token/.test(out) && !/\bFAIL\b/.test(out), out);
+    check('...the friend\'s one link', /"Over the internet" link it shows \(https:\/\/pc\.tail1234\.ts\.net\/#draft\/friend\/join/.test(out) && /nothing to install/.test(out), out);
+    check('...combined with --pause-lab: the lab held while it runs', /held: the lab starts no new job/.test(out) && readdirSync(join(fnRunner, 'holds')).length === 1, out);
+    r = await http({ port: U.coachPort, method: 'POST', path: '/room', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cubeId: 'synergy', cards: Array.from({ length: 20 }, (_, i) => `Card ${i}`) }) });
+    check('POST /room: bases.public is https://<ts.net name>', r.status === 201 && r.json?.bases?.public === 'https://pc.tail1234.ts.net', r.body);
+    const fid = r.json?.id;
+    const ftok = r.json?.friendToken;
+    const fh = { Host: 'pc.tail1234.ts.net', Origin: 'https://pc.tail1234.ts.net', 'Tailscale-Funnel-Request': '?1', 'X-Forwarded-For': '203.0.113.50', 'X-Forwarded-Host': 'pc.tail1234.ts.net', 'X-Forwarded-Proto': 'https' };
+    r = await http({ port: rp, path: `/room/${fid}`, headers: { ...fh, 'X-Room-Token': ftok } });
+    check('the room listener, as Funnel delivers the friend (ts.net Host, https Origin, its headers) with the link\'s token: 200', r.status === 200 && r.json?.you === 1, r.body);
+    r = await http({ port: rp, path: `/room/${fid}`, headers: fh });
+    check('...and without the token: 403', r.status === 403, r.body);
+    r = await http({ port: U.coachPort, path: '/health', headers: fh });
+    check('the coach helper, as Funnel would deliver it: 403', r.status === 403, r.body);
+    U.proc.kill('SIGTERM');
+    await new Promise((res) => (U.proc.exitCode !== null ? res() : U.proc.on('exit', res)));
+    check('...and released at the end', !existsSync(join(fnRunner, 'holds')) || readdirSync(join(fnRunner, 'holds')).length === 0, U.out());
+    check('Ctrl-C: the funnel child ended, so tailscaled drops the route', /\noff\n?$/.test(readFileSync(join(tsDir, 'calls'), 'utf8')) && !existsSync(join(tsDir, 'serve.json')) && /Tailscale Funnel: off/.test(U.out()), U.out());
+
+    const refused = async (args, env, label) => {
+      const nB = starts().length;
+      const B = spawn('bash', ['scripts/play.sh', ...args, '--port', String(await freePort()), '--coach-port', String(await freePort()), '--room-port', String(await freePort())], {
+        env: { ...process.env, PATH: TSPATH, MTGTABLE_TEST_FAKE_ENGINE: join(DIR, 'fake-engine.cjs'), MTGTABLE_TEST_VAR: `${REL}/${label}`, FAKE_EVENTS: EVENTS, FAKE_ALIVE: ALIVE, ...env },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      procs.push(B);
+      let o = '';
+      B.stdout.on('data', (d) => { o += d; });
+      B.stderr.on('data', (d) => { o += d; });
+      await new Promise((res) => (B.exitCode !== null ? res() : B.on('exit', res)));
+      return { code: B.exitCode, out: o, started: starts().length - nB };
+    };
+    let x = await refused(['--funnel'], { FAKE_TS_STATE: 'Stopped' }, 'fnstop');
+    check('--funnel with Tailscale down: exit 1 before any engine, saying so', x.code === 1 && /Tailscale is not up .*sudo tailscale up/.test(x.out) && x.started === 0, x.out);
+    x = await refused(['--funnel', '--lan'], {}, 'fnlan');
+    check('--funnel --lan: refused', x.code === 1 && /--funnel and --lan do not mix/.test(x.out) && x.started === 0, x.out);
+    x = await refused(['--funnel', '--tunnel', 'https://play.example.org'], {}, 'fntun');
+    check('--funnel --tunnel: refused', x.code === 1 && /pick one/.test(x.out) && x.started === 0, x.out);
+    x = await refused(['--funnel'], { PATH }, 'fnnone');
+    check('--funnel without tailscale installed: the install line', x.code === 1 && /install\.sh/.test(x.out) && x.started === 0, x.out);
+    x = await refused(['--funnel', '--site-dir', site], { FAKE_TS_EVIL: '1' }, 'fnevil');
+    check('a Funnel route that also names the coach helper: tunnel-check FAILs, play.sh stops and the funnel is off', x.code === 1 && /FAIL\s+serve pc\.tail1234\.ts\.net:443\/coach/.test(x.out)
+      && /tunnel-check --funnel failed/.test(x.out) && !existsSync(join(tsDir, 'serve.json')), x.out);
   }
 
   // ------------------------------------------------------------- no supervisor

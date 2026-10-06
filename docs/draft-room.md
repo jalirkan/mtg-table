@@ -312,5 +312,8 @@ The room listener and the table port are built to be tunnelled (no loopback
 exemption, `https://` origins, the table serving `/ws` only), and
 `docs/cloudflare.md` is the runbook: cloudflared checks Access itself.
 `./scripts/play.sh --tunnel https://<host>` (D408) hands the room its public URL,
-so the page shows the "Over the internet" link. A review and a seat log go out
+so the page shows the "Over the internet" link.
+Tailscale Funnel is the no-domain alternative: `./scripts/play.sh --funnel` (D409,
+`docs/tailscale-funnel.md`) routes the PC's `https://<machine>.<tailnet>.ts.net` to
+the room listener alone, with no login gate in front. A review and a seat log go out
 only to their own seat, over the room listener, like everything else in the room.

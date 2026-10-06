@@ -27,6 +27,11 @@ repo opens.
 > by address: the draft room's player listener (8644) and, during a game
 > between the two of you, the table's game seat (8646, `/ws` only).
 
+> **No domain, and tonight?** [`tailscale-funnel.md`](tailscale-funnel.md) (D409)
+> does the same with Tailscale Funnel: only your PC runs Tailscale, the friend
+> opens one `https://…ts.net` link, and `./scripts/play.sh --funnel` sets it up and
+> checks it. It has no login gate in front: the seat tokens are the only lock.
+
 **The whole path, in order** (each step links to its section):
 
 1. Once: a Cloudflare account and a domain on it ([§2](#2-what-you-need-and-what-it-costs)).
