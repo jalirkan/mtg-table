@@ -57,6 +57,15 @@
 //     (the previous match was started again: "restored": true) · 503 no supervisor ·
 //     504 no answer from play.sh in time.
 //
+//   (D404) A GAME BETWEEN TWO PEOPLE -- not an HTTP route: the draft room (tools/draft-room.mjs,
+//   in the same process) calls startTable({roomId, decks: [seat 0, seat 1], names, digests}) once
+//   both players have handed in a deck.  It writes var/match/<id>/seat0.dck, seat1.dck and
+//   seats.json ({names, tokenSha256}: the seat tokens' digests, never a token), then
+//   request.json {v, id, humans: 2, deck, deck2, seats, games: 1} and SIGUSR1; play.sh starts the
+//   bridge with --humans 2 (D402) and says how it went in status.json.  -> {ok, matchId, tablePort,
+//   seats: [{name, cards}x2], seed, ms} or {ok: false, status, message}.  While such a game runs, a
+//   POST /match is 409 (it would end it); /engine/start's "already running" is unchanged.
+//
 // THE RULES IT KEEPS:
 //   - The AI's decklist never goes on the game wire: the bridge loads ai.dck and
 //     hello_ok.match.aiDeck stays {name, cards} (M44).  This module's replies name
@@ -465,11 +474,67 @@ export function createMatchLauncher(opts) {
   // D333: what /health advertises about the AI a POST /match may ask for.
   const aiChoices = () => ({ aiPolicies: [...AI_POLICIES], aiSearchMs: { ...AI_SEARCH_MS } });
 
+  // D404: is a game between two people running now (current.json says so, the engine is up)?
+  const tableRunning = () => {
+    if (!available() || engine()?.engine === 'idle') return null;
+    const cur = readJson(join(dir, 'current.json'));
+    return cur?.match?.humans === 2 ? cur : null;
+  };
+
+  // D404: start a game between two people on the room's two decks.  Not a route: the draft room calls it.
+  const startTable = async ({ roomId, decks, names, digests }) => {
+    const no = (status, message) => ({ ok: false, status, message });
+    if (!available()) return no(503, 'the match launcher is off: this helper was not started by scripts/play.sh');
+    if (busy) return no(409, 'a match is already being started — wait for it');
+    if (!Array.isArray(decks) || decks.length !== 2 || !Array.isArray(names) || names.length !== 2
+        || !Array.isArray(digests) || digests.length !== 2 || !digests.every((d) => /^[0-9a-f]{64}$/.test(d))) return no(400, 'a table needs two decks, two names and two token digests');
+    busy = true;
+    const t0 = Date.now();
+    try {
+      const checked = decks.map((d, i) => checkDeck(d, `seat ${i}`));
+      const problems = checked.flatMap((c) => c.problems);
+      if (problems.length) return no(400, problems[0]);
+      const known = await cardIndex();
+      if (known) {
+        for (const [i, c] of checked.entries()) {
+          const unknown = [...new Set([...c.deck.main, ...c.deck.sideboard].map((e) => e[2]).filter((n) => !known.has(fold(n))))];
+          if (unknown.length) return no(400, `${names[i]}'s deck: ${unknown.length} card name${unknown.length === 1 ? '' : 's'} the engine does not know: ${unknown.slice(0, 12).join('; ')}`);
+        }
+      }
+      for (const n of names) if (typeof n !== 'string' || n.trim() === '' || n.length > 24 || /[\u0000-\u001f\u007f]/.test(n)) return no(400, 'a seat name is 1-24 characters');
+      if (!stillInside()) return no(500, 'the match directory is no longer inside var/ (a symlink leads out of it) — nothing was written');
+      mkdirSync(dir, { recursive: true });
+      let id = `m${Date.now()}`;
+      while (existsSync(join(dir, id))) id = `m${Number(id.slice(1)) + 1}`;
+      mkdirSync(join(dir, id));
+      writeFileSync(join(dir, id, 'seat0.dck'), dckText(checked[0].deck));
+      writeFileSync(join(dir, id, 'seat1.dck'), dckText(checked[1].deck));
+      writeFileSync(join(dir, id, 'seats.json'), JSON.stringify({ names, tokenSha256: digests }) + '\n');
+      const rel = (f) => join(matchDir, id, f).split(sep).join('/');
+      const dirs = readdirSync(dir).filter((x) => MATCH_ID.test(x)).sort();
+      for (const old of dirs.slice(0, Math.max(0, dirs.length - KEEP_MATCH_DIRS))) rmSync(join(dir, old), { recursive: true, force: true });
+      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, humans: 2, deck: rel('seat0.dck'), deck2: rel('seat1.dck'), seats: rel('seats.json'), games: 1 }) + '\n');
+      log(`MATCH ${id}: a game between two people for room ${String(roomId).slice(0, 12)}`);
+      try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) { return no(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`); }
+      const r = await ask(id, t0, null, null);
+      if (r.status !== 200) return no(r.status, r.body.message);
+      const st = readJson(join(dir, 'status.json'));
+      const got = st?.id === id ? st.match ?? {} : {};
+      const seats = Array.isArray(got.seats) ? got.seats.map((x) => ({ name: String(x?.name ?? ''), cards: Number(x?.cards ?? NaN) })) : [];
+      if (!Number.isInteger(got.tablePort)) return no(502, 'the engine started but did not say which port its table is on');
+      return { ok: true, matchId: id, tablePort: got.tablePort, seats, seed: got.seed ?? null, ms: Date.now() - t0 };
+    } finally {
+      busy = false;
+    }
+  };
+
   return {
     available,
     engine,
     aiChoices,
     wake,
+    startTable,
+    tableRunning,
     get() {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
       const asleep = engine()?.engine === 'idle';
@@ -479,6 +544,7 @@ export function createMatchLauncher(opts) {
     async post(body) {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
       if (busy) return fail(409, 'a match is already being started — wait for it');
+      if (tableRunning()) return fail(409, 'a game between two people is being played on this engine; a new match would end it — wait until it is over');
       busy = true;
       const t0 = Date.now();
       try {

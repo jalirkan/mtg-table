@@ -112,6 +112,11 @@ class CollectTest(unittest.TestCase):
         write(os.path.join(self.games, "match-m1234567890123", "frames.jsonl"), lines_of(os.path.join(FIXTURES, "g1.jsonl")))
         # a gate run's ws game: its id is not play.sh's, so its folder is not read
         write(os.path.join(self.games, "check-all-m2", "frames.jsonl"), as_person(g42, "check-all-m2"))
+        # D402/D404: a game between two people -- each seat's log under friend-<id>-seat<N>, not collected
+        # (recording both seats, with each player's opt-out, is a later lane)
+        for seat in (0, 1):
+            fid = "friend-m1234567890123-seat%d" % seat
+            write(os.path.join(self.games, fid, "frames.jsonl"), as_person(g42, fid))
         # a person's game cut before its end
         cut = [ln for ln in as_person(g42, "human-ws-902") if '"over"' not in ln and '"gameOver":{' not in ln]
         write(os.path.join(self.games, "human-ws-902", "frames.jsonl"), cut)
@@ -122,6 +127,7 @@ class CollectTest(unittest.TestCase):
         self.assertEqual(r["skipped"].get("transport None is not a person's seat"), 1)
         self.assertEqual(r["skipped"].get("not finished"), 1)
         self.assertNotIn("check-all-m2", json.dumps(r["entries"]))
+        self.assertNotIn("friend-", json.dumps(r["entries"]))
         # the manifest is not a .jsonl: dataset.py reads every log under the folder, and only the games are logs
         self.assertEqual(len(E.find_logs([self.out])), len(HUMAN_FIXTURES))
 

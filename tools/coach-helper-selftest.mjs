@@ -45,7 +45,7 @@ import { request } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
 
-import { admit, loopbackHostOk, startHelper as startInProcess } from './coach-helper.mjs';
+import { admit, loopbackHostOk, startHelper as startInProcess, viaTunnel } from './coach-helper.mjs';
 
 const DIR = resolve('var/coach-helper-selftest');
 const BIN = join(DIR, 'bin');
@@ -445,6 +445,11 @@ try {
     && /^origin refused:/.test(admit({ lan: false, origins: [], wsPort: 8642, method: 'GET', token: '', loop: true, host: '10.0.0.1' }).message));
   const base = { lan: false, host: '127.0.0.1:8643', origin: undefined, origins: ['http://127.0.0.1:*', 'http://localhost:*', 'https://jalirkan.github.io'], wsPort: 8642, method: 'GET', given: undefined, token: '' };
   const A = (o) => admit({ ...base, ...o });
+  // D405: a tunnel's headers on a port the tunnel policy never routes to.
+  check('admit: a request that came through a tunnel is refused first, even from loopback with a good Host', A({ loop: true, host: '127.0.0.1:8643', tunnelled: true }).why === 'tunnel'
+    && /^origin refused:/.test(A({ loop: true, host: '127.0.0.1:8643', tunnelled: true }).message));
+  check('viaTunnel: CF-Connecting-IP, CF-Ray or Cf-Access-Jwt-Assertion, and nothing else', viaTunnel({ 'cf-connecting-ip': '1.2.3.4' }) && viaTunnel({ 'cf-ray': 'x' })
+    && viaTunnel({ 'cf-access-jwt-assertion': 'x' }) && !viaTunnel({ host: 'x', 'x-cf-ray-like': 'y' }) && !viaTunnel(undefined));
   check('admit: loopback, no Origin: ok', A({ loop: true }).ok);
   check('admit: a non-loopback peer without --lan: 403 peer, even with an allowed Origin', A({ loop: false, origin: 'https://jalirkan.github.io' }).why === 'peer'
     && A({ loop: false, method: 'OPTIONS', origin: 'https://jalirkan.github.io' }).why === 'peer');

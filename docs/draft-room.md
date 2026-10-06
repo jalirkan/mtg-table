@@ -22,7 +22,14 @@ holds it (gate step 12f, CI).
   They type a name and press **Join**.
 - You draft. Each of you can ask your own coach about a pick; the advice is
   private to the browser that asked. When the 18 grids are done, each of you
-  builds a deck from your own pool in the usual deck editor.
+  builds a deck from your own pool in the usual deck editor and presses **Hand
+  in this deck**.
+- When both decks are in, the room starts the game on your machine's Forge (about
+  15 s), and both pages open the board, each on its own seat (below, *Phase 2*).
+  The game's seats are reached on the room's own port: the room listener passes
+  `/ws` through to the bridge's table port (`config.json` `tablePort`, 8646,
+  `--table-port`) on this machine, so a firewall needs only 8644 open to the
+  home network.
 
 Without `--lan`, the room listener answers this machine only (two browsers on one
 PC, or a tunnel later). `--room-port <n>` or `config.json` `roomPort` moves it off
@@ -36,7 +43,7 @@ its last pick, and 72 hours after it was made.
 | Listener | Route | Door |
 |---|---|---|
 | Coach helper (8643) | `POST /room`, `GET /room` | The owner's door (D386): loopback with a loopback `Host`, or the `--lan` pairing token. It is never tunnelled. Only the owner makes rooms. |
-| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick` | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
+| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
 | Room listener (8644) | `GET /`, `GET /assets/…` | No token. These are ForgeCoach's public build (`--room-site-dir`, which play.sh fills with the `--lan` download or `--site-dir`). Only GET and HEAD are allowed, and a path cannot leave the folder: `..`, encoded separators and symlinks are refused. |
 
 Tokens are 128 bits (22 base64url characters). The server stores only their
@@ -51,7 +58,7 @@ Limits:
 - 10 wrong links a minute per address, then 429 for the rest of that minute. Behind
   a tunnel, a loopback peer's `CF-Connecting-IP` names the address.
 - At most 3 event streams per seat and 32 in all.
-- Seat bodies of at most 1 KB, and a create body of at most 256 KB.
+- Seat bodies of at most 1 KB (a deck, 16 KB), and a create body of at most 256 KB.
 - At most 16 live rooms.
 
 ## Wire format
@@ -148,24 +155,75 @@ committed in both repositories (ForgeCoach's copy is
 so a change to either implementation fails a test somewhere. This repository's
 self-test also draws the server's `rng` side by side with `tools/cubelab/rng.ts`.
 
-## Phase 2: playing the decks against each other
+## Phase 2: playing the decks against each other (D402, D403, D404)
 
-Phase 2 is not built yet. The room is shaped for it:
+When the 18 grids are done, each player builds a deck from their own pool in
+ForgeCoach's deck editor and hands it to the room. When both decks are in, the
+room starts a game between them on this machine's Forge, and each player's page
+connects to their own seat.
 
-- **Both seats and both tokens already exist**, and they are seat tokens, not run
-  tokens, so a friend's link stays one person's.
-- **The deck goes to the room, privately.** The next route would be
-  `POST /room/<id>/deck` (`{main, sideboard}` checked against that seat's own
-  picks, then visible to that seat alone). Once both decks are in, the owner's
-  door asks `POST /match` (D303, `docs/match-launcher.md`) to start the bridge
-  with **two human seats** instead of an AI seat. That bridge change is its own
-  decision: each seat gets a token minted per game, the bridge gains a second
-  `/ws` seat, and hard rule 8's redaction applies to each viewer. The draft room
-  hands each player their own seat's token through the state they already
-  stream.
-- **The tunnel's needs are already met here.** There is no loopback exemption,
-  and `https://` origins pass through `--room-origin` or the page-own rule. A
-  `CF-Connecting-IP` is read only from a loopback peer, and only for rate limits.
-  `bases.public` carries the tunnel's URL. `docs/security/endpoints.md` lists the
-  room listener as the one listener that may sit behind a tunnel as it is. The
-  bridge's `/ws` still needs the five changes listed there.
+### `POST /room/<id>/deck` (room listener)
+
+```json
+{ "name": "Izzet Tempo", "main": [[1, "Lightning Bolt"], [1, "Counterspell"], [8, "Island"], [8, "Mountain"]],
+  "sideboard": [[1, "Pyroblast"]] }
+```
+
+- The seat's `X-Room-Token`, as every room route. At most 16 KB.
+- The deck shape is the match launcher's (`docs/match-launcher.md`): a name, 40–250
+  main-deck cards, `[count, cardName]` pairs. **Every card of the main deck and the
+  sideboard together must be one this seat drafted, no more often than it drafted
+  it**; basic lands (and the snow-covered ones) are free.
+- `200` state; `400 {code: "deck", problems, state}`; `409 {code: "drafting"}` before
+  the draft is over; `409 {code: "playing"}` while a game between you is starting or
+  being played. A deck handed in again replaces the earlier one until the game starts.
+
+### What the state adds
+
+```json
+"decks": [ { "ready": true, "name": "Izzet Tempo", "cards": 40 }, { "ready": false, "name": null, "cards": null } ],
+"yourDeck": { "name": "Izzet Tempo", "main": [[1, "Lightning Bolt"], "…"], "sideboard": [[1, "Pyroblast"]] },
+"game": { "n": 1, "state": "ready", "error": null, "matchId": "m1791306948840",
+          "tablePort": 8646, "token": "<THIS seat's seat token>" }
+```
+
+- `decks` — each seat's deck for the next game: whether it is in, its name and its
+  card count. The other player's list is never sent.
+- `yourDeck` — this seat's own list, to this seat alone.
+- `game` — `null` until both decks have been in once. `state` is `starting`, then
+  `ready` (or `failed` with `error`, and both decks go in again; `unavailable` when
+  this coach helper was not started by `scripts/play.sh` and so cannot start an
+  engine). **`token` is this seat's seat token for this game, in this seat's state
+  only, only while `ready`.**
+
+### Playing
+
+The page connects to `ws(s)://<the room's host>/ws?seat=<token>` — `/ws` on the
+room's own origin, which the room listener passes, byte for byte, to the bridge's
+table port on loopback (D404; 404 when no game is being played). The table (D402,
+protocol amendment **M59**) checks the token and the `Origin` before any
+handshake, every seat needs its own token, and loopback gets no exemption. The
+owner's page on github.io connects to `ws://127.0.0.1:8644/ws?seat=…`; the friend's
+page, served by the room listener at `http://<LAN IP>:8644`, to
+`ws://<LAN IP>:8644/ws?seat=…`; through a Cloudflare tunnel, to
+`wss://<the tunnel's name>/ws?seat=…`, which the tunnel routes to the table port
+itself (D405's GAME SEAT rule). Each player's stream is that
+seat's alone, redacted for it (hard rule 8): the other hand, library and face-down
+cards are never sent to the other browser. A `table` frame says who is connected,
+whose decision it is and that decision's clock (three minutes, then the engine's
+default), and an absent player's opponent may claim the win after two minutes away
+(D403). One game: hand in two decks again for a rematch, once the first is over.
+
+The tokens are minted per game, in memory only: `rooms.json` never holds one, and
+the bridge is given only their SHA-256 digests (`var/match/<id>/seats.json`).
+
+### What is not built (Phase 3 and 4)
+
+- Best of three with sideboarding between games.
+- Recording both seats into the human test set (D369) with each player's opt-out,
+  and the automatic review (D385) for both: a friend's game (`friend-<id>`) is
+  read by neither yet.
+- A tunnel (Phase 4): the room listener and the table port are built to be
+  tunnelled (no loopback exemption, `https://` origins, the table serving `/ws`
+  only), and `docs/cloudflare.md` (D405) is the runbook: cloudflared checks
+  Access itself. Handing the room its public URL (`play.sh`) is still to come.

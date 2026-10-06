@@ -222,6 +222,29 @@ plus a key where the table says:
 
 Nothing is written or restarted on a 400, 403, 405, 409, 413 or 503.
 
+## A game between two people (D404) — not a route
+
+The draft room (`tools/draft-room.mjs`, in the same coach helper) starts a game
+between its two players once both have handed in a deck (`docs/draft-room.md`,
+*Phase 2*). It calls the launcher's `startTable` directly — there is no HTTP
+route for it, and the owner's door is not involved. The launcher writes
+`var/match/<id>/seat0.dck`, `seat1.dck` and `seats.json` (`{names, tokenSha256}`:
+the digests of the two seat tokens the room minted, never a token), then
+`request.json` `{v, id, humans: 2, deck, deck2, seats, games: 1}` and SIGUSR1, as for
+`/match`. `play.sh` checks the three paths are exactly those, restarts the bridge
+with `--humans 2 --deck <seat0.dck> --deck2 <seat1.dck> --seats-file <seats.json>
+--table-port <tablePort> --games 1 --game-id friend-<id>` (with `--lan` on a `--lan`
+run; a caller's `--decision-timeout`, `--seat-grace`, `--idle-timeout`,
+`--table-origin` and `--seed` after `--`; no AI flag and no site), and writes
+`status.json` with `match: {humans: 2, seats: [{name, cards}] × 2, tablePort, games: 1,
+seed}`.
+
+**While that game runs, `POST /match` is 409** (`"a game between two people is being
+played on this engine…"`): a restart would end it. `/engine/start` already answers
+"running" and restarts nothing. **When it is over** the engine sleeps (D308), and a
+wake starts the last match against the AI — never the friend's game, whose tokens
+are spent. A friend's game that does not start leaves the engine asleep.
+
 ## `GET /match`
 
 ```json

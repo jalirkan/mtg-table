@@ -40,7 +40,7 @@ repo opens.
 8. [Security checklist](#8-security-checklist)
 9. [Revoking access](#9-revoking-access)
 10. [Troubleshooting](#10-troubleshooting)
-11. [The game seat (Phase 2): placeholder](#11-the-game-seat-phase-2-placeholder)
+11. [The game seat (D402)](#11-the-game-seat-d402)
 12. [Changes the other lanes still owe](#12-changes-the-other-lanes-still-owe)
 
 ---
@@ -56,7 +56,7 @@ logged in to.
 |---|---|---|
 | `/room/<id>`, `/room/<id>/events`, `/join`, `/pick` | `127.0.0.1:8644`, the draft room's player listener (D400) | Only a holder of that seat's token, sent in `X-Room-Token`. A wrong token gets 403, an unknown room 404, and 10 wrong tries a minute from one address get 429. |
 | `/`, `/assets/…` and the rest of the site | `127.0.0.1:8644` (the same listener) | Anyone past Access. These are ForgeCoach's public build, the same bytes as GitHub Pages. |
-| `/ws` | **Phase 2, placeholder:** `127.0.0.1:8646` (the table's game seat, [§11](#11-the-game-seat-phase-2-placeholder)) | Only a holder of that seat's token for that game. Until Phase 2 lands, the edge answers 404. |
+| `/ws` | `127.0.0.1:8646`, the table's game seat (D402, [§11](#11-the-game-seat-d402)); it listens only while a game between two people runs | Only a holder of that seat's token for that game, checked before the handshake. Between games nothing listens there, and the edge's request fails. |
 | `/coach`, `/vision`, `/match`, `/engine/…`, `/review`, `/eval`, `/observe`, `/health`, `/api`, `/personal`, `/spectate`, `/cards`, `/fixtures`, and `/room` itself | **Answered 404 by cloudflared at the edge**, so nothing local is asked | No one |
 | Any other hostname | 404 (the catch-all) | No one |
 
@@ -329,12 +329,14 @@ asks ForgeCoach to say this more clearly.
 
 ### The game seat (Phase 2)
 
-ForgeCoach's `src/play/seatUrl.ts` already does the right thing for a page that
-was not served by GitHub Pages or Vite: the seat is same-origin, at
-`wss://<page host>/ws?…`. Through the tunnel that becomes
-`wss://play.example.com/ws`, which the placeholder rule routes to the table's
-port. What the bridge must match is request 2 in
-[§12](#12-changes-the-other-lanes-still-owe).
+When both decks are in, the room hands each player a seat token for that game,
+and ForgeCoach opens the seat on the page's own origin:
+`wss://play.example.com/ws?seat=<token>`, which the GAME SEAT rule routes to the
+table's port (D402, D404). The table serves `/ws` and nothing else, refuses a
+missing or wrong token before the handshake, and accepts the Origin
+`https://play.example.com` with the Host cloudflared passes through. On your
+Wi-Fi the same URL works on the room's own port (`ws://<your IP>:8644/ws?…`):
+the room listener passes `/ws` through to the table on loopback.
 
 ---
 
@@ -458,26 +460,18 @@ From the fastest to the most targeted:
 
 ---
 
-## 11. The game seat (Phase 2): placeholder
+## 11. The game seat (D402)
 
-> **PLACEHOLDER.** Phase 2 (two human seats in the bridge, branch `c/two-humans`)
-> is not merged. Its plan is a **table port, `tablePort` 8646**. That port exists
-> only while a game between two people runs, has no loopback exemption, and needs
-> a per-seat, per-game token on `/ws`. Its endpoints.md row and its decision are
-> the authority once merged. Until then, nothing routes to it.
+Merged with Phase 2 (D402–D404): the **table port, `tablePort` 8646**, exists only
+while a game between two people runs, serves `/ws` and nothing else (every other
+path 404), has no loopback exemption, and checks a per-seat, per-game token
+before the handshake. The template's GAME SEAT rule routes `/ws` there, ahead of
+the edge-deny rule that lists `ws`.
 
-When it lands:
-
-1. Confirm the port and the path (`/ws`) in its decision and in endpoints.md.
-2. If either differs, change `GAME_SEAT` in `scripts/tunnel/policy.mjs`, and the
-   commented block in `config.yml.example` to match. Set `placeholder: false`.
-   Run `npm --prefix web test`: `web/test/tunnel.test.ts` checks the uncommented
-   block against the policy.
-3. In `~/.cloudflared/config.yml`, uncomment the three rule lines between
-   `# >>> GAME SEAT` and `# <<< GAME SEAT`. They come before the edge-deny rule,
-   so they take `/ws` back from it.
-4. Restart cloudflared, then run `tunnel-check.sh --local … --game-seat` during a
-   game, and the outside check. `/ws` with no seat token must not open a socket.
+A `config.yml` copied before Phase 2 has the rule commented out: uncomment the
+three lines between `# >>> GAME SEAT` and `# <<< GAME SEAT`, restart cloudflared,
+then run `tunnel-check.sh --local …` during a game, and the outside check. `/ws`
+with no seat token must not open a socket.
 
 ---
 
@@ -491,7 +485,7 @@ needed in files other lanes own. They are numbered so they can be referred to.
    becomes the helper's `--room-public-url`. ForgeCoach then shows the **"Over the
    internet"** link and the hand edit in §6 goes away. Leave `--lan` out of it:
    the tunnel needs loopback only.
-2. **Phase 2 table listener: make it tunnel-shaped.**
+2. **Done in Phase 2 (D402–D404).** ~~Phase 2 table listener: make it tunnel-shaped.~~
    - The friend's seat is `wss://<the page's host>/ws?seat=<token>` on the **same
      hostname with no port**. Cloudflare doesn't carry 8646, and an https page
      needs `wss:`.
@@ -501,10 +495,10 @@ needed in files other lanes own. They are numbered so they can be referred to.
    - Its Origin rule accepts `https://<Host>` on port 443.
    - Confirm the port, so `GAME_SEAT` in `scripts/tunnel/policy.mjs` can drop its
      placeholder flag.
-3. **ForgeCoach either-seat play: build the seat URL from the page.** When the
+3. **Done in Phase 2 (ForgeCoach).** ~~ForgeCoach either-seat play: build the seat URL from the page.~~ When the
    draft room hands a game seat to a page served through the tunnel, use
    `wss://<page host>/ws` (or `bases.public`), never `ws(s)://<host>:<tablePort>`.
-4. **The owner's doors: refuse anything that came through Cloudflare.** The coach
+4. **Done in Phase 2 (D402's `TunnelGate` on the bridge's port, the coach helper's `admit`).** ~~The owner's doors: refuse anything that came through Cloudflare.~~ The coach
    helper (8643) and the bridge's `LanGate` (8642) should refuse a request that
    carries `Cf-Connecting-IP`, `Cf-Ray` or `Cf-Access-Jwt-Assertion`. Only
    Cloudflare adds those headers, so a tunnel mis-pointed at either port, even
