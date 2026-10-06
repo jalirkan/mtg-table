@@ -4,6 +4,7 @@
 //
 //   tools/cubelab.sh queue plan --night 1 --drafts 25000 --jobs 7      # writes and prints the plan, plays nothing
 //   tools/cubelab.sh queue run  --night 1 --drafts 25000 --jobs 7      # plays it (resumable: run the same line again)
+//   tools/cubelab.sh queue check --night 1 --drafts 25000 --jobs 7     # D394: would every key folder accept it? writes nothing
 //       [--bridge-share 0.2] [--games 1] [--chunk 250] [--min-drafts 20] [--cubes a,b,...] [--power power.tsv]
 //       [--bridge-ratings even|own] [--record-every N]   (N = 1: every game, both chairs, D315; a night that
 //                                  recorded is refused a re-run without it, D365: --record-every 0 to stop on purpose)
@@ -18,10 +19,18 @@
 // normalised), every chunk passes it to `run`, and each draft's seats are a
 // pure function of its seed; every drafts.jsonl row of such a run carries
 // `profiles` (seat A's and B's), and tools/ml's games.jsonl copies them.  The
-// mix is part of each key folder's lab version (D341: run.ts compares
-// `profileMix`), so the first night with a mix appends to the folders only
-// with --allow-version-change; a re-run of a night uses the plan's mix, and a
-// different flag is refused.  The methods review (2026-10-04, rec. 5) asks for
+// mix is part of each key folder's lab version (D341; since D394 in the
+// version id, run.ts `versionWeights` -- before D394 run.ts compared it as part
+// of the folder's identity, which no flag passes, and night 4 failed every
+// chunk), so the first night with a mix appends to the folders only with
+// --allow-version-change; a re-run of a night uses the plan's mix, and a
+// different flag is refused.
+//
+// KEY FOLDERS FIRST (D394).  Before a `queue run` plays or records anything it
+// checks every key folder of the night the way that folder's first chunk will
+// (`checkKeyFolders`: run.ts's own identity and version checks, `checkOnly`),
+// and stops on any refusal; `queue check` does only that, writing nothing (not
+// even a new night's plan), so a job's pilot can run it against the real root.  The methods review (2026-10-04, rec. 5) asks for
 // it from night 4: one pilot's habits confound card power.
 //
 // PLAY EXPLORATION (D358).  With --play-explore the night's plan records the
@@ -88,7 +97,7 @@ import path from 'node:path';
 
 import { apportion, bridgeOptions, cubeId, resolveCube } from './bridge.ts';
 import { parseCube } from './cube.ts';
-import { engineEnv, engineFacts } from './engine.ts';
+import { engineEnv, engineFacts, type EngineEnv } from './engine.ts';
 import { defaultRatings, runLab, type DraftRecord, type RunOptions } from './run.ts';
 import { DEFAULT_WEIGHTS } from './weights.ts';
 import { assertQueueSeeds } from './seeds.ts';
@@ -368,6 +377,52 @@ function renderPlan(p: NightPlan, root: string): string {
   return out.join('\n');
 }
 
+/** One chunk's `run` options: the same for `queue run`, its preflight and `queue check` (D394). */
+export function chunkOptions(repo: string, root: string, plan: NightPlan, c: Chunk,
+  x: { jobs: number; allowVersionChange: boolean; recordEvery: number; gameTimeoutSec: number }): RunOptions {
+  const cubeFile = c.kind === 'normal' ? resolveCube(c.cubes[0] as string, repo) : '';
+  const o: RunOptions = {
+    cubeFile, format: plan.format as 'grid' | 'winston', drafts: c.drafts, games: plan.games, jobs: x.jobs, seed: c.seed,
+    ...seatOptions(plan), ratingsFile: c.kind === 'normal' ? defaultRatings(cubeFile) : null, record: 0,
+    out: path.join(root, c.key), builder: 'lab', gameTimeoutSec: x.gameTimeoutSec, winstonCards: 90, weights: DEFAULT_WEIGHTS,
+    ...(x.allowVersionChange ? { allowVersionChange: true } : {}),
+  };
+  if (c.kind === 'bridge') {
+    o.bridge = bridgeOptions(repo, c.cubes.join(','), undefined, 180, plan.bridgeRatings ?? 'even');
+    o.cubeFile = `bridge:${c.cubes.join('+')}`;
+  }
+  // Recording every game in the worker, both chairs (D315): the evaluator's dataset and this model read one run.
+  if (x.recordEvery) o.recordEvery = x.recordEvery;
+  // D358: a seeded share of this chunk's drafts explore their games
+  if (plan.playExplore) o.playExplore = plan.playExplore;
+  return o;
+}
+
+/**
+ * D394: each key folder of the night, checked by `runLab` itself (`checkOnly`) with the options of its first
+ * chunk still to play: the identity check and D341's version check, nothing written.  Returns the refusals
+ * (one line per folder); prints one line per folder.
+ */
+export async function checkKeyFolders(env: EngineEnv, plan: NightPlan, opts: (c: Chunk) => RunOptions, say: (s: string) => void): Promise<string[]> {
+  const first = new Map<string, Chunk>();
+  for (const c of plan.chunks) if (!first.has(c.key)) first.set(c.key, c);
+  const refused: string[] = [];
+  const quiet = (): void => {};
+  say(`\nkey folders (D394): ${first.size} checked before anything is written`);
+  for (const [key, c] of first) {
+    try {
+      const r = await runLab(env, { ...opts(c), checkOnly: true }, quiet);
+      const what = !r.resumed ? 'new folder' : r.versionChange ? `version change allowed (${r.versionChange.join(', ')})` : 'same version';
+      say(`  ok       ${key}: ${what}${r.done ? `, ${r.done} draft(s) already there` : ''}`);
+    } catch (e) {
+      const m = e instanceof Error ? e.message.split('\n')[0] as string : String(e);
+      refused.push(`${key}: ${m}`);
+      say(`  REFUSED  ${key}: ${m}`);
+    }
+  }
+  return refused;
+}
+
 export async function queueCommand(repo: string, mode: string, f: Map<string, string[]>, say: (s: string) => void): Promise<number> {
   const one = (k: string): string | undefined => f.get(k)?.at(-1);
   const num = (k: string, d: number): number => { const v = one(k); const n = v === undefined ? d : Number(v); if (!Number.isFinite(n) || n < 0) throw new Error(`--${k} wants a number, got ${v}`); return n; };
@@ -438,30 +493,26 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
   engineFacts(env, [...new Set(cubes.flatMap((c) => c.cards))], say);
   const jobs = Math.max(1, num('jobs', 1));
   const allowVersionChange = f.has('allow-version-change');
+  if (jobs > env.homes.length) throw new Error(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
+  const chunkOpts = (c: Chunk): RunOptions => chunkOptions(repo, root, plan, c, { jobs, allowVersionChange, recordEvery, gameTimeoutSec: num('game-timeout', 300) });
+  // D394: every key folder the night appends to is checked first, exactly as its first chunk's `run` will
+  // check it (the folder's identity, then D341's version), writing nothing.  `queue check` stops here; a
+  // `queue run` that would be refused anywhere stops before any chunk plays or the plan records the run.
+  const refused = await checkKeyFolders(env, plan, chunkOpts, say);
+  if (mode === 'check') {
+    say(refused.length ? `\nnight ${night}: ${refused.length} key folder(s) would refuse this run:\n  ${refused.join('\n  ')}` : `\nnight ${night}: every key folder accepts this run (check only: nothing written)`);
+    return refused.length ? 1 : 0;
+  }
+  if (refused.length) throw new Error(`night ${night}: ${refused.length} key folder(s) would refuse this run, so nothing was played:\n  ${refused.join('\n  ')}`);
   // D341: the night's plan records every run of it, with the code and engine (each chunk's run.json has the full version).
   plan.runs = [...(plan.runs ?? []), { at: new Date().toISOString(), ...codeVersion(repo), forgeJarSha256: fileSha(process.env.FORGE_JAR ?? null), allowVersionChange, recordEvery }];
   if (recordEvery) plan.recordEvery = recordEvery;
   fs.writeFileSync(planFile, `${JSON.stringify(plan, null, 1)}\n`);
-  if (jobs > env.homes.length) throw new Error(`--jobs ${jobs} but only ${env.homes.length} Forge home(s) were built`);
   let k = 0;
   const failed: string[] = [];
   for (const c of plan.chunks) {
     k++;
-    const cubeFile = c.kind === 'normal' ? resolveCube(c.cubes[0] as string, repo) : '';
-    const o: RunOptions = {
-      cubeFile, format: plan.format as 'grid' | 'winston', drafts: c.drafts, games: plan.games, jobs, seed: c.seed,
-      ...seatOptions(plan), ratingsFile: c.kind === 'normal' ? defaultRatings(cubeFile) : null, record: 0,
-      out: path.join(root, c.key), builder: 'lab', gameTimeoutSec: num('game-timeout', 300), winstonCards: 90, weights: DEFAULT_WEIGHTS,
-      ...(allowVersionChange ? { allowVersionChange: true } : {}),
-    };
-    if (c.kind === 'bridge') {
-      o.bridge = bridgeOptions(repo, c.cubes.join(','), undefined, 180, plan.bridgeRatings ?? 'even');
-      o.cubeFile = `bridge:${c.cubes.join('+')}`;
-    }
-    // Recording every game in the worker, both chairs (D315): the evaluator's dataset and this model read one run.
-    if (recordEvery) o.recordEvery = recordEvery;
-    // D358: a seeded share of this chunk's drafts explore their games
-    if (plan.playExplore) o.playExplore = plan.playExplore;
+    const o = chunkOpts(c);
     say(`\n== chunk ${k}/${plan.chunks.length}: ${c.key}, seeds ${c.seed}..${c.seed + c.drafts - 1}`);
     // One chunk failing (an engine that would not boot under load, say) does not end the night: the
     // rest play, and running the same line again retries only what is missing.
@@ -472,7 +523,8 @@ export async function queueCommand(repo: string, mode: string, f: Map<string, st
         if (!rj.record) throw new Error('--record-every was asked for, but the run did not record (D315) -- stopping the night');
       }
     } catch (e) {
-      if (e instanceof Error && /did not record \(D315\)|was written by lab version/.test(e.message)) throw e;
+      // A refusal is the same for every chunk of its folder (D341, D394): it stops the night, never fails it chunk by chunk.
+      if (e instanceof Error && /did not record \(D315\)|was written by lab version|holds a run with a different/.test(e.message)) throw e;
       failed.push(`${c.key} seeds ${c.seed}..${c.seed + c.drafts - 1}: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`);
       say(`chunk ${k} FAILED, carrying on: ${failed.at(-1)}`);
     }

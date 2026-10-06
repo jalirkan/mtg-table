@@ -39,7 +39,7 @@ import { reRated, runMixedDraft, type MixedMode } from './selfplay.ts';
 import type { CardInfo } from './report.ts';
 import type { Weights } from './weights.ts';
 import { assertRunSeeds } from './seeds.ts';
-import { labVersion, resumeVersions, type VersionEntry } from './versions.ts';
+import { labVersion, resumeVersions, type LabVersion, type VersionEntry } from './versions.ts';
 import { mixText, pickProfiles, type MixEntry } from './profiles.ts';
 import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExploreTag } from './playexplore.ts';
 
@@ -78,7 +78,16 @@ export interface RunOptions {
   explore?: ExploreOptions;
   /** D358: a share of the drafts play games whose decisions explore (playexplore.ts); absent = none, and the run is the old one. */
   playExplore?: PlayExploreOptions;
+  /**
+   * D394: check only.  Load the cube, build the run's meta and version, and apply both resume checks
+   * (the folder's identity and D341's version) against `out`'s run.json, then return without writing
+   * anything (`queue check`, and `queue run`'s preflight over every key folder of the night).
+   */
+  checkOnly?: boolean;
 }
+
+/** D394: what `runLab` found when it checked a folder (`checkOnly`), or after it ran. */
+export interface RunCheck { out: string; meta: RunMeta; version: LabVersion; resumed: boolean; done: number; versionChange: string[] | null }
 
 /** A drafter's line in drafts.jsonl: the draft side, plus which deck played and Forge's own build. */
 export interface DrafterRecord extends DrafterOut {
@@ -165,7 +174,33 @@ export function defaultRatings(cubeFile: string): string | null {
   return fs.existsSync(f) ? f : null;
 }
 
-export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<void> {
+/**
+ * The fields that make a run folder ONE population, compared on every resume and never appended across
+ * (`identityDiff`; a difference is refused even with --allow-version-change).  D394: the profile mix is
+ * NOT one of them -- it is part of the lab version (below), so a night that adds or changes the mix is a
+ * version change: refused without --allow-version-change, logged in run.json with it, and every line
+ * carries `ver` and its own `profiles`, so readers split by either.  Before D394 the mix sat here too,
+ * which no flag could pass: night 4 (J096) failed every chunk on it.
+ */
+export const IDENTITY_FIELDS = ['cubeSha', 'format', 'games', 'profiles', 'builder', 'weights', 'winstonCards', 'learned', 'bridge', 'explore'] as const;
+
+/** The identity fields that differ between a folder's run.json and this run's meta (empty: the same population). */
+export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): string[] {
+  const at = (m: Partial<RunMeta>, k: (typeof IDENTITY_FIELDS)[number]): string => JSON.stringify((m as Record<string, unknown>)[k] ?? null);
+  return IDENTITY_FIELDS.filter((k) => at(old, k) !== at(cur, k));
+}
+
+/**
+ * The weights-like input of a run's lab version (D341): the weights, plus each option that changes the
+ * games when it is on (D356 exploration, D358 play exploration, D394 the profile mix).  With all of them
+ * off it is the plain weights, so the version id of an ordinary run is what it always was.
+ */
+export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null }): unknown {
+  if (!x.explore && !x.playExplore && !x.profileMix) return w;
+  return { ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}) };
+}
+
+export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<RunCheck> {
   const t0 = Date.now();
   assertRunSeeds(o.seed, o.drafts, { deckset: o.deckset, games: o.games });
   const bridge = o.bridge ? loadBridge(env, o.bridge, o.weights, say, sha) : null;
@@ -231,29 +266,40 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     // D356: exploration changes the decks that play, so it is part of the version; off, the id is the old one.
     // D358: play exploration changes the games, so it is too (a change between nights of one folder is a
     // version change: refused unless --allow-version-change, and logged); off, the id is the old one.
-    weights: explore || playExplore ? { ...o.weights, ...(explore ? { explore } : {}), ...(playExplore ? { playExplore } : {}) } : o.weights,
+    // D394: so does the profile mix (each line also carries its seats' `profiles`).
+    weights: versionWeights(o.weights, { explore, playExplore, profileMix: meta.profileMix ?? null }),
   });
-  fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   const metaFile = path.join(o.out, 'run.json');
   const jsonl = path.join(o.out, 'drafts.jsonl');
   const done = new Set<number>();
+  let resumed = false;
+  let before = 0;
   if (fs.existsSync(metaFile)) {
+    resumed = true;
     const old = JSON.parse(fs.readFileSync(metaFile, 'utf8')) as RunMeta;
-    const same = (k: (m: RunMeta) => unknown): boolean => JSON.stringify(k(old)) === JSON.stringify(k(meta));
-    if (!same((m) => [m.cubeSha, m.format, m.games, m.profiles, m.builder, m.weights, m.winstonCards, m.learned ?? null, m.bridge ?? null, m.profileMix ?? null, m.explore ?? null])) {
-      throw new Error(`${o.out} holds a run with a different cube, format, games, profiles, builder, weights, learned files or exploration -- use a new --out`);
+    const differ = identityDiff(old, meta);
+    if (differ.length > 0) {
+      throw new Error(`${o.out} holds a run with a different ${differ.join(', ')} (D394: the folder's identity, which no flag changes) -- use a new --out`);
     }
     if (fs.existsSync(jsonl)) {
       for (const line of fs.readFileSync(jsonl, 'utf8').split('\n')) if (line.trim()) done.add((JSON.parse(line) as DraftRecord).seed);
     }
+    before = old.versions?.length ?? 0;
     meta.seed = Math.min(old.seed, o.seed);
     meta.drafts = Math.max(old.seed + old.drafts, o.seed + o.drafts) - meta.seed;
-    if (done.size > 0) say(`resuming: ${done.size} draft(s) already in ${jsonl}`);
+    if (done.size > 0 && !o.checkOnly) say(`resuming: ${done.size} draft(s) already in ${jsonl}`);
     // D341: a folder is one lab version unless --allow-version-change says otherwise (and it is logged).
     meta.versions = resumeVersions(old.versions ?? (done.size === 0 ? null : undefined), version, o.seed, !!o.allowVersionChange, o.out, say);
   } else {
     meta.versions = resumeVersions(null, version, o.seed, false, o.out, say);
   }
+  const last = meta.versions.at(-1);
+  const check: RunCheck = {
+    out: o.out, meta, version, resumed, done: done.size,
+    versionChange: resumed && meta.versions.length > before && last?.allowedChange ? last.allowedChange.changed : null,
+  };
+  if (o.checkOnly) return check;
+  fs.mkdirSync(path.join(o.out, 'decks'), { recursive: true });
   fs.writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
   // D315: the cube as drafted, beside the recordings, so the dataset's vocabulary is this pool.
   const cubeCopy = path.join(o.out, 'cube.md');
@@ -359,6 +405,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     if (saved.length > 0) throw new Error(`a worker SAVED Forge preferences under ${prefs} (${saved.join(', ')}) -- a run must never save prefs (CLAUDE.md hard rule 11, D107)`);
   }
   say(`done in ${((Date.now() - t0) / 1000).toFixed(0)} s -> ${jsonl}`);
+  return check;
 }
 
 /** The two seats of the draft at `seed`: drawn from the mix (D347), else `--profiles`. */

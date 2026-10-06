@@ -938,6 +938,7 @@ python3 tools/ml/matchup.py train var/cubelab/queue --out var/ml/matchup/night-1
 tools/cubelab.sh queue run  --night 2 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-1/power.tsv
 tools/cubelab.sh queue run  --night 3 --drafts 25000 --jobs 7 --record-every 1 --power var/ml/matchup/night-2/power.tsv \
     --play-explore share=0.15,epsilon=0.05,closecall=0.02 --allow-version-change   # D358, below
+tools/cubelab.sh queue check --night 4 --drafts 38000 --jobs 7 --record-every 1 ... --allow-version-change  # D394: would every key folder accept it? writes nothing
 ```
 
 | flag | default | |
@@ -1090,6 +1091,18 @@ docs-only commit changes HEAD but not the tree hash, so it does not stop a
 night. The queue's `night-N.json` lists every `queue run` of the night with its
 commit, tree, diff and jar; a version refusal stops the night (every chunk would
 fail the same way).
+
+**Identity and version (D394).** Two checks guard a folder. Its *identity* — cube,
+format, games, profiles, builder, weights, Winston cards, learned files, bridge,
+deck exploration — is never appended across, flag or not ("holds a run with a
+different games", naming the fields: use a new `--out`). Everything that is a
+deliberate change between nights is in the *version* instead and passes with
+`--allow-version-change`: the code, jar, ratings, D358's play exploration and
+D375's profile mix (whose lines also carry their seats' `profiles`). Before a
+`queue run` plays anything it checks every key folder of the night the way
+that folder's first chunk will, and stops on a refusal; `queue check`, with the
+same flags as the run, does only that and writes nothing (a job's pilot runs it
+on the real root).
 
 ## What it does not do
 
