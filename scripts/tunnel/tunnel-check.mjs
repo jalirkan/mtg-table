@@ -30,6 +30,13 @@
 //     - each listener's door as the tunnel would reach it -- from 127.0.0.1
 //       with Host: <hostname> and Origin: https://<hostname>: the room listener
 //       wants a seat token, the coach helper refuses the tunnel's Host (D386);
+//     - the owner's doors refuse Cloudflare's headers whatever the Host (D402's
+//       TunnelGate on the bridge, D404's `admit` on the coach helper): each of
+//       CF-Connecting-IP, CF-Ray and Cf-Access-Jwt-Assertion, with a loopback Host;
+//     - the game seat (D402, while a game between two people runs): /ws with no
+//       or a wrong seat token opens nothing, /observe opens nothing, and every
+//       other path is 404 -- the table serves /ws only; the room's own /ws
+//       (passed to the table, D404) opens nothing without a token either;
 //     - which ports listen beyond loopback (--lan is not needed for a tunnel).
 //
 // Exit 0 when nothing FAILed, 1 when something did, 2 on a usage error.  Wrong-
@@ -48,7 +55,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  GAME_SEAT, NEVER_PATHS, NEVER_PORTS, ROOM, accessAnswered, checkConfig,
+  GAME_SEAT, NEVER_PATHS, NEVER_PORTS, ROOM, TUNNEL_HEADERS, accessAnswered, checkConfig,
   verdictNever, verdictNoUpgrade, verdictRoomNoToken,
 } from './policy.mjs';
 
@@ -221,21 +228,57 @@ async function localDoors(host, ports, roomId, gameSeat, t, add, ok) {
   // The coach helper: never tunnelled, and its D386 Host check refuses a tunnel's name.
   const helper = await ask({ host, port: ports.coach, path: '/health', timeoutMs: t });
   if (helper.error) add('PASS', `coach helper 127.0.0.1:${ports.coach}, Host ${host}`, `not answering (${helper.error})`);
-  else ok(helper.status === 403, `coach helper 127.0.0.1:${ports.coach}, Host ${host}`, helper.status === 403 ? '403: it refuses a tunnel’s Host (D386)' : `${helper.status} -- it answered a tunnel's Host; never point a tunnel at it`);
-  // The bridge: it trusts loopback by design, so only the config keeps it off the tunnel.
+  else {
+    ok(helper.status === 403, `coach helper 127.0.0.1:${ports.coach}, Host ${host}`, helper.status === 403 ? '403: it refuses a tunnel’s Host (D386)' : `${helper.status} -- it answered a tunnel's Host; never point a tunnel at it`);
+    // D404: with a loopback Host too, a request carrying any one of Cloudflare's headers is refused (`admit`, first).
+    for (const h of TUNNEL_HEADERS) {
+      const r = await ask({ host: `127.0.0.1:${ports.coach}`, port: ports.coach, path: '/health', headers: { [h]: CF_VALUE[h] }, timeoutMs: t });
+      ok(r.status === 403, `coach helper, Host 127.0.0.1, ${h}`, r.error ?? (r.status === 403 ? '403: it refuses what came through Cloudflare' : `${r.status} -- it answered a request carrying ${h}: this helper predates D404's refusal (update mtg-table)`));
+    }
+  }
+  // The bridge: it trusts loopback by design, so the config's rules keep the tunnel off it -- and, since
+  // D402's TunnelGate, it refuses anything carrying Cloudflare's headers, whatever the Host.
   const bridge = await ask({ host, port: ports.ws, path: '/health', timeoutMs: t });
-  add('NOTE', `bridge 127.0.0.1:${ports.ws}, Host ${host}`, bridge.error
-    ? `not answering (${bridge.error})`
-    : `${bridge.status}: the bridge admits any loopback peer (endpoints.md) -- only the config's rules keep the tunnel off it`);
+  if (bridge.error) add('PASS', `bridge 127.0.0.1:${ports.ws}`, `not answering (${bridge.error})`);
+  else {
+    for (const h of TUNNEL_HEADERS) {
+      const r = await ask({ host: `127.0.0.1:${ports.ws}`, port: ports.ws, path: '/health', headers: { [h]: CF_VALUE[h] }, timeoutMs: t });
+      if (r.status === 403) { add('PASS', `bridge, Host 127.0.0.1, ${h}`, '403: it refuses what came through Cloudflare (D402)'); continue; }
+      if (r.error) { add('FAIL', `bridge, Host 127.0.0.1, ${h}`, r.error); continue; }
+      // A table of two (D402): the bridge's own port is a loopback /health and nothing else, without the gate.
+      const table = r.status === 200 && /game between two people/.test((await ask({ host: `127.0.0.1:${ports.ws}`, port: ports.ws, path: '/', headers: { [h]: CF_VALUE[h] }, timeoutMs: t })).body ?? '');
+      if (table) add('WARN', `bridge, Host 127.0.0.1, ${h}`, `${r.status}: at a table of two the bridge's port answers /health ("ok") even to a tunnel's headers -- it serves nothing else there, and no rule may name it (docs/security/endpoints.md, D408)`);
+      else add('FAIL', `bridge, Host 127.0.0.1, ${h}`, `${r.status} -- it answered a request carrying ${h}: this bridge predates D402's TunnelGate (rebuild: ./bridge/build.sh)`);
+    }
+  }
   if (gameSeat) {
     const seat = await tcp('127.0.0.1', ports.seat, 2000);
     if (seat !== 'open') add('WARN', `game seat 127.0.0.1:${ports.seat}`, 'not running (it exists only while a game between two people runs)');
     else {
+      // D402: the table serves /ws by token and nothing else -- no /observe, no /health, no site.
       const v = verdictNoUpgrade(await ask({ ...base, port: ports.seat, path: '/ws', upgrade: true }));
       ok(v.ok, 'game seat /ws with no seat token', v.note);
+      const wrong = verdictNoUpgrade(await ask({ ...base, port: ports.seat, path: `/ws?seat=${randomBytes(16).toString('base64url')}`, upgrade: true }));
+      ok(wrong.ok, 'game seat /ws with a wrong seat token', wrong.note);
+      const obs = verdictNoUpgrade(await ask({ ...base, port: ports.seat, path: '/observe', upgrade: true }));
+      ok(obs.ok, 'game seat /observe (a watcher would see a hand)', obs.note);
+      for (const p of TABLE_NEVER) {
+        const r = await ask({ ...base, port: ports.seat, path: p });
+        ok(r.status === 404, `game seat GET ${p}`, r.error ?? (r.status === 404 ? '404: the table serves /ws only' : `${r.status} -- the table port answers more than /ws`));
+      }
     }
   }
+  // D404: the room's own port passes /ws to the table; without a valid seat token nothing opens there either.
+  if (up === 'open') {
+    const v = verdictNoUpgrade(await ask({ ...base, port: ports.room, path: '/ws', upgrade: true }));
+    ok(v.ok, 'room listener /ws with no seat token (passed to the table)', v.note);
+  }
 }
+
+/** Paths the table port must answer 404 (D402): it serves `/ws` and nothing else. */
+export const TABLE_NEVER = Object.freeze(['/', '/health', '/observe', '/index.html']);
+/** Made-up values for Cloudflare's headers, as a tunnel daemon would add them. */
+const CF_VALUE = { 'cf-connecting-ip': '203.0.113.7', 'cf-ray': '8c0ffee000000000-AMS', 'cf-access-jwt-assertion': 'eyJhbGciOiJSUzI1NiJ9.e30.x' };
 
 async function outside(host, roomId, gameSeat, ip, t, env, add, ok) {
   let addrs = [];
