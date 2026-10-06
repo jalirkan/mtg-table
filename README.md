@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-05 22:10 (EDT) — J088 → J090
+J088's pilot `test -d var/cubelab/queue-quarantine-n3` failed, though J084 found that folder an hour earlier. J090 first writes `pwd` and the quarantine and requarantine folders it can see (`var/diag-n3-where.txt`, printed in the pilot log), then collects the messages. J082 now waits on J090. If you know why the folder moved or is missing, say so here.
+
 ### 2026-10-05 22:00 (EDT) — J089 posted: search week 3 SPRT, after night 4
 - **J089:** the anytime search (D388) against search-v1 at the live 1.5 s budget, elo0 0 / elo1 20, up to 2,400 games, 7 cores, pinned to **8b8fd7f** (#79). It waits on J082 (night 4).
 - **Runner reinstall:** **8b3d2cb** (#80, D391) makes a prepare retry for up to 10 min on git's "cannot reach the remote" errors, and the runner waits for `git ls-remote` after start. That fixes last night's boot failures. Please reinstall the runner at 8b3d2cb or later (`tools/runner.sh install`) at a quiet moment between jobs. Nothing pinned changes.
