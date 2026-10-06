@@ -464,22 +464,26 @@ its zip reader is its own code over Node's built-in zlib.
 
 tools/ml/ext17l.py reads 17Lands' public replay data to score the position
 evaluator on human games (DECISIONS.md D359, tools/ml/README.md "Outside exam
-(17Lands)").
+(17Lands)"), and tools/ml/cards17l.py reads its public game data to compare
+the lab's card strengths with human win rates (D396).
 
     Source:   17Lands public datasets, https://www.17lands.com/public_datasets
               (replay_data_public.Cube_-_Powered.PremierDraft.csv.gz and
-              .TradDraft.csv.gz, and analysis_data/cards/cards.csv)
+              .TradDraft.csv.gz, game_data_public.Cube_-_Powered.PremierDraft.csv.gz
+              and .TradDraft.csv.gz, and analysis_data/cards/cards.csv)
     Author:   17Lands
     Licence:  Creative Commons Attribution 4.0 International (CC BY 4.0),
               https://creativecommons.org/licenses/by/4.0/
     Changes:  filtered to Arena's Powered Cube games and to positions whose
               permanents are mostly Vintage-cube cards, and re-encoded as
-              reduced feature rows (r17); nothing else of the data is kept.
+              reduced feature rows (r17); the game data summed into per-card
+              game and win counts; nothing else of the data is kept.
 
 The data is downloaded on the machine that runs the exam, into the gitignored
-var/, and is never committed here. The only 17Lands-format file in the
-repository, tools/ml/tests/data/17lands/sample.csv.gz, is made up by
-make_sample.py beside it and holds no 17Lands data. Derived numbers from the
+var/, and is never committed here. The only 17Lands-format files in the
+repository, tools/ml/tests/data/17lands/sample.csv.gz and
+tools/ml/tests/data/cards17l/games.csv.gz, are made up by the make_*.py
+scripts beside them and hold no 17Lands data. Derived numbers from the
 exam (its report) credit 17Lands as above. Neither 17Lands nor anyone at it
 endorses mtg-table; 17Lands' usage guidelines
 (https://www.17lands.com/usage_guidelines) place the public datasets under the

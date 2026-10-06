@@ -1,0 +1,12 @@
+id,expansion,name,rarity,color_identity,mana_value,types,is_booster
+1,TST,Alpha Knight,common,W,1,Creature - Human Knight,True
+2,TST,Beta Priest,common,W,2,Creature - Human Cleric,True
+3,TST,Delta Bolt,common,R,1,Instant,True
+4,TST,Epsilon Goblin,common,R,1,Creature - Goblin,True
+5,TST,Eta Counter,common,U,2,Instant,True
+6,TST,Iota Bear,common,G,2,Creature - Bear,True
+7,TST,Lambda Ring,rare,,1,Artifact,True
+8,TST,Nu Lost // Back Face,rare,B,3,Creature - Spirit,True
+9,TST,Mu Fountain,rare,WU,0,Land,True
+10,TST,Pi Limited,rare,B,4,Sorcery,True
+11,TST,Alpha Knight Token,token,W,0,Token Creature - Knight,False
