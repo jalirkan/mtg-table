@@ -1,0 +1,5 @@
+PASS  pilot.games >= 20   [pilot.games = 56]
+PASS  pilot.errors + pilot.timeouts <= 2   [pilot.errors = 0, pilot.timeouts = 0]
+PASS  pm.played == 8   [pm.played = 8]
+PASS  pm.aSearch.searched >= 20   [pm.aSearch.searched = 165]
+PASS  pm.bSearch.searched == 0   [pm.bSearch.searched = 0]
