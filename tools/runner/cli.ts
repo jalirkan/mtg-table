@@ -13,7 +13,13 @@
 //   stop    [J###]        stop the running job(s) cleanly (TERM) and hold; `resume` carries on
 //   logs    [J###] [-n N] [-f]   the current step's log
 //   approve J###          after an old-format pilot: let the runner run the commands (STATUS approved)
-//   check   <job.md> [--metrics m.json]   parse a job file, list its steps, evaluate its checks
+//   check   <job.md> [--metrics m.json] [--jobs-dir DIR] [--var DIR] [--no-lint]
+//                         parse a job file, list its steps, lint it (D397: errors fail), evaluate its checks
+//   lint    <job.md>... [--jobs-dir DIR] [--var DIR] | --list-rules   the lint alone, over many files
+//   dry-run <job.md> --root <checkout> [--var DIR] [--max-seconds 60] [--workers 2] [--commands|--pilot-only]
+//           [--sandbox auto|ns|none] [--scratch DIR] [--keep] [--no-build] [--network] [--max-copy-mb 64]
+//                         the lint, then the pilot (and, sandboxed, each commands block for --max-seconds)
+//                         over an overlay of the real var/; prints which checks would pass (dryrun.ts)
 //   metrics <extractor> <args...>         print what an extractor reads (aibench, cubelab, ...)
 //
 // Options: --lab-root DIR (~/code/lab)  --state DIR (<runner>/var/runner)
@@ -33,6 +39,8 @@ import { acquireLock, releaseLock } from './lock.ts';
 import { evaluate, parse as parseExpr } from './expr.ts';
 import { parseJobFile } from './jobfile.ts';
 import { ledgerCheckLines, siblingJob } from './ledger.ts';
+import { LINT_RULES, lintJob, lintText, type Finding } from './lint.ts';
+import { dryRun, dryRunInner } from './dryrun.ts';
 import { EXTRACTORS } from './metrics.ts';
 import { DEFAULT_CONFIG, Runner, verdictText, type RunnerConfig } from './runner.ts';
 import { serveStatus, STATUS_HOST } from './serve.ts';
@@ -51,7 +59,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string> } {
     if (a.startsWith('--')) {
       const [k, v] = a.slice(2).split('=', 2) as [string, string | undefined];
       if (v !== undefined) f.set(k, v);
-      else if (['dry-run', 'no-push', 'follow'].includes(k)) f.set(k, '1');
+      else if (['dry-run', 'no-push', 'follow', 'no-lint', 'list-rules', 'commands', 'pilot-only', 'keep', 'no-build', 'network'].includes(k)) f.set(k, '1');
       else f.set(k, argv[++i] ?? '');
     } else if (a === '-f') f.set('follow', '1');
     else if (a === '-n') f.set('lines', argv[++i] ?? '80');
@@ -92,6 +100,13 @@ function config(f: Map<string, string>): RunnerConfig {
     commit,
     push: !f.has('no-push'),
   };
+}
+
+/** --jobs-dir, else the jobs/ folder a job file sits in at the top of a checkout (a pc-jobs worktree). */
+function jobsDirOf(file: string, f: Map<string, string>): string | null {
+  if (f.get('jobs-dir')) return f.get('jobs-dir') as string;
+  const dir = path.dirname(path.resolve(file));
+  return path.basename(dir) === 'jobs' && fs.existsSync(path.join(dir, '..', '.git')) ? dir : null;
 }
 
 function lock(cfg: RunnerConfig): void {
@@ -268,13 +283,44 @@ async function main(): Promise<number> {
       console.log(`pilot: ${job.pilot?.blocks.length ?? 0} block(s), ${job.pilot?.checks.length ?? 0} check(s); commands: ${job.commands?.blocks.length ?? 0} block(s), ${job.commands?.checks.length ?? 0} check(s); ${job.aborts.length} abort line(s); progress ${job.progress?.line ?? '-'}`);
       console.log(job.machineChecked ? 'machine-checked: the runner may go past the pilot on its own' : 'NOT machine-checked: the runner stops after the pilot (waiting, needs a human/Claude check)');
       for (const l of ledgerCheckLines(job, siblingJob(file), (n, t) => parseJobFile(n, t, parseExpr))) console.log(l);
+      // D397: the lint (lint.ts); its errors fail the check, its warnings do not.
+      const found: Finding[] = f.has('no-lint') ? [] : lintJob(job, { jobsDir: jobsDirOf(file, f), varDir: f.get('var') ?? null });
+      if (!f.has('no-lint')) process.stdout.write(lintText(found));
       if (job.errors.length) { console.log(`ERRORS:\n  ${job.errors.join('\n  ')}`); return 1; }
       if (f.get('metrics')) {
         const m = JSON.parse(fs.readFileSync(f.get('metrics') as string, 'utf8')) as Record<string, unknown>;
         console.log(`pilot checks:\n${verdictText((job.pilot?.checks ?? []).map((c) => evaluate(c, m)))}final checks:\n${verdictText((job.commands?.checks ?? []).map((c) => evaluate(c, m)))}aborts:\n${verdictText(job.aborts.map((c) => evaluate(c, m)))}`);
       }
-      return 0;
+      return found.some((x) => x.severity === 'error') ? 1 : 0;
     }
+    case 'lint': {
+      if (f.has('list-rules')) { for (const [id, what] of Object.entries(LINT_RULES)) console.log(`${id.padEnd(18)} ${what}`); return 0; }
+      if (!pos.length) throw new Error('lint <job.md>... [--jobs-dir DIR] [--var DIR]');
+      let bad = 0;
+      for (const file of pos) {
+        const job = parseJobFile(file, fs.readFileSync(file, 'utf8'), parseExpr);
+        const found = lintJob(job, { jobsDir: jobsDirOf(file, f), varDir: f.get('var') ?? null });
+        const errs = found.filter((x) => x.severity === 'error').length + job.errors.length;
+        if (errs) bad++;
+        console.log(`== ${path.basename(file)}${job.errors.length ? ` (${job.errors.length} parse error(s): ${job.errors.join('; ')})` : ''}`);
+        process.stdout.write(lintText(found));
+      }
+      console.log(`\n${pos.length} job file(s), ${bad} with errors`);
+      return bad ? 1 : 0;
+    }
+    case 'dry-run': {
+      const file = pos[0];
+      if (!file || !f.get('root')) throw new Error('dry-run <job.md> --root <checkout> [--var DIR] [--scratch DIR] [--max-seconds N] [--workers N] [--commands|--pilot-only] [--sandbox auto|ns|none] [--keep]');
+      return dryRun({
+        file, root: f.get('root') as string, varDir: f.get('var') ?? null, scratch: f.get('scratch') ?? null,
+        maxSeconds: Number(f.get('max-seconds') ?? 60), workers: Number(f.get('workers') ?? 2),
+        commands: f.has('commands') ? true : f.has('pilot-only') ? false : null,
+        sandbox: (f.get('sandbox') ?? 'auto') as 'auto' | 'ns' | 'none', keep: f.has('keep'), jobsDir: jobsDirOf(file, f),
+        forgecoach: f.get('forgecoach') ?? null, build: !f.has('no-build'), network: f.has('network'),
+        ...(f.get('max-copy-mb') ? { maxCopyMb: Number(f.get('max-copy-mb')) } : {}),
+      });
+    }
+    case 'dry-run-inner': return dryRunInner(pos[0] ?? '');      // dry-run's own second half, inside the namespace
     case 'metrics': {
       const ex = EXTRACTORS[pos[0] ?? ''];
       if (!ex) throw new Error(`metrics <${Object.keys(EXTRACTORS).join('|')}> <args>`);
@@ -282,7 +328,7 @@ async function main(): Promise<number> {
       return 0;
     }
     default:
-      console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(3, 23).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+      console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(3, 30).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
       return 2;
   }
 }

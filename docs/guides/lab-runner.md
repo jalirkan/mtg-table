@@ -77,7 +77,9 @@ tools/runner.sh logs [J###] [-f] [-n N]   # the current step's log
 tools/runner.sh once                   # one loop iteration in the foreground (testing; refuses while the service runs)
 tools/runner.sh plan [J###]            # the dry run: every script and systemd-run line the job would get; runs nothing
 tools/runner.sh approve J###           # an old-format job waiting after its pilot: run its commands
-tools/runner.sh check jobs/J0NN.md [--metrics m.json]   # parse a job file; evaluate its checks against metrics
+tools/runner.sh check jobs/J0NN.md [--metrics m.json]   # parse a job file, lint it (D397); evaluate its checks against metrics
+tools/runner.sh lint jobs/*.md --jobs-dir jobs          # the lint alone, over many files (--list-rules)
+tools/runner.sh dry-run jobs/J0NN.md --root ~/code/lab/mtg-table   # the pilot, then each commands block for 60 s, over an overlay
 tools/runner.sh metrics aibench var/ai-bench/night-*    # what an extractor reads, as JSON
 journalctl --user -u forgecoach-runner -f               # the runner's own log
 systemctl --user list-units 'lab-*'                     # the job steps running now
@@ -87,6 +89,53 @@ systemctl --user list-units 'lab-*'                     # the job steps running 
 `~/code/lab/runner/var/runner/`, from whichever checkout they are run from (`--state DIR`
 for another). `pause` takes effect at once, because it rewrites every
 running job's control file itself. The daemon picks up a `stop` within 10 s.
+
+## Before a job is posted: the lint and the dry run (D397)
+
+`tools/runner.sh check <job.md>` lints the file after parsing it (`tools/runner/lint.ts`);
+a lint **error** fails the check, a warning does not. `tools/runner.sh lint <files...>`
+lints many at once. Each rule comes from a job that failed on the PC:
+
+| rule | catches | from |
+|---|---|---|
+| `timeout-duration` | `timeout 10h30m`, `sleep 1h30m`: GNU takes one number and one unit | J093 |
+| `argmax-glob` | an unquoted glob two or more folders deep passed to a program (`$(ls -d var/cubelab/queue/normal/*/games/*)`): over data the job does not make, an error; over a tree it makes, a warning. With `--var DIR` the glob is expanded over the real data and an expansion over half of ARG_MAX is an error | J086 |
+| `light-var` | a `cpu: light` job that reads `var/` (a warning since D392) | J088, J090 |
+| `metric-self-count` | a metric counting a folder the job's own blocks write a matching file into (redirect, `tee`, `mkdir`, `cp`, `--out`, `clean:`, `collect:`) | J066, J084, J082 |
+| `after-missing` | an `after:` id with no file in `--jobs-dir` (default: the `jobs/` folder of a pc-jobs worktree) | |
+| `placeholder-id` | `J0XX`, `J###`, `followup: -`, `@<sha>`; `after:` drops a non-id without a word | |
+| `bash-syntax` | `bash -n` on every block and `metrics: sh:` line; a here-document that never ends | |
+| `python-syntax` | `compile()` on every Python here-document (`python3 - <<'PY'`, `cat > x.py <<'PY'`) and every literal `python3 -c` | |
+
+The lint reads the blocks with a small bash scanner (`shscan.ts`): quoted and unquoted globs,
+substitutions, here-documents and `NAME=literal` assignments carried forward. It cannot see
+inside a tool, so it cannot know that `cubelab.sh queue run` refuses a folder holding another
+run's settings (J096), that a dataset outgrew a memory cap (J087), or that a lane lacks a path.
+
+**The dry run** is for those. `tools/runner.sh dry-run <job.md> --root <checkout>` runs the
+lint, then the job's blocks as the runner writes them (`{workers}` = `--workers`, default 2;
+`JOBS`, `LAB_CONTROL`, the thread caps; `set -eo pipefail` in the checkout), each stopped after
+`--max-seconds` (default 60), and evaluates the pilot's `check:` lines on what the blocks wrote.
+
+- **In a user + mount namespace** (`unshare -Urm`, needs unprivileged user namespaces): an
+  overlayfs over the checkout and over the real `var/` it points to, so every write lands in the
+  scratch folder and the real tree is never written; every other mount but `/tmp`, `/var/tmp`
+  and `/dev/shm` is remounted read-only; each block runs in a network namespace of its own with
+  only loopback (`--network` keeps the host's). `--root` may be the lane clone itself: a commit
+  other than the job's pin is checked out and built (`--no-build`) inside the overlay. Here the
+  `## Commands` blocks run too, each for `--max-seconds`: long enough for a tool to start, read
+  its inputs and refuse (J096's version guard, J093's `timeout`, J086's argument list), never to
+  do the work. Final checks after cut-short blocks are printed but are not a verdict.
+- **Without one** (`--sandbox none`, or an Ubuntu with `apparmor_restrict_unprivileged_userns=1`):
+  `--root` must be a scratch checkout (`git worktree add /tmp/j <sha>`) with no `var/`; the dry
+  run builds one there: symlinks to the real `var/`'s entries, copies below the folders the
+  job's blocks visibly write (files over `--max-copy-mb`, default 64, left out and counted). A
+  tool that writes where the lint cannot see would write through a symlink, as a pilot on the
+  PC does today, so **only the pilot runs**: `## Commands` never does.
+
+The exit code is 0 when no lint error, no failed block and no failing pilot check was seen; 1
+otherwise; 2 when the sandbox or the checkout could not be set up. `--keep` keeps the scratch
+folder (the scripts, the logs and the overlay's upper layers: everything the blocks wrote).
 
 ## How a job runs
 
@@ -579,6 +628,12 @@ In the cloud container (4 shared cores, no systemd user session):
   second shard parked and started in slot 0; a pause holding the JVM after its game in
   flight; and the cube-lab pool at `--jobs 2` under `maxWorkers 1` running one worker JVM.
 - `tools/runner.sh plan` against the real `pc-jobs`, cloning from GitHub.
+- `web/test/lab-runner-lint.test.ts` (D397): each lint rule on the job shape that failed and on
+  its control (a rule with no case fails the test), the scanner, `check` failing on an error, and
+  the dry run in a namespace (a commands block refusing the real folder caught, the real `var/`
+  byte-identical after) and without one (the pilot only). `tools/runner.sh lint` over every job
+  on `pc-jobs` (J001-J096); the namespace was exercised as root in the container, never yet as
+  an unprivileged user on the PC.
 
 Only the PC can show the systemd half: real units, the slice's limits, oomd, the measured
 peak, the backoff under real pressure, and adoption across a service restart. That includes

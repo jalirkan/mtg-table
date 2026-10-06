@@ -208,6 +208,10 @@ These hold whatever a job file says:
 
 ## Job file format (`jobs/J###-name.md`)
 
+Before posting a job: `tools/runner.sh check jobs/J###-x.md` (it lints too, D397: a lint error
+fails it) and, where the data is, `tools/runner.sh dry-run jobs/J###-x.md --root <checkout>`.
+`docs/guides/lab-runner.md` (on main) lists the rules and the dry run's sandbox.
+
 The old format still parses. A job without `check:` lines runs only up to its pilot, then
 waits for a person or the PC session (rule 5). The machine-readable lines below are
 additions.
