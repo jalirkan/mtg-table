@@ -187,6 +187,9 @@ jobs:
       # Step 12: the checker must still reject every one-defect probe.
       - name: check-redaction-selftest.mjs
         run: node tools/check-redaction-selftest.mjs
+      # D402 (M59): a table of two's seat logs read against each other -- its controls.
+      - name: check-seat-pair-selftest.mjs
+        run: node tools/check-seat-pair-selftest.mjs
       - name: requarantine-selftest.mjs
         run: node tools/requarantine-selftest.mjs
       # Step 12d over the committed corpus (the gate adds its fresh logs).

@@ -345,10 +345,14 @@ test(`${FILE}: carries all eleven frame types of §2, and a token (P15)`, () => 
   // a unit test, which is not the same thing as a log the transport parses.
   const log = parseFrameLog(text);
   const types = new Set(log.frames.map((frame) => frame.type));
+  // M59's `table` is sent only at a table of two (§2.6), and this sample is a
+  // game against the AI, where a `table` frame would be a wrong frame; its
+  // artifact is a two-person recording (gate step 10i, check-redaction).
+  assert.ok((FRAME_TYPES as readonly string[]).includes('table'));
   assert.deepEqual(
     [...types].sort(),
-    [...FRAME_TYPES].sort(),
-    'the sample must carry one of every frame type §2 declares — and only those',
+    FRAME_TYPES.filter((t) => t !== 'table').sort(),
+    'the sample must carry one of every frame type §2 declares for a game against the AI — and only those',
   );
 
   // P15 — `CardView.isToken()`. `g1.jsonl` has 694 of them, so the emitter's

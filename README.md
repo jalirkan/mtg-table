@@ -85,8 +85,12 @@ finishable. Anything on this list is a closed question, not a backlog item.
   itself is not shown. *Lifted in part on 2026-10-06 by **D400**, on the owner's
   request:* two people may grid-draft a cube from their own browsers through the
   coach helper's draft room (`play.sh --draft-room`, `docs/draft-room.md`), on a
-  port of its own where every route needs a seat token. A draft only: a game still
-  has one human seat.
+  port of its own where every route needs a seat token. *And again the same day by
+  **D402** and **D403**, on the owner's request:* the two drafted decks may be
+  played against each other — `MtgTable --humans 2`, two human seats and no AI,
+  each its own redacted stream on a table port where every seat needs its own
+  per-game token (amendment M59). One game at a time, two people, no spectators:
+  a lobby, a third seat and a view of both hands are still a no.
 - **No deck builder.** Decks are `.dck` files you already have. Editing them is
   Forge's job, or a text editor's.
 - **No card-library package.** Nothing published, nothing the engine, the bridge
@@ -213,8 +217,8 @@ GATE_JOBS=8 WSPORT=8750 ./tools/check-all.sh   # more at once; step 10 on 8750..
 **It runs its steps concurrently** (D129–D135). Every step is a job with its
 own log under `var/check-all/<run>/`, and `GATE_JOBS` of them run at once —
 four on a 16-thread machine — each JVM a process of its own with its own game
-ids, `var/` paths, **Forge home** and, for step 10's eight servers, its own port
-(`WSPORT`..`WSPORT+7`). The Forge home is what makes the `var/` paths honest:
+ids, `var/` paths, **Forge home** and, for step 10's nine servers, its own port
+(`WSPORT`..`WSPORT+8`, and 10i's table on `WSPORT+18`). The Forge home is what makes the `var/` paths honest:
 every job boots Forge in `var/check-all/<run>/<job>/` (and every ten-games row in
 `var/ten-games/home-<seed>/`) — its own `userDir`, `cacheDir` and `config.json`,
 built by `tools/config.sh`'s `forge_home_make` — where every JVM used to share

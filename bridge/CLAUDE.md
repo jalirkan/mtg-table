@@ -110,6 +110,20 @@ the pipeline, the bind and every answer are M50's. A change to what a phone can
 reach goes through `LanGate`; a change to what the site can reach goes through
 `WsTransport.sitePath` and the real-path check, and `WsLanSelfTest` holds both.
 
+**A table of two is two seats, never one seat with two viewers** (D402, D403,
+amendment **M59**). `MtgTable --humans 2` hands `HostedMatch.startMatch` a map of
+two `RegisteredPlayer`s to two `WireGuiGame`s, so each person's stream is a seat
+exactly as above — its own transport, reply pool, frame log and `Snap` viewer —
+and `TableMatch` owns only what neither seat knows alone: presence, whose
+decision it is, the decision clock, the claim of a win. The seats are
+`WsTransport.tableSeat`s behind `TableServer`, a listener of its own (`tablePort`)
+where **every upgrade needs a seat's token, loopback included** — never give it
+`LanGate`'s exemption, because a tunnel daemon is loopback. A second socket with
+the same token replaces the first (4002); a table seat's ask never times out and
+a disconnect cancels nothing, because an away player is waited for, not answered
+for. `/observe` is refused there. `--transport auto` and `null` seat two
+automated players for the gate (step 10i).
+
 **Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
 sent the instant `over` arrives is QUEUED** (**D114**, amendment **M45**): `over`
 goes out at the outcome, while Forge is still finishing the game and has yet to
@@ -167,7 +181,10 @@ to think.
 
 ## The build's self-tests
 
-`bridge/build.sh` runs **eight** self-tests after javac (the eighth,
+`bridge/build.sh` runs **eight** self-tests after javac, and since D402 a ninth,
+`mtgtable.TableSelfTest` (amendment M59's door: a seat token per seat with no
+loopback exemption, no `/observe`, the table's `Origin` rule, the 4002 takeover,
+the wrong-token limit and the health-only port, on a real `TableServer`) (the eighth,
 `mtgtable.eval.EvalSelfTest`, is **D316**'s: the position evaluator's Java
 encoder and forward pass against Python's golden rows, features and P(win) in
 `fixtures/eval/`, its schema refusals, and D305's hidden-zone scrambler in Java;

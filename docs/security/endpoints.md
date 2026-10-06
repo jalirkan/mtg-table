@@ -65,9 +65,10 @@ the rules; this is the map.
 
 | Listener | Bind | Routes | Auth | Origin / CORS | Reads / writes on disk | Spends Claude usage |
 |---|---|---|---|---|---|---|
-| **Bridge** `WsTransport` (`MtgTable --transport ws`, `config.json` `wsPort`, 8642) | `127.0.0.1`; `0.0.0.0` with `--lan` | `GET /health` (200 `ok` / 503 `starting`; other methods 405); `/ws` the seat (one client, 4001 for a second); `/observe` read-only followers; `/` the built ForgeCoach site, only with `--site-dir` (`GET`/`HEAD`) | none on loopback; with `--lan`, `LanGate` first: a non-loopback peer needs `?token=` (sockets) or `?token=`/the `mtgtable_token` cookie (site, `/health`), SHA-256 + `MessageDigest.isEqual` | `/ws`, `/observe`: no `Origin` (a tool) or one on `wsAllowedOrigins` (loopback any port, `https://jalirkan.github.io`); with `--lan` also `http://<Host>` for a non-loopback peer only; else 403 before the handshake. No CORS on HTTP (nothing cross-origin reads it) | reads the `--site-dir` tree (text, normalised and real-path checks, symlinks refused, 64 MB a file); writes `var/games/<gameId>/frames.jsonl` (the frame log). A socket can only play the seat's game (acts, answers, `newGame`) | no |
+| **Bridge** `WsTransport` (`MtgTable --transport ws`, `config.json` `wsPort`, 8642) | `127.0.0.1`; `0.0.0.0` with `--lan` | `GET /health` (200 `ok` / 503 `starting`; other methods 405); `/ws` the seat (one client, 4001 for a second); `/observe` read-only followers; `/` the built ForgeCoach site, only with `--site-dir` (`GET`/`HEAD`) | any request carrying a tunnel's headers (`CF-Connecting-IP`, `CF-Ray`, `Cf-Access-Jwt-Assertion`) is 403 first, in every mode (`TunnelGate`, D405: this port is never tunnelled); then none on loopback; with `--lan`, `LanGate`: a non-loopback peer needs `?token=` (sockets) or `?token=`/the `mtgtable_token` cookie (site, `/health`), SHA-256 + `MessageDigest.isEqual` | `/ws`, `/observe`: no `Origin` (a tool) or one on `wsAllowedOrigins` (loopback any port, `https://jalirkan.github.io`); with `--lan` also `http://<Host>` for a non-loopback peer only; else 403 before the handshake. No CORS on HTTP (nothing cross-origin reads it) | reads the `--site-dir` tree (text, normalised and real-path checks, symlinks refused, 64 MB a file); writes `var/games/<gameId>/frames.jsonl` (the frame log). A socket can only play the seat's game (acts, answers, `newGame`) | no |
 | **Coach helper** `tools/coach-helper.mjs` (`coachPort`, 8643; started by `play.sh`) | `127.0.0.1`; `0.0.0.0` with `--lan` | `GET /health`; `POST /coach` (512 KB); `POST /vision` (24 MB, 8 images of 5 MB); `GET/POST /review`, `GET /review/<id>` (256 KB); `POST /eval` (2 MB); `GET/POST /match` (64 KB); `POST /engine/start` (4 KB); else 404, 405, 413 | none on loopback; **D386: a non-loopback peer is 403 unless `--lan`**, checked on the socket's remote address; with `--lan` it needs `?token=` or `X-ForgeCoach-Token`, SHA-256 + `crypto.timingSafeEqual` | **D386: a loopback peer's `Host` must be `localhost`/`*.localhost` or a loopback IP literal (`127.0.0.0/8`, `[::1]`, `[::ffff:127.x.x.x]`), port ≤ 65535.** `Origin` on `wsAllowedOrigins`; with `--lan`, a non-loopback peer also `http://<Host>` and `http://<Host name>:<wsPort>` (the bridge's LAN page); no `Origin` from loopback only. Allowed origins echoed with `Vary: Origin`; preflight 204 with `Allow-Private-Network`, needs only the origin | `/coach`, `/vision`: an empty temp dir per call, removed after (the system prompt in a temp file when over 100 KB). `/review`: reads `var/games/<gameId>/frames.jsonl` (name pattern, no `..`, real path inside `var/games/`), writes `var/coach-grade/review/<id>/`, runs `tools/coach-grade.sh` (JVMs). `/eval`: a long-lived Python child reading the model under `var/ml/`. `/match`: writes `var/match/<id>/{you,ai}.dck` and `var/match/request.json` (names through strict patterns, never in a path or argv), signals `play.sh`, which restarts the engine; D386: the match dir's real path must stay under `var/` | **yes**: `/coach`, `/vision` run `claude -p` (no tools, one turn, `dontAsk`); nothing else does |
 | **Draft room** `tools/draft-room.mjs` (D400; in the coach helper's process with `--draft-room`, `roomPort` 8644; `play.sh --draft-room`) | `127.0.0.1`; `0.0.0.0` with `--lan` | `GET /room/<id>`, `GET /room/<id>/events` (SSE), `POST /room/<id>/join`, `POST /room/<id>/pick` (1 KB); `GET`/`HEAD` the site (`--room-site-dir`); rooms are MADE only on the coach helper's port (`POST /room`, 256 KB, its D386 door) | **every room route needs the seat's `X-Room-Token`, a loopback peer included** (128 bits, SHA-256 digests on disk, `timingSafeEqual`); the site needs none (ForgeCoach's public build). Per seat 120 req/min, 3 streams; 10 wrong links/min per address (a loopback peer's `CF-Connecting-IP` when present), then 429; 16 rooms | `Origin` absent, on `wsAllowedOrigins`, the page's own `http(s)://<Host>`, or a `--room-origin`; else 403. No `Host` check (the token is the lock). Allowed origins echoed; preflight 204 with `Allow-Private-Network` | writes `var/draft-room/rooms.json` (mode 600, folder 700, real path under `var/`; token digests only); reads the `--room-site-dir` tree (`sitePath`: no `..`, encoded separator, NUL or symlink) | no |
+| **Table** `TableServer` (D402, M59; `MtgTable --humans 2 --transport ws`, `config.json` `tablePort` 8646, `--table-port`; exists only while a game between two people runs) | `127.0.0.1`; `0.0.0.0` with `--lan`. The bridge's own `wsPort` then binds `127.0.0.1` for `/health` alone | `/ws?seat=<token>` one of the two seats, and nothing else: `/observe` (D403), `/health` and every other path 404 (`/health` is the bridge's own `wsPort`'s, loopback only: 200 once both seats have a `hello_ok`, 503 before) | **every `/ws` upgrade needs a seat's token, a loopback peer included** (128 bits, minted per game by the draft room, D404); the bridge holds only their SHA-256 digests (`--seats-file`) and compares with `MessageDigest.isEqual`; the token is stripped from the URI before the handshake and never logged. 10 wrong tokens/min per address (a loopback peer's `CF-Connecting-IP` when present), then 429. A second socket with the same seat's token replaces the first (closed 4002) | `Origin` absent, on `wsAllowedOrigins`, a `--table-origin`, or `http(s)://` on the request's own host name at any port; else 403. No `Host` check (the token is the lock) | writes `var/games/<gameId>-seat0/` and `-seat1/frames.jsonl` (each seat's own redacted view); reads `--seats-file` (names and digests). A socket can only play its own seat | no |
 | **Lab runner status** `tools/runner/serve.ts` (`--http-port`, 8645) | `127.0.0.1` only (`STATUS_HOST`) | `GET /public-status.json` (`/status.json`, `/`), `/public-ladder.json`, `/public-warehouse.json`; else 404/405 | none | `https://jalirkan.github.io` and loopback dev origins, else 403; no `Origin` allowed; preflight answers private network | reads the runner's status, sanitised to the public copy (the same bytes `lab-status` publishes) | no |
 | **Vite dev server** (`npm --prefix web run dev`, `play.sh`'s board, `webPort` 5173; preview 4173) | `127.0.0.1` (`vite.config.ts`) | the app; `/fixtures/` (dev and preview); dev only: `/cards/api/*`, `/cards/img/*` (D92), `/spectate/<name>.jsonl` (D122), `/personal/*` (D195, D225) | none | Vite's defaults: `allowedHosts` (DNS-rebinding guard) and `cors` limited to localhost | reads `fixtures/` (resolved, inside the folder), `var/cards/`, `var/spectate/` (name pattern), `personal/models/` and `personal/relief/` (slug pattern, resolved inside) — **the personal tier is private (D190)** | no |
 | `tools/personal/check.mjs` (preview pages for headless Chromium, a run's lifetime) | `127.0.0.1` | `/`, `/clip/*.json`, `/model.glb`, `/three/*` | none | none | reads one model and `web/node_modules/three` (resolved inside) | no |
@@ -149,26 +150,27 @@ all.
 
 **May be exposed, after named changes:**
 
-- **The bridge's `/ws` and its site, for the friend who holds the seat.** What
-  must change first, each as its own decision:
-  1. *Loopback is no longer the owner.* A tunnel arrives from 127.0.0.1, so
-     `LanGate`'s loopback exemption must not apply to it: either the tunnel
-     targets a separate listener (its own port, its own gate, no exemption), or
-     the bridge refuses a loopback peer whose `Host` is not `localhost` or a
-     loopback IP literal (the coach helper's D386 rule), so tunnelled requests
-     fall through to the token. The `Host` rule alone is not enough for a
-     tunnel whose daemon can rewrite `Host`: the separate listener is.
-  2. *A token per seat, not per run.* The phone token gives the seat and
-     everything else; a friend's link should give one game's seat.
-  3. *`https://` origins.* A tunnel serves `https://<name>`, which neither
-     `wsAllowedOrigins` nor the `http://<Host>` rule names today.
-  4. *Access in front, the token behind it.* Cloudflare Access decides who
-     reaches the origin; the token still decides which seat. Neither replaces
-     the other, and the origin should check Access's
-     `Cf-Access-Jwt-Assertion` rather than trust that the tunnel is the only
-     way in.
-  5. *Hidden information is unchanged*: a friend's seat sees exactly what a
-     seat sees (hard rule 8); nothing about a tunnel needs a new redaction
-     mode, and a design that seems to is wrong.
+- **The table port (D402, M59), for the two seats of a game between two
+  people**, once Access is in front of it. Four of the five changes this
+  section listed for the bridge's `/ws` are made there, on a listener of its
+  own rather than on the bridge's `wsPort`:
+  1. *Loopback is no longer the owner* — done: the table port exists only while
+     a game between two people runs, and it has no loopback exemption; every
+     upgrade needs a seat's token, from 127.0.0.1 as from anywhere. A tunnel
+     points at the table port and never at `wsPort`, which a later one-person
+     game reopens with M51's exemption.
+  2. *A token per seat, not per run* — done: one per seat per game, minted by
+     the draft room (D404), held by the bridge as digests only.
+  3. *`https://` origins* — done: `http(s)://` on the request's own host name,
+     or a `--table-origin` (a tunnel's name).
+  4. *Access in front, the token behind it* — **not done** (Phase 4): the
+     origin does not yet check `Cf-Access-Jwt-Assertion`. Until it does, run no
+     tunnel to the table port.
+  5. *Hidden information is unchanged* — held: each seat is a seat (hard rule
+     8), and `/observe` is refused at a table (D403) rather than given a new
+     redaction mode. `tools/check-seat-pair.mjs` reads the two seats' logs
+     against each other on every gate (step 10i).
+- **The bridge's `/ws` and its site, for one friend on the owner's single
+  seat**: still the same five changes; nothing in D402 changes `wsPort`.
 - **Nothing else.** A new route a tunnel should carry is a new row in the
   table above and a decision, before it is a line of code.

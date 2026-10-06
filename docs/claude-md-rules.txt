@@ -66,6 +66,7 @@
 **A human seat has no wall clock** (**D286**). `--transport ws` and `console` put no
 **`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
 **A LAN server is the token's, and loopback is never asked for it** (D287–D289,
+**A table of two is two seats, never one seat with two viewers** (D402, D403,
 **Two end-of-game rules from the 2026-09-27 hardening pass.** **An `act: newGame`
 **`GET /health` is the session's readiness, not the port's** (amendment M15): 503
 **and anything it sends in that window is dropped with no reply** (amendment M20
@@ -377,6 +378,8 @@ span: Nothing an observer does may reach the seat
 span: Both paths check `Origin`
 span: A LAN server is the token's, and loopback is never asked for it
 span: for a non-loopback peer only
+span: A table of two is two seats, never one seat with two viewers
+span: every upgrade needs a seat's token, loopback included
 span: Two end-of-game rules from the 2026-09-27 hardening pass.
 span: An `act: newGame` sent the instant `over` arrives is QUEUED
 span: And an exception out of Forge's game loop fails the run

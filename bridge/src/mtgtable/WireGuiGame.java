@@ -63,86 +63,86 @@
  *                 rules this file is written to -- a push touches only getId() on a
  *                 view; only the game thread may block; no thread of ours is named Game*
  *                 - | - | report 07 section 2.5, hard rules 2 and 3
- * -    253-794    construction and injected wiring: the constructor (580),
- *                 setHostedMatch (600), setSession (605), setLogFactory (615),
- *                 awaitGameEnd (639) and awaitGameStart (644) with their await
- *                 (671), the run summary's counters from unimplemented (688) to
- *                 refreshesSkipped (787)
+ * -    253-899    construction and injected wiring: the constructor (582),
+ *                 setHostedMatch (602), setSession (607), setLogFactory (617),
+ *                 awaitGameEnd (744) and awaitGameStart (749) with their await
+ *                 (776), the run summary's counters from unimplemented (793) to
+ *                 refreshesSkipped (892)
  *                 MAIN | LIFE, for the game counters | report 07 section 3; D44
- * -    795-984    frame emission: emit (806), logC2s (889), envelope (925),
- *                 notice (952), unimpl (973), fired (981)
+ * -    900-1089   frame emission: emit (911), logC2s (994), envelope (1030),
+ *                 notice (1057), unimpl (1078), fired (1086)
  *                 whichever thread emits: GAME (`state`), EDT (`input`, notices),
  *                 IO, MAIN (game 1's `hello_ok`), and BG in the build | LOG, taken
- *                 at 844 and 909, with `over` re-checked under it at 865 and 910 |
+ *                 at 947 and 1012, with `over` re-checked under it at 968 and 1013 |
  *                 protocol sections 1 and 8.4: `over` is terminal (OverRaceSelfTest)
- * 1    985-1193   openView, the wiring hook: openView (997), seedPhaseStops (1084),
- *                 resetForGame (1139), the one reset hook between games
+ * 1    1090-1299  openView, the wiring hook: openView (1102), seedPhaseStops (1189),
+ *                 resetForGame (1244), the one reset hook between games
  *                 game 1: MAIN, the caller of HostedMatch.startMatch; later games:
  *                 EDT, from an `act: newGame` | LIFE; `deferred` and INPUT inside the
  *                 reset | report 07 section 4.1; D44 and amendment M38; D38
- * 2    1194-1552  handleGameEvents, THE snapshot hook: handleGameEvents (1211),
- *                 flushState (1226), OutcomeWatcher (1314), FinishWatcher (1336),
- *                 engineFinished (1352), the test hooks (1376-1484), captureOutcome
- *                 (1498; its hop is at 1504, tagged D39)
+ * 2    1300-1663  handleGameEvents, THE snapshot hook: handleGameEvents (1320),
+ *                 flushState (1335), OutcomeWatcher (1425), FinishWatcher (1447),
+ *                 engineFinished (1463), the test hooks (1479-1587), captureOutcome
+ *                 (1609; its hop is at 1615, tagged D39)
  *                 GAME; a batch that arrives on any other thread is buffered in
- *                 `deferred` (1213-1220); engineFinished runs on the EDT | `deferred`'s
+ *                 `deferred` (1316-1323); engineFinished runs on the EDT | `deferred`'s
  *                 monitor; LOG through emit | hard rule 3, D5; D114 (FinishWatcher);
  *                 D39 (the hop); amendments M4 and M11
- * 3    1553-1866  the input path: InputState (1558), engineInput (1614),
- *                 mutateInput (1625), inputBody (1641), showPromptMessage (1692),
- *                 updateButtons (1707), setSelectables (1730), setHighlighted (1756),
- *                 setCard (1792) and the rest of the prompt pushes
+ * 3    1664-1978  the input path: InputState (1669), engineInput (1725),
+ *                 mutateInput (1737), inputBody (1753), showPromptMessage (1804),
+ *                 updateButtons (1819), setSelectables (1842), setHighlighted (1868),
+ *                 setCard (1904) and the rest of the prompt pushes
  *                 Forge pushes from the EDT, from GAME and from the thread of a click
- *                 | INPUT (1630-1637); the push goes out after it is released
- *                 (1638) | D22 (inputGen), amendment M42 (inputSeen), protocol
+ *                 | INPUT (1734-1741); the push goes out after it is released
+ *                 (1742) | D22 (inputGen), amendment M42 (inputSeen), protocol
  *                 section 4
- * 4    1867-2039  the other pushes: updateCurrentPlayer (1877, AbstractGuiGame's
- *                 own abstract member), the overlays, message (1928), showErrorDialog
- *                 (1934), finishGame (1940), engineCrashed (1962), afterGameEnd
- *                 (1975), emitOver (1992)
+ * 4    1979-2151  the other pushes: updateCurrentPlayer (1989, AbstractGuiGame's
+ *                 own abstract member), the overlays, message (2040), showErrorDialog
+ *                 (2046), finishGame (2052), engineCrashed (2074), afterGameEnd
+ *                 (2087), emitOver (2104)
  *                 mostly the EDT; engineCrashed on the dying Game-n thread; emitOver
  *                 on whichever thread saw the outcome | `this`, so `over` goes out
  *                 once; LIFE, for games finished | amendments M4 and M11; D114; D115
- * 5    2040-2152  openZones / tempShowZones, hints and not questions: tempShowZones
- *                 (2054), openZones (2070), restoreOldZones (2091), hideZones (2097),
- *                 the zone-hint helpers (2102-2151)
+ * 5    2152-2264  openZones / tempShowZones, hints and not questions: tempShowZones
+ *                 (2166), openZones (2182), restoreOldZones (2203), hideZones (2209),
+ *                 the zone-hint helpers (2206-2255)
  *                 EDT (openZones sometimes GAME) | INPUT, through engineInput |
  *                 protocol section 4.3
- * 6    2153-2170  phase stops: isUiSetToSkipPhase (2163), asked on every step
+ * 6    2265-2282  phase stops: isUiSetToSkipPhase (2275), asked on every step
  *                 GAME | none (a ConcurrentHashMap) | D19, D38
- * 6b   2171-2393  the comfort snapshot, the four M6 answers Snap cannot compute:
- *                 the Snap.Comfort object (2180), stopNames (2235), activeYieldJson
- *                 (2251), undoStateJson (2292), rawYieldKey (2338; lint rule 4b's
- *                 one tagged key read is at 2339), handleFor (2343), standingYield (2368)
+ * 6b   2283-2505  the comfort snapshot, the four M6 answers Snap cannot compute:
+ *                 the Snap.Comfort object (2284), stopNames (2347), activeYieldJson
+ *                 (2363), undoStateJson (2404), rawYieldKey (2450; lint rule 4b's
+ *                 one tagged key read is at 2451), handleFor (2455), standingYield (2480)
  *                 GAME, inside Snap.state | none | D41, D42
- * 7    2394-3299  the ask path: ask (2412), decode (2477), the option writers
- *                 (2500-2596), then the blocking members: getAbilityToPlay (2601)
- *                 and its asynchronous menu (2708-2836; its hop is at 2723, tagged
- *                 D22), confirm (2839), getChoices (2931), order (2974),
- *                 chooseSingleEntityForEffect (3038), assignCombatDamage (3120),
- *                 assignGenericAmount (3182), manipulateCardList (3234), sideboard
- *                 (3274) and the rest
+ * 7    2506-3411  the ask path: ask (2524), decode (2589), the option writers
+ *                 (2604-2700), then the blocking members: getAbilityToPlay (2713)
+ *                 and its asynchronous menu (2812-2940; its hop is at 2835, tagged
+ *                 D22), confirm (2951), getChoices (3043), order (3086),
+ *                 chooseSingleEntityForEffect (3150), assignCombatDamage (3232),
+ *                 assignGenericAmount (3294), manipulateCardList (3346), sideboard
+ *                 (3378) and the rest
  *                 GAME, which parks until the answer comes; getAbilityToPlay arrives
  *                 on the EDT and hops (D22) | LOG while the ask is numbered
- *                 (2450-2458); none while parked | protocol sections 5 and 5.4 (null
+ *                 (2554-2562); none while parked | protocol sections 5 and 5.4 (null
  *                 is always an answer); D15, D24; D20, D22
- * 8    3300-4033  the inbound path, acts: onAct (3305), applyAct (3332), concede
- *                 (3516), setPhaseStop (3598), newGame (3700), yieldTo (3768),
- *                 setYield (3849), refreshState (3941; its hop is at 3950, tagged
- *                 D39), refreshSnapshot (3974), enginePausedForSeat (4022)
+ * 8    3412-4195  the inbound path, acts: onAct (3417), applyAct (3444), concede
+ *                 (3648), setPhaseStop (3760), newGame (3862), yieldTo (3930),
+ *                 setYield (4011), refreshState (4103; its hop is at 4112, tagged
+ *                 D39), refreshSnapshot (4136), enginePausedForSeat (4184)
  *                 onAct on IO; applyAct and every act on the EDT; refreshSnapshot on
  *                 a second Game-n worker | LOG, for the act's c2s line | D17, D39,
  *                 D41, D42, D114, amendment M8
- * 8b   4034-4282  the acts that write the engine from the EDT, then answers, resync
- *                 and disconnect: notNow (4054), engineFacts (4099), GuardFeeds
- *                 (4108), pressOk (4151), onAnswer (4171), onResync (4206),
- *                 onDisconnect (4261), close (4274)
+ * 8b   4196-4449  the acts that write the engine from the EDT, then answers, resync
+ *                 and disconnect: notNow (4216), engineFacts (4261), GuardFeeds
+ *                 (4270), pressOk (4313), onAnswer (4333), onResync (4368),
+ *                 onDisconnect (4423), close (4441)
  *                 notNow and pressOk on the EDT; onAnswer, onResync and onDisconnect
  *                 on IO | none of its own: volatile reads and atomics (a frame written
  *                 here takes LOG in emit or logC2s) | D136, amendment M48; D27,
  *                 amendment M42; D24
- * 9    4283-4339  answer coercion: asInt (4295), asBool (4299), asIntArray (4303),
- *                 asIntMap (4307), indexOfIdentity (4312), actBody (4317); the
+ * 9    4450-4506  answer coercion: asInt (4462), asBool (4466), asIntArray (4470),
+ *                 asIntMap (4474), indexOfIdentity (4479), actBody (4484); the
  *                 rest of it lives in Ask.java
  *                 any thread (pure functions) | none | protocol section 5.3
  */
@@ -635,6 +635,109 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     /** The reply pool, so the transport can complete and await on the same one. */
     public ReplyPool pool() {
         return pool;
+    }
+
+    // ---- amendment M59 (D402, D403): a game between two people ------------
+
+    /**
+     * What a seat of a two-person game needs from the table it sits at
+     * ({@link TableMatch}).  Null for every other game: one person against the
+     * AI, the automated seats, a recording.
+     */
+    interface Table {
+        /** EDT: this seat sent {@code act: claimWin} (D403). */
+        void claimWin(WireGuiGame seat);
+
+        /** The other seat of the table, or null. */
+        WireGuiGame peer(WireGuiGame seat);
+    }
+
+    /** Set once, before {@code HostedMatch.startMatch}; null outside a two-person game. */
+    private volatile Table table;
+
+    /** Engine-driven input pushes ({@link #engineInput}), for {@link #decisionKey}. */
+    private final AtomicLong engineInputs = new AtomicLong();
+
+    /** M59: seat this gui at a two-person table.  Before {@code startMatch}. */
+    void setTable(final Table t) {
+        this.table = t;
+    }
+
+    /**
+     * M59 (D403): whether the engine is waiting on this seat -- an ask is
+     * parked, or an input is up on its queue.  A lock-free read of two feeds
+     * {@link ActGuard} also reads; any thread.
+     */
+    boolean waitingOnSeat() {
+        return ready && !overEmitted && !closed && enginePausedForSeat();
+    }
+
+    /**
+     * M59 (D403): a number that moves whenever the engine pushes this seat a new
+     * prompt or asks it something -- the decision clock restarts when it does.
+     * A client's resync re-emits an {@code input} without moving it.
+     */
+    long decisionKey() {
+        return engineInputs.get() + engineAsks.get();
+    }
+
+    /** M59: a {@code table} frame (presence and the decision clock); MAIN thread. */
+    boolean emitTable(final String body) {
+        return ready && emit("table", body);
+    }
+
+    /** M59: a notice the table sends this seat (a clock that ran out, a claimed win). */
+    void tableNotice(final String level, final String title, final String text) {
+        if (ready) {
+            notice(level, title, text);
+        }
+    }
+
+    /**
+     * M59 (D403): this seat's decision clock ran out.  On the EDT, the decision
+     * gets the answer nobody chose: an outstanding ask is answered {@code null}
+     * (protocol section 5.4's default, as a dropped connection used to), and an
+     * input gets OK when OK is enabled and Cancel otherwise -- the console's
+     * empty line (bridge/CLAUDE.md).  Nothing when neither is enabled: the
+     * engine wants a card, and the clock simply runs again.
+     */
+    void clockExpired() {
+        FThreads.invokeInEdtNowOrLater(() -> {
+            if (overEmitted || closed || !inputSeen) {
+                return;
+            }
+            final int asks = pool.resolveAll();
+            if (asks > 0) {
+                System.err.println("TABLE CLOCK: seat " + (viewer == null ? "?" : viewer.getId()) + " -- "
+                        + asks + " ask(s) answered with their default (D403)");
+                return;
+            }
+            final IGameController c = controller();
+            if (c == null) {
+                return;
+            }
+            final boolean ok;
+            final boolean cancel;
+            synchronized (inputLock) {
+                ok = in.okEnabled;
+                cancel = in.cancelEnabled;
+            }
+            System.err.println("TABLE CLOCK: seat " + (viewer == null ? "?" : viewer.getId()) + " -- "
+                    + (ok ? "OK" : cancel ? "Cancel" : "nothing to press") + " (D403)");
+            if (ok) {
+                pressOk(c, c::selectButtonOk);
+            } else if (cancel) {
+                c.selectButtonCancel();
+            }
+        });
+    }
+
+    /** M59 (D403): concede for this seat, whose person is away and whose opponent claimed the win.  EDT. */
+    void concedeForAbsentSeat() {
+        final IGameController c = controller();
+        if (c != null && !overEmitted) {
+            concede(c);
+        }
     }
 
     /** Blocks until game {@code n} has emitted its {@code over}. */
@@ -1621,6 +1724,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     private void engineInput(final Consumer<InputState> f) {
         inputSeen = true;
+        engineInputs.incrementAndGet();        // M59: the table's decision clock
         mutateInput(f);
         if (pendingConcede && concedeRetryPosted.compareAndSet(false, true)) {
             // D136: the engine is showing this seat something, so it is parking
@@ -3437,12 +3541,29 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             c.alphaStrike();
             break;
         case "nextGame":
-            // The M3 spelling of newGame {mode:"continue"} (protocol 2.2).
-            newGame(c, "continue");
-            break;
         case "newGame":
-            newGame(c, body.get("mode") == null ? "continue" : String.valueOf(body.get("mode")));
+            if (table != null) {
+                // M59: a game between two people is one game (best of three is not built).
+                notice("warn", "No next game", "a game with a friend is one game; start another from the room");
+                return;
+            }
+            if ("nextGame".equals(action)) {
+                // The M3 spelling of newGame {mode:"continue"} (protocol 2.2).
+                newGame(c, "continue");
+            } else {
+                newGame(c, body.get("mode") == null ? "continue" : String.valueOf(body.get("mode")));
+            }
             break;
+        case "claimWin": {
+            // M59 (D403): the opponent has been away past the grace period.
+            final Table t = table;
+            if (t == null) {
+                notice("warn", "Unknown act", action);
+                return;
+            }
+            t.claimWin(this);
+            break;
+        }
         case "concede":
             concede(c);                        // D136: at once when quiet, else outcome now and the rest later
             break;
@@ -3525,7 +3646,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * refused: the player wants out.
      */
     private void concede(final IGameController c) {
-        final String why = ActGuard.whyNotNow(engineFacts(c, inputGen.get()));
+        final String why = quietForConcede(c);
         if (why == null || TEST_UNGUARDED_ACTS) {
             pendingConcede = false;
             concedesNow.incrementAndGet();
@@ -3542,7 +3663,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 }
             }
         }
-        final int answered = pool.resolveAll();
+        int answered = pool.resolveAll();
+        final WireGuiGame peer = table == null ? null : table.peer(this);
+        if (peer != null) {
+            // M59: in a game between two people the engine may be parked on the
+            // OTHER seat's ask; answering it with its default lets Game-0 reach
+            // the state-based check that ends the game this seat has conceded.
+            answered += peer.pool.resolveAll();
+        }
         System.err.println("CONCEDE DEFERRED: the engine is not quiet on this seat -- " + why + "; the outcome "
                 + "is written and Game-0's own state-based check ends the game" + (answered > 0 ? " (" + answered
                 + " parked ask(s) answered with their default)" : "") + " (D136)");
@@ -3569,7 +3697,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return;
         }
         final IGameController c = controller();
-        if (c != null && ActGuard.whyNotNow(engineFacts(c, inputGen.get())) == null) {
+        if (c != null && quietForConcede(c) == null) {
             pendingConcede = false;
             System.err.println("CONCEDE COMPLETED: the engine parked on this seat before it ended the game (D136)");
             concedeAll();
@@ -3587,6 +3715,29 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         if (concedeRetryPosted.compareAndSet(false, true)) {
             FThreads.delayInEDT(CONCEDE_RETRY_MS, this::retryConcede);
         }
+    }
+
+    /**
+     * D136's question for a concede: null when it may be applied whole now.  In a
+     * game between two people (M59) the engine parked on the OTHER seat's input
+     * is as quiet as one parked on this seat's -- {@code Game-0} is inside that
+     * seat's {@code showAndWait()} -- so the peer's own facts are asked too, with
+     * this seat's hops still counted.
+     */
+    private String quietForConcede(final IGameController c) {
+        final String why = ActGuard.whyNotNow(engineFacts(c, inputGen.get()));
+        if (why == null || table == null || hopsInFlight.get() > 0) {
+            return why;
+        }
+        final WireGuiGame peer = table.peer(this);
+        if (peer == null) {
+            return why;
+        }
+        final IGameController pc = peer.controller();
+        if (pc != null && ActGuard.whyNotNow(peer.engineFacts(pc, peer.inputGen.get())) == null) {
+            return null;
+        }
+        return why;
     }
 
     /**
@@ -4278,6 +4429,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // A menu nobody is parked on cannot be cancelled by the reply pool, and
         // the client that could have answered it is gone.
         asyncAsks.clear();
+        if (table != null) {
+            // M59 (D403): a table pauses for an absent player -- nothing answers
+            // for them.  Their asks stay parked and are re-sent on reconnect.
+            return;
+        }
         pool.cancelAll();                      // every parked game thread degrades to its default
     }
 
