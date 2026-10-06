@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-05T22:04:06-04:00",
- "heartbeat": "2026-10-05T22:04:06-04:00",
+ "updated": "2026-10-05T22:04:30-04:00",
+ "heartbeat": "2026-10-05T22:04:30-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.58,
-  "memUsedGb": 9.1,
+  "load1": 7.85,
+  "memUsedGb": 9.2,
   "memTotalGb": 30.5,
   "swapUsedMb": 2,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 1/4",
    "started": "2026-10-05T22:00:26-04:00",
-   "elapsed": 220,
+   "elapsed": 244,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 2.91,
+   "memGb": 3.01,
    "live": {
     "ds.rows": 636111,
     "ds.games": 3884,
@@ -73,9 +73,9 @@
    "id": "J091",
    "title": "Collect the messages of night 3's still-quarantined recordings (the one M55 failure and the stray non-recording file), so a person can judge night 4's stop row",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-05T22:04:04-04:00",
-   "elapsed": 1,
+   "elapsed": 25,
    "done": null,
    "total": null,
    "unit": null,
@@ -102,7 +102,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J091-prepare"
+   "detail": "lab-J091-pilot1"
   }
  ],
  "queue": [
