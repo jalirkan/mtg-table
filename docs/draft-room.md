@@ -43,7 +43,7 @@ its last pick, and 72 hours after it was made.
 | Listener | Route | Door |
 |---|---|---|
 | Coach helper (8643) | `POST /room`, `GET /room` | The owner's door (D386): loopback with a loopback `Host`, or the `--lan` pairing token. It is never tunnelled. Only the owner makes rooms. |
-| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>` (D407) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
+| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
 | Room listener (8644) | `GET /`, `GET /assets/…` | No token. These are ForgeCoach's public build (`--room-site-dir`, which play.sh fills with the `--lan` download or `--site-dir`). Only GET and HEAD are allowed, and a path cannot leave the folder: `..`, encoded separators and symlinks are refused. |
 
 Tokens are 128 bits (22 base64url characters). The server stores only their
@@ -281,6 +281,9 @@ this machine.
   room. `state` is `off` (not recorded, or automatic reviews are off here),
   `waiting`, `queued`, `running`, `done` (with `report`, docs/game-review.md's
   shape) or `failed`. `404 {code: "game"}` for a game that is not this room's.
+- `GET /room/<id>/log/<matchId>` → `200 application/x-ndjson`: this seat's own
+  frame log of that game, as the bridge wrote it (the frames the review's numbers
+  point at), for a game this seat was recorded in; `404` otherwise.
 - The review is built from this seat's own log, which holds this player's hand,
   so it is never served to the other seat — and the coach helper's own `/review`
   (8643) never serves a game between two people at all (`POST` 403, `GET` 404,

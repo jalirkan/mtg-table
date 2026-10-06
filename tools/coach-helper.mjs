@@ -202,7 +202,7 @@ import { availableParallelism, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
-import { MAX_REVIEW_BODY, createReviewRunner, cleanOld } from './review-runner.mjs';
+import { MAX_REVIEW_BODY, createReviewRunner, cleanOld, gameLog, readLogText } from './review-runner.mjs';
 import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
 import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
@@ -1047,7 +1047,9 @@ async function main() {
         gameRunning: (matchId) => !!match && match.tableRunning()?.id === matchId,
         // D406: the bridge's result.json for a table's game; D407: a seat log's own automatic review.
         gameResult: (matchId) => (match ? match.gameResult(matchId) : null),
-        reviewOf: (gameId) => seatReviewOf({ review, auto }, gameId) });
+        reviewOf: (gameId) => seatReviewOf({ review, auto }, gameId),
+        // D407: a seat's own log, for that seat's review screen (the room checks the seat and its consent).
+        seatLog: (gameId) => { const g = gameLog(cfg.repoRoot, 'var/games', gameId); return g.error ? null : readLogText(g.abs); } });
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,

@@ -433,7 +433,8 @@ section('3c. D406/D407: best of three, sideboarding, play or draw, consent, each
     startGame: async (g) => { bo.calls.push(g); return { ok: true, matchId: `m${1790000000000 + bo.calls.length}`, tablePort: 8646 }; },
     gameRunning: () => bo.running,
     gameResult: (m) => bo.results.get(m) ?? null,
-    reviewOf: (gid) => { bo.asked.push(gid); return bo.reviews.get(gid) ?? { state: 'waiting' }; } });
+    reviewOf: (gid) => { bo.asked.push(gid); return bo.reviews.get(gid) ?? { state: 'waiting' }; },
+    seatLog: (gid) => `{"v":1,"kind":"session","gameId":"${gid}"}\n` });
   const srv = startRoomServer({ store: bs, port: 0, origins: ORIGINS, log: () => {}, pollMs: 3_600_000 });
   const B = `http://127.0.0.1:${await srv.listen()}`;
   const badCreate = {};
@@ -523,6 +524,10 @@ section('3c. D406/D407: best of three, sideboarding, play or draw, consent, each
   eq([r1.status, r1.json.state, r1.json.report], [200, 'off', undefined], 'seat 1 (opted out) gets no review -- and never seat 0\'s');
   ok(!r1.text.includes('game-review'), "nothing of seat 0's report in seat 1's answer");
   eq((await call(B, `/room/${rid}/review/m1234567890123`, { token: K0 })).status, 404, 'a game that is not this room\'s: 404');
+  const lg0 = await call(B, `/room/${rid}/log/${m1}`, { token: K0 });
+  eq([lg0.status, lg0.text.trim()], [200, `{"v":1,"kind":"session","gameId":"friend-${m1}-seat0"}`], "GET /log/<matchId>: seat 0 gets its own seat's log, the frames its review numbers");
+  eq((await call(B, `/room/${rid}/log/${m1}`, { token: K1 })).status, 404, "seat 1 (not recorded) gets no log -- never seat 0's");
+  eq((await call(B, `/room/${rid}/log/m1234567890123`, { token: K0 })).status, 404, 'the log of a game that is not this room\'s: 404');
   eq((await call(B, `/room/${rid}/review`, { token: K0 })).status, 404, '/review without a game: 404');
   eq((await call(B, `/room/${rid}/review/${m1}`, { token: 'B'.repeat(22) })).status, 403, 'a review with a wrong token: 403');
   eq((await call(B, `/room/${rid}/review/${m1}`, { method: 'POST', token: K0, body: {} })).status, 405, 'POST to a review: 405');

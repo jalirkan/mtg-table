@@ -44,7 +44,9 @@ the friend's hand.
   /review` of a `friend-*` game is 403, `GET /review` leaves them out and `GET
   /review/<id>` is 404 — and the draft room hands each seat its own through
   `GET /room/<id>/review/<matchId>`, behind that seat's token, built from that
-  seat's log name only. The room's state carries each finished game's review
+  seat's log name only — with `GET /room/<id>/log/<matchId>`, that seat's own
+  frame log, whose frame numbers the report's are (the browser's own copy can
+  differ after a reload). The room's state carries each finished game's review
   state for this seat (`off`, `waiting`, `queued`, `running`, `done`, `failed`),
   never the other seat's.
 - **Nothing leaves the owner's machine.** The logs, the test set and the
@@ -78,5 +80,5 @@ into its own set, with its match and the opponent's deck by name, encoded into
 rows on its own; Phase 2's logs not taken; the test set itself unchanged.
 `tools/draft-room-selftest.mjs` 3c: the owner's default, a seat opting out
 without touching the other, each seat seeing only its own consent, the review
-route giving seat 0 its report and seat 1 (opted out) nothing of it, and the
-review of an opted-out seat never even looked up.
+route giving seat 0 its report and its own log and seat 1 (opted out) nothing
+of either, and the review of an opted-out seat never even looked up.

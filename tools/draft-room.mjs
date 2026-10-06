@@ -79,6 +79,9 @@
 //   GET  /room/<id>/review/<matchId>  (D407) -> 200 {ok, matchId, game, state, report?, why?}: THIS seat's own
 //                               engine review of that game of this room -- never the other seat's, whose log
 //                               holds that player's hand; state off|waiting|queued|running|done|failed
+//   GET  /room/<id>/log/<matchId>  (D407) -> 200 application/x-ndjson: THIS seat's own frame log of that
+//                               game (the bridge's, redacted for this seat), when this seat was recorded --
+//                               the review's frame numbers are this file's; 404 otherwise
 //   OPTIONS                  preflight (Allow-Private-Network, X-Room-Token)
 //   GET  /, /assets/...      the site, when --room-site-dir is given (else 404)
 //
@@ -361,7 +364,8 @@ function realUnder(root, p) {
  * startGame (D404: async ({roomId, decks, names, digests}) -> {ok, matchId, tablePort} | {ok: false, message};
  *            null when no engine can be started here), gameRunning (D404: matchId -> bool),
  * gameResult (D406: matchId -> {winnerSeat, draw, reason, finished} | null, the bridge's result.json),
- * reviewOf (D407: a seat log's gameId -> {state, report?, why?}: that log's automatic engine review) }
+ * reviewOf (D407: a seat log's gameId -> {state, report?, why?}: that log's automatic engine review),
+ * seatLog (D407: a seat log's gameId -> its text, or null) }
  */
 export function createRoomStore(opts = {}) {
   const now = opts.now ?? Date.now;
@@ -381,6 +385,7 @@ export function createRoomStore(opts = {}) {
   const gameRunning = opts.gameRunning ?? (() => true);
   const gameResult = opts.gameResult ?? (() => null);
   const reviewOf = opts.reviewOf ?? null;
+  const seatLogOf = opts.seatLog ?? (() => null);
   // D407: each finished game's review, per seat, as last seen ("<matchId>/<seat>" -> state word): memory only.
   const reviewSeen = new Map();
   /** A room from before D404, or from disk: the game fields it may lack. */
@@ -712,6 +717,15 @@ export function createRoomStore(opts = {}) {
       reviewSeen.set(`${matchId}/${seat}`, rv.state);
       return { status: 200, body: { ...base, state: rv.state, ...(rv.stage ? { stage: rv.stage } : {}), ...(rv.why ? { why: String(rv.why).slice(0, 300) } : {}), ...(rv.state === 'done' && rv.report ? { report: rv.report } : {}) } };
     },
+    /** D407: THIS seat's own frame log of a recorded game of the room (the review's frames are its), or null. */
+    seatLog(id, seat, matchId) {
+      const r = rooms.get(id);
+      if (!r) return null;
+      withGame(r);
+      const g = r.games.find((x) => x.matchId === matchId);
+      if (!g || !g.record?.[seat]) return null;
+      try { return seatLogOf(seatLog(matchId, seat)) ?? null; } catch { return null; }
+    },
     /** D406/D407: results and reviews (the room server calls it every POLL_MS). */
     poll,
     /** A stream: send(state) now and after every change, send(null) when the room goes. Returns unsubscribe. */
@@ -941,10 +955,10 @@ export function startRoomServer(opts) {
       }
       if (!all.take('all')) { send(res, 429, { ok: false, code: 'slow', message: 'the room is busy — try again in a moment' }, { ...cors, 'Retry-After': '5' }); say(429, ' (all)'); return; }
       if (fails.empty(who)) { send(res, 429, { ok: false, code: 'slow', message: 'too many wrong links from this address — wait a minute' }, { ...cors, 'Retry-After': '60' }); say(429, ' (failures)'); return; }
-      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review)(?:\/(m[0-9]{13}))?)?$/.exec(path);
+      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log)(?:\/(m[0-9]{13}))?)?$/.exec(path);
       if (!m || !ROOM_ID.test(m[1])) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
       const [, id, action, sub] = m;
-      if ((action === 'review') !== (sub !== undefined)) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
+      if ((action === 'review' || action === 'log') !== (sub !== undefined)) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
       const seat = store.auth(id, req.headers[TOKEN_HEADER]);
       if (seat === 'gone' || seat === 'token') {
         fails.take(who);
@@ -967,6 +981,17 @@ export function startRoomServer(opts) {
         const r = store.review(id, seat, sub);
         send(res, r.status, r.body, cors);
         say(r.status, ` (seat ${seat} review ${r.body.state ?? r.body.code})`);
+        return;
+      }
+      if (action === 'log') {
+        // D407: this seat's own log of a recorded game -- the frames its review numbers.
+        if (method !== 'GET') { send(res, 405, { ok: false, code: 'method', message: 'use GET' }, { ...cors, Allow: 'GET, OPTIONS' }); say(405); return; }
+        const text = store.seatLog(id, seat, sub);
+        if (text === null) { send(res, 404, { ok: false, code: 'log', message: 'no recorded log of yours for that game' }, cors); say(404, ` (seat ${seat} log)`); return; }
+        const body = Buffer.from(text, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', ...base, ...cors, 'Content-Length': body.length });
+        res.end(body);
+        say(200, ` (seat ${seat} log, ${body.length} bytes)`);
         return;
       }
       if (action === 'events') {

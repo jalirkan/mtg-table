@@ -73,7 +73,7 @@ you like to play or draw?", answered Play and took turn 1; both handshakes said
 game 2 of 3 and the score from their own side; 43 turns; `result.json` named
 seat 1, as both `over`s did; both logs pass check-redaction and
 check-seat-pair. `tools/ws-two-humans.mjs`: `result.json` names seat 0 after the
-`concede` and `claim` scenarios. `tools/draft-room-selftest.mjs` 3c (36 checks):
+`concede` and `claim` scenarios. `tools/draft-room-selftest.mjs` 3c (39 checks):
 a whole match through the store and the room listener — a concede scored as a
 loss, a sideboarded deck, the loser choosing, a draw replayed with a coin toss,
 a game with no result not counted, 2–1 ending the match and the next decks
