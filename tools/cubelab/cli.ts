@@ -18,7 +18,7 @@
 //                                                              share=0.15 epsilon=0.05 closecall=0.02 opening=off
 //           [--deckset]                                        the AI ladder's deck sets: reserved seeds, --games 0 (D340)
 //   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
-//   queue   plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
+//   queue   plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
 //           [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   each drafter's AI drawn per draft (D375; off by default)
 //   learn   <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...   (D301)
 //   selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N] [--deck-synergy on|off]
@@ -73,7 +73,7 @@ function usage(msg?: string): never {
                         [--play-explore on | --play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   (D358)
        tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
                         [the flags above but --ratings]
-       tools/cubelab.sh queue plan|run --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
+       tools/cubelab.sh queue plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
                         [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   (D375; off: Default vs Default)
                         [--cubes a,b,...] [--power <power.tsv>] [--chunk 250] [--allow-version-change]
                         [--record-every N] [--play-explore share=0.15,epsilon=0.05,closecall=0.02,opening=off]   (D358)
@@ -318,7 +318,7 @@ async function main(): Promise<number> {
       if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');
       return ratingsInit(pos[1], one(f, 'out'), f.has('force'));
     case 'run': if (!pos[0] && !f.has('bridge')) usage('run needs a cube file (or --bridge a,b)'); return run(pos[0] ?? '', f);
-    case 'queue': if (pos[0] !== 'plan' && pos[0] !== 'run') usage('queue plan|run --night N --drafts D'); return queueCommand(REPO, pos[0], f, say);
+    case 'queue': if (pos[0] !== 'plan' && pos[0] !== 'run' && pos[0] !== 'check') usage('queue plan|run|check --night N --drafts D'); return queueCommand(REPO, pos[0], f, say);
     case 'report': if (!pos[0]) usage('report needs a run directory'); return report(pos[0], f);
     case 'learn': return learnCommand(REPO, pos, f, say);
     case 'selfplay': if (!pos[0]) usage('selfplay needs a cube file'); return selfplayCommand(REPO, pos[0], f, say);

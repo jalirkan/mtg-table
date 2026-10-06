@@ -265,7 +265,7 @@ async function evolveLocked(env: EngineEnv, o: EvolveOptions, say: (s: string) =
     }
     fs.writeFileSync(inputFile, inputText);
     say(`== generation ${g}/${o.generations}: ${cube.title} (${cube.cards.length} cards), seeds ${seeds[0]}-${seeds[1]}`);
-    const labRun = (drafts: number, seed: number, out: string, explore: boolean): Promise<void> => runLab(env, {
+    const labRun = (drafts: number, seed: number, out: string, explore: boolean): Promise<unknown> => runLab(env, {
       cubeFile: inputFile, format: 'grid', drafts, games: o.games, jobs: o.jobs, seed, profiles: o.profiles,
       ratingsFile: o.ratingsFile, record: 0, ...(o.recordEvery ? { recordEvery: o.recordEvery } : {}), out, builder: 'lab',
       gameTimeoutSec: o.gameTimeoutSec, winstonCards: 90, weights: o.weights,
