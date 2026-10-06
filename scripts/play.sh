@@ -77,6 +77,7 @@
 #   ./scripts/play.sh --lan --site-dir ../ForgeCoach/dist   # ...serving a local ForgeCoach build
 #   ./scripts/play.sh --engine-only --lan --draft-room   # D400: grid-draft a cube with a friend on your Wi-Fi (below)
 #   ./scripts/play.sh --engine-only --pause-lab          # D401: the lab starts no new job while this runs (below)
+#   ./scripts/play.sh --tunnel https://play.example.com  # D408: a friend over the internet, through Cloudflare (below)
 #
 # Everything after `--` goes to `mtgtable.MtgTable` untouched, so a flag this
 # script has never heard of still reaches the bridge:
@@ -232,6 +233,28 @@
 # (Play vs Forge) starts the last match against the AI, never a friend's game.
 #   --table-port <n>          the table's port (config.json tablePort, else 8646)
 #
+# A FRIEND OVER THE INTERNET (D405, D408, docs/cloudflare.md).  With a Cloudflare
+# Tunnel and Access set up once (that runbook), each session is:
+#
+#   ./scripts/play.sh --tunnel https://play.example.com
+#
+# which is --engine-only --draft-room --room-public-url <that URL>, and:
+#   - refuses --lan: cloudflared reaches loopback, and --lan would open every port
+#     to the Wi-Fi as well;
+#   - runs scripts/tunnel/tunnel-check.sh --local <its host> before anything slow
+#     (the cloudflared config against the policy, and cloudflared's own routing
+#     when it is installed) and again once the room listener is up (every door as
+#     the tunnel reaches it), and stops on a FAIL either time -- nothing is
+#     reachable through a tunnel this script has not checked;
+#   - prints the two steps for the friend: sign in at the bare URL first, then
+#     open the join link, because Access's PIN login drops the `#` part a join
+#     link carries.
+# cloudflared itself runs in another terminal (`cloudflared tunnel run <name>`),
+# in the foreground; this script never starts or stops it.
+#   --room-public-url <url>   only the "Over the internet" link (bases.public), with
+#                             --draft-room; --tunnel sets it
+#   --tunnel-config <path>    the cloudflared config to check (default ~/.cloudflared/config.yml)
+#
 # PLAY MODE FOR THE LAB (D401).  --pause-lab holds the lab runner's ADMISSIONS
 # while this script runs: `tools/runner.sh hold --pid <this script>` at start,
 # `tools/runner.sh release` at exit.  No new lab job starts; a running one is never
@@ -303,6 +326,9 @@ TABLE_PORT="$(cfg_get tablePort || echo 8646)"   # D402: a game between two peop
 ROOM_SITE=""                     # D400: the site the room listener serves (the --lan download, or --site-dir)
 ROOM_LINE=""
 PAUSE_LAB=0                      # D401: hold the lab runner's admissions while this script runs
+ROOM_PUBLIC_URL=""               # D408: the draft room's "Over the internet" base (the helper's --room-public-url)
+TUNNEL_URL=""                    # D408: --tunnel <https://host>, see the header
+TUNNEL_CONFIG=""                 # D408: the cloudflared config tunnel-check reads (default ~/.cloudflared/config.yml)
 LAB_HELD=0
 
 # D303: the coach helper's /match asks for a restart with SIGUSR1.  IGNORED
@@ -381,6 +407,9 @@ while [ $# -gt 0 ]; do
     --room-port) ROOM_PORT="$2"; shift 2 ;;
     --table-port) TABLE_PORT="$2"; shift 2 ;;
     --pause-lab) PAUSE_LAB=1; shift ;;
+    --room-public-url) ROOM_PUBLIC_URL="${2:-}"; shift 2 ;;
+    --tunnel)    TUNNEL_URL="${2:-}"; shift 2 ;;
+    --tunnel-config) TUNNEL_CONFIG="${2:-}"; shift 2 ;;
     --help|-h)   sed -n '5,/^set -euo pipefail/p' "$0" | sed '$d'; exit 0 ;;
     --)          shift; PASSTHROUGH+=("$@"); break ;;
     *)           PASSTHROUGH+=("$1"); shift ;;
@@ -393,6 +422,25 @@ esac
 IDLE_EXIT_SEC="$(node -e 'process.stdout.write(String(Math.round(Number(process.argv[1]) * 60)))' "$IDLE_EXIT_MIN")"
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
+# D408: --tunnel is --engine-only --draft-room --room-public-url <url>, never with --lan.
+if [ -n "$TUNNEL_URL" ]; then
+  TUNNEL_URL="${TUNNEL_URL%/}"
+  [ "$LAN" = "1" ] && { printf 'play.sh: --tunnel and --lan do not mix: cloudflared reaches this machine on loopback, and --lan would also open every port to your Wi-Fi (docs/cloudflare.md)\n' >&2; exit 1; }
+  printf '%s' "$TUNNEL_URL" | grep -Eqi '^https://[a-z0-9-]+(\.[a-z0-9-]+)+$' \
+    || { printf 'play.sh: --tunnel wants your tunnel'"'"'s https:// address and nothing else, e.g. https://play.example.com (got "%s")\n' "$TUNNEL_URL" >&2; exit 1; }
+  [ -n "$ROOM_PUBLIC_URL" ] && [ "${ROOM_PUBLIC_URL%/}" != "$TUNNEL_URL" ] && { printf 'play.sh: --tunnel %s and --room-public-url %s disagree: give one\n' "$TUNNEL_URL" "$ROOM_PUBLIC_URL" >&2; exit 1; }
+  ROOM_PUBLIC_URL="$TUNNEL_URL"
+  ENGINE_ONLY=1
+  DRAFT_ROOM=1
+fi
+if [ -n "$ROOM_PUBLIC_URL" ]; then
+  ROOM_PUBLIC_URL="${ROOM_PUBLIC_URL%/}"
+  [ "$DRAFT_ROOM" = "1" ] || { printf 'play.sh: --room-public-url is the draft room'"'"'s: add --draft-room (or use --tunnel <url>)\n' >&2; exit 1; }
+  # The helper's own rule (an origin, nothing after it); checked here so a typo costs a second.
+  printf '%s' "$ROOM_PUBLIC_URL" | grep -Eqi '^https?://[a-z0-9.-]+(:[0-9]{1,5})?$' \
+    || { printf 'play.sh: --room-public-url must be an origin like https://play.example.com (got "%s")\n' "$ROOM_PUBLIC_URL" >&2; exit 1; }
+fi
+[ -n "$TUNNEL_CONFIG" ] && [ -z "$TUNNEL_URL" ] && { printf 'play.sh: --tunnel-config goes with --tunnel\n' >&2; exit 1; }
 [ "$DRAFT_ROOM" = "1" ] && [ "$COACH" != "1" ] && { printf 'play.sh: --draft-room runs in the coach helper: drop --no-coach\n' >&2; exit 1; }
 case "$ROOM_PORT" in ''|*[!0-9]*) printf 'play.sh: --room-port wants a port number (got "%s")\n' "$ROOM_PORT" >&2; exit 1 ;; esac
 case "$TABLE_PORT" in ''|*[!0-9]*) printf 'play.sh: --table-port wants a port number (got "%s")\n' "$TABLE_PORT" >&2; exit 1 ;; esac
@@ -487,8 +535,28 @@ if [ "$ENGINE_ONLY" = "1" ] && [ "$COACH" = "1" ] && [ "$MATCH" = "1" ] && [ "$P
   ' "$COACH_PORT" "$WS_PORT" && exit 0 || { rc=$?; [ "$rc" = "11" ] && exit 1; }
 fi
 
+# --------------------------------------------------------------------------
+# 0b: --tunnel (D408) -- the pre-session check, before anything slow or bound
+# --------------------------------------------------------------------------
+TUNNEL_HOST="${TUNNEL_URL#https://}"
+tunnel_check() {   # tunnel_check <what> -- scripts/tunnel/tunnel-check.sh --local on this run's ports; 1 on a FAIL
+  local cfg=() rc=0
+  [ -n "$TUNNEL_CONFIG" ] && cfg=(--config "$TUNNEL_CONFIG")
+  ./scripts/tunnel/tunnel-check.sh --local "$TUNNEL_HOST" "${cfg[@]+"${cfg[@]}"}" \
+    --room-port "$ROOM_PORT" --coach-port "$COACH_PORT" --ws-port "$WS_PORT" --seat-port "$TABLE_PORT" 2>&1 | sed 's/^/  /' || rc=$?
+  [ "$rc" = "0" ] && return 0
+  printf '\033[31mplay.sh: tunnel-check failed (%s) -- fix what it says FAIL before a friend can reach anything (docs/cloudflare.md, "Security checklist")\033[0m\n' "$1" >&2
+  return 1
+}
+if [ -n "$TUNNEL_URL" ]; then
+  say "tunnel-check (before the start): $TUNNEL_HOST"
+  command -v node >/dev/null 2>&1 || die "--tunnel needs node for scripts/tunnel/tunnel-check.sh"
+  tunnel_check "the config" || exit 1
+fi
+
 say "match"
 [ "$ENGINE_ONLY" = "1" ] && echo "mode: engine only (no vite, no browser) — D285"
+[ -n "$TUNNEL_URL" ] && echo "mode: tunnel — a friend over the internet at $TUNNEL_URL, through Cloudflare (D405, D408); the engine and the room on loopback only"
 [ "$LAN" = "1" ] && echo "mode: LAN — a phone on the same network, behind a pairing token (amendment M51)"
 if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
   echo "you:  $(deck_name "$DECK")  [$DECK]"; fi
@@ -830,6 +898,7 @@ start_coach() {
   # D400: the draft room, on its own port, with the site.
   if [ "$DRAFT_ROOM" = "1" ]; then
     args+=(--draft-room --room-port "$ROOM_PORT")
+    [ -n "$ROOM_PUBLIC_URL" ] && args+=(--room-public-url "$ROOM_PUBLIC_URL")   # D408: the "Over the internet" link
     [ -n "$ROOM_SITE" ] && args+=(--room-site-dir "$ROOM_SITE")
     [ -n "$FAKE_ENGINE" ] && [ -n "${MTGTABLE_TEST_VAR:-}" ] && args+=(--room-dir "$MTGTABLE_TEST_VAR/draft-room")
   fi
@@ -864,7 +933,7 @@ start_coach() {
   esac
   if [ "$DRAFT_ROOM" = "1" ]; then
     case "$body" in
-      *'"draftRoom":1'*) ROOM_LINE="Draft room: on — ForgeCoach → Draft → Draft with a friend makes a room and shows your friend's link; players use port $ROOM_PORT$([ "$LAN" = "1" ] && [ -n "$token" ] && echo " (and from your Wi-Fi)" || echo " (this machine only: add --lan for a friend on your Wi-Fi)")$([ -n "$ROOM_SITE" ] || echo "; NO site to serve, so the friend has no page")" ;;
+      *'"draftRoom":1'*) ROOM_LINE="Draft room: on — ForgeCoach → Draft → Draft with a friend makes a room and shows your friend's link; players use port $ROOM_PORT$(if [ -n "$TUNNEL_URL" ]; then echo " (this machine only; your friend comes through the tunnel at $TUNNEL_URL)"; elif [ "$LAN" = "1" ] && [ -n "$token" ]; then echo " (and from your Wi-Fi)"; else echo " (this machine only: add --lan for a friend on your Wi-Fi)"; fi)$([ -n "$ROOM_SITE" ] || echo "; NO site to serve, so the friend has no page")" ;;
       *) ROOM_LINE="Draft room: did not start ($(grep -m1 'room' "$COACH_LOG" 2>/dev/null || tail -1 "$COACH_LOG" 2>/dev/null))" ;;
     esac
   fi
@@ -1173,6 +1242,23 @@ if [ "$ENGINE_ONLY" = "1" ]; then
   echo "$COACH_LINE"
   echo "$MATCH_LINE"
   [ -n "$ROOM_LINE" ] && echo "$ROOM_LINE"
+  if [ -n "$TUNNEL_URL" ]; then
+    # D408: every door as the tunnel reaches it, now that they listen; a FAIL stops everything.
+    say "tunnel-check (the doors): $TUNNEL_HOST"
+    if ! tunnel_check "a door"; then stop; exit 1; fi
+    say "tunnel — your friend, over the internet"
+    case "$ROOM_LINE" in
+      'Draft room: on'*) : ;;
+      *) echo "  the draft room is not running here, so there is nothing to send yet (see the Draft room line above)" ;;
+    esac
+    echo "  1. Start the tunnel in another terminal, if it is not running:  cloudflared tunnel run <your tunnel>"
+    echo "  2. Send your friend $TUNNEL_URL/ FIRST. They sign in there with their email and the PIN Cloudflare sends."
+    echo "     (That sign-in drops everything after # in a link, so a join link opened first would land on the start page.)"
+    echo "  3. Make the room: https://jalirkan.github.io/ForgeCoach/ (or http://127.0.0.1:$ROOM_PORT/) → Draft → Draft with a friend → Create room."
+    echo "     Then send them the \"Over the internet\" link it shows ($TUNNEL_URL/#draft/friend/join?…), privately, to open in the same browser."
+    echo "  Revoke: that room's page has \"New link for your friend\" (the old link stops working) and \"Close room\"; Ctrl-C cloudflared shuts everyone out at once."
+    echo "  Run the outside check from another network before you send anything:  ./scripts/tunnel/tunnel-check.sh $TUNNEL_HOST"
+  fi
   if [ "$LAN" = "1" ]; then
     # The bridge prints one `WS LAN PAGE` line per address, best guess first,
     # just after the readiness flip; give it a moment to land in the log.

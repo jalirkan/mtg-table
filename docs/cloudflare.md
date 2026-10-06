@@ -1,6 +1,6 @@
 # Playing with a friend over the internet: Cloudflare Tunnel + Access
 
-**D405.** This runbook lets a friend reach your draft room (and, once Phase 2
+**D405, D408.** This runbook lets a friend reach your draft room (and, once Phase 2
 lands, the game) from anywhere, while nobody else can reach anything. You don't
 need to open any ports on your router.
 
@@ -24,7 +24,29 @@ repo opens.
 > **The one fact to remember.** cloudflared connects to your services *from
 > 127.0.0.1*. The bridge (8642) and the coach helper (8643) treat a 127.0.0.1
 > visitor as you. So the tunnel may point only at a listener that trusts nobody
-> by address, and today that is just the draft room's player listener (8644).
+> by address: the draft room's player listener (8644) and, during a game
+> between the two of you, the table's game seat (8646, `/ws` only).
+
+**The whole path, in order** (each step links to its section):
+
+1. Once: a Cloudflare account and a domain on it ([§2](#2-what-you-need-and-what-it-costs)).
+2. Once: install cloudflared, `tunnel login`, `tunnel create forge-table`,
+   `tunnel route dns forge-table play.<your domain>`, `chmod 700 ~/.cloudflared`
+   ([§3.1–3.2](#3-setup-once)).
+3. Once: Zero Trust → One-time PIN login; a self-hosted Access application on
+   the whole hostname, 24 h sessions; one policy, **Allow → Emails: you and your
+   friend** ([§4](#4-cloudflare-access-once)).
+4. Once: `cp scripts/tunnel/config.yml.example ~/.cloudflared/config.yml` and
+   fill in the UUID, the hostname, the team name and the AUD tag ([§3.3](#33-the-config)).
+5. Each session: `./scripts/play.sh --tunnel https://play.<your domain>` (it
+   checks the config and every door, and stops on a FAIL), then
+   `cloudflared tunnel run forge-table` in a second terminal ([§7](#7-each-session-start-check-play-stop)).
+   From another network, `./scripts/tunnel/tunnel-check.sh play.<your domain>`.
+6. Each session: send your friend `https://play.<your domain>/` to sign in, then
+   make the room (Draft → Draft with a friend) and send the **"Over the
+   internet"** link privately ([§6](#6-forgecoach-and-the-links)).
+7. After: Ctrl-C cloudflared, then `play.sh`. A leaked link: **New link for
+   your friend** or **Close room** on the room's page ([§9](#9-revoking-access)).
 
 ---
 
@@ -293,15 +315,13 @@ browser's preflight with a login redirect, and the calls would fail.
 ForgeCoach's **Draft → Draft with a friend → Create room** shows links built from
 the room's `bases` (the D400 public-URL support). `bases.public` comes from the
 coach helper's `--room-public-url`, which ForgeCoach shows as **"Over the
-internet"**. `play.sh` does not pass that flag yet (request 1 in
-[§12](#12-changes-the-other-lanes-still-owe)). Until it does, make the link by
-hand:
+internet"**: `https://play.example.com/#draft/friend/join?room=rAbC12_xY&t=…`.
+`./scripts/play.sh --tunnel https://play.example.com` passes it (D408; or
+`--draft-room --room-public-url <url>` by hand).
 
-1. Copy the **"On this computer (another browser)"** link. It looks like
-   `http://127.0.0.1:8644/#draft/friend/join?room=rAbC12_xY&t=<friend's seat token>`.
-2. Replace `http://127.0.0.1:8644` with `https://play.example.com`. **Keep
-   everything from `#` on exactly as it is.**
-3. You get `https://play.example.com/#draft/friend/join?room=rAbC12_xY&t=…`.
+(With an older `play.sh`, make the link by hand: copy the **"On this computer
+(another browser)"** link, replace `http://127.0.0.1:8644` with
+`https://play.example.com`, and keep everything from `#` on as it is.)
 
 The seat token is in the `#fragment`, which no server sees: not Cloudflare, not
 your machine. ForgeCoach moves it into the browser's storage and drops it from the
@@ -319,13 +339,14 @@ instead of the join page:
 
 ### The friend's coach
 
-The friend's page was not served by GitHub Pages, so ForgeCoach looks for a coach
-helper at `http://play.example.com:8643`. An https page cannot call that (mixed
-content), and Cloudflare doesn't carry that port anyway. So **your helper is never
-reachable from their page, by design**, and their coach panel says the helper
-isn't running. If they want advice, they can set ForgeCoach's coach source to
-**API key** in Settings and use their own Anthropic key. Request 7 in [§12](#12-changes-the-other-lanes-still-owe)
-asks ForgeCoach to say this more clearly.
+**Your helper is never reachable from their page, by design**: Cloudflare doesn't
+carry 8643, and the edge 404s `/coach`. ForgeCoach knows an `https://` page that
+is not GitHub Pages is a tunnel page (the bridge serves plain http only), so it
+never looks for a helper on the tunnel's host; it looks only for one on the
+friend's *own* machine (`127.0.0.1:8643`), and when there is none its coach
+panel says so: the coach needs their own Anthropic API key (**Settings → coach
+source: API key**), or their own mtg-table coach helper with
+`https://play.example.com` added to its `wsAllowedOrigins`.
 
 ### The game seat (Phase 2)
 
@@ -343,16 +364,22 @@ the room listener passes `/ws` through to the table on loopback.
 ## 7. Each session: start, check, play, stop
 
 ```bash
-# 1. The engine and the draft room -- WITHOUT --lan: cloudflared reaches loopback,
-#    and --lan would also open every port to your Wi-Fi.
-./scripts/play.sh --engine-only --draft-room
+# 1. The engine and the draft room on loopback, with the public URL, checked:
+#    --tunnel is --engine-only --draft-room --room-public-url <url>, refuses --lan,
+#    runs tunnel-check.sh --local before it starts and again once the room listens,
+#    and stops on any FAIL (D408).  It prints your friend's two steps at the end.
+./scripts/play.sh --tunnel https://play.example.com
 
 # 2. In a second terminal: the tunnel, in the foreground (Ctrl-C stops it).
 cloudflared tunnel run forge-table          # reads ~/.cloudflared/config.yml
-
-# 3. In a third terminal: the local check (config, routing, every door).
-./scripts/tunnel/tunnel-check.sh --local play.example.com
 ```
+
+(By hand, the same is `./scripts/play.sh --engine-only --draft-room
+--room-public-url https://play.example.com` and then
+`./scripts/tunnel/tunnel-check.sh --local play.example.com`.)  Run the local check
+again during a game between the two of you: the game seat (8646) listens only
+then, and the check asks it for `/ws` with no or a wrong token, `/observe` and
+`/health` (all refused).
 
 Then do the outside check. The best place is a laptop on your phone's hotspot, or
 any machine that is not on your home network:
@@ -429,7 +456,7 @@ From the fastest to the most targeted:
 |---|---|
 | **Everyone, now** | Ctrl-C cloudflared. Nothing is reachable until you start it again. |
 | **One person, for good** | Remove their email from the Access policy. Then revoke their session: **Access → Applications → Forge table → Revoke existing tokens**, or **My Team → Users → (user) → Revoke**. Their next request goes back to the login page, and their PIN no longer works. |
-| **A leaked room link** (seat token) | Behind Access, a leaked link alone gets a stranger nowhere. To kill the link anyway: a room's tokens last until the room expires (24 h after its last pick, 72 h at most). **A restart does not revoke them**, because rooms are kept in `var/draft-room/rooms.json`. Today the only way is to stop `play.sh` and delete that room's entry from the file, or the whole file to drop every room. Request 6 in [§12](#12-changes-the-other-lanes-still-owe) asks for a revoke button. |
+| **A leaked room link** (seat token) | Behind Access, a leaked link alone gets a stranger nowhere. To kill it anyway (D408), on the room's page in ForgeCoach (your own seat, on this machine): **New link for your friend** gives their seat a new token — the old link is refused at once, their open page is told so, their name and picks stay — and shows the new links to send; **Close room** ends the room for both of you. Both go through the coach helper on 127.0.0.1 (`POST /room/<id>/friend-link`, `POST /room/<id>/close`), never the room's port or the tunnel, and both are written to `var/draft-room/rooms.json` at once, so **a restart keeps the revoke**. A game already being played keeps its own per-game seat tokens until it ends (next row). |
 | **A game seat token** (Phase 2) | Tokens are minted per game. Ending the game (`play.sh` restarts the engine for the next match) makes them worthless. |
 | **The service token** | **Access → Service auth → Service tokens → delete** (or rotate). |
 | **A leaked tunnel credentials file** | `cloudflared tunnel delete forge-table` (Ctrl-C it first). Then `tunnel create` and `route dns` again with a new UUID, and update the config. |
@@ -452,7 +479,8 @@ From the fastest to the most targeted:
 | `403 {"code":"token"}` | Wrong or old link for that room | Make a fresh link from your room's page |
 | `404 {"code":"gone"}` | The room expired, or its id is mistyped | Make a new room |
 | `429 {"code":"slow"}` | 10 wrong links in a minute from that address (`CF-Connecting-IP`) | Wait a minute |
-| The draft **stops updating** after hours | The Access session expired: Cloudflare now answers the stream with a login redirect, which `fetch()` can't follow | Reload the page and log in again. The room has kept every pick. |
+| The draft **stops updating** after hours, or ForgeCoach says *reload — your Cloudflare sign-in may have expired* | The Access session expired: Cloudflare now answers the stream with a login redirect, which `fetch()` can't follow (ForgeCoach says so on a tunnel page after a redirect or a few failed reconnects) | Reload the page and log in again. The room has kept every pick. |
+| The friend's page says *this link was replaced* | You made a new link for their seat (§9) | Send them the new one |
 | `tunnel-check` says **"answered WITHOUT an Access login"** | Access doesn't cover that path, or a Bypass policy exists | Fix the application (§4 step 2) |
 | `tunnel-check` says **"something answers on …:8643"** | The DNS record points at your IP (a grey cloud or an A record), not only the tunnel | Delete that record, run `cloudflared tunnel route dns` again, and remove router forwards |
 | `cloudflared … unused keys` | A typo in `config.yml` | Run `cloudflared tunnel --config ~/.cloudflared/config.yml ingress validate` |
@@ -477,10 +505,13 @@ with no seat token must not open a socket.
 
 ## 12. Changes the other lanes still owe
 
-This lane (D405) added only docs, scripts and a test. The changes below are
-needed in files other lanes own. They are numbered so they can be referred to.
+D405 added only docs, scripts and a test, and listed the changes below for the
+lanes that own those files. Phase 2 (D402–D404) and Phase 4 (D408) have made
+all of them; they keep their numbers so they can still be referred to. One
+small gap is left open on purpose (endpoints.md, change 4): at a table of two
+the bridge's own port is a loopback `/health` without the `TunnelGate`.
 
-1. **`play.sh`: hand the public URL to the draft room.** Add something like
+1. **Done in Phase 4 (D408): `play.sh --room-public-url <url>` and `--tunnel <url>`.** ~~`play.sh`: hand the public URL to the draft room.~~ Add something like
    `--public-url https://play.example.com`, or `config.json` `publicUrl`, that
    becomes the helper's `--room-public-url`. ForgeCoach then shows the **"Over the
    internet"** link and the hand edit in §6 goes away. Leave `--lan` out of it:
@@ -504,25 +535,25 @@ needed in files other lanes own. They are numbered so they can be referred to.
    Cloudflare adds those headers, so a tunnel mis-pointed at either port, even
    with a `Host` rewrite, is turned away. The bridge has no `Host` check today
    (endpoints.md, change 1), so this is the cheapest guard for it.
-5. **`docs/security/endpoints.md`:**
+5. **Done in Phase 4 (D408).** ~~`docs/security/endpoints.md`:~~
    - record that change 4 (verify Access's JWT) is met by cloudflared's
      `originRequest.access` (D405), with no code in each listener;
    - add the table port's row;
    - point *What a tunnel may expose* at this runbook and `scripts/tunnel/policy.mjs`;
    - state that `/observe` is never tunnelled (edge 404).
-6. **Draft room: a way to revoke one room.** Rooms and their tokens survive a
+6. **Done in Phase 4 (D408): `POST /room/<id>/close` and `POST /room/<id>/friend-link` on the coach helper, and ForgeCoach's buttons.** ~~Draft room: a way to revoke one room.~~ Rooms and their tokens survive a
    restart (D400), and the only revoke today is editing `var/draft-room/rooms.json`
    with `play.sh` stopped. Add an owner-door `DELETE /room/<id>` (closing its
    streams), or "new link for the friend" (rotate `friendToken`), plus a
    ForgeCoach button.
-7. **ForgeCoach on a tunnel page:**
+7. **Done in Phase 4 (ForgeCoach).** ~~ForgeCoach on a tunnel page:~~
    - `helperTarget` points at `http://<tunnel host>:8643`, which is mixed content
      and never reachable. On an https page that isn't loopback, don't probe the
      page's host. Say "use your own API key", or try the visitor's own
      `127.0.0.1` helper.
    - After repeated network errors on the room stream on such a page, say "reload:
      your Cloudflare sign-in may have expired".
-8. **Optional: `play.sh --tunnel`.**
+8. **Done in Phase 4 (D408).** ~~Optional: `play.sh --tunnel`.~~ It also stops on a FAIL, and checks again once the room listens.
    - It implies `--engine-only --draft-room` and refuses `--lan`.
    - It runs `scripts/tunnel/tunnel-check.sh --local <publicUrl's host>` at start
      and prints the result.

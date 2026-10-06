@@ -22,7 +22,8 @@
 
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { createServer, type Server } from 'node:http';
+import { spawnSync } from 'node:child_process';
+import { createServer, request, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
@@ -40,6 +41,7 @@ interface Policy {
   GAME_SEAT: { port: number; path: string; placeholder: boolean };
   NEVER_PORTS: ReadonlyArray<{ port: number; name: string; why: string }>;
   NEVER_PATHS: ReadonlyArray<{ method: string; path: string; why: string }>;
+  TUNNEL_HEADERS: readonly string[];
   DENY_SEGMENTS: readonly string[];
   ROOM_ROOT_DENY: string;
   denyPath(): string;
@@ -54,10 +56,15 @@ interface Policy {
 }
 interface Result { level: 'PASS' | 'FAIL' | 'WARN' | 'SKIP' | 'NOTE'; name: string; note: string }
 interface Check {
+  TABLE_NEVER: readonly string[];
   runChecks(opts: Record<string, unknown>): Promise<Result[]>;
   bindsFrom(ssText: string, ports: number[]): Map<number, string[]>;
   inCloudflareV4(ip: string): boolean | null;
   parseArgs(argv: string[]): Record<string, unknown>;
+}
+interface HelperLib {
+  TUNNEL_HEADERS: readonly string[];
+  startHelper(opts: Record<string, unknown>): { listen(): Promise<number>; close(): void };
 }
 interface RoomLib {
   createRoomStore(opts?: Record<string, unknown>): unknown;
@@ -68,6 +75,8 @@ interface RoomLib {
 const P = (await import(new URL('../../scripts/tunnel/policy.mjs', import.meta.url).href)) as Policy;
 const C = (await import(new URL('../../scripts/tunnel/tunnel-check.mjs', import.meta.url).href)) as Check;
 const R = (await import(new URL('../../tools/draft-room.mjs', import.meta.url).href)) as RoomLib;
+const H = (await import(new URL('../../tools/coach-helper.mjs', import.meta.url).href)) as HelperLib;
+const viaTunnel = (h: Record<string, unknown>): boolean => P.TUNNEL_HEADERS.some((x) => h[x] !== undefined);
 
 const TEMPLATE = readFileSync(join(REPO, 'scripts/tunnel/config.yml.example'), 'utf8');
 const HOST = 'play.jalirkan-test.net';
@@ -333,8 +342,8 @@ test('tunnel-check --local: the real draft-room listener with a live room passes
   const owner = R.createRoomOwner({ store, roomPort });
   const made = owner.post({ cubeId: 'synergy', cards: 'abcdefghij'.split(''), name: 'Justin' });
   assert.equal(made.status, 201);
-  // A coach helper that refuses a tunnel's Host (its D386 door, in miniature).
-  const helper = await listen((req, res) => { res.statusCode = /^(localhost|127\.)/.test(String(req.headers.host)) ? 200 : 403; res.end(); });
+  // A coach helper that refuses a tunnel's Host (its D386 door, in miniature) and Cloudflare's headers (D404).
+  const helper = await listen((req, res) => { res.statusCode = /^(localhost|127\.)/.test(String(req.headers.host)) && !viaTunnel(req.headers) ? 200 : 403; res.end(); });
   const dead = await deadPort();
   const base = { hostname: HOST, local: true, configPath: cfg, cloudflared: null, ss: false, timeoutMs: 3000 };
   try {
@@ -368,5 +377,140 @@ test('tunnel-check --local: the real draft-room listener with a live room passes
   } finally {
     room.close();
     helper.server.close();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// D408: the CF-header refusals and the table port (8646), end to end.
+// ---------------------------------------------------------------------------
+
+test("Cloudflare's headers are one list: the policy's, the coach helper's and the bridge's TunnelGate's", () => {
+  assert.deepEqual([...P.TUNNEL_HEADERS], [...H.TUNNEL_HEADERS]);
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/WsTransport.java'), 'utf8');
+  const m = /TUNNEL_HEADERS = List\.of\(([^)]*)\)/.exec(java);
+  assert.ok(m, 'WsTransport.TUNNEL_HEADERS');
+  assert.deepEqual(m[1]!.split(',').map((x) => x.trim().replace(/^"|"$/g, '')), [...P.TUNNEL_HEADERS]);
+});
+
+/** A stand-in for the bridge's port (8642): D402's TunnelGate, then /health. */
+function bridgeLike(gate: boolean) {
+  return listen((req, res) => {
+    if (gate && viaTunnel(req.headers)) { res.statusCode = 403; res.end('this port is never tunnelled'); return; }
+    res.end(req.url === '/health' ? 'ok' : 'site');
+  });
+}
+
+/**
+ * A stand-in for the table port (D402's TableDoor): /ws by token and nothing else.  `lax` answers /health and
+ * opens /observe, as a table port that served more than /ws would.
+ */
+function tableLike(token: string, lax = false) {
+  return new Promise<{ server: Server; port: number }>((done) => {
+    const server = createServer((req, res) => {
+      const path = (req.url ?? '/').split('?')[0];
+      if (lax && path === '/health') { res.end('ok'); return; }
+      res.statusCode = path === '/ws' ? 403 : 404;
+      res.end();
+    });
+    server.on('upgrade', (req, socket) => {
+      const u = new URL(req.url ?? '/', 'http://x');
+      const open = (u.pathname === '/ws' && u.searchParams.get('seat') === token) || (lax && u.pathname === '/observe');
+      socket.end(open
+        ? 'HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n'
+        : `HTTP/1.1 ${u.pathname === '/ws' ? '403 Forbidden' : '404 Not Found'}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n`);
+    });
+    server.listen(0, '127.0.0.1', () => done({ server, port: (server.address() as { port: number }).port }));
+  });
+}
+
+test('tunnel-check --local: the real coach helper and a gated bridge refuse every Cloudflare header; an ungated one fails', async () => {
+  const cfg = join(scratch, 'config-cf.yml');
+  writeFileSync(cfg, FILLED);
+  const helper = H.startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins: ['https://jalirkan.github.io'], queueMax: 1, timeoutS: 5, room: null, review: null, evaluator: null, log: () => {} });
+  const helperPort = await helper.listen();
+  const gated = await bridgeLike(true);
+  const open = await bridgeLike(false);
+  const dead = await deadPort();
+  const base = { hostname: HOST, local: true, configPath: cfg, cloudflared: null, ss: false, timeoutMs: 3000 };
+  try {
+    const good = await C.runChecks({ ...base, ports: { room: dead, coach: helperPort, ws: gated.port, seat: dead } });
+    assert.deepEqual(good.filter((r) => r.level === 'FAIL'), []);
+    for (const h of P.TUNNEL_HEADERS) {
+      assert.ok(good.some((r) => r.level === 'PASS' && r.name === `coach helper, Host 127.0.0.1, ${h}`), `the real helper refuses ${h}`);
+      assert.ok(good.some((r) => r.level === 'PASS' && r.name === `bridge, Host 127.0.0.1, ${h}`), `the gated bridge refuses ${h}`);
+    }
+    const bad = await C.runChecks({ ...base, ports: { room: dead, coach: dead, ws: open.port, seat: dead } });
+    const failed = bad.filter((r) => r.level === 'FAIL').map((r) => r.name);
+    assert.deepEqual(failed, P.TUNNEL_HEADERS.map((h) => `bridge, Host 127.0.0.1, ${h}`), 'a bridge without the gate fails once per header');
+  } finally {
+    helper.close();
+    gated.server.close();
+    open.server.close();
+  }
+});
+
+test('tunnel-check --local: the table port (8646) serves /ws by token and nothing else; the room passes /ws to it; a lax table fails', async () => {
+  const cfg = join(scratch, 'config-seat.yml');
+  writeFileSync(cfg, FILLED);
+  const seatToken = 'S'.repeat(22);
+  const table = await tableLike(seatToken);
+  const store = R.createRoomStore();
+  const room = R.startRoomServer({ store, port: 0, origins: ['https://jalirkan.github.io'], tablePort: table.port, log: () => {} });
+  const roomPort = await room.listen();
+  const dead = await deadPort();
+  const base = { hostname: HOST, local: true, configPath: cfg, cloudflared: null, ss: false, timeoutMs: 3000 };
+  try {
+    const good = await C.runChecks({ ...base, ports: { room: roomPort, coach: dead, ws: dead, seat: table.port } });
+    assert.deepEqual(good.filter((r) => r.level === 'FAIL'), []);
+    const names = good.filter((r) => r.level === 'PASS').map((r) => r.name);
+    for (const n of ['game seat /ws with no seat token', 'game seat /ws with a wrong seat token', 'game seat /observe (a watcher would see a hand)',
+      ...C.TABLE_NEVER.map((p) => `game seat GET ${p}`), 'room listener /ws with no seat token (passed to the table)']) {
+      assert.ok(names.includes(n), `${n}: ${names.join(' | ')}`);
+    }
+    // The stand-in is a real door: the right token opens it, through the room's port as well.
+    const through = await new Promise<number>((done) => {
+      const q = request({ host: '127.0.0.1', port: roomPort, path: `/ws?seat=${seatToken}`, headers: { connection: 'Upgrade', upgrade: 'websocket' } });
+      q.on('upgrade', (_res, sock) => { sock.destroy(); done(101); });
+      q.on('response', (r) => done(r.statusCode ?? 0));
+      q.end();
+    });
+    assert.equal(through, 101, 'the seat token opens the seat through the room listener');
+
+    const lax = await tableLike(seatToken, true);
+    try {
+      const bad = await C.runChecks({ ...base, ports: { room: dead, coach: dead, ws: dead, seat: lax.port } });
+      const failed = bad.filter((r) => r.level === 'FAIL').map((r) => r.name);
+      assert.deepEqual(failed.sort(), ['game seat /observe (a watcher would see a hand)', 'game seat GET /health'].sort());
+    } finally {
+      lax.server.close();
+    }
+  } finally {
+    room.close();
+    table.server.close();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// D408: play.sh --tunnel / --room-public-url refuse what they must, before anything starts.
+// ---------------------------------------------------------------------------
+
+test('play.sh: --tunnel refuses --lan and a non-https address; --room-public-url wants the draft room', () => {
+  const run = (...args: string[]) => spawnSync('bash', ['scripts/play.sh', ...args], { cwd: REPO, encoding: 'utf8', timeout: 30_000, env: { ...process.env, MTGTABLE_TEST_FAKE_ENGINE: '' } });
+  const cases: Array<[string[], RegExp]> = [
+    [['--tunnel', 'https://play.example.org', '--lan'], /--tunnel and --lan do not mix/],
+    [['--lan', '--tunnel', 'https://play.example.org'], /--tunnel and --lan do not mix/],
+    [['--tunnel', 'http://play.example.org'], /--tunnel wants your tunnel's https:\/\/ address/],
+    [['--tunnel', 'https://play.example.org/#draft'], /--tunnel wants/],
+    [['--tunnel', 'https://play.example.org', '--room-public-url', 'https://other.example.org'], /disagree/],
+    [['--engine-only', '--room-public-url', 'https://play.example.org'], /add --draft-room/],
+    [['--engine-only', '--draft-room', '--room-public-url', 'https://play.example.org/x'], /must be an origin/],
+    [['--engine-only', '--tunnel-config', '/tmp/x.yml'], /goes with --tunnel/],
+    [['--tunnel', 'https://play.example.org', '--no-coach'], /drop --no-coach/],
+  ];
+  for (const [args, want] of cases) {
+    const r = run(...args);
+    assert.equal(r.status, 1, `${args.join(' ')}: exit ${r.status}\n${r.stdout}${r.stderr}`);
+    assert.match(r.stderr, want, args.join(' '));
+    assert.doesNotMatch(r.stdout, /== check-forge|== build/, `${args.join(' ')} got as far as the build`);
   }
 });

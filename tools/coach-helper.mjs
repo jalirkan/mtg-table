@@ -99,6 +99,9 @@
 //                 the flag).  --room-dir (var/draft-room), --room-site-dir <ForgeCoach build>
 //                 (served at the room listener's /), --room-origin <origin> (repeatable: an
 //                 extra page allowed to call it, e.g. a tunnel's https://), --room-public-url.
+//                 D408: POST /room/<id>/close closes a room for good, POST /room/<id>/friend-link
+//                 gives the friend's seat a new token (the old link stops working); both on this
+//                 port only, and /health says "roomRevoke": 1.
 //
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
@@ -706,6 +709,19 @@ export function startHelper(opts) {
       const r = room.post(q);
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 201 ? ` (room ${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    const owned = /^\/room\/([^/]+)\/(close|friend-link)$/.exec(path);
+    if (owned) {
+      // D408: the owner closes a room, or makes a new link for the friend's seat (the old one stops working).
+      // On this port's door (D386) alone -- the room listener has no such route -- and never tunnelled.
+      if (!room?.close) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      const raw = await readBody(req, res, 1024, '1 KB', cors, say);
+      if (raw === null) return;
+      const r = owned[2] === 'close' ? room.close(owned[1]) : room.friendLink(owned[1]);
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 200 ? ` (room ${owned[1]} ${owned[2] === 'close' ? 'closed' : 'new friend link'})` : '');
       return;
     }
     if (path === '/engine/start') {
