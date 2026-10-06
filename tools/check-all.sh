@@ -170,9 +170,11 @@
 #                                 scrambled and every feature unchanged, the
 #                                 schema golden, the split by game; numpy's
 #                                 half says whether it ran (~30 s; python3)
-#                                 Then 12i: MidMoveSelfTest (D352) -- a "may
-#                                 look" revealer leaves play and no frame shows
-#                                 the top card it revealed (one engine boot)
+#                                 Then 12i: MidMoveSelfTest (D352, D399) -- a
+#                                 "may look" revealer leaves play and no frame
+#                                 shows the top card it revealed; a static
+#                                 re-check and no frame drops the seat's own
+#                                 revealed top card (one engine boot)
 #                                 Then 12j: TimeoutSelfTest (D355) -- a game the
 #                                 watchdog ends records cleanly: no snapshot
 #                                 error, its outcome in the last frame, `over`
@@ -2029,7 +2031,10 @@ s12h_ml() {
 #      battlefield (the forwarder's 500 ms flush, made deterministic), and holds
 #      that the bare frame at that instant leaks the top card (the control: the
 #      window is real) while the recorder's log shows it in no frame without the
-#      Oracle in play.  One engine boot, about 30 s, writes var/check-all-midmove/.
+#      Oracle in play.  D399, the other window: with the Oracle in play and its
+#      controller the viewer, a flush landed inside checkStaticAbilities' tracker
+#      freeze (the bare frame there drops the top card: the control) is held, and
+#      every frame lists it.  One engine boot, about 30 s, writes var/check-all-midmove/.
 s12i_midmove() {
   printf '\n=== 12i. MidMoveSelfTest -- the revealer leaves play, its top card leaves library.cards in that frame (D352) ===\n'
   rc=0
@@ -2037,7 +2042,7 @@ s12i_midmove() {
   grep -E '^(  ok|  FAIL|MidMoveSelfTest)' var/check-all-midmove.log || true
   if [ "$rc" != "0" ]; then
     capped "$rc" && die "MidMoveSelfTest did not finish within ${GAME_TIMEOUT}s"
-    die "MidMoveSelfTest exited $rc: a frame can show a top card its revealer no longer reveals (12i, D352; log: var/check-all-midmove.log)"
+    die "MidMoveSelfTest exited $rc: a frame can show a top card its revealer no longer reveals, or drop one it still reveals (12i, D352, D399; log: var/check-all-midmove.log)"
   fi
 }
 

@@ -1209,6 +1209,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * game-thread flush ships it (counted; non-zero is expected).  D352: a flush
      * cut while a "may look" source has left but Forge has not re-run its statics
      * ({@link MidMove}) is buffered too, uncounted: it would show a hidden card.
+     * D399: so is a flush cut inside a view-tracker freeze (a static re-check),
+     * which would drop a revealed card the seat may see.  An ask still builds
+     * its frame at once ({@code ask} calls {@link #flushState} itself).
      */
     @Override
     public void handleGameEvents(final List<GameEvent> batch) {

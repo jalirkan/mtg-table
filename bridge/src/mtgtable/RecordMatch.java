@@ -533,7 +533,9 @@ public final class RecordMatch {
             }
             if (midMove.hold(game)) {
                 // D352: cut inside changeZone (or SBAs), before Forge re-ran its
-                // statics -- a "may look" effect still outlives its source.  The
+                // statics -- a "may look" effect still outlives its source.  D399:
+                // or cut inside a tracker freeze, half way through a static
+                // re-check -- a reveal still in force is briefly missing.  The
                 // next flush ships these events with its own.
                 synchronized (held) {
                     held.addAll(events);
