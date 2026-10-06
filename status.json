@@ -1,170 +1,23 @@
 {
  "schema": 1,
- "updated": "2026-10-06T05:00:42-04:00",
- "heartbeat": "2026-10-06T05:00:42-04:00",
+ "updated": "2026-10-06T05:00:56-04:00",
+ "heartbeat": "2026-10-06T05:00:56-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-06T05:00:56-04:00",
+ "idleReason": "blocked after J093",
  "host": {
-  "load1": 2.83,
-  "memUsedGb": 4.2,
+  "load1": 2.27,
+  "memUsedGb": 4.3,
   "memTotalGb": 30.5,
   "swapUsedMb": 2146,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 8,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
-  {
-   "publicTitle": "Queue night 4",
-   "publicEst": "~11 h",
-   "id": "J093",
-   "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
-   "cpu": "heavy",
-   "phase": "commands 1/3",
-   "started": "2026-10-06T04:59:58-04:00",
-   "elapsed": 44,
-   "done": 0,
-   "total": null,
-   "unit": "drafts",
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-06T04:59:58-04:00",
-   "memGb": 0,
-   "live": {
-    "night.night_drafts_done": 0,
-    "night.planned_drafts": 0,
-    "night.bridge_share": 0,
-    "quarantined": 0,
-    "base.bytes_ratio_explore_plain": 1.010364,
-    "base.drafts": 60000,
-    "base.draws": 13,
-    "base.engine_error_drafts": 3,
-    "base.engine_error_rate": 0.00005,
-    "base.engine_errors": 3,
-    "base.explore_drafts": 3084,
-    "base.explore_share": 0.0514,
-    "base.games": 59997,
-    "base.games_explore": 3084,
-    "base.mean_game_s": 4.577708,
-    "base.mean_game_s_explore": 4.564422,
-    "base.mean_game_s_plain": 4.578428,
-    "base.mean_turns": 19.404487,
-    "base.mixed_time_ratio": 0,
-    "base.ms": 274648742,
-    "base.ms_explore": 14076676,
-    "base.rec_bytes": 9989727025,
-    "base.rec_bytes_explore": 518543084,
-    "base.rec_bytes_per_game": 166503.775605,
-    "base.rec_bytes_per_game_explore": 168139.780804,
-    "base.rec_bytes_per_game_plain": 166415.123803,
-    "base.rec_games_explore": 3084,
-    "base.recorded_error_rate": 0.0003,
-    "base.recorded_errors": 18,
-    "base.recorded_games": 59997,
-    "base.seat_DD_games": 59997,
-    "base.seat_DD_mean_game_s": 4.577708,
-    "base.seat_DD_td_rate": 0.000217,
-    "base.seat_nondefault_td_rate_max": 0,
-    "base.time_ratio_explore_plain": 0.996941,
-    "base.timeout_draw_rate": 0.000417,
-    "base.timeouts": 12,
-    "base.turns": 1164211,
-    "base.written": 1,
-    "elapsed_s": 44
-   },
-   "liveHeadline": [
-    "night.night_drafts_done",
-    "night.planned_drafts",
-    "night.bridge_share",
-    "quarantined"
-   ],
-   "cubes": [
-    {
-     "id": "fair-fight",
-     "done": 6,
-     "planned": 6
-    },
-    {
-     "id": "modern-era",
-     "done": 6,
-     "planned": 6
-    },
-    {
-     "id": "omega",
-     "done": 6,
-     "planned": 6
-    },
-    {
-     "id": "pauper",
-     "done": 8,
-     "planned": 8
-    },
-    {
-     "id": "peasant",
-     "done": 10,
-     "planned": 10
-    },
-    {
-     "id": "synergy",
-     "done": 7,
-     "planned": 7
-    },
-    {
-     "id": "vintage",
-     "done": 5,
-     "planned": 5
-    }
-   ],
-   "publicCubes": true,
-   "pressureEvents": [],
-   "detail": "lab-J093-run1"
-  },
-  {
-   "publicTitle": "M55 root-cause extract",
-   "publicEst": "~2 min",
-   "id": "J094",
-   "title": "Extract the one M55 failure (night 3, modern-era+omega game 354 g1 seat 1, decision 58 names land:99) so its cause can be found",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-06T04:59:58-04:00",
-   "elapsed": 44,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "memGb": 0,
-   "live": {
-    "written": 0,
-    "elapsed_s": 44,
-    "found": 1,
-    "pressure_events": 0,
-    "workers": 1
-   },
-   "liveHeadline": [
-    "written"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J094-run1"
-  }
- ],
+ "running": [],
  "queue": [
   {
    "publicTitle": "Search week 3 SPRT",
@@ -177,6 +30,29 @@
  ],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Queue night 4",
+   "publicEst": "~11 h",
+   "id": "J093",
+   "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
+   "status": "failed",
+   "finished": "2026-10-06T05:00:56-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "step run1 exited 1"
+  },
+  {
+   "publicTitle": "M55 root-cause extract",
+   "publicEst": "~2 min",
+   "id": "J094",
+   "title": "Extract the one M55 failure (night 3, modern-era+omega game 354 g1 seat 1, decision 58 names land:99) so its cause can be found",
+   "status": "done",
+   "finished": "2026-10-06T05:00:56-04:00",
+   "headline": "written 1",
+   "numbers": {
+    "written": 1
+   }
+  },
   {
    "publicTitle": "Archive nights 1 and 2",
    "publicEst": "~6 h",
@@ -823,36 +699,6 @@
    "headline": "",
    "numbers": {},
    "detail": "step run1 exited 1"
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J015",
-   "title": "Grader smoke at live budgets: the refitted leaf scale, interval widths and racing drops (D348-D351)",
-   "status": "failed",
-   "finished": "2026-10-03T13:30:51-04:00",
-   "headline": "fit.scale -10325 · fit.scaleLo -10324.964 · fit.scaleHi -10324.964 · fit.games 1 · b1500.retired 0 · b3000.retired 0 · b3000.p90_wall_s 0",
-   "numbers": {
-    "fit.scale": -10325,
-    "fit.scaleLo": -10324.963607313552,
-    "fit.scaleHi": -10324.963607313552,
-    "fit.games": 1,
-    "b1500.retired": 0,
-    "b3000.retired": 0,
-    "b3000.p90_wall_s": 0
-   },
-   "detail": "check: fit.rows >= 100 (fit.rows = 34); fit.scale between 50 and 5000 (fit.scale = -10325); b1500.failed + b3000.failed <= 2 (b1500.failed = 12, b3000.failed = 12); b3000.median_halfwidth < 0.5 (b3000.median_halfwidth is missing)"
-  },
-  {
-   "publicTitle": null,
-   "publicEst": null,
-   "id": "J009",
-   "title": "Omega evolve with discovery + confirmation (D331) and recording (replaces J004)",
-   "status": "failed",
-   "finished": "2026-10-03T13:30:00-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "pilot: step pilot1 exited 128"
   }
  ],
  "runner": {

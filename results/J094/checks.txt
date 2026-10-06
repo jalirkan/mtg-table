@@ -1,0 +1,1 @@
+PASS  written == 1   [written = 1]
