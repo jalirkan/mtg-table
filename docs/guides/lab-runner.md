@@ -125,6 +125,24 @@ The steps are: `prepare` (clone if needed, fetch, `checkout --force --detach <re
 changed), then `pilot1…n`, then `pilot-checks` (the runner's own), then `run1…n`, then
 `final-checks` and `collect`.
 
+**A prepare that git cannot finish yet is retried, not failed** (D391). At boot the PC's git
+credentials came about two minutes after login, and the first prepares died with `fatal:
+could not read Username for 'https://github.com'` (exit 128); failed jobs then held the
+queue. Now a prepare that exits 128 with one of git's "cannot reach the remote" lines
+(`could not read Username`, `Could not resolve host`, `Failed to connect to`, `Connection
+timed out`, `unable to access 'https://…'`, a 5xx, `RPC failed`, … — `TRANSIENT_GIT` in
+`tools/runner/runner.ts`) runs again after 15 s, 30 s, 1 min, then every 2 min, for 10
+minutes from the first such failure. The job stays `running` meanwhile (STATUS
+`prepare_retry: <n>: <the git line>`), and only after the 10 minutes is it failed, its
+reason naming the retries. Any other prepare failure (a build, a ref that does not exist —
+also exit 128, without those words) fails at once, as before.
+
+**After the runner starts, it admits no job until git answers** (D391): `git ls-remote
+--exit-code origin refs/heads/pc-jobs` in the queue's clone, tried every 20 s. Jobs
+already running are monitored meanwhile; the next jobs show in the queue as "waiting for
+git to reach the remote". After 10 minutes without an answer it admits them anyway (their
+prepares still retry), so a check that cannot pass never stalls the lab.
+
 ## Cores: a job's width, and heavy jobs side by side
 
 A heavy job has a **width**, the cores it keeps busy: its `cores:` header, else its

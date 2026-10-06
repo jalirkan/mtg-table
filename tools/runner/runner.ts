@@ -23,6 +23,10 @@
 //   prepare   check the job's refs out in the runner's own clones under the
 //             lab root (~/code/lab/<repo>, `<repo>-light` for a light job, so a
 //             light job beside a heavy one never moves its checkout) and build;
+//             a prepare git cannot finish (exit 128, "could not read Username",
+//             "Could not resolve host", ...) runs again with backoff for 10 minutes
+//             before the job fails, and after a start no job is admitted until
+//             `git ls-remote` answers (D391: the PC's credentials come late at boot);
 //   pilot<k>  the `## Pilot` blocks, at a sized {workers}; the JVMs' peak RSS is sampled;
 //   pilot-checks  the pilot's metrics and `check:` lines, evaluated here (expr.ts).
 //             No `check:` lines (an old job file): `waiting`, needs a human/Claude
@@ -177,6 +181,12 @@ export interface JobRun {
   approved: boolean;
   /** Why the next step waits to start, when it does (for the log, once). */
   heldFor?: string | null;
+  /**
+   * D391: a prepare that failed because git could not reach GitHub (credentials not ready yet after a
+   * boot, DNS, the network): when the first such failure came, the retries so far, when the next may
+   * start, and the git line that said so.  Null or absent: none pending.
+   */
+  prepareRetry?: { since: number; attempts: number; nextAt: number; last: string } | null;
   /** The width the next step waits for, when it waits for cores other jobs hold (D365's per-step widths); null: not waiting. */
   waitingCores?: number | null;
   /** The width its last step started at (at first, the width it was admitted at): a step no wider never waits (D365). */
@@ -231,6 +241,57 @@ export const MEMORY_STOP_SETTLE_MS = 60_000;
 /** A network git call is cut off after this long, so one dead fetch or push never stalls the loop. */
 export const GIT_TIMEOUT_MS = 30_000;
 
+/**
+ * D391: a prepare that fails because git cannot reach the remote is retried for this long (from its
+ * first such failure) before the job fails.  At boot the PC's git credentials came about two minutes
+ * after login, and the first jobs' prepares failed with "could not read Username" (exit 128).
+ */
+export const PREPARE_RETRY_WINDOW_MS = 10 * 60_000;
+
+/** git's own words for "the remote could not be reached or would not let us in yet" (D391). */
+export const TRANSIENT_GIT = new RegExp([
+  'could not read (Username|Password) for',
+  'Could not resolve host',
+  'Could not resolve proxy',
+  'Temporary failure in name resolution',
+  'Failed to connect to',
+  'Connection (timed out|refused|reset)',
+  'Network is unreachable',
+  'No route to host',
+  'Operation timed out',
+  'unable to access \'https?://',
+  'The requested URL returned error: (5\\d\\d|429)',
+  'RPC failed',
+  'early EOF',
+  'gnutls_handshake\\(\\) failed',
+  'SSL_ERROR_SYSCALL',
+  'ssh: connect to host',
+  'ssh: Could not resolve hostname',
+].join('|'));
+
+/**
+ * The line of a failed prepare's log that says git could not reach the remote, or null (D391).  Only
+ * git's exit code 128 counts: a build that fails, or a ref that does not exist, fails the job at once.
+ */
+export function transientGitFailure(rc: number | null, log: string): string | null {
+  if (rc !== 128) return null;
+  const lines = log.split('\n').filter((l) => TRANSIENT_GIT.test(l));
+  return lines.length ? (lines.at(-1) as string).trim().slice(0, 200) : null;
+}
+
+/** The wait before prepare retry `attempt` (1, 2, …): 15 s, 30 s, 1 min, then every 2 min (D391). */
+export function prepareRetryDelay(attempt: number): number {
+  return Math.min(120_000, 15_000 * 2 ** Math.max(0, attempt - 1));
+}
+
+/**
+ * D391: after the runner starts, no job is admitted until `git ls-remote` reaches the queue's remote,
+ * checked at most this often; past `GIT_GATE_MAX_MS` jobs are admitted anyway (their prepares still
+ * retry), so a check that cannot pass never stalls the queue for good.
+ */
+export const GIT_GATE_EVERY_MS = 20_000;
+export const GIT_GATE_MAX_MS = 10 * 60_000;
+
 const MB = 1024 * 1024;
 const q = (s: string): string => `'${s.replace(/'/g, `'\\''`)}'`;
 
@@ -249,6 +310,9 @@ export class Runner {
   retained = new Map<string, JobFile>();
   /** When the last memory stop was sent (one at a time: `apply`). */
   lastMemoryStop = -Infinity;
+  /** D391: whether `git ls-remote` has reached the remote since this runner started, and when it was last tried. */
+  gitReady = false;
+  gitCheckedAt = -Infinity;
 
   constructor(cfg: RunnerConfig, sys: Sys) {
     this.cfg = cfg;
@@ -389,7 +453,13 @@ export class Runner {
       playing: this.sys.playing(this.cfg.bridgePort), paused: this.isPaused(), now: this.sys.now(),
     });
     this.blocked = blocked;
-    for (const job of start) this.begin(job, st.get(job.id) ?? null);
+    if (start.length && !this.gitReachable()) {
+      // D391: git is not reachable yet (at boot, the credentials come a minute or two after login).
+      // Nothing is admitted; the jobs wait in the queue, not failed.
+      this.blocked = [...start.map((j): Blocked => ({ id: j.id, title: j.title, est: j.est, cpu: j.cpu, code: 'queued', reason: 'waiting for git to reach the remote (the runner just started)' })), ...blocked];
+    } else {
+      for (const job of start) this.begin(job, st.get(job.id) ?? null);
+    }
     const doc = this.writeStatusJson();
     if (this.ladderSig() !== (this.p.ladderSig ?? '')) this.p.dirty = true;
     const now = this.sys.now();
@@ -398,6 +468,33 @@ export class Runner {
     if (due && now >= (this.p.nextPublishAt ?? 0)) this.publish();
     if (this.cfg.publicStatus) this.maybePublishPublic(sanitise(doc), stateChanged);
     this.save();
+  }
+
+  /**
+   * D391: true once `git ls-remote` has reached the queue's remote since the runner started (or
+   * `GIT_GATE_MAX_MS` has passed, or there is no clone to ask yet); checked at most every
+   * `GIT_GATE_EVERY_MS`.  Only the admission of new jobs waits on it.
+   */
+  gitReachable(): boolean {
+    if (this.gitReady) return true;
+    const now = this.sys.now();
+    const repo = this.queueRepo();
+    if (!fs.existsSync(path.join(repo, '.git'))) return true;
+    if (now - this.p.started >= GIT_GATE_MAX_MS) {
+      this.gitReady = true;
+      this.sys.log(`git: the remote still does not answer ${Math.round((now - this.p.started) / 60_000)} min after the start; admitting jobs (a prepare that cannot reach it retries, then fails)`);
+      return true;
+    }
+    if (now - this.gitCheckedAt < GIT_GATE_EVERY_MS) return false;
+    this.gitCheckedAt = now;
+    const r = this.git(repo, 'ls-remote', '--exit-code', 'origin', 'refs/heads/pc-jobs');
+    if (r.code === 0) {
+      this.gitReady = true;
+      this.sys.log(`git: the remote answers (${Math.round((now - this.p.started) / 1000)} s after the start); admitting jobs`);
+      return true;
+    }
+    this.sys.log(`git: ls-remote failed (exit ${r.code}): ${r.stderr.trim().split('\n').at(-1) ?? ''}; no job starts until it answers`);
+    return false;
   }
 
   /** A start: the steps, a STATUS of `running`. */
@@ -540,6 +637,8 @@ export class Runner {
     if (step.phase === 'prepare' && rc === 0) {
       this.readShas(r, job);
       r.canControl ??= this.detectControl(r, job);
+      if (r.prepareRetry) this.sys.log(`${r.id}: prepare passed after ${r.prepareRetry.attempts} retr${r.prepareRetry.attempts === 1 ? 'y' : 'ies'}`);
+      r.prepareRetry = null;
     }
     if (r.stopping) {
       const s = r.stopping;
@@ -561,6 +660,30 @@ export class Runner {
     if (rc === null) {
       // No exit code and the unit unloaded: it was killed from outside (systemd-oomd, the OOM killer, a reboot).
       this.memoryStop(r, `step ${step.name} was killed without an exit code (oomd or the OOM killer?)`);
+      return true;
+    }
+    // D391: git could not reach the remote (credentials not ready after a boot, DNS, the network):
+    // the prepare runs again after a backoff, for PREPARE_RETRY_WINDOW_MS from the first such failure.
+    // Only this attempt's part of the log (from the runner's own `==== <id> prepare started` line): an
+    // earlier attempt's git line must not make a later, different failure look transient.
+    const attemptLog = (t: string): string => t.slice(t.lastIndexOf(`==== ${r.id} ${step.name} started`));
+    const transient = step.phase === 'prepare' ? transientGitFailure(rc, attemptLog(this.tail(this.logFile(r, step), 200))) : null;
+    if (transient) {
+      const now = this.sys.now();
+      const since = r.prepareRetry?.since ?? now;
+      const attempts = (r.prepareRetry?.attempts ?? 0) + 1;
+      if (now - since < PREPARE_RETRY_WINDOW_MS) {
+        const nextAt = Math.min(now + prepareRetryDelay(attempts), since + PREPARE_RETRY_WINDOW_MS);
+        r.prepareRetry = { since, attempts, nextAt, last: transient };
+        this.sys.log(`${r.id}: prepare exited ${rc}: ${transient}; retry ${attempts} at ${isoLocal(nextAt)} (until ${isoLocal(since + PREPARE_RETRY_WINDOW_MS)})`);
+        this.setStatus(r, 'running', { phase: 'prepare', prepare_retry: `${attempts}: ${transient}` });
+        this.save(r);
+        return true;
+      }
+      const n = r.prepareRetry?.attempts ?? 0;
+      r.prepareRetry = null;
+      this.writeOut(r, 'failure.txt', `step ${step.name} exited ${rc}: git could not reach the remote for ${Math.round((now - since) / 60_000)} min (${n} retries)\n\n${this.tail(this.logFile(r, step), 60)}`);
+      this.finish(r, 'failed', `prepare: step ${step.name} exited ${rc} after ${n} retries over ${Math.round((now - since) / 60_000)} min: git could not reach the remote (${transient})`, { exit: String(rc) });
       return true;
     }
     // SIGKILL's exit code, and evidence of an OOM kill in the unit: a memory stop, retried, not a failure (D365).
@@ -747,6 +870,10 @@ export class Runner {
   /** Why a step may not start now (the runner is paused, Justin is at the table, the backoff paused the job), or null. */
   holdReason(r: JobRun): string | null {
     if (this.isPaused()) return 'the runner is paused';
+    const pr = r.prepareRetry;
+    if (pr && r.steps[r.stepIndex]?.phase === 'prepare' && this.sys.now() < pr.nextAt) {
+      return `prepare retry ${pr.attempts} at ${isoLocal(pr.nextAt)}: git could not reach the remote (${pr.last})`;
+    }
     if (r.cpu === 'heavy' && this.sys.playing(this.cfg.bridgePort)) return 'Justin is at the table';
     if (r.backoff?.paused) return 'paused for memory';
     return null;
