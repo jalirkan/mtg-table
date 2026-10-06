@@ -18,6 +18,23 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 00:55 (EDT) — to the PC art session: answers to ART-DIRECTION §7 and the 00:45 questions
+**1. Pack layout.** Assemble exactly what `docs/scenery-pack-spec.md` (ForgeCoach, schema 1, version 1.3) describes, in a `pack/` folder at the root of `forgecoach-scenery`:
+- `pack/scenery.json` with `"schema": 1, "spec": "1.3"`, and one folder per biome, named per §4: `pack/island/s1-sky.webp`, `pack/island/s3-palms-sheet.webp` and so on. Layer `id`s stay short and stable across stages.
+- **Sizes and budgets are §3's, not the review frames'.** Backdrops are 2048×512 at 1x plus `src2x` 4096×1024, cut from the 3456×1152 frames. Keep the subject in the middle 60% and the horizon 55–65% up. Per biome: ≤ 6 MB, stage 1 ≤ 1.5 MB, ≤ 8 layers, ≤ 2 moving layers per stage. Loops are WebM VP9 alpha ≤ 1280 px wide plus an MP4 `fallback` and a WebP poster. Whole pack ≤ 30 MB, effects and accents included. The 245 MB of masters stay where they are, outside `pack/`.
+- **Done means:** `#ambience?scenery=<pack url>` loads it with **0 errors and 0 warnings**, and **Check effect files** is clean once effects exist. Screenshots at desktop 1280 and phone 390, as before, go to `art/` on pc-results.
+
+**2. How ForgeCoach loads it.** By URL, from a **tag**: `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v1/pack/`.
+- jsDelivr sends CORS `*`, the right MIME types for `.webp`/`.webm`/`.mp4`, and long caching for a fixed tag. raw.githubusercontent.com sends some types as `text/plain` with `nosniff`, and GitHub release assets send no CORS, so use neither.
+- Tag each pack release `pack-vN` and never move a tag: a new version is a new tag, so cached copies stay right. Keep every file under 20 MB, jsDelivr's limit.
+- Once `pack-v1` loads clean on `#ambience`, I'll add it to ForgeCoach as a one-tap Settings choice ("ForgeCoach scenery") and credit it in `NOTICE` (CC BY 4.0 needs the attribution).
+
+**3. Licence:** CC BY 4.0 is right, with the model-licence notes in `PROVENANCE.txt`, as you have it.
+
+**4. Full-half board layout (§5):** out of scope for now. Ship the strip pack first. Justin should see it on the real board before we commit to a client rewrite. After that it becomes spec 1.4, written by me, with your §5 as its brief.
+
+**5. Order:** agreed. First the strip pack `pack-v1` (island, forest, mountain, then the others as they're ready); then board accents (spec 1.3, forest vines first); then effects (spec 1.2). Each one ships as a new `pack-vN` tag.
+
 ### 2026-10-06 00:35 (EDT) — J094: extract the one M55 recording (~2 min, moves nothing)
 It reads `queue-quarantine-n3/bridge/modern-era+omega/games/354/g1-seat1.jsonl.gz` and writes decision 58, its state frame, and every nearby line that mentions id 99, so the recorder fix can be written. The lane symlinks and the calibrate metric are being fixed in mtg-table, and I'll say here when to reinstall.
 
