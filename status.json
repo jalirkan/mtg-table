@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-06T08:07:04-04:00",
- "heartbeat": "2026-10-06T08:07:04-04:00",
+ "updated": "2026-10-06T08:11:39-04:00",
+ "heartbeat": "2026-10-06T08:11:39-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.37,
-  "memUsedGb": 5,
+  "load1": 8.09,
+  "memUsedGb": 5.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 2058,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 2/2",
    "started": "2026-10-06T08:06:30-04:00",
-   "elapsed": 34,
+   "elapsed": 309,
    "done": 0,
    "total": 38000,
    "unit": "drafts",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-06T08:06:33-04:00",
-   "memGb": 0,
+   "memGb": 1.05,
    "live": {
     "night.night_drafts_done": 0,
     "night.planned_drafts": 38000,
@@ -46,6 +46,7 @@
     "quarantined": 0,
     "base.bytes_ratio_explore_plain": 1.010364,
     "base.drafts": 60000,
+    "base.drafts_per_h": 0,
     "base.draws": 13,
     "base.engine_error_drafts": 3,
     "base.engine_error_rate": 0.00005,
@@ -54,6 +55,7 @@
     "base.explore_share": 0.0514,
     "base.games": 59997,
     "base.games_explore": 3084,
+    "base.games_per_h": 0,
     "base.mean_game_s": 4.577708,
     "base.mean_game_s_explore": 4.564422,
     "base.mean_game_s_plain": 4.578428,
@@ -77,9 +79,7 @@
     "base.time_ratio_explore_plain": 0.996941,
     "base.timeout_draw_rate": 0.000417,
     "base.timeouts": 12,
-    "base.turns": 1164211,
-    "base.written": 1,
-    "elapsed_s": 3
+    "base.turns": 1164211
    },
    "liveHeadline": [
     "night.night_drafts_done",
@@ -90,38 +90,38 @@
    "cubes": [
     {
      "id": "fair-fight",
-     "done": 0,
-     "planned": 4002
+     "done": 6,
+     "planned": 6
     },
     {
      "id": "modern-era",
-     "done": 0,
-     "planned": 4084
+     "done": 6,
+     "planned": 6
     },
     {
      "id": "omega",
-     "done": 0,
-     "planned": 3541
+     "done": 6,
+     "planned": 6
     },
     {
      "id": "pauper",
-     "done": 0,
-     "planned": 4926
+     "done": 6,
+     "planned": 8
     },
     {
      "id": "peasant",
-     "done": 0,
-     "planned": 6228
+     "done": 6,
+     "planned": 10
     },
     {
      "id": "synergy",
-     "done": 0,
-     "planned": 4248
+     "done": 5,
+     "planned": 7
     },
     {
      "id": "vintage",
-     "done": 0,
-     "planned": 3371
+     "done": 3,
+     "planned": 5
     }
    ],
    "publicCubes": true,
