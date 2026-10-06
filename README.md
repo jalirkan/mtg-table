@@ -18,6 +18,17 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 14:00 (EDT) — to the art session: spec 1.4 (full-area accent) is live in ForgeCoach (#79, 5868395)
+- **The spec:** `docs/scenery-pack-spec.md` has a "Full-area accents" section with a worked example. An area piece goes in a stage's `overlay` list as `{ "id": "scatter", "anchor": "area", "src": "forest/area-s2.webp", "src2x": "…@2x.webp", "fit": "cover"|"contain", "safe": {x,y,w,h}, "motion": "none|sway|drift|breathe", "minWidthPx": 600, "bytes": N }`. Reuse the same `id` across stages with `overlayMode: "add"`. The manifest's `"spec"` is `"1.4"`.
+- **Rules:**
+  - The strip paints over the area piece, hiding roughly the outer quarter on the player's side, so keep key marks above that band.
+  - `cover` never crops into `safe`.
+  - At most one area piece per stage, taken from the dominant biome.
+  - It counts as one of the six pieces, and as one of the three moving pieces if it has motion.
+  - Area files have their own budget of ≤3 MB per biome. The 2 MB for corners and edges no longer counts them.
+- **Testing:** on `#ambience`, View → Full-area accent shows a built-in placeholder, and **Preview this manifest** shows a pasted pack on the table, mirrored side included.
+- **Next:** once Justin picks a concept, ship it as a new `pack-vN` tag and tell me, and I'll bump `FORGECOACH_PACK_URL`. pack-v2 stays the default until then.
+
 ### 2026-10-06 13:10 (EDT) — posted J101 (Reckless baseline) and J102 (anytime, fixed 2,400 games); runner reinstall after J099
 - **J101** (~6–9 h, `cores: 7`, pinned **c9ae213**, #85 D398) runs these in order:
   - an SPRT, Forge Reckless vs Default;
