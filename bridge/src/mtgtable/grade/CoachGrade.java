@@ -72,6 +72,9 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *              --opp-deck D | --opp-pool P (a list of cards, a .dck, or "N Name" lines)
  *              --opp-known "Name; 2 Name" | FILE (AI picks the player saw: drawn first)
  *              --opp-deck-public "<reason>" (live modes only: the opponent's list is shared)
+ *   rollout  --moments M.jsonl --out OUT.jsonl [--shard I/K] [--k 32] [--seed 1] [--max-turns 40]
+ *            [--timeout-ms 120000] [--max-ms 0]   (D382: rollout labels, pool knowledge only; see below)
+ *   rollout-selftest --log F --seq N --opp-pool P [--k 4]   (engine smoke: the same seed twice, the same label)
  *   fit-scale  --logs DIR|FILE[,...] [--out var/coach-grade/leaf-scale.json] [--max-logs N] [--min-games 10]   (D349;
  *              a non-positive scale, or one from fewer games, is printed and NOT written: exit 3, D353 amended)
  *   settings:  --playouts N (rounds an option still in the race ends with; 200)
@@ -109,6 +112,18 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  * public card, the AI picks the player saw first).  A refused request is
  * answered {@code "status": "refused"} with the reason.
  *
+ * <p><b>Rollout labels</b> (D382, {@link Rollout}): {@code rollout} plays each
+ * moment -- a dataset row: {@code gameKey}, {@code log}, {@code seq} (the
+ * state frame's), {@code game} and {@code rowsToEnd} (the dataset's index and
+ * row key, copied through), {@code oppPool} (a card list: the cube's), and
+ * optionally {@code deck} / {@code ownPool} / {@code oppKnown} -- out
+ * {@code --k} times from that state with Forge Default on both seats, nothing
+ * forced, and writes the viewer's mean result.  Its knowledge is the LIVE
+ * guard's (D348, {@link HiddenPool#checkLive}) and stricter: an opponent deck
+ * list is refused even when marked public ({@code "status": "refused"}), so
+ * the opponent's hidden cards are always dealt from the pool.  A run resumes:
+ * keys already in {@code --out} are skipped.
+ *
  * <p>Threads: the grading runs as one task on Forge's game pool, started with
  * {@code GameAction.invoke} on a scratch game and waited on with a latch, as
  * {@code AiBench} starts its games (D309) -- one task at a time in this
@@ -143,6 +158,12 @@ public final class CoachGrade {
                 break;
             case "fit-scale":
                 exit = fitScale(rest);
+                break;
+            case "rollout":
+                exit = rollout(rest);
+                break;
+            case "rollout-selftest":
+                exit = rolloutSelftest(rest);
                 break;
             case "review-plan":
                 exit = reviewPlan(rest);
@@ -1205,6 +1226,242 @@ public final class CoachGrade {
             failures++;
         }
         System.err.println((ok ? "ok   " : "FAIL ") + what);
+    }
+
+    // ------------------------------------------------------------------
+    // Rollout labels (D382)
+    // ------------------------------------------------------------------
+
+    static Rollout.Settings rolloutSettings(final Flags f) {
+        final Rollout.Settings s = new Rollout.Settings();
+        s.k = f.i("k", 32);
+        s.seed = f.l("seed", 1);
+        s.maxTurns = f.i("max-turns", 40);
+        s.playoutTimeoutMs = f.l("timeout-ms", 120_000);
+        s.maxMs = f.l("max-ms", 0);
+        if (s.k < 1) {
+            throw new IllegalArgumentException("--k is at least 1");
+        }
+        return s;
+    }
+
+    /**
+     * A moment's knowledge for a rollout: pool mode only (D348, stricter than
+     * the live guard -- no opponent list, public or not), then
+     * {@link HiddenPool#checkLive} on the pool, then {@link #knowledge}.
+     */
+    static Rebuild.Knowledge rolloutKnowledge(final File root, final WireLog log, final Map<?, ?> mo) throws IOException {
+        if (mo.get("oppDeck") != null || mo.get("oppDeckPublic") != null) {
+            throw new HiddenPool.Refused("a rollout label never takes the opponent's deck list: its hidden cards are dealt from"
+                    + " the pool (D348, D382)");
+        }
+        final String pool = WireLog.str(mo, "oppPool");
+        if (pool == null) {
+            throw new HiddenPool.Refused("a rollout needs the opponent's pool (oppPool: the cube's card list)");
+        }
+        final Flags f = new Flags(new String[0]);
+        put(f, "opp-pool", pool);
+        put(f, "deck", WireLog.str(mo, "deck"));
+        put(f, "own-pool", WireLog.str(mo, "ownPool"));
+        put(f, "opp-known", WireLog.str(mo, "oppKnown"));
+        HiddenPool.checkLive(f.v, log.header, log.seat, root);
+        return knowledge(root, log, f);
+    }
+
+    /** One moment's label line (Forge's printing swallowed); a refused or unreadable moment gets its status line. */
+    static String rolloutOne(final Config cfg, final Map<?, ?> mo, final Rollout.Settings s) throws Exception {
+        final String logPath = WireLog.str(mo, "log");
+        final String gameKey = WireLog.str(mo, "gameKey");
+        final Map<String, Object> extra = new java.util.LinkedHashMap<>();
+        for (final String k : new String[] {"id", "gameKey", "log"}) {
+            if (mo.get(k) != null) {
+                extra.put(k, String.valueOf(mo.get(k)));
+            }
+        }
+        for (final String k : new String[] {"game", "rowsToEnd", "seq", "outcome"}) {
+            if (mo.get(k) instanceof Number) {
+                extra.put(k, mo.get(k));
+            }
+        }
+        final java.util.function.BiFunction<String, String, String> bad = (status, why) -> {
+            final Json.JsonOut j = new Json.JsonOut().obj().n("v", 1).n("key", gameKey + "#?");
+            for (final Map.Entry<String, Object> e : extra.entrySet()) {
+                if (e.getValue() instanceof Number) {
+                    j.n(e.getKey(), ((Number) e.getValue()).longValue());
+                } else {
+                    j.n(e.getKey(), String.valueOf(e.getValue()));
+                }
+            }
+            return j.n("status", status).n("error", why).end().done();
+        };
+        if (logPath == null || gameKey == null || !(mo.get("seq") instanceof Number)) {
+            return bad.apply("error", "a rollout moment needs log, gameKey and seq");
+        }
+        final File logFile = resolve(cfg, logPath);
+        final WireLog log = WireLog.read(logFile);
+        final Rebuild.Knowledge k;
+        try {
+            k = rolloutKnowledge(cfg.root(), log, mo);
+        } catch (final HiddenPool.Refused e) {
+            return bad.apply("refused", e.getMessage());
+        }
+        final int frame = Rollout.frameOfSeq(log, WireLog.num(mo, "seq", -1));
+        if (frame < 0) {
+            return bad.apply("error", "no state frame with seq " + WireLog.num(mo, "seq", -1) + " in " + logPath);
+        }
+        final WireLog.Moment m = log.review(frame);
+        final String key = Rollout.key(gameKey, frame);
+        final String[] out = new String[1];
+        final ByteArrayOutputStream noise = new ByteArrayOutputStream();
+        realOut = System.out;
+        System.setOut(new PrintStream(noise, true, "UTF-8"));   // Forge prints a lot during a game
+        try {
+            final long wait = s.maxMs > 0 ? s.maxMs + 600_000 : (long) s.k * s.playoutTimeoutMs + 600_000;
+            onGameThread(() -> out[0] = Rollout.run(log, m, k, s, key, extra), wait);
+        } finally {
+            System.setOut(realOut);
+        }
+        return out[0];
+    }
+
+    static int rollout(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final String movesPath = f.s("moments", null);
+        final String outPath = f.s("out", null);
+        if (movesPath == null || outPath == null) {
+            throw new IllegalArgumentException("rollout needs --moments and --out");
+        }
+        for (final String no : new String[] {"opp-deck", "opp-deck-public"}) {
+            if (f.v.containsKey(no)) {
+                throw new HiddenPool.Refused("rollout does not take --" + no + ": the opponent's hidden cards come from its pool (D348, D382)");
+            }
+        }
+        int shard = 0;
+        int shards = 1;
+        if (f.v.containsKey("shard")) {
+            final String[] p = f.v.get("shard").split("/");
+            shard = Integer.parseInt(p[0]);
+            shards = Integer.parseInt(p[1]);
+        }
+        final Rollout.Settings s = rolloutSettings(f);   // a bad flag fails here, before the engine boots
+        boot();
+        final Config cfg = Config.load();
+        final File out = new File(outPath);
+        final Set<String> done = new HashSet<>();
+        // --done FILE: every shard's lines so far (coach-grade.sh joins them), so a retry with another
+        // --jobs does not label a moment twice.
+        for (final File d : new File[] {out, f.v.containsKey("done") ? new File(f.v.get("done")) : null}) {
+            if (d == null || !d.isFile()) {
+                continue;
+            }
+            for (final String l : Files.readAllLines(d.toPath(), StandardCharsets.UTF_8)) {
+                if (!l.isBlank()) {
+                    try {
+                        done.add(String.valueOf(((Map<?, ?>) Json.parse(l)).get("id")));
+                    } catch (final RuntimeException e) {
+                        // a torn last line of a killed shard: that moment is labelled again
+                    }
+                }
+            }
+        }
+        if (out.getParentFile() != null) {
+            out.getParentFile().mkdirs();
+        }
+        final List<String> lines = Files.readAllLines(new File(movesPath).toPath(), StandardCharsets.UTF_8);
+        int idx = -1;
+        int labelled = 0;
+        final long t0 = System.nanoTime();
+        try (Writer w = new OutputStreamWriter(new FileOutputStream(out, true), StandardCharsets.UTF_8)) {
+            for (final String raw : lines) {
+                if (raw.isBlank()) {
+                    continue;
+                }
+                idx++;
+                if (idx % shards != shard) {
+                    continue;
+                }
+                final Map<?, ?> mo = (Map<?, ?>) Json.parse(raw);
+                final String id = String.valueOf(mo.get("id"));
+                if (mo.get("id") == null) {
+                    throw new IllegalArgumentException("moment " + idx + " has no id");
+                }
+                if (done.contains(id)) {
+                    continue;
+                }
+                String line;
+                try {
+                    line = rolloutOne(cfg, mo, s);
+                } catch (final Exception e) {
+                    line = new Json.JsonOut().obj().n("v", 1).n("id", id).n("status", "error").n("error", String.valueOf(e)).end().done();
+                }
+                w.write(line);
+                w.write('\n');
+                w.flush();
+                labelled++;
+                if (labelled % 10 == 0) {
+                    System.err.printf(java.util.Locale.ROOT, "[coach-grade] rollout shard %d/%d: %d labelled, %.1f s each%n", shard, shards,
+                            labelled, (System.nanoTime() - t0) / 1e9 / labelled);
+                }
+            }
+        }
+        System.err.println("[coach-grade] rollout shard " + shard + "/" + shards + ": " + labelled + " labelled -> " + outPath);
+        return 0;
+    }
+
+    /**
+     * The rollout's engine smoke (D382): one fixture position labelled twice on
+     * one seed and once on another, and the refusals.  The same seed must give
+     * the same playout results, one by one (a label is a function of its seed);
+     * the opponent's hidden cards come from the pool, never from a list.
+     */
+    static int rolloutSelftest(final String[] argv) throws Exception {
+        final Flags f = new Flags(argv);
+        final String logPath = f.s("log", null);
+        final String pool = f.s("opp-pool", null);
+        if (logPath == null || pool == null || !f.v.containsKey("seq")) {
+            throw new IllegalArgumentException("rollout-selftest needs --log, --seq and --opp-pool");
+        }
+        boot();
+        final Config cfg = Config.load();
+        final Rollout.Settings s = rolloutSettings(f);
+        if (!f.v.containsKey("k")) {
+            s.k = 4;
+        }
+        final Map<String, Object> mo = new java.util.LinkedHashMap<>();
+        mo.put("id", "selftest");
+        mo.put("gameKey", f.s("game-key", "selftest"));
+        mo.put("log", logPath);
+        mo.put("seq", (long) f.i("seq", -1));
+        mo.put("oppPool", pool);
+        final String a = rolloutOne(cfg, mo, s);
+        final String b = rolloutOne(cfg, mo, s);
+        System.out.println(a);
+        final Map<?, ?> ja = (Map<?, ?>) Json.parse(a);
+        final Map<?, ?> jb = (Map<?, ?>) Json.parse(b);
+        check("ok".equals(ja.get("status")), "the position was labelled (" + ja.get("status") + (ja.get("error") != null ? ": " + ja.get("error") : "") + ")");
+        check(WireLog.num(ja, "k", 0) == s.k, ja.get("k") + " of " + s.k + " playouts scored");
+        check(String.valueOf(ja.get("opponent")).startsWith("pool:"), "the opponent's hidden cards come from the pool: " + ja.get("opponent"));
+        check(java.util.Arrays.equals(WireLog.arr(ja, "results"), WireLog.arr(jb, "results")),
+                "the same seed twice: the same results, playout by playout (" + java.util.Arrays.toString(WireLog.arr(ja, "results")) + ")");
+        check(String.valueOf(ja.get("p")).equals(String.valueOf(jb.get("p"))), "the same seed twice: the same label (" + ja.get("p") + ")");
+        final Rollout.Settings s2 = rolloutSettings(f);
+        s2.k = s.k;
+        s2.seed = s.seed + 1;
+        final Map<?, ?> jc = (Map<?, ?>) Json.parse(rolloutOne(cfg, mo, s2));
+        check("ok".equals(jc.get("status")), "another seed labels it too (p " + jc.get("p") + ")");
+        // The refusals: an opponent list, public or not, and the opponent's own deck file as a "pool".
+        final Map<String, Object> withDeck = new java.util.LinkedHashMap<>(mo);
+        withDeck.put("oppDeck", pool);
+        check("refused".equals(((Map<?, ?>) Json.parse(rolloutOne(cfg, withDeck, s))).get("status")), "an opponent deck list is refused");
+        final Map<String, Object> pub = new java.util.LinkedHashMap<>(mo);
+        pub.put("oppDeckPublic", "a shared list");
+        check("refused".equals(((Map<?, ?>) Json.parse(rolloutOne(cfg, pub, s))).get("status")), "even marked public");
+        final Map<String, Object> noPool = new java.util.LinkedHashMap<>(mo);
+        noPool.remove("oppPool");
+        check("refused".equals(((Map<?, ?>) Json.parse(rolloutOne(cfg, noPool, s))).get("status")), "a moment with no pool is refused");
+        System.out.println("rollout selftest: " + checks + " check(s), " + failures + " failure(s); "
+                + ja.get("msPerPlayout") + " ms a playout, " + ja.get("ms") + " ms for " + ja.get("k") + " playouts");
+        return failures == 0 ? 0 : 1;
     }
 
     static int selftest(final String[] argv) throws Exception {

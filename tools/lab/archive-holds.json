@@ -16,6 +16,11 @@
       "nights": [1, 2],
       "until": ["J074"],
       "why": "the re-check restores quarantined recordings of nights 1-2 into the queue (J074, D371)"
+    },
+    {
+      "nights": [1, 2, 3],
+      "until": ["J076", "J077", "J078", "J079", "J080"],
+      "why": "rollout labels (D382) rebuild positions from nights 1-3's recordings in five nightly blocks; a .zst is copied back to gzip in the job's folder, a cold night is not read"
     }
   ]
 }

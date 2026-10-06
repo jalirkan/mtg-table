@@ -94,6 +94,40 @@ public final class GradeSelfTest {
         return Math.abs(a - b) <= tol;
     }
 
+    /**
+     * D382's rollout labels, the arithmetic and the keys (the engine half is
+     * {@code coach-grade.sh rollout-selftest}): a label counts wins, losses and
+     * draws (a half) and leaves failed playouts out; a position's key is its
+     * game's key and state frame, so its round seeds follow the game, not a
+     * path or a dataset index; a row's state frame is found by its seq, s2c only.
+     */
+    static void rolloutLabels() {
+        final Rollout.Label l = Rollout.Label.of(new double[] {1.0, 0.0, 0.5, Double.NaN, 1.0});
+        check(l.k == 4 && l.wins == 2 && l.losses == 1 && l.draws == 1 && l.errors == 1,
+                "a label counts 2 wins, 1 loss, 1 draw and leaves the failed playout out (k " + l.k + ")");
+        check(Math.abs(l.p - 0.625) < 1e-12, "its p is (wins + draws / 2) / k = 0.625: " + l.p);
+        check(l.lo < l.p && l.p < l.hi && l.lo >= 0 && l.hi <= 1, "with a Wilson interval around it");
+        final Rollout.Label none = Rollout.Label.of(new double[] {Double.NaN, Double.NaN});
+        check(none.k == 0 && Double.isNaN(none.p) && none.errors == 2, "every playout failed: no label");
+        check(Rollout.key("4375dfa314d382fa", 203).equals("4375dfa314d382fa#203"), "a position's key: the game key and its state frame");
+        final java.util.Set<Long> seeds = new java.util.HashSet<>();
+        for (int r = 0; r < 32; r++) {
+            seeds.add(GradeMath.roundSeed(1, Rollout.key("g", 7), r));
+        }
+        check(seeds.size() == 32 && GradeMath.roundSeed(1, Rollout.key("g", 7), 5) == GradeMath.roundSeed(1, Rollout.key("g", 7), 5),
+                "32 rounds, 32 seeds, each a function of (seed, key, round)");
+        check(GradeMath.roundSeed(1, Rollout.key("g", 7), 0) != GradeMath.roundSeed(1, Rollout.key("h", 7), 0),
+                "another game's position, another seed");
+        final WireLog log = WireLog.parse(java.util.Arrays.asList(
+                "{\"v\":1,\"kind\":\"session\",\"seat\":0}",
+                "{\"dir\":\"s2c\",\"seq\":1,\"type\":\"hello_ok\",\"body\":{}}",
+                "{\"dir\":\"c2s\",\"seq\":2,\"type\":\"state\",\"body\":{}}",
+                "{\"dir\":\"s2c\",\"seq\":2,\"type\":\"state\",\"body\":{\"priority\":0}}",
+                "{\"dir\":\"s2c\",\"seq\":3,\"type\":\"input\",\"body\":{}}"));
+        check(Rollout.frameOfSeq(log, 2) == 2, "a row's seq finds its s2c state frame (frame 2, not the c2s line before it)");
+        check(Rollout.frameOfSeq(log, 3) == -1 && Rollout.frameOfSeq(log, 9) == -1, "an input's seq, or a missing one, finds none");
+    }
+
     public static void main(final String[] args) {
         seeds();
         intervals();
@@ -109,6 +143,7 @@ public final class GradeSelfTest {
         overrideRule();
         hiddenPool();
         review();
+        rolloutLabels();
         try {
             zstdRefused();
             plantedLeak();
