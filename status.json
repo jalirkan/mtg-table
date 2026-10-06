@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-06T04:34:35-04:00",
- "heartbeat": "2026-10-06T04:34:35-04:00",
+ "updated": "2026-10-06T04:39:10-04:00",
+ "heartbeat": "2026-10-06T04:39:10-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2,
-  "memUsedGb": 12.9,
+  "load1": 2.09,
+  "memUsedGb": 5.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2142,
+  "swapUsedMb": 2146,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "commands 4/4",
    "started": "2026-10-06T00:05:14-04:00",
-   "elapsed": 16161,
+   "elapsed": 16436,
    "done": null,
    "total": null,
    "unit": null,
@@ -38,11 +38,12 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": 9.61,
+   "memGb": 2.38,
    "live": {
     "ds.rows": 19517006,
     "ds.games": 119816,
     "audit.pass": 1,
+    "fit.pass": 1,
     "audit.decksInTwoSplitsCount": 0,
     "audit.draftsInTwoSplitsCount": 0,
     "audit.games": 119816,
@@ -78,13 +79,13 @@
     "dry.dryLoad": 1,
     "dry.peakGB": 12.628,
     "dry.peakWithWorkersGB": 14.483,
-    "dry.splitSummary_test_deckNames": 1832,
-    "dry.splitSummary_test_decks": 12558
+    "dry.splitSummary_test_deckNames": 1832
    },
    "liveHeadline": [
     "ds.rows",
     "ds.games",
-    "audit.pass"
+    "audit.pass",
+    "fit.pass"
    ],
    "cubes": [],
    "publicCubes": false,
