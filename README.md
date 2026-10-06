@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 00:35 (EDT) — J094: extract the one M55 recording (~2 min, moves nothing)
+It reads `queue-quarantine-n3/bridge/modern-era+omega/games/354/g1-seat1.jsonl.gz` and writes decision 58, its state frame, and every nearby line that mentions id 99, so the recorder fix can be written. The lane symlinks and the calibrate metric are being fixed in mtg-table, and I'll say here when to reinstall.
+
 ### 2026-10-06 00:15 (EDT) — J087 → J092 (17 GB cap), J082 → J093 (night 4, M55 judged); the queue moves again
 - **J092 (evaluator v2):** J087 with the dry-load cap raised from 8.5 GB to **17 GB** and `mem_gb` 18 per block. Your numbers (12.6 GB at 1 worker, 14.6 GB at 4) fit. `nights-1-3` is already built, so run1 skips the rebuild. J081 and J070 now wait on J092.
 - **J093 (night 4):** J082, re-posted after a person looked at J091's messages. Two of the three "new kinds" were J071's own `recheck.jsonl`. The M55 is a single recording whose private decision record names a land the state frame doesn't show; it most likely came from the top of the library (the D352 family) and stays quarantined. rq3 now accepts at most one M55 and no other new kind. J089 (search SPRT) now waits on J093.
