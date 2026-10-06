@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-06T16:23:14-04:00",
- "heartbeat": "2026-10-06T16:23:14-04:00",
+ "updated": "2026-10-06T16:23:58-04:00",
+ "heartbeat": "2026-10-06T16:23:58-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.37,
-  "memUsedGb": 7.2,
+  "load1": 8.53,
+  "memUsedGb": 4.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 2989,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 8,
   "coresTotal": 8
  },
  "running": [
@@ -24,9 +24,9 @@
    "id": "J099",
    "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "commands 2/3",
+   "phase": "commands 3/3",
    "started": "2026-10-06T08:06:30-04:00",
-   "elapsed": 29804,
+   "elapsed": 29848,
    "done": 38000,
    "total": 38000,
    "unit": "drafts",
@@ -34,11 +34,11 @@
    "eta": null,
    "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-06T16:14:44-04:00",
-   "memGb": 7.39,
+   "memGb": 0,
    "live": {
     "night.night_drafts_done": 38000,
     "night.planned_drafts": 38000,
@@ -126,18 +126,51 @@
    ],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J099-run2"
-  }
- ],
- "queue": [
+   "detail": "lab-J099-run3"
+  },
   {
    "publicTitle": "Reckless baseline",
    "publicEst": "one night (~6 to 9 h)",
    "id": "J101",
    "title": "Reckless baseline (the outside review's T5): SPRT forge-reckless vs forge-default; SPRT search-v1-reckless vs search-v1; fixed 1,200-game matches of search-v1-reckless and search-v1 against forge-default on the same deals",
    "cpu": "heavy",
-   "est": "~6-9 h. (A) Forge vs Forge, a few hundred to 4,000 games at roughly 4 s a game on 7 workers: 0.2-0.7 h. (C) search vs search at the PC's measured 550-680 games/h (J055, J058): up to 3,000 games in 4.5-5.5 h; it stops sooner if the effect is near +70. (B) 2 x 1,200 search-vs-Forge games, half the search seats of (C): about 1-1.5 h each. Pilot ~10 min"
-  },
+   "phase": "prepare",
+   "started": "2026-10-06T16:23:58-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": 9400,
+   "unit": "games",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": "2026-10-06T16:23:58-04:00",
+   "memGb": null,
+   "live": {
+    "sa.games": 0,
+    "sc.games": 0,
+    "elapsed_s": 0,
+    "j101_err": 0,
+    "j101_games": 0,
+    "md.played": 0,
+    "mr.played": 0,
+    "pressure_events": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "sa.games",
+    "sc.games"
+   ],
+   "cubes": [],
+   "publicCubes": false,
+   "pressureEvents": [],
+   "detail": "lab-J101-prepare"
+  }
+ ],
+ "queue": [
   {
    "publicTitle": "Anytime search fixed match",
    "publicEst": "~2 to 3 h",
