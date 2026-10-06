@@ -1,0 +1,42 @@
+==== J085 run2 started 2026-10-05T22:00:26-04:00 in unit lab-J085-run2, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+var/cubelab/runs/j072-a: 8400 drafts (8400 plain), seeds 820000001-820008400; mean 0.500, deck-level design effect 1.017; discovery: 4 candidate(s) of 309 tests, 36 dominant-win test(s) at p <= 0.002 of 152
+  colour-adjusted null (D377): 1 FALSE candidate(s) of 309 tests; dominant-win tests at p <= 0.05: 26 of 152 (uniform: 7.6), at p <= 0.002: 9 (uniform: 0.30)
+  load (D376): 8400 of 8400 matches stamped; busy 6.995, load1/core mean 0.694 max 1.204; 1 watchdog timeout(s) in 20911 games; game-thread CPU / wall 0.623
+var/cubelab/runs/j072-b: 8400 drafts (8400 plain), seeds 820100001-820108400; mean 0.500, deck-level design effect 1.033; discovery: 3 candidate(s) of 308 tests, 28 dominant-win test(s) at p <= 0.002 of 151
+  colour-adjusted null (D377): 0 FALSE candidate(s) of 308 tests; dominant-win tests at p <= 0.05: 30 of 151 (uniform: 7.6), at p <= 0.002: 10 (uniform: 0.30)
+  load (D376): 8400 of 8400 matches stamped; busy 6.997, load1/core mean 0.738 max 1.279; 0 watchdog timeout(s) in 20827 games; game-thread CPU / wall 0.621
+cards: 148 groups with >= 100 games in both; dispersion (mean z^2, 1 = binomial) 0.733; RMS difference 0.015 vs binomial 0.018 (ratio 0.826)
+    Lotus Cobra: 0.472 (6495) vs 0.489 (6516), z -2.03
+    Rampaging Baloths: 0.460 (5796) vs 0.478 (5661), z -2.01
+    Sower of Temptation: 0.515 (13253) vs 0.503 (13124), z 2.00
+    Bloodghast: 0.530 (283) vs 0.452 (301), z 1.89
+colours: 5 groups with >= 100 games in both; dispersion (mean z^2, 1 = binomial) 0.388; RMS difference 0.004 vs binomial 0.006 (ratio 0.668)
+    G: 0.476 (10520) vs 0.482 (10453), z -0.97
+    W: 0.506 (20141) vs 0.509 (20221), z -0.55
+    U: 0.486 (24727) vs 0.484 (24557), z 0.55
+    R: 0.532 (12441) vs 0.529 (12539), z 0.54
+pairs: 10 groups with >= 100 games in both; dispersion (mean z^2, 1 = binomial) 0.418; RMS difference 0.008 vs binomial 0.013 (ratio 0.613)
+    WG: 0.465 (3521) vs 0.485 (3303), z -1.71
+    UB: 0.485 (8651) vs 0.480 (8428), z 0.66
+    BG: 0.483 (2299) vs 0.491 (2284), z -0.51
+    WR: 0.541 (4414) vs 0.536 (4570), z 0.51
+slice var/cubelab/runs/j072-a#1: 1400 drafts, seeds 820000001-820001400, mean 0.500; FALSE candidates on the colour null (D377) 1 (Sheoldred, the Apocalypse), on the mean null 3 (Baneslayer Angel, Glorybringer, Siege-Gang Commander)
+slice var/cubelab/runs/j072-a#2: 1400 drafts, seeds 820001401-820002800, mean 0.500; FALSE candidates on the colour null (D377) 2 (Sheoldred, the Apocalypse, Sower of Temptation), on the mean null 11 (Arc Trail, Bonecrusher Giant, Chain Lightning, Fable of the Mirror-Breaker, Fury, Goblin Rabblemaster, Goldspan Dragon, Lightning Bolt, Lightning Helix, Seasoned Pyromancer, Siege-Gang Commander)
+slice var/cubelab/runs/j072-a#3: 1400 drafts, seeds 820002801-820004200, mean 0.500; FALSE candidates on the colour null (D377) 1 (Sower of Temptation), on the mean null 2 (Goldspan Dragon, Siege-Gang Commander)
+slice var/cubelab/runs/j072-a#4: 1400 drafts, seeds 820004201-820005600, mean 0.500; FALSE candidates on the colour null (D377) 2 (Sheoldred, the Apocalypse, Sower of Temptation), on the mean null 2 (Bloodbraid Elf, Swords to Plowshares)
+slice var/cubelab/runs/j072-a#5: 1400 drafts, seeds 820005601-820007000, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
+slice var/cubelab/runs/j072-a#6: 1400 drafts, seeds 820007001-820008400, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 1 (Goblin Rabblemaster)
+slice var/cubelab/runs/j072-b#1: 1400 drafts, seeds 820100001-820101400, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 1 (Inferno Titan)
+slice var/cubelab/runs/j072-b#2: 1400 drafts, seeds 820101401-820102800, mean 0.500; FALSE candidates on the colour null (D377) 3 (Flametongue Kavu, Orcish Bowmasters, Sheoldred, the Apocalypse), on the mean null 3 (Flametongue Kavu, Glorybringer, Sword of Feast and Famine)
+slice var/cubelab/runs/j072-b#3: 1400 drafts, seeds 820102801-820104200, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
+slice var/cubelab/runs/j072-b#4: 1400 drafts, seeds 820104201-820105600, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
+slice var/cubelab/runs/j072-b#5: 1400 drafts, seeds 820105601-820107000, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 0
+slice var/cubelab/runs/j072-b#6: 1400 drafts, seeds 820107001-820108400, mean 0.500; FALSE candidates on the colour null (D377) 0, on the mean null 2 (Bonecrusher Giant, Goldspan Dragon)
+FALSE candidate in A on the colour-adjusted null (D377): Sower of Temptation dominant-win 0.515 over 13253 against 0.456; in the other batch 0.503 over 13124 against 0.463
+candidate in A (nothing changed): Falkenrath Aristocrat dominant-win 0.567 over 328 (colour pairs say 0.561); in the other batch 0.557 over 287 (colour pairs say 0.561)
+candidate in A (nothing changed): Huntmaster of the Fells dominant-win 0.569 over 325 (colour pairs say 0.537); in the other batch 0.518 over 369 (colour pairs say 0.530)
+candidate in A (nothing changed): Kolaghan's Command dominant-win 0.564 over 665 (colour pairs say 0.560); in the other batch 0.559 over 633 (colour pairs say 0.560)
+candidate in A (nothing changed): Sorin, Lord of Innistrad dominant-win 0.564 over 367 (colour pairs say 0.545); in the other batch 0.598 over 383 (colour pairs say 0.543)
+candidate in B (nothing changed): Doom Blade dominant-win 0.576 over 238 (colour pairs say 0.506); in the other batch 0.573 over 213 (colour pairs say 0.510)
+candidate in B (nothing changed): Kolaghan's Command dominant-win 0.559 over 633 (colour pairs say 0.560); in the other batch 0.564 over 665 (colour pairs say 0.560)
+candidate in B (nothing changed): Sorin, Lord of Innistrad dominant-win 0.598 over 383 (colour pairs say 0.543); in the other batch 0.564 over 367 (colour pairs say 0.545)

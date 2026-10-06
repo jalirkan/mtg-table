@@ -1,0 +1,13 @@
+PASS  a.drafts == 8400   [a.drafts = 8400]
+PASS  b.drafts == 8400   [b.drafts = 8400]
+PASS  a.engine_error_rate <= 1%   [a.engine_error_rate = 0]
+PASS  b.engine_error_rate <= 1%   [b.engine_error_rate = 0.0001]
+UNKNOWN  c.slices == 12   [c.slices = missing]   (c.slices is missing)
+UNKNOWN  c.a_mean >= 0.45 and c.a_mean <= 0.55   [c.a_mean = missing]   (c.a_mean is missing)
+UNKNOWN  c.b_mean >= 0.45 and c.b_mean <= 0.55   [c.b_mean = missing]   (c.b_mean is missing)
+UNKNOWN  c.a_deff <= 2   [c.a_deff = missing]   (c.a_deff is missing)
+UNKNOWN  c.b_deff <= 2   [c.b_deff = missing]   (c.b_deff is missing)
+UNKNOWN  c.a_load_stamped == 8400   [c.a_load_stamped = missing]   (c.a_load_stamped is missing)
+UNKNOWN  c.b_load_stamped == 8400   [c.b_load_stamped = missing]   (c.b_load_stamped is missing)
+UNKNOWN  c.a_colour_win_tests >= 100   [c.a_colour_win_tests = missing]   (c.a_colour_win_tests is missing)
+UNKNOWN  c.b_colour_win_tests >= 100   [c.b_colour_win_tests = missing]   (c.b_colour_win_tests is missing)

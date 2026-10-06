@@ -218,3 +218,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: gz 0
 - summary: results/J090/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table a2480d7
+
+## J085 FAILED: Evolve calibration night (D376, D377): two nothing-changed Omega batches of 8,400 drafts, read by calibrate.ts on both nulls
+
+- finished: 2026-10-05T22:00:55-04:00
+- decides: whether the hold on evolve cuts and D360's ratings raise lifts for new D377 folders (D376, D377; the lift itself is Justin's call)
+- hypothesis: D377's colour-adjusted null is calibrated on real games: about 0.6 false candidates over 12 discovery-sized slices, against about 3.3 a slice for D331's mean null
+- rule: D377 (below, "Pre-registered reading"): calibrated when the colour null's false candidates over the 12 slices are <= 2, each batch's colour dominant-win share at p <= 0.05 is <= 9%, and the pair dispersion is <= 1.5
+- outcome: failed (check: c.slices == 12 (c.slices is missing); c.a_mean >= 0.45 and c.a_mean <= 0.55 (c.a_mean is missing); c.b_mean >= 0.45 and c.b_mean <= 0.55 (c.b_mean is missing); c.a_deff <= 2 (c.a_deff is missing); c.b_deff <= 2 (c.b_deff is missing); c.a_load_stamped == 8400 (c.a_load_stamped is missing); c.b_load_stamped == 8400 (c.b_load_stamped is missing); c.a_colour_win_tests >= 100 (c.a_colour_win_tests is missing); c.b_colour_win_tests >= 100 (c.b_colour_win_tests is missing))
+- headline: a.drafts 8400, b.drafts 8400
+- summary: results/J085/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 369f613
