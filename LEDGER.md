@@ -347,3 +347,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - commits: mtg-table ef7e73f
 - follow-up: template matchup-read-nights-1-4: not due (the job did not finish done)
 - follow-up: template design-verify: not due (the job did not finish done)
+
+## J097 FAILED: Gate 2's truth read over every option (D395): pairwise ordering accuracy, rank correlations and a discordant sign test for the hand leaf against evaluators v1 and v2 on J050's truth tables; no playouts
+
+- finished: 2026-10-06T08:06:29-04:00
+- decides: whether the evaluator-as-leaf track restarts (the outside review's T2, a discordance-enriched gate 2) or stays stopped
+- hypothesis: v2's leaf orders a decision's options no better than the hand leaf (the outside review, section 2.1: the evaluator's log-loss gain is mostly between-game signal, which cancels inside a decision)
+- rule: D395 RANK_RULE (regret_rank.py), written before any real table was read with it: the evaluator has a within-decision edge when the mean over decisions of pairwise ordering accuracy, eval minus hand, has a 95% paired bootstrap interval (10,000 resamples of decisions, seed 20261004) whose lower end is above 0, on >= 240 decisions; read on v2 at 3 rounds (J081's regret-v2/rank-eval-3.jsonl against J050's rank-hand-3.jsonl); v1 and the 12-round tables are reported without a verdict. No edge: the leaf track stays stopped (no rollout-label nights, no T2). An edge: T2 is worth posting; REGRET_RULE's gate-2 FAILs stand either way
+- outcome: failed (pilot: inp.truth == 291 and inp.hand3 == 291 and inp.hand12 == 291 (inp.truth = 291, inp.hand3 = 344))
+- headline: -
+- summary: results/J097/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table fd1c91d

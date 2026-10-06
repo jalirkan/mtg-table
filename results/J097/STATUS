@@ -1,6 +1,7 @@
-running
+failed
+reason: pilot: inp.truth == 291 and inp.hand3 == 291 and inp.hand12 == 291 (inp.truth = 291, inp.hand3 = 344)
 runner: forgecoach-runner 8961fd5
 started: 2026-10-06T08:05:41-04:00
-phase: pilot 1/1
+finished: 2026-10-06T08:06:29-04:00
 mtg-table: fd1c91d
 workers: 1

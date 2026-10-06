@@ -1,0 +1,22 @@
+==== J098 pilot1 started 2026-10-06T08:06:16-04:00 in unit lab-J098-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1, lane 2
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.040s
+
+OK
+fetch: var/ml/cards17l/pilot/cards.csv: 1740431 bytes in 1 s
+fetch: var/ml/cards17l/pilot/game_data_public.Cube_-_Powered.PremierDraft.csv.gz: 3000000 bytes (first 3000000 of 26937904) in 2 s
+source: Human games: 17Lands public datasets (https://www.17lands.com/public_datasets), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); per-card counts derived from Powered Cube game data
+cards17l stats: 29501 games (0.5445 won), 544 cards, 0 bad rows, PARTIAL -> var/ml/cards17l/pilot/premier.json
+Human games: 17Lands public datasets (https://www.17lands.com/public_datasets), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); per-card counts derived from Powered Cube game data
+human games 29501 from game_data_public.Cube_-_Powered.PremierDraft.csv.gz (PARTIAL)
+overlap: cube 180, with lab power 180 (8 AI-limited, left out), in 17Lands 152, compared (>= 500 GIH games) 112, nonland 91
+Spearman power vs GIH WR, nonland: 0.299 [0.089, 0.495] (n 91); all cards 0.267 [0.081, 0.443] (n 112)
+  vs GP WR 0.112 [-0.115, 0.324] (n 91); vs IWD 0.324 [0.132, 0.507] (n 91); vs OH WR 0.186 [-0.019, 0.400] (n 91)
+human split-half Spearman 0.596 (whole data, Spearman-Brown 0.747; n 91): the ceiling
+reading (D396): WEAK
+lab rates above humans (lab pct - human pct):
+  Urza, Lord High Artificer        U     power +0.154  GIH WR 0.541 (n 956)  0.98 vs 0.18
+  Karn, Scion of Urza              C     power +0.069  GIH WR 0.531 (n 642)  0.88 vs 0.12
+  Sheoldred, the Apocalypse        B     power +0.226  GIH WR 0.550 (n 693)  0.99 vs 0.26
+  Baleful Strix                    multi power +0.090  GIH WR 0.546 (n 757)  0.93 vs 0.23

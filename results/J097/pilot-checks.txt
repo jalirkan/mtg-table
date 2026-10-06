@@ -1,0 +1,4 @@
+PASS  inp.setSha == 1   [inp.setSha = 1]
+FAIL  inp.truth == 291 and inp.hand3 == 291 and inp.hand12 == 291   [inp.truth = 291, inp.hand3 = 344]
+PASS  inp.v1e3 == 291 and inp.v1e12 == 291 and inp.v2e3 == 291 and inp.v2e12 == 291   [inp.v1e3 = 291, inp.v1e12 = 291, inp.v2e3 = 291, inp.v2e12 = 291]
+PASS  pr.written == 1 and pr.decisions == 30 and pr.edge == 0 and pr.ruled == 1   [pr.written = 1, pr.decisions = 30, pr.edge = 0, pr.ruled = 1]

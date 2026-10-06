@@ -1,0 +1,3 @@
+PASS  power_ok == 1   [power_ok = 1]
+PASS  pst.written == 1 and pst.partial == 1 and pst.games >= 5000 and pst.cards >= 500   [pst.written = 1, pst.partial = 1, pst.games = 29501, pst.cards = 544]
+PASS  pc.written == 1 and pc.cube == 180 and pc.withPower >= 170 and pc.in17Lands >= 140 and pc.ruleChanged == 0   [pc.written = 1, pc.cube = 180, pc.withPower = 180, pc.in17Lands = 152, pc.ruleChanged = 0]

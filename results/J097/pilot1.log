@@ -1,0 +1,21 @@
+==== J097 pilot1 started 2026-10-06T08:06:16-04:00 in unit lab-J097-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+.............
+----------------------------------------------------------------------
+Ran 13 tests in 1.278s
+
+OK
+regret_rank (v2-pilot): 30 of 30 decisions read; unread {}
+pairwise accuracy  hand 0.655  eval 0.645  eval - hand -0.0096 [-0.1294, +0.1087]  (n 25)
+  confident pairs  hand 0.900  eval 0.986  eval - hand +0.0865 [-0.0405, +0.3000]  (n 6)
+Spearman rho       hand 0.380  eval 0.383  eval - hand +0.0034 [-0.2614, +0.2721]  (n 22)
+Kendall tau-b      hand 0.330  eval 0.336  eval - hand +0.0057 [-0.2581, +0.2728]  (n 22)
+picks agree 73%; discordant 8: eval better 3, hand better 5, equal 0 (sign test p 0.727); clear only: eval 0, hand 1, unclear 7 (p 1.000)
+truth noise: 17238 playouts; per option median n 124 (p10 40, p90 200); best 200, retired 60; median se 0.033 (best 0.031); 83% of option pairs within 1.96 se; median reliability -0.39; regret se hand 0.0226, eval 0.0232; mean regret hand 0.0152, eval 0.0159
+  stratum attack n   5  pairwise hand 0.628 eval 0.684 diff +0.0554 [-0.0541, +0.1648]  rho hand 0.305 eval 0.426  discordant 1 (1:0:0)
+  stratum block  n   2  pairwise hand 0.689 eval 0.693 diff +0.0045 [-0.0625, +0.0714]  rho hand 0.440 eval 0.479  discordant 2 (1:1:0)
+  stratum spell  n  23  pairwise hand 0.658 eval 0.629 diff -0.0292 [-0.1880, +0.1375]  rho hand 0.397 eval 0.356  discordant 5 (1:4:0)
+  options 2      n  12  pairwise hand 0.667 eval 0.556 diff -0.1111 [-0.3333, +0.0000]  rho hand 0.429 eval 0.143  discordant 1 (0:1:0)
+  options 3-4    n  10  pairwise hand 0.609 eval 0.706 diff +0.0963 [-0.0889, +0.3556]  rho hand 0.257 eval 0.547  discordant 3 (1:2:0)
+  options 5-8    n   3  pairwise hand 0.582 eval 0.486 diff -0.0962 [-0.1923, +0.0000]  rho hand 0.266 eval -0.040  discordant 1 (0:1:0)
+  options 9+     n   5  pairwise hand 0.744 eval 0.761 diff +0.0172 [-0.0745, +0.1191]  rho hand 0.555 eval 0.628  discordant 3 (2:1:0)
+rank rule (D395): NO EDGE -- 25 decisions with an ordered pair < 240 (underpowered); pairwise accuracy eval - hand -0.0096 [-0.1294, +0.1087]: the interval does not lie above 0; the leaf track stays stopped
