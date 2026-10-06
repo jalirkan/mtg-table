@@ -254,6 +254,22 @@ import io.netty.util.ReferenceCountUtil;
  *       network loads its page from the same origin as the socket and never
  *       meets mixed content.</li>
  * </ul>
+ *
+ * <h2>A table seat (amendment M59, D402)</h2>
+ *
+ * <p>A game between two people ({@code MtgTable --humans 2}) has two seats, and
+ * each is one of these built by {@link #tableSeat}: it binds nothing and serves
+ * nothing of its own.  {@link TableServer} owns the listener, checks the seat's
+ * token, and hands the upgrade to {@link #installSeatHandlers}, after which
+ * everything above holds for that seat -- the cache, the resend, the M20 window
+ * -- with four differences: an ask never times out ({@link #askTimeoutMs} is 0
+ * whether or not the seat is connected, because the table pauses for an absent
+ * player instead of answering for them, D403); a second connection that shows
+ * the seat's token <b>replaces</b> the first, which is closed with
+ * {@value #REPLACED_CLOSE_CODE}, instead of being refused (the token is the
+ * person, and a phone that dropped off the Wi-Fi leaves a half-open socket
+ * behind); a {@code table} frame is cached and re-sent like a {@code state}; and
+ * there are no observers.
  */
 public final class WsTransport implements Transport {
 
@@ -286,6 +302,13 @@ public final class WsTransport implements Transport {
      * network failure and not reconnect in a loop) after one {@code notice}.
      */
     static final int REFUSED_CLOSE_CODE = 4001;
+
+    /**
+     * A table seat's older connection, replaced by a newer one that showed the
+     * same seat token (amendment M59).  An application code, so the old tab
+     * stops instead of reconnecting and taking the seat back.
+     */
+    static final int REPLACED_CLOSE_CODE = 4002;
 
     /** A normal, expected close: the game is over and the server is exiting. */
     static final int OVER_CLOSE_CODE = 1000;
@@ -377,6 +400,21 @@ public final class WsTransport implements Transport {
 
     /** The site's real, absolute root, or null when no site is served (M51). */
     private final Path siteRoot;
+
+    /**
+     * Amendment M59 (D402): a table seat -- no listener of its own; {@link TableServer}
+     * routes an authenticated upgrade here.  False for every other server.
+     */
+    private final boolean isTableSeat;
+
+    /** A table seat's index (0 or 1), for log lines; -1 otherwise. */
+    private final int seatIndex;
+
+    /** The last {@code table} frame (M59), re-sent on a reconnect like the last {@code state}. */
+    private volatile String lastTable;
+
+    /** Connections that replaced an older one on this table seat (M59). */
+    private final AtomicLong takeovers = new AtomicLong();
 
     /**
      * Whether a peer address counts as this machine.  Package-private and
@@ -471,6 +509,25 @@ public final class WsTransport implements Transport {
      */
     public WsTransport(final int port, final List<String> allowedOrigins, final String lanToken,
             final Path siteDir) {
+        this(port, allowedOrigins, lanToken, siteDir, -1);
+    }
+
+    /**
+     * Amendment M59 (D402): one seat of a game between two people.  It binds
+     * nothing: {@link TableServer} admits a connection that shows this seat's
+     * token and hands it to {@link #installSeatHandlers}.
+     */
+    static WsTransport tableSeat(final int index) {
+        if (index < 0 || index > 1) {
+            throw new IllegalArgumentException("a table seat is 0 or 1, got " + index);
+        }
+        return new WsTransport(0, Collections.emptyList(), null, null, index);
+    }
+
+    private WsTransport(final int port, final List<String> allowedOrigins, final String lanToken,
+            final Path siteDir, final int tableSeatIndex) {
+        this.isTableSeat = tableSeatIndex >= 0;
+        this.seatIndex = tableSeatIndex;
         this.port = port;
         this.allowedOrigins = validOrigins(allowedOrigins);
         if (lanToken != null && !lanToken.matches("^[A-Za-z0-9_-]{16,}$")) {
@@ -839,6 +896,33 @@ public final class WsTransport implements Transport {
         return ch != null && ch.isActive();
     }
 
+    /** Whether this seat's session exists: its {@code hello_ok} has been pushed (M15's readiness). */
+    boolean sessionReady() {
+        return lastHello != null;
+    }
+
+    /** M59: connections that replaced an older one on this table seat. */
+    public long takeovers() {
+        return takeovers.get();
+    }
+
+    /**
+     * Amendment M59 (D402): make {@code p}'s channel this table seat's socket --
+     * the same three handlers {@link Door} adds for {@value #SEAT_PATH}.
+     * {@link TableServer} calls it on its event loop, after the seat's token and
+     * the {@code Origin} have been checked and the query stripped from the URI.
+     */
+    void installSeatHandlers(final ChannelPipeline p) {
+        if (!isTableSeat) {
+            throw new IllegalStateException("installSeatHandlers is for a table seat");
+        }
+        if (p.get(H_FRAMES) == null) {
+            p.addLast(H_PROTOCOL, new WebSocketServerProtocolHandler(SEAT_PATH, null, false, MAX_WS_FRAME));
+            p.addLast(H_AGGREGATOR, new WebSocketFrameAggregator(MAX_WS_FRAME));
+            p.addLast(H_FRAMES, new WsHandler());
+        }
+    }
+
     public long framesOut() {
         return framesOut.get();
     }
@@ -913,6 +997,10 @@ public final class WsTransport implements Transport {
     public void start(final Inbound in, final ReplyPool replyPool) {
         this.inbound = in;
         this.pool = replyPool;
+        if (isTableSeat) {
+            // M59: TableServer owns the listener and its event loop.
+            return;
+        }
         // One event loop, one thread, named from a constant (R3).  Netty's own
         // DefaultThreadFactory would name it "nioEventLoopGroup-2-1", which is
         // harmless today and is exactly the kind of name this repo refuses to
@@ -935,6 +1023,10 @@ public final class WsTransport implements Transport {
                  // /health, the site and both sockets, and exists only on a
                  // LAN server; the site only when one was given.  With
                  // neither, this pipeline is M50's, handler for handler.
+                 // D405: this port must never be tunnelled (LanGate trusts loopback,
+                 // and cloudflared connects from loopback), so a request that
+                 // carries a tunnel's headers is refused first, in every mode.
+                 p.addLast(new TunnelGate());
                  if (lanToken != null) {
                      p.addLast(new LanGate());
                  }
@@ -996,6 +1088,7 @@ public final class WsTransport implements Transport {
             case "state":    lastState = frameJson; break;
             case "input":    lastInput = frameJson; break;
             case "over":     sawOver = true; lastOver = frameJson; break;
+            case "table":    lastTable = frameJson; break;   // M59: a table seat's presence and clock
             default: break;
             }
             write(frameJson);
@@ -1032,7 +1125,10 @@ public final class WsTransport implements Transport {
                 outstanding.put(askId, askFrameJson);
                 push(askFrameJson);
             }
-            final long deadline = connected() ? timeoutMs : NO_CLIENT_ASK_TIMEOUT_MS;
+            // M59 (D403): a table seat's ask waits for its person however long
+            // they are away -- the table pauses, and an opponent may claim the
+            // win after the grace period; nothing answers for an absent player.
+            final long deadline = isTableSeat || connected() ? timeoutMs : NO_CLIENT_ASK_TIMEOUT_MS;
             if (deadline != timeoutMs) {
                 System.err.println("WS ASK " + askId + " parks for " + deadline
                         + " ms, not " + timeoutMs + ": the client went away while the body was built");
@@ -1054,7 +1150,7 @@ public final class WsTransport implements Transport {
      */
     @Override
     public long askTimeoutMs(final String kind) {
-        return connected() ? 0L : NO_CLIENT_ASK_TIMEOUT_MS;
+        return isTableSeat || connected() ? 0L : NO_CLIENT_ASK_TIMEOUT_MS;   // M59: see ask()
     }
 
     /**
@@ -1421,6 +1517,12 @@ public final class WsTransport implements Transport {
             ch.writeAndFlush(new TextWebSocketFrame(state));
             framesOut.incrementAndGet();
         }
+        // M59: a table seat's presence and clock, verbatim like the state.
+        final String table = lastTable;
+        if (table != null) {
+            ch.writeAndFlush(new TextWebSocketFrame(table));
+            framesOut.incrementAndGet();
+        }
         // The `input` half is a REAL re-emission (logged, fresh seq) rather than
         // a replay of the cached frame, because onResync is the call whose guard
         // the M3 doorstep test exists to keep fixed: a resync must not arm
@@ -1504,6 +1606,45 @@ public final class WsTransport implements Transport {
                     ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
                     return;
                 }
+            }
+            ctx.fireChannelRead(msg);
+        }
+    }
+
+    /**
+     * The request headers a Cloudflare tunnel (or its Access) adds on the way
+     * to an origin (D405, docs/cloudflare.md).  A port that must never be
+     * tunnelled refuses any request carrying one.
+     */
+    static final List<String> TUNNEL_HEADERS = List.of("cf-connecting-ip", "cf-ray", "cf-access-jwt-assertion");
+
+    /** Does a request with these header names look like it came through a tunnel (D405)? */
+    static boolean viaTunnel(final Iterable<String> headerNames) {
+        for (final String n : headerNames) {
+            if (n != null && TUNNEL_HEADERS.contains(n.trim().toLowerCase(java.util.Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * D405: the bridge's own port is on {@code scripts/tunnel/policy.mjs}'s
+     * NEVER list -- it trusts loopback, and a tunnel daemon connects from
+     * loopback.  A request carrying a tunnel's headers ({@link #TUNNEL_HEADERS})
+     * is answered 403 and closed, whatever it asked for, {@code /health}
+     * included, in every mode.  Websocket frames after a handshake pass through.
+     */
+    private final class TunnelGate extends ChannelInboundHandlerAdapter {
+        @Override
+        public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+            if (msg instanceof FullHttpRequest && viaTunnel(((FullHttpRequest) msg).headers().names())) {
+                final FullHttpRequest req = (FullHttpRequest) msg;
+                System.err.println("WS TUNNEL REFUSED " + req.method() + " " + pathOf(req.uri()) + " from "
+                        + ctx.channel().remoteAddress() + ": this port is never tunnelled (D405)");
+                ReferenceCountUtil.release(msg);
+                plain(ctx, HttpResponseStatus.FORBIDDEN, "this port is never tunnelled");
+                return;
             }
             ctx.fireChannelRead(msg);
         }
@@ -1832,11 +1973,32 @@ public final class WsTransport implements Transport {
                 return;
             }
             if (connected()) {
-                // Contract (c): one client at a time.  Two boards answering the
-                // same prompt is not a feature we can make coherent, and the
-                // honest failure is to say so rather than to interleave them.
-                refuse(ctx, "another client is already connected to this game");
-                return;
+                if (isTableSeat) {
+                    // M59: the seat's token is the person, so a newer connection
+                    // that showed it is them again -- a reload, or a phone back on
+                    // the Wi-Fi with its old socket still half-open here.  The old
+                    // one is told why and closed; its channelInactive finds that it
+                    // is no longer `client` and leaves the seat alone.
+                    final Channel old = client;
+                    takeovers.incrementAndGet();
+                    System.err.println("WS SEAT " + seatIndex + " TAKEN OVER by " + ctx.channel().remoteAddress()
+                            + " (the older connection " + old.remoteAddress() + " is closed "
+                            + REPLACED_CLOSE_CODE + ")");
+                    final StringBuilder sb = new StringBuilder(96).append("{\"level\":\"warn\",\"title\":");
+                    Json.quote(sb, "Connection replaced");
+                    sb.append(",\"text\":");
+                    Json.quote(sb, "this seat was opened somewhere else");
+                    sb.append('}');
+                    old.writeAndFlush(new TextWebSocketFrame(oob("notice", sb.toString())));
+                    old.writeAndFlush(new CloseWebSocketFrame(REPLACED_CLOSE_CODE, "replaced by a newer connection"))
+                       .addListener(ChannelFutureListener.CLOSE);
+                } else {
+                    // Contract (c): one client at a time.  Two boards answering the
+                    // same prompt is not a feature we can make coherent, and the
+                    // honest failure is to say so rather than to interleave them.
+                    refuse(ctx, "another client is already connected to this game");
+                    return;
+                }
             }
             owner = true;
             client = ctx.channel();
@@ -1889,7 +2051,7 @@ public final class WsTransport implements Transport {
             if (msg instanceof TextWebSocketFrame) {
                 final String text = ((TextWebSocketFrame) msg).text();
                 try {
-                    if (owner && admitted("a text frame")) {
+                    if (owner && client == ctx.channel() && admitted("a text frame")) {
                         onText(text);
                     }
                 } catch (final RuntimeException e) {
@@ -1909,7 +2071,7 @@ public final class WsTransport implements Transport {
                 // WebSocketFrameAggregator above reassembles them into one
                 // TextWebSocketFrame -- so this branch is now what it always
                 // claimed to be, and it says so rather than dropping in silence.
-                if (owner && admitted("a binary frame")) {
+                if (owner && client == ctx.channel() && admitted("a binary frame")) {
                     dropped("the protocol is text frames only (section 1)");
                 }
                 ReferenceCountUtil.release(msg);
@@ -1957,7 +2119,11 @@ public final class WsTransport implements Transport {
 
         @Override
         public void channelInactive(final ChannelHandlerContext ctx) {
-            if (owner) {
+            if (owner && client != ctx.channel()) {
+                // M59: a table seat's older connection, replaced by a newer one
+                // (handshake); the seat is the newer one's, so nothing happens.
+                owner = false;
+            } else if (owner) {
                 owner = false;
                 client = null;
                 System.err.println("WS DISCONNECT " + ctx.channel().remoteAddress()

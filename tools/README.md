@@ -31,6 +31,9 @@ class files against it (javac, javap), and *no* for one that needs neither.
 | `ws-observe.mjs` | A follower on `/observe` (M50) that writes every frame it is sent (`--until over\|close`), and `--check`: its stream is the bridge log's s2c frames from its admission on, byte for byte, behind exactly the catch-up the transport promises (D291). | steps 10c, 10h | no (the server does) |
 | `check-redaction.mjs` | The hidden-information checker over frame logs (hard rule 8; report 06). Never `--pre-amendment`, never `--opponent-library-ok`. | step 11 and every recording step; CI | no |
 | `check-redaction-selftest.mjs` | The checker's negative controls: every one-defect probe in `fixtures/negative/redaction/` must be rejected. | step 12; CI | no |
+| `check-seat-pair.mjs` | A table of two's two seat logs read against each other (D402, M59): no name only one seat ever held reaches any string of the other's log before that seat legitimately saw the card, no card of one seat's in full in the other's hand, one game and two seats. | step 10i | no |
+| `check-seat-pair-selftest.mjs` | Its controls on a synthetic pair: a hidden name in a notice, a label or a prompt, a card in full in the other's hand, two games, the same seat twice -- each must fail; a name of the viewer's own deck, inside a longer public name, a token's, or after the card was seen -- each must pass. | step 12; CI | no |
+| `ws-two-humans.mjs` | A table of two end to end (D402, D403): starts `MtgTable --humans 2 --transport ws` with tokens it mints, plays two scripted clients on the table port (`--scenario concede` -- the door, a reconnect by token, a 4002 takeover, a concede; `claim` -- an absent player pauses the game, then the claim; `timeout` -- the decision clock), then audits both seat logs. | step 10i | boots Forge |
 | `requarantine.mjs` | D371: re-checks a queue night's quarantined recordings with the current checker (`check`: per failure kind, how many now pass; moves nothing), puts back only those that now pass every check (`restore`, a manifest per move, `failed.txt` kept as `failed.before-restore.txt`, the still-failing ones' new messages in `recheck.jsonl`), and reverses it (`undo --manifest`). `requarantine-selftest.mjs` is its test. | step 12; CI (the self-test) | no |
 | `build-workshop-catalog.ts` | Writes `web/src/workshop/catalog.json` from `decks/`, `fixtures/games/` and `cues.json`, and — for a deck card no recording showed face up — the engine's own card script (`forge-scripts.ts`, D196); `--check` diffs it byte for byte (with no engine resources, the engine facts are the committed file's). | step 12b (`--check`); CI | no (reads `forge-home/res` when it is there) |
 | `check-engine-crash.sh` | A card the engine cannot build, planted in a scratch Forge home, must fail `MtgTable` and `RecordMatch` with an error `notice` and a null `over` (D115). | step 12c | boots Forge |
@@ -301,6 +304,16 @@ A bare `./scripts/play.sh` plays three games against `config.json`'s
 ./scripts/play.sh -- --game-timeout 7200            # D286: a wall clock on the game (a human seat has none; 0 = none)
 ./scripts/play.sh -- --idle-timeout 600             # D286: end a ws session after 600 s with no client (default 3600; 0 = off)
 ./scripts/play.sh -- --ai-name "Doom"               # everything after -- goes to MtgTable
+```
+
+### A table of two (D402, D403, amendment M59)
+
+```bash
+./bridge/run.sh mtgtable.MtgTable --humans 2 --transport auto --seed 7      # two automated seats, a whole game
+node tools/check-seat-pair.mjs var/games/friend-auto-7-seat0/frames.jsonl var/games/friend-auto-7-seat1/frames.jsonl
+node tools/ws-two-humans.mjs --scenario concede     # the bridge, two scripted clients on the table port (also claim, timeout)
+./bridge/run.sh mtgtable.MtgTable --humans 2 --transport ws --deck <a.dck> --deck2 <b.dck> \
+    --seats-file <seats.json> [--table-port 8646] [--lan] [--decision-timeout 180] [--seat-grace 120]
 ```
 
 ### The coach helper (D292)

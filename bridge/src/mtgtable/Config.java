@@ -232,6 +232,21 @@ public final class Config {
         return out;
     }
 
+    /**
+     * The two seats' listener of a game between two people (amendment M59,
+     * D402): {@code "tablePort"}, 8646 when the key is missing.
+     */
+    public int tablePort() {
+        final Object v = values.get("tablePort");
+        if (v == null) {
+            return TableMatch.DEFAULT_TABLE_PORT;
+        }
+        if (!(v instanceof Number)) {
+            throw new IllegalStateException("key \"tablePort\" is not a number in " + file);
+        }
+        return ((Number) v).intValue();
+    }
+
     /** The Vite dev-server port. */
     public int webPort() {
         return num("webPort");

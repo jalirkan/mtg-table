@@ -25,7 +25,8 @@ N`, each row a job of the gate's own pool with all its assertions;
 Smoke, so an engine that cannot boot fails once; `node --test` after the six
 step-10 jobs whose logs `MTGTABLE_WS_LOGS` names, while `npm run build` and `vitest run` start at once (D131); step 11's fresh half
 and 12d after every recorder. Step 10's eight servers listen on **`WSPORT+0` ..
-`WSPORT+7`** (all on `WSPORT` serially). **Every job boots Forge in a home of its
+`WSPORT+7`** (all on `WSPORT` serially), and 10i's table on `WSPORT+8` and
+`WSPORT+18` (`WSPORT` and `WSPORT+10` serially). **Every job boots Forge in a home of its
 own** (D129, amended at merge): `var/check-all/<run>/<job>/`, built as the job
 starts by `tools/config.sh`'s `forge_home_make` — a `forge-home/` whose `res/` is
 the jar's, a `userDir` and `cacheDir` of its own, D14's overlay copied in, and a
@@ -57,9 +58,9 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **sixteen** lettered sub-steps — **2b**, **6b**,
-9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g** and **12h**; 9d and 10g
-added by **M6**, 10h by **D291**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+is **thirteen numbered steps** (plus **seventeen** lettered sub-steps — **2b**, **6b**,
+9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **10i**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g** and **12h**; 9d and 10g
+added by **M6**, 10h by **D291**, 10i by **D402**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
@@ -166,11 +167,16 @@ a `--idle-timeout 3` session with nobody in the seat and an observer attached
 must print `ABANDONED`, exit 1 without `MTGTABLE OK` and close the observer, and
 a second one whose seat `ws-smoke --hold 6` takes before the session exists and
 holds idle for twice the limit must end in its concede's `over`; about 25 s, on
-`WSPORT+7`. Each of 10a–10g and 10h's second session is asserted for exactly one `over`,
+`WSPORT+7`. **10i** (**D402**, **D403**, amendment M59) is a table of two: two
+automated seats (`--humans 2 --transport auto`) play a whole game, both seat
+logs through `check-redaction.mjs` and then `tools/check-seat-pair.mjs` against
+each other, and `tools/ws-two-humans.mjs` plays three scripted two-client games
+on the table port (`concede`, `claim`, `timeout`), each auditing its pair the
+same way; about two and a half minutes. Each of 10a–10g and 10h's second session is asserted for exactly one `over`,
 `over` last, and its log through `check-redaction.mjs` — including the CLIENT
 log, which is a different shape on purpose. Then `check-redaction.mjs` over the
 committed fixtures (`games/` **and** `synthetic/`) *and* every fresh recording →
-`check-redaction-selftest.mjs` → **12b**, `node tools/build-workshop-catalog.ts
+`check-redaction-selftest.mjs` and `check-seat-pair-selftest.mjs` → **12b**, `node tools/build-workshop-catalog.ts
 --check` (the workshop's generated `catalog.json` is byte for byte what `decks/`,
 `fixtures/games/` and `cues.json`'s card names make; it needs no `node_modules`,
 so it runs under `SKIP_WEB=1` too) → **12c**, `tools/check-engine-crash.sh`

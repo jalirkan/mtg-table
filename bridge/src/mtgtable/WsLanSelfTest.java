@@ -196,6 +196,12 @@ public final class WsLanSelfTest {
             eq("lanAdmits: " + r[0], r[6], WsTransport.lanAdmits((Boolean) r[1], (Boolean) r[2],
                     (String) r[3], (String) r[4], (String) r[5]));
         }
+        // D405: a tunnel's headers on a port that is never tunnelled.
+        eq("viaTunnel: none", false, WsTransport.viaTunnel(List.of("Host", "Origin", "Cookie")));
+        eq("viaTunnel: CF-Connecting-IP", true, WsTransport.viaTunnel(List.of("Host", "CF-Connecting-IP")));
+        eq("viaTunnel: cf-ray", true, WsTransport.viaTunnel(List.of("cf-ray")));
+        eq("viaTunnel: Cf-Access-Jwt-Assertion", true, WsTransport.viaTunnel(List.of("Cf-Access-Jwt-Assertion")));
+        eq("viaTunnel: a look-alike", false, WsTransport.viaTunnel(List.of("X-CF-Ray-Like")));
         eq("queryToken reads ?token=", TOKEN, WsTransport.queryToken("/?a=1&token=" + TOKEN));
         eq("queryToken: none", null, WsTransport.queryToken("/ws"));
         eq("cookieToken reads the cookie", TOKEN,
@@ -394,6 +400,9 @@ public final class WsLanSelfTest {
         try {
             eq("no --lan binds loopback", "127.0.0.1", plain.boundHost());
             eq("no --lan: /health is M15's", 503, get(port, "/health", null).status);
+            // D405: a tunnel's headers (the extra header rides in after the Cookie line) on a port never tunnelled.
+            eq("no --lan: /health through a tunnel is 403", 403, get(port, "/health", "a=b\r\nCF-Connecting-IP: 198.51.100.7").status);
+            eq("no --lan: /ws through Access is 403", 403, get(port, "/ws", "a=b\r\nCf-Access-Jwt-Assertion: x").status);
             eq("no --lan: /ws is M50's", 101, upgrade(port, "/ws", null, null, null));
             eq("no --lan: a foreign Origin is still 403", 403,
                     upgrade(port, "/ws", "https://evil.example", "127.0.0.1:" + port, null));

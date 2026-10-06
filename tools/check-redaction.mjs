@@ -1245,6 +1245,17 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
   }
 
+  /*
+   * Amendment M59 (D402).  `humans: 2` is OPTIONAL and says the other seat was a
+   * PERSON at a table of two, so `hello_ok.match` takes its two-person form and
+   * `table` frames may appear.  Only on a log a seat played (beside `transport`).
+   */
+  const tableOfTwo = header.humans === 2;
+  if (header.humans !== undefined) {
+    if (header.humans !== 2) note(1, `session header "humans" must be 2 when present (M59), got ${JSON.stringify(header.humans)}`);
+    if (header.transport === undefined) note(1, 'session header "humans" without "transport" -- only a seat a person plays sits at a table of two (M59)');
+  }
+
   if (!Array.isArray(header.decks)) {
     note(1, 'session header "decks" is not an array');
   } else {
@@ -1283,6 +1294,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     stackItems: 0,
     maxTurn: 0,
     hellos: 0, matchChecked: 0, yourProfileChecked: 0, aiPolicyChecked: 0,
+    tableMatchChecked: 0, tables: 0,
   };
   const seq = { s2c: 0, c2s: 0, ai: 0 };
   let sawState = false;
@@ -1415,6 +1427,10 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       return;
     }
     stats.matchChecked++;
+    if (tableOfTwo || m.opponent !== undefined) {
+      auditTableMatch(body, m, lineNo, where);
+      return;
+    }
     /*
      * Amendment M47: `yourProfile` -- the VIEWING seat's own AI profile -- is the
      * one key a recording may add, and only `mtgtable.RecordMatch` writes it,
@@ -1507,8 +1523,90 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
   }
 
+  /**
+   * Amendment M59 -- `hello_ok.match` at a table of two: {yourDeck, opponentDeck,
+   * opponent: "human", games}.  The opponent's deck is its NAME and COUNT only,
+   * exactly as `aiDeck` is (hard rule 8), there is no AI profile or policy, and
+   * every player in players[] is a person.
+   */
+  function auditTableMatch(body, m, lineNo, where) {
+    stats.tableMatchChecked++;
+    if (!tableOfTwo) note(lineNo, `${where}: a two-person match (opponent: "human") in a log whose session header has no humans: 2 (M59)`);
+    if (!sameKeys(m, ['yourDeck', 'opponentDeck', 'opponent', 'games'])) {
+      note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(m))}, expected exactly yourDeck, opponentDeck, opponent, games at a table of two (M59)`);
+    }
+    if (m.opponent !== 'human') note(lineNo, `${where}: opponent must be "human" (M59), got ${JSON.stringify(m.opponent)}`);
+    const count = (v) => Number.isInteger(v) && v >= 0;
+    const yd = m.yourDeck;
+    if (!plainObject(yd) || !sameKeys(yd, ['name', 'path', 'cards']) || !str(yd.name) || yd.name === '' ||
+        !str(yd.path) || yd.path === '' || !count(yd.cards)) {
+      note(lineNo, `${where}: yourDeck must be exactly {name, path, cards}, got ${JSON.stringify(yd)}`);
+    }
+    const od = m.opponentDeck;
+    if (!plainObject(od) || !sameKeys(od, ['name', 'cards']) || !str(od.name) || od.name === '' || !count(od.cards)) {
+      note(lineNo, `${where}: opponentDeck must be exactly {name, cards} -- the other person's decklist is ` +
+        `hidden information (hard rule 8, M59), got ${JSON.stringify(od)}`);
+    }
+    if (m.games !== 1) note(lineNo, `${where}: games must be 1 at a table of two (M59), got ${JSON.stringify(m.games)}`);
+    if (!Array.isArray(body.players) || body.players.some((p) => !plainObject(p) || p.isAi !== false)) {
+      note(lineNo, `${where}: every player at a table of two is a person (isAi: false) (M59)`);
+    }
+    if (Array.isArray(header.decks) && header.decks.length > 0) {
+      const mine = header.decks.find((d) => plainObject(d) && d.player === header.seat);
+      const theirs = header.decks.find((d) => plainObject(d) && d.player !== header.seat);
+      if (mine !== undefined && plainObject(yd) && (mine.path !== yd.path || mine.cards !== yd.cards)) {
+        note(lineNo, `${where}: yourDeck does not match the session header's entry for the viewing seat`);
+      }
+      if (theirs !== undefined && plainObject(od) && theirs.cards !== od.cards) {
+        note(lineNo, `${where}: opponentDeck.cards=${od.cards} but the session header says ${theirs.cards}`);
+      }
+    }
+  }
+
+  /**
+   * Amendment M59 -- a `table` frame: who is at the table, whose decision it is
+   * and its clock, and whether this seat may claim the win.  Exact keys; the
+   * only strings are the two players' names.  Only at a table of two.
+   */
+  const TABLE_KEYS = ['you', 'seats', 'decisionTimeoutMs', 'graceMs', 'claimWinAt', 'canClaimWin'];
+  const TABLE_SEAT_KEYS = ['seat', 'playerId', 'name', 'connected', 'deciding', 'decisionDeadline', 'awaySince'];
+  function auditTable(body, lineNo) {
+    stats.tables++;
+    const where = 'table (amendment M59)';
+    if (!tableOfTwo) note(lineNo, `${where}: a table frame in a log whose session header has no humans: 2`);
+    if (!sameKeys(body, TABLE_KEYS)) {
+      note(lineNo, `${where} has keys ${JSON.stringify(Object.keys(body))}, expected exactly ${TABLE_KEYS.join(', ')}`);
+      return;
+    }
+    const ms = (v) => v === null || (Number.isInteger(v) && v > 0);
+    if (body.you !== 0 && body.you !== 1) note(lineNo, `${where}: you must be 0 or 1`);
+    if (!Number.isInteger(body.decisionTimeoutMs) || body.decisionTimeoutMs < 0) note(lineNo, `${where}: decisionTimeoutMs`);
+    if (!Number.isInteger(body.graceMs) || body.graceMs < 0) note(lineNo, `${where}: graceMs`);
+    if (!ms(body.claimWinAt)) note(lineNo, `${where}: claimWinAt must be null or epoch ms`);
+    if (typeof body.canClaimWin !== 'boolean') note(lineNo, `${where}: canClaimWin must be a boolean`);
+    if (!Array.isArray(body.seats) || body.seats.length !== 2) {
+      note(lineNo, `${where}: seats must be two entries`);
+      return;
+    }
+    body.seats.forEach((st, i) => {
+      if (!plainObject(st) || !sameKeys(st, TABLE_SEAT_KEYS)) {
+        note(lineNo, `${where}: seats[${i}] must have exactly ${TABLE_SEAT_KEYS.join(', ')}`);
+        return;
+      }
+      if (st.seat !== i) note(lineNo, `${where}: seats[${i}].seat must be ${i}`);
+      if (st.playerId !== null && !Number.isInteger(st.playerId)) note(lineNo, `${where}: seats[${i}].playerId`);
+      if (!str(st.name) || st.name.length === 0 || st.name.length > 32) note(lineNo, `${where}: seats[${i}].name must be a short string`);
+      if (typeof st.connected !== 'boolean' || typeof st.deciding !== 'boolean') note(lineNo, `${where}: seats[${i}] connected/deciding are booleans`);
+      if (!ms(st.decisionDeadline) || !ms(st.awaySince)) note(lineNo, `${where}: seats[${i}] times are null or epoch ms`);
+    });
+  }
+
   function auditNonStateFrame(f, lineNo) {
     const body = f.body;
+    if (f.type === 'table') {
+      auditTable(body, lineNo);
+      return;
+    }
     if (f.type === 'hello_ok') {
       auditHello(body, lineNo);
       return;
@@ -2711,9 +2809,13 @@ for (const path of files) {
       ? `      hello_ok.match checked on ${stats.matchChecked} of ${stats.hellos} hello_ok frame(s) `
         + `(exact key sets; aiDeck held to {name, cards}; cross-checked against the session header`
         + `${stats.yourProfileChecked > 0 ? `; yourProfile on an AI viewer, M47` : ''}`
-        + `${stats.aiPolicyChecked > 0 ? `; aiPolicy a known policy, M56` : ''})`
+        + `${stats.aiPolicyChecked > 0 ? `; aiPolicy a known policy, M56` : ''}`
+        + `${stats.tableMatchChecked > 0 ? `; the two-person form, opponentDeck held to {name, cards}, M59` : ''})`
       : `      hello_ok.match absent from ${stats.hellos} hello_ok frame(s) (legitimate -- recorded `
         + `before amendment M44, or AI vs AI without a match setup; section 2.1)`);
+  }
+  if (stats.tables > 0) {
+    console.log(`      table frames=${stats.tables} (exact key sets, amendment M59: presence, the decision clock, claimWin)`);
   }
   // M49.  Whether this file carries the status layer's keywords -- on every
   // full card, or (a recording older than M49) on none.

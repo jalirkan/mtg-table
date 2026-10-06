@@ -1562,23 +1562,23 @@ believe the header, then fix this table.
 | § | lines | section | methods | thread | lock | governed by |
 |---|---|---|---|---|---|---|
 | — | 212-252 | the class comment, then the class declaration (251) | the three rules the file is written to: a push touches only `getId()` on a view; only the game thread may block; no thread of ours is named `Game*` | — | — | report 07 §2.5, hard rules 2-3 |
-| — | 253-794 | construction and injected wiring | the constructor (580), `setHostedMatch` (600), `setSession` (605), `setLogFactory` (615), `awaitGameEnd` (639) and `awaitGameStart` (644) with their `await` (671), the run summary's counters (`unimplemented` 688 … `refreshesSkipped` 787) | `main` | `lifecycle` (the game counters, which `main` waits on) | report 07 §3; **D44** (one log per game) |
-| — | 795-984 | frame emission | `emit` (806), `logC2s` (889), `envelope` (925), `notice` (952), `unimpl` (973), `fired` (981) | any thread that emits: the game thread (`state`), the EDT (`input`, notices), the transport thread, `main` (game 1's `hello_ok`); in the build, `OverRaceSelfTest`'s `mtg-table-bg` threads | **the current `GameLog`'s monitor**, held across numbering a frame and pushing it (844, 909) | protocol §1 and §8.4; `over` is terminal (the re-check at 865 and 910, `OverRaceSelfTest`) |
-| 1 | 985-1193 | `openView`, the wiring hook | `openView` (997), `seedPhaseStops` (1084), `resetForGame` (1139) | game 1: the thread that calls `HostedMatch.startMatch` (`main`); later games: the EDT, from an `act: newGame` | `lifecycle`; `deferred` and `inputLock` inside the reset | report 07 §4.1; **D44**, amendment M38 (the one reset hook); **D38** |
-| 2 | 1194-1552 | `handleGameEvents`, THE snapshot hook | `handleGameEvents` (1211), `flushState` (1226), `OutcomeWatcher` (1314), `FinishWatcher` (1336), `engineFinished` (1352), the test hooks (1376-1484), `captureOutcome` (1498; its hop at 1504) | the game thread; a batch that arrives on any other thread is buffered in `deferred` (1213-1220); `engineFinished` runs on the EDT | `deferred`'s monitor; `emit`'s | hard rule 3, **D5**; **D114** (`FinishWatcher`); **D39** (the hop's tag); amendments M4/M11 |
-| 3 | 1553-1866 | the input path | `InputState` (1558), `engineInput` (1614), `mutateInput` (1625), `inputBody` (1641), `showPromptMessage` (1692), `updateButtons` (1707), `setSelectables` (1730), `setHighlighted` (1756), `setCard` (1792), … | Forge pushes from the EDT, the game thread and the click thread | **`inputLock`**: the struct and its generation change together (1630-1637); the push happens after the lock is released (1638) | **D22** (`inputGen`), amendment M42 (`inputSeen`), protocol §4 |
-| 4 | 1867-2039 | the other pushes | `updateCurrentPlayer` (1877, `AbstractGuiGame`'s own abstract member), the overlays, `message` (1928), `showErrorDialog` (1934), `finishGame` (1940), `engineCrashed` (1962), `afterGameEnd` (1975), `emitOver` (1992) | mostly the EDT; `engineCrashed` on the dying `Game-n` thread; `emitOver` from whichever thread saw the outcome | `this` (so `over` is emitted once); `lifecycle` (games finished) | amendments M4/M11; **D114**; **D115** |
-| 5 | 2040-2152 | `openZones` / `tempShowZones`: hints, not questions | `tempShowZones` (2054), `openZones` (2070), `restoreOldZones` (2091), `hideZones` (2097), the zone-hint helpers (2102-2151) | the EDT (`openZones` sometimes the game thread) | `inputLock` (through `engineInput`) | protocol §4.3 |
-| 6 | 2153-2170 | phase stops | `isUiSetToSkipPhase` (2163) | the game thread | none (a `ConcurrentHashMap`) | **D19**, **D38** |
-| 6b | 2171-2393 | the comfort snapshot | the four M6 answers `Snap` cannot compute: the `Snap.Comfort` object (2180), `stopNames` (2235), `activeYieldJson` (2251), `undoStateJson` (2292), the yield handles (`rawYieldKey` 2338 — lint rule 4b's one `getKey()` is on 2339 — `handleFor` 2343, `standingYield` 2368) | the game thread (inside `Snap.state`) | none | **D41**, **D42** |
-| 7 | 2394-3299 | the ask path | `ask` (2412), `decode` (2477), the option writers (2500-2596), then the blocking members: `getAbilityToPlay` (2601, and its asynchronous menu, 2708-2836, its hop at 2723), `confirm` (2839), `getChoices` (2931), `order` (2974), `chooseSingleEntityForEffect` (3038), `assignCombatDamage` (3120), `assignGenericAmount` (3182), `manipulateCardList` (3234), `sideboard` (3274), … | **the game thread, which parks** until the answer comes; `getAbilityToPlay` arrives on the EDT and hops (**D22**) | the log's monitor while the ask is numbered (2450-2458); none while parked | protocol §5 and §5.4 (every ask answerable with null); **D15**, **D24**; **D20**, **D22** |
-| 8 | 3300-4033 | the inbound path: acts | `onAct` (3305), `applyAct` (3332), `concede` (3516), `setPhaseStop` (3598), `newGame` (3700), `yieldTo` (3768), `setYield` (3849), `refreshState` (3941; its hop at 3950), `refreshSnapshot` (3974), `enginePausedForSeat` (4022) | `onAct` on the transport thread; `applyAct` on the **EDT**; `refreshSnapshot` on a second `Game-n` worker | the log's monitor (the act's c2s line) | **D17** (acts on the EDT), **D39** (the refresh hop), **D41**, **D42**, **D114**, amendment M8 |
-| 8b | 4034-4282 | the acts that write the engine from the EDT; answers, resync, disconnect | `notNow` (4054), `engineFacts` (4099), `GuardFeeds` (4108), `pressOk` (4151), `onAnswer` (4171), `onResync` (4206), `onDisconnect` (4261), `close` (4274) | `notNow` / `pressOk` on the EDT; `onAnswer`, `onResync`, `onDisconnect` on the transport thread | none of its own: volatile reads and atomics (a frame written here takes the log's monitor in `emit` / `logC2s`) | **D136**, amendment M48; **D27**, amendment M42; **D24** |
-| 9 | 4283-4339 | answer coercion | `asInt` (4295), `asBool` (4299), `asIntArray` (4303), `asIntMap` (4307), `indexOfIdentity` (4312), `actBody` (4317) — the rest is `Ask.java` | any (pure functions) | none | protocol §5.3 |
+| — | 253-899 | construction and injected wiring | the constructor (582), `setHostedMatch` (602), `setSession` (607), `setLogFactory` (617), `awaitGameEnd` (744) and `awaitGameStart` (749) with their `await` (776), the run summary's counters (`unimplemented` 793 … `refreshesSkipped` 892) | `main` | `lifecycle` (the game counters, which `main` waits on) | report 07 §3; **D44** (one log per game) |
+| — | 900-1089 | frame emission | `emit` (911), `logC2s` (994), `envelope` (1030), `notice` (1057), `unimpl` (1078), `fired` (1086) | any thread that emits: the game thread (`state`), the EDT (`input`, notices), the transport thread, `main` (game 1's `hello_ok`); in the build, `OverRaceSelfTest`'s `mtg-table-bg` threads | **the current `GameLog`'s monitor**, held across numbering a frame and pushing it (947, 1012) | protocol §1 and §8.4; `over` is terminal (the re-check at 968 and 1013, `OverRaceSelfTest`) |
+| 1 | 1090-1299 | `openView`, the wiring hook | `openView` (1102), `seedPhaseStops` (1189), `resetForGame` (1244) | game 1: the thread that calls `HostedMatch.startMatch` (`main`); later games: the EDT, from an `act: newGame` | `lifecycle`; `deferred` and `inputLock` inside the reset | report 07 §4.1; **D44**, amendment M38 (the one reset hook); **D38** |
+| 2 | 1300-1663 | `handleGameEvents`, THE snapshot hook | `handleGameEvents` (1320), `flushState` (1335), `OutcomeWatcher` (1425), `FinishWatcher` (1447), `engineFinished` (1463), the test hooks (1479-1587), `captureOutcome` (1609; its hop at 1615) | the game thread; a batch that arrives on any other thread is buffered in `deferred` (1316-1323); `engineFinished` runs on the EDT | `deferred`'s monitor; `emit`'s | hard rule 3, **D5**; **D114** (`FinishWatcher`); **D39** (the hop's tag); amendments M4/M11 |
+| 3 | 1664-1978 | the input path | `InputState` (1669), `engineInput` (1725), `mutateInput` (1737), `inputBody` (1753), `showPromptMessage` (1804), `updateButtons` (1819), `setSelectables` (1842), `setHighlighted` (1868), `setCard` (1904), … | Forge pushes from the EDT, the game thread and the click thread | **`inputLock`**: the struct and its generation change together (1734-1741); the push happens after the lock is released (1742) | **D22** (`inputGen`), amendment M42 (`inputSeen`), protocol §4 |
+| 4 | 1979-2151 | the other pushes | `updateCurrentPlayer` (1989, `AbstractGuiGame`'s own abstract member), the overlays, `message` (2040), `showErrorDialog` (2046), `finishGame` (2052), `engineCrashed` (2074), `afterGameEnd` (2087), `emitOver` (2104) | mostly the EDT; `engineCrashed` on the dying `Game-n` thread; `emitOver` from whichever thread saw the outcome | `this` (so `over` is emitted once); `lifecycle` (games finished) | amendments M4/M11; **D114**; **D115** |
+| 5 | 2152-2264 | `openZones` / `tempShowZones`: hints, not questions | `tempShowZones` (2166), `openZones` (2182), `restoreOldZones` (2203), `hideZones` (2209), the zone-hint helpers (2206-2255) | the EDT (`openZones` sometimes the game thread) | `inputLock` (through `engineInput`) | protocol §4.3 |
+| 6 | 2265-2282 | phase stops | `isUiSetToSkipPhase` (2275) | the game thread | none (a `ConcurrentHashMap`) | **D19**, **D38** |
+| 6b | 2283-2505 | the comfort snapshot | the four M6 answers `Snap` cannot compute: the `Snap.Comfort` object (2284), `stopNames` (2347), `activeYieldJson` (2363), `undoStateJson` (2404), the yield handles (`rawYieldKey` 2450 — lint rule 4b's one `getKey()` is on 2451 — `handleFor` 2455, `standingYield` 2480) | the game thread (inside `Snap.state`) | none | **D41**, **D42** |
+| 7 | 2506-3411 | the ask path | `ask` (2524), `decode` (2589), the option writers (2604-2700), then the blocking members: `getAbilityToPlay` (2713, and its asynchronous menu, 2812-2940, its hop at 2835), `confirm` (2951), `getChoices` (3043), `order` (3086), `chooseSingleEntityForEffect` (3150), `assignCombatDamage` (3232), `assignGenericAmount` (3294), `manipulateCardList` (3346), `sideboard` (3378), … | **the game thread, which parks** until the answer comes; `getAbilityToPlay` arrives on the EDT and hops (**D22**) | the log's monitor while the ask is numbered (2554-2562); none while parked | protocol §5 and §5.4 (every ask answerable with null); **D15**, **D24**; **D20**, **D22** |
+| 8 | 3412-4195 | the inbound path: acts | `onAct` (3417), `applyAct` (3444), `concede` (3648), `setPhaseStop` (3760), `newGame` (3862), `yieldTo` (3930), `setYield` (4011), `refreshState` (4103; its hop at 4112), `refreshSnapshot` (4136), `enginePausedForSeat` (4184) | `onAct` on the transport thread; `applyAct` on the **EDT**; `refreshSnapshot` on a second `Game-n` worker | the log's monitor (the act's c2s line) | **D17** (acts on the EDT), **D39** (the refresh hop), **D41**, **D42**, **D114**, amendment M8 |
+| 8b | 4196-4449 | the acts that write the engine from the EDT; answers, resync, disconnect | `notNow` (4216), `engineFacts` (4261), `GuardFeeds` (4270), `pressOk` (4313), `onAnswer` (4333), `onResync` (4368), `onDisconnect` (4423), `close` (4441) | `notNow` / `pressOk` on the EDT; `onAnswer`, `onResync`, `onDisconnect` on the transport thread | none of its own: volatile reads and atomics (a frame written here takes the log's monitor in `emit` / `logC2s`) | **D136**, amendment M48; **D27**, amendment M42; **D24** |
+| 9 | 4450-4506 | answer coercion | `asInt` (4462), `asBool` (4466), `asIntArray` (4470), `asIntMap` (4474), `indexOfIdentity` (4479), `actBody` (4484) — the rest is `Ask.java` | any (pure functions) | none | protocol §5.3 |
 
 Three places in the file hop onto Forge's game pool so that a thread named
-`Game-n` may walk the views: `captureOutcome` (the hop at 1504, tagged **D39**),
-`asyncAbilityMenu` (2723, **D22**) and `refreshState` (3950, **D39**). Each carries an `// ALLOW hop:` tag naming its
+`Game-n` may walk the views: `captureOutcome` (the hop at 1615, tagged **D39**),
+`asyncAbilityMenu` (2835, **D22**) and `refreshState` (4112, **D39**). Each carries an `// ALLOW hop:` tag naming its
 argument, and `tools/lint-bridge.sh` fails a fourth (hard rule 3, **D181**).
 
 ### 9.3 Java's concurrency words, in TypeScript terms
@@ -1620,22 +1620,22 @@ The ask is the one place the rules engine **waits for the browser**.
 `getChoices` is the commonest kind (`choose_list`); the other blocking members
 follow the same path.
 
-1. **Forge, on `Game-0`, calls `getChoices(...)`** (`WireGuiGame.java:2931`). If
+1. **Forge, on `Game-0`, calls `getChoices(...)`** (`WireGuiGame.java:3035`). If
    the caller is not a game thread, it returns Forge's default at once
-   (2935-2937): only the game thread may block, because a parked EDT would stop
+   (3039-2937): only the game thread may block, because a parked EDT would stop
    every prompt.
-2. **`ask("choose_list", opts, writer)`** (2412) asserts it is on a game thread
-   (2413), flushes a fresh `state` first (2425 — the snapshot in which a card
-   revealed for this choice is visible, report 06 W4), mints an `askId` (2426),
-   asks the transport for its timeout (2427) and keeps the option list in
-   `pendingOpts` (2429): an answer's indexes resolve against that list and
+2. **`ask("choose_list", opts, writer)`** (2516) asserts it is on a game thread
+   (2517), flushes a fresh `state` first (2529 — the snapshot in which a card
+   revealed for this choice is visible, report 06 W4), mints an `askId` (2530),
+   asks the transport for its timeout (2531) and keeps the option list in
+   `pendingOpts` (2533): an answer's indexes resolve against that list and
    nothing else.
 3. **The frame is numbered** under the log's monitor, with the same
-   "`over` already sent?" re-check `emit` makes (2448-2458).
-4. **`pool.register(askId, kind)`** (2459; `ReplyPool.java:99`) puts a fresh
+   "`over` already sent?" re-check `emit` makes (2552-2458).
+4. **`pool.register(askId, kind)`** (2563; `ReplyPool.java:99`) puts a fresh
    `CompletableFuture` in the pool *before* the frame goes out, so an answer can
    never arrive for an ask nobody registered.
-5. **`transport.ask(askId, frame, timeoutMs)`** (2464). Over the socket that is
+5. **`transport.ask(askId, frame, timeoutMs)`** (2568). Over the socket that is
    `WsTransport.ask` (`WsTransport.java:404`): remember the frame for a
    reconnecting client, push it (366; netty writes it from its own loop, 498),
    then **`pool.await(askId, deadline)`** (`ReplyPool.java:117`), which is
@@ -1644,18 +1644,18 @@ follow the same path.
    (`cancelAll`, 178), which is always legal (protocol §5.4).
 6. **The browser answers** `{type:"answer", body:{askId, value}}`. netty's
    thread parses it and calls `inbound.onAnswer(...)` (`WsTransport.java:601`).
-7. **`WireGuiGame.onAnswer`** (4171) first asserts it is neither the game thread
-   nor the EDT (4172-4173): completing the future from the parked thread itself
+7. **`WireGuiGame.onAnswer`** (4322) first asserts it is neither the game thread
+   nor the EDT (4323-4173): completing the future from the parked thread itself
    would deadlock, and an answer must not queue behind prompts. It validates the
-   JSON (4175-4181), logs the `answer` frame (4187), and calls
-   **`pool.complete(askId, value)`** (4198; `ReplyPool.java:146`) — the
+   JSON (4326-4181), logs the `answer` frame (4338), and calls
+   **`pool.complete(askId, value)`** (4349; `ReplyPool.java:146`) — the
    `resolve()`. A second answer for the same ask finds the future already
-   completed and becomes a *Late answer* notice (4198-4202).
+   completed and becomes a *Late answer* notice (4349-4202).
 8. **`Game-0` wakes** inside `get()`. `await` removes the entry on its way out,
-   `ask` decodes the text (2465; a malformed answer is null, 2477-2486) and drops
-   `pendingOpts` (2472).
+   `ask` decodes the text (2569; a malformed answer is null, 2581-2486) and drops
+   `pendingOpts` (2576).
 9. **`getChoices` turns the indexes into Forge's objects** — `Ask.pick(source,
-   picks)`, or Forge's documented default when the answer was null (2960-2961) —
+   picks)`, or Forge's documented default when the answer was null (3064-2961) —
    and returns into the engine, which carries on.
 
 In TypeScript terms: the game thread does `const v = await pool.promiseFor(askId)`
@@ -1671,20 +1671,20 @@ An act is the browser **telling** the engine something; nothing waits for it.
 1. **The browser sends** `{type:"act", body:{action:"undo"}}`. Over the socket,
    netty's thread calls `inbound.onAct("undo", body)` (`WsTransport.java:585`);
    at the console, `mtg-table-io` does (`ConsoleTransport.java:576`).
-2. **`onAct`** (`WireGuiGame.java:3305`) asserts it is neither the game thread
-   nor the EDT (3306-3307), logs the `act` (3308), reads **`inputGen` now** —
-   the generation of the input the act arrived under (3312) — and hands the rest
-   to the EDT with `FThreads.invokeInEdtNowOrLater` (3318), which lands in
+2. **`onAct`** (`WireGuiGame.java:3409`) asserts it is neither the game thread
+   nor the EDT (3410-3307), logs the `act` (3412), reads **`inputGen` now** —
+   the generation of the input the act arrived under (3416) — and hands the rest
+   to the EDT with `FThreads.invokeInEdtNowOrLater` (3422), which lands in
    `HeadlessGuiBase`'s single-thread executor (`invokeInEdtLater`, 228). Acts run
    on the EDT because desktop Forge applies clicks there, serialised with prompt
    rendering (**D17**). In TypeScript: `queueMicrotask(() => applyAct(...))` on
    the one loop that also draws the prompts.
-3. **`applyAct`**, on `mtg-table-EDT` (3332): until the engine has asked this
-   seat anything (`!ready || !inputSeen`, 3333) every act but `concede` is
-   dropped with *Not yet*. Then it finds the seat's controller (3351) and, for
-   `undo` (3413), asks **`notNow("undo", …)`** (3418).
-4. **`notNow`** (4054) reads the engine's state once — `engineFacts` (4099)
-   through `GuardFeeds` (4108), one read per condition — and asks
+3. **`applyAct`**, on `mtg-table-EDT` (3436): until the engine has asked this
+   seat anything (`!ready || !inputSeen`, 3437) every act but `concede` is
+   dropped with *Not yet*. Then it finds the seat's controller (3455) and, for
+   `undo` (3517), asks **`notNow("undo", …)`** (3522).
+4. **`notNow`** (4205) reads the engine's state once — `engineFacts` (4250)
+   through `GuardFeeds` (4259), one read per condition — and asks
    **`ActGuard.whyNotNow`** (`ActGuard.java:224`) the eight questions, in order:
    1. is the game live (the engine has asked this seat something, and it is not
       over)?
@@ -1699,17 +1699,17 @@ An act is the browser **telling** the engine something; nothing waits for it.
    8. is no engine thread running?
 
    Any *no* is a reason: the act is counted, `NOT NOW` goes to stderr, and the
-   seat gets `notice {title:"Not now"}` (4077-4085). **The engine is not
+   seat gets `notice {title:"Not now"}` (4228-4085). **The engine is not
    touched** (**D136**, amendment M48).
-5. **All quiet: `c.undoLastAction()`** (3421), on the EDT, exactly where desktop
+5. **All quiet: `c.undoLastAction()`** (3525), on the EDT, exactly where desktop
    Forge's own Ctrl+Z runs it. An undo produces no game event, so nothing would
-   send the new board — hence **`refreshState()`** (3423).
-6. **`refreshState`** (3941) reads the generation on the EDT (3947), counts
-   itself as a hop in flight (3948) and hops onto Forge's pool with
-   `ThreadUtil.invokeInGameThread` (3950) — one of the three tagged hops. On that
-   second `Game-n` worker, **`refreshSnapshot`** (3974) checks again that the
-   generation has not moved (3978) and that the engine is parked for this seat
-   (3984; `enginePausedForSeat`, 4022), and only then flushes a `state` (3988).
+   send the new board — hence **`refreshState()`** (3527).
+6. **`refreshState`** (4092) reads the generation on the EDT (4098), counts
+   itself as a hop in flight (4099) and hops onto Forge's pool with
+   `ThreadUtil.invokeInGameThread` (4112) — one of the three tagged hops. On that
+   second `Game-n` worker, **`refreshSnapshot`** (4125) checks again that the
+   generation has not moved (4129) and that the engine is parked for this seat
+   (4135; `enginePausedForSeat`, 4173), and only then flushes a `state` (4139).
    Its thread name starts with `Game`, and `Game-0` is provably parked: that is
    **D39**'s argument for why this walk is legal.
 

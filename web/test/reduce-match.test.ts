@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
 import { initialState, reduce } from '../src/reduce.ts';
-import { aiPolicyOf, matchupOf, seatMatchOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
+import { aiPolicyOf, matchupOf, opponentIsHuman, seatMatchOf, type Frame, type HelloOkBody } from '../src/protocol.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 function frame(overrides: Record<string, unknown>): Frame {
@@ -216,8 +216,8 @@ test('over the committed ENGINE corpus: no match means null on every seat, a mat
       for (const p of body.players) {
         const seat = seatMatchOf(body, p.id);
         assert.ok(seat !== null, file);
-        assert.equal(seat.deck, p.id === body.you ? body.match.yourDeck.name : body.match.aiDeck.name);
-        const own: string | null = p.id === body.you ? (body.match.yourProfile ?? null) : body.match.aiProfile;
+        assert.equal(seat.deck, p.id === body.you ? body.match.yourDeck.name : body.match.aiDeck?.name);
+        const own: string | null = p.id === body.you ? (body.match.yourProfile ?? null) : (body.match.aiProfile ?? null);
         assert.equal(seat.aiProfile, p.isAi ? own : null);
       }
     }
@@ -240,4 +240,26 @@ test('the synthetic sample carries the match block, and it reads back per seat',
   assert.equal(body.match?.games, body.gameCount);
   // The AI's deck is a name and a count, nothing else (hard rule 8).
   assert.deepEqual(Object.keys(body.match?.aiDeck ?? {}).sort(), ['cards', 'name']);
+});
+
+test('amendment M59: a table of two -- the opponent is a person, their deck a name and a count, `table` folds', () => {
+  const body = {
+    gameId: 'friend-m0000000000001', you: 1, seed: 5, forgeVersion: '2.0.14', forgeJarSha256: 'x', unsupportedCards: [],
+    players: [{ id: 0, name: 'Ana', isAi: false }, { id: 1, name: 'Ben', isAi: false }],
+    match: {
+      yourDeck: { name: 'Ben deck', path: 'var/match/m0000000000001/seat1.dck', cards: 40 },
+      opponentDeck: { name: 'Ana deck', cards: 40 }, opponent: 'human', games: 1,
+    },
+  } as unknown as HelloOkBody;
+  assert.equal(opponentIsHuman(body), true);
+  assert.deepEqual(seatMatchOf(body, 0), { deck: 'Ana deck', aiProfile: null });
+  assert.deepEqual(seatMatchOf(body, 1), { deck: 'Ben deck', aiProfile: null });
+  assert.equal(aiPolicyOf(body), null);
+  const vsAi = { ...body, match: MATCH, players: [{ id: 0, name: 'Me', isAi: false }, { id: 1, name: 'Forge AI', isAi: true }] } as unknown as HelloOkBody;
+  assert.equal(opponentIsHuman(vsAi), false);
+  assert.equal(opponentIsHuman(null), false);
+  let s = reduce(initialState(), frame({ type: 'hello_ok', seq: 1, body }));
+  const before = s.framesApplied;
+  s = reduce(s, frame({ type: 'table', seq: 2, body: { you: 1, seats: [], decisionTimeoutMs: 0, graceMs: 0, claimWinAt: null, canClaimWin: false } }));
+  assert.equal(s.framesApplied, before + 1);
 });

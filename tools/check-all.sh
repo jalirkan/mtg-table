@@ -1069,6 +1069,9 @@ s09e_match() {
       yourDeck: { name: nameOf(deck), path: deck, cards: cardsOf(deck) },
       aiDeck: { name: nameOf(villain) ?? villain.replace(/^.*\//, "").replace(/\.dck$/, ""), cards: cardsOf(villain) },
       aiProfile: "Reckless", games: 1,
+      // Amendment M56 (7995435): MtgTable names the AI seat policy, last; this
+      // step predates it and failed on every full gate since (fixed with D402).
+      aiPolicy: "plain",
     };
     if (JSON.stringify(m) !== JSON.stringify(want)) {
       console.error("hello_ok.match is\n  " + JSON.stringify(m) + "\nexpected\n  " + JSON.stringify(want));
@@ -1733,6 +1736,52 @@ s10h_idle() {
   echo "OK: a client held the seat idle for 6 s, twice the 3 s limit, and the session ended in its concede"
 }
 
+# 10i. A table of two (amendment M59; D402, D403).  `MtgTable --humans 2`
+#      seats two people and no AI, each seat a WireGuiGame of its own with its
+#      own frame log redacted for it alone.  Two halves:
+#        (1) two AUTOMATED seats (--transport auto) play a whole game: exit 0
+#            with MTGTABLE OK, both seat logs end in `over`, both pass
+#            check-redaction.mjs, and tools/check-seat-pair.mjs reads them
+#            against each other -- no name only one seat ever held reaches any
+#            string of the other's log, no card of one seat's in full in the
+#            other's hand;
+#        (2) tools/ws-two-humans.mjs, two scripted clients on the table port,
+#            three times: `concede` (a wrong token, no token, /observe and the
+#            health port refused; a drop and a reconnect by token; a second
+#            socket replacing the first with 4002; a concede), `claim` (an
+#            absent player's decision pauses the game, an early claimWin is
+#            refused, the claim after the grace ends it) and `timeout` (the
+#            decision clock takes the default and says so).  Each audits its
+#            two logs the same way.
+#      About 2.5 min.  Ports WSPORT+8 (/health) and WSPORT+18 (the table);
+#      serially WSPORT and WSPORT+10.
+s10i_table() {
+  ws_job 8
+  local tp=$(( WSPORT + 10 )) sc rc=0
+  printf '\n=== 10i. a table of two: two automated seats, then two scripted clients on the table port (M59) ===\n'
+  timeout "$GAME_TIMEOUT" ./bridge/run.sh mtgtable.MtgTable --humans 2 --transport auto --seed 11 \
+      --deck decks/pacho-shield.dck --deck2 "$VILLAIN" --game-id check-all-table-auto \
+      > var/check-all-table-auto.log 2>&1 || rc=$?
+  [ "$rc" = "0" ] || { tail -20 var/check-all-table-auto.log >&2; die "the two automated seats' game exited $rc (log: var/check-all-table-auto.log)"; }
+  grep -q "^MTGTABLE OK$" var/check-all-table-auto.log || die "the two automated seats' game did not print MTGTABLE OK"
+  grep -E "^(winner|player turns|table frames|seat [01] )" var/check-all-table-auto.log || true
+  # A raw UNIMPL line starts the line ("UNIMPL <member>" on stderr); the seat summaries say "UNIMPL none".
+  ! grep -qE "^UNIMPL [A-Za-z]" var/check-all-table-auto.log || die "a seat hit an unimplemented IGuiGame member (var/check-all-table-auto.log)"
+  [ "$(grep -cE '^seat [01] .*UNIMPL none,' var/check-all-table-auto.log)" = "2" ] || die "a seat's summary does not say UNIMPL none (var/check-all-table-auto.log)"
+  for sc in 0 1; do
+    last_is_over "var/games/check-all-table-auto-seat$sc/frames.jsonl" || die "seat $sc's log does not end in \`over\`"
+    node tools/check-redaction.mjs "var/games/check-all-table-auto-seat$sc/frames.jsonl" || die "check-redaction.mjs on seat $sc of the automated table"
+  done
+  node tools/check-seat-pair.mjs var/games/check-all-table-auto-seat0/frames.jsonl var/games/check-all-table-auto-seat1/frames.jsonl \
+    || die "check-seat-pair.mjs: one seat's log names what only the other held"
+  for sc in concede claim timeout; do
+    node tools/ws-two-humans.mjs --scenario "$sc" --seed 5 --port "$WSPORT" --table-port "$tp" \
+        --game-id "check-all-table-$sc" --timeout "$GAME_TIMEOUT" \
+      || die "tools/ws-two-humans.mjs --scenario $sc failed (bridge log: var/two-humans/check-all-table-$sc.server.log)"
+  done
+  echo "OK: a table of two -- an automated game and the concede, claim and timeout scenarios, every seat log audited alone and in pairs"
+}
+
 # ---------------------------------------------------------------------------
 # Steps 11-13.
 # ---------------------------------------------------------------------------
@@ -1768,6 +1817,7 @@ s11_fresh() {
 s12_selftest() {
   hdr 12 "check-redaction-selftest.mjs -- the checker's own negative controls"
   node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"
+  node tools/check-seat-pair-selftest.mjs || die "check-seat-pair-selftest.mjs (M59: the two-seat check no longer catches a planted leak)"
   node tools/requarantine-selftest.mjs || die "requarantine-selftest.mjs (D371: re-checking and restoring a quarantined recording)"
 }
 
@@ -2213,9 +2263,10 @@ job 10e-m11       10 both     s10e_m11          "$PRE"
 job 10f-probe     10 both     s10f_probe        "$PRE"
 job 10g-three     10 both     s10g_three        "$PRE"
 job 10h-idle      10 both     s10h_idle         "$PRE"
+job 10i-table     10 both     s10i_table        "$PRE"
 # Every job that writes a frame log step 11's fresh half or 12d reads.
 RECORDERS="05-record 06b-paced 06b-seat1 07-null 08-console 09-auto 09d-sideboard 09e-match"
-RECORDERS="$RECORDERS 10a-smoke 10b-drop 10c-auto 10d-refuse 10e-m11 10f-probe 10g-three 10h-idle"
+RECORDERS="$RECORDERS 10a-smoke 10b-drop 10c-auto 10d-refuse 10e-m11 10f-probe 10g-three 10h-idle 10i-table"
 job 11-fixtures   11 both     s11_fixtures      "$PRE"
 job 11-fresh      11 both     s11_fresh         "$RECORDERS"
 job 12-selftest   12 both     s12_selftest      "$PRE"
@@ -2258,7 +2309,7 @@ fi
 PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach 12h-ml"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
-PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 08-console 12c-crash 12g-cubelab"
+PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 10i-table 08-console 12c-crash 12g-cubelab"
 
 # ---------------------------------------------------------------------------
 # The runner (D130).

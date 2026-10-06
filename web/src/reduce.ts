@@ -304,10 +304,15 @@ export function reduce(state: ClientState, frame: Frame): ClientState {
       // §2.5 — keepalive only; it carries no game meaning.
       return { ...state, framesApplied: applied };
 
+    case 'table':
+      // §2.6 (amendment M59) — a table of two's presence and clock. This board
+      // never sits at one (ForgeCoach does); a recording that carries one folds.
+      return { ...state, framesApplied: applied };
+
     default: {
       const unknown = frame as Envelope<FrameType, unknown>;
       throw new Error(
-        `reduce: unknown frame type — ${describe(unknown)} is not one of the ten types in ` +
+        `reduce: unknown frame type — ${describe(unknown)} is not one of the types in ` +
           `docs/protocol.md §2. The bridge and web/src/protocol.ts have drifted.`,
       );
     }

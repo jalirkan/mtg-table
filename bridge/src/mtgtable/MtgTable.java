@@ -262,6 +262,39 @@ public final class MtgTable {
         // 3. Decks.  DeckSerializer.fromFile ONLY (hard rule 4).
         final Deck deck1 = deck(deck1File);
         final Deck deck2 = deck(deck2File);
+        if (a.humans == 2) {
+            // Amendment M59 (D402): two people, no AI -- TableMatch seats both.
+            final TableMatch.Setup ts = new TableMatch.Setup();
+            ts.transport = a.transport;
+            ts.seed = a.seed;
+            ts.gameId = a.gameId != null ? a.gameId : "friend-" + a.transport + "-" + a.seed;
+            ts.cfg = cfg;
+            ts.deckFiles = new File[] {deck1File, deck2File};
+            ts.decks = new Deck[] {deck1, deck2};
+            if (a.seatsFile != null) {
+                final TableMatch.SeatsFile sf = TableMatch.readSeatsFile(resolve(cfg, a.seatsFile));
+                ts.names = sf.names;
+                ts.digests = sf.digests;
+            } else {
+                ts.names = new String[] {"Player 1", "Player 2"};
+            }
+            ts.tablePort = a.tablePort > 0 ? a.tablePort : cfg.tablePort();
+            ts.healthPort = a.port > 0 ? a.port : cfg.wsPort();
+            ts.lan = a.lan;
+            ts.tableOrigins = TableServer.tableOrigins(a.tableOrigins);
+            ts.decisionTimeoutSec = a.decisionTimeoutSec != null ? a.decisionTimeoutSec
+                    : "ws".equals(a.transport) ? TableMatch.DEFAULT_DECISION_TIMEOUT_SEC : 0L;
+            ts.graceSec = a.graceSec;
+            ts.idleTimeoutSec = "ws".equals(a.transport) ? a.idleTimeoutSec : 0L;
+            ts.gameTimeoutSec = gameLimitSec(a);
+            ts.keepOpen = a.keepOpen;
+            ts.manaLostPrompt = a.manaLostPrompt;
+            if (!TableMatch.run(ts, t0)) {
+                throw new IllegalStateException("the game did not reach `over`");
+            }
+            System.out.println("MTGTABLE OK");
+            return;
+        }
         System.out.println("deck you      = " + deck1.getName() + " (" + deck1.getMain().countAll() + " cards)");
         System.out.println("deck ai       = " + deck2.getName() + " (" + deck2.getMain().countAll() + " cards)");
 
@@ -981,6 +1014,18 @@ public final class MtgTable {
         boolean manaLostPrompt;
         /** Null when neither {@code --mana-lost-prompt} nor {@code --no-…} was given. */
         Boolean manaLostPromptFlag;
+        /** {@code --humans 1|2} (amendment M59, D402): 2 seats two people and no AI. */
+        int humans = 1;
+        /** {@code --seats-file <path>} (M59, D404): the two names and token digests. */
+        String seatsFile;
+        /** {@code --table-port <n>} (M59): the two seats' listener; 0 = config.json's tablePort. */
+        int tablePort;
+        /** {@code --table-origin <origin>} (M59), repeatable: an extra page origin, e.g. a tunnel's. */
+        final List<String> tableOrigins = new ArrayList<>();
+        /** {@code --decision-timeout <sec>} (M59, D403); null = the default, 0 = off. */
+        Long decisionTimeoutSec;
+        /** {@code --seat-grace <sec>} (M59, D403): away this long, and the opponent may claim the win. */
+        long graceSec = TableMatch.DEFAULT_GRACE_SEC;
 
         static Args parse(final String[] argv) {
             final Args a = new Args();
@@ -1036,6 +1081,27 @@ public final class MtgTable {
                     }
                     break;
                 case "--games":     a.games = Integer.parseInt(need(argv, ++i, k)); break;
+                case "--humans":
+                    a.humans = Integer.parseInt(need(argv, ++i, k));
+                    if (a.humans != 1 && a.humans != 2) {
+                        throw new IllegalArgumentException("--humans is 1 (you against the AI) or 2 (two people)");
+                    }
+                    break;
+                case "--seats-file":   a.seatsFile = need(argv, ++i, k); break;
+                case "--table-port":   a.tablePort = Integer.parseInt(need(argv, ++i, k)); break;
+                case "--table-origin": a.tableOrigins.add(need(argv, ++i, k)); break;
+                case "--decision-timeout":
+                    a.decisionTimeoutSec = Long.parseLong(need(argv, ++i, k));
+                    if (a.decisionTimeoutSec < 0) {
+                        throw new IllegalArgumentException("--decision-timeout is seconds, 0 for off");
+                    }
+                    break;
+                case "--seat-grace":
+                    a.graceSec = Long.parseLong(need(argv, ++i, k));
+                    if (a.graceSec < 0) {
+                        throw new IllegalArgumentException("--seat-grace is seconds");
+                    }
+                    break;
                 case "--probe":     a.probe = true; break;
                 case "--mana-lost-prompt":
                     a.manaLostPrompt = true;
@@ -1053,7 +1119,9 @@ public final class MtgTable {
                         + "[--seed <n>] [--seat 0|1] [--ai-name <name>] "
                         + "[--game-id <id>] [--port <n>] [--keep-open] [--lan] [--site-dir <path>] [--games <n>] "
                         + "[--game-timeout <sec>] [--idle-timeout <sec>] "
-                        + "[--probe] [--mana-lost-prompt] [--no-mana-lost-prompt]");
+                        + "[--probe] [--mana-lost-prompt] [--no-mana-lost-prompt] "
+                        + "[--humans 1|2] [--seats-file <path>] [--table-port <n>] [--table-origin <origin>] "
+                        + "[--decision-timeout <sec>] [--seat-grace <sec>]");
                 }
             }
             if (a.seat != 0) {
@@ -1064,6 +1132,27 @@ public final class MtgTable {
                 // lied about which seat it was redacted for.
                 throw new IllegalArgumentException("--seat 1 is not supported: HostedMatch sorts "
                         + "human seats first, so the human seat is always player 0");
+            }
+            if (a.humans == 2) {
+                // Amendment M59 (D402).  One game, two people, nobody else.
+                if (!a.transport.matches("ws|auto|null")) {
+                    throw new IllegalArgumentException("--humans 2 needs --transport ws (or auto / null, the "
+                            + "automated seats the gate plays)");
+                }
+                if (a.games != 1) {
+                    throw new IllegalArgumentException("--humans 2 plays one game: best of three is not built yet");
+                }
+                if ("ws".equals(a.transport) && a.seatsFile == null) {
+                    throw new IllegalArgumentException("--humans 2 --transport ws needs --seats-file: each seat's "
+                            + "token is what opens it, and nothing else does");
+                }
+                if (a.siteDir != null) {
+                    throw new IllegalArgumentException("--humans 2 serves no site: the draft room's listener does");
+                }
+            } else if (a.seatsFile != null || !a.tableOrigins.isEmpty() || a.tablePort != 0
+                    || a.decisionTimeoutSec != null) {
+                throw new IllegalArgumentException("--seats-file, --table-port, --table-origin and "
+                        + "--decision-timeout are for --humans 2");
             }
             if ((a.lan || a.siteDir != null) && !"ws".equals(a.transport)) {
                 throw new IllegalArgumentException("--lan and --site-dir need --transport ws");
@@ -1094,7 +1183,7 @@ public final class MtgTable {
     }
 
     /** The cards {@code Match.prepareAllZones} would silently drop from a library. */
-    private static List<String> unsupported(final Deck... decks) {
+    static List<String> unsupported(final Deck... decks) {
         final Set<String> out = new LinkedHashSet<>();
         for (final Deck d : decks) {
             for (final Map.Entry<PaperCard, Integer> e : d.getMain()) {
@@ -1116,13 +1205,13 @@ public final class MtgTable {
         return (f.isAbsolute() ? f : new File(cfg.root(), path)).getAbsoluteFile();
     }
 
-    private static String rel(final Config cfg, final File f) {
+    static String rel(final Config cfg, final File f) {
         final String root = cfg.root().getAbsolutePath() + File.separator;
         final String p = f.getAbsolutePath();
         return p.startsWith(root) ? p.substring(root.length()) : p;
     }
 
-    private static String sha256(final File f) {
+    static String sha256(final File f) {
         try {
             final MessageDigest md = MessageDigest.getInstance("SHA-256");
             try (java.io.InputStream in = Files.newInputStream(f.toPath())) {

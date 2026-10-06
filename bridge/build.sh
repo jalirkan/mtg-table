@@ -134,6 +134,19 @@ env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
     -Dsentry.uncaught.handler.enabled=false \
     -cp "$OUT:$FORGE_JAR" mtgtable.WsLanSelfTest "$REPO_ROOT/var/lan-selftest"
 
+# Unit-check amendment M59 (D402): a table of two's door, on a real TableServer
+# bound to free loopback ports with two table seats.  A seat token per seat and
+# no loopback exemption (no token or a wrong one is 403 from 127.0.0.1); no
+# /observe; the Origin rule (the page's host on another port, https, a
+# --table-origin); a second socket with the same token replaces the first (4002);
+# ten wrong tokens from one tunnelled address and the next is 429; the health
+# port answers /health and nothing else; the seats file's exact shape.  No game,
+# no Forge class; it writes two small files under var/.
+env -u DISPLAY java -Xmx4096m -Djava.awt.headless=true \
+    -Dio.netty.tryReflectionSetAccessible=true -Dfile.encoding=UTF-8 \
+    -Dsentry.uncaught.handler.enabled=false \
+    -cp "$OUT:$FORGE_JAR" mtgtable.TableSelfTest "$REPO_ROOT/var/table-selftest"
+
 # Unit-check the position evaluator's Java half (D316) against its Python half:
 # fixtures/eval/golden.json is tools/ml/eval_golden.py's answer for every
 # decision row of every committed recording -- the rows chosen, every feature,

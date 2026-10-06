@@ -30,6 +30,23 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-06 — a table of two: two people, two seats, one game
+
+Applied by the play-with-a-friend lane (branch `c/two-humans`; decisions
+**D402** and **D403**). `MtgTable --humans 2` seats two people and no AI. **Every
+frame either seat already understood is unchanged**: each seat is the single seat
+this file always described, its own stream redacted for that seat alone (§3.3,
+hard rule 8). What is new is only ever sent at a table of two, so no stream of
+one person against the AI changes by a byte. Held by `tools/check-redaction.mjs`
+(the two-person `match`, the `table` frame's exact keys, the header's `humans`),
+`tools/check-seat-pair.mjs` (the two seats' logs against each other),
+`mtgtable.TableSelfTest` (the door) and gate step 10i (a whole game of two
+automated seats, and two scripted clients on the table port).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M59 | §2, §2.1, §2.2, §2.6, §8.1, M13, M44, M50, M51 | **A table of two.** **(1) Where.** The two seats are on the **table port** (`config.json` `tablePort`, 8646; `--table-port`), `ws://<host>:<tablePort>/ws?seat=<token>`, bound to `127.0.0.1` or, with `--lan`, every interface. **Every upgrade must carry a seat's token, a loopback peer included** — there is no loopback exemption, because a tunnel daemon connects from 127.0.0.1. The token opens that seat and no other; the bridge holds only the two tokens' SHA-256 digests (`--seats-file`, `{names, tokenSha256}`), hashes what it is shown and compares digests (`MessageDigest.isEqual`), strips the query before the handshake and never logs a token. No token or a wrong one is **HTTP 403**; ten wrong tokens a minute from one address (a loopback peer's `CF-Connecting-IP`, when it sends one) and the rest of that minute is **429**. `Origin` must be absent, on `wsAllowedOrigins`, a `--table-origin`, or `http(s)://` on the request's own host name at any port (the draft room's page on 8644). **The table port serves `/ws` and nothing else**: `/observe` (no observers at a table of two: either stream shows its seat's hand), `/health`, a site and every other path are **404**, so a tunnel that routes `/ws` to it (D405) reaches exactly one thing. `GET /health` is the bridge's own `wsPort`'s, on loopback alone: 200 once both seats have their `hello_ok`, 503 before, so `play.sh`'s poll still works. A token is checked before the handshake, so a missing or wrong one never gets a socket. **(2) One client per seat, by token** (M13 for a table): a second connection that shows the same seat's token **replaces** the first, which is sent a `seq: 0` `notice {title: "Connection replaced"}` and closed **4002**; the seat is the newer one's, and its catch-up is M10's (the cached `hello_ok`, the last `state`, the last `table`, the `input` once there is one, every outstanding `ask`). **(3) `hello_ok.match` in its two-person form**: `{yourDeck, opponentDeck, opponent: "human", games: 1}` — `opponentDeck` is `{name, cards}` and nothing else (hard rule 8), there is no `aiDeck`, `aiProfile` or `aiPolicy`, and every `players[]` entry has `isAi: false`. **(4) A new s→c frame, `table` (§2.6)**: `{you, seats: [{seat, playerId, name, connected, deciding, decisionDeadline, awaySince}] × 2, decisionTimeoutMs, graceMs, claimWinAt, canClaimWin}` — sent to each seat whenever any of it changes, cached and re-sent on a reconnect after the `state`; times are the bridge's epoch ms, the envelope's `t`'s clock. **(5) The decision clock (D403)**: while a seat is connected and the engine waits on it, its clock runs (`--decision-timeout`, 180 s by default; 0 off); it restarts whenever the engine pushes that seat a new prompt or asks it something; when it runs out the decision gets the answer nobody chose — an outstanding `ask` is answered `null` (§5.4), an `input` gets OK when OK is enabled and Cancel otherwise — and both seats get a `notice {title: "Time's up"}`. **(6) Away (D403)**: a seat with no socket is away; **nothing answers for it** — its asks never time out (no `NO_CLIENT_ASK_TIMEOUT_MS`, no `cancelAll` on its disconnect) and its clock does not run, so the game pauses when it is that seat's decision; after `--seat-grace` (120 s) the other seat's `table.canClaimWin` is true and **`act: claimWin`** (§2.2) concedes for the absent player; earlier it is refused with `notice {title: "Not yet"}`. **(7) `concede`** is the seat's own, as ever, and is applied at once when the engine is parked on EITHER seat (D136's guard asked of both). **(8) One game**: `newGame` / `nextGame` are refused with `notice {title: "No next game"}`. **(9) The logs**: one per seat, `var/games/<gameId>-seat<N>/frames.jsonl`, each redacted for its seat (§8.3); the session header gains **`humans: 2`**, and its `decks` entry for the other seat carries no path or hash, as ever. `play.sh` names these games `friend-m<13 digits>`, which neither the human test set (D369) nor the automatic review (D385) reads. | D402, D403 |
+
 ### 2026-10-06 — the search's prior in decision records
 
 Applied by the search week-3 lane (branch `c/search-week3`; written as M56, renumbered: M56 and M57 went to `hello_ok.match.aiPolicy` and play exploration first). One row. **No
@@ -416,11 +433,12 @@ ignores are how the two hand-written ends drift apart without anyone noticing.
 
 ---
 
-## 2. Message types — 6 server→client, 4 client→server
+## 2. Message types — 7 server→client, 4 client→server
 
 | `type` | dir | blocks the game thread | emitted from | summary |
 |---|---|---|---|---|
 | `hello_ok` | s→c | no | any | handshake reply; sent once per **game** (§2.1) |
+| `table` | s→c | no | main | **a table of two only** (amendment **M59**): who is at the table, whose decision it is, its clock, and whether this seat may claim the win (§2.6) |
 | `state` | s→c | no | **game thread** | full redacted snapshot (§3) |
 | `input` | s→c | no | **EDT** | prompt / buttons / selectables / hints (§4) |
 | `ask` | s→c | **YES** | game thread | a blocking question (§5) |
@@ -538,6 +556,8 @@ name, the AI's profile, and how many games it is played to.
 | `games` | int ≥ 1 | `--games N`. **Always present**, unlike M41's `gameCount`, which is omitted for a one-game session |
 | `yourProfile` | string, **optional** | amendment **M47**: the **viewing seat's own** Forge AI profile. Only `mtgtable.RecordMatch` writes it (a spectated game), because only there is the viewing seat an AI; a stream whose `players[]` marks the viewer human must not carry it. Last in the object, so M44's keys keep their positions |
 | `aiPolicy` | string, **optional** | amendment **M56**: who answers for the other seat — `plain`, `outlets` or `search`, `MtgTable --ai-policy` (D314, D333). Written by `MtgTable` only; absent means the stream does not say. Read with `aiPolicyOf()` |
+| `opponentDeck` | `{name, cards}`, **a table of two** | amendment **M59**: the other PERSON's deck, name and card count only, exactly as `aiDeck`. At a table of two the object is exactly `{yourDeck, opponentDeck, opponent, games}` — no `aiDeck`, `aiProfile` or `aiPolicy` — and `games` is 1. Read with `seatMatchOf()` / `opponentIsHuman()` |
+| `opponent` | `"human"`, **a table of two** | amendment **M59**: the other seat is a person (`MtgTable --humans 2`). Absent whenever it is the AI |
 
 **Optional, and absent from every recording made before 2026-09-27** — the whole
 committed corpus — so a reader must treat a missing `match` as "this stream does
@@ -580,6 +600,7 @@ arrives as the next `state` / `input`.
 | `buttonCancel` | — | `selectButtonCancel()` | M2 |
 | `passPriority` | — | `IGameController.passPriority()` **[jar]** — genuinely distinct from `buttonOk`, and what "pass until something happens" needs (§10.3) | M6 |
 | `concede` | — | `getOriginalGameControllers().forEach(IGameController::concede)` — **never** `AbstractGuiGame.concede()`, which runs a nested confirm dialog off the game thread. While the engine is running it is **carried forward**: the seat's outcome now, the game ended by the engine's own check a moment later, the seat asked nothing more (amendment **M48**) | M2 |
+| `claimWin` | — | **a table of two only** (amendment **M59**, D403): the other seat has been away for `table.graceMs`, so the bridge concedes for them and this seat wins. Before that, or anywhere else, `notice {title: "Not yet"}` (or `"Unknown act"`) and nothing happens | M59 |
 | `newGame` | `mode` = `"continue"` \| `"restart"` | `nextGameDecision(CONTINUE)` / `nextGameDecision(NEW)` → `HostedMatch.continueMatch()` / `restartMatch()`. **Only meaningful after an `over`**; a new `hello_ok` follows and the client drops its card map (§2.1). See below | M6 |
 | `nextGame` | — | the M3 spelling of `newGame {mode:"continue"}`, kept as an alias | M3 |
 | `undo` | — | `undoLastAction()`, gated on `canUndoLastAction` — read `state.undo` (§3.1) for whether it will do anything. **Applied only while the engine is waiting on this seat**, else `notice {title:"Not now"}` and no effect (amendment **M48**, below) | M6 |
@@ -773,6 +794,44 @@ and nothing an observer sends is answered at all — not even its `ping`.
 before the session exists. A `notice` for it would be a pre-handshake frame, and
 §2.1's ordering outranks M18's "say so rather than nothing" — the server says so
 on stderr and in the run summary instead.
+
+### 2.6 `table` (s→c) — a table of two only
+
+Amendment **M59** (D402, D403). Sent to each seat of `MtgTable --humans 2`
+whenever any of it changes, by the bridge's main thread — so its `seq` sits in
+the seat's own series like any frame — and cached and re-sent on a reconnect
+right after the last `state`. A stream of one person against the AI never
+carries one.
+
+```json
+{ "v": 1, "seq": 57, "t": 1757600123000, "type": "table",
+  "body": {
+    "you": 1,
+    "seats": [
+      { "seat": 0, "playerId": 0, "name": "Justin", "connected": true,  "deciding": true,
+        "decisionDeadline": 1757600291000, "awaySince": null },
+      { "seat": 1, "playerId": 1, "name": "Sam",    "connected": true,  "deciding": false,
+        "decisionDeadline": null, "awaySince": null }
+    ],
+    "decisionTimeoutMs": 180000, "graceMs": 120000,
+    "claimWinAt": null, "canClaimWin": false } }
+```
+
+- `deciding` — the engine is waiting on that seat: an `input` is up on its queue
+  or an `ask` is parked. It is sampled five times a second, so a decision taken
+  faster than that may never show; the other seat reads it as "Justin is
+  thinking".
+- `decisionDeadline` — when that seat's clock runs out, while it is connected
+  and deciding with the clock on; `null` otherwise. Count down with
+  `decisionDeadline - t`: the envelope's `t` is the same clock, so the client's
+  own offset never matters.
+- `awaySince` — since when that seat has had no socket; `null` while it has one.
+  An away seat's decision waits for them (D403).
+- `claimWinAt` / `canClaimWin` — **this** seat's right to claim the win: the
+  other seat has been away since `awaySince`, and from `awaySince + graceMs` on
+  `canClaimWin` is true and `act: claimWin` ends the game.
+
+Exact keys, the names the only strings (`tools/check-redaction.mjs`).
 
 ---
 
@@ -2040,6 +2099,7 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `prefs` | **Optional** (amendment **M31**). The Forge preferences this process set **in memory** beyond the bootstrap's own three, as `FPref` names: today only `["UI_MANA_LOST_PROMPT"]`, from `--mana-lost-prompt`. It is why `fixtures/games/human-amount-7.jsonl` carries two `confirm` asks that **cannot** occur on stock preferences; without it a reader who re-records that fixture on defaults concludes the emitter changed. `tools/check-redaction.mjs` tolerates it and requires it of nothing. |
 | `recordedBy` | `"client"` on a log a **client** wrote (`tools/ws-auto-play.mjs --log`); **absent** means the bridge wrote it. `tools/check-redaction.mjs` reads it and relaxes the `seq` continuity rule, and nothing else: a client legitimately sees a frame re-delivered verbatim and real forward gaps, both amendment **M10** (M17). |
 | `paceMs` | **Optional** (amendment **M47**). Present only on a PACED AI-vs-AI recording — `mtgtable.RecordMatch --pace <ms>`, which `./scripts/spectate.sh` passes in follow mode: the engine dwelt `paceMs` at every phase boundary (a quarter of it after a frame that only moved the phase strip), so the `t` gaps are the watcher's pace, not the engine's. It changes nothing else — a paced and an unpaced recording of one seed are the same frames (§8.7). A positive integer; `tools/check-redaction.mjs` fails it beside `transport`, because a seat's pace is its player's. |
+| `humans` | **Optional** (amendment **M59**). `2` on each seat's log at a table of two (`MtgTable --humans 2`): the other seat is a person, so `hello_ok.match` takes its two-person form and `table` frames appear. Only beside `transport`. Each seat writes its own log, `var/games/<gameId>-seat<N>/frames.jsonl`. |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
 
 **A frame produced before the header is held, not dropped** (amendment M9). The
