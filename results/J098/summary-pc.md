@@ -1,0 +1,2 @@
+# J098 — the lab's card ratings vs 17Lands human win rates: plain summary (PC)
+Done 08:07 on 2026-10-06 (no Forge). 147 cards compared (126 non-land). Rank correlation (Spearman rho) between the lab's card ratings and 17Lands' human game-in-hand win rates: **0.295** (95% interval 0.137 to 0.439) — a weak positive agreement. The ratings agree with humans on direction but explain little of the ordering. Means by group: R_mean -0.736, cheapCreature_mean -0.347 (see metrics.json). The job's own reading flag is 1.
