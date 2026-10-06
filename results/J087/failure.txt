@@ -1,0 +1,7 @@
+step run2 exited 1
+
+==== J087 run2 started 2026-10-05T23:03:35-04:00 in unit lab-J087-run2, 6 worker(s), 6 core(s), BLAS/OpenMP threads 6, lane 2
+memory: score: rss 9.87 GB, peak 12.63 GB
+dry-load: 19517006 rows (train/val/test 15417966/2054045/2044995); peak RSS 12.63 GB
+dry-load: 4 workers, private memory 0.49, 0.49, 0.48, 0.49 GB; peak with workers 14.57 GB
+dry load: over 8.5 GB even with 1 worker

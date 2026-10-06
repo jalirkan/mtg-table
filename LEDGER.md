@@ -240,3 +240,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: gz 44
 - summary: results/J091/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table a2480d7
+
+## J087 FAILED: Evaluator v2 (D364): nights 1-3 dataset, split audit, learning curve (plain vs game-weighted), successive-halving search, gate 1 on v2 and v2 against v1 on the same test pairs
+
+- finished: 2026-10-05T23:38:26-04:00
+- decides: whether evaluator v2 (nights 1-3, D364) replaces v1 as the candidate for gate 2 (J081) and the coach's win chance
+- hypothesis: three nights of data and the successive-halving search give v2 a lower held-out log-loss than v1 on the same test pairs, and it passes gate 1
+- rule: gates.py gate 1 (D354) on v2, and eval_compare.py's paired difference v1 - v2 on the same held-out pairs with its 95% interval excluding 0 (D364)
+- outcome: failed (step run2 exited 1)
+- headline: ds.rows 19517006, ds.games 119816, audit.pass 1
+- summary: results/J087/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table ef7e73f
+- follow-up: jobs/J081-gate2-v2.md: on pc-jobs with after: on this job; the runner starts it

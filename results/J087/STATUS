@@ -1,8 +1,10 @@
-running
+failed
+reason: step run2 exited 1
 runner: forgecoach-runner 8b3d2cb
 started: 2026-10-05T22:00:26-04:00
-phase: commands 2/4
+finished: 2026-10-05T23:38:26-04:00
 mtg-table: ef7e73f
 workers: 6 (sized 6: min(cores 7, memory 12, max_workers 6); peak 1.50 GB per worker (declared), budget 21.4 GB)
 adopted: 2026-10-05T22:01:00-04:00: the runner restarted; lab-J087-pilot1 was still running
 blocks_done: run1 exit 0 at 2026-10-05T23:03:35-04:00
+exit: 1
