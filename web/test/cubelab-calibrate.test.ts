@@ -3,9 +3,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { test } from 'node:test';
 
-import { dispersion, firstDrafts, loadSummary, slicesOf, type Batch, type Tally } from '../../tools/cubelab/calibrate.ts';
+import { dispersion, firstDrafts, loadSummary, readBatch, readDraftLines, slicesOf, type Batch, type Tally } from '../../tools/cubelab/calibrate.ts';
 import type { DraftRecord } from '../../tools/cubelab/run.ts';
 import { rng } from '../../tools/cubelab/rng.ts';
 
@@ -65,4 +69,64 @@ test('calibrate (D377): --first reads the first N drafts by seed; --slice cuts d
   assert.deepEqual(s.map((b) => b.recs.map((r) => r.seed)), [[1, 2, 3], [4, 5, 6]]);
   assert.deepEqual(s.map((b) => b.dir), ['x#1', 'x#2']);
   assert.equal(slicesOf(X, 8).length, 0);
+});
+
+// ---------------------------------------------------------------- --flat, end to end (D393)
+
+const REPO = path.resolve(import.meta.dirname, '../..');
+
+/** Two run folders built from the mini fixture: n drafts each, distinct seeds, D376 load stamps. */
+function miniBatches(n: number): [string, string] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'calibrate-flat-'));
+  const src = path.join(REPO, 'fixtures/cubelab/mini');
+  const lines = fs.readFileSync(path.join(src, 'drafts.jsonl'), 'utf8').split('\n').filter(Boolean);
+  return (['a', 'b'] as const).map((k, bi) => {
+    const dir = path.join(root, k);
+    fs.mkdirSync(dir);
+    for (const f of ['run.json', 'cards.json']) fs.copyFileSync(path.join(src, f), path.join(dir, f));
+    const out: string[] = [];
+    for (let i = 0; i < n; i++) {
+      const d = JSON.parse(lines[i % lines.length] as string) as { seed: number; match: { load?: unknown } };
+      d.seed = (bi + 1) * 1000 + i + 1;
+      d.match.load = { busy: 2, alive: 2, load1: 1, cpus: 4 };
+      out.push(JSON.stringify(d));
+    }
+    fs.writeFileSync(path.join(dir, 'drafts.jsonl'), `${out.join('\n')}\n`);
+    return dir;
+  }) as [string, string];
+}
+
+test('calibrate --flat (D393): the runner\'s `sh:` metric gets ONE JSON object on stdout with every key J085 checked', () => {
+  const [a, b] = miniBatches(12);
+  // J085's line, on a fixture: relative paths from the checkout, node running the .ts directly, --flat last.
+  const r = spawnSync(process.execPath, ['tools/cubelab/calibrate.ts', a, b, '--cube', 'tools/ml/tests/data/mini-cube.md',
+    '--pool', 'cubes/omega-seed-pool.tsv', '--notes', 'cubes/omega-notes.tsv', '--min-games', '1', '--slice', '4', '--flat'],
+  { cwd: REPO, encoding: 'utf8', timeout: 120_000 });
+  assert.equal(r.status, 0, r.stderr);
+  const v = JSON.parse(r.stdout.trim()) as Record<string, number>;            // the runner's JSON.parse(stdout.trim())
+  for (const k of ['slices', 'a_mean', 'b_mean', 'a_deff', 'b_deff', 'a_load_stamped', 'b_load_stamped', 'a_colour_win_tests', 'b_colour_win_tests']) {
+    assert.equal(typeof v[k], 'number', `${k} in ${r.stdout}`);
+  }
+  assert.equal(v.slices, 6);
+  assert.equal(v.a_drafts, 12);
+  assert.equal(v.a_load_stamped, 12);
+  assert.equal(v.b_load_stamped, 12);
+  fs.rmSync(path.dirname(a), { recursive: true, force: true });
+});
+
+test('calibrate (D393): drafts.jsonl is read in chunks, strings shared, a torn last line left out; the records are JSON.parse\'s', () => {
+  const [a] = miniBatches(5);
+  const f = path.join(a, 'drafts.jsonl');
+  const whole = fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord);
+  fs.appendFileSync(f, '{"v": 1, "seed": 99, "match": {"ga');                 // a run still writing
+  const got: DraftRecord[] = [];
+  readDraftLines(f, (x) => { got.push(x); });
+  assert.deepEqual(got, whole);
+  for (const bytes of [1, 7, 64, 1000]) {                                         // lines across chunk boundaries
+    const small: DraftRecord[] = [];
+    readDraftLines(f, (x) => { small.push(x); }, bytes);
+    assert.deepEqual(small, whole, `chunks of ${bytes}`);
+  }
+  assert.deepEqual(readBatch(a).recs, whole);
+  fs.rmSync(path.dirname(a), { recursive: true, force: true });
 });

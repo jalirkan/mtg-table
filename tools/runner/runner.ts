@@ -40,8 +40,10 @@
 // has a lane, lane 1 the clones as before (~/code/lab/<repo>), lane k > 1
 // `<repo>-lane<k>`, its own checkout at its own pinned commit with its own build.
 // A lane's mtg-table `var/` is a symlink to lane 1's, so every job's outputs land
-// in the one var/ the next job (after:) and the ladder read.  Jobs side by side
-// therefore share var/: they must not write the same paths.
+// in the one var/ the next job (after:) and the ladder read.  The light lane
+// (`<repo>-light`) is linked the same way (D392): a light job reads the same
+// var/cubelab/... the heavy jobs wrote.  Jobs side by side therefore share var/:
+// they must not write the same paths.
 //
 // The runner's state lives in var/runner/ (jobs/<id>/run.json, the scripts,
 // the logs, the control files) so a restarted runner RECONCILES: a step whose
@@ -233,7 +235,7 @@ export function publicSignature(doc: StatusDoc, ladderSig = ''): string {
 }
 
 /** Names a `collect:` file may not take: they are the runner's own facts in results/<id>/. */
-export const RESERVED_OUTPUTS = new Set(['STATUS', 'summary.md', 'failure.txt', 'checks.txt', 'metrics.json', 'pilot-checks.txt', 'pilot-metrics.json', 'events.jsonl', 'collect-skipped.txt']);
+export const RESERVED_OUTPUTS = new Set(['STATUS', 'summary.md', 'failure.txt', 'checks.txt', 'metrics.json', 'pilot-checks.txt', 'pilot-metrics.json', 'metrics-errors.txt', 'pilot-metrics-errors.txt', 'events.jsonl', 'collect-skipped.txt']);
 
 /** After a memory stop, how long before another job may be stopped for memory: the freed memory shows in avg10. */
 export const MEMORY_STOP_SETTLE_MS = 60_000;
@@ -791,8 +793,9 @@ export class Runner {
       lines.push(`# ${repo}@${ref}`,
         `if [ ! -d ${q(dest)}/.git ]; then git clone --quiet ${home ? `--reference-if-able ${q(home)} --dissociate ` : ''}${q(url)} ${q(dest)}; fi`,
         `cd ${q(dest)}`,
-        // A lane's var/ is lane 1's: every job's outputs in one place (the header's LANES).
-        ...(repo === 'mtg-table' && r.cpu === 'heavy' && (r.lane ?? 0) > 0 ? [
+        // Every checkout but lane 1's -- a heavy lane k > 1 and the light lane alike -- has lane 1's
+        // var/: every job's outputs, and the data they read, in one place (the header's LANES, D392).
+        ...(repo === 'mtg-table' && dest !== this.checkout(repo, 'heavy') ? [
           `mkdir -p ${q(path.join(this.checkout(repo, 'heavy'), 'var'))}`,
           `if [ ! -L var ]; then if [ -e var ]; then mv var ".var-before-lane-$(date +%Y%m%d%H%M%S)"; fi; ln -s ${q(path.join(this.checkout(repo, 'heavy'), 'var'))} var; fi`,
           // .gitignore's `var/` matches a directory, not a symlink: keep the tree clean for the version stamps.
@@ -1181,7 +1184,7 @@ export class Runner {
     return f;
   }
 
-  metricsOf(specs: MetricSpec[], cwd: string, r: JobRun): Flat {
+  metricsOf(specs: MetricSpec[], cwd: string, r: JobRun, errors: string[] = []): Flat {
     const out: Flat = {};
     const logs = path.join(this.jobDir(r.id), '*.log');
     for (const s of specs) {
@@ -1193,7 +1196,7 @@ export class Runner {
           if (found) throw new Error(`names Justin's checkout (${found}); not run`);
           // In the lab slice, like the job: a metrics command is the job's code, under the job's budget.
           const res = this.sys.runInSlice(cmd, cwd, 300_000);
-          if (res.code !== 0) throw new Error(`exit ${res.code}: ${res.stderr.trim().split('\n').at(-1)}`);
+          if (res.code !== 0) throw new Error(`exit ${res.code}: ${stderrGist(res.stderr)}`);
           const v = JSON.parse(res.stdout.trim()) as unknown;
           place(s.name, typeof v === 'number' ? v : flatten(v), out);
         } else {
@@ -1203,6 +1206,7 @@ export class Runner {
         }
       } catch (e) {
         out.metrics_errors = (typeof out.metrics_errors === 'number' ? out.metrics_errors : 0) + 1;
+        errors.push(`metrics: ${s.line}\n  ${(e as Error).message}`);
         this.sys.log(`${r.id}: metrics "${s.line}": ${(e as Error).message}`);
       }
     }
@@ -1214,8 +1218,11 @@ export class Runner {
   private internalStep(r: JobRun, job: JobFile, step: Step): void {
     const cwd = this.cwdOf(r, job);
     if (step.kind === 'pilot-checks') {
-      const m = { ...this.metricsOf([...job.metrics, ...(job.pilot?.metrics ?? [])], cwd, r), ...this.runnerFacts(r) };
+      const errors: string[] = [];
+      const m = { ...this.metricsOf([...job.metrics, ...(job.pilot?.metrics ?? [])], cwd, r, errors), ...this.runnerFacts(r) };
       r.metrics = m;
+      if (errors.length) this.writeOut(r, 'pilot-metrics-errors.txt', `${errors.join('\n')}\n`);
+      else fs.rmSync(path.join(this.jobDir(r.id), 'out', 'pilot-metrics-errors.txt'), { force: true });
       const verdicts = (job.pilot?.checks ?? []).map((c) => evaluate(c, m));
       this.writeOut(r, 'pilot-metrics.json', `${JSON.stringify(m, null, 1)}\n`);
       this.writeOut(r, 'pilot-checks.txt', verdictText(verdicts));
@@ -1235,8 +1242,11 @@ export class Runner {
       return;
     }
     if (step.kind === 'final-checks') {
-      const m = { ...this.metricsOf([...job.metrics, ...(job.commands?.metrics ?? [])], cwd, r), ...this.runnerFacts(r) };
+      const errors: string[] = [];
+      const m = { ...this.metricsOf([...job.metrics, ...(job.commands?.metrics ?? [])], cwd, r, errors), ...this.runnerFacts(r) };
       r.metrics = m;
+      if (errors.length) this.writeOut(r, 'metrics-errors.txt', `${errors.join('\n')}\n`);
+      else fs.rmSync(path.join(this.jobDir(r.id), 'out', 'metrics-errors.txt'), { force: true });
       const verdicts = (job.commands?.checks ?? []).map((c) => evaluate(c, m));
       this.writeOut(r, 'metrics.json', `${JSON.stringify(m, null, 1)}\n`);
       this.writeOut(r, 'checks.txt', verdictText(verdicts));
@@ -1912,6 +1922,17 @@ if [ -n "$cg" ] && [ -r "/sys/fs/cgroup$cg/memory.events" ]; then grep '^oom_kil
 printf '%s\\n' "$rc" > ${q(`${rc}.part`)} && mv ${q(`${rc}.part`)} ${q(rc)}
 exit "$rc"
 `;
+}
+
+/**
+ * What a failed metrics command said, in one line (D393): node's own fatal line ("FATAL ERROR: ... JavaScript
+ * heap out of memory") or an error's line when there is one, else the last line.  A crash's last lines are a
+ * native stack ("10: 0x19c77d1 [node]", J085), which names nothing.
+ */
+export function stderrGist(stderr: string): string {
+  const ls = stderr.split('\n').map((l) => l.trim()).filter(Boolean);
+  const said = ls.find((l) => /FATAL ERROR|out of memory|^\w*Error\b|Error:/.test(l)) ?? ls.at(-1) ?? '';
+  return said.length > 300 ? `${said.slice(0, 300)}...` : said;
 }
 
 /** Bytes under a path (files' sizes, symlinks not followed); 0 when it is gone. */

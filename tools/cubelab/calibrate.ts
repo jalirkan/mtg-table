@@ -59,8 +59,47 @@ export function readBatch(dir: string): Batch {
   const cf = path.join(dir, 'cards.json');
   const cards = (fs.existsSync(cf) ? JSON.parse(fs.readFileSync(cf, 'utf8')) : {}) as Record<string, CardInfo>;
   const jl = path.join(dir, 'drafts.jsonl');
-  const recs = fs.existsSync(jl) ? fs.readFileSync(jl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const recs: DraftRecord[] = [];
+  if (fs.existsSync(jl)) readDraftLines(jl, (r) => { recs.push(r); });
   return { dir, meta, cards, recs };
+}
+
+/**
+ * Every complete line of a drafts.jsonl, parsed, read in chunks with its strings shared (D393).
+ * A batch of 8,400 drafts is 130+ MB of JSON, mostly the same 180 card names over and over: read
+ * whole and parsed as is, two batches needed more heap than the runner's 2 GB metrics slice gives
+ * node (J085's `--flat` metric died there).  Here no copy of the whole file is ever held, and
+ * every string value is one shared copy, so the records cost a fraction of the heap.  A torn last
+ * line (a run still writing) is left out, like the runner's own readers.
+ */
+export function readDraftLines(file: string, each: (r: DraftRecord) => void, chunkBytes = 8 << 20): void {
+  const pool = new Map<string, string>();
+  const intern = (_k: string, v: unknown): unknown => {
+    if (typeof v !== 'string') return v;
+    const had = pool.get(v);
+    if (had !== undefined) return had;
+    pool.set(v, v);
+    return v;
+  };
+  const fd = fs.openSync(file, 'r');
+  try {
+    const buf = Buffer.alloc(chunkBytes);
+    let rest = Buffer.alloc(0);
+    for (;;) {
+      const n = fs.readSync(fd, buf, 0, buf.length, null);
+      if (n === 0) break;
+      const chunk = rest.length ? Buffer.concat([rest, buf.subarray(0, n)]) : buf.subarray(0, n);
+      let start = 0;
+      for (let nl = chunk.indexOf(10, start); nl >= 0; nl = chunk.indexOf(10, start)) {
+        const line = chunk.toString('utf8', start, nl).trim();
+        if (line) each(JSON.parse(line, intern) as DraftRecord);
+        start = nl + 1;
+      }
+      rest = Buffer.from(chunk.subarray(start));
+    }
+  } finally {
+    fs.closeSync(fd);
+  }
 }
 
 export interface Tally { wins: number; games: number }

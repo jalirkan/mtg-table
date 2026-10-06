@@ -44,7 +44,7 @@ import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { followupMessage, ledgerCheckLines, ledgerEntry, ledgerKeys, ledgerMarkdown, ledgerWarnings, withMessages } from '../../tools/runner/ledger.ts';
 import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubelabQueue, draftStats, eachCompleteLine, expandGlob, ladder, lines, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
 import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
-import { blockSha, DEFAULT_CONFIG, GIT_GATE_EVERY_MS, GIT_GATE_MAX_MS, PREPARE_RETRY_WINDOW_MS, prepareRetryDelay, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, transientGitFailure, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { blockSha, DEFAULT_CONFIG, GIT_GATE_EVERY_MS, GIT_GATE_MAX_MS, PREPARE_RETRY_WINDOW_MS, prepareRetryDelay, publicSignature, Runner, stderrGist, THREAD_CAP_VARS, threadCaps, transientGitFailure, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
@@ -1580,6 +1580,59 @@ test('runner: the thread cap is the step\'s width (max_workers: 1, a 7-worker bl
   assert.ok(started.length >= 3 && started.every((u) => u.env.OMP_NUM_THREADS === '1'), started.map((u) => `${u.unit} ${u.env.OMP_NUM_THREADS}`).join(', '));
   assert.match(fs.readFileSync(path.join(r.jobDir('J070'), 'run2.log'), 'utf8'), /1 worker\(s\), 1 core\(s\), BLAS\/OpenMP threads 1/);
 });
+test('runner: the light lane\'s var/ is lane 1\'s too, as a heavy lane\'s (D392: J088 found no var/cubelab in mtg-table-light)', () => {
+  // J080 (heavy, lane 1) writes the lab data; J081 (light, after: J080) reads it from its own clone, mtg-table-light.
+  const LIGHT = (id: string, cpu: string, after: string, pilot: string) => `id: ${id}\ntitle: t\ncpu: ${cpu}\n${after}repos: mtg-table@main\nest: ~1 min\nresumable: yes\nmetrics: n = lines var/cubelab/queue-quarantine-n3/q.txt\n\n## Pilot\n\`\`\`bash\n${pilot}\n\`\`\`\ncheck: n == 1\n\n## Commands\n\`\`\`bash\ntest -d var/cubelab/queue-quarantine-n3\n\`\`\`\n`;
+  const w = world({
+    'J080-a.md': LIGHT('J080', 'heavy', '', 'mkdir -p var/cubelab/queue-quarantine-n3\necho q > var/cubelab/queue-quarantine-n3/q.txt'),
+    'J081-b.md': LIGHT('J081', 'light', 'after: J080\n', 'test -d var/cubelab/queue-quarantine-n3'),
+  });
+  const r = new Runner(w.cfg, w.sys);
+  const light = r.checkout('mtg-table', 'light');
+  // The PC's light clone predates this: a var/ of its own, without cubelab/.  It is moved aside, never deleted.
+  fs.mkdirSync(w.cfg.labRoot, { recursive: true });
+  git(w.cfg.labRoot, 'clone', '--quiet', w.mtg, light);
+  fs.mkdirSync(path.join(light, 'var', 'old'), { recursive: true });
+  r.reconcile();
+  w.sys.mode = 'run';
+  r.tick();
+  assert.equal(r.runs.get('J080')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  r.tick();
+  assert.equal(r.runs.get('J081')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.equal(w.sys.started.find((u) => u.unit === 'lab-J081-prepare')?.env.MTG_TABLE, light);
+  assert.ok(fs.lstatSync(path.join(light, 'var')).isSymbolicLink());
+  assert.equal(fs.readlinkSync(path.join(light, 'var')), path.join(w.cfg.labRoot, 'mtg-table', 'var'));
+  assert.ok(fs.readdirSync(light).some((f) => f.startsWith('.var-before-lane-') && fs.existsSync(path.join(light, f, 'old'))));
+  assert.equal(git(light, 'status', '--porcelain', '--untracked-files=no'), '');
+  // Lane 1's own checkout keeps a real directory: the link is never made there.
+  assert.ok(fs.lstatSync(path.join(r.checkout('mtg-table', 'heavy'), 'var')).isDirectory());
+  assert.match(fs.readFileSync(path.join(r.jobDir('J081'), 'prepare.sh'), 'utf8'), /ln -s .*mtg-table\/var' var/);
+});
+
+test('runner: a metrics command that crashes leaves metrics-errors.txt in results, naming node\'s fatal line, not its native stack (D393, J085)', () => {
+  const CRASH = NEW_JOB.replace('id: J010', 'id: J082')
+    .replace('echo "{\\"w\\": $JOBS, \\"p\\": {workers}}" > var/w.json', `echo "{\\"w\\": $JOBS, \\"p\\": {workers}}" > var/w.json
+printf 'echo "<--- Last few GCs --->" >&2\\necho "FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory" >&2\\necho " 9: 0xcf9cdb  [node]" >&2\\necho "10: 0x19c77d1  [node]" >&2\\nexit 1\\n' > var/crash.sh`)
+    .replace('metrics: final = sh: cat var/w.json', 'metrics: final = sh: cat var/w.json\nmetrics: c = sh: bash var/crash.sh')
+    .replace('check: final.w == final.p', 'check: final.w == final.p\ncheck: c.slices == 12');
+  const w = world({ 'J082-x.md': CRASH });
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  w.sys.mode = 'run';
+  r.tick();
+  const run = r.runs.get('J082')!;
+  assert.equal(run.outcome?.state, 'failed', w.sys.lines.join('\n'));
+  assert.match(run.outcome?.reason ?? '', /c\.slices is missing/);
+  const errs = show(w.mtg, 'pc-results:results/J082/metrics-errors.txt');
+  assert.match(errs, /^metrics: c = sh: bash var\/crash\.sh\n {2}exit 1: FATAL ERROR: Reached heap limit .*heap out of memory\n$/);
+  assert.equal(show(w.mtg, 'pc-results:results/J082/metrics.json').includes('"metrics_errors": 1'), true);
+  // The pilot's metrics all ran: no pilot-metrics-errors.txt.
+  assert.equal(show(w.mtg, 'pc-results:results/J082/pilot-metrics-errors.txt'), '');
+  assert.equal(stderrGist('one\n  two  \n'), 'two');
+  assert.equal(stderrGist('TypeError: x is not a function\n    at y (z.ts:1:1)\n'), 'TypeError: x is not a function');
+  assert.equal(stderrGist(''), '');
+});
+
 test('runner: a restart adopts a running unit, resumes a resumable step, restarts a non-resumable job (clean: moved aside)', () => {
   const NONRES = NEW_JOB.replace('id: J010', 'id: J021').replace('resumable: yes', 'resumable: no\nclean: var/out*');
   const w = world({ 'J020-x.md': NEW_JOB.replace('id: J010', 'id: J020'), 'J021-y.md': NONRES.replace('cpu: heavy', 'cpu: light') });
