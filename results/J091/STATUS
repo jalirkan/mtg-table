@@ -1,6 +1,6 @@
 running
 runner: forgecoach-runner 8b3d2cb
 started: 2026-10-05T22:04:04-04:00
-phase: pilot 1/1
+phase: commands 1/1
 mtg-table: a2480d7
-workers: 1
+workers: 1 (sized 1: min(cores 7, memory 10, max_workers 1); peak 1.00 GB per worker (declared), budget 12.4 GB)
