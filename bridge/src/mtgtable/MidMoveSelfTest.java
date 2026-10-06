@@ -85,6 +85,16 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *       the log); and the last frame has the Oracle in exile.</li>
  *   <li><b>The valve:</b> a {@link MidMove} asked about a stale game more than
  *       {@link MidMove#MAX_HELD} times in a row stops holding.</li>
+ *   <li><b>D399, the other window -- a reveal briefly missing:</b> seat 1 is
+ *       now the viewer, the Oracle stays in play, and Forge re-runs its
+ *       statics ({@code GameAction.checkStaticAbilities}); a subscriber
+ *       flushes the forwarder on the first event fired while the view tracker
+ *       is frozen (the Oracle's own {@code AdjustLandPlays} static, through
+ *       {@code Player.addMaxLandPlays}).  Control: a bare {@link Snap#state}
+ *       at that cut has the Oracle on the battlefield and seat 1's own top
+ *       card NOT in {@code library.cards} (night 3's game 354, the checker's
+ *       M55).  The fix: the flush was held ({@link MidMove#heldFrozen}) and
+ *       every frame of that log lists exactly the top card.</li>
  * </ol>
  *
  * <p>Usage: {@code ./bridge/run.sh mtgtable.MidMoveSelfTest <scratch dir>} --
@@ -166,6 +176,41 @@ public final class MidMoveSelfTest {
         expect("no frame shows seat 1's top card once the Oracle has left (" + leaks + " leak(s))", leaks == 0);
         expect("the mid-move flush was held (" + (ids[3] - heldBefore) + ")", ids[3] > heldBefore);
         expect("the held events reached the log: the Oracle's zone event to exile", zoneEvent);
+
+        // 5. D399: the reveal missing inside a tracker freeze.
+        final File frozenLog = new File(dir, "midupdate.jsonl");
+        final int[] fz = new int[4];                // oracle, top card, cuts while frozen, frozen holds after
+        final String[] fzCut = new String[1];
+        final int frozenBefore = MidMove.heldFrozen();
+        onGameThread(() -> runFrozen(frozenLog, fz, fzCut));
+        expect("D399: a flush was cut inside the tracker freeze (" + fz[2] + ")", fz[2] >= 1);
+        if (fzCut[0] != null) {
+            final Map<?, ?> s = (Map<?, ?>) Json.parse(fzCut[0]);
+            expect("D399 control: at the cut the Oracle is still on seat 1's battlefield", onBattlefield(s, 1, fz[0]));
+            expect("D399 control: at the cut a bare Snap.state leaves seat 1's own revealed top card out of "
+                    + "library.cards " + libraryIds(s, 1) + " -- night 3's M55", !libraryIds(s, 1).contains((long) fz[1]));
+        } else {
+            expect("D399 control: a frame was built at the cut", false);
+        }
+        final List<Map<?, ?>> fstates = new ArrayList<>();
+        for (final String line : Files.readAllLines(frozenLog.toPath(), StandardCharsets.UTF_8)) {
+            final Map<?, ?> f = (Map<?, ?>) Json.parse(line);
+            if ("state".equals(f.get("type"))) {
+                fstates.add((Map<?, ?>) f.get("body"));
+            }
+        }
+        expect("D399: the log has at least two state frames (" + fstates.size() + ")", fstates.size() >= 2);
+        int missing = 0;
+        for (int i = 0; i < fstates.size(); i++) {
+            final Map<?, ?> s = fstates.get(i);
+            if (!onBattlefield(s, 1, fz[0]) || !libraryIds(s, 1).equals(List.of((long) fz[1]))) {
+                missing++;
+                System.out.println("  D399: state frame " + i + ": library.cards " + libraryIds(s, 1));
+            }
+        }
+        expect("D399: every frame has the Oracle in play and exactly its top card in seat 1's library.cards ("
+                + missing + " without)", missing == 0);
+        expect("D399: the flush inside the freeze was held (" + (fz[3] - frozenBefore) + ")", fz[3] > frozenBefore);
 
         // 4. The valve, on a game left stale on purpose.
         expect("valve: the stale game counted as stale", valve[0] > 0);
@@ -259,6 +304,63 @@ public final class MidMoveSelfTest {
             held += mm.hold(stale) ? 1 : 0;
         }
         valve[0] = MidMove.revealStale(stale) ? held : 0;
+    }
+
+    /**
+     * D399, on the game thread: seat 1 (the Oracle's controller) is the viewer;
+     * Forge re-runs its statics with the Oracle in play, and the forwarder is
+     * flushed on the first event that arrives while the view tracker is frozen.
+     */
+    private static void runFrozen(final File logFile, final int[] ids, final String[] atCut) {
+        final Game game = position();
+        final Player me = game.getPlayers().get(1);
+        final PlayerView viewer = me.getView();
+        Card oracle = null;
+        for (final Card c : me.getCardsIn(ZoneType.Battlefield)) {
+            if (ORACLE.equals(c.getName())) {
+                oracle = c;
+            }
+        }
+        if (oracle == null) {
+            throw new IllegalStateException("the position has no " + ORACLE + " on seat 1's battlefield");
+        }
+        ids[0] = oracle.getId();
+        ids[1] = me.getCardsIn(ZoneType.Library).get(0).getId();
+        final GameLog log;
+        try {
+            log = new GameLog(logFile, false);
+        } catch (final java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+        log.header(new JsonOut().obj().n("v", GameLog.PROTOCOL_VERSION).n("kind", "session")
+                .n("gameId", "midupdate-selftest").end().done());
+        final RecordMatch.SpectatorGui gui =
+                new RecordMatch.SpectatorGui("midupdate-selftest", game, game.getView(), viewer, log, false);
+        gui.setGameView(null);
+        gui.setGameView(game.getView());
+        gui.openView(new TrackableCollection<>(viewer));
+        final GameEventForwarder forwarder = new GameEventForwarder(gui);
+        game.subscribeToEvents(forwarder);
+        // After the forwarder: the event is in the batch it flushes (the 50-event or 500 ms flush, landed on it).
+        game.subscribeToEvents(new Object() {
+            @Subscribe
+            public void receive(final GameEvent ev) {
+                if (MidMove.midUpdate(game) && ids[2]++ == 0) {
+                    atCut[0] = Snap.state("midupdate-selftest", game.getView(), viewer, List.of());
+                    forwarder.flush();
+                }
+            }
+        });
+        gui.snapshot(List.of());                   // control frame: the Oracle in play, its top card shown
+        game.getAction().checkStaticAbilities();
+        forwarder.flush();
+        gui.snapshot(List.of());
+        ids[3] = MidMove.heldFrozen();
+        try {
+            log.close();
+        } catch (final java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /** Seat 1 controls Oracle of Mul Daya; three cards in its library; seat 0's main phase. */

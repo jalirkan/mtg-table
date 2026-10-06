@@ -69,45 +69,122 @@ import forge.game.zone.ZoneType;
  * on stderr -- so a mistake here costs a few merged frames once, never a board
  * that stops updating.
  *
+ * <p><b>D399: never snapshot inside a tracker freeze either.</b>  The opposite
+ * window: a "may look" reveal whose source is still in play is briefly
+ * <em>missing</em>.  {@code GameAction.checkStaticAbilities} freezes the
+ * view tracker, clears every static effect ({@code StaticEffects
+ * .clearStaticEffects} -> {@code Card.removeMayLookAt}: the top card's
+ * {@code PlayerMayLook} empties at once, the property ignores the freeze),
+ * then re-applies the statics layer by layer -- and an earlier static can fire
+ * a game event before the {@code MayLookAt} one is back.  Oracle of Mul Daya
+ * does it to itself: its first static, {@code AdjustLandPlays$ 1}, runs
+ * {@code Player.addMaxLandPlays}, which fires {@code GameEventPlayerStatsChanged}
+ * before the second static re-reveals the top card.  Forge runs
+ * {@code checkStaticAbilities} constantly (every zone change, every state-based
+ * check, and the AI's own look-ahead: {@code AiController.chooseBestLandToPlay}
+ * -> {@code ReplacementHandler.getReplacementList}), so the forwarder's 50-event
+ * batch often fills on exactly that event, and the frame shows the seat's own
+ * revealed top card gone (the PC lab's night 3, game 354 g1 seat 1: card 99 in
+ * and out of {@code library.cards} frame by frame, and a decision offering
+ * {@code land:99} pointing at a frame without it -- the checker's M55).  A
+ * frozen tracker is the one sign Forge gives that its views are mid-update:
+ * properties that respect the freeze are still the old ones while the rest are
+ * new, so no frame built then is a position.  {@link #midUpdate} says so, and
+ * {@link #hold} keeps such a flush for the next one, with a valve of its own
+ * ({@link #MAX_HELD_FROZEN}).
+ *
  * <p>Game thread only: it reads the live {@link Game} (hard rule 3), which is
  * why it lives here and not in {@link Snap}, which walks views alone.
  */
 public final class MidMove {
 
-    /** Consecutive flushes one hook may hold before it gives up until the next clean flush. */
+    /** Consecutive flushes one hook may hold for a stale reveal before it gives up until the next clean flush. */
     static final int MAX_HELD = 8;
+    /**
+     * D399: the same valve for flushes cut inside a tracker freeze.  Larger,
+     * because Forge fires most of a busy turn's events from inside freezes
+     * (each static re-check fires one or two per land-play static, and the AI
+     * re-checks statics in its look-ahead), so many flushes in a row can land
+     * in one; the run ends at the next flush outside a freeze -- a phase
+     * boundary, a decision's flush -- which ships everything held.
+     */
+    static final int MAX_HELD_FROZEN = 256;
+    /** The longest run of frozen holds seen, this process. */
+    private static final AtomicInteger MAX_FROZEN_RUN = new AtomicInteger();
 
     /** How many flushes were held, this process (the self-test reads it). */
     private static final AtomicInteger HELD = new AtomicInteger();
+    /** Of those, how many because the tracker was frozen (D399). */
+    private static final AtomicInteger HELD_FROZEN = new AtomicInteger();
 
-    /** This hook's consecutive holds. */
+    /** This hook's consecutive holds: for a stale reveal, and inside a freeze. */
     private int run;
+    private int frozenRun;
     /** The valve tripped: hold nothing until {@link #revealStale} is false again. */
     private boolean gaveUp;
 
-    /** Game thread only: should this flush be kept for the next one?  Counts the hold. */
+    /** Game thread only: should this flush be kept for the next one (D352's stale reveal, D399's freeze)?  Counts the hold. */
     public boolean hold(final Game game) {
-        if (game == null || game.isGameOver() || !revealStale(game)) {
+        if (game == null || game.isGameOver()) {
             run = 0;
+            frozenRun = 0;
+            gaveUp = false;
+            return false;
+        }
+        final boolean frozen = midUpdate(game);
+        if (!frozen && !revealStale(game)) {
+            run = 0;
+            frozenRun = 0;
             gaveUp = false;
             return false;
         }
         if (gaveUp) {
             return false;
         }
-        if (run >= MAX_HELD) {
+        if (frozen ? frozenRun >= MAX_HELD_FROZEN : run >= MAX_HELD) {
             gaveUp = true;
             run = 0;
-            System.err.println("MID-MOVE HOLD GAVE UP: " + MAX_HELD + " flushes in a row held and the "
-                    + "\"may look\" effect is still stale; frames go out again (D352)");
+            frozenRun = 0;
+            System.err.println("MID-MOVE HOLD GAVE UP: " + (frozen ? MAX_HELD_FROZEN : MAX_HELD)
+                    + " flushes in a row held and "
+                    + (frozen ? "the view tracker is still frozen" : "the \"may look\" effect is still stale")
+                    + "; frames go out again (D352, D399)");
             return false;
         }
-        run++;
+        if (frozen) {
+            frozenRun++;
+            MAX_FROZEN_RUN.accumulateAndGet(frozenRun, Math::max);
+            HELD_FROZEN.incrementAndGet();
+        } else {
+            run++;
+        }
         if (HELD.incrementAndGet() <= 20) {
-            System.err.println("MID-MOVE FLUSH HELD: a \"may look\" effect outlives its source; "
-                    + "the frame waits for checkStaticAbilities (D352)");
+            System.err.println(frozen
+                    ? "MID-UPDATE FLUSH HELD: cut inside a tracker freeze (checkStaticAbilities); "
+                            + "the frame waits for the views to settle (D399)"
+                    : "MID-MOVE FLUSH HELD: a \"may look\" effect outlives its source; "
+                            + "the frame waits for checkStaticAbilities (D352)");
         }
         return true;
+    }
+
+    /** The longest run of consecutive frozen holds one hook has made, this process (D399). */
+    public static int maxFrozenRun() {
+        return MAX_FROZEN_RUN.get();
+    }
+
+    /** Flushes held so far in this process because the tracker was frozen (D399). */
+    public static int heldFrozen() {
+        return HELD_FROZEN.get();
+    }
+
+    /**
+     * D399: true while Forge is inside a view-tracker freeze --
+     * {@code checkStaticAbilities}, {@code checkStateEffects}, and a few
+     * effects' own bodies -- when the views are half updated.
+     */
+    public static boolean midUpdate(final Game game) {
+        return game.getTracker() != null && game.getTracker().isFrozen();
     }
 
     /** Flushes held so far in this process. */
