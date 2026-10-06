@@ -196,3 +196,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J086/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table ef7e73f
 - follow-up: jobs/J081-gate2-v2.md: on pc-jobs with after: on this job; the runner starts it
+
+## J088 FAILED: Collect the messages of night 3's still-quarantined recordings (the one M55 failure and the stray non-recording file), so a person can judge night 4's stop row
+
+- finished: 2026-10-05T20:05:57-04:00
+- decides: (no decides: line in the job file)
+- hypothesis: -
+- rule: (no rule: line in the job file)
+- outcome: failed (pilot: step pilot1 exited 1)
+- headline: gz 0
+- summary: results/J088/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table a2480d7
