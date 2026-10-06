@@ -44,7 +44,7 @@ import { parseJobFile, parseRepos } from '../../tools/runner/jobfile.ts';
 import { followupMessage, ledgerCheckLines, ledgerEntry, ledgerKeys, ledgerMarkdown, ledgerWarnings, withMessages } from '../../tools/runner/ledger.ts';
 import { aibench, CHUNK_BYTES, coachbench, completeLines, count, cubelab, cubelabQueue, draftStats, eachCompleteLine, expandGlob, ladder, lines, progressOf, rateAndEta } from '../../tools/runner/metrics.ts';
 import { legacyAibench, legacyCount, legacyCubelabQueue, legacyLines } from './lab-runner-legacy-metrics.ts';
-import { blockSha, DEFAULT_CONFIG, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, type RunnerConfig } from '../../tools/runner/runner.ts';
+import { blockSha, DEFAULT_CONFIG, GIT_GATE_EVERY_MS, GIT_GATE_MAX_MS, PREPARE_RETRY_WINDOW_MS, prepareRetryDelay, publicSignature, Runner, THREAD_CAP_VARS, threadCaps, transientGitFailure, type RunnerConfig } from '../../tools/runner/runner.ts';
 import { answer, originAllowed, serveStatus, type StatusSource } from '../../tools/runner/serve.ts';
 import { formatStatus, parseStatus, reservationOf, schedule, widthOf, type Holding, type MachineBudget, type Status } from '../../tools/runner/schedule.ts';
 import { budget, sizeWorkers, sliceUnit, systemdRunArgs, unitName, type UnitSpec } from '../../tools/runner/sizing.ts';
@@ -927,7 +927,15 @@ class FakeSys implements Sys {
   }
   machine() { return { memTotalGb: 30, physicalCores: 8, threads: 16 }; }
   host(): HostSample { return { at: this.t, load1: 1, memTotalGb: 30, memUsedGb: 10, swapUsedMb: 0, some10: this.some10, pswpin: 0 }; }
+  /** D391: the next this-many prepares fail as git did at boot: "could not read Username", exit 128 (the script is not run). */
+  prepareGitFails = 0;
   exec(u: UnitSpec): void {
+    if (u.unit.endsWith('-prepare') && this.prepareGitFails > 0) {
+      this.prepareGitFails--;
+      fs.appendFileSync(u.log, "fatal: could not read Username for 'https://github.com': No such device or address\n");
+      fs.writeFileSync(`${u.script}.rc`, '128\n');
+      return;
+    }
     spawnSync('bash', [`${u.script}.wrap`], { cwd: u.cwd, env: { ...process.env, ...u.env }, stdio: ['ignore', fs.openSync(u.log, 'a'), fs.openSync(u.log, 'a')] });
   }
   startUnit(u: UnitSpec) {
@@ -1057,6 +1065,109 @@ test('runner: a new-format job runs pilot, checks, sized commands, final checks 
   // Justin's checkout paths in a job are rewritten to the lab's.
   r.cfg.homeRepos['mtg-table'] = '/home/justin-a/code/mtg-table';
   assert.equal(r.substitute('cd /home/justin-a/code/mtg-table && ls ~/code/mtg-table/var /home/justin-a/code/mtg-table-main', run), `cd ${r.checkout('mtg-table', 'heavy')} && ls ${r.checkout('mtg-table', 'heavy')}/var /home/justin-a/code/mtg-table-main`);
+});
+
+const BOOT_GIT = "fatal: could not read Username for 'https://github.com': No such device or address";
+
+test('D391: transient git failures are recognised only on exit 128; the retry delays grow to 2 minutes', () => {
+  assert.equal(transientGitFailure(128, `lab: cloning\n${BOOT_GIT}\n`), BOOT_GIT);
+  assert.match(transientGitFailure(128, "fatal: unable to access 'https://github.com/jalirkan/mtg-table/': Could not resolve host: github.com") ?? '', /Could not resolve host/);
+  assert.match(transientGitFailure(128, 'ssh: Could not resolve hostname github.com: Temporary failure in name resolution') ?? '', /resolve hostname/);
+  assert.equal(transientGitFailure(1, BOOT_GIT), null, 'only git\'s exit code 128');
+  assert.equal(transientGitFailure(128, "fatal: invalid reference: c/no-such-branch"), null, 'a missing ref is not the network');
+  assert.equal(transientGitFailure(2, 'javac: error'), null);
+  assert.deepEqual([1, 2, 3, 4, 5, 9].map(prepareRetryDelay), [15_000, 30_000, 60_000, 120_000, 120_000, 120_000]);
+});
+
+test('D391: a prepare that git cannot finish at boot is retried with backoff, and the job then runs', () => {
+  const w = world({ 'J090-x.md': NEW_JOB.replace('id: J010', 'id: J090') });
+  w.sys.prepareGitFails = 2;
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  const run = r.runs.get('J090')!;
+  assert.equal(run.outcome, null, 'not failed');
+  assert.equal(run.prepareRetry?.attempts, 1);
+  assert.match(run.prepareRetry?.last ?? '', /could not read Username/);
+  assert.match(show(w.mtg, 'pc-results:results/J090/STATUS') || run.pendingStatus || '', /^running\n[\s\S]*prepare_retry: 1/);
+  w.sys.t += 10_000;
+  r.tick();                                                      // 15 s not up: nothing started
+  assert.equal(w.sys.started.filter((u) => u.unit === 'lab-J090-prepare').length, 1);
+  w.sys.t += 5_000;
+  r.tick();                                                      // retry 1 fails too: next in 30 s
+  assert.equal(run.prepareRetry?.attempts, 2);
+  w.sys.t += 30_000;
+  r.tick();                                                      // retry 2 passes; the job runs to the end
+  assert.equal(r.runs.get('J090')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.equal(run.prepareRetry, null);
+  assert.deepEqual(w.sys.started.map((u) => u.unit), ['lab-J090-prepare', 'lab-J090-prepare', 'lab-J090-prepare', 'lab-J090-pilot1', 'lab-J090-run1']);
+  assert.ok(w.sys.lines.some((l) => /J090: prepare passed after 2 retries/.test(l)));
+});
+
+test('D391: a prepare git still cannot finish after the window fails the job; any other prepare failure fails at once', () => {
+  const w = world({ 'J091-x.md': NEW_JOB.replace('id: J010', 'id: J091') });
+  w.sys.prepareGitFails = 1000;
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  const run = r.runs.get('J091')!;
+  for (let i = 0; i < 100 && !run.outcome; i++) { w.sys.t += 15_000; r.tick(); }
+  assert.equal(run.outcome?.state, 'failed');
+  assert.match(run.outcome?.reason ?? '', /^prepare: step prepare exited 128 after \d+ retries over 10 min: git could not reach the remote \(fatal: could not read Username/);
+  const prepares = w.sys.started.filter((u) => u.unit === 'lab-J091-prepare').length;
+  assert.ok(prepares >= 6 && prepares <= 10, `${prepares} prepares in ${PREPARE_RETRY_WINDOW_MS / 60_000} min`);
+  assert.match(show(w.mtg, 'pc-results:results/J091/failure.txt'), /git could not reach the remote for 10 min/);
+  // git's exit 128 for a ref that does not exist is not the network: failed at once, no retry.
+  const w2 = world({ 'J092-x.md': NEW_JOB.replace('id: J010', 'id: J092').replace('repos: mtg-table@main', 'repos: mtg-table@c/no-such-branch') });
+  const r2 = new Runner(w2.cfg, w2.sys);
+  r2.reconcile();
+  r2.tick();
+  assert.equal(r2.runs.get('J092')?.outcome?.reason, 'prepare: step prepare exited 128');
+  assert.equal(w2.sys.started.filter((u) => u.unit === 'lab-J092-prepare').length, 1);
+  // A retry whose own failure is not the network fails at once, though the log still holds the boot's line.
+  const w3 = world({ 'J095-x.md': NEW_JOB.replace('id: J010', 'id: J095').replace('repos: mtg-table@main', 'repos: mtg-table@c/no-such-branch') });
+  w3.sys.prepareGitFails = 1;
+  const r3 = new Runner(w3.cfg, w3.sys);
+  r3.reconcile();
+  r3.tick();
+  assert.equal(r3.runs.get('J095')?.prepareRetry?.attempts, 1);
+  w3.sys.t += 15_000;
+  r3.tick();
+  assert.equal(r3.runs.get('J095')?.outcome?.reason, 'prepare: step prepare exited 128');
+  assert.equal(w3.sys.started.filter((u) => u.unit === 'lab-J095-prepare').length, 2);
+});
+
+test('D391: after the runner starts, no job is admitted until git ls-remote reaches the remote (at most 10 minutes)', () => {
+  const w = world({ 'J093-x.md': NEW_JOB.replace('id: J010', 'id: J093') });
+  // A first run makes the queue's clone; the runner then restarts with git not ready.
+  new Runner(w.cfg, w.sys).reconcile();
+  w.sys.gitFails.add('ls-remote');
+  const r = new Runner(w.cfg, w.sys);
+  r.reconcile();
+  r.tick();
+  assert.equal(r.runs.get('J093'), undefined, 'not started');
+  assert.equal(r.blocked[0]?.id, 'J093');
+  assert.match(r.blocked[0]?.reason ?? '', /waiting for git/);
+  assert.ok(w.sys.lines.some((l) => /git: ls-remote failed \(exit 128\)/.test(l)));
+  w.sys.gitFails.delete('ls-remote');
+  w.sys.t += GIT_GATE_EVERY_MS - 1;
+  r.tick();                                                      // not asked again yet
+  assert.equal(r.runs.get('J093'), undefined);
+  w.sys.t += 1;
+  r.tick();
+  assert.equal(r.runs.get('J093')?.outcome?.state, 'done', w.sys.lines.join('\n'));
+  assert.ok(w.sys.lines.some((l) => /git: the remote answers/.test(l)));
+  // A remote that never answers holds admissions for GIT_GATE_MAX_MS, no longer.
+  const w2 = world({ 'J094-x.md': NEW_JOB.replace('id: J010', 'id: J094') });
+  new Runner(w2.cfg, w2.sys).reconcile();
+  w2.sys.gitFails.add('ls-remote');
+  const r2 = new Runner(w2.cfg, w2.sys);
+  r2.reconcile();
+  for (let t = 0; t < GIT_GATE_MAX_MS; t += 60_000) { r2.tick(); w2.sys.t += 60_000; }
+  assert.equal(r2.runs.get('J094'), undefined, 'held for the whole window');
+  r2.tick();
+  assert.equal(r2.runs.get('J094')?.outcome?.state, 'done');
+  assert.ok(w2.sys.lines.some((l) => /still does not answer 10 min after the start; admitting jobs/.test(l)));
 });
 
 const OLD_JOB = `id: J011
