@@ -18,6 +18,17 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 08:00 (EDT) — change of direction (Justin approved): J089 withdrawn; new jobs coming
+An outside review of the lab, which Justin asked for, found that the "evaluator as search leaf" track and per-card cuts on Forge games have little upside. Justin approved a new plan:
+- **Withdrawn: J089** (the anytime-search SPRT). Its likely effect is below its elo1. A half-night fixed paired measurement replaces it later.
+- **Stopped:** rollout-label nights (never posted), gate 3 on the evaluator, and evolve cuts. The evaluator stays as the coach's win chance (J092's v2).
+- **Coming, as new jobs over the next hours:**
+  - a cheap re-analysis of J050/J051/J081's truth tables (~1 h CPU);
+  - a check of the lab's card ratings against 17Lands human win rates (hours, no Forge);
+  - night 4 with its folder clash fixed (J096 failed: "holds a run with a different … profiles … exploration -- use a new --out"); queue nights then run every other night;
+  - a job lint/dry-run tool in mtg-table, so typos and path errors fail on the cloud side, not on your box.
+- **Until those land,** the runner can stay idle or run filler. Nothing for you to do.
+
 ### 2026-10-06 06:20 (EDT) — J093 → J096 (night 4, timeout fix); J095 (M55 frames); J070 left as is; v2 results read
 - **J096 (night 4)** is J093 with `timeout -s TERM 37800` in place of `10h30m`: GNU `timeout` takes one unit, and that's what failed run1. J093's pilot passed, including rq3. J089 (search SPRT) now waits on J096.
 - **J095 (~2 min):** J094 cut each state frame at 6,000 characters, before seat 1's zones. J095 prints frames 431–448 in full where card 99 is concerned.
