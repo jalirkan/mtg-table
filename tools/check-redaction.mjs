@@ -2458,8 +2458,8 @@ const EXPLORE_RULES = ['random', 'closeCall'];
 const EXPLORE_SUMMARY_KEYS = new Set(['decisionsRandomised', 'changed', 'closeCalls', 'closeCallsChanged', 'coins', 'failures', 'byKind']);
 const PLAY_EXPLORE_HEADER = { epsilon: 'number', closeCall: 'number', opening: 'boolean' };
 const SEARCH_KEYS = new Set(['options', 'forge', 'best', 'rounds', 'playouts', 'ms', 'budgetMs', 'timedOut',
-  'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z']);
-const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win']);
+  'overrode', 'fallback', 'horizon', 'rule', 'margin', 'stat', 'z', 'generated']);
+const SEARCH_OPTION_KEYS = new Set(['token', 'n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior']);
 const SEARCH_RULES = ['margin', 'lcb'];
 const SUMMARY_KEYS = new Set(['seat', 'written', 'searched', 'errors', 'recordMs', 'buildMs', 'byKind', 'byPolicy', 'forced', 'explore']);
 const FALLBACKS = [null, 'budget', 'copyError', 'unmappable', 'rolloutErrors', 'invalidAtEnd'];
@@ -2566,10 +2566,11 @@ function auditDecisions(aiLines, stateAt, stateOrder, header, isClientLog) {
       for (const k of Object.keys(sb ?? {})) if (!SEARCH_KEYS.has(k)) bad(lineNo, `decision ${b.n} search carries an unexpected key "${k}"`);
       if (!FALLBACKS.includes(sb?.fallback)) bad(lineNo, `decision ${b.n} search fallback ${JSON.stringify(sb?.fallback)}`);
       if (sb?.rule !== undefined && !SEARCH_RULES.includes(sb.rule)) bad(lineNo, `decision ${b.n} search rule ${JSON.stringify(sb.rule)}`);
+      if (sb?.generated !== undefined && !(Number.isInteger(sb.generated) && sb.generated > 0)) bad(lineNo, `decision ${b.n} search generated ${JSON.stringify(sb.generated)}`);
       for (const o of sb?.options ?? []) {
         for (const k of Object.keys(o)) if (!SEARCH_OPTION_KEYS.has(k)) bad(lineNo, `decision ${b.n} search option carries "${k}"`);
         checkToken(o.token, 'search option');
-        for (const k of ['n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win']) if (o[k] !== undefined && o[k] !== null && typeof o[k] !== 'number') bad(lineNo, `decision ${b.n} search option ${k} is not a number`);
+        for (const k of ['n', 'meanLeaf', 'se', 'diff', 'seDiff', 'win', 'prior']) if (o[k] !== undefined && o[k] !== null && typeof o[k] !== 'number') bad(lineNo, `decision ${b.n} search option ${k} is not a number`);
       }
     }
     // D3: the state it was taken in, and what that state shows the viewer.

@@ -18,7 +18,10 @@
  */
 package mtgtable.ai;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,6 +50,7 @@ import forge.game.spellability.AbilitySub;
 import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
 import forge.util.MyRandom;
+import mtgtable.eval.PositionEvaluator;
 
 /**
  * The determinized rollout search (D312), roadmap step 2
@@ -74,6 +78,14 @@ import forge.util.MyRandom;
  * Anything else -- a copy that
  * throws, a candidate that cannot be mapped into the copy, a budget too short
  * for the rounds -- is Forge's answer, counted.
+ *
+ * <p>Week 3's switches (D388–D390, each off by default): {@code anytime=1}
+ * ({@link #searchAnytime}: partial rounds kept, pruning to the budget, racing,
+ * a verdict on whatever paired evidence exists); {@code rank=prior}
+ * ({@link #rank}: generate up to {@code gen}, keep the best {@code cands} by
+ * the position after each is applied once); {@code rollout=outlets|both}
+ * (D310's outlet policy inside the copies, {@link RolloutController.Outlets}).
+ * With all three off the search is D312's, rollout for rollout.
  *
  * <p>Threads and randomness: everything runs on the calling game thread
  * (Forge's own AI eval threads aside, as in any default decision); no hop, no
@@ -115,6 +127,22 @@ public final class SearchPolicy {
         this.sink = sink;
         this.rng = new Random(cfg.seed != 0 ? cfg.seed : System.nanoTime());
         this.leafEval = cfg.leafModel == null ? null : evaluator(cfg.leafModel);
+        this.priorEval = cfg.rankPrior && "eval".equals(cfg.prior) ? loadEvaluator(cfg.evalModel, sink) : null;
+    }
+
+    /** D389's learned prior (D316's evaluator), or null: the leaf is the prior. */
+    private final PositionEvaluator priorEval;
+
+    private static PositionEvaluator loadEvaluator(final String model, final Sink sink) {
+        try {
+            return PositionEvaluator.load(Path.of(model));
+        } catch (final IOException | RuntimeException e) {
+            // A missing or unusable model is not a reason to stop playing: the
+            // leaf ranks instead, and the count says so.
+            sink.add("search.prior.evalUnavailable", 1);
+            sink.event("search prior=eval: " + model + " unusable, ranking by the leaf (" + e.getMessage() + ")");
+            return null;
+        }
     }
 
     // ---- D354: the learned evaluator at the leaves (leaf=eval:<model.json>) ----
@@ -176,7 +204,7 @@ public final class SearchPolicy {
         }
 
         /** Set the copy up so the rollout starts with this choice; throw if it cannot be mapped. */
-        abstract void install(LenientGameCopier cp, Game copy, Player aiCopy, RolloutController rc);
+        abstract void install(LenientGameCopier cp, Game copy, Player aiCopy, RolloutForcing rc);
     }
 
     /** Play {@code sa} (its targets and choices as set on the original) first; null = pass priority. */
@@ -237,7 +265,12 @@ public final class SearchPolicy {
         public String kind;
         /** The candidates, Forge's own first (index 0). */
         public List<Cand> cands = new ArrayList<>();
-        /** Per candidate: complete rounds it was scored in (every candidate shares them: CRN). */
+        /**
+         * Per candidate: the rounds it was scored in.  Every candidate shares
+         * them (CRN) unless {@code anytime=1} cut a round short, pruned it or
+         * retired it (D388): then each counts its own, and its paired
+         * difference to Forge's answer is over the rounds both were scored in.
+         */
         public int[] n = new int[0];
         public double[] meanLeaf = new double[0];
         /** Standard error of the mean leaf over rounds (NaN below two rounds). */
@@ -271,6 +304,20 @@ public final class SearchPolicy {
         public boolean overrode;
         /** The statistic the rule compared with the margin: the mean difference, or its lower bound. */
         public double stat = Double.NaN;
+        /**
+         * D389 ({@code rank=prior}): per candidate, the prior that ranked it --
+         * the leaf (or the learned evaluator's logit times {@link #LEAF_SCALE})
+         * of the position after it was applied once -- NaN when not scored
+         * (Forge's own answer and "pass" are kept unranked and never scored; a
+         * candidate the prior's time share did not reach); and how many
+         * candidates were generated before the cut (0 = no ranking ran).
+         */
+        public double[] prior = new double[0];
+        public int generated;
+        /** D388: the anytime search ran; candidates it pruned to the budget, and retired by racing. */
+        public boolean anytime;
+        public int pruned;
+        public int retired;
 
         /**
          * The override rule (D312; D350's noise-aware variant).  {@code margin}:
@@ -297,7 +344,13 @@ public final class SearchPolicy {
             return rep.stat > cfg.margin ? best : 0;
         }
 
-        /** Means, standard errors and paired differences to candidate 0 over the complete rounds. */
+        /**
+         * Means, standard errors and paired differences to candidate 0.  A NaN
+         * leaf is a rollout that was not played (D388's partial rounds, pruned or
+         * retired candidates): each mean is over that candidate's own rounds and
+         * each difference over the rounds both it and Forge's answer were scored
+         * in.  On complete rounds (no NaN) this is D350's computation exactly.
+         */
         public static void fillStats(final Report rep, final List<double[]> leaves, final List<double[]> wins, final int k) {
             final int r = leaves.size();
             rep.rounds = r;
@@ -308,28 +361,44 @@ public final class SearchPolicy {
             rep.seDiff = new double[k];
             rep.win = new double[k];
             for (int i = 0; i < k; i++) {
-                rep.n[i] = r;
                 double m = 0;
                 double d = 0;
                 double w = 0;
+                int n = 0;
+                int nd = 0;
                 for (int j = 0; j < r; j++) {
-                    m += leaves.get(j)[i];
-                    d += leaves.get(j)[i] - leaves.get(j)[0];
+                    final double x = leaves.get(j)[i];
+                    if (Double.isNaN(x)) {
+                        continue;
+                    }
+                    n++;
+                    m += x;
                     w += wins.isEmpty() ? 0 : wins.get(j)[i];
+                    if (!Double.isNaN(leaves.get(j)[0])) {
+                        nd++;
+                        d += x - leaves.get(j)[0];
+                    }
                 }
-                m = r == 0 ? Double.NaN : m / r;
-                d = r == 0 ? Double.NaN : d / r;
+                m = n == 0 ? Double.NaN : m / n;
+                d = nd == 0 ? Double.NaN : d / nd;
                 double sm = 0;
                 double sd = 0;
                 for (int j = 0; j < r; j++) {
-                    sm += Math.pow(leaves.get(j)[i] - m, 2);
-                    sd += Math.pow(leaves.get(j)[i] - leaves.get(j)[0] - d, 2);
+                    final double x = leaves.get(j)[i];
+                    if (Double.isNaN(x)) {
+                        continue;
+                    }
+                    sm += Math.pow(x - m, 2);
+                    if (!Double.isNaN(leaves.get(j)[0])) {
+                        sd += Math.pow(x - leaves.get(j)[0] - d, 2);
+                    }
                 }
+                rep.n[i] = n;
                 rep.meanLeaf[i] = m;
                 rep.diffLeaf[i] = d;
-                rep.seLeaf[i] = r > 1 ? Math.sqrt(sm / (r - 1) / r) : Double.NaN;
-                rep.seDiff[i] = r > 1 ? Math.sqrt(sd / (r - 1) / r) : Double.NaN;
-                rep.win[i] = r == 0 || wins.isEmpty() ? Double.NaN : w / r;
+                rep.seLeaf[i] = n > 1 ? Math.sqrt(sm / (n - 1) / n) : Double.NaN;
+                rep.seDiff[i] = nd > 1 ? Math.sqrt(sd / (nd - 1) / nd) : Double.NaN;
+                rep.win[i] = n == 0 || wins.isEmpty() ? Double.NaN : w / n;
             }
         }
 
@@ -341,6 +410,12 @@ public final class SearchPolicy {
             for (int i = 0; i < meanLeaf.length; i++) {
                 sb.append(i == 0 ? "" : "; ").append(i == 0 ? "forge " : "").append(String.format(Locale.ROOT,
                         "%.0f+-%.0f (d %.0f+-%.0f)", meanLeaf[i], seLeaf[i], diffLeaf[i], seDiff[i]));
+            }
+            if (generated > 0) {
+                sb.append(String.format(Locale.ROOT, ", ranked %d of %d by prior", meanLeaf.length, generated));
+            }
+            if (anytime) {
+                sb.append(String.format(Locale.ROOT, ", anytime: %d pruned, %d retired", pruned, retired));
             }
             sb.append(fallback != null ? ", fallback " + fallback : overrode ? ", overrode with " + best : ", kept Forge's");
             return sb.toString();
@@ -424,11 +499,12 @@ public final class SearchPolicy {
             cands.add(priorityCand(null));
         }
         for (final SpellAbility sa : alts) {
-            if (cands.size() >= cfg.maxCandidates) {
+            if (cands.size() >= genLimit()) {
                 break;
             }
             cands.add(priorityCand(sa));
         }
+        rank(ai, cands, "p", forgeSa != null ? 2 : 1, t0);
         sink.add("search.p.considered", 1);
         final Outcome o = search(ai, cands, "p", t0);
         if (o == null || o.chosen <= 0) {
@@ -458,7 +534,7 @@ public final class SearchPolicy {
         }
 
         @Override
-        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutController rc) {
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
             final SpellAbility mapped = sa == null ? null : mapSa(cp, sa, aiCopy);
             rc.forcePriority(mapped);
             final PhaseHandler ph = copy.getPhaseHandler();
@@ -473,7 +549,7 @@ public final class SearchPolicy {
         }
 
         @Override
-        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutController rc) {
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
             final PhaseHandler ph = copy.getPhaseHandler();
             ph.setPriority(aiCopy);
             ph.onStackResolved();   // as PriorityCand: this seat has priority now, and answers it as Forge would
@@ -688,7 +764,7 @@ public final class SearchPolicy {
         // Keep only legal declarations (checked on the real combat, then Forge's restored).
         final List<Cand> cands = new ArrayList<>();
         for (final Map<Card, GameEntity> m : configs) {
-            if (cands.size() >= cfg.maxCandidates) {
+            if (cands.size() >= genLimit()) {
                 break;
             }
             if (cands.isEmpty() || legalAttack(combat, m)) {
@@ -699,6 +775,7 @@ public final class SearchPolicy {
         if (cands.size() < 2) {
             return;
         }
+        rank(ai, cands, "a", 1, t0);
         sink.add("search.a.considered", 1);
         final Outcome o = search(ai, cands, "a", t0);
         if (o == null || o.chosen <= 0) {
@@ -759,7 +836,7 @@ public final class SearchPolicy {
         }
 
         @Override
-        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutController rc) {
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
             final Map<Card, GameEntity> mapped = new LinkedHashMap<>();
             for (final Map.Entry<Card, GameEntity> e : attack.entrySet()) {
                 mapped.put((Card) cp.find(e.getKey()), (GameEntity) cp.find(e.getValue()));
@@ -818,7 +895,7 @@ public final class SearchPolicy {
         }
         final List<Cand> cands = new ArrayList<>();
         for (final Map<Card, Card> m : configs) {
-            if (cands.size() >= cfg.maxCandidates) {
+            if (cands.size() >= genLimit()) {
                 break;
             }
             if (cands.isEmpty() || legalBlock(combat, ai, m)) {
@@ -829,6 +906,7 @@ public final class SearchPolicy {
         if (cands.size() < 2) {
             return;
         }
+        rank(ai, cands, "b", 1, t0);
         sink.add("search.b.considered", 1);
         final Outcome o = search(ai, cands, "b", t0);
         if (o == null || o.chosen <= 0) {
@@ -885,7 +963,7 @@ public final class SearchPolicy {
         }
 
         @Override
-        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutController rc) {
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
             final Map<Card, Card> mapped = new LinkedHashMap<>();
             for (final Map.Entry<Card, Card> e : block.entrySet()) {
                 mapped.put((Card) cp.find(e.getKey()), (Card) cp.find(e.getValue()));
@@ -911,6 +989,102 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
+    // The prior (D389)
+    // ==================================================================
+
+    /** How many candidates to generate: {@code gen} under {@code rank=prior}, else the {@code cands} cut itself. */
+    private int genLimit() {
+        return cfg.rankPrior ? cfg.generate : cfg.maxCandidates;
+    }
+
+    /** The prior's share of the budget: candidates it has not reached by then rank after the scored ones. */
+    static final double PRIOR_SHARE = 0.3;
+
+    /** Priors for the next {@link #search}'s report, keyed by candidate, and how many were generated. */
+    private Map<Cand, Double> pendingPrior;
+    private int pendingGenerated;
+
+    /**
+     * {@code rank=prior}: when more than {@code cands} candidates were
+     * generated, apply each once -- one copy per candidate, every one on the
+     * SAME determinization and engine seed, played only until the candidate
+     * has resolved ({@link RolloutForcing#applied}: a spell off the stack, a
+     * combat's damage dealt) -- score the position (the leaf, or D316's
+     * evaluator), and keep the first {@code keep} (Forge's own answer, and
+     * "pass") plus the best of the rest by that score, up to {@code cands}.
+     * The prior gets {@link #PRIOR_SHARE} of the budget; a candidate it does
+     * not reach ranks after the scored ones in enumeration order, and one that
+     * cannot be mapped or throws is dropped.  Edits {@code cands} in place.
+     */
+    private void rank(final Player ai, final List<Cand> cands, final String kind, final int keep, final long t0) {
+        pendingPrior = null;
+        pendingGenerated = 0;
+        if (!cfg.rankPrior || cands.size() <= cfg.maxCandidates) {
+            return;
+        }
+        final long tp = System.nanoTime();
+        final long deadline = t0 + (long) (cfg.budgetMs * PRIOR_SHARE * 1_000_000L);
+        final long seed = rng.nextLong();
+        final Map<Cand, Double> prior = new java.util.IdentityHashMap<>();
+        final List<Cand> drop = new ArrayList<>();
+        final Limits lim = new Limits(deadline, 0, 2_000, cfg.untapped, cfg.oracle, cfg.rolloutOutletsUs(),
+                cfg.rolloutOutletsThem(), true, priorEval == null ? null : (g, p) -> priorEval.logit(g, p) * LEAF_SCALE, leafEval);
+        int scored = 0;
+        for (int i = keep; i < cands.size(); i++) {
+            if (System.nanoTime() > deadline) {
+                sink.add("search.prior.timedOut", 1);
+                break;
+            }
+            try {
+                final Playout p = playout(ai.getGame(), ai, cands.get(i), seed, lim, sink, false, failCopyForTest);
+                if (p == null) {
+                    sink.add("search.prior.timedOut", 1);
+                    break;
+                }
+                prior.put(cands.get(i), p.leaf);
+                scored++;
+            } catch (final CopyFailed e) {
+                // The search's own first copy will most likely fail the same way and
+                // fall back; rank nothing, but never search more than `cands`.
+                while (cands.size() > cfg.maxCandidates) {
+                    cands.remove(cands.size() - 1);
+                }
+                return;
+            } catch (final RuntimeException | StackOverflowError e) {
+                drop.add(cands.get(i));
+                sink.add("search.prior.errors", 1);
+            }
+        }
+        final int generated = cands.size();
+        final List<Cand> head = new ArrayList<>(cands.subList(0, keep));
+        final List<Cand> rest = new ArrayList<>(cands.subList(keep, cands.size()));
+        rest.removeAll(drop);
+        // Stable: scored candidates by prior (best first), then the unscored in enumeration order.
+        rest.sort((a, b) -> {
+            final Double pa = prior.get(a);
+            final Double pb = prior.get(b);
+            if (pa == null || pb == null) {
+                return pa == null ? (pb == null ? 0 : 1) : -1;
+            }
+            return Double.compare(pb, pa);
+        });
+        cands.clear();
+        cands.addAll(head);
+        for (final Cand c : rest) {
+            if (cands.size() >= cfg.maxCandidates) {
+                break;
+            }
+            cands.add(c);
+        }
+        sink.add("search.prior.ranked", 1);
+        sink.add("search.prior.playouts", scored);
+        sink.add("search.prior.cut", generated - cands.size());
+        sink.add("search.prior.us", (int) ((System.nanoTime() - tp) / 1000L));
+        pendingPrior = prior;
+        pendingGenerated = generated;
+    }
+
+    // ==================================================================
     // The search
     // ==================================================================
 
@@ -922,7 +1096,26 @@ public final class SearchPolicy {
         }
     }
 
+    /** The ranking's priors, aligned with {@code cands}, into the report (D389). */
+    private void attachPrior(final Report rep, final List<Cand> cands) {
+        rep.prior = new double[cands.size()];
+        Arrays.fill(rep.prior, Double.NaN);
+        if (pendingPrior == null) {
+            return;
+        }
+        rep.generated = pendingGenerated;
+        for (int i = 0; i < cands.size(); i++) {
+            final Double v = pendingPrior.get(cands.get(i));
+            if (v != null) {
+                rep.prior[i] = v;
+            }
+        }
+    }
+
     private Outcome search(final Player ai, final List<Cand> cands, final String kind, final long t0) {
+        if (cfg.anytime) {
+            return searchAnytime(ai, cands, kind, t0);
+        }
         final long deadline = t0 + cfg.budgetMs * 1_000_000L;
         final Game game = ai.getGame();
         final int k = cands.size();
@@ -941,6 +1134,7 @@ public final class SearchPolicy {
         rep.z = cfg.lcb ? cfg.z : 0;
         rep.margin = cfg.margin;
         rep.leaves = leaves;
+        attachPrior(rep, cands);
         if (Determinizer.hiddenFaceDown(game, ai) > 0) {
             sink.add("search.oppFaceDownDecisions", 1);
         }
@@ -1036,6 +1230,206 @@ public final class SearchPolicy {
         return o;
     }
 
+    // ==================================================================
+    // The anytime search (D388)
+    // ==================================================================
+
+    /**
+     * D312's search under {@code anytime=1}: the same candidates, rollouts,
+     * common random numbers and override rule, but it never throws away work
+     * and it spends the budget where it informs.
+     *
+     * <ul>
+     * <li>Round 0 plays Forge's answer, then the rest in the order they came
+     *     (the prior's, under {@code rank=prior}); later rounds play Forge's,
+     *     then the others best-first, so a round the deadline cuts short has
+     *     scored the candidates that matter.  A cut round keeps the rollouts it
+     *     finished.</li>
+     * <li>Before each later round, the measured time per rollout says how many
+     *     candidates the time left can carry to {@code rounds} rounds; the
+     *     worst by their paired difference to Forge's answer are pruned to fit
+     *     (never Forge's, never below two).</li>
+     * <li>From {@link Anytime#RACE_FROM} paired rounds, a candidate whose paired
+     *     difference to the current leader is below zero by {@link Anytime#RACE_Z}
+     *     standard errors is retired.  The search stops early when only Forge's
+     *     answer is left.</li>
+     * <li>The verdict: the best candidate is the one with the highest paired
+     *     difference to Forge's answer among those with the most evidence (at
+     *     least {@code rounds} paired rounds when any has that many, else as
+     *     many as the best-covered); the override rule then decides as always
+     *     ({@code margin}, or {@code lcb} over its paired rounds).  Forge's
+     *     answer is kept without a verdict ({@code fallback: budget}) only when
+     *     no alternative was scored against it at all.</li>
+     * </ul>
+     */
+    private Outcome searchAnytime(final Player ai, final List<Cand> cands, final String kind, final long t0) {
+        final long deadline = t0 + cfg.budgetMs * 1_000_000L;
+        final Game game = ai.getGame();
+        final int k = cands.size();
+        final int horizon = cfg.horizonFor(kind);
+        final List<double[]> leaves = new ArrayList<>();
+        final List<double[]> wins = new ArrayList<>();
+        final boolean[] active = new boolean[k];
+        Arrays.fill(active, true);
+        final int[] errs = new int[k];
+        int errors = 0;
+        int complete = 0;
+        long rolloutNs = 0;
+        int timed = 0;
+        final Report rep = new Report();
+        report = rep;
+        rep.kind = kind;
+        rep.cands = new ArrayList<>(cands);
+        rep.budgetMs = cfg.budgetMs;
+        rep.horizon = horizon;
+        rep.rule = cfg.lcb ? "lcb" : "margin";
+        rep.z = cfg.lcb ? cfg.z : 0;
+        rep.margin = cfg.margin;
+        rep.leaves = leaves;
+        rep.anytime = true;
+        attachPrior(rep, cands);
+        if (Determinizer.hiddenFaceDown(game, ai) > 0) {
+            sink.add("search.oppFaceDownDecisions", 1);
+        }
+        try {
+            rounds:
+            while (System.nanoTime() < deadline && complete < cfg.maxRounds) {
+                final int r = leaves.size();
+                if (r > 0 && timed > 0) {
+                    final int cut = Anytime.pruneToBudget(active, leaves, rolloutNs / timed, deadline, r, cfg.minRounds);
+                    if (cut > 0) {
+                        rep.pruned += cut;
+                        sink.add("search.anytime.pruned", cut);
+                    }
+                }
+                final long seed = rng.nextLong();
+                final double[] round = new double[k];
+                final double[] roundWin = new double[k];
+                Arrays.fill(round, Double.NaN);
+                Arrays.fill(roundWin, Double.NaN);
+                leaves.add(round);
+                wins.add(roundWin);
+                boolean full = true;
+                for (final int i : Anytime.order(active, leaves, r)) {
+                    final long tr = System.nanoTime();
+                    final Playout p;
+                    try {
+                        p = rollout(game, ai, cands.get(i), seed, deadline, r == 0 && i == 0, horizon);
+                    } catch (final CopyFailed e) {
+                        throw e;
+                    } catch (final CandidateUnmappable e) {
+                        if (i == 0) {
+                            sink.add("search.fallback.unmappable", 1);
+                            rep.fallback = "unmappable";
+                            return null;
+                        }
+                        sink.add("search.candidateUnmappable", 1);
+                        active[i] = false;   // the rest keep playing: no restart, no lost rounds
+                        continue;
+                    } catch (final RuntimeException | StackOverflowError e) {
+                        // A candidate that throws in its copies (a script the copy
+                        // cannot run) is retired on its second error; only Forge's
+                        // own answer erroring, or errors everywhere, ends the search.
+                        errors++;
+                        errs[i]++;
+                        sink.add("search.rolloutErrors", 1);
+                        if (errs[0] >= 3 || errors >= 3 * k) {
+                            sink.add("search.fallback.rolloutErrors", 1);
+                            rep.fallback = "rolloutErrors";
+                            return null;
+                        }
+                        if (i > 0 && errs[i] >= 2) {
+                            active[i] = false;
+                            sink.add("search.anytime.erroredOut", 1);
+                        } else {
+                            full = false;
+                        }
+                        continue;
+                    }
+                    if (p == null) {
+                        rep.timedOut = true;
+                        break rounds;   // out of time mid-round: the rollouts this round finished are kept
+                    }
+                    rolloutNs += System.nanoTime() - tr;
+                    timed++;
+                    sink.add("search.rollouts", 1);
+                    rep.playouts++;
+                    round[i] = p.leaf;
+                    roundWin[i] = winOf(p);
+                }
+                if (full) {
+                    complete++;
+                }
+                final int out = Anytime.race(active, leaves);
+                if (out > 0) {
+                    rep.retired += out;
+                    sink.add("search.anytime.retired", out);
+                }
+                if (Anytime.count(active) <= 1) {
+                    break;   // only Forge's answer is left: decided
+                }
+            }
+            if (complete < cfg.maxRounds && System.nanoTime() >= deadline) {
+                rep.timedOut = true;
+            }
+        } catch (final CopyFailed e) {
+            sink.add("search.fallback.copyError", 1);
+            sink.event("search " + kind + ": copy failed, Forge's answer: " + e.getCause());
+            rep.fallback = "copyError";
+            return null;
+        } finally {
+            sink.add("search." + kind + ".ms", (int) ((System.nanoTime() - t0) / 1_000_000L));
+            if (report == rep) {
+                // A round the deadline cut before its first rollout carries nothing.
+                while (!leaves.isEmpty() && Anytime.allNaN(leaves.get(leaves.size() - 1))) {
+                    leaves.remove(leaves.size() - 1);
+                    wins.remove(wins.size() - 1);
+                }
+                rep.ms = (System.nanoTime() - t0) / 1_000_000L;
+                Report.fillStats(rep, leaves, wins, k);
+                rep.rounds = complete;
+            }
+        }
+        sink.add("search.rounds", complete);
+        // The verdict on the evidence that exists.
+        // "No information" is about every alternative scored, raced out or not:
+        // racing every alternative away is a verdict (Forge's), not a fallback.
+        final boolean[] any = new boolean[k];
+        Arrays.fill(any, true);
+        final int most = Anytime.most(any, leaves);
+        if (most == 0 && Anytime.count(active) <= 1 && rep.n.length > 0 && rep.n[0] > 0) {
+            // Every alternative was unmappable: nothing to choose between (D312's
+            // path returns Forge's answer with no fallback label either).
+            sink.add("search.anytime.noAlternatives", 1);
+            return null;
+        }
+        if (most == 0) {
+            sink.add("search.fallback.budget", 1);
+            rep.fallback = "budget";
+            rep.chosen = 0;
+            return null;
+        }
+        final int best = Anytime.best(active, leaves, rep.diffLeaf, cfg.minRounds);
+        if (most < cfg.minRounds) {
+            sink.add("search.anytime.short", 1);   // decided on fewer rounds than `rounds`: D312 would have fallen back
+        }
+        final Outcome o = new Outcome();
+        o.rounds = complete;
+        o.mean = rep.meanLeaf.clone();
+        o.chosen = Report.verdict(cfg, rep, best, best == 0 ? most : Anytime.paired(leaves, best));
+        if (cfg.lcb) {
+            sink.add(o.chosen > 0 ? "search.lcb.overrode" : best > 0 && rep.diffLeaf[best] > cfg.margin
+                    ? "search.lcb.held" : "search.lcb.none", 1);
+        }
+        rep.best = best;
+        rep.chosen = o.chosen;
+        rep.overrode = o.chosen > 0;
+        if (REPORT_EVENTS) {
+            sink.event(rep.summary());
+        }
+        return o;
+    }
+
     /** A playout's win estimate: a finished copy 1 / 0 / 0.5, else σ(leaf / {@link #LEAF_SCALE}). */
     public static double winOf(final Playout p) {
         if (p.over) {
@@ -1080,8 +1474,8 @@ public final class SearchPolicy {
     /** One rollout: null if the deadline passed before its leaf. */
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
                             final boolean first, final int horizon) {
-        return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle, leafEval), sink, first,
-                failCopyForTest);
+        return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle,
+                cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null, leafEval), sink, first, failCopyForTest);
     }
 
     /** How far a {@link #playout} may run. */
@@ -1097,6 +1491,13 @@ public final class SearchPolicy {
         public final double untapped;
         /** Bench only: skip the determinization, so the copy keeps the real hidden cards (D350's oracle). */
         public final boolean oracle;
+        /** D390: the searching seat plays D310's outlet policy in the copy; and the other seat too. */
+        public final boolean outletsUs;
+        public final boolean outletsThem;
+        /** D389's prior: stop as soon as the candidate has been played out ({@link RolloutForcing#applied}). */
+        public final boolean untilApplied;
+        /** D389: score an unfinished copy with this instead of {@link #leaf} (the learned evaluator); null = the leaf. */
+        public final java.util.function.ToDoubleBiFunction<Game, Player> score;
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps) {
             this(deadline, horizonTurns, maxSteps, 1.0, false);
@@ -1112,11 +1513,22 @@ public final class SearchPolicy {
 
         public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
                       final boolean oracle, final mtgtable.eval.PositionEvaluator evaluator) {
+            this(deadline, horizonTurns, maxSteps, untapped, oracle, false, false, false, null, evaluator);
+        }
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
+                      final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
+                      final java.util.function.ToDoubleBiFunction<Game, Player> score,
+                      final mtgtable.eval.PositionEvaluator evaluator) {
             this.deadline = deadline;
             this.horizonTurns = horizonTurns;
             this.maxSteps = maxSteps;
             this.untapped = untapped;
             this.oracle = oracle;
+            this.outletsUs = outletsUs;
+            this.outletsThem = outletsThem;
+            this.untilApplied = untilApplied;
+            this.score = score;
             this.evaluator = evaluator;
         }
     }
@@ -1176,7 +1588,7 @@ public final class SearchPolicy {
             } finally {
                 COPYING.set(Boolean.FALSE);
             }
-            sink.add("search.copyUs", (int) ((System.nanoTime() - tc) / 1000L));
+            sink.add(lim.untilApplied ? "search.prior.copyUs" : "search.copyUs", (int) ((System.nanoTime() - tc) / 1000L));
             // Forge's own per-decision limit inside a rollout: 1 s, not 5 (an
             // eval that times out plays nothing, which a rollout survives).
             copy.AI_TIMEOUT = 1;
@@ -1185,11 +1597,20 @@ public final class SearchPolicy {
                 sink.add("search.standInCards", cp.unmapped());
             }
             final Player aiCopy = (Player) cp.find(ai);
-            RolloutController rc = null;
+            RolloutForcing rc = null;
             for (final Player p : copy.getPlayers()) {
                 if (p == aiCopy) {
-                    rc = new RolloutController(copy, p, p.getLobbyPlayer());
-                    p.dangerouslySetController(rc);
+                    if (lim.outletsUs) {
+                        final RolloutController.Outlets o = new RolloutController.Outlets(copy, p, p.getLobbyPlayer());
+                        rc = o;
+                        p.dangerouslySetController(o);
+                    } else {
+                        final RolloutController c = new RolloutController(copy, p, p.getLobbyPlayer());
+                        rc = c;
+                        p.dangerouslySetController(c);
+                    }
+                } else if (lim.outletsThem) {
+                    p.dangerouslySetController(new PolicyControllerAi(copy, p, p.getLobbyPlayer(), new OutletPolicy(true)));
                 } else {
                     p.dangerouslySetController(new PlayerControllerAi(copy, p, p.getLobbyPlayer()));
                 }
@@ -1215,16 +1636,19 @@ public final class SearchPolicy {
                 if ((steps & 7) == 0 && System.nanoTime() > lim.deadline) {
                     return null;
                 }
+                if (lim.untilApplied && rc.applied(copy)) {
+                    break;
+                }
                 ph.mainLoopStep();
                 steps++;
             }
             final boolean capped = steps >= lim.maxSteps;
-            if (capped) {
+            if (capped && !lim.untilApplied) {
                 sink.add("search.rolloutStepCap", 1);
             }
-            sink.add("search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
-            final double leaf = lim.evaluator != null && !copy.isGameOver()
-                    ? evalLeaf(lim.evaluator, copy, aiCopy)   // D354
+            sink.add(lim.untilApplied ? "search.prior.playUs" : "search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
+            final double leaf = lim.score != null && !copy.isGameOver() ? lim.score.applyAsDouble(copy, aiCopy)
+                    : lim.evaluator != null && !copy.isGameOver() ? evalLeaf(lim.evaluator, copy, aiCopy)   // D354
                     : leaf(copy, aiCopy, lim.untapped);
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {

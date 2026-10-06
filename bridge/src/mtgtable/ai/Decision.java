@@ -135,6 +135,9 @@ public final class Decision {
         public final List<Double> diffLeaf = new ArrayList<>();
         public final List<Double> seDiff = new ArrayList<>();
         public final List<Double> win = new ArrayList<>();
+        /** D389 ({@code rank=prior}): the prior that ranked each option (NaN: not scored), and how many were generated (0: no ranking). */
+        public final List<Double> prior = new ArrayList<>();
+        public int generated;
         /** The rollouts' horizon (turns past this one), and the override rule and its margin in leaf points. */
         public int horizon;
         public String rule = "margin";
@@ -216,7 +219,12 @@ public final class Decision {
                 o.obj().n("token", check(s.tokens.get(i))).n("n", (long) s.n.get(i))
                         .n("meanLeaf", round(s.meanLeaf.get(i), 1)).n("se", round(get(s.seLeaf, i), 1))
                         .n("diff", round(get(s.diffLeaf, i), 1)).n("seDiff", round(get(s.seDiff, i), 1))
-                        .n("win", round(s.win.get(i), 4)).end();
+                        .n("win", round(s.win.get(i), 4));
+                final double pr = get(s.prior, i);
+                if (!Double.isNaN(pr)) {
+                    o.n("prior", round(pr, 1));
+                }
+                o.end();
             }
             o.end();
             o.n("forge", s.forge).n("best", s.best).n("rounds", s.rounds).n("playouts", s.playouts)
@@ -224,6 +232,9 @@ public final class Decision {
                     .n("stat", round(s.stat, 1));
             if ("lcb".equals(s.rule)) {
                 o.n("z", s.z);
+            }
+            if (s.generated > 0) {
+                o.n("generated", s.generated);
             }
             o.n("ms", s.ms).n("budgetMs", s.budgetMs).n("timedOut", s.timedOut)
                     .n("overrode", s.overrode);

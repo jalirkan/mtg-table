@@ -316,5 +316,17 @@
     "level": "fail",
     "expect": "both \"playExplore\" and \"transport\"",
     "why": "amendment M57 / D358: a seat a person plays never explores"
+  },
+  {
+    "file": "m58-search-prior-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M58: a decision record whose search ranked its candidates by a prior -- the control for the m58 probe"
+  },
+  {
+    "file": "m58-generated-is-not-a-count.jsonl",
+    "level": "fail",
+    "expect": "search generated",
+    "why": "amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string"
   }
 ]

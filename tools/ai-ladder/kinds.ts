@@ -109,6 +109,11 @@ export const KINDS: Record<string, Kind> = {
       z: { type: 'enum', values: ['1', '1.645', '2'], default: '1', omitAtDefault: true, doc: "the lcb rule's multiplier" },
       untapped: { type: 'int', min: 0, max: 1000, default: 1, omitAtDefault: true, doc: "leaf points an untapped creature is worth over a tapped one (1 = Forge's CreatureEvaluator)" },
       oracle: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: 'TEST ONLY: rollouts keep the real hidden cards (an upper bound on inference); never live, never promoted' },
+      // D388–D390 (the engine review's week-3 search upgrades), each off by default and out of the hash while off.
+      anytime: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: 'D388: keep partial rounds, prune to the budget, race, decide on whatever paired evidence exists (fall back only with none)' },
+      rank: { type: 'enum', values: ['order', 'prior'], default: 'order', omitAtDefault: true, doc: "D389: order = the first `cands` in enumeration order; prior = generate `gen`, apply each once, keep the best `cands` by the leaf after it" },
+      gen: { type: 'int', min: 2, max: 64, default: 24, omitAtDefault: true, doc: 'D389: candidates generated before the prior keeps `cands` (rank=prior only; at least cands)' },
+      rollout: { type: 'enum', values: ['default', 'outlets', 'both'], default: 'default', omitAtDefault: true, doc: "D390: the rollouts' policy: plain Forge, D310's outlet policy for the searching seat, or for both seats" },
     },
     // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
     // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
@@ -121,6 +126,9 @@ export const KINDS: Record<string, Kind> = {
       if (p.override !== undefined) kv.push(`override=${p.override}`, `z=${p.z ?? '1'}`);
       if (p.untapped !== undefined) kv.push(`untapped=${p.untapped}`);
       if (p.oracle === 'on') kv.push('oracle=1');
+      if (p.anytime === 'on') kv.push('anytime=1');
+      if (p.rank === 'prior') kv.push('rank=prior', `gen=${p.gen ?? Math.max(24, Number(p.cands))}`);
+      if (p.rollout !== undefined) kv.push(`rollout=${p.rollout}`);
       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
     },
     available: (repo) => {

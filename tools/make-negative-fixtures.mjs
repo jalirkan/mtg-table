@@ -902,5 +902,26 @@ exploreProbe('m57-playexplore-in-a-seat-recording.jsonl',
   'both "playExplore" and "transport"',
   () => {}, { ...exploreHeader, transport: 'ws' });
 
+// Amendment M58 (D389): the search's prior in M55's search block -- `prior` per
+// option and `generated` -- a control that passes and one malformed probe.
+{
+  const fs = slice();
+  const b = withDecision(fs);
+  // Forge's own answer (options[0]) is never scored by the prior (M58).
+  if (b.search.options[1]) b.search.options[1].prior = 388;
+  b.search.generated = 9;
+  write('m58-search-prior-present.jsonl', fs);
+  manifest.push({
+    file: 'm58-search-prior-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M58: a decision record whose search ranked its candidates by a prior -- the control for the m58 probe',
+  });
+  console.log('  PASS  m58-search-prior-present.jsonl  (a ranked search, no defect)');
+}
+
+probe('m58-generated-is-not-a-count.jsonl',
+  'amendment M58 / D389: `generated` is how many candidates were generated -- a positive integer, never a string',
+  'search generated',
+  (fs) => { withDecision(fs).search.generated = 'nine'; });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

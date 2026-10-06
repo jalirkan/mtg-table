@@ -610,7 +610,9 @@ public final class Decisions {
             s.diffLeaf.add(at(r.diffLeaf, i));
             s.seDiff.add(at(r.seDiff, i));
             s.win.add(at(r.win, i));
+            s.prior.add(at(r.prior, i));
         }
+        s.generated = r.generated;
         s.horizon = r.horizon;
         s.rule = r.rule;
         s.margin = r.margin;

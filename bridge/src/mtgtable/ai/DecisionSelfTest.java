@@ -98,6 +98,13 @@ public final class DecisionSelfTest {
         check(((Map<?, ?>) so[1]).get("win") == null, "NaN written as null");
         check(Boolean.TRUE.equals(sm.get("timedOut")) && Boolean.TRUE.equals(sm.get("overrode")) && sm.get("fallback") == null,
                 "search flags");
+        check(!((Map<?, ?>) so[0]).containsKey("prior") && !sm.containsKey("generated"), "no ranking: no prior keys (M55 unchanged)");
+        s.prior.addAll(List.of(Double.NaN, 412.345));
+        s.generated = 9;
+        final Map<?, ?> sp = (Map<?, ?>) ((Map<?, ?>) Json.parse(d.toJson(0, 5, 17, 12))).get("search");
+        final Object[] po = (Object[]) sp.get("options");
+        check(!((Map<?, ?>) po[0]).containsKey("prior") && Double.valueOf(412.3).equals(((Map<?, ?>) po[1]).get("prior"))
+                && Long.valueOf(9).equals(sp.get("generated")), "M58: prior per scored option, generated (D389)");
 
         final Decision mull = new Decision("mulligan", 0, "NONE");
         mull.options.addAll(List.of("keep", "mulligan"));
@@ -130,12 +137,95 @@ public final class DecisionSelfTest {
         }
         check(badKind, "an unknown kind is refused");
 
+        searchWeek3();
         explore();
 
         System.out.println("decision selftest: " + checks + " check(s), " + failures + " failure(s)");
         if (failures > 0) {
             System.exit(1);
         }
+    }
+
+    /** D388–D390: the config switches, the NaN-aware statistics and the anytime schedule, on numbers. */
+    private static void searchWeek3() {
+        final SearchConfig def = SearchConfig.defaults();
+        check("ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab".equals(def.toString())
+                && !def.anytime && !def.rankPrior && "default".equals(def.rollout), "defaults print and behave as before");
+        final SearchConfig on = SearchConfig.parse("anytime=1,rank=prior,gen=12,cands=8,rollout=outlets");
+        check(on.anytime && on.rankPrior && on.generate == 12 && on.maxCandidates == 8 && on.rolloutOutletsUs()
+                && !on.rolloutOutletsThem(), "the week-3 switches parse");
+        check(SearchConfig.parse(on.toString()).toString().equals(on.toString()), "and round-trip: " + on);
+        check(SearchConfig.parse("rank=prior").generate == 24 && SearchConfig.parse("rank=prior,cands=30").generate == 30,
+                "gen defaults to max(24, cands)");
+        check(SearchConfig.parse("rollout=both").rolloutOutletsThem(), "rollout=both");
+        // Main's leaf switch (D354, leaf=eval:<model>) composes with them: withLeaf's copy keeps every week-3 field.
+        final SearchConfig both = SearchConfig.parse("anytime=1,rank=prior,gen=12,cands=8,rollout=both,leaf=eval:m.json");
+        check(both.anytime && both.rankPrior && both.generate == 12 && both.rolloutOutletsThem() && "m.json".equals(both.leafModel)
+                && SearchConfig.parse(both.toString()).toString().equals(both.toString()), "leaf=eval keeps the week-3 switches: " + both);
+        check(SearchConfig.parse("leaf=eval:m.json").toString().equals(def.toString() + ",leaf=eval:m.json")
+                && !SearchConfig.parse("leaf=eval:m.json").anytime, "leaf=eval alone leaves them off");
+        for (final String bad : List.of("rank=best", "rank=prior,gen=3", "prior=eval", "rollout=sometimes", "anytime=2")) {
+            boolean threw = false;
+            try {
+                SearchConfig.parse(bad);
+            } catch (final IllegalArgumentException e) {
+                threw = true;
+            }
+            check(threw, "refused: " + bad);
+        }
+
+        // fillStats: complete rounds give D350's numbers; NaN rounds are skipped per candidate.
+        final List<double[]> full = List.of(new double[] {100, 140, 90}, new double[] {120, 150, 80},
+                new double[] {110, 170, 100});
+        final SearchPolicy.Report rf = new SearchPolicy.Report();
+        SearchPolicy.Report.fillStats(rf, full, List.of(), 3);
+        check(rf.n[1] == 3 && Math.abs(rf.meanLeaf[1] - 153.333) < 0.01 && Math.abs(rf.diffLeaf[1] - 43.333) < 0.01
+                && Math.abs(rf.seDiff[1] - Math.sqrt((Math.pow(40 - 43.333, 2) + Math.pow(30 - 43.333, 2)
+                + Math.pow(60 - 43.333, 2)) / 2 / 3)) < 0.01, "fillStats on complete rounds");
+        final List<double[]> part = new ArrayList<>(full);
+        part.add(new double[] {130, Double.NaN, 70});
+        final SearchPolicy.Report rp = new SearchPolicy.Report();
+        SearchPolicy.Report.fillStats(rp, part, List.of(), 3);
+        check(rp.n[0] == 4 && rp.n[1] == 3 && rp.n[2] == 4 && Math.abs(rp.diffLeaf[1] - 43.333) < 0.01
+                && Math.abs(rp.diffLeaf[2] - (-10 - 40 - 10 - 60) / 4.0) < 0.01, "fillStats skips NaN per candidate");
+
+        // The anytime schedule.
+        final boolean[] act = {true, true, true, true};
+        final List<double[]> lv = new ArrayList<>();
+        for (int r = 0; r < 4; r++) {
+            lv.add(new double[] {100 + r, 160 + 3 * r, 40 - r, 101 + r});   // 1 clearly best, 2 clearly worst, 3 = Forge's
+        }
+        check(Anytime.order(act, lv, 2).equals(List.of(0, 1, 3, 2)), "later rounds: Forge's first, then best-first");
+        check(Anytime.order(act, lv, 0).equals(List.of(0, 1, 2, 3)), "round 0: as generated (the prior's order)");
+        final boolean[] raced = act.clone();
+        check(Anytime.race(raced, lv) == 2 && !raced[2] && !raced[3] && raced[0] && raced[1],
+                "racing retires what is clearly worse than the leader, never Forge's answer");
+        final List<double[]> noisy = new ArrayList<>();
+        for (int r = 0; r < 4; r++) {
+            noisy.add(new double[] {100, r % 2 == 0 ? 160 : 60, r % 2 == 0 ? 50 : 150});   // close and noisy
+        }
+        check(Anytime.race(new boolean[] {true, true, true}, noisy) == 0, "a close, noisy pair is not raced out");
+        check(Anytime.race(act.clone(), lv.subList(0, 2)) == 0, "no racing before " + Anytime.RACE_FROM + " rounds");
+        final boolean[] pr = act.clone();
+        check(Anytime.pruneTo(pr, lv, 2) == 2 && pr[0] && pr[1] && !pr[2] && !pr[3], "pruning keeps Forge's and the best");
+        check(Anytime.best(act, lv, rpDiff(lv, 4), 2) == 1, "verdict candidate: the best paired difference");
+        // Partial evidence: one round, candidate 1 never scored, 3 scored once.
+        final List<double[]> one = List.of(new double[] {100, Double.NaN, 90, 130});
+        check(Anytime.most(act, one) == 1 && Anytime.best(act, one, rpDiff(one, 4), 2) == 3,
+                "one round is evidence: best-so-far, not a fallback");
+        final List<double[]> none = List.of(new double[] {100, Double.NaN, Double.NaN, Double.NaN});
+        check(Anytime.most(act, none) == 0 && Anytime.best(act, none, rpDiff(none, 4), 2) == 0,
+                "no alternative scored: no evidence (the one fallback left)");
+        // An alternative with more rounds outranks a lucky one-round candidate.
+        final List<double[]> mixed = List.of(new double[] {100, 130, 300}, new double[] {100, 125, Double.NaN});
+        check(Anytime.best(new boolean[] {true, true, true}, mixed, rpDiff(mixed, 3), 2) == 1,
+                "the verdict prefers candidates with the rounds the config asks for");
+    }
+
+    private static double[] rpDiff(final List<double[]> leaves, final int k) {
+        final SearchPolicy.Report r = new SearchPolicy.Report();
+        SearchPolicy.Report.fillStats(r, leaves, List.of(), k);
+        return r.diffLeaf;
     }
 
     /** D358: play exploration's arithmetic, without the engine. */
