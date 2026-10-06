@@ -1,0 +1,69 @@
+# mtg-table — scripts/tunnel/config.yml.example
+# Copyright (C) 2026 mtg-table contributors.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The cloudflared config for playing with a friend over the internet (D405,
+# docs/cloudflare.md).  Copy it to ~/.cloudflared/config.yml and replace the four
+# placeholders: the tunnel's UUID (twice), your hostname (play.example.com, in
+# every rule), your Zero Trust team name, and the Access application's AUD tag.
+# Then run `./scripts/tunnel/tunnel-check.sh --local play.<yours>` -- it checks
+# this file against scripts/tunnel/policy.mjs, which is the allowlist; the rules
+# below must stay exactly the policy's (web/test/tunnel.test.ts holds the
+# template to it).
+#
+# WHAT GOES THROUGH: one hostname, and on it only the draft room's player
+# listener (127.0.0.1:8644: every /room/<id> route needs that seat's token; `/`
+# is ForgeCoach's public build) -- and, once Phase 2 lands, the game seat
+# (the commented block below).
+#
+# WHAT NEVER GOES THROUGH (tunnel-check.sh fails if a rule names them):
+#   8642  the bridge -- it trusts loopback, and cloudflared IS loopback
+#   8643  the coach helper -- /coach spends your Claude usage, /match and
+#         /engine/start restart the engine, /review returns your games
+#   5173  the Vite dev server -- your personal tier and recordings
+#   /observe on any port -- it is one seat's view: your hand
+#
+# Do not add `httpHostHeader` anywhere: the coach helper's Host check is what
+# refuses a tunnel that was pointed at it by mistake.
+
+tunnel: <TUNNEL-UUID>
+credentials-file: /home/justin-a/.cloudflared/<TUNNEL-UUID>.json
+
+# cloudflared itself checks the Cloudflare Access token on every request before
+# anything reaches 127.0.0.1 (the Cf-Access-Jwt-Assertion check of
+# docs/security/endpoints.md's change 4).  If the Access application is ever
+# deleted or its policy loosened by mistake, requests are refused here instead of
+# reaching the room.
+originRequest:
+  access:
+    required: true
+    teamName: your-team
+    audTag:
+      - <AUD-TAG>
+
+ingress:
+  # PLACEHOLDER: uncomment the three rule lines below only when Phase 2's table
+  # listener is merged and its port confirmed (docs/cloudflare.md, "The game seat").
+  # >>> GAME SEAT (Phase 2)
+  # - hostname: play.example.com
+  #   path: ^/ws$
+  #   service: http://127.0.0.1:8646
+  # <<< GAME SEAT
+
+  # Never through the tunnel: the coach helper's, the bridge's and the dev
+  # server's routes are answered 404 here, at the edge, whatever the rules below
+  # say.  (`ws` is shadowed by the GAME SEAT rule once that is uncommented.)
+  - hostname: play.example.com
+    path: ^/(coach|vision|match|engine|review|eval|observe|health|ws|api|personal|spectate|cards|fixtures)(/.*)?$
+    service: http_status:404
+  # Rooms are made on the coach helper only (POST /room on 8643, never tunnelled).
+  - hostname: play.example.com
+    path: ^/room/?$
+    service: http_status:404
+  # The draft room's player listener: /room/<id>[/events|/join|/pick] with the
+  # seat's X-Room-Token, and ForgeCoach's site at /.
+  - hostname: play.example.com
+    service: http://127.0.0.1:8644
+
+  # Anything else -- another hostname, a scanner -- is a 404.
+  - service: http_status:404
