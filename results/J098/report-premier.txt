@@ -1,0 +1,50 @@
+Human games: 17Lands public datasets (https://www.17lands.com/public_datasets), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); per-card counts derived from Powered Cube game data
+human games 266117 from game_data_public.Cube_-_Powered.PremierDraft.csv.gz
+overlap: cube 180, with lab power 180 (8 AI-limited, left out), in 17Lands 152, compared (>= 500 GIH games) 147, nonland 126, with meta 179
+Spearman power vs GIH WR, nonland: 0.295 [0.137, 0.439] (n 126); all cards 0.265 [0.120, 0.405] (n 147)
+  vs GP WR 0.138 [-0.040, 0.315] (n 126); vs IWD 0.301 [0.124, 0.451] (n 126); vs OH WR 0.226 [0.052, 0.388] (n 126)
+  meta win rate vs GIH WR 0.501 [0.370, 0.628] (n 126); power vs meta 0.344 [0.168, 0.503] (n 126)
+human split-half Spearman 0.884 (whole data, Spearman-Brown 0.938; n 126): the ceiling
+reading (D396): WEAK
+lab rates above humans (lab pct - human pct):
+  Batterskull                      C     power +0.116  GIH WR 0.520 (n 3204)  0.96 vs 0.14
+  Questing Beast                   G     power +0.098  GIH WR 0.533 (n 3287)  0.95 vs 0.22
+  Primeval Titan                   G     power +0.043  GIH WR 0.506 (n 3266)  0.78 vs 0.08
+  Courser of Kruphix               G     power +0.038  GIH WR 0.505 (n 2700)  0.77 vs 0.07
+  Kappa Cannoneer                  U     power +0.061  GIH WR 0.528 (n 5306)  0.87 vs 0.18
+  Kaldra Compleat                  C     power +0.026  GIH WR 0.505 (n 3033)  0.68 vs 0.06
+  Uro, Titan of Nature's Wrath     multi power +0.050  GIH WR 0.533 (n 4649)  0.83 vs 0.23
+  Craterhoof Behemoth              G     power +0.015  GIH WR 0.487 (n 2213)  0.62 vs 0.01
+  Nissa, Who Shakes the World      G     power +0.213  GIH WR 0.543 (n 3406)  0.99 vs 0.39
+  Sheoldred, the Apocalypse        B     power +0.226  GIH WR 0.552 (n 6537)  1.00 vs 0.47
+  Karn, Scion of Urza              C     power +0.069  GIH WR 0.542 (n 5207)  0.88 vs 0.38
+  Grist, the Hunger Tide           multi power +0.094  GIH WR 0.547 (n 3399)  0.93 vs 0.44
+  Myr Battlesphere                 C     power -0.004  GIH WR 0.501 (n 3782)  0.53 vs 0.04
+  Baleful Strix                    multi power +0.090  GIH WR 0.547 (n 6775)  0.92 vs 0.43
+  Retrofitter Foundry              C     power +0.131  GIH WR 0.555 (n 7714)  0.97 vs 0.53
+lab rates below humans:
+  Thraben Inspector                W     power -0.086  GIH WR 0.596 (n 8665)  0.08 vs 0.83
+  Skyclave Apparition              W     power -0.074  GIH WR 0.585 (n 7988)  0.10 vs 0.77
+  Solitude                         W     power -0.053  GIH WR 0.596 (n 9660)  0.17 vs 0.84
+  Mother of Runes                  W     power -0.038  GIH WR 0.600 (n 10856)  0.27 vs 0.89
+  Lightning Helix                  multi power -0.040  GIH WR 0.592 (n 7703)  0.26 vs 0.81
+  Thalia, Guardian of Thraben      W     power -0.062  GIH WR 0.571 (n 6726)  0.12 vs 0.65
+  Skullclamp                       C     power -0.090  GIH WR 0.564 (n 8438)  0.07 vs 0.58
+  Reanimate                        B     power -0.051  GIH WR 0.573 (n 7634)  0.19 vs 0.68
+  Containment Priest               W     power -0.091  GIH WR 0.556 (n 7427)  0.06 vs 0.54
+  Sol Ring                         C     power -0.007  GIH WR 0.617 (n 9165)  0.49 vs 0.96
+  Mox Emerald                      G     power -0.015  GIH WR 0.598 (n 9421)  0.44 vs 0.87
+  Phlage, Titan of Fire's Fury     multi power -0.000  GIH WR 0.625 (n 10159)  0.54 vs 0.96
+  Black Lotus                      C     power +0.005  GIH WR 0.635 (n 9381)  0.58 vs 1.00
+  Sneak Attack                     R     power -0.152  GIH WR 0.547 (n 4949)  0.01 vs 0.42
+  Flickerwisp                      W     power -0.039  GIH WR 0.572 (n 4000)  0.27 vs 0.65
+mean z(lab) - z(human) by group (positive: the lab rates the group above humans):
+  W              n  20  -1.030 [-1.341, -0.714]  underrates
+  U              n  22  +0.392 [+0.032, +0.786]  overrates
+  B              n  19  +0.142 [-0.385, +0.744]  no difference shown
+  R              n  18  -0.736 [-0.999, -0.455]  underrates  (pre-registered)
+  G              n  18  +0.880 [+0.330, +1.460]  overrates
+  multi          n  18  +0.190 [-0.275, +0.645]  no difference shown
+  C              n  11  +0.297 [-0.732, +1.270]  no difference shown
+  cheapCreature  n  23  -0.347 [-0.749, +0.049]  no difference shown  (pre-registered)
+  otherNonland   n 103  +0.078 [-0.174, +0.304]  no difference shown

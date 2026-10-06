@@ -1,0 +1,4950 @@
+{
+ "rule": {
+  "minGih": 500,
+  "bootstrap": 2000,
+  "ci": 0.95,
+  "seed": 20261006,
+  "agreeRho": 0.5,
+  "agreeLo": 0.3,
+  "primary": "nonland cards: Spearman(power, GIH WR)",
+  "groups": [
+   "R",
+   "cheapCreature"
+  ],
+  "top": 15
+ },
+ "humanGames": 266117,
+ "humanPartial": false,
+ "sources": [
+  "game_data_public.Cube_-_Powered.PremierDraft.csv.gz"
+ ],
+ "overlap": {
+  "cube": 180,
+  "withPower": 180,
+  "aiLimited": 8,
+  "in17Lands": 152,
+  "withMeta": 179,
+  "compared": 147,
+  "comparedNonland": 126
+ },
+ "corr": {
+  "nonland": {
+   "gihWr": {
+    "n": 126,
+    "rho": 0.29460561620672987,
+    "lo": 0.13748345655965868,
+    "hi": 0.4388161806516716
+   },
+   "gpWr": {
+    "n": 126,
+    "rho": 0.13815093835926803,
+    "lo": -0.040479563040427345,
+    "hi": 0.3153789155731459
+   },
+   "iwd": {
+    "n": 126,
+    "rho": 0.3008418460323534,
+    "lo": 0.12369010520914907,
+    "hi": 0.45084755399135057
+   },
+   "ohWr": {
+    "n": 126,
+    "rho": 0.22620806330443638,
+    "lo": 0.051880034651535734,
+    "hi": 0.3880723716602542
+   }
+  },
+  "all": {
+   "gihWr": {
+    "n": 147,
+    "rho": 0.2648254419222743,
+    "lo": 0.12012952570548928,
+    "hi": 0.40512940836440814
+   }
+  },
+  "meta": {
+   "nonland": {
+    "gihWr": {
+     "n": 126,
+     "rho": 0.5014000855040535,
+     "lo": 0.3697641034277128,
+     "hi": 0.6278175735380424
+    }
+   },
+   "powerVsMeta": {
+    "n": 126,
+    "rho": 0.3438171172205904,
+    "lo": 0.16828269863124015,
+    "hi": 0.502539451699299
+   }
+  }
+ },
+ "humanReliability": {
+  "n": 126,
+  "splitHalf": 0.8839205099362579,
+  "spearmanBrown": 0.9383840828466432
+ },
+ "reading": "WEAK",
+ "overrated": [
+  {
+   "name": "Batterskull",
+   "group": "C",
+   "power": 0.1161,
+   "gihWr": 0.5202871410736579,
+   "gih": 3204,
+   "labPct": 0.9563492063492064,
+   "humanPct": 0.1388888888888889,
+   "labMinusHuman": 0.8174603174603174
+  },
+  {
+   "name": "Questing Beast",
+   "group": "G",
+   "power": 0.0981,
+   "gihWr": 0.5330088226346212,
+   "gih": 3287,
+   "labPct": 0.9484126984126984,
+   "humanPct": 0.21825396825396826,
+   "labMinusHuman": 0.7301587301587301
+  },
+  {
+   "name": "Primeval Titan",
+   "group": "G",
+   "power": 0.0426,
+   "gihWr": 0.505511328842621,
+   "gih": 3266,
+   "labPct": 0.7817460317460317,
+   "humanPct": 0.07539682539682539,
+   "labMinusHuman": 0.7063492063492064
+  },
+  {
+   "name": "Courser of Kruphix",
+   "group": "G",
+   "power": 0.038,
+   "gihWr": 0.5051851851851852,
+   "gih": 2700,
+   "labPct": 0.7738095238095238,
+   "humanPct": 0.06746031746031746,
+   "labMinusHuman": 0.7063492063492064
+  },
+  {
+   "name": "Kappa Cannoneer",
+   "group": "U",
+   "power": 0.0608,
+   "gihWr": 0.527892951375801,
+   "gih": 5306,
+   "labPct": 0.8690476190476191,
+   "humanPct": 0.17857142857142858,
+   "labMinusHuman": 0.6904761904761905
+  },
+  {
+   "name": "Kaldra Compleat",
+   "group": "C",
+   "power": 0.0263,
+   "gihWr": 0.5047807451368282,
+   "gih": 3033,
+   "labPct": 0.6785714285714286,
+   "humanPct": 0.05952380952380952,
+   "labMinusHuman": 0.6190476190476191
+  },
+  {
+   "name": "Uro, Titan of Nature's Wrath",
+   "group": "multi",
+   "power": 0.0499,
+   "gihWr": 0.5332329533232953,
+   "gih": 4649,
+   "labPct": 0.8293650793650794,
+   "humanPct": 0.2261904761904762,
+   "labMinusHuman": 0.6031746031746033
+  },
+  {
+   "name": "Craterhoof Behemoth",
+   "group": "G",
+   "power": 0.0147,
+   "gihWr": 0.4866696791685495,
+   "gih": 2213,
+   "labPct": 0.6150793650793651,
+   "humanPct": 0.011904761904761904,
+   "labMinusHuman": 0.6031746031746033
+  },
+  {
+   "name": "Nissa, Who Shakes the World",
+   "group": "G",
+   "power": 0.2128,
+   "gihWr": 0.5428655314151497,
+   "gih": 3406,
+   "labPct": 0.9880952380952381,
+   "humanPct": 0.39285714285714285,
+   "labMinusHuman": 0.5952380952380953
+  },
+  {
+   "name": "Sheoldred, the Apocalypse",
+   "group": "B",
+   "power": 0.2263,
+   "gihWr": 0.5519351384427107,
+   "gih": 6537,
+   "labPct": 0.996031746031746,
+   "humanPct": 0.4722222222222222,
+   "labMinusHuman": 0.5238095238095238
+  },
+  {
+   "name": "Karn, Scion of Urza",
+   "group": "C",
+   "power": 0.0691,
+   "gihWr": 0.541578644132898,
+   "gih": 5207,
+   "labPct": 0.8849206349206349,
+   "humanPct": 0.38492063492063494,
+   "labMinusHuman": 0.49999999999999994
+  },
+  {
+   "name": "Grist, the Hunger Tide",
+   "group": "multi",
+   "power": 0.094,
+   "gihWr": 0.5472197705207414,
+   "gih": 3399,
+   "labPct": 0.9325396825396826,
+   "humanPct": 0.44047619047619047,
+   "labMinusHuman": 0.4920634920634921
+  },
+  {
+   "name": "Myr Battlesphere",
+   "group": "C",
+   "power": -0.0035,
+   "gihWr": 0.5007932310946589,
+   "gih": 3782,
+   "labPct": 0.5277777777777778,
+   "humanPct": 0.04365079365079365,
+   "labMinusHuman": 0.48412698412698413
+  },
+  {
+   "name": "Baleful Strix",
+   "group": "multi",
+   "power": 0.0897,
+   "gihWr": 0.5468634686346864,
+   "gih": 6775,
+   "labPct": 0.9166666666666666,
+   "humanPct": 0.43253968253968256,
+   "labMinusHuman": 0.4841269841269841
+  },
+  {
+   "name": "Retrofitter Foundry",
+   "group": "C",
+   "power": 0.131,
+   "gihWr": 0.5548353642727508,
+   "gih": 7714,
+   "labPct": 0.9722222222222222,
+   "humanPct": 0.5277777777777778,
+   "labMinusHuman": 0.4444444444444444
+  }
+ ],
+ "underrated": [
+  {
+   "name": "Thraben Inspector",
+   "group": "W",
+   "power": -0.0857,
+   "gihWr": 0.5959607616849394,
+   "gih": 8665,
+   "labPct": 0.07539682539682539,
+   "humanPct": 0.8293650793650794,
+   "labMinusHuman": -0.7539682539682541
+  },
+  {
+   "name": "Skyclave Apparition",
+   "group": "W",
+   "power": -0.0738,
+   "gihWr": 0.5846269404106159,
+   "gih": 7988,
+   "labPct": 0.0992063492063492,
+   "humanPct": 0.7738095238095238,
+   "labMinusHuman": -0.6746031746031746
+  },
+  {
+   "name": "Solitude",
+   "group": "W",
+   "power": -0.0532,
+   "gihWr": 0.5959627329192546,
+   "gih": 9660,
+   "labPct": 0.17063492063492064,
+   "humanPct": 0.8373015873015873,
+   "labMinusHuman": -0.6666666666666667
+  },
+  {
+   "name": "Mother of Runes",
+   "group": "W",
+   "power": -0.0383,
+   "gihWr": 0.600313190862196,
+   "gih": 10856,
+   "labPct": 0.27380952380952384,
+   "humanPct": 0.8928571428571429,
+   "labMinusHuman": -0.6190476190476191
+  },
+  {
+   "name": "Lightning Helix",
+   "group": "multi",
+   "power": -0.0401,
+   "gihWr": 0.5923666104115279,
+   "gih": 7703,
+   "labPct": 0.25793650793650796,
+   "humanPct": 0.8134920634920635,
+   "labMinusHuman": -0.5555555555555556
+  },
+  {
+   "name": "Thalia, Guardian of Thraben",
+   "group": "W",
+   "power": -0.062,
+   "gihWr": 0.5710674992566162,
+   "gih": 6726,
+   "labPct": 0.11507936507936507,
+   "humanPct": 0.6468253968253969,
+   "labMinusHuman": -0.5317460317460317
+  },
+  {
+   "name": "Skullclamp",
+   "group": "C",
+   "power": -0.0902,
+   "gihWr": 0.5638776961365253,
+   "gih": 8438,
+   "labPct": 0.06746031746031746,
+   "humanPct": 0.5833333333333334,
+   "labMinusHuman": -0.5158730158730159
+  },
+  {
+   "name": "Reanimate",
+   "group": "B",
+   "power": -0.0515,
+   "gihWr": 0.5730940529211422,
+   "gih": 7634,
+   "labPct": 0.1865079365079365,
+   "humanPct": 0.6785714285714286,
+   "labMinusHuman": -0.4920634920634921
+  },
+  {
+   "name": "Containment Priest",
+   "group": "W",
+   "power": -0.0906,
+   "gihWr": 0.555540595125892,
+   "gih": 7427,
+   "labPct": 0.05952380952380952,
+   "humanPct": 0.5357142857142857,
+   "labMinusHuman": -0.47619047619047616
+  },
+  {
+   "name": "Sol Ring",
+   "group": "C",
+   "power": -0.0073,
+   "gihWr": 0.6170212765957447,
+   "gih": 9165,
+   "labPct": 0.4880952380952381,
+   "humanPct": 0.9563492063492064,
+   "labMinusHuman": -0.4682539682539683
+  },
+  {
+   "name": "Mox Emerald",
+   "group": "G",
+   "power": -0.0155,
+   "gihWr": 0.598344124827513,
+   "gih": 9421,
+   "labPct": 0.44047619047619047,
+   "humanPct": 0.8690476190476191,
+   "labMinusHuman": -0.4285714285714286
+  },
+  {
+   "name": "Phlage, Titan of Fire's Fury",
+   "group": "multi",
+   "power": -0.0002,
+   "gihWr": 0.6246677822620337,
+   "gih": 10159,
+   "labPct": 0.5357142857142857,
+   "humanPct": 0.9642857142857143,
+   "labMinusHuman": -0.4285714285714286
+  },
+  {
+   "name": "Black Lotus",
+   "group": "C",
+   "power": 0.0048,
+   "gihWr": 0.6352201257861635,
+   "gih": 9381,
+   "labPct": 0.5753968253968254,
+   "humanPct": 0.996031746031746,
+   "labMinusHuman": -0.4206349206349207
+  },
+  {
+   "name": "Sneak Attack",
+   "group": "R",
+   "power": -0.152,
+   "gihWr": 0.5465750656698323,
+   "gih": 4949,
+   "labPct": 0.011904761904761904,
+   "humanPct": 0.4246031746031746,
+   "labMinusHuman": -0.4126984126984127
+  },
+  {
+   "name": "Flickerwisp",
+   "group": "W",
+   "power": -0.0388,
+   "gihWr": 0.5715,
+   "gih": 4000,
+   "labPct": 0.26587301587301587,
+   "humanPct": 0.6547619047619048,
+   "labMinusHuman": -0.3888888888888889
+  }
+ ],
+ "groups": {
+  "W": {
+   "n": 20,
+   "mean": -1.0299748073706572,
+   "lo": -1.3412744271146961,
+   "hi": -0.7138532641287559,
+   "verdict": "underrates",
+   "preRegistered": false
+  },
+  "U": {
+   "n": 22,
+   "mean": 0.39213310785709565,
+   "lo": 0.031983869043875984,
+   "hi": 0.785624488554527,
+   "verdict": "overrates",
+   "preRegistered": false
+  },
+  "B": {
+   "n": 19,
+   "mean": 0.1419137666836851,
+   "lo": -0.3849815958470646,
+   "hi": 0.7438741385235195,
+   "verdict": "no difference shown",
+   "preRegistered": false
+  },
+  "R": {
+   "n": 18,
+   "mean": -0.7363670601370568,
+   "lo": -0.9990953366863812,
+   "hi": -0.4552799980563751,
+   "verdict": "underrates",
+   "preRegistered": true
+  },
+  "G": {
+   "n": 18,
+   "mean": 0.8801630133821162,
+   "lo": 0.33028842359491706,
+   "hi": 1.4597932555825104,
+   "verdict": "overrates",
+   "preRegistered": false
+  },
+  "multi": {
+   "n": 18,
+   "mean": 0.19012859025358136,
+   "lo": -0.27528314190617303,
+   "hi": 0.6445147492233653,
+   "verdict": "no difference shown",
+   "preRegistered": false
+  },
+  "C": {
+   "n": 11,
+   "mean": 0.2968694931446761,
+   "lo": -0.7319587697024597,
+   "hi": 1.2695877470127501,
+   "verdict": "no difference shown",
+   "preRegistered": false
+  },
+  "cheapCreature": {
+   "n": 23,
+   "mean": -0.3474889006298763,
+   "lo": -0.7489920861853016,
+   "hi": 0.048779233851090766,
+   "verdict": "no difference shown",
+   "preRegistered": true
+  },
+  "otherNonland": {
+   "n": 103,
+   "mean": 0.07759460887851562,
+   "lo": -0.17416854693536618,
+   "hi": 0.30351041426155867,
+   "verdict": "no difference shown",
+   "preRegistered": false
+  }
+ },
+ "rows": [
+  {
+   "name": "Mox Pearl",
+   "power": 0.019,
+   "sdPost": 0.0271,
+   "labGames": 4831,
+   "land": false,
+   "meta": 0.5129,
+   "gih": 9489,
+   "gihWr": 0.6136579196964906,
+   "gpWr": 0.5636145541783286,
+   "ohWr": 0.6419673539518901,
+   "iwd": 0.08242048840543281,
+   "gp": 25010,
+   "half": [
+    [
+     4743,
+     2888
+    ],
+    [
+     4746,
+     2935
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.6309523809523809,
+   "humanPct": 0.9484126984126984,
+   "labMinusHuman": -0.31746031746031744,
+   "zDiff": -1.3174838400385442
+  },
+  {
+   "name": "Mother of Runes",
+   "power": -0.0383,
+   "sdPost": 0.0319,
+   "labGames": 4039,
+   "land": false,
+   "meta": 0.5442,
+   "gih": 10856,
+   "gihWr": 0.600313190862196,
+   "gpWr": 0.6037754271765663,
+   "ohWr": 0.614758545849159,
+   "iwd": -0.005625207081041306,
+   "gp": 30725,
+   "half": [
+    [
+     5437,
+     3258
+    ],
+    [
+     5419,
+     3259
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": true,
+   "labPct": 0.27380952380952384,
+   "humanPct": 0.8928571428571429,
+   "labMinusHuman": -0.6190476190476191,
+   "zDiff": -1.81642195666767
+  },
+  {
+   "name": "Thraben Inspector",
+   "power": -0.0857,
+   "sdPost": 0.0165,
+   "labGames": 25599,
+   "land": false,
+   "meta": 0.5422,
+   "gih": 8665,
+   "gihWr": 0.5959607616849394,
+   "gpWr": 0.599518891792128,
+   "ohWr": 0.610104213864975,
+   "iwd": -0.0054019897751514945,
+   "gp": 24111,
+   "half": [
+    [
+     4421,
+     2612
+    ],
+    [
+     4244,
+     2552
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": true,
+   "labPct": 0.07539682539682539,
+   "humanPct": 0.8293650793650794,
+   "labMinusHuman": -0.7539682539682541,
+   "zDiff": -2.422221125139446
+  },
+  {
+   "name": "Thalia, Guardian of Thraben",
+   "power": -0.062,
+   "sdPost": 0.0252,
+   "labGames": 8908,
+   "land": false,
+   "meta": 0.5433,
+   "gih": 6726,
+   "gihWr": 0.5710674992566162,
+   "gpWr": 0.5959763559058384,
+   "ohWr": 0.5862068965517241,
+   "iwd": -0.03822037711744786,
+   "gp": 19286,
+   "half": [
+    [
+     3442,
+     1934
+    ],
+    [
+     3284,
+     1907
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": true,
+   "labPct": 0.11507936507936507,
+   "humanPct": 0.6468253968253969,
+   "labMinusHuman": -0.5317460317460317,
+   "zDiff": -1.3377408239786859
+  },
+  {
+   "name": "Stoneforge Mystic",
+   "power": 0.006,
+   "sdPost": 0.0226,
+   "labGames": 10816,
+   "land": false,
+   "meta": 0.5465,
+   "gih": 5001,
+   "gihWr": 0.5862827434513097,
+   "gpWr": 0.5701906412478336,
+   "ohWr": 0.5981421647819063,
+   "iwd": 0.026078413604557094,
+   "gp": 13271,
+   "half": [
+    [
+     2477,
+     1467
+    ],
+    [
+     2524,
+     1465
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": true,
+   "labPct": 0.5833333333333334,
+   "humanPct": 0.7896825396825397,
+   "labMinusHuman": -0.20634920634920628,
+   "zDiff": -0.7276900636762332
+  },
+  {
+   "name": "Adeline, Resplendent Cathar",
+   "power": 0.044,
+   "sdPost": 0.0261,
+   "labGames": 9875,
+   "land": false,
+   "meta": 0.5609,
+   "gih": 9370,
+   "gihWr": 0.6023479188900747,
+   "gpWr": 0.6083170362717243,
+   "ohWr": 0.608846487424111,
+   "iwd": -0.009058066428954126,
+   "gp": 27101,
+   "half": [
+    [
+     4755,
+     2862
+    ],
+    [
+     4615,
+     2782
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.8055555555555556,
+   "humanPct": 0.9007936507936508,
+   "labMinusHuman": -0.09523809523809523,
+   "zDiff": -0.6051335682149944
+  },
+  {
+   "name": "Ocelot Pride",
+   "power": 0.0508,
+   "sdPost": 0.0373,
+   "labGames": 3126,
+   "land": false,
+   "meta": 0.5723,
+   "gih": 10642,
+   "gihWr": 0.634185303514377,
+   "gpWr": 0.6072844316449263,
+   "ohWr": 0.66964451889075,
+   "iwd": 0.04190378108188708,
+   "gp": 29515,
+   "half": [
+    [
+     5328,
+     3354
+    ],
+    [
+     5314,
+     3395
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": true,
+   "labPct": 0.8373015873015873,
+   "humanPct": 0.9880952380952381,
+   "labMinusHuman": -0.1507936507936508,
+   "zDiff": -1.4194424754674548
+  },
+  {
+   "name": "Luminarch Aspirant",
+   "power": 0.0488,
+   "sdPost": 0.0217,
+   "labGames": 13176,
+   "land": false,
+   "meta": 0.5491,
+   "gih": 10486,
+   "gihWr": 0.6125309937058936,
+   "gpWr": 0.6072932682665954,
+   "ohWr": 0.6283971159179146,
+   "iwd": 0.008287071167780713,
+   "gp": 29918,
+   "half": [
+    [
+     5148,
+     3091
+    ],
+    [
+     5338,
+     3332
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": true,
+   "labPct": 0.8134920634920635,
+   "humanPct": 0.9404761904761905,
+   "labMinusHuman": -0.12698412698412698,
+   "zDiff": -0.8250782285055894
+  },
+  {
+   "name": "Elite Spellbinder",
+   "power": -0.0125,
+   "sdPost": 0.0274,
+   "labGames": 5992,
+   "land": false,
+   "meta": 0.552,
+   "gih": 8610,
+   "gihWr": 0.5914053426248548,
+   "gpWr": 0.5920198470126111,
+   "ohWr": 0.5918168533852898,
+   "iwd": -0.0008964081475447694,
+   "gp": 24185,
+   "half": [
+    [
+     4280,
+     2505
+    ],
+    [
+     4330,
+     2587
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.4642857142857143,
+   "humanPct": 0.8055555555555556,
+   "labMinusHuman": -0.3412698412698413,
+   "zDiff": -1.1610839227021175
+  },
+  {
+   "name": "Containment Priest",
+   "power": -0.0906,
+   "sdPost": 0.0364,
+   "labGames": 2768,
+   "land": false,
+   "meta": 0.5344,
+   "gih": 7427,
+   "gihWr": 0.555540595125892,
+   "gpWr": 0.582784365393061,
+   "ohWr": 0.5496414782129068,
+   "iwd": -0.042429260303206706,
+   "gp": 20493,
+   "half": [
+    [
+     3817,
+     2063
+    ],
+    [
+     3610,
+     2063
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": true,
+   "labPct": 0.05952380952380952,
+   "humanPct": 0.5357142857142857,
+   "labMinusHuman": -0.47619047619047616,
+   "zDiff": -1.330779954423748
+  },
+  {
+   "name": "Swords to Plowshares",
+   "power": 0.0009,
+   "sdPost": 0.0197,
+   "labGames": 17106,
+   "land": false,
+   "meta": 0.5506,
+   "gih": 10889,
+   "gihWr": 0.5973918633483332,
+   "gpWr": 0.5747621673790155,
+   "ohWr": 0.5889413616686344,
+   "iwd": 0.03659433456428374,
+   "gp": 29012,
+   "half": [
+    [
+     5481,
+     3259
+    ],
+    [
+     5408,
+     3246
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.5515873015873016,
+   "humanPct": 0.8611111111111112,
+   "labMinusHuman": -0.30952380952380953,
+   "zDiff": -1.1271473980136413
+  },
+  {
+   "name": "Ephemerate",
+   "power": -0.0432,
+   "sdPost": 0.062,
+   "labGames": 77,
+   "land": false,
+   "meta": 0.5456,
+   "gih": 2455,
+   "gihWr": 0.5270875763747455,
+   "gpWr": 0.5509313154831199,
+   "ohWr": 0.4986830553116769,
+   "iwd": -0.03657381385237091,
+   "gp": 6872,
+   "half": [
+    [
+     1260,
+     677
+    ],
+    [
+     1195,
+     617
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.25,
+   "humanPct": 0.1626984126984127,
+   "labMinusHuman": 0.0873015873015873,
+   "zDiff": 0.22221540460858058
+  },
+  {
+   "name": "Skyclave Apparition",
+   "power": -0.0738,
+   "sdPost": 0.0219,
+   "labGames": 15895,
+   "land": false,
+   "meta": 0.5278,
+   "gih": 7988,
+   "gihWr": 0.5846269404106159,
+   "gpWr": 0.5911013215859031,
+   "ohWr": 0.5668519989409584,
+   "iwd": -0.009888374413041912,
+   "gp": 22700,
+   "half": [
+    [
+     4086,
+     2388
+    ],
+    [
+     3902,
+     2282
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.0992063492063492,
+   "humanPct": 0.7738095238095238,
+   "labMinusHuman": -0.6746031746031746,
+   "zDiff": -1.911339698205753
+  },
+  {
+   "name": "Flickerwisp",
+   "power": -0.0388,
+   "sdPost": 0.0342,
+   "labGames": 3290,
+   "land": false,
+   "meta": 0.5474,
+   "gih": 4000,
+   "gihWr": 0.5715,
+   "gpWr": 0.5803342470598638,
+   "ohWr": 0.5516318887105404,
+   "iwd": -0.013571350164654272,
+   "gp": 11309,
+   "half": [
+    [
+     2015,
+     1148
+    ],
+    [
+     1985,
+     1138
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.26587301587301587,
+   "humanPct": 0.6547619047619048,
+   "labMinusHuman": -0.3888888888888889,
+   "zDiff": -0.9922106524910979
+  },
+  {
+   "name": "Loran of the Third Path",
+   "power": -0.0362,
+   "sdPost": 0.0306,
+   "labGames": 4832,
+   "land": false,
+   "meta": 0.5656,
+   "gih": 4817,
+   "gihWr": 0.5640440107951007,
+   "gpWr": 0.5677091240321847,
+   "ohWr": 0.5413368513632366,
+   "iwd": -0.0059752384830513705,
+   "gp": 13174,
+   "half": [
+    [
+     2427,
+     1348
+    ],
+    [
+     2390,
+     1369
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.3055555555555556,
+   "humanPct": 0.5992063492063492,
+   "labMinusHuman": -0.2936507936507936,
+   "zDiff": -0.73681016787315
+  },
+  {
+   "name": "Solitude",
+   "power": -0.0532,
+   "sdPost": 0.0263,
+   "labGames": 9432,
+   "land": false,
+   "meta": 0.5532,
+   "gih": 9660,
+   "gihWr": 0.5959627329192546,
+   "gpWr": 0.5882574331953331,
+   "ohWr": 0.5793439716312057,
+   "iwd": 0.012167347478367452,
+   "gp": 26570,
+   "half": [
+    [
+     4785,
+     2824
+    ],
+    [
+     4875,
+     2933
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.17063492063492064,
+   "humanPct": 0.8373015873015873,
+   "labMinusHuman": -0.6666666666666667,
+   "zDiff": -1.9207444502501838
+  },
+  {
+   "name": "The Wandering Emperor",
+   "power": 0.0317,
+   "sdPost": 0.0413,
+   "labGames": 1790,
+   "land": false,
+   "meta": 0.5845,
+   "gih": 5918,
+   "gihWr": 0.569111186211558,
+   "gpWr": 0.56539069914584,
+   "ohWr": 0.5471417965850037,
+   "iwd": 0.006688061980315685,
+   "gp": 15805,
+   "half": [
+    [
+     2889,
+     1605
+    ],
+    [
+     3029,
+     1763
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.7420634920634921,
+   "humanPct": 0.6309523809523809,
+   "labMinusHuman": 0.11111111111111116,
+   "zDiff": 0.16470399170614364
+  },
+  {
+   "name": "Balance",
+   "power": -0.0514,
+   "sdPost": 0.0556,
+   "labGames": 270,
+   "land": false,
+   "meta": 0.5688,
+   "gih": 7559,
+   "gihWr": 0.5311549146712529,
+   "gpWr": 0.5143243091123993,
+   "ohWr": 0.5150583896742471,
+   "iwd": 0.028635261375546395,
+   "gp": 17767,
+   "half": [
+    [
+     3814,
+     2019
+    ],
+    [
+     3745,
+     1996
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.19444444444444445,
+   "humanPct": 0.21031746031746032,
+   "labMinusHuman": -0.015873015873015872,
+   "zDiff": -0.021762193886845083
+  },
+  {
+   "name": "Wrath of God",
+   "power": -0.1187,
+   "sdPost": 0.0298,
+   "labGames": 5086,
+   "land": false,
+   "meta": 0.524,
+   "gih": 4236,
+   "gihWr": 0.5377714825306893,
+   "gpWr": 0.5166928515318147,
+   "ohWr": 0.4865329512893983,
+   "iwd": 0.03828890233062032,
+   "gp": 10184,
+   "half": [
+    [
+     2119,
+     1115
+    ],
+    [
+     2117,
+     1163
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.027777777777777776,
+   "humanPct": 0.2896825396825397,
+   "labMinusHuman": -0.2619047619047619,
+   "zDiff": -1.2513635914219674
+  },
+  {
+   "name": "Serra Paragon",
+   "power": 0.0298,
+   "sdPost": 0.0523,
+   "labGames": 490,
+   "land": false,
+   "meta": 0.5453,
+   "gih": 5787,
+   "gihWr": 0.5759460860549508,
+   "gpWr": 0.583338371319751,
+   "ohWr": 0.5454876273653566,
+   "iwd": -0.011065204418129415,
+   "gp": 16541,
+   "half": [
+    [
+     2936,
+     1671
+    ],
+    [
+     2851,
+     1662
+    ]
+   ],
+   "colors": "W",
+   "group": "W",
+   "cheapCreature": false,
+   "labPct": 0.7142857142857143,
+   "humanPct": 0.7103174603174603,
+   "labMinusHuman": 0.003968253968253954,
+   "zDiff": -0.06196143277074251
+  },
+  {
+   "name": "Mox Sapphire",
+   "power": -0.005,
+   "sdPost": 0.0271,
+   "labGames": 4865,
+   "land": false,
+   "meta": 0.5137,
+   "gih": 9204,
+   "gihWr": 0.5995219469795741,
+   "gpWr": 0.5547639123102867,
+   "ohWr": 0.6202787769784173,
+   "iwd": 0.07468787214914596,
+   "gp": 23720,
+   "half": [
+    [
+     4666,
+     2770
+    ],
+    [
+     4538,
+     2748
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.503968253968254,
+   "humanPct": 0.876984126984127,
+   "labMinusHuman": -0.373015873015873,
+   "zDiff": -1.2796972308503378
+  },
+  {
+   "name": "Ancestral Recall",
+   "power": 0.1163,
+   "sdPost": 0.0342,
+   "labGames": 3443,
+   "land": false,
+   "meta": 0.5047,
+   "gih": 9768,
+   "gihWr": 0.6332923832923832,
+   "gpWr": 0.563700577138427,
+   "ohWr": 0.6351162790697674,
+   "iwd": 0.12720529104952383,
+   "gp": 23218,
+   "half": [
+    [
+     4876,
+     3083
+    ],
+    [
+     4892,
+     3103
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.9642857142857143,
+   "humanPct": 0.9801587301587301,
+   "labMinusHuman": -0.015873015873015817,
+   "zDiff": -0.38287798500821535
+  },
+  {
+   "name": "Time Walk",
+   "power": 0.0859,
+   "sdPost": 0.0337,
+   "labGames": 3505,
+   "land": false,
+   "meta": 0.5076,
+   "gih": 9537,
+   "gihWr": 0.6332179930795848,
+   "gpWr": 0.5626154252044675,
+   "ohWr": 0.608091640263222,
+   "iwd": 0.13053863612525385,
+   "gp": 22742,
+   "half": [
+    [
+     4605,
+     2872
+    ],
+    [
+     4932,
+     3167
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.9087301587301587,
+   "humanPct": 0.9722222222222222,
+   "labMinusHuman": -0.06349206349206349,
+   "zDiff": -0.8498569109597107
+  },
+  {
+   "name": "Brainstorm",
+   "power": -0.047,
+   "sdPost": 0.0168,
+   "labGames": 19674,
+   "land": false,
+   "meta": 0.4626,
+   "gih": 5751,
+   "gihWr": 0.5199095809424448,
+   "gpWr": 0.5041901459326686,
+   "ohWr": 0.4770387965162312,
+   "iwd": 0.02919711274906056,
+   "gp": 13842,
+   "half": [
+    [
+     2863,
+     1518
+    ],
+    [
+     2888,
+     1472
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.21825396825396826,
+   "humanPct": 0.12301587301587301,
+   "labMinusHuman": 0.09523809523809525,
+   "zDiff": 0.37082579911785996
+  },
+  {
+   "name": "Ponder",
+   "power": -0.0622,
+   "sdPost": 0.0142,
+   "labGames": 30823,
+   "land": false,
+   "meta": 0.4714,
+   "gih": 7389,
+   "gihWr": 0.5360671268101231,
+   "gpWr": 0.5208321491502302,
+   "ohWr": 0.5068405981546293,
+   "iwd": 0.026846125096931517,
+   "gp": 17593,
+   "half": [
+    [
+     3690,
+     1944
+    ],
+    [
+     3699,
+     2017
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.10714285714285714,
+   "humanPct": 0.27380952380952384,
+   "labMinusHuman": -0.16666666666666669,
+   "zDiff": -0.3302566377821984
+  },
+  {
+   "name": "Preordain",
+   "power": -0.0366,
+   "sdPost": 0.0157,
+   "labGames": 23077,
+   "land": false,
+   "meta": 0.4448,
+   "gih": 7401,
+   "gihWr": 0.5428996081610593,
+   "gpWr": 0.5228816890336346,
+   "ohWr": 0.5091133765832561,
+   "iwd": 0.03574335507646742,
+   "gp": 17809,
+   "half": [
+    [
+     3688,
+     2002
+    ],
+    [
+     3713,
+     2016
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.2896825396825397,
+   "humanPct": 0.4007936507936508,
+   "labMinusHuman": -0.1111111111111111,
+   "zDiff": -0.13247765612721996
+  },
+  {
+   "name": "Frantic Search",
+   "power": -0.0603,
+   "sdPost": 0.0418,
+   "labGames": 1542,
+   "land": false,
+   "meta": 0.4327,
+   "gih": 5646,
+   "gihWr": 0.48990435706695007,
+   "gpWr": 0.47652186652992456,
+   "ohWr": 0.4524828767123288,
+   "iwd": 0.026467547091628574,
+   "gp": 13651,
+   "half": [
+    [
+     2747,
+     1326
+    ],
+    [
+     2899,
+     1440
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.1388888888888889,
+   "humanPct": 0.01984126984126984,
+   "labMinusHuman": 0.11904761904761905,
+   "zDiff": 1.031927760044248
+  },
+  {
+   "name": "Force of Will",
+   "power": 0.0684,
+   "sdPost": 0.0271,
+   "labGames": 7194,
+   "land": false,
+   "meta": 0.4868,
+   "gih": 8341,
+   "gihWr": 0.5733125524517444,
+   "gpWr": 0.5316850092969496,
+   "ohWr": 0.538756262894194,
+   "iwd": 0.07901804058795159,
+   "gp": 19899,
+   "half": [
+    [
+     4283,
+     2466
+    ],
+    [
+     4058,
+     2316
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.876984126984127,
+   "humanPct": 0.6865079365079365,
+   "labMinusHuman": 0.19047619047619047,
+   "zDiff": 0.6097445312163697
+  },
+  {
+   "name": "Mana Drain",
+   "power": 0.0279,
+   "sdPost": 0.0347,
+   "labGames": 3506,
+   "land": false,
+   "meta": 0.4783,
+   "gih": 8591,
+   "gihWr": 0.5806076126178559,
+   "gpWr": 0.5311097166578173,
+   "ohWr": 0.5626020685900925,
+   "iwd": 0.09058868300161083,
+   "gp": 20717,
+   "half": [
+    [
+     4383,
+     2511
+    ],
+    [
+     4208,
+     2477
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.6865079365079365,
+   "humanPct": 0.7658730158730159,
+   "labMinusHuman": -0.07936507936507942,
+   "zDiff": -0.2258747528887151
+  },
+  {
+   "name": "Counterspell",
+   "power": 0.0498,
+   "sdPost": 0.0164,
+   "labGames": 26588,
+   "land": false,
+   "meta": 0.504,
+   "gih": 7658,
+   "gihWr": 0.5485766518673283,
+   "gpWr": 0.5230353796980051,
+   "ohWr": 0.5142857142857142,
+   "iwd": 0.05071234273849151,
+   "gp": 18146,
+   "half": [
+    [
+     3850,
+     2132
+    ],
+    [
+     3808,
+     2069
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.8214285714285714,
+   "humanPct": 0.4642857142857143,
+   "labMinusHuman": 0.3571428571428571,
+   "zDiff": 1.036916044378899
+  },
+  {
+   "name": "Memory Lapse",
+   "power": 0.0312,
+   "sdPost": 0.0342,
+   "labGames": 3403,
+   "land": false,
+   "meta": 0.4828,
+   "gih": 8929,
+   "gihWr": 0.5582932019263075,
+   "gpWr": 0.5319314999311326,
+   "ohWr": 0.5305745914602004,
+   "iwd": 0.048519127258786265,
+   "gp": 21781,
+   "half": [
+    [
+     4494,
+     2504
+    ],
+    [
+     4435,
+     2481
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.7261904761904762,
+   "humanPct": 0.5515873015873016,
+   "labMinusHuman": 0.17460317460317454,
+   "zDiff": 0.46933723204304123
+  },
+  {
+   "name": "Snapcaster Mage",
+   "power": -0.061,
+   "sdPost": 0.0164,
+   "labGames": 21911,
+   "land": false,
+   "meta": 0.486,
+   "gih": 7687,
+   "gihWr": 0.5390919734616886,
+   "gpWr": 0.523561893529191,
+   "ohWr": 0.4944547134935305,
+   "iwd": 0.02927324234386386,
+   "gp": 18653,
+   "half": [
+    [
+     3892,
+     2067
+    ],
+    [
+     3795,
+     2077
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": true,
+   "labPct": 0.13095238095238096,
+   "humanPct": 0.3134920634920635,
+   "labMinusHuman": -0.18253968253968253,
+   "zDiff": -0.39907528604327347
+  },
+  {
+   "name": "Jace, Vryn's Prodigy",
+   "power": -0.0442,
+   "sdPost": 0.0184,
+   "labGames": 17098,
+   "land": false,
+   "meta": 0.4705,
+   "gih": 7169,
+   "gihWr": 0.529641512065839,
+   "gpWr": 0.5133180252583238,
+   "ohWr": 0.5026924295216978,
+   "iwd": 0.031143615009960768,
+   "gp": 17420,
+   "half": [
+    [
+     3566,
+     1896
+    ],
+    [
+     3603,
+     1901
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": true,
+   "labPct": 0.24206349206349206,
+   "humanPct": 0.20238095238095238,
+   "labMinusHuman": 0.03968253968253968,
+   "zDiff": 0.1330434668644127
+  },
+  {
+   "name": "Brazen Borrower",
+   "power": 0.0573,
+   "sdPost": 0.021,
+   "labGames": 12431,
+   "land": false,
+   "meta": 0.4861,
+   "gih": 6499,
+   "gihWr": 0.5473149715340822,
+   "gpWr": 0.5245132238219065,
+   "ohWr": 0.5053879310344828,
+   "iwd": 0.04191227575598255,
+   "gp": 15767,
+   "half": [
+    [
+     3178,
+     1738
+    ],
+    [
+     3321,
+     1819
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.8611111111111112,
+   "humanPct": 0.44841269841269843,
+   "labMinusHuman": 0.41269841269841273,
+   "zDiff": 1.189083234330269
+  },
+  {
+   "name": "Treasure Cruise",
+   "power": -0.0846,
+   "sdPost": 0.0231,
+   "labGames": 8719,
+   "land": false,
+   "meta": 0.4318,
+   "gih": 5017,
+   "gihWr": 0.5164440900936815,
+   "gpWr": 0.5036868973340897,
+   "ohWr": 0.4657671164417791,
+   "iwd": 0.02333579192209223,
+   "gp": 12341,
+   "half": [
+    [
+     2429,
+     1256
+    ],
+    [
+     2588,
+     1335
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.08333333333333333,
+   "humanPct": 0.0992063492063492,
+   "labMinusHuman": -0.015873015873015872,
+   "zDiff": -0.10935039385210565
+  },
+  {
+   "name": "Tinker",
+   "power": 0.0202,
+   "sdPost": 0.0326,
+   "labGames": 3748,
+   "land": false,
+   "meta": 0.4863,
+   "gih": 6591,
+   "gihWr": 0.5795782127143074,
+   "gpWr": 0.5076822491010134,
+   "ohWr": 0.5724482512491078,
+   "iwd": 0.1325165322869155,
+   "gp": 15295,
+   "half": [
+    [
+     3172,
+     1882
+    ],
+    [
+     3419,
+     1938
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.6388888888888888,
+   "humanPct": 0.7420634920634921,
+   "labMinusHuman": -0.10317460317460325,
+   "zDiff": -0.3149776299699955
+  },
+  {
+   "name": "Show and Tell",
+   "power": -0.012,
+   "sdPost": 0.0522,
+   "labGames": 449,
+   "land": false,
+   "meta": 0.4472,
+   "gih": 2749,
+   "gihWr": 0.5056384139687159,
+   "gpWr": 0.4835971223021583,
+   "ohWr": 0.5211267605633803,
+   "iwd": 0.04354365087644657,
+   "gp": 6950,
+   "half": [
+    [
+     1314,
+     674
+    ],
+    [
+     1435,
+     716
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.4722222222222222,
+   "humanPct": 0.08333333333333333,
+   "labMinusHuman": 0.3888888888888889,
+   "zDiff": 1.322992255084744
+  },
+  {
+   "name": "Urza, Lord High Artificer",
+   "power": 0.1539,
+   "sdPost": 0.0332,
+   "labGames": 4031,
+   "land": false,
+   "meta": 0.5035,
+   "gih": 7570,
+   "gihWr": 0.5557463672391018,
+   "gpWr": 0.5116355293346444,
+   "ohWr": 0.5227564102564103,
+   "iwd": 0.07945099323278054,
+   "gp": 18306,
+   "half": [
+    [
+     3795,
+     2101
+    ],
+    [
+     3775,
+     2106
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.9801587301587301,
+   "humanPct": 0.5436507936507936,
+   "labMinusHuman": 0.4365079365079365,
+   "zDiff": 2.436354540820109
+  },
+  {
+   "name": "Kappa Cannoneer",
+   "power": 0.0608,
+   "sdPost": 0.0352,
+   "labGames": 3220,
+   "land": false,
+   "meta": 0.5053,
+   "gih": 5306,
+   "gihWr": 0.527892951375801,
+   "gpWr": 0.5033511043412033,
+   "ohWr": 0.48549690917736565,
+   "iwd": 0.04337302975594465,
+   "gp": 13130,
+   "half": [
+    [
+     2633,
+     1398
+    ],
+    [
+     2673,
+     1403
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.8690476190476191,
+   "humanPct": 0.17857142857142858,
+   "labMinusHuman": 0.6904761904761905,
+   "zDiff": 1.8038691918557797
+  },
+  {
+   "name": "Thieving Skydiver",
+   "power": -0.0137,
+   "sdPost": 0.0331,
+   "labGames": 3441,
+   "land": false,
+   "meta": 0.4566,
+   "gih": 6040,
+   "gihWr": 0.5403973509933775,
+   "gpWr": 0.5194283769989793,
+   "ohWr": 0.5041128084606346,
+   "iwd": 0.03733420301976764,
+   "gp": 14695,
+   "half": [
+    [
+     2880,
+     1587
+    ],
+    [
+     3160,
+     1677
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": true,
+   "labPct": 0.45634920634920634,
+   "humanPct": 0.34523809523809523,
+   "labMinusHuman": 0.1111111111111111,
+   "zDiff": 0.2931586415889747
+  },
+  {
+   "name": "Phyrexian Metamorph",
+   "power": -0.0199,
+   "sdPost": 0.0477,
+   "labGames": 976,
+   "land": false,
+   "meta": 0.4592,
+   "gih": 4460,
+   "gihWr": 0.5201793721973094,
+   "gpWr": 0.5117868723161861,
+   "ohWr": 0.45430251202565475,
+   "iwd": 0.015843049986519975,
+   "gp": 11411,
+   "half": [
+    [
+     2220,
+     1139
+    ],
+    [
+     2240,
+     1181
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.4087301587301587,
+   "humanPct": 0.13095238095238096,
+   "labMinusHuman": 0.2777777777777778,
+   "zDiff": 0.7812379348225363
+  },
+  {
+   "name": "Jace, the Mind Sculptor",
+   "power": 0.0913,
+   "sdPost": 0.0228,
+   "labGames": 11574,
+   "land": false,
+   "meta": 0.4928,
+   "gih": 5496,
+   "gihWr": 0.5660480349344978,
+   "gpWr": 0.5277078085642317,
+   "ohWr": 0.5358228397742075,
+   "iwd": 0.06884133102388335,
+   "gp": 13498,
+   "half": [
+    [
+     2768,
+     1549
+    ],
+    [
+     2728,
+     1562
+    ]
+   ],
+   "colors": "U",
+   "group": "U",
+   "cheapCreature": false,
+   "labPct": 0.9246031746031746,
+   "humanPct": 0.6071428571428571,
+   "labMinusHuman": 0.31746031746031755,
+   "zDiff": 1.1728822241706336
+  },
+  {
+   "name": "Mox Jet",
+   "power": 0.0431,
+   "sdPost": 0.027,
+   "labGames": 4887,
+   "land": false,
+   "meta": 0.5164,
+   "gih": 9214,
+   "gihWr": 0.5957238984154547,
+   "gpWr": 0.5494703345475862,
+   "ohWr": 0.6278253236778583,
+   "iwd": 0.07535220434826384,
+   "gp": 23883,
+   "half": [
+    [
+     4563,
+     2701
+    ],
+    [
+     4651,
+     2788
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.7896825396825397,
+   "humanPct": 0.8214285714285714,
+   "labMinusHuman": -0.031746031746031744,
+   "zDiff": -0.4277659404376368
+  },
+  {
+   "name": "Dark Ritual",
+   "power": -0.0618,
+   "sdPost": 0.0466,
+   "labGames": 1089,
+   "land": false,
+   "meta": 0.4294,
+   "gih": 4492,
+   "gihWr": 0.5091273374888691,
+   "gpWr": 0.4947424701479237,
+   "ohWr": 0.4892122428499749,
+   "iwd": 0.026803328881429778,
+   "gp": 11222,
+   "half": [
+    [
+     2201,
+     1118
+    ],
+    [
+     2291,
+     1169
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.12301587301587301,
+   "humanPct": 0.09126984126984126,
+   "labMinusHuman": 0.031746031746031744,
+   "zDiff": 0.45375230965996116
+  },
+  {
+   "name": "Entomb",
+   "power": -0.0484,
+   "sdPost": 0.044,
+   "labGames": 1790,
+   "land": false,
+   "meta": 0.4568,
+   "gih": 5585,
+   "gihWr": 0.5588182632050134,
+   "gpWr": 0.519800924280128,
+   "ohWr": 0.5622300745975658,
+   "iwd": 0.06987237337968055,
+   "gp": 14065,
+   "half": [
+    [
+     2662,
+     1475
+    ],
+    [
+     2923,
+     1646
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.21031746031746032,
+   "humanPct": 0.5595238095238095,
+   "labMinusHuman": -0.3492063492063492,
+   "zDiff": -0.7741944360801675
+  },
+  {
+   "name": "Reanimate",
+   "power": -0.0515,
+   "sdPost": 0.0252,
+   "labGames": 9025,
+   "land": false,
+   "meta": 0.4463,
+   "gih": 7634,
+   "gihWr": 0.5730940529211422,
+   "gpWr": 0.5315450090275987,
+   "ohWr": 0.5628140703517588,
+   "iwd": 0.07553048421377978,
+   "gp": 19385,
+   "half": [
+    [
+     3726,
+     2122
+    ],
+    [
+     3908,
+     2253
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.1865079365079365,
+   "humanPct": 0.6785714285714286,
+   "labMinusHuman": -0.4920634920634921,
+   "zDiff": -1.2342198561865856
+  },
+  {
+   "name": "Animate Dead",
+   "power": 0.0092,
+   "sdPost": 0.0248,
+   "labGames": 9540,
+   "land": false,
+   "meta": 0.4606,
+   "gih": 7471,
+   "gihWr": 0.5688662829607817,
+   "gpWr": 0.5298577214664035,
+   "ohWr": 0.5480176211453744,
+   "iwd": 0.07311912565036893,
+   "gp": 19258,
+   "half": [
+    [
+     3762,
+     2151
+    ],
+    [
+     3709,
+     2099
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.6071428571428571,
+   "humanPct": 0.623015873015873,
+   "labMinusHuman": -0.015873015873015928,
+   "zDiff": -0.17544044592438807
+  },
+  {
+   "name": "Necromancy",
+   "power": 0.0288,
+   "sdPost": 0.0441,
+   "labGames": 1745,
+   "land": false,
+   "meta": 0.4753,
+   "gih": 6302,
+   "gihWr": 0.5544271659790543,
+   "gpWr": 0.5225648854961832,
+   "ohWr": 0.5265580736543909,
+   "iwd": 0.05867675138535611,
+   "gp": 16375,
+   "half": [
+    [
+     3114,
+     1743
+    ],
+    [
+     3188,
+     1751
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.7023809523809523,
+   "humanPct": 0.5198412698412699,
+   "labMinusHuman": 0.18253968253968245,
+   "zDiff": 0.543925490689197
+  },
+  {
+   "name": "Thoughtseize",
+   "power": -0.0749,
+   "sdPost": 0.0301,
+   "labGames": 5852,
+   "land": false,
+   "meta": 0.4322,
+   "gih": 8687,
+   "gihWr": 0.5393116150569817,
+   "gpWr": 0.5264402309825854,
+   "ohWr": 0.5356234096692112,
+   "iwd": 0.023765978609390448,
+   "gp": 21993,
+   "half": [
+    [
+     4366,
+     2407
+    ],
+    [
+     4321,
+     2278
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.09126984126984126,
+   "humanPct": 0.32142857142857145,
+   "labMinusHuman": -0.23015873015873017,
+   "zDiff": -0.6199190866550377
+  },
+  {
+   "name": "Hymn to Tourach",
+   "power": -0.0596,
+   "sdPost": 0.0413,
+   "labGames": 1680,
+   "land": false,
+   "meta": 0.448,
+   "gih": 4939,
+   "gihWr": 0.5381656205709657,
+   "gpWr": 0.5277493505471148,
+   "ohWr": 0.5291954022988505,
+   "iwd": 0.019379493403335668,
+   "gp": 12703,
+   "half": [
+    [
+     2563,
+     1410
+    ],
+    [
+     2376,
+     1248
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.14682539682539683,
+   "humanPct": 0.2976190476190476,
+   "labMinusHuman": -0.15079365079365079,
+   "zDiff": -0.3507240482674564
+  },
+  {
+   "name": "Demonic Tutor",
+   "power": -0.0364,
+   "sdPost": 0.0333,
+   "labGames": 4534,
+   "land": false,
+   "meta": 0.4594,
+   "gih": 6980,
+   "gihWr": 0.5524355300859599,
+   "gpWr": 0.5167442127635131,
+   "ohWr": 0.5198567708333334,
+   "iwd": 0.06482648964186793,
+   "gp": 17409,
+   "half": [
+    [
+     3406,
+     1860
+    ],
+    [
+     3574,
+     1996
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.2976190476190476,
+   "humanPct": 0.503968253968254,
+   "labMinusHuman": -0.20634920634920634,
+   "zDiff": -0.4047232751987984
+  },
+  {
+   "name": "Dark Confidant",
+   "power": 0.0014,
+   "sdPost": 0.0401,
+   "labGames": 1936,
+   "land": false,
+   "meta": 0.4715,
+   "gih": 4893,
+   "gihWr": 0.5352544451256898,
+   "gpWr": 0.5249243510113075,
+   "ohWr": 0.5337690631808278,
+   "iwd": 0.01660412220490426,
+   "gp": 12558,
+   "half": [
+    [
+     2482,
+     1323
+    ],
+    [
+     2411,
+     1296
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": true,
+   "labPct": 0.5595238095238095,
+   "humanPct": 0.26587301587301587,
+   "labMinusHuman": 0.29365079365079366,
+   "zDiff": 0.6746706890967804
+  },
+  {
+   "name": "Fatal Push",
+   "power": -0.0278,
+   "sdPost": 0.0434,
+   "labGames": 1282,
+   "land": false,
+   "meta": 0.5386,
+   "gih": 7830,
+   "gihWr": 0.5406130268199234,
+   "gpWr": 0.5228100343920696,
+   "ohWr": 0.5274817722938867,
+   "iwd": 0.03116447846053494,
+   "gp": 19772,
+   "half": [
+    [
+     4121,
+     2223
+    ],
+    [
+     3709,
+     2010
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.36904761904761907,
+   "humanPct": 0.3611111111111111,
+   "labMinusHuman": 0.007936507936507964,
+   "zDiff": 0.06934298460375216
+  },
+  {
+   "name": "Bone Shards",
+   "power": -0.0963,
+   "sdPost": 0.022,
+   "labGames": 13749,
+   "land": false,
+   "meta": 0.4512,
+   "gih": 4731,
+   "gihWr": 0.5286408793067005,
+   "gpWr": 0.516169842650431,
+   "ohWr": 0.513425925925926,
+   "iwd": 0.022638791624028265,
+   "gp": 12647,
+   "half": [
+    [
+     2316,
+     1186
+    ],
+    [
+     2415,
+     1315
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.051587301587301584,
+   "humanPct": 0.1865079365079365,
+   "labMinusHuman": -0.13492063492063494,
+   "zDiff": -0.6420620517008301
+  },
+  {
+   "name": "Collective Brutality",
+   "power": -0.1928,
+   "sdPost": 0.0354,
+   "labGames": 3955,
+   "land": false,
+   "meta": 0.4309,
+   "gih": 5466,
+   "gihWr": 0.5287230150018295,
+   "gpWr": 0.5118070554355652,
+   "ohWr": 0.49389747762408465,
+   "iwd": 0.03030799427517744,
+   "gp": 13890,
+   "half": [
+    [
+     2741,
+     1448
+    ],
+    [
+     2725,
+     1442
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.003968253968253968,
+   "humanPct": 0.19444444444444445,
+   "labMinusHuman": -0.19047619047619047,
+   "zDiff": -2.1336025359091773
+  },
+  {
+   "name": "Liliana of the Veil",
+   "power": 0.0217,
+   "sdPost": 0.0361,
+   "labGames": 2934,
+   "land": false,
+   "meta": 0.4895,
+   "gih": 4321,
+   "gihWr": 0.539458458690118,
+   "gpWr": 0.519158460161146,
+   "ohWr": 0.5233785822021116,
+   "iwd": 0.03885550421318096,
+   "gp": 11170,
+   "half": [
+    [
+     2256,
+     1282
+    ],
+    [
+     2065,
+     1049
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.6547619047619048,
+   "humanPct": 0.32936507936507936,
+   "labMinusHuman": 0.3253968253968254,
+   "zDiff": 0.8665532263296494
+  },
+  {
+   "name": "Grief",
+   "power": -0.1104,
+   "sdPost": 0.0366,
+   "labGames": 4215,
+   "land": false,
+   "meta": 0.4496,
+   "gih": 5752,
+   "gihWr": 0.5269471488178025,
+   "gpWr": 0.522438443208896,
+   "ohWr": 0.5024837600305694,
+   "iwd": 0.011942202132081858,
+   "gp": 15108,
+   "half": [
+    [
+     2829,
+     1487
+    ],
+    [
+     2923,
+     1544
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.03571428571428571,
+   "humanPct": 0.15476190476190477,
+   "labMinusHuman": -0.11904761904761905,
+   "zDiff": -0.8107471586576583
+  },
+  {
+   "name": "Recurring Nightmare",
+   "power": -0.0292,
+   "sdPost": 0.0432,
+   "labGames": 1846,
+   "land": false,
+   "meta": 0.4488,
+   "gih": 3595,
+   "gihWr": 0.49624478442280945,
+   "gpWr": 0.500526981450253,
+   "ohWr": 0.4591232227488152,
+   "iwd": 0.0008400477667472317,
+   "gp": 9488,
+   "half": [
+    [
+     1753,
+     831
+    ],
+    [
+     1842,
+     953
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.3611111111111111,
+   "humanPct": 0.03571428571428571,
+   "labMinusHuman": 0.3253968253968254,
+   "zDiff": 1.3287887994167318
+  },
+  {
+   "name": "Sheoldred, the Apocalypse",
+   "power": 0.2263,
+   "sdPost": 0.0308,
+   "labGames": 7304,
+   "land": false,
+   "meta": 0.4893,
+   "gih": 6537,
+   "gihWr": 0.5519351384427107,
+   "gpWr": 0.5256810272410897,
+   "ohWr": 0.5341074020319303,
+   "iwd": 0.0459998130231446,
+   "gp": 16666,
+   "half": [
+    [
+     3278,
+     1826
+    ],
+    [
+     3259,
+     1782
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.996031746031746,
+   "humanPct": 0.4722222222222222,
+   "labMinusHuman": 0.5238095238095238,
+   "zDiff": 3.663659193630752
+  },
+  {
+   "name": "Archon of Cruelty",
+   "power": 0.0977,
+   "sdPost": 0.0318,
+   "labGames": 6950,
+   "land": false,
+   "meta": 0.4776,
+   "gih": 5745,
+   "gihWr": 0.5639686684073107,
+   "gpWr": 0.527832685073009,
+   "ohWr": 0.5542353392104254,
+   "iwd": 0.06644157170100745,
+   "gp": 15683,
+   "half": [
+    [
+     2755,
+     1556
+    ],
+    [
+     2990,
+     1684
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.9404761904761905,
+   "humanPct": 0.5912698412698413,
+   "labMinusHuman": 0.3492063492063492,
+   "zDiff": 1.3316835965105223
+  },
+  {
+   "name": "Griselbrand",
+   "power": -0.0321,
+   "sdPost": 0.0373,
+   "labGames": 3884,
+   "land": false,
+   "meta": 0.4584,
+   "gih": 4462,
+   "gihWr": 0.4943971313312416,
+   "gpWr": 0.5017909475740802,
+   "ohWr": 0.48863086598935657,
+   "iwd": -0.0063314419897280705,
+   "gp": 12284,
+   "half": [
+    [
+     2226,
+     1091
+    ],
+    [
+     2236,
+     1115
+    ]
+   ],
+   "colors": "B",
+   "group": "B",
+   "cheapCreature": false,
+   "labPct": 0.32142857142857145,
+   "humanPct": 0.027777777777777776,
+   "labMinusHuman": 0.29365079365079366,
+   "zDiff": 1.3373841120704073
+  },
+  {
+   "name": "Mox Ruby",
+   "power": 0.0367,
+   "sdPost": 0.0271,
+   "labGames": 4843,
+   "land": false,
+   "meta": 0.5113,
+   "gih": 9480,
+   "gihWr": 0.6120253164556962,
+   "gpWr": 0.5672655653362273,
+   "ohWr": 0.6443647108484593,
+   "iwd": 0.07465636143371446,
+   "gp": 24879,
+   "half": [
+    [
+     4590,
+     2787
+    ],
+    [
+     4890,
+     3015
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.7658730158730159,
+   "humanPct": 0.9325396825396826,
+   "labMinusHuman": -0.16666666666666663,
+   "zDiff": -0.9972025537448573
+  },
+  {
+   "name": "Lightning Bolt",
+   "power": -0.0064,
+   "sdPost": 0.0187,
+   "labGames": 20127,
+   "land": false,
+   "meta": 0.4895,
+   "gih": 10684,
+   "gihWr": 0.5999625608386372,
+   "gpWr": 0.5864469239430853,
+   "ohWr": 0.6015625,
+   "iwd": 0.021625165766879784,
+   "gp": 29307,
+   "half": [
+    [
+     5378,
+     3229
+    ],
+    [
+     5306,
+     3181
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.49603174603174605,
+   "humanPct": 0.8849206349206349,
+   "labMinusHuman": -0.38888888888888884,
+   "zDiff": -1.314023659045783
+  },
+  {
+   "name": "Chain Lightning",
+   "power": -0.0295,
+   "sdPost": 0.0212,
+   "labGames": 13729,
+   "land": false,
+   "meta": 0.4744,
+   "gih": 9679,
+   "gihWr": 0.5744395082136584,
+   "gpWr": 0.5843038350270752,
+   "ohWr": 0.5690831556503199,
+   "iwd": -0.015804678510509707,
+   "gp": 26962,
+   "half": [
+    [
+     4829,
+     2769
+    ],
+    [
+     4850,
+     2791
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.3531746031746032,
+   "humanPct": 0.7023809523809523,
+   "labMinusHuman": -0.34920634920634913,
+   "zDiff": -0.9335677097656576
+  },
+  {
+   "name": "Fireblast",
+   "power": -0.021,
+   "sdPost": 0.0598,
+   "labGames": 97,
+   "land": false,
+   "meta": 0.4839,
+   "gih": 2793,
+   "gihWr": 0.5520945220193341,
+   "gpWr": 0.5820597225487891,
+   "ohWr": 0.5241528478731075,
+   "iwd": -0.04485231075834628,
+   "gp": 8506,
+   "half": [
+    [
+     1413,
+     798
+    ],
+    [
+     1380,
+     744
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.4007936507936508,
+   "humanPct": 0.4880952380952381,
+   "labMinusHuman": -0.08730158730158727,
+   "zDiff": -0.15722753965789033
+  },
+  {
+   "name": "Pyrokinesis",
+   "power": -0.0171,
+   "sdPost": 0.0612,
+   "labGames": 28,
+   "land": false,
+   "meta": 0.4118,
+   "gih": 7662,
+   "gihWr": 0.5861393891934221,
+   "gpWr": 0.5856815052776503,
+   "ohWr": 0.5822540644805732,
+   "iwd": 0.0010869229217396192,
+   "gp": 21790,
+   "half": [
+    [
+     3808,
+     2263
+    ],
+    [
+     3854,
+     2228
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.4246031746031746,
+   "humanPct": 0.7817460317460317,
+   "labMinusHuman": -0.35714285714285715,
+   "zDiff": -1.080025620957767
+  },
+  {
+   "name": "Unholy Heat",
+   "power": -0.0379,
+   "sdPost": 0.0348,
+   "labGames": 3532,
+   "land": false,
+   "meta": 0.4767,
+   "gih": 7746,
+   "gihWr": 0.569713400464756,
+   "gpWr": 0.5673847334836636,
+   "ohWr": 0.5583951635064578,
+   "iwd": 0.004297892278163573,
+   "gp": 20843,
+   "half": [
+    [
+     3852,
+     2200
+    ],
+    [
+     3894,
+     2213
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.28174603174603174,
+   "humanPct": 0.6388888888888888,
+   "labMinusHuman": -0.3571428571428571,
+   "zDiff": -0.9267372969359889
+  },
+  {
+   "name": "Monastery Swiftspear",
+   "power": 0.0033,
+   "sdPost": 0.0189,
+   "labGames": 19497,
+   "land": false,
+   "meta": 0.4823,
+   "gih": 3003,
+   "gihWr": 0.572094572094572,
+   "gpWr": 0.5816023738872403,
+   "ohWr": 0.5691699604743083,
+   "iwd": -0.014880876277359012,
+   "gp": 8762,
+   "half": [
+    [
+     1513,
+     864
+    ],
+    [
+     1490,
+     854
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": true,
+   "labPct": 0.5674603174603174,
+   "humanPct": 0.6626984126984127,
+   "labMinusHuman": -0.09523809523809523,
+   "zDiff": -0.3596989166293351
+  },
+  {
+   "name": "Ragavan, Nimble Pilferer",
+   "power": 0.0073,
+   "sdPost": 0.0289,
+   "labGames": 7083,
+   "land": false,
+   "meta": 0.4989,
+   "gih": 9908,
+   "gihWr": 0.6089018974566007,
+   "gpWr": 0.5897728527776755,
+   "ohWr": 0.6440677966101694,
+   "iwd": 0.030095648913816886,
+   "gp": 27163,
+   "half": [
+    [
+     5088,
+     3078
+    ],
+    [
+     4820,
+     2955
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": true,
+   "labPct": 0.5992063492063492,
+   "humanPct": 0.9166666666666666,
+   "labMinusHuman": -0.31746031746031744,
+   "zDiff": -1.3607146512141246
+  },
+  {
+   "name": "Dragon's Rage Channeler",
+   "power": 0.0065,
+   "sdPost": 0.0248,
+   "labGames": 8600,
+   "land": false,
+   "meta": 0.4682,
+   "gih": 5574,
+   "gihWr": 0.5685324721923215,
+   "gpWr": 0.5707395498392283,
+   "ohWr": 0.5637435519528371,
+   "iwd": -0.0035110013899447567,
+   "gp": 14928,
+   "half": [
+    [
+     2800,
+     1599
+    ],
+    [
+     2774,
+     1570
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": true,
+   "labPct": 0.5912698412698413,
+   "humanPct": 0.6150793650793651,
+   "labMinusHuman": -0.023809523809523836,
+   "zDiff": -0.20746814942050817
+  },
+  {
+   "name": "Goblin Rabblemaster",
+   "power": 0.0298,
+   "sdPost": 0.0304,
+   "labGames": 5355,
+   "land": false,
+   "meta": 0.4996,
+   "gih": 6851,
+   "gihWr": 0.5965552474091373,
+   "gpWr": 0.5969729508615841,
+   "ohWr": 0.602025618111409,
+   "iwd": -0.0006374030127537234,
+   "gp": 19557,
+   "half": [
+    [
+     3494,
+     2075
+    ],
+    [
+     3357,
+     2012
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.7142857142857143,
+   "humanPct": 0.8452380952380952,
+   "labMinusHuman": -0.13095238095238093,
+   "zDiff": -0.657012570860276
+  },
+  {
+   "name": "Fable of the Mirror-Breaker",
+   "power": 0.0536,
+   "sdPost": 0.0286,
+   "labGames": 7136,
+   "land": false,
+   "meta": 0.4918,
+   "gih": 10915,
+   "gihWr": 0.5966101694915255,
+   "gpWr": 0.5817510902381751,
+   "ohWr": 0.6086787312706752,
+   "iwd": 0.023839964489915544,
+   "gp": 29810,
+   "half": [
+    [
+     5390,
+     3167
+    ],
+    [
+     5525,
+     3345
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.8452380952380952,
+   "humanPct": 0.8531746031746031,
+   "labMinusHuman": -0.007936507936507908,
+   "zDiff": -0.29132143731370286
+  },
+  {
+   "name": "Laelia, the Blade Reforged",
+   "power": 0.0552,
+   "sdPost": 0.0378,
+   "labGames": 2803,
+   "land": false,
+   "meta": 0.5045,
+   "gih": 10791,
+   "gihWr": 0.6083773514966175,
+   "gpWr": 0.5982539943996047,
+   "ohWr": 0.6100148920327625,
+   "iwd": 0.015933249723294463,
+   "gp": 30355,
+   "half": [
+    [
+     5395,
+     3273
+    ],
+    [
+     5396,
+     3292
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.8531746031746031,
+   "humanPct": 0.9087301587301587,
+   "labMinusHuman": -0.05555555555555558,
+   "zDiff": -0.6063860103362204
+  },
+  {
+   "name": "Bonecrusher Giant",
+   "power": 0.0324,
+   "sdPost": 0.0262,
+   "labGames": 8478,
+   "land": false,
+   "meta": 0.5062,
+   "gih": 7407,
+   "gihWr": 0.5799918995544755,
+   "gpWr": 0.5790508149568552,
+   "ohWr": 0.5791474341569373,
+   "iwd": 0.0017020813454532435,
+   "gp": 20860,
+   "half": [
+    [
+     3547,
+     2018
+    ],
+    [
+     3860,
+     2278
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.75,
+   "humanPct": 0.75,
+   "labMinusHuman": 0.0,
+   "zDiff": -0.1386540727455846
+  },
+  {
+   "name": "Seasoned Pyromancer",
+   "power": -0.0046,
+   "sdPost": 0.0325,
+   "labGames": 4490,
+   "land": false,
+   "meta": 0.4382,
+   "gih": 5812,
+   "gihWr": 0.5770818995182381,
+   "gpWr": 0.58199842833827,
+   "ohWr": 0.5610270840661273,
+   "iwd": -0.007712325662225017,
+   "gp": 16543,
+   "half": [
+    [
+     2858,
+     1662
+    ],
+    [
+     2954,
+     1692
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.5119047619047619,
+   "humanPct": 0.7261904761904762,
+   "labMinusHuman": -0.2142857142857143,
+   "zDiff": -0.6256099463442318
+  },
+  {
+   "name": "Fiery Confluence",
+   "power": -0.0298,
+   "sdPost": 0.0596,
+   "labGames": 211,
+   "land": false,
+   "meta": 0.4658,
+   "gih": 9341,
+   "gihWr": 0.5794882774863505,
+   "gpWr": 0.579390155696829,
+   "ohWr": 0.5584741891274555,
+   "iwd": 0.0008147531756035331,
+   "gp": 26269,
+   "half": [
+    [
+     4608,
+     2678
+    ],
+    [
+     4733,
+     2735
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.34523809523809523,
+   "humanPct": 0.7341269841269841,
+   "labMinusHuman": -0.38888888888888884,
+   "zDiff": -1.0839710572133643
+  },
+  {
+   "name": "Sneak Attack",
+   "power": -0.152,
+   "sdPost": 0.0398,
+   "labGames": 2199,
+   "land": false,
+   "meta": 0.462,
+   "gih": 4949,
+   "gihWr": 0.5465750656698323,
+   "gpWr": 0.5015737228633685,
+   "ohWr": 0.5219298245614035,
+   "iwd": 0.08591534840580256,
+   "gp": 12391,
+   "half": [
+    [
+     2421,
+     1297
+    ],
+    [
+     2528,
+     1408
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.011904761904761904,
+   "humanPct": 0.4246031746031746,
+   "labMinusHuman": -0.4126984126984127,
+   "zDiff": -2.0194296858381606
+  },
+  {
+   "name": "Chandra, Torch of Defiance",
+   "power": 0.0343,
+   "sdPost": 0.0395,
+   "labGames": 2125,
+   "land": false,
+   "meta": 0.4912,
+   "gih": 5304,
+   "gihWr": 0.5522247360482655,
+   "gpWr": 0.5670110053338735,
+   "ohWr": 0.536515707874337,
+   "iwd": -0.02299556334657471,
+   "gp": 14811,
+   "half": [
+    [
+     2688,
+     1522
+    ],
+    [
+     2616,
+     1407
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.7579365079365079,
+   "humanPct": 0.49603174603174605,
+   "labMinusHuman": 0.26190476190476186,
+   "zDiff": 0.6923914670249929
+  },
+  {
+   "name": "Fury",
+   "power": 0.0187,
+   "sdPost": 0.032,
+   "labGames": 6764,
+   "land": false,
+   "meta": 0.5026,
+   "gih": 9921,
+   "gihWr": 0.6090111883882673,
+   "gpWr": 0.5921127159444917,
+   "ohWr": 0.5914902536155943,
+   "iwd": 0.0269101069492913,
+   "gp": 28248,
+   "half": [
+    [
+     4754,
+     2881
+    ],
+    [
+     5167,
+     3161
+    ]
+   ],
+   "colors": "R",
+   "group": "R",
+   "cheapCreature": false,
+   "labPct": 0.623015873015873,
+   "humanPct": 0.9246031746031746,
+   "labMinusHuman": -0.3015873015873016,
+   "zDiff": -1.1879476714685622
+  },
+  {
+   "name": "Mox Emerald",
+   "power": -0.0155,
+   "sdPost": 0.0271,
+   "labGames": 4832,
+   "land": false,
+   "meta": 0.5152,
+   "gih": 9421,
+   "gihWr": 0.598344124827513,
+   "gpWr": 0.5572971230558466,
+   "ohWr": 0.6288615251674228,
+   "iwd": 0.06843884742561857,
+   "gp": 24818,
+   "half": [
+    [
+     4679,
+     2781
+    ],
+    [
+     4742,
+     2856
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.44047619047619047,
+   "humanPct": 0.8690476190476191,
+   "labMinusHuman": -0.4285714285714286,
+   "zDiff": -1.4077237398309037
+  },
+  {
+   "name": "Llanowar Elves",
+   "power": -0.0041,
+   "sdPost": 0.0233,
+   "labGames": 10749,
+   "land": false,
+   "meta": 0.4513,
+   "gih": 4523,
+   "gihWr": 0.5394649568870219,
+   "gpWr": 0.5250737463126843,
+   "ohWr": 0.5556544968833482,
+   "iwd": 0.0240732274643769,
+   "gp": 12204,
+   "half": [
+    [
+     2269,
+     1223
+    ],
+    [
+     2254,
+     1217
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": true,
+   "labPct": 0.5198412698412699,
+   "humanPct": 0.3373015873015873,
+   "labMinusHuman": 0.18253968253968256,
+   "zDiff": 0.4682250910720602
+  },
+  {
+   "name": "Birds of Paradise",
+   "power": -0.0527,
+   "sdPost": 0.0542,
+   "labGames": 418,
+   "land": false,
+   "meta": 0.4873,
+   "gih": 5458,
+   "gihWr": 0.5520337119824111,
+   "gpWr": 0.5325584467045305,
+   "ohWr": 0.5690706853247219,
+   "iwd": 0.030887736539027766,
+   "gp": 15142,
+   "half": [
+    [
+     2705,
+     1517
+    ],
+    [
+     2753,
+     1496
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": true,
+   "labPct": 0.17857142857142858,
+   "humanPct": 0.4801587301587302,
+   "labMinusHuman": -0.3015873015873016,
+   "zDiff": -0.6446599115114722
+  },
+  {
+   "name": "Lotus Cobra",
+   "power": -0.0449,
+   "sdPost": 0.0249,
+   "labGames": 9880,
+   "land": false,
+   "meta": 0.4662,
+   "gih": 4154,
+   "gihWr": 0.5192585459797785,
+   "gpWr": 0.5134825519915404,
+   "ohWr": 0.51496138996139,
+   "iwd": 0.009720606174776325,
+   "gp": 11348,
+   "half": [
+    [
+     2048,
+     1052
+    ],
+    [
+     2106,
+     1105
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": true,
+   "labPct": 0.23412698412698413,
+   "humanPct": 0.11507936507936507,
+   "labMinusHuman": 0.11904761904761905,
+   "zDiff": 0.42203000660518764
+  },
+  {
+   "name": "Scavenging Ooze",
+   "power": -0.0232,
+   "sdPost": 0.0254,
+   "labGames": 8626,
+   "land": false,
+   "meta": 0.4477,
+   "gih": 2065,
+   "gihWr": 0.5036319612590799,
+   "gpWr": 0.5063116029742348,
+   "ohWr": 0.463265306122449,
+   "iwd": -0.0030638572705730116,
+   "gp": 5783,
+   "half": [
+    [
+     1038,
+     543
+    ],
+    [
+     1027,
+     497
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": true,
+   "labPct": 0.39285714285714285,
+   "humanPct": 0.051587301587301584,
+   "labMinusHuman": 0.3412698412698413,
+   "zDiff": 1.2080886477178385
+  },
+  {
+   "name": "Tireless Tracker",
+   "power": -0.0165,
+   "sdPost": 0.0217,
+   "labGames": 13228,
+   "land": false,
+   "meta": 0.4778,
+   "gih": 3895,
+   "gihWr": 0.5183568677792041,
+   "gpWr": 0.5157180826688663,
+   "ohWr": 0.49814716781365803,
+   "iwd": 0.005156983822140027,
+   "gp": 10911,
+   "half": [
+    [
+     1936,
+     996
+    ],
+    [
+     1959,
+     1023
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.43253968253968256,
+   "humanPct": 0.10714285714285714,
+   "labMinusHuman": 0.3253968253968254,
+   "zDiff": 0.8863274839472891
+  },
+  {
+   "name": "Six",
+   "power": 0.0285,
+   "sdPost": 0.0449,
+   "labGames": 1531,
+   "land": false,
+   "meta": 0.4638,
+   "gih": 4471,
+   "gihWr": 0.5347796913442183,
+   "gpWr": 0.5129592248687929,
+   "ohWr": 0.5294943820224719,
+   "iwd": 0.03666354219519924,
+   "gp": 12385,
+   "half": [
+    [
+     2226,
+     1218
+    ],
+    [
+     2245,
+     1173
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.6944444444444444,
+   "humanPct": 0.25,
+   "labMinusHuman": 0.4444444444444444,
+   "zDiff": 1.1065801755968916
+  },
+  {
+   "name": "Survival of the Fittest",
+   "power": -0.1011,
+   "sdPost": 0.0446,
+   "labGames": 1447,
+   "land": false,
+   "meta": 0.451,
+   "gih": 1544,
+   "gihWr": 0.47150259067357514,
+   "gpWr": 0.4822035819542054,
+   "ohWr": 0.45165562913907287,
+   "iwd": -0.010550532083065223,
+   "gp": 4411,
+   "half": [
+    [
+     750,
+     350
+    ],
+    [
+     794,
+     378
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.04365079365079365,
+   "humanPct": 0.003968253968253968,
+   "labMinusHuman": 0.03968253968253968,
+   "zDiff": 0.9336269273924149
+  },
+  {
+   "name": "Endurance",
+   "power": -0.0152,
+   "sdPost": 0.0638,
+   "labGames": 44,
+   "land": false,
+   "meta": 0.4134,
+   "gih": 2360,
+   "gihWr": 0.5351694915254237,
+   "gpWr": 0.5317066043249562,
+   "ohWr": 0.5135135135135135,
+   "iwd": 0.00467753958708772,
+   "gp": 6844,
+   "half": [
+    [
+     1194,
+     650
+    ],
+    [
+     1166,
+     613
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.44841269841269843,
+   "humanPct": 0.25793650793650796,
+   "labMinusHuman": 0.19047619047619047,
+   "zDiff": 0.42095563975161393
+  },
+  {
+   "name": "Eternal Witness",
+   "power": 0.0001,
+   "sdPost": 0.0247,
+   "labGames": 12533,
+   "land": false,
+   "meta": 0.4593,
+   "gih": 3200,
+   "gihWr": 0.5275,
+   "gpWr": 0.5167474906958385,
+   "ohWr": 0.5059901338971107,
+   "iwd": 0.021955553535720762,
+   "gp": 8867,
+   "half": [
+    [
+     1560,
+     842
+    ],
+    [
+     1640,
+     846
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.5436507936507936,
+   "humanPct": 0.17063492063492064,
+   "labMinusHuman": 0.37301587301587297,
+   "zDiff": 0.8785045015146797
+  },
+  {
+   "name": "Courser of Kruphix",
+   "power": 0.038,
+   "sdPost": 0.027,
+   "labGames": 9678,
+   "land": false,
+   "meta": 0.4718,
+   "gih": 2700,
+   "gihWr": 0.5051851851851852,
+   "gpWr": 0.5041454934474459,
+   "ohWr": 0.4980392156862745,
+   "iwd": 0.0026188892057155133,
+   "gp": 7478,
+   "half": [
+    [
+     1397,
+     725
+    ],
+    [
+     1303,
+     639
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.7738095238095238,
+   "humanPct": 0.06746031746031746,
+   "labMinusHuman": 0.7063492063492064,
+   "zDiff": 2.1076685312150896
+  },
+  {
+   "name": "Green Sun's Zenith",
+   "power": -0.0544,
+   "sdPost": 0.0611,
+   "labGames": 20,
+   "land": false,
+   "meta": 0.4596,
+   "gih": 3730,
+   "gihWr": 0.5533512064343163,
+   "gpWr": 0.5334119496855346,
+   "ohWr": 0.5402554136590783,
+   "iwd": 0.032592942295196825,
+   "gp": 10176,
+   "half": [
+    [
+     1808,
+     1010
+    ],
+    [
+     1922,
+     1054
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.1626984126984127,
+   "humanPct": 0.5119047619047619,
+   "labMinusHuman": -0.3492063492063492,
+   "zDiff": -0.7089341739843483
+  },
+  {
+   "name": "Questing Beast",
+   "power": 0.0981,
+   "sdPost": 0.0533,
+   "labGames": 581,
+   "land": false,
+   "meta": 0.4706,
+   "gih": 3287,
+   "gihWr": 0.5330088226346212,
+   "gpWr": 0.5293299079426247,
+   "ohWr": 0.5139949109414759,
+   "iwd": 0.0074305683715788495,
+   "gp": 9342,
+   "half": [
+    [
+     1654,
+     879
+    ],
+    [
+     1633,
+     873
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.9484126984126984,
+   "humanPct": 0.21825396825396826,
+   "labMinusHuman": 0.7301587301587301,
+   "zDiff": 2.2317641843993656
+  },
+  {
+   "name": "Titania, Protector of Argoth",
+   "power": -0.0305,
+   "sdPost": 0.0324,
+   "labGames": 4922,
+   "land": false,
+   "meta": 0.478,
+   "gih": 5115,
+   "gihWr": 0.541544477028348,
+   "gpWr": 0.5211053089643168,
+   "ohWr": 0.5054089138900909,
+   "iwd": 0.03548459109678903,
+   "gp": 13788,
+   "half": [
+    [
+     2567,
+     1381
+    ],
+    [
+     2548,
+     1389
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.32936507936507936,
+   "humanPct": 0.376984126984127,
+   "labMinusHuman": -0.047619047619047616,
+   "zDiff": 0.0007832276515805092
+  },
+  {
+   "name": "Nissa, Who Shakes the World",
+   "power": 0.2128,
+   "sdPost": 0.0323,
+   "labGames": 5155,
+   "land": false,
+   "meta": 0.4882,
+   "gih": 3406,
+   "gihWr": 0.5428655314151497,
+   "gpWr": 0.5208807111846185,
+   "ohWr": 0.5119647355163728,
+   "iwd": 0.03691800004803225,
+   "gp": 9674,
+   "half": [
+    [
+     1779,
+     951
+    ],
+    [
+     1627,
+     898
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.9880952380952381,
+   "humanPct": 0.39285714285714285,
+   "labMinusHuman": 0.5952380952380953,
+   "zDiff": 3.717197861732794
+  },
+  {
+   "name": "Natural Order",
+   "power": -0.0589,
+   "sdPost": 0.0488,
+   "labGames": 874,
+   "land": false,
+   "meta": 0.4477,
+   "gih": 3247,
+   "gihWr": 0.5343393902063444,
+   "gpWr": 0.5082939690212018,
+   "ohWr": 0.520460358056266,
+   "iwd": 0.04233660856517607,
+   "gp": 9103,
+   "half": [
+    [
+     1616,
+     890
+    ],
+    [
+     1631,
+     845
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.15476190476190477,
+   "humanPct": 0.24206349206349206,
+   "labMinusHuman": -0.0873015873015873,
+   "zDiff": -0.2294465130172123
+  },
+  {
+   "name": "Primeval Titan",
+   "power": 0.0426,
+   "sdPost": 0.0416,
+   "labGames": 1730,
+   "land": false,
+   "meta": 0.4716,
+   "gih": 3266,
+   "gihWr": 0.505511328842621,
+   "gpWr": 0.4999456934940806,
+   "ohWr": 0.4951012410189419,
+   "iwd": 0.011310186381135734,
+   "gp": 9207,
+   "half": [
+    [
+     1616,
+     817
+    ],
+    [
+     1650,
+     834
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.7817460317460317,
+   "humanPct": 0.07539682539682539,
+   "labMinusHuman": 0.7063492063492064,
+   "zDiff": 2.1692380335548447
+  },
+  {
+   "name": "Craterhoof Behemoth",
+   "power": 0.0147,
+   "sdPost": 0.033,
+   "labGames": 4733,
+   "land": false,
+   "meta": 0.4722,
+   "gih": 2213,
+   "gihWr": 0.4866696791685495,
+   "gpWr": 0.4956508469403327,
+   "ohWr": 0.45689655172413796,
+   "iwd": -0.009563842488701013,
+   "gp": 6553,
+   "half": [
+    [
+     1106,
+     542
+    ],
+    [
+     1107,
+     535
+    ]
+   ],
+   "colors": "G",
+   "group": "G",
+   "cheapCreature": false,
+   "labPct": 0.6150793650793651,
+   "humanPct": 0.011904761904761904,
+   "labMinusHuman": 0.6031746031746033,
+   "zDiff": 2.2827082670703787
+  },
+  {
+   "name": "Teferi, Time Raveler",
+   "power": 0.0209,
+   "sdPost": 0.0353,
+   "labGames": 3265,
+   "land": false,
+   "meta": 0.5299,
+   "gih": 7817,
+   "gihWr": 0.5764359728796213,
+   "gpWr": 0.53521201507191,
+   "ohWr": 0.536280487804878,
+   "iwd": 0.07657800488416638,
+   "gp": 18843,
+   "half": [
+    [
+     3942,
+     2270
+    ],
+    [
+     3875,
+     2236
+    ]
+   ],
+   "colors": "UW",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.6468253968253969,
+   "humanPct": 0.7182539682539683,
+   "labMinusHuman": -0.0714285714285714,
+   "zDiff": -0.21344904695927458
+  },
+  {
+   "name": "Teferi, Hero of Dominaria",
+   "power": 0.0854,
+   "sdPost": 0.0427,
+   "labGames": 1586,
+   "land": false,
+   "meta": 0.5524,
+   "gih": 6575,
+   "gihWr": 0.5625855513307985,
+   "gpWr": 0.5269391261659303,
+   "ohWr": 0.5187004155647903,
+   "iwd": 0.06349571301834533,
+   "gp": 16296,
+   "half": [
+    [
+     3282,
+     1824
+    ],
+    [
+     3293,
+     1875
+    ]
+   ],
+   "colors": "UW",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.9007936507936508,
+   "humanPct": 0.5753968253968254,
+   "labMinusHuman": 0.32539682539682546,
+   "zDiff": 1.1818073509793683
+  },
+  {
+   "name": "Baleful Strix",
+   "power": 0.0897,
+   "sdPost": 0.0377,
+   "labGames": 2538,
+   "land": false,
+   "meta": 0.535,
+   "gih": 6775,
+   "gihWr": 0.5468634686346864,
+   "gpWr": 0.5145071183997116,
+   "ohWr": 0.5233800935203741,
+   "iwd": 0.0556903776496242,
+   "gp": 16647,
+   "half": [
+    [
+     3456,
+     1874
+    ],
+    [
+     3319,
+     1831
+    ]
+   ],
+   "colors": "BU",
+   "group": "multi",
+   "cheapCreature": true,
+   "labPct": 0.9166666666666666,
+   "humanPct": 0.43253968253968256,
+   "labMinusHuman": 0.4841269841269841,
+   "zDiff": 1.7021099497041385
+  },
+  {
+   "name": "Psychic Frog",
+   "power": 0.0316,
+   "sdPost": 0.0337,
+   "labGames": 4028,
+   "land": false,
+   "meta": 0.4534,
+   "gih": 9341,
+   "gihWr": 0.5730649823359384,
+   "gpWr": 0.525767783708111,
+   "ohWr": 0.5887988209285188,
+   "iwd": 0.08383587016483512,
+   "gp": 22858,
+   "half": [
+    [
+     4645,
+     2695
+    ],
+    [
+     4696,
+     2658
+    ]
+   ],
+   "colors": "BU",
+   "group": "multi",
+   "cheapCreature": true,
+   "labPct": 0.7341269841269841,
+   "humanPct": 0.6706349206349206,
+   "labMinusHuman": 0.06349206349206349,
+   "zDiff": 0.04900231447771103
+  },
+  {
+   "name": "Expressive Iteration",
+   "power": -0.0265,
+   "sdPost": 0.0612,
+   "labGames": 12,
+   "land": false,
+   "meta": 0.4585,
+   "gih": 6175,
+   "gihWr": 0.5337651821862348,
+   "gpWr": 0.5175076193701321,
+   "ohWr": 0.4924755455229496,
+   "iwd": 0.029051015817933123,
+   "gp": 14765,
+   "half": [
+    [
+     3057,
+     1629
+    ],
+    [
+     3118,
+     1667
+    ]
+   ],
+   "colors": "RU",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.38492063492063494,
+   "humanPct": 0.23412698412698413,
+   "labMinusHuman": 0.1507936507936508,
+   "zDiff": 0.2871230841108101
+  },
+  {
+   "name": "Third Path Iconoclast",
+   "power": -0.0509,
+   "sdPost": 0.0312,
+   "labGames": 4725,
+   "land": false,
+   "meta": 0.4422,
+   "gih": 6439,
+   "gihWr": 0.5406118962571828,
+   "gpWr": 0.5073243453461239,
+   "ohWr": 0.5417130144605117,
+   "iwd": 0.05913883419762378,
+   "gp": 15428,
+   "half": [
+    [
+     3234,
+     1749
+    ],
+    [
+     3205,
+     1732
+    ]
+   ],
+   "colors": "RU",
+   "group": "multi",
+   "cheapCreature": true,
+   "labPct": 0.20238095238095238,
+   "humanPct": 0.3531746031746032,
+   "labMinusHuman": -0.1507936507936508,
+   "zDiff": -0.28709901690450357
+  },
+  {
+   "name": "Kolaghan's Command",
+   "power": 0.0239,
+   "sdPost": 0.052,
+   "labGames": 602,
+   "land": false,
+   "meta": 0.4926,
+   "gih": 5120,
+   "gihWr": 0.5384765625,
+   "gpWr": 0.5292796165942789,
+   "ohWr": 0.5221278497988378,
+   "iwd": 0.016451497355441047,
+   "gp": 13354,
+   "half": [
+    [
+     2612,
+     1381
+    ],
+    [
+     2508,
+     1376
+    ]
+   ],
+   "colors": "BR",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.6626984126984127,
+   "humanPct": 0.3055555555555556,
+   "labMinusHuman": 0.3571428571428571,
+   "zDiff": 0.9288536156255901
+  },
+  {
+   "name": "Bloodtithe Harvester",
+   "power": -0.0181,
+   "sdPost": 0.0574,
+   "labGames": 212,
+   "land": false,
+   "meta": 0.484,
+   "gih": 4111,
+   "gihWr": 0.5475553393334955,
+   "gpWr": 0.545870719648416,
+   "ohWr": 0.5463439752832132,
+   "iwd": 0.0039192450973124515,
+   "gp": 10922,
+   "half": [
+    [
+     2133,
+     1166
+    ],
+    [
+     1978,
+     1085
+    ]
+   ],
+   "colors": "BR",
+   "group": "multi",
+   "cheapCreature": true,
+   "labPct": 0.4166666666666667,
+   "humanPct": 0.45634920634920634,
+   "labMinusHuman": -0.03968253968253965,
+   "zDiff": 0.01858513173115167
+  },
+  {
+   "name": "Wrenn and Six",
+   "power": -0.0458,
+   "sdPost": 0.0589,
+   "labGames": 193,
+   "land": false,
+   "meta": 0.4131,
+   "gih": 4521,
+   "gihWr": 0.5458969254589693,
+   "gpWr": 0.5279986882020169,
+   "ohWr": 0.5338110165696373,
+   "iwd": 0.028971397780753416,
+   "gp": 12197,
+   "half": [
+    [
+     2287,
+     1239
+    ],
+    [
+     2234,
+     1229
+    ]
+   ],
+   "colors": "GR",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.2261904761904762,
+   "humanPct": 0.4166666666666667,
+   "labMinusHuman": -0.1904761904761905,
+   "zDiff": -0.3609921945846392
+  },
+  {
+   "name": "Minsc & Boo, Timeless Heroes",
+   "power": 0.0434,
+   "sdPost": 0.0466,
+   "labGames": 1264,
+   "land": false,
+   "meta": 0.4727,
+   "gih": 9459,
+   "gihWr": 0.5904429643725553,
+   "gpWr": 0.5526427224082843,
+   "ohWr": 0.5900747790618627,
+   "iwd": 0.0629485627801194,
+   "gp": 25977,
+   "half": [
+    [
+     4757,
+     2789
+    ],
+    [
+     4702,
+     2796
+    ]
+   ],
+   "colors": "GR",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.7976190476190477,
+   "humanPct": 0.7976190476190477,
+   "labMinusHuman": 0.0,
+   "zDiff": -0.2706592677860574
+  },
+  {
+   "name": "Knight of the Reliquary",
+   "power": -0.009,
+   "sdPost": 0.0616,
+   "labGames": 29,
+   "land": false,
+   "meta": 0.524,
+   "gih": 1267,
+   "gihWr": 0.5406471981057617,
+   "gpWr": 0.5250753631131817,
+   "ohWr": 0.5122749590834698,
+   "iwd": 0.02484873525349862,
+   "gp": 3649,
+   "half": [
+    [
+     595,
+     309
+    ],
+    [
+     672,
+     376
+    ]
+   ],
+   "colors": "GW",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.4801587301587302,
+   "humanPct": 0.36904761904761907,
+   "labMinusHuman": 0.1111111111111111,
+   "zDiff": 0.35847424480118495
+  },
+  {
+   "name": "Lingering Souls",
+   "power": -0.0301,
+   "sdPost": 0.0214,
+   "labGames": 13658,
+   "land": false,
+   "meta": 0.5565,
+   "gih": 4348,
+   "gihWr": 0.562557497700092,
+   "gpWr": 0.5516764604217076,
+   "ohWr": 0.5383843452082288,
+   "iwd": 0.01812082870079179,
+   "gp": 11572,
+   "half": [
+    [
+     2196,
+     1245
+    ],
+    [
+     2152,
+     1201
+    ]
+   ],
+   "colors": "BW",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.3373015873015873,
+   "humanPct": 0.5674603174603174,
+   "labMinusHuman": -0.23015873015873012,
+   "zDiff": -0.5997558747049088
+  },
+  {
+   "name": "Uro, Titan of Nature's Wrath",
+   "power": 0.0499,
+   "sdPost": 0.0461,
+   "labGames": 1111,
+   "land": false,
+   "meta": 0.5054,
+   "gih": 4649,
+   "gihWr": 0.5332329533232953,
+   "gpWr": 0.5142373154795515,
+   "ohWr": 0.49707602339181284,
+   "iwd": 0.033765718373908016,
+   "gp": 12397,
+   "half": [
+    [
+     2366,
+     1301
+    ],
+    [
+     2283,
+     1178
+    ]
+   ],
+   "colors": "GU",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.8293650793650794,
+   "humanPct": 0.2261904761904762,
+   "labMinusHuman": 0.6031746031746033,
+   "zDiff": 1.4814799339537927
+  },
+  {
+   "name": "Oko, Thief of Crowns",
+   "power": 0.0781,
+   "sdPost": 0.0368,
+   "labGames": 2925,
+   "land": false,
+   "meta": 0.4868,
+   "gih": 7259,
+   "gihWr": 0.5733572117371539,
+   "gpWr": 0.5347663961395043,
+   "ohWr": 0.5622161671207992,
+   "iwd": 0.06769970484355314,
+   "gp": 18236,
+   "half": [
+    [
+     3659,
+     2111
+    ],
+    [
+     3600,
+     2051
+    ]
+   ],
+   "colors": "GU",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.8928571428571429,
+   "humanPct": 0.6944444444444444,
+   "labMinusHuman": 0.19841269841269848,
+   "zDiff": 0.7581435645957817
+  },
+  {
+   "name": "Grist, the Hunger Tide",
+   "power": 0.094,
+   "sdPost": 0.0514,
+   "labGames": 718,
+   "land": false,
+   "meta": 0.5358,
+   "gih": 3399,
+   "gihWr": 0.5472197705207414,
+   "gpWr": 0.5166098807495741,
+   "ohWr": 0.5427841634738186,
+   "iwd": 0.05280441275459835,
+   "gp": 9392,
+   "half": [
+    [
+     1620,
+     879
+    ],
+    [
+     1779,
+     981
+    ]
+   ],
+   "colors": "BG",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.9325396825396826,
+   "humanPct": 0.44047619047619047,
+   "labMinusHuman": 0.4920634920634921,
+   "zDiff": 1.7581791485425895
+  },
+  {
+   "name": "Deathrite Shaman",
+   "power": -0.0267,
+   "sdPost": 0.0623,
+   "labGames": 199,
+   "land": false,
+   "meta": 0.4227,
+   "gih": 4443,
+   "gihWr": 0.537474679270763,
+   "gpWr": 0.5187554019014693,
+   "ohWr": 0.5450684285040113,
+   "iwd": 0.03262446529073448,
+   "gp": 11570,
+   "half": [
+    [
+     2276,
+     1240
+    ],
+    [
+     2167,
+     1148
+    ]
+   ],
+   "colors": "BG",
+   "group": "multi",
+   "cheapCreature": true,
+   "labPct": 0.376984126984127,
+   "humanPct": 0.28174603174603174,
+   "labMinusHuman": 0.09523809523809523,
+   "zDiff": 0.17693190623663407
+  },
+  {
+   "name": "Lightning Helix",
+   "power": -0.0401,
+   "sdPost": 0.0364,
+   "labGames": 2840,
+   "land": false,
+   "meta": 0.5682,
+   "gih": 7703,
+   "gihWr": 0.5923666104115279,
+   "gpWr": 0.5956226964553851,
+   "ohWr": 0.5792320173066522,
+   "iwd": -0.005003106164883864,
+   "gp": 21977,
+   "half": [
+    [
+     3873,
+     2273
+    ],
+    [
+     3830,
+     2290
+    ]
+   ],
+   "colors": "RW",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.25793650793650796,
+   "humanPct": 0.8134920634920635,
+   "labMinusHuman": -0.5555555555555556,
+   "zDiff": -1.61475649609377
+  },
+  {
+   "name": "Phlage, Titan of Fire's Fury",
+   "power": -0.0002,
+   "sdPost": 0.0492,
+   "labGames": 997,
+   "land": false,
+   "meta": 0.5442,
+   "gih": 10159,
+   "gihWr": 0.6246677822620337,
+   "gpWr": 0.6068614130434783,
+   "ohWr": 0.6094732704402516,
+   "iwd": 0.027606966169480662,
+   "gp": 29440,
+   "half": [
+    [
+     4992,
+     3154
+    ],
+    [
+     5167,
+     3192
+    ]
+   ],
+   "colors": "RW",
+   "group": "multi",
+   "cheapCreature": false,
+   "labPct": 0.5357142857142857,
+   "humanPct": 0.9642857142857143,
+   "labMinusHuman": -0.4285714285714286,
+   "zDiff": -1.9316637231611347
+  },
+  {
+   "name": "Black Lotus",
+   "power": 0.0048,
+   "sdPost": 0.0269,
+   "labGames": 4899,
+   "land": false,
+   "meta": 0.4977,
+   "gih": 9381,
+   "gihWr": 0.6352201257861635,
+   "gpWr": 0.570217209690894,
+   "ohWr": 0.6571491810535636,
+   "iwd": 0.1128242535061964,
+   "gp": 23940,
+   "half": [
+    [
+     4876,
+     3047
+    ],
+    [
+     4505,
+     2912
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.5753968253968254,
+   "humanPct": 0.996031746031746,
+   "labMinusHuman": -0.4206349206349207,
+   "zDiff": -2.159183968878502
+  },
+  {
+   "name": "Sol Ring",
+   "power": -0.0073,
+   "sdPost": 0.027,
+   "labGames": 4849,
+   "land": false,
+   "meta": 0.5078,
+   "gih": 9165,
+   "gihWr": 0.6170212765957447,
+   "gpWr": 0.5604767879548306,
+   "ohWr": 0.6502929247408743,
+   "iwd": 0.09449157505995798,
+   "gp": 23910,
+   "half": [
+    [
+     4490,
+     2756
+    ],
+    [
+     4675,
+     2899
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.4880952380952381,
+   "humanPct": 0.9563492063492064,
+   "labMinusHuman": -0.4682539682539683,
+   "zDiff": -1.8204509177061945
+  },
+  {
+   "name": "Skullclamp",
+   "power": -0.0902,
+   "sdPost": 0.0162,
+   "labGames": 16424,
+   "land": false,
+   "meta": 0.485,
+   "gih": 8438,
+   "gihWr": 0.5638776961365253,
+   "gpWr": 0.5616964362757788,
+   "ohWr": 0.5557160048134777,
+   "iwd": 0.0064311931923920485,
+   "gp": 23178,
+   "half": [
+    [
+     4448,
+     2525
+    ],
+    [
+     3990,
+     2233
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.06746031746031746,
+   "humanPct": 0.5833333333333334,
+   "labMinusHuman": -0.5158730158730159,
+   "zDiff": -1.5653254925082378
+  },
+  {
+   "name": "Smuggler's Copter",
+   "power": 0.0242,
+   "sdPost": 0.023,
+   "labGames": 7674,
+   "land": false,
+   "meta": 0.4879,
+   "gih": 8787,
+   "gihWr": 0.5801752589052008,
+   "gpWr": 0.5804534087648096,
+   "ohWr": 0.585614849187935,
+   "iwd": -3.9850259480056494e-05,
+   "gp": 24393,
+   "half": [
+    [
+     4410,
+     2563
+    ],
+    [
+     4377,
+     2535
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.6706349206349206,
+   "humanPct": 0.7579365079365079,
+   "labMinusHuman": -0.08730158730158732,
+   "zDiff": -0.2704890152501144
+  },
+  {
+   "name": "Umezawa's Jitte",
+   "power": -0.0337,
+   "sdPost": 0.0201,
+   "labGames": 9850,
+   "land": false,
+   "meta": 0.5134,
+   "gih": 6269,
+   "gihWr": 0.5452225235284734,
+   "gpWr": 0.5628983562562898,
+   "ohWr": 0.5243983957219251,
+   "iwd": -0.026885953483020808,
+   "gp": 17886,
+   "half": [
+    [
+     3120,
+     1724
+    ],
+    [
+     3149,
+     1694
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.3134920634920635,
+   "humanPct": 0.4087301587301587,
+   "labMinusHuman": -0.09523809523809523,
+   "zDiff": -0.15479528155593208
+  },
+  {
+   "name": "Retrofitter Foundry",
+   "power": 0.131,
+   "sdPost": 0.0192,
+   "labGames": 11426,
+   "land": false,
+   "meta": 0.5276,
+   "gih": 7714,
+   "gihWr": 0.5548353642727508,
+   "gpWr": 0.5257764136711232,
+   "ohWr": 0.5441941074523396,
+   "iwd": 0.06040800070626351,
+   "gp": 19223,
+   "half": [
+    [
+     3857,
+     2155
+    ],
+    [
+     3857,
+     2125
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.9722222222222222,
+   "humanPct": 0.5277777777777778,
+   "labMinusHuman": 0.4444444444444444,
+   "zDiff": 2.109269770380847
+  },
+  {
+   "name": "Batterskull",
+   "power": 0.1161,
+   "sdPost": 0.032,
+   "labGames": 3206,
+   "land": false,
+   "meta": 0.551,
+   "gih": 3204,
+   "gihWr": 0.5202871410736579,
+   "gpWr": 0.5243847874720358,
+   "ohWr": 0.49825296995108315,
+   "iwd": 0.005135625922142784,
+   "gp": 8940,
+   "half": [
+    [
+     1571,
+     806
+    ],
+    [
+     1633,
+     861
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.9563492063492064,
+   "humanPct": 0.1388888888888889,
+   "labMinusHuman": 0.8174603174603174,
+   "zDiff": 2.876851488455312
+  },
+  {
+   "name": "Karn, Scion of Urza",
+   "power": 0.0691,
+   "sdPost": 0.0203,
+   "labGames": 9982,
+   "land": false,
+   "meta": 0.523,
+   "gih": 5207,
+   "gihWr": 0.541578644132898,
+   "gpWr": 0.5092571252976876,
+   "ohWr": 0.5094594594594595,
+   "iwd": 0.055785431820348674,
+   "gp": 13017,
+   "half": [
+    [
+     2513,
+     1385
+    ],
+    [
+     2694,
+     1435
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.8849206349206349,
+   "humanPct": 0.38492063492063494,
+   "labMinusHuman": 0.49999999999999994,
+   "zDiff": 1.5368042738403411
+  },
+  {
+   "name": "Kaldra Compleat",
+   "power": 0.0263,
+   "sdPost": 0.03,
+   "labGames": 4176,
+   "land": false,
+   "meta": 0.5052,
+   "gih": 3033,
+   "gihWr": 0.5047807451368282,
+   "gpWr": 0.5239745165977423,
+   "ohWr": 0.4888408927285817,
+   "iwd": 0.004559604048814059,
+   "gp": 8947,
+   "half": [
+    [
+     1552,
+     767
+    ],
+    [
+     1481,
+     764
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.6785714285714286,
+   "humanPct": 0.05952380952380952,
+   "labMinusHuman": 0.6190476190476191,
+   "zDiff": 1.9387938914983818
+  },
+  {
+   "name": "Myr Battlesphere",
+   "power": -0.0035,
+   "sdPost": 0.0277,
+   "labGames": 4625,
+   "land": false,
+   "meta": 0.4985,
+   "gih": 3782,
+   "gihWr": 0.5007932310946589,
+   "gpWr": 0.4937543719396423,
+   "ohWr": 0.47503121098626716,
+   "iwd": 0.01529904981290181,
+   "gp": 10007,
+   "half": [
+    [
+     1902,
+     977
+    ],
+    [
+     1880,
+     917
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.5277777777777778,
+   "humanPct": 0.04365079365079365,
+   "labMinusHuman": 0.48412698412698413,
+   "zDiff": 1.5940582074256284
+  },
+  {
+   "name": "Emrakul, the Aeons Torn",
+   "power": -0.1193,
+   "sdPost": 0.0298,
+   "labGames": 4161,
+   "land": false,
+   "meta": 0.4641,
+   "gih": 2821,
+   "gihWr": 0.5225097483161999,
+   "gpWr": 0.48803955632767604,
+   "ohWr": 0.5040387722132472,
+   "iwd": 0.06895288379422437,
+   "gp": 7483,
+   "half": [
+    [
+     1357,
+     702
+    ],
+    [
+     1464,
+     772
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false,
+   "labPct": 0.01984126984126984,
+   "humanPct": 0.14682539682539683,
+   "labMinusHuman": -0.12698412698412698,
+   "zDiff": -0.8199685311100926
+  },
+  {
+   "name": "Tundra",
+   "power": 0.0388,
+   "sdPost": 0.0422,
+   "labGames": 1685,
+   "land": true,
+   "meta": 0.5137,
+   "gih": 7911,
+   "gihWr": 0.5564403994438124,
+   "gpWr": 0.5417633960297532,
+   "ohWr": 0.5284617421233784,
+   "iwd": 0.02514725632370196,
+   "gp": 21107,
+   "half": [
+    [
+     3851,
+     2135
+    ],
+    [
+     4060,
+     2267
+    ]
+   ],
+   "colors": "UW",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Underground Sea",
+   "power": 0.0347,
+   "sdPost": 0.045,
+   "labGames": 1325,
+   "land": true,
+   "meta": 0.4715,
+   "gih": 7357,
+   "gihWr": 0.5383988038602692,
+   "gpWr": 0.5156129826180588,
+   "ohWr": 0.5320870535714286,
+   "iwd": 0.037978988578992956,
+   "gp": 19503,
+   "half": [
+    [
+     3507,
+     1882
+    ],
+    [
+     3850,
+     2079
+    ]
+   ],
+   "colors": "BU",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Badlands",
+   "power": 0.0043,
+   "sdPost": 0.0506,
+   "labGames": 666,
+   "land": true,
+   "meta": 0.3774,
+   "gih": 7247,
+   "gihWr": 0.5467089830274596,
+   "gpWr": 0.5333898981832701,
+   "ohWr": 0.5435868961687951,
+   "iwd": 0.02310383281286732,
+   "gp": 20036,
+   "half": [
+    [
+     3560,
+     1934
+    ],
+    [
+     3687,
+     2028
+    ]
+   ],
+   "colors": "BR",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Taiga",
+   "power": -0.0123,
+   "sdPost": 0.0506,
+   "labGames": 644,
+   "land": true,
+   "meta": 0.4824,
+   "gih": 6209,
+   "gihWr": 0.5492027701723304,
+   "gpWr": 0.5439152283154906,
+   "ohWr": 0.5559666975023126,
+   "iwd": 0.008354873190977496,
+   "gp": 18308,
+   "half": [
+    [
+     3015,
+     1661
+    ],
+    [
+     3194,
+     1749
+    ]
+   ],
+   "colors": "GR",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Savannah",
+   "power": 0.0178,
+   "sdPost": 0.0483,
+   "labGames": 854,
+   "land": true,
+   "meta": 0.5322,
+   "gih": 5097,
+   "gihWr": 0.5409064155385521,
+   "gpWr": 0.5400245465702986,
+   "ohWr": 0.5385208012326657,
+   "iwd": 0.002796012141524473,
+   "gp": 14666,
+   "half": [
+    [
+     2633,
+     1446
+    ],
+    [
+     2464,
+     1311
+    ]
+   ],
+   "colors": "GW",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Scrubland",
+   "power": 0.0226,
+   "sdPost": 0.0484,
+   "labGames": 879,
+   "land": true,
+   "meta": 0.5296,
+   "gih": 6168,
+   "gihWr": 0.5419909208819714,
+   "gpWr": 0.5355335921873161,
+   "ohWr": 0.541070834718989,
+   "iwd": 0.011594362707635475,
+   "gp": 16998,
+   "half": [
+    [
+     3116,
+     1691
+    ],
+    [
+     3052,
+     1652
+    ]
+   ],
+   "colors": "BW",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Volcanic Island",
+   "power": -0.0035,
+   "sdPost": 0.0453,
+   "labGames": 1223,
+   "land": true,
+   "meta": 0.4538,
+   "gih": 8130,
+   "gihWr": 0.5509225092250922,
+   "gpWr": 0.5367354492458591,
+   "ohWr": 0.551226916266127,
+   "iwd": 0.024102441326186108,
+   "gp": 21614,
+   "half": [
+    [
+     4122,
+     2225
+    ],
+    [
+     4008,
+     2254
+    ]
+   ],
+   "colors": "RU",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Bayou",
+   "power": -0.0171,
+   "sdPost": 0.0503,
+   "labGames": 677,
+   "land": true,
+   "meta": 0.4174,
+   "gih": 5488,
+   "gihWr": 0.5081997084548106,
+   "gpWr": 0.5056061205645693,
+   "ohWr": 0.5016611295681063,
+   "iwd": 0.006040222517804339,
+   "gp": 15162,
+   "half": [
+    [
+     2732,
+     1359
+    ],
+    [
+     2756,
+     1430
+    ]
+   ],
+   "colors": "BG",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Plateau",
+   "power": -0.0228,
+   "sdPost": 0.0479,
+   "labGames": 937,
+   "land": true,
+   "meta": 0.5386,
+   "gih": 10258,
+   "gihWr": 0.5906609475531293,
+   "gpWr": 0.5915135117299634,
+   "ohWr": 0.5969652109548482,
+   "iwd": -0.0015069126301547886,
+   "gp": 30307,
+   "half": [
+    [
+     5076,
+     3026
+    ],
+    [
+     5182,
+     3033
+    ]
+   ],
+   "colors": "RW",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Tropical Island",
+   "power": 0.0204,
+   "sdPost": 0.0471,
+   "labGames": 991,
+   "land": true,
+   "meta": 0.4967,
+   "gih": 6044,
+   "gihWr": 0.5249834546657842,
+   "gpWr": 0.5185469580626108,
+   "ohWr": 0.5187870797626896,
+   "iwd": 0.012610001347449051,
+   "gp": 16930,
+   "half": [
+    [
+     3004,
+     1567
+    ],
+    [
+     3040,
+     1606
+    ]
+   ],
+   "colors": "GU",
+   "group": "multi",
+   "cheapCreature": false
+  },
+  {
+   "name": "Flooded Strand",
+   "power": -0.0288,
+   "sdPost": 0.0364,
+   "labGames": 3052,
+   "land": true,
+   "meta": 0.53,
+   "gih": 10295,
+   "gihWr": 0.5569694026226324,
+   "gpWr": 0.5427053066218076,
+   "ohWr": 0.5602646268348149,
+   "iwd": 0.024175725524028246,
+   "gp": 26156,
+   "half": [
+    [
+     5090,
+     2864
+    ],
+    [
+     5205,
+     2870
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Polluted Delta",
+   "power": -0.0541,
+   "sdPost": 0.0409,
+   "labGames": 2008,
+   "land": true,
+   "meta": 0.4619,
+   "gih": 9579,
+   "gihWr": 0.5455684309426871,
+   "gpWr": 0.5254468718967229,
+   "ohWr": 0.5426731078904992,
+   "iwd": 0.03467237858593719,
+   "gp": 24168,
+   "half": [
+    [
+     4765,
+     2638
+    ],
+    [
+     4814,
+     2588
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Bloodstained Mire",
+   "power": -0.0274,
+   "sdPost": 0.047,
+   "labGames": 1027,
+   "land": true,
+   "meta": 0.4914,
+   "gih": 10276,
+   "gihWr": 0.5522576878162709,
+   "gpWr": 0.5439517480174243,
+   "ohWr": 0.5592592592592592,
+   "iwd": 0.014902416640158789,
+   "gp": 26859,
+   "half": [
+    [
+     5346,
+     2916
+    ],
+    [
+     4930,
+     2759
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Wooded Foothills",
+   "power": -0.0865,
+   "sdPost": 0.043,
+   "labGames": 1528,
+   "land": true,
+   "meta": 0.4758,
+   "gih": 9904,
+   "gihWr": 0.5621970920840065,
+   "gpWr": 0.5526075022872827,
+   "ohWr": 0.5697649798856659,
+   "iwd": 0.01661304649996087,
+   "gp": 26232,
+   "half": [
+    [
+     4970,
+     2744
+    ],
+    [
+     4934,
+     2824
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Windswept Heath",
+   "power": -0.055,
+   "sdPost": 0.0411,
+   "labGames": 1894,
+   "land": true,
+   "meta": 0.4596,
+   "gih": 9445,
+   "gihWr": 0.5548967707781896,
+   "gpWr": 0.5483457502202996,
+   "ohWr": 0.5522224655134662,
+   "iwd": 0.011741620843378597,
+   "gp": 24966,
+   "half": [
+    [
+     4687,
+     2609
+    ],
+    [
+     4758,
+     2632
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Marsh Flats",
+   "power": -0.0005,
+   "sdPost": 0.0435,
+   "labGames": 1541,
+   "land": true,
+   "meta": 0.55,
+   "gih": 10301,
+   "gihWr": 0.5537326473157946,
+   "gpWr": 0.5466556564822461,
+   "ohWr": 0.5497887748943875,
+   "iwd": 0.012308138845410044,
+   "gp": 26642,
+   "half": [
+    [
+     5163,
+     2898
+    ],
+    [
+     5138,
+     2806
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Scalding Tarn",
+   "power": -0.0008,
+   "sdPost": 0.0406,
+   "labGames": 2036,
+   "land": true,
+   "meta": 0.4714,
+   "gih": 10378,
+   "gihWr": 0.5605126228560416,
+   "gpWr": 0.5435953862498103,
+   "ohWr": 0.5532660210179271,
+   "iwd": 0.02837406291683575,
+   "gp": 26356,
+   "half": [
+    [
+     4997,
+     2769
+    ],
+    [
+     5381,
+     3048
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Verdant Catacombs",
+   "power": -0.0345,
+   "sdPost": 0.0429,
+   "labGames": 1561,
+   "land": true,
+   "meta": 0.4618,
+   "gih": 8702,
+   "gihWr": 0.5452769478280854,
+   "gpWr": 0.5241655781271114,
+   "ohWr": 0.5450121654501217,
+   "iwd": 0.0359353778416458,
+   "gp": 22201,
+   "half": [
+    [
+     4251,
+     2351
+    ],
+    [
+     4451,
+     2394
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Arid Mesa",
+   "power": 0.0058,
+   "sdPost": 0.0426,
+   "labGames": 1670,
+   "land": true,
+   "meta": 0.561,
+   "gih": 11405,
+   "gihWr": 0.575010960105217,
+   "gpWr": 0.568401340429726,
+   "ohWr": 0.5865384615384616,
+   "iwd": 0.010668151360312073,
+   "gp": 30438,
+   "half": [
+    [
+     5669,
+     3285
+    ],
+    [
+     5736,
+     3273
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Misty Rainforest",
+   "power": -0.0738,
+   "sdPost": 0.0385,
+   "labGames": 2525,
+   "land": true,
+   "meta": 0.4739,
+   "gih": 9081,
+   "gihWr": 0.5556656755863891,
+   "gpWr": 0.5329168461869883,
+   "ohWr": 0.5501640881387717,
+   "iwd": 0.03888618545244127,
+   "gp": 23210,
+   "half": [
+    [
+     4605,
+     2606
+    ],
+    [
+     4476,
+     2440
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  },
+  {
+   "name": "Ancient Tomb",
+   "power": -0.0101,
+   "sdPost": 0.0622,
+   "labGames": 0,
+   "land": true,
+   "meta": null,
+   "gih": 6863,
+   "gihWr": 0.5515080868424888,
+   "gpWr": 0.5442435266424138,
+   "ohWr": 0.5451185709886048,
+   "iwd": 0.011366460701374481,
+   "gp": 18692,
+   "half": [
+    [
+     3390,
+     1883
+    ],
+    [
+     3473,
+     1902
+    ]
+   ],
+   "colors": "",
+   "group": "C",
+   "cheapCreature": false
+  }
+ ],
+ "inputs": {
+  "stats": [
+   "var/ml/cards17l/premier.json"
+  ],
+  "power": "var/ml/matchup/nights-1-2/power.tsv",
+  "cube": "cubes/vintage-cube-180.md",
+  "meta": "var/cubelab/meta-regen/out/vintage-cube-180.meta.json",
+  "cards": "var/ml/17lands/cards.csv"
+ }
+}

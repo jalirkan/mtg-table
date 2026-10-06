@@ -1,0 +1,33 @@
+==== J099 pilot1 started 2026-10-06T08:06:48-04:00 in unit lab-J099-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+night 3 quarantine (J071): 45 recordings, 0 now pass, 45 still fail
+M55	1	NEW: night 4 waits
+other	2	NEW: night 4 waits
+own-hand-no-name	43	known
+shape	2	NEW: night 4 waits
+nightstats: nights [1, 2, 3, 4], night 4: 26 keys -> var/cubelab/queue-night-4-stats
+  ok       normal/fair-fight: version change allowed (codeTree, weightsSha), 6083 draft(s) already there
+  ok       normal/modern-era: version change allowed (codeTree, weightsSha), 6114 draft(s) already there
+  ok       normal/omega: version change allowed (codeTree, weightsSha), 5484 draft(s) already there
+  ok       normal/pauper: version change allowed (codeTree, weightsSha), 8777 draft(s) already there
+  ok       normal/peasant: version change allowed (codeTree, weightsSha), 8739 draft(s) already there
+  ok       normal/synergy: version change allowed (codeTree, weightsSha), 7386 draft(s) already there
+  ok       normal/vintage: version change allowed (codeTree, weightsSha), 5417 draft(s) already there
+  ok       bridge/pauper+modern-era: version change allowed (codeTree, weightsSha), 966 draft(s) already there
+  ok       bridge/peasant+modern-era: version change allowed (codeTree, weightsSha), 851 draft(s) already there
+  ok       bridge/peasant+synergy: version change allowed (codeTree, weightsSha), 875 draft(s) already there
+  ok       bridge/pauper+synergy: version change allowed (codeTree, weightsSha), 939 draft(s) already there
+  ok       bridge/fair-fight+modern-era: version change allowed (codeTree, weightsSha), 777 draft(s) already there
+  ok       bridge/fair-fight+synergy: version change allowed (codeTree, weightsSha), 745 draft(s) already there
+  ok       bridge/synergy+omega: version change allowed (codeTree, weightsSha), 677 draft(s) already there
+  ok       bridge/synergy+vintage: version change allowed (codeTree, weightsSha), 666 draft(s) already there
+  ok       bridge/pauper+omega: version change allowed (codeTree, weightsSha), 657 draft(s) already there
+  ok       bridge/pauper+vintage: version change allowed (codeTree, weightsSha), 659 draft(s) already there
+  ok       bridge/peasant+omega: version change allowed (codeTree, weightsSha), 566 draft(s) already there
+  ok       bridge/peasant+vintage: version change allowed (codeTree, weightsSha), 570 draft(s) already there
+  ok       bridge/fair-fight+vintage: version change allowed (codeTree, weightsSha), 544 draft(s) already there
+  ok       bridge/modern-era+vintage: version change allowed (codeTree, weightsSha), 527 draft(s) already there
+  ok       bridge/fair-fight+omega: version change allowed (codeTree, weightsSha), 505 draft(s) already there
+  ok       bridge/modern-era+omega: version change allowed (codeTree, weightsSha), 499 draft(s) already there
+  ok       bridge/pauper+peasant: version change allowed (codeTree, weightsSha), 380 draft(s) already there
+  ok       bridge/fair-fight+peasant: version change allowed (codeTree, weightsSha), 332 draft(s) already there
+  ok       bridge/modern-era+synergy: version change allowed (codeTree, weightsSha), 265 draft(s) already there

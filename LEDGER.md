@@ -358,3 +358,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: -
 - summary: results/J097/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table fd1c91d
+
+## J098 DONE: The lab's card strengths against human results (D396): J062's M0 power and the Vintage meta win rates against 17Lands' Powered Cube GIH WR, by Spearman with a bootstrap interval, the biggest disagreements and colour groups; no Forge
+
+- finished: 2026-10-06T08:07:03-04:00
+- decides: whether the lab's card ratings may be presented to a human drafter (ForgeCoach's deck assistant) as more than "strength in Forge's hands", and which of M0 power and the per-cube meta win rate is the better guide
+- hypothesis: the lab's M0 card power ranks the Vintage cube's cards only weakly like human GIH WR (Forge is the only pilot), and Forge rates aggressive cards (red, cheap creatures) above where humans do
+- rule: D396 CARDS_RULE (cards17l.py), written before any real data was compared: on nonland Vintage-cube cards with >= 500 human GIH games (PremierDraft, AI-limited cards out), Spearman(power, GIH WR) with a 2,000-resample bootstrap over cards: AGREES when rho >= 0.5 and the 95% interval's lower end > 0.3, WEAK when the lower end > 0 but not that, NONE otherwise; Forge OVERRATES (UNDERRATES) a group when mean z(lab) - z(human) has a 95% interval above (below) 0, read for the pre-registered groups red and cheap creatures (mana value <= 2); everything else (meta win rate, GP WR, IWD, other colours, TradDraft pooled) is reported without a verdict
+- outcome: done
+- headline: p.compared 147, p.nonland 126, p.rho 0.2946, p.lo 0.1375, p.hi 0.4388, p.reading 1, p.R_mean -0.7364, p.cheapCreature_mean -0.3475
+- summary: results/J098/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table fd1c91d

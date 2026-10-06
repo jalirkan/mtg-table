@@ -1,0 +1,4 @@
+PASS  st.written == 1 and st.partial == 0 and st.games >= 250000 and st.bad == 0   [st.written = 1, st.partial = 0, st.games = 266117, st.bad = 0]
+PASS  p.written == 1 and p.partial == 0 and p.ruleChanged == 0   [p.written = 1, p.partial = 0, p.ruleChanged = 0]
+PASS  p.compared >= 100 and p.nonland >= 80   [p.compared = 147, p.nonland = 126]
+PASS  pooled.written == 1   [pooled.written = 1]
