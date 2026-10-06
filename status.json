@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-06T05:00:13-04:00",
- "heartbeat": "2026-10-06T05:00:13-04:00",
+ "updated": "2026-10-06T05:00:27-04:00",
+ "heartbeat": "2026-10-06T05:00:27-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.39,
+  "load1": 3.28,
   "memUsedGb": 4.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 2146,
@@ -24,9 +24,9 @@
    "id": "J093",
    "title": "Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-06T04:59:58-04:00",
-   "elapsed": 15,
+   "elapsed": 29,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -90,7 +90,7 @@
    "cubes": [],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J093-pilot1"
+   "detail": "lab-J093-pilot2"
   },
   {
    "publicTitle": "M55 root-cause extract",
@@ -98,9 +98,9 @@
    "id": "J094",
    "title": "Extract the one M55 failure (night 3, modern-era+omega game 354 g1 seat 1, decision 58 names land:99) so its cause can be found",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-06T04:59:58-04:00",
-   "elapsed": 15,
+   "elapsed": 29,
    "done": null,
    "total": null,
    "unit": null,
@@ -126,7 +126,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J094-prepare"
+   "detail": "lab-J094-pilot1"
   }
  ],
  "queue": [
