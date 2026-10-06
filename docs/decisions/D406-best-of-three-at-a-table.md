@@ -81,3 +81,13 @@ starting match 2. `tools/match-launcher-selftest.mjs` (11 new checks) and
 `mtgtable.TableSelfTest` (15 new) hold the seats file's new keys; six
 `fixtures/negative/redaction/m60-*` controls hold the wire. Gate step 10i's
 automated game is now game 2 of 3 with a chooser.
+
+**Also closed here (D408's open gap).** At a table of two the bridge's own
+`wsPort` is `TableServer`'s loopback `/health` door, which answered `ok` to a
+request carrying Cloudflare's headers. It now refuses them (403) on every path,
+`/health` included, as `TunnelGate` does in every other mode; `tunnel-check`'s
+three WARNs on it are FAILs, `web/test/tunnel.test.ts` holds both sides, and
+`TableSelfTest` checks the real door (6 new checks). Measured on a real table
+(`ws-two-humans.mjs`): `CF-Connecting-IP`, `CF-Ray` and
+`Cf-Access-Jwt-Assertion` → 403 on `/health` and `/`, while the game played on.
+

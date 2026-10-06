@@ -858,7 +858,8 @@ final class TableMatch implements WireGuiGame.Table {
         if (server != null) {
             System.out.println("table door     = " + server.admitted() + " admitted, " + server.tokenRefusals()
                     + " refused for want of a seat token, " + server.originRefusals() + " by Origin, "
-                    + server.limited() + " rate-limited, " + server.observeRefusals() + " observers refused");
+                    + server.limited() + " rate-limited, " + server.observeRefusals() + " observers refused, "
+                    + server.tunnelRefusals() + " tunnelled request(s) refused on the health port (D408)");
         }
         System.out.println("REVEAL count   = " + Snap.reveals() + " (full card in a hidden zone we do not own)");
         System.out.println("game wall time = " + gameMs + " ms");

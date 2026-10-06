@@ -239,6 +239,11 @@ public final class TableSelfTest {
             s1.push(HELLO1);
             s1.push(TABLE1);
             eq("health with both seats", 200, request(hp, "/health", null, null).status);
+            // D408: the bridge's own port is never tunnelled, at a table too: a tunnel's headers are 403 on every path.
+            for (final String h : WsTransport.TUNNEL_HEADERS) {
+                eq("the health port refuses " + h + " on /health", 403, requestWith(hp, "/health", h, "198.51.100.7").status);
+                eq("the health port refuses " + h + " on another path", 403, requestWith(hp, "/", h, "198.51.100.7").status);
+            }
             eq("the health port opens no seat", 404, upgrade(hp, "/ws?seat=" + T0, null, null, null).status);
             eq("the health port has no observers", 404, upgrade(hp, "/observe", null, null, null).status);
             eq("the table port serves /ws only: no /health", 404, request(p, "/health", null, null).status);
@@ -316,6 +321,20 @@ public final class TableSelfTest {
                 req.append("CF-Connecting-IP: ").append(cf).append("\r\n");
             }
             s.getOutputStream().write(req.append("\r\n").toString().getBytes(StandardCharsets.US_ASCII));
+            final Resp r = new Resp();
+            r.status = status(new BufferedInputStream(s.getInputStream()));
+            return r;
+        }
+    }
+
+    /** A GET carrying one extra header. */
+    private static Resp requestWith(final int port, final String target, final String name, final String value) throws IOException {
+        try (Socket s = new Socket()) {
+            s.connect(new InetSocketAddress("127.0.0.1", port), TIMEOUT_MS);
+            s.setSoTimeout(TIMEOUT_MS);
+            final String req = "GET " + target + " HTTP/1.1\r\nHost: 127.0.0.1:" + port + "\r\nConnection: close\r\n"
+                    + name + ": " + value + "\r\n\r\n";
+            s.getOutputStream().write(req.getBytes(StandardCharsets.US_ASCII));
             final Resp r = new Resp();
             r.status = status(new BufferedInputStream(s.getInputStream()));
             return r;

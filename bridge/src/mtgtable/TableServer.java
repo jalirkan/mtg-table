@@ -126,6 +126,8 @@ public final class TableServer {
     private static final Pattern IP = Pattern.compile("^[0-9a-fA-F:.]{2,45}$");
 
     private final int port;
+    /** D408: requests on the health port that carried a tunnel's headers, refused. */
+    private final java.util.concurrent.atomic.AtomicInteger tunnelRefusals = new java.util.concurrent.atomic.AtomicInteger();
     private final int healthPort;
     private final boolean lan;
     private final List<String> allowedOrigins;
@@ -335,6 +337,11 @@ public final class TableServer {
         return port;
     }
 
+    /** D408: requests on the health port refused for a tunnel's headers. */
+    int tunnelRefusals() {
+        return tunnelRefusals.get();
+    }
+
     /** The health port as bound, or 0. */
     int healthPort() {
         final Channel s = healthServer;
@@ -446,6 +453,16 @@ public final class TableServer {
             final String uri = req.uri();
             final int q = uri.indexOf('?');
             final String path = q < 0 ? uri : uri.substring(0, q);
+            if (healthOnly && WsTransport.viaTunnel(req.headers().names())) {
+                // D405/D408: the bridge's own port is never tunnelled, at a table of two as in every other
+                // mode -- WsTransport's TunnelGate, on this port's every path, /health included.
+                tunnelRefusals.incrementAndGet();
+                System.err.println("TABLE TUNNEL REFUSED " + req.method() + " " + path + " on the health port from "
+                        + ctx.channel().remoteAddress() + ": this port is never tunnelled (D405)");
+                ReferenceCountUtil.release(msg);
+                plain(ctx, HttpResponseStatus.FORBIDDEN, "this port is never tunnelled");
+                return;
+            }
             if (healthOnly && "/health".equals(path)) {
                 final boolean get = HttpMethod.GET.equals(req.method()) || HttpMethod.HEAD.equals(req.method());
                 ReferenceCountUtil.release(msg);
