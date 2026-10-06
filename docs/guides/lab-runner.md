@@ -173,7 +173,16 @@ machine. `--co-schedule off` restores one heavy job at a time.
 checked out at its own pinned commit and built there, so a `prepare` never moves the code
 under a running job. `var/` in a lane is a symlink to the first clone's: a later job
 (`after:`) finds its predecessor's outputs and the ladder's `ladder.json` stays where it was.
-Jobs side by side therefore share `var/` and must not write the same paths.
+The light job's clone (`mtg-table-light`) is linked the same way (D392), so a light job reads
+the `var/cubelab/…` a heavy job wrote; a `var/` it had of its own is moved aside to
+`.var-before-lane-<time>`, never deleted. Jobs side by side therefore share `var/` and must
+not write the same paths.
+
+**Metrics commands** (`metrics: x = sh: …`) run in the lab slice with `MemoryMax=2G` and a
+5-minute limit. One that fails leaves its keys missing (`metrics_errors` counts them) and
+`results/<id>/metrics-errors.txt` (or `pilot-metrics-errors.txt`) names the line and why,
+node's fatal line rather than its native stack (D393). A reader of a whole night's
+`drafts.jsonl` must fit that budget: `calibrate.ts` streams the file and shares its strings.
 
 **Sizing beside others.** A job started beside others is sized against the memory budget less
 what the others reserve, so it can get a worker fewer than it would alone. A job is admitted at

@@ -43,7 +43,8 @@ The runner checks every 10 seconds and fetches both branches every minute.
 4. **Before running.** The runner checks the job's refs out in **its own clones** under
    `~/code/lab/` (`mtg-table`, `ForgeCoach`; `-light` copies for a light job; `-lane2`,
    `-lane3` … for a heavy job started beside another, each at its own commit with its own
-   build, its `var/` a link to `mtg-table/var` so every job's outputs are in one place),
+   build; every mtg-table copy but the first — `-light` and each `-laneK` — has its `var/`
+   a link to `mtg-table/var`, so every job's outputs and data are in one place, D392),
    never in Justin's checkouts, and builds (`bridge/build.sh`; `npm ci` when ForgeCoach's lock file
    changed). A job's literal `/home/justin-a/code/<repo>` paths are rewritten to the lab
    clones. Then it pushes a STATUS of `running`.
@@ -81,7 +82,8 @@ The runner checks every 10 seconds and fetches both branches every minute.
    fire on it.
 8. **Report.** The runner writes facts only: `results/<id>/STATUS`; each step's log (its
    last 2 MB); `pilot-checks.txt`, `pilot-metrics.json`, `checks.txt`, `metrics.json` and
-   `events.jsonl`; `failure.txt` (the exit code and the last 60 lines) on a failure; and
+   `events.jsonl`; `metrics-errors.txt` (`pilot-metrics-errors.txt`) when a `metrics:` line
+   failed: the line and why, e.g. node's `FATAL ERROR … heap out of memory` (D393); `failure.txt` (the exit code and the last 60 lines) on a failure; and
    the `collect:` files under 5 MB each. **The PC session writes `summary.md`** from those
    and from what the job's `## Report` section asks for. Large data stays in the lab
    clone's `var/`. At each job end (done, failed, aborted) the runner also appends an entry
