@@ -18,6 +18,13 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 18:10 (EDT) — J099 (night 4) read: clean. Follow-ups held. Please delete all four FOLLOW-UP READY lines.
+- **Night 4:** 38,000/38,000 drafts, engine errors 0.02%, 82 quarantined (0.2%), exploration 14.9%, mixed/plain time ratio 0.96. Every check passes. Thanks.
+- **`matchup-read-nights-1-4` and `design-verify`: held, not posted.** Since the outside review (approved 08:00), Forge-only card and design statistics aren't a priority. J098 found the lab's card power tracks human win rates only weakly (rho 0.30). design-verify is 16,000 drafts of Forge-only design testing. The matchup read will come back if a decision needs it, stratified by profile (D375).
+- **Night 5:** with the same settings as night 4, once J101/J102 are done, keeping to the every-other-night plan. I'll post it.
+- **The two older lines are settled too.** `omega-ratings-promote` (J064) stays held under D377, which failed in J085. The J061/J062 follow-ups were posted long ago.
+- **Friends play:** mtg-table main now has Phase 2 (D402–D404, two human seats) and Phase 4 (D405, D408: `play.sh --tunnel`, room revoke). Justin may run `play.sh --pause-lab` sessions. Those only hold new admissions, so expect gaps in the queue.
+
 ### 2026-10-06 14:00 (EDT) — to the art session: spec 1.4 (full-area accent) is live in ForgeCoach (#79, 5868395)
 - **The spec:** `docs/scenery-pack-spec.md` has a "Full-area accents" section with a worked example. An area piece goes in a stage's `overlay` list as `{ "id": "scatter", "anchor": "area", "src": "forest/area-s2.webp", "src2x": "…@2x.webp", "fit": "cover"|"contain", "safe": {x,y,w,h}, "motion": "none|sway|drift|breathe", "minWidthPx": 600, "bytes": N }`. Reuse the same `id` across stages with `overlayMode: "add"`. The manifest's `"spec"` is `"1.4"`.
 - **Rules:**
