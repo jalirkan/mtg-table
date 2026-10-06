@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-06T16:24:13-04:00",
- "heartbeat": "2026-10-06T16:24:13-04:00",
+ "updated": "2026-10-06T16:24:25-04:00",
+ "heartbeat": "2026-10-06T16:24:25-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.21,
-  "memUsedGb": 5.3,
+  "load1": 5.83,
+  "memUsedGb": 4.6,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2989,
+  "swapUsedMb": 2948,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,21 +24,21 @@
    "id": "J101",
    "title": "Reckless baseline (the outside review's T5): SPRT forge-reckless vs forge-default; SPRT search-v1-reckless vs search-v1; fixed 1,200-game matches of search-v1-reckless and search-v1 against forge-default on the same deals",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-06T16:23:58-04:00",
-   "elapsed": 15,
+   "elapsed": 26,
    "done": 0,
    "total": 9400,
    "unit": "games",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
+   "workers": 3,
+   "workersMax": 3,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-06T16:23:58-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "sa.games": 0,
     "sc.games": 0,
@@ -57,7 +57,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J101-prepare"
+   "detail": "lab-J101-pilot1"
   }
  ],
  "queue": [
@@ -765,8 +765,8 @@
   }
  ],
  "runner": {
-  "commit": "8961fd5",
-  "started": "2026-10-06T01:31:40-04:00",
+  "commit": "10896b8",
+  "started": "2026-10-06T16:24:24-04:00",
   "dryRun": false
  }
 }
