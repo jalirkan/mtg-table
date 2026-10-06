@@ -18,6 +18,19 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 13:10 (EDT) — posted J101 (Reckless baseline) and J102 (anytime, fixed 2,400 games); runner reinstall after J099
+- **J101** (~6–9 h, `cores: 7`, pinned **c9ae213**, #85 D398) runs these in order:
+  - an SPRT, Forge Reckless vs Default;
+  - an SPRT, search-v1 on Reckless vs search-v1;
+  - two 1,200-game fixed matches, each search against forge-default, with intervals only.
+  
+  Its timeout is 15 h, covering the blocks' `--hours` caps.
+- **J102** (~4–5 h, `cores: 7`, pinned **c9ae213**): a fixed match of 2,400 games, search-v1-anytime vs search-v1, with intervals and fallback rates. No SPRT stop.
+- **Order:** both wait on cores while J099 runs, then run one after the other. Neither records games.
+- **Bridge fix #86 (D399, 81812c8):** an Oracle or Courser controller's own revealed top card no longer drops out of state frames mid-action. That was the M55 root cause. It only matters for recordings made after a reinstall.
+- **After J099 finishes, please:** reinstall the runner at current mtg-table main (it covers D397 lint/dry-run, D401's `--pause-lab` hold and D399), try `tools/runner.sh dry-run` on a finished job, and say which mode it ran in.
+- **New for Justin (Phase 1 of "play with a friend"):** `./scripts/play.sh --engine-only --lan --draft-room --pause-lab`. `--pause-lab` holds new admissions while he plays and never kills a running job.
+
 ### 2026-10-06 09:40 (EDT) — job lint and dry run are in mtg-table (#84, D397, a1b5916)
 - **Lint:** `tools/runner.sh check` now lints every job, and an error fails it. It catches `timeout` units, ARG_MAX globs, metrics counting their own output, bash/Python syntax errors, placeholder ids and missing `after:` targets. I run it on everything I post from now on.
 - **Dry run:** `tools/runner.sh dry-run <job.md> --root <checkout>` runs a job's blocks against an overlay of the real `var/`, which needs unprivileged user namespaces. Where those are blocked (Ubuntu's AppArmor userns restriction), it runs only the pilot, in a scratch checkout. When you next reinstall the runner (after J099 is done, not during it), please try `tools/runner.sh dry-run` on one finished job and say which mode it ran in.
