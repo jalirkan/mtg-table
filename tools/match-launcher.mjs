@@ -65,6 +65,11 @@
 //   bridge with --humans 2 (D402) and says how it went in status.json.  -> {ok, matchId, tablePort,
 //   seats: [{name, cards}x2], seed, ms} or {ok: false, status, message}.  While such a game runs, a
 //   POST /match is 409 (it would end it); /engine/start's "already running" is unchanged.
+//   (D406, D407) startTable also takes {match: {bestOf, game, wins}, chooser?, record: [bool, bool]} --
+//   where the game stands in the room's best of three, the seat that chooses to play or draw (the
+//   previous game's loser) and each seat's consent to recording -- and writes them into seats.json,
+//   which the bridge reads (TableMatch); gameResult(matchId) reads the result.json the bridge writes
+//   beside it when the game ends: {winnerSeat: 0|1|null, draw, reason, finished, turns} or null.
 //
 // THE RULES IT KEEPS:
 //   - The AI's decklist never goes on the game wire: the bridge loads ai.dck and
@@ -336,6 +341,31 @@ export function publicMatch(m) {
   return { yourDeck: deck(m.yourDeck), aiDeck: deck(m.aiDeck), aiProfile: m.aiProfile ?? null, aiPolicy: m.aiPolicy ?? null, games: m.games ?? null };
 }
 
+/**
+ * D406 / D407: a table's best-of-three place, play-or-draw chooser and recording consent, checked, as
+ * seats.json's extra keys ({seats}) -- or {problem}.  All absent: {seats: {}} (D404's one game).
+ */
+export function tableExtras({ match = null, chooser = null, record = null } = {}) {
+  const seats = {};
+  if (match !== null) {
+    const ok = match && typeof match === 'object' && (match.bestOf === 1 || match.bestOf === 3)
+      && Number.isInteger(match.game) && match.game >= 1 && match.game <= match.bestOf
+      && Array.isArray(match.wins) && match.wins.length === 2 && match.wins.every((w) => Number.isInteger(w) && w >= 0 && w <= Math.floor(match.bestOf / 2))
+      && match.wins[0] + match.wins[1] <= match.game - 1;
+    if (!ok) return { problem: 'match must be {bestOf: 1|3, game, wins: [a, b]} with no more wins than games before it' };
+    seats.match = { bestOf: match.bestOf, game: match.game, wins: [match.wins[0], match.wins[1]] };
+  }
+  if (chooser !== null) {
+    if ((chooser !== 0 && chooser !== 1) || !seats.match || seats.match.game < 2) return { problem: 'chooser is 0 or 1, the previous game\'s loser (game 2 on)' };
+    seats.chooser = chooser;
+  }
+  if (record !== null) {
+    if (!Array.isArray(record) || record.length !== 2 || !record.every((x) => typeof x === 'boolean')) return { problem: 'record is [bool, bool]' };
+    seats.record = [record[0], record[1]];
+  }
+  return { seats };
+}
+
 export function createMatchLauncher(opts) {
   const {
     repoRoot, matchDir, supervisorPid, cardsZip, customCardsDir, aiDir,
@@ -482,12 +512,14 @@ export function createMatchLauncher(opts) {
   };
 
   // D404: start a game between two people on the room's two decks.  Not a route: the draft room calls it.
-  const startTable = async ({ roomId, decks, names, digests }) => {
+  const startTable = async ({ roomId, decks, names, digests, match = null, chooser = null, record = null }) => {
     const no = (status, message) => ({ ok: false, status, message });
     if (!available()) return no(503, 'the match launcher is off: this helper was not started by scripts/play.sh');
     if (busy) return no(409, 'a match is already being started — wait for it');
     if (!Array.isArray(decks) || decks.length !== 2 || !Array.isArray(names) || names.length !== 2
         || !Array.isArray(digests) || digests.length !== 2 || !digests.every((d) => /^[0-9a-f]{64}$/.test(d))) return no(400, 'a table needs two decks, two names and two token digests');
+    const extra = tableExtras({ match, chooser, record });
+    if (extra.problem) return no(400, extra.problem);
     busy = true;
     const t0 = Date.now();
     try {
@@ -509,7 +541,7 @@ export function createMatchLauncher(opts) {
       mkdirSync(join(dir, id));
       writeFileSync(join(dir, id, 'seat0.dck'), dckText(checked[0].deck));
       writeFileSync(join(dir, id, 'seat1.dck'), dckText(checked[1].deck));
-      writeFileSync(join(dir, id, 'seats.json'), JSON.stringify({ names, tokenSha256: digests }) + '\n');
+      writeFileSync(join(dir, id, 'seats.json'), JSON.stringify({ names, tokenSha256: digests, ...extra.seats }) + '\n');
       const rel = (f) => join(matchDir, id, f).split(sep).join('/');
       const dirs = readdirSync(dir).filter((x) => MATCH_ID.test(x)).sort();
       for (const old of dirs.slice(0, Math.max(0, dirs.length - KEEP_MATCH_DIRS))) rmSync(join(dir, old), { recursive: true, force: true });
@@ -528,6 +560,17 @@ export function createMatchLauncher(opts) {
     }
   };
 
+  // D406: what the bridge wrote when the table's game ended (result.json beside seats.json), or null.
+  const gameResult = (matchId) => {
+    if (!dir || typeof matchId !== 'string' || !MATCH_ID.test(matchId)) return null;
+    const j = readJson(join(dir, matchId, 'result.json'));
+    if (!j || typeof j !== 'object' || j.v !== 1) return null;
+    const w = j.winnerSeat;
+    if (!(w === null || w === 0 || w === 1)) return null;
+    return { winnerSeat: w, draw: j.draw === true, reason: typeof j.reason === 'string' ? j.reason.slice(0, 40) : null,
+      finished: j.finished === true, turns: Number.isInteger(j.turns) ? j.turns : null };
+  };
+
   return {
     available,
     engine,
@@ -535,6 +578,7 @@ export function createMatchLauncher(opts) {
     wake,
     startTable,
     tableRunning,
+    gameResult,
     get() {
       if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
       const asleep = engine()?.engine === 'idle';

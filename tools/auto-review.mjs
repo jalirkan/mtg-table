@@ -29,6 +29,11 @@
 // The log is `frames.jsonl`, or `frames.jsonl.gz` when that is all there is (the
 // Java reader takes both, #73).  Only logs written after the queue file was
 // first made are taken (`since`): turning this on does not review your history.
+// (D407) A game between two people is reviewed too, seat by seat, when that seat's player agreed:
+// `friend-m<13 digits>-seat<N>` (the bridge's per-seat log of a table, D402), whose header says
+// `humans: 2` and `record: true` (the room's consent for that seat and game, M60) and whose players
+// are both people.  A seat that did not agree is judged and skipped, and never reviewed.  Its report is that
+// player's alone: the coach helper's own door does not serve it, the room does, to that seat (D407).
 // Every log judged is remembered in the queue file (`seen`: its path, size and
 // mtime, and the verdict), so a restart reads only the logs that changed; and a
 // scan reads at most `scanBatch` (4) whole logs before it yields the event loop
@@ -95,7 +100,9 @@ import { dirname, join, resolve } from 'node:path';
 import { gameLog, isUsableReport, readLogText, REVIEW_ID } from './review-runner.mjs';
 
 export const QUEUE_VERSION = 1;
-export const HUMAN_GAME_ID = /^(human-(ws|console)-\d+|match-m\d{13})(-g\d+)?$/;
+export const HUMAN_GAME_ID = /^(human-(ws|console)-\d+|match-m\d{13})(-g\d+)?$|^friend-m\d{13}-seat[01]$/;
+/** D407: a seat's log of a game between two people (a table, D402). */
+export const FRIEND_GAME_ID = /^friend-m\d{13}-seat[01]$/;
 export const HUMAN_TRANSPORTS = ['ws', 'console'];
 export const DEFAULT_QUEUE_FILE = 'var/coach-grade/auto-review/queue.json';
 export const DEFAULT_POLL_MS = 15_000;
@@ -126,6 +133,9 @@ export function judgeHumanGame(text) {
   const h = parse(nl < 0 ? text : text.slice(0, nl));
   if (!h || h.kind !== 'session') return { ok: false, why: 'no session header' };
   if (!HUMAN_TRANSPORTS.includes(h.transport)) return { ok: false, why: `transport ${JSON.stringify(h.transport ?? null)} is not a person's seat` };
+  // D407: a seat at a table of two is reviewed only with its player's consent for that game.
+  const table = h.humans === 2;
+  if (table && h.record !== true) return { ok: false, why: 'a game between two people whose player did not agree to recording (D407)' };
   let hello = null;
   let over = null;
   for (const line of text.split('\n')) {
@@ -138,7 +148,9 @@ export function judgeHumanGame(text) {
   const me = players.filter((p) => p && p.id === h.seat);
   const others = players.filter((p) => p && p.id !== h.seat);
   if (!me.length || me[0].isAi) return { ok: false, why: 'the viewing seat is an AI' };
-  if (!others.length || !others.every((p) => p.isAi)) return { ok: false, why: 'the other player is not an AI' };
+  if (table) {
+    if (!others.length || others.some((p) => p.isAi !== false) || hello.match?.opponent !== 'human') return { ok: false, why: 'a table of two whose other player is not a person' };
+  } else if (!others.length || !others.every((p) => p.isAi)) return { ok: false, why: 'the other player is not an AI' };
   const b = over?.body;
   if (!b || !(Number.isInteger(b.winner) || typeof b.reason === 'string')) return { ok: false, why: 'not finished' };
   return { ok: true, seat: h.seat, gameId: h.gameId, key: `${h.gameId}|${h.seed}|${h.startedAt}` };
@@ -510,6 +522,14 @@ export function createAutoReview(opts) {
       if (!enabled || broken || !review.available()) return { autoReview: 0 };
       const items = state?.items ?? [];
       return { autoReview: 1, autoReviewQueue: { pending: items.filter((i) => i.state === 'pending').length, running: items.some((i) => i.state === 'running') ? 1 : 0, gate: GATE_WORDS.includes(gate.word) ? gate.word : 'review-busy' } };
+    },
+    /**
+     * D407: where a seat log's automatic review is -- the newest item for that game id:
+     * {state: "pending"|"running"|"done"|"failed"|"skipped", reviewId?, why?}, or null (not queued yet).
+     */
+    find(gameId) {
+      const it = state ? [...state.items].reverse().find((i) => i.gameId === gameId) : null;
+      return it ? { state: it.state, ...(it.reviewId ? { reviewId: it.reviewId } : {}), ...(it.why ? { why: it.why } : {}) } : null;
     },
     /** For the self-test. */
     items() { return state ? state.items.map((i) => ({ ...i })) : []; },

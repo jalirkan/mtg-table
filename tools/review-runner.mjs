@@ -55,6 +55,12 @@
 // reports on disk again, so GET /review/<id> outlives a restart.  A game's log
 // may be `frames.jsonl` or, when that is absent, `frames.jsonl.gz`.
 //
+// A GAME BETWEEN TWO PEOPLE (D407): a seat's log of a table (`friend-...`, D402) holds that player's
+// hand, so its review is that player's alone.  This door never serves one: POST /review refuses such a
+// game (only the automatic review, with that player's consent, reviews it), and GET /review and
+// GET /review/<id> leave such reviews out; the draft room hands each seat its own through
+// `seatReview(id)` (tools/draft-room.mjs's GET /room/<id>/review/<matchId>, behind that seat's token).
+//
 // Its self-test is tools/review-runner-selftest.mjs (a fake coach-grade.sh;
 // gate 12f, CI); the automatic half's is tools/auto-review-selftest.mjs.
 
@@ -75,6 +81,8 @@ export const MAX_KNOWN = 60;
 export const LIMITS = { deepK: [1, 12], triageS: [5, 120], deepS: [30, 900] };
 export const DEFAULT_QUEUE_MAX = 2;
 export const KEEP_REVIEWS = 10;
+/** D407: a seat's log of a game between two people -- its review is that seat's alone. */
+export const FRIEND_GAME = /^friend-/;
 const STAGES = ['plan', 'triage', 'deepen', 'report'];
 
 const intIn = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
@@ -362,6 +370,9 @@ export function createReviewRunner(opts) {
       if (!available()) return { status: 503, body: { ok: false, type: 'error', message: 'the review is off here: the bridge is not built (./bridge/build.sh)' } };
       const { req, problems } = validateReview(q);
       if (!req) return { status: 400, body: { ok: false, type: 'error', message: problems[0], problems } };
+      if (FRIEND_GAME.test(req.gameId) && opts.auto !== true) {
+        return { status: 403, body: { ok: false, type: 'error', message: 'a game between two people is reviewed automatically, for each player who agreed to recording, and shown to that player only, through the draft room (D407)' } };
+      }
       const g = gameLog(repoRoot, gamesDir, req.gameId);
       if (g.error) return { status: g.status, body: { ok: false, type: 'error', message: g.error } };
       const seat = headerSeat(g.abs);
@@ -433,13 +444,24 @@ export function createReviewRunner(opts) {
       return n;
     },
     get(id) {
-      if (typeof id !== 'string' || !REVIEW_ID.test(id) || !reviews.has(id)) {
+      // D407: a review of a game between two people is not served here: it is one player's, through the room.
+      if (typeof id !== 'string' || !REVIEW_ID.test(id) || !reviews.has(id) || FRIEND_GAME.test(reviews.get(id).gameId ?? '')) {
         return { status: 404, body: { ok: false, type: 'error', message: 'no such review (the helper keeps the last few)' } };
       }
       return { status: 200, body: view(reviews.get(id), true) };
     },
+    /**
+     * D407, for the draft room only (never an HTTP route of this door): a review of a seat's log of a
+     * game between two people -- {state, stage?, error?, report?} or null.
+     */
+    seatReview(id) {
+      const r = typeof id === 'string' && REVIEW_ID.test(id) ? reviews.get(id) : null;
+      if (!r || !FRIEND_GAME.test(r.gameId ?? '')) return null;
+      return view(r, true);
+    },
     list() {
-      const all = [...reviews.values()].reverse().map((r) => ({ id: r.id, gameId: r.gameId, state: r.state, ...(r.auto ? { auto: true } : {}) }));
+      const all = [...reviews.values()].reverse().filter((r) => !FRIEND_GAME.test(r.gameId ?? ''))
+        .map((r) => ({ id: r.id, gameId: r.gameId, state: r.state, ...(r.auto ? { auto: true } : {}) }));
       return { status: 200, body: { ok: true, reviews: all } };
     },
     close() {

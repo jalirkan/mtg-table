@@ -20,7 +20,11 @@
 //      links (rooms.json holds token digests only); expiry closes streams;
 //   5. the limits: requests, wrong links, streams per seat;
 //   6. the site: files served, traversal, symlinks and encoded tricks refused;
-//   7. the CLI: `coach-helper.mjs --draft-room` on free ports, /health and a room.
+//   7. the CLI: `coach-helper.mjs --draft-room` on free ports, /health and a room;
+//   3c. D406/D407: a best of three -- each game scored from the bridge's result,
+//      sideboarded decks between games, the loser chooses play or draw, a draw
+//      played again, a game with no result not counted, two wins take the match
+//      and the next decks start another; each seat's consent and its own review.
 //
 // Its files are under var/draft-room-selftest/.  No network, no engine, no claude.
 
@@ -34,7 +38,7 @@ import { fileURLToPath } from 'node:url';
 import { startHelper } from './coach-helper.mjs';
 import { checkDeck } from './match-launcher.mjs';
 import {
-  applyPick, checkCreate, cleanText, createRoomOwner, createRoomStore, dealGrid, legalLines, newGrid, ownOrigin,
+  applyPick, checkCreate, cleanText, createRoomOwner, createRoomStore, dealGrid, legalLines, lineCards, newGrid, ownOrigin,
   rng, roomAdmit, roomBases, sitePath, startRoomServer, toAct,
 } from './draft-room.mjs';
 
@@ -211,7 +215,7 @@ const games = { calls: [], next: [], running: false };
 const store = createRoomStore({ dir: join(VAR, 'rooms'), varRoot: join(ROOT, 'var'), log: (s) => logs.push(s),
   startGame: async (g) => { games.calls.push(g); await new Promise((r) => setTimeout(r, 20)); return games.next.shift() ?? { ok: true, matchId: `m${1000000000000 + games.calls.length}`, tablePort: 8646 }; },
   gameRunning: () => games.running });
-const roomSrv = startRoomServer({ store, port: 0, origins: ORIGINS, log: (s) => logs.push(s) });
+const roomSrv = startRoomServer({ store, port: 0, origins: ORIGINS, log: (s) => logs.push(s), pollMs: 3_600_000 });
 const roomPort = await roomSrv.listen();
 const owner = createRoomOwner({ store, roomPort, lan: false });
 const helper = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins: ORIGINS, queueMax: 1, timeoutS: 5, room: owner, review: null, evaluator: null, log: (s) => logs.push(s) });
@@ -419,6 +423,115 @@ section('3b. D404: each seat hands in a deck from its own picks; both in, the ro
   const bm = bare.create({ cubeId: 'c', cubeTitle: 'c', cards, name: 'A' });
   const r2 = bare.view(bm.body.id, 0);
   eq([r2.decks, r2.yourDeck, r2.game], [[{ ready: false, name: null, cards: null }, { ready: false, name: null, cards: null }], null, null], 'a new room: no decks, no game');
+}
+
+// ---------------------------------------------------------------------------
+section('3c. D406/D407: best of three, sideboarding, play or draw, consent, each seat\'s own review');
+{
+  const bo = { calls: [], results: new Map(), running: true, reviews: new Map(), asked: [] };
+  const bs = createRoomStore({ dir: null, log: () => {},
+    startGame: async (g) => { bo.calls.push(g); return { ok: true, matchId: `m${1790000000000 + bo.calls.length}`, tablePort: 8646 }; },
+    gameRunning: () => bo.running,
+    gameResult: (m) => bo.results.get(m) ?? null,
+    reviewOf: (gid) => { bo.asked.push(gid); return bo.reviews.get(gid) ?? { state: 'waiting' }; } });
+  const srv = startRoomServer({ store: bs, port: 0, origins: ORIGINS, log: () => {}, pollMs: 3_600_000 });
+  const B = `http://127.0.0.1:${await srv.listen()}`;
+  const badCreate = {};
+  eq(checkCreate({ cubeId: 'c', cards, record: 'yes' }, badCreate), '"record" must be true or false', 'POST /room: "record" is true or false');
+  const mk = bs.create((() => { const c = {}; checkCreate({ cubeId: 'c', cards, name: 'Justin', firstSeat: 0, record: true }, c); return c; })());
+  const rid = mk.body.id;
+  const [K0, K1] = [mk.body.token, mk.body.friendToken];
+  bs.join(rid, 1, 'Sam');
+  // The draft, through the store: each seat takes the first line it may.
+  for (let v = bs.view(rid, 0); !v.done; v = bs.view(rid, 0)) {
+    const line = [0, 1, 2, 3, 4, 5].find((l) => l !== v.firstLine && lineCards(v.slots, l).length > 0);
+    bs.pick(rid, v.toAct, line, v.version);
+  }
+  const v0 = bs.view(rid, 0);
+  eq([v0.match, v0.games, v0.record, bs.view(rid, 1).record], [null, [], { you: true, default: true }, { you: true, default: true }], 'a new room: no match yet; both seats recorded by default, the owner\'s choice');
+  const off = await call(B, `/room/${rid}/record`, { method: 'POST', token: K1, body: { record: false } });
+  eq([off.status, off.json.record, bs.view(rid, 0).record.you], [200, { you: false, default: true }, true], 'POST /record: seat 1 opts out; seat 0\'s own consent is untouched');
+  eq((await call(B, `/room/${rid}/record`, { method: 'POST', token: K1, body: { record: 'no' } })).status, 400, 'POST /record with a non-boolean: 400');
+  eq((await call(B, `/room/${rid}/record`, { method: 'POST', token: K1, body: { record: true, extra: 1 } })).status, 400, 'POST /record with another key: 400');
+  ok(!JSON.stringify(bs.view(rid, 0)).includes('"record":[') && bs.view(rid, 0).record.you === true, 'a seat sees its own consent only, never the other\'s');
+  const pk = [v0.seats[0].picks, v0.seats[1].picks];
+  const deck = (p, from = 0) => ({ name: 'D', main: [...p.slice(from, from + 23).map((c) => [1, c]), [17, 'Plains']], sideboard: [...p.slice(0, from), ...p.slice(from + 23)].map((c) => [1, c]) });
+  const until = async (pred, ms = 2000) => { const t = Date.now(); while (Date.now() - t < ms) { if (pred()) return true; await new Promise((r) => setTimeout(r, 10)); } return false; };
+  const play = async (d0, d1) => {
+    bs.deck(rid, 0, d0);
+    bs.deck(rid, 1, d1);
+    await until(() => bs.view(rid, 0).game?.state === 'ready');
+    return bs.view(rid, 0).game.matchId;
+  };
+  eq(bs.deck(rid, 0, { ...deck(pk[0]), record: 'yes' }).code, 'deck', 'a deck whose "record" is not a boolean: refused');
+  // Game 1.
+  const m1 = await play(deck(pk[0]), deck(pk[1]));
+  eq([bo.calls[0].match, bo.calls[0].chooser, bo.calls[0].record], [{ bestOf: 3, game: 1, wins: [0, 0] }, undefined, [true, false]], 'game 1: a best of three from 0-0, Forge\'s coin toss, each seat\'s consent');
+  eq(bs.view(rid, 0).match, { n: 1, bestOf: 3, wins: [0, 0], over: false, winner: null, next: { game: 1, chooser: null, newMatch: false } }, 'the match is on, 0-0');
+  eq(bs.deck(rid, 0, deck(pk[0])).code, 'playing', 'a deck while game 1 is played (no result yet): 409 playing');
+  bs.poll();
+  eq(bs.view(rid, 0).game.result, null, 'no result.json yet: the game goes on');
+  bo.results.set(m1, { winnerSeat: 1, draw: false, reason: 'Conceded', finished: true });
+  const ver = bs.view(rid, 0).version;
+  bs.poll();
+  const a1 = bs.view(rid, 0);
+  eq([a1.game.result, a1.match.wins, a1.match.next, a1.version > ver], [{ winner: 1, reason: 'Conceded' }, [0, 1], { game: 2, chooser: 0, newMatch: false }, true], 'a concede is a loss: 0-1, game 2 next, seat 0 (the loser) chooses play or draw');
+  eq(a1.games, [{ match: 1, game: 1, matchId: m1, winner: 1, reason: 'Conceded', recorded: true, review: 'waiting' }], "seat 0's game list: game 1, recorded, its review not there yet");
+  eq(bs.view(rid, 1).games[0].recorded + '/' + bs.view(rid, 1).games[0].review, 'false/off', "seat 1 opted out: not recorded, no review");
+  ok(!bo.asked.some((g) => /seat1$/.test(g)), 'the review of a seat that opted out is never even looked for');
+  // Sideboarding: seat 0 hands in a different 40 of its own picks while the engine still lingers on the final board.
+  const sb = deck(pk[0], 2);
+  ok(JSON.stringify(sb.main) !== JSON.stringify(deck(pk[0]).main), 'seat 0 sideboards: another main deck from its own picks');
+  eq(bs.deck(rid, 0, { ...sb, main: [...sb.main.slice(0, 22), [1, pk[1][0]], ...sb.main.slice(23)] }).code, 'deck', "sideboarding in a card of the other seat's picks: refused (D404's check)");
+  const m2 = await play(sb, deck(pk[1]));
+  eq([bo.calls[1].match, bo.calls[1].chooser, bo.calls[1].decks[0].main], [{ bestOf: 3, game: 2, wins: [0, 1] }, 0, sb.main], 'game 2: the sideboarded deck, 0-1, seat 0 chooses');
+  bo.results.set(m2, { winnerSeat: null, draw: true, reason: 'Draw', finished: true });
+  bs.poll();
+  eq([bs.view(rid, 0).match.wins, bs.view(rid, 0).match.next], [[0, 1], { game: 2, chooser: null, newMatch: false }], 'a draw counts for nobody: game 2 again, a coin toss');
+  const m3 = await play(sb, deck(pk[1]));
+  eq([bo.calls[2].match.game, bo.calls[2].chooser], [2, undefined], 'game 2 replayed, no chooser after a draw');
+  bo.results.set(m3, { winnerSeat: 0, draw: false, reason: 'AllOpponentsLost', finished: true });
+  bs.poll();
+  eq([bs.view(rid, 1).match.wins, bs.view(rid, 1).match.next], [[1, 1], { game: 3, chooser: 1, newMatch: false }], '1-1: game 3, seat 1 chooses');
+  const m4 = await play(sb, deck(pk[1]));
+  bo.running = false;
+  bs.poll();
+  const lost = bs.view(rid, 0);
+  eq([lost.game.state, /without a result/.test(lost.game.error), lost.match.wins, lost.match.next.game], ['failed', true, [1, 1], 3], 'a game whose engine stopped with no result does not count: game 3 again');
+  ok(m4 && !lost.games.some((g) => g.matchId === m4), 'and it is not in the game list');
+  bo.running = true;
+  const m5 = await play(sb, deck(pk[1]));
+  eq([bo.calls[4].match, bo.calls[4].chooser], [{ bestOf: 3, game: 3, wins: [1, 1] }, 1], 'game 3 again, 1-1, seat 1 still chooses');
+  bo.results.set(m5, { winnerSeat: 0, draw: false, reason: 'AllOpponentsLost', finished: true });
+  bs.poll();
+  const fin = bs.view(rid, 1);
+  eq([fin.match.over, fin.match.winner, fin.match.wins, fin.match.next], [true, 0, [2, 1], { game: 1, chooser: null, newMatch: true }], 'two wins take the match: seat 0, 2-1');
+  eq(fin.games.map((g) => [g.match, g.game, g.winner]), [[1, 1, 1], [1, 2, null], [1, 2, 0], [1, 3, 0]], 'every finished game, a draw included, in order');
+  // Reviews: seat 0's own, never seat 1's.
+  bo.reviews.set(`friend-${m1}-seat0`, { state: 'running', stage: 'triage' });
+  bs.poll();
+  eq(bs.view(rid, 0).games[0].review, 'running', "the room follows seat 0's review of game 1");
+  bo.reviews.set(`friend-${m1}-seat0`, { state: 'done', report: { v: 1, kind: 'game-review', gameId: `friend-${m1}-seat0`, decisions: [] } });
+  const st0 = stream(B, rid, K0);
+  await st0.ready;
+  bs.poll();
+  await st0.until((x) => x.latest()?.games?.[0]?.review === 'done');
+  ok(true, "seat 0's stream is told when its review is done");
+  const r0 = await call(B, `/room/${rid}/review/${m1}`, { token: K0 });
+  eq([r0.status, r0.json.state, r0.json.game, r0.json.report?.gameId], [200, 'done', 1, `friend-${m1}-seat0`], 'GET /review/<matchId>: seat 0 gets its own report');
+  const r1 = await call(B, `/room/${rid}/review/${m1}`, { token: K1 });
+  eq([r1.status, r1.json.state, r1.json.report], [200, 'off', undefined], 'seat 1 (opted out) gets no review -- and never seat 0\'s');
+  ok(!r1.text.includes('game-review'), "nothing of seat 0's report in seat 1's answer");
+  eq((await call(B, `/room/${rid}/review/m1234567890123`, { token: K0 })).status, 404, 'a game that is not this room\'s: 404');
+  eq((await call(B, `/room/${rid}/review`, { token: K0 })).status, 404, '/review without a game: 404');
+  eq((await call(B, `/room/${rid}/review/${m1}`, { token: 'B'.repeat(22) })).status, 403, 'a review with a wrong token: 403');
+  eq((await call(B, `/room/${rid}/review/${m1}`, { method: 'POST', token: K0, body: {} })).status, 405, 'POST to a review: 405');
+  st0.close();
+  // The next pair of decks after a finished match: a new match.
+  bs.record(rid, 1, true);
+  await play(sb, deck(pk[1]));
+  eq([bo.calls[5].match, bo.calls[5].record, bs.view(rid, 0).match.n, bs.view(rid, 0).match.wins], [{ bestOf: 3, game: 1, wins: [0, 0] }, [true, true], 2, [0, 0]], 'decks after the match: match 2, game 1, 0-0, with seat 1\'s new consent');
+  srv.close();
 }
 
 // ---------------------------------------------------------------------------

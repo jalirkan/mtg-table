@@ -758,6 +758,30 @@ try {
     const wargv = starts().at(-1)?.argv ?? [];
     check('a wake after the game between two people starts the last match against the AI, not the table', r.status === 200 && r.json?.ok === true
       && !wargv.includes('--humans') && !wargv.includes('--seats-file') && argOf(wargv, '--ai-profile') !== undefined, `${r.body} ${wargv.join(' ')}`);
+    // D406 / D407: game 2 of a best of three -- where it stands, who chooses play or draw, each seat's consent.
+    const g2 = await tl.startTable({ roomId: 'rTestRoom1', decks: [deck('Red Pile', RED), deck('Blue Pile', BLUE)], names: ['Ana', 'Ben'], digests: dg,
+      match: { bestOf: 3, game: 2, wins: [0, 1] }, chooser: 0, record: [true, false] });
+    const s2 = starts().at(-1)?.seats;
+    const nAfter = starts().length;
+    check('D406: startTable writes the match, the chooser and the consents into the seats file, and nothing else new',
+      g2.ok === true && JSON.stringify(s2) === JSON.stringify({ names: ['Ana', 'Ben'], tokenSha256: dg, match: { bestOf: 3, game: 2, wins: [0, 1] }, chooser: 0, record: [true, false] }), JSON.stringify([g2, s2]));
+    for (const [what, extra] of [
+      ['a best of two', { match: { bestOf: 2, game: 1, wins: [0, 0] } }],
+      ['a fourth game', { match: { bestOf: 3, game: 4, wins: [1, 1] } }],
+      ['more wins than games before it', { match: { bestOf: 3, game: 2, wins: [1, 1] } }],
+      ['a chooser in game 1', { match: { bestOf: 3, game: 1, wins: [0, 0] }, chooser: 1 }],
+      ['a chooser with no match', { chooser: 0 }],
+      ['a consent that is not a boolean', { record: ['yes', false] }],
+    ]) {
+      const bad = await tl.startTable({ roomId: 'rTestRoom1', decks: [deck('Red Pile', RED), deck('Blue Pile', BLUE)], names: ['Ana', 'Ben'], digests: dg, ...extra });
+      check(`startTable refuses ${what}: 400, nothing started`, bad.ok === false && bad.status === 400 && starts().length === nAfter, JSON.stringify(bad));
+    }
+    check('gameResult: nothing before the bridge writes it', tl.gameResult(g2.matchId) === null);
+    writeFileSync(join(DIR, 't', 'match', g2.matchId, 'result.json'), JSON.stringify({ v: 1, gameId: `friend-${g2.matchId}`, finished: true, winnerSeat: 1, draw: false, reason: 'Conceded', from: 'outcome', turns: 9 }) + '\n');
+    check('gameResult: the winning seat as the bridge wrote it', JSON.stringify(tl.gameResult(g2.matchId)) === JSON.stringify({ winnerSeat: 1, draw: false, reason: 'Conceded', finished: true, turns: 9 }), JSON.stringify(tl.gameResult(g2.matchId)));
+    writeFileSync(join(DIR, 't', 'match', g2.matchId, 'result.json'), JSON.stringify({ v: 1, winnerSeat: 2 }));
+    check('gameResult: a seat that is not 0 or 1 is no result', tl.gameResult(g2.matchId) === null);
+    check('gameResult: not a match id, no result (no path from outside)', tl.gameResult('../../etc') === null && tl.gameResult('m12') === null);
     T.proc.kill('SIGTERM');
     await new Promise((res) => (T.proc.exitCode !== null ? res() : T.proc.on('exit', res)));
   }

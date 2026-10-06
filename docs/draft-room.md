@@ -43,7 +43,7 @@ its last pick, and 72 hours after it was made.
 | Listener | Route | Door |
 |---|---|---|
 | Coach helper (8643) | `POST /room`, `GET /room` | The owner's door (D386): loopback with a loopback `Host`, or the `--lan` pairing token. It is never tunnelled. Only the owner makes rooms. |
-| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
+| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>` (D407) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
 | Room listener (8644) | `GET /`, `GET /assets/…` | No token. These are ForgeCoach's public build (`--room-site-dir`, which play.sh fills with the `--lan` download or `--site-dir`). Only GET and HEAD are allowed, and a path cannot leave the folder: `..`, encoded separators and symlinks are refused. |
 
 Tokens are 128 bits (22 base64url characters). The server stores only their
@@ -67,13 +67,15 @@ Limits:
 
 ```json
 { "cubeId": "synergy", "cubeTitle": "Synergy Cube", "cards": ["…every name, in document order…"],
-  "name": "Justin", "firstSeat": 0 }
+  "name": "Justin", "firstSeat": 0, "record": true }
 ```
 
 `cards` holds 9–2,000 names, each 1–150 characters with no control characters;
 duplicates are dropped and the first one kept. `firstSeat` (0 or 1) opens grid 1;
-when it is absent, a random seat opens. `name` is 1–24 characters. Any other field
-is a 400.
+when it is absent, a random seat opens. `name` is 1–24 characters. `record`
+(D407, optional, false when absent) is the room's default for recording each
+seat's games — each player can still opt their own seat out, game by game. Any
+other field is a 400.
 
 → `201`
 
@@ -212,17 +214,80 @@ seat's alone, redacted for it (hard rule 8): the other hand, library and face-do
 cards are never sent to the other browser. A `table` frame says who is connected,
 whose decision it is and that decision's clock (three minutes, then the engine's
 default), and an absent player's opponent may claim the win after two minutes away
-(D403). One game: hand in two decks again for a rematch, once the first is over.
+(D403). The next game of the match is two decks handed in again (Phase 3, below).
 
 The tokens are minted per game, in memory only: `rooms.json` never holds one, and
 the bridge is given only their SHA-256 digests (`var/match/<id>/seats.json`).
 
-### What is not built (Phase 3 and 4)
+## Phase 3: best of three, recording and reviews (D406, D407)
 
-- Best of three with sideboarding between games.
-- Recording both seats into the human test set (D369) with each player's opt-out,
-  and the automatic review (D385) for both: a friend's game (`friend-<id>`) is
-  read by neither yet.
+### The match
+
+The room runs a **best of three**, one engine start per game (D406). Game 1
+starts when both decks are in, as above. When it ends the bridge writes
+`var/match/<id>/result.json` (the winning seat), the room scores it within two
+seconds and both rooms and both boards show the score. For the next game each
+player **hands in a deck again**: the same one, or sideboarded — any 40+ cards
+of their own picks plus basic lands, checked exactly as above. Both in, the next
+game starts, with fresh seat tokens. The loser of the previous game is asked
+Forge's own "*you lost the last game: play or draw?*" on their board; game 1 is
+Forge's coin toss. A concede and a claimed win are losses; a draw is played
+again; a game whose engine stopped with no result does not count. Two wins take
+the match; the next pair of decks starts a new one.
+
+What the state adds:
+
+```json
+"game":  { "…": "as above", "game": 2, "result": { "winner": 1, "reason": "Conceded" } },
+"match": { "n": 1, "bestOf": 3, "wins": [0, 1], "over": false, "winner": null,
+           "next": { "game": 2, "chooser": 0, "newMatch": false } },
+"games": [ { "match": 1, "game": 1, "matchId": "m1791306948840", "winner": 1, "reason": "Conceded",
+             "recorded": true, "review": "running" } ],
+"record": { "you": true, "default": true }
+```
+
+- `game.game` is the game's number in the match; `game.result` is null while it
+  is played.
+- `match.next` is the game the next pair of decks starts, and who chooses to
+  play or draw in it (null: a coin toss); `newMatch` after a decided match.
+- `games` is every finished game (24 kept), oldest first. `recorded` and
+  `review` are **this seat's own**.
+- The seats file the room hands the bridge gains `match: {bestOf, game, wins}`,
+  `chooser` (from game 2) and `record: [bool, bool]`; `hello_ok` says game *n* of
+  3 and `match.score`, the games each side won before it (protocol **M60**).
+
+### Recording, each player's choice (D407)
+
+The room's owner picks the default when making the room (`POST /room`
+`{"record": true}`; false when absent). Each player can opt their **own** seat
+in or out of the **next** game, in the room:
+
+- `POST /room/<id>/record` `{"record": true|false}` → `200` state (a body with
+  any other key, or a non-boolean, is `400`). A deck may carry `"record"` too.
+- Each seat sees only its own answer (`record.you`). The answers are fixed when
+  a game starts and go into that seat's session header (`record`, M60).
+
+A recorded seat's log is copied into `var/ml/human-friends/` by
+`tools/ml/human_collect.py` (the human test games of D369, kept apart from the
+games against the AI) and reviewed by the automatic engine review (D385) at idle
+priority. A seat that opted out is neither. One seat is a whole test game, so a
+game in which only one player agreed gives that player's seat. Nothing leaves
+this machine.
+
+### Each player's own review
+
+- `GET /room/<id>/review/<matchId>` → `200 {ok, matchId, match, game, state,
+  stage?, why?, report?}`: **this seat's** engine review of that game of the
+  room. `state` is `off` (not recorded, or automatic reviews are off here),
+  `waiting`, `queued`, `running`, `done` (with `report`, docs/game-review.md's
+  shape) or `failed`. `404 {code: "game"}` for a game that is not this room's.
+- The review is built from this seat's own log, which holds this player's hand,
+  so it is never served to the other seat — and the coach helper's own `/review`
+  (8643) never serves a game between two people at all (`POST` 403, `GET` 404,
+  left out of the list).
+
+## What is not built (Phase 4)
+
 - A tunnel (Phase 4): the room listener and the table port are built to be
   tunnelled (no loopback exemption, `https://` origins, the table serving `/ws`
   only), and `docs/cloudflare.md` (D405) is the runbook: cloudflared checks

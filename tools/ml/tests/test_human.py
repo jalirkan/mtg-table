@@ -112,8 +112,8 @@ class CollectTest(unittest.TestCase):
         write(os.path.join(self.games, "match-m1234567890123", "frames.jsonl"), lines_of(os.path.join(FIXTURES, "g1.jsonl")))
         # a gate run's ws game: its id is not play.sh's, so its folder is not read
         write(os.path.join(self.games, "check-all-m2", "frames.jsonl"), as_person(g42, "check-all-m2"))
-        # D402/D404: a game between two people -- each seat's log under friend-<id>-seat<N>, not collected
-        # (recording both seats, with each player's opt-out, is a later lane)
+        # D402/D404: a game between two people -- each seat's log under friend-<id>-seat<N>: never in this
+        # set (D407 collects a consenting seat into var/ml/human-friends/, test_friends below)
         for seat in (0, 1):
             fid = "friend-m1234567890123-seat%d" % seat
             write(os.path.join(self.games, fid, "frames.jsonl"), as_person(g42, fid))
@@ -220,6 +220,64 @@ class CollectTest(unittest.TestCase):
                 got[e["gameId"]] = f.read()
         self.assertEqual(got, {"saved-a": "".join(a), "saved-b": "".join(b)})
         self.assertTrue(all(e["origin"] == "from" for e in r["entries"]))
+
+    def test_friends(self):
+        """D407: a seat of a game between two people is taken, into its own set, only with its player's consent."""
+        g42 = os.path.join(FIXTURES, "human-auto-42.jsonl")
+
+        def table_seat(fid: str, record: bool | None, started: str) -> list[str]:
+            ls = as_person(g42, "friend-m1791306948840", started=started)
+            h = json.loads(ls[0])
+            h["humans"] = 2
+            if record is not None:
+                h["record"] = record
+            ls[0] = json.dumps(h) + "\n"
+            for i, line in enumerate(ls):
+                if '"hello_ok"' in line:
+                    f = json.loads(line)
+                    for pl in f["body"]["players"]:
+                        pl["isAi"] = False
+                    f["body"]["gameNumber"], f["body"]["gameCount"] = 2, 3
+                    f["body"]["match"] = {"yourDeck": {"name": "Mine", "path": "var/match/m1791306948840/seat0.dck", "cards": 40},
+                                          "opponentDeck": {"name": "Theirs", "cards": 40}, "opponent": "human", "games": 3,
+                                          "score": {"you": 1, "opponent": 0}}
+                    ls[i] = json.dumps(f) + "\n"
+            return ls
+
+        write(os.path.join(self.games, "friend-m1791306948840-seat0", "frames.jsonl"),
+              table_seat("seat0", True, "2026-10-06T20:00:00.100Z"))
+        write(os.path.join(self.games, "friend-m1791306948840-seat1", "frames.jsonl"),
+              table_seat("seat1", False, "2026-10-06T20:00:00.200Z"))
+        # Phase 2's games (no `record` in the header): never taken
+        write(os.path.join(self.games, "friend-m1791306900000-seat0", "frames.jsonl"),
+              table_seat("seat0", None, "2026-10-06T19:00:00.100Z"))
+        # a person against the AI beside them
+        write(os.path.join(self.games, "human-ws-42", "frames.jsonl"), as_person(g42, "human-ws-42"))
+        fout = os.path.join(self.tmp, "var", "ml", "human-friends")
+        r = quiet(HC.collect, self.games, self.out)
+        self.assertEqual([e["gameId"] for e in r["entries"]], ["human-ws-42"])   # the test set: against the AI only
+        f = quiet(HC.collect, self.games, fout, friends=True)
+        self.assertEqual([(e["gameId"], e["seat"]) for e in f["entries"]], [("friend-m1791306948840", 0)])
+        self.assertEqual(f["skipped"].get("the player did not agree to recording this game (D407)"), 2)
+        e = f["entries"][0]
+        self.assertEqual((e["opponent"], e["opponentDeck"], e["aiDeck"], e["record"]),
+                         ("human", {"name": "Theirs", "cards": 40}, None, True))
+        self.assertEqual(e["match"], {"game": 2, "of": 3, "score": {"you": 1, "opponent": 0}})
+        self.assertIn("-seat0-", e["file"])
+        # one seat is a whole test game: its own decisions, over its own view
+        with gzip.open(os.path.join(fout, e["file"]), "rt", encoding="utf-8") as fh:
+            body = fh.read()
+        tmpf = os.path.join(self.tmp, "seat.jsonl")
+        with open(tmpf, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        g = next(E.read_games(tmpf))
+        self.assertGreater(len(E.encode_game(g, E.Schema(E.Vocab.from_names([])))), 10)
+        self.assertEqual(quiet(HC.collect, self.games, fout, friends=True)["added"], 0)   # idempotent
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            HC.main(["--games-dir", self.games, "--out", self.out, "--quiet"])
+        self.assertIn("1 seat of games between two people", buf.getvalue())
+        self.assertNotIn(os.path.join(ROOT, "var", "ml", "human-friends"), buf.getvalue())
 
     def test_cli_status(self):
         lay_out(self.games)

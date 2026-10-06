@@ -575,6 +575,24 @@ export function claudeArgs({ model, systemArg, help, streamInput = false }) {
 // The server.
 // ---------------------------------------------------------------------------
 
+/**
+ * D407: where the automatic review of one seat's log of a game between two people is, for the draft
+ * room to show that seat (never the other): {state: off|waiting|queued|running|done|failed, stage?,
+ * why?, report?}.
+ */
+export function seatReviewOf({ review, auto }, gameId) {
+  if (!review || !auto) return { state: 'off', why: 'automatic reviews are off on the room’s computer (config.json coach.autoReview, or the bridge is not built)' };
+  const it = auto.find(gameId);
+  if (!it) return { state: 'waiting' };
+  if (it.state === 'pending') return { state: 'queued' };
+  if (!it.reviewId) return it.state === 'running' ? { state: 'running' } : { state: 'failed', why: it.why ?? `the review was ${it.state}` };
+  const r = review.seatReview(it.reviewId);
+  if (!r) return it.state === 'running' ? { state: 'running' } : { state: 'failed', why: 'the review is no longer kept on the room’s computer' };
+  if (r.state === 'done') return { state: 'done', report: r.report };
+  if (r.state === 'failed') return { state: 'failed', why: r.error ?? 'the review failed' };
+  return { state: r.state === 'queued' ? 'queued' : 'running', ...(r.stage ? { stage: r.stage } : {}) };
+}
+
 export function startHelper(opts) {
   const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, room = null, log = (s) => console.log(s) } = opts;
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
@@ -1026,7 +1044,10 @@ async function main() {
         // D404: a room whose two decks are in starts a game between the two seats -- through the match launcher,
         // when play.sh supervises this helper; without it the room says no engine can be started here.
         startGame: match ? (g) => match.startTable(g) : null,
-        gameRunning: (matchId) => !!match && match.tableRunning()?.id === matchId });
+        gameRunning: (matchId) => !!match && match.tableRunning()?.id === matchId,
+        // D406: the bridge's result.json for a table's game; D407: a seat log's own automatic review.
+        gameResult: (matchId) => (match ? match.gameResult(matchId) : null),
+        reviewOf: (gameId) => seatReviewOf({ review, auto }, gameId) });
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,

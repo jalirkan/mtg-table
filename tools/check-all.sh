@@ -1744,7 +1744,13 @@ s10h_idle() {
 #            check-redaction.mjs, and tools/check-seat-pair.mjs reads them
 #            against each other -- no name only one seat ever held reaches any
 #            string of the other's log, no card of one seat's in full in the
-#            other's hand;
+#            other's hand.  The game is game 2 of a best of three (D406, M60;
+#            a seats file with match, chooser and record): seat 0, which "lost
+#            game 1", is the one asked "you lost the last game: play or draw?"
+#            and (answering Play) takes turn 1; both handshakes say game 2 of 3
+#            and the score from their own side; each header carries its seat's
+#            consent (D407); result.json beside the seats file names the seat
+#            the logs' `over` names;
 #        (2) tools/ws-two-humans.mjs, two scripted clients on the table port,
 #            three times: `concede` (a wrong token, no token, /observe and the
 #            health port refused; a drop and a reconnect by token; a second
@@ -1759,8 +1765,14 @@ s10i_table() {
   ws_job 8
   local tp=$(( WSPORT + 10 )) sc rc=0
   printf '\n=== 10i. a table of two: two automated seats, then two scripted clients on the table port (M59) ===\n'
+  # D406/D407: game 2 of a best of three, seat 0 the previous game's loser, seat 1 not recorded.
+  mkdir -p var/check-all-table-auto
+  rm -f var/check-all-table-auto/result.json
+  printf '%s\n' '{"names":["Ana","Ben"],"tokenSha256":["'"$(printf 'a%.0s' $(seq 64))"'","'"$(printf 'b%.0s' $(seq 64))"'"],"match":{"bestOf":3,"game":2,"wins":[0,1]},"chooser":0,"record":[true,false]}' \
+    > var/check-all-table-auto/seats.json
   timeout "$GAME_TIMEOUT" ./bridge/run.sh mtgtable.MtgTable --humans 2 --transport auto --seed 11 \
       --deck decks/pacho-shield.dck --deck2 "$VILLAIN" --game-id check-all-table-auto \
+      --seats-file var/check-all-table-auto/seats.json \
       > var/check-all-table-auto.log 2>&1 || rc=$?
   [ "$rc" = "0" ] || { tail -20 var/check-all-table-auto.log >&2; die "the two automated seats' game exited $rc (log: var/check-all-table-auto.log)"; }
   grep -q "^MTGTABLE OK$" var/check-all-table-auto.log || die "the two automated seats' game did not print MTGTABLE OK"
@@ -1774,12 +1786,33 @@ s10i_table() {
   done
   node tools/check-seat-pair.mjs var/games/check-all-table-auto-seat0/frames.jsonl var/games/check-all-table-auto-seat1/frames.jsonl \
     || die "check-seat-pair.mjs: one seat's log names what only the other held"
+  node -e '
+    const fs = require("fs");
+    const read = (s) => fs.readFileSync(`var/games/check-all-table-auto-seat${s}/frames.jsonl`, "utf8").trim().split("\n").map((l) => JSON.parse(l));
+    const bad = (m) => { console.error("D406/D407: " + m); process.exit(1); };
+    const L = [read(0), read(1)];
+    const res = JSON.parse(fs.readFileSync("var/check-all-table-auto/result.json", "utf8"));
+    for (const s of [0, 1]) {
+      const h = L[s][0], hello = L[s].find((f) => f.type === "hello_ok").body, over = L[s].filter((f) => f.type === "over").pop().body;
+      if (h.record !== (s === 0)) bad(`seat ${s}: header record ${h.record}`);
+      if (hello.gameNumber !== 2 || hello.gameCount !== 3 || hello.match.games !== 3) bad(`seat ${s}: not game 2 of 3`);
+      const sc = hello.match.score;
+      if (sc.you !== (s === 1 ? 1 : 0) || sc.opponent !== (s === 0 ? 1 : 0)) bad(`seat ${s}: score ${JSON.stringify(sc)} from its own side`);
+      const asked = L[s].some((f) => f.type === "input" && /you lost the last game/i.test(f.body.prompt ?? ""));
+      if (asked !== (s === 0)) bad(`seat ${s} ${asked ? "was" : "was not"} asked "you lost the last game: play or draw?"`);
+      const t1 = L[s].find((f) => f.type === "state" && f.body.turn === 1);
+      if (!t1 || t1.body.activePlayer !== L[0][0].seat) bad(`seat ${s}: turn 1 is not seat 0'"'"'s (it chose Play)`);
+      const w = over.winner === null ? null : over.winner === h.seat ? s : 1 - s;
+      if (res.winnerSeat !== w) bad(`result.json says seat ${res.winnerSeat}, seat ${s}'"'"'s over says ${w}`);
+    }
+    console.log(`D406/D407: game 2 of 3 -- seat 0 chose and played first, consents [true, false], result.json: seat ${res.winnerSeat} won (${res.reason})`);
+  ' || die "the best-of-three game (D406/D407) is not what its seats file asked for"
   for sc in concede claim timeout; do
     node tools/ws-two-humans.mjs --scenario "$sc" --seed 5 --port "$WSPORT" --table-port "$tp" \
         --game-id "check-all-table-$sc" --timeout "$GAME_TIMEOUT" \
       || die "tools/ws-two-humans.mjs --scenario $sc failed (bridge log: var/two-humans/check-all-table-$sc.server.log)"
   done
-  echo "OK: a table of two -- an automated game and the concede, claim and timeout scenarios, every seat log audited alone and in pairs"
+  echo "OK: a table of two -- an automated best-of-three game 2 and the concede, claim and timeout scenarios, every seat log audited alone and in pairs, every result.json the winner"
 }
 
 # ---------------------------------------------------------------------------

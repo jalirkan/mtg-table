@@ -650,6 +650,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
         /** The other seat of the table, or null. */
         WireGuiGame peer(WireGuiGame seat);
+
+        /**
+         * EDT: this seat sent {@code act: concede} (D406) -- remembered so the
+         * game's result names the loser even when the concede came before the
+         * engine published an outcome (M11's null {@code over}).
+         */
+        default void conceded(final WireGuiGame seat) { }
     }
 
     /** Set once, before {@code HostedMatch.startMatch}; null outside a two-person game. */
@@ -3565,6 +3572,9 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             break;
         }
         case "concede":
+            if (table != null) {
+                table.conceded(this);          // D406: the result names the loser even without an outcome
+            }
             concede(c);                        // D136: at once when quiet, else outcome now and the rest later
             break;
         case "setPhaseStop": {

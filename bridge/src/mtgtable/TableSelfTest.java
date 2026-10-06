@@ -166,6 +166,34 @@ public final class TableSelfTest {
                 Files.write(f.toPath(), bad.getBytes(StandardCharsets.UTF_8));
                 eq("seats file refused: " + bad.substring(0, Math.min(40, bad.length())), true, refused(() -> TableMatch.readSeatsFile(f)));
             }
+            // D406 / D407: a game of a best of three, who chooses to play or draw, each seat's consent.
+            final String names = "\"names\":[\"Ana\",\"Ben\"],\"tokenSha256\":[\"" + hex(d[0]) + "\",\"" + hex(d[1]) + "\"]";
+            final File bo3 = new File(scratch, "bo3.json");
+            Files.write(bo3.toPath(), ("{" + names + ",\"match\":{\"bestOf\":3,\"game\":3,\"wins\":[1,1]},\"chooser\":0,"
+                    + "\"record\":[true,false]}").getBytes(StandardCharsets.UTF_8));
+            final TableMatch.SeatsFile b3 = TableMatch.readSeatsFile(bo3);
+            eq("seats file: best of 3", 3, b3.bestOf);
+            eq("seats file: game 3", 3, b3.gameNo);
+            eq("seats file: wins", "1-1", b3.wins[0] + "-" + b3.wins[1]);
+            eq("seats file: chooser", 0, b3.chooser);
+            eq("seats file: record", "true,false", b3.record[0] + "," + b3.record[1]);
+            eq("seats file without D406's keys: one game, a coin toss, no record", "1/1/-1/null",
+                    sf.bestOf + "/" + sf.gameNo + "/" + sf.chooser + "/" + (sf.record == null ? "null" : "set"));
+            for (final String bad : new String[] {
+                "\"match\":{\"bestOf\":2,\"game\":1,\"wins\":[0,0]}",
+                "\"match\":{\"bestOf\":3,\"game\":4,\"wins\":[0,0]}",
+                "\"match\":{\"bestOf\":3,\"game\":2,\"wins\":[2,0]}",
+                "\"match\":{\"bestOf\":3,\"game\":2,\"wins\":[1,1]}",
+                "\"match\":{\"bestOf\":3,\"game\":2,\"wins\":[0,0],\"seed\":5}",
+                "\"match\":{\"bestOf\":3,\"game\":1,\"wins\":[0,0]},\"chooser\":1",
+                "\"chooser\":2",
+                "\"record\":[true]",
+                "\"record\":[\"yes\",false]",
+            }) {
+                final File f = new File(scratch, "bad.json");
+                Files.write(f.toPath(), ("{" + names + "," + bad + "}").getBytes(StandardCharsets.UTF_8));
+                eq("seats file refused (D406/D407): " + bad.substring(0, Math.min(48, bad.length())), true, refused(() -> TableMatch.readSeatsFile(f)));
+            }
         }
     }
 
