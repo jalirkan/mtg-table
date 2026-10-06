@@ -252,3 +252,16 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J087/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table ef7e73f
 - follow-up: jobs/J081-gate2-v2.md: on pc-jobs with after: on this job; the runner starts it
+
+## J082 FAILED: Overnight queue, night 4: recorded drafts with D375's AI profile mix, play exploration at 0.15, bridge share 0.2 (card-level allocation from J062 power.tsv)
+
+- finished: 2026-10-05T23:43:06-04:00
+- decides: whether night 5 keeps D375's profile mix and this night's exploration share (D358); its drafts and recordings feed the matchup read of nights 1-4 and the evaluator
+- hypothesis: with the mix (Default 0.5, Reckless 0.25, Cautious 0.25) the night keeps engine errors <= 2% and recording errors <= 1%; games with a Reckless or Cautious seat take <= 1.5x the time of Default-vs-Default games and end in a timeout or draw <= 5% of the time; the D371 checker quarantines <= 0.5% of recordings
+- rule: written 2026-10-05 before the run, read on this night's own numbers (night-4.json below, not the runner's cumulative totals). Profile mix: keep it for night 5 if the games with a non-Default seat have timeouts + draws <= 5% for each profile, mean game time <= 1.5x the same night's Default-vs-Default games, and the night's engine errors <= 2% and recording errors <= 1%; otherwise night 5 plays Default vs Default and the cause is written up as a decision. Exploration: keep this night's share for night 5 if share x (exploring / plain mean game time - 1) <= 0.25, the night's mean recorded bytes per game <= 2.5x its plain games', and the same error limits hold; otherwise halve it. Both are measured inside this night, where the mix and exploration are each assigned by seed, so neither confounds the other
+- outcome: failed (pilot: rq3.written == 1 and rq3.newKinds == 0 (rq3.written = 1, rq3.newKinds = 3))
+- headline: night.night_drafts_done 0, night.planned_drafts 0, night.bridge_share 0, quarantined 0
+- summary: results/J082/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table ef7e73f
+- follow-up: template matchup-read-nights-1-4: not due (the job did not finish done)
+- follow-up: template design-verify: not due (the job did not finish done)

@@ -1,6 +1,8 @@
-running
+failed
+reason: pilot: rq3.written == 1 and rq3.newKinds == 0 (rq3.written = 1, rq3.newKinds = 3)
 runner: forgecoach-runner 8b3d2cb
 started: 2026-10-05T23:38:26-04:00
-phase: pilot 2/2
+finished: 2026-10-05T23:43:06-04:00
 mtg-table: ef7e73f
 workers: 3
+peak_worker_rss_gb: 1.24
