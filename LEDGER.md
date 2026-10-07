@@ -443,3 +443,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - commits: mtg-table 74c1360
 - follow-up: template matchup-read-nights-1-5: not due (the job did not finish done)
 - follow-up: template design-verify: not due (the job did not finish done)
+
+## J106 FAILED: ForgeCoach full-game playtest overnight: 50 games against Forge and 5 best-of-three tables between two browsers, every move a click on the real board by a monkey that reads the engine's offer from the protocol stream and never sends a frame of its own
+
+- finished: 2026-10-07T07:46:43-04:00
+- decides: whether two-person play is ready for Justin's friend again: every unreachable option, stuck seat, board that disagrees with the frames, lost log, leak and page error the suite finds is fixed or listed before the next game
+- hypothesis: after ForgeCoach #86 to #103 (the playtest, the faster live coach, graveyard abilities from the engine's state.playable) and mtg-table #92, #93, #96 and #98 (M61), complete games played through the real UI reach a real end with no stuck seat and no hidden card in the page, and no option the engine lists in state.playable is unreachable (the two gaps the container runs left, graveyard abilities that are not keywords and the coach asking again after a reload, are fixed)
+- rule: written before the run. READY if, over all games: the five best-of-threes complete (a match winner in the room), at least 45 of the 50 solo games and every table game reach a real end (win, loss or draw), and the counts of stuck, hidden-info, stack or combat mismatch, log-incomplete, page or console error and harness error findings are all 0. Unreachable-option findings do not block READY by themselves: each kind is listed with its screenshot and frame, and judged in the summary (a play the engine offers that no click can make is a bug to fix; one the monkey guessed from the card script and Forge then refused is not). Turn-cap findings (a game past 40 rounds, when a 40-card deck runs out by about round 34) count as a game that did not reach a real end. Otherwise NOT READY, with each failing kind triaged
+- outcome: failed (pilot: step pilot1 exited 2)
+- headline: pt.games 0, pt.ended 0, pt.matchesDone 0, pt.unreachable 0, pt.stuck 0, pt.hidden 0, pt.board 0, pt.log 0, pt.errors 0
+- summary: results/J106/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 503c602, ForgeCoach 311da8e
+- follow-up: template morning-read: not due (the job did not finish done)
