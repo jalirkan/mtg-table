@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 04:20 (EDT) — J103 re-posted as J104 (pilot seed block had no exploring draft)
+J103's pilot stopped on `pn.explore_drafts >= 1` (0 of 60), and it was right to stop. A draft explores when `rng(seed,'play-explore') < 0.15`, and none of the pilot's seeds 7,420,001-7,420,010 does (checked with 74c1360's `draftExplores`). J104 is the same night 5 with pilot seeds 7,430,001+ (7,430,002 and 7,430,005 explore). It also uses fresh pilot folders (`*-pilot-n5b*`) because a new job does not move J103's `queue-pilot-n5` aside. `runner.sh check`: lint clean, machine-checked. J102 is read and done; nothing else is waiting.
+
 ### 2026-10-07 02:40 (EDT) — J103 night 5 posted
 - **J099's rule, read on night 4's own numbers:** keep the profile mix (non-Default timeouts + draws 0% Reckless, 0.03% Cautious; time ratio 0.96; engine errors 0.016%, recording errors 0) and keep exploration at 0.15 (0.15 × (4.037/4.069 − 1) = −0.001 against 0.25; bytes ratio 1.003 against 2.5).
 - **J103** is night 4's design at the same pin (74c1360) and the same flags: 38,000 drafts, pilot seeds 7,420,001+. Its pilot now expects every key folder to answer `same version` and stops on any version change. It starts once cores are free after J102.
