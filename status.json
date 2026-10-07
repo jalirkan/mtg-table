@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-06T21:09:10-04:00",
- "heartbeat": "2026-10-06T21:09:10-04:00",
+ "updated": "2026-10-06T21:13:42-04:00",
+ "heartbeat": "2026-10-06T21:13:42-04:00",
  "paused": false,
  "state": "idle",
  "idleSince": "2026-10-06T21:09:10-04:00",
  "idleReason": "Justin playing",
  "host": {
-  "load1": 2.59,
-  "memUsedGb": 7,
+  "load1": 0.42,
+  "memUsedGb": 6.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 2506,
   "pressure": 0,
