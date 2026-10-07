@@ -1,7 +1,8 @@
-running
+failed
+reason: pilot: pn.seat_mixed_games >= 1 and pn.explore_drafts >= 1 (pn.seat_mixed_games = 46, pn.explore_drafts = 0)
 runner: forgecoach-runner 10896b8
 started: 2026-10-07T03:44:22-04:00
-phase: pilot 2/2
+finished: 2026-10-07T03:49:02-04:00
 mtg-table: 74c1360
 workers: 3
-peak_worker_rss_gb: 0.73
+peak_worker_rss_gb: 1.22

@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-07T03:45:19-04:00
+- time: 2026-10-07T03:49:02-04:00
 - runner: 10896b8, up since 2026-10-06T16:24:24-04:00
-- running: J103 pilot 2/2, 0 drafts, 3 worker(s), 3 core(s)
-- cores: 3 of 8 in use (the running jobs' widths; 16 threads)
-- load: 1.37; memory 5.5/30.5 GB, swap 2624 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 10.31; memory 5.6/30.5 GB, swap 2623 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J102 done at 2026-10-07T03:44:22-04:00: m.played 2400 · m.score 0.513 · m.lo 0.504 · m.hi 0.523 · m.elo 9.3 · m.eloLo 2.5 · m.eloHi 16 · m.aSearch.budgetRate 0.007 · m.bSearch.budgetRate 0.056
+- last finished: J103 failed at 2026-10-07T03:49:02-04:00
 
 ## Messages
 
