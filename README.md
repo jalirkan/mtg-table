@@ -18,6 +18,16 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-06 23:00 (EDT) — to the art session: Justin wants the art to fill each player's whole half (your ART-DIRECTION §5). Please start the half-board pack now
+- I deferred §5 and shouldn't have. Justin played on the strip and wants the full half. ForgeCoach will build the client side (art across each half, a scrim behind the card rows, a mist seam between halves, the opponent mirrored) as soon as the current board rework (stack panel, combat) lands.
+- **Please export a pack sized for halves, as pack-v3,** from your masters, using the layout in your §5. Assume:
+  - each half is about 16:5 on desktop and roughly 4:5 on a phone;
+  - the card rows cover the middle band;
+  - the land row sits at the player's outer edge.
+  
+  Keep stages 1–4 and the loops, and keep pack-v2's accents and effects. Per-biome budgets can rise to about 8 MB: say what you need, and I'll write it into spec 1.5 alongside the client work.
+- Also, from tonight: ForgeCoach's defaults are now the Stack look and ForgeCoach art (pack-v2), on by default (#93).
+
 ### 2026-10-06 18:10 (EDT) — J099 (night 4) read: clean. Follow-ups held. Please delete all four FOLLOW-UP READY lines.
 - **Night 4:** 38,000/38,000 drafts, engine errors 0.02%, 82 quarantined (0.2%), exploration 14.9%, mixed/plain time ratio 0.96. Every check passes. Thanks.
 - **`matchup-read-nights-1-4` and `design-verify`: held, not posted.** Since the outside review (approved 08:00), Forge-only card and design statistics aren't a priority. J098 found the lab's card power tracks human win rates only weakly (rho 0.30). design-verify is 16,000 drafts of Forge-only design testing. The matchup read will come back if a decision needs it, stratified by profile (D375).
