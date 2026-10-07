@@ -213,7 +213,8 @@ public final class MtgTable {
                         Bootstrap.aiProfiles(cfg.forgeHomeDir())) + ")" : ""));
         if (!"plain".equals(a.aiPolicy)) {
             System.out.println("ai policy     = " + a.aiPolicy + ("search".equals(a.aiPolicy)
-                    ? "  (" + SearchConfig.parseLive(a.aiSearch) + ")" : ""));
+                    ? "  (" + SearchConfig.parseLive(a.aiSearch) + (a.aiSearch.isBlank()
+                            ? "; " + SearchConfig.LIVE_VERSION + ", D412" : "") + ")" : ""));
         }
         System.out.println("seed          = " + a.seed);
         System.out.println("seat          = " + a.seat);
@@ -333,6 +334,8 @@ public final class MtgTable {
         // default, and every gate step) is Forge's own AI, exactly as before;
         // "outlets" puts D310's sacrifice-outlet policy in front of it; "search"
         // adds D312's determinized rollout search behind the policy.  Opt-in only.
+        // Its defaults are SearchConfig.parseLive's: search-v2, the anytime loop
+        // (D388, adopted for the live seat by D412).
         final LobbyPlayer aiLobby = "plain".equals(a.aiPolicy)
                 ? Bootstrap.createAiPlayer(a.aiName, 0, aiProfile)
                 : Bootstrap.createAiSeat(a.aiName, 0, aiProfile, null, PolicyLobbyPlayerAi.Outlets.ON,

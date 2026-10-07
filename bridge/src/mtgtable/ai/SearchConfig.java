@@ -65,7 +65,9 @@ import java.util.Locale;
  * margin, the reports and their win estimates keep their meaning.  The model
  * reads only the searching seat's knowledge, so a live seat may use it.
  *
- * <p>The week-3 upgrades (D388–D390), each off by default for the same reason:
+ * <p>The week-3 upgrades (D388–D390), each off by default in {@link #parse}
+ * for the same reason (D412 turns {@code anytime=1} on for the live seat only,
+ * in {@link #parseLive}: {@link #LIVE_VERSION}):
  * <ul>
  * <li>{@code anytime=1} -- the search respects its budget: a round cut short by
  *     the deadline keeps the rollouts it finished, candidates the remaining time
@@ -259,12 +261,33 @@ public final class SearchConfig {
     }
 
     /**
+     * The live seat's search version (D412): what {@code MtgTable --ai-policy
+     * search} plays with no {@code --ai-search} keys.  {@code search-v1} was
+     * {@link #parse}'s defaults (D312's loop); {@code search-v2} is search-v1
+     * with {@code anytime=1}, adopted on J102's pre-registered rule.  On the AI
+     * ladder this config is the player {@code search-v1-anytime} (D388), whose
+     * name and hash stay as they are (a ladder name is permanent).
+     */
+    public static final String LIVE_VERSION = "search-v2";
+
+    /**
+     * The live seat's defaults on top of {@link #parse}'s (D412), prepended so a
+     * key the caller names wins: {@code --ai-search anytime=0} is search-v1's
+     * loop again.  {@link #parse} itself keeps every default as it was, because
+     * the bench, the cube lab and every ladder player's seat config are parsed
+     * by it and must keep meaning what they meant when their games were played.
+     */
+    public static final String LIVE_DEFAULTS = "anytime=1";
+
+    /**
      * The game's AI seat's parse ({@code MtgTable --ai-search}, D314): as
-     * {@link #parse}, but the bench-only {@code oracle} is refused -- a seat
-     * that plays a person never sees their hidden cards (D312, D350).
+     * {@link #parse} over {@link #LIVE_DEFAULTS} (D412: the live seat runs
+     * {@link #LIVE_VERSION}, the anytime loop, unless the text says otherwise),
+     * and the bench-only {@code oracle} is refused -- a seat that plays a
+     * person never sees their hidden cards (D312, D350).
      */
     public static SearchConfig parseLive(final String text) {
-        final SearchConfig c = parse(text);
+        final SearchConfig c = parse(text == null || text.isBlank() ? LIVE_DEFAULTS : LIVE_DEFAULTS + "," + text);
         if (c.oracle) {
             throw new IllegalArgumentException("search oracle=1 reads the opponent's real hidden cards: bench only "
                     + "(tools/ai-bench, the ladder), never a live seat");
