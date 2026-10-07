@@ -1,9 +1,10 @@
 running
 runner: forgecoach-runner 10896b8
 started: 2026-10-07T10:22:42-04:00
-phase: commands 2/2
+phase: prepare
 mtg-table: 503c602
 ForgeCoach: 311da8e
-workers: 1 (sized 1: min(cores 7, memory 0, max_workers 1); peak 4.00 GB per worker (declared; measured 0.93), budget 2 GB)
+workers: 1
 peak_worker_rss_gb: 0.93
-blocks_done: run1 exit 0 at 2026-10-07T15:05:31-04:00
+restarted: 2026-10-07T19:27:20-04:00: the runner restarted during run2; the job is not resumable, so it starts again from the top (moved aside: var/playtest/J107)
+set_aside: 1 copy, 0.03 GB beside the job's clean: paths (never deleted: remove them by hand)
