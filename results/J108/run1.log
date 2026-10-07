@@ -1,0 +1,70 @@
+==== J108 run1 started 2026-10-07T16:11:21-04:00 in unit lab-J108-run1, 4 worker(s), 4 core(s), BLAS/OpenMP threads 4
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb2       218G  168G   40G  81% /
+/dev/sda4       931G  431G  501G  47% /mnt/e
+  check redaction: ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine: 90 quarantined recording(s), counted by walking the folder
+  check warehouse: ok: 20000 drafts lines ingested
+  check encoded: ok: 39908 of 39910 recordings encoded (100.0%)
+  check holds: ok: no hold (released: J052, J067, J076, J077, J078, J079, J080)
+cold night 1: 27 unit(s), 40003 file(s), 3.302 GB hot -> /mnt/e/forgecoach-archive
+  bridge__fair-fight+modern-era: 518 member(s), 43.4 MB hot -> 7.6 MB (5.72x), verified
+  bridge__fair-fight+omega: 344 member(s), 26.0 MB hot -> 4.7 MB (5.53x), verified
+  bridge__fair-fight+peasant: 220 member(s), 17.3 MB hot -> 3.0 MB (5.73x), verified
+  bridge__fair-fight+synergy: 476 member(s), 47.9 MB hot -> 7.6 MB (6.34x), verified
+  bridge__fair-fight+vintage: 384 member(s), 31.6 MB hot -> 5.4 MB (5.84x), verified
+  bridge__modern-era+omega: 348 member(s), 24.7 MB hot -> 4.5 MB (5.51x), verified
+  bridge__modern-era+synergy: 172 member(s), 15.6 MB hot -> 2.5 MB (6.20x), verified
+  bridge__modern-era+vintage: 386 member(s), 27.7 MB hot -> 4.9 MB (5.61x), verified
+  bridge__pauper+modern-era: 616 member(s), 51.6 MB hot -> 8.9 MB (5.79x), verified
+  bridge__pauper+omega: 428 member(s), 33.8 MB hot -> 6.0 MB (5.63x), verified
+  bridge__pauper+peasant: 231 member(s), 19.9 MB hot -> 3.4 MB (5.79x), verified
+  bridge__pauper+synergy: 558 member(s), 56.4 MB hot -> 8.9 MB (6.33x), verified
+  bridge__pauper+vintage: 438 member(s), 33.3 MB hot -> 5.9 MB (5.62x), verified
+  bridge__peasant+modern-era: 593 member(s), 40.2 MB hot -> 7.4 MB (5.46x), verified
+  bridge__peasant+omega: 404 member(s), 25.9 MB hot -> 4.8 MB (5.36x), verified
+  bridge__peasant+synergy: 571 member(s), 45.8 MB hot -> 7.8 MB (5.88x), verified
+  bridge__peasant+vintage: 418 member(s), 28.8 MB hot -> 5.1 MB (5.60x), verified
+  bridge__synergy+omega: 441 member(s), 34.1 MB hot -> 5.9 MB (5.79x), verified
+  bridge__synergy+vintage: 446 member(s), 35.7 MB hot -> 6.1 MB (5.87x), verified
+  normal__fair-fight: 3954 member(s), 365.2 MB hot -> 62.3 MB (5.86x), verified
+  normal__modern-era: 4192 member(s), 320.5 MB hot -> 56.5 MB (5.68x), verified
+  normal__omega: 3753 member(s), 264.8 MB hot -> 47.7 MB (5.55x), verified
+  normal__pauper: 5110 member(s), 501.6 MB hot -> 83.0 MB (6.04x), verified
+  normal__peasant: 6353 member(s), 420.1 MB hot -> 72.9 MB (5.76x), verified
+  normal__synergy: 4413 member(s), 500.4 MB hot -> 72.2 MB (6.93x), verified
+  normal__vintage: 4143 member(s), 279.8 MB hot -> 49.8 MB (5.62x), verified
+  quarantine: 93 member(s), 10.2 MB hot -> 8.7 MB (1.18x), verified
+cold night 1: 27 unit(s) verified, 0 failed; 40003 file(s), 3.302 GB hot -> 0.564 GB; 0 deleted from the hot disk
+  check redaction: ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine-n2: 44 quarantined recording(s), counted by walking the folder
+  check warehouse: ok: 20000 drafts lines ingested
+  check encoded: ok: 39954 of 39956 recordings encoded (100.0%)
+  check holds: ok: no hold (released: J052, J067, J076, J077, J078, J079, J080)
+cold night 2: 27 unit(s), 40003 file(s), 3.363 GB hot -> /mnt/e/forgecoach-archive
+  bridge__fair-fight+modern-era: 521 member(s), 41.7 MB hot -> 7.4 MB (5.64x), verified
+  bridge__fair-fight+omega: 336 member(s), 26.0 MB hot -> 4.8 MB (5.46x), verified
+  bridge__fair-fight+peasant: 221 member(s), 15.5 MB hot -> 2.8 MB (5.46x), verified
+  bridge__fair-fight+synergy: 504 member(s), 46.6 MB hot -> 7.6 MB (6.13x), verified
+  bridge__fair-fight+vintage: 353 member(s), 26.9 MB hot -> 4.8 MB (5.56x), verified
+  bridge__modern-era+omega: 328 member(s), 23.6 MB hot -> 4.2 MB (5.58x), verified
+  bridge__modern-era+synergy: 178 member(s), 15.6 MB hot -> 2.5 MB (6.20x), verified
+  bridge__modern-era+vintage: 336 member(s), 23.9 MB hot -> 4.3 MB (5.50x), verified
+  bridge__pauper+modern-era: 664 member(s), 55.6 MB hot -> 9.7 MB (5.73x), verified
+  bridge__pauper+omega: 446 member(s), 33.2 MB hot -> 6.0 MB (5.55x), verified
+  bridge__pauper+peasant: 262 member(s), 18.9 MB hot -> 3.4 MB (5.51x), verified
+  bridge__pauper+synergy: 656 member(s), 68.4 MB hot -> 11.0 MB (6.22x), verified
+  bridge__pauper+vintage: 442 member(s), 37.5 MB hot -> 6.4 MB (5.82x), verified
+  bridge__peasant+modern-era: 554 member(s), 39.9 MB hot -> 7.2 MB (5.57x), verified
+  bridge__peasant+omega: 364 member(s), 22.9 MB hot -> 4.3 MB (5.29x), verified
+  bridge__peasant+synergy: 577 member(s), 48.4 MB hot -> 8.1 MB (5.95x), verified
+  bridge__peasant+vintage: 359 member(s), 20.7 MB hot -> 3.9 MB (5.23x), verified
+  bridge__synergy+omega: 450 member(s), 37.6 MB hot -> 6.4 MB (5.88x), verified
+  bridge__synergy+vintage: 436 member(s), 34.9 MB hot -> 6.0 MB (5.78x), verified
+  normal__fair-fight: 4156 member(s), 369.6 MB hot -> 63.9 MB (5.79x), verified
+  normal__modern-era: 4065 member(s), 316.0 MB hot -> 54.2 MB (5.82x), verified
+  normal__omega: 3588 member(s), 249.8 MB hot -> 45.4 MB (5.51x), verified
+  normal__pauper: 6282 member(s), 624.5 MB hot -> 102.7 MB (6.08x), verified
+  normal__peasant: 5525 member(s), 360.2 MB hot -> 63.2 MB (5.70x), verified
+  normal__synergy: 5041 member(s), 578.4 MB hot -> 81.2 MB (7.12x), verified
+  normal__vintage: 3312 member(s), 222.0 MB hot -> 39.3 MB (5.65x), verified
+  quarantine: 47 member(s), 4.4 MB hot -> 3.8 MB (1.16x), verified
+cold night 2: 27 unit(s) verified, 0 failed; 40003 file(s), 3.363 GB hot -> 0.565 GB; 0 deleted from the hot disk
