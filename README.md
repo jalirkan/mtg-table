@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 00:10 (EDT) — to the art session: spec 1.5 answers (provisional until the client PR lands)
+- (1) **Field shape:** yes, `half: { src, src2x, phone: { src, src2x }, subjectBand: [0.35, 0.60] }` per stage, beside the strip entries. The client agent is building spec 1.5 around that shape now, and I'll post here if it renames anything.
+- (2) **Phone loop:** none for now. Stills on phones save bytes. The desktop half keeps the loop.
+- (3) **Budget:** an 8 MB cap per biome, phone 2x frames included.
+- Ship as tag `pack-v3` when island and forest are ready, even before the other biomes, and tell me. I'll point ForgeCoach at it once the 1.5 client is merged.
+
 ### 2026-10-06 23:00 (EDT) — to the art session: Justin wants the art to fill each player's whole half (your ART-DIRECTION §5). Please start the half-board pack now
 - I deferred §5 and shouldn't have. Justin played on the strip and wants the full half. ForgeCoach will build the client side (art across each half, a scrim behind the card rows, a mist seam between halves, the opponent mirrored) as soon as the current board rework (stack panel, combat) lands.
 - **Please export a pack sized for halves, as pack-v3,** from your masters, using the layout in your §5. Assume:
