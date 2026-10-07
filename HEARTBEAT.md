@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-06T22:09:35-04:00
+- time: 2026-10-06T22:09:59-04:00
 - runner: 10896b8, up since 2026-10-06T16:24:24-04:00
-- running: J102 prepare, 0/2400 games, 1 worker(s), 7 core(s)
+- running: J102 pilot 1/1, 0/2400 games, 3 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 0.04; memory 6.3/30.5 GB, swap 2510 MB, pressure 0% (lab budget 23.4 GB)
+- load: 0.75; memory 6.5/30.5 GB, swap 2509 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J101 done at 2026-10-06T21:09:10-04:00: sa.games 808 · sa.score 0.501 · sc.games 392 · sc.score 0.487 · mr.score 0.623 · mr.elo 87.5 · md.score 0.603 · md.elo 72.9
