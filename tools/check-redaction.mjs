@@ -679,6 +679,43 @@ const PLAYER_SHAPE = {
   ),
 };
 
+/** Amendment M61: one `state.playable` entry -- a card id, a zone that is not in play, its abilities. */
+const PLAYABLE_ZONES = ['hand', 'graveyard', 'exile', 'command', 'library'];
+const playableEntry = (e) =>
+  plainObject(e) && sameKeys(e, ['cardId', 'zone', 'abilities']) && num(e.cardId) &&
+  PLAYABLE_ZONES.includes(e.zone) && Array.isArray(e.abilities) && e.abilities.length > 0 &&
+  e.abilities.every((a) =>
+    plainObject(a) && sameKeys(a, ['abilityId', 'label', 'isSpell']) &&
+    num(a.abilityId) && str(a.label) && bool(a.isSpell));
+
+/**
+ * Amendment M61 (D413), the hidden-information half: `state.playable` says
+ * "this card is yours and you may play it now", so every entry must name a
+ * FULL card (never a stub) in the VIEWING seat's own zone of that name in the
+ * same frame -- never an opponent's card, never a card on the battlefield --
+ * and the list is only ever written at that seat's priority.
+ */
+function checkPlayable(body, seat) {
+  if (!Array.isArray(body.playable)) return [];
+  const out = [];
+  if (body.priority !== seat) {
+    out.push(`state.playable is a list while priority is ${JSON.stringify(body.priority)}, not the ` +
+      `viewing seat ${String(seat)} -- it is written only at the seat's own priority, null otherwise (M61)`);
+  }
+  const me = (body.players ?? []).find((p) => plainObject(p) && p.id === seat);
+  body.playable.forEach((e, i) => {
+    if (!plainObject(e)) return;   // the shape check says so
+    const zone = me && plainObject(me.zones) ? me.zones[e.zone] : undefined;
+    const card = Array.isArray(zone?.cards) ? zone.cards.find((c) => plainObject(c) && c.id === e.cardId) : undefined;
+    if (card === undefined || card.hidden === true || card.faceDownHidden === true) {
+      out.push(`state.playable[${i}] names card ${JSON.stringify(e.cardId)} in ${JSON.stringify(e.zone)}, which ` +
+        `is not a full card in the viewing seat's own ${JSON.stringify(e.zone)} in this frame -- the list is the ` +
+        `seat's own cards only, never the opponent's and never a concealed one (M61, D413)`);
+    }
+  });
+  return out;
+}
+
 const STATE_SHAPE = {
   gameId: str,
   turn: num,
@@ -717,6 +754,10 @@ const STATE_SHAPE = {
   undo: optional(
     nullable((v) => plainObject(v) && sameKeys(v, ['can', 'depth']) && bool(v.can) && num(v.depth)),
   ),
+  // Amendment M61 (D413).  Written by a seat on every frame -- null off its
+  // priority -- and never by an AI-vs-AI recorder, so per FILE: all or none.
+  // Who each entry may name is `checkPlayable`'s.
+  playable: perFile(nullable((v) => Array.isArray(v) && v.every(playableEntry)), 'M61 (playable)'),
 };
 
 /**
@@ -2154,6 +2195,8 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     // --- the drift half: exact key sets and runtime types (section 3) ---
     stats.shapeChecks++;
     for (const complaint of checkStateShape(body, missed)) note(lineNo, complaint);
+    for (const complaint of checkPlayable(body, seat)) note(lineNo, complaint);
+    if (Array.isArray(body.playable)) stats.playable = (stats.playable ?? 0) + body.playable.length;
 
     // --- the text half: no engine string names a card this frame concealed ---
     for (const complaint of checkTexts(body, seat)) note(lineNo, complaint);
@@ -2537,7 +2580,13 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   stats.perFile = {};
   for (const [label, tally] of missed.perFile) {
     stats.perFile[label] = tally.present > 0 ? (tally.absent > 0 ? 'half' : 'present') : 'absent';
-    if (tally.present > 0 && tally.absent > 0) {
+    if (tally.present > 0 && tally.absent > 0 && label !== 'M49 (keywords)') {
+      problems.push(
+        `${path}: ${label} is HALF PRESENT -- ${String(tally.present)} object(s) carry the key and ` +
+        `${String(tally.absent)} do not (first: ${tally.firstAbsent}). A file written before the ` +
+        `amendment, or by a recorder that does not write it, has NONE; a seat's emitter writes it ` +
+        `on every one (docs/protocol.md).`);
+    } else if (tally.present > 0 && tally.absent > 0) {
       problems.push(
         `${path}: M49's keywords are HALF PRESENT -- ${String(tally.present)} full card(s) carry ` +
         `"keywords" and ${String(tally.absent)} do not (first: ${tally.firstAbsent}). A recording ` +
@@ -2851,6 +2900,15 @@ for (const path of files) {
       : kw === 'absent'
         ? '      M49 keywords absent from every full card (legitimate -- recorded before amendment M49)'
         : '      M49 keywords HALF PRESENT (a failure, above)');
+  }
+  // M61.  Whether this file carries state.playable -- on every frame, or on none.
+  const pl = stats.perFile?.['M61 (playable)'];
+  if (pl !== undefined) {
+    console.log(pl === 'present'
+      ? `      M61 playable present on every state (${String(stats.playable ?? 0)} entries, each the seat's own full card)`
+      : pl === 'absent'
+        ? '      M61 playable absent (legitimate -- recorded before amendment M61, or no seat)'
+        : '      M61 playable HALF PRESENT (a failure, above)');
   }
   // M6.  Which comfort fields this recording carries, and which it does not:
   // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,

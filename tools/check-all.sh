@@ -182,6 +182,11 @@
 #                                 Then 12k: FaceDownSelfTest (D371) -- a
 #                                 face-down card's alt only where Forge's
 #                                 canFaceDownBeShownTo says (one engine boot)
+#                                 Then 12l: PlayableSelfTest (D413) -- state.
+#                                 playable lists Cauldron Familiar, Seasoned
+#                                 Pyromancer and Unwilling Ingredient from the
+#                                 graveyard, never the opponent's cards (one
+#                                 engine boot)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -2183,6 +2188,25 @@ s12k_facedown() {
   fi
 }
 
+# 12l. D413 (amendment M61): what the seat may play from outside the battlefield.
+#      bridge/src/mtgtable/PlayableSelfTest.java builds positions with Cauldron
+#      Familiar, Seasoned Pyromancer, Unwilling Ingredient and Deep Analysis in
+#      seat 0's graveyard and holds that Playables.of lists exactly the cards
+#      Forge's own click would play (Familiar only with a Food to sacrifice,
+#      flashback only at sorcery speed), never seat 1's, and that Snap.state
+#      writes the list, writes null off the priority, and drops an entry a
+#      comfort hands over for a card that is not the viewer's.  One engine boot.
+s12l_playable() {
+  printf '\n=== 12l. PlayableSelfTest -- state.playable: what the seat may play from its graveyard, exile, hand (D413) ===\n'
+  rc=0
+  jvm ./bridge/run.sh mtgtable.PlayableSelfTest > var/check-all-playable.log 2>&1 || rc=$?
+  grep -E '^(  ok|  FAIL|PlayableSelfTest)' var/check-all-playable.log || true
+  if [ "$rc" != "0" ]; then
+    capped "$rc" && die "PlayableSelfTest did not finish within ${GAME_TIMEOUT}s"
+    die "PlayableSelfTest exited $rc: state.playable missed a card Forge would play, listed one it would not, or named the opponent's (12l, D413; log: var/check-all-playable.log)"
+  fi
+}
+
 s13_skipped() {
   printf '\n(web steps skipped: SKIP_WEB=1)\n'
 }
@@ -2324,6 +2348,7 @@ job 12h-ml        12 both     s12h_ml           "$PRE"
 job 12i-midmove   12 both     s12i_midmove      "$PRE"
 job 12j-timeout   12 both     s12j_timeout      "$PRE"
 job 12k-facedown  12 both     s12k_facedown     "$PRE"
+job 12l-playable  12 both     s12l_playable     "$PRE"
 if [ "${SKIP_WEB:-0}" = "1" ]; then
   job 13-skipped  13 both     s13_skipped       "$PRE"
 else
