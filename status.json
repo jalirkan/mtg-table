@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-07T02:36:28-04:00",
- "heartbeat": "2026-10-07T02:36:28-04:00",
+ "updated": "2026-10-07T02:41:01-04:00",
+ "heartbeat": "2026-10-07T02:41:01-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 11.76,
-  "memUsedGb": 15.6,
+  "load1": 10.42,
+  "memUsedGb": 14.9,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2142,
+  "swapUsedMb": 2060,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,24 +26,24 @@
    "cpu": "heavy",
    "phase": "commands 1/1",
    "started": "2026-10-06T22:09:35-04:00",
-   "elapsed": 16013,
-   "done": 1824,
+   "elapsed": 16286,
+   "done": 1872,
    "total": 2400,
    "unit": "games",
-   "ratePerHour": 520.2,
-   "eta": "2026-10-07T03:42:54-04:00",
+   "ratePerHour": 504.1,
+   "eta": "2026-10-07T03:43:52-04:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-07T02:34:22-04:00",
-   "memGb": 8.22,
+   "dataUpdated": "2026-10-07T02:39:37-04:00",
+   "memGb": 7.84,
    "live": {
     "m.played": 0,
-    "elapsed_s": 16012,
+    "elapsed_s": 16265,
     "match_err": 1,
-    "match_games": 1824,
+    "match_games": 1872,
     "peak_worker_rss_gb": 1.25,
     "pressure_events": 2,
     "workers": 7
@@ -70,7 +70,16 @@
    "detail": "lab-J102-run1"
   }
  ],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": "Queue night 5",
+   "publicEst": "~11 h",
+   "id": "J103",
+   "title": "Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)",
+   "cpu": "heavy",
+   "est": "~8.5-10 h of drafts (38000 drafts: 8.5 h at night 3's measured 4,490 drafts/h, exploration kept), then ~1 h of redaction checks (resumable)"
+  }
+ ],
  "waiting": [],
  "finished": [
   {
