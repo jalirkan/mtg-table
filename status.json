@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-07T13:08:20-04:00",
- "heartbeat": "2026-10-07T13:08:20-04:00",
+ "updated": "2026-10-07T13:12:55-04:00",
+ "heartbeat": "2026-10-07T13:12:55-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 13.11,
-  "memUsedGb": 13.8,
+  "load1": 10.81,
+  "memUsedGb": 8.1,
   "memTotalGb": 30.5,
   "swapUsedMb": 3742,
   "pressure": 0,
@@ -26,23 +26,23 @@
    "cpu": "heavy",
    "phase": "commands 1/3",
    "started": "2026-10-07T06:05:50-04:00",
-   "elapsed": 25350,
-   "done": 33497,
+   "elapsed": 25625,
+   "done": 33918,
    "total": 38000,
    "unit": "drafts",
-   "ratePerHour": 4948.1,
-   "eta": "2026-10-07T14:02:56-04:00",
+   "ratePerHour": 5191.5,
+   "eta": "2026-10-07T14:00:05-04:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-07T13:07:57-04:00",
-   "memGb": 10.5,
+   "dataUpdated": "2026-10-07T13:12:12-04:00",
+   "memGb": 5.22,
    "live": {
-    "night.night_drafts_done": 33497,
+    "night.night_drafts_done": 33917,
     "night.planned_drafts": 38000,
-    "night.bridge_share": 0.2269,
+    "night.bridge_share": 0.2241,
     "quarantined": 0,
     "base.bytes_ratio_explore_plain": 1.005377,
     "base.drafts": 98000,
@@ -90,12 +90,12 @@
    "cubes": [
     {
      "id": "fair-fight",
-     "done": 3985,
+     "done": 4000,
      "planned": 4002
     },
     {
      "id": "modern-era",
-     "done": 3750,
+     "done": 4000,
      "planned": 4084
     },
     {
@@ -105,7 +105,7 @@
     },
     {
      "id": "pauper",
-     "done": 3750,
+     "done": 3905,
      "planned": 4926
     },
     {
@@ -155,7 +155,7 @@
    "cpu": "light",
    "phase": "commands 1/2",
    "started": "2026-10-07T10:22:42-04:00",
-   "elapsed": 9938,
+   "elapsed": 10213,
    "done": 17,
    "total": 60,
    "unit": "games",
@@ -178,7 +178,7 @@
     "pt.board": 0,
     "pt.log": 0,
     "pt.errors": 0,
-    "elapsed_s": 9926,
+    "elapsed_s": 10181,
     "peak_worker_rss_gb": 0.93,
     "pressure_events": 0,
     "pt.findings": 6,
