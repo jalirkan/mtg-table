@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-06T21:05:30-04:00
+- time: 2026-10-06T21:09:10-04:00
 - runner: 10896b8, up since 2026-10-06T16:24:24-04:00
-- running: J101 commands 3/3, 3640/9400 games, 649.9/h, ETA 2026-10-07T05:57:18-04:00, 7 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.93; memory 12.3/30.5 GB, swap 2506 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 2.59; memory 7/30.5 GB, swap 2506 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: J102 (new jobs held by play.sh --pause-lab (pid 746220): running jobs carry on)
-- last finished: J099 done at 2026-10-06T16:24:13-04:00: night.night_drafts_done 38000 · night.planned_drafts 38000 · night.bridge_share 0.2 · ns.engine_error_rate 0 · ns.mixed_time_ratio 0.957 · quarantined 82
+- last finished: J101 done at 2026-10-06T21:09:10-04:00: sa.games 808 · sa.score 0.501 · sc.games 392 · sc.score 0.487 · mr.score 0.623 · mr.elo 87.5 · md.score 0.603 · md.elo 72.9
 
 ## Messages
+
+- FOLLOW-UP READY [J101@2026-10-06T21:09:10-04:00] (the runner, for the cloud session): J101 is done; write and post the template morning-read. It decides: whether ForgeCoach's Play vs Forge should default to Forge's Reckless profile as the stronger opponent, and whether the search should sit on Reckless instead of Default. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J099@2026-10-06T16:24:13-04:00] (the runner, for the cloud session): J099 is done; write and post the template matchup-read-nights-1-4; write and post the template design-verify. It decides: whether night 5 keeps D375's profile mix and this night's exploration share (D358); its drafts and recordings feed the matchup read of nights 1-4 and the evaluator. Ledger: LEDGER.md. Delete this line once posted.
 

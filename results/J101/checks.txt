@@ -1,0 +1,5 @@
+PASS  sa.games >= 200   [sa.games = 808]
+PASS  sc.games >= 200   [sc.games = 392]
+PASS  mr.played >= 600   [mr.played = 1200]
+PASS  md.played >= 600   [md.played = 1200]
+PASS  mr.errors + mr.timeouts + md.errors + md.timeouts <= (mr.played + md.played) / 20   [mr.errors = 0, mr.timeouts = 0, md.errors = 0, md.timeouts = 0, mr.played = 1200, md.played = 1200]

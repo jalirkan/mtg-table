@@ -393,3 +393,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - commits: mtg-table 74c1360
 - follow-up: template matchup-read-nights-1-4: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
 - follow-up: template design-verify: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J101 DONE: Reckless baseline (the outside review's T5): SPRT forge-reckless vs forge-default; SPRT search-v1-reckless vs search-v1; fixed 1,200-game matches of search-v1-reckless and search-v1 against forge-default on the same deals
+
+- finished: 2026-10-06T21:09:10-04:00
+- decides: whether ForgeCoach's Play vs Forge should default to Forge's Reckless profile as the stronger opponent, and whether the search should sit on Reckless instead of Default
+- hypothesis: Reckless beats Default in cube games (D311: 60-40 over 100 paired games, paired p = 0.004, about +70 Elo), and the gain carries over when the search sits on Reckless
+- rule: written 2026-10-06 before the run. (A) Play vs Forge's default profile: SPRT forge-reckless vs forge-default (elo0 0, elo1 20, alpha = beta = 0.05, at most 4,000 games, mirrored deals on the confirm set). H1 -> Reckless becomes the default opponent; H0 or inconclusive -> Default stays. (C) The search's base: SPRT search-v1-reckless vs search-v1 (same parameters, at most 3,000 games). H1 -> the next search version sits on Reckless; H0 or inconclusive -> it stays on Default. (B) The two fixed matches (search-v1-reckless vs forge-default and search-v1 vs forge-default, 1,200 games each on the same deals) are reported as scores with 95% intervals and carry no verdict. They size what the search adds on each base, against the one opponent the ladder's scale is anchored to. H0 reads "not shown >= 20 Elo better", never "no gain"
+- outcome: done
+- headline: sa.games 808, sa.score 0.501, sc.games 392, sc.score 0.487, mr.score 0.6233, mr.elo 87.5, md.score 0.6033, md.elo 72.9
+- summary: results/J101/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table c9ae213
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

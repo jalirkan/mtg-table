@@ -1,0 +1,913 @@
+==== J101 run3 started 2026-10-06T17:49:19-04:00 in unit lab-J101-run3, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7, lane 2
+match search-v1-reckless vs forge-default on tools/ai-bench/pairs-confirm.txt: 150 batch(es) of 8 games (1200 games, 600 mirrored pairs), no stopping rule
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900000, 2 pair(s))
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900001, 2 pair(s))
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900002, 2 pair(s))
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900003, 2 pair(s))
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900004, 2 pair(s))
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900005, 2 pair(s))
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900006, 2 pair(s))
+  done   w6 search-v1-reckless 3-5 forge-default (0 draws) in 215 s
+  8 decisive games (4 pairs): search-v1-reckless scores 37.5%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900007, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 226 s
+  16 decisive games (8 pairs): search-v1-reckless scores 50.0%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900008, 2 pair(s))
+  done   w2 search-v1-reckless 3-5 forge-default (0 draws) in 235 s
+  24 decisive games (12 pairs): search-v1-reckless scores 45.8%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900009, 2 pair(s))
+  done   w4 search-v1-reckless 6-2 forge-default (0 draws) in 273 s
+  32 decisive games (16 pairs): search-v1-reckless scores 53.1%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900010, 2 pair(s))
+  done   w5 search-v1-reckless 7-1 forge-default (0 draws) in 286 s
+  40 decisive games (20 pairs): search-v1-reckless scores 60.0%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900011, 2 pair(s))
+  done   w1 search-v1-reckless 6-2 forge-default (0 draws) in 329 s
+  48 decisive games (24 pairs): search-v1-reckless scores 62.5%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900012, 2 pair(s))
+  done   w0 search-v1-reckless 4-4 forge-default (0 draws) in 149 s
+  56 decisive games (28 pairs): search-v1-reckless scores 60.7%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900013, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 382 s
+  64 decisive games (32 pairs): search-v1-reckless scores 60.9%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900014, 2 pair(s))
+  done   w2 search-v1-reckless 4-4 forge-default (0 draws) in 205 s
+  72 decisive games (36 pairs): search-v1-reckless scores 59.7%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900015, 2 pair(s))
+  done   w3 search-v1-reckless 4-4 forge-default (0 draws) in 129 s
+  80 decisive games (40 pairs): search-v1-reckless scores 58.8%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900016, 2 pair(s))
+  done   w6 search-v1-reckless 6-2 forge-default (0 draws) in 308 s
+  88 decisive games (44 pairs): search-v1-reckless scores 60.2%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900017, 2 pair(s))
+  done   w5 search-v1-reckless 5-3 forge-default (0 draws) in 272 s
+  96 decisive games (48 pairs): search-v1-reckless scores 60.4%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900018, 2 pair(s))
+  done   w1 search-v1-reckless 5-3 forge-default (0 draws) in 262 s
+  104 decisive games (52 pairs): search-v1-reckless scores 60.6%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900019, 2 pair(s))
+  done   w0 search-v1-reckless 3-5 forge-default (0 draws) in 296 s
+  112 decisive games (56 pairs): search-v1-reckless scores 58.9%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900020, 2 pair(s))
+  done   w2 search-v1-reckless 4-4 forge-default (0 draws) in 238 s
+  120 decisive games (60 pairs): search-v1-reckless scores 58.3%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900021, 2 pair(s))
+  done   w1 search-v1-reckless 4-4 forge-default (0 draws) in 106 s
+  128 decisive games (64 pairs): search-v1-reckless scores 57.8%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900022, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 426 s
+  136 decisive games (68 pairs): search-v1-reckless scores 58.1%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900023, 2 pair(s))
+  done   w3 search-v1-reckless 6-2 forge-default (0 draws) in 245 s
+  144 decisive games (72 pairs): search-v1-reckless scores 59.0%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900024, 2 pair(s))
+  done   w5 search-v1-reckless 5-3 forge-default (0 draws) in 243 s
+  152 decisive games (76 pairs): search-v1-reckless scores 59.2%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900025, 2 pair(s))
+  done   w6 search-v1-reckless 8-0 forge-default (0 draws) in 298 s
+  160 decisive games (80 pairs): search-v1-reckless scores 61.3%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900026, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 192 s
+  168 decisive games (84 pairs): search-v1-reckless scores 61.3%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900027, 2 pair(s))
+  done   w4 search-v1-reckless 4-4 forge-default (0 draws) in 186 s
+  176 decisive games (88 pairs): search-v1-reckless scores 60.8%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900028, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 235 s
+  184 decisive games (92 pairs): search-v1-reckless scores 60.9%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900029, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 159 s
+  192 decisive games (96 pairs): search-v1-reckless scores 60.9%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900030, 2 pair(s))
+  done   w1 search-v1-reckless 4-4 forge-default (0 draws) in 238 s
+  200 decisive games (100 pairs): search-v1-reckless scores 60.5%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900031, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 203 s
+  208 decisive games (104 pairs): search-v1-reckless scores 60.6%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900032, 2 pair(s))
+  done   w0 search-v1-reckless 6-2 forge-default (0 draws) in 220 s
+  216 decisive games (108 pairs): search-v1-reckless scores 61.1%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900033, 2 pair(s))
+  done   w3 search-v1-reckless 6-2 forge-default (0 draws) in 244 s
+  224 decisive games (112 pairs): search-v1-reckless scores 61.6%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900034, 2 pair(s))
+  done   w2 search-v1-reckless 3-5 forge-default (0 draws) in 292 s
+  232 decisive games (116 pairs): search-v1-reckless scores 60.8%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900035, 2 pair(s))
+  done   w5 search-v1-reckless 6-2 forge-default (0 draws) in 378 s
+  240 decisive games (120 pairs): search-v1-reckless scores 61.3%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900036, 2 pair(s))
+  done   w1 search-v1-reckless 6-2 forge-default (0 draws) in 296 s
+  248 decisive games (124 pairs): search-v1-reckless scores 61.7%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900037, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 110 s
+  256 decisive games (128 pairs): search-v1-reckless scores 61.7%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900038, 2 pair(s))
+  done   w6 search-v1-reckless 4-4 forge-default (0 draws) in 464 s
+  264 decisive games (132 pairs): search-v1-reckless scores 61.4%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900039, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 214 s
+  272 decisive games (136 pairs): search-v1-reckless scores 61.4%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900040, 2 pair(s))
+  done   w4 search-v1-reckless 2-6 forge-default (0 draws) in 293 s
+  280 decisive games (140 pairs): search-v1-reckless scores 60.4%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900041, 2 pair(s))
+  done   w3 search-v1-reckless 3-5 forge-default (0 draws) in 131 s
+  288 decisive games (144 pairs): search-v1-reckless scores 59.7%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900042, 2 pair(s))
+  done   w1 search-v1-reckless 5-3 forge-default (0 draws) in 229 s
+  296 decisive games (148 pairs): search-v1-reckless scores 59.8%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900043, 2 pair(s))
+  done   w5 search-v1-reckless 3-5 forge-default (0 draws) in 301 s
+  304 decisive games (152 pairs): search-v1-reckless scores 59.2%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900044, 2 pair(s))
+  done   w6 search-v1-reckless 6-2 forge-default (0 draws) in 206 s
+  312 decisive games (156 pairs): search-v1-reckless scores 59.6%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900045, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 330 s
+  320 decisive games (160 pairs): search-v1-reckless scores 59.7%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900046, 2 pair(s))
+  done   w3 search-v1-reckless 6-2 forge-default (0 draws) in 231 s
+  328 decisive games (164 pairs): search-v1-reckless scores 60.1%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900047, 2 pair(s))
+  done   w5 search-v1-reckless 5-3 forge-default (0 draws) in 161 s
+  336 decisive games (168 pairs): search-v1-reckless scores 60.1%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900048, 2 pair(s))
+  done   w1 search-v1-reckless 6-2 forge-default (0 draws) in 232 s
+  344 decisive games (172 pairs): search-v1-reckless scores 60.5%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900049, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 311 s
+  352 decisive games (176 pairs): search-v1-reckless scores 60.5%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900050, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 231 s
+  360 decisive games (180 pairs): search-v1-reckless scores 60.6%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900051, 2 pair(s))
+  done   w2 search-v1-reckless 6-2 forge-default (0 draws) in 278 s
+  368 decisive games (184 pairs): search-v1-reckless scores 60.9%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900052, 2 pair(s))
+  done   w0 search-v1-reckless 6-2 forge-default (0 draws) in 456 s
+  376 decisive games (188 pairs): search-v1-reckless scores 61.2%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900053, 2 pair(s))
+  done   w5 search-v1-reckless 5-3 forge-default (0 draws) in 231 s
+  384 decisive games (192 pairs): search-v1-reckless scores 61.2%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900054, 2 pair(s))
+  done   w1 search-v1-reckless 5-3 forge-default (0 draws) in 213 s
+  392 decisive games (196 pairs): search-v1-reckless scores 61.2%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900055, 2 pair(s))
+  done   w3 search-v1-reckless 7-1 forge-default (0 draws) in 275 s
+  400 decisive games (200 pairs): search-v1-reckless scores 61.8%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900056, 2 pair(s))
+  done   w6 search-v1-reckless 6-2 forge-default (0 draws) in 224 s
+  408 decisive games (204 pairs): search-v1-reckless scores 62.0%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900057, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 255 s
+  416 decisive games (208 pairs): search-v1-reckless scores 62.0%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900058, 2 pair(s))
+  done   w2 search-v1-reckless 4-4 forge-default (0 draws) in 194 s
+  424 decisive games (212 pairs): search-v1-reckless scores 61.8%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900059, 2 pair(s))
+  done   w0 search-v1-reckless 4-4 forge-default (0 draws) in 189 s
+  432 decisive games (216 pairs): search-v1-reckless scores 61.6%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900060, 2 pair(s))
+  done   w4 search-v1-reckless 6-2 forge-default (0 draws) in 154 s
+  440 decisive games (220 pairs): search-v1-reckless scores 61.8%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900061, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 169 s
+  448 decisive games (224 pairs): search-v1-reckless scores 61.8%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900062, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 206 s
+  456 decisive games (228 pairs): search-v1-reckless scores 61.8%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900063, 2 pair(s))
+  done   w5 search-v1-reckless 6-2 forge-default (0 draws) in 313 s
+  464 decisive games (232 pairs): search-v1-reckless scores 62.1%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900064, 2 pair(s))
+  done   w1 search-v1-reckless 5-3 forge-default (0 draws) in 305 s
+  472 decisive games (236 pairs): search-v1-reckless scores 62.1%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900065, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 272 s
+  480 decisive games (240 pairs): search-v1-reckless scores 62.1%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900066, 2 pair(s))
+  done   w3 search-v1-reckless 6-2 forge-default (0 draws) in 338 s
+  488 decisive games (244 pairs): search-v1-reckless scores 62.3%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900067, 2 pair(s))
+  done   w5 search-v1-reckless 4-4 forge-default (0 draws) in 167 s
+  496 decisive games (248 pairs): search-v1-reckless scores 62.1%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900068, 2 pair(s))
+  done   w4 search-v1-reckless 7-1 forge-default (0 draws) in 292 s
+  504 decisive games (252 pairs): search-v1-reckless scores 62.5%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900069, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 260 s
+  512 decisive games (256 pairs): search-v1-reckless scores 62.5%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900070, 2 pair(s))
+  done   w2 search-v1-reckless 4-4 forge-default (0 draws) in 252 s
+  520 decisive games (260 pairs): search-v1-reckless scores 62.3%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900071, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 228 s
+  528 decisive games (264 pairs): search-v1-reckless scores 62.3%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900072, 2 pair(s))
+  done   w1 search-v1-reckless 4-4 forge-default (0 draws) in 254 s
+  536 decisive games (268 pairs): search-v1-reckless scores 62.1%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900073, 2 pair(s))
+  done   w3 search-v1-reckless 4-4 forge-default (0 draws) in 232 s
+  544 decisive games (272 pairs): search-v1-reckless scores 61.9%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900074, 2 pair(s))
+  done   w5 search-v1-reckless 4-4 forge-default (0 draws) in 199 s
+  552 decisive games (276 pairs): search-v1-reckless scores 61.8%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900075, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 206 s
+  560 decisive games (280 pairs): search-v1-reckless scores 61.8%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900076, 2 pair(s))
+  done   w3 search-v1-reckless 4-4 forge-default (0 draws) in 139 s
+  568 decisive games (284 pairs): search-v1-reckless scores 61.6%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900077, 2 pair(s))
+  done   w0 search-v1-reckless 6-2 forge-default (0 draws) in 298 s
+  576 decisive games (288 pairs): search-v1-reckless scores 61.8%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900078, 2 pair(s))
+  done   w1 search-v1-reckless 3-5 forge-default (0 draws) in 315 s
+  584 decisive games (292 pairs): search-v1-reckless scores 61.5%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900079, 2 pair(s))
+  done   w6 search-v1-reckless 6-2 forge-default (0 draws) in 339 s
+  592 decisive games (296 pairs): search-v1-reckless scores 61.7%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900080, 2 pair(s))
+  done   w2 search-v1-reckless 6-2 forge-default (0 draws) in 361 s
+  600 decisive games (300 pairs): search-v1-reckless scores 61.8%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900081, 2 pair(s))
+  done   w5 search-v1-reckless 6-2 forge-default (0 draws) in 287 s
+  608 decisive games (304 pairs): search-v1-reckless scores 62.0%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900082, 2 pair(s))
+  done   w3 search-v1-reckless 4-4 forge-default (0 draws) in 270 s
+  616 decisive games (308 pairs): search-v1-reckless scores 61.9%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900083, 2 pair(s))
+  done   w4 search-v1-reckless 4-4 forge-default (0 draws) in 310 s
+  624 decisive games (312 pairs): search-v1-reckless scores 61.7%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900084, 2 pair(s))
+  done   w0 search-v1-reckless 4-4 forge-default (0 draws) in 207 s
+  632 decisive games (316 pairs): search-v1-reckless scores 61.6%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900085, 2 pair(s))
+  done   w1 search-v1-reckless 3-5 forge-default (0 draws) in 150 s
+  640 decisive games (320 pairs): search-v1-reckless scores 61.3%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900086, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 212 s
+  648 decisive games (324 pairs): search-v1-reckless scores 61.3%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900087, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 234 s
+  656 decisive games (328 pairs): search-v1-reckless scores 61.3%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900088, 2 pair(s))
+  done   w4 search-v1-reckless 4-4 forge-default (0 draws) in 162 s
+  664 decisive games (332 pairs): search-v1-reckless scores 61.1%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900089, 2 pair(s))
+  done   w3 search-v1-reckless 4-4 forge-default (0 draws) in 191 s
+  672 decisive games (336 pairs): search-v1-reckless scores 61.0%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900090, 2 pair(s))
+  done   w5 search-v1-reckless 6-2 forge-default (0 draws) in 310 s
+  680 decisive games (340 pairs): search-v1-reckless scores 61.2%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900091, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 183 s
+  688 decisive games (344 pairs): search-v1-reckless scores 61.2%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900092, 2 pair(s))
+  done   w0 search-v1-reckless 4-4 forge-default (0 draws) in 288 s
+  696 decisive games (348 pairs): search-v1-reckless scores 61.1%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900093, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 213 s
+  704 decisive games (352 pairs): search-v1-reckless scores 61.1%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900094, 2 pair(s))
+  done   w1 search-v1-reckless 4-4 forge-default (0 draws) in 312 s
+  712 decisive games (356 pairs): search-v1-reckless scores 61.0%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900095, 2 pair(s))
+  done   w4 search-v1-reckless 4-4 forge-default (0 draws) in 223 s
+  720 decisive games (360 pairs): search-v1-reckless scores 60.8%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900096, 2 pair(s))
+  done   w3 search-v1-reckless 6-2 forge-default (0 draws) in 235 s
+  728 decisive games (364 pairs): search-v1-reckless scores 61.0%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900097, 2 pair(s))
+  done   w2 search-v1-reckless 6-2 forge-default (0 draws) in 218 s
+  736 decisive games (368 pairs): search-v1-reckless scores 61.1%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900098, 2 pair(s))
+  done   w5 search-v1-reckless 5-3 forge-default (0 draws) in 296 s
+  744 decisive games (372 pairs): search-v1-reckless scores 61.2%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900099, 2 pair(s))
+  done   w6 search-v1-reckless 7-1 forge-default (0 draws) in 264 s
+  752 decisive games (376 pairs): search-v1-reckless scores 61.4%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900100, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 269 s
+  760 decisive games (380 pairs): search-v1-reckless scores 61.4%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900101, 2 pair(s))
+  done   w1 search-v1-reckless 4-4 forge-default (0 draws) in 256 s
+  768 decisive games (384 pairs): search-v1-reckless scores 61.3%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900102, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 229 s
+  776 decisive games (388 pairs): search-v1-reckless scores 61.3%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900103, 2 pair(s))
+  done   w3 search-v1-reckless 3-5 forge-default (0 draws) in 217 s
+  784 decisive games (392 pairs): search-v1-reckless scores 61.1%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900104, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 197 s
+  792 decisive games (396 pairs): search-v1-reckless scores 61.1%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900105, 2 pair(s))
+  done   w5 search-v1-reckless 5-3 forge-default (0 draws) in 269 s
+  800 decisive games (400 pairs): search-v1-reckless scores 61.1%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900106, 2 pair(s))
+  done   w3 search-v1-reckless 6-2 forge-default (0 draws) in 191 s
+  808 decisive games (404 pairs): search-v1-reckless scores 61.3%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900107, 2 pair(s))
+  done   w4 search-v1-reckless 6-2 forge-default (0 draws) in 277 s
+  816 decisive games (408 pairs): search-v1-reckless scores 61.4%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900108, 2 pair(s))
+  done   w0 search-v1-reckless 7-1 forge-default (0 draws) in 374 s
+  824 decisive games (412 pairs): search-v1-reckless scores 61.7%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900109, 2 pair(s))
+  done   w6 search-v1-reckless 6-2 forge-default (0 draws) in 387 s
+  832 decisive games (416 pairs): search-v1-reckless scores 61.8%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900110, 2 pair(s))
+  done   w1 search-v1-reckless 7-1 forge-default (0 draws) in 365 s
+  840 decisive games (420 pairs): search-v1-reckless scores 62.0%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900111, 2 pair(s))
+  done   w2 search-v1-reckless 8-0 forge-default (0 draws) in 272 s
+  848 decisive games (424 pairs): search-v1-reckless scores 62.4%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900112, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 154 s
+  856 decisive games (428 pairs): search-v1-reckless scores 62.4%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900113, 2 pair(s))
+  done   w5 search-v1-reckless 7-1 forge-default (0 draws) in 279 s
+  864 decisive games (432 pairs): search-v1-reckless scores 62.6%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900114, 2 pair(s))
+  done   w0 search-v1-reckless 3-5 forge-default (0 draws) in 185 s
+  872 decisive games (436 pairs): search-v1-reckless scores 62.4%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900115, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 358 s
+  880 decisive games (440 pairs): search-v1-reckless scores 62.4%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900116, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 282 s
+  888 decisive games (444 pairs): search-v1-reckless scores 62.4%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900117, 2 pair(s))
+  done   w1 search-v1-reckless 5-3 forge-default (0 draws) in 297 s
+  896 decisive games (448 pairs): search-v1-reckless scores 62.4%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900118, 2 pair(s))
+  done   w4 search-v1-reckless 6-2 forge-default (0 draws) in 219 s
+  904 decisive games (452 pairs): search-v1-reckless scores 62.5%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900119, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 287 s
+  912 decisive games (456 pairs): search-v1-reckless scores 62.5%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900120, 2 pair(s))
+  done   w5 search-v1-reckless 7-1 forge-default (0 draws) in 247 s
+  920 decisive games (460 pairs): search-v1-reckless scores 62.7%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900121, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 132 s
+  928 decisive games (464 pairs): search-v1-reckless scores 62.7%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900122, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 340 s
+  936 decisive games (468 pairs): search-v1-reckless scores 62.7%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900123, 2 pair(s))
+  done   w2 search-v1-reckless 4-4 forge-default (0 draws) in 209 s
+  944 decisive games (472 pairs): search-v1-reckless scores 62.6%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900124, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 261 s
+  952 decisive games (476 pairs): search-v1-reckless scores 62.6%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900125, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 329 s
+  960 decisive games (480 pairs): search-v1-reckless scores 62.6%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900126, 2 pair(s))
+  done   w1 search-v1-reckless 5-3 forge-default (0 draws) in 258 s
+  968 decisive games (484 pairs): search-v1-reckless scores 62.6%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900127, 2 pair(s))
+  done   w4 search-v1-reckless 4-4 forge-default (0 draws) in 214 s
+  976 decisive games (488 pairs): search-v1-reckless scores 62.5%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900128, 2 pair(s))
+  done   w5 search-v1-reckless 4-4 forge-default (0 draws) in 325 s
+  984 decisive games (492 pairs): search-v1-reckless scores 62.4%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900129, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 227 s
+  992 decisive games (496 pairs): search-v1-reckless scores 62.4%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900130, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 223 s
+  1000 decisive games (500 pairs): search-v1-reckless scores 62.4%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900131, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 254 s
+  1008 decisive games (504 pairs): search-v1-reckless scores 62.4%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900132, 2 pair(s))
+  done   w6 search-v1-reckless 3-5 forge-default (0 draws) in 264 s
+  1016 decisive games (508 pairs): search-v1-reckless scores 62.2%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900133, 2 pair(s))
+  done   w1 search-v1-reckless 4-4 forge-default (0 draws) in 295 s
+  1024 decisive games (512 pairs): search-v1-reckless scores 62.1%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900134, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 251 s
+  1032 decisive games (516 pairs): search-v1-reckless scores 62.1%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900135, 2 pair(s))
+  done   w5 search-v1-reckless 6-2 forge-default (0 draws) in 221 s
+  1040 decisive games (520 pairs): search-v1-reckless scores 62.2%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900136, 2 pair(s))
+  done   w0 search-v1-reckless 5-3 forge-default (0 draws) in 278 s
+  1048 decisive games (524 pairs): search-v1-reckless scores 62.2%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900137, 2 pair(s))
+  done   w1 search-v1-reckless 7-1 forge-default (0 draws) in 186 s
+  1056 decisive games (528 pairs): search-v1-reckless scores 62.4%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900138, 2 pair(s))
+  done   w6 search-v1-reckless 6-2 forge-default (0 draws) in 245 s
+  1064 decisive games (532 pairs): search-v1-reckless scores 62.5%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900139, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 293 s
+  1072 decisive games (536 pairs): search-v1-reckless scores 62.5%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900140, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 282 s
+  1080 decisive games (540 pairs): search-v1-reckless scores 62.5%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900141, 2 pair(s))
+  done   w4 search-v1-reckless 4-4 forge-default (0 draws) in 213 s
+  1088 decisive games (544 pairs): search-v1-reckless scores 62.4%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900142, 2 pair(s))
+  done   w5 search-v1-reckless 6-2 forge-default (0 draws) in 284 s
+  1096 decisive games (548 pairs): search-v1-reckless scores 62.5%
+  start  w5 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900143, 2 pair(s))
+  done   w1 search-v1-reckless 3-5 forge-default (0 draws) in 182 s
+  1104 decisive games (552 pairs): search-v1-reckless scores 62.3%
+  start  w1 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900144, 2 pair(s))
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 176 s
+  1112 decisive games (556 pairs): search-v1-reckless scores 62.3%
+  start  w2 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900145, 2 pair(s))
+  done   w6 search-v1-reckless 5-3 forge-default (0 draws) in 213 s
+  1120 decisive games (560 pairs): search-v1-reckless scores 62.3%
+  start  w6 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900146, 2 pair(s))
+  done   w0 search-v1-reckless 6-2 forge-default (0 draws) in 261 s
+  1128 decisive games (564 pairs): search-v1-reckless scores 62.4%
+  start  w0 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900147, 2 pair(s))
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 323 s
+  1136 decisive games (568 pairs): search-v1-reckless scores 62.4%
+  start  w3 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900148, 2 pair(s))
+  done   w4 search-v1-reckless 5-3 forge-default (0 draws) in 273 s
+  1144 decisive games (572 pairs): search-v1-reckless scores 62.4%
+  start  w4 search-v1-reckless vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T214919-2316078, seed 114900149, 2 pair(s))
+  done   w5 search-v1-reckless 5-3 forge-default (0 draws) in 243 s
+  1152 decisive games (576 pairs): search-v1-reckless scores 62.4%
+  done   w1 search-v1-reckless 5-3 forge-default (0 draws) in 241 s
+  1160 decisive games (580 pairs): search-v1-reckless scores 62.4%
+  done   w6 search-v1-reckless 4-4 forge-default (0 draws) in 236 s
+  1168 decisive games (584 pairs): search-v1-reckless scores 62.3%
+  done   w4 search-v1-reckless 6-2 forge-default (0 draws) in 128 s
+  1176 decisive games (588 pairs): search-v1-reckless scores 62.4%
+  done   w2 search-v1-reckless 5-3 forge-default (0 draws) in 287 s
+  1184 decisive games (592 pairs): search-v1-reckless scores 62.4%
+  done   w0 search-v1-reckless 4-4 forge-default (0 draws) in 260 s
+  1192 decisive games (596 pairs): search-v1-reckless scores 62.3%
+  done   w3 search-v1-reckless 5-3 forge-default (0 draws) in 218 s
+  1200 decisive games (600 pairs): search-v1-reckless scores 62.3%
+
+match finished: 1200 of 1200 games (0 draws, 0 engine errors, 0 timeouts), 600 mirrored pairs
+search-v1-reckless scores 62.3% [95% 60.2%, 64.5%] = +88 Elo [+72, +104] against forge-default
+search-v1-reckless: 29219 decisions searched in 1199 games, 4640 changed Forge's answer (15.9%); budget fallbacks 1985 = 6.8% [95% 6.1%, 7.5%]; other fallbacks {"rolloutErrors":161,"unmappable":45}
+forge-default: no searched decisions
+match search-v1 vs forge-default on tools/ai-bench/pairs-confirm.txt: 150 batch(es) of 8 games (1200 games, 600 mirrored pairs), no stopping rule
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900000, 2 pair(s))
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900001, 2 pair(s))
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900002, 2 pair(s))
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900003, 2 pair(s))
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900004, 2 pair(s))
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900005, 2 pair(s))
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900006, 2 pair(s))
+  done   w6 search-v1 4-4 forge-default (0 draws) in 231 s
+  8 decisive games (4 pairs): search-v1 scores 50.0%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900007, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 273 s
+  16 decisive games (8 pairs): search-v1 scores 50.0%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900008, 2 pair(s))
+  done   w2 search-v1 3-5 forge-default (0 draws) in 316 s
+  24 decisive games (12 pairs): search-v1 scores 45.8%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900009, 2 pair(s))
+  done   w5 search-v1 7-1 forge-default (0 draws) in 322 s
+  32 decisive games (16 pairs): search-v1 scores 56.3%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900010, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 337 s
+  40 decisive games (20 pairs): search-v1 scores 57.5%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900011, 2 pair(s))
+  done   w3 search-v1 3-5 forge-default (0 draws) in 345 s
+  48 decisive games (24 pairs): search-v1 scores 54.2%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900012, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 402 s
+  56 decisive games (28 pairs): search-v1 scores 55.4%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900013, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 159 s
+  64 decisive games (32 pairs): search-v1 scores 54.7%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900014, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 244 s
+  72 decisive games (36 pairs): search-v1 scores 55.6%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900015, 2 pair(s))
+  done   w2 search-v1 3-5 forge-default (0 draws) in 215 s
+  80 decisive games (40 pairs): search-v1 scores 53.8%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900016, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 115 s
+  88 decisive games (44 pairs): search-v1 scores 53.4%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900017, 2 pair(s))
+  done   w3 search-v1 4-4 forge-default (0 draws) in 264 s
+  96 decisive games (48 pairs): search-v1 scores 53.1%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900018, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 284 s
+  104 decisive games (52 pairs): search-v1 scores 53.8%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900019, 2 pair(s))
+  done   w6 search-v1 4-4 forge-default (0 draws) in 246 s
+  112 decisive games (56 pairs): search-v1 scores 53.6%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900020, 2 pair(s))
+  done   w2 search-v1 6-2 forge-default (0 draws) in 265 s
+  120 decisive games (60 pairs): search-v1 scores 55.0%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900021, 2 pair(s))
+  done   w4 search-v1 6-2 forge-default (0 draws) in 473 s
+  128 decisive games (64 pairs): search-v1 scores 56.3%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900022, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 126 s
+  136 decisive games (68 pairs): search-v1 scores 55.9%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900023, 2 pair(s))
+  done   w5 search-v1 6-2 forge-default (0 draws) in 510 s
+  144 decisive games (72 pairs): search-v1 scores 56.9%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900024, 2 pair(s))
+  done   w0 search-v1 8-0 forge-default (0 draws) in 319 s
+  152 decisive games (76 pairs): search-v1 scores 59.2%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900025, 2 pair(s))
+  done   w3 search-v1 5-3 forge-default (0 draws) in 328 s
+  160 decisive games (80 pairs): search-v1 scores 59.4%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900026, 2 pair(s))
+  done   w6 search-v1 4-4 forge-default (0 draws) in 236 s
+  168 decisive games (84 pairs): search-v1 scores 58.9%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900027, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 202 s
+  176 decisive games (88 pairs): search-v1 scores 58.5%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900028, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 221 s
+  184 decisive games (92 pairs): search-v1 scores 58.2%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900029, 2 pair(s))
+  done   w4 search-v1 3-5 forge-default (0 draws) in 231 s
+  192 decisive games (96 pairs): search-v1 scores 57.3%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900030, 2 pair(s))
+  done   w5 search-v1 6-2 forge-default (0 draws) in 250 s
+  200 decisive games (100 pairs): search-v1 scores 58.0%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900031, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 234 s
+  208 decisive games (104 pairs): search-v1 scores 58.2%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900032, 2 pair(s))
+  done   w2 search-v1 6-2 forge-default (0 draws) in 217 s
+  216 decisive games (108 pairs): search-v1 scores 58.8%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900033, 2 pair(s))
+  done   w0 search-v1 6-2 forge-default (0 draws) in 367 s
+  224 decisive games (112 pairs): search-v1 scores 59.4%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900034, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 205 s
+  232 decisive games (116 pairs): search-v1 scores 59.5%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900035, 2 pair(s))
+  done   w5 search-v1 5-3 forge-default (0 draws) in 248 s
+  240 decisive games (120 pairs): search-v1 scores 59.6%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900036, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 298 s
+  248 decisive games (124 pairs): search-v1 scores 59.7%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900037, 2 pair(s))
+  done   w0 search-v1 5-3 forge-default (0 draws) in 107 s
+  256 decisive games (128 pairs): search-v1 scores 59.8%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900038, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 228 s
+  264 decisive games (132 pairs): search-v1 scores 59.5%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900039, 2 pair(s))
+  done   w6 search-v1 3-5 forge-default (0 draws) in 261 s
+  272 decisive games (136 pairs): search-v1 scores 58.8%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900040, 2 pair(s))
+  done   w3 search-v1 4-4 forge-default (0 draws) in 515 s
+  280 decisive games (140 pairs): search-v1 scores 58.6%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900041, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 158 s
+  288 decisive games (144 pairs): search-v1 scores 58.3%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900042, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 300 s
+  296 decisive games (148 pairs): search-v1 scores 58.1%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900043, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 252 s
+  304 decisive games (152 pairs): search-v1 scores 58.2%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900044, 2 pair(s))
+  done   w5 search-v1 6-2 forge-default (0 draws) in 262 s
+  312 decisive games (156 pairs): search-v1 scores 58.7%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900045, 2 pair(s))
+  done   w2 search-v1 7-1 forge-default (0 draws) in 229 s
+  320 decisive games (160 pairs): search-v1 scores 59.4%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900046, 2 pair(s))
+  done   w0 search-v1 8-0 forge-default (0 draws) in 267 s
+  328 decisive games (164 pairs): search-v1 scores 60.4%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900047, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 240 s
+  336 decisive games (168 pairs): search-v1 scores 60.4%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900048, 2 pair(s))
+  done   w3 search-v1 5-3 forge-default (0 draws) in 342 s
+  344 decisive games (172 pairs): search-v1 scores 60.5%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900049, 2 pair(s))
+  done   w5 search-v1 4-4 forge-default (0 draws) in 239 s
+  352 decisive games (176 pairs): search-v1 scores 60.2%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900050, 2 pair(s))
+  done   w4 search-v1 6-2 forge-default (0 draws) in 243 s
+  360 decisive games (180 pairs): search-v1 scores 60.6%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900051, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 587 s
+  368 decisive games (184 pairs): search-v1 scores 60.6%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900052, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 287 s
+  376 decisive games (188 pairs): search-v1 scores 60.4%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900053, 2 pair(s))
+  done   w3 search-v1 6-2 forge-default (0 draws) in 274 s
+  384 decisive games (192 pairs): search-v1 scores 60.7%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900054, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 324 s
+  392 decisive games (196 pairs): search-v1 scores 60.5%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900055, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 279 s
+  400 decisive games (200 pairs): search-v1 scores 60.5%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900056, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 452 s
+  408 decisive games (204 pairs): search-v1 scores 60.3%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900057, 2 pair(s))
+  done   w5 search-v1 4-4 forge-default (0 draws) in 349 s
+  416 decisive games (208 pairs): search-v1 scores 60.1%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900058, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 228 s
+  424 decisive games (212 pairs): search-v1 scores 59.9%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900059, 2 pair(s))
+  done   w6 search-v1 4-4 forge-default (0 draws) in 317 s
+  432 decisive games (216 pairs): search-v1 scores 59.7%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900060, 2 pair(s))
+  done   w2 search-v1 6-2 forge-default (0 draws) in 279 s
+  440 decisive games (220 pairs): search-v1 scores 60.0%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900061, 2 pair(s))
+  done   w3 search-v1 7-1 forge-default (0 draws) in 342 s
+  448 decisive games (224 pairs): search-v1 scores 60.5%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900062, 2 pair(s))
+  done   w5 search-v1 5-3 forge-default (0 draws) in 234 s
+  456 decisive games (228 pairs): search-v1 scores 60.5%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900063, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 346 s
+  464 decisive games (232 pairs): search-v1 scores 60.6%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900064, 2 pair(s))
+  done   w0 search-v1 5-3 forge-default (0 draws) in 406 s
+  472 decisive games (236 pairs): search-v1 scores 60.6%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900065, 2 pair(s))
+  done   w1 search-v1 6-2 forge-default (0 draws) in 244 s
+  480 decisive games (240 pairs): search-v1 scores 60.8%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900066, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 230 s
+  488 decisive games (244 pairs): search-v1 scores 60.9%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900067, 2 pair(s))
+  done   w4 search-v1 4-4 forge-default (0 draws) in 204 s
+  496 decisive games (248 pairs): search-v1 scores 60.7%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900068, 2 pair(s))
+  done   w3 search-v1 4-4 forge-default (0 draws) in 295 s
+  504 decisive games (252 pairs): search-v1 scores 60.5%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900069, 2 pair(s))
+  done   w2 search-v1 7-1 forge-default (0 draws) in 315 s
+  512 decisive games (256 pairs): search-v1 scores 60.9%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900070, 2 pair(s))
+  done   w5 search-v1 4-4 forge-default (0 draws) in 332 s
+  520 decisive games (260 pairs): search-v1 scores 60.8%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900071, 2 pair(s))
+  done   w0 search-v1 5-3 forge-default (0 draws) in 306 s
+  528 decisive games (264 pairs): search-v1 scores 60.8%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900072, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 280 s
+  536 decisive games (268 pairs): search-v1 scores 60.8%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900073, 2 pair(s))
+  done   w6 search-v1 4-4 forge-default (0 draws) in 265 s
+  544 decisive games (272 pairs): search-v1 scores 60.7%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900074, 2 pair(s))
+  done   w4 search-v1 4-4 forge-default (0 draws) in 246 s
+  552 decisive games (276 pairs): search-v1 scores 60.5%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900075, 2 pair(s))
+  done   w3 search-v1 5-3 forge-default (0 draws) in 261 s
+  560 decisive games (280 pairs): search-v1 scores 60.5%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900076, 2 pair(s))
+  done   w2 search-v1 6-2 forge-default (0 draws) in 299 s
+  568 decisive games (284 pairs): search-v1 scores 60.7%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900077, 2 pair(s))
+  done   w5 search-v1 5-3 forge-default (0 draws) in 307 s
+  576 decisive games (288 pairs): search-v1 scores 60.8%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900078, 2 pair(s))
+  done   w6 search-v1 4-4 forge-default (0 draws) in 223 s
+  584 decisive games (292 pairs): search-v1 scores 60.6%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900079, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 331 s
+  592 decisive games (296 pairs): search-v1 scores 60.5%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900080, 2 pair(s))
+  done   w4 search-v1 4-4 forge-default (0 draws) in 270 s
+  600 decisive games (300 pairs): search-v1 scores 60.3%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900081, 2 pair(s))
+  done   w6 search-v1 3-5 forge-default (0 draws) in 184 s
+  608 decisive games (304 pairs): search-v1 scores 60.0%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900082, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 244 s
+  616 decisive games (308 pairs): search-v1 scores 59.9%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900083, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 484 s
+  624 decisive games (312 pairs): search-v1 scores 59.8%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900084, 2 pair(s))
+  done   w5 search-v1 4-4 forge-default (0 draws) in 243 s
+  632 decisive games (316 pairs): search-v1 scores 59.7%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900085, 2 pair(s))
+  done   w3 search-v1 7-1 forge-default (0 draws) in 389 s
+  640 decisive games (320 pairs): search-v1 scores 60.0%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900086, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 303 s
+  648 decisive games (324 pairs): search-v1 scores 60.0%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900087, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 196 s
+  656 decisive games (328 pairs): search-v1 scores 59.9%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900088, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 291 s
+  664 decisive games (332 pairs): search-v1 scores 59.9%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900089, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 197 s
+  672 decisive games (336 pairs): search-v1 scores 59.8%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900090, 2 pair(s))
+  done   w6 search-v1 6-2 forge-default (0 draws) in 348 s
+  680 decisive games (340 pairs): search-v1 scores 60.0%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900091, 2 pair(s))
+  done   w5 search-v1 1-7 forge-default (0 draws) in 409 s
+  688 decisive games (344 pairs): search-v1 scores 59.4%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900092, 2 pair(s))
+  done   w2 search-v1 5-3 forge-default (0 draws) in 268 s
+  696 decisive games (348 pairs): search-v1 scores 59.5%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900093, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 299 s
+  704 decisive games (352 pairs): search-v1 scores 59.5%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900094, 2 pair(s))
+  done   w0 search-v1 6-2 forge-default (0 draws) in 322 s
+  712 decisive games (356 pairs): search-v1 scores 59.7%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900095, 2 pair(s))
+  done   w3 search-v1 5-3 forge-default (0 draws) in 451 s
+  720 decisive games (360 pairs): search-v1 scores 59.7%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900096, 2 pair(s))
+  done   w4 search-v1 6-2 forge-default (0 draws) in 343 s
+  728 decisive games (364 pairs): search-v1 scores 59.9%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900097, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 335 s
+  736 decisive games (368 pairs): search-v1 scores 59.9%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900098, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 264 s
+  744 decisive games (372 pairs): search-v1 scores 59.8%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900099, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 287 s
+  752 decisive games (376 pairs): search-v1 scores 59.7%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900100, 2 pair(s))
+  done   w3 search-v1 5-3 forge-default (0 draws) in 273 s
+  760 decisive games (380 pairs): search-v1 scores 59.7%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900101, 2 pair(s))
+  done   w4 search-v1 4-4 forge-default (0 draws) in 296 s
+  768 decisive games (384 pairs): search-v1 scores 59.6%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900102, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 310 s
+  776 decisive games (388 pairs): search-v1 scores 59.5%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900103, 2 pair(s))
+  done   w5 search-v1 5-3 forge-default (0 draws) in 436 s
+  784 decisive games (392 pairs): search-v1 scores 59.6%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900104, 2 pair(s))
+  done   w6 search-v1 6-2 forge-default (0 draws) in 247 s
+  792 decisive games (396 pairs): search-v1 scores 59.7%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900105, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 364 s
+  800 decisive games (400 pairs): search-v1 scores 59.8%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900106, 2 pair(s))
+  done   w0 search-v1 6-2 forge-default (0 draws) in 276 s
+  808 decisive games (404 pairs): search-v1 scores 59.9%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900107, 2 pair(s))
+  done   w5 search-v1 6-2 forge-default (0 draws) in 283 s
+  816 decisive games (408 pairs): search-v1 scores 60.0%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900108, 2 pair(s))
+  done   w3 search-v1 7-1 forge-default (0 draws) in 369 s
+  824 decisive games (412 pairs): search-v1 scores 60.3%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900109, 2 pair(s))
+  done   w6 search-v1 6-2 forge-default (0 draws) in 311 s
+  832 decisive games (416 pairs): search-v1 scores 60.5%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900110, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 418 s
+  840 decisive games (420 pairs): search-v1 scores 60.5%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900111, 2 pair(s))
+  done   w5 search-v1 4-4 forge-default (0 draws) in 187 s
+  848 decisive games (424 pairs): search-v1 scores 60.4%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900112, 2 pair(s))
+  done   w2 search-v1 6-2 forge-default (0 draws) in 621 s
+  856 decisive games (428 pairs): search-v1 scores 60.5%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900113, 2 pair(s))
+  done   w1 search-v1 6-2 forge-default (0 draws) in 321 s
+  864 decisive games (432 pairs): search-v1 scores 60.6%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900114, 2 pair(s))
+  done   w3 search-v1 3-5 forge-default (0 draws) in 266 s
+  872 decisive games (436 pairs): search-v1 scores 60.4%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900115, 2 pair(s))
+  done   w0 search-v1 2-6 forge-default (0 draws) in 378 s
+  880 decisive games (440 pairs): search-v1 scores 60.1%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900116, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 336 s
+  888 decisive games (444 pairs): search-v1 scores 60.1%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900117, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 367 s
+  896 decisive games (448 pairs): search-v1 scores 60.2%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900118, 2 pair(s))
+  done   w5 search-v1 5-3 forge-default (0 draws) in 284 s
+  904 decisive games (452 pairs): search-v1 scores 60.2%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900119, 2 pair(s))
+  done   w2 search-v1 5-3 forge-default (0 draws) in 304 s
+  912 decisive games (456 pairs): search-v1 scores 60.2%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900120, 2 pair(s))
+  done   w1 search-v1 4-4 forge-default (0 draws) in 281 s
+  920 decisive games (460 pairs): search-v1 scores 60.1%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900121, 2 pair(s))
+  done   w5 search-v1 5-3 forge-default (0 draws) in 187 s
+  928 decisive games (464 pairs): search-v1 scores 60.1%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900122, 2 pair(s))
+  done   w0 search-v1 5-3 forge-default (0 draws) in 328 s
+  936 decisive games (468 pairs): search-v1 scores 60.1%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900123, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 248 s
+  944 decisive games (472 pairs): search-v1 scores 60.2%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900124, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 332 s
+  952 decisive games (476 pairs): search-v1 scores 60.2%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900125, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 264 s
+  960 decisive games (480 pairs): search-v1 scores 60.1%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900126, 2 pair(s))
+  done   w5 search-v1 4-4 forge-default (0 draws) in 241 s
+  968 decisive games (484 pairs): search-v1 scores 60.0%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900127, 2 pair(s))
+  done   w3 search-v1 7-1 forge-default (0 draws) in 616 s
+  976 decisive games (488 pairs): search-v1 scores 60.2%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900128, 2 pair(s))
+  done   w1 search-v1 5-3 forge-default (0 draws) in 385 s
+  984 decisive games (492 pairs): search-v1 scores 60.3%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900129, 2 pair(s))
+  done   w0 search-v1 3-5 forge-default (0 draws) in 288 s
+  992 decisive games (496 pairs): search-v1 scores 60.1%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900130, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 266 s
+  1000 decisive games (500 pairs): search-v1 scores 60.1%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900131, 2 pair(s))
+  done   w6 search-v1 6-2 forge-default (0 draws) in 284 s
+  1008 decisive games (504 pairs): search-v1 scores 60.2%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900132, 2 pair(s))
+  done   w2 search-v1 5-3 forge-default (0 draws) in 297 s
+  1016 decisive games (508 pairs): search-v1 scores 60.2%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900133, 2 pair(s))
+  done   w3 search-v1 4-4 forge-default (0 draws) in 278 s
+  1024 decisive games (512 pairs): search-v1 scores 60.2%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900134, 2 pair(s))
+  done   w5 search-v1 4-4 forge-default (0 draws) in 299 s
+  1032 decisive games (516 pairs): search-v1 scores 60.1%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900135, 2 pair(s))
+  done   w1 search-v1 6-2 forge-default (0 draws) in 282 s
+  1040 decisive games (520 pairs): search-v1 scores 60.2%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900136, 2 pair(s))
+  done   w0 search-v1 4-4 forge-default (0 draws) in 303 s
+  1048 decisive games (524 pairs): search-v1 scores 60.1%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900137, 2 pair(s))
+  done   w2 search-v1 6-2 forge-default (0 draws) in 278 s
+  1056 decisive games (528 pairs): search-v1 scores 60.2%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900138, 2 pair(s))
+  done   w4 search-v1 7-1 forge-default (0 draws) in 391 s
+  1064 decisive games (532 pairs): search-v1 scores 60.4%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900139, 2 pair(s))
+  done   w6 search-v1 5-3 forge-default (0 draws) in 354 s
+  1072 decisive games (536 pairs): search-v1 scores 60.4%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900140, 2 pair(s))
+  done   w3 search-v1 7-1 forge-default (0 draws) in 239 s
+  1080 decisive games (540 pairs): search-v1 scores 60.6%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900141, 2 pair(s))
+  done   w5 search-v1 3-5 forge-default (0 draws) in 294 s
+  1088 decisive games (544 pairs): search-v1 scores 60.5%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900142, 2 pair(s))
+  done   w0 search-v1 5-3 forge-default (0 draws) in 288 s
+  1096 decisive games (548 pairs): search-v1 scores 60.5%
+  start  w0 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900143, 2 pair(s))
+  done   w2 search-v1 4-4 forge-default (0 draws) in 231 s
+  1104 decisive games (552 pairs): search-v1 scores 60.4%
+  start  w2 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900144, 2 pair(s))
+  done   w1 search-v1 7-1 forge-default (0 draws) in 407 s
+  1112 decisive games (556 pairs): search-v1 scores 60.6%
+  start  w1 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900145, 2 pair(s))
+  done   w4 search-v1 5-3 forge-default (0 draws) in 264 s
+  1120 decisive games (560 pairs): search-v1 scores 60.6%
+  start  w4 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900146, 2 pair(s))
+  done   w3 search-v1 5-3 forge-default (0 draws) in 250 s
+  1128 decisive games (564 pairs): search-v1 scores 60.6%
+  start  w3 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900147, 2 pair(s))
+  done   w6 search-v1 4-4 forge-default (0 draws) in 412 s
+  1136 decisive games (568 pairs): search-v1 scores 60.6%
+  start  w6 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900148, 2 pair(s))
+  done   w5 search-v1 3-5 forge-default (0 draws) in 320 s
+  1144 decisive games (572 pairs): search-v1 scores 60.4%
+  start  w5 search-v1 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261006T232023-2302941, seed 114900149, 2 pair(s))
+  done   w2 search-v1 5-3 forge-default (0 draws) in 261 s
+  1152 decisive games (576 pairs): search-v1 scores 60.4%
+  done   w0 search-v1 3-5 forge-default (0 draws) in 298 s
+  1160 decisive games (580 pairs): search-v1 scores 60.3%
+  done   w4 search-v1 4-4 forge-default (0 draws) in 276 s
+  1168 decisive games (584 pairs): search-v1 scores 60.2%
+  done   w5 search-v1 4-4 forge-default (0 draws) in 137 s
+  1176 decisive games (588 pairs): search-v1 scores 60.1%
+  done   w3 search-v1 6-2 forge-default (0 draws) in 324 s
+  1184 decisive games (592 pairs): search-v1 scores 60.2%
+  done   w6 search-v1 6-2 forge-default (0 draws) in 253 s
+  1192 decisive games (596 pairs): search-v1 scores 60.3%
+  done   w1 search-v1 5-3 forge-default (0 draws) in 472 s
+  1200 decisive games (600 pairs): search-v1 scores 60.3%
+
+match finished: 1200 of 1200 games (0 draws, 0 engine errors, 0 timeouts), 600 mirrored pairs
+search-v1 scores 60.3% [95% 58.2%, 62.5%] = +73 Elo [+58, +89] against forge-default
+search-v1: 30048 decisions searched in 1199 games, 4364 changed Forge's answer (14.5%); budget fallbacks 4136 = 13.8% [95% 12.8%, 14.7%]; other fallbacks {"rolloutErrors":158,"unmappable":45}
+forge-default: no searched decisions
