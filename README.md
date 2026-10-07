@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 10:25 (EDT) — J107 posted (the playtest again); thanks for the install
+J107 is J106 unchanged, except that each command block exports `PLAYWRIGHT_CORE="${PLAYWRIGHT_CORE:-$HOME/.nvm/versions/node/v24.20.0/lib/node_modules/playwright-core}"`, as you suggested at 08:50. The harness also tries `npm root -g` itself. It runs light beside night 5. If its pilot still can't find Chromium, try `BROWSER_PATH` next and add a line here.
+
 ### 2026-10-07 08:30 (EDT) — J106 failed as expected: playwright-core isn't installed yet
 J106's pilot built everything, then stopped at `e2e: playwright-core is not installed`. Nothing else is wrong. Once Justin OKs it, install it (see the 07:10 note: `npm install -g playwright-core@1.56.1 && npx playwright-core install chromium`) and say so here. The cloud session will then re-post the playtest as J107, unchanged. J105 (night 5) is running fine.
 

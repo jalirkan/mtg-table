@@ -1,4 +1,4 @@
-id: J106
+id: J107
 title: ForgeCoach full-game playtest overnight: 50 games against Forge and 5 best-of-three tables between two browsers, every move a click on the real board by a monkey that reads the engine's offer from the protocol stream and never sends a frame of its own
 public_title: Full-game playtest
 public_est: one night (~5 to 8 h)
@@ -15,9 +15,9 @@ followup: morning-read
 est: ~5-8 h. Solo: 50 games of a vintage, modern-era, pauper or synergy cube draft (two of ForgeCoach's drafting AIs, then its deck builder) or one of decks/*.dck, against Forge's Default, Reckless or Cautious AI. In this container a game took 4-6 min of wall clock, about 130 decisions, on a shared 4-core machine; on the 9700X perhaps 2-4 min, so 2-3 h. Table: 5 best-of-three matches, each a grid draft in the draft room and then two to three games between two browsers, both seats monkeys; 15 min a game here, 2.5-4 h for all five. Pilot ~10 min
 resumable: no
 timeout: 9h
-clean: var/playtest/J106
+clean: var/playtest/J107
 progress: metric pt.games games of 60
-metrics: pt = sh: node -e 'const fs=require("fs");const o={games:0,ended:0,matches:0,matchesDone:0,findings:0,unreachable:0,stuck:0,hidden:0,board:0,log:0,errors:0,harness:0,turnCap:0,flow:0,other:0};for(const m of ["solo","table"]){const f="var/playtest/J106/"+m+"/report.json";if(!fs.existsSync(f))continue;const r=JSON.parse(fs.readFileSync(f,"utf8"));for(const g of r.games||[]){o.games++;if(/^(win|loss|draw|host won|friend won)$/.test(g.result))o.ended++}for(const x of r.matches||[]){o.matches++;if(/won/.test(x.result))o.matchesDone++}const all=[...(r.games||[]).flatMap((g)=>g.findings||[]),...(r.matches||[]).flatMap((x)=>x.findings||[])];for(const y of all){o.findings++;const k=y.kind;if(k==="unreachable-option")o.unreachable++;else if(k==="stuck"||k==="no-progress"||k==="ask-not-answered"||k==="no-seat"||k==="reload-no-seat")o.stuck++;else if(k==="hidden-info")o.hidden++;else if(/mismatch/.test(k))o.board++;else if(k==="log-incomplete")o.log++;else if(k==="page-error"||k==="console-error")o.errors++;else if(k==="harness-error")o.harness++;else if(k==="turn-cap")o.turnCap++;else if(k==="table-flow"||k==="bo3-incomplete"||k==="match-refused")o.flow++;else o.other++}}console.log(JSON.stringify(o))'
+metrics: pt = sh: node -e 'const fs=require("fs");const o={games:0,ended:0,matches:0,matchesDone:0,findings:0,unreachable:0,stuck:0,hidden:0,board:0,log:0,errors:0,harness:0,turnCap:0,flow:0,other:0};for(const m of ["solo","table"]){const f="var/playtest/J107/"+m+"/report.json";if(!fs.existsSync(f))continue;const r=JSON.parse(fs.readFileSync(f,"utf8"));for(const g of r.games||[]){o.games++;if(/^(win|loss|draw|host won|friend won)$/.test(g.result))o.ended++}for(const x of r.matches||[]){o.matches++;if(/won/.test(x.result))o.matchesDone++}const all=[...(r.games||[]).flatMap((g)=>g.findings||[]),...(r.matches||[]).flatMap((x)=>x.findings||[])];for(const y of all){o.findings++;const k=y.kind;if(k==="unreachable-option")o.unreachable++;else if(k==="stuck"||k==="no-progress"||k==="ask-not-answered"||k==="no-seat"||k==="reload-no-seat")o.stuck++;else if(k==="hidden-info")o.hidden++;else if(/mismatch/.test(k))o.board++;else if(k==="log-incomplete")o.log++;else if(k==="page-error"||k==="console-error")o.errors++;else if(k==="harness-error")o.harness++;else if(k==="turn-cap")o.turnCap++;else if(k==="table-flow"||k==="bo3-incomplete"||k==="match-refused")o.flow++;else o.other++}}console.log(JSON.stringify(o))'
 headline: pt.games, pt.ended, pt.matchesDone, pt.unreachable, pt.stuck, pt.hidden, pt.board, pt.log, pt.errors
 
 **Why.** The first real two-person game failed in front of Justin's friend: an attached Equipment could not be activated, a "choose a card from a graveyard" target never showed, blocking and the stack were unclear, the log was empty after a rejoin, and the coach slowed every turn. Agents had only tested with scripted bots and quick concedes. ForgeCoach's full-game playtest (`e2e/playtest/`, `npm run playtest`) plays whole games through the real UI. At every decision a monkey reads what the engine offers from the protocol stream: the ask and its options, the input's buttons and selectable cards, and at priority the seat's own cards, using Forge's card scripts to say which can be activated or cast from where. It finds the on-screen control for one option and clicks it: board tiles, attached chips, the hand, the zone picker and viewer, dialogs, the decision panel, combat and mana payment. An option the engine says is legal with no control is an unreachable-option finding, with a screenshot, the frame index, the ask and the card. Invariants are checked throughout:
@@ -35,7 +35,7 @@ In the container (2026-10-07), the first runs found and fixed three bugs: cyclin
 
 **Isolation.** Everything runs on its own ports: the engine on 8862, its coach helper on 8863, the draft room on 8864 and the table on 8866 (`--port-base 8862`). A game Justin is playing on 8642 is never touched. The playtest starts its own `scripts/play.sh --engine-only` with `--no-human-collect` (its games are not Justin's) and `--no-auto-review` (mtg-table #96; without it the helper's automatic review would queue a review per solo game at idle priority). Every step runs under `nice -n 19`. The browser is headless Chromium through playwright-core. playwright-core is not a ForgeCoach dependency, so the pilot only checks that it is there: `PLAYWRIGHT_CORE`, the global npm root, or the clone's own `node_modules`. If the pilot fails on it, the PC session installs it once, outside the clones (`npm install -g playwright-core@1.56.1 && npx playwright-core install chromium`), and runs the job again. That install is not part of the job.
 
-**Posted 2026-10-07 by the cloud session** (drafted as J103 in the container; renumbered J106 and pinned to the fixes for the two gaps the container runs left).
+**Re-posted from J106 (2026-10-07):** J106's pilot ran before the PC installed playwright-core (07:55 note) and stopped on `playwright-core is not installed`. J107 is the same job; each block now exports `PLAYWRIGHT_CORE` to the PC's global install, so the module resolves from inside the clone (08:50 note). **Posted 2026-10-07 by the cloud session** (drafted as J103 in the container; renumbered J107 and pinned to the fixes for the two gaps the container runs left).
 
 ## Pilot
 About 10 minutes: the forge home, the bridge build, ForgeCoach's `npm ci`, a browser launch, then one solo game against real Forge.
@@ -43,13 +43,14 @@ About 10 minutes: the forge home, the bridge build, ForgeCoach's `npm ci`, a bro
 ./tools/make-forge-home.sh
 ./bridge/build.sh
 cd {ForgeCoach}
+export PLAYWRIGHT_CORE="${PLAYWRIGHT_CORE:-$HOME/.nvm/versions/node/v24.20.0/lib/node_modules/playwright-core}"  # the PC's global install (07:55 note); the harness also tries `npm root -g`
 npm ci
 node --input-type=module -e "import('./e2e/harness.mjs').then(async (h) => { const pw = await h.loadPlaywright(); const b = await h.launchBrowser(pw); await b.close(); console.log('browser ok'); })"
 rc=0
-nice -n 19 npm run playtest -- --mode solo --games 1 --seed 1031 --decks cube --port-base 8862 --out {mtg-table}/var/playtest/J106/pilot || rc=$?
+nice -n 19 npm run playtest -- --mode solo --games 1 --seed 1031 --decks cube --port-base 8862 --out {mtg-table}/var/playtest/J107/pilot || rc=$?
 test "$rc" -le 1
 ```
-metrics: pilot = sh: node -e 'const fs=require("fs");const f="var/playtest/J106/pilot/report.json";const o={games:0,ended:0,harness:0,stuck:0};if(fs.existsSync(f)){const r=JSON.parse(fs.readFileSync(f,"utf8"));for(const g of r.games||[]){o.games++;if(/^(win|loss|draw)$/.test(g.result))o.ended++;for(const y of g.findings||[]){if(y.kind==="harness-error")o.harness++;if(y.kind==="stuck"||y.kind==="no-progress"||y.kind==="no-seat")o.stuck++}}}console.log(JSON.stringify(o))'
+metrics: pilot = sh: node -e 'const fs=require("fs");const f="var/playtest/J107/pilot/report.json";const o={games:0,ended:0,harness:0,stuck:0};if(fs.existsSync(f)){const r=JSON.parse(fs.readFileSync(f,"utf8"));for(const g of r.games||[]){o.games++;if(/^(win|loss|draw)$/.test(g.result))o.ended++;for(const y of g.findings||[]){if(y.kind==="harness-error")o.harness++;if(y.kind==="stuck"||y.kind==="no-progress"||y.kind==="no-seat")o.stuck++}}}console.log(JSON.stringify(o))'
 check: pilot.games == 1
 check: pilot.ended == 1
 check: pilot.harness == 0
@@ -59,14 +60,16 @@ The pilot only asks whether the machinery works: a browser starts, the engine st
 ## Commands
 ```bash
 cd {ForgeCoach}
+export PLAYWRIGHT_CORE="${PLAYWRIGHT_CORE:-$HOME/.nvm/versions/node/v24.20.0/lib/node_modules/playwright-core}"  # the PC's global install (07:55 note); the harness also tries `npm root -g`
 rc=0
-nice -n 19 npm run playtest -- --mode solo --games 50 --seed 106 --decks cube,dck --viewport mixed --coach fake --port-base 8862 --max-shots 150 --out {mtg-table}/var/playtest/J106/solo || rc=$?
+nice -n 19 npm run playtest -- --mode solo --games 50 --seed 106 --decks cube,dck --viewport mixed --coach fake --port-base 8862 --max-shots 150 --out {mtg-table}/var/playtest/J107/solo || rc=$?
 test "$rc" -le 1
 ```
 ```bash
 cd {ForgeCoach}
+export PLAYWRIGHT_CORE="${PLAYWRIGHT_CORE:-$HOME/.nvm/versions/node/v24.20.0/lib/node_modules/playwright-core}"  # the PC's global install (07:55 note); the harness also tries `npm root -g`
 rc=0
-nice -n 19 npm run playtest -- --mode table --games 5 --seed 106 --decks cube --viewport mixed --port-base 8862 --max-shots 150 --out {mtg-table}/var/playtest/J106/table || rc=$?
+nice -n 19 npm run playtest -- --mode table --games 5 --seed 106 --decks cube --viewport mixed --port-base 8862 --max-shots 150 --out {mtg-table}/var/playtest/J107/table || rc=$?
 test "$rc" -le 1
 ```
 check: pt.games >= 55
@@ -82,18 +85,18 @@ abort: pt.games >= 10 and pt.ended == 0
 These fire only when the harness itself is broken: half the games end in a harness error, or ten games in, none has reached an end.
 
 ## Report
-collect: var/playtest/J106/solo/report.md
-collect: var/playtest/J106/solo/report.json
-collect: var/playtest/J106/table/report.md
-collect: var/playtest/J106/table/report.json
-collect: var/playtest/J106/solo/shots/*.png
-collect: var/playtest/J106/table/shots/*.png
-collect: var/playtest/J106/solo/trace-*.jsonl
-collect: var/playtest/J106/table/trace-*.jsonl
-collect: var/playtest/J106/solo/frames-*.jsonl.gz
-collect: var/playtest/J106/table/frames-*.jsonl.gz
+collect: var/playtest/J107/solo/report.md
+collect: var/playtest/J107/solo/report.json
+collect: var/playtest/J107/table/report.md
+collect: var/playtest/J107/table/report.json
+collect: var/playtest/J107/solo/shots/*.png
+collect: var/playtest/J107/table/shots/*.png
+collect: var/playtest/J107/solo/trace-*.jsonl
+collect: var/playtest/J107/table/trace-*.jsonl
+collect: var/playtest/J107/solo/frames-*.jsonl.gz
+collect: var/playtest/J107/table/frames-*.jsonl.gz
 
-These land in results/J106/ on pc-results, the playtest's report and screenshots together, as `playtest/` asked.
+These land in results/J107/ on pc-results, the playtest's report and screenshots together, as `playtest/` asked.
 
 summary.md should give:
 - **READY or NOT READY**, by the rule, in one line.
