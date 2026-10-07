@@ -4,3 +4,4 @@ started: 2026-10-07T06:05:50-04:00
 phase: pilot 1/2
 mtg-table: 74c1360
 workers: 3
+pressure-1: 2026-10-07T06:06:38-04:00 drop to 2 worker(s): some avg10 27.5%, swap-in 4/s, job 1.2/21.4 GB
