@@ -1,4 +1,4 @@
-id: J104
+id: J105
 title: Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)
 public_title: Queue night 5
 public_est: ~11 h
@@ -15,7 +15,7 @@ max_workers: 7
 pilot_cores: 3
 mem_per_worker_gb: 2
 timeout: 13h
-clean: var/cubelab/queue-pilot-n5b var/cubelab/queue-pilot-n5b-stats
+clean: var/cubelab/queue-pilot-n5c var/cubelab/queue-pilot-n5c-stats
 progress: cubelab-queue var/cubelab/queue night 5
 metrics: night = cubelab-queue var/cubelab/queue night 5
 metrics: base = sh: cat var/cubelab/queue-night-5-stats/base.json 2>/dev/null || echo '{"written":0}'
@@ -25,11 +25,16 @@ metrics: free_gb = sh: df -BG --output=avail var/cubelab | tail -1 | tr -dc 0-9
 metrics: quarantined = sh: cat var/cubelab/queue-quarantine-n5/failed.txt 2>/dev/null | wc -l
 headline: night.night_drafts_done, night.planned_drafts, night.bridge_share, ns.engine_error_rate, ns.mixed_time_ratio, quarantined
 
+**Re-posted from J104 (2026-10-07, the cloud session).** J104's pilot played, recorded and explored (14 exploring games of 46) and then
+exited 2 at the sample line: `find | sort | head -6` under the runner's pipefail, `sort: write failed: Broken pipe` once there were
+more recordings than a pipe buffer. That line now reads `sort | sed -n '1,6p'` (reads everything, no SIGPIPE). The pilot folders are
+fresh again (`*-pilot-n5c*`); the seed block 7,430,001+ is kept (a fresh root, so the same exploring seeds).
+
 **Re-posted from J103 (2026-10-07, the cloud session).** J103's pilot stopped on `pn.explore_drafts >= 1` (0 of 60).
 Nothing was wrong with the night: a draft explores when `rng(seed, 'play-explore') < share`, and the pilot
 used only seeds 7,420,001-7,420,010, none of which explores at 0.15 (checked with 74c1360's `draftExplores`;
 about a 1-in-5 chance for 10 seeds). This pilot's block, 7,430,001+, has two exploring seeds in its first ten
-(7,430,002 and 7,430,005). Nothing else changes; J103 wrote nothing to the real root (its pilot runs first); this pilot uses fresh folders (`*-pilot-n5b*`), since a new job does not move J103's `queue-pilot-n5` aside.
+(7,430,002 and 7,430,005). Nothing else changes; J103 wrote nothing to the real root (its pilot runs first); J104 used `*-pilot-n5b*`.
 
 **Night 5 repeats night 4's design with the settings its rule chose: the profile mix kept, the exploration
 share kept at 0.15.** J099's `rule:` read on its own `night-4.json` (38,000 drafts, 37,994 games): timeouts +
@@ -47,7 +52,7 @@ J099; only the night number, the paths, the pilot's seed block and the key-folde
   and flags, so nothing should differ. A "version change allowed" line on any folder (a different
   Forge jar, ratings file, cube file or uncommitted diff on the PC) stops the job before it plays:
   nights 4 and 5 would not be one version. There must be no `REFUSED` line.
-- The 60-draft pilot plays in a fresh root (`queue-pilot-n5b`) whose key folders hold **copies of the
+- The 60-draft pilot plays in a fresh root (`queue-pilot-n5c`) whose key folders hold **copies of the
   real folders' `run.json`** (their identity and version history, no drafts). Its chunks therefore
   resume through the same identity and version checks as the night does (each answering `same
   version`), and then draft, play, record and explore with the night's own flags.
@@ -256,13 +261,13 @@ grep -E '^  (ok|REFUSED) ' var/cubelab/queue-night-5-keycheck.txt || true
 # the pilot plays in its own fresh root, its ledger starting every key at seed 7,430,001 (this job's block),
 # and its key folders holding COPIES of the real folders' run.json (identity + version history, no drafts),
 # so its chunks resume through the same checks the night's chunks will (D394)
-P=var/cubelab/queue-pilot-n5b
+P=var/cubelab/queue-pilot-n5c
 mkdir -p "$P"
-find var/cubelab/queue -mindepth 3 -maxdepth 3 -name run.json -path 'var/cubelab/queue/*/*/run.json' | sort > var/cubelab/queue-pilot-n5b-runjson.txt
+find var/cubelab/queue -mindepth 3 -maxdepth 3 -name run.json -path 'var/cubelab/queue/*/*/run.json' | sort > var/cubelab/queue-pilot-n5c-runjson.txt
 while read -r f; do
   k=${f#var/cubelab/queue/}; mkdir -p "$P/$(dirname "$k")"; [ -e "$P/$k" ] || cp "$f" "$P/$k"
-done < var/cubelab/queue-pilot-n5b-runjson.txt
-echo "copied $(wc -l < var/cubelab/queue-pilot-n5b-runjson.txt) run.json files into $P"
+done < var/cubelab/queue-pilot-n5c-runjson.txt
+echo "copied $(wc -l < var/cubelab/queue-pilot-n5c-runjson.txt) run.json files into $P"
 [ -e "$P/queue.json" ] || python3 - "$P" <<'PY'
 import glob, itertools, json, os, re, sys
 ids = sorted(re.sub(r'-cube(-\d+)?$', '', os.path.basename(f)[:-3]) for f in glob.glob('cubes/*-cube-180.md'))
@@ -273,18 +278,18 @@ PY
 # the night's own flags, --allow-version-change included; --min-drafts 1 so most keys (normal and bridge) get a chunk
 tools/cubelab.sh queue run --night 5 --drafts 60 --min-drafts 1 --bridge-share 0.2 --chunk 3 --jobs {workers} --record-every 1 --root "$P" \
   --play-explore share=0.15,epsilon=0.05,closecall=0.02 --profile-mix Default:0.5,Reckless:0.25,Cautious:0.25 \
-  --power var/ml/matchup/nights-1-2/power.tsv --allow-version-change 2>&1 | tee var/cubelab/queue-pilot-n5b-run.txt
-python3 var/cubelab/queue-nightstats.py "$P" var/cubelab/queue-pilot-n5b-stats 5
-python3 tools/ml/matchup_data.py "$P" --out var/ml/matchup-pilot-n5b/games.jsonl --check
-find "$P" -path '*/games/*' -name 'g1-seat*.jsonl.gz' | sort | head -6 > var/cubelab/queue-pilot-n5b-sample.txt
-xargs -r node tools/check-redaction.mjs < var/cubelab/queue-pilot-n5b-sample.txt || echo "redaction FAIL in the pilot sample (quarantined in the full run, not a pilot failure)"
+  --power var/ml/matchup/nights-1-2/power.tsv --allow-version-change 2>&1 | tee var/cubelab/queue-pilot-n5c-run.txt
+python3 var/cubelab/queue-nightstats.py "$P" var/cubelab/queue-pilot-n5c-stats 5
+python3 tools/ml/matchup_data.py "$P" --out var/ml/matchup-pilot-n5c/games.jsonl --check
+find "$P" -path '*/games/*' -name 'g1-seat*.jsonl.gz' | sort | sed -n '1,6p' > var/cubelab/queue-pilot-n5c-sample.txt
+xargs -r node tools/check-redaction.mjs < var/cubelab/queue-pilot-n5c-sample.txt || echo "redaction FAIL in the pilot sample (quarantined in the full run, not a pilot failure)"
 ```
-metrics: pilot = cubelab-queue var/cubelab/queue-pilot-n5b
-metrics: pn = sh: cat var/cubelab/queue-pilot-n5b-stats/night-5.json 2>/dev/null || echo '{"written":0}'
-metrics: pseeds = sh: cat var/cubelab/queue-pilot-n5b-stats/seeds.json 2>/dev/null || echo '{"written":0}'
+metrics: pilot = cubelab-queue var/cubelab/queue-pilot-n5c
+metrics: pn = sh: cat var/cubelab/queue-pilot-n5c-stats/night-5.json 2>/dev/null || echo '{"written":0}'
+metrics: pseeds = sh: cat var/cubelab/queue-pilot-n5c-stats/seeds.json 2>/dev/null || echo '{"written":0}'
 metrics: kc = sh: python3 -c "import json, re, sys; L=open(sys.argv[1]).read().splitlines(); ok=[l for l in L if l.startswith('  ok ')]; ch=[re.search(r'version change allowed \(([^)]*)\)', l) for l in ok]; print(json.dumps({'written': 1, 'ok': len(ok), 'refused': sum(1 for l in L if l.startswith('  REFUSED ')), 'vchange': sum(1 for m in ch if m), 'newFolders': sum(1 for l in ok if ': new folder' in l), 'same': sum(1 for l in ok if ': same version' in l), 'unexpected': sum(1 for m in ch if m and set(m.group(1).split(', ')) - {'codeTree', 'weightsSha'}), 'accepts': 1 if any('every key folder accepts this run' in l for l in L) else 0}))" var/cubelab/queue-night-5-keycheck.txt 2>/dev/null || echo '{"written":0}'
-metrics: pk = sh: python3 -c "import json, sys; L=open(sys.argv[1]).read().splitlines(); print(json.dumps({'written': 1, 'ok': sum(1 for l in L if l.startswith('  ok ')), 'vchange': sum(1 for l in L if l.startswith('  ok ') and 'version change allowed' in l), 'same': sum(1 for l in L if l.startswith('  ok ') and ': same version' in l), 'refused': sum(1 for l in L if l.startswith('  REFUSED ')), 'failedChunks': sum(1 for l in L if ' FAILED, carrying on' in l)}))" var/cubelab/queue-pilot-n5b-run.txt 2>/dev/null || echo '{"written":0}'
-metrics: copied = sh: wc -l < var/cubelab/queue-pilot-n5b-runjson.txt 2>/dev/null || echo 0
+metrics: pk = sh: python3 -c "import json, sys; L=open(sys.argv[1]).read().splitlines(); print(json.dumps({'written': 1, 'ok': sum(1 for l in L if l.startswith('  ok ')), 'vchange': sum(1 for l in L if l.startswith('  ok ') and 'version change allowed' in l), 'same': sum(1 for l in L if l.startswith('  ok ') and ': same version' in l), 'refused': sum(1 for l in L if l.startswith('  REFUSED ')), 'failedChunks': sum(1 for l in L if ' FAILED, carrying on' in l)}))" var/cubelab/queue-pilot-n5c-run.txt 2>/dev/null || echo '{"written":0}'
+metrics: copied = sh: wc -l < var/cubelab/queue-pilot-n5c-runjson.txt 2>/dev/null || echo 0
 metrics: n4 = sh: cat var/cubelab/queue-night-5-stats/night-4.json 2>/dev/null || echo '{"written":0}'
 metrics: rq3 = sh: python3 -c "import json; rows=[json.loads(l) for l in open('var/cubelab/queue-quarantine-n3/recheck.jsonl') if l.strip()]; rows=[r for r in rows if str(r.get('rel','')).endswith('.jsonl.gz')]; k={s for r in rows for s in r.get('kinds',[])} - {'A3', 'own-hand-no-name', 'M55'}; m=sum(1 for r in rows if 'M55' in r.get('kinds',[])); print(json.dumps({'written': 1, 'recordings': len(rows), 'm55': m, 'newKinds': len(k)}))" 2>/dev/null || echo '{"written":0}'
 check: rq3.written == 1 and rq3.newKinds == 0 and rq3.m55 <= 1

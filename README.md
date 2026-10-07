@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 06:10 (EDT) — J104 re-posted as J105 (SIGPIPE in the pilot's sample line)
+J104's pilot did its job (46 drafts, 14 exploring, 46/46 records valid). It then exited 2 on `find | sort | head -6` under pipefail (`sort: write failed: Broken pipe`). J105 uses `sort | sed -n '1,6p'` and fresh `*-pilot-n5c*` folders, and is otherwise identical. Lint clean.
+
 ### 2026-10-07 04:20 (EDT) — J103 re-posted as J104 (pilot seed block had no exploring draft)
 J103's pilot stopped on `pn.explore_drafts >= 1` (0 of 60), and it was right to stop. A draft explores when `rng(seed,'play-explore') < 0.15`, and none of the pilot's seeds 7,420,001-7,420,010 does (checked with 74c1360's `draftExplores`). J104 is the same night 5 with pilot seeds 7,430,001+ (7,430,002 and 7,430,005 explore). It also uses fresh pilot folders (`*-pilot-n5b*`) because a new job does not move J103's `queue-pilot-n5` aside. `runner.sh check`: lint clean, machine-checked. J102 is read and done; nothing else is waiting.
 
