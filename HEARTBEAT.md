@@ -2,13 +2,13 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-06T22:05:05-04:00
+- time: 2026-10-06T22:09:35-04:00
 - runner: 10896b8, up since 2026-10-06T16:24:24-04:00
-- running: nothing
-- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 0.41; memory 6.5/30.5 GB, swap 2510 MB, pressure 0% (lab budget 23.4 GB)
+- running: J102 prepare, 0/2400 games, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 0.04; memory 6.3/30.5 GB, swap 2510 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
-- waiting: J102 (new jobs held by play.sh --pause-lab (pid 746220): running jobs carry on)
+- waiting: nothing
 - last finished: J101 done at 2026-10-06T21:09:10-04:00: sa.games 808 · sa.score 0.501 · sc.games 392 · sc.score 0.487 · mr.score 0.623 · mr.elo 87.5 · md.score 0.603 · md.elo 72.9
 
 ## Messages
