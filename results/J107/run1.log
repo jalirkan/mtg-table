@@ -1,0 +1,173 @@
+==== J107 run1 started 2026-10-07T10:28:31-04:00 in unit lab-J107-run1, 1 worker(s), 3 core(s), BLAS/OpenMP threads 3
+
+> forgecoach@0.1.0 playtest
+> node --experimental-transform-types --no-warnings e2e/playtest/run.mjs --mode solo --games 50 --seed 106 --decks cube,dck --viewport mixed --coach fake --port-base 8862 --max-shots 150 --out /home/justin-a/code/lab/mtg-table-light/var/playtest/J107/solo
+
+[playtest 1s] building ForgeCoach (FORGECOACH_BASE=./)
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[playtest 16s] starting /home/justin-a/code/lab/mtg-table-light/scripts/play.sh --engine-only --port 8862 --coach-port 8863 --no-auto-review
+[playtest 83s] game 1: modern-era Gruul · Ramp into big monsters (cube:modern-era#106000:you) vs modern-era Boros · Aggro and equipment (cube:modern-era#106000:ai) [Reckless]
+[playtest 103s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 163s]   FINDING solo: coach-blank — during the opponent's turn 14 the coach panel shows no advice (it had answered before)
+[playtest 185s] game 1: loss (AllOpponentsLost) in 16 turns, 132 decisions, 1 finding(s)
+[playtest 185s] game 2: pauper Simic · ETB / blink (cube:pauper#106001:ai) vs pauper Orzhov · ETB / blink (cube:pauper#106001:you) [Reckless]
+[playtest 271s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 451s] game 2: loss (AllOpponentsLost) in 15 turns, 293 decisions, 0 finding(s)
+[playtest 452s] game 3: synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106002:you) vs synergy Boros · Tokens / go wide (cube:synergy#106002:ai) [Reckless]
+[playtest 504s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 596s] game 3: loss (AllOpponentsLost) in 13 turns, 207 decisions, 0 finding(s)
+[playtest 596s] game 4: Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck) vs Doom Legion (Marvel Super Heroes villains) (dck:decks/doom-legion.dck) [Cautious]
+[playtest 683s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 752s] game 4: loss (AllOpponentsLost) in 13 turns, 174 decisions, 0 finding(s)
+[playtest 752s] game 5: vintage Boros · White aggro & equipment (cube:vintage#106004:ai) vs vintage Orzhov · Aggro (cube:vintage#106004:you) [Default]
+[playtest 813s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 883s] game 5: loss (AllOpponentsLost) in 15 turns, 160 decisions, 0 finding(s)
+[playtest 883s] game 6: modern-era Selesnya · Creatures, counters, value (cube:modern-era#106005:ai) vs modern-era Gruul · Ramp into big monsters (cube:modern-era#106005:you) [Default]
+[playtest 943s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 1020s] game 6: loss (AllOpponentsLost) in 14 turns, 157 decisions, 0 finding(s)
+[playtest 1020s] game 7: pauper Azorius blink-skies (cube:pauper#106006:ai) vs pauper Boros aggro (cube:pauper#106006:you) [Default]
+[playtest 1077s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 1152s]   FINDING solo: coach-blank — during the opponent's turn 14 the coach panel shows no advice (it had answered before)
+[playtest 1191s] game 7: loss (AllOpponentsLost) in 18 turns, 240 decisions, 1 finding(s)
+[playtest 1192s] game 8: synergy Orzhov · Artifacts (cube:synergy#106007:you) vs synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106007:ai) [Cautious]
+[playtest 1263s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 1429s] game 8: loss (AllOpponentsLost) in 14 turns, 246 decisions, 0 finding(s)
+[playtest 1429s] game 9: Pacho SHIELD (Marvel Super Heroes) (dck:decks/pacho-shield.dck) vs Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) [Reckless]
+[playtest 1442s]   FINDING solo: coach-blank — during the opponent's turn 2 the coach panel shows no advice (it had answered before)
+[playtest 1475s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 1629s] game 9: loss (AllOpponentsLost) in 14 turns, 279 decisions, 1 finding(s)
+[playtest 1629s] game 10: vintage Boros · White aggro & equipment (cube:vintage#106009:ai) vs vintage Selesnya +B · Enter / leave value (cube:vintage#106009:you) [Cautious]
+[playtest 1706s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 1809s] game 10: win (AllOpponentsLost) in 16 turns, 184 decisions, 0 finding(s)
+[playtest 1809s] game 11: modern-era Selesnya · Creatures, counters, value (cube:modern-era#106010:you) vs modern-era Selesnya · Creatures, counters, value (cube:modern-era#106010:ai) [Cautious]
+[playtest 1878s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 1903s] game 11: loss (AllOpponentsLost) in 11 turns, 98 decisions, 0 finding(s)
+[playtest 1903s] game 12: pauper Boros aggro (cube:pauper#106011:you) vs pauper Boros aggro (cube:pauper#106011:ai) [Cautious]
+[playtest 1940s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 2100s] game 12: loss (AllOpponentsLost) in 17 turns, 217 decisions, 0 finding(s)
+[playtest 2100s] game 13: synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106012:you) vs synergy Orzhov · Tokens / go wide (cube:synergy#106012:ai) [Default]
+[playtest 2142s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 2157s]   FINDING solo: coach-blank — during the opponent's turn 7 the coach panel shows no advice (it had answered before)
+[playtest 2217s] game 13: loss (AllOpponentsLost) in 11 turns, 158 decisions, 1 finding(s)
+[playtest 2218s] game 14: Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck) vs Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) [Reckless]
+[playtest 2282s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 2351s] game 14: loss (AllOpponentsLost) in 14 turns, 138 decisions, 0 finding(s)
+[playtest 2351s] game 15: vintage Golgari +R · Big payoffs (cube:vintage#106014:ai) vs vintage Boros · White aggro & equipment (cube:vintage#106014:you) [Reckless]
+[playtest 2420s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 2502s]   FINDING solo: coach-blank — during the opponent's turn 11 the coach panel shows no advice (it had answered before)
+[playtest 2511s] game 15: loss (AllOpponentsLost) in 13 turns, 159 decisions, 1 finding(s)
+[playtest 2511s] game 16: modern-era Gruul · Ramp into big monsters (cube:modern-era#106015:ai) vs modern-era Gruul · Ramp into big monsters (cube:modern-era#106015:you) [Default]
+[playtest 2563s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 2648s] game 16: loss (AllOpponentsLost) in 12 turns, 142 decisions, 0 finding(s)
+[playtest 2648s] game 17: pauper Orzhov · Sacrifice (cube:pauper#106016:ai) vs pauper Orzhov · Tokens / go wide (cube:pauper#106016:you) [Reckless]
+[playtest 2709s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 7157s]   FINDING solo: abandoned — the game was left without an end (time) at turn 10
+[playtest 7157s] game 17: abandoned (time) (null) in 10 turns, 126 decisions, 1 finding(s)
+[playtest 7158s] game 18: synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106017:you) vs synergy Boros · Artifacts (cube:synergy#106017:ai) [Default]
+[playtest 7201s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 11674s]   FINDING solo: abandoned — the game was left without an end (time) at turn 7
+[playtest 11674s] game 18: abandoned (time) (null) in 7 turns, 54 decisions, 1 finding(s)
+[playtest 11674s] game 19: Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) vs Doom Legion (Marvel Super Heroes villains) (dck:decks/doom-legion.dck) [Reckless]
+[playtest 11719s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 11806s] game 19: win (AllOpponentsLost) in 17 turns, 161 decisions, 0 finding(s)
+[playtest 11806s] game 20: vintage Orzhov · Aggro (cube:vintage#106019:you) vs vintage Azorius · Control (cube:vintage#106019:ai) [Cautious]
+[playtest 11901s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 11998s] game 20: loss (AllOpponentsLost) in 11 turns, 197 decisions, 0 finding(s)
+[playtest 11998s] game 21: modern-era Selesnya · Creatures, counters, value (cube:modern-era#106020:you) vs modern-era Gruul · Ramp into big monsters (cube:modern-era#106020:ai) [Default]
+[playtest 12053s]   FINDING solo: coach-blank — during the opponent's turn 3 the coach panel shows no advice (it had answered before)
+[playtest 12065s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 12130s] game 21: loss (AllOpponentsLost) in 11 turns, 126 decisions, 1 finding(s)
+[playtest 12130s] game 22: pauper Boros aggro (cube:pauper#106021:you) vs pauper Azorius blink-skies (cube:pauper#106021:ai) [Default]
+[playtest 12194s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 12369s] game 22: loss (AllOpponentsLost) in 16 turns, 252 decisions, 0 finding(s)
+[playtest 12370s] game 23: synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106022:you) vs synergy Boros · Tokens / go wide (cube:synergy#106022:ai) [Default]
+[playtest 12420s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 12535s] game 23: loss (AllOpponentsLost) in 14 turns, 219 decisions, 0 finding(s)
+[playtest 12535s] game 24: Wakanda (Marvel Super Heroes Black Panther) (dck:decks/wakanda.dck) vs Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) [Cautious]
+[playtest 12577s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 12687s] game 24: loss (AllOpponentsLost) in 16 turns, 139 decisions, 0 finding(s)
+[playtest 12688s] game 25: vintage Rakdos · Sacrifice midrange (cube:vintage#106024:you) vs vintage Azorius · Control (cube:vintage#106024:ai) [Cautious]
+[playtest 12716s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 12939s] game 25: loss (AllOpponentsLost) in 27 turns, 335 decisions, 0 finding(s)
+[playtest 12940s] game 26: modern-era Selesnya · Creatures, counters, value (cube:modern-era#106025:you) vs modern-era Gruul · Ramp into big monsters (cube:modern-era#106025:ai) [Cautious]
+[playtest 12968s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 13135s] game 26: loss (AllOpponentsLost) in 17 turns, 231 decisions, 0 finding(s)
+[playtest 13135s] game 27: pauper Azorius blink-skies +R (cube:pauper#106026:you) vs pauper Orzhov · ETB / blink (cube:pauper#106026:ai) [Default]
+[playtest 13160s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 13238s] game 27: loss (AllOpponentsLost) in 15 turns, 150 decisions, 0 finding(s)
+[playtest 13238s] game 28: synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106027:ai) vs synergy Selesnya lifegain tokens +U (cube:synergy#106027:you) [Default]
+[playtest 13329s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 13420s] game 28: loss (AllOpponentsLost) in 16 turns, 195 decisions, 0 finding(s)
+[playtest 13420s] game 29: Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) vs Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) [Reckless]
+[playtest 13443s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 13471s] game 29: loss (AllOpponentsLost) in 11 turns, 70 decisions, 0 finding(s)
+[playtest 13471s] game 30: vintage Selesnya · Aggro (cube:vintage#106029:you) vs vintage Rakdos +W · Sacrifice midrange (cube:vintage#106029:ai) [Reckless]
+[playtest 13509s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 13597s] game 30: loss (AllOpponentsLost) in 12 turns, 145 decisions, 0 finding(s)
+[playtest 13597s] game 31: modern-era Gruul · Ramp into big monsters (cube:modern-era#106030:ai) vs modern-era Selesnya · Creatures, counters, value (cube:modern-era#106030:you) [Reckless]
+[playtest 13647s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 13778s] game 31: loss (AllOpponentsLost) in 20 turns, 254 decisions, 0 finding(s)
+[playtest 13778s] game 32: pauper Orzhov · Tokens / go wide (cube:pauper#106031:you) vs pauper Orzhov +R · ETB / blink (cube:pauper#106031:ai) [Default]
+[playtest 13841s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 13910s] game 32: loss (AllOpponentsLost) in 14 turns, 154 decisions, 0 finding(s)
+[playtest 13910s] game 33: synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106032:you) vs synergy Orzhov · Tokens / go wide (cube:synergy#106032:ai) [Default]
+[playtest 13952s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 14017s] game 33: loss (AllOpponentsLost) in 12 turns, 164 decisions, 0 finding(s)
+[playtest 14017s] game 34: Doom Legion (Marvel Super Heroes villains) (dck:decks/doom-legion.dck) vs Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck) [Default]
+[playtest 14126s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 14341s] game 34: loss (AllOpponentsLost) in 11 turns, 368 decisions, 0 finding(s)
+[playtest 14341s] game 35: vintage Azorius · Control (cube:vintage#106034:ai) vs vintage Selesnya · Aggro (cube:vintage#106034:you) [Reckless]
+[playtest 14391s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 14456s] game 35: loss (AllOpponentsLost) in 15 turns, 180 decisions, 0 finding(s)
+[playtest 14456s] game 36: modern-era Gruul · Ramp into big monsters (cube:modern-era#106035:ai) vs modern-era Boros · Aggro and equipment (cube:modern-era#106035:you) [Cautious]
+[playtest 14500s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 14563s] game 36: loss (AllOpponentsLost) in 11 turns, 126 decisions, 0 finding(s)
+[playtest 14563s] game 37: pauper Boros aggro (cube:pauper#106036:you) vs pauper Orzhov · Tokens / go wide (cube:pauper#106036:ai) [Default]
+[playtest 14605s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 14748s] game 37: loss (AllOpponentsLost) in 15 turns, 234 decisions, 0 finding(s)
+[playtest 14748s] game 38: synergy Orzhov · Enter-the-battlefield / blink (cube:synergy#106037:ai) vs synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106037:you) [Default]
+[playtest 14796s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 14953s] game 38: loss (AllOpponentsLost) in 17 turns, 232 decisions, 0 finding(s)
+[playtest 14953s] game 39: Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) vs Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck) [Default]
+[playtest 15009s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 15063s] game 39: loss (AllOpponentsLost) in 13 turns, 152 decisions, 0 finding(s)
+[playtest 15063s] game 40: vintage Azorius · Control (cube:vintage#106039:you) vs vintage Boros · White aggro & equipment (cube:vintage#106039:ai) [Default]
+[playtest 15102s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 15168s] game 40: loss (AllOpponentsLost) in 12 turns, 119 decisions, 0 finding(s)
+[playtest 15168s] game 41: modern-era Selesnya · Creatures, counters, value (cube:modern-era#106040:you) vs modern-era Selesnya · Creatures, counters, value (cube:modern-era#106040:ai) [Default]
+[playtest 15198s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 15277s] game 41: loss (AllOpponentsLost) in 12 turns, 146 decisions, 0 finding(s)
+[playtest 15277s] game 42: pauper Orzhov · Sacrifice (cube:pauper#106041:you) vs pauper Boros aggro (cube:pauper#106041:ai) [Default]
+[playtest 15341s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 15501s] game 42: loss (AllOpponentsLost) in 19 turns, 265 decisions, 0 finding(s)
+[playtest 15501s] game 43: synergy Orzhov · Tokens / go wide (cube:synergy#106042:ai) vs synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106042:you) [Reckless]
+[playtest 15602s]   solo reloaded at turn 7: log 7 → 7 turns
+[playtest 15640s] game 43: loss (AllOpponentsLost) in 12 turns, 123 decisions, 0 finding(s)
+[playtest 15640s] game 44: Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck) vs Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) [Cautious]
+[playtest 15685s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 15759s] game 44: loss (AllOpponentsLost) in 13 turns, 135 decisions, 0 finding(s)
+[playtest 15759s] game 45: vintage Rakdos · Sacrifice midrange (cube:vintage#106044:ai) vs vintage Azorius · Control (cube:vintage#106044:you) [Cautious]
+[playtest 15783s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 15858s] game 45: loss (AllOpponentsLost) in 17 turns, 154 decisions, 0 finding(s)
+[playtest 15858s] game 46: modern-era Gruul · Ramp into big monsters (cube:modern-era#106045:ai) vs modern-era Selesnya · Creatures, counters, value (cube:modern-era#106045:you) [Reckless]
+[playtest 15908s]   solo reloaded at turn 5: log 5 → 5 turns
+[playtest 15981s] game 46: loss (AllOpponentsLost) in 13 turns, 131 decisions, 0 finding(s)
+[playtest 15981s] game 47: pauper Azorius blink-skies (cube:pauper#106046:you) vs pauper Orzhov · Artifacts (cube:pauper#106046:ai) [Default]
+[playtest 16017s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 16094s] game 47: loss (AllOpponentsLost) in 16 turns, 159 decisions, 0 finding(s)
+[playtest 16095s] game 48: synergy Orzhov · Sacrifice ("aristocrats") (cube:synergy#106047:ai) vs synergy Orzhov · Tokens / go wide (cube:synergy#106047:you) [Cautious]
+[playtest 16170s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 16226s] game 48: loss (AllOpponentsLost) in 11 turns, 150 decisions, 0 finding(s)
+[playtest 16226s] game 49: Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) vs Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck) [Default]
+[playtest 16266s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 16303s] game 49: loss (AllOpponentsLost) in 14 turns, 119 decisions, 0 finding(s)
+[playtest 16303s] game 50: vintage Boros · White aggro & equipment (cube:vintage#106049:ai) vs vintage Boros · White aggro & equipment (cube:vintage#106049:you) [Reckless]
+[playtest 16415s]   solo reloaded at turn 6: log 6 → 6 turns
+[playtest 16608s] game 50: loss (AllOpponentsLost) in 15 turns, 359 decisions, 0 finding(s)
+
+playtest: 50 game(s); 46 loss, 2 win, 2 abandoned (time); 8 finding(s) of 2 kind(s)
+report: /home/justin-a/code/lab/mtg-table-light/var/playtest/J107/solo/report.md
