@@ -1,0 +1,158 @@
+==== J107 pilot1 started 2026-10-07T10:24:00-04:00 in unit lab-J107-pilot1, 1 worker(s), 3 core(s), BLAS/OpenMP threads 3
+forge home:  /home/justin-a/code/lab/mtg-table-light/forge-home/
+  res     -> /home/justin-a/forge/res
+  userDir  = /home/justin-a/code/lab/mtg-table-light/var/forge/
+  cacheDir = /home/justin-a/code/lab/mtg-table-light/var/cache/
+  custom   = /home/justin-a/code/lab/mtg-table-light/var/forge/custom/cards (1 card script(s) copied)
+forge home OK
+lint-bridge-selftest OK: 31 rules, 61 firing cases (each fired its own rule and no other), 75 checks
+bridge lint OK (75 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 75 file(s) -> /home/justin-a/code/lab/mtg-table-light/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table-light/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 303 frame(s) lost the race and were dropped
+OverRaceSelfTest: 11318 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:59654): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:59668): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:59676 (1 watching)
+WS CONNECT /127.0.0.1:59684 (connection #1)
+WS REFUSED /127.0.0.1:59700: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:59704 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:59704 (1 watching)
+WS DISCONNECT /127.0.0.1:59684 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:59706 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:59706 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:59714 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:33326 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:33326: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 43 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:46994: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:47004: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:47008: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:47022: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:47044: no valid pairing token
+WS SITE REFUSED /127.0.0.1:47152: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47166: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47168: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47176: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47190: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47192: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47202: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47216: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47220: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47226: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:47234: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:47248: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:47254: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:47262: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:47268: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:47272 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:47272 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:47284 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:47284 (0 watching)
+WS CONNECT /127.0.0.1:47300 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:47300 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:47312): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:47324): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:47340 (1 watching)
+WS CONNECT /127.0.0.1:43106 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:43106 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:43110 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:43110 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:34605 (/127.0.0.1:43114): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:55530: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:51272: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:51284: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:51286: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:51302: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:51318 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:51318 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:51322): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:33269 (/127.0.0.1:51338): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:40228: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:40238: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:40248: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:40264: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:40276: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:40278: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:40282: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:40294: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:40298: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:40306: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:40318: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:40328: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:40330: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:40336: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:37430: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37444: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37454: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:37490)
+TABLE SEAT 1 upgrade from /127.0.0.1:37498
+WS CONNECT /127.0.0.1:37498 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:37510
+WS SEAT 1 TAKEN OVER by /127.0.0.1:37510 (the older connection /127.0.0.1:37498 is closed 4002)
+WS CONNECT /127.0.0.1:37510 (connection #2)
+WS DISCONNECT /127.0.0.1:37510 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:37524
+WS CONNECT /127.0.0.1:37524 (connection #1)
+WS DISCONNECT /127.0.0.1:37524 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:37532: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37548: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37556: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37568: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37576: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37590: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37600: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37614: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37626: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:37632: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:37654
+WS CONNECT /127.0.0.1:37654 (connection #2)
+WS DISCONNECT /127.0.0.1:37654 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 8.9 us + predict 4.4 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 125 check(s), 0 failure(s)
+decision selftest: 100 check(s), 0 failure(s)
+build OK
+
+added 98 packages, and audited 99 packages in 1s
+
+13 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+browser ok
+
+> forgecoach@0.1.0 playtest
+> node --experimental-transform-types --no-warnings e2e/playtest/run.mjs --mode solo --games 1 --seed 1031 --decks cube --port-base 8862 --out /home/justin-a/code/lab/mtg-table-light/var/playtest/J107/pilot
+
+[playtest 0s] building ForgeCoach (FORGECOACH_BASE=./)
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[playtest 5s] starting /home/justin-a/code/lab/mtg-table-light/scripts/play.sh --engine-only --port 8862 --coach-port 8863 --no-auto-review
+[playtest 48s] game 1: synergy Boros · Artifacts (cube:synergy#1031000:ai) vs synergy Orzhov · Enter-the-battlefield / blink (cube:synergy#1031000:you) [Default]
+[playtest 107s]   solo reloaded at turn 8: log 8 → 8 turns
+[playtest 219s] game 1: loss (AllOpponentsLost) in 16 turns, 253 decisions, 0 finding(s)
+
+playtest: 1 game(s); 1 loss; 0 finding(s) of 0 kind(s)
+report: /home/justin-a/code/lab/mtg-table-light/var/playtest/J107/pilot/report.md
