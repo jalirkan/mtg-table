@@ -176,8 +176,12 @@ lab's `tools/cubelab/draft.ts`:
    that has cards, and the rest of the grid is discarded.
 3. The first pick alternates grid by grid.
 
-`fixtures/draft-room/grid-golden.json` is written by ForgeCoach's `draft.ts`: six
-deals and six whole drafts, with seeds up to 5×10⁹ and both opening seats. It is
+`fixtures/draft-room/grid-golden.json` is written by ForgeCoach's `draft.ts`: eight
+deals and eight whole drafts, with seeds up to 5×10⁹ and both opening seats, two of
+them on a real cube, Evybaby's New Cube (Evan's 360-card list,
+`cubes/evybaby-cube-360.md`, names with diacritics). Its `hashes` holds each golden
+cube's `cube.hash`; both sides check them, and the self-test checks the golden's
+Evybaby names against the cube document. It is
 committed in both repositories (ForgeCoach's copy is
 `src/draft/testdata/grid-golden.json`). Each side's tests must reproduce every case,
 so a change to either implementation fails a test somewhere. This repository's
