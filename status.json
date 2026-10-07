@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-07T04:07:27-04:00",
- "heartbeat": "2026-10-07T04:07:27-04:00",
+ "updated": "2026-10-07T04:08:00-04:00",
+ "heartbeat": "2026-10-07T04:08:00-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 8.19,
-  "memUsedGb": 5.4,
+  "load1": 5.94,
+  "memUsedGb": 5.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 2623,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J104",
    "title": "Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-07T04:07:03-04:00",
-   "elapsed": 24,
+   "elapsed": 58,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-07T04:07:03-04:00",
-   "memGb": 0.01,
+   "memGb": 0,
    "live": {
     "night.night_drafts_done": 0,
     "night.planned_drafts": 0,
@@ -90,15 +90,15 @@
    "cubes": [],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J104-pilot1"
+   "detail": "lab-J104-pilot2"
   }
  ],
  "queue": [],
  "waiting": [],
  "finished": [
   {
-   "publicTitle": "Queue night 5",
-   "publicEst": "~11 h",
+   "publicTitle": null,
+   "publicEst": null,
    "id": "J103",
    "title": "J103",
    "status": "failed",
