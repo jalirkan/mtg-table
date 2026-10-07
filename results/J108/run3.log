@@ -1,0 +1,70 @@
+==== J108 run3 started 2026-10-07T16:49:29-04:00 in unit lab-J108-run3, 4 worker(s), 4 core(s), BLAS/OpenMP threads 4
+  check redaction: ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine: 90 quarantined recording(s), counted by walking the folder
+  check warehouse: ok: 20000 drafts lines ingested
+  check encoded: ok: 39908 of 39910 recordings encoded (100.0%)
+  check holds: ok: no hold (released: J052, J067, J076, J077, J078, J079, J080)
+cold night 1: 27 unit(s), 40003 file(s), 3.302 GB hot -> /mnt/e/forgecoach-archive
+  bridge__fair-fight+modern-era: archived before, re-verified
+  bridge__fair-fight+omega: archived before, re-verified
+  bridge__fair-fight+peasant: archived before, re-verified
+  bridge__fair-fight+synergy: archived before, re-verified
+  bridge__fair-fight+vintage: archived before, re-verified
+  bridge__modern-era+omega: archived before, re-verified
+  bridge__modern-era+synergy: archived before, re-verified
+  bridge__modern-era+vintage: archived before, re-verified
+  bridge__pauper+modern-era: archived before, re-verified
+  bridge__pauper+omega: archived before, re-verified
+  bridge__pauper+peasant: archived before, re-verified
+  bridge__pauper+synergy: archived before, re-verified
+  bridge__pauper+vintage: archived before, re-verified
+  bridge__peasant+modern-era: archived before, re-verified
+  bridge__peasant+omega: archived before, re-verified
+  bridge__peasant+synergy: archived before, re-verified
+  bridge__peasant+vintage: archived before, re-verified
+  bridge__synergy+omega: archived before, re-verified
+  bridge__synergy+vintage: archived before, re-verified
+  normal__fair-fight: archived before, re-verified
+  normal__modern-era: archived before, re-verified
+  normal__omega: archived before, re-verified
+  normal__pauper: archived before, re-verified
+  normal__peasant: archived before, re-verified
+  normal__synergy: archived before, re-verified
+  normal__vintage: archived before, re-verified
+  quarantine: archived before, re-verified
+cold night 1: 27 unit(s) verified, 0 failed; 40003 file(s), 3.302 GB hot -> 0.564 GB; 40003 deleted from the hot disk
+  check redaction: ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine-n2: 44 quarantined recording(s), counted by walking the folder
+  check warehouse: ok: 20000 drafts lines ingested
+  check encoded: ok: 39954 of 39956 recordings encoded (100.0%)
+  check holds: ok: no hold (released: J052, J067, J076, J077, J078, J079, J080)
+cold night 2: 27 unit(s), 40003 file(s), 3.363 GB hot -> /mnt/e/forgecoach-archive
+  bridge__fair-fight+modern-era: archived before, re-verified
+  bridge__fair-fight+omega: archived before, re-verified
+  bridge__fair-fight+peasant: archived before, re-verified
+  bridge__fair-fight+synergy: archived before, re-verified
+  bridge__fair-fight+vintage: archived before, re-verified
+  bridge__modern-era+omega: archived before, re-verified
+  bridge__modern-era+synergy: archived before, re-verified
+  bridge__modern-era+vintage: archived before, re-verified
+  bridge__pauper+modern-era: archived before, re-verified
+  bridge__pauper+omega: archived before, re-verified
+  bridge__pauper+peasant: archived before, re-verified
+  bridge__pauper+synergy: archived before, re-verified
+  bridge__pauper+vintage: archived before, re-verified
+  bridge__peasant+modern-era: archived before, re-verified
+  bridge__peasant+omega: archived before, re-verified
+  bridge__peasant+synergy: archived before, re-verified
+  bridge__peasant+vintage: archived before, re-verified
+  bridge__synergy+omega: archived before, re-verified
+  bridge__synergy+vintage: archived before, re-verified
+  normal__fair-fight: archived before, re-verified
+  normal__modern-era: archived before, re-verified
+  normal__omega: archived before, re-verified
+  normal__pauper: archived before, re-verified
+  normal__peasant: archived before, re-verified
+  normal__synergy: archived before, re-verified
+  normal__vintage: archived before, re-verified
+  quarantine: archived before, re-verified
+cold night 2: 27 unit(s) verified, 0 failed; 40003 file(s), 3.363 GB hot -> 0.565 GB; 40003 deleted from the hot disk
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb2       218G  161G   46G  78% /
+/dev/sda4       931G  432G  500G  47% /mnt/e
