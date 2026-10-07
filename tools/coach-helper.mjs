@@ -31,7 +31,8 @@
 //                    only a real call can, and a logged-out CLI answers /coach with the
 //                    error line below.
 //   POST /coach   {"system": string, "user": string, "model"?: "opus"|"sonnet"|"haiku",
-//                  "supersedes"?: string, "thinking"?: "off"|"low"|"default"}
+//                  "supersedes"?: string, "replaceRunning"?: boolean (D410),
+//                  "thinking"?: "off"|"low"|"default"}
 //                 (default "sonnet"; body at most 512 KB, else 413)
 //                 -> 200 Content-Type: application/x-ndjson, one JSON object a line:
 //                    {"type":"text","text":"<delta>"}            ... the answer, as it streams
@@ -121,7 +122,18 @@
 //   a key ends every QUEUED question with the same key at once with
 //                    {"type":"error","code":"superseded","message":"superseded by a newer question"}
 //   (its one terminal line) and takes its place at the back of the queue.  A
-//   RUNNING question is never superseded: the client cancels it by disconnecting.
+//   RUNNING question is not superseded by the key alone: the client cancels it by
+//   disconnecting.  D410: with "replaceRunning": true as well (it needs
+//   "supersedes"; anything but true or false is 400), the running question with
+//   the same key ends too -- the same superseded line is its terminal line, its
+//   `claude` process group is killed (SIGTERM, SIGKILL after 2 s) and its slot
+//   is free at once -- so one key holds at most one question, running or
+//   queued, even when a client's disconnect never arrives.  ForgeCoach's live
+//   coach sends one key per seat.  /health carries "replaceRunning": 1.
+//
+//   TIMING (D410).  Each /coach and /vision log line ends with the prompt's size
+//   (system + user), the wait in the queue, the time to the first text and the
+//   whole time, e.g. "9.4 KB prompt; queued 0 ms; first text 3085 ms; 10139 ms".
 //
 //   THINKING (D346).  /coach also takes "thinking": "off" | "low" | "default"
 //   (absent = "default"; anything else, null included, is 400).  It caps the
@@ -139,7 +151,7 @@
 //   no such key and would ignore the field.
 //
 //   /health then also carries "concurrency": 1, "queue": {"max": <n>, "length":
-//   <waiting now>}, "running": 0|1 and "supersedes": 1.  An older helper has none
+//   <waiting now>}, "running": 0|1, "supersedes": 1 and "replaceRunning": 1 (D410).  An older helper has none
 //   of these: a client that finds no "queue" must expect 429 to a second question.
 //
 // WHO MAY CALL IT (amendments M50 and M51's rules, applied to this port):
@@ -606,12 +618,12 @@ export function startHelper(opts) {
   // helper on 0.0.0.0, to prove admit() refuses a non-loopback peer by its
   // address and not by the bind); the CLI never does.
   const bindHost = opts.bindHost ?? (lan ? '0.0.0.0' : '127.0.0.1');
-  let active = null;          // { kill() } of the running question
+  let active = null;          // { kill(), key, replace() } of the running question (D410: key and replace)
   const queue = [];           // waiting questions, oldest first: { key, go(), supersede(), position(n) }
   const pump = () => {
     if (active || !queue.length) return;
     const next = queue.shift();
-    active = { kill: () => {} };   // reserved now, so nothing can start between here and its turn
+    active = { kill: () => {}, key: next.key, replace: null };   // reserved now, so nothing can start between here and its turn
     queue.forEach((w, i) => w.position(i + 1));
     next.go(active);
   };
@@ -662,7 +674,7 @@ export function startHelper(opts) {
       const info = await claudeInfo();
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
-      const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
+      const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1, replaceRunning: 1 };   // D325; D410
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
       const ev = { ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}) };   // D361; D400 (no key without --draft-room)
       send(res, 200, info.ok
@@ -784,9 +796,20 @@ export function startHelper(opts) {
       say(400);
       return;
     }
+    // D410: "replaceRunning": true also ends the RUNNING question with the same key (one per key, running or queued).
+    const replaceRunning = 'replaceRunning' in q ? q.replaceRunning : false;
+    if (typeof replaceRunning !== 'boolean' || (replaceRunning && key === null)) {
+      send(res, 400, { type: 'error', message: '"replaceRunning" must be true or false, and true needs "supersedes"' }, cors);
+      say(400);
+      return;
+    }
+    const promptBytes = Buffer.byteLength(q.system, 'utf8') + Buffer.byteLength(q.user, 'utf8');   // D410: the timing line
 
     // D325: one question at a time; the rest wait in a queue, oldest first.
     if (key !== null) for (const w of queue.filter((x) => x.key === key)) w.supersede();
+    if (replaceRunning && active && active.key === key) {
+      if (active.replace) active.replace(); else active.replacePending = true;
+    }
     let headersSent = false;
     const writeHead = () => {
       if (headersSent) return;
@@ -834,9 +857,37 @@ export function startHelper(opts) {
       slot = turn;
       write({ type: 'running' });
     } else {
-      slot = { kill: () => {} };
+      slot = { kill: () => {}, key, replace: null };
       active = slot;
     }
+    const tStart = Date.now();
+    let tFirst = null;
+    let child;
+    let cancelled = false;
+    let replaced = false;
+    let tr = null;
+    const killGroup = (sig) => {
+      if (!child || child.exitCode !== null || child.signalCode !== null) return;
+      try { process.kill(-child.pid, sig); } catch { try { child.kill(sig); } catch { /* gone */ } }
+    };
+    const stopChild = () => {
+      killGroup('SIGTERM');
+      setTimeout(() => killGroup('SIGKILL'), 2000).unref();
+    };
+    // D410: a newer question with this key and "replaceRunning" ends this one: one superseded line, its claude killed.
+    slot.replace = () => {
+      if (replaced || res.writableEnded) return;
+      replaced = true;
+      cancelled = true;
+      tr?.end({ cancelled: true });   // the translator emits nothing more
+      writeHead();
+      write({ type: 'error', code: 'superseded', message: 'superseded by a newer question' });
+      res.end();
+      stopChild();
+      finishSlot();
+    };
+    if (slot.replacePending) slot.replace();
+    if (replaced) { say(200, ' (superseded before it started)'); return; }
     if (res.destroyed || req.socket.destroyed) {
       if (active === slot) active = null;
       say('-', ' (client left while waiting)');
@@ -845,9 +896,11 @@ export function startHelper(opts) {
     }
 
     const info = await claudeInfo();
+    if (replaced) { say(200, ' (superseded before it started)'); return; }
     writeHead();
     let outcome = '';
-    const tr = makeTranslator((ev) => {
+    tr = makeTranslator((ev) => {
+      if (ev.type === 'text' && tFirst === null) tFirst = Date.now();
       write(ev);
       if (ev.type === 'done' || ev.type === 'error') {
         outcome = ev.type === 'done' ? `done ${ev.model} ${ev.stopReason}` : 'error';
@@ -873,18 +926,8 @@ export function startHelper(opts) {
       systemArg = ['--system-prompt-file', sp];
     }
     const args = claudeArgs({ model, systemArg, help: info.help, streamInput: vision });
-    let child;
     let stderr = '';
-    let cancelled = false;
     let timedOut = false;
-    const killGroup = (sig) => {
-      if (!child || child.exitCode !== null || child.signalCode !== null) return;
-      try { process.kill(-child.pid, sig); } catch { try { child.kill(sig); } catch { /* gone */ } }
-    };
-    const stopChild = () => {
-      killGroup('SIGTERM');
-      setTimeout(() => killGroup('SIGKILL'), 2000).unref();
-    };
     try {
       const extraEnv = thinkingEnv(thinking);   // D346: through the env, never argv or a shell
       child = spawn('claude', args, { cwd: dir, detached: true, stdio: ['pipe', 'pipe', 'pipe'],
@@ -932,7 +975,9 @@ export function startHelper(opts) {
       }
       cleanup();
       finishSlot();
-      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}${vision ? `; ${nImages} image${nImages === 1 ? '' : 's'}` : ''}; ${Date.now() - t0} ms)`);
+      // D410: prompt size, the wait in the queue, the first word and the whole answer, per question.
+      const timing = `${(promptBytes / 1024).toFixed(1)} KB prompt; queued ${tStart - t0} ms; first text ${tFirst === null ? 'none' : `${tFirst - t0} ms`}`;
+      say(200, ` (${replaced ? 'superseded while running' : cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}${vision ? `; ${nImages} image${nImages === 1 ? '' : 's'}` : ''}; ${timing}; ${Date.now() - t0} ms)`);
     });
     function cleanup() {
       rmSync(dir, { recursive: true, force: true });
