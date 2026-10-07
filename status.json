@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-07T03:44:45-04:00",
- "heartbeat": "2026-10-07T03:44:45-04:00",
+ "updated": "2026-10-07T03:45:19-04:00",
+ "heartbeat": "2026-10-07T03:45:19-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.6,
-  "memUsedGb": 5.4,
+  "load1": 1.37,
+  "memUsedGb": 5.5,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2625,
+  "swapUsedMb": 2624,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,9 +24,9 @@
    "id": "J103",
    "title": "Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-07T03:44:22-04:00",
-   "elapsed": 24,
+   "elapsed": 57,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-07T03:44:22-04:00",
-   "memGb": 0.01,
+   "memGb": 0,
    "live": {
     "night.night_drafts_done": 0,
     "night.planned_drafts": 0,
@@ -82,7 +82,7 @@
    "cubes": [],
    "publicCubes": true,
    "pressureEvents": [],
-   "detail": "lab-J103-pilot1"
+   "detail": "lab-J103-pilot2"
   }
  ],
  "queue": [],
