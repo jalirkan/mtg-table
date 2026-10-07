@@ -1,0 +1,23 @@
+==== J108 pilot1 started 2026-10-07T16:10:00-04:00 in unit lab-J108-pilot1, 3 worker(s), 4 core(s), BLAS/OpenMP threads 4
+zstandard 0.25.0
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb2       218G  168G   40G  81% /
+/dev/sda4       931G  431G  501G  47% /mnt/e
+27G	var/cubelab/queue
+14M	var/cubelab/queue-quarantine
+7.1M	var/cubelab/queue-quarantine-n2
+{"draftsJsonl": 26, "eFreeGb": 537.14, "keys": 26, "laterBytes": 15649950221, "laterFiles": 191803, "ledger": 1, "n1Bytes": 3292120760, "n1Files": 39910, "n2Bytes": 3358240085, "n2Files": 39956, "n3Bytes": 3326034669, "n3Files": 39956, "n4Bytes": 6136254891, "n4Files": 75918, "n5Bytes": 6187660661, "n5Files": 75929, "plan1": 1, "plan2": 1, "plan3": 1, "plan4": 1, "plan5": 1, "q1Files": 93, "q2Files": 47, "rootFreeGb": 42.4, "runJson": 26, "written": 1}
+     90 queue-quarantine
+     44 queue-quarantine-n2
+  check redaction: ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine: 90 quarantined recording(s), counted by walking the folder
+  check warehouse: ok: 20000 drafts lines ingested
+  check encoded: ok: 39908 of 39910 recordings encoded (100.0%)
+  check holds: ok: no hold (released: J052, J067, J076, J077, J078, J079, J080)
+cold night 1: 27 unit(s), 40003 file(s), 3.302 GB hot -> /mnt/e/forgecoach-archive
+dry run: sample of 200: 4.923x smaller than on the hot disk -> about 0.671 GB on the drive (537 GB free); 0.102 CPU s a file
+  check redaction: ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine-n2: 44 quarantined recording(s), counted by walking the folder
+  check warehouse: ok: 20000 drafts lines ingested
+  check encoded: ok: 39954 of 39956 recordings encoded (100.0%)
+  check holds: ok: no hold (released: J052, J067, J076, J077, J078, J079, J080)
+cold night 2: 27 unit(s), 40003 file(s), 3.363 GB hot -> /mnt/e/forgecoach-archive
+dry run: sample of 200: 5.408x smaller than on the hot disk -> about 0.622 GB on the drive (537 GB free); 0.106 CPU s a file
