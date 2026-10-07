@@ -1,0 +1,62 @@
+step pilot2 exited 2
+
+[1/2] seed 7430007: A:WB+u 1-0 B:UR+w  games A
+[2/2] seed 7430008: A:UR+w 0-1 B:WU+b  games B
+matches: 8 s for 2 (4.2 s a draft wall-clock on 2 worker(s))
+recorded: 2 game(s), both chairs, 0.4 MiB gzipped (226 KiB a game) under var/cubelab/queue-pilot-n5b/normal/pauper/games
+done in 8 s -> var/cubelab/queue-pilot-n5b/normal/pauper/drafts.jsonl
+
+== chunk 28/30: normal/peasant, seeds 7430007..7430009
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n5b/normal/peasant/drafts.jsonl
+drafted and built 3 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/3] seed 7430007: A:UR+g 0-1 B:WB+u  games B
+[2/3] seed 7430008: A:UR+b 1-0 B:UB+r  games A
+[3/3] seed 7430009: A:UB 0-1 B:UR+b  games B
+matches: 9 s for 3 (3.1 s a draft wall-clock on 3 worker(s))
+recorded: 3 game(s), both chairs, 0.4 MiB gzipped (124 KiB a game) under var/cubelab/queue-pilot-n5b/normal/peasant/games
+done in 9 s -> var/cubelab/queue-pilot-n5b/normal/peasant/drafts.jsonl
+
+== chunk 29/30: normal/synergy, seeds 7430007..7430007
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 6 draft(s) already in var/cubelab/queue-pilot-n5b/normal/synergy/drafts.jsonl
+drafted and built 1 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+[1/1] seed 7430007: A:WR 1-0 B:UR+g  games A
+matches: 4 s for 1 (4.2 s a draft wall-clock on 1 worker(s))
+recorded: 1 game(s), both chairs, 0.1 MiB gzipped (80 KiB a game) under var/cubelab/queue-pilot-n5b/normal/synergy/games
+done in 4 s -> var/cubelab/queue-pilot-n5b/normal/synergy/drafts.jsonl
+
+== chunk 30/30: normal/peasant, seeds 7430010..7430010
+play exploration (D358): 0.15 of the drafts explore; epsilon 0.05, close call 0.02, opening off
+resuming: 9 draft(s) already in var/cubelab/queue-pilot-n5b/normal/peasant/drafts.jsonl
+drafted and built 1 draft(s) in 0.0 s; playing 1 game each on 1 worker(s)
+[1/1] seed 7430010: A:UR 0-1 B:WB+u  games B
+matches: 5 s for 1 (4.6 s a draft wall-clock on 1 worker(s))
+recorded: 1 game(s), both chairs, 0.1 MiB gzipped (99 KiB a game) under var/cubelab/queue-pilot-n5b/normal/peasant/games
+done in 5 s -> var/cubelab/queue-pilot-n5b/normal/peasant/drafts.jsonl
+
+night 5 done. Next: python3 tools/ml/matchup.py train var/cubelab/queue-pilot-n5b --out var/ml/matchup
+nightstats: nights [5], night 5: 19 keys -> var/cubelab/queue-pilot-n5b-stats
+46 decisive game(s) from 19 run(s), 46 draft(s) (bridge 12, normal 34); 0 duplicate(s) skipped; 0 game(s) with a deck-set deck dropped; 0 of other versions; 14 exploring game(s) left out by --play-explore exclude (D358) -> var/ml/matchup-pilot-n5b/games.jsonl
+  version 152cae1631ba: 8 game(s)
+  version 5268c1086aab: 1 game(s)
+  version 57d6d89145c6: 1 game(s)
+  version 5cc532abf8aa: 4 game(s)
+  version 6598308695db: 1 game(s)
+  version 99d4b4c666bf: 4 game(s)
+  version 9cd015cc22cb: 1 game(s)
+  version a392ddb440ba: 1 game(s)
+  version acfa7ae37653: 1 game(s)
+  version bbde18f57d40: 1 game(s)
+  version bebaa730680e: 1 game(s)
+  version ca5b94cb9a47: 1 game(s)
+  version d1ed44c7c89f: 1 game(s)
+  version d516862864f6: 1 game(s)
+  version da4ce871896c: 3 game(s)
+  version db5237256f65: 6 game(s)
+  version db58fcb87175: 5 game(s)
+  version ee88ac39a819: 1 game(s)
+  version f2c28d6a2a9c: 4 game(s)
+check: 46/46 records valid; kinds ['bridge', 'normal']
+sort: write failed: 'standard output': Broken pipe
+sort: write error
