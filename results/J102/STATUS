@@ -5,3 +5,4 @@ phase: commands 1/1
 mtg-table: c9ae213
 workers: 7 (sized 7: min(cores 7, memory 9, max_workers 7); peak 2.00 GB per worker (declared; measured 1.25), budget 21.4 GB)
 peak_worker_rss_gb: 1.25
+pressure-1: 2026-10-06T22:43:42-04:00 playing to 7 worker(s): Justin is at the table: new games wait
