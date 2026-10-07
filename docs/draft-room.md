@@ -44,7 +44,7 @@ its last pick, and 72 hours after it was made.
 |---|---|---|
 | Coach helper (8643) | `POST /room`, `GET /room` | The owner's door (D386): loopback with a loopback `Host`, or the `--lan` pairing token. It is never tunnelled. Only the owner makes rooms. |
 | Coach helper (8643) | `POST /room/<id>/close`, `POST /room/<id>/friend-link` (D408) | The same owner's door. Only the owner closes a room or replaces the friend's link; the room listener has no such route. |
-| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
+| Room listener (8644) | `GET /room/<id>`, `GET /room/<id>/events`, `POST /room/<id>/join`, `POST /room/<id>/pick`, `POST /room/<id>/deck` (D404), `POST /room/<id>/record`, `GET /room/<id>/review/<matchId>`, `GET /room/<id>/log/<matchId>` (D407), `POST /room/<id>/bug` (D411) | The seat's token in `X-Room-Token`, **always**: a loopback peer gets no exemption, because a tunnel daemon connects from 127.0.0.1. `Origin` must be absent, on `wsAllowedOrigins`, the page's own (`http(s)://<Host>`), or a `--room-origin`. There is no `Host` check, because the token is the lock and a tunnel's name must pass. |
 | Room listener (8644) | `GET /`, `GET /assets/…` | No token. These are ForgeCoach's public build (`--room-site-dir`, which play.sh fills with the `--lan` download or `--site-dir`). Only GET and HEAD are allowed, and a path cannot leave the folder: `..`, encoded separators and symlinks are refused. |
 
 Tokens are 128 bits (22 base64url characters). The server stores only their
@@ -152,6 +152,15 @@ It carries no tokens.
   - `400 {code:"illegal"}`: the line was already taken, or it has no cards left.
 
   Every `409` and `400` carries `state`, the room as it is now.
+- `POST /room/<id>/bug` (D411) → `201 {ok, id, screenshot}`: a bug report from
+  this seat's page (ForgeCoach's "Report a bug"; `tools/bug-reports.mjs` has
+  the body), saved on the owner's machine in `var/bugs/<id>.json`, with the room
+  and this seat recorded and the seat's token scrubbed out of it. The body may
+  be up to 6 MB, because it holds the last frames of this seat's log and an
+  optional screenshot. Each seat may send three in a burst, then one about
+  every three minutes (`429 {code:"slow"}`). `400 {code:"bad"}` is a body that
+  is not a report, `507 {code:"full"}` means the owner's folder is full, and
+  `404 {code:"off"}` means this listener has no bug store.
 - Other errors: `403 {code:"token"}`, `404 {code:"gone"}` (no such room, or it
   expired), `403 {code:"origin"}`, `413`, `429 {code:"slow"|"streams"}`.
 

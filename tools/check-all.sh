@@ -2004,6 +2004,10 @@ s12e_skipped() {
 #      Grid rules against ForgeCoach's golden draft, the room listener's door
 #      (tokens always, never loopback alone), two simulated players through a
 #      full 18-grid draft, restart, expiry, the limits and the site; about 3 s.
+#      Since D411 also tools/bug-reports-selftest.mjs: bug reports from the
+#      board -- the helper's POST /bug and the room's POST /room/<id>/bug behind
+#      their doors as they were, secrets scrubbed, the caps, and
+#      tools/bugs-sync.mjs against a local bare repository; about 3 s.
 s12f_coach() {
   printf '\n=== 12f. coach-helper-selftest.mjs -- the coach helper against a fake claude (D292) ===\n'
   node tools/coach-helper-selftest.mjs \
@@ -2020,6 +2024,9 @@ s12f_coach() {
   # D400: the draft room, end to end.
   node tools/draft-room-selftest.mjs \
     || die "draft-room-selftest.mjs (12f: the draft room broke its rules or its door -- see the FAIL lines above)"
+  # D411: bug reports from the board, and their sync to pc-results.
+  node tools/bug-reports-selftest.mjs \
+    || die "bug-reports-selftest.mjs (12f: a bug report door, its scrubbing or bugs-sync.mjs broke -- see the FAIL lines above)"
   # D361: the helper's /eval, the win chance.
   node tools/eval-runner-selftest.mjs \
     || die "eval-runner-selftest.mjs (12f: the win chance broke its contract with ForgeCoach, or its features left the training rows' -- see the FAIL lines above)"
