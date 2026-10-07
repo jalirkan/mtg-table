@@ -31,7 +31,8 @@
 //                    only a real call can, and a logged-out CLI answers /coach with the
 //                    error line below.
 //   POST /coach   {"system": string, "user": string, "model"?: "opus"|"sonnet"|"haiku",
-//                  "supersedes"?: string, "thinking"?: "off"|"low"|"default"}
+//                  "supersedes"?: string, "replaceRunning"?: boolean (D410),
+//                  "thinking"?: "off"|"low"|"default"}
 //                 (default "sonnet"; body at most 512 KB, else 413)
 //                 -> 200 Content-Type: application/x-ndjson, one JSON object a line:
 //                    {"type":"text","text":"<delta>"}            ... the answer, as it streams
@@ -103,6 +104,16 @@
 //                 gives the friend's seat a new token (the old link stops working); both on this
 //                 port only, and /health says "roomRevoke": 1.
 //
+//   POST /bug     -- BUG REPORTS FROM THE BOARD (D411): ForgeCoach's "Report a bug" panel, on
+//                 Justin's own page.  tools/bug-reports.mjs's header is that contract: the body
+//                 (at most 6 MB: the report, the last frames of the game's log, an optional
+//                 screenshot) is checked, scrubbed of secrets and saved as var/bugs/<id>.json
+//                 (+ the screenshot) -> 201 {"ok": true, "id", "screenshot"}; 400 a bad body,
+//                 413, 429 (more than a few a minute), 507 the folder is full.  Behind this
+//                 port's door as every route (D386).  /health carries "bugs": 1.  A friend's page
+//                 reports through the room listener instead (POST /room/<id>/bug, its seat token).
+//                 tools/bugs-sync.mjs --push copies new reports to pc-results under bugs/.
+//
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
 //   first out, up to --queue-max (default 4) waiting; past that it is answered
@@ -121,7 +132,18 @@
 //   a key ends every QUEUED question with the same key at once with
 //                    {"type":"error","code":"superseded","message":"superseded by a newer question"}
 //   (its one terminal line) and takes its place at the back of the queue.  A
-//   RUNNING question is never superseded: the client cancels it by disconnecting.
+//   RUNNING question is not superseded by the key alone: the client cancels it by
+//   disconnecting.  D410: with "replaceRunning": true as well (it needs
+//   "supersedes"; anything but true or false is 400), the running question with
+//   the same key ends too -- the same superseded line is its terminal line, its
+//   `claude` process group is killed (SIGTERM, SIGKILL after 2 s) and its slot
+//   is free at once -- so one key holds at most one question, running or
+//   queued, even when a client's disconnect never arrives.  ForgeCoach's live
+//   coach sends one key per seat.  /health carries "replaceRunning": 1.
+//
+//   TIMING (D410).  Each /coach and /vision log line ends with the prompt's size
+//   (system + user), the wait in the queue, the time to the first text and the
+//   whole time, e.g. "9.4 KB prompt; queued 0 ms; first text 3085 ms; 10139 ms".
 //
 //   THINKING (D346).  /coach also takes "thinking": "off" | "low" | "default"
 //   (absent = "default"; anything else, null included, is 400).  It caps the
@@ -139,7 +161,7 @@
 //   no such key and would ignore the field.
 //
 //   /health then also carries "concurrency": 1, "queue": {"max": <n>, "length":
-//   <waiting now>}, "running": 0|1 and "supersedes": 1.  An older helper has none
+//   <waiting now>}, "running": 0|1, "supersedes": 1 and "replaceRunning": 1 (D410).  An older helper has none
 //   of these: a client that finds no "queue" must expect 429 to a second question.
 //
 // WHO MAY CALL IT (amendments M50 and M51's rules, applied to this port):
@@ -208,7 +230,8 @@ import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 import { MAX_REVIEW_BODY, createReviewRunner, cleanOld, gameLog, readLogText } from './review-runner.mjs';
 import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
-import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
+import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createLimiter, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
+import { MAX_BUG_BODY, createBugStore } from './bug-reports.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -601,17 +624,19 @@ export function seatReviewOf({ review, auto }, gameId) {
 }
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, room = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, room = null, bugs = null, log = (s) => console.log(s) } = opts;
+  // D411: bug reports through this door -- a few a minute is plenty for a person at a board.
+  const bugLimit = createLimiter({ perMinute: opts.bugsPerMinute ?? 6, burst: opts.bugsBurst ?? 10 });
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
   // helper on 0.0.0.0, to prove admit() refuses a non-loopback peer by its
   // address and not by the bind); the CLI never does.
   const bindHost = opts.bindHost ?? (lan ? '0.0.0.0' : '127.0.0.1');
-  let active = null;          // { kill() } of the running question
+  let active = null;          // { kill(), key, replace() } of the running question (D410: key and replace)
   const queue = [];           // waiting questions, oldest first: { key, go(), supersede(), position(n) }
   const pump = () => {
     if (active || !queue.length) return;
     const next = queue.shift();
-    active = { kill: () => {} };   // reserved now, so nothing can start between here and its turn
+    active = { kill: () => {}, key: next.key, replace: null };   // reserved now, so nothing can start between here and its turn
     queue.forEach((w, i) => w.position(i + 1));
     next.go(active);
   };
@@ -662,9 +687,9 @@ export function startHelper(opts) {
       const info = await claudeInfo();
       const matchCap = match && match.available() ? 1 : 0;   // D303
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
-      const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
+      const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1, replaceRunning: 1 };   // D325; D410
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
-      const ev = { ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}) };   // D361; D400 (no key without --draft-room)
+      const ev = { ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}) };   // D361; D400 (no key without --draft-room); D411
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }, cors);
@@ -717,6 +742,20 @@ export function startHelper(opts) {
       const r = await evaluator.post(q);
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (p ${r.body.p.toFixed(3)}${r.body.sd !== undefined ? ` sd ${r.body.sd.toFixed(3)}` : ''}${r.body.explain ? ', explained' : ''}, turn ${r.body.turn}, ${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/bug') {
+      // D411: a bug report from Justin's own page (tools/bug-reports.mjs).  Behind this port's door, like every route.
+      if (!bugs) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (!bugLimit.take('owner')) { send(res, 429, { ok: false, type: 'error', code: 'slow', message: 'too many bug reports in a minute -- wait a moment' }, { ...cors, 'Retry-After': '10' }); say(429); return; }
+      const raw = await readBody(req, res, MAX_BUG_BODY, '6 MB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', code: 'bad', message: 'the body is not JSON' }, cors); say(400); return; }
+      const r = bugs.save({ body: q, via: 'helper', secrets: [token, url.searchParams.get('token') ?? '', String(req.headers['x-forgecoach-token'] ?? '')] });
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 201 ? ` (bug ${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path === '/room') {
@@ -784,9 +823,20 @@ export function startHelper(opts) {
       say(400);
       return;
     }
+    // D410: "replaceRunning": true also ends the RUNNING question with the same key (one per key, running or queued).
+    const replaceRunning = 'replaceRunning' in q ? q.replaceRunning : false;
+    if (typeof replaceRunning !== 'boolean' || (replaceRunning && key === null)) {
+      send(res, 400, { type: 'error', message: '"replaceRunning" must be true or false, and true needs "supersedes"' }, cors);
+      say(400);
+      return;
+    }
+    const promptBytes = Buffer.byteLength(q.system, 'utf8') + Buffer.byteLength(q.user, 'utf8');   // D410: the timing line
 
     // D325: one question at a time; the rest wait in a queue, oldest first.
     if (key !== null) for (const w of queue.filter((x) => x.key === key)) w.supersede();
+    if (replaceRunning && active && active.key === key) {
+      if (active.replace) active.replace(); else active.replacePending = true;
+    }
     let headersSent = false;
     const writeHead = () => {
       if (headersSent) return;
@@ -834,9 +884,37 @@ export function startHelper(opts) {
       slot = turn;
       write({ type: 'running' });
     } else {
-      slot = { kill: () => {} };
+      slot = { kill: () => {}, key, replace: null };
       active = slot;
     }
+    const tStart = Date.now();
+    let tFirst = null;
+    let child;
+    let cancelled = false;
+    let replaced = false;
+    let tr = null;
+    const killGroup = (sig) => {
+      if (!child || child.exitCode !== null || child.signalCode !== null) return;
+      try { process.kill(-child.pid, sig); } catch { try { child.kill(sig); } catch { /* gone */ } }
+    };
+    const stopChild = () => {
+      killGroup('SIGTERM');
+      setTimeout(() => killGroup('SIGKILL'), 2000).unref();
+    };
+    // D410: a newer question with this key and "replaceRunning" ends this one: one superseded line, its claude killed.
+    slot.replace = () => {
+      if (replaced || res.writableEnded) return;
+      replaced = true;
+      cancelled = true;
+      tr?.end({ cancelled: true });   // the translator emits nothing more
+      writeHead();
+      write({ type: 'error', code: 'superseded', message: 'superseded by a newer question' });
+      res.end();
+      stopChild();
+      finishSlot();
+    };
+    if (slot.replacePending) slot.replace();
+    if (replaced) { say(200, ' (superseded before it started)'); return; }
     if (res.destroyed || req.socket.destroyed) {
       if (active === slot) active = null;
       say('-', ' (client left while waiting)');
@@ -845,9 +923,11 @@ export function startHelper(opts) {
     }
 
     const info = await claudeInfo();
+    if (replaced) { say(200, ' (superseded before it started)'); return; }
     writeHead();
     let outcome = '';
-    const tr = makeTranslator((ev) => {
+    tr = makeTranslator((ev) => {
+      if (ev.type === 'text' && tFirst === null) tFirst = Date.now();
       write(ev);
       if (ev.type === 'done' || ev.type === 'error') {
         outcome = ev.type === 'done' ? `done ${ev.model} ${ev.stopReason}` : 'error';
@@ -873,18 +953,8 @@ export function startHelper(opts) {
       systemArg = ['--system-prompt-file', sp];
     }
     const args = claudeArgs({ model, systemArg, help: info.help, streamInput: vision });
-    let child;
     let stderr = '';
-    let cancelled = false;
     let timedOut = false;
-    const killGroup = (sig) => {
-      if (!child || child.exitCode !== null || child.signalCode !== null) return;
-      try { process.kill(-child.pid, sig); } catch { try { child.kill(sig); } catch { /* gone */ } }
-    };
-    const stopChild = () => {
-      killGroup('SIGTERM');
-      setTimeout(() => killGroup('SIGKILL'), 2000).unref();
-    };
     try {
       const extraEnv = thinkingEnv(thinking);   // D346: through the env, never argv or a shell
       child = spawn('claude', args, { cwd: dir, detached: true, stdio: ['pipe', 'pipe', 'pipe'],
@@ -932,7 +1002,9 @@ export function startHelper(opts) {
       }
       cleanup();
       finishSlot();
-      say(200, ` (${cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}${vision ? `; ${nImages} image${nImages === 1 ? '' : 's'}` : ''}; ${Date.now() - t0} ms)`);
+      // D410: prompt size, the wait in the queue, the first word and the whole answer, per question.
+      const timing = `${(promptBytes / 1024).toFixed(1)} KB prompt; queued ${tStart - t0} ms; first text ${tFirst === null ? 'none' : `${tFirst - t0} ms`}`;
+      say(200, ` (${replaced ? 'superseded while running' : cancelled && !outcome ? 'cancelled: the client left' : outcome}; ${model}${thinking === 'default' ? '' : `; thinking ${thinking}`}${vision ? `; ${nImages} image${nImages === 1 ? '' : 's'}` : ''}; ${timing}; ${Date.now() - t0} ms)`);
     });
     function cleanup() {
       rmSync(dir, { recursive: true, force: true });
@@ -1048,6 +1120,9 @@ async function main() {
     });
     void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}`));
   }
+  // D411: bug reports from the board, var/bugs/ (the helper's POST /bug, the room listener's POST /room/<id>/bug).
+  let bugs = null;
+  try { bugs = createBugStore({ dir: resolve(cfg.repoRoot, 'var', 'bugs'), varRoot: resolve(cfg.repoRoot, 'var'), log: (s) => console.log(`COACH ${s}`) }); } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
   // D400: the draft room -- its store and its own listener, before the helper's port opens.
   let room = null;
   let roomServer = null;
@@ -1073,7 +1148,7 @@ async function main() {
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,
-      siteDir: a.roomSiteDir ? resolve(a.roomSiteDir) : null, log: (s) => console.log(s) });
+      siteDir: a.roomSiteDir ? resolve(a.roomSiteDir) : null, bugs, log: (s) => console.log(s) });
     try { roomPort = await roomServer.listen(); } catch (e) {
       console.error(e.code === 'EADDRINUSE' ? `coach-helper: the draft room's port ${roomPort} is in use (--room-port, or config.json roomPort)` : `coach-helper: ${e.message}`);
       process.exit(1);
@@ -1081,7 +1156,7 @@ async function main() {
     room = createRoomOwner({ store, roomPort, lan: a.lan, publicUrl: a.roomPublicUrl });
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator, room });
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator, room, bugs });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -1100,6 +1175,7 @@ async function main() {
   auto?.start();   // D385: after LISTENING, so its first scan never delays the port
   if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
+  console.log(`COACH BUGS      POST /bug saves to var/bugs/ (D411); tools/bugs-sync.mjs --push sends new ones to pc-results`);
   console.log(room ? `COACH ROOM      /room on: POST makes a draft room; players use port ${roomPort} (D400)` : 'COACH ROOM      /room off (--draft-room)');
   const stop = () => { h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);
