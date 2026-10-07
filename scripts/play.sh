@@ -45,7 +45,10 @@
 #   --ai-search          the stronger AI (D312-D314, opt-in): Forge's AI with the
 #                        sacrifice-outlet policy and a determinized look-ahead search
 #                        at its main-phase plays, attacks and blocks (about 1.5 s of
-#                        thinking at each; --ai-search-ms <n> sets that budget)
+#                        thinking at each; --ai-search-ms <n> sets that budget).
+#                        Since D412 it is search-v2: D388's anytime loop, which
+#                        keeps the work a cut round did instead of falling back
+#                        to Forge's answer on budget
 #   config.json match.games is how many games a bare run plays (default 3).
 #
 # The flags win over config.json, and a flag typed after `--` wins over both.
@@ -641,7 +644,7 @@ if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
 if passthrough_has --deck2 --ai-deck; then echo "AI:   (the --ai-deck after --)"
 elif [ -n "$AI_DECK" ]; then echo "AI:   $(deck_name "$AI_DECK")  [$AI_DECK]"
 else echo "AI:   a mirror of your deck  (--mirror, or config.json match.aiDeck is null)"; fi
-[ "${AI_SEARCH:-0}" = "1" ] && echo "AI policy: search (D312-D314: outlet policy + look-ahead search)"
+[ "${AI_SEARCH:-0}" = "1" ] && echo "AI policy: search (D312-D314: outlet policy + look-ahead search; search-v2, the anytime loop, D412)"
 passthrough_has --ai-profile && echo "AI profile: (the --ai-profile after --)" \
   || echo "AI profile: $AI_PROFILE"
 human_collect

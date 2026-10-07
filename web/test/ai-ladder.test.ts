@@ -404,6 +404,26 @@ test('search kind, D388–D390: the week-3 switches stay out of the hash at thei
   for (const n of ['search-v1-anytime', 'search-v1-fixed3-ranked', 'search-v1-fixed3-routlets']) assert.ok(by.get(n)?.cfg, `${n} is registered and playable`);
 });
 
+test('D412: the live seat is search-v2 = search-v1 + anytime=1, which the ladder already rates as search-v1-anytime', () => {
+  const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v1 = by.get('search-v1')!, any = by.get('search-v1-anytime')!;
+  assert.equal(any.cfg, `${v1.cfg},anytime=1`, 'search-v1-anytime is search-v1 plus the anytime loop and nothing else');
+  // the hashes J102's games were played under (results/J102/match-J102.json: ah, bh)
+  assert.equal(any.hash, 'cdd55e02a89c', 'search-v1-anytime keeps its hash');
+  assert.equal(v1.hash, '81058679773e', 'search-v1 keeps its hash');
+  // The engine side: MtgTable --ai-policy search parses over SearchConfig.LIVE_DEFAULTS; the bench's parse is unchanged.
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  assert.match(java, /LIVE_VERSION = "search-v2";/);
+  const live = /LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!;
+  assert.equal(live, 'anytime=1', 'the live seat adds exactly the anytime switch');
+  for (const kv of live.split(',')) {
+    assert.ok(any.cfg!.split(/[:,]/).includes(kv), `${kv} is in search-v1-anytime's seat config`);
+    assert.ok(!v1.cfg!.split(/[:,]/).includes(kv), `${kv} is not in search-v1's`);
+  }
+  assert.match(java, /boolean anytime = false;/, "parse()'s own default stays off, so every ladder seat config means what it meant");
+});
+
 test('addPlayer never overwrites', () => {
   const reg = parseRegistry(JSON.stringify({ version: 1, players: [{ name: 'forge-default', kind: 'forge', params: {} }, { name: 'x-t1', kind: 'forge', params: {} }] }));
   assert.equal(addPlayer(reg, { name: 'x-t1', kind: 'forge', params: { profile: 'Reckless' } }), 'x-t1-2');

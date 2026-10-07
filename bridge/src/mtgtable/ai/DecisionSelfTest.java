@@ -173,6 +173,17 @@ public final class DecisionSelfTest {
             }
             check(threw, "refused: " + bad);
         }
+        // D412: the live seat is search-v2 (search-v1 + anytime=1); the bench's parse is unchanged.
+        final SearchConfig live = SearchConfig.parseLive("");
+        check("search-v2".equals(SearchConfig.LIVE_VERSION) && live.anytime
+                && (def.toString() + ",anytime=1").equals(live.toString()), "the live seat's default is search-v2: " + live);
+        check(SearchConfig.parseLive(null).toString().equals(live.toString()), "no --ai-search text is the same seat");
+        check(SearchConfig.parseLive("ms=3000").anytime && SearchConfig.parseLive("ms=3000").budgetMs == 3000,
+                "a budget from the picker (--ai-search ms=N) keeps the anytime loop");
+        check(!SearchConfig.parseLive("anytime=0").anytime
+                && SearchConfig.parseLive("anytime=0").toString().equals(def.toString()), "anytime=0 is search-v1's loop again");
+        check(!SearchConfig.parse("").anytime && !SearchConfig.parse("ms=1500").anytime,
+                "the bench's parse keeps anytime off (search-v1 and every ladder player mean what they meant)");
 
         // fillStats: complete rounds give D350's numbers; NaN rounds are skipped per candidate.
         final List<double[]> full = List.of(new double[] {100, 140, 90}, new double[] {120, 150, 80},

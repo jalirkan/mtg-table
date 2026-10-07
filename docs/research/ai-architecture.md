@@ -308,8 +308,9 @@ players.json ─► kinds.ts: {kind, params} ─► ai-bench seat config ("Reckl
   ai-bench game, so a new AI joins the ladder the day the bench can seat it —
   one row in `kinds.ts` mapping the player's params onto the bench's seat
   syntax. The search kind maps onto §8's
-  `+search:ms=…,cands=…,turns=…` seat syntax, and `search-v1` is the game's
-  `--ai-policy search` seat; the evaluator kind is declared and waits for its
+  `+search:ms=…,cands=…,turns=…` seat syntax, and `search-v1` was the game's
+  `--ai-policy search` seat (since D412 it is `search-v1-anytime`, the live
+  seat's search-v2); the evaluator kind is declared and waits for its
   bench option.
 - **Paired by construction.** `--mirror` plays each deal from both sides, and a
   matchup's k-th batch uses the same deals as every other matchup's k-th
