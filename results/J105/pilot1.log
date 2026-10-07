@@ -1,0 +1,33 @@
+==== J105 pilot1 started 2026-10-07T06:06:14-04:00 in unit lab-J105-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+night 3 quarantine (J071): 45 recordings, 0 now pass, 45 still fail
+M55	1	NEW: night 5 waits
+other	2	NEW: night 5 waits
+own-hand-no-name	43	known
+shape	2	NEW: night 5 waits
+nightstats: nights [1, 2, 3, 4], night 5: 26 keys -> var/cubelab/queue-night-5-stats
+  ok       normal/fair-fight: same version, 10085 draft(s) already there
+  ok       normal/modern-era: same version, 10198 draft(s) already there
+  ok       normal/omega: same version, 9025 draft(s) already there
+  ok       normal/pauper: same version, 13703 draft(s) already there
+  ok       normal/peasant: same version, 14967 draft(s) already there
+  ok       normal/synergy: same version, 11634 draft(s) already there
+  ok       normal/vintage: same version, 8788 draft(s) already there
+  ok       bridge/pauper+modern-era: same version, 1554 draft(s) already there
+  ok       bridge/peasant+modern-era: same version, 1431 draft(s) already there
+  ok       bridge/peasant+synergy: same version, 1432 draft(s) already there
+  ok       bridge/pauper+synergy: same version, 1479 draft(s) already there
+  ok       bridge/fair-fight+modern-era: same version, 1283 draft(s) already there
+  ok       bridge/fair-fight+synergy: same version, 1201 draft(s) already there
+  ok       bridge/synergy+omega: same version, 1092 draft(s) already there
+  ok       bridge/synergy+vintage: same version, 1068 draft(s) already there
+  ok       bridge/pauper+omega: same version, 1059 draft(s) already there
+  ok       bridge/pauper+vintage: same version, 1055 draft(s) already there
+  ok       bridge/peasant+omega: same version, 955 draft(s) already there
+  ok       bridge/peasant+vintage: same version, 956 draft(s) already there
+  ok       bridge/fair-fight+vintage: same version, 896 draft(s) already there
+  ok       bridge/modern-era+vintage: same version, 874 draft(s) already there
+  ok       bridge/fair-fight+omega: same version, 837 draft(s) already there
+  ok       bridge/modern-era+omega: same version, 830 draft(s) already there
+  ok       bridge/pauper+peasant: same version, 616 draft(s) already there
+  ok       bridge/fair-fight+peasant: same version, 554 draft(s) already there
+  ok       bridge/modern-era+synergy: same version, 428 draft(s) already there

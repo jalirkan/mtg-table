@@ -1,17 +1,17 @@
 {
  "schema": 1,
- "updated": "2026-10-07T06:06:38-04:00",
- "heartbeat": "2026-10-07T06:06:38-04:00",
+ "updated": "2026-10-07T06:07:02-04:00",
+ "heartbeat": "2026-10-07T06:07:02-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 7.91,
-  "memUsedGb": 4.3,
+  "load1": 5.95,
+  "memUsedGb": 4.5,
   "memTotalGb": 30.5,
   "swapUsedMb": 3579,
-  "pressure": 27.53,
+  "pressure": 2.58,
   "cpus": 16,
   "budgetGb": 23.4,
   "coresUsed": 3,
@@ -24,9 +24,9 @@
    "id": "J105",
    "title": "Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "phase": "pilot 1/2",
+   "phase": "pilot 2/2",
    "started": "2026-10-07T06:05:50-04:00",
-   "elapsed": 48,
+   "elapsed": 72,
    "done": 0,
    "total": null,
    "unit": "drafts",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-07T06:05:50-04:00",
-   "memGb": 1.24,
+   "memGb": 0,
    "live": {
     "night.night_drafts_done": 0,
     "night.planned_drafts": 0,
@@ -46,6 +46,7 @@
     "quarantined": 0,
     "base.bytes_ratio_explore_plain": 1.005377,
     "base.drafts": 98000,
+    "base.drafts_per_h": 0,
     "base.draws": 22,
     "base.engine_error_drafts": 9,
     "base.engine_error_rate": 0.000092,
@@ -54,6 +55,7 @@
     "base.explore_share": 0.089214,
     "base.games": 97991,
     "base.games_explore": 8742,
+    "base.games_per_h": 0,
     "base.mean_game_s": 4.378669,
     "base.mean_game_s_explore": 4.222862,
     "base.mean_game_s_plain": 4.39393,
@@ -77,9 +79,7 @@
     "base.seat_DD_mean_game_s": 4.52612,
     "base.seat_DD_td_rate": 0.000245,
     "base.seat_mixed_games": 28473,
-    "base.seat_mixed_mean_game_s": 4.01866,
-    "base.seat_mixed_td_rate": 0.000176,
-    "base.seat_nondefault_td_rate_max": 0.000299
+    "base.seat_mixed_mean_game_s": 4.01866
    },
    "liveHeadline": [
     "night.night_drafts_done",
@@ -97,7 +97,7 @@
      "pressure": 27.5
     }
    ],
-   "detail": "lab-J105-pilot1"
+   "detail": "lab-J105-pilot2"
   }
  ],
  "queue": [],
