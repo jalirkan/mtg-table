@@ -1045,6 +1045,43 @@ it**. Since match setup, `tools/fetch-art.ts` fetches every `decks/*.dck`,
 tools/fetch-art.ts --deck decks/pacho-shield.dck` writes an `art.json` without
 it, and a token is always drawn as the text frame.
 
+### Reporting a bug from the board (D411)
+
+ForgeCoach's play board (against Forge or at a table of two), its replay, and
+the draft and room screens have a **Report a bug** button (a bug icon; on a
+phone, in the ⋯ menu). **Shift+B** opens it anywhere. Type one line for the
+title and what happened, pick a severity if you like, tick *Attach a
+screenshot*, and press **Send**. The page adds the rest itself: the game, your
+seat, the turn, the phase and who has priority, the open question and its
+options, the last 300 frames of your log (only what your seat could see),
+recent console errors, and the site's build, look and settings. It never adds
+an API key or a seat or room token.
+
+Where it goes:
+
+- **Your own page** sends it to the coach helper (`POST /bug` on 8643), which
+  saves `var/bugs/<id>.json`, plus the screenshot. The panel shows the id.
+- **A friend's page** (a draft room, or a game between you two) sends it to
+  the room on your PC (`POST /room/<id>/bug`, with that seat's token), saved the
+  same way with the room and the seat. Your friend's report holds their own
+  hand, and the panel tells them so before they send it.
+- **Neither reachable** (github.io with no helper running): **Download report**
+  saves the same JSON file. Send it however you like.
+
+When `play.sh` exits it sends any new reports to the `pc-results` branch under
+`bugs/` (`tools/bugs-sync.mjs --push`). The reports there are smaller: the
+last 120 frames and a small screenshot, plus a line in `bugs/INDEX.md`. If
+that push fails (no network, no git credentials in this checkout), run it
+yourself from the repo root:
+
+```bash
+node tools/bugs-sync.mjs           # what is new in var/bugs/
+node tools/bugs-sync.mjs --push    # send it to pc-results (never pc-jobs, never main)
+```
+
+`--no-bugs-sync` stops play.sh doing it. The whole report always stays in
+`var/bugs/`.
+
 ### Choosing decks and the AI
 
 **Match setup** (2026-09-27, protocol amendment M44) chooses what you play

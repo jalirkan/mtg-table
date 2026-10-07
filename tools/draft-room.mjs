@@ -89,6 +89,10 @@
 //   GET  /room/<id>/log/<matchId>  (D407) -> 200 application/x-ndjson: THIS seat's own frame log of that
 //                               game (the bridge's, redacted for this seat), when this seat was recorded --
 //                               the review's frame numbers are this file's; 404 otherwise
+//   POST /room/<id>/bug      (D411) a bug report from this seat's page (tools/bug-reports.mjs: at most
+//                               6 MB, 3 a seat in 10 minutes past a burst of 3) -> 201 {ok, id, screenshot},
+//                               saved in var/bugs/ with the room and the seat; 404 {code:"off"} when this
+//                               listener has no bug store, 429 {code:"slow"}, 507 {code:"full"}
 //   OPTIONS                  preflight (Allow-Private-Network, X-Room-Token)
 //   GET  /, /assets/...      the site, when --room-site-dir is given (else 404)
 //
@@ -135,6 +139,7 @@ import { networkInterfaces } from 'node:os';
 import { extname, join, resolve, sep } from 'node:path';
 
 import { checkDeck } from './match-launcher.mjs';
+import { MAX_BUG_BODY } from './bug-reports.mjs';
 
 export const ROOM_VERSION = 1;
 export const DEFAULT_ROOM_PORT = 8644;
@@ -959,18 +964,22 @@ export function roomBases({ port, lan, publicUrl = null, interfaces = networkInt
 
 /**
  * opts: { store, port, bindHost, origins, extraOrigins, siteDir, log, now, limits: {apiPerMin, apiBurst,
- * sitePerMin, failPerMin, streamsPerSeat, streamsTotal}, pingMs, tablePort (a test's fixed `/ws` target;
- * default: the store's running game's) }
+ * sitePerMin, failPerMin, streamsPerSeat, streamsTotal, bugsPerMin, bugsBurst}, pingMs, tablePort (a test's
+ * fixed `/ws` target; default: the store's running game's), bugs (D411: tools/bug-reports.mjs's store, or
+ * null: POST /room/<id>/bug is then 404 {code:"off"}) }
  */
 export function startRoomServer(opts) {
   const { store, port = DEFAULT_ROOM_PORT, bindHost = '127.0.0.1', origins = [], extraOrigins = [], siteDir = null, log = (s) => console.log(s) } = opts;
   const now = opts.now ?? Date.now;
-  const L = { seatPerMin: 120, seatBurst: 60, allPerMin: 1200, allBurst: 300, sitePerMin: 600, siteBurst: 200, failPerMin: 10, streamsPerSeat: 3, streamsTotal: 32, ...(opts.limits ?? {}) };
+  const L = { seatPerMin: 120, seatBurst: 60, allPerMin: 1200, allBurst: 300, sitePerMin: 600, siteBurst: 200, failPerMin: 10, streamsPerSeat: 3, streamsTotal: 32, bugsPerMin: 0.3, bugsBurst: 3, ...(opts.limits ?? {}) };
   const pingMs = opts.pingMs ?? PING_MS;
   const seats = createLimiter({ perMinute: L.seatPerMin, burst: L.seatBurst, now });
   const all = createLimiter({ perMinute: L.allPerMin, burst: L.allBurst, now });
   const site = createLimiter({ perMinute: L.sitePerMin, burst: L.siteBurst, now });
   const fails = createLimiter({ perMinute: L.failPerMin, burst: L.failPerMin, now });
+  // D411: bug reports, per seat -- a burst of 3, then one every ~3 minutes; each may be 6 MB.
+  const bugLimit = createLimiter({ perMinute: L.bugsPerMin, burst: L.bugsBurst, now });
+  const bugs = opts.bugs ?? null;
   const open = new Set();
   const sweeper = setInterval(() => store.sweep(), 60_000);
   sweeper.unref();
@@ -1024,7 +1033,7 @@ export function startRoomServer(opts) {
       }
       if (!all.take('all')) { send(res, 429, { ok: false, code: 'slow', message: 'the room is busy — try again in a moment' }, { ...cors, 'Retry-After': '5' }); say(429, ' (all)'); return; }
       if (fails.empty(who)) { send(res, 429, { ok: false, code: 'slow', message: 'too many wrong links from this address — wait a minute' }, { ...cors, 'Retry-After': '60' }); say(429, ' (failures)'); return; }
-      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log)(?:\/(m[0-9]{13}))?)?$/.exec(path);
+      const m = /^\/room\/([^/]+)(?:\/(events|join|pick|deck|record|review|log|bug)(?:\/(m[0-9]{13}))?)?$/.exec(path);
       if (!m || !ROOM_ID.test(m[1])) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
       const [, id, action, sub] = m;
       if ((action === 'review' || action === 'log') !== (sub !== undefined)) { fails.take(who); send(res, 404, { ok: false, code: 'gone', message: 'no such room' }, cors); say(404); return; }
@@ -1096,6 +1105,20 @@ export function startRoomServer(opts) {
         return;
       }
       if (method !== 'POST') { send(res, 405, { ok: false, code: 'method', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (action === 'bug') {
+        // D411: a bug report from this seat's page, saved on this machine with the room and the seat.
+        if (!bugs) { send(res, 404, { ok: false, code: 'off', message: 'this room does not take bug reports' }, cors); say(404, ' (bug off)'); return; }
+        if (!bugLimit.take(`${id}/${seat}`)) { send(res, 429, { ok: false, code: 'slow', message: 'too many bug reports from this seat -- wait a few minutes' }, { ...cors, 'Retry-After': '180' }); say(429, ` (seat ${seat} bug)`); return; }
+        const rawBug = await readBody(req, MAX_BUG_BODY);
+        if (rawBug.tooLarge) { send(res, 413, { ok: false, code: 'size', message: `request too large (at most ${MAX_BUG_BODY / 1048576} MB)` }, { ...cors, Connection: 'close' }); say(413); req.destroy(); return; }
+        if (rawBug.broken) return;
+        let qb;
+        try { qb = JSON.parse(rawBug.text); } catch { send(res, 400, { ok: false, code: 'bad', message: 'the body is not JSON' }, cors); say(400); return; }
+        const r = bugs.save({ body: qb, via: 'room', room: id, seat, secrets: [String(req.headers[TOKEN_HEADER] ?? '')] });
+        send(res, r.status, r.body, cors);
+        say(r.status, r.status === 201 ? ` (seat ${seat} bug ${r.body.id})` : ` (seat ${seat} bug: ${String(r.body.message).slice(0, 120)})`);
+        return;
+      }
       const cap = action === 'deck' ? MAX_DECK_BODY : MAX_SEAT_BODY;   // D404: a deck is a few KB
       const raw = await readBody(req, cap);
       if (raw.tooLarge) { send(res, 413, { ok: false, code: 'size', message: `request too large (at most ${cap / 1024} KB)` }, { ...cors, Connection: 'close' }); say(413); req.destroy(); return; }
