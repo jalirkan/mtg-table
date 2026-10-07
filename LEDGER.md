@@ -468,3 +468,14 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - commits: mtg-table 74c1360
 - follow-up: template matchup-read-nights-1-5: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
 - follow-up: template design-verify: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J108 DONE: Move queue nights 1 and 2 to the cold drive (succeeds J070): one verified tar.zst a key folder plus each night's quarantine folder on /mnt/e/forgecoach-archive, an independent SHA-256 pass over every archive, and only then the hot copies deleted (D378); night 1's hold lifted
+
+- finished: 2026-10-07T16:57:18-04:00
+- decides: housekeeping, no lab decision: free about 6-7 GB on / by moving the finished nights 1-2 recordings to the cold tier (D378), the runway for night 6
+- hypothesis: every unit verifies by SHA-256 on the drive and the archives come out ~5x smaller than the hot gzip (J070's dry run: 4.92x on night 1)
+- rule: housekeeping, no pre-registered rule: D378's refusals, the independent verify block and the checks below; any mismatch stops the job before anything hot is deleted
+- outcome: done
+- headline: n1.members 40003, n2.members 40003, n1.hot 3302358295, n1.archive 563555595, n2.hot 3362639807, n2.archive 564817166, before.rootFreeGb 42.4, after.rootFreeGb 49.34
+- summary: results/J108/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 503c602

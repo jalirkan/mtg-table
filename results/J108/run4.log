@@ -1,0 +1,7 @@
+==== J108 run4 started 2026-10-07T16:55:41-04:00 in unit lab-J108-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"draftsJsonl": 26, "eFreeGb": 535.98, "keys": 26, "laterBytes": 15649950221, "laterFiles": 191803, "ledger": 1, "n1Bytes": 0, "n1Files": 0, "n2Bytes": 0, "n2Files": 0, "n3Bytes": 3326034669, "n3Files": 39956, "n4Bytes": 6136254891, "n4Files": 75918, "n5Bytes": 6187660661, "n5Files": 75929, "plan1": 1, "plan2": 1, "plan3": 1, "plan4": 1, "plan5": 1, "q1Files": 0, "q2Files": 0, "rootFreeGb": 49.34, "runJson": 26, "written": 1}
+checkpoint: 27860 lines, 512 MB, peak 536 MB
+checkpoint: 60111 lines, 1024 MB, peak 539 MB
+checkpoint: 91673 lines, 1536 MB, peak 539 MB
+checkpoint: 123105 lines, 2048 MB, peak 539 MB
+{"sources": 45, "filesRead": 38, "resets": 0, "lines": 136872, "badLines": 0, "jsonlMB": 2273.6, "rowsAdded": {"drafts": 136872, "games": 197414, "decks": 273744, "deck_cards": 7288153, "picks": 4927392}, "cards": 727, "cubeCards": 1260, "quarantined": 197, "results": {"sprt": 5, "experiments": 10, "gate_reports": 18, "ml_reports": 12, "matchup_power": 727}, "seconds": 85.9, "peakMB": 539.0}

@@ -1,0 +1,245 @@
+{
+ "archiveRoot": "/mnt/e/forgecoach-archive",
+ "checks": {
+  "encoded": "ok: 39908 of 39910 recordings encoded (100.0%)",
+  "holds": "ok: no hold (released: J052, J067, J076, J077, J078, J079, J080)",
+  "redaction": "ok: /home/justin-a/code/lab/mtg-table/var/cubelab/queue-quarantine: 90 quarantined recording(s), counted by walking the folder",
+  "warehouse": "ok: 20000 drafts lines ingested"
+ },
+ "driveFreeBytes": 537140793344,
+ "dryRun": true,
+ "estimate": {
+  "cpuSecondsPerFile": 0.102,
+  "expectedArchiveBytes": 670758355,
+  "ratio": 4.923,
+  "sampleHotBytes": 15910537,
+  "samplePackedBytes": 3231668,
+  "sampled": 200
+ },
+ "files": 40003,
+ "hotBytes": 3302358295,
+ "mirror": null,
+ "night": 1,
+ "refused": [],
+ "schema": 1,
+ "skipped": null,
+ "units": [
+  {
+   "files": 518,
+   "hotBytes": 43416201,
+   "key": "bridge/fair-fight+modern-era",
+   "kind": "recordings",
+   "name": "bridge__fair-fight+modern-era"
+  },
+  {
+   "files": 344,
+   "hotBytes": 25991205,
+   "key": "bridge/fair-fight+omega",
+   "kind": "recordings",
+   "name": "bridge__fair-fight+omega"
+  },
+  {
+   "files": 220,
+   "hotBytes": 17286241,
+   "key": "bridge/fair-fight+peasant",
+   "kind": "recordings",
+   "name": "bridge__fair-fight+peasant"
+  },
+  {
+   "files": 476,
+   "hotBytes": 47859208,
+   "key": "bridge/fair-fight+synergy",
+   "kind": "recordings",
+   "name": "bridge__fair-fight+synergy"
+  },
+  {
+   "files": 384,
+   "hotBytes": 31617942,
+   "key": "bridge/fair-fight+vintage",
+   "kind": "recordings",
+   "name": "bridge__fair-fight+vintage"
+  },
+  {
+   "files": 348,
+   "hotBytes": 24699058,
+   "key": "bridge/modern-era+omega",
+   "kind": "recordings",
+   "name": "bridge__modern-era+omega"
+  },
+  {
+   "files": 172,
+   "hotBytes": 15589351,
+   "key": "bridge/modern-era+synergy",
+   "kind": "recordings",
+   "name": "bridge__modern-era+synergy"
+  },
+  {
+   "files": 386,
+   "hotBytes": 27685494,
+   "key": "bridge/modern-era+vintage",
+   "kind": "recordings",
+   "name": "bridge__modern-era+vintage"
+  },
+  {
+   "files": 616,
+   "hotBytes": 51593092,
+   "key": "bridge/pauper+modern-era",
+   "kind": "recordings",
+   "name": "bridge__pauper+modern-era"
+  },
+  {
+   "files": 428,
+   "hotBytes": 33757820,
+   "key": "bridge/pauper+omega",
+   "kind": "recordings",
+   "name": "bridge__pauper+omega"
+  },
+  {
+   "files": 231,
+   "hotBytes": 19886619,
+   "key": "bridge/pauper+peasant",
+   "kind": "recordings",
+   "name": "bridge__pauper+peasant"
+  },
+  {
+   "files": 558,
+   "hotBytes": 56382860,
+   "key": "bridge/pauper+synergy",
+   "kind": "recordings",
+   "name": "bridge__pauper+synergy"
+  },
+  {
+   "files": 438,
+   "hotBytes": 33317633,
+   "key": "bridge/pauper+vintage",
+   "kind": "recordings",
+   "name": "bridge__pauper+vintage"
+  },
+  {
+   "files": 593,
+   "hotBytes": 40222754,
+   "key": "bridge/peasant+modern-era",
+   "kind": "recordings",
+   "name": "bridge__peasant+modern-era"
+  },
+  {
+   "files": 404,
+   "hotBytes": 25917882,
+   "key": "bridge/peasant+omega",
+   "kind": "recordings",
+   "name": "bridge__peasant+omega"
+  },
+  {
+   "files": 571,
+   "hotBytes": 45829325,
+   "key": "bridge/peasant+synergy",
+   "kind": "recordings",
+   "name": "bridge__peasant+synergy"
+  },
+  {
+   "files": 418,
+   "hotBytes": 28773353,
+   "key": "bridge/peasant+vintage",
+   "kind": "recordings",
+   "name": "bridge__peasant+vintage"
+  },
+  {
+   "files": 441,
+   "hotBytes": 34123198,
+   "key": "bridge/synergy+omega",
+   "kind": "recordings",
+   "name": "bridge__synergy+omega"
+  },
+  {
+   "files": 446,
+   "hotBytes": 35717711,
+   "key": "bridge/synergy+vintage",
+   "kind": "recordings",
+   "name": "bridge__synergy+vintage"
+  },
+  {
+   "files": 3954,
+   "hotBytes": 365236022,
+   "key": "normal/fair-fight",
+   "kind": "recordings",
+   "name": "normal__fair-fight"
+  },
+  {
+   "files": 4192,
+   "hotBytes": 320546395,
+   "key": "normal/modern-era",
+   "kind": "recordings",
+   "name": "normal__modern-era"
+  },
+  {
+   "files": 3753,
+   "hotBytes": 264794648,
+   "key": "normal/omega",
+   "kind": "recordings",
+   "name": "normal__omega"
+  },
+  {
+   "files": 5110,
+   "hotBytes": 501573984,
+   "key": "normal/pauper",
+   "kind": "recordings",
+   "name": "normal__pauper"
+  },
+  {
+   "files": 6353,
+   "hotBytes": 420122039,
+   "key": "normal/peasant",
+   "kind": "recordings",
+   "name": "normal__peasant"
+  },
+  {
+   "files": 4413,
+   "hotBytes": 500410276,
+   "key": "normal/synergy",
+   "kind": "recordings",
+   "name": "normal__synergy"
+  },
+  {
+   "files": 4143,
+   "hotBytes": 279770449,
+   "key": "normal/vintage",
+   "kind": "recordings",
+   "name": "normal__vintage"
+  },
+  {
+   "files": 93,
+   "hotBytes": 10237535,
+   "key": "queue-quarantine",
+   "kind": "quarantine",
+   "name": "quarantine"
+  }
+ ],
+ "vers": [
+  "16299d2db66b",
+  "22e2d10c1f31",
+  "3268aba6bc62",
+  "3d8317d580f5",
+  "46213876aec8",
+  "48bac64aa4a0",
+  "4c6db1cd22ac",
+  "4e4f77eaeb83",
+  "549af8151a00",
+  "58c1a435536a",
+  "591750118db6",
+  "614e801b7548",
+  "64ebf7ebd1fc",
+  "7951c64910f0",
+  "7cb13252703a",
+  "a32da4d980b4",
+  "a813fe263c19",
+  "b24f5ce1dd55",
+  "b875654a0c18",
+  "bbe420510a3e",
+  "d03d56e3c09d",
+  "d1a920eb3155",
+  "e16ad065bee2",
+  "e4c1d36daaee",
+  "ef4f4f69be46",
+  "f344baeba973"
+ ]
+}
