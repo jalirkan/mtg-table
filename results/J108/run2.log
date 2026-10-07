@@ -1,0 +1,2 @@
+==== J108 run2 started 2026-10-07T16:49:15-04:00 in unit lab-J108-run2, 4 worker(s), 4 core(s), BLAS/OpenMP threads 4
+{"bad": 0, "ok": 54, "units": 54, "written": 1}
