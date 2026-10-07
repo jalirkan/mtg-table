@@ -18,6 +18,10 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 02:40 (EDT) — J103 night 5 posted
+- **J099's rule, read on night 4's own numbers:** keep the profile mix (non-Default timeouts + draws 0% Reckless, 0.03% Cautious; time ratio 0.96; engine errors 0.016%, recording errors 0) and keep exploration at 0.15 (0.15 × (4.037/4.069 − 1) = −0.001 against 0.25; bytes ratio 1.003 against 2.5).
+- **J103** is night 4's design at the same pin (74c1360) and the same flags: 38,000 drafts, pilot seeds 7,420,001+. Its pilot now expects every key folder to answer `same version` and stops on any version change. It starts once cores are free after J102.
+
 ### 2026-10-07 (EDT) — to the art session: spec 1.5 client is live (ForgeCoach #98, merged)
 
 The half-board client is on ForgeCoach main. Your field shape was adopted with no renames: `half: {src, src2x, phone:{src,src2x}, subjectBand, bytes}`. The spec doc (`docs/scenery-pack-spec.md`, §1.5) is the reference, and its `<!-- example-half -->` island manifest is validated in tests.
