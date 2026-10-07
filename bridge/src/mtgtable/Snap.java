@@ -382,7 +382,26 @@ public final class Snap {
 
         /** {@code "yes"}, {@code "no"} or null -- the standing answer for this item. */
         String yieldMode(StackItemView si);
+
+        /**
+         * {@code state.playable} (protocol amendment <b>M61</b>, decision
+         * <b>D413</b>): the seat's own cards outside the battlefield that Forge
+         * would play or activate on a click right now, each with its legal
+         * abilities -- or {@code null} when the seat is not at its own priority
+         * (the key is then written as {@code null}, never omitted).  Built by
+         * {@link Playables#of}; this method only decides WHEN.  {@link #state}
+         * applies the gates and writes the labels.
+         */
+        List<Playable> playable();
     }
+
+    /**
+     * One entry of {@code state.playable} before the gates (amendment M61):
+     * a card of the seat's own, the zone it is in, and the abilities
+     * {@code Card.getAllPossibleAbilities(player, true)} kept -- the list
+     * {@code InputPassPriority.onCardSelected} plays from on a click.
+     */
+    public record Playable(CardView card, String zone, List<SpellAbilityView> abilities) { }
 
     /** The four-argument form: no seat, therefore no comfort fields (RecordMatch). */
     public static String state(final String gameId, final GameView game, final PlayerView viewer,
@@ -513,6 +532,14 @@ public final class Snap {
             } else {
                 o.raw(undo);
             }
+            // M61 (D413): written in every seat's frame -- null off the seat's
+            // priority -- so a file carries it everywhere or nowhere.
+            // And only beside this frame's own `priority` naming the viewer: the
+            // comfort reads the rules engine, this frame the view, and the two
+            // must never disagree on the wire (check-redaction holds it).
+            o.key("playable");
+            final boolean viewerPriority = priority != null && priority.getId() == viewer.getId();
+            playable(o, viewerPriority ? comfort.playable() : null, viewer, concealed);
         }
 
         o.key("events").arr();
@@ -796,6 +823,67 @@ public final class Snap {
         final ZoneType zt = cv.getZone();
         return identityConcealed(cv, viewer, zt == null ? "unknown" : lower(zt.name()), cv.getOwner());
     }
+
+    /**
+     * <b>THE</b> gated label of an ability -- an {@code ability_menu} option's and
+     * a {@code state.playable} entry's alike.  {@code SpellAbilityView.getDescription()}
+     * is built from the host card's name, so a host this viewer may not identify
+     * is {@code "???"}.
+     */
+    public static String abilityLabel(final SpellAbilityView sav, final PlayerView viewer) {
+        assertGameThread("Snap.abilityLabel");
+        final CardView host = sav.getCardView();
+        if (host != null && concealed(host, viewer)) {
+            return "???";
+        }
+        final String d = sav.getDescription();
+        return d == null ? "" : d;
+    }
+
+    /**
+     * {@code state.playable} (amendment M61).  Hidden information: an entry is
+     * written only for a card the VIEWER owns and controls, in one of the five
+     * zones Playables walks (never the battlefield or the stack), that this
+     * frame shows in full -- not concealed by the three gates and not in the
+     * frame's concealed set.  Anything else is dropped here, whatever the
+     * comfort handed over, and counted on stderr: the comfort is the seat's
+     * own and should never offer one.
+     */
+    private static void playable(final JsonOut o, final List<Playable> list, final PlayerView viewer,
+                                 final Set<Integer> concealedNow) {
+        if (list == null) {
+            o.vNull();
+            return;
+        }
+        o.arr();
+        for (final Playable p : list) {
+            final CardView cv = p.card();
+            if (cv == null || p.abilities() == null || p.abilities().isEmpty()) {
+                continue;
+            }
+            final Integer owner = pid(cv.getOwner());
+            final Integer controller = pid(cv.getController());
+            final boolean mine = owner != null && owner.intValue() == viewer.getId()
+                    && (controller == null || controller.intValue() == viewer.getId());
+            if (!mine || !PLAYABLE_ZONES.contains(p.zone()) || concealed(cv, viewer)
+                    || concealedNow.contains(Integer.valueOf(cv.getId()))) {
+                System.err.println("PLAYABLE DROPPED: card " + cv.getId() + " in " + p.zone()
+                        + " is not the viewer's own card in a zone it may list (M61)");
+                continue;
+            }
+            o.obj().n("cardId", cv.getId()).n("zone", p.zone());
+            o.key("abilities").arr();
+            for (final SpellAbilityView sav : p.abilities()) {
+                o.obj().n("abilityId", sav.getId()).n("label", abilityLabel(sav, viewer))
+                        .n("isSpell", sav.isSpell()).end();
+            }
+            o.end().end();
+        }
+        o.end();
+    }
+
+    /** The zones a {@code state.playable} entry may name (M61): never the battlefield, never the stack. */
+    public static final Set<String> PLAYABLE_ZONES = Set.of("hand", "graveyard", "exile", "command", "library");
 
     /**
      * Remaining toughness of a blocker, for {@code assign_damage.targets[].lethal}

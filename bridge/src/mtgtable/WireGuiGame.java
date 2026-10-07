@@ -110,39 +110,39 @@
  *                 protocol section 4.3
  * 6    2265-2282  phase stops: isUiSetToSkipPhase (2275), asked on every step
  *                 GAME | none (a ConcurrentHashMap) | D19, D38
- * 6b   2283-2505  the comfort snapshot, the four M6 answers Snap cannot compute:
- *                 the Snap.Comfort object (2284), stopNames (2347), activeYieldJson
- *                 (2363), undoStateJson (2404), rawYieldKey (2450; lint rule 4b's
- *                 one tagged key read is at 2451), handleFor (2455), standingYield (2480)
- *                 GAME, inside Snap.state | none | D41, D42
- * 7    2506-3411  the ask path: ask (2524), decode (2589), the option writers
- *                 (2604-2700), then the blocking members: getAbilityToPlay (2713)
- *                 and its asynchronous menu (2812-2940; its hop is at 2835, tagged
- *                 D22), confirm (2951), getChoices (3043), order (3086),
- *                 chooseSingleEntityForEffect (3150), assignCombatDamage (3232),
- *                 assignGenericAmount (3294), manipulateCardList (3346), sideboard
- *                 (3378) and the rest
+ * 6b   2290-2550  the comfort snapshot, M6's four answers and M61's: Snap.Comfort
+ *                 (2299), playableNow (2368), stopNames (2392), activeYieldJson (2408),
+ *                 undoStateJson (2449), rawYieldKey (2495; lint rule 4b's one tagged
+ *                 key read is at 2496), handleFor (2500), standingYield (2525)
+ *                 GAME, inside Snap.state | none | D41, D42, D413
+ * 7    2551-3456  the ask path: ask (2569), decode (2639), the option writers
+ *                 (2651-2754), then the blocking members: getAbilityToPlay (2758)
+ *                 and its asynchronous menu (2817-2993; its hop is at 2880, tagged
+ *                 D22), confirm (2996), getChoices (3088), order (3131),
+ *                 chooseSingleEntityForEffect (3195), assignCombatDamage (3277),
+ *                 assignGenericAmount (3339), manipulateCardList (3391), sideboard
+ *                 (3431) and the rest
  *                 GAME, which parks until the answer comes; getAbilityToPlay arrives
  *                 on the EDT and hops (D22) | LOG while the ask is numbered
- *                 (2554-2562); none while parked | protocol sections 5 and 5.4 (null
+ *                 (2612-2620); none while parked | protocol sections 5 and 5.4 (null
  *                 is always an answer); D15, D24; D20, D22
- * 8    3412-4195  the inbound path, acts: onAct (3417), applyAct (3444), concede
- *                 (3648), setPhaseStop (3760), newGame (3862), yieldTo (3930),
- *                 setYield (4011), refreshState (4103; its hop is at 4112, tagged
- *                 D39), refreshSnapshot (4136), enginePausedForSeat (4184)
+ * 8    3457-4243  the inbound path, acts: onAct (3462), applyAct (3489), concede
+ *                 (3696), setPhaseStop (3808), newGame (3910), yieldTo (3978),
+ *                 setYield (4059), refreshState (4151; its hop is at 4160, tagged
+ *                 D39), refreshSnapshot (4184), enginePausedForSeat (4232)
  *                 onAct on IO; applyAct and every act on the EDT; refreshSnapshot on
  *                 a second Game-n worker | LOG, for the act's c2s line | D17, D39,
  *                 D41, D42, D114, amendment M8
- * 8b   4196-4449  the acts that write the engine from the EDT, then answers, resync
- *                 and disconnect: notNow (4216), engineFacts (4261), GuardFeeds
- *                 (4270), pressOk (4313), onAnswer (4333), onResync (4368),
- *                 onDisconnect (4423), close (4441)
+ * 8b   4244-4497  the acts that write the engine from the EDT, then answers, resync
+ *                 and disconnect: notNow (4264), engineFacts (4309), GuardFeeds
+ *                 (4318), pressOk (4361), onAnswer (4381), onResync (4416),
+ *                 onDisconnect (4471), close (4489)
  *                 notNow and pressOk on the EDT; onAnswer, onResync and onDisconnect
  *                 on IO | none of its own: volatile reads and atomics (a frame written
  *                 here takes LOG in emit or logC2s) | D136, amendment M48; D27,
  *                 amendment M42; D24
- * 9    4450-4506  answer coercion: asInt (4462), asBool (4466), asIntArray (4470),
- *                 asIntMap (4474), indexOfIdentity (4479), actBody (4484); the
+ * 9    4498-4554  answer coercion: asInt (4510), asBool (4514), asIntArray (4518),
+ *                 asIntMap (4522), indexOfIdentity (4527), actBody (4532); the
  *                 rest of it lives in Ask.java
  *                 any thread (pure functions) | none | protocol section 5.3
  */
@@ -2343,7 +2343,45 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         @Override public String yieldMode(final forge.game.spellability.StackItemView si) {
             return standingYield(si);
         }
+
+        @Override public List<Snap.Playable> playable() {
+            return playableNow();
+        }
     };
+
+    /**
+     * Set by {@link #ask} around the {@code state} it flushes before the ask
+     * goes out: the seat is being asked something, not holding priority, so
+     * that frame's {@code playable} is {@code null}.  Game thread only.
+     */
+    private boolean flushingForAsk;
+
+    /**
+     * {@code state.playable} (protocol amendment M61, decision D413): at this
+     * seat's own priority, what {@link Playables#of} finds; otherwise
+     * {@code null}.  Runs inside {@link Snap#state}, on the game thread -- the
+     * match's own, or D39's refresh hop, which runs only while the engine is
+     * parked on this seat's input -- so it reads the rules engine where the
+     * snapshot itself is read.  Never throws: a failure is a {@code null}
+     * (the board falls back to its own reading) and a line on stderr.
+     */
+    private List<Snap.Playable> playableNow() {
+        if (flushingForAsk || hosted == null) {
+            return null;
+        }
+        try {
+            final PlayerControllerHuman h = humanController();
+            final forge.game.Game game = hosted.getGame();
+            if (h == null || !Playables.atPriority(game, h.getPlayer())) {
+                return null;
+            }
+            return Playables.of(h.getPlayer());
+        } catch (final RuntimeException e) {
+            errors.incrementAndGet();
+            System.err.println("PLAYABLE FAILED: " + e);
+            return null;
+        }
+    }
 
     /**
      * The complement of a skip set: every phase the game <b>stops</b> at, in
@@ -2541,7 +2579,12 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             System.err.println("ASK AFTER CONCEDE: " + kind + " -> null (D136)");
             return null;
         }
-        flushState(List.of());
+        flushingForAsk = true;                 // M61: an ask's frame is not the seat's priority
+        try {
+            flushState(List.of());
+        } finally {
+            flushingForAsk = false;
+        }
         final String askId = "a" + askSeq.incrementAndGet();
         final long timeoutMs = transport.askTimeoutMs(kind);
         askKinds.add(kind);
@@ -2697,12 +2740,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
     /** {@code SpellAbilityView.getDescription()} is built from the host card's name. */
     private String abilityLabel(final SpellAbilityView sav) {
-        final CardView host = sav.getCardView();
-        if (host != null && Snap.concealed(host, viewer)) {
-            return "???";
-        }
-        final String d = sav.getDescription();
-        return d == null ? "" : d;
+        return Snap.abilityLabel(sav, viewer);
     }
 
     private void options(final JsonOut o, final String key, final List<Object> opts,

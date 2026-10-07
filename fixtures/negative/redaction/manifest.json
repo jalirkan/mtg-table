@@ -364,5 +364,35 @@
     "level": "fail",
     "expect": "\"record\" without \"humans\": 2",
     "why": "amendment M60 / D407: only a seat at a table of two says whether it may be recorded"
+  },
+  {
+    "file": "m61-playable-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M61: state.playable on every state, a list at the seat's priority -- the control for the m61 probes"
+  },
+  {
+    "file": "m61-playable-names-the-opponent-hand.jsonl",
+    "level": "fail",
+    "expect": "is not a full card in the viewing seat's own",
+    "why": "amendment M61 / D413: the list is the seat's own cards -- naming a card in the opponent's hidden hand is a leak"
+  },
+  {
+    "file": "m61-playable-on-the-battlefield.jsonl",
+    "level": "fail",
+    "expect": "state.playable = ",
+    "why": "amendment M61: the list names cards outside the battlefield only"
+  },
+  {
+    "file": "m61-playable-off-priority.jsonl",
+    "level": "fail",
+    "expect": "while priority is",
+    "why": "amendment M61: the list is written only at the seat's own priority, null otherwise"
+  },
+  {
+    "file": "m61-playable-half-present.jsonl",
+    "level": "fail",
+    "expect": "M61 (playable) is HALF PRESENT",
+    "why": "amendment M61: a seat writes the key on every state -- some with and some without is a broken emitter"
   }
 ]

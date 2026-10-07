@@ -30,6 +30,24 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-07 — what the seat may play from outside the battlefield
+
+Found by ForgeCoach's full-game playtest: a card in the seat's graveyard with an
+activated ability that is not a keyword (Cauldron Familiar's "Sacrifice a Food:
+return it", Seasoned Pyromancer's and Unwilling Ingredient's "exile it from
+your graveyard: …") could not be used from the board. Forge takes the click
+(§4.1, M8: the seat's cards are clickable at priority), but nothing on the wire
+said which non-battlefield card had something to play, and a board that
+outlines by keyword (flashback, unearth…) cannot see an ability like these.
+One row. Decision **D413**. Held by `mtgtable.PlayableSelfTest` (gate step
+12l, on Forge's own cards), `tools/check-redaction.mjs` (the shape, the
+per-file rule and the hidden-information rule; five controls in
+`fixtures/negative/redaction/m61-*`) and `web/test/playable.test.ts`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M61 | §3, §3.1, §3.2 | **`state.playable`: at the seat's own priority, each of its own cards outside the battlefield that Forge would play on a click, with the abilities it would play.** `[{cardId, zone, abilities: [{abilityId, label, isSpell}]}]`, `zone` one of `hand`, `graveyard`, `exile`, `command`, `library` (the top card only). The list is Forge's own: `Card.getAllPossibleAbilities(player, true)` **[jar]**, the call `InputPassPriority.onCardSelected` plays a click from — every spell and ability, alternative costs included (flashback, escape, foretell, adventure…), each kept only if `SpellAbility.canPlay()`: its zone (`ActivationZone$ Graveyard`), its timing and restrictions, and its non-mana costs (`CostPayment.canPayAdditionalCosts`: Cauldron Familiar with no Food to sacrifice is not listed). **Mana is not predicted**, as Forge's click does not predict it (§3.2). Mana abilities are left out. **Written only at the seat's priority** — the rules engine's priority player, the frame's own `priority` naming the viewer, nothing resolving, and not the frame an `ask` flushes — and **`null` otherwise**; written by a seat on every `state` and never by an AI-vs-AI recorder, so a file carries the key on every frame or on none (the M49 rule). **Hidden information:** only the viewing seat's own cards (owner and controller), only cards this frame shows in full (`Snap.state` gates each entry again and drops any other, whatever it was handed); `label` is `SpellAbilityView.getDescription()` through the same one ability-label gate an `ability_menu` option's goes through. **The act is still `clickCard`**: with more than one ability Forge asks its own `ability_menu` (M14), exactly as for a card on the battlefield. `abilityId` is Forge's id for the ability **in that frame** — an alternative cost is a fresh copy each time — so it is not a handle for `clickAbility`. `Card.abilities` (§3.2) stays `[]`. **Optional**: absent from every stream before this amendment; a reader treats absent and `null` alike, as "this frame does not say", never as "nothing is playable". The client's one reader is `playableOf()` in `web/src/protocol.ts`. | ForgeCoach playtest |
+
 ### 2026-10-06 — a best of three at a table of two, and each seat's consent to recording
 
 Applied by the play-with-a-friend lane's third phase (branch `c/friend-bo3`;
@@ -899,6 +917,7 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   "stackCards": [ /* Card — the card behind each stack item, §3.3 */ ],
   "yield": null,
   "undo": { "can": false, "depth": 0 },
+  "playable": null,
   "combat": {
     "bands": [
       { "attackerIds": [12],
@@ -997,6 +1016,17 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   activated — and `buttons.cancel.label` is independently `Undo (n)` whenever
   `InputPassPriority` is up, which is the same fact arriving through the button
   the engine labelled. If the two ever disagree, the label wins.
+- **`playable` is what the seat may play from outside the battlefield, or
+  `null`** (amendment **M61**, D413). At the seat's own priority it lists each
+  of its own cards in `hand`, `graveyard`, `exile`, `command` or on top of its
+  `library` that has a spell or ability Forge would play on a click now —
+  `{cardId, zone, abilities: [{abilityId, label, isSpell}]}`, never empty
+  `abilities` — and `[]` when there is none; off its priority, and in the frame
+  an `ask` flushes, it is `null`. It is the engine's answer to "would a click
+  do something", not to "can I pay for it": mana is never predicted. The board
+  outlines these cards and sends `clickCard`; Forge asks its own `ability_menu`
+  when a card has more than one. A seat writes the key on every frame; an
+  AI-vs-AI recording never does.
 - **`stack[].yieldKey` is an opaque handle** (amendment **M36**) such as `"y3"`,
   or `null` for an item Forge gave no key. It is minted by the bridge, interned
   for the life of one game, and **must never be rendered**: Forge's own key is a
@@ -1089,7 +1119,9 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   which takes a `Card` and not a `CardView`, so it needs a game-thread hop that
   does not exist yet. Until then, `act: clickAbility` is resolvable only against
   the `abilityId`s the last `ability_menu` filled, and a client must not expect
-  a card object to carry its own playable list.
+  a card object to carry its own playable list. (What a card outside the
+  battlefield may do at the seat's priority is `state.playable`, amendment
+  **M61**, not this array.)
 - `setCode` is a string, or **`null` when Forge has no current state for the
   card** (`CardView.getCurrentState()` is a plain property read; the bridge
   writes `null` rather than inventing a set code). `setCode` plus `name` is what

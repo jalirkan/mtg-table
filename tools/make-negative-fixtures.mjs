@@ -1005,5 +1005,66 @@ tableProbe('m60-score-ahead-of-the-game.jsonl',
   console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
 }
 
+/*
+ * Amendment M61 (D413) -- `state.playable`, what the seat may play from outside
+ * the battlefield.  The control writes it as a seat does: on every state, a
+ * list at the seat's own priority (one of its own hand cards) and null
+ * elsewhere.  Four one-defect probes.
+ */
+const withPlayable = (fs) => {
+  const sts = statesOf(fs);
+  sts.forEach((f) => { f.body.playable = null; });
+  const first = sts[0].body;
+  first.priority = header.seat;
+  const me = first.players.find(isViewerSeat);
+  const card = me.zones.hand.cards.find((c) => c.hidden !== true);
+  if (card === undefined) throw new Error('no full viewer hand card in the slice');
+  first.playable = [{ cardId: card.id, zone: 'hand', abilities: [{ abilityId: 9001, label: 'Play a land', isSpell: false }] }];
+  return first;
+};
+{
+  const fs = slice();
+  withPlayable(fs);
+  write('m61-playable-present.jsonl', fs);
+  manifest.push({
+    file: 'm61-playable-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M61: state.playable on every state, a list at the seat\'s priority -- the control for the m61 probes',
+  });
+  console.log('  PASS  m61-playable-present.jsonl  (a seat\'s playable list, no defect)');
+}
+
+probe('m61-playable-names-the-opponent-hand.jsonl',
+  'amendment M61 / D413: the list is the seat\'s own cards -- naming a card in the opponent\'s hidden hand is a leak',
+  'is not a full card in the viewing seat\'s own',
+  (fs) => {
+    const b = withPlayable(fs);
+    const them = b.players.find((p) => !isViewerSeat(p));
+    b.playable[0].cardId = them.zones.hand.cards.find((c) => c.hidden === true).id;
+  });
+
+probe('m61-playable-on-the-battlefield.jsonl',
+  'amendment M61: the list names cards outside the battlefield only',
+  'state.playable = ',
+  (fs) => {
+    const b = withPlayable(fs);
+    b.playable[0].zone = 'battlefield';
+  });
+
+probe('m61-playable-off-priority.jsonl',
+  'amendment M61: the list is written only at the seat\'s own priority, null otherwise',
+  'while priority is',
+  (fs) => {
+    const b = withPlayable(fs);
+    b.priority = header.seat === 0 ? 1 : 0;
+  });
+
+probe('m61-playable-half-present.jsonl',
+  'amendment M61: a seat writes the key on every state -- some with and some without is a broken emitter',
+  'M61 (playable) is HALF PRESENT',
+  (fs) => {
+    withPlayable(fs);
+    delete statesOf(fs)[1].body.playable;
+  });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);
