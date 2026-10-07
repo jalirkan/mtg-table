@@ -1,152 +1,23 @@
 {
  "schema": 1,
- "updated": "2026-10-07T14:15:09-04:00",
- "heartbeat": "2026-10-07T14:15:09-04:00",
+ "updated": "2026-10-07T14:15:23-04:00",
+ "heartbeat": "2026-10-07T14:15:23-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.43,
-  "memUsedGb": 8.2,
+  "load1": 8.11,
+  "memUsedGb": 7.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 3871,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 4,
+  "coresUsed": 3,
   "coresTotal": 8
  },
  "running": [
-  {
-   "publicTitle": "Queue night 5",
-   "publicEst": "~11 h",
-   "id": "J105",
-   "title": "Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)",
-   "cpu": "heavy",
-   "phase": "commands 3/3",
-   "started": "2026-10-07T06:05:50-04:00",
-   "elapsed": 29359,
-   "done": 38000,
-   "total": 38000,
-   "unit": "drafts",
-   "ratePerHour": 3596,
-   "eta": null,
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-07T14:04:25-04:00",
-   "memGb": 0,
-   "live": {
-    "night.night_drafts_done": 38000,
-    "night.planned_drafts": 38000,
-    "night.bridge_share": 0.2,
-    "quarantined": 71,
-    "base.bytes_ratio_explore_plain": 1.005377,
-    "base.drafts": 98000,
-    "base.drafts_per_h": 0,
-    "base.draws": 22,
-    "base.engine_error_drafts": 9,
-    "base.engine_error_rate": 0.000092,
-    "base.engine_errors": 10,
-    "base.explore_drafts": 8743,
-    "base.explore_share": 0.089214,
-    "base.games": 97991,
-    "base.games_explore": 8742,
-    "base.games_per_h": 0,
-    "base.mean_game_s": 4.378669,
-    "base.mean_game_s_explore": 4.222862,
-    "base.mean_game_s_plain": 4.39393,
-    "base.mean_turns": 19.353992,
-    "base.mixed_time_ratio": 0.887882,
-    "base.ms": 429070136,
-    "base.ms_explore": 36916262,
-    "base.rec_bytes": 16118696850,
-    "base.rec_bytes_explore": 1445024720,
-    "base.rec_bytes_per_game": 164491.604841,
-    "base.rec_bytes_per_game_explore": 165296.810798,
-    "base.rec_bytes_per_game_plain": 164412.734372,
-    "base.rec_games_explore": 8742,
-    "base.recorded_error_rate": 0.000184,
-    "base.recorded_errors": 18,
-    "base.recorded_games": 97991,
-    "base.seat_Cautious_games": 16741,
-    "base.seat_Cautious_mean_game_s": 4.182166,
-    "base.seat_Cautious_td_rate": 0.000299,
-    "base.seat_DD_games": 69518,
-    "base.seat_DD_mean_game_s": 4.52612,
-    "base.seat_DD_td_rate": 0.000245,
-    "base.seat_mixed_games": 28473,
-    "base.seat_mixed_mean_game_s": 4.01866
-   },
-   "liveHeadline": [
-    "night.night_drafts_done",
-    "night.planned_drafts",
-    "night.bridge_share",
-    "quarantined"
-   ],
-   "cubes": [
-    {
-     "id": "fair-fight",
-     "done": 4002,
-     "planned": 4002
-    },
-    {
-     "id": "modern-era",
-     "done": 4084,
-     "planned": 4084
-    },
-    {
-     "id": "omega",
-     "done": 3541,
-     "planned": 3541
-    },
-    {
-     "id": "pauper",
-     "done": 4926,
-     "planned": 4926
-    },
-    {
-     "id": "peasant",
-     "done": 6228,
-     "planned": 6228
-    },
-    {
-     "id": "synergy",
-     "done": 4248,
-     "planned": 4248
-    },
-    {
-     "id": "vintage",
-     "done": 3371,
-     "planned": 3371
-    }
-   ],
-   "publicCubes": true,
-   "pressureEvents": [
-    {
-     "at": "2026-10-07T06:06:38-04:00",
-     "kind": "drop",
-     "workers": 2,
-     "pressure": 27.5
-    },
-    {
-     "at": "2026-10-07T10:38:36-04:00",
-     "kind": "drop",
-     "workers": 6,
-     "pressure": 0.1
-    },
-    {
-     "at": "2026-10-07T10:43:37-04:00",
-     "kind": "raise",
-     "workers": 7,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J105-run3"
-  },
   {
    "publicTitle": "Full-game playtest",
    "publicEst": "one night (~5 to 8 h)",
@@ -155,22 +26,22 @@
    "cpu": "light",
    "phase": "commands 1/2",
    "started": "2026-10-07T10:22:42-04:00",
-   "elapsed": 13946,
-   "done": 29,
+   "elapsed": 13961,
+   "done": 30,
    "total": 60,
    "unit": "games",
-   "ratePerHour": 20.7,
-   "eta": "2026-10-07T15:44:51-04:00",
+   "ratePerHour": 22.8,
+   "eta": "2026-10-07T15:34:28-04:00",
    "workers": 1,
    "workersMax": 1,
    "cores": 3,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-07T14:13:13-04:00",
-   "memGb": 1.32,
+   "dataUpdated": "2026-10-07T14:15:22-04:00",
+   "memGb": 1.36,
    "live": {
-    "pt.games": 29,
-    "pt.ended": 27,
+    "pt.games": 30,
+    "pt.ended": 28,
     "pt.matchesDone": 0,
     "pt.unreachable": 0,
     "pt.stuck": 0,
@@ -178,12 +49,12 @@
     "pt.board": 0,
     "pt.log": 0,
     "pt.errors": 0,
-    "elapsed_s": 13894,
+    "elapsed_s": 13960,
     "peak_worker_rss_gb": 0.93,
     "pressure_events": 0,
     "pt.findings": 8,
     "pt.flow": 0,
-    "pt.games_per_h": 20.7,
+    "pt.games_per_h": 22.8,
     "pt.harness": 0,
     "pt.matches": 0,
     "pt.other": 8,
@@ -210,6 +81,23 @@
  "queue": [],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Queue night 5",
+   "publicEst": "~11 h",
+   "id": "J105",
+   "title": "Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)",
+   "status": "done",
+   "finished": "2026-10-07T14:15:22-04:00",
+   "headline": "night.night_drafts_done 38000 · night.planned_drafts 38000 · night.bridge_share 0.2 · ns.engine_error_rate 0 · ns.mixed_time_ratio 0.893 · quarantined 71",
+   "numbers": {
+    "night.night_drafts_done": 38000,
+    "night.planned_drafts": 38000,
+    "night.bridge_share": 0.2,
+    "ns.engine_error_rate": 0.000079,
+    "ns.mixed_time_ratio": 0.893083,
+    "quarantined": 71
+   }
+  },
   {
    "publicTitle": null,
    "publicEst": null,
@@ -875,24 +763,6 @@
    "headline": "",
    "numbers": {},
    "detail": "the job file was removed from pc-jobs"
-  },
-  {
-   "publicTitle": "Decision records pilot re-run",
-   "publicEst": "~60 min",
-   "id": "J048",
-   "title": "(re-post of J027, after numpy) Decision records pilot, re-run after the reveal-leak fix (D352): 20 search-vs-Forge bench games and 20 mixed-profile lab drafts, recorded, redaction-checked mechanically",
-   "status": "done",
-   "finished": "2026-10-03T21:35:34-04:00",
-   "headline": "redaction_fail 0 · redaction_pass 80 · recorded_logs 80 · bench.games 20 · lab.drafts 20 · bench_policy.rows 4692 · lab_policy.rows 5984",
-   "numbers": {
-    "redaction_fail": 0,
-    "redaction_pass": 80,
-    "recorded_logs": 80,
-    "bench.games": 20,
-    "lab.drafts": 20,
-    "bench_policy.rows": 4692,
-    "lab_policy.rows": 5984
-   }
   }
  ],
  "runner": {

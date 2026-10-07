@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-07T14:15:09-04:00
+- time: 2026-10-07T14:15:23-04:00
 - runner: 10896b8, up since 2026-10-06T16:24:24-04:00
-- running: J105 commands 3/3, 38000/38000 drafts, 3596/h, 7 worker(s), 1 core(s); J107 commands 1/2, 29/60 games, 20.7/h, ETA 2026-10-07T15:44:51-04:00, 1 worker(s), 3 core(s)
-- cores: 4 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.43; memory 8.2/30.5 GB, swap 3871 MB, pressure 0% (lab budget 23.4 GB)
+- running: J107 commands 1/2, 30/60 games, 22.8/h, ETA 2026-10-07T15:34:28-04:00, 1 worker(s), 3 core(s)
+- cores: 3 of 8 in use (the running jobs' widths; 16 threads)
+- load: 8.11; memory 7.6/30.5 GB, swap 3871 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J106 failed at 2026-10-07T07:46:43-04:00
+- last finished: J105 done at 2026-10-07T14:15:22-04:00: night.night_drafts_done 38000 · night.planned_drafts 38000 · night.bridge_share 0.2 · ns.engine_error_rate 0 · ns.mixed_time_ratio 0.893 · quarantined 71
 
 ## Messages
+
+- FOLLOW-UP READY [J105@2026-10-07T14:15:22-04:00] (the runner, for the cloud session): J105 is done; write and post the template matchup-read-nights-1-5; write and post the template design-verify. It decides: whether night 6 keeps D375's profile mix and this night's exploration share (D358); its drafts and recordings feed the matchup read of nights 1-5 and the evaluator. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J102@2026-10-07T03:44:22-04:00] (the runner, for the cloud session): J102 is done; write and post the template morning-read. It decides: whether the anytime search (D388, anytime=1) becomes search-v1's default loop in the next search version. Ledger: LEDGER.md. Delete this line once posted.
 
