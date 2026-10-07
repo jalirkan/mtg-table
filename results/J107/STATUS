@@ -7,4 +7,5 @@ ForgeCoach: 311da8e
 workers: 1
 peak_worker_rss_gb: 0.93
 restarted: 2026-10-07T19:27:20-04:00: the runner restarted during run2; the job is not resumable, so it starts again from the top (moved aside: var/playtest/J107)
+resumed: 2026-10-07T19:33:02-04:00: the runner restarted at prepare
 set_aside: 1 copy, 0.03 GB beside the job's clean: paths (never deleted: remove them by hand)
