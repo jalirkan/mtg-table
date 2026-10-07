@@ -27,7 +27,9 @@
 // stream-json user message on stdin with --input-format stream-json, never argv,
 // every other flag as /coach's; bad images 400 with no child, the 24 MB body and
 // 5 MB image limits, /health's "vision": 1); a client that disconnects kills the child and
-// its grandchild; and in --lan mode, from this machine's non-loopback address,
+// its grandchild; D410's "replaceRunning" (a running question with the same key
+// ends with one superseded line and its child and grandchild are killed, another
+// key is left alone, bad values 400) and the per-answer timing log line; and in --lan mode, from this machine's non-loopback address,
 // the token rule (query or header, loopback exempt), the LAN page's origin, and
 // no Origin refused off loopback.  D386: a loopback peer's Host must be
 // localhost or an IP literal (a rebinding name or a tunnel's hostname is 403),
@@ -532,6 +534,44 @@ try {
   check('the helper logged the cancel and the drops', /cancelled: the client left/.test(h.log()) && /client left while queued/.test(h.log()) && /superseded while queued/.test(h.log()));
   r = await http({ port: P });
   check('/health: the queue is empty again', json(r.body)?.queue?.length === 0 && json(r.body)?.running === 0, r.body);
+
+  // ------------------------------------------------------------- D410: replaceRunning, the timing line
+  console.log('== replacing the running question by key (D410); the timing line');
+  check('/health advertises "replaceRunning": 1 (D410)', json(r.body)?.replaceRunning === 1, r.body);
+  lastCall();
+  for (const bad of ['yes', 1, null]) {
+    r = await coach(P, { system: 's', user: 'MODE:ok', supersedes: 'seat-0', replaceRunning: bad });
+    check(`"replaceRunning": ${JSON.stringify(bad)}: 400, no child started`, r.status === 400 && /replaceRunning/.test(json(r.body)?.message ?? '') && readdirSync(CALLS).length === 0, `${r.status} ${r.body}`);
+  }
+  r = await coach(P, { system: 's', user: 'MODE:ok', replaceRunning: true });
+  check('"replaceRunning" without "supersedes": 400', r.status === 400 && readdirSync(CALLS).length === 0, `${r.status} ${r.body}`);
+  const oldQ = stream(P, { system: 's', user: 'MODE:slow old', supersedes: 'seat-0', replaceRunning: true });
+  await oldQ.until((evs) => evs.length >= 1);
+  const oldPids = json(readFileSync(join(CALLS, 'slow-pids.json'), 'utf8'));
+  const other = stream(P, { system: 's', user: 'MODE:ok other', supersedes: 'seat-1', replaceRunning: true });
+  await other.until((evs) => evs.length >= 1);
+  check('another key with "replaceRunning" waits in the queue and leaves the running one alone',
+    JSON.stringify(other.evs()) === '[{"type":"queued","position":1}]' && oldPids.every(alive) && oldQ.evs().length === 1, JSON.stringify(other.evs()));
+  other.destroy();
+  await other.done;
+  const newQ = stream(P, { system: 's', user: 'MODE:ok new', supersedes: 'seat-0', replaceRunning: true });
+  await Promise.race([oldQ.done, sleep(5000)]);
+  if (terminalCount(oldQ.evs()) === 0) { oldQ.destroy(); await oldQ.done; }   // a helper that never replaces it: fail below, do not hang
+  check('the same key with "replaceRunning" ends the RUNNING question: its stream, then one superseded line',
+    terminalCount(oldQ.evs()) === 1 && oldQ.evs()[0]?.text === 'thinking about it'
+    && JSON.stringify(oldQ.evs().at(-1)) === '{"type":"error","code":"superseded","message":"superseded by a newer question"}', JSON.stringify(oldQ.evs()));
+  let oldGone = false;
+  for (let i = 0; i < 60 && !oldGone; i++) { await sleep(50); oldGone = !oldPids.some(alive); }
+  check('the replaced question\'s child AND grandchild are killed', oldGone, oldPids.filter(alive).join(' '));
+  await newQ.done;
+  check('the newcomer runs at once (no queued line): the stream, then done', newQ.evs()[0]?.type === 'thinking' && newQ.evs().at(-1)?.type === 'done'
+    && !newQ.evs().some((e) => e.type === 'queued') && terminalCount(newQ.evs()) === 1, JSON.stringify(newQ.evs()));
+  check('the helper logged the replacement', /superseded while running/.test(h.log()), h.log().slice(-600));
+  check('each answer\'s log line has its prompt size, queue wait, first text and total',
+    /done claude-fake-1 end_turn; sonnet; 0\.0 KB prompt; queued \d+ ms; first text \d+ ms; \d+ ms\)/.test(h.log()), h.log().slice(-600));
+  r = await http({ port: P });
+  check('/health: nothing running or queued after the replacement', json(r.body)?.queue?.length === 0 && json(r.body)?.running === 0, r.body);
+  lastCall();
 
   const h0 = await startHelper(['--queue-max', '0', '--busy-wait', '400']);
   const s1 = coach(h0.port, { system: 's', user: 'MODE:slowfinish' });
