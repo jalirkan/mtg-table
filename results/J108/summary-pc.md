@@ -1,0 +1,2 @@
+# J108 — archive nights 1 and 2 to the cold drive: plain summary (PC)
+Done 16:57 on 2026-10-07, about 50 minutes. Night 1: 40,003 files, 3.30 GB hot -> 0.56 GB archive; night 2: 40,003 files, 3.36 GB hot -> 0.56 GB archive (zstd, about 6x smaller, verified before deletion). `/mnt/e/forgecoach-archive` holds 1.1 GB. Free space on `/` went 42.4 -> 49.3 GB by the job's own measure (46 GB at 17:41 with the playtest's output growing). The archive tier works; nights 3-5 stay hot.
