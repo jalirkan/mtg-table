@@ -1,0 +1,2 @@
+# J102 — anytime search vs search-v1, fixed 2,400 games: plain summary (PC)
+Done 03:44 on 2026-10-07. search-v1-anytime scored **51.3%** [50.4%, 52.3%] over 2,400 games = **+9.3 Elo** [+2.5, +16.0]. A small, real gain — too small to have passed the withdrawn SPRT's 20-Elo bar, which is why the fixed match replaced it. Budget-fallback rate for the anytime side 0.7% (see metrics for the other side).
