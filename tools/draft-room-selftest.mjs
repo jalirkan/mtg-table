@@ -41,7 +41,7 @@ import { fileURLToPath } from 'node:url';
 import { startHelper } from './coach-helper.mjs';
 import { checkDeck } from './match-launcher.mjs';
 import {
-  applyPick, checkCreate, cleanText, clientKey, createRoomOwner, createRoomStore, dealGrid, legalLines, lineCards, newGrid, ownOrigin,
+  applyPick, checkCreate, cleanText, clientKey, createRoomOwner, createRoomStore, cubeHash, dealGrid, legalLines, lineCards, newGrid, ownOrigin,
   rng, roomAdmit, roomBases, sitePath, startRoomServer, toAct,
 } from './draft-room.mjs';
 
@@ -75,6 +75,23 @@ for (const c of golden.cases) {
   }
   eq(r.log, c.log, `${c.cube} seed ${c.seed} first seat ${c.firstSeat}: every pick the same (${c.log.length} picks)`);
   eq(r.picks, c.picks, `${c.cube} seed ${c.seed} first seat ${c.firstSeat}: both pools the same`);
+}
+// Each golden cube's room hash, as ForgeCoach's WebCrypto computes it (UTF-8: names with diacritics too).
+eq(Object.keys(golden.hashes ?? {}).sort(), Object.keys(golden.cubes).sort(), 'the golden file has a room hash for every cube');
+for (const [k, cards] of Object.entries(golden.cubes)) eq(cubeHash(cards), golden.hashes?.[k], `${k}: cubeHash is the golden's`);
+{
+  // Evybaby's New Cube (Evan's): the golden's names are cubes/evybaby-cube-360.md's, and the room takes the list.
+  const out = {};
+  eq(checkCreate({ cubeId: 'evybaby', cubeTitle: "Evybaby's New Cube", cards: golden.cubes.evybaby }, out), null, 'a room of Evybaby\'s New Cube (360 names) is a valid create body');
+  eq([out.cubeTitle, new Set(out.cards).size], ["Evybaby's New Cube", 360], 'its title and 360 different cards');
+  try {
+    const { parseCube } = await import('./cubelab/cube.ts');
+    const doc = parseCube(readFileSync(join(ROOT, 'cubes', 'evybaby-cube-360.md'), 'utf8'));
+    eq(doc.cards.map((c) => c.name), golden.cubes.evybaby, 'cubes/evybaby-cube-360.md lists the golden\'s 360 names, in order');
+    eq(doc.warnings, [], 'cubes/evybaby-cube-360.md parses without a warning');
+  } catch (e) {
+    console.log(`  skip  tools/cubelab/cube.ts cannot be imported by this Node (${e.message.split('\n')[0]}); the hash above covers the names`);
+  }
 }
 try {
   const lab = await import('./cubelab/rng.ts');
