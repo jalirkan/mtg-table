@@ -405,3 +405,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J101/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table c9ae213
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J102 DONE: Anytime search, fixed measurement: 2,400 games (1,200 mirrored pairs) of search-v1-anytime vs search-v1 at the live 1.5 s budget, score with a 95% interval in Elo and each side's budget-fallback rate (replaces the withdrawn J089)
+
+- finished: 2026-10-07T03:44:22-04:00
+- decides: whether the anytime search (D388, anytime=1) becomes search-v1's default loop in the next search version
+- hypothesis: keeping cut rounds, pruning to the budget and racing turn most of the searched decisions that fell back on budget (18.5% on the week-3 smoke, 11.7% on a larger dev run) into verdicts; the outside review puts the gain at about 10-13 Elo at best
+- rule: written 2026-10-06 before the run, read from var/ai-ladder/match-J102.json: ADOPT anytime=1 as the default loop if (a) the match is complete (all 2,400 games), (b) the 95% interval on search-v1-anytime's score against search-v1 has its lower end above 0.5 (above 0 Elo), and (c) the budget-fallback rate falls: search-v1-anytime's 95% upper end is below search-v1's 95% lower end (both game-clustered). Otherwise NO VERDICT: report the score and Elo with the interval, and both fallback rates, and keep D312's loop as the default; an interval that includes 0 is "not shown", never "no gain"
+- outcome: done
+- headline: m.played 2400, m.score 0.5133, m.lo 0.5036, m.hi 0.523, m.elo 9.3, m.eloLo 2.5, m.eloHi 16, m.aSearch.budgetRate 0.0071, m.bSearch.budgetRate 0.0561
+- summary: results/J102/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table c9ae213
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

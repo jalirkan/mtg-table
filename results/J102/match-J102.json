@@ -1,0 +1,54 @@
+{
+ "v": 1,
+ "at": "2026-10-07T07:44:19.737Z",
+ "id": "justin-a-B650-GAMING-X-AX-V2:20261007T021432-1827132",
+ "host": "justin-a-B650-GAMING-X-AX-V2",
+ "a": "search-v1-anytime",
+ "b": "search-v1",
+ "ah": "cdd55e02a89c",
+ "bh": "81058679773e",
+ "set": "tools/ai-bench/pairs-confirm.txt",
+ "target": 2400,
+ "planned": 2400,
+ "complete": true,
+ "played": 2400,
+ "draws": 0,
+ "errors": 0,
+ "timeouts": 1,
+ "decisive": 2400,
+ "pairs": 1200,
+ "aWins": 1232,
+ "score": 0.5133,
+ "se": 0.005,
+ "lo": 0.5036,
+ "hi": 0.523,
+ "elo": 9.3,
+ "eloLo": 2.5,
+ "eloHi": 16,
+ "aSearch": {
+  "games": 2399,
+  "searched": 55603,
+  "changed": 10113,
+  "fallback": {
+   "budget": 397,
+   "rolloutErrors": 106,
+   "unmappable": 80
+  },
+  "budgetRate": 0.00714,
+  "budgetLo": 0.005791,
+  "budgetHi": 0.008488
+ },
+ "bSearch": {
+  "games": 2399,
+  "searched": 55717,
+  "changed": 9348,
+  "fallback": {
+   "budget": 3128,
+   "rolloutErrors": 321,
+   "unmappable": 74
+  },
+  "budgetRate": 0.056141,
+  "budgetLo": 0.051387,
+  "budgetHi": 0.060894
+ }
+}

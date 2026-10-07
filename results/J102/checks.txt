@@ -1,0 +1,3 @@
+PASS  m.complete == true   [m.complete = true]
+PASS  m.played == 2400   [m.played = 2400]
+PASS  m.errors + m.timeouts <= m.played / 20   [m.errors = 0, m.timeouts = 1, m.played = 2400]

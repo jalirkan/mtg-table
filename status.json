@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-07T03:40:31-04:00",
- "heartbeat": "2026-10-07T03:40:31-04:00",
+ "updated": "2026-10-07T03:44:22-04:00",
+ "heartbeat": "2026-10-07T03:44:22-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.33,
-  "memUsedGb": 7.8,
+  "load1": 1.12,
+  "memUsedGb": 5.2,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2644,
+  "swapUsedMb": 2625,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -19,69 +19,95 @@
  },
  "running": [
   {
-   "publicTitle": "Anytime search fixed match",
-   "publicEst": "~2 to 3 h",
-   "id": "J102",
-   "title": "Anytime search, fixed measurement: 2,400 games (1,200 mirrored pairs) of search-v1-anytime vs search-v1 at the live 1.5 s budget, score with a 95% interval in Elo and each side's budget-fallback rate (replaces the withdrawn J089)",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-06T22:09:35-04:00",
-   "elapsed": 19856,
-   "done": 2384,
-   "total": 2400,
-   "unit": "games",
-   "ratePerHour": 554.7,
-   "eta": "2026-10-07T03:42:15-04:00",
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-07T03:39:40-04:00",
-   "memGb": 2.59,
-   "live": {
-    "m.played": 0,
-    "elapsed_s": 19805,
-    "match_err": 1,
-    "match_games": 2384,
-    "peak_worker_rss_gb": 1.25,
-    "pressure_events": 2,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "m.played"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [
-    {
-     "at": "2026-10-06T22:43:42-04:00",
-     "kind": "playing",
-     "workers": 7,
-     "pressure": 0
-    },
-    {
-     "at": "2026-10-06T23:24:52-04:00",
-     "kind": "play-ended",
-     "workers": 7,
-     "pressure": 0
-    }
-   ],
-   "detail": "lab-J102-run1"
-  }
- ],
- "queue": [
-  {
    "publicTitle": "Queue night 5",
    "publicEst": "~11 h",
    "id": "J103",
    "title": "Overnight queue, night 5: night 4's design and settings as J099's rule chose them (D375's AI profile mix kept, play exploration kept at 0.15), bridge share 0.2 (card-level allocation from J062 power.tsv)",
    "cpu": "heavy",
-   "est": "~8.5-10 h of drafts (38000 drafts: 8.5 h at night 3's measured 4,490 drafts/h, exploration kept), then ~1 h of redaction checks (resumable)"
+   "phase": "prepare",
+   "started": "2026-10-07T03:44:22-04:00",
+   "elapsed": 0,
+   "done": 0,
+   "total": null,
+   "unit": "drafts",
+   "ratePerHour": null,
+   "eta": null,
+   "workers": 1,
+   "workersMax": 1,
+   "cores": 7,
+   "errors": null,
+   "paused": false,
+   "dataUpdated": "2026-10-07T03:44:22-04:00",
+   "memGb": null,
+   "live": {
+    "night.night_drafts_done": 0,
+    "night.planned_drafts": 0,
+    "night.bridge_share": 0,
+    "quarantined": 0,
+    "base.written": 0,
+    "elapsed_s": 0,
+    "free_gb": 34,
+    "night.bridge_drafts": 0,
+    "night.bridge_drafts_done": 0,
+    "night.bridge_drafts_planned": 0,
+    "night.cpu_ms_per_turn": 0,
+    "night.drafts": 0,
+    "night.draws": 0,
+    "night.engine_error_rate": 0,
+    "night.engine_errors": 0,
+    "night.games": 0,
+    "night.mean_game_ms": 0,
+    "night.mean_game_s": 0,
+    "night.mean_turns": 0,
+    "night.median_game_s": 0,
+    "night.ms_per_turn": 0,
+    "night.nights": 1,
+    "night.output_bytes": 0,
+    "night.recorded_bytes_per_game": 0,
+    "night.recorded_errors": 0,
+    "night.recorded_games": 0,
+    "night.runs": 0,
+    "night.timeouts": 0,
+    "ns.written": 0,
+    "pressure_events": 0,
+    "seeds.written": 0,
+    "workers": 1
+   },
+   "liveHeadline": [
+    "night.night_drafts_done",
+    "night.planned_drafts",
+    "night.bridge_share",
+    "quarantined"
+   ],
+   "cubes": [],
+   "publicCubes": true,
+   "pressureEvents": [],
+   "detail": "lab-J103-prepare"
   }
  ],
+ "queue": [],
  "waiting": [],
  "finished": [
+  {
+   "publicTitle": "Anytime search fixed match",
+   "publicEst": "~2 to 3 h",
+   "id": "J102",
+   "title": "Anytime search, fixed measurement: 2,400 games (1,200 mirrored pairs) of search-v1-anytime vs search-v1 at the live 1.5 s budget, score with a 95% interval in Elo and each side's budget-fallback rate (replaces the withdrawn J089)",
+   "status": "done",
+   "finished": "2026-10-07T03:44:22-04:00",
+   "headline": "m.played 2400 · m.score 0.513 · m.lo 0.504 · m.hi 0.523 · m.elo 9.3 · m.eloLo 2.5 · m.eloHi 16 · m.aSearch.budgetRate 0.007 · m.bSearch.budgetRate 0.056",
+   "numbers": {
+    "m.played": 2400,
+    "m.score": 0.5133,
+    "m.lo": 0.5036,
+    "m.hi": 0.523,
+    "m.elo": 9.3,
+    "m.eloLo": 2.5,
+    "m.eloHi": 16,
+    "m.aSearch.budgetRate": 0.00714,
+    "m.bSearch.budgetRate": 0.056141
+   }
+  },
   {
    "publicTitle": "Reckless baseline",
    "publicEst": "one night (~6 to 9 h)",
@@ -766,17 +792,6 @@
     "ex.balance_diff": -0.043165291591307664,
     "ex.pooled_delta": 0.00631284075846994
    }
-  },
-  {
-   "publicTitle": "Evaluator training and fit gate",
-   "publicEst": "~6 h",
-   "id": "J034",
-   "title": "Evaluator gate 1: train the position evaluator on night 1 and run the held-out fit gate (D354)",
-   "status": "failed",
-   "finished": "2026-10-03T18:59:37-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "pilot: step pilot1 exited 1"
   }
  ],
  "runner": {

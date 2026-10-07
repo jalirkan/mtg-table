@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-07T03:40:31-04:00
+- time: 2026-10-07T03:44:22-04:00
 - runner: 10896b8, up since 2026-10-06T16:24:24-04:00
-- running: J102 commands 1/1, 2384/2400 games, 554.7/h, ETA 2026-10-07T03:42:15-04:00, 7 worker(s), 7 core(s)
+- running: J103 prepare, 0 drafts, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 3.33; memory 7.8/30.5 GB, swap 2644 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J103
+- load: 1.12; memory 5.2/30.5 GB, swap 2625 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J101 done at 2026-10-06T21:09:10-04:00: sa.games 808 · sa.score 0.501 · sc.games 392 · sc.score 0.487 · mr.score 0.623 · mr.elo 87.5 · md.score 0.603 · md.elo 72.9
+- last finished: J102 done at 2026-10-07T03:44:22-04:00: m.played 2400 · m.score 0.513 · m.lo 0.504 · m.hi 0.523 · m.elo 9.3 · m.eloLo 2.5 · m.eloHi 16 · m.aSearch.budgetRate 0.007 · m.bSearch.budgetRate 0.056
 
 ## Messages
+
+- FOLLOW-UP READY [J102@2026-10-07T03:44:22-04:00] (the runner, for the cloud session): J102 is done; write and post the template morning-read. It decides: whether the anytime search (D388, anytime=1) becomes search-v1's default loop in the next search version. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J101@2026-10-06T21:09:10-04:00] (the runner, for the cloud session): J101 is done; write and post the template morning-read. It decides: whether ForgeCoach's Play vs Forge should default to Forge's Reckless profile as the stronger opponent, and whether the search should sit on Reckless instead of Default. Ledger: LEDGER.md. Delete this line once posted.
 
