@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-07T06:10:54-04:00",
- "heartbeat": "2026-10-07T06:10:54-04:00",
+ "updated": "2026-10-07T06:15:31-04:00",
+ "heartbeat": "2026-10-07T06:15:31-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.65,
-  "memUsedGb": 4.6,
+  "load1": 17.52,
+  "memUsedGb": 13,
   "memTotalGb": 30.5,
-  "swapUsedMb": 3579,
+  "swapUsedMb": 3584,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,22 +26,22 @@
    "cpu": "heavy",
    "phase": "commands 1/3",
    "started": "2026-10-07T06:05:50-04:00",
-   "elapsed": 305,
-   "done": 0,
-   "total": null,
+   "elapsed": 581,
+   "done": 301,
+   "total": 38000,
    "unit": "drafts",
-   "ratePerHour": null,
-   "eta": null,
+   "ratePerHour": 1869.2,
+   "eta": "2026-10-08T02:25:37-04:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-07T06:05:50-04:00",
-   "memGb": 0,
+   "dataUpdated": "2026-10-07T06:15:30-04:00",
+   "memGb": 8.07,
    "live": {
-    "night.night_drafts_done": 0,
-    "night.planned_drafts": 0,
+    "night.night_drafts_done": 301,
+    "night.planned_drafts": 38000,
     "night.bridge_share": 0,
     "quarantined": 0,
     "base.bytes_ratio_explore_plain": 1.005377,
@@ -90,38 +90,38 @@
    "cubes": [
     {
      "id": "fair-fight",
-     "done": 6,
-     "planned": 6
+     "done": 250,
+     "planned": 4002
     },
     {
      "id": "modern-era",
-     "done": 6,
-     "planned": 6
+     "done": 51,
+     "planned": 4084
     },
     {
      "id": "omega",
-     "done": 6,
-     "planned": 6
+     "done": 0,
+     "planned": 3541
     },
     {
      "id": "pauper",
-     "done": 8,
-     "planned": 8
+     "done": 0,
+     "planned": 4926
     },
     {
      "id": "peasant",
-     "done": 10,
-     "planned": 10
+     "done": 0,
+     "planned": 6228
     },
     {
      "id": "synergy",
-     "done": 7,
-     "planned": 7
+     "done": 0,
+     "planned": 4248
     },
     {
      "id": "vintage",
-     "done": 5,
-     "planned": 5
+     "done": 0,
+     "planned": 3371
     }
    ],
    "publicCubes": true,
