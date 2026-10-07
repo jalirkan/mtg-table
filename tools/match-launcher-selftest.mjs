@@ -215,11 +215,13 @@ async function startPlay(extra, label, env = {}) {
 try {
   // ------------------------------------------------------------- play.sh, the launcher on
   console.log('== play.sh --engine-only with a fake engine: the launcher');
-  const A = await startPlay([], 'a');
+  // --no-auto-review (D385, for games that are not the owner's: ForgeCoach's playtest) is a flag play.sh takes.
+  const A = await startPlay(['--no-auto-review'], 'a');
   check('play.sh prints the match launcher line', /Match launcher: ForgeCoach's Play this match restarts this engine/.test(A.out()), A.out());
   check('the coach helper started without claude on PATH', /Coach: claude CLI not found/.test(A.out()));
   let r = await http({ port: A.coachPort });
   check('/health advertises match: 1', r.status === 200 && r.json?.match === 1 && r.json?.helper === 1, r.body);
+  check('play.sh --no-auto-review: the helper reviews nothing by itself', r.json?.autoReview === 0, r.body);
   check('/health advertises the AI policies and the search budget (D333)', JSON.stringify(r.json?.aiPolicies) === '["plain","outlets","search"]'
     && JSON.stringify(r.json?.aiSearchMs) === '{"min":500,"max":5000,"default":1500}', r.body);
   const first = starts();

@@ -67,6 +67,7 @@
 #                                                # var/ml/models/night-1-ensemble.json is preferred when it exists)
 #   ./scripts/play.sh --engine-only --idle-exit-after 60   # give up 60 min after the engine sleeps (D308)
 #   ./scripts/play.sh --no-human-collect    # do not copy finished games into var/ml/human/ (D369, below)
+#   ./scripts/play.sh --no-auto-review      # no automatic engine review of finished games (D385; config.json coach.autoReview)
 #   ./scripts/play.sh --no-bugs-sync        # do not send new bug reports to pc-results on exit (D411, below)
 #   ./scripts/play.sh --arena               # open the 3D arena instead of the board
 #   ./scripts/play.sh --no-open             # do not launch a browser
@@ -299,6 +300,11 @@
 # (D308) and at exit, takes well under a second when nothing is new, never stops
 # play.sh, and copies nothing twice.  --no-human-collect turns it off.
 #
+# THE AUTOMATIC REVIEW (D385) is the coach helper's: config.json `coach.autoReview`
+# (default true) reviews every finished human game.  --no-auto-review turns it off
+# for this run only -- for games that are not the owner's, such as ForgeCoach's
+# full-game playtest (its monkey's games would queue a review each).
+#
 # BUG REPORTS (D411).  ForgeCoach's "Report a bug" button (Shift+B) saves a report
 # through the coach helper (POST /bug; a friend's through the room, POST
 # /room/<id>/bug) in var/bugs/.  At exit, when there are new ones, this script
@@ -350,6 +356,7 @@ PORT_EXPLICIT=0                  # D308: --port given, so this is a second bridg
 PASSTHROUGH=()
 EVAL_ARGS=()                     # D361: the coach helper's /eval (--eval-model <path>, --no-eval)
 HUMAN_COLLECT=1                  # D369: copy finished games into var/ml/human/ at start, asleep and exit
+AUTO_REVIEW=1                    # D385: 0 = --no-auto-review, passed to the coach helper
 HUMAN_COLLECTED_AT_STOP=0
 BUGS_SYNC=1                      # D411: send new bug reports (var/bugs/) to pc-results at exit
 BUGS_SYNCED_AT_STOP=0
@@ -439,6 +446,7 @@ while [ $# -gt 0 ]; do
     --no-eval)   EVAL_ARGS+=(--no-eval); shift ;;
     --idle-exit-after) IDLE_EXIT_MIN="${2:-}"; shift 2 ;;
     --no-human-collect) HUMAN_COLLECT=0; shift ;;
+    --no-auto-review) AUTO_REVIEW=0; shift ;;
     --no-bugs-sync) BUGS_SYNC=0; shift ;;
     --draft-room) DRAFT_ROOM=1; shift ;;
     --room-port) ROOM_PORT="$2"; shift 2 ;;
@@ -992,7 +1000,8 @@ start_coach() {
   fi
   # D385: the automatic review (config.json coach.autoReview) -- never under a self-test's fake engine,
   # whose helper would otherwise queue the real var/games/ (as D369's collector is skipped there).
-  [ -n "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] && args+=(--no-auto-review)
+  # --no-auto-review turns it off for this run (games that are not the owner's: ForgeCoach's playtest).
+  if [ -n "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] || [ "$AUTO_REVIEW" = "0" ]; then args+=(--no-auto-review); fi
   : > "$COACH_LOG"
   COACH_HELPER_TOKEN="$token" node tools/coach-helper.mjs "${args[@]}" >>"$COACH_LOG" 2>&1 &
   COACH_PID=$!
