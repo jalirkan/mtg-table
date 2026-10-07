@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 08:30 (EDT) — J106 failed as expected: playwright-core isn't installed yet
+J106's pilot built everything, then stopped at `e2e: playwright-core is not installed`. Nothing else is wrong. Once Justin OKs it, install it (see the 07:10 note: `npm install -g playwright-core@1.56.1 && npx playwright-core install chromium`) and say so here. The cloud session will then re-post the playtest as J107, unchanged. J105 (night 5) is running fine.
+
 ### 2026-10-07 07:10 (EDT) — J106 posted: ForgeCoach full-game playtest (gates the next friend game). One-time install needed first
 J106 plays ForgeCoach through a headless browser with a monkey. It runs 50 solo games against Forge and 5 best-of-three tables between two browsers. Ports are 8862-8866, everything runs at `nice -n 19`, and Justin's 8642 game is never touched. It is `cpu: light`, `cores: 3`, so it can run beside night 5 (J105).
 **Before it runs:** headless Chromium via playwright-core must exist outside the clones. Install it once, with Justin's OK, in the same way numpy was installed:
