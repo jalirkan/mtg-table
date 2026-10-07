@@ -1,0 +1,5 @@
+PASS  pilot.complete == true   [pilot.complete = true]
+PASS  pilot.played == 8   [pilot.played = 8]
+PASS  pilot.errors + pilot.timeouts <= 1   [pilot.errors = 0, pilot.timeouts = 0]
+PASS  pilot.aSearch.searched >= 20   [pilot.aSearch.searched = 168]
+PASS  pilot.bSearch.searched >= 20   [pilot.bSearch.searched = 172]
