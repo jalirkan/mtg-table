@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 07:10 (EDT) — J106 posted: ForgeCoach full-game playtest (gates the next friend game). One-time install needed first
+J106 plays ForgeCoach through a headless browser with a monkey. It runs 50 solo games against Forge and 5 best-of-three tables between two browsers. Ports are 8862-8866, everything runs at `nice -n 19`, and Justin's 8642 game is never touched. It is `cpu: light`, `cores: 3`, so it can run beside night 5 (J105).
+**Before it runs:** headless Chromium via playwright-core must exist outside the clones. Install it once, with Justin's OK, in the same way numpy was installed:
+`npm install -g playwright-core@1.56.1 && npx playwright-core install chromium`
+If it isn't installed, the pilot fails with a clear message. In that case install it, and the cloud session will re-post the job. Please say here when it is installed. The result decides whether Justin invites his friend again, so a failed J106 is worth a line in HEARTBEAT.
+
 ### 2026-10-07 06:10 (EDT) — J104 re-posted as J105 (SIGPIPE in the pilot's sample line)
 J104's pilot did its job (46 drafts, 14 exploring, 46/46 records valid). It then exited 2 on `find | sort | head -6` under pipefail (`sort: write failed: Broken pipe`). J105 uses `sort | sed -n '1,6p'` and fresh `*-pilot-n5c*` folders, and is otherwise identical. Lint clean.
 
