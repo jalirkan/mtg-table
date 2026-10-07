@@ -103,6 +103,16 @@
 //                 gives the friend's seat a new token (the old link stops working); both on this
 //                 port only, and /health says "roomRevoke": 1.
 //
+//   POST /bug     -- BUG REPORTS FROM THE BOARD (D411): ForgeCoach's "Report a bug" panel, on
+//                 Justin's own page.  tools/bug-reports.mjs's header is that contract: the body
+//                 (at most 6 MB: the report, the last frames of the game's log, an optional
+//                 screenshot) is checked, scrubbed of secrets and saved as var/bugs/<id>.json
+//                 (+ the screenshot) -> 201 {"ok": true, "id", "screenshot"}; 400 a bad body,
+//                 413, 429 (more than a few a minute), 507 the folder is full.  Behind this
+//                 port's door as every route (D386).  /health carries "bugs": 1.  A friend's page
+//                 reports through the room listener instead (POST /room/<id>/bug, its seat token).
+//                 tools/bugs-sync.mjs --push copies new reports to pc-results under bugs/.
+//
 //   ONE QUESTION AT A TIME, THE REST IN A QUEUE (D325).  Claude Code runs one
 //   question at a time.  A /coach that arrives while one runs is QUEUED, first in
 //   first out, up to --queue-max (default 4) waiting; past that it is answered
@@ -208,7 +218,8 @@ import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 import { MAX_REVIEW_BODY, createReviewRunner, cleanOld, gameLog, readLogText } from './review-runner.mjs';
 import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
-import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
+import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createLimiter, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
+import { MAX_BUG_BODY, createBugStore } from './bug-reports.mjs';
 
 export const HELPER_VERSION = 1;
 export const MODELS = ['opus', 'sonnet', 'haiku'];
@@ -601,7 +612,9 @@ export function seatReviewOf({ review, auto }, gameId) {
 }
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, room = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, room = null, bugs = null, log = (s) => console.log(s) } = opts;
+  // D411: bug reports through this door -- a few a minute is plenty for a person at a board.
+  const bugLimit = createLimiter({ perMinute: opts.bugsPerMinute ?? 6, burst: opts.bugsBurst ?? 10 });
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
   // helper on 0.0.0.0, to prove admit() refuses a non-loopback peer by its
   // address and not by the bind); the CLI never does.
@@ -664,7 +677,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1 };   // D325
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
-      const ev = { ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}) };   // D361; D400 (no key without --draft-room)
+      const ev = { ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}) };   // D361; D400 (no key without --draft-room); D411
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1 } : {}), ...rv, ...ev }, cors);
@@ -717,6 +730,20 @@ export function startHelper(opts) {
       const r = await evaluator.post(q);
       send(res, r.status, r.body, cors);
       say(r.status, r.status === 200 ? ` (p ${r.body.p.toFixed(3)}${r.body.sd !== undefined ? ` sd ${r.body.sd.toFixed(3)}` : ''}${r.body.explain ? ', explained' : ''}, turn ${r.body.turn}, ${r.body.ms} ms)` : ` (${r.body.message.slice(0, 160)})`);
+      return;
+    }
+    if (path === '/bug') {
+      // D411: a bug report from Justin's own page (tools/bug-reports.mjs).  Behind this port's door, like every route.
+      if (!bugs) { send(res, 404, { type: 'error', message: 'not found' }, cors); say(404); return; }
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (!bugLimit.take('owner')) { send(res, 429, { ok: false, type: 'error', code: 'slow', message: 'too many bug reports in a minute -- wait a moment' }, { ...cors, 'Retry-After': '10' }); say(429); return; }
+      const raw = await readBody(req, res, MAX_BUG_BODY, '6 MB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', code: 'bad', message: 'the body is not JSON' }, cors); say(400); return; }
+      const r = bugs.save({ body: q, via: 'helper', secrets: [token, url.searchParams.get('token') ?? '', String(req.headers['x-forgecoach-token'] ?? '')] });
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 201 ? ` (bug ${r.body.id})` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path === '/room') {
@@ -1048,6 +1075,9 @@ async function main() {
     });
     void evaluator.start().then(() => console.log(`COACH EVAL      ${evaluator.describe()}`));
   }
+  // D411: bug reports from the board, var/bugs/ (the helper's POST /bug, the room listener's POST /room/<id>/bug).
+  let bugs = null;
+  try { bugs = createBugStore({ dir: resolve(cfg.repoRoot, 'var', 'bugs'), varRoot: resolve(cfg.repoRoot, 'var'), log: (s) => console.log(`COACH ${s}`) }); } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
   // D400: the draft room -- its store and its own listener, before the helper's port opens.
   let room = null;
   let roomServer = null;
@@ -1073,7 +1103,7 @@ async function main() {
     } catch (e) { console.error(`coach-helper: ${e.message}`); process.exit(2); }
     const kept = store.load();
     roomServer = startRoomServer({ store, port: roomPort, bindHost: a.lan ? '0.0.0.0' : '127.0.0.1', origins: cfg.origins, extraOrigins: a.roomOrigins,
-      siteDir: a.roomSiteDir ? resolve(a.roomSiteDir) : null, log: (s) => console.log(s) });
+      siteDir: a.roomSiteDir ? resolve(a.roomSiteDir) : null, bugs, log: (s) => console.log(s) });
     try { roomPort = await roomServer.listen(); } catch (e) {
       console.error(e.code === 'EADDRINUSE' ? `coach-helper: the draft room's port ${roomPort} is in use (--room-port, or config.json roomPort)` : `coach-helper: ${e.message}`);
       process.exit(1);
@@ -1081,7 +1111,7 @@ async function main() {
     room = createRoomOwner({ store, roomPort, lan: a.lan, publicUrl: a.roomPublicUrl });
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator, room });
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator, room, bugs });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -1100,6 +1130,7 @@ async function main() {
   auto?.start();   // D385: after LISTENING, so its first scan never delays the port
   if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');
   console.log(match ? `COACH MATCH     /match on: play.sh (pid ${a.supervisor}) restarts the engine; decks under ${a.matchDir}` : 'COACH MATCH     /match off (not started by play.sh)');
+  console.log(`COACH BUGS      POST /bug saves to var/bugs/ (D411); tools/bugs-sync.mjs --push sends new ones to pc-results`);
   console.log(room ? `COACH ROOM      /room on: POST makes a draft room; players use port ${roomPort} (D400)` : 'COACH ROOM      /room off (--draft-room)');
   const stop = () => { h.close(); roomServer?.close(); process.exit(0); };
   process.on('SIGINT', stop);
