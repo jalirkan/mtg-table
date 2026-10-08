@@ -835,6 +835,25 @@ public final class MtgTable {
         if (a.manaLostPrompt) {
             o.key("prefs").arr().v("UI_MANA_LOST_PROMPT").end();
         }
+        // Amendment M62 (D414): who answered for the AI seat, for the human test
+        // set's labels (tools/ml/human_collect.py) -- hello_ok.match.aiPolicy
+        // names the policy, and only this says a search seat's version and
+        // budget.  Omitted for plain Forge, so no plain recording changes.  The
+        // search's config is its own knobs (no card, no deck).  `version` is the
+        // live default's name (search-v2, D412) when the seat runs it, at any
+        // budget; null when other knobs were changed.
+        if (!"plain".equals(a.aiPolicy)) {
+            o.key("ai").obj().n("policy", a.aiPolicy);
+            if ("search".equals(a.aiPolicy)) {
+                final SearchConfig sc = SearchConfig.parseLive(a.aiSearch);
+                final boolean live = sc.toString().equals(
+                        SearchConfig.parseLive("ms=" + sc.budgetMs).toString());
+                o.n("version", live ? SearchConfig.LIVE_VERSION : null);
+                o.n("budgetMs", sc.budgetMs);
+                o.n("config", sc.toString());
+            }
+            o.end();
+        }
         o.key("decks").arr();
         for (final PlayerView p : players) {
             final boolean isViewer = p.getId() == viewer.getId();

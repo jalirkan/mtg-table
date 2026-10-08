@@ -1006,6 +1006,30 @@ tableProbe('m60-score-ahead-of-the-game.jsonl',
 }
 
 /*
+ * Amendment M62 (D414) -- the session header's `ai`: the AI seat's controller
+ * when it is not plain Forge, on a seat's log.  Two one-defect probes (the
+ * committed corpus has no ws seat recording of a search seat to be the control):
+ * a key it never carries, and the key on a log no seat played.
+ */
+const M62_AI = { policy: 'search', version: 'search-v2', budgetMs: 1500, config: 'ms=1500,cands=6,turns=0,rounds=2,margin=0,maxrounds=0,what=pab,anytime=1' };
+{
+  const name = 'm62-ai-unexpected-key.jsonl';
+  const fs = slice();
+  const bytes = write(name, fs, { ...structuredClone(header), transport: 'ws', ai: { ...M62_AI, aiDeck: 'decks/doom-legion.dck' } });
+  const why = 'amendment M62 / D414: the header\'s ai is the search\'s own knobs, never a deck or anything else';
+  manifest.push({ file: name, level: 'fail', expect: 'session header "ai" carries an unexpected key', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+}
+{
+  const name = 'm62-ai-without-transport.jsonl';
+  const fs = slice();
+  const bytes = write(name, fs, { ...structuredClone(header), ai: { ...M62_AI } });
+  const why = 'amendment M62 / D414: only a seat a person plays names its AI opponent in the header';
+  manifest.push({ file: name, level: 'fail', expect: 'session header "ai" without "transport"', why });
+  console.log(`  FAIL  ${name}  (${bytes} bytes)  ${why}`);
+}
+
+/*
  * Amendment M61 (D413) -- `state.playable`, what the seat may play from outside
  * the battlefield.  The control writes it as a seat does: on every state, a
  * list at the seat's own priority (one of its own hand cards) and null

@@ -812,11 +812,19 @@ into `var/ml/human/<gameId>-<seed>-<startedAt>.jsonl.gz`, byte for byte, keyed b
 game id + seed + start time so nothing is copied twice, with a line in
 `var/ml/human/manifest.json` (date, your deck and the cube it came from, the AI's
 deck name, profile and policy, the result). play.sh prints `human test set: N
-games`; `--no-human-collect` turns it off. Logs saved anywhere else:
+games`; `--no-human-collect` turns it off. **D414:** play.sh also runs it every
+minute while it is up (a line only when a game was added), because a ForgeCoach
+page that stays connected keeps the engine awake and the start's count is taken
+before the session's games; the manifest gains `aiSearch` (a search seat's
+version, budget and config, from the header's `ai`, M62) and `coach` (ForgeCoach's
+own per-game record of the live coach's answers, joined by the game key from any
+`coach-usage*.json` saved in `var/ml/human/` or `--coach-usage FILE`; null =
+unknown). Logs saved anywhere else:
 
 ```bash
 python3 tools/ml/human_collect.py --from ~/Downloads/forgecoach-logs    # any *.jsonl[.gz] with a session header
 python3 tools/ml/human_collect.py --status                               # the one line
+python3 tools/ml/human_collect.py --dry-run                              # what would be copied, and why every other log is not
 ```
 
 The copy is the human seat's own log, redacted for that seat by the bridge; the

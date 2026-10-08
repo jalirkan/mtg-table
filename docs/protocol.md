@@ -30,6 +30,19 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-08 — the session header names a search seat's version and budget
+
+The human test set (D369) labels each of the owner's games with the AI it was
+played against. `hello_ok.match.aiPolicy` (M56) says `search`, but not which
+search: since D412 the live seat is search-v2, and a picker can set its budget
+(D333). The header now says so — off the wire, so no client changes. One row.
+Decision **D414**. Held by `tools/check-redaction.mjs` (the shape; two controls
+in `fixtures/negative/redaction/m62-*`) and `tools/ml/tests/test_human.py`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M62 | §8.1 | **The session header's `ai` (D414): who answered for the AI seat when it is not plain Forge.** `{policy: "outlets"}`, or `{policy: "search", version, budgetMs, config}` — `version` the live default's name (`"search-v2"`, D412) when the seat runs it at any budget, `null` when other knobs were changed; `budgetMs` its wall-clock budget per searched decision; `config` `SearchConfig`'s own string (`ms=…,cands=…,…`). The search's knobs only: never a card, a deck or a path to either. **Omitted for plain Forge**, so no plain recording changes; written only on a seat's log (beside `transport`), never at a table of two. Off the wire (the header is the log's); `hello_ok.match.aiPolicy` (M56) still names the policy on the wire. Its reader is the human test set's collector (`tools/ml/human_collect.py`, the manifest's `aiSearch`). | D414 |
+
 ### 2026-10-07 — what the seat may play from outside the battlefield
 
 Found by ForgeCoach's full-game playtest: a card in the seat's graveyard with an
@@ -2150,6 +2163,7 @@ Line 0 is **not** a frame. It is the session header, distinguished by
 | `paceMs` | **Optional** (amendment **M47**). Present only on a PACED AI-vs-AI recording — `mtgtable.RecordMatch --pace <ms>`, which `./scripts/spectate.sh` passes in follow mode: the engine dwelt `paceMs` at every phase boundary (a quarter of it after a frame that only moved the phase strip), so the `t` gaps are the watcher's pace, not the engine's. It changes nothing else — a paced and an unpaced recording of one seed are the same frames (§8.7). A positive integer; `tools/check-redaction.mjs` fails it beside `transport`, because a seat's pace is its player's. |
 | `humans` | **Optional** (amendment **M59**). `2` on each seat's log at a table of two (`MtgTable --humans 2`): the other seat is a person, so `hello_ok.match` takes its two-person form and `table` frames appear. Only beside `transport`. Each seat writes its own log, `var/games/<gameId>-seat<N>/frames.jsonl`. |
 | `record` | **Optional** (amendment **M60**, D407). `true` or `false`: this seat's player agreed (or not) to this game going into the human test set (D369, `var/ml/human-friends/`) and the automatic engine review (D385, that player's own). Only beside `humans: 2`; absent means not agreed. |
+| `ai` | **Optional** (amendment **M62**, D414). The AI seat's controller when it is not plain Forge: `{"policy":"outlets"}` or `{"policy":"search","version":"search-v2"\|null,"budgetMs":1500,"config":"ms=1500,…"}`. Absent for plain Forge and on every log before M62. Only beside `transport`, never beside `humans`. |
 | `decks` | One entry per seat: `{player, path, sha256, cards}`. **`path` and `sha256` are the viewing seat's alone and are `null` for every other seat** — see below. `cards` is the main deck's card count and is public for every seat. |
 
 **A frame produced before the header is held, not dropped** (amendment M9). The
