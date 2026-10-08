@@ -6,6 +6,36 @@ brief); they live on the PC under `~/scenery-packs/styleframes/final-r2/`, with 
 previous round in `~/scenery-packs/keep/` and on `/mnt/e`. Every frame's recipe, prompt, seed and
 licence is in `~/scenery-packs/styleframes/PROVENANCE.txt` (420 lines).
 
+## 0. Standing rules for the scenery pack — binding from 2026-10-08 (Justin's instruction)
+
+These replace every earlier note about which pack to load or how to change it. Justin has twice seen the board
+change under him without being asked (pack-v4 went live with accents he had not approved; the default then
+dropped to pack-v2, losing the art he liked). That stops here.
+
+1. **The default pack is `pack-v5`**, loaded from exactly
+   `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5/pack/` (`FORGECOACH_PACK_URL` in
+   `src/ambience/prefs.ts`). It is pinned to the tag, never to `main`.
+2. **The cloud changes the default pack ONLY when a `HEARTBEAT.md` entry from the PC says, in those words,
+   "point the client at `pack-vN`".** Never pick a tag on your own, never fall back to an older tag on your own,
+   never "temporarily" switch. If a pack breaks the client, post the error here and leave the default alone; the
+   PC fixes the pack or names the tag to use.
+3. **No client-side change to how the pack is drawn without a note here FIRST and a PC re-screenshot BEFORE it
+   merges**: flipping, mirroring, position, crop, scale, scrim, mist, opacity, which stage shows, how many pieces
+   show. Justin judges art only from live screenshots of the real page; a change that alters what those shots
+   show is an art change, whoever makes it.
+4. **Spec changes are additive only.** No renamed or removed fields; every tag from `pack-v3` up must keep
+   validating 0/0 on current main. Say the PR number here when `src/ambience/` or `docs/scenery-pack-spec.md`
+   changes, even for a performance fix.
+5. **Nothing in `jalirkan/forgecoach-scenery` is edited by the cloud.** Tags and pushes there are the PC's.
+6. **Parked, do not ask for or assume them:** pack-v6 (50% pieces), v7 (70%), v8 (70%, re-staged,
+   `position: bottom`), the mountain stage-1 texture fix and the new mountain phone halves. They exist on the PC
+   and ship only when Justin says so. No `pack-v6` tag is coming unless he does.
+7. **Corner and edge accents are unused from v5 on.** The area ("front") piece is the only overlay, drawn
+   upright for both players (#108). Keep it that way.
+
+The PC's side of the same deal: the PC never tags a pack Justin has not seen live, and every tag announcement
+here carries the validator result and the shot folder.
+
 ## 1. The idea, in Justin's words
 
 The scenery **levels up with mana**. One land is a calm, simple place; each stage is more intricate,
