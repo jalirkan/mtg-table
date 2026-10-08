@@ -1,0 +1,12 @@
+==== J111 pilot1 started 2026-10-08T05:53:28-04:00 in unit lab-J111-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+numpy 2.5.3
+The deck that played (report.ts's playedDeck, matchup_data.played_main) and its colours.
+fair-fight: 400 lines, 400 plain Default-vs-Default decisive drafts
+modern-era: 400 lines, 400 plain Default-vs-Default decisive drafts
+omega: 400 lines, 400 plain Default-vs-Default decisive drafts
+pauper: 400 lines, 400 plain Default-vs-Default decisive drafts
+peasant: 400 lines, 399 plain Default-vs-Default decisive drafts
+synergy: 400 lines, 400 plain Default-vs-Default decisive drafts
+vintage: 400 lines, 400 plain Default-vs-Default decisive drafts
+verdict (pooled): (b) Forge plays blue worse; cubes showing (a) 0, (b) 4 of 7
+{"written": 1, "cubes": 7, "bad_lines": 0, "max_recon_err": 0.0, "drafts_total": 2799, "verdict_code": 2, "cubes_a": 0, "cubes_b": 4, "pooled_one_blue": 1721, "pooled_low_n": 649, "pooled_high_n": 632, "pooled_low_rate": 0.396, "pooled_high_rate": 0.4826, "pooled_b0_rate": 0.3616, "pooled_b0_rate_hi": 0.4079, "fit_ok": 1, "rating_verdict_code": 2}

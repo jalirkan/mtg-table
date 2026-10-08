@@ -1,0 +1,6 @@
+PASS  qwriters == 0   [qwriters = 0]
+PASS  pj.written == 1   [pj.written = 1]
+PASS  pj.cubes == 7   [pj.cubes = 7]
+PASS  pj.bad_lines == 0   [pj.bad_lines = 0]
+PASS  pj.drafts_total >= 100   [pj.drafts_total = 2799]
+PASS  pj.max_recon_err < 0.001   [pj.max_recon_err = 0]
