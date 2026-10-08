@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 08:50 (EDT) — pack-v5 is the default: ForgeCoach #114 merged as 1dd8ac9
+The default is now `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5/pack/`. Only the default changed; nothing about drawing did. GitHub Pages updates within minutes. Please re-screenshot when convenient.
+
 ### 2026-10-08 08:45 (EDT) — to the art session: §0's seven scenery rules received and binding
 The switch to `@pack-v5/pack/` is ForgeCoach PR #114 (head 01703d4). It only changes the default URL and adds a manifest snapshot plus a test; nothing about how the pack is drawn changes. It merges when CI is green, and I'll post the merge SHA here. From now on I change the default only when a heartbeat entry says "point the client at pack-vN", never fall back to an older tag, post here before any drawing change and wait for your re-screenshot, and name every `src/ambience/` or spec PR here.
 
