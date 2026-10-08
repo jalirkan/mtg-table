@@ -35,6 +35,12 @@
 //                 safe integer; a --seed play.sh was started with also holds, as for /match).
 //                 The 200 carries "seed", the one the engine says it started with;
 //                 /health carries "engine_start_seed": 1.
+//                 (D414) {"aiPolicy": "plain"|"outlets"|"search"} wakes it on that AI (it
+//                 replaces --ai-policy/--ai-search, budget included, and is the last setup
+//                 from then on), so plain Play vs Forge can pick the opponent as /match's
+//                 picker does; running already: nothing restarts, and a warning when it plays
+//                 another policy.  /health carries "engine_start_policy": 1.  A wake with no
+//                 policy plays the last setup's, which play.sh starts as search-v2 (D414).
 //   GET  /match   -> 200 {"ok":true,"state":"running"|"restarting"|"idle",
 //                         "match":{"yourDeck":{"name","cards"},"aiDeck":{"name","cards"},
 //                                  "aiProfile","aiPolicy","games"}}
@@ -181,24 +187,28 @@ export function profileOf(s, profiles) {
 
 /**
  * D381: a POST /engine/start body.  Empty (or only whitespace) is the D308 wake:
- * { aiProfile: null, seed: null }.  Otherwise a JSON object whose optional
- * "aiProfile" is one of `profiles`, any case, and (D384) whose optional "seed" is a
- * non-negative safe integer (unknown keys ignored, as /match); anything else is a
- * problem.  Returns { aiProfile, seed, problems }; seed null = a fresh one.
+ * { aiProfile: null, seed: null, aiPolicy: null }.  Otherwise a JSON object whose optional
+ * "aiProfile" is one of `profiles`, any case, (D384) whose optional "seed" is a
+ * non-negative safe integer, and (D414) whose optional "aiPolicy" is one of
+ * AI_POLICIES, exactly (unknown keys ignored, as /match); anything else is a
+ * problem.  Returns { aiProfile, seed, aiPolicy, problems }; seed null = a fresh one,
+ * aiPolicy null = the last setup's.
  */
 export function checkWake(raw, profiles = DEFAULT_PROFILES) {
-  const none = { aiProfile: null, seed: null };
+  const none = { aiProfile: null, seed: null, aiPolicy: null };
   if (raw === undefined || raw === null || String(raw).trim() === '') return { ...none, problems: [] };
   let q;
   try { q = JSON.parse(String(raw)); } catch { return { ...none, problems: ['the body is not JSON'] }; }
-  if (!q || typeof q !== 'object' || Array.isArray(q)) return { ...none, problems: ['expected no body, or {"aiProfile"?: string, "seed"?: number}'] };
+  if (!q || typeof q !== 'object' || Array.isArray(q)) return { ...none, problems: ['expected no body, or {"aiProfile"?: string, "seed"?: number, "aiPolicy"?: string}'] };
   const problems = [];
   const aiProfile = q.aiProfile === undefined ? null : profileOf(q.aiProfile, profiles);
   if (q.aiProfile !== undefined && aiProfile === null) problems.push(`aiProfile must be one of ${profiles.join(', ')}, got ${JSON.stringify(String(q.aiProfile)).slice(0, 40)}`);
   const seed = q.seed === undefined ? null : q.seed;
   if (q.seed !== undefined && (!Number.isSafeInteger(seed) || seed < 0)) problems.push(`seed must be a whole number 0-${Number.MAX_SAFE_INTEGER}, got ${JSON.stringify(q.seed)}`.slice(0, 120));
+  const aiPolicy = q.aiPolicy === undefined ? null : q.aiPolicy;
+  if (q.aiPolicy !== undefined && !AI_POLICIES.includes(q.aiPolicy)) problems.push(`aiPolicy must be one of ${AI_POLICIES.join(', ')}, got ${JSON.stringify(String(q.aiPolicy)).slice(0, 40)}`);
   if (problems.length) return { ...none, problems };
-  return { aiProfile, seed, problems };
+  return { aiProfile, seed, aiPolicy, problems };
 }
 
 /**
@@ -303,7 +313,7 @@ export function readProfiles(aiDir) {
 //
 //   var/match/<id>/you.dck, ai.dck   the decks (written here)
 //   var/match/request.json           {id, deck, aiDeck, aiProfile, games, aiPolicy?, aiSearchMs?}  (here, then SIGUSR1 to play.sh)
-//                                    or a wake: {id, wake: true, aiProfile?}  (D308; D381's profile)
+//                                    or a wake: {id, wake: true, aiProfile?, seed?, aiPolicy?}  (D308; D381, D384, D414)
 //   var/match/status.json            {id, state, error?, restored?, match?, ms?}  (play.sh)
 //   var/match/current.json           {id, match}  (play.sh, after every start)
 // ---------------------------------------------------------------------------
@@ -457,7 +467,7 @@ export function createMatchLauncher(opts) {
   let lastWakeId = 0;
   const wake = async (raw = '') => {
     if (!available()) return fail(503, 'the match launcher is off: this helper was not started by scripts/play.sh (or play.sh ran with --no-match)');
-    const { aiProfile, seed, problems } = checkWake(raw, readProfiles(aiDir));
+    const { aiProfile, seed, aiPolicy, problems } = checkWake(raw, readProfiles(aiDir));
     if (problems.length) return fail(400, 'the engine was not started: ' + problems[0], { problems });
     if (busy) return fail(409, 'a match is already being started — wait for it');
     const cur = engine();
@@ -468,6 +478,10 @@ export function createMatchLauncher(opts) {
         body.warnings = [`the engine is already running against the ${m.aiProfile} profile; ${aiProfile} was not applied — nothing is restarted while a match runs`];
       }
       if (seed !== null) (body.warnings ??= []).push(`the engine is already running; seed ${seed} was not applied — nothing is restarted while a match runs`);
+      // D414: the same for the opponent AI (current.json's aiPolicy is the engine's own word for it).
+      if (aiPolicy && m?.aiPolicy && m.aiPolicy !== aiPolicy) {
+        (body.warnings ??= []).push(`the engine is already running against ${m.aiPolicy === 'plain' ? 'Forge\'s own AI' : `the ${m.aiPolicy} AI`}; ${aiPolicy} was not applied — nothing is restarted while a match runs`);
+      }
       return { status: 200, body };
     }
     if (!stillInside()) return fail(500, 'the match directory is no longer inside var/ (a symlink leads out of it) — nothing was written');
@@ -479,7 +493,7 @@ export function createMatchLauncher(opts) {
       let id = `m${n}`;
       while (existsSync(join(dir, id))) id = `m${++n}`;
       lastWakeId = n;
-      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true, ...(aiProfile ? { aiProfile } : {}), ...(seed !== null ? { seed } : {}) }) + '\n');
+      writeAtomic(join(dir, 'request.json'), JSON.stringify({ v: MATCH_VERSION, id, wake: true, ...(aiProfile ? { aiProfile } : {}), ...(seed !== null ? { seed } : {}), ...(aiPolicy ? { aiPolicy } : {}) }) + '\n');
       try { process.kill(supervisorPid, 'SIGUSR1'); } catch (e) {
         return fail(503, `could not reach scripts/play.sh (pid ${supervisorPid}): ${e.code ?? e.message}`);
       }

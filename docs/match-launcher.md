@@ -43,9 +43,12 @@ absent means an older helper — treat it as running. `"engine_start": 1`
 `"aiPolicies": ["plain","outlets","search"]` and
 `"aiSearchMs": {"min":500,"max":5000,"default":1500}`: `POST /match` then takes
 `aiPolicy` and `aiSearchMs` (below). No `aiPolicies` key: an older helper — offer
-no choice and send neither key.
+no choice and send neither key. **Since D414 the default is the search AI**
+(search-v2): `play.sh` starts it unless `--ai-plain`, so a request with no
+`aiPolicy` plays it, and ForgeCoach's pickers start on it whenever `aiPolicies`
+lists `"search"` (plain Forge one tap away).
 
-## `POST /engine/start` (D308, D381, D384)
+## `POST /engine/start` (D308, D381, D384, D414)
 
 Wakes a sleeping engine **on the last match setup** — the decks, profile and
 games of the last `POST /match`, or `play.sh`'s own startup decks when there
@@ -73,13 +76,19 @@ ordinary **Play vs Forge** calls when `engine` is `"idle"`, then it connects to
   safe integer (0 to 2^53 − 1); it holds for this wake only, and the next wake
   without one deals a fresh seed again. A `--seed` `play.sh` was started with
   holds for every wake without one, as it does for `POST /match`;
-- anything else (not JSON, not an object, an unknown profile, a seed that is
-  negative, fractional, a string, `null` or past 2^53 − 1): **400** with
+- **`{"aiPolicy": "plain"}`** (D414, with or without the others): the last
+  setup, but against that AI — `"plain"`, `"outlets"` or `"search"`, exactly as
+  `/match`'s `aiPolicy`. It replaces `--ai-policy` and `--ai-search` (a search
+  budget too) and **stays the last setup's**, like a profile. Absent: the last
+  setup's AI, which a bare `play.sh` starts as search-v2 (D414);
+- anything else (not JSON, not an object, an unknown profile or policy, a seed
+  that is negative, fractional, a string, `null` or past 2^53 − 1): **400** with
   `problems`, and nothing starts.
 
 `/health` says the helper takes the body with `"engine_start_profile": 1`
-(beside `"engine_start": 1`), and the seed with `"engine_start_seed": 1`
-(D384); an older helper ignores a body, so send one only when the key is there.
+(beside `"engine_start": 1`), the seed with `"engine_start_seed": 1`
+(D384), and the AI with `"engine_start_policy": 1` (D414); an older helper
+ignores a body, so send one only when the key is there.
 
 200 — the engine is running: the `POST /match` 200's shape (`yourDeck`, `aiDeck`,
 `aiProfile`, `games`, `seed`, `ms`, `warnings`; `yourDeck.path` is `null` for the startup
@@ -89,7 +98,7 @@ loaded, and `seed` (D384) the shuffle it says it dealt — the same number
 running is also 200, at once, and **nothing restarts**:
 `{"ok":true,"already":true,"yourDeck":…,"aiDeck":…,"aiProfile":…,"games":…}`
 (the current match, or just `"ok"` and `"already"` when none is known); when the
-body asked for another profile than the running match's, or named a seed,
+body asked for another profile or AI than the running match's, or named a seed,
 `"warnings"` says it was not applied (a seed also when an engine started
 between the check and `play.sh` taking the wake up: then the 200 carries the
 running engine's `seed`). Refusals are `/match`'s: 400 (the body, D381), 403 (gate), 405
@@ -316,8 +325,9 @@ export interface MatchCurrent {
 export interface EngineStartRequest {
   aiProfile?: 'Default' | 'Cautious' | 'Reckless' | 'Experimental';
   seed?: number; // D384: 0..2^53-1; only when /health has engine_start_seed: 1; absent = a fresh shuffle
+  aiPolicy?: 'plain' | 'outlets' | 'search'; // D414: only when /health has engine_start_policy: 1; absent = the last setup's
 }
-// GET /health gains: match: 0 | 1, engine_start?: 1, engine_start_profile?: 1 (D381), engine_start_seed?: 1 (D384), and (when match is 1) engine: 'running' | 'idle',
+// GET /health gains: match: 0 | 1, engine_start?: 1, engine_start_profile?: 1 (D381), engine_start_seed?: 1 (D384), engine_start_policy?: 1 (D414), and (when match is 1) engine: 'running' | 'idle',
 // idleSince?: string, exitsAt?: string | null  (only when idle),
 // aiPolicies?: string[], aiSearchMs?: {min, max, default}  (D333, when match is 1)
 ```
@@ -337,8 +347,10 @@ export interface EngineStartRequest {
    AI's deck by its archetype, not after a card in it.
 5. Plain **Play vs Forge** with the engine asleep: `POST /engine/start`, with
    `{"aiProfile"}` when the player picked a profile and `/health` has
-   `engine_start_profile: 1` (D381); show `warnings` from an `already` reply
-   (the running match keeps its profile).
+   `engine_start_profile: 1` (D381), and `{"aiPolicy"}` — the search AI unless
+   the player picked plain Forge — when it has `engine_start_policy: 1` (D414);
+   show `warnings` from an `already` reply (the running match keeps its profile
+   and its AI).
 
 ## Not covered
 

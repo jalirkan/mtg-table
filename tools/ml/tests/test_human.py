@@ -12,7 +12,8 @@ a person -- `var/games/human-ws-<seed>-g<n>/frames.jsonl` with `transport: ws`
 Standard library: what is taken and what is not, an idempotent second run, the
 dedupe key, the copy byte for byte, the manifest (cube, AI policy, nothing of the
 AI's list), an unfinished game taken once it finishes, --from with a file of two
-games.  numpy: human_eval.py on the collected fixtures with the parity model
+games, and D414's labels (a search seat's budget from the header's `ai`, ForgeCoach's coach
+record joined by key, `--only-new`, the lock).  numpy: human_eval.py on the collected fixtures with the parity model
 (fixtures/eval/model.json) and baselines fitted on a dataset of the fixtures.
 """
 from __future__ import annotations
@@ -206,6 +207,88 @@ class CollectTest(unittest.TestCase):
         self.assertEqual(len(e["sha256"]), 64)
         self.assertEqual(HC.status_line(HC.read_manifest(self.out)["games"]),
                          "human test set: 1 game (0 won, 1 lost) -- var/ml/human/ (D369; descriptive until 30)")
+
+    def test_d414_ai_search_label(self):
+        """D414 (M62): a search seat's version, budget and config from the session header's `ai`."""
+        p = os.path.join(FIXTURES, "human-comfort-13.jsonl")
+        cfgs = {
+            "human-ws-1": {"policy": "search", "version": "search-v2", "budgetMs": 1500, "config": "ms=1500,cands=6,anytime=1"},
+            "human-ws-2": {"policy": "search", "version": None, "budgetMs": 3000, "config": "ms=3000,cands=6"},
+            "human-ws-3": {"policy": "outlets"},
+            "human-ws-4": None,   # plain Forge, or a log older than M62
+        }
+        for gid, ai in cfgs.items():
+            ls = as_person(p, gid)
+            if ai is not None:
+                h = json.loads(ls[0])
+                h["ai"] = ai
+                ls[0] = json.dumps(h) + "\n"
+            write(os.path.join(self.games, gid, "frames.jsonl"), ls)
+        by = {e["gameId"]: e for e in quiet(HC.collect, self.games, self.out)["entries"]}
+        self.assertEqual(by["human-ws-1"]["aiSearch"], {"version": "search-v2", "budgetMs": 1500, "config": "ms=1500,cands=6,anytime=1"})
+        self.assertEqual(by["human-ws-2"]["aiSearch"], {"version": None, "budgetMs": 3000, "config": "ms=3000,cands=6"})
+        self.assertIsNone(by["human-ws-3"]["aiSearch"])
+        self.assertIsNone(by["human-ws-4"]["aiSearch"])
+        self.assertTrue(all(e["coach"] is None for e in by.values()))   # no ForgeCoach record: unknown
+
+    def _coach_doc(self, games):
+        return {"v": 1, "kind": HC.COACH_KIND, "games": games}
+
+    def test_d414_coach_usage_join(self):
+        """D414: ForgeCoach's per-game coach record labels a game by its key and seat, also after the fact."""
+        p = os.path.join(FIXTURES, "human-comfort-13.jsonl")
+        for gid in ("human-ws-21", "human-ws-22", "human-ws-23"):
+            write(os.path.join(self.games, gid, "frames.jsonl"), as_person(p, gid))
+        r = quiet(HC.collect, self.games, self.out)
+        keys = {e["gameId"]: e["key"] for e in r["entries"]}
+        self.assertTrue(all(e["coach"] is None for e in r["entries"]))
+        # the export saved later, beside the set: games already collected are labelled on the next run
+        doc = self._coach_doc([
+            {"key": keys["human-ws-21"], "seat": 0, "answers": 7, "plans": 5, "asks": 2,
+             "models": ["claude-sonnet-4-5", "bad model name!"], "sources": ["helper"]},
+            {"key": keys["human-ws-22"], "seat": 0, "answers": 0, "plans": 0, "asks": 0, "models": [], "sources": []},
+            {"key": keys["human-ws-23"], "seat": 1, "answers": 3, "plans": 3, "asks": 0},   # another seat: not this log
+            {"key": "x", "seat": 0, "answers": -1, "plans": 0, "asks": 0},                  # malformed: skipped
+        ])
+        with open(os.path.join(self.out, "coach-usage-2026-10-08.json"), "w", encoding="utf-8") as fh:
+            json.dump(doc, fh)
+        r = quiet(HC.collect, self.games, self.out)
+        self.assertEqual(r["added"], 0)
+        self.assertEqual(r["coachLabelled"], 2)
+        by = {e["gameId"]: e for e in HC.read_manifest(self.out)["games"]}
+        self.assertEqual(by["human-ws-21"]["coach"], {"used": True, "answers": 7, "plans": 5, "asks": 2,
+                                                      "models": ["claude-sonnet-4-5"], "sources": ["helper"]})
+        self.assertEqual(by["human-ws-22"]["coach"]["used"], False)
+        self.assertIsNone(by["human-ws-23"]["coach"])
+        self.assertIn("1 with the coach, 1 without, 1 unknown", HC.status_line(list(by.values())))
+        # a second run changes nothing; a file that is not an export is ignored
+        with open(os.path.join(self.out, "coach-usage-junk.json"), "w", encoding="utf-8") as fh:
+            fh.write("{not json")
+        self.assertEqual(quiet(HC.collect, self.games, self.out)["coachLabelled"], 0)
+        # --coach-usage FILE from anywhere does the same
+        other = os.path.join(self.tmp, "Downloads", "forgecoach-coach-use.json")
+        os.makedirs(os.path.dirname(other))
+        with open(other, "w", encoding="utf-8") as fh:
+            json.dump(self._coach_doc([{"key": keys["human-ws-21"], "seat": 0, "answers": 9, "plans": 6, "asks": 3}]), fh)
+        quiet(HC.collect, self.games, self.out, coach_usage=[other])
+        by = {e["gameId"]: e for e in HC.read_manifest(self.out)["games"]}
+        self.assertEqual(by["human-ws-21"]["coach"]["answers"], 9)
+
+    def test_d414_only_new_and_lock(self):
+        """D414: play.sh's every-minute run says nothing unless a game was added; the lock is taken and given back."""
+        def run(*argv):
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                HC.main(["--games-dir", self.games, "--out", self.out, "--quiet", "--only-new", *argv])
+            return buf.getvalue()
+        self.assertEqual(run(), "")
+        p = os.path.join(FIXTURES, "human-comfort-13.jsonl")
+        write(os.path.join(self.games, "human-ws-31", "frames.jsonl"), as_person(p, "human-ws-31"))
+        self.assertIn("human test set: 1 game (0 won, 1 lost), 1 new", run())
+        self.assertEqual(run(), "")
+        self.assertTrue(os.path.isfile(os.path.join(self.out, ".collect.lock")))
+        with HC.locked(self.out):   # not held after a run: taking it again does not block
+            pass
 
     def test_from_a_file_of_two_games(self):
         a = as_person(os.path.join(FIXTURES, "human-scry-7.jsonl"), "saved-a")

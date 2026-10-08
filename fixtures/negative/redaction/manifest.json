@@ -366,6 +366,18 @@
     "why": "amendment M60 / D407: only a seat at a table of two says whether it may be recorded"
   },
   {
+    "file": "m62-ai-unexpected-key.jsonl",
+    "level": "fail",
+    "expect": "session header \"ai\" carries an unexpected key",
+    "why": "amendment M62 / D414: the header's ai is the search's own knobs, never a deck or anything else"
+  },
+  {
+    "file": "m62-ai-without-transport.jsonl",
+    "level": "fail",
+    "expect": "session header \"ai\" without \"transport\"",
+    "why": "amendment M62 / D414: only a seat a person plays names its AI opponent in the header"
+  },
+  {
     "file": "m61-playable-present.jsonl",
     "level": "pass",
     "expect": "PASS",

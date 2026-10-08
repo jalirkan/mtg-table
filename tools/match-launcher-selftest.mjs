@@ -275,7 +275,10 @@ try {
     && second.filter((a) => a === '--deck').length === 1 && second.filter((a) => a === '--games').length === 1, second.join(' '));
   check('a game id of its own, match-<id>', argOf(second, '--game-id') === 'match-' + r.json?.yourDeck?.path.split('/')[4], second.join(' '));
   check('the deck name never reached a command line', !second.some((a) => a.includes('Rock')));
-  check('no aiPolicy: the AI as play.sh started it (plain), no --ai-policy added', r.json?.aiPolicy === 'plain' && !second.includes('--ai-policy') && !second.includes('--ai-search'), `${r.body} ${second.join(' ')}`);
+  check('D414: a bare play.sh starts the search AI: one --ai-policy search, no --ai-search', argOf(first[0].argv, '--ai-policy') === 'search'
+    && first[0].argv.filter((a) => a === '--ai-policy').length === 1 && !first[0].argv.includes('--ai-search') && /AI policy: search-v2 \(the default, D414/.test(A.out()), first[0].argv.join(' '));
+  check('no aiPolicy: the AI as play.sh started it (search, D414), one --ai-policy, no --ai-search', r.json?.aiPolicy === 'search'
+    && second.filter((a) => a === '--ai-policy').length === 1 && argOf(second, '--ai-policy') === 'search' && !second.includes('--ai-search'), `${r.body} ${second.join(' ')}`);
   check('the old engine is gone', !alive(first[0].pid));
   for (let i = 0; i < 20 && !seatClosed; i++) await sleep(50);
   check("the old engine's seat socket was dropped", seatClosed);
@@ -378,7 +381,8 @@ try {
     && pa.filter((a) => a === '--ai-policy').length === 1 && argOf(pa, '--ai-policy') === 'outlets' && !pa.includes('--ai-search'), `${r.body} ${pa.join(' ')}`);
   r = await post(A.coachPort, req1);
   pa = starts().at(-1).argv;
-  check('no aiPolicy again: plain, as play.sh was started', r.status === 200 && r.json?.aiPolicy === 'plain' && !pa.includes('--ai-policy'), `${r.body} ${pa.join(' ')}`);
+  check('no aiPolicy again: search, as play.sh was started (D414)', r.status === 200 && r.json?.aiPolicy === 'search'
+    && pa.filter((a) => a === '--ai-policy').length === 1 && argOf(pa, '--ai-policy') === 'search', `${r.body} ${pa.join(' ')}`);
   check('the decks of old matches are pruned to the last 5', readdirSync(join(DIR, 'a', 'match')).filter((n) => /^m\d{13}$/.test(n)).length <= 5);
 
   // ------------------------------------------------------------- play.sh --lan
@@ -517,7 +521,9 @@ try {
 
   // D381: the same wake, with the AI profile ForgeCoach's Setup picked (no decks).
   console.log('== /engine/start with {"aiProfile"} (D381)');
-  check('checkWake: no body is the D308 wake', JSON.stringify(checkWake('')) === '{"aiProfile":null,"seed":null,"problems":[]}' && checkWake(undefined).aiProfile === null && checkWake('  \n').problems.length === 0);
+  check('checkWake: no body is the D308 wake', JSON.stringify(checkWake('')) === '{"aiProfile":null,"seed":null,"aiPolicy":null,"problems":[]}' && checkWake(undefined).aiProfile === null && checkWake('  \n').problems.length === 0);
+  check('checkWake (D414): an aiPolicy is one of plain, outlets, search, exactly', checkWake('{"aiPolicy":"plain"}').aiPolicy === 'plain' && checkWake('{"aiPolicy":"search","seed":3}').aiPolicy === 'search'
+    && checkWake('{}').aiPolicy === null && ['"Search"', '"hard"', '"search --seat 1"', '3', 'null'].every((v) => checkWake(`{"aiPolicy":${v}}`).problems.length === 1));
   check('checkWake: {} and unknown keys are the D308 wake', checkWake('{}').aiProfile === null && checkWake('{"x":1}').problems.length === 0);
   check('checkWake: a profile in any case, canonical', checkWake('{"aiProfile":"cAuTiOuS"}').aiProfile === 'Cautious');
   check('checkWake: a bad profile, JSON or shape is a problem', checkWake('{"aiProfile":"Hard"}').problems.length === 1 && checkWake('{"aiProfile":3}').problems.length === 1
@@ -529,14 +535,15 @@ try {
     return c.problems.length === 1 && /^seed must be a whole number/.test(c.problems[0]) && c.seed === null;
   }) && checkWake('{"seed":-1,"aiProfile":"Hard"}').problems.length === 2);
   r = await http({ port: W.coachPort });
-  check('/health: engine_start_profile 1, engine_start_seed 1', r.json?.engine_start === 1 && r.json?.engine_start_profile === 1 && r.json?.engine_start_seed === 1, r.body);
+  check('/health: engine_start_profile 1, engine_start_seed 1, engine_start_policy 1 (D414)', r.json?.engine_start === 1 && r.json?.engine_start_profile === 1 && r.json?.engine_start_seed === 1 && r.json?.engine_start_policy === 1, r.body);
   const wn = onW().length;
   const wakeWith = (body, port = W.coachPort) => http({ port, method: 'POST', path: '/engine/start', headers: { 'Content-Type': 'application/json', Origin: 'https://jalirkan.github.io' }, body });
   for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
   await untilIdle(W.coachPort);
   // Refusals start nothing.
   for (const [what, body] of [['an unknown profile', '{"aiProfile":"Hard"}'], ['a non-string profile', '{"aiProfile":["Cautious"]}'], ['a body that is not JSON', 'Cautious'], ['a JSON array', '["Cautious"]'],
-    ['a negative seed (D384)', '{"seed":-1}'], ['a fractional seed (D384)', '{"seed":2.5}'], ['a string seed (D384)', '{"seed":"42"}'], ['an unsafe seed (D384)', '{"seed":18446744073709551615}']]) {
+    ['a negative seed (D384)', '{"seed":-1}'], ['a fractional seed (D384)', '{"seed":2.5}'], ['a string seed (D384)', '{"seed":"42"}'], ['an unsafe seed (D384)', '{"seed":18446744073709551615}'],
+    ['an unknown aiPolicy (D414)', '{"aiPolicy":"hard"}']]) {
     r = await wakeWith(body);
     check(`${what}: 400 with problems, nothing started`, r.status === 400 && r.json?.ok === false && Array.isArray(r.json?.problems) && onW().length === wn, `${r.status} ${r.body}`);
   }
@@ -571,6 +578,22 @@ try {
   const wa = onW().at(-1)?.argv ?? [];
   check('D384: {"seed"} held for that wake only: the next bare wake deals a fresh one, the 200 echoing it', r.status === 200 && r.json?.already === false && onW().length === wsn + 2
     && /^\d+$/.test(argOf(wa, '--seed') ?? '') && argOf(wa, '--seed') !== '4242' && wa.filter((a) => a === '--seed').length === 1 && r.json?.seed === Number(argOf(wa, '--seed')), `${r.status} ${r.body} | ${wa.join(' ')}`);
+  // D414: {"aiPolicy"} wakes it on that AI, and it stays the last setup's.
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  check('D414: the wake engine started as search (the default)', argOf(onW()[0].argv, '--ai-policy') === 'search', onW()[0].argv.join(' '));
+  r = await wakeWith('{"aiPolicy":"plain"}');
+  const wpl = onW().at(-1)?.argv ?? [];
+  check('D414: asleep, {"aiPolicy":"plain"}: 200 on plain, one --ai-policy plain, no --ai-search, Cautious kept', r.status === 200 && r.json?.already === false && r.json?.aiPolicy === 'plain'
+    && wpl.filter((a) => a === '--ai-policy').length === 1 && argOf(wpl, '--ai-policy') === 'plain' && !wpl.includes('--ai-search') && argOf(wpl, '--ai-profile') === 'Cautious', `${r.status} ${r.body} | ${wpl.join(' ')}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  r = await http({ port: W.coachPort, method: 'POST', path: '/engine/start' });
+  check('D414: then a bare wake keeps plain: it is the last setup now', r.status === 200 && r.json?.aiPolicy === 'plain' && argOf(onW().at(-1)?.argv ?? [], '--ai-policy') === 'plain', `${r.status} ${r.body}`);
+  for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
+  await untilIdle(W.coachPort);
+  r = await wakeWith('{"aiPolicy":"search"}');
+  check('D414: and {"aiPolicy":"search"} back to the search AI', r.status === 200 && r.json?.aiPolicy === 'search' && argOf(onW().at(-1)?.argv ?? [], '--ai-policy') === 'search', `${r.status} ${r.body}`);
   for (let i = 0; i < 100 && alive(onW().at(-1)?.pid); i++) await sleep(100);
   await untilIdle(W.coachPort);
   W.proc.kill('SIGTERM');
@@ -607,6 +630,11 @@ try {
     && r.json?.warnings?.length === 1 && /seed 7 was not applied/.test(r.json.warnings[0]) && onR().length === rn, r.body);
   r = await wakeWith('{"seed":-7}', R.coachPort);
   check('while running, a bad seed (D384): still 400', r.status === 400 && onR().length === rn, r.body);
+  r = await wakeWith('{"aiPolicy":"plain"}', R.coachPort);
+  check('D414: while running the search AI, {"aiPolicy":"plain"}: 200 already, a warning, no restart', r.status === 200 && r.json?.already === true
+    && r.json?.warnings?.length === 1 && /already running against the search AI; plain was not applied/.test(r.json.warnings[0]) && onR().length === rn, r.body);
+  r = await wakeWith('{"aiPolicy":"search"}', R.coachPort);
+  check('D414: while running, the AI it plays: no warning', r.status === 200 && r.json?.already === true && r.json?.warnings === undefined && onR().length === rn, r.body);
   R.proc.kill('SIGTERM');
   for (let i = 0; i < 100 && R.proc.exitCode === null; i++) await sleep(50);
 
@@ -620,6 +648,28 @@ try {
     p.on('exit', (code) => res(code));
   });
   check("--idle-exit-after soon is refused", badArg === 1);
+
+  console.log('== D414: --ai-plain opts out of the search AI; disagreeing flags are refused');
+  const NP = await startPlay(['--ai-plain'], 'aiplain');
+  const nArgv = starts().filter((e) => argOf(e.argv, '--port') === String(NP.port))[0]?.argv ?? [];
+  check('--ai-plain: one --ai-policy plain, no --ai-search, and the line says so', nArgv.filter((a) => a === '--ai-policy').length === 1 && argOf(nArgv, '--ai-policy') === 'plain'
+    && !nArgv.includes('--ai-search') && /AI policy: plain \(--ai-plain/.test(NP.out()), `${nArgv.join(' ')}\n${NP.out().slice(0, 600)}`);
+  NP.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && NP.proc.exitCode === null; i++) await sleep(50);
+  const S1 = await startPlay(['--ai-search-ms', '2500'], 'aisearchms');
+  const sArgv = starts().filter((e) => argOf(e.argv, '--port') === String(S1.port))[0]?.argv ?? [];
+  check('--ai-search-ms 2500: the search AI at that budget, no second --ai-policy', argOf(sArgv, '--ai-search') === 'ms=2500' && !sArgv.includes('--ai-policy'), sArgv.join(' '));
+  S1.proc.kill('SIGTERM');
+  for (let i = 0; i < 100 && S1.proc.exitCode === null; i++) await sleep(50);
+  for (const extra of [['--ai-plain', '--ai-search'], ['--ai-plain', '--', '--ai-policy', 'outlets']]) {
+    const res = await new Promise((done) => {
+      let err = '';
+      const p = spawn('bash', ['scripts/play.sh', '--engine-only', ...extra], { env: { ...process.env, PATH }, stdio: ['ignore', 'ignore', 'pipe'] });
+      p.stderr.on('data', (d) => { err += d; });
+      p.on('exit', (code) => done({ code, err }));
+    });
+    check(`${extra.join(' ')}: refused, exit 1, "pick one"`, res.code === 1 && /pick one/.test(res.err), `${res.code} ${res.err}`);
+  }
 
   console.log('== --no-match: the old behaviour, play.sh exits with the engine');
   const M = await startPlay(['--no-match', '--seed', '7', '--', '--idle-timeout', '1'], 'nomatch');

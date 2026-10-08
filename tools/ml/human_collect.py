@@ -8,7 +8,9 @@ set, `var/ml/human/` (D347's place; D369), with a small manifest.
     python3 tools/ml/human_collect.py                  # var/games/ -> var/ml/human/ (what play.sh runs)
     python3 tools/ml/human_collect.py --from DIR       # frame logs saved anywhere else (any names)
     python3 tools/ml/human_collect.py --status         # one line: "human test set: N games ..."
-        [--games-dir var/games] [--out var/ml/human] [--dry-run] [--quiet] [--json]
+    python3 tools/ml/human_collect.py --dry-run        # what would be copied, and WHY each other log is not
+        [--games-dir var/games] [--out var/ml/human] [--dry-run] [--quiet] [--only-new] [--json]
+        [--coach-usage FILE]...
 
 WHERE THE GAMES ARE.  `mtgtable.MtgTable` writes every game a seat plays to
 `var/games/<gameId>/frames.jsonl` under the checkout it runs from (Config.root()).
@@ -51,6 +53,28 @@ your deck's non-basic cards, when your deck file is still on disk), `aiDeck`
 `.collect-cache.json` beside it remembers files already judged (size + mtime) so
 play.sh's call costs milliseconds.
 
+D414 added three labels:
+
+- `aiSearch`: the search AI's own settings, from the session header's `ai`
+  (protocol amendment M62): `{version, budgetMs, config}` -- `version` is
+  `search-v2` when the seat ran the live default (D412), else null; `budgetMs` its
+  wall-clock budget per searched decision; `config` the seat's whole config string
+  (no card, no deck).  Null for plain Forge, for outlets, and for a log older than
+  M62 (whose `aiPolicy` still says search, with the budget unknown).
+- `coach`: whether ForgeCoach's live coach advised this game, from ForgeCoach's
+  own record (Settings -> Coach use, export) -- `{used, answers, plans, asks,
+  models, sources}`, `answers` the coach answers shown on the play screen (the
+  auto-coach's turn plans plus the player's own questions).  The bridge's log
+  cannot say it (the coach is the browser's), so it is joined by the game key:
+  every `coach-usage*.json` in the set's folder (save ForgeCoach's export there),
+  plus `--coach-usage FILE`.  Null when no record names the game -- unknown, not
+  "no coach": another browser, or a ForgeCoach older than D414.  A record is
+  re-read on every run, so an export saved later labels games already collected.
+- the run itself: play.sh also calls this every minute while it runs
+  (`--quiet --only-new`, a line only when a game was added), so a game is in the
+  set a minute after it ends rather than when play.sh exits; an flock on
+  `<out>/.collect.lock` keeps two runs from writing the manifest at once.
+
 GAMES BETWEEN TWO PEOPLE (D407).  A table of two (D402) writes one log per seat,
 `var/games/friend-m<13 digits>-seat<N>/`, and the draft room asks each player, game
 by game, whether their seat may be recorded (the default is the room owner's
@@ -73,6 +97,8 @@ Standard library only (no numpy): play.sh runs it at start and at exit.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import glob
 import gzip
 import hashlib
 import io
@@ -99,6 +125,10 @@ GAME_ID = re.compile(r"^(human-(ws|console)-\d+|match-m\d{13})(-g\d+)?$")
 # D407: one seat's log of a game between two people (play.sh's table ids, TableMatch's -seat<N>).
 FRIEND_GAME_ID = re.compile(r"^friend-m\d{13}-seat[01]$")
 CUBE_MIN_SHARE = 0.8
+# D414: ForgeCoach's per-game coach record, saved beside the set (Settings -> Coach use).
+COACH_GLOB = "coach-usage*.json"
+COACH_KIND = "forgecoach.coachUse"
+MAX_COACH_LIST = 8
 
 
 # ---------------------------------------------------------------- reading one log
@@ -261,6 +291,7 @@ def entry_of(game: E.Game, raw: str, origin: str, repo: str) -> dict[str, Any]:
     ai = match.get("aiDeck") or {}
     cube, share = guess_cube(mine.get("path") or you.get("path"), repo)
     started = str(h.get("startedAt") or "")
+    ai_search = ai_search_of(h)
     friend = h.get("humans") == 2
     extra: dict[str, Any] = {}
     if friend:
@@ -280,10 +311,108 @@ def entry_of(game: E.Game, raw: str, origin: str, repo: str) -> dict[str, Any]:
         # M44: the AI's deck by its public name and count, never a path or a list.
         "aiDeck": {"name": ai.get("name"), "cards": ai.get("cards")} if ai else None,
         "aiProfile": match.get("aiProfile"), "aiPolicy": match.get("aiPolicy"),
+        "aiSearch": ai_search,   # D414 (M62): version, budget and config of a search seat; null otherwise
+        "coach": None,           # D414: ForgeCoach's record, joined by key in collect(); null = unknown
         "origin": origin, "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
         "collectedAt": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime()),
         **extra,
     }
+
+
+def ai_search_of(h: dict[str, Any]) -> dict[str, Any] | None:
+    """D414 (amendment M62): the session header's `ai` of a search seat, as {version, budgetMs, config}."""
+    ai = h.get("ai")
+    if not isinstance(ai, dict) or ai.get("policy") != "search":
+        return None
+    ms = ai.get("budgetMs")
+    ver = ai.get("version")
+    cfg = ai.get("config")
+    return {"version": ver if isinstance(ver, str) and re.fullmatch(r"search-v\d+", ver) else None,
+            "budgetMs": ms if isinstance(ms, int) and not isinstance(ms, bool) and 0 < ms <= 60_000 else None,
+            "config": cfg[:400] if isinstance(cfg, str) else None}
+
+
+# ---------------------------------------------------------------- the coach's record (D414)
+
+def _coach_record(g: Any) -> tuple[str, dict[str, Any]] | None:
+    """One game of ForgeCoach's coach-use export, checked; (key, the manifest's `coach`) or None."""
+    if not isinstance(g, dict):
+        return None
+    key, seat = g.get("key"), g.get("seat")
+    if not isinstance(key, str) or not (0 < len(key) <= 200) or key.count("|") < 2:
+        return None
+    if not isinstance(seat, int) or isinstance(seat, bool) or seat < 0:
+        return None
+    counts = {}
+    for k in ("answers", "plans", "asks"):
+        v = g.get(k)
+        if not isinstance(v, int) or isinstance(v, bool) or not (0 <= v <= 100_000):
+            return None
+        counts[k] = v
+
+    def words(x: Any) -> list[str]:
+        if not isinstance(x, list):
+            return []
+        return sorted({w for w in x if isinstance(w, str) and re.fullmatch(r"[A-Za-z0-9_.:@-]{1,80}", w)})[:MAX_COACH_LIST]
+
+    return key, {"used": counts["answers"] > 0, **counts, "models": words(g.get("models")),
+                 "sources": words(g.get("sources")), "seat": seat}
+
+
+def read_coach_usage(paths: list[str]) -> dict[str, dict[str, Any]]:
+    """Every ForgeCoach coach-use export named: game key -> its `coach` label.  A file that is
+    not one is skipped; for a key in two files the record with more answers wins (the later
+    export of the same browser only ever adds)."""
+    out: dict[str, dict[str, Any]] = {}
+    for p in paths:
+        try:
+            with open(p, encoding="utf-8") as f:
+                doc = json.load(f)
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        if not isinstance(doc, dict) or doc.get("kind") != COACH_KIND or doc.get("v") != 1 or not isinstance(doc.get("games"), list):
+            continue
+        for g in doc["games"]:
+            r = _coach_record(g)
+            if r and (r[0] not in out or r[1]["answers"] > out[r[0]]["answers"]):
+                out[r[0]] = r[1]
+    return out
+
+
+def coach_files(out: str, extra: list[str] | None = None) -> list[str]:
+    return sorted(glob.glob(os.path.join(out, COACH_GLOB))) + list(extra or [])
+
+
+def label_coach(entries: list[dict[str, Any]], usage: dict[str, dict[str, Any]]) -> int:
+    """Sets `coach` on every entry a record names (same key, same seat); returns how many changed."""
+    n = 0
+    for g in entries:
+        r = usage.get(g.get("key"))
+        if r is None or r.get("seat") != g.get("seat"):
+            g.setdefault("coach", None)
+            continue
+        lab = {k: v for k, v in r.items() if k != "seat"}
+        if g.get("coach") != lab:
+            g["coach"] = lab
+            n += 1
+    return n
+
+
+@contextlib.contextmanager
+def locked(out: str):
+    """D414: one collector at a time on a set (play.sh's minute loop beside its start/asleep/exit calls)."""
+    try:
+        import fcntl
+    except ImportError:  # not Linux/macOS: no lock, as before
+        yield
+        return
+    os.makedirs(out, exist_ok=True)
+    with open(os.path.join(out, ".collect.lock"), "a+", encoding="utf-8") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 
 
 # ---------------------------------------------------------------- the set on disk
@@ -330,9 +459,10 @@ def candidates(games_dir: str | None, from_dirs: list[str], ids: re.Pattern[str]
 
 
 def collect(games_dir: str | None, out: str, from_dirs: list[str] | None = None, repo: str = REPO,
-            dry_run: bool = False, friends: bool = False) -> dict[str, Any]:
-    """Copy what is new; returns {added, games, skipped: {why: n}, entries}.  `friends` (D407): the
-    seats of games between two people whose player agreed, into their own set."""
+            dry_run: bool = False, friends: bool = False, coach_usage: list[str] | None = None) -> dict[str, Any]:
+    """Copy what is new; returns {added, games, skipped: {why: n}, entries, coachLabelled}.  `friends`
+    (D407): the seats of games between two people whose player agreed, into their own set.
+    `coach_usage` (D414): extra ForgeCoach coach-use files, beside the set's own coach-usage*.json."""
     from_dirs = from_dirs or []
     ids = FRIEND_GAME_ID if friends else GAME_ID
     judge_one = judge_friend if friends else judge
@@ -399,6 +529,8 @@ def collect(games_dir: str | None, out: str, from_dirs: list[str] | None = None,
     # a manifest entry whose file vanished is dropped (the owner removed it by hand)
     games = sorted((g for g in by_key.values() if dry_run or os.path.isfile(os.path.join(out, g["file"]))),
                    key=lambda g: (str(g.get("startedAt") or ""), g["key"]))
+    # D414: the coach's record, joined by key (re-read every run: an export saved later labels old games).
+    coach_labelled = 0 if friends else label_coach(games, read_coach_usage(coach_files(out, coach_usage)))
     if not dry_run and (added or len(games) != len(man["games"]) or os.path.isdir(out)):
         about = ("games between two people at a table (D402), one seat each, every one with its player's consent "
                  "(D407); kept apart from the human test set; written by tools/ml/human_collect.py") if friends else \
@@ -407,7 +539,8 @@ def collect(games_dir: str | None, out: str, from_dirs: list[str] | None = None,
         man = {"version": 1, "about": about, "games": games}
         _write_json(os.path.join(out, MANIFEST), man)
         _write_json(os.path.join(out, CACHE), new_cache)
-    return {"added": len(added), "games": len(games), "skipped": skipped, "entries": games, "new": added}
+    return {"added": len(added), "games": len(games), "skipped": skipped, "entries": games, "new": added,
+            "coachLabelled": coach_labelled}
 
 
 def friends_line(entries: list[dict[str, Any]], added: int | None = None, out: str = DEFAULT_FRIENDS_OUT) -> str:
@@ -428,6 +561,10 @@ def status_line(entries: list[dict[str, Any]], added: int | None = None, out: st
     s = f"human test set: {n} game{'s' if n != 1 else ''}"
     if n:
         s += f" ({w} won, {loss} lost)"
+        coached = sum(1 for g in entries if (g.get("coach") or {}).get("used"))
+        known = sum(1 for g in entries if g.get("coach") is not None)
+        if known:   # D414: only when a ForgeCoach record was saved beside the set
+            s += f", {coached} with the coach, {known - coached} without, {n - known} unknown"
     if added:
         s += f", {added} new"
     s += f" -- {out}/ (D369; descriptive until 30)" if n < 30 else f" -- {out}/ (D369)"
@@ -446,6 +583,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--status", action="store_true", help="copy nothing; print the one status line")
     ap.add_argument("--dry-run", action="store_true", help="say what would be copied; write nothing")
     ap.add_argument("--quiet", action="store_true", help="print the status line only")
+    ap.add_argument("--only-new", action="store_true",
+                    help="D414: print nothing unless a game was added (play.sh's every-minute run)")
+    ap.add_argument("--coach-usage", action="append", default=[],
+                    help="D414: a ForgeCoach coach-use export (Settings -> Coach use) to label games with; "
+                         f"every {COACH_GLOB} in the set's folder is read anyway")
     ap.add_argument("--json", action="store_true", help="print the result as JSON")
     a = ap.parse_args(argv)
     out = a.out or os.path.join(REPO, DEFAULT_OUT)
@@ -461,10 +603,13 @@ def main(argv: list[str] | None = None) -> int:
               + friends_line([g for g in fman["games"] if os.path.isfile(os.path.join(fout, g.get("file", "")))], out=fshown))
         return 0
     games_dir = a.games_dir or (None if a.from_dirs else os.path.join(REPO, DEFAULT_GAMES))
-    r = collect(games_dir, out, a.from_dirs, REPO, a.dry_run)
-    # D407: the seats of games between two people whose player agreed -- var/games/ only, into their own set.
-    f = collect(games_dir, fout, [], REPO, a.dry_run, friends=True) if games_dir else \
-        {"added": 0, "games": 0, "skipped": {}, "entries": [], "new": []}
+    with (contextlib.nullcontext() if a.dry_run else locked(out)):
+        r = collect(games_dir, out, a.from_dirs, REPO, a.dry_run, coach_usage=a.coach_usage)
+        # D407: the seats of games between two people whose player agreed -- var/games/ only, into their own set.
+        f = collect(games_dir, fout, [], REPO, a.dry_run, friends=True) if games_dir else \
+            {"added": 0, "games": 0, "skipped": {}, "entries": [], "new": []}
+    if a.only_new and not a.json and not (r["added"] or f["added"]):
+        return 0
     if a.json:
         print(json.dumps({**{k: v for k, v in r.items() if k != "entries"},
                           "friends": {k: v for k, v in f.items() if k != "entries"}}, indent=1))

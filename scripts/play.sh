@@ -42,13 +42,19 @@
 #                        Cautious and Reckless were NOT measurably different
 #                        (docs/evidence/match-setup.md section P).  It is not a dial.
 #   --mirror             ignore match.aiDeck: the AI plays a copy of your deck
-#   --ai-search          the stronger AI (D312-D314, opt-in): Forge's AI with the
-#                        sacrifice-outlet policy and a determinized look-ahead search
-#                        at its main-phase plays, attacks and blocks (about 1.5 s of
-#                        thinking at each; --ai-search-ms <n> sets that budget).
-#                        Since D412 it is search-v2: D388's anytime loop, which
-#                        keeps the work a cut round did instead of falling back
-#                        to Forge's answer on budget
+#   (the AI)             THE DEFAULT SINCE D414 IS THE SEARCH AI, search-v2: Forge's
+#                        AI with the sacrifice-outlet policy and a determinized
+#                        look-ahead search at its main-phase plays, attacks and
+#                        blocks (D312-D314; about 1.5 s of thinking at each),
+#                        on D388's anytime loop (D412).  A bare run, --engine-only,
+#                        --lan, --funnel and --tunnel all start it.
+#   --ai-plain           opt out: Forge's own AI, as before D414 (`--ai-policy plain`)
+#   --ai-search          the search AI by name -- what a bare run plays anyway, kept
+#                        so older command lines work; --ai-search-ms <n> sets its
+#                        budget per decision (500-5000; default 1500).
+#                        A table of two people (D402) has no AI seat: unaffected.
+#                        Two flags that disagree (--ai-plain with --ai-search, or
+#                        either with an --ai-policy after --) are an error.
 #   config.json match.games is how many games a bare run plays (default 3).
 #
 # The flags win over config.json, and a flag typed after `--` wins over both.
@@ -60,6 +66,7 @@
 #   ./scripts/play.sh --seed 42             # a reproducible shuffle
 #   ./scripts/play.sh --ai-deck decks/morph-probe.dck --ai-profile Reckless
 #   ./scripts/play.sh --deck decks/pacho-shield.dck --mirror --ai-profile Cautious
+#   ./scripts/play.sh --ai-plain            # Forge's own AI instead of search-v2 (D414)
 #   ./scripts/play.sh --port 8652           # a second bridge beside a running one
 #   ./scripts/play.sh --engine-only --no-coach   # no coach helper (D292), so no match launcher either
 #   ./scripts/play.sh --engine-only --no-match   # the coach helper without /match (D303)
@@ -302,6 +309,10 @@
 # start -- printing "human test set: N games" -- when the engine falls asleep
 # (D308) and at exit, takes well under a second when nothing is new, never stops
 # play.sh, and copies nothing twice.  --no-human-collect turns it off.
+# D414: and every minute while play.sh runs, saying a line only when a game was
+# added -- the start's count is always taken before this session's games, and a
+# ForgeCoach page that stays connected keeps the engine awake (M6's linger), so
+# without it a whole evening's games waited for play.sh to exit.
 #
 # THE AUTOMATIC REVIEW (D385) is the coach helper's: config.json `coach.autoReview`
 # (default true) reviews every finished human game.  --no-auto-review turns it off
@@ -361,6 +372,9 @@ EVAL_ARGS=()                     # D361: the coach helper's /eval (--eval-model 
 HUMAN_COLLECT=1                  # D369: copy finished games into var/ml/human/ at start, asleep and exit
 AUTO_REVIEW=1                    # D385: 0 = --no-auto-review, passed to the coach helper
 HUMAN_COLLECTED_AT_STOP=0
+HUMAN_LOOP_PID=""                # D414: the every-minute collector, while play.sh runs
+AI_SEARCH=0                      # D314: --ai-search / --ai-search-ms named
+AI_PLAIN=0                       # D414: --ai-plain, Forge's own AI instead of the default search-v2
 BUGS_SYNC=1                      # D411: send new bug reports (var/bugs/) to pc-results at exit
 BUGS_SYNCED_AT_STOP=0
 DRAFT_ROOM=0                     # D400: the draft room, in the coach helper, on its own port
@@ -438,10 +452,12 @@ while [ $# -gt 0 ]; do
     --ai-deck|--deck2) AI_DECK="$2"; shift 2 ;;
     --ai-profile) AI_PROFILE="$2"; shift 2 ;;
     --mirror)    AI_DECK=""; shift ;;
-    # D314: the stronger AI, opt-in -- D310's outlet policy plus D312's search.
+    # D314: the stronger AI -- D310's outlet policy plus D312's search; the
+    # default since D414 (below, after the parse), --ai-plain opts out.
     # Passed through to MtgTable, so a match ForgeCoach restarts keeps it.
     --ai-search) PASSTHROUGH+=(--ai-policy search); AI_SEARCH=1; shift ;;
     --ai-search-ms) PASSTHROUGH+=(--ai-search "ms=$2"); AI_SEARCH=1; shift 2 ;;
+    --ai-plain)  AI_PLAIN=1; shift ;;
     --no-coach)  COACH=0; shift ;;
     --coach-port) COACH_PORT="$2"; shift 2 ;;
     --no-match)  MATCH=0; shift ;;
@@ -525,6 +541,25 @@ human_collect() {
   "${t[@]+"${t[@]}"}" python3 tools/ml/human_collect.py --quiet 2>/dev/null \
     || echo "human test set: the collector failed (run python3 tools/ml/human_collect.py to see why)"
 }
+# D414: the same, every HUMAN_COLLECT_EVERY_S seconds while play.sh runs, in the
+# background; a line only when a game was added (--only-new), nothing on a failure
+# (the start's and the exit's calls say that).  It stops with play.sh: stop() kills
+# it, and it checks that this script is still there before each run.  The
+# collector's own lock (var/ml/human/.collect.lock) keeps two runs apart.
+HUMAN_COLLECT_EVERY_S="${MTGTABLE_HUMAN_COLLECT_EVERY_S:-60}"
+case "$HUMAN_COLLECT_EVERY_S" in ''|*[!0-9]*|0) HUMAN_COLLECT_EVERY_S=60 ;; esac
+human_collect_loop() {
+  [ "$HUMAN_COLLECT" = "1" ] && [ -z "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] && [ -z "$HUMAN_LOOP_PID" ] || return 0
+  command -v python3 >/dev/null 2>&1 || return 0
+  local me=$$
+  (
+    trap - INT TERM EXIT
+    while sleep "$HUMAN_COLLECT_EVERY_S" && kill -0 "$me" 2>/dev/null; do
+      python3 tools/ml/human_collect.py --quiet --only-new 2>/dev/null || true
+    done
+  ) &
+  HUMAN_LOOP_PID=$!
+}
 # D411: the board's bug reports (var/bugs/) to pc-results under bugs/, when there are new ones.
 bugs_sync() {
   [ "$BUGS_SYNC" = "1" ] && [ -z "${MTGTABLE_TEST_FAKE_ENGINE:-}" ] || return 0
@@ -552,6 +587,32 @@ passthrough_has() {
   done
   return 1
 }
+
+# D414: the AI seat is search-v2 unless the caller says otherwise.  --ai-plain is
+# Forge's own AI, passed as `--ai-policy plain` so a restart (D303) and a wake (D308)
+# keep it; an --ai-policy / --ai-search of the caller's own (after --, or
+# --ai-search) is left alone.  Disagreeing flags are an error, not a silent winner.
+AI_LINE=""
+if [ "$AI_PLAIN" = "1" ]; then
+  if [ "$AI_SEARCH" = "1" ] || passthrough_has --ai-policy --ai-search; then
+    printf 'play.sh: --ai-plain is Forge'"'"'s own AI, and %s names another: pick one\n' \
+      "$([ "$AI_SEARCH" = "1" ] && echo "--ai-search" || echo "the --ai-policy/--ai-search after --")" >&2
+    exit 1
+  fi
+  PASSTHROUGH+=(--ai-policy plain)
+  AI_LINE="AI policy: plain (--ai-plain: Forge's own AI; the default is search-v2, D414)"
+elif passthrough_has --ai-policy --ai-search; then
+  # --ai-search / --ai-search-ms, or the caller's own after --: say what was asked.
+  if [ "$AI_SEARCH" = "1" ]; then
+    AI_LINE="AI policy: search (D312-D314: outlet policy + look-ahead search; search-v2, the anytime loop, D412)"
+  else
+    AI_LINE="AI policy: (the --ai-policy/--ai-search after --)"
+  fi
+else
+  PASSTHROUGH+=(--ai-policy search)
+  AI_SEARCH=1
+  AI_LINE="AI policy: search-v2 (the default, D414: outlet policy + look-ahead search, the anytime loop; --ai-plain for Forge's own AI)"
+fi
 deck_name() {   # the .dck's own Name=, which is what the board will print
   local n
   n="$(sed -n 's/^Name=//p' "$1" | head -1 | tr -d '\r')"
@@ -644,10 +705,11 @@ if passthrough_has --deck; then echo "you:  (the --deck after --)"; else
 if passthrough_has --deck2 --ai-deck; then echo "AI:   (the --ai-deck after --)"
 elif [ -n "$AI_DECK" ]; then echo "AI:   $(deck_name "$AI_DECK")  [$AI_DECK]"
 else echo "AI:   a mirror of your deck  (--mirror, or config.json match.aiDeck is null)"; fi
-[ "${AI_SEARCH:-0}" = "1" ] && echo "AI policy: search (D312-D314: outlet policy + look-ahead search; search-v2, the anytime loop, D412)"
+echo "$AI_LINE"
 passthrough_has --ai-profile && echo "AI profile: (the --ai-profile after --)" \
   || echo "AI profile: $AI_PROFILE"
 human_collect
+human_collect_loop   # D414
 
 # --------------------------------------------------------------------------
 # 0b: --lan's site (amendment M51, D289) -- before anything slow, so a missing
@@ -828,6 +890,12 @@ stop() {
     rm -f "$MATCH_DIR/current.json" "$MATCH_DIR/request.json" "$MATCH_DIR/status.json" "$MATCH_DIR/engine.json" 2>/dev/null || true
   fi
   lab_release   # D401
+  # D414: the every-minute collector first, so the last run below is the only one.
+  if [ -n "$HUMAN_LOOP_PID" ]; then
+    kill "$HUMAN_LOOP_PID" 2>/dev/null || true
+    wait "$HUMAN_LOOP_PID" 2>/dev/null || true
+    HUMAN_LOOP_PID=""
+  fi
   # D369: the games this session finished, now that the bridge has flushed its logs.
   if [ "$HUMAN_COLLECTED_AT_STOP" = "0" ] && [ -n "${SERVER_LOG:-}" ]; then
     HUMAN_COLLECTED_AT_STOP=1
@@ -1133,10 +1201,11 @@ restart_match() {
     const id = typeof r.id === "string" && /^m[0-9]{13}$/.test(r.id) ? r.id : "";
     const bad = (why) => { console.log("BAD"); console.log(id); console.log(why); process.exit(0); };
     if (!id) bad("no request id");
-    if (r.wake === true) {   // D308 /engine/start; D381: an optional profile, a .ai name; D384: an optional seed
+    if (r.wake === true) {   // D308 /engine/start; D381: an optional profile, a .ai name; D384: an optional seed; D414: an optional policy
       if (r.aiProfile !== undefined && (typeof r.aiProfile !== "string" || !/^[A-Za-z0-9_-]{1,40}$/.test(r.aiProfile))) bad("not a profile name");
       if (r.seed !== undefined && (!Number.isSafeInteger(r.seed) || r.seed < 0)) bad("seed is not a non-negative safe integer");
-      for (const x of ["WAKE", id, "", "", r.aiProfile ?? "", "", "", "", r.seed === undefined ? "" : String(r.seed)]) console.log(x);
+      if (r.aiPolicy !== undefined && !["plain", "outlets", "search"].includes(r.aiPolicy)) bad("aiPolicy is not plain, outlets or search");
+      for (const x of ["WAKE", id, "", "", r.aiProfile ?? "", "", r.aiPolicy ?? "", "", r.seed === undefined ? "" : String(r.seed)]) console.log(x);
       process.exit(0);
     }
     const dir = process.argv[2];
@@ -1179,7 +1248,7 @@ restart_match() {
     [ -f "${req[2]}" ] && [ -f "${req[3]}" ] || { match_write status "$id" failed "the deck files are missing" 1; return 0; }
     say "match $id — restarting the engine on ForgeCoach's decks (D303)"
   else
-    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)${req[4]:+, AI profile ${req[4]} (D381)}${req[8]:+, seed ${req[8]} (D384)}"
+    say "match $id — waking the engine on the last match setup (D308, POST /engine/start)${req[4]:+, AI profile ${req[4]} (D381)}${req[6]:+, AI policy ${req[6]} (D414)}${req[8]:+, seed ${req[8]} (D384)}"
   fi
   match_write status "$id" restarting
   local prev=("${BRIDGE_ARGS[@]}") pass=() skip=0 a
@@ -1207,7 +1276,9 @@ restart_match() {
     # stays the last setup's from here on).  D384: and a shuffle of its own -- the
     # request's seed, else a --seed play.sh was started with (as /match keeps it),
     # else a fresh random one: never the last wake's seed again.
-    local wprof="${req[4]:-}" wseed="${req[8]:-}"
+    # D414: and the request's AI policy when it names one (then it replaces
+    # --ai-policy and --ai-search, budget included, and stays the last setup).
+    local wprof="${req[4]:-}" wseed="${req[8]:-}" wpol="${req[6]:-}"
     skip=0
     for a in "${LAST_AI_ARGS[@]}"; do   # D404: the last match against the AI, never a table
       if [ "$skip" = "1" ]; then skip=0; continue; fi
@@ -1216,10 +1287,13 @@ restart_match() {
         --game-id=*|--seed=*) : ;;
         --ai-profile) if [ -n "$wprof" ]; then skip=1; else next+=("$a"); fi ;;
         --ai-profile=*) [ -n "$wprof" ] || next+=("$a") ;;
+        --ai-policy|--ai-search) if [ -n "$wpol" ]; then skip=1; else next+=("$a"); fi ;;
+        --ai-policy=*|--ai-search=*) [ -n "$wpol" ] || next+=("$a") ;;
         *) next+=("$a") ;;
       esac
     done
     [ -n "$wprof" ] && next+=(--ai-profile "$wprof")
+    [ -n "$wpol" ] && next+=(--ai-policy "$wpol")
     if [ -z "$wseed" ] && passthrough_has --seed; then
       skip=0
       for a in "${PASSTHROUGH[@]}"; do

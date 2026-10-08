@@ -61,6 +61,9 @@ const REQUIRED = [
   ['m60-score-ahead-of-the-game.jsonl', 'fail'],
   ['m60-record-not-a-boolean.jsonl', 'fail'],
   ['m60-record-against-the-ai.jsonl', 'fail'],
+  // Amendment M62 (D414): the session header's ai, the search's knobs only, on a seat's log only.
+  ['m62-ai-unexpected-key.jsonl', 'fail'],
+  ['m62-ai-without-transport.jsonl', 'fail'],
   ['m47-yourprofile-on-a-human-seat.jsonl', 'fail'],
   ['m47-yourprofile-is-a-path.jsonl', 'fail'],
   ['m47-pace-not-a-number.jsonl', 'fail'],

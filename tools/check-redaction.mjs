@@ -1297,6 +1297,29 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     if (header.transport === undefined) note(1, 'session header "humans" without "transport" -- only a seat a person plays sits at a table of two (M59)');
   }
   /*
+   * Amendment M62 (D414).  `ai` is OPTIONAL and names the AI seat's controller when
+   * it is not plain Forge: {policy: "outlets"} or {policy: "search", version,
+   * budgetMs, config} -- the search's own knobs, never a card or a deck.  Only on
+   * a seat's log (beside `transport`), never at a table of two (no AI seat).
+   */
+  if (header.ai !== undefined) {
+    const ai = header.ai;
+    if (!ai || typeof ai !== 'object' || Array.isArray(ai)) {
+      note(1, `session header "ai" must be an object (M62), got ${JSON.stringify(ai)}`);
+    } else {
+      const keys = ai.policy === 'search' ? ['policy', 'version', 'budgetMs', 'config'] : ['policy'];
+      if (ai.policy !== 'outlets' && ai.policy !== 'search') note(1, `session header ai.policy=${JSON.stringify(ai.policy)} is not outlets | search (M62; plain Forge writes no "ai")`);
+      for (const k of Object.keys(ai)) if (!keys.includes(k)) note(1, `session header "ai" carries an unexpected key "${k}" (M62)`);
+      if (ai.policy === 'search') {
+        if (ai.version !== null && !(typeof ai.version === 'string' && /^search-v\d+$/.test(ai.version))) note(1, `session header ai.version=${JSON.stringify(ai.version)} (M62)`);
+        if (!Number.isInteger(ai.budgetMs) || ai.budgetMs < 50 || ai.budgetMs > 60000) note(1, `session header ai.budgetMs=${JSON.stringify(ai.budgetMs)} is not 50-60000 (M62)`);
+        if (typeof ai.config !== 'string' || !/^ms=\d+,/.test(ai.config)) note(1, `session header ai.config=${JSON.stringify(ai.config)} is not a search config (M62)`);
+      }
+    }
+    if (header.transport === undefined) note(1, 'session header "ai" without "transport" -- only a seat a person plays names its opponent this way (M62)');
+    if (header.humans !== undefined) note(1, 'session header "ai" at a table of two -- there is no AI seat (M62)');
+  }
+  /*
    * Amendment M60 (D407).  `record` is OPTIONAL and is this seat's consent to the
    * human test set and the automatic review for this game: a boolean, and only at
    * a table of two (a game against the AI is the owner's own, D369).
