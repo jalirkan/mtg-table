@@ -114,6 +114,11 @@ export const KINDS: Record<string, Kind> = {
       rank: { type: 'enum', values: ['order', 'prior'], default: 'order', omitAtDefault: true, doc: "D389: order = the first `cands` in enumeration order; prior = generate `gen`, apply each once, keep the best `cands` by the leaf after it" },
       gen: { type: 'int', min: 2, max: 64, default: 24, omitAtDefault: true, doc: 'D389: candidates generated before the prior keeps `cands` (rank=prior only; at least cands)' },
       rollout: { type: 'enum', values: ['default', 'outlets', 'both'], default: 'default', omitAtDefault: true, doc: "D390: the rollouts' policy: plain Forge, D310's outlet policy for the searching seat, or for both seats" },
+      // D416: two more decision kinds, each off by default and out of the hash while off.
+      mull: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D416: search the opening hand -- keep against mulligan, and the London bottom -- by rollouts from the pre-game copy to game turn 2*mullTurns, on the lcb rule" },
+      mullMs: { type: 'int', min: 50, max: 60000, default: 6000, omitAtDefault: true, doc: "D416: the opening-hand search's own budget per decision (ms; mull=on only)" },
+      mullTurns: { type: 'int', min: 1, max: 8, default: 3, omitAtDefault: true, doc: 'D416: the opening-hand rollouts play until each seat has had this many turns (mull=on only)' },
+      targets: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D416: search the targets of the seat's own priority play: Forge's targets against up to cands-1 others, one part at a time" },
     },
     // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
     // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
@@ -129,6 +134,13 @@ export const KINDS: Record<string, Kind> = {
       if (p.anytime === 'on') kv.push('anytime=1');
       if (p.rank === 'prior') kv.push('rank=prior', `gen=${p.gen ?? Math.max(24, Number(p.cands))}`);
       if (p.rollout !== undefined) kv.push(`rollout=${p.rollout}`);
+      // D416: SearchConfig prints the mulligan's knobs only with mull on; so does the seat config.
+      if (p.mull === 'on') {
+        kv.push('mull=1');
+        if (p.mullMs !== undefined) kv.push(`mullms=${p.mullMs}`);
+        if (p.mullTurns !== undefined) kv.push(`mullturns=${p.mullTurns}`);
+      }
+      if (p.targets === 'on') kv.push('targets=1');
       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
     },
     available: (repo) => {

@@ -138,6 +138,7 @@ public final class DecisionSelfTest {
         check(badKind, "an unknown kind is refused");
 
         searchWeek3();
+        mullAndTargets();
         explore();
 
         System.out.println("decision selftest: " + checks + " check(s), " + failures + " failure(s)");
@@ -231,6 +232,42 @@ public final class DecisionSelfTest {
         final List<double[]> mixed = List.of(new double[] {100, 130, 300}, new double[] {100, 125, Double.NaN});
         check(Anytime.best(new boolean[] {true, true, true}, mixed, rpDiff(mixed, 3), 2) == 1,
                 "the verdict prefers candidates with the rounds the config asks for");
+    }
+
+    /** D416: the mulligan and target switches parse, print, refuse, and leave search-v2 as it was. */
+    private static void mullAndTargets() {
+        final SearchConfig def = SearchConfig.defaults();
+        final SearchConfig live = SearchConfig.parseLive("");
+        check(!def.mull && !def.targets && !live.mull && !live.targets, "mull and targets are off by default, live seat included");
+        check((def.toString() + ",anytime=1").equals(live.toString()) && !live.toString().contains("mull")
+                && !live.toString().contains("targets"), "search-v2's config string is unchanged: " + live);
+        check(def.mullMs == SearchConfig.MULL_MS && def.mullTurns == SearchConfig.MULL_TURNS && SearchConfig.MULL_MS == 6000
+                && SearchConfig.MULL_TURNS == 3, "the mulligan's defaults: 6000 ms, 3 turns a seat (game turn 6)");
+        final SearchConfig m = SearchConfig.parseLive("mull=1");
+        check(m.mull && !m.targets && m.anytime && m.toString().equals(live.toString() + ",mull=1"),
+                "search-v2 + mull=1 prints as search-v2 plus the switch: " + m);
+        final SearchConfig t = SearchConfig.parse("anytime=1,targets=1");
+        check(t.targets && !t.mull && t.toString().equals(live.toString() + ",targets=1"), "targets=1: " + t);
+        final SearchConfig mt = SearchConfig.parse("anytime=1,mull=1,targets=1,mullms=8000,mullturns=5");
+        check(mt.mull && mt.targets && mt.mullMs == 8000 && mt.mullTurns == 5
+                && SearchConfig.parse(mt.toString()).toString().equals(mt.toString()), "both, with knobs, round-trip: " + mt);
+        check(SearchConfig.parse("mull=0,targets=0").toString().equals(def.toString()), "mull=0,targets=0 is the default");
+        check(SearchConfig.parse("mullms=8000").toString().equals(def.toString()),
+                "a mulligan knob with mull off prints nothing (it changes no decision)");
+        final SearchConfig keepLeaf = SearchConfig.parse("anytime=1,mull=1,targets=1,leaf=eval:m.json");
+        check(keepLeaf.mull && keepLeaf.targets && "m.json".equals(keepLeaf.leafModel)
+                && SearchConfig.parse(keepLeaf.toString()).toString().equals(keepLeaf.toString()),
+                "leaf=eval keeps the D416 switches and they keep the leaf: " + keepLeaf);
+        for (final String bad : List.of("mull=2", "targets=yes", "mull=1,mullms=10", "mull=1,mullms=70000", "mullturns=0",
+                "mullturns=9")) {
+            boolean threw = false;
+            try {
+                SearchConfig.parse(bad);
+            } catch (final IllegalArgumentException e) {
+                threw = true;
+            }
+            check(threw, "refused: " + bad);
+        }
     }
 
     private static double[] rpDiff(final List<double[]> leaves, final int k) {

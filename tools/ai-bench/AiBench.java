@@ -1395,6 +1395,229 @@ public final class AiBench {
                             : "budget".equals(rep.fallback) && rep.playouts <= 1) && ms < 60 + 1500,
                             "a tight budget: " + ms + " ms, " + (rep == null ? "none" : rep.summary()));
                 });
+        d416Scenarios(castBoard);
+    }
+
+    // ------------------------------------------------------------------
+    // D416: the opening-hand search (mull=1) and the target search
+    // (targets=1) -- each fires on its own decisions and nowhere else, falls
+    // back to Forge's answer on a copier error, leaves the real game as it was,
+    // and never reads what the AI cannot see.
+    // ------------------------------------------------------------------
+
+    /** A pre-game board: no phase yet, seven cards in each hand, the libraries behind them. */
+    static List<String> pregame(final String aiHand, final String aiLibrary, final String humanHand, final String humanLibrary) {
+        return List.of("humanlife=20", "ailife=20", "turn=0", "activeplayer=ai", "activephase=NONE",
+                "aihand=" + aiHand, "ailibrary=" + aiLibrary, "humanhand=" + humanHand, "humanlibrary=" + humanLibrary);
+    }
+
+    private static final String LIB20 = "Swamp;Mountain;Typhoid Rats;Grizzly Bears;Swamp;Hill Giant;Mountain;Swamp;"
+            + "Lightning Bolt;Mountain;Swamp;Grizzly Bears;Mountain;Swamp;Typhoid Rats;Mountain;Swamp;Hill Giant;Mountain;Swamp";
+
+    static void d416Scenarios(final List<String> castBoard) throws Exception {
+        System.out.println("== ai-bench selftest: the opening-hand and target searches (D416, engine)");
+        final List<String> flood = pregame("Swamp;Swamp;Swamp;Mountain;Mountain;Mountain;Swamp", LIB20,
+                "Forest;Grizzly Bears;Forest;Llanowar Elves;Forest;Grizzly Bears;Forest",
+                "Forest;Grizzly Bears;Forest;Forest;Llanowar Elves;Forest;Grizzly Bears;Forest;Forest;Grizzly Bears");
+        final SearchConfig mull = SearchConfig.parse("anytime=1,seed=7,mull=1,mullms=3000");
+
+        // 1. It fires at mulliganKeepHand, plays both answers out from the pre-game copy, and leaves the real game alone.
+        scenario("search-mull-runs", flood, PolicyLobbyPlayerAi.Outlets.OFF, mull, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final List<String> hand0 = names(ai.getCardsIn(ZoneType.Hand));
+            final List<String> lib0 = names(ai.getCardsIn(ZoneType.Library));
+            final List<String> opp0 = names(ai.getWeakestOpponent().getCardsIn(ZoneType.Hand));
+            final long t0 = System.nanoTime();
+            final boolean keep = ctl.mulliganKeepHand(ai, 0);
+            final long ms = (System.nanoTime() - t0) / 1_000_000L;
+            final java.util.Map<String, Integer> c = ctl.counts();
+            check(c.getOrDefault("search.m.considered", 0) == 1 && c.getOrDefault("search.rollouts", 0) >= 2
+                    && c.getOrDefault("search.rolloutErrors", 0) == 0 && c.getOrDefault("search.fallback.copyError", 0) == 0
+                    && c.getOrDefault("search.fallback.unmappable", 0) == 0,
+                    "the mulligan search ran: " + (keep ? "keep" : "mulligan") + ", " + ms + " ms (" + c + ")");
+            check(ms < mull.mullMs + 3000, "inside the mulligan budget (" + ms + " ms for " + mull.mullMs + ")");
+            check(names(ai.getCardsIn(ZoneType.Hand)).equals(hand0) && names(ai.getCardsIn(ZoneType.Library)).equals(lib0)
+                    && names(ai.getWeakestOpponent().getCardsIn(ZoneType.Hand)).equals(opp0)
+                    && ai.getGame().getPhaseHandler().getPhase() == null,
+                    "the real game is untouched: the same hands, the same library order, still before turn 1");
+        });
+
+        // 2. A rollout's turn count: both candidates play past turn 1 (the horizon is game turn 2*mullturns).
+        final int[] turns = {0, 0};
+        scenario("search-mull-horizon", flood, PolicyLobbyPlayerAi.Outlets.OFF, mull, (ai, pol) -> {
+            final mtgtable.ai.SearchPolicy.Limits lim = new mtgtable.ai.SearchPolicy.Limits(
+                    System.nanoTime() + 20_000_000_000L, 2 * mull.mullTurns - 1, 20_000);
+            final mtgtable.ai.SearchPolicy.Sink quiet = new mtgtable.ai.SearchPolicy.Sink() {
+                @Override
+                public void add(final String key, final int n) { }
+
+                @Override
+                public void event(final String text) { }
+            };
+            for (int k = 0; k < 2; k++) {
+                final mtgtable.ai.SearchPolicy.Playout p = mtgtable.ai.SearchPolicy.playout(ai.getGame(), ai,
+                        mtgtable.ai.SearchPolicy.mulliganCandForTest(k == 0, ai, 0), 11, lim, quiet, false, null);
+                turns[k] = p == null ? -1 : p.over ? 99 : p.turns;
+            }
+            check((turns[0] >= 2 * mull.mullTurns - 1 || turns[0] == 99) && (turns[1] >= 2 * mull.mullTurns - 1 || turns[1] == 99),
+                    "keep and mulligan rollouts play to game turn " + 2 * mull.mullTurns + " (turns past turn 1: keep "
+                    + turns[0] + ", mulligan " + turns[1] + ")");
+        });
+
+        // 3. Never peeks: two games that differ only in what the AI cannot see (the opponent's hand/library
+        //    split and order, the AI's own library order) give the same copies, seed for seed -- the hand a
+        //    mulligan draws comes from the redealt library, and the opponent's hand is redealt too.
+        final List<List<String>> seen = new ArrayList<>();
+        final String[][] hidden = {
+            {"Forest;Grizzly Bears;Forest;Llanowar Elves;Forest;Grizzly Bears;Forest",
+             "Forest;Grizzly Bears;Forest;Forest;Llanowar Elves;Forest;Grizzly Bears;Forest;Forest;Grizzly Bears", LIB20},
+            {"Grizzly Bears;Grizzly Bears;Grizzly Bears;Llanowar Elves;Llanowar Elves;Forest;Forest",
+             "Forest;Forest;Forest;Forest;Forest;Forest;Forest;Forest;Grizzly Bears;Grizzly Bears",   // the same 17 cards as game 0
+             String.join(";", reversed(LIB20.split(";")))},
+        };
+        for (int g = 0; g < 2; g++) {
+            final List<String> board = pregame("Swamp;Swamp;Swamp;Mountain;Mountain;Mountain;Swamp", hidden[g][2],
+                    hidden[g][0], hidden[g][1]);
+            final List<String> out = new ArrayList<>();
+            scenario("search-mull-nopeek-" + g, board, PolicyLobbyPlayerAi.Outlets.OFF, mull, (ai, pol) -> {
+                final mtgtable.ai.SearchPolicy.Sink quiet = new mtgtable.ai.SearchPolicy.Sink() {
+                    @Override
+                    public void add(final String key, final int n) { }
+
+                    @Override
+                    public void event(final String text) { }
+                };
+                mtgtable.ai.SearchPolicy.probeForTest((copy, aiC) -> {
+                    final Player oppC = aiC.getWeakestOpponent();
+                    final List<String> mine = names(aiC.getCardsIn(ZoneType.Hand));
+                    final List<String> theirs = names(oppC.getCardsIn(ZoneType.Hand));
+                    java.util.Collections.sort(mine);
+                    java.util.Collections.sort(theirs);
+                    out.add(mine + " | " + theirs);
+                });
+                try {
+                    for (long seed = 1; seed <= 12; seed++) {
+                        mtgtable.ai.SearchPolicy.playout(ai.getGame(), ai, mtgtable.ai.SearchPolicy.mulliganCandForTest(false, ai, 0),
+                                seed, new mtgtable.ai.SearchPolicy.Limits(System.nanoTime() + 20_000_000_000L, 0, 0), quiet, false, null);
+                    }
+                } finally {
+                    mtgtable.ai.SearchPolicy.probeForTest(null);
+                }
+            });
+            seen.add(out);
+        }
+        check(seen.size() == 2 && seen.get(0).size() == 12 && seen.get(0).equals(seen.get(1)),
+                "a mulligan's copies depend on nothing hidden: the same 12 seeds give the same new hand and the same "
+                + "opponent hand in both games" + (seen.get(0).isEmpty() ? "" : " (first: " + seen.get(0).get(0) + ")"));
+        check(new java.util.HashSet<>(seen.get(0)).size() > 3, "and the seeds deal different hands ("
+                + new java.util.HashSet<>(seen.get(0)).size() + " distinct of 12)");
+
+        // 4. Falls back: a copier error keeps Forge's keep/mulligan, counted.
+        final boolean[] forgeKeep = {false, false};
+        scenario("search-mull-copy-fails", flood, PolicyLobbyPlayerAi.Outlets.OFF, mull, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            ctl.search().failCopyForTest(new RuntimeException("Couldn't map test"));
+            forgeKeep[0] = ctl.mulliganKeepHand(ai, 0);
+            forgeKeep[1] = !forge.ai.ComputerUtil.wantMulligan(ai, 0);
+            check(forgeKeep[0] == forgeKeep[1] && ctl.counts().getOrDefault("search.fallback.copyError", 0) == 1,
+                    "a copier error -> Forge's own " + (forgeKeep[1] ? "keep" : "mulligan") + ", counted (" + ctl.counts() + ")");
+        });
+
+        // 5. The London bottom: after a mulligan the bottom choice is searched among the hand's cards.
+        scenario("search-bottom-runs", flood, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("anytime=1,seed=7,mull=1,mullms=2500"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    ctl.search().failCopyForTest(new RuntimeException("skip the keep search"));
+                    ctl.mulliganKeepHand(ai, 0);   // only to learn who starts, as Forge's mulligan service asks it first
+                    ctl.search().failCopyForTest(null);
+                    final forge.game.card.CardCollection hand = new forge.game.card.CardCollection(ai.getCardsIn(ZoneType.Hand));
+                    final forge.game.card.CardCollectionView back = ctl.tuckCardsViaMulligan(hand, 1);
+                    final java.util.Map<String, Integer> c = ctl.counts();
+                    check(back != null && back.size() == 1 && hand.contains(back.get(0))
+                            && c.getOrDefault("search.k.considered", 0) == 1 && c.getOrDefault("search.rolloutErrors", 0) == 0,
+                            "the bottom search ran and put one card of the hand on the bottom: " + names(back) + " (" + c + ")");
+                    check(ai.getCardsIn(ZoneType.Hand).size() == 7, "the real hand is untouched (the caller moves the card)");
+                });
+
+        // 6. Off by default: search-v2's config never searches a mulligan.
+        scenario("search-mull-off", flood, PolicyLobbyPlayerAi.Outlets.OFF, SearchConfig.parse("anytime=1,seed=7"),
+                (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    ctl.mulliganKeepHand(ai, 0);
+                    check(!ctl.counts().containsKey("search.m.considered") && !ctl.counts().containsKey("search.rollouts"),
+                            "mull off: no mulligan search (" + ctl.counts() + ")");
+                });
+
+        // 7. Targets: Forge's sorcery removal at main 1; the target search rolls its target out against the others.
+        final List<String> slash = List.of(
+                "humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN1",
+                "humanbattlefield=Forest;Forest;Grizzly Bears;Hill Giant|Id:41", "humanhand=Lightning Bolt",
+                "humanlibrary=Forest;Forest;Forest", "aihand=Flame Slash", "ailibrary=Mountain;Mountain;Mountain",
+                "aibattlefield=Mountain;Mountain;Typhoid Rats");
+        final SearchConfig tgt = SearchConfig.parse("ms=3000,anytime=1,seed=7,what=a,targets=1");
+        scenario("search-targets-runs", slash, PolicyLobbyPlayerAi.Outlets.OFF, tgt, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+            final java.util.Map<String, Integer> c = ctl.counts();
+            final mtgtable.ai.SearchPolicy.Report rep = ctl.search().takeTargetReport();
+            final boolean cast = pick != null && pick.size() == 1 && "Flame Slash".equals(pick.get(0).getHostCard().getName());
+            check(cast, "Forge casts Flame Slash (got " + pick + ")");
+            if (cast) {
+                final forge.game.GameObject t = pick.get(0).getTargets().get(0);
+                check(c.getOrDefault("search.t.considered", 0) == 1 && rep != null && "t".equals(rep.kind)
+                        && rep.cands.size() >= 2 && c.getOrDefault("search.rolloutErrors", 0) == 0,
+                        "the target search ran: " + (rep == null ? "none" : rep.summary()) + " (" + c + ")");
+                check(t instanceof Card && ((Card) t).isInZone(ZoneType.Battlefield) && ((Card) t).isCreature()
+                        && pick.get(0).canTarget(t), "the play still has one legal target: " + t);
+                boolean visible = rep != null;
+                for (int i = 0; rep != null && i < rep.cands.size(); i++) {
+                    final String tok = mtgtable.ai.SearchPolicy.token(rep.cands.get(i));
+                    visible &= tok.matches("target:p?\\d+");
+                }
+                check(visible, "every candidate is a target the AI can see, by id");
+                check(c.getOrDefault("search.p.considered", 0) == 0 && c.getOrDefault("search.a.considered", 0) == 0,
+                        "only the target search ran (what=a: no priority search)");
+            }
+            check(ai.getWeakestOpponent().getCardsIn(ZoneType.Hand).size() == 1, "the real game is untouched");
+        });
+
+        // 8. Falls back: a copier error keeps Forge's target.
+        scenario("search-targets-copy-fails", slash, PolicyLobbyPlayerAi.Outlets.OFF, tgt, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            ctl.search().failCopyForTest(new RuntimeException("Couldn't map test"));
+            final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+            check(pick != null && pick.size() == 1 && !pick.get(0).getTargets().isEmpty()
+                    && ctl.counts().getOrDefault("search.fallback.copyError", 0) == 1
+                    && ctl.counts().getOrDefault("search.t.changed", 0) == 0,
+                    "a copier error -> Forge's own target (" + (pick == null ? "none" : pick.get(0).getTargets()) + ", "
+                    + ctl.counts() + ")");
+        });
+
+        // 9. Only on targeted plays: Typhoid Rats has no target, so the target search never fires.
+        scenario("search-targets-untargeted", castBoard, PolicyLobbyPlayerAi.Outlets.OFF, tgt, (ai, pol) -> {
+            final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+            ctl.chooseSpellAbilityToPlay();
+            check(!ctl.counts().containsKey("search.t.considered") && !ctl.counts().containsKey("search.rollouts"),
+                    "no target, no target search (" + ctl.counts() + ")");
+        });
+
+        // 10. Off by default: the same Flame Slash with search-v2's config is never target-searched.
+        scenario("search-targets-off", slash, PolicyLobbyPlayerAi.Outlets.OFF, SearchConfig.parse("ms=3000,anytime=1,seed=7,what=a"),
+                (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    ctl.chooseSpellAbilityToPlay();
+                    check(!ctl.counts().containsKey("search.t.considered") && !ctl.counts().containsKey("search.rollouts"),
+                            "targets off: no target search (" + ctl.counts() + ")");
+                });
+    }
+
+    static String[] reversed(final String[] a) {
+        final String[] r = new String[a.length];
+        for (int i = 0; i < a.length; i++) {
+            r[i] = a[a.length - 1 - i];
+        }
+        return r;
+
     }
 
     static boolean targets(final forge.game.spellability.SpellAbility sa, final Player p) {

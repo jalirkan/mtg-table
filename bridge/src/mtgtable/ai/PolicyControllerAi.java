@@ -70,6 +70,11 @@ import forge.util.collect.FCollectionView;
  * by its own seeded generator.  The decision record then carries the mark
  * ({@code explore: {rule, forge}}), so a policy dataset can leave it out.  With
  * no explorer, nothing changes.
+ *
+ * <p><b>Opening hands and targets (D416).</b>  With the search's {@code mull=1},
+ * {@link #mulliganKeepHand} and {@link #tuckCardsViaMulligan} reconsider Forge's
+ * keep and London bottom; with {@code targets=1}, the targets of the priority
+ * answer are reconsidered after it is chosen.  Both off: Forge's answers.
  */
 public class PolicyControllerAi extends PlayerControllerAi {
 
@@ -93,6 +98,9 @@ public class PolicyControllerAi extends PlayerControllerAi {
     /** Whose answer the last {@link #choose} returned, and the outlet policy's reason. */
     private String lastBy = "forge";
     private String lastWhy;
+
+    /** The player who starts, from the last {@link #mulliganKeepHand} (the London bottom is asked without it; D416). */
+    private Player mullFirst;
 
     /** Play exploration (D358), or null: the seat plays its policy's answers. */
     private Explorer explorer;
@@ -175,6 +183,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
         if (search != null) {
             search.takeReport();
+            search.takeTargetReport();
         }
         final List<SpellAbility> r = explored(choose());
         final Decision.Explore explored = explorer == null ? null : explorer.takeMark();
@@ -202,10 +211,20 @@ public class PolicyControllerAi extends PlayerControllerAi {
                 // decision that is written: a forced pass costs no frame.
                 final int[] mark = decisions.mark();
                 final int n = decisions.write(d, mark);
+                final SearchPolicy.Report trep = search == null ? null : search.takeTargetReport();
                 if (sa != null) {
+                    boolean first = true;
                     for (final Decision t : Decisions.targets(sa, player, "targets", targetMarks)) {
                         t.parent = n;
                         t.by = lastBy;
+                        if (trep != null) {
+                            // D416: the target search's verdict covers every targeted part; its numbers go on the first
+                            t.by = trep.fallback == null && trep.chosen >= 0 ? "search" : t.by;
+                            if (first) {
+                                t.search = Decisions.stats(trep);
+                            }
+                        }
+                        first = false;
                         writeOrCount(t, mark);
                     }
                 }
@@ -248,8 +267,22 @@ public class PolicyControllerAi extends PlayerControllerAi {
         }
     }
 
-    /** The priority answer: the outlet policy, Forge, the policy again, then the search (D309-D312). */
+    /**
+     * The priority answer ({@link #choose0}), then, with {@code targets=1}, the
+     * target search on it (D416): never on an answer the outlet policy chose or
+     * steers (its own victim and target rules).
+     */
     private List<SpellAbility> choose() {
+        final List<SpellAbility> r = choose0();
+        if (search != null && r != null && r.size() == 1 && steerSa == null && !"outlets".equals(lastBy)
+                && search.wantsTargets(player)) {
+            search.chooseTargets(player, r.get(0));
+        }
+        return r;
+    }
+
+    /** The priority answer: the outlet policy, Forge, the policy again, then the search (D309-D312). */
+    private List<SpellAbility> choose0() {
         steerSa = null;
         steerVictim = null;
         lastBy = "forge";
@@ -424,12 +457,25 @@ public class PolicyControllerAi extends PlayerControllerAi {
 
     @Override
     public boolean mulliganKeepHand(final Player firstPlayer, final int cardsToReturn) {
+        mullFirst = firstPlayer;
         if (decisions == null) {
-            final boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
+            boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
+            if (search != null) {
+                keep = search.chooseMulligan(player, firstPlayer, cardsToReturn, keep);   // D416 (mull=1)
+                search.takeReport();
+            }
             return explorer == null ? keep : explorer.mulligan(keep, cardsToReturn);
         }
         final int[] mark = decisions.mark();
+        if (search != null) {
+            search.takeReport();
+        }
         boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
+        SearchPolicy.Report mrep = null;
+        if (search != null) {
+            keep = search.chooseMulligan(player, firstPlayer, cardsToReturn, keep);   // D416 (mull=1)
+            mrep = search.takeReport();
+        }
         Decision.Explore em = null;
         if (explorer != null) {
             keep = explorer.mulligan(keep, cardsToReturn);
@@ -438,11 +484,39 @@ public class PolicyControllerAi extends PlayerControllerAi {
         try {
             final Decision d = Decisions.mulligan(player, keep);
             d.explore = em;
+            if (mrep != null) {
+                d.search = Decisions.stats(mrep);
+                d.by = mrep.fallback == null && mrep.chosen >= 0 ? "search" : "forge";
+            }
             decisions.write(d, mark);
         } catch (final RuntimeException e) {
             decisions.error("mulligan", e);
         }
         return keep;
+    }
+
+    /**
+     * The London bottom (D416): Forge chooses, then with {@code mull=1} the
+     * search may put other cards on the bottom.  Not a recorded decision (D347
+     * has no kind for it); counted.
+     */
+    @Override
+    public CardCollectionView tuckCardsViaMulligan(final CardCollectionView hand, final int cardsToReturn) {
+        final CardCollectionView forge = super.tuckCardsViaMulligan(hand, cardsToReturn);
+        if (search == null || !search.wantsMulligan(player) || forge == null) {
+            return forge;
+        }
+        final List<Card> h = new ArrayList<>();
+        for (final Card c : hand) {
+            h.add(c);
+        }
+        final List<Card> f = new ArrayList<>();
+        for (final Card c : forge) {
+            f.add(c);
+        }
+        final List<Card> r = search.chooseBottom(player, mullFirst, h, cardsToReturn, f);
+        search.takeReport();
+        return r == f ? forge : new forge.game.card.CardCollection(r);
     }
 
     @Override
@@ -552,6 +626,12 @@ public class PolicyControllerAi extends PlayerControllerAi {
 
     @Override
     public boolean chooseTargetsFor(final SpellAbility currentAbility) {
+        if (search != null && search.config().targets) {
+            // D416: Forge asks this only mid-resolution or for another player's
+            // targeting (TargetingPlayer); a copy cannot start there (no stack), so
+            // it stays Forge's, and the count says how often the path comes up.
+            count("search.t.chooseTargetsFor");
+        }
         if (decisions == null) {
             return super.chooseTargetsFor(currentAbility);
         }

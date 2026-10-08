@@ -119,6 +119,19 @@ public final class SearchPolicy {
     /** Test hook: thrown from inside the copy step, as a copier failure would be. */
     private RuntimeException failCopyForTest;
 
+    /** For the self-test only (D416): sees each rollout's copy and searching seat once it is set up, before play. */
+    private static volatile java.util.function.BiConsumer<Game, Player> probeForTest;
+
+    /** For the self-test only: called with every rollout's copy and its searching seat after the setup (null = off). */
+    public static void probeForTest(final java.util.function.BiConsumer<Game, Player> probe) {
+        probeForTest = probe;
+    }
+
+    /** For the self-test only: the mulligan search's candidate (keep, or one more London mulligan), D416. */
+    public static Cand mulliganCandForTest(final boolean keep, final Player first, final int tucked) {
+        return new MullCand(keep, first, tucked);
+    }
+
     /** For the self-test only: make every copy fail with {@code e} (null = off). */
     public void failCopyForTest(final RuntimeException e) {
         failCopyForTest = e;
@@ -207,6 +220,15 @@ public final class SearchPolicy {
 
         /** Set the copy up so the rollout starts with this choice; throw if it cannot be mapped. */
         abstract void install(LenientGameCopier cp, Game copy, Player aiCopy, RolloutForcing rc);
+
+        /**
+         * After the determinization (D416): a choice that draws or places
+         * library cards (a mulligan, a London bottom) must act on the redealt
+         * library, never on the real order the copy came with.  Nothing for the
+         * other kinds.  Throw if it cannot be done.
+         */
+        void afterDeterminize(final LenientGameCopier cp, final Game copy, final Player aiCopy) {
+        }
     }
 
     /** Play {@code sa} (its targets and choices as set on the original) first; null = pass priority. */
@@ -330,20 +352,26 @@ public final class SearchPolicy {
          * Pure (no Forge class), so {@code GradeSelfTest} checks it on numbers.
          */
         public static int verdict(final SearchConfig cfg, final Report rep, final int best, final int rounds) {
+            return verdict(cfg.lcb, cfg.z, cfg.margin, rep, best, rounds);
+        }
+
+        /** {@link #verdict(SearchConfig, Report, int, int)} with the rule spelled out (D416: the opening hand's is always lcb). */
+        public static int verdict(final boolean lcb, final double z, final int margin, final Report rep, final int best,
+                                  final int rounds) {
             if (best == 0) {
                 rep.stat = 0;
                 return 0;
             }
-            if (!cfg.lcb) {
+            if (!lcb) {
                 rep.stat = rep.diffLeaf[best];
-                return rep.diffLeaf[best] > cfg.margin ? best : 0;
+                return rep.diffLeaf[best] > margin ? best : 0;
             }
             if (rounds < SearchConfig.LCB_MIN_ROUNDS || Double.isNaN(rep.seDiff[best])) {
                 rep.stat = Double.NaN;
                 return 0;
             }
-            rep.stat = rep.diffLeaf[best] - cfg.z * rep.seDiff[best];
-            return rep.stat > cfg.margin ? best : 0;
+            rep.stat = rep.diffLeaf[best] - z * rep.seDiff[best];
+            return rep.stat > margin ? best : 0;
         }
 
         /**
@@ -459,6 +487,15 @@ public final class SearchPolicy {
         }
         if (c instanceof ForgeCand) {
             return "forge";
+        }
+        if (c instanceof MullCand) {
+            return ((MullCand) c).keep ? "keep" : "mulligan";
+        }
+        if (c instanceof TargetCand) {
+            return ((TargetCand) c).token;
+        }
+        if (c instanceof BottomCand) {
+            return "option:hidden";   // a London bottom is not a recorded decision (D347 has no kind for it)
         }
         throw new IllegalArgumentException("candidate " + c);
     }
@@ -991,6 +1028,481 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
+    // (m) the opening hand: keep or mulligan; (k) the London bottom (D416)
+    // ==================================================================
+
+    /**
+     * Whether the opening-hand search runs: {@code mull=1}, a two-player game
+     * (the London rule's first mulligan is free only in multiplayer and Brawl,
+     * which the candidates below do not model).
+     */
+    public boolean wantsMulligan(final Player ai) {
+        return cfg.mull && ai.getGame().getPlayers().size() == 2;
+    }
+
+    /** London's ceiling inside a rollout: Forge's own further mulligans stop at a hand of three. */
+    static final int MAX_TUCK_IN_ROLLOUT = 4;
+
+    /**
+     * {@code mulliganKeepHand}: Forge said {@code forgeKeep}.  Roll "keep" out
+     * against "mulligan" from the pre-game copy and return the answer to play.
+     * {@code tucked} is how many cards this hand has already put on the bottom
+     * (Forge's {@code cardsToReturn}), {@code first} the player who starts.
+     */
+    public boolean chooseMulligan(final Player ai, final Player first, final int tucked, final boolean forgeKeep) {
+        if (!wantsMulligan(ai)) {
+            return forgeKeep;
+        }
+        if (first == null || ai.getGame().getPhaseHandler().getPhase() != null
+                || ai.getCardsIn(ZoneType.Hand).isEmpty() || tucked + 1 > ai.getMaxHandSize()) {
+            sink.add("search.m.skip", 1);   // not a pre-game London decision this search can replay
+            return forgeKeep;
+        }
+        final long t0 = System.nanoTime();
+        pendingPrior = null;
+        pendingGenerated = 0;
+        final List<Cand> cands = new ArrayList<>();
+        cands.add(new MullCand(forgeKeep, first, tucked));
+        cands.add(new MullCand(!forgeKeep, first, tucked));
+        sink.add("search.m.considered", 1);
+        final Outcome o = search(ai, cands, "m", t0);
+        fewRounds("m");
+        if (o == null || o.chosen <= 0) {
+            return forgeKeep;
+        }
+        sink.add("search.m.changed", 1);
+        sink.add(forgeKeep ? "search.m.changed.toMulligan" : "search.m.changed.toKeep", 1);
+        sink.event(String.format(Locale.ROOT, "search M: %s over Forge's %s (%s, %d rounds)", cands.get(1).label,
+                cands.get(0).label, means(cands, o), o.rounds));
+        return !forgeKeep;
+    }
+
+    /**
+     * The London bottom ({@code tuckCardsViaMulligan}): Forge chose
+     * {@code forge} ({@code n} cards of {@code hand}).  The alternatives are
+     * every other single card ({@code n = 1}) or Forge's choice with one card
+     * swapped ({@code n > 1}), distinct by name, ranked by Forge's own hand
+     * score of what would be KEPT ({@code ComputerUtil.scoreHand}) and cut to
+     * {@code cands}; each is rolled out like a mulligan.  Returns the cards to
+     * put on the bottom.
+     */
+    public List<Card> chooseBottom(final Player ai, final Player first, final List<Card> hand, final int n,
+                                   final List<Card> forgeBottom) {
+        if (!wantsMulligan(ai)) {
+            return forgeBottom;
+        }
+        if (first == null || n < 1 || forgeBottom == null || forgeBottom.size() != n || !hand.containsAll(forgeBottom)
+                || ai.getGame().getPhaseHandler().getPhase() != null) {
+            sink.add("search.k.skip", 1);
+            return forgeBottom;
+        }
+        final long t0 = System.nanoTime();
+        pendingPrior = null;
+        pendingGenerated = 0;
+        final List<List<Card>> alts = new ArrayList<>();
+        final Set<String> seen = new HashSet<>();
+        seen.add(nameKey(forgeBottom));
+        final List<Card> rest = new ArrayList<>(hand);
+        rest.removeAll(forgeBottom);
+        if (n == 1) {
+            for (final Card c : rest) {
+                final List<Card> b = List.of(c);
+                if (seen.add(nameKey(b))) {
+                    alts.add(b);
+                }
+            }
+        } else {
+            for (final Card out : forgeBottom) {
+                for (final Card in : rest) {
+                    final List<Card> b = new ArrayList<>(forgeBottom);
+                    b.remove(out);
+                    b.add(in);
+                    if (seen.add(nameKey(b))) {
+                        alts.add(b);
+                    }
+                }
+            }
+        }
+        if (alts.isEmpty()) {
+            return forgeBottom;   // every card in hand has the same name: nothing to choose
+        }
+        // The cheap prior: Forge's own score of the hand each bottom would keep (stable: ties keep enumeration order).
+        final Map<List<Card>, Integer> score = new java.util.IdentityHashMap<>();
+        for (final List<Card> b : alts) {
+            final CardCollection kept = new CardCollection(hand);
+            kept.removeAll(b);
+            int v;
+            try {
+                v = forge.ai.ComputerUtil.scoreHand(kept, ai, n);
+            } catch (final RuntimeException e) {
+                v = Integer.MIN_VALUE;
+            }
+            score.put(b, v);
+        }
+        alts.sort((x, y) -> Integer.compare(score.get(y), score.get(x)));
+        final List<Cand> cands = new ArrayList<>();
+        cands.add(new BottomCand(forgeBottom, first, n));
+        for (final List<Card> b : alts) {
+            if (cands.size() >= cfg.maxCandidates) {
+                break;
+            }
+            cands.add(new BottomCand(b, first, n));
+        }
+        sink.add("search.k.considered", 1);
+        final Outcome o = search(ai, cands, "k", t0);
+        fewRounds("k");
+        if (o == null || o.chosen <= 0) {
+            return forgeBottom;
+        }
+        final BottomCand c = (BottomCand) cands.get(o.chosen);
+        sink.add("search.k.changed", 1);
+        sink.event(String.format(Locale.ROOT, "search K: %s over Forge's %s (%d rounds)", c.label, cands.get(0).label,
+                o.rounds));
+        return c.bottom;
+    }
+
+    /** Counts an opening-hand search that ended with fewer paired rounds than its lcb rule needs (Forge's answer kept). */
+    private void fewRounds(final String kind) {
+        if (report != null && report.fallback == null && report.rounds < SearchConfig.LCB_MIN_ROUNDS) {
+            sink.add("search." + kind + ".fewRounds", 1);
+        }
+    }
+
+    private static String nameKey(final List<Card> cs) {
+        final List<String> l = new ArrayList<>();
+        for (final Card c : cs) {
+            l.add(c.getName());
+        }
+        java.util.Collections.sort(l);
+        return String.join("|", l);
+    }
+
+    /**
+     * The London mulligan on a copy, as Forge's {@code LondonMulligan} plays it
+     * minus its 100 ms pause: the hand goes to the library, the library is
+     * shuffled (the rollout's seeded random), seven are drawn, and the seat's
+     * controller -- Forge's AI inside a rollout -- puts {@code tuck} on the bottom.
+     */
+    static void londonMulligan(final Game copy, final Player p, final int tuck) {
+        for (final Card c : new ArrayList<>(p.getCardsIn(ZoneType.Hand))) {
+            copy.getAction().moveToLibrary(c, null);
+        }
+        p.shuffle(null);
+        p.drawCards(p.getMaxHandSize());
+        p.onMulliganned();
+        final CardCollection hand = new CardCollection(p.getCardsIn(ZoneType.Hand));
+        for (final Card c : p.getController().tuckCardsViaMulligan(hand, tuck)) {
+            copy.getAction().moveToLibrary(c, -1, null);
+        }
+    }
+
+    /**
+     * After the forced opening choice: Forge's AI takes any further mulligans
+     * on the hand it now holds (its own rule, up to a hand of three), the
+     * opponent keeps the hand the determinization dealt it (whether it has
+     * already kept is not known to the AI), and the copy's first turn starts
+     * with {@code first}.
+     */
+    static void startCopyGame(final Game copy, final Player aiCopy, final Player firstCopy, final int tucked) {
+        int t = tucked;
+        while (t < MAX_TUCK_IN_ROLLOUT && !aiCopy.getController().mulliganKeepHand(firstCopy, t)) {
+            t++;
+            londonMulligan(copy, aiCopy, t);
+        }
+        copy.setAge(forge.game.GameStage.Play);
+        copy.setStartingPlayer(firstCopy);
+        copy.getPhaseHandler().setupFirstTurn(firstCopy, null);
+    }
+
+    /** Keep (true) or take one more London mulligan (false), then play from turn 1. */
+    private static final class MullCand extends Cand {
+        final boolean keep;
+        final Player first;
+        final int tucked;
+
+        MullCand(final boolean keep, final Player first, final int tucked) {
+            super(keep ? "keep" : "mulligan");
+            this.keep = keep;
+            this.first = first;
+            this.tucked = tucked;
+        }
+
+        @Override
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
+            if (copy.getPhaseHandler().getPhase() != null) {
+                throw new IllegalStateException("the copy is past the opening hands");
+            }
+            copy.setAge(forge.game.GameStage.Mulligan);
+        }
+
+        @Override
+        void afterDeterminize(final LenientGameCopier cp, final Game copy, final Player aiCopy) {
+            final Player firstCopy = (Player) cp.find(first);
+            if (keep) {
+                // Kept: no further mulligan is asked of this hand.
+                copy.setAge(forge.game.GameStage.Play);
+                copy.setStartingPlayer(firstCopy);
+                copy.getPhaseHandler().setupFirstTurn(firstCopy, null);
+                return;
+            }
+            londonMulligan(copy, aiCopy, tucked + 1);
+            startCopyGame(copy, aiCopy, firstCopy, tucked + 1);
+        }
+    }
+
+    /** Put these cards (of the original game's hand) on the bottom, then play from turn 1. */
+    private static final class BottomCand extends Cand {
+        final List<Card> bottom;
+        final Player first;
+        final int n;
+
+        BottomCand(final List<Card> bottom, final Player first, final int n) {
+            super("bottom " + names(bottom));
+            this.bottom = new ArrayList<>(bottom);
+            this.first = first;
+            this.n = n;
+        }
+
+        @Override
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
+            if (copy.getPhaseHandler().getPhase() != null) {
+                throw new IllegalStateException("the copy is past the opening hands");
+            }
+            copy.setAge(forge.game.GameStage.Mulligan);
+        }
+
+        @Override
+        void afterDeterminize(final LenientGameCopier cp, final Game copy, final Player aiCopy) {
+            for (final Card c : bottom) {
+                final Card m = (Card) cp.find(c);
+                if (m.getZone() == null || !m.getZone().is(ZoneType.Hand)) {
+                    throw new IllegalStateException("not in the copy's hand: " + c);
+                }
+                copy.getAction().moveToLibrary(m, -1, null);
+            }
+            startCopyGame(copy, aiCopy, (Player) cp.find(first), n);
+        }
+    }
+
+    // ==================================================================
+    // (t) the targets of the seat's own priority play (D416)
+    // ==================================================================
+
+    /**
+     * Whether the target search looks at a priority answer now: {@code targets=1}
+     * and an empty stack (a copy does not carry the stack, D312), in any phase.
+     */
+    public boolean wantsTargets(final Player ai) {
+        final Game g = ai.getGame();
+        return cfg.targets && g.getStack().isEmpty() && g.getPhaseHandler().getPhase() != null;
+    }
+
+    /** The target search's last report, kept apart from the priority search's (the record attaches each to its own decision). */
+    private Report targetReport;
+
+    /** The last target search's report, or null; clears it. */
+    public Report takeTargetReport() {
+        final Report r = targetReport;
+        targetReport = null;
+        return r;
+    }
+
+    /** The parts of {@code sa}'s chain that target, in chain order (the decision record's order, D347). */
+    static List<SpellAbility> targetingParts(final SpellAbility sa) {
+        final List<SpellAbility> parts = new ArrayList<>();
+        for (SpellAbility s = sa; s != null; s = s.getSubAbility()) {
+            if (s.usesTargeting()) {
+                parts.add(s);
+            }
+        }
+        return parts;
+    }
+
+    /** A target the seat can see as an object: a player, or a card in a public zone (D347's visibility). */
+    static boolean targetVisible(final GameObject e, final Player ai) {
+        if (e instanceof Player) {
+            return true;
+        }
+        return e instanceof Card && Decisions.visible((Card) e, ai);
+    }
+
+    /**
+     * {@code sa} is the play about to be returned (Forge's, or the search's).
+     * When one of its parts has exactly one target, roll Forge's targets out
+     * against other legal ones -- for one part at a time, the others kept --
+     * and re-target {@code sa} in place when the paired evidence says so.
+     * Parts with several targets, divided amounts, random targets or another
+     * player choosing them are left as Forge set them.
+     */
+    public void chooseTargets(final Player ai, final SpellAbility sa) {
+        if (!wantsTargets(ai) || sa == null || sa.isLandAbility() || sa.isTrigger()) {
+            return;
+        }
+        final List<SpellAbility> parts = targetingParts(sa);
+        if (parts.isEmpty()) {
+            return;
+        }
+        final Report prev = report;
+        try {
+            chooseTargets0(ai, sa, parts);
+        } finally {
+            targetReport = report == prev ? null : report;
+            report = prev;
+        }
+    }
+
+    private void chooseTargets0(final Player ai, final SpellAbility sa, final List<SpellAbility> parts) {
+        final long t0 = System.nanoTime();
+        final Game g = ai.getGame();
+        // One alternative = (part, entity); each carries its prior: Forge's side first, then Forge's card value.
+        final List<Object[]> alts = new ArrayList<>();
+        GameObject forgeFirst = null;
+        for (int pi = 0; pi < parts.size(); pi++) {
+            final SpellAbility part = parts.get(pi);
+            if (part.hasParam("TargetingPlayer")) {
+                sink.add("search.t.skip.targetingPlayer", 1);
+                return;   // another player chooses (Forge defers it): not ours to search
+            }
+            final forge.game.spellability.TargetRestrictions tr = part.getTargetRestrictions();
+            if (tr == null || part.isDividedAsYouChoose() || tr.isRandomTarget() || part.getTargets().size() != 1) {
+                sink.add("search.t.skip.part", 1);
+                continue;
+            }
+            final GameObject cur = part.getTargets().get(0);
+            if (forgeFirst == null) {
+                forgeFirst = cur;
+            }
+            final Player side = sideOf(cur);
+            // getAllCandidates' flag is onlyNonCard: false lists the players AND the cards it may target.
+            for (final GameEntity e : tr.getAllCandidates(part, false)) {
+                if (e == cur || !targetVisible(e, ai)) {
+                    continue;
+                }
+                try {
+                    if (!part.canTarget(e)) {
+                        continue;
+                    }
+                } catch (final RuntimeException ex) {
+                    continue;
+                }
+                final int same = side != null && side == sideOf(e) ? 0 : 1;
+                double v;
+                if (e instanceof Player) {
+                    v = 1000;
+                } else {
+                    try {
+                        v = ((Card) e).isInZone(ZoneType.Battlefield) ? CARD_EVAL.evalCard(g, ai, (Card) e) : 50;
+                    } catch (final RuntimeException ex) {
+                        v = 50;
+                    }
+                }
+                alts.add(new Object[] {pi, e, same, v});
+            }
+        }
+        if (forgeFirst == null) {
+            return;   // no part with a single target
+        }
+        if (alts.isEmpty()) {
+            sink.add("search.t.noAlternatives", 1);
+            return;
+        }
+        alts.sort((x, y) -> {
+            final int s = Integer.compare((Integer) x[2], (Integer) y[2]);
+            return s != 0 ? s : Double.compare((Double) y[3], (Double) x[3]);
+        });
+        pendingPrior = null;
+        pendingGenerated = 0;
+        final List<Cand> cands = new ArrayList<>();
+        cands.add(new TargetCand(sa, -1, null, Decisions.entityToken("target", forgeFirst, ai)));
+        for (final Object[] a : alts) {
+            if (cands.size() >= cfg.maxCandidates) {
+                break;
+            }
+            final GameEntity e = (GameEntity) a[1];
+            final String tok = Decisions.entityToken("target", e, ai);
+            if (tok == null) {
+                continue;
+            }
+            cands.add(new TargetCand(sa, (Integer) a[0], e, tok));
+        }
+        if (cands.size() < 2) {
+            return;
+        }
+        sink.add("search.t.considered", 1);
+        final Outcome o = search(ai, cands, "t", t0);
+        if (o == null || o.chosen <= 0) {
+            return;
+        }
+        final TargetCand c = (TargetCand) cands.get(o.chosen);
+        final SpellAbility part = parts.get(c.part);
+        final GameObject old = part.getTargets().get(0);
+        part.resetTargets();
+        part.getTargets().add(c.target);
+        boolean ok;
+        try {
+            ok = part.canTarget(c.target) && sa.isTargetNumberValid();
+        } catch (final RuntimeException e) {
+            ok = false;
+        }
+        if (!ok) {
+            part.resetTargets();
+            part.getTargets().add(old);
+            sink.add("search.t.invalidAtEnd", 1);
+            invalidAtEnd();
+            return;
+        }
+        sink.add("search.t.changed", 1);
+        sink.event(String.format(Locale.ROOT, "search T: %s over Forge's %s (%s, %d rounds)", c.label,
+                cands.get(0).label, means(cands, o), o.rounds));
+    }
+
+    /** The player a target belongs to: itself, or a card's controller. */
+    private static Player sideOf(final GameObject o) {
+        if (o instanceof Player) {
+            return (Player) o;
+        }
+        return o instanceof Card ? ((Card) o).getController() : null;
+    }
+
+    /** Play {@code sa} with one part's single target replaced ({@code part} -1: Forge's targets as they are). */
+    private static final class TargetCand extends Cand {
+        final SpellAbility sa;
+        final int part;
+        final GameEntity target;
+        final String token;
+
+        TargetCand(final SpellAbility sa, final int part, final GameEntity target, final String token) {
+            super(describe(sa) + " -> " + (target == null ? "Forge's targets" : targetName(target)));
+            this.sa = sa;
+            this.part = part;
+            this.target = target;
+            this.token = token;
+        }
+
+        @Override
+        void install(final LenientGameCopier cp, final Game copy, final Player aiCopy, final RolloutForcing rc) {
+            final SpellAbility mapped = mapSa(cp, sa, aiCopy);   // Forge's targets copied
+            if (part >= 0) {
+                final List<SpellAbility> parts = targetingParts(mapped);
+                if (part >= parts.size()) {
+                    throw new IllegalStateException("no targeting part " + part + " on the copy");
+                }
+                final SpellAbility p = parts.get(part);
+                p.resetTargets();
+                p.getTargets().add(cp.find(target));
+            }
+            rc.forcePriority(mapped);
+            final PhaseHandler ph = copy.getPhaseHandler();
+            ph.setPriority(aiCopy);
+            ph.onStackResolved();
+        }
+    }
+
+    private static String targetName(final GameEntity e) {
+        return e instanceof Player ? "player " + ((Player) e).getId() : ((Card) e).getName();
+    }
+
+    // ==================================================================
     // The prior (D389)
     // ==================================================================
 
@@ -1114,14 +1626,42 @@ public final class SearchPolicy {
         }
     }
 
+    /** The wall-clock budget for a decision of this kind: the mulligan's own (D416), else {@code ms}. */
+    private int budgetFor(final String kind) {
+        return "m".equals(kind) || "k".equals(kind) ? cfg.mullMs : cfg.budgetMs;
+    }
+
+    /**
+     * Whether a decision of this kind is overruled only on the noise-aware rule
+     * (D350's lcb: the paired difference's lower bound, z = {@code z}, over at
+     * least {@link SearchConfig#LCB_MIN_ROUNDS} paired rounds, clears the
+     * margin): always for the opening hand (D416) -- its rollouts are long and
+     * noisy, its rounds few, and a wrong mulligan costs a card -- else as the
+     * config says.
+     */
+    private boolean lcbFor(final String kind) {
+        return cfg.lcb || "m".equals(kind) || "k".equals(kind);
+    }
+
+    /** D416's kinds: m (keep or mulligan), k (the London bottom), t (targets). */
+    private static boolean newKind(final String kind) {
+        return "m".equals(kind) || "k".equals(kind) || "t".equals(kind);
+    }
+
+    /** The rollout horizon for a decision of this kind (turns past the one the rollout starts in). */
+    private int horizonFor(final String kind) {
+        // D416: a mulligan rollout starts in game turn 1 and plays through turn 2·mullturns.
+        return "m".equals(kind) || "k".equals(kind) ? 2 * cfg.mullTurns - 1 : cfg.horizonFor(kind);
+    }
+
     private Outcome search(final Player ai, final List<Cand> cands, final String kind, final long t0) {
         if (cfg.anytime) {
             return searchAnytime(ai, cands, kind, t0);
         }
-        final long deadline = t0 + cfg.budgetMs * 1_000_000L;
+        final long deadline = t0 + budgetFor(kind) * 1_000_000L;
         final Game game = ai.getGame();
         final int k = cands.size();
-        final int horizon = cfg.horizonFor(kind);
+        final int horizon = horizonFor(kind);
         final List<double[]> leaves = new ArrayList<>();
         final List<double[]> wins = new ArrayList<>();
         int errors = 0;
@@ -1130,10 +1670,10 @@ public final class SearchPolicy {
         report = rep;
         rep.kind = kind;
         rep.cands = new ArrayList<>(cands);
-        rep.budgetMs = cfg.budgetMs;
+        rep.budgetMs = budgetFor(kind);
         rep.horizon = horizon;
-        rep.rule = cfg.lcb ? "lcb" : "margin";
-        rep.z = cfg.lcb ? cfg.z : 0;
+        rep.rule = lcbFor(kind) ? "lcb" : "margin";
+        rep.z = lcbFor(kind) ? cfg.z : 0;
         rep.margin = cfg.margin;
         rep.leaves = leaves;
         attachPrior(rep, cands);
@@ -1177,6 +1717,9 @@ public final class SearchPolicy {
                         break rounds;   // out of time mid-round: the round is dropped
                     }
                     sink.add("search.rollouts", 1);
+                    if (newKind(kind)) {
+                        sink.add("search." + kind + ".rollouts", 1);
+                    }
                     rep.playouts++;
                     round[i] = p.leaf;
                     roundWin[i] = winOf(p);
@@ -1218,8 +1761,8 @@ public final class SearchPolicy {
                 best = i;
             }
         }
-        o.chosen = Report.verdict(cfg, rep, best, rounds);
-        if (cfg.lcb) {
+        o.chosen = Report.verdict(lcbFor(kind), cfg.z, cfg.margin, rep, best, rounds);
+        if (lcbFor(kind)) {
             sink.add(o.chosen > 0 ? "search.lcb.overrode" : best > 0 && rep.diffLeaf[best] > cfg.margin
                     ? "search.lcb.held" : "search.lcb.none", 1);
         }
@@ -1265,10 +1808,10 @@ public final class SearchPolicy {
      * </ul>
      */
     private Outcome searchAnytime(final Player ai, final List<Cand> cands, final String kind, final long t0) {
-        final long deadline = t0 + cfg.budgetMs * 1_000_000L;
+        final long deadline = t0 + budgetFor(kind) * 1_000_000L;
         final Game game = ai.getGame();
         final int k = cands.size();
-        final int horizon = cfg.horizonFor(kind);
+        final int horizon = horizonFor(kind);
         final List<double[]> leaves = new ArrayList<>();
         final List<double[]> wins = new ArrayList<>();
         final boolean[] active = new boolean[k];
@@ -1282,10 +1825,10 @@ public final class SearchPolicy {
         report = rep;
         rep.kind = kind;
         rep.cands = new ArrayList<>(cands);
-        rep.budgetMs = cfg.budgetMs;
+        rep.budgetMs = budgetFor(kind);
         rep.horizon = horizon;
-        rep.rule = cfg.lcb ? "lcb" : "margin";
-        rep.z = cfg.lcb ? cfg.z : 0;
+        rep.rule = lcbFor(kind) ? "lcb" : "margin";
+        rep.z = lcbFor(kind) ? cfg.z : 0;
         rep.margin = cfg.margin;
         rep.leaves = leaves;
         rep.anytime = true;
@@ -1355,6 +1898,9 @@ public final class SearchPolicy {
                     rolloutNs += System.nanoTime() - tr;
                     timed++;
                     sink.add("search.rollouts", 1);
+                    if (newKind(kind)) {
+                        sink.add("search." + kind + ".rollouts", 1);   // D416: the new kinds' own count (p, a, b's lines unchanged)
+                    }
                     rep.playouts++;
                     round[i] = p.leaf;
                     roundWin[i] = winOf(p);
@@ -1418,8 +1964,8 @@ public final class SearchPolicy {
         final Outcome o = new Outcome();
         o.rounds = complete;
         o.mean = rep.meanLeaf.clone();
-        o.chosen = Report.verdict(cfg, rep, best, best == 0 ? most : Anytime.paired(leaves, best));
-        if (cfg.lcb) {
+        o.chosen = Report.verdict(lcbFor(kind), cfg.z, cfg.margin, rep, best, best == 0 ? most : Anytime.paired(leaves, best));
+        if (lcbFor(kind)) {
             sink.add(o.chosen > 0 ? "search.lcb.overrode" : best > 0 && rep.diffLeaf[best] > cfg.margin
                     ? "search.lcb.held" : "search.lcb.none", 1);
         }
@@ -1628,6 +2174,15 @@ public final class SearchPolicy {
                 sink.add("search.oracleRollouts", 1);
             } else {
                 Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
+            }
+            try {
+                cand.afterDeterminize(cp, copy, aiCopy);   // D416: a mulligan draws from the redealt library
+            } catch (final RuntimeException e) {
+                throw new CandidateUnmappable(e);
+            }
+            final java.util.function.BiConsumer<Game, Player> probe = probeForTest;
+            if (probe != null) {
+                probe.accept(copy, aiCopy);
             }
             final long tp = System.nanoTime();
             final PhaseHandler ph = copy.getPhaseHandler();

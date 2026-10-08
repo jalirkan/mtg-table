@@ -277,6 +277,23 @@ pins both halves: Forge's copier throws on a board with Tarmogoyf and Grist in
 the sideboard, ours copies it. (A card in a copied zone that the strict lookup
 still cannot map — the bench met one, a Bird token — gets a stand-in too.)
 
+**Two more decisions, off by default (D416).** `mull=1` searches the opening
+hand: at `mulliganKeepHand` keep against one more London mulligan, and at
+`tuckCardsViaMulligan` Forge's bottom against single-card alternatives (ranked
+by Forge's own `ComputerUtil.scoreHand` of the kept hand). The copy is taken
+before turn 1 (no phase yet); the candidate acts after the determinization, so
+a mulligan draws from the redealt library; Forge's AI then takes any further
+mulligans in the copy, the opponent keeps what it was dealt, and the copy's
+first turn starts (`PhaseHandler.setupFirstTurn`). Rollouts play to the end of
+game turn `2·mullturns` (3 a seat) on their own budget (`mullms`, 6 s), and
+Forge is overruled only on the lcb rule over at least 3 paired rounds.
+`targets=1` searches the targets of the seat's own priority play: for each part
+with exactly one target, Forge's target against the other legal, visible ones
+(Forge's side first, then by Forge's card value), up to `cands`, on the search's
+own rule. Forge's AI picks those targets inside `canPlaySa`, before the answer
+is returned; `chooseTargetsFor` and `chooseSingleEntityForEffect` come mid-
+resolution, where a copy (no stack) cannot start, and stay Forge's.
+
 **Measured** (`docs/evidence/search-ai.md`): 56.5% against Default's 47.0% on
 the same 200 cube deals, 37 deals gained and 18 lost (p = 0.015); copier errors
 0.22% before the token fix; a quarter of searched decisions kept Forge's answer
