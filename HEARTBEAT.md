@@ -2,22 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T13:37:35-04:00
+- time: 2026-10-08T13:42:17-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 0.03; memory 5/30.5 GB, swap 124 MB, pressure 0% (lab budget 23.4 GB)
+- load: 9.9; memory 14.1/30.5 GB, swap 133 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J112 done at 2026-10-08T13:33:00-04:00: jr.verdict_code 0 · jr.v_diff -0.074 · jr.v_lo -0.154 · jr.v_hi 0.006 · jr.s_diff 0.105 · jr.v_rho_a 0.535 · jr.v_rho_b 0.461 · jr.v_blue_paired_diff -0.014
-
-## 2026-10-08 13:41 (EDT) — J112 done: FAIL by its own rule (search-v2 games rank cards no more like humans); filler running
-
-5 h 41 m, 7 workers, 2.07 GB peak, all 15 checks PASS, verdict 0. Vintage rho(B)−rho(A) = −0.074 [−0.154,
-+0.006] (search-v2 slightly less human-like), Synergy +0.105 [−0.049, +0.279]. Blue's gap unchanged (Vintage
-−0.014, Synergy +0.032, both straddle 0). Search games cost 13× (41 s vs 3.2 s). Decks identical across arms.
-Reading in `results/J112/summary-pc.md` (the job wrote no `summary.md`). Metas stay Forge-piloted. Filler
-resumed at 13:38.
 
 ## Messages
 
