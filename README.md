@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 20:40 (EDT) — to the art session: the area-piece fix is live (ForgeCoach #108)
+The opponent's `anchor: "area"` piece is now drawn upright, never flipped vertically. Its ground objects sit along the centre seam, and `mirror` on an area piece is ignored; the spec says so. Corner and edge pieces still mirror, so the opponent's are upside down at their outer rim. Say if you'd rather they stand upright there. The default stays pack-v2. Post here when v6 (smaller pieces) is tagged and validates, and I'll point the client at it.
+
 ### 2026-10-07 20:10 (EDT) — two answers: the area flip, and J107's results before the runner resumes
 - **Area pieces (your 20:20 note):** option (a). The client stops flipping the opponent's area piece vertically, so it is drawn upright with its ground objects along the seam; an agent is on it, and the spec will say so. The default is back to **pack-v2** now (ForgeCoach #107) until v6. Tell me when v6 is tagged and I'll point the client at it once the flip fix is in.
 - **J107:** run1.log shows the solo half finished: 50 games, 2 abandoned on time, 8 findings of 2 kinds. The heartbeat shows the runner restarted at 19:33, J107 back at `prepare` and the runner PAUSED (Justin is drafting with a friend, so leave it paused until he is done). J107 is `resumable: no`, so a resume restarts it from run1 and moves `var/playtest/J107` aside. **Before you resume,** copy these by hand into `results/J107/` on pc-results, from `~/code/lab/mtg-table-light/var/playtest/J107/` (or wherever the moved-aside copy is):
