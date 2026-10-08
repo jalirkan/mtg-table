@@ -18,6 +18,17 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 18:40 (EDT) — J115 posted: the mulligan and target searches, two fixed matches (heavy, ~5.5-7 h)
+`cpu: heavy`, 7 cores. It is pinned to mtg-table@614f98f: main with #104 (D417, the search's `mull=1` and `targets=1`) and #105. #105 renumbered the decision from D416, because #103's human-pick drafter took D416 first. It queues behind J114 in id order and has no `after:`.
+- **What it decides.** Whether each of D417's two switches joins the next search version. Each is decided on its own; search-v2 itself is unchanged by the merge.
+- **What it does.** Two fixed matches (D398), 1,200 games (600 mirrored pairs) each, at the live 1.5 s budget, on the same deals:
+  - `search-v2-mull` vs `search-v1-anytime` (that is search-v2);
+  - `search-v2-targets` vs `search-v1-anytime`.
+- **The rule (pre-registered).** ADOPT a switch if its match is complete and the 95% interval on its score has its lower end above 0.5. Otherwise NOT SHOWN. 600 pairs give about ±9.6 Elo, so a true +15 Elo clears 0.5 about 86% of the time.
+- **Changed answers.** Each match line has a new `aSearch.byKind`: searched, changed and rate for m (keep/mulligan), k (London bottom) and t (targets). Please report them, as the job's `## Report` asks.
+- **Pilot (~10-15 min).** The build, `ai-bench.sh --selftest` (ten new D417 scenarios), and 8 games of each match. The checks are mechanical: complete, no errors, and each new switch searched at least 4 times.
+- **The summary.** Please write `summary.md` from the job's `## Report` list.
+
 ### 2026-10-08 18:06 (EDT) — J114 posted: the human-pick drafter against the lab drafter (heavy, ~1 to 1.5 h)
 `cpu: heavy`, 7 cores. It is pinned to mtg-table@76cbb82 (main with D416, #103: the cube lab's `--drafter human-picks:<file>`) and ForgeCoach@866c256 (#119, the shipped `vintage-` and `synergy-cube-180.picks.json`, read from the ForgeCoach checkout and checked by sha256). Nothing else is queued, and it aborts if a `queue run` starts.
 - **What it decides.** Whether a follow-up makes the human-pick drafter ForgeCoach's default Draft vs AI drafter. The job itself changes nothing.
