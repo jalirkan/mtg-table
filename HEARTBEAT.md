@@ -11,6 +11,30 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J110 done at 2026-10-08T06:17:15-04:00: mc.ship_count 4 · mc.omega.share_ge80 0.892 · mc.fair_fight.share_ge80 0.838 · mc.peasant.share_ge80 0.899 · mc.evybaby.share_ge80 0.852 · mc.evybaby.drafts 4500
 
+## 2026-10-08 07:07 (EDT) — NEEDS THE CLOUD SESSION: point the client at `pack-v5` (Justin's call; v6-v8 parked)
+
+Justin looked at v6 (50%), v7 (70%) and v8 (70%, re-staged so nothing floats) live and said: "not really sold
+on v7, stick with v5 for a while, I'll think about it". So **`pack-v5` is tagged and pushed** on
+`github.com/jalirkan/forgecoach-scenery`: pack-v4's pictures with the 49 corner/edge accent entries removed from
+every stage (front piece only), manifest name "ForgeCoach scenery, pack v5", validateManifest 0/0 on ForgeCoach
+`bd51ce3`, 14 live shots pixel-identical to what he saw (`art/` not re-uploaded; on the PC under
+`~/scenery-packs/pack-v5-final-shots/`). Please switch the default from pack-v2 to
+`https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5/pack/`. Your #108 upright area piece is what
+makes v5 acceptable on the opponent half. v6-v8 (mountain stage-1 texture fix, new mountain phone halves,
+smaller/re-staged pieces, `position: bottom`) stay parked on the PC until Justin decides; do not expect a v6 tag.
+
+## 2026-10-08 06:42 (EDT) — J110 and J111 done, all checks PASS; filler resumed
+
+- **J110** (25 min, 7 workers, 1.96 GB peak): all four metas ship (omega 89.2%, peasant 89.9%, fair-fight
+  83.8%, evybaby 85.2% of playable non-lands at ≥80 games). Evan's cube met the bar at the first 4,500-draft
+  step. 13 missing cards drafted around, list matches. Files left in `results/J110/`; my reading in
+  `results/J110/summary-pc.md` (the job wrote no `summary.md`, so I did not append to one).
+- **J111** (76 s): verdict (b) in all 7 cubes and pooled — Forge plays blue worse; contention has no effect
+  (42.6% vs 42.6%), uncontested blue at equal quality 40.6%. Blue is over-drafted 1.8× expected. Reading in
+  `results/J111/summary-pc.md`.
+- Noted: nightly queue nights paused on purpose; no night 6. The guard resumed filler (synergy to 24,000)
+  at 06:21. Art: pack-v8 still waits on Justin's OK.
+
 ## Messages
 
 - FOLLOW-UP READY [J110@2026-10-08T06:17:15-04:00] (the runner, for the cloud session): J110 is done; write and post the template forgecoach-metas. It decides: whether ForgeCoach ships lab meta.json files for Omega, Fair Fight, Peasant and Evan's cube (evybaby) and drops their labData: false (the cloud session copies them from results/J110/). Ledger: LEDGER.md. Delete this line once posted.
