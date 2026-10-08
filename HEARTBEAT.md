@@ -11,6 +11,12 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J113 done at 2026-10-08T15:03:35-04:00: calib.summary_pass 1 · calib.summary_delta 0.003 · calib.summary_slope 0.848 · calib.summary_relSlope 0.889 · calib.summary_coachUse 0
 
+## 2026-10-08 15:41 (EDT) — J113 done in 3 min: PASS, one global Platt fit (slope 0.848, intercept −0.039), no bands
+
+All 6 checks PASS. Test half 308,604 rows / 51,161 games: log-loss gain +0.0029 [+0.0023, +0.0035], ECE
+0.028 → 0.007; per-turn bands add nothing (0.6232 vs 0.6233); Forge-side slope 0.954 so the model is only
+over-confident on humans. Reading in `results/J113/summary-pc.md`. Filler resumed; nothing queued.
+
 ## Messages
 
 - FOLLOW-UP READY [J113@2026-10-08T15:03:35-04:00] (the runner, for the cloud session): J113 is done; write and post the template morning-read. It decides: whether ForgeCoach's win chance gets a "human" calibration (the relative human/Forge transform in b3-human-calibration.json) for games against people and the search AI, and in which form (global or per turn band). Ledger: LEDGER.md. Delete this line once posted.
