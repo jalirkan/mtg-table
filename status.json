@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-08T15:01:03-04:00",
- "heartbeat": "2026-10-08T15:01:03-04:00",
+ "updated": "2026-10-08T15:01:29-04:00",
+ "heartbeat": "2026-10-08T15:01:29-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 9.29,
-  "memUsedGb": 5.7,
+  "load1": 6.4,
+  "memUsedGb": 5,
   "memTotalGb": 30.5,
   "swapUsedMb": 213,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J113",
    "title": "B3, the win chance on human games: Platt recalibration of the frozen r17 evaluator on 17Lands' Powered Cube replays (dev half), tested on the held-out half, with the human/Forge relative slope a coach would need (D415)",
    "cpu": "light",
-   "phase": "pilot 1/1",
+   "phase": "commands 1/1",
    "started": "2026-10-08T15:00:28-04:00",
-   "elapsed": 35,
+   "elapsed": 61,
    "done": null,
    "total": null,
    "unit": null,
@@ -42,7 +42,7 @@
    "live": {
     "calib.written": 0,
     "disk_gb": 41,
-    "elapsed_s": 0,
+    "elapsed_s": 61,
     "ext.written": 0,
     "pressure_events": 0,
     "trad.written": 0,
@@ -52,7 +52,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J113-pilot1"
+   "detail": "lab-J113-run1"
   }
  ],
  "queue": [],

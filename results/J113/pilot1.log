@@ -1,0 +1,26 @@
+==== J113 pilot1 started 2026-10-08T15:01:02-04:00 in unit lab-J113-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+......................dataset: 9 rows, 1 games, 1/4 files
+....................
+----------------------------------------------------------------------
+Ran 42 tests in 5.633s
+
+OK
+dataset: 18 rows from 2 games, 394 features (schema a8e2de6b43518aa4, vocab 189 slots)
+  skipped games: {'reserved deck (D340)': 2}
+  play exploration (D358): 0 game(s) played with exploration kept (--play-explore exclude)
+  train:     18 rows,    2 games (1 groups); games won/lost/drawn 1/1/0; rows +1/-1/0 9/9/0
+  val  :      0 rows,    0 games (0 groups); games won/lost/drawn 0/0/0; rows +1/-1/0 0/0/0
+  test :      0 rows,    0 games (0 groups); games won/lost/drawn 0/0/0; rows +1/-1/0 0/0/0
+d064644a61a631c3947e4ee452ea67d6f75063c3b11638be5c23f609fdb5dfd2  var/ml/models/r17-vintage-n1.json
+fetch: var/ml/17lands/b3-pilot/cards.csv: 1740431 bytes in 1 s
+fetch: var/ml/17lands/b3-pilot/replay_data_public.Cube_-_Powered.PremierDraft.csv.gz: 20000000 bytes (first 20000000 of 143232456) in 2 s
+source: 17Lands public datasets (https://www.17lands.com/public_datasets), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); filtered to Powered Cube and re-encoded as r17 rows
+ext17l: 37505 games read (37373 with positions, 14111 with rows; skipped none) in 10.7 s
+  user-side positions (turn >= 3, final half-turn dropped): 371344; qualifying: >=0.5 42013 (11.3%), >=0.8 5233 (1.4%), >=0.7 7208 (1.9%), all in vocab 4542 (1.2%)
+  rows written (share >= 0.5, perspective both): 84026 {'test.user': 21206, 'test.oppo': 21206, 'dev.user': 20807, 'dev.oppo': 20807}; unknown ids 0 (0 occurrences); peak RSS 0.236 GB
+    0.8-0.9     1336  0.846  0.822
+    0.9-1.0      667  0.938  0.921
+
+verdict (CALIB_RULE, D415): NO VERDICT -- the 17Lands rows come from a partial download (a sanity run) (for the record: log-loss(uncalibrated) - log-loss(Platt) = +0.0019, 95% interval over games [+0.0003, +0.0035])
+form: global; coach use: none -- the verdict is NO VERDICT
+peak RSS 0.156 GB
