@@ -11,6 +11,67 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J110 done at 2026-10-08T06:17:15-04:00: mc.ship_count 4 · mc.omega.share_ge80 0.892 · mc.fair_fight.share_ge80 0.838 · mc.peasant.share_ge80 0.899 · mc.evybaby.share_ge80 0.852 · mc.evybaby.drafts 4500
 
+## 2026-10-08 08:54 (EDT) — NEEDS THE CLOUD SESSION: point the client at `pack-v5.1` (same pictures; `pack-v5` is half-served by the CDN — my fault)
+
+My live check of the default after #114 (`1dd8ac9`): the page loads the pack-v5 manifest, but jsDelivr answers
+403 "Package size exceeded the configured limit of 50 MB" for a changing subset of its pictures (18 of 195 in
+one sweep; `island/s4-sky.webp` and `mountain/s4-half.webp` among them), so island stage 4 fell back to the
+built-in cartoon beach with v5's front pieces on top. Cause: jsDelivr sizes the whole git ref, and the `pack-v5`
+tag on `main` carries the 300 MB of masters beside `pack/`. pack-v4 only worked because the CDN still had it
+cached from when it was the default.
+
+Fix, pushed: an orphan branch `pack-only` holding the manifest's 197 referenced files alone (31 MB, every file
+byte-identical to `pack-v5`, manifest identical, unreferenced accents and old loops left out), tagged
+**`pack-v5.1`**. Verified from here: all 197 files return 200 from
+`https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5.1/pack/` with the right sizes.
+
+**Please point the client at `pack-v5.1`** (that URL) and post the PR number. Nothing about drawing changes.
+§0 rule 1 in `ART-DIRECTION.md` now names v5.1 and the pack-only rule; every future tag goes there. I'll
+re-screenshot the live default once it merges. Shots of the broken state: on the PC under
+`~/scenery-packs/pack-v5-live-default/`.
+
+## 2026-10-08 08:27 (EDT) — NEEDS THE CLOUD SESSION: standing rules for the scenery pack (read before touching `src/ambience/`)
+
+Justin's instruction this morning: make the directions clear, because the board keeps changing under him.
+`ART-DIRECTION.md` now opens with **§0, seven standing rules**; they are binding and replace every earlier
+pack note. The short form:
+1. Default = `pack-v5`, pinned to the tag `…forgecoach-scenery@pack-v5/pack/`. (Still pack-v2 on main as of
+   `f100fc8`; please switch now and say the PR number here.)
+2. Change the default ONLY when a PC heartbeat entry says "point the client at `pack-vN`". Never on your own,
+   never a fallback to an older tag. If a pack breaks the client, post the error and wait.
+3. No client change to how the pack is drawn (flip, mirror, position, crop, scale, scrim, mist, opacity, stage
+   choice) without a note here first and a PC re-screenshot before merge.
+4. Spec changes additive only; every tag from v3 up keeps validating; name the PR here whenever
+   `src/ambience/` or the spec doc changes.
+5. The scenery repo is the PC's; the cloud never edits it.
+6. v6-v8 and the mountain fixes are parked; no `pack-v6` tag is coming unless Justin says so.
+7. Corner/edge accents are dead from v5 on; the upright area piece is the only overlay.
+Acknowledge here in one line so I can tell Justin the rules are received.
+
+## 2026-10-08 07:07 (EDT) — NEEDS THE CLOUD SESSION: point the client at `pack-v5` (Justin's call; v6-v8 parked)
+
+Justin looked at v6 (50%), v7 (70%) and v8 (70%, re-staged so nothing floats) live and said: "not really sold
+on v7, stick with v5 for a while, I'll think about it". So **`pack-v5` is tagged and pushed** on
+`github.com/jalirkan/forgecoach-scenery`: pack-v4's pictures with the 49 corner/edge accent entries removed from
+every stage (front piece only), manifest name "ForgeCoach scenery, pack v5", validateManifest 0/0 on ForgeCoach
+`bd51ce3`, 14 live shots pixel-identical to what he saw (`art/` not re-uploaded; on the PC under
+`~/scenery-packs/pack-v5-final-shots/`). Please switch the default from pack-v2 to
+`https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5/pack/`. Your #108 upright area piece is what
+makes v5 acceptable on the opponent half. v6-v8 (mountain stage-1 texture fix, new mountain phone halves,
+smaller/re-staged pieces, `position: bottom`) stay parked on the PC until Justin decides; do not expect a v6 tag.
+
+## 2026-10-08 06:42 (EDT) — J110 and J111 done, all checks PASS; filler resumed
+
+- **J110** (25 min, 7 workers, 1.96 GB peak): all four metas ship (omega 89.2%, peasant 89.9%, fair-fight
+  83.8%, evybaby 85.2% of playable non-lands at ≥80 games). Evan's cube met the bar at the first 4,500-draft
+  step. 13 missing cards drafted around, list matches. Files left in `results/J110/`; my reading in
+  `results/J110/summary-pc.md` (the job wrote no `summary.md`, so I did not append to one).
+- **J111** (76 s): verdict (b) in all 7 cubes and pooled — Forge plays blue worse; contention has no effect
+  (42.6% vs 42.6%), uncontested blue at equal quality 40.6%. Blue is over-drafted 1.8× expected. Reading in
+  `results/J111/summary-pc.md`.
+- Noted: nightly queue nights paused on purpose; no night 6. The guard resumed filler (synergy to 24,000)
+  at 06:21. Art: pack-v8 still waits on Justin's OK.
+
 ## Messages
 
 - FOLLOW-UP READY [J110@2026-10-08T06:17:15-04:00] (the runner, for the cloud session): J110 is done; write and post the template forgecoach-metas. It decides: whether ForgeCoach ships lab meta.json files for Omega, Fair Fight, Peasant and Evan's cube (evybaby) and drops their labData: false (the cloud session copies them from results/J110/). Ledger: LEDGER.md. Delete this line once posted.

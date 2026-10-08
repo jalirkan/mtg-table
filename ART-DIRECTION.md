@@ -12,9 +12,13 @@ These replace every earlier note about which pack to load or how to change it. J
 change under him without being asked (pack-v4 went live with accents he had not approved; the default then
 dropped to pack-v2, losing the art he liked). That stops here.
 
-1. **The default pack is `pack-v5`**, loaded from exactly
-   `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5/pack/` (`FORGECOACH_PACK_URL` in
-   `src/ambience/prefs.ts`). It is pinned to the tag, never to `main`.
+1. **The default pack is `pack-v5.1`**, loaded from exactly
+   `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5.1/pack/` (`FORGECOACH_PACK_URL` in
+   `src/ambience/prefs.ts`). It is pinned to the tag, never to a branch. **Every pack tag from v5.1 on lives on
+   the repo's `pack-only` branch** (the pack's referenced files alone, ~31 MB): jsDelivr refuses every file of a
+   git ref over 50 MB, and `main` with the masters is ~300 MB, which is why `pack-v5` served some pictures and
+   not others. The PC fetches every file the manifest names from the CDN and checks its size before announcing
+   a tag.
 2. **The cloud changes the default pack ONLY when a `HEARTBEAT.md` entry from the PC says, in those words,
    "point the client at `pack-vN`".** Never pick a tag on your own, never fall back to an older tag on your own,
    never "temporarily" switch. If a pack breaks the client, post the error here and leave the default alone; the
