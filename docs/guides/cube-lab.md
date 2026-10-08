@@ -117,6 +117,22 @@ replaced by one card. The AI takes a pile when it is worth the expected value
 of a blind card (the mean of the cards it has not seen) plus a margin
 (`winstonMargin1..3`). Who opens is the seed's parity.
 
+### The human-pick drafter (D416)
+
+`--drafter human-picks:<ForgeCoach>/public/cubes/<cube>.picks.json` makes one seat
+(`--drafter-seat`, default A) draft with ForgeCoach's pick model fitted to 17Lands'
+human Powered Cube picks (ForgeCoach `docs/human-picks.md`) instead of the score
+above; the other seat drafts as always, and both build with the lab builder and
+the cube's ratings. `tools/cubelab/humanpicks.ts` computes each card's utility
+`u = s·(1 + γ·t) + β·x` exactly as ForgeCoach's `humanPicks.ts` and its fitter do
+(the tests check both). A card the file does not cover gets
+`s = a + b·rating`, the least-squares line over the covered cards (in `run.json`).
+A **grid line** is worth Σ exp(u) over its cards, taken best first, each against
+the pool plus the cards before it: invariant to the logit's additive constant
+(a crossing line holds 2 cards, a parallel one 3), and the best card dominates.
+Grid only; one cube; no `--synergy`, `--bridge` or `--explore`. The drafter, its
+seat and the file's sha256 are part of the folder's identity and version.
+
 ## How the decks are built (D294)
 
 Every two-colour pair, with no splash and with each splash colour the pool can
@@ -317,6 +333,8 @@ lowers it): a mix with search plays slower games.
 | `--weight name=value` | | one weight; repeatable; wins over `--weights` |
 | `--synergy <tsv>` | | learned pair synergy for both drafters (`learn` writes it; D301) |
 | `--deck-synergy on\|off` | `off` | ...and for both deckbuilders (needs `--synergy`) |
+| `--drafter human-picks:<x.picks.json>` | off | one seat drafts with ForgeCoach's human pick model instead (grid only; *The human-pick drafter* above, D416) |
+| `--drafter-seat A\|B` | `A` | which seat that is (a mirrored test runs both) |
 | `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
 | `--bridge-ratio 0.5,0.5` | equal | each cube's share of a bridge pool |
 | `--bridge-size N` | 180 | a bridge pool's size (at least 162, a grid's deal) |

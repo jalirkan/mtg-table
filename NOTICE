@@ -490,6 +490,27 @@ endorses mtg-table; 17Lands' usage guidelines
 licence, and this project uses only the published files, never the 17Lands API.
 
 
+8b. 17Lands public datasets, through ForgeCoach's human pick model (test fixtures)
+----------------------------------------------------------------------------------
+
+fixtures/human-picks/{vintage,synergy}-cube-180.picks.json and fitpy-golden.json
+are copies of files from ForgeCoach (https://github.com/jalirkan/ForgeCoach,
+GPL-3.0-or-later; public/cubes/ and src/cube/testdata/ at 866c256): a pick model
+fitted to 17Lands' public Powered Cube draft data. They hold per-card pick
+strengths, model coefficients and 30 held-out picks' features, not the data.
+The cube lab's `--drafter human-picks` (D416) reads the same files from a
+ForgeCoach checkout.
+
+    Source:   17Lands public datasets, https://www.17lands.com/public_datasets
+              (draft_data_public.Cube_-_Powered.PremierDraft.csv.gz and
+              .TradDraft.csv.gz)
+    Author:   17Lands
+    Licence:  Creative Commons Attribution 4.0 International (CC BY 4.0),
+              https://creativecommons.org/licenses/by/4.0/
+    Changes:  a conditional-logit pick model fitted to the picks (ForgeCoach
+              docs/human-picks.md); only its fitted numbers are kept.
+
+
 9. Code that is deliberately NOT used
 -------------------------------------
 

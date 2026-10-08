@@ -42,6 +42,7 @@ import { assertRunSeeds } from './seeds.ts';
 import { labVersion, resumeVersions, type LabVersion, type VersionEntry } from './versions.ts';
 import { mixText, pickProfiles, type MixEntry } from './profiles.ts';
 import { draftExplores, playExploreTag, type PlayExploreOptions, type PlayExploreTag } from './playexplore.ts';
+import { humanDrafter, parsePicks, runHumanDraft, type Fallback } from './humanpicks.ts';
 
 export interface RunOptions {
   cubeFile: string;
@@ -84,6 +85,11 @@ export interface RunOptions {
    * anything (`queue check`, and `queue run`'s preflight over every key folder of the night).
    */
   checkOnly?: boolean;
+  /**
+   * D416: one seat drafts with ForgeCoach's human pick model (`--drafter human-picks:<file>`, humanpicks.ts),
+   * the other with the current drafter; grid, one cube, no learned files.  Absent = the run is the old one.
+   */
+  drafter?: { kind: 'human-picks'; file: string; seat: 'A' | 'B' };
 }
 
 /** D394: what `runLab` found when it checked a folder (`checkOnly`), or after it ran. */
@@ -155,7 +161,11 @@ export interface RunMeta {
   explore?: ExploreOptions;
   /** D358: the play exploration of the drafts this run appended last (absent: none). A change is a version change (D341). */
   playExplore?: PlayExploreOptions;
+  /** D416: the seat that drafted with the human pick model, its file, and how much of the cube the file covered. */
+  drafter?: RunDrafter;
 }
+
+export interface RunDrafter { kind: 'human-picks'; seat: 'A' | 'B'; file: string; sha: string; cards: number; covered: number; fallback: Fallback }
 
 export const sha = (s: string | Buffer): string => createHash('sha256').update(s).digest('hex');
 
@@ -182,7 +192,7 @@ export function defaultRatings(cubeFile: string): string | null {
  * carries `ver` and its own `profiles`, so readers split by either.  Before D394 the mix sat here too,
  * which no flag could pass: night 4 (J096) failed every chunk on it.
  */
-export const IDENTITY_FIELDS = ['cubeSha', 'format', 'games', 'profiles', 'builder', 'weights', 'winstonCards', 'learned', 'bridge', 'explore'] as const;
+export const IDENTITY_FIELDS = ['cubeSha', 'format', 'games', 'profiles', 'builder', 'weights', 'winstonCards', 'learned', 'bridge', 'explore', 'drafter'] as const;
 
 /** The identity fields that differ between a folder's run.json and this run's meta (empty: the same population). */
 export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): string[] {
@@ -195,16 +205,20 @@ export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): stri
  * games when it is on (D356 exploration, D358 play exploration, D394 the profile mix).  With all of them
  * off it is the plain weights, so the version id of an ordinary run is what it always was.
  */
-export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null }): unknown {
-  if (!x.explore && !x.playExplore && !x.profileMix) return w;
-  return { ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}) };
+export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { seat: string; sha: string } | null }): unknown {
+  if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter) return w;
+  return {
+    ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}),
+    ...(x.drafter ? { drafter: { kind: 'human-picks', seat: x.drafter.seat, sha: x.drafter.sha } } : {}),
+  };
 }
 
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<RunCheck> {
   const t0 = Date.now();
   assertRunSeeds(o.seed, o.drafts, { deckset: o.deckset, games: o.games });
   const bridge = o.bridge ? loadBridge(env, o.bridge, o.weights, say, sha) : null;
-  const { lc, text } = bridge ?? loadForRun(env, o.cubeFile, o.ratingsFile, o.weights, say);
+  const loaded = bridge ? null : loadForRun(env, o.cubeFile, o.ratingsFile, o.weights, say);
+  const { lc, text } = bridge ?? (loaded as NonNullable<typeof loaded>);
   const rel = (f: string): string => path.relative(env.repo, path.resolve(f));
   const shaOf = (f: string | null | undefined): string | null => (f ? sha(fs.readFileSync(f)) : null);
   let draftOne = (seed: number): DraftOut => runDraft(lc, o.format, seed, o.weights, o.winstonCards);
@@ -239,6 +253,24 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     draftOne = (seed) => exploreDraft(base(seed), explore, lc.byName, maxSplash);
     say(`exploring (D356): ${explore.share} of the drafts; a target rated under ${explore.below} forced with probability v / max(sum v, ${explore.cap}), v ${explore.gold} for gold`);
   }
+  let drafterMeta: RunDrafter | null = null;
+  if (o.drafter) {
+    // D416: one seat drafts with the human pick model; everything else is a plain run's.
+    if (bridge || o.mixed || o.synergyFile || explore) throw new Error('--drafter human-picks runs on one cube with its own ratings: no --bridge, --synergy, head-to-head or --explore');
+    if (o.format !== 'grid') throw new Error('--drafter human-picks drafts grid only');
+    const raw = fs.readFileSync(o.drafter.file);
+    const file = parsePicks(JSON.parse(raw.toString('utf8')));
+    if (file.cube.file !== path.basename(o.cubeFile)) throw new Error(`${o.drafter.file} is for ${file.cube.file}, not ${path.basename(o.cubeFile)}`);
+    const listedOf = new Map<string, string>();
+    for (const f of loaded?.facts ?? []) if (f.found && f.name) listedOf.set(f.name, f.listed);
+    const hd = humanDrafter(file, lc.cards, listedOf);
+    const seat = o.drafter.seat;
+    draftOne = (seed) => runHumanDraft(lc, hd, seat, seed, o.weights);
+    drafterMeta = { kind: 'human-picks', seat, file: rel(o.drafter.file), sha: sha(raw), cards: lc.cards.length, covered: hd.covered.size, fallback: hd.fallback };
+    const fb = hd.fallback;
+    say(`drafter (D416): seat ${seat} drafts with the human pick model ${o.drafter.file} (${hd.covered.size} of ${lc.cards.length} cards covered, ${file.cube.matched} in the file); `
+      + `the rest at s = ${fb.intercept.toFixed(3)} + ${fb.slope.toFixed(4)} x rating (least squares over the covered cards, r ${fb.r.toFixed(2)}); seat ${seat === 'A' ? 'B' : 'A'} the current drafter`);
+  }
   const playExplore = o.playExplore && o.playExplore.share > 0 ? o.playExplore : null;
   if (playExplore) {
     if (o.games < 1) throw new Error('--play-explore explores games: it needs --games 1 or more');
@@ -259,6 +291,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     ...(o.profileMix ? { profileMix: mixText(o.profileMix) } : {}),
     ...(explore ? { explore } : {}),
     ...(playExplore ? { playExplore } : {}),
+    ...(drafterMeta ? { drafter: drafterMeta } : {}),
   };
   const version = labVersion(env.repo, {
     cubeShas: bridge ? bridge.meta.sources.map((x) => x.sha) : [meta.cubeSha],
@@ -267,7 +300,8 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
     // D358: play exploration changes the games, so it is too (a change between nights of one folder is a
     // version change: refused unless --allow-version-change, and logged); off, the id is the old one.
     // D394: so does the profile mix (each line also carries its seats' `profiles`).
-    weights: versionWeights(o.weights, { explore, playExplore, profileMix: meta.profileMix ?? null }),
+    // D416: the human-pick drafter changes the drafts, so its seat and file are part of the version; off, the id is the old one.
+    weights: versionWeights(o.weights, { explore, playExplore, profileMix: meta.profileMix ?? null, drafter: drafterMeta }),
   });
   const metaFile = path.join(o.out, 'run.json');
   const jsonl = path.join(o.out, 'drafts.jsonl');
