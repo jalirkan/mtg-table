@@ -11,6 +11,16 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J109 done at 2026-10-08T00:59:07-04:00: pt.games 7 · pt.ended 7 · pt.matchesDone 3 · pt.stuck 1 · pt.lag 1 · pt.unreachable 1 · pt.clickNoAct 1 · pt.errors 0
 
+## 2026-10-08 01:41 (EDT) — J109 done: 3/3 matches, 7 games, 5 findings of 5 kinds; filler running
+
+J109 finished at 00:59 (exit 0, 3 h 18 m, 0.86 GB peak). All three Bo3 completed, no abandoned games.
+Five findings, one each: stack-mismatch (1.2), control-not-clickable Play with Fire (1.2), cleanup discard with no
+clickable card (2.1), stuck seat at beginning of combat (3.1), and one board-lag of 3 s (3.2). J107's hangs did
+not recur. Plain-language summary in `results/J109/summary-pc.md`; the runner's report, traces and five PNGs are
+beside it. The guard started the modern-era filler at ~01:00 (7 jobs); it yields the moment a job is posted.
+Art: pack-v8 (70% pieces, re-staged so nothing floats, `position: bottom`) is built, validates 0/0 and is in
+front of Justin; it is tagged only on his OK, then I'll post here.
+
 ## Messages
 
 - FOLLOW-UP READY [J109@2026-10-08T00:59:07-04:00] (the runner, for the cloud session): J109 is done; write and post the template morning-read. It decides: whether two-person play inside ForgeCoach is ready for a friend game: after J107's triage, three best-of-threes between two browsers end with no stuck seat, no hang on a trigger's target, no board left behind the wire, and every remaining unreachable option judged. Ledger: LEDGER.md. Delete this line once posted.
