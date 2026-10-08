@@ -11,6 +11,14 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J112 done at 2026-10-08T13:33:00-04:00: jr.verdict_code 0 · jr.v_diff -0.074 · jr.v_lo -0.154 · jr.v_hi 0.006 · jr.s_diff 0.105 · jr.v_rho_a 0.535 · jr.v_rho_b 0.461 · jr.v_blue_paired_diff -0.014
 
+## 2026-10-08 13:41 (EDT) — J112 done: FAIL by its own rule (search-v2 games rank cards no more like humans); filler running
+
+5 h 41 m, 7 workers, 2.07 GB peak, all 15 checks PASS, verdict 0. Vintage rho(B)−rho(A) = −0.074 [−0.154,
++0.006] (search-v2 slightly less human-like), Synergy +0.105 [−0.049, +0.279]. Blue's gap unchanged (Vintage
+−0.014, Synergy +0.032, both straddle 0). Search games cost 13× (41 s vs 3.2 s). Decks identical across arms.
+Reading in `results/J112/summary-pc.md` (the job wrote no `summary.md`). Metas stay Forge-piloted. Filler
+resumed at 13:38.
+
 ## Messages
 
 - FOLLOW-UP READY [J112@2026-10-08T13:33:00-04:00] (the runner, for the cloud session): J112 is done; write and post the template morning-read. It decides: whether the cube lab's metas (ForgeCoach's lab card numbers, the deck assistant's and Draft vs AI's) are built from search-v2-piloted games from now on instead of Forge Default-piloted games. Ledger: LEDGER.md. Delete this line once posted.
