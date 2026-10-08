@@ -503,3 +503,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J111/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 59a0ced
 - follow-up: template blue-advice: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J110 DONE: Lab stats (meta.json) for every cube Justin drafts: Omega, Fair Fight and Peasant built from the queue's plain Default-vs-Default drafts, and Evan's cube (evybaby, 360 cards) drafted afresh, 4,500-7,000 grid drafts, best of one
+
+- finished: 2026-10-08T06:17:15-04:00
+- decides: whether ForgeCoach ships lab meta.json files for Omega, Fair Fight, Peasant and Evan's cube (evybaby) and drops their labData: false (the cloud session copies them from results/J110/)
+- hypothesis: the queue's plain Default-vs-Default drafts give Omega, Fair Fight and Peasant at least the shipped four's per-card data; Evan's 360-card cube, whose cards each reach about half as many grid drafts as a 180-card cube's, reaches the same per-card bar within 4,500-7,000 drafts; the 13 cards Forge 2.0.14 lacks never reach a draft line
+- rule: written 2026-10-08 before the run. A cube's meta ships when ForgeCoach@0011633's parseMeta reads it (schema 1) and its cubeForMeta names that cube, no card key falls outside the cube, it rests on 100+ drafts (J075), and at least 81% of its playable nonland cards (the cube's nonland cards less those Forge lacks) have 80+ decisive games. 80 is ForgeCoach's META_STRENGTH, the games at which a card's lab number carries half its weight; 0.81 is the lowest share among the four shipped metas (Pauper 0.819; Synergy 0.831, Vintage 0.843, Modern-Era 0.894), rounded down. A meta under the bar is not shipped, and the summary says how many more drafts it would need. Evan's drafting stops at the first of 4,500, 6,000 or 7,000 drafts whose meta meets the bar: a stop on card counts, never on win rates, so it biases no rate
+- outcome: done
+- headline: mc.ship_count 4, mc.omega.share_ge80 0.892, mc.fair_fight.share_ge80 0.838, mc.peasant.share_ge80 0.899, mc.evybaby.share_ge80 0.852, mc.evybaby.drafts 4500
+- summary: results/J110/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 59a0ced, ForgeCoach 0011633
+- follow-up: template forgecoach-metas: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

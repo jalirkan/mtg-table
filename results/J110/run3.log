@@ -1,0 +1,34 @@
+==== J110 run3 started 2026-10-08T06:17:01-04:00 in unit lab-J110-run3, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+# J110: lab metas for Omega, Fair Fight, Peasant and Evan's cube
+
+| file | ships | drafts | decisive games | playable nonland | share with 80+ games | median games | p10 games | lands played | orphans | ForgeCoach id | KB |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| evybaby-cube-360.meta.json | yes | 4500 | 4498 | 317 (13 not in Forge) | 0.852 | 530 | 44 | 30 / 30 | 0 | ok | 175 |
+| fair-fight-cube-180.meta.json | yes | 7434 | 7434 | 160 | 0.838 | 1695 | 23 | 20 / 20 | 0 | ok | 200 |
+| omega-cube-180.meta.json | yes | 6682 | 6682 | 158 | 0.892 | 1983 | 56 | 20 / 22 | 0 | ok | 251 |
+| peasant-cube-180.meta.json | yes | 10956 | 10950 | 158 | 0.899 | 2772 | 74 | 22 / 22 | 0 | ok | 216 |
+
+Shipped metas (/home/justin-a/code/lab/ForgeCoach/public/cubes): modern-era-cube-180.meta.json 0.894 / median 1703 / 5781 drafts; pauper-cube-180.meta.json 0.819 / median 1620 / 8314 drafts; synergy-cube-180.meta.json 0.831 / median 1653 / 6980 drafts; vintage-cube-180.meta.json 0.843 / median 1266 / 5167 drafts.
+Rule: ship when schema_ok, id_ok, no orphans, drafts >= 100 and share >= 0.81 of playable nonland cards with 80+ decisive games.
+
+## The queue folders, filtered to plain Default-vs-Default drafts
+
+```
+{"cubes":{"omega":{"lines":12566,"explore":1345,"mixed":4539,"bad":0,"kept":6682,"kept_mb":103.2,"run_profiles_dd":1,"missing":0,"ratings":null},"fair_fight":{"lines":14087,"explore":1514,"mixed":5139,"bad":0,"kept":7434,"kept_mb":111.4,"run_profiles_dd":1,"missing":0,"ratings":"cubes/fair-fight-cube-180.ratings.tsv"},"peasant":{"lines":21195,"explore":2274,"mixed":7965,"bad":0,"kept":10956,"kept_mb":170.4,"run_profiles_dd":1,"missing":0,"ratings":"cubes/peasant-cube-180.ratings.tsv"}},"min_kept":6682,"max_kept_mb":170.4,"bad":0,"not_dd_runs":0}
+```
+
+## Evan's cube, step by step (drafts, share of playable nonland cards with 80+ games, median games)
+
+- evy-4500: 4500 drafts, share 0.852, median 530, p10 44
+
+## Evan's cube against Forge 2.0.14
+
+```
+{"listed":360,"in_db":347,"missing":13,"doc_missing":13,"missing_match":1,"names":["Rescue Girl, First Responder","Flickering Hound","Generous Revival","Apex Witchstalker","Pompous Battlemage","Awaken the Inferno","Fblthp, Knows the Way","Theorix Charm","Twisted Fates","Twinned Vision","Saheeli, Jewel of Avishkar","Primal Witchstalker","Warrior's Blades"],"run_missing":13,"run_missing_match":1,"lines":4500,"missing_in_lines":0}
+cards listed    360
+in Forge's DB   347   MISSING 13
+unsupported     0
+AI:RemAIDeck    6 (Forge: its AI plays these poorly or not at all)
+draft ranks     CubeCobra list 141, a set's rank file only 202, none 4
+unranked        4 (Forge would score these -100 and draft them last; the lab starts them at 40)
+```

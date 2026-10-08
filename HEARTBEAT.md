@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T06:17:01-04:00
+- time: 2026-10-08T06:17:15-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J110 commands 3/3, 4499/7000 drafts, 11168.5/h, ETA 2026-10-08T06:30:27-04:00, 7 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.33; memory 5/30.5 GB, swap 101 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 7.26; memory 4.8/30.5 GB, swap 101 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J111 done at 2026-10-08T05:53:57-04:00: bj.verdict_code 2 · bj.cubes_a 0 · bj.cubes_b 7 · bj.pooled_low_rate 0.426 · bj.pooled_high_rate 0.427 · bj.pooled_b0_rate 0.406
+- last finished: J110 done at 2026-10-08T06:17:15-04:00: mc.ship_count 4 · mc.omega.share_ge80 0.892 · mc.fair_fight.share_ge80 0.838 · mc.peasant.share_ge80 0.899 · mc.evybaby.share_ge80 0.852 · mc.evybaby.drafts 4500
 
 ## Messages
+
+- FOLLOW-UP READY [J110@2026-10-08T06:17:15-04:00] (the runner, for the cloud session): J110 is done; write and post the template forgecoach-metas. It decides: whether ForgeCoach ships lab meta.json files for Omega, Fair Fight, Peasant and Evan's cube (evybaby) and drops their labData: false (the cloud session copies them from results/J110/). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J111@2026-10-08T05:53:57-04:00] (the runner, for the cloud session): J111 is done; write and post the template blue-advice. It decides: what ForgeCoach says about the AI's blue habit: a "the AI over-drafts blue" line in Draft vs AI and a caveat on the deck assistant's pair win rates naming the cause the numbers support (contention between the drafters, or Forge's play with blue), and whether a colour-aware pick tweak is worth one lab A/B night. Ledger: LEDGER.md. Delete this line once posted.
 

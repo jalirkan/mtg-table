@@ -1,0 +1,36 @@
+facts: booting the engine to look up 360 cards ...
+facts: 2.5 s
+== cubes/evybaby-cube-360.md: Evybaby's New Cube
+sections        White 49/49, Blue 49/49, Black 50/50, Red 50/50, Green 49/49, Colorless 10/10, Multicolor 73/73, Lands 30/30
+cards listed    360
+in Forge's DB   347   MISSING 13
+  MISSING       Rescue Girl, First Responder   did you mean: -
+  MISSING       Flickering Hound   did you mean: Flickering Ward
+  MISSING       Generous Revival   did you mean: Wondrous Revival
+  MISSING       Apex Witchstalker   did you mean: -
+  MISSING       Pompous Battlemage   did you mean: -
+  MISSING       Awaken the Inferno   did you mean: -
+  MISSING       Fblthp, Knows the Way   did you mean: -
+  MISSING       Theorix Charm   did you mean: Theros Charm
+  MISSING       Twisted Fates   did you mean: -
+  MISSING       Twinned Vision   did you mean: Tunnel Vision
+  MISSING       Saheeli, Jewel of Avishkar   did you mean: -
+  MISSING       Primal Witchstalker   did you mean: -
+  MISSING       Warrior's Blades   did you mean: -
+two-faced       24: Elite Interceptor // Rejoinder; Giant Killer // Chop Down; Shepherd of the Flock // Usher to Safety; Witch Enchanter // Witch-Blessed Meadow; The Legend of Yangchen // Avatar Yangchen; Bilbo, Luckwearer // Burglar's Plot; Picklock Prankster // Free the Fae; Brazen Borrower // Petty Theft; Gollum, Silent Slinker // Meager Meal; Okiba Reckoner Raid // Nezumi Road Captain; Life of Toshiro Umezawa // Memory of Toshiro; Embereth Shieldbreaker // Battle Display; Bonecrusher Giant // Stomp; Glóin the Mighty // Easy Pickings; Kumano Faces Kakkazan // Etching of Kumano; Studious First-Year // Rampant Growth; Ulvenwald Oddity // Ulvenwald Behemoth; Boseiju Reaches Skyward // Branch of Boseiju; Aang, Swift Savior // Aang and La, Ocean's Fury; Threadbind Clique // Rip the Seams; Spellscorn Coven // Take It Back; Questing Druid // Seek the Beast; Disruptive Stormbrood // Petty Revenge; Thranduil, Sindarin Liege // Silvan Rally  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    6 (Forge: its AI plays these poorly or not at all)
+  Prismatic Ending
+  Divergent Equation
+  Goblin Welder
+  Faithless Looting
+  Goblin Bombardment
+  Mishra's Bauble
+AI:RemRandomDeck 8: Emrakul's Messenger, Micromancer, Goblin Welder, Nishoba Brawler, Farseek, Witch's Oven, Soulherder, Halo Forager (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 141, a set's rank file only 202, none 4
+unranked        4 (Forge would score these -100 and draft them last; the lab starts them at 40)
+  Archaeomender
+  Experimental Confectioner
+  Stingcaster Mage
+  Okoye, Mighty and Adored
+best printing   57 card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): Giant Killer [ELD], Isamaru, Hound of Konda [CHK], Loam Lion [WWK], Cathar Commando [FDN], Shepherd of the Flock [ELD], Mischievous Pup [LCI], Ephemerate [STA], Take Up the Shield [OTJ], Faerie Seer [MH1], Spectral Sailor [FDN], Faerie Vandal [SNC], Moon-Circuit Hacker [NEO], Ninja of the Deep Hours [BOK], Whirler Rogue [ORI], Vapor Snag [MM2], Carrion Feeder [MH1], Bloodghast [ZEN], Umbral Collar Zealot [EOE], Zulaport Cutthroat [BFZ], Thieving Sprite [LRW], Vengeful Rebel [AER], Yahenni, Undying Partisan [AER], Rankle, Master of Pranks [ELD], Throat Slitter [BOK], Goblin Welder [C14], Embereth Shieldbreaker [ELD], Goblin Engineer [MH1], Sokenzan Smelter [NEO], Young Pyromancer [2X2], Hellrider [MM3], Monstrous Rage [WOE], Firebolt [MH1], Birds of Paradise [4ED], Haywire Mite [BRO], Wild Nacatl [ALA], Quirion Dryad [PLS], Tough Cookie [WOE], Ulvenwald Oddity [VOW], Ram Through [IKO], Circuit Mender [NEO], Soulherder [MH1], Drown in the Loch [ELD], Halo Forager [MOM], Mayhem Devil [WAR], Burning-Tree Emissary [GTC], Ruby, Daring Tracker [WOE], Territorial Kavu [MH2], Emmara, Soul of the Accord [GRN], Qasali Pridemage [ARB], Voice of Resurgence [DGM], Loxodon Smiter [RTR], March of the Multitudes [GRN], Killian, Ink Duelist [STX], Zealous Persecution [ARB], Expressive Iteration [SOA], Coiling Oracle [C15], Path to the World Tree [KHM]
