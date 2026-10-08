@@ -119,7 +119,7 @@ public final class SearchPolicy {
     /** Test hook: thrown from inside the copy step, as a copier failure would be. */
     private RuntimeException failCopyForTest;
 
-    /** For the self-test only (D416): sees each rollout's copy and searching seat once it is set up, before play. */
+    /** For the self-test only (D417): sees each rollout's copy and searching seat once it is set up, before play. */
     private static volatile java.util.function.BiConsumer<Game, Player> probeForTest;
 
     /** For the self-test only: called with every rollout's copy and its searching seat after the setup (null = off). */
@@ -127,7 +127,7 @@ public final class SearchPolicy {
         probeForTest = probe;
     }
 
-    /** For the self-test only: the mulligan search's candidate (keep, or one more London mulligan), D416. */
+    /** For the self-test only: the mulligan search's candidate (keep, or one more London mulligan), D417. */
     public static Cand mulliganCandForTest(final boolean keep, final Player first, final int tucked) {
         return new MullCand(keep, first, tucked);
     }
@@ -222,7 +222,7 @@ public final class SearchPolicy {
         abstract void install(LenientGameCopier cp, Game copy, Player aiCopy, RolloutForcing rc);
 
         /**
-         * After the determinization (D416): a choice that draws or places
+         * After the determinization (D417): a choice that draws or places
          * library cards (a mulligan, a London bottom) must act on the redealt
          * library, never on the real order the copy came with.  Nothing for the
          * other kinds.  Throw if it cannot be done.
@@ -355,7 +355,7 @@ public final class SearchPolicy {
             return verdict(cfg.lcb, cfg.z, cfg.margin, rep, best, rounds);
         }
 
-        /** {@link #verdict(SearchConfig, Report, int, int)} with the rule spelled out (D416: the opening hand's is always lcb). */
+        /** {@link #verdict(SearchConfig, Report, int, int)} with the rule spelled out (D417: the opening hand's is always lcb). */
         public static int verdict(final boolean lcb, final double z, final int margin, final Report rep, final int best,
                                   final int rounds) {
             if (best == 0) {
@@ -1028,7 +1028,7 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
-    // (m) the opening hand: keep or mulligan; (k) the London bottom (D416)
+    // (m) the opening hand: keep or mulligan; (k) the London bottom (D417)
     // ==================================================================
 
     /**
@@ -1285,7 +1285,7 @@ public final class SearchPolicy {
     }
 
     // ==================================================================
-    // (t) the targets of the seat's own priority play (D416)
+    // (t) the targets of the seat's own priority play (D417)
     // ==================================================================
 
     /**
@@ -1626,7 +1626,7 @@ public final class SearchPolicy {
         }
     }
 
-    /** The wall-clock budget for a decision of this kind: the mulligan's own (D416), else {@code ms}. */
+    /** The wall-clock budget for a decision of this kind: the mulligan's own (D417), else {@code ms}. */
     private int budgetFor(final String kind) {
         return "m".equals(kind) || "k".equals(kind) ? cfg.mullMs : cfg.budgetMs;
     }
@@ -1635,7 +1635,7 @@ public final class SearchPolicy {
      * Whether a decision of this kind is overruled only on the noise-aware rule
      * (D350's lcb: the paired difference's lower bound, z = {@code z}, over at
      * least {@link SearchConfig#LCB_MIN_ROUNDS} paired rounds, clears the
-     * margin): always for the opening hand (D416) -- its rollouts are long and
+     * margin): always for the opening hand (D417) -- its rollouts are long and
      * noisy, its rounds few, and a wrong mulligan costs a card -- else as the
      * config says.
      */
@@ -1643,14 +1643,14 @@ public final class SearchPolicy {
         return cfg.lcb || "m".equals(kind) || "k".equals(kind);
     }
 
-    /** D416's kinds: m (keep or mulligan), k (the London bottom), t (targets). */
+    /** D417's kinds: m (keep or mulligan), k (the London bottom), t (targets). */
     private static boolean newKind(final String kind) {
         return "m".equals(kind) || "k".equals(kind) || "t".equals(kind);
     }
 
     /** The rollout horizon for a decision of this kind (turns past the one the rollout starts in). */
     private int horizonFor(final String kind) {
-        // D416: a mulligan rollout starts in game turn 1 and plays through turn 2·mullturns.
+        // D417: a mulligan rollout starts in game turn 1 and plays through turn 2·mullturns.
         return "m".equals(kind) || "k".equals(kind) ? 2 * cfg.mullTurns - 1 : cfg.horizonFor(kind);
     }
 
@@ -1899,7 +1899,7 @@ public final class SearchPolicy {
                     timed++;
                     sink.add("search.rollouts", 1);
                     if (newKind(kind)) {
-                        sink.add("search." + kind + ".rollouts", 1);   // D416: the new kinds' own count (p, a, b's lines unchanged)
+                        sink.add("search." + kind + ".rollouts", 1);   // D417: the new kinds' own count (p, a, b's lines unchanged)
                     }
                     rep.playouts++;
                     round[i] = p.leaf;
@@ -2176,7 +2176,7 @@ public final class SearchPolicy {
                 Determinizer.determinize(copy, aiCopy, new Random(seed * 0x9E3779B97F4A7C15L + 1));
             }
             try {
-                cand.afterDeterminize(cp, copy, aiCopy);   // D416: a mulligan draws from the redealt library
+                cand.afterDeterminize(cp, copy, aiCopy);   // D417: a mulligan draws from the redealt library
             } catch (final RuntimeException e) {
                 throw new CandidateUnmappable(e);
             }

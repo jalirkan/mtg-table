@@ -71,7 +71,7 @@ import forge.util.collect.FCollectionView;
  * ({@code explore: {rule, forge}}), so a policy dataset can leave it out.  With
  * no explorer, nothing changes.
  *
- * <p><b>Opening hands and targets (D416).</b>  With the search's {@code mull=1},
+ * <p><b>Opening hands and targets (D417).</b>  With the search's {@code mull=1},
  * {@link #mulliganKeepHand} and {@link #tuckCardsViaMulligan} reconsider Forge's
  * keep and London bottom; with {@code targets=1}, the targets of the priority
  * answer are reconsidered after it is chosen.  Both off: Forge's answers.
@@ -99,7 +99,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
     private String lastBy = "forge";
     private String lastWhy;
 
-    /** The player who starts, from the last {@link #mulliganKeepHand} (the London bottom is asked without it; D416). */
+    /** The player who starts, from the last {@link #mulliganKeepHand} (the London bottom is asked without it; D417). */
     private Player mullFirst;
 
     /** Play exploration (D358), or null: the seat plays its policy's answers. */
@@ -218,7 +218,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
                         t.parent = n;
                         t.by = lastBy;
                         if (trep != null) {
-                            // D416: the target search's verdict covers every targeted part; its numbers go on the first
+                            // D417: the target search's verdict covers every targeted part; its numbers go on the first
                             t.by = trep.fallback == null && trep.chosen >= 0 ? "search" : t.by;
                             if (first) {
                                 t.search = Decisions.stats(trep);
@@ -269,7 +269,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
 
     /**
      * The priority answer ({@link #choose0}), then, with {@code targets=1}, the
-     * target search on it (D416): never on an answer the outlet policy chose or
+     * target search on it (D417): never on an answer the outlet policy chose or
      * steers (its own victim and target rules).
      */
     private List<SpellAbility> choose() {
@@ -461,7 +461,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
         if (decisions == null) {
             boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
             if (search != null) {
-                keep = search.chooseMulligan(player, firstPlayer, cardsToReturn, keep);   // D416 (mull=1)
+                keep = search.chooseMulligan(player, firstPlayer, cardsToReturn, keep);   // D417 (mull=1)
                 search.takeReport();
             }
             return explorer == null ? keep : explorer.mulligan(keep, cardsToReturn);
@@ -473,7 +473,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
         boolean keep = super.mulliganKeepHand(firstPlayer, cardsToReturn);
         SearchPolicy.Report mrep = null;
         if (search != null) {
-            keep = search.chooseMulligan(player, firstPlayer, cardsToReturn, keep);   // D416 (mull=1)
+            keep = search.chooseMulligan(player, firstPlayer, cardsToReturn, keep);   // D417 (mull=1)
             mrep = search.takeReport();
         }
         Decision.Explore em = null;
@@ -496,7 +496,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
     }
 
     /**
-     * The London bottom (D416): Forge chooses, then with {@code mull=1} the
+     * The London bottom (D417): Forge chooses, then with {@code mull=1} the
      * search may put other cards on the bottom.  Not a recorded decision (D347
      * has no kind for it); counted.
      */
@@ -627,7 +627,7 @@ public class PolicyControllerAi extends PlayerControllerAi {
     @Override
     public boolean chooseTargetsFor(final SpellAbility currentAbility) {
         if (search != null && search.config().targets) {
-            // D416: Forge asks this only mid-resolution or for another player's
+            // D417: Forge asks this only mid-resolution or for another player's
             // targeting (TargetingPlayer); a copy cannot start there (no stack), so
             // it stays Forge's, and the count says how often the path comes up.
             count("search.t.chooseTargetsFor");

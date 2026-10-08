@@ -315,7 +315,7 @@ async function cmdMatch(a: Args, argv: string[]): Promise<void> {
   for (const [who, t] of [[A.name, line.aSearch], [B.name, line.bSearch]] as const) {
     if (t.searched === 0) { console.log(`${who}: no searched decisions`); continue; }
     console.log(`${who}: ${t.searched} decisions searched in ${t.games} games, ${t.changed} changed Forge's answer (${pct(t.changed / t.searched)}); budget fallbacks ${t.fallback.budget ?? 0} = ${pct(t.budgetRate)} [95% ${pct(t.budgetLo)}, ${pct(t.budgetHi)}]; other fallbacks ${JSON.stringify(Object.fromEntries(Object.entries(t.fallback).filter(([k]) => k !== 'budget')))}`);
-    // D416: per decision kind, how often the search changed Forge's answer.
+    // D417: per decision kind, how often the search changed Forge's answer.
     console.log(`${who} by kind: ${Object.entries(t.byKind).map(([k, e]) => `${k} ${e.changed}/${e.searched}`).join(', ')}`);
   }
 }

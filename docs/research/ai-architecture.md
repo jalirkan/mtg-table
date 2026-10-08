@@ -277,7 +277,7 @@ pins both halves: Forge's copier throws on a board with Tarmogoyf and Grist in
 the sideboard, ours copies it. (A card in a copied zone that the strict lookup
 still cannot map — the bench met one, a Bird token — gets a stand-in too.)
 
-**Two more decisions, off by default (D416).** `mull=1` searches the opening
+**Two more decisions, off by default (D417).** `mull=1` searches the opening
 hand: at `mulliganKeepHand` keep against one more London mulligan, and at
 `tuckCardsViaMulligan` Forge's bottom against single-card alternatives (ranked
 by Forge's own `ComputerUtil.scoreHand` of the kept hand). The copy is taken

@@ -87,7 +87,7 @@ import java.util.Locale;
  *     (D390).</li>
  * </ul>
  *
- * <p>Two more decision kinds (D416), each off by default in {@link #parse} and
+ * <p>Two more decision kinds (D417), each off by default in {@link #parse} and
  * {@link #parseLive}, so search-v2 is unchanged unless the text names them:
  * <ul>
  * <li>{@code mull=1} -- the opening hand: at {@code mulliganKeepHand} keep is
@@ -149,16 +149,16 @@ public final class SearchConfig {
      */
     public final String leafModel;
 
-    /** D416: search the opening hand (keep or mulligan, and the London bottom choice). */
+    /** D417: search the opening hand (keep or mulligan, and the London bottom choice). */
     public final boolean mull;
-    /** D416: the mulligan search's own wall-clock budget per decision (ms). */
+    /** D417: the mulligan search's own wall-clock budget per decision (ms). */
     public final int mullMs;
-    /** D416: the mulligan rollouts' horizon in turns PER SEAT: they play to the end of game turn 2·mullTurns. */
+    /** D417: the mulligan rollouts' horizon in turns PER SEAT: they play to the end of game turn 2·mullTurns. */
     public final int mullTurns;
-    /** D416: search the targets of the seat's own priority plays. */
+    /** D417: search the targets of the seat's own priority plays. */
     public final boolean targets;
 
-    /** D416's defaults. */
+    /** D417's defaults. */
     public static final int MULL_MS = 6000;
     public static final int MULL_TURNS = 3;
 
@@ -252,7 +252,7 @@ public final class SearchConfig {
         this(base, model, base.mull, base.mullMs, base.mullTurns, base.targets);
     }
 
-    /** D354 and D416: a copy of {@code base} with the leaf model and the mulligan and target switches given. */
+    /** D354 and D417: a copy of {@code base} with the leaf model and the mulligan and target switches given. */
     private SearchConfig(final SearchConfig base, final String model, final boolean mull, final int mullMs,
                          final int mullTurns, final boolean targets) {
         if (mullMs < 50 || mullMs > 60_000) {
@@ -289,7 +289,7 @@ public final class SearchConfig {
         this.targets = targets;
     }
 
-    /** D416: this config with the mulligan search and the target search switched as given. */
+    /** D417: this config with the mulligan search and the target search switched as given. */
     public SearchConfig withDecisions(final boolean mull, final int mullMs, final int mullTurns, final boolean targets) {
         if (mull == this.mull && mullMs == this.mullMs && mullTurns == this.mullTurns && targets == this.targets) {
             return this;
@@ -376,7 +376,7 @@ public final class SearchConfig {
         String evalModel = null;
         String rollout = "default";
         String leaf = "hand";   // D354
-        boolean mull = false;   // D416
+        boolean mull = false;   // D417
         int mullMs = MULL_MS;
         int mullTurns = MULL_TURNS;
         boolean targets = false;
@@ -417,7 +417,7 @@ public final class SearchConfig {
                 case "evalmodel": evalModel = p[1]; break;
                 case "rollout": rollout = p[1]; break;
                 case "leaf": leaf = p[1]; break;   // D354: hand | eval:<model.json>
-                case "mull": mull = bit("mull", p[1]); break;   // D416
+                case "mull": mull = bit("mull", p[1]); break;   // D417
                 case "mullms": mullMs = Integer.parseInt(p[1]); break;
                 case "mullturns": mullTurns = Integer.parseInt(p[1]); break;
                 case "targets": targets = bit("targets", p[1]); break;
@@ -478,7 +478,7 @@ public final class SearchConfig {
         if (leafModel != null) {
             sb.append(",leaf=eval:").append(leafModel);   // D354
         }
-        // D416's, likewise: only when on, and the mulligan's knobs only when not at their defaults.
+        // D417's, likewise: only when on, and the mulligan's knobs only when not at their defaults.
         if (mull) {
             sb.append(",mull=1");
             if (mullMs != MULL_MS) {

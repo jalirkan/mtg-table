@@ -1,6 +1,6 @@
-## D416 — The search takes two more decisions, each behind its own switch: the opening hand (`mull=1`: keep or mulligan, and the London bottom) and the targets of its own priority play (`targets=1`); search-v2 is unchanged
+## D417 — The search takes two more decisions, each behind its own switch: the opening hand (`mull=1`: keep or mulligan, and the London bottom) and the targets of its own priority play (`targets=1`); search-v2 is unchanged
 
-*Branch `c/search-mull-targets`.* Extends D312 (the search's three decisions), D350 (the lcb
+*Branch `c/search-mull-targets`.* Merged as D416 (#104) minutes after main's own D416 (the cube lab's human-pick drafter, #103) and renumbered D417 at once (`node tools/decisions.mjs check`; numbers are final, D200, and #103's came first). Extends D312 (the search's three decisions), D350 (the lcb
 rule) and D388 (the anytime loop). Ladder players `search-v2-mull`, `search-v2-targets` and
 `search-v2-mull-targets`; the fixed matches that decide them are J114 (`pc-jobs`).
 
