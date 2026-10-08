@@ -2,20 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T15:40:09-04:00
+- time: 2026-10-08T15:44:43-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.72; memory 14.2/30.5 GB, swap 213 MB, pressure 0% (lab budget 23.4 GB)
+- load: 10.01; memory 14.3/30.5 GB, swap 213 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J113 done at 2026-10-08T15:03:35-04:00: calib.summary_pass 1 · calib.summary_delta 0.003 · calib.summary_slope 0.848 · calib.summary_relSlope 0.889 · calib.summary_coachUse 0
-
-## 2026-10-08 15:41 (EDT) — J113 done in 3 min: PASS, one global Platt fit (slope 0.848, intercept −0.039), no bands
-
-All 6 checks PASS. Test half 308,604 rows / 51,161 games: log-loss gain +0.0029 [+0.0023, +0.0035], ECE
-0.028 → 0.007; per-turn bands add nothing (0.6232 vs 0.6233); Forge-side slope 0.954 so the model is only
-over-confident on humans. Reading in `results/J113/summary-pc.md`. Filler resumed; nothing queued.
 
 ## Messages
 
