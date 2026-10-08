@@ -2,56 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T08:25:10-04:00
+- time: 2026-10-08T08:29:42-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: J112 commands 1/4, 0/3000 drafts, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.38; memory 13.6/30.5 GB, swap 109 MB, pressure 0% (lab budget 23.4 GB)
+- load: 10.02; memory 14.2/30.5 GB, swap 109 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J110 done at 2026-10-08T06:17:15-04:00: mc.ship_count 4 · mc.omega.share_ge80 0.892 · mc.fair_fight.share_ge80 0.838 · mc.peasant.share_ge80 0.899 · mc.evybaby.share_ge80 0.852 · mc.evybaby.drafts 4500
-
-## 2026-10-08 08:27 (EDT) — NEEDS THE CLOUD SESSION: standing rules for the scenery pack (read before touching `src/ambience/`)
-
-Justin's instruction this morning: make the directions clear, because the board keeps changing under him.
-`ART-DIRECTION.md` now opens with **§0, seven standing rules**; they are binding and replace every earlier
-pack note. The short form:
-1. Default = `pack-v5`, pinned to the tag `…forgecoach-scenery@pack-v5/pack/`. (Still pack-v2 on main as of
-   `f100fc8`; please switch now and say the PR number here.)
-2. Change the default ONLY when a PC heartbeat entry says "point the client at `pack-vN`". Never on your own,
-   never a fallback to an older tag. If a pack breaks the client, post the error and wait.
-3. No client change to how the pack is drawn (flip, mirror, position, crop, scale, scrim, mist, opacity, stage
-   choice) without a note here first and a PC re-screenshot before merge.
-4. Spec changes additive only; every tag from v3 up keeps validating; name the PR here whenever
-   `src/ambience/` or the spec doc changes.
-5. The scenery repo is the PC's; the cloud never edits it.
-6. v6-v8 and the mountain fixes are parked; no `pack-v6` tag is coming unless Justin says so.
-7. Corner/edge accents are dead from v5 on; the upright area piece is the only overlay.
-Acknowledge here in one line so I can tell Justin the rules are received.
-
-## 2026-10-08 07:07 (EDT) — NEEDS THE CLOUD SESSION: point the client at `pack-v5` (Justin's call; v6-v8 parked)
-
-Justin looked at v6 (50%), v7 (70%) and v8 (70%, re-staged so nothing floats) live and said: "not really sold
-on v7, stick with v5 for a while, I'll think about it". So **`pack-v5` is tagged and pushed** on
-`github.com/jalirkan/forgecoach-scenery`: pack-v4's pictures with the 49 corner/edge accent entries removed from
-every stage (front piece only), manifest name "ForgeCoach scenery, pack v5", validateManifest 0/0 on ForgeCoach
-`bd51ce3`, 14 live shots pixel-identical to what he saw (`art/` not re-uploaded; on the PC under
-`~/scenery-packs/pack-v5-final-shots/`). Please switch the default from pack-v2 to
-`https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5/pack/`. Your #108 upright area piece is what
-makes v5 acceptable on the opponent half. v6-v8 (mountain stage-1 texture fix, new mountain phone halves,
-smaller/re-staged pieces, `position: bottom`) stay parked on the PC until Justin decides; do not expect a v6 tag.
-
-## 2026-10-08 06:42 (EDT) — J110 and J111 done, all checks PASS; filler resumed
-
-- **J110** (25 min, 7 workers, 1.96 GB peak): all four metas ship (omega 89.2%, peasant 89.9%, fair-fight
-  83.8%, evybaby 85.2% of playable non-lands at ≥80 games). Evan's cube met the bar at the first 4,500-draft
-  step. 13 missing cards drafted around, list matches. Files left in `results/J110/`; my reading in
-  `results/J110/summary-pc.md` (the job wrote no `summary.md`, so I did not append to one).
-- **J111** (76 s): verdict (b) in all 7 cubes and pooled — Forge plays blue worse; contention has no effect
-  (42.6% vs 42.6%), uncontested blue at equal quality 40.6%. Blue is over-drafted 1.8× expected. Reading in
-  `results/J111/summary-pc.md`.
-- Noted: nightly queue nights paused on purpose; no night 6. The guard resumed filler (synergy to 24,000)
-  at 06:21. Art: pack-v8 still waits on Justin's OK.
 
 ## Messages
 
