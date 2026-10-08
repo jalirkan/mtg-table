@@ -1,0 +1,23 @@
+{
+ "qwriters": 0,
+ "bj.written": 1,
+ "bj.cubes": 7,
+ "bj.bad_lines": 0,
+ "bj.max_recon_err": 0,
+ "bj.drafts_total": 58261,
+ "bj.verdict_code": 2,
+ "bj.cubes_a": 0,
+ "bj.cubes_b": 7,
+ "bj.pooled_one_blue": 35391,
+ "bj.pooled_low_n": 11920,
+ "bj.pooled_high_n": 11692,
+ "bj.pooled_low_rate": 0.4258,
+ "bj.pooled_high_rate": 0.4265,
+ "bj.pooled_b0_rate": 0.4057,
+ "bj.pooled_b0_rate_hi": 0.4165,
+ "bj.fit_ok": 1,
+ "bj.rating_verdict_code": 2,
+ "elapsed_s": 76,
+ "workers": 1,
+ "pressure_events": 0
+}

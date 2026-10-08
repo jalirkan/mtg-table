@@ -1,0 +1,122 @@
+==== J110 pilot1 started 2026-10-08T05:53:15-04:00 in unit lab-J110-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+✔ every committed cube parses to 180 cards in the sections its headings promise (4.368585ms)
+✔ themes, roles, gold pairs, prices and Pathways (2.137058ms)
+✔ pips and what a card can make (0.659666ms)
+✔ the generator is a function of its seed and stream (0.27008ms)
+✔ grid: 18 grids of 9 from 162, a line each, 3 then 2 or 3, first pick alternating (10.020144ms)
+✔ a draft and its decks are the same for the same seed (10.267702ms)
+✔ winston: always pass -> blind cards, then the last pile is forced; every card ends in a pool (2.963691ms)
+✔ winston: always take pile 1 -> it is replaced by exactly one card each time (8.840495ms)
+✔ winston with the AI chooser deals the whole stack (9.246142ms)
+✔ every AI-drafted deck is legal: 40 cards, 16-17 lands, two colours plus a legal splash (107.802857ms)
+✔ a thin pool builds three colours when no pair or splash reaches 23 spells (D298) (0.979151ms)
+✔ a thin pool plays 18 lands when its best pair has 22 spells (D298) (0.52944ms)
+✔ the deck checker rejects what is not a deck (0.150545ms)
+✔ synergy grows with shared themes; colours commit after a third; a splash needs rating and sources (0.210748ms)
+✔ ratings: Forge rank or the unrated default; the TSV round-trips; weights refuse unknown names (0.374027ms)
+✔ report: the mini fixture by arithmetic (1.954544ms)
+✔ report: the mini fixture matches summary.golden.json (0.478074ms)
+✔ report: the HTML is self-contained, and the Markdown names the recordings (0.743495ms)
+✔ meta.json: schema 1 keys, shrinkage, archetypes, lands and splash on the mini fixture (1.057849ms)
+✔ meta.json: a nonbasic land is counted like a spell, and stays out of pairs and key cards (D380) (0.359539ms)
+✔ meta.json: every played card is counted under its own name, once per deck (D380) (0.574555ms)
+✔ meta.json: the mini fixture matches meta.golden.json (0.429382ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 259.327745
+omega: 12566 lines, 195M
+fair-fight: 14087 lines, 212M
+peasant: 21195 lines, 331M
+{"cubes":{"omega":{"lines":300,"explore":0,"mixed":0,"bad":0,"kept":300,"kept_mb":4.6,"run_profiles_dd":1,"missing":0,"ratings":null},"fair_fight":{"lines":300,"explore":0,"mixed":0,"bad":0,"kept":300,"kept_mb":4.5,"run_profiles_dd":1,"missing":0,"ratings":"cubes/fair-fight-cube-180.ratings.tsv"},"peasant":{"lines":300,"explore":0,"mixed":0,"bad":0,"kept":300,"kept_mb":4.7,"run_profiles_dd":1,"missing":0,"ratings":"cubes/peasant-cube-180.ratings.tsv"}},"min_kept":300,"max_kept_mb":4.7,"bad":0,"not_dd_runs":0}
+var/cubelab/j110/pilot/stage/omega/meta.json
+var/cubelab/j110/pilot/stage/fair-fight/meta.json
+var/cubelab/j110/pilot/stage/peasant/meta.json
+facts: booting the engine to look up 360 cards ...
+facts: 2.5 s
+== cubes/evybaby-cube-360.md: Evybaby's New Cube
+sections        White 49/49, Blue 49/49, Black 50/50, Red 50/50, Green 49/49, Colorless 10/10, Multicolor 73/73, Lands 30/30
+cards listed    360
+in Forge's DB   347   MISSING 13
+  MISSING       Rescue Girl, First Responder   did you mean: -
+  MISSING       Flickering Hound   did you mean: Flickering Ward
+  MISSING       Generous Revival   did you mean: Wondrous Revival
+  MISSING       Apex Witchstalker   did you mean: -
+  MISSING       Pompous Battlemage   did you mean: -
+  MISSING       Awaken the Inferno   did you mean: -
+  MISSING       Fblthp, Knows the Way   did you mean: -
+  MISSING       Theorix Charm   did you mean: Theros Charm
+  MISSING       Twisted Fates   did you mean: -
+  MISSING       Twinned Vision   did you mean: Tunnel Vision
+  MISSING       Saheeli, Jewel of Avishkar   did you mean: -
+  MISSING       Primal Witchstalker   did you mean: -
+  MISSING       Warrior's Blades   did you mean: -
+two-faced       24: Elite Interceptor // Rejoinder; Giant Killer // Chop Down; Shepherd of the Flock // Usher to Safety; Witch Enchanter // Witch-Blessed Meadow; The Legend of Yangchen // Avatar Yangchen; Bilbo, Luckwearer // Burglar's Plot; Picklock Prankster // Free the Fae; Brazen Borrower // Petty Theft; Gollum, Silent Slinker // Meager Meal; Okiba Reckoner Raid // Nezumi Road Captain; Life of Toshiro Umezawa // Memory of Toshiro; Embereth Shieldbreaker // Battle Display; Bonecrusher Giant // Stomp; Glóin the Mighty // Easy Pickings; Kumano Faces Kakkazan // Etching of Kumano; Studious First-Year // Rampant Growth; Ulvenwald Oddity // Ulvenwald Behemoth; Boseiju Reaches Skyward // Branch of Boseiju; Aang, Swift Savior // Aang and La, Ocean's Fury; Threadbind Clique // Rip the Seams; Spellscorn Coven // Take It Back; Questing Druid // Seek the Beast; Disruptive Stormbrood // Petty Revenge; Thranduil, Sindarin Liege // Silvan Rally  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    6 (Forge: its AI plays these poorly or not at all)
+  Prismatic Ending
+  Divergent Equation
+  Goblin Welder
+  Faithless Looting
+  Goblin Bombardment
+  Mishra's Bauble
+AI:RemRandomDeck 8: Emrakul's Messenger, Micromancer, Goblin Welder, Nishoba Brawler, Farseek, Witch's Oven, Soulherder, Halo Forager (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 141, a set's rank file only 202, none 4
+unranked        4 (Forge would score these -100 and draft them last; the lab starts them at 40)
+  Archaeomender
+  Experimental Confectioner
+  Stingcaster Mage
+  Okoye, Mighty and Adored
+best printing   57 card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): Giant Killer [ELD], Isamaru, Hound of Konda [CHK], Loam Lion [WWK], Cathar Commando [FDN], Shepherd of the Flock [ELD], Mischievous Pup [LCI], Ephemerate [STA], Take Up the Shield [OTJ], Faerie Seer [MH1], Spectral Sailor [FDN], Faerie Vandal [SNC], Moon-Circuit Hacker [NEO], Ninja of the Deep Hours [BOK], Whirler Rogue [ORI], Vapor Snag [MM2], Carrion Feeder [MH1], Bloodghast [ZEN], Umbral Collar Zealot [EOE], Zulaport Cutthroat [BFZ], Thieving Sprite [LRW], Vengeful Rebel [AER], Yahenni, Undying Partisan [AER], Rankle, Master of Pranks [ELD], Throat Slitter [BOK], Goblin Welder [C14], Embereth Shieldbreaker [ELD], Goblin Engineer [MH1], Sokenzan Smelter [NEO], Young Pyromancer [2X2], Hellrider [MM3], Monstrous Rage [WOE], Firebolt [MH1], Birds of Paradise [4ED], Haywire Mite [BRO], Wild Nacatl [ALA], Quirion Dryad [PLS], Tough Cookie [WOE], Ulvenwald Oddity [VOW], Ram Through [IKO], Circuit Mender [NEO], Soulherder [MH1], Drown in the Loch [ELD], Halo Forager [MOM], Mayhem Devil [WAR], Burning-Tree Emissary [GTC], Ruby, Daring Tracker [WOE], Territorial Kavu [MH2], Emmara, Soul of the Accord [GRN], Qasali Pridemage [ARB], Voice of Resurgence [DGM], Loxodon Smiter [RTR], March of the Multitudes [GRN], Killian, Ink Duelist [STX], Zealous Persecution [ARB], Expressive Iteration [SOA], Coiling Oracle [C15], Path to the World Tree [KHM]
+cube lab: cubes/evybaby-cube-360.md, grid, 30 draft(s) from seed 1101001, best of 1, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/cubelab/j110/pilot/evy
+WARNING: 13 card(s) not in the engine, drafted without them: Rescue Girl, First Responder, Flickering Hound, Generous Revival, Apex Witchstalker, Pompous Battlemage, Awaken the Inferno, Fblthp, Knows the Way, Theorix Charm, Twisted Fates, Twinned Vision, Saheeli, Jewel of Avishkar, Primal Witchstalker, Warrior's Blades (run check)
+drafted and built 30 draft(s) in 0.1 s; playing 1 game each on 3 worker(s)
+[1/30] seed 1101001: A:WG+b 0-1 B:UG+w  games B
+[2/30] seed 1101002: A:RG+u 0-1 B:WU+g  games B
+[3/30] seed 1101003: A:WB+u 1-0 B:UR+g  games A
+[4/30] seed 1101005: A:WG 1-0 B:WB+r  games A
+[5/30] seed 1101006: A:WR+g 0-1 B:WB+r  games B
+[6/30] seed 1101007: A:WU+g 0-1 B:BG+r  games B
+[7/30] seed 1101008: A:WG+r 1-0 B:UB+g  games A
+[8/30] seed 1101010: A:WU+r 0-1 B:BG+r  games B
+[9/30] seed 1101009: A:UR+g 1-0 B:WR+u  games A
+[10/30] seed 1101011: A:RG+b 0-1 B:WG+r  games B
+[11/30] seed 1101012: A:WG+r 1-0 B:UB+g  games A
+[12/30] seed 1101004: A:UG+r 1-0 B:WR+u  games A
+[13/30] seed 1101013: A:UG+r 0-1 B:WU+r  games B
+[14/30] seed 1101014: A:WU+g 1-0 B:UR+b  games A
+[15/30] seed 1101016: A:WB+r 0-1 B:WU+g  games B
+[16/30] seed 1101017: A:UB+r 1-0 B:WU+r  games A
+[17/30] seed 1101015: A:WU+r 0-1 B:WB+r  games B
+[18/30] seed 1101018: A:WU+g 0-1 B:UB+r  games B
+[19/30] seed 1101019: A:WR+b 0-1 B:BG+r  games B
+[20/30] seed 1101021: A:UR+w 1-0 B:BG+r  games A
+[21/30] seed 1101020: A:WU+r 1-0 B:BR  games A
+[22/30] seed 1101022: A:WU+b 0-1 B:BR+g  games B
+[23/30] seed 1101023: A:RG+w 0-1 B:WU+g  games B
+[24/30] seed 1101024: A:BG+w 0-1 B:WG+r  games B
+[25/30] seed 1101025: A:UR+b 1-0 B:UB+w  games A
+[26/30] seed 1101026: A:UB+r 1-0 B:WB+u  games A
+[27/30] seed 1101027: A:UR+b 0-1 B:UG+w  games B
+[28/30] seed 1101028: A:UB+g 0-1 B:WU+r  games B
+[29/30] seed 1101029: A:RG+b 0-1 B:UG+r  games B
+[30/30] seed 1101030: A:UG+r 0-1 B:UR+g  games B
+matches: 24 s for 30 (0.8 s a draft wall-clock on 3 worker(s))
+done in 25 s -> var/cubelab/j110/pilot/evy/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/j110/pilot/evy
+var/cubelab/j110/pilot/evy/meta.json
+| file | ships | drafts | decisive games | playable nonland | share with 80+ games | median games | p10 games | lands played | orphans | ForgeCoach id | KB |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| evybaby-cube-360.meta.json | no | 30 | 30 | 317 (13 not in Forge) | 0 | 3 | 0 | 29 / 30 | 0 | ok | 121 |
+| fair-fight-cube-180.meta.json | no | 300 | 300 | 160 | 0.438 | 67 | 1 | 20 / 20 | 0 | ok | 152 |
+| omega-cube-180.meta.json | no | 300 | 300 | 158 | 0.551 | 88 | 2 | 20 / 22 | 0 | ok | 183 |
+| peasant-cube-180.meta.json | no | 300 | 299 | 158 | 0.487 | 75 | 2 | 22 / 22 | 0 | ok | 156 |
+
+Shipped metas (/home/justin-a/code/lab/ForgeCoach/public/cubes): modern-era-cube-180.meta.json 0.894 / median 1703 / 5781 drafts; pauper-cube-180.meta.json 0.819 / median 1620 / 8314 drafts; synergy-cube-180.meta.json 0.831 / median 1653 / 6980 drafts; vintage-cube-180.meta.json 0.843 / median 1266 / 5167 drafts.
+Rule: ship when schema_ok, id_ok, no orphans, drafts >= 100 and share >= 0.81 of playable nonland cards with 80+ decisive games.
+{"cubes":{"omega":{"lines":300,"explore":0,"mixed":0,"bad":0,"kept":300,"kept_mb":4.6,"run_profiles_dd":1,"missing":0,"ratings":null},"fair_fight":{"lines":300,"explore":0,"mixed":0,"bad":0,"kept":300,"kept_mb":4.5,"run_profiles_dd":1,"missing":0,"ratings":"cubes/fair-fight-cube-180.ratings.tsv"},"peasant":{"lines":300,"explore":0,"mixed":0,"bad":0,"kept":300,"kept_mb":4.7,"run_profiles_dd":1,"missing":0,"ratings":"cubes/peasant-cube-180.ratings.tsv"}},"min_kept":300,"max_kept_mb":4.7,"bad":0,"not_dd_runs":0}
+{"listed":360,"in_db":347,"missing":13,"doc_missing":13,"missing_match":1,"names":["Rescue Girl, First Responder","Flickering Hound","Generous Revival","Apex Witchstalker","Pompous Battlemage","Awaken the Inferno","Fblthp, Knows the Way","Theorix Charm","Twisted Fates","Twinned Vision","Saheeli, Jewel of Avishkar","Primal Witchstalker","Warrior's Blades"],"run_missing":13,"run_missing_match":1,"lines":30,"missing_in_lines":0}

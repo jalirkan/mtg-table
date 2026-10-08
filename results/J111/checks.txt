@@ -1,0 +1,7 @@
+PASS  bj.written == 1   [bj.written = 1]
+PASS  bj.cubes == 7   [bj.cubes = 7]
+PASS  bj.bad_lines == 0   [bj.bad_lines = 0]
+PASS  bj.max_recon_err < 0.001   [bj.max_recon_err = 0]
+PASS  bj.pooled_one_blue >= 1000   [bj.pooled_one_blue = 35391]
+PASS  bj.fit_ok == 1   [bj.fit_ok = 1]
+PASS  bj.verdict_code between 0 and 3   [bj.verdict_code = 2]

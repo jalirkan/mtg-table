@@ -1,0 +1,48 @@
+==== J111 run1 started 2026-10-08T05:53:43-04:00 in unit lab-J111-run1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+fair-fight: 14087 lines, 7434 plain Default-vs-Default decisive drafts
+modern-era: 14282 lines, 7507 plain Default-vs-Default decisive drafts
+omega: 12566 lines, 6682 plain Default-vs-Default decisive drafts
+pauper: 18629 lines, 10370 plain Default-vs-Default decisive drafts
+peasant: 21195 lines, 10950 plain Default-vs-Default decisive drafts
+synergy: 15882 lines, 8758 plain Default-vs-Default decisive drafts
+vintage: 12159 lines, 6560 plain Default-vs-Default decisive drafts
+verdict (pooled): (b) Forge plays blue worse; cubes showing (a) 0, (b) 7 of 7
+# J111: the blue question
+
+**Pooled verdict: (b) Forge plays blue worse.** Cubes showing (a) contention: 0 of 7; showing (b) Forge plays blue worse: 7 of 7.
+
+Plain (no exploration) Default-vs-Default decisive drafts from the queue's normal cube folders, every night on disk. A both-blue draft is 0.5 for blue by construction, so blue's deficit lives in one-blue drafts; contention there is the blue cards the non-blue seat took (low band: at or under the cube's 25th percentile; high band: at or over its 75th).
+
+## Blue's share and win rate
+
+| cube | drafts | both / one / no blue | blue deck share | expected from its cards | blue cards (mono-U) | blue win rate | non-blue | one-blue drafts: blue |
+|---|---|---|---|---|---|---|---|---|
+| fair-fight | 7434 | 3348 / 4032 / 54 | 72.2% | 39.6% | 32 of 146 coloured (26) | 46.8% [45.9, 47.8] | 58.3% [56.8, 59.8] | 41.5% [40.0, 43.0] |
+| modern-era | 7507 | 2078 / 5111 / 318 | 61.7% | 40.2% | 34 of 150 coloured (26) | 46.2% [45.1, 47.2] | 56.2% [54.9, 57.5] | 43.0% [41.7, 44.4] |
+| omega | 6682 | 1599 / 4712 / 371 | 59.2% | 40.2% | 32 of 140 coloured (24) | 48.6% [47.5, 49.7] | 52.0% [50.6, 53.3] | 47.7% [46.3, 49.1] |
+| pauper | 10370 | 6709 / 3646 / 15 | 82.3% | 39.5% | 32 of 147 coloured (26) | 49.0% [48.3, 49.8] | 54.5% [52.9, 56.1] | 45.4% [43.8, 47.0] |
+| peasant | 10950 | 2040 / 8129 / 781 | 55.8% | 40.4% | 33 of 143 coloured (25) | 43.6% [42.7, 44.5] | 58.0% [57.1, 59.0] | 40.4% [39.4, 41.5] |
+| synergy | 8758 | 3101 / 5403 / 254 | 66.2% | 40.2% | 32 of 140 coloured (24) | 43.8% [42.9, 44.7] | 62.1% [60.9, 63.3] | 36.8% [35.5, 38.0] |
+| vintage | 6560 | 1844 / 4358 / 358 | 61.3% | 40.2% | 32 of 140 coloured (24) | 48.7% [47.6, 49.8] | 52.0% [50.6, 53.4] | 47.7% [46.2, 49.1] |
+
+## The rule's two tests (quality: the lab's deck score)
+
+| cube | low band: blue | high band: blue | (a) | uncontested, equal quality: blue | (b) | verdict |
+|---|---|---|---|---|---|---|
+| fair-fight | 42.2% [39.4, 45.0] n=1180 | 39.3% [36.4, 42.2] n=1080 | - | 36.3% [32.2, 40.5] | shown | (b) Forge plays blue worse |
+| modern-era | 43.9% [41.6, 46.2] n=1852 | 42.6% [39.9, 45.3] n=1286 | - | 42.6% [40.0, 45.3] | shown | (b) Forge plays blue worse |
+| omega | 47.4% [45.1, 49.8] n=1738 | 46.2% [43.4, 49.0] n=1184 | - | 46.2% [43.0, 49.4] | shown | (b) Forge plays blue worse |
+| pauper | 43.5% [40.8, 46.2] n=1316 | 46.5% [43.9, 49.0] n=1438 | - | 37.2% [32.2, 42.5] | shown | (b) Forge plays blue worse |
+| peasant | 40.5% [38.8, 42.2] n=3137 | 40.8% [39.2, 42.5] n=3394 | - | 40.0% [38.0, 41.9] | shown | (b) Forge plays blue worse |
+| synergy | 35.7% [33.2, 38.3] n=1397 | 38.0% [35.8, 40.2] n=1897 | - | 32.5% [29.7, 35.4] | shown | (b) Forge plays blue worse |
+| vintage | 46.2% [43.5, 48.9] n=1300 | 49.2% [46.6, 51.8] n=1413 | - | 45.1% [42.3, 47.9] | shown | (b) Forge plays blue worse |
+| **pooled** | 42.6% [41.7, 43.5] n=11920 | 42.6% [41.8, 43.5] n=11692 | - | 40.6% [39.5, 41.6] | shown | (b) Forge plays blue worse |
+
+## Secondary (not in the verdict)
+
+- Quality as the deck's mean nonland card rating instead: pooled verdict (b) Forge plays blue worse; uncontested blue at equal quality 43.0% [41.9, 44.1].
+- Contention's total effect (logit, per SD of the other seat's blue takes, one-blue drafts): 0.001 [-0.0201, 0.0221].
+- Blue deck quality (z), both-blue minus one-blue drafts, per cube: fair-fight -0.7122 [-0.7443, -0.68]; modern-era -0.5151 [-0.5523, -0.4778]; omega -0.664 [-0.7044, -0.6236]; pauper -0.8809 [-0.9102, -0.8515]; peasant -0.5567 [-0.5925, -0.5208]; synergy -0.4158 [-0.4492, -0.3825]; vintage -0.2812 [-0.3203, -0.2422].
+- Every profile (nights 4-5's mix included), blue win rate against non-blue: fair-fight 46.9% vs 58.1%; modern-era 46.5% vs 55.6%; omega 48.6% vs 52.0%; pauper 49.0% vs 54.8%; peasant 43.3% vs 58.5%; synergy 44.0% vs 62.0%; vintage 48.9% vs 51.7%.
+
+Expected share: the share of two-colour pairs holding blue when pairs are weighted by the product of their colours' nonland card counts (a multicolour card counts in each of its colours); 40% if every pair were equally likely. (b) cannot tell Forge piloting blue badly from the lab's ratings over-rating blue cards for Forge's pilot. Games in one draft are one game here (best of one), so the intervals are per draft.

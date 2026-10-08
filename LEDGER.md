@@ -491,3 +491,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J109/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 59a0ced, ForgeCoach 0011633
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J111 DONE: The blue question: in every queue cube the AI drafter puts most decks into blue and blue decks lose; does contention between the two drafters or Forge's play with blue explain it (read-only, minutes)
+
+- finished: 2026-10-08T05:53:57-04:00
+- decides: what ForgeCoach says about the AI's blue habit: a "the AI over-drafts blue" line in Draft vs AI and a caveat on the deck assistant's pair win rates naming the cause the numbers support (contention between the drafters, or Forge's play with blue), and whether a colour-aware pick tweak is worth one lab A/B night
+- hypothesis: the research retrospective (2026-10-08, §3A, from J073's colour pairs) found blue pairs take 56-83% of decks in all 7 cubes and win 0.44-0.49 against 0.52-0.62 for non-blue; either both drafters take blue and cut each other (contention), or Forge plays blue worse than the lab rates it
+- rule: written 2026-10-08 before the run (blue.py's header). Plain Default-vs-Default decisive drafts, normal queue folders, every night on disk. A both-blue draft is 0.5 for blue by construction, so blue's deficit is its deficit in one-blue drafts; contention there is the blue cards the non-blue seat took (low band: at or under the cube's 25th percentile; high band: at or over its 75th). (a) contention is shown when blue's win rate in the low band has a Wilson 95% interval entirely above the high band's (the intervals do not overlap). (b) Forge plays blue worse is shown when, in the low band, blue's log-odds at equal deck quality (logit on the two decks' lab deck scores as within-cube z-scores, plus who was on the play) has a 95% interval entirely below 0. The verdict is both, (a), (b), or neither shown (no interval clears), pooled over the cubes; per-cube verdicts are description only
+- outcome: done
+- headline: bj.verdict_code 2, bj.cubes_a 0, bj.cubes_b 7, bj.pooled_low_rate 0.4258, bj.pooled_high_rate 0.4265, bj.pooled_b0_rate 0.4057
+- summary: results/J111/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 59a0ced
+- follow-up: template blue-advice: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

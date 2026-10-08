@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T05:53:44-04:00
+- time: 2026-10-08T05:53:58-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J110 pilot 1/1, 0/7000 drafts, 3 worker(s), 3 core(s); J111 commands 1/1, 1 worker(s), 1 core(s)
-- cores: 4 of 8 in use (the running jobs' widths; 16 threads)
-- load: 11.61; memory 8.4/30.5 GB, swap 101 MB, pressure 0% (lab budget 23.4 GB)
+- running: J110 commands 1/3, 0/7000 drafts, 7 worker(s), 1 core(s)
+- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
+- load: 9.98; memory 5.1/30.5 GB, swap 101 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J109 done at 2026-10-08T00:59:07-04:00: pt.games 7 · pt.ended 7 · pt.matchesDone 3 · pt.stuck 1 · pt.lag 1 · pt.unreachable 1 · pt.clickNoAct 1 · pt.errors 0
+- last finished: J111 done at 2026-10-08T05:53:57-04:00: bj.verdict_code 2 · bj.cubes_a 0 · bj.cubes_b 7 · bj.pooled_low_rate 0.426 · bj.pooled_high_rate 0.427 · bj.pooled_b0_rate 0.406
 
 ## Messages
+
+- FOLLOW-UP READY [J111@2026-10-08T05:53:57-04:00] (the runner, for the cloud session): J111 is done; write and post the template blue-advice. It decides: what ForgeCoach says about the AI's blue habit: a "the AI over-drafts blue" line in Draft vs AI and a caveat on the deck assistant's pair win rates naming the cause the numbers support (contention between the drafters, or Forge's play with blue), and whether a colour-aware pick tweak is worth one lab A/B night. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J109@2026-10-08T00:59:07-04:00] (the runner, for the cloud session): J109 is done; write and post the template morning-read. It decides: whether two-person play inside ForgeCoach is ready for a friend game: after J107's triage, three best-of-threes between two browsers end with no stuck seat, no hang on a trigger's target, no board left behind the wire, and every remaining unreachable option judged. Ledger: LEDGER.md. Delete this line once posted.
 

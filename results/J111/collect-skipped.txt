@@ -1,0 +1,2 @@
+metrics.json: a name the runner reserves for its own outputs
+summary.md: a name the runner reserves for its own outputs
