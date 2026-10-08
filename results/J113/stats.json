@@ -1,0 +1,54 @@
+{
+ "source": "17Lands public datasets (https://www.17lands.com/public_datasets), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); filtered to Powered Cube and re-encoded as r17 rows",
+ "replay": "replay_data_public.Cube_-_Powered.PremierDraft.csv.gz",
+ "partialDownload": false,
+ "maxGames": null,
+ "schemaKind": "r17",
+ "schemaId": "aa9d28f669f8bbbe",
+ "nFeatures": 394,
+ "vocab": [
+  "vintage-cube-180.md"
+ ],
+ "minShare": 0.5,
+ "minTurn": 3,
+ "perspective": "both",
+ "halfSalt": "r17-exam-v1",
+ "games": 266117,
+ "gamesWithPositions": 265174,
+ "gamesWithRows": 101962,
+ "skipped": {},
+ "candidates": {
+  "user": {
+   "positions": 2667602,
+   ">=0.5": 306819,
+   ">=0.7": 53010,
+   ">=0.8": 38431,
+   ">=1": 33477
+  },
+  "oppo": {
+   "positions": 2667602,
+   ">=0.5": 306819,
+   ">=0.7": 53010,
+   ">=0.8": 38431,
+   ">=1": 33477
+  }
+ },
+ "rows": {
+  "test.user": 154302,
+  "test.oppo": 154302,
+  "dev.user": 152517,
+  "dev.oppo": 152517
+ },
+ "rowsTotal": 613638,
+ "shards": 7,
+ "unknownIds": 1,
+ "unknownOccurrences": 2,
+ "unknownTop": [
+  [
+   "1004",
+   2
+  ]
+ ],
+ "seconds": 77.2,
+ "peakGB": 0.374
+}

@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T15:01:29-04:00
+- time: 2026-10-08T15:03:35-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J113 commands 1/1, 1 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 6.4; memory 5/30.5 GB, swap 213 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 1.56; memory 5/30.5 GB, swap 213 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J112 done at 2026-10-08T13:33:00-04:00: jr.verdict_code 0 · jr.v_diff -0.074 · jr.v_lo -0.154 · jr.v_hi 0.006 · jr.s_diff 0.105 · jr.v_rho_a 0.535 · jr.v_rho_b 0.461 · jr.v_blue_paired_diff -0.014
+- last finished: J113 done at 2026-10-08T15:03:35-04:00: calib.summary_pass 1 · calib.summary_delta 0.003 · calib.summary_slope 0.848 · calib.summary_relSlope 0.889 · calib.summary_coachUse 0
 
 ## Messages
+
+- FOLLOW-UP READY [J113@2026-10-08T15:03:35-04:00] (the runner, for the cloud session): J113 is done; write and post the template morning-read. It decides: whether ForgeCoach's win chance gets a "human" calibration (the relative human/Forge transform in b3-human-calibration.json) for games against people and the search AI, and in which form (global or per turn band). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J112@2026-10-08T13:33:00-04:00] (the runner, for the cloud session): J112 is done; write and post the template morning-read. It decides: whether the cube lab's metas (ForgeCoach's lab card numbers, the deck assistant's and Draft vs AI's) are built from search-v2-piloted games from now on instead of Forge Default-piloted games. Ledger: LEDGER.md. Delete this line once posted.
 

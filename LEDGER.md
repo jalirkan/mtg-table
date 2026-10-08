@@ -527,3 +527,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J112/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 59a0ced, ForgeCoach bd51ce3
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J113 DONE: B3, the win chance on human games: Platt recalibration of the frozen r17 evaluator on 17Lands' Powered Cube replays (dev half), tested on the held-out half, with the human/Forge relative slope a coach would need (D415)
+
+- finished: 2026-10-08T15:03:35-04:00
+- decides: whether ForgeCoach's win chance gets a "human" calibration (the relative human/Forge transform in b3-human-calibration.json) for games against people and the search AI, and in which form (global or per turn band)
+- hypothesis: J063's reliability table showed the r17 win chance too extreme on human games (fitted slope about 0.82), so a Platt fit on the dev half lowers held-out log-loss; part of that slope is r17's own over-confidence on Forge's games (J063: "0.957" was 0.895), so the relative slope (human / Forge) is expected nearer 1 than the absolute one, and whether its interval excludes 1 is open
+- rule: D415, human_calib.py CALIB_RULE. Population: PremierDraft's whole file, D359's test half, both perspectives, turn >= 3, final half-turn dropped, share >= 0.5; the r17 evaluator frozen (J063's var/ml/models/r17-vintage-n1.json, sha256 recorded). PASS when log-loss(uncalibrated) - log-loss(global Platt fitted on the dev half) > 0 with the lower end of its 95% percentile interval (2,000 resamples over test games, seed 20261008) above 0, on >= 2,000 games and 10,000 rows; fewer is FAIL (underpowered); a partial download, a sample, one perspective or another file is NO VERDICT. Per-band form only when log-loss(global) - log-loss(bands) has its interval above 0. Coach use = relative only on a PASS with a Forge-side fit of >= 2,000 rows and 20 deck pairs, both slopes positive, and the relative slope's 95% interval excluding 1; else none
+- outcome: done
+- headline: calib.summary_pass 1, calib.summary_delta 0.0029, calib.summary_slope 0.8478, calib.summary_relSlope 0.8891, calib.summary_coachUse 0
+- summary: results/J113/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table cb81721
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

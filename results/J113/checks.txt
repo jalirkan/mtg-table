@@ -1,0 +1,6 @@
+PASS  ext.written == 1   [ext.written = 1]
+PASS  ext.partial == 0   [ext.partial = 0]
+PASS  ext.games >= 250000   [ext.games = 266117]
+PASS  trad.written == 1   [trad.written = 1]
+PASS  calib.summary_written == 1   [calib.summary_written = 1]
+PASS  calib.summary_decided == 1   [calib.summary_decided = 1]

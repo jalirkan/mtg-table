@@ -1,0 +1,117 @@
+{
+ "format": "mtgtable-winchance-calibration",
+ "formatVersion": 1,
+ "decision": "D415",
+ "transform": "p' = sigmoid(intercept + slope * logit(p))",
+ "turn": "the protocol's turn (half-turn number: 1 is the first player's first turn); bands as listed",
+ "source": "17Lands public datasets (https://www.17lands.com/public_datasets), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); filtered to Powered Cube and re-encoded as r17 rows",
+ "model": {
+  "file": "r17-vintage-n1.json",
+  "sha256": "d064644a61a631c3947e4ee452ea67d6f75063c3b11638be5c23f609fdb5dfd2",
+  "schemaId": "aa9d28f669f8bbbe",
+  "kind": "r17"
+ },
+ "population": {
+  "replay": "replay_data_public.Cube_-_Powered.PremierDraft.csv.gz",
+  "fitHalf": "dev",
+  "perspective": "both",
+  "minShare": 0.5,
+  "minTurn": 3,
+  "rows": 41614,
+  "games": 7042,
+  "positions": "end of each half-turn, the game's final half-turn dropped"
+ },
+ "verdict": "NO VERDICT",
+ "absolute": {
+  "appliesTo": "the r17 model above, on its raw output",
+  "global": {
+   "intercept": -0.03909015632946215,
+   "slope": 0.8393058151347699
+  },
+  "bands": [
+   {
+    "lo": 3,
+    "hi": 4,
+    "intercept": -0.049007770845313846,
+    "slope": 0.7826680458666173,
+    "rows": 16494
+   },
+   {
+    "lo": 5,
+    "hi": 8,
+    "intercept": -0.03403994270399565,
+    "slope": 0.8908816496220507,
+    "rows": 15964
+   },
+   {
+    "lo": 9,
+    "hi": 12,
+    "intercept": -0.023752352819136967,
+    "slope": 0.8039415446979923,
+    "rows": 6122
+   },
+   {
+    "lo": 13,
+    "hi": 16,
+    "intercept": -0.022043992052697154,
+    "slope": 0.8044996092889216,
+    "rows": 2162
+   },
+   {
+    "lo": 17,
+    "hi": null,
+    "intercept": -0.0052330827579089865,
+    "slope": 0.9498623624966865,
+    "rows": 872
+   }
+  ],
+  "recommendedForm": "global"
+ },
+ "relative": {
+  "appliesTo": "a model already calibrated on Forge's games (v1/v2), on its raw output",
+  "global": {
+   "intercept": 0.0072623005023983375,
+   "slope": 0.8801323003651315,
+   "slopeInterval": [
+    0.7311379012170132,
+    1.0581640674939476
+   ]
+  },
+  "bands": [
+   {
+    "lo": 3,
+    "hi": 4,
+    "intercept": -0.00578325582883725,
+    "slope": 0.8207394911475231
+   },
+   {
+    "lo": 5,
+    "hi": 8,
+    "intercept": 0.01516089978006599,
+    "slope": 0.9342169463094143
+   },
+   {
+    "lo": 9,
+    "hi": 12,
+    "intercept": 0.02064703662149169,
+    "slope": 0.8430478001400761
+   },
+   {
+    "lo": 13,
+    "hi": 16,
+    "intercept": 0.02238621769728,
+    "slope": 0.8436330107549793
+   },
+   {
+    "lo": 17,
+    "hi": null,
+    "intercept": 0.04722509560794316,
+    "slope": 0.9960666673091348
+   }
+  ]
+ },
+ "coach": {
+  "use": "none",
+  "why": "the verdict is NO VERDICT"
+ }
+}

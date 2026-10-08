@@ -1,63 +1,42 @@
 {
  "schema": 1,
- "updated": "2026-10-08T15:01:29-04:00",
- "heartbeat": "2026-10-08T15:01:29-04:00",
+ "updated": "2026-10-08T15:03:35-04:00",
+ "heartbeat": "2026-10-08T15:03:35-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-08T15:03:35-04:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 6.4,
+  "load1": 1.56,
   "memUsedGb": 5,
   "memTotalGb": 30.5,
   "swapUsedMb": 213,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 1,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Win chance calibration on human games",
    "publicEst": "~30 min",
    "id": "J113",
    "title": "B3, the win chance on human games: Platt recalibration of the frozen r17 evaluator on 17Lands' Powered Cube replays (dev half), tested on the held-out half, with the human/Forge relative slope a coach would need (D415)",
-   "cpu": "light",
-   "phase": "commands 1/1",
-   "started": "2026-10-08T15:00:28-04:00",
-   "elapsed": 61,
-   "done": null,
-   "total": null,
-   "unit": null,
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 1,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": null,
-   "memGb": 0,
-   "live": {
-    "calib.written": 0,
-    "disk_gb": 41,
-    "elapsed_s": 61,
-    "ext.written": 0,
-    "pressure_events": 0,
-    "trad.written": 0,
-    "workers": 1
-   },
-   "liveHeadline": [],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J113-run1"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+   "status": "done",
+   "finished": "2026-10-08T15:03:35-04:00",
+   "headline": "calib.summary_pass 1 · calib.summary_delta 0.003 · calib.summary_slope 0.848 · calib.summary_relSlope 0.889 · calib.summary_coachUse 0",
+   "numbers": {
+    "calib.summary_pass": 1,
+    "calib.summary_delta": 0.002875569273680582,
+    "calib.summary_slope": 0.8478302121434688,
+    "calib.summary_relSlope": 0.8890713509629008,
+    "calib.summary_coachUse": 0
+   }
+  },
   {
    "publicTitle": "Search AI pilots for cube stats",
    "publicEst": "one night (~7 to 10 h)",
@@ -736,20 +715,6 @@
    "finished": "2026-10-04T12:32:51-04:00",
    "headline": "",
    "numbers": {}
-  },
-  {
-   "publicTitle": "Queue night 2",
-   "publicEst": "~5 h",
-   "id": "J059",
-   "title": "Overnight queue, night 2: recorded normal + bridge drafts across all cubes, on main with the reveal-leak fix (D352)",
-   "status": "done",
-   "finished": "2026-10-04T12:19:19-04:00",
-   "headline": "night.drafts 40000 · night.games 39998 · night.engine_error_rate 0",
-   "numbers": {
-    "night.drafts": 40000,
-    "night.games": 39998,
-    "night.engine_error_rate": 0.0001
-   }
   }
  ],
  "runner": {

@@ -1,0 +1,117 @@
+{
+ "format": "mtgtable-winchance-calibration",
+ "formatVersion": 1,
+ "decision": "D415",
+ "transform": "p' = sigmoid(intercept + slope * logit(p))",
+ "turn": "the protocol's turn (half-turn number: 1 is the first player's first turn); bands as listed",
+ "source": "17Lands public datasets (https://www.17lands.com/public_datasets), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); filtered to Powered Cube and re-encoded as r17 rows",
+ "model": {
+  "file": "r17-vintage-n1.json",
+  "sha256": "d064644a61a631c3947e4ee452ea67d6f75063c3b11638be5c23f609fdb5dfd2",
+  "schemaId": "aa9d28f669f8bbbe",
+  "kind": "r17"
+ },
+ "population": {
+  "replay": "replay_data_public.Cube_-_Powered.PremierDraft.csv.gz",
+  "fitHalf": "dev",
+  "perspective": "both",
+  "minShare": 0.5,
+  "minTurn": 3,
+  "rows": 305034,
+  "games": 50801,
+  "positions": "end of each half-turn, the game's final half-turn dropped"
+ },
+ "verdict": "PASS",
+ "absolute": {
+  "appliesTo": "the r17 model above, on its raw output",
+  "global": {
+   "intercept": -0.038953682116063044,
+   "slope": 0.8478302121434688
+  },
+  "bands": [
+   {
+    "lo": 3,
+    "hi": 4,
+    "intercept": -0.048563334580402,
+    "slope": 0.7798935655052874,
+    "rows": 118564
+   },
+   {
+    "lo": 5,
+    "hi": 8,
+    "intercept": -0.03248045435636471,
+    "slope": 0.8410266006680499,
+    "rows": 116806
+   },
+   {
+    "lo": 9,
+    "hi": 12,
+    "intercept": -0.025677032419569857,
+    "slope": 0.9050610437386627,
+    "rows": 45686
+   },
+   {
+    "lo": 13,
+    "hi": 16,
+    "intercept": -0.017548143569062962,
+    "slope": 0.8798034410029223,
+    "rows": 16436
+   },
+   {
+    "lo": 17,
+    "hi": null,
+    "intercept": -0.012325384821112385,
+    "slope": 0.8738434969668505,
+    "rows": 7542
+   }
+  ],
+  "recommendedForm": "global"
+ },
+ "relative": {
+  "appliesTo": "a model already calibrated on Forge's games (v1/v2), on its raw output",
+  "global": {
+   "intercept": 0.007869552753120956,
+   "slope": 0.8890713509629008,
+   "slopeInterval": [
+    0.74802419852303,
+    1.0520878515336831
+   ]
+  },
+  "bands": [
+   {
+    "lo": 3,
+    "hi": 4,
+    "intercept": -0.005492046169603977,
+    "slope": 0.8178300513000902
+   },
+   {
+    "lo": 5,
+    "hi": 8,
+    "intercept": 0.013967036533058523,
+    "slope": 0.8819367903406925
+   },
+   {
+    "lo": 9,
+    "hi": 12,
+    "intercept": 0.02430689739909658,
+    "slope": 0.9490860709319258
+   },
+   {
+    "lo": 13,
+    "hi": 16,
+    "intercept": 0.03104088117522758,
+    "slope": 0.92259985863999
+   },
+   {
+    "lo": 17,
+    "hi": null,
+    "intercept": 0.03593448928026505,
+    "slope": 0.9163500041055339
+   }
+  ]
+ },
+ "coach": {
+  "use": "none",
+  "why": "the relative slope's interval [0.748, 1.052] includes 1: the human effect is not told apart from r17's own miscalibration on Forge's games"
+ }
+}
