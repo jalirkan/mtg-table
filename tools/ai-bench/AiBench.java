@@ -1399,7 +1399,7 @@ public final class AiBench {
     }
 
     // ------------------------------------------------------------------
-    // D416: the opening-hand search (mull=1) and the target search
+    // D417: the opening-hand search (mull=1) and the target search
     // (targets=1) -- each fires on its own decisions and nowhere else, falls
     // back to Forge's answer on a copier error, leaves the real game as it was,
     // and never reads what the AI cannot see.
@@ -1415,7 +1415,7 @@ public final class AiBench {
             + "Lightning Bolt;Mountain;Swamp;Grizzly Bears;Mountain;Swamp;Typhoid Rats;Mountain;Swamp;Hill Giant;Mountain;Swamp";
 
     static void d416Scenarios(final List<String> castBoard) throws Exception {
-        System.out.println("== ai-bench selftest: the opening-hand and target searches (D416, engine)");
+        System.out.println("== ai-bench selftest: the opening-hand and target searches (D417, engine)");
         final List<String> flood = pregame("Swamp;Swamp;Swamp;Mountain;Mountain;Mountain;Swamp", LIB20,
                 "Forest;Grizzly Bears;Forest;Llanowar Elves;Forest;Grizzly Bears;Forest",
                 "Forest;Grizzly Bears;Forest;Forest;Llanowar Elves;Forest;Grizzly Bears;Forest;Forest;Grizzly Bears");

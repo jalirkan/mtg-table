@@ -234,7 +234,7 @@ public final class DecisionSelfTest {
                 "the verdict prefers candidates with the rounds the config asks for");
     }
 
-    /** D416: the mulligan and target switches parse, print, refuse, and leave search-v2 as it was. */
+    /** D417: the mulligan and target switches parse, print, refuse, and leave search-v2 as it was. */
     private static void mullAndTargets() {
         final SearchConfig def = SearchConfig.defaults();
         final SearchConfig live = SearchConfig.parseLive("");
@@ -257,7 +257,7 @@ public final class DecisionSelfTest {
         final SearchConfig keepLeaf = SearchConfig.parse("anytime=1,mull=1,targets=1,leaf=eval:m.json");
         check(keepLeaf.mull && keepLeaf.targets && "m.json".equals(keepLeaf.leafModel)
                 && SearchConfig.parse(keepLeaf.toString()).toString().equals(keepLeaf.toString()),
-                "leaf=eval keeps the D416 switches and they keep the leaf: " + keepLeaf);
+                "leaf=eval keeps the D417 switches and they keep the leaf: " + keepLeaf);
         for (final String bad : List.of("mull=2", "targets=yes", "mull=1,mullms=10", "mull=1,mullms=70000", "mullturns=0",
                 "mullturns=9")) {
             boolean threw = false;

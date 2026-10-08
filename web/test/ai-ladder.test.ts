@@ -627,7 +627,7 @@ test('the registry (D398): search-v1-reckless is search-v1 on Reckless.ai and no
   assert.notEqual(rk.hash, v1.hash);
 });
 
-test('D416: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-anytime) plus their switches and nothing else', () => {
+test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-anytime) plus their switches and nothing else', () => {
   const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
   const by = new Map(reg.map((x) => [x.name, x]));
   const v2 = by.get('search-v1-anytime')!;
@@ -649,7 +649,7 @@ test('D416: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
   assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v2) does not turn them on');
 });
 
-test('D416: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
+test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');
   const c1 = { 'search.p.considered': 10, 'search.p.changed': 2, 'search.m.considered': 1, 'search.m.changed': 1, 'search.t.considered': 3, 'search.t.changed': 0 };

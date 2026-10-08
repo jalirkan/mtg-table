@@ -83,14 +83,14 @@ export interface SearchTally {
   /** Per game: [searched, budget fallbacks], for the clustered interval. */
   perGame: Array<[number, number]>;
   /**
-   * D416: per decision kind (p priority, a attacks, b blocks, m keep/mulligan, k the London bottom, t targets),
+   * D417: per decision kind (p priority, a attacks, b blocks, m keep/mulligan, k the London bottom, t targets),
    * decisions searched (`search.<kind>.considered`) and changed (`search.<kind>.changed`), summed over every game.
    * `searched` and `changed` above stay p + a + b, as J102 counted them.
    */
   byKind: Record<string, { searched: number; changed: number }>;
 }
 
-/** The decision kinds the search counts (D312, D416). */
+/** The decision kinds the search counts (D312, D417). */
 export const SEARCH_KINDS = ['p', 'a', 'b', 'm', 'k', 't'] as const;
 
 export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {} });
