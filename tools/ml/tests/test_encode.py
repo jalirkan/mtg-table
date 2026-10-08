@@ -13,6 +13,7 @@ import copy
 import gzip
 import json
 import os
+import re
 import random
 import shutil
 import sys
@@ -57,14 +58,17 @@ class VocabTest(unittest.TestCase):
             "Watery Grave", "Hengegate Pathway", "Clearwater Pathway"])
 
     def test_committed_cubes_parse_whole(self):
-        """Every cube under cubes/ gives its 180 distinct names (the cube lab's
+        """Every cube under cubes/ gives as many distinct names as its file name
+        says (`<id>-cube-<N>.md`: 180 for most, 360 for evybaby; the cube lab's
         parser, tools/cubelab/cube.ts, gives the same lists in the same order)."""
         cubes = sorted(f for f in os.listdir(os.path.join(ROOT, "cubes")) if f.endswith(".md"))
         self.assertTrue(cubes)
         for c in cubes:
+            m = re.search(r"-cube-(\d+)\.md$", c)
+            size = int(m.group(1)) if m else 180
             names = E.read_vocab_names(os.path.join(ROOT, "cubes", c))
-            self.assertEqual(len(names), 180, c)
-            self.assertEqual(len({E.norm_name(n) for n in names}), 180, c)
+            self.assertEqual(len(names), size, c)
+            self.assertEqual(len({E.norm_name(n) for n in names}), size, c)
 
     def test_basics_first_specials_last_and_other(self):
         v = E.Vocab.from_files([MINI_CUBE])
