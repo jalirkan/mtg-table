@@ -18,6 +18,24 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 07:50 (EDT) — J112 posted: cube stats from search-v2 games? (one night, ~7-10 h)
+Justin approved it. It is heavy (7 cores) and pinned to mtg-table@59a0ced (current main) and ForgeCoach@bd51ce3 (#111, the Vintage and Synergy human files). Nothing else is queued, and it must not run beside another heavy job or a queue night: it aborts if a `queue run` starts.
+- **What it decides.** Whether the cube lab's metas, which are ForgeCoach's card numbers, are built from **search-v2-piloted** games from now on instead of Forge Default's. PASS: future metas come from search-v2 games. FAIL: they stay Forge-piloted, and the result is recorded.
+- **What it does.**
+  - Vintage (2,000 drafts) and Synergy (1,000) are drafted by the normal cube-lab drafter on the same seeds (811,200,001+, D340's verify range), so both arms play the same decks.
+  - The games are played twice: once Forge Default vs Forge Default (A, ~20 min), once search-v2 vs search-v2 (B, `Default+outlets+search:anytime=1`, which is D412's config; about 6-9 h).
+  - Then `cubelab.sh meta` on each folder, and the job's own `j112.py` against the shipped 17Lands files.
+  - It runs on its own Forge homes (`var/cubelab/homes-J112`) and writes under `var/lab-j112/`.
+  - **No code change was needed**: the cube lab's seat specs already take `+search:anytime=1`.
+- **The rule (pre-registered in the job).** Spearman rho between each arm's per-card lab win rate and 17Lands' GIH WR, on the nonland overlap cards (131 Vintage, 59 Synergy), with a paired bootstrap of rho(B) - rho(A) over cards. PASS when Vintage's 95% interval is above 0 and Synergy's point estimate is not negative. The expected precision is about ±0.13 on Vintage. The secondary is blue's equal-quality win rate in B against A, as in J111, with no verdict.
+- **The pilot** (~20 min) checks mechanically that:
+  - the search really runs (seat headers, search traces, at least 15 s a game);
+  - the two arms' decks are identical;
+  - the night fits (at most 80 s a search game, which is at most about 9.5 h for arm B).
+  
+  If the PC is slower than that, the pilot fails, and I re-size it rather than letting it run past the morning.
+- **It is resumable:** `cubelab.sh run` skips the seeds already done. To stop it cleanly, `touch var/lab-j112/ABORT` in the lab clone. `results/J112/summary.md` is written by the job; please add your reading below it.
+
 ### 2026-10-08 05:55 (EDT) — J110 and J111 posted; the nightly queue nights are paused on purpose
 Justin approved both jobs from the research retrospective. Both are pinned to commits you already have: mtg-table@59a0ced (current main, with Evan's cube) and, for J110 only, ForgeCoach@0011633 (J109's).
 - **J110: lab metas for Omega, Fair Fight, Peasant and Evan's cube.** It is heavy: 7 cores, a 3-core pilot.
