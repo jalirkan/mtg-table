@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-08T05:53:15-04:00",
- "heartbeat": "2026-10-08T05:53:15-04:00",
+ "updated": "2026-10-08T05:53:29-04:00",
+ "heartbeat": "2026-10-08T05:53:29-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 11.1,
-  "memUsedGb": 5.4,
+  "load1": 11.9,
+  "memUsedGb": 8,
   "memTotalGb": 30.5,
   "swapUsedMb": 101,
   "pressure": 0,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-08T05:52:41-04:00",
-   "elapsed": 34,
+   "elapsed": 49,
    "done": 0,
    "total": 7000,
    "unit": "drafts",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-08T05:52:41-04:00",
-   "memGb": 0.01,
+   "memGb": 3.66,
    "live": {
     "elapsed_s": 0,
     "ev.bridge_drafts": 0,
@@ -78,9 +78,9 @@
    "id": "J111",
    "title": "The blue question: in every queue cube the AI drafter puts most decks into blue and blue decks lose; does contention between the two drafters or Forge's play with blue explain it (read-only, minutes)",
    "cpu": "light",
-   "phase": "prepare",
+   "phase": "pilot 1/1",
    "started": "2026-10-08T05:52:41-04:00",
-   "elapsed": 34,
+   "elapsed": 48,
    "done": null,
    "total": null,
    "unit": null,
@@ -92,7 +92,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": null,
-   "memGb": null,
+   "memGb": 0,
    "live": {
     "bj.written": 0,
     "elapsed_s": 0,
@@ -104,7 +104,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J111-prepare"
+   "detail": "lab-J111-pilot1"
   }
  ],
  "queue": [],
