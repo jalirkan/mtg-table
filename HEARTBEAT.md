@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T19:07:54-04:00
+- time: 2026-10-08T19:08:08-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J114 commands 3/3, 3000/3000 drafts, 1841.4/h, 7 worker(s), 1 core(s); J115 prepare, 0/2400 games, 1 worker(s), 7 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.47; memory 4.9/30.5 GB, swap 231 MB, pressure 0% (lab budget 23.4 GB)
+- running: J115 prepare, 0/2400 games, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 6.67; memory 5.3/30.5 GB, swap 231 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J113 done at 2026-10-08T15:03:35-04:00: calib.summary_pass 1 · calib.summary_delta 0.003 · calib.summary_slope 0.848 · calib.summary_relSlope 0.889 · calib.summary_coachUse 0
+- last finished: J114 done at 2026-10-08T19:08:08-04:00: jr.verdict_code 0 · jr.v_rate 0.478 · jr.v_lo 0.457 · jr.v_hi 0.499 · jr.s_rate 0.507 · jr.v_blue_h 0.627 · jr.v_blue_c 0.609
 
 ## Messages
+
+- FOLLOW-UP READY [J114@2026-10-08T19:08:08-04:00] (the runner, for the cloud session): J114 is done; write and post the template morning-read. It decides: whether a follow-up makes the human-pick drafter (D416) the default AI drafter of ForgeCoach's Draft vs AI; this job changes nothing itself. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J113@2026-10-08T15:03:35-04:00] (the runner, for the cloud session): J113 is done; write and post the template morning-read. It decides: whether ForgeCoach's win chance gets a "human" calibration (the relative human/Forge transform in b3-human-calibration.json) for games against people and the search AI, and in which form (global or per turn band). Ledger: LEDGER.md. Delete this line once posted.
 

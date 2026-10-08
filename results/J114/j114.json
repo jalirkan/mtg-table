@@ -1,0 +1,318 @@
+{
+ "written": 1,
+ "cubes": {
+  "vintage": {
+   "cube": "vintage",
+   "matches": 2000,
+   "engine_errors": 0,
+   "pairing": {
+    "seeds_a": 1000,
+    "seeds_b": 1000,
+    "seeds_both": 1000,
+    "only_a": 0,
+    "only_b": 0
+   },
+   "drafter": {
+    "a": {
+     "kind": "human-picks",
+     "seat": "A",
+     "file": "../ForgeCoach/public/cubes/vintage-cube-180.picks.json",
+     "sha": "d17708275e1559c508f36a2be65d5c07fb125ab8f044e712baecf169bbf6cfd0",
+     "cards": 180,
+     "covered": 152,
+     "fallback": {
+      "intercept": -3.784942121363612,
+      "slope": 0.05866013175926005,
+      "n": 152,
+      "r": 0.530075151621169
+     }
+    },
+    "b": {
+     "kind": "human-picks",
+     "seat": "B",
+     "file": "../ForgeCoach/public/cubes/vintage-cube-180.picks.json",
+     "sha": "d17708275e1559c508f36a2be65d5c07fb125ab8f044e712baecf169bbf6cfd0",
+     "cards": 180,
+     "covered": 152,
+     "fallback": {
+      "intercept": -3.784942121363612,
+      "slope": 0.05866013175926005,
+      "n": 152,
+      "r": 0.530075151621169
+     }
+    }
+   },
+   "ok": 1,
+   "rate": 0.478,
+   "ci": [
+    0.457,
+    0.499
+   ],
+   "se_cluster": 0.011,
+   "won": 956,
+   "lost": 1044,
+   "drawn": 0,
+   "seeds": 1000,
+   "by_seat": {
+    "A": {
+     "matches": 1000,
+     "rate": 0.485
+    },
+    "B": {
+     "matches": 1000,
+     "rate": 0.471
+    }
+   },
+   "games": {
+    "won": 2363,
+    "lost": 2548,
+    "rate": 0.4812,
+    "ci": [
+     0.4667,
+     0.4957
+    ]
+   },
+   "colours": {
+    "W": {
+     "human": 0.479,
+     "current": 0.5685,
+     "diff": -0.0895,
+     "diff_ci": null
+    },
+    "U": {
+     "human": 0.6265,
+     "current": 0.6085,
+     "diff": 0.018,
+     "diff_ci": [
+      -0.015,
+      0.0505
+     ]
+    },
+    "B": {
+     "human": 0.3585,
+     "current": 0.274,
+     "diff": 0.0845,
+     "diff_ci": null
+    },
+    "R": {
+     "human": 0.3805,
+     "current": 0.3415,
+     "diff": 0.039,
+     "diff_ci": null
+    },
+    "G": {
+     "human": 0.161,
+     "current": 0.2075,
+     "diff": -0.0465,
+     "diff_ci": null
+    }
+   },
+   "forge_built": {
+    "human": 0,
+    "current": 0
+   },
+   "deck_score": {
+    "human": 135.1176,
+    "current": 142.6227
+   },
+   "uncovered_share": 0.1265,
+   "blue": {
+    "human": {
+     "one_blue": 670,
+     "blue_win_rate": 0.4537,
+     "equal_quality": {
+      "ok": 1,
+      "n": 670,
+      "b": [
+       -0.0338,
+       0.2308,
+       -0.0741
+      ],
+      "b0_rate": 0.4915,
+      "b0_rate_ci": [
+       0.4469,
+       0.5364
+      ]
+     }
+    },
+    "current": {
+     "one_blue": 634,
+     "blue_win_rate": 0.47,
+     "equal_quality": {
+      "ok": 1,
+      "n": 634,
+      "b": [
+       -0.6024,
+       0.3437,
+       0.0322
+      ],
+      "b0_rate": 0.3538,
+      "b0_rate_ci": [
+       0.3,
+       0.4116
+      ]
+     }
+    }
+   }
+  },
+  "synergy": {
+   "cube": "synergy",
+   "matches": 999,
+   "engine_errors": 1,
+   "pairing": {
+    "seeds_a": 500,
+    "seeds_b": 500,
+    "seeds_both": 500,
+    "only_a": 0,
+    "only_b": 0
+   },
+   "drafter": {
+    "a": {
+     "kind": "human-picks",
+     "seat": "A",
+     "file": "../ForgeCoach/public/cubes/synergy-cube-180.picks.json",
+     "sha": "4f1af828a5ddd70e068c52565564f2d55fa979aa293e3e46f6e90bf7c1f8352a",
+     "cards": 180,
+     "covered": 79,
+     "fallback": {
+      "intercept": -2.0989393792057505,
+      "slope": 0.029392761149632185,
+      "n": 79,
+      "r": 0.48455100359742503
+     }
+    },
+    "b": {
+     "kind": "human-picks",
+     "seat": "B",
+     "file": "../ForgeCoach/public/cubes/synergy-cube-180.picks.json",
+     "sha": "4f1af828a5ddd70e068c52565564f2d55fa979aa293e3e46f6e90bf7c1f8352a",
+     "cards": 180,
+     "covered": 79,
+     "fallback": {
+      "intercept": -2.0989393792057505,
+      "slope": 0.029392761149632185,
+      "n": 79,
+      "r": 0.48455100359742503
+     }
+    }
+   },
+   "ok": 1,
+   "rate": 0.507,
+   "ci": [
+    0.476,
+    0.538
+   ],
+   "se_cluster": 0.0158,
+   "won": 506,
+   "lost": 492,
+   "drawn": 1,
+   "seeds": 500,
+   "by_seat": {
+    "A": {
+     "matches": 499,
+     "rate": 0.5411
+    },
+    "B": {
+     "matches": 500,
+     "rate": 0.473
+    }
+   },
+   "games": {
+    "won": 1194,
+    "lost": 1199,
+    "rate": 0.499,
+    "ci": [
+     0.4776,
+     0.5208
+    ]
+   },
+   "colours": {
+    "W": {
+     "human": 0.4855,
+     "current": 0.4575,
+     "diff": 0.028,
+     "diff_ci": null
+    },
+    "U": {
+     "human": 0.5405,
+     "current": 0.6617,
+     "diff": -0.1211,
+     "diff_ci": [
+      -0.1713,
+      -0.0703
+     ]
+    },
+    "B": {
+     "human": 0.3413,
+     "current": 0.2052,
+     "diff": 0.1361,
+     "diff_ci": null
+    },
+    "R": {
+     "human": 0.3063,
+     "current": 0.1261,
+     "diff": 0.1802,
+     "diff_ci": null
+    },
+    "G": {
+     "human": 0.3293,
+     "current": 0.5495,
+     "diff": -0.2202,
+     "diff_ci": null
+    }
+   },
+   "forge_built": {
+    "human": 0,
+    "current": 0
+   },
+   "deck_score": {
+    "human": 124.0116,
+    "current": 136.9863
+   },
+   "uncovered_share": 0.4928,
+   "blue": {
+    "human": {
+     "one_blue": 278,
+     "blue_win_rate": 0.2914,
+     "equal_quality": {
+      "ok": 1,
+      "n": 278,
+      "b": [
+       -0.5961,
+       0.3572,
+       -0.0503
+      ],
+      "b0_rate": 0.3552,
+      "b0_rate_ci": [
+       0.2837,
+       0.4339
+      ]
+     }
+    },
+    "current": {
+     "one_blue": 398,
+     "blue_win_rate": 0.3568,
+     "equal_quality": {
+      "ok": 1,
+      "n": 398,
+      "b": [
+       -1.2852,
+       0.39,
+       -0.1442
+      ],
+      "b0_rate": 0.2167,
+      "b0_rate_ci": [
+       0.1471,
+       0.3073
+      ]
+     }
+    }
+   }
+  }
+ },
+ "bad_lines": 0,
+ "drafter_ok": 1,
+ "picks_sha_ok": 1,
+ "verdict_code": 0,
+ "verdict": "fail"
+}

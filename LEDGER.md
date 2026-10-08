@@ -539,3 +539,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J113/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table cb81721
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J114 DONE: The human-pick drafter: does the cube lab's AI drafter build stronger decks when it drafts grid lines with ForgeCoach's 17Lands human pick model (Vintage, Synergy; mirrored seats; Forge Default pilots)
+
+- finished: 2026-10-08T19:08:08-04:00
+- decides: whether a follow-up makes the human-pick drafter (D416) the default AI drafter of ForgeCoach's Draft vs AI; this job changes nothing itself
+- hypothesis: ForgeCoach #119's pick model names the human's pick 73% of the time on Vintage's cards against 35% for the lab drafter's ratings; J111 found the lab drafter over-drafts blue 1.4-2.1x and Forge plays blue worse. If picking like strong humans (on-colour, black and blue power, fewer white and red aggro cards) builds better decks, the human-pick drafter wins more than half of its best-of-3 matches against the current drafter when both decks are piloted by the same Forge AI
+- rule: written 2026-10-08 before any J114 game was played (j114.py's header). Per cube (Vintage, Synergy), the same seeds 811,400,001 and up twice: HA (seat A drafts with D416's human-pick drafter from ForgeCoach@866c256's <cube>.picks.json, seat B with the current drafter) and HB (the mirror, seat B human); both seats Forge Default, best of 3, the lab builder and the cube's ratings. Outcome: the human-pick drafter's match win rate pooled over HA and HB (won 1, lost 0, drawn 0.5; engine-error matches left out and counted); 95% interval by cluster bootstrap over seeds (a seed's matches in both folders together), 10,000 resamples, numpy default_rng(20261008), percentile. PASS when Vintage's interval lies entirely above 0.5 AND Synergy's point estimate is >= 0.5; otherwise FAIL. Blue (secondary, J111's method) carries no verdict
+- outcome: done
+- headline: jr.verdict_code 0, jr.v_rate 0.478, jr.v_lo 0.457, jr.v_hi 0.499, jr.s_rate 0.507, jr.v_blue_h 0.6265, jr.v_blue_c 0.6085
+- summary: results/J114/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 76cbb82, ForgeCoach 866c256
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
