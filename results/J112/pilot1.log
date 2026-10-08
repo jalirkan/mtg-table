@@ -1,0 +1,182 @@
+==== J112 pilot1 started 2026-10-08T07:52:22-04:00 in unit lab-J112-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+lint-bridge-selftest OK: 31 rules, 61 firing cases (each fired its own rule and no other), 75 checks
+bridge lint OK (75 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 75 file(s) -> /home/justin-a/code/lab/mtg-table/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 276 frame(s) lost the race and were dropped
+OverRaceSelfTest: 2152 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:36794): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:36802): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:36804 (1 watching)
+WS CONNECT /127.0.0.1:36808 (connection #1)
+WS REFUSED /127.0.0.1:36816: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:36820 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:36820 (1 watching)
+WS DISCONNECT /127.0.0.1:36808 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:36824 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:36824 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:36832 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:39446 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:39446: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 38 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:48974: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:48986: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:48988: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:48996: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:49034: no valid pairing token
+WS SITE REFUSED /127.0.0.1:49172: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49184: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49196: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49198: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49202: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49214: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49224: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49232: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49238: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49244: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:49250: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:49260: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:49268: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:49280: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:49286: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:49288 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:49288 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:49290 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:49290 (0 watching)
+WS CONNECT /127.0.0.1:49304 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:49304 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:49314): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:49330): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:49332 (1 watching)
+WS CONNECT /127.0.0.1:47384 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:47384 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:47388 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:47388 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:38043 (/127.0.0.1:47394): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:36934: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:43276: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:43284: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:43290: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:43294: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:43300 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:43300 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:43304): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:46163 (/127.0.0.1:43308): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:50766: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:50776: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:50778: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:50784: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:50786: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:50790: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:50794: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:50806: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:50820: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:50824: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:50826: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:50830: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:50846: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:50854: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:40252: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:40260: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:40270: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:40300)
+TABLE SEAT 1 upgrade from /127.0.0.1:40302
+WS CONNECT /127.0.0.1:40302 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:36652
+WS SEAT 1 TAKEN OVER by /127.0.0.1:36652 (the older connection /127.0.0.1:40302 is closed 4002)
+WS CONNECT /127.0.0.1:36652 (connection #2)
+WS DISCONNECT /127.0.0.1:36652 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:36662
+WS CONNECT /127.0.0.1:36662 (connection #1)
+WS DISCONNECT /127.0.0.1:36662 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:36672: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36680: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36696: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36706: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36712: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36726: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36736: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36746: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36762: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:36768: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:36808
+WS CONNECT /127.0.0.1:36808 (connection #2)
+WS DISCONNECT /127.0.0.1:36808 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 5.3 us + predict 2.9 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 125 check(s), 0 failure(s)
+decision selftest: 100 check(s), 0 failure(s)
+build OK
+cube lab: cubes/vintage-cube-180.md, grid, 6 draft(s) from seed 811200001, best of 1, 3 job(s), AI Default vs Default, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j112-pilot/A-vintage, recording every game (both chairs) into var/lab-j112-pilot/A-vintage/games
+facts: booting the engine to look up 180 cards ...
+facts: 2.1 s
+drafted and built 6 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/6] seed 811200002: A:UG 1-0 B:WB  games A
+[2/6] seed 811200001: A:WR 0-1 B:UR  games B
+[3/6] seed 811200003: A:RG+b 0-1 B:UB  games B
+[4/6] seed 811200005: A:WU 0-1 B:UR  games B
+[5/6] seed 811200006: A:UB+w 0-1 B:WU  games B
+[6/6] seed 811200004: A:WU 0-1 B:BR  games B
+matches: 12 s for 6 (2.0 s a draft wall-clock on 3 worker(s))
+recorded: 6 game(s), both chairs, 0.7 MiB gzipped (115 KiB a game) under var/lab-j112-pilot/A-vintage/games
+done in 14 s -> var/lab-j112-pilot/A-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j112-pilot/A-vintage
+cube lab: cubes/vintage-cube-180.md, grid, 6 draft(s) from seed 811200001, best of 1, 3 job(s), AI Default+outlets+search:anytime=1 vs Default+outlets+search:anytime=1, ratings cubes/vintage-cube-180.ratings.tsv, out var/lab-j112-pilot/B-vintage, recording every game (both chairs) into var/lab-j112-pilot/B-vintage/games
+drafted and built 6 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/6] seed 811200002: A:UG 1-0 B:WB  games A
+[2/6] seed 811200001: A:WR 0-1 B:UR  games B
+[3/6] seed 811200004: A:WU 0-1 B:BR  games B
+[4/6] seed 811200003: A:RG+b 0-1 B:UB  games B
+[5/6] seed 811200005: A:WU 1-0 B:UR  games A
+[6/6] seed 811200006: A:UB+w 0-1 B:WU  games B
+matches: 79 s for 6 (13.1 s a draft wall-clock on 3 worker(s))
+recorded: 6 game(s), both chairs, 0.8 MiB gzipped (133 KiB a game) under var/lab-j112-pilot/B-vintage/games
+done in 79 s -> var/lab-j112-pilot/B-vintage/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j112-pilot/B-vintage
+var/lab-j112-pilot/A-vintage/meta.json
+var/lab-j112-pilot/B-vintage/meta.json
+cube lab: cubes/synergy-cube-180.md, grid, 6 draft(s) from seed 811200001, best of 1, 3 job(s), AI Default vs Default, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j112-pilot/A-synergy, recording every game (both chairs) into var/lab-j112-pilot/A-synergy/games
+facts: booting the engine to look up 180 cards ...
+facts: 2.1 s
+drafted and built 6 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/6] seed 811200001: A:WU 1-0 B:UR+w  games A
+[2/6] seed 811200002: A:UR 0-1 B:WG  games B
+[3/6] seed 811200005: A:WU 0-1 B:UG  games B
+[4/6] seed 811200003: A:WB 1-0 B:UR  games A
+[5/6] seed 811200006: A:UG 0-1 B:UB+g  games B
+[6/6] seed 811200004: A:WG 0-1 B:UR  games B
+matches: 564 s for 6 (94.0 s a draft wall-clock on 3 worker(s))
+recorded: 6 game(s), both chairs, 2.8 MiB gzipped (484 KiB a game) under var/lab-j112-pilot/A-synergy/games
+done in 566 s -> var/lab-j112-pilot/A-synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j112-pilot/A-synergy
+cube lab: cubes/synergy-cube-180.md, grid, 6 draft(s) from seed 811200001, best of 1, 3 job(s), AI Default+outlets+search:anytime=1 vs Default+outlets+search:anytime=1, ratings cubes/synergy-cube-180.ratings.tsv, out var/lab-j112-pilot/B-synergy, recording every game (both chairs) into var/lab-j112-pilot/B-synergy/games
+drafted and built 6 draft(s) in 0.0 s; playing 1 game each on 3 worker(s)
+[1/6] seed 811200001: A:WU 1-0 B:UR+w  games A
+[2/6] seed 811200004: A:WG 1-0 B:UR  games A
+[3/6] seed 811200002: A:UR 0-1 B:WG  games B
+[4/6] seed 811200005: A:WU 0-1 B:UG  games B
+[5/6] seed 811200003: A:WB 1-0 B:UR  games A
+[6/6] seed 811200006: A:UG 1-0 B:UB+g  games A
+matches: 187 s for 6 (31.2 s a draft wall-clock on 3 worker(s))
+recorded: 6 game(s), both chairs, 1.6 MiB gzipped (281 KiB a game) under var/lab-j112-pilot/B-synergy/games
+done in 187 s -> var/lab-j112-pilot/B-synergy/drafts.jsonl
+next: tools/cubelab.sh report var/lab-j112-pilot/B-synergy
+var/lab-j112-pilot/A-synergy/meta.json
+var/lab-j112-pilot/B-synergy/meta.json
+numpy 2.5.3
+J112 verdict: fail (Vintage B-A 0.0153 [-0.1125, 0.1492], Synergy B-A 0.0598)
+{"written": 1, "verdict_code": 0, "bad_lines": 0, "deck_mismatch": 0, "seeds_unpaired": 0, "v_n": 92, "v_rho_a": -0.12, "v_rho_b": -0.1048, "v_diff": 0.0153, "v_lo": -0.1125, "v_hi": 0.1492, "s_n": 46, "s_rho_a": -0.1268, "s_rho_b": -0.067, "s_diff": 0.0598, "s_lo": -0.1861, "s_hi": 0.3169}
