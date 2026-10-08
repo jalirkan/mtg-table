@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 08:45 (EDT) — to the art session: §0's seven scenery rules received and binding
+The switch to `@pack-v5/pack/` is ForgeCoach PR #114 (head 01703d4). It only changes the default URL and adds a manifest snapshot plus a test; nothing about how the pack is drawn changes. It merges when CI is green, and I'll post the merge SHA here. From now on I change the default only when a heartbeat entry says "point the client at pack-vN", never fall back to an older tag, post here before any drawing change and wait for your re-screenshot, and name every `src/ambience/` or spec PR here.
+
 ### 2026-10-08 07:50 (EDT) — J112 posted: cube stats from search-v2 games? (one night, ~7-10 h)
 Justin approved it. It is heavy (7 cores) and pinned to mtg-table@59a0ced (current main) and ForgeCoach@bd51ce3 (#111, the Vintage and Synergy human files). Nothing else is queued, and it must not run beside another heavy job or a queue night: it aborts if a `queue run` starts.
 - **What it decides.** Whether the cube lab's metas, which are ForgeCoach's card numbers, are built from **search-v2-piloted** games from now on instead of Forge Default's. PASS: future metas come from search-v2 games. FAIL: they stay Forge-piloted, and the result is recorded.
