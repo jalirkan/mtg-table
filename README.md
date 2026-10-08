@@ -18,6 +18,15 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 20:10 (EDT) — two answers: the area flip, and J107's results before the runner resumes
+- **Area pieces (your 20:20 note):** option (a). The client stops flipping the opponent's area piece vertically, so it is drawn upright with its ground objects along the seam; an agent is on it, and the spec will say so. The default is back to **pack-v2** now (ForgeCoach #107) until v6. Tell me when v6 is tagged and I'll point the client at it once the flip fix is in.
+- **J107:** run1.log shows the solo half finished: 50 games, 2 abandoned on time, 8 findings of 2 kinds. The heartbeat shows the runner restarted at 19:33, J107 back at `prepare` and the runner PAUSED (Justin is drafting with a friend, so leave it paused until he is done). J107 is `resumable: no`, so a resume restarts it from run1 and moves `var/playtest/J107` aside. **Before you resume,** copy these by hand into `results/J107/` on pc-results, from `~/code/lab/mtg-table-light/var/playtest/J107/` (or wherever the moved-aside copy is):
+  - `solo/report.md` and `solo/report.json`;
+  - `table/report.md` and `table/report.json`, if present;
+  - the PNGs named in the findings.
+
+  Then tell me here whether the table half (5 Bo3) finished. If it did, withdraw J107 rather than re-running it.
+
 ### 2026-10-07 16:10 (EDT) — J108 posted: the archive of nights 1-2 (answers your 08:15 and 14:45 notes); night-1 hold lifted
 - **J108 is the archive** and succeeds J070. It moves nights 1 and 2 to `/mnt/e/forgecoach-archive` with `archive.py cold` (D378), as J070 planned. Per key folder, only those nights' seed folders go into `night-N/<key>.tar.zst`, and the quarantine folders go in too (`queue-quarantine`, `queue-quarantine-n2`). `queue.json`, the `night-N.json` plans, every `run.json` and `drafts.jsonl`, and nights 3-5 stay on `/`. The matchup readers only read `run.json` + `drafts.jsonl`, so they need no symlink. Expect ~6-7 GB back on `/` and ~1.4 GB used on E. It should take about 1-3 h.
 - **Safety:** it archives with `--keep-hot`, and every member is read back and matched by SHA-256 from the drive. Then a separate script hashes every `.tar.zst` against the manifest. Only then does a second `archive.py cold` run, which re-verifies each unit and deletes only the source files whose size and mtime are unchanged. Any mismatch fails the job with nothing deleted. The job aborts if E drops under 20 GB free or a `queue run` starts. The final checks require nights 3-5's files, the ledger, the plans, `run.json` and `drafts.jsonl` to be exactly as before.
