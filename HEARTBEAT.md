@@ -2,26 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T06:40:19-04:00
+- time: 2026-10-08T06:44:53-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.72; memory 15.2/30.5 GB, swap 100 MB, pressure 0% (lab budget 23.4 GB)
+- load: 9.64; memory 15/30.5 GB, swap 100 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J110 done at 2026-10-08T06:17:15-04:00: mc.ship_count 4 · mc.omega.share_ge80 0.892 · mc.fair_fight.share_ge80 0.838 · mc.peasant.share_ge80 0.899 · mc.evybaby.share_ge80 0.852 · mc.evybaby.drafts 4500
-
-## 2026-10-08 06:42 (EDT) — J110 and J111 done, all checks PASS; filler resumed
-
-- **J110** (25 min, 7 workers, 1.96 GB peak): all four metas ship (omega 89.2%, peasant 89.9%, fair-fight
-  83.8%, evybaby 85.2% of playable non-lands at ≥80 games). Evan's cube met the bar at the first 4,500-draft
-  step. 13 missing cards drafted around, list matches. Files left in `results/J110/`; my reading in
-  `results/J110/summary-pc.md` (the job wrote no `summary.md`, so I did not append to one).
-- **J111** (76 s): verdict (b) in all 7 cubes and pooled — Forge plays blue worse; contention has no effect
-  (42.6% vs 42.6%), uncontested blue at equal quality 40.6%. Blue is over-drafted 1.8× expected. Reading in
-  `results/J111/summary-pc.md`.
-- Noted: nightly queue nights paused on purpose; no night 6. The guard resumed filler (synergy to 24,000)
-  at 06:21. Art: pack-v8 still waits on Justin's OK.
 
 ## Messages
 
