@@ -1,0 +1,13 @@
+==== J110 run1 started 2026-10-08T05:53:57-04:00 in unit lab-J110-run1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{"cubes":{"omega":{"lines":12566,"explore":1345,"mixed":4539,"bad":0,"kept":6682,"kept_mb":103.2,"run_profiles_dd":1,"missing":0,"ratings":null},"fair_fight":{"lines":14087,"explore":1514,"mixed":5139,"bad":0,"kept":7434,"kept_mb":111.4,"run_profiles_dd":1,"missing":0,"ratings":"cubes/fair-fight-cube-180.ratings.tsv"},"peasant":{"lines":21195,"explore":2274,"mixed":7965,"bad":0,"kept":10956,"kept_mb":170.4,"run_profiles_dd":1,"missing":0,"ratings":"cubes/peasant-cube-180.ratings.tsv"}},"min_kept":6682,"max_kept_mb":170.4,"bad":0,"not_dd_runs":0}
+var/cubelab/j110/stage/omega/meta.json
+var/cubelab/j110/stage/fair-fight/meta.json
+var/cubelab/j110/stage/peasant/meta.json
+| file | ships | drafts | decisive games | playable nonland | share with 80+ games | median games | p10 games | lands played | orphans | ForgeCoach id | KB |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| fair-fight-cube-180.meta.json | yes | 7434 | 7434 | 160 | 0.838 | 1695 | 23 | 20 / 20 | 0 | ok | 200 |
+| omega-cube-180.meta.json | yes | 6682 | 6682 | 158 | 0.892 | 1983 | 56 | 20 / 22 | 0 | ok | 251 |
+| peasant-cube-180.meta.json | yes | 10956 | 10950 | 158 | 0.899 | 2772 | 74 | 22 / 22 | 0 | ok | 216 |
+
+Shipped metas (/home/justin-a/code/lab/ForgeCoach/public/cubes): modern-era-cube-180.meta.json 0.894 / median 1703 / 5781 drafts; pauper-cube-180.meta.json 0.819 / median 1620 / 8314 drafts; synergy-cube-180.meta.json 0.831 / median 1653 / 6980 drafts; vintage-cube-180.meta.json 0.843 / median 1266 / 5167 drafts.
+Rule: ship when schema_ok, id_ok, no orphans, drafts >= 100 and share >= 0.81 of playable nonland cards with 80+ decisive games.
