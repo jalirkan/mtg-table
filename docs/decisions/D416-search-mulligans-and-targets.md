@@ -130,7 +130,7 @@ non-empty stack (counterspells, responses).
 deal, one worker; no engine errors, no timeouts, no fallbacks):
 - search-v2-mull: 5 keep/mulligan searches (1.25 a game), 5.6 s and 9–23 rollouts each, none
   changed Forge's answer (one held by the lcb rule); 1 London bottom searched (29 rollouts in
-  6 s), changed. 54 s a game against search-v2's own decisions' ~47 s.
+  6 s), changed. 54 s a game on average over the 4 games (the target smoke: 54 s too).
 - search-v2-targets: 8 target searches (2 a game), 1.5 s each, 2 changed Forge's target.
 - Costs: about +7 s a game for the mulligan seat, +3 s for the target seat. The PR's comment
   has the full output.
