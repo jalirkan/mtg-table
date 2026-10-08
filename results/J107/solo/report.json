@@ -1,0 +1,5412 @@
+{
+ "started": "2026-10-07T14:28:32.062Z",
+ "options": {
+  "mode": "solo",
+  "games": 50,
+  "seed": 106,
+  "decks": "cube,dck",
+  "turnCap": 40,
+  "coach": "fake",
+  "reload": 1,
+  "out": "/home/justin-a/code/lab/mtg-table-light/var/playtest/J107/solo",
+  "headless": true,
+  "stallS": 150,
+  "gameMinutes": 75,
+  "aiProfile": null,
+  "portBase": 8862,
+  "maxShots": 150,
+  "viewport": "mixed"
+ },
+ "games": [
+  {
+   "id": 1,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106000:you)",
+    "theirs": "modern-era Boros · Aggro and equipment (cube:modern-era#106000:ai)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [
+    {
+     "game": 1,
+     "seat": "solo",
+     "kind": "coach-blank",
+     "what": "during the opponent's turn 14 the coach panel shows no advice (it had answered before)",
+     "frame": 697,
+     "seq": 697,
+     "turn": 14,
+     "phase": "END_OF_TURN",
+     "prompt": "Priority: Human\nTurn: 14 (Forge AI)\nPhase: End step\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 80,
+     "shot": "shots/g1-solo-1-coach-blank.png"
+    }
+   ],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 16,
+   "rounds": 8,
+   "decisions": {
+    "solo": 132
+   },
+   "clicks": {
+    "solo": 131
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 89,
+      "pay": 34,
+      "buttons": 3,
+      "select": 2,
+      "block": 1
+     },
+     "rare": {
+      "manual-tap": 16,
+      "activate": 2,
+      "to-eot": 2,
+      "zone-choice": 1,
+      "equip": 2,
+      "equip-attached": 5
+     }
+    }
+   },
+   "frames": {
+    "solo": 875
+   },
+   "traces": {
+    "solo": "trace-g1-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g1-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 8,
+    "afterOver": 1,
+    "list": [
+     {
+      "at": 7.5,
+      "ms": 55,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 10.5,
+      "ms": 54,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 17.1,
+      "ms": 58,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 26.8,
+      "ms": 54,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 44,
+      "ms": 56,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 54.8,
+      "ms": 53,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 68.9,
+      "ms": 91,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     },
+     {
+      "at": 80,
+      "ms": 71,
+      "turn": 14,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 15"
+     }
+    ],
+    "answered": 8,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1
+    },
+    "latencyMs": [
+     55,
+     54,
+     58,
+     54,
+     56,
+     53,
+     91,
+     71
+    ],
+    "stopped": 0,
+    "blankSamples": 1,
+    "oppTurnSamples": 40
+   },
+   "seconds": 102
+  },
+  {
+   "id": 2,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Simic · ETB / blink (cube:pauper#106001:ai)",
+    "theirs": "pauper Orzhov · ETB / blink (cube:pauper#106001:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 15,
+   "rounds": 8,
+   "decisions": {
+    "solo": 293
+   },
+   "clicks": {
+    "solo": 275
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "order": 3,
+      "choose_list": 14
+     },
+     "modes": {
+      "opening": 2,
+      "open": 5,
+      "priority": 178,
+      "pay": 69,
+      "select": 12,
+      "buttons": 9,
+      "block": 1
+     },
+     "rare": {
+      "target-player": 5,
+      "to-eot": 2,
+      "manual-tap": 29,
+      "equip": 29,
+      "trigger-order": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 1659
+   },
+   "traces": {
+    "solo": "trace-g2-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g2-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 0,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 266
+  },
+  {
+   "id": 3,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106002:you)",
+    "theirs": "synergy Boros · Tokens / go wide (cube:synergy#106002:ai)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 13,
+   "rounds": 7,
+   "decisions": {
+    "solo": 207
+   },
+   "clicks": {
+    "solo": 163
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 40,
+      "text": 3,
+      "choose_entities": 1,
+      "confirm": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 114,
+      "pay": 30,
+      "select": 12,
+      "buttons": 3,
+      "attack": 1,
+      "block": 1
+     },
+     "rare": {
+      "x-spell": 23,
+      "zone-choice": 24,
+      "manual-tap": 14,
+      "to-eot": 6,
+      "x-number": 3,
+      "zone-pick": 3
+     }
+    }
+   },
+   "frames": {
+    "solo": 1284
+   },
+   "traces": {
+    "solo": "trace-g3-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g3-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 6,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 12.1,
+      "ms": 55,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 26.9,
+      "ms": 56,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 42.1,
+      "ms": 60,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 74,
+      "ms": 54,
+      "turn": 8,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 88.7,
+      "ms": 55,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 107.3,
+      "ms": 55,
+      "turn": 12,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 12"
+     }
+    ],
+    "answered": 5,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1
+    },
+    "latencyMs": [
+     55,
+     60,
+     54,
+     55,
+     55
+    ],
+    "stopped": 1,
+    "blankSamples": 0,
+    "oppTurnSamples": 39
+   },
+   "seconds": 145
+  },
+  {
+   "id": 4,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck)",
+    "theirs": "Doom Legion (Marvel Super Heroes villains) (dck:decks/doom-legion.dck)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 13,
+   "rounds": 7,
+   "decisions": {
+    "solo": 174
+   },
+   "clicks": {
+    "solo": 167
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 6,
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 97,
+      "open": 19,
+      "pay": 44,
+      "select": 2,
+      "attack": 2,
+      "block": 2
+     },
+     "rare": {
+      "target-player": 5,
+      "manual-tap": 17,
+      "to-eot": 4,
+      "ability-menu": 6
+     }
+    }
+   },
+   "frames": {
+    "solo": 1066
+   },
+   "traces": {
+    "solo": "trace-g4-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g4-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 155
+  },
+  {
+   "id": 5,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Boros · White aggro & equipment (cube:vintage#106004:ai)",
+    "theirs": "vintage Orzhov · Aggro (cube:vintage#106004:you)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 15,
+   "rounds": 8,
+   "decisions": {
+    "solo": 160
+   },
+   "clicks": {
+    "solo": 161
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 5
+     },
+     "modes": {
+      "opening": 2,
+      "open": 7,
+      "priority": 106,
+      "pay": 32,
+      "select": 6,
+      "attack": 1,
+      "block": 1
+     },
+     "rare": {
+      "target-player": 7,
+      "to-eot": 5,
+      "manual-tap": 14,
+      "graveyard-cast": 2,
+      "activate": 3,
+      "multi-block": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1059
+   },
+   "traces": {
+    "solo": "trace-g5-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g5-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 7,
+    "afterOver": 2,
+    "list": [
+     {
+      "at": 27.3,
+      "ms": 53,
+      "turn": 2,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 35.3,
+      "ms": 53,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 48.2,
+      "ms": 54,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 68.2,
+      "ms": 68,
+      "turn": 7,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 88.1,
+      "ms": 96,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 103.8,
+      "ms": 58,
+      "turn": 11,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 12"
+     },
+     {
+      "at": 121.8,
+      "ms": 54,
+      "turn": 13,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 14"
+     }
+    ],
+    "answered": 7,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1
+    },
+    "latencyMs": [
+     53,
+     53,
+     54,
+     68,
+     96,
+     58,
+     54
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 31
+   },
+   "seconds": 131
+  },
+  {
+   "id": 6,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106005:ai)",
+    "theirs": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106005:you)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 14,
+   "rounds": 7,
+   "decisions": {
+    "solo": 157
+   },
+   "clicks": {
+    "solo": 146
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 1,
+      "choose_list": 2,
+      "choose_entities": 3
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 118,
+      "pay": 16,
+      "attack": 5,
+      "select": 7,
+      "buttons": 3
+     },
+     "rare": {
+      "manual-tap": 6,
+      "ability-menu": 1,
+      "to-eot": 4,
+      "x-spell": 2,
+      "activate": 30,
+      "zone-choice": 3,
+      "alpha-strike": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 939
+   },
+   "traces": {
+    "solo": "trace-g6-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g6-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 136
+  },
+  {
+   "id": 7,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Azorius blink-skies (cube:pauper#106006:ai)",
+    "theirs": "pauper Boros aggro (cube:pauper#106006:you)"
+   },
+   "aiProfile": "Default",
+   "findings": [
+    {
+     "game": 7,
+     "seat": "solo",
+     "kind": "coach-blank",
+     "what": "during the opponent's turn 14 the coach panel shows no advice (it had answered before)",
+     "frame": 1196,
+     "seq": 1196,
+     "turn": 14,
+     "phase": "END_OF_TURN",
+     "prompt": "Priority: Human\nTurn: 14 (Forge AI)\nPhase: End step\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 131,
+     "shot": "shots/g7-solo-2-coach-blank.png"
+    }
+   ],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 18,
+   "rounds": 9,
+   "decisions": {
+    "solo": 240
+   },
+   "clicks": {
+    "solo": 243
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 3,
+      "choose_list": 3,
+      "assign_damage": 1,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 162,
+      "pay": 43,
+      "select": 16,
+      "block": 2,
+      "attack": 5,
+      "buttons": 2
+     },
+     "rare": {
+      "ability-menu-cancel": 1,
+      "equip": 30,
+      "ability-menu": 2,
+      "equip-attached": 23,
+      "manual-tap": 11,
+      "to-eot": 5,
+      "assign_damage": 1,
+      "graveyard-cast": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1516
+   },
+   "traces": {
+    "solo": "trace-g7-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g7-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 9,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 6.4,
+      "ms": 55,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 11.7,
+      "ms": 54,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 32,
+      "ms": 55,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 51.2,
+      "ms": 59,
+      "turn": 7,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 61.5,
+      "ms": 53,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 74.5,
+      "ms": 54,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 96.2,
+      "ms": 55,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     },
+     {
+      "at": 131.5,
+      "ms": 394,
+      "turn": 14,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 15"
+     },
+     {
+      "at": 150.4,
+      "ms": 64,
+      "turn": 16,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 17"
+     }
+    ],
+    "answered": 8,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "2": 1,
+     "4": 2,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1
+    },
+    "latencyMs": [
+     55,
+     55,
+     59,
+     53,
+     54,
+     55,
+     394,
+     64
+    ],
+    "stopped": 1,
+    "blankSamples": 1,
+    "oppTurnSamples": 39
+   },
+   "seconds": 171
+  },
+  {
+   "id": 8,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Artifacts (cube:synergy#106007:you)",
+    "theirs": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106007:ai)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 14,
+   "rounds": 7,
+   "decisions": {
+    "solo": 246
+   },
+   "clicks": {
+    "solo": 245
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 2,
+      "assign_damage": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 150,
+      "pay": 82,
+      "block": 2,
+      "select": 5,
+      "attack": 2
+     },
+     "rare": {
+      "manual-tap": 23,
+      "to-eot": 5,
+      "equip": 27,
+      "ability-menu": 2,
+      "equip-attached": 3,
+      "alpha-strike": 1,
+      "assign_damage": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1675
+   },
+   "traces": {
+    "solo": "trace-g8-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g8-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 237
+  },
+  {
+   "id": 9,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Pacho SHIELD (Marvel Super Heroes) (dck:decks/pacho-shield.dck)",
+    "theirs": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [
+    {
+     "game": 9,
+     "seat": "solo",
+     "kind": "coach-blank",
+     "what": "during the opponent's turn 2 the coach panel shows no advice (it had answered before)",
+     "frame": 73,
+     "seq": 75,
+     "turn": 3,
+     "phase": "DRAW",
+     "prompt": "Waiting for Forge AI...",
+     "ask": null,
+     "card": null,
+     "at": 13,
+     "shot": "shots/g9-solo-3-coach-blank.png"
+    }
+   ],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 14,
+   "rounds": 7,
+   "decisions": {
+    "solo": 279
+   },
+   "clicks": {
+    "solo": 274
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 4,
+      "choose_list": 5,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 142,
+      "pay": 98,
+      "block": 2,
+      "select": 21,
+      "attack": 3,
+      "buttons": 1
+     },
+     "rare": {
+      "manual-tap": 22,
+      "to-eot": 2,
+      "ability-menu": 3,
+      "activate": 17,
+      "ability-menu-cancel": 1,
+      "equip": 4,
+      "zone-choice": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1837
+   },
+   "traces": {
+    "solo": "trace-g9-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g9-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 7,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 5.4,
+      "ms": 53,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 13,
+      "ms": 63,
+      "turn": 3,
+      "phase": "MAIN1",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 23.2,
+      "ms": 73,
+      "turn": 4,
+      "phase": "CLEANUP",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 43.6,
+      "ms": 61,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 62.1,
+      "ms": 56,
+      "turn": 9,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 117.5,
+      "ms": 53,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 160.4,
+      "ms": 60,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     }
+    ],
+    "answered": 6,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 2,
+     "3": 1,
+     "5": 2,
+     "6": 1
+    },
+    "latencyMs": [
+     53,
+     73,
+     61,
+     56,
+     53,
+     60
+    ],
+    "stopped": 1,
+    "blankSamples": 1,
+    "oppTurnSamples": 60
+   },
+   "seconds": 200
+  },
+  {
+   "id": 10,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Boros · White aggro & equipment (cube:vintage#106009:ai)",
+    "theirs": "vintage Selesnya +B · Enter / leave value (cube:vintage#106009:you)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "win",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 16,
+   "rounds": 8,
+   "decisions": {
+    "solo": 184
+   },
+   "clicks": {
+    "solo": 184
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1,
+      "ability_menu": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 113,
+      "pay": 57,
+      "attack": 6,
+      "select": 5
+     },
+     "rare": {
+      "manual-tap": 26,
+      "alpha-strike": 2,
+      "ability-menu": 1,
+      "to-eot": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1244
+   },
+   "traces": {
+    "solo": "trace-g10-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g10-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 1,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 179
+  },
+  {
+   "id": 11,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106010:you)",
+    "theirs": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106010:ai)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 98
+   },
+   "clicks": {
+    "solo": 93
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_entities": 1,
+      "choose_list": 4,
+      "ability_menu": 1
+     },
+     "modes": {
+      "opening": 2,
+      "open": 1,
+      "priority": 57,
+      "pay": 29,
+      "select": 1,
+      "buttons": 2
+     },
+     "rare": {
+      "target-player": 1,
+      "manual-tap": 20,
+      "zone-choice": 1,
+      "to-eot": 4,
+      "x-spell": 4,
+      "ability-menu": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 565
+   },
+   "traces": {
+    "solo": "trace-g11-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g11-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 5,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 12.6,
+      "ms": 55,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 19,
+      "ms": 57,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 59.4,
+      "ms": 54,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 67.6,
+      "ms": 55,
+      "turn": 8,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 80.3,
+      "ms": 53,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     }
+    ],
+    "answered": 4,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1
+    },
+    "latencyMs": [
+     55,
+     54,
+     55,
+     53
+    ],
+    "stopped": 1,
+    "blankSamples": 0,
+    "oppTurnSamples": 16
+   },
+   "seconds": 94
+  },
+  {
+   "id": 12,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Boros aggro (cube:pauper#106011:you)",
+    "theirs": "pauper Boros aggro (cube:pauper#106011:ai)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 17,
+   "rounds": 9,
+   "decisions": {
+    "solo": 217
+   },
+   "clicks": {
+    "solo": 219
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_entities": 1,
+      "order": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 131,
+      "pay": 65,
+      "buttons": 4,
+      "select": 12,
+      "block": 2
+     },
+     "rare": {
+      "manual-tap": 27,
+      "zone-choice": 1,
+      "activate": 1,
+      "to-eot": 3,
+      "graveyard-cast": 10,
+      "trigger-order": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1394
+   },
+   "traces": {
+    "solo": "trace-g12-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g12-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 197
+  },
+  {
+   "id": 13,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106012:you)",
+    "theirs": "synergy Orzhov · Tokens / go wide (cube:synergy#106012:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [
+    {
+     "game": 13,
+     "seat": "solo",
+     "kind": "coach-blank",
+     "what": "during the opponent's turn 7 the coach panel shows no advice (it had answered before)",
+     "frame": 510,
+     "seq": 511,
+     "turn": 7,
+     "phase": "END_OF_TURN",
+     "prompt": "Priority: Human\nTurn: 7 (Forge AI)\nPhase: End step\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 56,
+     "shot": "shots/g13-solo-4-coach-blank.png"
+    }
+   ],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 158
+   },
+   "clicks": {
+    "solo": 151
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 7,
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 99,
+      "pay": 45,
+      "select": 2,
+      "block": 2,
+      "attack": 1
+     },
+     "rare": {
+      "ability-menu": 7,
+      "manual-tap": 9,
+      "equip": 18,
+      "x-spell": 1,
+      "to-eot": 3
+     }
+    }
+   },
+   "frames": {
+    "solo": 1061
+   },
+   "traces": {
+    "solo": "trace-g13-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g13-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 5,
+    "afterOver": 2,
+    "list": [
+     {
+      "at": 5.1,
+      "ms": 53,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 11.4,
+      "ms": 53,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 21.7,
+      "ms": 52,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 56.5,
+      "ms": 110,
+      "turn": 7,
+      "phase": "END_OF_TURN",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 93.6,
+      "ms": 88,
+      "turn": 10,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 10"
+     }
+    ],
+    "answered": 4,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1
+    },
+    "latencyMs": [
+     53,
+     53,
+     52,
+     88
+    ],
+    "stopped": 1,
+    "blankSamples": 1,
+    "oppTurnSamples": 32
+   },
+   "seconds": 117
+  },
+  {
+   "id": 14,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck)",
+    "theirs": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 14,
+   "rounds": 7,
+   "decisions": {
+    "solo": 138
+   },
+   "clicks": {
+    "solo": 135
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 6
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 84,
+      "pay": 37,
+      "select": 1,
+      "buttons": 1,
+      "attack": 4,
+      "block": 3
+     },
+     "rare": {
+      "manual-tap": 19,
+      "ability-menu": 6,
+      "to-eot": 3,
+      "alpha-strike": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 915
+   },
+   "traces": {
+    "solo": "trace-g14-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g14-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 133
+  },
+  {
+   "id": 15,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Golgari +R · Big payoffs (cube:vintage#106014:ai)",
+    "theirs": "vintage Boros · White aggro & equipment (cube:vintage#106014:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [
+    {
+     "game": 15,
+     "seat": "solo",
+     "kind": "coach-blank",
+     "what": "during the opponent's turn 11 the coach panel shows no advice (it had answered before)",
+     "frame": 823,
+     "seq": 824,
+     "turn": 11,
+     "phase": "END_OF_TURN",
+     "prompt": "Priority: Human\nTurn: 11 (Forge AI)\nPhase: End step\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 151,
+     "shot": "shots/g15-solo-5-coach-blank.png"
+    }
+   ],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 13,
+   "rounds": 7,
+   "decisions": {
+    "solo": 159
+   },
+   "clicks": {
+    "solo": 156
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_entities": 1,
+      "choose_list": 3
+     },
+     "modes": {
+      "opening": 2,
+      "open": 1,
+      "priority": 83,
+      "pay": 61,
+      "select": 5,
+      "buttons": 3
+     },
+     "rare": {
+      "target-player": 1,
+      "manual-tap": 28,
+      "activate": 1,
+      "zone-choice": 1,
+      "use-mana": 13,
+      "to-eot": 3
+     }
+    }
+   },
+   "frames": {
+    "solo": 908
+   },
+   "traces": {
+    "solo": "trace-g15-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g15-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 6,
+    "afterOver": 2,
+    "list": [
+     {
+      "at": 11.5,
+      "ms": 56,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 38.9,
+      "ms": 55,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 56.1,
+      "ms": 54,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 71.5,
+      "ms": 54,
+      "turn": 7,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 78.2,
+      "ms": 53,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 150.6,
+      "ms": 112,
+      "turn": 11,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 12"
+     }
+    ],
+    "answered": 6,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1
+    },
+    "latencyMs": [
+     56,
+     55,
+     54,
+     54,
+     53,
+     112
+    ],
+    "stopped": 0,
+    "blankSamples": 1,
+    "oppTurnSamples": 20
+   },
+   "seconds": 159
+  },
+  {
+   "id": 16,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106015:ai)",
+    "theirs": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106015:you)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 12,
+   "rounds": 6,
+   "decisions": {
+    "solo": 142
+   },
+   "clicks": {
+    "solo": 131
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 4,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 87,
+      "pay": 46,
+      "buttons": 2
+     },
+     "rare": {
+      "manual-tap": 23,
+      "ability-menu": 4,
+      "to-eot": 1,
+      "activate": 1,
+      "zone-choice": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 827
+   },
+   "traces": {
+    "solo": "trace-g16-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g16-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 1,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 137
+  },
+  {
+   "id": 17,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Orzhov · Sacrifice (cube:pauper#106016:ai)",
+    "theirs": "pauper Orzhov · Tokens / go wide (cube:pauper#106016:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [
+    {
+     "game": 17,
+     "seat": "solo",
+     "kind": "abandoned",
+     "what": "the game was left without an end (time) at turn 10",
+     "frame": 761,
+     "seq": 762,
+     "turn": 10,
+     "phase": "MAIN1",
+     "prompt": "Falkenrath Noble (19) - Whenever Falkenrath Noble or another creature dies, target player loses 1 life and you gain 1 life. [Zone Changer: Falkenrath Noble (19)]\n\nSelect target player",
+     "ask": null,
+     "card": null,
+     "at": 4508,
+     "shot": "shots/g17-solo-6-abandoned.png"
+    }
+   ],
+   "viewport": "desktop",
+   "result": "abandoned (time)",
+   "reason": null,
+   "capped": false,
+   "turns": 10,
+   "rounds": 5,
+   "decisions": {
+    "solo": 126
+   },
+   "clicks": {
+    "solo": 125
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 2
+     },
+     "modes": {
+      "opening": 3,
+      "open": 1,
+      "priority": 64,
+      "pay": 47,
+      "select": 9
+     },
+     "rare": {
+      "target-player": 1,
+      "ability-menu-cancel": 1,
+      "manual-tap": 22,
+      "to-eot": 2,
+      "ability-menu": 1,
+      "equip-attached": 7,
+      "use-mana": 5
+     }
+    }
+   },
+   "frames": {
+    "solo": 761
+   },
+   "traces": {
+    "solo": "trace-g17-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g17-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 5,
+    "afterOver": 0,
+    "list": [
+     {
+      "at": 12.9,
+      "ms": 56,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 23.9,
+      "ms": 54,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 42.5,
+      "ms": 56,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 58.5,
+      "ms": 55,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 91.2,
+      "ms": 55,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     }
+    ],
+    "answered": 5,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1
+    },
+    "latencyMs": [
+     56,
+     54,
+     56,
+     55,
+     55
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 3667
+   },
+   "seconds": 4509
+  },
+  {
+   "id": 18,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106017:you)",
+    "theirs": "synergy Boros · Artifacts (cube:synergy#106017:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [
+    {
+     "game": 18,
+     "seat": "solo",
+     "kind": "abandoned",
+     "what": "the game was left without an end (time) at turn 7",
+     "frame": 375,
+     "seq": 376,
+     "turn": 7,
+     "phase": "COMBAT_DAMAGE",
+     "prompt": "Blood Artist (2) - Whenever Blood Artist or another creature dies, target player loses 1 life and you gain 1 life. [Zone Changer: Blood Artist (2)]\n\nSelect target player",
+     "ask": null,
+     "card": null,
+     "at": 4515,
+     "shot": "shots/g18-solo-7-abandoned.png"
+    }
+   ],
+   "viewport": "phone",
+   "result": "abandoned (time)",
+   "reason": null,
+   "capped": false,
+   "turns": 7,
+   "rounds": 4,
+   "decisions": {
+    "solo": 54
+   },
+   "clicks": {
+    "solo": 53
+   },
+   "stats": {
+    "solo": {
+     "asks": {},
+     "modes": {
+      "opening": 2,
+      "priority": 41,
+      "pay": 10,
+      "block": 1
+     },
+     "rare": {
+      "to-eot": 2,
+      "manual-tap": 3
+     }
+    }
+   },
+   "frames": {
+    "solo": 375
+   },
+   "traces": {
+    "solo": "trace-g18-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g18-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 0,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 4516
+  },
+  {
+   "id": 19,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)",
+    "theirs": "Doom Legion (Marvel Super Heroes villains) (dck:decks/doom-legion.dck)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "win",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 17,
+   "rounds": 9,
+   "decisions": {
+    "solo": 161
+   },
+   "clicks": {
+    "solo": 168
+   },
+   "stats": {
+    "solo": {
+     "asks": {},
+     "modes": {
+      "opening": 3,
+      "open": 1,
+      "priority": 102,
+      "pay": 50,
+      "attack": 5
+     },
+     "rare": {
+      "target-player": 1,
+      "manual-tap": 25,
+      "activate": 23,
+      "to-eot": 3,
+      "alpha-strike": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 1056
+   },
+   "traces": {
+    "solo": "trace-g19-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g19-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 9,
+    "afterOver": 0,
+    "list": [
+     {
+      "at": 10.9,
+      "ms": 55,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 17.4,
+      "ms": 55,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 24.2,
+      "ms": 54,
+      "turn": 5,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 34.9,
+      "ms": 53,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 50.9,
+      "ms": 55,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 67.1,
+      "ms": 57,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 89.2,
+      "ms": 179,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     },
+     {
+      "at": 105.9,
+      "ms": 66,
+      "turn": 14,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 15"
+     },
+     {
+      "at": 123.9,
+      "ms": 62,
+      "turn": 17,
+      "phase": "MAIN1",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 17"
+     }
+    ],
+    "answered": 8,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "3": 2,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "9": 1
+    },
+    "latencyMs": [
+     55,
+     55,
+     54,
+     53,
+     55,
+     57,
+     179,
+     66
+    ],
+    "stopped": 1,
+    "blankSamples": 0,
+    "oppTurnSamples": 36
+   },
+   "seconds": 132
+  },
+  {
+   "id": 20,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Orzhov · Aggro (cube:vintage#106019:you)",
+    "theirs": "vintage Azorius · Control (cube:vintage#106019:ai)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 197
+   },
+   "clicks": {
+    "solo": 194
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_entities": 2
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 89,
+      "pay": 103,
+      "buttons": 1
+     },
+     "rare": {
+      "manual-tap": 56,
+      "to-eot": 3,
+      "zone-choice": 2,
+      "use-mana": 9
+     }
+    }
+   },
+   "frames": {
+    "solo": 1079
+   },
+   "traces": {
+    "solo": "trace-g20-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g20-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 192
+  },
+  {
+   "id": 21,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106020:you)",
+    "theirs": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106020:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [
+    {
+     "game": 21,
+     "seat": "solo",
+     "kind": "coach-blank",
+     "what": "during the opponent's turn 3 the coach panel shows no advice (it had answered before)",
+     "frame": 136,
+     "seq": 139,
+     "turn": 3,
+     "phase": "CLEANUP",
+     "prompt": "Waiting for Forge AI...",
+     "ask": null,
+     "card": null,
+     "at": 54,
+     "shot": "shots/g21-solo-8-coach-blank.png"
+    }
+   ],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 126
+   },
+   "clicks": {
+    "solo": 126
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1,
+      "choose_entities": 2
+     },
+     "modes": {
+      "opening": 2,
+      "open": 3,
+      "priority": 65,
+      "pay": 47,
+      "attack": 2,
+      "block": 1,
+      "buttons": 3
+     },
+     "rare": {
+      "target-player": 3,
+      "manual-tap": 27,
+      "to-eot": 2,
+      "use-mana": 2,
+      "activate": 1,
+      "zone-choice": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 767
+   },
+   "traces": {
+    "solo": "trace-g21-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g21-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 5,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 16.7,
+      "ms": 53,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 53.9,
+      "ms": 156,
+      "turn": 4,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 62.8,
+      "ms": 172,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 81.5,
+      "ms": 64,
+      "turn": 8,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 94.2,
+      "ms": 55,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 10"
+     }
+    ],
+    "answered": 4,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1
+    },
+    "latencyMs": [
+     53,
+     156,
+     172,
+     64
+    ],
+    "stopped": 1,
+    "blankSamples": 1,
+    "oppTurnSamples": 30
+   },
+   "seconds": 131
+  },
+  {
+   "id": 22,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Boros aggro (cube:pauper#106021:you)",
+    "theirs": "pauper Azorius blink-skies (cube:pauper#106021:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 16,
+   "rounds": 8,
+   "decisions": {
+    "solo": 252
+   },
+   "clicks": {
+    "solo": 244
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 12,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 150,
+      "pay": 62,
+      "select": 22,
+      "buttons": 1,
+      "attack": 2
+     },
+     "rare": {
+      "to-eot": 4,
+      "manual-tap": 27,
+      "zone-choice": 1,
+      "activate": 1,
+      "graveyard-cast": 10
+     }
+    }
+   },
+   "frames": {
+    "solo": 1653
+   },
+   "traces": {
+    "solo": "trace-g22-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g22-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 239
+  },
+  {
+   "id": 23,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106022:you)",
+    "theirs": "synergy Boros · Tokens / go wide (cube:synergy#106022:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 14,
+   "rounds": 7,
+   "decisions": {
+    "solo": 219
+   },
+   "clicks": {
+    "solo": 220
+   },
+   "stats": {
+    "solo": {
+     "asks": {},
+     "modes": {
+      "opening": 2,
+      "priority": 107,
+      "pay": 95,
+      "select": 14,
+      "block": 1
+     },
+     "rare": {
+      "to-eot": 5,
+      "manual-tap": 45,
+      "use-mana": 4
+     }
+    }
+   },
+   "frames": {
+    "solo": 1387
+   },
+   "traces": {
+    "solo": "trace-g23-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g23-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 7,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 10.6,
+      "ms": 57,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 13.7,
+      "ms": 56,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": "net::ERR_ABORTED",
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 21.8,
+      "ms": 54,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 35.8,
+      "ms": 57,
+      "turn": 7,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 73.4,
+      "ms": 54,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 114.6,
+      "ms": 59,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 150.6,
+      "ms": 77,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     }
+    ],
+    "answered": 6,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "2": 1,
+     "4": 2,
+     "5": 1,
+     "6": 1
+    },
+    "latencyMs": [
+     57,
+     54,
+     57,
+     54,
+     59,
+     77
+    ],
+    "stopped": 1,
+    "blankSamples": 0,
+    "oppTurnSamples": 79
+   },
+   "seconds": 166
+  },
+  {
+   "id": 24,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Wakanda (Marvel Super Heroes Black Panther) (dck:decks/wakanda.dck)",
+    "theirs": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 16,
+   "rounds": 8,
+   "decisions": {
+    "solo": 139
+   },
+   "clicks": {
+    "solo": 140
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 3,
+      "open": 1,
+      "priority": 104,
+      "pay": 21,
+      "buttons": 3,
+      "select": 2,
+      "block": 3,
+      "attack": 1
+     },
+     "rare": {
+      "target-player": 1,
+      "manual-tap": 6,
+      "activate": 2,
+      "to-eot": 5,
+      "multi-block": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 985
+   },
+   "traces": {
+    "solo": "trace-g24-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g24-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 152
+  },
+  {
+   "id": 25,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Rakdos · Sacrifice midrange (cube:vintage#106024:you)",
+    "theirs": "vintage Azorius · Control (cube:vintage#106024:ai)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 27,
+   "rounds": 14,
+   "decisions": {
+    "solo": 335
+   },
+   "clicks": {
+    "solo": 325
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 8,
+      "choose_entities": 1,
+      "ability_menu": 11
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 219,
+      "pay": 81,
+      "attack": 5,
+      "buttons": 3,
+      "select": 4,
+      "block": 1
+     },
+     "rare": {
+      "manual-tap": 30,
+      "to-eot": 5,
+      "activate": 21,
+      "zone-choice": 1,
+      "ability-menu": 11,
+      "multi-block": 1,
+      "equip-attached": 10
+     }
+    }
+   },
+   "frames": {
+    "solo": 2189
+   },
+   "traces": {
+    "solo": "trace-g25-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g25-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 14,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 7,
+      "ms": 57,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 16.9,
+      "ms": 54,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 25.5,
+      "ms": 55,
+      "turn": 5,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 33,
+      "ms": 60,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 42.2,
+      "ms": 54,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 62.8,
+      "ms": 97,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 85.2,
+      "ms": 163,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     },
+     {
+      "at": 96.1,
+      "ms": 75,
+      "turn": 14,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 15"
+     },
+     {
+      "at": 124.1,
+      "ms": 81,
+      "turn": 16,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 17"
+     },
+     {
+      "at": 134.1,
+      "ms": 54,
+      "turn": 18,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 19"
+     },
+     {
+      "at": 146.5,
+      "ms": 58,
+      "turn": 20,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 21"
+     },
+     {
+      "at": 181,
+      "ms": 101,
+      "turn": 22,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 23"
+     },
+     {
+      "at": 206.4,
+      "ms": 53,
+      "turn": 25,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 25"
+     },
+     {
+      "at": 230.1,
+      "ms": 2502,
+      "turn": 26,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 27"
+     }
+    ],
+    "answered": 14,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "3": 2,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 1,
+     "10": 1,
+     "11": 1,
+     "13": 2
+    },
+    "latencyMs": [
+     57,
+     54,
+     55,
+     60,
+     54,
+     97,
+     163,
+     75,
+     81,
+     54,
+     58,
+     101,
+     53,
+     2502
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 62
+   },
+   "seconds": 252
+  },
+  {
+   "id": 26,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106025:you)",
+    "theirs": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106025:ai)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 17,
+   "rounds": 9,
+   "decisions": {
+    "solo": 231
+   },
+   "clicks": {
+    "solo": 161
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 55,
+      "ability_menu": 4,
+      "text": 6,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 132,
+      "pay": 24,
+      "block": 1,
+      "buttons": 1,
+      "select": 4,
+      "attack": 2
+     },
+     "rare": {
+      "to-eot": 6,
+      "x-spell": 26,
+      "zone-choice": 23,
+      "manual-tap": 6,
+      "activate": 17,
+      "ability-menu-cancel": 3,
+      "x-number": 6,
+      "ability-menu": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1304
+   },
+   "traces": {
+    "solo": "trace-g26-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g26-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 195
+  },
+  {
+   "id": 27,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Azorius blink-skies +R (cube:pauper#106026:you)",
+    "theirs": "pauper Orzhov · ETB / blink (cube:pauper#106026:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 15,
+   "rounds": 8,
+   "decisions": {
+    "solo": 150
+   },
+   "clicks": {
+    "solo": 151
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "order": 2,
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 95,
+      "pay": 41,
+      "attack": 5,
+      "block": 3,
+      "select": 1
+     },
+     "rare": {
+      "manual-tap": 22,
+      "trigger-order": 2,
+      "to-eot": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1042
+   },
+   "traces": {
+    "solo": "trace-g27-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g27-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 7,
+    "afterOver": 2,
+    "list": [
+     {
+      "at": 7.3,
+      "ms": 53,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 13,
+      "ms": 53,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 22.2,
+      "ms": 53,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 40.1,
+      "ms": 54,
+      "turn": 7,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 52.7,
+      "ms": 57,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 69.9,
+      "ms": 54,
+      "turn": 11,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 12"
+     },
+     {
+      "at": 92.3,
+      "ms": 151,
+      "turn": 13,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 14"
+     }
+    ],
+    "answered": 7,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1
+    },
+    "latencyMs": [
+     53,
+     53,
+     53,
+     54,
+     57,
+     54,
+     151
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 26
+   },
+   "seconds": 103
+  },
+  {
+   "id": 28,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106027:ai)",
+    "theirs": "synergy Selesnya lifegain tokens +U (cube:synergy#106027:you)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 16,
+   "rounds": 8,
+   "decisions": {
+    "solo": 195
+   },
+   "clicks": {
+    "solo": 198
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 131,
+      "pay": 47,
+      "select": 5,
+      "attack": 4,
+      "block": 4,
+      "buttons": 1
+     },
+     "rare": {
+      "manual-tap": 22,
+      "to-eot": 10,
+      "ability-menu": 1,
+      "alpha-strike": 1,
+      "activate": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 1347
+   },
+   "traces": {
+    "solo": "trace-g28-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g28-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 181
+  },
+  {
+   "id": 29,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)",
+    "theirs": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 70
+   },
+   "clicks": {
+    "solo": 76
+   },
+   "stats": {
+    "solo": {
+     "asks": {},
+     "modes": {
+      "opening": 1,
+      "priority": 55,
+      "pay": 10,
+      "block": 3,
+      "attack": 1
+     },
+     "rare": {
+      "activate": 1,
+      "manual-tap": 3
+     }
+    }
+   },
+   "frames": {
+    "solo": 536
+   },
+   "traces": {
+    "solo": "trace-g29-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g29-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 5,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 7.5,
+      "ms": 54,
+      "turn": 2,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 13.2,
+      "ms": 54,
+      "turn": 4,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 20.6,
+      "ms": 53,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 30.5,
+      "ms": 54,
+      "turn": 8,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 42.2,
+      "ms": 53,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     }
+    ],
+    "answered": 5,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1
+    },
+    "latencyMs": [
+     54,
+     54,
+     53,
+     54,
+     53
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 14
+   },
+   "seconds": 51
+  },
+  {
+   "id": 30,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Selesnya · Aggro (cube:vintage#106029:you)",
+    "theirs": "vintage Rakdos +W · Sacrifice midrange (cube:vintage#106029:ai)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 12,
+   "rounds": 6,
+   "decisions": {
+    "solo": 145
+   },
+   "clicks": {
+    "solo": 142
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 94,
+      "pay": 41,
+      "block": 1,
+      "select": 3,
+      "attack": 2,
+      "buttons": 1
+     },
+     "rare": {
+      "manual-tap": 14,
+      "to-eot": 4,
+      "equip": 7,
+      "equip-attached": 6
+     }
+    }
+   },
+   "frames": {
+    "solo": 916
+   },
+   "traces": {
+    "solo": "trace-g30-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g30-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 0,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 126
+  },
+  {
+   "id": 31,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106030:ai)",
+    "theirs": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106030:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 20,
+   "rounds": 10,
+   "decisions": {
+    "solo": 254
+   },
+   "clicks": {
+    "solo": 254
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 2,
+      "confirm": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 126,
+      "pay": 104,
+      "open": 2,
+      "select": 11,
+      "attack": 1,
+      "block": 4,
+      "buttons": 1
+     },
+     "rare": {
+      "ability-menu": 2,
+      "manual-tap": 47,
+      "target-player": 1,
+      "exile-play": 2,
+      "to-eot": 4,
+      "use-mana": 7,
+      "activate": 4
+     }
+    }
+   },
+   "frames": {
+    "solo": 1566
+   },
+   "traces": {
+    "solo": "trace-g31-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g31-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 10,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 4.3,
+      "ms": 52,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 26.3,
+      "ms": 53,
+      "turn": 3,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 47.8,
+      "ms": 53,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 64.4,
+      "ms": 53,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 94.1,
+      "ms": 53,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 102.4,
+      "ms": 52,
+      "turn": 11,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 125.7,
+      "ms": 52,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     },
+     {
+      "at": 142,
+      "ms": 52,
+      "turn": 14,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 15"
+     },
+     {
+      "at": 170.4,
+      "ms": 52,
+      "turn": 16,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 17"
+     },
+     {
+      "at": 175.8,
+      "ms": 52,
+      "turn": 18,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 19"
+     }
+    ],
+    "answered": 10,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 2,
+     "3": 1,
+     "4": 1,
+     "6": 2,
+     "7": 1,
+     "8": 1,
+     "9": 1
+    },
+    "latencyMs": [
+     52,
+     53,
+     53,
+     53,
+     53,
+     52,
+     52,
+     52,
+     52,
+     52
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 45
+   },
+   "seconds": 181
+  },
+  {
+   "id": 32,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Orzhov · Tokens / go wide (cube:pauper#106031:you)",
+    "theirs": "pauper Orzhov +R · ETB / blink (cube:pauper#106031:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 14,
+   "rounds": 7,
+   "decisions": {
+    "solo": 154
+   },
+   "clicks": {
+    "solo": 139
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 7,
+      "choose_list": 2,
+      "confirm": 3
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 104,
+      "pay": 31,
+      "select": 2,
+      "attack": 2,
+      "block": 1
+     },
+     "rare": {
+      "manual-tap": 5,
+      "activate": 16,
+      "ability-menu": 7,
+      "graveyard-cast": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 959
+   },
+   "traces": {
+    "solo": "trace-g32-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g32-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 132
+  },
+  {
+   "id": 33,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106032:you)",
+    "theirs": "synergy Orzhov · Tokens / go wide (cube:synergy#106032:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 12,
+   "rounds": 6,
+   "decisions": {
+    "solo": 164
+   },
+   "clicks": {
+    "solo": 149
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 16,
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 86,
+      "pay": 53,
+      "open": 1,
+      "buttons": 1,
+      "attack": 3,
+      "block": 1
+     },
+     "rare": {
+      "ability-menu": 14,
+      "manual-tap": 26,
+      "activate": 15,
+      "target-player": 1,
+      "ability-menu-cancel": 2,
+      "use-mana": 1,
+      "alpha-strike": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 963
+   },
+   "traces": {
+    "solo": "trace-g33-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g33-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 6,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 4.4,
+      "ms": 53,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 14,
+      "ms": 53,
+      "turn": 3,
+      "phase": "UPKEEP",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 22.4,
+      "ms": 53,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 31.1,
+      "ms": 53,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 45.7,
+      "ms": 53,
+      "turn": 9,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 71.5,
+      "ms": 53,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     }
+    ],
+    "answered": 6,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 2,
+     "3": 1,
+     "5": 2
+    },
+    "latencyMs": [
+     53,
+     53,
+     53,
+     53,
+     53,
+     53
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 26
+   },
+   "seconds": 107
+  },
+  {
+   "id": 34,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Doom Legion (Marvel Super Heroes villains) (dck:decks/doom-legion.dck)",
+    "theirs": "Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 368
+   },
+   "clicks": {
+    "solo": 348
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 12,
+      "choose_list": 1,
+      "confirm": 4
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 145,
+      "pay": 158,
+      "select": 46
+     },
+     "rare": {
+      "to-eot": 5,
+      "manual-tap": 64,
+      "activate": 11,
+      "ability-menu": 12,
+      "use-mana": 13
+     }
+    }
+   },
+   "frames": {
+    "solo": 2119
+   },
+   "traces": {
+    "solo": "trace-g34-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g34-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 324
+  },
+  {
+   "id": 35,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Azorius · Control (cube:vintage#106034:ai)",
+    "theirs": "vintage Selesnya · Aggro (cube:vintage#106034:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 15,
+   "rounds": 8,
+   "decisions": {
+    "solo": 180
+   },
+   "clicks": {
+    "solo": 174
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 6,
+      "choose_list": 1,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 111,
+      "pay": 51,
+      "select": 3,
+      "attack": 2,
+      "buttons": 1,
+      "block": 3
+     },
+     "rare": {
+      "manual-tap": 20,
+      "activate": 13,
+      "ability-menu": 5,
+      "to-eot": 3,
+      "ability-menu-cancel": 1,
+      "zone-choice": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1149
+   },
+   "traces": {
+    "solo": "trace-g35-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g35-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 7,
+    "afterOver": 2,
+    "list": [
+     {
+      "at": 4.5,
+      "ms": 53,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 23.2,
+      "ms": 53,
+      "turn": 4,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 48,
+      "ms": 53,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 62.4,
+      "ms": 52,
+      "turn": 7,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 79.1,
+      "ms": 52,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 87.6,
+      "ms": 52,
+      "turn": 11,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 12"
+     },
+     {
+      "at": 97.9,
+      "ms": 52,
+      "turn": 13,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 14"
+     }
+    ],
+    "answered": 7,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1
+    },
+    "latencyMs": [
+     53,
+     53,
+     53,
+     52,
+     52,
+     52,
+     52
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 31
+   },
+   "seconds": 115
+  },
+  {
+   "id": 36,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106035:ai)",
+    "theirs": "modern-era Boros · Aggro and equipment (cube:modern-era#106035:you)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 126
+   },
+   "clicks": {
+    "solo": 120
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 5,
+      "assign_damage": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 79,
+      "pay": 32,
+      "attack": 3,
+      "block": 2,
+      "select": 1,
+      "buttons": 1
+     },
+     "rare": {
+      "manual-tap": 17,
+      "to-eot": 2,
+      "assign_damage": 1,
+      "zone-pick": 1,
+      "alpha-strike": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 838
+   },
+   "traces": {
+    "solo": "trace-g36-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g36-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 107
+  },
+  {
+   "id": 37,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Boros aggro (cube:pauper#106036:you)",
+    "theirs": "pauper Orzhov · Tokens / go wide (cube:pauper#106036:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 15,
+   "rounds": 8,
+   "decisions": {
+    "solo": 234
+   },
+   "clicks": {
+    "solo": 227
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 16
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 122,
+      "select": 14,
+      "pay": 80,
+      "block": 1
+     },
+     "rare": {
+      "manual-tap": 27,
+      "use-mana": 14,
+      "graveyard-cast": 9,
+      "to-eot": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 1411
+   },
+   "traces": {
+    "solo": "trace-g37-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g37-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 7,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 5.7,
+      "ms": 51,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 17.4,
+      "ms": 53,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 51.5,
+      "ms": 52,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 91.2,
+      "ms": 54,
+      "turn": 8,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 154.7,
+      "ms": 53,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 167.6,
+      "ms": 53,
+      "turn": 11,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 12"
+     },
+     {
+      "at": 175.6,
+      "ms": 52,
+      "turn": 13,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 14"
+     }
+    ],
+    "answered": 7,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1
+    },
+    "latencyMs": [
+     51,
+     53,
+     52,
+     54,
+     53,
+     53,
+     52
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 54
+   },
+   "seconds": 185
+  },
+  {
+   "id": 38,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Enter-the-battlefield / blink (cube:synergy#106037:ai)",
+    "theirs": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106037:you)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 17,
+   "rounds": 9,
+   "decisions": {
+    "solo": 232
+   },
+   "clicks": {
+    "solo": 216
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1,
+      "order": 2,
+      "ability_menu": 7
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 158,
+      "pay": 58,
+      "buttons": 3,
+      "block": 1,
+      "select": 1
+     },
+     "rare": {
+      "to-eot": 6,
+      "manual-tap": 15,
+      "equip": 39,
+      "trigger-order": 1,
+      "ability-menu": 5,
+      "activate": 1,
+      "ability-menu-cancel": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 1545
+   },
+   "traces": {
+    "solo": "trace-g38-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g38-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 205
+  },
+  {
+   "id": 39,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)",
+    "theirs": "Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 13,
+   "rounds": 7,
+   "decisions": {
+    "solo": 152
+   },
+   "clicks": {
+    "solo": 143
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 15
+     },
+     "modes": {
+      "opening": 3,
+      "open": 4,
+      "priority": 78,
+      "pay": 33,
+      "block": 5,
+      "select": 12,
+      "attack": 2
+     },
+     "rare": {
+      "target-player": 4,
+      "manual-tap": 13,
+      "activate": 2,
+      "to-eot": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 980
+   },
+   "traces": {
+    "solo": "trace-g39-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g39-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 6,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 20,
+      "ms": 53,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 28.6,
+      "ms": 52,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 50,
+      "ms": 53,
+      "turn": 5,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 74,
+      "ms": 52,
+      "turn": 8,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 82.4,
+      "ms": 53,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 95,
+      "ms": 53,
+      "turn": 11,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 12"
+     }
+    ],
+    "answered": 6,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1
+    },
+    "latencyMs": [
+     53,
+     52,
+     53,
+     52,
+     53,
+     53
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 31
+   },
+   "seconds": 110
+  },
+  {
+   "id": 40,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Azorius · Control (cube:vintage#106039:you)",
+    "theirs": "vintage Boros · White aggro & equipment (cube:vintage#106039:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 12,
+   "rounds": 6,
+   "decisions": {
+    "solo": 119
+   },
+   "clicks": {
+    "solo": 117
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 84,
+      "open": 6,
+      "pay": 17,
+      "buttons": 2,
+      "attack": 3,
+      "block": 3,
+      "select": 1
+     },
+     "rare": {
+      "target-player": 5,
+      "manual-tap": 6,
+      "to-eot": 7,
+      "activate": 6
+     }
+    }
+   },
+   "frames": {
+    "solo": 829
+   },
+   "traces": {
+    "solo": "trace-g40-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g40-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 105
+  },
+  {
+   "id": 41,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106040:you)",
+    "theirs": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106040:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 12,
+   "rounds": 6,
+   "decisions": {
+    "solo": 146
+   },
+   "clicks": {
+    "solo": 146
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 3,
+      "open": 5,
+      "priority": 74,
+      "pay": 57,
+      "select": 6
+     },
+     "rare": {
+      "target-player": 5,
+      "manual-tap": 25,
+      "to-eot": 5
+     }
+    }
+   },
+   "frames": {
+    "solo": 914
+   },
+   "traces": {
+    "solo": "trace-g41-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g41-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 6,
+    "afterOver": 2,
+    "list": [
+     {
+      "at": 20.3,
+      "ms": 52,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 22.1,
+      "ms": 53,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 27.3,
+      "ms": 53,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 44.7,
+      "ms": 53,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 69.1,
+      "ms": 53,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 93.7,
+      "ms": 53,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     }
+    ],
+    "answered": 6,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1
+    },
+    "latencyMs": [
+     52,
+     53,
+     53,
+     53,
+     53,
+     53
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 18
+   },
+   "seconds": 109
+  },
+  {
+   "id": 42,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Orzhov · Sacrifice (cube:pauper#106041:you)",
+    "theirs": "pauper Boros aggro (cube:pauper#106041:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 19,
+   "rounds": 10,
+   "decisions": {
+    "solo": 265
+   },
+   "clicks": {
+    "solo": 262
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "order": 2,
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 152,
+      "pay": 76,
+      "select": 23,
+      "block": 3,
+      "attack": 4,
+      "buttons": 2
+     },
+     "rare": {
+      "manual-tap": 34,
+      "activate": 21,
+      "trigger-order": 1,
+      "to-eot": 3,
+      "use-mana": 1,
+      "zone-pick": 15,
+      "equip-attached": 2,
+      "equip": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 1704
+   },
+   "traces": {
+    "solo": "trace-g42-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g42-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 224
+  },
+  {
+   "id": 43,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Tokens / go wide (cube:synergy#106042:ai)",
+    "theirs": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106042:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 12,
+   "rounds": 6,
+   "decisions": {
+    "solo": 123
+   },
+   "clicks": {
+    "solo": 123
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 3,
+      "open": 10,
+      "priority": 63,
+      "pay": 43,
+      "buttons": 2,
+      "block": 1
+     },
+     "rare": {
+      "target-player": 10,
+      "manual-tap": 27,
+      "activate": 1,
+      "zone-choice": 1,
+      "to-eot": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 659
+   },
+   "traces": {
+    "solo": "trace-g43-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g43-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 6,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 35.1,
+      "ms": 52,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 84.9,
+      "ms": 52,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 93,
+      "ms": 54,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 99.6,
+      "ms": 54,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 111.7,
+      "ms": 52,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 119.5,
+      "ms": 52,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     }
+    ],
+    "answered": 6,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1
+    },
+    "latencyMs": [
+     52,
+     52,
+     54,
+     54,
+     52,
+     52
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 20
+   },
+   "seconds": 139
+  },
+  {
+   "id": 44,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Masters of Evil (Marvel Super Heroes villains) (dck:decks/masters-of-evil.dck)",
+    "theirs": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 13,
+   "rounds": 7,
+   "decisions": {
+    "solo": 135
+   },
+   "clicks": {
+    "solo": 134
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 80,
+      "open": 2,
+      "pay": 39,
+      "select": 9,
+      "block": 3
+     },
+     "rare": {
+      "target-player": 1,
+      "manual-tap": 17,
+      "to-eot": 3
+     }
+    }
+   },
+   "frames": {
+    "solo": 901
+   },
+   "traces": {
+    "solo": "trace-g44-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g44-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 120
+  },
+  {
+   "id": 45,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Rakdos · Sacrifice midrange (cube:vintage#106044:ai)",
+    "theirs": "vintage Azorius · Control (cube:vintage#106044:you)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 17,
+   "rounds": 9,
+   "decisions": {
+    "solo": 154
+   },
+   "clicks": {
+    "solo": 149
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 8
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 95,
+      "pay": 42,
+      "attack": 1,
+      "block": 4,
+      "select": 3
+     },
+     "rare": {
+      "manual-tap": 19,
+      "alpha-strike": 1,
+      "to-eot": 2,
+      "activate": 8,
+      "ability-menu": 8
+     }
+    }
+   },
+   "frames": {
+    "solo": 1024
+   },
+   "traces": {
+    "solo": "trace-g45-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g45-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 8,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 4.5,
+      "ms": 53,
+      "turn": 1,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 2"
+     },
+     {
+      "at": 8.2,
+      "ms": 52,
+      "turn": 3,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 4"
+     },
+     {
+      "at": 22.2,
+      "ms": 52,
+      "turn": 6,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 6"
+     },
+     {
+      "at": 32.7,
+      "ms": 53,
+      "turn": 8,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 8"
+     },
+     {
+      "at": 39.2,
+      "ms": 52,
+      "turn": 9,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 10"
+     },
+     {
+      "at": 46.1,
+      "ms": 53,
+      "turn": 11,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 12"
+     },
+     {
+      "at": 61.6,
+      "ms": 53,
+      "turn": 13,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 14"
+     },
+     {
+      "at": 81.2,
+      "ms": 53,
+      "turn": 15,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 16"
+     }
+    ],
+    "answered": 8,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1
+    },
+    "latencyMs": [
+     53,
+     52,
+     52,
+     53,
+     52,
+     53,
+     53,
+     53
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 33
+   },
+   "seconds": 99
+  },
+  {
+   "id": 46,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "modern-era Gruul · Ramp into big monsters (cube:modern-era#106045:ai)",
+    "theirs": "modern-era Selesnya · Creatures, counters, value (cube:modern-era#106045:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 13,
+   "rounds": 7,
+   "decisions": {
+    "solo": 131
+   },
+   "clicks": {
+    "solo": 122
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 6
+     },
+     "modes": {
+      "opening": 2,
+      "open": 4,
+      "priority": 76,
+      "pay": 41,
+      "select": 2
+     },
+     "rare": {
+      "target-player": 4,
+      "manual-tap": 22,
+      "ability-menu": 6,
+      "to-eot": 5,
+      "use-mana": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 759
+   },
+   "traces": {
+    "solo": "trace-g46-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g46-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 0,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 123
+  },
+  {
+   "id": 47,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "pauper Azorius blink-skies (cube:pauper#106046:you)",
+    "theirs": "pauper Orzhov · Artifacts (cube:pauper#106046:ai)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 16,
+   "rounds": 8,
+   "decisions": {
+    "solo": 159
+   },
+   "clicks": {
+    "solo": 153
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 6,
+      "ability_menu": 2
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 106,
+      "pay": 40,
+      "block": 2,
+      "attack": 1
+     },
+     "rare": {
+      "to-eot": 3,
+      "manual-tap": 22,
+      "use-mana": 4,
+      "ability-menu": 2,
+      "zone-choice": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 999
+   },
+   "traces": {
+    "solo": "trace-g47-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g47-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 8,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 4.2,
+      "ms": 53,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 7,
+      "ms": 53,
+      "turn": 3,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 12.4,
+      "ms": 53,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 21.7,
+      "ms": 54,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 41.4,
+      "ms": 53,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 60.9,
+      "ms": 52,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 71.1,
+      "ms": 52,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     },
+     {
+      "at": 86.9,
+      "ms": 53,
+      "turn": 14,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 15"
+     }
+    ],
+    "answered": 8,
+    "latencySource": "page",
+    "perRound": {
+     "1": 1,
+     "2": 2,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1
+    },
+    "latencyMs": [
+     53,
+     53,
+     53,
+     54,
+     53,
+     52,
+     52,
+     53
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 33
+   },
+   "seconds": 113
+  },
+  {
+   "id": 48,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "synergy Orzhov · Sacrifice (\"aristocrats\") (cube:synergy#106047:ai)",
+    "theirs": "synergy Orzhov · Tokens / go wide (cube:synergy#106047:you)"
+   },
+   "aiProfile": "Cautious",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 11,
+   "rounds": 6,
+   "decisions": {
+    "solo": 150
+   },
+   "clicks": {
+    "solo": 143
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "order": 2,
+      "confirm": 1,
+      "choose_entities": 1,
+      "choose_list": 1,
+      "assign_damage": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 92,
+      "pay": 44,
+      "buttons": 2,
+      "block": 2,
+      "select": 1,
+      "attack": 1
+     },
+     "rare": {
+      "manual-tap": 17,
+      "to-eot": 3,
+      "activate": 9,
+      "trigger-order": 1,
+      "zone-choice": 1,
+      "assign_damage": 1,
+      "use-mana": 1
+     }
+    }
+   },
+   "frames": {
+    "solo": 951
+   },
+   "traces": {
+    "solo": "trace-g48-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g48-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 2,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 131
+  },
+  {
+   "id": 49,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)",
+    "theirs": "Hulk Family (Marvel Super Heroes gamma) (dck:decks/hulk-family.dck)"
+   },
+   "aiProfile": "Default",
+   "findings": [],
+   "viewport": "desktop",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 14,
+   "rounds": 7,
+   "decisions": {
+    "solo": 119
+   },
+   "clicks": {
+    "solo": 119
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "choose_list": 1,
+      "confirm": 1,
+      "choose_entities": 2
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 84,
+      "pay": 20,
+      "attack": 3,
+      "block": 4,
+      "buttons": 2
+     },
+     "rare": {
+      "manual-tap": 8,
+      "activate": 17,
+      "to-eot": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 754
+   },
+   "traces": {
+    "solo": "trace-g49-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g49-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 7,
+    "afterOver": 3,
+    "list": [
+     {
+      "at": 4.6,
+      "ms": 53,
+      "turn": 1,
+      "phase": "MAIN1",
+      "stopped": null,
+      "type": "plan my turn 1"
+     },
+     {
+      "at": 8.7,
+      "ms": 52,
+      "turn": 2,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 3"
+     },
+     {
+      "at": 15.5,
+      "ms": 53,
+      "turn": 4,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 5"
+     },
+     {
+      "at": 28.1,
+      "ms": 52,
+      "turn": 6,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 7"
+     },
+     {
+      "at": 44.8,
+      "ms": 53,
+      "turn": 8,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 9"
+     },
+     {
+      "at": 57.1,
+      "ms": 53,
+      "turn": 10,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 11"
+     },
+     {
+      "at": 65.5,
+      "ms": 52,
+      "turn": 12,
+      "phase": "END_OF_TURN",
+      "stopped": null,
+      "type": "plan my turn 13"
+     }
+    ],
+    "answered": 7,
+    "latencySource": "page",
+    "perRound": {
+     "1": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1
+    },
+    "latencyMs": [
+     53,
+     52,
+     53,
+     52,
+     53,
+     53,
+     52
+    ],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 24
+   },
+   "seconds": 77
+  },
+  {
+   "id": 50,
+   "mode": "solo",
+   "seed": 106,
+   "decks": {
+    "mine": "vintage Boros · White aggro & equipment (cube:vintage#106049:ai)",
+    "theirs": "vintage Boros · White aggro & equipment (cube:vintage#106049:you)"
+   },
+   "aiProfile": "Reckless",
+   "findings": [],
+   "viewport": "phone",
+   "result": "loss",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 15,
+   "rounds": 8,
+   "decisions": {
+    "solo": 359
+   },
+   "clicks": {
+    "solo": 325
+   },
+   "stats": {
+    "solo": {
+     "asks": {
+      "ability_menu": 30,
+      "choose_list": 2
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 188,
+      "open": 15,
+      "pay": 85,
+      "select": 30,
+      "block": 2,
+      "attack": 4,
+      "buttons": 2
+     },
+     "rare": {
+      "to-eot": 11,
+      "target-player": 1,
+      "activate": 39,
+      "ability-menu": 27,
+      "manual-tap": 12,
+      "ability-menu-cancel": 3,
+      "alpha-strike": 2,
+      "equip": 2
+     }
+    }
+   },
+   "frames": {
+    "solo": 2260
+   },
+   "traces": {
+    "solo": "trace-g50-solo.jsonl"
+   },
+   "frameLogs": {
+    "solo": "frames-g50-solo.jsonl.gz"
+   },
+   "coach": {
+    "questions": 0,
+    "afterOver": 3,
+    "list": [],
+    "answered": 0,
+    "latencySource": "page",
+    "perRound": {},
+    "latencyMs": [],
+    "stopped": 0,
+    "blankSamples": 0,
+    "oppTurnSamples": 0
+   },
+   "seconds": 305
+  }
+ ],
+ "matches": [],
+ "env": {
+  "cardScripts": 10184
+ },
+ "summary": {
+  "games": 50,
+  "matches": 0,
+  "results": {
+   "loss": 46,
+   "win": 2,
+   "abandoned (time)": 2
+  },
+  "findings": 8,
+  "distinct": 2,
+  "rarePaths": {
+   "manual-tap": 1055,
+   "activate": 286,
+   "to-eot": 174,
+   "zone-choice": 66,
+   "equip": 159,
+   "equip-attached": 56,
+   "target-player": 57,
+   "trigger-order": 8,
+   "x-spell": 56,
+   "x-number": 9,
+   "zone-pick": 19,
+   "ability-menu": 135,
+   "graveyard-cast": 33,
+   "multi-block": 3,
+   "alpha-strike": 13,
+   "ability-menu-cancel": 14,
+   "assign_damage": 4,
+   "use-mana": 75,
+   "exile-play": 2
+  },
+  "coachLatencyMs": {
+   "n": 168,
+   "median": 53,
+   "p90": 73,
+   "max": 2502
+  },
+  "line": "playtest: 50 game(s); 46 loss, 2 win, 2 abandoned (time); 8 finding(s) of 2 kind(s)"
+ },
+ "finished": "2026-10-07T19:05:20.013Z"
+}

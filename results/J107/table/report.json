@@ -1,0 +1,1448 @@
+{
+ "started": "2026-10-07T19:05:31.763Z",
+ "options": {
+  "mode": "table",
+  "games": 5,
+  "seed": 106,
+  "decks": "cube",
+  "turnCap": 40,
+  "coach": "off",
+  "reload": 1,
+  "out": "/home/justin-a/code/lab/mtg-table-light/var/playtest/J107/table",
+  "headless": true,
+  "stallS": 150,
+  "gameMinutes": 75,
+  "aiProfile": null,
+  "portBase": 8862,
+  "maxShots": 150,
+  "viewport": "mixed"
+ },
+ "games": [
+  {
+   "id": "1.1",
+   "mode": "table",
+   "seed": 106,
+   "cube": "pauper",
+   "decks": {
+    "host": "Justin’s Pauper Cube deck",
+    "friend": "Sam’s Pauper Cube deck"
+   },
+   "findings": [],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 42,
+   "rounds": 21,
+   "decisions": {
+    "host": 586,
+    "friend": 748
+   },
+   "clicks": {
+    "host": 543,
+    "friend": 728
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 7,
+      "choose_list": 35
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 345,
+      "pay": 136,
+      "open": 23,
+      "select": 33,
+      "buttons": 5
+     },
+     "rare": {
+      "ability-menu-cancel": 2,
+      "target-player": 18,
+      "zone-pick": 3,
+      "ability-menu": 5,
+      "manual-tap": 8
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_list": 19,
+      "ability_menu": 6
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 376,
+      "pay": 290,
+      "buttons": 37,
+      "select": 11,
+      "attack": 8
+     },
+     "rare": {
+      "to-eot": 9,
+      "x-spell": 2,
+      "ability-menu": 5,
+      "manual-tap": 111,
+      "activate": 21,
+      "use-mana": 10,
+      "ability-menu-cancel": 1,
+      "graveyard-cast": 1
+     }
+    }
+   },
+   "frames": {
+    "host": 6564,
+    "friend": 6970
+   },
+   "traces": {
+    "host": "trace-g1.1-host.jsonl",
+    "friend": "trace-g1.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g1.1-host.jsonl.gz",
+    "friend": "frames-g1.1-friend.jsonl.gz"
+   },
+   "seconds": 1055
+  },
+  {
+   "id": "1.2",
+   "mode": "table",
+   "seed": 106,
+   "cube": "pauper",
+   "decks": {
+    "host": "Justin’s Pauper Cube deck",
+    "friend": "Sam’s Pauper Cube deck (sideboarded)"
+   },
+   "findings": [
+    {
+     "game": "1.2",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "button cancel \"Cancel\" (pay: \"Rally the Peasants (77) - Creatures you control get +2/+0 until end of turn.\")",
+     "frame": 7542,
+     "seq": 7544,
+     "turn": 51,
+     "phase": "MAIN1",
+     "prompt": "Rally the Peasants (77) - Creatures you control get +2/+0 until end of turn.\n\nPay Mana Cost: {2}{R}",
+     "ask": null,
+     "card": null,
+     "ui": {
+      "board": "mode-stack",
+      "primary": "Let it resolveOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 1287,
+     "shot": "shots/g1.2-friend-1-unreachable-option.png"
+    },
+    {
+     "game": "1.2",
+     "seat": "friend",
+     "kind": "control-not-clickable",
+     "what": "spell: Rolling Thunder",
+     "why": "locator.click: Timeout 6000ms exceeded.",
+     "frame": 9716,
+     "seq": 9718,
+     "turn": 59,
+     "phase": "MAIN1",
+     "prompt": "Lone Missionary - Creature 2 / 1\n\nPay Mana Cost: {1}{W}",
+     "ask": null,
+     "card": null,
+     "at": 1695,
+     "shot": "shots/g1.2-friend-2-control-not-clickable.png"
+    }
+   ],
+   "result": "host won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 70,
+   "rounds": 35,
+   "decisions": {
+    "host": 1347,
+    "friend": 1294
+   },
+   "clicks": {
+    "host": 1332,
+    "friend": 1262
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 9,
+      "choose_list": 37
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 646,
+      "pay": 447,
+      "buttons": 107,
+      "select": 86,
+      "open": 1,
+      "attack": 9,
+      "block": 3
+     },
+     "rare": {
+      "manual-tap": 169,
+      "ability-menu": 7,
+      "to-eot": 12,
+      "ability-menu-cancel": 2,
+      "zone-pick": 7,
+      "target-player": 1,
+      "graveyard-cast": 9,
+      "activate": 59,
+      "use-mana": 17,
+      "alpha-strike": 1,
+      "equip": 2,
+      "equip-attached": 25
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 26,
+      "choose_list": 45,
+      "text": 2,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 2,
+      "open": 7,
+      "priority": 609,
+      "pay": 437,
+      "buttons": 90,
+      "select": 66,
+      "block": 3,
+      "attack": 6
+     },
+     "rare": {
+      "target-player": 6,
+      "ability-menu": 23,
+      "manual-tap": 119,
+      "ability-menu-cancel": 3,
+      "activate": 36,
+      "to-eot": 15,
+      "graveyard-cast": 52,
+      "x-spell": 21,
+      "x-number": 2,
+      "use-mana": 17,
+      "zone-choice": 1
+     }
+    }
+   },
+   "frames": {
+    "host": 13253,
+    "friend": 12729
+   },
+   "traces": {
+    "host": "trace-g1.2-host.jsonl",
+    "friend": "trace-g1.2-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g1.2-host.jsonl.gz",
+    "friend": "frames-g1.2-friend.jsonl.gz"
+   },
+   "seconds": 2386
+  },
+  {
+   "id": "1.3",
+   "mode": "table",
+   "seed": 106,
+   "cube": "pauper",
+   "decks": {
+    "host": "Justin’s Pauper Cube deck",
+    "friend": "Sam’s Pauper Cube deck (sideboarded) (sideboarded)"
+   },
+   "findings": [],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 28,
+   "rounds": 14,
+   "decisions": {
+    "host": 581,
+    "friend": 585
+   },
+   "clicks": {
+    "host": 520,
+    "friend": 557
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_list": 50,
+      "ability_menu": 17
+     },
+     "modes": {
+      "opening": 2,
+      "open": 19,
+      "priority": 267,
+      "pay": 158,
+      "select": 68
+     },
+     "rare": {
+      "target-player": 14,
+      "ability-menu": 17,
+      "zone-pick": 7,
+      "to-eot": 7,
+      "graveyard-cast": 4
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 22,
+      "choose_list": 3
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 262,
+      "pay": 261,
+      "buttons": 15,
+      "select": 14,
+      "attack": 6
+     },
+     "rare": {
+      "ability-menu": 21,
+      "to-eot": 9,
+      "manual-tap": 113,
+      "activate": 55,
+      "ability-menu-cancel": 1,
+      "use-mana": 2,
+      "x-spell": 1
+     }
+    }
+   },
+   "frames": {
+    "host": 5933,
+    "friend": 5480
+   },
+   "traces": {
+    "host": "trace-g1.3-host.jsonl",
+    "friend": "trace-g1.3-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g1.3-host.jsonl.gz",
+    "friend": "frames-g1.3-friend.jsonl.gz"
+   },
+   "seconds": 964
+  },
+  {
+   "id": "2.1",
+   "mode": "table",
+   "seed": 106,
+   "cube": "synergy",
+   "decks": {
+    "host": "Justin’s Synergy Cube deck",
+    "friend": "Sam’s Synergy Cube deck"
+   },
+   "findings": [
+    {
+     "game": "2.1",
+     "seat": "host",
+     "kind": "unreachable-option",
+     "what": "button ok \"OK\" (priority: \"Priority: Justin\")",
+     "frame": 518,
+     "seq": 520,
+     "turn": 5,
+     "phase": "MAIN2",
+     "prompt": "Priority: Justin\nTurn: 5 (Justin)\nPhase: Main phase, postcombat\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "ui": {
+      "board": "mode-pay is-selecting",
+      "primary": "Autotap a card first (disabled)",
+      "dialog": false,
+      "card": []
+     },
+     "at": 78,
+     "shot": "shots/g2.1-host-3-unreachable-option.png"
+    },
+    {
+     "game": "2.1",
+     "seat": "host",
+     "kind": "abandoned",
+     "what": "the game was left without an end (time) at turn 17",
+     "frame": 2387,
+     "seq": 2389,
+     "turn": 17,
+     "phase": "MAIN1",
+     "prompt": "Blood Artist (30) - Whenever Blood Artist or another creature dies, target player loses 1 life and you gain 1 life. [Zone Changer: Blood Artist (30)]\n\nSelect target player",
+     "ask": null,
+     "card": null,
+     "at": 4500,
+     "shot": "shots/g2.1-host-4-abandoned.png"
+    }
+   ],
+   "result": "abandoned (time)",
+   "reason": null,
+   "capped": false,
+   "turns": 17,
+   "rounds": 9,
+   "decisions": {
+    "host": 265,
+    "friend": 179
+   },
+   "clicks": {
+    "host": 241,
+    "friend": 173
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_entities": 1,
+      "ability_menu": 28,
+      "choose_list": 1,
+      "order": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 130,
+      "pay": 74,
+      "buttons": 6,
+      "attack": 4,
+      "select": 18
+     },
+     "rare": {
+      "to-eot": 2,
+      "activate": 24,
+      "zone-choice": 1,
+      "manual-tap": 26,
+      "ability-menu": 25,
+      "ability-menu-cancel": 3,
+      "trigger-order": 1
+     }
+    },
+    "friend": {
+     "asks": {},
+     "modes": {
+      "opening": 1,
+      "priority": 117,
+      "pay": 52,
+      "select": 9
+     },
+     "rare": {
+      "to-eot": 7
+     }
+    }
+   },
+   "frames": {
+    "host": 2387,
+    "friend": 2155
+   },
+   "traces": {
+    "host": "trace-g2.1-host.jsonl",
+    "friend": "trace-g2.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g2.1-host.jsonl.gz",
+    "friend": "frames-g2.1-friend.jsonl.gz"
+   },
+   "seconds": 4501
+  },
+  {
+   "id": "3.1",
+   "mode": "table",
+   "seed": 106,
+   "cube": "vintage",
+   "decks": {
+    "host": "Justin’s Vintage Cube deck",
+    "friend": "Sam’s Vintage Cube deck"
+   },
+   "findings": [
+    {
+     "game": "3.1",
+     "seat": "host",
+     "kind": "unreachable-option",
+     "what": "button ok \"OK\" (attack: \"Select creatures to attack Sam or select player/card you wish to attack.\")",
+     "frame": 2502,
+     "seq": 2504,
+     "turn": 17,
+     "phase": "COMBAT_DECLARE_ATTACKERS",
+     "prompt": "Select creatures to attack Sam or select player/card you wish to attack.",
+     "ask": null,
+     "card": null,
+     "ui": {
+      "board": "mode-attack is-selecting",
+      "primary": "Confirm attacksOKSpace",
+      "dialog": false,
+      "card": []
+     },
+     "at": 528,
+     "shot": "shots/g3.1-host-5-unreachable-option.png"
+    },
+    {
+     "game": "3.1",
+     "seat": "host",
+     "kind": "unreachable-option",
+     "what": "button cancel \"Alpha Strike\" (attack: \"Select creatures to attack Sam or select player/card you wish to attack.\")",
+     "frame": 2502,
+     "seq": 2504,
+     "turn": 17,
+     "phase": "COMBAT_DECLARE_ATTACKERS",
+     "prompt": "Select creatures to attack Sam or select player/card you wish to attack.",
+     "ask": null,
+     "card": null,
+     "ui": {
+      "board": "mode-attack is-selecting",
+      "primary": "Confirm attacksOKSpace",
+      "dialog": false,
+      "card": []
+     },
+     "at": 529,
+     "shot": "shots/g3.1-host-6-unreachable-option.png"
+    },
+    {
+     "game": "3.1",
+     "seat": "host",
+     "kind": "unreachable-option",
+     "what": "attacker Thieving Skydiver (27) has no clickable tile",
+     "frame": 2502,
+     "seq": 2504,
+     "turn": 17,
+     "phase": "COMBAT_DECLARE_ATTACKERS",
+     "prompt": "Select creatures to attack Sam or select player/card you wish to attack.",
+     "ask": null,
+     "card": {
+      "id": 27
+     },
+     "ui": {
+      "board": "mode-attack is-selecting",
+      "primary": "Confirm attacksOKSpace",
+      "dialog": false,
+      "card": [
+       {
+        "where": "tile",
+        "mark": "act",
+        "w": 114,
+        "h": 159,
+        "opacity": "1",
+        "hidden": false
+       }
+      ]
+     },
+     "at": 529,
+     "shot": "shots/g3.1-host-7-unreachable-option.png"
+    },
+    {
+     "game": "3.1",
+     "seat": "host",
+     "kind": "unreachable-option",
+     "what": "ask ability_menu \"\": no dialog on screen",
+     "frame": 4108,
+     "seq": 4110,
+     "turn": 29,
+     "phase": "MAIN1",
+     "prompt": "Knight of the Reliquary - Creature 2 / 2\n\nPay Mana Cost: {1}{W}{G}",
+     "ask": {
+      "kind": "ability_menu",
+      "askId": "a115",
+      "prompt": null,
+      "options": [
+       "{T}: Add {W}.",
+       "{T}: Add {U}."
+      ]
+     },
+     "card": null,
+     "ui": {
+      "board": "mode-ask",
+      "primary": "Answer the question (disabled)",
+      "dialog": true,
+      "card": []
+     },
+     "at": 849,
+     "shot": "shots/g3.1-host-8-unreachable-option.png"
+    },
+    {
+     "game": "3.1",
+     "seat": "host",
+     "kind": "click-no-act",
+     "what": "instant: Counterspell: a click on a marked card sent no clickCard",
+     "frame": 4472,
+     "seq": 4474,
+     "turn": 31,
+     "phase": "COMBAT_DECLARE_ATTACKERS",
+     "prompt": "Waiting for Sam...",
+     "ask": null,
+     "card": {
+      "id": 9
+     },
+     "at": 963,
+     "shot": "shots/g3.1-host-9-click-no-act.png"
+    }
+   ],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 33,
+   "rounds": 17,
+   "decisions": {
+    "host": 611,
+    "friend": 518
+   },
+   "clicks": {
+    "host": 475,
+    "friend": 436
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 97,
+      "choose_list": 34,
+      "choose_entities": 1,
+      "order": 2
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 240,
+      "open": 23,
+      "pay": 181,
+      "buttons": 2,
+      "select": 27,
+      "attack": 2
+     },
+     "rare": {
+      "target-player": 17,
+      "manual-tap": 100,
+      "ability-menu": 90,
+      "activate": 2,
+      "zone-choice": 1,
+      "to-eot": 5,
+      "ability-menu-cancel": 6,
+      "use-mana": 13,
+      "trigger-order": 2
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_list": 9,
+      "choose_entities": 1,
+      "ability_menu": 63
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 226,
+      "pay": 201,
+      "select": 11,
+      "buttons": 5,
+      "open": 1
+     },
+     "rare": {
+      "manual-tap": 94,
+      "activate": 4,
+      "zone-choice": 2,
+      "ability-menu": 59,
+      "to-eot": 1,
+      "ability-menu-cancel": 4,
+      "use-mana": 2
+     }
+    }
+   },
+   "frames": {
+    "host": 4893,
+    "friend": 4463
+   },
+   "traces": {
+    "host": "trace-g3.1-host.jsonl",
+    "friend": "trace-g3.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g3.1-host.jsonl.gz",
+    "friend": "frames-g3.1-friend.jsonl.gz"
+   },
+   "seconds": 1100
+  },
+  {
+   "id": "3.2",
+   "mode": "table",
+   "seed": 106,
+   "cube": "vintage",
+   "decks": {
+    "host": "Justin’s Vintage Cube deck",
+    "friend": "Sam’s Vintage Cube deck (sideboarded)"
+   },
+   "findings": [
+    {
+     "game": "3.2",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "button ok \"OK\" (priority: \"Priority: Sam\")",
+     "frame": 1950,
+     "seq": 1952,
+     "turn": 17,
+     "phase": "MAIN2",
+     "prompt": "Priority: Sam\nTurn: 17 (Sam)\nPhase: Main phase, postcombat\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "ui": {
+      "board": "mode-pay is-selecting",
+      "primary": "Autotap a card first (disabled)",
+      "dialog": false,
+      "card": []
+     },
+     "at": 530,
+     "shot": "shots/g3.2-friend-10-unreachable-option.png"
+    },
+    {
+     "game": "3.2",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "button cancel \"Cancel\" (pay: \"Toxic Deluge (59) - All creatures get -X/-X until end of turn.\")",
+     "frame": 2534,
+     "seq": 2536,
+     "turn": 21,
+     "phase": "MAIN2",
+     "prompt": "Toxic Deluge (59) - All creatures get -X/-X until end of turn.\n\nPay Mana Cost: {2}{B}",
+     "ask": null,
+     "card": null,
+     "ui": {
+      "board": "mode-main",
+      "primary": "End turnOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 651,
+     "shot": "shots/g3.2-friend-11-unreachable-option.png"
+    }
+   ],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 32,
+   "rounds": 16,
+   "decisions": {
+    "host": 474,
+    "friend": 605
+   },
+   "clicks": {
+    "host": 437,
+    "friend": 473
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_entities": 1,
+      "ability_menu": 2,
+      "choose_list": 34
+     },
+     "modes": {
+      "opening": 3,
+      "open": 42,
+      "priority": 259,
+      "pay": 108,
+      "buttons": 2,
+      "select": 23
+     },
+     "rare": {
+      "target-player": 29,
+      "manual-tap": 18,
+      "activate": 9,
+      "zone-choice": 1,
+      "ability-menu": 2,
+      "to-eot": 4,
+      "zone-pick": 7,
+      "equip": 20
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_list": 20,
+      "ability_menu": 103,
+      "choose_entities": 3,
+      "order": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 195,
+      "pay": 251,
+      "buttons": 7,
+      "select": 16,
+      "open": 8
+     },
+     "rare": {
+      "manual-tap": 166,
+      "ability-menu": 90,
+      "activate": 4,
+      "zone-choice": 3,
+      "ability-menu-cancel": 13,
+      "to-eot": 7,
+      "trigger-order": 1,
+      "target-player": 3
+     }
+    }
+   },
+   "frames": {
+    "host": 4430,
+    "friend": 4073
+   },
+   "traces": {
+    "host": "trace-g3.2-host.jsonl",
+    "friend": "trace-g3.2-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g3.2-host.jsonl.gz",
+    "friend": "frames-g3.2-friend.jsonl.gz"
+   },
+   "seconds": 1114
+  },
+  {
+   "id": "4.1",
+   "mode": "table",
+   "seed": 106,
+   "cube": "modern-era",
+   "decks": {
+    "host": "Justin’s Modern-Era Cube deck",
+    "friend": "Sam’s Modern-Era Cube deck"
+   },
+   "findings": [
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Seasoned Pyromancer (54, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 54,
+      "name": "Seasoned Pyromancer",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 906,
+     "shot": "shots/g4.1-friend-12-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Vampire Nighthawk (81, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 81,
+      "name": "Vampire Nighthawk",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 906,
+     "shot": "shots/g4.1-friend-13-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Lightning Helix (83, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 83,
+      "name": "Lightning Helix",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 907,
+     "shot": "shots/g4.1-friend-14-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Oko, Thief of Crowns (50, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 50,
+      "name": "Oko, Thief of Crowns",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 907,
+     "shot": "shots/g4.1-friend-15-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Portable Hole (82, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 82,
+      "name": "Portable Hole",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 907,
+     "shot": "shots/g4.1-friend-16-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Courser of Kruphix (98, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 98,
+      "name": "Courser of Kruphix",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 907,
+     "shot": "shots/g4.1-friend-17-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Heartless Act (62, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 62,
+      "name": "Heartless Act",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 907,
+     "shot": "shots/g4.1-friend-18-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Kitesail Freebooter (90, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 5988,
+     "seq": 5987,
+     "turn": 40,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 40 (Sam)\nPhase: Main phase, precombat\nStack: Empty",
+     "ask": null,
+     "card": {
+      "id": 90,
+      "name": "Kitesail Freebooter",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-main",
+      "primary": "Go to combatOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 908,
+     "shot": "shots/g4.1-friend-19-unreachable-option.png"
+    },
+    {
+     "game": "4.1",
+     "seat": "host",
+     "kind": "click-no-act",
+     "what": "ok \"Go to combatOKSpace\" sent no buttonOk",
+     "frame": 7953,
+     "seq": 7955,
+     "turn": 53,
+     "phase": "MAIN1",
+     "prompt": "Garruk Wildspeaker\n\nPay Mana Cost: {2}{G}{G}",
+     "ask": null,
+     "card": null,
+     "at": 1267,
+     "shot": "shots/g4.1-host-20-click-no-act.png"
+    }
+   ],
+   "result": "host won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 55,
+   "rounds": 28,
+   "decisions": {
+    "host": 885,
+    "friend": 874
+   },
+   "clicks": {
+    "host": 861,
+    "friend": 811
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 20,
+      "choose_list": 19
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 364,
+      "pay": 401,
+      "select": 51,
+      "open": 15,
+      "attack": 12,
+      "buttons": 2
+     },
+     "rare": {
+      "ability-menu-cancel": 1,
+      "to-eot": 8,
+      "ability-menu": 19,
+      "manual-tap": 167,
+      "target-player": 5,
+      "use-mana": 30,
+      "alpha-strike": 1,
+      "activate": 13
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 4,
+      "choose_list": 41
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 425,
+      "pay": 322,
+      "select": 79,
+      "open": 1
+     },
+     "rare": {
+      "to-eot": 12,
+      "zone-pick": 7,
+      "ability-menu-cancel": 2,
+      "ability-menu": 2,
+      "manual-tap": 77
+     }
+    }
+   },
+   "frames": {
+    "host": 8540,
+    "friend": 8756
+   },
+   "traces": {
+    "host": "trace-g4.1-host.jsonl",
+    "friend": "trace-g4.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g4.1-host.jsonl.gz",
+    "friend": "frames-g4.1-friend.jsonl.gz"
+   },
+   "seconds": 1428
+  },
+  {
+   "id": "4.2",
+   "mode": "table",
+   "seed": 106,
+   "cube": "modern-era",
+   "decks": {
+    "host": "Justin’s Modern-Era Cube deck",
+    "friend": "Sam’s Modern-Era Cube deck (sideboarded)"
+   },
+   "findings": [],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 23,
+   "rounds": 12,
+   "decisions": {
+    "host": 456,
+    "friend": 514
+   },
+   "clicks": {
+    "host": 444,
+    "friend": 436
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 4,
+      "choose_list": 7
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 169,
+      "pay": 225,
+      "select": 48,
+      "open": 1,
+      "block": 1
+     },
+     "rare": {
+      "to-eot": 2,
+      "ability-menu": 4,
+      "manual-tap": 122,
+      "use-mana": 18,
+      "activate": 4
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 64,
+      "choose_list": 25,
+      "text": 1
+     },
+     "modes": {
+      "opening": 3,
+      "open": 3,
+      "priority": 161,
+      "pay": 202,
+      "buttons": 2,
+      "select": 46,
+      "attack": 7
+     },
+     "rare": {
+      "target-player": 3,
+      "ability-menu": 60,
+      "to-eot": 5,
+      "manual-tap": 98,
+      "ability-menu-cancel": 4,
+      "alpha-strike": 1,
+      "use-mana": 24,
+      "x-spell": 3,
+      "exile-play": 1,
+      "x-number": 1,
+      "activate": 16,
+      "zone-pick": 2
+     }
+    }
+   },
+   "frames": {
+    "host": 3876,
+    "friend": 3915
+   },
+   "traces": {
+    "host": "trace-g4.2-host.jsonl",
+    "friend": "trace-g4.2-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g4.2-host.jsonl.gz",
+    "friend": "frames-g4.2-friend.jsonl.gz"
+   },
+   "seconds": 943
+  },
+  {
+   "id": "4.3",
+   "mode": "table",
+   "seed": 106,
+   "cube": "modern-era",
+   "decks": {
+    "host": "Justin’s Modern-Era Cube deck",
+    "friend": "Sam’s Modern-Era Cube deck (sideboarded) (sideboarded)"
+   },
+   "findings": [],
+   "result": "host won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 29,
+   "rounds": 15,
+   "decisions": {
+    "host": 374,
+    "friend": 473
+   },
+   "clicks": {
+    "host": 368,
+    "friend": 454
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 13
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 177,
+      "pay": 127,
+      "select": 44,
+      "buttons": 1,
+      "attack": 9,
+      "open": 1
+     },
+     "rare": {
+      "ability-menu": 12,
+      "manual-tap": 55,
+      "to-eot": 3,
+      "use-mana": 15,
+      "ability-menu-cancel": 1,
+      "activate": 21,
+      "alpha-strike": 1
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_list": 7,
+      "ability_menu": 11
+     },
+     "modes": {
+      "opening": 2,
+      "open": 4,
+      "priority": 264,
+      "pay": 158,
+      "select": 27
+     },
+     "rare": {
+      "target-player": 4,
+      "x-spell": 7,
+      "to-eot": 8,
+      "ability-menu": 11,
+      "graveyard-cast": 7
+     }
+    }
+   },
+   "frames": {
+    "host": 4170,
+    "friend": 4667
+   },
+   "traces": {
+    "host": "trace-g4.3-host.jsonl",
+    "friend": "trace-g4.3-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g4.3-host.jsonl.gz",
+    "friend": "frames-g4.3-friend.jsonl.gz"
+   },
+   "seconds": 758
+  },
+  {
+   "id": "5.1",
+   "mode": "table",
+   "seed": 106,
+   "cube": "pauper",
+   "decks": {
+    "host": "Justin’s Pauper Cube deck",
+    "friend": "Sam’s Pauper Cube deck"
+   },
+   "findings": [
+    {
+     "game": "5.1",
+     "seat": "friend",
+     "kind": "unreachable-option",
+     "what": "Exclude (55, hand): spell — no clickable control at \"Priority: Sam\" (MAIN1)",
+     "frame": 3363,
+     "seq": 3362,
+     "turn": 27,
+     "phase": "MAIN1",
+     "prompt": "Priority: Sam\nTurn: 27 (Sam)\nPhase: Main phase, precombat\nStack: 1 to Resolve.",
+     "ask": null,
+     "card": {
+      "id": 55,
+      "name": "Exclude",
+      "zone": "hand",
+      "attachedToId": null
+     },
+     "ui": {
+      "board": "mode-stack",
+      "primary": "Let it resolveOK",
+      "dialog": false,
+      "card": []
+     },
+     "at": 560,
+     "shot": "shots/g5.1-friend-21-unreachable-option.png"
+    }
+   ],
+   "result": "host won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 30,
+   "rounds": 15,
+   "decisions": {
+    "host": 603,
+    "friend": 268
+   },
+   "clicks": {
+    "host": 604,
+    "friend": 252
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_list": 8
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 242,
+      "pay": 203,
+      "buttons": 81,
+      "select": 58,
+      "attack": 9
+     },
+     "rare": {
+      "manual-tap": 85,
+      "to-eot": 6,
+      "alpha-strike": 2,
+      "activate": 7,
+      "zone-pick": 7
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 3,
+      "choose_list": 9
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 185,
+      "pay": 47,
+      "select": 21,
+      "open": 2
+     },
+     "rare": {
+      "ability-menu": 3,
+      "x-spell": 6,
+      "to-eot": 9
+     }
+    }
+   },
+   "frames": {
+    "host": 5620,
+    "friend": 3780
+   },
+   "traces": {
+    "host": "trace-g5.1-host.jsonl",
+    "friend": "trace-g5.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g5.1-host.jsonl.gz",
+    "friend": "frames-g5.1-friend.jsonl.gz"
+   },
+   "seconds": 651
+  }
+ ],
+ "matches": [
+  {
+   "id": 1,
+   "cube": "pauper",
+   "result": "friend won 2 – 1",
+   "games": [
+    "1.1",
+    "1.2",
+    "1.3"
+   ],
+   "findings": []
+  },
+  {
+   "id": 2,
+   "cube": "synergy",
+   "result": "abandoned",
+   "games": [
+    "2.1"
+   ],
+   "findings": []
+  },
+  {
+   "id": 3,
+   "cube": "vintage",
+   "result": "friend won 2 – 0",
+   "games": [
+    "3.1",
+    "3.2"
+   ],
+   "findings": []
+  },
+  {
+   "id": 4,
+   "cube": "modern-era",
+   "result": "host won 2 – 1",
+   "games": [
+    "4.1",
+    "4.2",
+    "4.3"
+   ],
+   "findings": []
+  }
+ ],
+ "env": {
+  "cardScripts": 10184
+ },
+ "summary": {
+  "games": 10,
+  "matches": 4,
+  "results": {
+   "friend won": 5,
+   "host won": 4,
+   "abandoned (time)": 1
+  },
+  "findings": 21,
+  "distinct": 19,
+  "rarePaths": {
+   "ability-menu-cancel": 43,
+   "target-player": 100,
+   "zone-pick": 40,
+   "ability-menu": 455,
+   "manual-tap": 1528,
+   "to-eot": 131,
+   "x-spell": 40,
+   "activate": 275,
+   "use-mana": 148,
+   "graveyard-cast": 73,
+   "alpha-strike": 6,
+   "equip": 22,
+   "equip-attached": 25,
+   "x-number": 3,
+   "zone-choice": 9,
+   "trigger-order": 4,
+   "exile-play": 1
+  },
+  "coachLatencyMs": null,
+  "line": "playtest: 10 game(s), 4 best-of-three(s); 5 friend won, 4 host won, 1 abandoned (time); 21 finding(s) of 19 kind(s); ERROR"
+ },
+ "error": "stopped by SIGTERM",
+ "finished": "2026-10-07T23:26:35.971Z"
+}
