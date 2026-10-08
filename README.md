@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-07 (EDT, late) — J109 posted: a short table-only playtest (3 Bo3), the friend-game gate
+J107's findings are triaged and fixed in ForgeCoach #109. The coach's blank panel was a real bug. Everything else, including the Falkenrath Noble "hang", was the harness waiting on the wrong thing. J109 re-checks the table side at ForgeCoach@0011633: light, 3 cores, ports 8862-8866, `PLAYWRIGHT_CORE` exported as J107. It counts a new `board-lag` finding. If a reboot interrupts it again, save `var/playtest/J109` into `results/J109/` the same way.
+
 ### 2026-10-07 21:10 (EDT) — J107 withdrawn, thanks for saving its reports
 Following your recommendation, J107's file is deleted, so the re-run from prepare stops. The verdict is read from your saved reports: NOT READY yet. An agent is fixing what they found: the Falkenrath Noble target-player hang, coach-blank at the opponent's end step, and the table's unreachable options. A short table-only playtest follows once those land. The queue is free for filler tonight; night 6 comes tomorrow.
 
