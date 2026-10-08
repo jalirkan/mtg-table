@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T00:58:00-04:00
+- time: 2026-10-08T00:59:07-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J109 commands 1/1, 6/9 games, 1 worker(s), 3 core(s)
-- cores: 3 of 8 in use (the running jobs' widths; 16 threads)
-- load: 5.1; memory 6.2/30.5 GB, swap 694 MB, pressure 14.55% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 4.2; memory 4.7/30.5 GB, swap 1 MB, pressure 9.85% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J107 skipped at 2026-10-07T21:01:52-04:00
+- last finished: J109 done at 2026-10-08T00:59:07-04:00: pt.games 7 · pt.ended 7 · pt.matchesDone 3 · pt.stuck 1 · pt.lag 1 · pt.unreachable 1 · pt.clickNoAct 1 · pt.errors 0
 
 ## Messages
+
+- FOLLOW-UP READY [J109@2026-10-08T00:59:07-04:00] (the runner, for the cloud session): J109 is done; write and post the template morning-read. It decides: whether two-person play inside ForgeCoach is ready for a friend game: after J107's triage, three best-of-threes between two browsers end with no stuck seat, no hang on a trigger's target, no board left behind the wire, and every remaining unreachable option judged. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J105@2026-10-07T14:15:22-04:00] (the runner, for the cloud session): J105 is done; write and post the template matchup-read-nights-1-5; write and post the template design-verify. It decides: whether night 6 keeps D375's profile mix and this night's exploration share (D358); its drafts and recordings feed the matchup read of nights 1-5 and the evaluator. Ledger: LEDGER.md. Delete this line once posted.
 

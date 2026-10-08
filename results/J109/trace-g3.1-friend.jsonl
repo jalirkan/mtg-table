@@ -1,0 +1,270 @@
+{"t":1791431627338,"turn":0,"phase":null,"active":false,"frame":11,"what":"Sam, you are going first!","ms":3889,"r":"opening","did":"Keep 7 1"}
+{"t":1791431631458,"turn":1,"phase":"MAIN1","active":true,"frame":21,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Ulvenwald Mysteries"}
+{"t":1791431632370,"turn":1,"phase":"MAIN1","active":true,"frame":28,"what":"Ulvenwald Mysteries","ms":585,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431633110,"turn":1,"phase":"MAIN1","active":true,"frame":36,"what":"Priority: Sam","ms":475,"r":"priority:card:land","did":"land: Verdant Catacombs"}
+{"t":1791431633739,"turn":1,"phase":"MAIN1","active":true,"frame":44,"what":"Priority: Sam","ms":463,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791431634635,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2844,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431637632,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431640632,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431643631,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2849,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431646635,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2842,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431649631,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431652632,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431655635,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2844,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431658632,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431661631,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431664632,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431667631,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2848,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431670631,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2848,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431673632,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431676630,"turn":1,"phase":"MAIN1","active":true,"frame":52,"what":"Experimental Synthesizer","ms":590,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431677374,"turn":1,"phase":"MAIN1","active":true,"frame":60,"what":"Priority: Sam","ms":596,"r":"priority:card:spell","did":"spell: Marionette Master"}
+{"t":1791431678402,"turn":1,"phase":"MAIN1","active":true,"frame":69,"what":"Marionette Master - Creature 1 / 3","ms":2842,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431681398,"turn":1,"phase":"MAIN1","active":true,"frame":69,"what":"Marionette Master - Creature 1 / 3","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431684398,"turn":1,"phase":"MAIN1","active":true,"frame":69,"what":"Marionette Master - Creature 1 / 3","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431687400,"turn":1,"phase":"MAIN1","active":true,"frame":69,"what":"Marionette Master - Creature 1 / 3","ms":2845,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431690398,"turn":1,"phase":"MAIN1","active":true,"frame":69,"what":"Marionette Master - Creature 1 / 3","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431693398,"turn":1,"phase":"MAIN1","active":true,"frame":69,"what":"Marionette Master - Creature 1 / 3","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431694020,"turn":1,"phase":"MAIN1","active":true,"frame":77,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791431694935,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2842,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431697931,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2845,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431700930,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431703931,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431706930,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431709934,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2844,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431712931,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2844,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431715928,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431718932,"turn":1,"phase":"MAIN1","active":true,"frame":85,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431719551,"turn":1,"phase":"MAIN1","active":true,"frame":93,"what":"Priority: Sam","ms":825,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791431722091,"turn":1,"phase":"MAIN2","active":true,"frame":116,"what":"Priority: Sam","ms":1472,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791431724000,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2843,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431726998,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431729998,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2844,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431732998,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2843,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431735996,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431738996,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2845,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431741997,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2843,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431744994,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2848,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431747996,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":2845,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431750998,"turn":1,"phase":"MAIN2","active":true,"frame":124,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431751617,"turn":1,"phase":"MAIN2","active":true,"frame":132,"what":"Priority: Sam","ms":945,"r":"priority:eot","did":"To EOT"}
+{"t":1791431759799,"turn":2,"phase":"COMBAT_BEGIN","active":false,"frame":179,"what":"Priority: Sam","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431760419,"turn":2,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":187,"what":"Priority: Sam","ms":596,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431773547,"turn":2,"phase":"END_OF_TURN","active":false,"frame":235,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791431775303,"turn":2,"phase":"END_OF_TURN","active":false,"frame":235,"what":"Priority: Sam","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431775932,"turn":3,"phase":"MAIN1","active":true,"frame":243,"what":"Priority: Sam","ms":466,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791431776832,"turn":3,"phase":"MAIN1","active":true,"frame":251,"what":"Ichor Wellspring","ms":2840,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431779826,"turn":3,"phase":"MAIN1","active":true,"frame":251,"what":"Ichor Wellspring","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431782827,"turn":3,"phase":"MAIN1","active":true,"frame":251,"what":"Ichor Wellspring","ms":2846,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431785827,"turn":3,"phase":"MAIN1","active":true,"frame":251,"what":"Ichor Wellspring","ms":2847,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431788828,"turn":3,"phase":"MAIN1","active":true,"frame":251,"what":"Ichor Wellspring","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431789452,"turn":3,"phase":"MAIN1","active":true,"frame":259,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791431791209,"turn":3,"phase":"MAIN1","active":true,"frame":259,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Ulvenwald Mysteries"}
+{"t":1791431792115,"turn":3,"phase":"MAIN1","active":true,"frame":267,"what":"Ulvenwald Mysteries","ms":2843,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431795113,"turn":3,"phase":"MAIN1","active":true,"frame":267,"what":"Ulvenwald Mysteries","ms":2842,"r":"pay:tap","did":"tap Verdant Catacombs for mana"}
+{"t":1791431798110,"turn":3,"phase":"MAIN1","active":true,"frame":267,"what":"Ulvenwald Mysteries","ms":589,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431798853,"turn":3,"phase":"MAIN1","active":true,"frame":275,"what":"Priority: Sam","ms":597,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791431799897,"turn":3,"phase":"MAIN1","active":true,"frame":284,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431800638,"turn":3,"phase":"MAIN1","active":true,"frame":292,"what":"Priority: Sam","ms":476,"r":"priority:card:ability (ability)","did":"ability (ability): Verdant Catacombs"}
+{"t":1791431801548,"turn":3,"phase":"MAIN1","active":true,"frame":297,"what":"Do you want to pay 1 life?","ms":465,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791431803114,"turn":3,"phase":"MAIN1","active":true,"frame":304,"what":"Priority: Sam","ms":467,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791431803733,"turn":3,"phase":"MAIN1","active":true,"frame":307,"what":"Priority: Sam","ms":6332,"r":"stuck","did":"ok \"Let it resolveOK\""}
+{"t":1791431811717,"turn":3,"phase":"MAIN1","active":true,"frame":316,"what":"ask choose_entities: Select a card from your library","ms":499,"r":"ask:choose_entities","did":null}
+{"t":1791431812666,"turn":3,"phase":"MAIN1","active":true,"frame":321,"what":"Do you want to pay 2 life?","ms":586,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791431813406,"turn":3,"phase":"MAIN1","active":true,"frame":328,"what":"Priority: Sam","ms":473,"r":"priority:card:spell","did":"spell: Marionette Master"}
+{"t":1791431814315,"turn":3,"phase":"MAIN1","active":true,"frame":336,"what":"Marionette Master - Creature 1 / 3","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431814813,"turn":3,"phase":"MAIN1","active":true,"frame":337,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431815630,"turn":3,"phase":"MAIN1","active":true,"frame":341,"what":"Marionette Master - Creature 1 / 3","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431816370,"turn":3,"phase":"MAIN1","active":true,"frame":348,"what":"Priority: Sam","ms":465,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791431817267,"turn":3,"phase":"MAIN1","active":true,"frame":356,"what":"Scute Swarm - Creature 1 / 1","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431817766,"turn":3,"phase":"MAIN1","active":true,"frame":357,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791431818584,"turn":3,"phase":"MAIN1","active":true,"frame":361,"what":"Scute Swarm - Creature 1 / 1","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431819325,"turn":3,"phase":"MAIN1","active":true,"frame":368,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791431820235,"turn":3,"phase":"MAIN1","active":true,"frame":376,"what":"Experimental Synthesizer","ms":344,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431820732,"turn":3,"phase":"MAIN1","active":true,"frame":377,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431821765,"turn":3,"phase":"MAIN1","active":true,"frame":381,"what":"Experimental Synthesizer","ms":462,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431822381,"turn":3,"phase":"MAIN1","active":true,"frame":388,"what":"Priority: Sam","ms":601,"r":"priority:card:spell","did":"spell: Intangible Virtue"}
+{"t":1791431823413,"turn":3,"phase":"MAIN1","active":true,"frame":396,"what":"Intangible Virtue","ms":344,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431823911,"turn":3,"phase":"MAIN1","active":true,"frame":397,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431824731,"turn":3,"phase":"MAIN1","active":true,"frame":401,"what":"Intangible Virtue","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431825349,"turn":3,"phase":"MAIN1","active":true,"frame":408,"what":"Priority: Sam","ms":826,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791431830219,"turn":3,"phase":"MAIN2","active":true,"frame":438,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791431831130,"turn":3,"phase":"MAIN2","active":true,"frame":445,"what":"Scute Swarm - Creature 1 / 1","ms":377,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431833985,"turn":3,"phase":"MAIN2","active":true,"frame":446,"what":"ask ability_menu: ","ms":383,"r":"ask:ability_menu","did":null}
+{"t":1791431834813,"turn":3,"phase":"MAIN2","active":true,"frame":450,"what":"Scute Swarm - Creature 1 / 1","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431835431,"turn":3,"phase":"MAIN2","active":true,"frame":457,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Intangible Virtue"}
+{"t":1791431836329,"turn":3,"phase":"MAIN2","active":true,"frame":465,"what":"Intangible Virtue","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431836829,"turn":3,"phase":"MAIN2","active":true,"frame":466,"what":"ask ability_menu: ","ms":491,"r":"ask:ability_menu","did":null}
+{"t":1791431837762,"turn":3,"phase":"MAIN2","active":true,"frame":470,"what":"Intangible Virtue","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431838381,"turn":3,"phase":"MAIN2","active":true,"frame":477,"what":"Priority: Sam","ms":465,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791431839279,"turn":3,"phase":"MAIN2","active":true,"frame":485,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431839777,"turn":3,"phase":"MAIN2","active":true,"frame":486,"what":"ask ability_menu: ","ms":374,"r":"ask:ability_menu","did":null}
+{"t":1791431840596,"turn":3,"phase":"MAIN2","active":true,"frame":490,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431841217,"turn":3,"phase":"MAIN2","active":true,"frame":497,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791431842129,"turn":3,"phase":"MAIN2","active":true,"frame":505,"what":"Experimental Synthesizer","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431842627,"turn":3,"phase":"MAIN2","active":true,"frame":506,"what":"ask ability_menu: ","ms":493,"r":"ask:ability_menu","did":null}
+{"t":1791431843563,"turn":3,"phase":"MAIN2","active":true,"frame":510,"what":"Experimental Synthesizer","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431844182,"turn":3,"phase":"MAIN2","active":true,"frame":517,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791431845095,"turn":3,"phase":"MAIN2","active":true,"frame":525,"what":"Ichor Wellspring","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431845597,"turn":3,"phase":"MAIN2","active":true,"frame":526,"what":"ask ability_menu: ","ms":490,"r":"ask:ability_menu","did":null}
+{"t":1791431846528,"turn":3,"phase":"MAIN2","active":true,"frame":530,"what":"Ichor Wellspring","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431847148,"turn":3,"phase":"MAIN2","active":true,"frame":537,"what":"Priority: Sam","ms":463,"r":"priority:card:spell","did":"spell: Marionette Master"}
+{"t":1791431848046,"turn":3,"phase":"MAIN2","active":true,"frame":545,"what":"Marionette Master - Creature 1 / 3","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431848543,"turn":3,"phase":"MAIN2","active":true,"frame":546,"what":"ask ability_menu: ","ms":374,"r":"ask:ability_menu","did":null}
+{"t":1791431849362,"turn":3,"phase":"MAIN2","active":true,"frame":550,"what":"Marionette Master - Creature 1 / 3","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431849982,"turn":3,"phase":"MAIN2","active":true,"frame":557,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Ulvenwald Mysteries"}
+{"t":1791431850898,"turn":3,"phase":"MAIN2","active":true,"frame":565,"what":"Ulvenwald Mysteries","ms":343,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431851393,"turn":3,"phase":"MAIN2","active":true,"frame":566,"what":"ask ability_menu: ","ms":377,"r":"ask:ability_menu","did":null}
+{"t":1791431852212,"turn":3,"phase":"MAIN2","active":true,"frame":570,"what":"Ulvenwald Mysteries","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431852830,"turn":3,"phase":"MAIN2","active":true,"frame":577,"what":"Priority: Sam","ms":583,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791431860180,"turn":4,"phase":"COMBAT_BEGIN","active":false,"frame":603,"what":"Priority: Sam","ms":464,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431860801,"turn":4,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":611,"what":"Priority: Sam","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431861430,"turn":4,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":613,"what":"Priority: Sam","ms":104,"r":"stuck","did":null}
+{"t":1791431867628,"turn":4,"phase":"END_OF_TURN","active":false,"frame":643,"what":"Priority: Sam","ms":827,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431868609,"turn":5,"phase":"MAIN1","active":true,"frame":654,"what":"Priority: Sam","ms":469,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791431869511,"turn":5,"phase":"MAIN1","active":true,"frame":662,"what":"Deep Forest Hermit - Creature 1 / 1","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431870009,"turn":5,"phase":"MAIN1","active":true,"frame":663,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431870828,"turn":5,"phase":"MAIN1","active":true,"frame":667,"what":"Deep Forest Hermit - Creature 1 / 1","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431871447,"turn":5,"phase":"MAIN1","active":true,"frame":674,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791431872345,"turn":5,"phase":"MAIN1","active":true,"frame":682,"what":"Scute Swarm - Creature 1 / 1","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431872843,"turn":5,"phase":"MAIN1","active":true,"frame":683,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791431873661,"turn":5,"phase":"MAIN1","active":true,"frame":687,"what":"Scute Swarm - Creature 1 / 1","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431874401,"turn":5,"phase":"MAIN1","active":true,"frame":694,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Intangible Virtue"}
+{"t":1791431875312,"turn":5,"phase":"MAIN1","active":true,"frame":702,"what":"Intangible Virtue","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431875931,"turn":5,"phase":"MAIN1","active":true,"frame":710,"what":"Priority: Sam","ms":839,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791431879695,"turn":5,"phase":"MAIN2","active":true,"frame":734,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Intangible Virtue"}
+{"t":1791431880595,"turn":5,"phase":"MAIN2","active":true,"frame":741,"what":"Intangible Virtue","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431881091,"turn":5,"phase":"MAIN2","active":true,"frame":742,"what":"ask ability_menu: ","ms":1732,"r":"ask:ability_menu","did":null}
+{"t":1791431883261,"turn":5,"phase":"MAIN2","active":true,"frame":742,"what":"Intangible Virtue","ms":522,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431883936,"turn":5,"phase":"MAIN2","active":true,"frame":743,"what":"ask ability_menu: ","ms":499,"r":"ask:ability_menu","did":null}
+{"t":1791431884879,"turn":5,"phase":"MAIN2","active":true,"frame":747,"what":"Intangible Virtue","ms":463,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431885496,"turn":5,"phase":"MAIN2","active":true,"frame":754,"what":"Priority: Sam","ms":466,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791431886394,"turn":5,"phase":"MAIN2","active":true,"frame":762,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431886892,"turn":5,"phase":"MAIN2","active":true,"frame":763,"what":"ask ability_menu: ","ms":495,"r":"ask:ability_menu","did":null}
+{"t":1791431887828,"turn":5,"phase":"MAIN2","active":true,"frame":767,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":584,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431888569,"turn":5,"phase":"MAIN2","active":true,"frame":774,"what":"Priority: Sam","ms":594,"r":"priority:card:spell","did":"spell: Marionette Master"}
+{"t":1791431889594,"turn":5,"phase":"MAIN2","active":true,"frame":782,"what":"Marionette Master - Creature 1 / 3","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431890091,"turn":5,"phase":"MAIN2","active":true,"frame":783,"what":"ask ability_menu: ","ms":497,"r":"ask:ability_menu","did":null}
+{"t":1791431891027,"turn":5,"phase":"MAIN2","active":true,"frame":787,"what":"Marionette Master - Creature 1 / 3","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431891647,"turn":5,"phase":"MAIN2","active":true,"frame":794,"what":"Priority: Sam","ms":465,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791431892544,"turn":5,"phase":"MAIN2","active":true,"frame":802,"what":"Scute Swarm - Creature 1 / 1","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431893043,"turn":5,"phase":"MAIN2","active":true,"frame":803,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791431893862,"turn":5,"phase":"MAIN2","active":true,"frame":807,"what":"Scute Swarm - Creature 1 / 1","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431894496,"turn":5,"phase":"MAIN2","active":true,"frame":814,"what":"Priority: Sam","ms":463,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791431895395,"turn":5,"phase":"MAIN2","active":true,"frame":822,"what":"Deep Forest Hermit - Creature 1 / 1","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431895892,"turn":5,"phase":"MAIN2","active":true,"frame":823,"what":"ask ability_menu: ","ms":495,"r":"ask:ability_menu","did":null}
+{"t":1791431896828,"turn":5,"phase":"MAIN2","active":true,"frame":827,"what":"Deep Forest Hermit - Creature 1 / 1","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431897449,"turn":5,"phase":"MAIN2","active":true,"frame":834,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791431898361,"turn":5,"phase":"MAIN2","active":true,"frame":842,"what":"Ichor Wellspring","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431898858,"turn":5,"phase":"MAIN2","active":true,"frame":843,"what":"ask ability_menu: ","ms":496,"r":"ask:ability_menu","did":null}
+{"t":1791431899793,"turn":5,"phase":"MAIN2","active":true,"frame":847,"what":"Ichor Wellspring","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431900411,"turn":5,"phase":"MAIN2","active":true,"frame":854,"what":"Priority: Sam","ms":464,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791431901310,"turn":5,"phase":"END_OF_TURN","active":true,"frame":860,"what":"Waiting for Justin...","ms":389,"r":"moved-on","did":null}
+{"t":1791431903988,"turn":5,"phase":"CLEANUP","active":true,"frame":873,"what":"Cleanup Phase","ms":592,"r":"select:done","did":"choose Experimental Synthesizer"}
+{"t":1791431915026,"turn":6,"phase":"COMBAT_BEGIN","active":false,"frame":909,"what":"Priority: Sam","ms":466,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431915645,"turn":6,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":917,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791431917402,"turn":6,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":917,"what":"Priority: Sam","ms":833,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431918676,"turn":6,"phase":"END_OF_TURN","active":false,"frame":929,"what":"Priority: Sam","ms":585,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431923714,"turn":7,"phase":"MAIN1","active":true,"frame":945,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Intangible Virtue"}
+{"t":1791431924643,"turn":7,"phase":"MAIN1","active":true,"frame":953,"what":"Intangible Virtue","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431925141,"turn":7,"phase":"MAIN1","active":true,"frame":954,"what":"ask ability_menu: ","ms":495,"r":"ask:ability_menu","did":null}
+{"t":1791431926077,"turn":7,"phase":"MAIN1","active":true,"frame":958,"what":"Intangible Virtue","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431926697,"turn":7,"phase":"MAIN1","active":true,"frame":965,"what":"Priority: Sam","ms":599,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791431927684,"turn":7,"phase":"MAIN2","active":true,"frame":979,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Intangible Virtue"}
+{"t":1791431928592,"turn":7,"phase":"MAIN2","active":true,"frame":986,"what":"Intangible Virtue","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431929091,"turn":7,"phase":"MAIN2","active":true,"frame":987,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791431929910,"turn":7,"phase":"MAIN2","active":true,"frame":991,"what":"Intangible Virtue","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431930530,"turn":7,"phase":"MAIN2","active":true,"frame":998,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791431931442,"turn":7,"phase":"MAIN2","active":true,"frame":1006,"what":"Ponder (54) - Look at the top 3 cards of Sam's library. Then put them back in any order.You may have that player shuffle their library. Sam draws a card.","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431931940,"turn":7,"phase":"MAIN2","active":true,"frame":1007,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431932759,"turn":7,"phase":"MAIN2","active":true,"frame":1011,"what":"Ponder (54) - Look at the top 3 cards of Sam's library. Then put them back in any order.You may have that player shuffle their library. Sam draws a card.","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431933380,"turn":7,"phase":"MAIN2","active":true,"frame":1018,"what":"Priority: Sam","ms":598,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791431934425,"turn":7,"phase":"MAIN2","active":true,"frame":1026,"what":"Scute Swarm - Creature 1 / 1","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431934924,"turn":7,"phase":"MAIN2","active":true,"frame":1027,"what":"ask ability_menu: ","ms":494,"r":"ask:ability_menu","did":null}
+{"t":1791431935858,"turn":7,"phase":"MAIN2","active":true,"frame":1031,"what":"Scute Swarm - Creature 1 / 1","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431936481,"turn":7,"phase":"MAIN2","active":true,"frame":1038,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791431937392,"turn":7,"phase":"MAIN2","active":true,"frame":1046,"what":"Ichor Wellspring","ms":345,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431937890,"turn":7,"phase":"MAIN2","active":true,"frame":1047,"what":"ask ability_menu: ","ms":495,"r":"ask:ability_menu","did":null}
+{"t":1791431938826,"turn":7,"phase":"MAIN2","active":true,"frame":1051,"what":"Ichor Wellspring","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431939445,"turn":7,"phase":"MAIN2","active":true,"frame":1058,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791431940358,"turn":7,"phase":"MAIN2","active":true,"frame":1066,"what":"Deep Forest Hermit - Creature 1 / 1","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431940857,"turn":7,"phase":"MAIN2","active":true,"frame":1067,"what":"ask ability_menu: ","ms":496,"r":"ask:ability_menu","did":null}
+{"t":1791431941792,"turn":7,"phase":"MAIN2","active":true,"frame":1071,"what":"Deep Forest Hermit - Creature 1 / 1","ms":585,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431942536,"turn":7,"phase":"MAIN2","active":true,"frame":1078,"what":"Priority: Sam","ms":592,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791431943574,"turn":7,"phase":"MAIN2","active":true,"frame":1086,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431944314,"turn":7,"phase":"MAIN2","active":true,"frame":1094,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Marionette Master"}
+{"t":1791431945224,"turn":7,"phase":"MAIN2","active":true,"frame":1102,"what":"Marionette Master - Creature 1 / 3","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431945722,"turn":7,"phase":"MAIN2","active":true,"frame":1103,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431946542,"turn":7,"phase":"MAIN2","active":true,"frame":1107,"what":"Marionette Master - Creature 1 / 3","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431947283,"turn":7,"phase":"MAIN2","active":true,"frame":1114,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Ulvenwald Mysteries"}
+{"t":1791431948192,"turn":7,"phase":"MAIN2","active":true,"frame":1122,"what":"Ulvenwald Mysteries","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431948690,"turn":7,"phase":"MAIN2","active":true,"frame":1123,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431949508,"turn":7,"phase":"MAIN2","active":true,"frame":1127,"what":"Ulvenwald Mysteries","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431950248,"turn":7,"phase":"MAIN2","active":true,"frame":1134,"what":"Priority: Sam","ms":597,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791431950998,"turn":7,"phase":"CLEANUP","active":true,"frame":1143,"what":"Cleanup Phase","ms":596,"r":"select:done","did":"choose Marionette Master"}
+{"t":1791431976357,"turn":8,"phase":"COMBAT_BEGIN","active":false,"frame":1221,"what":"Priority: Sam","ms":468,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431976979,"turn":8,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1229,"what":"Priority: Sam","ms":598,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431991288,"turn":8,"phase":"END_OF_TURN","active":false,"frame":1275,"what":"Priority: Sam","ms":828,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791431992270,"turn":9,"phase":"MAIN1","active":true,"frame":1286,"what":"Priority: Sam","ms":472,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791431993172,"turn":9,"phase":"MAIN1","active":true,"frame":1294,"what":"Ichor Wellspring","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431993671,"turn":9,"phase":"MAIN1","active":true,"frame":1295,"what":"ask ability_menu: ","ms":377,"r":"ask:ability_menu","did":null}
+{"t":1791431994490,"turn":9,"phase":"MAIN1","active":true,"frame":1299,"what":"Ichor Wellspring","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431995111,"turn":9,"phase":"MAIN1","active":true,"frame":1306,"what":"Priority: Sam","ms":599,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791431996156,"turn":9,"phase":"MAIN1","active":true,"frame":1314,"what":"Deep Forest Hermit - Creature 1 / 1","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431996656,"turn":9,"phase":"MAIN1","active":true,"frame":1315,"what":"ask ability_menu: ","ms":1729,"r":"ask:ability_menu","did":null}
+{"t":1791431998823,"turn":9,"phase":"MAIN1","active":true,"frame":1315,"what":"Deep Forest Hermit - Creature 1 / 1","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791431999321,"turn":9,"phase":"MAIN1","active":true,"frame":1316,"what":"ask ability_menu: ","ms":376,"r":"ask:ability_menu","did":null}
+{"t":1791432000140,"turn":9,"phase":"MAIN1","active":true,"frame":1320,"what":"Deep Forest Hermit - Creature 1 / 1","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432000880,"turn":9,"phase":"MAIN1","active":true,"frame":1327,"what":"Priority: Sam","ms":597,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791432001924,"turn":9,"phase":"MAIN1","active":true,"frame":1335,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432002424,"turn":9,"phase":"MAIN1","active":true,"frame":1336,"what":"ask ability_menu: ","ms":493,"r":"ask:ability_menu","did":null}
+{"t":1791432003356,"turn":9,"phase":"MAIN1","active":true,"frame":1340,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432003978,"turn":9,"phase":"MAIN1","active":true,"frame":1347,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791432004890,"turn":9,"phase":"MAIN1","active":true,"frame":1355,"what":"Eternal Witness - Creature 2 / 1","ms":346,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432005389,"turn":9,"phase":"MAIN1","active":true,"frame":1356,"what":"ask ability_menu: ","ms":493,"r":"ask:ability_menu","did":null}
+{"t":1791432006324,"turn":9,"phase":"MAIN1","active":true,"frame":1360,"what":"Eternal Witness - Creature 2 / 1","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432006942,"turn":9,"phase":"MAIN1","active":true,"frame":1367,"what":"Priority: Sam","ms":585,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791432013113,"turn":9,"phase":"MAIN2","active":true,"frame":1398,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791432014021,"turn":9,"phase":"MAIN2","active":true,"frame":1405,"what":"Ichor Wellspring","ms":349,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432014526,"turn":9,"phase":"MAIN2","active":true,"frame":1406,"what":"ask ability_menu: ","ms":490,"r":"ask:ability_menu","did":null}
+{"t":1791432015455,"turn":9,"phase":"MAIN2","active":true,"frame":1410,"what":"Ichor Wellspring","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432016195,"turn":9,"phase":"MAIN2","active":true,"frame":1417,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791432017105,"turn":9,"phase":"MAIN2","active":true,"frame":1425,"what":"Ponder (54) - Look at the top 3 cards of Sam's library. Then put them back in any order.You may have that player shuffle their library. Sam draws a card.","ms":348,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432017604,"turn":9,"phase":"MAIN2","active":true,"frame":1426,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791432018422,"turn":9,"phase":"MAIN2","active":true,"frame":1430,"what":"Ponder (54) - Look at the top 3 cards of Sam's library. Then put them back in any order.You may have that player shuffle their library. Sam draws a card.","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432019164,"turn":9,"phase":"MAIN2","active":true,"frame":1437,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Ulvenwald Mysteries"}
+{"t":1791432020071,"turn":9,"phase":"MAIN2","active":true,"frame":1445,"what":"Ulvenwald Mysteries","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432020571,"turn":9,"phase":"MAIN2","active":true,"frame":1446,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791432021387,"turn":9,"phase":"MAIN2","active":true,"frame":1450,"what":"Ulvenwald Mysteries","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432022127,"turn":9,"phase":"MAIN2","active":true,"frame":1457,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791432023054,"turn":9,"phase":"MAIN2","active":true,"frame":1465,"what":"Deep Forest Hermit - Creature 1 / 1","ms":348,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432023557,"turn":9,"phase":"MAIN2","active":true,"frame":1466,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791432024371,"turn":9,"phase":"MAIN2","active":true,"frame":1470,"what":"Deep Forest Hermit - Creature 1 / 1","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432024993,"turn":9,"phase":"MAIN2","active":true,"frame":1477,"what":"Priority: Sam","ms":600,"r":"priority:card:spell","did":"spell: Titania, Protector of Argoth"}
+{"t":1791432026037,"turn":9,"phase":"MAIN2","active":true,"frame":1485,"what":"Titania, Protector of Argoth - Creature 5 / 3","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432026657,"turn":9,"phase":"MAIN2","active":true,"frame":1493,"what":"Priority: Sam","ms":466,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791432027554,"turn":9,"phase":"MAIN2","active":true,"frame":1501,"what":"Eternal Witness - Creature 2 / 1","ms":349,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432028055,"turn":9,"phase":"MAIN2","active":true,"frame":1502,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791432028872,"turn":9,"phase":"MAIN2","active":true,"frame":1506,"what":"Eternal Witness - Creature 2 / 1","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432029492,"turn":9,"phase":"MAIN2","active":true,"frame":1513,"what":"Priority: Sam","ms":823,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791432032620,"turn":9,"phase":"CLEANUP","active":true,"frame":1532,"what":"Cleanup Phase","ms":590,"r":"select:done","did":"choose Ichor Wellspring"}
+{"t":1791432043653,"turn":10,"phase":"COMBAT_BEGIN","active":false,"frame":1579,"what":"Priority: Sam","ms":468,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791432044273,"turn":10,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1587,"what":"Priority: Sam","ms":825,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791432047638,"turn":10,"phase":"END_OF_TURN","active":false,"frame":1606,"what":"Priority: Sam","ms":826,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791432048618,"turn":11,"phase":"MAIN1","active":true,"frame":1617,"what":"Priority: Sam","ms":470,"r":"priority:card:spell","did":"spell: Ulvenwald Mysteries"}
+{"t":1791432049520,"turn":11,"phase":"MAIN1","active":true,"frame":1625,"what":"Ulvenwald Mysteries","ms":348,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432050021,"turn":11,"phase":"MAIN1","active":true,"frame":1626,"what":"ask ability_menu: ","ms":374,"r":"ask:ability_menu","did":null}
+{"t":1791432050837,"turn":11,"phase":"MAIN1","active":true,"frame":1630,"what":"Ulvenwald Mysteries","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432051457,"turn":11,"phase":"MAIN1","active":true,"frame":1637,"what":"Priority: Sam","ms":604,"r":"priority:card:spell","did":"spell: Intangible Virtue"}
+{"t":1791432052504,"turn":11,"phase":"MAIN1","active":true,"frame":1645,"what":"Intangible Virtue","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432053245,"turn":11,"phase":"MAIN1","active":true,"frame":1653,"what":"Priority: Sam","ms":598,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791432054287,"turn":11,"phase":"MAIN1","active":true,"frame":1661,"what":"Deep Forest Hermit - Creature 1 / 1","ms":347,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791432054787,"turn":11,"phase":"MAIN1","active":true,"frame":1662,"what":"ask ability_menu: ","ms":495,"r":"ask:ability_menu","did":null}
+{"t":1791432055721,"turn":11,"phase":"MAIN1","active":true,"frame":1666,"what":"Deep Forest Hermit - Creature 1 / 1","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432056341,"turn":11,"phase":"MAIN1","active":true,"frame":1673,"what":"Priority: Sam","ms":841,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791432061494,"turn":11,"phase":"MAIN2","active":true,"frame":1704,"what":"Priority: Sam","ms":596,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791432062290,"turn":11,"phase":"CLEANUP","active":true,"frame":1715,"what":"Cleanup Phase","ms":602,"r":"select:done","did":"choose Scute Swarm"}
+{"t":1791432082486,"turn":12,"phase":"COMBAT_BEGIN","active":false,"frame":1793,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791432084242,"turn":12,"phase":"COMBAT_BEGIN","active":false,"frame":1793,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791432085999,"turn":12,"phase":"COMBAT_BEGIN","active":false,"frame":1793,"what":"Priority: Sam","ms":104,"r":"stuck","did":null}
+{"t":1791432087756,"turn":12,"phase":"COMBAT_BEGIN","active":false,"frame":1793,"what":"Priority: Sam","ms":104,"r":"stuck","did":null}

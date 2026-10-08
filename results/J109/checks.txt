@@ -1,0 +1,3 @@
+PASS  pt.games >= 6   [pt.games = 7]
+PASS  pt.matches == 3   [pt.matches = 3]
+PASS  pt.harness <= 1   [pt.harness = 0]

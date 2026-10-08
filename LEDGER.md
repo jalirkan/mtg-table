@@ -479,3 +479,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - headline: n1.members 40003, n2.members 40003, n1.hot 3302358295, n1.archive 563555595, n2.hot 3362639807, n2.archive 564817166, before.rootFreeGb 42.4, after.rootFreeGb 49.34
 - summary: results/J108/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 503c602
+
+## J109 DONE: ForgeCoach table playtest, short: three best-of-three matches between two browsers (the friend on a phone), every move a click on the real board, after the J107 triage (ForgeCoach #109)
+
+- finished: 2026-10-08T00:59:07-04:00
+- decides: whether two-person play inside ForgeCoach is ready for a friend game: after J107's triage, three best-of-threes between two browsers end with no stuck seat, no hang on a trigger's target, no board left behind the wire, and every remaining unreachable option judged
+- hypothesis: J107's table findings were the harness (a board read a moment early, a click as the question changed, a phone hand re-folded) and its three hangs were the harness waiting on a "Select target player" with both buttons off (ForgeCoach #109, reproduced on the fake engine and real Forge). With the harness fixed, three table best-of-threes complete with zero stuck, no-progress, board-lag and unreachable-option findings
+- rule: written before the run. READY if all three best-of-threes complete (a match winner in the room), every table game reaches a real end (win, loss or draw; a game past the turn cap is not one), and the counts of stuck / no-progress / ask-not-answered, board-lag, hidden-info, stack or combat mismatch, log-incomplete, page or console error and harness-error findings are all 0. Unreachable-option and click-no-act findings do not block READY by themselves: each is listed with its shot and frame and judged in the summary (a play no click can make is a bug; a monkey miss is not). Otherwise NOT READY, with each failing kind triaged
+- outcome: done
+- headline: pt.games 7, pt.ended 7, pt.matchesDone 3, pt.stuck 1, pt.lag 1, pt.unreachable 1, pt.clickNoAct 1, pt.errors 0
+- summary: results/J109/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 59a0ced, ForgeCoach 0011633
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

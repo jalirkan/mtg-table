@@ -1,0 +1,47 @@
+==== J109 run1 started 2026-10-07T21:44:12-04:00 in unit lab-J109-run1, 1 worker(s), 3 core(s), BLAS/OpenMP threads 3
+
+> forgecoach@0.1.0 playtest
+> node --experimental-transform-types --no-warnings e2e/playtest/run.mjs --mode table --games 3 --seed 109 --decks cube --viewport mixed --stall-s 150 --port-base 8862 --max-shots 150 --out /home/justin-a/code/lab/mtg-table-light/var/playtest/J109/table
+
+[playtest 0s] building ForgeCoach (FORGECOACH_BASE=./)
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[playtest 2s] starting /home/justin-a/code/lab/mtg-table-light/scripts/play.sh --engine-only --port 8862 --coach-port 8863 --no-auto-review --draft-room --site-dir /tmp/forgecoach-playtest-3MSReo/site --room-port 8864 --table-port 8866
+[playtest 28s] match 1: a modern-era grid draft between two browsers
+[playtest 33s] match 1 game 1
+[playtest 98s]   friend reloaded at turn 5: log 5 → 5 turns
+[playtest 1230s] match 1 game 1: friend won (AllOpponentsLost) in 49 turns, 0 finding(s)
+[playtest 1236s] match 1 game 2
+[playtest 1389s]   host reloaded at turn 7: log 7 → 7 turns
+[playtest 3095s]   FINDING friend: stack-mismatch — the stack holds 1 but no stack panel shows
+[playtest 3631s]   FINDING host: control-not-clickable — spell: Play with Fire (locator.click: Timeout 6000ms exceeded.)
+[playtest 3703s] match 1 game 2: friend won (AllOpponentsLost) in 68 turns, 2 finding(s)
+[playtest 3706s] match 1: friend won 2 – 0
+[playtest 3706s] match 2: a pauper grid draft between two browsers
+[playtest 3714s] match 2 game 1
+[playtest 3804s]   friend reloaded at turn 6: log 6 → 6 turns
+[playtest 4027s]   FINDING host: unreachable-option — a target with nothing named: no player or card offered to click — "Cleanup Phase"
+[playtest 5394s] match 2 game 1: host won (AllOpponentsLost) in 77 turns, 1 finding(s)
+[playtest 5405s] match 2 game 2
+[playtest 5523s]   host reloaded at turn 5: log 5 → 5 turns
+[playtest 7760s] match 2 game 2: host won (AllOpponentsLost) in 40 turns, 0 finding(s)
+[playtest 7767s] match 2: host won 2 – 0
+[playtest 7768s] match 3: a synergy grid draft between two browsers
+[playtest 7771s] match 3 game 1
+[playtest 8071s]   friend reloaded at turn 7: log 7 → 7 turns
+[playtest 8236s]   FINDING friend: stuck — the engine waits on this seat and the board offers nothing that moves it ("Priority: Sam")
+[playtest 8241s] match 3 game 1: host won (AllOpponentsLost) in 12 turns, 1 finding(s)
+[playtest 8248s] match 3 game 2
+[playtest 8384s]   host reloaded at turn 7: log 7 → 7 turns
+[playtest 9115s]   FINDING host: board-lag — the board still drew input seq 4167 3000 ms after the wire's 4175 ("Priority: Justin")
+[playtest 9486s] match 3 game 2: friend won (AllOpponentsLost) in 43 turns, 1 finding(s)
+[playtest 9493s] match 3 game 3
+[playtest 9663s]   host reloaded at turn 7: log 7 → 7 turns
+[playtest 11685s] match 3 game 3: friend won (AllOpponentsLost) in 56 turns, 0 finding(s)
+[playtest 11688s] match 3: friend won 2 – 1
+
+playtest: 7 game(s), 3 best-of-three(s); 4 friend won, 3 host won; 5 finding(s) of 5 kind(s)
+report: /home/justin-a/code/lab/mtg-table-light/var/playtest/J109/table/report.md

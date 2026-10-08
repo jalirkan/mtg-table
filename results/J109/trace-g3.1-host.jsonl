@@ -1,0 +1,229 @@
+{"t":1791431623698,"turn":0,"phase":null,"active":false,"frame":4,"what":"Justin, you have won the coin toss.","ms":590,"r":"opening","did":"Draw 2Go second, draw on your first turn"}
+{"t":1791431631063,"turn":0,"phase":null,"active":false,"frame":14,"what":"Sam is going first.","ms":592,"r":"opening","did":"Keep 7 1"}
+{"t":1791431719889,"turn":1,"phase":"COMBAT_BEGIN","active":false,"frame":53,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791431720526,"turn":1,"phase":"COMBAT_BEGIN","active":false,"frame":60,"what":"Snapcaster Mage - Creature 2 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431721155,"turn":1,"phase":"COMBAT_BEGIN","active":false,"frame":68,"what":"Priority: Justin","ms":477,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431721786,"turn":1,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":76,"what":"Priority: Justin","ms":1516,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431751953,"turn":1,"phase":"END_OF_TURN","active":false,"frame":95,"what":"Priority: Justin","ms":478,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431752584,"turn":2,"phase":"MAIN1","active":true,"frame":102,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791431753221,"turn":2,"phase":"MAIN1","active":true,"frame":110,"what":"Snapcaster Mage - Creature 2 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431753853,"turn":2,"phase":"MAIN1","active":true,"frame":118,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Saheeli, Sublime Artificer"}
+{"t":1791431754608,"turn":2,"phase":"MAIN1","active":true,"frame":126,"what":"Saheeli, Sublime Artificer","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431755236,"turn":2,"phase":"MAIN1","active":true,"frame":134,"what":"Priority: Justin","ms":600,"r":"priority:card:land","did":"land: Temple Garden"}
+{"t":1791431755995,"turn":2,"phase":"MAIN1","active":true,"frame":141,"what":"Do you want to pay 2 life?","ms":469,"r":"buttons:buttons:ok","did":"ok \"YesSpace\""}
+{"t":1791431756619,"turn":2,"phase":"MAIN1","active":true,"frame":148,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791431757256,"turn":2,"phase":"MAIN1","active":true,"frame":156,"what":"Smuggler's Copter","ms":355,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431757765,"turn":2,"phase":"MAIN1","active":true,"frame":157,"what":"ask ability_menu: ","ms":493,"r":"ask:ability_menu","did":null}
+{"t":1791431758411,"turn":2,"phase":"MAIN1","active":true,"frame":161,"what":"Smuggler's Copter","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431759035,"turn":2,"phase":"MAIN1","active":true,"frame":168,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791431760914,"turn":2,"phase":"MAIN2","active":true,"frame":187,"what":"Priority: Justin","ms":469,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791431761537,"turn":2,"phase":"MAIN2","active":true,"frame":194,"what":"Torrential Gearhulk - Creature 5 / 6","ms":356,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431762045,"turn":2,"phase":"MAIN2","active":true,"frame":195,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431762575,"turn":2,"phase":"MAIN2","active":true,"frame":199,"what":"Torrential Gearhulk - Creature 5 / 6","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431763201,"turn":2,"phase":"MAIN2","active":true,"frame":206,"what":"Priority: Justin","ms":467,"r":"priority:card:spell","did":"spell: Saheeli, Sublime Artificer"}
+{"t":1791431763821,"turn":2,"phase":"MAIN2","active":true,"frame":214,"what":"Saheeli, Sublime Artificer","ms":355,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431764333,"turn":2,"phase":"MAIN2","active":true,"frame":215,"what":"ask ability_menu: ","ms":488,"r":"ask:ability_menu","did":null}
+{"t":1791431764975,"turn":2,"phase":"MAIN2","active":true,"frame":219,"what":"Saheeli, Sublime Artificer","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431765601,"turn":2,"phase":"MAIN2","active":true,"frame":226,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Flickerwisp"}
+{"t":1791431766357,"turn":2,"phase":"MAIN2","active":true,"frame":234,"what":"Flickerwisp - Creature 3 / 1","ms":352,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431766862,"turn":2,"phase":"MAIN2","active":true,"frame":235,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791431767389,"turn":2,"phase":"MAIN2","active":true,"frame":239,"what":"Flickerwisp - Creature 3 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431768020,"turn":2,"phase":"MAIN2","active":true,"frame":246,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Priest of Forgotten Gods"}
+{"t":1791431768773,"turn":2,"phase":"MAIN2","active":true,"frame":254,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":354,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431769280,"turn":2,"phase":"MAIN2","active":true,"frame":255,"what":"ask ability_menu: ","ms":370,"r":"ask:ability_menu","did":null}
+{"t":1791431769804,"turn":2,"phase":"MAIN2","active":true,"frame":259,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431770553,"turn":2,"phase":"MAIN2","active":true,"frame":266,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791431771186,"turn":2,"phase":"MAIN2","active":true,"frame":274,"what":"Smuggler's Copter","ms":358,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431771700,"turn":2,"phase":"MAIN2","active":true,"frame":275,"what":"ask ability_menu: ","ms":487,"r":"ask:ability_menu","did":null}
+{"t":1791431772340,"turn":2,"phase":"MAIN2","active":true,"frame":279,"what":"Smuggler's Copter","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431772968,"turn":2,"phase":"MAIN2","active":true,"frame":286,"what":"Priority: Justin","ms":581,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791431804067,"turn":3,"phase":"MAIN1","active":false,"frame":328,"what":"Priority: Justin","ms":506,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431804728,"turn":3,"phase":"MAIN1","active":false,"frame":330,"what":"Priority: Justin","ms":727,"r":"priority:card:instant","did":"instant: Snapcaster Mage"}
+{"t":1791431825631,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":377,"what":"Priority: Justin","ms":469,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791431826254,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":384,"what":"Snapcaster Mage - Creature 2 / 1","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431826882,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":392,"what":"Priority: Justin","ms":462,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431827499,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":400,"what":"Priority: Justin","ms":467,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791431828121,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":408,"what":"Torrential Gearhulk - Creature 5 / 6","ms":353,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431828626,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":409,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791431829154,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":413,"what":"Torrential Gearhulk - Creature 5 / 6","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431829906,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":420,"what":"Priority: Justin","ms":833,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431853310,"turn":3,"phase":"END_OF_TURN","active":false,"frame":482,"what":"Priority: Justin","ms":1262,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431854726,"turn":4,"phase":"MAIN1","active":true,"frame":489,"what":"Priority: Justin","ms":592,"r":"priority:card:spell","did":"spell: Priest of Forgotten Gods"}
+{"t":1791431855473,"turn":4,"phase":"MAIN1","active":true,"frame":497,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":351,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431855977,"turn":4,"phase":"MAIN1","active":true,"frame":498,"what":"ask ability_menu: ","ms":371,"r":"ask:ability_menu","did":null}
+{"t":1791431856501,"turn":4,"phase":"MAIN1","active":true,"frame":502,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431857254,"turn":4,"phase":"MAIN1","active":true,"frame":510,"what":"Priority: Justin","ms":2754,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791431861728,"turn":4,"phase":"MAIN2","active":true,"frame":528,"what":"Priority: Justin","ms":591,"r":"priority:card:spell","did":"spell: Flickerwisp"}
+{"t":1791431862473,"turn":4,"phase":"MAIN2","active":true,"frame":536,"what":"Flickerwisp - Creature 3 / 1","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431863098,"turn":4,"phase":"MAIN2","active":true,"frame":544,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Priest of Forgotten Gods"}
+{"t":1791431863910,"turn":4,"phase":"MAIN2","active":true,"frame":552,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":349,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431864411,"turn":4,"phase":"MAIN2","active":true,"frame":553,"what":"ask ability_menu: ","ms":491,"r":"ask:ability_menu","did":null}
+{"t":1791431865058,"turn":4,"phase":"MAIN2","active":true,"frame":557,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431865681,"turn":4,"phase":"MAIN2","active":true,"frame":564,"what":"Priority: Justin","ms":587,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791431866421,"turn":4,"phase":"MAIN2","active":true,"frame":572,"what":"Snapcaster Mage - Creature 2 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431867049,"turn":4,"phase":"MAIN2","active":true,"frame":580,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791431867947,"turn":4,"phase":"CLEANUP","active":true,"frame":592,"what":"Cleanup Phase","ms":604,"r":"select:done","did":"choose Deep Analysis"}
+{"t":1791431876310,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":627,"what":"Priority: Justin","ms":470,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791431876935,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":634,"what":"Snapcaster Mage - Creature 2 / 1","ms":356,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431877443,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":635,"what":"ask ability_menu: ","ms":492,"r":"ask:ability_menu","did":null}
+{"t":1791431878087,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":639,"what":"Snapcaster Mage - Creature 2 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431878717,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":646,"what":"Priority: Justin","ms":477,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431879348,"turn":5,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":654,"what":"Priority: Justin","ms":823,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431901247,"turn":5,"phase":"END_OF_TURN","active":false,"frame":708,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791431901885,"turn":5,"phase":"END_OF_TURN","active":false,"frame":716,"what":"Torrential Gearhulk - Creature 5 / 6","ms":355,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431902393,"turn":5,"phase":"END_OF_TURN","active":false,"frame":717,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791431902917,"turn":5,"phase":"END_OF_TURN","active":false,"frame":721,"what":"Torrential Gearhulk - Creature 5 / 6","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431903668,"turn":5,"phase":"END_OF_TURN","active":false,"frame":728,"what":"Priority: Justin","ms":836,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431904657,"turn":6,"phase":"MAIN1","active":true,"frame":739,"what":"Priority: Justin","ms":471,"r":"priority:card:spell","did":"spell: Saheeli, Sublime Artificer"}
+{"t":1791431905281,"turn":6,"phase":"MAIN1","active":true,"frame":747,"what":"Saheeli, Sublime Artificer","ms":360,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431905794,"turn":6,"phase":"MAIN1","active":true,"frame":748,"what":"ask ability_menu: ","ms":369,"r":"ask:ability_menu","did":null}
+{"t":1791431906318,"turn":6,"phase":"MAIN1","active":true,"frame":752,"what":"Saheeli, Sublime Artificer","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431907067,"turn":6,"phase":"MAIN1","active":true,"frame":759,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Blade Splicer"}
+{"t":1791431907702,"turn":6,"phase":"MAIN1","active":true,"frame":767,"what":"Blade Splicer - Creature 1 / 1","ms":356,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431908210,"turn":6,"phase":"MAIN1","active":true,"frame":768,"what":"ask ability_menu: ","ms":1728,"r":"ask:ability_menu","did":null}
+{"t":1791431910091,"turn":6,"phase":"MAIN1","active":true,"frame":768,"what":"Blade Splicer - Creature 1 / 1","ms":349,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431910595,"turn":6,"phase":"MAIN1","active":true,"frame":769,"what":"ask ability_menu: ","ms":489,"r":"ask:ability_menu","did":null}
+{"t":1791431911236,"turn":6,"phase":"MAIN1","active":true,"frame":773,"what":"Blade Splicer - Creature 1 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431911864,"turn":6,"phase":"MAIN1","active":true,"frame":780,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791431912620,"turn":6,"phase":"MAIN1","active":true,"frame":788,"what":"Smuggler's Copter","ms":354,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431913126,"turn":6,"phase":"MAIN1","active":true,"frame":789,"what":"ask ability_menu: ","ms":371,"r":"ask:ability_menu","did":null}
+{"t":1791431913650,"turn":6,"phase":"MAIN1","active":true,"frame":793,"what":"Smuggler's Copter","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431914280,"turn":6,"phase":"MAIN1","active":true,"frame":800,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791431917726,"turn":6,"phase":"MAIN2","active":true,"frame":818,"what":"Priority: Justin","ms":588,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791431919122,"turn":6,"phase":"CLEANUP","active":true,"frame":829,"what":"Cleanup Phase","ms":798,"r":"select:done","did":"choose Saheeli, Sublime Artificer"}
+{"t":1791431927087,"turn":7,"phase":"COMBAT_BEGIN","active":false,"frame":853,"what":"Priority: Justin","ms":1072,"r":"priority:eot","did":"To EOT"}
+{"t":1791431951380,"turn":8,"phase":"MAIN1","active":true,"frame":931,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Flickerwisp"}
+{"t":1791431952015,"turn":8,"phase":"MAIN1","active":true,"frame":938,"what":"Flickerwisp - Creature 3 / 1","ms":358,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431952529,"turn":8,"phase":"MAIN1","active":true,"frame":939,"what":"ask ability_menu: ","ms":368,"r":"ask:ability_menu","did":null}
+{"t":1791431953051,"turn":8,"phase":"MAIN1","active":true,"frame":943,"what":"Flickerwisp - Creature 3 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431953678,"turn":8,"phase":"MAIN1","active":true,"frame":950,"what":"Priority: Justin","ms":605,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791431954437,"turn":8,"phase":"MAIN1","active":true,"frame":958,"what":"Torrential Gearhulk - Creature 5 / 6","ms":352,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431954942,"turn":8,"phase":"MAIN1","active":true,"frame":959,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791431955469,"turn":8,"phase":"MAIN1","active":true,"frame":963,"what":"Torrential Gearhulk - Creature 5 / 6","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431956097,"turn":8,"phase":"MAIN1","active":true,"frame":970,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791431956854,"turn":8,"phase":"MAIN1","active":true,"frame":978,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":353,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431957359,"turn":8,"phase":"MAIN1","active":true,"frame":979,"what":"ask ability_menu: ","ms":371,"r":"ask:ability_menu","did":null}
+{"t":1791431957885,"turn":8,"phase":"MAIN1","active":true,"frame":983,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431958634,"turn":8,"phase":"MAIN1","active":true,"frame":990,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791431959268,"turn":8,"phase":"MAIN1","active":true,"frame":998,"what":"Man-o'-War - Creature 2 / 2","ms":353,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431959777,"turn":8,"phase":"MAIN1","active":true,"frame":999,"what":"ask ability_menu: ","ms":490,"r":"ask:ability_menu","did":null}
+{"t":1791431960419,"turn":8,"phase":"MAIN1","active":true,"frame":1003,"what":"Man-o'-War - Creature 2 / 2","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431961046,"turn":8,"phase":"MAIN1","active":true,"frame":1010,"what":"Priority: Justin","ms":818,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791431962018,"turn":8,"phase":"MAIN1","active":true,"frame":1019,"what":"Deep Analysis (1) - Target player draws two cards.","ms":474,"r":"open-target","did":"target player 1"}
+{"t":1791431962645,"turn":8,"phase":"MAIN1","active":true,"frame":1028,"what":"Deep Analysis (1) - Sam draws two cards.","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431963399,"turn":8,"phase":"MAIN1","active":true,"frame":1036,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791431964033,"turn":8,"phase":"MAIN1","active":true,"frame":1044,"what":"Smuggler's Copter","ms":354,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431964539,"turn":8,"phase":"MAIN1","active":true,"frame":1045,"what":"ask ability_menu: ","ms":493,"r":"ask:ability_menu","did":null}
+{"t":1791431965186,"turn":8,"phase":"MAIN1","active":true,"frame":1049,"what":"Smuggler's Copter","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431965812,"turn":8,"phase":"MAIN1","active":true,"frame":1056,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Blade Splicer"}
+{"t":1791431966449,"turn":8,"phase":"MAIN1","active":true,"frame":1064,"what":"Blade Splicer - Creature 1 / 1","ms":356,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431966957,"turn":8,"phase":"MAIN1","active":true,"frame":1065,"what":"ask ability_menu: ","ms":1729,"r":"ask:ability_menu","did":null}
+{"t":1791431968844,"turn":8,"phase":"MAIN1","active":true,"frame":1065,"what":"Blade Splicer - Creature 1 / 1","ms":360,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431969358,"turn":8,"phase":"MAIN1","active":true,"frame":1066,"what":"ask ability_menu: ","ms":492,"r":"ask:ability_menu","did":null}
+{"t":1791431970003,"turn":8,"phase":"MAIN1","active":true,"frame":1070,"what":"Blade Splicer - Creature 1 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431970628,"turn":8,"phase":"MAIN1","active":true,"frame":1077,"what":"Priority: Justin","ms":605,"r":"priority:card:spell","did":"spell: Priest of Forgotten Gods"}
+{"t":1791431971387,"turn":8,"phase":"MAIN1","active":true,"frame":1085,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":352,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431971892,"turn":8,"phase":"MAIN1","active":true,"frame":1086,"what":"ask ability_menu: ","ms":370,"r":"ask:ability_menu","did":null}
+{"t":1791431972417,"turn":8,"phase":"MAIN1","active":true,"frame":1090,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431973166,"turn":8,"phase":"MAIN1","active":true,"frame":1097,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791431973797,"turn":8,"phase":"MAIN1","active":true,"frame":1105,"what":"Snapcaster Mage - Creature 2 / 1","ms":358,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431974308,"turn":8,"phase":"MAIN1","active":true,"frame":1106,"what":"ask ability_menu: ","ms":492,"r":"ask:ability_menu","did":null}
+{"t":1791431974953,"turn":8,"phase":"MAIN1","active":true,"frame":1110,"what":"Snapcaster Mage - Creature 2 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431975580,"turn":8,"phase":"MAIN1","active":true,"frame":1117,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791431977465,"turn":8,"phase":"MAIN2","active":true,"frame":1135,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791431978096,"turn":8,"phase":"MAIN2","active":true,"frame":1142,"what":"Snapcaster Mage - Creature 2 / 1","ms":358,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431978607,"turn":8,"phase":"MAIN2","active":true,"frame":1143,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791431979133,"turn":8,"phase":"MAIN2","active":true,"frame":1147,"what":"Snapcaster Mage - Creature 2 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431979761,"turn":8,"phase":"MAIN2","active":true,"frame":1154,"what":"Priority: Justin","ms":823,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791431980737,"turn":8,"phase":"MAIN2","active":true,"frame":1163,"what":"Deep Analysis (1) - Target player draws two cards.","ms":468,"r":"open-target","did":"target player 1"}
+{"t":1791431981360,"turn":8,"phase":"MAIN2","active":true,"frame":1172,"what":"Deep Analysis (1) - Sam draws two cards.","ms":343,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431981856,"turn":8,"phase":"MAIN2","active":true,"frame":1173,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791431982383,"turn":8,"phase":"MAIN2","active":true,"frame":1177,"what":"Deep Analysis (1) - Sam draws two cards.","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431983133,"turn":8,"phase":"MAIN2","active":true,"frame":1184,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Priest of Forgotten Gods"}
+{"t":1791431983764,"turn":8,"phase":"MAIN2","active":true,"frame":1192,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431984514,"turn":8,"phase":"MAIN2","active":true,"frame":1200,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791431985149,"turn":8,"phase":"MAIN2","active":true,"frame":1208,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431985899,"turn":8,"phase":"MAIN2","active":true,"frame":1216,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791431986531,"turn":8,"phase":"MAIN2","active":true,"frame":1224,"what":"Torrential Gearhulk - Creature 5 / 6","ms":355,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431987040,"turn":8,"phase":"MAIN2","active":true,"frame":1225,"what":"ask ability_menu: ","ms":1727,"r":"ask:ability_menu","did":null}
+{"t":1791431988920,"turn":8,"phase":"MAIN2","active":true,"frame":1225,"what":"Torrential Gearhulk - Creature 5 / 6","ms":349,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791431989422,"turn":8,"phase":"MAIN2","active":true,"frame":1226,"what":"ask ability_menu: ","ms":371,"r":"ask:ability_menu","did":null}
+{"t":1791431989947,"turn":8,"phase":"MAIN2","active":true,"frame":1230,"what":"Torrential Gearhulk - Creature 5 / 6","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431990698,"turn":8,"phase":"MAIN2","active":true,"frame":1237,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791431991601,"turn":8,"phase":"CLEANUP","active":true,"frame":1249,"what":"Cleanup Phase","ms":595,"r":"select:done","did":"choose Torrential Gearhulk"}
+{"t":1791432007332,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":1292,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791432007964,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":1299,"what":"Snapcaster Mage - Creature 2 / 1","ms":356,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432008472,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":1300,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791432009001,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":1304,"what":"Snapcaster Mage - Creature 2 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432009628,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":1311,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432010379,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1319,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791432011013,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1327,"what":"Snapcaster Mage - Creature 2 / 1","ms":357,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432011522,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1328,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791432012047,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1332,"what":"Snapcaster Mage - Creature 2 / 1","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432012799,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1339,"what":"Priority: Justin","ms":835,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432029833,"turn":9,"phase":"END_OF_TURN","active":false,"frame":1392,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791432030464,"turn":9,"phase":"END_OF_TURN","active":false,"frame":1399,"what":"Snapcaster Mage - Creature 2 / 1","ms":356,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432030974,"turn":9,"phase":"END_OF_TURN","active":false,"frame":1400,"what":"ask ability_menu: ","ms":370,"r":"ask:ability_menu","did":null}
+{"t":1791432031496,"turn":9,"phase":"END_OF_TURN","active":false,"frame":1404,"what":"Snapcaster Mage - Creature 2 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432032126,"turn":9,"phase":"END_OF_TURN","active":false,"frame":1411,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432033018,"turn":10,"phase":"MAIN1","active":true,"frame":1423,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Priest of Forgotten Gods"}
+{"t":1791432033648,"turn":10,"phase":"MAIN1","active":true,"frame":1430,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432034276,"turn":10,"phase":"MAIN1","active":true,"frame":1438,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791432034913,"turn":10,"phase":"MAIN1","active":true,"frame":1446,"what":"Snapcaster Mage - Creature 2 / 1","ms":357,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432035422,"turn":10,"phase":"MAIN1","active":true,"frame":1447,"what":"ask ability_menu: ","ms":370,"r":"ask:ability_menu","did":null}
+{"t":1791432035945,"turn":10,"phase":"MAIN1","active":true,"frame":1451,"what":"Snapcaster Mage - Creature 2 / 1","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432036698,"turn":10,"phase":"MAIN1","active":true,"frame":1458,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432037329,"turn":10,"phase":"MAIN1","active":true,"frame":1466,"what":"Archon of Cruelty - Creature 6 / 6","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432038080,"turn":10,"phase":"MAIN1","active":true,"frame":1474,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Flickerwisp"}
+{"t":1791432038714,"turn":10,"phase":"MAIN1","active":true,"frame":1482,"what":"Flickerwisp - Creature 3 / 1","ms":355,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432039221,"turn":10,"phase":"MAIN1","active":true,"frame":1483,"what":"ask ability_menu: ","ms":493,"r":"ask:ability_menu","did":null}
+{"t":1791432039867,"turn":10,"phase":"MAIN1","active":true,"frame":1487,"what":"Flickerwisp - Creature 3 / 1","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432040497,"turn":10,"phase":"MAIN1","active":true,"frame":1494,"what":"Priority: Justin","ms":598,"r":"priority:card:spell","did":"spell: Blade Splicer"}
+{"t":1791432041249,"turn":10,"phase":"MAIN1","active":true,"frame":1502,"what":"Blade Splicer - Creature 1 / 1","ms":353,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432041755,"turn":10,"phase":"MAIN1","active":true,"frame":1503,"what":"ask ability_menu: ","ms":374,"r":"ask:ability_menu","did":null}
+{"t":1791432042284,"turn":10,"phase":"MAIN1","active":true,"frame":1507,"what":"Blade Splicer - Creature 1 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432042910,"turn":10,"phase":"MAIN1","active":true,"frame":1514,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432044577,"turn":10,"phase":"MAIN2","active":true,"frame":1532,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432045215,"turn":10,"phase":"MAIN2","active":true,"frame":1539,"what":"Archon of Cruelty - Creature 6 / 6","ms":354,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432045720,"turn":10,"phase":"MAIN2","active":true,"frame":1540,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791432046248,"turn":10,"phase":"MAIN2","active":true,"frame":1544,"what":"Archon of Cruelty - Creature 6 / 6","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432046876,"turn":10,"phase":"MAIN2","active":true,"frame":1551,"what":"Priority: Justin","ms":602,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432047954,"turn":10,"phase":"CLEANUP","active":true,"frame":1563,"what":"Cleanup Phase","ms":608,"r":"select:done","did":"choose Flickerwisp"}
+{"t":1791432056716,"turn":11,"phase":"COMBAT_BEGIN","active":false,"frame":1598,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791432057347,"turn":11,"phase":"COMBAT_BEGIN","active":false,"frame":1605,"what":"Snapcaster Mage - Creature 2 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432057977,"turn":11,"phase":"COMBAT_BEGIN","active":false,"frame":1613,"what":"Priority: Justin","ms":477,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432058608,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1621,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791432059366,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1630,"what":"Snapcaster Mage - Creature 2 / 1","ms":352,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432059871,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1631,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791432060397,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1635,"what":"Snapcaster Mage - Creature 2 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432061028,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1642,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432061892,"turn":11,"phase":"END_OF_TURN","active":false,"frame":1654,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432063416,"turn":12,"phase":"MAIN1","active":true,"frame":1665,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432064169,"turn":12,"phase":"MAIN1","active":true,"frame":1673,"what":"Smuggler's Copter","ms":350,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432064671,"turn":12,"phase":"MAIN1","active":true,"frame":1674,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791432065197,"turn":12,"phase":"MAIN1","active":true,"frame":1678,"what":"Smuggler's Copter","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432065949,"turn":12,"phase":"MAIN1","active":true,"frame":1685,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791432066578,"turn":12,"phase":"MAIN1","active":true,"frame":1693,"what":"Man-o'-War - Creature 2 / 2","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432067329,"turn":12,"phase":"MAIN1","active":true,"frame":1702,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Priest of Forgotten Gods"}
+{"t":1791432067962,"turn":12,"phase":"MAIN1","active":true,"frame":1710,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":357,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432068471,"turn":12,"phase":"MAIN1","active":true,"frame":1711,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791432068996,"turn":12,"phase":"MAIN1","active":true,"frame":1715,"what":"Priest of Forgotten Gods - Creature 1 / 2","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432069748,"turn":12,"phase":"MAIN1","active":true,"frame":1722,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791432070379,"turn":12,"phase":"MAIN1","active":true,"frame":1730,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":356,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432070888,"turn":12,"phase":"MAIN1","active":true,"frame":1731,"what":"ask ability_menu: ","ms":490,"r":"ask:ability_menu","did":null}
+{"t":1791432071533,"turn":12,"phase":"MAIN1","active":true,"frame":1735,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432072158,"turn":12,"phase":"MAIN1","active":true,"frame":1742,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791432072914,"turn":12,"phase":"MAIN1","active":true,"frame":1750,"what":"Snapcaster Mage - Creature 2 / 1","ms":354,"r":"pay:tap","did":"tap Temple Garden for mana"}
+{"t":1791432073424,"turn":12,"phase":"MAIN1","active":true,"frame":1751,"what":"ask ability_menu: ","ms":368,"r":"ask:ability_menu","did":null}
+{"t":1791432073946,"turn":12,"phase":"MAIN1","active":true,"frame":1755,"what":"Snapcaster Mage - Creature 2 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432074575,"turn":12,"phase":"MAIN1","active":true,"frame":1762,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432075333,"turn":12,"phase":"MAIN1","active":true,"frame":1770,"what":"Archon of Cruelty - Creature 6 / 6","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432075959,"turn":12,"phase":"MAIN1","active":true,"frame":1778,"what":"Priority: Justin","ms":600,"r":"priority:card:land","did":"land: Hallowed Fountain"}
+{"t":1791432076712,"turn":12,"phase":"MAIN1","active":true,"frame":1784,"what":"Do you want to pay 2 life?","ms":478,"r":"buttons:buttons:ok","did":"ok \"YesSpace\""}
+{"t":1791432077346,"turn":12,"phase":"MAIN1","active":true,"frame":1791,"what":"Priority: Justin","ms":847,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791432078346,"turn":12,"phase":"MAIN1","active":true,"frame":1800,"what":"Deep Analysis (1) - Target player draws two cards.","ms":595,"r":"open-target","did":"target player 0"}
+{"t":1791432079094,"turn":12,"phase":"MAIN1","active":true,"frame":1810,"what":"Deep Analysis (1) - Justin draws two cards.","ms":478,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791432079727,"turn":12,"phase":"MAIN1","active":true,"frame":1816,"what":"Do you want to pay 3 life?","ms":598,"r":"buttons:buttons:cancel","did":"cancel \"No\""}
+{"t":1791432080478,"turn":12,"phase":"MAIN1","active":true,"frame":1823,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Blade Splicer"}
+{"t":1791432081113,"turn":12,"phase":"MAIN1","active":true,"frame":1831,"what":"Blade Splicer - Creature 1 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432081746,"turn":12,"phase":"MAIN1","active":true,"frame":1839,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}

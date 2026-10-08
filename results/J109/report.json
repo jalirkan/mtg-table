@@ -1,0 +1,829 @@
+{
+ "started": "2026-10-08T01:44:12.249Z",
+ "options": {
+  "mode": "table",
+  "games": 3,
+  "seed": 109,
+  "decks": "cube",
+  "turnCap": 40,
+  "coach": "off",
+  "reload": 1,
+  "out": "/home/justin-a/code/lab/mtg-table-light/var/playtest/J109/table",
+  "headless": true,
+  "stallS": 150,
+  "gameMinutes": 75,
+  "aiProfile": null,
+  "portBase": 8862,
+  "maxShots": 150,
+  "viewport": "mixed"
+ },
+ "games": [
+  {
+   "id": "1.1",
+   "mode": "table",
+   "seed": 109,
+   "cube": "modern-era",
+   "decks": {
+    "host": "Justin’s Modern-Era Cube deck",
+    "friend": "Sam’s Modern-Era Cube deck"
+   },
+   "findings": [],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 49,
+   "rounds": 25,
+   "decisions": {
+    "host": 598,
+    "friend": 819
+   },
+   "clicks": {
+    "host": 613,
+    "friend": 767
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 9,
+      "choose_list": 9
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 332,
+      "pay": 194,
+      "select": 33,
+      "open": 18,
+      "buttons": 1
+     },
+     "rare": {
+      "ability-menu-cancel": 2,
+      "to-eot": 8,
+      "target-player": 11,
+      "ability-menu": 7,
+      "graveyard-cast": 32,
+      "manual-tap": 5
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 36,
+      "order": 1,
+      "choose_list": 19,
+      "text": 1
+     },
+     "modes": {
+      "opening": 2,
+      "open": 8,
+      "priority": 345,
+      "pay": 354,
+      "select": 41,
+      "attack": 9,
+      "buttons": 3
+     },
+     "rare": {
+      "target-player": 8,
+      "ability-menu": 35,
+      "to-eot": 12,
+      "manual-tap": 193,
+      "trigger-order": 1,
+      "x-spell": 7,
+      "use-mana": 16,
+      "x-number": 1,
+      "activate": 25,
+      "ability-menu-cancel": 1,
+      "alpha-strike": 2,
+      "exile-play": 5
+     }
+    }
+   },
+   "frames": {
+    "host": 6768,
+    "friend": 7010
+   },
+   "traces": {
+    "host": "trace-g1.1-host.jsonl",
+    "friend": "trace-g1.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g1.1-host.jsonl.gz",
+    "friend": "frames-g1.1-friend.jsonl.gz"
+   },
+   "seconds": 1197
+  },
+  {
+   "id": "1.2",
+   "mode": "table",
+   "seed": 109,
+   "cube": "modern-era",
+   "decks": {
+    "host": "Justin’s Modern-Era Cube deck",
+    "friend": "Sam’s Modern-Era Cube deck (sideboarded)"
+   },
+   "findings": [
+    {
+     "game": "1.2",
+     "seat": "friend",
+     "kind": "stack-mismatch",
+     "what": "the stack holds 1 but no stack panel shows",
+     "frame": 9948,
+     "seq": 9950,
+     "turn": 60,
+     "phase": "MAIN2",
+     "prompt": "Priority: Sam\nTurn: 60 (Sam)\nPhase: Main phase, postcombat\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 1858,
+     "shot": "shots/g1.2-friend-1-stack-mismatch.png"
+    },
+    {
+     "game": "1.2",
+     "seat": "host",
+     "kind": "control-not-clickable",
+     "what": "spell: Play with Fire",
+     "why": "locator.click: Timeout 6000ms exceeded.",
+     "frame": 12434,
+     "seq": 12433,
+     "turn": 67,
+     "phase": "MAIN2",
+     "prompt": "Priority: Justin\nTurn: 67 (Justin)\nPhase: Main phase, postcombat\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 2395,
+     "shot": "shots/g1.2-host-2-control-not-clickable.png"
+    }
+   ],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 68,
+   "rounds": 34,
+   "decisions": {
+    "host": 1440,
+    "friend": 1246
+   },
+   "clicks": {
+    "host": 1243,
+    "friend": 1131
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_list": 96,
+      "ability_menu": 151,
+      "order": 2,
+      "text": 1
+     },
+     "modes": {
+      "opening": 3,
+      "open": 48,
+      "priority": 566,
+      "pay": 483,
+      "select": 87,
+      "buttons": 2,
+      "block": 1
+     },
+     "rare": {
+      "target-player": 29,
+      "to-eot": 8,
+      "graveyard-cast": 51,
+      "manual-tap": 139,
+      "ability-menu": 131,
+      "ability-menu-cancel": 20,
+      "equip": 25,
+      "use-mana": 9,
+      "trigger-order": 1,
+      "x-spell": 8,
+      "zone-choice": 8,
+      "x-number": 1,
+      "exile-play": 1
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 101,
+      "order": 1,
+      "choose_list": 13,
+      "text": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 531,
+      "pay": 516,
+      "select": 62,
+      "attack": 15,
+      "open": 3,
+      "buttons": 2
+     },
+     "rare": {
+      "ability-menu": 96,
+      "manual-tap": 241,
+      "trigger-order": 1,
+      "to-eot": 15,
+      "alpha-strike": 1,
+      "activate": 28,
+      "use-mana": 15,
+      "ability-menu-cancel": 5,
+      "exile-play": 2,
+      "x-spell": 3,
+      "graveyard-cast": 3,
+      "x-number": 1
+     }
+    }
+   },
+   "frames": {
+    "host": 12577,
+    "friend": 11608
+   },
+   "traces": {
+    "host": "trace-g1.2-host.jsonl",
+    "friend": "trace-g1.2-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g1.2-host.jsonl.gz",
+    "friend": "frames-g1.2-friend.jsonl.gz"
+   },
+   "seconds": 2466
+  },
+  {
+   "id": "2.1",
+   "mode": "table",
+   "seed": 109,
+   "cube": "pauper",
+   "decks": {
+    "host": "Justin’s Pauper Cube deck",
+    "friend": "Sam’s Pauper Cube deck"
+   },
+   "findings": [
+    {
+     "game": "2.1",
+     "seat": "host",
+     "kind": "unreachable-option",
+     "what": "a target with nothing named: no player or card offered to click — \"Cleanup Phase\"",
+     "frame": 2403,
+     "seq": 2405,
+     "turn": 23,
+     "phase": "MAIN1",
+     "prompt": "Cleanup Phase\nSelect 1 card(s) to discard to bring your hand down to the maximum of 7 cards.",
+     "ask": null,
+     "card": null,
+     "ui": {
+      "board": "mode-waiting",
+      "primary": "Waiting for Sam… (disabled)",
+      "dialog": false,
+      "card": []
+     },
+     "at": 311,
+     "shot": "shots/g2.1-host-3-unreachable-option.png"
+    }
+   ],
+   "result": "host won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 77,
+   "rounds": 39,
+   "decisions": {
+    "host": 906,
+    "friend": 1121
+   },
+   "clicks": {
+    "host": 826,
+    "friend": 1155
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_list": 69,
+      "ability_menu": 7
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 443,
+      "open": 16,
+      "pay": 287,
+      "select": 44,
+      "buttons": 39
+     },
+     "rare": {
+      "target-player": 13,
+      "to-eot": 5,
+      "zone-choice": 24,
+      "ability-menu": 6,
+      "manual-tap": 70,
+      "ability-menu-cancel": 1
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_list": 27,
+      "ability_menu": 4
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 565,
+      "pay": 372,
+      "select": 81,
+      "open": 4,
+      "buttons": 56,
+      "attack": 10
+     },
+     "rare": {
+      "target-player": 4,
+      "to-eot": 12,
+      "graveyard-cast": 71,
+      "manual-tap": 113,
+      "alpha-strike": 3,
+      "exile-play": 2,
+      "ability-menu-cancel": 2,
+      "ability-menu": 2,
+      "zone-choice": 2,
+      "use-mana": 1
+     }
+    }
+   },
+   "frames": {
+    "host": 9915,
+    "friend": 11110
+   },
+   "traces": {
+    "host": "trace-g2.1-host.jsonl",
+    "friend": "trace-g2.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g2.1-host.jsonl.gz",
+    "friend": "frames-g2.1-friend.jsonl.gz"
+   },
+   "seconds": 1680
+  },
+  {
+   "id": "2.2",
+   "mode": "table",
+   "seed": 109,
+   "cube": "pauper",
+   "decks": {
+    "host": "Justin’s Pauper Cube deck",
+    "friend": "Sam’s Pauper Cube deck (sideboarded)"
+   },
+   "findings": [],
+   "result": "host won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 40,
+   "rounds": 20,
+   "decisions": {
+    "host": 714,
+    "friend": 1754
+   },
+   "clicks": {
+    "host": 715,
+    "friend": 1689
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_list": 14,
+      "ability_menu": 4,
+      "order": 2
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 356,
+      "pay": 235,
+      "open": 15,
+      "select": 47,
+      "buttons": 23,
+      "attack": 7,
+      "block": 10
+     },
+     "rare": {
+      "target-player": 3,
+      "to-eot": 7,
+      "manual-tap": 66,
+      "ability-menu": 4,
+      "use-mana": 15,
+      "equip": 1,
+      "equip-attached": 31,
+      "activate": 16,
+      "multi-block": 2,
+      "trigger-order": 1
+     }
+    },
+    "friend": {
+     "asks": {
+      "ability_menu": 16,
+      "choose_list": 53,
+      "assign_damage": 3
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 408,
+      "pay": 986,
+      "buttons": 86,
+      "open": 3,
+      "select": 186,
+      "attack": 7,
+      "block": 4
+     },
+     "rare": {
+      "manual-tap": 459,
+      "ability-menu": 14,
+      "to-eot": 7,
+      "zone-choice": 25,
+      "zone-pick": 2,
+      "ability-menu-cancel": 2,
+      "assign_damage": 3,
+      "alpha-strike": 1,
+      "graveyard-cast": 15,
+      "activate": 6
+     }
+    }
+   },
+   "frames": {
+    "host": 9344,
+    "friend": 14750
+   },
+   "traces": {
+    "host": "trace-g2.2-host.jsonl",
+    "friend": "trace-g2.2-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g2.2-host.jsonl.gz",
+    "friend": "frames-g2.2-friend.jsonl.gz"
+   },
+   "seconds": 2355
+  },
+  {
+   "id": "3.1",
+   "mode": "table",
+   "seed": 109,
+   "cube": "synergy",
+   "decks": {
+    "host": "Justin’s Synergy Cube deck",
+    "friend": "Sam’s Synergy Cube deck"
+   },
+   "findings": [
+    {
+     "game": "3.1",
+     "seat": "friend",
+     "kind": "stuck",
+     "what": "the engine waits on this seat and the board offers nothing that moves it (\"Priority: Sam\")",
+     "frame": 1793,
+     "seq": 1793,
+     "turn": 12,
+     "phase": "COMBAT_BEGIN",
+     "prompt": "Priority: Sam\nTurn: 12 (Justin)\nPhase: Beginning of Combat Step\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 464,
+     "shot": "shots/g3.1-friend-4-stuck.png"
+    }
+   ],
+   "result": "host won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 12,
+   "rounds": 6,
+   "decisions": {
+    "host": 229,
+    "friend": 270
+   },
+   "clicks": {
+    "host": 192,
+    "friend": 220
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 40
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 84,
+      "pay": 93,
+      "buttons": 3,
+      "select": 4,
+      "open": 3
+     },
+     "rare": {
+      "manual-tap": 40,
+      "ability-menu": 37,
+      "ability-menu-cancel": 3,
+      "to-eot": 1,
+      "graveyard-cast": 3,
+      "target-player": 3
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_entities": 1,
+      "ability_menu": 40
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 89,
+      "pay": 132,
+      "buttons": 2,
+      "open": 1,
+      "select": 4
+     },
+     "rare": {
+      "manual-tap": 82,
+      "to-eot": 1,
+      "activate": 1,
+      "zone-choice": 1,
+      "ability-menu": 38,
+      "ability-menu-cancel": 2
+     }
+    }
+   },
+   "frames": {
+    "host": 1847,
+    "friend": 1795
+   },
+   "traces": {
+    "host": "trace-g3.1-host.jsonl",
+    "friend": "trace-g3.1-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g3.1-host.jsonl.gz",
+    "friend": "frames-g3.1-friend.jsonl.gz"
+   },
+   "seconds": 470
+  },
+  {
+   "id": "3.2",
+   "mode": "table",
+   "seed": 109,
+   "cube": "synergy",
+   "decks": {
+    "host": "Justin’s Synergy Cube deck",
+    "friend": "Sam’s Synergy Cube deck (sideboarded)"
+   },
+   "findings": [
+    {
+     "game": "3.2",
+     "seat": "host",
+     "kind": "board-lag",
+     "what": "the board still drew input seq 4167 3000 ms after the wire's 4175 (\"Priority: Justin\")",
+     "frame": 4178,
+     "seq": 4177,
+     "turn": 33,
+     "phase": "COMBAT_DECLARE_ATTACKERS",
+     "prompt": "Priority: Justin\nTurn: 33 (Sam)\nPhase: Declare Attackers Step\nStack: Empty",
+     "ask": null,
+     "card": null,
+     "at": 867,
+     "shot": "shots/g3.2-host-5-board-lag.png"
+    }
+   ],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 43,
+   "rounds": 22,
+   "decisions": {
+    "host": 490,
+    "friend": 814
+   },
+   "clicks": {
+    "host": 459,
+    "friend": 715
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "ability_menu": 14,
+      "choose_list": 24,
+      "choose_entities": 1
+     },
+     "modes": {
+      "opening": 2,
+      "open": 10,
+      "priority": 269,
+      "pay": 147,
+      "select": 21,
+      "buttons": 2
+     },
+     "rare": {
+      "target-player": 10,
+      "to-eot": 6,
+      "ability-menu": 11,
+      "graveyard-cast": 7,
+      "ability-menu-cancel": 3,
+      "x-spell": 16,
+      "manual-tap": 9,
+      "activate": 1,
+      "zone-choice": 14
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_list": 31,
+      "choose_entities": 2,
+      "ability_menu": 73
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 309,
+      "pay": 319,
+      "open": 50,
+      "select": 15,
+      "buttons": 6,
+      "attack": 7
+     },
+     "rare": {
+      "target-player": 27,
+      "to-eot": 4,
+      "manual-tap": 130,
+      "activate": 3,
+      "zone-choice": 2,
+      "ability-menu": 63,
+      "ability-menu-cancel": 10,
+      "use-mana": 13
+     }
+    }
+   },
+   "frames": {
+    "host": 5628,
+    "friend": 6479
+   },
+   "traces": {
+    "host": "trace-g3.2-host.jsonl",
+    "friend": "trace-g3.2-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g3.2-host.jsonl.gz",
+    "friend": "frames-g3.2-friend.jsonl.gz"
+   },
+   "seconds": 1239
+  },
+  {
+   "id": "3.3",
+   "mode": "table",
+   "seed": 109,
+   "cube": "synergy",
+   "decks": {
+    "host": "Justin’s Synergy Cube deck",
+    "friend": "Sam’s Synergy Cube deck (sideboarded) (sideboarded)"
+   },
+   "findings": [],
+   "result": "friend won",
+   "reason": "AllOpponentsLost",
+   "capped": false,
+   "turns": 56,
+   "rounds": 28,
+   "decisions": {
+    "host": 1182,
+    "friend": 871
+   },
+   "clicks": {
+    "host": 1009,
+    "friend": 746
+   },
+   "stats": {
+    "host": {
+     "asks": {
+      "choose_entities": 1,
+      "ability_menu": 186,
+      "order": 2,
+      "choose_list": 4,
+      "text": 1
+     },
+     "modes": {
+      "opening": 2,
+      "priority": 465,
+      "pay": 420,
+      "buttons": 3,
+      "open": 53,
+      "select": 45
+     },
+     "rare": {
+      "manual-tap": 183,
+      "activate": 13,
+      "zone-choice": 2,
+      "ability-menu-cancel": 16,
+      "ability-menu": 170,
+      "to-eot": 6,
+      "trigger-order": 1,
+      "target-player": 34,
+      "x-spell": 1,
+      "x-number": 1,
+      "equip": 49,
+      "graveyard-cast": 25
+     }
+    },
+    "friend": {
+     "asks": {
+      "choose_entities": 1,
+      "ability_menu": 117,
+      "choose_list": 16,
+      "order": 1
+     },
+     "modes": {
+      "opening": 1,
+      "priority": 348,
+      "pay": 319,
+      "buttons": 10,
+      "select": 39,
+      "open": 5,
+      "attack": 14
+     },
+     "rare": {
+      "to-eot": 9,
+      "manual-tap": 133,
+      "activate": 3,
+      "zone-choice": 1,
+      "ability-menu": 107,
+      "ability-menu-cancel": 10,
+      "alpha-strike": 3,
+      "use-mana": 3,
+      "graveyard-cast": 12,
+      "trigger-order": 1
+     }
+    }
+   },
+   "frames": {
+    "host": 9192,
+    "friend": 8045
+   },
+   "traces": {
+    "host": "trace-g3.3-host.jsonl",
+    "friend": "trace-g3.3-friend.jsonl"
+   },
+   "frameLogs": {
+    "host": "frames-g3.3-host.jsonl.gz",
+    "friend": "frames-g3.3-friend.jsonl.gz"
+   },
+   "seconds": 2192
+  }
+ ],
+ "matches": [
+  {
+   "id": 1,
+   "cube": "modern-era",
+   "result": "friend won 2 – 0",
+   "games": [
+    "1.1",
+    "1.2"
+   ],
+   "findings": []
+  },
+  {
+   "id": 2,
+   "cube": "pauper",
+   "result": "host won 2 – 0",
+   "games": [
+    "2.1",
+    "2.2"
+   ],
+   "findings": []
+  },
+  {
+   "id": 3,
+   "cube": "synergy",
+   "result": "friend won 2 – 1",
+   "games": [
+    "3.1",
+    "3.2",
+    "3.3"
+   ],
+   "findings": []
+  }
+ ],
+ "env": {
+  "cardScripts": 10184
+ },
+ "summary": {
+  "games": 7,
+  "matches": 3,
+  "results": {
+   "friend won": 4,
+   "host won": 3
+  },
+  "findings": 5,
+  "distinct": 5,
+  "rarePaths": {
+   "ability-menu-cancel": 77,
+   "to-eot": 101,
+   "target-player": 142,
+   "ability-menu": 721,
+   "graveyard-cast": 219,
+   "manual-tap": 1863,
+   "trigger-order": 6,
+   "x-spell": 35,
+   "use-mana": 72,
+   "x-number": 4,
+   "activate": 96,
+   "alpha-strike": 10,
+   "exile-play": 10,
+   "equip": 75,
+   "zone-choice": 79,
+   "equip-attached": 31,
+   "multi-block": 2,
+   "zone-pick": 2,
+   "assign_damage": 3
+  },
+  "coachLatencyMs": null,
+  "line": "playtest: 7 game(s), 3 best-of-three(s); 4 friend won, 3 host won; 5 finding(s) of 5 kind(s)"
+ },
+ "finished": "2026-10-08T04:59:00.210Z"
+}

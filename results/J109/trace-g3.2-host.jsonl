@@ -1,0 +1,490 @@
+{"t":1791432107722,"turn":0,"phase":null,"active":false,"frame":1860,"what":"Sam is going first.","ms":477,"r":"opening","did":"Mulligan 2"}
+{"t":1791432108355,"turn":0,"phase":null,"active":false,"frame":1866,"what":"Return 1 card(s) to the bottom of your library","ms":3228,"r":"open-target:cancel","did":"target player 1; cancel \"Auto\""}
+{"t":1791432111737,"turn":0,"phase":null,"active":false,"frame":1873,"what":"Sam is going first.","ms":840,"r":"opening","did":"Keep 6 1"}
+{"t":1791432120674,"turn":1,"phase":"COMBAT_BEGIN","active":false,"frame":1911,"what":"Priority: Justin","ms":1076,"r":"priority:eot","did":"To EOT"}
+{"t":1791432128244,"turn":2,"phase":"MAIN1","active":true,"frame":1950,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Krenko, Tin Street Kingpin"}
+{"t":1791432128870,"turn":2,"phase":"MAIN1","active":true,"frame":1957,"what":"Krenko, Tin Street Kingpin - Creature 1 / 2","ms":462,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432129487,"turn":2,"phase":"MAIN1","active":true,"frame":1965,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432130123,"turn":2,"phase":"MAIN1","active":true,"frame":1973,"what":"Charming Prince - Creature 2 / 2","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432130753,"turn":2,"phase":"MAIN1","active":true,"frame":1981,"what":"Priority: Justin","ms":583,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791432131491,"turn":2,"phase":"MAIN1","active":true,"frame":1990,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432132117,"turn":2,"phase":"MAIN1","active":true,"frame":1998,"what":"Priority: Justin","ms":466,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432132737,"turn":2,"phase":"MAIN1","active":true,"frame":2006,"what":"Archon of Cruelty - Creature 6 / 6","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432133493,"turn":2,"phase":"MAIN1","active":true,"frame":2014,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432134120,"turn":2,"phase":"MAIN1","active":true,"frame":2022,"what":"Smuggler's Copter","ms":461,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432134735,"turn":2,"phase":"MAIN1","active":true,"frame":2030,"what":"Priority: Justin","ms":583,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432135474,"turn":2,"phase":"MAIN1","active":true,"frame":2039,"what":"Avenger of Zendikar - Creature 5 / 5","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432136102,"turn":2,"phase":"MAIN1","active":true,"frame":2047,"what":"Priority: Justin","ms":583,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432139401,"turn":2,"phase":"MAIN2","active":true,"frame":2065,"what":"Priority: Justin","ms":466,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432140020,"turn":2,"phase":"MAIN2","active":true,"frame":2072,"what":"Charming Prince - Creature 2 / 2","ms":461,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432140633,"turn":2,"phase":"MAIN2","active":true,"frame":2080,"what":"Priority: Justin","ms":464,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432141250,"turn":2,"phase":"MAIN2","active":true,"frame":2088,"what":"Smuggler's Copter","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432141869,"turn":2,"phase":"MAIN2","active":true,"frame":2096,"what":"Priority: Justin","ms":583,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432161314,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":2172,"what":"Priority: Justin","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432161932,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2179,"what":"Priority: Justin","ms":584,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432164304,"turn":3,"phase":"END_OF_TURN","active":false,"frame":2197,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432165102,"turn":4,"phase":"MAIN1","active":true,"frame":2208,"what":"Priority: Justin","ms":462,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432165718,"turn":4,"phase":"MAIN1","active":true,"frame":2215,"what":"Charming Prince - Creature 2 / 2","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432166354,"turn":4,"phase":"MAIN1","active":true,"frame":2223,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791432166983,"turn":4,"phase":"MAIN1","active":true,"frame":2231,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432167602,"turn":4,"phase":"MAIN1","active":true,"frame":2239,"what":"Priority: Justin","ms":463,"r":"priority:card:spell","did":"spell: Krenko, Tin Street Kingpin"}
+{"t":1791432168220,"turn":4,"phase":"MAIN1","active":true,"frame":2247,"what":"Krenko, Tin Street Kingpin - Creature 1 / 2","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432168973,"turn":4,"phase":"MAIN1","active":true,"frame":2255,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432169601,"turn":4,"phase":"MAIN1","active":true,"frame":2263,"what":"Archon of Cruelty - Creature 6 / 6","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432170342,"turn":4,"phase":"MAIN1","active":true,"frame":2272,"what":"Priority: Justin","ms":472,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432170967,"turn":4,"phase":"MAIN1","active":true,"frame":2280,"what":"Avenger of Zendikar - Creature 5 / 5","ms":463,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432171584,"turn":4,"phase":"MAIN1","active":true,"frame":2288,"what":"Priority: Justin","ms":465,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432172205,"turn":4,"phase":"MAIN1","active":true,"frame":2296,"what":"Soulherder - Creature 1 / 1","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432172957,"turn":4,"phase":"MAIN1","active":true,"frame":2304,"what":"Priority: Justin","ms":594,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432181037,"turn":4,"phase":"MAIN2","active":true,"frame":2338,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432181668,"turn":4,"phase":"MAIN2","active":true,"frame":2345,"what":"Archon of Cruelty - Creature 6 / 6","ms":462,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432182283,"turn":4,"phase":"MAIN2","active":true,"frame":2353,"what":"Priority: Justin","ms":464,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432182900,"turn":4,"phase":"MAIN2","active":true,"frame":2361,"what":"Soulherder - Creature 1 / 1","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432183519,"turn":4,"phase":"MAIN2","active":true,"frame":2369,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Krenko, Tin Street Kingpin"}
+{"t":1791432184149,"turn":4,"phase":"MAIN2","active":true,"frame":2377,"what":"Krenko, Tin Street Kingpin - Creature 1 / 2","ms":585,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432184889,"turn":4,"phase":"MAIN2","active":true,"frame":2385,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Saheeli, Sublime Artificer"}
+{"t":1791432185518,"turn":4,"phase":"MAIN2","active":true,"frame":2393,"what":"Saheeli, Sublime Artificer","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432186149,"turn":4,"phase":"MAIN2","active":true,"frame":2401,"what":"Priority: Justin","ms":584,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432186886,"turn":4,"phase":"MAIN2","active":true,"frame":2409,"what":"Charming Prince - Creature 2 / 2","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432187521,"turn":4,"phase":"MAIN2","active":true,"frame":2417,"what":"Priority: Justin","ms":598,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432188273,"turn":4,"phase":"MAIN2","active":true,"frame":2425,"what":"Avenger of Zendikar - Creature 5 / 5","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432188899,"turn":4,"phase":"MAIN2","active":true,"frame":2433,"what":"Priority: Justin","ms":467,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791432189520,"turn":4,"phase":"MAIN2","active":true,"frame":2441,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432190271,"turn":4,"phase":"MAIN2","active":true,"frame":2449,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432191193,"turn":4,"phase":"CLEANUP","active":true,"frame":2461,"what":"Cleanup Phase","ms":593,"r":"select:done","did":"choose Krenko, Tin Street Kingpin"}
+{"t":1791432206731,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":2526,"what":"Priority: Justin","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432207348,"turn":5,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2533,"what":"Priority: Justin","ms":585,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432208123,"turn":5,"phase":"END_OF_TURN","active":false,"frame":2545,"what":"Priority: Justin","ms":591,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432208921,"turn":6,"phase":"MAIN1","active":true,"frame":2556,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432209550,"turn":6,"phase":"MAIN1","active":true,"frame":2563,"what":"Charming Prince - Creature 2 / 2","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432210182,"turn":6,"phase":"MAIN1","active":true,"frame":2571,"what":"Priority: Justin","ms":465,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432210803,"turn":6,"phase":"MAIN1","active":true,"frame":2579,"what":"Avenger of Zendikar - Creature 5 / 5","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432211431,"turn":6,"phase":"MAIN1","active":true,"frame":2587,"what":"Priority: Justin","ms":587,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432212172,"turn":6,"phase":"MAIN1","active":true,"frame":2595,"what":"Archon of Cruelty - Creature 6 / 6","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432212800,"turn":6,"phase":"MAIN1","active":true,"frame":2603,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432221270,"turn":6,"phase":"MAIN2","active":true,"frame":2637,"what":"Priority: Justin","ms":595,"r":"priority:eot","did":"To EOT"}
+{"t":1791432225853,"turn":6,"phase":"CLEANUP","active":true,"frame":2658,"what":"Cleanup Phase","ms":598,"r":"select:done","did":"choose Saheeli, Sublime Artificer"}
+{"t":1791432236317,"turn":7,"phase":"COMBAT_BEGIN","active":false,"frame":2705,"what":"Priority: Justin","ms":462,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432236933,"turn":7,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2713,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432244380,"turn":7,"phase":"END_OF_TURN","active":false,"frame":2749,"what":"Priority: Justin","ms":585,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432245376,"turn":8,"phase":"MAIN1","active":true,"frame":2761,"what":"Priority: Justin","ms":471,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432246001,"turn":8,"phase":"MAIN1","active":true,"frame":2768,"what":"Charming Prince - Creature 2 / 2","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432246632,"turn":8,"phase":"MAIN1","active":true,"frame":2776,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432247270,"turn":8,"phase":"MAIN1","active":true,"frame":2784,"what":"Smuggler's Copter","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432247900,"turn":8,"phase":"MAIN1","active":true,"frame":2792,"what":"Priority: Justin","ms":359,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432248412,"turn":8,"phase":"MAIN1","active":true,"frame":2793,"what":"ask ability_menu: ","ms":490,"r":"ask:ability_menu","did":null}
+{"t":1791432249057,"turn":8,"phase":"MAIN1","active":true,"frame":2801,"what":"Reveillark (Evoked)","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432249683,"turn":8,"phase":"MAIN1","active":true,"frame":2809,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Deep Analysis"}
+{"t":1791432250438,"turn":8,"phase":"MAIN1","active":true,"frame":2818,"what":"Deep Analysis (1) - Target player draws two cards.","ms":473,"r":"open-target","did":"target player 1"}
+{"t":1791432251066,"turn":8,"phase":"MAIN1","active":true,"frame":2827,"what":"Deep Analysis (1) - Sam draws two cards.","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432251817,"turn":8,"phase":"MAIN1","active":true,"frame":2835,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Archon of Cruelty"}
+{"t":1791432252450,"turn":8,"phase":"MAIN1","active":true,"frame":2843,"what":"Archon of Cruelty - Creature 6 / 6","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432253202,"turn":8,"phase":"MAIN1","active":true,"frame":2852,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432253832,"turn":8,"phase":"MAIN1","active":true,"frame":2860,"what":"Soulherder - Creature 1 / 1","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432254465,"turn":8,"phase":"MAIN1","active":true,"frame":2868,"what":"Priority: Justin","ms":583,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432255204,"turn":8,"phase":"MAIN1","active":true,"frame":2876,"what":"Avenger of Zendikar - Creature 5 / 5","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432255832,"turn":8,"phase":"MAIN1","active":true,"frame":2884,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432260911,"turn":8,"phase":"MAIN2","active":true,"frame":2911,"what":"Priority: Justin","ms":468,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791432261533,"turn":8,"phase":"MAIN2","active":true,"frame":2918,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432262162,"turn":8,"phase":"MAIN2","active":true,"frame":2926,"what":"Priority: Justin","ms":466,"r":"priority:card:spell","did":"spell: Deep Analysis"}
+{"t":1791432262782,"turn":8,"phase":"MAIN2","active":true,"frame":2935,"what":"Deep Analysis (1) - Target player draws two cards.","ms":480,"r":"open-target","did":"target player 1"}
+{"t":1791432263416,"turn":8,"phase":"MAIN2","active":true,"frame":2944,"what":"Deep Analysis (1) - Sam draws two cards.","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432264169,"turn":8,"phase":"MAIN2","active":true,"frame":2952,"what":"Priority: Justin","ms":355,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432264677,"turn":8,"phase":"MAIN2","active":true,"frame":2953,"what":"ask ability_menu: ","ms":368,"r":"ask:ability_menu","did":null}
+{"t":1791432265199,"turn":8,"phase":"MAIN2","active":true,"frame":2961,"what":"Reveillark (Evoked)","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432265952,"turn":8,"phase":"MAIN2","active":true,"frame":2969,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432266580,"turn":8,"phase":"MAIN2","active":true,"frame":2977,"what":"Soulherder - Creature 1 / 1","ms":462,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432267199,"turn":8,"phase":"MAIN2","active":true,"frame":2985,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432267955,"turn":8,"phase":"MAIN2","active":true,"frame":2993,"what":"Smuggler's Copter","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432268579,"turn":8,"phase":"MAIN2","active":true,"frame":3001,"what":"Priority: Justin","ms":587,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432273062,"turn":8,"phase":"CLEANUP","active":true,"frame":3021,"what":"Cleanup Phase","ms":587,"r":"select:done","did":"choose Archon of Cruelty"}
+{"t":1791432277245,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":3047,"what":"Priority: Justin","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432277865,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3054,"what":"Priority: Justin","ms":598,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791432279437,"turn":10,"phase":"MAIN1","active":true,"frame":3076,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432280066,"turn":10,"phase":"MAIN1","active":true,"frame":3083,"what":"Smuggler's Copter","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432280697,"turn":10,"phase":"MAIN1","active":true,"frame":3091,"what":"Priority: Justin","ms":602,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432289596,"turn":10,"phase":"MAIN2","active":true,"frame":3125,"what":"Priority: Justin","ms":464,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432290216,"turn":10,"phase":"MAIN2","active":true,"frame":3132,"what":"Torrential Gearhulk - Creature 5 / 6","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432290848,"turn":10,"phase":"MAIN2","active":true,"frame":3140,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432291785,"turn":10,"phase":"CLEANUP","active":true,"frame":3152,"what":"Cleanup Phase","ms":598,"r":"select:done","did":"choose Deep Analysis"}
+{"t":1791432294375,"turn":11,"phase":"COMBAT_BEGIN","active":false,"frame":3173,"what":"Priority: Justin","ms":469,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432294998,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3180,"what":"Priority: Justin","ms":584,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432302344,"turn":11,"phase":"END_OF_TURN","active":false,"frame":3216,"what":"Priority: Justin","ms":468,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432302965,"turn":11,"phase":"END_OF_TURN","active":false,"frame":3223,"what":"Torrential Gearhulk - Creature 5 / 6","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432303598,"turn":11,"phase":"END_OF_TURN","active":false,"frame":3231,"what":"Priority: Justin","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432304591,"turn":12,"phase":"MAIN1","active":true,"frame":3242,"what":"Priority: Justin","ms":470,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432305215,"turn":12,"phase":"MAIN1","active":true,"frame":3250,"what":"Torrential Gearhulk - Creature 5 / 6","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432305849,"turn":12,"phase":"MAIN1","active":true,"frame":3258,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791432306602,"turn":12,"phase":"MAIN1","active":true,"frame":3266,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432307231,"turn":12,"phase":"MAIN1","active":true,"frame":3274,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432307986,"turn":12,"phase":"MAIN1","active":true,"frame":3282,"what":"Avenger of Zendikar - Creature 5 / 5","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432308618,"turn":12,"phase":"MAIN1","active":true,"frame":3290,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432309249,"turn":12,"phase":"MAIN1","active":true,"frame":3298,"what":"Smuggler's Copter","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432310001,"turn":12,"phase":"MAIN1","active":true,"frame":3306,"what":"Priority: Justin","ms":594,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432318479,"turn":12,"phase":"MAIN2","active":true,"frame":3340,"what":"Priority: Justin","ms":361,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432318993,"turn":12,"phase":"MAIN2","active":true,"frame":3341,"what":"ask ability_menu: ","ms":369,"r":"ask:ability_menu","did":null}
+{"t":1791432319515,"turn":12,"phase":"MAIN2","active":true,"frame":3349,"what":"Reveillark - Creature 4 / 3","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432320146,"turn":12,"phase":"MAIN2","active":true,"frame":3357,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432320781,"turn":12,"phase":"MAIN2","active":true,"frame":3365,"what":"Torrential Gearhulk - Creature 5 / 6","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432321533,"turn":12,"phase":"MAIN2","active":true,"frame":3373,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432322164,"turn":12,"phase":"MAIN2","active":true,"frame":3381,"what":"Soulherder - Creature 1 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432322795,"turn":12,"phase":"MAIN2","active":true,"frame":3389,"what":"Priority: Justin","ms":586,"r":"priority:card:spell","did":"spell: Pia and Kiran Nalaar"}
+{"t":1791432323535,"turn":12,"phase":"MAIN2","active":true,"frame":3397,"what":"Pia and Kiran Nalaar - Creature 2 / 2","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432324165,"turn":12,"phase":"MAIN2","active":true,"frame":3405,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432324917,"turn":12,"phase":"MAIN2","active":true,"frame":3413,"what":"Avenger of Zendikar - Creature 5 / 5","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432325549,"turn":12,"phase":"MAIN2","active":true,"frame":3421,"what":"Priority: Justin","ms":826,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791432326529,"turn":12,"phase":"MAIN2","active":true,"frame":3430,"what":"Deep Analysis (1) - Target player draws two cards.","ms":464,"r":"open-target","did":"target player 1"}
+{"t":1791432327146,"turn":12,"phase":"MAIN2","active":true,"frame":3439,"what":"Deep Analysis (1) - Sam draws two cards.","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432327781,"turn":12,"phase":"MAIN2","active":true,"frame":3447,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432328537,"turn":12,"phase":"MAIN2","active":true,"frame":3455,"what":"Smuggler's Copter","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432329162,"turn":12,"phase":"MAIN2","active":true,"frame":3463,"what":"Priority: Justin","ms":584,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432330232,"turn":12,"phase":"CLEANUP","active":true,"frame":3475,"what":"Cleanup Phase","ms":598,"r":"select:done","did":"choose Pia and Kiran Nalaar"}
+{"t":1791432338997,"turn":13,"phase":"COMBAT_BEGIN","active":false,"frame":3516,"what":"Priority: Justin","ms":477,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432339627,"turn":13,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3523,"what":"Priority: Justin","ms":465,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432340245,"turn":13,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3531,"what":"Torrential Gearhulk - Creature 5 / 6","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432340882,"turn":13,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3539,"what":"Priority: Justin","ms":836,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432363491,"turn":13,"phase":"END_OF_TURN","active":false,"frame":3578,"what":"Priority: Justin","ms":469,"r":"priority:eot","did":"To EOT"}
+{"t":1791432364113,"turn":14,"phase":"MAIN1","active":true,"frame":3589,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432364751,"turn":14,"phase":"MAIN1","active":true,"frame":3597,"what":"Soulherder - Creature 1 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432365379,"turn":14,"phase":"MAIN1","active":true,"frame":3605,"what":"Priority: Justin","ms":364,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432365895,"turn":14,"phase":"MAIN1","active":true,"frame":3606,"what":"ask ability_menu: ","ms":366,"r":"ask:ability_menu","did":null}
+{"t":1791432366415,"turn":14,"phase":"MAIN1","active":true,"frame":3614,"what":"Reveillark (Evoked)","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432367167,"turn":14,"phase":"MAIN1","active":true,"frame":3622,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432378429,"turn":14,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":3663,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791432381417,"turn":14,"phase":"MAIN2","active":true,"frame":3682,"what":"Priority: Justin","ms":357,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432381988,"turn":14,"phase":"MAIN2","active":true,"frame":3683,"what":"ask ability_menu: ","ms":875,"r":"ask:ability_menu","did":null}
+{"t":1791432383016,"turn":14,"phase":"MAIN2","active":true,"frame":3691,"what":"Reveillark (Evoked)","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432383648,"turn":14,"phase":"MAIN2","active":true,"frame":3699,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432384280,"turn":14,"phase":"MAIN2","active":true,"frame":3707,"what":"Soulherder - Creature 1 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432384912,"turn":14,"phase":"MAIN2","active":true,"frame":3715,"what":"Priority: Justin","ms":1007,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791432386074,"turn":14,"phase":"MAIN2","active":true,"frame":3724,"what":"Deep Analysis (1) - Target player draws two cards.","ms":465,"r":"open-target","did":"target player 1"}
+{"t":1791432386693,"turn":14,"phase":"MAIN2","active":true,"frame":3733,"what":"Deep Analysis (1) - Sam draws two cards.","ms":483,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432387330,"turn":14,"phase":"MAIN2","active":true,"frame":3741,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791432388085,"turn":14,"phase":"MAIN2","active":true,"frame":3749,"what":"Goblin Bombardment","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432388713,"turn":14,"phase":"MAIN2","active":true,"frame":3757,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Smuggler's Copter"}
+{"t":1791432389468,"turn":14,"phase":"MAIN2","active":true,"frame":3765,"what":"Smuggler's Copter","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432390098,"turn":14,"phase":"MAIN2","active":true,"frame":3773,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432390850,"turn":14,"phase":"MAIN2","active":true,"frame":3781,"what":"Avenger of Zendikar - Creature 5 / 5","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432391476,"turn":14,"phase":"MAIN2","active":true,"frame":3789,"what":"Priority: Justin","ms":470,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791432392101,"turn":14,"phase":"MAIN2","active":true,"frame":3797,"what":"Satyr Wayfinder - Creature 1 / 1","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432392847,"turn":14,"phase":"MAIN2","active":true,"frame":3805,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432393482,"turn":14,"phase":"MAIN2","active":true,"frame":3813,"what":"Torrential Gearhulk - Creature 5 / 6","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432394235,"turn":14,"phase":"MAIN2","active":true,"frame":3821,"what":"Priority: Justin","ms":594,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791432395157,"turn":14,"phase":"CLEANUP","active":true,"frame":3835,"what":"Cleanup Phase","ms":471,"r":"select:done","did":"choose Smuggler's Copter"}
+{"t":1791432420646,"turn":15,"phase":"COMBAT_BEGIN","active":false,"frame":3902,"what":"Priority: Justin","ms":479,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432421279,"turn":15,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3909,"what":"Priority: Justin","ms":840,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432429807,"turn":15,"phase":"END_OF_TURN","active":false,"frame":3943,"what":"Priority: Justin","ms":587,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432430802,"turn":16,"phase":"MAIN1","active":true,"frame":3955,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791432431435,"turn":16,"phase":"MAIN1","active":true,"frame":3962,"what":"Satyr Wayfinder - Creature 1 / 1","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432432063,"turn":16,"phase":"MAIN1","active":true,"frame":3970,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432432698,"turn":16,"phase":"MAIN1","active":true,"frame":3978,"what":"Soulherder - Creature 1 / 1","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432433334,"turn":16,"phase":"MAIN1","active":true,"frame":3986,"what":"Priority: Justin","ms":595,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791432434083,"turn":16,"phase":"MAIN1","active":true,"frame":3994,"what":"Goblin Bombardment","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432434713,"turn":16,"phase":"MAIN1","active":true,"frame":4002,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Cranial Plating"}
+{"t":1791432435469,"turn":16,"phase":"MAIN1","active":true,"frame":4010,"what":"Cranial Plating","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432436094,"turn":16,"phase":"MAIN1","active":true,"frame":4018,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432436851,"turn":16,"phase":"MAIN1","active":true,"frame":4026,"what":"Avenger of Zendikar - Creature 5 / 5","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432437478,"turn":16,"phase":"MAIN1","active":true,"frame":4034,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432438234,"turn":16,"phase":"MAIN1","active":true,"frame":4042,"what":"Charming Prince - Creature 2 / 2","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432438862,"turn":16,"phase":"MAIN1","active":true,"frame":4050,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432439499,"turn":16,"phase":"MAIN1","active":true,"frame":4058,"what":"Torrential Gearhulk - Creature 5 / 6","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432440250,"turn":16,"phase":"MAIN1","active":true,"frame":4066,"what":"Priority: Justin","ms":356,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432440758,"turn":16,"phase":"MAIN1","active":true,"frame":4067,"what":"ask ability_menu: ","ms":369,"r":"ask:ability_menu","did":null}
+{"t":1791432441283,"turn":16,"phase":"MAIN1","active":true,"frame":4075,"what":"Reveillark (Evoked)","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432442030,"turn":16,"phase":"MAIN1","active":true,"frame":4083,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432451712,"turn":16,"phase":"MAIN2","active":true,"frame":4112,"what":"Priority: Justin","ms":360,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432452225,"turn":16,"phase":"MAIN2","active":true,"frame":4113,"what":"ask ability_menu: ","ms":401,"r":"ask:ability_menu","did":null}
+{"t":1791432452779,"turn":16,"phase":"MAIN2","active":true,"frame":4121,"what":"Reveillark - Creature 4 / 3","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432453409,"turn":16,"phase":"MAIN2","active":true,"frame":4129,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432454498,"turn":16,"phase":"CLEANUP","active":true,"frame":4141,"what":"Cleanup Phase","ms":596,"r":"select:done","did":"choose Cranial Plating"}
+{"t":1791432457286,"turn":17,"phase":"MAIN1","active":false,"frame":4163,"what":"Priority: Justin","ms":590,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791432479191,"turn":18,"phase":"MAIN1","active":true,"frame":4250,"what":"Priority: Justin","ms":603,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432484568,"turn":18,"phase":"MAIN2","active":true,"frame":4275,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791432485196,"turn":18,"phase":"MAIN2","active":true,"frame":4282,"what":"Goblin Bombardment","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432485824,"turn":18,"phase":"MAIN2","active":true,"frame":4290,"what":"Priority: Justin","ms":832,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791432486811,"turn":18,"phase":"MAIN2","active":true,"frame":4299,"what":"Deep Analysis (1) - Target player draws two cards.","ms":476,"r":"open-target","did":"target player 0"}
+{"t":1791432487441,"turn":18,"phase":"MAIN2","active":true,"frame":4308,"what":"Deep Analysis (1) - Justin draws two cards.","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432488075,"turn":18,"phase":"MAIN2","active":true,"frame":4316,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432488833,"turn":18,"phase":"MAIN2","active":true,"frame":4324,"what":"Avenger of Zendikar - Creature 5 / 5","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432489461,"turn":18,"phase":"MAIN2","active":true,"frame":4332,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432490216,"turn":18,"phase":"MAIN2","active":true,"frame":4340,"what":"Torrential Gearhulk - Creature 5 / 6","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432490842,"turn":18,"phase":"MAIN2","active":true,"frame":4348,"what":"Priority: Justin","ms":361,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432491356,"turn":18,"phase":"MAIN2","active":true,"frame":4349,"what":"ask ability_menu: ","ms":1723,"r":"ask:ability_menu","did":null}
+{"t":1791432493232,"turn":18,"phase":"MAIN2","active":true,"frame":4349,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432493863,"turn":18,"phase":"MAIN2","active":true,"frame":4357,"what":"Soulherder - Creature 1 / 1","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432494610,"turn":18,"phase":"MAIN2","active":true,"frame":4365,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432495521,"turn":18,"phase":"CLEANUP","active":true,"frame":4377,"what":"Cleanup Phase","ms":591,"r":"select:done","did":"choose Satyr Wayfinder"}
+{"t":1791432515831,"turn":19,"phase":"COMBAT_BEGIN","active":false,"frame":4435,"what":"Priority: Justin","ms":472,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432516457,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4442,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432517094,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4450,"what":"Torrential Gearhulk - Creature 5 / 6","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432517724,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4458,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432526584,"turn":19,"phase":"END_OF_TURN","active":false,"frame":4490,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432527210,"turn":19,"phase":"END_OF_TURN","active":false,"frame":4497,"what":"Torrential Gearhulk - Creature 5 / 6","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432527842,"turn":19,"phase":"END_OF_TURN","active":false,"frame":4505,"what":"Priority: Justin","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432528833,"turn":20,"phase":"MAIN1","active":true,"frame":4516,"what":"Priority: Justin","ms":354,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432529339,"turn":20,"phase":"MAIN1","active":true,"frame":4517,"what":"ask ability_menu: ","ms":385,"r":"ask:ability_menu","did":null}
+{"t":1791432529879,"turn":20,"phase":"MAIN1","active":true,"frame":4525,"what":"Reveillark (Evoked)","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432530507,"turn":20,"phase":"MAIN1","active":true,"frame":4533,"what":"Priority: Justin","ms":605,"r":"priority:card:spell","did":"spell: Avenger of Zendikar"}
+{"t":1791432531265,"turn":20,"phase":"MAIN1","active":true,"frame":4541,"what":"Avenger of Zendikar - Creature 5 / 5","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432531937,"turn":20,"phase":"MAIN1","active":true,"frame":4549,"what":"Priority: Justin","ms":589,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791432532680,"turn":20,"phase":"MAIN1","active":true,"frame":4557,"what":"Man-o'-War - Creature 2 / 2","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432533428,"turn":20,"phase":"MAIN1","active":true,"frame":4565,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432544705,"turn":20,"phase":"MAIN2","active":true,"frame":4599,"what":"Priority: Justin","ms":603,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432545700,"turn":20,"phase":"CLEANUP","active":true,"frame":4610,"what":"Cleanup Phase","ms":594,"r":"select:done","did":"choose Avenger of Zendikar"}
+{"t":1791432560237,"turn":21,"phase":"COMBAT_BEGIN","active":false,"frame":4660,"what":"Priority: Justin","ms":466,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432560857,"turn":21,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4667,"what":"Priority: Justin","ms":840,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432561850,"turn":21,"phase":"END_OF_TURN","active":false,"frame":4679,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432562476,"turn":21,"phase":"END_OF_TURN","active":false,"frame":4687,"what":"Torrential Gearhulk - Creature 5 / 6","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432563107,"turn":21,"phase":"END_OF_TURN","active":false,"frame":4695,"what":"Priority: Justin","ms":840,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432564100,"turn":22,"phase":"MAIN1","active":true,"frame":4706,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Torrential Gearhulk"}
+{"t":1791432565210,"turn":22,"phase":"MAIN1","active":true,"frame":4714,"what":"Torrential Gearhulk - Creature 5 / 6","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432565849,"turn":22,"phase":"MAIN1","active":true,"frame":4722,"what":"Priority: Justin","ms":590,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432569209,"turn":22,"phase":"MAIN2","active":true,"frame":4740,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432569842,"turn":22,"phase":"MAIN2","active":true,"frame":4747,"what":"Soulherder - Creature 1 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432570475,"turn":22,"phase":"MAIN2","active":true,"frame":4755,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791432571110,"turn":22,"phase":"MAIN2","active":true,"frame":4763,"what":"Goblin Bombardment","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432571859,"turn":22,"phase":"MAIN2","active":true,"frame":4771,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432572781,"turn":22,"phase":"CLEANUP","active":true,"frame":4783,"what":"Cleanup Phase","ms":880,"r":"select:1","did":"choose Torrential Gearhulk"}
+{"t":1791432588114,"turn":23,"phase":"COMBAT_BEGIN","active":false,"frame":4833,"what":"Priority: Justin","ms":471,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432588741,"turn":23,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4840,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432602052,"turn":23,"phase":"END_OF_TURN","active":false,"frame":4880,"what":"Priority: Justin","ms":587,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432603046,"turn":24,"phase":"MAIN1","active":true,"frame":4892,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791432603675,"turn":24,"phase":"MAIN1","active":true,"frame":4899,"what":"Goblin Bombardment","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432604309,"turn":24,"phase":"MAIN1","active":true,"frame":4907,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Charming Prince"}
+{"t":1791432604943,"turn":24,"phase":"MAIN1","active":true,"frame":4915,"what":"Charming Prince - Creature 2 / 2","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432605575,"turn":24,"phase":"MAIN1","active":true,"frame":4923,"what":"Priority: Justin","ms":362,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432606090,"turn":24,"phase":"MAIN1","active":true,"frame":4924,"what":"ask ability_menu: ","ms":505,"r":"ask:ability_menu","did":null}
+{"t":1791432606755,"turn":24,"phase":"MAIN1","active":true,"frame":4932,"what":"Reveillark - Creature 4 / 3","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432607511,"turn":24,"phase":"MAIN1","active":true,"frame":4940,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791432608141,"turn":24,"phase":"MAIN1","active":true,"frame":4945,"what":"ask choose_list: Choose X for Walking Ballista","ms":416,"r":"ask:choose_list","did":null}
+{"t":1791432608711,"turn":24,"phase":"MAIN1","active":true,"frame":4951,"what":"Walking Ballista - Creature 0 / 0 (X=7)","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432609340,"turn":24,"phase":"MAIN1","active":true,"frame":4959,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Phantasmal Image"}
+{"t":1791432610098,"turn":24,"phase":"MAIN1","active":true,"frame":4967,"what":"Phantasmal Image - Creature 0 / 0","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432610724,"turn":24,"phase":"MAIN1","active":true,"frame":4975,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432612607,"turn":24,"phase":"MAIN2","active":true,"frame":4993,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791432613241,"turn":24,"phase":"MAIN2","active":true,"frame":4997,"what":"ask choose_list: Choose X for Walking Ballista","ms":504,"r":"ask:choose_list","did":null}
+{"t":1791432613899,"turn":24,"phase":"MAIN2","active":true,"frame":5004,"what":"Priority: Justin","ms":813,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791432614866,"turn":24,"phase":"MAIN2","active":true,"frame":5013,"what":"Deep Analysis (1) - Target player draws two cards.","ms":470,"r":"open-target","did":"target player 1"}
+{"t":1791432615490,"turn":24,"phase":"MAIN2","active":true,"frame":5022,"what":"Deep Analysis (1) - Sam draws two cards.","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432616123,"turn":24,"phase":"MAIN2","active":true,"frame":5030,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Phantasmal Image"}
+{"t":1791432616879,"turn":24,"phase":"MAIN2","active":true,"frame":5038,"what":"Phantasmal Image - Creature 0 / 0","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432617508,"turn":24,"phase":"MAIN2","active":true,"frame":5046,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791432618263,"turn":24,"phase":"MAIN2","active":true,"frame":5054,"what":"Man-o'-War - Creature 2 / 2","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432618891,"turn":24,"phase":"MAIN2","active":true,"frame":5062,"what":"Priority: Justin","ms":362,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432619407,"turn":24,"phase":"MAIN2","active":true,"frame":5063,"what":"ask ability_menu: ","ms":512,"r":"ask:ability_menu","did":null}
+{"t":1791432620073,"turn":24,"phase":"MAIN2","active":true,"frame":5071,"what":"Reveillark (Evoked)","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432620706,"turn":24,"phase":"MAIN2","active":true,"frame":5079,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432621465,"turn":24,"phase":"MAIN2","active":true,"frame":5087,"what":"Soulherder - Creature 1 / 1","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432622089,"turn":24,"phase":"MAIN2","active":true,"frame":5095,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791432622845,"turn":24,"phase":"MAIN2","active":true,"frame":5103,"what":"Goblin Bombardment","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432623475,"turn":24,"phase":"MAIN2","active":true,"frame":5111,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432624559,"turn":24,"phase":"CLEANUP","active":true,"frame":5123,"what":"Cleanup Phase","ms":479,"r":"select:done","did":"choose Charming Prince"}
+{"t":1791432651438,"turn":25,"phase":"COMBAT_BEGIN","active":false,"frame":5194,"what":"Priority: Justin","ms":479,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432652072,"turn":25,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5201,"what":"Priority: Justin","ms":632,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432667764,"turn":25,"phase":"END_OF_TURN","active":false,"frame":5242,"what":"Priority: Justin","ms":472,"r":"priority:eot","did":"To EOT"}
+{"t":1791432669822,"turn":26,"phase":"MAIN1","active":true,"frame":5256,"what":"Priority: Justin","ms":485,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791432670461,"turn":26,"phase":"MAIN1","active":true,"frame":5264,"what":"Goblin Bombardment","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432671088,"turn":26,"phase":"MAIN1","active":true,"frame":5272,"what":"Priority: Justin","ms":600,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791432673539,"turn":26,"phase":"CLEANUP","active":true,"frame":5297,"what":"Cleanup Phase","ms":482,"r":"select:done","did":"choose Phantasmal Image"}
+{"t":1791432677521,"turn":27,"phase":"MAIN1","active":false,"frame":5321,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791432701622,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":5338,"what":"Priority: Justin","ms":485,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432702260,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":5345,"what":"Priority: Justin","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432702890,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5353,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432703525,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5361,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432796595,"turn":27,"phase":"END_OF_TURN","active":false,"frame":5415,"what":"Priority: Justin","ms":489,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432797238,"turn":27,"phase":"END_OF_TURN","active":false,"frame":5422,"what":"Priority: Justin","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432797868,"turn":28,"phase":"MAIN1","active":true,"frame":5430,"what":"Priority: Justin","ms":483,"r":"priority:card:land","did":"land: Arid Mesa"}
+{"t":1791432798504,"turn":28,"phase":"MAIN1","active":true,"frame":5438,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791432800378,"turn":28,"phase":"MAIN2","active":true,"frame":5456,"what":"Priority: Justin","ms":489,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432801020,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2846,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432804019,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2848,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432807024,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2841,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432810018,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2847,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432813018,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2848,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432816020,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2845,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432819019,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2846,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432822018,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2846,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432825019,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":2846,"r":"pay:tap","did":"tap Arid Mesa for mana"}
+{"t":1791432828018,"turn":28,"phase":"MAIN2","active":true,"frame":5463,"what":"Soulherder - Creature 1 / 1","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432828769,"turn":28,"phase":"MAIN2","active":true,"frame":5471,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791432843786,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5513,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432844419,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5520,"what":"Priority: Justin","ms":479,"r":"priority:card:ability (ability)","did":"ability (ability): Arid Mesa"}
+{"t":1791432845835,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5525,"what":"Do you want to pay 1 life?","ms":479,"r":"buttons:buttons:ok","did":"ok \"YesSpace\""}
+{"t":1791432846471,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5532,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432847101,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5540,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791432848150,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5550,"what":"ask choose_entities: Select a card from your library","ms":535,"r":"ask:choose_entities","did":null}
+{"t":1791432848839,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5554,"what":"Cancel Search? Up to 1 more card(s) can be selected.","ms":474,"r":"buttons:buttons:ok","did":"ok \"YesSpace\""}
+{"t":1791432849466,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":5561,"what":"Priority: Justin","ms":481,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432852164,"turn":29,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5573,"what":"Priority: Justin","ms":521,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432852839,"turn":29,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5581,"what":"Priority: Justin","ms":474,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791432865690,"turn":30,"phase":"MAIN1","active":true,"frame":5622,"what":"Priority: Justin","ms":1508,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791432869614,"turn":30,"phase":"CLEANUP","active":true,"frame":5640,"what":"Cleanup Phase","ms":486,"r":"select:done","did":"choose Deadly Dispute"}
+{"t":1791432878431,"turn":31,"phase":"MAIN1","active":false,"frame":5671,"what":"Priority: Justin","ms":488,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432879080,"turn":31,"phase":"MAIN1","active":false,"frame":5678,"what":"Priority: Justin","ms":620,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791432889184,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":5721,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432889821,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":5728,"what":"Priority: Justin","ms":490,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791432890471,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":5733,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":414,"r":"ask:choose_list","did":null}
+{"t":1791432891050,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":5736,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":386,"r":"ask:choose_list","did":null}
+{"t":1791432891591,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":5743,"what":"Priority: Justin","ms":488,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432892233,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5751,"what":"Priority: Justin","ms":839,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791432898541,"turn":32,"phase":"MAIN1","active":true,"frame":5780,"what":"Priority: Justin","ms":617,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791432899320,"turn":32,"phase":"MAIN1","active":true,"frame":5784,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":383,"r":"ask:choose_list","did":null}
+{"t":1791432899856,"turn":32,"phase":"MAIN1","active":true,"frame":5791,"what":"Priority: Justin","ms":376,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791432900385,"turn":32,"phase":"MAIN1","active":true,"frame":5792,"what":"ask ability_menu: ","ms":1729,"r":"ask:ability_menu","did":null}
+{"t":1791432902269,"turn":32,"phase":"MAIN1","active":true,"frame":5792,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791432904128,"turn":32,"phase":"MAIN1","active":true,"frame":5800,"what":"Soulherder - Creature 1 / 1","ms":503,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432904784,"turn":32,"phase":"MAIN1","active":true,"frame":5808,"what":"Priority: Justin","ms":487,"r":"priority:card:spell","did":"spell: Lingering Souls"}
+{"t":1791432905427,"turn":32,"phase":"MAIN1","active":true,"frame":5816,"what":"Lingering Souls (28) - Justin creates two 1/1 white Spirit creature tokens with flying.","ms":1071,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432906651,"turn":32,"phase":"MAIN1","active":true,"frame":5824,"what":"Priority: Justin","ms":834,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791432907639,"turn":32,"phase":"MAIN1","active":true,"frame":5833,"what":"Deep Analysis (1) - Target player draws two cards.","ms":590,"r":"open-target","did":"target player 1"}
+{"t":1791432908384,"turn":32,"phase":"MAIN1","active":true,"frame":5842,"what":"Deep Analysis (1) - Sam draws two cards.","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791432909014,"turn":32,"phase":"MAIN1","active":true,"frame":5850,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791432909769,"turn":32,"phase":"MAIN1","active":true,"frame":5855,"what":"ask choose_list: Choose X for Walking Ballista","ms":381,"r":"ask:choose_list","did":null}
+{"t":1791432910305,"turn":32,"phase":"MAIN1","active":true,"frame":5862,"what":"Priority: Justin","ms":595,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791432914115,"turn":32,"phase":"CLEANUP","active":true,"frame":5887,"what":"Cleanup Phase","ms":983,"r":"select:done","did":"choose Walking Ballista"}
+{"t":1791432930946,"turn":33,"phase":"MAIN1","active":false,"frame":5929,"what":"Priority: Justin","ms":2401,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791432933500,"turn":33,"phase":"MAIN1","active":false,"frame":5934,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":2743,"r":"ask:choose_list","did":null}
+{"t":1791432936395,"turn":33,"phase":"MAIN1","active":false,"frame":5937,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":399,"r":"ask:choose_list","did":null}
+{"t":1791432936947,"turn":33,"phase":"MAIN1","active":false,"frame":5944,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791432939821,"turn":33,"phase":"MAIN1","active":false,"frame":5961,"what":"Priority: Justin","ms":491,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791432962477,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6014,"what":"Priority: Justin","ms":487,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791432963117,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6018,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":505,"r":"ask:choose_list","did":null}
+{"t":1791432963779,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6025,"what":"Priority: Justin","ms":3875,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432969846,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":6038,"what":"Priority: Justin","ms":492,"r":"priority:card:spell","did":"spell: Ephemerate"}
+{"t":1791432970492,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":6045,"what":"Priority: Justin","ms":496,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791432971141,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":6050,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":426,"r":"ask:choose_list","did":null}
+{"t":1791432971719,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":6053,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":382,"r":"ask:choose_list","did":null}
+{"t":1791432972254,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":6060,"what":"Priority: Justin","ms":1544,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432998178,"turn":33,"phase":"END_OF_TURN","active":false,"frame":6116,"what":"Priority: Justin","ms":681,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791432999013,"turn":34,"phase":"MAIN1","active":true,"frame":6124,"what":"Priority: Justin","ms":730,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791432999896,"turn":34,"phase":"MAIN1","active":true,"frame":6129,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":401,"r":"ask:choose_list","did":null}
+{"t":1791433000454,"turn":34,"phase":"MAIN1","active":true,"frame":6136,"what":"Priority: Justin","ms":618,"r":"priority:card:spell","did":"spell: Kari Zev, Skyship Raider"}
+{"t":1791433001345,"turn":34,"phase":"MAIN1","active":true,"frame":6144,"what":"Kari Zev, Skyship Raider - Creature 1 / 3","ms":501,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433002001,"turn":34,"phase":"MAIN1","active":true,"frame":6152,"what":"Priority: Justin","ms":733,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791433002889,"turn":34,"phase":"MAIN1","active":true,"frame":6160,"what":"Soulherder - Creature 1 / 1","ms":584,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433004034,"turn":34,"phase":"MAIN1","active":true,"frame":6161,"what":"Soulherder - Creature 1 / 1","ms":1157,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433005684,"turn":34,"phase":"MAIN1","active":true,"frame":6170,"what":"Priority: Justin","ms":486,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791433006324,"turn":34,"phase":"MAIN1","active":true,"frame":6178,"what":"Man-o'-War - Creature 2 / 2","ms":487,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433006965,"turn":34,"phase":"MAIN1","active":true,"frame":6186,"what":"Priority: Justin","ms":547,"r":"priority:card:spell","did":"spell: Lingering Souls"}
+{"t":1791433007665,"turn":34,"phase":"MAIN1","active":true,"frame":6195,"what":"Lingering Souls (28) - Justin creates two 1/1 white Spirit creature tokens with flying.","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433008317,"turn":34,"phase":"MAIN1","active":true,"frame":6203,"what":"Priority: Justin","ms":482,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791433010945,"turn":34,"phase":"MAIN2","active":true,"frame":6222,"what":"Priority: Justin","ms":3767,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791433014865,"turn":34,"phase":"MAIN2","active":true,"frame":6232,"what":"Man-o'-War - Creature 2 / 2","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433015506,"turn":34,"phase":"MAIN2","active":true,"frame":6240,"what":"Priority: Justin","ms":498,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791433016158,"turn":34,"phase":"MAIN2","active":true,"frame":6248,"what":"Goblin Bombardment","ms":611,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433016922,"turn":34,"phase":"MAIN2","active":true,"frame":6256,"what":"Priority: Justin","ms":613,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791433018017,"turn":34,"phase":"CLEANUP","active":true,"frame":6268,"what":"Cleanup Phase","ms":2187,"r":"select:done","did":"choose Ephemerate"}
+{"t":1791433024104,"turn":35,"phase":"COMBAT_BEGIN","active":false,"frame":6289,"what":"Priority: Justin","ms":677,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433026026,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6302,"what":"Priority: Justin","ms":2850,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791433061243,"turn":36,"phase":"MAIN1","active":true,"frame":6368,"what":"Priority: Justin","ms":487,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791433061882,"turn":36,"phase":"MAIN1","active":true,"frame":6372,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":1350,"r":"ask:choose_list","did":null}
+{"t":1791433063386,"turn":36,"phase":"MAIN1","active":true,"frame":6379,"what":"Priority: Justin","ms":376,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791433063916,"turn":36,"phase":"MAIN1","active":true,"frame":6380,"what":"ask ability_menu: ","ms":1724,"r":"ask:ability_menu","did":null}
+{"t":1791433065793,"turn":36,"phase":"MAIN1","active":true,"frame":6380,"what":"Priority: Justin","ms":493,"r":"priority:card:spell","did":"spell: Lingering Souls"}
+{"t":1791433066440,"turn":36,"phase":"MAIN1","active":true,"frame":6388,"what":"Lingering Souls (28) - Justin creates two 1/1 white Spirit creature tokens with flying.","ms":487,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433067084,"turn":36,"phase":"MAIN1","active":true,"frame":6396,"what":"Priority: Justin","ms":511,"r":"priority:card:spell","did":"spell: Kari Zev, Skyship Raider"}
+{"t":1791433067748,"turn":36,"phase":"MAIN1","active":true,"frame":6404,"what":"Kari Zev, Skyship Raider - Creature 1 / 3","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433068501,"turn":36,"phase":"MAIN1","active":true,"frame":6412,"what":"Priority: Justin","ms":499,"r":"priority:card:spell","did":"spell: Goblin Bombardment"}
+{"t":1791433069154,"turn":36,"phase":"MAIN1","active":true,"frame":6420,"what":"Goblin Bombardment","ms":609,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433069917,"turn":36,"phase":"MAIN1","active":true,"frame":6428,"what":"Priority: Justin","ms":627,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791433070698,"turn":36,"phase":"MAIN1","active":true,"frame":6436,"what":"Soulherder - Creature 1 / 1","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433071331,"turn":36,"phase":"MAIN1","active":true,"frame":6444,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791433073190,"turn":36,"phase":"MAIN2","active":true,"frame":6462,"what":"Priority: Justin","ms":914,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791433074257,"turn":36,"phase":"MAIN2","active":true,"frame":6470,"what":"Soulherder - Creature 1 / 1","ms":365,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433075781,"turn":36,"phase":"MAIN2","active":true,"frame":6478,"what":"Priority: Justin","ms":1262,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791433077571,"turn":36,"phase":"CLEANUP","active":true,"frame":6490,"what":"Cleanup Phase","ms":621,"r":"select:done","did":"choose Goblin Bombardment"}
+{"t":1791433078764,"turn":37,"phase":"COMBAT_BEGIN","active":false,"frame":6505,"what":"Priority: Justin","ms":647,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433081951,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6519,"what":"Priority: Justin","ms":502,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791433082607,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6526,"what":"Snapcaster Mage - Creature 2 / 1","ms":714,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433083474,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6534,"what":"Priority: Justin","ms":715,"r":"priority:eot","did":"To EOT"}
+{"t":1791433089396,"turn":38,"phase":"MAIN1","active":true,"frame":6567,"what":"Priority: Justin","ms":520,"r":"priority:card:spell","did":"spell: Kari Zev, Skyship Raider"}
+{"t":1791433090069,"turn":38,"phase":"MAIN1","active":true,"frame":6575,"what":"Kari Zev, Skyship Raider - Creature 1 / 3","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433090714,"turn":38,"phase":"MAIN1","active":true,"frame":6583,"what":"Priority: Justin","ms":608,"r":"priority:card:spell","did":"spell: Lingering Souls"}
+{"t":1791433091477,"turn":38,"phase":"MAIN1","active":true,"frame":6591,"what":"Lingering Souls (28) - Justin creates two 1/1 white Spirit creature tokens with flying.","ms":607,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433092237,"turn":38,"phase":"MAIN1","active":true,"frame":6600,"what":"Priority: Justin","ms":848,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791433093239,"turn":38,"phase":"MAIN1","active":true,"frame":6609,"what":"Deep Analysis (1) - Target player draws two cards.","ms":483,"r":"open-target","did":"target player 0"}
+{"t":1791433093876,"turn":38,"phase":"MAIN1","active":true,"frame":6618,"what":"Deep Analysis (1) - Justin draws two cards.","ms":603,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433094632,"turn":38,"phase":"MAIN1","active":true,"frame":6626,"what":"Priority: Justin","ms":2679,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791433097465,"turn":38,"phase":"MAIN1","active":true,"frame":6634,"what":"Snapcaster Mage - Creature 2 / 1","ms":620,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433098242,"turn":38,"phase":"MAIN1","active":true,"frame":6642,"what":"Priority: Justin","ms":370,"r":"priority:card:spell","did":"spell: Reveillark"}
+{"t":1791433098764,"turn":38,"phase":"MAIN1","active":true,"frame":6643,"what":"ask ability_menu: ","ms":506,"r":"ask:ability_menu","did":null}
+{"t":1791433099423,"turn":38,"phase":"MAIN1","active":true,"frame":6651,"what":"Reveillark - Creature 4 / 3","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433100070,"turn":38,"phase":"MAIN1","active":true,"frame":6659,"what":"Priority: Justin","ms":613,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791433103531,"turn":38,"phase":"MAIN2","active":true,"frame":6677,"what":"Priority: Justin","ms":487,"r":"priority:card:spell","did":"spell: Kari Zev, Skyship Raider"}
+{"t":1791433104171,"turn":38,"phase":"MAIN2","active":true,"frame":6684,"what":"Kari Zev, Skyship Raider - Creature 1 / 3","ms":489,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433104815,"turn":38,"phase":"MAIN2","active":true,"frame":6692,"what":"Priority: Justin","ms":496,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791433105466,"turn":38,"phase":"MAIN2","active":true,"frame":6700,"what":"Man-o'-War - Creature 2 / 2","ms":501,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433106120,"turn":38,"phase":"MAIN2","active":true,"frame":6708,"what":"Priority: Justin","ms":618,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791433113126,"turn":38,"phase":"CLEANUP","active":true,"frame":6720,"what":"Cleanup Phase","ms":859,"r":"select:done","did":"choose Reveillark"}
+{"t":1791433189497,"turn":39,"phase":"COMBAT_BEGIN","active":false,"frame":6790,"what":"Priority: Justin","ms":767,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433192722,"turn":39,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6804,"what":"Priority: Justin","ms":492,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433194713,"turn":39,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":6816,"what":"Priority: Justin","ms":489,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433208455,"turn":39,"phase":"END_OF_TURN","active":false,"frame":6843,"what":"Priority: Justin","ms":2964,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433211839,"turn":40,"phase":"MAIN1","active":true,"frame":6855,"what":"Priority: Justin","ms":499,"r":"priority:card:spell","did":"spell: Kari Zev, Skyship Raider"}
+{"t":1791433212491,"turn":40,"phase":"MAIN1","active":true,"frame":6862,"what":"Kari Zev, Skyship Raider - Creature 1 / 3","ms":1438,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433214081,"turn":40,"phase":"MAIN1","active":true,"frame":6870,"what":"Priority: Justin","ms":618,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791433214853,"turn":40,"phase":"MAIN1","active":true,"frame":6879,"what":"Soulherder - Creature 1 / 1","ms":3264,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433218271,"turn":40,"phase":"MAIN1","active":true,"frame":6887,"what":"Priority: Justin","ms":494,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791433218918,"turn":40,"phase":"MAIN1","active":true,"frame":6895,"what":"Snapcaster Mage - Creature 2 / 1","ms":367,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433220232,"turn":40,"phase":"MAIN1","active":true,"frame":6904,"what":"Priority: Justin","ms":500,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791433220887,"turn":40,"phase":"MAIN1","active":true,"frame":6912,"what":"Man-o'-War - Creature 2 / 2","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433221531,"turn":40,"phase":"MAIN1","active":true,"frame":6920,"what":"Priority: Justin","ms":628,"r":"priority:card:spell","did":"spell: Lingering Souls"}
+{"t":1791433222312,"turn":40,"phase":"MAIN1","active":true,"frame":6928,"what":"Lingering Souls (28) - Justin creates two 1/1 white Spirit creature tokens with flying.","ms":613,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433223081,"turn":40,"phase":"MAIN1","active":true,"frame":6936,"what":"Priority: Justin","ms":504,"r":"priority:card:spell","did":"spell: Third Path Iconoclast"}
+{"t":1791433223738,"turn":40,"phase":"MAIN1","active":true,"frame":6944,"what":"Third Path Iconoclast - Creature 2 / 1","ms":614,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433224505,"turn":40,"phase":"MAIN1","active":true,"frame":6952,"what":"Priority: Justin","ms":614,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791433225272,"turn":40,"phase":"MAIN1","active":true,"frame":6957,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":615,"r":"ask:choose_list","did":null}
+{"t":1791433226038,"turn":40,"phase":"MAIN1","active":true,"frame":6960,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":424,"r":"ask:choose_list","did":null}
+{"t":1791433226615,"turn":40,"phase":"MAIN1","active":true,"frame":6967,"what":"March of Otherworldly Light (41) - Exile target artifact, creature, or enchantment with mana value X or less.","ms":608,"r":"select:done","did":"choose Llanowar Elves"}
+{"t":1791433227377,"turn":40,"phase":"MAIN1","active":true,"frame":6977,"what":"March of Otherworldly Light (41) - Exile Llanowar Elves (84). (Exiled=7)","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433229020,"turn":40,"phase":"MAIN1","active":true,"frame":6985,"what":"Priority: Justin","ms":616,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791433232550,"turn":40,"phase":"MAIN2","active":true,"frame":7003,"what":"Priority: Justin","ms":500,"r":"priority:card:spell","did":"spell: Third Path Iconoclast"}
+{"t":1791433233205,"turn":40,"phase":"MAIN2","active":true,"frame":7010,"what":"Third Path Iconoclast - Creature 2 / 1","ms":490,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433233848,"turn":40,"phase":"MAIN2","active":true,"frame":7018,"what":"Priority: Justin","ms":623,"r":"priority:card:spell","did":"spell: Snapcaster Mage"}
+{"t":1791433234624,"turn":40,"phase":"MAIN2","active":true,"frame":7027,"what":"Snapcaster Mage - Creature 2 / 1","ms":488,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433235268,"turn":40,"phase":"MAIN2","active":true,"frame":7035,"what":"Priority: Justin","ms":621,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791433236041,"turn":40,"phase":"MAIN2","active":true,"frame":7040,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":420,"r":"ask:choose_list","did":null}
+{"t":1791433236614,"turn":40,"phase":"MAIN2","active":true,"frame":7043,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":618,"r":"ask:choose_list","did":null}
+{"t":1791433237387,"turn":40,"phase":"MAIN2","active":true,"frame":7050,"what":"Priority: Justin","ms":863,"r":"priority:card:from the graveyard (Target player draws two cards)","did":"your graveyard; from the graveyard (Target player draws two cards): Deep Analysis"}
+{"t":1791433238404,"turn":40,"phase":"MAIN2","active":true,"frame":7059,"what":"Deep Analysis (1) - Target player draws two cards.","ms":482,"r":"open-target","did":"target player 1"}
+{"t":1791433239040,"turn":40,"phase":"MAIN2","active":true,"frame":7068,"what":"Deep Analysis (1) - Sam draws two cards.","ms":604,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433239798,"turn":40,"phase":"MAIN2","active":true,"frame":7076,"what":"Priority: Justin","ms":615,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791433240727,"turn":40,"phase":"CLEANUP","active":true,"frame":7088,"what":"Cleanup Phase","ms":624,"r":"select:done","did":"choose Snapcaster Mage"}
+{"t":1791433255325,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":7112,"what":"Priority: Justin","ms":494,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791433255972,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":7117,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":420,"r":"ask:choose_list","did":null}
+{"t":1791433256544,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":7120,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":420,"r":"ask:choose_list","did":null}
+{"t":1791433257117,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":7127,"what":"March of Otherworldly Light (41) - Exile target artifact, creature, or enchantment with mana value X or less.","ms":484,"r":"select:done","did":"choose Llanowar Elves"}
+{"t":1791433257758,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":7136,"what":"March of Otherworldly Light (41) - Exile Llanowar Elves (84). (Exiled=6)","ms":490,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433258402,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":7144,"what":"Priority: Justin","ms":612,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433261072,"turn":41,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7158,"what":"Priority: Justin","ms":611,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433262666,"turn":41,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7170,"what":"Priority: Justin","ms":497,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791433263316,"turn":41,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7174,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":426,"r":"ask:choose_list","did":null}
+{"t":1791433263895,"turn":41,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7177,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":524,"r":"ask:choose_list","did":null}
+{"t":1791433264573,"turn":41,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7184,"what":"Priority: Justin","ms":610,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433265917,"turn":41,"phase":"END_OF_TURN","active":false,"frame":7196,"what":"Priority: Justin","ms":607,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433266867,"turn":42,"phase":"MAIN1","active":true,"frame":7205,"what":"Priority: Justin","ms":501,"r":"priority:card:spell","did":"spell: Lingering Souls"}
+{"t":1791433267522,"turn":42,"phase":"MAIN1","active":true,"frame":7213,"what":"Lingering Souls (28) - Justin creates two 1/1 white Spirit creature tokens with flying.","ms":486,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433270173,"turn":42,"phase":"MAIN1","active":true,"frame":7221,"what":"Priority: Justin","ms":494,"r":"priority:card:spell","did":"spell: Blade Splicer"}
+{"t":1791433270820,"turn":42,"phase":"MAIN1","active":true,"frame":7229,"what":"Blade Splicer - Creature 1 / 1","ms":490,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433271467,"turn":42,"phase":"MAIN1","active":true,"frame":7237,"what":"Priority: Justin","ms":503,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791433272122,"turn":42,"phase":"MAIN1","active":true,"frame":7242,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":423,"r":"ask:choose_list","did":null}
+{"t":1791433272697,"turn":42,"phase":"MAIN1","active":true,"frame":7245,"what":"ask choose_list: Choose X for March of Otherworldly Light","ms":399,"r":"ask:choose_list","did":null}
+{"t":1791433273250,"turn":42,"phase":"MAIN1","active":true,"frame":7252,"what":"Priority: Justin","ms":499,"r":"priority:card:spell","did":"spell: Kari Zev, Skyship Raider"}
+{"t":1791433273902,"turn":42,"phase":"MAIN1","active":true,"frame":7260,"what":"Kari Zev, Skyship Raider - Creature 1 / 3","ms":614,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433274670,"turn":42,"phase":"MAIN1","active":true,"frame":7268,"what":"Priority: Justin","ms":511,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791433275335,"turn":42,"phase":"MAIN1","active":true,"frame":7276,"what":"Soulherder - Creature 1 / 1","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433275983,"turn":42,"phase":"MAIN1","active":true,"frame":7284,"what":"Priority: Justin","ms":617,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791433277760,"turn":42,"phase":"MAIN2","active":true,"frame":7302,"what":"Priority: Justin","ms":507,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791433278422,"turn":42,"phase":"MAIN2","active":true,"frame":7309,"what":"Man-o'-War - Creature 2 / 2","ms":499,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433279075,"turn":42,"phase":"MAIN2","active":true,"frame":7317,"what":"Priority: Justin","ms":642,"r":"priority:card:spell","did":"spell: Kari Zev, Skyship Raider"}
+{"t":1791433279871,"turn":42,"phase":"MAIN2","active":true,"frame":7325,"what":"Kari Zev, Skyship Raider - Creature 1 / 3","ms":624,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433282124,"turn":42,"phase":"MAIN2","active":true,"frame":7333,"what":"Priority: Justin","ms":531,"r":"priority:card:spell","did":"spell: March of Otherworldly Light"}
+{"t":1791433282808,"turn":42,"phase":"MAIN2","active":true,"frame":7338,"what":"ask choose_list: Choose how many white cards to exile for March of Otherworldly Light","ms":388,"r":"ask:choose_list","did":null}
+{"t":1791433283349,"turn":42,"phase":"MAIN2","active":true,"frame":7345,"what":"Priority: Justin","ms":502,"r":"priority:card:spell","did":"spell: Soulherder"}
+{"t":1791433284005,"turn":42,"phase":"MAIN2","active":true,"frame":7353,"what":"Soulherder - Creature 1 / 1","ms":487,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433284645,"turn":42,"phase":"MAIN2","active":true,"frame":7361,"what":"Priority: Justin","ms":648,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791433285731,"turn":42,"phase":"CLEANUP","active":true,"frame":7373,"what":"Cleanup Phase","ms":839,"r":"select:done","did":"choose March of Otherworldly Light"}
+{"t":1791433312005,"turn":43,"phase":"COMBAT_BEGIN","active":false,"frame":7422,"what":"Priority: Justin","ms":487,"r":"priority:eot","did":"To EOT"}
+{"t":1791433315278,"turn":43,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7435,"what":"Priority: Justin","ms":1467,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791433322380,"turn":43,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7453,"what":"Priority: Justin","ms":621,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791433324400,"turn":43,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7467,"what":"Priority: Justin","ms":607,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}

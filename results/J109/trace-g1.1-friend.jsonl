@@ -1,0 +1,819 @@
+{"t":1791423888724,"turn":0,"phase":null,"active":false,"frame":11,"what":"Sam, you are going first!","ms":3840,"r":"opening","did":"Mulligan 2"}
+{"t":1791423892718,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":2854,"r":"open-target","did":"target player 0"}
+{"t":1791423895725,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":2848,"r":"open-target","did":"target player 1"}
+{"t":1791423898728,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":2842,"r":"open-target","did":"target player 0"}
+{"t":1791423901724,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":2848,"r":"open-target","did":"target player 0"}
+{"t":1791423904724,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":2848,"r":"open-target","did":"target player 0"}
+{"t":1791423907727,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":2845,"r":"open-target","did":"target player 0"}
+{"t":1791423910725,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":2845,"r":"open-target","did":"target player 0"}
+{"t":1791423913724,"turn":0,"phase":null,"active":false,"frame":16,"what":"Return 1 card(s) to the bottom of your library","ms":3339,"r":"open-target:cancel","did":"target player 0; cancel \"Auto\""}
+{"t":1791423920586,"turn":0,"phase":null,"active":false,"frame":26,"what":"Sam, you are going first!","ms":3844,"r":"opening","did":"Keep 6 1"}
+{"t":1791423924583,"turn":1,"phase":"MAIN1","active":true,"frame":33,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Unholy Heat"}
+{"t":1791423925214,"turn":1,"phase":"MAIN1","active":true,"frame":41,"what":"Priority: Sam","ms":341,"r":"priority:card:land","did":"land: Barkchannel Pathway"}
+{"t":1791423925710,"turn":1,"phase":"MAIN1","active":true,"frame":42,"what":"ask ability_menu: ","ms":491,"r":"ask:ability_menu","did":null}
+{"t":1791423926355,"turn":1,"phase":"MAIN1","active":true,"frame":51,"what":"Priority: Sam","ms":953,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791423927689,"turn":1,"phase":"MAIN2","active":true,"frame":68,"what":"Priority: Sam","ms":591,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791423932943,"turn":2,"phase":"COMBAT_BEGIN","active":false,"frame":90,"what":"Priority: Sam","ms":467,"r":"priority:card:spell","did":"spell: Unholy Heat"}
+{"t":1791423933563,"turn":2,"phase":"COMBAT_BEGIN","active":false,"frame":98,"what":"Priority: Sam","ms":463,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423934179,"turn":2,"phase":"COMBAT_BEGIN","active":false,"frame":106,"what":"Priority: Sam","ms":583,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423934917,"turn":2,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":114,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Unholy Heat"}
+{"t":1791423935545,"turn":2,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":122,"what":"Priority: Sam","ms":585,"r":"priority:eot","did":"To EOT"}
+{"t":1791423936650,"turn":3,"phase":"MAIN1","active":true,"frame":141,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423937279,"turn":3,"phase":"MAIN1","active":true,"frame":148,"what":"Priority: Sam","ms":826,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791423938641,"turn":3,"phase":"MAIN2","active":true,"frame":165,"what":"Priority: Sam","ms":468,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423939261,"turn":3,"phase":"MAIN2","active":true,"frame":172,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791423940159,"turn":3,"phase":"MAIN2","active":true,"frame":180,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":587,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791423940899,"turn":3,"phase":"MAIN2","active":true,"frame":184,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":459,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791423941512,"turn":3,"phase":"MAIN2","active":true,"frame":191,"what":"Priority: Sam","ms":944,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791423944896,"turn":4,"phase":"COMBAT_BEGIN","active":false,"frame":215,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Unholy Heat"}
+{"t":1791423945513,"turn":4,"phase":"COMBAT_BEGIN","active":false,"frame":223,"what":"Priority: Sam","ms":463,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423946128,"turn":4,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":231,"what":"Priority: Sam","ms":584,"r":"priority:card:spell","did":"spell: Unholy Heat"}
+{"t":1791423946866,"turn":4,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":239,"what":"Priority: Sam","ms":598,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423947617,"turn":4,"phase":"END_OF_TURN","active":false,"frame":248,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423948246,"turn":4,"phase":"END_OF_TURN","active":false,"frame":256,"what":"Priority: Sam","ms":824,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423950832,"turn":5,"phase":"MAIN1","active":true,"frame":271,"what":"Priority: Sam","ms":360,"r":"priority:card:spell","did":"spell: Fury"}
+{"t":1791423951344,"turn":5,"phase":"MAIN1","active":true,"frame":272,"what":"ask ability_menu: ","ms":372,"r":"ask:ability_menu","did":null}
+{"t":1791423951870,"turn":5,"phase":"MAIN1","active":true,"frame":280,"what":"Fury (49) - As an additional cost to cast this spell, exile a red card from your hand.","ms":472,"r":"select:done","did":"choose Unholy Heat"}
+{"t":1791423952776,"turn":5,"phase":"MAIN1","active":true,"frame":290,"what":"Priority: Sam","ms":467,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791423953677,"turn":5,"phase":"MAIN1","active":true,"frame":298,"what":"Restoration Angel - Creature 3 / 4","ms":467,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791423954297,"turn":5,"phase":"MAIN1","active":true,"frame":302,"what":"Restoration Angel - Creature 3 / 4","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791423955327,"turn":5,"phase":"MAIN1","active":true,"frame":309,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791423957082,"turn":5,"phase":"MAIN1","active":true,"frame":309,"what":"Priority: Sam","ms":597,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423957832,"turn":5,"phase":"MAIN1","active":true,"frame":317,"what":"Priority: Sam","ms":476,"r":"priority:eot","did":"To EOT"}
+{"t":1791423958962,"turn":5,"phase":"MAIN1","active":true,"frame":326,"what":"ask order: Select order for simultaneous abilities","ms":520,"r":"ask:order","did":null}
+{"t":1791423959926,"turn":5,"phase":"MAIN1","active":true,"frame":333,"what":"Fury (49) - When Fury enters, it deals 4 damage divided as you choose among any number of target creatures and/or planeswalkers. [Zone Changer: Fury (49)]","ms":587,"r":"select:done","did":"choose Fury"}
+{"t":1791423960666,"turn":5,"phase":"MAIN1","active":true,"frame":338,"what":"Fury (49) - When Fury enters, it deals 4 damage divided as you choose among any number of target creatures and/or planeswalkers. [Zone Changer: Fury (49)]","ms":596,"r":"select:done","did":"choose Fury"}
+{"t":1791423961416,"turn":5,"phase":"MAIN1","active":true,"frame":344,"what":"Fury (49) - When Fury enters, it deals 4 damage divided as you choose among any number of target creatures and/or planeswalkers. [Zone Changer: Fury (49)]","ms":477,"r":"select:done","did":"choose Fury"}
+{"t":1791423962046,"turn":5,"phase":"MAIN1","active":true,"frame":349,"what":"Fury (49) - When Fury enters, it deals 4 damage divided as you choose among any number of target creatures and/or planeswalkers. [Zone Changer: Fury (49)]","ms":598,"r":"select:done","did":"choose Fury"}
+{"t":1791423962797,"turn":5,"phase":"MAIN1","active":true,"frame":355,"what":"Fury (49) - When Fury enters, it deals 4 damage divided as you choose among any number of target creatures and/or planeswalkers. [Zone Changer: Fury (49)]","ms":461,"r":"select:ok","did":"ok \"OK\""}
+{"t":1791423970993,"turn":6,"phase":"COMBAT_BEGIN","active":false,"frame":413,"what":"Priority: Sam","ms":465,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791423971891,"turn":6,"phase":"COMBAT_BEGIN","active":false,"frame":421,"what":"Restoration Angel - Creature 3 / 4","ms":466,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791423972509,"turn":6,"phase":"COMBAT_BEGIN","active":false,"frame":425,"what":"Restoration Angel - Creature 3 / 4","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791423973409,"turn":6,"phase":"COMBAT_BEGIN","active":false,"frame":432,"what":"Priority: Sam","ms":587,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423974148,"turn":6,"phase":"COMBAT_BEGIN","active":false,"frame":440,"what":"Priority: Sam","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423974778,"turn":6,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":448,"what":"Priority: Sam","ms":463,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423975396,"turn":6,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":456,"what":"Priority: Sam","ms":583,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423976132,"turn":6,"phase":"END_OF_TURN","active":false,"frame":465,"what":"Priority: Sam","ms":837,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423977122,"turn":7,"phase":"MAIN1","active":true,"frame":476,"what":"Priority: Sam","ms":469,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791423977745,"turn":7,"phase":"MAIN1","active":true,"frame":484,"what":"Priority: Sam","ms":463,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791423978641,"turn":7,"phase":"MAIN1","active":true,"frame":492,"what":"Restoration Angel - Creature 3 / 4","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791423979380,"turn":7,"phase":"MAIN1","active":true,"frame":500,"what":"Priority: Sam","ms":941,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791423981254,"turn":7,"phase":"MAIN2","active":true,"frame":520,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791423981877,"turn":7,"phase":"MAIN2","active":true,"frame":524,"what":"ask choose_list: Choose X for Walking Ballista","ms":491,"r":"ask:choose_list","did":null}
+{"t":1791423982522,"turn":7,"phase":"MAIN2","active":true,"frame":531,"what":"Priority: Sam","ms":951,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791423994293,"turn":8,"phase":"COMBAT_BEGIN","active":false,"frame":593,"what":"Priority: Sam","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423994911,"turn":8,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":601,"what":"Priority: Sam","ms":824,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423997075,"turn":8,"phase":"END_OF_TURN","active":false,"frame":619,"what":"Priority: Sam","ms":826,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791423998055,"turn":9,"phase":"MAIN1","active":true,"frame":630,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791423998958,"turn":9,"phase":"MAIN1","active":true,"frame":638,"what":"Thragtusk - Creature 5 / 3","ms":467,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791423999578,"turn":9,"phase":"MAIN1","active":true,"frame":642,"what":"Thragtusk - Creature 5 / 3","ms":463,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424000195,"turn":9,"phase":"MAIN1","active":true,"frame":649,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Hero's Downfall"}
+{"t":1791424000829,"turn":9,"phase":"MAIN1","active":true,"frame":657,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424001741,"turn":9,"phase":"MAIN1","active":true,"frame":665,"what":"Restoration Angel - Creature 3 / 4","ms":588,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424002484,"turn":9,"phase":"MAIN1","active":true,"frame":669,"what":"Restoration Angel - Creature 3 / 4","ms":593,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424003230,"turn":9,"phase":"MAIN1","active":true,"frame":676,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424004142,"turn":9,"phase":"MAIN1","active":true,"frame":684,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424004762,"turn":9,"phase":"MAIN1","active":true,"frame":692,"what":"Priority: Sam","ms":600,"r":"priority:eot","did":"To EOT"}
+{"t":1791424018574,"turn":10,"phase":"COMBAT_BEGIN","active":false,"frame":771,"what":"Priority: Sam","ms":468,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424019195,"turn":10,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":779,"what":"Priority: Sam","ms":462,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424020091,"turn":10,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":787,"what":"Restoration Angel - Creature 3 / 4","ms":469,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424020713,"turn":10,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":791,"what":"Restoration Angel - Creature 3 / 4","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424021624,"turn":10,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":798,"what":"Priority: Sam","ms":586,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424025140,"turn":10,"phase":"END_OF_TURN","active":false,"frame":822,"what":"Priority: Sam","ms":827,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424026120,"turn":11,"phase":"MAIN1","active":true,"frame":833,"what":"Priority: Sam","ms":470,"r":"priority:card:spell","did":"spell: Ledger Shredder"}
+{"t":1791424027023,"turn":11,"phase":"MAIN1","active":true,"frame":841,"what":"Ledger Shredder - Creature 1 / 3","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424027766,"turn":11,"phase":"MAIN1","active":true,"frame":849,"what":"Priority: Sam","ms":594,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424034223,"turn":11,"phase":"MAIN2","active":true,"frame":882,"what":"Priority: Sam","ms":468,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424035124,"turn":11,"phase":"MAIN2","active":true,"frame":889,"what":"Thragtusk - Creature 5 / 3","ms":466,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424035744,"turn":11,"phase":"MAIN2","active":true,"frame":893,"what":"Thragtusk - Creature 5 / 3","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424036496,"turn":11,"phase":"MAIN2","active":true,"frame":900,"what":"Priority: Sam","ms":836,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424039001,"turn":11,"phase":"CLEANUP","active":true,"frame":918,"what":"Cleanup Phase","ms":593,"r":"select:done","did":"choose Hero's Downfall"}
+{"t":1791424048840,"turn":12,"phase":"COMBAT_BEGIN","active":false,"frame":970,"what":"Priority: Sam","ms":467,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424049459,"turn":12,"phase":"COMBAT_BEGIN","active":false,"frame":978,"what":"Priority: Sam","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424050076,"turn":12,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":986,"what":"Priority: Sam","ms":583,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424051105,"turn":12,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":994,"what":"Restoration Angel - Creature 3 / 4","ms":588,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424051846,"turn":12,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":998,"what":"Restoration Angel - Creature 3 / 4","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424052757,"turn":12,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1005,"what":"Priority: Sam","ms":587,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424055406,"turn":12,"phase":"END_OF_TURN","active":false,"frame":1024,"what":"Priority: Sam","ms":468,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424056306,"turn":12,"phase":"END_OF_TURN","active":false,"frame":1032,"what":"Restoration Angel - Creature 3 / 4","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424057207,"turn":12,"phase":"END_OF_TURN","active":false,"frame":1040,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791424058963,"turn":12,"phase":"END_OF_TURN","active":false,"frame":1040,"what":"Priority: Sam","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424059953,"turn":13,"phase":"MAIN1","active":true,"frame":1051,"what":"Priority: Sam","ms":470,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424060857,"turn":13,"phase":"MAIN1","active":true,"frame":1059,"what":"Restoration Angel - Creature 3 / 4","ms":587,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424061597,"turn":13,"phase":"MAIN1","active":true,"frame":1063,"what":"Restoration Angel - Creature 3 / 4","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424062226,"turn":13,"phase":"MAIN1","active":true,"frame":1070,"what":"Priority: Sam","ms":583,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424063239,"turn":13,"phase":"MAIN1","active":true,"frame":1078,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":588,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424063981,"turn":13,"phase":"MAIN1","active":true,"frame":1082,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424064611,"turn":13,"phase":"MAIN1","active":true,"frame":1089,"what":"Priority: Sam","ms":600,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424065365,"turn":13,"phase":"MAIN1","active":true,"frame":1097,"what":"Priority: Sam","ms":104,"r":"stuck","did":null}
+{"t":1791424067124,"turn":13,"phase":"MAIN1","active":true,"frame":1097,"what":"Priority: Sam","ms":346,"r":"priority:card:spell","did":"spell: Mulldrifter"}
+{"t":1791424067622,"turn":13,"phase":"MAIN1","active":true,"frame":1098,"what":"ask ability_menu: ","ms":373,"r":"ask:ability_menu","did":null}
+{"t":1791424068440,"turn":13,"phase":"MAIN1","active":true,"frame":1106,"what":"Mulldrifter - Creature 2 / 2","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424069180,"turn":13,"phase":"MAIN1","active":true,"frame":1114,"what":"Priority: Sam","ms":596,"r":"priority:card:spell","did":"spell: Ledger Shredder"}
+{"t":1791424070206,"turn":13,"phase":"MAIN1","active":true,"frame":1122,"what":"Ledger Shredder - Creature 1 / 3","ms":589,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424070947,"turn":13,"phase":"MAIN1","active":true,"frame":1126,"what":"Ledger Shredder - Creature 1 / 3","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424071577,"turn":13,"phase":"MAIN1","active":true,"frame":1133,"what":"Priority: Sam","ms":584,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791424072313,"turn":13,"phase":"MAIN1","active":true,"frame":1139,"what":"ask choose_list: Choose X for Walking Ballista","ms":503,"r":"ask:choose_list","did":null}
+{"t":1791424072970,"turn":13,"phase":"MAIN1","active":true,"frame":1146,"what":"Priority: Sam","ms":592,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424076436,"turn":13,"phase":"MAIN2","active":true,"frame":1170,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Seasoned Hallowblade"}
+{"t":1791424077339,"turn":13,"phase":"MAIN2","active":true,"frame":1177,"what":"Seasoned Hallowblade - Creature 3 / 1","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424077959,"turn":13,"phase":"MAIN2","active":true,"frame":1185,"what":"Priority: Sam","ms":584,"r":"priority:card:spell","did":"spell: Ledger Shredder"}
+{"t":1791424078989,"turn":13,"phase":"MAIN2","active":true,"frame":1193,"what":"Ledger Shredder - Creature 1 / 3","ms":587,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424079729,"turn":13,"phase":"MAIN2","active":true,"frame":1197,"what":"Ledger Shredder - Creature 1 / 3","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424080478,"turn":13,"phase":"MAIN2","active":true,"frame":1204,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424081389,"turn":13,"phase":"MAIN2","active":true,"frame":1212,"what":"Thragtusk - Creature 5 / 3","ms":591,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424082133,"turn":13,"phase":"MAIN2","active":true,"frame":1216,"what":"Thragtusk - Creature 5 / 3","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424082879,"turn":13,"phase":"MAIN2","active":true,"frame":1223,"what":"Priority: Sam","ms":835,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424083868,"turn":13,"phase":"CLEANUP","active":true,"frame":1235,"what":"Cleanup Phase","ms":834,"r":"select:done","did":"choose Seasoned Hallowblade"}
+{"t":1791424091255,"turn":14,"phase":"COMBAT_BEGIN","active":false,"frame":1275,"what":"Priority: Sam","ms":468,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424091875,"turn":14,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1283,"what":"Priority: Sam","ms":600,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424093053,"turn":14,"phase":"END_OF_TURN","active":false,"frame":1295,"what":"Priority: Sam","ms":470,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424093676,"turn":14,"phase":"END_OF_TURN","active":false,"frame":1303,"what":"Priority: Sam","ms":600,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424094721,"turn":14,"phase":"END_OF_TURN","active":false,"frame":1311,"what":"Restoration Angel - Creature 3 / 4","ms":588,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424095466,"turn":14,"phase":"END_OF_TURN","active":false,"frame":1315,"what":"Restoration Angel - Creature 3 / 4","ms":593,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424096504,"turn":14,"phase":"END_OF_TURN","active":false,"frame":1322,"what":"Priority: Sam","ms":587,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424097343,"turn":15,"phase":"MAIN1","active":true,"frame":1333,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424098255,"turn":15,"phase":"MAIN1","active":true,"frame":1340,"what":"Restoration Angel - Creature 3 / 4","ms":589,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424098998,"turn":15,"phase":"MAIN1","active":true,"frame":1344,"what":"Restoration Angel - Creature 3 / 4","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424099623,"turn":15,"phase":"MAIN1","active":true,"frame":1351,"what":"Priority: Sam","ms":466,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424100521,"turn":15,"phase":"MAIN1","active":true,"frame":1359,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":468,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424101143,"turn":15,"phase":"MAIN1","active":true,"frame":1363,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424101776,"turn":15,"phase":"MAIN1","active":true,"frame":1370,"what":"Priority: Sam","ms":840,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424107697,"turn":15,"phase":"MAIN2","active":true,"frame":1406,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424108326,"turn":15,"phase":"MAIN2","active":true,"frame":1413,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Ledger Shredder"}
+{"t":1791424109238,"turn":15,"phase":"MAIN2","active":true,"frame":1421,"what":"Ledger Shredder - Creature 1 / 3","ms":588,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424109980,"turn":15,"phase":"MAIN2","active":true,"frame":1425,"what":"Ledger Shredder - Creature 1 / 3","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424110607,"turn":15,"phase":"MAIN2","active":true,"frame":1432,"what":"Priority: Sam","ms":603,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424111653,"turn":15,"phase":"MAIN2","active":true,"frame":1440,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424112395,"turn":15,"phase":"MAIN2","active":true,"frame":1448,"what":"Priority: Sam","ms":596,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791424113143,"turn":15,"phase":"MAIN2","active":true,"frame":1453,"what":"ask choose_list: Choose X for Walking Ballista","ms":384,"r":"ask:choose_list","did":null}
+{"t":1791424113680,"turn":15,"phase":"MAIN2","active":true,"frame":1460,"what":"Priority: Sam","ms":354,"r":"priority:card:spell","did":"spell: Mulldrifter"}
+{"t":1791424114187,"turn":15,"phase":"MAIN2","active":true,"frame":1461,"what":"ask ability_menu: ","ms":374,"r":"ask:ability_menu","did":null}
+{"t":1791424115002,"turn":15,"phase":"MAIN2","active":true,"frame":1469,"what":"Mulldrifter (Evoked)","ms":590,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424115746,"turn":15,"phase":"MAIN2","active":true,"frame":1473,"what":"Mulldrifter (Evoked)","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424116376,"turn":15,"phase":"MAIN2","active":true,"frame":1480,"what":"Priority: Sam","ms":599,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424117421,"turn":15,"phase":"MAIN2","active":true,"frame":1488,"what":"Thragtusk - Creature 5 / 3","ms":588,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424118163,"turn":15,"phase":"MAIN2","active":true,"frame":1492,"what":"Thragtusk - Creature 5 / 3","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424118914,"turn":15,"phase":"MAIN2","active":true,"frame":1499,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424119819,"turn":15,"phase":"MAIN2","active":true,"frame":1507,"what":"Restoration Angel - Creature 3 / 4","ms":470,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424120442,"turn":15,"phase":"MAIN2","active":true,"frame":1511,"what":"Restoration Angel - Creature 3 / 4","ms":463,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424121059,"turn":15,"phase":"MAIN2","active":true,"frame":1518,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791424122814,"turn":15,"phase":"MAIN2","active":true,"frame":1518,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424123720,"turn":15,"phase":"MAIN2","active":true,"frame":1526,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":470,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424124344,"turn":15,"phase":"MAIN2","active":true,"frame":1530,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424125095,"turn":15,"phase":"MAIN2","active":true,"frame":1537,"what":"Priority: Sam","ms":837,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424129013,"turn":15,"phase":"CLEANUP","active":true,"frame":1561,"what":"Cleanup Phase","ms":598,"r":"select:done","did":"choose Mulldrifter"}
+{"t":1791424130287,"turn":16,"phase":"COMBAT_BEGIN","active":false,"frame":1576,"what":"Priority: Sam","ms":468,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424131185,"turn":16,"phase":"COMBAT_BEGIN","active":false,"frame":1584,"what":"Restoration Angel - Creature 3 / 4","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424132087,"turn":16,"phase":"COMBAT_BEGIN","active":false,"frame":1592,"what":"Priority: Sam","ms":467,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424132709,"turn":16,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1600,"what":"Priority: Sam","ms":598,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424133461,"turn":16,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1608,"what":"Priority: Sam","ms":598,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424139436,"turn":16,"phase":"END_OF_TURN","active":false,"frame":1632,"what":"Priority: Sam","ms":828,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424140418,"turn":17,"phase":"MAIN1","active":true,"frame":1643,"what":"Priority: Sam","ms":350,"r":"priority:card:land","did":"land: Hengegate Pathway"}
+{"t":1791424140920,"turn":17,"phase":"MAIN1","active":true,"frame":1644,"what":"ask ability_menu: ","ms":374,"r":"ask:ability_menu","did":null}
+{"t":1791424141447,"turn":17,"phase":"MAIN1","active":true,"frame":1652,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Ledger Shredder"}
+{"t":1791424142354,"turn":17,"phase":"MAIN1","active":true,"frame":1661,"what":"Ledger Shredder - Creature 1 / 3","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424142974,"turn":17,"phase":"MAIN1","active":true,"frame":1669,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424143608,"turn":17,"phase":"MAIN1","active":true,"frame":1677,"what":"Priority: Sam","ms":482,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791424144243,"turn":17,"phase":"MAIN1","active":true,"frame":1682,"what":"ask choose_list: Choose X for Walking Ballista","ms":420,"r":"ask:choose_list","did":null}
+{"t":1791424145102,"turn":17,"phase":"MAIN1","active":true,"frame":1688,"what":"Walking Ballista - Creature 0 / 0 (X=3)","ms":591,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424145846,"turn":17,"phase":"MAIN1","active":true,"frame":1692,"what":"Walking Ballista - Creature 0 / 0 (X=3)","ms":596,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424146597,"turn":17,"phase":"MAIN1","active":true,"frame":1696,"what":"Walking Ballista - Creature 0 / 0 (X=3)","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424147224,"turn":17,"phase":"MAIN1","active":true,"frame":1703,"what":"Priority: Sam","ms":602,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424148270,"turn":17,"phase":"MAIN1","active":true,"frame":1712,"what":"Restoration Angel - Creature 3 / 4","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424149012,"turn":17,"phase":"MAIN1","active":true,"frame":1720,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424149919,"turn":17,"phase":"MAIN1","active":true,"frame":1728,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":469,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424150541,"turn":17,"phase":"MAIN1","active":true,"frame":1732,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":481,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424151176,"turn":17,"phase":"MAIN1","active":true,"frame":1736,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424151808,"turn":17,"phase":"MAIN1","active":true,"frame":1743,"what":"Priority: Sam","ms":602,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424152852,"turn":17,"phase":"MAIN1","active":true,"frame":1751,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":589,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424153595,"turn":17,"phase":"MAIN1","active":true,"frame":1755,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":475,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424154223,"turn":17,"phase":"MAIN1","active":true,"frame":1759,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424154978,"turn":17,"phase":"MAIN1","active":true,"frame":1766,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424155902,"turn":17,"phase":"MAIN1","active":true,"frame":1774,"what":"Thragtusk - Creature 5 / 3","ms":470,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424156525,"turn":17,"phase":"MAIN1","active":true,"frame":1778,"what":"Thragtusk - Creature 5 / 3","ms":479,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424157156,"turn":17,"phase":"MAIN1","active":true,"frame":1782,"what":"Thragtusk - Creature 5 / 3","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424157792,"turn":17,"phase":"MAIN1","active":true,"frame":1789,"what":"Priority: Sam","ms":599,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424160461,"turn":17,"phase":"MAIN2","active":true,"frame":1812,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Ledger Shredder"}
+{"t":1791424161385,"turn":17,"phase":"MAIN2","active":true,"frame":1820,"what":"Ledger Shredder - Creature 1 / 3","ms":591,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424162421,"turn":17,"phase":"MAIN2","active":true,"frame":1829,"what":"Priority: Sam","ms":586,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424163250,"turn":17,"phase":"MAIN2","active":true,"frame":1841,"what":"Priority: Sam","ms":472,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424164152,"turn":17,"phase":"MAIN2","active":true,"frame":1848,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424164775,"turn":17,"phase":"MAIN2","active":true,"frame":1856,"what":"Priority: Sam","ms":601,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424165819,"turn":17,"phase":"MAIN2","active":true,"frame":1864,"what":"Thragtusk - Creature 5 / 3","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424166442,"turn":17,"phase":"MAIN2","active":true,"frame":1872,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791424167076,"turn":17,"phase":"MAIN2","active":true,"frame":1877,"what":"ask choose_list: Choose X for Walking Ballista","ms":508,"r":"ask:choose_list","did":null}
+{"t":1791424167738,"turn":17,"phase":"MAIN2","active":true,"frame":1884,"what":"Priority: Sam","ms":604,"r":"priority:eot","did":"To EOT"}
+{"t":1791424176286,"turn":18,"phase":"COMBAT_BEGIN","active":false,"frame":1935,"what":"Priority: Sam","ms":469,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424177201,"turn":18,"phase":"COMBAT_BEGIN","active":false,"frame":1943,"what":"Restoration Angel - Creature 3 / 4","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424178119,"turn":18,"phase":"COMBAT_BEGIN","active":false,"frame":1951,"what":"Priority: Sam","ms":590,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424178862,"turn":18,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1959,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424179785,"turn":18,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1967,"what":"Restoration Angel - Creature 3 / 4","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424180684,"turn":18,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1975,"what":"Priority: Sam","ms":469,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424181585,"turn":18,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1984,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":468,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424182484,"turn":18,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1993,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":590,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424183519,"turn":18,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2001,"what":"Priority: Sam","ms":587,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424194001,"turn":18,"phase":"END_OF_TURN","active":false,"frame":2056,"what":"Priority: Sam","ms":469,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424194918,"turn":18,"phase":"END_OF_TURN","active":false,"frame":2065,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":470,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424195835,"turn":18,"phase":"END_OF_TURN","active":false,"frame":2074,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":590,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424196868,"turn":18,"phase":"END_OF_TURN","active":false,"frame":2082,"what":"Priority: Sam","ms":588,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424197901,"turn":18,"phase":"END_OF_TURN","active":false,"frame":2090,"what":"Restoration Angel - Creature 3 / 4","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424198817,"turn":18,"phase":"END_OF_TURN","active":false,"frame":2098,"what":"Priority: Sam","ms":593,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424199687,"turn":19,"phase":"MAIN1","active":true,"frame":2109,"what":"Priority: Sam","ms":483,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791424200323,"turn":19,"phase":"MAIN1","active":true,"frame":2113,"what":"ask choose_list: Choose X for Walking Ballista","ms":510,"r":"ask:choose_list","did":null}
+{"t":1791424200987,"turn":19,"phase":"MAIN1","active":true,"frame":2120,"what":"Priority: Sam","ms":468,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424201901,"turn":19,"phase":"MAIN1","active":true,"frame":2129,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":470,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424202816,"turn":19,"phase":"MAIN1","active":true,"frame":2138,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":593,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424203561,"turn":19,"phase":"MAIN1","active":true,"frame":2142,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":477,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424204190,"turn":19,"phase":"MAIN1","active":true,"frame":2146,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424204948,"turn":19,"phase":"MAIN1","active":true,"frame":2153,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424205867,"turn":19,"phase":"MAIN1","active":true,"frame":2161,"what":"Restoration Angel - Creature 3 / 4","ms":471,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424206492,"turn":19,"phase":"MAIN1","active":true,"frame":2165,"what":"Restoration Angel - Creature 3 / 4","ms":480,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424207125,"turn":19,"phase":"MAIN1","active":true,"frame":2169,"what":"Restoration Angel - Creature 3 / 4","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424207756,"turn":19,"phase":"MAIN1","active":true,"frame":2176,"what":"Priority: Sam","ms":604,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424208801,"turn":19,"phase":"MAIN1","active":true,"frame":2185,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":590,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424209545,"turn":19,"phase":"MAIN1","active":true,"frame":2189,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":476,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424210174,"turn":19,"phase":"MAIN1","active":true,"frame":2193,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424210927,"turn":19,"phase":"MAIN1","active":true,"frame":2200,"what":"Priority: Sam","ms":839,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424213116,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":2221,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1199,"r":"attack:1","did":"attack with Ledger Shredder; ok \"Attack with 1OK\""}
+{"t":1791424214751,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2242,"what":"Priority: Sam","ms":592,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424215784,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2250,"what":"Restoration Angel - Creature 3 / 4","ms":592,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424216531,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2254,"what":"Restoration Angel - Creature 3 / 4","ms":594,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424217277,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2258,"what":"Restoration Angel - Creature 3 / 4","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424218202,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2265,"what":"Priority: Sam","ms":469,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424219118,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2274,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":470,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424220032,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2283,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":472,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424220657,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2287,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424221583,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2294,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Fatal Push"}
+{"t":1791424222501,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2303,"what":"Fatal Push (81) - Destroy target creature if it has mana value 2 or less. Revolt — Destroy that creature if it has mana value 4 or less instead if a permanent you controlled left the battlefield this turn.","ms":469,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424223416,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2312,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":470,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424224041,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2316,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":481,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424224675,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2320,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":483,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424225601,"turn":19,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":2327,"what":"Priority: Sam","ms":590,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424226368,"turn":19,"phase":"MAIN2","active":true,"frame":2339,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424227282,"turn":19,"phase":"MAIN2","active":true,"frame":2346,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":593,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424228028,"turn":19,"phase":"MAIN2","active":true,"frame":2350,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":476,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424228658,"turn":19,"phase":"MAIN2","active":true,"frame":2354,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424229289,"turn":19,"phase":"MAIN2","active":true,"frame":2361,"what":"Priority: Sam","ms":602,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424230332,"turn":19,"phase":"MAIN2","active":true,"frame":2369,"what":"Restoration Angel - Creature 3 / 4","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424230957,"turn":19,"phase":"MAIN2","active":true,"frame":2377,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424235216,"turn":20,"phase":"COMBAT_BEGIN","active":false,"frame":2406,"what":"Priority: Sam","ms":470,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424236132,"turn":20,"phase":"COMBAT_BEGIN","active":false,"frame":2414,"what":"Restoration Angel - Creature 3 / 4","ms":471,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424236757,"turn":20,"phase":"COMBAT_BEGIN","active":false,"frame":2418,"what":"Restoration Angel - Creature 3 / 4","ms":481,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424237391,"turn":20,"phase":"COMBAT_BEGIN","active":false,"frame":2422,"what":"Restoration Angel - Creature 3 / 4","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424238299,"turn":20,"phase":"COMBAT_BEGIN","active":false,"frame":2429,"what":"Priority: Sam","ms":471,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424238926,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2437,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424239849,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2446,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":591,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424240882,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2455,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":474,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424241510,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2459,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":477,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424242141,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2463,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424243067,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2470,"what":"Priority: Sam","ms":589,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424244098,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2478,"what":"Restoration Angel - Creature 3 / 4","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424245015,"turn":20,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2486,"what":"Priority: Sam","ms":592,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424247364,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2504,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791424249122,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2504,"what":"Priority: Sam","ms":483,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424250049,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2513,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":471,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424250964,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2522,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":475,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424251595,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2526,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":596,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424252345,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2530,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424253265,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2537,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424254181,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2545,"what":"Restoration Angel - Creature 3 / 4","ms":593,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424254927,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2549,"what":"Restoration Angel - Creature 3 / 4","ms":477,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424255558,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2553,"what":"Restoration Angel - Creature 3 / 4","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424256599,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2560,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791424258354,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2560,"what":"Priority: Sam","ms":602,"r":"priority:card:spell","did":"spell: Fatal Push"}
+{"t":1791424259398,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2569,"what":"Fatal Push (81) - Destroy target creature if it has mana value 2 or less. Revolt — Destroy that creature if it has mana value 4 or less instead if a permanent you controlled left the battlefield this turn.","ms":472,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424260313,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2578,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":474,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424260939,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2582,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":601,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424261694,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2586,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":2846,"r":"pay:pool","did":"floating mana"}
+{"t":1791424264697,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2586,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424265618,"turn":20,"phase":"END_OF_TURN","active":false,"frame":2593,"what":"Priority: Sam","ms":590,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424266391,"turn":21,"phase":"MAIN1","active":true,"frame":2604,"what":"Priority: Sam","ms":362,"r":"priority:card:land","did":"land: Blightstep Pathway"}
+{"t":1791424266905,"turn":21,"phase":"MAIN1","active":true,"frame":2605,"what":"ask ability_menu: ","ms":394,"r":"ask:ability_menu","did":null}
+{"t":1791424267452,"turn":21,"phase":"MAIN1","active":true,"frame":2613,"what":"Priority: Sam","ms":470,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424268367,"turn":21,"phase":"MAIN1","active":true,"frame":2621,"what":"Restoration Angel - Creature 3 / 4","ms":473,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424268994,"turn":21,"phase":"MAIN1","active":true,"frame":2625,"what":"Restoration Angel - Creature 3 / 4","ms":485,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424269631,"turn":21,"phase":"MAIN1","active":true,"frame":2629,"what":"Restoration Angel - Creature 3 / 4","ms":474,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424270258,"turn":21,"phase":"MAIN1","active":true,"frame":2633,"what":"Restoration Angel - Creature 3 / 4","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424270892,"turn":21,"phase":"MAIN1","active":true,"frame":2640,"what":"Priority: Sam","ms":602,"r":"priority:card:spell","did":"spell: Walking Ballista"}
+{"t":1791424271646,"turn":21,"phase":"MAIN1","active":true,"frame":2645,"what":"ask choose_list: Choose X for Walking Ballista","ms":419,"r":"ask:choose_list","did":null}
+{"t":1791424272217,"turn":21,"phase":"MAIN1","active":true,"frame":2648,"what":"ask text: Enter a number greater than or equal to 0:","ms":499,"r":"ask:text","did":null}
+{"t":1791424273149,"turn":21,"phase":"MAIN1","active":true,"frame":2655,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Fatal Push"}
+{"t":1791424274064,"turn":21,"phase":"MAIN1","active":true,"frame":2664,"what":"Fatal Push (81) - Destroy target creature if it has mana value 2 or less. Revolt — Destroy that creature if it has mana value 4 or less instead if a permanent you controlled left the battlefield this turn.","ms":474,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424274982,"turn":21,"phase":"MAIN1","active":true,"frame":2674,"what":"Fatal Push (81) - Destroy Ledger Shredder (53).","ms":475,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424275899,"turn":21,"phase":"MAIN1","active":true,"frame":2683,"what":"Priority: Sam","ms":595,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424276930,"turn":21,"phase":"MAIN1","active":true,"frame":2692,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":475,"r":"select:done","did":"choose Ledger Shredder"}
+{"t":1791424277848,"turn":21,"phase":"MAIN1","active":true,"frame":2701,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":476,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424278478,"turn":21,"phase":"MAIN1","active":true,"frame":2705,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":598,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424279230,"turn":21,"phase":"MAIN1","active":true,"frame":2709,"what":"Go for the Throat (80) - Destroy Ledger Shredder (53).","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424280148,"turn":21,"phase":"MAIN1","active":true,"frame":2716,"what":"Priority: Sam","ms":594,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424280926,"turn":21,"phase":"MAIN1","active":true,"frame":2728,"what":"Ledger Shredder (53)","ms":479,"r":"select:done","did":"choose Murderous Rider"}
+{"t":1791424281849,"turn":21,"phase":"MAIN1","active":true,"frame":2738,"what":"Priority: Sam","ms":594,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424283000,"turn":21,"phase":"MAIN1","active":true,"frame":2750,"what":"Priority: Sam","ms":831,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424283987,"turn":21,"phase":"MAIN1","active":true,"frame":2762,"what":"Priority: Sam","ms":486,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424284915,"turn":21,"phase":"MAIN1","active":true,"frame":2770,"what":"Thragtusk - Creature 5 / 3","ms":475,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424285543,"turn":21,"phase":"MAIN1","active":true,"frame":2774,"what":"Thragtusk - Creature 5 / 3","ms":480,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424286177,"turn":21,"phase":"MAIN1","active":true,"frame":2778,"what":"Thragtusk - Creature 5 / 3","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424286808,"turn":21,"phase":"MAIN1","active":true,"frame":2785,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424288294,"turn":21,"phase":"MAIN2","active":true,"frame":2803,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424289216,"turn":21,"phase":"MAIN2","active":true,"frame":2810,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":593,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424289962,"turn":21,"phase":"MAIN2","active":true,"frame":2814,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424290592,"turn":21,"phase":"MAIN2","active":true,"frame":2821,"what":"Priority: Sam","ms":609,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424291355,"turn":21,"phase":"MAIN2","active":true,"frame":2830,"what":"Priority: Sam","ms":486,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424292285,"turn":21,"phase":"MAIN2","active":true,"frame":2838,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":488,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424292926,"turn":21,"phase":"MAIN2","active":true,"frame":2842,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":480,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424293561,"turn":21,"phase":"MAIN2","active":true,"frame":2846,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424294191,"turn":21,"phase":"MAIN2","active":true,"frame":2853,"what":"Priority: Sam","ms":602,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424295230,"turn":21,"phase":"MAIN2","active":true,"frame":2861,"what":"Thragtusk - Creature 5 / 3","ms":596,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424295981,"turn":21,"phase":"MAIN2","active":true,"frame":2865,"what":"Thragtusk - Creature 5 / 3","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424296729,"turn":21,"phase":"MAIN2","active":true,"frame":2872,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424297647,"turn":21,"phase":"MAIN2","active":true,"frame":2880,"what":"Restoration Angel - Creature 3 / 4","ms":476,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424298277,"turn":21,"phase":"MAIN2","active":true,"frame":2884,"what":"Restoration Angel - Creature 3 / 4","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424298909,"turn":21,"phase":"MAIN2","active":true,"frame":2891,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791424300664,"turn":21,"phase":"MAIN2","active":true,"frame":2891,"what":"Priority: Sam","ms":713,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424304515,"turn":22,"phase":"COMBAT_BEGIN","active":false,"frame":2916,"what":"Priority: Sam","ms":473,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424305431,"turn":22,"phase":"COMBAT_BEGIN","active":false,"frame":2924,"what":"Restoration Angel - Creature 3 / 4","ms":477,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424306060,"turn":22,"phase":"COMBAT_BEGIN","active":false,"frame":2928,"what":"Restoration Angel - Creature 3 / 4","ms":479,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424306694,"turn":22,"phase":"COMBAT_BEGIN","active":false,"frame":2932,"what":"Restoration Angel - Creature 3 / 4","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424307614,"turn":22,"phase":"COMBAT_BEGIN","active":false,"frame":2939,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424308241,"turn":22,"phase":"COMBAT_BEGIN","active":false,"frame":2947,"what":"Priority: Sam","ms":479,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424308874,"turn":22,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2955,"what":"Priority: Sam","ms":840,"r":"priority:eot","did":"To EOT"}
+{"t":1791424315772,"turn":23,"phase":"MAIN1","active":true,"frame":3001,"what":"Priority: Sam","ms":485,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424316697,"turn":23,"phase":"MAIN1","active":true,"frame":3008,"what":"Restoration Angel - Creature 3 / 4","ms":603,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424317454,"turn":23,"phase":"MAIN1","active":true,"frame":3016,"what":"Priority: Sam","ms":847,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424321547,"turn":23,"phase":"MAIN2","active":true,"frame":3046,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424322465,"turn":23,"phase":"MAIN2","active":true,"frame":3053,"what":"Thragtusk - Creature 5 / 3","ms":595,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424323215,"turn":23,"phase":"MAIN2","active":true,"frame":3057,"what":"Thragtusk - Creature 5 / 3","ms":475,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424323843,"turn":23,"phase":"MAIN2","active":true,"frame":3061,"what":"Thragtusk - Creature 5 / 3","ms":479,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424324475,"turn":23,"phase":"MAIN2","active":true,"frame":3065,"what":"Thragtusk - Creature 5 / 3","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424325231,"turn":23,"phase":"MAIN2","active":true,"frame":3072,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424326148,"turn":23,"phase":"MAIN2","active":true,"frame":3080,"what":"Restoration Angel - Creature 3 / 4","ms":477,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424326777,"turn":23,"phase":"MAIN2","active":true,"frame":3084,"what":"Restoration Angel - Creature 3 / 4","ms":483,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424327414,"turn":23,"phase":"MAIN2","active":true,"frame":3088,"what":"Restoration Angel - Creature 3 / 4","ms":478,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424328045,"turn":23,"phase":"MAIN2","active":true,"frame":3092,"what":"Restoration Angel - Creature 3 / 4","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424328795,"turn":23,"phase":"MAIN2","active":true,"frame":3099,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424329715,"turn":23,"phase":"MAIN2","active":true,"frame":3107,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":475,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424330342,"turn":23,"phase":"MAIN2","active":true,"frame":3111,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":484,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424330978,"turn":23,"phase":"MAIN2","active":true,"frame":3115,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":477,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424331610,"turn":23,"phase":"MAIN2","active":true,"frame":3119,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424332242,"turn":23,"phase":"MAIN2","active":true,"frame":3126,"what":"Priority: Sam","ms":599,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424335165,"turn":24,"phase":"COMBAT_BEGIN","active":false,"frame":3149,"what":"Priority: Sam","ms":474,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424335795,"turn":24,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3157,"what":"Priority: Sam","ms":596,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424336544,"turn":24,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3166,"what":"Priority: Sam","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424348514,"turn":24,"phase":"END_OF_TURN","active":false,"frame":3228,"what":"Priority: Sam","ms":835,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424349504,"turn":25,"phase":"MAIN1","active":true,"frame":3239,"what":"Priority: Sam","ms":608,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424352209,"turn":25,"phase":"MAIN2","active":true,"frame":3260,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424353129,"turn":25,"phase":"MAIN2","active":true,"frame":3267,"what":"Thragtusk - Creature 5 / 3","ms":595,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424353879,"turn":25,"phase":"MAIN2","active":true,"frame":3271,"what":"Thragtusk - Creature 5 / 3","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424354506,"turn":25,"phase":"MAIN2","active":true,"frame":3278,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424359862,"turn":26,"phase":"COMBAT_BEGIN","active":false,"frame":3309,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424360779,"turn":26,"phase":"COMBAT_BEGIN","active":false,"frame":3317,"what":"Restoration Angel - Creature 3 / 4","ms":474,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424361407,"turn":26,"phase":"COMBAT_BEGIN","active":false,"frame":3321,"what":"Restoration Angel - Creature 3 / 4","ms":481,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424362041,"turn":26,"phase":"COMBAT_BEGIN","active":false,"frame":3325,"what":"Restoration Angel - Creature 3 / 4","ms":478,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424362675,"turn":26,"phase":"COMBAT_BEGIN","active":false,"frame":3329,"what":"Restoration Angel - Creature 3 / 4","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424363595,"turn":26,"phase":"COMBAT_BEGIN","active":false,"frame":3336,"what":"Priority: Sam","ms":473,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424364222,"turn":26,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3344,"what":"Priority: Sam","ms":840,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424369228,"turn":26,"phase":"END_OF_TURN","active":false,"frame":3375,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424369856,"turn":26,"phase":"END_OF_TURN","active":false,"frame":3383,"what":"Priority: Sam","ms":600,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424370726,"turn":27,"phase":"MAIN1","active":true,"frame":3394,"what":"Priority: Sam","ms":597,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424373912,"turn":27,"phase":"MAIN2","active":true,"frame":3417,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424374827,"turn":27,"phase":"MAIN2","active":true,"frame":3425,"what":"Restoration Angel - Creature 3 / 4","ms":599,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424375578,"turn":27,"phase":"MAIN2","active":true,"frame":3429,"what":"Restoration Angel - Creature 3 / 4","ms":476,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424376208,"turn":27,"phase":"MAIN2","active":true,"frame":3433,"what":"Restoration Angel - Creature 3 / 4","ms":479,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424376840,"turn":27,"phase":"MAIN2","active":true,"frame":3437,"what":"Restoration Angel - Creature 3 / 4","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424377594,"turn":27,"phase":"MAIN2","active":true,"frame":3444,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Brimaz, King of Oreskos"}
+{"t":1791424378511,"turn":27,"phase":"MAIN2","active":true,"frame":3452,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424379141,"turn":27,"phase":"MAIN2","active":true,"frame":3460,"what":"Priority: Sam","ms":482,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424380061,"turn":27,"phase":"MAIN2","active":true,"frame":3468,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":483,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424380699,"turn":27,"phase":"MAIN2","active":true,"frame":3476,"what":"Priority: Sam","ms":490,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424381627,"turn":27,"phase":"MAIN2","active":true,"frame":3484,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":599,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424382379,"turn":27,"phase":"MAIN2","active":true,"frame":3488,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424383010,"turn":27,"phase":"MAIN2","active":true,"frame":3495,"what":"Priority: Sam","ms":598,"r":"priority:card:land","did":"land: Stomping Ground"}
+{"t":1791424384042,"turn":27,"phase":"MAIN2","active":true,"frame":3501,"what":"Do you want to pay 2 life?","ms":477,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791424384672,"turn":27,"phase":"MAIN2","active":true,"frame":3508,"what":"Priority: Sam","ms":848,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424389126,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3537,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Restoration Angel"}
+{"t":1791424390044,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3546,"what":"Restoration Angel - Creature 3 / 4","ms":476,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424390672,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3551,"what":"Restoration Angel - Creature 3 / 4","ms":481,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424391594,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3560,"what":"Priority: Sam","ms":595,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424392710,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3572,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424393627,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3581,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":476,"r":"select:done","did":"choose Restoration Angel"}
+{"t":1791424394543,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3590,"what":"Go for the Throat (80) - Destroy Restoration Angel (92).","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424395578,"turn":28,"phase":"COMBAT_BEGIN","active":false,"frame":3598,"what":"Priority: Sam","ms":595,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424396327,"turn":28,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3606,"what":"Priority: Sam","ms":599,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424397360,"turn":28,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3616,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":595,"r":"select:done","did":"choose Restoration Angel"}
+{"t":1791424398394,"turn":28,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3625,"what":"Go for the Throat (80) - Destroy Restoration Angel (92).","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424399311,"turn":28,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3633,"what":"Priority: Sam","ms":596,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424400061,"turn":28,"phase":"END_OF_TURN","active":false,"frame":3642,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424400976,"turn":28,"phase":"END_OF_TURN","active":false,"frame":3651,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":475,"r":"select:done","did":"choose Restoration Angel"}
+{"t":1791424401893,"turn":28,"phase":"END_OF_TURN","active":false,"frame":3660,"what":"Go for the Throat (80) - Destroy Restoration Angel (92).","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424402827,"turn":28,"phase":"END_OF_TURN","active":false,"frame":3668,"what":"Priority: Sam","ms":840,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424403820,"turn":29,"phase":"MAIN1","active":true,"frame":3679,"what":"Priority: Sam","ms":485,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424404743,"turn":29,"phase":"MAIN1","active":true,"frame":3687,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":480,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424405378,"turn":29,"phase":"MAIN1","active":true,"frame":3691,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":356,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424405886,"turn":29,"phase":"MAIN1","active":true,"frame":3692,"what":"ask ability_menu: ","ms":398,"r":"ask:ability_menu","did":null}
+{"t":1791424406727,"turn":29,"phase":"MAIN1","active":true,"frame":3696,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":598,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424407478,"turn":29,"phase":"MAIN1","active":true,"frame":3700,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":615,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424408246,"turn":29,"phase":"MAIN1","active":true,"frame":3704,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":2839,"r":"pay:pool","did":"floating mana"}
+{"t":1791424411237,"turn":29,"phase":"MAIN1","active":true,"frame":3704,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":2848,"r":"pay:pool","did":"floating mana"}
+{"t":1791424414240,"turn":29,"phase":"MAIN1","active":true,"frame":3704,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":2844,"r":"pay:pool","did":"floating mana"}
+{"t":1791424417238,"turn":29,"phase":"MAIN1","active":true,"frame":3704,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791424420237,"turn":29,"phase":"MAIN1","active":true,"frame":3704,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":609,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424421002,"turn":29,"phase":"MAIN1","active":true,"frame":3711,"what":"Priority: Sam","ms":487,"r":"priority:card:spell","did":"spell: Go for the Throat"}
+{"t":1791424421925,"turn":29,"phase":"MAIN1","active":true,"frame":3720,"what":"Go for the Throat (80) - Destroy target nonartifact creature.","ms":480,"r":"select:done","did":"choose Restoration Angel"}
+{"t":1791424422843,"turn":29,"phase":"MAIN1","active":true,"frame":3730,"what":"Go for the Throat (80) - Destroy Restoration Angel (92).","ms":356,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424423353,"turn":29,"phase":"MAIN1","active":true,"frame":3731,"what":"ask ability_menu: ","ms":393,"r":"ask:ability_menu","did":null}
+{"t":1791424424179,"turn":29,"phase":"MAIN1","active":true,"frame":3736,"what":"Go for the Throat (80) - Destroy Restoration Angel (92).","ms":477,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424425093,"turn":29,"phase":"MAIN1","active":true,"frame":3745,"what":"Priority: Sam","ms":606,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424427472,"turn":29,"phase":"MAIN1","active":true,"frame":3764,"what":"Priority: Sam","ms":484,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424428392,"turn":29,"phase":"MAIN1","active":true,"frame":3771,"what":"Thragtusk - Creature 5 / 3","ms":600,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424429145,"turn":29,"phase":"MAIN1","active":true,"frame":3775,"what":"Thragtusk - Creature 5 / 3","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424429793,"turn":29,"phase":"MAIN1","active":true,"frame":3782,"what":"Priority: Sam","ms":600,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424430547,"turn":29,"phase":"MAIN1","active":true,"frame":3790,"what":"Priority: Sam","ms":972,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424431852,"turn":29,"phase":"MAIN2","active":true,"frame":3807,"what":"Priority: Sam","ms":492,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424432778,"turn":29,"phase":"MAIN2","active":true,"frame":3814,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":602,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424433533,"turn":29,"phase":"MAIN2","active":true,"frame":3818,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":491,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424434177,"turn":29,"phase":"MAIN2","active":true,"frame":3822,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424434931,"turn":29,"phase":"MAIN2","active":true,"frame":3829,"what":"Priority: Sam","ms":488,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424435860,"turn":29,"phase":"MAIN2","active":true,"frame":3837,"what":"Thragtusk - Creature 5 / 3","ms":483,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424436496,"turn":29,"phase":"MAIN2","active":true,"frame":3845,"what":"Priority: Sam","ms":105,"r":"stuck","did":null}
+{"t":1791424438254,"turn":29,"phase":"MAIN2","active":true,"frame":3845,"what":"Priority: Sam","ms":488,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424439178,"turn":29,"phase":"MAIN2","active":true,"frame":3853,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":601,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424439933,"turn":29,"phase":"MAIN2","active":true,"frame":3857,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":617,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424440703,"turn":29,"phase":"MAIN2","active":true,"frame":3861,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":489,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424441344,"turn":29,"phase":"MAIN2","active":true,"frame":3868,"what":"Priority: Sam","ms":602,"r":"priority:card:spell","did":"spell: Evolved Sleeper"}
+{"t":1791424442378,"turn":29,"phase":"MAIN2","active":true,"frame":3876,"what":"Evolved Sleeper - Creature 1 / 1","ms":480,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424443015,"turn":29,"phase":"MAIN2","active":true,"frame":3880,"what":"Evolved Sleeper - Creature 1 / 1","ms":493,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424443661,"turn":29,"phase":"MAIN2","active":true,"frame":3884,"what":"Evolved Sleeper - Creature 1 / 1","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424444305,"turn":29,"phase":"MAIN2","active":true,"frame":3891,"what":"Priority: Sam","ms":484,"r":"priority:card:spell","did":"spell: Brimaz, King of Oreskos"}
+{"t":1791424445227,"turn":29,"phase":"MAIN2","active":true,"frame":3899,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":485,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424445865,"turn":29,"phase":"MAIN2","active":true,"frame":3903,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424446515,"turn":29,"phase":"MAIN2","active":true,"frame":3910,"what":"Priority: Sam","ms":599,"r":"priority:eot","did":"To EOT"}
+{"t":1791424462808,"turn":30,"phase":"COMBAT_BEGIN","active":false,"frame":3993,"what":"Priority: Sam","ms":480,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424463442,"turn":30,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4001,"what":"Priority: Sam","ms":598,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424464192,"turn":30,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4009,"what":"Priority: Sam","ms":599,"r":"priority:eot","did":"To EOT"}
+{"t":1791424465716,"turn":31,"phase":"MAIN1","active":true,"frame":4031,"what":"Priority: Sam","ms":368,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424466237,"turn":31,"phase":"MAIN1","active":true,"frame":4032,"what":"Priority: Sam","ms":1173,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424467859,"turn":31,"phase":"MAIN1","active":true,"frame":4046,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":483,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424468498,"turn":31,"phase":"MAIN1","active":true,"frame":4050,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":489,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424469140,"turn":31,"phase":"MAIN1","active":true,"frame":4057,"what":"Priority: Sam","ms":483,"r":"priority:card:spell","did":"spell: Sakura-Tribe Elder"}
+{"t":1791424470057,"turn":31,"phase":"MAIN1","active":true,"frame":4066,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":485,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424470696,"turn":31,"phase":"MAIN1","active":true,"frame":4071,"what":"Sakura-Tribe Elder - Creature 1 / 1","ms":491,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424471624,"turn":31,"phase":"MAIN1","active":true,"frame":4080,"what":"Priority: Sam","ms":603,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424474265,"turn":31,"phase":"MAIN1","active":true,"frame":4099,"what":"Priority: Sam","ms":490,"r":"priority:card:spell","did":"spell: Jace, Vryn's Prodigy"}
+{"t":1791424475190,"turn":31,"phase":"MAIN1","active":true,"frame":4106,"what":"Jace, Vryn's Prodigy - Creature 0 / 2","ms":605,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424475950,"turn":31,"phase":"MAIN1","active":true,"frame":4114,"what":"Priority: Sam","ms":612,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424480649,"turn":31,"phase":"MAIN2","active":true,"frame":4145,"what":"Priority: Sam","ms":490,"r":"priority:card:spell","did":"spell: Brimaz, King of Oreskos"}
+{"t":1791424481572,"turn":31,"phase":"MAIN2","active":true,"frame":4152,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":604,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424482329,"turn":31,"phase":"MAIN2","active":true,"frame":4156,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":495,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424482977,"turn":31,"phase":"MAIN2","active":true,"frame":4160,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":501,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424483633,"turn":31,"phase":"MAIN2","active":true,"frame":4167,"what":"Priority: Sam","ms":490,"r":"priority:card:spell","did":"spell: Jace, Vryn's Prodigy"}
+{"t":1791424484557,"turn":31,"phase":"MAIN2","active":true,"frame":4175,"what":"Jace, Vryn's Prodigy - Creature 0 / 2","ms":606,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424485317,"turn":31,"phase":"MAIN2","active":true,"frame":4179,"what":"Jace, Vryn's Prodigy - Creature 0 / 2","ms":492,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424485963,"turn":31,"phase":"MAIN2","active":true,"frame":4183,"what":"Jace, Vryn's Prodigy - Creature 0 / 2","ms":499,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424486616,"turn":31,"phase":"MAIN2","active":true,"frame":4190,"what":"Priority: Sam","ms":490,"r":"priority:card:spell","did":"spell: Evolved Sleeper"}
+{"t":1791424487540,"turn":31,"phase":"MAIN2","active":true,"frame":4199,"what":"Evolved Sleeper - Creature 1 / 1","ms":610,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424488592,"turn":31,"phase":"MAIN2","active":true,"frame":4208,"what":"Priority: Sam","ms":486,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424489524,"turn":31,"phase":"MAIN2","active":true,"frame":4217,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":604,"r":"select:done","did":"choose Sakura-Tribe Elder"}
+{"t":1791424490572,"turn":31,"phase":"MAIN2","active":true,"frame":4226,"what":"Fading Hope (82) - Return Sakura-Tribe Elder (88) to its owner's hand. Sam scries 1.","ms":487,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424491215,"turn":31,"phase":"MAIN2","active":true,"frame":4230,"what":"Fading Hope (82) - Return Sakura-Tribe Elder (88) to its owner's hand. Sam scries 1.","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424492156,"turn":31,"phase":"MAIN2","active":true,"frame":4237,"what":"Priority: Sam","ms":606,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424492981,"turn":31,"phase":"MAIN2","active":true,"frame":4249,"what":"Priority: Sam","ms":490,"r":"priority:card:ability (ability)","did":"ability (ability): Sakura-Tribe Elder"}
+{"t":1791424494967,"turn":31,"phase":"MAIN2","active":true,"frame":4253,"what":"Sacrifice Sakura-Tribe Elder?","ms":496,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791424495906,"turn":31,"phase":"MAIN2","active":true,"frame":4259,"what":"Priority: Sam","ms":606,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424496954,"turn":31,"phase":"MAIN2","active":true,"frame":4268,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":487,"r":"select:done","did":"choose Evolved Sleeper"}
+{"t":1791424497889,"turn":31,"phase":"MAIN2","active":true,"frame":4277,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":609,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424498940,"turn":31,"phase":"MAIN2","active":true,"frame":4285,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791424500698,"turn":31,"phase":"MAIN2","active":true,"frame":4285,"what":"Priority: Sam","ms":615,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424503198,"turn":31,"phase":"MAIN2","active":true,"frame":4301,"what":"ask choose_list: Looking at cards in your library","ms":474,"r":"ask:choose_list","did":null}
+{"t":1791424503826,"turn":31,"phase":"MAIN2","active":true,"frame":4307,"what":"Priority: Sam","ms":616,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424512588,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4351,"what":"Priority: Sam","ms":363,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424513105,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4352,"what":"ask ability_menu: ","ms":384,"r":"ask:ability_menu","did":null}
+{"t":1791424513922,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4358,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":485,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424514561,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4362,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424515507,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4369,"what":"Priority: Sam","ms":500,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424516438,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4378,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":605,"r":"select:done","did":"choose Evolved Sleeper"}
+{"t":1791424517489,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4387,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":488,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424518132,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4391,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":494,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424519073,"turn":32,"phase":"COMBAT_BEGIN","active":false,"frame":4398,"what":"Priority: Sam","ms":847,"r":"priority:eot","did":"To EOT"}
+{"t":1791424529623,"turn":33,"phase":"MAIN1","active":true,"frame":4456,"what":"Priority: Sam","ms":1283,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424531058,"turn":33,"phase":"MAIN1","active":true,"frame":4457,"what":"ask ability_menu: ","ms":510,"r":"ask:ability_menu","did":null}
+{"t":1791424532006,"turn":33,"phase":"MAIN1","active":true,"frame":4463,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":490,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424532649,"turn":33,"phase":"MAIN1","active":true,"frame":4467,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":372,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424533174,"turn":33,"phase":"MAIN1","active":true,"frame":4468,"what":"ask ability_menu: ","ms":1725,"r":"ask:ability_menu","did":null}
+{"t":1791424535340,"turn":33,"phase":"MAIN1","active":true,"frame":4468,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":608,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424536102,"turn":33,"phase":"MAIN1","active":true,"frame":4475,"what":"Priority: Sam","ms":492,"r":"priority:card:spell","did":"spell: Brimaz, King of Oreskos"}
+{"t":1791424537041,"turn":33,"phase":"MAIN1","active":true,"frame":4483,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":502,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424537696,"turn":33,"phase":"MAIN1","active":true,"frame":4487,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":619,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424538467,"turn":33,"phase":"MAIN1","active":true,"frame":4495,"what":"Priority: Sam","ms":488,"r":"priority:card:spell","did":"spell: Jace, Vryn's Prodigy"}
+{"t":1791424540421,"turn":33,"phase":"MAIN1","active":true,"frame":4504,"what":"Jace, Vryn's Prodigy - Creature 0 / 2","ms":496,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424541354,"turn":33,"phase":"MAIN1","active":true,"frame":4513,"what":"Priority: Sam","ms":370,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424541877,"turn":33,"phase":"MAIN1","active":true,"frame":4514,"what":"ask ability_menu: ","ms":397,"r":"ask:ability_menu","did":null}
+{"t":1791424542721,"turn":33,"phase":"MAIN1","active":true,"frame":4520,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":366,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424543239,"turn":33,"phase":"MAIN1","active":true,"frame":4521,"what":"ask ability_menu: ","ms":390,"r":"ask:ability_menu","did":null}
+{"t":1791424544069,"turn":33,"phase":"MAIN1","active":true,"frame":4525,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":494,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424544718,"turn":33,"phase":"MAIN1","active":true,"frame":4529,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":493,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424545655,"turn":33,"phase":"MAIN1","active":true,"frame":4536,"what":"Priority: Sam","ms":851,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424546659,"turn":33,"phase":"MAIN1","active":true,"frame":4548,"what":"Priority: Sam","ms":618,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424547722,"turn":33,"phase":"MAIN1","active":true,"frame":4557,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":486,"r":"select:done","did":"choose Evolved Sleeper"}
+{"t":1791424548654,"turn":33,"phase":"MAIN1","active":true,"frame":4566,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":613,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424549420,"turn":33,"phase":"MAIN1","active":true,"frame":4575,"what":"Priority: Sam","ms":1442,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424551303,"turn":33,"phase":"MAIN1","active":true,"frame":4585,"what":"Thragtusk - Creature 5 / 3","ms":366,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424551820,"turn":33,"phase":"MAIN1","active":true,"frame":4586,"what":"ask ability_menu: ","ms":513,"r":"ask:ability_menu","did":null}
+{"t":1791424552771,"turn":33,"phase":"MAIN1","active":true,"frame":4590,"what":"Thragtusk - Creature 5 / 3","ms":490,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424553416,"turn":33,"phase":"MAIN1","active":true,"frame":4594,"what":"Thragtusk - Creature 5 / 3","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424554066,"turn":33,"phase":"MAIN1","active":true,"frame":4601,"what":"Priority: Sam","ms":614,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424555120,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":4614,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1008,"r":"attack:1","did":"attack with Evolved Sleeper; ok \"Attack with 1OK\""}
+{"t":1791424559470,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":4636,"what":"Priority: Sam","ms":608,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424560423,"turn":33,"phase":"MAIN2","active":true,"frame":4645,"what":"Priority: Sam","ms":501,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424561370,"turn":33,"phase":"MAIN2","active":true,"frame":4653,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424562018,"turn":33,"phase":"MAIN2","active":true,"frame":4661,"what":"Priority: Sam","ms":491,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424562953,"turn":33,"phase":"MAIN2","active":true,"frame":4670,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":488,"r":"select:done","did":"choose Evolved Sleeper"}
+{"t":1791424563888,"turn":33,"phase":"MAIN2","active":true,"frame":4679,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":609,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424564653,"turn":33,"phase":"MAIN2","active":true,"frame":4683,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":367,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424565172,"turn":33,"phase":"MAIN2","active":true,"frame":4684,"what":"ask ability_menu: ","ms":394,"r":"ask:ability_menu","did":null}
+{"t":1791424566005,"turn":33,"phase":"MAIN2","active":true,"frame":4688,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":2840,"r":"pay:pool","did":"floating mana"}
+{"t":1791424569000,"turn":33,"phase":"MAIN2","active":true,"frame":4688,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791424572000,"turn":33,"phase":"MAIN2","active":true,"frame":4688,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791424574999,"turn":33,"phase":"MAIN2","active":true,"frame":4688,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791424577999,"turn":33,"phase":"MAIN2","active":true,"frame":4688,"what":"Fading Hope (82) - Return Evolved Sleeper (71) to its owner's hand. Sam scries 1.","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424578651,"turn":33,"phase":"MAIN2","active":true,"frame":4695,"what":"Priority: Sam","ms":613,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424579704,"turn":33,"phase":"MAIN2","active":true,"frame":4703,"what":"Thragtusk - Creature 5 / 3","ms":368,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424580226,"turn":33,"phase":"MAIN2","active":true,"frame":4704,"what":"ask ability_menu: ","ms":407,"r":"ask:ability_menu","did":null}
+{"t":1791424581069,"turn":33,"phase":"MAIN2","active":true,"frame":4708,"what":"Thragtusk - Creature 5 / 3","ms":491,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424581714,"turn":33,"phase":"MAIN2","active":true,"frame":4712,"what":"Thragtusk - Creature 5 / 3","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424582365,"turn":33,"phase":"MAIN2","active":true,"frame":4719,"what":"Priority: Sam","ms":491,"r":"priority:card:spell","did":"spell: Bone Shards"}
+{"t":1791424583009,"turn":33,"phase":"MAIN2","active":true,"frame":4723,"what":"ask ability_menu: ","ms":415,"r":"ask:ability_menu","did":null}
+{"t":1791424583870,"turn":33,"phase":"MAIN2","active":true,"frame":4731,"what":"Bone Shards (70) - Destroy target creature or planeswalker. (Additional cost: Discard a card)","ms":487,"r":"select:done","did":"choose Evolved Sleeper"}
+{"t":1791424584803,"turn":33,"phase":"MAIN2","active":true,"frame":4740,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":608,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424585565,"turn":33,"phase":"MAIN2","active":true,"frame":4744,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":373,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424586091,"turn":33,"phase":"MAIN2","active":true,"frame":4745,"what":"ask ability_menu: ","ms":527,"r":"ask:ability_menu","did":null}
+{"t":1791424587054,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":2840,"r":"pay:pool","did":"floating mana"}
+{"t":1791424590048,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791424593046,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":2848,"r":"pay:pool","did":"floating mana"}
+{"t":1791424596052,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":2841,"r":"pay:pool","did":"floating mana"}
+{"t":1791424599046,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":2848,"r":"pay:pool","did":"floating mana"}
+{"t":1791424602048,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791424605048,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791424608046,"turn":33,"phase":"MAIN2","active":true,"frame":4749,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":502,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424608701,"turn":33,"phase":"MAIN2","active":true,"frame":4756,"what":"Priority: Sam","ms":369,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424609221,"turn":33,"phase":"MAIN2","active":true,"frame":4757,"what":"ask ability_menu: ","ms":511,"r":"ask:ability_menu","did":null}
+{"t":1791424610169,"turn":33,"phase":"MAIN2","active":true,"frame":4763,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":490,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424610813,"turn":33,"phase":"MAIN2","active":true,"frame":4767,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":373,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424611338,"turn":33,"phase":"MAIN2","active":true,"frame":4768,"what":"ask ability_menu: ","ms":393,"r":"ask:ability_menu","did":null}
+{"t":1791424612168,"turn":33,"phase":"MAIN2","active":true,"frame":4772,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424612813,"turn":33,"phase":"MAIN2","active":true,"frame":4779,"what":"Priority: Sam","ms":372,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424613341,"turn":33,"phase":"MAIN2","active":true,"frame":4780,"what":"Priority: Sam","ms":995,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424623586,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4830,"what":"Priority: Sam","ms":485,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424624500,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4839,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":487,"r":"select:done","did":"choose Jace, Vryn's Prodigy"}
+{"t":1791424625435,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4848,"what":"Fading Hope (82) - Return Jace, Vryn's Prodigy (87) to its owner's hand. Sam scries 1.","ms":613,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424626486,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4856,"what":"Priority: Sam","ms":367,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424627005,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4857,"what":"ask ability_menu: ","ms":400,"r":"ask:ability_menu","did":null}
+{"t":1791424627852,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4863,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":365,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424628369,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4864,"what":"ask ability_menu: ","ms":391,"r":"ask:ability_menu","did":null}
+{"t":1791424629201,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4868,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":608,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424629964,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4872,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424630904,"turn":34,"phase":"COMBAT_BEGIN","active":false,"frame":4879,"what":"Priority: Sam","ms":505,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424631563,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4887,"what":"Priority: Sam","ms":489,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424632501,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4896,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":487,"r":"select:done","did":"choose Jace, Vryn's Prodigy"}
+{"t":1791424633434,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4905,"what":"Fading Hope (82) - Return Jace, Vryn's Prodigy (87) to its owner's hand. Sam scries 1.","ms":493,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424634369,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4913,"what":"Priority: Sam","ms":367,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424634888,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4914,"what":"ask ability_menu: ","ms":500,"r":"ask:ability_menu","did":null}
+{"t":1791424635836,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4920,"what":"Evolved Sleeper (71) - {B}: Evolved Sleeper becomes a Human Cleric with base power and toughness 2/2.","ms":489,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424636480,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4924,"what":"Evolved Sleeper (71) - {B}: Evolved Sleeper becomes a Human Cleric with base power and toughness 2/2.","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424637419,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4931,"what":"Priority: Sam","ms":730,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424638303,"turn":34,"phase":"END_OF_TURN","active":false,"frame":4940,"what":"Priority: Sam","ms":860,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424639316,"turn":35,"phase":"MAIN1","active":true,"frame":4951,"what":"Priority: Sam","ms":489,"r":"priority:card:spell","did":"spell: Brimaz, King of Oreskos"}
+{"t":1791424640250,"turn":35,"phase":"MAIN1","active":true,"frame":4959,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":491,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424640894,"turn":35,"phase":"MAIN1","active":true,"frame":4963,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":497,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424641545,"turn":35,"phase":"MAIN1","active":true,"frame":4967,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":620,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424642322,"turn":35,"phase":"MAIN1","active":true,"frame":4971,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":381,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424642856,"turn":35,"phase":"MAIN1","active":true,"frame":4972,"what":"ask ability_menu: ","ms":526,"r":"ask:ability_menu","did":null}
+{"t":1791424643818,"turn":35,"phase":"MAIN1","active":true,"frame":4976,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424644464,"turn":35,"phase":"MAIN1","active":true,"frame":4983,"what":"Priority: Sam","ms":613,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424647083,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":5005,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1635,"r":"attack:2","did":"attack with Evolved Sleeper; attack with Jace, Vryn's Prodigy; ok \"Attack with 2OK\""}
+{"t":1791424649151,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5031,"what":"Priority: Sam","ms":486,"r":"priority:card:spell","did":"spell: Fading Hope"}
+{"t":1791424650083,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5040,"what":"Fading Hope (82) - Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom.)","ms":486,"r":"select:done","did":"choose Jace, Vryn's Prodigy"}
+{"t":1791424651018,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5050,"what":"Fading Hope (82) - Return Jace, Vryn's Prodigy (87) to its owner's hand. Sam scries 1.","ms":490,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424651948,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5059,"what":"Priority: Sam","ms":616,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424654367,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5077,"what":"Skyclave Apparition (74)","ms":490,"r":"buttons:buttons:cancel","did":"cancel \"Bottom\""}
+{"t":1791424655301,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5083,"what":"Priority: Sam","ms":364,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424655818,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5084,"what":"ask ability_menu: ","ms":505,"r":"ask:ability_menu","did":null}
+{"t":1791424656768,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5091,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":492,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424657701,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5100,"what":"Priority: Sam","ms":370,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424658224,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5101,"what":"ask ability_menu: ","ms":397,"r":"ask:ability_menu","did":null}
+{"t":1791424659066,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5107,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":616,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424660116,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5115,"what":"Priority: Sam","ms":614,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424662817,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5134,"what":"Priority: Sam","ms":489,"r":"priority:eot","did":"To EOT"}
+{"t":1791424670386,"turn":36,"phase":"COMBAT_BEGIN","active":false,"frame":5178,"what":"Priority: Sam","ms":367,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424670906,"turn":36,"phase":"COMBAT_BEGIN","active":false,"frame":5179,"what":"ask ability_menu: ","ms":384,"r":"ask:ability_menu","did":null}
+{"t":1791424671735,"turn":36,"phase":"COMBAT_BEGIN","active":false,"frame":5185,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":367,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424672255,"turn":36,"phase":"COMBAT_BEGIN","active":false,"frame":5186,"what":"ask ability_menu: ","ms":391,"r":"ask:ability_menu","did":null}
+{"t":1791424673084,"turn":36,"phase":"COMBAT_BEGIN","active":false,"frame":5190,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424674019,"turn":36,"phase":"COMBAT_BEGIN","active":false,"frame":5197,"what":"Priority: Sam","ms":607,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424674782,"turn":36,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5205,"what":"Priority: Sam","ms":366,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424675300,"turn":36,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5206,"what":"ask ability_menu: ","ms":506,"r":"ask:ability_menu","did":null}
+{"t":1791424676253,"turn":36,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5212,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":367,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424676773,"turn":36,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5213,"what":"ask ability_menu: ","ms":406,"r":"ask:ability_menu","did":null}
+{"t":1791424677617,"turn":36,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5217,"what":"Evolved Sleeper (71) - {1}{B}: If Evolved Sleeper is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3.","ms":612,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424678668,"turn":36,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5224,"what":"Priority: Sam","ms":610,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424688099,"turn":36,"phase":"END_OF_TURN","active":false,"frame":5269,"what":"Priority: Sam","ms":365,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Evolved Sleeper"}
+{"t":1791424688617,"turn":36,"phase":"END_OF_TURN","active":false,"frame":5270,"what":"ask ability_menu: ","ms":384,"r":"ask:ability_menu","did":null}
+{"t":1791424689448,"turn":36,"phase":"END_OF_TURN","active":false,"frame":5276,"what":"Evolved Sleeper (71) - {1}{B}{B}: If Evolved Sleeper is a Phyrexian, put a +1/+1 counter on it, then you draw a card and you lose 1 life.","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424690382,"turn":36,"phase":"END_OF_TURN","active":false,"frame":5284,"what":"Priority: Sam","ms":609,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424691204,"turn":37,"phase":"MAIN1","active":true,"frame":5295,"what":"Priority: Sam","ms":625,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424692698,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":5310,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":609,"r":"attack:0","did":"ok \"Confirm attacksOK\""}
+{"t":1791424693464,"turn":37,"phase":"MAIN2","active":true,"frame":5323,"what":"Priority: Sam","ms":491,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424694399,"turn":37,"phase":"MAIN2","active":true,"frame":5331,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":890,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424695443,"turn":37,"phase":"MAIN2","active":true,"frame":5339,"what":"Priority: Sam","ms":496,"r":"priority:card:spell","did":"spell: Bone Shards"}
+{"t":1791424696092,"turn":37,"phase":"MAIN2","active":true,"frame":5343,"what":"ask ability_menu: ","ms":407,"r":"ask:ability_menu","did":null}
+{"t":1791424696931,"turn":37,"phase":"MAIN2","active":true,"frame":5351,"what":"Bone Shards (70) - Destroy target creature or planeswalker. (Additional cost: Sacrifice a creature)","ms":614,"r":"select:done","did":"choose Evolved Sleeper"}
+{"t":1791424697982,"turn":37,"phase":"MAIN2","active":true,"frame":5361,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":495,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424698631,"turn":37,"phase":"MAIN2","active":true,"frame":5366,"what":"Bone Shards (70) - Destroy Evolved Sleeper (71).","ms":491,"r":"pay:tap","did":"tap Blightstep Pathway for mana"}
+{"t":1791424699565,"turn":37,"phase":"MAIN2","active":true,"frame":5374,"what":"Bone Shards (70)","ms":491,"r":"select:done","did":"choose Evolved Sleeper"}
+{"t":1791424700500,"turn":37,"phase":"MAIN2","active":true,"frame":5384,"what":"Priority: Sam","ms":614,"r":"priority:card:spell","did":"spell: Beast Within"}
+{"t":1791424701548,"turn":37,"phase":"MAIN2","active":true,"frame":5393,"what":"Beast Within (77) - Destroy target permanent. Its controller creates a 3/3 green Beast creature token.","ms":491,"r":"select:done","did":"choose Blightstep Pathway"}
+{"t":1791424702482,"turn":37,"phase":"MAIN2","active":true,"frame":5403,"what":"Beast Within (77) - Destroy Blightstep Pathway (54).","ms":618,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424703549,"turn":37,"phase":"MAIN2","active":true,"frame":5412,"what":"Priority: Sam","ms":616,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424704633,"turn":37,"phase":"MAIN2","active":true,"frame":5424,"what":"Priority: Sam","ms":855,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424705641,"turn":37,"phase":"MAIN2","active":true,"frame":5436,"what":"Priority: Sam","ms":503,"r":"priority:card:spell","did":"spell: Fable of the Mirror-Breaker"}
+{"t":1791424706581,"turn":37,"phase":"MAIN2","active":true,"frame":5444,"what":"Fable of the Mirror-Breaker","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424707232,"turn":37,"phase":"MAIN2","active":true,"frame":5452,"what":"Priority: Sam","ms":491,"r":"priority:card:spell","did":"spell: Brimaz, King of Oreskos"}
+{"t":1791424708163,"turn":37,"phase":"MAIN2","active":true,"frame":5460,"what":"Brimaz, King of Oreskos - Creature 3 / 4","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424708813,"turn":37,"phase":"MAIN2","active":true,"frame":5468,"what":"Priority: Sam","ms":495,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424709747,"turn":37,"phase":"MAIN2","active":true,"frame":5476,"what":"Thragtusk - Creature 5 / 3","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424710397,"turn":37,"phase":"MAIN2","active":true,"frame":5484,"what":"Priority: Sam","ms":735,"r":"priority:eot","did":"To EOT"}
+{"t":1791424725746,"turn":38,"phase":"COMBAT_BEGIN","active":false,"frame":5552,"what":"Priority: Sam","ms":493,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424726393,"turn":38,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5560,"what":"Priority: Sam","ms":613,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424734297,"turn":38,"phase":"END_OF_TURN","active":false,"frame":5600,"what":"Priority: Sam","ms":942,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424735419,"turn":39,"phase":"MAIN1","active":true,"frame":5612,"what":"Priority: Sam","ms":622,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424738513,"turn":39,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":5633,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1135,"r":"attack:1","did":"attack with Beast Token; ok \"Attack with 1OK\""}
+{"t":1791424745215,"turn":39,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5656,"what":"Priority: Sam","ms":634,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424746002,"turn":39,"phase":"MAIN2","active":true,"frame":5665,"what":"Priority: Sam","ms":509,"r":"priority:card:spell","did":"spell: Garruk Wildspeaker"}
+{"t":1791424746947,"turn":39,"phase":"MAIN2","active":true,"frame":5673,"what":"Garruk Wildspeaker","ms":374,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424747472,"turn":39,"phase":"MAIN2","active":true,"frame":5674,"what":"ask ability_menu: ","ms":410,"r":"ask:ability_menu","did":null}
+{"t":1791424748329,"turn":39,"phase":"MAIN2","active":true,"frame":5678,"what":"Garruk Wildspeaker","ms":501,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424748986,"turn":39,"phase":"MAIN2","active":true,"frame":5682,"what":"Garruk Wildspeaker","ms":516,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424749655,"turn":39,"phase":"MAIN2","active":true,"frame":5686,"what":"Garruk Wildspeaker","ms":624,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424750432,"turn":39,"phase":"MAIN2","active":true,"frame":5694,"what":"Priority: Sam","ms":494,"r":"priority:card:spell","did":"spell: Thragtusk"}
+{"t":1791424751362,"turn":39,"phase":"MAIN2","active":true,"frame":5702,"what":"Thragtusk - Creature 5 / 3","ms":372,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424751887,"turn":39,"phase":"MAIN2","active":true,"frame":5703,"what":"ask ability_menu: ","ms":411,"r":"ask:ability_menu","did":null}
+{"t":1791424752746,"turn":39,"phase":"MAIN2","active":true,"frame":5707,"what":"Thragtusk - Creature 5 / 3","ms":501,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424753402,"turn":39,"phase":"MAIN2","active":true,"frame":5711,"what":"Thragtusk - Creature 5 / 3","ms":508,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424754064,"turn":39,"phase":"MAIN2","active":true,"frame":5715,"what":"Thragtusk - Creature 5 / 3","ms":619,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424754837,"turn":39,"phase":"MAIN2","active":true,"frame":5722,"what":"Priority: Sam","ms":628,"r":"priority:card:spell","did":"spell: Jace, Vryn's Prodigy"}
+{"t":1791424755913,"turn":39,"phase":"MAIN2","active":true,"frame":5731,"what":"Jace, Vryn's Prodigy - Creature 0 / 2","ms":501,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424756846,"turn":39,"phase":"MAIN2","active":true,"frame":5740,"what":"Priority: Sam","ms":621,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424757709,"turn":39,"phase":"MAIN2","active":true,"frame":5752,"what":"Priority: Sam","ms":621,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424767946,"turn":40,"phase":"COMBAT_BEGIN","active":false,"frame":5805,"what":"Priority: Sam","ms":370,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424768470,"turn":40,"phase":"COMBAT_BEGIN","active":false,"frame":5806,"what":"Priority: Sam","ms":501,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424769124,"turn":40,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5814,"what":"Priority: Sam","ms":373,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424769652,"turn":40,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5815,"what":"Priority: Sam","ms":745,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424770550,"turn":40,"phase":"END_OF_TURN","active":false,"frame":5824,"what":"Priority: Sam","ms":866,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424771571,"turn":41,"phase":"MAIN1","active":true,"frame":5835,"what":"Priority: Sam","ms":628,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424772728,"turn":41,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":5851,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1257,"r":"attack:alpha","did":"cancel \"Attack with everythingAlpha Strike\"; ok \"Attack with 2OK\""}
+{"t":1791424774445,"turn":41,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":5874,"what":"Priority: Sam","ms":498,"r":"priority:eot","did":"To EOT"}
+{"t":1791424792245,"turn":42,"phase":"COMBAT_BEGIN","active":false,"frame":5960,"what":"Priority: Sam","ms":372,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424792771,"turn":42,"phase":"COMBAT_BEGIN","active":false,"frame":5961,"what":"Priority: Sam","ms":505,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424793429,"turn":42,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5969,"what":"Priority: Sam","ms":854,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424794726,"turn":42,"phase":"END_OF_TURN","active":false,"frame":5981,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791424796483,"turn":42,"phase":"END_OF_TURN","active":false,"frame":5981,"what":"Priority: Sam","ms":387,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424797023,"turn":42,"phase":"END_OF_TURN","active":false,"frame":5982,"what":"Priority: Sam","ms":863,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424798039,"turn":43,"phase":"MAIN1","active":true,"frame":5993,"what":"Priority: Sam","ms":628,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424800611,"turn":43,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":6015,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1661,"r":"attack:2","did":"attack with Beast Token; attack with Jace, Vryn's Prodigy; ok \"Attack with 2OK\""}
+{"t":1791424802712,"turn":43,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6041,"what":"Priority: Sam","ms":373,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424803238,"turn":43,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6042,"what":"Priority: Sam","ms":676,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424804104,"turn":43,"phase":"MAIN2","active":true,"frame":6054,"what":"Priority: Sam","ms":2396,"r":"priority:card:spell","did":"spell: Garruk Wildspeaker"}
+{"t":1791424806945,"turn":43,"phase":"MAIN2","active":true,"frame":6062,"what":"Garruk Wildspeaker","ms":500,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424807600,"turn":43,"phase":"MAIN2","active":true,"frame":6066,"what":"Garruk Wildspeaker","ms":630,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424808384,"turn":43,"phase":"MAIN2","active":true,"frame":6070,"what":"Garruk Wildspeaker","ms":514,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424809051,"turn":43,"phase":"MAIN2","active":true,"frame":6077,"what":"Priority: Sam","ms":634,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424824711,"turn":44,"phase":"COMBAT_BEGIN","active":false,"frame":6150,"what":"Priority: Sam","ms":374,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424825239,"turn":44,"phase":"COMBAT_BEGIN","active":false,"frame":6151,"what":"Priority: Sam","ms":500,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424825894,"turn":44,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6159,"what":"Priority: Sam","ms":370,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424826418,"turn":44,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6160,"what":"Priority: Sam","ms":869,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424839826,"turn":44,"phase":"END_OF_TURN","active":false,"frame":6217,"what":"Priority: Sam","ms":857,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424840836,"turn":45,"phase":"MAIN1","active":true,"frame":6228,"what":"Priority: Sam","ms":511,"r":"priority:card:spell","did":"spell: Garruk Wildspeaker"}
+{"t":1791424841792,"turn":45,"phase":"MAIN1","active":true,"frame":6236,"what":"Garruk Wildspeaker","ms":503,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424842451,"turn":45,"phase":"MAIN1","active":true,"frame":6244,"what":"Priority: Sam","ms":633,"r":"priority:card:spell","did":"spell: Light Up the Stage"}
+{"t":1791424843526,"turn":45,"phase":"MAIN1","active":true,"frame":6253,"what":"Light Up the Stage (94) - Sam exiles the top two cards of their library.","ms":508,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424844476,"turn":45,"phase":"MAIN1","active":true,"frame":6262,"what":"Priority: Sam","ms":104,"r":"stuck","did":null}
+{"t":1791424846235,"turn":45,"phase":"MAIN1","active":true,"frame":6262,"what":"Priority: Sam","ms":641,"r":"priority:card:ability (ability)","did":"ability (ability): Jace, Vryn's Prodigy"}
+{"t":1791424847030,"turn":45,"phase":"MAIN1","active":true,"frame":6270,"what":"Priority: Sam","ms":639,"r":"priority:eot","did":"To EOT"}
+{"t":1791424847911,"turn":45,"phase":"MAIN1","active":true,"frame":6282,"what":"Jace, Vryn's Prodigy (87)","ms":501,"r":"select:1","did":"choose Thragtusk"}
+{"t":1791424859342,"turn":46,"phase":"COMBAT_BEGIN","active":false,"frame":6346,"what":"Priority: Sam","ms":845,"r":"priority:card:from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94))","did":"your exile; from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94)): Torrential Gearhulk"}
+{"t":1791424860625,"turn":46,"phase":"COMBAT_BEGIN","active":false,"frame":6354,"what":"Torrential Gearhulk - Creature 5 / 6","ms":500,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424861559,"turn":46,"phase":"COMBAT_BEGIN","active":false,"frame":6362,"what":"Priority: Sam","ms":499,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424862213,"turn":46,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6370,"what":"Priority: Sam","ms":631,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424875075,"turn":46,"phase":"END_OF_TURN","active":false,"frame":6428,"what":"Priority: Sam","ms":862,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424876090,"turn":47,"phase":"MAIN1","active":true,"frame":6439,"what":"Priority: Sam","ms":609,"r":"priority:card:spell","did":"spell: Damnation"}
+{"t":1791424877144,"turn":47,"phase":"MAIN1","active":true,"frame":6447,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":503,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424877801,"turn":47,"phase":"MAIN1","active":true,"frame":6451,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":513,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424878469,"turn":47,"phase":"MAIN1","active":true,"frame":6455,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":388,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791424879010,"turn":47,"phase":"MAIN1","active":true,"frame":6456,"what":"ask ability_menu: ","ms":410,"r":"ask:ability_menu","did":null}
+{"t":1791424879860,"turn":47,"phase":"MAIN1","active":true,"frame":6460,"what":"Damnation (62) - Destroy all creatures. They can't be regenerated.","ms":503,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424880517,"turn":47,"phase":"MAIN1","active":true,"frame":6467,"what":"Priority: Sam","ms":858,"r":"priority:card:from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94))","did":"your exile; from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94)): Torrential Gearhulk"}
+{"t":1791424881824,"turn":47,"phase":"MAIN1","active":true,"frame":6475,"what":"Torrential Gearhulk - Creature 5 / 6","ms":507,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424882485,"turn":47,"phase":"MAIN1","active":true,"frame":6483,"what":"Priority: Sam","ms":860,"r":"priority:card:from the exile (Llanowar Elves - Creature 1 / 1 by Light Up the Stage (94))","did":"your exile; from the exile (Llanowar Elves - Creature 1 / 1 by Light Up the Stage (94)): Llanowar Elves"}
+{"t":1791424883791,"turn":47,"phase":"MAIN1","active":true,"frame":6492,"what":"Llanowar Elves - Creature 1 / 1","ms":507,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791424884741,"turn":47,"phase":"MAIN1","active":true,"frame":6501,"what":"Priority: Sam","ms":854,"r":"priority:card:from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94))","did":"your exile; from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94)): Torrential Gearhulk"}
+{"t":1791424886041,"turn":47,"phase":"MAIN1","active":true,"frame":6509,"what":"Torrential Gearhulk - Creature 5 / 6","ms":510,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424886706,"turn":47,"phase":"MAIN1","active":true,"frame":6513,"what":"Torrential Gearhulk - Creature 5 / 6","ms":513,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424887375,"turn":47,"phase":"MAIN1","active":true,"frame":6517,"what":"Torrential Gearhulk - Creature 5 / 6","ms":503,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424888324,"turn":47,"phase":"MAIN1","active":true,"frame":6524,"what":"Priority: Sam","ms":385,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Jace, Telepath Unbound"}
+{"t":1791424888863,"turn":47,"phase":"MAIN1","active":true,"frame":6525,"what":"Priority: Sam","ms":516,"r":"priority:card:spell","did":"spell: Cryptic Command"}
+{"t":1791424889532,"turn":47,"phase":"MAIN1","active":true,"frame":6529,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":559,"r":"ask:choose_list","did":null}
+{"t":1791424890243,"turn":47,"phase":"MAIN1","active":true,"frame":6532,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":439,"r":"ask:choose_list","did":null}
+{"t":1791424890834,"turn":47,"phase":"MAIN1","active":true,"frame":6536,"what":"ask choose_list: Select target card","ms":451,"r":"ask:choose_list","did":null}
+{"t":1791424891724,"turn":47,"phase":"MAIN1","active":true,"frame":6543,"what":"Cryptic Command (95) - Return target permanent to its owner's hand.","ms":501,"r":"select:done","did":"choose Stomping Ground"}
+{"t":1791424892659,"turn":47,"phase":"MAIN1","active":true,"frame":6552,"what":"Cryptic Command (95) -  Counter target spell. (Targeting: Llanowar Elves - Creature 1 / 1 by Light Up the Stage (94)) Return target permanent to its owner's hand. (Targeting: Stomping Ground (64))","ms":510,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424893610,"turn":47,"phase":"MAIN1","active":true,"frame":6560,"what":"Priority: Sam","ms":867,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791424894632,"turn":47,"phase":"MAIN1","active":true,"frame":6572,"what":"Priority: Sam","ms":637,"r":"priority:card:spell","did":"spell: Fable of the Mirror-Breaker"}
+{"t":1791424895883,"turn":47,"phase":"MAIN1","active":true,"frame":6580,"what":"Fable of the Mirror-Breaker","ms":516,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424896553,"turn":47,"phase":"MAIN1","active":true,"frame":6584,"what":"Fable of the Mirror-Breaker","ms":2847,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424899557,"turn":47,"phase":"MAIN1","active":true,"frame":6584,"what":"Fable of the Mirror-Breaker","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424900221,"turn":47,"phase":"MAIN1","active":true,"frame":6591,"what":"Priority: Sam","ms":510,"r":"priority:card:spell","did":"spell: Craterhoof Behemoth"}
+{"t":1791424901173,"turn":47,"phase":"MAIN1","active":true,"frame":6599,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":2842,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424904170,"turn":47,"phase":"MAIN1","active":true,"frame":6599,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":2845,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424907168,"turn":47,"phase":"MAIN1","active":true,"frame":6599,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":639,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424907961,"turn":47,"phase":"MAIN1","active":true,"frame":6603,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":641,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424908756,"turn":47,"phase":"MAIN1","active":true,"frame":6607,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":2843,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424911753,"turn":47,"phase":"MAIN1","active":true,"frame":6607,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":2846,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424914752,"turn":47,"phase":"MAIN1","active":true,"frame":6607,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":2847,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424917753,"turn":47,"phase":"MAIN1","active":true,"frame":6607,"what":"Craterhoof Behemoth - Creature 5 / 5","ms":516,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424918422,"turn":47,"phase":"MAIN1","active":true,"frame":6614,"what":"Priority: Sam","ms":512,"r":"priority:card:spell","did":"spell: Garruk Wildspeaker"}
+{"t":1791424919374,"turn":47,"phase":"MAIN1","active":true,"frame":6622,"what":"Garruk Wildspeaker","ms":506,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424920036,"turn":47,"phase":"MAIN1","active":true,"frame":6626,"what":"Garruk Wildspeaker","ms":509,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424920699,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2849,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424923702,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2846,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424926703,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2844,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424929701,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2846,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424932701,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2847,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424935703,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2846,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424938702,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2843,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424941699,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2849,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424944702,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":2845,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424947702,"turn":47,"phase":"MAIN1","active":true,"frame":6630,"what":"Garruk Wildspeaker","ms":516,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424948372,"turn":47,"phase":"MAIN1","active":true,"frame":6637,"what":"Priority: Sam","ms":630,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791424951138,"turn":47,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":6659,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1267,"r":"attack:alpha","did":"cancel \"Attack with everythingAlpha Strike\"; ok \"Attack with 1OK\""}
+{"t":1791424952840,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6682,"what":"Priority: Sam","ms":498,"r":"priority:card:spell","did":"spell: Cryptic Command"}
+{"t":1791424953489,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6686,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":434,"r":"ask:choose_list","did":null}
+{"t":1791424954075,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6689,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":436,"r":"ask:choose_list","did":null}
+{"t":1791424954954,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6697,"what":"Cryptic Command (95) - Return target permanent to its owner's hand. Tap all creatures your opponents control.","ms":506,"r":"select:done","did":"choose Tidechannel Pathway"}
+{"t":1791424955907,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6706,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2855,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424958917,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6706,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2847,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424961918,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6706,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2845,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424964916,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6706,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":640,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791424965712,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6710,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2850,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424968716,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6710,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2845,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424971715,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6710,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2850,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424974722,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6710,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2858,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424977733,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6710,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":516,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424978403,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6714,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2843,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424981401,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6714,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2845,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424984399,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6714,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":2846,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424987401,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6714,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Tidechannel Pathway (63)) Tap all creatures your opponents control.","ms":515,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424988355,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6721,"what":"Priority: Sam","ms":381,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Jace, Telepath Unbound"}
+{"t":1791424988890,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6722,"what":"Priority: Sam","ms":869,"r":"priority:card:from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94))","did":"your exile; from the exile (Torrential Gearhulk - Creature 5 / 6 by Light Up the Stage (94)): Torrential Gearhulk"}
+{"t":1791424990205,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6730,"what":"Torrential Gearhulk - Creature 5 / 6","ms":627,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791424990987,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6734,"what":"Torrential Gearhulk - Creature 5 / 6","ms":2841,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791424993983,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6734,"what":"Torrential Gearhulk - Creature 5 / 6","ms":636,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791424995054,"turn":47,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6742,"what":"Priority: Sam","ms":630,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791424997493,"turn":47,"phase":"MAIN2","active":true,"frame":6761,"what":"Priority: Sam","ms":638,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791424998450,"turn":47,"phase":"CLEANUP","active":true,"frame":6772,"what":"Cleanup Phase","ms":631,"r":"select:done","did":"choose Garruk Wildspeaker"}
+{"t":1791425006304,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6812,"what":"Priority: Sam","ms":501,"r":"priority:card:spell","did":"spell: Cryptic Command"}
+{"t":1791425006959,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6816,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":447,"r":"ask:choose_list","did":null}
+{"t":1791425008265,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6819,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":443,"r":"ask:choose_list","did":null}
+{"t":1791425009152,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6826,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2843,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425012149,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6826,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":509,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791425012812,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6830,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":511,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791425013476,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2852,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425016482,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2845,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425019481,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2846,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425022481,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2847,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425025485,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2843,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425028481,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2845,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425031480,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2847,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425034483,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":2844,"r":"pay:tap","did":"tap Llanowar Elves for mana"}
+{"t":1791425037479,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6834,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":510,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791425038438,"turn":48,"phase":"COMBAT_BEGIN","active":false,"frame":6841,"what":"Priority: Sam","ms":522,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791425039114,"turn":48,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6849,"what":"Priority: Sam","ms":380,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Jace, Telepath Unbound"}
+{"t":1791425039648,"turn":48,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6850,"what":"Priority: Sam","ms":633,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791425043335,"turn":48,"phase":"END_OF_TURN","active":false,"frame":6869,"what":"Priority: Sam","ms":503,"r":"priority:card:spell","did":"spell: Cryptic Command"}
+{"t":1791425044825,"turn":48,"phase":"END_OF_TURN","active":false,"frame":6873,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":562,"r":"ask:choose_list","did":null}
+{"t":1791425045539,"turn":48,"phase":"END_OF_TURN","active":false,"frame":6876,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":453,"r":"ask:choose_list","did":null}
+{"t":1791425046436,"turn":48,"phase":"END_OF_TURN","active":false,"frame":6884,"what":"Cryptic Command (95) - Return target permanent to its owner's hand. Draw a card.","ms":515,"r":"select:done","did":"choose Stomping Ground"}
+{"t":1791425047403,"turn":48,"phase":"END_OF_TURN","active":false,"frame":6893,"what":"Cryptic Command (95) -  Return target permanent to its owner's hand. (Targeting: Stomping Ground (64)) Draw a card.","ms":507,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791425048353,"turn":48,"phase":"END_OF_TURN","active":false,"frame":6901,"what":"Priority: Sam","ms":625,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791425049170,"turn":49,"phase":"MAIN1","active":true,"frame":6909,"what":"Priority: Sam","ms":631,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791425050303,"turn":49,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":6925,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1593,"r":"attack:2","did":"attack with Beast Token; attack with Llanowar Elves; ok \"Attack with 2OK\""}
+{"t":1791425056518,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6959,"what":"Priority: Sam","ms":625,"r":"priority:card:spell","did":"spell: Cryptic Command"}
+{"t":1791425057295,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6963,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":443,"r":"ask:choose_list","did":null}
+{"t":1791425057891,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6966,"what":"ask choose_list: Sam activated Cryptic Command - Choose a mode","ms":453,"r":"ask:choose_list","did":null}
+{"t":1791425058785,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6973,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":526,"r":"pay:tap","did":"tap Tidechannel Pathway for mana"}
+{"t":1791425059464,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6977,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":514,"r":"pay:tap","did":"tap Hengegate Pathway for mana"}
+{"t":1791425060132,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6981,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":385,"r":"pay:tap","did":"tap Stomping Ground for mana"}
+{"t":1791425060669,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6982,"what":"ask ability_menu: ","ms":421,"r":"ask:ability_menu","did":null}
+{"t":1791425061534,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6986,"what":"Cryptic Command (95) -  Tap all creatures your opponents control. Draw a card.","ms":510,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791425062487,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6993,"what":"Priority: Sam","ms":398,"r":"priority:card:ability (ability, ability, ability)","did":"ability (ability, ability, ability): Jace, Telepath Unbound"}
+{"t":1791425063039,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6994,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791425064795,"turn":49,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":6994,"what":"Priority: Sam","ms":632,"r":"priority:ok","did":"ok \"Pass priorityOK\""}

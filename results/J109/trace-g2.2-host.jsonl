@@ -1,0 +1,714 @@
+{"t":1791429264802,"turn":0,"phase":null,"active":false,"frame":9927,"what":"Sam is going first.","ms":600,"r":"opening","did":"Keep 7 1"}
+{"t":1791429280772,"turn":1,"phase":"MAIN1","active":false,"frame":9951,"what":"Priority: Justin","ms":517,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791429288535,"turn":2,"phase":"MAIN1","active":true,"frame":9983,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Conclave Naturalists"}
+{"t":1791429289173,"turn":2,"phase":"MAIN1","active":true,"frame":9990,"what":"Conclave Naturalists - Creature 4 / 4","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429289800,"turn":2,"phase":"MAIN1","active":true,"frame":9998,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Tortured Existence"}
+{"t":1791429290435,"turn":2,"phase":"MAIN1","active":true,"frame":10006,"what":"Tortured Existence","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429291194,"turn":2,"phase":"MAIN1","active":true,"frame":10014,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429294212,"turn":2,"phase":"MAIN1","active":true,"frame":10022,"what":"Guttersnipe - Creature 2 / 2","ms":1784,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429296151,"turn":2,"phase":"MAIN1","active":true,"frame":10030,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429296786,"turn":2,"phase":"MAIN1","active":true,"frame":10038,"what":"Kor Skyfisher - Creature 2 / 3","ms":724,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429297715,"turn":2,"phase":"MAIN1","active":true,"frame":10046,"what":"Priority: Justin","ms":1118,"r":"priority:card:spell","did":"spell: Stormfront Pegasus"}
+{"t":1791429298986,"turn":2,"phase":"MAIN1","active":true,"frame":10054,"what":"Stormfront Pegasus - Creature 2 / 1","ms":826,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429299969,"turn":2,"phase":"MAIN1","active":true,"frame":10062,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429306061,"turn":2,"phase":"MAIN2","active":true,"frame":10091,"what":"Priority: Justin","ms":470,"r":"priority:card:spell","did":"spell: Stormfront Pegasus"}
+{"t":1791429306685,"turn":2,"phase":"MAIN2","active":true,"frame":10098,"what":"Stormfront Pegasus - Creature 2 / 1","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429307320,"turn":2,"phase":"MAIN2","active":true,"frame":10106,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429307950,"turn":2,"phase":"MAIN2","active":true,"frame":10114,"what":"Guttersnipe - Creature 2 / 2","ms":616,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429308720,"turn":2,"phase":"MAIN2","active":true,"frame":10122,"what":"Priority: Justin","ms":893,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429309767,"turn":2,"phase":"MAIN2","active":true,"frame":10123,"what":"Priority: Justin","ms":774,"r":"moved-on","did":null}
+{"t":1791429310694,"turn":2,"phase":"MAIN2","active":true,"frame":10130,"what":"Kor Skyfisher - Creature 2 / 3","ms":350,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429313549,"turn":2,"phase":"MAIN2","active":true,"frame":10138,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429314306,"turn":2,"phase":"MAIN2","active":true,"frame":10142,"what":"ask choose_list: Choose optional costs","ms":377,"r":"ask:choose_list","did":null}
+{"t":1791429314836,"turn":2,"phase":"MAIN2","active":true,"frame":10149,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429315579,"turn":2,"phase":"MAIN2","active":true,"frame":10157,"what":"Ancestral Blade","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429316323,"turn":2,"phase":"MAIN2","active":true,"frame":10165,"what":"Priority: Justin","ms":594,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791429318777,"turn":2,"phase":"MAIN2","active":true,"frame":10175,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":917,"r":"open-target","did":"target player 1"}
+{"t":1791429319848,"turn":2,"phase":"MAIN2","active":true,"frame":10184,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":666,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429320671,"turn":2,"phase":"MAIN2","active":true,"frame":10192,"what":"Priority: Justin","ms":595,"r":"priority:eot","did":"To EOT"}
+{"t":1791429322053,"turn":2,"phase":"CLEANUP","active":true,"frame":10206,"what":"Cleanup Phase","ms":763,"r":"select:done","did":"choose Conclave Naturalists"}
+{"t":1791429329958,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":10237,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429330584,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":10241,"what":"ask choose_list: Choose optional costs","ms":533,"r":"ask:choose_list","did":null}
+{"t":1791429331270,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":10248,"what":"Priority: Justin","ms":594,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429332018,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10256,"what":"Priority: Justin","ms":837,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429347479,"turn":3,"phase":"END_OF_TURN","active":false,"frame":10301,"what":"Priority: Justin","ms":482,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429348114,"turn":4,"phase":"MAIN1","active":true,"frame":10308,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Stormfront Pegasus"}
+{"t":1791429348883,"turn":4,"phase":"MAIN1","active":true,"frame":10316,"what":"Stormfront Pegasus - Creature 2 / 1","ms":761,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429350381,"turn":4,"phase":"MAIN1","active":true,"frame":10324,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429352457,"turn":4,"phase":"MAIN2","active":true,"frame":10342,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429353082,"turn":4,"phase":"MAIN2","active":true,"frame":10346,"what":"ask choose_list: Choose optional costs","ms":519,"r":"ask:choose_list","did":null}
+{"t":1791429353755,"turn":4,"phase":"MAIN2","active":true,"frame":10353,"what":"Priority: Justin","ms":615,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429356706,"turn":4,"phase":"MAIN2","active":true,"frame":10361,"what":"Kor Skyfisher - Creature 2 / 3","ms":2417,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429359279,"turn":4,"phase":"MAIN2","active":true,"frame":10369,"what":"Priority: Justin","ms":467,"r":"priority:card:land","did":"land: Blossoming Sands"}
+{"t":1791429359902,"turn":4,"phase":"MAIN2","active":true,"frame":10377,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429360822,"turn":4,"phase":"MAIN2","active":true,"frame":10390,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791429361451,"turn":4,"phase":"MAIN2","active":true,"frame":10398,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":476,"r":"open-target","did":"target card 17"}
+{"t":1791429362081,"turn":4,"phase":"MAIN2","active":true,"frame":10401,"what":"Skewer the Critics (12) - The selected card is not a damage target.","ms":478,"r":"open-target","did":"target card 70"}
+{"t":1791429362713,"turn":4,"phase":"MAIN2","active":true,"frame":10404,"what":"Skewer the Critics (12) - The selected card is not a damage target.","ms":463,"r":"open-target","did":"target player 1"}
+{"t":1791429363329,"turn":4,"phase":"MAIN2","active":true,"frame":10413,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":584,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429364197,"turn":4,"phase":"MAIN2","active":true,"frame":10422,"what":"Priority: Justin","ms":467,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429364816,"turn":4,"phase":"MAIN2","active":true,"frame":10430,"what":"Ancestral Blade","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429365447,"turn":4,"phase":"MAIN2","active":true,"frame":10438,"what":"Priority: Justin","ms":466,"r":"priority:card:spell","did":"spell: Tortured Existence"}
+{"t":1791429366067,"turn":4,"phase":"MAIN2","active":true,"frame":10446,"what":"Tortured Existence","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429366699,"turn":4,"phase":"MAIN2","active":true,"frame":10454,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Stormfront Pegasus"}
+{"t":1791429367454,"turn":4,"phase":"MAIN2","active":true,"frame":10462,"what":"Stormfront Pegasus - Creature 2 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429368081,"turn":4,"phase":"MAIN2","active":true,"frame":10470,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429375748,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":10492,"what":"Priority: Justin","ms":482,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429376385,"turn":5,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10500,"what":"Priority: Justin","ms":837,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429384519,"turn":5,"phase":"END_OF_TURN","active":false,"frame":10535,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429385147,"turn":5,"phase":"END_OF_TURN","active":false,"frame":10539,"what":"ask choose_list: Choose optional costs","ms":505,"r":"ask:choose_list","did":null}
+{"t":1791429385804,"turn":5,"phase":"END_OF_TURN","active":false,"frame":10546,"what":"Priority: Justin","ms":832,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429386794,"turn":6,"phase":"MAIN1","active":true,"frame":10557,"what":"Priority: Justin","ms":469,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429387417,"turn":6,"phase":"MAIN1","active":true,"frame":10565,"what":"Kor Skyfisher - Creature 2 / 3","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429388169,"turn":6,"phase":"MAIN1","active":true,"frame":10573,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429388802,"turn":6,"phase":"MAIN1","active":true,"frame":10581,"what":"Satyr Wayfinder - Creature 1 / 1","ms":356,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429389311,"turn":6,"phase":"MAIN1","active":true,"frame":10589,"what":"Priority: Justin","ms":469,"r":"priority:card:spell","did":"spell: Stormfront Pegasus"}
+{"t":1791429389935,"turn":6,"phase":"MAIN1","active":true,"frame":10597,"what":"Stormfront Pegasus - Creature 2 / 1","ms":477,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429390566,"turn":6,"phase":"MAIN1","active":true,"frame":10601,"what":"Stormfront Pegasus - Creature 2 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429391196,"turn":6,"phase":"MAIN1","active":true,"frame":10608,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429391953,"turn":6,"phase":"MAIN1","active":true,"frame":10616,"what":"Ancestral Blade","ms":695,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429392803,"turn":6,"phase":"MAIN1","active":true,"frame":10620,"what":"Ancestral Blade","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429393552,"turn":6,"phase":"MAIN1","active":true,"frame":10627,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791429394184,"turn":6,"phase":"MAIN1","active":true,"frame":10636,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":477,"r":"open-target","did":"target card 70"}
+{"t":1791429394819,"turn":6,"phase":"MAIN1","active":true,"frame":10639,"what":"Skewer the Critics (12) - The selected card is not a damage target.","ms":976,"r":"open-target:cancel","did":"target card 70; cancel \"Cancel\""}
+{"t":1791429395949,"turn":6,"phase":"MAIN1","active":true,"frame":10652,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Tortured Existence"}
+{"t":1791429396582,"turn":6,"phase":"MAIN1","active":true,"frame":10660,"what":"Tortured Existence","ms":600,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429397336,"turn":6,"phase":"MAIN1","active":true,"frame":10665,"what":"Blossoming Sands (17)","ms":476,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429397965,"turn":6,"phase":"MAIN1","active":true,"frame":10673,"what":"Tortured Existence","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429398597,"turn":6,"phase":"MAIN1","active":true,"frame":10680,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429402841,"turn":6,"phase":"MAIN2","active":true,"frame":10703,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429403468,"turn":6,"phase":"MAIN2","active":true,"frame":10710,"what":"Ancestral Blade","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429404218,"turn":6,"phase":"MAIN2","active":true,"frame":10718,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791429404850,"turn":6,"phase":"MAIN2","active":true,"frame":10727,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":476,"r":"open-target","did":"target player 1"}
+{"t":1791429405479,"turn":6,"phase":"MAIN2","active":true,"frame":10736,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":482,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429406116,"turn":6,"phase":"MAIN2","active":true,"frame":10741,"what":"Blossoming Sands (17)","ms":476,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429406748,"turn":6,"phase":"MAIN2","active":true,"frame":10749,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429407501,"turn":6,"phase":"MAIN2","active":true,"frame":10756,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429408135,"turn":6,"phase":"MAIN2","active":true,"frame":10764,"what":"Satyr Wayfinder - Creature 1 / 1","ms":609,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429408899,"turn":6,"phase":"MAIN2","active":true,"frame":10768,"what":"Satyr Wayfinder - Creature 1 / 1","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429409534,"turn":6,"phase":"MAIN2","active":true,"frame":10775,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429410288,"turn":6,"phase":"MAIN2","active":true,"frame":10783,"what":"Guttersnipe - Creature 2 / 2","ms":473,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429410916,"turn":6,"phase":"MAIN2","active":true,"frame":10788,"what":"Blossoming Sands (17)","ms":597,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429411667,"turn":6,"phase":"MAIN2","active":true,"frame":10796,"what":"Guttersnipe - Creature 2 / 2","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429412298,"turn":6,"phase":"MAIN2","active":true,"frame":10803,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429412935,"turn":6,"phase":"MAIN2","active":true,"frame":10811,"what":"Kor Skyfisher - Creature 2 / 3","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429413686,"turn":6,"phase":"MAIN2","active":true,"frame":10819,"what":"Priority: Justin","ms":473,"r":"priority:card:spell","did":"spell: Tortured Existence"}
+{"t":1791429414315,"turn":6,"phase":"MAIN2","active":true,"frame":10827,"what":"Tortured Existence","ms":599,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429415070,"turn":6,"phase":"MAIN2","active":true,"frame":10832,"what":"Blossoming Sands (17)","ms":473,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429415698,"turn":6,"phase":"MAIN2","active":true,"frame":10840,"what":"Tortured Existence","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429416449,"turn":6,"phase":"MAIN2","active":true,"frame":10847,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429417082,"turn":6,"phase":"MAIN2","active":true,"frame":10851,"what":"ask choose_list: Choose optional costs","ms":415,"r":"ask:choose_list","did":null}
+{"t":1791429417652,"turn":6,"phase":"MAIN2","active":true,"frame":10858,"what":"Priority: Justin","ms":594,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791429421163,"turn":6,"phase":"CLEANUP","active":true,"frame":10877,"what":"Cleanup Phase","ms":2426,"r":"select:done","did":"choose Stormfront Pegasus"}
+{"t":1791429445511,"turn":7,"phase":"COMBAT_BEGIN","active":false,"frame":10950,"what":"Priority: Justin","ms":481,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429446147,"turn":7,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10957,"what":"Priority: Justin","ms":837,"r":"priority:eot","did":"To EOT"}
+{"t":1791429452178,"turn":8,"phase":"MAIN1","active":true,"frame":10992,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Owlbear"}
+{"t":1791429452935,"turn":8,"phase":"MAIN1","active":true,"frame":11000,"what":"Owlbear - Creature 4 / 4","ms":595,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429453684,"turn":8,"phase":"MAIN1","active":true,"frame":11004,"what":"Owlbear - Creature 4 / 4","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429454314,"turn":8,"phase":"MAIN1","active":true,"frame":11011,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Tortured Existence"}
+{"t":1791429454952,"turn":8,"phase":"MAIN1","active":true,"frame":11019,"what":"Tortured Existence","ms":593,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429455698,"turn":8,"phase":"MAIN1","active":true,"frame":11024,"what":"Blossoming Sands (17)","ms":479,"r":"buttons:buttons:cancel","did":"cancel \"White\""}
+{"t":1791429456329,"turn":8,"phase":"MAIN1","active":true,"frame":11032,"what":"Tortured Existence","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429457083,"turn":8,"phase":"MAIN1","active":true,"frame":11039,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429457716,"turn":8,"phase":"MAIN1","active":true,"frame":11047,"what":"Satyr Wayfinder - Creature 1 / 1","ms":597,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429458467,"turn":8,"phase":"MAIN1","active":true,"frame":11051,"what":"Satyr Wayfinder - Creature 1 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429459096,"turn":8,"phase":"MAIN1","active":true,"frame":11058,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429463979,"turn":8,"phase":"MAIN2","active":true,"frame":11084,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429464616,"turn":8,"phase":"MAIN2","active":true,"frame":11091,"what":"Kor Skyfisher - Creature 2 / 3","ms":478,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429465248,"turn":8,"phase":"MAIN2","active":true,"frame":11095,"what":"Kor Skyfisher - Creature 2 / 3","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429465880,"turn":8,"phase":"MAIN2","active":true,"frame":11102,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429466636,"turn":8,"phase":"MAIN2","active":true,"frame":11106,"what":"ask choose_list: Choose optional costs","ms":497,"r":"ask:choose_list","did":null}
+{"t":1791429467290,"turn":8,"phase":"MAIN2","active":true,"frame":11113,"what":"Priority: Justin","ms":591,"r":"priority:card:spell","did":"spell: Tortured Existence"}
+{"t":1791429468033,"turn":8,"phase":"MAIN2","active":true,"frame":11121,"what":"Tortured Existence","ms":476,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429468662,"turn":8,"phase":"MAIN2","active":true,"frame":11126,"what":"Blossoming Sands (17)","ms":481,"r":"buttons:buttons:cancel","did":"cancel \"White\""}
+{"t":1791429469296,"turn":8,"phase":"MAIN2","active":true,"frame":11134,"what":"Tortured Existence","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429470049,"turn":8,"phase":"MAIN2","active":true,"frame":11141,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429470682,"turn":8,"phase":"MAIN2","active":true,"frame":11149,"what":"Guttersnipe - Creature 2 / 2","ms":598,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429471436,"turn":8,"phase":"MAIN2","active":true,"frame":11154,"what":"Blossoming Sands (17)","ms":475,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429472065,"turn":8,"phase":"MAIN2","active":true,"frame":11162,"what":"Guttersnipe - Creature 2 / 2","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429472816,"turn":8,"phase":"MAIN2","active":true,"frame":11169,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791429473450,"turn":8,"phase":"MAIN2","active":true,"frame":11178,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":595,"r":"open-target","did":"target card 70"}
+{"t":1791429474199,"turn":8,"phase":"MAIN2","active":true,"frame":11181,"what":"Skewer the Critics (12) - The selected card is not a damage target.","ms":843,"r":"open-target:cancel","did":"target card 17; cancel \"Cancel\""}
+{"t":1791429475197,"turn":8,"phase":"MAIN2","active":true,"frame":11194,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429475838,"turn":8,"phase":"MAIN2","active":true,"frame":11202,"what":"Satyr Wayfinder - Creature 1 / 1","ms":472,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429476463,"turn":8,"phase":"MAIN2","active":true,"frame":11206,"what":"Satyr Wayfinder - Creature 1 / 1","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429477217,"turn":8,"phase":"MAIN2","active":true,"frame":11213,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Owlbear"}
+{"t":1791429477850,"turn":8,"phase":"MAIN2","active":true,"frame":11221,"what":"Owlbear - Creature 4 / 4","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429478600,"turn":8,"phase":"MAIN2","active":true,"frame":11229,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429483097,"turn":8,"phase":"CLEANUP","active":true,"frame":11249,"what":"Cleanup Phase","ms":717,"r":"select:done","did":"choose Tortured Existence"}
+{"t":1791429487079,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":11274,"what":"Priority: Justin","ms":478,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429487712,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11281,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429488348,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11285,"what":"ask choose_list: Choose optional costs","ms":414,"r":"ask:choose_list","did":null}
+{"t":1791429488916,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11292,"what":"Priority: Justin","ms":716,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429489785,"turn":9,"phase":"END_OF_TURN","active":false,"frame":11301,"what":"Priority: Justin","ms":595,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429490664,"turn":10,"phase":"MAIN1","active":true,"frame":11312,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429493055,"turn":10,"phase":"MAIN2","active":true,"frame":11332,"what":"Priority: Justin","ms":472,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429493682,"turn":10,"phase":"MAIN2","active":true,"frame":11339,"what":"Guttersnipe - Creature 2 / 2","ms":478,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429494313,"turn":10,"phase":"MAIN2","active":true,"frame":11344,"what":"Blossoming Sands (17)","ms":479,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429494948,"turn":10,"phase":"MAIN2","active":true,"frame":11352,"what":"Guttersnipe - Creature 2 / 2","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429495579,"turn":10,"phase":"MAIN2","active":true,"frame":11359,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429496335,"turn":10,"phase":"MAIN2","active":true,"frame":11367,"what":"Satyr Wayfinder - Creature 1 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429496964,"turn":10,"phase":"MAIN2","active":true,"frame":11375,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429497718,"turn":10,"phase":"MAIN2","active":true,"frame":11383,"what":"Ancestral Blade","ms":475,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429498348,"turn":10,"phase":"MAIN2","active":true,"frame":11387,"what":"Ancestral Blade","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429499103,"turn":10,"phase":"MAIN2","active":true,"frame":11394,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429499730,"turn":10,"phase":"MAIN2","active":true,"frame":11398,"what":"ask choose_list: Choose optional costs","ms":382,"r":"ask:choose_list","did":null}
+{"t":1791429500265,"turn":10,"phase":"MAIN2","active":true,"frame":11405,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Mind Stone"}
+{"t":1791429500901,"turn":10,"phase":"MAIN2","active":true,"frame":11413,"what":"Mind Stone","ms":476,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429501530,"turn":10,"phase":"MAIN2","active":true,"frame":11417,"what":"Mind Stone","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429502283,"turn":10,"phase":"MAIN2","active":true,"frame":11424,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791429502915,"turn":10,"phase":"MAIN2","active":true,"frame":11433,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":477,"r":"open-target","did":"target card 17"}
+{"t":1791429503545,"turn":10,"phase":"MAIN2","active":true,"frame":11436,"what":"Skewer the Critics (12) - The selected card is not a damage target.","ms":602,"r":"open-target","did":"target card 70"}
+{"t":1791429504301,"turn":10,"phase":"MAIN2","active":true,"frame":11439,"what":"Skewer the Critics (12) - The selected card is not a damage target.","ms":842,"r":"open-target:cancel","did":"target card 70; cancel \"Cancel\""}
+{"t":1791429505297,"turn":10,"phase":"MAIN2","active":true,"frame":11452,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Owlbear"}
+{"t":1791429505931,"turn":10,"phase":"MAIN2","active":true,"frame":11460,"what":"Owlbear - Creature 4 / 4","ms":598,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429506683,"turn":10,"phase":"MAIN2","active":true,"frame":11464,"what":"Owlbear - Creature 4 / 4","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429507314,"turn":10,"phase":"MAIN2","active":true,"frame":11471,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429508391,"turn":10,"phase":"CLEANUP","active":true,"frame":11483,"what":"Cleanup Phase","ms":1375,"r":"select:done","did":"choose Owlbear"}
+{"t":1791429527803,"turn":11,"phase":"COMBAT_BEGIN","active":false,"frame":11548,"what":"Priority: Justin","ms":472,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429528433,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11555,"what":"Priority: Justin","ms":886,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429533381,"turn":11,"phase":"END_OF_TURN","active":false,"frame":11577,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429534177,"turn":12,"phase":"MAIN1","active":true,"frame":11588,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429534815,"turn":12,"phase":"MAIN1","active":true,"frame":11595,"what":"Ancestral Blade","ms":478,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429535447,"turn":12,"phase":"MAIN1","active":true,"frame":11599,"what":"Ancestral Blade","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429536079,"turn":12,"phase":"MAIN1","active":true,"frame":11606,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429536836,"turn":12,"phase":"MAIN1","active":true,"frame":11614,"what":"Satyr Wayfinder - Creature 1 / 1","ms":471,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429537461,"turn":12,"phase":"MAIN1","active":true,"frame":11618,"what":"Satyr Wayfinder - Creature 1 / 1","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429538095,"turn":12,"phase":"MAIN1","active":true,"frame":11625,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429543544,"turn":12,"phase":"MAIN2","active":true,"frame":11650,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791429544179,"turn":12,"phase":"MAIN2","active":true,"frame":11654,"what":"ask choose_list: Choose optional costs","ms":502,"r":"ask:choose_list","did":null}
+{"t":1791429544835,"turn":12,"phase":"MAIN2","active":true,"frame":11661,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791429545466,"turn":12,"phase":"MAIN2","active":true,"frame":11669,"what":"Seeker of the Way - Creature 2 / 2","ms":597,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429546216,"turn":12,"phase":"MAIN2","active":true,"frame":11673,"what":"Seeker of the Way - Creature 2 / 2","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429546846,"turn":12,"phase":"MAIN2","active":true,"frame":11680,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429550707,"turn":12,"phase":"CLEANUP","active":true,"frame":11697,"what":"Cleanup Phase","ms":485,"r":"select:done","did":"choose Vicious Offering"}
+{"t":1791429555486,"turn":13,"phase":"COMBAT_BEGIN","active":false,"frame":11722,"what":"Priority: Justin","ms":473,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429556113,"turn":13,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11729,"what":"Priority: Justin","ms":478,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429586174,"turn":13,"phase":"END_OF_TURN","active":false,"frame":11817,"what":"Priority: Justin","ms":607,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429587153,"turn":14,"phase":"MAIN1","active":true,"frame":11829,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429587781,"turn":14,"phase":"MAIN1","active":true,"frame":11836,"what":"Ancestral Blade","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429588412,"turn":14,"phase":"MAIN1","active":true,"frame":11844,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429589044,"turn":14,"phase":"MAIN1","active":true,"frame":11852,"what":"Kor Skyfisher - Creature 2 / 3","ms":480,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429589678,"turn":14,"phase":"MAIN1","active":true,"frame":11856,"what":"Kor Skyfisher - Creature 2 / 3","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429590435,"turn":14,"phase":"MAIN1","active":true,"frame":11863,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429591064,"turn":14,"phase":"MAIN1","active":true,"frame":11871,"what":"Satyr Wayfinder - Creature 1 / 1","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429591816,"turn":14,"phase":"MAIN1","active":true,"frame":11879,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429592450,"turn":14,"phase":"MAIN1","active":true,"frame":11887,"what":"Guttersnipe - Creature 2 / 2","ms":597,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429593200,"turn":14,"phase":"MAIN1","active":true,"frame":11892,"what":"Blossoming Sands (17)","ms":472,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429593826,"turn":14,"phase":"MAIN1","active":true,"frame":11900,"what":"Guttersnipe - Creature 2 / 2","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429594463,"turn":14,"phase":"MAIN1","active":true,"frame":11907,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429596315,"turn":14,"phase":"MAIN2","active":true,"frame":11925,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429596950,"turn":14,"phase":"MAIN2","active":true,"frame":11932,"what":"Satyr Wayfinder - Creature 1 / 1","ms":475,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429597579,"turn":14,"phase":"MAIN2","active":true,"frame":11936,"what":"Satyr Wayfinder - Creature 1 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429598211,"turn":14,"phase":"MAIN2","active":true,"frame":11943,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Mind Stone"}
+{"t":1791429598848,"turn":14,"phase":"MAIN2","active":true,"frame":11951,"what":"Mind Stone","ms":597,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429599602,"turn":14,"phase":"MAIN2","active":true,"frame":11955,"what":"Mind Stone","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429600229,"turn":14,"phase":"MAIN2","active":true,"frame":11962,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791429600983,"turn":14,"phase":"MAIN2","active":true,"frame":11970,"what":"Seeker of the Way - Creature 2 / 2","ms":475,"r":"pay:tap","did":"tap Blossoming Sands for mana"}
+{"t":1791429601612,"turn":14,"phase":"MAIN2","active":true,"frame":11974,"what":"Seeker of the Way - Creature 2 / 2","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429602364,"turn":14,"phase":"MAIN2","active":true,"frame":11981,"what":"Priority: Justin","ms":479,"r":"priority:card:land","did":"land: Thornwood Falls"}
+{"t":1791429605608,"turn":14,"phase":"MAIN2","active":true,"frame":11989,"what":"Priority: Justin","ms":606,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791429616230,"turn":15,"phase":"COMBAT_BEGIN","active":false,"frame":12034,"what":"Priority: Justin","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429616860,"turn":15,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":12041,"what":"Priority: Justin","ms":841,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429617855,"turn":15,"phase":"END_OF_TURN","active":false,"frame":12053,"what":"Priority: Justin","ms":846,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429618856,"turn":16,"phase":"MAIN1","active":true,"frame":12064,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791429619493,"turn":16,"phase":"MAIN1","active":true,"frame":12073,"what":"Kor Skyfisher - Creature 2 / 3","ms":480,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791429620128,"turn":16,"phase":"MAIN1","active":true,"frame":12082,"what":"Priority: Justin","ms":2153,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429625223,"turn":16,"phase":"MAIN1","active":true,"frame":12102,"what":"Priority: Justin","ms":603,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429626968,"turn":16,"phase":"MAIN1","active":true,"frame":12114,"what":"Kor Skyfisher (29)","ms":576,"r":"select:1","did":"choose Thornwood Falls"}
+{"t":1791429627793,"turn":16,"phase":"MAIN1","active":true,"frame":12126,"what":"Priority: Justin","ms":480,"r":"priority:card:land","did":"land: Boros Garrison"}
+{"t":1791429628427,"turn":16,"phase":"MAIN1","active":true,"frame":12133,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429632182,"turn":16,"phase":"MAIN1","active":true,"frame":12151,"what":"Boros Garrison (41)","ms":473,"r":"select:done","did":"choose Blossoming Sands"}
+{"t":1791429632970,"turn":16,"phase":"MAIN1","active":true,"frame":12163,"what":"Priority: Justin","ms":591,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791429636464,"turn":16,"phase":"CLEANUP","active":true,"frame":12183,"what":"Cleanup Phase","ms":601,"r":"select:done","did":"choose Blossoming Sands"}
+{"t":1791429645608,"turn":17,"phase":"MAIN1","active":false,"frame":12219,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429653573,"turn":17,"phase":"COMBAT_BEGIN","active":false,"frame":12250,"what":"Priority: Justin","ms":2682,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429656411,"turn":17,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":12258,"what":"Priority: Justin","ms":1423,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429661540,"turn":17,"phase":"END_OF_TURN","active":false,"frame":12279,"what":"Priority: Justin","ms":481,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429662175,"turn":18,"phase":"MAIN1","active":true,"frame":12286,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429663144,"turn":18,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":12302,"what":"Select creatures to attack Sam or select player/card you wish to attack.","ms":981,"r":"attack:1","did":"attack with Kor Skyfisher; ok \"Attack with 1OKSpace\""}
+{"t":1791429664528,"turn":18,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":12324,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429665161,"turn":18,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":12332,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":477,"r":"select:done","did":"choose Kor Skyfisher"}
+{"t":1791429665793,"turn":18,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":12341,"what":"Tragic Slip (27) - Kor Skyfisher (29) gets -1/-1  until end of turn.","ms":481,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791429667809,"turn":18,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":12345,"what":"Tragic Slip (27) - Kor Skyfisher (29) gets -1/-1  until end of turn.","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429668444,"turn":18,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":12352,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429679877,"turn":18,"phase":"MAIN2","active":true,"frame":12385,"what":"Priority: Justin","ms":363,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791429680670,"turn":18,"phase":"MAIN2","active":true,"frame":12386,"what":"ask ability_menu: ","ms":375,"r":"ask:ability_menu","did":null}
+{"t":1791429681199,"turn":18,"phase":"MAIN2","active":true,"frame":12395,"what":"Skewer the Critics (12) - Spectacle {R} (You may cast this spell for its spectacle cost rather than its mana cost if an opponent lost life this turn.)","ms":593,"r":"select:done","did":"choose Kor Skyfisher"}
+{"t":1791429681947,"turn":18,"phase":"MAIN2","active":true,"frame":12405,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Kor Skyfisher (29).","ms":477,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791429682578,"turn":18,"phase":"MAIN2","active":true,"frame":12414,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429690631,"turn":18,"phase":"MAIN2","active":true,"frame":12441,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429691263,"turn":18,"phase":"MAIN2","active":true,"frame":12448,"what":"Satyr Wayfinder - Creature 1 / 1","ms":474,"r":"pay:pool","did":"floating mana"}
+{"t":1791429691891,"turn":18,"phase":"MAIN2","active":true,"frame":12453,"what":"Satyr Wayfinder - Creature 1 / 1","ms":2851,"r":"pay:pool","did":"floating mana"}
+{"t":1791429694895,"turn":18,"phase":"MAIN2","active":true,"frame":12453,"what":"Satyr Wayfinder - Creature 1 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429695527,"turn":18,"phase":"MAIN2","active":true,"frame":12461,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429709170,"turn":19,"phase":"MAIN1","active":false,"frame":12507,"what":"Priority: Justin","ms":491,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429709814,"turn":19,"phase":"MAIN1","active":false,"frame":12515,"what":"Priority: Justin","ms":594,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429728605,"turn":19,"phase":"COMBAT_BEGIN","active":false,"frame":12566,"what":"Priority: Justin","ms":469,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429729259,"turn":19,"phase":"COMBAT_BEGIN","active":false,"frame":12575,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":478,"r":"select:done","did":"choose Firebrand Archer"}
+{"t":1791429729890,"turn":19,"phase":"COMBAT_BEGIN","active":false,"frame":12584,"what":"Tragic Slip (27) - Firebrand Archer (97) gets -1/-1  until end of turn.","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429730525,"turn":19,"phase":"COMBAT_BEGIN","active":false,"frame":12592,"what":"Priority: Justin","ms":480,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429731159,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":12600,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429740576,"turn":19,"phase":"END_OF_TURN","active":false,"frame":12639,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429741216,"turn":19,"phase":"END_OF_TURN","active":false,"frame":12648,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":488,"r":"select:done","did":"choose Firebrand Archer"}
+{"t":1791429741857,"turn":19,"phase":"END_OF_TURN","active":false,"frame":12657,"what":"Tragic Slip (27) - Firebrand Archer (97) gets -1/-1  until end of turn.","ms":784,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429742947,"turn":19,"phase":"END_OF_TURN","active":false,"frame":12665,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429743697,"turn":20,"phase":"MAIN1","active":true,"frame":12673,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429744327,"turn":20,"phase":"MAIN1","active":true,"frame":12682,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":598,"r":"select:done","did":"choose Firebrand Archer"}
+{"t":1791429745078,"turn":20,"phase":"MAIN1","active":true,"frame":12691,"what":"Tragic Slip (27) - Firebrand Archer (97) gets -1/-1  until end of turn.","ms":479,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791429745711,"turn":20,"phase":"MAIN1","active":true,"frame":12695,"what":"Tragic Slip (27) - Firebrand Archer (97) gets -1/-1  until end of turn.","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429746463,"turn":20,"phase":"MAIN1","active":true,"frame":12702,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429747093,"turn":20,"phase":"MAIN1","active":true,"frame":12710,"what":"Satyr Wayfinder - Creature 1 / 1","ms":479,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791429747727,"turn":20,"phase":"MAIN1","active":true,"frame":12714,"what":"Satyr Wayfinder - Creature 1 / 1","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429748478,"turn":20,"phase":"MAIN1","active":true,"frame":12721,"what":"Priority: Justin","ms":485,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791429749118,"turn":20,"phase":"MAIN1","active":true,"frame":12730,"what":"Seeker of the Way - Creature 2 / 2","ms":611,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791429749886,"turn":20,"phase":"MAIN1","active":true,"frame":12739,"what":"Priority: Justin","ms":488,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429754170,"turn":20,"phase":"MAIN1","active":true,"frame":12756,"what":"Priority: Justin","ms":499,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429754827,"turn":20,"phase":"MAIN1","active":true,"frame":12764,"what":"Guttersnipe - Creature 2 / 2","ms":1066,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429756048,"turn":20,"phase":"MAIN1","active":true,"frame":12772,"what":"Priority: Justin","ms":617,"r":"priority:card:spell","did":"spell: Perilous Myr"}
+{"t":1791429756819,"turn":20,"phase":"MAIN1","active":true,"frame":12780,"what":"Perilous Myr - Creature 1 / 1","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429757457,"turn":20,"phase":"MAIN1","active":true,"frame":12788,"what":"Priority: Justin","ms":601,"r":"priority:card:land","did":"land: Thornwood Falls"}
+{"t":1791429758213,"turn":20,"phase":"MAIN1","active":true,"frame":12796,"what":"Priority: Justin","ms":2526,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429761321,"turn":20,"phase":"MAIN1","active":true,"frame":12809,"what":"Priority: Justin","ms":485,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429761960,"turn":20,"phase":"MAIN1","active":true,"frame":12816,"what":"Ancestral Blade","ms":1101,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429763216,"turn":20,"phase":"MAIN1","active":true,"frame":12824,"what":"Priority: Justin","ms":607,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429778924,"turn":20,"phase":"MAIN2","active":true,"frame":12854,"what":"Priority: Justin","ms":492,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429779568,"turn":20,"phase":"MAIN2","active":true,"frame":12862,"what":"Guttersnipe - Creature 2 / 2","ms":606,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429780330,"turn":20,"phase":"MAIN2","active":true,"frame":12870,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Mind Stone"}
+{"t":1791429780964,"turn":20,"phase":"MAIN2","active":true,"frame":12878,"what":"Mind Stone","ms":609,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429781726,"turn":20,"phase":"MAIN2","active":true,"frame":12886,"what":"Priority: Justin","ms":485,"r":"priority:card:spell","did":"spell: Perilous Myr"}
+{"t":1791429782365,"turn":20,"phase":"MAIN2","active":true,"frame":12894,"what":"Perilous Myr - Creature 1 / 1","ms":607,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429783125,"turn":20,"phase":"MAIN2","active":true,"frame":12902,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429783762,"turn":20,"phase":"MAIN2","active":true,"frame":12910,"what":"Ancestral Blade","ms":593,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429784509,"turn":20,"phase":"MAIN2","active":true,"frame":12918,"what":"Priority: Justin","ms":479,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429787858,"turn":21,"phase":"COMBAT_BEGIN","active":false,"frame":12937,"what":"Priority: Justin","ms":1467,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791429790298,"turn":21,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":12949,"what":"Priority: Justin","ms":455,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429790907,"turn":21,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":12956,"what":"Select creatures to block Firebrand Archer (97) or select another attacker to declare blockers for.","ms":479,"r":"block:0","did":"ok \"No blocksOKSpace\""}
+{"t":1791429793882,"turn":21,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":12971,"what":"Priority: Justin","ms":492,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429795193,"turn":21,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":12980,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":480,"r":"select:done","did":"choose Seeker of the Way"}
+{"t":1791429795831,"turn":21,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":12989,"what":"Tragic Slip (27) - Seeker of the Way (45) gets -1/-1  until end of turn.","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429796454,"turn":21,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":12997,"what":"Priority: Justin","ms":601,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791429805778,"turn":22,"phase":"MAIN1","active":true,"frame":13035,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791429806573,"turn":22,"phase":"MAIN1","active":true,"frame":13043,"what":"Satyr Wayfinder - Creature 1 / 1","ms":481,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791429807207,"turn":22,"phase":"MAIN1","active":true,"frame":13048,"what":"Satyr Wayfinder - Creature 1 / 1","ms":479,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791429807840,"turn":22,"phase":"MAIN1","active":true,"frame":13057,"what":"Priority: Justin","ms":672,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429808667,"turn":22,"phase":"MAIN1","active":true,"frame":13066,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":487,"r":"select:done","did":"choose Seeker of the Way"}
+{"t":1791429809307,"turn":22,"phase":"MAIN1","active":true,"frame":13075,"what":"Tragic Slip (27) - Seeker of the Way (45) gets -1/-1  until end of turn.","ms":2845,"r":"pay:pool","did":"floating mana"}
+{"t":1791429812306,"turn":22,"phase":"MAIN1","active":true,"frame":13075,"what":"Tragic Slip (27) - Seeker of the Way (45) gets -1/-1  until end of turn.","ms":2846,"r":"pay:pool","did":"floating mana"}
+{"t":1791429815307,"turn":22,"phase":"MAIN1","active":true,"frame":13075,"what":"Tragic Slip (27) - Seeker of the Way (45) gets -1/-1  until end of turn.","ms":2844,"r":"pay:pool","did":"floating mana"}
+{"t":1791429818304,"turn":22,"phase":"MAIN1","active":true,"frame":13075,"what":"Tragic Slip (27) - Seeker of the Way (45) gets -1/-1  until end of turn.","ms":2847,"r":"pay:pool","did":"floating mana"}
+{"t":1791429821306,"turn":22,"phase":"MAIN1","active":true,"frame":13075,"what":"Tragic Slip (27) - Seeker of the Way (45) gets -1/-1  until end of turn.","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429821947,"turn":22,"phase":"MAIN1","active":true,"frame":13083,"what":"Priority: Justin","ms":488,"r":"priority:eot","did":"To EOT"}
+{"t":1791429836762,"turn":22,"phase":"MAIN1","active":true,"frame":13123,"what":"ask choose_list: Looking at cards in your library","ms":343,"r":"ask:choose_list","did":null}
+{"t":1791429914103,"turn":23,"phase":"COMBAT_BEGIN","active":false,"frame":13322,"what":"Priority: Justin","ms":485,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429916095,"turn":23,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":13334,"what":"Priority: Justin","ms":690,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429916938,"turn":23,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":13341,"what":"Select creatures to block Firebrand Archer (97) or select another attacker to declare blockers for.","ms":1897,"r":"block:2","did":"block with Seeker of the Way; block with Satyr Wayfinder; ok \"Confirm blocksOKSpace\""}
+{"t":1791429919292,"turn":23,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":13360,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429940390,"turn":23,"phase":"MAIN2","active":false,"frame":13410,"what":"Priority: Justin","ms":553,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429941096,"turn":23,"phase":"MAIN2","active":false,"frame":13418,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":608,"r":"select:done","did":"choose Satyr Wayfinder"}
+{"t":1791429941857,"turn":23,"phase":"MAIN2","active":false,"frame":13427,"what":"Tragic Slip (27) - Satyr Wayfinder (18) gets -13/-13  until end of turn.","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429942510,"turn":23,"phase":"MAIN2","active":false,"frame":13435,"what":"Priority: Justin","ms":612,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429944572,"turn":23,"phase":"END_OF_TURN","active":false,"frame":13450,"what":"Priority: Justin","ms":485,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429945210,"turn":24,"phase":"MAIN1","active":true,"frame":13457,"what":"Priority: Justin","ms":1332,"r":"priority:card:spell","did":"spell: Perilous Myr"}
+{"t":1791429946698,"turn":24,"phase":"MAIN1","active":true,"frame":13466,"what":"Perilous Myr - Creature 1 / 1","ms":606,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791429947456,"turn":24,"phase":"MAIN1","active":true,"frame":13475,"what":"Priority: Justin","ms":358,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429948473,"turn":24,"phase":"MAIN1","active":true,"frame":13481,"what":"Waiting for Sam...","ms":104,"r":"moved-on","did":null}
+{"t":1791429949202,"turn":24,"phase":"MAIN1","active":true,"frame":13488,"what":"Priority: Justin","ms":1493,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791429950848,"turn":24,"phase":"MAIN1","active":true,"frame":13489,"what":"Priority: Justin","ms":526,"r":"moved-on","did":null}
+{"t":1791429951677,"turn":24,"phase":"MAIN1","active":true,"frame":13499,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":613,"r":"select:done","did":"choose Perilous Myr"}
+{"t":1791429952446,"turn":24,"phase":"MAIN1","active":true,"frame":13508,"what":"Tragic Slip (27) - Perilous Myr (11) gets -1/-1  until end of turn.","ms":613,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791429953212,"turn":24,"phase":"MAIN1","active":true,"frame":13513,"what":"Thornwood Falls (32)","ms":514,"r":"buttons:buttons:cancel","did":"cancel \"Blue\""}
+{"t":1791429953879,"turn":24,"phase":"MAIN1","active":true,"frame":13521,"what":"Tragic Slip (27) - Perilous Myr (11) gets -1/-1  until end of turn.","ms":584,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429954617,"turn":24,"phase":"MAIN1","active":true,"frame":13528,"what":"Priority: Justin","ms":490,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791429955259,"turn":24,"phase":"MAIN1","active":true,"frame":13536,"what":"Yavimaya Elder - Creature 2 / 1","ms":615,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429956027,"turn":24,"phase":"MAIN1","active":true,"frame":13544,"what":"Priority: Justin","ms":624,"r":"priority:card:spell","did":"spell: Mind Stone"}
+{"t":1791429956808,"turn":24,"phase":"MAIN1","active":true,"frame":13552,"what":"Mind Stone","ms":479,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791429957440,"turn":24,"phase":"MAIN1","active":true,"frame":13556,"what":"Mind Stone","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429958194,"turn":24,"phase":"MAIN1","active":true,"frame":13563,"what":"Priority: Justin","ms":497,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429958845,"turn":24,"phase":"MAIN1","active":true,"frame":13571,"what":"Ancestral Blade","ms":608,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791429959606,"turn":24,"phase":"MAIN1","active":true,"frame":13576,"what":"Thornwood Falls (32)","ms":478,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429960237,"turn":24,"phase":"MAIN1","active":true,"frame":13584,"what":"Ancestral Blade","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429960992,"turn":24,"phase":"MAIN1","active":true,"frame":13591,"what":"Priority: Justin","ms":498,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429962422,"turn":24,"phase":"MAIN1","active":true,"frame":13599,"what":"Guttersnipe - Creature 2 / 2","ms":607,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791429963182,"turn":24,"phase":"MAIN1","active":true,"frame":13604,"what":"Thornwood Falls (32)","ms":485,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791429963821,"turn":24,"phase":"MAIN1","active":true,"frame":13612,"what":"Guttersnipe - Creature 2 / 2","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429964468,"turn":24,"phase":"MAIN1","active":true,"frame":13619,"what":"Priority: Justin","ms":589,"r":"priority:card:spell","did":"spell: Hard Evidence"}
+{"t":1791429965886,"turn":24,"phase":"MAIN1","active":true,"frame":13628,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":482,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791429966524,"turn":24,"phase":"MAIN1","active":true,"frame":13637,"what":"Priority: Justin","ms":617,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791429978422,"turn":24,"phase":"MAIN1","active":true,"frame":13666,"what":"Priority: Justin","ms":638,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791430001964,"turn":24,"phase":"MAIN2","active":true,"frame":13718,"what":"Priority: Justin","ms":1398,"r":"priority:card:spell","did":"spell: Mind Stone"}
+{"t":1791430003517,"turn":24,"phase":"MAIN2","active":true,"frame":13727,"what":"Mind Stone","ms":488,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430004158,"turn":24,"phase":"MAIN2","active":true,"frame":13735,"what":"Priority: Justin","ms":1086,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791430005397,"turn":24,"phase":"MAIN2","active":true,"frame":13743,"what":"Yavimaya Elder - Creature 2 / 1","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430006043,"turn":24,"phase":"MAIN2","active":true,"frame":13751,"what":"Priority: Justin","ms":620,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791430006816,"turn":24,"phase":"MAIN2","active":true,"frame":13759,"what":"Ancestral Blade","ms":611,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430007580,"turn":24,"phase":"MAIN2","active":true,"frame":13768,"what":"Priority: Justin","ms":611,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791430037188,"turn":25,"phase":"COMBAT_BEGIN","active":false,"frame":13830,"what":"Priority: Justin","ms":499,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430037841,"turn":25,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":13837,"what":"Priority: Justin","ms":794,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430053714,"turn":25,"phase":"MAIN2","active":false,"frame":13887,"what":"Priority: Justin","ms":1653,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430055748,"turn":25,"phase":"MAIN2","active":false,"frame":13899,"what":"Priority: Justin","ms":496,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430056398,"turn":25,"phase":"MAIN2","active":false,"frame":13907,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":1406,"r":"select:done","did":"choose Perilous Myr"}
+{"t":1791430057958,"turn":25,"phase":"MAIN2","active":false,"frame":13916,"what":"Tragic Slip (27) - Perilous Myr (11) gets -1/-1  until end of turn.","ms":521,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430058634,"turn":25,"phase":"MAIN2","active":false,"frame":13924,"what":"Priority: Justin","ms":487,"r":"priority:eot","did":"To EOT"}
+{"t":1791430059920,"turn":26,"phase":"MAIN1","active":true,"frame":13941,"what":"Priority: Justin","ms":502,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791430060575,"turn":26,"phase":"MAIN1","active":true,"frame":13950,"what":"Ancestral Blade","ms":495,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430061225,"turn":26,"phase":"MAIN1","active":true,"frame":13959,"what":"Priority: Justin","ms":628,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430085420,"turn":26,"phase":"MAIN1","active":true,"frame":14033,"what":"Priority: Justin","ms":378,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430085952,"turn":26,"phase":"MAIN1","active":true,"frame":14034,"what":"Priority: Justin","ms":4135,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430090856,"turn":26,"phase":"MAIN1","active":true,"frame":14049,"what":"Priority: Justin","ms":617,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791430103818,"turn":26,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":14087,"what":"Select creatures to attack Sam or select player/card you wish to attack.","ms":1446,"r":"attack:2","did":"attack with Perilous Myr; attack with Crab Token; ok \"Attack with 2OKSpace\""}
+{"t":1791430106230,"turn":26,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":14106,"what":"Waiting for Sam...","ms":103,"r":"moved-on","did":null}
+{"t":1791430111188,"turn":26,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14116,"what":"Priority: Justin","ms":861,"r":"priority:eot","did":"To EOT"}
+{"t":1791430191763,"turn":27,"phase":"MAIN1","active":false,"frame":14341,"what":"Priority: Justin","ms":492,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430192409,"turn":27,"phase":"MAIN1","active":false,"frame":14347,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430193062,"turn":27,"phase":"MAIN1","active":false,"frame":14355,"what":"Priority: Justin","ms":612,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430194950,"turn":27,"phase":"MAIN1","active":false,"frame":14369,"what":"Priority: Justin","ms":511,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430195615,"turn":27,"phase":"MAIN1","active":false,"frame":14377,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":499,"r":"select:done","did":"choose Crab Token"}
+{"t":1791430196268,"turn":27,"phase":"MAIN1","active":false,"frame":14386,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":622,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430197043,"turn":27,"phase":"MAIN1","active":false,"frame":14391,"what":"Thornwood Falls (32)","ms":493,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791430197689,"turn":27,"phase":"MAIN1","active":false,"frame":14399,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430198340,"turn":27,"phase":"MAIN1","active":false,"frame":14406,"what":"Priority: Justin","ms":498,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430199012,"turn":27,"phase":"MAIN1","active":false,"frame":14412,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":495,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430199660,"turn":27,"phase":"MAIN1","active":false,"frame":14416,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":617,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430200434,"turn":27,"phase":"MAIN1","active":false,"frame":14423,"what":"Priority: Justin","ms":386,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430200973,"turn":27,"phase":"MAIN1","active":false,"frame":14424,"what":"Priority: Justin","ms":546,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430231189,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":14516,"what":"Priority: Justin","ms":499,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430231843,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14523,"what":"Priority: Justin","ms":376,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430232911,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14524,"what":"Priority: Justin","ms":620,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430233685,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14533,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":619,"r":"select:done","did":"choose Soldier Token"}
+{"t":1791430234459,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14543,"what":"Tragic Slip (27) - Soldier Token (104) gets -1/-1  until end of turn.","ms":496,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430235108,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14548,"what":"Thornwood Falls (32)","ms":615,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791430235876,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14556,"what":"Tragic Slip (27) - Soldier Token (104) gets -1/-1  until end of turn.","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430236526,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14563,"what":"Priority: Justin","ms":496,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430237176,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14569,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":497,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430237826,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14573,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":798,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430238781,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14580,"what":"Priority: Justin","ms":888,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430262700,"turn":27,"phase":"END_OF_TURN","active":false,"frame":14652,"what":"Priority: Justin","ms":384,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430263237,"turn":27,"phase":"END_OF_TURN","active":false,"frame":14653,"what":"Priority: Justin","ms":501,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430263892,"turn":27,"phase":"END_OF_TURN","active":false,"frame":14659,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":687,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430264734,"turn":27,"phase":"END_OF_TURN","active":false,"frame":14663,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":536,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430265441,"turn":27,"phase":"END_OF_TURN","active":false,"frame":14670,"what":"Priority: Justin","ms":3969,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430270272,"turn":28,"phase":"MAIN1","active":true,"frame":14678,"what":"Priority: Justin","ms":516,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430270942,"turn":28,"phase":"MAIN1","active":true,"frame":14687,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":1362,"r":"select:done","did":"choose Crab Token"}
+{"t":1791430272457,"turn":28,"phase":"MAIN1","active":true,"frame":14696,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":496,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791430273107,"turn":28,"phase":"MAIN1","active":true,"frame":14700,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430273761,"turn":28,"phase":"MAIN1","active":true,"frame":14707,"what":"Priority: Justin","ms":630,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430274558,"turn":28,"phase":"MAIN1","active":true,"frame":14714,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":525,"r":"select:done","did":"choose Perilous Myr"}
+{"t":1791430276184,"turn":28,"phase":"MAIN1","active":true,"frame":14724,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":508,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430280055,"turn":28,"phase":"MAIN1","active":true,"frame":14733,"what":"Priority: Justin","ms":622,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430289430,"turn":28,"phase":"MAIN1","active":true,"frame":14769,"what":"Priority: Justin","ms":502,"r":"priority:card:spell","did":"spell: Judge's Familiar"}
+{"t":1791430290087,"turn":28,"phase":"MAIN1","active":true,"frame":14777,"what":"Judge's Familiar - Creature 1 / 1","ms":618,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430290859,"turn":28,"phase":"MAIN1","active":true,"frame":14786,"what":"Priority: Justin","ms":379,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430293173,"turn":28,"phase":"MAIN1","active":true,"frame":14787,"what":"Priority: Justin","ms":395,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430294451,"turn":28,"phase":"MAIN1","active":true,"frame":14790,"what":"Priority: Justin","ms":279,"r":"moved-on","did":null}
+{"t":1791430296201,"turn":28,"phase":"MAIN1","active":true,"frame":14800,"what":"Priority: Justin","ms":385,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791430296739,"turn":28,"phase":"MAIN1","active":true,"frame":14801,"what":"ask ability_menu: ","ms":403,"r":"ask:ability_menu","did":null}
+{"t":1791430298070,"turn":28,"phase":"MAIN1","active":true,"frame":14807,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":521,"r":"pay:pool","did":"floating mana"}
+{"t":1791430298745,"turn":28,"phase":"MAIN1","active":true,"frame":14812,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":507,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430299405,"turn":28,"phase":"MAIN1","active":true,"frame":14820,"what":"Priority: Justin","ms":507,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791430300960,"turn":28,"phase":"MAIN1","active":true,"frame":14828,"what":"Yavimaya Elder - Creature 2 / 1","ms":1689,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430305672,"turn":28,"phase":"MAIN1","active":true,"frame":14835,"what":"Priority: Justin","ms":620,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791430310340,"turn":28,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":14859,"what":"Select creatures to attack Sam or select player/card you wish to attack.","ms":2821,"r":"attack:3","did":"attack with Perilous Myr; attack with Crab Token; attack with Soldier Token; ok \"Attack with 3OKSpace\""}
+{"t":1791430325699,"turn":28,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14916,"what":"Priority: Justin","ms":513,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430326366,"turn":28,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14925,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":498,"r":"select:done","did":"choose Judge's Familiar"}
+{"t":1791430327018,"turn":28,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14934,"what":"Tragic Slip (27) - Judge's Familiar (50) gets -1/-1  until end of turn.","ms":624,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430327797,"turn":28,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14942,"what":"Priority: Justin","ms":391,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430328342,"turn":28,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14943,"what":"Priority: Justin","ms":619,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430329719,"turn":28,"phase":"MAIN2","active":true,"frame":14956,"what":"Priority: Justin","ms":506,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430330379,"turn":28,"phase":"MAIN2","active":true,"frame":14963,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":508,"r":"select:done","did":"choose Judge's Familiar"}
+{"t":1791430331041,"turn":28,"phase":"MAIN2","active":true,"frame":14972,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":493,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430331688,"turn":28,"phase":"MAIN2","active":true,"frame":14979,"what":"Priority: Justin","ms":1053,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791430332896,"turn":28,"phase":"MAIN2","active":true,"frame":14988,"what":"Guttersnipe - Creature 2 / 2","ms":506,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430333559,"turn":28,"phase":"MAIN2","active":true,"frame":14996,"what":"Priority: Justin","ms":2917,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791430382606,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":15110,"what":"Priority: Justin","ms":399,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430383160,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":15111,"what":"Priority: Justin","ms":512,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430383826,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":15117,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":513,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430384494,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":15125,"what":"Priority: Justin","ms":557,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430392920,"turn":29,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15140,"what":"Priority: Justin","ms":2412,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430395487,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15150,"what":"Select creatures to block Unwilling Ingredient (89) or select another attacker to declare blockers for.","ms":1593,"r":"block:1","did":"block with Judge's Familiar; ok \"Confirm blocksOKSpace\""}
+{"t":1791430397233,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15155,"what":"Select creatures to block Unwilling Ingredient (89) or select another attacker to declare blockers for.","ms":374,"r":"block:0","did":"ok \"Confirm blocksOKSpace\""}
+{"t":1791430397761,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15156,"what":"Select creatures to block Unwilling Ingredient (89) or select another attacker to declare blockers for.","ms":381,"r":"block:0","did":"ok \"Confirm blocksOKSpace\""}
+{"t":1791430398296,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15157,"what":"Select creatures to block Unwilling Ingredient (89) or select another attacker to declare blockers for.","ms":904,"r":"block:1","did":"block with Judge's Familiar; ok \"No blocksOKSpace\""}
+{"t":1791430412242,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15198,"what":"Priority: Justin","ms":516,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430412915,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15204,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":510,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430414173,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15212,"what":"Priority: Justin","ms":622,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430420423,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15232,"what":"Priority: Justin","ms":581,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430421157,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15240,"what":"Priority: Justin","ms":637,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430421949,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15246,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":508,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430422609,"turn":29,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15254,"what":"Priority: Justin","ms":642,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430428574,"turn":29,"phase":"END_OF_TURN","active":false,"frame":15277,"what":"Priority: Justin","ms":442,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430430801,"turn":30,"phase":"MAIN1","active":true,"frame":15289,"what":"Priority: Justin","ms":513,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791430431921,"turn":30,"phase":"MAIN1","active":true,"frame":15297,"what":"Guttersnipe - Creature 2 / 2","ms":3257,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430435333,"turn":30,"phase":"MAIN1","active":true,"frame":15297,"what":"Guttersnipe - Creature 2 / 2","ms":767,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430436254,"turn":30,"phase":"MAIN1","active":true,"frame":15306,"what":"Priority: Justin","ms":984,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791430474099,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":15404,"what":"Priority: Justin","ms":514,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430474769,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":15410,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":627,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430475550,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":15418,"what":"Priority: Justin","ms":697,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430479066,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15430,"what":"Priority: Justin","ms":513,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430479734,"turn":31,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15437,"what":"Select creatures to block Unwilling Ingredient (89) or select another attacker to declare blockers for.","ms":560,"r":"block:0","did":"ok \"No blocksOKSpace\""}
+{"t":1791430489267,"turn":31,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15462,"what":"Priority: Justin","ms":415,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430489835,"turn":31,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15463,"what":"Priority: Justin","ms":512,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430490502,"turn":31,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15472,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":496,"r":"select:done","did":"choose Soldier Token"}
+{"t":1791430491152,"turn":31,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15481,"what":"Tragic Slip (27) - Soldier Token (104) gets -1/-1  until end of turn.","ms":504,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430491810,"turn":31,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15489,"what":"Priority: Justin","ms":512,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430492477,"turn":31,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":15497,"what":"Priority: Justin","ms":398,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430493089,"turn":31,"phase":"END_OF_TURN","active":false,"frame":15508,"what":"Priority: Justin","ms":520,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430493762,"turn":31,"phase":"END_OF_TURN","active":false,"frame":15515,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":511,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430494430,"turn":31,"phase":"END_OF_TURN","active":false,"frame":15523,"what":"Priority: Justin","ms":387,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430494971,"turn":31,"phase":"END_OF_TURN","active":false,"frame":15524,"what":"Priority: Justin","ms":1161,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430496285,"turn":32,"phase":"MAIN1","active":true,"frame":15532,"what":"Priority: Justin","ms":523,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430496962,"turn":32,"phase":"MAIN1","active":true,"frame":15539,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":510,"r":"select:done","did":"choose Soldier Token"}
+{"t":1791430497626,"turn":32,"phase":"MAIN1","active":true,"frame":15549,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":511,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430498700,"turn":32,"phase":"MAIN1","active":true,"frame":15558,"what":"Priority: Justin","ms":507,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430499362,"turn":32,"phase":"MAIN1","active":true,"frame":15566,"what":"Priority: Justin","ms":639,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430500155,"turn":32,"phase":"MAIN1","active":true,"frame":15575,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":631,"r":"select:done","did":"choose Crab Token"}
+{"t":1791430500939,"turn":32,"phase":"MAIN1","active":true,"frame":15584,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":522,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430501617,"turn":32,"phase":"MAIN1","active":true,"frame":15589,"what":"Thornwood Falls (32)","ms":629,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791430502400,"turn":32,"phase":"MAIN1","active":true,"frame":15597,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":521,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430503075,"turn":32,"phase":"MAIN1","active":true,"frame":15604,"what":"Priority: Justin","ms":400,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430503632,"turn":32,"phase":"MAIN1","active":true,"frame":15605,"what":"Priority: Justin","ms":510,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430504295,"turn":32,"phase":"MAIN1","active":true,"frame":15611,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430504962,"turn":32,"phase":"MAIN1","active":true,"frame":15618,"what":"Priority: Justin","ms":2251,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430511240,"turn":32,"phase":"MAIN1","active":true,"frame":15632,"what":"Priority: Justin","ms":1886,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791430513279,"turn":32,"phase":"MAIN1","active":true,"frame":15640,"what":"Yavimaya Elder - Creature 2 / 1","ms":1095,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430514529,"turn":32,"phase":"MAIN1","active":true,"frame":15644,"what":"Yavimaya Elder - Creature 2 / 1","ms":508,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430515193,"turn":32,"phase":"MAIN1","active":true,"frame":15651,"what":"Priority: Justin","ms":1798,"r":"priority:card:spell","did":"spell: Body Dropper"}
+{"t":1791430517146,"turn":32,"phase":"MAIN1","active":true,"frame":15659,"what":"Body Dropper - Creature 2 / 2","ms":507,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430517807,"turn":32,"phase":"MAIN1","active":true,"frame":15664,"what":"Thornwood Falls (32)","ms":520,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791430518481,"turn":32,"phase":"MAIN1","active":true,"frame":15672,"what":"Body Dropper - Creature 2 / 2","ms":2842,"r":"pay:pool","did":"floating mana"}
+{"t":1791430521477,"turn":32,"phase":"MAIN1","active":true,"frame":15672,"what":"Body Dropper - Creature 2 / 2","ms":2847,"r":"pay:pool","did":"floating mana"}
+{"t":1791430524478,"turn":32,"phase":"MAIN1","active":true,"frame":15672,"what":"Body Dropper - Creature 2 / 2","ms":516,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430525151,"turn":32,"phase":"MAIN1","active":true,"frame":15679,"what":"Priority: Justin","ms":509,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791430533166,"turn":32,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":15706,"what":"Select creatures to attack Sam or select player/card you wish to attack.","ms":1192,"r":"attack:2","did":"attack with Soldier Token; attack with Judge's Familiar; ok \"Attack with 2OKSpace\""}
+{"t":1791430535287,"turn":32,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15733,"what":"Priority: Justin","ms":3656,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430543670,"turn":32,"phase":"MAIN2","active":true,"frame":15752,"what":"Priority: Justin","ms":525,"r":"priority:card:spell","did":"spell: Body Dropper"}
+{"t":1791430544349,"turn":32,"phase":"MAIN2","active":true,"frame":15759,"what":"Body Dropper - Creature 2 / 2","ms":505,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430545015,"turn":32,"phase":"MAIN2","active":true,"frame":15764,"what":"Thornwood Falls (32)","ms":592,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791430545762,"turn":32,"phase":"MAIN2","active":true,"frame":15772,"what":"Body Dropper - Creature 2 / 2","ms":629,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430546545,"turn":32,"phase":"MAIN2","active":true,"frame":15779,"what":"Priority: Justin","ms":636,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430547334,"turn":32,"phase":"MAIN2","active":true,"frame":15786,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":519,"r":"select:done","did":"choose Crab Token"}
+{"t":1791430548008,"turn":32,"phase":"MAIN2","active":true,"frame":15796,"what":"Ancestral Blade (6) - Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)","ms":399,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430549312,"turn":32,"phase":"MAIN2","active":true,"frame":15805,"what":"Priority: Justin","ms":571,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430550038,"turn":32,"phase":"MAIN2","active":true,"frame":15806,"what":"Priority: Justin","ms":527,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430551578,"turn":32,"phase":"MAIN2","active":true,"frame":15815,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":507,"r":"select:done","did":"choose Crab Token"}
+{"t":1791430552240,"turn":32,"phase":"MAIN2","active":true,"frame":15824,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":518,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430552911,"turn":32,"phase":"MAIN2","active":true,"frame":15832,"what":"Priority: Justin","ms":514,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430553579,"turn":32,"phase":"MAIN2","active":true,"frame":15838,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":520,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430554252,"turn":32,"phase":"MAIN2","active":true,"frame":15846,"what":"Priority: Justin","ms":647,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430562923,"turn":32,"phase":"MAIN2","active":true,"frame":15879,"what":"Priority: Justin","ms":1673,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791430564751,"turn":32,"phase":"MAIN2","active":true,"frame":15887,"what":"Yavimaya Elder - Creature 2 / 1","ms":520,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430565426,"turn":32,"phase":"MAIN2","active":true,"frame":15895,"what":"Priority: Justin","ms":1448,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791430591041,"turn":33,"phase":"COMBAT_BEGIN","active":false,"frame":15947,"what":"Priority: Justin","ms":637,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430593629,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15959,"what":"Priority: Justin","ms":2927,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430596711,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15967,"what":"Priority: Justin","ms":521,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430597385,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15976,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":507,"r":"select:done","did":"choose Judge's Familiar"}
+{"t":1791430598049,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15985,"what":"Tragic Slip (27) - Judge's Familiar (50) gets -1/-1  until end of turn.","ms":1562,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430599765,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15995,"what":"Priority: Justin","ms":511,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430601671,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":16001,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":447,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430602273,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":16009,"what":"Priority: Justin","ms":398,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430602826,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":16010,"what":"Priority: Justin","ms":482,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430603462,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16017,"what":"Select creatures to block Unwilling Ingredient (89) or select another attacker to declare blockers for.","ms":925,"r":"block:1","did":"block with Guttersnipe; ok \"Confirm blocksOKSpace\""}
+{"t":1791430604542,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16022,"what":"Select creatures to block Unwilling Ingredient (89) or select another attacker to declare blockers for.","ms":1865,"r":"block:3","did":"block with Perilous Myr; block with Crab Token; block with Guttersnipe; ok \"Confirm blocksOKSpace\""}
+{"t":1791430623472,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16074,"what":"Priority: Justin","ms":4701,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430628327,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16075,"what":"Priority: Justin","ms":522,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430629005,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16084,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":507,"r":"select:done","did":"choose Guttersnipe"}
+{"t":1791430629666,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16093,"what":"Tragic Slip (27) - Guttersnipe (46) gets -1/-1  until end of turn.","ms":533,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430630353,"turn":33,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16101,"what":"Priority: Justin","ms":661,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430631294,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16114,"what":"Perilous Myr (11) - When Perilous Myr dies, it deals 2 damage to any target. [Zone Changer: Perilous Myr (11)]","ms":509,"r":"select:1","did":"choose Spellstutter Sprite"}
+{"t":1791430649557,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16170,"what":"Priority: Justin","ms":510,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430650220,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16178,"what":"Priority: Justin","ms":525,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430650900,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16187,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":512,"r":"select:done","did":"choose Crab Token"}
+{"t":1791430651565,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16196,"what":"Tragic Slip (27) - Crab Token (100) gets -13/-13  until end of turn.","ms":522,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430652240,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16204,"what":"Priority: Justin","ms":518,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430652913,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16210,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":520,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430653588,"turn":33,"phase":"COMBAT_DAMAGE","active":false,"frame":16218,"what":"Priority: Justin","ms":636,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430701168,"turn":33,"phase":"MAIN2","active":false,"frame":16345,"what":"Priority: Justin","ms":518,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430701840,"turn":33,"phase":"MAIN2","active":false,"frame":16352,"what":"Priority: Justin","ms":873,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430726628,"turn":33,"phase":"END_OF_TURN","active":false,"frame":16427,"what":"Priority: Justin","ms":525,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430730476,"turn":33,"phase":"END_OF_TURN","active":false,"frame":16433,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":519,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430731152,"turn":33,"phase":"END_OF_TURN","active":false,"frame":16441,"what":"Priority: Justin","ms":522,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430731829,"turn":34,"phase":"MAIN1","active":true,"frame":16449,"what":"Priority: Justin","ms":1296,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791430733280,"turn":34,"phase":"MAIN1","active":true,"frame":16458,"what":"Candy Trail","ms":524,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430733958,"turn":34,"phase":"MAIN1","active":true,"frame":16466,"what":"Priority: Justin","ms":508,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791430734619,"turn":34,"phase":"MAIN1","active":true,"frame":16470,"what":"ask choose_list: Choose optional costs","ms":464,"r":"ask:choose_list","did":null}
+{"t":1791430735237,"turn":34,"phase":"MAIN1","active":true,"frame":16477,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":522,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791430735914,"turn":34,"phase":"MAIN1","active":true,"frame":16481,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":525,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430736593,"turn":34,"phase":"MAIN1","active":true,"frame":16485,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":515,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430737261,"turn":34,"phase":"MAIN1","active":true,"frame":16492,"what":"Priority: Justin","ms":979,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791430738575,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":16508,"what":"Select creatures to attack Sam or select player/card you wish to attack.","ms":3115,"r":"attack:4","did":"attack with Crab Token; attack with Soldier Token; attack with Judge's Familiar; attack with Guttersnipe; ok \"Attack with 4OKSpace\""}
+{"t":1791430759682,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16588,"what":"Priority: Justin","ms":406,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430760241,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16589,"what":"Priority: Justin","ms":534,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791430760932,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16596,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":415,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430761761,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16606,"what":"Priority: Justin","ms":413,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430762327,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16607,"what":"Priority: Justin","ms":537,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430763019,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16616,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":1473,"r":"select:done","did":"choose Soldier Token"}
+{"t":1791430764646,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16625,"what":"Tragic Slip (27) - Soldier Token (104) gets -1/-1  until end of turn.","ms":537,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430765337,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16633,"what":"Priority: Justin","ms":1527,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430771345,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16652,"what":"Use triggered ability of Krosan Tusker (35)?","ms":635,"r":"buttons:buttons:ok","did":"ok \"YesSpace\""}
+{"t":1791430772132,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16658,"what":"ask choose_list: Looking at cards in your library","ms":438,"r":"ask:choose_list","did":null}
+{"t":1791430772724,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16665,"what":"Priority: Justin","ms":1646,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430774526,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16666,"what":"Priority: Justin","ms":542,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430775221,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16674,"what":"Priority: Justin","ms":640,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430785440,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16710,"what":"Priority: Justin","ms":707,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430786483,"turn":34,"phase":"MAIN2","active":true,"frame":16722,"what":"Priority: Justin","ms":957,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791430789324,"turn":35,"phase":"COMBAT_BEGIN","active":false,"frame":16743,"what":"Priority: Justin","ms":661,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430790367,"turn":35,"phase":"COMBAT_BEGIN","active":false,"frame":16752,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":3068,"r":"select:1","did":"choose Soldier Token"}
+{"t":1791430794081,"turn":35,"phase":"COMBAT_BEGIN","active":false,"frame":16762,"what":"Tragic Slip (27) - Soldier Token (104) gets -1/-1  until end of turn.","ms":536,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430794770,"turn":35,"phase":"COMBAT_BEGIN","active":false,"frame":16770,"what":"Priority: Justin","ms":643,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430796395,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":16782,"what":"Priority: Justin","ms":683,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791430797233,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":16790,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":522,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430801826,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":16800,"what":"Priority: Justin","ms":411,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430802391,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":16801,"what":"Priority: Justin","ms":936,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430847455,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16870,"what":"Priority: Justin","ms":419,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430848029,"turn":35,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":16871,"what":"Priority: Justin","ms":431,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430866697,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16919,"what":"Priority: Justin","ms":534,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430867886,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16927,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":733,"r":"select:done","did":"choose Crab Token"}
+{"t":1791430868772,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16937,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":743,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430869668,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16945,"what":"Priority: Justin","ms":526,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791430870552,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16953,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":510,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430871740,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16963,"what":"Priority: Justin","ms":1500,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430873394,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16964,"what":"Priority: Justin","ms":529,"r":"priority:card:ability (ability)","did":"ability (ability): Judge's Familiar"}
+{"t":1791430874077,"turn":35,"phase":"END_OF_TURN","active":false,"frame":16972,"what":"Priority: Justin","ms":888,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791430875120,"turn":36,"phase":"MAIN1","active":true,"frame":16983,"what":"Priority: Justin","ms":4273,"r":"priority:card:spell","did":"spell: Fling"}
+{"t":1791430880383,"turn":36,"phase":"MAIN1","active":true,"frame":16992,"what":"Fling (36) - As an additional cost to cast this spell, sacrifice a creature.","ms":865,"r":"select:done","did":"choose Judge's Familiar"}
+{"t":1791430881403,"turn":36,"phase":"MAIN1","active":true,"frame":17003,"what":"Fling (36) - Fling (36) deals 0 damage to Judge's Familiar (50).","ms":535,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791430882091,"turn":36,"phase":"MAIN1","active":true,"frame":17008,"what":"Thornwood Falls (32)","ms":533,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791430882777,"turn":36,"phase":"MAIN1","active":true,"frame":17018,"what":"Fling (36) - Fling (36) deals 0 damage to Judge's Familiar (50).","ms":469,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791430883475,"turn":36,"phase":"MAIN1","active":true,"frame":17026,"what":"Fling (36)","ms":528,"r":"select:done","did":"choose Soldier Token"}
+{"t":1791430884156,"turn":36,"phase":"MAIN1","active":true,"frame":17036,"what":"Priority: Justin","ms":777,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430885450,"turn":36,"phase":"MAIN1","active":true,"frame":17051,"what":"Priority: Justin","ms":405,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791430886009,"turn":36,"phase":"MAIN1","active":true,"frame":17052,"what":"Priority: Justin","ms":1203,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791430888106,"turn":36,"phase":"MAIN1","active":true,"frame":17056,"what":"Priority: Justin","ms":2851,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791430891315,"turn":36,"phase":"MAIN1","active":true,"frame":17059,"what":"Priority: Justin","ms":503,"r":"moved-on","did":null}
+{"t":1791430892352,"turn":36,"phase":"MAIN1","active":true,"frame":17063,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":1203,"r":"pay:pool","did":"floating mana"}
+{"t":1791430893708,"turn":36,"phase":"MAIN1","active":true,"frame":17068,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":2850,"r":"pay:pool","did":"floating mana"}
+{"t":1791430896712,"turn":36,"phase":"MAIN1","active":true,"frame":17068,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":543,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430897409,"turn":36,"phase":"MAIN1","active":true,"frame":17076,"what":"Priority: Justin","ms":542,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791430898103,"turn":36,"phase":"MAIN1","active":true,"frame":17085,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":527,"r":"select:done","did":"choose Judge's Familiar"}
+{"t":1791430898784,"turn":36,"phase":"MAIN1","active":true,"frame":17094,"what":"Tragic Slip (27) - Judge's Familiar (50) gets -13/-13  until end of turn.","ms":2843,"r":"pay:pool","did":"floating mana"}
+{"t":1791430901784,"turn":36,"phase":"MAIN1","active":true,"frame":17094,"what":"Tragic Slip (27) - Judge's Familiar (50) gets -13/-13  until end of turn.","ms":535,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791430902474,"turn":36,"phase":"MAIN1","active":true,"frame":17102,"what":"Priority: Justin","ms":655,"r":"priority:eot","did":"To EOT"}
+{"t":1791431003105,"turn":37,"phase":"COMBAT_BEGIN","active":false,"frame":17335,"what":"Priority: Justin","ms":654,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431005188,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":17347,"what":"Priority: Justin","ms":539,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431009727,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":17357,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":968,"r":"select:done","did":"choose Myr Sire"}
+{"t":1791431011755,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":17367,"what":"Tragic Slip (27) - Myr Sire (87) gets -1/-1  until end of turn.","ms":534,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431012443,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":17375,"what":"Priority: Justin","ms":649,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431013247,"turn":37,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":17382,"what":"Select creatures to block Myr Sire (87) or select another attacker to declare blockers for.","ms":1818,"r":"block:2","did":"block with Crab Token; block with Guttersnipe; ok \"Confirm blocksOKSpace\""}
+{"t":1791431037887,"turn":37,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":17443,"what":"Priority: Justin","ms":1017,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431039059,"turn":37,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":17444,"what":"Priority: Justin","ms":537,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431039751,"turn":37,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":17453,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":528,"r":"select:done","did":"choose Guttersnipe"}
+{"t":1791431040435,"turn":37,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":17462,"what":"Tragic Slip (27) - Guttersnipe (46) gets -1/-1  until end of turn.","ms":535,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431041137,"turn":37,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":17470,"what":"Priority: Justin","ms":656,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431053119,"turn":37,"phase":"COMBAT_DAMAGE","active":false,"frame":17503,"what":"Priority: Justin","ms":545,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431053817,"turn":37,"phase":"COMBAT_DAMAGE","active":false,"frame":17510,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":538,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431054510,"turn":37,"phase":"COMBAT_DAMAGE","active":false,"frame":17518,"what":"Priority: Justin","ms":771,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431108212,"turn":37,"phase":"END_OF_TURN","active":false,"frame":17663,"what":"Priority: Justin","ms":456,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431108821,"turn":37,"phase":"END_OF_TURN","active":false,"frame":17664,"what":"Priority: Justin","ms":532,"r":"priority:eot","did":"To EOT"}
+{"t":1791431109621,"turn":38,"phase":"MAIN1","active":true,"frame":17677,"what":"Priority: Justin","ms":577,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431111236,"turn":38,"phase":"MAIN1","active":true,"frame":17684,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":541,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791431111930,"turn":38,"phase":"MAIN1","active":true,"frame":17688,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":2331,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791431114755,"turn":38,"phase":"MAIN1","active":true,"frame":17693,"what":"Thornwood Falls (32)","ms":658,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791431115567,"turn":38,"phase":"MAIN1","active":true,"frame":17701,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":2850,"r":"pay:pool","did":"floating mana"}
+{"t":1791431118572,"turn":38,"phase":"MAIN1","active":true,"frame":17701,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":790,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431119520,"turn":38,"phase":"MAIN1","active":true,"frame":17708,"what":"Priority: Justin","ms":545,"r":"priority:card:spell","did":"spell: Mind Stone"}
+{"t":1791431120220,"turn":38,"phase":"MAIN1","active":true,"frame":17717,"what":"Mind Stone","ms":535,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791431120908,"turn":38,"phase":"MAIN1","active":true,"frame":17726,"what":"Priority: Justin","ms":813,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431121876,"turn":38,"phase":"MAIN1","active":true,"frame":17735,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":1484,"r":"select:done","did":"choose Phyrexian Myr Token"}
+{"t":1791431123513,"turn":38,"phase":"MAIN1","active":true,"frame":17744,"what":"Tragic Slip (27) - Phyrexian Myr Token (106) gets -1/-1  until end of turn.","ms":550,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791431124216,"turn":38,"phase":"MAIN1","active":true,"frame":17749,"what":"Thornwood Falls (32)","ms":1382,"r":"buttons:buttons:ok","did":"ok \"GreenSpace\""}
+{"t":1791431125753,"turn":38,"phase":"MAIN1","active":true,"frame":17757,"what":"Tragic Slip (27) - Phyrexian Myr Token (106) gets -1/-1  until end of turn.","ms":543,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431126450,"turn":38,"phase":"MAIN1","active":true,"frame":17764,"what":"Priority: Justin","ms":433,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431127037,"turn":38,"phase":"MAIN1","active":true,"frame":17765,"what":"Priority: Justin","ms":550,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431127742,"turn":38,"phase":"MAIN1","active":true,"frame":17773,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":538,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791431128434,"turn":38,"phase":"MAIN1","active":true,"frame":17778,"what":"Thornwood Falls (32)","ms":664,"r":"buttons:buttons:cancel","did":"cancel \"Blue\""}
+{"t":1791431129251,"turn":38,"phase":"MAIN1","active":true,"frame":17786,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":668,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431130076,"turn":38,"phase":"MAIN1","active":true,"frame":17793,"what":"Priority: Justin","ms":551,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431131454,"turn":38,"phase":"MAIN1","active":true,"frame":17799,"what":"Waiting for Sam...","ms":103,"r":"moved-on","did":null}
+{"t":1791431150443,"turn":38,"phase":"MAIN1","active":true,"frame":17850,"what":"Priority: Justin","ms":2693,"r":"priority:card:spell","did":"spell: Archaeomancer"}
+{"t":1791431155097,"turn":38,"phase":"MAIN1","active":true,"frame":17859,"what":"Archaeomancer - Creature 1 / 2","ms":547,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791431155798,"turn":38,"phase":"MAIN1","active":true,"frame":17863,"what":"Archaeomancer - Creature 1 / 2","ms":722,"r":"pay:tap","did":"tap Mind Stone for mana"}
+{"t":1791431156673,"turn":38,"phase":"MAIN1","active":true,"frame":17867,"what":"Archaeomancer - Creature 1 / 2","ms":530,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431158074,"turn":38,"phase":"MAIN1","active":true,"frame":17874,"what":"Priority: Justin","ms":545,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791431158773,"turn":38,"phase":"MAIN1","active":true,"frame":17883,"what":"Candy Trail","ms":655,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791431160413,"turn":38,"phase":"MAIN1","active":true,"frame":17892,"what":"Priority: Justin","ms":442,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431161010,"turn":38,"phase":"MAIN1","active":true,"frame":17893,"what":"Priority: Justin","ms":559,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431161723,"turn":38,"phase":"MAIN1","active":true,"frame":17902,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":1073,"r":"select:done","did":"choose Crab Token"}
+{"t":1791431162950,"turn":38,"phase":"MAIN1","active":true,"frame":17911,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":554,"r":"pay:tap","did":"tap Mind Stone for mana"}
+{"t":1791431163661,"turn":38,"phase":"MAIN1","active":true,"frame":17915,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":554,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431164514,"turn":38,"phase":"MAIN1","active":true,"frame":17922,"what":"Priority: Justin","ms":790,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431168154,"turn":38,"phase":"MAIN1","active":true,"frame":17938,"what":"Priority: Justin","ms":547,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431168855,"turn":38,"phase":"MAIN1","active":true,"frame":17945,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":2741,"r":"pay:tap","did":"tap Mind Stone for mana"}
+{"t":1791431171752,"turn":38,"phase":"MAIN1","active":true,"frame":17949,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":565,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431172470,"turn":38,"phase":"MAIN1","active":true,"frame":17956,"what":"Priority: Justin","ms":664,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431194408,"turn":38,"phase":"MAIN1","active":true,"frame":18003,"what":"ask order: Select cards to be put on the bottom of your library","ms":2293,"r":"ask:order","did":null}
+{"t":1791431198947,"turn":38,"phase":"MAIN1","active":true,"frame":18007,"what":"ask order: Arrange cards to be put on top of your library","ms":757,"r":"ask:order","did":null}
+{"t":1791431199859,"turn":38,"phase":"MAIN1","active":true,"frame":18014,"what":"Priority: Justin","ms":884,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791431200897,"turn":38,"phase":"MAIN1","active":true,"frame":18018,"what":"ask choose_list: Choose optional costs","ms":489,"r":"ask:choose_list","did":null}
+{"t":1791431201539,"turn":38,"phase":"MAIN1","active":true,"frame":18025,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":539,"r":"pay:tap","did":"tap Mind Stone for mana"}
+{"t":1791431202231,"turn":38,"phase":"MAIN1","active":true,"frame":18029,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":665,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431203052,"turn":38,"phase":"MAIN1","active":true,"frame":18036,"what":"Priority: Justin","ms":557,"r":"priority:card:spell","did":"spell: Body Dropper"}
+{"t":1791431203761,"turn":38,"phase":"MAIN1","active":true,"frame":18044,"what":"Body Dropper - Creature 2 / 2","ms":548,"r":"pay:tap","did":"tap Mind Stone for mana"}
+{"t":1791431204463,"turn":38,"phase":"MAIN1","active":true,"frame":18048,"what":"Body Dropper - Creature 2 / 2","ms":545,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431205163,"turn":38,"phase":"MAIN1","active":true,"frame":18055,"what":"Priority: Justin","ms":669,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791431221312,"turn":38,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":18102,"what":"Select creatures to attack Sam or select player/card you wish to attack.","ms":2337,"r":"attack:2","did":"attack with Crab Token; attack with Guttersnipe; ok \"Attack with 2OKSpace\""}
+{"t":1791431225573,"turn":38,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":18131,"what":"Priority: Justin","ms":426,"r":"priority:card:ability (ability)","did":"ability (ability): Mind Stone"}
+{"t":1791431226155,"turn":38,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":18132,"what":"ask ability_menu: ","ms":568,"r":"ask:ability_menu","did":null}
+{"t":1791431226878,"turn":38,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":18140,"what":"Priority: Justin","ms":797,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791431234726,"turn":38,"phase":"MAIN2","active":true,"frame":18160,"what":"Priority: Justin","ms":563,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431235481,"turn":38,"phase":"MAIN2","active":true,"frame":18167,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":545,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431236180,"turn":38,"phase":"MAIN2","active":true,"frame":18175,"what":"Priority: Justin","ms":790,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791431283462,"turn":39,"phase":"MAIN1","active":false,"frame":18291,"what":"Priority: Justin","ms":464,"r":"priority:card:ability (ability)","did":"ability (ability): Mind Stone"}
+{"t":1791431284082,"turn":39,"phase":"MAIN1","active":false,"frame":18292,"what":"Priority: Justin","ms":418,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431284655,"turn":39,"phase":"MAIN1","active":false,"frame":18293,"what":"Priority: Justin","ms":557,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431285366,"turn":39,"phase":"MAIN1","active":false,"frame":18302,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":527,"r":"select:done","did":"choose Crab Token"}
+{"t":1791431286047,"turn":39,"phase":"MAIN1","active":false,"frame":18311,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":662,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431286863,"turn":39,"phase":"MAIN1","active":false,"frame":18319,"what":"Priority: Justin","ms":782,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431349229,"turn":39,"phase":"COMBAT_BEGIN","active":false,"frame":18497,"what":"Priority: Justin","ms":425,"r":"priority:card:ability (ability)","did":"ability (ability): Mind Stone"}
+{"t":1791431349809,"turn":39,"phase":"COMBAT_BEGIN","active":false,"frame":18498,"what":"Priority: Justin","ms":427,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431350388,"turn":39,"phase":"COMBAT_BEGIN","active":false,"frame":18499,"what":"Priority: Justin","ms":561,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791431413864,"turn":40,"phase":"MAIN1","active":true,"frame":18672,"what":"Priority: Justin","ms":1780,"r":"priority:card:spell","did":"spell: Body Dropper"}
+{"t":1791431415798,"turn":40,"phase":"MAIN1","active":true,"frame":18680,"what":"Body Dropper - Creature 2 / 2","ms":563,"r":"pay:tap","did":"tap Mind Stone for mana"}
+{"t":1791431416514,"turn":40,"phase":"MAIN1","active":true,"frame":18684,"what":"Body Dropper - Creature 2 / 2","ms":547,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791431417214,"turn":40,"phase":"MAIN1","active":true,"frame":18688,"what":"Body Dropper - Creature 2 / 2","ms":664,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431418035,"turn":40,"phase":"MAIN1","active":true,"frame":18695,"what":"Priority: Justin","ms":686,"r":"priority:card:spell","did":"spell: Archaeomancer"}
+{"t":1791431418874,"turn":40,"phase":"MAIN1","active":true,"frame":18703,"what":"Archaeomancer - Creature 1 / 2","ms":550,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431419578,"turn":40,"phase":"MAIN1","active":true,"frame":18711,"what":"Priority: Justin","ms":676,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431420409,"turn":40,"phase":"MAIN1","active":true,"frame":18719,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":536,"r":"pay:tap","did":"tap Mind Stone for mana"}
+{"t":1791431421098,"turn":40,"phase":"MAIN1","active":true,"frame":18723,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":544,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791431421794,"turn":40,"phase":"MAIN1","active":true,"frame":18727,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":671,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431422619,"turn":40,"phase":"MAIN1","active":true,"frame":18734,"what":"Priority: Justin","ms":536,"r":"priority:card:ability (ability)","did":"ability (ability): Mind Stone"}
+{"t":1791431425176,"turn":40,"phase":"MAIN1","active":true,"frame":18735,"what":"ask ability_menu: ","ms":1084,"r":"ask:ability_menu","did":null}
+{"t":1791431426414,"turn":40,"phase":"MAIN1","active":true,"frame":18743,"what":"Priority: Justin","ms":671,"r":"priority:card:ability (ability)","did":"ability (ability): Candy Trail"}
+{"t":1791431427240,"turn":40,"phase":"MAIN1","active":true,"frame":18751,"what":"Candy Trail (43) - {2}, {T}, Sacrifice Candy Trail: You gain 3 life and draw a card.","ms":552,"r":"pay:tap","did":"tap Thornwood Falls for mana"}
+{"t":1791431427946,"turn":40,"phase":"MAIN1","active":true,"frame":18756,"what":"Candy Trail (43) - {2}, {T}, Sacrifice Candy Trail: You gain 3 life and draw a card.","ms":667,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431428766,"turn":40,"phase":"MAIN1","active":true,"frame":18763,"what":"Priority: Justin","ms":558,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791431429647,"turn":40,"phase":"MAIN1","active":true,"frame":18767,"what":"ask choose_list: Choose optional costs","ms":493,"r":"ask:choose_list","did":null}
+{"t":1791431430295,"turn":40,"phase":"MAIN1","active":true,"frame":18775,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":552,"r":"pay:tap","did":"tap Boros Garrison for mana"}
+{"t":1791431431000,"turn":40,"phase":"MAIN1","active":true,"frame":18780,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":561,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791431431716,"turn":40,"phase":"MAIN1","active":true,"frame":18789,"what":"Priority: Justin","ms":937,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431432806,"turn":40,"phase":"MAIN1","active":true,"frame":18798,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":545,"r":"select:done","did":"choose Guttersnipe"}
+{"t":1791431433505,"turn":40,"phase":"MAIN1","active":true,"frame":18807,"what":"Tragic Slip (27) - Guttersnipe (46) gets -1/-1  until end of turn.","ms":3200,"r":"pay:pool","did":"floating mana"}
+{"t":1791431436860,"turn":40,"phase":"MAIN1","active":true,"frame":18807,"what":"Tragic Slip (27) - Guttersnipe (46) gets -1/-1  until end of turn.","ms":566,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431437579,"turn":40,"phase":"MAIN1","active":true,"frame":18815,"what":"Priority: Justin","ms":792,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431494593,"turn":40,"phase":"MAIN1","active":true,"frame":18963,"what":"Priority: Justin","ms":540,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431497698,"turn":40,"phase":"MAIN1","active":true,"frame":18972,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":557,"r":"select:done","did":"choose Crab Token"}
+{"t":1791431498409,"turn":40,"phase":"MAIN1","active":true,"frame":18981,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":2842,"r":"pay:pool","did":"floating mana"}
+{"t":1791431501405,"turn":40,"phase":"MAIN1","active":true,"frame":18981,"what":"Tragic Slip (27) - Crab Token (100) gets -1/-1  until end of turn.","ms":689,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431502251,"turn":40,"phase":"MAIN1","active":true,"frame":18989,"what":"Priority: Justin","ms":689,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431503093,"turn":40,"phase":"MAIN1","active":true,"frame":18997,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":555,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431503802,"turn":40,"phase":"MAIN1","active":true,"frame":19004,"what":"Priority: Justin","ms":683,"r":"priority:card:ability (ability)","did":"ability (ability): Candy Trail"}
+{"t":1791431504639,"turn":40,"phase":"MAIN1","active":true,"frame":19012,"what":"Candy Trail (43) - {2}, {T}, Sacrifice Candy Trail: You gain 3 life and draw a card.","ms":683,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791431505475,"turn":40,"phase":"MAIN1","active":true,"frame":19018,"what":"Sacrifice Candy Trail?","ms":570,"r":"buttons:buttons:cancel","did":"cancel \"No\""}
+{"t":1791431506198,"turn":40,"phase":"MAIN1","active":true,"frame":19025,"what":"Priority: Justin","ms":437,"r":"priority:card:ability (ability)","did":"ability (ability): Mind Stone"}
+{"t":1791431506789,"turn":40,"phase":"MAIN1","active":true,"frame":19026,"what":"Priority: Justin","ms":444,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431507387,"turn":40,"phase":"MAIN1","active":true,"frame":19027,"what":"Priority: Justin","ms":802,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791431524191,"turn":40,"phase":"MAIN1","active":true,"frame":19079,"what":"Priority: Justin","ms":807,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791431537128,"turn":40,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":19118,"what":"Select creatures to attack Sam or select player/card you wish to attack.","ms":1821,"r":"attack:1","did":"attack with Guttersnipe; ok \"Attack with 1OKSpace\""}
+{"t":1791431562884,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19196,"what":"Priority: Justin","ms":441,"r":"priority:card:ability (ability)","did":"ability (ability): Mind Stone"}
+{"t":1791431563479,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19197,"what":"Priority: Justin","ms":580,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791431567649,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19207,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":784,"r":"select:done","did":"choose Saproling Token"}
+{"t":1791431568587,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19216,"what":"Tragic Slip (27) - Saproling Token (109) gets -1/-1  until end of turn.","ms":686,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431569426,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19224,"what":"Priority: Justin","ms":437,"r":"priority:card:ability (Equip)","did":"ability (Equip): Ancestral Blade"}
+{"t":1791431570017,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19225,"what":"Priority: Justin","ms":1007,"r":"priority:card:spell","did":"spell: Deadly Dispute"}
+{"t":1791431571180,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19233,"what":"Deadly Dispute (5) - Draw two cards and create a Treasure token.","ms":575,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791431571908,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":19241,"what":"Priority: Justin","ms":757,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}

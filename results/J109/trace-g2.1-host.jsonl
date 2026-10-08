@@ -1,0 +1,906 @@
+{"t":1791427574721,"turn":0,"phase":null,"active":false,"frame":12,"what":"Sam is going first.","ms":596,"r":"opening","did":"Keep 7 1"}
+{"t":1791427582293,"turn":1,"phase":"COMBAT_BEGIN","active":false,"frame":48,"what":"Priority: Justin","ms":471,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427582917,"turn":1,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":55,"what":"Priority: Justin","ms":583,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427587076,"turn":1,"phase":"END_OF_TURN","active":false,"frame":79,"what":"Priority: Justin","ms":471,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427587703,"turn":2,"phase":"MAIN1","active":true,"frame":86,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427588336,"turn":2,"phase":"MAIN1","active":true,"frame":95,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":477,"r":"open-target","did":"target player 1"}
+{"t":1791427588969,"turn":2,"phase":"MAIN1","active":true,"frame":104,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427589719,"turn":2,"phase":"MAIN1","active":true,"frame":113,"what":"Priority: Justin","ms":461,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427590335,"turn":2,"phase":"MAIN1","active":true,"frame":121,"what":"Yavimaya Elder - Creature 2 / 1","ms":461,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427590951,"turn":2,"phase":"MAIN1","active":true,"frame":129,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Archaeomancer"}
+{"t":1791427591585,"turn":2,"phase":"MAIN1","active":true,"frame":137,"what":"Archaeomancer - Creature 1 / 2","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427592336,"turn":2,"phase":"MAIN1","active":true,"frame":145,"what":"Priority: Justin","ms":582,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791427598432,"turn":2,"phase":"CLEANUP","active":true,"frame":182,"what":"Cleanup Phase","ms":925,"r":"select:done","did":"choose Moon-Circuit Hacker"}
+{"t":1791427604010,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":216,"what":"Priority: Justin","ms":469,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427604632,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":223,"what":"Priority: Justin","ms":587,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791427606204,"turn":4,"phase":"MAIN1","active":true,"frame":245,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427606836,"turn":4,"phase":"MAIN1","active":true,"frame":252,"what":"Gravedigger - Creature 2 / 2","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427607468,"turn":4,"phase":"MAIN1","active":true,"frame":260,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427608101,"turn":4,"phase":"MAIN1","active":true,"frame":269,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":598,"r":"open-target","did":"target player 1"}
+{"t":1791427608853,"turn":4,"phase":"MAIN1","active":true,"frame":278,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427609484,"turn":4,"phase":"MAIN1","active":true,"frame":286,"what":"Priority: Justin","ms":464,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791427610101,"turn":4,"phase":"MAIN1","active":true,"frame":294,"what":"Experimental Synthesizer","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427610854,"turn":4,"phase":"MAIN1","active":true,"frame":302,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Attended Knight"}
+{"t":1791427611486,"turn":4,"phase":"MAIN1","active":true,"frame":310,"what":"Attended Knight - Creature 2 / 2","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427612241,"turn":4,"phase":"MAIN1","active":true,"frame":319,"what":"Priority: Justin","ms":593,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427613774,"turn":4,"phase":"MAIN2","active":true,"frame":337,"what":"Priority: Justin","ms":594,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427622140,"turn":4,"phase":"CLEANUP","active":true,"frame":364,"what":"Cleanup Phase","ms":595,"r":"select:done","did":"choose Blossoming Sands"}
+{"t":1791427631900,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":406,"what":"Priority: Justin","ms":463,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427632518,"turn":5,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":413,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427645249,"turn":5,"phase":"END_OF_TURN","active":false,"frame":459,"what":"Priority: Justin","ms":581,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427646244,"turn":6,"phase":"MAIN1","active":true,"frame":471,"what":"Priority: Justin","ms":469,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791427647576,"turn":6,"phase":"MAIN1","active":true,"frame":478,"what":"Experimental Synthesizer","ms":531,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427648261,"turn":6,"phase":"MAIN1","active":true,"frame":486,"what":"Priority: Justin","ms":468,"r":"priority:card:spell","did":"spell: Body Dropper"}
+{"t":1791427648884,"turn":6,"phase":"MAIN1","active":true,"frame":494,"what":"Body Dropper - Creature 2 / 2","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427649514,"turn":6,"phase":"MAIN1","active":true,"frame":502,"what":"Priority: Justin","ms":466,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427650133,"turn":6,"phase":"MAIN1","active":true,"frame":510,"what":"Gravedigger - Creature 2 / 2","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427650888,"turn":6,"phase":"MAIN1","active":true,"frame":518,"what":"Priority: Justin","ms":474,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427651517,"turn":6,"phase":"MAIN1","active":true,"frame":527,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":478,"r":"open-target","did":"target player 1"}
+{"t":1791427652148,"turn":6,"phase":"MAIN1","active":true,"frame":536,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427652903,"turn":6,"phase":"MAIN1","active":true,"frame":544,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Conclave Naturalists"}
+{"t":1791427653533,"turn":6,"phase":"MAIN1","active":true,"frame":552,"what":"Conclave Naturalists - Creature 4 / 4","ms":582,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427654268,"turn":6,"phase":"MAIN1","active":true,"frame":561,"what":"Priority: Justin","ms":974,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427657997,"turn":6,"phase":"MAIN2","active":true,"frame":579,"what":"Priority: Justin","ms":585,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427662777,"turn":6,"phase":"CLEANUP","active":true,"frame":598,"what":"Cleanup Phase","ms":590,"r":"select:done","did":"choose Experimental Synthesizer"}
+{"t":1791427666961,"turn":7,"phase":"COMBAT_BEGIN","active":false,"frame":624,"what":"Priority: Justin","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427667585,"turn":7,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":631,"what":"Priority: Justin","ms":837,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427671542,"turn":7,"phase":"END_OF_TURN","active":false,"frame":655,"what":"Priority: Justin","ms":470,"r":"priority:eot","did":"To EOT"}
+{"t":1791427672338,"turn":8,"phase":"MAIN1","active":true,"frame":668,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Attended Knight"}
+{"t":1791427672970,"turn":8,"phase":"MAIN1","active":true,"frame":675,"what":"Attended Knight - Creature 2 / 2","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427673601,"turn":8,"phase":"MAIN1","active":true,"frame":683,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427674730,"turn":8,"phase":"MAIN2","active":true,"frame":697,"what":"Priority: Justin","ms":705,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427675591,"turn":8,"phase":"CLEANUP","active":true,"frame":705,"what":"Cleanup Phase","ms":833,"r":"select:done","did":"choose Attended Knight"}
+{"t":1791427688872,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":766,"what":"Priority: Justin","ms":473,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427689499,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":773,"what":"Priority: Justin","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427690490,"turn":9,"phase":"END_OF_TURN","active":false,"frame":785,"what":"Priority: Justin","ms":591,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427691263,"turn":10,"phase":"MAIN1","active":true,"frame":796,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Archaeomancer"}
+{"t":1791427691899,"turn":10,"phase":"MAIN1","active":true,"frame":803,"what":"Archaeomancer - Creature 1 / 2","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427692532,"turn":10,"phase":"MAIN1","active":true,"frame":811,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Body Dropper"}
+{"t":1791427693167,"turn":10,"phase":"MAIN1","active":true,"frame":819,"what":"Body Dropper - Creature 2 / 2","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427693918,"turn":10,"phase":"MAIN1","active":true,"frame":827,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427694551,"turn":10,"phase":"MAIN1","active":true,"frame":835,"what":"Yavimaya Elder - Creature 2 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427695182,"turn":10,"phase":"MAIN1","active":true,"frame":843,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427695934,"turn":10,"phase":"MAIN1","active":true,"frame":852,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":474,"r":"open-target","did":"target player 1"}
+{"t":1791427696562,"turn":10,"phase":"MAIN1","active":true,"frame":861,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":586,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427697302,"turn":10,"phase":"MAIN1","active":true,"frame":869,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427697933,"turn":10,"phase":"MAIN1","active":true,"frame":877,"what":"Kor Skyfisher - Creature 2 / 3","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427698565,"turn":10,"phase":"MAIN1","active":true,"frame":885,"what":"Priority: Justin","ms":583,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427699303,"turn":10,"phase":"MAIN1","active":true,"frame":893,"what":"Gravedigger - Creature 2 / 2","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427699931,"turn":10,"phase":"MAIN1","active":true,"frame":901,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Conclave Naturalists"}
+{"t":1791427700687,"turn":10,"phase":"MAIN1","active":true,"frame":910,"what":"Conclave Naturalists - Creature 4 / 4","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427701316,"turn":10,"phase":"MAIN1","active":true,"frame":918,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427702816,"turn":10,"phase":"MAIN2","active":true,"frame":936,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427703454,"turn":10,"phase":"MAIN2","active":true,"frame":943,"what":"Gravedigger - Creature 2 / 2","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427704079,"turn":10,"phase":"MAIN2","active":true,"frame":951,"what":"Priority: Justin","ms":468,"r":"priority:card:spell","did":"spell: Conclave Naturalists"}
+{"t":1791427704701,"turn":10,"phase":"MAIN2","active":true,"frame":959,"what":"Conclave Naturalists - Creature 4 / 4","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427705332,"turn":10,"phase":"MAIN2","active":true,"frame":967,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Perilous Myr"}
+{"t":1791427706084,"turn":10,"phase":"MAIN2","active":true,"frame":975,"what":"Perilous Myr - Creature 1 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427706715,"turn":10,"phase":"MAIN2","active":true,"frame":983,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427707796,"turn":10,"phase":"CLEANUP","active":true,"frame":995,"what":"Cleanup Phase","ms":602,"r":"select:done","did":"choose Archaeomancer"}
+{"t":1791427712178,"turn":11,"phase":"COMBAT_BEGIN","active":false,"frame":1022,"what":"Priority: Justin","ms":466,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427712798,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1029,"what":"Priority: Justin","ms":841,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791427715763,"turn":12,"phase":"MAIN1","active":true,"frame":1057,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427716397,"turn":12,"phase":"MAIN1","active":true,"frame":1064,"what":"Gravedigger - Creature 2 / 2","ms":463,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427717013,"turn":12,"phase":"MAIN1","active":true,"frame":1072,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427717653,"turn":12,"phase":"MAIN1","active":true,"frame":1080,"what":"Yavimaya Elder - Creature 2 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427718278,"turn":12,"phase":"MAIN1","active":true,"frame":1088,"what":"Priority: Justin","ms":588,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427719019,"turn":12,"phase":"MAIN1","active":true,"frame":1096,"what":"Kor Skyfisher - Creature 2 / 3","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427719645,"turn":12,"phase":"MAIN1","active":true,"frame":1104,"what":"Priority: Justin","ms":587,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427721342,"turn":12,"phase":"MAIN2","active":true,"frame":1123,"what":"Priority: Justin","ms":469,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427721966,"turn":12,"phase":"MAIN2","active":true,"frame":1130,"what":"Yavimaya Elder - Creature 2 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427722599,"turn":12,"phase":"MAIN2","active":true,"frame":1138,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427723233,"turn":12,"phase":"MAIN2","active":true,"frame":1146,"what":"Kor Skyfisher - Creature 2 / 3","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427723863,"turn":12,"phase":"MAIN2","active":true,"frame":1154,"what":"Priority: Justin","ms":585,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427724602,"turn":12,"phase":"MAIN2","active":true,"frame":1163,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":474,"r":"open-target","did":"target player 1"}
+{"t":1791427725229,"turn":12,"phase":"MAIN2","active":true,"frame":1172,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":463,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427725843,"turn":12,"phase":"MAIN2","active":true,"frame":1180,"what":"Priority: Justin","ms":588,"r":"priority:card:spell","did":"spell: Perilous Myr"}
+{"t":1791427726587,"turn":12,"phase":"MAIN2","active":true,"frame":1188,"what":"Perilous Myr - Creature 1 / 1","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427727216,"turn":12,"phase":"MAIN2","active":true,"frame":1196,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427727846,"turn":12,"phase":"MAIN2","active":true,"frame":1204,"what":"Gravedigger - Creature 2 / 2","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427728601,"turn":12,"phase":"MAIN2","active":true,"frame":1212,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427729507,"turn":12,"phase":"CLEANUP","active":true,"frame":1224,"what":"Cleanup Phase","ms":592,"r":"select:done","did":"choose Conclave Naturalists"}
+{"t":1791427738073,"turn":13,"phase":"COMBAT_BEGIN","active":false,"frame":1267,"what":"Priority: Justin","ms":470,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427738697,"turn":13,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1274,"what":"Priority: Justin","ms":841,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427741062,"turn":13,"phase":"END_OF_TURN","active":false,"frame":1292,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427741857,"turn":14,"phase":"MAIN1","active":true,"frame":1303,"what":"Priority: Justin","ms":472,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427742484,"turn":14,"phase":"MAIN1","active":true,"frame":1310,"what":"Gravedigger - Creature 2 / 2","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427743114,"turn":14,"phase":"MAIN1","active":true,"frame":1318,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427743747,"turn":14,"phase":"MAIN1","active":true,"frame":1326,"what":"Yavimaya Elder - Creature 2 / 1","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427744383,"turn":14,"phase":"MAIN1","active":true,"frame":1334,"what":"Priority: Justin","ms":598,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427745135,"turn":14,"phase":"MAIN1","active":true,"frame":1342,"what":"Kor Skyfisher - Creature 2 / 3","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427745763,"turn":14,"phase":"MAIN1","active":true,"frame":1350,"what":"Priority: Justin","ms":602,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427753809,"turn":14,"phase":"MAIN2","active":true,"frame":1389,"what":"Priority: Justin","ms":470,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791427754433,"turn":14,"phase":"MAIN2","active":true,"frame":1396,"what":"Satyr Wayfinder - Creature 1 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427755063,"turn":14,"phase":"MAIN2","active":true,"frame":1404,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427755697,"turn":14,"phase":"MAIN2","active":true,"frame":1413,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":478,"r":"open-target","did":"target player 1"}
+{"t":1791427756329,"turn":14,"phase":"MAIN2","active":true,"frame":1422,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427757084,"turn":14,"phase":"MAIN2","active":true,"frame":1430,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Body Dropper"}
+{"t":1791427757716,"turn":14,"phase":"MAIN2","active":true,"frame":1438,"what":"Body Dropper - Creature 2 / 2","ms":596,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427758465,"turn":14,"phase":"MAIN2","active":true,"frame":1446,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427759098,"turn":14,"phase":"MAIN2","active":true,"frame":1454,"what":"Kor Skyfisher - Creature 2 / 3","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427759853,"turn":14,"phase":"MAIN2","active":true,"frame":1462,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427760482,"turn":14,"phase":"MAIN2","active":true,"frame":1470,"what":"Gravedigger - Creature 2 / 2","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427761114,"turn":14,"phase":"MAIN2","active":true,"frame":1478,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Perilous Myr"}
+{"t":1791427761869,"turn":14,"phase":"MAIN2","active":true,"frame":1486,"what":"Perilous Myr - Creature 1 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427762496,"turn":14,"phase":"MAIN2","active":true,"frame":1494,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427763571,"turn":14,"phase":"CLEANUP","active":true,"frame":1506,"what":"Cleanup Phase","ms":593,"r":"select:done","did":"choose Perilous Myr"}
+{"t":1791427767556,"turn":15,"phase":"COMBAT_BEGIN","active":false,"frame":1531,"what":"Priority: Justin","ms":470,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427768180,"turn":15,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1538,"what":"Priority: Justin","ms":719,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427769052,"turn":15,"phase":"END_OF_TURN","active":false,"frame":1547,"what":"Priority: Justin","ms":835,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427770043,"turn":16,"phase":"MAIN1","active":true,"frame":1558,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427770680,"turn":16,"phase":"MAIN1","active":true,"frame":1567,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":598,"r":"open-target","did":"target player 1"}
+{"t":1791427771432,"turn":16,"phase":"MAIN1","active":true,"frame":1576,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427772064,"turn":16,"phase":"MAIN1","active":true,"frame":1584,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427772818,"turn":16,"phase":"MAIN1","active":true,"frame":1592,"what":"Kor Skyfisher - Creature 2 / 3","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427773446,"turn":16,"phase":"MAIN1","active":true,"frame":1600,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Chain Lightning"}
+{"t":1791427774201,"turn":16,"phase":"MAIN1","active":true,"frame":1609,"what":"Chain Lightning (13) - Chain Lightning deals 3 damage to any target. Then that player or that permanent's controller may pay {R}{R}. If the player does, they may copy this spell and may choose a new target for that copy.","ms":473,"r":"open-target","did":"target player 1"}
+{"t":1791427774827,"turn":16,"phase":"MAIN1","active":true,"frame":1618,"what":"Chain Lightning (13) - Chain Lightning (13) deals 3 damage to Sam.","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427775446,"turn":16,"phase":"MAIN1","active":true,"frame":1626,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427776201,"turn":16,"phase":"MAIN1","active":true,"frame":1634,"what":"Yavimaya Elder - Creature 2 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427776829,"turn":16,"phase":"MAIN1","active":true,"frame":1642,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427781898,"turn":16,"phase":"MAIN2","active":true,"frame":1672,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Chain Lightning"}
+{"t":1791427782532,"turn":16,"phase":"MAIN2","active":true,"frame":1680,"what":"Chain Lightning (13) - Chain Lightning deals 3 damage to any target. Then that player or that permanent's controller may pay {R}{R}. If the player does, they may copy this spell and may choose a new target for that copy.","ms":475,"r":"open-target","did":"target player 1"}
+{"t":1791427783161,"turn":16,"phase":"MAIN2","active":true,"frame":1689,"what":"Chain Lightning (13) - Chain Lightning (13) deals 3 damage to Sam.","ms":463,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427783779,"turn":16,"phase":"MAIN2","active":true,"frame":1697,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427784417,"turn":16,"phase":"MAIN2","active":true,"frame":1705,"what":"Kor Skyfisher - Creature 2 / 3","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427785164,"turn":16,"phase":"MAIN2","active":true,"frame":1713,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Skewer the Critics"}
+{"t":1791427785797,"turn":16,"phase":"MAIN2","active":true,"frame":1722,"what":"Skewer the Critics (12) - Skewer the Critics deals 3 damage to any target.","ms":598,"r":"open-target","did":"target player 1"}
+{"t":1791427786550,"turn":16,"phase":"MAIN2","active":true,"frame":1731,"what":"Skewer the Critics (12) - Skewer the Critics (12) deals 3 damage to Sam.","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427787180,"turn":16,"phase":"MAIN2","active":true,"frame":1739,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427790664,"turn":16,"phase":"CLEANUP","active":true,"frame":1760,"what":"Cleanup Phase","ms":599,"r":"select:done","did":"choose Skewer the Critics"}
+{"t":1791427800423,"turn":17,"phase":"COMBAT_BEGIN","active":false,"frame":1807,"what":"Priority: Justin","ms":469,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427801045,"turn":17,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":1814,"what":"Priority: Justin","ms":839,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427805004,"turn":17,"phase":"END_OF_TURN","active":false,"frame":1838,"what":"Priority: Justin","ms":471,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791427805801,"turn":18,"phase":"MAIN1","active":true,"frame":1851,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427811777,"turn":18,"phase":"MAIN2","active":true,"frame":1883,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791427812413,"turn":18,"phase":"MAIN2","active":true,"frame":1890,"what":"Satyr Wayfinder - Creature 1 / 1","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427813049,"turn":18,"phase":"MAIN2","active":true,"frame":1898,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791427813678,"turn":18,"phase":"MAIN2","active":true,"frame":1906,"what":"Serrated Arrows","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427814433,"turn":18,"phase":"MAIN2","active":true,"frame":1914,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Kor Skyfisher"}
+{"t":1791427815063,"turn":18,"phase":"MAIN2","active":true,"frame":1922,"what":"Kor Skyfisher - Creature 2 / 3","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427815694,"turn":18,"phase":"MAIN2","active":true,"frame":1930,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427816448,"turn":18,"phase":"MAIN2","active":true,"frame":1938,"what":"Gravedigger - Creature 2 / 2","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427817079,"turn":18,"phase":"MAIN2","active":true,"frame":1946,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427817833,"turn":18,"phase":"MAIN2","active":true,"frame":1954,"what":"Yavimaya Elder - Creature 2 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427818459,"turn":18,"phase":"MAIN2","active":true,"frame":1962,"what":"Priority: Justin","ms":602,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427822334,"turn":18,"phase":"CLEANUP","active":true,"frame":1983,"what":"Cleanup Phase","ms":595,"r":"select:done","did":"choose Body Dropper"}
+{"t":1791427825522,"turn":19,"phase":"COMBAT_BEGIN","active":false,"frame":2007,"what":"Priority: Justin","ms":469,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427826145,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2014,"what":"Priority: Justin","ms":839,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427832294,"turn":19,"phase":"END_OF_TURN","active":false,"frame":2045,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427833091,"turn":20,"phase":"MAIN1","active":true,"frame":2056,"what":"Priority: Justin","ms":471,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427833715,"turn":20,"phase":"MAIN1","active":true,"frame":2063,"what":"Gravedigger - Creature 2 / 2","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427834344,"turn":20,"phase":"MAIN1","active":true,"frame":2071,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427838468,"turn":20,"phase":"MAIN2","active":true,"frame":2098,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427839098,"turn":20,"phase":"MAIN2","active":true,"frame":2105,"what":"Gravedigger - Creature 2 / 2","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427839727,"turn":20,"phase":"MAIN2","active":true,"frame":2113,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791427840364,"turn":20,"phase":"MAIN2","active":true,"frame":2121,"what":"Ponder (10) - Look at the top 3 cards of Justin's library. Then put them back in any order.You may have that player shuffle their library. Justin draws a card.","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427840996,"turn":20,"phase":"MAIN2","active":true,"frame":2129,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Chain Lightning"}
+{"t":1791427841750,"turn":20,"phase":"MAIN2","active":true,"frame":2138,"what":"Chain Lightning (13) - Chain Lightning deals 3 damage to any target. Then that player or that permanent's controller may pay {R}{R}. If the player does, they may copy this spell and may choose a new target for that copy.","ms":475,"r":"open-target","did":"target player 1"}
+{"t":1791427842377,"turn":20,"phase":"MAIN2","active":true,"frame":2147,"what":"Chain Lightning (13) - Chain Lightning (13) deals 3 damage to Sam.","ms":605,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427843135,"turn":20,"phase":"MAIN2","active":true,"frame":2155,"what":"Priority: Justin","ms":592,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427845843,"turn":20,"phase":"CLEANUP","active":true,"frame":2173,"what":"Cleanup Phase","ms":602,"r":"select:done","did":"choose Kor Skyfisher"}
+{"t":1791427856197,"turn":21,"phase":"COMBAT_BEGIN","active":false,"frame":2222,"what":"Priority: Justin","ms":477,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427856829,"turn":21,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2229,"what":"Priority: Justin","ms":841,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427862372,"turn":21,"phase":"END_OF_TURN","active":false,"frame":2259,"what":"Priority: Justin","ms":468,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791427863567,"turn":22,"phase":"MAIN1","active":true,"frame":2273,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427864197,"turn":22,"phase":"MAIN1","active":true,"frame":2280,"what":"Gravedigger - Creature 2 / 2","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427864827,"turn":22,"phase":"MAIN1","active":true,"frame":2288,"what":"Priority: Justin","ms":483,"r":"priority:card:land","did":"land: Boros Garrison"}
+{"t":1791427865465,"turn":22,"phase":"MAIN1","active":true,"frame":2296,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791427869050,"turn":22,"phase":"MAIN1","active":true,"frame":2317,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Chain Lightning"}
+{"t":1791427869682,"turn":22,"phase":"MAIN1","active":true,"frame":2326,"what":"Chain Lightning (13) - Chain Lightning deals 3 damage to any target. Then that player or that permanent's controller may pay {R}{R}. If the player does, they may copy this spell and may choose a new target for that copy.","ms":595,"r":"open-target","did":"target player 1"}
+{"t":1791427870431,"turn":22,"phase":"MAIN1","active":true,"frame":2335,"what":"Chain Lightning (13) - Chain Lightning (13) deals 3 damage to Sam.","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427871062,"turn":22,"phase":"MAIN1","active":true,"frame":2343,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427871933,"turn":22,"phase":"MAIN2","active":true,"frame":2354,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427872561,"turn":22,"phase":"MAIN2","active":true,"frame":2361,"what":"Yavimaya Elder - Creature 2 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427873192,"turn":22,"phase":"MAIN2","active":true,"frame":2369,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791427873830,"turn":22,"phase":"MAIN2","active":true,"frame":2377,"what":"Ponder (10) - Look at the top 3 cards of Justin's library. Then put them back in any order.You may have that player shuffle their library. Justin draws a card.","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427874463,"turn":22,"phase":"MAIN2","active":true,"frame":2385,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427875619,"turn":22,"phase":"CLEANUP","active":true,"frame":2394,"what":"Cleanup Phase","ms":475,"r":"select:1","did":"choose Deadly Dispute"}
+{"t":1791427876248,"turn":22,"phase":"CLEANUP","active":true,"frame":2398,"what":"Cleanup Phase","ms":3110,"r":"stuck","did":null}
+{"t":1791427887068,"turn":23,"phase":"COMBAT_BEGIN","active":false,"frame":2437,"what":"Priority: Justin","ms":473,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427887694,"turn":23,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2444,"what":"Priority: Justin","ms":839,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427893440,"turn":23,"phase":"MAIN2","active":false,"frame":2474,"what":"Priority: Justin","ms":723,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791427894316,"turn":23,"phase":"MAIN2","active":false,"frame":2481,"what":"ask choose_list: Looking at cards in Sam's hand","ms":375,"r":"ask:choose_list","did":null}
+{"t":1791427898220,"turn":23,"phase":"END_OF_TURN","active":false,"frame":2502,"what":"Priority: Justin","ms":588,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427899216,"turn":24,"phase":"MAIN1","active":true,"frame":2514,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791427899844,"turn":24,"phase":"MAIN1","active":true,"frame":2521,"what":"Satyr Wayfinder - Creature 1 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427900475,"turn":24,"phase":"MAIN1","active":true,"frame":2529,"what":"Priority: Justin","ms":481,"r":"priority:card:land","did":"land: Boros Garrison"}
+{"t":1791427901110,"turn":24,"phase":"MAIN1","active":true,"frame":2537,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791427906583,"turn":24,"phase":"MAIN1","active":true,"frame":2557,"what":"Priority: Justin","ms":593,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427912558,"turn":24,"phase":"MAIN2","active":true,"frame":2586,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Chain Lightning"}
+{"t":1791427913194,"turn":24,"phase":"MAIN2","active":true,"frame":2594,"what":"Chain Lightning (13) - Chain Lightning deals 3 damage to any target. Then that player or that permanent's controller may pay {R}{R}. If the player does, they may copy this spell and may choose a new target for that copy.","ms":478,"r":"open-target","did":"target player 1"}
+{"t":1791427913825,"turn":24,"phase":"MAIN2","active":true,"frame":2603,"what":"Chain Lightning (13) - Chain Lightning (13) deals 3 damage to Sam.","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427914460,"turn":24,"phase":"MAIN2","active":true,"frame":2611,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427915214,"turn":24,"phase":"MAIN2","active":true,"frame":2619,"what":"Yavimaya Elder - Creature 2 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427915845,"turn":24,"phase":"MAIN2","active":true,"frame":2627,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791427916477,"turn":24,"phase":"MAIN2","active":true,"frame":2635,"what":"Serrated Arrows","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427917233,"turn":24,"phase":"MAIN2","active":true,"frame":2643,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427917862,"turn":24,"phase":"MAIN2","active":true,"frame":2651,"what":"Gravedigger - Creature 2 / 2","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427918613,"turn":24,"phase":"MAIN2","active":true,"frame":2659,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Basking Broodscale"}
+{"t":1791427919246,"turn":24,"phase":"MAIN2","active":true,"frame":2667,"what":"Basking Broodscale - Creature 2 / 2","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427919997,"turn":24,"phase":"MAIN2","active":true,"frame":2675,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Satyr Wayfinder"}
+{"t":1791427920627,"turn":24,"phase":"MAIN2","active":true,"frame":2683,"what":"Satyr Wayfinder - Creature 1 / 1","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427921381,"turn":24,"phase":"MAIN2","active":true,"frame":2692,"what":"Priority: Justin","ms":595,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427922313,"turn":24,"phase":"CLEANUP","active":true,"frame":2704,"what":"Cleanup Phase","ms":598,"r":"select:done","did":"choose Chain Lightning"}
+{"t":1791427923309,"turn":25,"phase":"COMBAT_BEGIN","active":false,"frame":2719,"what":"Priority: Justin","ms":479,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427923943,"turn":25,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2726,"what":"Priority: Justin","ms":841,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427924936,"turn":25,"phase":"END_OF_TURN","active":false,"frame":2738,"what":"Priority: Justin","ms":830,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427925918,"turn":26,"phase":"MAIN1","active":true,"frame":2749,"what":"Priority: Justin","ms":472,"r":"priority:card:land","did":"land: Boros Garrison"}
+{"t":1791427926547,"turn":26,"phase":"MAIN1","active":true,"frame":2757,"what":"Priority: Justin","ms":478,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791427936252,"turn":26,"phase":"CLEANUP","active":true,"frame":2804,"what":"Cleanup Phase","ms":592,"r":"select:done","did":"choose Satyr Wayfinder"}
+{"t":1791427947211,"turn":27,"phase":"MAIN1","active":false,"frame":2855,"what":"Priority: Justin","ms":719,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791427948083,"turn":27,"phase":"MAIN1","active":false,"frame":2862,"what":"ask choose_list: Looking at cards in Sam's hand","ms":373,"r":"ask:choose_list","did":null}
+{"t":1791427951983,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":2883,"what":"Priority: Justin","ms":473,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427952609,"turn":27,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":2890,"what":"Priority: Justin","ms":840,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791427957360,"turn":28,"phase":"MAIN1","active":true,"frame":2924,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791427957993,"turn":28,"phase":"MAIN1","active":true,"frame":2931,"what":"Candy Trail","ms":902,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427959050,"turn":28,"phase":"MAIN1","active":true,"frame":2939,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791427959681,"turn":28,"phase":"MAIN1","active":true,"frame":2947,"what":"Ponder (10) - Look at the top 3 cards of Justin's library. Then put them back in any order.You may have that player shuffle their library. Justin draws a card.","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427960432,"turn":28,"phase":"MAIN1","active":true,"frame":2955,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791427961060,"turn":28,"phase":"MAIN1","active":true,"frame":2963,"what":"Serrated Arrows","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427961814,"turn":28,"phase":"MAIN1","active":true,"frame":2971,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791427965326,"turn":28,"phase":"MAIN2","active":true,"frame":2995,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Yavimaya Elder"}
+{"t":1791427965963,"turn":28,"phase":"MAIN2","active":true,"frame":3002,"what":"Yavimaya Elder - Creature 2 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427966594,"turn":28,"phase":"MAIN2","active":true,"frame":3010,"what":"Priority: Justin","ms":481,"r":"priority:card:land","did":"land: Boros Garrison"}
+{"t":1791427967228,"turn":28,"phase":"MAIN2","active":true,"frame":3018,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791427969110,"turn":28,"phase":"MAIN2","active":true,"frame":3034,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791427969746,"turn":28,"phase":"MAIN2","active":true,"frame":3041,"what":"Serrated Arrows","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427970376,"turn":28,"phase":"MAIN2","active":true,"frame":3049,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791427971010,"turn":28,"phase":"MAIN2","active":true,"frame":3057,"what":"Gravedigger - Creature 2 / 2","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427971642,"turn":28,"phase":"MAIN2","active":true,"frame":3065,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791427972396,"turn":28,"phase":"MAIN2","active":true,"frame":3070,"what":"ask choose_list: Delve how many cards?","ms":412,"r":"ask:choose_list","did":null}
+{"t":1791427972961,"turn":28,"phase":"MAIN2","active":true,"frame":3076,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427973595,"turn":28,"phase":"MAIN2","active":true,"frame":3084,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791427974228,"turn":28,"phase":"MAIN2","active":true,"frame":3092,"what":"Candy Trail","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427974979,"turn":28,"phase":"MAIN2","active":true,"frame":3100,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Basking Broodscale"}
+{"t":1791427975612,"turn":28,"phase":"MAIN2","active":true,"frame":3108,"what":"Basking Broodscale - Creature 2 / 2","ms":600,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427976365,"turn":28,"phase":"MAIN2","active":true,"frame":3116,"what":"Priority: Justin","ms":475,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791427976994,"turn":28,"phase":"MAIN2","active":true,"frame":3124,"what":"Ponder (10) - Look at the top 3 cards of Justin's library. Then put them back in any order.You may have that player shuffle their library. Justin draws a card.","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427977745,"turn":28,"phase":"MAIN2","active":true,"frame":3132,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791427978667,"turn":28,"phase":"CLEANUP","active":true,"frame":3144,"what":"Cleanup Phase","ms":593,"r":"select:done","did":"choose Basking Broodscale"}
+{"t":1791427980660,"turn":29,"phase":"MAIN1","active":false,"frame":3162,"what":"Priority: Justin","ms":717,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791427981531,"turn":29,"phase":"MAIN1","active":false,"frame":3169,"what":"ask choose_list: Looking at cards in Sam's hand","ms":375,"r":"ask:choose_list","did":null}
+{"t":1791427982252,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":3178,"what":"Priority: Justin","ms":467,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791427982872,"turn":29,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3185,"what":"Priority: Justin","ms":842,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791427993602,"turn":30,"phase":"MAIN1","active":true,"frame":3234,"what":"Priority: Justin","ms":470,"r":"priority:card:land","did":"land: Boros Garrison"}
+{"t":1791427994225,"turn":30,"phase":"MAIN1","active":true,"frame":3241,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791427994859,"turn":30,"phase":"MAIN1","active":true,"frame":3245,"what":"ask choose_list: Choose optional costs","ms":417,"r":"ask:choose_list","did":null}
+{"t":1791427995430,"turn":30,"phase":"MAIN1","active":true,"frame":3252,"what":"Priority: Justin","ms":596,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791427998182,"turn":30,"phase":"MAIN1","active":true,"frame":3271,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791427998812,"turn":30,"phase":"MAIN1","active":true,"frame":3278,"what":"Serrated Arrows","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791427999441,"turn":30,"phase":"MAIN1","active":true,"frame":3286,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791428000077,"turn":30,"phase":"MAIN1","active":true,"frame":3294,"what":"Gravedigger - Creature 2 / 2","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428000708,"turn":30,"phase":"MAIN1","active":true,"frame":3302,"what":"Priority: Justin","ms":603,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791428001465,"turn":30,"phase":"MAIN1","active":true,"frame":3310,"what":"Candy Trail","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428002092,"turn":30,"phase":"MAIN1","active":true,"frame":3318,"what":"Priority: Justin","ms":599,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428004752,"turn":30,"phase":"MAIN2","active":true,"frame":3339,"what":"Priority: Justin","ms":590,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428006146,"turn":30,"phase":"CLEANUP","active":true,"frame":3350,"what":"Cleanup Phase","ms":596,"r":"select:done","did":"choose Yavimaya Elder"}
+{"t":1791428014310,"turn":31,"phase":"MAIN1","active":false,"frame":3391,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791428014941,"turn":31,"phase":"MAIN1","active":false,"frame":3395,"what":"ask choose_list: Choose optional costs","ms":417,"r":"ask:choose_list","did":null}
+{"t":1791428015512,"turn":31,"phase":"MAIN1","active":false,"frame":3402,"what":"Priority: Justin","ms":717,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428016381,"turn":31,"phase":"MAIN1","active":false,"frame":3410,"what":"ask choose_list: Looking at cards in Sam's hand","ms":373,"r":"ask:choose_list","did":null}
+{"t":1791428017097,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":3419,"what":"Priority: Justin","ms":473,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428017724,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3426,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791428018355,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3430,"what":"ask choose_list: Choose optional costs","ms":417,"r":"ask:choose_list","did":null}
+{"t":1791428018926,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3437,"what":"Priority: Justin","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428026256,"turn":31,"phase":"END_OF_TURN","active":false,"frame":3474,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Vicious Offering"}
+{"t":1791428026889,"turn":31,"phase":"END_OF_TURN","active":false,"frame":3478,"what":"ask choose_list: Choose optional costs","ms":503,"r":"ask:choose_list","did":null}
+{"t":1791428027546,"turn":31,"phase":"END_OF_TURN","active":false,"frame":3485,"what":"Priority: Justin","ms":835,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428028536,"turn":32,"phase":"MAIN1","active":true,"frame":3496,"what":"Priority: Justin","ms":589,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428030239,"turn":32,"phase":"MAIN2","active":true,"frame":3514,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791428030877,"turn":32,"phase":"MAIN2","active":true,"frame":3521,"what":"Ponder (10) - Look at the top 3 cards of Justin's library. Then put them back in any order.You may have that player shuffle their library. Justin draws a card.","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428031509,"turn":32,"phase":"MAIN2","active":true,"frame":3529,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428032429,"turn":32,"phase":"CLEANUP","active":true,"frame":3541,"what":"Cleanup Phase","ms":1569,"r":"select:done","did":"choose Vicious Offering"}
+{"t":1791428042187,"turn":33,"phase":"COMBAT_BEGIN","active":false,"frame":3586,"what":"Priority: Justin","ms":484,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428042825,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3593,"what":"Priority: Justin","ms":840,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428046168,"turn":33,"phase":"END_OF_TURN","active":false,"frame":3614,"what":"Priority: Justin","ms":605,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428047164,"turn":34,"phase":"MAIN1","active":true,"frame":3626,"what":"Priority: Justin","ms":476,"r":"priority:card:land","did":"land: Boros Garrison"}
+{"t":1791428047793,"turn":34,"phase":"MAIN1","active":true,"frame":3633,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428049354,"turn":34,"phase":"MAIN1","active":true,"frame":3648,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428049990,"turn":34,"phase":"MAIN1","active":true,"frame":3652,"what":"ask choose_list: Delve how many cards?","ms":2800,"r":"ask:choose_list","did":null}
+{"t":1791428052946,"turn":34,"phase":"MAIN1","active":true,"frame":3655,"what":"ask choose_list: Exile which card(1/5)?","ms":531,"r":"ask:choose_list","did":null}
+{"t":1791428053630,"turn":34,"phase":"MAIN1","active":true,"frame":3658,"what":"ask choose_list: Exile which card(2/5)?","ms":378,"r":"ask:choose_list","did":null}
+{"t":1791428054162,"turn":34,"phase":"MAIN1","active":true,"frame":3664,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428054792,"turn":34,"phase":"MAIN1","active":true,"frame":3672,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Judge's Familiar"}
+{"t":1791428055427,"turn":34,"phase":"MAIN1","active":true,"frame":3680,"what":"Judge's Familiar - Creature 1 / 1","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428056058,"turn":34,"phase":"MAIN1","active":true,"frame":3688,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428056816,"turn":34,"phase":"MAIN1","active":true,"frame":3696,"what":"Fanatical Firebrand - Creature 1 / 1","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428057442,"turn":34,"phase":"MAIN1","active":true,"frame":3704,"what":"Priority: Justin","ms":607,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791428058202,"turn":34,"phase":"MAIN1","active":true,"frame":3712,"what":"Candy Trail","ms":487,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428058842,"turn":34,"phase":"MAIN1","active":true,"frame":3720,"what":"Priority: Justin","ms":602,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428059710,"turn":34,"phase":"MAIN2","active":true,"frame":3731,"what":"Priority: Justin","ms":479,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428060343,"turn":34,"phase":"MAIN2","active":true,"frame":3737,"what":"Fanatical Firebrand - Creature 1 / 1","ms":616,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428061116,"turn":34,"phase":"MAIN2","active":true,"frame":3746,"what":"Priority: Justin","ms":500,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791428061768,"turn":34,"phase":"MAIN2","active":true,"frame":3754,"what":"Serrated Arrows","ms":486,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428062407,"turn":34,"phase":"MAIN2","active":true,"frame":3762,"what":"Priority: Justin","ms":601,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428063161,"turn":34,"phase":"MAIN2","active":true,"frame":3768,"what":"ask choose_list: Delve how many cards?","ms":777,"r":"ask:choose_list","did":null}
+{"t":1791428064090,"turn":34,"phase":"MAIN2","active":true,"frame":3771,"what":"ask choose_list: Exile which card(1/4)?","ms":535,"r":"ask:choose_list","did":null}
+{"t":1791428064778,"turn":34,"phase":"MAIN2","active":true,"frame":3774,"what":"ask choose_list: Exile which card(2/4)?","ms":410,"r":"ask:choose_list","did":null}
+{"t":1791428065341,"turn":34,"phase":"MAIN2","active":true,"frame":3777,"what":"ask choose_list: Exile which card(3/4)?","ms":415,"r":"ask:choose_list","did":null}
+{"t":1791428065908,"turn":34,"phase":"MAIN2","active":true,"frame":3780,"what":"ask choose_list: Exile which card(4/4)?","ms":536,"r":"ask:choose_list","did":null}
+{"t":1791428066597,"turn":34,"phase":"MAIN2","active":true,"frame":3786,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428067737,"turn":34,"phase":"MAIN2","active":true,"frame":3795,"what":"Priority: Justin","ms":488,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791428068378,"turn":34,"phase":"MAIN2","active":true,"frame":3803,"what":"Candy Trail","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428069007,"turn":34,"phase":"MAIN2","active":true,"frame":3811,"what":"Priority: Justin","ms":607,"r":"priority:card:spell","did":"spell: Judge's Familiar"}
+{"t":1791428069771,"turn":34,"phase":"MAIN2","active":true,"frame":3819,"what":"Judge's Familiar - Creature 1 / 1","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428070411,"turn":34,"phase":"MAIN2","active":true,"frame":3827,"what":"Priority: Justin","ms":600,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791428071166,"turn":34,"phase":"MAIN2","active":true,"frame":3835,"what":"Ponder (10) - Look at the top 3 cards of Justin's library. Then put them back in any order.You may have that player shuffle their library. Justin draws a card.","ms":609,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428071930,"turn":34,"phase":"MAIN2","active":true,"frame":3843,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428073333,"turn":34,"phase":"CLEANUP","active":true,"frame":3852,"what":"Cleanup Phase","ms":854,"r":"select:done","did":"choose Boros Garrison"}
+{"t":1791428075675,"turn":35,"phase":"COMBAT_BEGIN","active":false,"frame":3873,"what":"Priority: Justin","ms":480,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428076309,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":3880,"what":"Priority: Justin","ms":837,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428085023,"turn":35,"phase":"END_OF_TURN","active":false,"frame":3922,"what":"Priority: Justin","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428086019,"turn":36,"phase":"MAIN1","active":true,"frame":3934,"what":"Priority: Justin","ms":486,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791428086659,"turn":36,"phase":"MAIN1","active":true,"frame":3941,"what":"Serrated Arrows","ms":478,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428087290,"turn":36,"phase":"MAIN1","active":true,"frame":3949,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791428087926,"turn":36,"phase":"MAIN1","active":true,"frame":3957,"what":"Gravedigger - Creature 2 / 2","ms":598,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428088680,"turn":36,"phase":"MAIN1","active":true,"frame":3965,"what":"Priority: Justin","ms":476,"r":"priority:card:spell","did":"spell: Judge's Familiar"}
+{"t":1791428089309,"turn":36,"phase":"MAIN1","active":true,"frame":3973,"what":"Judge's Familiar - Creature 1 / 1","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428089940,"turn":36,"phase":"MAIN1","active":true,"frame":3981,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428090698,"turn":36,"phase":"MAIN1","active":true,"frame":3989,"what":"Priority: Justin","ms":477,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428091327,"turn":36,"phase":"MAIN1","active":true,"frame":3994,"what":"ask choose_list: Delve how many cards?","ms":411,"r":"ask:choose_list","did":null}
+{"t":1791428091891,"turn":36,"phase":"MAIN1","active":true,"frame":3997,"what":"ask choose_list: Exile which card(1/5)?","ms":382,"r":"ask:choose_list","did":null}
+{"t":1791428092427,"turn":36,"phase":"MAIN1","active":true,"frame":4003,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428093057,"turn":36,"phase":"MAIN1","active":true,"frame":4011,"what":"Priority: Justin","ms":359,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428093833,"turn":36,"phase":"COMBAT_BEGIN","active":true,"frame":4017,"what":"Waiting for Sam...","ms":103,"r":"moved-on","did":null}
+{"t":1791428096973,"turn":36,"phase":"MAIN2","active":true,"frame":4032,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428097608,"turn":36,"phase":"MAIN2","active":true,"frame":4039,"what":"Fanatical Firebrand - Creature 1 / 1","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428098239,"turn":36,"phase":"MAIN2","active":true,"frame":4047,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428098879,"turn":36,"phase":"MAIN2","active":true,"frame":4055,"what":"Priority: Justin","ms":596,"r":"priority:card:spell","did":"spell: Judge's Familiar"}
+{"t":1791428099628,"turn":36,"phase":"MAIN2","active":true,"frame":4063,"what":"Judge's Familiar - Creature 1 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428100258,"turn":36,"phase":"MAIN2","active":true,"frame":4071,"what":"Priority: Justin","ms":481,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791428100893,"turn":36,"phase":"MAIN2","active":true,"frame":4079,"what":"Candy Trail","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428101643,"turn":36,"phase":"MAIN2","active":true,"frame":4087,"what":"Priority: Justin","ms":478,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791428102275,"turn":36,"phase":"MAIN2","active":true,"frame":4095,"what":"Ponder (10) - Look at the top 3 cards of Justin's library. Then put them back in any order.You may have that player shuffle their library. Justin draws a card.","ms":597,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428103026,"turn":36,"phase":"MAIN2","active":true,"frame":4103,"what":"Priority: Justin","ms":597,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428103940,"turn":36,"phase":"CLEANUP","active":true,"frame":4115,"what":"Cleanup Phase","ms":601,"r":"select:done","did":"choose Ponder"}
+{"t":1791428116084,"turn":37,"phase":"COMBAT_BEGIN","active":false,"frame":4163,"what":"Priority: Justin","ms":490,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428116727,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4170,"what":"Priority: Justin","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428117719,"turn":37,"phase":"END_OF_TURN","active":false,"frame":4182,"what":"Priority: Justin","ms":482,"r":"priority:eot","did":"To EOT"}
+{"t":1791428118475,"turn":38,"phase":"MAIN1","active":true,"frame":4195,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Oblivion Ring"}
+{"t":1791428119112,"turn":38,"phase":"MAIN1","active":true,"frame":4202,"what":"Oblivion Ring","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428119742,"turn":38,"phase":"MAIN1","active":true,"frame":4210,"what":"Priority: Justin","ms":484,"r":"priority:card:spell","did":"spell: Judge's Familiar"}
+{"t":1791428120378,"turn":38,"phase":"MAIN1","active":true,"frame":4218,"what":"Judge's Familiar - Creature 1 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428121007,"turn":38,"phase":"MAIN1","active":true,"frame":4226,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428121763,"turn":38,"phase":"MAIN1","active":true,"frame":4234,"what":"Fanatical Firebrand - Creature 1 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428122393,"turn":38,"phase":"MAIN1","active":true,"frame":4242,"what":"Priority: Justin","ms":599,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791428123147,"turn":38,"phase":"MAIN1","active":true,"frame":4250,"what":"Gravedigger - Creature 2 / 2","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428123772,"turn":38,"phase":"MAIN1","active":true,"frame":4258,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791428124529,"turn":38,"phase":"MAIN1","active":true,"frame":4266,"what":"Serrated Arrows","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428125159,"turn":38,"phase":"MAIN1","active":true,"frame":4274,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428128231,"turn":38,"phase":"MAIN2","active":true,"frame":4296,"what":"Priority: Justin","ms":492,"r":"priority:card:spell","did":"spell: Candy Trail"}
+{"t":1791428128875,"turn":38,"phase":"MAIN2","active":true,"frame":4303,"what":"Candy Trail","ms":479,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428129510,"turn":38,"phase":"MAIN2","active":true,"frame":4311,"what":"Priority: Justin","ms":598,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428130422,"turn":38,"phase":"CLEANUP","active":true,"frame":4323,"what":"Cleanup Phase","ms":603,"r":"select:done","did":"choose Candy Trail"}
+{"t":1791428143959,"turn":39,"phase":"COMBAT_BEGIN","active":false,"frame":4380,"what":"Priority: Justin","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428144590,"turn":39,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4387,"what":"Priority: Justin","ms":600,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791428159921,"turn":40,"phase":"MAIN1","active":true,"frame":4459,"what":"Priority: Justin","ms":489,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428160562,"turn":40,"phase":"MAIN1","active":true,"frame":4464,"what":"ask choose_list: Delve how many cards?","ms":412,"r":"ask:choose_list","did":null}
+{"t":1791428161128,"turn":40,"phase":"MAIN1","active":true,"frame":4470,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428161756,"turn":40,"phase":"MAIN1","active":true,"frame":4478,"what":"Priority: Justin","ms":487,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428162395,"turn":40,"phase":"MAIN1","active":true,"frame":4486,"what":"Fanatical Firebrand - Creature 1 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428163025,"turn":40,"phase":"MAIN1","active":true,"frame":4494,"what":"Priority: Justin","ms":604,"r":"priority:card:spell","did":"spell: Counterspell"}
+{"t":1791428163783,"turn":40,"phase":"MAIN1","active":true,"frame":4502,"what":"Priority: Justin","ms":614,"r":"priority:card:spell","did":"spell: Judge's Familiar"}
+{"t":1791428164550,"turn":40,"phase":"MAIN1","active":true,"frame":4510,"what":"Judge's Familiar - Creature 1 / 1","ms":489,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428165196,"turn":40,"phase":"MAIN1","active":true,"frame":4518,"what":"Priority: Justin","ms":616,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428165965,"turn":40,"phase":"MAIN1","active":true,"frame":4526,"what":"Priority: Justin","ms":494,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791428166612,"turn":40,"phase":"MAIN1","active":true,"frame":4534,"what":"Gravedigger - Creature 2 / 2","ms":599,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428167758,"turn":40,"phase":"MAIN1","active":true,"frame":4542,"what":"Priority: Justin","ms":613,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428171042,"turn":40,"phase":"MAIN2","active":true,"frame":4566,"what":"Priority: Justin","ms":480,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428171674,"turn":40,"phase":"MAIN2","active":true,"frame":4573,"what":"Priority: Justin","ms":483,"r":"priority:card:spell","did":"spell: Oblivion Ring"}
+{"t":1791428172311,"turn":40,"phase":"MAIN2","active":true,"frame":4581,"what":"Oblivion Ring","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428172941,"turn":40,"phase":"MAIN2","active":true,"frame":4589,"what":"Priority: Justin","ms":493,"r":"priority:card:spell","did":"spell: Gravedigger"}
+{"t":1791428173587,"turn":40,"phase":"MAIN2","active":true,"frame":4597,"what":"Gravedigger - Creature 2 / 2","ms":607,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428174348,"turn":40,"phase":"MAIN2","active":true,"frame":4605,"what":"Priority: Justin","ms":610,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428175422,"turn":40,"phase":"CLEANUP","active":true,"frame":4617,"what":"Cleanup Phase","ms":605,"r":"select:done","did":"choose Gravedigger"}
+{"t":1791428187976,"turn":41,"phase":"MAIN1","active":false,"frame":4668,"what":"Priority: Justin","ms":606,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428190120,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":4683,"what":"Priority: Justin","ms":363,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428190636,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":4684,"what":"Priority: Justin","ms":2040,"r":"priority:card:spell","did":"spell: Counterspell"}
+{"t":1791428192830,"turn":41,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4698,"what":"Priority: Justin","ms":496,"r":"priority:card:spell","did":"spell: Counterspell"}
+{"t":1791428193480,"turn":41,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":4706,"what":"Priority: Justin","ms":615,"r":"priority:eot","did":"To EOT"}
+{"t":1791428195135,"turn":42,"phase":"MAIN1","active":true,"frame":4726,"what":"Priority: Justin","ms":609,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428200513,"turn":42,"phase":"MAIN2","active":true,"frame":4755,"what":"Priority: Justin","ms":609,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428202037,"turn":42,"phase":"CLEANUP","active":true,"frame":4763,"what":"Cleanup Phase","ms":614,"r":"select:done","did":"choose Counterspell"}
+{"t":1791428214252,"turn":43,"phase":"COMBAT_BEGIN","active":false,"frame":4810,"what":"Priority: Justin","ms":843,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791428220823,"turn":44,"phase":"MAIN1","active":true,"frame":4847,"what":"Priority: Justin","ms":485,"r":"priority:card:spell","did":"spell: Oblivion Ring"}
+{"t":1791428221514,"turn":44,"phase":"MAIN1","active":true,"frame":4854,"what":"Oblivion Ring","ms":489,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428222156,"turn":44,"phase":"MAIN1","active":true,"frame":4862,"what":"Priority: Justin","ms":606,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428222914,"turn":44,"phase":"MAIN1","active":true,"frame":4870,"what":"Priority: Justin","ms":496,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428223565,"turn":44,"phase":"MAIN1","active":true,"frame":4875,"what":"ask choose_list: Delve how many cards?","ms":425,"r":"ask:choose_list","did":null}
+{"t":1791428224143,"turn":44,"phase":"MAIN1","active":true,"frame":4878,"what":"ask choose_list: Exile which card(1/7)?","ms":416,"r":"ask:choose_list","did":null}
+{"t":1791428224712,"turn":44,"phase":"MAIN1","active":true,"frame":4881,"what":"ask choose_list: Exile which card(2/7)?","ms":400,"r":"ask:choose_list","did":null}
+{"t":1791428225266,"turn":44,"phase":"MAIN1","active":true,"frame":4887,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":524,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428225943,"turn":44,"phase":"MAIN1","active":true,"frame":4895,"what":"Priority: Justin","ms":359,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791428226454,"turn":44,"phase":"MAIN1","active":true,"frame":4896,"what":"ask ability_menu: ","ms":1139,"r":"ask:ability_menu","did":null}
+{"t":1791428227947,"turn":44,"phase":"MAIN1","active":true,"frame":4902,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":609,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428228709,"turn":44,"phase":"MAIN1","active":true,"frame":4910,"what":"Priority: Justin","ms":619,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428231375,"turn":44,"phase":"MAIN2","active":true,"frame":4931,"what":"Priority: Justin","ms":482,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428232011,"turn":44,"phase":"MAIN2","active":true,"frame":4935,"what":"ask choose_list: Delve how many cards?","ms":415,"r":"ask:choose_list","did":null}
+{"t":1791428232580,"turn":44,"phase":"MAIN2","active":true,"frame":4941,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428233225,"turn":44,"phase":"MAIN2","active":true,"frame":4949,"what":"Priority: Justin","ms":605,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428234174,"turn":44,"phase":"CLEANUP","active":true,"frame":4961,"what":"Cleanup Phase","ms":489,"r":"select:1","did":"choose Judge's Familiar"}
+{"t":1791428247707,"turn":45,"phase":"COMBAT_BEGIN","active":false,"frame":5013,"what":"Priority: Justin","ms":479,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428248339,"turn":45,"phase":"COMBAT_BEGIN","active":false,"frame":5019,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":484,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428248977,"turn":45,"phase":"COMBAT_BEGIN","active":false,"frame":5027,"what":"Priority: Justin","ms":506,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428249635,"turn":45,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5035,"what":"Priority: Justin","ms":610,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428250491,"turn":45,"phase":"END_OF_TURN","active":false,"frame":5047,"what":"Priority: Justin","ms":600,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428251488,"turn":46,"phase":"MAIN1","active":true,"frame":5059,"what":"Priority: Justin","ms":620,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428255868,"turn":46,"phase":"MAIN2","active":true,"frame":5085,"what":"Priority: Justin","ms":494,"r":"priority:card:spell","did":"spell: Oblivion Ring"}
+{"t":1791428256515,"turn":46,"phase":"MAIN2","active":true,"frame":5092,"what":"Oblivion Ring","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428257161,"turn":46,"phase":"MAIN2","active":true,"frame":5100,"what":"Priority: Justin","ms":619,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428259675,"turn":46,"phase":"CLEANUP","active":true,"frame":5118,"what":"Cleanup Phase","ms":622,"r":"select:done","did":"choose Oblivion Ring"}
+{"t":1791428260646,"turn":47,"phase":"COMBAT_BEGIN","active":false,"frame":5133,"what":"Priority: Justin","ms":490,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428261291,"turn":47,"phase":"COMBAT_BEGIN","active":false,"frame":5139,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":500,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428261946,"turn":47,"phase":"COMBAT_BEGIN","active":false,"frame":5147,"what":"Priority: Justin","ms":614,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791428272991,"turn":48,"phase":"MAIN1","active":true,"frame":5196,"what":"Priority: Justin","ms":616,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428275778,"turn":48,"phase":"MAIN2","active":true,"frame":5216,"what":"Priority: Justin","ms":501,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428276433,"turn":48,"phase":"MAIN2","active":true,"frame":5223,"what":"Fanatical Firebrand - Creature 1 / 1","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428277079,"turn":48,"phase":"MAIN2","active":true,"frame":5231,"what":"Priority: Justin","ms":616,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428280558,"turn":48,"phase":"CLEANUP","active":true,"frame":5250,"what":"Cleanup Phase","ms":866,"r":"select:done","did":"choose Jungle Hollow"}
+{"t":1791428290115,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":5291,"what":"Priority: Justin","ms":489,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428290757,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":5297,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":501,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428291411,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":5305,"what":"Priority: Justin","ms":512,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428292077,"turn":49,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5313,"what":"Priority: Justin","ms":620,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428296287,"turn":49,"phase":"END_OF_TURN","active":false,"frame":5332,"what":"Priority: Justin","ms":486,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791428297084,"turn":50,"phase":"MAIN1","active":true,"frame":5345,"what":"Priority: Justin","ms":1448,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428298684,"turn":50,"phase":"MAIN1","active":true,"frame":5349,"what":"ask choose_list: Choose optional costs","ms":446,"r":"ask:choose_list","did":null}
+{"t":1791428299283,"turn":50,"phase":"MAIN1","active":true,"frame":5356,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428299933,"turn":50,"phase":"MAIN1","active":true,"frame":5364,"what":"Priority: Justin","ms":498,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791428300584,"turn":50,"phase":"MAIN1","active":true,"frame":5372,"what":"Serrated Arrows","ms":613,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428301350,"turn":50,"phase":"MAIN1","active":true,"frame":5380,"what":"Priority: Justin","ms":507,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428302009,"turn":50,"phase":"MAIN1","active":true,"frame":5385,"what":"ask choose_list: Delve how many cards?","ms":415,"r":"ask:choose_list","did":null}
+{"t":1791428302576,"turn":50,"phase":"MAIN1","active":true,"frame":5388,"what":"ask choose_list: Exile which card(1/4)?","ms":418,"r":"ask:choose_list","did":null}
+{"t":1791428303148,"turn":50,"phase":"MAIN1","active":true,"frame":5391,"what":"ask choose_list: Exile which card(2/4)?","ms":2219,"r":"ask:choose_list","did":null}
+{"t":1791428305523,"turn":50,"phase":"MAIN1","active":true,"frame":5397,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":493,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428306169,"turn":50,"phase":"MAIN1","active":true,"frame":5405,"what":"Priority: Justin","ms":613,"r":"priority:card:land","did":"land: Rugged Highlands"}
+{"t":1791428306937,"turn":50,"phase":"MAIN1","active":true,"frame":5413,"what":"Priority: Justin","ms":611,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428308632,"turn":50,"phase":"MAIN1","active":true,"frame":5429,"what":"Priority: Justin","ms":499,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428309285,"turn":50,"phase":"MAIN1","active":true,"frame":5436,"what":"Priority: Justin","ms":500,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428310671,"turn":50,"phase":"MAIN1","active":true,"frame":5444,"what":"Fanatical Firebrand - Creature 1 / 1","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428311317,"turn":50,"phase":"MAIN1","active":true,"frame":5452,"what":"Priority: Justin","ms":615,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428313014,"turn":50,"phase":"MAIN2","active":true,"frame":5470,"what":"Priority: Justin","ms":492,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428313658,"turn":50,"phase":"MAIN2","active":true,"frame":5474,"what":"ask choose_list: Delve how many cards?","ms":416,"r":"ask:choose_list","did":null}
+{"t":1791428314227,"turn":50,"phase":"MAIN2","active":true,"frame":5477,"what":"ask choose_list: Exile which card(1/2)?","ms":436,"r":"ask:choose_list","did":null}
+{"t":1791428314815,"turn":50,"phase":"MAIN2","active":true,"frame":5480,"what":"ask choose_list: Exile which card(2/2)?","ms":556,"r":"ask:choose_list","did":null}
+{"t":1791428315732,"turn":50,"phase":"MAIN2","active":true,"frame":5486,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":617,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428316503,"turn":50,"phase":"MAIN2","active":true,"frame":5494,"what":"Priority: Justin","ms":610,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428324779,"turn":51,"phase":"COMBAT_BEGIN","active":false,"frame":5529,"what":"Priority: Justin","ms":501,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428325435,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5536,"what":"Priority: Justin","ms":488,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428326079,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5542,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":619,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428326851,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5550,"what":"Priority: Justin","ms":613,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428341914,"turn":51,"phase":"MAIN2","active":false,"frame":5606,"what":"Priority: Justin","ms":614,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428343166,"turn":51,"phase":"MAIN2","active":false,"frame":5615,"what":"ask choose_list: Looking at cards in Sam's hand","ms":1066,"r":"ask:choose_list","did":null}
+{"t":1791428351644,"turn":51,"phase":"END_OF_TURN","active":false,"frame":5643,"what":"Priority: Justin","ms":496,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428352294,"turn":51,"phase":"END_OF_TURN","active":false,"frame":5649,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428353542,"turn":51,"phase":"END_OF_TURN","active":false,"frame":5657,"what":"Priority: Justin","ms":621,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428354433,"turn":52,"phase":"MAIN1","active":true,"frame":5668,"what":"Priority: Justin","ms":650,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428355237,"turn":52,"phase":"MAIN1","active":true,"frame":5676,"what":"Guttersnipe - Creature 2 / 2","ms":488,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428355879,"turn":52,"phase":"MAIN1","active":true,"frame":5680,"what":"Guttersnipe - Creature 2 / 2","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428356529,"turn":52,"phase":"MAIN1","active":true,"frame":5687,"what":"Priority: Justin","ms":622,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428360007,"turn":52,"phase":"MAIN2","active":true,"frame":5708,"what":"Priority: Justin","ms":503,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428360664,"turn":52,"phase":"MAIN2","active":true,"frame":5712,"what":"ask choose_list: Choose optional costs","ms":402,"r":"ask:choose_list","did":null}
+{"t":1791428361951,"turn":52,"phase":"MAIN2","active":true,"frame":5719,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":497,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428362601,"turn":52,"phase":"MAIN2","active":true,"frame":5723,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428363247,"turn":52,"phase":"MAIN2","active":true,"frame":5730,"what":"Priority: Justin","ms":497,"r":"priority:card:spell","did":"spell: Fanatical Firebrand"}
+{"t":1791428363898,"turn":52,"phase":"MAIN2","active":true,"frame":5739,"what":"Fanatical Firebrand - Creature 1 / 1","ms":621,"r":"pay:auto","did":"ok \"Auto payAutoSpace\""}
+{"t":1791428364672,"turn":52,"phase":"MAIN2","active":true,"frame":5749,"what":"Priority: Justin","ms":613,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428365605,"turn":52,"phase":"MAIN2","active":true,"frame":5762,"what":"Priority: Justin","ms":2889,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791428368649,"turn":52,"phase":"MAIN2","active":true,"frame":5769,"what":"Man-o'-War - Creature 2 / 2","ms":613,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428369416,"turn":52,"phase":"MAIN2","active":true,"frame":5777,"what":"Priority: Justin","ms":502,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791428370072,"turn":52,"phase":"MAIN2","active":true,"frame":5785,"what":"Serrated Arrows","ms":505,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428370730,"turn":52,"phase":"MAIN2","active":true,"frame":5793,"what":"Priority: Justin","ms":376,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791428371259,"turn":52,"phase":"MAIN2","active":true,"frame":5794,"what":"ask ability_menu: ","ms":405,"r":"ask:ability_menu","did":null}
+{"t":1791428371819,"turn":52,"phase":"MAIN2","active":true,"frame":5802,"what":"Krosan Tusker - Creature 6 / 5","ms":494,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428372467,"turn":52,"phase":"MAIN2","active":true,"frame":5810,"what":"Priority: Justin","ms":616,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428380070,"turn":53,"phase":"COMBAT_BEGIN","active":false,"frame":5843,"what":"Priority: Justin","ms":505,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428380728,"turn":53,"phase":"COMBAT_BEGIN","active":false,"frame":5849,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":500,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428381382,"turn":53,"phase":"COMBAT_BEGIN","active":false,"frame":5857,"what":"Priority: Justin","ms":614,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428382150,"turn":53,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":5865,"what":"Priority: Justin","ms":855,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428385879,"turn":53,"phase":"END_OF_TURN","active":false,"frame":5884,"what":"Priority: Justin","ms":618,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428387042,"turn":54,"phase":"MAIN1","active":true,"frame":5896,"what":"Priority: Justin","ms":505,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791428387701,"turn":54,"phase":"MAIN1","active":true,"frame":5903,"what":"Man-o'-War - Creature 2 / 2","ms":910,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428388765,"turn":54,"phase":"MAIN1","active":true,"frame":5908,"what":"Rugged Highlands (9)","ms":497,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428389415,"turn":54,"phase":"MAIN1","active":true,"frame":5916,"what":"Man-o'-War - Creature 2 / 2","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428390065,"turn":54,"phase":"MAIN1","active":true,"frame":5923,"what":"Priority: Justin","ms":495,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428390716,"turn":54,"phase":"MAIN1","active":true,"frame":5927,"what":"ask choose_list: Choose optional costs","ms":397,"r":"ask:choose_list","did":null}
+{"t":1791428391267,"turn":54,"phase":"MAIN1","active":true,"frame":5934,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":493,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428391913,"turn":54,"phase":"MAIN1","active":true,"frame":5938,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428392563,"turn":54,"phase":"MAIN1","active":true,"frame":5945,"what":"Priority: Justin","ms":504,"r":"priority:card:spell","did":"spell: Serrated Arrows"}
+{"t":1791428393221,"turn":54,"phase":"MAIN1","active":true,"frame":5953,"what":"Serrated Arrows","ms":627,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428394001,"turn":54,"phase":"MAIN1","active":true,"frame":5957,"what":"Serrated Arrows","ms":494,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428394650,"turn":54,"phase":"MAIN1","active":true,"frame":5964,"what":"Priority: Justin","ms":375,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791428395177,"turn":54,"phase":"MAIN1","active":true,"frame":5965,"what":"ask ability_menu: ","ms":408,"r":"ask:ability_menu","did":null}
+{"t":1791428395740,"turn":54,"phase":"MAIN1","active":true,"frame":5973,"what":"Krosan Tusker - Creature 6 / 5","ms":505,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428398255,"turn":54,"phase":"MAIN1","active":true,"frame":5977,"what":"Krosan Tusker - Creature 6 / 5","ms":589,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428398997,"turn":54,"phase":"MAIN1","active":true,"frame":5984,"what":"Priority: Justin","ms":621,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428408492,"turn":54,"phase":"COMBAT_BEGIN","active":true,"frame":6011,"what":"Priority: Justin","ms":501,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428409152,"turn":54,"phase":"COMBAT_BEGIN","active":true,"frame":6017,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":617,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428409922,"turn":54,"phase":"COMBAT_BEGIN","active":true,"frame":6021,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":506,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428410581,"turn":54,"phase":"COMBAT_BEGIN","active":true,"frame":6028,"what":"Priority: Justin","ms":631,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428412018,"turn":54,"phase":"MAIN2","active":true,"frame":6042,"what":"Priority: Justin","ms":1208,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428413378,"turn":54,"phase":"MAIN2","active":true,"frame":6050,"what":"Priority: Justin","ms":378,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791428413908,"turn":54,"phase":"MAIN2","active":true,"frame":6051,"what":"ask ability_menu: ","ms":411,"r":"ask:ability_menu","did":null}
+{"t":1791428414473,"turn":54,"phase":"MAIN2","active":true,"frame":6059,"what":"Krosan Tusker - Creature 6 / 5","ms":503,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428416942,"turn":54,"phase":"MAIN2","active":true,"frame":6067,"what":"Priority: Justin","ms":513,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791428417608,"turn":54,"phase":"MAIN2","active":true,"frame":6075,"what":"Man-o'-War - Creature 2 / 2","ms":500,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428418261,"turn":54,"phase":"MAIN2","active":true,"frame":6080,"what":"Rugged Highlands (9)","ms":502,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428418916,"turn":54,"phase":"MAIN2","active":true,"frame":6088,"what":"Man-o'-War - Creature 2 / 2","ms":615,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428419684,"turn":54,"phase":"MAIN2","active":true,"frame":6095,"what":"Priority: Justin","ms":499,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791428420340,"turn":54,"phase":"MAIN2","active":true,"frame":6103,"what":"Seeker of the Way - Creature 2 / 2","ms":503,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428420997,"turn":54,"phase":"MAIN2","active":true,"frame":6108,"what":"Rugged Highlands (9)","ms":505,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428421655,"turn":54,"phase":"MAIN2","active":true,"frame":6116,"what":"Seeker of the Way - Creature 2 / 2","ms":507,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428422695,"turn":54,"phase":"MAIN2","active":true,"frame":6123,"what":"Priority: Justin","ms":663,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428423527,"turn":54,"phase":"MAIN2","active":true,"frame":6128,"what":"ask choose_list: Delve how many cards?","ms":434,"r":"ask:choose_list","did":null}
+{"t":1791428424113,"turn":54,"phase":"MAIN2","active":true,"frame":6131,"what":"ask choose_list: Exile which card(1/5)?","ms":601,"r":"ask:choose_list","did":null}
+{"t":1791428424868,"turn":54,"phase":"MAIN2","active":true,"frame":6134,"what":"ask choose_list: Exile which card(2/5)?","ms":332,"r":"ask:choose_list","did":null}
+{"t":1791428425353,"turn":54,"phase":"MAIN2","active":true,"frame":6135,"what":"Priority: Justin","ms":6543,"r":"stuck","did":"ok \"End turnOKSpace\""}
+{"t":1791428433548,"turn":54,"phase":"MAIN2","active":true,"frame":6137,"what":"ask choose_list: Exile which card(3/5)?","ms":471,"r":"ask:choose_list","did":null}
+{"t":1791428434174,"turn":54,"phase":"MAIN2","active":true,"frame":6143,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":501,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428434828,"turn":54,"phase":"MAIN2","active":true,"frame":6148,"what":"Rugged Highlands (9)","ms":502,"r":"buttons:buttons:cancel","did":"cancel \"Green\""}
+{"t":1791428435483,"turn":54,"phase":"MAIN2","active":true,"frame":6156,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428436134,"turn":54,"phase":"MAIN2","active":true,"frame":6163,"what":"Priority: Justin","ms":735,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428437023,"turn":54,"phase":"CLEANUP","active":true,"frame":6172,"what":"Cleanup Phase","ms":1470,"r":"select:done","did":"choose Serrated Arrows"}
+{"t":1791428438701,"turn":55,"phase":"COMBAT_BEGIN","active":false,"frame":6188,"what":"Priority: Justin","ms":490,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428439345,"turn":55,"phase":"COMBAT_BEGIN","active":false,"frame":6194,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":501,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428440000,"turn":55,"phase":"COMBAT_BEGIN","active":false,"frame":6198,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":493,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428440647,"turn":55,"phase":"COMBAT_BEGIN","active":false,"frame":6205,"what":"Priority: Justin","ms":499,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428441299,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6213,"what":"Priority: Justin","ms":743,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428460629,"turn":55,"phase":"MAIN2","active":false,"frame":6273,"what":"Priority: Justin","ms":619,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428461598,"turn":55,"phase":"END_OF_TURN","active":false,"frame":6285,"what":"Priority: Justin","ms":500,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428462252,"turn":56,"phase":"MAIN1","active":true,"frame":6292,"what":"Priority: Justin","ms":518,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791428462924,"turn":56,"phase":"MAIN1","active":true,"frame":6300,"what":"Seeker of the Way - Creature 2 / 2","ms":523,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428463600,"turn":56,"phase":"MAIN1","active":true,"frame":6308,"what":"Priority: Justin","ms":515,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428464272,"turn":56,"phase":"MAIN1","active":true,"frame":6317,"what":"Sunlance (8) - Sunlance deals 3 damage to target nonwhite creature.","ms":502,"r":"select:done","did":"choose Unwilling Ingredient"}
+{"t":1791428464928,"turn":56,"phase":"MAIN1","active":true,"frame":6326,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Unwilling Ingredient (89).","ms":620,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428465701,"turn":56,"phase":"MAIN1","active":true,"frame":6331,"what":"Rugged Highlands (9)","ms":630,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428466486,"turn":56,"phase":"MAIN1","active":true,"frame":6339,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Unwilling Ingredient (89).","ms":625,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428467265,"turn":56,"phase":"MAIN1","active":true,"frame":6346,"what":"Priority: Justin","ms":499,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428467917,"turn":56,"phase":"MAIN1","active":true,"frame":6350,"what":"ask choose_list: Choose optional costs","ms":434,"r":"ask:choose_list","did":null}
+{"t":1791428468506,"turn":56,"phase":"MAIN1","active":true,"frame":6357,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":627,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428469286,"turn":56,"phase":"MAIN1","active":true,"frame":6361,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":631,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428470070,"turn":56,"phase":"MAIN1","active":true,"frame":6368,"what":"Priority: Justin","ms":638,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428470862,"turn":56,"phase":"MAIN1","active":true,"frame":6376,"what":"Guttersnipe - Creature 2 / 2","ms":501,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428471516,"turn":56,"phase":"MAIN1","active":true,"frame":6384,"what":"Priority: Justin","ms":628,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428473645,"turn":56,"phase":"MAIN2","active":true,"frame":6402,"what":"Priority: Justin","ms":551,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428474351,"turn":56,"phase":"MAIN2","active":true,"frame":6406,"what":"ask choose_list: Choose optional costs","ms":1664,"r":"ask:choose_list","did":null}
+{"t":1791428476168,"turn":56,"phase":"MAIN2","active":true,"frame":6413,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":511,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428476832,"turn":56,"phase":"MAIN2","active":true,"frame":6417,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428477483,"turn":56,"phase":"MAIN2","active":true,"frame":6424,"what":"Priority: Justin","ms":505,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428478141,"turn":56,"phase":"MAIN2","active":true,"frame":6432,"what":"Guttersnipe - Creature 2 / 2","ms":504,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428478798,"turn":56,"phase":"MAIN2","active":true,"frame":6440,"what":"Priority: Justin","ms":524,"r":"priority:card:spell","did":"spell: Man-o'-War"}
+{"t":1791428479477,"turn":56,"phase":"MAIN2","active":true,"frame":6448,"what":"Man-o'-War - Creature 2 / 2","ms":501,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428480132,"turn":56,"phase":"MAIN2","active":true,"frame":6453,"what":"Rugged Highlands (9)","ms":492,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428480777,"turn":56,"phase":"MAIN2","active":true,"frame":6461,"what":"Man-o'-War - Creature 2 / 2","ms":505,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428481437,"turn":56,"phase":"MAIN2","active":true,"frame":6468,"what":"Priority: Justin","ms":386,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791428481976,"turn":56,"phase":"MAIN2","active":true,"frame":6469,"what":"ask ability_menu: ","ms":411,"r":"ask:ability_menu","did":null}
+{"t":1791428482540,"turn":56,"phase":"MAIN2","active":true,"frame":6477,"what":"Krosan Tusker - Creature 6 / 5","ms":506,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428483202,"turn":56,"phase":"MAIN2","active":true,"frame":6485,"what":"Priority: Justin","ms":633,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428487683,"turn":56,"phase":"CLEANUP","active":true,"frame":6504,"what":"Cleanup Phase","ms":635,"r":"select:done","did":"choose Man-o'-War"}
+{"t":1791428492861,"turn":57,"phase":"MAIN1","active":false,"frame":6529,"what":"Priority: Justin","ms":498,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428494041,"turn":57,"phase":"MAIN1","active":false,"frame":6535,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":510,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428494704,"turn":57,"phase":"MAIN1","active":false,"frame":6539,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":503,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428495362,"turn":57,"phase":"MAIN1","active":false,"frame":6546,"what":"Priority: Justin","ms":498,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428503810,"turn":57,"phase":"COMBAT_BEGIN","active":false,"frame":6577,"what":"Priority: Justin","ms":619,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428505206,"turn":57,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6588,"what":"Priority: Justin","ms":501,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428505860,"turn":57,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6594,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":1439,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428507455,"turn":57,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6598,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":1228,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428508837,"turn":57,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":6605,"what":"Priority: Justin","ms":869,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428525279,"turn":57,"phase":"END_OF_TURN","active":false,"frame":6665,"what":"Priority: Justin","ms":497,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428525947,"turn":57,"phase":"END_OF_TURN","active":false,"frame":6671,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":519,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428526619,"turn":57,"phase":"END_OF_TURN","active":false,"frame":6675,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":517,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428527290,"turn":57,"phase":"END_OF_TURN","active":false,"frame":6682,"what":"Priority: Justin","ms":504,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428527949,"turn":58,"phase":"MAIN1","active":true,"frame":6690,"what":"Priority: Justin","ms":519,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428530347,"turn":58,"phase":"MAIN1","active":true,"frame":6699,"what":"Sunlance (8) - Sunlance deals 3 damage to target nonwhite creature.","ms":517,"r":"select:done","did":"choose Unwilling Ingredient"}
+{"t":1791428531017,"turn":58,"phase":"MAIN1","active":true,"frame":6708,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Unwilling Ingredient (89).","ms":832,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428532004,"turn":58,"phase":"MAIN1","active":true,"frame":6714,"what":"Rugged Highlands (9)","ms":513,"r":"buttons:buttons:cancel","did":"cancel \"Green\""}
+{"t":1791428532670,"turn":58,"phase":"MAIN1","active":true,"frame":6722,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Unwilling Ingredient (89).","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428533335,"turn":58,"phase":"MAIN1","active":true,"frame":6729,"what":"Priority: Justin","ms":541,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428534029,"turn":58,"phase":"MAIN1","active":true,"frame":6734,"what":"ask choose_list: Delve how many cards?","ms":434,"r":"ask:choose_list","did":null}
+{"t":1791428534615,"turn":58,"phase":"MAIN1","active":true,"frame":6737,"what":"ask choose_list: Exile which card(1/1)?","ms":1377,"r":"ask:choose_list","did":null}
+{"t":1791428536145,"turn":58,"phase":"MAIN1","active":true,"frame":6743,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":508,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428536810,"turn":58,"phase":"MAIN1","active":true,"frame":6751,"what":"Priority: Justin","ms":384,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791428537347,"turn":58,"phase":"MAIN1","active":true,"frame":6752,"what":"ask ability_menu: ","ms":405,"r":"ask:ability_menu","did":null}
+{"t":1791428537905,"turn":58,"phase":"MAIN1","active":true,"frame":6760,"what":"Krosan Tusker - Creature 6 / 5","ms":629,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428538689,"turn":58,"phase":"MAIN1","active":true,"frame":6764,"what":"Krosan Tusker - Creature 6 / 5","ms":629,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428539471,"turn":58,"phase":"MAIN1","active":true,"frame":6772,"what":"Priority: Justin","ms":513,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428540137,"turn":58,"phase":"MAIN1","active":true,"frame":6776,"what":"ask choose_list: Choose optional costs","ms":451,"r":"ask:choose_list","did":null}
+{"t":1791428540743,"turn":58,"phase":"MAIN1","active":true,"frame":6781,"what":"Sprout Swarm (34)","ms":501,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428541397,"turn":58,"phase":"MAIN1","active":true,"frame":6787,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":520,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428542071,"turn":58,"phase":"MAIN1","active":true,"frame":6791,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":511,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428542736,"turn":58,"phase":"MAIN1","active":true,"frame":6798,"what":"Priority: Justin","ms":644,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428550725,"turn":58,"phase":"MAIN2","active":true,"frame":6827,"what":"Priority: Justin","ms":515,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791428551394,"turn":58,"phase":"MAIN2","active":true,"frame":6834,"what":"Seeker of the Way - Creature 2 / 2","ms":691,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428552242,"turn":58,"phase":"MAIN2","active":true,"frame":6839,"what":"Rugged Highlands (9)","ms":625,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428553020,"turn":58,"phase":"MAIN2","active":true,"frame":6847,"what":"Seeker of the Way - Creature 2 / 2","ms":1356,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428554530,"turn":58,"phase":"MAIN2","active":true,"frame":6854,"what":"Priority: Justin","ms":380,"r":"priority:card:spell","did":"spell: Krosan Tusker"}
+{"t":1791428555064,"turn":58,"phase":"MAIN2","active":true,"frame":6855,"what":"ask ability_menu: ","ms":1725,"r":"ask:ability_menu","did":null}
+{"t":1791428556942,"turn":58,"phase":"MAIN2","active":true,"frame":6855,"what":"Priority: Justin","ms":853,"r":"priority:card:spell","did":"spell: Tenth District Legionnaire"}
+{"t":1791428557949,"turn":58,"phase":"MAIN2","active":true,"frame":6864,"what":"Tenth District Legionnaire - Creature 2 / 2","ms":514,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428558617,"turn":58,"phase":"MAIN2","active":true,"frame":6868,"what":"Tenth District Legionnaire - Creature 2 / 2","ms":649,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428559420,"turn":58,"phase":"MAIN2","active":true,"frame":6875,"what":"Priority: Justin","ms":1806,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428568058,"turn":58,"phase":"CLEANUP","active":true,"frame":6898,"what":"Cleanup Phase","ms":632,"r":"select:done","did":"choose Tenth District Legionnaire"}
+{"t":1791428578613,"turn":59,"phase":"MAIN1","active":false,"frame":6941,"what":"Priority: Justin","ms":513,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428579279,"turn":59,"phase":"MAIN1","active":false,"frame":6947,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":518,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428579951,"turn":59,"phase":"MAIN1","active":false,"frame":6951,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":513,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428580619,"turn":59,"phase":"MAIN1","active":false,"frame":6958,"what":"Priority: Justin","ms":634,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428581406,"turn":59,"phase":"COMBAT_BEGIN","active":false,"frame":6970,"what":"Priority: Justin","ms":509,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428582067,"turn":59,"phase":"COMBAT_BEGIN","active":false,"frame":6974,"what":"ask choose_list: Choose optional costs","ms":449,"r":"ask:choose_list","did":null}
+{"t":1791428582838,"turn":59,"phase":"COMBAT_BEGIN","active":false,"frame":6979,"what":"Sprout Swarm (34)","ms":500,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428583491,"turn":59,"phase":"COMBAT_BEGIN","active":false,"frame":6985,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":506,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428584151,"turn":59,"phase":"COMBAT_BEGIN","active":false,"frame":6989,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":514,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428584819,"turn":59,"phase":"COMBAT_BEGIN","active":false,"frame":6996,"what":"Priority: Justin","ms":632,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428586221,"turn":59,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7008,"what":"Priority: Justin","ms":509,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428586883,"turn":59,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7014,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":635,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428587673,"turn":59,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7018,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":506,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428588333,"turn":59,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7025,"what":"Priority: Justin","ms":634,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428594742,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7049,"what":"Priority: Justin","ms":502,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428595401,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7055,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":517,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428596071,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7059,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":630,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428596856,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7066,"what":"Priority: Justin","ms":624,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428597631,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7070,"what":"ask choose_list: Choose optional costs","ms":454,"r":"ask:choose_list","did":null}
+{"t":1791428598237,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7075,"what":"Sprout Swarm (34)","ms":625,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428599016,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7081,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":514,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428599684,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7085,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":514,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428600351,"turn":59,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7092,"what":"Priority: Justin","ms":875,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791428604520,"turn":60,"phase":"MAIN1","active":true,"frame":7116,"what":"Priority: Justin","ms":522,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428605195,"turn":60,"phase":"MAIN1","active":true,"frame":7121,"what":"ask choose_list: Delve how many cards?","ms":436,"r":"ask:choose_list","did":null}
+{"t":1791428605784,"turn":60,"phase":"MAIN1","active":true,"frame":7124,"what":"ask choose_list: Exile which card(1/3)?","ms":453,"r":"ask:choose_list","did":null}
+{"t":1791428606390,"turn":60,"phase":"MAIN1","active":true,"frame":7127,"what":"ask choose_list: Exile which card(2/3)?","ms":424,"r":"ask:choose_list","did":null}
+{"t":1791428606970,"turn":60,"phase":"MAIN1","active":true,"frame":7133,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":512,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428607636,"turn":60,"phase":"MAIN1","active":true,"frame":7138,"what":"Rugged Highlands (9)","ms":2567,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428610357,"turn":60,"phase":"MAIN1","active":true,"frame":7146,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":507,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428611017,"turn":60,"phase":"MAIN1","active":true,"frame":7153,"what":"Priority: Justin","ms":522,"r":"priority:card:spell","did":"spell: Militia Bugler"}
+{"t":1791428611691,"turn":60,"phase":"MAIN1","active":true,"frame":7161,"what":"Militia Bugler - Creature 2 / 3","ms":505,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428612350,"turn":60,"phase":"MAIN1","active":true,"frame":7166,"what":"Rugged Highlands (9)","ms":526,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428613031,"turn":60,"phase":"MAIN1","active":true,"frame":7174,"what":"Militia Bugler - Creature 2 / 3","ms":518,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428613703,"turn":60,"phase":"MAIN1","active":true,"frame":7181,"what":"Priority: Justin","ms":518,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428614374,"turn":60,"phase":"MAIN1","active":true,"frame":7189,"what":"Guttersnipe - Creature 2 / 2","ms":628,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428615156,"turn":60,"phase":"MAIN1","active":true,"frame":7193,"what":"Guttersnipe - Creature 2 / 2","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428615822,"turn":60,"phase":"MAIN1","active":true,"frame":7200,"what":"Priority: Justin","ms":532,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428616507,"turn":60,"phase":"MAIN1","active":true,"frame":7204,"what":"ask choose_list: Choose optional costs","ms":415,"r":"ask:choose_list","did":null}
+{"t":1791428617079,"turn":60,"phase":"MAIN1","active":true,"frame":7211,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":519,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428617753,"turn":60,"phase":"MAIN1","active":true,"frame":7215,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":631,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428618537,"turn":60,"phase":"MAIN1","active":true,"frame":7223,"what":"Priority: Justin","ms":771,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428627007,"turn":60,"phase":"MAIN2","active":true,"frame":7256,"what":"Priority: Justin","ms":507,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428627667,"turn":60,"phase":"MAIN2","active":true,"frame":7260,"what":"ask choose_list: Choose optional costs","ms":459,"r":"ask:choose_list","did":null}
+{"t":1791428628279,"turn":60,"phase":"MAIN2","active":true,"frame":7267,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":520,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428628954,"turn":60,"phase":"MAIN2","active":true,"frame":7271,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":514,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428629621,"turn":60,"phase":"MAIN2","active":true,"frame":7278,"what":"Priority: Justin","ms":641,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791428633976,"turn":60,"phase":"CLEANUP","active":true,"frame":7299,"what":"Cleanup Phase","ms":1063,"r":"select:done","did":"choose Militia Bugler"}
+{"t":1791428654178,"turn":61,"phase":"COMBAT_BEGIN","active":false,"frame":7361,"what":"Priority: Justin","ms":643,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428656822,"turn":61,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7373,"what":"Priority: Justin","ms":507,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428657481,"turn":61,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7377,"what":"ask choose_list: Choose optional costs","ms":845,"r":"ask:choose_list","did":null}
+{"t":1791428658482,"turn":61,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7382,"what":"Sprout Swarm (34)","ms":508,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428659143,"turn":61,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7388,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":520,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428659818,"turn":61,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7392,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":517,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428660490,"turn":61,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7399,"what":"Priority: Justin","ms":627,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428665437,"turn":61,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7419,"what":"Priority: Justin","ms":1666,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428667256,"turn":61,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7425,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428667921,"turn":61,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7433,"what":"Priority: Justin","ms":871,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428668943,"turn":61,"phase":"END_OF_TURN","active":false,"frame":7445,"what":"Priority: Justin","ms":519,"r":"priority:card:hand ability (Cycling {2}{G} ({2}{G}, Discard this card)","did":"hand ability (Cycling {2}{G} ({2}{G}, Discard this card): Krosan Tusker"}
+{"t":1791428669616,"turn":61,"phase":"END_OF_TURN","active":false,"frame":7451,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":517,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428670289,"turn":61,"phase":"END_OF_TURN","active":false,"frame":7455,"what":"Krosan Tusker (35) - Cycling {2}{G} ({2}{G}, Discard this card: Draw a card.)","ms":507,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428670950,"turn":61,"phase":"END_OF_TURN","active":false,"frame":7462,"what":"Priority: Justin","ms":536,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428671639,"turn":62,"phase":"MAIN1","active":true,"frame":7470,"what":"Priority: Justin","ms":633,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428680767,"turn":62,"phase":"MAIN2","active":true,"frame":7500,"what":"Priority: Justin","ms":525,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791428681446,"turn":62,"phase":"MAIN2","active":true,"frame":7507,"what":"Seeker of the Way - Creature 2 / 2","ms":520,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428682119,"turn":62,"phase":"MAIN2","active":true,"frame":7512,"what":"Rugged Highlands (9)","ms":516,"r":"buttons:buttons:cancel","did":"cancel \"Green\""}
+{"t":1791428682789,"turn":62,"phase":"MAIN2","active":true,"frame":7520,"what":"Seeker of the Way - Creature 2 / 2","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428683455,"turn":62,"phase":"MAIN2","active":true,"frame":7527,"what":"Priority: Justin","ms":532,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428684138,"turn":62,"phase":"MAIN2","active":true,"frame":7531,"what":"ask choose_list: Choose optional costs","ms":423,"r":"ask:choose_list","did":null}
+{"t":1791428684715,"turn":62,"phase":"MAIN2","active":true,"frame":7538,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":515,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428685384,"turn":62,"phase":"MAIN2","active":true,"frame":7542,"what":"Saproling Migration (26) - Justin creates two 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":798,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428686336,"turn":62,"phase":"MAIN2","active":true,"frame":7549,"what":"Priority: Justin","ms":527,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428687017,"turn":62,"phase":"MAIN2","active":true,"frame":7557,"what":"Guttersnipe - Creature 2 / 2","ms":514,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428687684,"turn":62,"phase":"MAIN2","active":true,"frame":7561,"what":"Guttersnipe - Creature 2 / 2","ms":539,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428688375,"turn":62,"phase":"MAIN2","active":true,"frame":7568,"what":"Priority: Justin","ms":535,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428689064,"turn":62,"phase":"MAIN2","active":true,"frame":7573,"what":"ask choose_list: Delve how many cards?","ms":454,"r":"ask:choose_list","did":null}
+{"t":1791428689669,"turn":62,"phase":"MAIN2","active":true,"frame":7576,"what":"ask choose_list: Exile which card(1/3)?","ms":448,"r":"ask:choose_list","did":null}
+{"t":1791428690269,"turn":62,"phase":"MAIN2","active":true,"frame":7579,"what":"ask choose_list: Exile which card(2/3)?","ms":424,"r":"ask:choose_list","did":null}
+{"t":1791428691720,"turn":62,"phase":"MAIN2","active":true,"frame":7585,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":515,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428692388,"turn":62,"phase":"MAIN2","active":true,"frame":7593,"what":"Priority: Justin","ms":640,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428696697,"turn":62,"phase":"CLEANUP","active":true,"frame":7612,"what":"Cleanup Phase","ms":894,"r":"select:done","did":"choose Krosan Tusker"}
+{"t":1791428710035,"turn":63,"phase":"MAIN1","active":false,"frame":7659,"what":"Priority: Justin","ms":635,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428711431,"turn":63,"phase":"MAIN1","active":false,"frame":7671,"what":"Priority: Justin","ms":638,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428722036,"turn":63,"phase":"COMBAT_BEGIN","active":false,"frame":7703,"what":"Priority: Justin","ms":633,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428723776,"turn":63,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":7715,"what":"Priority: Justin","ms":643,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428724819,"turn":63,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":7727,"what":"Priority: Justin","ms":631,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428725766,"turn":63,"phase":"END_OF_TURN","active":false,"frame":7739,"what":"Priority: Justin","ms":766,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428726689,"turn":64,"phase":"MAIN1","active":true,"frame":7747,"what":"Priority: Justin","ms":521,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791428727365,"turn":64,"phase":"MAIN1","active":true,"frame":7755,"what":"Ancestral Blade","ms":518,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428728037,"turn":64,"phase":"MAIN1","active":true,"frame":7763,"what":"Priority: Justin","ms":535,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428728726,"turn":64,"phase":"MAIN1","active":true,"frame":7771,"what":"Guttersnipe - Creature 2 / 2","ms":524,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428729404,"turn":64,"phase":"MAIN1","active":true,"frame":7775,"what":"Guttersnipe - Creature 2 / 2","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428730070,"turn":64,"phase":"MAIN1","active":true,"frame":7782,"what":"Priority: Justin","ms":631,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428730855,"turn":64,"phase":"MAIN1","active":true,"frame":7786,"what":"ask choose_list: Choose optional costs","ms":422,"r":"ask:choose_list","did":null}
+{"t":1791428731430,"turn":64,"phase":"MAIN1","active":true,"frame":7791,"what":"Sprout Swarm (34)","ms":520,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428732103,"turn":64,"phase":"MAIN1","active":true,"frame":7797,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":514,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428732772,"turn":64,"phase":"MAIN1","active":true,"frame":7805,"what":"Priority: Justin","ms":518,"r":"priority:card:spell","did":"spell: Hard Evidence"}
+{"t":1791428733445,"turn":64,"phase":"MAIN1","active":true,"frame":7813,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":642,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428734240,"turn":64,"phase":"MAIN1","active":true,"frame":7818,"what":"Rugged Highlands (9)","ms":646,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428735043,"turn":64,"phase":"MAIN1","active":true,"frame":7826,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":642,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428735839,"turn":64,"phase":"MAIN1","active":true,"frame":7833,"what":"Priority: Justin","ms":529,"r":"priority:card:spell","did":"spell: Saproling Migration"}
+{"t":1791428736520,"turn":64,"phase":"MAIN1","active":true,"frame":7837,"what":"ask choose_list: Choose optional costs","ms":460,"r":"ask:choose_list","did":null}
+{"t":1791428737136,"turn":64,"phase":"MAIN1","active":true,"frame":7844,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":514,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428737804,"turn":64,"phase":"MAIN1","active":true,"frame":7848,"what":"Saproling Migration (26) - Justin creates four 1/1 green Saproling creature tokens. If this spell was kicked, create four of those tokens instead.","ms":511,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428738468,"turn":64,"phase":"MAIN1","active":true,"frame":7855,"what":"Priority: Justin","ms":526,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428739148,"turn":64,"phase":"MAIN1","active":true,"frame":7860,"what":"ask choose_list: Delve how many cards?","ms":453,"r":"ask:choose_list","did":null}
+{"t":1791428739754,"turn":64,"phase":"MAIN1","active":true,"frame":7863,"what":"ask choose_list: Exile which card(1/6)?","ms":426,"r":"ask:choose_list","did":null}
+{"t":1791428740334,"turn":64,"phase":"MAIN1","active":true,"frame":7869,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":519,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428741045,"turn":64,"phase":"MAIN1","active":true,"frame":7874,"what":"Rugged Highlands (9)","ms":544,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428741742,"turn":64,"phase":"MAIN1","active":true,"frame":7882,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":1250,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428743146,"turn":64,"phase":"MAIN1","active":true,"frame":7889,"what":"Priority: Justin","ms":533,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428743835,"turn":64,"phase":"MAIN1","active":true,"frame":7898,"what":"Sunlance (8) - Sunlance deals 3 damage to target nonwhite creature.","ms":509,"r":"select:done","did":"choose Mire Triton"}
+{"t":1791428744498,"turn":64,"phase":"MAIN1","active":true,"frame":7907,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Mire Triton (66).","ms":529,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428745182,"turn":64,"phase":"MAIN1","active":true,"frame":7915,"what":"Priority: Justin","ms":529,"r":"priority:card:spell","did":"spell: Seeker of the Way"}
+{"t":1791428745864,"turn":64,"phase":"MAIN1","active":true,"frame":7923,"what":"Seeker of the Way - Creature 2 / 2","ms":520,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428746538,"turn":64,"phase":"MAIN1","active":true,"frame":7928,"what":"Rugged Highlands (9)","ms":532,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428747224,"turn":64,"phase":"MAIN1","active":true,"frame":7936,"what":"Seeker of the Way - Creature 2 / 2","ms":528,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428747906,"turn":64,"phase":"MAIN1","active":true,"frame":7943,"what":"Priority: Justin","ms":655,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428759247,"turn":64,"phase":"MAIN2","active":true,"frame":7976,"what":"Priority: Justin","ms":530,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428759931,"turn":64,"phase":"MAIN2","active":true,"frame":7984,"what":"Sunlance (8) - Sunlance deals 3 damage to target nonwhite creature.","ms":633,"r":"select:done","did":"choose Mire Triton"}
+{"t":1791428760791,"turn":64,"phase":"MAIN2","active":true,"frame":7993,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Mire Triton (66).","ms":527,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428761472,"turn":64,"phase":"MAIN2","active":true,"frame":7998,"what":"Rugged Highlands (9)","ms":513,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428762139,"turn":64,"phase":"MAIN2","active":true,"frame":8006,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Mire Triton (66).","ms":542,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428762837,"turn":64,"phase":"MAIN2","active":true,"frame":8013,"what":"Priority: Justin","ms":537,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428763527,"turn":64,"phase":"MAIN2","active":true,"frame":8018,"what":"ask choose_list: Delve how many cards?","ms":460,"r":"ask:choose_list","did":null}
+{"t":1791428764140,"turn":64,"phase":"MAIN2","active":true,"frame":8021,"what":"ask choose_list: Exile which card(1/5)?","ms":440,"r":"ask:choose_list","did":null}
+{"t":1791428764734,"turn":64,"phase":"MAIN2","active":true,"frame":8027,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":522,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428765410,"turn":64,"phase":"MAIN2","active":true,"frame":8032,"what":"Rugged Highlands (9)","ms":528,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428766093,"turn":64,"phase":"MAIN2","active":true,"frame":8040,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":646,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428766894,"turn":64,"phase":"MAIN2","active":true,"frame":8048,"what":"Priority: Justin","ms":773,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428773157,"turn":64,"phase":"CLEANUP","active":true,"frame":8067,"what":"Cleanup Phase","ms":897,"r":"select:done","did":"choose Saproling Migration"}
+{"t":1791428782912,"turn":65,"phase":"COMBAT_BEGIN","active":false,"frame":8106,"what":"Priority: Justin","ms":520,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428783585,"turn":65,"phase":"COMBAT_BEGIN","active":false,"frame":8110,"what":"ask choose_list: Choose optional costs","ms":423,"r":"ask:choose_list","did":null}
+{"t":1791428784162,"turn":65,"phase":"COMBAT_BEGIN","active":false,"frame":8115,"what":"Sprout Swarm (34)","ms":516,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428784831,"turn":65,"phase":"COMBAT_BEGIN","active":false,"frame":8121,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":518,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428785506,"turn":65,"phase":"COMBAT_BEGIN","active":false,"frame":8125,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":527,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428786187,"turn":65,"phase":"COMBAT_BEGIN","active":false,"frame":8132,"what":"Priority: Justin","ms":650,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428788545,"turn":65,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8144,"what":"Priority: Justin","ms":602,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428790324,"turn":65,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8148,"what":"ask choose_list: Choose optional costs","ms":465,"r":"ask:choose_list","did":null}
+{"t":1791428790942,"turn":65,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8153,"what":"Sprout Swarm (34)","ms":520,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428791615,"turn":65,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8159,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":520,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428792290,"turn":65,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8163,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":525,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428792969,"turn":65,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8170,"what":"Priority: Justin","ms":634,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428796054,"turn":65,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":8187,"what":"Priority: Justin","ms":889,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428816962,"turn":65,"phase":"MAIN2","active":false,"frame":8237,"what":"Priority: Justin","ms":516,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428817631,"turn":65,"phase":"MAIN2","active":false,"frame":8241,"what":"ask choose_list: Choose optional costs","ms":457,"r":"ask:choose_list","did":null}
+{"t":1791428818242,"turn":65,"phase":"MAIN2","active":false,"frame":8246,"what":"Sprout Swarm (34)","ms":526,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428818926,"turn":65,"phase":"MAIN2","active":false,"frame":8252,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":525,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428819604,"turn":65,"phase":"MAIN2","active":false,"frame":8256,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":531,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428820289,"turn":65,"phase":"MAIN2","active":false,"frame":8263,"what":"Priority: Justin","ms":652,"r":"priority:ok","did":"ok \"Let it resolveOKSpace\""}
+{"t":1791428821448,"turn":65,"phase":"END_OF_TURN","active":false,"frame":8275,"what":"Priority: Justin","ms":676,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428822277,"turn":66,"phase":"MAIN1","active":true,"frame":8283,"what":"Priority: Justin","ms":530,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791428824846,"turn":66,"phase":"MAIN1","active":true,"frame":8292,"what":"Sunlance (8) - Sunlance deals 3 damage to target nonwhite creature.","ms":910,"r":"select:1","did":"choose Carrier Thrall"}
+{"t":1791428827575,"turn":66,"phase":"MAIN1","active":true,"frame":8303,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Carrier Thrall (71).","ms":1664,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428829392,"turn":66,"phase":"MAIN1","active":true,"frame":8311,"what":"Priority: Justin","ms":650,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791428830195,"turn":66,"phase":"MAIN1","active":true,"frame":8321,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":520,"r":"select:done","did":"choose Carrier Thrall"}
+{"t":1791428830870,"turn":66,"phase":"MAIN1","active":true,"frame":8330,"what":"Tragic Slip (27) - Carrier Thrall (71) gets -1/-1  until end of turn.","ms":533,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428831558,"turn":66,"phase":"MAIN1","active":true,"frame":8335,"what":"Rugged Highlands (9)","ms":528,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428832240,"turn":66,"phase":"MAIN1","active":true,"frame":8341,"what":"Tragic Slip (27) - Carrier Thrall (71) gets -1/-1  until end of turn.","ms":103,"r":"moved-on","did":null}
+{"t":1791428832498,"turn":66,"phase":"MAIN1","active":true,"frame":8344,"what":"Tragic Slip (27) - Carrier Thrall (71) gets -1/-1  until end of turn.","ms":512,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428833163,"turn":66,"phase":"MAIN1","active":true,"frame":8351,"what":"Priority: Justin","ms":689,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428843766,"turn":66,"phase":"MAIN2","active":true,"frame":8381,"what":"Priority: Justin","ms":538,"r":"priority:card:spell","did":"spell: Tragic Slip"}
+{"t":1791428845740,"turn":66,"phase":"MAIN2","active":true,"frame":8389,"what":"Tragic Slip (27) - Target creature gets -1/-1 until end of turn. Morbid — That creature gets -13/-13 instead if a creature died this turn.","ms":1138,"r":"select:1","did":"choose Carrier Thrall"}
+{"t":1791428849144,"turn":66,"phase":"MAIN2","active":true,"frame":8401,"what":"Tragic Slip (27) - Carrier Thrall (71) gets -1/-1  until end of turn.","ms":527,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428849824,"turn":66,"phase":"MAIN2","active":true,"frame":8406,"what":"Rugged Highlands (9)","ms":730,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428850708,"turn":66,"phase":"MAIN2","active":true,"frame":8414,"what":"Tragic Slip (27) - Carrier Thrall (71) gets -1/-1  until end of turn.","ms":652,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428851514,"turn":66,"phase":"MAIN2","active":true,"frame":8421,"what":"Priority: Justin","ms":661,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428852329,"turn":66,"phase":"MAIN2","active":true,"frame":8429,"what":"Guttersnipe - Creature 2 / 2","ms":527,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428853011,"turn":66,"phase":"MAIN2","active":true,"frame":8433,"what":"Guttersnipe - Creature 2 / 2","ms":528,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428853692,"turn":66,"phase":"MAIN2","active":true,"frame":8440,"what":"Priority: Justin","ms":530,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428854477,"turn":66,"phase":"MAIN2","active":true,"frame":8444,"what":"ask choose_list: Choose optional costs","ms":2586,"r":"ask:choose_list","did":null}
+{"t":1791428857338,"turn":66,"phase":"MAIN2","active":true,"frame":8450,"what":"Sprout Swarm (34)","ms":1903,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428859394,"turn":66,"phase":"MAIN2","active":true,"frame":8456,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":526,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428860073,"turn":66,"phase":"MAIN2","active":true,"frame":8460,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":530,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428860758,"turn":66,"phase":"MAIN2","active":true,"frame":8467,"what":"Priority: Justin","ms":396,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428862367,"turn":66,"phase":"END_OF_TURN","active":true,"frame":8473,"what":"Waiting for Sam...","ms":103,"r":"moved-on","did":null}
+{"t":1791428863207,"turn":66,"phase":"CLEANUP","active":true,"frame":8479,"what":"Cleanup Phase","ms":663,"r":"select:done","did":"choose Tragic Slip"}
+{"t":1791428868781,"turn":67,"phase":"COMBAT_BEGIN","active":false,"frame":8506,"what":"Priority: Justin","ms":521,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428871967,"turn":67,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8518,"what":"Priority: Justin","ms":533,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428872653,"turn":67,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8522,"what":"ask choose_list: Choose optional costs","ms":1770,"r":"ask:choose_list","did":null}
+{"t":1791428875325,"turn":67,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8526,"what":"Sprout Swarm (34)","ms":519,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428875998,"turn":67,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8533,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":521,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428876674,"turn":67,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8537,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":529,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428877360,"turn":67,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8544,"what":"Priority: Justin","ms":644,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428878353,"turn":67,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":8557,"what":"Priority: Justin","ms":656,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428887276,"turn":67,"phase":"END_OF_TURN","active":false,"frame":8579,"what":"Priority: Justin","ms":830,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428888323,"turn":68,"phase":"MAIN1","active":true,"frame":8591,"what":"Priority: Justin","ms":544,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791428889019,"turn":68,"phase":"MAIN1","active":true,"frame":8598,"what":"Ancestral Blade","ms":533,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428889706,"turn":68,"phase":"MAIN1","active":true,"frame":8603,"what":"Rugged Highlands (9)","ms":529,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428890682,"turn":68,"phase":"MAIN1","active":true,"frame":8611,"what":"Ancestral Blade","ms":547,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428891383,"turn":68,"phase":"MAIN1","active":true,"frame":8618,"what":"Priority: Justin","ms":1509,"r":"priority:card:spell","did":"spell: Sprout Swarm"}
+{"t":1791428893044,"turn":68,"phase":"MAIN1","active":true,"frame":8622,"what":"ask choose_list: Choose optional costs","ms":437,"r":"ask:choose_list","did":null}
+{"t":1791428893637,"turn":68,"phase":"MAIN1","active":true,"frame":8627,"what":"Sprout Swarm (34)","ms":646,"r":"buttons:buttons:ok","did":"ok \"OKSpace\""}
+{"t":1791428894436,"turn":68,"phase":"MAIN1","active":true,"frame":8633,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":532,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428895122,"turn":68,"phase":"MAIN1","active":true,"frame":8637,"what":"Sprout Swarm (34) - Justin creates a 1/1 green Saproling creature token.","ms":651,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428895929,"turn":68,"phase":"MAIN1","active":true,"frame":8644,"what":"Priority: Justin","ms":651,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428907915,"turn":68,"phase":"MAIN2","active":true,"frame":8678,"what":"Priority: Justin","ms":538,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791428912259,"turn":68,"phase":"CLEANUP","active":true,"frame":8686,"what":"Cleanup Phase","ms":430,"r":"select:done","did":"choose Sprout Swarm"}
+{"t":1791428948143,"turn":69,"phase":"COMBAT_BEGIN","active":false,"frame":8787,"what":"Priority: Justin","ms":660,"r":"priority:eot","did":"To EOT"}
+{"t":1791428950663,"turn":69,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8801,"what":"Priority: Justin","ms":642,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428960820,"turn":69,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":8832,"what":"Priority: Justin","ms":895,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791428961870,"turn":69,"phase":"END_OF_TURN","active":false,"frame":8843,"what":"Priority: Justin","ms":2316,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791428964403,"turn":70,"phase":"MAIN1","active":true,"frame":8857,"what":"Priority: Justin","ms":971,"r":"priority:card:spell","did":"spell: Hard Evidence"}
+{"t":1791428965528,"turn":70,"phase":"MAIN1","active":true,"frame":8864,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":526,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428966208,"turn":70,"phase":"MAIN1","active":true,"frame":8869,"what":"Rugged Highlands (9)","ms":530,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428967406,"turn":70,"phase":"MAIN1","active":true,"frame":8877,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":969,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428968528,"turn":70,"phase":"MAIN1","active":true,"frame":8884,"what":"Priority: Justin","ms":538,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791428969837,"turn":70,"phase":"MAIN1","active":true,"frame":8892,"what":"Guttersnipe - Creature 2 / 2","ms":537,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428971424,"turn":70,"phase":"MAIN1","active":true,"frame":8896,"what":"Guttersnipe - Creature 2 / 2","ms":555,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428972134,"turn":70,"phase":"MAIN1","active":true,"frame":8903,"what":"Priority: Justin","ms":855,"r":"priority:card:spell","did":"spell: Treasure Cruise"}
+{"t":1791428973143,"turn":70,"phase":"MAIN1","active":true,"frame":8908,"what":"ask choose_list: Delve how many cards?","ms":470,"r":"ask:choose_list","did":null}
+{"t":1791428973766,"turn":70,"phase":"MAIN1","active":true,"frame":8911,"what":"ask choose_list: Exile which card(1/6)?","ms":456,"r":"ask:choose_list","did":null}
+{"t":1791428974379,"turn":70,"phase":"MAIN1","active":true,"frame":8917,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":595,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428975128,"turn":70,"phase":"MAIN1","active":true,"frame":8922,"what":"Rugged Highlands (9)","ms":529,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428975810,"turn":70,"phase":"MAIN1","active":true,"frame":8930,"what":"Treasure Cruise (37) - Justin draws three cards.","ms":536,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428976500,"turn":70,"phase":"MAIN1","active":true,"frame":8937,"what":"Priority: Justin","ms":669,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791428990712,"turn":70,"phase":"MAIN2","active":true,"frame":8981,"what":"Priority: Justin","ms":533,"r":"priority:card:spell","did":"spell: Utopia Sprawl"}
+{"t":1791428991398,"turn":70,"phase":"MAIN2","active":true,"frame":8988,"what":"Priority: Justin","ms":1240,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791428992793,"turn":70,"phase":"MAIN2","active":true,"frame":8997,"what":"Ancestral Blade","ms":528,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791428993478,"turn":70,"phase":"MAIN2","active":true,"frame":9002,"what":"Rugged Highlands (9)","ms":533,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791428994164,"turn":70,"phase":"MAIN2","active":true,"frame":9010,"what":"Ancestral Blade","ms":664,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791428994981,"turn":70,"phase":"MAIN2","active":true,"frame":9017,"what":"Priority: Justin","ms":670,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429003340,"turn":70,"phase":"CLEANUP","active":true,"frame":9045,"what":"Cleanup Phase","ms":661,"r":"select:done","did":"choose Utopia Sprawl"}
+{"t":1791429030473,"turn":71,"phase":"COMBAT_BEGIN","active":false,"frame":9125,"what":"Priority: Justin","ms":650,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429032307,"turn":71,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":9136,"what":"Priority: Justin","ms":648,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429048936,"turn":71,"phase":"END_OF_TURN","active":false,"frame":9191,"what":"Priority: Justin","ms":895,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429049984,"turn":72,"phase":"MAIN1","active":true,"frame":9202,"what":"Priority: Justin","ms":549,"r":"priority:card:spell","did":"spell: Sunlance"}
+{"t":1791429050686,"turn":72,"phase":"MAIN1","active":true,"frame":9211,"what":"Sunlance (8) - Sunlance deals 3 damage to target nonwhite creature.","ms":531,"r":"select:done","did":"choose Unwilling Ingredient"}
+{"t":1791429051372,"turn":72,"phase":"MAIN1","active":true,"frame":9220,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Unwilling Ingredient (89).","ms":535,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429052061,"turn":72,"phase":"MAIN1","active":true,"frame":9225,"what":"Rugged Highlands (9)","ms":545,"r":"buttons:buttons:cancel","did":"cancel \"Green\""}
+{"t":1791429052759,"turn":72,"phase":"MAIN1","active":true,"frame":9233,"what":"Sunlance (8) - Sunlance (8) deals 3 damage to Unwilling Ingredient (89).","ms":530,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429053445,"turn":72,"phase":"MAIN1","active":true,"frame":9240,"what":"Priority: Justin","ms":676,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429068845,"turn":72,"phase":"MAIN2","active":true,"frame":9286,"what":"Priority: Justin","ms":1017,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429070692,"turn":72,"phase":"CLEANUP","active":true,"frame":9297,"what":"Cleanup Phase","ms":1425,"r":"select:done","did":"choose Sunlance"}
+{"t":1791429078605,"turn":73,"phase":"COMBAT_BEGIN","active":false,"frame":9328,"what":"Priority: Justin","ms":770,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429079995,"turn":73,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":9339,"what":"Priority: Justin","ms":902,"r":"priority:eot","did":"To EOT"}
+{"t":1791429092739,"turn":74,"phase":"MAIN1","active":true,"frame":9383,"what":"Priority: Justin","ms":2302,"r":"priority:card:spell","did":"spell: Hard Evidence"}
+{"t":1791429095196,"turn":74,"phase":"MAIN1","active":true,"frame":9390,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":785,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429097800,"turn":74,"phase":"MAIN1","active":true,"frame":9399,"what":"Priority: Justin","ms":552,"r":"priority:card:spell","did":"spell: Owlbear"}
+{"t":1791429098729,"turn":74,"phase":"MAIN1","active":true,"frame":9407,"what":"Owlbear - Creature 4 / 4","ms":544,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429099427,"turn":74,"phase":"MAIN1","active":true,"frame":9411,"what":"Owlbear - Creature 4 / 4","ms":670,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429100250,"turn":74,"phase":"MAIN1","active":true,"frame":9418,"what":"Priority: Justin","ms":2529,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429102934,"turn":74,"phase":"MAIN1","active":true,"frame":9426,"what":"Guttersnipe - Creature 2 / 2","ms":539,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429103630,"turn":74,"phase":"MAIN1","active":true,"frame":9430,"what":"Guttersnipe - Creature 2 / 2","ms":681,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429104464,"turn":74,"phase":"MAIN1","active":true,"frame":9437,"what":"Priority: Justin","ms":594,"r":"priority:card:spell","did":"spell: Ancestral Blade"}
+{"t":1791429105210,"turn":74,"phase":"MAIN1","active":true,"frame":9445,"what":"Ancestral Blade","ms":546,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429105911,"turn":74,"phase":"MAIN1","active":true,"frame":9450,"what":"Rugged Highlands (9)","ms":571,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791429106649,"turn":74,"phase":"MAIN1","active":true,"frame":9458,"what":"Ancestral Blade","ms":679,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429107482,"turn":74,"phase":"MAIN1","active":true,"frame":9465,"what":"Priority: Justin","ms":670,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429122809,"turn":74,"phase":"MAIN2","active":true,"frame":9504,"what":"Priority: Justin","ms":670,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429123632,"turn":74,"phase":"MAIN2","active":true,"frame":9511,"what":"Guttersnipe - Creature 2 / 2","ms":542,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429124328,"turn":74,"phase":"MAIN2","active":true,"frame":9515,"what":"Guttersnipe - Creature 2 / 2","ms":667,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429125150,"turn":74,"phase":"MAIN2","active":true,"frame":9522,"what":"Priority: Justin","ms":775,"r":"priority:ok","did":"ok \"End turnOKSpace\""}
+{"t":1791429126188,"turn":74,"phase":"CLEANUP","active":true,"frame":9534,"what":"Cleanup Phase","ms":545,"r":"select:1","did":"choose Treasure Cruise"}
+{"t":1791429145386,"turn":75,"phase":"COMBAT_BEGIN","active":false,"frame":9585,"what":"Priority: Justin","ms":669,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429152663,"turn":75,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":9598,"what":"Priority: Justin","ms":672,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429173180,"turn":75,"phase":"COMBAT_DECLARE_BLOCKERS","active":false,"frame":9647,"what":"Priority: Justin","ms":535,"r":"priority:ok","did":"ok \"Pass priorityOKSpace\""}
+{"t":1791429174237,"turn":75,"phase":"END_OF_TURN","active":false,"frame":9656,"what":"Priority: Justin","ms":826,"r":"priority:cancel","did":"cancel \"Skip to end of turnEnd Turn\""}
+{"t":1791429175218,"turn":76,"phase":"MAIN1","active":true,"frame":9669,"what":"Priority: Justin","ms":554,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429175925,"turn":76,"phase":"MAIN1","active":true,"frame":9677,"what":"Guttersnipe - Creature 2 / 2","ms":920,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429176999,"turn":76,"phase":"MAIN1","active":true,"frame":9681,"what":"Guttersnipe - Creature 2 / 2","ms":545,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429177698,"turn":76,"phase":"MAIN1","active":true,"frame":9688,"what":"Priority: Justin","ms":1089,"r":"priority:card:spell","did":"spell: Vault Skirge"}
+{"t":1791429178941,"turn":76,"phase":"MAIN1","active":true,"frame":9697,"what":"Vault Skirge - Creature 1 / 1","ms":556,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429179650,"turn":76,"phase":"MAIN1","active":true,"frame":9702,"what":"Rugged Highlands (9)","ms":545,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791429182104,"turn":76,"phase":"MAIN1","active":true,"frame":9710,"what":"Vault Skirge - Creature 1 / 1","ms":663,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429183924,"turn":76,"phase":"MAIN1","active":true,"frame":9718,"what":"Priority: Justin","ms":683,"r":"priority:card:spell","did":"spell: Hard Evidence"}
+{"t":1791429184760,"turn":76,"phase":"MAIN1","active":true,"frame":9726,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":551,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429185510,"turn":76,"phase":"MAIN1","active":true,"frame":9731,"what":"Rugged Highlands (9)","ms":675,"r":"buttons:buttons:cancel","did":"cancel \"Green\""}
+{"t":1791429186339,"turn":76,"phase":"MAIN1","active":true,"frame":9739,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":678,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429187171,"turn":76,"phase":"MAIN1","active":true,"frame":9746,"what":"Priority: Justin","ms":786,"r":"priority:ok","did":"ok \"Go to combatOKSpace\""}
+{"t":1791429199311,"turn":76,"phase":"MAIN2","active":true,"frame":9783,"what":"Priority: Justin","ms":679,"r":"priority:card:spell","did":"spell: Hard Evidence"}
+{"t":1791429200143,"turn":76,"phase":"MAIN2","active":true,"frame":9790,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":551,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429200848,"turn":76,"phase":"MAIN2","active":true,"frame":9795,"what":"Rugged Highlands (9)","ms":543,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791429201546,"turn":76,"phase":"MAIN2","active":true,"frame":9803,"what":"Hard Evidence (48) - Justin creates a 0/3 blue Crab creature token. Investigate. (Create a colorless Clue artifact token with \"{2}, Sacrifice this artifact: Draw a card.\")","ms":551,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429202250,"turn":76,"phase":"MAIN2","active":true,"frame":9810,"what":"Priority: Justin","ms":680,"r":"priority:card:spell","did":"spell: Guttersnipe"}
+{"t":1791429203084,"turn":76,"phase":"MAIN2","active":true,"frame":9818,"what":"Guttersnipe - Creature 2 / 2","ms":542,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429203780,"turn":76,"phase":"MAIN2","active":true,"frame":9822,"what":"Guttersnipe - Creature 2 / 2","ms":547,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429204480,"turn":76,"phase":"MAIN2","active":true,"frame":9829,"what":"Priority: Justin","ms":555,"r":"priority:card:spell","did":"spell: Tortured Existence"}
+{"t":1791429205188,"turn":76,"phase":"MAIN2","active":true,"frame":9837,"what":"Tortured Existence","ms":704,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429207696,"turn":76,"phase":"MAIN2","active":true,"frame":9846,"what":"Priority: Justin","ms":755,"r":"priority:card:spell","did":"spell: Vault Skirge"}
+{"t":1791429208604,"turn":76,"phase":"MAIN2","active":true,"frame":9854,"what":"Vault Skirge - Creature 1 / 1","ms":556,"r":"pay:tap","did":"tap Rugged Highlands for mana"}
+{"t":1791429209313,"turn":76,"phase":"MAIN2","active":true,"frame":9859,"what":"Rugged Highlands (9)","ms":546,"r":"buttons:buttons:ok","did":"ok \"RedSpace\""}
+{"t":1791429210014,"turn":76,"phase":"MAIN2","active":true,"frame":9867,"what":"Vault Skirge - Creature 1 / 1","ms":667,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791429210835,"turn":76,"phase":"MAIN2","active":true,"frame":9874,"what":"Priority: Justin","ms":791,"r":"priority:cancel","did":"cancel \"Skip to opponent’s turnEnd Turn\""}
+{"t":1791429221430,"turn":76,"phase":"CLEANUP","active":true,"frame":9903,"what":"Cleanup Phase","ms":669,"r":"select:done","did":"choose Fling"}

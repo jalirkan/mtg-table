@@ -1,0 +1,871 @@
+{"t":1791433349208,"turn":0,"phase":null,"active":false,"frame":8286,"what":"Justin is going first.","ms":3844,"r":"opening","did":"Keep 7 1"}
+{"t":1791433369753,"turn":1,"phase":"COMBAT_BEGIN","active":false,"frame":8319,"what":"Priority: Sam","ms":461,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433370368,"turn":1,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8327,"what":"Priority: Sam","ms":824,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433379899,"turn":1,"phase":"MAIN2","active":false,"frame":8350,"what":"Priority: Sam","ms":586,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791433381700,"turn":1,"phase":"END_OF_TURN","active":false,"frame":8365,"what":"Priority: Sam","ms":603,"r":"priority:eot","did":"To EOT"}
+{"t":1791433382457,"turn":2,"phase":"MAIN1","active":true,"frame":8378,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Legion Warboss"}
+{"t":1791433383366,"turn":2,"phase":"MAIN1","active":true,"frame":8386,"what":"Legion Warboss - Creature 2 / 2","ms":1166,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433384685,"turn":2,"phase":"MAIN1","active":true,"frame":8394,"what":"Priority: Sam","ms":484,"r":"priority:card:land","did":"land: Bloodstained Mire"}
+{"t":1791433385322,"turn":2,"phase":"MAIN1","active":true,"frame":8402,"what":"Priority: Sam","ms":466,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433387354,"turn":2,"phase":"MAIN1","active":true,"frame":8410,"what":"Stitcher's Supplier - Creature 1 / 1","ms":2841,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433390349,"turn":2,"phase":"MAIN1","active":true,"frame":8410,"what":"Stitcher's Supplier - Creature 1 / 1","ms":590,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433391093,"turn":2,"phase":"MAIN1","active":true,"frame":8418,"what":"Priority: Sam","ms":596,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791433392134,"turn":2,"phase":"MAIN1","active":true,"frame":8426,"what":"Deep Forest Hermit - Creature 1 / 1","ms":2843,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433395131,"turn":2,"phase":"MAIN1","active":true,"frame":8426,"what":"Deep Forest Hermit - Creature 1 / 1","ms":2848,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433398132,"turn":2,"phase":"MAIN1","active":true,"frame":8426,"what":"Deep Forest Hermit - Creature 1 / 1","ms":2845,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433401133,"turn":2,"phase":"MAIN1","active":true,"frame":8426,"what":"Deep Forest Hermit - Creature 1 / 1","ms":2846,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433404132,"turn":2,"phase":"MAIN1","active":true,"frame":8426,"what":"Deep Forest Hermit - Creature 1 / 1","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433404754,"turn":2,"phase":"MAIN1","active":true,"frame":8434,"what":"Priority: Sam","ms":465,"r":"priority:card:spell","did":"spell: Hanweir Garrison"}
+{"t":1791433405651,"turn":2,"phase":"MAIN1","active":true,"frame":8442,"what":"Hanweir Garrison - Creature 2 / 3","ms":589,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433406393,"turn":2,"phase":"MAIN1","active":true,"frame":8450,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433407300,"turn":2,"phase":"MAIN1","active":true,"frame":8458,"what":"Eternal Witness - Creature 2 / 1","ms":2844,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433410297,"turn":2,"phase":"MAIN1","active":true,"frame":8458,"what":"Eternal Witness - Creature 2 / 1","ms":2848,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433413299,"turn":2,"phase":"MAIN1","active":true,"frame":8458,"what":"Eternal Witness - Creature 2 / 1","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433413919,"turn":2,"phase":"MAIN1","active":true,"frame":8466,"what":"Priority: Sam","ms":946,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433415464,"turn":2,"phase":"MAIN2","active":true,"frame":8483,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791433416367,"turn":2,"phase":"MAIN2","active":true,"frame":8490,"what":"Ichor Wellspring","ms":2844,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433419364,"turn":2,"phase":"MAIN2","active":true,"frame":8490,"what":"Ichor Wellspring","ms":2848,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433422366,"turn":2,"phase":"MAIN2","active":true,"frame":8490,"what":"Ichor Wellspring","ms":2846,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433425365,"turn":2,"phase":"MAIN2","active":true,"frame":8490,"what":"Ichor Wellspring","ms":2845,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433428363,"turn":2,"phase":"MAIN2","active":true,"frame":8490,"what":"Ichor Wellspring","ms":2847,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433431365,"turn":2,"phase":"MAIN2","active":true,"frame":8490,"what":"Ichor Wellspring","ms":2846,"r":"pay:tap","did":"tap Bloodstained Mire for mana"}
+{"t":1791433434364,"turn":2,"phase":"MAIN2","active":true,"frame":8490,"what":"Ichor Wellspring","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433434989,"turn":2,"phase":"MAIN2","active":true,"frame":8498,"what":"Priority: Sam","ms":598,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433437851,"turn":3,"phase":"COMBAT_BEGIN","active":false,"frame":8521,"what":"Priority: Sam","ms":465,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433438468,"turn":3,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8529,"what":"Priority: Sam","ms":825,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433446015,"turn":3,"phase":"END_OF_TURN","active":false,"frame":8554,"what":"Priority: Sam","ms":465,"r":"priority:card:ability (ability)","did":"ability (ability): Bloodstained Mire"}
+{"t":1791433446915,"turn":3,"phase":"END_OF_TURN","active":false,"frame":8559,"what":"Do you want to pay 1 life?","ms":463,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791433447814,"turn":3,"phase":"END_OF_TURN","active":false,"frame":8566,"what":"Priority: Sam","ms":685,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791433449248,"turn":3,"phase":"END_OF_TURN","active":false,"frame":8578,"what":"ask choose_entities: Select a card from your library","ms":450,"r":"ask:choose_entities","did":null}
+{"t":1791433450131,"turn":3,"phase":"END_OF_TURN","active":false,"frame":8582,"what":"Cancel Search? Up to 1 more card(s) can be selected.","ms":467,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791433451030,"turn":3,"phase":"END_OF_TURN","active":false,"frame":8589,"what":"Priority: Sam","ms":587,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433452348,"turn":4,"phase":"MAIN1","active":true,"frame":8597,"what":"Priority: Sam","ms":714,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433455181,"turn":4,"phase":"MAIN1","active":true,"frame":8605,"what":"Eternal Witness - Creature 2 / 1","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433455799,"turn":4,"phase":"MAIN1","active":true,"frame":8613,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Scavenging Ooze"}
+{"t":1791433456697,"turn":4,"phase":"MAIN1","active":true,"frame":8621,"what":"Scavenging Ooze - Creature 2 / 2","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433457317,"turn":4,"phase":"MAIN1","active":true,"frame":8629,"what":"Priority: Sam","ms":823,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433458675,"turn":4,"phase":"MAIN2","active":true,"frame":8646,"what":"Priority: Sam","ms":589,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433459472,"turn":4,"phase":"CLEANUP","active":true,"frame":8657,"what":"Cleanup Phase","ms":594,"r":"select:done","did":"choose Scavenging Ooze"}
+{"t":1791433465280,"turn":5,"phase":"MAIN1","active":false,"frame":8685,"what":"Priority: Sam","ms":826,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791433467210,"turn":5,"phase":"MAIN1","active":false,"frame":8700,"what":"Priority: Sam","ms":711,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791433473898,"turn":5,"phase":"COMBAT_BEGIN","active":false,"frame":8734,"what":"Priority: Sam","ms":464,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433474579,"turn":5,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":8742,"what":"Priority: Sam","ms":586,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433481663,"turn":5,"phase":"END_OF_TURN","active":false,"frame":8781,"what":"Priority: Sam","ms":466,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433482283,"turn":6,"phase":"MAIN1","active":true,"frame":8789,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Hanweir Garrison"}
+{"t":1791433483180,"turn":6,"phase":"MAIN1","active":true,"frame":8797,"what":"Hanweir Garrison - Creature 2 / 3","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433483798,"turn":6,"phase":"MAIN1","active":true,"frame":8805,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433484697,"turn":6,"phase":"MAIN1","active":true,"frame":8813,"what":"Knight of Autumn - Creature 2 / 1","ms":2213,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433487064,"turn":6,"phase":"MAIN1","active":true,"frame":8821,"what":"Priority: Sam","ms":466,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791433487963,"turn":6,"phase":"MAIN1","active":true,"frame":8829,"what":"Deep Forest Hermit - Creature 1 / 1","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433488580,"turn":6,"phase":"MAIN1","active":true,"frame":8837,"what":"Priority: Sam","ms":465,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791433489479,"turn":6,"phase":"MAIN1","active":true,"frame":8845,"what":"Ichor Wellspring","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433490221,"turn":6,"phase":"MAIN1","active":true,"frame":8853,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433491129,"turn":6,"phase":"MAIN1","active":true,"frame":8861,"what":"Stitcher's Supplier - Creature 1 / 1","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433491750,"turn":6,"phase":"MAIN1","active":true,"frame":8869,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791433492664,"turn":6,"phase":"MAIN1","active":true,"frame":8877,"what":"Experimental Synthesizer","ms":584,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433493401,"turn":6,"phase":"MAIN1","active":true,"frame":8885,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Legion Warboss"}
+{"t":1791433494312,"turn":6,"phase":"MAIN1","active":true,"frame":8893,"what":"Legion Warboss - Creature 2 / 2","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433494932,"turn":6,"phase":"MAIN1","active":true,"frame":8901,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433495829,"turn":6,"phase":"MAIN1","active":true,"frame":8909,"what":"Eternal Witness - Creature 2 / 1","ms":585,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433496568,"turn":6,"phase":"MAIN1","active":true,"frame":8918,"what":"Priority: Sam","ms":599,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433500166,"turn":6,"phase":"MAIN2","active":true,"frame":8934,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433501062,"turn":6,"phase":"MAIN2","active":true,"frame":8942,"what":"Eternal Witness - Creature 2 / 1","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433501807,"turn":6,"phase":"MAIN2","active":true,"frame":8950,"what":"Priority: Sam","ms":972,"r":"priority:card:spell","did":"spell: Ichor Wellspring"}
+{"t":1791433503212,"turn":6,"phase":"MAIN2","active":true,"frame":8958,"what":"Ichor Wellspring","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433503953,"turn":6,"phase":"MAIN2","active":true,"frame":8966,"what":"Priority: Sam","ms":474,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791433504861,"turn":6,"phase":"MAIN2","active":true,"frame":8974,"what":"Experimental Synthesizer","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433505481,"turn":6,"phase":"MAIN2","active":true,"frame":8982,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Legion Warboss"}
+{"t":1791433506379,"turn":6,"phase":"MAIN2","active":true,"frame":8990,"what":"Legion Warboss - Creature 2 / 2","ms":465,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433507257,"turn":6,"phase":"MAIN2","active":true,"frame":8998,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433509097,"turn":6,"phase":"MAIN2","active":true,"frame":9006,"what":"Knight of Autumn - Creature 2 / 1","ms":464,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433509714,"turn":6,"phase":"MAIN2","active":true,"frame":9014,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433511829,"turn":6,"phase":"MAIN2","active":true,"frame":9022,"what":"Stitcher's Supplier - Creature 1 / 1","ms":347,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433512424,"turn":6,"phase":"MAIN2","active":true,"frame":9030,"what":"Priority: Sam","ms":710,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433513289,"turn":6,"phase":"CLEANUP","active":true,"frame":9039,"what":"Cleanup Phase","ms":1724,"r":"select:1","did":"choose Ichor Wellspring"}
+{"t":1791433516711,"turn":7,"phase":"COMBAT_BEGIN","active":false,"frame":9058,"what":"Priority: Sam","ms":470,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433517334,"turn":7,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":9066,"what":"Priority: Sam","ms":596,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433527214,"turn":7,"phase":"END_OF_TURN","active":false,"frame":9102,"what":"Priority: Sam","ms":481,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433527849,"turn":8,"phase":"MAIN1","active":true,"frame":9110,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Hanweir Garrison"}
+{"t":1791433528762,"turn":8,"phase":"MAIN1","active":true,"frame":9118,"what":"Hanweir Garrison - Creature 2 / 3","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433529380,"turn":8,"phase":"MAIN1","active":true,"frame":9126,"what":"Priority: Sam","ms":464,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433530277,"turn":8,"phase":"MAIN1","active":true,"frame":9134,"what":"Knight of Autumn - Creature 2 / 1","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433530899,"turn":8,"phase":"MAIN1","active":true,"frame":9142,"what":"Priority: Sam","ms":1597,"r":"priority:card:spell","did":"spell: Elspeth, Sun's Champion"}
+{"t":1791433532932,"turn":8,"phase":"MAIN1","active":true,"frame":9150,"what":"Elspeth, Sun's Champion","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433533554,"turn":8,"phase":"MAIN1","active":true,"frame":9158,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433534465,"turn":8,"phase":"MAIN1","active":true,"frame":9166,"what":"Eternal Witness - Creature 2 / 1","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433535206,"turn":8,"phase":"MAIN1","active":true,"frame":9174,"what":"Priority: Sam","ms":477,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433536132,"turn":8,"phase":"MAIN1","active":true,"frame":9182,"what":"Stitcher's Supplier - Creature 1 / 1","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433536752,"turn":8,"phase":"MAIN1","active":true,"frame":9190,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791433538423,"turn":8,"phase":"MAIN1","active":true,"frame":9198,"what":"Experimental Synthesizer","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433539049,"turn":8,"phase":"MAIN1","active":true,"frame":9206,"what":"Priority: Sam","ms":599,"r":"priority:card:spell","did":"spell: Deep Forest Hermit"}
+{"t":1791433540094,"turn":8,"phase":"MAIN1","active":true,"frame":9214,"what":"Deep Forest Hermit - Creature 1 / 1","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433540835,"turn":8,"phase":"MAIN1","active":true,"frame":9222,"what":"Priority: Sam","ms":597,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433546493,"turn":8,"phase":"MAIN2","active":true,"frame":9248,"what":"Priority: Sam","ms":467,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433547394,"turn":8,"phase":"MAIN2","active":true,"frame":9255,"what":"Stitcher's Supplier - Creature 1 / 1","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433548014,"turn":8,"phase":"MAIN2","active":true,"frame":9263,"what":"Priority: Sam","ms":883,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433549081,"turn":8,"phase":"CLEANUP","active":true,"frame":9275,"what":"Cleanup Phase","ms":598,"r":"select:done","did":"choose Elspeth, Sun's Champion"}
+{"t":1791433557127,"turn":9,"phase":"COMBAT_BEGIN","active":false,"frame":9311,"what":"Priority: Sam","ms":467,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433559371,"turn":9,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":9319,"what":"Priority: Sam","ms":595,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433580226,"turn":9,"phase":"END_OF_TURN","active":false,"frame":9381,"what":"Priority: Sam","ms":466,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433583131,"turn":9,"phase":"CLEANUP","active":false,"frame":9386,"what":"Waiting for Justin...","ms":103,"r":"moved-on","did":null}
+{"t":1791433583387,"turn":10,"phase":"MAIN1","active":true,"frame":9393,"what":"Priority: Sam","ms":1921,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433585743,"turn":10,"phase":"MAIN1","active":true,"frame":9401,"what":"Stitcher's Supplier - Creature 1 / 1","ms":535,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433586432,"turn":10,"phase":"MAIN1","active":true,"frame":9409,"what":"Priority: Sam","ms":601,"r":"priority:card:spell","did":"spell: Legion Warboss"}
+{"t":1791433587476,"turn":10,"phase":"MAIN1","active":true,"frame":9417,"what":"Legion Warboss - Creature 2 / 2","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433588218,"turn":10,"phase":"MAIN1","active":true,"frame":9425,"what":"Priority: Sam","ms":716,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433606151,"turn":10,"phase":"MAIN2","active":true,"frame":9473,"what":"Priority: Sam","ms":1690,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791433608793,"turn":10,"phase":"MAIN2","active":true,"frame":9481,"what":"Experimental Synthesizer","ms":567,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433609515,"turn":10,"phase":"MAIN2","active":true,"frame":9489,"what":"Priority: Sam","ms":598,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433610559,"turn":10,"phase":"MAIN2","active":true,"frame":9497,"what":"Stitcher's Supplier - Creature 1 / 1","ms":587,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433611749,"turn":10,"phase":"MAIN2","active":true,"frame":9505,"what":"Priority: Sam","ms":478,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433612781,"turn":10,"phase":"CLEANUP","active":true,"frame":9517,"what":"Cleanup Phase","ms":1461,"r":"select:done","did":"choose Deep Forest Hermit"}
+{"t":1791433614673,"turn":11,"phase":"COMBAT_BEGIN","active":false,"frame":9532,"what":"Priority: Sam","ms":468,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433615294,"turn":11,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":9540,"what":"Priority: Sam","ms":603,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433616074,"turn":11,"phase":"END_OF_TURN","active":false,"frame":9549,"what":"Priority: Sam","ms":586,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433616871,"turn":12,"phase":"MAIN1","active":true,"frame":9560,"what":"Priority: Sam","ms":470,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433617774,"turn":12,"phase":"MAIN1","active":true,"frame":9567,"what":"Knight of Autumn - Creature 2 / 1","ms":466,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433618394,"turn":12,"phase":"MAIN1","active":true,"frame":9575,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433640058,"turn":12,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":9635,"what":"Priority: Sam","ms":589,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791433640801,"turn":12,"phase":"MAIN2","active":true,"frame":9644,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Legion Warboss"}
+{"t":1791433641724,"turn":12,"phase":"MAIN2","active":true,"frame":9652,"what":"Legion Warboss - Creature 2 / 2","ms":589,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433642468,"turn":12,"phase":"MAIN2","active":true,"frame":9660,"what":"Priority: Sam","ms":2660,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433646191,"turn":12,"phase":"MAIN2","active":true,"frame":9668,"what":"Knight of Autumn - Creature 2 / 1","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433646814,"turn":12,"phase":"MAIN2","active":true,"frame":9676,"what":"Priority: Sam","ms":558,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433647808,"turn":12,"phase":"MAIN2","active":true,"frame":9684,"what":"Stitcher's Supplier - Creature 1 / 1","ms":1056,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433649669,"turn":12,"phase":"MAIN2","active":true,"frame":9693,"what":"Priority: Sam","ms":715,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433650538,"turn":12,"phase":"CLEANUP","active":true,"frame":9702,"what":"Cleanup Phase","ms":590,"r":"select:done","did":"choose Hanweir Garrison"}
+{"t":1791433662988,"turn":13,"phase":"COMBAT_BEGIN","active":false,"frame":9741,"what":"Priority: Sam","ms":737,"r":"priority:eot","did":"To EOT"}
+{"t":1791433666078,"turn":14,"phase":"MAIN1","active":true,"frame":9760,"what":"Priority: Sam","ms":2012,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433668574,"turn":14,"phase":"MAIN2","active":true,"frame":9777,"what":"Priority: Sam","ms":844,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433674264,"turn":14,"phase":"CLEANUP","active":true,"frame":9795,"what":"Cleanup Phase","ms":687,"r":"select:done","did":"choose Watcher for Tomorrow"}
+{"t":1791433683057,"turn":15,"phase":"MAIN1","active":false,"frame":9832,"what":"Priority: Sam","ms":725,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791433685106,"turn":15,"phase":"COMBAT_BEGIN","active":false,"frame":9844,"what":"Priority: Sam","ms":467,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433685726,"turn":15,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":9852,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433694056,"turn":15,"phase":"END_OF_TURN","active":false,"frame":9881,"what":"Priority: Sam","ms":470,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433694682,"turn":16,"phase":"MAIN1","active":true,"frame":9889,"what":"Priority: Sam","ms":597,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433695723,"turn":16,"phase":"MAIN1","active":true,"frame":9897,"what":"Eternal Witness - Creature 2 / 1","ms":590,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433696466,"turn":16,"phase":"MAIN1","active":true,"frame":9905,"what":"Priority: Sam","ms":596,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433697505,"turn":16,"phase":"MAIN1","active":true,"frame":9914,"what":"Stitcher's Supplier - Creature 1 / 1","ms":589,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433698425,"turn":16,"phase":"MAIN1","active":true,"frame":9922,"what":"Priority: Sam","ms":484,"r":"priority:card:spell","did":"spell: Legion Warboss"}
+{"t":1791433699355,"turn":16,"phase":"MAIN1","active":true,"frame":9930,"what":"Legion Warboss - Creature 2 / 2","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433699977,"turn":16,"phase":"MAIN1","active":true,"frame":9938,"what":"Priority: Sam","ms":598,"r":"priority:card:spell","did":"spell: Pelt Collector"}
+{"t":1791433701192,"turn":16,"phase":"MAIN1","active":true,"frame":9946,"what":"Pelt Collector - Creature 1 / 1","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433701827,"turn":16,"phase":"MAIN1","active":true,"frame":9954,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791433702754,"turn":16,"phase":"MAIN1","active":true,"frame":9962,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433703376,"turn":16,"phase":"MAIN1","active":true,"frame":9970,"what":"Priority: Sam","ms":1104,"r":"priority:card:spell","did":"spell: Experimental Synthesizer"}
+{"t":1791433704921,"turn":16,"phase":"MAIN1","active":true,"frame":9979,"what":"Experimental Synthesizer","ms":468,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433705546,"turn":16,"phase":"MAIN1","active":true,"frame":9987,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791433707333,"turn":16,"phase":"MAIN1","active":true,"frame":9995,"what":"Risen Reef - Creature 1 / 1","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433707960,"turn":16,"phase":"MAIN1","active":true,"frame":10003,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433708871,"turn":16,"phase":"MAIN1","active":true,"frame":10011,"what":"Knight of Autumn - Creature 2 / 1","ms":591,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433709615,"turn":16,"phase":"MAIN1","active":true,"frame":10019,"what":"Priority: Sam","ms":476,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433710738,"turn":16,"phase":"COMBAT_BEGIN","active":true,"frame":10027,"what":"Waiting for Justin...","ms":103,"r":"moved-on","did":null}
+{"t":1791433718519,"turn":16,"phase":"MAIN2","active":true,"frame":10054,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433719437,"turn":16,"phase":"MAIN2","active":true,"frame":10062,"what":"Eternal Witness - Creature 2 / 1","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433720062,"turn":16,"phase":"MAIN2","active":true,"frame":10070,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433720987,"turn":16,"phase":"MAIN2","active":true,"frame":10078,"what":"Stitcher's Supplier - Creature 1 / 1","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433721609,"turn":16,"phase":"MAIN2","active":true,"frame":10085,"what":"Priority: Sam","ms":607,"r":"priority:card:spell","did":"spell: Pelt Collector"}
+{"t":1791433722653,"turn":16,"phase":"MAIN2","active":true,"frame":10094,"what":"Pelt Collector - Creature 1 / 1","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433723280,"turn":16,"phase":"MAIN2","active":true,"frame":10102,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Legion Warboss"}
+{"t":1791433724202,"turn":16,"phase":"MAIN2","active":true,"frame":10110,"what":"Legion Warboss - Creature 2 / 2","ms":593,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433724949,"turn":16,"phase":"MAIN2","active":true,"frame":10118,"what":"Priority: Sam","ms":598,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791433725987,"turn":16,"phase":"MAIN2","active":true,"frame":10126,"what":"Risen Reef - Creature 1 / 1","ms":592,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433726732,"turn":16,"phase":"MAIN2","active":true,"frame":10134,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791433727655,"turn":16,"phase":"MAIN2","active":true,"frame":10142,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":467,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433728276,"turn":16,"phase":"MAIN2","active":true,"frame":10150,"what":"Priority: Sam","ms":1675,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433733481,"turn":16,"phase":"CLEANUP","active":true,"frame":10166,"what":"Cleanup Phase","ms":596,"r":"select:done","did":"choose Experimental Synthesizer"}
+{"t":1791433735779,"turn":17,"phase":"COMBAT_BEGIN","active":false,"frame":10181,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433736535,"turn":17,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10189,"what":"Priority: Sam","ms":835,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433738087,"turn":17,"phase":"END_OF_TURN","active":false,"frame":10201,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791433739843,"turn":17,"phase":"END_OF_TURN","active":false,"frame":10201,"what":"Priority: Sam","ms":481,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433740481,"turn":18,"phase":"MAIN1","active":true,"frame":10209,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Stitcher's Supplier"}
+{"t":1791433741404,"turn":18,"phase":"MAIN1","active":true,"frame":10217,"what":"Stitcher's Supplier - Creature 1 / 1","ms":590,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433742148,"turn":18,"phase":"MAIN1","active":true,"frame":10225,"what":"Priority: Sam","ms":1473,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433744070,"turn":18,"phase":"MAIN1","active":true,"frame":10234,"what":"Knight of Autumn - Creature 2 / 1","ms":843,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433745065,"turn":18,"phase":"MAIN1","active":true,"frame":10242,"what":"Priority: Sam","ms":597,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433747016,"turn":18,"phase":"MAIN2","active":true,"frame":10260,"what":"Priority: Sam","ms":473,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433748393,"turn":18,"phase":"MAIN2","active":true,"frame":10267,"what":"Knight of Autumn - Creature 2 / 1","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433749028,"turn":18,"phase":"MAIN2","active":true,"frame":10275,"what":"Priority: Sam","ms":1079,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433750555,"turn":18,"phase":"MAIN2","active":true,"frame":10283,"what":"Eternal Witness - Creature 2 / 1","ms":604,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433751314,"turn":18,"phase":"MAIN2","active":true,"frame":10291,"what":"Priority: Sam","ms":596,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791433752353,"turn":18,"phase":"MAIN2","active":true,"frame":10299,"what":"Risen Reef - Creature 1 / 1","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433753528,"turn":18,"phase":"MAIN2","active":true,"frame":10307,"what":"Priority: Sam","ms":599,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433761648,"turn":18,"phase":"CLEANUP","active":true,"frame":10330,"what":"Cleanup Phase","ms":595,"r":"select:done","did":"choose Legion Warboss"}
+{"t":1791433769118,"turn":19,"phase":"COMBAT_BEGIN","active":false,"frame":10358,"what":"Priority: Sam","ms":469,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433769740,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10366,"what":"Priority: Sam","ms":104,"r":"stuck","did":null}
+{"t":1791433771498,"turn":19,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10366,"what":"Priority: Sam","ms":593,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433784551,"turn":19,"phase":"END_OF_TURN","active":false,"frame":10402,"what":"Priority: Sam","ms":471,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433785177,"turn":20,"phase":"MAIN1","active":true,"frame":10410,"what":"Priority: Sam","ms":599,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433786216,"turn":20,"phase":"MAIN1","active":true,"frame":10418,"what":"Knight of Autumn - Creature 2 / 1","ms":1307,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433787677,"turn":20,"phase":"MAIN1","active":true,"frame":10426,"what":"Priority: Sam","ms":482,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791433788601,"turn":20,"phase":"MAIN1","active":true,"frame":10434,"what":"Risen Reef - Creature 1 / 1","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433792179,"turn":20,"phase":"MAIN1","active":true,"frame":10442,"what":"Priority: Sam","ms":600,"r":"priority:card:spell","did":"spell: Baleful Strix"}
+{"t":1791433793221,"turn":20,"phase":"MAIN1","active":true,"frame":10450,"what":"Baleful Strix - Creature 1 / 1","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433793845,"turn":20,"phase":"MAIN1","active":true,"frame":10458,"what":"Priority: Sam","ms":1053,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433795213,"turn":20,"phase":"MAIN2","active":true,"frame":10475,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433796137,"turn":20,"phase":"MAIN2","active":true,"frame":10482,"what":"Knight of Autumn - Creature 2 / 1","ms":590,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433796880,"turn":20,"phase":"MAIN2","active":true,"frame":10490,"what":"Priority: Sam","ms":836,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433801195,"turn":20,"phase":"CLEANUP","active":true,"frame":10510,"what":"Cleanup Phase","ms":2164,"r":"select:done","did":"choose Stitcher's Supplier"}
+{"t":1791433804918,"turn":21,"phase":"COMBAT_BEGIN","active":false,"frame":10526,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791433806677,"turn":21,"phase":"COMBAT_BEGIN","active":false,"frame":10526,"what":"Priority: Sam","ms":598,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433807430,"turn":21,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10534,"what":"Priority: Sam","ms":834,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433814986,"turn":21,"phase":"END_OF_TURN","active":false,"frame":10564,"what":"Priority: Sam","ms":591,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433815729,"turn":22,"phase":"MAIN1","active":true,"frame":10575,"what":"Priority: Sam","ms":477,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433818912,"turn":22,"phase":"MAIN2","active":true,"frame":10592,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433819836,"turn":22,"phase":"MAIN2","active":true,"frame":10599,"what":"Eternal Witness - Creature 2 / 1","ms":588,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433820577,"turn":22,"phase":"MAIN2","active":true,"frame":10607,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Baleful Strix"}
+{"t":1791433821499,"turn":22,"phase":"MAIN2","active":true,"frame":10615,"what":"Baleful Strix - Creature 1 / 1","ms":1198,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433822850,"turn":22,"phase":"MAIN2","active":true,"frame":10623,"what":"Priority: Sam","ms":1939,"r":"priority:card:land","did":"land: Overgrown Tomb"}
+{"t":1791433825233,"turn":22,"phase":"MAIN2","active":true,"frame":10629,"what":"Do you want to pay 2 life?","ms":595,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791433826080,"turn":22,"phase":"MAIN2","active":true,"frame":10636,"what":"Priority: Sam","ms":476,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791433826999,"turn":22,"phase":"MAIN2","active":true,"frame":10644,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433827691,"turn":22,"phase":"MAIN2","active":true,"frame":10652,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433830350,"turn":23,"phase":"COMBAT_BEGIN","active":false,"frame":10672,"what":"Priority: Sam","ms":470,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433830973,"turn":23,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10680,"what":"Priority: Sam","ms":480,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433831605,"turn":23,"phase":"MAIN2","active":false,"frame":10683,"what":"Priority: Sam","ms":9552,"r":"priority:eot","did":"To EOT"}
+{"t":1791433841600,"turn":23,"phase":"END_OF_TURN","active":false,"frame":10707,"what":"Priority: Sam","ms":589,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433842630,"turn":24,"phase":"MAIN1","active":true,"frame":10719,"what":"Priority: Sam","ms":595,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433844599,"turn":24,"phase":"MAIN2","active":true,"frame":10736,"what":"Priority: Sam","ms":471,"r":"priority:card:spell","did":"spell: Reckless Fireweaver"}
+{"t":1791433846369,"turn":24,"phase":"MAIN2","active":true,"frame":10743,"what":"Reckless Fireweaver - Creature 1 / 3","ms":364,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791433847180,"turn":24,"phase":"MAIN2","active":true,"frame":10744,"what":"ask ability_menu: ","ms":699,"r":"ask:ability_menu","did":null}
+{"t":1791433848316,"turn":24,"phase":"MAIN2","active":true,"frame":10748,"what":"Reckless Fireweaver - Creature 1 / 3","ms":4174,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433852645,"turn":24,"phase":"MAIN2","active":true,"frame":10755,"what":"Priority: Sam","ms":475,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433853566,"turn":24,"phase":"MAIN2","active":true,"frame":10763,"what":"Eternal Witness - Creature 2 / 1","ms":1302,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791433855021,"turn":24,"phase":"MAIN2","active":true,"frame":10764,"what":"ask ability_menu: ","ms":390,"r":"ask:ability_menu","did":null}
+{"t":1791433855850,"turn":24,"phase":"MAIN2","active":true,"frame":10768,"what":"Eternal Witness - Creature 2 / 1","ms":469,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433856472,"turn":24,"phase":"MAIN2","active":true,"frame":10775,"what":"Priority: Sam","ms":551,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791433857465,"turn":24,"phase":"MAIN2","active":true,"frame":10783,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":1172,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791433858789,"turn":24,"phase":"MAIN2","active":true,"frame":10784,"what":"ask ability_menu: ","ms":1201,"r":"ask:ability_menu","did":null}
+{"t":1791433860420,"turn":24,"phase":"MAIN2","active":true,"frame":10788,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":471,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433861044,"turn":24,"phase":"MAIN2","active":true,"frame":10795,"what":"Priority: Sam","ms":1679,"r":"priority:card:spell","did":"spell: Pelt Collector"}
+{"t":1791433863166,"turn":24,"phase":"MAIN2","active":true,"frame":10804,"what":"Pelt Collector - Creature 1 / 1","ms":351,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791433863669,"turn":24,"phase":"MAIN2","active":true,"frame":10805,"what":"ask ability_menu: ","ms":1324,"r":"ask:ability_menu","did":null}
+{"t":1791433865432,"turn":24,"phase":"MAIN2","active":true,"frame":10810,"what":"Pelt Collector - Creature 1 / 1","ms":591,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433866176,"turn":24,"phase":"MAIN2","active":true,"frame":10814,"what":"Pelt Collector - Creature 1 / 1","ms":476,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433866807,"turn":24,"phase":"MAIN2","active":true,"frame":10818,"what":"Pelt Collector - Creature 1 / 1","ms":484,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433867444,"turn":24,"phase":"MAIN2","active":true,"frame":10822,"what":"Pelt Collector - Creature 1 / 1","ms":595,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433868194,"turn":24,"phase":"MAIN2","active":true,"frame":10826,"what":"Pelt Collector - Creature 1 / 1","ms":476,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433868823,"turn":24,"phase":"MAIN2","active":true,"frame":10830,"what":"Pelt Collector - Creature 1 / 1","ms":600,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433869575,"turn":24,"phase":"MAIN2","active":true,"frame":10834,"what":"Pelt Collector - Creature 1 / 1","ms":478,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433870207,"turn":24,"phase":"MAIN2","active":true,"frame":10838,"what":"Pelt Collector - Creature 1 / 1","ms":599,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433870962,"turn":24,"phase":"MAIN2","active":true,"frame":10842,"what":"Pelt Collector - Creature 1 / 1","ms":474,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433871589,"turn":24,"phase":"MAIN2","active":true,"frame":10846,"what":"Pelt Collector - Creature 1 / 1","ms":600,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433872346,"turn":24,"phase":"MAIN2","active":true,"frame":10850,"what":"Pelt Collector - Creature 1 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433872972,"turn":24,"phase":"MAIN2","active":true,"frame":10857,"what":"Priority: Sam","ms":487,"r":"priority:card:spell","did":"spell: Baleful Strix"}
+{"t":1791433873898,"turn":24,"phase":"MAIN2","active":true,"frame":10865,"what":"Baleful Strix - Creature 1 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433874523,"turn":24,"phase":"MAIN2","active":true,"frame":10872,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433875448,"turn":24,"phase":"MAIN2","active":true,"frame":10881,"what":"Knight of Autumn - Creature 2 / 1","ms":351,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791433875950,"turn":24,"phase":"MAIN2","active":true,"frame":10882,"what":"ask ability_menu: ","ms":644,"r":"ask:ability_menu","did":null}
+{"t":1791433877031,"turn":24,"phase":"MAIN2","active":true,"frame":10886,"what":"Knight of Autumn - Creature 2 / 1","ms":470,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433877655,"turn":24,"phase":"MAIN2","active":true,"frame":10893,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791433878581,"turn":24,"phase":"MAIN2","active":true,"frame":10901,"what":"Risen Reef - Creature 1 / 1","ms":351,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791433879765,"turn":24,"phase":"MAIN2","active":true,"frame":10902,"what":"ask ability_menu: ","ms":1728,"r":"ask:ability_menu","did":null}
+{"t":1791433881931,"turn":24,"phase":"MAIN2","active":true,"frame":10902,"what":"Risen Reef - Creature 1 / 1","ms":351,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791433882434,"turn":24,"phase":"MAIN2","active":true,"frame":10903,"what":"ask ability_menu: ","ms":377,"r":"ask:ability_menu","did":null}
+{"t":1791433884272,"turn":24,"phase":"MAIN2","active":true,"frame":10907,"what":"Risen Reef - Creature 1 / 1","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433887324,"turn":24,"phase":"MAIN2","active":true,"frame":10915,"what":"Priority: Sam","ms":597,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791433895357,"turn":24,"phase":"CLEANUP","active":true,"frame":10935,"what":"Cleanup Phase","ms":909,"r":"select:done","did":"choose Reckless Fireweaver"}
+{"t":1791433917763,"turn":25,"phase":"COMBAT_BEGIN","active":false,"frame":10987,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791433921005,"turn":25,"phase":"COMBAT_BEGIN","active":false,"frame":10987,"what":"Priority: Sam","ms":599,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433924529,"turn":25,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":10999,"what":"Priority: Sam","ms":830,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433961379,"turn":25,"phase":"END_OF_TURN","active":false,"frame":11076,"what":"Priority: Sam","ms":1354,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791433964939,"turn":26,"phase":"MAIN1","active":true,"frame":11090,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Pelt Collector"}
+{"t":1791433965862,"turn":26,"phase":"MAIN1","active":true,"frame":11098,"what":"Pelt Collector - Creature 1 / 1","ms":633,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791433968662,"turn":26,"phase":"MAIN1","active":true,"frame":11107,"what":"Priority: Sam","ms":594,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791433970409,"turn":26,"phase":"MAIN1","active":true,"frame":11120,"what":"Priority: Sam","ms":595,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433971444,"turn":26,"phase":"MAIN1","active":true,"frame":11128,"what":"Eternal Witness - Creature 2 / 1","ms":4797,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433976400,"turn":26,"phase":"MAIN1","active":true,"frame":11136,"what":"Priority: Sam","ms":1091,"r":"priority:card:spell","did":"spell: Unsummon"}
+{"t":1791433977927,"turn":26,"phase":"MAIN1","active":true,"frame":11146,"what":"Unsummon (91) - Return target creature to its owner's hand.","ms":474,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791433979809,"turn":26,"phase":"MAIN1","active":true,"frame":11155,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":2360,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433982324,"turn":26,"phase":"MAIN1","active":true,"frame":11163,"what":"Priority: Sam","ms":595,"r":"priority:card:spell","did":"spell: Baleful Strix"}
+{"t":1791433983712,"turn":26,"phase":"MAIN1","active":true,"frame":11171,"what":"Baleful Strix - Creature 1 / 1","ms":607,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433984472,"turn":26,"phase":"MAIN1","active":true,"frame":11179,"what":"Priority: Sam","ms":478,"r":"priority:card:spell","did":"spell: Myr Sire"}
+{"t":1791433985392,"turn":26,"phase":"MAIN1","active":true,"frame":11187,"what":"Myr Sire - Creature 1 / 1","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433986019,"turn":26,"phase":"MAIN1","active":true,"frame":11195,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433986942,"turn":26,"phase":"MAIN1","active":true,"frame":11203,"what":"Knight of Autumn - Creature 2 / 1","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433987690,"turn":26,"phase":"MAIN1","active":true,"frame":11211,"what":"Priority: Sam","ms":1307,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791433994549,"turn":26,"phase":"MAIN2","active":true,"frame":11243,"what":"Priority: Sam","ms":2111,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791433997092,"turn":26,"phase":"MAIN2","active":true,"frame":11251,"what":"Eternal Witness - Creature 2 / 1","ms":593,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791433997947,"turn":26,"phase":"MAIN2","active":true,"frame":11259,"what":"Priority: Sam","ms":674,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791433999944,"turn":26,"phase":"MAIN2","active":true,"frame":11268,"what":"Knight of Autumn - Creature 2 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434000569,"turn":26,"phase":"MAIN2","active":true,"frame":11276,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791434001492,"turn":26,"phase":"MAIN2","active":true,"frame":11284,"what":"Risen Reef - Creature 1 / 1","ms":594,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434002239,"turn":26,"phase":"MAIN2","active":true,"frame":11292,"what":"Priority: Sam","ms":1003,"r":"priority:card:spell","did":"spell: Myr Sire"}
+{"t":1791434004022,"turn":26,"phase":"MAIN2","active":true,"frame":11300,"what":"Myr Sire - Creature 1 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434004673,"turn":26,"phase":"MAIN2","active":true,"frame":11309,"what":"Priority: Sam","ms":1611,"r":"priority:card:spell","did":"spell: Baleful Strix"}
+{"t":1791434006725,"turn":26,"phase":"MAIN2","active":true,"frame":11317,"what":"Baleful Strix - Creature 1 / 1","ms":559,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434007438,"turn":26,"phase":"MAIN2","active":true,"frame":11325,"what":"Priority: Sam","ms":1300,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434036360,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":11389,"what":"Priority: Sam","ms":489,"r":"priority:card:spell","did":"spell: Unsummon"}
+{"t":1791434037292,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":11398,"what":"Unsummon (91) - Return target creature to its owner's hand.","ms":1240,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434038975,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":11407,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":473,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434039892,"turn":27,"phase":"COMBAT_BEGIN","active":false,"frame":11415,"what":"Priority: Sam","ms":592,"r":"priority:eot","did":"To EOT"}
+{"t":1791434069452,"turn":28,"phase":"MAIN1","active":true,"frame":11493,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791434070723,"turn":28,"phase":"MAIN1","active":true,"frame":11500,"what":"Risen Reef - Creature 1 / 1","ms":354,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434071230,"turn":28,"phase":"MAIN1","active":true,"frame":11501,"what":"ask ability_menu: ","ms":673,"r":"ask:ability_menu","did":null}
+{"t":1791434074810,"turn":28,"phase":"MAIN1","active":true,"frame":11505,"what":"Risen Reef - Creature 1 / 1","ms":491,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434078327,"turn":28,"phase":"MAIN1","active":true,"frame":11514,"what":"Priority: Sam","ms":595,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791434079572,"turn":28,"phase":"MAIN1","active":true,"frame":11523,"what":"Knight of Autumn - Creature 2 / 1","ms":595,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434080320,"turn":28,"phase":"MAIN1","active":true,"frame":11531,"what":"Priority: Sam","ms":599,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791434081357,"turn":28,"phase":"MAIN1","active":true,"frame":11539,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":353,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434081863,"turn":28,"phase":"MAIN1","active":true,"frame":11540,"what":"ask ability_menu: ","ms":1333,"r":"ask:ability_menu","did":null}
+{"t":1791434083640,"turn":28,"phase":"MAIN1","active":true,"frame":11544,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":474,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434084266,"turn":28,"phase":"MAIN1","active":true,"frame":11551,"what":"Priority: Sam","ms":603,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434087596,"turn":28,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":11573,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1737,"r":"attack:0","did":"ok \"Confirm attacksOK\""}
+{"t":1791434091500,"turn":28,"phase":"MAIN2","active":true,"frame":11591,"what":"Priority: Sam","ms":482,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791434092423,"turn":28,"phase":"MAIN2","active":true,"frame":11598,"what":"Knight of Autumn - Creature 2 / 1","ms":472,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434093050,"turn":28,"phase":"MAIN2","active":true,"frame":11606,"what":"Priority: Sam","ms":709,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434094012,"turn":28,"phase":"CLEANUP","active":true,"frame":11619,"what":"Cleanup Phase","ms":607,"r":"select:done","did":"choose Baleful Strix"}
+{"t":1791434117539,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":11677,"what":"Priority: Sam","ms":473,"r":"priority:card:spell","did":"spell: Unsummon"}
+{"t":1791434118455,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":11686,"what":"Unsummon (91) - Return target creature to its owner's hand.","ms":1525,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434120421,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":11695,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":593,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434121456,"turn":29,"phase":"COMBAT_BEGIN","active":false,"frame":11703,"what":"Priority: Sam","ms":471,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434122082,"turn":29,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11711,"what":"Priority: Sam","ms":627,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434135673,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11741,"what":"Priority: Sam","ms":610,"r":"priority:card:spell","did":"spell: Unsummon"}
+{"t":1791434136721,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11751,"what":"Unsummon (91) - Return target creature to its owner's hand.","ms":794,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434137954,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11760,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":354,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434138573,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11761,"what":"ask ability_menu: ","ms":2925,"r":"ask:ability_menu","did":null}
+{"t":1791434141938,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11761,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":353,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434142444,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11762,"what":"ask ability_menu: ","ms":394,"r":"ask:ability_menu","did":null}
+{"t":1791434143269,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11766,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434144289,"turn":29,"phase":"END_OF_TURN","active":false,"frame":11773,"what":"Priority: Sam","ms":472,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434146955,"turn":30,"phase":"MAIN1","active":true,"frame":11786,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791434148712,"turn":30,"phase":"MAIN1","active":true,"frame":11786,"what":"Priority: Sam","ms":1118,"r":"priority:card:spell","did":"spell: Knight of Autumn"}
+{"t":1791434151153,"turn":30,"phase":"MAIN1","active":true,"frame":11795,"what":"Knight of Autumn - Creature 2 / 1","ms":476,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434151783,"turn":30,"phase":"MAIN1","active":true,"frame":11803,"what":"Priority: Sam","ms":600,"r":"priority:eot","did":"To EOT"}
+{"t":1791434156507,"turn":30,"phase":"CLEANUP","active":true,"frame":11828,"what":"Cleanup Phase","ms":609,"r":"select:done","did":"choose Knight of Autumn"}
+{"t":1791434166755,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":11870,"what":"Priority: Sam","ms":472,"r":"priority:card:spell","did":"spell: Unsummon"}
+{"t":1791434167669,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":11879,"what":"Unsummon (91) - Return target creature to its owner's hand.","ms":475,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434168587,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":11888,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":353,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434169092,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":11889,"what":"ask ability_menu: ","ms":485,"r":"ask:ability_menu","did":null}
+{"t":1791434171269,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":11893,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434173821,"turn":31,"phase":"COMBAT_BEGIN","active":false,"frame":11900,"what":"Priority: Sam","ms":491,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434174465,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11908,"what":"Priority: Sam","ms":479,"r":"priority:card:spell","did":"spell: Unsummon"}
+{"t":1791434175386,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11917,"what":"Unsummon (91) - Return target creature to its owner's hand.","ms":498,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434176317,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11926,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":357,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434176826,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11927,"what":"ask ability_menu: ","ms":393,"r":"ask:ability_menu","did":null}
+{"t":1791434178620,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11931,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":475,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434179537,"turn":31,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":11938,"what":"Priority: Sam","ms":475,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434180534,"turn":31,"phase":"END_OF_TURN","active":false,"frame":11950,"what":"Priority: Sam","ms":786,"r":"priority:card:spell","did":"spell: Unsummon"}
+{"t":1791434181769,"turn":31,"phase":"END_OF_TURN","active":false,"frame":11960,"what":"Unsummon (91) - Return target creature to its owner's hand.","ms":475,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434182684,"turn":31,"phase":"END_OF_TURN","active":false,"frame":11969,"what":"Unsummon (91) - Return Pelt Collector (92) to its owner's hand.","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434183603,"turn":31,"phase":"END_OF_TURN","active":false,"frame":11977,"what":"Priority: Sam","ms":885,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434185687,"turn":32,"phase":"MAIN1","active":true,"frame":11988,"what":"Priority: Sam","ms":375,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791434186503,"turn":32,"phase":"MAIN1","active":true,"frame":11996,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":357,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434187012,"turn":32,"phase":"MAIN1","active":true,"frame":11997,"what":"ask ability_menu: ","ms":394,"r":"ask:ability_menu","did":null}
+{"t":1791434190493,"turn":32,"phase":"MAIN1","active":true,"frame":12001,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":607,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434191253,"turn":32,"phase":"MAIN1","active":true,"frame":12008,"what":"Priority: Sam","ms":596,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434198002,"turn":32,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":12034,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":859,"r":"attack:alpha","did":"cancel \"Attack with everythingAlpha Strike\"; ok \"Attack with 1OK\""}
+{"t":1791434202503,"turn":32,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":12060,"what":"Priority: Sam","ms":693,"r":"priority:eot","did":"To EOT"}
+{"t":1791434213324,"turn":32,"phase":"CLEANUP","active":true,"frame":12087,"what":"Cleanup Phase","ms":613,"r":"select:done","did":"choose Unsummon"}
+{"t":1791434256396,"turn":33,"phase":"COMBAT_BEGIN","active":false,"frame":12166,"what":"Priority: Sam","ms":493,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434257159,"turn":33,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":12174,"what":"Priority: Sam","ms":602,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434268183,"turn":33,"phase":"END_OF_TURN","active":false,"frame":12205,"what":"Priority: Sam","ms":532,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434274777,"turn":34,"phase":"MAIN1","active":true,"frame":12220,"what":"Priority: Sam","ms":489,"r":"priority:card:land","did":"land: Marsh Flats"}
+{"t":1791434275858,"turn":34,"phase":"MAIN1","active":true,"frame":12227,"what":"Priority: Sam","ms":507,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434276800,"turn":34,"phase":"MAIN1","active":true,"frame":12235,"what":"Scute Swarm - Creature 1 / 1","ms":362,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434277314,"turn":34,"phase":"MAIN1","active":true,"frame":12236,"what":"ask ability_menu: ","ms":1573,"r":"ask:ability_menu","did":null}
+{"t":1791434279331,"turn":34,"phase":"MAIN1","active":true,"frame":12240,"what":"Scute Swarm - Creature 1 / 1","ms":2841,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434282326,"turn":34,"phase":"MAIN1","active":true,"frame":12240,"what":"Scute Swarm - Creature 1 / 1","ms":3581,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434286061,"turn":34,"phase":"MAIN1","active":true,"frame":12240,"what":"Scute Swarm - Creature 1 / 1","ms":2844,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434289060,"turn":34,"phase":"MAIN1","active":true,"frame":12240,"what":"Scute Swarm - Creature 1 / 1","ms":2847,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434292060,"turn":34,"phase":"MAIN1","active":true,"frame":12240,"what":"Scute Swarm - Creature 1 / 1","ms":483,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434292695,"turn":34,"phase":"MAIN1","active":true,"frame":12247,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434296570,"turn":34,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":12269,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1001,"r":"attack:1","did":"attack with Pelt Collector; ok \"Attack with 1OK\""}
+{"t":1791434300591,"turn":34,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":12298,"what":"Priority: Sam","ms":620,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434306013,"turn":34,"phase":"MAIN2","active":true,"frame":12317,"what":"Priority: Sam","ms":487,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791434306948,"turn":34,"phase":"MAIN2","active":true,"frame":12324,"what":"Eternal Witness - Creature 2 / 1","ms":365,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434307470,"turn":34,"phase":"MAIN2","active":true,"frame":12325,"what":"ask ability_menu: ","ms":1383,"r":"ask:ability_menu","did":null}
+{"t":1791434309298,"turn":34,"phase":"MAIN2","active":true,"frame":12329,"what":"Eternal Witness - Creature 2 / 1","ms":2842,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434312296,"turn":34,"phase":"MAIN2","active":true,"frame":12329,"what":"Eternal Witness - Creature 2 / 1","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434312955,"turn":34,"phase":"MAIN2","active":true,"frame":12336,"what":"Priority: Sam","ms":612,"r":"priority:card:spell","did":"spell: Risen Reef"}
+{"t":1791434314398,"turn":34,"phase":"MAIN2","active":true,"frame":12344,"what":"Risen Reef - Creature 1 / 1","ms":2841,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434317394,"turn":34,"phase":"MAIN2","active":true,"frame":12344,"what":"Risen Reef - Creature 1 / 1","ms":2845,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434320392,"turn":34,"phase":"MAIN2","active":true,"frame":12344,"what":"Risen Reef - Creature 1 / 1","ms":2847,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434323392,"turn":34,"phase":"MAIN2","active":true,"frame":12344,"what":"Risen Reef - Creature 1 / 1","ms":2848,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434326396,"turn":34,"phase":"MAIN2","active":true,"frame":12344,"what":"Risen Reef - Creature 1 / 1","ms":2843,"r":"pay:tap","did":"tap Marsh Flats for mana"}
+{"t":1791434329392,"turn":34,"phase":"MAIN2","active":true,"frame":12344,"what":"Risen Reef - Creature 1 / 1","ms":361,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434329906,"turn":34,"phase":"MAIN2","active":true,"frame":12345,"what":"ask ability_menu: ","ms":395,"r":"ask:ability_menu","did":null}
+{"t":1791434330746,"turn":34,"phase":"MAIN2","active":true,"frame":12349,"what":"Risen Reef - Creature 1 / 1","ms":481,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434331381,"turn":34,"phase":"MAIN2","active":true,"frame":12356,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791434333137,"turn":34,"phase":"MAIN2","active":true,"frame":12356,"what":"Priority: Sam","ms":487,"r":"priority:card:ability (ability)","did":"ability (ability): Marsh Flats"}
+{"t":1791434334065,"turn":34,"phase":"MAIN2","active":true,"frame":12361,"what":"Do you want to pay 1 life?","ms":605,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791434335114,"turn":34,"phase":"MAIN2","active":true,"frame":12368,"what":"Priority: Sam","ms":599,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791434338700,"turn":34,"phase":"MAIN2","active":true,"frame":12378,"what":"ask choose_list: Looking at cards in your library","ms":729,"r":"ask:choose_list","did":null}
+{"t":1791434339583,"turn":34,"phase":"MAIN2","active":true,"frame":12386,"what":"Priority: Sam","ms":373,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434340109,"turn":34,"phase":"MAIN2","active":true,"frame":12387,"what":"ask ability_menu: ","ms":1212,"r":"ask:ability_menu","did":null}
+{"t":1791434341763,"turn":34,"phase":"MAIN2","active":true,"frame":12395,"what":"Grim Haruspex - Creature 3 / 2","ms":358,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434342276,"turn":34,"phase":"MAIN2","active":true,"frame":12396,"what":"ask ability_menu: ","ms":1731,"r":"ask:ability_menu","did":null}
+{"t":1791434344446,"turn":34,"phase":"MAIN2","active":true,"frame":12396,"what":"Grim Haruspex - Creature 3 / 2","ms":360,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434344958,"turn":34,"phase":"MAIN2","active":true,"frame":12397,"what":"ask ability_menu: ","ms":396,"r":"ask:ability_menu","did":null}
+{"t":1791434345896,"turn":34,"phase":"MAIN2","active":true,"frame":12401,"what":"Grim Haruspex - Creature 3 / 2","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434346532,"turn":34,"phase":"MAIN2","active":true,"frame":12408,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791434348287,"turn":34,"phase":"MAIN2","active":true,"frame":12408,"what":"Priority: Sam","ms":491,"r":"priority:card:spell","did":"spell: Myr Sire"}
+{"t":1791434349211,"turn":34,"phase":"MAIN2","active":true,"frame":12416,"what":"Myr Sire - Creature 1 / 1","ms":361,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434349725,"turn":34,"phase":"MAIN2","active":true,"frame":12417,"what":"ask ability_menu: ","ms":392,"r":"ask:ability_menu","did":null}
+{"t":1791434350562,"turn":34,"phase":"MAIN2","active":true,"frame":12421,"what":"Myr Sire - Creature 1 / 1","ms":604,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434351320,"turn":34,"phase":"MAIN2","active":true,"frame":12428,"what":"Priority: Sam","ms":489,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434352248,"turn":34,"phase":"MAIN2","active":true,"frame":12436,"what":"Scute Swarm - Creature 1 / 1","ms":376,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434352775,"turn":34,"phase":"MAIN2","active":true,"frame":12437,"what":"ask ability_menu: ","ms":392,"r":"ask:ability_menu","did":null}
+{"t":1791434353613,"turn":34,"phase":"MAIN2","active":true,"frame":12441,"what":"Scute Swarm - Creature 1 / 1","ms":477,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434354446,"turn":34,"phase":"MAIN2","active":true,"frame":12448,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791434355362,"turn":34,"phase":"MAIN2","active":true,"frame":12456,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":362,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434355877,"turn":34,"phase":"MAIN2","active":true,"frame":12457,"what":"ask ability_menu: ","ms":1732,"r":"ask:ability_menu","did":null}
+{"t":1791434359697,"turn":34,"phase":"MAIN2","active":true,"frame":12461,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":602,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434360451,"turn":34,"phase":"MAIN2","active":true,"frame":12468,"what":"Priority: Sam","ms":500,"r":"priority:card:spell","did":"spell: Monastery Swiftspear"}
+{"t":1791434361105,"turn":34,"phase":"MAIN2","active":true,"frame":12476,"what":"Monastery Swiftspear - Creature 1 / 2","ms":1148,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434362405,"turn":34,"phase":"MAIN2","active":true,"frame":12477,"what":"ask ability_menu: ","ms":517,"r":"ask:ability_menu","did":null}
+{"t":1791434363362,"turn":34,"phase":"MAIN2","active":true,"frame":12481,"what":"Monastery Swiftspear - Creature 1 / 2","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434364001,"turn":34,"phase":"MAIN2","active":true,"frame":12488,"what":"Priority: Sam","ms":974,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434378579,"turn":35,"phase":"COMBAT_BEGIN","active":false,"frame":12535,"what":"Priority: Sam","ms":476,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434379208,"turn":35,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":12543,"what":"Priority: Sam","ms":481,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434402660,"turn":35,"phase":"END_OF_TURN","active":false,"frame":12596,"what":"Priority: Sam","ms":479,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434403573,"turn":35,"phase":"CLEANUP","active":false,"frame":12601,"what":"Waiting for Justin...","ms":1848,"r":"moved-on","did":null}
+{"t":1791434405864,"turn":36,"phase":"MAIN1","active":true,"frame":12608,"what":"Priority: Sam","ms":498,"r":"priority:card:spell","did":"spell: Myr Sire"}
+{"t":1791434406811,"turn":36,"phase":"MAIN1","active":true,"frame":12616,"what":"Myr Sire - Creature 1 / 1","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434407444,"turn":36,"phase":"MAIN1","active":true,"frame":12624,"what":"Priority: Sam","ms":968,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434409464,"turn":36,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":12640,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":616,"r":"attack:0","did":"ok \"Confirm attacksOK\""}
+{"t":1791434410344,"turn":36,"phase":"MAIN2","active":true,"frame":12656,"what":"Priority: Sam","ms":481,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791434411259,"turn":36,"phase":"MAIN2","active":true,"frame":12663,"what":"Eternal Witness - Creature 2 / 1","ms":360,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434412765,"turn":36,"phase":"MAIN2","active":true,"frame":12664,"what":"ask ability_menu: ","ms":510,"r":"ask:ability_menu","did":null}
+{"t":1791434413711,"turn":36,"phase":"MAIN2","active":true,"frame":12668,"what":"Eternal Witness - Creature 2 / 1","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434414343,"turn":36,"phase":"MAIN2","active":true,"frame":12675,"what":"Priority: Sam","ms":817,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434416672,"turn":36,"phase":"MAIN2","active":true,"frame":12676,"what":"ask ability_menu: ","ms":619,"r":"ask:ability_menu","did":null}
+{"t":1791434417727,"turn":36,"phase":"MAIN2","active":true,"frame":12684,"what":"Morph - Creature 2/2","ms":361,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434418239,"turn":36,"phase":"MAIN2","active":true,"frame":12685,"what":"ask ability_menu: ","ms":1395,"r":"ask:ability_menu","did":null}
+{"t":1791434420206,"turn":36,"phase":"MAIN2","active":true,"frame":12689,"what":"Morph - Creature 2/2","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434420845,"turn":36,"phase":"MAIN2","active":true,"frame":12696,"what":"Priority: Sam","ms":600,"r":"priority:card:spell","did":"spell: Sun Titan"}
+{"t":1791434422643,"turn":36,"phase":"MAIN2","active":true,"frame":12704,"what":"Sun Titan - Creature 6 / 6","ms":359,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434423154,"turn":36,"phase":"MAIN2","active":true,"frame":12705,"what":"ask ability_menu: ","ms":2735,"r":"ask:ability_menu","did":null}
+{"t":1791434426327,"turn":36,"phase":"MAIN2","active":true,"frame":12705,"what":"Sun Titan - Creature 6 / 6","ms":358,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434426837,"turn":36,"phase":"MAIN2","active":true,"frame":12706,"what":"ask ability_menu: ","ms":735,"r":"ask:ability_menu","did":null}
+{"t":1791434428009,"turn":36,"phase":"MAIN2","active":true,"frame":12710,"what":"Sun Titan - Creature 6 / 6","ms":601,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434428764,"turn":36,"phase":"MAIN2","active":true,"frame":12717,"what":"Priority: Sam","ms":855,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434429772,"turn":36,"phase":"CLEANUP","active":true,"frame":12729,"what":"Cleanup Phase","ms":845,"r":"select:done","did":"choose Risen Reef"}
+{"t":1791434444531,"turn":37,"phase":"COMBAT_BEGIN","active":false,"frame":12781,"what":"Priority: Sam","ms":482,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434445168,"turn":37,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":12789,"what":"Priority: Sam","ms":494,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434468209,"turn":37,"phase":"END_OF_TURN","active":false,"frame":12863,"what":"Priority: Sam","ms":620,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434470244,"turn":38,"phase":"MAIN1","active":true,"frame":12875,"what":"Priority: Sam","ms":480,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791434472794,"turn":38,"phase":"MAIN1","active":true,"frame":12881,"what":"Priority: Sam","ms":381,"r":"moved-on","did":null}
+{"t":1791434473329,"turn":38,"phase":"MAIN1","active":true,"frame":12884,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":373,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434473855,"turn":38,"phase":"MAIN1","active":true,"frame":12885,"what":"ask ability_menu: ","ms":394,"r":"ask:ability_menu","did":null}
+{"t":1791434474691,"turn":38,"phase":"MAIN1","active":true,"frame":12889,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":480,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434475324,"turn":38,"phase":"MAIN1","active":true,"frame":12896,"what":"Priority: Sam","ms":482,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791434476549,"turn":38,"phase":"MAIN1","active":true,"frame":12904,"what":"Eternal Witness - Creature 2 / 1","ms":370,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434477072,"turn":38,"phase":"MAIN1","active":true,"frame":12905,"what":"ask ability_menu: ","ms":1730,"r":"ask:ability_menu","did":null}
+{"t":1791434480361,"turn":38,"phase":"MAIN1","active":true,"frame":12909,"what":"Eternal Witness - Creature 2 / 1","ms":618,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434481132,"turn":38,"phase":"MAIN1","active":true,"frame":12917,"what":"Priority: Sam","ms":371,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434481658,"turn":38,"phase":"MAIN1","active":true,"frame":12918,"what":"ask ability_menu: ","ms":398,"r":"ask:ability_menu","did":null}
+{"t":1791434482490,"turn":38,"phase":"MAIN1","active":true,"frame":12926,"what":"Grim Haruspex - Creature 3 / 2","ms":361,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434483003,"turn":38,"phase":"MAIN1","active":true,"frame":12927,"what":"ask ability_menu: ","ms":1488,"r":"ask:ability_menu","did":null}
+{"t":1791434484927,"turn":38,"phase":"MAIN1","active":true,"frame":12931,"what":"Grim Haruspex - Creature 3 / 2","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434485562,"turn":38,"phase":"MAIN1","active":true,"frame":12938,"what":"Priority: Sam","ms":495,"r":"priority:card:spell","did":"spell: Sun Titan"}
+{"t":1791434486209,"turn":38,"phase":"MAIN1","active":true,"frame":12946,"what":"Sun Titan - Creature 6 / 6","ms":1074,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434487436,"turn":38,"phase":"MAIN1","active":true,"frame":12947,"what":"ask ability_menu: ","ms":806,"r":"ask:ability_menu","did":null}
+{"t":1791434488674,"turn":38,"phase":"MAIN1","active":true,"frame":12951,"what":"Sun Titan - Creature 6 / 6","ms":485,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434489312,"turn":38,"phase":"MAIN1","active":true,"frame":12958,"what":"Priority: Sam","ms":1394,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434494825,"turn":38,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":12977,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1353,"r":"attack:alpha","did":"cancel \"Attack with everythingAlpha Strike\"; ok \"Attack with 1OK\""}
+{"t":1791434497670,"turn":38,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":13003,"what":"Priority: Sam","ms":850,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434499015,"turn":38,"phase":"MAIN2","active":true,"frame":13018,"what":"Priority: Sam","ms":2936,"r":"priority:card:spell","did":"spell: Soul Warden"}
+{"t":1791434504419,"turn":38,"phase":"MAIN2","active":true,"frame":13026,"what":"Soul Warden - Creature 1 / 1","ms":466,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434505172,"turn":38,"phase":"MAIN2","active":true,"frame":13027,"what":"ask ability_menu: ","ms":394,"r":"ask:ability_menu","did":null}
+{"t":1791434506005,"turn":38,"phase":"MAIN2","active":true,"frame":13031,"what":"Soul Warden - Creature 1 / 1","ms":484,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434506643,"turn":38,"phase":"MAIN2","active":true,"frame":13038,"what":"Priority: Sam","ms":1347,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434508220,"turn":38,"phase":"CLEANUP","active":true,"frame":13050,"what":"Cleanup Phase","ms":701,"r":"select:1","did":"choose Soul Warden"}
+{"t":1791434513289,"turn":39,"phase":"COMBAT_BEGIN","active":false,"frame":13072,"what":"Priority: Sam","ms":557,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434514000,"turn":39,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":13080,"what":"Priority: Sam","ms":611,"r":"priority:eot","did":"To EOT"}
+{"t":1791434515787,"turn":40,"phase":"MAIN1","active":true,"frame":13100,"what":"Priority: Sam","ms":614,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434523245,"turn":40,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":13121,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":877,"r":"attack:1","did":"attack with Pelt Collector; ok \"Attack with 1OK\""}
+{"t":1791434530225,"turn":40,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":13150,"what":"Priority: Sam","ms":602,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434534830,"turn":40,"phase":"MAIN2","active":true,"frame":13164,"what":"Priority: Sam","ms":371,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434535353,"turn":40,"phase":"MAIN2","active":true,"frame":13165,"what":"ask ability_menu: ","ms":853,"r":"ask:ability_menu","did":null}
+{"t":1791434537452,"turn":40,"phase":"MAIN2","active":true,"frame":13173,"what":"Morph - Creature 2/2","ms":471,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434538075,"turn":40,"phase":"MAIN2","active":true,"frame":13174,"what":"ask ability_menu: ","ms":388,"r":"ask:ability_menu","did":null}
+{"t":1791434538904,"turn":40,"phase":"MAIN2","active":true,"frame":13178,"what":"Morph - Creature 2/2","ms":484,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434539543,"turn":40,"phase":"MAIN2","active":true,"frame":13185,"what":"Priority: Sam","ms":616,"r":"priority:card:spell","did":"spell: Seasoned Pyromancer"}
+{"t":1791434540605,"turn":40,"phase":"MAIN2","active":true,"frame":13193,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":361,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434541420,"turn":40,"phase":"MAIN2","active":true,"frame":13194,"what":"ask ability_menu: ","ms":436,"r":"ask:ability_menu","did":null}
+{"t":1791434542305,"turn":40,"phase":"MAIN2","active":true,"frame":13198,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":483,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434544764,"turn":40,"phase":"MAIN2","active":true,"frame":13205,"what":"Priority: Sam","ms":735,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434545652,"turn":40,"phase":"CLEANUP","active":true,"frame":13214,"what":"Cleanup Phase","ms":849,"r":"select:done","did":"choose Myr Sire"}
+{"t":1791434553280,"turn":41,"phase":"COMBAT_BEGIN","active":false,"frame":13246,"what":"Priority: Sam","ms":615,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434554048,"turn":41,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":13254,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791434555804,"turn":41,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":13254,"what":"Priority: Sam","ms":601,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434556579,"turn":41,"phase":"END_OF_TURN","active":false,"frame":13263,"what":"Priority: Sam","ms":856,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434558506,"turn":42,"phase":"MAIN1","active":true,"frame":13274,"what":"Priority: Sam","ms":369,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434559229,"turn":42,"phase":"MAIN1","active":true,"frame":13275,"what":"ask ability_menu: ","ms":405,"r":"ask:ability_menu","did":null}
+{"t":1791434560071,"turn":42,"phase":"MAIN1","active":true,"frame":13283,"what":"Grim Haruspex - Creature 3 / 2","ms":363,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434560585,"turn":42,"phase":"MAIN1","active":true,"frame":13284,"what":"ask ability_menu: ","ms":397,"r":"ask:ability_menu","did":null}
+{"t":1791434561505,"turn":42,"phase":"MAIN1","active":true,"frame":13288,"what":"Grim Haruspex - Creature 3 / 2","ms":482,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434562140,"turn":42,"phase":"MAIN1","active":true,"frame":13295,"what":"Priority: Sam","ms":500,"r":"priority:card:spell","did":"spell: Seasoned Pyromancer"}
+{"t":1791434563086,"turn":42,"phase":"MAIN1","active":true,"frame":13303,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":363,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434563600,"turn":42,"phase":"MAIN1","active":true,"frame":13304,"what":"ask ability_menu: ","ms":1785,"r":"ask:ability_menu","did":null}
+{"t":1791434565820,"turn":42,"phase":"MAIN1","active":true,"frame":13304,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":364,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434566336,"turn":42,"phase":"MAIN1","active":true,"frame":13305,"what":"ask ability_menu: ","ms":401,"r":"ask:ability_menu","did":null}
+{"t":1791434567170,"turn":42,"phase":"MAIN1","active":true,"frame":13309,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":486,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434567813,"turn":42,"phase":"MAIN1","active":true,"frame":13316,"what":"Priority: Sam","ms":620,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791434568870,"turn":42,"phase":"MAIN1","active":true,"frame":13324,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":362,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434569388,"turn":42,"phase":"MAIN1","active":true,"frame":13325,"what":"ask ability_menu: ","ms":1160,"r":"ask:ability_menu","did":null}
+{"t":1791434570988,"turn":42,"phase":"MAIN1","active":true,"frame":13329,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":606,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434572428,"turn":42,"phase":"MAIN1","active":true,"frame":13337,"what":"Priority: Sam","ms":3656,"r":"priority:card:spell","did":"spell: Sun Titan"}
+{"t":1791434576519,"turn":42,"phase":"MAIN1","active":true,"frame":13345,"what":"Sun Titan - Creature 6 / 6","ms":470,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434577335,"turn":42,"phase":"MAIN1","active":true,"frame":13346,"what":"ask ability_menu: ","ms":1933,"r":"ask:ability_menu","did":null}
+{"t":1791434581172,"turn":42,"phase":"MAIN1","active":true,"frame":13350,"what":"Sun Titan - Creature 6 / 6","ms":501,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434581826,"turn":42,"phase":"MAIN1","active":true,"frame":13357,"what":"Priority: Sam","ms":619,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434586337,"turn":42,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":13381,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":2051,"r":"attack:1","did":"attack with Pelt Collector; ok \"Attack with 1OK\""}
+{"t":1791434592853,"turn":42,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":13414,"what":"Priority: Sam","ms":608,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434594924,"turn":42,"phase":"MAIN2","active":true,"frame":13426,"what":"Priority: Sam","ms":380,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434595459,"turn":42,"phase":"MAIN2","active":true,"frame":13427,"what":"ask ability_menu: ","ms":409,"r":"ask:ability_menu","did":null}
+{"t":1791434596302,"turn":42,"phase":"MAIN2","active":true,"frame":13435,"what":"Morph - Creature 2/2","ms":363,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434599403,"turn":42,"phase":"MAIN2","active":true,"frame":13436,"what":"ask ability_menu: ","ms":609,"r":"ask:ability_menu","did":null}
+{"t":1791434600452,"turn":42,"phase":"MAIN2","active":true,"frame":13440,"what":"Morph - Creature 2/2","ms":489,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434601095,"turn":42,"phase":"MAIN2","active":true,"frame":13447,"what":"Priority: Sam","ms":495,"r":"priority:card:land","did":"land: Breeding Pool"}
+{"t":1791434602052,"turn":42,"phase":"MAIN2","active":true,"frame":13453,"what":"Do you want to pay 2 life?","ms":492,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791434603671,"turn":42,"phase":"MAIN2","active":true,"frame":13460,"what":"Priority: Sam","ms":490,"r":"priority:card:spell","did":"spell: Monastery Swiftspear"}
+{"t":1791434604602,"turn":42,"phase":"MAIN2","active":true,"frame":13468,"what":"Monastery Swiftspear - Creature 1 / 2","ms":1208,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434605962,"turn":42,"phase":"MAIN2","active":true,"frame":13469,"what":"ask ability_menu: ","ms":1734,"r":"ask:ability_menu","did":null}
+{"t":1791434609704,"turn":42,"phase":"MAIN2","active":true,"frame":13473,"what":"Monastery Swiftspear - Creature 1 / 2","ms":361,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434610219,"turn":42,"phase":"MAIN2","active":true,"frame":13474,"what":"ask ability_menu: ","ms":397,"r":"ask:ability_menu","did":null}
+{"t":1791434611051,"turn":42,"phase":"MAIN2","active":true,"frame":13478,"what":"Monastery Swiftspear - Creature 1 / 2","ms":493,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434611701,"turn":42,"phase":"MAIN2","active":true,"frame":13485,"what":"Priority: Sam","ms":487,"r":"priority:card:spell","did":"spell: Zulaport Cutthroat"}
+{"t":1791434613672,"turn":42,"phase":"MAIN2","active":true,"frame":13494,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":1546,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791434615485,"turn":42,"phase":"MAIN2","active":true,"frame":13497,"what":"Zulaport Cutthroat - Creature 1 / 1","ms":987,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791434616904,"turn":42,"phase":"MAIN2","active":true,"frame":13504,"what":"Priority: Sam","ms":1157,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791434619405,"turn":42,"phase":"MAIN2","active":true,"frame":13518,"what":"Priority: Sam","ms":3457,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791434623669,"turn":42,"phase":"MAIN2","active":true,"frame":13526,"what":"Eternal Witness - Creature 2 / 1","ms":542,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434624364,"turn":42,"phase":"MAIN2","active":true,"frame":13534,"what":"Priority: Sam","ms":494,"r":"priority:card:spell","did":"spell: Sun Titan"}
+{"t":1791434625301,"turn":42,"phase":"MAIN2","active":true,"frame":13542,"what":"Sun Titan - Creature 6 / 6","ms":488,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434626210,"turn":42,"phase":"MAIN2","active":true,"frame":13550,"what":"Priority: Sam","ms":496,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434627151,"turn":42,"phase":"MAIN2","active":true,"frame":13558,"what":"Scute Swarm - Creature 1 / 1","ms":673,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434627978,"turn":42,"phase":"MAIN2","active":true,"frame":13566,"what":"Priority: Sam","ms":616,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434644869,"turn":43,"phase":"COMBAT_BEGIN","active":false,"frame":13615,"what":"Priority: Sam","ms":491,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434645516,"turn":43,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":13623,"what":"Priority: Sam","ms":612,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434673734,"turn":43,"phase":"END_OF_TURN","active":false,"frame":13697,"what":"Priority: Sam","ms":519,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434677823,"turn":44,"phase":"MAIN1","active":true,"frame":13713,"what":"Priority: Sam","ms":784,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434679116,"turn":44,"phase":"MAIN1","active":true,"frame":13721,"what":"Scute Swarm - Creature 1 / 1","ms":365,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434679633,"turn":44,"phase":"MAIN1","active":true,"frame":13722,"what":"ask ability_menu: ","ms":406,"r":"ask:ability_menu","did":null}
+{"t":1791434680484,"turn":44,"phase":"MAIN1","active":true,"frame":13726,"what":"Scute Swarm - Creature 1 / 1","ms":365,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434681170,"turn":44,"phase":"MAIN1","active":true,"frame":13727,"what":"ask ability_menu: ","ms":396,"r":"ask:ability_menu","did":null}
+{"t":1791434683868,"turn":44,"phase":"MAIN1","active":true,"frame":13731,"what":"Scute Swarm - Creature 1 / 1","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434684514,"turn":44,"phase":"MAIN1","active":true,"frame":13738,"what":"Priority: Sam","ms":619,"r":"priority:card:spell","did":"spell: Sun Titan"}
+{"t":1791434685566,"turn":44,"phase":"MAIN1","active":true,"frame":13746,"what":"Sun Titan - Creature 6 / 6","ms":379,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434686096,"turn":44,"phase":"MAIN1","active":true,"frame":13747,"what":"ask ability_menu: ","ms":410,"r":"ask:ability_menu","did":null}
+{"t":1791434686949,"turn":44,"phase":"MAIN1","active":true,"frame":13751,"what":"Sun Titan - Creature 6 / 6","ms":369,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434687498,"turn":44,"phase":"MAIN1","active":true,"frame":13752,"what":"ask ability_menu: ","ms":399,"r":"ask:ability_menu","did":null}
+{"t":1791434689000,"turn":44,"phase":"MAIN1","active":true,"frame":13756,"what":"Sun Titan - Creature 6 / 6","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434689648,"turn":44,"phase":"MAIN1","active":true,"frame":13763,"what":"Priority: Sam","ms":493,"r":"priority:card:spell","did":"spell: Bloodghast"}
+{"t":1791434690583,"turn":44,"phase":"MAIN1","active":true,"frame":13771,"what":"Bloodghast - Creature 2 / 1","ms":365,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434691099,"turn":44,"phase":"MAIN1","active":true,"frame":13772,"what":"ask ability_menu: ","ms":803,"r":"ask:ability_menu","did":null}
+{"t":1791434692349,"turn":44,"phase":"MAIN1","active":true,"frame":13776,"what":"Bloodghast - Creature 2 / 1","ms":383,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434692885,"turn":44,"phase":"MAIN1","active":true,"frame":13777,"what":"ask ability_menu: ","ms":1724,"r":"ask:ability_menu","did":null}
+{"t":1791434695072,"turn":44,"phase":"MAIN1","active":true,"frame":13777,"what":"Bloodghast - Creature 2 / 1","ms":376,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434695600,"turn":44,"phase":"MAIN1","active":true,"frame":13778,"what":"ask ability_menu: ","ms":402,"r":"ask:ability_menu","did":null}
+{"t":1791434696450,"turn":44,"phase":"MAIN1","active":true,"frame":13782,"what":"Bloodghast - Creature 2 / 1","ms":2839,"r":"pay:pool","did":"floating mana"}
+{"t":1791434699443,"turn":44,"phase":"MAIN1","active":true,"frame":13782,"what":"Bloodghast - Creature 2 / 1","ms":621,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434700219,"turn":44,"phase":"MAIN1","active":true,"frame":13790,"what":"Priority: Sam","ms":503,"r":"priority:card:spell","did":"spell: Seasoned Pyromancer"}
+{"t":1791434701748,"turn":44,"phase":"MAIN1","active":true,"frame":13798,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":496,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434702397,"turn":44,"phase":"MAIN1","active":true,"frame":13800,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":2843,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434705450,"turn":44,"phase":"MAIN1","active":true,"frame":13800,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":2205,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434707809,"turn":44,"phase":"MAIN1","active":true,"frame":13810,"what":"Priority: Sam","ms":371,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434708333,"turn":44,"phase":"MAIN1","active":true,"frame":13811,"what":"ask ability_menu: ","ms":282,"r":"ask:ability_menu","did":null}
+{"t":1791434708768,"turn":44,"phase":"MAIN1","active":true,"frame":13812,"what":"Priority: Sam","ms":528,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791434709731,"turn":44,"phase":"MAIN1","active":true,"frame":13821,"what":"Morph - Creature 2/2","ms":369,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434710252,"turn":44,"phase":"MAIN1","active":true,"frame":13822,"what":"ask ability_menu: ","ms":403,"r":"ask:ability_menu","did":null}
+{"t":1791434711098,"turn":44,"phase":"MAIN1","active":true,"frame":13826,"what":"Morph - Creature 2/2","ms":366,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434712571,"turn":44,"phase":"MAIN1","active":true,"frame":13827,"what":"ask ability_menu: ","ms":494,"r":"ask:ability_menu","did":null}
+{"t":1791434713497,"turn":44,"phase":"MAIN1","active":true,"frame":13831,"what":"Morph - Creature 2/2","ms":547,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434714197,"turn":44,"phase":"MAIN1","active":true,"frame":13838,"what":"Priority: Sam","ms":488,"r":"priority:card:spell","did":"spell: Monastery Swiftspear"}
+{"t":1791434715133,"turn":44,"phase":"MAIN1","active":true,"frame":13846,"what":"Monastery Swiftspear - Creature 1 / 2","ms":366,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434715652,"turn":44,"phase":"MAIN1","active":true,"frame":13847,"what":"ask ability_menu: ","ms":3374,"r":"ask:ability_menu","did":null}
+{"t":1791434719998,"turn":44,"phase":"MAIN1","active":true,"frame":13851,"what":"Monastery Swiftspear - Creature 1 / 2","ms":366,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434720517,"turn":44,"phase":"MAIN1","active":true,"frame":13852,"what":"ask ability_menu: ","ms":399,"r":"ask:ability_menu","did":null}
+{"t":1791434721347,"turn":44,"phase":"MAIN1","active":true,"frame":13856,"what":"Monastery Swiftspear - Creature 1 / 2","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434721999,"turn":44,"phase":"MAIN1","active":true,"frame":13863,"what":"Priority: Sam","ms":857,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434726564,"turn":44,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":13888,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":486,"r":"attack:0","did":"ok \"Confirm attacksOK\""}
+{"t":1791434727202,"turn":44,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":13894,"what":"Select creatures to attack null or select player/card you wish to attack.","ms":5653,"r":"attack:moved-on","did":"attack with Pelt Collector; attack with Zulaport Cutthroat"}
+{"t":1791434733169,"turn":44,"phase":"MAIN2","active":true,"frame":13911,"what":"Priority: Sam","ms":503,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434751664,"turn":45,"phase":"COMBAT_BEGIN","active":false,"frame":13963,"what":"Priority: Sam","ms":492,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434752309,"turn":45,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":13971,"what":"Priority: Sam","ms":4245,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434776614,"turn":45,"phase":"END_OF_TURN","active":false,"frame":14029,"what":"Priority: Sam","ms":851,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434780149,"turn":46,"phase":"MAIN1","active":true,"frame":14040,"what":"Priority: Sam","ms":512,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434781257,"turn":46,"phase":"MAIN1","active":true,"frame":14048,"what":"Scute Swarm - Creature 1 / 1","ms":382,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434781791,"turn":46,"phase":"MAIN1","active":true,"frame":14049,"what":"ask ability_menu: ","ms":517,"r":"ask:ability_menu","did":null}
+{"t":1791434782750,"turn":46,"phase":"MAIN1","active":true,"frame":14053,"what":"Scute Swarm - Creature 1 / 1","ms":370,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434783272,"turn":46,"phase":"MAIN1","active":true,"frame":14054,"what":"ask ability_menu: ","ms":414,"r":"ask:ability_menu","did":null}
+{"t":1791434786172,"turn":46,"phase":"MAIN1","active":true,"frame":14058,"what":"Scute Swarm - Creature 1 / 1","ms":503,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434786829,"turn":46,"phase":"MAIN1","active":true,"frame":14065,"what":"Priority: Sam","ms":494,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434790179,"turn":46,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":14082,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1006,"r":"attack:1","did":"attack with Pelt Collector; ok \"Attack with 1OK\""}
+{"t":1791434802790,"turn":46,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14113,"what":"Priority: Sam","ms":1422,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434804439,"turn":46,"phase":"MAIN2","active":true,"frame":14126,"what":"Priority: Sam","ms":500,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791434806752,"turn":46,"phase":"MAIN2","active":true,"frame":14129,"what":"ask choose_list: Choose optional costs","ms":2483,"r":"ask:choose_list","did":null}
+{"t":1791434816644,"turn":46,"phase":"MAIN2","active":true,"frame":14140,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":511,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434817595,"turn":46,"phase":"MAIN2","active":true,"frame":14149,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":368,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434818230,"turn":46,"phase":"MAIN2","active":true,"frame":14150,"what":"ask ability_menu: ","ms":1116,"r":"ask:ability_menu","did":null}
+{"t":1791434819777,"turn":46,"phase":"MAIN2","active":true,"frame":14154,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434820452,"turn":46,"phase":"MAIN2","active":true,"frame":14161,"what":"Priority: Sam","ms":624,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434821511,"turn":46,"phase":"MAIN2","active":true,"frame":14169,"what":"Scute Swarm - Creature 1 / 1","ms":367,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434822030,"turn":46,"phase":"MAIN2","active":true,"frame":14170,"what":"ask ability_menu: ","ms":743,"r":"ask:ability_menu","did":null}
+{"t":1791434823211,"turn":46,"phase":"MAIN2","active":true,"frame":14174,"what":"Scute Swarm - Creature 1 / 1","ms":368,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434823731,"turn":46,"phase":"MAIN2","active":true,"frame":14175,"what":"ask ability_menu: ","ms":414,"r":"ask:ability_menu","did":null}
+{"t":1791434824577,"turn":46,"phase":"MAIN2","active":true,"frame":14179,"what":"Scute Swarm - Creature 1 / 1","ms":1664,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434826396,"turn":46,"phase":"MAIN2","active":true,"frame":14186,"what":"Priority: Sam","ms":1020,"r":"priority:card:spell","did":"spell: Seasoned Pyromancer"}
+{"t":1791434830111,"turn":46,"phase":"MAIN2","active":true,"frame":14195,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":366,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434830629,"turn":46,"phase":"MAIN2","active":true,"frame":14196,"what":"ask ability_menu: ","ms":756,"r":"ask:ability_menu","did":null}
+{"t":1791434831828,"turn":46,"phase":"MAIN2","active":true,"frame":14200,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":366,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434832345,"turn":46,"phase":"MAIN2","active":true,"frame":14201,"what":"ask ability_menu: ","ms":1726,"r":"ask:ability_menu","did":null}
+{"t":1791434834510,"turn":46,"phase":"MAIN2","active":true,"frame":14201,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":368,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434835031,"turn":46,"phase":"MAIN2","active":true,"frame":14202,"what":"ask ability_menu: ","ms":418,"r":"ask:ability_menu","did":null}
+{"t":1791434835893,"turn":46,"phase":"MAIN2","active":true,"frame":14206,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":389,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434836435,"turn":46,"phase":"MAIN2","active":true,"frame":14207,"what":"Seasoned Pyromancer - Creature 2 / 2","ms":620,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434840729,"turn":46,"phase":"CLEANUP","active":true,"frame":14234,"what":"Cleanup Phase","ms":518,"r":"select:done","did":"choose Seasoned Pyromancer"}
+{"t":1791434853262,"turn":47,"phase":"COMBAT_BEGIN","active":false,"frame":14272,"what":"Priority: Sam","ms":850,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791434854558,"turn":47,"phase":"COMBAT_BEGIN","active":false,"frame":14278,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434855494,"turn":47,"phase":"COMBAT_BEGIN","active":false,"frame":14286,"what":"Priority: Sam","ms":371,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434856019,"turn":47,"phase":"COMBAT_BEGIN","active":false,"frame":14287,"what":"Priority: Sam","ms":1638,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434857810,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14303,"what":"Priority: Sam","ms":2233,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791434860494,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14309,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":366,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434861011,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14310,"what":"ask ability_menu: ","ms":403,"r":"ask:ability_menu","did":null}
+{"t":1791434861859,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14314,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":366,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434862379,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14315,"what":"ask ability_menu: ","ms":399,"r":"ask:ability_menu","did":null}
+{"t":1791434863227,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14319,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":493,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434865036,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14326,"what":"Priority: Sam","ms":103,"r":"stuck","did":null}
+{"t":1791434866794,"turn":47,"phase":"END_OF_TURN","active":false,"frame":14326,"what":"Priority: Sam","ms":503,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434868920,"turn":48,"phase":"MAIN1","active":true,"frame":14339,"what":"Priority: Sam","ms":661,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434872645,"turn":48,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":14361,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1189,"r":"attack:2","did":"attack with Pelt Collector; attack with Zulaport Cutthroat; ok \"Attack with 2OK\""}
+{"t":1791434880045,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14395,"what":"Priority: Sam","ms":559,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791434880756,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14399,"what":"ask choose_list: Choose optional costs","ms":436,"r":"ask:choose_list","did":null}
+{"t":1791434882520,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14407,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":500,"r":"select:1","did":"choose Pelt Collector"}
+{"t":1791434883176,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14414,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":687,"r":"open-target","did":"target card 81"}
+{"t":1791434884308,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14417,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":102,"r":"moved-on","did":null}
+{"t":1791434884562,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14418,"what":"ask ability_menu: ","ms":1296,"r":"ask:ability_menu","did":null}
+{"t":1791434886292,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14422,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":372,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434886816,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14423,"what":"ask ability_menu: ","ms":425,"r":"ask:ability_menu","did":null}
+{"t":1791434887675,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14427,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":492,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434888609,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14434,"what":"Priority: Sam","ms":854,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791434889908,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14440,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":372,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434890432,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14441,"what":"ask ability_menu: ","ms":416,"r":"ask:ability_menu","did":null}
+{"t":1791434891290,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14445,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":371,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434891813,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14446,"what":"ask ability_menu: ","ms":417,"r":"ask:ability_menu","did":null}
+{"t":1791434892676,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14450,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434893611,"turn":48,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14457,"what":"Priority: Sam","ms":632,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434895407,"turn":48,"phase":"MAIN2","active":true,"frame":14469,"what":"Priority: Sam","ms":2672,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434898980,"turn":48,"phase":"MAIN2","active":true,"frame":14477,"what":"Scute Swarm - Creature 1 / 1","ms":452,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434899659,"turn":48,"phase":"MAIN2","active":true,"frame":14478,"what":"ask ability_menu: ","ms":403,"r":"ask:ability_menu","did":null}
+{"t":1791434900508,"turn":48,"phase":"MAIN2","active":true,"frame":14482,"what":"Scute Swarm - Creature 1 / 1","ms":373,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434901033,"turn":48,"phase":"MAIN2","active":true,"frame":14483,"what":"ask ability_menu: ","ms":531,"r":"ask:ability_menu","did":null}
+{"t":1791434902074,"turn":48,"phase":"MAIN2","active":true,"frame":14487,"what":"Scute Swarm - Creature 1 / 1","ms":495,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434902723,"turn":48,"phase":"MAIN2","active":true,"frame":14494,"what":"Priority: Sam","ms":372,"r":"priority:card:spell","did":"spell: Grim Haruspex"}
+{"t":1791434903247,"turn":48,"phase":"MAIN2","active":true,"frame":14495,"what":"ask ability_menu: ","ms":544,"r":"ask:ability_menu","did":null}
+{"t":1791434904241,"turn":48,"phase":"MAIN2","active":true,"frame":14503,"what":"Morph - Creature 2/2","ms":376,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791434904793,"turn":48,"phase":"MAIN2","active":true,"frame":14504,"what":"ask ability_menu: ","ms":625,"r":"ask:ability_menu","did":null}
+{"t":1791434906571,"turn":48,"phase":"MAIN2","active":true,"frame":14508,"what":"Morph - Creature 2/2","ms":499,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434907225,"turn":48,"phase":"MAIN2","active":true,"frame":14515,"what":"Priority: Sam","ms":491,"r":"priority:card:spell","did":"spell: Ponder"}
+{"t":1791434910608,"turn":48,"phase":"MAIN2","active":true,"frame":14526,"what":"Ponder (54) - Look at the top 3 cards of Sam's library. Then put them back in any order.You may have that player shuffle their library. Sam draws a card.","ms":497,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791434911540,"turn":48,"phase":"MAIN2","active":true,"frame":14535,"what":"Priority: Sam","ms":952,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791434915016,"turn":48,"phase":"MAIN2","active":true,"frame":14551,"what":"ask order: Choose order of cards to put into the library","ms":844,"r":"ask:order","did":null}
+{"t":1791434917450,"turn":48,"phase":"MAIN2","active":true,"frame":14556,"what":"Do you want to shuffle the library?","ms":2432,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791434920902,"turn":48,"phase":"MAIN2","active":true,"frame":14569,"what":"Priority: Sam","ms":1589,"r":"priority:card:spell","did":"spell: Delver of Secrets"}
+{"t":1791434922928,"turn":48,"phase":"MAIN2","active":true,"frame":14577,"what":"Delver of Secrets - Creature 1 / 1","ms":375,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434923455,"turn":48,"phase":"MAIN2","active":true,"frame":14578,"what":"ask ability_menu: ","ms":417,"r":"ask:ability_menu","did":null}
+{"t":1791434924312,"turn":48,"phase":"MAIN2","active":true,"frame":14582,"what":"Delver of Secrets - Creature 1 / 1","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434924964,"turn":48,"phase":"MAIN2","active":true,"frame":14589,"what":"Priority: Sam","ms":1856,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791434927256,"turn":48,"phase":"MAIN2","active":true,"frame":14595,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":371,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434928433,"turn":48,"phase":"MAIN2","active":true,"frame":14596,"what":"ask ability_menu: ","ms":632,"r":"ask:ability_menu","did":null}
+{"t":1791434930128,"turn":48,"phase":"MAIN2","active":true,"frame":14600,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":511,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434930792,"turn":48,"phase":"MAIN2","active":true,"frame":14607,"what":"Priority: Sam","ms":622,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791434933030,"turn":48,"phase":"CLEANUP","active":true,"frame":14619,"what":"Cleanup Phase","ms":1159,"r":"select:done","did":"choose Bloodghast"}
+{"t":1791434956241,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":14688,"what":"Priority: Sam","ms":625,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791434957019,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":14692,"what":"ask choose_list: Choose optional costs","ms":400,"r":"ask:choose_list","did":null}
+{"t":1791434957855,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":14700,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":912,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791434959205,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":14709,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Pelt Collector (92).","ms":371,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791434959728,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":14710,"what":"ask ability_menu: ","ms":538,"r":"ask:ability_menu","did":null}
+{"t":1791434960704,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":14714,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Pelt Collector (92).","ms":497,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434963455,"turn":49,"phase":"COMBAT_BEGIN","active":false,"frame":14721,"what":"Priority: Sam","ms":1518,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434965126,"turn":49,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14729,"what":"Priority: Sam","ms":627,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434989073,"turn":49,"phase":"END_OF_TURN","active":false,"frame":14779,"what":"Priority: Sam","ms":512,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791434990174,"turn":50,"phase":"MAIN1","active":true,"frame":14791,"what":"Priority: Sam","ms":515,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791434991120,"turn":50,"phase":"MAIN1","active":true,"frame":14798,"what":"Scute Swarm - Creature 1 / 1","ms":506,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791434991779,"turn":50,"phase":"MAIN1","active":true,"frame":14805,"what":"Priority: Sam","ms":2520,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791434994737,"turn":50,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":14822,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1555,"r":"attack:2","did":"attack with Pelt Collector; attack with Zulaport Cutthroat; ok \"Attack with 2OK\""}
+{"t":1791434997055,"turn":50,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14849,"what":"Priority: Sam","ms":3360,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435000855,"turn":50,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14855,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":374,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435001382,"turn":50,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14856,"what":"ask ability_menu: ","ms":414,"r":"ask:ability_menu","did":null}
+{"t":1791435002238,"turn":50,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14860,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":388,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435002779,"turn":50,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14861,"what":"ask ability_menu: ","ms":420,"r":"ask:ability_menu","did":null}
+{"t":1791435003637,"turn":50,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14865,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":494,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435007283,"turn":50,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":14873,"what":"Priority: Sam","ms":924,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435008397,"turn":50,"phase":"MAIN2","active":true,"frame":14885,"what":"Priority: Sam","ms":1698,"r":"priority:card:spell","did":"spell: Sun Titan"}
+{"t":1791435012863,"turn":50,"phase":"MAIN2","active":true,"frame":14894,"what":"Sun Titan - Creature 6 / 6","ms":378,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435013393,"turn":50,"phase":"MAIN2","active":true,"frame":14895,"what":"ask ability_menu: ","ms":424,"r":"ask:ability_menu","did":null}
+{"t":1791435014254,"turn":50,"phase":"MAIN2","active":true,"frame":14899,"what":"Sun Titan - Creature 6 / 6","ms":373,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435014780,"turn":50,"phase":"MAIN2","active":true,"frame":14900,"what":"ask ability_menu: ","ms":1733,"r":"ask:ability_menu","did":null}
+{"t":1791435016954,"turn":50,"phase":"MAIN2","active":true,"frame":14900,"what":"Sun Titan - Creature 6 / 6","ms":373,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435017480,"turn":50,"phase":"MAIN2","active":true,"frame":14901,"what":"ask ability_menu: ","ms":422,"r":"ask:ability_menu","did":null}
+{"t":1791435018338,"turn":50,"phase":"MAIN2","active":true,"frame":14905,"what":"Sun Titan - Creature 6 / 6","ms":816,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435019307,"turn":50,"phase":"MAIN2","active":true,"frame":14912,"what":"Priority: Sam","ms":519,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791435020270,"turn":50,"phase":"MAIN2","active":true,"frame":14920,"what":"Eternal Witness - Creature 2 / 1","ms":2196,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435022621,"turn":50,"phase":"MAIN2","active":true,"frame":14928,"what":"Priority: Sam","ms":747,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791435028685,"turn":50,"phase":"CLEANUP","active":true,"frame":14946,"what":"Cleanup Phase","ms":632,"r":"select:done","did":"choose Grim Haruspex"}
+{"t":1791435050087,"turn":51,"phase":"COMBAT_BEGIN","active":false,"frame":14990,"what":"Priority: Sam","ms":514,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435050759,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":14998,"what":"Priority: Sam","ms":883,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435052084,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15004,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":373,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435052610,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15005,"what":"ask ability_menu: ","ms":417,"r":"ask:ability_menu","did":null}
+{"t":1791435053974,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15009,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":373,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435054499,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15010,"what":"ask ability_menu: ","ms":419,"r":"ask:ability_menu","did":null}
+{"t":1791435055357,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15014,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435056527,"turn":51,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15021,"what":"Priority: Sam","ms":847,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435070384,"turn":51,"phase":"MAIN2","active":false,"frame":15060,"what":"Priority: Sam","ms":494,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435071031,"turn":51,"phase":"MAIN2","active":false,"frame":15064,"what":"ask choose_list: Choose optional costs","ms":436,"r":"ask:choose_list","did":null}
+{"t":1791435071898,"turn":51,"phase":"MAIN2","active":false,"frame":15072,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":497,"r":"select:done","did":"choose Zulaport Cutthroat"}
+{"t":1791435072831,"turn":51,"phase":"MAIN2","active":false,"frame":15081,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Zulaport Cutthroat (66).","ms":375,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435073358,"turn":51,"phase":"MAIN2","active":false,"frame":15082,"what":"ask ability_menu: ","ms":420,"r":"ask:ability_menu","did":null}
+{"t":1791435074214,"turn":51,"phase":"MAIN2","active":false,"frame":15086,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Zulaport Cutthroat (66).","ms":375,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435074742,"turn":51,"phase":"MAIN2","active":false,"frame":15087,"what":"ask ability_menu: ","ms":1507,"r":"ask:ability_menu","did":null}
+{"t":1791435076682,"turn":51,"phase":"MAIN2","active":false,"frame":15091,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Zulaport Cutthroat (66).","ms":498,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435077617,"turn":51,"phase":"MAIN2","active":false,"frame":15098,"what":"Priority: Sam","ms":102,"r":"stuck","did":null}
+{"t":1791435079374,"turn":51,"phase":"MAIN2","active":false,"frame":15098,"what":"Priority: Sam","ms":626,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791435090302,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15130,"what":"Priority: Sam","ms":857,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435092291,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15136,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":380,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435092823,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15137,"what":"ask ability_menu: ","ms":539,"r":"ask:ability_menu","did":null}
+{"t":1791435093801,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15141,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":390,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435094344,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15142,"what":"ask ability_menu: ","ms":419,"r":"ask:ability_menu","did":null}
+{"t":1791435097173,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15146,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":392,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435097719,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15147,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":397,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435101123,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15155,"what":"Priority: Sam","ms":1444,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435102720,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15159,"what":"ask choose_list: Choose optional costs","ms":413,"r":"ask:choose_list","did":null}
+{"t":1791435103567,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15167,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":1306,"r":"select:done","did":"choose Zulaport Cutthroat"}
+{"t":1791435105316,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15176,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":502,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435106266,"turn":51,"phase":"END_OF_TURN","active":false,"frame":15184,"what":"Priority: Sam","ms":838,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435107258,"turn":52,"phase":"MAIN1","active":true,"frame":15192,"what":"Priority: Sam","ms":515,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791435108216,"turn":52,"phase":"MAIN1","active":true,"frame":15200,"what":"Eternal Witness - Creature 2 / 1","ms":505,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435108876,"turn":52,"phase":"MAIN1","active":true,"frame":15208,"what":"Priority: Sam","ms":878,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791435110204,"turn":52,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":15224,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":1310,"r":"attack:2","did":"attack with Pelt Collector; attack with Zulaport Cutthroat; ok \"Attack with 2OK\""}
+{"t":1791435114084,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15251,"what":"Priority: Sam","ms":510,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435114747,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15255,"what":"ask choose_list: Choose optional costs","ms":647,"r":"ask:choose_list","did":null}
+{"t":1791435115832,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15263,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":515,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791435116782,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15272,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":378,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435118424,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15273,"what":"ask ability_menu: ","ms":640,"r":"ask:ability_menu","did":null}
+{"t":1791435119501,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15277,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":434,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435120088,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15278,"what":"ask ability_menu: ","ms":417,"r":"ask:ability_menu","did":null}
+{"t":1791435120954,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15282,"what":"Burst Lightning (57) - Burst Lightning (57) deals 4 damage to Pelt Collector (92).","ms":523,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435121919,"turn":52,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":15289,"what":"Priority: Sam","ms":639,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435128133,"turn":52,"phase":"MAIN2","active":true,"frame":15312,"what":"Priority: Sam","ms":523,"r":"priority:card:spell","did":"spell: Delver of Secrets"}
+{"t":1791435129967,"turn":52,"phase":"MAIN2","active":true,"frame":15320,"what":"Delver of Secrets - Creature 1 / 1","ms":521,"r":"pay:auto","did":"ok \"Auto payAuto\""}
+{"t":1791435130931,"turn":52,"phase":"MAIN2","active":true,"frame":15329,"what":"Priority: Sam","ms":849,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435132613,"turn":52,"phase":"MAIN2","active":true,"frame":15335,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":377,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435133143,"turn":52,"phase":"MAIN2","active":true,"frame":15336,"what":"ask ability_menu: ","ms":541,"r":"ask:ability_menu","did":null}
+{"t":1791435134130,"turn":52,"phase":"MAIN2","active":true,"frame":15340,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":628,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435135199,"turn":52,"phase":"MAIN2","active":true,"frame":15347,"what":"Priority: Sam","ms":865,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791435136218,"turn":52,"phase":"MAIN2","active":true,"frame":15359,"what":"Priority: Sam","ms":649,"r":"priority:card:spell","did":"spell: Monastery Swiftspear"}
+{"t":1791435138656,"turn":52,"phase":"MAIN2","active":true,"frame":15363,"what":"Priority: Sam","ms":6105,"r":"priority:click-failed","did":"land: Flooded Strand"}
+{"t":1791435145201,"turn":52,"phase":"MAIN2","active":true,"frame":15370,"what":"Monastery Swiftspear - Creature 1 / 2","ms":394,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435145747,"turn":52,"phase":"MAIN2","active":true,"frame":15371,"what":"ask ability_menu: ","ms":419,"r":"ask:ability_menu","did":null}
+{"t":1791435147548,"turn":52,"phase":"MAIN2","active":true,"frame":15375,"what":"Monastery Swiftspear - Creature 1 / 2","ms":507,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435148210,"turn":52,"phase":"MAIN2","active":true,"frame":15382,"what":"Priority: Sam","ms":515,"r":"priority:card:spell","did":"spell: Eternal Witness"}
+{"t":1791435149731,"turn":52,"phase":"MAIN2","active":true,"frame":15390,"what":"Eternal Witness - Creature 2 / 1","ms":510,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435150395,"turn":52,"phase":"MAIN2","active":true,"frame":15398,"what":"Priority: Sam","ms":754,"r":"priority:ok","did":"ok \"End turnOK\""}
+{"t":1791435189599,"turn":53,"phase":"COMBAT_BEGIN","active":false,"frame":15476,"what":"Priority: Sam","ms":1579,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435191333,"turn":53,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15485,"what":"Priority: Sam","ms":2045,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435215431,"turn":53,"phase":"END_OF_TURN","active":false,"frame":15538,"what":"Priority: Sam","ms":3159,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435221429,"turn":53,"phase":"END_OF_TURN","active":false,"frame":15544,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":380,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435221961,"turn":53,"phase":"END_OF_TURN","active":false,"frame":15545,"what":"ask ability_menu: ","ms":413,"r":"ask:ability_menu","did":null}
+{"t":1791435223515,"turn":53,"phase":"END_OF_TURN","active":false,"frame":15549,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":1225,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435225179,"turn":53,"phase":"END_OF_TURN","active":false,"frame":15556,"what":"Priority: Sam","ms":505,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435227650,"turn":54,"phase":"UPKEEP","active":true,"frame":15568,"what":"Priority: Sam","ms":2617,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435230714,"turn":54,"phase":"UPKEEP","active":true,"frame":15574,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":382,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435231250,"turn":54,"phase":"UPKEEP","active":true,"frame":15575,"what":"ask ability_menu: ","ms":430,"r":"ask:ability_menu","did":null}
+{"t":1791435232134,"turn":54,"phase":"UPKEEP","active":true,"frame":15579,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":398,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435232685,"turn":54,"phase":"UPKEEP","active":true,"frame":15580,"what":"ask ability_menu: ","ms":903,"r":"ask:ability_menu","did":null}
+{"t":1791435234026,"turn":54,"phase":"UPKEEP","active":true,"frame":15584,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":513,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435234977,"turn":54,"phase":"UPKEEP","active":true,"frame":15591,"what":"Priority: Sam","ms":631,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791435244776,"turn":54,"phase":"UPKEEP","active":true,"frame":15607,"what":"ask choose_list: Looking at cards in your library","ms":646,"r":"ask:choose_list","did":null}
+{"t":1791435246275,"turn":54,"phase":"UPKEEP","active":true,"frame":15611,"what":"Reveal cards to other players?","ms":987,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791435247631,"turn":54,"phase":"MAIN1","active":true,"frame":15621,"what":"Priority: Sam","ms":645,"r":"priority:eot","did":"To EOT"}
+{"t":1791435250561,"turn":54,"phase":"CLEANUP","active":true,"frame":15641,"what":"Cleanup Phase","ms":1319,"r":"select:done","did":"choose Sun Titan"}
+{"t":1791435309947,"turn":55,"phase":"COMBAT_BEGIN","active":false,"frame":15739,"what":"Priority: Sam","ms":518,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435310618,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15747,"what":"Priority: Sam","ms":507,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435311278,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15750,"what":"ask choose_list: Choose optional costs","ms":1081,"r":"ask:choose_list","did":null}
+{"t":1791435312807,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15759,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":500,"r":"select:done","did":"choose Zulaport Cutthroat"}
+{"t":1791435313740,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15768,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":380,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435316856,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15769,"what":"ask ability_menu: ","ms":432,"r":"ask:ability_menu","did":null}
+{"t":1791435318508,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15773,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":380,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435319040,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15774,"what":"ask ability_menu: ","ms":1729,"r":"ask:ability_menu","did":null}
+{"t":1791435321207,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15774,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":506,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435322159,"turn":55,"phase":"COMBAT_DECLARE_ATTACKERS","active":false,"frame":15781,"what":"Priority: Sam","ms":504,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435367359,"turn":55,"phase":"END_OF_TURN","active":false,"frame":15857,"what":"Priority: Sam","ms":1205,"r":"priority:ok","did":"ok \"Pass priorityOK\""}
+{"t":1791435369123,"turn":56,"phase":"UPKEEP","active":true,"frame":15869,"what":"Priority: Sam","ms":623,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435369900,"turn":56,"phase":"UPKEEP","active":true,"frame":15873,"what":"ask choose_list: Choose optional costs","ms":292,"r":"ask:choose_list","did":null}
+{"t":1791435373853,"turn":56,"phase":"UPKEEP","active":true,"frame":15881,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":826,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791435375119,"turn":56,"phase":"UPKEEP","active":true,"frame":15890,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Pelt Collector (92).","ms":392,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435375664,"turn":56,"phase":"UPKEEP","active":true,"frame":15891,"what":"ask ability_menu: ","ms":434,"r":"ask:ability_menu","did":null}
+{"t":1791435376537,"turn":56,"phase":"UPKEEP","active":true,"frame":15895,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Pelt Collector (92).","ms":388,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435377077,"turn":56,"phase":"UPKEEP","active":true,"frame":15896,"what":"ask ability_menu: ","ms":431,"r":"ask:ability_menu","did":null}
+{"t":1791435377955,"turn":56,"phase":"UPKEEP","active":true,"frame":15900,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Pelt Collector (92).","ms":2842,"r":"pay:pool","did":"floating mana"}
+{"t":1791435380950,"turn":56,"phase":"UPKEEP","active":true,"frame":15900,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Pelt Collector (92).","ms":526,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435381922,"turn":56,"phase":"UPKEEP","active":true,"frame":15907,"what":"Priority: Sam","ms":1127,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791435384654,"turn":56,"phase":"UPKEEP","active":true,"frame":15917,"what":"ask choose_list: Looking at cards in your library","ms":596,"r":"ask:choose_list","did":null}
+{"t":1791435385686,"turn":56,"phase":"UPKEEP","active":true,"frame":15921,"what":"Reveal cards to other players?","ms":710,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791435392264,"turn":56,"phase":"MAIN1","active":true,"frame":15930,"what":"Priority: Sam","ms":532,"r":"priority:card:spell","did":"spell: Scute Swarm"}
+{"t":1791435394424,"turn":56,"phase":"MAIN1","active":true,"frame":15938,"what":"Scute Swarm - Creature 1 / 1","ms":460,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435395037,"turn":56,"phase":"MAIN1","active":true,"frame":15939,"what":"ask ability_menu: ","ms":425,"r":"ask:ability_menu","did":null}
+{"t":1791435396072,"turn":56,"phase":"MAIN1","active":true,"frame":15943,"what":"Scute Swarm - Creature 1 / 1","ms":386,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435396611,"turn":56,"phase":"MAIN1","active":true,"frame":15944,"what":"ask ability_menu: ","ms":434,"r":"ask:ability_menu","did":null}
+{"t":1791435400998,"turn":56,"phase":"MAIN1","active":true,"frame":15948,"what":"Scute Swarm - Creature 1 / 1","ms":519,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435401854,"turn":56,"phase":"MAIN1","active":true,"frame":15956,"what":"Priority: Sam","ms":520,"r":"priority:card:land","did":"land: Flooded Strand"}
+{"t":1791435404806,"turn":56,"phase":"MAIN1","active":true,"frame":15963,"what":"Priority: Sam","ms":515,"r":"priority:card:ability (ability)","did":"ability (ability): Flooded Strand"}
+{"t":1791435405752,"turn":56,"phase":"MAIN1","active":true,"frame":15968,"what":"Do you want to pay 1 life?","ms":535,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791435406722,"turn":56,"phase":"MAIN1","active":true,"frame":15975,"what":"Priority: Sam","ms":1353,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791435419988,"turn":56,"phase":"MAIN1","active":true,"frame":15994,"what":"ask choose_list: Looking at cards in your library","ms":1061,"r":"ask:choose_list","did":null}
+{"t":1791435421486,"turn":56,"phase":"MAIN1","active":true,"frame":16000,"what":"Priority: Sam","ms":867,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435422834,"turn":56,"phase":"MAIN1","active":true,"frame":16006,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":389,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435423376,"turn":56,"phase":"MAIN1","active":true,"frame":16007,"what":"ask ability_menu: ","ms":436,"r":"ask:ability_menu","did":null}
+{"t":1791435424251,"turn":56,"phase":"MAIN1","active":true,"frame":16011,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":388,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435424792,"turn":56,"phase":"MAIN1","active":true,"frame":16012,"what":"ask ability_menu: ","ms":421,"r":"ask:ability_menu","did":null}
+{"t":1791435425652,"turn":56,"phase":"MAIN1","active":true,"frame":16016,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":514,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435426602,"turn":56,"phase":"MAIN1","active":true,"frame":16023,"what":"Priority: Sam","ms":511,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435427265,"turn":56,"phase":"MAIN1","active":true,"frame":16027,"what":"ask choose_list: Choose optional costs","ms":420,"r":"ask:choose_list","did":null}
+{"t":1791435428116,"turn":56,"phase":"MAIN1","active":true,"frame":16035,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":510,"r":"select:done","did":"choose Zulaport Cutthroat"}
+{"t":1791435429068,"turn":56,"phase":"MAIN1","active":true,"frame":16044,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":389,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435429609,"turn":56,"phase":"MAIN1","active":true,"frame":16045,"what":"ask ability_menu: ","ms":433,"r":"ask:ability_menu","did":null}
+{"t":1791435430483,"turn":56,"phase":"MAIN1","active":true,"frame":16049,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":389,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435431024,"turn":56,"phase":"MAIN1","active":true,"frame":16050,"what":"ask ability_menu: ","ms":1740,"r":"ask:ability_menu","did":null}
+{"t":1791435433202,"turn":56,"phase":"MAIN1","active":true,"frame":16050,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":390,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435433745,"turn":56,"phase":"MAIN1","active":true,"frame":16051,"what":"ask ability_menu: ","ms":433,"r":"ask:ability_menu","did":null}
+{"t":1791435434617,"turn":56,"phase":"MAIN1","active":true,"frame":16055,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":1373,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435436438,"turn":56,"phase":"MAIN1","active":true,"frame":16062,"what":"Priority: Sam","ms":529,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791435445834,"turn":56,"phase":"MAIN1","active":true,"frame":16084,"what":"Use triggered ability of Bloodghast (65)?","ms":714,"r":"buttons:buttons:ok","did":"ok \"Yes\""}
+{"t":1791435448175,"turn":56,"phase":"MAIN1","active":true,"frame":16089,"what":"Waiting for Justin...","ms":453,"r":"moved-on","did":null}
+{"t":1791435448782,"turn":56,"phase":"MAIN1","active":true,"frame":16095,"what":"Priority: Sam","ms":514,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435449694,"turn":56,"phase":"MAIN1","active":true,"frame":16099,"what":"ask choose_list: Choose optional costs","ms":424,"r":"ask:choose_list","did":null}
+{"t":1791435450551,"turn":56,"phase":"MAIN1","active":true,"frame":16107,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":629,"r":"select:done","did":"choose Bloodghast"}
+{"t":1791435451616,"turn":56,"phase":"MAIN1","active":true,"frame":16116,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Bloodghast (65).","ms":388,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435452160,"turn":56,"phase":"MAIN1","active":true,"frame":16117,"what":"ask ability_menu: ","ms":436,"r":"ask:ability_menu","did":null}
+{"t":1791435453033,"turn":56,"phase":"MAIN1","active":true,"frame":16121,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Bloodghast (65).","ms":519,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435453985,"turn":56,"phase":"MAIN1","active":true,"frame":16128,"what":"Priority: Sam","ms":638,"r":"priority:ok","did":"ok \"Let it resolveOK\""}
+{"t":1791435458502,"turn":56,"phase":"MAIN1","active":true,"frame":16148,"what":"Priority: Sam","ms":2611,"r":"priority:card:from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard)","did":"your graveyard; from the graveyard ({3}{R}{R}, Exile Seasoned Pyromancer from your graveyard): Seasoned Pyromancer"}
+{"t":1791435461554,"turn":56,"phase":"MAIN1","active":true,"frame":16154,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":392,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435462098,"turn":56,"phase":"MAIN1","active":true,"frame":16155,"what":"ask ability_menu: ","ms":632,"r":"ask:ability_menu","did":null}
+{"t":1791435470350,"turn":56,"phase":"MAIN1","active":true,"frame":16159,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":390,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435470893,"turn":56,"phase":"MAIN1","active":true,"frame":16160,"what":"ask ability_menu: ","ms":783,"r":"ask:ability_menu","did":null}
+{"t":1791435472119,"turn":56,"phase":"MAIN1","active":true,"frame":16164,"what":"Seasoned Pyromancer (55) - {3}{R}{R}, Exile Seasoned Pyromancer from your graveyard: Create two 1/1 red Elemental creature tokens.","ms":869,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435473326,"turn":56,"phase":"MAIN1","active":true,"frame":16171,"what":"Priority: Sam","ms":1521,"r":"priority:card:spell","did":"spell: Mentor of the Meek"}
+{"t":1791435475285,"turn":56,"phase":"MAIN1","active":true,"frame":16179,"what":"Mentor of the Meek - Creature 2 / 2","ms":389,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435475834,"turn":56,"phase":"MAIN1","active":true,"frame":16180,"what":"ask ability_menu: ","ms":646,"r":"ask:ability_menu","did":null}
+{"t":1791435476935,"turn":56,"phase":"MAIN1","active":true,"frame":16184,"what":"Mentor of the Meek - Creature 2 / 2","ms":387,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435477475,"turn":56,"phase":"MAIN1","active":true,"frame":16185,"what":"ask ability_menu: ","ms":750,"r":"ask:ability_menu","did":null}
+{"t":1791435478669,"turn":56,"phase":"MAIN1","active":true,"frame":16189,"what":"Mentor of the Meek - Creature 2 / 2","ms":519,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435479342,"turn":56,"phase":"MAIN1","active":true,"frame":16196,"what":"Priority: Sam","ms":522,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435480016,"turn":56,"phase":"MAIN1","active":true,"frame":16200,"what":"ask choose_list: Choose optional costs","ms":997,"r":"ask:choose_list","did":null}
+{"t":1791435483787,"turn":56,"phase":"MAIN1","active":true,"frame":16208,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":647,"r":"select:done","did":"choose Pelt Collector"}
+{"t":1791435484868,"turn":56,"phase":"MAIN1","active":true,"frame":16217,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Pelt Collector (92).","ms":757,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435485778,"turn":56,"phase":"MAIN1","active":true,"frame":16227,"what":"Priority: Sam","ms":1462,"r":"priority:ok","did":"ok \"Go to combatOK\""}
+{"t":1791435488036,"turn":56,"phase":"COMBAT_DECLARE_ATTACKERS","active":true,"frame":16244,"what":"Select creatures to attack Justin or select player/card you wish to attack.","ms":5099,"r":"attack:alpha","did":"cancel \"Attack with everythingAlpha Strike\"; ok \"Attack with 4OK\""}
+{"t":1791435494925,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16273,"what":"Priority: Sam","ms":525,"r":"priority:card:spell","did":"spell: Burst Lightning"}
+{"t":1791435495602,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16277,"what":"ask choose_list: Choose optional costs","ms":416,"r":"ask:choose_list","did":null}
+{"t":1791435496451,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16285,"what":"Burst Lightning (57) - Burst Lightning deals 2 damage to any target. If Burst Lightning was kicked, it deals 4 damage instead.","ms":506,"r":"select:done","did":"choose Zulaport Cutthroat"}
+{"t":1791435497402,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16294,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":1129,"r":"pay:tap","did":"tap Breeding Pool for mana"}
+{"t":1791435498683,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16295,"what":"ask ability_menu: ","ms":432,"r":"ask:ability_menu","did":null}
+{"t":1791435499552,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16299,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":406,"r":"pay:tap","did":"tap Overgrown Tomb for mana"}
+{"t":1791435504587,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16300,"what":"ask ability_menu: ","ms":510,"r":"ask:ability_menu","did":null}
+{"t":1791435505534,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16304,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":2839,"r":"pay:pool","did":"floating mana"}
+{"t":1791435508527,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16304,"what":"Burst Lightning (57) - Burst Lightning (57) deals 2 damage to Zulaport Cutthroat (66).","ms":1213,"r":"pay:cancel","did":"cancel \"Cancel\""}
+{"t":1791435511121,"turn":56,"phase":"COMBAT_DECLARE_BLOCKERS","active":true,"frame":16311,"what":"Priority: Sam","ms":529,"r":"priority:eot","did":"To EOT"}
