@@ -626,3 +626,43 @@ test('the registry (D398): search-v1-reckless is search-v1 on Reckless.ai and no
   assert.equal(rk.cfg, v1.cfg!.replace(/^Default\+/, 'Reckless+'));
   assert.notEqual(rk.hash, v1.hash);
 });
+
+test('D416: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-anytime) plus their switches and nothing else', () => {
+  const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!;
+  const mull = by.get('search-v2-mull')!, tg = by.get('search-v2-targets')!, both = by.get('search-v2-mull-targets')!;
+  assert.equal(mull.cfg, `${v2.cfg},mull=1`);
+  assert.equal(tg.cfg, `${v2.cfg},targets=1`);
+  assert.equal(both.cfg, `${v2.cfg},mull=1,targets=1`);
+  assert.equal(new Set([v2.hash, mull.hash, tg.hash, both.hash]).size, 4, 'one name per config: four configs, four hashes');
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged by the new (off) parameters");
+  // The switches at their defaults are the old config; the mulligan knobs print only with mull on.
+  const plain = resolveParams('search', {});
+  assert.deepEqual(resolveParams('search', { mull: 'off', targets: 'off', mullMs: 6000, mullTurns: 3 }), plain);
+  assert.match(KINDS.search!.cfg(resolveParams('search', { mull: 'on', mullMs: 8000, mullTurns: 4 })), /,mull=1,mullms=8000,mullturns=4$/);
+  assert.doesNotMatch(KINDS.search!.cfg(resolveParams('search', { mullMs: 8000 })), /mull/);
+  // The engine's defaults and the kind's agree.
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  assert.equal(Number(/MULL_MS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullMs!.default);
+  assert.equal(Number(/MULL_TURNS = (\d+);/.exec(java)![1]), KINDS.search!.params.mullTurns!.default);
+  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v2) does not turn them on');
+});
+
+test('D416: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
+  const f = join(dir, 'b0.jsonl');
+  const c1 = { 'search.p.considered': 10, 'search.p.changed': 2, 'search.m.considered': 1, 'search.m.changed': 1, 'search.t.considered': 3, 'search.t.changed': 0 };
+  const c2 = { 'search.a.considered': 4, 'search.m.considered': 2, 'search.k.considered': 1, 'search.k.changed': 1 };
+  writeFileSync(f, [JSON.stringify({ aStats: { counts: c1 } }), JSON.stringify({ aStats: { counts: c2 } })].join('\n'));
+  const a = emptyTally(), b = emptyTally();
+  tallyBatch(f, a, b);
+  assert.equal(a.searched, 14);
+  assert.equal(a.changed, 2);
+  const tl = tallyLine(a);
+  assert.deepEqual(tl.byKind, {
+    p: { searched: 10, changed: 2, rate: 0.2 }, a: { searched: 4, changed: 0, rate: 0 },
+    m: { searched: 3, changed: 1, rate: 0.333333 }, k: { searched: 1, changed: 1, rate: 1 }, t: { searched: 3, changed: 0, rate: 0 },
+  });
+  assert.deepEqual(tallyLine(b).byKind, {});
+});

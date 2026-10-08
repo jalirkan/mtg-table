@@ -82,14 +82,30 @@ export interface SearchTally {
   fallback: Record<string, number>;
   /** Per game: [searched, budget fallbacks], for the clustered interval. */
   perGame: Array<[number, number]>;
+  /**
+   * D416: per decision kind (p priority, a attacks, b blocks, m keep/mulligan, k the London bottom, t targets),
+   * decisions searched (`search.<kind>.considered`) and changed (`search.<kind>.changed`), summed over every game.
+   * `searched` and `changed` above stay p + a + b, as J102 counted them.
+   */
+  byKind: Record<string, { searched: number; changed: number }>;
 }
 
-export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [] });
+/** The decision kinds the search counts (D312, D416). */
+export const SEARCH_KINDS = ['p', 'a', 'b', 'm', 'k', 't'] as const;
+
+export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {} });
 
 /** One seat's counters from an ai-bench line (`aStats.counts` / `bStats.counts`) into the tally. */
 export function addCounts(t: SearchTally, counts: Record<string, unknown> | undefined): void {
   if (!counts) return;
   const n = (k: string): number => (typeof counts[k] === 'number' ? counts[k] as number : 0);
+  for (const k of SEARCH_KINDS) {
+    const c = n(`search.${k}.considered`), x = n(`search.${k}.changed`);
+    if (c === 0 && x === 0) continue;
+    const e = t.byKind[k] ?? (t.byKind[k] = { searched: 0, changed: 0 });
+    e.searched += c;
+    e.changed += x;
+  }
   const searched = n('search.p.considered') + n('search.a.considered') + n('search.b.considered');
   if (searched === 0) return;
   t.games++;
@@ -130,8 +146,13 @@ export function tallyBatch(file: string, a: SearchTally, b: SearchTally): void {
 }
 
 /** A tally as the match line keeps it (no per-game rows). */
-export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null } {
+export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null; byKind: Record<string, { searched: number; changed: number; rate: number | null }> } {
   const br = budgetRate(t);
   const r6 = (x: number | null): number | null => (x === null ? null : Math.round(x * 1e6) / 1e6);
-  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi) };
+  const byKind: Record<string, { searched: number; changed: number; rate: number | null }> = {};
+  for (const k of SEARCH_KINDS) {
+    const e = t.byKind[k];
+    if (e) byKind[k] = { searched: e.searched, changed: e.changed, rate: e.searched > 0 ? r6(e.changed / e.searched) : null };
+  }
+  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi), byKind };
 }

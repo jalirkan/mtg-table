@@ -86,6 +86,25 @@ import java.util.Locale;
  *     Forge; {@code rollout=both} gives the opponent's seat the policy too
  *     (D390).</li>
  * </ul>
+ *
+ * <p>Two more decision kinds (D416), each off by default in {@link #parse} and
+ * {@link #parseLive}, so search-v2 is unchanged unless the text names them:
+ * <ul>
+ * <li>{@code mull=1} -- the opening hand: at {@code mulliganKeepHand} keep is
+ *     rolled out against mulligan, and at the London mulligan's bottom choice
+ *     ({@code tuckCardsViaMulligan}) Forge's cards against other bottoms, each
+ *     rollout from the pre-game copy to the end of game turn
+ *     {@code 2·mullturns} (both seats have had {@code mullturns} turns; default
+ *     3), with its own budget {@code mullms} (default 6000), because the
+ *     question is rare (one or two a game) and its rollouts are long; Forge is
+ *     overruled only on the lcb rule (D350) over at least 3 paired rounds;</li>
+ * <li>{@code targets=1} -- the targets of the seat's own priority play: when
+ *     the play (Forge's or the search's) targets, Forge's targets are rolled
+ *     out against up to {@code cands - 1} other legal targets for one part at a
+ *     time, ranked by a cheap prior (the side Forge's target is on first, then
+ *     by Forge's own card value), and replaced on the same paired evidence
+ *     rule as every other search.</li>
+ * </ul>
  */
 public final class SearchConfig {
 
@@ -129,6 +148,19 @@ public final class SearchConfig {
      * {@link #withLeaf}, so the constructors above stay as they are.
      */
     public final String leafModel;
+
+    /** D416: search the opening hand (keep or mulligan, and the London bottom choice). */
+    public final boolean mull;
+    /** D416: the mulligan search's own wall-clock budget per decision (ms). */
+    public final int mullMs;
+    /** D416: the mulligan rollouts' horizon in turns PER SEAT: they play to the end of game turn 2·mullTurns. */
+    public final int mullTurns;
+    /** D416: search the targets of the seat's own priority plays. */
+    public final boolean targets;
+
+    /** D416's defaults. */
+    public static final int MULL_MS = 6000;
+    public static final int MULL_TURNS = 3;
 
     /** The fewest complete rounds the {@code lcb} rule overrules Forge on (an sd from fewer is no sd). */
     public static final int LCB_MIN_ROUNDS = 3;
@@ -199,6 +231,10 @@ public final class SearchConfig {
         this.evalModel = evalModel;
         this.rollout = rollout;
         this.leafModel = null;
+        this.mull = false;
+        this.mullMs = MULL_MS;
+        this.mullTurns = MULL_TURNS;
+        this.targets = false;
     }
 
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
@@ -213,6 +249,18 @@ public final class SearchConfig {
 
     /** D354: a copy of {@code base} whose leaves use the evaluator at {@code model} (null = the hand leaf). */
     private SearchConfig(final SearchConfig base, final String model) {
+        this(base, model, base.mull, base.mullMs, base.mullTurns, base.targets);
+    }
+
+    /** D354 and D416: a copy of {@code base} with the leaf model and the mulligan and target switches given. */
+    private SearchConfig(final SearchConfig base, final String model, final boolean mull, final int mullMs,
+                         final int mullTurns, final boolean targets) {
+        if (mullMs < 50 || mullMs > 60_000) {
+            throw new IllegalArgumentException("search mullms must be 50..60000 ms, got " + mullMs);
+        }
+        if (mullTurns < 1 || mullTurns > 8) {
+            throw new IllegalArgumentException("search mullturns must be 1..8, got " + mullTurns);
+        }
         this.budgetMs = base.budgetMs;
         this.maxCandidates = base.maxCandidates;
         this.horizonTurns = base.horizonTurns;
@@ -235,6 +283,18 @@ public final class SearchConfig {
         this.evalModel = base.evalModel;
         this.rollout = base.rollout;
         this.leafModel = model;
+        this.mull = mull;
+        this.mullMs = mullMs;
+        this.mullTurns = mullTurns;
+        this.targets = targets;
+    }
+
+    /** D416: this config with the mulligan search and the target search switched as given. */
+    public SearchConfig withDecisions(final boolean mull, final int mullMs, final int mullTurns, final boolean targets) {
+        if (mull == this.mull && mullMs == this.mullMs && mullTurns == this.mullTurns && targets == this.targets) {
+            return this;
+        }
+        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets);
     }
 
     /**
@@ -316,6 +376,10 @@ public final class SearchConfig {
         String evalModel = null;
         String rollout = "default";
         String leaf = "hand";   // D354
+        boolean mull = false;   // D416
+        int mullMs = MULL_MS;
+        int mullTurns = MULL_TURNS;
+        boolean targets = false;
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -353,9 +417,13 @@ public final class SearchConfig {
                 case "evalmodel": evalModel = p[1]; break;
                 case "rollout": rollout = p[1]; break;
                 case "leaf": leaf = p[1]; break;   // D354: hand | eval:<model.json>
+                case "mull": mull = bit("mull", p[1]); break;   // D416
+                case "mullms": mullMs = Integer.parseInt(p[1]); break;
+                case "mullturns": mullTurns = Integer.parseInt(p[1]); break;
+                case "targets": targets = bit("targets", p[1]); break;
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
-                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout)");
+                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets)");
                 }
             }
         }
@@ -370,7 +438,8 @@ public final class SearchConfig {
         }
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
-                "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf);
+                "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf)
+                .withDecisions(mull, mullMs, mullTurns, targets);
         // gen is read only under rank=prior (and validated there).
     }
 
@@ -409,7 +478,27 @@ public final class SearchConfig {
         if (leafModel != null) {
             sb.append(",leaf=eval:").append(leafModel);   // D354
         }
+        // D416's, likewise: only when on, and the mulligan's knobs only when not at their defaults.
+        if (mull) {
+            sb.append(",mull=1");
+            if (mullMs != MULL_MS) {
+                sb.append(",mullms=").append(mullMs);
+            }
+            if (mullTurns != MULL_TURNS) {
+                sb.append(",mullturns=").append(mullTurns);
+            }
+        }
+        if (targets) {
+            sb.append(",targets=1");
+        }
         return sb.toString();
+    }
+
+    private static boolean bit(final String key, final String v) {
+        if (!v.matches("[01]")) {
+            throw new IllegalArgumentException("search " + key + "= takes 0 or 1: " + v);
+        }
+        return "1".equals(v);
     }
 
     private static String trim(final double v) {
