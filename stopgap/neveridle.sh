@@ -15,7 +15,7 @@ lab_cores10(){ now=0; for u in $(systemctl --user list-units 'lab-J*' --no-legen
     n=$(systemctl --user show "$u" -p CPUUsageNSec --value 2>/dev/null); case "$n" in ''|*[!0-9]*) n=0;; esac; now=$((now + n)); done
   d=$((now - lab_prev)); lab_prev=$now; [ "$d" -lt 0 ] && d=0; c10=$(( d / 3000000000 )); }   # 30 s tick -> tenths of a core
 start_filler(){ # $1 = workers, $2 = why
-  for target in 2000 6000 12000; do for c in synergy-cube-180 modern-era-cube-180 vintage-cube-180 pauper-cube-180; do
+  for target in 2000 6000 12000 24000; do for c in synergy-cube-180 modern-era-cube-180 vintage-cube-180 pauper-cube-180; do
     n=$(wc -l < "$SRC/var/cubelab/runs/filler-$c/drafts.jsonl" 2>/dev/null || echo 0)
     [ "${n:-0}" -ge "$target" ] && continue
     say "$2: starting filler on $c ($n of $target drafts done), $1 worker(s)"
