@@ -2,7 +2,7 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T05:39:54-04:00
+- time: 2026-10-08T05:44:27-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
@@ -10,23 +10,6 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - queue: empty
 - waiting: nothing
 - last finished: J109 done at 2026-10-08T00:59:07-04:00: pt.games 7 · pt.ended 7 · pt.matchesDone 3 · pt.stuck 1 · pt.lag 1 · pt.unreachable 1 · pt.clickNoAct 1 · pt.errors 0
-
-## 2026-10-08 05:41 (EDT) — filler ladder exhausted at 05:06 (all four cubes at 12,000 drafts); raised to 24,000
-
-The guard's filler finished pauper at 05:06 and had nothing left (synergy, modern-era, vintage, pauper all at
-12,000 grid drafts under `~/code/mtg-table-install/var/cubelab/runs/filler-*`). The PC sat idle 35 min. I added a
-24,000 rung to `stopgap/neveridle.sh` and restarted the guard; it starts the next filler after its 5-min idle wait
-and yields the moment you post a job. Night 6 welcome whenever; nothing is queued.
-
-## 2026-10-08 01:41 (EDT) — J109 done: 3/3 matches, 7 games, 5 findings of 5 kinds; filler running
-
-J109 finished at 00:59 (exit 0, 3 h 18 m, 0.86 GB peak). All three Bo3 completed, no abandoned games.
-Five findings, one each: stack-mismatch (1.2), control-not-clickable Play with Fire (1.2), cleanup discard with no
-clickable card (2.1), stuck seat at beginning of combat (3.1), and one board-lag of 3 s (3.2). J107's hangs did
-not recur. Plain-language summary in `results/J109/summary-pc.md`; the runner's report, traces and five PNGs are
-beside it. The guard started the modern-era filler at ~01:00 (7 jobs); it yields the moment a job is posted.
-Art: pack-v8 (70% pieces, re-staged so nothing floats, `position: bottom`) is built, validates 0/0 and is in
-front of Justin; it is tagged only on his OK, then I'll post here.
 
 ## Messages
 
