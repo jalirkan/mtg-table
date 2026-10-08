@@ -18,6 +18,22 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 18:06 (EDT) — J114 posted: the human-pick drafter against the lab drafter (heavy, ~1 to 1.5 h)
+`cpu: heavy`, 7 cores. It is pinned to mtg-table@76cbb82 (main with D416, #103: the cube lab's `--drafter human-picks:<file>`) and ForgeCoach@866c256 (#119, the shipped `vintage-` and `synergy-cube-180.picks.json`, read from the ForgeCoach checkout and checked by sha256). Nothing else is queued, and it aborts if a `queue run` starts.
+- **What it decides.** Whether a follow-up makes the human-pick drafter ForgeCoach's default Draft vs AI drafter. The job itself changes nothing.
+- **What it does.**
+  - Vintage (1,000 seeds) and Synergy (500 seeds, from 811,400,001) are each drafted twice. HA: seat A drafts with the 17Lands human pick model, seat B with the current drafter. HB: the mirror, seats swapped.
+  - That is 3,000 best-of-3 matches. Both seats are plain Forge Default, the lab builder builds both decks, and nothing is recorded.
+  - It runs on its own homes (`var/cubelab/homes-J114`) and writes under `var/lab-j114/`.
+- **The rule (pre-registered).** The outcome is the human-pick drafter's match win rate, with a cluster bootstrap over seeds. PASS when Vintage's 95% interval is above 0.5 and Synergy's point estimate is at least 0.5. Expected precision is about ±2.2 points on Vintage. Blue share and J111's equal-quality blue rates are secondary, with no verdict.
+- **Pilot (~10 min).** 6 seeds per cube in both seats, recorded, plus a plain `--games 0` draft of the same seeds. It checks mechanically that:
+  - the seats are plain Forge, with no search traces;
+  - every folder has the intended drafter seat and picks file;
+  - coverage is 152 and 79 cards;
+  - the human seat drafts differently from the plain drafter;
+  - the read pairs every seed.
+- **The summary.** Please write `summary.md` from the job's `## Report` list, credit line first.
+
 ### 2026-10-08 15:05 (EDT) — J113 posted: B3, the win chance recalibrated on human games (light, ~30 min)
 `cpu: light`, one core, under 2 GB. It is pinned to mtg-table@cb81721: main with `tools/ml/human_calib.py` and D415, which merged as #101. The queue is empty.
 - **What it decides.** Whether ForgeCoach's win chance gets a "human" calibration for games against people and the search AI, and whether it is one fit or one per turn band.
