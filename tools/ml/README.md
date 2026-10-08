@@ -629,6 +629,37 @@ in 222–294 s on one process at a 0.40 GB peak; 2,667,602 user-side positions, 
 (11.5%) qualify at share ≥ 0.5 and 38,431 (1.4%) at ≥ 0.8; the rule's population is 154,302
 rows from 51,161 games. The exam over those rows took 85 s at a 0.46 GB peak.
 
+## The win chance recalibrated on human games (D415)
+
+The outside exam found the r17 evaluator useful on 17Lands' human games but too sure of itself.
+`human_calib.py` fits a Platt transform, p' = sigmoid(a + b logit(p)), to that frozen model on
+17Lands' `dev` half and tests it on the `test` half, by `CALIB_RULE`, written before its run.
+
+```bash
+python3 tools/ml/ext17l.py rows var/ml/17lands/replay_data_public.Cube_-_Powered.PremierDraft.csv.gz \
+    --out var/ml/17lands/b3-rows-premier --perspective both
+python3 tools/ml/human_calib.py --model var/ml/models/r17-vintage-n1.json --ext var/ml/17lands/b3-rows-premier \
+    --data var/ml/data/r17-vintage-n1 --trad var/ml/17lands/b3-rows-trad \
+    --report var/ml/reports/b3-calib.json --params var/ml/reports/b3-human-calibration.json
+```
+
+- **Why r17, not v2.** 17Lands has an end-of-half-turn snapshot with no P/T, keywords,
+  tapped state, counters, graveyards, exile or stack; v2 reads all of them at a decision
+  state. A fit on v2 with those masked would calibrate the mask (D359 rejected the same).
+- **Both perspectives.** Each position appears from both sides with opposite labels, so the
+  tracker users' 54% win rate cancels instead of landing in the intercept. The bootstrap
+  resamples whole games. The user's rows alone are a secondary table.
+- **Relative to Forge.** r17 is over-confident on Forge's own held-out games too. So
+  `--data` fits the same transform on our validation split, and the report gives the
+  relative slope b_human / b_forge with an interval. That is the part a model calibrated on
+  Forge's games (v1, v2) would need. The params file recommends it to the coach only on a
+  PASS, with a usable Forge fit, and when that interval excludes 1.
+- **The rule.** On the `test` half, both perspectives, turn >= 3, share >= 0.5: PASS when
+  log-loss(uncalibrated) - log-loss(Platt) > 0 with its 95% interval (2,000 resamples over
+  games) above 0, on >= 2,000 games and 10,000 rows. Per-turn-band fits are the recommended
+  form only when they beat the global fit with an interval above 0. A partial download, a
+  sample, one perspective or another file gives NO VERDICT.
+
 ## Hardware: the owner's desktop
 
 Ryzen 7 9700X (8 cores, 16 threads), 30 GB, a GTX 1080 (8 GB) until the RTX 50
