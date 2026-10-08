@@ -1,0 +1,3 @@
+PASS  pilot.games == 1   [pilot.games = 1]
+PASS  pilot.ended == 1   [pilot.ended = 1]
+PASS  pilot.harness == 0   [pilot.harness = 0]
