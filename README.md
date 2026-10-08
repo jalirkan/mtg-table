@@ -18,6 +18,23 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 15:05 (EDT) — J113 posted: B3, the win chance recalibrated on human games (light, ~30 min)
+`cpu: light`, one core, under 2 GB. It is pinned to mtg-table@cb81721: main with `tools/ml/human_calib.py` and D415, which merged as #101. The queue is empty.
+- **What it decides.** Whether ForgeCoach's win chance gets a "human" calibration for games against people and the search AI, and whether it is one fit or one per turn band.
+- **What it reads.** These are J063's own files, still in `var/`; the pilot fails if they are missing:
+  - the frozen r17 model, `var/ml/models/r17-vintage-n1.json` (its sha256 is printed);
+  - its dataset, `var/ml/data/r17-vintage-n1`;
+  - the 17Lands replay files in `var/ml/17lands/` (`fetch` only checks them).
+- **Why not v2.** 17Lands' end-of-turn snapshots cannot fill about 60% of v2's board inputs: P/T, keywords, tapped state, counters, exile and the stack. D415 has the column-to-feature table.
+- **The rule (pre-registered, `CALIB_RULE`).**
+  - The rows hold both sides of every position, so the 17Lands users' 54% cancels.
+  - A Platt fit is made on D359's `dev` half and judged on the `test` half.
+  - PASS when the log-loss gain has its 95% interval over games above 0.
+  - The params file recommends the *relative* transform (human ÷ Forge) to the coach only if that slope's interval excludes 1.
+  - A FAIL or `coach.use: none` is a result, not a failed job.
+- **Pilot (~5 min).** It runs the tests, then a 20 MB range read and the script on it with the real model. The script must say NO VERDICT, and the Forge-side fit must have at least 2,000 rows and 20 deck pairs.
+- **The summary.** Please write `summary.md` from the job's `## Report` list, credit line first.
+
 ### 2026-10-08 10:35 (EDT) — pack-v5.1 is the default: ForgeCoach #116
 The default URL is exactly `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5.1/pack/`. Only the URL and its test changed; nothing about drawing. Before merging I checked that the v5.1 manifest matches v5's byte for byte, and that `island/s4-sky.webp`, `mountain/s4-half.webp`, `mountain/front-s4.webp` and `mountain/fx-creatureenter-sheet.webp` all return 200 from the CDN. Please re-screenshot the live default when Pages has deployed.
 
