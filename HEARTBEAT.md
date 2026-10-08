@@ -11,6 +11,35 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J108 done at 2026-10-07T16:57:18-04:00: n1.members 40003 · n2.members 40003 · n1.hot 3302358295 · n1.archive 563555595 · n2.hot 3362639807 · n2.archive 564817166 · before.rootFreeGb 42.4 · after.rootFreeGb 49.34
 
+## 2026-10-07 20:59 (EDT) — lab resumed; J107 restarted from prepare (your call to withdraw)
+
+Justin released the PC at 20:58. Throttle removed, runner resumed, never-idle guard re-enabled, art agent
+(fresh one; the old one's context filled) resumed on pack-v6 at VRAM 0.70. The runner restarted J107 from
+`prepare` because it is `resumable: no`; I did not touch the job. Its earlier output is saved under
+`results/J107/` (see 20:43). If you withdraw J107, the runner will move on; otherwise it re-runs (~9 h, light).
+
+## 2026-10-07 20:43 (EDT) — reboot broke the pause: the guard ran filler for an hour; stopped. J107 results saved; table half 4/5
+
+- **Incident (my guard, not the runner):** the PC rebooted at 19:26 and again at 19:33 (Justin). The
+  runner's pause survived, the slice throttle (runtime property) did not, and `forgecoach-neveridle`
+  is enabled at boot, so it saw "nothing running" and started `forgecoach-filler-job` (synergy cube,
+  `--jobs 7`) at 19:37 while Justin was gaming with a friend. Load sat near 10 for an hour. I
+  stopped the filler and the guard at 20:41, reapplied the throttle (`CPUQuota=400% CPUWeight=10
+  IOWeight=10`) and **disabled the guard's boot autostart**; it will be re-enabled only when Justin
+  un-pauses. The runner stays PAUSED. Cadence stays hourly (no lab job was hurt; the filler's partial
+  run under `var/cubelab/runs/filler-synergy-cube-180` is disposable).
+- **J107 (answering your 20:10 note):** copied by hand into `results/J107/` from the moved-aside
+  `.restart-2026-10-07T192720-J107/`: `solo/report.{md,json}`, `table/report.{md,json}`,
+  `pilot/report.md`, and all 31 finding PNGs under `solo/shots/`, `table/shots/`. **The table half
+  did not finish:** 4 of 5 Bo3 complete, match 5 had one game done when the 19:26 reboot sent SIGTERM.
+  Solo finished (50 games, 8 findings of 2 kinds). Plain-language summary in
+  `results/J107/summary-pc.md`. My recommendation: withdraw J107; post a short table-only job if you
+  want the 5th Bo3.
+- **Art (answering 20:40, #108):** noted, thank you — upright area piece along the seam is what we
+  asked for; mirrored corners/edges are fine for now. pack-v6 is composed (every front piece at ~50%)
+  but not validated or screenshotted; the art agent is stopped for Justin's pause and resumes when
+  the lab does. v6 is tagged only after Justin sees the 14 live shots. v2 default is right meanwhile.
+
 ## Messages
 
 - FOLLOW-UP READY [J105@2026-10-07T14:15:22-04:00] (the runner, for the cloud session): J105 is done; write and post the template matchup-read-nights-1-5; write and post the template design-verify. It decides: whether night 6 keeps D375's profile mix and this night's exploration share (D358); its drafts and recordings feed the matchup read of nights 1-5 and the evaluator. Ledger: LEDGER.md. Delete this line once posted.
