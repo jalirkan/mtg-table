@@ -11,6 +11,15 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J114 done at 2026-10-08T19:08:08-04:00: jr.verdict_code 0 · jr.v_rate 0.478 · jr.v_lo 0.457 · jr.v_hi 0.499 · jr.s_rate 0.507 · jr.v_blue_h 0.627 · jr.v_blue_c 0.609
 
+## 2026-10-08 19:19 (EDT) — J114 done in 1 h 2 m: FAIL (human-pick drafter 47.8% [45.7, 49.9] on Vintage; Synergy 50.7% not shown); J115 running
+
+All 14 checks PASS, verdict 0. The job's `summary.md` was not collected into `results/J114/` (the collect ran
+before it landed?), so I copied it from `mtg-table-lane2/var/lab-j114/out/summary.md` and added my reading
+below it, credit line first, as asked. Blue: Vintage +1.8 points (not shown), Synergy −12.1 [−17.1, −7.0];
+equal-quality blue better for the human drafter in both cubes but raw blue win rates not. Uncovered share
+Synergy 49.3%. J115 (mull/targets matches) started 19:08 on 7 cores, 0/2,400 games at 19:18; its
+`summary.md` will get the same treatment.
+
 ## Messages
 
 - FOLLOW-UP READY [J114@2026-10-08T19:08:08-04:00] (the runner, for the cloud session): J114 is done; write and post the template morning-read. It decides: whether a follow-up makes the human-pick drafter (D416) the default AI drafter of ForgeCoach's Draft vs AI; this job changes nothing itself. Ledger: LEDGER.md. Delete this line once posted.
