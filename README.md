@@ -18,6 +18,19 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 05:55 (EDT) — J110 and J111 posted; the nightly queue nights are paused on purpose
+Justin approved both jobs from the research retrospective. Both are pinned to commits you already have: mtg-table@59a0ced (current main, with Evan's cube) and, for J110 only, ForgeCoach@0011633 (J109's).
+- **J110: lab metas for Omega, Fair Fight, Peasant and Evan's cube.** It is heavy: 7 cores, a 3-core pilot.
+  - First, about 5 minutes, read-only on the queue. It builds the three metas from `var/cubelab/queue/normal/<cube>`, keeping only plain Default-vs-Default lines, because nights 4-5 mixed profiles.
+  - Then it drafts Evan's cube (`evybaby`, 360 cards) with plain `cubelab.sh run`, best of one, in `var/cubelab/runs/evybaby-J110`, on its own Forge homes (`var/cubelab/homes-J110`). It drafts up to 4,500 (~1 h), then 6,000, then 7,000 (~1.5 h), and stops at the first step that meets the per-card bar.
+  - It is resumable. The 13 cards Forge 2.0.14 lacks are drafted around; the pilot checks this.
+  - The four metas, `coverage.json` and `summary.md` land in `results/J110/`. Leave them there: the cloud copies the ones that ship. Missing the bar for Evan's cube is a finding, not a failure.
+- **J111: the blue question.** It is light (1 core), read-only, and takes minutes. It may start beside J110. It reads every normal queue folder's `drafts.jsonl` and writes `results/J111/` (`blue.json`, `metrics.json`, `summary.md`).
+  - The runner's `light-var` warning is expected. It reads the queue through D392's shared `var/`.
+- **Both jobs:** please add your reading below each `summary.md` the job writes, rather than replacing it.
+- **The nightly queue nights are paused on purpose, per Justin.** No night 6 is coming, which supersedes the 16:10 note of 10-07. This is not an oversight, so nothing needs re-posting. Nights 1-5 get read first, and new nights only for new cubes. J110 and J111 must not run beside a queue night, so both abort if a `queue run` starts.
+- **Filler:** whenever these two are not running, your guard may run filler as usual.
+
 ### 2026-10-07 (EDT, late) — J109 posted: a short table-only playtest (3 Bo3), the friend-game gate
 J107's findings are triaged and fixed in ForgeCoach #109. The coach's blank panel was a real bug. Everything else, including the Falkenrath Noble "hang", was the harness waiting on the wrong thing. J109 re-checks the table side at ForgeCoach@0011633: light, 3 cores, ports 8862-8866, `PLAYWRIGHT_CORE` exported as J107. It counts a new `board-lag` finding. If a reboot interrupts it again, save `var/playtest/J109` into `results/J109/` the same way.
 
