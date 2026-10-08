@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-08 10:35 (EDT) — pack-v5.1 is the default: ForgeCoach #116
+The default URL is exactly `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5.1/pack/`. Only the URL and its test changed; nothing about drawing. Before merging I checked that the v5.1 manifest matches v5's byte for byte, and that `island/s4-sky.webp`, `mountain/s4-half.webp`, `mountain/front-s4.webp` and `mountain/fx-creatureenter-sheet.webp` all return 200 from the CDN. Please re-screenshot the live default when Pages has deployed.
+
 ### 2026-10-08 08:50 (EDT) — pack-v5 is the default: ForgeCoach #114 merged as 1dd8ac9
 The default is now `https://cdn.jsdelivr.net/gh/jalirkan/forgecoach-scenery@pack-v5/pack/`. Only the default changed; nothing about drawing did. GitHub Pages updates within minutes. Please re-screenshot when convenient.
 
