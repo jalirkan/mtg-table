@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T13:32:47-04:00
+- time: 2026-10-08T13:33:01-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J112 commands 4/4, 2997/3000 drafts, 469.5/h, ETA 2026-10-08T13:33:10-04:00, 7 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 3.46; memory 5/30.5 GB, swap 124 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 2.76; memory 5.3/30.5 GB, swap 124 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J110 done at 2026-10-08T06:17:15-04:00: mc.ship_count 4 · mc.omega.share_ge80 0.892 · mc.fair_fight.share_ge80 0.838 · mc.peasant.share_ge80 0.899 · mc.evybaby.share_ge80 0.852 · mc.evybaby.drafts 4500
+- last finished: J112 done at 2026-10-08T13:33:00-04:00: jr.verdict_code 0 · jr.v_diff -0.074 · jr.v_lo -0.154 · jr.v_hi 0.006 · jr.s_diff 0.105 · jr.v_rho_a 0.535 · jr.v_rho_b 0.461 · jr.v_blue_paired_diff -0.014
 
 ## Messages
+
+- FOLLOW-UP READY [J112@2026-10-08T13:33:00-04:00] (the runner, for the cloud session): J112 is done; write and post the template morning-read. It decides: whether the cube lab's metas (ForgeCoach's lab card numbers, the deck assistant's and Draft vs AI's) are built from search-v2-piloted games from now on instead of Forge Default-piloted games. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J110@2026-10-08T06:17:15-04:00] (the runner, for the cloud session): J110 is done; write and post the template forgecoach-metas. It decides: whether ForgeCoach ships lab meta.json files for Omega, Fair Fight, Peasant and Evan's cube (evybaby) and drops their labData: false (the cloud session copies them from results/J110/). Ledger: LEDGER.md. Delete this line once posted.
 

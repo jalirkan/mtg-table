@@ -1,0 +1,41 @@
+==== J112 run4 started 2026-10-08T13:32:47-04:00 in unit lab-J112-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+var/lab-j112/A-vintage/meta.json
+var/lab-j112/B-vintage/meta.json
+var/lab-j112/A-synergy/meta.json
+var/lab-j112/B-synergy/meta.json
+J112 verdict: fail (Vintage B-A -0.0738 [-0.1539, 0.0061], Synergy B-A 0.1052)
+# J112: search-v2 pilots and human card numbers
+
+**Verdict: FAIL** (pre-registered: Vintage's 95% interval on rho(B) - rho(A) above 0, and Synergy's point estimate not negative). Vintage -0.0738 [-0.154, +0.006]; Synergy 0.1052 [-0.049, +0.279].
+
+A = Forge Default vs Forge Default, B = search-v2 vs search-v2 (Default+outlets+search:anytime=1), on the same draft seeds and so the same decks. rho = Spearman between the arm's per-card lab win rate and 17Lands' GIH WR (Arena's Powered Cube), nonland overlap cards with 500+ games in hand and lab games in both arms; paired bootstrap over cards.
+
+## Primary
+
+| cube | cards | rho A [95%] | rho B [95%] | B - A [95%] | P(B - A <= 0) | rho(A, B) | shipped meta's rho | median games a card A / B |
+|---|---|---|---|---|---|---|---|---|
+| vintage | 131 | 0.535 [+0.401, +0.644] | 0.4611 [+0.328, +0.575] | **-0.0738 [-0.154, +0.006]** | 0.9651 | 0.7769 | 0.4771 (n 131) | 538 / 537 |
+| synergy | 58 | 0.3181 [+0.044, +0.554] | 0.4234 [+0.192, +0.611] | **0.1052 [-0.049, +0.279]** | 0.1053 | 0.7632 | 0.4471 (n 58) | 371 / 371 |
+
+The shipped meta's rho is on many more drafts (less noise), so it is higher than either arm's here; only B against A, on equal draft counts, is the test.
+
+## Pairing and runs
+
+- vintage: 2000 seeds in both arms (0 only in A, 0 only in B); decks differing between arms: 0.
+- synergy: 1000 seeds in both arms (0 only in A, 0 only in B); decks differing between arms: 0.
+
+## Secondary: blue at equal quality (as J111; description only)
+
+| cube | arm | one-blue drafts | blue win rate | equal quality (J111 b0) | low-contention band b0 |
+|---|---|---|---|---|---|
+| vintage | A | 1328 | 46.2% [43.5, 48.9] | 44.4% [41.6, 47.2] | 44.5% [39.5, 49.7] (n 389) |
+| vintage | B | 1327 | 44.8% [42.1, 47.4] | 43.0% [40.2, 45.8] | 45.3% [40.3, 50.4] (n 389) |
+| synergy | A | 625 | 34.7% [31.1, 38.5] | 30.6% [26.7, 34.9] | 27.3% [20.3, 35.6] (n 185) |
+| synergy | B | 623 | 37.7% [34.0, 41.6] | 37.2% [33.1, 41.5] | 34.1% [26.6, 42.5] (n 183) |
+
+Paired (the same one-blue drafts, decisive in both arms; identical decks, so quality is held exactly):
+
+- vintage: n 1327, blue 46.1% in A, 44.8% in B; B - A -1.4 points [-4.1, +1.4] (B won where A lost 164, the reverse 182).
+- synergy: n 623, blue 34.5% in A, 37.7% in B; B - A +3.2 points [-0.3, +6.9] (B won where A lost 79, the reverse 59).
+
+The blue numbers carry no verdict. A smaller gap in B says Forge's play explains part of J111's deficit; an unchanged gap says the search inherits it (it overrules Forge only where it finds a clearly better line).

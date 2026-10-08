@@ -515,3 +515,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J110/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 59a0ced, ForgeCoach 0011633
 - follow-up: template forgecoach-metas: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J112 DONE: Search-v2 pilots for cube stats: do cube-lab games played by search-v2 instead of Forge Default give card win rates that rank like 17Lands humans (Vintage, Synergy), and does blue's Forge deficit shrink
+
+- finished: 2026-10-08T13:33:00-04:00
+- decides: whether the cube lab's metas (ForgeCoach's lab card numbers, the deck assistant's and Draft vs AI's) are built from search-v2-piloted games from now on instead of Forge Default-piloted games
+- hypothesis: J111 found Forge plays blue worse (blue decks win 33-46% at equal deck quality in all 7 cubes) and the lab's Forge-piloted card win rates agree with 17Lands humans only at rho ~0.48 (Vintage, 131 cards; Synergy 0.45, 59; ForgeCoach docs/human-blend.md); search-v2 overrules Forge's answer on ~18% of searched decisions (J102) and is +73-87 Elo over Forge Default (J101), so cards Forge misplays should be credited closer to how humans do, and the blue gap should narrow
+- rule: written 2026-10-08 before any J112 game was played (j112.py's header). Per cube (Vintage, Synergy), cards = nonland cards with 500+ games in hand in ForgeCoach@bd51ce3's <cube>.human.json and at least one lab game in both arms; rho = Spearman (average ranks) between the arm's per-card lab win rate (meta.json wins / games) and the human GIH WR (gihW / gih); difference rho(B) - rho(A), B = search-v2 vs search-v2, A = Forge Default vs Forge Default on the same draft seeds; paired bootstrap over cards, 10,000 resamples, default_rng(20261006), percentile 95% interval. PASS when Vintage's interval is entirely above 0 AND Synergy's point estimate is >= 0: future metas are built from search-v2-piloted games. Otherwise FAIL: metas stay Forge Default-piloted, and the result is recorded. The blue numbers (secondary, as J111) carry no verdict
+- outcome: done
+- headline: jr.verdict_code 0, jr.v_diff -0.0738, jr.v_lo -0.1539, jr.v_hi 0.0061, jr.s_diff 0.1052, jr.v_rho_a 0.535, jr.v_rho_b 0.4611, jr.v_blue_paired_diff -0.0136
+- summary: results/J112/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 59a0ced, ForgeCoach bd51ce3
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
