@@ -51,8 +51,8 @@ function oracleFromSqlite(path) {
   // eslint-disable-next-line no-undef
   const { DatabaseSync } = process.getBuiltinModule('node:sqlite');
   const db = new DatabaseSync(path, { readOnly: true });
-  const byName = db.prepare('SELECT oracle_text FROM cards WHERE name = ? LIMIT 1');
-  const byNorm = db.prepare('SELECT c.oracle_text FROM card_names n JOIN cards c ON c.oracle_id = n.oracle_id WHERE n.norm_name = ? LIMIT 1');
+  const byName = db.prepare('SELECT oracle_text, faces FROM cards WHERE name = ? LIMIT 1');
+  const byNorm = db.prepare('SELECT c.oracle_text, c.faces FROM card_names n JOIN cards c ON c.oracle_id = n.oracle_id WHERE n.norm_name = ? LIMIT 1');
   const cache = new Map();
   return {
     source: `sqlite ${path}`,
@@ -62,7 +62,15 @@ function oracleFromSqlite(path) {
       if (!row) {
         try { row = byNorm.get(norm(name)); } catch { row = null; }
       }
-      const t = row && typeof row.oracle_text === 'string' ? stripReminder(row.oracle_text) : null;
+      // a card of two faces (adventure, split, MDFC): each face's text under its name, as faceText does
+      // for Scryfall objects. The index's oracle_text joins them as "front\n//\nback" without names, so
+      // "cast Stomp" (Bonecrusher Giant) could not be matched (m20).
+      let faces = null;
+      try { faces = row && row.faces ? JSON.parse(row.faces) : null; } catch { faces = null; }
+      const named = Array.isArray(faces) ? faces.filter((f) => f && f.name && f.oracle_text) : [];
+      const t = named.length >= 2
+        ? named.map((f) => `${f.name}: ${stripReminder(f.oracle_text)}`).join(' // ')
+        : row && typeof row.oracle_text === 'string' ? stripReminder(row.oracle_text) : null;
       cache.set(name, t);
       return t;
     },
