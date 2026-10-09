@@ -477,3 +477,22 @@ test('a card cast from the graveyard shows and checks its flashback cost (sk7 Mo
   assert.deepEqual(zoneCost(blink, 'graveyard', oracle), { cost: '{3}{U}', how: 'flashback' });
   assert.equal(zoneCost(blink, 'hand', oracle), null);
 });
+
+test('options that differ only in a bracketed cost: a full copy or one distinguishing word picks (sk8 Bone Shards)', async () => {
+  const { classifyAsk } = await import('../lib/decision.mjs');
+  const h = harness([]);
+  h.feed('state', state({ turn: 3 }));
+  const ask = { askId: 'a9', kind: 'ability_menu', cardId: 40, options: [
+    { id: 0, label: 'Destroy target creature or planeswalker. (Additional cost: Sacrifice a creature)', kind: 'ability', cardId: 40, canPlay: true, isSpell: true },
+    { id: 1, label: 'Destroy target creature or planeswalker. (Additional cost: Discard a card)', kind: 'ability', cardId: 40, canPlay: true, isSpell: true },
+  ] };
+  const d = classifyAsk({ state: h.core.state, ask, me: 0 });
+  const plan = { steps: [{ verb: 'choose', names: 'x' }], i: 0 };
+  const full = h.core.answerWith(d, plan, plan.steps[0], 'Destroy target creature or planeswalker. (Additional cost: Discard a card)');
+  assert.deepEqual(full.moves, [{ type: 'answer', askId: 'a9', value: 1 }]);
+  plan.i = 0;
+  const word = h.core.answerWith(d, plan, plan.steps[0], 'discard');
+  assert.deepEqual(word.moves, [{ type: 'answer', askId: 'a9', value: 1 }]);
+  plan.i = 0;
+  assert.ok(h.core.answerWith(d, plan, plan.steps[0], 'Destroy target creature or planeswalker').fail, 'ambiguous stays a correction');
+});

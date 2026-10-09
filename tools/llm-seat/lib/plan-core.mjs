@@ -828,6 +828,16 @@ export class PlanCore extends SeatCore {
     } else {
       for (const n of names) {
         const ref = parseRef(n);
+        // an option named in full, brackets and all, wins outright; a word or
+        // phrase that only one option's label contains picks it (sk8: Bone
+        // Shards' two options differ only in "(Additional cost: …)", which
+        // parseRef strips, so even an exact copy was refused)
+        const raw = normName(n);
+        const free = cands.filter((c) => !taken.has(c.id) && c.group === 'option');
+        const exact = free.filter((c) => normName(c.opt.label) === raw);
+        const contains = raw.length >= 3 ? free.filter((c) => normName(c.opt.label).includes(raw)) : [];
+        const direct = exact.length === 1 ? exact[0] : contains.length === 1 ? contains[0] : null;
+        if (direct) { taken.add(direct.id); chosen.push(direct.opt.n); continue; }
         let m = matchRef(ref, cands, taken);
         if (!m.ok && m.why === 'missing' && ref.name.length >= 3) {
           // a long option label (an ability, a mode) may be named by its start
