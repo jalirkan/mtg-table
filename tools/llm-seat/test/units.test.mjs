@@ -397,3 +397,14 @@ test('a land in hand: "Play land" plays it, landcycling is an activation (cf4 As
   const verbs = d.options.filter((o) => o.cardId === 21).map((o) => o.verb).sort();
   assert.deepEqual(verbs, ['activate', 'land']);
 });
+
+test('the London mulligan bottom offers the hand (the wire lists no cards), clicks then OK (m20)', () => {
+  const s = state({ me: { hand: [creature(11, 'Grizzly Bears', 2, 2), creature(12, 'Marionette Master', 4, 4), land(13, 'Island', { zone: 'hand' })] } });
+  const input = { prompt: 'Return 1 card(s) to the bottom of your library', buttons: { ok: { label: 'OK', enabled: false }, cancel: { label: 'Auto', enabled: true } },
+    selectable: { cardIds: [], min: 0, max: 0, mode: 'none' } };
+  const d = classifyInput({ state: s, input, me: 0, oracle: ORACLE });
+  assert.ok(!d.auto);
+  assert.equal(d.options.length, 3);
+  const n = d.options.find((o) => o.cardId === 12).n;
+  assert.deepEqual(movesFor(d, [n]), [{ type: 'act', action: 'clickCard', cardId: 12 }, { type: 'act', action: 'buttonOk' }]);
+});
