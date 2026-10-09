@@ -185,7 +185,9 @@
 #                                 Then 12l: PlayableSelfTest (D413) -- state.
 #                                 playable lists Cauldron Familiar, Seasoned
 #                                 Pyromancer and Unwilling Ingredient from the
-#                                 graveyard, never the opponent's cards (one
+#                                 graveyard, never the opponent's cards; and
+#                                 (D420) state.activatable lists Jace's loyalty
+#                                 abilities, a named equip, a Clue, a crew (one
 #                                 engine boot)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
@@ -2195,15 +2197,20 @@ s12k_facedown() {
 #      Forge's own click would play (Familiar only with a Food to sacrifice,
 #      flashback only at sorcery speed), never seat 1's, and that Snap.state
 #      writes the list, writes null off the priority, and drops an entry a
-#      comfort hands over for a card that is not the viewer's.  One engine boot.
+#      comfort hands over for a card that is not the viewer's.
+#      D420 (amendment M63), the battlefield's half, in the same JVM: state.
+#      activatable lists Jace, the Mind Sculptor's loyalty abilities (only those
+#      the loyalty pays, once a turn, sorcery speed), Samurai's Katana's named
+#      equip, a Clue token's sacrifice and Smuggler's Copter's crew, never a
+#      land's mana ability or seat 1's permanents.  One engine boot.
 s12l_playable() {
-  printf '\n=== 12l. PlayableSelfTest -- state.playable: what the seat may play from its graveyard, exile, hand (D413) ===\n'
+  printf '\n=== 12l. PlayableSelfTest -- state.playable and state.activatable: what the seat may play from its graveyard, exile, hand, and activate on the battlefield (D413, D420) ===\n'
   rc=0
   jvm ./bridge/run.sh mtgtable.PlayableSelfTest > var/check-all-playable.log 2>&1 || rc=$?
   grep -E '^(  ok|  FAIL|PlayableSelfTest)' var/check-all-playable.log || true
   if [ "$rc" != "0" ]; then
     capped "$rc" && die "PlayableSelfTest did not finish within ${GAME_TIMEOUT}s"
-    die "PlayableSelfTest exited $rc: state.playable missed a card Forge would play, listed one it would not, or named the opponent's (12l, D413; log: var/check-all-playable.log)"
+    die "PlayableSelfTest exited $rc: state.playable or state.activatable missed a card Forge would play or activate, listed one it would not, or named the opponent's (12l, D413, D420; log: var/check-all-playable.log)"
   fi
 }
 

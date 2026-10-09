@@ -33,11 +33,12 @@ export function player(id, name, z = {}, extra = {}) {
   };
 }
 
-export function state({ turn = 1, phase = 'MAIN1', active = 0, priority = 0, me = {}, opp = {}, stack = [], stackCards = [], playable = null, combat = null, events = [], meExtra = {}, gameOver = null } = {}) {
+/** `activatable` (M63) is left out unless given: the tests before it are an engine without the key. */
+export function state({ turn = 1, phase = 'MAIN1', active = 0, priority = 0, me = {}, opp = {}, stack = [], stackCards = [], playable = null, activatable, combat = null, events = [], meExtra = {}, gameOver = null } = {}) {
   return {
     gameId: 'fake-1', turn, round: Math.ceil(turn / 2), phase, activePlayer: active, priority, gameOver,
     players: [player(0, 'Human', me, meExtra), player(1, 'Forge AI', opp)],
-    stack, stackCards, yield: null, undo: { can: false, depth: 0 }, playable, combat, events,
+    stack, stackCards, yield: null, undo: { can: false, depth: 0 }, playable, ...(activatable !== undefined ? { activatable } : {}), combat, events,
   };
 }
 

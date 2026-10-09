@@ -65,6 +65,7 @@ Each step is one of these, using card names exactly as the game shows them:
   play land <card>
   cast <card>                      or  cast <card> -> <target>
   activate <card>                  or  activate <card> -> <target>
+  activate <card>: <ability>       (a permanent with several: its cost, as in "+2", or words of it)
   attack with <creature>, <creature>, ...      or  attack with none
   block <attacker> with <your creature>        (one line per block)
   target <card or player>          (answers a question that asks for a target)
@@ -189,7 +190,8 @@ Everything else is code, with no call: mana is the engine's own Auto; priority w
 no step left is passed; an engine question with one legal answer is answered; a
 spell of the seat's own on the stack is let resolve; an ability menu after a
 `cast X` step picks the spell (after `activate X`, the one ability when there is
-one); an optional cost the seat cannot pay is never offered (below). The phase stops
+one, or the one the step named, M63); a delve cost is paid by the seat through the
+engine's own two prompts (below); an optional cost the seat cannot pay is never offered (below). The phase stops
 are decision mode's default set (own MAIN1 and MAIN2; the opponent's declare-blockers
 step while the seat has a creature; the opponent's end step while it has an untapped
 land and an instant-speed option), with no `next:` line.
@@ -197,7 +199,9 @@ land and an instant-speed option), with no `next:` line.
 ### How steps are carried out
 
 In order, against what the wire offers (decision.mjs's options): `state.playable`
-(M61) and the battlefield abilities at priority, the attack candidates and block
+(M61) and `state.activatable` (M63, D420: each permanent you control with the
+abilities Forge would activate on a click now; on an engine without the key, the
+permanents whose card text has a non-mana activated ability) at priority, the attack candidates and block
 pairs read off the board, an ask's options, `input.selectable`. A name matches by
 verb and card name — case, accents and punctuation do not count; `Island #35` (or
 `[35]`, the log's spelling) picks one card; same-named cards of one owner in one
@@ -206,8 +210,24 @@ without an id. A comma inside a card name ("Peggy Carter, Secret Agent") is kept
 when the name is one of the candidates.
 
 - `play land` / `cast` / `activate` run at the seat's priority. A `cast` from hand is
-  first checked against the untapped mana (`lib/mana.mjs`; cost reducers, convoke,
-  delve and alternative costs are left to the engine).
+  first checked against the untapped mana (`lib/mana.mjs`; cost reducers, convoke
+  and alternative costs are left to the engine; delve counts the graveyard, at
+  most the generic part).
+- `activate X` picks the permanent from the engine's list; when it has more than one
+  ability there, `activate X: +2` (a loyalty cost; `2` reads as `+2`) or `activate
+  X: draw three` (words only one label contains) names one, and the engine's menu
+  is answered with it; with none named the menu is asked as a question. An ability
+  the list does not have is a correction that lists the ones it does. The prompt
+  lists every one, permanent and the engine's label, under *activate on the
+  battlefield*, marked when its mana cost cannot be paid from the untapped mana.
+- A question that needs N choices (Ghostly Flicker's two targets, "choose 2") takes
+  the `target` / `choose` steps that follow, in order, until N are named.
+- **Delve** (measured: Forge asks `choose_list` "Delve how many cards?", `"0"`..`k`,
+  then "Exile which card(i/n)?" once per card, where none clears the whole delve):
+  the seat answers both with no call — what the untapped mana cannot cover (minus
+  the mana the plan's later `cast` steps need), all of it when short anyway; lands
+  first, never a card the engine listed as playable from the graveyard while another
+  will do. A payment that still fails says how many cards delve exiled.
 - `cast X -> Y` answers the targeting question that follows with Y; a target the step
   did not name is one plain question.
 - `attack with A, B` is played at the declaration (priority before combat is passed
@@ -314,8 +334,6 @@ says otherwise.
 
 - **Ordering, damage assignment, amounts, library manipulation, sideboarding, text**:
   as decision mode, the bridge's default.
-- **An `activate X` step that names which of several abilities**: the engine's menu
-  is asked as a question (`choose <ability words>`, matched by its start).
 - **Attacking a planeswalker or battle**: as decision mode, the attack goes to the
   engine's current defender.
 - **Grading plan-mode choices**: the positions mode and coach-grade work per engine
@@ -412,9 +430,12 @@ and logged):
   which is answered with no call (`how: "auto"`, with the reason).
 - **Priority with nothing playable is passed with no call.** Playable is the
   engine's own list, `state.playable` (amendment M61: each card outside the
-  battlefield Forge would play on a click now), plus every permanent of yours
-  whose oracle text has a non-mana activated ability (`--no-battlefield-abilities`
-  turns that off; the wire has no list for the battlefield, §3.2). On an engine
+  battlefield Forge would play on a click now), plus `state.activatable`
+  (amendment M63, D420: each permanent you control with the non-mana abilities
+  Forge would activate on a click now, one option per ability). On an engine
+  without M63 every permanent of yours whose oracle text has a non-mana
+  activated ability is offered instead (`--no-battlefield-abilities` turns that
+  hint off). On an engine
   older than M61 the seat's hand is offered instead (everything at its own main
   phase with an empty stack, else Instants and FLASH cards) and Forge refuses
   what it will not take.
@@ -459,7 +480,8 @@ the seat's own Forge stops to a minimal default set plus whatever the reply's
 - opponent's `COMBAT_DECLARE_BLOCKERS` while you control a creature;
 - opponent's `END_OF_TURN` while you have an untapped land and an instant-speed
   option (an Instant or a FLASH card in hand, or a permanent with a non-mana
-  activated ability).
+  activated ability: one the engine last listed in `state.activatable` with an
+  ability that is not a loyalty ability or an equip, or one whose card text says so).
 
 A reply with no `next:` line goes back to the defaults; `--no-stops` leaves
 Forge's stops alone. Each `setPhaseStop` is an act on the wire and in the

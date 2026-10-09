@@ -105,6 +105,9 @@ export class SeatCore {
         this.stateSeq = frame.seq;
         if (b.turn !== this.cancelTurn) { this.cancelTurn = b.turn; this.cancelled = new Map(); this.lastCancel = null; }
         if (this.lastClick && (b.events ?? []).some((e) => (e.kind === 'cast' || e.kind === 'land') && e.cardId === this.lastClick.cardId)) this.lastClick = null;
+        // M63: the permanents the engine last listed with an ability usable at
+        // instant speed (not a loyalty ability, not an equip), for the end-step stop
+        if (Array.isArray(b.activatable)) this.instantActivatable = instantActivatable(b.activatable);
         break;
       case 'input': {
         const changed = this.input === null || inputKey(b) !== inputKey(this.input);
@@ -174,7 +177,7 @@ export class SeatCore {
 
   syncStops() {
     if (!this.useStops || !this.state || this.me === null) return;
-    const want = desiredStops(this.state, this.me, this.requested, this.oracle);
+    const want = desiredStops(this.state, this.me, this.requested, this.oracle, this.instantActivatable ?? null);
     const acts = stopActs(this.state, this.me, want);
     if (acts.length) {
       this.say(`STOPS -> ${stopsText(want)}`);
@@ -338,13 +341,19 @@ export class SeatCore {
   }
 }
 
+/** The ids of `state.activatable` entries with an ability that is not sorcery-speed by its kind (loyalty, equip). */
+export function instantActivatable(list) {
+  const sorcery = /^\s*[+\-−–]?\d+\s*:|\b(Equip|Reconfigure|Fortify)\b/;
+  return new Set(list.filter((e) => (e.abilities ?? []).some((a) => !sorcery.test(String(a.label ?? '')))).map((e) => e.cardId));
+}
+
 /** Takes out of a priority decision every card whose play was cancelled MAX_CANCELLED times this turn. */
 export function guardCancelled(d, cancelled) {
   const out = d.options.filter((o) => typeof o.cardId === 'number' && (cancelled.get(o.cardId) ?? 0) >= MAX_CANCELLED);
   if (!out.length) return d;
   d.options = d.options.filter((o) => !out.includes(o));
   d.options.forEach((o, i) => { o.n = i + 1; });
-  d.context.push(`(Not offered again this turn: the engine cancelled the play of ${[...new Set(out.map((o) => o.label.replace(/^(Cast|Play land|Activate an ability of) /, '').split(' [')[0]))].join(', ')} twice.)`);
+  d.context.push(`(Not offered again this turn: the engine cancelled the play of ${[...new Set(out.map((o) => o.label.replace(/^(Cast|Play land|Activate an ability of|Activate) /, '').split(' [')[0]))].join(', ')} twice.)`);
   if (d.options.length === 1 && !d.auto) d.auto = { reason: 'priority with nothing playable (the rest was cancelled twice this turn)', moves: d.options[0].moves };
   return d;
 }

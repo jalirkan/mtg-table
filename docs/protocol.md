@@ -30,6 +30,25 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-09 — what the seat may activate on the battlefield
+
+Found by nine shakedown games of the LLM seat (D418, D419) with a real model:
+M61 tells a seat what it may play from outside the battlefield, but the
+battlefield was left out ("its cards were always clickable"), so a client that
+must *say* what it can do there guessed from card text — and every guess
+missed a family: `Equip {1}`, `Murasame — Equip {5}`, a planeswalker's loyalty
+abilities, a Clue token with no card text at all. Forge already answers the
+question for a click. One row. Decision **D420**. Held by
+`mtgtable.PlayableSelfTest` (gate step 12l, on Forge's own cards: Jace, the
+Mind Sculptor, Samurai's Katana, a Clue token, Smuggler's Copter),
+`tools/check-redaction.mjs` (the shape, the per-file rule and the
+hidden-information rule; five controls in `fixtures/negative/redaction/m63-*`)
+and `web/test/playable.test.ts`.
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M63 | §3, §3.1 | **`state.activatable`: at the seat's own priority, each permanent it controls with a non-mana ability Forge would activate on a click now, with those abilities.** `[{cardId, zone: "battlefield", abilities: [{abilityId, label, isSpell: false}]}]` — M61's entry shape, `zone` always `battlefield`, `isSpell` always `false`. The list is Forge's own: `Card.getAllPossibleAbilities(player, true)` **[jar]** on each permanent the seat **controls** (an owner's card under the opponent's control is the opponent's), each ability kept only if `SpellAbility.canPlay()` — loyalty abilities once a turn at sorcery speed and only those the loyalty can pay (`SubCounter`), equip at sorcery speed, crew with enough untapped power, a Clue's `{2}, Sacrifice`, a tapped permanent's `{T}` ability not at all — **and, beyond `canPlay()`, only when every target the ability must choose has a candidate** (`TargetRestrictions.hasCandidates` **[jar]** on the ability and its sub-abilities whose minimum is above 0: an equip with no creature in play, or Jace's −1 with none, is a click Forge starts and then cancels, so it is not listed; M61's `playable` does not apply this). **Mana is not predicted**; mana abilities are left out (they are used to pay, never clicked for). **A separate key, so `playable` (M61) keeps its meaning** — outside the battlefield only — for every reader that outlines cards by it. **Written only at the seat's priority, `null` otherwise**, exactly as M61 (the same moment, the same `ask`-flush rule), on every `state` a seat writes and never by an AI-vs-AI recorder, so a file carries the key on every frame or on none — a file recorded between M61 and M63 carries `playable` alone. **Hidden information:** only permanents the viewing seat controls, shown in full in this frame (`Snap.state` gates each entry again and drops any other with an `ACTIVATABLE DROPPED` line); `label` goes through the one ability-label gate (`Snap.abilityLabel`). **The act is still `clickCard`** on the permanent; with more than one ability Forge asks its own `ability_menu` (M14), whose options carry the same labels. `abilityId` is Forge's id in that frame and is matched against the menu's, never sent as `clickAbility`. **Optional**: absent from every stream before this amendment; a reader treats absent and `null` alike. The client's one reader is `activatableOf()` in `web/src/protocol.ts`. | LLM seat shakedown |
+
 ### 2026-10-08 — the session header names a search seat's version and budget
 
 The human test set (D369) labels each of the owner's games with the AI it was
@@ -1040,6 +1059,15 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   outlines these cards and sends `clickCard`; Forge asks its own `ability_menu`
   when a card has more than one. A seat writes the key on every frame; an
   AI-vs-AI recording never does.
+- **`activatable` is what the seat may activate on the battlefield, or `null`**
+  (amendment **M63**, D420). At the seat's own priority it lists each permanent
+  the seat controls that has a non-mana ability Forge would activate on a click
+  now — `{cardId, zone: "battlefield", abilities: [{abilityId, label, isSpell:
+  false}]}`, never empty `abilities` — and `[]` when there is none; off its
+  priority, and in the frame an `ask` flushes, it is `null`. Same rules as
+  `playable`: mana never predicted, mana abilities left out, written on every
+  frame of a seat and never by an AI-vs-AI recording. A separate key, so
+  `playable` still means "outside the battlefield".
 - **`stack[].yieldKey` is an opaque handle** (amendment **M36**) such as `"y3"`,
   or `null` for an item Forge gave no key. It is minted by the bridge, interned
   for the life of one game, and **must never be rendered**: Forge's own key is a
@@ -1134,7 +1162,8 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   the `abilityId`s the last `ability_menu` filled, and a client must not expect
   a card object to carry its own playable list. (What a card outside the
   battlefield may do at the seat's priority is `state.playable`, amendment
-  **M61**, not this array.)
+  **M61**, and what a permanent may activate is `state.activatable`, amendment
+  **M63** — not this array.)
 - `setCode` is a string, or **`null` when Forge has no current state for the
   card** (`CardView.getCurrentState()` is a plain property read; the bridge
   writes `null` rather than inventing a set code). `setCode` plus `name` is what

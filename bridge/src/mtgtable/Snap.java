@@ -393,6 +393,15 @@ public final class Snap {
          * applies the gates and writes the labels.
          */
         List<Playable> playable();
+
+        /**
+         * {@code state.activatable} (protocol amendment <b>M63</b>, decision
+         * <b>D420</b>): the permanents the seat controls whose non-mana
+         * abilities Forge would activate on a click right now, each with
+         * those abilities -- or {@code null} off the seat's own priority,
+         * exactly as {@link #playable}.  Built by {@link Playables#activatable}.
+         */
+        List<Playable> activatable();
     }
 
     /**
@@ -540,6 +549,9 @@ public final class Snap {
             o.key("playable");
             final boolean viewerPriority = priority != null && priority.getId() == viewer.getId();
             playable(o, viewerPriority ? comfort.playable() : null, viewer, concealed);
+            // M63 (D420): the battlefield's half, under the same rule.
+            o.key("activatable");
+            activatable(o, viewerPriority ? comfort.activatable() : null, viewer, concealed);
         }
 
         o.key("events").arr();
@@ -876,6 +888,45 @@ public final class Snap {
             for (final SpellAbilityView sav : p.abilities()) {
                 o.obj().n("abilityId", sav.getId()).n("label", abilityLabel(sav, viewer))
                         .n("isSpell", sav.isSpell()).end();
+            }
+            o.end().end();
+        }
+        o.end();
+    }
+
+    /**
+     * {@code state.activatable} (amendment M63, D420).  Hidden information: an
+     * entry is written only for a permanent the VIEWER controls, on the
+     * battlefield, that this frame shows in full -- not concealed by the three
+     * gates and not in the frame's concealed set.  Anything else is dropped
+     * here and counted on stderr, whatever the comfort handed over.  Labels go
+     * through {@link #abilityLabel}, the one ability-label gate.
+     */
+    private static void activatable(final JsonOut o, final List<Playable> list, final PlayerView viewer,
+                                    final Set<Integer> concealedNow) {
+        if (list == null) {
+            o.vNull();
+            return;
+        }
+        o.arr();
+        for (final Playable p : list) {
+            final CardView cv = p.card();
+            if (cv == null || p.abilities() == null || p.abilities().isEmpty()) {
+                continue;
+            }
+            final Integer controller = pid(cv.getController());
+            final boolean mine = controller != null && controller.intValue() == viewer.getId();
+            final boolean onField = "battlefield".equals(p.zone()) && cv.getZone() == ZoneType.Battlefield;
+            if (!mine || !onField || concealed(cv, viewer) || concealedNow.contains(Integer.valueOf(cv.getId()))) {
+                System.err.println("ACTIVATABLE DROPPED: card " + cv.getId() + " in " + p.zone()
+                        + " is not a permanent the viewer controls (M63)");
+                continue;
+            }
+            o.obj().n("cardId", cv.getId()).n("zone", "battlefield");
+            o.key("abilities").arr();
+            for (final SpellAbilityView sav : p.abilities()) {
+                o.obj().n("abilityId", sav.getId()).n("label", abilityLabel(sav, viewer))
+                        .n("isSpell", false).end();
             }
             o.end().end();
         }

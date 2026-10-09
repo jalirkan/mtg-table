@@ -33,9 +33,10 @@
 // spell of the seat's own on the stack is let resolve.
 //
 // EXECUTION.  Steps run in order against what the wire offers:
-// `state.playable` (M61) and the battlefield abilities at priority (decision.mjs's
-// options), the attack candidates and block pairs read off the board, an
-// ask's options, `input.selectable`.  `cast X -> Y` answers the targeting
+// `state.playable` (M61) and `state.activatable` (M63; on an older engine the
+// battlefield abilities read off the card text) at priority (decision.mjs's
+// options; "activate <permanent>: <ability>" names one of several), the attack
+// candidates and block pairs read off the board, an ask's options, `input.selectable`.  `cast X -> Y` answers the targeting
 // question that follows with Y.  An attack step waits for the declaration
 // (priority before combat is passed to get there); steps after it run in the
 // second main phase.  The engine is the rules judge throughout.
@@ -43,11 +44,11 @@
 import { checkChoice, classifyAsk, inputBinding, inputKindOf, movesFor } from './decision.mjs';
 import { visibleNames } from './history.mjs';
 import { hasKeyword, isCreature, isLand, nameOf, playersOf } from './frames.mjs';
-import { payProblem, availableMana, parseCost, zoneCost } from './mana.mjs';
+import { activationProblem, payProblem, availableMana, parseCost, zoneCost } from './mana.mjs';
 import { needsTap } from './oracle.mjs';
 import { parseArm } from './arms.mjs';
 import { newSessionId } from './model.mjs';
-import { matchRef, normName, parseRef, parsePlan, splitNames, stepText } from './plan.mjs';
+import { abilitySplits, matchAbility, matchRef, normName, parseRef, parsePlan, splitNames, stepText } from './plan.mjs';
 import { Namer, PLAN_SYSTEM, phaseWords, planDeltaPrompt, planFullPrompt, planProgress, stackItemWords } from './plan-prompt.mjs';
 import { MAX_CANCELLED, MAX_MODEL_ERRORS, STALL_MS, SeatCore, inputKey } from './seat-core.mjs';
 
@@ -269,7 +270,25 @@ export class PlanCore extends SeatCore {
         this.pendingTargets = null;
       }
       for (const e of b.events ?? []) if (e.kind === 'land' && e.player === this.me) this.landsPlayed += 1;
+      // what the engine last listed as playable from the graveyard: delve keeps those (M61)
+      if (Array.isArray(b.playable)) this.gyPlayable = new Set(b.playable.filter((e) => e.zone === 'graveyard').map((e) => e.cardId));
     }
+  }
+
+  /** For a delve the engine asks about while a step's spell is being paid (mana.mjs delveCount / delvePick). */
+  delveContext() {
+    const cast = this.lastCast;
+    let reserve = 0;
+    const plan = cast?.plan ?? null;
+    if (plan) {
+      const hand = [...new Namer(this.state).cards.values()].filter((c) => c.zone === 'hand' && c.owner === this.me);
+      for (const st of plan.steps.slice(plan.i)) {
+        if (st.verb !== 'cast') continue;
+        const c = hand.find((h) => normName(nameOf(h) ?? '') === parseRef(st.name).name && h.id !== cast.card?.id);
+        if (c) reserve += parseCost(c.manaCost ?? '').mv;
+      }
+    }
+    return { casting: cast?.card ?? null, reserve, keep: this.gyPlayable ?? new Set() };
   }
 
   /** The plan whose steps run now (an interrupting moment's, else the turn's). */
@@ -292,8 +311,9 @@ export class PlanCore extends SeatCore {
     const first = this.asks.values().next();
     if (!first.done) {
       const { body, seq } = first.value;
-      const d = classifyAsk({ state: this.state, ask: body, intent: this.intent, me: this.me, oracle: this.oracle });
+      const d = classifyAsk({ state: this.state, ask: body, intent: this.intent, me: this.me, oracle: this.oracle, delve: this.delveContext() });
       if (body.kind === 'ability_menu') this.intent = null;
+      if (d.delve) this.lastDelve = { ...d.delve, card: this.lastCast?.card?.id ?? null };
       await this.handle(d, { askId: String(body.askId), frameSeq: seq, attempt: 0 });
       return;
     }
@@ -394,7 +414,7 @@ export class PlanCore extends SeatCore {
       if (r.auto) this.stats.auto += 1;
       this.log(this.rec(d, { how: r.auto ? 'auto' : 'plan', reason: r.why, moves: r.moves }));
     }
-    if (r.intent) this.intent = r.intent;
+    if (r.intent || (r.step && 'intent' in r)) this.intent = r.intent ?? null;   // a step's click: its ability, or none (the menu asks)
     if (d.source === 'ask') {
       for (const m of r.moves) this.emit(m, r.why);
       return;
@@ -481,7 +501,10 @@ export class PlanCore extends SeatCore {
       if (this.lastCast) {
         const c = this.lastCast.card;
         const p = c ? payProblem(c, this.state, this.me, this.oracle) : null;
-        this.payFailure = { plan: this.lastCast.plan, step: this.lastCast.step, why: `the engine could not pay for it from your untapped mana${p ? ` (${p})` : ''}` };
+        const dv = this.lastDelve && this.lastDelve.card === c?.id ? this.lastDelve : null;
+        const delveWords = dv ? `, even with delve exiling ${dv.n} card${dv.n === 1 ? '' : 's'} from your graveyard (the engine allowed at most ${dv.max})` : '';
+        this.payFailure = { plan: this.lastCast.plan, step: this.lastCast.step, why: `the engine could not pay for it from your untapped mana${delveWords}${p ? ` (${p})` : ''}` };
+        this.lastDelve = null;
         this.lastCast = null;
       }
       const cancel = this.input?.buttons?.cancel?.enabled;
@@ -542,7 +565,7 @@ export class PlanCore extends SeatCore {
   canAct(d) {
     if (d.auto) return false;
     const cards = new Namer(this.state).cards;
-    return d.options.some((o) => o.verb === 'land' || o.verb === 'activate'
+    return d.options.some((o) => o.verb === 'land' || (o.verb === 'activate' && !activationProblem(o, cards.get(o.cardId), this.state, this.me, this.oracle))
       || (o.verb === 'cast' && !(o.zone === 'hand' && payProblem(cards.get(o.cardId), this.state, this.me, this.oracle))));
   }
 
@@ -607,9 +630,60 @@ export class PlanCore extends SeatCore {
     }
   }
 
+  /**
+   * activate at priority from the engine's own list (M63): the permanent by
+   * name, then -- when it has more than one ability the engine allows now --
+   * the ability by its cost ("+2", "-1", "0") or words of its label.
+   */
+  activateStep(d, plan, step) {
+    const namer = new Namer(this.state);
+    const byCard = new Map();
+    for (const o of d.options.filter((x) => x.verb === 'activate')) {
+      if (!byCard.has(o.cardId)) byCard.set(o.cardId, []);
+      byCard.get(o.cardId).push(o);
+    }
+    const cands = [...byCard.keys()].map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: byCard.get(id)[0].zone ?? 'battlefield', card: namer.cards.get(id) }));
+    let pick = null;
+    let sel = null;
+    let first = null;
+    for (const sp of abilitySplits(step.name)) {
+      const ref = parseRef(sp.name);
+      const m = matchRef(ref, cands);
+      if (m.ok) { pick = m.pick; sel = sp.ability; break; }
+      // for the reason in words: the split that names a card the seat can see ("Jace…: +2" -> Jace)
+      const known = [...namer.cards.values()].some((c) => nameOf(c) && normName(nameOf(c)) === ref.name);
+      if (!first || (!first.known && (known || (first.m.why === 'missing' && m.why !== 'missing')))) first = { ref, m, known };
+    }
+    if (!pick) return { fail: { plan, step, why: this.whyNotPlayable('activate', first.ref, first.m, step) } };
+    const abil = byCard.get(pick.id);
+    const nm = namer.name(pick.card);
+    const labelOf = (a) => String(a.abilityLabel ?? a.intent?.abilityLabel ?? '');
+    const listed = abil.map((a) => `"${labelOf(a)}"`).join('; ');
+    let o = null;
+    if (sel !== null) {
+      const mm = matchAbility(sel, abil.map(labelOf));
+      if (!mm.ok) {
+        return { fail: { plan, step, why: `"${sel}" ${mm.why === 'ambiguous' ? 'fits more than one' : 'is not one'} of the abilities the engine allows ${nm} now: ${listed}` } };
+      }
+      o = abil[mm.index];
+    } else if (abil.length === 1) {
+      o = abil[0];
+    }
+    if (o) {
+      const p = activationProblem(o, pick.card, this.state, this.me, this.oracle);
+      if (p) return { fail: { plan, step, why: p } };
+    }
+    plan.i += 1;
+    this.pendingTargets = step.targets ? { plan, step, text: step.targets } : null;
+    this.lastCast = { plan, step, card: pick.card, face: null, ability: o };
+    // several abilities and none named: the click makes the engine ask which (a question)
+    return { moves: o ? o.moves : [act('clickCard', { cardId: pick.id })], why: stepText(step), step, plan, exec: true, intent: o?.intent ? { ...o.intent, label: o.label } : null };
+  }
+
   /** play land / cast / activate at priority. */
   priorityStep(d, plan, step) {
     const want = step.verb === 'play land' ? 'land' : step.verb === 'cast' ? 'cast' : 'activate';
+    if (want === 'activate' && this.state?.activatable !== undefined) return this.activateStep(d, plan, step);
     const cards = new Namer(this.state).cards;
     const cands = d.options.filter((o) => o.verb === want).map((o) => {
       const c = cards.get(o.cardId);
@@ -673,6 +747,12 @@ export class PlanCore extends SeatCore {
       return `the engine does not offer to cast ${nameOf(inHand)} now`;
     }
     if (!onField) return `${nameOf(own[0])} is not on your battlefield (it is in your ${own[0].zone}); only a permanent's ability can be activated this way`;
+    if (Array.isArray(st.activatable)) {
+      // M63: the engine's own list says no
+      const pw = /\bPlaneswalker\b/.test(String(onField.types ?? ''));
+      const why = onField.tapped ? ` (it is tapped)` : pw ? ' (a planeswalker uses one loyalty ability a turn, in your main phase with an empty stack)' : '';
+      return `the engine offers no ability of ${nameOf(onField)} now${why}`;
+    }
     const text = this.oracle?.text(nameOf(onField)) ?? null;
     if (onField.tapped && needsTap(text)) return `${nameOf(onField)} is tapped`;
     if (isCreature(onField) && onField.sick && needsTap(text) && !hasKeyword(onField, 'HASTE')) return `${nameOf(onField)} is summoning sick, so it cannot use a {T} ability yet`;
@@ -823,6 +903,19 @@ export class PlanCore extends SeatCore {
     const many = d.multi;
     let names = splitNames(text, cands.map((c) => c.name));
     if (!many) names = names.slice(0, 1);
+    // A question that needs N choices (Ghostly Flicker's two targets, "choose
+    // 2"): consecutive target / choose steps right after this one fill it
+    // before it fails (sk: "target A" then "target B" for one question of two).
+    let extra = 0;
+    if (many && !(names.length === 1 && /^(none|nothing)$/i.test(names[0].trim())) && plan) {
+      const from = consume ? plan.steps.indexOf(step) + 1 : plan.i;
+      while (names.length < d.min && from >= 0) {
+        const nx = plan.steps[from + extra];
+        if (!nx || (nx.verb !== 'target' && nx.verb !== 'choose')) break;
+        names.push(...splitNames(nx.names, cands.map((c) => c.name)));
+        extra += 1;
+      }
+    }
     const chosen = [];
     const taken = new Set();
     const engineAsks = this.engineAsks(d);
@@ -837,6 +930,12 @@ export class PlanCore extends SeatCore {
         // parseRef strips, so even an exact copy was refused)
         const raw = normName(n);
         const free = cands.filter((c) => !taken.has(c.id) && c.group === 'option');
+        if (d.kind === 'ask:ability_menu') {
+          // an ability named by its loyalty cost ("+2", "-1") or words of its label (M63)
+          const abil = free.filter((c) => c.opt.value !== null);
+          const am = matchAbility(n.trim(), abil.map((c) => String(c.opt.label ?? '')));
+          if (am.ok) { taken.add(abil[am.index].id); chosen.push(abil[am.index].opt.n); continue; }
+        }
         const exact = free.filter((c) => normName(c.opt.label) === raw);
         const contains = raw.length >= 3 ? free.filter((c) => normName(c.opt.label).includes(raw)) : [];
         const direct = exact.length === 1 ? exact[0] : contains.length === 1 ? contains[0] : null;
@@ -860,7 +959,9 @@ export class PlanCore extends SeatCore {
     const err = checkChoice(d, chosen);
     if (err) return { fail: { plan, step, why: err, engineAsks } };
     if (consume) plan.i += 1;
-    return { moves: movesFor(d, chosen), why: `${stepText(step)}${consume ? '' : ' (its target)'}`, step, plan, exec: d.source !== 'ask' };
+    plan.i += extra;
+    const joined = extra ? ` with the next ${extra === 1 ? 'step' : `${extra} steps`}` : '';
+    return { moves: movesFor(d, chosen), why: `${stepText(step)}${consume ? '' : ' (its target)'}${joined}`, step, plan, exec: d.source !== 'ask' };
   }
 
   engineAsks(d) {

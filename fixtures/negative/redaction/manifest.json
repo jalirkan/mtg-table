@@ -406,5 +406,35 @@
     "level": "fail",
     "expect": "M61 (playable) is HALF PRESENT",
     "why": "amendment M61: a seat writes the key on every state -- some with and some without is a broken emitter"
+  },
+  {
+    "file": "m63-activatable-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M63: state.activatable on every state, a list at the seat's priority -- the control for the m63 probes"
+  },
+  {
+    "file": "m63-activatable-names-the-opponent-permanent.jsonl",
+    "level": "fail",
+    "expect": "controlled by the viewing seat",
+    "why": "amendment M63 / D420: the list is the permanents the seat controls -- naming the opponent's is a lie about control"
+  },
+  {
+    "file": "m63-activatable-off-the-battlefield.jsonl",
+    "level": "fail",
+    "expect": "state.activatable = ",
+    "why": "amendment M63: the list names battlefield permanents only (a card elsewhere is M61's playable)"
+  },
+  {
+    "file": "m63-activatable-off-priority.jsonl",
+    "level": "fail",
+    "expect": "state.activatable is a list while priority is",
+    "why": "amendment M63: the list is written only at the seat's own priority, null otherwise"
+  },
+  {
+    "file": "m63-activatable-half-present.jsonl",
+    "level": "fail",
+    "expect": "M63 (activatable) is HALF PRESENT",
+    "why": "amendment M63: a seat writes the key on every state -- some with and some without is a broken emitter"
   }
 ]

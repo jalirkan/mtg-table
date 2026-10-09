@@ -73,10 +73,42 @@ function offerLine(text, label, sep = '; ') {
 }
 
 /**
- * Plan mode's fake (D419): a land, the first spell it can pay for, an attack
- * with every creature that can; pass on everything the opponent does; keep;
- * play first; the first choice of a question; "pass" (or the first choice) on
- * a correction.  Read from the plain-words message, as a model would.
+ * The engine's battlefield activations (M63) the message lists, one per line
+ * under "activate on the battlefield": [{card, label, payable}].
+ */
+export function engineActivations(text) {
+  const lines = String(text).split('\n');
+  const at = lines.findIndex((l) => l.startsWith('  activate on the battlefield'));
+  if (at < 0) return [];
+  const out = [];
+  for (const l of lines.slice(at + 1)) {
+    const m = /^ {4}(.+?): (.+)$/.exec(l);
+    if (!m) break;
+    out.push({ card: m[1], label: m[2], payable: !/\(your untapped mana cannot pay for it now\)$/.test(m[2]) });
+  }
+  return out;
+}
+
+/** "activate <card>: <its cost or first words>" for one engine-listed ability. */
+function activateStep(a, all) {
+  const several = all.filter((x) => x.card === a.card).length > 1;
+  if (!several) return `activate ${a.card}`;
+  const cost = /^([+\-−]?\d+):/.exec(a.label);
+  const shared = cost && all.filter((x) => x.card === a.card && x.label.startsWith(`${cost[1]}:`)).length > 1;
+  if (cost && !shared) return `activate ${a.card}: ${cost[1]}`;
+  // a cost two abilities share (Elspeth, Knight-Errant's two +1s): the cost and the label's words
+  const words = a.label.replace(/^[^:]*:\s*/, '').split(/[.(]/)[0].trim();
+  return `activate ${a.card}: ${cost ? `${cost[1]} ` : ''}${words}`;
+}
+
+/**
+ * Plan mode's fake (D419): a land, the first spell it can pay for, the first
+ * activation the engine lists that the mana can pay for (a loyalty ability
+ * first, M63), an attack with every creature that can; pass on everything the
+ * opponent does, but at its end step use an activation if one is listed;
+ * keep; play first; the first choice of a question (the first N, as N steps,
+ * when it needs N); "pass" (or the first choice) on a correction.  Read from
+ * the plain-words message, as a model would.
  */
 export function fakePlan(user) {
   const text = String(user);
@@ -87,10 +119,20 @@ export function fakePlan(user) {
     const ask = /The engine now asks: .*\. Choices: (.*)\. Answer it/.exec(text);
     const list = (ask ? ask[1] : choices && !/cannot be done/.test(text.split('\n')[0]) ? choices[1] : null);
     if (list) {
-      const first = list.split('; ')[0].replace(/ \((choose|yours|the opponent's)[^)]*\)$/, '');
-      return planReply('Take the first choice.', [`${/target/i.test(text.split('\n')[0]) || (ask && /target/i.test(ask[0])) ? 'target' : 'choose'} ${first}`]);
+      const verb = /target/i.test(text.split('\n')[0]) || (ask && /target/i.test(ask[0])) ? 'target' : 'choose';
+      const need = /\(choose (\d+)/.exec(list);
+      const items = list.split('; ').map((x) => x.replace(/ \((choose|yours|the opponent's)[^)]*\)$/, ''));
+      if (need && Number(need[1]) > 1) {
+        // one step per choice: the seat combines consecutive steps to fill N
+        return planReply(`Take the first ${need[1]} choices.`, items.slice(0, Number(need[1])).map((x) => `${verb} ${x}`));
+      }
+      return planReply('Take the first choice.', [`${verb} ${items[0]}`]);
     }
     return planReply('Do nothing more now.', ['pass']);
+  }
+  const acts = engineActivations(text).filter((a) => a.payable);
+  if (/^It is the opponent's end step/.test(text) && acts.length) {
+    return planReply('Use an ability before my turn.', [activateStep(acts[0], engineActivations(text))]);
   }
   if (!/^It is your turn/.test(text)) return planReply('Let it be.', ['pass']);
   const steps = [];
@@ -98,6 +140,8 @@ export function fakePlan(user) {
   if (land) steps.push(`play land ${land}`);
   const cast = offerLine(text, 'cast')[0];
   if (cast) steps.push(`cast ${cast.replace(/ \{.*$/, '').replace(/ from your \w+$/, '')}`);
+  const act = acts.find((a) => /^[+\-−]?\d+:/.test(a.label)) ?? acts[0];
+  if (act) steps.push(activateStep(act, engineActivations(text)));
   const attackers = offerLine(text, 'can attack this turn').map((a) => a.replace(/ -?\d+\/-?\d+.*$/, '').replace(/ \(.*$/, ''));
   if (attackers.length) steps.push(`attack with ${attackers.join(', ')}`);
   if (!steps.length) steps.push('hold');

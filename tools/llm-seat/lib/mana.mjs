@@ -13,6 +13,7 @@
 // whose own mana payment is the last word.
 
 import { isCreature, isLand, hasKeyword, nameOf, playersOf } from './frames.mjs';
+import { abilityCost } from './plan.mjs';
 
 const COLORS = ['W', 'U', 'B', 'R', 'G'];
 const COLOR_WORD = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless' };
@@ -102,17 +103,28 @@ export function payProblem(card, state, me, oracle = null) {
   if (!card?.manaCost) return null;
   const name = nameOf(card);
   const text = name && oracle ? oracle.text(name) : null;
-  if (text && UNREADABLE.test(text)) return null;
+  // Delve alone is readable: each card exiled from the graveyard pays {1} of
+  // the generic part, so at most min(generic, graveyard) (Treasure Cruise, sk)
+  const delve = text && /\bDelve\b/.test(text) && !UNREADABLE.test(text.replace(/\bDelve\b[^\n]*/g, ''));
+  if (text && UNREADABLE.test(text) && !delve) return null;
   const { mine } = playersOf(state, me);
   for (const p of mine?.zones?.battlefield?.cards ?? []) {
     const t = nameOf(p) && oracle ? oracle.text(nameOf(p)) : null;
     if (t && /cost(s)? .{0,40}less|less to cast/i.test(t)) return null;
   }
   const cost = parseCost(card.manaCost);
+  let delveNote = '';
+  if (delve) {
+    const gy = Math.max(0, (mine?.zones?.graveyard?.count ?? 0) - (card.zone === 'graveyard' ? 1 : 0));
+    const cut = Math.min(cost.generic, gy);
+    cost.generic -= cut;
+    cost.mv -= cut;
+    delveNote = ` even with delve exiling ${cut} card${cut === 1 ? '' : 's'} of your graveyard (${gy} there)`;
+  }
   const avail = availableMana(state, me, oracle);
   const list = avail.sources.map((s) => s.name).join(', ');
   const have = `${avail.sources.length} untapped mana source${avail.sources.length === 1 ? '' : 's'}${list ? ` (${list})` : ''}${avail.poolTotal ? ` and ${avail.poolTotal} mana in your pool` : ''}`;
-  if (avail.total < cost.mv) return `it costs ${card.manaCost} (${cost.mv} mana) and you have ${have}`;
+  if (avail.total < cost.mv) return `it costs ${card.manaCost}${delve ? `, ${cost.mv} mana${delveNote},` : ` (${cost.mv} mana)`} and you have ${have}`;
   for (const col of [...COLORS, 'C']) {
     const need = cost.pips[col];
     if (need > 0 && canMake(avail, col) < need) {
@@ -170,4 +182,51 @@ export function optionalCostPayable(label, state, me, oracle = null) {
     return availableMana(state, me, oracle).total >= parseCost(head).mv;
   }
   return null;
+}
+
+/**
+ * Why an engine-listed activation (M63) cannot be paid from the untapped mana
+ * now, from the mana symbols of its label's cost ("{2}, Sacrifice this
+ * token: …"), or null.  A hint, as payProblem is: no cost symbols (a loyalty
+ * cost, "Crew 1") or a cost this cannot read is left to the engine.
+ */
+export function activationProblem(o, card, state, me, oracle) {
+  if (!o?.engine) return null;
+  const cost = abilityCost(o.abilityLabel) ?? (/^[^(]*?\b(?:Equip|Reconfigure|Fortify)\b\s*((?:\{[^}]+\})+)/i.exec(o.abilityLabel ?? '')?.[1] ?? null);
+  if (!cost) return null;
+  const mana = (cost.match(/\{[^}]+\}/g) ?? []).filter((x) => !/^\{(T|Q|E|X)\}$/i.test(x)).join('');
+  if (!mana) return null;
+  const p = payProblem({ ...(card ?? {}), name: card?.name, manaCost: mana }, state, me, oracle);
+  return p ? `its ability "${String(o.abilityLabel).slice(0, 80)}" ${p.replace(/^it costs/, 'costs')}` : null;
+}
+
+/**
+ * Delve (Forge's `chooseCardsToDelve`, measured on the wire): the engine asks
+ * "Delve how many cards?" (choose_list "0".."k", k = min(generic, graveyard))
+ * and then "Exile which card(i/n)?" once per card, where choosing none clears
+ * the whole delve.  Both are part of paying, so the seat answers them, never
+ * the model: delve what the untapped mana cannot cover (keeping `reserve` mana
+ * for the plan's later spells), all of it when the mana is short anyway, and
+ * exile lands first and never a card the engine listed as playable from the
+ * graveyard when another will do.  -> {n, why}
+ */
+export function delveCount({ maxOption, casting = null, reserve = 0, state, me, oracle = null }) {
+  if (!casting?.manaCost) return { n: maxOption, why: 'the spell is not known: as many as the engine allows' };
+  const mv = parseCost(casting.manaCost).mv;
+  const avail = availableMana(state, me, oracle).total;
+  const need = mv + reserve - avail;
+  if (need >= maxOption) return { n: maxOption, why: `${casting.manaCost} with ${avail} untapped mana${reserve ? ` and ${reserve} kept for later spells` : ''}: as many as the engine allows` };
+  const n = Math.max(0, need);
+  return { n, why: `${casting.manaCost} with ${avail} untapped mana${reserve ? ` and ${reserve} kept for later spells` : ''}: ${n} from the graveyard, the rest from mana` };
+}
+
+/** Which graveyard card to exile for delve: lands, then cards not playable from there; the option, or null. */
+export function delvePick(options, cards, keepIds = new Set()) {
+  const ranked = options.filter((o) => typeof o.cardId === 'number').map((o, i) => {
+    const c = cards.get(o.cardId) ?? o.card ?? null;
+    const keep = keepIds.has(o.cardId) ? 2 : 0;
+    const landFirst = c && isLand(c) ? 0 : 1;
+    return { o, score: keep + landFirst, i };
+  }).sort((a, b) => a.score - b.score || a.i - b.i);
+  return ranked[0]?.o ?? null;
 }

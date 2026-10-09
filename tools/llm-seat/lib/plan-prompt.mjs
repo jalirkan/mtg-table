@@ -15,7 +15,7 @@
 
 import { cardsById, hasKeyword, isCreature, isLand, nameOf, playersOf } from './frames.mjs';
 import { cardTextBlock, visibleNames } from './history.mjs';
-import { availableMana, manaWords, payProblem, zoneCost } from './mana.mjs';
+import { activationProblem, availableMana, manaWords, payProblem, zoneCost } from './mana.mjs';
 import { duplicateNames, showName } from './plan.mjs';
 
 export const PLAN_SYSTEM = [
@@ -33,6 +33,7 @@ export const PLAN_SYSTEM = [
   '  play land <card>',
   '  cast <card>                      or  cast <card> -> <target>',
   '  activate <card>                  or  activate <card> -> <target>',
+  '  activate <card>: <ability>       (a permanent with several: its cost, as in "+2", or words of it)',
   '  attack with <creature>, <creature>, ...      or  attack with none',
   '  block <attacker> with <your creature>        (one line per block)',
   '  target <card or player>          (answers a question that asks for a target)',
@@ -216,11 +217,23 @@ export function offersText(state, me, offers, { oracle = null, attackers = null 
       if (problem) cannot.push(label);
       else cast.push(label);
     }
-    const act = [...new Set(offers.filter((o) => o.verb === 'activate').map((o) => `${namer.byId(o.cardId)}${o.zone && o.zone !== 'battlefield' ? ` (from your ${o.zone})` : ''}`))];
+    const actOffers = offers.filter((o) => o.verb === 'activate');
+    const engineList = actOffers.some((o) => o.engine);
+    const act = [...new Set(actOffers.filter((o) => !o.engine).map((o) => `${namer.byId(o.cardId)}${o.zone && o.zone !== 'battlefield' ? ` (from your ${o.zone})` : ''}`))];
     if (lands.length) out.push(`  play a land: ${[...new Set(lands)].join(', ')}`);
     if (cast.length) out.push(`  cast: ${[...new Set(cast)].join('; ')}`);
     if (cannot.length) out.push(`  in your hand, but your untapped mana (${availableMana(state, me, oracle).total}) cannot pay for it now: ${[...new Set(cannot)].join('; ')}`);
     if (act.length) out.push(`  activate: ${act.join('; ')}`);
+    if (engineList) {
+      // M63: the engine's own list, one line per ability, in its words
+      out.push('  activate on the battlefield (the engine\'s list; for a permanent with more than one, write "activate <card>: <cost or words of the ability>"):');
+      for (const o of actOffers.filter((x) => x.engine)) {
+        const label = String(o.abilityLabel ?? '').replace(/\s+/g, ' ').trim();
+        const short = label.length > 160 ? `${label.slice(0, 157)}...` : label;
+        const problem = activationProblem(o, namer.cards.get(o.cardId), state, me, oracle);
+        out.push(`    ${namer.byId(o.cardId)}: ${short}${problem ? ' (your untapped mana cannot pay for it now)' : ''}`);
+      }
+    }
     if (offers.legacy) out.push('  (this engine does not list what is playable: the cards above are your hand, and the engine refuses what you cannot play)');
   }
   if (attackers && attackers.length) out.push(`  can attack this turn: ${attackers.map((c) => `${namer.name(c)}${pt(c)}`).join('; ')}`);

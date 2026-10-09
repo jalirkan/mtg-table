@@ -1090,5 +1090,67 @@ probe('m61-playable-half-present.jsonl',
     delete statesOf(fs)[1].body.playable;
   });
 
+/*
+ * Amendment M63 (D420) -- `state.activatable`, the battlefield's half.  The
+ * control writes it as a seat does (beside M61's playable): on every state, a
+ * list at the seat's own priority (one of its own permanents) and null
+ * elsewhere.  Four one-defect probes.
+ */
+const withActivatable = (fs) => {
+  const sts = statesOf(fs);
+  sts.forEach((f) => { f.body.activatable = null; });
+  const first = sts[0].body;
+  first.priority = header.seat;
+  const me = first.players.find(isViewerSeat);
+  const card = me.zones.battlefield.cards.find((c) => c.hidden !== true && c.controller === header.seat);
+  if (card === undefined) throw new Error('no full viewer permanent in the slice');
+  first.activatable = [{ cardId: card.id, zone: 'battlefield', abilities: [{ abilityId: 9002, label: '{2}, Sacrifice this token: Draw a card.', isSpell: false }] }];
+  return first;
+};
+{
+  const fs = slice();
+  withActivatable(fs);
+  write('m63-activatable-present.jsonl', fs);
+  manifest.push({
+    file: 'm63-activatable-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M63: state.activatable on every state, a list at the seat\'s priority -- the control for the m63 probes',
+  });
+  console.log('  PASS  m63-activatable-present.jsonl  (a seat\'s activatable list, no defect)');
+}
+
+probe('m63-activatable-names-the-opponent-permanent.jsonl',
+  'amendment M63 / D420: the list is the permanents the seat controls -- naming the opponent\'s is a lie about control',
+  'controlled by the viewing seat',
+  (fs) => {
+    const b = withActivatable(fs);
+    const them = b.players.find((p) => !isViewerSeat(p));
+    const theirs = them.zones.battlefield.cards.find((c) => c.hidden !== true) ?? them.zones.hand.cards.find((c) => c.hidden === true);
+    b.activatable[0].cardId = theirs.id;
+  });
+
+probe('m63-activatable-off-the-battlefield.jsonl',
+  'amendment M63: the list names battlefield permanents only (a card elsewhere is M61\'s playable)',
+  'state.activatable = ',
+  (fs) => {
+    const b = withActivatable(fs);
+    b.activatable[0].zone = 'hand';
+  });
+
+probe('m63-activatable-off-priority.jsonl',
+  'amendment M63: the list is written only at the seat\'s own priority, null otherwise',
+  'state.activatable is a list while priority is',
+  (fs) => {
+    const b = withActivatable(fs);
+    b.priority = header.seat === 0 ? 1 : 0;
+  });
+
+probe('m63-activatable-half-present.jsonl',
+  'amendment M63: a seat writes the key on every state -- some with and some without is a broken emitter',
+  'M63 (activatable) is HALF PRESENT',
+  (fs) => {
+    withActivatable(fs);
+    delete statesOf(fs)[1].body.activatable;
+  });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

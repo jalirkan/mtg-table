@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
 import { initialState, reduce } from '../src/reduce.ts';
-import { playableOf, type Frame, type GameStateBody } from '../src/protocol.ts';
+import { activatableOf, playableOf, type Frame, type GameStateBody } from '../src/protocol.ts';
 import { parseFrameLog } from '../src/transport/replay.ts';
 
 const FAMILIAR = {
@@ -73,4 +73,34 @@ test('M61: every committed recording predates the key, and reads null throughout
     }
   }
   assert.ok(states > 0);
+});
+
+// Amendment M63 (decision D420): `state.activatable`, the battlefield's half,
+// through the fold and out of its one reader, `activatableOf`.
+const CLUE = {
+  cardId: 7,
+  zone: 'battlefield',
+  abilities: [{ abilityId: 546, label: '{2}, Sacrifice this token: Draw a card.', isSpell: false }],
+};
+
+test('M63: state.activatable survives the fold and reads back; playable is untouched', () => {
+  const f = { v: 1, seq: 1, t: 1757600000000, type: 'state', body: stateBody({ playable: [FAMILIAR], activatable: [CLUE] }) } as unknown as Frame;
+  const s = reduce(initialState(), f);
+  assert.deepEqual(activatableOf(s.board), [CLUE]);
+  assert.deepEqual(playableOf(s.board), [FAMILIAR]);
+});
+
+test('M63: absent and null read as null, an empty list as an empty list, malformed entries dropped', () => {
+  assert.equal(activatableOf(stateBody({})), null);
+  assert.equal(activatableOf(stateBody({ activatable: null })), null);
+  assert.deepEqual(activatableOf(stateBody({ activatable: [] })), []);
+  const list = activatableOf(stateBody({
+    activatable: [
+      CLUE,
+      { cardId: 8, zone: 'hand', abilities: CLUE.abilities },
+      { cardId: 9, zone: 'battlefield', abilities: [] },
+      { cardId: 10, zone: 'battlefield', abilities: [{ abilityId: 1, label: 'x', isSpell: true }] },
+    ],
+  }));
+  assert.deepEqual(list?.map((e) => e.cardId), [7]);
 });
