@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-09T10:15:12-04:00
+- time: 2026-10-09T10:16:36-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J116 commands 1/1, 1336/4800 games, 533.8/h, ETA 2026-10-09T16:44:31-04:00, 7 worker(s), 7 core(s); J119 commands 1/1, 1/2 games, 2.5/h, ETA 2026-10-09T10:39:35-04:00, 1 worker(s), 1 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 12.54; memory 14.3/30.5 GB, swap 780 MB, pressure 0% (lab budget 23.4 GB)
+- running: J116 commands 1/1, 1352/4800 games, 549.4/h, ETA 2026-10-09T16:33:08-04:00, 7 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 11.18; memory 13.6/30.5 GB, swap 779 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J118 failed at 2026-10-09T08:40:01-04:00
+- last finished: J119 done at 2026-10-09T10:16:36-04:00: g.games 2 · g.finished 2 · g.wins 1 · g.turns 41 · g.modelCalls 260 · g.fallbacks 0 · g.refused 0 · g.tokensIn 520 · g.tokensOut 37292
 
 ## Messages
+
+- FOLLOW-UP READY [J119@2026-10-09T10:16:36-04:00] (the runner, for the cloud session): J119 is done; write and post the template morning-read. It decides: whether the LLM seat is ready for Justin's small Sonnet tests (4-6 games vs Forge, then the replay comparison of fresh vs session:10), and what one game costs, so Justin can decide how much allowance to spend; this job changes nothing itself. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J115@2026-10-08T23:31:42-04:00] (the runner, for the cloud session): J115 is done; write and post the template morning-read. It decides: whether the opening-hand search (D417 mull=1) and the target search (D417 targets=1), each on its own, join the next search version (search-v3); each switch is decided separately. Ledger: LEDGER.md. Delete this line once posted.
 

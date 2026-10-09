@@ -1,0 +1,61 @@
+{
+  "results": [
+    {
+      "n": 1,
+      "arm": "fresh",
+      "seed": 1,
+      "deck": "decks/pacho-shield.dck",
+      "aiDeck": "decks/doom-legion.dck",
+      "mirrored": false,
+      "gameId": "llm-J119-smoke-001",
+      "result": "loss",
+      "turns": 22,
+      "modelCalls": 150,
+      "fallbacks": 0,
+      "tokensIn": 300,
+      "cacheRead": 18911,
+      "cacheCreate": 590532,
+      "tokensOut": 31165,
+      "ms": 928898,
+      "bridgeLog": "var/games/llm-J119-smoke-001/frames.jsonl",
+      "bridgeExit": 0
+    },
+    {
+      "n": 2,
+      "arm": "fresh",
+      "seed": 1,
+      "deck": "decks/doom-legion.dck",
+      "aiDeck": "decks/pacho-shield.dck",
+      "mirrored": true,
+      "gameId": "llm-J119-smoke-002",
+      "result": "win",
+      "turns": 19,
+      "modelCalls": 110,
+      "fallbacks": 0,
+      "tokensIn": 220,
+      "cacheRead": 1388,
+      "cacheCreate": 327779,
+      "tokensOut": 6127,
+      "ms": 457430,
+      "bridgeLog": "var/games/llm-J119-smoke-002/frames.jsonl",
+      "bridgeExit": 0
+    }
+  ],
+  "byArm": {
+    "fresh": {
+      "games": 2,
+      "win": 1,
+      "loss": 1,
+      "draw": 0,
+      "other": 0,
+      "turns": 41,
+      "modelCalls": 260,
+      "fallbacks": 0,
+      "tokensIn": 520,
+      "cacheRead": 20299,
+      "cacheCreate": 918311,
+      "tokensOut": 37292,
+      "ms": 1386328
+    }
+  }
+}

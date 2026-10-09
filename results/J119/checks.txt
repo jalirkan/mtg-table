@@ -1,0 +1,4 @@
+PASS  g.games == 2   [g.games = 2]
+PASS  g.finished == 2   [g.finished = 2]
+PASS  g.fallbacks * 10 <= g.modelDecisions   [g.fallbacks = 0, g.modelDecisions = 196]
+PASS  g.refused * 10 <= g.decisions   [g.refused = 0, g.decisions = 224]

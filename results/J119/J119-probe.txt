@@ -1,0 +1,9 @@
+claude -p --output-format json --model sonnet --system-prompt <system> --tools  --strict-mcp-config --permission-mode dontAsk --max-turns 1 --no-session-persistence
+cwd /tmp/llm-seat-qZg61u
+reply "choice: 1"
+usage {"input":504,"cacheCreate":0,"cacheRead":0,"output":7} ms 3553 session 72685eb5-b4a3-44bd-acb1-bafb8d4de2b1
+reply "choice: 1"
+usage {"input":504,"cacheCreate":0,"cacheRead":0,"output":7} ms 3042 session a638caa7-460e-46a6-9ddf-e95e0b909947
+reply "choice: 1"
+usage {"input":576,"cacheCreate":0,"cacheRead":0,"output":7} ms 4662 session a638caa7-460e-46a6-9ddf-e95e0b909947
+probe ok
