@@ -539,3 +539,23 @@ test('one ability is picked whatever the words; a Yes/No button pair naming the 
   const r = h.core.atQuestion(d, plan, null);
   assert.deepEqual(r.moves, [{ type: 'act', action: 'buttonOk' }]);
 });
+
+test('the sqlite card index names each face of a two-faced card, as the real index stores it (m20 Stomp)', async () => {
+  const { openOracle } = await import('../lib/oracle.mjs');
+  const { faceNamesOf } = await import('../lib/plan-core.mjs');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { DatabaseSync } = process.getBuiltinModule('node:sqlite');
+  const path = join(mkdtempSync(join(tmpdir(), 'oracle-')), 'cards.sqlite');
+  const db = new DatabaseSync(path);
+  db.exec('CREATE TABLE cards (oracle_id TEXT, name TEXT, oracle_text TEXT, faces TEXT); CREATE TABLE card_names (norm_name TEXT, oracle_id TEXT, kind TEXT);');
+  const faces = JSON.stringify([{ name: 'Bonecrusher Giant', oracle_text: 'Whenever this creature becomes the target of a spell, this creature deals 2 damage to that spell\'s controller.' },
+    { name: 'Stomp', oracle_text: 'Damage can\'t be prevented this turn. Stomp deals 2 damage to any target.' }]);
+  // exactly as the real index: oracle_text joins the faces without names
+  db.prepare('INSERT INTO cards VALUES (?, ?, ?, ?)').run('x', 'Bonecrusher Giant // Stomp', 'Whenever …\n//\nDamage …', faces);
+  db.prepare('INSERT INTO card_names VALUES (?, ?, ?)').run('bonecrusher giant', 'x', 'face');
+  db.close();
+  const o = openOracle(path);
+  assert.deepEqual(faceNamesOf(o.text('Bonecrusher Giant')), ['Bonecrusher Giant', 'Stomp']);
+});
