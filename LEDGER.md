@@ -575,3 +575,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J117/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table ccd4d5d
 - follow-up: template morning-read: not due (the job did not finish done)
+
+## J118 FAILED: Sonnet seat smoke test, again after J117 (every model call failed): 2 games (one seed, mirrored) of Claude Sonnet in the human seat against Forge Default, the fresh-context arm, to see that the LLM seat works end to end and what one game really costs in tokens and time (D418)
+
+- finished: 2026-10-09T08:40:01-04:00
+- decides: whether the LLM seat is ready for Justin's small Sonnet tests (4-6 games vs Forge, then the replay comparison of fresh vs session:10), and what one game costs, so Justin can decide how much allowance to spend; this job changes nothing itself
+- hypothesis: the seat finishes both games with few fallbacks; the dry run's estimate (~60-120 model calls and ~190k input tokens a game for the fresh arm, before Claude Code's own overhead and thinking) is about right
+- rule: written 2026-10-09 before the run. READY if both games finish (win, loss or draw; no "unfinished" or "no-bridge"), fallbacks are at most 1 in 10 model decisions, and the engine refused at most 1 in 10 of the seat's moves. Otherwise NOT READY, with the cause. Win/loss is reported and decides nothing (2 games)
+- outcome: failed (pilot: step pilot1 exited 1)
+- headline: g.games 0, g.finished 0, g.wins 0, g.turns 0, g.modelCalls 0, g.fallbacks 0, g.refused 0, g.tokensIn 0, g.tokensOut 0
+- summary: results/J118/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 304273d
+- follow-up: template morning-read: not due (the job did not finish done)

@@ -1,0 +1,62 @@
+step pilot1 exited 1
+
+  msh: 453 prints (Scryfall total_cards 453)
+  msc: 866 prints (Scryfall total_cards 866)
+
+built var/cards/cards.sqlite
+  oracle cards     38,708  (bulk updated_at 2026-10-09T09:01:54.966+00:00)
+  prints           39,185  (msh 453, msc 866 synced; the rest are the bulk's representative prints)
+  sets             1,056
+  fts rows         38,708
+  file             55.8 MiB (58,474,496 B)
+  index time       6.3 s
+  built_at         2026-10-09T12:39:45.471Z
+  content_sha256   84f5808438f352a1220fb93fe32cbd168425aa8acccb7df98af093a9ad0ad919
+  total wall time  10.4 s  (schema v1)
+
+requests (measured from the client log):
+  search       8 req  mean   1.99/s  min gap  501 ms  max in any 1 s: 2 (limit 2/s)  OK  [200×8]
+  api          2 req  mean   3.97/s  min gap  252 ms  max in any 1 s: 2 (limit 10/s)  OK  [200×2]
+  file         2 req  mean   0.40/s  min gap 2496 ms  max in any 1 s: 1 (no limit)  [200×2]
+
+Card data from Scryfall (https://scryfall.com). Magic: The Gathering card text and images are
+(c) Wizards of the Coast; artist credit ships with every print and must be shown with its art.
+✔ golden prompts: fresh, session:3 (chain and transcript), game (93.131424ms)
+✔ positions of a recorded game: frames point at the act, actual moves map to options (26.558244ms)
+✔ replay writes choices and coach-grade moments; join pairs the arms by position (28.6898ms)
+✔ a whole (scripted) game through the socket (1290.878361ms)
+✔ reply: one choice, several, none, with next stops (1.625619ms)
+✔ reply: malformed replies say why (0.250795ms)
+✔ priority with nothing playable passes with no call (0.907238ms)
+✔ priority with playable cards asks, offering the engine list; the token is coach-grade's (0.703973ms)
+✔ a permanent with a non-mana activated ability is offered; a mana ability is not (0.703081ms)
+✔ oracle hint: activated non-mana abilities (0.142671ms)
+✔ mana payment is the engine's Auto, never a call (0.171725ms)
+✔ the mulligan asks, keep first (0.107083ms)
+✔ attack: candidates from the board, clicks then OK, the grade token sorted (0.479728ms)
+✔ block: pairs, one attacker per blocker, attacker then blocker clicks (1.034529ms)
+✔ a target selection asks unless one target is the only answer (2.858974ms)
+✔ waiting, yielding and an empty targeting prompt are not decisions (0.235786ms)
+✔ asks: every engine question goes to the model unless one answer is legal (0.539712ms)
+✔ an ability menu after a priority choice is answered by that choice (id, else label) (0.1689ms)
+✔ default stops follow the board; setPhaseStop acts are the difference (0.429142ms)
+✔ claude args: fresh has no session; a session starts with its id and resumes it (0.320858ms)
+✔ the CLI's JSON result: text, usage, session id (0.458158ms)
+✔ the fake model picks the first option that is not the default (0.344893ms)
+✔ an arm retries once on a malformed reply, then plays the default (counted) (1.534346ms)
+✔ session arms: full message first, deltas after, restart after N calls (1.276928ms)
+✔ oracle from Scryfall objects: reminder text dropped, faces joined, a print with text wins (0.804353ms)
+✔ run-match: seeds, mirrored deals per arm, the bridge command (3.615327ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1366.995275
+/usr/bin/claude
+2.1.283 (Claude Code)
+claude -p --output-format json --model sonnet --system-prompt <system> --tools  --strict-mcp-config --permission-mode dontAsk --max-turns 1 --no-session-persistence
+cwd /tmp/llm-seat-1TYNLv
+probe FAILED: Claude Code: Failed to authenticate: OAuth session expired and could not be refreshed
