@@ -51,6 +51,12 @@ import { matchRef, normName, parseRef, parsePlan, splitNames, stepText } from '.
 import { Namer, PLAN_SYSTEM, phaseWords, planDeltaPrompt, planFullPrompt, planProgress, stackItemWords } from './plan-prompt.mjs';
 import { MAX_CANCELLED, MAX_MODEL_ERRORS, STALL_MS, SeatCore, inputKey } from './seat-core.mjs';
 
+/** The face names of a two-faced card from its card text ("A: … // B: …"); [] for one face. */
+export function faceNamesOf(text) {
+  if (!text || !text.includes(' // ')) return [];
+  return text.split(' // ').map((part) => /^([^:]{2,60}):/.exec(part)?.[1]?.trim()).filter(Boolean);
+}
+
 export const MAX_CORRECTIONS = 2;
 
 const PRIORITY_VERBS = new Set(['play land', 'cast', 'activate']);
@@ -555,18 +561,22 @@ export class PlanCore extends SeatCore {
     const cards = new Namer(this.state).cards;
     const cands = d.options.filter((o) => o.verb === want).map((o) => {
       const c = cards.get(o.cardId);
-      return { id: o.cardId, name: nameOf(c) ?? '', group: o.zone ?? '', opt: o, card: c };
+      // the other half of an adventure / split card ("Swift End" for Murderous
+      // Rider, s20): the state shows one name, the card text both
+      const faces = faceNamesOf(this.oracle?.text(nameOf(c) ?? '') ?? null);
+      return { id: o.cardId, name: nameOf(c) ?? '', group: o.zone ?? '', opt: o, card: c, aliases: faces.map(normName), faces };
     });
     const ref = parseRef(step.name);
     const m = matchRef(ref, cands);
     if (!m.ok) return { fail: { plan, step, why: this.whyNotPlayable(want, ref, m, step) } };
-    if (want === 'cast' && m.pick.opt.zone === 'hand') {
+    const face = (m.pick.faces ?? []).find((f) => normName(f) === ref.name && normName(f) !== normName(m.pick.name)) ?? null;
+    if (want === 'cast' && m.pick.opt.zone === 'hand' && !face) {   // the other half has its own cost: the engine judges it
       const p = payProblem(m.pick.card, this.state, this.me, this.oracle);
       if (p) return { fail: { plan, step, why: p } };
     }
     plan.i += 1;
     this.pendingTargets = step.targets ? { plan, step, text: step.targets } : null;
-    if (want !== 'land') this.lastCast = { plan, step, card: m.pick.card };
+    if (want !== 'land') this.lastCast = { plan, step, card: m.pick.card, face };
     const o = m.pick.opt;
     return { moves: o.moves, why: stepText(step), step, plan, exec: true, intent: o.intent ? { ...o.intent, label: o.label } : null };
   }
@@ -703,6 +713,11 @@ export class PlanCore extends SeatCore {
       const pt = this.pendingTargets;
       this.pendingTargets = null;
       return this.answerWith(d, pt.plan, pt.step, pt.text, { consume: false });
+    }
+    if (d.kind === 'ask:ability_menu' && this.lastCast?.face && this.lastCast.card?.id === d.cardId) {
+      const f = normName(this.lastCast.face);
+      const hit = d.options.filter((o) => normName(String(o.label ?? '')).includes(f));
+      if (hit.length >= 1) return { moves: movesFor(d, [hit[0].n]), why: `${stepText(this.lastCast.step)}: the ${this.lastCast.face} half`, auto: true };
     }
     if (d.kind === 'ask:ability_menu' && this.lastCast && this.lastCast.card?.id === d.cardId) {
       // the card was clicked for a step: "cast" means the spell, "activate" an ability (when only one is)
