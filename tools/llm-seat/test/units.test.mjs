@@ -31,7 +31,10 @@ test('reply: one choice, several, none, with next stops', () => {
 });
 
 test('reply: malformed replies say why', () => {
-  assert.match(parseReply('I think 3').error, /unexpected line/);
+  assert.match(parseReply('I think 3').error, /no "choice:" line/);
+  assert.deepEqual(parseReply("All my lands are tapped, so I can't cast anything.\n\nchoice: 1\nnext: own MAIN1"),
+    { ok: true, choice: [1], next: [{ turn: 'own', phase: 'MAIN1' }] });
+  assert.match(parseReply('choice: 1\nchoice: 2').error, /more than one choice/);
   assert.match(parseReply('choice: three').error, /option numbers/);
   assert.match(parseReply('next: opp END_OF_TURN').error, /no "choice:" line/);
   assert.match(parseReply('choice: 1\nchoice: 2').error, /more than one choice/);
@@ -282,7 +285,7 @@ test('an arm retries once on a malformed reply, then plays the default (counted)
   assert.equal(ok.how, 'model');
   assert.deepEqual(ok.chosen, [2]);
   assert.equal(ok.retries, 1);
-  assert.match(ok.calls[0].error, /unexpected line/);
+  assert.match(ok.calls[0].error, /no "choice:" line/);
   const bad = await new Arm('fresh', makeFakeModel({ script: ['choice: 9', 'choice: 0'] })).decide(snap, d);
   assert.equal(bad.how, 'fallback');
   assert.deepEqual(bad.chosen, [1]);

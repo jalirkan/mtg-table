@@ -9,9 +9,11 @@
 //   next: opp END_OF_TURN, own MAIN1             optional; the phases where it wants priority next
 //
 // in either order, case-insensitive keys, blank lines and surrounding
-// whitespace tolerated, one optional ``` fence around them tolerated.  Anything
-// else is malformed: the seat says why and asks once more, then plays the safe
-// default (counted).  Validation against the decision (option range, how many)
+// whitespace tolerated, one optional ``` fence around them tolerated.  Other
+// lines (a sentence of reasoning before the choice: a third of J119's first
+// replies) are ignored; a reply with no choice line, two of them, or a bad
+// value is malformed: the seat says why and asks once more, then plays the
+// safe default (counted).  Validation against the decision (option range, how many)
 // is decision.mjs's checkChoice.
 
 import { PHASES } from './frames.mjs';
@@ -23,7 +25,7 @@ export function parseReply(text) {
   let next = null;
   for (const line of lines) {
     const m = /^(choice|next)\s*:\s*(.*)$/i.exec(line);
-    if (!m) return { ok: false, error: `unexpected line ${JSON.stringify(line.slice(0, 80))}: reply with only the choice line and an optional next line` };
+    if (!m) continue;   // prose around the answer (J119): ignored
     const key = m[1].toLowerCase();
     const val = m[2].trim();
     if (key === 'choice') {
