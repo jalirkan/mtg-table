@@ -90,6 +90,9 @@ export function hasNonManaActivated(text) {
   if (!text) return false;
   for (const line of text.split('\n')) {
     const clean = line.replace(/\([^)]*\)/g, '');
+    // keyword activations written without a colon: "Equip {1}", "Crew 3",
+    // "Reconfigure {2}" (s20: Bonesplitter's equip was never offered)
+    if (/^\s*(Equip|Reconfigure|Fortify|Level up|Crew|Outlast|Adapt|Monstrosity)\b/i.test(clean)) return true;
     const m = /^([^"]*?):\s*(.*)$/.exec(clean);
     if (!m) continue;
     const cost = m[1];

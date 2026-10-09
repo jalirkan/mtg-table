@@ -90,7 +90,7 @@ test('a permanent with a non-mana activated ability is offered; a mana ability i
 test('oracle hint: activated non-mana abilities', () => {
   assert.equal(hasNonManaActivated('{T}: Add {G}.'), false);
   assert.equal(hasNonManaActivated('{2}, {T}: Draw a card.'), true);
-  assert.equal(hasNonManaActivated('Flying\nEquip {2}'), false);
+  assert.equal(hasNonManaActivated('Flying\nEquip {2}'), true);   // real oracle text has no colon (s20)
   assert.equal(hasNonManaActivated('Equip {2}: Attach to target creature you control.'), true);
   assert.equal(hasNonManaActivated('When this enters, draw a card.'), false);
   assert.equal(hasNonManaActivated(null), false);
@@ -341,4 +341,12 @@ test('assign_damage is answered explicitly: lethal to blockers in order, the res
   assert.deepEqual(defaultAnswer('assign_damage', two), { 1: 2 });
   assert.deepEqual(defaultAnswer('assign_damage', { total: 5, targets: [{ id: 0, defender: true }, { id: 1, lethal: 2 }, { id: 2, lethal: 1 }] }), { 1: 2, 2: 3 });
   assert.deepEqual(defaultAnswer('assign_damage', { total: 3, targets: [{ id: 0, defender: true }] }), { 0: 3 });
+});
+
+test('keyword activations without a colon count as battlefield abilities (Equip, Crew)', async () => {
+  const { hasNonManaActivated } = await import('../lib/oracle.mjs');
+  assert.equal(hasNonManaActivated('Equipped creature gets +2/+0.\nEquip {1}'), true);
+  assert.equal(hasNonManaActivated('Flying\nCrew 3'), true);
+  assert.equal(hasNonManaActivated('{T}: Add {G}.'), false);
+  assert.equal(hasNonManaActivated('Flying'), false);
 });
