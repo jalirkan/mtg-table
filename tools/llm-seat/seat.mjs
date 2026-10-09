@@ -46,6 +46,9 @@ import { makeClaudeModel, makeFakeModel } from './lib/model.mjs';
 import { openOracle } from './lib/oracle.mjs';
 import { SETTLE_MS, SeatCore } from './lib/seat-core.mjs';
 
+/** The same ask kind this many times in a row with no state frame between ends the game as stuck. */
+const MAX_REPEAT_ASKS = 50;
+
 export function parseArgs(argv) {
   const a = {
     url: null, port: 8642, mode: 'plan', model: 'fake', context: 'fresh', thinking: 'low', oracle: null, run: null,
@@ -127,6 +130,8 @@ export function runSeat(a, deps = {}) {
     let settleTimer = null;
     let finished = false;
     let opened = false;
+    let repeatAsks = 0;
+    let repeatKind = null;
 
     const writeLine = (o) => {
       const line = `${JSON.stringify(o)}\n`;
@@ -198,6 +203,16 @@ export function runSeat(a, deps = {}) {
         return;
       }
       if (frame.seq !== 0) writeLine({ ...frame, dir: 's2c' });
+      // Stuck guard (s20): the same ask kind back-to-back, with no state frame
+      // between, MAX_REPEAT_ASKS times means the engine and the seat are in a
+      // loop: end the game (exit 7) instead of spinning until the timeout.
+      if (frame.type === 'state') repeatAsks = 0;
+      else if (frame.type === 'ask') {
+        const k = String(frame.body?.kind);
+        repeatAsks = k === repeatKind ? repeatAsks + 1 : 1;
+        repeatKind = k;
+        if (repeatAsks >= MAX_REPEAT_ASKS) { finish(7, `stuck: ${repeatAsks} ${k} asks in a row with no state change`); return; }
+      }
       if (frame.type === 'hello_ok' && !logStream) {
         gameId = String(frame.body.gameId ?? 'unknown');
         logStream = createWriteStream(join(runDir, 'frames', `${gameId}.jsonl`));

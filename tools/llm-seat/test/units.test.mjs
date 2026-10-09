@@ -334,3 +334,11 @@ test('run-match: seeds, mirrored deals per arm, the bridge command', async () =>
   assert.deepEqual(bridgeCommand(a, g[1]), ['./bridge/run.sh', 'mtgtable.MtgTable', '--transport', 'ws', '--port', '8650', '--seed', '1',
     '--deck', 'B.dck', '--ai-deck', 'A.dck', '--ai-profile', 'Default', '--ai-policy', 'plain', '--game-id', 'llm-t-002', '--games', '1']);
 });
+
+test('assign_damage is answered explicitly: lethal to blockers in order, the rest to the last (s20 loop)', async () => {
+  const { defaultAnswer } = await import('../lib/decision.mjs');
+  const two = { total: 2, targets: [{ id: 0, defender: true }, { id: 1, defender: false, lethal: 2 }, { id: 2, defender: false, lethal: 2 }] };
+  assert.deepEqual(defaultAnswer('assign_damage', two), { 1: 2 });
+  assert.deepEqual(defaultAnswer('assign_damage', { total: 5, targets: [{ id: 0, defender: true }, { id: 1, lethal: 2 }, { id: 2, lethal: 1 }] }), { 1: 2, 2: 3 });
+  assert.deepEqual(defaultAnswer('assign_damage', { total: 3, targets: [{ id: 0, defender: true }] }), { 0: 3 });
+});
