@@ -392,6 +392,21 @@ export function classifyAsk({ state, ask, intent = null, me = null, oracle = nul
       d.fallback = indices(min).map((i) => i + 1);
       return d;
     }
+    case 'order': {
+      // Scry / Ponder-style "put on the bottom": the model's decision (sk2: it
+      // was answered "none" by default). Arranging the top order stays the
+      // engine's default.
+      const src = Array.isArray(ask.source) ? ask.source : [];
+      const anyCount = !(typeof ask.min === 'number' && ask.min > 0) && !(typeof ask.max === 'number' && ask.max >= 0 && ask.max < src.length);
+      if (/put on the bottom/i.test(String(ask.prompt ?? '')) && src.length > 0 && anyCount && (ask.dest ?? []).length === 0) {
+        src.forEach((o, i) => d.options.push({ n: i + 1, label: optionLabel(o, cards), value: o.id, cardId: o.cardId }));
+        d.options.push({ n: src.length + 1, label: 'None (keep them all on top)', value: null, none: true, isDefault: true });
+        d.multi = true; d.min = 1; d.max = src.length; d.answerOrder = true;
+        d.fallback = [src.length + 1];
+        return d;
+      }
+      return autoOf(d, `${kind}: the engine's default (not offered to the model)`, [answer(askId, defaultAnswer(kind, ask))]);
+    }
     default:
       return autoOf(d, `${kind}: the engine's default (not offered to the model)`, [answer(askId, defaultAnswer(kind, ask))]);
   }
@@ -405,6 +420,7 @@ export function classifyAsk({ state, ask, intent = null, me = null, oracle = nul
 export function movesFor(d, chosen) {
   const opt = (n) => d.options[n - 1];
   if (d.source === 'ask') {
+    if (d.answerOrder) return [answer(d.askId, { ordered: chosen.filter((n) => !opt(n).none).map((n) => opt(n).value), remember: false })];
     if (d.answerList) return [answer(d.askId, chosen.map((n) => opt(n).value))];
     return [answer(d.askId, opt(chosen[0]).value)];
   }
