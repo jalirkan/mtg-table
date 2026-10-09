@@ -496,3 +496,15 @@ test('options that differ only in a bracketed cost: a full copy or one distingui
   plan.i = 0;
   assert.ok(h.core.answerWith(d, plan, plan.steps[0], 'Destroy target creature or planeswalker').fail, 'ambiguous stays a correction');
 });
+
+test('a yes/no question takes plain words: "don\'t pay" is No, "pay" is Yes (sk9 shockland)', async () => {
+  const { classifyAsk } = await import('../lib/decision.mjs');
+  const h = harness([]);
+  h.feed('state', state({ turn: 3 }));
+  const ask = { askId: 'a4', kind: 'confirm', prompt: 'Do you want to pay 2 life?', yesLabel: 'Yes', noLabel: 'No', defaultYes: false };
+  const d = classifyAsk({ state: h.core.state, ask, me: 0 });
+  const plan = { steps: [{ verb: 'choose', names: 'x' }], i: 0 };
+  assert.deepEqual(h.core.answerWith(d, plan, plan.steps[0], "don't pay").moves, [{ type: 'answer', askId: 'a4', value: false }]);
+  plan.i = 0;
+  assert.deepEqual(h.core.answerWith(d, plan, plan.steps[0], 'pay').moves, [{ type: 'answer', askId: 'a4', value: true }]);
+});

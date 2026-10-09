@@ -595,7 +595,9 @@ export class PlanCore extends SeatCore {
         // trigger, a cost) was already asked, or will be asked when it
         // resolves: drop the step quietly instead of a correction (s20: Kor
         // Skyfisher's "choose Swamp", Ballista's "target opponent")
-        if (plan.steps.slice(0, plan.i).some((x) => PRIORITY_VERBS.has(x.verb))) {
+        // also in a question's plan: its later target/choose was answered by a
+        // pending "-> target" (sk9: Shadowspear's equip then "target Mulldrifter")
+        if (plan.kind === 'question' || plan.steps.slice(0, plan.i).some((x) => PRIORITY_VERBS.has(x.verb))) {
           plan.i += 1;
           return this.atPriority(d, plan, plan.steps[plan.i] ?? null);
         }
@@ -807,8 +809,9 @@ export class PlanCore extends SeatCore {
       }
       if (o.isDefault && (o.none || /^(None|Never mind|OK \(choose nothing\))/.test(String(o.label)))) aliases.push('none', 'nothing');
       if (o.button) aliases.push(normName(String(o.label).replace(/\s*\(.*\)$/, '')));
-      if (o.value === true) aliases.push('yes');
-      if (o.value === false) aliases.push('no');
+      // plain words for a yes/no (sk9: "choose don't pay" to "Do you want to pay 2 life?")
+      if (o.value === true) aliases.push('yes', 'pay', 'pay it', 'accept', 'do it', 'ok');
+      if (o.value === false) aliases.push('no', 'dont pay', 'do not pay', 'decline', 'skip', 'dont', 'do not', 'pass');
       // the id a "#n" names is the CARD's (the number the game shows), never the option's
       return { id: typeof o.cardId === 'number' ? o.cardId : `option ${o.n}`, name, group, aliases, opt: o };
     });
