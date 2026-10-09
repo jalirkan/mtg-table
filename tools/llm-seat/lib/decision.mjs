@@ -28,6 +28,7 @@
 
 import { cardsById, hasKeyword, isCreature, isLand, nameOf, playersOf, relTurn } from './frames.mjs';
 import { hasNonManaActivated, needsTap } from './oracle.mjs';
+import { optionalCostPayable } from './mana.mjs';
 
 /** A card in one line: name [id], cost, type, P/T, the facts the wire carries. */
 export function describeCard(c, { withCost = true } = {}) {
@@ -139,7 +140,7 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
             const where = e.zone === 'hand' ? '' : ` from ${e.zone}`;
             const label = `${verb} ${describeCard(c)}${where}${abilities.length > 1 || !ab.isSpell ? ` -- ${String(ab.label ?? '').slice(0, 160)}` : ''}`;
             d.options.push({
-              label, moves: [act('clickCard', { cardId: e.cardId })],
+              label, moves: [act('clickCard', { cardId: e.cardId })], cardId: e.cardId, zone: e.zone, verb: land ? 'land' : ab.isSpell ? 'cast' : 'activate',
               intent: { cardId: e.cardId, abilityId: ab.abilityId, abilityLabel: String(ab.label ?? '') },
               token: e.zone === 'hand' ? (land ? `land:${e.cardId}` : ab.isSpell ? `cast:${e.cardId}` : null) : null,
             });
@@ -153,9 +154,9 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
         for (const c of mine.zones?.hand?.cards ?? []) {
           if (c.hidden === true || typeof c.id !== 'number') continue;
           if (isLand(c)) {
-            if (sorcerySpeed) d.options.push({ label: `Play land ${describeCard(c)}`, moves: [act('clickCard', { cardId: c.id })], token: `land:${c.id}` });
+            if (sorcerySpeed) d.options.push({ label: `Play land ${describeCard(c)}`, moves: [act('clickCard', { cardId: c.id })], token: `land:${c.id}`, cardId: c.id, zone: 'hand', verb: 'land', legacy: true });
           } else if (sorcerySpeed || /\bInstant\b/.test(String(c.types ?? '')) || hasKeyword(c, 'FLASH')) {
-            d.options.push({ label: `Cast ${describeCard(c)}`, moves: [act('clickCard', { cardId: c.id })], token: `cast:${c.id}` });
+            d.options.push({ label: `Cast ${describeCard(c)}`, moves: [act('clickCard', { cardId: c.id })], token: `cast:${c.id}`, cardId: c.id, zone: 'hand', verb: 'cast', legacy: true });
           }
         }
         if (d.options.length > 1) d.context.push('(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)');
@@ -166,7 +167,7 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
           const text = nameOf(c) ? oracle.text(nameOf(c)) : null;
           if (!hasNonManaActivated(text)) continue;
           if (c.tapped && needsTap(text)) continue;
-          d.options.push({ label: `Activate an ability of ${describeCard(c)} (the engine lists the ones it allows)`, moves: [act('clickCard', { cardId: c.id })], token: null });
+          d.options.push({ label: `Activate an ability of ${describeCard(c)} (the engine lists the ones it allows)`, moves: [act('clickCard', { cardId: c.id })], token: null, cardId: c.id, zone: 'battlefield', verb: 'activate' });
         }
       }
       d.options.forEach((o, i) => { o.n = i + 1; });
@@ -293,11 +294,11 @@ export function defaultAnswer(kind, body) {
   }
 }
 
-export function classifyAsk({ state, ask, intent = null }) {
+export function classifyAsk({ state, ask, intent = null, me = null, oracle = null }) {
   const kind = String(ask.kind);
   const askId = String(ask.askId);
   const cards = cardsById(state);
-  const d = decisionBase({ source: 'ask', kind: `ask:${kind}`, prompt: String(ask.prompt ?? ask.title ?? ''), askId });
+  const d = decisionBase({ source: 'ask', kind: `ask:${kind}`, prompt: String(ask.prompt ?? ask.title ?? ''), askId, cardId: ask.cardId ?? null });
   switch (kind) {
     case 'ability_menu': {
       const opts = Array.isArray(ask.options) ? ask.options : [];
@@ -308,7 +309,7 @@ export function classifyAsk({ state, ask, intent = null }) {
         if (hit) return autoOf(d, 'the ability chosen at priority', [answer(askId, hit.id)]);
       }
       d.prompt = d.prompt || `Choose an ability of ${describeCard(cards.get(ask.cardId))}`;
-      playable.forEach((o, i) => d.options.push({ n: i + 1, label: String(o.label ?? `ability ${o.abilityId}`), value: o.id }));
+      playable.forEach((o, i) => d.options.push({ n: i + 1, label: String(o.label ?? `ability ${o.abilityId}`), value: o.id, isSpell: o.isSpell === true }));
       d.options.push({ n: d.options.length + 1, label: 'Never mind (play nothing)', value: null, isDefault: true });
       d.fallback = [d.options.length];
       if (playable.length === 1) return autoOf(d, 'one ability', [answer(askId, playable[0].id)]);
@@ -332,7 +333,14 @@ export function classifyAsk({ state, ask, intent = null }) {
     }
     case 'choose_list':
     case 'choose_entities': {
-      const opts = Array.isArray(ask.options) ? ask.options : [];
+      let opts = Array.isArray(ask.options) ? ask.options : [];
+      if (kind === 'choose_list' && me !== null && /optional cost/i.test(String(ask.prompt ?? '')) && !(typeof ask.min === 'number' && ask.min > 0)) {
+        // an optional cost the seat cannot pay is never offered: choosing it cancels the cast (the 1,900-cast loop)
+        const payable = opts.filter((o) => optionalCostPayable(o.label, state, me, oracle) !== false);
+        if (payable.length < opts.length) d.context.push(`(Not offered, you cannot pay it now: ${opts.filter((o) => !payable.includes(o)).map((o) => String(o.label).split(' – ')[0]).join('; ')})`);
+        if (payable.length === 0) return autoOf(d, 'optional costs: none can be paid now', [answer(askId, [])]);
+        opts = payable;
+      }
       const n = opts.length;
       if (kind === 'choose_list' && ask.reveal === true) return autoOf(d, 'a reveal: acknowledge', [answer(askId, [])]);
       const min = typeof ask.min === 'number' && ask.min > 0 ? Math.min(ask.min, n) : 0;

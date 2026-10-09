@@ -20,9 +20,10 @@
 //
 // Flags: --deck/--ai-deck or --pairs FILE [--pair I] (a pairs file's I-th
 // line, ai-bench's format); --seeds 1,2,5 or 1-10; --mirror; --context
-// (comma list of arms); --model, --thinking, --oracle, --no-stops (seat.mjs);
+// (comma list of arms); --mode plan|decision (plan, D419; decision is D418's
+// one call per engine prompt); --model, --thinking, --oracle, --no-stops (seat.mjs);
 // --ai-profile (Default); --port (8650); --run NAME; --health-timeout S (180);
-// --game-timeout S (7200); --dry-run.  Everything lands in var/llm-seat/<run>/
+// --game-timeout S (7200); --save-prompts (seat.mjs's); --dry-run.  Everything lands in var/llm-seat/<run>/
 // (seat.mjs's files, plus bridge/<gameId>.log and schedule.json); the bridge
 // writes its own frame log to var/games/<gameId>/frames.jsonl, the one to
 // grade (replay.mjs --replay).
@@ -55,7 +56,7 @@ export function readPairs(text) {
 
 export function parseArgs(argv) {
   const a = {
-    deck: null, aiDeck: null, pairs: null, pair: 0, seeds: [1], mirror: false, arms: ['fresh'], model: 'fake', thinking: 'low',
+    deck: null, aiDeck: null, pairs: null, pair: 0, seeds: [1], mirror: false, arms: ['fresh'], mode: 'plan', model: 'fake', thinking: 'low',
     oracle: null, stops: true, aiProfile: 'Default', port: 8650, run: null, healthTimeoutS: 180, gameTimeoutS: 7200, dryRun: false, out: 'var/llm-seat',
   };
   for (let i = 0; i < argv.length; i++) {
@@ -69,6 +70,7 @@ export function parseArgs(argv) {
       case '--seeds': a.seeds = parseSeeds(v()); break;
       case '--mirror': a.mirror = true; break;
       case '--context': a.arms = v().split(',').map((s) => s.trim()).filter(Boolean); break;
+      case '--mode': a.mode = v(); break;
       case '--model': a.model = v(); break;
       case '--thinking': a.thinking = v(); break;
       case '--oracle': a.oracle = v(); break;
@@ -80,6 +82,7 @@ export function parseArgs(argv) {
       case '--health-timeout': a.healthTimeoutS = Number(v()); break;
       case '--game-timeout': a.gameTimeoutS = Number(v()); break;
       case '--dry-run': a.dryRun = true; break;
+      case '--save-prompts': a.savePrompts = true; break;
       default: throw new Error(`unknown flag ${k}`);
     }
   }
@@ -90,6 +93,7 @@ export function parseArgs(argv) {
   }
   if (!a.deck || !a.aiDeck) throw new Error('--deck and --ai-deck (or --pairs) are required');
   for (const s of a.arms) parseArm(s);
+  if (!['plan', 'decision'].includes(a.mode)) throw new Error('--mode is plan or decision');
   if (!a.run) a.run = `match-${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}`;
   if (!/^[A-Za-z0-9._-]+$/.test(a.run)) throw new Error('--run must be a plain name');
   return a;
@@ -157,22 +161,23 @@ async function main() {
       continue;
     }
     const summary = await runSeat({
-      url: null, port: a.port, model: a.model, context: g.arm, thinking: a.thinking, oracle: a.oracle, run: a.run, out: a.out,
-      fakeScript: null, stops: a.stops, battlefieldAbilities: true, printPrompts: false, savePrompts: false,
+      url: null, port: a.port, mode: a.mode, model: a.model, context: g.arm, thinking: a.thinking, oracle: a.oracle, run: a.run, out: a.out,
+      fakeScript: null, stops: a.stops, battlefieldAbilities: true, printPrompts: false, savePrompts: a.savePrompts === true,
       timeoutS: a.gameTimeoutS, modelTimeoutS: 180, quiet: false,
     }, { match: { gameId: g.gameId, seed: g.seed, deck: g.deck, aiDeck: g.aiDeck, mirrored: g.mirrored, aiProfile: a.aiProfile } });
     const code = await Promise.race([exited, new Promise((r) => setTimeout(() => r('killed'), 60_000))]);
     if (code === 'killed') { try { process.kill(-jvm.pid, 'SIGKILL'); } catch { /* gone */ } }
-    results.push({ ...g, result: summary.result, turns: summary.turns, modelCalls: summary.modelCalls, fallbacks: summary.fallbacks,
+    results.push({ ...g, mode: a.mode, result: summary.result, turns: summary.turns, modelCalls: summary.modelCalls, fallbacks: summary.fallbacks,
+      corrections: summary.corrections ?? null,
       tokensIn: summary.tokensIn, cacheRead: summary.cacheRead, cacheCreate: summary.cacheCreate, tokensOut: summary.tokensOut, ms: summary.ms,
       bridgeLog: `var/games/${g.gameId}/frames.jsonl`, bridgeExit: code });
   }
   const byArm = {};
   for (const r of results) {
-    const s = (byArm[r.arm] ??= { games: 0, win: 0, loss: 0, draw: 0, other: 0, turns: 0, modelCalls: 0, fallbacks: 0, tokensIn: 0, cacheRead: 0, cacheCreate: 0, tokensOut: 0, ms: 0 });
+    const s = (byArm[r.arm] ??= { games: 0, win: 0, loss: 0, draw: 0, other: 0, turns: 0, modelCalls: 0, fallbacks: 0, corrections: 0, tokensIn: 0, cacheRead: 0, cacheCreate: 0, tokensOut: 0, ms: 0 });
     s.games += 1;
     if (['win', 'loss', 'draw'].includes(r.result)) s[r.result] += 1; else s.other += 1;
-    for (const k of ['turns', 'modelCalls', 'fallbacks', 'tokensIn', 'cacheRead', 'cacheCreate', 'tokensOut', 'ms']) s[k] += r[k] ?? 0;
+    for (const k of ['turns', 'modelCalls', 'fallbacks', 'corrections', 'tokensIn', 'cacheRead', 'cacheCreate', 'tokensOut', 'ms']) s[k] += r[k] ?? 0;
   }
   writeFileSync(join(runDir, 'results.json'), `${JSON.stringify({ results, byArm }, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify(byArm, null, 2)}\n`);

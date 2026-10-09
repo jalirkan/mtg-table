@@ -24,6 +24,7 @@
 // Cancel / pass, so a refused click never loops; each refusal is counted.
 
 import { classifyAsk, classifyInput, inputBinding, inputKindOf, movesFor, tokenFor } from './decision.mjs';
+import { cardsById, nameOf } from './frames.mjs';
 import { History } from './history.mjs';
 import { snapshot } from './prompt.mjs';
 import { desiredStops, stopActs, stopsText } from './stops.mjs';
@@ -32,6 +33,9 @@ import { desiredStops, stopActs, stopsText } from './stops.mjs';
 export const MAX_MODEL_ERRORS = 3;
 
 export const SETTLE_MS = 120;
+
+/** A card whose play the engine cancelled this many times in one turn is not offered again that turn. */
+export const MAX_CANCELLED = 2;
 export const STALL_MS = 6000;
 
 export function inputKey(body) {
@@ -78,6 +82,10 @@ export class SeatCore {
     this.movedAt = null;         // when the seat last put a move on the wire
     this.modelErrors = 0;
     this.fatal = null;
+    this.lastClick = null;       // {cardId, zone, stateSeq}: a card clicked at priority, until we see what became of it
+    this.cancelled = new Map();  // cardId -> how many times this turn its play came back cancelled
+    this.lastCancel = null;      // {cardId, name, count}: the newest cancelled play
+    this.cancelTurn = null;
     this.stats = { decisions: 0, model: 0, auto: 0, fallback: 0, retries: 0, refused: 0, stale: 0, modelCalls: 0, promptBytes: 0, tokensIn: 0, tokensOut: 0, cacheRead: 0, cacheCreate: 0, costUsd: 0, modelMs: 0 };
   }
 
@@ -95,6 +103,8 @@ export class SeatCore {
       case 'state':
         this.state = b;
         this.stateSeq = frame.seq;
+        if (b.turn !== this.cancelTurn) { this.cancelTurn = b.turn; this.cancelled = new Map(); this.lastCancel = null; }
+        if (this.lastClick && (b.events ?? []).some((e) => (e.kind === 'cast' || e.kind === 'land') && e.cardId === this.lastClick.cardId)) this.lastClick = null;
         break;
       case 'input': {
         const changed = this.input === null || inputKey(b) !== inputKey(this.input);
@@ -123,13 +133,43 @@ export class SeatCore {
     }
     this.say(`${move.type === 'act' ? 'ACT ' : 'ANSW'} ${JSON.stringify(move)}  (${why})`);
     if (!(move.type === 'act' && move.action === 'setPhaseStop')) this.movedAt = this.now();
+    if (move.type === 'act' && move.action === 'clickCard' && this.input && inputKindOf(this.input, this.state, this.me) === 'priority') {
+      const c = cardsById(this.state).get(move.cardId);
+      this.lastClick = c ? { cardId: move.cardId, zone: c.zone, stateSeq: this.stateSeq, name: nameOf(c) } : null;
+    }
     this.send(move);
   }
 
   /** The current input's decision, or null when there is no input to act on. */
   currentInputDecision() {
     if (!this.input || !this.state || this.me === null) return null;
-    return classifyInput({ state: this.state, input: this.input, me: this.me, oracle: this.oracle, opts: this.opts });
+    const d = classifyInput({ state: this.state, input: this.input, me: this.me, oracle: this.oracle, opts: this.opts });
+    if (d.kind === 'priority') {
+      this.checkCancelled();
+      guardCancelled(d, this.cancelled);
+    }
+    return d;
+  }
+
+  /**
+   * Back at priority after a click on a card: did the play happen?  A card
+   * still in the zone it was clicked in, with nothing of it on the stack and no
+   * cast / land event, was cancelled (an optional cost or a target it could not
+   * choose, mana it could not pay).  Counted per card per turn: the LOOP GUARD
+   * (a fake-model game cast the same card 1,900 times, choosing a Teamwork cost
+   * it could not pay).
+   */
+  checkCancelled() {
+    const lc = this.lastClick;
+    if (!lc || lc.stateSeq === this.stateSeq) return;
+    this.lastClick = null;
+    const c = cardsById(this.state).get(lc.cardId);
+    const onStack = (this.state.stack ?? []).some((it) => it.sourceCardId === lc.cardId);
+    if (!c || c.zone !== lc.zone || onStack) return;
+    const n = (this.cancelled.get(lc.cardId) ?? 0) + 1;
+    this.cancelled.set(lc.cardId, n);
+    this.lastCancel = { cardId: lc.cardId, name: lc.name, count: n };
+    this.say(`CANCELLED: the play of ${lc.name ?? `card ${lc.cardId}`} came back (${n} this turn)`);
   }
 
   syncStops() {
@@ -148,7 +188,7 @@ export class SeatCore {
     const first = this.asks.values().next();
     if (!first.done) {
       const { body, seq } = first.value;
-      const d = classifyAsk({ state: this.state, ask: body, intent: this.intent });
+      const d = classifyAsk({ state: this.state, ask: body, intent: this.intent, me: this.me, oracle: this.oracle });
       if (body.kind === 'ability_menu') this.intent = null;
       await this.run(d, { askId: String(body.askId), frameSeq: seq });
       return;
@@ -296,6 +336,17 @@ export class SeatCore {
       this.emit(firstMove, `${rec.how} ${d.kind}`);
     }
   }
+}
+
+/** Takes out of a priority decision every card whose play was cancelled MAX_CANCELLED times this turn. */
+export function guardCancelled(d, cancelled) {
+  const out = d.options.filter((o) => typeof o.cardId === 'number' && (cancelled.get(o.cardId) ?? 0) >= MAX_CANCELLED);
+  if (!out.length) return d;
+  d.options = d.options.filter((o) => !out.includes(o));
+  d.options.forEach((o, i) => { o.n = i + 1; });
+  d.context.push(`(Not offered again this turn: the engine cancelled the play of ${[...new Set(out.map((o) => o.label.replace(/^(Cast|Play land|Activate an ability of) /, '').split(' [')[0]))].join(', ')} twice.)`);
+  if (d.options.length === 1 && !d.auto) d.auto = { reason: 'priority with nothing playable (the rest was cancelled twice this turn)', moves: d.options[0].moves };
+  return d;
 }
 
 function res2labels(d, chosen) {

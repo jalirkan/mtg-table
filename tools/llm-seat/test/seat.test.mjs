@@ -67,7 +67,7 @@ test('a whole (scripted) game through the socket', async () => {
   let scriptError = null;
   bridge.server.on('script-error', (e) => { scriptError = e; });
   const out = mkdtempSync(join(tmpdir(), 'llm-seat-e2e-'));
-  const a = { ...parseArgs(['--port', String(bridge.port), '--run', 'e2e', '--quiet', '--timeout', '30']), out };
+  const a = { ...parseArgs(['--port', String(bridge.port), '--mode', 'decision', '--run', 'e2e', '--quiet', '--timeout', '30']), out };
   const summary = await runSeat(a, { model: makeFakeModel(), oracle: ORACLE });
   await bridge.close();
   assert.equal(scriptError, null, scriptError?.message);
