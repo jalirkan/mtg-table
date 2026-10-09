@@ -423,3 +423,18 @@ test('faceNamesOf reads both halves of an adventure card (s20 Swift End)', async
   assert.deepEqual(faceNamesOf('Murderous Rider: Lifelink. When this dies, put it on the bottom. // Swift End: Destroy target creature or planeswalker. You lose 2 life.'), ['Murderous Rider', 'Swift End']);
   assert.deepEqual(faceNamesOf('Flying'), []);
 });
+
+test('mana is paid keeping the colour a later cast step needs (sk1: Overseer then Hard Evidence)', async () => {
+  const h = harness([reply('cast Inspiring Overseer\n2. cast Hard Evidence')]);
+  const island = land(9, 'Island', { zone: 'battlefield', types: 'Basic Land - Island' });
+  const overseer = card(60, 'Inspiring Overseer', { manaCost: '{2}{W}', types: 'Creature - Human Cleric' });
+  const evidence = card(61, 'Hard Evidence', { manaCost: '{U}', types: 'Sorcery' });
+  h.feed('state', state({ turn: 3, me: { hand: [overseer, evidence], battlefield: [...plains(3), island] }, playable: playable([60], [61]) }));
+  h.feed('input', priorityInput(3));
+  await h.tick();
+  h.feed('input', input('Inspiring Overseer (60)\n\nPay Mana Cost: {2}{W}', { ok: ['Auto', true], cancel: ['Cancel', true] }));
+  await h.tick();
+  const first = h.last();
+  assert.equal(first.action, 'clickCard');
+  assert.notEqual(first.cardId, 9, 'the Island is kept for Hard Evidence');
+});
