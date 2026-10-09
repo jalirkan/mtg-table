@@ -1,0 +1,5 @@
+PASS  pt.complete == true   [pt.complete = true]
+PASS  pt.played == 8   [pt.played = 8]
+PASS  pt.errors + pt.timeouts <= 1   [pt.errors = 0, pt.timeouts = 0]
+PASS  pt.aSearch.byKind.t.searched >= 4   [pt.aSearch.byKind.t.searched = 27]
+PASS  pt.bSearch.searched >= 20   [pt.bSearch.searched = 167]
