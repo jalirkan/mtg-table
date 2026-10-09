@@ -43,7 +43,7 @@
 import { checkChoice, classifyAsk, inputBinding, inputKindOf, movesFor } from './decision.mjs';
 import { visibleNames } from './history.mjs';
 import { hasKeyword, isCreature, isLand, nameOf, playersOf } from './frames.mjs';
-import { payProblem, availableMana, parseCost } from './mana.mjs';
+import { payProblem, availableMana, parseCost, zoneCost } from './mana.mjs';
 import { needsTap } from './oracle.mjs';
 import { parseArm } from './arms.mjs';
 import { newSessionId } from './model.mjs';
@@ -623,6 +623,11 @@ export class PlanCore extends SeatCore {
     if (want === 'cast' && m.pick.opt.zone === 'hand' && !face) {   // the other half has its own cost: the engine judges it
       const p = payProblem(m.pick.card, this.state, this.me, this.oracle);
       if (p) return { fail: { plan, step, why: p } };
+    }
+    if (want === 'cast' && m.pick.opt.zone && m.pick.opt.zone !== 'hand') {
+      const alt = zoneCost(m.pick.card, m.pick.opt.zone, this.oracle);
+      const p = alt ? payProblem({ ...m.pick.card, manaCost: alt.cost }, this.state, this.me, this.oracle) : null;
+      if (p) return { fail: { plan, step, why: `from your ${m.pick.opt.zone} it is cast by ${alt.how}: ${p}` } };
     }
     plan.i += 1;
     this.pendingTargets = step.targets ? { plan, step, text: step.targets } : null;

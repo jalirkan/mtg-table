@@ -128,6 +128,26 @@ export function payProblem(card, state, me, oracle = null) {
   return null;
 }
 
+/**
+ * The mana cost of casting `card` from a zone other than the hand, from its
+ * card text: Flashback {..} / Escape—{..} / Retrace (its own cost). null when
+ * the text names none (sk7: Momentary Blink from the graveyard was shown at
+ * its hand cost {1}{W}; its flashback is {3}{U}).
+ */
+export function zoneCost(card, zone, oracle = null) {
+  if (zone === 'hand' || !card) return null;
+  const name = nameOf(card);
+  const text = name && oracle ? oracle.text(name) : '';
+  if (zone === 'graveyard') {
+    const fb = /\bFlashback\s*((?:\{[^}]+\})+)/i.exec(text ?? '');
+    if (fb) return { cost: fb[1], how: 'flashback' };
+    const esc = /\bEscape\s*[—-]\s*((?:\{[^}]+\})+)/i.exec(text ?? '');
+    if (esc) return { cost: esc[1], how: 'escape' };
+    if (/\bRetrace\b/i.test(text ?? '') && card.manaCost) return { cost: card.manaCost, how: 'retrace' };
+  }
+  return null;
+}
+
 const NUMBER = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5 };
 
 /**

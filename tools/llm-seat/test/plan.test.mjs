@@ -469,3 +469,11 @@ test('a token named with or without "Token", with its number, matches (sk6 Insec
   assert.equal(matchRef(parseRef('Insect Token'), cands).pick?.id, 148);
   assert.equal(matchRef(parseRef('Grizzly Bears #148'), cands).ok, false);
 });
+
+test('a card cast from the graveyard shows and checks its flashback cost (sk7 Momentary Blink)', async () => {
+  const { zoneCost } = await import('../lib/mana.mjs');
+  const blink = card(25, 'Momentary Blink', { manaCost: '{1}{W}', types: 'Instant', zone: 'graveyard' });
+  const oracle = { text: (n) => (n === 'Momentary Blink' ? 'Exile target creature you control, then return it.\nFlashback {3}{U}' : null) };
+  assert.deepEqual(zoneCost(blink, 'graveyard', oracle), { cost: '{3}{U}', how: 'flashback' });
+  assert.equal(zoneCost(blink, 'hand', oracle), null);
+});
