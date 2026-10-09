@@ -280,6 +280,17 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
     }
     case 'buttons':
     default: {
+      // the London mulligan's bottom: Forge takes clicks on hand cards but lists none (mode none), so
+      // the seat offers its hand (m20: only "Auto" was offered and the model's choice was ignored)
+      const bottom = /^Return (\d+) card\(s\) to the bottom of your library/i.exec(prompt);
+      const hand = (mine?.zones?.hand?.cards ?? []).filter((c) => c.hidden !== true && typeof c.id === 'number');
+      if (bottom && hand.length > Number(bottom[1])) {
+        const k = Number(bottom[1]);
+        hand.forEach((c, i) => d.options.push({ n: i + 1, label: describeCard(c), moves: [act('clickCard', { cardId: c.id })], cardId: c.id, token: `bottom:${c.id}` }));
+        d.multi = true; d.min = k; d.max = k; d.okAfter = true;
+        d.fallback = d.options.slice(0, k).map((o) => o.n);   // only after two unusable replies
+        return d;
+      }
       if (ok.enabled) d.options.push({ label: String(ok.label ?? 'OK'), moves: [act('buttonOk')], isDefault: true, button: true });
       if (cancel.enabled) d.options.push({ label: String(cancel.label ?? 'Cancel'), moves: [act('buttonCancel')], button: true });
       d.options.forEach((o, i) => { o.n = i + 1; });

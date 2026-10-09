@@ -559,3 +559,14 @@ test('the sqlite card index names each face of a two-faced card, as the real ind
   const o = openOracle(path);
   assert.deepEqual(faceNamesOf(o.text('Bonecrusher Giant')), ['Bonecrusher Giant', 'Stomp']);
 });
+
+test('a number question takes the one number in the words ("pay X=1", m20)', async () => {
+  const { classifyAsk } = await import('../lib/decision.mjs');
+  const h = harness([]);
+  h.feed('state', state({ turn: 3 }));
+  const ask = { askId: 'x1', kind: 'choose_list', prompt: 'Choose X for Crypt Rats', min: 1, max: 1,
+    options: ['0', '1', '2', '3'].map((l, i) => ({ id: i, label: l, kind: 'number' })).concat([{ id: 4, label: 'Other...', kind: 'text' }]) };
+  const d = classifyAsk({ state: h.core.state, ask, me: 0 });
+  const plan = { steps: [{ n: 1, verb: 'choose', names: 'x' }], i: 0, kind: 'question' };
+  assert.deepEqual(h.core.answerWith(d, plan, plan.steps[0], 'pay X=1').moves, [{ type: 'answer', askId: 'x1', value: [1] }]);
+});

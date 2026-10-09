@@ -872,7 +872,7 @@ export class PlanCore extends SeatCore {
         return { moves: movesFor(d, [yes.n]), why: `yes: part of ${stepText(prev)}, which the plan chose`, auto: true };
       }
     }
-    if (yesNo && wantsOn && this.lastCast) {
+    if (yesNo && wantsOn && (this.lastCast || (plan && plan.steps.slice(0, plan.i).some((x) => PRIORITY_VERBS.has(x.verb))))) {   // m20: Gearhulk/Halo Forager "Do you want to play X?" 
       // the plan goes on to a target or a choice: it means "yes" to the engine's confirm in between
       // (cf4: Halo Forager's "cast it?" met "target Goblin Army Token")
       const yes = d.options.find(isYes);
@@ -976,6 +976,14 @@ export class PlanCore extends SeatCore {
         // parseRef strips, so even an exact copy was refused)
         const raw = normName(n);
         const free = cands.filter((c) => !taken.has(c.id) && c.group === 'option');
+        // a number question ("Choose X"): one number in the words picks it ("pay X=1", "X = 3", m20)
+        if (free.length && free.every((c) => /^\d+$/.test(String(c.opt.label).trim()) || /^other/i.test(String(c.opt.label)))) {
+          const nums = String(n).match(/\d+/g) ?? [];
+          if (nums.length === 1) {
+            const hit = free.find((c) => String(c.opt.label).trim() === nums[0]);
+            if (hit) { taken.add(hit.id); chosen.push(hit.opt.n); continue; }
+          }
+        }
         if (d.kind === 'ask:ability_menu') {
           // an ability named by its loyalty cost ("+2", "-1") or words of its label (M63)
           const abil = free.filter((c) => c.opt.value !== null);
