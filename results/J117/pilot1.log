@@ -1,0 +1,193 @@
+==== J117 pilot1 started 2026-10-09T08:24:32-04:00 in unit lab-J117-pilot1, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+lint-bridge-selftest OK: 31 rules, 61 firing cases (each fired its own rule and no other), 75 checks
+bridge lint OK (75 file(s) under bridge/src, 3 under tools/; 31 rules)
+compiling 75 file(s) -> /home/justin-a/code/lab/mtg-table-light/bridge/out
+JsonSelfTest: 50 check(s), 0 failure(s)
+AskSelfTest: 106 check(s), 0 failure(s)
+GAME LOG: 1 frame(s) were produced before the session header, which never arrived -- /home/justin-a/code/lab/mtg-table-light/var/gamelog-selftest/no-header.jsonl is empty
+GameLogSelfTest: 38 check(s), 0 failure(s)
+OverRaceSelfTest: stress 300 rounds, 308 frame(s) lost the race and were dropped
+OverRaceSelfTest: 14844 expected stderr line(s) (dropped frames and the no-outcome `over`), 0 unexpected
+OverRaceSelfTest: 11 check(s), 0 failure(s)
+ActGuardSelfTest: 74 check(s), 0 failure(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:43334): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:43350): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:43360 (1 watching)
+WS CONNECT /127.0.0.1:43376 (connection #1)
+WS REFUSED /127.0.0.1:43378: another client is already connected to this game
+WS OBSERVER CONNECT /127.0.0.1:43388 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:43388 (1 watching)
+WS DISCONNECT /127.0.0.1:43376 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:43402 (2 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:43402 (1 watching)
+WS OBSERVER CONNECT /127.0.0.1:43408 (2 watching)
+WS OBSERVER CONNECT /127.0.0.1:38822 (1 watching)
+WS OBSERVER DROPPED /127.0.0.1:38822: more than 8388608 bytes behind
+WsObserveSelfTest: 384 pushes (24 MB) past an observer that never reads took 41 ms
+WsObserveSelfTest: 95 check(s), 0 failure(s)
+WS LAN REFUSED GET / from /127.0.0.1:48070: no valid pairing token
+WS LAN REFUSED GET / from /127.0.0.1:48072: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:48084: no valid pairing token
+WS LAN REFUSED GET /health from /127.0.0.1:48094: no valid pairing token
+WS LAN REFUSED GET /assets/index-abc.js from /127.0.0.1:48130: no valid pairing token
+WS SITE REFUSED /127.0.0.1:48266: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48278: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48286: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48292: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48300: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48308: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48324: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48336: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48352: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48362: a path that would leave the site
+WS SITE REFUSED /127.0.0.1:48374: a link that leads out of the site
+WS LAN REFUSED GET /ws from /127.0.0.1:48386: no valid pairing token
+WS LAN REFUSED GET /observe from /127.0.0.1:48396: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:48408: no valid pairing token
+WS LAN REFUSED GET /ws from /127.0.0.1:48418: no valid pairing token
+WS OBSERVER CONNECT /127.0.0.1:48434 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:48434 (0 watching)
+WS OBSERVER CONNECT /127.0.0.1:48444 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:48444 (0 watching)
+WS CONNECT /127.0.0.1:48448 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:48448 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /observe from http://192.168.1.50:8642 (/127.0.0.1:48454): not in wsAllowedOrigins
+WS ORIGIN REFUSED /observe from https://evil.example (/127.0.0.1:48466): not in wsAllowedOrigins
+WS OBSERVER CONNECT /127.0.0.1:48474 (1 watching)
+WS CONNECT /127.0.0.1:52004 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:52004 -- cancelling 0 pending ask(s)
+WS OBSERVER CONNECT /127.0.0.1:52020 (1 watching)
+WS OBSERVER DISCONNECT /127.0.0.1:52020 (0 watching)
+WS ORIGIN REFUSED /observe from http://evil.example:36933 (/127.0.0.1:52030): not in wsAllowedOrigins
+WS SITE REFUSED /127.0.0.1:38996: a path that would leave the site
+WS TUNNEL REFUSED GET /health from /127.0.0.1:55764: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:55772: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /health from /127.0.0.1:55786: this port is never tunnelled (D405)
+WS TUNNEL REFUSED GET /ws from /127.0.0.1:55802: this port is never tunnelled (D405)
+WS CONNECT /127.0.0.1:55814 (connection #1)
+WS CONNECT before the session exists -- no resend; hello_ok + state + input follow from openView
+WS DISCONNECT /127.0.0.1:55814 -- cancelling 0 pending ask(s)
+WS ORIGIN REFUSED /ws from https://evil.example (/127.0.0.1:55826): not in wsAllowedOrigins
+WS ORIGIN REFUSED /ws from http://evil.example:33545 (/127.0.0.1:55840): not in wsAllowedOrigins
+WsLanSelfTest: 174 check(s), 0 failure(s)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:60160: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:60172: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:60176: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:60180: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:60196: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:60206: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:60208: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:60210: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:60222: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:60232: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:60244: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:60252: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET /health on the health port from /127.0.0.1:60256: this port is never tunnelled (D405)
+TABLE TUNNEL REFUSED GET / on the health port from /127.0.0.1:60266: this port is never tunnelled (D405)
+TABLE REFUSED /ws from /127.0.0.1:42850: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:42856: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:42864: no valid seat token (M59)
+TABLE ORIGIN REFUSED /ws from http://evil.example (/127.0.0.1:42884)
+TABLE SEAT 1 upgrade from /127.0.0.1:42900
+WS CONNECT /127.0.0.1:42900 (connection #1)
+TABLE SEAT 1 upgrade from /127.0.0.1:42906
+WS SEAT 1 TAKEN OVER by /127.0.0.1:42906 (the older connection /127.0.0.1:42900 is closed 4002)
+WS CONNECT /127.0.0.1:42906 (connection #2)
+WS DISCONNECT /127.0.0.1:42906 -- cancelling 0 pending ask(s)
+TABLE SEAT 0 upgrade from /127.0.0.1:42910
+WS CONNECT /127.0.0.1:42910 (connection #1)
+WS DISCONNECT /127.0.0.1:42910 -- cancelling 0 pending ask(s)
+TABLE REFUSED /ws from /127.0.0.1:42926: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:42938: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:42950: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:42966: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:42976: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:42990: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:43002: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:43004: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:43008: no valid seat token (M59)
+TABLE REFUSED /ws from /127.0.0.1:43022: no valid seat token (M59)
+TABLE SEAT 0 upgrade from /127.0.0.1:43028
+WS CONNECT /127.0.0.1:43028 (connection #2)
+WS DISCONNECT /127.0.0.1:43028 -- cancelling 0 pending ask(s)
+TableSelfTest: 114 check(s), 0 failure(s)
+eval selftest: schema 93f0e3ecd2654bdd, 3133 features, vocab 170; 37 schema/vocab checks
+eval selftest: parity over 2561 rows (264 full vectors) of 22 games; worst |P_java - P_python| = 2.22e-16
+eval selftest: hidden zones scrambled in every recording, 2561 rows unchanged; negative control changed rows, as it must
+eval selftest: encode 8.8 us + predict 3.8 us per position (20000 positions, 3133 features, model fixture (16 hidden); checksum 0.524)
+eval selftest OK (8039 checks)
+grade selftest: 125 check(s), 0 failure(s)
+decision selftest: 115 check(s), 0 failure(s)
+build OK
+user-agent: mtg-table/0.1 (local hobby client; github.com/jalirkan/mtg-table)
+fetch: oracle-cards-20261009090154.jsonl.gz (23.5 MiB (24,596,743 B), updated_at 2026-10-09T09:01:54.966+00:00)
+  23.5 MiB (24,596,743 B) in 1.6 s
+fetch: /sets → 1,056 sets
+fetch: e:msh → 453 prints in 3 page(s) (total_cards 453)
+fetch: e:msc → 866 prints in 5 page(s) (total_cards 866)
+index: oracle layer from var/cards/bulk/oracle-cards-20261009090154.jsonl.gz
+  38,708 oracle cards (0 lines skipped)
+  1,056 sets
+  msh: 453 prints (Scryfall total_cards 453)
+  msc: 866 prints (Scryfall total_cards 866)
+
+built var/cards/cards.sqlite
+  oracle cards     38,708  (bulk updated_at 2026-10-09T09:01:54.966+00:00)
+  prints           39,185  (msh 453, msc 866 synced; the rest are the bulk's representative prints)
+  sets             1,056
+  fts rows         38,708
+  file             55.8 MiB (58,474,496 B)
+  index time       3.7 s
+  built_at         2026-10-09T12:25:09.806Z
+  content_sha256   84f5808438f352a1220fb93fe32cbd168425aa8acccb7df98af093a9ad0ad919
+  total wall time  9.4 s  (schema v1)
+
+requests (measured from the client log):
+  search       8 req  mean   1.99/s  min gap  500 ms  max in any 1 s: 2 (limit 2/s)  OK  [200×8]
+  api          2 req  mean   0.52/s  min gap 1938 ms  max in any 1 s: 1 (limit 10/s)  OK  [200×2]
+  file         3 req  mean   0.37/s  min gap 2529 ms  max in any 1 s: 1 (no limit)  [200×3]
+
+Card data from Scryfall (https://scryfall.com). Magic: The Gathering card text and images are
+(c) Wizards of the Coast; artist credit ships with every print and must be shown with its art.
+✔ golden prompts: fresh, session:3 (chain and transcript), game (94.102722ms)
+✔ positions of a recorded game: frames point at the act, actual moves map to options (47.335304ms)
+✔ replay writes choices and coach-grade moments; join pairs the arms by position (35.274728ms)
+✔ a whole (scripted) game through the socket (1290.198078ms)
+✔ reply: one choice, several, none, with next stops (2.222773ms)
+✔ reply: malformed replies say why (0.325287ms)
+✔ priority with nothing playable passes with no call (1.165068ms)
+✔ priority with playable cards asks, offering the engine list; the token is coach-grade's (0.740874ms)
+✔ a permanent with a non-mana activated ability is offered; a mana ability is not (0.842857ms)
+✔ oracle hint: activated non-mana abilities (0.22168ms)
+✔ mana payment is the engine's Auto, never a call (0.264751ms)
+✔ the mulligan asks, keep first (0.223112ms)
+✔ attack: candidates from the board, clicks then OK, the grade token sorted (0.685939ms)
+✔ block: pairs, one attacker per blocker, attacker then blocker clicks (0.557076ms)
+✔ a target selection asks unless one target is the only answer (0.439573ms)
+✔ waiting, yielding and an empty targeting prompt are not decisions (0.257989ms)
+✔ asks: every engine question goes to the model unless one answer is legal (0.563518ms)
+✔ an ability menu after a priority choice is answered by that choice (id, else label) (0.154904ms)
+✔ default stops follow the board; setPhaseStop acts are the difference (0.437219ms)
+✔ claude args: fresh has no session; a session starts with its id and resumes it (0.307001ms)
+✔ the CLI's JSON result: text, usage, session id (0.533381ms)
+✔ the fake model picks the first option that is not the default (0.355935ms)
+✔ an arm retries once on a malformed reply, then plays the default (counted) (1.439738ms)
+✔ session arms: full message first, deltas after, restart after N calls (1.175337ms)
+✔ oracle from Scryfall objects: reminder text dropped, faces joined, a print with text wins (1.297168ms)
+✔ run-match: seeds, mirrored deals per arm, the bridge command (3.578832ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1359.501214
+/usr/bin/claude
+2.1.283 (Claude Code)
+llm-J117-dry-001  arm=fresh  seed=1
+  ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8650 --seed 1 --deck decks/pacho-shield.dck --ai-deck decks/doom-legion.dck --ai-profile Default --ai-policy plain --game-id llm-J117-dry-001 --games 1
+llm-J117-dry-002  arm=fresh  seed=1 (mirrored)
+  ./bridge/run.sh mtgtable.MtgTable --transport ws --port 8650 --seed 1 --deck decks/doom-legion.dck --ai-deck decks/pacho-shield.dck --ai-profile Default --ai-policy plain --game-id llm-J117-dry-002 --games 1
