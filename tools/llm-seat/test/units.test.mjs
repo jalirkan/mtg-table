@@ -90,7 +90,7 @@ test('a permanent with a non-mana activated ability is offered; a mana ability i
 test('oracle hint: activated non-mana abilities', () => {
   assert.equal(hasNonManaActivated('{T}: Add {G}.'), false);
   assert.equal(hasNonManaActivated('{2}, {T}: Draw a card.'), true);
-  assert.equal(hasNonManaActivated('Flying\nEquip {2}'), false);
+  assert.equal(hasNonManaActivated('Flying\nEquip {2}'), true);   // real oracle text has no colon (s20)
   assert.equal(hasNonManaActivated('Equip {2}: Attach to target creature you control.'), true);
   assert.equal(hasNonManaActivated('When this enters, draw a card.'), false);
   assert.equal(hasNonManaActivated(null), false);
