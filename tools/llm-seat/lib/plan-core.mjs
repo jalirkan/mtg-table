@@ -607,7 +607,7 @@ export class PlanCore extends SeatCore {
         return this.priorityStep(d, plan, step);
       case 'attack with':
         if (own && BEFORE_COMBAT.has(st.phase)) return this.pass(`on to combat, for ${stepText(step)}`);
-        if (/^(none|nothing|no one|no creatures?)$/i.test(normName(String(step.names ?? '')))) {   // nothing to do: done (cf3)
+        if (step.names == null || /^(none|nothing|no one|no creatures?)$/i.test(normName(String(step.names)))) {   // "attack with none" parses as names null (s2)
           plan.i += 1;
           return this.atPriority(d, plan, plan.steps[plan.i] ?? null);
         }
@@ -878,7 +878,9 @@ export class PlanCore extends SeatCore {
       const yes = d.options.find(isYes);
       return { moves: movesFor(d, [yes.n]), why: `yes: the plan goes on to ${this.pendingTargets ? 'its target' : stepText(step)}`, auto: true };
     }
-    if (this.pendingTargets && d.kind !== 'ask:ability_menu') {   // a menu comes before the target: keep it for the target
+    // a menu or a modal spell's modes come before the target: keep the target for it (s2: Cryptic Command)
+    const modesOnly = d.options.some((o) => o.mode) && d.options.every((o) => o.mode || o.button);
+    if (this.pendingTargets && d.kind !== 'ask:ability_menu' && !modesOnly) {
       const pt = this.pendingTargets;
       this.pendingTargets = null;
       return this.answerWith(d, pt.plan, pt.step, pt.text, { consume: false });

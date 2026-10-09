@@ -570,3 +570,17 @@ test('a number question takes the one number in the words ("pay X=1", m20)', asy
   const plan = { steps: [{ n: 1, verb: 'choose', names: 'x' }], i: 0, kind: 'question' };
   assert.deepEqual(h.core.answerWith(d, plan, plan.steps[0], 'pay X=1').moves, [{ type: 'answer', askId: 'x1', value: [1] }]);
 });
+
+test('a modal spell\'s modes do not use up the "-> target" (s2 Cryptic Command)', async () => {
+  const { classifyAsk } = await import('../lib/decision.mjs');
+  const h = harness([]);
+  h.feed('state', state({ turn: 3 }));
+  h.core.pendingTargets = { plan: { steps: [], i: 0 }, step: { n: 1, verb: 'cast', name: 'Cryptic Command' }, text: 'The One Ring' };
+  const ask = { askId: 'm2', kind: 'choose_list', prompt: 'Choose two modes', min: 2, max: 2, options: [
+    { id: 0, label: 'Counter target spell.', kind: 'ability', cardId: 9 }, { id: 1, label: 'Return target permanent to its owner\'s hand.', kind: 'ability', cardId: 9 },
+    { id: 2, label: 'Tap all creatures your opponents control.', kind: 'ability', cardId: 9 }, { id: 3, label: 'Draw a card.', kind: 'ability', cardId: 9 }] };
+  const d = classifyAsk({ state: h.core.state, ask, me: 0 });
+  const r = h.core.atQuestion(d, { steps: [], i: 0, kind: 'turn' }, null);
+  assert.ok(r.moment, 'the modes are asked');
+  assert.ok(h.core.pendingTargets, 'the target is kept for the target question');
+});
