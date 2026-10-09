@@ -185,7 +185,7 @@ test('asks: every engine question goes to the model unless one answer is legal',
   assert.deepEqual(movesFor(optional, [2]), [{ type: 'answer', askId: 'a2', value: [] }]);
   const multi = classifyAsk({ state: s, ask: { askId: 'a3', kind: 'choose_entities', prompt: 'Choose two', options: opts, min: 2, max: 2 } });
   assert.equal(multi.multi, true);
-  assert.equal(checkChoice(multi, [1]), 'choose between 2 and 2 options');
+  assert.equal(checkChoice(multi, [1]), 'this question needs exactly 2 choices and you named 1: write one step "choose A, B" naming exactly 2 of them');
   assert.deepEqual(movesFor(multi, [1, 3]), [{ type: 'answer', askId: 'a3', value: [0, 2] }]);
   assert.deepEqual(classifyAsk({ state: s, ask: { askId: 'a4', kind: 'choose_list', prompt: 'Looking at', options: opts, min: -1, max: -1, reveal: true } }).auto.moves, [{ type: 'answer', askId: 'a4', value: [] }]);
   assert.deepEqual(classifyAsk({ state: s, ask: { askId: 'a5', kind: 'choose_list', prompt: 'Pick', options: opts.slice(0, 1), min: 1, max: 1 } }).auto.moves, [{ type: 'answer', askId: 'a5', value: [0] }]);
@@ -361,4 +361,17 @@ test('"Select any target" offers both players even though the wire lists only ca
   const d = classifyInput({ state: s, input, me: 0, oracle: ORACLE });
   assert.ok(d.options.some((o) => o.moves?.[0]?.action === 'clickPlayer' && o.moves[0].playerId === 1), 'the opponent is offered');
   assert.ok(!d.auto, 'not answered automatically with the only card listed');
+});
+
+test('"Select target player" with mode none offers both players (s20 Thought Scour)', () => {
+  const s = state();
+  const input = {
+    prompt: 'Thought Scour (36) - Target player mills two cards. Draw a card. \n\nSelect target player',
+    buttons: { ok: { label: 'OK', enabled: false }, cancel: { label: 'Cancel', enabled: true } },
+    selectable: { cardIds: [], min: 1, max: 1, mode: 'none' },
+  };
+  const d = classifyInput({ state: s, input, me: 0, oracle: ORACLE });
+  const players = d.options.filter((o) => o.moves?.[0]?.action === 'clickPlayer').map((o) => o.moves[0].playerId).sort();
+  assert.deepEqual(players, [0, 1]);
+  assert.ok(!d.auto);
 });
