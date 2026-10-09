@@ -551,3 +551,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J114/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 76cbb82, ForgeCoach 866c256
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J115 DONE: Opening-hand and target search, fixed measurement: two 1,200-game matches (600 mirrored pairs each) at the live 1.5 s budget, search-v2-mull vs search-v2 and search-v2-targets vs search-v2 (search-v2 = the ladder's search-v1-anytime), each switch's score with a 95% interval in Elo and how often it changed Forge's answer (D417)
+
+- finished: 2026-10-08T23:31:42-04:00
+- decides: whether the opening-hand search (D417 mull=1) and the target search (D417 targets=1), each on its own, join the next search version (search-v3); each switch is decided separately
+- hypothesis: Forge's land-count mulligan rule and its greedy single-target choices both lose games the search can see; the target search changes a quarter of the targeted plays it looks at (smoke 2/8) and the opening-hand search rarely overrules Forge (the lcb rule, smoke 0/5 keeps and 1/1 bottoms), so each gain, if any, is expected small, about +5 to +15 Elo
+- rule: written 2026-10-08 before the run, read from var/ai-ladder/match-J115-mull.json and var/ai-ladder/match-J115-targets.json, each switch on its own: ADOPT the switch into the next search version if its match is complete (all 1,200 games) and the 95% interval on its score against search-v1-anytime (search-v2) has its lower end above 0.5 (above 0 Elo). Otherwise NOT SHOWN for that switch: report the score and Elo with the interval and how often it changed Forge's answer; an interval that includes 0.5 is "not shown", never "no effect", and a match that stopped early gives no verdict
+- outcome: done
+- headline: mm.played 1200, mm.score 0.4917, mm.lo 0.475, mm.hi 0.5083, mm.elo -5.8, mm.eloLo -17.4, mm.eloHi 5.8, mt.played 1200, mt.score 0.51, mt.lo 0.4962, mt.hi 0.5238, mt.elo 6.9, mt.eloLo -2.7, mt.eloHi 16.6
+- summary: results/J115/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 614f98f
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

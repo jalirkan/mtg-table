@@ -1,0 +1,6 @@
+PASS  mm.complete == true   [mm.complete = true]
+PASS  mm.played == 1200   [mm.played = 1200]
+PASS  mm.errors + mm.timeouts <= mm.played / 20   [mm.errors = 0, mm.timeouts = 0, mm.played = 1200]
+PASS  mt.complete == true   [mt.complete = true]
+PASS  mt.played == 1200   [mt.played = 1200]
+PASS  mt.errors + mt.timeouts <= mt.played / 20   [mt.errors = 0, mt.timeouts = 0, mt.played = 1200]
