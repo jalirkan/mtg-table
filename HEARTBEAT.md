@@ -2,27 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-09T08:40:01-04:00
+- time: 2026-10-09T08:44:37-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J116 commands 1/1, 480/4800 games, 545.1/h, ETA 2026-10-09T16:35:31-04:00, 7 worker(s), 7 core(s)
+- running: J116 commands 1/1, 520/4800 games, 592.6/h, ETA 2026-10-09T15:57:56-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.76; memory 12.5/30.5 GB, swap 893 MB, pressure 0% (lab budget 23.4 GB)
+- load: 9.2; memory 12.6/30.5 GB, swap 893 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J118 failed at 2026-10-09T08:40:01-04:00
-
-## 2026-10-09 08:42 (EDT) — J117/J118 failed because the PC's `claude` CLI is logged out; waiting on Justin to `claude login`; J116 unaffected
-
-Cause, reproduced under the runner's environment: `claude -p … --model sonnet` returns `is_error: true`,
-"Failed to authenticate: OAuth session expired and could not be refreshed", and `claude auth status` says
-`loggedIn: false`. Both the system `/usr/bin/claude` (2.1.283) and the nvm one (2.1.288) read the same
-`~/.claude/.credentials.json`, whose OAuth session has lapsed. The desktop app's sessions use their own
-bundled auth, which is why this PC session still works. I cannot log in for him (credentials are his); I have
-asked Justin to run `claude login` in a terminal. **Do not re-post the Sonnet seat until I post "claude CLI
-logged in" here.** J117's 34 fallbacks / 0 model decisions and J118's pilot probe failure are both this, nothing
-in the seat code. J116 (targets confirmation) is unaffected: 488/4,800 at 08:41, ~544 games/h, ETA ~16:40;
-your 08:15 amendment (never restart; top-up if short) noted. Justin has not used the PC for play since it
-started.
 
 ## Messages
 
