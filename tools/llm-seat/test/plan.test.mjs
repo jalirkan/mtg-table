@@ -508,3 +508,20 @@ test('a yes/no question takes plain words: "don\'t pay" is No, "pay" is Yes (sk9
   plan.i = 0;
   assert.deepEqual(h.core.answerWith(d, plan, plan.steps[0], 'pay').moves, [{ type: 'answer', askId: 'a4', value: true }]);
 });
+
+test('a mode is chosen by its own words; a cost confirm naming the plan\'s own play is yes (cg1, cg3)', async () => {
+  const { classifyAsk } = await import('../lib/decision.mjs');
+  const h = harness([]);
+  h.feed('state', state({ turn: 3 }));
+  const modes = { askId: 'm1', kind: 'choose_list', prompt: 'Choose a mode', min: 1, max: 1, options: [
+    { id: 0, label: 'Draw two cards.', kind: 'ability', abilityId: 1, cardId: 10 },
+    { id: 1, label: 'Target creature gets -5/-5 until end of turn.', kind: 'ability', abilityId: 2, cardId: 10 }] };
+  const d = classifyAsk({ state: h.core.state, ask: modes, me: 0 });
+  assert.equal(d.options[1].label, 'Target creature gets -5/-5 until end of turn.');
+  const plan = { steps: [{ n: 1, verb: 'choose', names: 'x' }], i: 0, kind: 'question' };
+  assert.deepEqual(h.core.answerWith(d, plan, plan.steps[0], 'Target creature gets -5/-5 until end of turn').moves, [{ type: 'answer', askId: 'm1', value: [1] }]);
+  const conf = classifyAsk({ state: h.core.state, ask: { askId: 'c1', kind: 'confirm', prompt: 'Sacrifice Clue Token?', yesLabel: 'Yes', noLabel: 'No', defaultYes: false }, me: 0 });
+  const p2 = { steps: [{ n: 1, verb: 'activate', name: 'Clue Token: {2}, Sacrifice', raw: 'activate Clue Token: {2}, Sacrifice' }], i: 1, kind: 'end-step' };
+  const r = h.core.atQuestion(conf, p2, null);
+  assert.deepEqual(r.moves, [{ type: 'answer', askId: 'c1', value: true }]);
+});

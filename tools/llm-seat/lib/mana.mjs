@@ -93,7 +93,7 @@ export function manaWords(avail) {
   return { sources: parts.join(' '), pool: pool.join(' ') };
 }
 
-const UNREADABLE = /convoke|delve|affinity|improvise|emerge|costs? \{?[\dX]*\}? ?less|less to cast|without paying|rather than pay|you may pay .* rather/i;
+const UNREADABLE = /convoke|delve|affinity|improvise|emerge|evoke|dash|prowl|surge|spectacle|madness|blitz|bestow|overload|mutate|plot|costs? \{?[\dX]*\}? ?less|less to cast|without paying|rather than pay|you may pay .* rather/i;
 
 /**
  * Why `card` (in hand, with a mana cost) cannot be paid for from the untapped

@@ -857,6 +857,18 @@ export class PlanCore extends SeatCore {
     const yesNo = d.options.length >= 2 && d.options.some((o) => o.value === true) && d.options.some((o) => o.value === false);
     const wantsOn = (this.pendingTargets || (step && (step.verb === 'target' || step.verb === 'choose')
       && !/^(yes|no|pay|dont pay|do not pay|decline|accept|skip)$/i.test(normName(String(step.names ?? '')))));
+    // a yes/no that names the card this plan just cast or activated is that play's own cost
+    // ("Sacrifice Clue Token?", "pay 3 life?" for its flashback): the plan chose the play, so yes
+    // (cg3: Sonnet, asked bare, declined its own Clue)
+    const prev = plan && plan.i > 0 ? plan.steps[plan.i - 1] : null;
+    if (yesNo && prev && (prev.verb === 'cast' || prev.verb === 'activate')) {
+      const who = normName(parseRef(String(prev.name ?? '').split(':')[0]).name ?? '');   // 'Clue Token: {2}, Sacrifice' -> the card
+      const words = normName(String(d.prompt ?? ''));
+      if (who && words.includes(who)) {
+        const yes = d.options.find((o) => o.value === true);
+        return { moves: movesFor(d, [yes.n]), why: `yes: part of ${stepText(prev)}, which the plan chose`, auto: true };
+      }
+    }
     if (yesNo && wantsOn && this.lastCast) {
       // the plan goes on to a target or a choice: it means "yes" to the engine's confirm in between
       // (cf4: Halo Forager's "cast it?" met "target Goblin Army Token")
@@ -899,7 +911,14 @@ export class PlanCore extends SeatCore {
       let name = String(o.label ?? '');
       let group = 'option';
       const pid = o.moves?.[0]?.playerId;
-      if (typeof o.cardId === 'number' && namer.cards.has(o.cardId)) {
+      if (o.mode) {
+        // a mode: its own words (cg1)
+        name = String(o.label ?? '');
+      } else if (typeof o.cardId === 'number' && !namer.cards.has(o.cardId) && o.cardName) {
+        // a card the state does not show, e.g. from a library search (cg5: "choose Island" among eight)
+        name = o.cardName;
+        group = 'search';
+      } else if (typeof o.cardId === 'number' && namer.cards.has(o.cardId)) {
         const c = namer.cards.get(o.cardId);
         name = nameOf(c) ?? name;
         group = `${c.zone}:${c.controller}`;
