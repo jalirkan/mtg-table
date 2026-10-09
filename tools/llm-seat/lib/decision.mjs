@@ -97,6 +97,8 @@ export function inputKindOf(input, state, me) {
   if (prompt.startsWith('Select creatures to block')) return 'block';
   if (/\bkeep\b/i.test(prompt) && ok.enabled && cancel.enabled && !prompt.startsWith('Priority')) return 'mulligan';
   if ((sel.mode === 'cards' && cardIds.length > 0) || sel.mode === 'players') return 'select';
+  // a player target can come with mode "none" and nothing listed (s20 Thought Scour)
+  if (/\bSelect\b[^\n]*\btarget (player|opponent)\b/i.test(prompt) && (sel.min ?? 0) > 0) return 'select';
   if (/^Priority:/.test(prompt) && state?.priority === me && ok.enabled) return 'priority';
   if (!ok.enabled && !cancel.enabled) return 'wait';
   if (/\btarget\b/i.test(prompt) && !ok.enabled) return 'target-wait';
@@ -221,7 +223,7 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
       // Offer both players when the prompt allows a player; Forge refuses a
       // click it will not take.
       const playerWords = /any target|target player|target opponent|player or planeswalker|creature or player|player, planeswalker|each opponent|any player/i;
-      if (sel.mode === 'players' || (sel.mode !== 'none' && playerWords.test(String(input.prompt ?? '')))) {
+      if (sel.mode === 'players' || (/\bSelect\b[^\n]*\btarget\b/i.test(String(input.prompt ?? '')) && playerWords.test(String(input.prompt ?? '')))) {
         for (const p of state?.players ?? []) {
           d.options.push({ label: `${p.id === me ? 'You' : 'Opponent'} (player ${p.id}, ${p.name})`, moves: [act('clickPlayer', { playerId: p.id })], token: `target:player${p.id}` });
         }
@@ -468,7 +470,10 @@ export function checkChoice(d, chosen) {
     }
     return null;
   }
-  if (chosen.length < d.min || chosen.length > d.max) return `choose between ${d.min} and ${d.max} options`;
+  if (chosen.length < d.min || chosen.length > d.max) {
+    const need = d.min === d.max ? `exactly ${d.min}` : `${d.min} to ${d.max}`;
+    return `this question needs ${need} choices and you named ${chosen.length}: write one step "choose A, B" naming ${need} of them`;
+  }
   return null;
 }
 
