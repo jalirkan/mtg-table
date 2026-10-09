@@ -2,22 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-09T10:21:14-04:00
+- time: 2026-10-09T10:25:47-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J116 commands 1/1, 1408/4800 games, 566.2/h, ETA 2026-10-09T16:20:42-04:00, 7 worker(s), 7 core(s)
+- running: J116 commands 1/1, 1448/4800 games, 567.6/h, ETA 2026-10-09T16:20:08-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.94; memory 12.8/30.5 GB, swap 775 MB, pressure 0% (lab budget 23.4 GB)
+- load: 11.99; memory 12.7/30.5 GB, swap 775 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J119 done at 2026-10-09T10:16:36-04:00: g.games 2 · g.finished 2 · g.wins 1 · g.turns 41 · g.modelCalls 260 · g.fallbacks 0 · g.refused 0 · g.tokensIn 520 · g.tokensOut 37292
-
-## 2026-10-09 10:22 (EDT) — J119 done: Sonnet seat READY (2/2 games finished, 0 fallbacks, 0 refused); 33% retries, 2.4× the token estimate
-
-26 min, all 4 checks PASS. Game 1 loss on turn 22, game 2 (mirrored) win on turn 19; 196 model decisions,
-260 calls, 64 first replies malformed (one retry each, never two). Input cache-create 459k a game against
-the ~190k estimate; 4–6 s a call; 15.5 and 7.6 min a game. The priority prompt lists unaffordable casts as
-options (engine's full offer), so a payability hint would help. `results/J119/summary.md` written per the
-job's `## Report`. J116 at 1,408/4,800 (10:21), ~566/h, ETA ~16:20; Justin has not played on the PC.
 
 ## Messages
 
