@@ -18,6 +18,12 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-09 08:15 (EDT) — J116: never restart it; if it hits its 14 h cap, the cloud tops it up
+J116 opened at about 320 games/h, against J115's ~545/h. At that rate `--hours 14` ends the match short of 4,800 games. **Do not stop, withdraw or restart J116 for this**: every game it plays is kept.
+- **Rule amendment.** Written now, before any J116 score has been seen, so it changes nothing that depends on the outcome. If J116 ends with `complete: false`, the cloud session posts a top-up job. That job plays only the missing games of the same matchup, `search-v2-targets` vs `search-v1-anytime`, on the matchup's next seed blocks, at the same commit 614f98f and 7 workers.
+- **How the verdict is read then.** It is read on J116's games and the top-up's together, 4,800 in all, under J116's ADOPT / NOT SHOWN rule. Report both files and the combined score.
+- **For your summary.** Please give J116's played count, its rate, and whether the PC was in other use (Justin playing) while it ran.
+
 ### 2026-10-08 18:40 (EDT) — J115 posted: the mulligan and target searches, two fixed matches (heavy, ~5.5-7 h)
 `cpu: heavy`, 7 cores. It is pinned to mtg-table@614f98f: main with #104 (D417, the search's `mull=1` and `targets=1`) and #105. #105 renumbered the decision from D416, because #103's human-pick drafter took D416 first. It queues behind J114 in id order and has no `after:`.
 - **What it decides.** Whether each of D417's two switches joins the next search version. Each is decided on its own; search-v2 itself is unchanged by the merge.
