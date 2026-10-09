@@ -350,3 +350,15 @@ test('keyword activations without a colon count as battlefield abilities (Equip,
   assert.equal(hasNonManaActivated('{T}: Add {G}.'), false);
   assert.equal(hasNonManaActivated('Flying'), false);
 });
+
+test('"Select any target" offers both players even though the wire lists only cards (s20 Ballista)', () => {
+  const s = state({ me: { battlefield: [creature(39, 'Walking Ballista', 1, 1, { zone: 'battlefield' })] } });
+  const input = {
+    prompt: 'Walking Ballista (39) - Remove a +1/+1 counter from Walking Ballista: It deals 1 damage to any target.\n\nSelect any target',
+    buttons: { ok: { label: 'OK', enabled: false }, cancel: { label: 'Cancel', enabled: true } },
+    selectable: { cardIds: [39], min: 1, max: 1, mode: 'cards' },
+  };
+  const d = classifyInput({ state: s, input, me: 0, oracle: ORACLE });
+  assert.ok(d.options.some((o) => o.moves?.[0]?.action === 'clickPlayer' && o.moves[0].playerId === 1), 'the opponent is offered');
+  assert.ok(!d.auto, 'not answered automatically with the only card listed');
+});

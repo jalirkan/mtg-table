@@ -535,6 +535,14 @@ export class PlanCore extends SeatCore {
         return { moves: [act('passPriority')], why: stepText(step), step, plan };
       case 'target':
       case 'choose':
+        // a choice that belongs to an earlier step of this plan (an enters
+        // trigger, a cost) was already asked, or will be asked when it
+        // resolves: drop the step quietly instead of a correction (s20: Kor
+        // Skyfisher's "choose Swamp", Ballista's "target opponent")
+        if (plan.steps.slice(0, plan.i).some((x) => PRIORITY_VERBS.has(x.verb))) {
+          plan.i += 1;
+          return this.atPriority(d, plan, plan.steps[plan.i] ?? null);
+        }
         return { fail: { plan, step, why: 'nothing is asking you to choose or target right now (you have priority)' } };
       default:
         return { fail: { plan, step, why: 'it is not the start of the game: keep and mulligan are only for your opening hand' } };
@@ -691,7 +699,7 @@ export class PlanCore extends SeatCore {
 
   /** An engine question (a selection, an ask, a button pair): the plan's target / choice, else ask. */
   atQuestion(d, plan, step) {
-    if (this.pendingTargets) {
+    if (this.pendingTargets && d.kind !== 'ask:ability_menu') {   // a menu comes before the target: keep it for the target
       const pt = this.pendingTargets;
       this.pendingTargets = null;
       return this.answerWith(d, pt.plan, pt.step, pt.text, { consume: false });
