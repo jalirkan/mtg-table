@@ -215,7 +215,13 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
       const ids = (sel.cardIds ?? []).filter((x) => typeof x === 'number');
       const selMin = typeof sel.min === 'number' ? sel.min : 0;
       const selMax = typeof sel.max === 'number' && sel.max > 0 ? sel.max : ids.length;
-      if (sel.mode === 'players') {
+      // "Select any target" comes with mode "cards" and only the cards listed:
+      // the players are legal too but not on the wire (s20: a Walking Ballista
+      // ping at the opponent clicked the only card listed, the Ballista itself).
+      // Offer both players when the prompt allows a player; Forge refuses a
+      // click it will not take.
+      const playerWords = /any target|target player|target opponent|player or planeswalker|creature or player|player, planeswalker|each opponent|any player/i;
+      if (sel.mode === 'players' || (sel.mode !== 'none' && playerWords.test(String(input.prompt ?? '')))) {
         for (const p of state?.players ?? []) {
           d.options.push({ label: `${p.id === me ? 'You' : 'Opponent'} (player ${p.id}, ${p.name})`, moves: [act('clickPlayer', { playerId: p.id })], token: `target:player${p.id}` });
         }
