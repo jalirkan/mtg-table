@@ -7,13 +7,17 @@
 // bridge's `/ws`, one game per connection.  The bridge is any `MtgTable
 // --transport ws` (run-match.mjs starts one per game; ./scripts/play.sh
 // --engine-only works too).  This file is the socket and the files; the
-// decisions are lib/seat-core.mjs's, the words lib/prompt.mjs's.
+// decisions are lib/plan-core.mjs's (--mode plan, the default: D419, the
+// model plans a turn in plain words and the code carries the steps out) or
+// lib/seat-core.mjs's (--mode decision: D418, one call per engine prompt, a
+// numbered option list), the words lib/plan-prompt.mjs's / lib/prompt.mjs's.
 //
 //   node tools/llm-seat/seat.mjs --port 8642 --model fake --run pilot     # no spend
 //   node tools/llm-seat/seat.mjs --port 8642 --model sonnet --context session:10 --run arms-1
 //   node tools/llm-seat/seat.mjs --port 8642 --dry-run                    # fake model, prints every prompt
 //
-// Flags: --url ws://… | --port N; --model fake|sonnet|opus|haiku (fake);
+// Flags: --url ws://… | --port N; --mode plan|decision (plan);
+// --model fake|sonnet|opus|haiku (fake);
 // --context fresh|session:N|game (fresh); --thinking off|low|default (low:
 // coach-helper's D346 mapping); --oracle FILE (.jsonl Scryfall objects or the
 // card library's .sqlite; default var/cards/cards.sqlite when present);
@@ -37,13 +41,14 @@ import { fileURLToPath } from 'node:url';
 import { resolve as resolvePath } from 'node:path';
 
 import { Arm, parseArm } from './lib/arms.mjs';
+import { PlanAsker, PlanCore } from './lib/plan-core.mjs';
 import { makeClaudeModel, makeFakeModel } from './lib/model.mjs';
 import { openOracle } from './lib/oracle.mjs';
 import { SETTLE_MS, SeatCore } from './lib/seat-core.mjs';
 
 export function parseArgs(argv) {
   const a = {
-    url: null, port: 8642, model: 'fake', context: 'fresh', thinking: 'low', oracle: null, run: null,
+    url: null, port: 8642, mode: 'plan', model: 'fake', context: 'fresh', thinking: 'low', oracle: null, run: null,
     fakeScript: null, stops: true, battlefieldAbilities: true, printPrompts: false, savePrompts: false,
     timeoutS: 7200, modelTimeoutS: 180, quiet: false, out: 'var/llm-seat',
   };
@@ -53,6 +58,7 @@ export function parseArgs(argv) {
     switch (k) {
       case '--url': a.url = v(); break;
       case '--port': a.port = Number(v()); break;
+      case '--mode': a.mode = v(); break;
       case '--model': a.model = v(); break;
       case '--context': a.context = v(); break;
       case '--thinking': a.thinking = v(); break;
@@ -72,6 +78,7 @@ export function parseArgs(argv) {
     }
   }
   parseArm(a.context);
+  if (!['plan', 'decision'].includes(a.mode)) throw new Error('--mode is plan or decision');
   if (!['fake', 'sonnet', 'opus', 'haiku'].includes(a.model)) throw new Error('--model is fake, sonnet, opus or haiku');
   if (!['off', 'low', 'default'].includes(a.thinking)) throw new Error('--thinking is off, low or default');
   if (!a.run) a.run = `${a.model}-${a.context.replace(':', '')}-${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}`;
@@ -109,7 +116,7 @@ export function runSeat(a, deps = {}) {
       writeFileSync(join(d, `${String(promptNo).padStart(4, '0')}.txt`), `${p.system}\n\n----- USER -----\n${p.user}\n`);
     }
   };
-  const arm = new Arm(a.context, model, { onPrompt });
+  const arm = a.mode === 'decision' ? new Arm(a.context, model, { onPrompt }) : new PlanAsker(a.context, model, { onPrompt });
   const url = a.url ?? `ws://127.0.0.1:${a.port}/ws`;
 
   return new Promise((resolve) => {
@@ -134,8 +141,9 @@ export function runSeat(a, deps = {}) {
       socket.send(JSON.stringify(frame));
       writeLine({ ...frame, dir: 'c2s' });
     };
-    const core = new SeatCore({
-      send, arm, oracle, say, useStops: a.stops, opts: { battlefieldAbilities: a.battlefieldAbilities },
+    const Core = a.mode === 'decision' ? SeatCore : PlanCore;
+    const core = new Core({
+      send, arm, asker: arm, oracle, say, useStops: a.stops, opts: { battlefieldAbilities: a.battlefieldAbilities },
       log: (rec) => appendFileSync(join(runDir, 'decisions.jsonl'), `${JSON.stringify({ run: a.run, model: model.name, t: Date.now(), ...rec })}\n`),
     });
 
@@ -165,6 +173,7 @@ export function runSeat(a, deps = {}) {
         retries: core.stats.retries, refused: core.stats.refused, stale: core.stats.stale, modelCalls: core.stats.modelCalls,
         sessionResets: arm.resets, promptBytes: core.stats.promptBytes, tokensIn: core.stats.tokensIn, tokensOut: core.stats.tokensOut,
         cacheRead: core.stats.cacheRead, cacheCreate: core.stats.cacheCreate, costUsd: core.stats.costUsd, modelMs: core.stats.modelMs,
+        mode: a.mode, ...(core.extraSummary ? core.extraSummary() : {}),
         match: deps.match ?? null,
       };
       appendFileSync(join(runDir, 'games.jsonl'), `${JSON.stringify(summary)}\n`);
@@ -176,7 +185,7 @@ export function runSeat(a, deps = {}) {
     const wall = a.timeoutS > 0 ? setTimeout(() => finish(4, `timeout after ${a.timeoutS} s`), a.timeoutS * 1000) : null;
 
     socket = new WS(url);
-    socket.addEventListener('open', () => { opened = true; say(`connected ${url} (arm ${arm.spec.name}, model ${model.name}, oracle ${oracle.source})`); });
+    socket.addEventListener('open', () => { opened = true; say(`connected ${url} (mode ${a.mode}, arm ${arm.spec.name}, model ${model.name}, oracle ${oracle.source})`); });
     socket.addEventListener('error', () => { if (!opened) finish(5, `could not connect to ${url}`); });
     socket.addEventListener('close', () => { if (!finished) finish(core.over ? 0 : 3, 'socket closed before over'); });
     socket.addEventListener('message', (ev) => {

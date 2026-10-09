@@ -64,14 +64,55 @@ export function fakeChoice(text) {
   return `choice: ${pick.n}`;
 }
 
+const planReply = (plan, steps) => `PLAN: ${plan}\nSTEPS:\n${steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\nEND`;
+
+/** The line after `label:` in the WHAT THE ENGINE LETS YOU DO NOW block, split at "; " (or ", "). */
+function offerLine(text, label, sep = '; ') {
+  const m = new RegExp(`^  ${label}: (.*)$`, 'm').exec(text);
+  return m ? m[1].split(sep).map((x) => x.trim()).filter(Boolean) : [];
+}
+
+/**
+ * Plan mode's fake (D419): a land, the first spell it can pay for, an attack
+ * with every creature that can; pass on everything the opponent does; keep;
+ * play first; the first choice of a question; "pass" (or the first choice) on
+ * a correction.  Read from the plain-words message, as a model would.
+ */
+export function fakePlan(user) {
+  const text = String(user);
+  if (/Do you keep it\?/.test(text.split('\n')[0])) return planReply('Keep the opening hand.', ['keep']);
+  if (/play first or draw/.test(text.split('\n')[0])) return planReply('Play first.', ['choose play']);
+  const choices = /^(?:Choices|Legal targets): (.*)\.$/m.exec(text);
+  if (/^(The engine asks you|.* needs a target: which\?)/m.test(text.split('\n')[0]) || /could not be read|cannot be done/.test(text.split('\n')[0])) {
+    const ask = /The engine now asks: .*\. Choices: (.*)\. Answer it/.exec(text);
+    const list = (ask ? ask[1] : choices && !/cannot be done/.test(text.split('\n')[0]) ? choices[1] : null);
+    if (list) {
+      const first = list.split('; ')[0].replace(/ \((choose|yours|the opponent's)[^)]*\)$/, '');
+      return planReply('Take the first choice.', [`${/target/i.test(text.split('\n')[0]) || (ask && /target/i.test(ask[0])) ? 'target' : 'choose'} ${first}`]);
+    }
+    return planReply('Do nothing more now.', ['pass']);
+  }
+  if (!/^It is your turn/.test(text)) return planReply('Let it be.', ['pass']);
+  const steps = [];
+  const land = offerLine(text, 'play a land', ', ')[0];
+  if (land) steps.push(`play land ${land}`);
+  const cast = offerLine(text, 'cast')[0];
+  if (cast) steps.push(`cast ${cast.replace(/ \{.*$/, '').replace(/ from your \w+$/, '')}`);
+  const attackers = offerLine(text, 'can attack this turn').map((a) => a.replace(/ -?\d+\/-?\d+.*$/, '').replace(/ \(.*$/, ''));
+  if (attackers.length) steps.push(`attack with ${attackers.join(', ')}`);
+  if (!steps.length) steps.push('hold');
+  return planReply('Develop and attack.', steps);
+}
+
 export function makeFakeModel({ script = [] } = {}) {
   const queue = [...script];
   let calls = 0;
   return {
     name: 'fake',
-    async call({ user, sessionId = null }) {
+    async call({ system = '', user, sessionId = null }) {
       calls += 1;
-      const text = queue.length ? String(queue.shift()) : fakeChoice(user);
+      const plan = String(system).startsWith('REPLY FORMAT');
+      const text = queue.length ? String(queue.shift()) : plan ? fakePlan(user) : fakeChoice(user);
       return { text, usage: null, sessionId: sessionId ?? `fake-${calls}`, ms: 0, costUsd: null, model: 'fake' };
     },
   };
