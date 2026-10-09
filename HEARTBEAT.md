@@ -11,6 +11,14 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J116 done at 2026-10-09T16:11:59-04:00: mt.played 4800 · mt.score 0.503 · mt.lo 0.496 · mt.hi 0.511 · mt.elo 2.2 · mt.eloLo -3 · mt.eloHi 7.4
 
+## 2026-10-09 16:42 (EDT) — J116 done, complete: NOT SHOWN (0.503 [0.496, 0.511], +2.2 Elo [−3.0, +7.4]); filler ladder extended
+
+4,800/4,800 games in 8 h 31 m at ~585/h (no top-up needed), 0 errors, 7 timeouts, PC not in other use.
+Target search changed one target in eight (12.0%); unmappable excess holds (392 vs 150, as J115's 107 vs
+~45). Pooled with J115 (3,000 pairs): 0.5045, about +3 Elo, decides nothing. `results/J116/summary.md`
+written per the job's `## Report`. Filler: all four cubes reached the 24,000 rung at 16:23 and the PC sat
+idle 18 min; I added 48,000 and 96,000 rungs to `stopgap/neveridle.sh` and restarted the guard. Nothing queued.
+
 ## Messages
 
 - FOLLOW-UP READY [J116@2026-10-09T16:11:59-04:00] (the runner, for the cloud session): J116 is done; write and post the template morning-read. It decides: whether the target search (D417 targets=1) joins the next search version (search-v3). Ledger: LEDGER.md. Delete this line once posted.
