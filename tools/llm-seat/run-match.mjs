@@ -22,7 +22,7 @@
 // line, ai-bench's format); --seeds 1,2,5 or 1-10; --mirror; --context
 // (comma list of arms); --mode plan|decision (plan, D419; decision is D418's
 // one call per engine prompt); --model, --thinking, --oracle, --no-stops (seat.mjs);
-// --ai-profile (Default); --port (8650); --run NAME; --health-timeout S (180);
+// --ai-profile (Default); --ai-policy plain|outlets|search (plain; search is the live seat's search-v2, D412); --port (8650); --run NAME; --health-timeout S (180);
 // --game-timeout S (7200); --save-prompts (seat.mjs's); --dry-run.  Everything lands in var/llm-seat/<run>/
 // (seat.mjs's files, plus bridge/<gameId>.log and schedule.json); the bridge
 // writes its own frame log to var/games/<gameId>/frames.jsonl, the one to
@@ -57,7 +57,7 @@ export function readPairs(text) {
 export function parseArgs(argv) {
   const a = {
     deck: null, aiDeck: null, pairs: null, pair: 0, seeds: [1], mirror: false, arms: ['fresh'], mode: 'plan', model: 'fake', thinking: 'low',
-    oracle: null, stops: true, aiProfile: 'Default', port: 8650, run: null, healthTimeoutS: 180, gameTimeoutS: 7200, dryRun: false, out: 'var/llm-seat',
+    oracle: null, stops: true, aiProfile: 'Default', aiPolicy: 'plain', port: 8650, run: null, healthTimeoutS: 180, gameTimeoutS: 7200, dryRun: false, out: 'var/llm-seat',
   };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
@@ -76,6 +76,7 @@ export function parseArgs(argv) {
       case '--oracle': a.oracle = v(); break;
       case '--no-stops': a.stops = false; break;
       case '--ai-profile': a.aiProfile = v(); break;
+      case '--ai-policy': a.aiPolicy = v(); if (!['plain', 'outlets', 'search'].includes(a.aiPolicy)) throw new Error(`--ai-policy: plain, outlets or search, not ${a.aiPolicy}`); break;
       case '--port': a.port = Number(v()); break;
       case '--run': a.run = v(); break;
       case '--out': a.out = v(); break;
@@ -117,7 +118,7 @@ export function schedule(a) {
 /** The bridge's command line for one game (pure). */
 export function bridgeCommand(a, g) {
   return ['./bridge/run.sh', 'mtgtable.MtgTable', '--transport', 'ws', '--port', String(a.port), '--seed', String(g.seed),
-    '--deck', g.deck, '--ai-deck', g.aiDeck, '--ai-profile', a.aiProfile, '--ai-policy', 'plain',
+    '--deck', g.deck, '--ai-deck', g.aiDeck, '--ai-profile', a.aiProfile, '--ai-policy', a.aiPolicy,
     '--game-id', g.gameId, '--games', '1'];
 }
 
@@ -164,7 +165,7 @@ async function main() {
       url: null, port: a.port, mode: a.mode, model: a.model, context: g.arm, thinking: a.thinking, oracle: a.oracle, run: a.run, out: a.out,
       fakeScript: null, stops: a.stops, battlefieldAbilities: true, printPrompts: false, savePrompts: a.savePrompts === true,
       timeoutS: a.gameTimeoutS, modelTimeoutS: 180, quiet: false,
-    }, { match: { gameId: g.gameId, seed: g.seed, deck: g.deck, aiDeck: g.aiDeck, mirrored: g.mirrored, aiProfile: a.aiProfile } });
+    }, { match: { gameId: g.gameId, seed: g.seed, deck: g.deck, aiDeck: g.aiDeck, mirrored: g.mirrored, aiProfile: a.aiProfile, aiPolicy: a.aiPolicy } });
     const code = await Promise.race([exited, new Promise((r) => setTimeout(() => r('killed'), 60_000))]);
     if (code === 'killed') { try { process.kill(-jvm.pid, 'SIGKILL'); } catch { /* gone */ } }
     results.push({ ...g, mode: a.mode, result: summary.result, turns: summary.turns, modelCalls: summary.modelCalls, fallbacks: summary.fallbacks,
