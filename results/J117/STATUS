@@ -1,7 +1,8 @@
-running
+failed
+reason: aborted: g.fallbacks >= 10 and g.fallbacks * 3 > g.modelDecisions (g.fallbacks = 34, g.modelDecisions = 0)
 runner: forgecoach-runner 10896b8
 started: 2026-10-09T08:23:57-04:00
-phase: stopping
+finished: 2026-10-09T08:26:24-04:00
 mtg-table: ccd4d5d
 workers: 1 (sized 1: min(cores 7, memory 0, max_workers 1); peak 2.50 GB per worker (default; measured 0.09), budget 2 GB)
 peak_worker_rss_gb: 0.09
