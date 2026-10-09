@@ -297,6 +297,8 @@ const len = (a) => (Array.isArray(a) ? a.length : 0);
 const indices = (n) => Array.from({ length: Math.max(0, n) }, (_, i) => i);
 
 function optionLabel(o, cards) {
+  // a mode or ability is its own text, not its card's name (cg1: The Mightstone and Weakstone's two modes)
+  if (o.kind === 'ability' && o.label) return String(o.label);
   const c = o.card ?? (typeof o.cardId === 'number' ? cards.get(o.cardId) : null);
   if (c) return describeCard(c);
   if (typeof o.playerId === 'number') return `player ${o.playerId} (${o.label})`;
@@ -426,13 +428,13 @@ export function classifyAsk({ state, ask, intent = null, me = null, oracle = nul
       if (n === 0 || max === 0) return autoOf(d, 'nothing to choose', [answer(askId, [])]);
       if (min === n) return autoOf(d, 'all must be chosen', [answer(askId, indices(n))]);
       if (max <= 1) {
-        opts.forEach((o, i) => d.options.push({ n: i + 1, label: optionLabel(o, cards), value: [o.id], cardId: o.cardId }));
+        opts.forEach((o, i) => d.options.push({ n: i + 1, label: optionLabel(o, cards), value: [o.id], cardId: o.cardId, cardName: o.card?.name ?? null, mode: o.kind === 'ability' }));
         if (min === 0) d.options.push({ n: n + 1, label: 'None', value: [], isDefault: true });
         d.fallback = [min === 0 ? n + 1 : 1];
         if (n === 1 && min === 1) return autoOf(d, 'one option', [answer(askId, [opts[0].id])]);
         return d;
       }
-      opts.forEach((o, i) => d.options.push({ n: i + 1, label: optionLabel(o, cards), value: o.id }));
+      opts.forEach((o, i) => d.options.push({ n: i + 1, label: optionLabel(o, cards), value: o.id, cardId: o.cardId, cardName: o.card?.name ?? null, mode: o.kind === 'ability' }));
       d.multi = true; d.min = min; d.max = max; d.answerList = true;
       d.fallback = indices(min).map((i) => i + 1);
       return d;
