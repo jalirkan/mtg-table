@@ -525,3 +525,17 @@ test('a mode is chosen by its own words; a cost confirm naming the plan\'s own p
   const r = h.core.atQuestion(conf, p2, null);
   assert.deepEqual(r.moves, [{ type: 'answer', askId: 'c1', value: true }]);
 });
+
+test('one ability is picked whatever the words; a Yes/No button pair naming the plan\'s play is yes (ch3 Clue)', async () => {
+  const { matchAbility } = await import('../lib/plan.mjs');
+  assert.deepEqual(matchAbility('{2}', ['{2}, Sacrifice this token: Draw a card.']), { ok: true, index: 0 });
+  assert.equal(matchAbility('{2}, Sacrifice', ['{2}, Sacrifice this token: Draw a card.', '+1: x']).index, 0);
+  const h = harness([]);
+  h.feed('state', state({ turn: 3 }));
+  const d = { kind: 'buttons', prompt: 'Sacrifice Clue Token?', source: 'input', options: [
+    { n: 1, label: 'Yes', moves: [{ type: 'act', action: 'buttonOk' }], button: true },
+    { n: 2, label: 'No', moves: [{ type: 'act', action: 'buttonCancel' }], button: true }] };
+  const plan = { steps: [{ n: 1, verb: 'activate', name: 'Clue Token', raw: 'activate Clue Token' }], i: 1, kind: 'turn' };
+  const r = h.core.atQuestion(d, plan, null);
+  assert.deepEqual(r.moves, [{ type: 'act', action: 'buttonOk' }]);
+});
