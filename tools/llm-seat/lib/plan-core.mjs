@@ -854,7 +854,10 @@ export class PlanCore extends SeatCore {
 
   /** An engine question (a selection, an ask, a button pair): the plan's target / choice, else ask. */
   atQuestion(d, plan, step) {
-    const yesNo = d.options.length >= 2 && d.options.some((o) => o.value === true) && d.options.some((o) => o.value === false);
+    // a yes/no: the confirm ask's true/false, or a button pair labelled Yes / No (ch3: "Sacrifice Clue Token?" is buttons)
+    const isYes = (o) => o.value === true || (o.button && /^(yes|ok)$/i.test(String(o.label ?? '').trim()));
+    const isNo = (o) => o.value === false || (o.button && /^(no|cancel)$/i.test(String(o.label ?? '').trim()));
+    const yesNo = d.options.length >= 2 && d.options.some(isYes) && d.options.some(isNo);
     const wantsOn = (this.pendingTargets || (step && (step.verb === 'target' || step.verb === 'choose')
       && !/^(yes|no|pay|dont pay|do not pay|decline|accept|skip)$/i.test(normName(String(step.names ?? '')))));
     // a yes/no that names the card this plan just cast or activated is that play's own cost
@@ -865,14 +868,14 @@ export class PlanCore extends SeatCore {
       const who = normName(parseRef(String(prev.name ?? '').split(':')[0]).name ?? '');   // 'Clue Token: {2}, Sacrifice' -> the card
       const words = normName(String(d.prompt ?? ''));
       if (who && words.includes(who)) {
-        const yes = d.options.find((o) => o.value === true);
+        const yes = d.options.find(isYes);
         return { moves: movesFor(d, [yes.n]), why: `yes: part of ${stepText(prev)}, which the plan chose`, auto: true };
       }
     }
     if (yesNo && wantsOn && this.lastCast) {
       // the plan goes on to a target or a choice: it means "yes" to the engine's confirm in between
       // (cf4: Halo Forager's "cast it?" met "target Goblin Army Token")
-      const yes = d.options.find((o) => o.value === true);
+      const yes = d.options.find(isYes);
       return { moves: movesFor(d, [yes.n]), why: `yes: the plan goes on to ${this.pendingTargets ? 'its target' : stepText(step)}`, auto: true };
     }
     if (this.pendingTargets && d.kind !== 'ask:ability_menu') {   // a menu comes before the target: keep it for the target
@@ -908,6 +911,8 @@ export class PlanCore extends SeatCore {
     const me = this.me;
     return d.options.map((o) => {
       const aliases = [normName(o.label)];
+      const head = String(o.label ?? '').replace(/\s+-\s+.*$/, '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*#\d+\s*$/, '');
+      if (typeof o.cardId === 'number' && head && normName(head) !== aliases[0]) aliases.push(normName(head));   // a card only (ch5): "Man-o'-War - Creature 2 / 2"
       let name = String(o.label ?? '');
       let group = 'option';
       const pid = o.moves?.[0]?.playerId;

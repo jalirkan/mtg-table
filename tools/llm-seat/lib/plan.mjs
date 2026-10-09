@@ -276,6 +276,14 @@ export const abilityCost = (label) => {
  * contains, decides.
  */
 export function matchAbility(selector, labels) {
+  // one ability: whatever the words, they mean it (ch3: "activate Clue Token: {2}")
+  if (labels.length === 1) return { ok: true, index: 0 };
+  // a label that starts with the words as written, cost symbols included ("{2}, Sacrifice")
+  const rawSel = String(selector ?? '').trim().toLowerCase();
+  if (rawSel.length >= 2) {
+    const pre = labels.map((l, i) => (String(l).trim().toLowerCase().startsWith(rawSel) ? i : -1)).filter((i) => i >= 0);
+    if (pre.length === 1) return { ok: true, index: pre[0] };
+  }
   const sel = signFix(selector);
   // a cost and words ("+1 soldier", "+1: Create a 1/1 …"): Elspeth, Knight-Errant has two +1s
   const both = /^([+\-]?\d+)\s*:?\s+(\S.*)$/.exec(sel);
