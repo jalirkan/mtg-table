@@ -140,7 +140,8 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
           const c = cards.get(e.cardId);
           const abilities = Array.isArray(e.abilities) ? e.abilities : [];
           for (const ab of abilities) {
-            const land = isLand(c) && ab.isSpell === false && e.zone === 'hand';
+            // a land in hand plays, unless the ability is another one (Ash Barrens' landcycling, cf4)
+            const land = isLand(c) && ab.isSpell === false && e.zone === 'hand' && !/cycling|channel|:|\{/i.test(String(ab.label ?? ''));
             const verb = land ? 'Play land' : ab.isSpell ? 'Cast' : 'Activate';
             const where = e.zone === 'hand' ? '' : ` from ${e.zone}`;
             const label = `${verb} ${describeCard(c)}${where}${abilities.length > 1 || !ab.isSpell ? ` -- ${String(ab.label ?? '').slice(0, 160)}` : ''}`;

@@ -386,3 +386,14 @@ test('a scry-style "put on the bottom" order ask goes to the model (sk2), the an
   assert.deepEqual(movesFor(d, [2]), [{ type: 'answer', askId: 'a2', value: { ordered: [1], remember: false } }]);
   assert.deepEqual(movesFor(d, [3]), [{ type: 'answer', askId: 'a2', value: { ordered: [], remember: false } }]);
 });
+
+test('a land in hand: "Play land" plays it, landcycling is an activation (cf4 Ash Barrens)', () => {
+  const s = state({ me: { hand: [land(21, 'Ash Barrens', { zone: 'hand', types: 'Land' })] } });
+  s.playable = [{ cardId: 21, zone: 'hand', abilities: [
+    { abilityId: 1, label: 'Play land', isSpell: false },
+    { abilityId: 2, label: 'Basic landcycling {1} ({1}, Discard this card: Search your library for a basic land card…)', isSpell: false },
+  ] }];
+  const d = classifyInput({ state: s, input: priorityInput(), me: 0, oracle: ORACLE });
+  const verbs = d.options.filter((o) => o.cardId === 21).map((o) => o.verb).sort();
+  assert.deepEqual(verbs, ['activate', 'land']);
+});

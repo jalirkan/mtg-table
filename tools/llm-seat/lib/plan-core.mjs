@@ -549,7 +549,11 @@ export class PlanCore extends SeatCore {
         }
         return this.atQuestion(d, plan, step);
       default:
-        if (d.auto) return { moves: d.auto.moves, why: d.auto.reason, auto: true };
+        if (d.auto) {
+          // the one legal target was taken for the plan: its "-> target" is used up (cf4: Animate Dead)
+          if (/one legal target/.test(d.auto.reason ?? '')) this.pendingTargets = null;
+          return { moves: d.auto.moves, why: d.auto.reason, auto: true };
+        }
         return this.atQuestion(d, plan, step);
     }
   }
@@ -603,6 +607,10 @@ export class PlanCore extends SeatCore {
         return this.priorityStep(d, plan, step);
       case 'attack with':
         if (own && BEFORE_COMBAT.has(st.phase)) return this.pass(`on to combat, for ${stepText(step)}`);
+        if (/^(none|nothing|no one|no creatures?)$/i.test(normName(String(step.names ?? '')))) {   // nothing to do: done (cf3)
+          plan.i += 1;
+          return this.atPriority(d, plan, plan.steps[plan.i] ?? null);
+        }
         return { fail: { plan, step, why: own ? `combat is over this turn (it is your ${phaseWords(st.phase)})` : 'it is not your turn' } };
       case 'block':
         if (!own && BEFORE_BLOCKS.has(st.phase)) return this.pass(`on to the declaration of blockers, for ${stepText(step)}`);
@@ -846,6 +854,15 @@ export class PlanCore extends SeatCore {
 
   /** An engine question (a selection, an ask, a button pair): the plan's target / choice, else ask. */
   atQuestion(d, plan, step) {
+    const yesNo = d.options.length >= 2 && d.options.some((o) => o.value === true) && d.options.some((o) => o.value === false);
+    const wantsOn = (this.pendingTargets || (step && (step.verb === 'target' || step.verb === 'choose')
+      && !/^(yes|no|pay|dont pay|do not pay|decline|accept|skip)$/i.test(normName(String(step.names ?? '')))));
+    if (yesNo && wantsOn && this.lastCast) {
+      // the plan goes on to a target or a choice: it means "yes" to the engine's confirm in between
+      // (cf4: Halo Forager's "cast it?" met "target Goblin Army Token")
+      const yes = d.options.find((o) => o.value === true);
+      return { moves: movesFor(d, [yes.n]), why: `yes: the plan goes on to ${this.pendingTargets ? 'its target' : stepText(step)}`, auto: true };
+    }
     if (this.pendingTargets && d.kind !== 'ask:ability_menu') {   // a menu comes before the target: keep it for the target
       const pt = this.pendingTargets;
       this.pendingTargets = null;
@@ -865,7 +882,12 @@ export class PlanCore extends SeatCore {
     }
     if (step && (step.verb === 'target' || step.verb === 'choose')) return this.answerWith(d, plan, step, step.names);
     const about = this.lastCast?.card ? nameOf(this.lastCast.card) : null;
-    return { moment: { kind: 'question', question: questionText(d, this.state, this.me, { plan: this.plans.at(-1) ?? null, about }) } };
+    let q = questionText(d, this.state, this.me, { plan: this.plans.at(-1) ?? null, about });
+    if (yesNo && about) {
+      // cf3/cf5: a cost the plan's own play asks for ("pay 3 life?", the Clue's sacrifice) was declined by mistake
+      q += `\nThis question is part of ${this.lastCast.step.verb === 'activate' ? 'activating' : 'casting'} ${about}, which your plan chose; its mana is already paid. Answering no cancels that ${this.lastCast.step.verb === 'activate' ? 'activation' : 'spell'}.`;
+    }
+    return { moment: { kind: 'question', question: q } };
   }
 
   /** The candidates of a question, for the name matcher. */
