@@ -438,3 +438,26 @@ test('mana is paid keeping the colour a later cast step needs (sk1: Overseer the
   assert.equal(first.action, 'clickCard');
   assert.notEqual(first.cardId, 9, 'the Island is kept for Hard Evidence');
 });
+
+test('a payment never taps the same land twice while the state lags, and keeps W for a later Swords (sk5)', async () => {
+  const h = harness([reply('cast Solitude\n2. cast Swords to Plowshares')]);
+  const islands = [7, 8, 9].map((id) => land(id, 'Island', { zone: 'battlefield', types: 'Basic Land - Island' }));
+  const solitude = card(60, 'Solitude', { manaCost: '{3}{W}{W}', types: 'Creature - Elemental Incarnation' });
+  const swords = card(61, 'Swords to Plowshares', { manaCost: '{W}', types: 'Instant' });
+  h.feed('state', state({ turn: 3, me: { hand: [solitude, swords], battlefield: [...plains(3), ...islands] }, playable: playable([60], [61]) }));
+  h.feed('input', priorityInput(3));
+  await h.tick();
+  h.feed('input', input('Solitude (60)\n\nPay Mana Cost: {3}{W}{W}', { ok: ['Auto', true], cancel: ['Cancel', true] }));
+  await h.tick();
+  const a = h.last();
+  h.feed('input', input('Solitude (60)\n\nPay Mana Cost: {3}{W}', { ok: ['Auto', true], cancel: ['Cancel', true] }));
+  await h.tick();
+  const b = h.last();
+  h.feed('input', input('Solitude (60)\n\nPay Mana Cost: {3}', { ok: ['Auto', true], cancel: ['Cancel', true] }));
+  await h.tick();
+  const c = h.last();
+  assert.equal(a.action, 'clickCard'); assert.equal(b.action, 'clickCard'); assert.equal(c.action, 'clickCard');
+  assert.notEqual(a.cardId, b.cardId, 'two different Plains');
+  assert.ok([1, 2, 3].includes(a.cardId) && [1, 2, 3].includes(b.cardId));
+  assert.ok([7, 8, 9].includes(c.cardId), 'generic from an Island, the third Plains kept for Swords');
+});

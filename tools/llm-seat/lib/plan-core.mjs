@@ -446,18 +446,23 @@ export class PlanCore extends SeatCore {
       for (const k of Object.keys(reserve)) reserve[k] += p[k] ?? 0;
     }
     if (!Object.values(reserve).some((n) => n > 0)) return null;   // nothing later needs a colour: Auto is fine
-    const single = avail.sources.filter((x) => x.colors !== 'any' && x.colors.size === 1 && x.amount === 1);
+    // lands this payment already tapped: the state may not show them tapped yet (sk5: Plains clicked twice)
+    const cast = this.lastCast?.card?.id ?? null;
+    if (this.payTapped?.cast !== cast) this.payTapped = { cast, ids: new Set() };
+    const single = avail.sources.filter((x) => x.colors !== 'any' && x.colors.size === 1 && x.amount === 1 && !this.payTapped.ids.has(x.id));
     const colourOf = (x) => [...x.colors][0];
-    const count = (col) => avail.sources.filter((x) => x.colors === 'any' || x.colors.has(col)).length;
+    const count = (col) => avail.sources.filter((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id)).length;
     for (const col of ['W', 'U', 'B', 'R', 'G', 'C']) {
       if ((need.pips[col] ?? 0) === 0) continue;
       const hit = single.find((x) => colourOf(x) === col);
+      if (hit) this.payTapped.ids.add(hit.id);
       return hit ? { id: hit.id, name: hit.name, why: `for {${col}}` } : null;
     }
     if (need.generic > 0) {
       // generic: the land whose colour is most to spare after the plan's later spells
       const spare = (x) => count(colourOf(x)) - reserve[colourOf(x)];
       const best = [...single].sort((a, b) => spare(b) - spare(a))[0];
+      if (best && spare(best) > 0) this.payTapped.ids.add(best.id);
       if (best && spare(best) > 0) return { id: best.id, name: best.name, why: `generic, keeping ${Object.entries(reserve).filter(([, n]) => n > 0).map(([k]) => k).join('')} for later` };
     }
     return null;
