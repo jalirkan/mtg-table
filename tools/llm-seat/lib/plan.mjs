@@ -174,10 +174,16 @@ export function matchRef(ref, candidates, taken = new Set()) {
   if (ref.id !== null) {
     const c = free.find((x) => x.id === ref.id);
     if (!c) return { ok: false, why: 'id', found: [] };
-    if (ref.name && !facesOf(c.name).includes(ref.name) && !c.aliases?.includes(ref.name)) return { ok: false, why: 'id', found: [c] };
+    // the number is the card's own: a name that is only near ("Insect Token" for
+    // a token the engine calls "Insect", sk6) still means this card
+    const near = (a, b) => a === b || a.replace(/\btoken\b/g, '').trim() === b.replace(/\btoken\b/g, '').trim() || a.startsWith(b) || b.startsWith(a);
+    if (ref.name && !facesOf(c.name).some((f) => near(f, ref.name)) && !c.aliases?.includes(ref.name)) return { ok: false, why: 'id', found: [c] };
     return { ok: true, pick: c };
   }
-  const hits = free.filter((c) => facesOf(c.name).includes(ref.name) || (c.aliases ?? []).includes(ref.name));
+  const untoken = (x) => x.replace(/\btoken\b/g, '').replace(/\s+/g, ' ').trim();
+  let hits = free.filter((c) => facesOf(c.name).includes(ref.name) || (c.aliases ?? []).includes(ref.name));
+  // "Insect Token" for a token the engine calls "Insect" (sk6)
+  if (hits.length === 0) hits = free.filter((c) => facesOf(c.name).some((f) => untoken(f) === untoken(ref.name)));
   if (hits.length === 0) return { ok: false, why: 'missing', found: [] };
   const groups = new Set(hits.map((c) => c.group ?? ''));
   if (groups.size > 1) return { ok: false, why: 'ambiguous', found: hits };
