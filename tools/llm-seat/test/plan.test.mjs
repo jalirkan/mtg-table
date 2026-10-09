@@ -461,3 +461,11 @@ test('a payment never taps the same land twice while the state lags, and keeps W
   assert.ok([1, 2, 3].includes(a.cardId) && [1, 2, 3].includes(b.cardId));
   assert.ok([7, 8, 9].includes(c.cardId), 'generic from an Island, the third Plains kept for Swords');
 });
+
+test('a token named with or without "Token", with its number, matches (sk6 Insect Token #148)', async () => {
+  const { matchRef, parseRef } = await import('../lib/plan.mjs');
+  const cands = [{ id: 148, name: 'Insect', group: 'battlefield:1' }, { id: 95, name: 'Snapcaster Mage', group: 'battlefield:1' }];
+  assert.equal(matchRef(parseRef('Insect Token #148'), cands).pick?.id, 148);
+  assert.equal(matchRef(parseRef('Insect Token'), cands).pick?.id, 148);
+  assert.equal(matchRef(parseRef('Grizzly Bears #148'), cands).ok, false);
+});
