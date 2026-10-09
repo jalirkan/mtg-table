@@ -43,7 +43,7 @@
 import { checkChoice, classifyAsk, inputBinding, inputKindOf, movesFor } from './decision.mjs';
 import { visibleNames } from './history.mjs';
 import { hasKeyword, isCreature, isLand, nameOf, playersOf } from './frames.mjs';
-import { payProblem, availableMana } from './mana.mjs';
+import { payProblem, availableMana, parseCost } from './mana.mjs';
 import { needsTap } from './oracle.mjs';
 import { parseArm } from './arms.mjs';
 import { newSessionId } from './model.mjs';
@@ -424,10 +424,55 @@ export class PlanCore extends SeatCore {
   // What the plan (or code) does at this decision
   // -------------------------------------------------------------------------
 
+  /**
+   * One land to tap for the cost being paid, keeping the colours the plan's
+   * later "cast" steps need; null = let the engine's Auto pay (an unreadable
+   * cost, mana in the pool, an unknown source, or no single-colour land fits).
+   */
+  smartPaySource() {
+    const m = /Pay Mana Cost:\s*((?:\{[^}]+\})+)/.exec(String(this.input?.prompt ?? ''));
+    if (!m || /[\/XYS]/i.test(m[1].replace(/[{}]/g, ''))) return null;
+    const need = parseCost(m[1]);
+    const avail = availableMana(this.state, this.me, this.oracle);
+    if (!avail.known || avail.poolTotal > 0) return null;
+    const reserve = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    const plan = this.plans.at(-1);
+    const hand = [...new Namer(this.state).cards.values()].filter((c) => c.zone === 'hand' && c.owner === this.me);
+    for (const st of plan ? plan.steps.slice(plan.i) : []) {
+      if (st.verb !== 'cast') continue;
+      const c = hand.find((h) => normName(nameOf(h) ?? '') === parseRef(st.name).name);
+      if (!c || c.id === this.lastCast?.card?.id) continue;
+      const p = parseCost(c.manaCost ?? '').pips;
+      for (const k of Object.keys(reserve)) reserve[k] += p[k] ?? 0;
+    }
+    if (!Object.values(reserve).some((n) => n > 0)) return null;   // nothing later needs a colour: Auto is fine
+    const single = avail.sources.filter((x) => x.colors !== 'any' && x.colors.size === 1 && x.amount === 1);
+    const colourOf = (x) => [...x.colors][0];
+    const count = (col) => avail.sources.filter((x) => x.colors === 'any' || x.colors.has(col)).length;
+    for (const col of ['W', 'U', 'B', 'R', 'G', 'C']) {
+      if ((need.pips[col] ?? 0) === 0) continue;
+      const hit = single.find((x) => colourOf(x) === col);
+      return hit ? { id: hit.id, name: hit.name, why: `for {${col}}` } : null;
+    }
+    if (need.generic > 0) {
+      // generic: the land whose colour is most to spare after the plan's later spells
+      const spare = (x) => count(colourOf(x)) - reserve[colourOf(x)];
+      const best = [...single].sort((a, b) => spare(b) - spare(a))[0];
+      if (best && spare(best) > 0) return { id: best.id, name: best.name, why: `generic, keeping ${Object.entries(reserve).filter(([, n]) => n > 0).map(([k]) => k).join('')} for later` };
+    }
+    return null;
+  }
+
   nextMove(d, ctx) {
     const st = this.state;
     if (d.kind === 'pay') {
-      if ((ctx.attempt ?? 0) === 0 && this.input?.buttons?.ok?.enabled) return { moves: [act('buttonOk')], why: "mana payment: the engine's Auto", auto: true };
+      if ((ctx.attempt ?? 0) === 0) {
+        // pay with the plan's later spells in mind (sk1: Auto tapped the only
+        // Island for Inspiring Overseer, and Hard Evidence {U} could not be cast)
+        const land = this.smartPaySource();
+        if (land) return { moves: [act('clickCard', { cardId: land.id })], why: `mana payment: tap ${land.name} (${land.why})`, auto: true };
+      }
+      if ((ctx.attempt ?? 0) <= 1 && this.input?.buttons?.ok?.enabled) return { moves: [act('buttonOk')], why: "mana payment: the engine's Auto", auto: true };
       if (this.lastCast) {
         const c = this.lastCast.card;
         const p = c ? payProblem(c, this.state, this.me, this.oracle) : null;
