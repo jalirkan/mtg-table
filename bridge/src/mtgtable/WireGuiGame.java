@@ -110,11 +110,11 @@
  *                 protocol section 4.3
  * 6    2265-2282  phase stops: isUiSetToSkipPhase (2275), asked on every step
  *                 GAME | none (a ConcurrentHashMap) | D19, D38
- * 6b   2290-2550  the comfort snapshot, M6's four answers and M61's: Snap.Comfort
- *                 (2299), playableNow (2368), stopNames (2392), activeYieldJson (2408),
+ * 6b   2290-2550  the comfort snapshot, M6's four answers, M61's and M63's: Snap.Comfort
+ *                 (2299), playableNow (2368), activatableNow (after it), stopNames (2392), activeYieldJson (2408),
  *                 undoStateJson (2449), rawYieldKey (2495; lint rule 4b's one tagged
  *                 key read is at 2496), handleFor (2500), standingYield (2525)
- *                 GAME, inside Snap.state | none | D41, D42, D413
+ *                 GAME, inside Snap.state | none | D41, D42, D413, D420
  * 7    2551-3456  the ask path: ask (2569), decode (2639), the option writers
  *                 (2651-2754), then the blocking members: getAbilityToPlay (2758)
  *                 and its asynchronous menu (2817-2993; its hop is at 2880, tagged
@@ -2347,6 +2347,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         @Override public List<Snap.Playable> playable() {
             return playableNow();
         }
+
+        @Override public List<Snap.Playable> activatable() {
+            return activatableNow();
+        }
     };
 
     /**
@@ -2379,6 +2383,30 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         } catch (final RuntimeException e) {
             errors.incrementAndGet();
             System.err.println("PLAYABLE FAILED: " + e);
+            return null;
+        }
+    }
+
+    /**
+     * {@code state.activatable} (protocol amendment M63, decision D420): at
+     * this seat's own priority, what {@link Playables#activatable} finds on
+     * the battlefield; otherwise {@code null}.  The same thread, the same
+     * moment and the same never-throw rule as {@link #playableNow}.
+     */
+    private List<Snap.Playable> activatableNow() {
+        if (flushingForAsk || hosted == null) {
+            return null;
+        }
+        try {
+            final PlayerControllerHuman h = humanController();
+            final forge.game.Game game = hosted.getGame();
+            if (h == null || !Playables.atPriority(game, h.getPlayer())) {
+                return null;
+            }
+            return Playables.activatable(h.getPlayer());
+        } catch (final RuntimeException e) {
+            errors.incrementAndGet();
+            System.err.println("ACTIVATABLE FAILED: " + e);
             return null;
         }
     }

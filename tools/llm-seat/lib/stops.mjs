@@ -14,7 +14,9 @@
 //   opp END_OF_TURN                                        while you have an untapped land AND
 //                                                          an instant-speed option (an Instant
 //                                                          or a FLASH card in hand, or a permanent
-//                                                          with a non-mana activated ability)
+//                                                          with a non-mana activated ability --
+//                                                          the engine's own M63 list when it has
+//                                                          one, else the card text)
 // What the stops do NOT gate (verified, docs/llm-seat.md): a non-empty stack
 // prompts the seat whatever the stops say, and the attack / block declarations
 // are inputs of their own.
@@ -24,7 +26,12 @@ import { hasNonManaActivated } from './oracle.mjs';
 
 export const STOP_PHASES = PHASES;
 
-export function defaultStops(state, me, oracle = null) {
+/**
+ * `engineListed` (M63): the ids of permanents the engine listed in
+ * `state.activatable` with an ability usable at instant speed; with it, a
+ * token with no card text (a Clue) counts as well as the card-text hint.
+ */
+export function defaultStops(state, me, oracle = null, engineListed = null) {
   const own = new Set(['MAIN1', 'MAIN2']);
   const opp = new Set();
   const { mine } = playersOf(state, me);
@@ -34,14 +41,15 @@ export function defaultStops(state, me, oracle = null) {
   const untappedLand = bf.some((c) => isLand(c) && !c.tapped);
   const instantInHand = (mine.zones?.hand?.cards ?? []).some((c) => c.hidden !== true
     && (/\bInstant\b/.test(String(c.types ?? '')) || hasKeyword(c, 'FLASH')));
-  const activated = oracle ? bf.some((c) => !isLand(c) && nameOf(c) && hasNonManaActivated(oracle.text(nameOf(c)))) : false;
+  const activated = (oracle ? bf.some((c) => !isLand(c) && nameOf(c) && hasNonManaActivated(oracle.text(nameOf(c)))) : false)
+    || (engineListed ? bf.some((c) => engineListed.has(c.id)) : false);
   if (untappedLand && (instantInHand || activated)) opp.add('END_OF_TURN');
   return { own, opp };
 }
 
 /** defaults ∪ requested ([{turn, phase}]). */
-export function desiredStops(state, me, requested = [], oracle = null) {
-  const d = defaultStops(state, me, oracle);
+export function desiredStops(state, me, requested = [], oracle = null, engineListed = null) {
+  const d = defaultStops(state, me, oracle, engineListed);
   for (const r of requested) d[r.turn].add(r.phase);
   return d;
 }

@@ -108,6 +108,7 @@ const opt = {
 const AMENDED_KEYS = [
   { type: 'hello_ok', key: 'match', amendment: 'M44' },
   { type: 'state', key: 'playable', amendment: 'M61' },
+  { type: 'state', key: 'activatable', amendment: 'M63' },
 ];
 /**
  * The same rule for a key an amendment added to a CARD, which sits at any depth

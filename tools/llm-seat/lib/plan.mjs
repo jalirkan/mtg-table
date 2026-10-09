@@ -229,3 +229,86 @@ export function duplicateNames(cards) {
   }
   return new Set([...seen].filter(([, n]) => n > 1).map(([k]) => k));
 }
+
+// ---------------------------------------------------------------------------
+// Naming one ability of a permanent (M63, D420)
+// ---------------------------------------------------------------------------
+
+/** "−1" / "–1" / "+2" / "0": a loyalty cost as the engine's label starts with it. */
+const LOYALTY = /^[+\-−–]?\d+$/;
+const signFix = (s) => String(s).replace(/[−–]/g, '-').trim();
+
+/**
+ * The ways a step names a permanent and one of its abilities:
+ * "Jace, the Mind Sculptor: +2", "Jace, the Mind Sculptor +2",
+ * "Jace, the Mind Sculptor (+2)", "Clue Token: draw a card".  Returns every
+ * {name, ability} split worth trying, the whole text (no ability) first; the
+ * caller keeps the first whose name matches a permanent (a card name may
+ * itself hold a colon: "Circle of Protection: Red").
+ */
+export function abilitySplits(text) {
+  const t = String(text ?? '').trim();
+  const out = [{ name: t, ability: null }];
+  const loyalty = /^(.*?)\s*(?:\(\s*([+\-−–]?\d+)\s*\)|\s([+\-−–]\d+|0))\s*$/.exec(t);
+  if (loyalty && loyalty[1]) out.push({ name: loyalty[1].replace(/[:\s]+$/, ''), ability: signFix(loyalty[2] ?? loyalty[3]) });
+  for (let i = t.indexOf(':'); i > 0; i = t.indexOf(':', i + 1)) {
+    const ability = t.slice(i + 1).trim().replace(/^["'“]|["'”]$/g, '');
+    if (ability) out.push({ name: t.slice(0, i).trim(), ability });
+  }
+  for (const sep of [' -- ', ' — ', ' - ']) {
+    const i = t.indexOf(sep);
+    if (i > 0) out.push({ name: t.slice(0, i).trim(), ability: t.slice(i + sep.length).trim() });
+  }
+  return out;
+}
+
+/** The cost part of an engine ability label: "+2" of "+2: Look at…", "{2}, Sacrifice this token" of "{2}, Sacrifice…: Draw a card." */
+export const abilityCost = (label) => {
+  const s = String(label ?? '').replace(/\([^)]*\)/g, '');   // reminder text holds colons of its own
+  const i = s.indexOf(':');
+  return i > 0 ? s.slice(0, i).trim() : null;
+};
+
+/**
+ * matchAbility(selector, labels) -> {ok: true, index} | {ok: false, why}
+ * A loyalty cost ("+2", "-1", "0", "2" for "+2") picks the label that starts
+ * with it; otherwise the label in full, then a word or phrase only one label
+ * contains, decides.
+ */
+export function matchAbility(selector, labels) {
+  const sel = signFix(selector);
+  // a cost and words ("+1 soldier", "+1: Create a 1/1 …"): Elspeth, Knight-Errant has two +1s
+  const both = /^([+\-]?\d+)\s*:?\s+(\S.*)$/.exec(sel);
+  if (both) {
+    const costs = labels.map((l) => signFix(abilityCost(l) ?? ''));
+    const same = labels.map((l, i) => i).filter((i) => costs[i] === both[1] || (/^\d+$/.test(both[1]) && both[1] !== '0' && costs[i] === `+${both[1]}`));
+    if (same.length) {
+      const sub = matchAbility(both[2], same.map((i) => labels[i]));
+      if (sub.ok) return { ok: true, index: same[sub.index] };
+      if (normName(labels[same[0]]) === normName(sel) && same.length === 1) return { ok: true, index: same[0] };
+    }
+  }
+  if (LOYALTY.test(sel)) {
+    const costs = labels.map((l) => signFix(abilityCost(l) ?? ''));
+    let hits = costs.map((c, i) => (c === sel || (sel === '0' && c === '+0') ? i : -1)).filter((i) => i >= 0);
+    if (hits.length === 0 && /^\d+$/.test(sel) && sel !== '0') hits = costs.map((c, i) => (c === `+${sel}` ? i : -1)).filter((i) => i >= 0);
+    if (hits.length === 1) return { ok: true, index: hits[0] };
+    if (hits.length > 1) return { ok: false, why: 'ambiguous' };
+  }
+  const n = normName(sel);
+  const exact = labels.map((l, i) => (normName(l) === n ? i : -1)).filter((i) => i >= 0);
+  if (exact.length === 1) return { ok: true, index: exact[0] };
+  if (n.length >= 3) {
+    const part = labels.map((l, i) => (normName(l).includes(n) ? i : -1)).filter((i) => i >= 0);
+    if (part.length === 1) return { ok: true, index: part[0] };
+    if (part.length > 1) return { ok: false, why: 'ambiguous' };
+    // every word of three letters or more is in one label only ("soldier token")
+    const words = n.split(' ').filter((w) => w.length >= 3);
+    if (words.length) {
+      const all = labels.map((l, i) => (words.every((w) => normName(l).split(' ').includes(w)) ? i : -1)).filter((i) => i >= 0);
+      if (all.length === 1) return { ok: true, index: all[0] };
+      if (all.length > 1) return { ok: false, why: 'ambiguous' };
+    }
+  }
+  return { ok: false, why: 'missing' };
+}

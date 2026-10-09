@@ -716,6 +716,45 @@ function checkPlayable(body, seat) {
   return out;
 }
 
+/** Amendment M63: one `state.activatable` entry -- a permanent's id, the battlefield, its abilities (never spells). */
+const activatableEntry = (e) =>
+  plainObject(e) && sameKeys(e, ['cardId', 'zone', 'abilities']) && num(e.cardId) &&
+  e.zone === 'battlefield' && Array.isArray(e.abilities) && e.abilities.length > 0 &&
+  e.abilities.every((a) =>
+    plainObject(a) && sameKeys(a, ['abilityId', 'label', 'isSpell']) &&
+    num(a.abilityId) && str(a.label) && a.isSpell === false);
+
+/**
+ * Amendment M63 (D420), the hidden-information half: `state.activatable` says
+ * "this permanent is yours to use now", so every entry must name a FULL card
+ * on the battlefield that the VIEWING seat controls in the same frame -- never
+ * an opponent's permanent, never a concealed one -- and the list is only ever
+ * written at that seat's priority.
+ */
+function checkActivatable(body, seat) {
+  if (!Array.isArray(body.activatable)) return [];
+  const out = [];
+  if (body.priority !== seat) {
+    out.push(`state.activatable is a list while priority is ${JSON.stringify(body.priority)}, not the ` +
+      `viewing seat ${String(seat)} -- it is written only at the seat's own priority, null otherwise (M63)`);
+  }
+  const onField = [];
+  for (const p of body.players ?? []) {
+    const cards = plainObject(p) && plainObject(p.zones) ? p.zones.battlefield?.cards : undefined;
+    if (Array.isArray(cards)) onField.push(...cards);
+  }
+  body.activatable.forEach((e, i) => {
+    if (!plainObject(e)) return;   // the shape check says so
+    const card = onField.find((c) => plainObject(c) && c.id === e.cardId);
+    if (card === undefined || card.hidden === true || card.faceDownHidden === true || card.controller !== seat) {
+      out.push(`state.activatable[${i}] names card ${JSON.stringify(e.cardId)}, which is not a full card on the ` +
+        `battlefield controlled by the viewing seat in this frame -- the list is the seat's own permanents only, ` +
+        `never the opponent's and never a concealed one (M63, D420)`);
+    }
+  });
+  return out;
+}
+
 const STATE_SHAPE = {
   gameId: str,
   turn: num,
@@ -758,6 +797,10 @@ const STATE_SHAPE = {
   // priority -- and never by an AI-vs-AI recorder, so per FILE: all or none.
   // Who each entry may name is `checkPlayable`'s.
   playable: perFile(nullable((v) => Array.isArray(v) && v.every(playableEntry)), 'M61 (playable)'),
+  // Amendment M63 (D420).  The battlefield's half, under M61's rule: per FILE,
+  // all or none (a file recorded between M61 and M63 carries `playable` alone).
+  // Who each entry may name is `checkActivatable`'s.
+  activatable: perFile(nullable((v) => Array.isArray(v) && v.every(activatableEntry)), 'M63 (activatable)'),
 };
 
 /**
@@ -2220,6 +2263,8 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     for (const complaint of checkStateShape(body, missed)) note(lineNo, complaint);
     for (const complaint of checkPlayable(body, seat)) note(lineNo, complaint);
     if (Array.isArray(body.playable)) stats.playable = (stats.playable ?? 0) + body.playable.length;
+    for (const complaint of checkActivatable(body, seat)) note(lineNo, complaint);
+    if (Array.isArray(body.activatable)) stats.activatable = (stats.activatable ?? 0) + body.activatable.length;
 
     // --- the text half: no engine string names a card this frame concealed ---
     for (const complaint of checkTexts(body, seat)) note(lineNo, complaint);
@@ -2932,6 +2977,15 @@ for (const path of files) {
       : pl === 'absent'
         ? '      M61 playable absent (legitimate -- recorded before amendment M61, or no seat)'
         : '      M61 playable HALF PRESENT (a failure, above)');
+  }
+  // M63.  The same for state.activatable.
+  const ac = stats.perFile?.['M63 (activatable)'];
+  if (ac !== undefined) {
+    console.log(ac === 'present'
+      ? `      M63 activatable present on every state (${String(stats.activatable ?? 0)} entries, each a permanent the seat controls)`
+      : ac === 'absent'
+        ? '      M63 activatable absent (legitimate -- recorded before amendment M63, or no seat)'
+        : '      M63 activatable HALF PRESENT (a failure, above)');
   }
   // M6.  Which comfort fields this recording carries, and which it does not:
   // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,

@@ -12,7 +12,8 @@
 //     declarations, a selection the engine asks for -- EXCEPT one with exactly
 //     one legal answer;
 //   - priority with nothing to play (no `state.playable` entry, M61, and no
-//     permanent with a non-mana activated ability) is passed with no call;
+//     `state.activatable` entry, M63 -- or, on an older engine, no permanent
+//     whose card text has a non-mana activated ability) is passed with no call;
 //   - mana payment is the engine's own Auto (`buttonOk`), never a call.
 //
 // The option list is the engine's: `state.playable` (M61) at priority, the
@@ -28,7 +29,7 @@
 
 import { cardsById, hasKeyword, isCreature, isLand, nameOf, playersOf, relTurn } from './frames.mjs';
 import { hasNonManaActivated, needsTap } from './oracle.mjs';
-import { optionalCostPayable } from './mana.mjs';
+import { delveCount, delvePick, optionalCostPayable } from './mana.mjs';
 
 /** A card in one line: name [id], cost, type, P/T, the facts the wire carries. */
 export function describeCard(c, { withCost = true } = {}) {
@@ -107,8 +108,10 @@ export function inputKindOf(input, state, me) {
 
 /**
  * classify({state, input, me, oracle, intentFor, opts}) for an input; see the
- * file header.  `opts.battlefieldAbilities` (default true) offers your
- * permanents whose oracle text has a non-mana activated ability.
+ * file header.  The battlefield's activations are `state.activatable` (M63)
+ * when the frame carries the key; on an older engine `opts.battlefieldAbilities`
+ * (default true) offers your permanents whose oracle text has a non-mana
+ * activated ability.
  */
 export function classifyInput({ state, input, me, oracle, opts = {} }) {
   const kind = inputKindOf(input, state, me);
@@ -163,7 +166,27 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
         }
         if (d.options.length > 1) d.context.push('(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)');
       }
-      if (opts.battlefieldAbilities !== false && mine && oracle) {
+      if (state.activatable !== undefined) {
+        // M63 (D420): the engine's own list of what the seat's permanents can
+        // activate now -- one option per ability, labelled with the engine's
+        // label.  The click is the permanent; the ability menu that may follow
+        // is answered from `intent` (classifyAsk).  No card-text guessing: a
+        // permanent the engine does not list is not offered (null: none now).
+        for (const e of Array.isArray(state.activatable) ? state.activatable : []) {
+          const c = cards.get(e.cardId);
+          const abilities = Array.isArray(e.abilities) ? e.abilities : [];
+          for (const ab of abilities) {
+            const abilityLabel = String(ab.label ?? '');
+            d.options.push({
+              label: `Activate ${describeCard(c)} -- ${abilityLabel.slice(0, 160)}`,
+              moves: [act('clickCard', { cardId: e.cardId })], token: null, cardId: e.cardId, zone: 'battlefield', verb: 'activate',
+              intent: { cardId: e.cardId, abilityId: ab.abilityId, abilityLabel }, abilityLabel, abilityCount: abilities.length, engine: true,
+            });
+          }
+        }
+      } else if (opts.battlefieldAbilities !== false && mine && oracle) {
+        // An engine older than M63 (or a recording made before it): a HINT from
+        // the card text; Forge lists the abilities it allows on the click.
         for (const c of mine.zones?.battlefield?.cards ?? []) {
           if (c.hidden === true || c.controller !== me) continue;
           const text = nameOf(c) ? oracle.text(nameOf(c)) : null;
@@ -324,7 +347,12 @@ export function defaultAnswer(kind, body) {
   }
 }
 
-export function classifyAsk({ state, ask, intent = null, me = null, oracle = null }) {
+/**
+ * `delve` = {casting, reserve, keep}: the spell being cast, the mana the plan
+ * keeps for later, the graveyard cards the engine last listed as playable
+ * (plan mode passes them; without, delve takes as many as allowed).
+ */
+export function classifyAsk({ state, ask, intent = null, me = null, oracle = null, delve = null }) {
   const kind = String(ask.kind);
   const askId = String(ask.askId);
   const cards = cardsById(state);
@@ -364,6 +392,22 @@ export function classifyAsk({ state, ask, intent = null, me = null, oracle = nul
     case 'choose_list':
     case 'choose_entities': {
       let opts = Array.isArray(ask.options) ? ask.options : [];
+      if (/^Delve how many cards\?/i.test(String(ask.prompt ?? ''))) {
+        // paying a delve cost: the seat's, like the rest of the mana (mana.mjs delveCount)
+        const nums = opts.map((o) => ({ o, n: Number(o.label) })).filter((x) => Number.isInteger(x.n));
+        if (nums.length) {
+          const max = Math.max(...nums.map((x) => x.n));
+          const { n, why } = delveCount({ maxOption: max, casting: delve?.casting ?? null, reserve: delve?.reserve ?? 0, state, me, oracle });
+          const hit = nums.find((x) => x.n === n) ?? nums.find((x) => x.n === max);
+          d.delve = { n: hit.n, max };
+          return autoOf(d, `delve: exile ${hit.n} card${hit.n === 1 ? '' : 's'} (${why})`, [answer(askId, [hit.o.id])]);
+        }
+      }
+      if (/^Exile which card\s*\(\d+\s*\/\s*\d+\)\?/i.test(String(ask.prompt ?? ''))) {
+        // one card of a delve: never "none", which would clear the whole delve
+        const pick = delvePick(opts, cards, delve?.keep ?? new Set());
+        if (pick) return autoOf(d, `delve: exile ${optionLabel(pick, cards)}`, [answer(askId, [pick.id])]);
+      }
       if (kind === 'choose_list' && me !== null && /optional cost/i.test(String(ask.prompt ?? '')) && !(typeof ask.min === 'number' && ask.min > 0)) {
         // an optional cost the seat cannot pay is never offered: choosing it cancels the cast (the 1,900-cast loop)
         const payable = opts.filter((o) => optionalCostPayable(o.label, state, me, oracle) !== false);

@@ -72,6 +72,27 @@ import mtgtable.ai.PolicyLobbyPlayerAi;
  *       or that sits on the battlefield.</li>
  * </ol>
  *
+ * <p><b>Amendment M63, decision D420: {@code state.activatable}</b>, the
+ * battlefield's half, on real cards (the LLM seat guessed these from card text
+ * and missed every family the regex did not know):
+ *
+ * <ol start="6">
+ *   <li><b>Seat 0's main phase:</b> {@link Playables#activatable} lists Jace,
+ *       the Mind Sculptor's +2, 0 and -1 (not the -12 at loyalty 3), Samurai's
+ *       Katana's named equip ("Murasame -- Equip {5}"), a Clue token's
+ *       "{2}, Sacrifice", Smuggler's Copter's Crew 1; never an Island's mana
+ *       ability, a vanilla creature, or any of seat 1's permanents.</li>
+ *   <li><b>No creature in play:</b> the Katana's equip and Jace's -1 (no
+ *       target) are not listed; the +2, the 0 and the Clue are.</li>
+ *   <li><b>Jace already activated this turn:</b> it is not listed.</li>
+ *   <li><b>Seat 1's turn, seat 0 holding priority:</b> the Clue and the crew
+ *       (instant speed) are, Jace and the equip (sorcery speed) are not.</li>
+ *   <li><b>{@link Snap#state}</b> writes {@code activatable} with labels, null
+ *       off the priority, no key with no seat; drops a hostile entry (seat 1's
+ *       Jace, a card in hand dressed as a battlefield one); and
+ *       {@code playable} never names a battlefield card.</li>
+ * </ol>
+ *
  * <p>Usage: {@code ./bridge/run.sh mtgtable.PlayableSelfTest}.  One JVM,
  * about 30 s, almost all of it {@code FModel.initialize}.  Step 12j of
  * {@code tools/check-all.sh}.
@@ -94,7 +115,10 @@ public final class PlayableSelfTest {
         final Config cfg = Config.load();
         Bootstrap.installGui(cfg.forgeHomeDir());   // hard rule 1: the first Forge call
         Bootstrap.initializeModel(false);
-        onGameThread(PlayableSelfTest::run);
+        onGameThread(() -> {
+            run();
+            runActivatable();
+        });
         System.out.println("PlayableSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
             System.out.println("  FAIL " + f);
@@ -198,6 +222,195 @@ public final class PlayableSelfTest {
         }
     }
 
+
+    private static final String JACE = "Jace, the Mind Sculptor";
+    private static final String KATANA = "Samurai's Katana";
+    private static final String COPTER = "Smuggler's Copter";
+    private static final String BEARS = "Grizzly Bears";
+    private static final String CLUE = "Clue Token";
+
+    /** Amendment M63 (D420): {@code state.activatable}, the battlefield's half. */
+    private static void runActivatable() {
+        // 6. Seat 0's main phase.
+        {
+            final Game g = battlefield("p0");
+            final Player me = g.getPlayers().get(0);
+            final List<Snap.Playable> list = Playables.activatable(me);
+            final Map<String, Snap.Playable> got = byName(list);
+            System.out.println("  activatable (main): " + describe(list));
+            expect("act main: " + JACE + " is listed " + got.keySet(), got.containsKey(JACE));
+            final Snap.Playable jace = got.get(JACE);
+            if (jace != null) {
+                final List<String> labels = labels(jace);
+                expect("act main: Jace has exactly three loyalty abilities at loyalty 3 " + labels, labels.size() == 3);
+                expect("act main: Jace's +2 is one", labels.stream().anyMatch((l) -> l.startsWith("+2")));
+                expect("act main: Jace's 0 is one", labels.stream().anyMatch((l) -> l.startsWith("0")));
+                expect("act main: Jace's -1 is one", labels.stream().anyMatch((l) -> l.startsWith("-1")));
+                expect("act main: Jace's -12 is not (loyalty 3)", labels.stream().noneMatch((l) -> l.startsWith("-12")));
+                expect("act main: every ability is an ability, not a spell",
+                        jace.abilities().stream().noneMatch(SpellAbilityView::isSpell));
+                expect("act main: the zone is battlefield", "battlefield".equals(jace.zone()));
+            }
+            expect("act main: " + KATANA + "'s equip is listed", got.containsKey(KATANA)
+                    && labels(got.get(KATANA)).stream().anyMatch((l) -> l.contains("Equip")));
+            expect("act main: the Clue's \"{2}, Sacrifice\" is listed", got.containsKey(CLUE)
+                    && labels(got.get(CLUE)).stream().anyMatch((l) -> l.contains("Draw a card")));
+            expect("act main: " + COPTER + "'s Crew is listed", got.containsKey(COPTER)
+                    && labels(got.get(COPTER)).stream().anyMatch((l) -> l.toLowerCase().contains("crew")));
+            expect("act main: the Island's mana ability is not", !got.containsKey("Island"));
+            expect("act main: " + BEARS + " (no ability) is not", !got.containsKey(BEARS));
+            for (final Snap.Playable p : list) {
+                expect("act main: " + p.card().getName() + " is controlled by seat 0",
+                        p.card().getController().getId() == me.getView().getId());
+            }
+            expect("act main: no entry is seat 1's (" + list.size() + " entries, seat 1 has a Jace and a Clue)",
+                    list.stream().allMatch((p) -> p.card().getController().getId() == me.getView().getId()));
+
+            // 9. What Snap writes.
+            final PlayerView viewer = me.getView();
+            final String raw = Snap.state("activatable-selftest", g.getView(), viewer, List.of(),
+                    comfort(Playables.of(me), list));
+            final Map<?, ?> st = (Map<?, ?>) Json.parse(raw);
+            final List<?> al = list(st.get("activatable"));
+            expect("Snap: state.activatable is written (" + al.size() + " entries)", al.size() == list.size());
+            boolean shape = true;
+            for (final Object o : al) {
+                final Map<?, ?> e = (Map<?, ?>) o;
+                shape &= "battlefield".equals(e.get("zone")) && e.get("cardId") instanceof Number && e.keySet().size() == 3;
+                for (final Object a : list(e.get("abilities"))) {
+                    final Map<?, ?> m = (Map<?, ?>) a;
+                    shape &= m.get("label") instanceof String sl && !sl.isEmpty() && !"???".equals(sl);
+                    shape &= m.get("abilityId") instanceof Number && Boolean.FALSE.equals(m.get("isSpell")) && m.keySet().size() == 3;
+                }
+            }
+            expect("Snap: every activatable entry is {cardId, zone: battlefield, abilities: [{abilityId, label, isSpell:false}]}", shape);
+            final int at = raw.indexOf("\"activatable\":");
+            final int end = raw.indexOf(",\"events\":", at);
+            System.out.println("  activatable JSON: " + (at >= 0 && end > at ? raw.substring(at, end) : "(not found)"));
+            boolean noField = true;
+            for (final Object o : list(st.get("playable"))) {
+                noField &= !"battlefield".equals(((Map<?, ?>) o).get("zone"));
+            }
+            expect("Snap: state.playable still names no battlefield card", noField);
+            final Map<?, ?> off = (Map<?, ?>) Json.parse(Snap.state("activatable-selftest", g.getView(), viewer, List.of(),
+                    comfort(null, null)));
+            expect("Snap: off the seat's priority, activatable is written as null",
+                    off.containsKey("activatable") && off.get("activatable") == null);
+            final Map<?, ?> none = (Map<?, ?>) Json.parse(Snap.state("activatable-selftest", g.getView(), viewer, List.of()));
+            expect("Snap: with no seat the activatable key is absent", !none.containsKey("activatable"));
+
+            final Player opp = g.getPlayers().get(1);
+            final List<Snap.Playable> hostile = new ArrayList<>();
+            for (final Card c : opp.getCardsIn(ZoneType.Battlefield)) {
+                if (JACE.equals(c.getName())) {
+                    hostile.add(new Snap.Playable(c.getView(), "battlefield", views(c, opp)));
+                }
+            }
+            for (final Card c : me.getCardsIn(ZoneType.Hand)) {
+                hostile.add(new Snap.Playable(c.getView(), "battlefield", views(c, me)));
+            }
+            expect("control: the hostile activatable comfort hands over " + hostile.size() + " entries", hostile.size() >= 2);
+            final Map<?, ?> h = (Map<?, ?>) Json.parse(Snap.state("activatable-selftest", g.getView(), viewer, List.of(),
+                    comfort(List.of(), hostile)));
+            expect("Snap: an activatable entry for the opponent's permanent or a card in hand is dropped",
+                    list(h.get("activatable")).isEmpty());
+
+            // 7. Jace already used this turn.
+            for (final Card c : me.getCardsIn(ZoneType.Battlefield)) {
+                if (JACE.equals(c.getName())) {
+                    c.addPlaneswalkerAbilityActivated();
+                }
+            }
+            final Map<String, Snap.Playable> after = byName(Playables.activatable(me));
+            expect("act used: Jace is not listed once a loyalty ability was activated this turn " + after.keySet(),
+                    !after.containsKey(JACE));
+            expect("act used: the Clue still is", after.containsKey(CLUE));
+        }
+
+        // 6b. No creature on the battlefield: an equip and Jace's -1 have no target.
+        {
+            final Game g = battlefield("p0", false);
+            final Map<String, Snap.Playable> got = byName(Playables.activatable(g.getPlayers().get(0)));
+            expect("act no creature: the Katana's equip is not listed (no creature to equip) " + got.keySet(), !got.containsKey(KATANA));
+            final List<String> jl = labels(got.get(JACE));
+            expect("act no creature: Jace's +2 and 0 are listed, the -1 is not (no creature to return) " + jl,
+                    jl.size() == 2 && jl.stream().noneMatch((l) -> l.startsWith("-1")));
+            expect("act no creature: the Clue still is", got.containsKey(CLUE));
+        }
+
+        // 8. Seat 1's turn; seat 0 holds priority.
+        {
+            final Game g = battlefield("p1");
+            final Player me = g.getPlayers().get(0);
+            givePriority(g, me);
+            final Map<String, Snap.Playable> got = byName(Playables.activatable(me));
+            expect("act their turn: the Clue is listed (instant speed) " + got.keySet(), got.containsKey(CLUE));
+            expect("act their turn: the Copter's Crew is listed (instant speed)", got.containsKey(COPTER));
+            expect("act their turn: Jace is not (sorcery speed)", !got.containsKey(JACE));
+            expect("act their turn: the Katana's equip is not (sorcery speed)", !got.containsKey(KATANA));
+            givePriority(g, g.getPlayers().get(1));
+            final Map<?, ?> theirs = (Map<?, ?>) Json.parse(Snap.state("activatable-selftest", g.getView(), me.getView(),
+                    List.of(), comfort(Playables.of(me), Playables.activatable(me))));
+            expect("Snap: a frame whose priority is the opponent's writes activatable null, whatever the comfort says",
+                    theirs.containsKey("activatable") && theirs.get("activatable") == null);
+        }
+    }
+
+    private static List<String> labels(final Snap.Playable p) {
+        final List<String> out = new ArrayList<>();
+        if (p != null) {
+            for (final SpellAbilityView v : p.abilities()) {
+                out.add(String.valueOf(v.getDescription()));
+            }
+        }
+        return out;
+    }
+
+    private static String describe(final List<Snap.Playable> list) {
+        final StringBuilder b = new StringBuilder();
+        for (final Snap.Playable p : list) {
+            b.append(p.card().getName()).append(labels(p)).append("; ");
+        }
+        return b.toString();
+    }
+
+    /** Seat 0 and seat 1 each have permanents with activated abilities; {@code turn} is "p0" or "p1". */
+    private static Game battlefield(final String turn) {
+        return battlefield(turn, true);
+    }
+
+    private static Game battlefield(final String turn, final boolean bears) {
+        final Deck dummy = new Deck("activatable");
+        dummy.getMain().add(FModel.getMagicDb().getCommonCards().getCard("Island"), 20);
+        final List<RegisteredPlayer> regs = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            final RegisteredPlayer rp = new RegisteredPlayer(dummy);
+            rp.setPlayer(Bootstrap.createAiSeat("Seat" + i, i, Bootstrap.DEFAULT_AI_PROFILE, null,
+                    PolicyLobbyPlayerAi.Outlets.OFF));
+            regs.add(rp);
+        }
+        final GameRules rules = new GameRules(GameType.Constructed);
+        rules.setAppliedVariants(EnumSet.of(GameType.Constructed));
+        rules.setGamesPerMatch(1);
+        final Game game = new Match(rules, regs, "activatable-selftest").createGame();
+        final GameState gs = new GameState();
+        gs.parse(List.of(
+                "turn=3",
+                "activeplayer=" + turn,
+                "activephase=" + PhaseType.MAIN1.name(),
+                "p0life=20",
+                "p1life=20",
+                "p0hand=Island",
+                "p0battlefield=" + JACE + "|Counters:LOYALTY=3;" + KATANA + ";T:c_a_clue_draw;" + COPTER + (bears ? ";" + BEARS : "")
+                        + ";Island;Island;Island;Island;Island;Island",
+                "p0library=Island;Island;Island",
+                "p1battlefield=" + JACE + "|Counters:LOYALTY=3;T:c_a_clue_draw;Island;Island",
+                "p1library=Island;Island;Island"));
+        gs.applyToGame(game);
+        givePriority(game, game.getPlayers().get("p1".equals(turn) ? 1 : 0));
+        return game;
+    }
+
     private static List<SpellAbilityView> views(final Card c, final Player p) {
         final List<SpellAbilityView> out = new ArrayList<>();
         for (final SpellAbility sa : c.getAllSpellAbilities()) {
@@ -221,6 +434,11 @@ public final class PlayableSelfTest {
 
     /** A comfort that answers only {@code playable}; the rest are a seat's quiet defaults. */
     private static Snap.Comfort comfort(final List<Snap.Playable> playable) {
+        return comfort(playable, null);
+    }
+
+    /** A comfort that answers {@code playable} and {@code activatable} (M63). */
+    private static Snap.Comfort comfort(final List<Snap.Playable> playable, final List<Snap.Playable> activatable) {
         return new Snap.Comfort() {
             @Override public List<String> stopsOnTurnOf(final int playerId) { return List.of(); }
             @Override public List<String> stopsOffTurnOf(final int playerId) { return List.of(); }
@@ -229,6 +447,7 @@ public final class PlayableSelfTest {
             @Override public String yieldHandle(final StackItemView si) { return null; }
             @Override public String yieldMode(final StackItemView si) { return null; }
             @Override public List<Snap.Playable> playable() { return playable; }
+            @Override public List<Snap.Playable> activatable() { return activatable; }
         };
     }
 

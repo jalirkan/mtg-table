@@ -26,6 +26,7 @@ import forge.game.card.Card;
 import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.SpellAbilityView;
+import forge.game.spellability.TargetRestrictions;
 import forge.game.zone.ZoneType;
 
 /**
@@ -52,6 +53,14 @@ import forge.game.zone.ZoneType;
  * highlights" do) and changes nothing else.  Never the opponent's cards: the
  * walk starts from the seat's own zones, and {@link Snap#state} gates every
  * entry again.
+ *
+ * <p><b>Amendment M63, decision D420: the battlefield, in a list of its own.</b>
+ * {@link #activatable} asks the same question of the seat's own
+ * <em>controlled</em> permanents -- loyalty abilities, equip, crew, a Clue's
+ * "{2}, Sacrifice", any non-mana activated ability {@code canPlay()} allows now
+ * -- for {@code state.activatable}.  It is a separate key so that
+ * {@code state.playable}'s meaning (outside the battlefield) never changes for
+ * the readers that already outline cards by it.
  */
 public final class Playables {
 
@@ -119,6 +128,75 @@ public final class Playables {
             }
         }
         return out;
+    }
+
+    /**
+     * Amendment M63 (D420): every permanent {@code me} CONTROLS on the
+     * battlefield with at least one non-mana ability Forge would activate on
+     * a click right now ({@code getAllPossibleAbilities(me, true)}, each kept
+     * only if {@code canPlay()}: a planeswalker's loyalty ability once a turn
+     * at sorcery speed, an equip at sorcery speed, a Clue's sacrifice, a
+     * Vehicle's crew), with those abilities -- and only when each target it
+     * must choose has a candidate ({@link #targetsPossible}).  Mana is not predicted; mana
+     * abilities are left out (they are paid with, never clicked for).  A card
+     * whose abilities throw is skipped and counted on stderr.
+     */
+    public static List<Snap.Playable> activatable(final Player me) {
+        Snap.assertGameThread("Playables.activatable");
+        final List<Snap.Playable> out = new ArrayList<>();
+        if (me == null) {
+            return out;
+        }
+        for (final Card c : new ArrayList<>(me.getCardsIn(ZoneType.Battlefield))) {
+            if (c.getController() != me) {
+                continue;
+            }
+            final List<SpellAbilityView> views = new ArrayList<>();
+            try {
+                for (final SpellAbility sa : c.getAllPossibleAbilities(me, true)) {
+                    if (sa != null && !sa.isManaAbility() && !sa.isSpell() && targetsPossible(c, sa)) {
+                        views.add(sa.getView());
+                    }
+                }
+            } catch (final RuntimeException e) {
+                skipped++;
+                System.err.println("ACTIVATABLE SKIPPED: card " + c.getId() + ": " + e.getClass().getSimpleName());
+                continue;
+            }
+            if (!views.isEmpty()) {
+                out.add(new Snap.Playable(c.getView(), "battlefield", views));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Can every part of {@code sa} that must target find a candidate now?
+     * {@code canPlay()} does not ask (measured: Ancestral Blade's equip with no
+     * creature in play was listed, and the click went nowhere), so a click
+     * Forge would start and then cancel for want of a target is left out:
+     * an equip with no creature, Jace's -1 with no creature.  An ability whose
+     * targets are optional (minimum 0) stays.
+     */
+    private static boolean targetsPossible(final Card host, final SpellAbility sa) {
+        for (SpellAbility part = sa; part != null; part = part.getSubAbility()) {
+            if (!part.usesTargeting()) {
+                continue;
+            }
+            final TargetRestrictions tr = part.getTargetRestrictions();
+            if (tr != null && tr.getMinTargets(host, part) > 0 && !tr.hasCandidates(part)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** How many permanents {@link #activatable} skipped because their abilities threw (this JVM). */
+    private static int skipped;   // game thread only
+
+    /** {@link #activatable}'s skip count, for a test or a log line. */
+    public static int activatableSkipped() {
+        return skipped;
     }
 
     private static String wireZone(final ZoneType z) {
