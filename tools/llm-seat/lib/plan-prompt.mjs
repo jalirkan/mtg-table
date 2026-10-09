@@ -15,7 +15,7 @@
 
 import { cardsById, hasKeyword, isCreature, isLand, nameOf, playersOf } from './frames.mjs';
 import { cardTextBlock, visibleNames } from './history.mjs';
-import { availableMana, manaWords, payProblem } from './mana.mjs';
+import { availableMana, manaWords, payProblem, zoneCost } from './mana.mjs';
 import { duplicateNames, showName } from './plan.mjs';
 
 export const PLAN_SYSTEM = [
@@ -209,8 +209,10 @@ export function offersText(state, me, offers, { oracle = null, attackers = null 
     for (const o of offers.filter((x) => x.verb === 'cast')) {
       const c = namer.cards.get(o.cardId);
       const where = o.zone && o.zone !== 'hand' ? ` from your ${o.zone}` : '';
-      const problem = o.zone === 'hand' ? payProblem(c, state, me, oracle) : null;
-      const label = `${namer.name(c)}${c?.manaCost ? ` ${c.manaCost}` : ''}${where}`;
+      const alt = o.zone && o.zone !== 'hand' ? zoneCost(c, o.zone, oracle) : null;
+      const problem = o.zone === 'hand' ? payProblem(c, state, me, oracle) : alt ? payProblem({ ...c, manaCost: alt.cost }, state, me, oracle) : null;
+      const cost = alt ? ` (${alt.how} ${alt.cost})` : o.zone && o.zone !== 'hand' ? '' : c?.manaCost ? ` ${c.manaCost}` : '';
+      const label = `${namer.name(c)}${cost}${where}`;
       if (problem) cannot.push(label);
       else cast.push(label);
     }
