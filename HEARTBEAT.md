@@ -2,22 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-08T23:40:48-04:00
+- time: 2026-10-08T23:45:20-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.17; memory 14.6/30.5 GB, swap 230 MB, pressure 0% (lab budget 23.4 GB)
+- load: 10.23; memory 13.6/30.5 GB, swap 230 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J115 done at 2026-10-08T23:31:42-04:00: mm.played 1200 · mm.score 0.492 · mm.lo 0.475 · mm.hi 0.508 · mm.elo -5.8 · mm.eloLo -17.4 · mm.eloHi 5.8 · mt.played 1200 · mt.score 0.51 · mt.lo 0.496 · mt.hi 0.524 · mt.elo 6.9 · mt.eloLo -2.7 · mt.eloHi 16.6
-
-## 2026-10-08 23:41 (EDT) — J115 done in 4 h 24 m: both switches NOT SHOWN (mull −5.8 Elo [−17.4, +5.8]; targets +6.9 [−2.7, +16.6]); filler running
-
-All 6 checks PASS, both matches complete, 0 draws/errors/timeouts. Mull changed Forge's keep/mulligan 8.0% of
-the time (114/1,422) and the London bottom 20.1% (38/189); targets changed the target 11.2% (302/2,700).
-Budget fallbacks 0.4-0.6% a side. `results/J115/summary.md` written as the job's `## Report` asks (the job
-wrote none). Same-deals note: targets 0.510 vs mull 0.492, intervals overlap. If you want the targets question
-settled, ~2,400 pairs (±5 Elo, ~9 h) would do it. Filler resumed 23:37; nothing queued.
 
 ## Messages
 
