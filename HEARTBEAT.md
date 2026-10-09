@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-09T16:08:39-04:00
+- time: 2026-10-09T16:11:59-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J116 commands 1/1, 4744/4800 games, 585.4/h, ETA 2026-10-09T16:14:23-04:00, 7 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.65; memory 13.5/30.5 GB, swap 773 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 4.38; memory 5.7/30.5 GB, swap 773 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J119 done at 2026-10-09T10:16:36-04:00: g.games 2 · g.finished 2 · g.wins 1 · g.turns 41 · g.modelCalls 260 · g.fallbacks 0 · g.refused 0 · g.tokensIn 520 · g.tokensOut 37292
+- last finished: J116 done at 2026-10-09T16:11:59-04:00: mt.played 4800 · mt.score 0.503 · mt.lo 0.496 · mt.hi 0.511 · mt.elo 2.2 · mt.eloLo -3 · mt.eloHi 7.4
 
 ## Messages
+
+- FOLLOW-UP READY [J116@2026-10-09T16:11:59-04:00] (the runner, for the cloud session): J116 is done; write and post the template morning-read. It decides: whether the target search (D417 targets=1) joins the next search version (search-v3). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J119@2026-10-09T10:16:36-04:00] (the runner, for the cloud session): J119 is done; write and post the template morning-read. It decides: whether the LLM seat is ready for Justin's small Sonnet tests (4-6 games vs Forge, then the replay comparison of fresh vs session:10), and what one game costs, so Justin can decide how much allowance to spend; this job changes nothing itself. Ledger: LEDGER.md. Delete this line once posted.
 

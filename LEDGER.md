@@ -599,3 +599,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J119/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 304273d
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J116 DONE: Target search confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-targets vs search-v2 (the ladder's search-v1-anytime), the score with a 95% interval in Elo and how often it changed Forge's target (D417; Justin asked for it after J115's +6.9 Elo [−2.7, +16.6])
+
+- finished: 2026-10-09T16:11:59-04:00
+- decides: whether the target search (D417 targets=1) joins the next search version (search-v3)
+- hypothesis: J115 measured the target search at +6.9 Elo [−2.7, +16.6] over 600 pairs, changing 11.2% of the targets it searched; if that is real, a fresh match four times the size (±~5 Elo) puts its lower end above 0
+- rule: written 2026-10-09 before the run, read from var/ai-ladder/match-J116-targets.json alone (J115's games are not pooled in: J116 is the confirmation, on fresh deals). ADOPT targets=1 into the next search version if the match is complete (all 4,800 games) and the 95% interval on search-v2-targets' score against search-v1-anytime has its lower end above 0.5 (above 0 Elo). Otherwise NOT SHOWN: report the score and Elo with the interval and how often it changed Forge's target. An interval that includes 0.5 is "not shown", never "no effect"; a match that stopped early gives no verdict
+- outcome: done
+- headline: mt.played 4800, mt.score 0.5031, mt.lo 0.4956, mt.hi 0.5106, mt.elo 2.2, mt.eloLo -3, mt.eloHi 7.4
+- summary: results/J116/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 614f98f
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

@@ -1,65 +1,44 @@
 {
  "schema": 1,
- "updated": "2026-10-09T16:08:39-04:00",
- "heartbeat": "2026-10-09T16:08:39-04:00",
+ "updated": "2026-10-09T16:11:59-04:00",
+ "heartbeat": "2026-10-09T16:11:59-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-09T16:11:59-04:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 9.65,
-  "memUsedGb": 13.5,
+  "load1": 4.38,
+  "memUsedGb": 5.7,
   "memTotalGb": 30.5,
   "swapUsedMb": 773,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Target search confirmation match",
    "publicEst": "~9 h (one night)",
    "id": "J116",
    "title": "Target search confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-targets vs search-v2 (the ladder's search-v1-anytime), the score with a 95% interval in Elo and how often it changed Forge's target (D417; Justin asked for it after J115's +6.9 Elo [−2.7, +16.6])",
-   "cpu": "heavy",
-   "phase": "commands 1/1",
-   "started": "2026-10-09T07:41:13-04:00",
-   "elapsed": 30445,
-   "done": 4744,
-   "total": 4800,
-   "unit": "games",
-   "ratePerHour": 585.4,
-   "eta": "2026-10-09T16:14:23-04:00",
-   "workers": 7,
-   "workersMax": 7,
-   "cores": 7,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-09T16:08:08-04:00",
-   "memGb": 7.78,
-   "live": {
-    "mt.played": 0,
-    "elapsed_s": 30414,
-    "match_err": 7,
-    "match_games": 4744,
-    "peak_worker_rss_gb": 1.12,
-    "pressure_events": 0,
-    "workers": 7
-   },
-   "liveHeadline": [
-    "mt.played"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J116-run1"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+   "status": "done",
+   "finished": "2026-10-09T16:11:59-04:00",
+   "headline": "mt.played 4800 · mt.score 0.503 · mt.lo 0.496 · mt.hi 0.511 · mt.elo 2.2 · mt.eloLo -3 · mt.eloHi 7.4",
+   "numbers": {
+    "mt.played": 4800,
+    "mt.score": 0.5031,
+    "mt.lo": 0.4956,
+    "mt.hi": 0.5106,
+    "mt.elo": 2.2,
+    "mt.eloLo": -3,
+    "mt.eloHi": 7.4
+   }
+  },
   {
    "publicTitle": "Sonnet seat smoke test",
    "publicEst": "~1-2 h",
@@ -764,17 +743,6 @@
     "night.games": 59997,
     "night.engine_error_rate": 0.0001
    }
-  },
-  {
-   "publicTitle": "Evaluator SPRT",
-   "publicEst": "one to two nights",
-   "id": "J052",
-   "title": "Evaluator gate 3: SPRT search-v1-fixed3 with the evaluator's leaves vs search-v1-fixed3 (D354)",
-   "status": "failed",
-   "finished": "2026-10-04T23:51:46-04:00",
-   "headline": "",
-   "numbers": {},
-   "detail": "pilot: g2.pass == 1 (g2.pass = 0)"
   }
  ],
  "runner": {
