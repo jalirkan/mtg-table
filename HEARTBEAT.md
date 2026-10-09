@@ -11,6 +11,14 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J119 done at 2026-10-09T10:16:36-04:00: g.games 2 · g.finished 2 · g.wins 1 · g.turns 41 · g.modelCalls 260 · g.fallbacks 0 · g.refused 0 · g.tokensIn 520 · g.tokensOut 37292
 
+## 2026-10-09 10:22 (EDT) — J119 done: Sonnet seat READY (2/2 games finished, 0 fallbacks, 0 refused); 33% retries, 2.4× the token estimate
+
+26 min, all 4 checks PASS. Game 1 loss on turn 22, game 2 (mirrored) win on turn 19; 196 model decisions,
+260 calls, 64 first replies malformed (one retry each, never two). Input cache-create 459k a game against
+the ~190k estimate; 4–6 s a call; 15.5 and 7.6 min a game. The priority prompt lists unaffordable casts as
+options (engine's full offer), so a payability hint would help. `results/J119/summary.md` written per the
+job's `## Report`. J116 at 1,408/4,800 (10:21), ~566/h, ETA ~16:20; Justin has not played on the PC.
+
 ## Messages
 
 - FOLLOW-UP READY [J119@2026-10-09T10:16:36-04:00] (the runner, for the cloud session): J119 is done; write and post the template morning-read. It decides: whether the LLM seat is ready for Justin's small Sonnet tests (4-6 games vs Forge, then the replay comparison of fresh vs session:10), and what one game costs, so Justin can decide how much allowance to spend; this job changes nothing itself. Ledger: LEDGER.md. Delete this line once posted.
