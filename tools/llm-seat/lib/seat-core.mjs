@@ -28,6 +28,9 @@ import { History } from './history.mjs';
 import { snapshot } from './prompt.mjs';
 import { desiredStops, stopActs, stopsText } from './stops.mjs';
 
+/** The CLI failing this many decisions in a row stops the game (no allowance spent on fallbacks). */
+export const MAX_MODEL_ERRORS = 3;
+
 export const SETTLE_MS = 120;
 export const STALL_MS = 6000;
 
@@ -73,6 +76,8 @@ export class SeatCore {
     this.stateOrder = 0;
     this.inputOrder = 0;
     this.movedAt = null;         // when the seat last put a move on the wire
+    this.modelErrors = 0;
+    this.fatal = null;
     this.stats = { decisions: 0, model: 0, auto: 0, fallback: 0, retries: 0, refused: 0, stale: 0, modelCalls: 0, promptBytes: 0, tokensIn: 0, tokensOut: 0, cacheRead: 0, cacheCreate: 0, costUsd: 0, modelMs: 0 };
   }
 
@@ -240,6 +245,15 @@ export class SeatCore {
             this.stats.cacheCreate += c.usage.cacheCreate ?? 0;
           }
           if (typeof c.costUsd === 'number') this.stats.costUsd += c.costUsd;
+        }
+        const callErr = res.calls.find((c) => c.transport)?.error ?? null;
+        if (callErr !== null && res.how === 'fallback' && res.calls.every((c) => c.transport)) {
+          // the model never answered (the CLI failed): say why, and stop the game after 3 in a row
+          this.modelErrors += 1;
+          this.say(`MODEL ERROR ${this.modelErrors} in a row: ${String(callErr).slice(0, 500)}`);
+          if (this.modelErrors >= MAX_MODEL_ERRORS) this.fatal = `model error ${this.modelErrors} times in a row: ${String(callErr).slice(0, 300)}`;
+        } else {
+          this.modelErrors = 0;
         }
         if (res.how === 'fallback') {
           this.stats.fallback += 1;

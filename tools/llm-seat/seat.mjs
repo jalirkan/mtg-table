@@ -143,6 +143,7 @@ export function runSeat(a, deps = {}) {
       settleTimer = null;
       if (finished) return;
       try { await core.tick(); } catch (e) { say(`TICK ERROR ${e.stack ?? e}`); }
+      if (core.fatal) { finish(6, core.fatal); return; }
       if (!finished && settleTimer === null) settleTimer = setTimeout(tick, 1000);   // the stall clock
     };
     const settle = () => {

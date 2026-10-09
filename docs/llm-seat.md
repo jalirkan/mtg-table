@@ -46,6 +46,19 @@ run uses.
    read "(no oracle text available)" — names, types, P/T and keywords are still
    on the wire.
 
+### (0) The probe: one tiny call
+
+```bash
+node tools/llm-seat/probe.mjs --model sonnet [--session]
+```
+
+One call (two more with `--session`) with exactly the seat's CLI arguments; it
+prints the reply and its usage, or the CLI's error and exits 1. Put it in a
+job's pilot so a `claude` that is not logged in (or refuses a flag) fails the
+pilot instead of a game. In a game, a decision whose every call failed in the
+CLI prints `MODEL ERROR` with the reason, and **3 in a row stop the game**
+(exit 6, the reason in `games.jsonl`), so no game is played on fallbacks (J117).
+
 ### (a) The pilot: 2 games against Forge Default
 
 ```bash

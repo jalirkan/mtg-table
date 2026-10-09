@@ -85,7 +85,7 @@ export class Arm {
       try {
         res = await this.model.call({ system: this.system, user, session });
       } catch (e) {
-        record.calls.push({ attempt, promptBytes: Buffer.byteLength(user, 'utf8'), error: String(e.message ?? e), ms: Date.now() - t0 });
+        record.calls.push({ attempt, promptBytes: Buffer.byteLength(user, 'utf8'), error: String(e.message ?? e), transport: true, ms: Date.now() - t0 });
         if (session) this.session.started = this.session.started || false;
         break;   // a transport error is not retried as a malformed reply; the default is played
       }
