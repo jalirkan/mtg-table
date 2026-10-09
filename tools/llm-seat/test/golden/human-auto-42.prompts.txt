@@ -1,0 +1,1173 @@
+SYSTEM
+You are playing a two-player game of Magic: The Gathering against the Forge AI. A program shows you the game from your seat and carries out your choices; you see only what your seat may see.
+
+Each message ends with a DECISION and numbered OPTIONS. The options are the moves the rules engine offers now. For attacks and blocks the list is the creatures that may be able to; the engine checks legality and refuses an illegal one.
+
+Reply with these lines and nothing else:
+choice: <option number>          (several comma-separated only where the decision says so; "none" only where allowed)
+next: <own|opp> <PHASE>, ...     (optional)
+
+The next line names extra phases where you want to get priority from now on, beyond the defaults: your own MAIN1 and MAIN2; the opponent's COMBAT_DECLARE_BLOCKERS while you control a creature; the opponent's END_OF_TURN while you have an untapped land and an instant-speed card or ability. Without a next line only the defaults apply. Whatever the stops, you are always asked when something is put on the stack and you can respond, when you declare attackers or blockers, and whenever the engine asks you a question. When you have nothing you can play, priority is passed for you.
+Phases: UPKEEP DRAW MAIN1 COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS COMBAT_FIRST_STRIKE_DAMAGE COMBAT_DAMAGE COMBAT_END MAIN2 END_OF_TURN CLEANUP.
+
+Play to win. Card text is given once per conversation; the game log and the state are the record of the game.
+
+===== chain fresh pos 0 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 40, hand 0, mana pool -
+  Hand: -
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 40, hand 0, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+(none new)
+
+DECISION (buttons): The engine asks you to choose. Choose one option.
+Engine prompt: Human, you have won the coin toss. / Would you like to play or draw?
+OPTIONS:
+1. Play
+2. Draw
+
+===== chain fresh pos 1 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 33, hand 7, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (mulligan): Mulligan decision. Choose one option.
+Engine prompt: Human, you are going first! / Do you want to keep your hand?
+OPTIONS:
+1. Keep (keep this hand)
+2. Mulligan (mulligan)
+
+===== chain fresh pos 2 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you):
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Play land Island [38] Basic Land - Island
+3. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+4. Play land Island [37] Basic Land - Island
+5. Cast Web Up [27] {2}{W} Enchantment
+6. Play land Island [35] Basic Land - Island
+7. Cast Pym Particles [6] {U} Sorcery
+8. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain fresh pos 3 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain fresh pos 4 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+
+===== chain fresh pos 5 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain fresh pos 6 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain fresh pos 7 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+
+===== chain session:3 pos 0 (session start) =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 40, hand 0, mana pool -
+  Hand: -
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 40, hand 0, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+(none new)
+
+DECISION (buttons): The engine asks you to choose. Choose one option.
+Engine prompt: Human, you have won the coin toss. / Would you like to play or draw?
+OPTIONS:
+1. Play
+2. Draw
+
+===== chain session:3 pos 1 (session resume) =====
+SINCE YOUR LAST DECISION
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 33, hand 7, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (mulligan): Mulligan decision. Choose one option.
+Engine prompt: Human, you are going first! / Do you want to keep your hand?
+OPTIONS:
+1. Keep (keep this hand)
+2. Mulligan (mulligan)
+
+===== chain session:3 pos 2 (session resume) =====
+Note: at your previous decision the move actually made was 1. Keep (keep this hand); the game continued from that.
+
+SINCE YOUR LAST DECISION
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you):
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Play land Island [38] Basic Land - Island
+3. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+4. Play land Island [37] Basic Land - Island
+5. Cast Web Up [27] {2}{W} Enchantment
+6. Play land Island [35] Basic Land - Island
+7. Cast Pym Particles [6] {U} Sorcery
+8. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain session:3 pos 3 (session start) =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain session:3 pos 4 (session resume) =====
+Note: at your previous decision the move actually made was 5. Play land Island [35] Basic Land - Island; the game continued from that.
+
+SINCE YOUR LAST DECISION
+(nothing yet)
+ENGINE NOTICES
+- Not selectable: card 35 cannot be selected now
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+
+===== chain session:3 pos 5 (session resume) =====
+Note: at your previous decision the move actually made was 2. None; the game continued from that.
+
+SINCE YOUR LAST DECISION
+(nothing yet)
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain session:3 pos 6 (session start) =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain session:3 pos 7 (session resume) =====
+Note: at your previous decision the move actually made was 3. Play land Island [37] Basic Land - Island; the game continued from that.
+
+SINCE YOUR LAST DECISION
+(nothing yet)
+ENGINE NOTICES
+- Not selectable: card 37 cannot be selected now
+- Not selectable: card 35 cannot be selected now
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+
+===== chain game pos 0 (session start) =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 40, hand 0, mana pool -
+  Hand: -
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 40, hand 0, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+(none new)
+
+DECISION (buttons): The engine asks you to choose. Choose one option.
+Engine prompt: Human, you have won the coin toss. / Would you like to play or draw?
+OPTIONS:
+1. Play
+2. Draw
+
+===== chain game pos 1 (session resume) =====
+SINCE YOUR LAST DECISION
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 33, hand 7, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (mulligan): Mulligan decision. Choose one option.
+Engine prompt: Human, you are going first! / Do you want to keep your hand?
+OPTIONS:
+1. Keep (keep this hand)
+2. Mulligan (mulligan)
+
+===== chain game pos 2 (session resume) =====
+Note: at your previous decision the move actually made was 1. Keep (keep this hand); the game continued from that.
+
+SINCE YOUR LAST DECISION
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you):
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Play land Island [38] Basic Land - Island
+3. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+4. Play land Island [37] Basic Land - Island
+5. Cast Web Up [27] {2}{W} Enchantment
+6. Play land Island [35] Basic Land - Island
+7. Cast Pym Particles [6] {U} Sorcery
+8. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain game pos 3 (session resume) =====
+SINCE YOUR LAST DECISION
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain game pos 4 (session resume) =====
+Note: at your previous decision the move actually made was 5. Play land Island [35] Basic Land - Island; the game continued from that.
+
+SINCE YOUR LAST DECISION
+(nothing yet)
+ENGINE NOTICES
+- Not selectable: card 35 cannot be selected now
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+
+===== chain game pos 5 (session resume) =====
+Note: at your previous decision the move actually made was 2. None; the game continued from that.
+
+SINCE YOUR LAST DECISION
+(nothing yet)
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain game pos 6 (session resume) =====
+Note: at your previous decision the move actually made was 4. Cast Web Up [27] {2}{W} Enchantment; the game continued from that.
+
+SINCE YOUR LAST DECISION
+(nothing yet)
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== chain game pos 7 (session resume) =====
+Note: at your previous decision the move actually made was 3. Play land Island [37] Basic Land - Island; the game continued from that.
+
+SINCE YOUR LAST DECISION
+(nothing yet)
+ENGINE NOTICES
+- Not selectable: card 37 cannot be selected now
+- Not selectable: card 35 cannot be selected now
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+
+===== transcript session:3 pos 0 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 40, hand 0, mana pool -
+  Hand: -
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 40, hand 0, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+(none new)
+
+DECISION (buttons): The engine asks you to choose. Choose one option.
+Engine prompt: Human, you have won the coin toss. / Would you like to play or draw?
+OPTIONS:
+1. Play
+2. Draw
+
+===== transcript session:3 pos 1 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 40, hand 0, mana pool -
+  Hand: -
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 40, hand 0, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+(none new)
+
+EARLIER DECISIONS IN THIS GAME (what you were asked, and the move that was made)
+
+--- decision 1 ---
+DECISION (buttons): The engine asks you to choose. Choose one option.
+Engine prompt: Human, you have won the coin toss. / Would you like to play or draw?
+OPTIONS:
+1. Play
+2. Draw
+Move made: 1. Play
+
+--- now ---
+SINCE YOUR LAST DECISION
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 33, hand 7, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (mulligan): Mulligan decision. Choose one option.
+Engine prompt: Human, you are going first! / Do you want to keep your hand?
+OPTIONS:
+1. Keep (keep this hand)
+2. Mulligan (mulligan)
+
+===== transcript session:3 pos 2 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+(nothing yet)
+
+CURRENT STATE
+Before the game (no turn has begun)
+YOU (Human): life 20, library 40, hand 0, mana pool -
+  Hand: -
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 40, hand 0, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+(none new)
+
+EARLIER DECISIONS IN THIS GAME (what you were asked, and the move that was made)
+
+--- decision 1 ---
+DECISION (buttons): The engine asks you to choose. Choose one option.
+Engine prompt: Human, you have won the coin toss. / Would you like to play or draw?
+OPTIONS:
+1. Play
+2. Draw
+Move made: 1. Play
+
+--- decision 2 ---
+DECISION (mulligan): Mulligan decision. Choose one option.
+Engine prompt: Human, you are going first! / Do you want to keep your hand?
+OPTIONS:
+1. Keep (keep this hand)
+2. Mulligan (mulligan)
+Move made: 1. Keep (keep this hand)
+
+--- now ---
+SINCE YOUR LAST DECISION
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you):
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 7, mana pool -
+  Hand: Island [38] Basic Land - Island; Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: -
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Play land Island [38] Basic Land - Island
+3. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+4. Play land Island [37] Basic Land - Island
+5. Cast Web Up [27] {2}{W} Enchantment
+6. Play land Island [35] Basic Land - Island
+7. Cast Pym Particles [6] {U} Sorcery
+8. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== transcript session:3 pos 3 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== transcript session:3 pos 4 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+EARLIER DECISIONS IN THIS GAME (what you were asked, and the move that was made)
+
+--- decision 1 ---
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+Move made: 5. Play land Island [35] Basic Land - Island
+
+--- now ---
+SINCE YOUR LAST DECISION
+(nothing yet)
+ENGINE NOTICES
+- Not selectable: card 35 cannot be selected now
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+
+===== transcript session:3 pos 5 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+EARLIER DECISIONS IN THIS GAME (what you were asked, and the move that was made)
+
+--- decision 1 ---
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+Move made: 5. Play land Island [35] Basic Land - Island
+
+--- decision 2 ---
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
+Move made: 2. None
+
+--- now ---
+SINCE YOUR LAST DECISION
+(nothing yet)
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN1, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== transcript session:3 pos 6 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+
+===== transcript session:3 pos 7 =====
+GAME LOG (from the start; "you" is your seat, "opp" the opponent)
+Before turn 1: opp mulligan; opp mulligan;
+T1 (you): you land Island [38];
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT
+Pym Particles: Target creature gains vigilance until end of turn and can't be blocked this turn. / Draw a card.
+Quantum Reduction: Teamwork 2 / You may cast this spell as though it had flash if it's cast using teamwork. / Enchant creature / Enchanted creature gets -5/-0 and loses all abilities.
+Robotics Mastery: Flash / Enchant creature / When this Aura enters, create two 1/1 colorless Robot artifact creature tokens with flying. / Enchanted creature gets +2/+2.
+Web Up: When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.
+
+EARLIER DECISIONS IN THIS GAME (what you were asked, and the move that was made)
+
+--- decision 1 ---
+DECISION (priority): You have priority. Choose one option.
+(This engine does not list what is playable now: the cards below are your hand, and the engine refuses what you cannot play or pay for.)
+OPTIONS:
+1. Pass priority (do nothing now)
+2. Cast Quantum Reduction [5] {1}{U} Enchantment - Aura
+3. Play land Island [37] Basic Land - Island
+4. Cast Web Up [27] {2}{W} Enchantment
+5. Play land Island [35] Basic Land - Island
+6. Cast Pym Particles [6] {U} Sorcery
+7. Cast Robotics Mastery [39] {4}{U} Enchantment - Aura
+Move made: 3. Play land Island [37] Basic Land - Island
+
+--- now ---
+SINCE YOUR LAST DECISION
+(nothing yet)
+ENGINE NOTICES
+- Not selectable: card 37 cannot be selected now
+- Not selectable: card 35 cannot be selected now
+
+CURRENT STATE
+Turn 1 (round 1, yours), phase MAIN2, priority: you
+YOU (Human): life 20, library 33, hand 6, mana pool -
+  Hand: Quantum Reduction [5] {1}{U} Enchantment - Aura; Island [37] Basic Land - Island; Web Up [27] {2}{W} Enchantment; Island [35] Basic Land - Island; Pym Particles [6] {U} Sorcery; Robotics Mastery [39] {4}{U} Enchantment - Aura
+  Lands: Island [38] Basic Land - Island
+  Battlefield: -
+OPPONENT (Forge AI): life 20, library 35, hand 5, mana pool -
+  Lands: -
+  Battlefield: -
+STACK: empty
+Your phase stops: own turn MAIN1 COMBAT_DECLARE_BLOCKERS MAIN2; opponent's turn COMBAT_BEGIN COMBAT_DECLARE_ATTACKERS COMBAT_DECLARE_BLOCKERS END_OF_TURN
+
+CARD TEXT (cards not shown before)
+(none new)
+
+DECISION (ask:choose_list): The engine asks you to choose. Choose one option.
+Engine prompt: Choose optional costs
+OPTIONS:
+1. Teamwork – Tap any number of untapped creatures you control other than CARDNAME with total power 2 or greater
+2. None
