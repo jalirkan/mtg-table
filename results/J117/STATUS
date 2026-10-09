@@ -1,7 +1,7 @@
 running
 runner: forgecoach-runner 10896b8
 started: 2026-10-09T08:23:57-04:00
-phase: commands 1/1
+phase: stopping
 mtg-table: ccd4d5d
 workers: 1 (sized 1: min(cores 7, memory 0, max_workers 1); peak 2.50 GB per worker (default; measured 0.09), budget 2 GB)
 peak_worker_rss_gb: 0.09
