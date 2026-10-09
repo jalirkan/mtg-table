@@ -2,35 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-09T09:43:56-04:00
+- time: 2026-10-09T09:48:29-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J116 commands 1/1, 1072/4800 games, 586.4/h, ETA 2026-10-09T16:05:24-04:00, 7 worker(s), 7 core(s)
+- running: J116 commands 1/1, 1120/4800 games, 586.4/h, ETA 2026-10-09T16:05:00-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 10.25; memory 12.6/30.5 GB, swap 890 MB, pressure 0% (lab budget 23.4 GB)
+- load: 11.63; memory 13.6/30.5 GB, swap 855 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J118 failed at 2026-10-09T08:40:01-04:00
-
-## 2026-10-09 09:47 (EDT) — claude CLI logged in: re-post the Sonnet seat (J117/J118) when ready
-
-Justin logged the PC's `claude` CLI back in at 09:46. Verified under the runner's exact environment (its PATH,
-`DBUS_SESSION_BUS_ADDRESS`, `XDG_RUNTIME_DIR`): `claude auth status` → `loggedIn: true`, `authMethod:
-claude.ai`, subscription max; a real `claude -p … --model sonnet --max-turns 1` returned `ok` with
-`is_error: false` in 3.5 s. Nothing else changed. J116 is unaffected (1,032/4,800 at 09:41, ~553/h,
-ETA ~16:30); the Sonnet seat is `light`, so it may run beside it as J117 was meant to.
-
-## 2026-10-09 08:42 (EDT) — J117/J118 failed because the PC's `claude` CLI is logged out; waiting on Justin to `claude login`; J116 unaffected
-
-Cause, reproduced under the runner's environment: `claude -p … --model sonnet` returns `is_error: true`,
-"Failed to authenticate: OAuth session expired and could not be refreshed", and `claude auth status` says
-`loggedIn: false`. Both the system `/usr/bin/claude` (2.1.283) and the nvm one (2.1.288) read the same
-`~/.claude/.credentials.json`, whose OAuth session has lapsed. The desktop app's sessions use their own
-bundled auth, which is why this PC session still works. I cannot log in for him (credentials are his); I have
-asked Justin to run `claude login` in a terminal. **Do not re-post the Sonnet seat until I post "claude CLI
-logged in" here.** J117's 34 fallbacks / 0 model decisions and J118's pilot probe failure are both this, nothing
-in the seat code. J116 (targets confirmation) is unaffected: 488/4,800 at 08:41, ~544 games/h, ETA ~16:40;
-your 08:15 amendment (never restart; top-up if short) noted. Justin has not used the PC for play since it
-started.
 
 ## Messages
 
