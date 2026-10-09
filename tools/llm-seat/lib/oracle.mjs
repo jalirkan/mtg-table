@@ -92,7 +92,7 @@ export function hasNonManaActivated(text) {
     const clean = line.replace(/\([^)]*\)/g, '');
     // keyword activations written without a colon: "Equip {1}", "Crew 3",
     // "Reconfigure {2}" (s20: Bonesplitter's equip was never offered)
-    if (/^\s*(Equip|Reconfigure|Fortify|Level up|Crew|Outlast|Adapt|Monstrosity)\b/i.test(clean)) return true;
+    if (/^\s*(?:[^—\n]{1,40}\s—\s*)?(Equip|Reconfigure|Fortify|Level up|Crew|Outlast|Adapt|Monstrosity)\b/i.test(clean)) return true;   // "Murasame — Equip {5}" (sk2)
     const m = /^([^"]*?):\s*(.*)$/.exec(clean);
     if (!m) continue;
     const cost = m[1];

@@ -375,3 +375,14 @@ test('"Select target player" with mode none offers both players (s20 Thought Sco
   assert.deepEqual(players, [0, 1]);
   assert.ok(!d.auto);
 });
+
+test('a scry-style "put on the bottom" order ask goes to the model (sk2), the answer is {ordered, remember}', async () => {
+  const { movesFor } = await import('../lib/decision.mjs');
+  const ask = { askId: 'a2', kind: 'order', prompt: 'Select cards to be put on the bottom of your library', min: -1, max: -1, dest: [],
+    source: [{ id: 0, label: 'Marionette Apprentice', kind: 'card', cardId: 16 }, { id: 1, label: 'Swamp', kind: 'card', cardId: 17 }] };
+  const d = classifyAsk({ state: state(), ask, me: 0 });
+  assert.ok(!d.auto);
+  assert.equal(d.options.length, 3);
+  assert.deepEqual(movesFor(d, [2]), [{ type: 'answer', askId: 'a2', value: { ordered: [1], remember: false } }]);
+  assert.deepEqual(movesFor(d, [3]), [{ type: 'answer', askId: 'a2', value: { ordered: [], remember: false } }]);
+});
