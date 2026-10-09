@@ -417,3 +417,9 @@ test('plan mode end to end over a socket: files and the game summary', async () 
   assert.ok(recs.some((r) => r.kind === 'step' && r.status === 'sent' && r.text === 'play land Forest'));
   assert.ok(recs.some((r) => r.how === 'auto' && /used up/.test(r.reason)), 'no call once the plan is used up');
 });
+
+test('faceNamesOf reads both halves of an adventure card (s20 Swift End)', async () => {
+  const { faceNamesOf } = await import('../lib/plan-core.mjs');
+  assert.deepEqual(faceNamesOf('Murderous Rider: Lifelink. When this dies, put it on the bottom. // Swift End: Destroy target creature or planeswalker. You lose 2 life.'), ['Murderous Rider', 'Swift End']);
+  assert.deepEqual(faceNamesOf('Flying'), []);
+});
