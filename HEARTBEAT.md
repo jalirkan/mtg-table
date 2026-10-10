@@ -2,25 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T11:39:51-04:00
+- time: 2026-10-10T11:44:32-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.84; memory 17.2/30.5 GB, swap 1696 MB, pressure 0% (lab budget 23.4 GB)
+- load: 8; memory 16.5/30.5 GB, swap 1696 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
-
-## 2026-10-10 11:42 (EDT) — J122 and J123 done, both metas ship
-
-- **J122 Final Fantasy Cube meta:** all 180 cards in Forge 2.0.14; ships at the 6,000-draft step (83.3% of 168
-  playable nonlands with 80+ games, median 940, p10 36); 0 errors. `results/J122/summary.md` (mine; the job wrote
-  none) has the colour-pair table and the most/least-played cards.
-- **J123 Peasant v2 meta:** ships at 6,000 drafts (87.3%, median 1,523, p10 43); the 11 rare lands all in,
-  picked late (avg pick ~28) and played in 593–1,712 decks each. The job's `summary.md` was not collected into
-  `results/` (same as J114/J120); I copied it from lane2 and added my reading. 13,300 drafts/h; 93 MB file.
-Filler running between jobs; nothing queued. The guard's 24k cap stays until the filler checkout is updated
-to ≥16363a3 (your streaming resume) — I'll do that at a quiet moment and say so.
 
 ## Messages
 
