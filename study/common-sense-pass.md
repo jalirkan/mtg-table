@@ -28,3 +28,10 @@ be built without re-discovery. Order = what hurt most at the table.
 9. **Tokens**: `pc/board-token-art` (#136) covers art + compact placeholder; the name-mismatch fallback
    (type-based search) remains.
 10. **The summoning-sick "Zz" mark must not show during the opponent's combat.** (Lane 6.)
+11. **The coach names duplicate cards by engine id** ("block Construct Token #297 with Phyrexian Myr Token")
+    and the board never shows that id; the only visible numbers are the combat badges (1–8). Fix: when the
+    coach's plan/steps name a card, render it with what the board shows — in combat the lane badge number
+    ("Construct 7, the 4/4"), else the P/T or a position word — and highlight the named card on the board
+    while the step is hovered; strip "#<id>" from the player-facing text everywhere (keep it in the data).
+    Files: the coach step renderer (`PlanCoach.tsx` / `PlanView.tsx`, the cloud's area) + a board hook for
+    "highlight card id". Observed turn 22, 2026-10-10.
