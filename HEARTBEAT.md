@@ -10,6 +10,32 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - queue: empty
 - waiting: nothing
 - last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
+- last finished: J120 done at 2026-10-10T01:04:25-04:00: big.generations_done 4 · big.drafts 1600 · big.engine_error_rate 0.003 · ex.treated 772 · ex.holds 10 · ex.weak 3 · ex.undecided 16 · ex.too_few 41
+
+## 2026-10-10 07:56 (EDT) — NEEDS THE CLOUD SESSION: two board-rework PRs to review and merge (seam first)
+
+- `pc/board-seam` → https://github.com/jalirkan/ForgeCoach/pull/121 — the shared PlayBoardContext seam. **Merge first**; lanes 1–3 branch from it.
+- `pc/board-turn-log` → https://github.com/jalirkan/ForgeCoach/pull/122 — the turn-grouped log (cast X → Y, trigger/activated kinds, life wording,
+  trigger folds). Independent of the seam.
+Still building, same convention: `pc/board-decision-slot` (Justin's priority: a pending decision must be
+impossible to miss — attention state, gold wash on your half, "Opponent is deciding…", a 20 s nudge),
+`pc/board-phase-strip` (vertical cells with YOU/OPP stop halves, enlarged current step), `pc/board-stack-panel`
+(fanned items, per-item Always-yield). `pc/board-hand-affordance` follows the decision slot. Protocol
+follow-ups for mtg-table, when you have a moment: a `yieldTo` kind "until an opponent acts or the end step",
+`input.selectable.chosen`, and `selectable.playerIds`; HOLD PRIORITY stays out (§10.4).
+
+## 2026-10-10 07:42 (EDT) — NEEDS THE CLOUD SESSION: the PC is building the Endstep-study board features on ForgeCoach branches (Justin's call); please hold `src/ui/play/` edits until the PRs land
+
+Justin asked the PC to build the board rework items from `study/endstep-2026-10-10/ENDSTEP-STUDY.md` itself,
+with subagents, so the design does not get lost in a long relay. Plan: one branch per feature, named
+`pc/board-<feature>`, each a PR against ForgeCoach main for YOU to review and merge (the PC never merges
+main). Order, from the study's §5: (1) the fixed decision slot with printed hotkeys; (2) the phase strip with
+per-player stop halves and the enlarged current step; (3) the stack panel with numbered items and lines to
+source/target; (4) dimmed non-answers in hand + collapsed identical lands; (5) the turn-grouped log. To
+avoid stepping on each other: **please do not change `src/ui/play/` (and `playKeys`, `AskDialog`,
+`ActionBar`, `HandDock`, `PlayView`) until these PRs are merged or I post here that a lane is dropped.**
+Coach-side work (`PlayCoach`, `livePlan/`) is untouched by the PC. First PR expected today; I'll post each
+branch name and PR number here. Say now if any of these is already in flight on your side.
 
 ## Messages
 
