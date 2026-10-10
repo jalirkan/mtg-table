@@ -462,17 +462,29 @@ export class PlanCore extends SeatCore {
     // lands this payment already tapped: the state may not show them tapped yet (sk5: Plains clicked twice)
     const cast = this.lastCast?.card?.id ?? null;
     if (this.payTapped?.cast !== cast) this.payTapped = { cast, ids: new Set() };
-    // a colour no untapped source makes but a converter does (Prophetic Prism): click the converter.
-    // Forge's Auto never uses one; a click does -- its own "{1}" payment comes next, and its mana goes
-    // to the spell (the Prism probe on real Forge; s2-search-p20-s6's Welcoming Vampire)
+    // Filters (mana.mjs): Forge's Auto never pays with one, a click does -- its own "{1}" payment
+    // comes next (Auto pays it), and its mana goes to the spell (the Prism and Signet probes, real
+    // Forge).  So click one (a) for a colour no other untapped source makes (s2-search-p20-s6:
+    // Prophetic Prism for Welcoming Vampire's {W}), or (b) when the other untapped mana is short of
+    // the cost (Azorius Signet's net mana for Pristine Talisman {3} beside two Swamps).
+    const free = (x) => !this.payTapped.ids.has(x.id);
+    const makes = (x, col) => x.colors === 'any' || x.colors.has(col);
+    const netFilters = avail.sources.filter((x) => x.filter && free(x));
+    const filterPick = (f, why) => {
+      this.payTapped.ids.add(f.id);
+      return { id: f.id, name: f.name, why: `${why}; ${f.name}'s own ${f.cost} is paid next` };
+    };
     for (const col of ['W', 'U', 'B', 'R', 'G']) {
       if ((need.pips[col] ?? 0) === 0) continue;
-      if (avail.sources.some((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id))) continue;
-      const f = (avail.filters ?? []).find((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id));
+      if (avail.sources.some((x) => !x.filter && free(x) && makes(x, col))) continue;
+      const f = [...netFilters, ...(avail.filters ?? []).filter(free)].find((x) => makes(x, col));
       if (!f) continue;
-      this.payTapped.ids.add(f.id);
       this.filterColour = col;
-      return { id: f.id, name: f.name, why: `for {${col}}: no untapped source makes it, so ${f.name} turns other mana into it (its ${f.cost} is paid next)` };
+      return filterPick(f, `for {${col}}: no other untapped source makes it`);
+    }
+    const directTotal = avail.sources.filter((x) => !x.filter && free(x)).reduce((n, x) => n + x.amount, 0);
+    if (need.mv > directTotal && netFilters.length) {
+      return filterPick(netFilters[0], `${need.mv} to pay and ${directTotal} other untapped mana: its net mana is needed`);
     }
     const reserve = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
     const plan = this.plans.at(-1);
@@ -485,7 +497,7 @@ export class PlanCore extends SeatCore {
       for (const k of Object.keys(reserve)) reserve[k] += p[k] ?? 0;
     }
     if (!Object.values(reserve).some((n) => n > 0)) return null;   // nothing later needs a colour: Auto is fine
-    const single = avail.sources.filter((x) => x.colors !== 'any' && x.colors.size === 1 && x.amount === 1 && !this.payTapped.ids.has(x.id));
+    const single = avail.sources.filter((x) => !x.filter && x.colors !== 'any' && x.colors.size === 1 && x.amount === 1 && !this.payTapped.ids.has(x.id));
     const colourOf = (x) => [...x.colors][0];
     const count = (col) => avail.sources.filter((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id)).length;
     for (const col of ['W', 'U', 'B', 'R', 'G', 'C']) {

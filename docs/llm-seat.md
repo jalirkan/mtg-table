@@ -229,19 +229,23 @@ when the name is one of the candidates.
   first, never a card the engine listed as playable from the graveyard while another
   will do. A payment that still fails says how many cards delve exiled.
 - **Filter mana** (a mana ability whose cost needs mana: Prophetic Prism, Signets,
-  filter lands' second line) is no mana of its own: Forge's Auto never pays with it
-  (s2-search-p20-s6: six lands and the Prism were told "7 mana" with white, and
-  Welcoming Vampire {2}{W} could not be paid). One whose cost is generic mana only
-  (`{1}, {T}: Add …`) is a *converter* (`mana.mjs` `availableMana().filters`): not in
-  the total, but one of the other mana can come out in its colours, and the view says
-  so ("Prophetic Prism ({1}: turns one of it into any colour)"). Smart pay clicks it
-  when the payment needs a colour no untapped source makes. Measured on real Forge
-  (the Prism probe, fake seat): the payment prompt lists no source, but a click on the
-  Prism at "Pay Mana Cost: {W}" opens the Prism's own "Pay Mana Cost: {1}" (Auto
-  enabled), and once that is paid the spell is cast with the Prism's white, no colour
-  asked; clicked at priority instead, the Prism asks "Select Mana to Produce" (the
-  seat answers the colour smart pay wanted) and the mana goes to the pool. A filter
-  with a coloured or hybrid cost (Mystic Gate's `{W/U}`) is not used.
+  filter lands) is never paid by Forge's Auto (s2-search-p20-s6: six lands and the
+  Prism were told "7 mana" with white, and Welcoming Vampire {2}{W} could not be
+  paid). One whose cost is generic mana only counts at its **net**, what it makes less
+  what it costs (`mana.mjs` `manaLines().generic`): a Signet (`{1}, {T}: Add {W}{U}`)
+  is +1, a source marked `filter`; a net-0 one at {1} (the Prism) is a *converter*
+  (`availableMana().filters`): no mana of its own, but one of the other mana can come
+  out in its colours ("Prophetic Prism ({1}: turns one of it into any colour)"); an
+  amount the board decides (Cabal Coffers) or a coloured / hybrid cost (Mystic Gate's
+  `{W/U}`) counts nothing. Smart pay clicks a filter when the payment needs a colour
+  no other untapped source makes, or when the other untapped mana is short of the
+  cost. Measured on real Forge (the Prism and Signet probes, scripted seat): the
+  payment prompt lists no source and Auto is off, but a click on the filter at "Pay
+  Mana Cost: …" opens its own "Pay Mana Cost: {1}" (Auto on); once that is paid its
+  mana goes to the spell, no colour asked, and any left over (the Signet's second
+  mana) to the pool — Forge's "mana floating … could be lost" confirm on the next pass
+  is answered yes with no call. Clicked at priority, the Prism asks "Select Mana to
+  Produce" (answered with the colour smart pay wanted).
 - `cast X -> Y` answers the targeting question that follows with Y; a target the step
   did not name is one plain question.
 - `attack with A, B` is played at the declaration (priority before combat is passed

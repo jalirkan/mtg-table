@@ -23,7 +23,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { classifyInput } from '../lib/decision.mjs';
+import { classifyAsk, classifyInput } from '../lib/decision.mjs';
 import { availableMana, isFilterCost, manaLines, payProblem } from '../lib/mana.mjs';
 import { planView } from '../lib/plan-prompt.mjs';
 import { makeFakeModel } from '../lib/model.mjs';
@@ -198,7 +198,7 @@ test('s2-search-p20-s6: Prophetic Prism (a mana ability whose cost needs mana) i
   assert.equal(fx.frames.find((f) => f.seq === 701).body.buttons.ok.enabled, false);
 });
 
-test('filter mana: a land keeps its free line; a generic-cost filter is a converter of its colours; a hybrid-cost one is nothing (card-index texts)', () => {
+test('filter mana: a land keeps its free line; a generic-cost filter counts at its net (a Signet +1), a net-0 one is a converter, a board-count or hybrid one nothing (card-index texts)', () => {
   assert.equal(isFilterCost('{1}, {T}'), true);
   assert.equal(isFilterCost('{W/U}, {T}'), true);
   assert.equal(isFilterCost('{T}, Sacrifice this artifact'), false);
@@ -208,21 +208,24 @@ test('filter mana: a land keeps its free line; a generic-cost filter is a conver
     'Sungrass Prairie': '{1}, {T}: Add {G}{W}.',
     'Dimir Signet': '{1}, {T}: Add {U}{B}.',
     'Prophetic Prism': 'When this artifact enters, draw a card.\n{1}, {T}: Add one mana of any color.',
+    'Cabal Coffers': '{2}, {T}: Add {B} for each Swamp you control.',
   };
-  assert.deepEqual(manaLines(texts['Mystic Gate']), { free: '{T}: Add {C}.', filter: true, converter: null });
+  assert.deepEqual(manaLines(texts['Mystic Gate']), { free: '{T}: Add {C}.', filter: true, generic: null });
+  assert.equal(manaLines(texts['Cabal Coffers']).generic.produced, null, 'the board decides: no net');
   const oracle = oracleOf(texts);
   const s = state({ me: { battlefield: [
     land(1, 'Mystic Gate', { zone: 'battlefield', types: 'Land - Gate' }), land(2, 'Sungrass Prairie', { zone: 'battlefield', types: 'Land' }),
     card(3, 'Dimir Signet', { zone: 'battlefield', types: 'Artifact' }), card(4, 'Prophetic Prism', { zone: 'battlefield', types: 'Artifact' }),
+    land(5, 'Cabal Coffers', { zone: 'battlefield', types: 'Land' }),
   ] } });
   const avail = availableMana(s, 0, oracle);
-  assert.equal(avail.total, 1);
-  assert.deepEqual(avail.sources.map((x) => [x.name, [...x.colors]]), [['Mystic Gate', ['C']]]);
-  assert.deepEqual(avail.filters.map((f) => [f.name, f.colors === 'any' ? 'any' : [...f.colors].sort().join('')]), [['Sungrass Prairie', 'GW'], ['Dimir Signet', 'BU'], ['Prophetic Prism', 'any']]);
+  assert.equal(avail.total, 3, 'Gate 1 + Prairie net 1 + Signet net 1; the Prism and the Coffers add none');
+  assert.deepEqual(avail.sources.map((x) => [x.name, [...x.colors].sort().join(''), x.amount, x.filter === true]),
+    [['Mystic Gate', 'C', 1, false], ['Sungrass Prairie', 'GW', 1, true], ['Dimir Signet', 'BU', 1, true]]);
+  assert.deepEqual(avail.filters.map((f) => [f.name, f.colors, f.cost]), [['Prophetic Prism', 'any', '{1}']]);
   assert.equal(avail.known, true);
-  // one mana to feed them: {W} can be made (one converter), {W}{U} cannot (one mana, not two)
-  assert.equal(payProblem(card(9, 'Savannah Lions', { manaCost: '{W}' }), s, 0, oracle), null);
-  assert.match(payProblem(card(10, 'Azorius Charm', { manaCost: '{W}{U}' }), s, 0, oracle), /costs \{W\}\{U\} \(2 mana\) and you have 1 untapped mana source/);
+  assert.equal(payProblem(card(10, 'Azorius Charm', { manaCost: '{W}{U}' }), s, 0, oracle), null, 'W from the Prairie, U from the Signet');
+  assert.match(payProblem(card(11, 'Ugin', { manaCost: '{8}' }), s, 0, oracle), /\(8 mana\) and you have 3 untapped mana sources/);
 });
 
 test('Prism probe (real Forge): smart pay clicks Prophetic Prism for {W}, the engine asks the Prism\'s own {1}, Auto pays it, and Savannah Lions is cast -- no correction', async () => {
@@ -258,4 +261,40 @@ test('Prism probe (real Forge, the Prism clicked at priority): its "Select Mana 
   await h.tick();
   assert.deepEqual(h.moves().at(-1), { type: 'answer', askId: 'a1', value: [0] });
   assert.equal(h.users.length, 0, 'no question to the model');
+});
+
+test('Signet probe (real Forge): Azorius Signet counts +1 and smart pay clicks it -- for Savannah Lions\' {W}, and for Pristine Talisman {3} beside two Swamps', async () => {
+  const fx = fixture('probe-signet-pay.json');
+  const oracle = oracleOf(fx.oracle);
+  assert.equal(fx.oracle['Azorius Signet'], '{1}, {T}: Add {W}{U}.');
+  const replay = async (frames, plan) => {
+    const h = harness([reply(plan), reply('hold')], { oracle });
+    for (let i = 0; i < frames.length; i++) {
+      h.frame(frames[i]);
+      if (i === frames.length - 1 || frames[i + 1].t - frames[i].t >= 120) await h.tick();
+    }
+    return h;
+  };
+  // try C: Swamp, Swamp, Signet untapped; Forge's Auto is off for {W} (the Signet's white is the only one)
+  const c0 = fx.tryC[0].body;
+  const ac = availableMana(c0, 0, oracle);
+  assert.equal(ac.total, 3, 'two Swamps and the Signet\'s net 1');
+  assert.equal(payProblem(c0.players[0].zones.hand.cards.find((x) => x.name === 'Savannah Lions'), c0, 0, oracle), null);
+  assert.equal(fx.tryC.find((f) => f.seq === 129).body.buttons.ok.enabled, false, 'no Auto for {W}');
+  const hc = await replay(fx.tryC, 'cast Savannah Lions');
+  assert.deepEqual(hc.moves().slice(0, 3).map((m) => m.cardId ?? m.action), [18, 4, 'buttonOk'], 'the Lions, the Signet, Auto for the Signet\'s {1}');
+  assert.equal(hc.users.length, 1, 'no correction');
+  assert.ok(fx.tryC.find((f) => f.seq === 145).body.events.some((e) => e.kind === 'cast' && e.cardId === 18));
+  assert.equal(fx.tryC.find((f) => f.seq === 145).body.players[0].manaPool.U, 1, 'the Signet\'s blue left in the pool');
+  // try D: {3} with two Swamps and the Signet; Auto is off: the Signet's net mana is needed
+  assert.equal(fx.tryD.find((f) => f.seq === 193).body.buttons.ok.enabled, false, 'no Auto for {3} either');
+  const hd = await replay(fx.tryD, 'cast Pristine Talisman');
+  assert.deepEqual(hd.moves().slice(0, 4).map((m) => m.cardId ?? m.action), [22, 4, 'buttonOk', 'buttonOk'], 'the Talisman, the Signet, Auto for its {1}, Auto for the last {1}');
+  assert.equal(hd.users.length, 1, 'no correction');
+  assert.ok(fx.tryD.find((f) => f.seq === 212).body.events.some((e) => e.kind === 'cast' && e.cardId === 22));
+});
+
+test('Signet probe: Forge\'s "mana floating … could be lost" confirm after a pass is answered yes with no call', () => {
+  const d = classifyAsk({ state: state(), ask: { askId: 'a1', kind: 'confirm', timeoutMs: 0, prompt: 'You have mana floating in your mana pool that could be lost if you pass priority now.' }, me: 0 });
+  assert.deepEqual(d.auto.moves, [{ type: 'answer', askId: 'a1', value: true }]);
 });

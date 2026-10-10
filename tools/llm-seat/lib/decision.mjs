@@ -447,6 +447,12 @@ export function classifyAsk({ state, ask, intent = null, me = null, oracle = nul
       return d;
     }
     case 'confirm': {
+      // Forge's "mana floating … could be lost if you pass": the pass was the seat's own choice (a
+      // Signet's second mana left in the pool after a payment, the Signet probe): it stands
+      if (/mana floating in your mana pool that could be lost/i.test(String(ask.prompt ?? ''))) {
+        d.options.push({ n: 1, label: 'Yes', value: true }, { n: 2, label: 'No', value: false });
+        return autoOf(d, 'mana left in the pool: the pass stands (the mana is lost)', [answer(askId, true)]);
+      }
       d.options.push({ n: 1, label: String(ask.yesLabel ?? 'Yes'), value: true, isDefault: ask.defaultYes === true });
       d.options.push({ n: 2, label: String(ask.noLabel ?? 'No'), value: false, isDefault: ask.defaultYes !== true });
       d.fallback = [ask.defaultYes === true ? 1 : 2];

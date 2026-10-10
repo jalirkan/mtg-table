@@ -51,28 +51,44 @@ const MANA_LINE = /^([^:\n]*\{T\}[^:\n]*):\s*Add\b/i;
 
 /**
  * Does a mana ability's cost need mana ("{1}, {T}: Add one mana of any
- * color", "{W/U}, {T}: Add {W}{W}…")?  A FILTER: it turns mana into mana, so
- * it adds no mana of its own, and Forge's Auto payment never uses it (s2 p20
- * s6: Prophetic Prism, the only white, and Welcoming Vampire's payment had no
- * Auto).  A click on one during a payment does use it (the Prism probe, real
- * Forge: the click opens the Prism's own "Pay Mana Cost: {1}", and its mana
- * goes to the spell), so one whose cost is generic mana only is kept as a
- * CONVERTER: no mana of its own, but one of the other mana can come out in its
- * colours (availableMana's `filters`; smart pay clicks it when a colour is
- * otherwise missing, plan-core.mjs).
+ * color", "{W/U}, {T}: Add {W}{W}…")?  A FILTER: it turns mana into mana.
+ * Forge's Auto payment never uses one (s2-search-p20-s6: Prophetic Prism, the
+ * only white, and Welcoming Vampire's payment had no Auto; the Signet probe:
+ * Auto off for Savannah Lions {W} and for Pristine Talisman {3} beside Azorius
+ * Signet), but a click on one during a payment does (both probes, real Forge:
+ * the click opens the filter's own "Pay Mana Cost: {1}", and its mana goes to
+ * the spell, any left over to the pool).  So a filter whose cost is generic
+ * mana only counts at its NET: what it makes less what it costs --
+ *   - net > 0 (a Signet "{1}, {T}: Add {W}{U}": +1): a source of `amount` net,
+ *     marked `filter` (smart pay clicks it, plan-core.mjs);
+ *   - net 0 at a cost of {1} (Prophetic Prism): a CONVERTER (`filters`): no
+ *     mana of its own, but one of the other mana can come out in its colours;
+ *   - otherwise (an amount the board decides, Cabal Coffers' "for each
+ *     Swamp"; a coloured or hybrid cost, Mystic Gate's {W/U}): nothing.
  */
 export const isFilterCost = (cost) => (String(cost ?? '').match(/\{[^}]+\}/g) ?? []).some((x) => !/^\{(T|Q|E)\}$/i.test(x));
 
-/** The tap-for-mana lines of an oracle text: {free, filter} (free: the first whose cost needs no mana, or null). */
+/**
+ * The tap-for-mana lines of an oracle text: {free, filter, generic}.  free:
+ * the first whose cost needs no mana (or null); filter: any line needs mana;
+ * generic: the first filter line whose mana cost is generic only, as
+ * {line, cost, costMv, produced (null when the board decides), colors}.
+ */
 export function manaLines(text) {
   const lines = String(text ?? '').split('\n').map((l) => [l, MANA_LINE.exec(l)]).filter(([, m]) => m);
-  // a converter: a filter whose cost is generic mana only ("{1}, {T}"), probed on real Forge
-  const conv = lines.find(([, m]) => isFilterCost(m[1]) && (m[1].match(/\{[^}]+\}/g) ?? []).every((x) => /^\{(\d+|T|Q)\}$/i.test(x)));
-  return {
-    free: lines.find(([, m]) => !isFilterCost(m[1]))?.[0] ?? null,
-    filter: lines.some(([, m]) => isFilterCost(m[1])),
-    converter: conv ? { line: conv[0], cost: conv[1][1].replace(/\s*,?\s*\{[TQ]\}\s*,?\s*/gi, '').trim() } : null,
-  };
+  const gen = lines.find(([, m]) => isFilterCost(m[1]) && (m[1].match(/\{[^}]+\}/g) ?? []).every((x) => /^\{(\d+|T|Q)\}$/i.test(x)));
+  let generic = null;
+  if (gen) {
+    const [line, m] = gen;
+    const add = addClause(line);
+    const variable = /\b(for each|equal to|number of|X)\b/.test(/\bAdd\b(.*)$/i.exec(line)?.[1] ?? '');
+    generic = {
+      line, cost: m[1].replace(/\s*,?\s*\{[TQ]\}\s*,?\s*/gi, '').trim(),
+      costMv: (m[1].match(/\{(\d+)\}/g) ?? []).reduce((n, x) => n + Number(x.slice(1, -1)), 0),
+      produced: variable ? null : add.amount, colors: add.colors,
+    };
+  }
+  return { free: lines.find(([, m]) => !isFilterCost(m[1]))?.[0] ?? null, filter: lines.some(([, m]) => isFilterCost(m[1])), generic };
 }
 
 /** A tap-for-mana line of an oracle text whose cost needs no mana, or null. */
@@ -80,19 +96,20 @@ const manaLine = (text) => manaLines(text).free;
 
 /**
  * The seat's untapped mana sources and pool.
- * -> {total, sources: [{id, name, colors: Set|'any', amount}], filters: [{id, name, colors, cost}], pool: {W..C}, known: boolean}
- * `filters` are converters (manaLines): not in `total`, but each can turn one
- * of the other mana into its colours.
+ * -> {total, sources: [{id, name, colors: Set|'any', amount, filter?, cost?}], filters: [{id, name, colors, cost}], pool: {W..C}, known: boolean}
+ * A source with `filter` is a net-positive filter (a Signet, counted at its
+ * net); `filters` are converters, not in `total` (manaLines above).
  */
 export function availableMana(state, me, oracle = null) {
   const { mine } = playersOf(state, me);
   const sources = [];
   const filters = [];
-  const converter = (c, name, text) => {
-    const cv = manaLines(text).converter;
-    if (!cv) return false;
-    filters.push({ id: c.id, name: name ?? '?', colors: addClause(cv.line).colors, cost: cv.cost });
-    return true;
+  const filterSource = (c, name, text) => {
+    const g = manaLines(text).generic;
+    if (!g || g.produced === null) return;
+    const net = g.produced - g.costMv;
+    if (net > 0) sources.push({ id: c.id, name: name ?? '?', colors: g.colors, amount: net, filter: true, cost: g.cost });
+    else if (net === 0 && g.costMv === 1) filters.push({ id: c.id, name: name ?? '?', colors: g.colors, cost: g.cost });
   };
   let known = true;
   for (const c of mine?.zones?.battlefield?.cards ?? []) {
@@ -102,14 +119,14 @@ export function availableMana(state, me, oracle = null) {
     if (isLand(c)) {
       const basics = Object.entries(BASIC_TYPE).filter(([t]) => new RegExp(`\\b${t}\\b`).test(String(c.types ?? ''))).map(([, col]) => col);
       let add = basics.length ? { colors: new Set(basics), amount: 1 } : (manaLine(text) ? addClause(manaLine(text)) : null);
-      if (!add && manaLines(text).filter) { converter(c, name, text); continue; }   // a filter land with no free line (Sungrass Prairie): no mana of its own
+      if (!add && manaLines(text).filter) { filterSource(c, name, text); continue; }   // a filter land with no free line (Sungrass Prairie)
       if (!add) { add = { colors: 'any', amount: 1 }; known = false; }
       sources.push({ id: c.id, name: name ?? 'a land', colors: add.colors, amount: add.amount });
       continue;
     }
     const line = manaLine(text);
     if (isCreature(c) && c.sick && !hasKeyword(c, 'HASTE')) continue;
-    if (!line) { converter(c, name, text); continue; }
+    if (!line) { filterSource(c, name, text); continue; }
     const add = addClause(line);
     sources.push({ id: c.id, name: name ?? '?', colors: add.colors, amount: add.amount });
   }
@@ -131,7 +148,7 @@ function canMake(avail, col) {
 
 /** "U U R" -- what the untapped sources make, for the view. */
 export function manaWords(avail) {
-  const parts = avail.sources.map((s) => (s.colors === 'any' ? 'any' : [...s.colors].join('/')) + (s.amount > 1 ? `x${s.amount}` : ''));
+  const parts = avail.sources.map((s) => (s.colors === 'any' ? 'any' : [...s.colors].join('/')) + (s.amount > 1 ? `x${s.amount}` : '') + (s.filter ? ` (net of its ${s.cost})` : ''));
   const pool = Object.entries(avail.pool).filter(([, n]) => n > 0).map(([k, n]) => `${k}${n > 1 ? `x${n}` : ''}`);
   const filters = (avail.filters ?? []).map((f) => `${f.name} (${f.cost}: turns one of it into ${f.colors === 'any' ? 'any colour' : [...f.colors].join('/')})`);
   return { sources: parts.join(' '), pool: pool.join(' '), filters: filters.join('; ') };
