@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T07:58:14-04:00
+- time: 2026-10-10T08:02:47-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 4.41; memory 5.9/30.5 GB, swap 2337 MB, pressure 0% (lab budget 23.4 GB)
+- load: 0.96; memory 5.5/30.5 GB, swap 2335 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
