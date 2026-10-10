@@ -58,3 +58,10 @@ be built without re-discovery. Order = what hurt most at the table.
     text, P/T; `alt` for the other face); the image lookup must fetch the matching Scryfall `card_faces[]`
     image for the face shown, not the card's front `image_uris`. Check `cards.ts` face handling and
     `CardTile` for transformed/flipped/meld states. Turn ~24, 2026-10-10.
+14. **The coach's plan steps do not recognise a double-faced card cast as its back face.** Step "cast Lunarch
+    Veteran" stayed unchecked after Justin cast it via disturb: what hit the stack and resolved was Luminous
+    Phantom (the back face), and the step matcher compares the front name. Fix in the plan tracker
+    (`src/livePlan/`, `planRun.ts` / `autoPlan.ts` — the cloud's area): match a step's card by card id when the
+    plan names one, else by either face name (`alt`/faces), and treat a transformed/disturbed cast as the same
+    card. Also the step text should use the face the player will actually cast ("cast Luminous Phantom
+    (disturb)"). Turn 23, 2026-10-10.
