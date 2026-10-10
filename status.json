@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-10T07:45:39-04:00",
- "heartbeat": "2026-10-10T07:45:39-04:00",
+ "updated": "2026-10-10T07:48:48-04:00",
+ "heartbeat": "2026-10-10T07:48:48-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.25,
-  "memUsedGb": 8.1,
+  "load1": 1.52,
+  "memUsedGb": 4.8,
   "memTotalGb": 30.5,
-  "swapUsedMb": 2355,
+  "swapUsedMb": 2347,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 1,
   "coresTotal": 8
  },
  "running": [
@@ -24,21 +24,21 @@
    "id": "J121",
    "title": "B2, deckbuilder choices: from 800 lab drafts each of Vintage 180 and Evan's cube (seeds 812,000,001+), every seat's pool built by ForgeCoach's deck assistant and a few one-decision variants (16 / 17 / 18 lands, the splash cut) plus the lab's and Forge's own builds, each played against the other seat's lab deck; paired by pool, Forge Default vs Forge Default on all of them and search-v2 vs search-v2 on 120 drafts a cube as a sign check",
    "cpu": "heavy",
-   "phase": "commands 3/4",
+   "phase": "commands 4/4",
    "started": "2026-10-10T01:04:25-04:00",
-   "elapsed": 24074,
-   "done": 35376,
+   "elapsed": 24263,
+   "done": 35391,
    "total": 36300,
    "unit": "games",
-   "ratePerHour": 598.7,
-   "eta": "2026-10-10T09:18:15-04:00",
+   "ratePerHour": 556.3,
+   "eta": "2026-10-10T09:26:50-04:00",
    "workers": 7,
    "workersMax": 7,
-   "cores": 7,
+   "cores": 1,
    "errors": null,
    "paused": false,
-   "dataUpdated": "2026-10-10T07:45:17-04:00",
-   "memGb": 2.49,
+   "dataUpdated": "2026-10-10T07:48:26-04:00",
+   "memGb": 0.01,
    "live": {
     "de.bridge_drafts": 0,
     "de.cpu_ms_per_turn": 0,
@@ -98,7 +98,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J121-run3"
+   "detail": "lab-J121-run4"
   }
  ],
  "queue": [],
