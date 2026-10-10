@@ -1,0 +1,83 @@
+==== J122 pilot1 started 2026-10-10T10:02:34-04:00 in unit lab-J122-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+✔ every committed cube parses to 180 cards in the sections its headings promise (10.432646ms)
+✔ themes, roles, gold pairs, prices and Pathways (3.952605ms)
+✔ pips and what a card can make (1.966033ms)
+✔ the generator is a function of its seed and stream (0.446075ms)
+✔ grid: 18 grids of 9 from 162, a line each, 3 then 2 or 3, first pick alternating (22.200049ms)
+✔ a draft and its decks are the same for the same seed (17.814385ms)
+✔ winston: always pass -> blind cards, then the last pile is forced; every card ends in a pool (5.266623ms)
+✔ winston: always take pile 1 -> it is replaced by exactly one card each time (14.770541ms)
+✔ winston with the AI chooser deals the whole stack (16.183557ms)
+✔ every AI-drafted deck is legal: 40 cards, 16-17 lands, two colours plus a legal splash (207.164201ms)
+✔ a thin pool builds three colours when no pair or splash reaches 23 spells (D298) (1.558652ms)
+✔ a thin pool plays 18 lands when its best pair has 22 spells (D298) (0.612058ms)
+✔ the deck checker rejects what is not a deck (0.245245ms)
+✔ synergy grows with shared themes; colours commit after a third; a splash needs rating and sources (0.298004ms)
+✔ ratings: Forge rank or the unrated default; the TSV round-trips; weights refuse unknown names (0.709343ms)
+✔ report: the mini fixture by arithmetic (2.994781ms)
+✔ report: the mini fixture matches summary.golden.json (0.806617ms)
+✔ report: the HTML is self-contained, and the Markdown names the recordings (1.38373ms)
+✔ meta.json: schema 1 keys, shrinkage, archetypes, lands and splash on the mini fixture (1.716551ms)
+✔ meta.json: a nonbasic land is counted like a spell, and stays out of pairs and key cards (D380) (0.515837ms)
+✔ meta.json: every played card is counted under its own name, once per deck (D380) (0.816827ms)
+✔ meta.json: the mini fixture matches meta.golden.json (0.610286ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 426.282838
+facts: booting the engine to look up 180 cards ...
+facts: 3.7 s
+== cubes/final-fantasy-cube-180.md: The Final Fantasy Cube — version 1 (180 cards, two-player)
+sections        White 26/26, Blue 26/26, Black 26/26, Red 26/26, Green 26/26, Gold 22/22, Colorless 16/16, Lands 12/12
+cards listed    180
+in Forge's DB   180
+two-faced       18: Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal; Dion, Bahamut's Dominant // Bahamut, Warden of Light; Jill, Shiva's Dominant // Shiva, Warden of Ice; Sidequest: Card Collection // Magicked Card; Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel; Jecht, Reluctant Guardian // Braska's Final Aeon; Vincent Valentine // Galian Beast; Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark; Zenos yae Galvus // Shinryu, Transcendent Rival; Clive, Ifrit's Dominant // Ifrit, Warden of Inferno; Esper Origins // Summon: Esper Maduin; Sidequest: Raise a Chocobo // Black Chocobo; Emet-Selch, Unsundered // Hades, Sorcerer of Eld; Garland, Knight of Cornelia // Chaos, the Endless; Kuja, Genome Sorcerer // Trance Kuja, Fate Defied; Exdeath, Void Warlock // Neo Exdeath, Dimension's End; The Emperor of Palamecia // The Lord Master of Hell; Balamb Garden, SeeD Academy // Balamb Garden, Airborne  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    0 (Forge: its AI plays these poorly or not at all)
+AI:RemRandomDeck 0 (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 65, a set's rank file only 114, none 1
+unranked        1 (Forge would score these -100 and draft them last; the lab starts them at 40)
+  Auron, Venerated Guardian
+best printing   2 card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): Fynn, the Fangbearer [KHM], Smuggler's Copter [FCA]
+cube lab: cubes/final-fantasy-cube-180.md, grid, 30 draft(s) from seed 161000001, best of 1, 3 job(s), AI Default vs Default, ratings Forge's ranks, out var/cubelab/j122/pilot/run
+drafted and built 30 draft(s) in 0.1 s; playing 1 game each on 3 worker(s)
+[1/30] seed 161000001: A:WR+b 0-1 B:WB+u  games B
+[2/30] seed 161000003: A:WB+u 0-1 B:WR+g  games B
+[3/30] seed 161000002: A:BR+g 0-1 B:WG+r  games B
+[4/30] seed 161000005: A:WR+g 0-1 B:BR+g  games B
+[5/30] seed 161000004: A:BR+g 1-0 B:WU+g  games A
+[6/30] seed 161000007: A:BG+u 0-1 B:WR+g  games B
+[7/30] seed 161000008: A:BR+g 1-0 B:WU+g  games A
+[8/30] seed 161000009: A:WB+g 1-0 B:BR+u  games A
+[9/30] seed 161000011: A:BR+w 0-1 B:WG+r  games B
+[10/30] seed 161000006: A:BR+w 0-1 B:UG+w  games B
+[11/30] seed 161000013: A:WU+g 1-0 B:BR  games A
+[12/30] seed 161000014: A:WR+u 1-0 B:UB+r  games A
+[13/30] seed 161000015: A:BR+g 0-1 B:WU+r  games B
+[14/30] seed 161000012: A:UB+g 0-1 B:WR+g  games B
+[15/30] seed 161000010: A:UB+r 0-1 B:WR+g  games B
+[16/30] seed 161000017: A:WR+g 0-1 B:RG+b  games B
+[17/30] seed 161000016: A:BR+g 0-1 B:UB+g  games B
+[18/30] seed 161000020: A:BR+w 0-1 B:WB+u  games B
+[19/30] seed 161000019: A:WB+g 1-0 B:BR+g  games A
+[20/30] seed 161000018: A:UB+g 0-1 B:WB+r  games B
+[21/30] seed 161000023: A:WB+r 0-1 B:RG+w  games B
+[22/30] seed 161000022: A:RG+w 1-0 B:WB+u  games A
+[23/30] seed 161000021: A:WB+r 0-1 B:UR+g  games B
+[24/30] seed 161000025: A:WB+g 0-1 B:BR+u  games B
+[25/30] seed 161000024: A:WB+r 1-0 B:WR+g  games A
+[26/30] seed 161000026: A:WG+r 1-0 B:BR+w  games A
+[27/30] seed 161000027: A:WG+u 0-1 B:BR+w  games B
+[28/30] seed 161000028: A:BR+g 0-1 B:WR+g  games B
+[29/30] seed 161000029: A:WB+r 1-0 B:WR+g  games A
+[30/30] seed 161000030: A:WR+g 0-1 B:UB+r  games B
+matches: 32 s for 30 (1.1 s a draft wall-clock on 3 worker(s))
+done in 33 s -> var/cubelab/j122/pilot/run/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/j122/pilot/run
+var/cubelab/j122/pilot/run/meta.json
+{"listed":180,"in_db":180,"missing":0,"names":[],"run_missing":0,"run_missing_match":1,"lines":30,"missing_in_lines":0}
+{"written":1,"schema_ok":1,"id_ok":1,"orphans":0,"drafts":30,"games":30,"cube_cards":180,"missing":0,"playable_nonland":168,"share_ge80":0,"median_games":4,"p10_games":0,"lands_played":12,"lands":12,"threshold":{"games":80,"share":0.81,"drafts":100},"ship":0}
