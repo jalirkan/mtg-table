@@ -1,0 +1,108 @@
+==== J123 pilot1 started 2026-10-10T10:30:24-04:00 in unit lab-J123-pilot1, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3, lane 2
+✔ every committed cube parses to 180 cards in the sections its headings promise (4.446104ms)
+✔ themes, roles, gold pairs, prices and Pathways (2.077161ms)
+✔ pips and what a card can make (0.663666ms)
+✔ the generator is a function of its seed and stream (0.264841ms)
+✔ grid: 18 grids of 9 from 162, a line each, 3 then 2 or 3, first pick alternating (8.974455ms)
+✔ a draft and its decks are the same for the same seed (9.720577ms)
+✔ winston: always pass -> blind cards, then the last pile is forced; every card ends in a pool (2.912803ms)
+✔ winston: always take pile 1 -> it is replaced by exactly one card each time (8.63351ms)
+✔ winston with the AI chooser deals the whole stack (9.244886ms)
+✔ every AI-drafted deck is legal: 40 cards, 16-17 lands, two colours plus a legal splash (110.066838ms)
+✔ a thin pool builds three colours when no pair or splash reaches 23 spells (D298) (1.04622ms)
+✔ a thin pool plays 18 lands when its best pair has 22 spells (D298) (0.424243ms)
+✔ the deck checker rejects what is not a deck (0.132601ms)
+✔ synergy grows with shared themes; colours commit after a third; a splash needs rating and sources (0.184349ms)
+✔ ratings: Forge rank or the unrated default; the TSV round-trips; weights refuse unknown names (0.353819ms)
+✔ report: the mini fixture by arithmetic (2.031555ms)
+✔ report: the mini fixture matches summary.golden.json (0.497011ms)
+✔ report: the HTML is self-contained, and the Markdown names the recordings (0.74494ms)
+✔ meta.json: schema 1 keys, shrinkage, archetypes, lands and splash on the mini fixture (1.080555ms)
+✔ meta.json: a nonbasic land is counted like a spell, and stays out of pairs and key cards (D380) (0.402331ms)
+✔ meta.json: every played card is counted under its own name, once per deck (D380) (0.586851ms)
+✔ meta.json: the mini fixture matches meta.golden.json (0.523481ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 245.240562
+facts: booting the engine to look up 180 cards ...
+facts: 2.1 s
+== cubes/peasant-cube-180.md: The Peasant Cube — two-player edition (180 cards)
+sections        White 23/23, Blue 25/25, Black 25/25, Red 24/24, Green 24/24, Gold 23/23, Colorless 14/14, Lands 22/22
+cards listed    180
+in Forge's DB   180
+two-faced       4: Witch Enchanter // Witch-Blessed Meadow; Sink into Stupor // Soporific Springs; Amethyst Dragon // Explosive Crystal; Khenra Spellspear // Gitaxian Spellstalker  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    5 (Forge: its AI plays these poorly or not at all)
+  Waker of Waves
+  Faithless Looting
+  Goblin Bombardment
+  Mishra's Bauble
+  Spawning Pit
+AI:RemRandomDeck 2: Soulherder, Halo Forager (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 95, a set's rank file only 83, none 2
+unranked        2 (Forge would score these -100 and draft them last; the lab starts them at 40)
+  Shi'ar Soldier
+  Shuri, Vibranium Technologist
+best printing   41 card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): Cathar Commando [FDN], Flickerwisp [2X2], Ephemerate [STA], Cast Out [AKH], Frost Trickster [STX], Whirler Rogue [ORI], Waker of Waves [M21], Lampad of Death's Vigil [THB], Sinister Starfish [MH2], Umbral Collar Zealot [EOE], Yahenni, Undying Partisan [AER], Thermo-Alchemist [DBL], Charging Monstrosaur [XLN], Firebolt [MH1], Hordeling Outburst [A25], Satyr Wayfinder [CMA], Reclamation Sage [C14], Thrashing Brontodon [M20], Pelakka Wurm [M19], Sprout Swarm [FUT], Trumpeting Herd [MH1], Grizzly Fate [JUD], Soulherder [MH1], Halo Forager [MOM], Mayhem Devil [WAR], Vitu-Ghazi Guildmage [RTR], Balmor, Battlemage Captain [DMU], Heroic Reinforcements [2X2], Signal Pest [MBS], Spawning Pit [DST], Ashnod's Altar [ATQ], Circuit Mender [NEO], Oketra's Monument [AKH], Bane of Bala Ged [BFZ], Artisan of Kozilek [ARC], Bountiful Landscape [MH3], Deceptive Landscape [MH3], Foreboding Landscape [MH3], Perilous Landscape [MH3], Shattered Landscape [MH3], Horizon Canopy [EXP]
+{"listed":180,"in_db":180,"unsupported":0,"missing":0,"doc_cards":180,"doc_warnings":0,"new_lands_in_doc":11,"ratings_rows":180,"ratings_match":1}
+cube lab: cubes/peasant-cube-180.md, grid, 30 draft(s) from seed 151000001, best of 1, 3 job(s), AI Default vs Default, ratings cubes/peasant-cube-180.ratings.tsv, out var/cubelab/j123/pilot/run
+drafted and built 30 draft(s) in 0.1 s; playing 1 game each on 3 worker(s)
+[1/30] seed 151000001: A:WB 1-0 B:UR+g  games A
+[2/30] seed 151000002: A:UR 1-0 B:UB+w  games A
+[3/30] seed 151000003: A:BR+w 1-0 B:UB+r  games A
+[4/30] seed 151000005: A:WB 1-0 B:UR+g  games A
+[5/30] seed 151000004: A:UB+r 0-1 B:UR+g  games B
+[6/30] seed 151000006: A:BR 0-1 B:UG+r  games B
+[7/30] seed 151000009: A:BR+w 0-1 B:UR+g  games B
+[8/30] seed 151000007: A:WR+b 0-1 B:BG  games B
+[9/30] seed 151000008: A:WU+b 1-0 B:UR+g  games A
+[10/30] seed 151000011: A:UR+g 1-0 B:UB+r  games A
+[11/30] seed 151000012: A:WU+r 1-0 B:UB+r  games A
+[12/30] seed 151000013: A:UR+b 1-0 B:BG+u  games A
+[13/30] seed 151000014: A:RG 1-0 B:UB+r  games A
+[14/30] seed 151000010: A:WU+b 1-0 B:RG+u  games A
+[15/30] seed 151000015: A:UR+g 0-1 B:WB+u  games B
+[16/30] seed 151000016: A:RG+b 1-0 B:UB  games A
+[17/30] seed 151000017: A:UR 0-1 B:BG  games B
+[18/30] seed 151000018: A:BG 1-0 B:UB+r  games A
+[19/30] seed 151000019: A:UB+w 0-1 B:UR  games B
+[20/30] seed 151000021: A:UG+r 0-1 B:UB+r  games B
+[21/30] seed 151000020: A:BR 1-0 B:UB  games A
+[22/30] seed 151000022: A:UR+w 0-1 B:WR+g  games B
+[23/30] seed 151000023: A:BR+g 1-0 B:UB+r  games A
+[24/30] seed 151000025: A:RG+u 0-1 B:BG  games B
+[25/30] seed 151000024: A:BG 1-0 B:UR+b  games A
+[26/30] seed 151000026: A:WB+r 1-0 B:RG  games A
+[27/30] seed 151000028: A:WB 1-0 B:UR+g  games A
+[28/30] seed 151000027: A:RG+b 1-0 B:BR+u  games A
+[29/30] seed 151000029: A:UB+r 0-1 B:RG+u  games B
+[30/30] seed 151000030: A:UR+g 0-1 B:WB  games B
+matches: 21 s for 30 (0.7 s a draft wall-clock on 3 worker(s))
+done in 21 s -> var/cubelab/j123/pilot/run/drafts.jsonl
+next: tools/cubelab.sh report var/cubelab/j123/pilot/run
+var/cubelab/j123/pilot/run/meta.json
+| ships | drafts | decisive games | playable nonland | share with 80+ games | median games | p10 games | lands played | rare lands in / old cards in | orphans | ForgeCoach id |
+|---|---|---|---|---|---|---|---|---|---|---|
+| no | 30 | 30 | 158 | 0 | 7 | 0 | 22 / 22 | 11 / 0 | 0 | ok |
+
+| rare land | picked | avg pick | in decks | games | win rate |
+|---|---|---|---|---|---|
+| Meticulous Archive | 18 | 24.2222 | 7 | 7 | 0.4286 |
+| Undercity Sewers | 13 | 25.4615 | 5 | 5 | 0.6 |
+| Blood Crypt | 10 | 28.3 | 6 | 6 | 0.1667 |
+| Stomping Ground | 19 | 33.3684 | 10 | 10 | 0.5 |
+| Horizon Canopy | 9 | 25.6667 | 1 | 1 | 0 |
+| Godless Shrine | 16 | 24.3125 | 5 | 5 | 0.4 |
+| Steam Vents | 15 | 28.7333 | 11 | 11 | 0.2727 |
+| Underground Mortuary | 13 | 27.3846 | 5 | 5 | 0.4 |
+| Sacred Foundry | 22 | 26.9091 | 6 | 6 | 0.3333 |
+| Breeding Pool | 11 | 27.9091 | 7 | 7 | 0.4286 |
+| Prismatic Vista | 22 | 22.7727 | 22 | 22 | 0.4091 |
+
+Other shipped metas (/home/justin-a/code/lab/ForgeCoach-lane2/public/cubes): evybaby-cube-360.meta.json 0.818 / median 476 / 4500 drafts; fair-fight-cube-180.meta.json 0.838 / median 1695 / 7434 drafts; modern-era-cube-180.meta.json 0.894 / median 1703 / 5781 drafts; omega-cube-180.meta.json 0.892 / median 1983 / 6682 drafts; pauper-cube-180.meta.json 0.819 / median 1620 / 8314 drafts; synergy-cube-180.meta.json 0.831 / median 1653 / 6980 drafts; vintage-cube-180.meta.json 0.843 / median 1266 / 5167 drafts.
+Rule: ship when schema_ok, id_ok, the card list is ForgeCoach's v2 document's, no orphans, drafts >= 100 and share >= 0.81 of playable nonland cards with 80+ decisive games.
