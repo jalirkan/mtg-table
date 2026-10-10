@@ -1,0 +1,14 @@
+facts: booting the engine to look up 180 cards ...
+facts: 3.7 s
+== cubes/final-fantasy-cube-180.md: The Final Fantasy Cube — version 1 (180 cards, two-player)
+sections        White 26/26, Blue 26/26, Black 26/26, Red 26/26, Green 26/26, Gold 22/22, Colorless 16/16, Lands 12/12
+cards listed    180
+in Forge's DB   180
+two-faced       18: Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal; Dion, Bahamut's Dominant // Bahamut, Warden of Light; Jill, Shiva's Dominant // Shiva, Warden of Ice; Sidequest: Card Collection // Magicked Card; Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel; Jecht, Reluctant Guardian // Braska's Final Aeon; Vincent Valentine // Galian Beast; Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark; Zenos yae Galvus // Shinryu, Transcendent Rival; Clive, Ifrit's Dominant // Ifrit, Warden of Inferno; Esper Origins // Summon: Esper Maduin; Sidequest: Raise a Chocobo // Black Chocobo; Emet-Selch, Unsundered // Hades, Sorcerer of Eld; Garland, Knight of Cornelia // Chaos, the Endless; Kuja, Genome Sorcerer // Trance Kuja, Fate Defied; Exdeath, Void Warlock // Neo Exdeath, Dimension's End; The Emperor of Palamecia // The Lord Master of Hell; Balamb Garden, SeeD Academy // Balamb Garden, Airborne  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    0 (Forge: its AI plays these poorly or not at all)
+AI:RemRandomDeck 0 (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 65, a set's rank file only 114, none 1
+unranked        1 (Forge would score these -100 and draft them last; the lab starts them at 40)
+  Auron, Venerated Guardian
+best printing   2 card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): Fynn, the Fangbearer [KHM], Smuggler's Copter [FCA]

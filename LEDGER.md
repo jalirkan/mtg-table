@@ -635,3 +635,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J121/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table fcdb174, ForgeCoach 866c256
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J122 DONE: Lab stats (meta.json) for the Final Fantasy Cube: its 180 cards against Forge 2.0.14, then 3,000-7,500 grid drafts, best of one, until the shipped metas' bar is met
+
+- finished: 2026-10-10T10:30:10-04:00
+- decides: whether ForgeCoach ships public/cubes/final-fantasy-cube-180.meta.json and drops the cube's labData: false (the cloud session copies it from results/J122/), and which of the cube's cards Forge 2.0.14 lacks (the cloud session lists them under the document's "Not in Forge 2.0.14")
+- hypothesis: Forge 2.0.14 (built 2026-08-08) has the whole Final Fantasy release (June 2025), so all 180 cards are in its database; a 180-card cube reaches the shipped metas' per-card bar within 3,000-7,500 grid drafts
+- rule: written 2026-10-10 before the run, J110's rule unchanged. The meta ships when ForgeCoach@bec2dba's parseMeta reads it (schema 1), its cubeForMeta names final-fantasy, no card key falls outside the cube, it rests on 100+ drafts, and at least 81% of its playable nonland cards (the cube's nonland cards less those Forge lacks) have 80+ decisive games. Drafting stops at the first of 3,000, 4,500, 6,000 or 7,500 drafts whose meta meets the bar: a stop on card counts, never on win rates. A missed bar at 7,500 is a finding, not a failure: the meta is collected and does not ship
+- outcome: done
+- headline: ffl.listed 180, ffl.missing 0, ff.drafts 6000, cov.share_ge80 0.833, cov.median_games 940, cov.ship 1
+- summary: results/J122/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table a944b25, ForgeCoach bec2dba
+- follow-up: template forgecoach-final-fantasy-meta: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

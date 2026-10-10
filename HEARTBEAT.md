@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T10:29:58-04:00
+- time: 2026-10-10T10:30:11-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J122 commands 2/2, 5921/7500 drafts, 12953.8/h, ETA 2026-10-10T10:37:16-04:00, 7 worker(s), 1 core(s); J123 prepare, 0/12000 drafts, 1 worker(s), 7 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.59; memory 8.1/30.5 GB, swap 1697 MB, pressure 0% (lab budget 23.4 GB)
+- running: J123 prepare, 0/12000 drafts, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 8.1; memory 7.9/30.5 GB, swap 1697 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
+- last finished: J122 done at 2026-10-10T10:30:10-04:00: ffl.listed 180 · ffl.missing 0 · ff.drafts 6000 · cov.share_ge80 0.833 · cov.median_games 940 · cov.ship 1
 
 ## Messages
+
+- FOLLOW-UP READY [J122@2026-10-10T10:30:10-04:00] (the runner, for the cloud session): J122 is done; write and post the template forgecoach-final-fantasy-meta. It decides: whether ForgeCoach ships public/cubes/final-fantasy-cube-180.meta.json and drops the cube's labData: false (the cloud session copies it from results/J122/), and which of the cube's cards Forge 2.0.14 lacks (the cloud session lists them under the document's "Not in Forge 2.0.14"). Ledger: LEDGER.md. Delete this line once posted.
 
 
 - FOLLOW-UP READY [J120@2026-10-10T01:04:25-04:00] (the runner, for the cloud session): J120 is done; write and post the template synergy-fic-cards. It decides: whether any of Counter Blitz's counters cards goes into the Synergy Cube (Justin's call: the lab informs it, his notes decide; nothing here edits cubes/synergy-cube-180.md). Ledger: LEDGER.md. Delete this line once posted.
