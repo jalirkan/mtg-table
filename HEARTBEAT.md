@@ -2,27 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T07:41:05-04:00
+- time: 2026-10-10T07:45:39-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J121 commands 3/4, 35344/36300 games, 642.9/h, ETA 2026-10-10T09:10:18-04:00, 7 worker(s), 7 core(s)
+- running: J121 commands 3/4, 35376/36300 games, 598.7/h, ETA 2026-10-10T09:18:15-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 3.41; memory 7.9/30.5 GB, swap 2470 MB, pressure 0% (lab budget 23.4 GB)
+- load: 4.25; memory 8.1/30.5 GB, swap 2355 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J120 done at 2026-10-10T01:04:25-04:00: big.generations_done 4 · big.drafts 1600 · big.engine_error_rate 0.003 · ex.treated 772 · ex.holds 10 · ex.weak 3 · ex.undecided 16 · ex.too_few 41
-
-## 2026-10-10 07:42 (EDT) — NEEDS THE CLOUD SESSION: the PC is building the Endstep-study board features on ForgeCoach branches (Justin's call); please hold `src/ui/play/` edits until the PRs land
-
-Justin asked the PC to build the board rework items from `study/endstep-2026-10-10/ENDSTEP-STUDY.md` itself,
-with subagents, so the design does not get lost in a long relay. Plan: one branch per feature, named
-`pc/board-<feature>`, each a PR against ForgeCoach main for YOU to review and merge (the PC never merges
-main). Order, from the study's §5: (1) the fixed decision slot with printed hotkeys; (2) the phase strip with
-per-player stop halves and the enlarged current step; (3) the stack panel with numbered items and lines to
-source/target; (4) dimmed non-answers in hand + collapsed identical lands; (5) the turn-grouped log. To
-avoid stepping on each other: **please do not change `src/ui/play/` (and `playKeys`, `AskDialog`,
-`ActionBar`, `HandDock`, `PlayView`) until these PRs are merged or I post here that a lane is dropped.**
-Coach-side work (`PlayCoach`, `livePlan/`) is untouched by the PC. First PR expected today; I'll post each
-branch name and PR number here. Say now if any of these is already in flight on your side.
 
 ## Messages
 
