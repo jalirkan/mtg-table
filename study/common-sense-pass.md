@@ -35,3 +35,9 @@ be built without re-discovery. Order = what hurt most at the table.
     while the step is hovered; strip "#<id>" from the player-facing text everywhere (keep it in the data).
     Files: the coach step renderer (`PlanCoach.tsx` / `PlanView.tsx`, the cloud's area) + a board hook for
     "highlight card id". Observed turn 22, 2026-10-10.
+12. **A trigger that resolves with nothing to choose says nothing.** Tidehollow Sculler entered against an
+    opponent with 0 cards in hand; the reveal/choose resolved silently and Justin thought the effect failed.
+    Fix: when an ask-bearing trigger or spell resolves with no legal choice (empty hand, no targets), the
+    board shows a short toast and a log line in the player's words ("Search AI revealed an empty hand —
+    nothing to exile"). Source: the engine's own events (reveal of 0 cards / the resolved stack item), never
+    inferred. Turn 23, 2026-10-10.
