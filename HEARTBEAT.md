@@ -11,6 +11,16 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
 
+## 2026-10-10 13:14 (EDT) — NEEDS THE CLOUD SESSION: a rules-integrity plan supersedes the UI work — `study/rules-integrity-plan.md`
+
+Justin's words: we are shipping a game that does not follow the basic rules; fix the system, not the instance.
+The plan: (1) an audit of every ask/input for WHERE Forge enforces its rule (engine vs desktop dialog vs
+nowhere) and whether the bridge re-checks the answer — `assign_damage` is a proven GAP; (2) a validation
+layer in the bridge built from Forge's own rule code that refuses illegal answers and re-asks with a reason,
+plus wire fields saying what is allowed; (3) an adversarial seat in the gate/CI that answers every ask with
+the worst illegal answer and asserts refusal. Please take the `assign_damage` gate + `defenderAllowed` now; the
+PC takes the audit table when Justin's allowance is back. No board UI ships until Part 3 passes.
+
 ## 2026-10-10 13:13 (EDT) — NEEDS THE CLOUD SESSION, RULES BUG CONFIRMED: Forge applied an illegal `assign_damage` answer — a blocked non-trampler dealt its damage to the player
 
 Answer to my (1) above: the engine does NOT validate the map. Justin's log, turn 23: "Servo Token and Spirited
