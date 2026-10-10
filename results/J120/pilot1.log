@@ -1,0 +1,44 @@
+==== J120 pilot1 started 2026-10-09T23:50:38-04:00 in unit lab-J120-pilot1, 3 worker(s), 7 core(s), BLAS/OpenMP threads 7
+cube lab evolve: cubes/synergy-cube-180.md, pool cubes/synergy-fic-pool.tsv, notes cubes/synergy-fic-notes.tsv, 1 generation(s) x 30 draft(s) from seed 142000001, 3 job(s), at most 6 swap(s) a generation, out var/cubelab/evolve/synergy-fic-pilot, exploring 0.3 of the discovery drafts (D356: cap 4, gold 4, margin 0.1, minDecks 10)
+facts: booting the engine to look up 217 cards ...
+facts: 2.1 s
+WARNING: 180 cube card(s) not in the pool (their colours come from their sections): Thraben Inspector, Spirited Companion, Lunarch Veteran, Soul Warden, Ajani's Pridemate, Luminarch Aspirant, Charming Prince, Skyclave Apparition, Flickerwisp, Restoration Angel, Ephemerate, Blade Splicer, Intangible Virtue, Battle Screech, Adeline, Resplendent Cathar, Welcoming Vampire, Brimaz, King of Oreskos, Swords to Plowshares, Prismatic Ending, March of Otherworldly Light, Sun Titan, Elspeth, Sun's Champion, Mentor of the Meek, Reveillark, Opt, Consider, Brainstorm, Ponder, Thought Scour, Delver of Secrets, Ledger Shredder, Snapcaster Mage, Man-o'-War, Mulldrifter, Phantasmal Image, Thieving Skydiver, Sai, Master Thopterist, Emry, Lurker of the Loch, Murmuring Mystic, Talrand, Sky Summoner, Champion of Wits, Mana Leak, Remand, Unsummon, Deep Analysis, Torrential Gearhulk, Watcher for Tomorrow, Jace, Vryn's Prodigy, Blood Artist, Zulaport Cutthroat, Viscera Seer, Carrion Feeder, Cauldron Familiar, Priest of Forgotten Gods, Village Rites, Deadly Dispute, Bone Shards, Fatal Push, Go for the Throat, Stitcher's Supplier, Bloodghast, Gravecrawler, Unburial Rites, Persist, Woe Strider, Kitesail Freebooter, Vampire Nighthawk, Grim Haruspex, Midnight Reaper, Archon of Cruelty, Marionette Master, Ophiomancer, Monastery Swiftspear, Soul-Scar Mage, Young Pyromancer, Dreadhorde Arcanist, Goblin Bombardment, Reckless Fireweaver, Pia Nalaar, Pia and Kiran Nalaar, Hordeling Outburst, Faithless Looting, Cathartic Reunion, Lightning Bolt, Burst Lightning, Kari Zev, Skyship Raider, Hanweir Garrison, Goblin Rabblemaster, Legion Warboss, Krenko, Tin Street Kingpin, Flame Slash, Chandra, Torch of Defiance, Experimental Synthesizer, Unexpected Windfall, Seasoned Pyromancer, Anax, Hardened in the Forge, Llanowar Elves, Sakura-Tribe Elder, Satyr Wayfinder, Lotus Cobra, Tireless Tracker, Scavenging Ooze, Hardened Scales, Pelt Collector, Scute Swarm, Springbloom Druid, Eternal Witness, Wood Elves, Courser of Kruphix, Prosperous Innkeeper, Evolution Sage, Rishkar, Peema Renegade, Ramunap Excavator, Titania, Protector of Argoth, Ulvenwald Mysteries, Beast Within, Ram Through, Elvish Visionary, Deep Forest Hermit, Avenger of Zendikar, Reflector Mage, Soulherder, Prized Amalgam, Baleful Strix, Mayhem Devil, Juri, Master of the Revue, Grumgully, the Generous, Omnath, Locus of Rage, Conclave Mentor, Knight of Autumn, Lingering Souls, Tidehollow Sculler, Third Path Iconoclast, Saheeli, Sublime Artificer, Winding Constrictor, Grist, the Hunger Tide, Lightning Helix, Showdown of the Skalds, Risen Reef, Lonis, Cryptozoologist, Walking Ballista, Hangarback Walker, Smuggler's Copter, Ichor Wellspring, Mishra's Bauble, Chromatic Star, Servo Schematic, Myr Sire, Steel Overseer, Bonesplitter, Shadowspear, Mind Stone, Prophetic Prism, Candy Trail, Skullclamp, Cranial Plating, Solemn Simulacrum, Lotus Petal, Karn, Scion of Urza, Retrofitter Foundry, Hallowed Fountain, Watery Grave, Blood Crypt, Stomping Ground, Temple Garden, Godless Shrine, Steam Vents, Overgrown Tomb, Sacred Foundry, Breeding Pool, Flooded Strand, Polluted Delta, Bloodstained Mire, Wooded Foothills, Windswept Heath, Marsh Flats, Scalding Tarn, Verdant Catacombs, Arid Mesa, Misty Rainforest
+== generation 1/1: The Synergy Cube — version 1 (180 cards, two-player) (180 cards), seeds 142000001-142000030
+exploring (D356): 0.3 of the drafts; a target rated under 60 forced with probability v / max(sum v, 4), v 4 for gold
+drafted and built 30 draft(s) in 0.1 s; playing 1 game each on 3 worker(s)
+[1/30] seed 142000002: A:WU 1-0 B:UG  games A
+[2/30] seed 142000004: A:UR 1-0 B:UG  games A
+[3/30] seed 142000003: A:UG 1-0 B:WU  games A
+[4/30] seed 142000006: A:UG 1-0 B:WG+u  games A
+[5/30] seed 142000007: A:WU 1-0 B:WG  games A
+[6/30] seed 142000008: A:WG 0-1 B:WU  games B
+[7/30] seed 142000009: A:WR 0-1 B:UG  games B
+[8/30] seed 142000010: A:UB 0-1 B:WU  games B
+[9/30] seed 142000011: A:WU 1-0 B:BG+u  games A
+[10/30] seed 142000012: A:WG 1-0 B:UB+g  games A
+[11/30] seed 142000001: A:WU 0-1 B:UB  games B
+[12/30] seed 142000014: A:UG 0-1 B:WR  games B
+[13/30] seed 142000005: A:WG 1-0 B:UG  games A
+[14/30] seed 142000016: A:WR 1-0 B:UG  games A
+[15/30] seed 142000017: A:WG 1-0 B:UB  games A
+[16/30] seed 142000015: A:UG 1-0 B:WG  games A
+[17/30] seed 142000018: A:WU+g 0-1 B:WU  games B
+[18/30] seed 142000019: A:WU 0-1 B:WR+u  games B
+[19/30] seed 142000020: A:WR 0-1 B:UG  games B
+[20/30] seed 142000021: A:WR 1-0 B:UG  games A
+[21/30] seed 142000023: A:UB 0-1 B:RG  games B
+[22/30] seed 142000022: A:WU+g 0-1 B:RG  games B
+[23/30] seed 142000024: A:WU 0-1 B:RG  games B
+[24/30] seed 142000026: A:UG 1-0 B:UB  games A
+[25/30] seed 142000027: A:WB 1-0 B:UG  games A
+[26/30] seed 142000028: A:UR 0-1 B:BG  games B
+[27/30] seed 142000029: A:WU 1-0 B:RG  games A
+[28/30] seed 142000013: A:WR 0-1 B:UG  games B
+[29/30] seed 142000030: A:UB+w 1-0 B:UR  games A
+[30/30] seed 142000025: A:UG 0-1 B:UG  games B
+matches: 86 s for 30 (2.9 s a draft wall-clock on 3 worker(s))
+done in 86 s -> var/cubelab/evolve/synergy-fic-pilot/gen-01/run/drafts.jsonl
+generation 1: 6 of 30 draft(s) explored (D356); the game rules read the other 24
+generation 1: Insufficient data: no card was confirmed at 30 drafts; 29 lead(s) to watch — about 285 drafts per generation would find half of them. Run more drafts. 37 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).
+done: var/cubelab/evolve/synergy-fic-pilot/changelog.md, var/cubelab/evolve/synergy-fic-pilot/index.html, var/cubelab/evolve/synergy-fic-pilot/synergy-cube-180.md
+{"explore_on":1,"generations_done":1,"explored_drafts":6,"plain_drafts":24,"explored_engine_error_rate":0,"plain_engine_error_rate":0,"explored_timeout_rate":0,"plain_timeout_rate":0,"plain_deff_max":1,"plain_mean_min":0.4987,"plain_mean_max":0.4987,"rating_limited":37,"share":0.2,"share_z":-1.1952286093343936,"treated":11,"expected":10.499999999999996,"treated_z":0.15430334996209302,"pooled_delta":0.05644474234709679,"pooled_se":0.18466466077136284,"balance_diff":0.21073379149603966,"targets":35,"holds":0,"weak":0,"undecided":0,"too_few":35,"limited_judged":0,"limited_min_treated":0,"limited_median_treated":0}

@@ -1,0 +1,2 @@
+metrics: ex = sh: node tools/cubelab/explore-health.ts var/cubelab/evolve/synergy-fic
+  exit 1: Error: ENOENT: no such file or directory, open 'var/cubelab/evolve/synergy-fic/evolve.json'
