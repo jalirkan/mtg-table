@@ -30,6 +30,29 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-10 — a yield to the opponent's next move, what an input has chosen, and which players a click is taken for
+
+Asked for by the ForgeCoach board rebuild (the PC session's Endstep study, 2026-10-10)
+and approved by the owner the same day: three follow-ups to the play board's
+protocol, each a field or a kind Forge already has the answer to. A "hold
+priority" flag stays out (§10.4: Forge has no such feature). Decisions **D421**
+(M64), **D422** (M65) and **D423** (M66). Held by `mtgtable.SelectionSelfTest`
+(gate step 12l, beside `PlayableSelfTest`: the player rule on Lightning Bolt,
+Into the Void, Duress, Curse of the Pierced Heart and Leyline of Sanctity, a
+declaration read off a real `Combat`), `tools/check-redaction.mjs` (the shapes,
+the per-file rule and who a selection may name; six controls in
+`fixtures/negative/redaction/m65-*` / `m66-*`), `web/test/selection.test.ts` and
+`tools/llm-seat/test/selection.test.mjs` on real frames
+(`fixtures/select-probe/m64-m66-frames.json`), and verified live by
+`tools/ws-select-probe.mjs`, a scripted seat on `/ws` against the real engine
+(`docs/evidence/select-probe.md`).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M64 | §2.2, §3.1 | **`yieldTo {kind: "endStepOrOpponent"}`: pass priority until an opponent acts or the current turn's end step begins, whichever is first.** **"An opponent acts"** is exactly: (a) an item an opponent controls goes on the stack — a spell cast, an ability activated, a triggered ability (Forge's `GameEventSpellAbilityCast`, fired by `MagicStack.add` for every item; the item's activating player is its controller); or (b) an opponent declares attackers attacking this seat or a permanent it controls (`GameEventAttackersDeclared`). The bridge ends the yield at the event itself, on the game thread, before the seat is next offered priority, so the seat gets priority with that item on the stack, or in the declare-attackers step. **The end step**: when the turn's `END_OF_TURN` begins the yield ends and the seat gets priority there **even if its phase stops skip that step** (for that one step). The seat's own items do not end it, and nor does anything else: its own triggers, the opponent's land drops, a phase change. **What else clears it**: `buttonCancel` (Forge's Cancel, as for every yield), any other `yieldTo` (Forge runs one yield at a time), a later turn beginning (an effect ended the turn before its end step), the end of the game. Sent in the end step or the cleanup step it is **refused** with `notice {level:"warn", title:"yieldTo"}` and nothing changes — "the current turn's end step" has already begun, and the next one is a whole turn away. The passing itself is Forge's own marker at the turn player's `END_OF_TURN` (the mechanism of `kind:"marker"`), so `input.prompt` reads Forge's "Yielding until *X*'s End step" and the other rules of a yield hold (on the seat's own turn Forge skips an optional attack declaration while yielding; a block declaration is still asked). While it runs, **`state.yield` is `{kind: "endStepOrOpponent", playerId: <the turn player>, phase: "END_OF_TURN"}`** — a state is only written when something flushes one, so a short yield may never show it, exactly as for the other kinds. Forge's own yield interrupts (`YIELD_INTERRUPT_ON_OPPONENT_SPELL`, `_ON_ATTACKERS`, on by default) end every yield on the same two events; the bridge enforces (a) and (b) itself, so this kind means the same whatever those preferences say (measured both ways, `docs/evidence/select-probe.md`). **Optional**: a bridge before M64 answers the kind with `notice {title:"yieldTo"}` ("kind must be …") and does nothing; `state.yield.kind` is one of the three older kinds on every stream before it. | Endstep study, D421 |
+| M65 | §4 | **`input.selectable.chosen`: what the seat has already chosen in the input that is up.** `{cardIds, playerIds, blocks, attacks}` (ids ascending), or `null`. Read off Forge's own input, never worked out from the prompt: **targets** (`InputSelectTargets`) — the cards and players targeted so far; **a list** (`InputSelectEntitiesFromList`, e.g. discard two, convoke) — the entries ticked; **a block declaration** (`InputBlock`) — `cardIds` the seat's blockers and `blocks: [{blockerId, attackerId}]`, one row per pair, read off the game's own combat, which Forge writes as each click is taken **and which `state.combat` does not show until the declaration ends** (the clicks run on the EDT; the snapshot is the game thread's); **an attack declaration** (`InputAttack`) — `cardIds` the attackers and `attacks: [{attackerId, defender: {kind: "player"\|"card", id}}]`. `blocks` and `attacks` are `[]` outside their declarations. **`null`** when no selection is up (priority, a mana payment, an ask) or the bridge cannot say; a targeting or list input's `chosen` holds while its selection is up and goes `null` in the frames its `onStop` pushes. Every chosen target or list entry is one `selectable.cardIds` offered in the same input. **Hidden information**: ids only, the viewing seat's own input; a chosen card is one the engine offered this seat, a declared blocker or attacker is its own creature on the battlefield. **Written on every `input` a seat writes** (per file, all or none). **Optional**: absent before M65; a reader treats absent and `null` alike — "this frame does not say", never "nothing chosen". The client's one reader is `chosenOf()` in `web/src/protocol.ts`. | Endstep study; the LLM seat's block tracking (PR #130), D422 |
+| M66 | §4, §10.2 | **`input.selectable.playerIds`: the players a click (`clickPlayer`) would be taken for in the input that is up.** Ids ascending; **player ids never travel in `cardIds`**. Forge's own rule for each input: **targets** — `InputSelectTargets.onPlayerSelected`'s: a player already targeted (the click takes it back), or one not out of the game, attachable for an Aura spell, that the ability `canTarget` (hexproof, "target opponent", protection are Forge's), not under a must-target filter that narrowed the choice to cards, and through the caller's filter; **a list** — the players among its valid choices; **an attack declaration** — the defending players (a click picks whom the next attacker attacks). **`[]`** when a player click does nothing in the input (priority, a block declaration, a confirm, the mulligan) — a fact, not an unknown. **`null`** when the bridge cannot say: no input, a mana payment (Forge takes a click on yourself there as Phyrexian life), any input class it does not read. `selectable.mode` is still computed from `cardIds` alone, so a player-only choice ("target opponent") still reads `"none"`: read `playerIds`. **Hidden information**: seat ids only. **Written on every `input` a seat writes** (per file, all or none). **Optional**: absent before M66, and absent and `null` alike mean "this frame does not say", never "no player is clickable". The client's one reader is `selectablePlayersOf()` in `web/src/protocol.ts`. One quirk this does not change: `input.highlighted` can carry a **player** id — Forge highlights the targeted player, and the current defender in an attack declaration, through the same `setHighlighted` call as cards (`highlighted: [1]` in every committed human-seat recording) — so read players from `playerIds` / `chosen.playerIds`, never from `highlighted`. | Endstep study, §10.2, D423 |
+
 ### 2026-10-09 — what the seat may activate on the battlefield
 
 Found by nine shakedown games of the LLM seat (D418, D419) with a real model:
@@ -674,7 +697,7 @@ arrives as the next `state` / `input`.
 | `alphaStrike` | — | `alphaStrike()` — only meaningful during `InputAttack` | M5 |
 | `useMana` | `color` | `useMana(byte)`, `byte = MagicColor.fromName(...)`. **A `cardId` is a `clickCard`, not a `useMana`.** Like `undo`, applied only while the engine is waiting on this seat (**M48**) | M5 |
 | `setPhaseStop` | `phase`, `turn` = `"own"` \| `"opp"`, `stop` | `WireGuiGame`'s own stop map — *not* `FPref`, and *not* `YieldController` — mirrored to the controller with `YieldUpdate.SkipPhase` so Forge's own `tryAutoPassNow()` fires. `turn` is relative to the **viewing seat**; `{playerId, phase, stop}` is still accepted (amendment **M33**) | M6 |
-| `yieldTo` | `kind` = `"endOfTurn"` \| `"marker"` \| `"stack"`; `phase` and an optional `turn` (`"own"`/`"opp"`, default own) for `marker` | `IGameController.sendYieldUpdate` with `SetAutoPassUntilEndOfTurn` / `AbstractGuiGame.handleYieldMarkerToggle` / `StackYield`. **Cancelled by `buttonCancel`**, which is the Cancel button `InputLockUI` labels while a yield runs | M6 |
+| `yieldTo` | `kind` = `"endOfTurn"` \| `"marker"` \| `"stack"` \| `"endStepOrOpponent"` (amendment **M64**); `phase` and an optional `turn` (`"own"`/`"opp"`, default own) for `marker` | `IGameController.sendYieldUpdate` with `SetAutoPassUntilEndOfTurn` / `AbstractGuiGame.handleYieldMarkerToggle` / `StackYield`; `endStepOrOpponent` is a `SetMarker` at the turn player's `END_OF_TURN` that the bridge ends the moment an opponent puts an item on the stack or attacks the seat (M64 is the definition). **Cancelled by `buttonCancel`**, which is the Cancel button `InputLockUI` labels while a yield runs | M6, M64 |
 | `setYield` | `yieldKey`, `mode` = `"yes"` \| `"no"` \| `"clear"` | `setShouldAutoYield(key, on, isAbilityScope)` plus `setTriggerDecision(key, ACCEPT\|DECLINE\|ASK, …)`; `yieldKey` is the **bridge-minted handle** from `state.stack[]`, never Forge's own key | M6 |
 
 **`newGame`, exactly** (amendment **M38**). It is answered by
@@ -1031,7 +1054,9 @@ from `handleGameEvents` and from inside value-returning `IGuiGame` methods.
   `players[0].phaseStops.opp === players[1].phaseStops.own`, and that is not a
   bug: each seat's strip reads its own object.
 - **`yield` is the active pass-to, or `null`** (amendment **M34**):
-  `{kind: "endOfTurn" | "marker" | "stack", playerId, phase}`. `endOfTurn` and
+  `{kind: "endOfTurn" | "marker" | "stack" | "endStepOrOpponent", playerId, phase}`
+  (the fourth kind is amendment **M64**: `playerId` the turn player, `phase`
+  `"END_OF_TURN"`, ended early by an opponent's action — M64 says exactly which). `endOfTurn` and
   `stack` carry `playerId` (the yielding seat) and `phase: null`; `marker` carries
   the `(playerId, phase)` cell priority is being fast-forwarded to. Forge allows
   **one at a time** — setting any of the three clears the other two
@@ -1670,7 +1695,8 @@ the EDT**, not the game thread.
       "cancel": { "label": "Cancel", "enabled": false },
       "focus":  "ok"
     },
-    "selectable": { "cardIds": [31, 32], "min": 0, "max": 2, "mode": "cards" },
+    "selectable": { "cardIds": [31, 32], "min": 0, "max": 2, "mode": "cards",
+                    "playerIds": [], "chosen": { "cardIds": [31], "playerIds": [], "blocks": [], "attacks": [] } },
     "highlighted": [],
     "weak": [],
     "openZones": []
@@ -1686,7 +1712,9 @@ the EDT**, not the game thread.
 | `buttons.focus` | `"ok"` \| `"cancel"` \| `null` — `updateButtons`' sixth argument, `focus1` **[jar]**, which says which button the desktop would have focused (amendment **M39**). **Space activates the focused button**, and that is the whole reason the field exists: "space = OK" is not a Forge shortcut, it is Swing button focus. A client binds Space to `buttonOk` / `buttonCancel` per this field and to `passPriority` when it is `null`. **`focus1` is a `boolean`** — it names button 1, the OK button — so this emitter writes `"ok"` or `null` and never `"cancel"`. The type keeps the third value because a client must not assume the engine can only focus one of the two buttons, and because `"cancel"` is the honest encoding the day `updateButtons` grows a `focus2`. |
 | `selectable.cardIds` | **The explicit selection set** — the ids `setSelectables` named for a *choice*: targeting, discard, declare blockers, `InputSelectEntities`. It is **not** the set of cards the engine will accept a click on (amendment M8): `InputPassPriority` never calls `setSelectables`, so at your own main phase this is `[]` and your hand is still clickable. May contain an id that is **not** in this frame's `state` (a library card that is a legal target): render nothing for it, never throw. |
 | `selectable.min` / `.max` | How many, for that explicit choice. Both `0` when there is none. |
-| `selectable.mode` | `"cards"` \| `"players"` \| `"none"`. `"none"` means *no explicit selection is outstanding* — not "nothing is clickable". |
+| `selectable.mode` | `"cards"` \| `"players"` \| `"none"`. `"none"` means *no explicit selection is outstanding* — not "nothing is clickable". Computed from `cardIds` alone (`"players"` is not emitted): a player-only choice reads `"none"`, and `playerIds` (M66) is where it shows. |
+| `selectable.playerIds` | Amendment **M66**: the players a `clickPlayer` would be taken for in this input, `[]` when a player click does nothing here, `null` when the bridge cannot say; absent before M66. See M66 for each input's rule. |
+| `selectable.chosen` | Amendment **M65**: `{cardIds, playerIds, blocks, attacks}`, what the seat has already chosen in this input — targets, list entries, or a declaration's blockers / attackers (which `state.combat` does not show until the declaration ends); `null` when no selection is up or the bridge cannot say; absent before M65. |
 | `highlighted` | Card ids to emphasise without making clickable. |
 | `weak` | Card ids from `setWeaklySelectable` — Forge's "this would be tapped by Auto" hint. It is a multiset on Forge's side (a count of 2 means *Auto would tap it*); the wire carries the distinct ids. `[]` until M5. |
 | `openZones` | Zone panels the engine asked the client to open: `[{playerId, zones:["graveyard","exile"]}]`. A **hint**, not a question — see §4.3. `[]` most of the time. |
@@ -2450,8 +2478,9 @@ specified in §2.2, §3, §3.1 and §4 — and where the two descriptions differ
 live one wins (`phaseStops` is `{own,opp}`, not a flat array; `yield` carries its
 `kind`; `setPhaseStop` names a `turn`, not a `playerId`; `setYield`'s modes are
 `yes` / `no` / `clear`; `newGame`'s are `continue` / `restart`). What is left
-below and **still not emitted** is `state.autoPassNoActions`,
-`attachedToPlayerId` on a `Card`, and `input.selectable.playerIds`.
+below and **still not emitted** is `state.autoPassNoActions` and
+`attachedToPlayerId` on a `Card`; `input.selectable.playerIds` shipped in
+amendment **M66** (2026-10-10), beside `input.selectable.chosen` (M65).
 
 The rest of this section is kept as written, because it is the reasoning the live
 shapes came out of. Everything in it was specified but **not on the wire** when it
@@ -2481,7 +2510,7 @@ report 11's names are the ones used here.
 | field | shape | meaning |
 |---|---|---|
 | `buttons.focus` | `"ok" \| "cancel" \| null` | `updateButtons(owner, label1, label2, enable1, enable2, **focus1**)` **[jar]** already carries it. Space activates the focused button; that is how the desktop behaves, and it is why "space = OK" is not a Forge shortcut. |
-| `selectable.playerIds` | `number[]` | which seats are clickable. **Player ids never travel in `cardIds`.** Today §4's `mode: "players"` leaves the reader to guess. |
+| `selectable.playerIds` | `number[]` | which seats are clickable. **Player ids never travel in `cardIds`.** Today §4's `mode: "players"` leaves the reader to guess. **Shipped as amendment M66**, nullable (`null`: the bridge cannot say). |
 | `weak` | `number[]` | already specified in §4; `[]` until M5 fills it. |
 
 ### 10.3 `act` additions

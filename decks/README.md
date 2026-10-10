@@ -501,6 +501,7 @@ the path fires every game.
 | `scry-probe.dck` | 24 Island, 16 Opt | scry 1 → `input.focusCard` with a library card | ten-games seed 10, `human-scry-7` |
 | `search-probe.dck` | 20 Forest, 20 Rampant Growth | `choose_entities` with a `delayedReveal` (library search) | ten-games seed 2, `human-search-7` |
 | `sideboard-probe.dck` | 18 Forest, 22 Garruk's Companion; sideboard 15 Giant Growth | the `sideboard` ask between games | check-all step 9d |
+| `select-probe.dck` | 9 Mountain, 8 Island, 6 Lightning Bolt, 4 Into the Void, 4 Careful Study, 9 Gray Ogre | a player target ("any target"), a creatures-only multi-target, a discard-two list, attack and block declarations: `input.selectable.chosen` / `playerIds` (M65, M66) | `tools/ws-select-probe.mjs` (D421–D423) |
 | `trample-probe.dck` | 18 Forest, 22 Garruk's Companion | `assign_damage` (a trampler) | ten-games seed 8, `human-trample-7` |
 | `yield-probe.dck` | 18 Forest, 22 Thallid | the same triggered ability on the stack every turn (auto-yield) | check-all step 10g, `human-yield-13` |
 

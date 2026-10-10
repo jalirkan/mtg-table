@@ -267,6 +267,17 @@ when the name is one of the candidates.
   took stay. (m20-search-p15: the Spawn's refused block left the Dragon declared on
   Writhing Chrysalis, so every later "block Mulldrifter with Amethyst Dragon" was
   "cannot be selected now"; state 1041's combat shows the Dragon's block.)
+  **On an engine with amendment M65 (D422) the declaration is the engine's own
+  record**, `input.selectable.chosen.blocks` (Forge's combat as each click is
+  taken), and the seat's `blockDecl` is only the fallback for an older engine; an
+  attack decision's already-declared attackers are `chosen.attacks`, and a
+  multi-target or list choice does not click what the input already holds.
+- **Players are offered from the engine's list** when the input carries
+  `selectable.playerIds` (amendment M66, D423): exactly the players a click would
+  be taken for — Duress offers the opponent alone, a hexproof player is not
+  offered — and a player-only choice with nothing else listed is a selection.
+  The prompt-word guess ("any target", "target opponent") is only for an older
+  engine.
 - When the steps run out, priority is passed with no call until the next moment.
 
 **The engine is the rules judge.** When a step has no matching action, the

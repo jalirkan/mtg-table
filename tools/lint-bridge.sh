@@ -544,6 +544,21 @@ check_game_pool_reflection() {
 }
 rule game-pool-reflection check_game_pool_reflection
 
+# --------------------------------------------------------------------------
+# 8. A Forge field read by name (D423)
+#
+# A private field read through reflection is a seam javap does not list and an
+# engine upgrade can move without a compile error.  The bridge has exactly one
+# reader, InputPeek: InputSelectTargets keeps the targets chosen so far and the
+# ability being targeted in private fields with no getter in the pinned jar
+# (javap), and input.selectable.chosen / playerIds (amendments M65, M66) need
+# both.  It looks each field up once and sends null when one is missing.  A
+# second reader is a decision, not a formality.  (Reflection onto our OWN
+# classes, as OverRaceSelfTest does with getDeclaredMethod, is not this rule.)
+# --------------------------------------------------------------------------
+ban_except forge-field-read 'bridge/src/mtgtable/InputPeek.java' 'getDeclaredField(' \
+  'a field read by name through reflection. The one allowed reader is InputPeek (InputSelectTargets has no getter for its targets or its ability, D423); add a second only with a decision.'
+
 [ "$LIST" = 1 ] && exit 0
 
 if [ "$fail" -ne 0 ]; then

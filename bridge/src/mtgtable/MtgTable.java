@@ -546,6 +546,10 @@ public final class MtgTable {
         System.out.println("events dropped = " + Snap.incompleteEventsDropped() + " (missing a required id)");
         System.out.println("unzoned cards  = " + Snap.unzonedCards());
         System.out.println("emit errors    = " + gui.errors());
+        System.out.println("input peeks    = " + gui.peekErrors() + " failed (input.selectable.chosen / playerIds "
+                + "sent as null; M65, M66)");
+        System.out.println("end-step yields= " + gui.endStepYieldsEnded() + " ended by an opponent's action, "
+                + "the end step or the turn's end (M64)");
         System.out.println("late frames    = " + gui.lateFramesDropped()
                 + " (passed the fast check, lost the race to `over`, dropped -- section 8.4)");
         if (transport instanceof WsTransport) {

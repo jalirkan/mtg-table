@@ -436,5 +436,41 @@
     "level": "fail",
     "expect": "M63 (activatable) is HALF PRESENT",
     "why": "amendment M63: a seat writes the key on every state -- some with and some without is a broken emitter"
+  },
+  {
+    "file": "m65-m66-selection-present.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendments M65 / M66: a targeting input and a block declaration with chosen and playerIds as a seat writes them -- the control for the m65 / m66 probes"
+  },
+  {
+    "file": "m66-playerids-names-no-seat.jsonl",
+    "level": "fail",
+    "expect": "which is not a seat of this game",
+    "why": "amendment M66 / D423: playerIds names seats -- an id that is no seat is a card id in the wrong list"
+  },
+  {
+    "file": "m65-chosen-was-never-offered.jsonl",
+    "level": "fail",
+    "expect": "which was not offered",
+    "why": "amendment M65 / D422: a target or list entry chosen is one the engine offered this seat in the same input"
+  },
+  {
+    "file": "m65-block-by-the-opponent.jsonl",
+    "level": "fail",
+    "expect": "controlled by the viewing seat",
+    "why": "amendment M65 / D422: a block declaration is the viewing seat's own -- a blocker it does not control is a lie about control"
+  },
+  {
+    "file": "m65-chosen-shape.jsonl",
+    "level": "fail",
+    "expect": "is not {cardIds, playerIds, blocks, attacks}",
+    "why": "amendment M65: chosen is exactly {cardIds, playerIds, blocks, attacks}"
+  },
+  {
+    "file": "m65-chosen-half-present.jsonl",
+    "level": "fail",
+    "expect": "M65 (chosen) is HALF PRESENT",
+    "why": "amendment M65: a seat writes chosen on every input -- some with and some without is a broken emitter"
   }
 ]

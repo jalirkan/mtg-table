@@ -188,7 +188,10 @@
 #                                 graveyard, never the opponent's cards; and
 #                                 (D420) state.activatable lists Jace's loyalty
 #                                 abilities, a named equip, a Clue, a crew (one
-#                                 engine boot)
+#                                 engine boot); then SelectionSelfTest (D422,
+#                                 D423): input.selectable's player rule and a
+#                                 declaration's chosen blocks / attacks on real
+#                                 cards (a second engine boot)
 #  13. web: npm run build && npm test   (tsc, node --test, and the vitest render
 #                                 smoke test that actually mounts <Board/>), with
 #                                 MTGTABLE_WS_LOGS naming the logs step 10
@@ -2203,14 +2206,30 @@ s12k_facedown() {
 #      the loyalty pays, once a turn, sorcery speed), Samurai's Katana's named
 #      equip, a Clue token's sacrifice and Smuggler's Copter's crew, never a
 #      land's mana ability or seat 1's permanents.  One engine boot.
+#      D422 / D423 (amendments M65, M66), what an input has chosen and which
+#      players a click is taken for, in a second JVM:
+#      bridge/src/mtgtable/SelectionSelfTest.java holds InputPeek to Forge's own
+#      onPlayerSelected rule (Lightning Bolt both seats, Into the Void none,
+#      Duress the opponent, Leyline of Sanctity's hexproof, an Aura that enchants
+#      a player) and reads a declaration's blocks and attacks off a real Combat;
+#      it also fails if the InputSelectTargets fields InputPeek reads by name are
+#      gone from this engine.  The live half is tools/ws-select-probe.mjs (not in
+#      the gate: three real games, docs/evidence/select-probe.md).
 s12l_playable() {
-  printf '\n=== 12l. PlayableSelfTest -- state.playable and state.activatable: what the seat may play from its graveyard, exile, hand, and activate on the battlefield (D413, D420) ===\n'
+  printf '\n=== 12l. PlayableSelfTest and SelectionSelfTest -- state.playable and state.activatable: what the seat may play from its graveyard, exile, hand, and activate on the battlefield (D413, D420); input.selectable.playerIds and chosen (D422, D423) ===\n'
   rc=0
   jvm ./bridge/run.sh mtgtable.PlayableSelfTest > var/check-all-playable.log 2>&1 || rc=$?
   grep -E '^(  ok|  FAIL|PlayableSelfTest)' var/check-all-playable.log || true
   if [ "$rc" != "0" ]; then
     capped "$rc" && die "PlayableSelfTest did not finish within ${GAME_TIMEOUT}s"
     die "PlayableSelfTest exited $rc: state.playable or state.activatable missed a card Forge would play or activate, listed one it would not, or named the opponent's (12l, D413, D420; log: var/check-all-playable.log)"
+  fi
+  rc=0
+  jvm ./bridge/run.sh mtgtable.SelectionSelfTest > var/check-all-selection.log 2>&1 || rc=$?
+  grep -E '^(  ok|  FAIL|SelectionSelfTest)' var/check-all-selection.log || true
+  if [ "$rc" != "0" ]; then
+    capped "$rc" && die "SelectionSelfTest did not finish within ${GAME_TIMEOUT}s"
+    die "SelectionSelfTest exited $rc: input.selectable.playerIds or chosen disagreed with Forge's own rule, or InputPeek cannot read InputSelectTargets on this engine (12l, D422, D423; log: var/check-all-selection.log)"
   fi
 }
 

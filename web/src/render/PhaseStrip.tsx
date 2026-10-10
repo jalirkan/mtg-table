@@ -199,7 +199,9 @@ function YieldLine({ yielding }: { yielding: YieldState | null }): JSX.Element |
   const what =
     yielding.kind === 'endOfTurn'
       ? 'until the end of this turn'
-      : yielding.kind === 'stack'
+      : yielding.kind === 'endStepOrOpponent'
+        ? 'until an opponent acts or the end step'
+        : yielding.kind === 'stack'
         ? 'until the stack clears'
         : `until ${yielding.phase ?? 'the marked phase'}`;
   return (

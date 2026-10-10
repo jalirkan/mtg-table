@@ -25,11 +25,14 @@
 //
 // A block declaration is clicks (attacker, then blocker) that Forge keeps as
 // they come, and the state shows none of them until the declaration ends: so
-// the seat keeps the blocks it declared (`blockDecl`, a click the engine
-// refused taken back) and hands them to the decision as `d.declared`, which
-// movesFor builds on -- a click on a declared block again would take it back.
+// the seat hands the blocks declared so far to the decision as `d.declared`,
+// which movesFor builds on -- a click on a declared block again would take it
+// back.  An engine with amendment M65 says what they are
+// (`input.selectable.chosen.blocks`, Forge's own combat) and that is
+// authoritative; on an older engine the seat keeps its own record
+// (`blockDecl`, a click the engine refused taken back).
 
-import { classifyAsk, classifyInput, inputBinding, inputKindOf, movesFor, tokenFor } from './decision.mjs';
+import { classifyAsk, classifyInput, engineChosen, inputBinding, inputKindOf, movesFor, tokenFor } from './decision.mjs';
 import { cardsById, nameOf } from './frames.mjs';
 import { History } from './history.mjs';
 import { snapshot } from './prompt.mjs';
@@ -187,6 +190,9 @@ export class SeatCore {
 
   /** The blocks declared so far in this declaration: [{attackerId, blockerId}]. */
   declaredBlocks() {
+    // M65 (D422): the engine's own record, when the input carries it.
+    const blocks = engineChosen(this.input)?.blocks;
+    if (Array.isArray(blocks)) return blocks.map((b) => ({ attackerId: b.attackerId, blockerId: b.blockerId }));
     return [...(this.blockDecl?.pairs ?? new Map()).entries()].map(([blockerId, attackerId]) => ({ attackerId, blockerId }));
   }
 

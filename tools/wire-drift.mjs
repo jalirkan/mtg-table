@@ -82,8 +82,11 @@
 // Everything else on those cards is still compared; the keywords' VALUES come
 // under this step the day g1 is re-recorded on purpose.  A committed file that
 // carries the key is compared with it, as every other key is.  `state.playable`
-// (amendment M61, D413) is a second such key, by the same rule, and
-// `state.activatable` (amendment M63, D420) a third.
+// (amendment M61, D413) is a second such key, by the same rule,
+// `state.activatable` (amendment M63, D420) a third, and `input.selectable`'s
+// `chosen` and `playerIds` (amendments M65, M66; D422, D423) the fourth and
+// fifth -- an AI-vs-AI recording has no input, so today they cannot differ,
+// but a seat's recording compared here would.
 //
 // And one ENCODING the committed file may predate, in both modes (amendment
 // M52, D290): a `blockers` event's unblocked attacker, `[n]` (itself) before
@@ -161,7 +164,7 @@ const A = load(fa);
 const B = load(fb);
 
 /** Keys a later amendment added, that a committed file may predate (see the header). */
-const LATER_KEYS = [['keywords', 'M49'], ['playable', 'M61'], ['activatable', 'M63']];
+const LATER_KEYS = [['keywords', 'M49'], ['playable', 'M61'], ['activatable', 'M63'], ['chosen', 'M65'], ['playerIds', 'M66']];
 /** Does any object, at any depth, carry this key? */
 function carries(v, key) {
   if (Array.isArray(v)) return v.some((x) => carries(x, key));
