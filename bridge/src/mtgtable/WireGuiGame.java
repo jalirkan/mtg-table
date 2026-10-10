@@ -1,6 +1,6 @@
 /*
  * mtg-table -- a local browser client for Magic: The Gathering on the Forge engine.
- * Copyright (C) 2026 mtg-table contributors.
+ * Copyright (C) 2146 mtg-table contributors.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -59,90 +59,93 @@
  * sec  lines      what is there, and its members (line)
  *                 thread | lock | governed by
  * ---  ---------  --------------------------------------------------------------
- * -    212-252    the class comment, then the class declaration (251): the three
+ * -    216-256    the class comment, then the class declaration (255): the three
  *                 rules this file is written to -- a push touches only getId() on a
  *                 view; only the game thread may block; no thread of ours is named Game*
  *                 - | - | report 07 section 2.5, hard rules 2 and 3
- * -    253-899    construction and injected wiring: the constructor (582),
- *                 setHostedMatch (602), setSession (607), setLogFactory (617),
- *                 awaitGameEnd (744) and awaitGameStart (749) with their await
- *                 (776), the run summary's counters from unimplemented (793) to
- *                 refreshesSkipped (892)
+ * -    257-932    construction and injected wiring: the constructor (607),
+ *                 setHostedMatch (627), setSession (632), setLogFactory (642),
+ *                 awaitGameEnd (769) and awaitGameStart (774) with their await
+ *                 (801), the run summary's counters from unimplemented (818) to
+ *                 refreshesSkipped (925)
  *                 MAIN | LIFE, for the game counters | report 07 section 3; D44
- * -    900-1089   frame emission: emit (911), logC2s (994), envelope (1030),
- *                 notice (1057), unimpl (1078), fired (1086)
+ * -    933-1122   frame emission: emit (944), logC2s (1027), envelope (1063),
+ *                 notice (1090), unimpl (1111), fired (1119)
  *                 whichever thread emits: GAME (`state`), EDT (`input`, notices),
  *                 IO, MAIN (game 1's `hello_ok`), and BG in the build | LOG, taken
- *                 at 947 and 1012, with `over` re-checked under it at 968 and 1013 |
+ *                 at 980 and 1045, with `over` re-checked under it at 1001 and 1046 |
  *                 protocol sections 1 and 8.4: `over` is terminal (OverRaceSelfTest)
- * 1    1090-1299  openView, the wiring hook: openView (1102), seedPhaseStops (1189),
- *                 resetForGame (1244), the one reset hook between games
+ * 1    1123-1339  openView, the wiring hook: openView (1135), seedPhaseStops (1227),
+ *                 resetForGame (1282), the one reset hook between games
  *                 game 1: MAIN, the caller of HostedMatch.startMatch; later games:
  *                 EDT, from an `act: newGame` | LIFE; `deferred` and INPUT inside the
  *                 reset | report 07 section 4.1; D44 and amendment M38; D38
- * 2    1300-1663  handleGameEvents, THE snapshot hook: handleGameEvents (1320),
- *                 flushState (1335), OutcomeWatcher (1425), FinishWatcher (1447),
- *                 engineFinished (1463), the test hooks (1479-1587), captureOutcome
- *                 (1609; its hop is at 1615, tagged D39)
+ * 2    1340-1703  handleGameEvents, THE snapshot hook: handleGameEvents (1360),
+ *                 flushState (1375), OutcomeWatcher (1465), FinishWatcher (1487),
+ *                 engineFinished (1503), the test hooks (1519-1627), captureOutcome
+ *                 (1649; its hop is at 1655, tagged D39)
  *                 GAME; a batch that arrives on any other thread is buffered in
- *                 `deferred` (1316-1323); engineFinished runs on the EDT | `deferred`'s
+ *                 `deferred` (1356-1363); engineFinished runs on the EDT | `deferred`'s
  *                 monitor; LOG through emit | hard rule 3, D5; D114 (FinishWatcher);
  *                 D39 (the hop); amendments M4 and M11
- * 3    1664-1978  the input path: InputState (1669), engineInput (1725),
- *                 mutateInput (1737), inputBody (1753), showPromptMessage (1804),
- *                 updateButtons (1819), setSelectables (1842), setHighlighted (1868),
- *                 setCard (1904) and the rest of the prompt pushes
+ * 3    1704-2098  the input path: InputState (1709), engineInput (1774),
+ *                 mutateInput (1797), inputBody (1813), showPromptMessage (1893),
+ *                 updateButtons (1939), setSelectables (1962), setHighlighted (1988),
+ *                 setCard (2024), peekInput (1916, M65 / M66's InputPeek read) and the
+ *                 rest of the prompt pushes
  *                 Forge pushes from the EDT, from GAME and from the thread of a click
- *                 | INPUT (1734-1741); the push goes out after it is released
- *                 (1742) | D22 (inputGen), amendment M42 (inputSeen), protocol
+ *                 | INPUT (1783-1801); the push goes out after it is released
+ *                 (1802) | D22 (inputGen), amendment M42 (inputSeen), protocol
  *                 section 4
- * 4    1979-2151  the other pushes: updateCurrentPlayer (1989, AbstractGuiGame's
- *                 own abstract member), the overlays, message (2040), showErrorDialog
- *                 (2046), finishGame (2052), engineCrashed (2074), afterGameEnd
- *                 (2087), emitOver (2104)
+ * 4    2099-2271  the other pushes: updateCurrentPlayer (2109, AbstractGuiGame's
+ *                 own abstract member), the overlays, message (2160), showErrorDialog
+ *                 (2166), finishGame (2172), engineCrashed (2194), afterGameEnd
+ *                 (2207), emitOver (2224)
  *                 mostly the EDT; engineCrashed on the dying Game-n thread; emitOver
  *                 on whichever thread saw the outcome | `this`, so `over` goes out
  *                 once; LIFE, for games finished | amendments M4 and M11; D114; D115
- * 5    2152-2264  openZones / tempShowZones, hints and not questions: tempShowZones
- *                 (2166), openZones (2182), restoreOldZones (2203), hideZones (2209),
- *                 the zone-hint helpers (2206-2255)
+ * 5    2272-2384  openZones / tempShowZones, hints and not questions: tempShowZones
+ *                 (2286), openZones (2302), restoreOldZones (2323), hideZones (2329),
+ *                 the zone-hint helpers (2326-2375)
  *                 EDT (openZones sometimes GAME) | INPUT, through engineInput |
  *                 protocol section 4.3
- * 6    2265-2282  phase stops: isUiSetToSkipPhase (2275), asked on every step
+ * 6    2385-2402  phase stops: isUiSetToSkipPhase (2395), asked on every step (and
+ *                 M64's one-step stop at the end step a yield reached)
  *                 GAME | none (a ConcurrentHashMap) | D19, D38
- * 6b   2290-2550  the comfort snapshot, M6's four answers, M61's and M63's: Snap.Comfort
- *                 (2299), playableNow (2368), activatableNow (after it), stopNames (2392), activeYieldJson (2408),
- *                 undoStateJson (2449), rawYieldKey (2495; lint rule 4b's one tagged
- *                 key read is at 2496), handleFor (2500), standingYield (2525)
+ * 6b   2416-2677  the comfort snapshot, M6's four answers, M61's and M63's: Snap.Comfort
+ *                 (2425), playableNow (2494), activatableNow (after it), stopNames (2518), activeYieldJson (2534),
+ *                 undoStateJson (2575), rawYieldKey (2622; lint rule 4b's one tagged
+ *                 key read is at 2623), handleFor (2627), standingYield (2652)
  *                 GAME, inside Snap.state | none | D41, D42, D413, D420
- * 7    2551-3456  the ask path: ask (2569), decode (2639), the option writers
- *                 (2651-2754), then the blocking members: getAbilityToPlay (2758)
- *                 and its asynchronous menu (2817-2993; its hop is at 2880, tagged
- *                 D22), confirm (2996), getChoices (3088), order (3131),
- *                 chooseSingleEntityForEffect (3195), assignCombatDamage (3277),
- *                 assignGenericAmount (3339), manipulateCardList (3391), sideboard
- *                 (3431) and the rest
+ * 7    2678-3583  the ask path: ask (2696), decode (2766), the option writers
+ *                 (2778-2881), then the blocking members: getAbilityToPlay (2885)
+ *                 and its asynchronous menu (2944-3120; its hop is at 3007, tagged
+ *                 D22), confirm (3123), getChoices (3215), order (3258),
+ *                 chooseSingleEntityForEffect (3322), assignCombatDamage (3404),
+ *                 assignGenericAmount (3466), manipulateCardList (3518), sideboard
+ *                 (3558) and the rest
  *                 GAME, which parks until the answer comes; getAbilityToPlay arrives
  *                 on the EDT and hops (D22) | LOG while the ask is numbered
- *                 (2612-2620); none while parked | protocol sections 5 and 5.4 (null
+ *                 (2739-2747); none while parked | protocol sections 5 and 5.4 (null
  *                 is always an answer); D15, D24; D20, D22
- * 8    3457-4243  the inbound path, acts: onAct (3462), applyAct (3489), concede
- *                 (3696), setPhaseStop (3808), newGame (3910), yieldTo (3978),
- *                 setYield (4059), refreshState (4151; its hop is at 4160, tagged
- *                 D39), refreshSnapshot (4184), enginePausedForSeat (4232)
+ * 8    3584-4532  the inbound path, acts: onAct (3589), applyAct (3616), concede
+ *                 (3823), setPhaseStop (3935), newGame (4037), yieldTo (4105) with
+ *                 M64's yieldToEndStepOrOpponent (4208) and EndStepWatcher (4270, GAME),
+ *                 setYield (4348), refreshState (4440; its hop is at 4449, tagged
+ *                 D39), refreshSnapshot (4473), enginePausedForSeat (4521)
  *                 onAct on IO; applyAct and every act on the EDT; refreshSnapshot on
  *                 a second Game-n worker | LOG, for the act's c2s line | D17, D39,
  *                 D41, D42, D114, amendment M8
- * 8b   4244-4497  the acts that write the engine from the EDT, then answers, resync
- *                 and disconnect: notNow (4264), engineFacts (4309), GuardFeeds
- *                 (4318), pressOk (4361), onAnswer (4381), onResync (4416),
- *                 onDisconnect (4471), close (4489)
+ * 8b   4533-4786  the acts that write the engine from the EDT, then answers, resync
+ *                 and disconnect: notNow (4553), engineFacts (4598), GuardFeeds
+ *                 (4607), pressOk (4650), onAnswer (4670), onResync (4705),
+ *                 onDisconnect (4760), close (4778)
  *                 notNow and pressOk on the EDT; onAnswer, onResync and onDisconnect
  *                 on IO | none of its own: volatile reads and atomics (a frame written
  *                 here takes LOG in emit or logC2s) | D136, amendment M48; D27,
  *                 amendment M42; D24
- * 9    4498-4554  answer coercion: asInt (4510), asBool (4514), asIntArray (4518),
- *                 asIntMap (4522), indexOfIdentity (4527), actBody (4532); the
+ * 9    4787-4843  answer coercion: asInt (4799), asBool (4803), asIntArray (4807),
+ *                 asIntMap (4811), indexOfIdentity (4816), actBody (4821); the
  *                 rest of it lives in Ask.java
  *                 any thread (pure functions) | none | protocol section 5.3
  */
@@ -176,6 +179,10 @@ import com.google.common.eventbus.Subscribe;
 import forge.game.event.GameEvent;
 import forge.game.event.GameEventGameFinished;
 import forge.game.event.GameEventGameOutcome;
+import forge.game.event.GameEventAttackersDeclared;
+import forge.game.event.GameEventSpellAbilityCast;
+import forge.game.event.GameEventTurnBegan;
+import forge.game.event.GameEventTurnPhase;
 import forge.game.phase.PhaseType;
 import forge.game.player.DelayedReveal;
 import forge.game.player.IHasIcon;
@@ -307,6 +314,27 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     private final AtomicLong inputGen = new AtomicLong();
     private final AtomicInteger errors = new AtomicInteger();
+    /**
+     * Amendment M64 (D421): the running {@code yieldTo {kind:"endStepOrOpponent"}}
+     * -- whose end step and in which turn -- or null.  It rides on Forge's own
+     * marker at that end step, and it is running exactly while that marker is
+     * ({@link #endStepYieldRunning}); {@link EndStepWatcher} ends it.
+     */
+    private volatile EndStepYield endStepYield;
+    /**
+     * M64: the end step the yield reached, for the one priority there: the seat
+     * stops at it even when its phase stops skip it ({@link #isUiSetToSkipPhase}).
+     * Cleared at the next step.
+     */
+    private volatile EndStepYield endStepStop;
+
+    /** M64: the end step a yield runs to: the turn player's id and the turn number ({@code state.turn}). */
+    private record EndStepYield(int ownerId, int turn) { }
+
+    /** M65 / M66: an {@link InputPeek} read that threw (the frame went out with null). */
+    private final AtomicInteger peekErrors = new AtomicInteger();
+    /** M64: yields to "an opponent acts or the end step" that {@link EndStepWatcher} ended. */
+    private final AtomicInteger endStepYieldsEnded = new AtomicInteger();
     /** M6 acts the seat actually used, for the run summary and the evidence table. */
     private final AtomicInteger newGamesRequested = new AtomicInteger();
     private final AtomicInteger yieldsSet = new AtomicInteger();
@@ -829,6 +857,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      *         and has never once been exercised by the engine for these decks,
      *         which is a fact the summary should print rather than leave implicit.
      */
+    public int peekErrors() {
+        return peekErrors.get();
+    }
+
+    public int endStepYieldsEnded() {
+        return endStepYieldsEnded.get();
+    }
+
     public int[] focusPushes() {
         return new int[] {focusOnGameThread.get(), focusOffGameThread.get()};
     }
@@ -1173,6 +1209,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // 3. The outcome, captured where it is legal to read it.
             hosted.getGame().subscribeToEvents(new OutcomeWatcher());
 
+            // 3b. M64 (D421): the end of a yield to "an opponent acts or the
+            //     end step", on the game thread at the event itself -- before
+            //     the seat is next offered priority.
+            hosted.getGame().subscribeToEvents(new EndStepWatcher());
+
             // 4. D114: "Forge has finished game n", from game n's own bus.
             //    Subscribed LAST, so FControlGameEventHandler (subscribed by
             //    HostedMatch.startGame before openView) has queued its EDT
@@ -1280,6 +1321,8 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         handleToKey.clear();
         handleSeq.set(0);
         skips.clear();
+        endStepYield = null;                   // M64: a yield belongs to the game it was set in
+        endStepStop = null;
         synchronized (deferred) {
             deferred.clear();
         }
@@ -1694,6 +1737,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         private final Set<Integer> highlighted = new LinkedHashSet<>();
         private final Set<Integer> weak = new LinkedHashSet<>();
         private final Map<Integer, Set<String>> openZones = new LinkedHashMap<>();
+        /**
+         * Amendments M65 / M66 (D422, D423): what {@link InputPeek} read off the
+         * seat's current input at the last engine push -- the players a click
+         * would be taken for and what is already chosen; null when the bridge
+         * cannot say.  Cached here so a {@code resync} repeats them and never
+         * reads Forge from the IO thread.
+         */
+        private InputPeek.Facts peek = InputPeek.Facts.NONE;
 
         /** Back to the constructed state, for a new game (M6). */
         private void reset() {
@@ -1711,6 +1762,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             highlighted.clear();
             weak.clear();
             openZones.clear();
+            peek = InputPeek.Facts.NONE;
         }
     }
 
@@ -1732,7 +1784,18 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private void engineInput(final Consumer<InputState> f) {
         inputSeen = true;
         engineInputs.incrementAndGet();        // M59: the table's decision clock
-        mutateInput(f);
+        // M65 / M66: read the input Forge is showing BEFORE taking the lock --
+        // Forge code runs here (sa.canTarget, the combat), and none of it may
+        // run under inputLock.  On this push's own thread: see InputPeek.
+        final InputPeek.Facts facts = peekInput();
+        mutateInput(s -> {
+            f.accept(s);
+            // A targeting or list input's facts hold only while its
+            // setSelectables is in force: its onStop clears them while the
+            // object is still on the queue (InputPeek.Facts).
+            s.peek = facts.needsSelectables() && s.selMax == 0 && s.selectable.isEmpty()
+                    ? InputPeek.Facts.NONE : facts;
+        });
         if (pendingConcede && concedeRetryPosted.compareAndSet(false, true)) {
             // D136: the engine is showing this seat something, so it is parking
             // (or has parked) here: finish the deferred concede on the EDT.
@@ -1784,6 +1847,35 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         o.end();
         o.n("min", s.selMin).n("max", s.selMax);
         o.n("mode", s.selectable.isEmpty() ? "none" : "cards");
+        // Amendment M66 (D423): the players a click would be taken for in this
+        // input; null when the bridge cannot say.  Never inside cardIds.
+        o.key("playerIds");
+        idsOrNull(o, s.peek.playerIds());
+        // Amendment M65 (D422): what the seat has already chosen in this input;
+        // null when no selection is up or the bridge cannot say.
+        o.key("chosen");
+        final InputPeek.Chosen ch = s.peek.chosen();
+        if (ch == null) {
+            o.vNull();
+        } else {
+            o.obj();
+            o.key("cardIds");
+            idsOrNull(o, ch.cardIds());
+            o.key("playerIds");
+            idsOrNull(o, ch.playerIds());
+            o.key("blocks").arr();
+            for (final InputPeek.Block b : ch.blocks()) {
+                o.obj().n("blockerId", b.blockerId()).n("attackerId", b.attackerId()).end();
+            }
+            o.end();
+            o.key("attacks").arr();
+            for (final InputPeek.Attack a : ch.attacks()) {
+                o.obj().n("attackerId", a.attackerId()).key("defender").obj()
+                 .n("kind", a.defenderKind()).n("id", a.defenderId()).end().end();
+            }
+            o.end();
+            o.end();
+        }
         o.end();
         o.key("highlighted").arr();
         for (final Integer id : s.highlighted) {
@@ -1805,6 +1897,37 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
         o.end();
         return o.end().done();
+    }
+
+    private static void idsOrNull(final JsonOut o, final List<Integer> ids) {
+        if (ids == null) {
+            o.vNull();
+            return;
+        }
+        o.arr();
+        for (final Integer id : ids) {
+            o.v(id.intValue());
+        }
+        o.end();
+    }
+
+    /**
+     * M65 / M66: {@link InputPeek}'s facts for the input on this seat's queue,
+     * or {@link InputPeek.Facts#NONE}.  A read that throws is counted and says
+     * "cannot say" -- the frame still goes out.
+     */
+    private InputPeek.Facts peekInput() {
+        final IGameController c = controller();
+        if (!(c instanceof PlayerControllerHuman h)) {
+            return InputPeek.Facts.NONE;
+        }
+        try {
+            return InputPeek.of(currentInput(c), h.getPlayer());
+        } catch (final RuntimeException e) {
+            peekErrors.incrementAndGet();
+            System.err.println("INPUT PEEK FAILED: " + e + " (chosen / playerIds go out as null; D422, D423)");
+            return InputPeek.Facts.NONE;
+        }
     }
 
     @Override
@@ -2283,6 +2406,12 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         if (turnPlayer == null) {
             return false;
         }
+        // M64 (D421): a yield to the end step stops AT the end step, whatever
+        // the seat's stops say -- for that one step.
+        final EndStepYield stop = endStepStop;
+        if (stop != null && phase == PhaseType.END_OF_TURN && turnPlayer.getId() == stop.ownerId()) {
+            return false;
+        }
         final EnumSet<PhaseType> set = skips.get(Integer.valueOf(turnPlayer.getId()));
         return set != null && set.contains(phase);
     }
@@ -2456,7 +2585,8 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 return null;
             }
             final PlayerView owner = m.getPhaseOwner();
-            o.n("kind", "marker")
+            final EndStepYield e = endStepYield;
+            o.n("kind", e != null && endStepYieldRunning(e, y) ? "endStepOrOpponent" : "marker")
              .nInt("playerId", owner == null ? null : Integer.valueOf(owner.getId()))
              .n("phase", m.getPhase() == null ? null : m.getPhase().name());
         }
@@ -4009,7 +4139,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return;
         }
         final String kind = body.get("kind") == null ? "" : String.valueOf(body.get("kind"));
+        if (YIELD_KINDS.contains(kind)) {
+            endStepYield = null;               // M64: every yield replaces the one before (Forge: one at a time)
+        }
         switch (kind) {
+        case "endStepOrOpponent":
+            yieldToEndStepOrOpponent(c);
+            break;
         case "endOfTurn":
             // Forge's own two-line helper, copied by call and not by body.
             forge.gamemodes.match.YieldController.endTurn(c, me);
@@ -4052,8 +4188,164 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             break;
         }
         default:
-            notice("warn", "yieldTo", "kind must be endOfTurn|marker|stack, got " + kind);
+            notice("warn", "yieldTo", "kind must be endOfTurn|marker|stack|endStepOrOpponent, got " + kind);
         }
+    }
+
+    /** The {@code yieldTo} kinds this bridge takes. */
+    private static final Set<String> YIELD_KINDS = Set.of("endOfTurn", "marker", "stack", "endStepOrOpponent");
+
+    /**
+     * <b>Amendment M64, decision D421: {@code yieldTo {kind:"endStepOrOpponent"}}.</b>
+     * Pass priority until an opponent acts or the current turn's end step,
+     * whichever comes first.  The passing is Forge's own: a yield marker at the
+     * turn player's {@code END_OF_TURN} ({@code YieldUpdate.SetMarker}, the
+     * mechanism of {@code kind:"marker"}), so Forge's prompt says "Yielding
+     * until ..." and its Cancel ends it like every yield.  What ends it early is
+     * ours, in {@link EndStepWatcher}, and does not depend on Forge's yield
+     * preferences.  Refused in the end step and the cleanup step, where "the
+     * current turn's end step" has already begun: the next one would be a whole
+     * turn away, and passing through the seat's own turn is not what the act
+     * asks.  EDT (an act).
+     */
+    private void yieldToEndStepOrOpponent(final IGameController c) {
+        final HostedMatch h = hosted;
+        final forge.game.Game game = h == null ? null : h.getGame();
+        if (game == null) {
+            notice("warn", "yieldTo", "no game is running");
+            return;
+        }
+        final forge.game.phase.PhaseHandler ph = game.getPhaseHandler();
+        final Player turnPlayer = ph.getPlayerTurn();
+        final PhaseType now = ph.getPhase();
+        if (turnPlayer == null || now == null) {
+            notice("warn", "yieldTo", "no turn has begun yet");
+            return;
+        }
+        if (now == PhaseType.END_OF_TURN || now == PhaseType.CLEANUP) {
+            notice("warn", "yieldTo", "the end step has already begun: pass priority instead");
+            return;
+        }
+        final PlayerView owner = playerIndex.get(Integer.valueOf(turnPlayer.getId()));
+        if (owner == null) {
+            notice("warn", "yieldTo", "no such player for the end step");
+            return;
+        }
+        // Set BEFORE the marker: sending it passes priority (tryAutoPassNow),
+        // and from then on the game thread may reach EndStepWatcher at any time.
+        final EndStepYield e = new EndStepYield(owner.getId(), ph.getTurn());
+        endStepYield = e;
+        System.err.println("YIELD endStepOrOpponent: to player " + e.ownerId() + "'s end step of turn " + e.turn()
+                + ", or the first thing an opponent puts on the stack or an attack on this seat (M64, D421)");
+        c.sendYieldUpdate(new forge.gamemodes.match.YieldUpdate.SetMarker(owner, PhaseType.END_OF_TURN, false));
+    }
+
+    /** M64: is this yield still the one Forge is running -- its marker, at that end step? */
+    private static boolean endStepYieldRunning(final EndStepYield e, final forge.gamemodes.match.YieldController y) {
+        final forge.gamemodes.match.YieldMarker m = y.getAutoPassUntilMarker();
+        return m != null && m.getPhase() == PhaseType.END_OF_TURN && m.getPhaseOwner() != null
+                && m.getPhaseOwner().getId() == e.ownerId();
+    }
+
+    /**
+     * <b>M64 (D421): what ends a yield to "an opponent acts or the end step".</b>
+     * On the game's own event bus, so on the game thread at the event itself --
+     * the cast, the attack, the step -- and before the seat is next offered
+     * priority (Guava dispatches synchronously on the posting thread, as for
+     * {@link OutcomeWatcher}).  Ending it is
+     * {@code YieldController.clearActiveYieldAndDispatch()}, the call Forge's
+     * own yield interrupts make from the same thread.  Ended by:
+     * <ul>
+     *   <li>an item an opponent controls going on the stack: a spell cast, an
+     *       ability activated, a trigger ({@code GameEventSpellAbilityCast} is
+     *       fired by {@code MagicStack.add} for every one; its activating
+     *       player is the controller);</li>
+     *   <li>an opponent declaring attackers at this seat or a permanent it
+     *       controls ({@code GameEventAttackersDeclared});</li>
+     *   <li>the turn's end step beginning ({@code GameEventTurnPhase}) -- and
+     *       then the seat is stopped there, see {@link #endStepStop};</li>
+     *   <li>a later turn beginning, should an effect end the turn before its
+     *       end step.</li>
+     * </ul>
+     * Cancel, another {@code yieldTo} and the end of the game end it too: each
+     * takes Forge's marker away, and a yield whose marker is gone is over.
+     */
+    private final class EndStepWatcher {
+        @Subscribe
+        public void receive(final GameEvent ev) {
+            if (ev instanceof GameEventTurnPhase && endStepStop != null) {
+                endStepStop = null;            // the end step it was for is over (set again below if this is it)
+            }
+            final EndStepYield e = endStepYield;
+            if (e == null) {
+                return;
+            }
+            final IGameController c = controller();
+            final forge.gamemodes.match.YieldController y = c == null ? null : c.getYieldController();
+            if (y == null || !endStepYieldRunning(e, y)) {
+                // Cancelled, replaced, or ended a moment ago by Forge's own
+                // yield interrupt on this same event (FControlGameEventHandler
+                // is subscribed before us; with Forge's defaults it ends every
+                // yield on an opponent's spell and on an attack on the seat).
+                endStepYield = null;
+                System.err.println("YIELD endStepOrOpponent OVER: Forge's marker is gone (Cancel, another yield, "
+                        + "or Forge's own interrupt on " + ev.getClass().getSimpleName() + ") (M64, D421)");
+                return;
+            }
+            final PlayerView me = viewer;
+            final int myId = me == null ? Integer.MIN_VALUE : me.getId();
+            String why = null;
+            if (ev instanceof GameEventSpellAbilityCast sc) {
+                final PlayerView who = sc.si() == null ? null : sc.si().getActivatingPlayer();
+                if (who != null && who.getId() != myId) {
+                    why = "player " + who.getId() + " put an item on the stack";
+                }
+            } else if (ev instanceof GameEventAttackersDeclared ad) {
+                if (ad.player() != null && ad.player().getId() != myId && attacksSeat(myId)) {
+                    why = "player " + ad.player().getId() + " attacked this seat";
+                }
+            } else if (ev instanceof GameEventTurnPhase tp) {
+                if (tp.phase() == PhaseType.END_OF_TURN && tp.playerTurn() != null
+                        && tp.playerTurn().getId() == e.ownerId() && currentTurn() == e.turn()) {
+                    endStepStop = e;
+                    why = "the end step began";
+                }
+            } else if (ev instanceof GameEventTurnBegan tb) {
+                if (tb.turnNumber() > e.turn()) {
+                    why = "turn " + e.turn() + " ended without an end step";
+                }
+            }
+            if (why != null) {
+                endStepYield = null;
+                endStepYieldsEnded.incrementAndGet();
+                System.err.println("YIELD endStepOrOpponent ENDED: " + why + " (M64, D421)");
+                y.clearActiveYieldAndDispatch();
+            }
+        }
+    }
+
+    /** M64.  Game thread.  Does the declared attack include this seat or a permanent it controls? */
+    private boolean attacksSeat(final int myId) {
+        final HostedMatch h = hosted;
+        final forge.game.combat.Combat combat = h == null || h.getGame() == null ? null : h.getGame().getCombat();
+        if (combat == null) {
+            return false;
+        }
+        for (final forge.game.GameEntity d : combat.getDefenders()) {
+            final boolean mine = d instanceof Player p ? p.getId() == myId
+                    : d instanceof forge.game.card.Card pw && pw.getController() != null
+                      && pw.getController().getId() == myId;
+            if (mine && !combat.getAttackersOf(d).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** M64.  Game thread: {@code PhaseHandler.getTurn()}, the number {@code state.turn} carries. */
+    private int currentTurn() {
+        final HostedMatch h = hosted;
+        return h == null || h.getGame() == null ? -1 : h.getGame().getPhaseHandler().getTurn();
     }
 
     /** Which phase cell a {@code yieldTo {kind:"marker"}} means; the viewer by default. */

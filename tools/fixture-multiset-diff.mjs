@@ -109,7 +109,21 @@ const AMENDED_KEYS = [
   { type: 'hello_ok', key: 'match', amendment: 'M44' },
   { type: 'state', key: 'playable', amendment: 'M61' },
   { type: 'state', key: 'activatable', amendment: 'M63' },
+  // M65 / M66 (D422, D423): two keys inside `input.selectable` -- a dotted
+  // path names a key below `body`.
+  { type: 'input', key: 'selectable.chosen', amendment: 'M65' },
+  { type: 'input', key: 'selectable.playerIds', amendment: 'M66' },
 ];
+/** The object holding a dotted `key` under `body`, and the last segment; null when absent. */
+function holder(body, key) {
+  const parts = key.split('.');
+  let o = body;
+  for (const p of parts.slice(0, -1)) {
+    if (o === null || typeof o !== 'object') return null;
+    o = o[p];
+  }
+  return o !== null && typeof o === 'object' ? { o, k: parts[parts.length - 1] } : null;
+}
 /**
  * The same rule for a key an amendment added to a CARD, which sits at any depth
  * (`players[].zones.*.cards[]`, `stackCards`, an ask option's `card`): when A
@@ -237,9 +251,9 @@ function load(path, drop = new Map()) {
       continue;
     }
     lines++;
-    const dropKey = drop.get(frame.type);
-    if (dropKey !== undefined && frame.body !== null && typeof frame.body === 'object') {
-      delete frame.body[dropKey];
+    for (const dropKey of drop.get(frame.type) ?? []) {
+      const h = holder(frame.body, dropKey);
+      if (h !== null) delete h.o[h.k];
     }
     for (const key of deepDrop) dropDeep(frame, key);
     if (selfBlocksAsEmpty) unblockSelf(frame);
@@ -265,7 +279,8 @@ function amendedCount(path, type, key) {
     const frame = JSON.parse(raw);
     if (frame?.type !== type) continue;
     total++;
-    if (frame.body !== null && typeof frame.body === 'object' && key in frame.body) carrying++;
+    const h = holder(frame.body, key);
+    if (h !== null && h.k in h.o) carrying++;
   }
   return { total, carrying };
 }
@@ -283,7 +298,7 @@ if (!opt.keepAmended) {
       continue; // load() below reports an unreadable or malformed file properly
     }
     if (ca.total > 0 && ca.carrying === 0 && cb.carrying > 0) {
-      dropB.set(type, key);
+      dropB.set(type, [...(dropB.get(type) ?? []), key]);
       amendedNotes.push(
         `  amendment ${amendment}: ${type}.${key} is absent from all ${String(ca.total)} of A's ` +
           `${type} frame(s) (A predates it) and present in ${String(cb.carrying)} of B's -- ` +

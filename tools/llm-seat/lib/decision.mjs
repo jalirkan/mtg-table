@@ -132,6 +132,29 @@ function autoOf(d, reason, moves) {
 // Inputs
 // ---------------------------------------------------------------------------
 
+/**
+ * Amendment M66 (D423): the players a click would be taken for in this input,
+ * as the engine lists them (`input.selectable.playerIds`), or null when the
+ * frame does not say (an older engine, or an input the bridge does not read).
+ */
+export function enginePlayers(input) {
+  const v = input?.selectable?.playerIds;
+  return Array.isArray(v) && v.every((x) => Number.isInteger(x)) ? v : null;
+}
+
+/**
+ * Amendment M65 (D422): what the seat has already chosen in this input
+ * (`input.selectable.chosen`), or null when the frame does not say.  The
+ * declaration's blocks and attacks are Forge's own, which the state does not
+ * show until the declaration ends.
+ */
+export function engineChosen(input) {
+  const c = input?.selectable?.chosen;
+  if (c === null || typeof c !== 'object' || !Array.isArray(c.cardIds) || !Array.isArray(c.playerIds)
+    || !Array.isArray(c.blocks) || !Array.isArray(c.attacks)) return null;
+  return c;
+}
+
 export function inputKindOf(input, state, me) {
   const prompt = String(input?.prompt ?? '');
   const ok = input?.buttons?.ok ?? {};
@@ -147,6 +170,9 @@ export function inputKindOf(input, state, me) {
   if (prompt.startsWith('Select creatures to block')) return 'block';
   if (/\bkeep\b/i.test(prompt) && ok.enabled && cancel.enabled && !prompt.startsWith('Priority')) return 'mulligan';
   if ((sel.mode === 'cards' && cardIds.length > 0) || sel.mode === 'players') return 'select';
+  // M66: a player-only choice (target player, target opponent) comes with mode
+  // "none" and no cards; the engine's player list says it is a choice.
+  if ((enginePlayers(input) ?? []).length > 0) return 'select';
   // a player target can come with mode "none" and nothing listed (s20 Thought Scour)
   if (/\bSelect\b[^\n]*\btarget (player|opponent)\b/i.test(prompt) && (sel.min ?? 0) > 0) return 'select';
   if (/^Priority:/.test(prompt) && state?.priority === me && ok.enabled) return 'priority';
@@ -261,7 +287,10 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
       d.options.push({ n: 1, label: 'No attack', isDefault: true, none: true });
       cands.forEach((c, i) => d.options.push({ n: i + 2, label: `Attack with ${describeCard(c)}`, cardId: c.id }));
       d.multi = true; d.min = 1; d.max = d.options.length - 1 || 1;
-      d.current = cands.filter((c) => c.attacking).map((c) => c.id);
+      // M65: the attackers already declared are the engine's (the state shows
+      // none of them until the declaration ends); an older engine: the state's.
+      const chosen = engineChosen(input);
+      d.current = chosen ? chosen.attacks.map((a) => a.attackerId) : cands.filter((c) => c.attacking).map((c) => c.id);
       d.gradeType = 'attack';
       if (cands.length === 0) return autoOf(d, 'no creature can attack', [act('buttonOk')]);
       return d;
@@ -304,8 +333,17 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
       // ping at the opponent clicked the only card listed, the Ballista itself).
       // Offer both players when the prompt allows a player; Forge refuses a
       // click it will not take.
+      //
+      // M66 (D423): an engine that lists the players (`selectable.playerIds`)
+      // is taken at its word -- exactly those players, no prompt guessing.
       const playerWords = /any target|target player|target opponent|player or planeswalker|creature or player|player, planeswalker|each opponent|any player/i;
-      if (sel.mode === 'players' || (/\bSelect\b[^\n]*\btarget\b/i.test(String(input.prompt ?? '')) && playerWords.test(String(input.prompt ?? '')))) {
+      const listed = enginePlayers(input);
+      if (listed !== null) {
+        for (const p of state?.players ?? []) {
+          if (!listed.includes(p.id)) continue;
+          d.options.push({ label: `${p.id === me ? 'You' : 'Opponent'} (player ${p.id}, ${p.name})`, moves: [act('clickPlayer', { playerId: p.id })], token: `target:player${p.id}` });
+        }
+      } else if (sel.mode === 'players' || (/\bSelect\b[^\n]*\btarget\b/i.test(String(input.prompt ?? '')) && playerWords.test(String(input.prompt ?? '')))) {
         for (const p of state?.players ?? []) {
           d.options.push({ label: `${p.id === me ? 'You' : 'Opponent'} (player ${p.id}, ${p.name})`, moves: [act('clickPlayer', { playerId: p.id })], token: `target:player${p.id}` });
         }
@@ -332,6 +370,9 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
       d.options.forEach((o, i) => { o.n = i + 1; });
       d.multi = true; d.min = Math.max(0, selMin); d.max = Math.min(selMax, d.options.length);
       d.okAfter = true;
+      // M65: what this input already holds (a click on it again takes it back)
+      const held = engineChosen(input);
+      if (held) d.alreadyChosen = { cardIds: held.cardIds, playerIds: held.playerIds };
       d.fallback = d.options.slice(0, d.min).map((o) => o.n);
       if (d.min === d.options.length && d.max === d.min) return autoOf(d, 'all must be chosen', movesFor(d, d.fallback));
       return d;
@@ -570,7 +611,19 @@ export function movesFor(d, chosen) {
     return out;
   }
   if (d.multi) {
-    const out = chosen.flatMap((n) => opt(n).moves);
+    let out = chosen.flatMap((n) => opt(n).moves);
+    const have = d.alreadyChosen;
+    if (have) {
+      // M65: the engine already holds some of the choice -- a click on one of
+      // those would take it back -- so click only what is wanted and not held,
+      // and take back what is held and not wanted.
+      const keyOf = (m) => (m.action === 'clickCard' ? `c${m.cardId}` : m.action === 'clickPlayer' ? `p${m.playerId}` : null);
+      const held = new Set([...have.cardIds.map((id) => `c${id}`), ...have.playerIds.map((id) => `p${id}`)]);
+      const wanted = new Set(out.map(keyOf).filter((k) => k !== null));
+      const back = [...held].filter((k) => !wanted.has(k))
+        .map((k) => (k[0] === 'c' ? act('clickCard', { cardId: Number(k.slice(1)) }) : act('clickPlayer', { playerId: Number(k.slice(1)) })));
+      out = [...back, ...out.filter((m) => !held.has(keyOf(m)))];
+    }
     if (d.okAfter) out.push(act('buttonOk'));
     return out;
   }

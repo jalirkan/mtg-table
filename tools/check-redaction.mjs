@@ -755,6 +755,108 @@ function checkActivatable(body, seat) {
   return out;
 }
 
+const ids = (v) => Array.isArray(v) && v.every(num);
+
+/**
+ * Amendments M65 / M66 (D422, D423): `input.selectable.chosen` and
+ * `input.selectable.playerIds`, the shape and who they may name.  Both are
+ * ids only, and both describe the VIEWING seat's own input (an input is a
+ * seat's by construction): `playerIds` names seats; `chosen` names what the
+ * engine offered this seat in the same input (`selectable.cardIds`, the
+ * seats), or -- in a declaration -- its own creatures on the battlefield and
+ * the attackers it blocks.  `state` is the last snapshot before this input.
+ * Each key is per FILE, all or none (a seat writes both on every input).
+ */
+function checkSelection(body, seat, state, missed) {
+  const out = [];
+  const sel = plainObject(body.selectable) ? body.selectable : null;
+  if (sel === null) return out;
+  const tally = (label, present, where) => {
+    const t = missed.perFile.get(label) ?? { present: 0, absent: 0, firstAbsent: null };
+    if (present) t.present += 1;
+    else {
+      t.absent += 1;
+      t.firstAbsent ??= where;
+    }
+    missed.perFile.set(label, t);
+  };
+  tally('M66 (playerIds)', 'playerIds' in sel, 'input.selectable');
+  tally('M65 (chosen)', 'chosen' in sel, 'input.selectable');
+  const seats = new Set((state?.players ?? []).map((p) => p?.id).filter(num));
+  const isSeat = (id) => seats.size === 0 || seats.has(id);
+  if ('playerIds' in sel && sel.playerIds !== null) {
+    if (!ids(sel.playerIds)) {
+      out.push(`input.selectable.playerIds = ${JSON.stringify(sel.playerIds)} is not null or a list of ids (M66)`);
+    } else {
+      for (const id of sel.playerIds) {
+        if (!isSeat(id)) out.push(`input.selectable.playerIds names ${String(id)}, which is not a seat of this game -- player ids never travel as card ids (M66, D423)`);
+      }
+    }
+  }
+  if (!('chosen' in sel) || sel.chosen === null) return out;
+  const c = sel.chosen;
+  const shaped = plainObject(c) && sameKeys(c, ['cardIds', 'playerIds', 'blocks', 'attacks']) &&
+    ids(c.cardIds) && ids(c.playerIds) &&
+    Array.isArray(c.blocks) && c.blocks.every((b) => plainObject(b) && sameKeys(b, ['blockerId', 'attackerId']) && num(b.blockerId) && num(b.attackerId)) &&
+    Array.isArray(c.attacks) && c.attacks.every((a) => plainObject(a) && sameKeys(a, ['attackerId', 'defender']) && num(a.attackerId) &&
+      plainObject(a.defender) && sameKeys(a.defender, ['kind', 'id']) && oneOf('player', 'card')(a.defender.kind) && num(a.defender.id));
+  if (!shaped) {
+    out.push(`input.selectable.chosen = ${JSON.stringify(c)} is not {cardIds, playerIds, blocks, attacks} (M65)`);
+    return out;
+  }
+  for (const id of c.playerIds) {
+    if (!isSeat(id)) out.push(`input.selectable.chosen.playerIds names ${String(id)}, which is not a seat of this game (M65)`);
+  }
+  // A full card on the battlefield in the last snapshot, and who controls it.
+  const onField = new Map();
+  for (const p of state?.players ?? []) {
+    for (const card of (plainObject(p) && plainObject(p.zones) ? p.zones.battlefield?.cards : null) ?? []) {
+      if (plainObject(card) && num(card.id)) onField.set(card.id, card);
+    }
+  }
+  const own = (id) => {
+    const card = onField.get(id);
+    return card !== undefined && card.hidden !== true && card.faceDownHidden !== true && card.controller === seat;
+  };
+  const declaration = c.blocks.length > 0 || c.attacks.length > 0;
+  if (!declaration) {
+    // A target or a list entry: only what the engine offered this seat here.
+    const offered = new Set(Array.isArray(sel.cardIds) ? sel.cardIds : []);
+    for (const id of c.cardIds) {
+      if (!offered.has(id)) {
+        out.push(`input.selectable.chosen.cardIds names card ${String(id)}, which was not offered in this ` +
+          `input's selectable.cardIds -- a choice is one of the engine's offers to this seat (M65, D422)`);
+      }
+    }
+  }
+  for (const b of c.blocks) {
+    if (!own(b.blockerId)) {
+      out.push(`input.selectable.chosen.blocks names blocker ${String(b.blockerId)}, which is not a full card on the ` +
+        `battlefield controlled by the viewing seat -- the declaration is this seat's own (M65, D422)`);
+    }
+    if (!onField.has(b.attackerId)) {
+      out.push(`input.selectable.chosen.blocks names attacker ${String(b.attackerId)}, which is not on the battlefield (M65)`);
+    }
+  }
+  for (const a of c.attacks) {
+    if (!own(a.attackerId)) {
+      out.push(`input.selectable.chosen.attacks names attacker ${String(a.attackerId)}, which is not a full card on the ` +
+        `battlefield controlled by the viewing seat (M65, D422)`);
+    }
+    if (a.defender.kind === 'player' ? !isSeat(a.defender.id) : !onField.has(a.defender.id)) {
+      out.push(`input.selectable.chosen.attacks defender ${JSON.stringify(a.defender)} is neither a seat nor a permanent (M65)`);
+    }
+  }
+  if (declaration) {
+    const named = new Set([...c.blocks.map((b) => b.blockerId), ...c.attacks.map((a) => a.attackerId)]);
+    if (c.cardIds.length !== named.size || c.cardIds.some((id) => !named.has(id))) {
+      out.push(`input.selectable.chosen.cardIds ${JSON.stringify(c.cardIds)} are not exactly the declared ` +
+        `${c.blocks.length > 0 ? 'blockers' : 'attackers'} (M65)`);
+    }
+  }
+  return out;
+}
+
 const STATE_SHAPE = {
   gameId: str,
   turn: num,
@@ -784,7 +886,8 @@ const STATE_SHAPE = {
       (v) =>
         plainObject(v) &&
         sameKeys(v, ['kind', 'playerId', 'phase']) &&
-        oneOf('endOfTurn', 'marker', 'stack')(v.kind) &&
+        // M64 (D421) adds `endStepOrOpponent`.
+        oneOf('endOfTurn', 'marker', 'stack', 'endStepOrOpponent')(v.kind) &&
         nullable(num)(v.playerId) &&
         nullable(str)(v.phase),
     ),
@@ -1415,6 +1518,8 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   const seq = { s2c: 0, c2s: 0, ai: 0 };
   let sawState = false;
   const seat = header.seat;
+  /** M65 / M66: the last state body, which an input's selection is checked against. */
+  let lastStateBody = null;
   /** M55 / D347: every state frame's index in frames[] -> {seq, the ids it shows the viewer}; the decision lines, audited after. */
   const stateAt = new Map();
   const stateOrder = [];
@@ -1875,6 +1980,12 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
 
     if (f.type === 'input') {
       scanPrompt(body.prompt, 'input.prompt', lineNo);
+      // Amendments M65 / M66 (D422, D423).
+      for (const complaint of checkSelection(body, seat, lastStateBody, missed)) note(lineNo, complaint);
+      if (plainObject(body.selectable)) {
+        if (Array.isArray(body.selectable.playerIds)) stats.selPlayers = (stats.selPlayers ?? 0) + 1;
+        if (plainObject(body.selectable.chosen)) stats.selChosen = (stats.selChosen ?? 0) + 1;
+      }
       // M6, amendment M39. `buttons.focus` says which button Space activates.
       // Three-valued and never a boolean: a client that read `true` as "OK" and
       // `false` as "Cancel" would press Cancel on every ordinary prompt.
@@ -2239,6 +2350,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
     stats.state++;
     sawState = true;
+    if (plainObject(f.body)) lastStateBody = f.body;
     if (Array.isArray(f.body?.players)) {
       stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat) });
       stateOrder.push(i - 1);
@@ -2986,6 +3098,16 @@ for (const path of files) {
       : ac === 'absent'
         ? '      M63 activatable absent (legitimate -- recorded before amendment M63, or no seat)'
         : '      M63 activatable HALF PRESENT (a failure, above)');
+  }
+  // M65 / M66.  Whether this file's inputs carry selectable.chosen / playerIds.
+  for (const [label, n, what] of [['M66 (playerIds)', stats.selPlayers, 'a list'], ['M65 (chosen)', stats.selChosen, 'an object']]) {
+    const v = stats.perFile?.[label];
+    if (v === undefined) continue;
+    console.log(v === 'present'
+      ? `      ${label} present on every input (${String(n ?? 0)} carrying ${what}, the rest null)`
+      : v === 'absent'
+        ? `      ${label} absent (legitimate -- recorded before the amendment, or no input)`
+        : `      ${label} HALF PRESENT (a failure, above)`);
   }
   // M6.  Which comfort fields this recording carries, and which it does not:
   // an AI-vs-AI log has no seat to answer them and a pre-M6 log predates them,

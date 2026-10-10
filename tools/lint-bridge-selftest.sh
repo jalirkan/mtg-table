@@ -659,13 +659,13 @@ fires game-thread-hop 'a tag citing D9999, whose docs/decisions/D9999-*.md file 
 
 c_pool_field() { probe bridge/src/mtgtable/LintProbe.java <<'JAVA'
     static Object pool() throws ReflectiveOperationException {
-        final java.lang.reflect.Field f = forge.util.ThreadUtil.class.getDeclaredField("gameThreadPool");
-        f.setAccessible(true);
-        return f.get(null);
+        final java.lang.reflect.Method m = forge.util.ThreadUtil.class.getDeclaredMethod("getGameThreadPool");
+        m.setAccessible(true);
+        return m.invoke(null);
     }
 JAVA
 }
-fires game-pool-reflection 'ThreadUtil.gameThreadPool read through reflection' c_pool_field
+fires game-pool-reflection 'ThreadUtil.getGameThreadPool reached through reflection' c_pool_field
 c_pool_factory() { probe tools/probe/LintProbe.java <<'JAVA'
     static Object factory() throws ReflectiveOperationException {
         return Class.forName("forge.util.ThreadUtil$WorkerThreadFactory");
@@ -673,6 +673,24 @@ c_pool_factory() { probe tools/probe/LintProbe.java <<'JAVA'
 JAVA
 }
 fires game-pool-reflection 'ThreadUtil$WorkerThreadFactory by name, in tools/' c_pool_factory
+
+# -- 8. a Forge field read by name: InputPeek alone (D423)
+c_field_read() { probe bridge/src/mtgtable/LintProbe.java <<'JAVA'
+    static Object sa(final Object input) throws ReflectiveOperationException {
+        final java.lang.reflect.Field f = forge.gamemodes.match.input.InputSelectTargets.class.getDeclaredField("sa");
+        f.setAccessible(true);
+        return f.get(input);
+    }
+JAVA
+}
+fires forge-field-read 'InputSelectTargets.sa read by name in a file other than InputPeek.java' c_field_read
+c_field_read_tools() { probe tools/probe/InputPeek.java <<'JAVA'
+    static Object targets(final Object input) throws ReflectiveOperationException {
+        return input.getClass().getDeclaredField("targets").get(input);
+    }
+JAVA
+}
+fires forge-field-read 'getDeclaredField in tools/probe/InputPeek.java: the ALLOW is a path, not a file name' c_field_read_tools
 
 # ---------------------------------------------------------------------------
 # 5. What the rules must NOT catch.

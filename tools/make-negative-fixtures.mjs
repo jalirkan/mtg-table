@@ -1152,5 +1152,95 @@ probe('m63-activatable-half-present.jsonl',
     delete statesOf(fs)[1].body.activatable;
   });
 
+/*
+ * Amendments M65 / M66 (D422, D423) -- `input.selectable.chosen` and
+ * `input.selectable.playerIds`.  The control adds two inputs after the last
+ * state, written as a seat writes them: a targeting input (one of the
+ * opponent's permanents offered and chosen, both seats clickable) and a block
+ * declaration (the viewer's permanent blocking one of the opponent's).  Five
+ * one-defect probes.
+ */
+const withSelection = (fs) => {
+  const sts = statesOf(fs);
+  const last = sts[sts.length - 1].body;
+  const me = last.players.find(isViewerSeat);
+  const them = last.players.find((p) => !isViewerSeat(p));
+  const mine = me.zones.battlefield.cards.find((c) => c.hidden !== true && c.controller === header.seat);
+  const theirs = them.zones.battlefield.cards.find((c) => c.hidden !== true);
+  if (mine === undefined || theirs === undefined) throw new Error('no full permanent on each side in the slice');
+  const input = (prompt, selectable) => ({
+    v: 1, seq: 0, t: fs[0].t, dir: 's2c', type: 'input',
+    body: {
+      prompt, focusCardId: null, focusCard: null,
+      buttons: { ok: { label: 'OK', enabled: true }, cancel: { label: 'Cancel', enabled: false } },
+      selectable, highlighted: [], weak: [], openZones: [],
+    },
+  });
+  const seats = last.players.map((p) => p.id);
+  const target = input('Lightning Bolt (90) - Select any target', {
+    cardIds: [theirs.id], min: 1, max: 2, mode: 'cards', playerIds: seats,
+    chosen: { cardIds: [theirs.id], playerIds: [], blocks: [], attacks: [] },
+  });
+  const block = input(`Select creatures to block ${theirs.name} (${theirs.id}) or select another attacker to declare blockers for.`, {
+    cardIds: [], min: 0, max: 0, mode: 'none', playerIds: [],
+    chosen: { cardIds: [mine.id], playerIds: [], blocks: [{ blockerId: mine.id, attackerId: theirs.id }], attacks: [] },
+  });
+  const at = fs.findIndex((f) => f.type === 'over');
+  fs.splice(at, 0, target, block);
+  fs.forEach((f, i) => { f.seq = i + 1; });
+  return { target: target.body.selectable, block: block.body.selectable, mine, theirs, seats };
+};
+{
+  const fs = slice();
+  withSelection(fs);
+  write('m65-m66-selection-present.jsonl', fs);
+  manifest.push({
+    file: 'm65-m66-selection-present.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendments M65 / M66: a targeting input and a block declaration with chosen and playerIds as a seat writes them -- the control for the m65 / m66 probes',
+  });
+  console.log('  PASS  m65-m66-selection-present.jsonl  (a seat\'s chosen and playerIds, no defect)');
+}
+
+probe('m66-playerids-names-no-seat.jsonl',
+  'amendment M66 / D423: playerIds names seats -- an id that is no seat is a card id in the wrong list',
+  'which is not a seat of this game',
+  (fs) => {
+    const { target } = withSelection(fs);
+    target.playerIds = [...target.playerIds, 77];
+  });
+
+probe('m65-chosen-was-never-offered.jsonl',
+  'amendment M65 / D422: a target or list entry chosen is one the engine offered this seat in the same input',
+  'which was not offered',
+  (fs) => {
+    const { target, mine } = withSelection(fs);
+    target.chosen.cardIds = [mine.id];
+  });
+
+probe('m65-block-by-the-opponent.jsonl',
+  'amendment M65 / D422: a block declaration is the viewing seat\'s own -- a blocker it does not control is a lie about control',
+  'controlled by the viewing seat',
+  (fs) => {
+    const { block, theirs } = withSelection(fs);
+    block.chosen.blocks = [{ blockerId: theirs.id, attackerId: theirs.id }];
+    block.chosen.cardIds = [theirs.id];
+  });
+
+probe('m65-chosen-shape.jsonl',
+  'amendment M65: chosen is exactly {cardIds, playerIds, blocks, attacks}',
+  'is not {cardIds, playerIds, blocks, attacks}',
+  (fs) => {
+    const { target } = withSelection(fs);
+    delete target.chosen.attacks;
+  });
+
+probe('m65-chosen-half-present.jsonl',
+  'amendment M65: a seat writes chosen on every input -- some with and some without is a broken emitter',
+  'M65 (chosen) is HALF PRESENT',
+  (fs) => {
+    const { block } = withSelection(fs);
+    delete block.chosen;
+  });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

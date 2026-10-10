@@ -809,6 +809,42 @@
       ]
     },
     {
+      "file": "select-probe.dck",
+      "name": "Select probe",
+      "cards": [
+        {
+          "name": "Mountain",
+          "count": 9,
+          "section": "main"
+        },
+        {
+          "name": "Island",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Lightning Bolt",
+          "count": 6,
+          "section": "main"
+        },
+        {
+          "name": "Into the Void",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "Careful Study",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "Gray Ogre",
+          "count": 9,
+          "section": "main"
+        }
+      ]
+    },
+    {
       "file": "sideboard-probe.dck",
       "name": "Sideboard probe",
       "cards": [
@@ -1238,6 +1274,14 @@
       "setCode": "MSC",
       "keywords": []
     },
+    "Careful Study": {
+      "types": "Sorcery",
+      "manaCost": "{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
     "Castle Doom": {
       "types": "Land",
       "manaCost": null,
@@ -1460,6 +1504,14 @@
         "FLYING"
       ]
     },
+    "Gray Ogre": {
+      "types": "Creature - Ogre",
+      "manaCost": "{2}{R}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
     "HULK SMASH!": {
       "types": "Instant",
       "manaCost": "{1}{R}",
@@ -1587,6 +1639,14 @@
       "keywords": [
         "VIGILANCE"
       ]
+    },
+    "Into the Void": {
+      "types": "Sorcery",
+      "manaCost": "{3}{U}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
     },
     "Island": {
       "types": "Basic Land - Island",
@@ -2370,8 +2430,11 @@
   "engine": [
     "Austere Command",
     "Avengers: Under Siege",
+    "Careful Study",
     "Giant Growth",
+    "Gray Ogre",
     "Hidden Lair",
+    "Into the Void",
     "Lightning Bolt",
     "Tiger Shark, Abyssal Hunter",
     "Titania, Proud Pummeler",
@@ -2407,6 +2470,7 @@
     "Boomerang, Blade Flinger": "figure",
     "Borough Backup": "cues",
     "Brawn, Amadeus Cho": "figure",
+    "Careful Study": null,
     "Castle Doom": null,
     "Chandra's Emberling": null,
     "Clue Token": null,
@@ -2437,6 +2501,7 @@
     "Giant Growth": null,
     "Giant-Sized Flying Ant": "figure",
     "Graft Surgeon": null,
+    "Gray Ogre": "figure",
     "HULK SMASH!": null,
     "HYDRA Troopers": "figure",
     "Helicarrier Strike": "cues",
@@ -2451,6 +2516,7 @@
     "Hulk, Gamma Goliath": "figure",
     "Hulk, Strongest There Is": "figure",
     "Hulkling, Burgeoning Bruiser": "figure",
+    "Into the Void": null,
     "Island": "cues",
     "Jiang Yanggu, Alone": null,
     "Kang the Conqueror": "figure",
