@@ -37,6 +37,7 @@ import {
 } from './raise.ts';
 import { initialRating, parseRatings, ratingsTsv } from './ratings.ts';
 import { DEFAULT_WEIGHTS, type Weights } from './weights.ts';
+import { fileLines } from './lines.ts';
 
 export interface Evidence { rows: JudgedRow[]; anchors: Map<string, Anchor>; from: string; anchorsFrom: string }
 
@@ -59,7 +60,7 @@ export function evidenceFromFolder(dir: string, rating: (name: string) => number
     tables.push(s.explore.table);
     const jf = path.join(dir, g, 'run', 'drafts.jsonl');
     if (!fs.existsSync(jf)) throw new Error(`${jf} is missing: the anchors need the explored drafts`);
-    for (const l of fs.readFileSync(jf, 'utf8').split('\n')) if (l.trim()) seats.push(...((JSON.parse(l) as SeatLine).explore?.seats ?? []));
+    for (const l of fileLines(jf)) if (l.trim()) seats.push(...((JSON.parse(l) as SeatLine).explore?.seats ?? []));
   }
   const rows = rowsFromTables(tables, { margin: st.explore.margin, minDecks: st.explore.minDecks, q: st.knobs?.fdrQ ?? 0.1 });
   return { rows, anchors: anchorsOf(seats, rating), from: `${dir} (${tables.length} generation(s), pooled exactly)`, anchorsFrom: `${dir}/gen-*/run/drafts.jsonl` };

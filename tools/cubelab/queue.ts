@@ -104,6 +104,7 @@ import { assertQueueSeeds } from './seeds.ts';
 import { codeVersion, fileSha } from './versions.ts';
 import { isPlayExplored, parsePlayExploreArgs, playExploreText, type PlayExploreOptions } from './playexplore.ts';
 import { checkProfiles, mixText, parseProfileMix } from './profiles.ts';
+import { fileLines } from './lines.ts';
 
 /** Power tier of each cube: 0 flat, 1 middle, 2 powered.  A cube not listed is treated as middle. */
 export const TIERS: Record<string, { tier: number; why: string }> = {
@@ -280,7 +281,7 @@ export function gamesByCard(dirs: string[]): Map<string, number> {
     if (!fs.existsSync(d)) return;
     const jl = path.join(d, 'drafts.jsonl');
     if (fs.existsSync(jl)) {
-      for (const line of fs.readFileSync(jl, 'utf8').split('\n')) {
+      for (const line of fileLines(jl)) {
         if (!line.trim()) continue;
         const rec = JSON.parse(line) as DraftRecord;
         if (isPlayExplored(rec)) continue;

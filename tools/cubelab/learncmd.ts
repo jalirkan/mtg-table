@@ -27,6 +27,7 @@ import { defaultRatings, loadForRun, runLab, type DraftRecord, type RunMeta, typ
 import { deckQuality, gamesForHalfWidth, headToHead, pairedVsControl, reRated, writeJson, type DeckQuality, type H2H, type Paired } from './selfplay.ts';
 import { DEFAULT_WEIGHTS, mergeWeights, parseWeightArgs, type Weights } from './weights.ts';
 import { filterPlayExplore } from './playexplore.ts';
+import { readJsonLines } from './lines.ts';
 
 type Flags = Map<string, string[]>;
 const one = (f: Flags, k: string): string | undefined => f.get(k)?.at(-1);
@@ -67,7 +68,7 @@ export function readRunData(dir: string): RunData {
   const meta = JSON.parse(fs.readFileSync(path.join(dir, 'run.json'), 'utf8')) as RunMeta;
   const cards = JSON.parse(fs.readFileSync(path.join(dir, 'cards.json'), 'utf8')) as RunData['cards'];
   const jsonl = path.join(dir, 'drafts.jsonl');
-  const all = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const all = fs.existsSync(jsonl) ? readJsonLines<DraftRecord>(jsonl) : [];
   const { recs, dropped } = filterPlayExplore(all, 'exclude');
   return { dir, meta, cards, recs, playExploreDropped: dropped };
 }

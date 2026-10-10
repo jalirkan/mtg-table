@@ -18,6 +18,7 @@ import path from 'node:path';
 
 import type { GenSummary } from './evolve-report.ts';
 import { exploreHealth, judgeExplored, mergeTables, type ExploreTable } from './explore.ts';
+import { fileLines } from './lines.ts';
 
 export type Flat = Record<string, number>;
 
@@ -34,7 +35,7 @@ export function evolveExploreHealth(dir: string): Flat {
   for (const g of gens) {
     const f = path.join(dir, g, 'run', 'drafts.jsonl');
     if (!fs.existsSync(f)) continue;
-    for (const l of fs.readFileSync(f, 'utf8').split('\n')) {
+    for (const l of fileLines(f)) {
       if (!l.trim()) continue;
       const r = JSON.parse(l) as Line;
       const ex = !!r.explore;

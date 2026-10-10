@@ -56,6 +56,7 @@ import { queueCommand } from './queue.ts';
 import { filterPlayExplore, parsePlayExploreArgs, playExploreText } from './playexplore.ts';
 import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
+import { readJsonLines } from './lines.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const say = (s: string): void => { process.stdout.write(`${s}\n`); };
@@ -242,7 +243,7 @@ export function readRun(out: string, playExplore: 'include' | 'exclude' | 'only'
   const meta = JSON.parse(fs.readFileSync(path.join(out, 'run.json'), 'utf8')) as RunMeta;
   const cards = JSON.parse(fs.readFileSync(path.join(out, 'cards.json'), 'utf8')) as Record<string, CardInfo>;
   const jsonl = path.join(out, 'drafts.jsonl');
-  const all = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const all = fs.existsSync(jsonl) ? readJsonLines<DraftRecord>(jsonl) : [];
   const { recs, dropped } = filterPlayExplore(all, playExplore);
   const rf = path.join(out, 'recordings.json');
   const recordings = fs.existsSync(rf) ? JSON.parse(fs.readFileSync(rf, 'utf8')) as Recording[] : [];

@@ -28,6 +28,7 @@ import path from 'node:path';
 
 import type { Fact } from './cards.ts';
 import { loadBridge, type BridgeMeta, type BridgeOptions, type BridgeTag } from './bridge.ts';
+import { fileLines } from './lines.ts';
 import { parseCube } from './cube.ts';
 import { dckText } from './deck.ts';
 import { engineFacts, runPool, type EngineEnv, type ForgeBuild, type GameRow, type MatchJob, type PoolLoad } from './engine.ts';
@@ -316,7 +317,7 @@ export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => 
       throw new Error(`${o.out} holds a run with a different ${differ.join(', ')} (D394: the folder's identity, which no flag changes) -- use a new --out`);
     }
     if (fs.existsSync(jsonl)) {
-      for (const line of fs.readFileSync(jsonl, 'utf8').split('\n')) if (line.trim()) done.add((JSON.parse(line) as DraftRecord).seed);
+      for (const line of fileLines(jsonl)) if (line.trim()) done.add((JSON.parse(line) as DraftRecord).seed);
     }
     before = old.versions?.length ?? 0;
     meta.seed = Math.min(old.seed, o.seed);
@@ -453,12 +454,25 @@ function deckLabel(d: DraftOut, k: 0 | 1): string {
   return deck ? `${d.drafters[k].seat}:${deck.colors}${deck.splash ? `+${deck.splash.toLowerCase()}` : ''}` : `${d.drafters[k].seat}:forge`;
 }
 
+/**
+ * The `n` lowest-seed records of a drafts.jsonl, by seed, file order among equal seeds -- what the whole-file
+ * read's stable sort and slice gave (a torn last line throws, as it did) -- holding n + 1 records, never the file.
+ */
+export function firstBySeed(jsonl: string, n: number): DraftRecord[] {
+  const recs: DraftRecord[] = [];
+  for (const l of fileLines(jsonl)) {
+    if (!l) continue;
+    recs.push(JSON.parse(l) as DraftRecord);
+    if (recs.length > n) recs.sort((a, b) => a.seed - b.seed).pop();
+  }
+  return recs.sort((a, b) => a.seed - b.seed);
+}
+
 /** Record game 1 of the first `o.record` drafts with mtgtable.RecordMatch, seat 0 = drafter A. */
 export function recordGames(env: EngineEnv, o: RunOptions, say: (s: string) => void): void {
   const jsonl = path.join(o.out, 'drafts.jsonl');
   if (!fs.existsSync(jsonl)) return;
-  const recs = fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord)
-    .sort((a, b) => a.seed - b.seed).slice(0, o.record);
+  const recs = firstBySeed(jsonl, o.record);
   const framesDir = path.join(o.out, 'frames');
   fs.mkdirSync(framesDir, { recursive: true });
   const indexFile = path.join(o.out, 'recordings.json');
