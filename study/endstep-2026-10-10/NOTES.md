@@ -228,3 +228,100 @@ Purpose: observations for the cloud's ForgeCoach board rework. Human-driven sess
     scenery layout: the phone shows the two halves stacked with the hand under them, and the land row is
     nearly as tall as the creature row; the "middle 60%" crop assumption in spec 1.5 holds.)
 32. MENU: a click on the MENU pill at the top of my half showed nothing in the capture; not studied.
+33. **The board menu** (`33-board-menu.jpg`, the ≡ beside MENU). A compact list: **CARD SIZE slider**
+    (shown "144", the width in px), Show decklist, **Auto-yields**, Settings, **Keyboard shortcuts**, Report a
+    problem, Reload, **Record a macro**, Concede. Card size as a live slider is the "Resize" grip on the
+    phone. Auto-yields is our M6 auto-yield as a menu page. "Record a macro" is a notable extra: canned
+    sequences of answers. Concede lives at the bottom of this menu, not on the board.
+34. **Auto-yields = "Standing orders"** (`34-auto-yields-standing-orders.jpg`). A dialog: title AUTO-YIELDS /
+    *Standing orders* / "Abilities you've told the engine to resolve without stopping for your priority."
+    A master toggle ("Active. Marked abilities resolve on their own."), **REMEMBER FOR: This game / This
+    match / This device** (match = "kept through the match, cleared when it ends"), the empty state "No
+    auto-yields or trigger answers. Right-click an ability on the stack and choose Auto-yield…", and a
+    **Remembered orders** row ("Orders you saved with 'OK & remember' are applied without asking for the rest
+    of this game" + Forget). So: yields are set FROM the stack item (right-click), scoped by game / match /
+    device, and trigger-order answers can be remembered the same way. Our D42 yield keys map onto this
+    directly; the scope choice and the "OK & remember" on an ask are the parts we lack.
+35. **Keyboard shortcuts page** (`35-keyboard-shortcuts.jpg`) — the full semantics, worth quoting:
+    - PRIORITY & TURN: **Space** Pass / Confirm ("passes priority, or confirms whatever the game is asking:
+      blocks, damage, targets, selections"); **C** pass until combat (can be pre-queued while waiting);
+      **E** pass until end of turn; **T** pass until my next turn; **B** pass until before my turn ("the end
+      step of the turn right before yours — the last window before your untap; works in 2/3/4-player
+      games"); **R** pass until action or end step ("until an opponent casts, activates or triggers, or
+      the nearest end step, whichever comes first"); **Ctrl+Z** Undo ("a land drop, an activation, a cast —
+      whenever the engine says it is still reversible; works mid-cast too: from a targeting, mode or payment
+      prompt it rewinds the whole cast"); **F4** yield this turn; **F6** yield continuously; **F3** yield to
+      stack ("pass repeatedly until the stack finishes resolving — stopping if an opponent adds to it, while
+      your own triggers keep it going; never skips a phase").
+    - COMBAT: **A** Alpha Strike. CASTING & PROMPTS: **A** Auto-pay mana; **P** Peek behind prompt ("collapse
+      an open prompt window to peek at the battlefield; press again to restore"). CARDS & ZONES: **Q**
+      inspect hovered card (pin it to the detail panel, same as right-click). A "FIXED KEYS" section below;
+      accelerators rebindable under Settings → Controls.
+    This is the pass-to vocabulary (M6: phase stops, pass-to, auto-yield, auto-pay, undo) as one page of
+    verbs with keys; "R" (until the opponent does something) and "F3" (yield to stack) are the two we do not
+    have names for.
+36. **Concede confirm** (`36-concede-confirm.jpg`). A tiny centred dialog: "Concede? / You'll lose. This can't
+    be undone." Cancel (neutral) / Concede (red). The board dims behind it. Second of only two modals seen,
+    both for irreversible choices.
+37. **End of game** (`37-end-screen-match-record.jpg`). The board is replaced by one centred card: "MATCH
+    RECORD / *Defeat* / You yield the match to Forge AI after 3 turns." then three rows — LIFE TOTAL 18–19,
+    CARDS IN HAND 5, FINAL TURN 3 — and two buttons with keys: **REMATCH [↵]** (primary) and **RETURN TO
+    LOBBY [Esc]**. No board behind it, no log; a result, three numbers, two exits. Our New Game row is the
+    same idea on the board; Endstep clears the board entirely and makes rematch the default key.
+38. **Spectating a live human Bo3** (`38-spectate-start-hidden-hands.jpg`; Dancorvus vs knstrktd, Pauper,
+    game 1 of 3 at T0). The same board, with: a **MATCH header** on the strip ("Game 1 / 3 · 0–0"); a
+    **per-player chess clock** beside each name (25:00 / 24:50, the active player's running, in a gold pill);
+    a **watcher count** (eye · 1) beside the top player; the strip header "OPP TURN · T0 / ● OPP PRIORITY"
+    from the viewed seat's point of view. **Hands are hidden**: the viewed player's hand renders as seven
+    "? Hidden card" tiles — the spectator sees neither hand, which is exactly our hard rule 8's stance (one
+    seat's eyes, and here not even that). A **SPECTATING** panel sits where the decision panel would be:
+    "⇅ Cycle" (switch which seat you view), "Leave", and **"Ask knstrktd" / "Ask Dancorvus"** — a request to
+    the player to reveal their hand to you, which they can grant. Chat arrives as a toast ("Dancorvus: Gl
+    hf" with OPEN CHAT) and a CHAT button with an unread badge sits bottom right. Our LAN observer (D287)
+    has no chat and no ask-to-reveal; the clock and "Game n / 3" header would suit the table-of-two (D402).
+39. **Live play, two turns in** (`39-spectate-opponent-deciding.jpg`). Three details at real speed: (a) a
+    **"● Opponent is deciding…"** line with a pulsing dot sits just under the opponent's battlefield whenever
+    the other seat holds priority — the "who are we waiting for" answer in one place; (b) a **summoning-sick
+    creature carries a "Zz" mark** over its art (Mortician Beetle) until it can attack; (c) a card whose
+    image has not loaded yet is drawn as a **name-only frame** ("Island" in a plain card shape), so the board
+    never shows a blank. The clocks run only for the player with priority. Hands stay hidden ("? Hidden
+    card") throughout. Humans play at roughly a decision every 3–8 s here; the board kept up with no
+    visible lag at 800 px.
+40. **Open a table** (`40-open-a-table.jpg`). Eight table kinds as a two-column list, each with a one-line
+    gloss: Constructed ("Bring your own deck"), **vs Bot** ("AI"), Commander, **Draft** ("Open packs, pick,
+    pass"), Sealed ("Build from six packs"), Momir Basic, Forgetful Fish ("Two duelists, one shared
+    library"), Freeplay ("Any cards, no deck rules"); plus "Have an invite code?" + Join. Invite codes are how
+    a friend joins a private table — the same job as ForgeCoach's draft-room seat tokens (D400), but typed
+    by the friend rather than carried in a link.
+41. **Draft pod setup** (`41-draft-pod-setup.jpg`). A private pod page: title "<host>'s Draft pod", a
+    Private/Public switch, the **invite code (5MZBKYYA) + "Copy invite link"**, Seats 1 of 8 with "7 open
+    seats · **Add a bot** · Copy invite link", and the line "Decks are drafted during play. Bots take the
+    seats the host gives them." The Table panel: Game Draft, Variant Booster, **Packs from: Choose a cube**
+    (a guest has none: "Build a cube to draft from one"), Packs 3, Cards per pack 15, Cards per pick 1,
+    **Pick undo On/Off**, **Tournament after On** ("needs a second player"), Deck building 30 min, Players 8,
+    Clock, **Pick timer 60 s**, Spectators, Rewind. So a draft is a table with bots filling seats on demand
+    and a pick timer; the grid draft in ForgeCoach's draft room is the two-player cousin of this (D400).
+42. **Packs from an official set** (`42-draft-official-set-FRA.jpg`). "Packs from" offers a cube search,
+    "Official set" and "Chaos" (every pack a different set). Choosing Official set shows three per-pack set
+    selects, **defaulting to FRA — Reality Fracture** — with "Original booster size" checked. Endstep's engine
+    therefore already carries FRA: it runs a newer Forge than our pinned 2.0.14 (consistent with D109: we
+    wait for the official release; Endstep tracks dailies or built its own). "Waiting for players · 1 of 8".
+43. **The draft table, pack 1 pick 1** (`43-draft-pack1-pick1.jpg`). "Begin the draft" with one bot added
+    filled the other six seats with bots on its own. Header: "‹ Tables · **Pack 1 · Pick 1** · a pass-direction
+    widget (seat badges with ← → and 'Passes left') · **Choose a card** (the state) · Leave draft…". The pack:
+    "Pack · 14 cards" as a grid of full card images (5 per row at 800 px) with a **card-size slider and
+    'Fit'**; hovering floats the big preview. Below a divider: "**Your picks · 0 of 42** · Undo pick ·
+    Compact stacks ▾ · by mana value ▾ · card size" and the empty-state line "Your picks gather here." — the
+    pool is laid out like the deck builder (mana-value stacks). FRA cards show the printed image but the
+    hover tooltip says **"Card text unavailable"**: Endstep's data has the set's images/names ahead of its
+    oracle text. Pick timer 60 s was set but no visible countdown yet at P1p1.
+44. **Select, then confirm** (`44-draft-card-selected.jpg`). One click on a pack card outlines it blue and the
+    header's state button turns into a gold **"Pick [Enter]"**; a second click elsewhere changes the
+    selection. So a pick is select → Enter (or click Pick), with "Undo pick" available below once made
+    (Pick undo was On in the table settings). Same two-step shape as attacking: select on the board,
+    confirm with the one primary key.
+45. **Pack 1 pick 2, the pool begins** (`45-draft-pick2-pool.jpg`). The next pack (13 cards) arrived at once
+    (bots pick instantly). Below: "Your picks · **1 of 42** · (colour pip) 1 · Undo pick", the pool as
+    compact stacks by mana value ("3 mana · 1", "Side · 0"), and a bottom toast "Picked Mindseeker Oculus ·
+    Undo Ctrl+Z". The pool keeps a running colour-pip count beside the pick count — the cheapest "what am I
+    drafting" readout. ForgeCoach's grid draft could show the same pip count and the same compact stacks.

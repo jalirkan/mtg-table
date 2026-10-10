@@ -81,3 +81,36 @@ a ▲ for more; the log is a tab on the right edge.
 5. Dimming of non-answers in hand; collapsed identical lands; graveyard/exile as counts.
 6. The turn/phase-grouped log.
 Not worth copying: the blockers stop that fires with nothing to block; the DOM-less cards.
+
+## 6. Second pass (same session, after the game): menus, end screen, spectating, draft
+- **Board menu** (`33`): card-size slider, Show decklist, Auto-yields, Settings, Keyboard shortcuts, Report a
+  problem, Reload, Record a macro, Concede.
+- **Auto-yields as "standing orders"** (`34`): set by right-clicking an item on the stack; a master toggle;
+  **scope: this game / this match / this device**; trigger-order answers can be saved with "OK & remember"
+  and forgotten in the same dialog. Our D42 yields lack the scope and the remembered answers.
+- **Keyboard map** (`35`), the verbs with keys: Space pass/confirm; C until combat; E until end of turn; T
+  until my next turn; B until before my turn (last window before your untap, works in 3–4 player); R until
+  an opponent acts or the nearest end step; Ctrl+Z undo, mid-cast too; F4 yield this turn; F6 yield
+  continuously; F3 yield to stack (pass repeatedly until the stack empties, stop if an opponent adds to it);
+  A alpha strike / auto-pay; P peek behind the prompt; Q pin the hovered card. The two we have no word for:
+  R and F3. Everything rebindable under Settings → Controls.
+- **End of game** (`37`): the board is replaced by one card — "MATCH RECORD / Defeat / You yield the match
+  to Forge AI after 3 turns", life total 18–19, cards in hand, final turn, then REMATCH [↵] and RETURN TO
+  LOBBY [Esc]. Concede is a two-button confirm ("You'll lose. This can't be undone."), one of only two modals
+  seen (the other is pass-to-end-of-turn on the phone).
+- **Spectating a live Bo3** (`38`, `39`): hands are hidden as "? Hidden card" tiles for both seats; a
+  SPECTATING panel offers Cycle (switch seat), Leave, and **"Ask <player>"** to request a hand reveal; the
+  strip carries a MATCH header ("Game 1 / 3 · 0–0"); per-player chess clocks run for the seat with
+  priority; "● Opponent is deciding…" sits under the opponent's battlefield while you wait; summoning-sick
+  creatures carry a "Zz"; not-yet-loaded card images render as a name-only frame; chat is a toast plus a
+  CHAT button with an unread badge. Our LAN observer (D287) has the hidden hands; it lacks the clock, the
+  match header, the deciding line and chat.
+- **Draft** (`40`–`45`): "Open a table" lists eight kinds (Constructed, vs Bot, Commander, Draft, Sealed,
+  Momir Basic, Forgetful Fish, Freeplay) plus an invite-code join. A Draft pod is private by default with an
+  invite code and link, "Add a bot" per seat (one bot was enough; "Begin the draft [Enter]" filled the rest),
+  packs from a cube search / an official set / chaos, pick undo, pick timer, tournament-after, deck-building
+  minutes. **The official-set default was FRA (Reality Fracture)** — Endstep's engine already has the set
+  we wait on (D109), though its hover text says "Card text unavailable" for FRA cards. The pick screen:
+  "Pack 1 · Pick 1", a pass-direction widget, the pack as a grid of full cards with a size slider; a pick is
+  select (blue outline) → **Pick [Enter]**, with "Undo pick" / Ctrl+Z after; the pool below as compact
+  mana-value stacks with a running colour-pip count ("Your picks 1 of 42 · ◐1"). Bots pick instantly.
