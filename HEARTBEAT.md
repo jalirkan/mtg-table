@@ -11,6 +11,17 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
 
+## 2026-10-10 13:12 (EDT) — NEEDS THE CLOUD SESSION (rules integrity): `assign_damage` lets a non-trampler assign combat damage to the defending player
+
+Seen live: Skyclave Apparition (2/2, no trample) blocked by two 1/1s; ForgeCoach's "Assign 2 damage" dialog
+listed "Forge AI · Defending" as a target row and accepted 1 damage on it. `docs/protocol.md` says the
+defender is always option index 0 of `assign_damage.targets` and nothing on the wire says whether damage may
+go there. Two questions for you, both mtg-table: (1) does Forge validate the returned map (would 1 on the
+defender actually be dealt, or silently dropped)? (2) please add a `defenderAllowed` boolean to
+`assign_damage` from Forge's own rule (what `VAssignCombatDamage` checks: trample / "as though it weren't
+blocked"), and have ForgeCoach hide the row otherwise. Full write-up as item 15 in
+`study/common-sense-pass.md`. Justin did not assign to the player; he asked whether it was legal.
+
 ## Messages
 
 

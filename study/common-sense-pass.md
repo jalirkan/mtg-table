@@ -65,3 +65,15 @@ be built without re-discovery. Order = what hurt most at the table.
     plan names one, else by either face name (`alt`/faces), and treat a transformed/disturbed cast as the same
     card. Also the step text should use the face the player will actually cast ("cast Luminous Phantom
     (disturb)"). Turn 23, 2026-10-10.
+15. **Combat damage assignment offers the defending player to a non-trampler.** Skyclave Apparition (2/2, no
+    trample) blocked by Servo Token + Spirited Companion: the "Assign 2 damage" dialog listed "Forge AI ·
+    Defending" as a row and accepted 1 on it ("All 2 assigned"). Illegal by the rules (only trample, or an
+    "as though it weren't blocked" effect, may put excess on the player, and only after lethal to every
+    blocker). Protocol fact: `assign_damage.targets` ALWAYS carries the defender at index 0 (`"defender":
+    true`) with no flag saying whether the engine will let damage go there. Fix in two halves: (a) mtg-table
+    bridge: emit `defenderAllowed` from Forge's own rule (what VAssignCombatDamage uses: trample / the
+    "assign as though not blocked" keyword), and say whether the engine validates the returned map; (b)
+    ForgeCoach `AskDialog` assign-damage body: hide the defender row unless `defenderAllowed`, and enforce
+    "lethal in order" only through the engine's `overrideOrder`/`maySkip` flags, never by client arithmetic.
+    Until (a) lands, the client should not show the defender row at all unless the attacker's wire
+    `keywords` contain Trample (engine state, not a rules computation). Turn 23, 2026-10-10.
