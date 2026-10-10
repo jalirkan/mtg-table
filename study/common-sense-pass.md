@@ -77,3 +77,6 @@ be built without re-discovery. Order = what hurt most at the table.
     "lethal in order" only through the engine's `overrideOrder`/`maySkip` flags, never by client arithmetic.
     Until (a) lands, the client should not show the defender row at all unless the attacker's wire
     `keywords` contain Trample (engine state, not a rules computation). Turn 23, 2026-10-10.
+    **CONFIRMED APPLIED:** the log shows "Skyclave Apparition dealt 2 combat damage to Forge AI" while blocked
+    by two creatures with no trample (Forge AI 6 → 1). The engine does not validate the map. RULES BUG, top of
+    the list.

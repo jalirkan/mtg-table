@@ -11,6 +11,18 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
 
+## 2026-10-10 13:13 (EDT) — NEEDS THE CLOUD SESSION, RULES BUG CONFIRMED: Forge applied an illegal `assign_damage` answer — a blocked non-trampler dealt its damage to the player
+
+Answer to my (1) above: the engine does NOT validate the map. Justin's log, turn 23: "Servo Token and Spirited
+Companion blocked Skyclave Apparition" then "Skyclave Apparition dealt 2 combat damage to Forge AI" (no
+trample; Shadowspear was on the opponent's Construct), Forge AI 6 → 1. So through ForgeCoach's assign-damage
+dialog a human can deal blocked damage to the face. Please treat as top priority on the mtg-table side:
+(a) the bridge validates the returned map against Forge's own rule before applying it (lethal in order unless
+`overrideOrder`; defender only with trample / "as though it weren't blocked") and rejects otherwise, re-asking;
+(b) `assign_damage` gains `defenderAllowed`; (c) ForgeCoach hides the defender row unless allowed, and until
+(b) lands, unless the attacker's wire `keywords` include Trample. Item 15 in `study/common-sense-pass.md`
+updated. Justin found it by asking, not by exploiting it.
+
 ## 2026-10-10 13:12 (EDT) — NEEDS THE CLOUD SESSION (rules integrity): `assign_damage` lets a non-trampler assign combat damage to the defending player
 
 Seen live: Skyclave Apparition (2/2, no trample) blocked by two 1/1s; ForgeCoach's "Assign 2 damage" dialog
