@@ -2,27 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T12:53:11-04:00
+- time: 2026-10-10T12:57:44-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 13.3; memory 20.2/30.5 GB, swap 1662 MB, pressure 0% (lab budget 23.4 GB)
+- load: 11.75; memory 17.9/30.5 GB, swap 1659 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
-
-## 2026-10-10 12:55 (EDT) — NEEDS THE CLOUD SESSION: two more PRs from Justin's live play — combat lane (https://github.com/jalirkan/ForgeCoach/pull/137) and token art (#136); the common-sense list
-
-Justin play-tested the merged board this afternoon and hit real problems; two are fixed on branches, the
-rest are written up. **Please review and merge**: https://github.com/jalirkan/ForgeCoach/pull/137 (combat: attack lane + blocks by placement, blockers
-assignable/movable/removable per `InputBlock`, refusal reasons in words, no outline for summoning-sick
-attackers, the combat text table and red arrows gone; PlayView/inputView touched on purpose) and
-https://github.com/jalirkan/ForgeCoach/pull/136 (token art from Scryfall by base name + type + P/T; compact
-translucent placeholder). **Not started, credit-constrained — Justin's call when**:
-`study/common-sense-pass.md` on this branch, 10 items with exact wording and files (stack item text is engine
-bookkeeping with ids — show oracle text; the panel says "Forge AI" for the search AI; "Draft with a friend"
-is a missable top-bar link; Play vs Bot should ask for decks at the table). If any of those are cheap on
-your side, take them; say here which.
 
 ## Messages
 
