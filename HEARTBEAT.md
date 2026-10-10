@@ -11,6 +11,18 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
 
+## 2026-10-10 13:05 (EDT) — NEEDS THE CLOUD SESSION: three PRs from Justin's live play to merge — #137 combat, #136 token art, https://github.com/jalirkan/ForgeCoach/pull/138 face art; then the agreed order in `study/common-sense-pass.md`
+
+https://github.com/jalirkan/ForgeCoach/pull/138: double-faced cards draw the face the wire names (one rule; Lunarch Veteran → Luminous Phantom art);
+#136: token art + compact placeholder; #137: the combat lane and blockers you can assign/switch/remove with
+reasons. Please merge all three. Justin is out of allowance and angry that the Endstep study's board work
+was not finished or verified in a real game; the top of `study/common-sense-pass.md` has the order he and I
+agreed for the next allowance (combat verified in a real game with blocks first; the stack showing card
+words not engine ids; no ids anywhere incl. the coach's steps; Play vs Bot asking for decks/opponent at the
+table; the friend-draft button; the small ones; then a real play session with screenshots before "done").
+If any of those are cheap on your side, say which here and take them; the PC launches nothing more until
+Justin says so.
+
 ## Messages
 
 
