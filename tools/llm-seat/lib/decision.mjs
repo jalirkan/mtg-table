@@ -57,6 +57,55 @@ export function describeCard(c, { withCost = true } = {}) {
 
 const firstLine = (s) => String(s ?? '').split('\n')[0].trim();
 
+const isBlack = (c) => {
+  if (hasKeyword(c, 'DEVOID')) return false;
+  if (!c?.manaCost) return null;   // a token, a land: its colour is not on the wire
+  return /\{[^}]*B[^}]*\}/.test(c.manaCost);
+};
+
+/**
+ * Why `blocker` cannot block `attacker` by the evasion keywords the wire
+ * carries (flying / reach, shadow, horsemanship, fear, skulk): {rule, why} in
+ * words, or null when nothing on the wire rules it out.  A HINT, as the mana
+ * words are: a "can't block" effect is not on the wire, and Forge stays the
+ * judge.
+ */
+export function blockRule(attacker, blocker) {
+  if (!attacker || !blocker) return null;
+  const a = nameOf(attacker) ?? 'the attacker';
+  const b = nameOf(blocker) ?? 'your creature';
+  const kw = (c, k) => hasKeyword(c, k);
+  if (kw(attacker, 'FLYING') && !kw(blocker, 'FLYING') && !kw(blocker, 'REACH')) {
+    return { rule: 'flying', why: `${a} has flying and ${b} has neither flying nor reach` };
+  }
+  if (kw(attacker, 'SHADOW') && !kw(blocker, 'SHADOW')) return { rule: 'shadow', why: `${a} has shadow and ${b} does not` };
+  if (kw(blocker, 'SHADOW') && !kw(attacker, 'SHADOW')) return { rule: 'shadow', why: `${b} has shadow, so it can block only creatures with shadow` };
+  if (kw(attacker, 'HORSEMANSHIP') && !kw(blocker, 'HORSEMANSHIP')) return { rule: 'horsemanship', why: `${a} has horsemanship and ${b} does not` };
+  if (kw(attacker, 'FEAR') && !/\bArtifact\b/.test(String(blocker.types ?? '')) && isBlack(blocker) === false) {
+    return { rule: 'fear', why: `${a} has fear: only artifact or black creatures can block it, and ${b} is neither` };
+  }
+  if (kw(attacker, 'SKULK') && Number(blocker.power) > Number(attacker.power)) {
+    return { rule: 'skulk', why: `${a} has skulk: no creature with greater power can block it (${b} has ${blocker.power}, ${a} ${attacker.power})` };
+  }
+  return null;
+}
+
+/** blockRule's words only. */
+export const blockProblem = (attacker, blocker) => blockRule(attacker, blocker)?.why ?? null;
+
+/** "Eldrazi Spawn Token cannot block Vampire Nighthawk, Mulldrifter (flying)" -- one clause per blocker. */
+export function unblockableWords(d, cards) {
+  const byBlocker = new Map();
+  for (const u of d.unblockable ?? []) {
+    if (!byBlocker.has(u.blockerId)) byBlocker.set(u.blockerId, []);
+    byBlocker.get(u.blockerId).push(u);
+  }
+  const nm = (id) => nameOf(cards.get(id)) ?? `card ${id}`;
+  return [...byBlocker.entries()]
+    .map(([b, us]) => `${nm(b)} cannot block ${us.map((u) => nm(u.attackerId)).join(', ')} (${[...new Set(us.map((u) => u.rule))].join(', ')})`)
+    .join('; ');
+}
+
 /** The key a queued move is bound to: the same decision, re-pushed, keeps it; a new one drops it. */
 export function inputBinding(kind, input) {
   if (kind === 'attack' || kind === 'block') return kind;
@@ -222,18 +271,27 @@ export function classifyInput({ state, input, me, oracle, opts = {} }) {
       for (const band of state?.combat?.bands ?? []) for (const id of band.attackerIds ?? []) attackers.push(id);
       const blockers = (mine?.zones?.battlefield?.cards ?? []).filter((c) => c.hidden !== true && c.controller === me && isCreature(c) && !c.tapped);
       d.options.push({ n: 1, label: 'No blocks', isDefault: true, none: true });
+      d.attackerIds = attackers;
+      d.blockerIds = blockers.map((b) => b.id);
       // The two lists once, the pairs by name and id: a pair list grows as attackers x blockers.
       d.context.push(`Attackers: ${attackers.map((a) => describeCard(cards.get(a))).join('; ')}`);
       d.context.push(`Your untapped creatures: ${blockers.map((b) => describeCard(b)).join('; ')}`);
       const short = (c, id) => `${nameOf(c) ?? 'a hidden card'} [${id}]`;
+      // a pair the evasion keywords on the wire rule out is not offered (m20-search-p15:
+      // the Eldrazi Spawn token was sent to block Vampire Nighthawk, which flies)
+      d.unblockable = [];
       for (const a of attackers) {
         for (const b of blockers) {
+          const no = blockRule(cards.get(a), b);
+          if (no) { d.unblockable.push({ attackerId: a, blockerId: b.id, ...no }); continue; }
           d.options.push({ n: d.options.length + 1, label: `Block ${short(cards.get(a), a)} with ${short(b, b.id)}`, attackerId: a, blockerId: b.id });
         }
       }
+      if (d.unblockable.length) d.context.push(`Blocks the rules rule out: ${unblockableWords(d, cards)}`);
       d.multi = true; d.min = 1; d.max = Math.max(1, blockers.length);
       d.gradeType = 'block';
       if (attackers.length === 0 || blockers.length === 0) return autoOf(d, 'no possible block', [act('buttonOk')]);
+      if (d.options.length === 1) return autoOf(d, 'no possible block: no creature of yours can block any attacker (flying, …)', [act('buttonOk')]);
       return d;
     }
     case 'select': {
@@ -389,6 +447,12 @@ export function classifyAsk({ state, ask, intent = null, me = null, oracle = nul
       return d;
     }
     case 'confirm': {
+      // Forge's "mana floating … could be lost if you pass": the pass was the seat's own choice (a
+      // Signet's second mana left in the pool after a payment, the Signet probe): it stands
+      if (/mana floating in your mana pool that could be lost/i.test(String(ask.prompt ?? ''))) {
+        d.options.push({ n: 1, label: 'Yes', value: true }, { n: 2, label: 'No', value: false });
+        return autoOf(d, 'mana left in the pool: the pass stands (the mana is lost)', [answer(askId, true)]);
+      }
       d.options.push({ n: 1, label: String(ask.yesLabel ?? 'Yes'), value: true, isDefault: ask.defaultYes === true });
       d.options.push({ n: 2, label: String(ask.noLabel ?? 'No'), value: false, isDefault: ask.defaultYes !== true });
       d.fallback = [ask.defaultYes === true ? 1 : 2];
@@ -491,8 +555,17 @@ export function movesFor(d, chosen) {
   if (d.kind === 'block') {
     const pairs = chosen.filter((n) => !opt(n).none).map((n) => opt(n))
       .sort((x, y) => x.attackerId - y.attackerId || x.blockerId - y.blockerId);
+    // Blocks already declared in this declaration (d.declared, kept by the seat:
+    // the state does not show them until the declaration ends) stay declared in
+    // Forge, and a click on one again takes it back: so a block wanted and
+    // declared is not clicked, and one declared but not wanted is clicked off
+    // (m20-search-p15: the Dragon's block from a half-refused try made the next
+    // try's "block Mulldrifter with Amethyst Dragon" a "cannot be selected").
+    const declared = Array.isArray(d.declared) ? d.declared : [];
+    const same = (x, y) => x.attackerId === y.attackerId && x.blockerId === y.blockerId;
     const out = [];
-    for (const p of pairs) out.push(act('clickCard', { cardId: p.attackerId }), act('clickCard', { cardId: p.blockerId }));
+    for (const p of declared) if (!pairs.some((q) => same(p, q))) out.push(act('clickCard', { cardId: p.attackerId }), act('clickCard', { cardId: p.blockerId }));
+    for (const p of pairs) if (!declared.some((q) => same(p, q))) out.push(act('clickCard', { cardId: p.attackerId }), act('clickCard', { cardId: p.blockerId }));
     out.push(act('buttonOk'));
     return out;
   }

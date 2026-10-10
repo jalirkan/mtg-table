@@ -41,14 +41,14 @@
 // (priority before combat is passed to get there); steps after it run in the
 // second main phase.  The engine is the rules judge throughout.
 
-import { checkChoice, classifyAsk, inputBinding, inputKindOf, movesFor } from './decision.mjs';
+import { blockProblem, checkChoice, classifyAsk, inputBinding, inputKindOf, movesFor, unblockableWords } from './decision.mjs';
 import { visibleNames } from './history.mjs';
 import { hasKeyword, isCreature, isLand, nameOf, playersOf } from './frames.mjs';
 import { activationProblem, payProblem, availableMana, parseCost, zoneCost } from './mana.mjs';
 import { needsTap } from './oracle.mjs';
 import { parseArm } from './arms.mjs';
 import { newSessionId } from './model.mjs';
-import { abilitySplits, matchAbility, matchRef, normName, parseRef, parsePlan, splitNames, stepText } from './plan.mjs';
+import { abilityCost, abilitySplits, matchAbility, matchRef, normName, parseRef, parsePlan, splitNames, stepText } from './plan.mjs';
 import { Namer, PLAN_SYSTEM, phaseWords, planDeltaPrompt, planFullPrompt, planProgress, stackItemWords } from './plan-prompt.mjs';
 import { MAX_CANCELLED, MAX_MODEL_ERRORS, STALL_MS, SeatCore, inputKey } from './seat-core.mjs';
 
@@ -159,11 +159,14 @@ export function responseQuestion(item, state, me, plan) {
 
 export function blocksQuestion(d, state) {
   const namer = new Namer(state);
-  const attackers = [...new Set(d.options.filter((o) => !o.none).map((o) => o.attackerId))].map((id) => namer.permanent(namer.cards.get(id)));
-  const blockers = [...new Set(d.options.filter((o) => !o.none).map((o) => o.blockerId))].map((id) => namer.permanent(namer.cards.get(id)));
+  const pairs = d.options.filter((o) => !o.none);
+  const attackers = (d.attackerIds ?? [...new Set(pairs.map((o) => o.attackerId))]).map((id) => namer.permanent(namer.cards.get(id)));
+  const blockers = (d.blockerIds ?? [...new Set(pairs.map((o) => o.blockerId))]).map((id) => namer.permanent(namer.cards.get(id)));
   return [
     `The opponent attacks with: ${attackers.join('; ')}.`,
     `Your untapped creatures: ${blockers.join('; ')}.`,
+    ...(d.unblockable?.length ? [`By the rules: ${unblockableWords(d, namer.cards)}.`] : []),
+    ...(d.declaredWords ? [`Already declared: ${d.declaredWords}. Your block steps are the whole declaration: a declared block you leave out is taken back.`] : []),
     'Declare your blockers: one step "block <attacker> with <your creature>" per block, or the single step "pass" for no blocks. Steps after the blocks (a spell or an ability) are carried out once the blocks are declared.',
   ].join('\n');
 }
@@ -268,6 +271,7 @@ export class PlanCore extends SeatCore {
         this.blocksAsked = false;
         this.landsPlayed = 0;
         this.pendingTargets = null;
+        this.filterColour = null;
       }
       for (const e of b.events ?? []) if (e.kind === 'land' && e.player === this.me) this.landsPlayed += 1;
       // what the engine last listed as playable from the graveyard: delve keeps those (M61)
@@ -455,6 +459,33 @@ export class PlanCore extends SeatCore {
     const need = parseCost(m[1]);
     const avail = availableMana(this.state, this.me, this.oracle);
     if (!avail.known || avail.poolTotal > 0) return null;
+    // lands this payment already tapped: the state may not show them tapped yet (sk5: Plains clicked twice)
+    const cast = this.lastCast?.card?.id ?? null;
+    if (this.payTapped?.cast !== cast) this.payTapped = { cast, ids: new Set() };
+    // Filters (mana.mjs): Forge's Auto never pays with one, a click does -- its own "{1}" payment
+    // comes next (Auto pays it), and its mana goes to the spell (the Prism and Signet probes, real
+    // Forge).  So click one (a) for a colour no other untapped source makes (s2-search-p20-s6:
+    // Prophetic Prism for Welcoming Vampire's {W}), or (b) when the other untapped mana is short of
+    // the cost (Azorius Signet's net mana for Pristine Talisman {3} beside two Swamps).
+    const free = (x) => !this.payTapped.ids.has(x.id);
+    const makes = (x, col) => x.colors === 'any' || x.colors.has(col);
+    const netFilters = avail.sources.filter((x) => x.filter && free(x));
+    const filterPick = (f, why) => {
+      this.payTapped.ids.add(f.id);
+      return { id: f.id, name: f.name, why: `${why}; ${f.name}'s own ${f.cost} is paid next` };
+    };
+    for (const col of ['W', 'U', 'B', 'R', 'G']) {
+      if ((need.pips[col] ?? 0) === 0) continue;
+      if (avail.sources.some((x) => !x.filter && free(x) && makes(x, col))) continue;
+      const f = [...netFilters, ...(avail.filters ?? []).filter(free)].find((x) => makes(x, col));
+      if (!f) continue;
+      this.filterColour = col;
+      return filterPick(f, `for {${col}}: no other untapped source makes it`);
+    }
+    const directTotal = avail.sources.filter((x) => !x.filter && free(x)).reduce((n, x) => n + x.amount, 0);
+    if (need.mv > directTotal && netFilters.length) {
+      return filterPick(netFilters[0], `${need.mv} to pay and ${directTotal} other untapped mana: its net mana is needed`);
+    }
     const reserve = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
     const plan = this.plans.at(-1);
     const hand = [...new Namer(this.state).cards.values()].filter((c) => c.zone === 'hand' && c.owner === this.me);
@@ -466,10 +497,7 @@ export class PlanCore extends SeatCore {
       for (const k of Object.keys(reserve)) reserve[k] += p[k] ?? 0;
     }
     if (!Object.values(reserve).some((n) => n > 0)) return null;   // nothing later needs a colour: Auto is fine
-    // lands this payment already tapped: the state may not show them tapped yet (sk5: Plains clicked twice)
-    const cast = this.lastCast?.card?.id ?? null;
-    if (this.payTapped?.cast !== cast) this.payTapped = { cast, ids: new Set() };
-    const single = avail.sources.filter((x) => x.colors !== 'any' && x.colors.size === 1 && x.amount === 1 && !this.payTapped.ids.has(x.id));
+    const single = avail.sources.filter((x) => !x.filter && x.colors !== 'any' && x.colors.size === 1 && x.amount === 1 && !this.payTapped.ids.has(x.id));
     const colourOf = (x) => [...x.colors][0];
     const count = (col) => avail.sources.filter((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id)).length;
     for (const col of ['W', 'U', 'B', 'R', 'G', 'C']) {
@@ -500,10 +528,9 @@ export class PlanCore extends SeatCore {
       if ((ctx.attempt ?? 0) <= 1 && this.input?.buttons?.ok?.enabled) return { moves: [act('buttonOk')], why: "mana payment: the engine's Auto", auto: true };
       if (this.lastCast) {
         const c = this.lastCast.card;
-        const p = c ? payProblem(c, this.state, this.me, this.oracle) : null;
         const dv = this.lastDelve && this.lastDelve.card === c?.id ? this.lastDelve : null;
         const delveWords = dv ? `, even with delve exiling ${dv.n} card${dv.n === 1 ? '' : 's'} from your graveyard (the engine allowed at most ${dv.max})` : '';
-        this.payFailure = { plan: this.lastCast.plan, step: this.lastCast.step, why: `the engine could not pay for it from your untapped mana${delveWords}${p ? ` (${p})` : ''}` };
+        this.payFailure = { plan: this.lastCast.plan, step: this.lastCast.step, why: `the engine could not pay for it from your untapped mana${delveWords}${payWords(this.lastCast, this.input, this.state, this.me, this.oracle)}` };
         this.lastDelve = null;
         this.lastCast = null;
       }
@@ -549,6 +576,12 @@ export class PlanCore extends SeatCore {
         }
         return this.atQuestion(d, plan, step);
       default:
+        if (this.filterColour && /^Select Mana to Produce/i.test(String(d.prompt ?? ''))) {
+          // a converter's colour (the Prism probe's activation at priority asks it): the one smart pay clicked it for
+          const word = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' }[this.filterColour];
+          const o = d.options.find((x) => normName(String(x.label ?? '')) === word);
+          if (o) return { moves: movesFor(d, [o.n]), why: `mana: ${word}, the colour the payment needed`, auto: true };
+        }
         if (d.auto) {
           // the one legal target was taken for the plan: its "-> target" is used up (cf4: Animate Dead)
           if (/one legal target/.test(d.auto.reason ?? '')) this.pendingTargets = null;
@@ -715,7 +748,7 @@ export class PlanCore extends SeatCore {
     }
     plan.i += 1;
     this.pendingTargets = step.targets ? { plan, step, text: step.targets } : null;
-    if (want !== 'land') this.lastCast = { plan, step, card: m.pick.card, face };
+    if (want !== 'land') this.lastCast = { plan, step, card: m.pick.card, face, zone: m.pick.opt.zone ?? 'hand' };
     const o = m.pick.opt;
     return { moves: o.moves, why: stepText(step), step, plan, exec: true, intent: o.intent ? { ...o.intent, label: o.label } : null };
   }
@@ -823,8 +856,9 @@ export class PlanCore extends SeatCore {
       }
       const namer = new Namer(this.state);
       const pairs = d.options.filter((o) => !o.none);
-      const attackers = [...new Set(pairs.map((o) => o.attackerId))].map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'theirs' }));
-      const blockers = [...new Set(pairs.map((o) => o.blockerId))].map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'mine' }));
+      // every attacker and every untapped creature, so a pair the rules rule out gets its reason
+      const attackers = (d.attackerIds ?? [...new Set(pairs.map((o) => o.attackerId))]).map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'theirs' }));
+      const blockers = (d.blockerIds ?? [...new Set(pairs.map((o) => o.blockerId))]).map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'mine' }));
       const chosen = [];
       const used = new Set();
       let last = step;
@@ -839,6 +873,10 @@ export class PlanCore extends SeatCore {
         if (!b.ok) return { fail: { plan, step: s, why: used.size && blockers.some((x) => used.has(x.id) && normName(x.name) === bRef.name) ? `${s.blocker} already blocks; each creature blocks one attacker` : this.whyNotCreature(bRef, 'block', used) } };
         used.add(b.pick.id);
         const o = pairs.find((x) => x.attackerId === a.pick.id && x.blockerId === b.pick.id);
+        if (!o) {
+          const why = blockProblem(namer.cards.get(a.pick.id), namer.cards.get(b.pick.id));
+          return { fail: { plan, step: s, why: `${namer.byId(b.pick.id)} cannot block ${namer.byId(a.pick.id)}${why ? `: ${why}` : ''}` } };
+        }
         chosen.push(o.n);
       }
       const err = checkChoice(d, chosen);
@@ -1021,6 +1059,9 @@ export class PlanCore extends SeatCore {
   }
 
   engineAsks(d) {
+    if (d.kind === 'block' && d.declaredWords) {
+      return `Already declared (the engine took these clicks): ${d.declaredWords}. Your block steps are the whole declaration: a declared block you leave out is taken back.`;
+    }
     if (d.kind === 'priority' || d.kind === 'attack' || d.kind === 'block') return null;
     const { prompt, choices } = choicesWords(d, { ...this.state, __me: this.me });
     return `The engine now asks: ${prompt || '(no words)'}. Choices: ${choices}. Answer it with step 1 "target <name>" or "choose <option>".`;
@@ -1167,12 +1208,60 @@ export class PlanCore extends SeatCore {
   }
 }
 
+/**
+ * The cost words of a payment the engine could not make: " (…)" or "".  An
+ * activation quotes ITS ability's cost, never the card's casting cost (s2 p0
+ * s7: "activate Crypt Rats" was told "it costs {2}{B} (3 mana)", the Rats'
+ * own cost, for its {X} ability); a cast from another zone its flashback /
+ * escape cost; a cast from the hand the card's cost.  What the engine asked
+ * for ("Pay Mana Cost: {B}{B}{B}", X chosen) is judged against the untapped
+ * mana when the step's own cost has no fixed amount or is not known.
+ */
+export function payWords(cast, input, state, me, oracle) {
+  const c = cast?.card ?? null;
+  const asked = /Pay Mana Cost:\s*((?:\{[^}]+\})+)/.exec(String(input?.prompt ?? ''))?.[1] ?? null;
+  const judge = (cost) => (cost ? payProblem({ ...(c ?? {}), manaCost: cost }, state, me, oracle) : null);
+  // "the engine asked for {B}{B}{B} (3 mana) and you have …", or just the cost
+  const askedWords = () => {
+    if (!asked) return '';
+    const p = judge(asked);
+    return `the engine asked for ${p ? p.replace(/^it costs /, '') : asked}`;
+  };
+  if (cast?.step?.verb === 'activate') {
+    // the ability: the engine's label (M63), else the payment prompt's "Card (id) - <ability>"
+    const label = String(cast.ability?.abilityLabel ?? cast.ability?.intent?.abilityLabel ?? '').trim()
+      || /^[^\n]*?\(\d+\)\s+-\s+([^\n]+)/.exec(String(input?.prompt ?? ''))?.[1]?.trim() || '';
+    if (!label) return asked ? ` (${askedWords()})` : '';
+    const cost = abilityCost(label) ?? (/^[^(]*?\b(?:Equip|Reconfigure|Fortify)\b\s*((?:\{[^}]+\})+)/i.exec(label)?.[1] ?? null);
+    const mana = (cost?.match(/\{[^}]+\}/g) ?? []).filter((x) => !/^\{(T|Q|E)\}$/i.test(x)).join('');
+    const head = `its ability "${label.slice(0, 100)}"`;
+    // a fixed cost: judged as written (activationProblem's words); {X}: what the engine asked for
+    const p = mana && !/\{[XY]\}/i.test(mana) ? judge(mana) : null;
+    if (p) return ` (${head} ${p.replace(/^it costs/, 'costs')})`;
+    const more = askedWords();
+    return ` (${head}${cost ? ` costs ${cost}` : ''}${more ? `; ${more}` : ''})`;
+  }
+  if (!c) return '';
+  if (cast.face) {   // the other half of an adventure / split card: its own cost, the engine's words
+    const more = askedWords();
+    return more ? ` (${cast.face}: ${more})` : '';
+  }
+  if (cast.zone && cast.zone !== 'hand') {
+    const alt = zoneCost(c, cast.zone, oracle);
+    if (!alt) return '';
+    const p = judge(alt.cost);
+    return ` (from your ${cast.zone} it is cast by ${alt.how}: ${p ?? `it costs ${alt.cost}`})`;
+  }
+  const p = payProblem(c, state, me, oracle);
+  return p ? ` (${p})` : '';
+}
+
 /** The safe default for a decision: pass, no attack, no blocks, keep, the ask's own default. */
 export function defaultMoves(d, input) {
   switch (d.kind) {
     case 'priority': return [act('passPriority')];
-    case 'attack':
-    case 'block': return movesFor(d, [1]);
+    case 'attack': return movesFor(d, [1]);
+    case 'block': return movesFor(d, d.fallback ?? [1]);   // no new block; the ones the engine already took stay (decision.mjs withDeclared)
     case 'mulligan': return [act('buttonOk')];
     default:
       if (d.auto) return d.auto.moves;

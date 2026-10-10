@@ -145,7 +145,7 @@ export function planView(state, me, { oracle = null, landsPlayed = null } = {}) 
       out.push(`  Hand: ${list((z.hand?.cards ?? []).map((c) => namer.inHand(c)))}`);
       const avail = availableMana(state, me, oracle);
       const w = manaWords(avail);
-      const pool = w.pool ? `; in your mana pool: ${w.pool}` : '';
+      const pool = `${w.filters ? `; ${w.filters}` : ''}${w.pool ? `; in your mana pool: ${w.pool}` : ''}`;
       out.push(`  Untapped mana: ${avail.total}${avail.sources.length ? ` (${avail.sources.map((s) => s.name).join(', ')}: ${w.sources})` : ''}${pool}.${landsPlayed === null ? '' : ` Land played this turn: ${landsPlayed > 0 ? 'yes' : 'no'}.`}`);
     } else {
       const shown = (z.hand?.cards ?? []).filter((c) => c.hidden !== true);
