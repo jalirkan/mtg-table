@@ -80,3 +80,9 @@ be built without re-discovery. Order = what hurt most at the table.
     **CONFIRMED APPLIED:** the log shows "Skyclave Apparition dealt 2 combat damage to Forge AI" while blocked
     by two creatures with no trample (Forge AI 6 → 1). The engine does not validate the map. RULES BUG, top of
     the list.
+16. **Auto-coach (Steps) did not ask at the player's declare-blockers input.** Turn 24: ten attackers at the
+    player's 5 life, the blockers input came and went with no plan; the panel still showed the turn-23
+    advice. The Steps help promises "your blocks". Check `autoPlan.ts` / `livePlan` moment detection against
+    the real input (mode 'block' with the engine's "Select creatures to block …" prompt), and that an
+    in-flight answer survives the step moving on (show "Coach is thinking…" in the panel while it runs, and
+    deliver the plan into the block decision, not after). Cloud's area. 2026-10-10.
