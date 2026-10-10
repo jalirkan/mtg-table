@@ -647,3 +647,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J122/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table a944b25, ForgeCoach bec2dba
 - follow-up: template forgecoach-final-fantasy-meta: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J123 DONE: Peasant Cube v2 lab meta: MatEffect's 11 rare lands back in the list (ForgeCoach #131), drafted afresh, 6,000-12,000 grid drafts, best of one, Default vs Default, unrecorded
+
+- finished: 2026-10-10T10:58:30-04:00
+- decides: whether ForgeCoach replaces public/cubes/peasant-cube-180.meta.json, which still describes v1 (the ten Duskmourn duals and Ash Barrens; J110, 10,956 queue drafts), with this run's v2 meta (the cloud session copies it from results/J123/)
+- hypothesis: none to confirm: a rebuild. v1's per-card counts, scaled to 6,000 drafts, give 0.873 of playable nonland cards 80+ games (0.81 is the bar), so the first step should meet it; the 11 rare lands (Forge ranks 50-99, against 11-54 for what they replaced) are drafted earlier and played in more decks, which shifts the nonland picks a little
+- rule: written 2026-10-10 before the run. The meta ships when ForgeCoach@c93d90e's parseMeta reads it (schema 1) and its cubeForMeta names peasant, its card list is ForgeCoach's v2 document's exactly (the 11 rare lands in, the 11 cards they replaced out), no card key falls outside the cube, it rests on 100+ drafts (J075), and at least 81% of its playable nonland cards have 80+ decisive games (J110's bar: 80 is ForgeCoach's META_STRENGTH, 0.81 the lowest share among the four metas shipped before J110, rounded down). Drafting stops at the first of 6,000, 9,000 or 12,000 drafts whose meta meets the bar: a stop on card counts, never on win rates. A meta under the bar at 12,000 is not shipped (ForgeCoach then decides between v1's meta and labData: false), and the summary says how many more drafts it would need; a follow-up tops the same folder up
+- outcome: done
+- headline: mc.ship 1, mc.share_ge80 0.873, mc.drafts 6000, mc.median_games 1523, mc.p10_games 43, mc.new_lands_played 11
+- summary: results/J123/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 4b424a2, ForgeCoach c93d90e
+- follow-up: template forgecoach-metas: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

@@ -1,0 +1,39 @@
+==== J123 run2 started 2026-10-10T10:58:17-04:00 in unit lab-J123-run2, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1, lane 2
+# J123: the Peasant Cube's lab meta, v2 (the 11 rare lands back)
+
+| ships | drafts | decisive games | playable nonland | share with 80+ games | median games | p10 games | lands played | rare lands in / old cards in | orphans | ForgeCoach id |
+|---|---|---|---|---|---|---|---|---|---|---|
+| yes | 6000 | 5998 | 158 | 0.873 | 1523 | 43 | 22 / 22 | 11 / 0 | 0 | ok |
+
+| rare land | picked | avg pick | in decks | games | win rate |
+|---|---|---|---|---|---|
+| Meticulous Archive | 3326 | 27.8824 | 770 | 770 | 0.5494 |
+| Undercity Sewers | 2580 | 28.9965 | 1179 | 1179 | 0.4758 |
+| Blood Crypt | 2634 | 28.3121 | 1314 | 1314 | 0.4855 |
+| Stomping Ground | 3382 | 27.7558 | 1712 | 1710 | 0.4813 |
+| Horizon Canopy | 2288 | 28.2788 | 593 | 592 | 0.4713 |
+| Godless Shrine | 3174 | 28.1418 | 937 | 937 | 0.5368 |
+| Steam Vents | 2904 | 28.3237 | 1657 | 1657 | 0.4363 |
+| Underground Mortuary | 2650 | 27.6517 | 1035 | 1035 | 0.5014 |
+| Sacred Foundry | 3372 | 28.2286 | 1083 | 1082 | 0.5102 |
+| Breeding Pool | 2589 | 28.3357 | 822 | 822 | 0.4988 |
+| Prismatic Vista | 3800 | 28.6766 | 3800 | 3799 | 0.4849 |
+
+Other shipped metas (/home/justin-a/code/lab/ForgeCoach-lane2/public/cubes): evybaby-cube-360.meta.json 0.818 / median 476 / 4500 drafts; fair-fight-cube-180.meta.json 0.838 / median 1695 / 7434 drafts; modern-era-cube-180.meta.json 0.894 / median 1703 / 5781 drafts; omega-cube-180.meta.json 0.892 / median 1983 / 6682 drafts; pauper-cube-180.meta.json 0.819 / median 1620 / 8314 drafts; synergy-cube-180.meta.json 0.831 / median 1653 / 6980 drafts; vintage-cube-180.meta.json 0.843 / median 1266 / 5167 drafts.
+Rule: ship when schema_ok, id_ok, the card list is ForgeCoach's v2 document's, no orphans, drafts >= 100 and share >= 0.81 of playable nonland cards with 80+ decisive games.
+
+## Step by step (drafts, share of playable nonland cards with 80+ games, median, p10)
+
+- peasant-6000: 6000 drafts, share 0.873, median 1523, p10 43
+
+## The document against Forge 2.0.14
+
+```
+{"listed":180,"in_db":180,"unsupported":0,"missing":0,"doc_cards":180,"doc_warnings":0,"new_lands_in_doc":11,"ratings_rows":180,"ratings_match":1}
+cards listed    180
+in Forge's DB   180
+unsupported     0
+AI:RemAIDeck    5 (Forge: its AI plays these poorly or not at all)
+draft ranks     CubeCobra list 95, a set's rank file only 83, none 2
+unranked        2 (Forge would score these -100 and draft them last; the lab starts them at 40)
+```

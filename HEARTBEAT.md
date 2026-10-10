@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T10:58:17-04:00
+- time: 2026-10-10T10:58:31-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J123 commands 2/2, 6000/12000 drafts, 12712.5/h, ETA 2026-10-10T11:26:36-04:00, 7 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.18; memory 7.3/30.5 GB, swap 1696 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 7; memory 6.9/30.5 GB, swap 1696 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J122 done at 2026-10-10T10:30:10-04:00: ffl.listed 180 · ffl.missing 0 · ff.drafts 6000 · cov.share_ge80 0.833 · cov.median_games 940 · cov.ship 1
+- last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
 
 ## Messages
+
+- FOLLOW-UP READY [J123@2026-10-10T10:58:30-04:00] (the runner, for the cloud session): J123 is done; write and post the template forgecoach-metas. It decides: whether ForgeCoach replaces public/cubes/peasant-cube-180.meta.json, which still describes v1 (the ten Duskmourn duals and Ash Barrens; J110, 10,956 queue drafts), with this run's v2 meta (the cloud session copies it from results/J123/). Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J122@2026-10-10T10:30:10-04:00] (the runner, for the cloud session): J122 is done; write and post the template forgecoach-final-fantasy-meta. It decides: whether ForgeCoach ships public/cubes/final-fantasy-cube-180.meta.json and drops the cube's labData: false (the cloud session copies it from results/J122/), and which of the cube's cards Forge 2.0.14 lacks (the cloud session lists them under the document's "Not in Forge 2.0.14"). Ledger: LEDGER.md. Delete this line once posted.
 

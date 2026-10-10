@@ -1,0 +1,20 @@
+facts: booting the engine to look up 180 cards ...
+facts: 2.1 s
+== cubes/peasant-cube-180.md: The Peasant Cube — two-player edition (180 cards)
+sections        White 23/23, Blue 25/25, Black 25/25, Red 24/24, Green 24/24, Gold 23/23, Colorless 14/14, Lands 22/22
+cards listed    180
+in Forge's DB   180
+two-faced       4: Witch Enchanter // Witch-Blessed Meadow; Sink into Stupor // Soporific Springs; Amethyst Dragon // Explosive Crystal; Khenra Spellspear // Gitaxian Spellstalker  (looked up by the front face)
+unsupported     0
+AI:RemAIDeck    5 (Forge: its AI plays these poorly or not at all)
+  Waker of Waves
+  Faithless Looting
+  Goblin Bombardment
+  Mishra's Bauble
+  Spawning Pit
+AI:RemRandomDeck 2: Soulherder, Halo Forager (left out of Forge's random decks; harmless here)
+draft ranks     CubeCobra list 95, a set's rank file only 83, none 2
+unranked        2 (Forge would score these -100 and draft them last; the lab starts them at 40)
+  Shi'ar Soldier
+  Shuri, Vibranium Technologist
+best printing   41 card(s) are ranked only under an older printing than Forge's default (the lab uses that rank): Cathar Commando [FDN], Flickerwisp [2X2], Ephemerate [STA], Cast Out [AKH], Frost Trickster [STX], Whirler Rogue [ORI], Waker of Waves [M21], Lampad of Death's Vigil [THB], Sinister Starfish [MH2], Umbral Collar Zealot [EOE], Yahenni, Undying Partisan [AER], Thermo-Alchemist [DBL], Charging Monstrosaur [XLN], Firebolt [MH1], Hordeling Outburst [A25], Satyr Wayfinder [CMA], Reclamation Sage [C14], Thrashing Brontodon [M20], Pelakka Wurm [M19], Sprout Swarm [FUT], Trumpeting Herd [MH1], Grizzly Fate [JUD], Soulherder [MH1], Halo Forager [MOM], Mayhem Devil [WAR], Vitu-Ghazi Guildmage [RTR], Balmor, Battlemage Captain [DMU], Heroic Reinforcements [2X2], Signal Pest [MBS], Spawning Pit [DST], Ashnod's Altar [ATQ], Circuit Mender [NEO], Oketra's Monument [AKH], Bane of Bala Ged [BFZ], Artisan of Kozilek [ARC], Bountiful Landscape [MH3], Deceptive Landscape [MH3], Foreboding Landscape [MH3], Perilous Landscape [MH3], Shattered Landscape [MH3], Horizon Canopy [EXP]
