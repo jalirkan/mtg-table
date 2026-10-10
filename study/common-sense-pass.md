@@ -41,3 +41,8 @@ be built without re-discovery. Order = what hurt most at the table.
     board shows a short toast and a log line in the player's words ("Search AI revealed an empty hand —
     nothing to exile"). Source: the engine's own events (reveal of 0 cards / the resolved stack item), never
     inferred. Turn 23, 2026-10-10.
+13. **Transformed double-faced cards keep the front face's art.** Lunarch Veteran returned via disturb as
+    Luminous Phantom and (per Justin) still showed the front art. The wire carries the current face (name,
+    text, P/T; `alt` for the other face); the image lookup must fetch the matching Scryfall `card_faces[]`
+    image for the face shown, not the card's front `image_uris`. Check `cards.ts` face handling and
+    `CardTile` for transformed/flipped/meld states. Turn ~24, 2026-10-10.
