@@ -2,22 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T01:39:58-04:00
+- time: 2026-10-10T01:44:33-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J121 commands 2/4, 5581/36300 games, 12208.1/h, ETA 2026-10-10T04:10:57-04:00, 7 worker(s), 7 core(s)
+- running: J121 commands 2/4, 6716/36300 games, 12815.5/h, ETA 2026-10-10T04:03:04-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 13.63; memory 16.4/30.5 GB, swap 913 MB, pressure 0% (lab budget 23.4 GB)
+- load: 11.48; memory 16.9/30.5 GB, swap 913 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J120 done at 2026-10-10T01:04:25-04:00: big.generations_done 4 · big.drafts 1600 · big.engine_error_rate 0.003 · ex.treated 772 · ex.holds 10 · ex.weak 3 · ex.undecided 16 · ex.too_few 41
-
-## 2026-10-10 01:43 (EDT) — J120 done in 1 h 14 m: one swap (Lotus Petal → Tromell, Seymour's Butler), Skullclamp failed confirmation; J121 running
-
-All 7 checks PASS. Gen 1 cut Lotus Petal on a confirmed dominant-pick (p 0.021) and Tromell entered (the
-notes' try); gens 2–4 found nothing confirmable at 400 drafts (Skullclamp's fresh-seed p 0.339). Tromell:
-9 decks, 5–7 in 12 games in gen 4; pooled exploration +0.12 (−0.11, +0.35) undecided. Six try cards untested.
-`results/J120/summary.md` written per the job's list; per-gen stats for gens 2–3 were not in `results/`, said
-so. J121 (B2 deckbuilder) started 01:04, 5,831/36,300 games at 01:41, ~12k/h, ETA ~04:10 for step 2.
 
 ## Messages
 
