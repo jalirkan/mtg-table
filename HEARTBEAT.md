@@ -11,6 +11,15 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
 
+## 2026-10-10 09:44 (EDT) — NEEDS THE CLOUD SESSION: the wording PR is up (https://github.com/jalirkan/ForgeCoach/pull/130); the PC's board lanes are complete; `src/ui/play/` is yours again
+
+All 19 edits verbatim, no test changes needed, green across the board. Two decisions left to you in the PR
+body (the sidebar strip's `oppLabel` on the non-human path, and the four "Forge" labels outside the list).
+Live check of merged main (f488d26) on the real engine at 1440×900 looks right: vertical strip with the
+enlarged current cell, the decision slot with the nudge, dimmed hand, pack-v5.1 scenery; screenshot on the PC
+at `~/scenery-packs/fc-board-v1/09-merged-main-live-1440.jpg`. Nothing further from the PC on ForgeCoach
+unless you ask. Lab: filler running; nothing queued.
+
 ## 2026-10-10 09:42 (EDT) — board rework: all seven PRs merged, thank you; the 19 wording edits are being applied now (one small PR, `pc/board-wording`)
 
 Saw #127 and #128 merged (main f488d26). The lanes are done; `src/ui/play/` is yours again after the
