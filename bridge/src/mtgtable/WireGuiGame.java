@@ -333,6 +333,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
     /** M65 / M66: an {@link InputPeek} read that threw (the frame went out with null). */
     private final AtomicInteger peekErrors = new AtomicInteger();
+    /** M67 (D424): assign_damage answers refused by DamageRule (each re-asked with its reason). */
+    private final AtomicInteger damageRefusals = new AtomicInteger();
+    /** M67 (D424): attackers whose assignment the seat skipped (null with maySkip) since the last one applied. */
+    private final Set<Integer> damageSkips = new java.util.HashSet<>();
     /** M64: yields to "an opponent acts or the end step" that {@link EndStepWatcher} ended. */
     private final AtomicInteger endStepYieldsEnded = new AtomicInteger();
     /** M6 acts the seat actually used, for the run summary and the evidence table. */
@@ -859,6 +863,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     public int peekErrors() {
         return peekErrors.get();
+    }
+
+    /** M67 (D424): assign_damage answers the rule refused. */
+    public int damageRefusals() {
+        return damageRefusals.get();
     }
 
     public int endStepYieldsEnded() {
@@ -3437,7 +3446,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                                                      final boolean overrideOrder, final boolean maySkip) {
         fired("assignCombatDamage");
         if (!ThreadUtil.isGameThread()) {
-            return null;                       // PCH:302-304 handles null: "let Forge assign"
+            return null;                       // off the game thread: Forge's own null (never reached in practice)
         }
         // Index 0 is always the DEFENDER, carrying "defender": true; the blockers
         // follow.  Index 0 marshals back to the map key null, which is what
@@ -3447,50 +3456,104 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         if (blockers != null) {
             opts.addAll(blockers);
         }
-        final Object v = ask("assign_damage", opts, o -> {
-            // Nullable ON PURPOSE, and declared so at both ends (protocol
-            // section 5.2, protocol.ts `attackerId: number | null`): Forge's
-            // signature allows a null attacker and this emitter cannot prove it
-            // never happens, so the type says what the code can do rather than
-            // what a run happened to produce.
-            o.nInt("attackerId", attacker == null ? null : Integer.valueOf(attacker.getId()));
-            o.n("total", damage).n("overrideOrder", overrideOrder).n("maySkip", maySkip);
-            o.key("targets").arr();
-            for (int i = 0; i < opts.size(); i++) {
-                final Object t = opts.get(i);
-                o.obj();
-                o.n("id", i);
-                o.n("defender", i == 0);
-                if (t instanceof CardView) {
-                    final CardView cv = (CardView) t;
-                    o.n("label", Snap.label(cv, viewer));
-                    o.n("kind", "card");
-                    o.n("cardId", cv.getId());
-                    o.nInt("lethal", Snap.lethal(cv));
-                    o.key("card");
-                    Snap.card(o, cv, viewer);
-                } else if (t instanceof PlayerView) {
-                    final PlayerView pv = (PlayerView) t;
-                    o.n("label", pv.getName() == null ? "" : pv.getName());
-                    o.n("kind", "player");
-                    o.n("playerId", pv.getId());
-                    o.nNull("lethal");
-                } else {
-                    o.n("label", t == null ? "" : t.getClass().getSimpleName());
-                    o.n("kind", "other");
-                    o.nNull("lethal");
+        // M67 / D424: THE RULE.  Forge's engine applies whatever map comes back;
+        // the rule lives in its desktop dialog, VAssignCombatDamage, which the
+        // wire replaced.  DamageRule is that dialog's rule, fed the same reads
+        // (the attacker's hasTrample / hasDeathtouch / hasDivideDamage,
+        // getDamageToKill per blocker), and an answer it refuses is never
+        // applied: the ask goes out again, a new askId, with the reason.
+        final boolean[] kw = Snap.assignerKeywords(attacker);
+        final Integer[] lethal = new Integer[opts.size()];
+        final String[] labels = new String[opts.size()];
+        final int[] ruleLethal = new int[opts.size() - 1];
+        for (int i = 0; i < opts.size(); i++) {
+            final Object t = opts.get(i);
+            if (t instanceof CardView) {
+                labels[i] = Snap.label((CardView) t, viewer);
+                lethal[i] = i == 0 ? null : Snap.lethal((CardView) t, kw[1]);
+            } else if (t instanceof PlayerView) {
+                labels[i] = ((PlayerView) t).getName() == null ? "" : ((PlayerView) t).getName();
+            } else {
+                labels[i] = t == null ? "" : t.getClass().getSimpleName();
+            }
+            if (i > 0) {
+                ruleLethal[i - 1] = lethal[i] == null ? 0 : lethal[i].intValue();
+            }
+        }
+        final DamageRule rule = DamageRule.of(damage, ruleLethal, labels, overrideOrder, kw[0], kw[2],
+                defender != null);
+        final Integer attackerKey = attacker == null ? null : Integer.valueOf(attacker.getId());
+        String reason = null;
+        while (true) {
+            final String why = reason;
+            final Object v = ask("assign_damage", opts, o -> {
+                // Nullable ON PURPOSE, and declared so at both ends (protocol
+                // section 5.2, protocol.ts `attackerId: number | null`): Forge's
+                // signature allows a null attacker and this emitter cannot prove it
+                // never happens, so the type says what the code can do rather than
+                // what a run happened to produce.
+                o.nInt("attackerId", attackerKey);
+                o.n("total", damage).n("overrideOrder", overrideOrder).n("maySkip", maySkip);
+                o.n("defenderAllowed", rule.defenderAllowed);   // M67
+                o.n("reason", why);                             // M67: null on the first asking
+                o.key("targets").arr();
+                for (int i = 0; i < opts.size(); i++) {
+                    final Object t = opts.get(i);
+                    o.obj();
+                    o.n("id", i);
+                    o.n("defender", i == 0);
+                    if (t instanceof CardView) {
+                        final CardView cv = (CardView) t;
+                        o.n("label", labels[i]);
+                        o.n("kind", "card");
+                        o.n("cardId", cv.getId());
+                        o.nInt("lethal", lethal[i]);
+                        o.key("card");
+                        Snap.card(o, cv, viewer);
+                    } else if (t instanceof PlayerView) {
+                        final PlayerView pv = (PlayerView) t;
+                        o.n("label", labels[i]);
+                        o.n("kind", "player");
+                        o.n("playerId", pv.getId());
+                        o.nNull("lethal");
+                    } else {
+                        o.n("label", labels[i]);
+                        o.n("kind", "other");
+                        o.nNull("lethal");
+                    }
+                    o.end();
                 }
                 o.end();
+            });
+            final Map<Integer, Integer> m = asIntMap(v);
+            if (m == null) {
+                // null (a timeout, a disconnect, a malformed answer, or the
+                // seat's own null).  Forge's dialog has exactly two ways to close
+                // without OK: Skip (only when maySkip: Combat re-queues this
+                // attacker behind the others) and Auto.  A skip is taken once
+                // per attacker until an assignment is applied, so a seat that
+                // answers null to everything still ends the step; anything else
+                // is Auto -- never Forge's null, which re-asks the same question
+                // forever (one attacker) or NPEs (a blocker's damage).
+                if (maySkip && attackerKey != null && damageSkips.add(attackerKey)) {
+                    return null;
+                }
+                damageSkips.clear();
+                return Ask.damageAssignment(blockers, rule.auto());
             }
-            o.end();
-        });
-        final Map<Integer, Integer> m = asIntMap(v);
-        // Index 0 -> the null key -> the defending player, indices 1..n ->
-        // blockers.get(i - 1).  In Ask.damageAssignment, where AskSelfTest
-        // drives it with a defender plus two blockers: section 5.3's documented
-        // trap is invisible on the wire, because a one-off error produces a
-        // perfectly well-formed answer object.
-        return m == null ? null : Ask.damageAssignment(blockers, m);
+            final String refused = rule.refusal(m);
+            if (refused == null) {
+                damageSkips.clear();
+                return Ask.damageAssignment(blockers, m);
+            }
+            damageRefusals.incrementAndGet();
+            System.err.println("ASSIGN_DAMAGE REFUSED (D424): " + m + " -- " + refused);
+            if (closed || overEmitted || pendingConcede) {
+                damageSkips.clear();
+                return Ask.damageAssignment(blockers, rule.auto());   // nobody left to ask: Auto, never the illegal map
+            }
+            reason = refused;
+        }
     }
 
     @Override

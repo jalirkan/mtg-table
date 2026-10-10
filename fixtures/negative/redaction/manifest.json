@@ -472,5 +472,23 @@
     "level": "fail",
     "expect": "M65 (chosen) is HALF PRESENT",
     "why": "amendment M65: a seat writes chosen on every input -- some with and some without is a broken emitter"
+  },
+  {
+    "file": "m67-assign-damage-refused.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M67: an illegal assign_damage answer refused and re-asked with a reason, then a legal one -- the control for the m67 probes"
+  },
+  {
+    "file": "m67-illegal-damage-applied.jsonl",
+    "level": "fail",
+    "expect": "the bridge applied an illegal damage map",
+    "why": "amendment M67 / D424: damage on the defender while defenderAllowed is false must be refused -- the next ask is the same question with a reason"
+  },
+  {
+    "file": "m67-defender-allowed-half-present.jsonl",
+    "level": "fail",
+    "expect": "M67 (assign_damage.defenderAllowed) is HALF PRESENT",
+    "why": "amendment M67: a bridge since M67 writes defenderAllowed on every assign_damage ask -- some with and some without is a broken emitter"
   }
 ]

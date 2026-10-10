@@ -30,6 +30,26 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-10 — the bridge is the rules gate for combat damage
+
+Found in the owner's own game (turn 23, 2026-10-10): Skyclave Apparition, a
+2/2 with no trample, blocked by Servo Token and Spirited Companion, dealt its 2
+combat damage to the defending player through ForgeCoach's assign-damage
+dialog (Forge AI 6 → 1). Forge's engine applies whatever damage map comes back;
+the rule lives in its desktop dialog (`VAssignCombatDamage`), which the wire
+replaced, so the bridge carried the ask and not the rule. Decision **D424**
+(M67). Held by `mtgtable.DamageRule` (the rule, Forge-free) and its cases in
+`mtgtable.AskSelfTest` (`bridge/build.sh`), `tools/check-redaction.mjs` (the
+shape, the per-file rule, and an illegal answer that is not refused; three
+controls in `fixtures/negative/redaction/m67-*`), `web/test/assign-damage.test.ts`
+and the LLM seat's tests on real frames (`fixtures/assign-probe/m67-frames.json`),
+and verified live by `tools/ws-assign-probe.mjs`, a scripted seat on `/ws` that
+tries to cheat the real engine (`docs/evidence/assign-probe.md`).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M67 | §5.2, §5.3, §5.4 | **`assign_damage` is checked by the bridge, by Forge's own rule, and an illegal answer is refused.** **The rule** is `VAssignCombatDamage`'s (javap on the pinned 2.0.14 jar; `DamageRule.java` cites each method): the targets are the blockers in Forge's order, then the defender **only when** the attacker's current state `hasTrample()` and Forge passed a defender, or it `hasDivideDamage()` ("divided as you choose among defending player and/or any number of creatures they control") and `overrideOrder` is true. Lethal damage per blocker is the dialog's `getDamageToKill`: `max(0, CardView.getLethalDamage())` (toughness less damage marked and damage already assigned this combat), a planeswalker's loyalty, at most 1 when the attacker has deathtouch. A legal map assigns **exactly** `total`, no negative amount, no index outside `targets`; with `hasDivideDamage` and `overrideOrder`, any split; with `overrideOrder` false (Forge's legacy damage assignment order), a target takes damage only when every target before it has lethal; otherwise (today's rules, `overrideOrder` true) the blockers in any split and the defender only once **every** blocker has lethal. "Assign combat damage as though it weren't blocked" never reaches this ask (Forge's `Combat` asks a confirm and puts it all on the defender itself); trample over planeswalkers arrives as a trampler whose last blocker is the planeswalker. **New fields**: `defenderAllowed: boolean` (may index 0 take damage) and `reason: string \| null` (`null` on a first asking); **`targets[].lethal` now means the dialog's lethal damage** (deathtouch, planeswalkers and damage already assigned included; before M67 it was toughness less damage marked). **Refused**: an answer the rule forbids is never applied; the same question is asked again under a **new `askId`** with `reason` a sentence a person can read ("Without trample, a blocked creature can't assign combat damage to Forge AI. Assign all 2 to the blockers."), as many times as it takes. **`null`** (a timeout, a disconnect, a malformed answer or the seat's own): with `maySkip`, Forge's Skip once per attacker (the attacker is assigned after the others); otherwise the dialog's **Auto** — lethal to each blocker in order while damage lasts, the rest on the defender when it is allowed, else on the last blocker reached. Before M67 a null went back to Forge as null, which re-asked the same attacker forever. **Optional**: absent before M67; a reader treats an absent `defenderAllowed` as "the bridge does not say" (and an absent `reason` as `null`), never as `true`. The client's one reader is `assignDamageRuleOf()` in `web/src/protocol.ts`. | Owner's game, turn 23; `study/rules-integrity-plan.md` Part 2; D424 |
+
 ### 2026-10-10 — a yield to the opponent's next move, what an input has chosen, and which players a click is taken for
 
 Asked for by the ForgeCoach board rebuild (the PC session's Endstep study, 2026-10-10)
@@ -1881,7 +1901,7 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
 | `choose_list` | `getChoices` — and everything `AbstractGuiGame` builds on it: `one` / `oneOrNone` / `many` / `reveal` / `getInteger` / `insertInList` | `prompt`, `options:[opt]`, `preselected:[index]`, `min`, `max`, **`reveal`** | `[index…]` (length in `[min,max]`), or `null` |
 | `order` | `order` → `OrderResult` | `prompt`, `destLabel`, `source:[opt]`, `dest:[opt]`, `min`, `max`, `referenceCardId`, `sideboardMode`, `showRemember` | `{ "ordered": [index…], "remember": bool }` — **never `null`** |
 | `choose_entities` | `chooseSingleEntityForEffect` (min=max=1, or min=0 when optional), `chooseEntitiesForEffect` | `prompt`, `options:[opt]`, `min`, `max`, **`delayedReveal`** | `[index…]`, or `null` |
-| `assign_damage` | `assignCombatDamage` | `attackerId` (**or `null`**: Forge's signature allows a null attacker), `total`, `overrideOrder`, `maySkip`, `targets:[opt]` — **the defender is index 0** | `{ "<index>": n, … }`, or `null` |
+| `assign_damage` | `assignCombatDamage` | `attackerId` (**or `null`**: Forge's signature allows a null attacker), `total`, `overrideOrder`, `maySkip`, `defenderAllowed`, `reason` (amendment **M67**), `targets:[opt]` — **the defender is index 0** | `{ "<index>": n, … }`, or `null`; **checked by the bridge (M67)** |
 | `assign_amount` | `assignGenericAmount` | `sourceCardId`, `total`, `atLeastOne`, `label`, `targets:[opt]` | `{ "<index>": n, … }`, or `null` |
 | `manipulate_list` | `manipulateCardList` (surveil, scry-likes) | `prompt`, `cards:[opt]` (full list, in order), `manipulable:[index]`, `toTop`, `toBottom`, `toAnywhere` | `[index…]` — the full list in its new order |
 | `sideboard` | `sideboard` | `prompt`, `main:[opt]`, `side:[opt]` | `[index…]` = the new main deck, or `null` |
@@ -1976,11 +1996,15 @@ recorded plus `manipulate_list` and `options` unreachable is the eleven.)
   `p12-choose-list-reveals-without-the-flag.jsonl`).
 - **`assign_damage`'s defender is option index 0**, carrying `"defender": true`
   plus `playerId` or `cardId`; the blockers follow, each with `cardId` and
-  `lethal` (remaining toughness, computed on the game thread). The bridge
-  marshals index 0 back to the map key `null`, which is what
+  `lethal` (the damage Forge's dialog counts as lethal, amendment **M67**,
+  computed on the game thread). **Index 0 is always there, and may take damage
+  only when `defenderAllowed` is true** (M67): the bridge checks every answer
+  by Forge's own rule and asks again, with a `reason`, until one is legal. The
+  bridge marshals index 0 back to the map key `null`, which is what
   `PlayerControllerHuman.java:305-311` accepts for "the defending player", and
-  index `i` back to `blockers.get(i - 1)`. A `null` answer is legal here and
-  means "let Forge assign" (`PCH:302-304`).
+  index `i` back to `blockers.get(i - 1)`. A `null` answer is legal here: with
+  `maySkip` it is Forge's Skip (this attacker is assigned after the others),
+  otherwise the bridge assigns as Forge's Auto button does (M67).
   **A one-off error in that marshalling is invisible on the wire** — both
   spellings are a well-formed `{"<index>": n}` object — so it is not left to a
   recording to catch: `mtgtable.Ask` holds the marshalling for all eleven kinds
