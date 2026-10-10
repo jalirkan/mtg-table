@@ -1,0 +1,22 @@
+==== J121 run2 started 2026-10-10T01:12:34-04:00 in unit lab-J121-run2, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+ai-bench: run j121-forge, 7 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j121-forge
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J121.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+ai-bench: shard 3 starts in slot 3
+ai-bench: shard 4 starts in slot 4
+ai-bench: shard 5 starts in slot 5
+ai-bench: shard 6 starts in slot 6
+ai-bench: shard 6 parked
+ai-bench: shard 6 starts in slot 6
+== Default vs Default
+  games 32444: A 16303, B 16138, draws 3 (timeouts 3, engine errors 3)
+  A win rate 50.3% of 32441 decisive  (95% Wilson CI 49.7-50.8%)
+  focus deck (first of each pair) win rate 52.2% of 32441  (95% CI 51.7-52.8%)
+  game time mean 2.0 s, median 1.3 s, max 330.0 s; turns mean 18.2; AI eval timeouts 48 (0.00/game)
+  A vs the known 50%: 50.3% over 32441 deal(s), 95% CI 49.7-50.8%, p = 0.360 (+2 Elo, CI -2 to +6)
+  RemAIDeck cards left in hand at game end: A 6982, B 6976
+  A counters:     {activate.Carrion Feeder=230, activate.Cauldron Familiar=377, cast.Carrion Feeder=110, cast.Cauldron Familiar=844, cast.Deadly Dispute=429, cast.Mayhem Devil=52, cast.Zulaport Cutthroat=272, forge.outletActivation=3042}
+  B counters:     {activate.Carrion Feeder=174, activate.Cauldron Familiar=368, cast.Carrion Feeder=105, cast.Cauldron Familiar=876, cast.Deadly Dispute=423, cast.Mayhem Devil=59, cast.Zulaport Cutthroat=287, forge.outletActivation=2951}
+  focus counters: {activate.Carrion Feeder=313, activate.Cauldron Familiar=315, cast.Carrion Feeder=174, cast.Cauldron Familiar=784, cast.Deadly Dispute=330, cast.Mayhem Devil=54, cast.Zulaport Cutthroat=391, forge.outletActivation=2243}
