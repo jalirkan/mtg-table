@@ -29,6 +29,7 @@ import { dirname } from 'node:path';
 
 import type { Player } from './registry.ts';
 import type { GameRecord } from './results.ts';
+import { fileLines } from '../cubelab/lines.ts';
 
 export interface ExpStart {
   v: 1; id: string; kind: 'start'; at: string; host: string; cmd: string; args: string[];
@@ -64,7 +65,7 @@ export function append(file: string, line: ExpLine): void {
 
 export function readLog(file: string): ExpLine[] {
   if (!existsSync(file)) return [];
-  return readFileSync(file, 'utf8').split('\n').filter((l) => l.trim()).flatMap((l) => {
+  return [...fileLines(file)].filter((l) => l.trim()).flatMap((l) => {
     try { return [JSON.parse(l) as ExpLine]; } catch { return []; }
   });
 }

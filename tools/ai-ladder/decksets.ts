@@ -19,6 +19,7 @@
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join, relative } from 'node:path';
+import { fileLines } from '../cubelab/lines.ts';
 
 export interface SetPair { cube: string; seed: number; a: string; b: string }
 
@@ -29,7 +30,7 @@ export function draftsOf(runDir: string): SetPair[] {
   const out: SetPair[] = [];
   const f = join(runDir, 'drafts.jsonl');
   if (!existsSync(f)) return out;
-  for (const line of readFileSync(f, 'utf8').split('\n')) {
+  for (const line of fileLines(f)) {
     if (!line.trim()) continue;
     const r = JSON.parse(line) as { seed: number; drafters: Array<{ deckFile: string | null }> };
     const [x, y] = r.drafters;

@@ -4,7 +4,7 @@
 //
 // docs/guides/ai-ladder.md is the manual; DECISIONS.md D318–D321 are why.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,6 +21,7 @@ import { choose, hostBase, mkey, SCHED_DEFAULTS, type SchedPlayer, type SchedSta
 import { Session } from './session.ts';
 import { NI_DEFAULTS, niState, pairScores, SPRT_DEFAULTS, sprtState, verdictWords, type NiParams, type SprtParams, type SprtState } from './sprt.ts';
 import { grid, halving, sample, TUNE_DEFAULTS, type Tally } from './tune.ts';
+import { fileLines } from '../cubelab/lines.ts';
 
 const REPO = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 
@@ -103,7 +104,7 @@ function session(a: Args, defaultBatchPairs: number, defaultSet = CONFIRM_SET): 
 
 function readJsonl<T>(file: string): T[] {
   if (!existsSync(file)) return [];
-  return readFileSync(file, 'utf8').split('\n').filter((l) => l.trim()).flatMap((l) => {
+  return [...fileLines(file)].filter((l) => l.trim()).flatMap((l) => {
     try { return [JSON.parse(l) as T]; } catch { return []; }
   });
 }

@@ -62,6 +62,7 @@ import { parseRatings } from './ratings.ts';
 import { aggregate, renderHtml, type CardInfo } from './report.ts';
 import { runLab, sha, type DraftRecord, type RunMeta } from './run.ts';
 import type { Weights } from './weights.ts';
+import { readJsonLines } from './lines.ts';
 
 export interface EvolveOptions {
   cubeFile: string;
@@ -147,7 +148,7 @@ function readRunDir(out: string): { meta: RunMeta; cards: Record<string, CardInf
   const meta = JSON.parse(fs.readFileSync(path.join(out, 'run.json'), 'utf8')) as RunMeta;
   const cards = JSON.parse(fs.readFileSync(path.join(out, 'cards.json'), 'utf8')) as Record<string, CardInfo>;
   const jsonl = path.join(out, 'drafts.jsonl');
-  const recs = fs.existsSync(jsonl) ? fs.readFileSync(jsonl, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord) : [];
+  const recs = fs.existsSync(jsonl) ? readJsonLines<DraftRecord>(jsonl) : [];
   return { meta, cards, recs };
 }
 

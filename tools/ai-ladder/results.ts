@@ -29,10 +29,11 @@
 //   load   the machine's 1-minute load average when the batch ended — a busy
 //          machine weakens Forge's AI (its 5 s timeout) and a wall-clock search
 
-import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { Player } from './registry.ts';
+import { fileLines } from '../cubelab/lines.ts';
 
 export interface GameRecord {
   v: 1;
@@ -108,7 +109,7 @@ export function readResults(dir: string): GameRecord[] {
   if (!existsSync(d)) return [];
   const byId = new Map<string, GameRecord>();
   for (const f of readdirSync(d).filter((x) => x.endsWith('.jsonl')).sort()) {
-    for (const line of readFileSync(join(d, f), 'utf8').split('\n')) {
+    for (const line of fileLines(join(d, f))) {
       if (!line.trim()) continue;
       let r: GameRecord;
       try {

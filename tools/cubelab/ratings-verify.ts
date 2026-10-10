@@ -38,6 +38,7 @@ import { binomLower, binomUpper, holm } from './evolve-stats.ts';
 import { balanceOf, batchStats, pooledTest, type CardStat, type Group } from './evolve.ts';
 import { filterPlayExplore } from './playexplore.ts';
 import type { DraftRecord, RunMeta } from './run.ts';
+import { readJsonLines } from './lines.ts';
 
 export interface VerifyOptions { margin: number; alpha: number; minPairGames: number }
 export const VERIFY_DEFAULTS: VerifyOptions = { margin: 0.05, alpha: 0.05, minPairGames: 100 };
@@ -189,8 +190,7 @@ export function readBatch(dir: string): BatchView {
   const meta = JSON.parse(fs.readFileSync(path.join(dir, 'run.json'), 'utf8')) as RunMeta;
   const info = JSON.parse(fs.readFileSync(path.join(dir, 'cards.json'), 'utf8')) as Record<string, CardInfo>;
   // Complete lines only: a run still appending may leave a torn last line.
-  const text = fs.readFileSync(path.join(dir, 'drafts.jsonl'), 'utf8');
-  const all = text.slice(0, text.lastIndexOf('\n') + 1).split('\n').filter(Boolean).map((l) => JSON.parse(l) as DraftRecord);
+  const all = readJsonLines<DraftRecord>(path.join(dir, 'drafts.jsonl'), { complete: true });
   const recs = filterPlayExplore(all, 'exclude').recs;
   const b = batchStats(meta, info, recs, null);
   const bal = balanceOf(b.metaDoc);
