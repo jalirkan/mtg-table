@@ -1,4 +1,4 @@
-id: J121
+id: J122
 title: Lab stats (meta.json) for the Final Fantasy Cube: its 180 cards against Forge 2.0.14, then 3,000-7,500 grid drafts, best of one, until the shipped metas' bar is met
 public_title: Cube meta: the Final Fantasy Cube
 public_est: ~2 h
@@ -12,14 +12,14 @@ repos: mtg-table@a944b25 (branch c/hopeful-johnson-20lca7: main plus cubes/final
 est: ~5 min pilot, then 3,000 drafts ~40 min, at most 7,500 ~1.7 h on 7 workers (J110 measured 4,490-4,730 grid drafts/h best of one on the queue, recording; this run records nothing)
 resumable: yes
 timeout: 4h
-clean: var/cubelab/j121
-progress: cubelab var/cubelab/runs/final-fantasy-J121 of 7500
+clean: var/cubelab/j122
+progress: cubelab var/cubelab/runs/final-fantasy-J122 of 7500
 metrics: qwriters = sh: pgrep -fc '[c]ubelab.* queue run' || true
-metrics: ff = cubelab var/cubelab/runs/final-fantasy-J121
-metrics: ffl = sh: cat var/cubelab/j121/check.json 2>/dev/null || echo '{"listed":0}'
-metrics: cov = sh: cat var/cubelab/j121/out/coverage.json 2>/dev/null || echo '{"written":0}'
+metrics: ff = cubelab var/cubelab/runs/final-fantasy-J122
+metrics: ffl = sh: cat var/cubelab/j122/check.json 2>/dev/null || echo '{"listed":0}'
+metrics: cov = sh: cat var/cubelab/j122/out/coverage.json 2>/dev/null || echo '{"written":0}'
 headline: ffl.listed, ffl.missing, ff.drafts, cov.share_ge80, cov.median_games, cov.ship
-decides: whether ForgeCoach ships public/cubes/final-fantasy-cube-180.meta.json and drops the cube's labData: false (the cloud session copies it from results/J121/), and which of the cube's cards Forge 2.0.14 lacks (the cloud session lists them under the document's "Not in Forge 2.0.14")
+decides: whether ForgeCoach ships public/cubes/final-fantasy-cube-180.meta.json and drops the cube's labData: false (the cloud session copies it from results/J122/), and which of the cube's cards Forge 2.0.14 lacks (the cloud session lists them under the document's "Not in Forge 2.0.14")
 hypothesis: Forge 2.0.14 (built 2026-08-08) has the whole Final Fantasy release (June 2025), so all 180 cards are in its database; a 180-card cube reaches the shipped metas' per-card bar within 3,000-7,500 grid drafts
 rule: written 2026-10-10 before the run, J110's rule unchanged. The meta ships when ForgeCoach@bec2dba's parseMeta reads it (schema 1), its cubeForMeta names final-fantasy, no card key falls outside the cube, it rests on 100+ drafts, and at least 81% of its playable nonland cards (the cube's nonland cards less those Forge lacks) have 80+ decisive games. Drafting stops at the first of 3,000, 4,500, 6,000 or 7,500 drafts whose meta meets the bar: a stop on card counts, never on win rates. A missed bar at 7,500 is a finding, not a failure: the meta is collected and does not ship
 followup: forgecoach-final-fantasy-meta
@@ -30,8 +30,8 @@ This job gives it the lab numbers every other cube has, and is the first check o
 Justin approved it.
 
 **The run.** The cube lab's normal `run`, as J110 drafted Evan's cube: grid, best of one, Default against Default,
-the lab builder, no exploration, no profile mix, no recording. Folder `var/cubelab/runs/final-fantasy-J121`, its own
-Forge homes (`CUBELAB_HOME_ROOT=var/cubelab/homes-J121`). The cube has no ratings file, so it drafts on Forge's
+the lab builder, no exploration, no profile mix, no recording. Folder `var/cubelab/runs/final-fantasy-J122`, its own
+Forge homes (`CUBELAB_HOME_ROOT=var/cubelab/homes-J122`). The cube has no ratings file, so it drafts on Forge's
 draft ranks (FIN has a rank file if Forge ships one; an unranked card starts at the lab's `unrated` weight).
 
 **Seeds.** 160,000,001+ for the run (at most 7,500), 161,000,001-161,000,030 for the pilot. In the D340 lab range,
@@ -51,9 +51,9 @@ a 30-draft run in its own folder turned into a meta and read by ForgeCoach's par
 node --test web/test/cubelab.test.ts
 grep -q "id: 'final-fantasy'" {ForgeCoach}/src/cube/cubes.ts
 cmp cubes/final-fantasy-cube-180.md {ForgeCoach}/public/cubes/final-fantasy-cube-180.md
-mkdir -p var/cubelab/j121-tools var/cubelab/j121/pilot/out
-cat > var/cubelab/j121-tools/ffcheck.mjs <<'J121EOF'
-// J121: the cube against Forge 2.0.14 (`cubelab.sh check`'s output) and, with a run folder, that no card Forge
+mkdir -p var/cubelab/j122-tools var/cubelab/j122/pilot/out
+cat > var/cubelab/j122-tools/ffcheck.mjs <<'J122EOF'
+// J122: the cube against Forge 2.0.14 (`cubelab.sh check`'s output) and, with a run folder, that no card Forge
 // lacks reaches a draft line.  usage: node ffcheck.mjs <check.txt> [<run dir>]
 import fs from 'node:fs';
 import path from 'node:path';
@@ -76,9 +76,9 @@ if (runDir) {
   out.missing_in_lines = hit;
 }
 console.log(JSON.stringify(out));
-J121EOF
-cat > var/cubelab/j121-tools/ffcover.mjs <<'J121EOF'
-// J121: the Final Fantasy meta read by ForgeCoach's own parser (src/cube/meta.ts, schema 1), matched by its
+J122EOF
+cat > var/cubelab/j122-tools/ffcover.mjs <<'J122EOF'
+// J122: the Final Fantasy meta read by ForgeCoach's own parser (src/cube/meta.ts, schema 1), matched by its
 // cubeForMeta, and J110's rule on it.  usage: node ffcover.mjs <ForgeCoach checkout> <meta.json> <run.json>
 import fs from 'node:fs';
 import path from 'node:path';
@@ -109,21 +109,21 @@ const out = {
 };
 out.ship = schemaOk && idOk && orphans === 0 && drafts >= MIN_DRAFTS && share >= SHARE ? 1 : 0;
 console.log(JSON.stringify(out));
-J121EOF
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J121
-P=var/cubelab/j121/pilot
+J122EOF
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J122
+P=var/cubelab/j122/pilot
 # exits 1 when cards are missing: the checks below read its output
-tools/cubelab.sh check cubes/final-fantasy-cube-180.md > var/cubelab/j121/check.txt || true
-cat var/cubelab/j121/check.txt
+tools/cubelab.sh check cubes/final-fantasy-cube-180.md > var/cubelab/j122/check.txt || true
+cat var/cubelab/j122/check.txt
 tools/cubelab.sh run cubes/final-fantasy-cube-180.md --format grid --games 1 --drafts 30 --jobs {workers} --seed 161000001 --out $P/run
-node var/cubelab/j121-tools/ffcheck.mjs var/cubelab/j121/check.txt $P/run > $P/check.json
+node var/cubelab/j122-tools/ffcheck.mjs var/cubelab/j122/check.txt $P/run > $P/check.json
 tools/cubelab.sh meta $P/run --cube cubes/final-fantasy-cube-180.md
-node var/cubelab/j121-tools/ffcover.mjs {ForgeCoach} $P/run/meta.json $P/run/run.json > $P/out/coverage.json
+node var/cubelab/j122-tools/ffcover.mjs {ForgeCoach} $P/run/meta.json $P/run/run.json > $P/out/coverage.json
 cat $P/check.json $P/out/coverage.json
 ```
-metrics: pl = sh: cat var/cubelab/j121/pilot/check.json 2>/dev/null || echo '{"listed":0}'
-metrics: pc = sh: cat var/cubelab/j121/pilot/out/coverage.json 2>/dev/null || echo '{"written":0}'
-metrics: prun = cubelab var/cubelab/j121/pilot/run
+metrics: pl = sh: cat var/cubelab/j122/pilot/check.json 2>/dev/null || echo '{"listed":0}'
+metrics: pc = sh: cat var/cubelab/j122/pilot/out/coverage.json 2>/dev/null || echo '{"written":0}'
+metrics: prun = cubelab var/cubelab/j122/pilot/run
 check: qwriters == 0
 check: pl.listed == 180
 check: pl.in_db + pl.missing == 180
@@ -138,10 +138,10 @@ check: pc.orphans == 0
 ## Commands
 ```bash
 # 1. up to 3,000, 4,500, 6,000, 7,500 drafts; stop at the first step whose meta meets the bar (card counts only)
-export CUBELAB_HOME_ROOT=var/cubelab/homes-J121
-E=var/cubelab/runs/final-fantasy-J121
-O=var/cubelab/j121/out
-mkdir -p "$O" var/cubelab/j121/steps
+export CUBELAB_HOME_ROOT=var/cubelab/homes-J122
+E=var/cubelab/runs/final-fantasy-J122
+O=var/cubelab/j122/out
+mkdir -p "$O" var/cubelab/j122/steps
 # a resumed run parses every line it finds: drop a line a stopped run left half-written
 if [ -s "$E/drafts.jsonl" ]; then
   node -e 'const fs=require("fs");const f=process.argv[1];const b=fs.readFileSync(f);const k=b.lastIndexOf(10);if(k+1<b.length){fs.truncateSync(f,k+1);console.log("dropped a half-written last line");}' "$E/drafts.jsonl"
@@ -152,9 +152,9 @@ for n in 3000 4500 6000 7500; do
   tools/cubelab.sh meta "$E" --cube cubes/final-fantasy-cube-180.md
   cp "$E/meta.json" "$O/final-fantasy-cube-180.meta.json"
   cp "$E/run.json" "$O/final-fantasy-cube-180.run.json"
-  node var/cubelab/j121-tools/ffcover.mjs {ForgeCoach} "$O/final-fantasy-cube-180.meta.json" "$O/final-fantasy-cube-180.run.json" > "var/cubelab/j121/steps/ff-$n.json"
-  cat "var/cubelab/j121/steps/ff-$n.json"
-  if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit(r.share_ge80 >= r.threshold.share ? 0 : 1)' "var/cubelab/j121/steps/ff-$n.json"; then
+  node var/cubelab/j122-tools/ffcover.mjs {ForgeCoach} "$O/final-fantasy-cube-180.meta.json" "$O/final-fantasy-cube-180.run.json" > "var/cubelab/j122/steps/ff-$n.json"
+  cat "var/cubelab/j122/steps/ff-$n.json"
+  if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit(r.share_ge80 >= r.threshold.share ? 0 : 1)' "var/cubelab/j122/steps/ff-$n.json"; then
     echo "== final-fantasy: the bar is met at $n drafts"
     break
   fi
@@ -163,12 +163,12 @@ done
 cores: 1
 ```bash
 # 2. the checks' numbers and summary.md
-O=var/cubelab/j121/out
-E=var/cubelab/runs/final-fantasy-J121
-node var/cubelab/j121-tools/ffcheck.mjs var/cubelab/j121/check.txt "$E" > var/cubelab/j121/check.json
-node var/cubelab/j121-tools/ffcover.mjs {ForgeCoach} "$O/final-fantasy-cube-180.meta.json" "$O/final-fantasy-cube-180.run.json" > "$O/coverage.json"
-cp var/cubelab/j121/check.txt "$O/forge-check.txt"
-cat var/cubelab/j121/check.json "$O/coverage.json"
+O=var/cubelab/j122/out
+E=var/cubelab/runs/final-fantasy-J122
+node var/cubelab/j122-tools/ffcheck.mjs var/cubelab/j122/check.txt "$E" > var/cubelab/j122/check.json
+node var/cubelab/j122-tools/ffcover.mjs {ForgeCoach} "$O/final-fantasy-cube-180.meta.json" "$O/final-fantasy-cube-180.run.json" > "$O/coverage.json"
+cp var/cubelab/j122/check.txt "$O/forge-check.txt"
+cat var/cubelab/j122/check.json "$O/coverage.json"
 ```
 check: ff.drafts >= 3000
 check: ff.engine_error_rate <= 2%
@@ -191,13 +191,13 @@ abort: ff.games >= 500 and ff.timeouts > 0.05 * ff.games
 - Free disk under 10 GB.
 
 ## Report
-collect: var/cubelab/j121/out/final-fantasy-cube-180.meta.json
-collect: var/cubelab/j121/out/final-fantasy-cube-180.run.json
-collect: var/cubelab/j121/out/coverage.json
-collect: var/cubelab/j121/out/forge-check.txt
-collect: var/cubelab/j121/check.json
-collect: var/cubelab/j121/steps/
-collect: var/cubelab/j121/pilot/check.json
+collect: var/cubelab/j122/out/final-fantasy-cube-180.meta.json
+collect: var/cubelab/j122/out/final-fantasy-cube-180.run.json
+collect: var/cubelab/j122/out/coverage.json
+collect: var/cubelab/j122/out/forge-check.txt
+collect: var/cubelab/j122/check.json
+collect: var/cubelab/j122/steps/
+collect: var/cubelab/j122/pilot/check.json
 
 summary.md:
 - Forge: how many of the 180 cards are in Forge 2.0.14's database, and every one that is not, by name.
