@@ -47,8 +47,25 @@ export function addClause(text) {
   return { colors: all, amount: Math.max(1, syms.length) };
 }
 
-/** A tap-for-mana line of an oracle text, or null. */
-const manaLine = (text) => String(text ?? '').split('\n').find((l) => /\{T\}[^:]*:\s*Add\b/i.test(l)) ?? null;
+const MANA_LINE = /^([^:\n]*\{T\}[^:\n]*):\s*Add\b/i;
+
+/**
+ * Does a mana ability's cost need mana ("{1}, {T}: Add one mana of any
+ * color", "{W/U}, {T}: Add {W}{W}…")?  A FILTER: it turns mana into mana, so
+ * it adds no mana of its own, and Forge's Auto payment never uses it (s2 p20
+ * s6: Prophetic Prism, the only white, and Welcoming Vampire's payment had no
+ * Auto) -- nor can the seat, whose payment prompt lists no source.
+ */
+export const isFilterCost = (cost) => (String(cost ?? '').match(/\{[^}]+\}/g) ?? []).some((x) => !/^\{(T|Q|E)\}$/i.test(x));
+
+/** The tap-for-mana lines of an oracle text: {free, filter} (free: the first whose cost needs no mana, or null). */
+export function manaLines(text) {
+  const lines = String(text ?? '').split('\n').map((l) => [l, MANA_LINE.exec(l)]).filter(([, m]) => m);
+  return { free: lines.find(([, m]) => !isFilterCost(m[1]))?.[0] ?? null, filter: lines.some(([, m]) => isFilterCost(m[1])) };
+}
+
+/** A tap-for-mana line of an oracle text whose cost needs no mana, or null. */
+const manaLine = (text) => manaLines(text).free;
 
 /**
  * The seat's untapped mana sources and pool.
@@ -65,6 +82,7 @@ export function availableMana(state, me, oracle = null) {
     if (isLand(c)) {
       const basics = Object.entries(BASIC_TYPE).filter(([t]) => new RegExp(`\\b${t}\\b`).test(String(c.types ?? ''))).map(([, col]) => col);
       let add = basics.length ? { colors: new Set(basics), amount: 1 } : (manaLine(text) ? addClause(manaLine(text)) : null);
+      if (!add && manaLines(text).filter) continue;   // a filter land with no free line (Sungrass Prairie): no mana of its own
       if (!add) { add = { colors: 'any', amount: 1 }; known = false; }
       sources.push({ id: c.id, name: name ?? 'a land', colors: add.colors, amount: add.amount });
       continue;

@@ -12,7 +12,10 @@
 //     Nighthawk (flying), the engine refused it after it had already taken the
 //     Amethyst Dragon's block of Writhing Chrysalis, and every later try's
 //     "block … with Amethyst Dragon" was "cannot be selected now": the Dragon
-//     was still declared (state 1041's combat).
+//     was still declared (state 1041's combat);
+//   - s2-search-p20-s6: Prophetic Prism ("{1}, {T}: Add one mana of any
+//     color") was counted as a seventh mana of any colour, so Welcoming
+//     Vampire {2}{W} was sent with no white source and Forge could not pay.
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -21,6 +24,8 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { classifyInput } from '../lib/decision.mjs';
+import { availableMana, isFilterCost, manaLines, payProblem } from '../lib/mana.mjs';
+import { planView } from '../lib/plan-prompt.mjs';
 import { makeFakeModel } from '../lib/model.mjs';
 import { PlanAsker, PlanCore, payWords } from '../lib/plan-core.mjs';
 import { card, land, state } from './helpers.mjs';
@@ -171,4 +176,46 @@ test('m20-search-p15: after a half-refused try the next blocks build on what was
   // the Dragon's block of Chrysalis is taken back (Chrysalis, Dragon), then Spawn on Chrysalis and Dragon on Mulldrifter
   assert.deepEqual(clicks, [28, 3, 28, 138, 75, 3, 'buttonOk']);
   assert.deepEqual(h.core.declaredBlocks().sort((a, b) => a.blockerId - b.blockerId), [{ attackerId: 75, blockerId: 3 }, { attackerId: 28, blockerId: 138 }]);
+});
+
+// ---------------------------------------------------------------- 2. filter mana is not extra mana
+
+test('s2-search-p20-s6: Prophetic Prism (a mana ability whose cost needs mana) is no mana of its own: 6 lands, 6 mana, no white', () => {
+  const fx = fixture('s2-p20-s6-prophetic-prism.json');
+  const st = fx.frames.find((f) => f.seq === 694).body;
+  const oracle = oracleOf(fx.oracle);
+  assert.equal(fx.oracle['Prophetic Prism'], 'When this artifact enters, draw a card.\n{1}, {T}: Add one mana of any color.');
+  assert.match(fx.recordedFailure, /could not pay/);
+  const avail = availableMana(st, 0, oracle);
+  assert.equal(avail.total, 6);
+  assert.deepEqual(avail.sources.map((x) => x.name), ['Island', 'Swamp', 'Swamp', 'Swamp', 'Island', 'Swamp']);
+  assert.ok(!avail.sources.some((x) => x.colors === 'any' || x.colors.has('W')));
+  const vampire = st.players[0].zones.hand.cards.find((c) => c.name === 'Welcoming Vampire');
+  assert.match(payProblem(vampire, st, 0, oracle), /^it costs \{2\}\{W\}, which needs 1 white mana, and your untapped mana makes no white/);
+  assert.match(planView(st, 0, { oracle }), /Untapped mana: 6 \(/);
+  // the payment the engine could not make: no Auto (frame 701)
+  assert.equal(fx.frames.find((f) => f.seq === 701).body.buttons.ok.enabled, false);
+});
+
+test('filter mana: a land keeps its free line ({T}: Add {C}); one with only filter lines and every filter artifact add nothing (card-index texts)', () => {
+  assert.equal(isFilterCost('{1}, {T}'), true);
+  assert.equal(isFilterCost('{W/U}, {T}'), true);
+  assert.equal(isFilterCost('{T}, Sacrifice this artifact'), false);
+  assert.equal(isFilterCost('{T}'), false);
+  const texts = {
+    'Mystic Gate': '{T}: Add {C}.\n{W/U}, {T}: Add {W}{W}, {W}{U}, or {U}{U}.',
+    'Sungrass Prairie': '{1}, {T}: Add {G}{W}.',
+    'Dimir Signet': '{1}, {T}: Add {U}{B}.',
+    'Prophetic Prism': 'When this artifact enters, draw a card.\n{1}, {T}: Add one mana of any color.',
+  };
+  assert.deepEqual(manaLines(texts['Mystic Gate']), { free: '{T}: Add {C}.', filter: true });
+  const oracle = oracleOf(texts);
+  const s = state({ me: { battlefield: [
+    land(1, 'Mystic Gate', { zone: 'battlefield', types: 'Land - Gate' }), land(2, 'Sungrass Prairie', { zone: 'battlefield', types: 'Land' }),
+    card(3, 'Dimir Signet', { zone: 'battlefield', types: 'Artifact' }), card(4, 'Prophetic Prism', { zone: 'battlefield', types: 'Artifact' }),
+  ] } });
+  const avail = availableMana(s, 0, oracle);
+  assert.equal(avail.total, 1);
+  assert.deepEqual(avail.sources.map((x) => [x.name, [...x.colors]]), [['Mystic Gate', ['C']]]);
+  assert.equal(avail.known, true);
 });

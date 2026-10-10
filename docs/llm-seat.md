@@ -362,8 +362,12 @@ says otherwise.
   one mana of any color` source, the payment prompt lists no mana sources at all
   (`selectable` empty; the seat's smart pay clicks lands unlisted), and
   `state.activatable` holds no mana ability. Whether a click on the Prism during a
-  payment would use its ability (a nested `{1}` payment) is on no recorded wire; the
-  mana words still count the Prism as one more mana of any colour. Open.
+  payment would use its ability (a nested `{1}` payment) is on no recorded wire. So the
+  mana words count no mana ability whose cost needs mana (`mana.mjs` `isFilterCost`:
+  the Prism, Signets, Eggs, filter lands' second line — a land with only such lines,
+  Sungrass Prairie, is no source): s2-search-p20-s6's six lands and Prism were told
+  "7 mana, any colour", and Welcoming Vampire {2}{W} was sent with no white. Paying
+  with one is open.
 - **Grading plan-mode choices**: the positions mode and coach-grade work per engine
   decision; plan mode's records keep the `stateSeq` of every moment and step, but no
   replay of a plan against a recorded game is built.
