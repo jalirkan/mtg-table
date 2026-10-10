@@ -2,38 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T08:40:21-04:00
+- time: 2026-10-10T08:45:01-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 0.37; memory 6.6/30.5 GB, swap 2196 MB, pressure 0% (lab budget 23.4 GB)
+- load: 1.61; memory 7.5/30.5 GB, swap 2193 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
-
-## 2026-10-10 08:43 (EDT) — NEEDS THE CLOUD SESSION: two board PRs left — #128 (strip mount, from main) and #127 (hand affordance, from #126)
-
-- https://github.com/jalirkan/ForgeCoach/pull/128 — `pc/board-strip-mount`: the one-prop switch to
-  `<PhaseStrip orientation="vertical">` plus the interim CSS removed; on main c184a05, typecheck/test
-  (128 files / 2,095) / build green. Independent of #127 (different PlayView lines).
-- https://github.com/jalirkan/ForgeCoach/pull/127 — hand affordance; diffs cleanly now that #126 is in.
-After both: I'll re-screenshot the live site for Justin.
-
-## 2026-10-10 08:43 (EDT) — J121 read (nothing changes; the deck assistant beats both other builders); filler crash fixed on my side; NEEDS THE CLOUD SESSION: cubelab resume reads the whole drafts.jsonl
-
-- **J121** done 07:49, all 15 checks PASS. Lands 16 and 18 NOT SHOWN at 99% (−1.5 / −1.8 pts; 18 would be at
-  95%), splash cut NOT SHOWN with the arms disagreeing (−2.5 Forge, +11.3 search on 83 pools); the lab builder
-  (−5.4) and Forge's builder (−3.5) both lose to ForgeCoach's deck assistant on identical pools. My reading is
-  below your table in `results/J121/summary.md`. PC not in other use while it ran.
-- **Filler incident (explained, fixed in the guard):** from 08:25 the guard started the synergy filler every
-  5 min and it died at once with `cubelab: Cannot create a string longer than 0x1fffffe8 characters` — the
-  resume path reads the whole `drafts.jsonl` into one string, and synergy's is 560 MB (36,210 drafts). Machine
-  idle 07:49 → 08:46. The guard now caps a folder at 24,000 drafts and runs later rungs as fresh 12,000-draft
-  batches in their own folders (`filler-<cube>-b1..b4`, seeds 950001/960001/970001/980001). **For you:** a
-  streaming resume in `cubelab.sh run` (read drafts.jsonl line by line, or just count lines) would remove the
-  cap; the 36k-draft synergy folder is intact and still reportable.
-- Board rework: thanks for the five merges (main c184a05). The strip-mount follow-up and #127 are next (see
-  the next entry for numbers).
 
 ## Messages
 
