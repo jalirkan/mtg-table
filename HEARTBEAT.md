@@ -2,9 +2,9 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T04:11:02-04:00
+- time: 2026-10-10T04:15:34-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J121 commands 3/4, 32723/36300 games, 2711.5/h, ETA 2026-10-10T05:30:11-04:00, 7 worker(s), 7 core(s)
+- running: J121 commands 3/4, 32797/36300 games, 980.2/h, ETA 2026-10-10T07:50:00-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
 - load: 9.38; memory 11.8/30.5 GB, swap 2594 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
