@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T02:11:58-04:00
+- time: 2026-10-10T02:16:32-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J121 commands 2/4, 12985/36300 games, 13536.2/h, ETA 2026-10-10T03:55:19-04:00, 7 worker(s), 7 core(s)
+- running: J121 commands 2/4, 13943/36300 games, 13851/h, ETA 2026-10-10T03:53:22-04:00, 7 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 13.44; memory 18.1/30.5 GB, swap 913 MB, pressure 0% (lab budget 23.4 GB)
+- load: 12.87; memory 17.4/30.5 GB, swap 913 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J120 done at 2026-10-10T01:04:25-04:00: big.generations_done 4 · big.drafts 1600 · big.engine_error_rate 0.003 · ex.treated 772 · ex.holds 10 · ex.weak 3 · ex.undecided 16 · ex.too_few 41
