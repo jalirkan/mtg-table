@@ -384,8 +384,13 @@ public final class ConsoleTransport implements Transport {
         case "assign_damage":
         case "assign_amount":
             menu(sb, b.get("targets"), 0);
+            if (b.get("reason") instanceof String) {
+                sb.append("\n  refused: ").append(b.get("reason"));            // M67
+            }
             sb.append("\n  total ").append(b.get("total"))
-              .append("   answer: <index>=<amount>,<index>=<amount>  (index 0 is the defender), or . for null");
+              .append("   answer: <index>=<amount>,<index>=<amount>  (index 0 is the defender")
+              .append(Boolean.FALSE.equals(b.get("defenderAllowed")) ? ", and may take no damage" : "")
+              .append("), or . for null");
             break;
         default:
             menu(sb, b.get("options"), 0);

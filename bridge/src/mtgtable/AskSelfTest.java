@@ -63,6 +63,7 @@ public final class AskSelfTest {
     public static void main(final String[] args) {
         coercion();
         assignDamage();
+        damageRule();
         assignAmount();
         manipulateList();
         chooseListAndEntities();
@@ -139,10 +140,96 @@ public final class AskSelfTest {
         eq("assign_damage: with no blockers the defender still marshals",
            Integer.valueOf(5), none.get("<null>"));
 
-        // A null answer means "let Forge assign" (PCH:302-304) and never reaches
-        // the marshaller; if it did, it must not throw.
+        // A null answer never reaches the marshaller (M67: the bridge turns it
+        // into a skip or the dialog's Auto, DamageRule.auto); if it did, it
+        // must not throw.
         eq("assign_damage: a null answer marshals to nothing",
            Integer.valueOf(0), Integer.valueOf(Ask.damageAssignment(blockers, null).size()));
+    }
+
+    // ==================================================================
+    // assign_damage's RULE (M67, D424) -- VAssignCombatDamage's, which the
+    // engine does not re-check.  Index 0 is the defender, 1..n the blockers.
+    // ==================================================================
+
+    private static void damageRule() {
+        final String[] labels = { "Forge AI", "Servo Token", "Spirited Companion" };
+        // The 2026-10-10 game: Skyclave Apparition (2/2, no trample) blocked by
+        // a 1/1 Servo and a 1/2 Spirited Companion; today's rules (overrideOrder).
+        final DamageRule skyclave = DamageRule.of(2, new int[] { 1, 2 }, labels, true, false, false, true);
+        expect("rule: no trample -> the defender is not allowed", !skyclave.defenderAllowed);
+        refused("rule: 2 to the defender without trample (the bug)", skyclave, "{\"0\":2}", "trample");
+        refused("rule: 1 to the defender, 1 to a blocker, without trample", skyclave, "{\"0\":1,\"1\":1}", "trample");
+        refused("rule: 0+... the defender even with every blocker lethal, without trample",
+                DamageRule.of(4, new int[] { 1, 2 }, labels, true, false, false, true), "{\"0\":1,\"1\":1,\"2\":2}",
+                "trample");
+        legal("rule: the whole 2 on the Companion (any split among blockers, overrideOrder)", skyclave, "{\"2\":2}");
+        legal("rule: 1 and 1", skyclave, "{\"1\":1,\"2\":1}");
+        legal("rule: a zero to the defender is no damage to it", skyclave, "{\"0\":0,\"1\":2}");
+        refused("rule: short of the total", skyclave, "{\"1\":1}", "exactly 2");
+        refused("rule: over the total", skyclave, "{\"1\":2,\"2\":1}", "exactly 2");
+        refused("rule: a target that was not offered", skyclave, "{\"3\":2}", "not one of the choices");
+        refused("rule: a negative amount", skyclave, "{\"1\":3,\"2\":-1}", "negative");
+        eq("rule: Auto without trample piles the rest on the last blocker reached",
+           "{1=1, 2=1}", String.valueOf(skyclave.auto()));
+        eq("rule: Auto of 5 without trample", "{1=1, 2=4}",
+           String.valueOf(DamageRule.of(5, new int[] { 1, 2 }, labels, true, false, false, true).auto()));
+
+        // Trample (overrideOrder): the defender only once every blocker has lethal.
+        final DamageRule trample = DamageRule.of(5, new int[] { 1, 2 }, labels, true, true, false, true);
+        expect("rule: trample with a defender -> allowed", trample.defenderAllowed);
+        legal("rule: trample, lethal to both and 2 over", trample, "{\"0\":2,\"1\":1,\"2\":2}");
+        legal("rule: trample, everything on the blockers", trample, "{\"1\":4,\"2\":1}");
+        refused("rule: trample, the Companion short of lethal", trample, "{\"0\":3,\"1\":1,\"2\":1}",
+                "Spirited Companion needs 2");
+        eq("rule: Auto with trample: lethal in order, the rest to the defender",
+           "{1=1, 2=2, 0=2}", String.valueOf(trample.auto()));
+        expect("rule: trample but no defender (a blocker's damage) -> not allowed",
+               !DamageRule.of(5, new int[] { 1, 2 }, labels, true, true, false, false).defenderAllowed);
+
+        // Deathtouch is in the lethal numbers the bridge hands the rule
+        // (Snap.lethal: min(lethal, 1)): a 3-damage deathtouch trampler over a
+        // 4/4 and a 2/2 needs only 1 on each.
+        final DamageRule deathtouch = DamageRule.of(3, new int[] { 1, 1 }, labels, true, true, false, true);
+        legal("rule: deathtouch + trample, 1 each and 1 over", deathtouch, "{\"0\":1,\"1\":1,\"2\":1}");
+
+        // Legacy damage assignment order (overrideOrder false).
+        final DamageRule ordered = DamageRule.of(4, new int[] { 2, 2 }, labels, false, true, false, true);
+        refused("rule: in order, the second blocker before the first has lethal", ordered,
+                "{\"1\":1,\"2\":3}", "in order");
+        legal("rule: in order, lethal to the first, the rest to the second", ordered, "{\"1\":2,\"2\":2}");
+        legal("rule: in order, all on the first", ordered, "{\"1\":4}");
+        refused("rule: in order, the defender before the second has lethal", ordered,
+                "{\"0\":1,\"1\":2,\"2\":1}", "Spirited Companion needs 2");
+        eq("rule: Auto in order", "{1=2, 2=2}", String.valueOf(ordered.auto()));
+        eq("rule: Auto in order, damage short of the first's lethal", "{1=1}",
+           String.valueOf(DamageRule.of(1, new int[] { 2, 2 }, labels, false, false, false, true).auto()));
+
+        // Divided as you choose (Butcher Orgg) with overrideOrder: any split.
+        final DamageRule divide = DamageRule.of(3, new int[] { 2, 2 }, labels, true, false, true, true);
+        expect("rule: divided as you choose -> the defender is allowed", divide.defenderAllowed);
+        legal("rule: divided as you choose, all to the defender", divide, "{\"0\":3}");
+        legal("rule: divided as you choose, 1 to each", divide, "{\"0\":1,\"1\":1,\"2\":1}");
+        refused("rule: divided as you choose still needs the total", divide, "{\"0\":2}", "exactly 3");
+        // The divide keyword without overrideOrder is the ordinary ordered rule.
+        expect("rule: divide without overrideOrder -> no defender",
+               !DamageRule.of(3, new int[] { 2, 2 }, labels, false, false, true, true).defenderAllowed);
+
+        // The marshalling of a rule's answer: Auto through Ask.damageAssignment.
+        final Map<String, Integer> autoMap = named(Ask.damageAssignment(List.of("Servo", "Companion"), trample.auto()));
+        eq("rule: Auto marshals the defender to the null key", Integer.valueOf(2), autoMap.get("<null>"));
+        eq("rule: Auto marshals index 2 to the second blocker", Integer.valueOf(2), autoMap.get("Companion"));
+    }
+
+    private static void legal(final String what, final DamageRule rule, final String json) {
+        final String r = rule.refusal(intMap(json));
+        expect(what + " is legal (got: " + r + ")", r == null);
+    }
+
+    private static void refused(final String what, final DamageRule rule, final String json, final String needle) {
+        final String r = rule.refusal(intMap(json));
+        expect(what + " is refused", r != null);
+        expect(what + ": the reason names \"" + needle + "\" (got: " + r + ")", r != null && r.contains(needle));
     }
 
     // ==================================================================

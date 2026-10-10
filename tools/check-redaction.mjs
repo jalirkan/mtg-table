@@ -998,6 +998,11 @@ const ASK_SHAPES = {
   // says what the code can do rather than what a run happened to produce.
   assign_damage: {
     attackerId: nullable(num), total: num, overrideOrder: bool, maySkip: bool,
+    // Amendment M67 (D424): may the defender (index 0) take damage, and why
+    // the bridge refused the last answer (null on a first asking).  Per file,
+    // all or none: every assign_damage ask a bridge since M67 writes has both.
+    defenderAllowed: perFile(bool, 'M67 (assign_damage.defenderAllowed)'),
+    reason: perFile(nullable(str), 'M67 (assign_damage.reason)'),
     targets: arrayOf(askOption),
   },
   assign_amount: {
@@ -1514,6 +1519,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     maxTurn: 0,
     hellos: 0, matchChecked: 0, yourProfileChecked: 0, aiPolicyChecked: 0,
     tableMatchChecked: 0, tables: 0,
+    damageRefusalsSeen: 0,
   };
   const seq = { s2c: 0, c2s: 0, ai: 0 };
   let sawState = false;
@@ -1615,6 +1621,15 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
   const openAsks = new Map();
   /** `askId` -> the line the answer arrived on, so a second one can say where. */
   const closedAsks = new Map();
+  /**
+   * M67 (D424): an assign_damage answer the rule forbids on the wire's own
+   * terms -- damage on the defender while `defenderAllowed` is false, or a
+   * total that is not the ask's `total` -- waiting to be REFUSED: the next ask
+   * must be assign_damage again with a `reason`, and no state may show the
+   * attacker dealing damage first.  Either other outcome means the bridge
+   * applied an illegal map.
+   */
+  let illegalDamage = null;
   /** The most recent state's card->zone/owner map, for the ask-body check. */
   let lastZoneOf = new Map();
 
@@ -1861,11 +1876,24 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       }
       pendingAsk = body.askId ?? true;
 
+      // --- M67: an illegal assign_damage answer must come back as a re-ask --
+      if (illegalDamage !== null) {
+        const reAsk = body.kind === 'assign_damage' && str(body.reason) && body.reason !== '' &&
+          body.attackerId === illegalDamage.attackerId;
+        if (reAsk) stats.damageRefusalsSeen++;
+        else {
+          note(lineNo, `the assign_damage answer on line ${illegalDamage.line} (${illegalDamage.why}) was not ` +
+            `refused: the next ask is ${JSON.stringify(body.kind)}${body.kind === 'assign_damage' ? ' with no reason' : ''}, ` +
+            `not assign_damage again with a reason -- the bridge applied an illegal damage map (M67, D424)`);
+        }
+        illegalDamage = null;
+      }
+
       // --- the drift half, per kind: exact key set + declared nullability ---
       const shape = ASK_SHAPES[body.kind];
       if (shape !== undefined) {
         stats.askShapeChecks++;
-        for (const complaint of checkShape({ ...body }, { ...ASK_COMMON, ...shape }, `ask.${body.kind}`)) {
+        for (const complaint of checkShape({ ...body }, { ...ASK_COMMON, ...shape }, `ask.${body.kind}`, missed)) {
           note(lineNo, complaint);
         }
       }
@@ -1878,7 +1906,9 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
         note(lineNo, `ask reuses askId ${JSON.stringify(body.askId)}, which this log already ` +
           `opened -- section 5 says an askId is unique for the life of the connection (A12)`);
       } else {
-        openAsks.set(body.askId, { kind: body.kind, count: optionCount(body), line: lineNo });
+        openAsks.set(body.askId, { kind: body.kind, count: optionCount(body), line: lineNo,
+          dmg: body.kind === 'assign_damage' && typeof body.defenderAllowed === 'boolean'
+            ? { defenderAllowed: body.defenderAllowed, total: body.total, attackerId: body.attackerId } : null });
       }
 
       // Every card inside an ask body goes through the one gated function, so
@@ -2091,6 +2121,16 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     openAsks.delete(askId);
     closedAsks.set(askId, lineNo);
     stats.answerKinds.add(open.kind);
+    if (open.dmg && plainObject(body.value)) {
+      // M67: the two halves of the rule the wire itself decides.
+      const amounts = Object.entries(body.value).map(([k, v]) => [k, typeof v === 'number' ? v : 0]);
+      const sum = amounts.reduce((a, [, v]) => a + v, 0);
+      const toDefender = amounts.filter(([k]) => k === '0').reduce((a, [, v]) => a + v, 0);
+      const why = toDefender > 0 && !open.dmg.defenderAllowed
+        ? `${toDefender} to the defender with defenderAllowed false`
+        : sum !== open.dmg.total ? `${sum} assigned of ${open.dmg.total}` : null;
+      if (why !== null) illegalDamage = { line: lineNo, why, attackerId: open.dmg.attackerId };
+    }
 
     const spec = ANSWER_RULES[open.kind];
     if (spec === undefined) return;   // unknown kind: already failed under A11
@@ -2351,6 +2391,13 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     stats.state++;
     sawState = true;
     if (plainObject(f.body)) lastStateBody = f.body;
+    if (illegalDamage !== null && Array.isArray(f.body?.events) &&
+        f.body.events.some((e) => e?.kind === 'damage' && e.sourceCardId === illegalDamage.attackerId)) {
+      note(lineNo, `card ${illegalDamage.attackerId} deals damage after the assign_damage answer on line ` +
+        `${illegalDamage.line} (${illegalDamage.why}) and before any re-ask -- the bridge applied an illegal ` +
+        `damage map (M67, D424)`);
+      illegalDamage = null;
+    }
     if (Array.isArray(f.body?.players)) {
       stateAt.set(i - 1, { seq: f.seq, lineNo, ids: visibleIds(f.body, seat) });
       stateOrder.push(i - 1);
@@ -3048,7 +3095,8 @@ for (const path of files) {
     + `concealed=${stats.textsConcealed}, none joinable to a card concealed in the same frame`);
   console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
     + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}  tokens=${stats.tokens}  `
-    + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`);
+    + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`
+    + `${stats.damageRefusalsSeen ? `  assign_damage answers refused and re-asked=${stats.damageRefusalsSeen} (M67)` : ''}`);
   console.log(`      A12 answers=${stats.answers} (kinds: `
     + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
     + `the matching ask.kind, unanswered asks=${stats.unanswered}`

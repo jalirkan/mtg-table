@@ -19,7 +19,7 @@ directory and delete one it cannot parse. So these files are only ever read.
 | `hulk-family.dck` | Hulk Family (Marvel Super Heroes gamma) | **an AI deck.** R/G gamma stompy, 40 cards. The AI plays Birds of Paradise first when it has one, attacks from its third turn with Hellcat or a Gamma Grotesque, then lands a 4/4 trampler a turn; it holds HULK SMASH! until you have a creature worth hitting. |
 | `wakanda.dck` | Wakanda (Marvel Super Heroes Black Panther) | **an AI deck.** G/W go-wide, 40 cards. The AI puts down a 2-drop a turn (T'Chaka, a Gallant Citizen, Shuri), widens the army with Okoye's Soldiers and Black Panther, Vanguard's tokens, attacks with all of it from its third turn, and keeps Swords to Plowshares for a real threat. |
 | `specs/*.json` (four) | — | **the AI decks' specs**: each `.dck` above and `doom-legion.dck` is written from one by `tools/build-deck.ts`, never typed by hand (below). |
-| `*-probe.dck` (nine) | … probe | test decks that force one engine path each. Never meant to be fun. |
+| `*-probe.dck` (twelve) | … probe | test decks that force one engine path each. Never meant to be fun. |
 | `fra-rw-aggro.dck` | Reality Fracture red-white legends aggro | **the user's Reality Fracture pool** (FRA), 40 cards + 10 sideboard. **Does not play on Forge 2.0.14** — see below. |
 | `fra-rw-aggro.txt` | — | the same list as the user wrote it, under a `#` header that says so. Not read by the engine. |
 
@@ -494,6 +494,8 @@ the path fires every game.
 
 | file | contents | forces | used by |
 |---|---|---|---|
+| `assign-probe.dck` | 18 Forest, 14 Prized Unicorn, 8 Rancor | `assign_damage` with two or more blockers, with and without trample (Prized Unicorn must be blocked by all; Rancor on one of them) — the seat's side | `tools/ws-assign-probe.mjs` (D424) |
+| `blockers-probe.dck` | 24 Plains, 16 Razorgrass Screen | blockers that cannot attack and must block, with 1 toughness so a trampler has excess — the AI's side of `assign-probe.dck` | `tools/ws-assign-probe.mjs` (D424) |
 | `amount-probe.dck` | 20 Mountain, 20 Manamorphose | `assign_amount` (a mana combination), floating mana (`useMana`) | ten-games seed 4 (`--probe --mana-lost-prompt`), `human-amount-7` |
 | `future-sight-probe.dck` | 22 Island, 18 Future Sight | a continuous may-look static: `library.cards` beyond `count` | `fixtures/games/future-sight.jsonl` (RecordMatch) |
 | `morph-probe.dck` | 18 Mountain, 8 Ainok Tracker, 8 Battering Craghorn, 6 Ashcloud Phoenix | face-down cards (morph) | the `--deck2` of every probe row; `morph.jsonl`, `disjoint.jsonl` |

@@ -278,6 +278,11 @@ when the name is one of the candidates.
   offered — and a player-only choice with nothing else listed is a selection.
   The prompt-word guess ("any target", "target opponent") is only for an older
   engine.
+- **Combat damage is split by the engine's rule** (amendment M67, D424): lethal
+  to each blocker in order, then the rest on the defending player only when the
+  ask's `defenderAllowed` is true (trample), else on the last blocker; on an
+  engine before M67 nothing goes to the player while a creature blocks. The
+  bridge refuses any other split and asks again with a `reason`.
 - When the steps run out, priority is passed with no call until the next moment.
 
 **The engine is the rules judge.** When a step has no matching action, the

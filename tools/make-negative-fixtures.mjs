@@ -1242,5 +1242,75 @@ probe('m65-chosen-half-present.jsonl',
     delete block.chosen;
   });
 
+/*
+ * Amendment M67 (D424) -- the bridge refuses an illegal combat-damage map.
+ * The control adds an assign_damage ask after the last state, written as a
+ * bridge since M67 writes it (the viewer's creature attacking, blocked by two
+ * of the opponent's, no trample: `defenderAllowed: false`), an answer the rule
+ * refuses, the re-ask with its reason, and a legal answer.  Two one-defect
+ * probes: the illegal answer is followed by something other than a re-ask (it
+ * was applied), and `defenderAllowed` written on one ask and not the other.
+ */
+const withDamageAsk = (fs) => {
+  const sts = statesOf(fs);
+  const last = sts[sts.length - 1].body;
+  const me = last.players.find(isViewerSeat);
+  const them = last.players.find((p) => !isViewerSeat(p));
+  const mine = me.zones.battlefield.cards.find((c) => c.hidden !== true && c.controller === header.seat);
+  const theirs = them.zones.battlefield.cards.filter((c) => c.hidden !== true).slice(0, 2);
+  if (mine === undefined || theirs.length < 2) throw new Error('no attacker and two blockers in the slice');
+  const ask = (askId, reason) => ({
+    v: 1, seq: 0, t: fs[0].t, dir: 's2c', type: 'ask',
+    body: {
+      askId, kind: 'assign_damage', timeoutMs: 0, attackerId: mine.id, total: 2,
+      overrideOrder: true, maySkip: false, defenderAllowed: false, reason,
+      targets: [
+        { id: 0, defender: true, label: them.name, kind: 'player', playerId: them.id, lethal: null },
+        ...theirs.map((c, i) => ({ id: i + 1, defender: false, label: c.name, kind: 'card', cardId: c.id, lethal: 1, card: structuredClone(c) })),
+      ],
+    },
+  });
+  const answer = (askId, value, cseq) => ({ v: 1, seq: cseq, t: fs[0].t, dir: 'c2s', type: 'answer', body: { askId, value } });
+  const first = ask('a901', null);
+  const refusedAnswer = answer('a901', { 0: 2 }, 1);
+  const again = ask('a902', `Without trample, a blocked creature can't assign combat damage to ${them.name}. Assign all 2 to the blockers.`);
+  const legal = answer('a902', { 1: 1, 2: 1 }, 2);
+  const at = fs.findIndex((f) => f.type === 'over');
+  fs.splice(at, 0, first, refusedAnswer, again, legal);
+  let seq = 0;
+  for (const f of fs) if (f.dir !== 'c2s') f.seq = ++seq;
+  return { first, again, refusedAnswer, legal };
+};
+{
+  const fs = slice();
+  withDamageAsk(fs);
+  write('m67-assign-damage-refused.jsonl', fs);
+  manifest.push({
+    file: 'm67-assign-damage-refused.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M67: an illegal assign_damage answer refused and re-asked with a reason, then a legal one -- the control for the m67 probes',
+  });
+  console.log('  PASS  m67-assign-damage-refused.jsonl  (refused, re-asked, answered legally; no defect)');
+}
+
+probe('m67-illegal-damage-applied.jsonl',
+  'amendment M67 / D424: damage on the defender while defenderAllowed is false must be refused -- the next ask is the same question with a reason',
+  'the bridge applied an illegal damage map',
+  (fs) => {
+    const { again } = withDamageAsk(fs);
+    // The re-ask became some other question: the bridge went on as if the
+    // illegal map had been taken.
+    again.body = { askId: 'a902', kind: 'confirm', timeoutMs: 0, prompt: 'Continue?', title: '', yesLabel: 'Yes', noLabel: 'No', defaultYes: true, card: null };
+    const i = fs.findIndex((f) => f.dir === 'c2s' && f.body.askId === 'a902');
+    fs[i].body.value = true;
+  });
+
+probe('m67-defender-allowed-half-present.jsonl',
+  'amendment M67: a bridge since M67 writes defenderAllowed on every assign_damage ask -- some with and some without is a broken emitter',
+  'M67 (assign_damage.defenderAllowed) is HALF PRESENT',
+  (fs) => {
+    const { again } = withDamageAsk(fs);
+    delete again.body.defenderAllowed;
+  });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

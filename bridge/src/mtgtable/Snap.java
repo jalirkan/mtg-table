@@ -937,17 +937,53 @@ public final class Snap {
     public static final Set<String> PLAYABLE_ZONES = Set.of("hand", "graveyard", "exile", "command", "library");
 
     /**
-     * Remaining toughness of a blocker, for {@code assign_damage.targets[].lethal}
-     * (protocol section 5.3).  Game thread; {@code null} when the card has no
-     * printed toughness.
+     * Lethal damage for a blocker, for {@code assign_damage.targets[].lethal}
+     * (protocol section 5.3, amendment M67): the damage Forge's own dialog
+     * counts as lethal.  Game thread; {@code null} when the card is neither a
+     * creature, nor has a printed toughness, nor is a planeswalker.
      */
-    public static Integer lethal(final CardView cv) {
+    public static Integer lethal(final CardView cv, final boolean attackerDeathtouch) {
         assertGameThread("Snap.lethal");
         final CardView.CardStateView st = cv == null ? null : cv.getCurrentState();
-        if (st == null || !(st.isCreature() || st.hasPrintedPT())) {
+        if (st == null) {
             return null;
         }
-        return Integer.valueOf(st.getToughness() - cv.getDamage());
+        // M67 (D424): VAssignCombatDamage.getDamageToKill, read for read -- a
+        // planeswalker's loyalty; otherwise max(0, CardView.getLethalDamage())
+        // (Forge's toughness less damage marked and damage already assigned,
+        // 0 once a deathtouch source has assigned to it), at most 1 when the
+        // creature assigning has deathtouch.
+        if (st.isPlaneswalker()) {
+            return Integer.valueOf(loyalty(st));
+        }
+        if (!(st.isCreature() || st.hasPrintedPT())) {
+            return null;
+        }
+        final int l = Math.max(0, cv.getLethalDamage());
+        return Integer.valueOf(attackerDeathtouch ? Math.min(l, 1) : l);
+    }
+
+    private static int loyalty(final CardView.CardStateView st) {
+        try {
+            return Math.max(0, Integer.parseInt(String.valueOf(st.getLoyalty()).trim()));
+        } catch (final NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * What {@code assign_damage}'s rule reads off the creature assigning (M67,
+     * D424): {@code VAssignCombatDamage}'s constructor's three reads of its
+     * current state -- {@code {hasTrample(), hasDeathtouch(),
+     * hasDivideDamage()}}.  Game thread; all false for a null card.
+     */
+    public static boolean[] assignerKeywords(final CardView attacker) {
+        assertGameThread("Snap.assignerKeywords");
+        final CardView.CardStateView st = attacker == null ? null : attacker.getCurrentState();
+        if (st == null) {
+            return new boolean[3];
+        }
+        return new boolean[] { st.hasTrample(), st.hasDeathtouch(), st.hasDivideDamage() };
     }
 
     /**

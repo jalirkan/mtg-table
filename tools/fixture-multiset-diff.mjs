@@ -113,6 +113,10 @@ const AMENDED_KEYS = [
   // path names a key below `body`.
   { type: 'input', key: 'selectable.chosen', amendment: 'M65' },
   { type: 'input', key: 'selectable.playerIds', amendment: 'M66' },
+  // M67 (D424): two keys on an assign_damage ask -- absent from every ask of
+  // the other ten kinds, so A's ask frames carry neither and B's carry both.
+  { type: 'ask', key: 'defenderAllowed', amendment: 'M67' },
+  { type: 'ask', key: 'reason', amendment: 'M67' },
 ];
 /** The object holding a dotted `key` under `body`, and the last segment; null when absent. */
 function holder(body, key) {

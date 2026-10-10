@@ -306,6 +306,43 @@
       ]
     },
     {
+      "file": "assign-probe.dck",
+      "name": "Assign probe",
+      "cards": [
+        {
+          "name": "Forest",
+          "count": 18,
+          "section": "main"
+        },
+        {
+          "name": "Prized Unicorn",
+          "count": 14,
+          "section": "main"
+        },
+        {
+          "name": "Rancor",
+          "count": 8,
+          "section": "main"
+        }
+      ]
+    },
+    {
+      "file": "blockers-probe.dck",
+      "name": "Blockers probe",
+      "cards": [
+        {
+          "name": "Plains",
+          "count": 24,
+          "section": "main"
+        },
+        {
+          "name": "Razorgrass Screen",
+          "count": 16,
+          "section": "main"
+        }
+      ]
+    },
+    {
       "file": "fra-rw-aggro.dck",
       "name": "Reality Fracture red-white legends aggro",
       "cards": [
@@ -1855,6 +1892,14 @@
       "token": false,
       "setCode": "MSH"
     },
+    "Prized Unicorn": {
+      "types": "Creature - Unicorn",
+      "manaCost": "{3}{G}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
     "Pym Particles": {
       "types": "Sorcery",
       "manaCost": "{U}",
@@ -1897,6 +1942,22 @@
       "toughness": null,
       "token": false,
       "setCode": "FIC"
+    },
+    "Rancor": {
+      "types": "Enchantment - Aura",
+      "manaCost": "{G}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Razorgrass Screen": {
+      "types": "Artifact Creature - Wall",
+      "manaCost": "{1}",
+      "power": "2",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
     },
     "Red Hulk": {
       "types": "Legendary Creature - Gamma Berserker Villain",
@@ -2436,6 +2497,9 @@
     "Hidden Lair",
     "Into the Void",
     "Lightning Bolt",
+    "Prized Unicorn",
+    "Rancor",
+    "Razorgrass Screen",
     "Tiger Shark, Abyssal Hunter",
     "Titania, Proud Pummeler",
     "Whiplash, Vengeful Engineer",
@@ -2544,12 +2608,15 @@
     "Peggy Carter, Secret Agent": "figure",
     "Pharaoh Rama-Tut": "figure",
     "Plains": "cues",
+    "Prized Unicorn": "figure",
     "Pym Particles": "cues",
     "Pyre Rhymer": null,
     "Quake, Agent of S.H.I.E.L.D.": "figure",
     "Quantum Reduction": "cues",
     "Radioactive Man": "figure",
     "Rampant Growth": null,
+    "Rancor": null,
+    "Razorgrass Screen": "figure",
     "Red Hulk": "figure",
     "Rick Jones, Destined Sidekick": "figure",
     "Robot Token": "figure",

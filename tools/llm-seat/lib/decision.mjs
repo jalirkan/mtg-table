@@ -429,26 +429,35 @@ export function defaultAnswer(kind, body) {
     case 'manipulate_list': return indices(len(body.cards));
     case 'sideboard': return indices(len(body.main));
     case 'assign_damage': {
-      // §5.3 says null lets Forge assign, but with blockers and overrideOrder the
+      // §5.3 said null lets Forge assign, but with blockers and overrideOrder the
       // engine asked again 9,400 times in a row (s20-plain-p10, pauper, two
-      // blockers). So assign explicitly: lethal to each blocker in order, the
-      // rest to the last blocker; with no blocker, all of it to the defender
-      // (index 0). The values sum to `total`.
+      // blockers; M67 now turns a null into Forge's Auto). So assign
+      // explicitly: lethal to each blocker in order, then the rest -- to the
+      // defender (index 0) when the bridge says it may take damage
+      // (`defenderAllowed`, M67: trample), else to the last blocker. A bridge
+      // before M67 says nothing, and nothing goes to the defender while a
+      // creature blocks. With no blocker, all of it to the defender. The values
+      // sum to `total`; the bridge refuses anything else, with a `reason`.
       const total = typeof body.total === 'number' ? body.total : 0;
       const ts = Array.isArray(body.targets) ? body.targets : [];
       const blockers = ts.map((t, i) => ({ t, i })).filter(({ t }) => t.defender !== true);
+      const toDefender = body.defenderAllowed === true;
       if (total <= 0) return null;
-      if (blockers.length === 0) return { 0: total };
+      if (blockers.length === 0) return body.defenderAllowed === false ? null : { 0: total };
       const out = {};
       let left = total;
       for (const { t, i } of blockers) {
         if (left <= 0) break;
-        const want = typeof t.lethal === 'number' && t.lethal > 0 ? t.lethal : left;
+        const lethal = typeof t.lethal === 'number' && t.lethal >= 0 ? t.lethal : null;
+        const want = lethal !== null && (lethal > 0 || toDefender) ? lethal : left;
         const give = Math.min(want, left);
-        out[i] = give;
+        if (give > 0) out[i] = give;
         left -= give;
       }
-      if (left > 0) { const last = blockers[blockers.length - 1].i; out[last] = (out[last] ?? 0) + left; }
+      if (left > 0) {
+        if (toDefender) out[0] = left;
+        else { const last = blockers[blockers.length - 1].i; out[last] = (out[last] ?? 0) + left; }
+      }
       return out;
     }
     case 'assign_amount': {

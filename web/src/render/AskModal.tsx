@@ -41,6 +41,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { EMPTY_ART_INDEX, type ArtIndex } from '../art.ts';
 import {
+  assignDamageRuleOf,
   isFaceDownHidden,
   isHidden,
   type AnswerValue,
@@ -1120,17 +1121,20 @@ function body(
       );
     }
 
-    case 'assign_damage':
+    case 'assign_damage': {
+      // M67 (D424): the defender's row only when the bridge says it may take
+      // damage; the bridge refuses any other answer and says why (`reason`).
+      const rule = assignDamageRuleOf(ask);
       return (
         <AmountRows
-          targets={ask.targets}
+          targets={rule.defenderAllowed === false ? ask.targets.filter((t) => t.defender !== true) : ask.targets}
           total={ask.total}
           amounts={draft.shape === 'amounts' ? draft.amounts : {}}
           live={live}
           extra={(t) =>
             [
               (t as { defender?: boolean }).defender === true ? 'the defender' : '',
-              (t as { lethal?: number }).lethal === undefined
+              typeof (t as { lethal?: number | null }).lethal !== 'number'
                 ? ''
                 : `lethal ${String((t as { lethal?: number }).lethal)}`,
             ]
@@ -1141,11 +1145,15 @@ function body(
             setDraft({ shape: 'amounts', amounts });
           }}
           note={
+            `${rule.reason === null ? '' : `refused: ${rule.reason} · `}` +
             `${ask.overrideOrder ? 'order overridden · ' : ''}${ask.maySkip ? 'may skip · ' : ''}` +
-            `index 0 is the defending player or planeswalker (§5.3)`
+            (rule.defenderAllowed === false
+              ? 'the defender may take no damage (M67)'
+              : `index 0 is the defending player or planeswalker (§5.3)`)
           }
         />
       );
+    }
 
     case 'assign_amount':
       return (
