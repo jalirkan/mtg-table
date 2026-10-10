@@ -86,3 +86,6 @@ be built without re-discovery. Order = what hurt most at the table.
     the real input (mode 'block' with the engine's "Select creatures to block …" prompt), and that an
     in-flight answer survives the step moving on (show "Coach is thinking…" in the panel while it runs, and
     deliver the plan into the block decision, not after). Cloud's area. 2026-10-10.
+17. **An exploratory click activated Carrion Feeder's only ability and sacrificed it.** See
+    `rules-integrity-plan.md` Part 2b: lone abilities go through a menu with Cancel; sacrifice/discard costs
+    are never auto-chosen; inspect ≠ act. Game lost on it, 2026-10-10.

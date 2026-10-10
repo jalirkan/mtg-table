@@ -50,3 +50,17 @@ Method: for each row, read the Forge call site (javap on the pinned jar where ne
 1. Cloud (mtg-table): the `assign_damage` gate + `defenderAllowed` now (the proven gap). 2. PC: the audit table
 (reading). 3. Cloud: Part 2 for every GAP row. 4. Either: Part 3. 5. ForgeCoach dialogs follow the new wire.
 Justin: nothing to decide here except the order; this supersedes the UI items in `common-sense-pass.md`.
+
+## Part 2b — a click is never a commitment (added 2026-10-10 after Carrion Feeder sacrificed itself on a look)
+Observed: clicking Carrion Feeder on the battlefield, to see its options, activated its only ability at once
+("Sacrifice a creature: put a +1/+1 counter on it") and the sacrifice was taken with no real choice or
+confirm. Game lost on an exploratory click. Requirements, bridge + client:
+1. Clicking a permanent with abilities ALWAYS shows them first (an `ability_menu` even for a single ability),
+   with Cancel; nothing is activated until the player chooses. (Forge's desktop auto-activates a lone
+   ability; the bridge asks instead — that is a client-affordance rule, not a game rule.)
+2. A cost that gives something up — sacrifice, discard, exile from hand/battlefield, pay life — is NEVER
+   auto-chosen, even with one legal option: the engine's cost prompt is sent with a Cancel that undoes the
+   activation (Forge's `InputPayMana`/cost inputs support cancel before payment completes; verify per cost
+   type and record which cannot be cancelled once begun, and make the board ask BEFORE those).
+3. Looking is a separate gesture from acting: hover/right-click inspects (card detail), a click acts only
+   through the menu/confirm above. The playtest monkey and the adversarial seat get a scene for each.
