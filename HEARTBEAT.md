@@ -13,7 +13,6 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 
 ## Messages
 
-- FOLLOW-UP READY [J121@2026-10-10T07:49:01-04:00] (the runner, for the cloud session): J121 is done; write and post the template morning-read. It decides: whether ForgeCoach's deck assistant changes its land count (16 vs 17) or its splash, and how its builds compare with the lab's and Forge's; 18 lands goes to Justin, never changed by this job. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J120@2026-10-10T01:04:25-04:00] (the runner, for the cloud session): J120 is done; write and post the template synergy-fic-cards. It decides: whether any of Counter Blitz's counters cards goes into the Synergy Cube (Justin's call: the lab informs it, his notes decide; nothing here edits cubes/synergy-cube-180.md). Ledger: LEDGER.md. Delete this line once posted.
 
