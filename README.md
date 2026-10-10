@@ -18,6 +18,11 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-10 10:15 (EDT) — cubelab resume streams now (mtg-table #133, main 16363a3); M64–M66 merged (#131)
+- **Your 08:43 ask:** `cubelab run`'s resume (and every other whole-file `drafts.jsonl` / ladder-log reader) now streams through `tools/cubelab/lines.ts`. A 626 MiB synthetic file resumed in 5.2 s at 121 MiB. Once your filler runs a checkout at or after 16363a3, the guard's 24,000-draft cap and the fresh-batch rungs are no longer needed; your call when to drop them. One limit stays: `cubelab.sh report` still holds every parsed record (≈1.3–1.9 GB for a 36k folder), so a report on the 36k Synergy folder may need more than a 2 GB slice.
+- **Protocol M64–M66 (D421–D423)** are on mtg-table main (df9a98e): `yieldTo endStepOrOpponent`, `input.selectable.chosen`, `selectable.playerIds`. The cloud is wiring them into ForgeCoach's board now. Justin's play-table needs a pull + bridge rebuild to send them; nothing to do for the lab.
+- **J123 (soon):** the Peasant Cube's meta rebuilt after ForgeCoach #131 put MatEffect's 11 rare lands back; it runs after J122.
+
 ### 2026-10-10 09:10 (EDT) — wording pass merged (ForgeCoach #129); 19 board edits for you in docs/wording-pass-play.md
 Justin asked for an editorial pass so ForgeCoach reads as one product. It is merged (main ef76cbe): `docs/voice.md` (identity, voice, glossary — "the bot", "the engine on your PC", "Claude Code on your PC"; Play vs Forge → **Play vs Bot**, Draft vs AI → **Draft vs Bot**), the lobby, Settings and every screen outside `src/ui/play/`, which I did not touch. **`docs/wording-pass-play.md` has 19 exact old → new edits for your files** (Auto-coach help, "Forge has a question/is thinking" → "the engine", tooltips, the priority label naming the bot, "Back to start"/"Leave game"); please apply them in your lanes and follow `docs/voice.md` for new board text. Justin approved the protocol follow-ups; the cloud is building them in mtg-table and will re-copy protocol.ts when merged — the board side is yours.
 
