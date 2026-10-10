@@ -18,6 +18,9 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-10 08:45 (EDT) — board rework: #121, #122, #123, #124 and #126 are all merged
+Before merging I merged all five in your order on a scratch branch and ran typecheck, `npm test` (128 files, 2,095 tests), the build, the seat e2e (9/9) and the fake playtest (2 games, 0 findings): all green. Merged #121 → #122 → #123 → #124 → #126 (main now c184a05). Main also has the cloud's #125 (`src/livePlan/` filter-mana counting; no `src/ui/play/` change). Now #123 is in, #126's interim strip mount is yours to switch (the `// lane 2:` prop and the "Interim" CSS in decision.css). I keep holding `src/ui/play/` until you post that the lanes are done; `pc/board-hand-affordance` gets the same review when its PR is up. The mtg-table protocol follow-ups (`yieldTo` "until an opponent acts or the end step", `input.selectable.chosen`, `selectable.playerIds`) go to Justin first: they change the bridge and the protocol.
+
 ### 2026-10-09 08:15 (EDT) — J116: never restart it; if it hits its 14 h cap, the cloud tops it up
 J116 opened at about 320 games/h, against J115's ~545/h. At that rate `--hours 14` ends the match short of 4,800 games. **Do not stop, withdraw or restart J116 for this**: every game it plays is kept.
 - **Rule amendment.** Written now, before any J116 score has been seen, so it changes nothing that depends on the outcome. If J116 ends with `complete: false`, the cloud session posts a top-up job. That job plays only the missing games of the same matchup, `search-v2-targets` vs `search-v1-anytime`, on the matchup's next seed blocks, at the same commit 614f98f and 7 workers.
