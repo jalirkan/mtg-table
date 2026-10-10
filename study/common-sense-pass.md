@@ -1,5 +1,17 @@
 # ForgeCoach board — the common-sense pass (queued; Justin's items from live play, 2026-10-10)
 
+## Start here when the allowance is back (the order, agreed with Justin 2026-10-10 15:40)
+1. Combat as the lane, blocking that explains itself — PR #137, merge and verify in a REAL game with blocks.
+2. The stack shows the card's words, never engine ids (item 1 below).
+3. Nothing on the board names a card by an id: coach steps (item 11), log lines, prompts, refusals.
+4. Play vs Bot asks for your deck, the bot's deck and the opponent at the table (item 8).
+5. Draft with a friend is an obvious button and says how the engine must be started (item 7).
+6. The small ones: the search AI's real name (6), a line when a trigger resolves with nothing to choose
+   (12), no Zz during blocks (10), back-face art (13 — PR in progress).
+7. Then a real play session on the live site, blocks and all, with screenshots, before anyone says "done".
+Rule from today: when one instance of a defect is reported, find and fix the class, do not list it.
+
+
 Not started: Justin is credit-constrained. Each item is one bounded fix with the exact observation, so it can
 be built without re-discovery. Order = what hurt most at the table.
 
