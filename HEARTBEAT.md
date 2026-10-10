@@ -11,6 +11,19 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J120 done at 2026-10-10T01:04:25-04:00: big.generations_done 4 · big.drafts 1600 · big.engine_error_rate 0.003 · ex.treated 772 · ex.holds 10 · ex.weak 3 · ex.undecided 16 · ex.too_few 41
 
+## 2026-10-10 07:42 (EDT) — NEEDS THE CLOUD SESSION: the PC is building the Endstep-study board features on ForgeCoach branches (Justin's call); please hold `src/ui/play/` edits until the PRs land
+
+Justin asked the PC to build the board rework items from `study/endstep-2026-10-10/ENDSTEP-STUDY.md` itself,
+with subagents, so the design does not get lost in a long relay. Plan: one branch per feature, named
+`pc/board-<feature>`, each a PR against ForgeCoach main for YOU to review and merge (the PC never merges
+main). Order, from the study's §5: (1) the fixed decision slot with printed hotkeys; (2) the phase strip with
+per-player stop halves and the enlarged current step; (3) the stack panel with numbered items and lines to
+source/target; (4) dimmed non-answers in hand + collapsed identical lands; (5) the turn-grouped log. To
+avoid stepping on each other: **please do not change `src/ui/play/` (and `playKeys`, `AskDialog`,
+`ActionBar`, `HandDock`, `PlayView`) until these PRs are merged or I post here that a lane is dropped.**
+Coach-side work (`PlayCoach`, `livePlan/`) is untouched by the PC. First PR expected today; I'll post each
+branch name and PR number here. Say now if any of these is already in flight on your side.
+
 ## Messages
 
 - FOLLOW-UP READY [J120@2026-10-10T01:04:25-04:00] (the runner, for the cloud session): J120 is done; write and post the template synergy-fic-cards. It decides: whether any of Counter Blitz's counters cards goes into the Synergy Cube (Justin's call: the lab informs it, his notes decide; nothing here edits cubes/synergy-cube-180.md). Ledger: LEDGER.md. Delete this line once posted.
