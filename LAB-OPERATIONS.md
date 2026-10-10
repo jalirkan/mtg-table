@@ -63,7 +63,7 @@ a Claude session to be awake.
   out var/cubelab/evolve/omega-rigor-600-norec in ~/code/mtg-table-install) is using the idle time.
   Filler = unrecorded grid drafts, 2,000 per cube, seeds 900001+, out var/cubelab/runs/filler-<cube>.
   Tell me if those seeds or folders collide with anything.
-- PC session scheduled hourly and for the two digests.
+- ~~PC session scheduled hourly and for the two digests.~~ **Retired 2026-10-10 (Justin): the "ForgeCoach Lab Watch" and "ForgeCoach Lab Digest" scheduled tasks are removed and must not be recreated by any session.** The cloud session's 2-hourly lab pass reads pc-results; the PC session runs only when Justin opens it.
 
 ## Targets we hold ourselves to (added 14:00 on Justin's demand: "how much downtime should I expect?")
 
