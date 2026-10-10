@@ -15,14 +15,21 @@ lab_cores10(){ now=0; for u in $(systemctl --user list-units 'lab-J*' --no-legen
     n=$(systemctl --user show "$u" -p CPUUsageNSec --value 2>/dev/null); case "$n" in ''|*[!0-9]*) n=0;; esac; now=$((now + n)); done
   d=$((now - lab_prev)); lab_prev=$now; [ "$d" -lt 0 ] && d=0; c10=$(( d / 3000000000 )); }   # 30 s tick -> tenths of a core
 start_filler(){ # $1 = workers, $2 = why
-  for target in 2000 6000 12000 24000 48000 96000; do for c in synergy-cube-180 modern-era-cube-180 vintage-cube-180 pauper-cube-180; do
-    n=$(wc -l < "$SRC/var/cubelab/runs/filler-$c/drafts.jsonl" 2>/dev/null || echo 0)
-    [ "${n:-0}" -ge "$target" ] && continue
-    say "$2: starting filler on $c ($n of $target drafts done), $1 worker(s)"
-    systemd-run --user --unit=forgecoach-filler-job --slice=forgecoach-lab.slice --collect -p Nice=15 \
-      --working-directory="$SRC" --setenv=PATH="$PATH" --setenv=HOME="$HOME" \
-      bash -c "tools/cubelab.sh run cubes/$c.md --format grid --drafts $target --jobs $1 --seed 900001 --out var/cubelab/runs/filler-$c >> var/filler.log 2>&1 && tools/cubelab.sh report var/cubelab/runs/filler-$c >> var/filler.log 2>&1" >/dev/null 2>&1
-    return; done; done; }
+  # 2026-10-10: cubelab's resume reads the whole drafts.jsonl into one string, and the synergy file (36k drafts,
+  # ~600 MB) hit V8's string limit ("Cannot create a string longer than 0x1fffffe8"). So no folder grows past
+  # 24,000 drafts: later rungs are fresh batches of 12,000 in their own folders with their own seed blocks.
+  for spec in "2000 filler-%s 900001" "6000 filler-%s 900001" "12000 filler-%s 900001" "24000 filler-%s 900001" \
+              "12000 filler-%s-b1 950001" "12000 filler-%s-b2 960001" "12000 filler-%s-b3 970001" "12000 filler-%s-b4 980001"; do
+    set -- $1 $spec   # $1 workers, $2 target, $3 folder pattern, $4 seed
+    for c in synergy-cube-180 modern-era-cube-180 vintage-cube-180 pauper-cube-180; do
+      folder=$(printf "$3" "$c")
+      n=$(wc -l < "$SRC/var/cubelab/runs/$folder/drafts.jsonl" 2>/dev/null || echo 0)
+      [ "${n:-0}" -ge "$2" ] && continue
+      say "filler: starting $c in $folder ($n of $2 drafts done, seed $4), $1 worker(s)"
+      systemd-run --user --unit=forgecoach-filler-job --slice=forgecoach-lab.slice --collect -p Nice=15 \
+        --working-directory="$SRC" --setenv=PATH="$PATH" --setenv=HOME="$HOME" \
+        bash -c "tools/cubelab.sh run cubes/$c.md --format grid --drafts $2 --jobs $1 --seed $4 --out var/cubelab/runs/$folder >> var/filler.log 2>&1 && tools/cubelab.sh report var/cubelab/runs/$folder >> var/filler.log 2>&1" >/dev/null 2>&1
+      return; done; done; }
 light=0
 hand_busy(){ systemctl --user is-active --quiet forgecoach-hand-evolve || systemctl --user is-active --quiet forgecoach-filler-job; }
 mkdir -p "$SRC/var"; say "neveridle started"
