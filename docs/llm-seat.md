@@ -233,6 +233,22 @@ when the name is one of the candidates.
 - `attack with A, B` is played at the declaration (priority before combat is passed
   to get there); steps after it run in the second main phase; no attack step means no
   attack. `block A with B` lines are one declaration.
+- **Blocks the wire rules out are not offered.** A block pair is dropped when the
+  keywords on the wire forbid it (`decision.mjs` `blockRule`: flying without flying
+  or reach, shadow, horsemanship, fear, skulk); the blocks question says so ("By the
+  rules: Eldrazi Spawn Token cannot block Vampire Nighthawk, Mulldrifter (flying)")
+  and a step naming one is corrected before any click. A "can't block" effect is not
+  on the wire: the engine still judges.
+- **A block declaration is kept as it is clicked.** Forge keeps each block it takes,
+  a click on a declared block again takes it back, and the state shows none of them
+  until the declaration ends. So the seat keeps the blocks it declared (a click the
+  engine refused undone; `seat-core.mjs` `blockDecl`): a correction is told what is
+  already declared, the new block steps are the whole declaration (a declared block
+  they leave out is clicked off, one they keep is not clicked again), and the
+  default after the corrections is "no new block" — the blocks the engine already
+  took stay. (m20-search-p15: the Spawn's refused block left the Dragon declared on
+  Writhing Chrysalis, so every later "block Mulldrifter with Amethyst Dragon" was
+  "cannot be selected now"; state 1041's combat shows the Dragon's block.)
 - When the steps run out, priority is passed with no call until the next moment.
 
 **The engine is the rules judge.** When a step has no matching action, the
@@ -253,7 +269,13 @@ creature named "X" on the battlefield`, `Elf is summoning sick (it came under yo
 control this turn)`, `"Grizzly Bears" fits more than one choice: Grizzly Bears #20,
 Grizzly Bears #31; add the number`, `you have already played a land this turn`,
 `X is not an instant: it can be cast only in your own main phase with an empty
-stack`, `that cast was cancelled: X went back to where it was …`. When the engine
+stack`, `that cast was cancelled: X went back to where it was …`. A payment the
+engine could not make quotes the cost of what was paid for: the card's cost for a
+cast from the hand, its flashback / escape cost from the graveyard, and for an
+activation the ability's own cost from the engine's label (Equip too), with what the
+engine asked for when the cost has an X (`its ability "{X}: Crypt Rats deals X
+damage …" costs {X}; the engine asked for {B}{B}{B} (3 mana) and you have 2 untapped
+mana sources (Swamp, Plains)`; before, the Rats' casting cost {2}{B} was quoted). When the engine
 is mid-question (a target), the correction also carries the question and its legal
 answers. **At most 2 corrections a moment** (an unreadable reply counts as one); then
 the safe default — pass, no attack, no blocks, keep, the ask's own default — and a
@@ -336,6 +358,12 @@ says otherwise.
   as decision mode, the bridge's default.
 - **Attacking a planeswalker or battle**: as decision mode, the attack goes to the
   engine's current defender.
+- **Filter mana (Prophetic Prism)**: Forge's Auto never pays with a `{1}, {T}: Add
+  one mana of any color` source, the payment prompt lists no mana sources at all
+  (`selectable` empty; the seat's smart pay clicks lands unlisted), and
+  `state.activatable` holds no mana ability. Whether a click on the Prism during a
+  payment would use its ability (a nested `{1}` payment) is on no recorded wire; the
+  mana words still count the Prism as one more mana of any colour. Open.
 - **Grading plan-mode choices**: the positions mode and coach-grade work per engine
   decision; plan mode's records keep the `stateSeq` of every moment and step, but no
   replay of a plan against a recorded game is built.
@@ -448,13 +476,15 @@ and logged):
 options, `input.selectable` for a selection. Two lists are not on the wire and
 are read off the board: the attack candidates (your untapped creatures without
 summoning sickness, or with haste) and the block pairs (your untapped creatures
-× the attackers in `state.combat`), because Forge's attack and block inputs never
+× the attackers in `state.combat`, less the pairs flying / reach, shadow,
+horsemanship, fear or skulk rule out), because Forge's attack and block inputs never
 name selectables (§4.1, M8). The engine still judges: a click it refuses is a
 `notice`, and the seat then plays the default on the same input, then OK /
 Cancel / pass, so a refused click never loops (`refused` in the game summary).
 An attack is its clicks then OK, sent one per settled input and dropped as soon
 as the engine's prompt is no longer the attack; a block is attacker-then-blocker
-clicks per pair, then OK.
+clicks per pair, then OK, built on the blocks already declared in the same
+declaration (the default on a refused block keeps those, adds none).
 
 **Echoes.** After every move the bridge sends a burst within a few ms — Forge's
 echo of the old prompt (`awaitNextInput`), the new state, the new prompt (in

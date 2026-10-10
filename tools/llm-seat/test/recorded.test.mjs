@@ -1,0 +1,174 @@
+// mtg-table — tools/llm-seat/test/recorded.test.mjs
+// Copyright (C) 2026 mtg-table contributors.
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Plan mode (D419) against REAL recorded wire frames (test/fixtures/, cut from
+// Sonnet runs' `frames/` and `decisions.jsonl`; the source of each is in the
+// fixture's `source`), with the fake model replaying the recorded replies:
+//
+//   - s2-search-p0-s7: "activate Crypt Rats" with X = 3 could not be paid, and
+//     the correction quoted the Rats' casting cost {2}{B}, not its {X} ability;
+//   - m20-search-p15: the Eldrazi Spawn token was sent to block Vampire
+//     Nighthawk (flying), the engine refused it after it had already taken the
+//     Amethyst Dragon's block of Writhing Chrysalis, and every later try's
+//     "block … with Amethyst Dragon" was "cannot be selected now": the Dragon
+//     was still declared (state 1041's combat).
+
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+import { classifyInput } from '../lib/decision.mjs';
+import { makeFakeModel } from '../lib/model.mjs';
+import { PlanAsker, PlanCore, payWords } from '../lib/plan-core.mjs';
+import { card, land, state } from './helpers.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const fixture = (name) => JSON.parse(readFileSync(join(here, 'fixtures', name), 'utf8'));
+const reply = (...steps) => `PLAN: test plan.\nSTEPS:\n${steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\nEND`;
+const oracleOf = (map) => ({ source: 'fixture', text: (n) => map?.[n] ?? null });
+
+function harness(script, { oracle = oracleOf({}) } = {}) {
+  const sent = [];
+  const users = [];
+  const fake = makeFakeModel({ script });
+  const model = { name: 'fake', call: async (q) => { users.push(q.user); return fake.call(q); } };
+  let t = 1000;
+  const core = new PlanCore({ send: (m) => sent.push(m), asker: new PlanAsker('fresh', model), oracle, now: () => t, log: () => {}, say: process.env.SAY ? (x) => console.log(x) : () => {} });
+  const h = {
+    sent, users, core,
+    frame(f) { core.onFrame({ v: 1, seq: f.seq, type: f.type, body: f.body }); },
+    async tick(ms = 200) { t += ms; await core.tick(); },
+    moves: () => sent.filter((m) => m.action !== 'setPhaseStop'),
+  };
+  core.onFrame({ v: 1, seq: 0, type: 'hello_ok', body: { gameId: 'recorded', you: 0 } });
+  return h;
+}
+
+// ---------------------------------------------------------------- 1. the cost of an ability that could not be paid
+
+test('s2-search-p0-s7: an activation the engine could not pay quotes the ability\'s cost and what the engine asked for, not the card\'s', async () => {
+  const fx = fixture('s2-p0-s7-crypt-rats-pay.json');
+  assert.match(fx.recordedFailure, /it costs \{2\}\{B\} \(3 mana\)/, 'the recorded message: the Rats\' casting cost');
+  const at = (seq) => fx.frames.find((f) => f.seq === seq);
+  // the recorded plan's steps from where the frames start (Plains played, the Rats cast)
+  const steps = fx.planSteps.slice(2, 4);
+  assert.deepEqual(steps, ['activate Crypt Rats', 'choose 3']);
+  const h = harness([reply(...steps), reply('hold')], { oracle: oracleOf(fx.oracle) });
+  h.frame(at(1106));
+  h.frame(at(1111));
+  await h.tick();
+  assert.deepEqual(h.moves().at(-1), { type: 'act', action: 'clickCard', cardId: 37 });
+  h.frame(at(1112));
+  h.frame(at(1113));   // "Choose X for Crypt Rats"
+  await h.tick();
+  assert.deepEqual(h.moves().at(-1), { type: 'answer', askId: 'a16', value: [3] });
+  h.frame(at(1117));   // "Crypt Rats (37) - {X}: … Pay Mana Cost: {B}{B}{B}", Auto disabled
+  await h.tick();
+  assert.deepEqual(h.moves().at(-1), { type: 'act', action: 'buttonCancel' });
+  h.frame(at(1119));
+  h.frame(at(1121));   // the payment prompt's buttons over a priority prompt: still paying
+  await h.tick();
+  h.frame(at(1122));
+  await h.tick();
+  assert.equal(h.users.length, 2);
+  const why = h.users[1].split('\n')[0];
+  assert.equal(why, "Step 1 'activate Crypt Rats' cannot be done: the engine could not pay for it from your untapped mana"
+    + ' (its ability "{X}: Crypt Rats deals X damage to each creature and each player. Spend only black mana on X." costs {X};'
+    + ' the engine asked for {B}{B}{B} (3 mana) and you have 2 untapped mana sources (Swamp, Plains)).');
+  assert.doesNotMatch(why, /\{2\}\{B\}/);
+});
+
+test('payWords: a fixed ability cost and an Equip label are judged as written; a cast keeps the card\'s cost; flashback its own', () => {
+  const s = state({ me: { battlefield: [land(1, 'Island', { zone: 'battlefield', types: 'Basic Land - Island' })] } });
+  const step = (verb) => ({ n: 1, verb, raw: `${verb} x` });
+  const clue = card(31, 'Clue Token', { zone: 'battlefield', types: 'Artifact - Clue', token: true });
+  // the labels as the engine sends them (activatable.test.mjs: Clue from M63, Samurai's Katana from sk2)
+  assert.equal(payWords({ step: step('activate'), card: clue, ability: { abilityLabel: '{2}, Sacrifice this token: Draw a card.' } }, null, s, 0, null),
+    ' (its ability "{2}, Sacrifice this token: Draw a card." costs {2} (2 mana) and you have 1 untapped mana source (Island))');
+  const katana = card(32, "Samurai's Katana", { zone: 'battlefield', types: 'Artifact - Equipment', manaCost: '{2}{R}' });
+  const w = payWords({ step: step('activate'), card: katana, ability: { abilityLabel: 'Murasame — Equip {5} ' } }, null, s, 0, null);
+  assert.match(w, /^ \(its ability "Murasame — Equip \{5\}" costs \{5\} \(5 mana\)/);
+  assert.doesNotMatch(w, /\{2\}\{R\}/, 'never the equipment\'s own cost');
+  // a cast from the hand: the card's cost, as before
+  assert.match(payWords({ step: step('cast'), card: card(9, 'Robotics Mastery', { manaCost: '{4}{U}' }), zone: 'hand' }, null, s, 0, null), /^ \(it costs \{4\}\{U\} \(5 mana\)/);
+  // from the graveyard: the flashback cost
+  const blink = card(7, 'Momentary Blink', { manaCost: '{1}{W}', zone: 'graveyard' });
+  const ora = { text: (n) => (n === 'Momentary Blink' ? 'Target creature you control gets exiled, then returns.\nFlashback {3}{U}' : null) };
+  assert.match(payWords({ step: step('cast'), card: blink, zone: 'graveyard' }, null, s, 0, ora), /^ \(from your graveyard it is cast by flashback: it costs \{3\}\{U\}/);
+});
+
+// ---------------------------------------------------------------- 3. blocks
+
+test('m20-search-p15: a block the wire rules out (flying) is not offered, and a plan naming it is corrected before any click', async () => {
+  const fx = fixture('m20-p15-amethyst-dragon-blocks.json');
+  const at = (seq) => fx.frames.find((f) => f.seq === seq);
+  const d = classifyInput({ state: at(984).body, input: at(987).body, me: 0, oracle: null });
+  const pairs = d.options.filter((o) => !o.none).map((o) => `${o.blockerId}>${o.attackerId}`);
+  for (const flier of [89, 75, 159]) {
+    assert.ok(!pairs.includes(`138>${flier}`), `the Spawn token cannot block flier ${flier}`);
+    assert.ok(pairs.includes(`3>${flier}`), `the Dragon (flying) can block flier ${flier}`);
+  }
+  assert.ok(pairs.includes('138>28') && pairs.includes('138>104'));
+  assert.match(d.context.join('\n'), /Blocks the rules rule out: Eldrazi Spawn Token cannot block Vampire Nighthawk, Mulldrifter, Thopter Token \(flying\)/);
+
+  // the recorded replies: Spawn on Nighthawk (now refused before a click), then Spawn on Chrysalis + Dragon on Mulldrifter
+  const h = harness([fx.replies[0], fx.replies[1]]);
+  h.frame(at(984));
+  h.frame(at(987));
+  await h.tick();
+  assert.match(h.users[0], /By the rules: Eldrazi Spawn Token cannot block Vampire Nighthawk, Mulldrifter, Thopter Token \(flying\)\./);
+  assert.equal(h.users.length, 2);
+  assert.match(h.users[1].split('\n')[0], /^Step 2 'block Vampire Nighthawk with Eldrazi Spawn Token' cannot be done: Eldrazi Spawn Token cannot block Vampire Nighthawk: Vampire Nighthawk has flying and Eldrazi Spawn Token has neither flying nor reach\.$/);
+  for (let i = 0; i < 6; i++) { h.frame(at(987)); await h.tick(); }
+  const clicks = h.moves().map((m) => m.cardId ?? m.action);
+  assert.deepEqual(clicks, [28, 138, 75, 3, 'buttonOk'], 'the corrected blocks, no stale click');
+});
+
+test('m20-search-p15: the seat\'s record of the declaration, fed the recorded clicks and refusals, is the engine\'s own (state 1041)', () => {
+  const fx = fixture('m20-p15-amethyst-dragon-blocks.json');
+  const at = (seq) => fx.frames.find((f) => f.seq === seq);
+  const h = harness([]);
+  h.frame(at(984));
+  h.frame(at(987));
+  const notices = [at(1004), at(1021), at(1038)];
+  const names = { 138: 'Eldrazi Spawn Token', 3: 'Amethyst Dragon' };
+  fx.attempts.forEach((moves, i) => {
+    const refusedId = Number(Object.keys(names).find((id) => notices[i].body.text.startsWith(names[id])));
+    // one click per tick up to the one the engine refused (the queue is dropped there)
+    for (const m of moves) {
+      h.core.emit(m, 'recorded');
+      if (m.cardId === refusedId) break;
+    }
+    h.frame(notices[i]);
+  });
+  const engine = at(1041).body.combat.bands.flatMap((b) => (b.blockerIds ?? []).map((blockerId) => ({ attackerId: b.attackerIds[0], blockerId })));
+  assert.deepEqual(engine, [{ attackerId: 28, blockerId: 3 }], 'Forge kept the Dragon on Writhing Chrysalis from the first try');
+  assert.deepEqual(h.core.declaredBlocks(), engine);
+  // so the Dragon's refusal had a cause readable from the seat's own clicks: the decision now says so
+  const d = h.core.currentInputDecision();
+  assert.deepEqual(d.declared, engine);
+  assert.match(d.context.join('\n'), /Already declared in this declaration: Amethyst Dragon blocks Writhing Chrysalis/);
+  assert.deepEqual(d.fallback.map((n) => d.options[n - 1].blockerId), [3], 'the default keeps the block the engine took');
+});
+
+test('m20-search-p15: after a half-refused try the next blocks build on what was declared (no click takes a wanted block back)', async () => {
+  const fx = fixture('m20-p15-amethyst-dragon-blocks.json');
+  const at = (seq) => fx.frames.find((f) => f.seq === seq);
+  const h = harness([fx.replies[1]]);
+  h.frame(at(984));
+  h.frame(at(987));
+  // the recorded first try: Dragon on Chrysalis taken, the Spawn refused
+  for (const m of fx.attempts[0].slice(0, 4)) h.core.emit(m, 'recorded');
+  h.frame(at(1004));
+  h.sent.length = 0;
+  await h.tick();
+  assert.match(h.users[0], /Already declared: Amethyst Dragon blocks Writhing Chrysalis\. Your block steps are the whole declaration/);
+  for (let i = 0; i < 8; i++) { h.frame(at(987)); await h.tick(); }
+  const clicks = h.moves().map((m) => m.cardId ?? m.action);
+  // the Dragon's block of Chrysalis is taken back (Chrysalis, Dragon), then Spawn on Chrysalis and Dragon on Mulldrifter
+  assert.deepEqual(clicks, [28, 3, 28, 138, 75, 3, 'buttonOk']);
+  assert.deepEqual(h.core.declaredBlocks().sort((a, b) => a.blockerId - b.blockerId), [{ attackerId: 75, blockerId: 3 }, { attackerId: 28, blockerId: 138 }]);
+});

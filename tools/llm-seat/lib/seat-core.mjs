@@ -22,6 +22,12 @@
 // When the engine refuses a move (a `notice` while the same input stays up)
 // the same decision is played again with the safe default, then with OK /
 // Cancel / pass, so a refused click never loops; each refusal is counted.
+//
+// A block declaration is clicks (attacker, then blocker) that Forge keeps as
+// they come, and the state shows none of them until the declaration ends: so
+// the seat keeps the blocks it declared (`blockDecl`, a click the engine
+// refused taken back) and hands them to the decision as `d.declared`, which
+// movesFor builds on -- a click on a declared block again would take it back.
 
 import { classifyAsk, classifyInput, inputBinding, inputKindOf, movesFor, tokenFor } from './decision.mjs';
 import { cardsById, nameOf } from './frames.mjs';
@@ -86,6 +92,7 @@ export class SeatCore {
     this.cancelled = new Map();  // cardId -> how many times this turn its play came back cancelled
     this.lastCancel = null;      // {cardId, name, count}: the newest cancelled play
     this.cancelTurn = null;
+    this.blockDecl = null;       // {turn, current, pairs: Map blocker -> attacker, last}: the block declaration so far
     this.stats = { decisions: 0, model: 0, auto: 0, fallback: 0, retries: 0, refused: 0, stale: 0, modelCalls: 0, promptBytes: 0, tokensIn: 0, tokensOut: 0, cacheRead: 0, cacheCreate: 0, costUsd: 0, modelMs: 0 };
   }
 
@@ -108,19 +115,24 @@ export class SeatCore {
         // M63: the permanents the engine last listed with an ability usable at
         // instant speed (not a loyalty ability, not an equip), for the end-step stop
         if (Array.isArray(b.activatable)) this.instantActivatable = instantActivatable(b.activatable);
+        if (this.blockDecl && (b.turn !== this.blockDecl.turn || b.phase !== 'COMBAT_DECLARE_BLOCKERS')) this.blockDecl = null;
         break;
       case 'input': {
         const changed = this.input === null || inputKey(b) !== inputKey(this.input);
         this.input = b;
         if (changed) this.inputSeq = frame.seq;
+        if (this.blockDecl && !['block', 'wait'].includes(inputKindOf(b, this.state, this.me))) this.blockDecl = null;   // the declaration is over
         break;
       }
       case 'ask':
         if (!this.answered.has(String(b.askId))) this.asks.set(String(b.askId), { body: b, seq: frame.seq });
         break;
-      case 'notice':
-        if (this.pending && /Not selectable|Not now|Not yet|Illegal|cannot/i.test(`${b.title} ${b.text}`)) this.refusedAt = this.now();
+      case 'notice': {
+        const refused = /Not selectable|Not now|Not yet|Illegal|cannot/i.test(`${b.title} ${b.text}`);
+        if (this.pending && refused) this.refusedAt = this.now();
+        if (refused) this.blockRefused();
         break;
+      }
       case 'over':
         this.over = b;
         break;
@@ -140,13 +152,49 @@ export class SeatCore {
       const c = cardsById(this.state).get(move.cardId);
       this.lastClick = c ? { cardId: move.cardId, zone: c.zone, stateSeq: this.stateSeq, name: nameOf(c) } : null;
     }
+    if (move.type === 'act' && move.action === 'clickCard' && this.input && inputKindOf(this.input, this.state, this.me) === 'block') this.blockClicked(move.cardId);
     this.send(move);
+  }
+
+  /**
+   * A click in the block declaration, as Forge's InputBlock takes it: an
+   * attacker becomes the one being blocked; a creature of the seat's blocks
+   * it, or -- when it already blocks that attacker -- is taken back.
+   */
+  blockClicked(cardId) {
+    const attackers = new Set((this.state?.combat?.bands ?? []).flatMap((band) => band.attackerIds ?? []));
+    if (!this.blockDecl) {
+      const first = /\((\d+)\)/.exec(String(this.input?.prompt ?? ''));
+      this.blockDecl = { turn: this.state?.turn ?? null, current: first ? Number(first[1]) : null, pairs: new Map(), last: null };
+    }
+    const bd = this.blockDecl;
+    if (attackers.has(cardId)) { bd.current = cardId; bd.last = null; return; }
+    if (bd.current === null) return;
+    const prev = bd.pairs.has(cardId) ? bd.pairs.get(cardId) : null;
+    if (prev === bd.current) bd.pairs.delete(cardId);
+    else bd.pairs.set(cardId, bd.current);
+    bd.last = { blockerId: cardId, prev };
+  }
+
+  /** A refused click of a blocker: Forge did not take it, so the declaration is as before. */
+  blockRefused() {
+    const last = this.blockDecl?.last;
+    if (!last) return;
+    if (last.prev === null) this.blockDecl.pairs.delete(last.blockerId);
+    else this.blockDecl.pairs.set(last.blockerId, last.prev);
+    this.blockDecl.last = null;
+  }
+
+  /** The blocks declared so far in this declaration: [{attackerId, blockerId}]. */
+  declaredBlocks() {
+    return [...(this.blockDecl?.pairs ?? new Map()).entries()].map(([blockerId, attackerId]) => ({ attackerId, blockerId }));
   }
 
   /** The current input's decision, or null when there is no input to act on. */
   currentInputDecision() {
     if (!this.input || !this.state || this.me === null) return null;
     const d = classifyInput({ state: this.state, input: this.input, me: this.me, oracle: this.oracle, opts: this.opts });
+    if (d.kind === 'block') withDeclared(d, this.declaredBlocks(), this.state);
     if (d.kind === 'priority') {
       this.checkCancelled();
       guardCancelled(d, this.cancelled);
@@ -339,6 +387,25 @@ export class SeatCore {
       this.emit(firstMove, `${rec.how} ${d.kind}`);
     }
   }
+}
+
+/**
+ * The blocks already declared, on a block decision: `d.declared` (movesFor
+ * builds on it), a context line, and the default -- no NEW block: the ones the
+ * engine already took were the player's own choices and stay (m20-search-p15:
+ * they were what kept the seat alive), unless a "No blocks" is chosen.
+ */
+export function withDeclared(d, declared, state) {
+  const mine = declared.filter((p) => (d.attackerIds ?? []).includes(p.attackerId));
+  if (!mine.length) return d;
+  d.declared = mine;
+  const cards = cardsById(state);
+  const nm = (id) => nameOf(cards.get(id)) ?? `card ${id}`;
+  d.declaredWords = mine.map((p) => `${nm(p.blockerId)} blocks ${nm(p.attackerId)}`).join('; ');
+  d.context.push(`Already declared in this declaration: ${d.declaredWords}`);
+  const keep = mine.map((p) => d.options.find((o) => !o.none && o.attackerId === p.attackerId && o.blockerId === p.blockerId)?.n).filter(Boolean);
+  if (keep.length) d.fallback = keep;
+  return d;
 }
 
 /** The ids of `state.activatable` entries with an ability that is not sorcery-speed by its kind (loyalty, equip). */

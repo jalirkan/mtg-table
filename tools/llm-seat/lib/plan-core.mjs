@@ -41,14 +41,14 @@
 // (priority before combat is passed to get there); steps after it run in the
 // second main phase.  The engine is the rules judge throughout.
 
-import { checkChoice, classifyAsk, inputBinding, inputKindOf, movesFor } from './decision.mjs';
+import { blockProblem, checkChoice, classifyAsk, inputBinding, inputKindOf, movesFor, unblockableWords } from './decision.mjs';
 import { visibleNames } from './history.mjs';
 import { hasKeyword, isCreature, isLand, nameOf, playersOf } from './frames.mjs';
 import { activationProblem, payProblem, availableMana, parseCost, zoneCost } from './mana.mjs';
 import { needsTap } from './oracle.mjs';
 import { parseArm } from './arms.mjs';
 import { newSessionId } from './model.mjs';
-import { abilitySplits, matchAbility, matchRef, normName, parseRef, parsePlan, splitNames, stepText } from './plan.mjs';
+import { abilityCost, abilitySplits, matchAbility, matchRef, normName, parseRef, parsePlan, splitNames, stepText } from './plan.mjs';
 import { Namer, PLAN_SYSTEM, phaseWords, planDeltaPrompt, planFullPrompt, planProgress, stackItemWords } from './plan-prompt.mjs';
 import { MAX_CANCELLED, MAX_MODEL_ERRORS, STALL_MS, SeatCore, inputKey } from './seat-core.mjs';
 
@@ -159,11 +159,14 @@ export function responseQuestion(item, state, me, plan) {
 
 export function blocksQuestion(d, state) {
   const namer = new Namer(state);
-  const attackers = [...new Set(d.options.filter((o) => !o.none).map((o) => o.attackerId))].map((id) => namer.permanent(namer.cards.get(id)));
-  const blockers = [...new Set(d.options.filter((o) => !o.none).map((o) => o.blockerId))].map((id) => namer.permanent(namer.cards.get(id)));
+  const pairs = d.options.filter((o) => !o.none);
+  const attackers = (d.attackerIds ?? [...new Set(pairs.map((o) => o.attackerId))]).map((id) => namer.permanent(namer.cards.get(id)));
+  const blockers = (d.blockerIds ?? [...new Set(pairs.map((o) => o.blockerId))]).map((id) => namer.permanent(namer.cards.get(id)));
   return [
     `The opponent attacks with: ${attackers.join('; ')}.`,
     `Your untapped creatures: ${blockers.join('; ')}.`,
+    ...(d.unblockable?.length ? [`By the rules: ${unblockableWords(d, namer.cards)}.`] : []),
+    ...(d.declaredWords ? [`Already declared: ${d.declaredWords}. Your block steps are the whole declaration: a declared block you leave out is taken back.`] : []),
     'Declare your blockers: one step "block <attacker> with <your creature>" per block, or the single step "pass" for no blocks. Steps after the blocks (a spell or an ability) are carried out once the blocks are declared.',
   ].join('\n');
 }
@@ -500,10 +503,9 @@ export class PlanCore extends SeatCore {
       if ((ctx.attempt ?? 0) <= 1 && this.input?.buttons?.ok?.enabled) return { moves: [act('buttonOk')], why: "mana payment: the engine's Auto", auto: true };
       if (this.lastCast) {
         const c = this.lastCast.card;
-        const p = c ? payProblem(c, this.state, this.me, this.oracle) : null;
         const dv = this.lastDelve && this.lastDelve.card === c?.id ? this.lastDelve : null;
         const delveWords = dv ? `, even with delve exiling ${dv.n} card${dv.n === 1 ? '' : 's'} from your graveyard (the engine allowed at most ${dv.max})` : '';
-        this.payFailure = { plan: this.lastCast.plan, step: this.lastCast.step, why: `the engine could not pay for it from your untapped mana${delveWords}${p ? ` (${p})` : ''}` };
+        this.payFailure = { plan: this.lastCast.plan, step: this.lastCast.step, why: `the engine could not pay for it from your untapped mana${delveWords}${payWords(this.lastCast, this.input, this.state, this.me, this.oracle)}` };
         this.lastDelve = null;
         this.lastCast = null;
       }
@@ -715,7 +717,7 @@ export class PlanCore extends SeatCore {
     }
     plan.i += 1;
     this.pendingTargets = step.targets ? { plan, step, text: step.targets } : null;
-    if (want !== 'land') this.lastCast = { plan, step, card: m.pick.card, face };
+    if (want !== 'land') this.lastCast = { plan, step, card: m.pick.card, face, zone: m.pick.opt.zone ?? 'hand' };
     const o = m.pick.opt;
     return { moves: o.moves, why: stepText(step), step, plan, exec: true, intent: o.intent ? { ...o.intent, label: o.label } : null };
   }
@@ -823,8 +825,9 @@ export class PlanCore extends SeatCore {
       }
       const namer = new Namer(this.state);
       const pairs = d.options.filter((o) => !o.none);
-      const attackers = [...new Set(pairs.map((o) => o.attackerId))].map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'theirs' }));
-      const blockers = [...new Set(pairs.map((o) => o.blockerId))].map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'mine' }));
+      // every attacker and every untapped creature, so a pair the rules rule out gets its reason
+      const attackers = (d.attackerIds ?? [...new Set(pairs.map((o) => o.attackerId))]).map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'theirs' }));
+      const blockers = (d.blockerIds ?? [...new Set(pairs.map((o) => o.blockerId))]).map((id) => ({ id, name: nameOf(namer.cards.get(id)) ?? '', group: 'mine' }));
       const chosen = [];
       const used = new Set();
       let last = step;
@@ -839,6 +842,10 @@ export class PlanCore extends SeatCore {
         if (!b.ok) return { fail: { plan, step: s, why: used.size && blockers.some((x) => used.has(x.id) && normName(x.name) === bRef.name) ? `${s.blocker} already blocks; each creature blocks one attacker` : this.whyNotCreature(bRef, 'block', used) } };
         used.add(b.pick.id);
         const o = pairs.find((x) => x.attackerId === a.pick.id && x.blockerId === b.pick.id);
+        if (!o) {
+          const why = blockProblem(namer.cards.get(a.pick.id), namer.cards.get(b.pick.id));
+          return { fail: { plan, step: s, why: `${namer.byId(b.pick.id)} cannot block ${namer.byId(a.pick.id)}${why ? `: ${why}` : ''}` } };
+        }
         chosen.push(o.n);
       }
       const err = checkChoice(d, chosen);
@@ -1021,6 +1028,9 @@ export class PlanCore extends SeatCore {
   }
 
   engineAsks(d) {
+    if (d.kind === 'block' && d.declaredWords) {
+      return `Already declared (the engine took these clicks): ${d.declaredWords}. Your block steps are the whole declaration: a declared block you leave out is taken back.`;
+    }
     if (d.kind === 'priority' || d.kind === 'attack' || d.kind === 'block') return null;
     const { prompt, choices } = choicesWords(d, { ...this.state, __me: this.me });
     return `The engine now asks: ${prompt || '(no words)'}. Choices: ${choices}. Answer it with step 1 "target <name>" or "choose <option>".`;
@@ -1167,12 +1177,60 @@ export class PlanCore extends SeatCore {
   }
 }
 
+/**
+ * The cost words of a payment the engine could not make: " (…)" or "".  An
+ * activation quotes ITS ability's cost, never the card's casting cost (s2 p0
+ * s7: "activate Crypt Rats" was told "it costs {2}{B} (3 mana)", the Rats'
+ * own cost, for its {X} ability); a cast from another zone its flashback /
+ * escape cost; a cast from the hand the card's cost.  What the engine asked
+ * for ("Pay Mana Cost: {B}{B}{B}", X chosen) is judged against the untapped
+ * mana when the step's own cost has no fixed amount or is not known.
+ */
+export function payWords(cast, input, state, me, oracle) {
+  const c = cast?.card ?? null;
+  const asked = /Pay Mana Cost:\s*((?:\{[^}]+\})+)/.exec(String(input?.prompt ?? ''))?.[1] ?? null;
+  const judge = (cost) => (cost ? payProblem({ ...(c ?? {}), manaCost: cost }, state, me, oracle) : null);
+  // "the engine asked for {B}{B}{B} (3 mana) and you have …", or just the cost
+  const askedWords = () => {
+    if (!asked) return '';
+    const p = judge(asked);
+    return `the engine asked for ${p ? p.replace(/^it costs /, '') : asked}`;
+  };
+  if (cast?.step?.verb === 'activate') {
+    // the ability: the engine's label (M63), else the payment prompt's "Card (id) - <ability>"
+    const label = String(cast.ability?.abilityLabel ?? cast.ability?.intent?.abilityLabel ?? '').trim()
+      || /^[^\n]*?\(\d+\)\s+-\s+([^\n]+)/.exec(String(input?.prompt ?? ''))?.[1]?.trim() || '';
+    if (!label) return asked ? ` (${askedWords()})` : '';
+    const cost = abilityCost(label) ?? (/^[^(]*?\b(?:Equip|Reconfigure|Fortify)\b\s*((?:\{[^}]+\})+)/i.exec(label)?.[1] ?? null);
+    const mana = (cost?.match(/\{[^}]+\}/g) ?? []).filter((x) => !/^\{(T|Q|E)\}$/i.test(x)).join('');
+    const head = `its ability "${label.slice(0, 100)}"`;
+    // a fixed cost: judged as written (activationProblem's words); {X}: what the engine asked for
+    const p = mana && !/\{[XY]\}/i.test(mana) ? judge(mana) : null;
+    if (p) return ` (${head} ${p.replace(/^it costs/, 'costs')})`;
+    const more = askedWords();
+    return ` (${head}${cost ? ` costs ${cost}` : ''}${more ? `; ${more}` : ''})`;
+  }
+  if (!c) return '';
+  if (cast.face) {   // the other half of an adventure / split card: its own cost, the engine's words
+    const more = askedWords();
+    return more ? ` (${cast.face}: ${more})` : '';
+  }
+  if (cast.zone && cast.zone !== 'hand') {
+    const alt = zoneCost(c, cast.zone, oracle);
+    if (!alt) return '';
+    const p = judge(alt.cost);
+    return ` (from your ${cast.zone} it is cast by ${alt.how}: ${p ?? `it costs ${alt.cost}`})`;
+  }
+  const p = payProblem(c, state, me, oracle);
+  return p ? ` (${p})` : '';
+}
+
 /** The safe default for a decision: pass, no attack, no blocks, keep, the ask's own default. */
 export function defaultMoves(d, input) {
   switch (d.kind) {
     case 'priority': return [act('passPriority')];
-    case 'attack':
-    case 'block': return movesFor(d, [1]);
+    case 'attack': return movesFor(d, [1]);
+    case 'block': return movesFor(d, d.fallback ?? [1]);   // no new block; the ones the engine already took stay (decision.mjs withDeclared)
     case 'mulligan': return [act('buttonOk')];
     default:
       if (d.auto) return d.auto.moves;
