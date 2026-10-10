@@ -2,12 +2,12 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T10:26:06-04:00
+- time: 2026-10-10T10:29:58-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J122 commands 1/2, 4816/7500 drafts, 12438.8/h, ETA 2026-10-10T10:39:03-04:00, 7 worker(s), 7 core(s)
-- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 12.56; memory 17.6/30.5 GB, swap 1697 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J123
+- running: J122 commands 2/2, 5921/7500 drafts, 12953.8/h, ETA 2026-10-10T10:37:16-04:00, 7 worker(s), 1 core(s); J123 prepare, 0/12000 drafts, 1 worker(s), 7 core(s)
+- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
+- load: 9.59; memory 8.1/30.5 GB, swap 1697 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
 - last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
 
