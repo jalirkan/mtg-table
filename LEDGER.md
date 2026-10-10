@@ -611,3 +611,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J116/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 614f98f
 - follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J120 DONE: Synergy evolve with Counter Blitz's counters cards (Final Fantasy X Commander) in the seed pool: 4 generations x 400 drafts, best of 3, exploration on, unrecorded
+
+- finished: 2026-10-10T01:04:25-04:00
+- decides: whether any of Counter Blitz's counters cards goes into the Synergy Cube (Justin's call: the lab informs it, his notes decide; nothing here edits cubes/synergy-cube-180.md)
+- hypothesis: none to confirm: a descriptive run. The evolve loop cuts only a card it confirms dead or dominant on fresh seeds, and a pool card enters only into a slot a cut opens, so it may add no Final Fantasy card at all; with the try notes, the seven strongest-reading ones are first in line for any slot that opens
+- rule: written 2026-10-10 before the run. A swap counts only as evolve decides it (D331 discovery then confirmation, D357 pooled repeats). A Final Fantasy card that enters is read from its generations' stats.json and, if it is rated under deadMinRating, from the changelog's pooled exploration table after generation 4 (holds its own / weak when played / undecided / too few), never from a per-generation table. No verdict cuts or adds a card in the real cube: the summary reports, Justin decides
+- outcome: done
+- headline: big.generations_done 4, big.drafts 1600, big.engine_error_rate 0.0031, ex.treated 772, ex.holds 10, ex.weak 3, ex.undecided 16, ex.too_few 41
+- summary: results/J120/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table c7d1e4d
+- follow-up: template synergy-fic-cards: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

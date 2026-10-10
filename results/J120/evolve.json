@@ -1,0 +1,192 @@
+{
+  "v": 1,
+  "cube": "cubes/synergy-cube-180.md",
+  "startSha": "7e4f1e95fe385467242f5e6153e29545d25dd2e3f1e67312e4264775f1fd1cfa",
+  "pool": "cubes/synergy-fic-pool.tsv",
+  "poolSha": "236d80f02be020f2b86c6c4f34f1dc919030fc517ba3022ef4c34092daf077fb",
+  "drafts": 400,
+  "seed": 140000001,
+  "games": 3,
+  "profiles": [
+    "Default",
+    "Default"
+  ],
+  "weights": {
+    "unrated": 40,
+    "landScale": 0.45,
+    "synergy": 4,
+    "synergyCap": 6,
+    "lean": 10,
+    "commitAt": 0.3333333333333333,
+    "offColour": 40,
+    "splash": 15,
+    "splashMinRating": 70,
+    "splashSources": 2,
+    "fixing": 12,
+    "setRest": 0.6,
+    "winstonMargin1": 10,
+    "winstonMargin2": 5,
+    "winstonMargin3": 0,
+    "remAIDeck": 0,
+    "playable": 45,
+    "deckPlayable": 2,
+    "deckTheme": 1.5,
+    "deckCurve": 1,
+    "deckCreatures": 1.5,
+    "creaturesMin": 13,
+    "deckSplash": 3,
+    "maxSplash": 3,
+    "maxSplashStretch": 7,
+    "deckThreeColour": 1.5,
+    "deckEighteenLands": 2,
+    "splashDeckSources": 3,
+    "buildSynergy": 3,
+    "sixteenLandsAt": 2.5
+  },
+  "knobs": {
+    "swaps": 6,
+    "minSeen": 15,
+    "minGames": 20,
+    "minOnColour": 8,
+    "deadPlayRateHi": 0.35,
+    "deadMinRating": 60,
+    "dominantMargin": 0.05,
+    "dominantFirstPickLo": 0.75,
+    "fdrQ": 0.1,
+    "confirmAlpha": 0.05,
+    "confirmPower": 0.8,
+    "dominantEffect": 0.1,
+    "deadEffect": 0.1,
+    "pickEffect": 0.9,
+    "confirmMinDrafts": 20,
+    "confirmMaxDrafts": 300,
+    "confirmSeedOffset": 1000000,
+    "confirmPool": 1,
+    "watchWinMargin": 0.12,
+    "colourSlack": 2,
+    "minSignposts": 2,
+    "fitSameClass": 4,
+    "fitTheme": 3,
+    "fitRole": 2,
+    "fitMv": 1,
+    "fitRating": 4,
+    "fitBalance": 3,
+    "fitTry": 20,
+    "dominantReplaceRatio": 0.9,
+    "humanTest": 10
+  },
+  "constraints": {
+    "size": 180,
+    "colourTarget": {
+      "W": 32,
+      "U": 32,
+      "B": 32,
+      "R": 32,
+      "G": 32
+    },
+    "colourSlack": 2,
+    "lands": 20,
+    "fixingMin": 0,
+    "pairMin": {
+      "WU": 2,
+      "WB": 2,
+      "WR": 2,
+      "WG": 2,
+      "UB": 2,
+      "UR": 2,
+      "UG": 2,
+      "BR": 2,
+      "BG": 2,
+      "RG": 2
+    }
+  },
+  "date": "2026-10-10",
+  "generations": [
+    {
+      "gen": 1,
+      "inputSha": "7e4f1e95fe385467242f5e6153e29545d25dd2e3f1e67312e4264775f1fd1cfa",
+      "outputSha": "a27fef661409a808ec5e733acf80c899db578129ec9a62f98152726b9d110f01",
+      "versionIn": 1,
+      "versionOut": 2,
+      "seeds": [
+        140000001,
+        140000400
+      ],
+      "confirmSeeds": [
+        141000001,
+        141000047
+      ],
+      "swaps": [
+        {
+          "out": "Lotus Petal",
+          "outSection": "Colorless",
+          "in": "Tromell, Seymour's Butler",
+          "inSection": "Green",
+          "why": "dominant-pick",
+          "evidence": "discovery (400 drafts): first line in 299 of 358 grids (0.84 vs 0.75), p 6.8e-5, q 0.009; confirmed on fresh seeds 141000001–141000047 (47 drafts): first line in 39 of 44 grids (0.89 vs 0.75), p 0.021, Holm p 0.021",
+          "fit": "colour G for C; no shared theme; mv 3 for 0; rating 40; helps weak CTR ETB G (0.50); notes say try"
+        }
+      ],
+      "verdict": "1 swap(s): 1 card(s) found and then confirmed on fresh drafts; 8 more lead(s) are insufficient data. Discovery: 1 candidate(s) of 280 tests at a false-discovery rate of 0.1; confirmation on 47 fresh drafts: 1 confirmed, 0 not. 39 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-10",
+      "notesSha": "9ccfa6ddc634e15e6a11006682328b8ebc860b4294a0578b18808f38488c8522"
+    },
+    {
+      "gen": 2,
+      "inputSha": "a27fef661409a808ec5e733acf80c899db578129ec9a62f98152726b9d110f01",
+      "outputSha": "36ed6111c6814a16827501d22bd18778e1769b93cf2c54f9e14cf81fdf00181a",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        140000401,
+        140000800
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 400 drafts; 5 lead(s) to watch — about 1341 drafts per generation would find half of them. Run more drafts. 38 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-10",
+      "notesSha": "9ccfa6ddc634e15e6a11006682328b8ebc860b4294a0578b18808f38488c8522"
+    },
+    {
+      "gen": 3,
+      "inputSha": "36ed6111c6814a16827501d22bd18778e1769b93cf2c54f9e14cf81fdf00181a",
+      "outputSha": "5b5cdc601469ea99e81f0940548289950eeb3d5149d62b004a2472b8b8703b98",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        140000801,
+        140001200
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 400 drafts; 7 lead(s) to watch — about 3811 drafts per generation would find half of them. Run more drafts. 40 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-10",
+      "notesSha": "9ccfa6ddc634e15e6a11006682328b8ebc860b4294a0578b18808f38488c8522"
+    },
+    {
+      "gen": 4,
+      "inputSha": "5b5cdc601469ea99e81f0940548289950eeb3d5149d62b004a2472b8b8703b98",
+      "outputSha": "1658b8261f68c01b5eea48bf623b9456db1b88724af8dbedce9be51db658228b",
+      "versionIn": 2,
+      "versionOut": 2,
+      "seeds": [
+        140001201,
+        140001600
+      ],
+      "confirmSeeds": [
+        141000901,
+        141000946
+      ],
+      "swaps": [],
+      "verdict": "Insufficient data: no card was confirmed at 400 drafts; 4 lead(s) to watch — about 5899 drafts per generation would find half of them. Run more drafts. Discovery: 1 candidate(s) of 280 tests at a false-discovery rate of 0.1; confirmation on 46 fresh drafts: 0 confirmed, 1 not. 40 card(s) are rarely or never played on colour but rated under 60: a ratings question, not a drafts one (see rating-limited).",
+      "date": "2026-10-10",
+      "notesSha": "9ccfa6ddc634e15e6a11006682328b8ebc860b4294a0578b18808f38488c8522"
+    }
+  ],
+  "explore": {
+    "share": 0.3,
+    "cap": 4,
+    "gold": 4,
+    "margin": 0.1,
+    "minDecks": 10
+  },
+  "winNull": "colour"
+}

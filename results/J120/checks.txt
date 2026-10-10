@@ -1,0 +1,7 @@
+PASS  big.generations_done == 4   [big.generations_done = 4]
+PASS  big.drafts == 1600   [big.drafts = 1600]
+PASS  big.engine_error_rate <= 1%   [big.engine_error_rate = 0.0031]
+PASS  ex.generations_done == 4   [ex.generations_done = 4]
+PASS  ex.explored_drafts + ex.plain_drafts == 1600   [ex.explored_drafts = 491, ex.plain_drafts = 1109]
+PASS  ex.share_z between -4 and 4   [ex.share_z = 0.6001]
+PASS  ex.explored_engine_error_rate <= ex.plain_engine_error_rate + 1%   [ex.explored_engine_error_rate = 0.0041, ex.plain_engine_error_rate = 0.0027]
