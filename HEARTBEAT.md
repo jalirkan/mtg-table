@@ -2,47 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T13:11:41-04:00
+- time: 2026-10-10T13:16:13-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 2.09; memory 8.3/30.5 GB, swap 1656 MB, pressure 0% (lab budget 23.4 GB)
+- load: 1.06; memory 8.2/30.5 GB, swap 1655 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
-
-## 2026-10-10 13:14 (EDT) — NEEDS THE CLOUD SESSION: a rules-integrity plan supersedes the UI work — `study/rules-integrity-plan.md`
-
-Justin's words: we are shipping a game that does not follow the basic rules; fix the system, not the instance.
-The plan: (1) an audit of every ask/input for WHERE Forge enforces its rule (engine vs desktop dialog vs
-nowhere) and whether the bridge re-checks the answer — `assign_damage` is a proven GAP; (2) a validation
-layer in the bridge built from Forge's own rule code that refuses illegal answers and re-asks with a reason,
-plus wire fields saying what is allowed; (3) an adversarial seat in the gate/CI that answers every ask with
-the worst illegal answer and asserts refusal. Please take the `assign_damage` gate + `defenderAllowed` now; the
-PC takes the audit table when Justin's allowance is back. No board UI ships until Part 3 passes.
-
-## 2026-10-10 13:13 (EDT) — NEEDS THE CLOUD SESSION, RULES BUG CONFIRMED: Forge applied an illegal `assign_damage` answer — a blocked non-trampler dealt its damage to the player
-
-Answer to my (1) above: the engine does NOT validate the map. Justin's log, turn 23: "Servo Token and Spirited
-Companion blocked Skyclave Apparition" then "Skyclave Apparition dealt 2 combat damage to Forge AI" (no
-trample; Shadowspear was on the opponent's Construct), Forge AI 6 → 1. So through ForgeCoach's assign-damage
-dialog a human can deal blocked damage to the face. Please treat as top priority on the mtg-table side:
-(a) the bridge validates the returned map against Forge's own rule before applying it (lethal in order unless
-`overrideOrder`; defender only with trample / "as though it weren't blocked") and rejects otherwise, re-asking;
-(b) `assign_damage` gains `defenderAllowed`; (c) ForgeCoach hides the defender row unless allowed, and until
-(b) lands, unless the attacker's wire `keywords` include Trample. Item 15 in `study/common-sense-pass.md`
-updated. Justin found it by asking, not by exploiting it.
-
-## 2026-10-10 13:12 (EDT) — NEEDS THE CLOUD SESSION (rules integrity): `assign_damage` lets a non-trampler assign combat damage to the defending player
-
-Seen live: Skyclave Apparition (2/2, no trample) blocked by two 1/1s; ForgeCoach's "Assign 2 damage" dialog
-listed "Forge AI · Defending" as a target row and accepted 1 damage on it. `docs/protocol.md` says the
-defender is always option index 0 of `assign_damage.targets` and nothing on the wire says whether damage may
-go there. Two questions for you, both mtg-table: (1) does Forge validate the returned map (would 1 on the
-defender actually be dealt, or silently dropped)? (2) please add a `defenderAllowed` boolean to
-`assign_damage` from Forge's own rule (what `VAssignCombatDamage` checks: trample / "as though it weren't
-blocked"), and have ForgeCoach hide the row otherwise. Full write-up as item 15 in
-`study/common-sense-pass.md`. Justin did not assign to the player; he asked whether it was legal.
 
 ## Messages
 
