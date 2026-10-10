@@ -228,6 +228,20 @@ when the name is one of the candidates.
   the mana the plan's later `cast` steps need), all of it when short anyway; lands
   first, never a card the engine listed as playable from the graveyard while another
   will do. A payment that still fails says how many cards delve exiled.
+- **Filter mana** (a mana ability whose cost needs mana: Prophetic Prism, Signets,
+  filter lands' second line) is no mana of its own: Forge's Auto never pays with it
+  (s2-search-p20-s6: six lands and the Prism were told "7 mana" with white, and
+  Welcoming Vampire {2}{W} could not be paid). One whose cost is generic mana only
+  (`{1}, {T}: Add …`) is a *converter* (`mana.mjs` `availableMana().filters`): not in
+  the total, but one of the other mana can come out in its colours, and the view says
+  so ("Prophetic Prism ({1}: turns one of it into any colour)"). Smart pay clicks it
+  when the payment needs a colour no untapped source makes. Measured on real Forge
+  (the Prism probe, fake seat): the payment prompt lists no source, but a click on the
+  Prism at "Pay Mana Cost: {W}" opens the Prism's own "Pay Mana Cost: {1}" (Auto
+  enabled), and once that is paid the spell is cast with the Prism's white, no colour
+  asked; clicked at priority instead, the Prism asks "Select Mana to Produce" (the
+  seat answers the colour smart pay wanted) and the mana goes to the pool. A filter
+  with a coloured or hybrid cost (Mystic Gate's `{W/U}`) is not used.
 - `cast X -> Y` answers the targeting question that follows with Y; a target the step
   did not name is one plain question.
 - `attack with A, B` is played at the declaration (priority before combat is passed
@@ -358,16 +372,6 @@ says otherwise.
   as decision mode, the bridge's default.
 - **Attacking a planeswalker or battle**: as decision mode, the attack goes to the
   engine's current defender.
-- **Filter mana (Prophetic Prism)**: Forge's Auto never pays with a `{1}, {T}: Add
-  one mana of any color` source, the payment prompt lists no mana sources at all
-  (`selectable` empty; the seat's smart pay clicks lands unlisted), and
-  `state.activatable` holds no mana ability. Whether a click on the Prism during a
-  payment would use its ability (a nested `{1}` payment) is on no recorded wire. So the
-  mana words count no mana ability whose cost needs mana (`mana.mjs` `isFilterCost`:
-  the Prism, Signets, Eggs, filter lands' second line — a land with only such lines,
-  Sungrass Prairie, is no source): s2-search-p20-s6's six lands and Prism were told
-  "7 mana, any colour", and Welcoming Vampire {2}{W} was sent with no white. Paying
-  with one is open.
 - **Grading plan-mode choices**: the positions mode and coach-grade work per engine
   decision; plan mode's records keep the `stateSeq` of every moment and step, but no
   replay of a plan against a recorded game is built.

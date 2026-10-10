@@ -178,26 +178,27 @@ test('m20-search-p15: after a half-refused try the next blocks build on what was
   assert.deepEqual(h.core.declaredBlocks().sort((a, b) => a.blockerId - b.blockerId), [{ attackerId: 75, blockerId: 3 }, { attackerId: 28, blockerId: 138 }]);
 });
 
-// ---------------------------------------------------------------- 2. filter mana is not extra mana
+// ---------------------------------------------------------------- 2. filter mana: a converter, not extra mana
 
-test('s2-search-p20-s6: Prophetic Prism (a mana ability whose cost needs mana) is no mana of its own: 6 lands, 6 mana, no white', () => {
+test('s2-search-p20-s6: Prophetic Prism (a mana ability whose cost needs mana) is no extra mana, but it can make the white: 6 lands, 6 mana', () => {
   const fx = fixture('s2-p20-s6-prophetic-prism.json');
   const st = fx.frames.find((f) => f.seq === 694).body;
   const oracle = oracleOf(fx.oracle);
   assert.equal(fx.oracle['Prophetic Prism'], 'When this artifact enters, draw a card.\n{1}, {T}: Add one mana of any color.');
   assert.match(fx.recordedFailure, /could not pay/);
   const avail = availableMana(st, 0, oracle);
-  assert.equal(avail.total, 6);
+  assert.equal(avail.total, 6, 'the recorded prompt said 7');
   assert.deepEqual(avail.sources.map((x) => x.name), ['Island', 'Swamp', 'Swamp', 'Swamp', 'Island', 'Swamp']);
   assert.ok(!avail.sources.some((x) => x.colors === 'any' || x.colors.has('W')));
+  assert.deepEqual(avail.filters.map((f) => [f.name, f.colors, f.cost]), [['Prophetic Prism', 'any', '{1}']]);
   const vampire = st.players[0].zones.hand.cards.find((c) => c.name === 'Welcoming Vampire');
-  assert.match(payProblem(vampire, st, 0, oracle), /^it costs \{2\}\{W\}, which needs 1 white mana, and your untapped mana makes no white/);
-  assert.match(planView(st, 0, { oracle }), /Untapped mana: 6 \(/);
-  // the payment the engine could not make: no Auto (frame 701)
+  assert.equal(payProblem(vampire, st, 0, oracle), null, 'the white comes from the Prism, which smart pay clicks');
+  assert.match(planView(st, 0, { oracle }), /Untapped mana: 6 \(Island, Swamp, Swamp, Swamp, Island, Swamp: U B B B U B\); Prophetic Prism \(\{1\}: turns one of it into any colour\)\./);
+  // the payment the engine could not make by itself: no Auto (frame 701)
   assert.equal(fx.frames.find((f) => f.seq === 701).body.buttons.ok.enabled, false);
 });
 
-test('filter mana: a land keeps its free line ({T}: Add {C}); one with only filter lines and every filter artifact add nothing (card-index texts)', () => {
+test('filter mana: a land keeps its free line; a generic-cost filter is a converter of its colours; a hybrid-cost one is nothing (card-index texts)', () => {
   assert.equal(isFilterCost('{1}, {T}'), true);
   assert.equal(isFilterCost('{W/U}, {T}'), true);
   assert.equal(isFilterCost('{T}, Sacrifice this artifact'), false);
@@ -208,7 +209,7 @@ test('filter mana: a land keeps its free line ({T}: Add {C}); one with only filt
     'Dimir Signet': '{1}, {T}: Add {U}{B}.',
     'Prophetic Prism': 'When this artifact enters, draw a card.\n{1}, {T}: Add one mana of any color.',
   };
-  assert.deepEqual(manaLines(texts['Mystic Gate']), { free: '{T}: Add {C}.', filter: true });
+  assert.deepEqual(manaLines(texts['Mystic Gate']), { free: '{T}: Add {C}.', filter: true, converter: null });
   const oracle = oracleOf(texts);
   const s = state({ me: { battlefield: [
     land(1, 'Mystic Gate', { zone: 'battlefield', types: 'Land - Gate' }), land(2, 'Sungrass Prairie', { zone: 'battlefield', types: 'Land' }),
@@ -217,5 +218,44 @@ test('filter mana: a land keeps its free line ({T}: Add {C}); one with only filt
   const avail = availableMana(s, 0, oracle);
   assert.equal(avail.total, 1);
   assert.deepEqual(avail.sources.map((x) => [x.name, [...x.colors]]), [['Mystic Gate', ['C']]]);
+  assert.deepEqual(avail.filters.map((f) => [f.name, f.colors === 'any' ? 'any' : [...f.colors].sort().join('')]), [['Sungrass Prairie', 'GW'], ['Dimir Signet', 'BU'], ['Prophetic Prism', 'any']]);
   assert.equal(avail.known, true);
+  // one mana to feed them: {W} can be made (one converter), {W}{U} cannot (one mana, not two)
+  assert.equal(payProblem(card(9, 'Savannah Lions', { manaCost: '{W}' }), s, 0, oracle), null);
+  assert.match(payProblem(card(10, 'Azorius Charm', { manaCost: '{W}{U}' }), s, 0, oracle), /costs \{W\}\{U\} \(2 mana\) and you have 1 untapped mana source/);
+});
+
+test('Prism probe (real Forge): smart pay clicks Prophetic Prism for {W}, the engine asks the Prism\'s own {1}, Auto pays it, and Savannah Lions is cast -- no correction', async () => {
+  const fx = fixture('probe-prism-pay.json');
+  assert.deepEqual(fx.probeMoves.map((m) => m.body.cardId ?? m.body.action), [22, 4, 36, 'passPriority'], 'what the probe did');
+  const h = harness([reply('cast Savannah Lions'), reply('hold')], { oracle: oracleOf(fx.oracle) });
+  const frames = fx.frames;
+  for (let i = 0; i < frames.length; i++) {
+    h.frame(frames[i]);
+    // the seat decides once the stream is quiet (SETTLE_MS 120): where the real stream paused
+    const quiet = i === frames.length - 1 || frames[i + 1].t - frames[i].t >= 120;
+    if (quiet) await h.tick();
+  }
+  const moves = h.moves().map((m) => m.cardId ?? m.action);
+  // the Lions' click, the Prism's click at "Pay Mana Cost: {W}", Auto for the Prism's {1}, pass with the Lions on the stack, pass when the plan is done
+  assert.deepEqual(moves, [22, 4, 'buttonOk', 'passPriority', 'passPriority']);
+  assert.equal(h.users.length, 1, 'no correction');
+  assert.equal(h.core.stats.stepsFailed, 0);
+  // the frame the Prism click answered, and the one it opened
+  assert.match(frames.find((f) => f.seq === 138).body.prompt, /Savannah Lions - Creature 2 \/ 1\n\nPay Mana Cost: \{W\}/);
+  assert.equal(frames.find((f) => f.seq === 138).body.buttons.ok.enabled, false, 'Forge\'s Auto cannot pay {W} here');
+  assert.match(frames.find((f) => f.seq === 144).body.prompt, /^Prophetic Prism \(4\) - \{1\}, \{T\}: Add one mana of any color\.\n\nPay Mana Cost: \{1\}$/);
+  assert.ok(frames.find((f) => f.seq === 154).body.events.some((e) => e.kind === 'cast' && e.cardId === 22), 'the Lions were cast');
+});
+
+test('Prism probe (real Forge, the Prism clicked at priority): its "Select Mana to Produce" is answered with the colour smart pay wanted', async () => {
+  const fx = fixture('probe-prism-pay.json');
+  const h = harness([], { oracle: oracleOf(fx.oracle) });
+  h.frame(fx.frames.find((f) => f.seq === 128));
+  h.core.filterColour = 'W';
+  // the ask as probe-prism-B's frame 143 carried it
+  h.frame({ seq: 900, type: 'ask', body: { askId: 'a1', kind: 'choose_list', timeoutMs: 0, prompt: 'Select Mana to Produce', options: ['white', 'blue', 'black', 'red', 'green'].map((label, id) => ({ id, label, kind: 'color' })), preselected: [], min: 1, max: 1, reveal: false } });
+  await h.tick();
+  assert.deepEqual(h.moves().at(-1), { type: 'answer', askId: 'a1', value: [0] });
+  assert.equal(h.users.length, 0, 'no question to the model');
 });

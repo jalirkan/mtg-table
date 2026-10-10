@@ -54,14 +54,25 @@ const MANA_LINE = /^([^:\n]*\{T\}[^:\n]*):\s*Add\b/i;
  * color", "{W/U}, {T}: Add {W}{W}…")?  A FILTER: it turns mana into mana, so
  * it adds no mana of its own, and Forge's Auto payment never uses it (s2 p20
  * s6: Prophetic Prism, the only white, and Welcoming Vampire's payment had no
- * Auto) -- nor can the seat, whose payment prompt lists no source.
+ * Auto).  A click on one during a payment does use it (the Prism probe, real
+ * Forge: the click opens the Prism's own "Pay Mana Cost: {1}", and its mana
+ * goes to the spell), so one whose cost is generic mana only is kept as a
+ * CONVERTER: no mana of its own, but one of the other mana can come out in its
+ * colours (availableMana's `filters`; smart pay clicks it when a colour is
+ * otherwise missing, plan-core.mjs).
  */
 export const isFilterCost = (cost) => (String(cost ?? '').match(/\{[^}]+\}/g) ?? []).some((x) => !/^\{(T|Q|E)\}$/i.test(x));
 
 /** The tap-for-mana lines of an oracle text: {free, filter} (free: the first whose cost needs no mana, or null). */
 export function manaLines(text) {
   const lines = String(text ?? '').split('\n').map((l) => [l, MANA_LINE.exec(l)]).filter(([, m]) => m);
-  return { free: lines.find(([, m]) => !isFilterCost(m[1]))?.[0] ?? null, filter: lines.some(([, m]) => isFilterCost(m[1])) };
+  // a converter: a filter whose cost is generic mana only ("{1}, {T}"), probed on real Forge
+  const conv = lines.find(([, m]) => isFilterCost(m[1]) && (m[1].match(/\{[^}]+\}/g) ?? []).every((x) => /^\{(\d+|T|Q)\}$/i.test(x)));
+  return {
+    free: lines.find(([, m]) => !isFilterCost(m[1]))?.[0] ?? null,
+    filter: lines.some(([, m]) => isFilterCost(m[1])),
+    converter: conv ? { line: conv[0], cost: conv[1][1].replace(/\s*,?\s*\{[TQ]\}\s*,?\s*/gi, '').trim() } : null,
+  };
 }
 
 /** A tap-for-mana line of an oracle text whose cost needs no mana, or null. */
@@ -69,11 +80,20 @@ const manaLine = (text) => manaLines(text).free;
 
 /**
  * The seat's untapped mana sources and pool.
- * -> {total, sources: [{id, name, colors: Set|'any', amount}], pool: {W..C}, known: boolean}
+ * -> {total, sources: [{id, name, colors: Set|'any', amount}], filters: [{id, name, colors, cost}], pool: {W..C}, known: boolean}
+ * `filters` are converters (manaLines): not in `total`, but each can turn one
+ * of the other mana into its colours.
  */
 export function availableMana(state, me, oracle = null) {
   const { mine } = playersOf(state, me);
   const sources = [];
+  const filters = [];
+  const converter = (c, name, text) => {
+    const cv = manaLines(text).converter;
+    if (!cv) return false;
+    filters.push({ id: c.id, name: name ?? '?', colors: addClause(cv.line).colors, cost: cv.cost });
+    return true;
+  };
   let known = true;
   for (const c of mine?.zones?.battlefield?.cards ?? []) {
     if (c.hidden === true || c.controller !== me || c.tapped) continue;
@@ -82,33 +102,39 @@ export function availableMana(state, me, oracle = null) {
     if (isLand(c)) {
       const basics = Object.entries(BASIC_TYPE).filter(([t]) => new RegExp(`\\b${t}\\b`).test(String(c.types ?? ''))).map(([, col]) => col);
       let add = basics.length ? { colors: new Set(basics), amount: 1 } : (manaLine(text) ? addClause(manaLine(text)) : null);
-      if (!add && manaLines(text).filter) continue;   // a filter land with no free line (Sungrass Prairie): no mana of its own
+      if (!add && manaLines(text).filter) { converter(c, name, text); continue; }   // a filter land with no free line (Sungrass Prairie): no mana of its own
       if (!add) { add = { colors: 'any', amount: 1 }; known = false; }
       sources.push({ id: c.id, name: name ?? 'a land', colors: add.colors, amount: add.amount });
       continue;
     }
     const line = manaLine(text);
-    if (!line) continue;
     if (isCreature(c) && c.sick && !hasKeyword(c, 'HASTE')) continue;
+    if (!line) { converter(c, name, text); continue; }
     const add = addClause(line);
     sources.push({ id: c.id, name: name ?? '?', colors: add.colors, amount: add.amount });
   }
   const pool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0, ...(mine?.manaPool ?? {}) };
   const poolTotal = Object.values(pool).reduce((a, b) => a + (Number(b) || 0), 0);
   const total = sources.reduce((a, s) => a + s.amount, 0) + poolTotal;
-  return { total, sources, pool, poolTotal, known };
+  return { total, sources, filters, pool, poolTotal, known };
 }
 
-/** How many of the sources (plus the pool) can make colour `col`. */
+/**
+ * How many of the sources (plus the pool) can make colour `col`: directly, plus
+ * one per converter of that colour while other mana is left to feed it.
+ */
 function canMake(avail, col) {
-  return avail.sources.filter((s) => s.colors === 'any' || s.colors.has(col)).reduce((a, s) => a + s.amount, 0) + (Number(avail.pool[col]) || 0);
+  const direct = avail.sources.filter((s) => s.colors === 'any' || s.colors.has(col)).reduce((a, s) => a + s.amount, 0) + (Number(avail.pool[col]) || 0);
+  const conv = (avail.filters ?? []).filter((f) => f.colors === 'any' || f.colors.has(col)).length;
+  return direct + Math.min(conv, Math.max(0, avail.total - direct));
 }
 
 /** "U U R" -- what the untapped sources make, for the view. */
 export function manaWords(avail) {
   const parts = avail.sources.map((s) => (s.colors === 'any' ? 'any' : [...s.colors].join('/')) + (s.amount > 1 ? `x${s.amount}` : ''));
   const pool = Object.entries(avail.pool).filter(([, n]) => n > 0).map(([k, n]) => `${k}${n > 1 ? `x${n}` : ''}`);
-  return { sources: parts.join(' '), pool: pool.join(' ') };
+  const filters = (avail.filters ?? []).map((f) => `${f.name} (${f.cost}: turns one of it into ${f.colors === 'any' ? 'any colour' : [...f.colors].join('/')})`);
+  return { sources: parts.join(' '), pool: pool.join(' '), filters: filters.join('; ') };
 }
 
 const UNREADABLE = /convoke|delve|affinity|improvise|emerge|evoke|dash|prowl|surge|spectacle|madness|blitz|bestow|overload|mutate|plot|costs? \{?[\dX]*\}? ?less|less to cast|without paying|rather than pay|you may pay .* rather/i;
@@ -141,7 +167,8 @@ export function payProblem(card, state, me, oracle = null) {
   }
   const avail = availableMana(state, me, oracle);
   const list = avail.sources.map((s) => s.name).join(', ');
-  const have = `${avail.sources.length} untapped mana source${avail.sources.length === 1 ? '' : 's'}${list ? ` (${list})` : ''}${avail.poolTotal ? ` and ${avail.poolTotal} mana in your pool` : ''}`;
+  const conv = (avail.filters ?? []).map((f) => f.name).join(', ');
+  const have = `${avail.sources.length} untapped mana source${avail.sources.length === 1 ? '' : 's'}${list ? ` (${list})` : ''}${avail.poolTotal ? ` and ${avail.poolTotal} mana in your pool` : ''}${conv ? `; ${conv} only turns one of that mana into another colour` : ''}`;
   if (avail.total < cost.mv) return `it costs ${card.manaCost}${delve ? `, ${cost.mv} mana${delveNote},` : ` (${cost.mv} mana)`} and you have ${have}`;
   for (const col of [...COLORS, 'C']) {
     const need = cost.pips[col];

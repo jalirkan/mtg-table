@@ -271,6 +271,7 @@ export class PlanCore extends SeatCore {
         this.blocksAsked = false;
         this.landsPlayed = 0;
         this.pendingTargets = null;
+        this.filterColour = null;
       }
       for (const e of b.events ?? []) if (e.kind === 'land' && e.player === this.me) this.landsPlayed += 1;
       // what the engine last listed as playable from the graveyard: delve keeps those (M61)
@@ -458,6 +459,21 @@ export class PlanCore extends SeatCore {
     const need = parseCost(m[1]);
     const avail = availableMana(this.state, this.me, this.oracle);
     if (!avail.known || avail.poolTotal > 0) return null;
+    // lands this payment already tapped: the state may not show them tapped yet (sk5: Plains clicked twice)
+    const cast = this.lastCast?.card?.id ?? null;
+    if (this.payTapped?.cast !== cast) this.payTapped = { cast, ids: new Set() };
+    // a colour no untapped source makes but a converter does (Prophetic Prism): click the converter.
+    // Forge's Auto never uses one; a click does -- its own "{1}" payment comes next, and its mana goes
+    // to the spell (the Prism probe on real Forge; s2-search-p20-s6's Welcoming Vampire)
+    for (const col of ['W', 'U', 'B', 'R', 'G']) {
+      if ((need.pips[col] ?? 0) === 0) continue;
+      if (avail.sources.some((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id))) continue;
+      const f = (avail.filters ?? []).find((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id));
+      if (!f) continue;
+      this.payTapped.ids.add(f.id);
+      this.filterColour = col;
+      return { id: f.id, name: f.name, why: `for {${col}}: no untapped source makes it, so ${f.name} turns other mana into it (its ${f.cost} is paid next)` };
+    }
     const reserve = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
     const plan = this.plans.at(-1);
     const hand = [...new Namer(this.state).cards.values()].filter((c) => c.zone === 'hand' && c.owner === this.me);
@@ -469,9 +485,6 @@ export class PlanCore extends SeatCore {
       for (const k of Object.keys(reserve)) reserve[k] += p[k] ?? 0;
     }
     if (!Object.values(reserve).some((n) => n > 0)) return null;   // nothing later needs a colour: Auto is fine
-    // lands this payment already tapped: the state may not show them tapped yet (sk5: Plains clicked twice)
-    const cast = this.lastCast?.card?.id ?? null;
-    if (this.payTapped?.cast !== cast) this.payTapped = { cast, ids: new Set() };
     const single = avail.sources.filter((x) => x.colors !== 'any' && x.colors.size === 1 && x.amount === 1 && !this.payTapped.ids.has(x.id));
     const colourOf = (x) => [...x.colors][0];
     const count = (col) => avail.sources.filter((x) => (x.colors === 'any' || x.colors.has(col)) && !this.payTapped.ids.has(x.id)).length;
@@ -551,6 +564,12 @@ export class PlanCore extends SeatCore {
         }
         return this.atQuestion(d, plan, step);
       default:
+        if (this.filterColour && /^Select Mana to Produce/i.test(String(d.prompt ?? ''))) {
+          // a converter's colour (the Prism probe's activation at priority asks it): the one smart pay clicked it for
+          const word = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' }[this.filterColour];
+          const o = d.options.find((x) => normName(String(x.label ?? '')) === word);
+          if (o) return { moves: movesFor(d, [o.n]), why: `mana: ${word}, the colour the payment needed`, auto: true };
+        }
         if (d.auto) {
           // the one legal target was taken for the plan: its "-> target" is used up (cf4: Animate Dead)
           if (/one legal target/.test(d.auto.reason ?? '')) this.pendingTargets = null;
