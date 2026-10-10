@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-10T07:48:48-04:00
+- time: 2026-10-10T07:49:02-04:00
 - runner: 10896b8, up since 2026-10-07T19:33:01-04:00
-- running: J121 commands 4/4, 35391/36300 games, 556.3/h, ETA 2026-10-10T09:26:50-04:00, 7 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 1.52; memory 4.8/30.5 GB, swap 2347 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 1.19; memory 4.7/30.5 GB, swap 2347 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J120 done at 2026-10-10T01:04:25-04:00: big.generations_done 4 · big.drafts 1600 · big.engine_error_rate 0.003 · ex.treated 772 · ex.holds 10 · ex.weak 3 · ex.undecided 16 · ex.too_few 41
+- last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
 
 ## Messages
+
+- FOLLOW-UP READY [J121@2026-10-10T07:49:01-04:00] (the runner, for the cloud session): J121 is done; write and post the template morning-read. It decides: whether ForgeCoach's deck assistant changes its land count (16 vs 17) or its splash, and how its builds compare with the lab's and Forge's; 18 lands goes to Justin, never changed by this job. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J120@2026-10-10T01:04:25-04:00] (the runner, for the cloud session): J120 is done; write and post the template synergy-fic-cards. It decides: whether any of Counter Blitz's counters cards goes into the Synergy Cube (Justin's call: the lab informs it, his notes decide; nothing here edits cubes/synergy-cube-180.md). Ledger: LEDGER.md. Delete this line once posted.
 

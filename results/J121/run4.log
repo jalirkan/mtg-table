@@ -1,0 +1,37 @@
+==== J121 run4 started 2026-10-10T07:48:48-04:00 in unit lab-J121-run4, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+# J121: which deck choices win more (paired by pool, clustered by draft)
+
+Score = the variant's game score minus the reference's on the same pool against the same opponent deck (+0.02 = 2 points).
+
+| contrast | pilot | cube | pools | est | 95% | 99% | verdict |
+|---|---|---|---|---|---|---|---|
+| lands16 (l16 − l17) | Forge Default | both | 2955 | -0.0152 | [-0.0329, 0.0025] | [-0.0384, 0.008] | not shown |
+| lands16 | Forge Default | evybaby | 1451 | -0.0213 | [-0.0456, 0.0029] | [-0.0532, 0.0106] | description |
+| lands16 | Forge Default | vintage | 1504 | -0.0091 | [-0.0348, 0.0166] | [-0.0428, 0.0247] | description |
+| lands16 | search-v2 | both | 441 | -0.0262 | [-0.0729, 0.0206] | [-0.0876, 0.0353] | guard: sign only |
+| lands18 (l18 − l17) | Forge Default | both | 3185 | -0.0175 | [-0.0339, -0.0011] | [-0.039, 0.004] | not shown |
+| lands18 | Forge Default | evybaby | 1590 | -0.015 | [-0.038, 0.008] | [-0.0452, 0.0152] | description |
+| lands18 | Forge Default | vintage | 1595 | -0.02 | [-0.0434, 0.0034] | [-0.0508, 0.0108] | description |
+| lands18 | search-v2 | both | 474 | -0.0115 | [-0.057, 0.0341] | [-0.0714, 0.0485] | guard: sign only |
+| nosplash (nospl − fc) | Forge Default | both | 518 | -0.0251 | [-0.0688, 0.0186] | [-0.0826, 0.0324] | not shown |
+| nosplash | Forge Default | evybaby | 409 | -0.0366 | [-0.0867, 0.0135] | [-0.1025, 0.0293] | description |
+| nosplash | Forge Default | vintage | 109 | 0.0142 | [-0.0751, 0.1035] | [-0.1032, 0.1315] | description |
+| nosplash | search-v2 | both | 83 | 0.113 | [-0.0025, 0.2285] | [-0.0388, 0.2648] | guard: sign only |
+| lab (lab − fc) | Forge Default | both | 3188 | -0.0536 | [-0.0709, -0.0363] | [-0.0763, -0.0308] | fc better |
+| lab | Forge Default | evybaby | 1592 | -0.0991 | [-0.123, -0.0752] | [-0.1305, -0.0676] | description |
+| lab | Forge Default | vintage | 1596 | -0.0081 | [-0.0328, 0.0165] | [-0.0405, 0.0243] | description |
+| forge (forge − fc) | Forge Default | both | 3188 | -0.035 | [-0.0521, -0.0179] | [-0.0575, -0.0125] | fc better |
+| forge | Forge Default | evybaby | 1592 | -0.0397 | [-0.064, -0.0154] | [-0.0717, -0.0077] | description |
+| forge | Forge Default | vintage | 1596 | -0.0303 | [-0.0545, -0.0061] | [-0.0621, 0.0015] | description |
+| fc16_vs_17 (fc − l17) | Forge Default | both | 760 | -0.0391 | [-0.0754, -0.0029] | [-0.0868, 0.0085] | description |
+| fc16_vs_17 | Forge Default | evybaby | 53 | -0.0566 | [-0.1766, 0.0634] | [-0.2143, 0.1011] | description |
+| fc16_vs_17 | Forge Default | vintage | 707 | -0.0375 | [-0.0755, 0.0006] | [-0.0875, 0.0126] | description |
+| fc16_vs_17 | search-v2 | both | 124 | -0.0515 | [-0.1387, 0.0358] | [-0.1661, 0.0632] | guard: sign only |
+| l16_at17 (l16 − l17) | Forge Default | both | 2153 | -0.009 | [-0.0303, 0.0123] | [-0.0369, 0.019] | description |
+| l16_at17 | Forge Default | evybaby | 1361 | -0.0251 | [-0.0503, 0.0001] | [-0.0583, 0.0081] | description |
+| l16_at17 | Forge Default | vintage | 792 | 0.0119 | [-0.0243, 0.0482] | [-0.0357, 0.0596] | description |
+| l16_at17 | search-v2 | both | 313 | -0.006 | [-0.0644, 0.0525] | [-0.0828, 0.0709] | guard: sign only |
+| l18_at17 (l18 − l17) | Forge Default | both | 2380 | -0.0208 | [-0.0408, -0.0008] | [-0.0471, 0.0055] | description |
+| l18_at17 | Forge Default | evybaby | 1497 | -0.0191 | [-0.0429, 0.0048] | [-0.0504, 0.0123] | description |
+| l18_at17 | Forge Default | vintage | 883 | -0.0229 | [-0.0565, 0.0107] | [-0.0671, 0.0213] | description |
+| l18_at17 | search-v2 | both | 346 | 0.0069 | [-0.0506, 0.0644] | [-0.0687, 0.0825] | guard: sign only |
