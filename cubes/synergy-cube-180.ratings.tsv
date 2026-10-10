@@ -1,4 +1,4 @@
-# cube lab ratings for: The Synergy Cube — version 1 (180 cards, two-player)
+# cube lab ratings for: The Synergy Cube — version 2 (180 cards, two-player)
 # Seeded by `tools/cubelab.sh ratings init` from Forge's draft ranks (CardRanker.getRawScore of the
 # best-ranked printing; source cube = CubeCobra's list, set = that set's rank file). A card Forge has no
 # rank for starts at 40. Edit the rating column; the other two say where it started.
@@ -33,9 +33,7 @@ Brainstorm	85	85	cube:C15
 Ponder	98.1	98.1	cube:MAR
 Thought Scour	80.4	80.4	cube:2X2
 Delver of Secrets	19.7	19.7	set:ISD
-Ledger Shredder	72.4	72.4	cube:SPG
 Snapcaster Mage	98.3	98.3	cube:UMA
-Man-o'-War	86.9	86.9	cube:DMR
 Mulldrifter	71.5	71.5	cube:2X2
 Phantasmal Image	68.2	68.2	cube:SPG
 Thieving Skydiver	52.8	52.8	cube:ZNR
@@ -75,6 +73,7 @@ Midnight Reaper	47.4	47.4	set:RVR
 Archon of Cruelty	98.5	98.5	cube:MH2
 Marionette Master	44.8	44.8	set:KLD
 Ophiomancer	91.2	91.2	cube:MH3
+Reanimate	99	99	cube:ARC
 Monastery Swiftspear	87.2	87.2	cube:PIO
 Soul-Scar Mage	9.4	9.4	set:AKH
 Young Pyromancer	42.4	42.4	set:2X2
@@ -157,7 +156,6 @@ Shadowspear	83	83	cube:THB
 Mind Stone	60.4	60.4	cube:C14
 Prophetic Prism	90.5	90.5	cube:WOE
 Candy Trail	57.9	57.9	cube:WOE
-Skullclamp	99.1	99.1	cube:DST
 Cranial Plating	54.9	54.9	cube:5DN
 Solemn Simulacrum	54.7	54.7	cube:MPS_KLD
 Lotus Petal	98.7	98.7	cube:MPS_KLD
