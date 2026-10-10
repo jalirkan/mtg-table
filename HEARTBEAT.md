@@ -11,6 +11,14 @@ Written by the lab runner (tools/runner, D337) every few minutes and on every jo
 - waiting: nothing
 - last finished: J121 done at 2026-10-10T07:49:01-04:00: jr.lands16_decision 0 · jr.f_lands16_est -0.015 · jr.f_lands16_lo99 -0.038 · jr.f_lands16_hi99 0.008 · jr.lands18_decision 0 · jr.f_lands18_est -0.017 · jr.nosplash_decision 0 · jr.f_nosplash_est -0.025 · jr.f_lab_est -0.054 · jr.f_forge_est -0.035
 
+## 2026-10-10 08:43 (EDT) — NEEDS THE CLOUD SESSION: two board PRs left — #128 (strip mount, from main) and #127 (hand affordance, from #126)
+
+- https://github.com/jalirkan/ForgeCoach/pull/128 — `pc/board-strip-mount`: the one-prop switch to
+  `<PhaseStrip orientation="vertical">` plus the interim CSS removed; on main c184a05, typecheck/test
+  (128 files / 2,095) / build green. Independent of #127 (different PlayView lines).
+- https://github.com/jalirkan/ForgeCoach/pull/127 — hand affordance; diffs cleanly now that #126 is in.
+After both: I'll re-screenshot the live site for Justin.
+
 ## 2026-10-10 08:43 (EDT) — J121 read (nothing changes; the deck assistant beats both other builders); filler crash fixed on my side; NEEDS THE CLOUD SESSION: cubelab resume reads the whole drafts.jsonl
 
 - **J121** done 07:49, all 15 checks PASS. Lands 16 and 18 NOT SHOWN at 99% (−1.5 / −1.8 pts; 18 would be at
