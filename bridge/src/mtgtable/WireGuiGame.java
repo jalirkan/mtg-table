@@ -450,6 +450,16 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
 
     private final Map<String, AsyncMenu> asyncMenus = new ConcurrentHashMap<>();
 
+    /**
+     * M69 (D427): the ability ids a click on one of the seat's own permanents
+     * must not activate on its own ({@link Playables#confirmFirst}), as of the
+     * last snapshot at the seat's priority -- written on the game thread,
+     * read on the click's thread (the EDT), integers only.
+     */
+    private volatile Set<Integer> confirmFirstIds = Set.of();
+    /** M69: lone abilities a click raised a one-option menu for instead of activating. */
+    private final AtomicInteger loneMenus = new AtomicInteger();
+
     // ---- the snapshot index an `act` resolves against (built on the game thread)
     private volatile Map<Integer, CardView> cardIndex = Map.of();
     private volatile Map<Integer, PlayerView> playerIndex = Map.of();
@@ -896,6 +906,10 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         return answerRefusals.get();
     }
 
+    /** M69 (D427): clicks on a lone ability that raised a menu instead of activating it. */
+    public int loneMenus() {
+        return loneMenus.get();
+    }
 
     public int endStepYieldsEnded() {
         return endStepYieldsEnded.get();
@@ -1355,6 +1369,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         asyncAsks.clear();
         asyncMenus.clear();
         keyToHandle.clear();
+        confirmFirstIds = Set.of();            // M69: a new game has no permanents yet
         handleToKey.clear();
         handleSeq.set(0);
         skips.clear();
@@ -2569,6 +2584,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             if (h == null || !Playables.atPriority(game, h.getPlayer())) {
                 return null;
             }
+            confirmFirstIds = Playables.confirmFirst(h.getPlayer());   // M69 (D427)
             return Playables.activatable(h.getPlayer());
         } catch (final RuntimeException e) {
             errors.incrementAndGet();
@@ -3018,8 +3034,26 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // Forge's desktop client answers this one locally when there is nothing
         // to choose (CMatchUI.java:1016-1035); so do we, or every land drop
         // becomes a one-option menu.
+        //
+        // M69 (D427): except a click on the seat's own permanent whose lone
+        // ability is not an undoable mana ability.  A click is a look until the
+        // player says otherwise: Carrion Feeder ("Sacrifice a creature: put a
+        // +1/+1 counter") was activated by a click meant to see its options,
+        // and its sacrifice prompt then committed on the next click.  So that
+        // click gets the same asynchronous menu two abilities would, with one
+        // option and "never mind" (null); a land's tap for mana, which Forge
+        // can undo, and a spell from the hand keep the shortcut.  Decided from
+        // ids the last priority snapshot wrote (confirmFirstIds), so this
+        // thread reads no view.
         if (abilities.size() == 1) {
             final SpellAbilityView only = abilities.get(0);
+            final boolean lookFirst = triggerEvent == null && !ThreadUtil.isGameThread()
+                    && confirmFirstIds.contains(Integer.valueOf(only.getId()));
+            if (lookFirst) {
+                loneMenus.incrementAndGet();
+                asyncAbilityMenu(host, abilities);
+                return null;                   // the caller null-checks (PCH:226); nothing is activated
+            }
             if (triggerEvent == null || !only.promptIfOnlyPossibleAbility()) {
                 return triggerEvent == null || only.canPlay() ? only : null;
             }

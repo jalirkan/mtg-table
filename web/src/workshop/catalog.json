@@ -343,6 +343,57 @@
       ]
     },
     {
+      "file": "cost-probe.dck",
+      "name": "Cost probe",
+      "cards": [
+        {
+          "name": "Swamp",
+          "count": 8,
+          "section": "main"
+        },
+        {
+          "name": "Forest",
+          "count": 7,
+          "section": "main"
+        },
+        {
+          "name": "Carrion Feeder",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "Wild Mongrel",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "Sakura-Tribe Elder",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "Woodwraith Strangler",
+          "count": 4,
+          "section": "main"
+        },
+        {
+          "name": "Greed",
+          "count": 3,
+          "section": "main"
+        },
+        {
+          "name": "Bone Splinters",
+          "count": 3,
+          "section": "main"
+        },
+        {
+          "name": "Mind Stone",
+          "count": 3,
+          "section": "main"
+        }
+      ]
+    },
+    {
       "file": "fra-rw-aggro.dck",
       "name": "Reality Fracture red-white legends aggro",
       "cards": [
@@ -1282,6 +1333,14 @@
       "token": false,
       "setCode": "MSH"
     },
+    "Bone Splinters": {
+      "types": "Sorcery",
+      "manaCost": "{B}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
     "Boomerang, Blade Flinger": {
       "types": "Legendary Creature - Human Villain",
       "manaCost": "{1}{B}",
@@ -1316,6 +1375,14 @@
       "manaCost": "{U}",
       "power": null,
       "toughness": null,
+      "token": false,
+      "setCode": null
+    },
+    "Carrion Feeder": {
+      "types": "Creature - Zombie",
+      "manaCost": "{B}",
+      "power": "1",
+      "toughness": "1",
       "token": false,
       "setCode": null
     },
@@ -1546,6 +1613,14 @@
       "manaCost": "{2}{R}",
       "power": "2",
       "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
+    "Greed": {
+      "types": "Enchantment",
+      "manaCost": "{3}{B}",
+      "power": null,
+      "toughness": null,
       "token": false,
       "setCode": null
     },
@@ -1789,6 +1864,14 @@
       "token": false,
       "setCode": "SPG"
     },
+    "Mind Stone": {
+      "types": "Artifact",
+      "manaCost": "{2}",
+      "power": null,
+      "toughness": null,
+      "token": false,
+      "setCode": null
+    },
     "Moonstone, Harsh Mistress": {
       "types": "Legendary Creature - Human Doctor Villain",
       "manaCost": "{3}{B}",
@@ -2020,6 +2103,14 @@
       "toughness": null,
       "token": false,
       "setCode": "MSH"
+    },
+    "Sakura-Tribe Elder": {
+      "types": "Creature - Snake Shaman",
+      "manaCost": "{1}{G}",
+      "power": "1",
+      "toughness": "1",
+      "token": false,
+      "setCode": null
     },
     "Saproling Token": {
       "types": "Creature - Saproling",
@@ -2401,6 +2492,14 @@
         "DEATHTOUCH"
       ]
     },
+    "Wild Mongrel": {
+      "types": "Creature - Dog",
+      "manaCost": "{1}{G}",
+      "power": "2",
+      "toughness": "2",
+      "token": false,
+      "setCode": null
+    },
     "Wolverine, Fierce Fighter": {
       "types": "Legendary Creature - Mutant Berserker Hero",
       "manaCost": "{2}{R}{G}",
@@ -2417,6 +2516,14 @@
       "manaCost": "{2}{RG}",
       "power": "3",
       "toughness": "3",
+      "token": false,
+      "setCode": null
+    },
+    "Woodwraith Strangler": {
+      "types": "Creature - Plant Zombie",
+      "manaCost": "{2}{B}{G}",
+      "power": "2",
+      "toughness": "2",
       "token": false,
       "setCode": null
     },
@@ -2491,19 +2598,26 @@
   "engine": [
     "Austere Command",
     "Avengers: Under Siege",
+    "Bone Splinters",
     "Careful Study",
+    "Carrion Feeder",
     "Giant Growth",
     "Gray Ogre",
+    "Greed",
     "Hidden Lair",
     "Into the Void",
     "Lightning Bolt",
+    "Mind Stone",
     "Prized Unicorn",
     "Rancor",
     "Razorgrass Screen",
+    "Sakura-Tribe Elder",
     "Tiger Shark, Abyssal Hunter",
     "Titania, Proud Pummeler",
     "Whiplash, Vengeful Engineer",
-    "Woodwork Prodigy"
+    "Wild Mongrel",
+    "Woodwork Prodigy",
+    "Woodwraith Strangler"
   ],
   "threeD": {
     "A.I.M. Bot": "figure",
@@ -2531,10 +2645,12 @@
     "Black Panther, Most Dangerous": "figure",
     "Black Panther, Vanguard": "figure",
     "Bold Biochemist": "figure",
+    "Bone Splinters": null,
     "Boomerang, Blade Flinger": "figure",
     "Borough Backup": "cues",
     "Brawn, Amadeus Cho": "figure",
     "Careful Study": null,
+    "Carrion Feeder": "figure",
     "Castle Doom": null,
     "Chandra's Emberling": null,
     "Clue Token": null,
@@ -2566,6 +2682,7 @@
     "Giant-Sized Flying Ant": "figure",
     "Graft Surgeon": null,
     "Gray Ogre": "figure",
+    "Greed": null,
     "HULK SMASH!": null,
     "HYDRA Troopers": "figure",
     "Helicarrier Strike": "cues",
@@ -2596,6 +2713,7 @@
     "Madame Hydra, Reanimated": "figure",
     "Manamorphose": null,
     "Medic's Kitesail": null,
+    "Mind Stone": null,
     "Moonstone, Harsh Mistress": "figure",
     "Mountain": null,
     "Nakia, Wakandan Operative": "figure",
@@ -2625,6 +2743,7 @@
     "Rootbound Crag": null,
     "S.H.I.E.L.D. Helicarrier": "figure",
     "S.H.I.E.L.D. Spy Kit": "cues",
+    "Sakura-Tribe Elder": "figure",
     "Samut, Hazoret's Champion": null,
     "Saproling Token": "figure",
     "Shatterwing Pegasus": null,
@@ -2671,8 +2790,10 @@
     "Whiplash, Vengeful Engineer": "figure",
     "Whirlwind, Killer Cyclone": "figure",
     "White Widow, Yelena Belova": "figure",
+    "Wild Mongrel": "figure",
     "Wolverine, Fierce Fighter": "figure",
     "Woodwork Prodigy": "figure",
+    "Woodwraith Strangler": "figure",
     "Wrath of the Bloodmane": null,
     "Yellowjacket, Heartless Marauder": "figure",
     "Yoshimaru, Beloved Companion": null,

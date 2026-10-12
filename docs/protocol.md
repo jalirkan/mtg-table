@@ -30,6 +30,22 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-12 — a click is never a commitment
+
+Found in the owner's own game (2026-10-10): a click on Carrion Feeder, meant to
+see its options, activated its only ability ("Sacrifice a creature: put a +1/+1
+counter on Carrion Feeder") at once, and the sacrifice prompt that followed
+committed on the next click. Forge's desktop answers a lone ability itself
+(`CMatchUI.getAbilityToPlay`), and the bridge copied that shortcut. Decision
+**D427** (M69). Held by `mtgtable.PlayableSelfTest` (gate step 12l: which
+abilities ask first, on real cards), `tools/llm-seat/test/lone-ability.test.mjs`
+on real asks (`fixtures/cost-probe/m69-frames.json`), and verified live by
+`tools/ws-cost-probe.mjs` (`docs/evidence/cost-probe.md`).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M69 | §5.2, §5.3 | **A click on one of the seat's own permanents never activates an ability by itself**, unless that ability is a mana ability Forge can undo (a land's tap). Every other ability — a lone one included — comes as the asynchronous `ability_menu` (M14) first, **one option** when there is one ability, and answering it `null` ("never mind") changes nothing. Which abilities ask first is the engine's own list for the click (`Card.getAllPossibleAbilities(player, true)` on each permanent the seat controls) minus those `SpellAbility.isUndoable()` says Forge can undo, taken at the seat's priority (`Playables.confirmFirst`). A card in the hand keeps Forge's shortcut: a click casts it, and the cast's own prompts carry a Cancel. **No new field**: the menu is the M14 shape it always was, with one option. **What a cost prompt does, measured on the real engine** (`docs/evidence/cost-probe.md`): no cost that gives something up is chosen for the player, even with one legal option — "sacrifice a creature" and "discard a card" are a card selection (`input`, OK disabled until a pick, Cancel enabled), "sacrifice this" and "pay N life" are a yes/no `input`, "exile a card from your graveyard" is an optional `choose_entities`; Cancel (or No, or `null`) at any of them undoes the whole activation, mana already paid included; the pick, the Yes or the answer that completes the cost is the commitment. | Owner's game, 2026-10-10; `study/rules-integrity-plan.md` Part 2b; D427 |
+
 ### 2026-10-12 — the bridge is the rules gate for every answer
 
 The rules audit (decision **D425**, `docs/rules-audit.md`) found six more ask
@@ -1978,6 +1994,11 @@ recorded plus `manipulate_list` and `options` unreachable is the eleven.)
   It still blocks when Forge asks from a game thread (a `PlayEffect`, a
   `DiscoverEffect`), which is the path the one-ability shortcut and the
   `host == null` skip were written for.
+
+  **Since amendment M69 the menu also comes for ONE ability** when the click is
+  on one of the seat's own permanents and the ability is not a mana ability
+  Forge can undo: a click is a look until the player chooses (D427). A land's
+  tap for mana and a card cast from the hand keep the shortcut.
 
 - **`order` is not top/bottom.** Forge's `OrderResult` is
   `(List<T> ordered, boolean rememberDecision)` **[jar]**, and `ordered()` is the

@@ -171,6 +171,45 @@ public final class Playables {
     }
 
     /**
+     * Amendment M69 (D427): the abilities on {@code me}'s own permanents that a
+     * click must NOT activate on its own -- every ability
+     * {@code getAllPossibleAbilities(me, true)} offers on a permanent {@code me}
+     * controls, except a mana ability Forge can undo
+     * ({@code SpellAbility.isUndoable()}: Forge's own undo predicate -- every
+     * cost part undoable, i.e. a tap of a land; a Treasure's sacrifice or
+     * Cadaverous Bloom's exile from hand is not).  {@code WireGuiGame}
+     * answers a click on a permanent whose only ability is in this set with a
+     * one-option {@code ability_menu} instead of activating it: Forge's
+     * desktop activates a lone ability at once, and an exploratory click on
+     * Carrion Feeder sacrificed it (2026-10-10).  Ids, so the click thread
+     * (the EDT, where no view may be walked) reads nothing but integers.
+     */
+    public static java.util.Set<Integer> confirmFirst(final Player me) {
+        Snap.assertGameThread("Playables.confirmFirst");
+        final java.util.Set<Integer> out = new java.util.HashSet<>();
+        if (me == null) {
+            return out;
+        }
+        for (final Card c : new ArrayList<>(me.getCardsIn(ZoneType.Battlefield))) {
+            if (c.getController() != me) {
+                continue;
+            }
+            try {
+                for (final SpellAbility sa : c.getAllPossibleAbilities(me, true)) {
+                    if (sa != null && !(sa.isManaAbility() && sa.isUndoable())) {
+                        out.add(Integer.valueOf(sa.getId()));
+                    }
+                }
+            } catch (final RuntimeException e) {
+                // A broken script must not take the snapshot down; its card
+                // keeps Forge's own click (the shortcut), as before M69.
+                System.err.println("CONFIRM-FIRST SKIPPED: card " + c.getId() + ": " + e.getClass().getSimpleName());
+            }
+        }
+        return out;
+    }
+
+    /**
      * Can every part of {@code sa} that must target find a candidate now?
      * {@code canPlay()} does not ask (measured: Ancestral Blade's equip with no
      * creature in play was listed, and the click went nowhere), so a click
