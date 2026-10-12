@@ -435,6 +435,7 @@ AI_DECK="$(cfg_match aiDeck || true)"   # empty = a mirror of DECK
 AI_PROFILE="$(cfg_match aiProfile || echo Default)"
 GAMES_DEFAULT="$(cfg_match games || echo 3)"   # M6: "three games back to back, one command typed"
 
+PLAY_ARGS="$*"                   # as typed, for a "run this again" line
 while [ $# -gt 0 ]; do
   case "$1" in
     --port)      WS_PORT="$2"; PORT_EXPLICIT=1; shift 2 ;;
@@ -669,6 +670,13 @@ if [ "$ENGINE_ONLY" = "1" ] && [ "$COACH" = "1" ] && [ "$MATCH" = "1" ] && [ "$P
       const h = await get(base + "/health"); let j = null;
       try { j = JSON.parse(h && h.t); } catch {}
       if (!j || j.helper !== 1 || j.match !== 1 || !j.engine) process.exit(10);        // not a launcher-carrying helper: carry on
+      // This run asks for the draft room (--draft-room, --funnel, --tunnel) and the play.sh
+      // already running has none: never answer "nothing to start" -- the room would silently
+      // not exist and the page would keep saying so.
+      if (process.argv[3] === "1" && j.draftRoom !== 1) {
+        console.error("play.sh: a play.sh without the friend room is already running. Stop it and run this again:\n  pkill -f scripts/play.sh; sleep 5; " + process.argv[4]);
+        process.exit(11);
+      }
       if (j.engine !== "idle") {
         const e = await get("http://127.0.0.1:" + process.argv[2] + "/health");
         if (e && e.s === 200) { console.log("ForgeCoach engine already running on ws://127.0.0.1:" + process.argv[2] + "/ws (play.sh is running; Ctrl-C it to stop) — nothing to start"); process.exit(0); }
@@ -680,7 +688,7 @@ if [ "$ENGINE_ONLY" = "1" ] && [ "$COACH" = "1" ] && [ "$MATCH" = "1" ] && [ "$P
       if (r.status === 200 && b.ok) { console.log("Engine ready on ws://127.0.0.1:" + process.argv[2] + "/ws — open https://jalirkan.github.io/ForgeCoach/ and click Play (the earlier play.sh keeps running; Ctrl-C it to stop)"); process.exit(0); }
       console.error("play.sh: the sleeping engine did not wake: " + (b.message || "HTTP " + r.status)); process.exit(11);
     })();
-  ' "$COACH_PORT" "$WS_PORT" && exit 0 || { rc=$?; [ "$rc" = "11" ] && exit 1; }
+  ' "$COACH_PORT" "$WS_PORT" "$DRAFT_ROOM" "./scripts/play.sh $PLAY_ARGS" && exit 0 || { rc=$?; [ "$rc" = "11" ] && exit 1; }
 fi
 
 # --------------------------------------------------------------------------
