@@ -519,6 +519,13 @@ if [ "$FUNNEL" = "1" ]; then
   ENGINE_ONLY=1
   DRAFT_ROOM=1
 fi
+# No web/node_modules: this repo's own board cannot start, and ForgeCoach (the
+# usual client) needs only the engine, so a plain run becomes --engine-only here,
+# before anything depends on the mode, instead of stopping after the build.
+if [ "$ENGINE_ONLY" = "0" ] && [ -z "$FAKE_ENGINE" ] && [ ! -d web/node_modules ]; then
+  printf 'play.sh: web/node_modules is not installed, so this runs engine-only, for ForgeCoach (https://jalirkan.github.io/ForgeCoach/). For this repo'"'"'s own board: npm --prefix web install\n' >&2
+  ENGINE_ONLY=1
+fi
 if [ -n "$ROOM_PUBLIC_URL" ]; then
   ROOM_PUBLIC_URL="${ROOM_PUBLIC_URL%/}"
   [ "$DRAFT_ROOM" = "1" ] || { printf 'play.sh: --room-public-url is the draft room'"'"'s: add --draft-room (or use --tunnel <url>)\n' >&2; exit 1; }
