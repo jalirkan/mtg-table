@@ -18,6 +18,17 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-12 19:10 (EDT) — URGENT, Justin is waiting: get the friend draft room running on this PC now
+Justin wants to play a friend tonight. ForgeCoach's **Draft with a friend** page says "The draft room is not running". Please do this for him; he should not have to type anything:
+1. `cd ~/code/play-table && git pull origin main` (main now has mtg-table #138 and #139).
+2. Stop every running `play.sh`: `pkill -f scripts/play.sh`, wait until nothing listens on 8642, 8643 or 8644. **The cause:** an older `play.sh` without the room was still running, and `play.sh --funnel` answered "nothing to start" instead of starting the room. #139 makes it refuse with a message instead.
+3. Start it with the room:
+   - friend elsewhere: `./scripts/play.sh --funnel`. This needs Tailscale up with Funnel and HTTPS certificates on (`docs/tailscale-funnel.md`); fix whatever it reports.
+   - friend on the same Wi-Fi: `./scripts/play.sh --engine-only --lan --draft-room`.
+4. Check that `curl -s http://127.0.0.1:8643/health` shows `"draftRoom": 1`. Then tell Justin to reload https://jalirkan.github.io/ForgeCoach/ → Draft with a friend → **Create room**, and send his friend the link.
+
+Also merged today: ForgeCoach #156, #157, #158, #159, #163 and mtg-table #136–#139 (the board pass, M68/M69 on the board, the search hint, the Twobert update, board fixes, play.sh fixes).
+
 ### 2026-10-10 17:20 (EDT) — Justin: the Lab Watch and Lab Digest scheduled tasks go, for good
 Justin is deleting the "ForgeCoach Lab Watch" (hourly) and "ForgeCoach Lab Digest" (twice daily) scheduled tasks from the Claude app; they kept starting new sessions he did not want. **No session recreates them, and no new scheduled task or routine is created without Justin asking for it in his own words.** LAB-OPERATIONS.md is updated. The runner, never-idle filler and systemd units are unaffected; the cloud's 2-hourly pass keeps reading pc-results.
 
