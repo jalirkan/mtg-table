@@ -41,6 +41,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { EMPTY_ART_INDEX, type ArtIndex } from '../art.ts';
 import {
+  askReasonOf,
   assignDamageRuleOf,
   isFaceDownHidden,
   isHidden,
@@ -548,6 +549,13 @@ function AskForm({
 
   return (
     <>
+      {ask.kind !== 'assign_damage' && askReasonOf(ask) !== null ? (
+        // M68 (D426): the bridge refused the last answer to this question and
+        // said why; assign_damage shows its own (M67) in its note.
+        <p className="ask-modal__refused" role="alert">
+          refused: {askReasonOf(ask)}
+        </p>
+      ) : null}
       <div className="ask-modal__body">{body(ask, draft, setDraft, live, art)}</div>
 
       <div className="ask-modal__actions">
@@ -1163,9 +1171,16 @@ function body(
           amounts={draft.shape === 'amounts' ? draft.amounts : {}}
           live={live}
           extra={(t) =>
-            (t as { max?: number }).max === undefined
-              ? ''
-              : `max ${String((t as { max?: number }).max)}`
+            [
+              typeof (t as { min?: number }).min === 'number' && (t as { min?: number }).min! > 0
+                ? `min ${String((t as { min?: number }).min)}`
+                : '',
+              typeof (t as { max?: number | null }).max === 'number'
+                ? `max ${String((t as { max?: number }).max)}`
+                : '',
+            ]
+              .filter((bit) => bit !== '')
+              .join(' · ')
           }
           onChange={(amounts) => {
             setDraft({ shape: 'amounts', amounts });

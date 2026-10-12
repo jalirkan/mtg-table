@@ -1946,6 +1946,12 @@ button:disabled {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+/* M68 (D426): the bridge refused the last answer to this question, and why. */
+.ask-modal__refused {
+  margin: 0 0 8px;
+  color: var(--warn);
+  font-size: 12px;
+}
 
 .ask-modal__options {
   margin: 0;

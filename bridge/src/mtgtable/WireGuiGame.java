@@ -170,6 +170,8 @@ import java.util.function.Function;
 import forge.LobbyPlayer;
 import forge.card.MagicColor;
 import forge.deck.CardPool;
+import forge.deck.DeckFormat;
+import forge.game.GameType;
 import forge.game.GameEntityView;
 import forge.game.GameView;
 import forge.game.card.CardView;
@@ -205,6 +207,7 @@ import forge.localinstance.properties.ForgePreferences;
 import forge.localinstance.properties.ForgePreferences.FPref;
 import forge.localinstance.skin.FSkinProp;
 import forge.model.FModel;
+import org.apache.commons.lang3.Range;
 import forge.player.AutoYieldStore;
 import forge.player.PlayerControllerHuman;
 import forge.player.PlayerZoneUpdate;
@@ -337,6 +340,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     private final AtomicInteger damageRefusals = new AtomicInteger();
     /** M67 (D424): attackers whose assignment the seat skipped (null with maySkip) since the last one applied. */
     private final Set<Integer> damageSkips = new java.util.HashSet<>();
+    /** M68 (D426): answers to the other ten kinds refused by AnswerRule (each re-asked with its reason). */
+    private final AtomicInteger answerRefusals = new AtomicInteger();
+    /**
+     * M68 (D426): the bounds of the {@code getInteger} this game thread is inside,
+     * so its "Other..." {@code text} ask can carry and check them
+     * ({@link #getInteger(String, int, int, int)}); null outside one.
+     */
+    private final ThreadLocal<int[]> integerBounds = new ThreadLocal<>();
     /** M64: yields to "an opponent acts or the end step" that {@link EndStepWatcher} ended. */
     private final AtomicInteger endStepYieldsEnded = new AtomicInteger();
     /** M6 acts the seat actually used, for the run summary and the evidence table. */
@@ -428,6 +439,16 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      * unpark.
      */
     private final Map<String, List<Object>> asyncAsks = new ConcurrentHashMap<>();
+
+    /**
+     * M68 (D426): what it takes to ask an asynchronous menu AGAIN, with a
+     * reason, without walking a view: the host card's id, the options array as
+     * the first asking wrote it, and the input generation it belongs to.  Keyed
+     * like {@link #asyncAsks}, and cleared with it.
+     */
+    private record AsyncMenu(int hostId, String optionsJson, long gen) { }
+
+    private final Map<String, AsyncMenu> asyncMenus = new ConcurrentHashMap<>();
 
     // ---- the snapshot index an `act` resolves against (built on the game thread)
     private volatile Map<Integer, CardView> cardIndex = Map.of();
@@ -869,6 +890,12 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
     public int damageRefusals() {
         return damageRefusals.get();
     }
+
+    /** M68 (D426): answers to the other ten kinds the rule refused. */
+    public int answerRefusals() {
+        return answerRefusals.get();
+    }
+
 
     public int endStepYieldsEnded() {
         return endStepYieldsEnded.get();
@@ -1326,6 +1353,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         abilityIndex.clear();
         pendingOpts.clear();
         asyncAsks.clear();
+        asyncMenus.clear();
         keyToHandle.clear();
         handleToKey.clear();
         handleSeq.set(0);
@@ -2802,7 +2830,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
     }
 
-    /** A malformed answer is a null answer; it never throws on the game thread. */
+    /**
+     * The decoded {@code answer.value}: {@code null} for no answer (a timeout, a
+     * disconnect, a literal {@code null}), and {@link AnswerRule#MALFORMED} for
+     * one that is not JSON -- which, since M68 (D426), is refused and asked again
+     * like any other illegal answer instead of silently playing Forge's default.
+     * Never throws on the game thread.
+     */
     private static Object decode(final String valueJson) {
         if (valueJson == null) {
             return null;
@@ -2810,9 +2844,62 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         try {
             return Json.parse(valueJson);
         } catch (final RuntimeException e) {
-            System.err.println("ANSWER UNPARSEABLE, treated as null: " + valueJson);
-            return null;
+            System.err.println("ANSWER UNPARSEABLE (refused, D426): " + valueJson);
+            return AnswerRule.MALFORMED;
         }
+    }
+
+    /**
+     * <b>M68 (D426): the checked ask.</b>  {@link #ask} once, then
+     * {@code rule} over the answer; an answer the rule refuses is <b>never
+     * returned</b> -- the same question goes out again under a new
+     * {@code askId} with {@code reason}, the rule's sentence, as many times as
+     * it takes (D424's loop, for every kind).  {@code null} (no answer, or the
+     * seat's own) is returned as {@code null}, and each caller keeps its
+     * documented section 5.4 default for it.  When the game is over, closed or
+     * conceded mid-ask, a refused answer is {@code null} too: nobody is left to
+     * ask, and the default is legal where the answer was not.
+     *
+     * @param rule null when the decoded answer is legal, else why not
+     */
+    private Object askChecked(final String kind, final List<Object> opts, final BodyWriter extra,
+                              final Function<Object, String> rule) {
+        String reason = null;
+        while (true) {
+            final String why = reason;
+            final Object v = ask(kind, opts, o -> {
+                extra.write(o);
+                o.n("reason", why);            // M68: null on the first asking
+            });
+            if (v == null) {
+                return null;
+            }
+            String refused;
+            try {
+                refused = rule.apply(v);
+            } catch (final RuntimeException e) {
+                // A rule that throws must not take the game thread down; an
+                // answer it could not judge is not one it can vouch for.
+                errors.incrementAndGet();
+                System.err.println("ANSWER RULE FAILED " + kind + ": " + e);
+                refused = AnswerRule.unreadable("an answer this question accepts");
+            }
+            if (refused == null) {
+                return v;
+            }
+            answerRefusals.incrementAndGet();
+            System.err.println("ANSWER REFUSED (D426) " + kind + ": " + clip(v) + " -- " + refused);
+            if (closed || overEmitted || pendingConcede) {
+                return null;                   // nobody left to ask: the default, never the illegal answer
+            }
+            reason = refused;
+        }
+    }
+
+    /** An answer for a log line: short, and never more than the client sent. */
+    private static String clip(final Object v) {
+        String s = v instanceof Object[] ? java.util.Arrays.deepToString((Object[]) v) : String.valueOf(v);
+        return s.length() > 120 ? s.substring(0, 120) + "..." : s;
     }
 
     // ---- option writing --------------------------------------------------
@@ -2910,13 +2997,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         return Snap.abilityLabel(sav, viewer);
     }
 
-    private void options(final JsonOut o, final String key, final List<Object> opts,
-                         final int from, final int to, final Function<Object, String> display) {
+    private JsonOut options(final JsonOut o, final String key, final List<Object> opts,
+                            final int from, final int to, final Function<Object, String> display) {
         o.key(key).arr();
         for (int i = from; i < to; i++) {
             option(o, i, opts.get(i), display);
         }
-        o.end();
+        return o.end();
     }
 
     // ---- the thirteen blocking members -----------------------------------
@@ -2973,11 +3060,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         for (final SpellAbilityView sav : abilities) {
             abilityIndex.put(Integer.valueOf(sav.getId()), sav);
         }
-        final Object v = ask("ability_menu", opts, o -> {
+        final Object v = askChecked("ability_menu", opts, o -> {
             o.n("cardId", host.getId());
             options(o, "options", opts, 0, opts.size(), null);
-        });
-        final Integer i = asInt(v);
+        }, a -> AnswerRule.index(a, abilities.size()));   // M68
+        final Integer i = AnswerRule.intOf(v);
         return i == null || i < 0 || i >= abilities.size() ? null : abilities.get(i);
     }
 
@@ -3095,14 +3182,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // player has already moved past, and the board is modal while an ask
             // is outstanding, so there is never more than one to lose.
             asyncAsks.clear();
+            asyncMenus.clear();
             asyncAsks.put(askId, opts);
             askKinds.add("ability_menu");
-            final JsonOut o = new JsonOut().obj();
-            o.n("askId", askId).n("kind", "ability_menu")
-             .n("timeoutMs", transport.askTimeoutMs("ability_menu"));
-            o.n("cardId", hostId);
-            options(o, "options", opts, 0, opts.size(), null);
-            final String body = o.end().done();
+            // The options array once, so a refusal can ask again without a walk (M68).
+            final String wrapped = options(new JsonOut().obj(), "options", opts, 0, opts.size(), null).end().done();
+            final String optionsJson = wrapped.substring("{\"options\":".length(), wrapped.length() - 1);
+            final String body = asyncMenuBody(askId, hostId, optionsJson, null);
             if (inputGen.get() != gen) {
                 // The walk finished, but the input moved while it ran: the menu
                 // would open over a board the player has already left, and
@@ -3112,6 +3198,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                         + ", not emitted (D22)");
                 return;
             }
+            asyncMenus.put(askId, new AsyncMenu(hostId, optionsJson, gen));
             emit("ask", body);
         } catch (final RuntimeException e) {
             errors.incrementAndGet();
@@ -3131,13 +3218,34 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
      */
     private void applyAsyncAbilityMenu(final String askId, final List<Object> opts,
                                        final String valueJson) {
-        final Integer i = asInt(decode(valueJson));
-        if (i == null || i.intValue() < 0 || i.intValue() >= opts.size()) {
+        final AsyncMenu menu = asyncMenus.remove(askId);
+        final Object v = decode(valueJson);
+        if (v == null) {
             // Section 5.4: every ask is answerable with null.  Here that means
             // "never mind" -- Forge's input is still the one that asked, so the
             // player just keeps playing.
             return;
         }
+        final String refused = AnswerRule.index(v, opts.size());
+        if (refused != null) {
+            // M68 (D426): an id the menu did not offer is refused, and the same
+            // menu goes out again with the reason -- built from what the first
+            // asking wrote, so no view is read here (D22).  Only while the input
+            // that asked is still the one Forge is on.
+            answerRefusals.incrementAndGet();
+            System.err.println("ANSWER REFUSED (D426) ability_menu: " + clip(v) + " -- " + refused);
+            if (menu != null && !closed && !overEmitted && inputGen.get() == menu.gen()) {
+                final String again = "a" + askSeq.incrementAndGet();
+                asyncAsks.clear();
+                asyncMenus.clear();
+                asyncAsks.put(again, opts);
+                asyncMenus.put(again, menu);
+                askKinds.add("ability_menu");
+                emit("ask", asyncMenuBody(again, menu.hostId(), menu.optionsJson(), refused));
+            }
+            return;
+        }
+        final Integer i = AnswerRule.intOf(v);
         final Object chosen = opts.get(i.intValue());
         if (!(chosen instanceof SpellAbilityView)) {
             notice("warn", "Unknown ability", askId + " option " + i);
@@ -3159,6 +3267,18 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         });
     }
 
+    /** An asynchronous menu's body (protocol section 5.2), M68's {@code reason} last. */
+    private String asyncMenuBody(final String askId, final int hostId, final String optionsJson,
+                                 final String reason) {
+        final JsonOut o = new JsonOut().obj();
+        o.n("askId", askId).n("kind", "ability_menu")
+         .n("timeoutMs", transport.askTimeoutMs("ability_menu"));
+        o.n("cardId", hostId);
+        o.key("options").raw(optionsJson);
+        o.n("reason", reason);
+        return o.end().done();
+    }
+
     @Override
     public boolean confirm(final CardView c, final String question, final boolean defaultIsYes,
                            final List<String> options) {
@@ -3168,7 +3288,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         }
         final String yes = options != null && options.size() > 0 ? options.get(0) : "Yes";
         final String no = options != null && options.size() > 1 ? options.get(1) : "No";
-        final Object v = ask("confirm", List.of(), o -> {
+        final Object v = askChecked("confirm", List.of(), o -> {
             o.n("prompt", question == null ? "" : question);
             o.n("title", "Confirm");
             o.n("yesLabel", yes).n("noLabel", no).n("defaultYes", defaultIsYes);
@@ -3180,7 +3300,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             } else {
                 Snap.card(o, c, viewer);
             }
-        });
+        }, AnswerRule::bool);                 // M68
         final Boolean b = asBool(v);
         return b == null ? defaultIsYes : b.booleanValue();
     }
@@ -3192,14 +3312,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         if (!ThreadUtil.isGameThread()) {
             return defaultYes;
         }
-        final Object v = ask("confirm", List.of(), o -> {
+        final Object v = askChecked("confirm", List.of(), o -> {
             o.n("prompt", message == null ? "" : message);
             o.n("title", title == null ? "" : title);
             o.n("yesLabel", yesButtonText == null ? "Yes" : yesButtonText);
             o.n("noLabel", noButtonText == null ? "No" : noButtonText);
             o.n("defaultYes", defaultYes);
             o.nNull("card");
-        });
+        }, AnswerRule::bool);                 // M68
         final Boolean b = asBool(v);
         return b == null ? defaultYes : b.booleanValue();
     }
@@ -3212,14 +3332,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return defaultOption;
         }
         final List<Object> opts = options == null ? List.of() : new ArrayList<>(options);
-        final Object v = ask("options", opts, o -> {
+        final Object v = askChecked("options", opts, o -> {
             o.n("prompt", message == null ? "" : message);
             o.n("title", title == null ? "" : title);
             options(o, "options", opts, 0, opts.size(), null);
             o.n("defaultIndex", defaultOption);
             o.nNull("card");                   // FSkinProp is a desktop icon enum: ignored
-        });
-        final Integer i = asInt(v);
+        }, a -> AnswerRule.index(a, opts.size()));   // M68
+        final Integer i = AnswerRule.intOf(v);
         return i == null || i < 0 || i >= opts.size() ? defaultOption : i.intValue();
     }
 
@@ -3231,7 +3351,14 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         if (!ThreadUtil.isGameThread()) {
             return null;                       // null is "cancel"; AbstractGuiGame:854 handles it
         }
-        final Object v = ask("text", List.of(), o -> {
+        // M68 (D426): the bounds of the getInteger this is the "Other..." of, so
+        // the wire says them and the answer is checked against them here, with
+        // a reason -- Forge's own loop (AbstractGuiGame.getInteger) would ask
+        // the same question again with neither.
+        final int[] bounds = isNumeric ? integerBounds.get() : null;
+        final Integer lo = bounds == null || bounds[0] == Integer.MIN_VALUE ? null : Integer.valueOf(bounds[0]);
+        final Integer hi = bounds == null || bounds[1] == Integer.MAX_VALUE ? null : Integer.valueOf(bounds[1]);
+        final Object v = askChecked("text", List.of(), o -> {
             o.n("prompt", message == null ? "" : message);
             o.n("title", title == null ? "" : title);
             // `initial` is a string in protocol section 5.2 and in protocol.ts,
@@ -3247,7 +3374,8 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             }
             o.end();
             o.n("numeric", isNumeric);
-        });
+            o.nInt("min", lo).nInt("max", hi);   // M68: null when not numeric or not known
+        }, a -> AnswerRule.text(a, isNumeric, lo, hi));
         return v instanceof String ? (String) v : null;
     }
 
@@ -3262,7 +3390,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         final List<Object> opts = new ArrayList<>(source);
         @SuppressWarnings("unchecked")
         final Function<Object, String> disp = display == null ? null : x -> display.apply((T) x);
-        final Object v = ask("choose_list", opts, o -> {
+        final Object v = askChecked("choose_list", opts, o -> {
             o.n("prompt", message == null ? "" : message);
             options(o, "options", opts, 0, opts.size(), disp);
             o.key("preselected").arr();
@@ -3280,8 +3408,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             // A negative min means "show these, select nothing"; without the flag
             // a reveal renders as an impossible "pick -1 cards".
             o.n("reveal", min < 0);
-        });
-        final int[] picks = asIntArray(v);
+        }, a -> AnswerRule.picks(a, opts.size(), min, max));   // M68: ListChooser's rule
+        if (min < 0) {
+            return new ArrayList<>();          // a reveal: acknowledged, nothing chosen
+        }
+        final int[] picks = AnswerRule.intsOf(v);
         return picks == null ? choicesDefault(min, source) : Ask.pick(source, picks);
     }
 
@@ -3314,7 +3445,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             opts.addAll(sourceChoices);
         }
         final int total = opts.size();
-        final Object v = ask("order", opts, o -> {
+        final Object v = askChecked("order", opts, o -> {
             o.n("prompt", title == null ? "" : title);
             o.n("destLabel", top == null ? "" : top);
             options(o, "dest", opts, 0, destCount, null);
@@ -3324,12 +3455,12 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             o.n("min", remainingObjectsMin).n("max", remainingObjectsMax);
             o.nInt("referenceCardId", referenceCard == null ? null : Integer.valueOf(referenceCard.getId()));
             o.n("sideboardMode", sideboardingMode).n("showRemember", rememberOption);
-        });
+        }, a -> AnswerRule.order(a, total, remainingObjectsMin, remainingObjectsMax));   // M68: DualListBox's rule
         if (!(v instanceof Map)) {
             return orderDefault(remainingObjectsMin, remainingObjectsMax, sourceChoices, destChoices);
         }
         final Map<?, ?> m = (Map<?, ?>) v;
-        final int[] picks = asIntArray(m.get("ordered"));
+        final int[] picks = AnswerRule.intsOf(m.get("ordered"));
         if (picks == null) {
             return orderDefault(remainingObjectsMin, remainingObjectsMax, sourceChoices, destChoices);
         }
@@ -3368,17 +3499,21 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return null;                       // guarded at PCH:616-618
         }
         final List<Object> opts = new ArrayList<>(optionList);
-        final Object v = ask("choose_entities", opts, o -> {
+        final int min = isOptional ? 0 : 1;
+        final Object v = askChecked("choose_entities", opts, o -> {
             o.n("prompt", title == null ? "" : title);
             options(o, "options", opts, 0, opts.size(), null);
-            o.n("min", isOptional ? 0 : 1).n("max", 1);
+            o.n("min", min).n("max", 1);
             delayedReveal(o, delayedReveal);
-        });
-        final int[] picks = asIntArray(v);
-        if (picks == null || picks.length == 0 || picks[0] < 0 || picks[0] >= optionList.size()) {
-            return null;
+        }, a -> AnswerRule.picks(a, opts.size(), min, 1));   // M68: one / oneOrNone
+        final int[] picks = AnswerRule.intsOf(v);
+        if (picks == null) {
+            // No answer.  A mandatory choice cannot be skipped (Forge's `one`
+            // has no Cancel): the first option, as choose_list's default; an
+            // optional one is "none".
+            return isOptional ? null : optionList.get(0);
         }
-        return optionList.get(picks[0]);
+        return picks.length == 0 ? null : optionList.get(picks[0]);
     }
 
     @Override
@@ -3397,13 +3532,13 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             return new ArrayList<>();
         }
         final List<Object> opts = new ArrayList<>(optionList);
-        final Object v = ask("choose_entities", opts, o -> {
+        final Object v = askChecked("choose_entities", opts, o -> {
             o.n("prompt", title == null ? "" : title);
             options(o, "options", opts, 0, opts.size(), null);
             o.n("min", min).n("max", max);
             delayedReveal(o, delayedReveal);
-        });
-        final int[] picks = asIntArray(v);
+        }, a -> AnswerRule.picks(a, opts.size(), min, max));   // M68: DualListBox(size-max, size-min)
+        final int[] picks = AnswerRule.intsOf(v);
         return picks == null ? fallback : new ArrayList<GameEntityView>(Ask.pick(optionList, picks));
     }
 
@@ -3525,7 +3660,21 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 }
                 o.end();
             });
-            final Map<Integer, Integer> m = asIntMap(v);
+            final Map<Integer, Integer> m = AnswerRule.intMapOf(v);
+            if (m == null && v != null) {
+                // M68 (D426): an answer that is not a map of amounts is refused
+                // like an illegal one -- before M68 it was a null, i.e. Skip or
+                // Auto, a choice the player never made.
+                damageRefusals.incrementAndGet();
+                final String unreadable = AnswerRule.unreadable("an object of target id to damage, like {\"1\": 2}");
+                System.err.println("ASSIGN_DAMAGE REFUSED (D426): " + clip(v) + " -- " + unreadable);
+                if (closed || overEmitted || pendingConcede) {
+                    damageSkips.clear();
+                    return Ask.damageAssignment(blockers, rule.auto());
+                }
+                reason = unreadable;
+                continue;
+            }
             if (m == null) {
                 // null (a timeout, a disconnect, a malformed answer, or the
                 // seat's own null).  Forge's dialog has exactly two ways to close
@@ -3564,8 +3713,26 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         if (!ThreadUtil.isGameThread() || targets == null) {
             return null;                       // PCH:329,358 guard with if (vResult != null)
         }
+        if (amount <= 0) {
+            return new HashMap<>();            // CMatchUI.assignGenericAmount: nothing to assign, no dialog
+        }
         final List<Object> opts = new ArrayList<>(targets.keySet());
-        final Object v = ask("assign_amount", opts, o -> {
+        // M68 (D426): VAssignGenericAmount's rule -- exactly `amount`, each
+        // target at most its map value (else the total), at least 1 each with
+        // atLeastOne.  Forge's engine checks none of it (chooseTargetsFor adds
+        // whatever comes back), so an answer the rule refuses is never applied.
+        final Integer[] caps = new Integer[opts.size()];
+        final String[] amountLabels = new String[opts.size()];
+        for (int i = 0; i < opts.size(); i++) {
+            final Object t = opts.get(i);
+            caps[i] = targets.get(t);
+            amountLabels[i] = t instanceof MagicColor.Color ? ((MagicColor.Color) t).getName()
+                    : t instanceof CardView ? Snap.label((CardView) t, viewer)
+                    : t instanceof PlayerView ? (((PlayerView) t).getName() == null ? "" : ((PlayerView) t).getName())
+                    : "";
+        }
+        final AnswerRule.Amounts rule = AnswerRule.Amounts.of(amount, atLeastOne, caps, amountLabels);
+        final Object v = askChecked("assign_amount", opts, o -> {
             o.nInt("sourceCardId", effectSource == null ? null : Integer.valueOf(effectSource.getId()));
             o.n("total", amount).n("atLeastOne", atLeastOne);
             o.n("label", amountLabel == null ? "" : amountLabel);
@@ -3598,14 +3765,74 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                     // label; the type name is enough to render "something else".
                     o.n("label", t == null ? "" : t.getClass().getSimpleName()).n("kind", "entity");
                 }
-                final Integer cap = targets.get(t);
-                o.nInt("max", cap);
+                // M68: the dialog's own bounds -- `max` its cap (the map value,
+                // else the total; before M68 the raw map value, null when Forge
+                // had none) and `min` 1 with atLeastOne, else 0.
+                o.n("min", rule.minOf(i)).n("max", rule.maxOf(i));
                 o.end();
             }
             o.end();
-        });
-        final Map<Integer, Integer> m = asIntMap(v);
-        return m == null ? null : Ask.indexedAmounts(opts, m);
+        }, a -> rule.refusal(AnswerRule.intMapOf(a)));
+        final Map<Integer, Integer> m = AnswerRule.intMapOf(v);
+        // No answer: the dialog's start (1 each with atLeastOne) and the rest in
+        // order -- never Forge's null, which chooseTargetsFor unboxes (an NPE on
+        // the game thread for a divided spell).  Every target is present, zeros
+        // included, for the same reason.
+        final Map<Integer, Integer> full = rule.fill();
+        if (m != null) {
+            for (final Integer k : full.keySet()) {
+                full.put(k, m.getOrDefault(k, Integer.valueOf(0)));
+            }
+        }
+        return Ask.indexedAmounts(opts, full);
+    }
+
+    /**
+     * M68 (D426): {@code PlayerControllerHuman.sideboard}'s two bounds, read the
+     * way it reads them: {@code min(|main|, format main minimum)} and the format's
+     * sideboard maximum (none: the whole pool), from the match's game type --
+     * or {@code {null, null}} when Forge does not enforce deck legality
+     * ({@code FPref.ENFORCE_DECK_LEGALITY} off), where it takes any size.
+     */
+    private Integer[] sideboardBounds(final int mainSize, final int sideSize) {
+        try {
+            if (!FModel.getPreferences().getPrefBoolean(ForgePreferences.FPref.ENFORCE_DECK_LEGALITY)) {
+                return new Integer[] { null, null };
+            }
+            final GameType ruled = hosted == null || hosted.getMatch() == null
+                    || hosted.getMatch().getRules() == null ? null : hosted.getMatch().getRules().getGameType();
+            final GameType type = ruled == null ? GameType.Constructed : ruled;
+            final DeckFormat format = type.getDeckFormat();
+            final Range<Integer> main = format.getMainRange();
+            final Range<Integer> side = format.getSideRange();
+            final int mainMin = Math.min(mainSize, main == null ? 0 : main.getMinimum().intValue());
+            final int sideMax = side == null ? mainSize + sideSize : side.getMaximum().intValue();
+            return new Integer[] { Integer.valueOf(mainMin), Integer.valueOf(sideMax) };
+        } catch (final RuntimeException e) {
+            System.err.println("SIDEBOARD BOUNDS UNKNOWN (only membership is checked): " + e);
+            return new Integer[] { null, null };
+        }
+    }
+
+    /**
+     * M68 (D426): Forge's own {@code getInteger}, run with its bounds noted for
+     * the game thread, so the {@code showInputDialog} its "Other..." branch
+     * raises can put them on the wire and check the answer against them
+     * ({@link #showInputDialog}).  The logic is the superclass's, unchanged.
+     */
+    @Override
+    public Integer getInteger(final String message, final int min, final int max, final int cutoff) {
+        final int[] outer = integerBounds.get();
+        integerBounds.set(new int[] { min, max });
+        try {
+            return super.getInteger(message, min, max, cutoff);
+        } finally {
+            if (outer == null) {
+                integerBounds.remove();
+            } else {
+                integerBounds.set(outer);
+            }
+        }
     }
 
     @Override
@@ -3632,7 +3859,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                 }
             }
         }
-        final Object v = ask("manipulate_list", opts, o -> {
+        final Object v = askChecked("manipulate_list", opts, o -> {
             o.n("prompt", title == null ? "" : title);
             options(o, "cards", opts, 0, opts.size(), null);
             o.key("manipulable").arr();
@@ -3641,11 +3868,11 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
             }
             o.end();
             o.n("toTop", toTop).n("toBottom", toBottom).n("toAnywhere", toAnywhere);
-        });
+        }, a -> AnswerRule.reorder(a, opts.size(), canMove));   // M68: only the offered cards move
         // A wrong length, a duplicate or an out-of-range index is the input
         // list unchanged -- PCH:986 indexes the result, so this one is never
         // null and never short (Ask.reorder, driven by AskSelfTest).
-        return Ask.reorder(all, asIntArray(v));
+        return Ask.reorder(all, AnswerRule.intsOf(v));
     }
 
     @Override
@@ -3659,15 +3886,23 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         final List<Object> opts = new ArrayList<>(mainList);
         final int mainCount = opts.size();
         opts.addAll(sideList);
-        final Object v = ask("sideboard", opts, o -> {
+        // M68 (D426): DualListBox only moves cards between the two lists, so
+        // the new main deck is distinct indices into main ++ side; and Forge's
+        // own loop (PlayerControllerHuman.sideboard, under ENFORCE_DECK_LEGALITY)
+        // wants at least min(|main|, the format's minimum) in the main deck and
+        // at most the format's sideboard maximum left over -- the same bounds,
+        // read the same way, on the wire and checked here with a reason.
+        final Integer[] bounds = sideboardBounds(mainList.size(), sideList.size());
+        final Object v = askChecked("sideboard", opts, o -> {
             o.n("prompt", message == null ? "" : message);
             options(o, "main", opts, 0, mainCount, null);
             options(o, "side", opts, mainCount, opts.size(), null);
-        });
+            o.nInt("mainMin", bounds[0]).nInt("sideMax", bounds[1]);   // M68
+        }, a -> AnswerRule.sideboard(a, mainCount, opts.size() - mainCount, bounds[0], bounds[1]));
         // The new main deck, as indices into `main ++ side` (section 5.1); null
         // is "no sideboarding", which PCH:276 tolerates.
         final List<PaperCard> out = new ArrayList<>();
-        for (final Object o : Ask.sideboardMain(opts, asIntArray(v))) {
+        for (final Object o : Ask.sideboardMain(opts, AnswerRule.intsOf(v))) {
             if (o instanceof PaperCard) {
                 out.add((PaperCard) o);
             }
@@ -4860,6 +5095,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         // A menu nobody is parked on cannot be cancelled by the reply pool, and
         // the client that could have answered it is gone.
         asyncAsks.clear();
+        asyncMenus.clear();
         if (table != null) {
             // M59 (D403): a table pauses for an absent player -- nothing answers
             // for them.  Their asks stay parked and are re-sent on reconnect.

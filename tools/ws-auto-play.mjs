@@ -1340,7 +1340,9 @@ function answerFor(kind, body) {
       // `null` is, and it is §5.4's own default ("that is 'cancel'").
       if (body.numeric !== true) return '';
       if (!args.probe) return null;
-      return bumpPrompt(`text|${String(body.prompt)}`) === 1 ? '0' : null;
+      // M68: the body carries getInteger's bounds; the probe's real string is
+      // the smallest legal one when it says, "0" otherwise.
+      return bumpPrompt(`text|${String(body.prompt)}`) === 1 ? String(intOf(body.min) ?? 0) : null;
     }
     case 'choose_list': {
       const n = len(body.options);
@@ -1410,10 +1412,26 @@ function answerFor(kind, body) {
       return { [String(n > 1 ? 1 : 0)]: total };
     }
     case 'assign_amount': {
-      const n = len(body.targets);
+      // M68 (D426): AutoTransport's branch -- the dialog's start (each target's
+      // `min`, 1 with atLeastOne) and the rest in order up to each `max`. The
+      // bridge refuses "all on target 0" whenever that breaks a cap or a floor.
+      const ts = Array.isArray(body.targets) ? body.targets : [];
       const total = intOf(body.total);
-      if (n === 0 || total === null) return null;
-      return { 0: total };
+      if (ts.length === 0 || total === null) return null;
+      let left = total;
+      const got = ts.map((t) => {
+        const lo = intOf(t?.min) ?? (body.atLeastOne === true ? 1 : 0);
+        const g = Math.min(Math.max(0, left), lo);
+        left -= g;
+        return g;
+      });
+      ts.forEach((t, i) => {
+        const cap = intOf(t?.max) ?? total;
+        const add = Math.min(left, Math.max(0, cap - got[i]));
+        got[i] += add;
+        left -= add;
+      });
+      return Object.fromEntries(got.map((g, i) => [String(i), g]));
     }
     default:
       return null;

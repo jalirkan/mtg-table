@@ -117,6 +117,13 @@ const AMENDED_KEYS = [
   // the other ten kinds, so A's ask frames carry neither and B's carry both.
   { type: 'ask', key: 'defenderAllowed', amendment: 'M67' },
   { type: 'ask', key: 'reason', amendment: 'M67' },
+  // M68 (D426): `reason` on every kind (the row above already drops it from a
+  // newer recording's asks when the older one has none), and the sideboard's
+  // deck-size bounds.  `text.min` / `text.max` share their names with
+  // choose_list's own `min` / `max`, so they are not droppable by key here; no
+  // compared recording carries a numeric text ask.
+  { type: 'ask', key: 'mainMin', amendment: 'M68' },
+  { type: 'ask', key: 'sideMax', amendment: 'M68' },
 ];
 /** The object holding a dotted `key` under `body`, and the last segment; null when absent. */
 function holder(body, key) {

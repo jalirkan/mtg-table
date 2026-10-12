@@ -162,6 +162,8 @@
 import { readFileSync, statSync } from 'node:fs';
 import * as zlib from 'node:zlib';
 
+import { answerRefusal } from './adversary/answers.mjs';
+
 const PROTOCOL_VERSION = 1;
 
 /**
@@ -938,6 +940,8 @@ const OVER_SHAPE = {
 const OPTION_KEYS = new Set([
   'id', 'label', 'kind', 'cardId', 'playerId', 'abilityId', 'card',
   'canPlay', 'isSpell', 'lethal', 'defender', 'max',
+  // M68: an assign_amount target's floor (1 with atLeastOne, else 0).
+  'min',
 ]);
 const OPTION_KINDS = new Set([
   'card', 'player', 'ability', 'color', 'number', 'text', 'other', 'entity',
@@ -964,34 +968,56 @@ const delayedRevealShape = (v) =>
  * Forge in a recording, so for those this table and
  * `fixtures/synthetic/sample-handwritten.jsonl` are the whole of the contract.
  */
+/**
+ * M68 (D426): why an answer to an ask a bridge since M68 wrote is one the
+ * bridge must refuse, judged from the ask's own wire fields -- the same rules
+ * as `bridge/src/mtgtable/AnswerRule.java` (Forge's dialogs: ListChooser,
+ * DualListBox, VAssignGenericAmount, getInteger's loop), or null when it is
+ * legal.  One JS copy of them, shared with the adversarial seat (D428).
+ */
+const m68Refusal = answerRefusal;
+
 const ASK_COMMON = { askId: str, kind: str, timeoutMs: num };
+/** M68 (D426): `reason` on one kind's asks -- per file and per kind, all or none. */
+function m68Reason(kind) {
+  return perFile(nullable(str), `M68 (${kind}.reason)`);
+}
 const ASK_SHAPES = {
   // cardId is NOT nullable: with no host card there is nothing to attach a menu
   // to, so the bridge skips the ask entirely rather than emitting a null.
-  ability_menu: { cardId: num, options: arrayOf(askOption) },
+  // Amendment M68 (D426): every kind but assign_damage (M67's) gained
+  // `reason` -- why the bridge refused the last answer, null on a first
+  // asking.  Per file, all or none, like M67's.
+  ability_menu: { cardId: num, options: arrayOf(askOption), reason: m68Reason('ability_menu') },
   confirm: {
     prompt: str, title: str, yesLabel: str, noLabel: str,
-    defaultYes: bool, card: nullable(plainObject),
+    defaultYes: bool, card: nullable(plainObject), reason: m68Reason('confirm'),
   },
   options: {
     prompt: str, title: str, options: arrayOf(askOption),
-    defaultIndex: num, card: nullable(plainObject),
+    defaultIndex: num, card: nullable(plainObject), reason: m68Reason('options'),
   },
   // `initial` is a string, "" when Forge has none -- like every other string
-  // field on the wire.  A null here was a shape neither end declared.
-  text: { prompt: str, title: str, initial: str, suggestions: arrayOf(str), numeric: bool },
+  // field on the wire.  A null here was a shape neither end declared.  M68:
+  // `min` / `max`, getInteger's bounds for a numeric ask (null when the bridge
+  // does not know them, and on a free-text ask).
+  text: {
+    prompt: str, title: str, initial: str, suggestions: arrayOf(str), numeric: bool,
+    min: perFile(nullable(num), 'M68 (text.min)'), max: perFile(nullable(num), 'M68 (text.max)'),
+    reason: m68Reason('text'),
+  },
   choose_list: {
     prompt: str, options: arrayOf(askOption), preselected: arrayOf(num),
-    min: num, max: num, reveal: bool,
+    min: num, max: num, reveal: bool, reason: m68Reason('choose_list'),
   },
   order: {
     prompt: str, destLabel: str, source: arrayOf(askOption), dest: arrayOf(askOption),
     min: num, max: num, referenceCardId: nullable(num),
-    sideboardMode: bool, showRemember: bool,
+    sideboardMode: bool, showRemember: bool, reason: m68Reason('order'),
   },
   choose_entities: {
     prompt: str, options: arrayOf(askOption), min: num, max: num,
-    delayedReveal: nullable(delayedRevealShape),
+    delayedReveal: nullable(delayedRevealShape), reason: m68Reason('choose_entities'),
   },
   // attackerId IS nullable, declared at both ends: Forge's signature allows a
   // null attacker and the emitter cannot prove it never happens, so the type
@@ -1005,15 +1031,23 @@ const ASK_SHAPES = {
     reason: perFile(nullable(str), 'M67 (assign_damage.reason)'),
     targets: arrayOf(askOption),
   },
+  // M68: each target's `min` (1 with atLeastOne) and `max` (the dialog's cap,
+  // never null since M68) ride on the target; `reason` on the body.
   assign_amount: {
     sourceCardId: nullable(num), total: num, atLeastOne: bool, label: str,
-    targets: arrayOf(askOption),
+    targets: arrayOf(askOption), reason: m68Reason('assign_amount'),
   },
   manipulate_list: {
     prompt: str, cards: arrayOf(askOption), manipulable: arrayOf(num),
-    toTop: bool, toBottom: bool, toAnywhere: bool,
+    toTop: bool, toBottom: bool, toAnywhere: bool, reason: m68Reason('manipulate_list'),
   },
-  sideboard: { prompt: str, main: arrayOf(askOption), side: arrayOf(askOption) },
+  // M68: Forge's two deck-size bounds when it enforces them, else null.
+  sideboard: {
+    prompt: str, main: arrayOf(askOption), side: arrayOf(askOption),
+    mainMin: perFile(nullable(num), 'M68 (sideboard.mainMin)'),
+    sideMax: perFile(nullable(num), 'M68 (sideboard.sideMax)'),
+    reason: m68Reason('sideboard'),
+  },
 };
 
 /**
@@ -1519,7 +1553,7 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     maxTurn: 0,
     hellos: 0, matchChecked: 0, yourProfileChecked: 0, aiPolicyChecked: 0,
     tableMatchChecked: 0, tables: 0,
-    damageRefusalsSeen: 0,
+    damageRefusalsSeen: 0, answerRefusalsSeen: 0,
   };
   const seq = { s2c: 0, c2s: 0, ai: 0 };
   let sawState = false;
@@ -1630,6 +1664,12 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
    * applied an illegal map.
    */
   let illegalDamage = null;
+  /**
+   * M68 (D426): the same for every other kind -- an answer to an ask carrying
+   * M68's `reason` key that the kind's rule forbids (`m68Refusal`): the next
+   * ask must be the same kind again with a reason, or the bridge applied it.
+   */
+  let illegalAnswer = null;
   /** The most recent state's card->zone/owner map, for the ask-body check. */
   let lastZoneOf = new Map();
 
@@ -1888,6 +1928,15 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
         }
         illegalDamage = null;
       }
+      if (illegalAnswer !== null) {
+        if (body.kind === illegalAnswer.kind && str(body.reason) && body.reason !== '') stats.answerRefusalsSeen++;
+        else {
+          note(lineNo, `the ${illegalAnswer.kind} answer on line ${illegalAnswer.line} (${illegalAnswer.why}) was not ` +
+            `refused: the next ask is ${JSON.stringify(body.kind)}${body.kind === illegalAnswer.kind ? ' with no reason' : ''}, ` +
+            `not ${illegalAnswer.kind} again with a reason -- the bridge applied an illegal answer (M68, D426)`);
+        }
+        illegalAnswer = null;
+      }
 
       // --- the drift half, per kind: exact key set + declared nullability ---
       const shape = ASK_SHAPES[body.kind];
@@ -1908,7 +1957,9 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
       } else {
         openAsks.set(body.askId, { kind: body.kind, count: optionCount(body), line: lineNo,
           dmg: body.kind === 'assign_damage' && typeof body.defenderAllowed === 'boolean'
-            ? { defenderAllowed: body.defenderAllowed, total: body.total, attackerId: body.attackerId } : null });
+            ? { defenderAllowed: body.defenderAllowed, total: body.total, attackerId: body.attackerId } : null,
+          // M68: an ask with the `reason` key is one the bridge checks the answer to.
+          checked: body.kind !== 'assign_damage' && 'reason' in body ? structuredClone(body) : null });
       }
 
       // Every card inside an ask body goes through the one gated function, so
@@ -2078,6 +2129,10 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     }
 
     if (f.type === 'over') {
+      // M67 / M68: a game that ends while an illegal answer waits for its
+      // re-ask (a concede, the engine closing) asks nothing more; the bridge
+      // returns the default then, never the illegal answer.
+      illegalAnswer = null;
       stats.overs++;
       for (const complaint of checkShape(body, OVER_SHAPE, 'over')) note(lineNo, complaint);
       return;
@@ -2130,6 +2185,21 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
         ? `${toDefender} to the defender with defenderAllowed false`
         : sum !== open.dmg.total ? `${sum} assigned of ${open.dmg.total}` : null;
       if (why !== null) illegalDamage = { line: lineNo, why, attackerId: open.dmg.attackerId };
+    }
+    if (open.dmg && body.value !== null && body.value !== undefined && !plainObject(body.value)) {
+      // M68: a malformed damage answer is refused too (before M68 it was a null).
+      illegalDamage = { line: lineNo, why: 'not a map of amounts', attackerId: open.dmg.attackerId };
+      return;
+    }
+    if (open.checked && body.value !== null && body.value !== undefined) {
+      const why = m68Refusal(open.checked, body.value);
+      if (why !== null) {
+        // Legitimately in the log -- a client may send anything -- provided the
+        // bridge refused it: the next ask decides.  A12's shape note would
+        // call the CLIENT wrong, which is not this checker's business here.
+        illegalAnswer = { line: lineNo, why, kind: open.kind };
+        return;
+      }
     }
 
     const spec = ANSWER_RULES[open.kind];
@@ -3096,7 +3166,8 @@ for (const path of files) {
   console.log(`      A6 ever-revealed ids=${stats.everRevealed}  library cards revealed=`
     + `${stats.libraryRevealed}${stats.revealedTops ? ` (${stats.revealedTops} an opponent's top card revealed by a permanent, A3)` : ''}  alt blocks=${stats.altBlocks}${stats.altByLook ? ` (${stats.altByLook} an opponent's card exiled under a look permission, A9)` : ''}  tokens=${stats.tokens}  `
     + `asks=${stats.asks}  prompts scanned=${stats.promptsScanned}`
-    + `${stats.damageRefusalsSeen ? `  assign_damage answers refused and re-asked=${stats.damageRefusalsSeen} (M67)` : ''}`);
+    + `${stats.damageRefusalsSeen ? `  assign_damage answers refused and re-asked=${stats.damageRefusalsSeen} (M67)` : ''}`
+    + `${stats.answerRefusalsSeen ? `  answers refused and re-asked=${stats.answerRefusalsSeen} (M68)` : ''}`);
   console.log(`      A12 answers=${stats.answers} (kinds: `
     + `${[...(stats.answerKinds ?? [])].sort().join(', ') || 'none'}), value shape checked against `
     + `the matching ask.kind, unanswered asks=${stats.unanswered}`

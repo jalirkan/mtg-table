@@ -461,8 +461,26 @@ export function defaultAnswer(kind, body) {
       return out;
     }
     case 'assign_amount': {
-      const n = len(body.targets);
-      return n === 0 || typeof body.total !== 'number' ? null : { 0: body.total };
+      // M68 (D426): the bridge refuses what Forge's dialog would not allow -- a
+      // share over a target's `max`, under its `min` (1 with atLeastOne), a
+      // total that is not `total`. So: each target's `min`, then the rest in
+      // order up to each `max` (AutoTransport's answer). "All on target 0"
+      // was legal only while nothing checked it.
+      const ts = Array.isArray(body.targets) ? body.targets : [];
+      if (ts.length === 0 || typeof body.total !== 'number') return null;
+      const int = (v) => (typeof v === 'number' && Number.isInteger(v) ? v : null);
+      let left = body.total;
+      const got = ts.map((t) => {
+        const g = Math.min(Math.max(0, left), int(t?.min) ?? (body.atLeastOne === true ? 1 : 0));
+        left -= g;
+        return g;
+      });
+      ts.forEach((t, i) => {
+        const add = Math.min(left, Math.max(0, (int(t?.max) ?? body.total) - got[i]));
+        got[i] += add;
+        left -= add;
+      });
+      return Object.fromEntries(got.map((g, i) => [i, g]));
     }
     case 'text': return body.numeric === true ? null : '';   // §5.4 / M25 / M29
     default: return null;
@@ -479,6 +497,8 @@ export function classifyAsk({ state, ask, intent = null, me = null, oracle = nul
   const askId = String(ask.askId);
   const cards = cardsById(state);
   const d = decisionBase({ source: 'ask', kind: `ask:${kind}`, prompt: String(ask.prompt ?? ask.title ?? ''), askId, cardId: ask.cardId ?? null });
+  // M67 / M68: the bridge refused the last answer to this same question, and says why
+  if (typeof ask.reason === 'string' && ask.reason !== '') d.context.push(`The engine refused your last answer: ${ask.reason}`);
   switch (kind) {
     case 'ability_menu': {
       const opts = Array.isArray(ask.options) ? ask.options : [];
