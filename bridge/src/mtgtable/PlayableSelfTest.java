@@ -118,6 +118,7 @@ public final class PlayableSelfTest {
         onGameThread(() -> {
             run();
             runActivatable();
+            runConfirmFirst();
         });
         System.out.println("PlayableSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -377,6 +378,68 @@ public final class PlayableSelfTest {
     /** Seat 0 and seat 1 each have permanents with activated abilities; {@code turn} is "p0" or "p1". */
     private static Game battlefield(final String turn) {
         return battlefield(turn, true);
+    }
+
+    /**
+     * Amendment M69 (D427): {@link Playables#confirmFirst} -- the abilities a
+     * click on the seat's own permanent must not activate on its own.  Carrion
+     * Feeder's "Sacrifice a creature" (the owner's game, 2026-10-10) and
+     * Sakura-Tribe Elder's "Sacrifice this" are in it; a Forest's tap for
+     * mana, which Forge can undo, is not; a Treasure's "{T}, Sacrifice: add
+     * mana" is a mana ability Forge cannot undo, so it is; and the opponent's
+     * own Carrion Feeder never is.
+     */
+    private static void runConfirmFirst() {
+        final Deck dummy = new Deck("confirm-first");
+        dummy.getMain().add(FModel.getMagicDb().getCommonCards().getCard("Island"), 20);
+        final List<RegisteredPlayer> regs = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            final RegisteredPlayer rp = new RegisteredPlayer(dummy);
+            rp.setPlayer(Bootstrap.createAiSeat("Seat" + i, i, Bootstrap.DEFAULT_AI_PROFILE, null,
+                    PolicyLobbyPlayerAi.Outlets.OFF));
+            regs.add(rp);
+        }
+        final GameRules rules = new GameRules(GameType.Constructed);
+        rules.setAppliedVariants(EnumSet.of(GameType.Constructed));
+        rules.setGamesPerMatch(1);
+        final Game game = new Match(rules, regs, "confirm-first-selftest").createGame();
+        final GameState gs = new GameState();
+        gs.parse(List.of(
+                "turn=3",
+                "activeplayer=p0",
+                "activephase=" + PhaseType.MAIN1.name(),
+                "p0life=20",
+                "p1life=20",
+                "p0hand=Island",
+                "p0battlefield=Carrion Feeder;Sakura-Tribe Elder;Forest;T:c_a_treasure_sac",
+                "p0library=Forest;Island;Island",
+                "p1battlefield=Carrion Feeder;Island",
+                "p1library=Island;Island;Island"));
+        gs.applyToGame(game);
+        givePriority(game, game.getPlayers().get(0));
+        final Player me = game.getPlayers().get(0);
+        final java.util.Set<Integer> ids = Playables.confirmFirst(me);
+        final Map<String, List<Integer>> byCard = new HashMap<>();
+        for (final Player p : game.getPlayers()) {
+            for (final Card c : p.getCardsIn(ZoneType.Battlefield)) {
+                final List<Integer> mine = new ArrayList<>();
+                for (final SpellAbility sa : c.getAllPossibleAbilities(me, true)) {
+                    mine.add(Integer.valueOf(sa.getId()));
+                }
+                byCard.put((p == me ? "" : "their ") + c.getName(), mine);
+            }
+        }
+        System.out.println("  confirmFirst: " + ids + " of " + byCard);
+        final java.util.function.Predicate<String> all = (n) -> byCard.containsKey(n) && !byCard.get(n).isEmpty()
+                && ids.containsAll(byCard.get(n));
+        final java.util.function.Predicate<String> none = (n) -> byCard.containsKey(n)
+                && byCard.get(n).stream().noneMatch(ids::contains);
+        expect("confirm-first: Carrion Feeder's \"Sacrifice a creature\" asks before it activates", all.test("Carrion Feeder"));
+        expect("confirm-first: Sakura-Tribe Elder's \"Sacrifice this\" asks too", all.test("Sakura-Tribe Elder"));
+        expect("confirm-first: a Forest's tap for mana (undoable) keeps the click", none.test("Forest"));
+        expect("confirm-first: a Treasure's \"{T}, Sacrifice: add mana\" (not undoable) asks",
+                byCard.keySet().stream().filter((n) -> n.contains("Treasure")).anyMatch(all));
+        expect("confirm-first: the opponent's Carrion Feeder is never the seat's", none.test("their Carrion Feeder"));
     }
 
     private static Game battlefield(final String turn, final boolean bears) {

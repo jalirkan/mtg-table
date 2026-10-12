@@ -490,5 +490,23 @@
     "level": "fail",
     "expect": "M67 (assign_damage.defenderAllowed) is HALF PRESENT",
     "why": "amendment M67: a bridge since M67 writes defenderAllowed on every assign_damage ask -- some with and some without is a broken emitter"
+  },
+  {
+    "file": "m68-answer-refused.jsonl",
+    "level": "pass",
+    "expect": "PASS",
+    "why": "amendment M68: an illegal choose_list answer refused and re-asked with a reason, then a legal one -- the control for the m68 probes"
+  },
+  {
+    "file": "m68-illegal-answer-applied.jsonl",
+    "level": "fail",
+    "expect": "the bridge applied an illegal answer",
+    "why": "amendment M68 / D426: a choose_list answer outside [min, max] must be refused -- the next ask is the same question with a reason"
+  },
+  {
+    "file": "m68-reason-half-present.jsonl",
+    "level": "fail",
+    "expect": "M68 (choose_list.reason) is HALF PRESENT",
+    "why": "amendment M68: a bridge since M68 writes reason on every ask of a kind -- some with and some without is a broken emitter"
   }
 ]

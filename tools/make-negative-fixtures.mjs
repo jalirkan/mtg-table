@@ -1312,5 +1312,67 @@ probe('m67-defender-allowed-half-present.jsonl',
     delete again.body.defenderAllowed;
   });
 
+/*
+ * Amendment M68 (D426) -- every other ask kind's answer is checked too.  The
+ * control adds a choose_list ask after the last state, written as a bridge
+ * since M68 writes it (`reason` null), an answer the rule refuses (none chosen
+ * where exactly one must be), the re-ask with its reason, and a legal answer.
+ * Two one-defect probes: the illegal answer followed by some other question
+ * (it was applied), and `reason` written on one choose_list and not the other.
+ */
+const withListAsk = (fs) => {
+  const sts = statesOf(fs);
+  const last = sts[sts.length - 1].body;
+  const me = last.players.find(isViewerSeat);
+  const hand = me.zones.hand.cards.filter((c) => c.hidden !== true).slice(0, 2);
+  if (hand.length < 2) throw new Error('no two cards in the viewer\'s hand in the slice');
+  const ask = (askId, reason) => ({
+    v: 1, seq: 0, t: fs[0].t, dir: 's2c', type: 'ask',
+    body: {
+      askId, kind: 'choose_list', timeoutMs: 0, prompt: 'Choose a card to discard',
+      options: hand.map((c, i) => ({ id: i, label: c.name, kind: 'card', cardId: c.id, card: structuredClone(c) })),
+      preselected: [], min: 1, max: 1, reveal: false, reason,
+    },
+  });
+  const answer = (askId, value, cseq) => ({ v: 1, seq: cseq, t: fs[0].t, dir: 'c2s', type: 'answer', body: { askId, value } });
+  const first = ask('a911', null);
+  const refusedAnswer = answer('a911', [], 1);
+  const again = ask('a912', 'Choose exactly 1 option (this answer chose 0).');
+  const legal = answer('a912', [1], 2);
+  const at = fs.findIndex((f) => f.type === 'over');
+  fs.splice(at, 0, first, refusedAnswer, again, legal);
+  let seq = 0;
+  for (const f of fs) if (f.dir !== 'c2s') f.seq = ++seq;
+  return { first, again, refusedAnswer, legal };
+};
+{
+  const fs = slice();
+  withListAsk(fs);
+  write('m68-answer-refused.jsonl', fs);
+  manifest.push({
+    file: 'm68-answer-refused.jsonl', level: 'pass', expect: 'PASS',
+    why: 'amendment M68: an illegal choose_list answer refused and re-asked with a reason, then a legal one -- the control for the m68 probes',
+  });
+  console.log('  PASS  m68-answer-refused.jsonl  (refused, re-asked, answered legally; no defect)');
+}
+
+probe('m68-illegal-answer-applied.jsonl',
+  'amendment M68 / D426: a choose_list answer outside [min, max] must be refused -- the next ask is the same question with a reason',
+  'the bridge applied an illegal answer',
+  (fs) => {
+    const { again } = withListAsk(fs);
+    again.body = { askId: 'a912', kind: 'confirm', timeoutMs: 0, prompt: 'Continue?', title: '', yesLabel: 'Yes', noLabel: 'No', defaultYes: true, card: null, reason: null };
+    const i = fs.findIndex((f) => f.dir === 'c2s' && f.body.askId === 'a912');
+    fs[i].body.value = true;
+  });
+
+probe('m68-reason-half-present.jsonl',
+  'amendment M68: a bridge since M68 writes reason on every ask of a kind -- some with and some without is a broken emitter',
+  'M68 (choose_list.reason) is HALF PRESENT',
+  (fs) => {
+    const { again } = withListAsk(fs);
+    delete again.body.reason;
+  });
+
 writeFileSync(`${OUT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
 console.log(`wrote ${manifest.length} files + manifest.json to ${OUT_DIR}/`);

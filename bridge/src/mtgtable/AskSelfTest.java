@@ -71,6 +71,8 @@ public final class AskSelfTest {
         sideboardKind();
         nullAnswers();
         policy();
+        answerRule();
+        autoAnswersAreLegal();
 
         System.out.println("AskSelfTest: " + checks + " check(s), " + FAILURES.size() + " failure(s)");
         for (final String f : FAILURES) {
@@ -505,6 +507,165 @@ public final class AskSelfTest {
                 answer("choose_entities",
                         "{\"kind\":\"choose_entities\",\"min\":1,\"max\":1,\"options\":["
                         + "{\"id\":0},{\"id\":1}]}", true, probeSeen));
+    }
+
+    // ==================================================================
+    // M68 (D426): AnswerRule -- every kind's rule, from Forge's own dialogs
+    // ==================================================================
+
+    private static void ok(final String what, final String refusal) {
+        expect(what + " is legal" + (refusal == null ? "" : " (refused: " + refusal + ")"), refusal == null);
+    }
+
+    private static void no(final String what, final String refusal, final String needle) {
+        expect(what + " is refused", refusal != null);
+        if (refusal != null && needle != null) {
+            expect(what + ": the reason says \"" + needle + "\" (got: " + refusal + ")", refusal.contains(needle));
+        }
+    }
+
+    private static void answerRule() {
+        // choose_list / choose_entities: ListChooser's count, a set of rows.
+        ok("choose_list [1] of 3, min 1 max 1", AnswerRule.picks(parse("[1]"), 3, 1, 1));
+        no("choose_list [] to a `one` (min 1) -- it threw on the game thread",
+                AnswerRule.picks(parse("[]"), 3, 1, 1), "exactly 1 option");
+        no("choose_list [0,1] to max 1", AnswerRule.picks(parse("[0,1]"), 3, 1, 1), "exactly 1");
+        no("choose_list [0,0], one option twice", AnswerRule.picks(parse("[0,0]"), 3, 0, 3), "more than once");
+        no("choose_list [3], not offered", AnswerRule.picks(parse("[3]"), 3, 0, 1), "not one of the choices");
+        no("choose_list [-1]", AnswerRule.picks(parse("[-1]"), 3, 0, 1), "not one of the choices");
+        no("choose_list [1.5], a fraction", AnswerRule.picks(parse("[1.5]"), 3, 0, 1), "could not be read");
+        no("choose_list \"0\", a string", AnswerRule.picks(parse("\"0\""), 3, 0, 1), "could not be read");
+        no("choose_list a malformed answer", AnswerRule.picks(AnswerRule.MALFORMED, 3, 0, 1), "could not be read");
+        ok("choose_list [] to an optional (min 0)", AnswerRule.picks(parse("[]"), 3, 0, 1));
+        ok("choose_list a max beyond the list is the list", AnswerRule.picks(parse("[0,1,2]"), 3, 0, 99));
+        ok("choose_list a min beyond the list is the list", AnswerRule.picks(parse("[0,1]"), 2, 5, 9));
+        no("choose_list between 2 and 3, one picked", AnswerRule.picks(parse("[0]"), 4, 2, 3), "between 2 and 3");
+        no("choose_list at most 2, three picked", AnswerRule.picks(parse("[0,1,2]"), 4, 0, 2), "at most 2");
+        ok("a reveal (min -1) takes any list -- it chooses nothing", AnswerRule.picks(parse("[0]"), 2, -1, -1));
+        ok("a reveal takes []", AnswerRule.picks(parse("[]"), 2, -1, -1));
+        no("a reveal still refuses a non-list", AnswerRule.picks(parse("{}"), 2, -1, -1), "could not be read");
+
+        // ability_menu / options: one index into the offered list.
+        ok("ability_menu 1 of 2", AnswerRule.index(parse("1"), 2));
+        no("ability_menu 2 of 2", AnswerRule.index(parse("2"), 2), "not one of the choices");
+        no("ability_menu [0], a list", AnswerRule.index(parse("[0]"), 2), "could not be read");
+        no("options -1", AnswerRule.index(parse("-1"), 2), "not one of the choices");
+
+        // confirm.
+        ok("confirm true", AnswerRule.bool(parse("true")));
+        no("confirm 1", AnswerRule.bool(parse("1")), "true or false");
+        no("confirm \"yes\"", AnswerRule.bool(parse("\"yes\"")), "true or false");
+
+        // text: getInteger's Other... loop, with its bounds.
+        final Integer zero = Integer.valueOf(0);
+        final Integer ten = Integer.valueOf(10);
+        ok("text \"7\" in [0,10]", AnswerRule.text(parse("\"7\""), true, zero, ten));
+        no("text \"11\" over 10", AnswerRule.text(parse("\"11\""), true, zero, ten), "from 0 to 10");
+        no("text \"-1\" (Forge's isNumeric has no sign)", AnswerRule.text(parse("\"-1\""), true, zero, ten), "not a number");
+        no("text \"\"", AnswerRule.text(parse("\"\""), true, zero, ten), "not a number");
+        no("text \"two\"", AnswerRule.text(parse("\"two\""), true, null, null), "not a number");
+        no("text 7, a number not a string", AnswerRule.text(parse("7"), true, zero, ten), "could not be read");
+        no("text \"99999999999\"", AnswerRule.text(parse("\"99999999999\""), true, zero, null), "out of range");
+        ok("text with unknown bounds: digits only", AnswerRule.text(parse("\"12345\""), true, null, null));
+        ok("free text: any string", AnswerRule.text(parse("\"Llanowar Elves\""), false, null, null));
+
+        // order: DualListBox -- each item once, the count left in source bounded.
+        final String keepAll = "{\"ordered\":[2,0,1],\"remember\":false}";
+        ok("order: all three moved, remaining 0..0", AnswerRule.order(parse(keepAll), 3, 0, 0));
+        no("order: two of three when all must move", AnswerRule.order(parse("{\"ordered\":[0,1]}"), 3, 0, 0),
+                "exactly 3");
+        no("order: an item twice", AnswerRule.order(parse("{\"ordered\":[0,0,1]}"), 3, 0, 0), "more than once");
+        no("order: an id not offered", AnswerRule.order(parse("{\"ordered\":[0,1,5]}"), 3, 0, 0),
+                "not one of the choices");
+        ok("order: max < 0 is any size", AnswerRule.order(parse("{\"ordered\":[1]}"), 3, -1, -1));
+        ok("order: many() of 1..2 from 4 (remaining 2..3)",
+                AnswerRule.order(parse("{\"ordered\":[3]}"), 4, 2, 3));
+        no("order: many() of 1..2 from 4, three put",
+                AnswerRule.order(parse("{\"ordered\":[0,1,2]}"), 4, 2, 3), "between 1 and 2");
+        no("order: null `ordered`", AnswerRule.order(parse("{\"remember\":true}"), 3, 0, 0), "could not be read");
+        no("order: a non-boolean remember", AnswerRule.order(parse("{\"ordered\":[0,1,2],\"remember\":1}"), 3, 0, 0),
+                "remember");
+        no("order: a bare list", AnswerRule.order(parse("[0,1,2]"), 3, 0, 0), "could not be read");
+
+        // sideboard: distinct indices into main ++ side, and Forge's two bounds.
+        ok("sideboard: the identity", AnswerRule.sideboard(parse("[0,1,2]"), 3, 2, Integer.valueOf(3), Integer.valueOf(15)));
+        ok("sideboard: one swapped", AnswerRule.sideboard(parse("[0,1,3]"), 3, 2, Integer.valueOf(3), Integer.valueOf(15)));
+        no("sideboard: a card twice -- a copy the pool does not have",
+                AnswerRule.sideboard(parse("[0,0,0]"), 3, 2, Integer.valueOf(3), Integer.valueOf(15)), "more than once");
+        no("sideboard: too small a main deck",
+                AnswerRule.sideboard(parse("[0,1]"), 3, 2, Integer.valueOf(3), Integer.valueOf(15)), "at least 3 cards");
+        no("sideboard: too big a sideboard",
+                AnswerRule.sideboard(parse("[0,1,2]"), 3, 2, Integer.valueOf(0), Integer.valueOf(1)), "at most 1 card");
+        ok("sideboard: unenforced sizes", AnswerRule.sideboard(parse("[4]"), 3, 2, null, null));
+        no("sideboard: an index past the pool", AnswerRule.sideboard(parse("[5]"), 3, 2, null, null),
+                "not one of the choices");
+
+        // manipulate_list: a permutation; only the offered cards move.
+        final java.util.Set<Integer> mid = new java.util.HashSet<>(List.of(Integer.valueOf(1), Integer.valueOf(2)));
+        ok("manipulate_list: the offered two trade places", AnswerRule.reorder(parse("[0,2,1]"), 3, mid));
+        no("manipulate_list: a card not offered moves", AnswerRule.reorder(parse("[1,0,2]"), 3, mid), "cannot be moved");
+        no("manipulate_list: short", AnswerRule.reorder(parse("[0,1]"), 3, mid), "all 3 cards");
+        no("manipulate_list: a duplicate", AnswerRule.reorder(parse("[0,1,1]"), 3, mid), "more than once");
+
+        // assign_amount: VAssignGenericAmount.
+        final AnswerRule.Amounts divided = AnswerRule.Amounts.of(2, true,
+                new Integer[] { Integer.valueOf(2), Integer.valueOf(2) }, new String[] { "Bear", "Elf" });
+        ok("divided 2 as 1+1", divided.refusal(AnswerRule.intMapOf(parse("{\"0\":1,\"1\":1}"))));
+        no("divided 2 as 5+5 -- the engine would deal 10",
+                divided.refusal(AnswerRule.intMapOf(parse("{\"0\":5,\"1\":5}"))), "at most 2");
+        no("divided 2 as 2+0 with atLeastOne",
+                divided.refusal(AnswerRule.intMapOf(parse("{\"0\":2}"))), "at least 1");
+        no("divided 2 as 1, short", AnswerRule.Amounts.of(2, false, new Integer[] { null, null }, null)
+                .refusal(AnswerRule.intMapOf(parse("{\"0\":1}"))), "exactly 2");
+        no("an amount to a target not offered", divided.refusal(AnswerRule.intMapOf(parse("{\"0\":1,\"7\":1}"))),
+                "not one of the choices");
+        no("a negative amount", divided.refusal(AnswerRule.intMapOf(parse("{\"0\":3,\"1\":-1}"))), "negative");
+        no("a non-map amount answer", divided.refusal(AnswerRule.intMapOf(parse("[1,1]"))), "could not be read");
+        no("a fractional amount", divided.refusal(AnswerRule.intMapOf(parse("{\"0\":1.5,\"1\":0.5}"))),
+                "could not be read");
+        final AnswerRule.Amounts mana = AnswerRule.Amounts.of(3, false,
+                new Integer[] { Integer.valueOf(1), Integer.valueOf(1), Integer.valueOf(1) }, null);
+        no("mana of different colours: 2 of one", mana.refusal(AnswerRule.intMapOf(parse("{\"0\":2,\"1\":1}"))),
+                "at most 1");
+        eq("the null default with atLeastOne: 1 each, then in order", "{0=1, 1=1}", String.valueOf(divided.fill()));
+        eq("the null default for 3 over caps 1,1,1", "{0=1, 1=1, 2=1}", String.valueOf(mana.fill()));
+        eq("the null default for 5 over caps none,none", "{0=5, 1=0}",
+                String.valueOf(AnswerRule.Amounts.of(5, false, new Integer[] { null, null }, null).fill()));
+        ok("every fill is legal (divided)", divided.refusal(divided.fill()));
+        ok("every fill is legal (mana)", mana.refusal(mana.fill()));
+        final AnswerRule.Amounts stuck = AnswerRule.Amounts.of(3, true, new Integer[] { Integer.valueOf(1) }, null);
+        expect("an infeasible rule says so", !stuck.feasible());
+        ok("an infeasible rule takes what the caps allow", stuck.refusal(AnswerRule.intMapOf(parse("{\"0\":1}"))));
+    }
+
+    /**
+     * The automated seat answers every kind with something the rule accepts --
+     * else M68's re-ask would loop it to the ask ceiling and a concede.
+     */
+    private static void autoAnswersAreLegal() {
+        final Map<String, Integer> seen = new java.util.HashMap<>();
+        final String amount = "{\"kind\":\"assign_amount\",\"total\":3,\"atLeastOne\":true,\"targets\":["
+                + "{\"id\":0,\"min\":1,\"max\":3},{\"id\":1,\"min\":1,\"max\":3}]}";
+        final AnswerRule.Amounts rule = AnswerRule.Amounts.of(3, true, new Integer[] { Integer.valueOf(3), Integer.valueOf(3) }, null);
+        ok("AutoTransport's assign_amount (atLeastOne over two targets)",
+                rule.refusal(AnswerRule.intMapOf(parse(answer("assign_amount", amount, false, seen)))));
+        final String capped = "{\"kind\":\"assign_amount\",\"total\":3,\"atLeastOne\":false,\"targets\":["
+                + "{\"id\":0,\"min\":0,\"max\":1},{\"id\":1,\"min\":0,\"max\":1},{\"id\":2,\"min\":0,\"max\":1}]}";
+        final AnswerRule.Amounts capRule = AnswerRule.Amounts.of(3, false,
+                new Integer[] { Integer.valueOf(1), Integer.valueOf(1), Integer.valueOf(1) }, null);
+        ok("AutoTransport's assign_amount (three caps of 1)",
+                capRule.refusal(AnswerRule.intMapOf(parse(answer("assign_amount", capped, false, seen)))));
+        final String order = "{\"kind\":\"order\",\"dest\":[],\"source\":[{\"id\":0},{\"id\":1},{\"id\":2}],"
+                + "\"min\":0,\"max\":0}";
+        ok("AutoTransport's order (all must move)", AnswerRule.order(parse(answer("order", order, false, seen)), 3, 0, 0));
+        final String many = "{\"kind\":\"order\",\"dest\":[],\"source\":[{\"id\":0},{\"id\":1},{\"id\":2},{\"id\":3}],"
+                + "\"min\":2,\"max\":3}";
+        ok("AutoTransport's order (many: 1..2 of 4)", AnswerRule.order(parse(answer("order", many, false, seen)), 4, 2, 3));
+        final String side = "{\"kind\":\"sideboard\",\"main\":[{\"id\":0},{\"id\":1}],\"side\":[{\"id\":2}]}";
+        ok("AutoTransport's sideboard (probe swap)",
+                AnswerRule.sideboard(parse(answer("sideboard", side, true, seen)), 2, 1, Integer.valueOf(2), Integer.valueOf(15)));
+        final String list = "{\"kind\":\"choose_list\",\"min\":2,\"max\":2,\"options\":[{\"id\":0},{\"id\":1},{\"id\":2}]}";
+        ok("AutoTransport's choose_list (exactly 2)", AnswerRule.picks(parse(answer("choose_list", list, false, seen)), 3, 2, 2));
     }
 
     @SuppressWarnings("unchecked")

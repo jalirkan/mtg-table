@@ -100,8 +100,10 @@
  * ---------------------------------------------------------------------------
  */
 
-import { mkdirSync, createWriteStream } from 'node:fs';
+import { mkdirSync, createWriteStream, writeFileSync } from 'node:fs';
 import { dirname, extname } from 'node:path';
+
+import { createAdversary } from './adversary/core.mjs';
 
 const PROTOCOL_VERSION = 1;
 
@@ -146,7 +148,8 @@ function usage(message) {
       '                                  [--require-yield-repeat] [--require-late-undo]\n' +
       '                                  [--undo-race]\n' +
       '                                  [--refuse-first-ask [--reconnect-after 5000]]\n' +
-      '                                  [--observe-at-ask]\n',
+      '                                  [--observe-at-ask]\n' +
+      '                                  [--adversary <report.json> [--require-kinds k1,k2]]\n',
   );
   process.exit(2);
 }
@@ -155,7 +158,7 @@ const args = {
   port: 8642, url: null, timeoutS: 300, log: null, resyncAfter: 12, quiet: false,
   refuseFirstAsk: false, reconnectAfterMs: 5000, probe: false, games: 1, comfort: false,
   newGameDelayMs: 0, requireYieldRepeat: false, requireLateUndo: false, undoRace: false,
-  observeAtAsk: false,
+  observeAtAsk: false, adversary: null, requireKinds: [],
 };
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
@@ -173,6 +176,11 @@ for (let i = 2; i < process.argv.length; i++) {
     case '--quiet': args.quiet = true; break;
     case '--refuse-first-ask': args.refuseFirstAsk = true; break;
     case '--probe': args.probe = true; break;
+    // D428: the adversarial seat -- every ask answered first with illegal
+    // answers that must be refused, every input class probed once a turn with
+    // an act the engine must refuse; tools/adversary/ has the rules.
+    case '--adversary': args.adversary = next(); break;
+    case '--require-kinds': args.requireKinds = next().split(',').filter((k) => k !== ''); break;
     // M6, protocol amendment M38. After each `over` this seat sends
     // `act: newGame {mode}` and plays on, exactly as AutoTransport does: nothing
     // in the bridge starts a game, so a multi-game session is a CLIENT
@@ -222,6 +230,7 @@ if (!Number.isFinite(args.games) || args.games <= 0) usage('--games must be a po
 if (!Number.isFinite(args.newGameDelayMs) || args.newGameDelayMs < 0) usage('--new-game-delay-ms must be a non-negative integer');
 if (args.observeAtAsk && args.refuseFirstAsk) usage('--observe-at-ask and --refuse-first-ask both take the first ask; pass one');
 const URL_ = args.url ?? `ws://127.0.0.1:${args.port}/ws`;
+if (args.adversary !== null && (args.refuseFirstAsk || args.observeAtAsk)) usage('--adversary takes every ask; it does not combine with --refuse-first-ask or --observe-at-ask');
 
 // ---------------------------------------------------------------------------
 // Logging
@@ -326,6 +335,13 @@ let matchSeen = null;
 const answered = new Map();
 
 let me = null;
+/** D428: the last `state` body, for the adversary's input probes. */
+let lastStateBody = null;
+/** D428: the adversarial seat, when --adversary is given (`answer`, `act` and `say` are hoisted). */
+let adv = null;
+/** D428: `${turn}:${cardId}` -- the permanents the adversary's policy has clicked this turn. */
+const advClicked = new Set();
+if (args.adversary !== null) adv = createAdversary({ answer, act: (a, e) => act(a, e), say });
 let myHand = [];
 let myLands = [];
 /** Untapped lands this seat controls on the battlefield -- what `--comfort`'s undo step taps for mana. */
@@ -555,6 +571,7 @@ function onFrame(text) {
   if (frame.type === 'hello_ok' || frame.type === 'state') seatRaw[frame.type] = text;
 
   const body = frame.body;
+  adv?.onFrame(frame);
   switch (frame.type) {
     case 'hello_ok':
       me = typeof body.you === 'number' ? body.you : null;
@@ -681,6 +698,7 @@ function onFrame(text) {
 
 /** Remember just enough of the board to answer "is it my turn, and what is in my hand". */
 function onState(body) {
+  lastStateBody = body;
   if (body.gameOver !== null && body.gameOver !== undefined) gameOverStateSeen = true;
   // PROGRESS (AutoTransport.progressKey). A repeated prompt only means "stuck"
   // while nothing else has moved; a turn/phase change clears both counters, so
@@ -1263,6 +1281,19 @@ function plan(body) {
       if (myPool[c] > 0) out.push(['useMana', { color: POOL_COLOR_NAMES[c] }]);
     }
   }
+  if (adv !== null && !mustClick && !payingMana && myPriority && myMainPhase && stackEmpty) {
+    // D428: the adversary needs the engine's menus and cost prompts, so its
+    // policy also clicks a permanent `state.activatable` lists (M63) -- once a
+    // turn each, or a Carrion Feeder would eat the board.
+    for (const e of Array.isArray(lastStateBody?.activatable) ? lastStateBody.activatable : []) {
+      const key = `${String(lastStateBody?.turn)}:${String(e.cardId)}`;
+      if (typeof e.cardId === 'number' && !advClicked.has(key)) {
+        out.push(['clickCard', { cardId: e.cardId }]);
+        advClicked.add(key);
+        break;
+      }
+    }
+  }
   if (!mustClick && !payingMana && myPriority && myMainPhase && stackEmpty) {
     // Lands first: a land drop is the one play that is always legal, and without
     // it this policy never has mana, never casts, never reaches combat or an ask.
@@ -1340,7 +1371,9 @@ function answerFor(kind, body) {
       // `null` is, and it is §5.4's own default ("that is 'cancel'").
       if (body.numeric !== true) return '';
       if (!args.probe) return null;
-      return bumpPrompt(`text|${String(body.prompt)}`) === 1 ? '0' : null;
+      // M68: the body carries getInteger's bounds; the probe's real string is
+      // the smallest legal one when it says, "0" otherwise.
+      return bumpPrompt(`text|${String(body.prompt)}`) === 1 ? String(intOf(body.min) ?? 0) : null;
     }
     case 'choose_list': {
       const n = len(body.options);
@@ -1410,10 +1443,26 @@ function answerFor(kind, body) {
       return { [String(n > 1 ? 1 : 0)]: total };
     }
     case 'assign_amount': {
-      const n = len(body.targets);
+      // M68 (D426): AutoTransport's branch -- the dialog's start (each target's
+      // `min`, 1 with atLeastOne) and the rest in order up to each `max`. The
+      // bridge refuses "all on target 0" whenever that breaks a cap or a floor.
+      const ts = Array.isArray(body.targets) ? body.targets : [];
       const total = intOf(body.total);
-      if (n === 0 || total === null) return null;
-      return { 0: total };
+      if (ts.length === 0 || total === null) return null;
+      let left = total;
+      const got = ts.map((t) => {
+        const lo = intOf(t?.min) ?? (body.atLeastOne === true ? 1 : 0);
+        const g = Math.min(Math.max(0, left), lo);
+        left -= g;
+        return g;
+      });
+      ts.forEach((t, i) => {
+        const cap = intOf(t?.max) ?? total;
+        const add = Math.min(left, Math.max(0, cap - got[i]));
+        got[i] += add;
+        left -= add;
+      });
+      return Object.fromEntries(got.map((g, i) => [String(i), g]));
     }
     default:
       return null;
@@ -1476,6 +1525,12 @@ function onAsk(body) {
   }
   if (args.observeAtAsk && observe === null) {
     observeAtAsk(askId, kind, body, rawFrame);
+    return;
+  }
+  if (adv !== null) {
+    // D428: the adversary answers, illegal first; this policy's own answer is
+    // the legal one it ends with.
+    adv.onAsk(body, (b) => answerFor(String(b.kind), b));
     return;
   }
   answerAsk(askId, kind, body);
@@ -1660,6 +1715,7 @@ function tick() {
   }
 
   guardedActTimers(now);                       // D136: --undo-race and --comfort's undo steps
+  adv?.tick(now);                              // D428: an illegal answer or act that drew nothing
   if (observe !== null && observe.verdict === 'pending') return;   // D291: the ask is held open
   if (pendingInput === null) return;
   if (now < comfortHoldUntil) return;          // --comfort: see comfortStep()
@@ -1667,6 +1723,15 @@ function tick() {
   const sinceDecision = now - lastDecisionAt;
   if (quiet >= SETTLE_MS || sinceDecision >= STEP_CAP_MS) {
     lastActivity = now;                        // one decision per settle window
+    if (adv !== null) {
+      // D428: hold while an illegal act waits for its refusal; otherwise, once
+      // a turn per input class, the illegal act goes first.
+      if (adv.busy()) return;
+      if (adv.inputProbe(pendingInput, lastStateBody, me)) {
+        lastDecisionAt = now;
+        return;
+      }
+    }
     try {
       decide(pendingInput);
     } catch (err) {
@@ -1676,6 +1741,31 @@ function tick() {
 }
 
 function finish() {
+  if (adv !== null) {
+    // D428: the adversary's verdict. A leak (an illegal answer or act the bridge
+    // or the engine took) and a legal answer refused are both failures; a kind
+    // named by --require-kinds that never saw a refusal is "not reached".
+    const v = adv.verdict(args.requireKinds);
+    try {
+      mkdirSync(dirname(args.adversary), { recursive: true });
+      writeFileSync(args.adversary, JSON.stringify({ ...adv.report, missing: v.missing }, null, 2) + '\n');
+    } catch (err) {
+      process.stderr.write(`[ws-auto] could not write ${args.adversary}: ${String(err)}\n`);
+    }
+    const r = adv.report;
+    for (const [k, s] of Object.entries(r.asks)) {
+      process.stderr.write(`[adversary] ask ${k.padEnd(16)} asked=${s.asked} illegal=${s.illegalSent} refused=${s.refused} `
+        + `leaks=${s.leaks} legal=${s.legalSent} accepted=${s.legalAccepted} legalRefused=${s.legalRefused}\n`);
+    }
+    for (const [k, s] of Object.entries(r.inputs)) {
+      process.stderr.write(`[adversary] input ${k.padEnd(17)} probes=${s.probes} refused=${s.refused} leaks=${s.leaks}\n`);
+    }
+    if (failure === null && !v.ok) {
+      failure = { message: `--adversary: ${r.leaks.length} leak(s), ${r.legalRefused.length} legal answer(s) refused -- see ${args.adversary}`, code: 3 };
+    } else if (failure === null && v.missing.length > 0) {
+      failure = { message: `--adversary: never refused an illegal answer to ${v.missing.join(', ')} (--require-kinds)`, code: 11 };
+    }
+  }
   if (args.observeAtAsk && failure === null && over && observe === null) {
     failure = {
       message: '--observe-at-ask: no ask was raised in the whole game, so no observer was caught up on one '

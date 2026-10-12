@@ -831,7 +831,10 @@ public class AutoTransport implements Transport {
             final String prompt = "text|" + body.get("prompt");
             final int seen = askPromptsSeen.merge(prompt, Integer.valueOf(1),
                     (a, b) -> Integer.valueOf(a + b)).intValue();
-            return seen == 1 ? "\"0\"" : "null";
+            // M68: the body carries getInteger's bounds; the smallest legal
+            // number when it says, "0" otherwise.
+            final Integer lo = intOf(body.get("min"));
+            return seen == 1 ? "\"" + (lo == null ? 0 : Math.max(0, lo.intValue())) + "\"" : "null";
         }
         case "choose_list": {
             final int n = size(body.get("options"));
@@ -923,12 +926,39 @@ public class AutoTransport implements Transport {
             return "{\"" + (n > 1 ? 1 : 0) + "\":" + total.intValue() + "}";
         }
         case "assign_amount": {
-            final int n = size(body.get("targets"));
+            // M68 (D426): the bridge now refuses what VAssignGenericAmount
+            // would not allow -- a share over a target's `max`, a target under
+            // its `min` (1 with atLeastOne), a total that is not `total` -- so
+            // the answer is the dialog's own start (each target's `min`) and
+            // the rest in order up to each `max`.  "All on target 0" was legal
+            // only while nothing checked it.
+            final Object[] ts = arr(body.get("targets"));
             final Integer total = intOf(body.get("total"));
-            if (n == 0 || total == null) {
+            if (ts.length == 0 || total == null) {
                 return "null";
             }
-            return "{\"0\":" + total.intValue() + "}";
+            final boolean atLeastOne = bool(body.get("atLeastOne"));
+            final int[] got = new int[ts.length];
+            final int[] cap = new int[ts.length];
+            int left = total.intValue();
+            for (int i = 0; i < ts.length; i++) {
+                final Map<String, Object> t = map(ts[i]);
+                final Integer lo = t == null ? null : intOf(t.get("min"));
+                final Integer hi = t == null ? null : intOf(t.get("max"));
+                cap[i] = hi == null ? total.intValue() : hi.intValue();
+                got[i] = Math.min(Math.max(0, left), lo == null ? (atLeastOne ? 1 : 0) : lo.intValue());
+                left -= got[i];
+            }
+            for (int i = 0; i < ts.length && left > 0; i++) {
+                final int add = Math.min(left, Math.max(0, cap[i] - got[i]));
+                got[i] += add;
+                left -= add;
+            }
+            final StringBuilder sb = new StringBuilder("{");
+            for (int i = 0; i < ts.length; i++) {
+                sb.append(i == 0 ? "" : ",").append('"').append(i).append("\":").append(got[i]);
+            }
+            return sb.append('}').toString();
         }
         default:
             return "null";

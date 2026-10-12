@@ -323,3 +323,44 @@ test('max === 1 is a radio button: clicking another option MOVES the choice', ()
   // -1 is Forge's "unconstrained" (§5.3).
   expect(toggleChoice([0, 1, 2], 3, -1)).toEqual([0, 1, 2, 3]);
 });
+
+// ---------------------------------------------------------------------------
+// M68 (D426): a refused answer comes back as the same question with `reason`,
+// for every kind, and the modal says why above the question.
+// ---------------------------------------------------------------------------
+
+test('M68: a re-asked choose_list shows the bridge\'s reason; a first asking shows none', () => {
+  const base = {
+    askId: 'a9', kind: 'choose_list' as const, timeoutMs: 0, prompt: 'Choose a card to discard',
+    options: [
+      { id: 0, label: 'Plains', kind: 'card' as const },
+      { id: 1, label: 'Island', kind: 'card' as const },
+    ],
+    preselected: [], min: 1, max: 1, reveal: false,
+  };
+  const first = renderToStaticMarkup(<AskModal ask={{ ...base, reason: null }} onAnswer={() => undefined} />);
+  expect(first).not.toContain('ask-modal__refused');
+  const again = renderToStaticMarkup(
+    <AskModal ask={{ ...base, askId: 'a10', reason: 'Choose exactly 1 option (this answer chose 0).' }} onAnswer={() => undefined} />,
+  );
+  expect(again).toContain('ask-modal__refused');
+  expect(again).toContain('Choose exactly 1 option (this answer chose 0).');
+});
+
+test('M68: an assign_amount target shows the bounds the bridge checks', () => {
+  const html = renderToStaticMarkup(
+    <AskModal
+      ask={{
+        askId: 'a11', kind: 'assign_amount', timeoutMs: 0, sourceCardId: 5, total: 2, atLeastOne: true,
+        label: 'damage', reason: null,
+        targets: [
+          { id: 0, label: 'Grizzly Bears', kind: 'entity', cardId: 7, min: 1, max: 2 },
+          { id: 1, label: 'Forge AI', kind: 'entity', playerId: 2, min: 1, max: 2 },
+        ],
+      }}
+      onAnswer={() => undefined}
+    />,
+  );
+  expect(html).toContain('min 1');
+  expect(html).toContain('max 2');
+});

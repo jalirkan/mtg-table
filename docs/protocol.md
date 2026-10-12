@@ -30,6 +30,41 @@ A browser is not one.
 
 ## Amendments
 
+### 2026-10-12 — a click is never a commitment
+
+Found in the owner's own game (2026-10-10): a click on Carrion Feeder, meant to
+see its options, activated its only ability ("Sacrifice a creature: put a +1/+1
+counter on Carrion Feeder") at once, and the sacrifice prompt that followed
+committed on the next click. Forge's desktop answers a lone ability itself
+(`CMatchUI.getAbilityToPlay`), and the bridge copied that shortcut. Decision
+**D427** (M69). Held by `mtgtable.PlayableSelfTest` (gate step 12l: which
+abilities ask first, on real cards), `tools/llm-seat/test/lone-ability.test.mjs`
+on real asks (`fixtures/cost-probe/m69-frames.json`), and verified live by
+`tools/ws-cost-probe.mjs` (`docs/evidence/cost-probe.md`).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M69 | §5.2, §5.3 | **A click on one of the seat's own permanents never activates an ability by itself**, unless that ability is a mana ability Forge can undo (a land's tap). Every other ability — a lone one included — comes as the asynchronous `ability_menu` (M14) first, **one option** when there is one ability, and answering it `null` ("never mind") changes nothing. Which abilities ask first is the engine's own list for the click (`Card.getAllPossibleAbilities(player, true)` on each permanent the seat controls) minus those `SpellAbility.isUndoable()` says Forge can undo, taken at the seat's priority (`Playables.confirmFirst`). A card in the hand keeps Forge's shortcut: a click casts it, and the cast's own prompts carry a Cancel. **No new field**: the menu is the M14 shape it always was, with one option. **What a cost prompt does, measured on the real engine** (`docs/evidence/cost-probe.md`): no cost that gives something up is chosen for the player, even with one legal option — "sacrifice a creature" and "discard a card" are a card selection (`input`, OK disabled until a pick, Cancel enabled), "sacrifice this" and "pay N life" are a yes/no `input`, "exile a card from your graveyard" is an optional `choose_entities`; Cancel (or No, or `null`) at any of them undoes the whole activation, mana already paid included; the pick, the Yes or the answer that completes the cost is the commitment. | Owner's game, 2026-10-10; `study/rules-integrity-plan.md` Part 2b; D427 |
+
+### 2026-10-12 — the bridge is the rules gate for every answer
+
+The rules audit (decision **D425**, `docs/rules-audit.md`) found six more ask
+kinds whose rule lives only in a Forge desktop dialog the wire replaced, and the
+bridge passed each answer through: an over-allocated divided spell dealt the extra
+damage, a sideboard answered `[0,0,…]` played forty copies of one card, a `[]` to
+a mandatory `choose_list` threw on the game thread. Decision **D426** (M68). Held
+by `mtgtable.AnswerRule` (the rules, Forge-free) and its cases in
+`mtgtable.AskSelfTest` (`bridge/build.sh`, which also checks that the automated
+seat's own answers pass them), `tools/check-redaction.mjs` (the new keys per file,
+and an answer the rule forbids that is not followed by a re-ask with a reason;
+controls in `fixtures/negative/redaction/m68-*`), `web/test/answer-reason.test.ts`
+and `web/test/ask-modal.test.tsx`, and verified live by the adversarial seat
+`tools/adversary/` (D428).
+
+| # | Section | Change | Source |
+|---|---|---|---|
+| M68 | §5.2, §5.3, §5.4 | **Every ask kind's answer is checked by the bridge, by Forge's own rule for that kind, and an illegal one is refused** — M67's loop, for the other ten kinds. **The rules** (`AnswerRule.java` cites each Forge member; javap on the pinned 2.0.14 jar): `choose_list` / `choose_entities` — distinct option ids, at least `min` and at most `max` of them (a `max` beyond the list is the list; `ListChooser.SelListener`, `DualListBox` for a many); a reveal (`min < 0`) takes any list and chooses nothing. `order` — distinct ids into `dest ++ source`, the count **left in `source`** in `[min, max]`, any count when `max < 0` (`DualListBox._setButtonState`); `remember` a boolean when present. `sideboard` — distinct ids into `main ++ side` (a card cannot be played more often than the pool holds it), at least `mainMin` cards in the new main deck and at most `sideMax` left over (`PlayerControllerHuman.sideboard`'s own loop). `assign_amount` — exactly `total`, each target between its `min` and `max`, no target not offered (`VAssignGenericAmount`). `text` — a string; a numeric one only digits (Forge's `StringUtils.isNumeric`, so no sign) within `min`..`max` (`AbstractGuiGame.getInteger`'s loop). `manipulate_list` — every card once, and a card not in `manipulable` in its own place. `ability_menu` / `options` — one offered id. `confirm` — a boolean. **A malformed answer** (the wrong JSON type for its kind) is refused like an illegal one — before M68 it was a `null`, and so Forge's default played a choice the player never made; `null` itself keeps its §5.4 meaning. **New fields**: `reason: string \| null` on every kind (`null` on a first asking; M67 had put it on `assign_damage`); `text.min` / `text.max` (`number \| null`: the bounds of a numeric ask, null when there are none or the bridge does not know them, and on free text); `sideboard.mainMin` / `sideboard.sideMax` (`number \| null`: Forge's deck-size rule, null when it does not enforce deck legality); an `assign_amount` target's `min` (1 with `atLeastOne`, else 0), and its `max` is now the dialog's cap (Forge's value for that target, else the total) and **never null**. **Refused**: the same question again under a **new `askId`** with `reason` a sentence a person can read ("Choose exactly 1 option (this answer chose 0)."), as many times as it takes; an asynchronous `ability_menu` (M14) is sent again the same way while the input that raised it is still the one Forge is on. **Changed null defaults** (each now legal by the rule above): an `assign_amount` `null` is the dialog's start — 1 on each target with `atLeastOne` — and the rest in order up to each cap (before M68 Forge got `null`, which `chooseTargetsFor` dereferences for a divided spell: an NPE on the game thread); a **mandatory** single `choose_entities` answered `null` is its first option (Forge's `one` has no Cancel; before M68 the effect saw nothing chosen). **Optional**: absent before M68; a reader treats an absent `reason` as `null` and an absent bound as "the bridge does not say". `askReasonOf()` in `web/src/protocol.ts` is `reason`'s one reader. | `docs/rules-audit.md`; `study/rules-integrity-plan.md` Part 2; D425, D426 |
+
 ### 2026-10-10 — the bridge is the rules gate for combat damage
 
 Found in the owner's own game (turn 23, 2026-10-10): Skyclave Apparition, a
@@ -1894,17 +1929,17 @@ Eleven kinds cover the twelve blocking `IGuiGame` methods that remain after
 
 | `kind` | `IGuiGame` method(s) | extra body | `answer.value` |
 |---|---|---|---|
-| `ability_menu` | `getAbilityToPlay` | `cardId` (**never null** — with no host card the bridge skips the ask), `options:[opt]` (each with `abilityId`, `label` from `SpellAbilityView.getDescription()`, `canPlay`, `isSpell`) | option index, or `null`. **The one kind that may be asked with no game thread parked on it** — amendment **M14**, §5.3 |
-| `confirm` | `confirm(CardView,…)`, `showConfirmDialog` | `prompt`, `title`, `yesLabel`, `noLabel`, `defaultYes`, **`card`** (`Card` or `null`) | `true` \| `false` \| `null` |
-| `options` | `showOptionDialog` | `prompt`, `title`, `options:[opt]`, `defaultIndex`, **`card`** (`Card` or `null`) | option index, or `null` |
-| `text` | `showInputDialog` | `prompt`, `title`, `initial` (**a string, `""` when Forge has none**), `suggestions:[string]`, `numeric` | string, or `null` |
-| `choose_list` | `getChoices` — and everything `AbstractGuiGame` builds on it: `one` / `oneOrNone` / `many` / `reveal` / `getInteger` / `insertInList` | `prompt`, `options:[opt]`, `preselected:[index]`, `min`, `max`, **`reveal`** | `[index…]` (length in `[min,max]`), or `null` |
-| `order` | `order` → `OrderResult` | `prompt`, `destLabel`, `source:[opt]`, `dest:[opt]`, `min`, `max`, `referenceCardId`, `sideboardMode`, `showRemember` | `{ "ordered": [index…], "remember": bool }` — **never `null`** |
-| `choose_entities` | `chooseSingleEntityForEffect` (min=max=1, or min=0 when optional), `chooseEntitiesForEffect` | `prompt`, `options:[opt]`, `min`, `max`, **`delayedReveal`** | `[index…]`, or `null` |
+| `ability_menu` | `getAbilityToPlay` | `cardId` (**never null** — with no host card the bridge skips the ask), `options:[opt]` (each with `abilityId`, `label` from `SpellAbilityView.getDescription()`, `canPlay`, `isSpell`), `reason` (M68) | option index, or `null`. **The one kind that may be asked with no game thread parked on it** — amendment **M14**, §5.3 |
+| `confirm` | `confirm(CardView,…)`, `showConfirmDialog` | `prompt`, `title`, `yesLabel`, `noLabel`, `defaultYes`, **`card`** (`Card` or `null`), `reason` (M68) | `true` \| `false` \| `null` |
+| `options` | `showOptionDialog` | `prompt`, `title`, `options:[opt]`, `defaultIndex`, **`card`** (`Card` or `null`), `reason` (M68) | option index, or `null` |
+| `text` | `showInputDialog` | `prompt`, `title`, `initial` (**a string, `""` when Forge has none**), `suggestions:[string]`, `numeric`, `min`, `max` (M68: a numeric ask's bounds, or `null`), `reason` (M68) | string, or `null`; **a numeric one is checked against `min`/`max` (M68)** |
+| `choose_list` | `getChoices` — and everything `AbstractGuiGame` builds on it: `one` / `oneOrNone` / `many` / `reveal` / `getInteger` / `insertInList` | `prompt`, `options:[opt]`, `preselected:[index]`, `min`, `max`, **`reveal`**, `reason` (M68) | `[index…]` (distinct, length in `[min,max]`; **checked, M68**), or `null` |
+| `order` | `order` → `OrderResult` | `prompt`, `destLabel`, `source:[opt]`, `dest:[opt]`, `min`, `max`, `referenceCardId`, `sideboardMode`, `showRemember`, `reason` (M68) | `{ "ordered": [index…], "remember": bool }` — **never `null`**; distinct, the count left in `source` in `[min,max]` (**checked, M68**) |
+| `choose_entities` | `chooseSingleEntityForEffect` (min=max=1, or min=0 when optional), `chooseEntitiesForEffect` | `prompt`, `options:[opt]`, `min`, `max`, **`delayedReveal`**, `reason` (M68) | `[index…]` (distinct, length in `[min,max]`; **checked, M68**), or `null` |
 | `assign_damage` | `assignCombatDamage` | `attackerId` (**or `null`**: Forge's signature allows a null attacker), `total`, `overrideOrder`, `maySkip`, `defenderAllowed`, `reason` (amendment **M67**), `targets:[opt]` — **the defender is index 0** | `{ "<index>": n, … }`, or `null`; **checked by the bridge (M67)** |
-| `assign_amount` | `assignGenericAmount` | `sourceCardId`, `total`, `atLeastOne`, `label`, `targets:[opt]` | `{ "<index>": n, … }`, or `null` |
-| `manipulate_list` | `manipulateCardList` (surveil, scry-likes) | `prompt`, `cards:[opt]` (full list, in order), `manipulable:[index]`, `toTop`, `toBottom`, `toAnywhere` | `[index…]` — the full list in its new order |
-| `sideboard` | `sideboard` | `prompt`, `main:[opt]`, `side:[opt]` | `[index…]` = the new main deck, or `null` |
+| `assign_amount` | `assignGenericAmount` | `sourceCardId`, `total`, `atLeastOne`, `label`, `targets:[opt]` (each with `min` and `max`, M68), `reason` (M68) | `{ "<index>": n, … }` (exactly `total`, each in its `[min,max]`; **checked, M68**), or `null` |
+| `manipulate_list` | `manipulateCardList` (surveil, scry-likes) | `prompt`, `cards:[opt]` (full list, in order), `manipulable:[index]`, `toTop`, `toBottom`, `toAnywhere`, `reason` (M68) | `[index…]` — the full list in its new order, only `manipulable` cards moved (**checked, M68**) |
+| `sideboard` | `sideboard` | `prompt`, `main:[opt]`, `side:[opt]`, `mainMin`, `sideMax` (M68: Forge's deck-size rule, or `null`), `reason` (M68) | `[index…]` = the new main deck (distinct; **checked, M68**), or `null` |
 
 **Which of the eleven this configuration can actually see** (amendment
 **M22**/**M23**/**M24**/**M27**, measured in `docs/evidence/m5-probes.md`). The
@@ -1959,6 +1994,11 @@ recorded plus `manipulate_list` and `options` unreachable is the eleven.)
   It still blocks when Forge asks from a game thread (a `PlayEffect`, a
   `DiscoverEffect`), which is the path the one-ability shortcut and the
   `host == null` skip were written for.
+
+  **Since amendment M69 the menu also comes for ONE ability** when the click is
+  on one of the seat's own permanents and the ability is not a mana ability
+  Forge can undo: a click is a look until the player chooses (D427). A land's
+  tap for mana and a card cast from the hand keep the shortcut.
 
 - **`order` is not top/bottom.** Forge's `OrderResult` is
   `(List<T> ordered, boolean rememberDecision)` **[jar]**, and `ordered()` is the
@@ -2109,8 +2149,10 @@ The machinery, all of which must exist before the first `ask` is emitted:
 - Forge's documented null-defaults per method (`RemoteClientGuiGame.java:436,442,453`;
   `assignCombatDamage`'s null case is handled at `PlayerControllerHuman.java:302`).
 - A second `answer` for a completed `askId` dropped with a `notice`, never applied.
-- A malformed answer (wrong JSON shape) treated as `null`, never thrown on the
-  game thread.
+- A malformed answer (wrong JSON shape) never thrown on the game thread. Before
+  amendment **M68** it was treated as `null`; since M68 it is **refused** and the
+  question asked again with a `reason`, like any answer the kind's rule forbids
+  (§5.2) — a `null` is still always legal.
 - **Concede reachable from every UI state**, so a wedge is always escapable.
 
 ---

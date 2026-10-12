@@ -283,6 +283,10 @@ when the name is one of the candidates.
   ask's `defenderAllowed` is true (trample), else on the last blocker; on an
   engine before M67 nothing goes to the player while a creature blocks. The
   bridge refuses any other split and asks again with a `reason`.
+- **Every other answer is checked too** (amendment M68, D426): a divided amount
+  is filled within each target's `min`/`max` and adds up to `total`; and when the
+  bridge refuses an answer and asks the same question again, its `reason` goes
+  into the model's context ("The engine refused your last answer: …").
 - When the steps run out, priority is passed with no call until the next moment.
 
 **The engine is the rules judge.** When a step has no matching action, the

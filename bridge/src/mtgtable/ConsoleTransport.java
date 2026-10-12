@@ -358,6 +358,10 @@ public final class ConsoleTransport implements Transport {
         final StringBuilder sb = new StringBuilder(256);
         sb.append("\n== ask ").append(b.get("askId")).append("  ").append(kind).append("  ")
           .append(quote(String.valueOf(b.getOrDefault("prompt", b.getOrDefault("title", "")))));
+        if (b.get("reason") instanceof String) {
+            // M67 / M68: the bridge refused the last answer to this question, and why.
+            sb.append("\n  refused: ").append(b.get("reason"));
+        }
         switch (kind) {
         case "confirm":
             sb.append("\n  y = ").append(b.get("yesLabel")).append("   n = ").append(b.get("noLabel"))
@@ -365,6 +369,10 @@ public final class ConsoleTransport implements Transport {
             break;
         case "text":
             sb.append("\n  type the text, or . to cancel   (initial: ").append(b.get("initial")).append(')');
+            if (b.get("min") != null || b.get("max") != null) {
+                sb.append("   a number from ").append(b.get("min") == null ? "-" : b.get("min"))
+                  .append(" to ").append(b.get("max") == null ? "-" : b.get("max"));   // M68
+            }
             break;
         case "order":
             menu(sb, b.get("dest"), 0);
@@ -384,9 +392,6 @@ public final class ConsoleTransport implements Transport {
         case "assign_damage":
         case "assign_amount":
             menu(sb, b.get("targets"), 0);
-            if (b.get("reason") instanceof String) {
-                sb.append("\n  refused: ").append(b.get("reason"));            // M67
-            }
             sb.append("\n  total ").append(b.get("total"))
               .append("   answer: <index>=<amount>,<index>=<amount>  (index 0 is the defender")
               .append(Boolean.FALSE.equals(b.get("defenderAllowed")) ? ", and may take no damage" : "")
