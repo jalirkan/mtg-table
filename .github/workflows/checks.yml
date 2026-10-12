@@ -214,6 +214,9 @@ jobs:
         run: node tools/match-launcher-selftest.mjs
       - name: review-runner-selftest.mjs
         run: node tools/review-runner-selftest.mjs
+      # D429: the search hint's /hint against a fake coach-grade.sh serve.
+      - name: hint-runner-selftest.mjs
+        run: node tools/hint-runner-selftest.mjs
       # D400: the draft room -- the Grid rules against ForgeCoach's golden draft, its door, a full draft.
       - name: draft-room-selftest.mjs
         run: node tools/draft-room-selftest.mjs

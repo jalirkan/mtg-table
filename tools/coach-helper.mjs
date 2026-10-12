@@ -83,6 +83,14 @@
 //                 --no-eval turns it off; --eval-python, --eval-schema <schemaId> (refuse
 //                 another), --eval-cube <cube.md> (refuse another card list).
 //
+//   POST /hint    -- THE SEARCH HINT (D429): "what would the search AI do?" for the
+//                 one decision open in a game the engine is playing, from that seat's
+//                 own log in var/games/, in a few seconds (tools/coach-grade.sh serve,
+//                 booted on the first hint, at low priority).  tools/hint-runner.mjs's
+//                 header is that contract (docs/search-hint.md the copyable form);
+//                 /health carries "hint": 1 when the bridge is built (else 0),
+//                 --no-hint turns it off.
+//
 //   GET  /match, POST /match  -- THE MATCH LAUNCHER (D303): start a match with two
 //                 decks the browser built.  tools/match-launcher.mjs's header is that
 //                 contract; /health then carries "match": 1 (else "match": 0).  Only
@@ -229,6 +237,7 @@ import { fileURLToPath } from 'node:url';
 import { MAX_MATCH_BODY, createMatchLauncher } from './match-launcher.mjs';
 import { MAX_REVIEW_BODY, createReviewRunner, cleanOld, gameLog, readLogText } from './review-runner.mjs';
 import { createAutoReview, runnerStatusFile } from './auto-review.mjs';
+import { MAX_HINT_BODY, createHintRunner } from './hint-runner.mjs';
 import { MAX_EVAL_BODY, createEvalRunner, resolveEvalModel, resolveEvalPython } from './eval-runner.mjs';
 import { DEFAULT_ROOM_PORT, MAX_CREATE_BODY, createLimiter, createRoomOwner, createRoomStore, startRoomServer } from './draft-room.mjs';
 import { MAX_BUG_BODY, createBugStore } from './bug-reports.mjs';
@@ -499,7 +508,7 @@ function readConfig() {
 function parseArgs(argv) {
   const a = { port: undefined, lan: false, token: process.env.COACH_HELPER_TOKEN || '', wsPort: undefined, queueMax: DEFAULT_QUEUE_MAX, timeoutS: 300,
     matchDir: undefined, supervisor: undefined, matchTimeoutS: 180, cardsZip: undefined,
-    review: true, reviewJobs: undefined, reviewQueueMax: 2, autoReview: undefined, runnerStatus: undefined,
+    review: true, hint: true, reviewJobs: undefined, reviewQueueMax: 2, autoReview: undefined, runnerStatus: undefined,
     eval: true, evalModel: undefined, evalPython: undefined, evalSchema: undefined, evalCube: undefined,
     draftRoom: false, roomPort: undefined, roomDir: 'var/draft-room', roomSiteDir: undefined, roomOrigins: [], roomPublicUrl: null };
   for (let i = 0; i < argv.length; i++) {
@@ -520,6 +529,7 @@ function parseArgs(argv) {
     else if (f === '--match-timeout') a.matchTimeoutS = Number(val());
     else if (f === '--cards-zip') a.cardsZip = val();
     else if (f === '--no-review') a.review = false;
+    else if (f === '--no-hint') a.hint = false;   // D429
     else if (f === '--review-jobs') a.reviewJobs = Number(val());
     else if (f === '--review-queue-max') a.reviewQueueMax = Number(val());
     else if (f === '--no-auto-review') a.autoReview = false;   // D385
@@ -624,7 +634,7 @@ export function seatReviewOf({ review, auto }, gameId) {
 }
 
 export function startHelper(opts) {
-  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, auto = null, evaluator = null, room = null, bugs = null, log = (s) => console.log(s) } = opts;
+  const { port, lan, token, wsPort, origins, queueMax = DEFAULT_QUEUE_MAX, timeoutS, match = null, review = null, hint = null, auto = null, evaluator = null, room = null, bugs = null, log = (s) => console.log(s) } = opts;
   // D411: bug reports through this door -- a few a minute is plenty for a person at a board.
   const bugLimit = createLimiter({ perMinute: opts.bugsPerMinute ?? 6, burst: opts.bugsBurst ?? 10 });
   // D386: the address to bind.  Only the self-test passes `bindHost` (a non-LAN
@@ -689,7 +699,7 @@ export function startHelper(opts) {
       const eng = matchCap ? { ...match.engine(), ...match.aiChoices?.() } : null;   // D308: engine running | idle; D333: aiPolicies
       const q = { concurrency: 1, queue: { max: queueMax, length: queue.length }, running: active ? 1 : 0, supersedes: 1, replaceRunning: 1 };   // D325; D410
       const rv = review ? { ...review.health(), ...(auto ? auto.health() : { autoReview: 0 }) } : { review: 0, autoReview: 0 };   // D353, D385
-      const ev = { ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}) };   // D361; D400 (no key without --draft-room); D411
+      const ev = { ...(hint ? hint.health() : { hint: 0 }), ...(evaluator ? evaluator.health() : { eval: 0 }), ...(room ? room.health() : {}), ...(bugs ? bugs.health() : {}) };   // D361; D400 (no key without --draft-room); D411
       send(res, 200, info.ok
         ? { ok: true, helper: HELPER_VERSION, claude: info.version, models: MODELS, thinking: THINKING, vision: 1, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }
         : { ok: false, helper: HELPER_VERSION, error: info.error, ...q, match: matchCap, ...eng, ...(matchCap ? { engine_start: 1, engine_start_profile: 1, engine_start_seed: 1, engine_start_policy: 1 } : {}), ...rv, ...ev }, cors);
@@ -727,6 +737,19 @@ export function startHelper(opts) {
       const r = path === '/review' ? review.list() : review.get(path.slice('/review/'.length));
       send(res, r.status, r.body, cors);
       say(r.status);
+      return;
+    }
+    if (path === '/hint') {
+      // D429: the search hint (tools/hint-runner.mjs).  Behind the same gate as /coach.
+      if (req.method !== 'POST') { send(res, 405, { ok: false, type: 'error', message: 'use POST' }, { ...cors, Allow: 'POST, OPTIONS' }); say(405); return; }
+      if (!hint) { send(res, 503, { ok: false, type: 'error', message: 'the search hint is off: this helper was started with --no-hint' }, cors); say(503); return; }
+      const raw = await readBody(req, res, MAX_HINT_BODY, '256 KB', cors, say);
+      if (raw === null) return;
+      let q;
+      try { q = JSON.parse(raw); } catch { send(res, 400, { ok: false, type: 'error', message: 'the body is not JSON' }, cors); say(400); return; }
+      const r = await hint.post(q);
+      send(res, r.status, r.body, cors);
+      say(r.status, r.status === 200 ? ` (${r.body.status}${r.body.pick ? ` ${r.body.pick}, ${r.body.strength}` : ''}, ${r.body.wallMs} ms)` : ` (${r.body.message.slice(0, 160)})`);
       return;
     }
     if (path === '/eval') {
@@ -1049,6 +1072,7 @@ export function startHelper(opts) {
       for (const c of live) { try { process.kill(-c.pid, 'SIGKILL'); } catch { /* gone */ } }
       auto?.stop();
       review?.close();
+      hint?.close();
       evaluator?.close();
       server.close();
       server.closeAllConnections?.();
@@ -1106,6 +1130,8 @@ async function main() {
     review = createReviewRunner({ repoRoot: cfg.repoRoot, jobs, queueMax: a.reviewQueueMax, log: (s) => console.log(s) });
     review.restore();   // D385: the newest finished reports on disk, served again
   }
+  // D429: the search hint, one booted engine started on the first request.
+  const hint = a.hint ? createHintRunner({ repoRoot: cfg.repoRoot, log: (s) => console.log(`COACH ${s}`) }) : null;
   let auto = null;
   if (review && (a.autoReview ?? cfg.autoReview)) {
     auto = createAutoReview({ repoRoot: cfg.repoRoot, review, statusFile: a.runnerStatus ? resolve(a.runnerStatus) : runnerStatusFile(cfg.repoRoot),
@@ -1156,7 +1182,7 @@ async function main() {
     room = createRoomOwner({ store, roomPort, lan: a.lan, publicUrl: a.roomPublicUrl });
     console.log(`ROOM LISTENING http://${a.lan ? '0.0.0.0' : '127.0.0.1'}:${roomPort} (every room route needs a seat token; ${kept} room${kept === 1 ? '' : 's'} kept from ${a.roomDir})${a.roomSiteDir ? `; the site from ${a.roomSiteDir}` : '; no site (--room-site-dir)'}`);
   }
-  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, auto, evaluator, room, bugs });
+  const h = startHelper({ port, lan: a.lan, token: a.token, wsPort, origins: cfg.origins, queueMax: a.queueMax, timeoutS: a.timeoutS, match, review, hint, auto, evaluator, room, bugs });
   let bound;
   try { bound = await h.listen(); } catch (e) {
     console.error(e.code === 'EADDRINUSE' ? `coach-helper: port ${port} is in use (another coach helper? --port, or config.json coachPort)` : `coach-helper: ${e.message}`);
@@ -1171,6 +1197,7 @@ async function main() {
   console.log(!review ? 'COACH REVIEW    /review off (--no-review)'
     : review.available() ? 'COACH REVIEW    /review on: tools/coach-grade.sh review, one at a time'
     : 'COACH REVIEW    /review waits for the bridge build (./bridge/build.sh); /health says "review": 0 until then');
+  console.log(`COACH HINT      ${hint ? hint.describe() : '/hint off (--no-hint)'}`);
   if (review && !auto) console.log(`COACH AUTO      automatic reviews off (${a.autoReview === false ? '--no-auto-review' : 'config.json coach.autoReview'})`);
   auto?.start();   // D385: after LISTENING, so its first scan never delays the port
   if (!evaluator) console.log('COACH EVAL      /eval off (--no-eval)');

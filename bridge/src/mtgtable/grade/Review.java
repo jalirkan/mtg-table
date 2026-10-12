@@ -103,6 +103,50 @@ public final class Review {
     }
 
     /**
+     * The kind of decision an open input asks the viewer for, as the review
+     * grades them: the attack prompt, the block prompt, a target prompt, or a
+     * priority prompt in the viewer's own main phase with an empty stack
+     * ({@code spell}); null for anything else.  {@link #plan}'s rule, and the
+     * live hint's (D429), so the two can never disagree about a moment.
+     */
+    static String kindOf(final Map<?, ?> state, final Map<?, ?> input, final int seat) {
+        if (state == null || input == null) {
+            return null;
+        }
+        final String phase = WireLog.str(state, "phase");
+        if (phase == null || WireLog.num(state, "turn", 0) <= 0) {
+            return null;   // the pre-game prompts
+        }
+        final String prompt = String.valueOf(WireLog.str(input, "prompt")).trim();
+        if (prompt.startsWith("Select creatures to attack")) {
+            return "attack";
+        }
+        if (prompt.startsWith("Select creatures to block")) {
+            return "block";
+        }
+        if (isTargetInput(input)) {
+            return "target";
+        }
+        if (prompt.regionMatches(true, 0, "Priority:", 0, 9) && isMain(phase)
+                && WireLog.num(state, "activePlayer", -1) == seat && WireLog.arr(state, "stack").length == 0) {
+            return "spell";
+        }
+        return null;
+    }
+
+    /**
+     * The search hint's moment (D429): the kind of the decision open at the end
+     * of everything before frame {@code frame} -- the latest state and the
+     * latest input of the viewer's own log, by {@link #kindOf} -- or null when
+     * no gradable decision is open there (the opponent's turn, a mana payment,
+     * a question the analysis does not grade).
+     */
+    public static String liveType(final WireLog log, final int frame) {
+        final WireLog.Moment m = log.live(frame);
+        return m == null ? null : kindOf(m.state, m.input, log.seat);
+    }
+
+    /**
      * The decisions of the log's viewer to grade, in log order.  A human-seat
      * log (one with acts): the first act of each decision -- the viewer's own
      * main phase at a priority prompt with an empty stack ({@code spell}, once
@@ -162,18 +206,17 @@ public final class Review {
                 continue;   // the pre-game prompts
             }
             final String prompt = String.valueOf(WireLog.str(input, "prompt")).trim();
+            final String kind = kindOf(state, input, log.seat);
             String key;
-            String kind;
             String played = null;
-            if (prompt.startsWith("Select creatures to attack")) {
+            if (kind == null) {
+                continue;
+            } else if ("attack".equals(kind)) {
                 key = "attack:" + turn;
-                kind = "attack";
-            } else if (prompt.startsWith("Select creatures to block")) {
+            } else if ("block".equals(kind)) {
                 key = "block:" + turn;
-                kind = "block";
-            } else if (isTargetInput(input)) {
+            } else if ("target".equals(kind)) {
                 key = "target:" + inputIdx + ":" + prompt.split("\n")[0];
-                kind = "target";
                 if ("clickCard".equals(action)) {
                     final long id = WireLog.num(act, "cardId", -1);
                     boolean offered = false;
@@ -188,12 +231,8 @@ public final class Review {
                     seen.add(key);   // cancelled, or a click the prompt did not offer: no choice to grade
                     continue;
                 }
-            } else if (prompt.regionMatches(true, 0, "Priority:", 0, 9) && isMain(phase)
-                    && WireLog.num(state, "activePlayer", -1) == log.seat && WireLog.arr(state, "stack").length == 0) {
-                key = "spell:" + turn + ":" + phase;
-                kind = "spell";
             } else {
-                continue;
+                key = "spell:" + turn + ":" + phase;
             }
             if (!seen.add(key)) {
                 continue;

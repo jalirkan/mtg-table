@@ -861,8 +861,17 @@ public final class CoachGrade {
         } catch (final HiddenPool.Refused e) {
             return new Json.JsonOut().obj().n("v", 1).n("status", "refused").n("error", e.getMessage()).n("frame", frame).end().done();
         }
+        String type = f.s("type", "");
+        if ("auto".equals(type)) {
+            // D429, the search hint: the decision open at this moment, by the review's own rule.
+            type = Review.liveType(log, frame);
+            if (type == null) {
+                return new Json.JsonOut().obj().n("v", 1).n("status", "unsupported").n("error", "no decision the analysis grades is open"
+                        + " here (it grades main-phase spells, attacks, blocks and targets)").n("frame", frame).end().done();
+            }
+        }
         final long t0 = System.nanoTime();
-        final String line = gradeOne(cfg, logFile, frame, f.s("mode", "live"), f.s("type", ""), k, liveSettings(f), 0);
+        final String line = gradeOne(cfg, logFile, frame, f.s("mode", "live"), type, k, liveSettings(f), 0);
         final long ms = (System.nanoTime() - t0) / 1_000_000L;
         return line.substring(0, line.length() - 1) + ",\"frame\":" + frame + ",\"wallMs\":" + ms + "}";
     }
@@ -873,7 +882,10 @@ public final class CoachGrade {
      * printing goes to stderr).  A request is
      * {@code {"id", "log", "type", "frame"?, "mode"?, "oppDeck"?, "oppPool"?,
      * "deck"?, "budgetMs"?, "horizon"?, "seed"?, "only"?}}; the answer is
-     * {@code analyse}'s object with the request's {@code id}.  Requests are
+     * {@code analyse}'s object with the request's {@code id}.  {@code "type":
+     * "auto"} (D429, the search hint) grades whatever decision is open at the
+     * moment ({@link Review#liveType}), or answers {@code "status":
+     * "unsupported"} when none the analysis grades is.  Requests are
      * answered one at a time, in order; EOF ends the process.
      */
     static int serve(final String[] argv) throws Exception {

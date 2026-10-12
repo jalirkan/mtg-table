@@ -59,6 +59,13 @@
  * catch-up lacks the ask or differs from the seat's frames by a byte, and if no
  * ask was raised in the whole game (nothing was tested). Gate step 10c.
  *
+ * `--hold-hook <module.mjs>` (D429) parks the seat on each new decision while
+ * an outside check runs: before the policy answers an `input` it has not held
+ * yet, it awaits the module's default export with `{gameId, me, stateSeq,
+ * inputSeq, state, input}` -- the engine stays parked on this seat the whole
+ * time, exactly as it does while a person thinks.  `tools/hint-probe.mjs` asks
+ * the coach helper's /hint there.  Without the flag nothing changes.
+ *
  * `--refuse-first-ask` is the cancelAll() coverage nothing else in the repo has:
  * it plays normally until the first `ask` FRAME, drops the socket while a game
  * thread is parked inside `ReplyPool.await`, reconnects a few seconds later and
@@ -101,7 +108,8 @@
  */
 
 import { mkdirSync, createWriteStream, writeFileSync } from 'node:fs';
-import { dirname, extname } from 'node:path';
+import { dirname, extname, resolve as resolvePath } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { createAdversary } from './adversary/core.mjs';
 
@@ -149,7 +157,8 @@ function usage(message) {
       '                                  [--undo-race]\n' +
       '                                  [--refuse-first-ask [--reconnect-after 5000]]\n' +
       '                                  [--observe-at-ask]\n' +
-      '                                  [--adversary <report.json> [--require-kinds k1,k2]]\n',
+      '                                  [--adversary <report.json> [--require-kinds k1,k2]]\n' +
+      '                                  [--hold-hook <module.mjs>]\n',
   );
   process.exit(2);
 }
@@ -158,7 +167,7 @@ const args = {
   port: 8642, url: null, timeoutS: 300, log: null, resyncAfter: 12, quiet: false,
   refuseFirstAsk: false, reconnectAfterMs: 5000, probe: false, games: 1, comfort: false,
   newGameDelayMs: 0, requireYieldRepeat: false, requireLateUndo: false, undoRace: false,
-  observeAtAsk: false, adversary: null, requireKinds: [],
+  observeAtAsk: false, adversary: null, requireKinds: [], holdHook: null,
 };
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
@@ -180,6 +189,8 @@ for (let i = 2; i < process.argv.length; i++) {
     // answers that must be refused, every input class probed once a turn with
     // an act the engine must refuse; tools/adversary/ has the rules.
     case '--adversary': args.adversary = next(); break;
+    // D429: park on each new decision while an outside check runs (see the header).
+    case '--hold-hook': args.holdHook = next(); break;
     case '--require-kinds': args.requireKinds = next().split(',').filter((k) => k !== ''); break;
     // M6, protocol amendment M38. After each `over` this seat sends
     // `act: newGame {mode}` and plays on, exactly as AutoTransport does: nothing
@@ -342,6 +353,12 @@ let adv = null;
 /** D428: `${turn}:${cardId}` -- the permanents the adversary's policy has clicked this turn. */
 const advClicked = new Set();
 if (args.adversary !== null) adv = createAdversary({ answer, act: (a, e) => act(a, e), say });
+/** D429: --hold-hook's function, the seqs of the last state and input, and whether a hold is running. */
+const holdHook = args.holdHook === null ? null : (await import(pathToFileURL(resolvePath(args.holdHook)).href)).default;
+let lastStateSeq = 0;
+let lastInputSeq = 0;
+let holdKey = '';
+let holdPending = false;
 let myHand = [];
 let myLands = [];
 /** Untapped lands this seat controls on the battlefield -- what `--comfort`'s undo step taps for mana. */
@@ -614,12 +631,14 @@ function onFrame(text) {
       break;
     case 'state':
       stats.states += 1;
+      lastStateSeq = frame.seq;
       onState(body);
       lastActivity = Date.now();
       break;
     case 'input': {
       stats.inputs += 1;
       inputsThisGame += 1;
+      lastInputSeq = frame.seq;
       pendingInput = body;
       // --comfort 3b: an `input` that asks this seat to ACT while the yielded
       // key sits on TOP of the stack is the engine NOT consulting the store.
@@ -1723,6 +1742,21 @@ function tick() {
   const sinceDecision = now - lastDecisionAt;
   if (quiet >= SETTLE_MS || sinceDecision >= STEP_CAP_MS) {
     lastActivity = now;                        // one decision per settle window
+    if (holdHook !== null) {
+      // D429: the seat stays parked while the hook runs (once per new state + input).
+      if (holdPending) return;
+      const k = `${lastStateSeq}:${lastInputSeq}`;
+      if (k !== holdKey) {
+        holdKey = k;
+        holdPending = true;
+        Promise.resolve()
+          .then(() => holdHook({ gameId: gameIds[gameIds.length - 1] ?? null, me, stateSeq: lastStateSeq, inputSeq: lastInputSeq,
+            state: lastStateBody, input: pendingInput }))
+          .catch((e) => say(`HOLD hook threw: ${String(e)}`))
+          .finally(() => { holdPending = false; lastActivity = Date.now(); lastFrameAt = Date.now(); });
+        return;
+      }
+    }
     if (adv !== null) {
       // D428: hold while an illegal act waits for its refusal; otherwise, once
       // a turn per input class, the illegal act goes first.

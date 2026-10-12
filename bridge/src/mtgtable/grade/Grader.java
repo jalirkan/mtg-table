@@ -215,6 +215,7 @@ public final class Grader {
                     shared.playLand = land;
                     notes.add("the land drop is open: " + b0.byWire.get(land).getName() + " #" + land
                             + " is played first in every option (Forge's choice of land); --lands grades land drops instead");
+                    j.n("landFirst", land);   // D429: the hint says "play <land> first" in board words
                     b0 = rb.build(GradeMath.mix(set.seed ^ GradeMath.hash(key)), shared);
                 }
             }
