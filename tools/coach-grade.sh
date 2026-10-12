@@ -42,6 +42,7 @@
 # playouts to the end of this turn scored by the search's leaf evaluator, so a
 # coach can explain the engine's numbers.  serve keeps one booted engine (Forge
 # takes ~10 s to start) and answers one JSON request per stdin line:
+# ("type": "auto" grades the decision open at the frame, by the review's rule -- D429's search hint)
 #   {"id","log","type","frame"?,"mode"?,"oppPool"?,"oppKnown"?,"ownPool"?,"deck"?,"budgetMs"?,"horizon"?,"seed"?,
 #    "only"?,"leafScale"?,"oppDeck"?,"oppDeckPublic"?,"oppDeckPublicReason"?}
 # with one JSON line on stdout (`{"ready":true}` first); see CoachGrade's header.

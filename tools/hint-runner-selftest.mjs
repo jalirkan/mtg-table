@@ -1,0 +1,265 @@
+#!/usr/bin/env node
+// mtg-table — tools/hint-runner-selftest.mjs
+// Copyright (C) 2026 mtg-table contributors.
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// The search hint's self-test (D429): tools/hint-runner.mjs and the coach
+// helper's /hint route, against a FAKE `coach-grade.sh serve` -- a bash script
+// that runs a small Node fake printing the real one's ready line and answering
+// each request line by the game id in the moment's header: "slow-..." sleeps
+// 1.2 s, "refuse-..." answers refused, "trivial-..." one option, "none-..."
+// unsupported, "crash-..." exits.  Everything goes under var/hint-runner-selftest/.
+// No Forge, no claude, no network.
+//
+// What it holds: the request's validation (no field takes the AI's deck; the
+// review's own pool / known / game-id rules; stateSeq, inputSeq, budget
+// ranges); the moment pinned in the bridge's own log by seq (ok, moved on, not
+// there yet, a half-written last line, a finished game); the answer's words
+// never stronger than the intervals (best / tie / close / worse; clear only
+// when every other option is worse; the runner-up the best tie or close call);
+// the request the engine gets (type auto, the frame count, the pool a file,
+// the known picks, the budget); a game between two people refused; the seat;
+// supersede (waiting and running); the queue and 429; refused -> 403; a dead
+// engine -> 500 and a restart; the default spawn under nice; and the helper's
+// route (/health, POST, 405, Origin, --no-hint).
+//
+//   node tools/hint-runner-selftest.mjs      # exit 0 iff every check passes; ~10 s
+//
+// Run from the repo root (hard rule 9).  Gate step 12f; CI.
+
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { request } from 'node:http';
+import { join, resolve } from 'node:path';
+import { createHintRunner, hintOf, momentOf, optionVerdict, validateHint } from './hint-runner.mjs';
+import { startHelper } from './coach-helper.mjs';
+
+const REL = 'var/hint-runner-selftest';
+const DIR = resolve(REL);
+rmSync(DIR, { recursive: true, force: true });
+mkdirSync(join(DIR, 'games'), { recursive: true });
+
+let checks = 0;
+let failures = 0;
+const check = (ok, what) => {
+  checks++;
+  if (!ok) failures++;
+  console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${what}`);
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// --- games: a header, a state (seq 5), an input (seq 6), an act ---------------------------------
+const header = (id, seat = 0) => JSON.stringify({ v: 1, kind: 'session', gameId: id, seat, decks: [{ player: seat, path: 'decks/x.dck' }] });
+const frames = [
+  { v: 1, seq: 1, dir: 's2c', type: 'hello_ok', body: { gameId: 'x', you: 0 } },
+  { v: 1, seq: 5, dir: 's2c', type: 'state', body: { turn: 3, phase: 'MAIN1' } },
+  { v: 1, seq: 6, dir: 's2c', type: 'input', body: { prompt: 'Priority: You' } },
+  { v: 1, seq: 2, dir: 'c2s', type: 'act', body: { action: 'clickCard', cardId: 9 } },
+].map((f) => JSON.stringify(f));
+const game = (id, seat = 0) => {
+  mkdirSync(join(DIR, 'games', id), { recursive: true });
+  writeFileSync(join(DIR, 'games', id, 'frames.jsonl'), `${header(id, seat)}\n${frames.join('\n')}\n`);
+};
+for (const id of ['g1', 'g2', 'g3', 'slow-1', 'slow-2', 'slow-3', 'refuse-1', 'trivial-1', 'none-1', 'crash-1', 'friend-m1234567890123']) game(id);
+game('seat1', 1);
+
+// --- the fake coach-grade.sh serve ----------------------------------------------------------------
+const FAKE_JS = join(DIR, 'fake-serve.mjs');
+writeFileSync(FAKE_JS, `// A fake \`coach-grade.sh serve\` for hint-runner-selftest.mjs.  Not the grader.
+import { appendFileSync, readFileSync } from 'node:fs';
+import { createInterface } from 'node:readline';
+if (process.argv[2] !== 'serve') { console.error('not serve'); process.exit(2); }
+if (process.env.FAKE_BOOT_FAIL) { console.error('COACH-GRADE FAILED: no engine'); process.exit(2); }
+console.log('[noise] Forge prints to stderr, but a stray line here is skipped');
+console.log(JSON.stringify({ ready: true }));
+const rl = createInterface({ input: process.stdin });
+const opt = (token, winRate, regret, lo, hi, best, n = 8, extra = {}) => ({ token, label: token + ' label', forge: false, n, winRate, winLo: winRate - 0.1, winHi: winRate + 0.1, regret, regretLo: lo, regretHi: hi, best, ...extra });
+rl.on('line', async (line) => {
+  const q = JSON.parse(line);
+  appendFileSync(${JSON.stringify(join(DIR, 'requests.jsonl'))}, line + '\\n');
+  const text = readFileSync(q.log, 'utf8');
+  const head = JSON.parse(text.split('\\n')[0]);
+  const id = head.gameId;
+  const nFrames = text.trim().split('\\n').length - 1;
+  const base = { id: q.id, v: 1, type: 'spell', turn: 3, phase: 'MAIN1', seat: head.seat, opponent: q.oppPool ? 'pool:' + q.oppPool + ' minus ...' : 'unknown', ownDeck: 'deck:decks/x.dck', frame: q.frame, wallMs: 3100 };
+  if (id.startsWith('slow-')) await new Promise((r) => setTimeout(r, 1200));
+  if (id.startsWith('crash-')) process.exit(3);
+  let a;
+  if (id.startsWith('refuse-')) a = { id: q.id, v: 1, status: 'refused', error: 'live analysis does not take the opponent deck list' };
+  else if (id.startsWith('none-')) a = { id: q.id, v: 1, status: 'unsupported', error: 'no decision the analysis grades is open here', frame: q.frame };
+  else if (id.startsWith('trivial-')) a = { ...base, status: 'trivial', options: [{ token: 'pass', label: 'pass', forge: true }] };
+  else a = { ...base, status: 'ok', measure: 'leaf', rounds: 6, playouts: 30, best: 'cast:9', forgeChoice: 'pass', landFirst: 4, nFrames,
+    options: [opt('pass', 0.50, 0.04, 0.01, 0.07, false, 8, { forge: true }), opt('cast:9', 0.54, 0, 0, 0.02, true),
+      opt('cast:10', 0.52, 0.02, -0.01, 0.05, false), { token: 'cast:11', label: 'x', forge: false, alias: 'cast:10', n: 8, winRate: 0.52 }] };
+  console.log(JSON.stringify(a));
+});
+`);
+const FAKE = join(DIR, 'fake-grade.sh');
+writeFileSync(FAKE, `#!/usr/bin/env bash\n# A fake tools/coach-grade.sh for hint-runner-selftest.mjs.\nexec node ${JSON.stringify(FAKE_JS)} "$@"\n`);
+chmodSync(FAKE, 0o755);
+
+const mk = (extra = {}) => createHintRunner({ repoRoot: process.cwd(), gamesDir: `${REL}/games`, workDir: `${REL}/work`, script: FAKE,
+  prefix: [], waitLogMs: 200, log: () => {}, ...extra });
+const requests = () => (existsSync(join(DIR, 'requests.jsonl')) ? readFileSync(join(DIR, 'requests.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l)) : []);
+const pool = Array.from({ length: 40 }, (_, i) => [2, `Card Number ${String.fromCharCode(65 + (i % 26))}${i}`]);
+
+// 1. Validation.
+console.log('validation');
+const v = (q) => validateHint(q);
+check(v({ gameId: 'g1', stateSeq: 5 }).req?.budgetMs === 3000, 'a plain request: the budget defaults to 3000 ms');
+const deck = v({ gameId: 'g1', stateSeq: 5, oppDeck: 'decks/doom-legion.dck' });
+check(!deck.req && /AI's deck is never accepted/.test(deck.problems[0]), 'oppDeck: refused, and the refusal says the AI\'s deck is never accepted');
+check(!v({ gameId: 'g1', stateSeq: 5, oppDeckPublic: true }).req, 'oppDeckPublic: refused (no field marks a list public here)');
+check(!v({ gameId: 'g1' }).req && !v({ gameId: 'g1', stateSeq: 0 }).req && !v({ gameId: 'g1', stateSeq: 1.5 }).req, 'stateSeq: required, a whole number from 1');
+check(!v({ gameId: 'g1', stateSeq: 5, inputSeq: 'x' }).req && v({ gameId: 'g1', stateSeq: 5, inputSeq: 6 }).req?.inputSeq === 6, 'inputSeq: optional, a whole number');
+check(!v({ gameId: 'g1', stateSeq: 5, budgetMs: 1000 }).req && !v({ gameId: 'g1', stateSeq: 5, budgetMs: 7000 }).req
+  && v({ gameId: 'g1', stateSeq: 5, budgetMs: 6000 }).req?.budgetMs === 6000, 'budgetMs: 1500-6000');
+check(!v({ gameId: '../x', stateSeq: 5 }).req && !v({ gameId: 'a/b', stateSeq: 5 }).req, 'the game id: the review\'s rule (no traversal)');
+check(!v({ gameId: 'g1', stateSeq: 5, oppPool: [[40, 'Swamp']] }).req, 'a pool under 80 cards (a deck): refused, the review\'s rule');
+check(v({ gameId: 'g1', stateSeq: 5, oppPool: pool, oppKnown: ['Shock'] }).req?.pool.length === 40, 'a cube pool and known picks: taken');
+check(!v({ gameId: 'g1', stateSeq: 5, seat: 2 }).req && !v([]).req && !v(null).req, 'seat 0|1; the body an object');
+
+// 2. The moment.
+console.log('the moment');
+const T = `${header('g1')}\n${frames.join('\n')}\n`;
+const m = momentOf(T, 5, 6);
+check(m.state === 'ok' && m.frames === 4 && m.seat === 0 && m.text === T, 'the log at the board\'s state and input: ok, every frame (acts too), the header\'s seat');
+check(momentOf(T, 5).state === 'ok', 'without inputSeq: the state alone');
+check(momentOf(T, 4).state === 'moved' && momentOf(T, 5, 3).state === 'moved', 'a newer state or input in the log: moved on');
+check(momentOf(T, 9).state === 'behind' && momentOf(T, 5, 8).state === 'behind', 'a state or input the log has not reached: behind');
+check(momentOf(`${T}{"v":1,"seq":7,"dir":"s2c","type":"sta`, 5, 6).state === 'ok' && momentOf(`${T}{"v":1,"seq":7,"dir":"s2c","type":"sta`, 5, 6).frames === 4,
+  'a half-written last line is not read');
+check(momentOf(`${T}{"v":1,"seq":7,"dir":"s2c","type":"over","body":{}}\n`, 5, 6).state === 'moved', 'a finished game: moved on');
+check(momentOf('{"v":1}\n', 5).state === 'bad' && momentOf('', 5).state === 'bad', 'no session header: bad');
+
+// 3. The words.
+console.log('the words');
+const o = (regret, lo, best = false, n = 8) => ({ token: 't', n, winRate: 0.5, regret, regretLo: lo, best });
+check(optionVerdict(o(0, 0, true)) === 'best' && optionVerdict(o(0.003, 0)) === 'tie' && optionVerdict(o(0.03, 0)) === 'close'
+  && optionVerdict(o(0.03, 0.01)) === 'worse' && optionVerdict(o(0.03, 0.01, false, 0)) === 'not-graded',
+  'best; a regret under 0.005 a tie; an interval including zero close; excluding it worse; no playouts not graded');
+const g0 = { status: 'ok', measure: 'leaf', rounds: 4, playouts: 12, opponent: null, options: [
+  { token: 'attack:none', label: 'no attack', n: 4, winRate: 0.4, regret: 0.1, regretLo: 0.02, regretHi: 0.2, best: false },
+  { token: 'attack:1,2', label: 'attack with both', n: 4, winRate: 0.5, regret: 0, regretLo: 0, regretHi: 0, best: true }] };
+const h0 = hintOf(g0, { gameId: 'g1', seat: 0, stateSeq: 5, inputSeq: 6, frame: 4, budgetMs: 3000 });
+check(h0.pick === 'attack:1,2' && h0.strength === 'clear' && h0.runnerUp === undefined && h0.options[0].token === 'attack:1,2'
+  && h0.options[1].verdict === 'worse', 'every other option worse: the pick is clear, no runner-up, the best first');
+check(h0.knowledge.opponentModel === 'basic-lands' && h0.measure === 'leaf', 'no pool: knowledge says basic lands; the measure says leaf');
+const g1 = { ...g0, opponent: 'pool:x minus', options: [...g0.options, { token: 'attack:1', label: 'attack with one', n: 4, winRate: 0.48, regret: 0.02, regretLo: 0, regretHi: 0.05, best: false }] };
+const h1 = hintOf(g1, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000 });
+check(h1.strength === 'close' && h1.runnerUp === 'attack:1' && h1.knowledge.opponentModel === 'pool',
+  'a close call among the others: too close to call, that option named as the runner-up');
+const g2 = { ...g0, options: [...g1.options, { token: 'attack:2', label: 'attack with two', n: 4, winRate: 0.499, regret: 0.001, regretLo: 0, regretHi: 0.01, best: false }] };
+check(hintOf(g2, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000 }).runnerUp === 'attack:2', 'a tie outranks a close call as the runner-up');
+const gt = hintOf({ status: 'trivial', options: [{ token: 'pass', label: 'pass' }] }, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000 });
+check(gt.pick === 'pass' && gt.strength === 'only', 'one legal option: picked, strength "only"');
+const gu = hintOf({ status: 'unsupported', error: 'no decision' }, { gameId: 'g1', seat: 0, stateSeq: 5, frame: 4, budgetMs: 3000 });
+check(gu.status === 'unsupported' && gu.pick === undefined && /no decision/.test(gu.message), 'unsupported: no pick, the reason');
+
+// 4. The runner against the fake engine.
+console.log('the runner');
+const hr = mk();
+check(hr.health().hint === 1 && hr.health().hintEngine === 'idle' && hr.health().hintBudgetMs.max === 6000, '/health: hint 1, engine idle until the first hint');
+const r1 = await hr.post({ gameId: 'g1', seat: 0, stateSeq: 5, inputSeq: 6, oppPool: pool, oppKnown: ['Shock', 'Lightning Bolt'], budgetMs: 2500 });
+check(r1.status === 200 && r1.body.kind === 'search-hint' && r1.body.status === 'ok' && r1.body.pick === 'cast:9' && r1.body.strength === 'close'
+  && r1.body.runnerUp === 'cast:10' && r1.body.landFirst === 4 && r1.body.forgeChoice === 'pass', `an answer: the pick, too close to call, the runner-up, the land first (${JSON.stringify(r1.body).slice(0, 160)})`);
+check(r1.body.options.find((x) => x.token === 'cast:10')?.same?.[0] === 'cast:11' && !r1.body.options.some((x) => x.token === 'cast:11'),
+  'another copy of a card: reported under the option it is the same as');
+check(r1.body.knowledge.opponentModel === 'pool' && r1.body.stateSeq === 5 && r1.body.budgetMs === 2500 && typeof r1.body.wallMs === 'number',
+  'the knowledge used, the moment and the budget in the answer');
+const q1 = requests().at(-1);
+check(q1.type === 'auto' && q1.frame === 4 && q1.budgetMs === 2500 && q1.log === `${REL}/work/moment.jsonl` && q1.oppPool === `${REL}/work/pool.txt`
+  && Array.isArray(q1.oppKnown) && q1.oppKnown[1] === 'Lightning Bolt' && q1.oppDeck === undefined && q1.deck === undefined,
+  'the engine is asked type auto at the log\'s frame count, the moment a file of the hint\'s own, the pool a file, no deck field');
+check(readFileSync(join(DIR, 'work', 'pool.txt'), 'utf8').split('\n')[0] === '2 Card Number A0', 'the pool file: "n Name" lines');
+check(hr.health().hintEngine === 'ready', 'the engine stays up for the next hint');
+const r2 = await hr.post({ gameId: 'g1', stateSeq: 5 });
+check(r2.status === 200 && r2.body.knowledge.opponentModel === 'basic-lands', 'no pool: basic lands, said in the answer');
+check((await hr.post({ gameId: 'friend-m1234567890123', stateSeq: 5 })).status === 403, 'a game between two people: 403');
+check((await hr.post({ gameId: 'nope', stateSeq: 5 })).status === 404, 'no such game: 404');
+check((await hr.post({ gameId: 'seat1', seat: 0, stateSeq: 5 })).status === 400, 'a seat other than the log\'s: 400');
+const mv = await hr.post({ gameId: 'g1', stateSeq: 4 });
+check(mv.status === 409 && mv.body.code === 'moved-on', 'the game moved on: 409 moved-on');
+const t0 = Date.now();
+const ny = await hr.post({ gameId: 'g1', stateSeq: 9 });
+check(ny.status === 409 && ny.body.code === 'not-yet' && Date.now() - t0 >= 190, 'a moment the log has not reached: waited for, then 409 not-yet');
+const rf = await hr.post({ gameId: 'refuse-1', stateSeq: 5 });
+check(rf.status === 403 && rf.body.status === 'refused', 'the live guard refuses: 403 refused');
+const tv = await hr.post({ gameId: 'trivial-1', stateSeq: 5 });
+check(tv.status === 200 && tv.body.status === 'trivial' && tv.body.pick === 'pass', 'one option: trivial, picked');
+const nn = await hr.post({ gameId: 'none-1', stateSeq: 5 });
+check(nn.status === 200 && nn.body.status === 'unsupported' && !nn.body.pick, 'no decision the analysis grades: unsupported');
+
+// Supersede: the same game, three requests; the first runs, the second waits, the third replaces it.
+console.log('supersede and the queue');
+const s1 = hr.post({ gameId: 'slow-1', stateSeq: 5 });
+await sleep(100);
+const s2 = hr.post({ gameId: 'slow-1', stateSeq: 5 });
+const s3 = hr.post({ gameId: 'slow-1', stateSeq: 5 });
+const [a1, a2, a3] = await Promise.all([s1, s2, s3]);
+check(a2.status === 409 && a2.body.code === 'superseded', 'a waiting hint replaced by a newer one for the same game: 409 superseded at once');
+check(a1.status === 409 && a1.body.code === 'superseded', 'a running hint a newer one replaced: 409 superseded when it ends');
+check(a3.status === 200 && a3.body.status === 'ok', 'the newest gets the answer');
+const hq = mk({ queueMax: 1 });
+const x1 = hq.post({ gameId: 'slow-2', stateSeq: 5 });
+await sleep(100);
+const x2 = hq.post({ gameId: 'slow-3', stateSeq: 5 });
+const x3 = await hq.post({ gameId: 'g2', stateSeq: 5 });
+check(x3.status === 429, 'other games past the queue: 429');
+check((await x1).status === 200 && (await x2).status === 200, 'the ones in the queue are answered in turn');
+hq.close();
+
+// A dead engine.
+console.log('a dead engine');
+const cr = await hr.post({ gameId: 'crash-1', stateSeq: 5 });
+check(cr.status === 500 && /stopped/.test(cr.body.message), 'the engine dies mid-hint: 500, says so');
+const after = await hr.post({ gameId: 'g3', stateSeq: 5 });
+check(after.status === 200 && after.body.status === 'ok', 'the next hint starts the engine again');
+hr.close();
+check(hr.health().hintEngine === 'idle', 'close() stops the engine');
+const bf = createHintRunner({ repoRoot: process.cwd(), gamesDir: `${REL}/games`, workDir: `${REL}/work`, script: FAKE, prefix: [], log: () => {}, env: { FAKE_BOOT_FAIL: '1' } });
+const bfr = await bf.post({ gameId: 'g1', stateSeq: 5 });
+check(bfr.status === 503 && /stopped while starting/.test(bfr.body.message), 'an engine that cannot start: 503, with its last line');
+const off = mk({ available: () => false });
+check(off.health().hint === 0 && (await off.post({ gameId: 'g1', stateSeq: 5 })).status === 503, 'the bridge not built: hint 0 and 503');
+// The default spawn: under nice, detached, the serve command, a Forge home of its own.
+let spied = null;
+const spy = createHintRunner({ repoRoot: process.cwd(), gamesDir: `${REL}/games`, workDir: `${REL}/work`, log: () => {},
+  spawnImpl: (cmd, args, o2) => { spied = { cmd, args, o2 }; throw new Error('spy'); } });
+await spy.post({ gameId: 'g1', stateSeq: 5 });
+check(spied && spied.cmd === 'nice' && spied.args.join(' ') === '-n 10 bash tools/coach-grade.sh serve' && spied.o2.detached === true
+  && spied.o2.env.COACH_GRADE_HOME === 'hint-home', 'the default spawn: nice -n 10 bash tools/coach-grade.sh serve, detached, its own Forge home');
+
+// 5. Through the helper.
+console.log('the helper route');
+const origins = ['http://127.0.0.1:*'];
+const call = (port, method, path, body, headers = {}) => new Promise((res, rej) => {
+  const data = body === undefined ? undefined : JSON.stringify(body);
+  const r = request({ host: '127.0.0.1', port, method, path, headers: { ...(data ? { 'Content-Type': 'application/json' } : {}), ...headers } }, (resp) => {
+    let t = '';
+    resp.on('data', (x) => { t += x; });
+    resp.on('end', () => { let j2 = null; try { j2 = JSON.parse(t); } catch { /* not json */ } res({ status: resp.statusCode, body: j2 }); });
+  });
+  r.on('error', rej);
+  if (data) r.write(data);
+  r.end();
+});
+const hint = mk();
+const h = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins, timeoutS: 5, hint, log: () => {} });
+const port = await h.listen();
+const hh = await call(port, 'GET', '/health');
+check(hh.status === 200 && hh.body.hint === 1 && hh.body.hintEngine === 'idle' && hh.body.hintBudgetMs?.default === 3000, '/health carries "hint": 1');
+const p = await call(port, 'POST', '/hint', { gameId: 'g1', stateSeq: 5, inputSeq: 6 }, { Origin: 'http://127.0.0.1:5173' });
+check(p.status === 200 && p.body.pick === 'cast:9', 'POST /hint: 200 with the hint');
+check((await call(port, 'GET', '/hint')).status === 405, 'GET /hint: 405');
+check((await call(port, 'POST', '/hint', { gameId: 'g1', stateSeq: 5, oppDeck: 'x' })).status === 400, 'an opponent deck through the route: 400');
+check((await call(port, 'POST', '/hint', { gameId: 'g1', stateSeq: 5 }, { Origin: 'http://evil.example' })).status === 403, 'another Origin: 403');
+h.close();
+const h2 = startHelper({ port: 0, lan: false, token: '', wsPort: 8642, origins, timeoutS: 5, hint: null, log: () => {} });
+const port2 = await h2.listen();
+check((await call(port2, 'GET', '/health')).body.hint === 0 && (await call(port2, 'POST', '/hint', { gameId: 'g1', stateSeq: 5 })).status === 503,
+  '--no-hint: "hint": 0 and 503');
+h2.close();
+
+rmSync(DIR, { recursive: true, force: true });
+console.log(`hint-runner-selftest ${failures ? 'FAILED' : 'OK'} (${checks} checks, ${failures} failure(s))`);
+process.exit(failures ? 1 : 0);

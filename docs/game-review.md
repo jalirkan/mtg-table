@@ -226,5 +226,11 @@ review of the same game; it preempts a running automatic review.
   `"autoReview": 1|0` (0 also when `var/` cannot be written) and, with 1,
   `"autoReviewQueue": {"pending", "running", "gate": "open"|"review-busy"|"lab-busy"}`.
 
+## The search hint (D429)
+
+The triage's settings for ONE moment of a game still in play, on the player's
+request: `POST /hint` on the same helper, the same hidden-information rule, the
+same verdict words. `docs/search-hint.md` is that contract.
+
 A game's log may also be `var/games/<gameId>/frames.jsonl.gz` when there is no
 `frames.jsonl` (`WireLog` reads gzip; GradeSelfTest holds it, #73).

@@ -396,6 +396,13 @@ public final class GradeSelfTest {
         check(got.toString().equals("spell@2/0=cast:5 attack@7/5=attack:7,8 spell@11/9=pass target@13/9=target:21 block@18/16=block:7>30 "),
                 "a human log's plan: first act of each decision, the cast from hand (not the land), the attack, MAIN2's pass,"
                 + " the clicked target (a cancelled one dropped), the block without the self-listed unblocked attacker: " + got);
+        // D429: the search hint's live moment -- the decision open at the end of the log so far, by the plan's own rule.
+        check("spell".equals(Review.liveType(hl, 2)) && "attack".equals(Review.liveType(hl, 7))
+                && "attack".equals(Review.liveType(hl, 8)) && "spell".equals(Review.liveType(hl, 11))
+                && "target".equals(Review.liveType(hl, 13)) && "block".equals(Review.liveType(hl, 18)),
+                "live hint: main-phase priority, the attack prompt (an attacker already clicked too), MAIN2, a target, a block");
+        check(Review.liveType(hl, 1) == null && Review.liveType(hl, 6) == null,
+                "live hint: no input yet, or combat before its prompt (the last input a main-phase one) -- none");
         check(hp.get(0).momentKey("L").equals("L#live2:spell") && hp.get(1).round == 1,
                 "a planned moment's key is batch's (log#live<frame>:<type>)");
         final List<String> ml = Review.momentLines(hp, "L");

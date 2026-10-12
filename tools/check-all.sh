@@ -2088,6 +2088,9 @@ s12e_skipped() {
 #      Grid rules against ForgeCoach's golden draft, the room listener's door
 #      (tokens always, never loopback alone), two simulated players through a
 #      full 18-grid draft, restart, expiry, the limits and the site; about 3 s.
+#      Since D429 also tools/hint-runner-selftest.mjs: /hint, the search
+#      hint, against a FAKE coach-grade.sh serve (no deck field, the moment by
+#      seq, the words never stronger than the intervals, supersede); about 8 s.
 #      Since D411 also tools/bug-reports-selftest.mjs: bug reports from the
 #      board -- the helper's POST /bug and the room's POST /room/<id>/bug behind
 #      their doors as they were, secrets scrubbed, the caps, and
@@ -2105,6 +2108,9 @@ s12f_coach() {
   # D385: the automatic review after every human game, against the same fake.
   node tools/auto-review-selftest.mjs \
     || die "auto-review-selftest.mjs (12f: the automatic review broke its rules -- see the FAIL lines above)"
+  # D429: the helper's /hint against a fake coach-grade.sh serve.
+  node tools/hint-runner-selftest.mjs \
+    || die "hint-runner-selftest.mjs (12f: the search hint broke its contract with ForgeCoach or its hidden-information rule -- see the FAIL lines above)"
   # D400: the draft room, end to end.
   node tools/draft-room-selftest.mjs \
     || die "draft-room-selftest.mjs (12f: the draft room broke its rules or its door -- see the FAIL lines above)"
