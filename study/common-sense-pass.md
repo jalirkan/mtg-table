@@ -89,3 +89,34 @@ be built without re-discovery. Order = what hurt most at the table.
 17. **An exploratory click activated Carrion Feeder's only ability and sacrificed it.** See
     `rules-integrity-plan.md` Part 2b: lone abilities go through a menu with Cancel; sacrifice/discard costs
     are never auto-chosen; inspect ≠ act. Game lost on it, 2026-10-10.
+
+## Real-game session, 2026-10-12 (PC, ForgeCoach main 346084e on the dev server, mtg-table 1f3cb22a, Search AI, Doom Legion)
+
+Played by me in the browser pane, every click tried, after the Endstep combat study
+(`study/endstep-combat-2026-10-12/COMBAT-STUDY.md`). Fixed today in ForgeCoach PR #146 (small-fixes lane):
+the stuck hover preview (a card that leaves the DOM under the mouse left its big preview mid-screen for turns),
+"Human, you have won the coin toss" / "Human, you are going first!" (the engine's seat name in prompts), and
+the silent "Connecting to the engine…" hang when the page's origin is mistaken for the engine. Two combat
+lanes (pc/board-combat-v2, pc/board-damage-bar) are rebuilding attackers/blockers/divide-damage to the study.
+
+Still open, found today:
+- **Engine ids in ask labels**: the replacement-effects order ask reads "Thriving Isle (9) - Thriving Isle
+  enters tapped." — the "(9)" is the engine's card id (pass item 3, no ids anywhere).
+- **Uncastable cards are lit in hand** and the engine lets the cast start: with one Plains, Agent Phil Coulson
+  ({1}{W}) and Wasp ({2}{W}) were bright; clicking opens "Pay {1}{W}" with Auto disabled and the hint "tap a
+  card first", which is wrong — Auto is off because it cannot pay. Endstep dims what you cannot cast. Needs an
+  engine-side fact (does Forge expose "can pay now" to the GUI? the bridge would carry it), not client rules.
+- **"Forge AI" everywhere but the panel**: the opponent panel says "Search AI" while the slot says "Forge AI's
+  beginning of combat", the log "Forge AI played Swamp", "Forge AI cast HYDRA Troopers" (pass item 6).
+- **Declare attackers has no Skip-combat button before a pick** (Esc = "Clear attackers" only after one);
+  Endstep shows Skip combat [Esc] and Alpha strike [A] from the start. Combat-v2 lane.
+- **Default stops**: the opponent's beginning of combat stops me every turn with "You can cast an instant or
+  use an ability now; or pass" even with nothing castable; Endstep's defaults stop at ATK/BLK and END only.
+- **Mulligan flow**: after one mulligan the engine asked "Return 1 card to the bottom" BEFORE "keep this
+  6-card hand?" (Forge's order); the slot handled both; selection/deselection and the count work.
+- Works as it should: land on one click with the biome; cast → pay → Auto [A]; Cancel [Esc] on a payment;
+  colour choice with 1–4 hotkeys; attackers (count in the button, Call back, attack lane with a numbered
+  badge and the "→ Search AI" chip); the stack panel for my own spell; the turn-grouped Game Log; a page
+  reload mid-game ("Another window has your seat" → Reconnect) resumes the game with the coach's last answer.
+- Setup note for the PC: a vite dev server on a port outside DEV_PORTS (5173/5174/4173) makes the page
+  think the engine served it — run ForgeCoach's dev server on 5173.
