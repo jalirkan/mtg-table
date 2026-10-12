@@ -65,6 +65,17 @@ while D13 holds, M23) never reach a seat; their rules are held by `AskSelfTest`
 also builds and checks illegal answers for every one of the 159 asks recorded in
 `fixtures/` (all eleven kinds).
 
+## The saved fixture
+
+`fixtures/adversary/m68-frames.json` is one refusal chain per kind, cut from these
+games' frame logs (the four gate games' bridge logs, the sideboard and order
+games' client logs): the first asking (`reason: null`), each illegal answer and
+the re-ask that refused it with its reason, and the legal answer the engine took
+— `ability_menu`, `assign_amount`, `assign_damage`, `choose_entities`,
+`choose_list`, `confirm`, `order`, `sideboard`, `text`. `tools/adversary/selftest.mjs`
+holds the rules to it (every answer the bridge refused, the rules refuse; every
+one it took, they take) and `web/test/answer-reason.test.ts` reads its reasons.
+
 ## What it found on the way
 
 - **Before M68 (this branch's D426) each of these was applied** — read off

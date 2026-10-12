@@ -76,4 +76,7 @@ M29 happened.
 
 **Evidence.** `AskSelfTest` (every rule, including the automated seat's answers);
 `check-redaction-selftest` (the m68 controls); the adversarial seat on the real
-engine (D428, `docs/evidence/adversary.md`).
+engine (D428, `docs/evidence/adversary.md`): every illegal answer to every kind
+Forge dispatched refused and re-asked with a reason, every legal one taken;
+`fixtures/adversary/m68-frames.json` is one such chain per kind, cut from those
+games.

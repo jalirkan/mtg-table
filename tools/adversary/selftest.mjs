@@ -12,7 +12,9 @@
 //   2. over EVERY ask in the committed recordings and fixtures (fixtures/games,
 //      the M67 and M69 probe cuts, the hand-written sample): legalAnswer is
 //      taken, and every kind that can be cheated gets at least one illegal
-//      answer to try;
+//      answer to try; and over fixtures/adversary/m68-frames.json (one refusal
+//      chain per kind, cut from real-engine games): every answer the bridge
+//      refused the rules refuse, and every answer it took they take;
 //   3. the state machine (core.mjs) against two fake bridges: an honest one
 //      (it refuses by the same rules and re-asks with a reason) gives no leak;
 //      a leaky one (it applies whatever comes back) is caught on every kind,
@@ -139,6 +141,35 @@ for (const f of files) {
   }
 }
 expect(`the recordings carry asks (${asks})`, asks > 100);
+
+// --- 2b. the real engine's refusals (fixtures/adversary/m68-frames.json) -------------
+// One chain per kind, cut from the gate's adversary games on the real engine
+// (D428): the first asking, each illegal answer and the re-ask that refused it
+// with a reason, then the legal answer the engine took.  The rules must call
+// every refused answer illegal and the last one legal -- the bridge and this
+// JS copy agreeing on what the real bridge actually did.
+{
+  const chains = JSON.parse(readFileSync(join(repo, 'fixtures', 'adversary', 'm68-frames.json'), 'utf8'));
+  const kinds = Object.keys(chains);
+  expect(`the M68 fixture has a chain for each kind the gate's games raise (${kinds.join(', ')})`,
+    ['ability_menu', 'assign_amount', 'assign_damage', 'choose_entities', 'choose_list', 'confirm', 'order', 'sideboard', 'text']
+      .every((k) => kinds.includes(k)));
+  for (const [kind, { frames }] of Object.entries(chains)) {
+    let ask = null;
+    for (let i = 0; i < frames.length; i++) {
+      const f = frames[i];
+      if (f.type === 'ask') {
+        if (ask !== null) expect(`${kind}: the re-ask ${f.body.askId} carries a reason`, typeof f.body.reason === 'string' && f.body.reason !== '');
+        ask = f.body;
+        continue;
+      }
+      const reAsked = frames[i + 1]?.type === 'ask';
+      const why = f.body.value === null ? null : answerRefusal(ask, f.body.value);
+      if (reAsked) expect(`${kind}: ${JSON.stringify(f.body.value)}, refused by the bridge, is one the rules refuse`, why !== null);
+      else expect(`${kind}: the last answer ${JSON.stringify(f.body.value)}, taken by the bridge, is one the rules take (${why})`, why === null);
+    }
+  }
+}
 
 // --- 3. the state machine against fake bridges ----------------------------------------
 function play(asksToPose, bridge) {
