@@ -59,93 +59,93 @@
  * sec  lines      what is there, and its members (line)
  *                 thread | lock | governed by
  * ---  ---------  --------------------------------------------------------------
- * -    216-256    the class comment, then the class declaration (255): the three
+ * -    220-262    the class comment, then the class declaration (261): the three
  *                 rules this file is written to -- a push touches only getId() on a
  *                 view; only the game thread may block; no thread of ours is named Game*
  *                 - | - | report 07 section 2.5, hard rules 2 and 3
- * -    257-932    construction and injected wiring: the constructor (607),
- *                 setHostedMatch (627), setSession (632), setLogFactory (642),
- *                 awaitGameEnd (769) and awaitGameStart (774) with their await
- *                 (801), the run summary's counters from unimplemented (818) to
- *                 refreshesSkipped (925)
+ * -    263-992    construction and injected wiring: the constructor (645),
+ *                 setHostedMatch (665), setSession (670), setLogFactory (680),
+ *                 awaitGameEnd (814) and awaitGameStart (819) with their await
+ *                 (846), the run summary's counters from unimplemented (863) to
+ *                 refreshesSkipped (985)
  *                 MAIN | LIFE, for the game counters | report 07 section 3; D44
- * -    933-1122   frame emission: emit (944), logC2s (1027), envelope (1063),
- *                 notice (1090), unimpl (1111), fired (1119)
+ * -    993-1182   frame emission: emit (1004), logC2s (1087), envelope (1123),
+ *                 notice (1150), unimpl (1171), fired (1179)
  *                 whichever thread emits: GAME (`state`), EDT (`input`, notices),
  *                 IO, MAIN (game 1's `hello_ok`), and BG in the build | LOG, taken
- *                 at 980 and 1045, with `over` re-checked under it at 1001 and 1046 |
+ *                 at 1042 and 1107, with `over` re-checked under it at 1063 and 1108 |
  *                 protocol sections 1 and 8.4: `over` is terminal (OverRaceSelfTest)
- * 1    1123-1339  openView, the wiring hook: openView (1135), seedPhaseStops (1227),
- *                 resetForGame (1282), the one reset hook between games
+ * 1    1183-1401  openView, the wiring hook: openView (1195), seedPhaseStops (1287),
+ *                 resetForGame (1342), the one reset hook between games
  *                 game 1: MAIN, the caller of HostedMatch.startMatch; later games:
  *                 EDT, from an `act: newGame` | LIFE; `deferred` and INPUT inside the
  *                 reset | report 07 section 4.1; D44 and amendment M38; D38
- * 2    1340-1703  handleGameEvents, THE snapshot hook: handleGameEvents (1360),
- *                 flushState (1375), OutcomeWatcher (1465), FinishWatcher (1487),
- *                 engineFinished (1503), the test hooks (1519-1627), captureOutcome
- *                 (1649; its hop is at 1655, tagged D39)
+ * 2    1402-1765  handleGameEvents, THE snapshot hook: handleGameEvents (1422),
+ *                 flushState (1437), OutcomeWatcher (1527), FinishWatcher (1549),
+ *                 engineFinished (1565), the test hooks (1589-1697), captureOutcome
+ *                 (1711; its hop is at 1717, tagged D39)
  *                 GAME; a batch that arrives on any other thread is buffered in
- *                 `deferred` (1356-1363); engineFinished runs on the EDT | `deferred`'s
+ *                 `deferred` (1425-1430); engineFinished runs on the EDT | `deferred`'s
  *                 monitor; LOG through emit | hard rule 3, D5; D114 (FinishWatcher);
  *                 D39 (the hop); amendments M4 and M11
- * 3    1704-2098  the input path: InputState (1709), engineInput (1774),
- *                 mutateInput (1797), inputBody (1813), showPromptMessage (1893),
- *                 updateButtons (1939), setSelectables (1962), setHighlighted (1988),
- *                 setCard (2024), peekInput (1916, M65 / M66's InputPeek read) and the
+ * 3    1766-2160  the input path: InputState (1771), engineInput (1836),
+ *                 mutateInput (1859), inputBody (1875), showPromptMessage (1986),
+ *                 updateButtons (2001), setSelectables (2024), setHighlighted (2050),
+ *                 setCard (2086), peekInput (1971, M65 / M66's InputPeek read) and the
  *                 rest of the prompt pushes
  *                 Forge pushes from the EDT, from GAME and from the thread of a click
- *                 | INPUT (1783-1801); the push goes out after it is released
- *                 (1802) | D22 (inputGen), amendment M42 (inputSeen), protocol
+ *                 | INPUT (1864-1871); the push goes out after it is released
+ *                 (1872) | D22 (inputGen), amendment M42 (inputSeen), protocol
  *                 section 4
- * 4    2099-2271  the other pushes: updateCurrentPlayer (2109, AbstractGuiGame's
- *                 own abstract member), the overlays, message (2160), showErrorDialog
- *                 (2166), finishGame (2172), engineCrashed (2194), afterGameEnd
- *                 (2207), emitOver (2224)
+ * 4    2161-2333  the other pushes: updateCurrentPlayer (2171, AbstractGuiGame's
+ *                 own abstract member), the overlays, message (2222), showErrorDialog
+ *                 (2228), finishGame (2234), engineCrashed (2256), afterGameEnd
+ *                 (2269), emitOver (2286)
  *                 mostly the EDT; engineCrashed on the dying Game-n thread; emitOver
  *                 on whichever thread saw the outcome | `this`, so `over` goes out
  *                 once; LIFE, for games finished | amendments M4 and M11; D114; D115
- * 5    2272-2384  openZones / tempShowZones, hints and not questions: tempShowZones
- *                 (2286), openZones (2302), restoreOldZones (2323), hideZones (2329),
- *                 the zone-hint helpers (2326-2375)
+ * 5    2334-2446  openZones / tempShowZones, hints and not questions: tempShowZones
+ *                 (2348), openZones (2364), restoreOldZones (2385), hideZones (2391),
+ *                 the zone-hint helpers (2396-2445)
  *                 EDT (openZones sometimes GAME) | INPUT, through engineInput |
  *                 protocol section 4.3
- * 6    2385-2402  phase stops: isUiSetToSkipPhase (2395), asked on every step (and
+ * 6    2447-2470  phase stops: isUiSetToSkipPhase (2457), asked on every step (and
  *                 M64's one-step stop at the end step a yield reached)
  *                 GAME | none (a ConcurrentHashMap) | D19, D38
- * 6b   2416-2677  the comfort snapshot, M6's four answers, M61's and M63's: Snap.Comfort
- *                 (2425), playableNow (2494), activatableNow (after it), stopNames (2518), activeYieldJson (2534),
- *                 undoStateJson (2575), rawYieldKey (2622; lint rule 4b's one tagged
- *                 key read is at 2623), handleFor (2627), standingYield (2652)
+ * 6b   2471-2761  the comfort snapshot, M6's four answers, M61's and M63's: Snap.Comfort
+ *                 (2480), playableNow (2529), activatableNow (after it), stopNames (2482), activeYieldJson (2513),
+ *                 undoStateJson (2517), rawYieldKey (2706; lint rule 4b's one tagged
+ *                 key read is at 2707), handleFor (2711), standingYield (2736)
  *                 GAME, inside Snap.state | none | D41, D42, D413, D420
- * 7    2678-3583  the ask path: ask (2696), decode (2766), the option writers
- *                 (2778-2881), then the blocking members: getAbilityToPlay (2885)
- *                 and its asynchronous menu (2944-3120; its hop is at 3007, tagged
- *                 D22), confirm (3123), getChoices (3215), order (3258),
- *                 chooseSingleEntityForEffect (3322), assignCombatDamage (3404),
- *                 assignGenericAmount (3466), manipulateCardList (3518), sideboard
- *                 (3558) and the rest
+ * 7    2762-3946  the ask path: ask (2780), decode (2838), askChecked (2881, M68), the option writers
+ *                 (2921-3024), then the blocking members: getAbilityToPlay (3028)
+ *                 and its asynchronous menu (3105-3314; its hop is at 3168, tagged
+ *                 D22; M69's lone-ability menu at 3050), confirm (3317), getChoices (3417), order (3463),
+ *                 chooseSingleEntityForEffect (3527), assignCombatDamage (3613),
+ *                 assignGenericAmount (3743), manipulateCardList (3873), sideboard
+ *                 (3924) and the rest
  *                 GAME, which parks until the answer comes; getAbilityToPlay arrives
  *                 on the EDT and hops (D22) | LOG while the ask is numbered
- *                 (2739-2747); none while parked | protocol sections 5 and 5.4 (null
+ *                 (2823-2831); none while parked | protocol sections 5 and 5.4 (null
  *                 is always an answer); D15, D24; D20, D22
- * 8    3584-4532  the inbound path, acts: onAct (3589), applyAct (3616), concede
- *                 (3823), setPhaseStop (3935), newGame (4037), yieldTo (4105) with
- *                 M64's yieldToEndStepOrOpponent (4208) and EndStepWatcher (4270, GAME),
- *                 setYield (4348), refreshState (4440; its hop is at 4449, tagged
- *                 D39), refreshSnapshot (4473), enginePausedForSeat (4521)
+ * 8    3947-4895  the inbound path, acts: onAct (3952), applyAct (3979), concede
+ *                 (4102), setPhaseStop (4298), newGame (4400), yieldTo (4468) with
+ *                 M64's yieldToEndStepOrOpponent (4543) and EndStepWatcher (4605, GAME),
+ *                 setYield (4711), refreshState (4803; its hop is at 4812, tagged
+ *                 D39), refreshSnapshot (4836), enginePausedForSeat (4884)
  *                 onAct on IO; applyAct and every act on the EDT; refreshSnapshot on
  *                 a second Game-n worker | LOG, for the act's c2s line | D17, D39,
  *                 D41, D42, D114, amendment M8
- * 8b   4533-4786  the acts that write the engine from the EDT, then answers, resync
- *                 and disconnect: notNow (4553), engineFacts (4598), GuardFeeds
- *                 (4607), pressOk (4650), onAnswer (4670), onResync (4705),
- *                 onDisconnect (4760), close (4778)
+ * 8b   4896-5150  the acts that write the engine from the EDT, then answers, resync
+ *                 and disconnect: notNow (4916), engineFacts (4961), GuardFeeds
+ *                 (4970), pressOk (5013), onAnswer (5033), onResync (5068),
+ *                 onDisconnect (5123), close (5142)
  *                 notNow and pressOk on the EDT; onAnswer, onResync and onDisconnect
  *                 on IO | none of its own: volatile reads and atomics (a frame written
  *                 here takes LOG in emit or logC2s) | D136, amendment M48; D27,
  *                 amendment M42; D24
- * 9    4787-4843  answer coercion: asInt (4799), asBool (4803), asIntArray (4807),
- *                 asIntMap (4811), indexOfIdentity (4816), actBody (4821); the
+ * 9    5151-5207  answer coercion: asInt (5163), asBool (5167), asIntArray (5171),
+ *                 asIntMap (5175), indexOfIdentity (5180), actBody (5185); the
  *                 rest of it lives in Ask.java
  *                 any thread (pure functions) | none | protocol section 5.3
  */

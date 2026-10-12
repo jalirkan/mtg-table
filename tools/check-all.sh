@@ -1825,6 +1825,79 @@ s10i_table() {
   echo "OK: a table of two -- an automated best-of-three game 2 and the concede, claim and timeout scenarios, every seat log audited alone and in pairs, every result.json the winner"
 }
 
+# 10j. THE ADVERSARIAL SEAT (D428; amendments M67, M68).  The bridge is the
+#      rules gate for every answer, and this is the gate trying to cheat it on
+#      the real engine: tools/adversary/adversary.mjs answers EVERY ask first
+#      with the worst illegal answers it can build from the ask's own wire
+#      fields (totals off by one, ids not offered, duplicate picks, too many
+#      and too few, out-of-range numbers, the wrong JSON type) -- each must come
+#      back as the same question with a `reason` -- then with a legal one,
+#      which must be taken; and once a turn per input class an act the engine
+#      must refuse (an opponent's creature as an attacker, a card from the
+#      opponent's hidden hand, an ability or a player that does not exist).
+#      Three probe decks, one game each, chosen for the kinds they raise:
+#      amount-probe (assign_amount, confirm), search-probe (choose_entities and
+#      a reveal) and number-probe (choose_list, numeric text).  Any leak -- an
+#      illegal answer or act taken -- fails the step, and so does a kind named
+#      below that never had an illegal answer refused.  Every server log then
+#      goes through check-redaction, which judges each answer by the same rules.
+s10j_adversary() {
+  [ "$HAVE_AUTOPLAY" = "1" ] || return 0
+  ws_job 9
+  printf '\n=== 10j. the adversarial seat: an illegal answer to every ask and an illegal act per input, refused (D428) ===\n'
+  local spec name seed deck kinds
+  for spec in "amount 7 decks/amount-probe.dck assign_amount,confirm" \
+              "search 7 decks/search-probe.dck choose_entities" \
+              "number 7 decks/number-probe.dck choose_list,text"; do
+    read -r name seed deck kinds <<< "$spec"
+    WS_SEED="$seed" WS_EXTRA="--deck $deck" ws_start "check-all-adv-$name" "var/check-all-adv-$name.log"
+    if ! node tools/adversary/adversary.mjs --port "$WSPORT" --timeout 600 --quiet \
+        --require-kinds "$kinds" --report "var/check-all-adv-$name.json" \
+        --log "var/check-all-adv-$name-client.jsonl" > "var/check-all-adv-$name-client.log" 2>&1; then
+      cat "var/check-all-adv-$name-client.log" >&2
+      die "the adversarial seat on $deck: an illegal answer or act was TAKEN, a legal one refused, or a kind ($kinds) never had an illegal answer refused (report: var/check-all-adv-$name.json)"
+    fi
+    grep -E '^\[adversary\]' "var/check-all-adv-$name-client.log" || true
+    ws_finish "check-all-adv-$name" "var/check-all-adv-$name.log" "the adversary on $deck"
+    rm -f "var/check-all-adv-$name-client.jsonl"
+  done
+  echo "OK: the adversarial seat -- every illegal answer refused and re-asked with a reason, every legal one taken, every illegal act refused"
+}
+
+# 10k. A click is never a commitment (D427, amendment M69), on the real engine:
+#      tools/ws-cost-probe.mjs clicks each permanent of decks/cost-probe.dck
+#      whose ability gives something up -- a click must raise a menu (one
+#      option for a lone ability) whose `null` changes nothing, every cost
+#      prompt must offer Cancel and Cancel must undo the activation (after a
+#      first cost part was paid too), Bone Splinters' additional sacrifice must
+#      be cancellable, and a basic land must still tap on a click.  Then the
+#      adversary on the same deck: its menus, sacrifice prompts and graveyard
+#      choices, cheated.
+s10k_costs() {
+  [ "$HAVE_AUTOPLAY" = "1" ] || return 0
+  ws_job 10
+  printf '\n=== 10k. a click is never a commitment: the lone-ability menu and every give-up cost cancellable (D427), then the adversary on the cost deck ===\n'
+  WS_SEED=3 WS_EXTRA="--deck decks/cost-probe.dck --ai-deck decks/blockers-probe.dck" \
+    ws_start check-all-cost-probe var/check-all-cost-probe.log
+  if ! node tools/ws-cost-probe.mjs --port "$WSPORT" --timeout 600 --quiet \
+      --report var/check-all-cost-probe.json > var/check-all-cost-probe-client.log 2>&1; then
+    cat var/check-all-cost-probe-client.log >&2
+    die "tools/ws-cost-probe.mjs: a click activated an ability, a cost prompt offered no Cancel, or Cancel left the board changed (D427; report: var/check-all-cost-probe.json)"
+  fi
+  cat var/check-all-cost-probe-client.log
+  ws_finish check-all-cost-probe var/check-all-cost-probe.log "the cost probe"
+  WS_SEED=3 WS_EXTRA="--deck decks/cost-probe.dck --ai-deck decks/blockers-probe.dck" \
+    ws_start check-all-adv-cost var/check-all-adv-cost.log
+  if ! node tools/adversary/adversary.mjs --port "$WSPORT" --timeout 600 --quiet --require-kinds ability_menu \
+      --report var/check-all-adv-cost.json > var/check-all-adv-cost-client.log 2>&1; then
+    cat var/check-all-adv-cost-client.log >&2
+    die "the adversarial seat on decks/cost-probe.dck: an illegal answer or act was TAKEN (report: var/check-all-adv-cost.json)"
+  fi
+  grep -E '^\[adversary\]' var/check-all-adv-cost-client.log || true
+  ws_finish check-all-adv-cost var/check-all-adv-cost.log "the adversary on the cost deck"
+  echo "OK: a click is never a commitment, and the cost deck's answers cannot be cheated"
+}
+
 # ---------------------------------------------------------------------------
 # Steps 11-13.
 # ---------------------------------------------------------------------------
@@ -1860,6 +1933,7 @@ s11_fresh() {
 s12_selftest() {
   hdr 12 "check-redaction-selftest.mjs -- the checker's own negative controls"
   node tools/check-redaction-selftest.mjs || die "check-redaction-selftest.mjs (the checker no longer catches a defect it is supposed to catch)"
+  node tools/adversary/selftest.mjs || die "tools/adversary/selftest.mjs (D428: the adversary's rules, its illegal answers over every recorded ask, or its leak detection against a fake leaky bridge)"
   node tools/check-seat-pair-selftest.mjs || die "check-seat-pair-selftest.mjs (M59: the two-seat check no longer catches a planted leak)"
   node tools/requarantine-selftest.mjs || die "requarantine-selftest.mjs (D371: re-checking and restoring a quarantined recording)"
 }
@@ -2354,9 +2428,12 @@ job 10f-probe     10 both     s10f_probe        "$PRE"
 job 10g-three     10 both     s10g_three        "$PRE"
 job 10h-idle      10 both     s10h_idle         "$PRE"
 job 10i-table     10 both     s10i_table        "$PRE"
+job 10j-adversary 10 both     s10j_adversary    "$PRE"
+job 10k-costs     10 both     s10k_costs        "$PRE"
 # Every job that writes a frame log step 11's fresh half or 12d reads.
 RECORDERS="05-record 06b-paced 06b-seat1 07-null 08-console 09-auto 09d-sideboard 09e-match"
 RECORDERS="$RECORDERS 10a-smoke 10b-drop 10c-auto 10d-refuse 10e-m11 10f-probe 10g-three 10h-idle 10i-table"
+RECORDERS="$RECORDERS 10j-adversary 10k-costs"
 job 11-fixtures   11 both     s11_fixtures      "$PRE"
 job 11-fresh      11 both     s11_fresh         "$RECORDERS"
 job 12-selftest   12 both     s12_selftest      "$PRE"
@@ -2400,7 +2477,7 @@ fi
 PAR_FIRST="06-drift 06b-check 11-fixtures 12-selftest 12b-catalog 12e-decks 12f-coach 12h-ml"
 PAR_FIRST="$PAR_FIRST 10g-three 13b-render 13a-build 04-smoke 05-record 09d-sideboard 10c-auto 10d-refuse 10f-probe"
 PAR_FIRST="$PAR_FIRST 10b-drop 07-null 06b-paced 06b-seat1 09b-drift 09-auto 09e-match"
-PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 10i-table 08-console 12c-crash 12g-cubelab"
+PAR_FIRST="$PAR_FIRST $TEN_ROWS 10a-smoke 10e-m11 10h-idle 10i-table 10j-adversary 10k-costs 08-console 12c-crash 12g-cubelab"
 
 # ---------------------------------------------------------------------------
 # The runner (D130).

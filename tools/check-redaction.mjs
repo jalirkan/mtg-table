@@ -2177,14 +2177,26 @@ function checkFile(path, { preAmendment = false, opponentLibraryOk = false, clie
     closedAsks.set(askId, lineNo);
     stats.answerKinds.add(open.kind);
     if (open.dmg && plainObject(body.value)) {
-      // M67: the two halves of the rule the wire itself decides.
-      const amounts = Object.entries(body.value).map(([k, v]) => [k, typeof v === 'number' ? v : 0]);
+      // M67: the halves of the rule the wire itself decides -- and, since M68,
+      // the shape: a key that is not a target, a negative or fractional
+      // amount.  (Lethal-before-the-defender is not judged here: a "divided as
+      // you choose" attacker may skip it, and the wire does not say which one
+      // divides.)
+      const entries = Object.entries(body.value);
+      const amounts = entries.map(([k, v]) => [k, typeof v === 'number' ? v : 0]);
       const sum = amounts.reduce((a, [, v]) => a + v, 0);
       const toDefender = amounts.filter(([k]) => k === '0').reduce((a, [, v]) => a + v, 0);
-      const why = toDefender > 0 && !open.dmg.defenderAllowed
-        ? `${toDefender} to the defender with defenderAllowed false`
-        : sum !== open.dmg.total ? `${sum} assigned of ${open.dmg.total}` : null;
-      if (why !== null) illegalDamage = { line: lineNo, why, attackerId: open.dmg.attackerId };
+      const badKey = entries.find(([k]) => !/^[0-9]+$/.test(k) || Number(k) >= (open.count ?? 0));
+      const badAmount = entries.find(([, v]) => typeof v !== 'number' || !Number.isInteger(v) || v < 0);
+      const why = badKey !== undefined ? `target ${badKey[0]} not offered`
+        : badAmount !== undefined ? `amount ${JSON.stringify(badAmount[1])} not a whole non-negative number`
+        : toDefender > 0 && !open.dmg.defenderAllowed
+          ? `${toDefender} to the defender with defenderAllowed false`
+          : sum !== open.dmg.total ? `${sum} assigned of ${open.dmg.total}` : null;
+      if (why !== null) {
+        illegalDamage = { line: lineNo, why, attackerId: open.dmg.attackerId };
+        if (badKey !== undefined || badAmount !== undefined) return;   // refused, not a client's A12 slip
+      }
     }
     if (open.dmg && body.value !== null && body.value !== undefined && !plainObject(body.value)) {
       // M68: a malformed damage answer is refused too (before M68 it was a null).

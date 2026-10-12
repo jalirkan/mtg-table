@@ -25,8 +25,9 @@ N`, each row a job of the gate's own pool with all its assertions;
 Smoke, so an engine that cannot boot fails once; `node --test` after the six
 step-10 jobs whose logs `MTGTABLE_WS_LOGS` names, while `npm run build` and `vitest run` start at once (D131); step 11's fresh half
 and 12d after every recorder. Step 10's eight servers listen on **`WSPORT+0` ..
-`WSPORT+7`** (all on `WSPORT` serially), and 10i's table on `WSPORT+8` and
-`WSPORT+18` (`WSPORT` and `WSPORT+10` serially). **Every job boots Forge in a home of its
+`WSPORT+7`** (all on `WSPORT` serially), 10i's table on `WSPORT+8` and
+`WSPORT+18` (`WSPORT` and `WSPORT+10` serially), and 10j and 10k on `WSPORT+9`
+and `WSPORT+10` (`WSPORT` serially). **Every job boots Forge in a home of its
 own** (D129, amended at merge): `var/check-all/<run>/<job>/`, built as the job
 starts by `tools/config.sh`'s `forge_home_make` — a `forge-home/` whose `res/` is
 the jar's, a `userDir` and `cacheDir` of its own, D14's overlay copied in, and a
@@ -58,9 +59,9 @@ tail, the table and a `check-all FAILED at step N` line — even for a job that
 died of `set -e` without one, so D113's silent 141 cannot recur (D130) — and
 exits 1. **Nothing is retried** (**D135**): a step that fails under the gate's
 own load and never serially is a finding, reported with its log. What it runs, in the serial order,
-is **thirteen numbered steps** (plus **seventeen** lettered sub-steps — **2b**, **6b**,
-9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **10i**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g** and **12h**; 9d and 10g
-added by **M6**, 10h by **D291**, 10i by **D402**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
+is **thirteen numbered steps** (plus **nineteen** lettered sub-steps — **2b**, **6b**,
+9b, 9c, **9d**, **9e**, 10f, **10g**, **10h**, **10i**, **10j**, **10k**, **12b**, **12c**, **12d**, **12e**, **12f**, **12g** and **12h**; 9d and 10g
+added by **M6**, 10h by **D291**, 10i by **D402**, 10j and 10k by **D428**, 12f by **D292**, 12g by **D296**, 12h by **D305**, 9e by **match setup**, 12b and 12c by the 2026-09-27 hardening
 pass, 6b by **spectating**, 12d by **the narrator**, 2b and 12e by **the guards
 lane** — so the numbering and every
 reference to "10d" stayed correct when they were added): lint
@@ -175,7 +176,16 @@ game's loser is the one asked to play or draw and takes turn 1, both handshakes
 say 2 of 3 with the score from their side, the headers carry each seat's
 consent and `result.json` names the winner), and `tools/ws-two-humans.mjs` plays three scripted two-client games
 on the table port (`concede`, `claim`, `timeout`), each auditing its pair the
-same way; about two and a half minutes. Each of 10a–10g and 10h's second session is asserted for exactly one `over`,
+same way; about two and a half minutes. **10j** (**D428**) is the adversarial
+seat: `tools/adversary/adversary.mjs` plays amount-probe, search-probe and
+number-probe (seed 7) answering every ask first with the illegal answers
+`tools/adversary/answers.mjs` builds from its wire fields — each must come back
+as the same question with a `reason` (M67/M68) — then legally, and once a turn per
+input class sends an act the engine must refuse; a leak, a legal answer refused
+or a required kind never refused fails it. **10k** (**D427**) runs
+`tools/ws-cost-probe.mjs` on `decks/cost-probe.dck` (a click on a permanent is a
+menu first, every give-up cost prompt has a Cancel that undoes the activation,
+a land still taps) and then the adversary on the same deck. Each of 10a–10g and 10h's second session is asserted for exactly one `over`,
 `over` last, and its log through `check-redaction.mjs` — including the CLIENT
 log, which is a different shape on purpose. Then `check-redaction.mjs` over the
 committed fixtures (`games/` **and** `synthetic/`) *and* every fresh recording →

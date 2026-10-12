@@ -187,6 +187,11 @@ jobs:
       # Step 12: the checker must still reject every one-defect probe.
       - name: check-redaction-selftest.mjs
         run: node tools/check-redaction-selftest.mjs
+      # D428: the adversarial seat's rules (shared with check-redaction), its
+      # illegal answers over every recorded ask, and its leak detection against
+      # a fake leaky bridge -- no engine.  The real-engine games are steps 10j/10k.
+      - name: adversary/selftest.mjs
+        run: node tools/adversary/selftest.mjs
       # D402 (M59): a table of two's seat logs read against each other -- its controls.
       - name: check-seat-pair-selftest.mjs
         run: node tools/check-seat-pair-selftest.mjs
