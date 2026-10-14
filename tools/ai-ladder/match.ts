@@ -88,12 +88,18 @@ export interface SearchTally {
    * `searched` and `changed` above stay p + a + b, as J102 counted them.
    */
   byKind: Record<string, { searched: number; changed: number }>;
+  /**
+   * J126: per decision kind, the decisions' summed wall time in microseconds (`search.<kind>.us`, from before the
+   * candidates are generated to the verdict -- the search's, or the distilled policy's with `distill=`), so a match
+   * line says how long each side took per decision.  Absent on lines from before the counter.
+   */
+  us: Record<string, number>;
 }
 
 /** The decision kinds the search counts (D312, D417). */
 export const SEARCH_KINDS = ['p', 'a', 'b', 'm', 'k', 't'] as const;
 
-export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {} });
+export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {}, us: {} });
 
 /** One seat's counters from an ai-bench line (`aStats.counts` / `bStats.counts`) into the tally. */
 export function addCounts(t: SearchTally, counts: Record<string, unknown> | undefined): void {
@@ -105,6 +111,8 @@ export function addCounts(t: SearchTally, counts: Record<string, unknown> | unde
     const e = t.byKind[k] ?? (t.byKind[k] = { searched: 0, changed: 0 });
     e.searched += c;
     e.changed += x;
+    const us = n(`search.${k}.us`);
+    if (us > 0) t.us[k] = (t.us[k] ?? 0) + us;
   }
   const searched = n('search.p.considered') + n('search.a.considered') + n('search.b.considered');
   if (searched === 0) return;
@@ -146,7 +154,7 @@ export function tallyBatch(file: string, a: SearchTally, b: SearchTally): void {
 }
 
 /** A tally as the match line keeps it (no per-game rows). */
-export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null; byKind: Record<string, { searched: number; changed: number; rate: number | null }> } {
+export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null; byKind: Record<string, { searched: number; changed: number; rate: number | null }>; msMean: Record<string, number | null>; msPerDecision: number | null } {
   const br = budgetRate(t);
   const r6 = (x: number | null): number | null => (x === null ? null : Math.round(x * 1e6) / 1e6);
   const byKind: Record<string, { searched: number; changed: number; rate: number | null }> = {};
@@ -154,5 +162,17 @@ export function tallyLine(t: SearchTally): { games: number; searched: number; ch
     const e = t.byKind[k];
     if (e) byKind[k] = { searched: e.searched, changed: e.changed, rate: e.searched > 0 ? r6(e.changed / e.searched) : null };
   }
-  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi), byKind };
+  // J126: mean wall time per decision, by kind and over p + a + b (null where no time was counted)
+  const r3 = (x: number): number => Math.round(x * 1000) / 1000;
+  const msMean: Record<string, number | null> = {};
+  let usPab = 0, nPab = 0;
+  for (const k of SEARCH_KINDS) {
+    const e = t.byKind[k];
+    if (!e) continue;
+    const us = t.us?.[k];
+    msMean[k] = us !== undefined && e.searched > 0 ? r3(us / 1000 / e.searched) : null;
+    if ((k === 'p' || k === 'a' || k === 'b') && us !== undefined) { usPab += us; nPab += e.searched; }
+  }
+  const msPerDecision = nPab > 0 ? r3(usPab / 1000 / nPab) : null;
+  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi), byKind, msMean, msPerDecision };
 }

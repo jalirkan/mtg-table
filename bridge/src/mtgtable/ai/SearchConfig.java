@@ -105,6 +105,13 @@ import java.util.Locale;
  *     by Forge's own card value), and replaced on the same paired evidence
  *     rule as every other search.</li>
  * </ul>
+ *
+ * <p>{@code distill=<model.json>} (J126, B1; off by default): the distilled
+ * policy.  The seat generates the same candidates as the search at p, a and b
+ * and plays the one {@link DistillModel} scores highest, with no rollout; a kind
+ * the model does not cover keeps Forge's answer.  The timing counters
+ * ({@code search.<kind>.ms} and {@code .us}) time its decisions as they time the
+ * search's, so a match line compares the two.
  */
 public final class SearchConfig {
 
@@ -157,6 +164,12 @@ public final class SearchConfig {
     public final int mullTurns;
     /** D417: search the targets of the seat's own priority plays. */
     public final boolean targets;
+    /**
+     * J126 (B1): the distilled policy's model file, or null.  With it the seat
+     * plays search-v2's candidates as the model scores them, with no rollout
+     * ({@link DistillModel}; {@code distill=<model.json>}).
+     */
+    public final String distillModel;
 
     /** D417's defaults. */
     public static final int MULL_MS = 6000;
@@ -235,6 +248,7 @@ public final class SearchConfig {
         this.mullMs = MULL_MS;
         this.mullTurns = MULL_TURNS;
         this.targets = false;
+        this.distillModel = null;
     }
 
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
@@ -249,12 +263,12 @@ public final class SearchConfig {
 
     /** D354: a copy of {@code base} whose leaves use the evaluator at {@code model} (null = the hand leaf). */
     private SearchConfig(final SearchConfig base, final String model) {
-        this(base, model, base.mull, base.mullMs, base.mullTurns, base.targets);
+        this(base, model, base.mull, base.mullMs, base.mullTurns, base.targets, base.distillModel);
     }
 
     /** D354 and D417: a copy of {@code base} with the leaf model and the mulligan and target switches given. */
     private SearchConfig(final SearchConfig base, final String model, final boolean mull, final int mullMs,
-                         final int mullTurns, final boolean targets) {
+                         final int mullTurns, final boolean targets, final String distillModel) {
         if (mullMs < 50 || mullMs > 60_000) {
             throw new IllegalArgumentException("search mullms must be 50..60000 ms, got " + mullMs);
         }
@@ -287,6 +301,7 @@ public final class SearchConfig {
         this.mullMs = mullMs;
         this.mullTurns = mullTurns;
         this.targets = targets;
+        this.distillModel = distillModel;
     }
 
     /** D417: this config with the mulligan search and the target search switched as given. */
@@ -294,7 +309,23 @@ public final class SearchConfig {
         if (mull == this.mull && mullMs == this.mullMs && mullTurns == this.mullTurns && targets == this.targets) {
             return this;
         }
-        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets);
+        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, distillModel);
+    }
+
+    /**
+     * J126: this config with the distilled policy's model at {@code path} (null
+     * or empty = none).  A path with a comma, a plus or a space cannot be
+     * spelled in a seat config.
+     */
+    public SearchConfig withDistill(final String path) {
+        final String p = path == null || path.isEmpty() ? null : path;
+        if (java.util.Objects.equals(p, distillModel)) {
+            return this;
+        }
+        if (p != null && p.matches(".*[,+\\s].*")) {
+            throw new IllegalArgumentException("search distill= is a model file path (no comma, plus or space): " + p);
+        }
+        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, p);
     }
 
     /**
@@ -380,6 +411,7 @@ public final class SearchConfig {
         int mullMs = MULL_MS;
         int mullTurns = MULL_TURNS;
         boolean targets = false;
+        String distill = null;   // J126
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -421,9 +453,10 @@ public final class SearchConfig {
                 case "mullms": mullMs = Integer.parseInt(p[1]); break;
                 case "mullturns": mullTurns = Integer.parseInt(p[1]); break;
                 case "targets": targets = bit("targets", p[1]); break;
+                case "distill": distill = p[1]; break;   // J126: the distilled policy's model file
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
-                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets)");
+                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets, distill)");
                 }
             }
         }
@@ -439,7 +472,7 @@ public final class SearchConfig {
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
                 "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf)
-                .withDecisions(mull, mullMs, mullTurns, targets);
+                .withDecisions(mull, mullMs, mullTurns, targets).withDistill(distill);
         // gen is read only under rank=prior (and validated there).
     }
 
@@ -490,6 +523,9 @@ public final class SearchConfig {
         }
         if (targets) {
             sb.append(",targets=1");
+        }
+        if (distillModel != null) {
+            sb.append(",distill=").append(distillModel);   // J126
         }
         return sb.toString();
     }

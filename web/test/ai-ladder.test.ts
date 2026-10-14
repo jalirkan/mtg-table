@@ -544,6 +544,51 @@ test('search-eval (D354): the search with leaf=eval:<model>, pinned to the model
   assert.match(resolvePlayer({ name: 'e', kind: 'search-eval', params: { ...params, model: 'abc' } }, repo).unavailable!, /12 hex/);
 });
 
+test('search-distill (J126): search-v2\'s candidates scored by the distilled model, pinned by its content hash', async () => {
+  const { createHash } = await import('node:crypto');
+  const repo = mkdtempSync(join(tmpdir(), 'ladder-distill-'));
+  mkdirSync(join(repo, 'tools/ai-bench'), { recursive: true });
+  mkdirSync(join(repo, 'bridge/src/mtgtable/ai'), { recursive: true });
+  mkdirSync(join(repo, 'var/ml/models'), { recursive: true });
+  writeFileSync(join(repo, 'tools/ai-bench/AiBench.java'), '// +search');
+  // search-v2's ladder params (search-v1-anytime, D412), as `distill.py register` copies them
+  const params = { profile: 'Default', outlets: 'on', budgetMs: 1500, anytime: 'on' } as const;
+  writeFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'class SearchConfig {}');
+  const body = '{"format":"mtgtable-distill"}\n';
+  const hash = createHash('sha256').update(body).digest('hex').slice(0, 12);
+  assert.match(resolvePlayer({ name: 'd', kind: 'search-distill', params: { ...params, model: hash } }, repo).unavailable!, /no distill= flag/);
+  writeFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'case "distill": distill = p[1];');
+  assert.match(resolvePlayer({ name: 'd', kind: 'search-distill', params: { ...params, model: hash } }, repo).unavailable!, /is not here/);
+  writeFileSync(join(repo, `var/ml/models/distill-${hash}.json`), body);
+  const p = resolvePlayer({ name: 'd', kind: 'search-distill', params: { ...params, model: hash } }, repo);
+  assert.equal(p.unavailable, null);
+  const v2 = resolvePlayer({ name: 's', kind: 'search', params }, repo);
+  assert.equal(v2.cfg, 'Default+outlets+search:ms=1500,cands=6,turns=0,rounds=2,margin=20,maxrounds=12,what=pab,seed=0,anytime=1');
+  assert.equal(p.cfg, `${v2.cfg},distill=var/ml/models/distill-${hash}.json`, 'search-v2\'s candidates, only the chooser differs');
+  assert.notEqual(p.hash, v2.hash);
+  writeFileSync(join(repo, `var/ml/models/distill-${hash}.json`), body + ' ');
+  assert.match(resolvePlayer({ name: 'd', kind: 'search-distill', params: { ...params, model: hash } }, repo).unavailable!, /hashes to/);
+  assert.match(resolvePlayer({ name: 'd', kind: 'search-distill', params: { ...params, model: 'abc' } }, repo).unavailable!, /12 hex/);
+  // the real SearchConfig has the key
+  assert.match(readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8'), /case "distill"/);
+});
+
+test('J126: the match tally times each side\'s decisions (search.<kind>.us), per kind and over p + a + b', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ladder-us-'));
+  const f = join(dir, 'b0.jsonl');
+  const a1 = { 'search.p.considered': 10, 'search.p.us': 8_000_000, 'search.a.considered': 4, 'search.a.us': 4_000_000, 'search.t.considered': 2 };
+  const a2 = { 'search.p.considered': 10, 'search.p.us': 7_000_000, 'search.b.considered': 2, 'search.b.us': 1_000_000 };
+  const b1 = { 'search.p.considered': 5, 'search.p.us': 2_500 };
+  writeFileSync(f, [JSON.stringify({ aStats: { counts: a1 }, bStats: { counts: b1 } }), JSON.stringify({ aStats: { counts: a2 } })].join('\n'));
+  const a = emptyTally(), b = emptyTally();
+  tallyBatch(f, a, b);
+  const ta = tallyLine(a);
+  assert.deepEqual(ta.msMean, { p: 750, a: 1000, b: 500, t: null });
+  assert.equal(ta.msPerDecision, 769.231, "20,000 ms over 26 p+a+b decisions, rounded to the microsecond");
+  assert.equal(Number(tallyLine(b).msPerDecision), 0.5);
+  assert.equal(tallyLine(emptyTally()).msPerDecision, null, 'no time counted: null, never 0');
+});
+
 // ------------------------------------------------------------ match (D398)
 
 test('match (D398): the pair-score interval, in Elo too; no interval under 2 pairs', () => {

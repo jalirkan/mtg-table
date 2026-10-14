@@ -68,6 +68,7 @@ import mtgtable.Config;
 import mtgtable.Json;
 import mtgtable.Json.JsonOut;
 import mtgtable.SeatRecorder;
+import mtgtable.ai.DistillRows;
 import mtgtable.ai.ExploreMath;
 import mtgtable.ai.PolicyControllerAi;
 import mtgtable.ai.PolicyLobbyPlayerAi;
@@ -422,7 +423,12 @@ public final class CubeLab {
             }
             final Recording rec = record == null ? null
                     : new Recording(record, id, seed, g, gameSeed, aOnPlay, decks, deckFiles, specA, specB, exploreHeader);
+            // J126: the distilled policy's row exporter names its rows by the draft and game (off unless
+            // MTGTABLE_DISTILL_ROWS is set; mtgtable.ai.DistillRows)
+            final String rowsKey = "lab:" + id + ":g" + g;
+            DistillRows.setGame(rowsKey);
             final GameResult r = playGame(decks, lpA, lpB, aOnPlay, gameSeed, timeoutMs, rec);
+            DistillRows.endGame(rowsKey, r.winner, !r.stuck && r.error == null);
             if (r.stuck) {
                 res.end().n("stuck", true).end();
                 emit(res.done());

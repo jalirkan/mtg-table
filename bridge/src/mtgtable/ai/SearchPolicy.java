@@ -143,7 +143,11 @@ public final class SearchPolicy {
         this.rng = new Random(cfg.seed != 0 ? cfg.seed : System.nanoTime());
         this.leafEval = cfg.leafModel == null ? null : evaluator(cfg.leafModel);
         this.priorEval = cfg.rankPrior && "eval".equals(cfg.prior) ? loadEvaluator(cfg.evalModel, sink) : null;
+        this.distill = cfg.distillModel == null ? null : DistillModel.cached(cfg.distillModel);
     }
+
+    /** J126: the distilled policy's model, or null (the search decides). */
+    private final DistillModel distill;
 
     /** D389's learned prior (D316's evaluator), or null: the leaf is the prior. */
     private final PositionEvaluator priorEval;
@@ -545,7 +549,9 @@ public final class SearchPolicy {
         }
         rank(ai, cands, "p", forgeSa != null ? 2 : 1, t0);
         sink.add("search.p.considered", 1);
-        final Outcome o = search(ai, cands, "p", t0);
+        final double[] st = stateFor(ai);
+        final Outcome o = decide(ai, cands, "p", t0, st);
+        exportRow(ai, cands, "p", o == null || o.chosen <= 0 ? 0 : o.chosen, st, t0);
         if (o == null || o.chosen <= 0) {
             return forge;
         }
@@ -816,8 +822,10 @@ public final class SearchPolicy {
         }
         rank(ai, cands, "a", 1, t0);
         sink.add("search.a.considered", 1);
-        final Outcome o = search(ai, cands, "a", t0);
+        final double[] st = stateFor(ai);
+        final Outcome o = decide(ai, cands, "a", t0, st);
         if (o == null || o.chosen <= 0) {
+            exportRow(ai, cands, "a", 0, st, t0);
             return;
         }
         final AttackCand c = (AttackCand) cands.get(o.chosen);
@@ -826,8 +834,10 @@ public final class SearchPolicy {
             setAttack(combat, forge);
             sink.add("search.a.invalidAtEnd", 1);
             invalidAtEnd();
+            exportRow(ai, cands, "a", 0, st, t0);
             return;
         }
+        exportRow(ai, cands, "a", o.chosen, st, t0);
         sink.add("search.a.changed", 1);
         sink.event(String.format(Locale.ROOT, "search A: %s over Forge's %s (%s, %d rounds)", c.label,
                 cands.get(0).label, means(cands, o), o.rounds));
@@ -947,8 +957,10 @@ public final class SearchPolicy {
         }
         rank(ai, cands, "b", 1, t0);
         sink.add("search.b.considered", 1);
-        final Outcome o = search(ai, cands, "b", t0);
+        final double[] st = stateFor(ai);
+        final Outcome o = decide(ai, cands, "b", t0, st);
         if (o == null || o.chosen <= 0) {
+            exportRow(ai, cands, "b", 0, st, t0);
             return;
         }
         final BlockCand c = (BlockCand) cands.get(o.chosen);
@@ -957,8 +969,10 @@ public final class SearchPolicy {
             setBlock(combat, ai, forge);
             sink.add("search.b.invalidAtEnd", 1);
             invalidAtEnd();
+            exportRow(ai, cands, "b", 0, st, t0);
             return;
         }
+        exportRow(ai, cands, "b", o.chosen, st, t0);
         sink.add("search.b.changed", 1);
         sink.event(String.format(Locale.ROOT, "search B: %s over Forge's %s (%s, %d rounds)", c.label,
                 cands.get(0).label, means(cands, o), o.rounds));
@@ -1654,6 +1668,159 @@ public final class SearchPolicy {
         return "m".equals(kind) || "k".equals(kind) ? 2 * cfg.mullTurns - 1 : cfg.horizonFor(kind);
     }
 
+    // ==================================================================
+    // J126 (B1): the distilled policy and the row exporter
+    // ==================================================================
+
+    /** The search's verdict, or with {@code distill=} the model's (no rollout). */
+    private Outcome decide(final Player ai, final List<Cand> cands, final String kind, final long t0,
+                           final double[] state) {
+        return distill != null ? distilled(ai, cands, kind, t0, state) : search(ai, cands, kind, t0);
+    }
+
+    /**
+     * The state vector the distilled policy and the row exporter read, taken
+     * right before the verdict (an attack's or a block's combat then holds
+     * Forge's declaration, in training and in play alike), or null when
+     * neither is on.  An encoder error is counted and leaves the decision to
+     * the search, or to Forge's answer under {@code distill=}.
+     */
+    private double[] stateFor(final Player ai) {
+        if (distill == null && !DistillRows.enabled()) {
+            return null;
+        }
+        try {
+            return DistillFeatures.state(ai);
+        } catch (final RuntimeException e) {
+            sink.add("distill.stateError", 1);
+            return null;
+        }
+    }
+
+    /**
+     * The distilled policy (J126): every candidate scored by the model, the
+     * best played; Forge's answer when the model does not cover the kind or a
+     * feature cannot be computed.  Its {@link Report} carries the scores as the
+     * candidates' {@code prior}, rule {@code distill}, no rounds.
+     */
+    private Outcome distilled(final Player ai, final List<Cand> cands, final String kind, final long t0,
+                              final double[] state) {
+        final Report rep = new Report();
+        report = rep;
+        rep.kind = kind;
+        rep.cands = new ArrayList<>(cands);
+        rep.budgetMs = budgetFor(kind);
+        rep.rule = "distill";
+        rep.margin = 0;
+        Report.fillStats(rep, new ArrayList<>(), new ArrayList<>(), cands.size());
+        rep.prior = new double[cands.size()];
+        Arrays.fill(rep.prior, Double.NaN);
+        try {
+            if (!distill.covers(kind)) {
+                sink.add("distill." + kind + ".uncovered", 1);
+                rep.chosen = 0;
+                return null;
+            }
+            if (state == null) {
+                sink.add("search.fallback.distillState", 1);
+                rep.fallback = "distillState";
+                rep.chosen = 0;
+                return null;
+            }
+            final int[] errors = new int[1];
+            final double[][] c = DistillFeatures.candidates(kind, ai, cands, errors);
+            if (errors[0] > 0) {
+                sink.add("distill.featureErrors", errors[0]);
+            }
+            final double[] s = distill.scores(kind, state, c);
+            final int best = DistillModel.argmax(s);
+            rep.prior = s;
+            rep.best = best;
+            rep.chosen = best;
+            rep.overrode = best > 0;
+            rep.stat = s[best] - s[0];
+            sink.add("distill." + kind + ".scored", 1);
+            final Outcome o = new Outcome();
+            o.chosen = best;
+            o.rounds = 0;
+            o.mean = s.clone();
+            return o;
+        } catch (final RuntimeException e) {
+            sink.add("search.fallback.distillError", 1);
+            sink.event("distill " + kind + ": " + e + ", Forge's answer");
+            rep.fallback = "distillError";
+            rep.chosen = 0;
+            return null;
+        } finally {
+            final long ns = System.nanoTime() - t0;
+            sink.add("search." + kind + ".ms", (int) (ns / 1_000_000L));
+            sink.add("search." + kind + ".us", (int) (ns / 1_000L));
+            rep.ms = ns / 1_000_000L;
+        }
+    }
+
+    /**
+     * The row exporter (J126; {@link DistillRows}): one row per decision of a
+     * SEARCHING seat when {@code MTGTABLE_DISTILL_ROWS} is set -- never the
+     * distilled seat's own.  {@code played} is the candidate the seat played (0
+     * after a fallback or an invalid declaration); the time is the decision's,
+     * from {@code t0} to now.
+     */
+    private void exportRow(final Player ai, final List<Cand> cands, final String kind, final int played,
+                           final double[] state, final long t0) {
+        if (distill != null || state == null || !DistillRows.enabled()) {
+            return;
+        }
+        final double ms = (System.nanoTime() - t0) / 1e6;
+        try {
+            final int[] errors = new int[1];
+            final double[][] c = DistillFeatures.candidates(kind, ai, cands, errors);
+            if (errors[0] > 0) {
+                sink.add("distill.featureErrors", errors[0]);
+            }
+            final List<String> tokens = new ArrayList<>(cands.size());
+            for (final Cand x : cands) {
+                String t;
+                try {
+                    t = token(x);
+                } catch (final RuntimeException e) {
+                    t = "?";
+                }
+                tokens.add(t);
+            }
+            final Report rep = report;
+            DistillRows.row(ai.getGame().getId(), ai.getName(), kind, ai.getGame().getPhaseHandler().getTurn(), state,
+                    c, tokens, played, rep == null ? null : rep.fallback, ms);
+            sink.add("distill.rows", 1);
+        } catch (final RuntimeException e) {
+            sink.add("distill.rowErrors", 1);
+        }
+    }
+
+    /** J126: a priority candidate's play (null = pass), or null for another kind of candidate. */
+    static SpellAbility candSa(final Cand c) {
+        if (c instanceof PriorityCand) {
+            return ((PriorityCand) c).sa;
+        }
+        throw new IllegalArgumentException("not a priority candidate: " + c.label);
+    }
+
+    /** J126: an attack candidate's declaration. */
+    static Map<Card, GameEntity> candAttack(final Cand c) {
+        if (c instanceof AttackCand) {
+            return ((AttackCand) c).attack;
+        }
+        throw new IllegalArgumentException("not an attack candidate: " + c.label);
+    }
+
+    /** J126: a block candidate's declaration (blocker -> attacker). */
+    static Map<Card, Card> candBlock(final Cand c) {
+        if (c instanceof BlockCand) {
+            return ((BlockCand) c).block;
+        }
+        throw new IllegalArgumentException("not a block candidate: " + c.label);
+    }
+
     private Outcome search(final Player ai, final List<Cand> cands, final String kind, final long t0) {
         if (cfg.anytime) {
             return searchAnytime(ai, cands, kind, t0);
@@ -1738,6 +1905,7 @@ public final class SearchPolicy {
         } finally {
             if (!retried) {
                 sink.add("search." + kind + ".ms", (int) ((System.nanoTime() - t0) / 1_000_000L));
+                sink.add("search." + kind + ".us", (int) ((System.nanoTime() - t0) / 1_000L));   // J126
             }
             if (report == rep) {
                 rep.ms = (System.nanoTime() - t0) / 1_000_000L;
@@ -1927,6 +2095,7 @@ public final class SearchPolicy {
             return null;
         } finally {
             sink.add("search." + kind + ".ms", (int) ((System.nanoTime() - t0) / 1_000_000L));
+            sink.add("search." + kind + ".us", (int) ((System.nanoTime() - t0) / 1_000L));   // J126
             if (report == rep) {
                 // A round the deadline cut before its first rollout carries nothing.
                 while (!leaves.isEmpty() && Anytime.allNaN(leaves.get(leaves.size() - 1))) {

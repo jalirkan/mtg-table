@@ -318,6 +318,8 @@ async function cmdMatch(a: Args, argv: string[]): Promise<void> {
     console.log(`${who}: ${t.searched} decisions searched in ${t.games} games, ${t.changed} changed Forge's answer (${pct(t.changed / t.searched)}); budget fallbacks ${t.fallback.budget ?? 0} = ${pct(t.budgetRate)} [95% ${pct(t.budgetLo)}, ${pct(t.budgetHi)}]; other fallbacks ${JSON.stringify(Object.fromEntries(Object.entries(t.fallback).filter(([k]) => k !== 'budget')))}`);
     // D417: per decision kind, how often the search changed Forge's answer.
     console.log(`${who} by kind: ${Object.entries(t.byKind).map(([k, e]) => `${k} ${e.changed}/${e.searched}`).join(', ')}`);
+    // J126: the decisions' wall time (search.<kind>.us), the search's or the distilled policy's
+    if (t.msPerDecision !== null) console.log(`${who} time per decision: ${t.msPerDecision} ms (p+a+b); by kind ${Object.entries(t.msMean).map(([k, v]) => `${k} ${v ?? '-'}`).join(', ')}`);
   }
 }
 

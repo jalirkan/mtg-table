@@ -169,4 +169,11 @@ java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.grade.GradeSelfTest
 # before it is written.  No engine.
 java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.ai.DecisionSelfTest
 
+# Unit-check the distilled policy's engine-free half (J126, B1): the layout
+# against fixtures/distill/names.json (what tools/ml/distill.py reads), the
+# model's Java forward pass against numpy's on fixtures/distill/golden.json, its
+# refusals of another layout, the search config's distill= key, and the row
+# exporter's lines.  No engine; it writes one temp folder and deletes it.
+java -Dfile.encoding=UTF-8 -cp "$OUT:$FORGE_JAR" mtgtable.ai.DistillSelfTest "$REPO_ROOT"
+
 echo "build OK"
