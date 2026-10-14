@@ -333,7 +333,7 @@ def train_head(tr: KindData, va: KindData, o: argparse.Namespace, rng) -> tuple[
                 v += (1 - b2) * gr * gr
                 head.p[k] -= o.lr * (m / (1 - b1 ** step)) / (np.sqrt(v / (1 - b2 ** step)) + eps)
         vl = loss_grad(head, vSz, vCz, vDz, va.off, va.g, va.y, 0.0)[0] if va.n else math.nan
-        log.append({"epoch": ep + 1, "valLoss": round(vl, 6)})
+        log.append({"epoch": ep + 1, "valLoss": None if math.isnan(vl) else round(vl, 6)})
         if va.n == 0 or vl < best[0] - 1e-6:
             best = (vl, {k: v.copy() for k, v in head.p.items()}, ep + 1)
             bad = 0
@@ -486,12 +486,12 @@ def cmd_train(o: argparse.Namespace) -> int:
                          "test": {k: (metrics["kinds"][k].get("test") or {}).get("agreement") for k in model["kinds"]}}
     os.makedirs(os.path.dirname(os.path.abspath(o.out)), exist_ok=True)
     with open(o.out, "w", encoding="utf-8") as f:
-        json.dump(model, f, separators=(",", ":"))
+        json.dump(model, f, separators=(",", ":"), allow_nan=False)
         f.write("\n")
     if o.metrics:
         os.makedirs(os.path.dirname(os.path.abspath(o.metrics)), exist_ok=True)
         with open(o.metrics, "w", encoding="utf-8") as f:
-            json.dump(metrics, f, indent=1)
+            json.dump(metrics, f, indent=1, allow_nan=False)   # a NaN is not JSON: the runner's metrics would refuse the file
             f.write("\n")
     for kind in KINDS:
         r = metrics["kinds"].get(kind, {})

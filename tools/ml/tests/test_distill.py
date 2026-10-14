@@ -277,6 +277,25 @@ class TestModel(unittest.TestCase):
         finally:
             shutil.rmtree(d)
 
+    def test_tiny_data_still_writes_json(self) -> None:
+        """A kind with no validation game (the pilot's six games) must still give strict JSON: no NaN."""
+        lay = layout()
+        d = tempfile.mkdtemp()
+        try:
+            rng = random.Random(3)
+            lines = [header(lay)]
+            for i in range(3):
+                gk = f"lab:tiny{i}:g1"
+                lines += planted_game(rng, lay, gk, 40) + [{"type": "end", "game": gk, "ok": True}]
+            write_rows(os.path.join(d, "rows-1.jsonl"), lines)
+            out, met = os.path.join(d, "model.json"), os.path.join(d, "metrics.json")
+            self.assertEqual(X.main(["train", d, "--out", out, "--metrics", met, "--min-train", "5", "--epochs", "3"]), 0)
+            for f in (out, met):
+                with open(f) as fh:
+                    json.loads(fh.read(), parse_constant=lambda c: self.fail(f"{f} holds {c}"))
+        finally:
+            shutil.rmtree(d)
+
     def test_register(self) -> None:
         d = tempfile.mkdtemp()
         try:
