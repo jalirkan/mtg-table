@@ -18,6 +18,27 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-14 00:45 (EDT) — Justin: kick off the next jobs. The PC session writes, lints, queues and runs them
+Justin asked for the next set of lab jobs, started from this PC. The queue is empty (J123 was the last). Please write these as job files `jobs/J124-…`, `J125-…` and `J126-…`. Check each one with `tools/runner.sh check <abs path>`, push them to pc-jobs in this order, and let the runner take them. Pre-register every rule in the job file **before** any number is seen. Report each one in `summary.md` the same way as J115 to J123. Heavy compute stays on this PC. Pin each job to the mtg-table commit it was written against.
+
+1. **J124 — low-curve 16 lands (the follow-up J121 suggested).**
+   - **Question:** on pools where ForgeCoach's builder picks 16 lands (its low-curve rule), is 16 worse than 17?
+   - **Evidence so far:** J121's secondary read was −3.9 pts, 95% [−7.5, −0.3]. That was not shown at its 99%.
+   - **Design:** reuse J121's `variants.ts` setup. Use only the pools where ForgeCoach chooses 16, from fresh lab drafts across Vintage 180, Evan's cube and Synergy. Pair by pool and cluster by draft. Use the Forge arm, plus search-v2 on a subsample. Aim for about 2,000 such pools.
+   - **Rule:** SHOWN if the Forge arm's 99% interval on (16 − 17) lies entirely below 0 **and** search-v2's estimate has the same sign. Then the cloud changes ForgeCoach's low-curve rule to 17. Otherwise NOT SHOWN, and the rule stays.
+2. **J125 — #3, tuning the search leaf weights** (next in the search growth plan Justin approved on 2026-10-08).
+   - **Question:** do different weights in search-v2's leaf evaluation beat the current ones?
+   - **Design:** a small candidate set chosen on a tuning split only, for example coordinate steps on the 3–5 biggest terms. Then **one** fixed match (D398, mirrored pairs, the live 1.5 s budget) of the best candidate vs search-v2, on held-out seeds. Use about 600 pairs, as J115 did.
+   - **Rule:** ADOPT only if the match is complete and the 95% interval on the score has its lower end above 0.5. Otherwise NOT SHOWN.
+3. **J126 — B1, distilling search-v2 into a fast policy** (approved 2026-10-08, last in that plan).
+   - **Goal:** a policy that plays close to search-v2 at a fraction of the time, for faster lab games and the live hint.
+   - **Design:** generate (state, search-v2 choice) rows from lab games at the decisions search covers (priority, attack, block, mulligan, targets). Train a small model with `tools/ml` (the same feature encoder as eval, D361). Split by game, keeping a held-out test set.
+   - **Report:** top-1 agreement with search-v2 on held-out decisions, per decision kind. Then a fixed match of distilled vs search-v2, and of distilled vs Forge Default.
+   - **Rule:** written in the job before the data is generated. Suggested: SHIP as a lab policy if it is not shown worse than search-v2 by more than 0.03 in score (95%) **and** is at least 10× faster per decision.
+   - **If it needs new code** (row export, training script): build it in mtg-table on a `pc/` branch, run its self-tests and open a PR. The cloud reviews and merges it before the job runs.
+
+Not now: C (the Sonnet pilot) costs API money. It stays parked until Justin says so.
+
 ### 2026-10-12 19:10 (EDT) — URGENT, Justin is waiting: get the friend draft room running on this PC now
 Justin wants to play a friend tonight. ForgeCoach's **Draft with a friend** page says "The draft room is not running". Please do this for him; he should not have to type anything:
 1. `cd ~/code/play-table && git pull origin main` (main now has mtg-table #138 and #139).
