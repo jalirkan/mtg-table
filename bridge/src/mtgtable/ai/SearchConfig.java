@@ -105,6 +105,16 @@ import java.util.Locale;
  *     by Forge's own card value), and replaced on the same paired evidence
  *     rule as every other search.</li>
  * </ul>
+ *
+ * <p>The hand leaf's weights (D431), each a percentage, 100 by default and
+ * printed only when not 100, so search-v2 and every ladder player keep their
+ * seat configs and hashes: {@code wlife} (the life curve), {@code whand} (cards
+ * in hand), {@code wcreature} (creatures through Forge's
+ * {@code CreatureEvaluator}) and {@code wother} (every other permanent: lands
+ * and the rest, through {@code GameStateEvaluator.evalCard}).  Each multiplies
+ * its term on both sides; a win, a loss, poison, an empty library and the
+ * {@code untapped} term keep their points.  They act on the hand leaf only, not
+ * on the learned evaluator's ({@code leaf=eval}).
  */
 public final class SearchConfig {
 
@@ -157,6 +167,12 @@ public final class SearchConfig {
     public final int mullTurns;
     /** D417: search the targets of the seat's own priority plays. */
     public final boolean targets;
+
+    /** D431: the hand leaf's term weights, in percent (100 = the plain leaf). */
+    public final int wLife;
+    public final int wHand;
+    public final int wCreature;
+    public final int wOther;
 
     /** D417's defaults. */
     public static final int MULL_MS = 6000;
@@ -235,6 +251,10 @@ public final class SearchConfig {
         this.mullMs = MULL_MS;
         this.mullTurns = MULL_TURNS;
         this.targets = false;
+        this.wLife = 100;
+        this.wHand = 100;
+        this.wCreature = 100;
+        this.wOther = 100;
     }
 
     /** Whether the searching seat's rollouts play D310's outlet policy (D390). */
@@ -255,6 +275,18 @@ public final class SearchConfig {
     /** D354 and D417: a copy of {@code base} with the leaf model and the mulligan and target switches given. */
     private SearchConfig(final SearchConfig base, final String model, final boolean mull, final int mullMs,
                          final int mullTurns, final boolean targets) {
+        this(base, model, mull, mullMs, mullTurns, targets, base.wLife, base.wHand, base.wCreature, base.wOther);
+    }
+
+    /** D431: a copy of {@code base} with everything above given, the leaf's weights too. */
+    private SearchConfig(final SearchConfig base, final String model, final boolean mull, final int mullMs,
+                         final int mullTurns, final boolean targets, final int wLife, final int wHand,
+                         final int wCreature, final int wOther) {
+        for (final int w : new int[] {wLife, wHand, wCreature, wOther}) {
+            if (w < 0 || w > 1000) {
+                throw new IllegalArgumentException("search wlife, whand, wcreature and wother are percentages 0..1000, got " + w);
+            }
+        }
         if (mullMs < 50 || mullMs > 60_000) {
             throw new IllegalArgumentException("search mullms must be 50..60000 ms, got " + mullMs);
         }
@@ -287,6 +319,29 @@ public final class SearchConfig {
         this.mullMs = mullMs;
         this.mullTurns = mullTurns;
         this.targets = targets;
+        this.wLife = wLife;
+        this.wHand = wHand;
+        this.wCreature = wCreature;
+        this.wOther = wOther;
+    }
+
+    /** D431: this config with the hand leaf's weights given, in percent. */
+    public SearchConfig withLeafWeights(final int wLife, final int wHand, final int wCreature, final int wOther) {
+        if (wLife == this.wLife && wHand == this.wHand && wCreature == this.wCreature && wOther == this.wOther) {
+            return this;
+        }
+        return new SearchConfig(this, leafModel, mull, mullMs, mullTurns, targets, wLife, wHand, wCreature, wOther);
+    }
+
+    /**
+     * D431: the hand leaf's weights as multipliers {life, hand, creature, other},
+     * or null when all four are 100 (the plain leaf, {@link SearchPolicy#leaf}).
+     */
+    public double[] leafWeights() {
+        if (wLife == 100 && wHand == 100 && wCreature == 100 && wOther == 100) {
+            return null;
+        }
+        return new double[] {wLife / 100.0, wHand / 100.0, wCreature / 100.0, wOther / 100.0};
     }
 
     /** D417: this config with the mulligan search and the target search switched as given. */
@@ -380,6 +435,10 @@ public final class SearchConfig {
         int mullMs = MULL_MS;
         int mullTurns = MULL_TURNS;
         boolean targets = false;
+        int wLife = 100;   // D431
+        int wHand = 100;
+        int wCreature = 100;
+        int wOther = 100;
         if (text != null && !text.isBlank()) {
             for (final String kv : text.split(",")) {
                 final String[] p = kv.trim().split("=", 2);
@@ -421,9 +480,14 @@ public final class SearchConfig {
                 case "mullms": mullMs = Integer.parseInt(p[1]); break;
                 case "mullturns": mullTurns = Integer.parseInt(p[1]); break;
                 case "targets": targets = bit("targets", p[1]); break;
+                case "wlife": wLife = Integer.parseInt(p[1]); break;   // D431
+                case "whand": wHand = Integer.parseInt(p[1]); break;
+                case "wcreature": wCreature = Integer.parseInt(p[1]); break;
+                case "wother": wOther = Integer.parseInt(p[1]); break;
                 default: throw new IllegalArgumentException("unknown search option " + p[0]
                         + " (ms, cands, turns, rounds, margin, maxrounds, what, seed, aturns, override, z, untapped, oracle,"
-                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets)");
+                        + " leaf, anytime, rank, gen, prior, evalmodel, rollout, mull, mullms, mullturns, targets,"
+                        + " wlife, whand, wcreature, wother)");
                 }
             }
         }
@@ -439,7 +503,7 @@ public final class SearchConfig {
         return new SearchConfig(ms, cands, turns, rounds, margin, maxRounds, what.contains("p"), what.contains("a"),
                 what.contains("b"), seed, aturns, "lcb".equals(override), z, untapped, oracle, anytime,
                 "prior".equals(rank), gen < 0 ? Math.max(24, cands) : gen, prior, evalModel, rollout).withLeaf(leaf)
-                .withDecisions(mull, mullMs, mullTurns, targets);
+                .withDecisions(mull, mullMs, mullTurns, targets).withLeafWeights(wLife, wHand, wCreature, wOther);
         // gen is read only under rank=prior (and validated there).
     }
 
@@ -490,6 +554,19 @@ public final class SearchConfig {
         }
         if (targets) {
             sb.append(",targets=1");
+        }
+        // D431's, likewise: only a weight that is not 100.
+        if (wLife != 100) {
+            sb.append(",wlife=").append(wLife);
+        }
+        if (wHand != 100) {
+            sb.append(",whand=").append(wHand);
+        }
+        if (wCreature != 100) {
+            sb.append(",wcreature=").append(wCreature);
+        }
+        if (wOther != 100) {
+            sb.append(",wother=").append(wOther);
         }
         return sb.toString();
     }

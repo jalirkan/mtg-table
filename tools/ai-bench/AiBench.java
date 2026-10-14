@@ -1395,6 +1395,61 @@ public final class AiBench {
                             : "budget".equals(rep.fallback) && rep.playouts <= 1) && ms < 60 + 1500,
                             "a tight budget: " + ms + " ms, " + (rep == null ? "none" : rep.summary()));
                 });
+        // 9. D431: the hand leaf's weights.  On a real board each weight scales
+        //    its own term and nothing else (the leaf is linear in the four), all
+        //    four at 1 is the plain leaf to the bit, and a search whose weights
+        //    are all 0 scores every unfinished rollout 0 -- so the weights reach
+        //    the rollouts' leaves.
+        final List<String> leafBoard = List.of(
+                "humanlife=4", "ailife=20", "turn=5", "activeplayer=ai", "activephase=COMBAT_DECLARE_ATTACKERS",
+                "humanbattlefield=Forest;Wall of Wood", "humanhand=Forest;Forest", "aihand=Swamp",
+                "humanlibrary=Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp",
+                "aibattlefield=Grizzly Bears;Grizzly Bears;Forest;Forest");
+        scenario("leaf-weights", leafBoard, PolicyLobbyPlayerAi.Outlets.OFF, (ai, pol) -> {
+            final Game g = ai.getGame();
+            final double plain = mtgtable.ai.SearchPolicy.leaf(g, ai, 1.0);
+            check(plain == mtgtable.ai.SearchPolicy.leaf(g, ai, 1.0, null)
+                    && plain == mtgtable.ai.SearchPolicy.leaf(g, ai, 1.0, new double[] {1, 1, 1, 1})
+                    && plain == mtgtable.ai.SearchPolicy.leaf(g, ai),
+                    "weights 1 (or none) are the plain leaf to the bit: " + plain);
+            final double[] term = new double[4];
+            for (int i = 0; i < 4; i++) {
+                final double[] w = {1, 1, 1, 1};
+                w[i] = 0;
+                term[i] = plain - mtgtable.ai.SearchPolicy.leaf(g, ai, 1.0, w);
+            }
+            check(term[0] == 200 && term[1] == -40 && term[2] != 0 && term[3] != 0,
+                    "each weight has its own term (life 320 - 120 = 200, hand 40 x (1 - 2) = -40, creatures, other): "
+                            + java.util.Arrays.toString(term));
+            final double[] w = {0.5, 1.5, 2.0, 0.25};
+            double expect = plain;
+            for (int i = 0; i < 4; i++) {
+                expect += (w[i] - 1) * term[i];
+            }
+            final double got = mtgtable.ai.SearchPolicy.leaf(g, ai, 1.0, w);
+            check(Math.abs(got - expect) < 1e-6, "the leaf is linear in the four weights: " + got + " vs " + expect);
+        });
+        scenario("search-leaf-weights", leafBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                SearchConfig.parse("ms=3000,rounds=1,seed=7,what=a,wlife=0,whand=0,wcreature=0,wother=0"), (ai, pol) -> {
+                    final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                    final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
+                    ai.getGame().getPhaseHandler().setCombat(combat);
+                    combat.initConstraints();
+                    ctl.declareAttackers(ai, combat);
+                    final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
+                    int zero = 0;
+                    int other = 0;
+                    for (int i = 0; rep != null && i < rep.meanLeaf.length; i++) {
+                        final double m = rep.meanLeaf[i];
+                        if (m == 0) {
+                            zero++;
+                        } else if (!Double.isNaN(m) && Math.abs(m) < 50_000) {
+                            other++;   // an unfinished rollout the weights did not reach
+                        }
+                    }
+                    check(rep != null && zero >= 1 && other == 0 && ctl.counts().getOrDefault("search.rolloutErrors", 0) == 0,
+                            "weights 0 score every unfinished rollout 0: " + (rep == null ? "none" : rep.summary()));
+                });
         d416Scenarios(castBoard);
     }
 

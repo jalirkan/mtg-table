@@ -1542,7 +1542,8 @@ public final class SearchPolicy {
         final Map<Cand, Double> prior = new java.util.IdentityHashMap<>();
         final List<Cand> drop = new ArrayList<>();
         final Limits lim = new Limits(deadline, 0, 2_000, cfg.untapped, cfg.oracle, cfg.rolloutOutletsUs(),
-                cfg.rolloutOutletsThem(), true, priorEval == null ? null : (g, p) -> priorEval.logit(g, p) * LEAF_SCALE, leafEval);
+                cfg.rolloutOutletsThem(), true, priorEval == null ? null : (g, p) -> priorEval.logit(g, p) * LEAF_SCALE, leafEval,
+                cfg.leafWeights());
         int scored = 0;
         for (int i = keep; i < cands.size(); i++) {
             if (System.nanoTime() > deadline) {
@@ -2023,7 +2024,8 @@ public final class SearchPolicy {
     private Playout rollout(final Game game, final Player ai, final Cand cand, final long seed, final long deadline,
                             final boolean first, final int horizon) {
         return playout(game, ai, cand, seed, new Limits(deadline, horizon, 20_000, cfg.untapped, cfg.oracle,
-                cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null, leafEval), sink, first, failCopyForTest);
+                cfg.rolloutOutletsUs(), cfg.rolloutOutletsThem(), false, null, leafEval, cfg.leafWeights()), sink, first,
+                failCopyForTest);
     }
 
     /** How far a {@link #playout} may run. */
@@ -2068,6 +2070,17 @@ public final class SearchPolicy {
                       final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
                       final java.util.function.ToDoubleBiFunction<Game, Player> score,
                       final mtgtable.eval.PositionEvaluator evaluator) {
+            this(deadline, horizonTurns, maxSteps, untapped, oracle, outletsUs, outletsThem, untilApplied, score, evaluator, null);
+        }
+
+        /** D431: the hand leaf's weights {life, hand, creature, other} as multipliers; null = the plain leaf. */
+        public final double[] leafWeights;
+
+        public Limits(final long deadline, final int horizonTurns, final int maxSteps, final double untapped,
+                      final boolean oracle, final boolean outletsUs, final boolean outletsThem, final boolean untilApplied,
+                      final java.util.function.ToDoubleBiFunction<Game, Player> score,
+                      final mtgtable.eval.PositionEvaluator evaluator, final double[] leafWeights) {
+            this.leafWeights = leafWeights == null ? null : leafWeights.clone();
             this.deadline = deadline;
             this.horizonTurns = horizonTurns;
             this.maxSteps = maxSteps;
@@ -2206,7 +2219,7 @@ public final class SearchPolicy {
             sink.add(lim.untilApplied ? "search.prior.playUs" : "search.playUs", (int) ((System.nanoTime() - tp) / 1000L));
             final double leaf = lim.score != null && !copy.isGameOver() ? lim.score.applyAsDouble(copy, aiCopy)
                     : lim.evaluator != null && !copy.isGameOver() ? evalLeaf(lim.evaluator, copy, aiCopy)   // D354
-                    : leaf(copy, aiCopy, lim.untapped);
+                    : leaf(copy, aiCopy, lim.untapped, lim.leafWeights);
             return new Playout(leaf, copy.isGameOver(), resultOf(copy, aiCopy), capped, ph.getTurn() - startTurn);
         } finally {
             MyRandom.setRandom(realRandom);
@@ -2255,6 +2268,22 @@ public final class SearchPolicy {
      * is; the weight is a knob for the ladder's SPRT, its default unchanged.
      */
     public static double leaf(final Game g, final Player ai, final double untapped) {
+        return leaf(g, ai, untapped, null);
+    }
+
+    /**
+     * {@link #leaf} with its four big terms weighted (D431): {@code w} is
+     * {life, hand, creature, other} as multipliers, each on both sides -- the
+     * life curve, the cards in hand, every creature's {@code evalCard} and every
+     * other permanent's.  A win, a loss, poison, an empty library and the
+     * {@code untapped} term keep their points.  {@code null} is all four at 1:
+     * the same doubles as the plain leaf, since a product with 1.0 is exact.
+     */
+    public static double leaf(final Game g, final Player ai, final double untapped, final double[] w) {
+        final double wLife = w == null ? 1.0 : w[0];
+        final double wHand = w == null ? 1.0 : w[1];
+        final double wCreature = w == null ? 1.0 : w[2];
+        final double wOther = w == null ? 1.0 : w[3];
         final int turn = g.getPhaseHandler().getTurn();
         // isInGame() is "no outcome yet": a winner is out of the game too.
         if (ai.hasLost()) {
@@ -2274,10 +2303,10 @@ public final class SearchPolicy {
         double s = 0;
         for (final Player p : g.getPlayers()) {
             final int sign = p == ai ? 1 : -1;
-            s += sign * lifeValue(p.getLife());
+            s += sign * wLife * lifeValue(p.getLife());
             s -= sign * 25.0 * p.getPoisonCounters();
             final int hand = p.getCardsIn(ZoneType.Hand).size();
-            s += sign * 40.0 * (p.isUnlimitedHandSize() ? hand : Math.min(hand, p.getMaxHandSize()));
+            s += sign * wHand * 40.0 * (p.isUnlimitedHandSize() ? hand : Math.min(hand, p.getMaxHandSize()));
             if (p.getCardsIn(ZoneType.Library).isEmpty()) {
                 s -= sign * 300.0;
             }
@@ -2292,7 +2321,7 @@ public final class SearchPolicy {
             } catch (final RuntimeException e) {
                 v = 50;
             }
-            s += (c.getController() == ai ? 1 : -1) * v;
+            s += (c.getController() == ai ? 1 : -1) * (c.isCreature() ? wCreature : wOther) * v;
             if (untapped != 1.0 && c.isCreature() && c.isUntapped()) {
                 s += (c.getController() == ai ? 1 : -1) * (untapped - 1.0);
             }

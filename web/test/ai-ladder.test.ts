@@ -649,6 +649,32 @@ test('D417: search-v2-mull, -targets and -mull-targets are search-v2 (search-v1-
   assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /mull|targets/, 'the live seat (search-v2) does not turn them on');
 });
 
+test('D431: the eight search-v2-w* players are search-v2 (search-v1-anytime) plus one leaf weight and nothing else', () => {
+  const reg = players(JSON.parse(readFileSync(join(REPO, 'tools/ai-ladder/players.json'), 'utf8')), REPO);
+  const by = new Map(reg.map((x) => [x.name, x]));
+  const v2 = by.get('search-v1-anytime')!;
+  const hashes = new Set([v2.hash]);
+  for (const key of ['wlife', 'whand', 'wcreature', 'wother']) {
+    for (const pct of [50, 150]) {
+      const p = by.get(`search-v2-${key}${pct}`);
+      assert.ok(p?.cfg, `search-v2-${key}${pct} is registered and playable`);
+      assert.equal(p!.cfg, `${v2.cfg},${key}=${pct}`);
+      hashes.add(p!.hash);
+    }
+  }
+  assert.equal(hashes.size, 9, 'one name per config: nine configs, nine hashes');
+  assert.equal(v2.hash, 'cdd55e02a89c', "search-v2's hash is unchanged by the new (100%) parameters");
+  // At 100 the weights are the old config; off 100 they print in SearchConfig's order.
+  assert.deepEqual(resolveParams('search', { wLife: 100, wHand: 100, wCreature: 100, wOther: 100 }), resolveParams('search', {}));
+  assert.match(KINDS.search!.cfg(resolveParams('search', { wOther: 0, wCreature: 150, wHand: 75, wLife: 200 })),
+    /,wlife=200,whand=75,wcreature=150,wother=0$/);
+  assert.throws(() => resolveParams('search', { wLife: 1001 }), /0\.\.1000/);
+  // The engine knows each key, and the live seat (search-v2) sets none.
+  const java = readFileSync(join(REPO, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8');
+  for (const key of ['wlife', 'whand', 'wcreature', 'wother']) assert.ok(java.includes(`case "${key}"`), `SearchConfig parses ${key}`);
+  assert.doesNotMatch(/LIVE_DEFAULTS = "([^"]*)";/.exec(java)![1]!, /wlife|whand|wcreature|wother/);
+});
+
 test('D417: the match tally counts each decision kind, and searched/changed stay p + a + b', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ladder-kinds-'));
   const f = join(dir, 'b0.jsonl');

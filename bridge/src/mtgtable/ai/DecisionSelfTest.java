@@ -139,6 +139,7 @@ public final class DecisionSelfTest {
 
         searchWeek3();
         mullAndTargets();
+        leafWeights();
         explore();
 
         System.out.println("decision selftest: " + checks + " check(s), " + failures + " failure(s)");
@@ -264,6 +265,47 @@ public final class DecisionSelfTest {
             try {
                 SearchConfig.parse(bad);
             } catch (final IllegalArgumentException e) {
+                threw = true;
+            }
+            check(threw, "refused: " + bad);
+        }
+    }
+
+    /** D431: the hand leaf's weights parse, print only when not 100, refuse, survive every copy, and leave search-v2 as it was. */
+    private static void leafWeights() {
+        final SearchConfig def = SearchConfig.defaults();
+        final SearchConfig live = SearchConfig.parseLive("");
+        check(def.wLife == 100 && def.wHand == 100 && def.wCreature == 100 && def.wOther == 100 && def.leafWeights() == null
+                && live.leafWeights() == null, "the weights are 100 by default, live seat included, and give the plain leaf");
+        check(!live.toString().contains("wlife") && !live.toString().contains("whand") && !live.toString().contains("wcreature")
+                && !live.toString().contains("wother") && (def.toString() + ",anytime=1").equals(live.toString()),
+                "search-v2's config string is unchanged: " + live);
+        check(SearchConfig.parse("wlife=100,whand=100,wcreature=100,wother=100").toString().equals(def.toString()),
+                "every weight at 100 is the default");
+        final SearchConfig l = SearchConfig.parse("anytime=1,wlife=50");
+        check(l.wLife == 50 && l.wHand == 100 && l.toString().equals(live.toString() + ",wlife=50")
+                && java.util.Arrays.equals(l.leafWeights(), new double[] {0.5, 1.0, 1.0, 1.0}),
+                "search-v2 + wlife=50 prints as search-v2 plus the weight: " + l);
+        final SearchConfig all = SearchConfig.parse("anytime=1,wother=0,wcreature=150,whand=75,wlife=200");
+        check(all.toString().equals(live.toString() + ",wlife=200,whand=75,wcreature=150,wother=0")
+                && SearchConfig.parse(all.toString()).toString().equals(all.toString())
+                && java.util.Arrays.equals(all.leafWeights(), new double[] {2.0, 0.75, 1.5, 0.0}),
+                "four weights print in a fixed order and round-trip: " + all);
+        final SearchConfig keep = SearchConfig.parse("anytime=1,mull=1,targets=1,leaf=eval:m.json,whand=150");
+        check(keep.mull && keep.targets && "m.json".equals(keep.leafModel) && keep.wHand == 150
+                && keep.withLeaf("hand").wHand == 150 && keep.withLeaf("hand").leafModel == null
+                && keep.withDecisions(false, SearchConfig.MULL_MS, SearchConfig.MULL_TURNS, false).wHand == 150
+                && keep.withLeafWeights(100, 100, 100, 100).mull && keep.withLeafWeights(100, 100, 100, 100).leafModel != null
+                && keep.withLeafWeights(100, 100, 100, 100).leafWeights() == null
+                && SearchConfig.parse(keep.toString()).toString().equals(keep.toString()),
+                "the weights survive withLeaf and withDecisions, and they keep the leaf and the switches: " + keep);
+        check(SearchConfig.parseLive("wcreature=50").anytime && SearchConfig.parseLive("wcreature=50").wCreature == 50,
+                "the live parse takes a weight on top of search-v2");
+        for (final String bad : List.of("wlife=-1", "whand=1001", "wcreature=0.5", "wother=x", "wlife=")) {
+            boolean threw = false;
+            try {
+                SearchConfig.parse(bad);
+            } catch (final IllegalArgumentException e) {   // NumberFormatException is one
                 threw = true;
             }
             check(threw, "refused: " + bad);

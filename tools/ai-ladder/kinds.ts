@@ -119,6 +119,11 @@ export const KINDS: Record<string, Kind> = {
       mullMs: { type: 'int', min: 50, max: 60000, default: 6000, omitAtDefault: true, doc: "D417: the opening-hand search's own budget per decision (ms; mull=on only)" },
       mullTurns: { type: 'int', min: 1, max: 8, default: 3, omitAtDefault: true, doc: 'D417: the opening-hand rollouts play until each seat has had this many turns (mull=on only)' },
       targets: { type: 'enum', values: ['off', 'on'], default: 'off', omitAtDefault: true, doc: "D417: search the targets of the seat's own priority play: Forge's targets against up to cands-1 others, one part at a time" },
+      // D431: the hand leaf's four big terms, in percent, 100 by default and out of the hash while 100.
+      wLife: { type: 'int', min: 0, max: 1000, default: 100, omitAtDefault: true, doc: "D431: the leaf's life curve, in percent (both sides)" },
+      wHand: { type: 'int', min: 0, max: 1000, default: 100, omitAtDefault: true, doc: "D431: the leaf's cards in hand, in percent (both sides)" },
+      wCreature: { type: 'int', min: 0, max: 1000, default: 100, omitAtDefault: true, doc: "D431: the leaf's creatures (Forge's CreatureEvaluator), in percent (both sides)" },
+      wOther: { type: 'int', min: 0, max: 1000, default: 100, omitAtDefault: true, doc: "D431: the leaf's other permanents (lands and the rest, Forge's evalCard), in percent (both sides)" },
     },
     // FIXED-ROLLOUT benchmark mode needs no search change (D312's loop stops at
     // maxrounds): rounds = maxRounds = N, budgetMs at its 60000 ceiling, a fixed
@@ -141,6 +146,11 @@ export const KINDS: Record<string, Kind> = {
         if (p.mullTurns !== undefined) kv.push(`mullturns=${p.mullTurns}`);
       }
       if (p.targets === 'on') kv.push('targets=1');
+      // D431: SearchConfig prints a weight only when it is not 100, in this order; so does the seat config.
+      if (p.wLife !== undefined) kv.push(`wlife=${p.wLife}`);
+      if (p.wHand !== undefined) kv.push(`whand=${p.wHand}`);
+      if (p.wCreature !== undefined) kv.push(`wcreature=${p.wCreature}`);
+      if (p.wOther !== undefined) kv.push(`wother=${p.wOther}`);
       return `${p.profile}${outletSuffix(p.outlets as string)}+search:${kv.join(',')}`;
     },
     available: (repo) => {
