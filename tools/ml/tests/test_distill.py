@@ -121,11 +121,15 @@ class TestReader(unittest.TestCase):
             self.assertEqual(r["notes"]["gamesNotOk"], 1)
             self.assertEqual(r["notes"]["gamesDuplicate"], 1)
             self.assertEqual(r["notes"]["tornLines"], 1)
+            st = X.stats([d], NAMES)       # the streamed counter agrees with the reader
+            self.assertEqual((st["games"], st["rows"], st["unended"], st["gamesNotOk"], st["duplicate"], st["layoutOk"]),
+                             (1, 5, 1, 1, 1, 1), st)
             other = header(lay)
             other["stateSchemaId"] = "0000000000000000"
             write_rows(os.path.join(d, "rows-3.jsonl"), [other])
             with self.assertRaises(SystemExit):
                 X.read_rows([d])
+            self.assertEqual((X.stats([d], NAMES)["layouts"], X.stats([d], NAMES)["layoutOk"]), (2, 0))
         finally:
             shutil.rmtree(d)
 

@@ -604,6 +604,66 @@ def cmd_verdict(o: argparse.Namespace) -> int:
     return 0
 
 
+def stats(paths: Iterable[str], names_file: str | None = None) -> dict[str, Any]:
+    """Counts over rows files, streamed (standard library): ended games, rows by kind, fallbacks, the layout, and
+    whether the layout is names.json's (the one DistillSelfTest holds the Java side to)."""
+    out: dict[str, Any] = {"files": 0, "games": 0, "gamesNotOk": 0, "unended": 0, "p": 0, "a": 0, "b": 0,
+                           "fallback": 0, "overrode": 0, "msSum": 0.0, "layouts": 0, "layoutOk": 0, "duplicate": 0}
+    layouts = set()
+    seen: set[str] = set()
+    for f in row_files(paths):
+        out["files"] += 1
+        pending: dict[str, list[tuple[str, bool, bool, float]]] = {}
+        with open(f, encoding="utf-8") as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                try:
+                    o = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                t = o.get("type")
+                if t == "header":
+                    layouts.add((o.get("featureVersion"), o.get("stateSchemaId"), o.get("stateSize"),
+                                 json.dumps(o.get("cand"), sort_keys=True)))
+                elif t == "row" and o.get("kind") in KINDS:
+                    pending.setdefault(o["game"], []).append((o["kind"], bool(o.get("fallback")), int(o.get("chosen", 0)) > 0,
+                                                             float(o.get("ms") or 0.0)))
+                elif t == "end":
+                    rows = pending.pop(o.get("game"), [])
+                    if not o.get("ok"):
+                        out["gamesNotOk"] += 1
+                        continue
+                    if o.get("game") in seen:
+                        out["duplicate"] += 1
+                        continue
+                    seen.add(o.get("game"))
+                    out["games"] += 1
+                    for k, fb, ov, ms in rows:
+                        out[k] += 1
+                        out["fallback"] += fb
+                        out["overrode"] += ov
+                        out["msSum"] += ms
+        out["unended"] += len(pending)
+    out["layouts"] = len(layouts)
+    n = out["p"] + out["a"] + out["b"]
+    out["rows"] = n
+    out["msMean"] = round(out.pop("msSum") / n, 3) if n else None
+    out["overrodeRate"] = round(out["overrode"] / n, 6) if n else None
+    if names_file and len(layouts) == 1:
+        with open(names_file, encoding="utf-8") as f:
+            nm = json.load(f)
+        (fv, sid, size, cand), = layouts
+        out["layoutOk"] = 1 if (fv, sid, size, cand) == (nm["featureVersion"], nm["stateSchemaId"], nm["stateSize"],
+                                                          json.dumps(nm["cand"], sort_keys=True)) else 0
+    return out
+
+
+def cmd_stats(o: argparse.Namespace) -> int:
+    print(json.dumps(stats(o.rows, o.names)))
+    return 0
+
+
 def cmd_golden(o: argparse.Namespace) -> int:
     """fixtures/distill/: a small seeded model over names.json's layout and numpy's scores for a few decisions,
     for DistillSelfTest's parity check.  Kind b is left out on purpose (the Java side's 'not covered')."""
@@ -675,10 +735,15 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--match-search", dest="match_search", required=True)
     v.add_argument("--match-forge", dest="match_forge", required=True)
     v.add_argument("--out")
+    st = sub.add_parser("stats", help="counts over rows files as one JSON line (streamed; standard library)")
+    st.add_argument("rows", nargs="+")
+    st.add_argument("--names", default=os.path.join("fixtures", "distill", "names.json"),
+                    help="the layout the rows must carry (layoutOk)")
     g = sub.add_parser("golden", help="fixtures/distill/model.json and golden.json from names.json (DistillSelfTest)")
     g.add_argument("--out", default="fixtures/distill")
     a = ap.parse_args(argv)
-    return {"train": cmd_train, "register": cmd_register, "verdict": cmd_verdict, "golden": cmd_golden}[a.cmd](a)
+    return {"train": cmd_train, "register": cmd_register, "verdict": cmd_verdict, "stats": cmd_stats,
+            "golden": cmd_golden}[a.cmd](a)
 
 
 if __name__ == "__main__":
