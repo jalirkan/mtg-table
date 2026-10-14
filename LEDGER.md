@@ -659,3 +659,15 @@ read against the rule. ledger.jsonl holds the same entries, one JSON object a li
 - summary: results/J123/summary.md (the PC session's; judge it against the rule)
 - commits: mtg-table 4b424a2, ForgeCoach c93d90e
 - follow-up: template forgecoach-metas: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages
+
+## J124 DONE: B2 follow-up, 16 or 17 lands where ForgeCoach's deck assistant picks 16: fresh lab drafts of Vintage 180, Evan's cube and Synergy (1,400 each, seeds 813,000,001+), only the seats whose ForgeCoach build plays 16 lands (about 2,000 pools), that deck against the same deck on 17 lands, each against the other seat's lab deck; paired by pool, clustered by draft; Forge Default on every pool (4 games a deck), search-v2 on the first 300 pools (2 games a deck) as the sign check
+
+- finished: 2026-10-14T05:45:07-04:00
+- decides: whether ForgeCoach's deck assistant keeps playing 16 lands where it now picks 16 (its low-curve rule) or plays 17 there
+- hypothesis: J121's secondary read (its fc16_vs_17: 760 pools where the builder picked 16, mostly Vintage) was -3.9 points for 16, 95% [-7.5, -0.3], 99% [-8.7, +0.9], search-v2 -5.2 on 124 pools; that read was chosen after the fact among several, so the true effect is likely smaller, 1-3 points
+- rule: written 2026-10-14 before any J124 draft or game. Unit: a focus pool = one seat of one lab draft whose ForgeCoach build (buildDecks(ctx, pool)[0] at ForgeCoach@3972058) plays 16 lands; l16 = that deck, l17 = the same colours and splash on 17 lands (J121's stepLands: the land in cuts the spell whose loss leaves the builder's best score). Both play the OTHER seat's lab deck. A game scores 1/0, a draw or timeout 1/2, an engine error is left out; per pool l16's mean score minus l17's, averaged within the draft (its seats), then over drafts; normal 95% and 99% intervals. ONE contrast. SHOWN if the Forge Default arm's 99% interval on (16 - 17) over every kept pool lies entirely below 0 AND search-v2's point estimate on its subsample is below 0 too; then the cloud changes ForgeCoach's low-curve rule to 17. Otherwise NOT SHOWN, and the rule stays (16 shown better is also NOT SHOWN: the rule stays). Per cube and per source (lowcurve = the low-curve rule chose 16, meta = the meta's land table did) are descriptions and decide nothing. An interval that includes 0 is not shown, never no effect
+- outcome: done
+- headline: jr.shown 0, jr.f_est -0.0061, jr.f_lo99 -0.0255, jr.f_hi99 0.0133, jr.f_lo95 -0.0208, jr.f_hi95 0.0087, jr.s_est -0.0109, jr.f_pools 2019, jr.f_source_lowcurve_est -0.0063, jr.f_source_meta_est -0.0046
+- summary: results/J124/summary.md (the PC session's; judge it against the rule)
+- commits: mtg-table 37c6ae6, ForgeCoach 3972058
+- follow-up: template morning-read: READY: not on pc-jobs; a FOLLOW-UP READY line is in HEARTBEAT.md ## Messages

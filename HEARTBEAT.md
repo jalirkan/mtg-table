@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-14T05:44:53-04:00
+- time: 2026-10-14T05:45:08-04:00
 - runner: 10896b8, up since 2026-10-13T00:03:39-04:00
-- running: J124 commands 4/4, 17351/18600 games, 211.1/h, ETA 2026-10-14T11:39:57-04:00, 7 worker(s), 1 core(s); J125 prepare, 0/3440 games, 1 worker(s), 7 core(s)
-- cores: 8 of 8 in use (the running jobs' widths; 16 threads)
-- load: 0.92; memory 3.3/30.5 GB, swap 1825 MB, pressure 0% (lab budget 23.4 GB)
+- running: J125 prepare, 0/3440 games, 1 worker(s), 7 core(s)
+- cores: 7 of 8 in use (the running jobs' widths; 16 threads)
+- load: 0.87; memory 3.6/30.5 GB, swap 1825 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J126
 - waiting: nothing
-- last finished: J123 done at 2026-10-10T10:58:30-04:00: mc.ship 1 · mc.share_ge80 0.873 · mc.drafts 6000 · mc.median_games 1523 · mc.p10_games 43 · mc.new_lands_played 11
+- last finished: J124 done at 2026-10-14T05:45:07-04:00: jr.shown 0 · jr.f_est -0.006 · jr.f_lo99 -0.025 · jr.f_hi99 0.013 · jr.f_lo95 -0.021 · jr.f_hi95 0.009 · jr.s_est -0.011 · jr.f_pools 2019 · jr.f_source_lowcurve_est -0.006 · jr.f_source_meta_est -0.005
 
 ## Messages
+
+- FOLLOW-UP READY [J124@2026-10-14T05:45:07-04:00] (the runner, for the cloud session): J124 is done; write and post the template morning-read. It decides: whether ForgeCoach's deck assistant keeps playing 16 lands where it now picks 16 (its low-curve rule) or plays 17 there. Ledger: LEDGER.md. Delete this line once posted.
 
 
 - FOLLOW-UP READY [J122@2026-10-10T10:30:10-04:00] (the runner, for the cloud session): J122 is done; write and post the template forgecoach-final-fantasy-meta. It decides: whether ForgeCoach ships public/cubes/final-fantasy-cube-180.meta.json and drops the cube's labData: false (the cloud session copies it from results/J122/), and which of the cube's cards Forge 2.0.14 lacks (the cloud session lists them under the document's "Not in Forge 2.0.14"). Ledger: LEDGER.md. Delete this line once posted.
