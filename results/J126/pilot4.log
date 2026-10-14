@@ -1,0 +1,25 @@
+==== J126 pilot4 started 2026-10-14T12:23:15-04:00 in unit lab-J126-pilot4, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+match search-v2-distill-09bd73ea1861 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 8 games (8 games, 4 mirrored pairs), no stopping rule
+  start  w0 search-v2-distill-09bd73ea1861 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261014T162316-1971437, seed 114900000, 2 pair(s))
+  done   w0 search-v2-distill-09bd73ea1861 3-5 search-v1-anytime (0 draws) in 125 s
+  8 decisive games (4 pairs): search-v2-distill-09bd73ea1861 scores 37.5%
+
+match finished: 8 of 8 games (0 draws, 0 engine errors, 0 timeouts), 4 mirrored pairs
+search-v2-distill-09bd73ea1861 scores 37.5% [95% 13.0%, 62.0%] = -89 Elo [-330, +85] against search-v1-anytime
+search-v2-distill-09bd73ea1861: 189 decisions searched in 8 games, 14 changed Forge's answer (7.4%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-distill-09bd73ea1861 by kind: p 10/127, a 2/50, b 2/12
+search-v2-distill-09bd73ea1861 time per decision: 2.184 ms (p+a+b); by kind p 3.075, a 0.312, b 0.557
+search-v1-anytime: 173 decisions searched in 8 games, 31 changed Forge's answer (17.9%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v1-anytime by kind: p 24/111, a 3/46, b 4/16
+search-v1-anytime time per decision: 658.956 ms (p+a+b); by kind p 701.128, a 511.719, b 789.689
+match search-v2-distill-09bd73ea1861 vs forge-default on tools/ai-bench/pairs-confirm.txt: 1 batch(es) of 8 games (8 games, 4 mirrored pairs), no stopping rule
+  start  w0 search-v2-distill-09bd73ea1861 vs forge-default (match:justin-a-B650-GAMING-X-AX-V2:20261014T162521-2019315, seed 114900000, 2 pair(s))
+  done   w0 search-v2-distill-09bd73ea1861 4-4 forge-default (0 draws) in 17 s
+  8 decisive games (4 pairs): search-v2-distill-09bd73ea1861 scores 50.0%
+
+match finished: 8 of 8 games (0 draws, 0 engine errors, 0 timeouts), 4 mirrored pairs
+search-v2-distill-09bd73ea1861 scores 50.0% [95% 10.0%, 90.0%] = +0 Elo [-382, +382] against forge-default
+search-v2-distill-09bd73ea1861: 205 decisions searched in 8 games, 25 changed Forge's answer (12.2%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-distill-09bd73ea1861 by kind: p 21/133, a 2/57, b 2/15
+search-v2-distill-09bd73ea1861 time per decision: 3.501 ms (p+a+b); by kind p 5.153, a 0.441, b 0.488
+forge-default: no searched decisions

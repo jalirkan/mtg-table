@@ -1,7 +1,8 @@
-running
+failed
+reason: pilot: merged == 1 (merged = 0)
 runner: forgecoach-runner 10896b8
 started: 2026-10-14T12:19:18-04:00
-phase: pilot 4/4
+finished: 2026-10-14T12:25:49-04:00
 mtg-table: 10e8f99
 workers: 3
 peak_worker_rss_gb: 1.15
