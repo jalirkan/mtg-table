@@ -1,0 +1,20 @@
+==== J124 run2 started 2026-10-14T01:20:24-04:00 in unit lab-J124-run2, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+ai-bench: run j124-forge, 7 job(s) -> /home/justin-a/code/lab/mtg-table/var/ai-bench/j124-forge
+ai-bench: under the control file /home/justin-a/code/lab/runner/var/runner/control/J124.json
+ai-bench: shard 0 starts in slot 0
+ai-bench: shard 1 starts in slot 1
+ai-bench: shard 2 starts in slot 2
+ai-bench: shard 3 starts in slot 3
+ai-bench: shard 4 starts in slot 4
+ai-bench: shard 5 starts in slot 5
+ai-bench: shard 6 starts in slot 6
+== Default vs Default
+  games 16152: A 8041, B 8109, draws 2 (timeouts 9, engine errors 2)
+  A win rate 49.8% of 16150 decisive  (95% Wilson CI 49.0-50.6%)
+  focus deck (first of each pair) win rate 52.8% of 16150  (95% CI 52.0-53.6%)
+  game time mean 3.3 s, median 1.6 s, max 330.0 s; turns mean 17.7; AI eval timeouts 205 (0.01/game)
+  A vs the known 50%: 49.8% over 16150 deal(s), 95% CI 49.0-50.6%, p = 0.593 (-1 Elo, CI -7 to +4)
+  RemAIDeck cards left in hand at game end: A 5863, B 5739
+  A counters:     {activate.Carrion Feeder=553, activate.Cauldron Familiar=54, activate.Priest of Forgotten Gods=93, activate.Woe Strider=81, cast.Blood Artist=356, cast.Carrion Feeder=110, cast.Cauldron Familiar=666, cast.Deadly Dispute=439, cast.Grim Haruspex=472, cast.Juri, Master of the Revue=33, cast.Mayhem Devil=90, cast.Priest of Forgotten Gods=162, cast.Village Rites=65, cast.Woe Strider=365, cast.Zulaport Cutthroat=128, forge.outletActivation=1056}
+  B counters:     {activate.Carrion Feeder=558, activate.Cauldron Familiar=57, activate.Priest of Forgotten Gods=86, activate.Woe Strider=65, cast.Blood Artist=343, cast.Carrion Feeder=102, cast.Cauldron Familiar=652, cast.Deadly Dispute=440, cast.Grim Haruspex=443, cast.Juri, Master of the Revue=42, cast.Mayhem Devil=116, cast.Priest of Forgotten Gods=148, cast.Village Rites=60, cast.Woe Strider=384, cast.Zulaport Cutthroat=141, forge.outletActivation=1033}
+  focus counters: {activate.Carrion Feeder=1071, activate.Cauldron Familiar=77, activate.Priest of Forgotten Gods=122, activate.Woe Strider=61, cast.Blood Artist=283, cast.Carrion Feeder=208, cast.Cauldron Familiar=690, cast.Deadly Dispute=386, cast.Grim Haruspex=336, cast.Juri, Master of the Revue=75, cast.Mayhem Devil=203, cast.Priest of Forgotten Gods=195, cast.Village Rites=125, cast.Woe Strider=311, cast.Zulaport Cutthroat=250, forge.outletActivation=1441}

@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-14T03:41:05-04:00",
- "heartbeat": "2026-10-14T03:41:05-04:00",
+ "updated": "2026-10-14T03:41:17-04:00",
+ "heartbeat": "2026-10-14T03:41:17-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 1.54,
-  "memUsedGb": 6,
+  "load1": 1.46,
+  "memUsedGb": 3.4,
   "memTotalGb": 30.5,
-  "swapUsedMb": 1833,
+  "swapUsedMb": 1826,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -24,21 +24,21 @@
    "id": "J124",
    "title": "B2 follow-up, 16 or 17 lands where ForgeCoach's deck assistant picks 16: fresh lab drafts of Vintage 180, Evan's cube and Synergy (1,400 each, seeds 813,000,001+), only the seats whose ForgeCoach build plays 16 lands (about 2,000 pools), that deck against the same deck on 17 lands, each against the other seat's lab deck; paired by pool, clustered by draft; Forge Default on every pool (4 games a deck), search-v2 on the first 300 pools (2 games a deck) as the sign check",
    "cpu": "heavy",
-   "phase": "commands 2/4",
+   "phase": "commands 3/4",
    "started": "2026-10-14T01:07:49-04:00",
-   "elapsed": 9196,
+   "elapsed": 9208,
    "done": 16134,
    "total": 18600,
    "unit": "games",
    "ratePerHour": 5402.4,
-   "eta": "2026-10-14T04:08:28-04:00",
+   "eta": "2026-10-14T04:08:40-04:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-14T03:40:34-04:00",
-   "memGb": 2.66,
+   "memGb": 0,
    "live": {
     "de.bridge_drafts": 0,
     "de.cpu_ms_per_turn": 0,
@@ -98,7 +98,7 @@
      "pressure": 0
     }
    ],
-   "detail": "lab-J124-run2"
+   "detail": "lab-J124-run3"
   }
  ],
  "queue": [
