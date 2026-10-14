@@ -1,0 +1,29 @@
+==== J126 pilot2 started 2026-10-14T12:20:19-04:00 in unit lab-J126-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+cube lab: cubes/vintage-cube-180.md, grid, 2 draft(s) from seed 814900001, best of 1, 3 job(s), AI Default+outlets+search:anytime=1 vs Default+outlets+search:anytime=1, ratings cubes/vintage-cube-180.ratings.tsv, out var/ml/distill/J126/pilot/lab/vintage
+facts: booting the engine to look up 180 cards ...
+facts: 2.1 s
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 2 worker(s)
+[1/2] seed 814900002: A:UR 0-1 B:WB  games B
+[2/2] seed 814900001: A:WU+r 0-1 B:WU  games B
+matches: 42 s for 2 (21.1 s a draft wall-clock on 2 worker(s))
+done in 44 s -> var/ml/distill/J126/pilot/lab/vintage/drafts.jsonl
+next: tools/cubelab.sh report var/ml/distill/J126/pilot/lab/vintage
+cube lab: cubes/evybaby-cube-360.md, grid, 2 draft(s) from seed 814900001, best of 1, 3 job(s), AI Default+outlets+search:anytime=1 vs Default+outlets+search:anytime=1, ratings Forge's ranks, out var/ml/distill/J126/pilot/lab/evybaby
+facts: booting the engine to look up 360 cards ...
+facts: 2.4 s
+WARNING: 13 card(s) not in the engine, drafted without them: Rescue Girl, First Responder, Flickering Hound, Generous Revival, Apex Witchstalker, Pompous Battlemage, Awaken the Inferno, Fblthp, Knows the Way, Theorix Charm, Twisted Fates, Twinned Vision, Saheeli, Jewel of Avishkar, Primal Witchstalker, Warrior's Blades (run check)
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 2 worker(s)
+[1/2] seed 814900002: A:UR 1-0 B:WU+g  games A
+[2/2] seed 814900001: A:BR+w 0-1 B:WU+g  games B
+matches: 28 s for 2 (13.8 s a draft wall-clock on 2 worker(s))
+done in 30 s -> var/ml/distill/J126/pilot/lab/evybaby/drafts.jsonl
+next: tools/cubelab.sh report var/ml/distill/J126/pilot/lab/evybaby
+cube lab: cubes/synergy-cube-180.md, grid, 2 draft(s) from seed 814900001, best of 1, 3 job(s), AI Default+outlets+search:anytime=1 vs Default+outlets+search:anytime=1, ratings cubes/synergy-cube-180.ratings.tsv, out var/ml/distill/J126/pilot/lab/synergy
+facts: booting the engine to look up 180 cards ...
+facts: 2.0 s
+drafted and built 2 draft(s) in 0.0 s; playing 1 game each on 2 worker(s)
+[1/2] seed 814900002: A:WU 0-1 B:WG  games B
+[2/2] seed 814900001: A:WU 1-0 B:WG  games A
+matches: 82 s for 2 (41.1 s a draft wall-clock on 2 worker(s))
+done in 84 s -> var/ml/distill/J126/pilot/lab/synergy/drafts.jsonl
+next: tools/cubelab.sh report var/ml/distill/J126/pilot/lab/synergy
