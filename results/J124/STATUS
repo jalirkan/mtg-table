@@ -4,7 +4,8 @@ started: 2026-10-14T01:07:49-04:00
 phase: commands 2/4
 mtg-table: 37c6ae6
 ForgeCoach: 3972058
-workers: 6 (sized 7: min(cores 7, memory 7, max_workers 7); peak 2.50 GB per worker (declared; measured 1.65), budget 21.4 GB)
+workers: 7 (sized 7: min(cores 7, memory 7, max_workers 7); peak 2.50 GB per worker (declared; measured 1.65), budget 21.4 GB)
 peak_worker_rss_gb: 1.65
 blocks_done: run1 exit 0 at 2026-10-14T01:20:24-04:00
 pressure-1: 2026-10-14T01:16:59-04:00 drop to 6 worker(s): some avg10 16.6%, swap-in 131/s, job 11.2/21.4 GB
+pressure-2: 2026-10-14T01:22:47-04:00 raise to 7 worker(s): some avg10 0.0%, swap-in 0/s, job 8.9/21.4 GB
