@@ -1,16 +1,16 @@
 {
  "schema": 1,
- "updated": "2026-10-14T01:09:18-04:00",
- "heartbeat": "2026-10-14T01:09:18-04:00",
+ "updated": "2026-10-14T01:13:56-04:00",
+ "heartbeat": "2026-10-14T01:13:56-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 6.14,
-  "memUsedGb": 10.3,
+  "load1": 8.28,
+  "memUsedGb": 10,
   "memTotalGb": 30.5,
-  "swapUsedMb": 516,
+  "swapUsedMb": 551,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
@@ -26,7 +26,7 @@
    "cpu": "heavy",
    "phase": "pilot 1/1",
    "started": "2026-10-14T01:07:49-04:00",
-   "elapsed": 89,
+   "elapsed": 367,
    "done": 0,
    "total": 18600,
    "unit": "games",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-14T01:07:49-04:00",
-   "memGb": 0.01,
+   "memGb": 2.35,
    "live": {
     "de.bridge_drafts": 0,
     "de.cpu_ms_per_turn": 0,
@@ -88,7 +88,16 @@
    "detail": "lab-J124-pilot1"
   }
  ],
- "queue": [],
+ "queue": [
+  {
+   "publicTitle": "Search leaf weights tuning and fixed match",
+   "publicEst": "~6-7 h (one night)",
+   "id": "J125",
+   "title": "Search leaf weights (growth plan #3): eight coordinate steps of search-v2's hand leaf (x0.5 and x1.5 on its life, hand, creature and other-permanent terms) tuned on the dev deck set against search-v2, 140 mirrored pairs each; then ONE fixed 1,200-game match (600 mirrored pairs, D398, the live 1.5 s budget) of the best step against search-v2 on the held-out confirm set, read on a 95% interval (D431)",
+   "cpu": "heavy",
+   "est": "~6-7 h. The tuning plays 8 x 280 = 2,240 games and the confirmation 1,200, 3,440 in all. J116 played 4,800 search-vs-search games at 7 workers at about 585 games an hour (8 h 31 m with its pilot) and J115 2,400 in 4 h 24 m, so the tuning takes ~3.8-4 h (35 batches of 8 games is 5 rounds of 7 workers, so little idle tail) and the confirmation ~2.1 h; pilot ~15 min. At J115's worst case (75 s a game a worker) it would be ~10 h; each tuning match stops itself at 3 h, the confirmation at 8 h, and the step timeout is 14 h"
+  }
+ ],
  "waiting": [],
  "finished": [
   {
