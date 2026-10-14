@@ -133,6 +133,25 @@ class TestReader(unittest.TestCase):
         finally:
             shutil.rmtree(d)
 
+    def test_same_key_in_two_folders_is_two_games(self) -> None:
+        """Two cubes drafted at the same seed give the same lab key; their folders keep them apart (the J126 dry run)."""
+        lay = layout()
+        d = tempfile.mkdtemp()
+        try:
+            rng = random.Random(2)
+            for cube in ("vintage", "synergy"):
+                os.makedirs(os.path.join(d, cube))
+                write_rows(os.path.join(d, cube, "rows-1.jsonl"),
+                           [header(lay), *planted_game(rng, lay, "lab:814900001:g1", 3), {"type": "end", "game": "lab:814900001:g1", "ok": True}])
+            r = X.read_rows([d])
+            self.assertEqual((r["notes"]["gamesEnded"], r["notes"]["gamesDuplicate"]), (2, 0))
+            games = {x["game"] for v in r["rows"].values() for x in v}
+            self.assertEqual(games, {"vintage|lab:814900001:g1", "synergy|lab:814900001:g1"})
+            st = X.stats([d], NAMES)
+            self.assertEqual((st["games"], st["duplicate"], st["rows"]), (2, 0, 6))
+        finally:
+            shutil.rmtree(d)
+
     def test_split_is_by_game_and_salted(self) -> None:
         import dataset as DS  # noqa: E402  -- the same rule as the evaluator's datasets
         games = [f"lab:{i}:g1" for i in range(2000)]

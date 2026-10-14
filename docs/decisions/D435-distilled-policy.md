@@ -38,7 +38,7 @@ would need the same features computed a second way.
    naming the layout. The cube lab names each game (`lab:<draft id>:g<n>`) and writes an
    `end` line when it finishes, so a reader keeps only ended games and a game a killed
    worker left half-written (replayed from its seed by the next worker) is not counted
-   twice. Off unless the variable is set; nothing else changes.
+   twice. A reader keys a game by its rows folder and the lab's key (`<folder>|lab:<seed>:g<n>`): the lab's key repeats across cubes drafted at the same seeds. Off unless the variable is set; nothing else changes.
 3. **The model** (`tools/ml/distill.py`, numpy, gradients by hand and checked): per
    kind, a scorer over the decision's candidates, `x_i = [state, c_i, c_i − c_0]`
    standardised, `w2·relu(W1 x_i + b1) + u·x_i`, softmax over the candidates,

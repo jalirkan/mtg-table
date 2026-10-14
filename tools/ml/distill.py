@@ -33,7 +33,10 @@ decision of it, in one split -- `sha256("J126|<game key>")` mod 100: 0-79
 train, 80-89 val, 90-99 test (dataset.py's split_of with salt "J126").  A row
 whose search fell back to Forge's answer (budget, copy error, unmappable,
 rollout errors, an invalid declaration) is not search-v2's judgement: it is
-left out of training and of the agreement, and counted.
+left out of training and of the agreement, and counted.  A game's key is
+`<folder>|<game>`: the rows file's folder relative to the path given (one
+folder per cube), then the lab's `lab:<draft seed>:g<n>`, which repeats across
+cubes drafted at the same seeds.
 
 THE MODEL (one per kind; `mtgtable.ai.DistillModel` is the Java forward pass).
 For candidate i of a decision, x_i = [state, c_i, c_i - c_0], standardised with
@@ -99,15 +102,19 @@ def split_of(group: str, weights: tuple[int, int, int] = SPLIT, salt: str = SALT
 
 # ---------------------------------------------------------------- reading the rows
 
-def row_files(paths: Iterable[str]) -> list[str]:
-    out: list[str] = []
+def row_files(paths: Iterable[str]) -> list[tuple[str, str]]:
+    """Every rows file under the paths, each with its SCOPE: its folder relative to the path it was found under.
+    A game is keyed `<scope>|<game>`, because the lab's key (`lab:<draft seed>:g<n>`) repeats across cubes that share
+    seeds; one folder per cube (or per run) keeps their games apart."""
+    out: list[tuple[str, str]] = []
     for p in paths:
         if os.path.isfile(p):
-            out.append(p)
+            out.append((".", p))
             continue
         for root, _dirs, files in os.walk(p):
-            out.extend(os.path.join(root, f) for f in files if f.startswith("rows-") and f.endswith(".jsonl"))
-    return sorted(out)
+            scope = os.path.relpath(root, p).replace(os.sep, "/")
+            out.extend((scope, os.path.join(root, f)) for f in files if f.startswith("rows-") and f.endswith(".jsonl"))
+    return sorted(out, key=lambda x: x[1])
 
 
 def read_rows(paths: Iterable[str]) -> dict[str, Any]:
@@ -117,7 +124,7 @@ def read_rows(paths: Iterable[str]) -> dict[str, Any]:
     notes = {"files": 0, "tornLines": 0, "gamesEnded": 0, "gamesNotOk": 0, "gamesUnended": 0,
              "gamesDuplicate": 0, "rowsUnended": 0, "rowsOtherKind": 0}
     seen_games: set[str] = set()
-    for f in row_files(paths):
+    for scope, f in row_files(paths):
         notes["files"] += 1
         pending: dict[str, list[dict[str, Any]]] = {}
         with open(f, encoding="utf-8") as fh:
@@ -145,9 +152,10 @@ def read_rows(paths: Iterable[str]) -> dict[str, Any]:
                 if o.get("kind") not in KINDS:
                     notes["rowsOtherKind"] += 1
                     continue
+                o["game"] = f"{scope}|{o['game']}"
                 pending.setdefault(o["game"], []).append(o)
             elif t == "end":
-                g = o.get("game")
+                g = f"{scope}|{o.get('game')}"
                 rows = pending.pop(g, [])
                 if not o.get("ok", False):
                     notes["gamesNotOk"] += 1
@@ -611,7 +619,7 @@ def stats(paths: Iterable[str], names_file: str | None = None) -> dict[str, Any]
                            "fallback": 0, "overrode": 0, "msSum": 0.0, "layouts": 0, "layoutOk": 0, "duplicate": 0}
     layouts = set()
     seen: set[str] = set()
-    for f in row_files(paths):
+    for scope, f in row_files(paths):
         out["files"] += 1
         pending: dict[str, list[tuple[str, bool, bool, float]]] = {}
         with open(f, encoding="utf-8") as fh:
@@ -627,17 +635,18 @@ def stats(paths: Iterable[str], names_file: str | None = None) -> dict[str, Any]
                     layouts.add((o.get("featureVersion"), o.get("stateSchemaId"), o.get("stateSize"),
                                  json.dumps(o.get("cand"), sort_keys=True)))
                 elif t == "row" and o.get("kind") in KINDS:
-                    pending.setdefault(o["game"], []).append((o["kind"], bool(o.get("fallback")), int(o.get("chosen", 0)) > 0,
+                    pending.setdefault(f"{scope}|{o['game']}", []).append((o["kind"], bool(o.get("fallback")), int(o.get("chosen", 0)) > 0,
                                                              float(o.get("ms") or 0.0)))
                 elif t == "end":
-                    rows = pending.pop(o.get("game"), [])
+                    g = f"{scope}|{o.get('game')}"
+                    rows = pending.pop(g, [])
                     if not o.get("ok"):
                         out["gamesNotOk"] += 1
                         continue
-                    if o.get("game") in seen:
+                    if g in seen:
                         out["duplicate"] += 1
                         continue
-                    seen.add(o.get("game"))
+                    seen.add(g)
                     out["games"] += 1
                     for k, fb, ov, ms in rows:
                         out[k] += 1
