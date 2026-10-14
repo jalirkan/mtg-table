@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-14T10:18:57-04:00",
- "heartbeat": "2026-10-14T10:18:57-04:00",
+ "updated": "2026-10-14T10:19:12-04:00",
+ "heartbeat": "2026-10-14T10:19:12-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.68,
+  "load1": 3.86,
   "memUsedGb": 4.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 1524,
@@ -24,21 +24,21 @@
    "id": "J125",
    "title": "Search leaf weights (growth plan #3): eight coordinate steps of search-v2's hand leaf (x0.5 and x1.5 on its life, hand, creature and other-permanent terms) tuned on the dev deck set against search-v2, 140 mirrored pairs each; then ONE fixed 1,200-game match (600 mirrored pairs, D398, the live 1.5 s budget) of the best step against search-v2 on the held-out confirm set, read on a 95% interval (D431)",
    "cpu": "heavy",
-   "phase": "commands 2/3",
+   "phase": "commands 3/3",
    "started": "2026-10-14T05:44:53-04:00",
-   "elapsed": 16444,
+   "elapsed": 16459,
    "done": 2224,
    "total": 3440,
    "unit": "games",
    "ratePerHour": 531.1,
-   "eta": "2026-10-14T12:36:19-04:00",
+   "eta": "2026-10-14T12:36:34-04:00",
    "workers": 7,
    "workersMax": 7,
    "cores": 7,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-14T10:18:12-04:00",
-   "memGb": 0,
+   "memGb": 0.01,
    "live": {
     "sel.chosen": 0,
     "cm.played": 0,
@@ -71,7 +71,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J125-run2"
+   "detail": "lab-J125-run3"
   }
  ],
  "queue": [
