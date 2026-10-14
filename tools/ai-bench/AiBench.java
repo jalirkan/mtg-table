@@ -1197,6 +1197,108 @@ public final class AiBench {
                 "aibattlefield=Goblin Bombardment;Grizzly Bears;Mountain"),
             (ai, pol) -> check(pol.decide(ai) == null, "a quiet board -> no sacrifice"));
         searchScenarios();
+        distillScenarios();
+    }
+
+    // ------------------------------------------------------------------
+    // J126 (B1): the row exporter on a searching seat, and the distilled
+    // policy (fixtures/distill/model.json, a seeded model: covers p and a)
+    // deciding with no rollout -- and never exporting rows of its own.
+    // ------------------------------------------------------------------
+
+    static void distillScenarios() throws Exception {
+        System.out.println("== ai-bench selftest: the distilled policy and its row exporter (J126, engine)");
+        final List<String> castBoard = List.of(
+                "humanlife=20", "ailife=20", "turn=3", "activeplayer=ai", "activephase=MAIN2",
+                "humanbattlefield=Forest", "humanhand=Lightning Bolt", "humanlibrary=Forest;Forest;Forest",
+                "aihand=Typhoid Rats", "ailibrary=Swamp;Swamp;Swamp", "aibattlefield=Swamp|Id:30");
+        final List<String> attackBoard = List.of(
+                "humanlife=4", "ailife=20", "turn=5", "activeplayer=ai", "activephase=COMBAT_DECLARE_ATTACKERS",
+                "humanbattlefield=Forest", "humanlibrary=Forest;Forest;Forest", "ailibrary=Swamp;Swamp;Swamp",
+                "aibattlefield=Grizzly Bears;Grizzly Bears;Forest");
+        final java.nio.file.Path rows = Files.createTempDirectory("ai-bench-distill-rows");
+        try {
+            // 1. search-v2 (the anytime search) with the exporter on: one row per searched decision.
+            mtgtable.ai.DistillRows.enableForTest(rows);
+            mtgtable.ai.DistillRows.setGame("selftest:rows");
+            scenario("distill-rows-p", castBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                    SearchConfig.parse("ms=3000,rounds=1,seed=7,anytime=1"), (ai, pol) -> {
+                        final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                        ctl.chooseSpellAbilityToPlay();
+                        check(ctl.counts().getOrDefault("distill.rows", 0) == 1
+                                && ctl.counts().getOrDefault("search.p.us", 0) > 0,
+                                "the search's decision is one row, and timed (" + ctl.counts() + ")");
+                    });
+            scenario("distill-rows-a", attackBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                    SearchConfig.parse("ms=3000,rounds=1,seed=7,anytime=1,what=a"), (ai, pol) -> {
+                        final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                        final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
+                        ai.getGame().getPhaseHandler().setCombat(combat);
+                        combat.initConstraints();
+                        ctl.declareAttackers(ai, combat);
+                        check(ctl.counts().getOrDefault("distill.rows", 0) == 1, "the attack is one row (" + ctl.counts() + ")");
+                    });
+            mtgtable.ai.DistillRows.endGame("selftest:rows", null, true);
+            mtgtable.ai.DistillRows.close();
+            final List<String> lines = Files.readAllLines(mtgtable.ai.DistillRows.file(rows), StandardCharsets.UTF_8);
+            check(lines.size() == 4, "header, two rows, end (" + lines.size() + " lines)");
+            if (lines.size() == 4) {
+                final Map<?, ?> h = (Map<?, ?>) Json.parse(lines.get(0));
+                final Map<?, ?> p = (Map<?, ?>) Json.parse(lines.get(1));
+                final Map<?, ?> a = (Map<?, ?>) Json.parse(lines.get(2));
+                final int size = ((Number) h.get("stateSize")).intValue();
+                final Object[] pc = (Object[]) p.get("c");
+                check("header".equals(h.get("type")) && size == mtgtable.ai.DistillFeatures.stateSchema().size(),
+                        "the header names the layout (" + size + " state features)");
+                check("p".equals(p.get("kind")) && "selftest:rows".equals(p.get("game")) && pc.length == 2
+                        && ((Object[]) pc[0]).length == mtgtable.ai.DistillFeatures.P_NAMES.size()
+                        && ((Number) ((Object[]) pc[0])[0]).intValue() == 1 && ((Number) ((Object[]) pc[1])[1]).intValue() == 1
+                        && ((Object[]) p.get("s")).length > 10,
+                        "the priority row: Typhoid Rats (Forge's) and pass, the state sparse: " + lines.get(1).substring(0, 120));
+                check("a".equals(a.get("kind")) && ((Object[]) a.get("c")).length >= 2
+                        && ((Number) a.get("chosen")).intValue() < ((Object[]) a.get("c")).length,
+                        "the attack row: " + ((Object[]) a.get("c")).length + " declarations, played " + a.get("chosen"));
+            }
+
+            // 2. The distilled policy on the same boards: scored, played, no rollout, no row of its own.
+            final String model = "fixtures/distill/model.json";
+            scenario("distill-runs-p", castBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                    SearchConfig.parse("seed=7,anytime=1,distill=" + model), (ai, pol) -> {
+                        final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                        final long t0 = System.nanoTime();
+                        final List<forge.game.spellability.SpellAbility> pick = ctl.chooseSpellAbilityToPlay();
+                        final long us = (System.nanoTime() - t0) / 1000L;
+                        final Map<String, Integer> c = ctl.counts();
+                        check(c.getOrDefault("search.p.considered", 0) == 1 && c.getOrDefault("distill.p.scored", 0) == 1
+                                && !c.containsKey("search.rollouts") && !c.containsKey("distill.rows"),
+                                "scored by the model, no rollout, no row (" + c + ")");
+                        check(pick == null || "Typhoid Rats".equals(pick.get(0).getHostCard().getName()),
+                                "it plays Typhoid Rats or passes (got " + pick + ", " + us + " us)");
+                        final mtgtable.ai.SearchPolicy.Report rep = ctl.search().peekReport();
+                        check(rep != null && "distill".equals(rep.rule) && rep.prior.length == 2 && rep.chosen >= 0,
+                                "its report: rule distill, two scores, a verdict");
+                    });
+            scenario("distill-runs-a", attackBoard, PolicyLobbyPlayerAi.Outlets.OFF,
+                    SearchConfig.parse("seed=7,anytime=1,what=a,distill=" + model), (ai, pol) -> {
+                        final PolicyControllerAi ctl = (PolicyControllerAi) ai.getController();
+                        final forge.game.combat.Combat combat = new forge.game.combat.Combat(ai);
+                        ai.getGame().getPhaseHandler().setCombat(combat);
+                        combat.initConstraints();
+                        ctl.declareAttackers(ai, combat);
+                        final Map<String, Integer> c = ctl.counts();
+                        check(c.getOrDefault("distill.a.scored", 0) == 1 && !c.containsKey("search.rollouts")
+                                && forge.game.combat.CombatUtil.validateAttackers(combat),
+                                "the attack scored by the model, a legal declaration (" + c + ")");
+                    });
+            check(Files.readAllLines(mtgtable.ai.DistillRows.file(rows), StandardCharsets.UTF_8).size() == 4,
+                    "the distilled seat wrote no row");
+        } finally {
+            mtgtable.ai.DistillRows.enableForTest(null);
+            for (final java.io.File f : rows.toFile().listFiles()) {
+                Files.deleteIfExists(f.toPath());
+            }
+            Files.deleteIfExists(rows);
+        }
     }
 
     // ------------------------------------------------------------------

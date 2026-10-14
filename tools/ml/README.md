@@ -796,6 +796,38 @@ is never read (the redaction checker fails such a log; the reader refuses it
 too). Cost, measured (D347): three synergy-cube games, one worker, both chairs
 recorded — see the decision's *Measured*.
 
+## The distilled policy (D435, J126)
+
+B1 of the search plan: search-v2's own candidates at p, a and b, scored by a small model
+trained on what search-v2 played, with no rollout. `docs/decisions/D435-distilled-policy.md`
+is the why; the job is J126 on pc-jobs.
+
+```bash
+# 1. rows: lab games with search-v2 in both seats and the exporter on (one file per worker JVM)
+MTGTABLE_DISTILL_ROWS=$PWD/var/ml/distill/rows/synergy tools/cubelab.sh run cubes/synergy-cube-180.md \
+    --format grid --games 1 --drafts 100 --seed 812620001 --jobs 7 \
+    --profiles 'Default+outlets+search:anytime=1,Default+outlets+search:anytime=1' --out var/ml/distill/lab/synergy
+# 2. the model and its held-out report (split by game, salt J126, 80/10/10)
+python3 tools/ml/distill.py train var/ml/distill/rows --out var/ml/distill/model.json --metrics var/ml/distill/metrics.json
+# 3. the ladder player, and a fixed match against search-v2 (D398)
+NAME=$(python3 tools/ml/distill.py register --model var/ml/distill/model.json --registry var/ml/distill/players.json)
+tools/ai-ladder.sh match "$NAME" search-v1-anytime --games 1200 --registry var/ml/distill/players.json --out M.json
+```
+
+- **The rows** (`mtgtable.ai.DistillRows`): a `header` line (the layout), then per
+  searched decision the state (D361's encoder with no cube cards: 396 numbers, sparse),
+  each candidate's vector (`mtgtable.ai.DistillFeatures`, Forge's answer first), the
+  index played, the fallback and the wall time; an `end` line per game from the cube
+  lab. A game with no `ok` end line is dropped (a killed worker's half game).
+- **The model**: per kind, `w2·relu(W1 x + b1) + u·x` over `x = [state, c_i, c_i − c_0]`,
+  softmax over the decision's candidates; `mtgtable.ai.DistillModel` is the Java forward
+  pass, held to numpy's by `DistillSelfTest` (`fixtures/distill/`, written by
+  `distill.py golden` from `names.json`).
+- **The seat**: `distill=<model.json>` in a search config; the arg max, Forge's answer
+  on a tie, at a kind the model does not cover, and at every decision search-v2 does not
+  search. Its decisions are timed by the same `search.<kind>.us` counter as the
+  search's, and a match line's `msPerDecision` compares the two sides.
+
 ## Exploring games (D358)
 
 The queue's `--play-explore` (docs/guides/cube-lab.md, *Play exploration*) plays a

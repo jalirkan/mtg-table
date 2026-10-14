@@ -191,6 +191,43 @@ KINDS['search-eval'] = {
 /** Where `search-eval` reads its model files from: the repo `available()` was last asked about (the ladder's REPO). */
 const REPO_FOR_MODELS = { root: '.' };
 
+// The distilled policy (J126, B1): search-v2's candidates scored by a small model trained on search-v2's own choices
+// (tools/ml/distill.py), no rollout -- `distill=<model.json>` in the seat's search config.  Pinned to the model file by
+// its content hash exactly as `search-eval` is: `model` is the first 12 hex of the file's sha256, the file
+// var/ml/models/distill-<model>.json (`distill.py register` puts it there and writes the registry), so the name and
+// the config hash name the exact model.  The search's own params stay, because the candidates are the search's:
+// a distilled player is its base search player's params plus `model`.
+export const distillModelPath = (hash: ParamValue): string => `${EVAL_MODEL_DIR}/distill-${hash}.json`;
+
+KINDS['search-distill'] = {
+  doc: "J126 (B1): the distilled policy -- search-v2's candidates at p, a and b scored by a model trained on search-v2's choices, no rollout; Forge's answer at a kind the model does not cover. `model` is the 12-hex sha256 prefix of var/ml/models/distill-<model>.json.",
+  params: { ...KINDS.search!.params, model: { type: 'text', default: '', doc: "the distilled model's content hash (12 hex of its sha256)" } },
+  cfg: (p) => {
+    const { model, ...search } = p;
+    if (!/^[0-9a-f]{12}$/.test(String(model))) throw new Error(`search-distill.model must be 12 hex (the model file's sha256 prefix), got ${JSON.stringify(model)}`);
+    const file = distillModelPath(model as string);
+    let got: string;
+    try {
+      got = createHash('sha256').update(readFileSync(join(REPO_FOR_MODELS.root, file))).digest('hex').slice(0, 12);
+    } catch {
+      throw new Error(`search-distill: ${file} is not here (tools/ml/distill.py register puts it there)`);
+    }
+    if (got !== model) throw new Error(`search-distill: ${file} hashes to ${got}, not ${model} -- the file changed; register the new model under its own name`);
+    return `${KINDS.search!.cfg(search)},distill=${file}`;
+  },
+  available: (repo) => {
+    REPO_FOR_MODELS.root = repo;
+    const s = KINDS.search!.available(repo);
+    if (s) return s;
+    try {
+      if (!readFileSync(join(repo, 'bridge/src/mtgtable/ai/SearchConfig.java'), 'utf8').includes('case "distill"')) return 'the search has no distill= flag in this checkout (J126)';
+    } catch {
+      return 'the search has no distill= flag in this checkout (J126)';
+    }
+    return null;
+  },
+};
+
 /** Fill defaults and check every param against the kind; throws on an unknown param or a bad value. */
 export function resolveParams(kindName: string, params: Params): Params {
   const k = KINDS[kindName];
