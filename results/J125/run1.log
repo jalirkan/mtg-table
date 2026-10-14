@@ -1,0 +1,905 @@
+==== J125 run1 started 2026-10-14T05:55:39-04:00 in unit lab-J125-run1, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7, lane 2
+match search-v2-wlife50 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900000, 2 pair(s))
+  start  w1 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900001, 2 pair(s))
+  start  w2 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900002, 2 pair(s))
+  start  w3 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900003, 2 pair(s))
+  start  w4 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900004, 2 pair(s))
+  start  w5 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900005, 2 pair(s))
+  start  w6 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900006, 2 pair(s))
+  done   w4 search-v2-wlife50 5-3 search-v1-anytime (0 draws) in 157 s
+  8 decisive games (4 pairs): search-v2-wlife50 scores 62.5%
+  start  w4 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900007, 2 pair(s))
+  done   w6 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 261 s
+  16 decisive games (8 pairs): search-v2-wlife50 scores 56.3%
+  start  w6 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900008, 2 pair(s))
+  done   w5 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 372 s
+  24 decisive games (12 pairs): search-v2-wlife50 scores 50.0%
+  start  w5 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900009, 2 pair(s))
+  done   w1 search-v2-wlife50 5-3 search-v1-anytime (0 draws) in 381 s
+  32 decisive games (16 pairs): search-v2-wlife50 scores 53.1%
+  start  w1 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900010, 2 pair(s))
+  done   w3 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 386 s
+  40 decisive games (20 pairs): search-v2-wlife50 scores 50.0%
+  start  w3 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900011, 2 pair(s))
+  done   w2 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 472 s
+  48 decisive games (24 pairs): search-v2-wlife50 scores 50.0%
+  start  w2 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900012, 2 pair(s))
+  done   w5 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 202 s
+  56 decisive games (28 pairs): search-v2-wlife50 scores 48.2%
+  start  w5 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900013, 2 pair(s))
+  done   w0 search-v2-wlife50 5-3 search-v1-anytime (0 draws) in 599 s
+  64 decisive games (32 pairs): search-v2-wlife50 scores 50.0%
+  start  w0 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900014, 2 pair(s))
+  done   w4 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 452 s
+  72 decisive games (36 pairs): search-v2-wlife50 scores 48.6%
+  start  w4 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900015, 2 pair(s))
+  done   w6 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 349 s
+  80 decisive games (40 pairs): search-v2-wlife50 scores 48.8%
+  start  w6 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900016, 2 pair(s))
+  done   w1 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 246 s
+  88 decisive games (44 pairs): search-v2-wlife50 scores 48.9%
+  start  w1 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900017, 2 pair(s))
+  done   w5 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 248 s
+  96 decisive games (48 pairs): search-v2-wlife50 scores 49.0%
+  start  w5 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900018, 2 pair(s))
+  done   w0 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 262 s
+  104 decisive games (52 pairs): search-v2-wlife50 scores 48.1%
+  start  w0 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900019, 2 pair(s))
+  done   w2 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 424 s
+  112 decisive games (56 pairs): search-v2-wlife50 scores 47.3%
+  start  w2 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900020, 2 pair(s))
+  done   w3 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 514 s
+  120 decisive games (60 pairs): search-v2-wlife50 scores 47.5%
+  start  w3 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900021, 2 pair(s))
+  done   w1 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 320 s
+  128 decisive games (64 pairs): search-v2-wlife50 scores 47.7%
+  start  w1 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900022, 2 pair(s))
+  done   w4 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 430 s
+  136 decisive games (68 pairs): search-v2-wlife50 scores 47.8%
+  start  w4 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900023, 2 pair(s))
+  done   w6 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 508 s
+  144 decisive games (72 pairs): search-v2-wlife50 scores 47.2%
+  start  w6 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900024, 2 pair(s))
+  done   w0 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 312 s
+  152 decisive games (76 pairs): search-v2-wlife50 scores 47.4%
+  start  w0 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900025, 2 pair(s))
+  done   w3 search-v2-wlife50 5-3 search-v1-anytime (0 draws) in 294 s
+  160 decisive games (80 pairs): search-v2-wlife50 scores 48.1%
+  start  w3 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900026, 2 pair(s))
+  done   w5 search-v2-wlife50 5-3 search-v1-anytime (0 draws) in 399 s
+  168 decisive games (84 pairs): search-v2-wlife50 scores 48.8%
+  start  w5 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900027, 2 pair(s))
+  done   w2 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 331 s
+  176 decisive games (88 pairs): search-v2-wlife50 scores 48.3%
+  start  w2 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900028, 2 pair(s))
+  done   w1 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 363 s
+  184 decisive games (92 pairs): search-v2-wlife50 scores 48.4%
+  start  w1 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900029, 2 pair(s))
+  done   w6 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 271 s
+  192 decisive games (96 pairs): search-v2-wlife50 scores 48.4%
+  start  w6 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900030, 2 pair(s))
+  done   w4 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 359 s
+  200 decisive games (100 pairs): search-v2-wlife50 scores 48.5%
+  start  w4 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900031, 2 pair(s))
+  done   w0 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 343 s
+  208 decisive games (104 pairs): search-v2-wlife50 scores 48.1%
+  start  w0 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900032, 2 pair(s))
+  done   w1 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 233 s
+  216 decisive games (108 pairs): search-v2-wlife50 scores 48.1%
+  start  w1 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900033, 2 pair(s))
+  done   w2 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 320 s
+  224 decisive games (112 pairs): search-v2-wlife50 scores 48.2%
+  start  w2 search-v2-wlife50 vs search-v1-anytime (match:j125-tune:20261014T095539-650022, seed 610900034, 2 pair(s))
+  done   w5 search-v2-wlife50 3-5 search-v1-anytime (0 draws) in 338 s
+  232 decisive games (116 pairs): search-v2-wlife50 scores 47.8%
+  done   w3 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 428 s
+  240 decisive games (120 pairs): search-v2-wlife50 scores 47.9%
+  done   w2 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 195 s
+  248 decisive games (124 pairs): search-v2-wlife50 scores 48.0%
+  done   w4 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 381 s
+  256 decisive games (128 pairs): search-v2-wlife50 scores 48.0%
+  done   w1 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 359 s
+  264 decisive games (132 pairs): search-v2-wlife50 scores 48.1%
+  done   w6 search-v2-wlife50 2-6 search-v1-anytime (0 draws) in 554 s
+  272 decisive games (136 pairs): search-v2-wlife50 scores 47.4%
+  done   w0 search-v2-wlife50 4-4 search-v1-anytime (0 draws) in 489 s
+  280 decisive games (140 pairs): search-v2-wlife50 scores 47.5%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-wlife50 scores 47.5% [95% 44.5%, 50.5%] = -17 Elo [-39, +4] against search-v1-anytime
+search-v2-wlife50: 6845 decisions searched in 280 games, 1118 changed Forge's answer (16.3%); budget fallbacks 69 = 1.0% [95% 0.5%, 1.5%]; other fallbacks {"rolloutErrors":14,"unmappable":3}
+search-v2-wlife50 by kind: p 853/4737, a 180/1501, b 85/607
+search-v1-anytime: 6779 decisions searched in 280 games, 1190 changed Forge's answer (17.6%); budget fallbacks 71 = 1.0% [95% 0.5%, 1.6%]; other fallbacks {"unmappable":3,"rolloutErrors":11}
+search-v1-anytime by kind: p 885/4734, a 222/1493, b 83/552
+match search-v2-wlife150 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900000, 2 pair(s))
+  start  w1 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900001, 2 pair(s))
+  start  w2 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900002, 2 pair(s))
+  start  w3 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900003, 2 pair(s))
+  start  w4 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900004, 2 pair(s))
+  start  w5 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900005, 2 pair(s))
+  start  w6 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900006, 2 pair(s))
+  done   w4 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 188 s
+  8 decisive games (4 pairs): search-v2-wlife150 scores 50.0%
+  start  w4 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900007, 2 pair(s))
+  done   w6 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 249 s
+  16 decisive games (8 pairs): search-v2-wlife150 scores 50.0%
+  start  w6 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900008, 2 pair(s))
+  done   w5 search-v2-wlife150 5-3 search-v1-anytime (0 draws) in 393 s
+  24 decisive games (12 pairs): search-v2-wlife150 scores 54.2%
+  start  w5 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900009, 2 pair(s))
+  done   w1 search-v2-wlife150 5-3 search-v1-anytime (0 draws) in 402 s
+  32 decisive games (16 pairs): search-v2-wlife150 scores 56.3%
+  start  w1 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900010, 2 pair(s))
+  done   w3 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 409 s
+  40 decisive games (20 pairs): search-v2-wlife150 scores 55.0%
+  start  w3 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900011, 2 pair(s))
+  done   w2 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 423 s
+  48 decisive games (24 pairs): search-v2-wlife150 scores 54.2%
+  start  w2 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900012, 2 pair(s))
+  done   w0 search-v2-wlife150 3-5 search-v1-anytime (0 draws) in 559 s
+  56 decisive games (28 pairs): search-v2-wlife150 scores 51.8%
+  start  w0 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900013, 2 pair(s))
+  done   w6 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 359 s
+  64 decisive games (32 pairs): search-v2-wlife150 scores 51.6%
+  start  w6 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900014, 2 pair(s))
+  done   w5 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 245 s
+  72 decisive games (36 pairs): search-v2-wlife150 scores 51.4%
+  start  w5 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900015, 2 pair(s))
+  done   w1 search-v2-wlife150 3-5 search-v1-anytime (0 draws) in 255 s
+  80 decisive games (40 pairs): search-v2-wlife150 scores 50.0%
+  start  w1 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900016, 2 pair(s))
+  done   w4 search-v2-wlife150 5-3 search-v1-anytime (0 draws) in 498 s
+  88 decisive games (44 pairs): search-v2-wlife150 scores 51.1%
+  start  w4 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900017, 2 pair(s))
+  done   w2 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 348 s
+  96 decisive games (48 pairs): search-v2-wlife150 scores 51.0%
+  start  w2 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900018, 2 pair(s))
+  done   w0 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 267 s
+  104 decisive games (52 pairs): search-v2-wlife150 scores 51.0%
+  start  w0 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900019, 2 pair(s))
+  done   w3 search-v2-wlife150 3-5 search-v1-anytime (0 draws) in 472 s
+  112 decisive games (56 pairs): search-v2-wlife150 scores 50.0%
+  start  w3 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900020, 2 pair(s))
+  done   w6 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 287 s
+  120 decisive games (60 pairs): search-v2-wlife150 scores 50.0%
+  start  w6 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900021, 2 pair(s))
+  done   w4 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 271 s
+  128 decisive games (64 pairs): search-v2-wlife150 scores 50.0%
+  start  w4 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900022, 2 pair(s))
+  done   w5 search-v2-wlife150 5-3 search-v1-anytime (0 draws) in 430 s
+  136 decisive games (68 pairs): search-v2-wlife150 scores 50.7%
+  start  w5 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900023, 2 pair(s))
+  done   w0 search-v2-wlife150 5-3 search-v1-anytime (0 draws) in 245 s
+  144 decisive games (72 pairs): search-v2-wlife150 scores 51.4%
+  start  w0 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900024, 2 pair(s))
+  done   w1 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 487 s
+  152 decisive games (76 pairs): search-v2-wlife150 scores 51.3%
+  start  w1 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900025, 2 pair(s))
+  done   w3 search-v2-wlife150 5-3 search-v1-anytime (0 draws) in 304 s
+  160 decisive games (80 pairs): search-v2-wlife150 scores 51.9%
+  start  w3 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900026, 2 pair(s))
+  done   w2 search-v2-wlife150 3-5 search-v1-anytime (0 draws) in 420 s
+  168 decisive games (84 pairs): search-v2-wlife150 scores 51.2%
+  start  w2 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900027, 2 pair(s))
+  done   w6 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 310 s
+  176 decisive games (88 pairs): search-v2-wlife150 scores 51.1%
+  start  w6 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900028, 2 pair(s))
+  done   w4 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 356 s
+  184 decisive games (92 pairs): search-v2-wlife150 scores 51.1%
+  start  w4 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900029, 2 pair(s))
+  done   w5 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 319 s
+  192 decisive games (96 pairs): search-v2-wlife150 scores 51.0%
+  start  w5 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900030, 2 pair(s))
+  done   w0 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 330 s
+  200 decisive games (100 pairs): search-v2-wlife150 scores 51.0%
+  start  w0 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900031, 2 pair(s))
+  done   w6 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 285 s
+  208 decisive games (104 pairs): search-v2-wlife150 scores 51.0%
+  start  w6 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900032, 2 pair(s))
+  done   w1 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 348 s
+  216 decisive games (108 pairs): search-v2-wlife150 scores 50.9%
+  start  w1 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900033, 2 pair(s))
+  done   w2 search-v2-wlife150 3-5 search-v1-anytime (0 draws) in 325 s
+  224 decisive games (112 pairs): search-v2-wlife150 scores 50.4%
+  start  w2 search-v2-wlife150 vs search-v1-anytime (match:j125-tune:20261014T102904-3566276, seed 610900034, 2 pair(s))
+  done   w4 search-v2-wlife150 3-5 search-v1-anytime (0 draws) in 225 s
+  232 decisive games (116 pairs): search-v2-wlife150 scores 50.0%
+  done   w3 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 455 s
+  240 decisive games (120 pairs): search-v2-wlife150 scores 50.0%
+  done   w2 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 189 s
+  248 decisive games (124 pairs): search-v2-wlife150 scores 50.0%
+  done   w0 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 391 s
+  256 decisive games (128 pairs): search-v2-wlife150 scores 50.0%
+  done   w1 search-v2-wlife150 5-3 search-v1-anytime (0 draws) in 299 s
+  264 decisive games (132 pairs): search-v2-wlife150 scores 50.4%
+  done   w6 search-v2-wlife150 3-5 search-v1-anytime (0 draws) in 351 s
+  272 decisive games (136 pairs): search-v2-wlife150 scores 50.0%
+  done   w5 search-v2-wlife150 4-4 search-v1-anytime (0 draws) in 575 s
+  280 decisive games (140 pairs): search-v2-wlife150 scores 50.0%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-wlife150 scores 50.0% [95% 47.4%, 52.6%] = +0 Elo [-18, +18] against search-v1-anytime
+search-v2-wlife150: 6730 decisions searched in 280 games, 1202 changed Forge's answer (17.9%); budget fallbacks 62 = 0.9% [95% 0.4%, 1.4%]; other fallbacks {"rolloutErrors":14,"unmappable":6}
+search-v2-wlife150 by kind: p 877/4687, a 230/1473, b 95/570
+search-v1-anytime: 6818 decisions searched in 280 games, 1182 changed Forge's answer (17.3%); budget fallbacks 54 = 0.8% [95% 0.4%, 1.2%]; other fallbacks {"rolloutErrors":12,"unmappable":5}
+search-v1-anytime by kind: p 884/4723, a 204/1483, b 94/612
+match search-v2-whand50 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900000, 2 pair(s))
+  start  w1 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900001, 2 pair(s))
+  start  w2 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900002, 2 pair(s))
+  start  w3 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900003, 2 pair(s))
+  start  w4 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900004, 2 pair(s))
+  start  w5 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900005, 2 pair(s))
+  start  w6 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900006, 2 pair(s))
+  done   w4 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 155 s
+  8 decisive games (4 pairs): search-v2-whand50 scores 50.0%
+  start  w4 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900007, 2 pair(s))
+  done   w3 search-v2-whand50 5-3 search-v1-anytime (0 draws) in 346 s
+  16 decisive games (8 pairs): search-v2-whand50 scores 56.3%
+  start  w3 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900008, 2 pair(s))
+  done   w6 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 375 s
+  24 decisive games (12 pairs): search-v2-whand50 scores 54.2%
+  start  w6 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900009, 2 pair(s))
+  done   w2 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 383 s
+  32 decisive games (16 pairs): search-v2-whand50 scores 53.1%
+  start  w2 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900010, 2 pair(s))
+  done   w5 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 419 s
+  40 decisive games (20 pairs): search-v2-whand50 scores 52.5%
+  start  w5 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900011, 2 pair(s))
+  done   w1 search-v2-whand50 6-2 search-v1-anytime (0 draws) in 438 s
+  48 decisive games (24 pairs): search-v2-whand50 scores 56.3%
+  start  w1 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900012, 2 pair(s))
+  done   w0 search-v2-whand50 5-3 search-v1-anytime (0 draws) in 574 s
+  56 decisive games (28 pairs): search-v2-whand50 scores 57.1%
+  start  w0 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900013, 2 pair(s))
+  done   w6 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 218 s
+  64 decisive games (32 pairs): search-v2-whand50 scores 56.3%
+  start  w6 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900014, 2 pair(s))
+  done   w2 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 216 s
+  72 decisive games (36 pairs): search-v2-whand50 scores 55.6%
+  start  w2 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900015, 2 pair(s))
+  done   w4 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 545 s
+  80 decisive games (40 pairs): search-v2-whand50 scores 55.0%
+  start  w4 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900016, 2 pair(s))
+  done   w3 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 361 s
+  88 decisive games (44 pairs): search-v2-whand50 scores 54.5%
+  start  w3 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900017, 2 pair(s))
+  done   w0 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 238 s
+  96 decisive games (48 pairs): search-v2-whand50 scores 54.2%
+  start  w0 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900018, 2 pair(s))
+  done   w1 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 390 s
+  104 decisive games (52 pairs): search-v2-whand50 scores 53.8%
+  start  w1 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900019, 2 pair(s))
+  done   w6 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 273 s
+  112 decisive games (56 pairs): search-v2-whand50 scores 53.6%
+  start  w6 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900020, 2 pair(s))
+  done   w5 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 531 s
+  120 decisive games (60 pairs): search-v2-whand50 scores 53.3%
+  start  w5 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900021, 2 pair(s))
+  done   w3 search-v2-whand50 5-3 search-v1-anytime (0 draws) in 260 s
+  128 decisive games (64 pairs): search-v2-whand50 scores 53.9%
+  start  w3 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900022, 2 pair(s))
+  done   w1 search-v2-whand50 3-5 search-v1-anytime (0 draws) in 274 s
+  136 decisive games (68 pairs): search-v2-whand50 scores 52.9%
+  start  w1 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900023, 2 pair(s))
+  done   w2 search-v2-whand50 5-3 search-v1-anytime (0 draws) in 543 s
+  144 decisive games (72 pairs): search-v2-whand50 scores 53.5%
+  start  w2 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900024, 2 pair(s))
+  done   w4 search-v2-whand50 3-5 search-v1-anytime (0 draws) in 453 s
+  152 decisive games (76 pairs): search-v2-whand50 scores 52.6%
+  start  w4 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900025, 2 pair(s))
+  done   w5 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 256 s
+  160 decisive games (80 pairs): search-v2-whand50 scores 52.5%
+  start  w5 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900026, 2 pair(s))
+  done   w6 search-v2-whand50 2-6 search-v1-anytime (0 draws) in 348 s
+  168 decisive games (84 pairs): search-v2-whand50 scores 51.2%
+  start  w6 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900027, 2 pair(s))
+  done   w0 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 455 s
+  176 decisive games (88 pairs): search-v2-whand50 scores 51.1%
+  start  w0 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900028, 2 pair(s))
+  done   w3 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 374 s
+  184 decisive games (92 pairs): search-v2-whand50 scores 51.1%
+  start  w3 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900029, 2 pair(s))
+  done   w1 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 306 s
+  192 decisive games (96 pairs): search-v2-whand50 scores 51.0%
+  start  w1 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900030, 2 pair(s))
+  done   w2 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 308 s
+  200 decisive games (100 pairs): search-v2-whand50 scores 51.0%
+  start  w2 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900031, 2 pair(s))
+  done   w4 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 359 s
+  208 decisive games (104 pairs): search-v2-whand50 scores 51.0%
+  start  w4 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900032, 2 pair(s))
+  done   w6 search-v2-whand50 3-5 search-v1-anytime (0 draws) in 331 s
+  216 decisive games (108 pairs): search-v2-whand50 scores 50.5%
+  start  w6 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900033, 2 pair(s))
+  done   w3 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 208 s
+  224 decisive games (112 pairs): search-v2-whand50 scores 50.4%
+  start  w3 search-v2-whand50 vs search-v1-anytime (match:j125-tune:20261014T110146-2265883, seed 610900034, 2 pair(s))
+  done   w0 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 289 s
+  232 decisive games (116 pairs): search-v2-whand50 scores 50.4%
+  done   w5 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 455 s
+  240 decisive games (120 pairs): search-v2-whand50 scores 50.4%
+  done   w3 search-v2-whand50 4-4 search-v1-anytime (0 draws) in 208 s
+  248 decisive games (124 pairs): search-v2-whand50 scores 50.4%
+  done   w2 search-v2-whand50 3-5 search-v1-anytime (0 draws) in 331 s
+  256 decisive games (128 pairs): search-v2-whand50 scores 50.0%
+  done   w4 search-v2-whand50 5-3 search-v1-anytime (0 draws) in 303 s
+  264 decisive games (132 pairs): search-v2-whand50 scores 50.4%
+  done   w6 search-v2-whand50 5-3 search-v1-anytime (0 draws) in 282 s
+  272 decisive games (136 pairs): search-v2-whand50 scores 50.7%
+  done   w1 search-v2-whand50 5-3 search-v1-anytime (0 draws) in 500 s
+  280 decisive games (140 pairs): search-v2-whand50 scores 51.1%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-whand50 scores 51.1% [95% 48.2%, 54.0%] = +7 Elo [-13, +28] against search-v1-anytime
+search-v2-whand50: 6786 decisions searched in 280 games, 1164 changed Forge's answer (17.2%); budget fallbacks 34 = 0.5% [95% 0.2%, 0.8%]; other fallbacks {"unmappable":4,"rolloutErrors":9}
+search-v2-whand50 by kind: p 875/4712, a 217/1492, b 72/582
+search-v1-anytime: 6827 decisions searched in 280 games, 1181 changed Forge's answer (17.3%); budget fallbacks 56 = 0.8% [95% 0.4%, 1.2%]; other fallbacks {"rolloutErrors":12,"unmappable":6}
+search-v1-anytime by kind: p 886/4763, a 205/1493, b 90/571
+match search-v2-whand150 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900000, 2 pair(s))
+  start  w1 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900001, 2 pair(s))
+  start  w2 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900002, 2 pair(s))
+  start  w3 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900003, 2 pair(s))
+  start  w4 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900004, 2 pair(s))
+  start  w5 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900005, 2 pair(s))
+  start  w6 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900006, 2 pair(s))
+  done   w4 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 160 s
+  8 decisive games (4 pairs): search-v2-whand150 scores 50.0%
+  start  w4 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900007, 2 pair(s))
+  done   w6 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 265 s
+  16 decisive games (8 pairs): search-v2-whand150 scores 50.0%
+  start  w6 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900008, 2 pair(s))
+  done   w3 search-v2-whand150 5-3 search-v1-anytime (0 draws) in 349 s
+  24 decisive games (12 pairs): search-v2-whand150 scores 54.2%
+  start  w3 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900009, 2 pair(s))
+  done   w5 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 359 s
+  32 decisive games (16 pairs): search-v2-whand150 scores 53.1%
+  start  w5 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900010, 2 pair(s))
+  done   w1 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 405 s
+  40 decisive games (20 pairs): search-v2-whand150 scores 52.5%
+  start  w1 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900011, 2 pair(s))
+  done   w2 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 465 s
+  48 decisive games (24 pairs): search-v2-whand150 scores 52.1%
+  start  w2 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900012, 2 pair(s))
+  done   w0 search-v2-whand150 6-2 search-v1-anytime (0 draws) in 574 s
+  56 decisive games (28 pairs): search-v2-whand150 scores 55.4%
+  start  w0 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900013, 2 pair(s))
+  done   w5 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 219 s
+  64 decisive games (32 pairs): search-v2-whand150 scores 54.7%
+  start  w5 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900014, 2 pair(s))
+  done   w3 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 234 s
+  72 decisive games (36 pairs): search-v2-whand150 scores 54.2%
+  start  w3 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900015, 2 pair(s))
+  done   w6 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 350 s
+  80 decisive games (40 pairs): search-v2-whand150 scores 53.8%
+  start  w6 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900016, 2 pair(s))
+  done   w4 search-v2-whand150 5-3 search-v1-anytime (0 draws) in 474 s
+  88 decisive games (44 pairs): search-v2-whand150 scores 54.5%
+  start  w4 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900017, 2 pair(s))
+  done   w0 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 249 s
+  96 decisive games (48 pairs): search-v2-whand150 scores 54.2%
+  start  w0 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900018, 2 pair(s))
+  done   w5 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 287 s
+  104 decisive games (52 pairs): search-v2-whand150 scores 53.8%
+  start  w5 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900019, 2 pair(s))
+  done   w2 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 402 s
+  112 decisive games (56 pairs): search-v2-whand150 scores 53.6%
+  start  w2 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900020, 2 pair(s))
+  done   w4 search-v2-whand150 5-3 search-v1-anytime (0 draws) in 308 s
+  120 decisive games (60 pairs): search-v2-whand150 scores 54.2%
+  start  w4 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900021, 2 pair(s))
+  done   w1 search-v2-whand150 5-3 search-v1-anytime (0 draws) in 546 s
+  128 decisive games (64 pairs): search-v2-whand150 scores 54.7%
+  start  w1 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900022, 2 pair(s))
+  done   w3 search-v2-whand150 3-5 search-v1-anytime (0 draws) in 493 s
+  136 decisive games (68 pairs): search-v2-whand150 scores 53.7%
+  start  w3 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900023, 2 pair(s))
+  done   w5 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 248 s
+  144 decisive games (72 pairs): search-v2-whand150 scores 53.5%
+  start  w5 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900024, 2 pair(s))
+  done   w6 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 534 s
+  152 decisive games (76 pairs): search-v2-whand150 scores 53.3%
+  start  w6 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900025, 2 pair(s))
+  done   w2 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 314 s
+  160 decisive games (80 pairs): search-v2-whand150 scores 53.1%
+  start  w2 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900026, 2 pair(s))
+  done   w4 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 297 s
+  168 decisive games (84 pairs): search-v2-whand150 scores 53.0%
+  start  w4 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900027, 2 pair(s))
+  done   w0 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 432 s
+  176 decisive games (88 pairs): search-v2-whand150 scores 52.8%
+  start  w0 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900028, 2 pair(s))
+  done   w1 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 365 s
+  184 decisive games (92 pairs): search-v2-whand150 scores 52.7%
+  start  w1 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900029, 2 pair(s))
+  done   w3 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 349 s
+  192 decisive games (96 pairs): search-v2-whand150 scores 52.6%
+  start  w3 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900030, 2 pair(s))
+  done   w5 search-v2-whand150 5-3 search-v1-anytime (0 draws) in 351 s
+  200 decisive games (100 pairs): search-v2-whand150 scores 53.0%
+  start  w5 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900031, 2 pair(s))
+  done   w1 search-v2-whand150 3-5 search-v1-anytime (0 draws) in 231 s
+  208 decisive games (104 pairs): search-v2-whand150 scores 52.4%
+  start  w1 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900032, 2 pair(s))
+  done   w0 search-v2-whand150 3-5 search-v1-anytime (0 draws) in 300 s
+  216 decisive games (108 pairs): search-v2-whand150 scores 51.9%
+  start  w0 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900033, 2 pair(s))
+  done   w6 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 406 s
+  224 decisive games (112 pairs): search-v2-whand150 scores 51.8%
+  start  w6 search-v2-whand150 vs search-v1-anytime (match:j125-tune:20261014T113334-953045, seed 610900034, 2 pair(s))
+  done   w4 search-v2-whand150 3-5 search-v1-anytime (0 draws) in 327 s
+  232 decisive games (116 pairs): search-v2-whand150 scores 51.3%
+  done   w2 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 473 s
+  240 decisive games (120 pairs): search-v2-whand150 scores 51.2%
+  done   w6 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 219 s
+  248 decisive games (124 pairs): search-v2-whand150 scores 51.2%
+  done   w5 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 386 s
+  256 decisive games (128 pairs): search-v2-whand150 scores 51.2%
+  done   w1 search-v2-whand150 3-5 search-v1-anytime (0 draws) in 375 s
+  264 decisive games (132 pairs): search-v2-whand150 scores 50.8%
+  done   w0 search-v2-whand150 4-4 search-v1-anytime (0 draws) in 404 s
+  272 decisive games (136 pairs): search-v2-whand150 scores 50.7%
+  done   w3 search-v2-whand150 3-5 search-v1-anytime (0 draws) in 536 s
+  280 decisive games (140 pairs): search-v2-whand150 scores 50.4%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-whand150 scores 50.4% [95% 47.5%, 53.3%] = +3 Elo [-18, +23] against search-v1-anytime
+search-v2-whand150: 6859 decisions searched in 280 games, 1188 changed Forge's answer (17.3%); budget fallbacks 72 = 1.0% [95% 0.5%, 1.6%]; other fallbacks {"rolloutErrors":14,"unmappable":8}
+search-v2-whand150 by kind: p 867/4746, a 224/1504, b 97/609
+search-v1-anytime: 6853 decisions searched in 280 games, 1218 changed Forge's answer (17.8%); budget fallbacks 51 = 0.7% [95% 0.4%, 1.1%]; other fallbacks {"rolloutErrors":17,"unmappable":7}
+search-v1-anytime by kind: p 896/4748, a 242/1515, b 80/590
+match search-v2-wcreature50 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900000, 2 pair(s))
+  start  w1 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900001, 2 pair(s))
+  start  w2 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900002, 2 pair(s))
+  start  w3 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900003, 2 pair(s))
+  start  w4 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900004, 2 pair(s))
+  start  w5 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900005, 2 pair(s))
+  start  w6 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900006, 2 pair(s))
+  done   w4 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 175 s
+  8 decisive games (4 pairs): search-v2-wcreature50 scores 50.0%
+  start  w4 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900007, 2 pair(s))
+  done   w6 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 323 s
+  16 decisive games (8 pairs): search-v2-wcreature50 scores 50.0%
+  start  w6 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900008, 2 pair(s))
+  done   w5 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 353 s
+  24 decisive games (12 pairs): search-v2-wcreature50 scores 45.8%
+  start  w5 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900009, 2 pair(s))
+  done   w3 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 385 s
+  32 decisive games (16 pairs): search-v2-wcreature50 scores 50.0%
+  start  w3 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900010, 2 pair(s))
+  done   w1 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 421 s
+  40 decisive games (20 pairs): search-v2-wcreature50 scores 52.5%
+  start  w1 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900011, 2 pair(s))
+  done   w2 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 444 s
+  48 decisive games (24 pairs): search-v2-wcreature50 scores 54.2%
+  start  w2 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900012, 2 pair(s))
+  done   w5 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 239 s
+  56 decisive games (28 pairs): search-v2-wcreature50 scores 51.8%
+  start  w5 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900013, 2 pair(s))
+  done   w6 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 298 s
+  64 decisive games (32 pairs): search-v2-wcreature50 scores 51.6%
+  start  w6 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900014, 2 pair(s))
+  done   w4 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 498 s
+  72 decisive games (36 pairs): search-v2-wcreature50 scores 51.4%
+  start  w4 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900015, 2 pair(s))
+  done   w3 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 304 s
+  80 decisive games (40 pairs): search-v2-wcreature50 scores 50.0%
+  start  w3 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900016, 2 pair(s))
+  done   w0 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 722 s
+  88 decisive games (44 pairs): search-v2-wcreature50 scores 48.9%
+  start  w0 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900017, 2 pair(s))
+  done   w5 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 273 s
+  96 decisive games (48 pairs): search-v2-wcreature50 scores 49.0%
+  start  w5 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900018, 2 pair(s))
+  done   w2 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 430 s
+  104 decisive games (52 pairs): search-v2-wcreature50 scores 49.0%
+  start  w2 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900019, 2 pair(s))
+  done   w6 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 291 s
+  112 decisive games (56 pairs): search-v2-wcreature50 scores 50.0%
+  start  w6 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900020, 2 pair(s))
+  done   w0 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 255 s
+  120 decisive games (60 pairs): search-v2-wcreature50 scores 49.2%
+  start  w0 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900021, 2 pair(s))
+  done   w1 search-v2-wcreature50 2-6 search-v1-anytime (0 draws) in 561 s
+  128 decisive games (64 pairs): search-v2-wcreature50 scores 47.7%
+  start  w1 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900022, 2 pair(s))
+  done   w2 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 290 s
+  136 decisive games (68 pairs): search-v2-wcreature50 scores 48.5%
+  start  w2 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900023, 2 pair(s))
+  done   w5 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 322 s
+  144 decisive games (72 pairs): search-v2-wcreature50 scores 47.9%
+  start  w5 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900024, 2 pair(s))
+  done   w3 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 520 s
+  152 decisive games (76 pairs): search-v2-wcreature50 scores 48.0%
+  start  w3 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900025, 2 pair(s))
+  done   w4 search-v2-wcreature50 6-2 search-v1-anytime (0 draws) in 544 s
+  160 decisive games (80 pairs): search-v2-wcreature50 scores 49.4%
+  start  w4 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900026, 2 pair(s))
+  done   w6 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 338 s
+  168 decisive games (84 pairs): search-v2-wcreature50 scores 50.0%
+  start  w6 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900027, 2 pair(s))
+  done   w0 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 323 s
+  176 decisive games (88 pairs): search-v2-wcreature50 scores 50.0%
+  start  w0 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900028, 2 pair(s))
+  done   w1 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 381 s
+  184 decisive games (92 pairs): search-v2-wcreature50 scores 50.0%
+  start  w1 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900029, 2 pair(s))
+  done   w5 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 293 s
+  192 decisive games (96 pairs): search-v2-wcreature50 scores 49.5%
+  start  w5 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900030, 2 pair(s))
+  done   w2 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 359 s
+  200 decisive games (100 pairs): search-v2-wcreature50 scores 50.0%
+  start  w2 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900031, 2 pair(s))
+  done   w0 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 291 s
+  208 decisive games (104 pairs): search-v2-wcreature50 scores 49.5%
+  start  w0 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900032, 2 pair(s))
+  done   w6 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 372 s
+  216 decisive games (108 pairs): search-v2-wcreature50 scores 49.5%
+  start  w6 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900033, 2 pair(s))
+  done   w3 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 417 s
+  224 decisive games (112 pairs): search-v2-wcreature50 scores 49.1%
+  start  w3 search-v2-wcreature50 vs search-v1-anytime (match:j125-tune:20261014T120615-3811416, seed 610900034, 2 pair(s))
+  done   w1 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 289 s
+  232 decisive games (116 pairs): search-v2-wcreature50 scores 49.1%
+  done   w4 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 550 s
+  240 decisive games (120 pairs): search-v2-wcreature50 scores 49.2%
+  done   w3 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 253 s
+  248 decisive games (124 pairs): search-v2-wcreature50 scores 49.6%
+  done   w2 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 382 s
+  256 decisive games (128 pairs): search-v2-wcreature50 scores 50.0%
+  done   w6 search-v2-wcreature50 5-3 search-v1-anytime (0 draws) in 360 s
+  264 decisive games (132 pairs): search-v2-wcreature50 scores 50.4%
+  done   w0 search-v2-wcreature50 4-4 search-v1-anytime (0 draws) in 403 s
+  272 decisive games (136 pairs): search-v2-wcreature50 scores 50.4%
+  done   w5 search-v2-wcreature50 3-5 search-v1-anytime (0 draws) in 516 s
+  280 decisive games (140 pairs): search-v2-wcreature50 scores 50.0%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-wcreature50 scores 50.0% [95% 46.0%, 54.0%] = +0 Elo [-28, +28] against search-v1-anytime
+search-v2-wcreature50: 6929 decisions searched in 280 games, 1206 changed Forge's answer (17.4%); budget fallbacks 68 = 1.0% [95% 0.5%, 1.5%]; other fallbacks {"unmappable":4,"rolloutErrors":18}
+search-v2-wcreature50 by kind: p 935/4886, a 174/1455, b 97/588
+search-v1-anytime: 6875 decisions searched in 280 games, 1209 changed Forge's answer (17.6%); budget fallbacks 49 = 0.7% [95% 0.3%, 1.1%]; other fallbacks {"unmappable":5,"rolloutErrors":13}
+search-v1-anytime by kind: p 914/4781, a 229/1551, b 66/543
+match search-v2-wcreature150 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900000, 2 pair(s))
+  start  w1 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900001, 2 pair(s))
+  start  w2 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900002, 2 pair(s))
+  start  w3 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900003, 2 pair(s))
+  start  w4 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900004, 2 pair(s))
+  start  w5 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900005, 2 pair(s))
+  start  w6 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900006, 2 pair(s))
+  done   w4 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 173 s
+  8 decisive games (4 pairs): search-v2-wcreature150 scores 50.0%
+  start  w4 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900007, 2 pair(s))
+  done   w6 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 260 s
+  16 decisive games (8 pairs): search-v2-wcreature150 scores 50.0%
+  start  w6 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900008, 2 pair(s))
+  done   w5 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 413 s
+  24 decisive games (12 pairs): search-v2-wcreature150 scores 50.0%
+  start  w5 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900009, 2 pair(s))
+  done   w3 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 422 s
+  32 decisive games (16 pairs): search-v2-wcreature150 scores 46.9%
+  start  w3 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900010, 2 pair(s))
+  done   w2 search-v2-wcreature150 5-3 search-v1-anytime (0 draws) in 422 s
+  40 decisive games (20 pairs): search-v2-wcreature150 scores 50.0%
+  start  w2 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900011, 2 pair(s))
+  done   w1 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 551 s
+  48 decisive games (24 pairs): search-v2-wcreature150 scores 50.0%
+  start  w1 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900012, 2 pair(s))
+  done   w6 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 349 s
+  56 decisive games (28 pairs): search-v2-wcreature150 scores 50.0%
+  start  w6 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900013, 2 pair(s))
+  done   w0 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 629 s
+  64 decisive games (32 pairs): search-v2-wcreature150 scores 48.4%
+  start  w0 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900014, 2 pair(s))
+  done   w5 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 221 s
+  72 decisive games (36 pairs): search-v2-wcreature150 scores 48.6%
+  start  w5 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900015, 2 pair(s))
+  done   w3 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 237 s
+  80 decisive games (40 pairs): search-v2-wcreature150 scores 48.8%
+  start  w3 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900016, 2 pair(s))
+  done   w4 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 572 s
+  88 decisive games (44 pairs): search-v2-wcreature150 scores 48.9%
+  start  w4 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900017, 2 pair(s))
+  done   w6 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 284 s
+  96 decisive games (48 pairs): search-v2-wcreature150 scores 49.0%
+  start  w6 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900018, 2 pair(s))
+  done   w0 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 274 s
+  104 decisive games (52 pairs): search-v2-wcreature150 scores 48.1%
+  start  w0 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900019, 2 pair(s))
+  done   w2 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 546 s
+  112 decisive games (56 pairs): search-v2-wcreature150 scores 47.3%
+  start  w2 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900020, 2 pair(s))
+  done   w1 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 434 s
+  120 decisive games (60 pairs): search-v2-wcreature150 scores 46.7%
+  start  w1 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900021, 2 pair(s))
+  done   w5 search-v2-wcreature150 6-2 search-v1-anytime (0 draws) in 434 s
+  128 decisive games (64 pairs): search-v2-wcreature150 scores 48.4%
+  start  w5 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900022, 2 pair(s))
+  done   w4 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 344 s
+  136 decisive games (68 pairs): search-v2-wcreature150 scores 48.5%
+  start  w4 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900023, 2 pair(s))
+  done   w0 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 246 s
+  144 decisive games (72 pairs): search-v2-wcreature150 scores 47.9%
+  start  w0 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900024, 2 pair(s))
+  done   w1 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 270 s
+  152 decisive games (76 pairs): search-v2-wcreature150 scores 48.0%
+  start  w1 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900025, 2 pair(s))
+  done   w3 search-v2-wcreature150 5-3 search-v1-anytime (0 draws) in 612 s
+  160 decisive games (80 pairs): search-v2-wcreature150 scores 48.8%
+  start  w3 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900026, 2 pair(s))
+  done   w2 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 355 s
+  168 decisive games (84 pairs): search-v2-wcreature150 scores 48.8%
+  start  w2 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900027, 2 pair(s))
+  done   w6 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 484 s
+  176 decisive games (88 pairs): search-v2-wcreature150 scores 48.3%
+  start  w6 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900028, 2 pair(s))
+  done   w0 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 285 s
+  184 decisive games (92 pairs): search-v2-wcreature150 scores 48.4%
+  start  w0 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900029, 2 pair(s))
+  done   w5 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 420 s
+  192 decisive games (96 pairs): search-v2-wcreature150 scores 48.4%
+  start  w5 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900030, 2 pair(s))
+  done   w4 search-v2-wcreature150 5-3 search-v1-anytime (0 draws) in 399 s
+  200 decisive games (100 pairs): search-v2-wcreature150 scores 49.0%
+  start  w4 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900031, 2 pair(s))
+  done   w1 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 370 s
+  208 decisive games (104 pairs): search-v2-wcreature150 scores 48.6%
+  start  w1 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900032, 2 pair(s))
+  done   w6 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 283 s
+  216 decisive games (108 pairs): search-v2-wcreature150 scores 48.6%
+  start  w6 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900033, 2 pair(s))
+  done   w2 search-v2-wcreature150 3-5 search-v1-anytime (0 draws) in 352 s
+  224 decisive games (112 pairs): search-v2-wcreature150 scores 48.2%
+  start  w2 search-v2-wcreature150 vs search-v1-anytime (match:j125-tune:20261014T123929-2526108, seed 610900034, 2 pair(s))
+  done   w0 search-v2-wcreature150 5-3 search-v1-anytime (0 draws) in 257 s
+  232 decisive games (116 pairs): search-v2-wcreature150 scores 48.7%
+  done   w3 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 543 s
+  240 decisive games (120 pairs): search-v2-wcreature150 scores 48.8%
+  done   w4 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 392 s
+  248 decisive games (124 pairs): search-v2-wcreature150 scores 48.8%
+  done   w2 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 226 s
+  256 decisive games (128 pairs): search-v2-wcreature150 scores 48.8%
+  done   w5 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 480 s
+  264 decisive games (132 pairs): search-v2-wcreature150 scores 48.9%
+  done   w1 search-v2-wcreature150 5-3 search-v1-anytime (0 draws) in 345 s
+  272 decisive games (136 pairs): search-v2-wcreature150 scores 49.3%
+  done   w6 search-v2-wcreature150 4-4 search-v1-anytime (0 draws) in 324 s
+  280 decisive games (140 pairs): search-v2-wcreature150 scores 49.3%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-wcreature150 scores 49.3% [95% 46.3%, 52.3%] = -5 Elo [-26, +16] against search-v1-anytime
+search-v2-wcreature150: 6971 decisions searched in 280 games, 1258 changed Forge's answer (18.0%); budget fallbacks 47 = 0.7% [95% 0.3%, 1.0%]; other fallbacks {"rolloutErrors":11,"unmappable":4}
+search-v2-wcreature150 by kind: p 921/4827, a 240/1547, b 97/597
+search-v1-anytime: 7011 decisions searched in 280 games, 1212 changed Forge's answer (17.3%); budget fallbacks 69 = 1.0% [95% 0.4%, 1.6%]; other fallbacks {"rolloutErrors":11,"unmappable":5}
+search-v1-anytime by kind: p 886/4863, a 232/1539, b 94/609
+match search-v2-wother50 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900000, 2 pair(s))
+  start  w1 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900001, 2 pair(s))
+  start  w2 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900002, 2 pair(s))
+  start  w3 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900003, 2 pair(s))
+  start  w4 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900004, 2 pair(s))
+  start  w5 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900005, 2 pair(s))
+  start  w6 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900006, 2 pair(s))
+  done   w4 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 166 s
+  8 decisive games (4 pairs): search-v2-wother50 scores 50.0%
+  start  w4 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900007, 2 pair(s))
+  done   w6 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 263 s
+  16 decisive games (8 pairs): search-v2-wother50 scores 50.0%
+  start  w6 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900008, 2 pair(s))
+  done   w2 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 318 s
+  24 decisive games (12 pairs): search-v2-wother50 scores 50.0%
+  start  w2 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900009, 2 pair(s))
+  done   w3 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 355 s
+  32 decisive games (16 pairs): search-v2-wother50 scores 46.9%
+  start  w3 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900010, 2 pair(s))
+  done   w5 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 378 s
+  40 decisive games (20 pairs): search-v2-wother50 scores 47.5%
+  start  w5 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900011, 2 pair(s))
+  done   w1 search-v2-wother50 6-2 search-v1-anytime (0 draws) in 494 s
+  48 decisive games (24 pairs): search-v2-wother50 scores 52.1%
+  start  w1 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900012, 2 pair(s))
+  done   w2 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 211 s
+  56 decisive games (28 pairs): search-v2-wother50 scores 51.8%
+  start  w2 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900013, 2 pair(s))
+  done   w3 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 233 s
+  64 decisive games (32 pairs): search-v2-wother50 scores 51.6%
+  start  w3 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900014, 2 pair(s))
+  done   w4 search-v2-wother50 5-3 search-v1-anytime (0 draws) in 476 s
+  72 decisive games (36 pairs): search-v2-wother50 scores 52.8%
+  start  w4 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900015, 2 pair(s))
+  done   w6 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 396 s
+  80 decisive games (40 pairs): search-v2-wother50 scores 52.5%
+  start  w6 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900016, 2 pair(s))
+  done   w0 search-v2-wother50 5-3 search-v1-anytime (0 draws) in 674 s
+  88 decisive games (44 pairs): search-v2-wother50 scores 53.4%
+  start  w0 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900017, 2 pair(s))
+  done   w2 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 251 s
+  96 decisive games (48 pairs): search-v2-wother50 scores 53.1%
+  start  w2 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900018, 2 pair(s))
+  done   w3 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 266 s
+  104 decisive games (52 pairs): search-v2-wother50 scores 51.9%
+  start  w3 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900019, 2 pair(s))
+  done   w1 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 397 s
+  112 decisive games (56 pairs): search-v2-wother50 scores 51.8%
+  start  w1 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900020, 2 pair(s))
+  done   w5 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 563 s
+  120 decisive games (60 pairs): search-v2-wother50 scores 51.7%
+  start  w5 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900021, 2 pair(s))
+  done   w0 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 291 s
+  128 decisive games (64 pairs): search-v2-wother50 scores 51.6%
+  start  w0 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900022, 2 pair(s))
+  done   w3 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 242 s
+  136 decisive games (68 pairs): search-v2-wother50 scores 50.7%
+  start  w3 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900023, 2 pair(s))
+  done   w4 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 465 s
+  144 decisive games (72 pairs): search-v2-wother50 scores 50.7%
+  start  w4 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900024, 2 pair(s))
+  done   w2 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 425 s
+  152 decisive games (76 pairs): search-v2-wother50 scores 50.0%
+  start  w2 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900025, 2 pair(s))
+  done   w6 search-v2-wother50 5-3 search-v1-anytime (0 draws) in 560 s
+  160 decisive games (80 pairs): search-v2-wother50 scores 50.6%
+  start  w6 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900026, 2 pair(s))
+  done   w1 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 345 s
+  168 decisive games (84 pairs): search-v2-wother50 scores 50.6%
+  start  w1 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900027, 2 pair(s))
+  done   w5 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 316 s
+  176 decisive games (88 pairs): search-v2-wother50 scores 50.6%
+  start  w5 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900028, 2 pair(s))
+  done   w0 search-v2-wother50 5-3 search-v1-anytime (0 draws) in 371 s
+  184 decisive games (92 pairs): search-v2-wother50 scores 51.1%
+  start  w0 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900029, 2 pair(s))
+  done   w4 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 332 s
+  192 decisive games (96 pairs): search-v2-wother50 scores 51.0%
+  start  w4 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900030, 2 pair(s))
+  done   w3 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 348 s
+  200 decisive games (100 pairs): search-v2-wother50 scores 51.0%
+  start  w3 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900031, 2 pair(s))
+  done   w5 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 288 s
+  208 decisive games (104 pairs): search-v2-wother50 scores 50.5%
+  start  w5 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900032, 2 pair(s))
+  done   w0 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 213 s
+  216 decisive games (108 pairs): search-v2-wother50 scores 50.5%
+  start  w0 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900033, 2 pair(s))
+  done   w2 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 344 s
+  224 decisive games (112 pairs): search-v2-wother50 scores 50.0%
+  start  w2 search-v2-wother50 vs search-v1-anytime (match:j125-tune:20261014T131233-1221926, seed 610900034, 2 pair(s))
+  done   w1 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 342 s
+  232 decisive games (116 pairs): search-v2-wother50 scores 49.6%
+  done   w6 search-v2-wother50 3-5 search-v1-anytime (0 draws) in 454 s
+  240 decisive games (120 pairs): search-v2-wother50 scores 49.2%
+  done   w2 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 222 s
+  248 decisive games (124 pairs): search-v2-wother50 scores 49.2%
+  done   w3 search-v2-wother50 5-3 search-v1-anytime (0 draws) in 402 s
+  256 decisive games (128 pairs): search-v2-wother50 scores 49.6%
+  done   w0 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 308 s
+  264 decisive games (132 pairs): search-v2-wother50 scores 49.6%
+  done   w5 search-v2-wother50 4-4 search-v1-anytime (0 draws) in 360 s
+  272 decisive games (136 pairs): search-v2-wother50 scores 49.6%
+  done   w4 search-v2-wother50 6-2 search-v1-anytime (0 draws) in 627 s
+  280 decisive games (140 pairs): search-v2-wother50 scores 50.4%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-wother50 scores 50.4% [95% 47.3%, 53.4%] = +3 Elo [-19, +24] against search-v1-anytime
+search-v2-wother50: 6816 decisions searched in 280 games, 1119 changed Forge's answer (16.4%); budget fallbacks 62 = 0.9% [95% 0.5%, 1.4%]; other fallbacks {"rolloutErrors":13,"unmappable":10}
+search-v2-wother50 by kind: p 800/4756, a 229/1492, b 90/568
+search-v1-anytime: 6843 decisions searched in 280 games, 1198 changed Forge's answer (17.5%); budget fallbacks 48 = 0.7% [95% 0.3%, 1.1%]; other fallbacks {"rolloutErrors":9,"unmappable":7}
+search-v1-anytime by kind: p 904/4753, a 208/1485, b 86/605
+match search-v2-wother150 vs search-v1-anytime on tools/ai-bench/pairs-dev.txt: 35 batch(es) of 8 games (280 games, 140 mirrored pairs), no stopping rule
+  start  w0 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900000, 2 pair(s))
+  start  w1 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900001, 2 pair(s))
+  start  w2 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900002, 2 pair(s))
+  start  w3 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900003, 2 pair(s))
+  start  w4 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900004, 2 pair(s))
+  start  w5 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900005, 2 pair(s))
+  start  w6 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900006, 2 pair(s))
+  done   w4 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 167 s
+  8 decisive games (4 pairs): search-v2-wother150 scores 50.0%
+  start  w4 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900007, 2 pair(s))
+  done   w6 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 267 s
+  16 decisive games (8 pairs): search-v2-wother150 scores 50.0%
+  start  w6 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900008, 2 pair(s))
+  done   w1 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 348 s
+  24 decisive games (12 pairs): search-v2-wother150 scores 50.0%
+  start  w1 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900009, 2 pair(s))
+  done   w5 search-v2-wother150 2-6 search-v1-anytime (0 draws) in 396 s
+  32 decisive games (16 pairs): search-v2-wother150 scores 43.8%
+  start  w5 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900010, 2 pair(s))
+  done   w2 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 398 s
+  40 decisive games (20 pairs): search-v2-wother150 scores 45.0%
+  start  w2 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900011, 2 pair(s))
+  done   w3 search-v2-wother150 6-2 search-v1-anytime (0 draws) in 446 s
+  48 decisive games (24 pairs): search-v2-wother150 scores 50.0%
+  start  w3 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900012, 2 pair(s))
+  done   w0 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 592 s
+  56 decisive games (28 pairs): search-v2-wother150 scores 50.0%
+  start  w0 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900013, 2 pair(s))
+  done   w6 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 355 s
+  64 decisive games (32 pairs): search-v2-wother150 scores 50.0%
+  start  w6 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900014, 2 pair(s))
+  done   w1 search-v2-wother150 2-6 search-v1-anytime (0 draws) in 288 s
+  72 decisive games (36 pairs): search-v2-wother150 scores 47.2%
+  start  w1 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900015, 2 pair(s))
+  done   w4 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 469 s
+  80 decisive games (40 pairs): search-v2-wother150 scores 47.5%
+  start  w4 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900016, 2 pair(s))
+  done   w5 search-v2-wother150 3-5 search-v1-anytime (0 draws) in 259 s
+  88 decisive games (44 pairs): search-v2-wother150 scores 46.6%
+  start  w5 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900017, 2 pair(s))
+  done   w0 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 248 s
+  96 decisive games (48 pairs): search-v2-wother150 scores 46.9%
+  start  w0 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900018, 2 pair(s))
+  done   w3 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 407 s
+  104 decisive games (52 pairs): search-v2-wother150 scores 47.1%
+  start  w3 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900019, 2 pair(s))
+  done   w5 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 212 s
+  112 decisive games (56 pairs): search-v2-wother150 scores 47.3%
+  start  w5 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900020, 2 pair(s))
+  done   w2 search-v2-wother150 3-5 search-v1-anytime (0 draws) in 533 s
+  120 decisive games (60 pairs): search-v2-wother150 scores 46.7%
+  start  w2 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900021, 2 pair(s))
+  done   w6 search-v2-wother150 3-5 search-v1-anytime (0 draws) in 312 s
+  128 decisive games (64 pairs): search-v2-wother150 scores 46.1%
+  start  w6 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900022, 2 pair(s))
+  done   w1 search-v2-wother150 3-5 search-v1-anytime (0 draws) in 503 s
+  136 decisive games (68 pairs): search-v2-wother150 scores 45.6%
+  start  w1 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900023, 2 pair(s))
+  done   w4 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 514 s
+  144 decisive games (72 pairs): search-v2-wother150 scores 45.8%
+  start  w4 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900024, 2 pair(s))
+  done   w3 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 300 s
+  152 decisive games (76 pairs): search-v2-wother150 scores 46.1%
+  start  w3 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900025, 2 pair(s))
+  done   w2 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 283 s
+  160 decisive games (80 pairs): search-v2-wother150 scores 46.3%
+  start  w2 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900026, 2 pair(s))
+  done   w5 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 373 s
+  168 decisive games (84 pairs): search-v2-wother150 scores 46.4%
+  start  w5 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900027, 2 pair(s))
+  done   w6 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 378 s
+  176 decisive games (88 pairs): search-v2-wother150 scores 46.6%
+  start  w6 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900028, 2 pair(s))
+  done   w0 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 519 s
+  184 decisive games (92 pairs): search-v2-wother150 scores 46.7%
+  start  w0 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900029, 2 pair(s))
+  done   w4 search-v2-wother150 3-5 search-v1-anytime (0 draws) in 269 s
+  192 decisive games (96 pairs): search-v2-wother150 scores 46.4%
+  start  w4 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900030, 2 pair(s))
+  done   w1 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 361 s
+  200 decisive games (100 pairs): search-v2-wother150 scores 46.5%
+  start  w1 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900031, 2 pair(s))
+  done   w3 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 361 s
+  208 decisive games (104 pairs): search-v2-wother150 scores 46.6%
+  start  w3 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900032, 2 pair(s))
+  done   w0 search-v2-wother150 5-3 search-v1-anytime (0 draws) in 236 s
+  216 decisive games (108 pairs): search-v2-wother150 scores 47.2%
+  start  w0 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900033, 2 pair(s))
+  done   w5 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 356 s
+  224 decisive games (112 pairs): search-v2-wother150 scores 47.3%
+  start  w5 search-v2-wother150 vs search-v1-anytime (match:j125-tune:20261014T134659-4063514, seed 610900034, 2 pair(s))
+  done   w6 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 307 s
+  232 decisive games (116 pairs): search-v2-wother150 scores 47.4%
+  done   w2 search-v2-wother150 3-5 search-v1-anytime (0 draws) in 521 s
+  240 decisive games (120 pairs): search-v2-wother150 scores 47.1%
+  done   w1 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 331 s
+  248 decisive games (124 pairs): search-v2-wother150 scores 47.2%
+  done   w5 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 235 s
+  256 decisive games (128 pairs): search-v2-wother150 scores 47.3%
+  done   w3 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 350 s
+  264 decisive games (132 pairs): search-v2-wother150 scores 47.3%
+  done   w4 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 462 s
+  272 decisive games (136 pairs): search-v2-wother150 scores 47.4%
+  done   w0 search-v2-wother150 4-4 search-v1-anytime (0 draws) in 316 s
+  280 decisive games (140 pairs): search-v2-wother150 scores 47.5%
+
+match finished: 280 of 280 games (0 draws, 0 engine errors, 0 timeouts), 140 mirrored pairs
+search-v2-wother150 scores 47.5% [95% 44.8%, 50.2%] = -17 Elo [-36, +1] against search-v1-anytime
+search-v2-wother150: 6765 decisions searched in 280 games, 1239 changed Forge's answer (18.3%); budget fallbacks 61 = 0.9% [95% 0.4%, 1.4%]; other fallbacks {"rolloutErrors":20,"unmappable":3}
+search-v2-wother150 by kind: p 949/4751, a 202/1443, b 88/571
+search-v1-anytime: 6789 decisions searched in 280 games, 1187 changed Forge's answer (17.5%); budget fallbacks 55 = 0.8% [95% 0.4%, 1.2%]; other fallbacks {"rolloutErrors":16,"unmappable":6}
+search-v1-anytime by kind: p 877/4715, a 223/1501, b 87/573
