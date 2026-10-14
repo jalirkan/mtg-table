@@ -1,0 +1,7 @@
+==== J126 pilot3 started 2026-10-14T12:23:01-04:00 in unit lab-J126-pilot3, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+{"files": 6, "games": 6, "gamesNotOk": 0, "unended": 0, "p": 202, "a": 58, "b": 24, "fallback": 0, "overrode": 67, "layouts": 1, "layoutOk": 1, "duplicate": 0, "rows": 284, "msMean": 801.496, "overrodeRate": 0.235915}
+p: no test decisions (val 0, train 202); best epoch 40
+a: no test decisions (val 0, train 58); best epoch 40
+b: no test decisions (val 0, train 24); best epoch 40
+p+a+b: agreement {'n': 0, 'rate': None, 'lo': None, 'hi': None, 'games': 0}, search-v2 None ms a decision
+search-v2-distill-09bd73ea1861

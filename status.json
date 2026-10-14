@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-14T12:23:01-04:00",
- "heartbeat": "2026-10-14T12:23:01-04:00",
+ "updated": "2026-10-14T12:23:17-04:00",
+ "heartbeat": "2026-10-14T12:23:17-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.2,
+  "load1": 1.71,
   "memUsedGb": 3.8,
   "memTotalGb": 30.5,
   "swapUsedMb": 1523,
@@ -24,9 +24,9 @@
    "id": "J126",
    "title": "B1, distilling search-v2 into a fast policy: 1,800 lab games of Vintage 180, Evan's cube and Synergy with search-v2 in both seats and D435's row exporter on (seeds 814,000,001+), one small candidate scorer per decision kind trained on what search-v2 played (split by game, 80/10/10), its held-out top-1 agreement per kind, then two fixed 1,200-game matches (600 mirrored pairs, D398): distilled vs search-v2 and distilled vs Forge Default",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-10-14T12:19:18-04:00",
-   "elapsed": 223,
+   "elapsed": 239,
    "done": 0,
    "total": 4200,
    "unit": "units",
@@ -87,7 +87,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J126-pilot3"
+   "detail": "lab-J126-pilot4"
   }
  ],
  "queue": [],
