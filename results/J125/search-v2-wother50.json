@@ -1,0 +1,88 @@
+{
+ "v": 1,
+ "at": "2026-10-14T13:46:59.565Z",
+ "id": "j125-tune:20261014T131233-1221926",
+ "host": "j125-tune",
+ "a": "search-v2-wother50",
+ "b": "search-v1-anytime",
+ "ah": "38ba11c1dacc",
+ "bh": "cdd55e02a89c",
+ "set": "tools/ai-bench/pairs-dev.txt",
+ "target": 280,
+ "planned": 280,
+ "complete": true,
+ "played": 280,
+ "draws": 0,
+ "errors": 0,
+ "timeouts": 0,
+ "decisive": 280,
+ "pairs": 140,
+ "aWins": 141,
+ "score": 0.5036,
+ "se": 0.0156,
+ "lo": 0.473,
+ "hi": 0.5342,
+ "elo": 2.5,
+ "eloLo": -18.8,
+ "eloHi": 23.8,
+ "aSearch": {
+  "games": 280,
+  "searched": 6816,
+  "changed": 1119,
+  "fallback": {
+   "budget": 62,
+   "rolloutErrors": 13,
+   "unmappable": 10
+  },
+  "budgetRate": 0.009096,
+  "budgetLo": 0.00462,
+  "budgetHi": 0.013573,
+  "byKind": {
+   "p": {
+    "searched": 4756,
+    "changed": 800,
+    "rate": 0.168209
+   },
+   "a": {
+    "searched": 1492,
+    "changed": 229,
+    "rate": 0.153485
+   },
+   "b": {
+    "searched": 568,
+    "changed": 90,
+    "rate": 0.158451
+   }
+  }
+ },
+ "bSearch": {
+  "games": 280,
+  "searched": 6843,
+  "changed": 1198,
+  "fallback": {
+   "rolloutErrors": 9,
+   "budget": 48,
+   "unmappable": 7
+  },
+  "budgetRate": 0.007014,
+  "budgetLo": 0.003499,
+  "budgetHi": 0.01053,
+  "byKind": {
+   "p": {
+    "searched": 4753,
+    "changed": 904,
+    "rate": 0.190196
+   },
+   "a": {
+    "searched": 1485,
+    "changed": 208,
+    "rate": 0.140067
+   },
+   "b": {
+    "searched": 605,
+    "changed": 86,
+    "rate": 0.142149
+   }
+  }
+ }
+}

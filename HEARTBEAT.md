@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-14T12:15:13-04:00
+- time: 2026-10-14T12:19:18-04:00
 - runner: 10896b8, up since 2026-10-13T00:03:39-04:00
-- running: J125 commands 3/3, 3392/3440 games, 644.6/h, ETA 2026-10-14T12:19:41-04:00, 7 worker(s), 7 core(s)
+- running: J126 prepare, 0/4200 units, 1 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.54; memory 10.4/30.5 GB, swap 1524 MB, pressure 0% (lab budget 23.4 GB)
-- queue: J126
+- load: 1.95; memory 3.8/30.5 GB, swap 1523 MB, pressure 0% (lab budget 23.4 GB)
+- queue: empty
 - waiting: nothing
-- last finished: J124 done at 2026-10-14T05:45:07-04:00: jr.shown 0 · jr.f_est -0.006 · jr.f_lo99 -0.025 · jr.f_hi99 0.013 · jr.f_lo95 -0.021 · jr.f_hi95 0.009 · jr.s_est -0.011 · jr.f_pools 2019 · jr.f_source_lowcurve_est -0.006 · jr.f_source_meta_est -0.005
+- last finished: J125 done at 2026-10-14T12:19:18-04:00: sel.chosen 1 · sel.score 0.511 · cm.played 1200 · cm.score 0.492 · cm.lo 0.477 · cm.hi 0.506 · cm.elo -5.8 · cm.eloLo -16.1 · cm.eloHi 4.5 · v.adopt 0
 
 ## Messages
+
+- FOLLOW-UP READY [J125@2026-10-14T12:19:18-04:00] (the runner, for the cloud session): J125 is done; write and post the template morning-read. It decides: whether search-v2's hand leaf gets new weights in the next search version (search-v3): the one coordinate step chosen on the dev set is adopted only if the held-out fixed match shows it beats search-v2. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J124@2026-10-14T05:45:07-04:00] (the runner, for the cloud session): J124 is done; write and post the template morning-read. It decides: whether ForgeCoach's deck assistant keeps playing 16 lands where it now picks 16 (its low-curve rule) or plays 17 there. Ledger: LEDGER.md. Delete this line once posted.
 

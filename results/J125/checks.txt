@@ -1,0 +1,7 @@
+PASS  sel.written == 1   [sel.written = 1]
+PASS  sel.tuned == 8   [sel.tuned = 8]
+PASS  sel.chosen == 0 or (cm.complete == true and cm.played == 1200)   [sel.chosen = 1, cm.complete = true, cm.played = 1200]
+PASS  sel.chosen == 0 or cm.errors + cm.timeouts <= cm.played / 20   [sel.chosen = 1, cm.errors = 0, cm.timeouts = 0, cm.played = 1200]
+PASS  v.written == 1   [v.written = 1]
+PASS  v.adopt == 1 or not (sel.chosen == 1 and cm.complete == true and cm.played == 1200 and cm.lo > 0.5)   [v.adopt = 0, sel.chosen = 1, cm.complete = true, cm.played = 1200, cm.lo = 0.4769]
+PASS  v.adopt == 0 or (sel.chosen == 1 and cm.complete == true and cm.played == 1200 and cm.lo > 0.5)   [v.adopt = 0]
