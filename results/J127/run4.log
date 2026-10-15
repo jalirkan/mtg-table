@@ -1,0 +1,6 @@
+==== J127 run4 started 2026-10-14T20:50:30-04:00 in unit lab-J127-run4, 2 worker(s), 2 core(s), BLAS/OpenMP threads 2
+{"files": 22, "games": 1799, "gamesNotOk": 1, "unended": 0, "p": 57648, "a": 18300, "b": 7512, "fallback": 1310, "overrode": 14842, "layouts": 1, "layoutOk": 1, "duplicate": 0, "rows": 83460, "msMean": 821.535, "overrodeRate": 0.177834}
+p: test 6042 decisions in 192 games, agreement 0.814796 [0.804428, 0.825165], always-Forge 0.811817; best epoch 3
+a: test 1920 decisions in 192 games, agreement 0.848437 [0.826121, 0.870754], always-Forge 0.846875; best epoch 13
+b: test 816 decisions in 171 games, agreement 0.838235 [0.811631, 0.86484], always-Forge 0.848039; best epoch 11
+p+a+b: agreement {'n': 8778, 'rate': 0.824334, 'lo': 0.814731, 'hi': 0.833937, 'games': 192}, search-v2 826.841 ms a decision
