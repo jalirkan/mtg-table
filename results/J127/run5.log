@@ -1,0 +1,462 @@
+==== J127 run5 started 2026-10-14T20:50:44-04:00 in unit lab-J127-run5, 7 worker(s), 7 core(s), BLAS/OpenMP threads 7
+the distilled player: search-v2-distill-150cee98c455
+match search-v2-distill-150cee98c455 vs search-v1-anytime on tools/ai-bench/pairs-confirm.txt: 150 batch(es) of 8 games (1200 games, 600 mirrored pairs), no stopping rule
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900000, 2 pair(s))
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900001, 2 pair(s))
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900002, 2 pair(s))
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900003, 2 pair(s))
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900004, 2 pair(s))
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900005, 2 pair(s))
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900006, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 157 s
+  8 decisive games (4 pairs): search-v2-distill-150cee98c455 scores 50.0%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900007, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 205 s
+  16 decisive games (8 pairs): search-v2-distill-150cee98c455 scores 50.0%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900008, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 209 s
+  24 decisive games (12 pairs): search-v2-distill-150cee98c455 scores 45.8%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900009, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 222 s
+  32 decisive games (16 pairs): search-v2-distill-150cee98c455 scores 50.0%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900010, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 237 s
+  40 decisive games (20 pairs): search-v2-distill-150cee98c455 scores 50.0%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900011, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 260 s
+  48 decisive games (24 pairs): search-v2-distill-150cee98c455 scores 52.1%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900012, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 272 s
+  56 decisive games (28 pairs): search-v2-distill-150cee98c455 scores 48.2%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900013, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 125 s
+  64 decisive games (32 pairs): search-v2-distill-150cee98c455 scores 48.4%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900014, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 155 s
+  72 decisive games (36 pairs): search-v2-distill-150cee98c455 scores 44.4%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900015, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 216 s
+  80 decisive games (40 pairs): search-v2-distill-150cee98c455 scores 45.0%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900016, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 87 s
+  88 decisive games (44 pairs): search-v2-distill-150cee98c455 scores 45.5%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900017, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 195 s
+  96 decisive games (48 pairs): search-v2-distill-150cee98c455 scores 44.8%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900018, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 219 s
+  104 decisive games (52 pairs): search-v2-distill-150cee98c455 scores 43.3%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900019, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 246 s
+  112 decisive games (56 pairs): search-v2-distill-150cee98c455 scores 43.8%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900020, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 155 s
+  120 decisive games (60 pairs): search-v2-distill-150cee98c455 scores 43.3%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900021, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 299 s
+  128 decisive games (64 pairs): search-v2-distill-150cee98c455 scores 44.5%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900022, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 90 s
+  136 decisive games (68 pairs): search-v2-distill-150cee98c455 scores 44.1%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900023, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 238 s
+  144 decisive games (72 pairs): search-v2-distill-150cee98c455 scores 43.8%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900024, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 135 s
+  152 decisive games (76 pairs): search-v2-distill-150cee98c455 scores 43.4%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900025, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 233 s
+  160 decisive games (80 pairs): search-v2-distill-150cee98c455 scores 43.1%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900026, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 278 s
+  168 decisive games (84 pairs): search-v2-distill-150cee98c455 scores 42.9%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900027, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 182 s
+  176 decisive games (88 pairs): search-v2-distill-150cee98c455 scores 42.0%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900028, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 176 s
+  184 decisive games (92 pairs): search-v2-distill-150cee98c455 scores 42.4%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900029, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 204 s
+  192 decisive games (96 pairs): search-v2-distill-150cee98c455 scores 42.2%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900030, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 128 s
+  200 decisive games (100 pairs): search-v2-distill-150cee98c455 scores 42.5%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900031, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 160 s
+  208 decisive games (104 pairs): search-v2-distill-150cee98c455 scores 42.3%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900032, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 215 s
+  216 decisive games (108 pairs): search-v2-distill-150cee98c455 scores 42.6%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900033, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 194 s
+  224 decisive games (112 pairs): search-v2-distill-150cee98c455 scores 41.5%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900034, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 204 s
+  232 decisive games (116 pairs): search-v2-distill-150cee98c455 scores 41.4%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900035, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 210 s
+  240 decisive games (120 pairs): search-v2-distill-150cee98c455 scores 41.3%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900036, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 333 s
+  248 decisive games (124 pairs): search-v2-distill-150cee98c455 scores 40.7%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900037, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 300 s
+  256 decisive games (128 pairs): search-v2-distill-150cee98c455 scores 41.0%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900038, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 130 s
+  264 decisive games (132 pairs): search-v2-distill-150cee98c455 scores 40.5%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900039, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 102 s
+  272 decisive games (136 pairs): search-v2-distill-150cee98c455 scores 40.4%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900040, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 189 s
+  280 decisive games (140 pairs): search-v2-distill-150cee98c455 scores 41.1%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900041, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 239 s
+  288 decisive games (144 pairs): search-v2-distill-150cee98c455 scores 40.3%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900042, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 235 s
+  296 decisive games (148 pairs): search-v2-distill-150cee98c455 scores 40.2%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900043, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 251 s
+  304 decisive games (152 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900044, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 217 s
+  312 decisive games (156 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900045, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 158 s
+  320 decisive games (160 pairs): search-v2-distill-150cee98c455 scores 38.8%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900046, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 166 s
+  328 decisive games (164 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900047, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 233 s
+  336 decisive games (168 pairs): search-v2-distill-150cee98c455 scores 38.1%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900048, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 141 s
+  344 decisive games (172 pairs): search-v2-distill-150cee98c455 scores 37.5%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900049, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 209 s
+  352 decisive games (176 pairs): search-v2-distill-150cee98c455 scores 37.2%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900050, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 198 s
+  360 decisive games (180 pairs): search-v2-distill-150cee98c455 scores 37.2%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900051, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 323 s
+  368 decisive games (184 pairs): search-v2-distill-150cee98c455 scores 37.2%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900052, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 269 s
+  376 decisive games (188 pairs): search-v2-distill-150cee98c455 scores 37.2%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900053, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 160 s
+  384 decisive games (192 pairs): search-v2-distill-150cee98c455 scores 37.5%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900054, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 184 s
+  392 decisive games (196 pairs): search-v2-distill-150cee98c455 scores 38.0%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900055, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 267 s
+  400 decisive games (200 pairs): search-v2-distill-150cee98c455 scores 38.0%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900056, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 6-2 search-v1-anytime (0 draws) in 212 s
+  408 decisive games (204 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900057, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 199 s
+  416 decisive games (208 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900058, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 146 s
+  424 decisive games (212 pairs): search-v2-distill-150cee98c455 scores 38.4%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900059, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 220 s
+  432 decisive games (216 pairs): search-v2-distill-150cee98c455 scores 38.0%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900060, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 182 s
+  440 decisive games (220 pairs): search-v2-distill-150cee98c455 scores 38.0%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900061, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 139 s
+  448 decisive games (224 pairs): search-v2-distill-150cee98c455 scores 38.2%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900062, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 171 s
+  456 decisive games (228 pairs): search-v2-distill-150cee98c455 scores 38.4%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900063, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 174 s
+  464 decisive games (232 pairs): search-v2-distill-150cee98c455 scores 37.9%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900064, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 297 s
+  472 decisive games (236 pairs): search-v2-distill-150cee98c455 scores 37.7%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900065, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 149 s
+  480 decisive games (240 pairs): search-v2-distill-150cee98c455 scores 37.7%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900066, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 284 s
+  488 decisive games (244 pairs): search-v2-distill-150cee98c455 scores 38.1%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900067, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 401 s
+  496 decisive games (248 pairs): search-v2-distill-150cee98c455 scores 38.1%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900068, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 155 s
+  504 decisive games (252 pairs): search-v2-distill-150cee98c455 scores 38.1%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900069, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 247 s
+  512 decisive games (256 pairs): search-v2-distill-150cee98c455 scores 37.9%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900070, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 139 s
+  520 decisive games (260 pairs): search-v2-distill-150cee98c455 scores 38.1%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900071, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 191 s
+  528 decisive games (264 pairs): search-v2-distill-150cee98c455 scores 38.3%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900072, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 192 s
+  536 decisive games (268 pairs): search-v2-distill-150cee98c455 scores 38.2%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900073, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 261 s
+  544 decisive games (272 pairs): search-v2-distill-150cee98c455 scores 38.1%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900074, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 180 s
+  552 decisive games (276 pairs): search-v2-distill-150cee98c455 scores 38.2%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900075, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 98 s
+  560 decisive games (280 pairs): search-v2-distill-150cee98c455 scores 38.4%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900076, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 179 s
+  568 decisive games (284 pairs): search-v2-distill-150cee98c455 scores 38.4%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900077, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 173 s
+  576 decisive games (288 pairs): search-v2-distill-150cee98c455 scores 38.5%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900078, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 251 s
+  584 decisive games (292 pairs): search-v2-distill-150cee98c455 scores 38.2%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900079, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 161 s
+  592 decisive games (296 pairs): search-v2-distill-150cee98c455 scores 38.2%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900080, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 241 s
+  600 decisive games (300 pairs): search-v2-distill-150cee98c455 scores 38.0%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900081, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 139 s
+  608 decisive games (304 pairs): search-v2-distill-150cee98c455 scores 38.2%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900082, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 295 s
+  616 decisive games (308 pairs): search-v2-distill-150cee98c455 scores 38.3%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900083, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 182 s
+  624 decisive games (312 pairs): search-v2-distill-150cee98c455 scores 38.5%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900084, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 102 s
+  632 decisive games (316 pairs): search-v2-distill-150cee98c455 scores 38.4%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900085, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 169 s
+  640 decisive games (320 pairs): search-v2-distill-150cee98c455 scores 38.6%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900086, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 154 s
+  648 decisive games (324 pairs): search-v2-distill-150cee98c455 scores 38.6%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900087, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 161 s
+  656 decisive games (328 pairs): search-v2-distill-150cee98c455 scores 38.6%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900088, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 135 s
+  664 decisive games (332 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900089, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 144 s
+  672 decisive games (336 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900090, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 260 s
+  680 decisive games (340 pairs): search-v2-distill-150cee98c455 scores 38.5%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900091, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 155 s
+  688 decisive games (344 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900092, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 250 s
+  696 decisive games (348 pairs): search-v2-distill-150cee98c455 scores 38.9%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900093, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 250 s
+  704 decisive games (352 pairs): search-v2-distill-150cee98c455 scores 38.9%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900094, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 212 s
+  712 decisive games (356 pairs): search-v2-distill-150cee98c455 scores 39.0%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900095, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 191 s
+  720 decisive games (360 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900096, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 217 s
+  728 decisive games (364 pairs): search-v2-distill-150cee98c455 scores 39.3%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900097, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 208 s
+  736 decisive games (368 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900098, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 171 s
+  744 decisive games (372 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900099, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 165 s
+  752 decisive games (376 pairs): search-v2-distill-150cee98c455 scores 39.6%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900100, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 177 s
+  760 decisive games (380 pairs): search-v2-distill-150cee98c455 scores 39.6%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900101, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 245 s
+  768 decisive games (384 pairs): search-v2-distill-150cee98c455 scores 39.3%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900102, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 168 s
+  776 decisive games (388 pairs): search-v2-distill-150cee98c455 scores 39.3%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900103, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 226 s
+  784 decisive games (392 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900104, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 162 s
+  792 decisive games (396 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900105, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 186 s
+  800 decisive games (400 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900106, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 152 s
+  808 decisive games (404 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900107, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 170 s
+  816 decisive games (408 pairs): search-v2-distill-150cee98c455 scores 39.3%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900108, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 237 s
+  824 decisive games (412 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900109, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 169 s
+  832 decisive games (416 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900110, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 276 s
+  840 decisive games (420 pairs): search-v2-distill-150cee98c455 scores 38.9%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900111, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 317 s
+  848 decisive games (424 pairs): search-v2-distill-150cee98c455 scores 39.0%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900112, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 127 s
+  856 decisive games (428 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900113, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 227 s
+  864 decisive games (432 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900114, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 145 s
+  872 decisive games (436 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900115, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 222 s
+  880 decisive games (440 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900116, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 177 s
+  888 decisive games (444 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900117, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 232 s
+  896 decisive games (448 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900118, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 223 s
+  904 decisive games (452 pairs): search-v2-distill-150cee98c455 scores 39.3%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900119, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 5-3 search-v1-anytime (0 draws) in 231 s
+  912 decisive games (456 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900120, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 183 s
+  920 decisive games (460 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900121, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 223 s
+  928 decisive games (464 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900122, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 104 s
+  936 decisive games (468 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900123, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 142 s
+  944 decisive games (472 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900124, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 158 s
+  952 decisive games (476 pairs): search-v2-distill-150cee98c455 scores 39.2%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900125, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 292 s
+  960 decisive games (480 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900126, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 199 s
+  968 decisive games (484 pairs): search-v2-distill-150cee98c455 scores 39.0%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900127, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 148 s
+  976 decisive games (488 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900128, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 169 s
+  984 decisive games (492 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900129, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 193 s
+  992 decisive games (496 pairs): search-v2-distill-150cee98c455 scores 39.0%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900130, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 6-2 search-v1-anytime (0 draws) in 180 s
+  1000 decisive games (500 pairs): search-v2-distill-150cee98c455 scores 39.3%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900131, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 156 s
+  1008 decisive games (504 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900132, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 192 s
+  1016 decisive games (508 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900133, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 191 s
+  1024 decisive games (512 pairs): search-v2-distill-150cee98c455 scores 39.6%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900134, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 166 s
+  1032 decisive games (516 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900135, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 161 s
+  1040 decisive games (520 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900136, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 197 s
+  1048 decisive games (524 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900137, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 167 s
+  1056 decisive games (528 pairs): search-v2-distill-150cee98c455 scores 39.6%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900138, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 130 s
+  1064 decisive games (532 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900139, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 162 s
+  1072 decisive games (536 pairs): search-v2-distill-150cee98c455 scores 39.5%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900140, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 245 s
+  1080 decisive games (540 pairs): search-v2-distill-150cee98c455 scores 39.4%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900141, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 166 s
+  1088 decisive games (544 pairs): search-v2-distill-150cee98c455 scores 39.3%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900142, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 183 s
+  1096 decisive games (548 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w6 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900143, 2 pair(s))
+  done   w4 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 224 s
+  1104 decisive games (552 pairs): search-v2-distill-150cee98c455 scores 39.0%
+  start  w4 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900144, 2 pair(s))
+  done   w2 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 155 s
+  1112 decisive games (556 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w2 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900145, 2 pair(s))
+  done   w1 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 169 s
+  1120 decisive games (560 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w1 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900146, 2 pair(s))
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 165 s
+  1128 decisive games (564 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w3 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900147, 2 pair(s))
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 216 s
+  1136 decisive games (568 pairs): search-v2-distill-150cee98c455 scores 39.1%
+  start  w0 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900148, 2 pair(s))
+  done   w5 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 181 s
+  1144 decisive games (572 pairs): search-v2-distill-150cee98c455 scores 39.0%
+  start  w5 search-v2-distill-150cee98c455 vs search-v1-anytime (match:justin-a-B650-GAMING-X-AX-V2:20261015T005044-3795523, seed 114900149, 2 pair(s))
+  done   w6 search-v2-distill-150cee98c455 1-7 search-v1-anytime (0 draws) in 151 s
+  1152 decisive games (576 pairs): search-v2-distill-150cee98c455 scores 38.8%
+  done   w4 search-v2-distill-150cee98c455 4-4 search-v1-anytime (0 draws) in 161 s
+  1160 decisive games (580 pairs): search-v2-distill-150cee98c455 scores 38.9%
+  done   w5 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 97 s
+  1168 decisive games (584 pairs): search-v2-distill-150cee98c455 scores 38.9%
+  done   w1 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 189 s
+  1176 decisive games (588 pairs): search-v2-distill-150cee98c455 scores 38.8%
+  done   w2 search-v2-distill-150cee98c455 2-6 search-v1-anytime (0 draws) in 263 s
+  1184 decisive games (592 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  done   w3 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 211 s
+  1192 decisive games (596 pairs): search-v2-distill-150cee98c455 scores 38.7%
+  done   w0 search-v2-distill-150cee98c455 3-5 search-v1-anytime (0 draws) in 212 s
+  1200 decisive games (600 pairs): search-v2-distill-150cee98c455 scores 38.7%
+
+match finished: 1200 of 1200 games (0 draws, 0 engine errors, 0 timeouts), 600 mirrored pairs
+search-v2-distill-150cee98c455 scores 38.7% [95% 36.5%, 40.8%] = -80 Elo [-96, -65] against search-v1-anytime
+search-v2-distill-150cee98c455: 29936 decisions searched in 1199 games, 2160 changed Forge's answer (7.2%); budget fallbacks 0 = 0.0% [95% 0.0%, 0.0%]; other fallbacks {}
+search-v2-distill-150cee98c455 by kind: p 1605/21248, a 382/6115, b 173/2573
+search-v2-distill-150cee98c455 time per decision: 5.112 ms (p+a+b); by kind p 6.882, a 0.59, b 1.244
+search-v1-anytime: 28876 decisions searched in 1199 games, 5074 changed Forge's answer (17.6%); budget fallbacks 197 = 0.7% [95% 0.5%, 0.9%]; other fallbacks {"rolloutErrors":59,"unmappable":39}
+search-v1-anytime by kind: p 3941/20156, a 907/6646, b 226/2074
+search-v1-anytime time per decision: 896.32 ms (p+a+b); by kind p 904.649, a 839.407, b 997.742
