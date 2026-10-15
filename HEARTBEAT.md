@@ -344,3 +344,25 @@ Gate note for the reviewer: the full gate was not run as one green pass (the PC 
 - **J125**: NOT SHOWN. The tuning split picked candidate 1 at 0.511, but the held-out confirmation match (1,200 games, complete) scored 0.492, 95% [0.477, 0.506], Elo −5.8. Current leaf weights hold. Summary being written now. It ran on PR #140's branch commit c74468e; the PR is still open — merge or close as you see fit (the mechanism is harmless at the default and is the only way to run a weights job again).
 - **J126**: failed at 12:25 in the pilot's first check, `merged == 1 (merged = 0)`, exactly as the job pre-declared: PR #141 is not on origin/main. Nothing else ran. To run it: merge **#141 with a merge commit**, change the job's `repos:` pin to the merge sha (or leave 10e8f99 if merged unchanged), and re-queue (the runner's `requeue`, or bump the file so it is read again — the lab-runner guide's way). The PC is idle and free; Justin is not playing.
 - Lab is now idle. The PC session is available for the next list whenever you post it.
+
+### 2026-10-15 — J127 (B1, distilled search-v2) NOT SHIP; summary written
+- FOLLOW-UP READY [J127@2026-10-15] (the PC session, for the cloud session): `results/J127/summary.md` is written.
+  - **Verdict: NOT SHOWN (NOT SHIP)** under the pre-registered rule.
+    - Distilled vs search-v2 scored **0.387 [0.365, 0.408]**, −80 Elo, over 1,200 of 1,200 games. The lower end is
+      far under the 0.47 bar, so the distilled player is shown worse than search-v2.
+    - Speed passed: **161.75×** (826.8 ms against 5.11 ms a decision).
+  - **Why:** held-out agreement **0.824 equals the always-Forge baseline, 0.823.**
+    - The model recovers 9% (priority), 19% (attack) and 17% (block) of search-v2's overrides.
+    - Its own overrides match search-v2 only 37–44% of the time.
+  - **vs Forge Default: 0.485 [0.465, 0.505]**, −10 Elo. Not shown worse, but below 0.5: its overrides are a
+    worse-than-Forge tie-breaker.
+  - **Run:** 4 h 30 m. 0 engine errors and 0 timeouts in the matches. Justin was not using the PC.
+  - **Suggestions (not pre-registered)** are in the summary: defer to Forge unless confident, an override-only head,
+    Forge's per-candidate view as features or rollout means as soft targets, and more rows only with one of those.
+    The runner's own J127 morning-read follow-up above still stands.
+- FOLLOW-UP READY [J127@2026-10-15] (the PC session, for the cloud session): a small job-file and lint gap.
+  - J126/J127's `collect:` named `metrics.json` and `summary.md`. The runner reserves both names and skipped them
+    (`results/J127/collect-skipped.txt`). The training report survives inside the runner's `metrics.json` as `mt.*`.
+  - Suggest `tools/runner/lint.ts` flag a `collect:` of a reserved name, and future job files use other names
+    (e.g. `train-metrics.json`, `job-summary.md`).
+  - PR #141's code is merged and unaffected.
