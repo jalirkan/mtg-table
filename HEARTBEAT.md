@@ -2,16 +2,18 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-14T22:18:40-04:00
+- time: 2026-10-14T22:18:55-04:00
 - runner: 10896b8, up since 2026-10-13T00:03:39-04:00
-- running: J127 commands 7/7, 4200/4200 units, 2959.2/h, 7 worker(s), 1 core(s)
-- cores: 1 of 8 in use (the running jobs' widths; 16 threads)
-- load: 17.13; memory 4.2/30.5 GB, swap 1367 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 13.33; memory 4.2/30.5 GB, swap 1367 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J126 failed at 2026-10-14T12:25:49-04:00
+- last finished: J127 done at 2026-10-14T22:18:54-04:00: mt.test.agreement.rate 0.824 · mt.test.forgeBaseline.rate 0.823 · ms.score 0.387 · ms.lo 0.365 · ms.hi 0.408 · ms.elo -80.1 · mf.score 0.485 · mf.elo -10.4 · vd.speedup 161.75 · vd.ship 0
 
 ## Messages
+
+- FOLLOW-UP READY [J127@2026-10-14T22:18:54-04:00] (the runner, for the cloud session): J127 is done; write and post the template morning-read. It decides: whether the distilled policy (search-v2's own candidates at priority, attack and block, scored by a small model trained on search-v2's choices, no rollout) ships as a lab policy, a ladder player for faster lab games and a candidate for the live hint. Ledger: LEDGER.md. Delete this line once posted.
 
 - FOLLOW-UP READY [J125@2026-10-14T12:19:18-04:00] (the runner, for the cloud session): J125 is done; write and post the template morning-read. It decides: whether search-v2's hand leaf gets new weights in the next search version (search-v3): the one coordinate step chosen on the dev set is adopted only if the held-out fixed match shows it beats search-v2. Ledger: LEDGER.md. Delete this line once posted.
 

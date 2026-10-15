@@ -1,0 +1,57 @@
+{
+ "ship": 0,
+ "complete": 1,
+ "notWorse": 0,
+ "fast": 1,
+ "margin": 0.03,
+ "speedupBar": 10.0,
+ "vsSearch": {
+  "played": 1200,
+  "planned": 1200,
+  "pairs": 600,
+  "score": 0.3867,
+  "lo": 0.3652,
+  "hi": 0.4082,
+  "elo": -80.1,
+  "eloLo": -96.1,
+  "eloHi": -64.5,
+  "draws": 0,
+  "errors": 0,
+  "timeouts": 0
+ },
+ "vsForge": {
+  "played": 1200,
+  "planned": 1200,
+  "complete": true,
+  "pairs": 600,
+  "score": 0.485,
+  "lo": 0.4649,
+  "hi": 0.5051,
+  "elo": -10.4,
+  "eloLo": -24.4,
+  "eloHi": 3.6,
+  "draws": 0,
+  "errors": 0,
+  "timeouts": 0
+ },
+ "heldOutSearchMs": 826.841,
+ "distillMsLive": 5.112,
+ "searchMsLive": 896.32,
+ "speedup": 161.75,
+ "speedupLive": 175.34,
+ "agreement": 0.824334,
+ "agreementLo": 0.814731,
+ "agreementHi": 0.833937,
+ "forgeBaseline": 0.822853,
+ "covered": [
+  "a",
+  "b",
+  "p"
+ ],
+ "byKind": {
+  "p": 0.814796,
+  "a": 0.848437,
+  "b": 0.838235
+ },
+ "reading": "NOT SHOWN: the score's lower end 0.3652 is under 0.47"
+}

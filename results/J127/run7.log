@@ -1,0 +1,86 @@
+==== J127 run7 started 2026-10-14T22:18:40-04:00 in unit lab-J127-run7, 1 worker(s), 1 core(s), BLAS/OpenMP threads 1
+{
+ "ship": 0,
+ "complete": 1,
+ "notWorse": 0,
+ "fast": 1,
+ "margin": 0.03,
+ "speedupBar": 10.0,
+ "vsSearch": {
+  "played": 1200,
+  "planned": 1200,
+  "pairs": 600,
+  "score": 0.3867,
+  "lo": 0.3652,
+  "hi": 0.4082,
+  "elo": -80.1,
+  "eloLo": -96.1,
+  "eloHi": -64.5,
+  "draws": 0,
+  "errors": 0,
+  "timeouts": 0
+ },
+ "vsForge": {
+  "played": 1200,
+  "planned": 1200,
+  "complete": true,
+  "pairs": 600,
+  "score": 0.485,
+  "lo": 0.4649,
+  "hi": 0.5051,
+  "elo": -10.4,
+  "eloLo": -24.4,
+  "eloHi": 3.6,
+  "draws": 0,
+  "errors": 0,
+  "timeouts": 0
+ },
+ "heldOutSearchMs": 826.841,
+ "distillMsLive": 5.112,
+ "searchMsLive": 896.32,
+ "speedup": 161.75,
+ "speedupLive": 175.34,
+ "agreement": 0.824334,
+ "agreementLo": 0.814731,
+ "agreementHi": 0.833937,
+ "forgeBaseline": 0.822853,
+ "covered": [
+  "a",
+  "b",
+  "p"
+ ],
+ "byKind": {
+  "p": 0.814796,
+  "a": 0.848437,
+  "b": 0.838235
+ },
+ "reading": "NOT SHOWN: the score's lower end 0.3652 is under 0.47"
+}
+# J127: search-v2 distilled into a fast policy (B1, D435)
+
+**Reading under the pre-registered rule: NOT SHOWN: the score's lower end 0.3652 is under 0.47.**
+
+## The rows
+
+1799 ended games (1 not ok, 0 unended, 0 duplicates dropped); 83460 rows: p 57648, a 18300, b 7512; search fallbacks 1310; search-v2 overrode Forge on 0.177834 of them; its mean decision time 821.535 ms; layout ok 1.
+
+## Held-out agreement with search-v2 (test split, by game)
+
+| kind | test decisions | games | top-1 agreement [95%] | always Forge [95%] | recall on search-v2's overrides | model overrides | precision of the model's overrides | search-v2 ms |
+|---|---|---|---|---|---|---|---|---|
+| p | 6042 | 192 | 0.814796 [0.804428, 0.825165] | 0.811817 [0.799909, 0.823726] | 0.091469 [0.061329, 0.121609] | 0.038729 | 0.444444 [0.344933, 0.543956] | 819.485 |
+| a | 1920 | 192 | 0.848437 [0.826121, 0.870754] | 0.846875 [0.827658, 0.866092] | 0.193878 [0.144061, 0.243695] | 0.070833 | 0.419118 [0.314245, 0.52399] | 799.525 |
+| b | 816 | 171 | 0.838235 [0.811631, 0.86484] | 0.848039 [0.82253, 0.873549] | 0.169355 [0.092775, 0.245935] | 0.069853 | 0.368421 [0.227159, 0.509683] | 945.588 |
+| p+a+b | 8778 | | 0.824334 [0.814731, 0.833937] | 0.822853 [0.812605, 0.8331] | | | | 826.841 |
+
+numpy's forward pass: 0.000951 ms a decision (reference only; the seat's time is in the match).
+
+## The matches (D398, 600 mirrored pairs each, the confirm set)
+
+| against | played / planned | score [95%] | Elo [95%] | draws, errors, timeouts | distilled ms a decision | opponent ms a decision |
+|---|---|---|---|---|---|---|
+| search-v2 (search-v1-anytime) | 1200 / 1200 | 0.3867 [0.3652, 0.4082] | -80.1 [-96.1, -64.5] | 0, 0, 0 | 5.112 | 896.32 |
+| Forge Default | 1200 / 1200 | 0.485 [0.4649, 0.5051] | -10.4 [-24.4, 3.6] | 0, 0, 0 | 7.928 | None |
+
+Speed-up (the rule's): search-v2's held-out 826.841 ms / the distilled seat's 5.112 ms = 161.75x (bar 10); within the match: 175.34x.
+Rule parts: complete 1, not worse by more than 0.03 0, at least 10x faster 1; ship 0.
