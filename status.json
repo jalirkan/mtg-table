@@ -1,14 +1,14 @@
 {
  "schema": 1,
- "updated": "2026-10-15T11:19:13-04:00",
- "heartbeat": "2026-10-15T11:19:13-04:00",
+ "updated": "2026-10-15T11:19:47-04:00",
+ "heartbeat": "2026-10-15T11:19:47-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 2.93,
-  "memUsedGb": 5.4,
+  "load1": 3.6,
+  "memUsedGb": 5.6,
   "memTotalGb": 30.5,
   "swapUsedMb": 1529,
   "pressure": 0,
@@ -24,9 +24,9 @@
    "id": "J128",
    "title": "Search-v2 with the learned evaluator at its leaves: ONE fixed 1,200-game match (600 mirrored pairs, D398, the live 1.5 s budget) of search-v2-evalleaf (search-v2 whose unfinished rollouts are scored by evaluator v2's P(win) for the searching seat, D437) against search-v1-anytime (search-v2) on the confirm deck set, read on a 95% interval; no tuning",
    "cpu": "heavy",
-   "phase": "pilot 1/4",
+   "phase": "pilot 2/4",
    "started": "2026-10-15T11:18:49-04:00",
-   "elapsed": 25,
+   "elapsed": 59,
    "done": 0,
    "total": 1200,
    "unit": "games",
@@ -38,7 +38,7 @@
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-15T11:18:49-04:00",
-   "memGb": 0.01,
+   "memGb": 0,
    "live": {
     "cm.played": 0,
     "cm.score": 0,
@@ -65,7 +65,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J128-pilot1"
+   "detail": "lab-J128-pilot2"
   }
  ],
  "queue": [],
