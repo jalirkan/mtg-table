@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-15T08:58:50-04:00
+- time: 2026-10-15T09:03:24-04:00
 - runner: 10896b8, up since 2026-10-13T00:03:39-04:00
 - running: nothing
 - cores: 0 of 8 in use (the running jobs' widths; 16 threads)
-- load: 0.01; memory 4.2/30.5 GB, swap 1359 MB, pressure 0% (lab budget 23.4 GB)
+- load: 0.05; memory 4.2/30.5 GB, swap 1359 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
 - last finished: J127 done at 2026-10-14T22:18:54-04:00: mt.test.agreement.rate 0.824 · mt.test.forgeBaseline.rate 0.823 · ms.score 0.387 · ms.lo 0.365 · ms.hi 0.408 · ms.elo -80.1 · mf.score 0.485 · mf.elo -10.4 · vd.speedup 161.75 · vd.ship 0
