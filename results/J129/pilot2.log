@@ -1,0 +1,15 @@
+==== J129 pilot2 started 2026-10-15T10:43:56-04:00 in unit lab-J129-pilot2, 3 worker(s), 3 core(s), BLAS/OpenMP threads 3
+pilot game: match-m1791341011805
+J129 REVIEW match-m1791341011805 (1 of 1)
+REVIEW STAGE plan var/j129/input/games/match-m1791341011805.jsonl seat 0
+{"status":"ok","decisions":6,"jobs":3,"triageMsPerDecision":3000,"gameId":"match-m1791341011805","frames":247}
+REVIEW STAGE triage 6 decision(s) on 3 JVM(s), 3000 ms each
+coach-grade: 6 graded moment(s) -> var/coach-grade/review/j129-match-m1791341011805/triage.jsonl
+REVIEW STAGE deepen 1 decision(s) on 1 JVM(s), 40000 ms each, horizon 1
+coach-grade: 1 graded moment(s) -> var/coach-grade/review/j129-match-m1791341011805/deep.jsonl
+REVIEW STAGE report
+review: 6 decision(s), 3 graded, 0 mistake(s), 1 close call(s), 1 deepened, 0 error(s) -> var/j129/pilot/reviews/match-m1791341011805.json
+REVIEW DONE var/j129/pilot/reviews/match-m1791341011805.json decisions=6 graded=3 errors=0 deepened=1
+{"games":1,"done":1,"failed":0,"empty":0}
+{"games":1,"decisions":3,"leaks":0}
+{"written":1,"strict":1,"mismatches":0,"leaks":0,"kinds":10,"decisions":3,"mistakes":0,"gamesGraded":1,"minMistakes":5,"minGames":3,"bootstrapB":10000}

@@ -1,75 +1,37 @@
 {
  "schema": 1,
- "updated": "2026-10-15T10:43:58-04:00",
- "heartbeat": "2026-10-15T10:43:58-04:00",
+ "updated": "2026-10-15T10:44:45-04:00",
+ "heartbeat": "2026-10-15T10:44:45-04:00",
  "paused": false,
- "state": "running",
- "idleSince": null,
- "idleReason": null,
+ "state": "idle",
+ "idleSince": "2026-10-15T10:44:45-04:00",
+ "idleReason": "queue empty",
  "host": {
-  "load1": 9.1,
-  "memUsedGb": 8.8,
+  "load1": 15.27,
+  "memUsedGb": 11.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 1380,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 3,
+  "coresUsed": 0,
   "coresTotal": 8
  },
- "running": [
+ "running": [],
+ "queue": [],
+ "waiting": [],
+ "finished": [
   {
    "publicTitle": "Leak report from my own games",
    "publicEst": "~1-2 h",
    "id": "J129",
    "title": "A3, the leak report: Justin's recurring mistakes in his own recorded games. Every decision of his seat that the post-game review covers (main-phase plays, attacks, blocks, targets) is graded by coach-grade.sh review in pool mode (D348), put into one kind by what he chose and what he saw, and judged by a rule written before grading (D438): a mistake is a regret interval above zero; a leak is at least 5 mistakes in at least 3 games with a mean regret whose 95% interval is above zero; everything else \"not shown\"",
-   "cpu": "heavy",
-   "phase": "pilot 2/2",
-   "started": "2026-10-15T10:43:16-04:00",
-   "elapsed": 41,
-   "done": 0,
-   "total": 9,
-   "unit": "units",
-   "ratePerHour": null,
-   "eta": null,
-   "workers": 3,
-   "workersMax": 3,
-   "cores": 3,
-   "errors": null,
-   "paused": false,
-   "dataUpdated": "2026-10-15T10:43:16-04:00",
-   "memGb": 0.01,
-   "live": {
-    "inv.decisions": 0,
-    "rs.failed": 0,
-    "elapsed_s": 0,
-    "games_done": 0,
-    "inv.gamesWithDecisions": 0,
-    "inv.inputOk": 0,
-    "inv.otherSeats": -1,
-    "inv.written": 0,
-    "merged": 0,
-    "metrics_errors": 1,
-    "pressure_events": 0,
-    "rs.done": 0,
-    "rs.empty": 0,
-    "rs.games": 0,
-    "staged": 1,
-    "workers": 1
-   },
-   "liveHeadline": [
-    "inv.decisions",
-    "rs.failed"
-   ],
-   "cubes": [],
-   "publicCubes": false,
-   "pressureEvents": [],
-   "detail": "lab-J129-pilot2"
-  }
- ],
- "queue": [],
- "waiting": [],
- "finished": [
+   "status": "failed",
+   "finished": "2026-10-15T10:44:45-04:00",
+   "headline": "",
+   "numbers": {},
+   "detail": "pilot: merged == 1 (merged = 0)"
+  },
   {
    "publicTitle": "Distilled search policy: train and two fixed matches",
    "publicEst": "~6-9 h (one night)",
@@ -814,20 +776,6 @@
    "headline": "",
    "numbers": {},
    "detail": "prepare: step prepare exited 128"
-  },
-  {
-   "publicTitle": "Quarantine re-check",
-   "publicEst": "~1 h",
-   "id": "J074",
-   "title": "Re-check nights 1 and 2's quarantined recordings with the fixed redaction checker (D371) and restore only the ones that now pass every check",
-   "status": "done",
-   "finished": "2026-10-05T09:10:27-04:00",
-   "headline": "n1.nowPass 731 · n2.nowPass 640 · restored 1371",
-   "numbers": {
-    "n1.nowPass": 731,
-    "n2.nowPass": 640,
-    "restored": 1371
-   }
   }
  ],
  "runner": {

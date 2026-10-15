@@ -2,14 +2,14 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-15T10:43:58-04:00
+- time: 2026-10-15T10:44:45-04:00
 - runner: 10896b8, up since 2026-10-13T00:03:39-04:00
-- running: J129 pilot 2/2, 0/9 units, 3 worker(s), 3 core(s)
-- cores: 3 of 8 in use (the running jobs' widths; 16 threads)
-- load: 9.1; memory 8.8/30.5 GB, swap 1380 MB, pressure 0% (lab budget 23.4 GB)
+- running: nothing
+- cores: 0 of 8 in use (the running jobs' widths; 16 threads)
+- load: 15.27; memory 11.9/30.5 GB, swap 1380 MB, pressure 0% (lab budget 23.4 GB)
 - queue: empty
 - waiting: nothing
-- last finished: J127 done at 2026-10-14T22:18:54-04:00: mt.test.agreement.rate 0.824 · mt.test.forgeBaseline.rate 0.823 · ms.score 0.387 · ms.lo 0.365 · ms.hi 0.408 · ms.elo -80.1 · mf.score 0.485 · mf.elo -10.4 · vd.speedup 161.75 · vd.ship 0
+- last finished: J129 failed at 2026-10-15T10:44:45-04:00
 
 ## Messages
 
