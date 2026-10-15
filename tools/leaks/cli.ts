@@ -267,11 +267,17 @@ function review(f: Map<string, string[]>): void {
   const failed: Obj[] = [];
   const empty: string[] = [];
   let done = 0;
+  // written after every game, so a job's abort and progress lines can read it while the review runs
+  const status = (): void => writeJson(join(out, 'review-status.json'), {
+    games: todo.length, done, failed: failed.length, empty: empty.length, failedGames: failed, emptyGames: empty, settings: { jobs, ...set },
+  });
+  status();
   for (const g of todo) {
     const target = join(out, g.gameId + '.json');
     const plan = join(input, 'plan', g.gameId + '.jsonl');
     if (existsSync(plan) && readFileSync(plan, 'utf8').trim() === '') {
       empty.push(g.gameId);   // the review's own planner found no decision of his: nothing to grade, not a failure
+      status();
       continue;
     }
     if (existsSync(target)) {
@@ -287,10 +293,9 @@ function review(f: Map<string, string[]>): void {
       '--run', `j129-${g.gameId.replace(/[^A-Za-z0-9_-]/g, '_')}`, '--out', target], { stdio: 'inherit' });
     if (r.status === 0 && existsSync(target)) done++;
     else failed.push({ gameId: g.gameId, exit: r.status });
+    status();
   }
-  writeJson(join(out, 'review-status.json'), {
-    games: todo.length, done, failed: failed.length, empty: empty.length, failedGames: failed, emptyGames: empty, settings: { jobs, ...set },
-  });
+  status();
   console.log(JSON.stringify({ games: todo.length, done, failed: failed.length, empty: empty.length }));
 }
 
