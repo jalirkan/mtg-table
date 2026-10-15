@@ -94,12 +94,19 @@ export interface SearchTally {
    * line says how long each side took per decision.  Absent on lines from before the counter.
    */
   us: Record<string, number>;
+  /**
+   * J128 (D437): leaves scored by the learned evaluator (`search.leaf.eval`, D354's `leaf=eval:<model>`) and their summed
+   * cost in nanoseconds (`search.leaf.evalNs`), so a match line says the evaluator really scored the leaves and what one
+   * costs.  0 for every hand-leaf player.  Optional so tallies built before the counter stay valid.
+   */
+  evalLeaves?: number;
+  evalNs?: number;
 }
 
 /** The decision kinds the search counts (D312, D417). */
 export const SEARCH_KINDS = ['p', 'a', 'b', 'm', 'k', 't'] as const;
 
-export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {}, us: {} });
+export const emptyTally = (): SearchTally => ({ games: 0, searched: 0, changed: 0, fallback: {}, perGame: [], byKind: {}, us: {}, evalLeaves: 0, evalNs: 0 });
 
 /** One seat's counters from an ai-bench line (`aStats.counts` / `bStats.counts`) into the tally. */
 export function addCounts(t: SearchTally, counts: Record<string, unknown> | undefined): void {
@@ -114,6 +121,9 @@ export function addCounts(t: SearchTally, counts: Record<string, unknown> | unde
     const us = n(`search.${k}.us`);
     if (us > 0) t.us[k] = (t.us[k] ?? 0) + us;
   }
+  // J128: the evaluator's leaves (any kind's rollouts; the prior's never use it)
+  t.evalLeaves = (t.evalLeaves ?? 0) + n('search.leaf.eval');
+  t.evalNs = (t.evalNs ?? 0) + n('search.leaf.evalNs');
   const searched = n('search.p.considered') + n('search.a.considered') + n('search.b.considered');
   if (searched === 0) return;
   t.games++;
@@ -154,7 +164,7 @@ export function tallyBatch(file: string, a: SearchTally, b: SearchTally): void {
 }
 
 /** A tally as the match line keeps it (no per-game rows). */
-export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null; byKind: Record<string, { searched: number; changed: number; rate: number | null }>; msMean: Record<string, number | null>; msPerDecision: number | null } {
+export function tallyLine(t: SearchTally): { games: number; searched: number; changed: number; fallback: Record<string, number>; budgetRate: number; budgetLo: number | null; budgetHi: number | null; byKind: Record<string, { searched: number; changed: number; rate: number | null }>; msMean: Record<string, number | null>; msPerDecision: number | null; evalLeaves: number; evalLeafUs: number | null } {
   const br = budgetRate(t);
   const r6 = (x: number | null): number | null => (x === null ? null : Math.round(x * 1e6) / 1e6);
   const byKind: Record<string, { searched: number; changed: number; rate: number | null }> = {};
@@ -174,5 +184,8 @@ export function tallyLine(t: SearchTally): { games: number; searched: number; ch
     if ((k === 'p' || k === 'a' || k === 'b') && us !== undefined) { usPab += us; nPab += e.searched; }
   }
   const msPerDecision = nPab > 0 ? r3(usPab / 1000 / nPab) : null;
-  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi), byKind, msMean, msPerDecision };
+  // J128: the evaluator's leaves and the mean cost of one, in microseconds (null where none was scored)
+  const evalLeaves = t.evalLeaves ?? 0;
+  const evalLeafUs = evalLeaves > 0 ? r3((t.evalNs ?? 0) / 1000 / evalLeaves) : null;
+  return { games: t.games, searched: t.searched, changed: t.changed, fallback: { ...t.fallback }, budgetRate: r6(br.rate) as number, budgetLo: r6(br.lo), budgetHi: r6(br.hi), byKind, msMean, msPerDecision, evalLeaves, evalLeafUs };
 }

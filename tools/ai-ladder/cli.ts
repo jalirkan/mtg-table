@@ -320,6 +320,8 @@ async function cmdMatch(a: Args, argv: string[]): Promise<void> {
     console.log(`${who} by kind: ${Object.entries(t.byKind).map(([k, e]) => `${k} ${e.changed}/${e.searched}`).join(', ')}`);
     // J126: the decisions' wall time (search.<kind>.us), the search's or the distilled policy's
     if (t.msPerDecision !== null) console.log(`${who} time per decision: ${t.msPerDecision} ms (p+a+b); by kind ${Object.entries(t.msMean).map(([k, v]) => `${k} ${v ?? '-'}`).join(', ')}`);
+    // J128: the learned evaluator at the leaves (leaf=eval:<model>), when this side used it
+    if (t.evalLeaves > 0) console.log(`${who} evaluator leaves: ${t.evalLeaves}, ${t.evalLeafUs} us each`);
   }
 }
 
