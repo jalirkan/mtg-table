@@ -18,6 +18,37 @@ Neither branch holds code, and neither is ever merged into `main`. The runner's 
 
 The cloud session's answers to `HEARTBEAT.md` ("NEEDS THE CLOUD SESSION" and `## Messages`). Newest first.
 
+### 2026-10-15 (EDT) — Justin: two more jobs. The PC session builds, PRs, writes, lints and queues them
+J124, J125 and J127 all came back NOT SHOWN or NOT SHIP; the cloud has read them. Justin asked for these two next. Use the same pattern as J126/J127:
+- new code goes on a `pc/` branch with its self-tests, and you open a PR;
+- the job's pilot checks `merged == 1`, so the cloud reviews and merges first, and the job is pinned to the merge commit;
+- the rule is pre-registered in the job file before any number exists;
+- `tools/runner.sh check` is clean;
+- the job is pushed to pc-jobs.
+
+1. **J128 — search-v2 with the learned evaluator as its leaf.**
+   - **Why:** J125 showed the hand leaf's weights are not where the gains are. The evaluator (D361, eval v2, the win-chance model, already in Java at ~10–25 µs a position) is a stronger judge of a position than the hand formula.
+   - **Build:** a `SearchConfig` switch (e.g. `leaf=eval`) that scores search-v2's leaf positions with the evaluator's P(win) for the searching seat. Use the same seat-redacted view, so no hidden information enters. The default stays `hand`. Add a ladder kind such as `search-v2-evalleaf`, a self-test that the switch changes only the leaf, and a check that the time per decision stays within the 1.5 s budget.
+   - **Job:** one fixed D398 match of `search-v2-evalleaf` vs `search-v1-anytime` (search-v2), 1,200 games (600 mirrored pairs), live 1.5 s budget, confirm deck set, no tuning on it.
+   - **Rule:** ADOPT if the match is complete and the 95% lower end of the score is above 0.5. Otherwise NOT SHOWN.
+   - **Report:** also report changed answers by kind, ms per decision and budget fallbacks.
+   - **Optional:** if a blended leaf (evaluator plus hand) seems worth it, pick its single mix on the dev set first, as J125 did, and confirm only that one.
+2. **J129 — A3, the leak report: Justin's recurring mistakes in his own games.**
+   - **Data:** Justin's recorded games on this PC (`var/games/`, `var/ml/human/`, his seat only; friend games only for his own seat, never the friend's).
+   - **Method:** for each of his decisions that search covers (priority, attack, block; mulligan if available), run the engine review (`coach-grade` / search-v2, pool-mode hidden information, D348) to get regret against the best option with its interval. Group them into kinds of mistakes, for example:
+     - playing a land late;
+     - not attacking when the attack was free;
+     - chump or double blocks;
+     - holding mana up versus tapping out;
+     - casting into open mana;
+     - keeping or mulliganing;
+     - sequencing two spells.
+   - **Pre-registered honesty rule** (the review's own): a decision counts as a mistake only when its interval excludes zero. A *leak* is a kind with at least 5 such mistakes across at least 3 games, and a mean regret whose 95% interval excludes zero. Everything else is listed as "not shown".
+   - **Output:** `results/J129/leaks.json` (strict, numbers-only per kind; each leak's example moments as game id + frame seq) and `summary.md` in plain words for Justin. Nothing ships automatically.
+   - **The cloud then decides** whether ForgeCoach shows it, for example as a "Your leaks" page linking each example to the replay. If he has too few recorded games for any verdict, say how many there are and what is needed.
+
+Keep C (the Sonnet pilot) parked. It costs API money.
+
 ### 2026-10-14 00:45 (EDT) — Justin: kick off the next jobs. The PC session writes, lints, queues and runs them
 Justin asked for the next set of lab jobs, started from this PC. The queue is empty (J123 was the last). Please write these as job files `jobs/J124-…`, `J125-…` and `J126-…`. Check each one with `tools/runner.sh check <abs path>`, push them to pc-jobs in this order, and let the runner take them. Pre-register every rule in the job file **before** any number is seen. Report each one in `summary.md` the same way as J115 to J123. Heavy compute stays on this PC. Pin each job to the mtg-table commit it was written against.
 
