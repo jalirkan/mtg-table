@@ -1,20 +1,20 @@
 {
  "schema": 1,
- "updated": "2026-10-16T14:47:37-04:00",
- "heartbeat": "2026-10-16T14:47:37-04:00",
+ "updated": "2026-10-16T14:48:01-04:00",
+ "heartbeat": "2026-10-16T14:48:01-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 4.36,
-  "memUsedGb": 6.8,
+  "load1": 3.19,
+  "memUsedGb": 6.9,
   "memTotalGb": 30.5,
   "swapUsedMb": 1986,
   "pressure": 0,
   "cpus": 16,
   "budgetGb": 23.4,
-  "coresUsed": 7,
+  "coresUsed": 3,
   "coresTotal": 8
  },
  "running": [
@@ -24,21 +24,21 @@
    "id": "J137",
    "title": "Synergy v2 against the designed v3, head to head under the design study's pre-registered rule: ForgeCoach's v2 (3e3b007b, sha-checked) and results/J135/synergy-cube-180.v3-designed.md (pc-results 8ac778d1, sha-checked; 8 swaps), tools/cubelab.sh compare on the SAME 1,500 seeds (837,000,001-837,001,500), grid, best of three, Default vs Default, Forge's ranks, no exploration, unrecorded; runs only when results/J135/APPROVED exists",
    "cpu": "heavy",
-   "phase": "prepare",
+   "phase": "pilot 1/2",
    "started": "2026-10-16T14:47:37-04:00",
-   "elapsed": 0,
+   "elapsed": 24,
    "done": 0,
    "total": 3000,
    "unit": "drafts",
    "ratePerHour": null,
    "eta": null,
-   "workers": 1,
-   "workersMax": 1,
-   "cores": 7,
+   "workers": 3,
+   "workersMax": 3,
+   "cores": 3,
    "errors": null,
    "paused": false,
    "dataUpdated": "2026-10-16T14:47:37-04:00",
-   "memGb": null,
+   "memGb": 0.01,
    "live": {
     "all.engine_error_rate": 0,
     "all.bridge_drafts": 0,
@@ -72,7 +72,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J137-prepare"
+   "detail": "lab-J137-pilot1"
   }
  ],
  "queue": [
