@@ -2,11 +2,11 @@
 
 Written by the lab runner (tools/runner, D337) every few minutes and on every job state change.
 
-- time: 2026-10-16T02:23:52-04:00
+- time: 2026-10-16T02:28:24-04:00
 - runner: 10896b8e, up since 2026-10-15T21:58:11-04:00
-- running: J131 commands 1/2, 760/1200 games, 327.7/h, ETA 2026-10-16T03:44:26-04:00, 5 worker(s), 7 core(s)
+- running: J131 commands 1/2, 800/1200 games, 374/h, ETA 2026-10-16T03:32:35-04:00, 5 worker(s), 7 core(s)
 - cores: 7 of 8 in use (the running jobs' widths; 16 threads)
-- load: 8.69; memory 9.4/30.5 GB, swap 1612 MB, pressure 0% (lab budget 23.4 GB)
+- load: 6.95; memory 10.1/30.5 GB, swap 1612 MB, pressure 0% (lab budget 23.4 GB)
 - queue: J132
 - waiting: nothing
 - last finished: J135 done at 2026-10-16T01:56:50-04:00: bm.swaps 0 · bm.swaps_dead 0 · bm.swaps_dominant_win 0 · bm.swaps_dominant_pick 0 · bm.pair_spread_before 0.358 · bm.pair_spread_after 0.425 · bm.pair_spread_change_lo -0.058 · bm.pair_spread_change_hi 0.206 · bm.arch_true_sd_before 0.121 · bm.arch_true_sd_after 0.161 · bm.card_true_sd_before 0.064 · bm.card_true_sd_after 0.083 · big.engine_error_rate 0.002
