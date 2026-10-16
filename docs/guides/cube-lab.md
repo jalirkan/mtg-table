@@ -133,6 +133,64 @@ the pool plus the cards before it: invariant to the logit's additive constant
 Grid only; one cube; no `--synergy`, `--bridge` or `--explore`. The drafter, its
 seat and the file's sha256 are part of the folder's identity and version.
 
+### The drafters, and how to name each (D439)
+
+A plain run drafts both seats with the **lab drafter** above. `--drafter <spec>` gives one seat
+(`--drafter-seat A|B`, default A) another drafter; the other seat stays the lab drafter, and both
+seats build with the lab builder and the cube's ratings, so two mirrored folders on the same seeds
+(the drafter at A in one, at B in the other) compare **picking** alone. Every drafter but the lab's is
+grid only, on one cube, with no `--synergy`, `--bridge`, head-to-head or `--explore`; the spec, its
+seat and what pins it (a file's sha256, a model's name) are part of the folder's identity and lab
+version, so a folder never mixes drafters.
+
+| drafter | on the command line | what picks | cost |
+|---|---|---|---|
+| the lab drafter | (no `--drafter`) | rating + theme synergy + colour lean, committing after a third of its picks (D294, above) | free |
+| Forge's ranks | `--drafter forge-ranks` | Forge's own pick function in the lab's terms: each card at Forge's raw draft score (as `ratings init` seeds it, whatever the ratings file says), no synergy, no lean, committing after its first line (`synergy 0, lean 0, commitAt 0.04`, D439). An approximation of what D294 rejected, not Forge's code: Forge has no grid draft | free |
+| the human-pick model | `--drafter human-picks:<ForgeCoach>/public/cubes/<cube>.picks.json` | ForgeCoach's 17Lands pick model (D416, above). It lost to the lab drafter on Vintage (J114) | free |
+| an LLM | `--drafter llm:<haiku\|sonnet\|opus>[:thinking=off\|low\|default]` | Claude, asked once a decision through the logged-in Claude Code CLI (below) | **API money** |
+| a fake LLM | `--drafter llm:fake` | the first line the prompt lists: no network, no spend; for tests, pilots and dry runs | free |
+
+"Search AI" is not a drafter: search-v2 is a way of *playing* games (`--profiles …+search`, D347),
+and it can pilot the decks any of these drafters build.
+
+**The LLM drafter (D439, `tools/cubelab/llmdraft.ts`).** One fresh call per decision, 18 a draft,
+with the LLM seat's CLI wrapper (`tools/llm-seat/lib/model.mjs`: every tool off, one turn, thinking
+through coach-helper's two variables; `thinking` defaults to `low`, as the seat's). The system prompt
+is the grid's rules and the reply format; the user prompt is the cube's name, a summary of its own
+document (its "What it is", "The themes and how they connect" or "Design principles" section, else
+its opening line and "Source and credit"; at most 600 characters), the grid with every card's name,
+cost, type, P/T and oracle text (cut at 200 characters), the lines it may take, and its own pool so
+far grouped by colour with mana value and type. `--llm-sees-opponent` adds the opponent's pool (grid
+picks are public, so it hides nothing either way; the default keeps the prompt small). Nothing in a
+grid draft is hidden: all nine cards are face up for both drafters.
+
+- **The reply** is `{"take": "row"|"col", "index": 0..2, "reason": "…"}`, parsed strictly: the object
+  alone (or in one ```` ```json ```` fence), no other key, an integer index, a line the rules allow. A
+  reply that fails, or a call that fails, is sent back once with the fault named; a second failure
+  takes the **lab drafter's line** for that decision and counts a **fallback**.
+- **Cost accounting.** Each draft's line in `drafts.jsonl` carries `llm`: calls, retries, fallbacks,
+  failed calls, input tokens (plain, cache read, cache write), output tokens, the CLI's own cost
+  figure, the milliseconds inside the model and the draft's wall time, and every decision's line,
+  reason and faults. The run prints the totals.
+- **Determinism and resume.** The CLI exposes no temperature, so the answers are not a function of
+  the seed; the deal, who opens, the other seat and every fallback are. Each finished draft's
+  decisions go to `<out>/llm/<seed>.json` at once, and a resumed run replays that file instead of
+  asking again: a stopped run never pays twice, and a folder's drafts can be rebuilt from it.
+- **`--llm-jobs N`** (default 2) drafts N seeds at once; the model is the wait, not the CPU.
+
+**What it costs (measured, 2026-10-15).** The one real smoke, Vintage, seed 899,000,001, seat A
+`llm:haiku` (thinking low), `--games 0`: 18 decisions, 18 calls, 0 retries, 0 fallbacks; 57,971
+input tokens a draft (36 plain, 57,935 written to the cache, none read: every call is fresh and the
+Claude Code CLI writes its prompt to the one-hour cache), 6,610 output tokens; 114.6 s wall, 6.4 s a
+call; the CLI's cost figure $0.0149. At the same token counts, Sonnet 5.5's list price (claude-api
+skill, prices cached 2026-10-06: $2 input, $10 output per million tokens, a one-hour cache write 2×
+input) is about **$0.30 a draft** — 57,935 × $4 + 6,610 × $10 per million — and more if Sonnet
+writes longer replies or thinks longer than Haiku did (+$0.07 a draft per doubling of the output).
+On a Claude subscription login the CLI draws on the plan instead; the figure is what the API would
+charge. **Running it at scale is Justin's call**: building the option was approved, spending on it
+was not.
+
 ## How the decks are built (D294)
 
 Every two-colour pair, with no splash and with each splash colour the pool can
@@ -334,7 +392,11 @@ lowers it): a mix with search plays slower games.
 | `--synergy <tsv>` | | learned pair synergy for both drafters (`learn` writes it; D301) |
 | `--deck-synergy on\|off` | `off` | ...and for both deckbuilders (needs `--synergy`) |
 | `--drafter human-picks:<x.picks.json>` | off | one seat drafts with ForgeCoach's human pick model instead (grid only; *The human-pick drafter* above, D416) |
+| `--drafter forge-ranks` | off | one seat drafts on Forge's ranks (grid only; *The drafters* above, D439) |
+| `--drafter llm:<model>[:thinking=off\|low\|default]` | off | one seat asks Claude (`haiku`, `sonnet`, `opus`; `fake` spends nothing), once a decision (grid only; D439). **Costs API money** |
 | `--drafter-seat A\|B` | `A` | which seat that is (a mirrored test runs both) |
+| `--llm-sees-opponent` | off | the LLM's prompt also lists the opponent's pool (part of the folder's identity) |
+| `--llm-jobs N` | 2 | LLM drafts asked at once |
 | `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
 | `--bridge-ratio 0.5,0.5` | equal | each cube's share of a bridge pool |
 | `--bridge-size N` | 180 | a bridge pool's size (at least 162, a grid's deal) |
@@ -392,7 +454,8 @@ tools/cubelab.sh run cubes/synergy-cube-180.md --drafts 100 --jobs 4 --out var/c
 rating), `decks/<seed>-A.dck` and `-B.dck` (the lab's) and `-A-forge.dck` /
 `-B-forge.dck` (Forge's builder's), `logs/worker-<k>.log` (the engine's own
 output), `frames/` and `recordings.json` under `--record`, `games/` and
-`cube.md` under `--record-all` / `--record-every` (above), and
+`cube.md` under `--record-all` / `--record-every` (above), `llm/<seed>.json` under an LLM
+drafter (each draft's decisions, replayed on resume; D439), and
 **`drafts.jsonl`**, one line per draft:
 
 ```jsonc
@@ -414,6 +477,13 @@ output), `frames/` and `recordings.json` under `--record`, `games/` and
              "winsA": 1, "winsB": 0, "winner": "A", "worker": 0 },
   "ms": { "draft": 15, "build": 20, "match": 24970 } }
 ```
+
+Under an LLM drafter (D439) a line also carries `"llm": { "seat": "A", "model": "haiku", "thinking":
+"low", "resolved": "claude-haiku-…", "decisions": 18, "calls": 18, "retries": 0, "fallbacks": 0,
+"callErrors": 0, "tokensIn": 36, "cacheRead": 0, "cacheCreate": 57935, "tokensOut": 6610,
+"costUsd": 0.0149, "modelMs": 114437, "wallMs": 114559, "replayed": false, "picks": [ { "at": 1,
+"line": "col 2", "by": "model", "reason": "…", "promptChars": 2610 }, … ] }` — `line` in the lab's
+own 1-based names, as `picks[].how`; `by` is `model`, `retry` or `fallback`.
 
 `report <out>` reads the folder and writes `report.html` (one self-contained
 page: no script, font or style from anywhere), `report.md` (the headline
