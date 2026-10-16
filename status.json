@@ -1,13 +1,13 @@
 {
  "schema": 1,
- "updated": "2026-10-16T16:41:23-04:00",
- "heartbeat": "2026-10-16T16:41:23-04:00",
+ "updated": "2026-10-16T16:41:37-04:00",
+ "heartbeat": "2026-10-16T16:41:37-04:00",
  "paused": false,
  "state": "running",
  "idleSince": null,
  "idleReason": null,
  "host": {
-  "load1": 3.5,
+  "load1": 3.02,
   "memUsedGb": 7.7,
   "memTotalGb": 30.5,
   "swapUsedMb": 1994,
@@ -24,9 +24,9 @@
    "id": "J139",
    "title": "Evaluator-leaf confirmation: one 4,800-game match (2,400 mirrored pairs, fresh deals) at the live 1.5 s budget, search-v2-evalleaf (D437) vs search-v2 (search-v1-anytime) on the confirm deck set, read alone on a 95% interval; Justin asked for it after J131's +8.7 Elo [-4.7, +22.1]",
    "cpu": "heavy",
-   "phase": "pilot 3/4",
+   "phase": "pilot 4/4",
    "started": "2026-10-16T16:40:10-04:00",
-   "elapsed": 73,
+   "elapsed": 87,
    "done": 1816,
    "total": 4800,
    "unit": "games",
@@ -73,7 +73,7 @@
    "cubes": [],
    "publicCubes": false,
    "pressureEvents": [],
-   "detail": "lab-J139-pilot3"
+   "detail": "lab-J139-pilot4"
   }
  ],
  "queue": [
