@@ -892,7 +892,12 @@ tools/cubelab.sh library-candidates --fc ~/code/ForgeCoach [--out cubes/library]
   best pooled shrunk win rate first (to four decimals, then games). A card with no lab data, or fewer
   games, has no slot; the header says how many that excludes.
 - **`random-180.md`**, the control: every drawable card, keyed by a seeded uniform draw (`--seed`, 180,
-  `rng.ts`), under the same skeleton — a legal, colour-balanced cube that nobody selected.
+  `rng.ts`), under the same skeleton — a legal, colour-balanced cube that nobody selected. Its draw
+  holds **3 cards Forge marks `AI:RemoveDeck:All`** (Adanto Vanguard, Flash, Memory Jar; its own header
+  names them), kept on purpose: the control draws every supported card alike, and leaving the flagged
+  ones out would make it a selected cube. The hits hold none and Omega none by design, and the lab's
+  default weights do not mark the flag down (`remAIDeck: 0`), so Forge's AI may play those three
+  poorly in random-180's games: a difference against the control includes those 3 slots of 180.
 - **`synergy-v2-180.md`**: ForgeCoach's current Synergy Cube, copied with one provenance line under its
   title, for reference. J136 does not read it: its Synergy population is ForgeCoach's v2 only, copied from
   its pinned clone and checked by sha256. Synergy v2 against a v3 is a separate job, J137.

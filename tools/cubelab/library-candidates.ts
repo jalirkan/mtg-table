@@ -22,7 +22,9 @@
 //                            win rate under Omega's skeleton (below); no lab data, no slot.
 //   <out>/random-180.md      the control: the same skeleton from every supported card, each card's
 //                            key a seeded uniform draw (--seed, 180), so a legal, colour-balanced cube
-//                            that nobody selected.
+//                            that nobody selected.  Cards Forge marks AI:RemoveDeck:All are drawn like
+//                            any other (3 at --seed 180; the document lists them): leaving them out
+//                            would make the control a selected cube.
 //   <out>/synergy-v2-180.md  ForgeCoach's current Synergy Cube (version 2), copied with a provenance
 //                            line under its title and nothing else changed.
 //
