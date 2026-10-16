@@ -93,3 +93,11 @@ run, replaces it with `run.json`'s `missing` (the engine's own lookup) for every
 `var/cards/cards.sqlite`, which is Scryfall's and knows the cards Forge 2.0.14 lacks (Reality
 Fracture's among them); Forge's edition files, which list printings, not scripts.
 
+*Smoke, 2026-10-16 (load average about 20, the lab's J134 beside it):* one watch through
+`createWatchRunner` and the real `tools/cubelab.sh watch` — Fair Fight posted as `my-smoke-unknown`
+with two planted names, seed 445, best of 1, pace 0, game 1 polled every 250 ms from the start.
+`202` in 376 ms (the name index built inside it), `unknownCards` the two planted names from the
+first `match.json` and still the two once the engine's `run.json` replaced it; 77 polls, no `500`
+(the #148 fix: `hello_ok` at 11.7 s, nothing served until the first state, the first 12,061 bytes at
+17.0 s), the whole 2,186,747-byte log served, A won in 16 turns, `redaction: "pass"`.
+
