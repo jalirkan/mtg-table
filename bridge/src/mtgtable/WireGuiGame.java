@@ -136,16 +136,16 @@
  *                 onAct on IO; applyAct and every act on the EDT; refreshSnapshot on
  *                 a second Game-n worker | LOG, for the act's c2s line | D17, D39,
  *                 D41, D42, D114, amendment M8
- * 8b   4896-5150  the acts that write the engine from the EDT, then answers, resync
- *                 and disconnect: notNow (4916), engineFacts (4961), GuardFeeds
- *                 (4970), pressOk (5013), onAnswer (5033), onResync (5068),
- *                 onDisconnect (5123), close (5142)
+ * 8b   4896-5219  the acts that write the engine from the EDT, then answers, resync
+ *                 and disconnect: notNow (4916), engineFacts (4961), GuardFeeds (4970),
+ *                 pressOk (5013), onAnswer (5033), onResync (5068), onDisconnect (5123),
+ *                 close (5142); D448's abandonForAbsentSeat (5181), newGameAfterAbandon (5209)
  *                 notNow and pressOk on the EDT; onAnswer, onResync and onDisconnect
- *                 on IO | none of its own: volatile reads and atomics (a frame written
- *                 here takes LOG in emit or logC2s) | D136, amendment M48; D27,
- *                 amendment M42; D24
- * 9    5151-5207  answer coercion: asInt (5163), asBool (5167), asIntArray (5171),
- *                 asIntMap (5175), indexOfIdentity (5180), actBody (5185); the
+ *                 on IO; D448's pair on MAIN, posting to the EDT | none of its own:
+ *                 volatile reads and atomics (a frame written here takes LOG in emit or
+ *                 logC2s) | D136, amendment M48; D27, amendment M42; D24; D448, M70
+ * 9    5220-5276  answer coercion: asInt (5232), asBool (5236), asIntArray (5240),
+ *                 asIntMap (5244), indexOfIdentity (5249), actBody (5254); the
  *                 rest of it lives in Ask.java
  *                 any thread (pure functions) | none | protocol section 5.3
  */
@@ -2317,7 +2317,7 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
                     + "published an outcome (protocol amendment M11)");
         }
         String body = overBody;
-        if (body == null) {
+        if (body == null || gameId.equals(abandonedGameId)) {    // D448: an abandoned game has no result
             // The engine never published a win condition we could read on the
             // game thread.  Protocol section 7 declares `reason` nullable for
             // exactly this window; "" would misreport it as a known empty one.
@@ -5146,6 +5146,75 @@ public final class WireGuiGame extends AbstractGuiGame implements Transport.Inbo
         } catch (final java.io.IOException e) {
             System.err.println("LOG CLOSE FAILED: " + e);
         }
+    }
+
+    // ---- D448: a stalled game on a multi-game server ------------------------
+
+    /**
+     * D448: the id of the game the server abandoned, or null.  Set on the EDT by
+     * {@link #abandonForAbsentSeat}; read by {@link #emitOver}, which then sends
+     * the no-result body (amendment M70).  An id, not a flag, so the reset hook
+     * between games has nothing to clear: game n+1 has an id of its own.
+     */
+    private volatile String abandonedGameId;
+
+    /**
+     * <b>D448.</b>  MAIN thread, from {@code MtgTable}'s game loop: nobody has held
+     * this seat for {@code --idle-timeout} seconds on a {@code --games N} server, so
+     * the game is ended with no result instead of failing the run.  Nothing new
+     * reaches the engine: on the EDT -- where every act runs -- this is a warn
+     * {@code notice} in our own words and then {@link #concede}, the {@code act:
+     * concede} path exactly as a client's (and {@link #concedeForAbsentSeat}'s,
+     * D403): applied whole when {@link ActGuard} says the engine is quiet on this
+     * seat, else the outcome now and {@code Game-0}'s own state-based check for
+     * the rest (D136).  Forge's outcome event then reaches {@link #captureOutcome}
+     * and its existing hop (D39) as after any concede, so there is no fourth hop
+     * (hard rule 3).  The concession is only the engine's way out: the
+     * {@code over} carries M11's null body, because an absent player did not
+     * lose a game.
+     *
+     * @param text the notice's text, the bridge's own words (no engine string)
+     * @return false when there is nothing to concede into yet -- the engine has
+     *         not asked this seat anything ({@code inputSeen}), or the game is
+     *         already over; the caller then fails the run as before
+     */
+    boolean abandonForAbsentSeat(final String text) {
+        if (!ready || !inputSeen || overEmitted || closed) {
+            return false;
+        }
+        FThreads.invokeInEdtNowOrLater(() -> {
+            if (overEmitted || closed) {
+                return;
+            }
+            final IGameController c = controller();
+            if (c == null) {
+                System.err.println("ABANDON: the seat has no controller, so the game cannot be conceded (D448)");
+                return;
+            }
+            abandonedGameId = gameId;
+            notice("warn", "Game abandoned", text);
+            System.err.println("ABANDON " + gameId + ": conceding on the absent seat's behalf; the `over` "
+                    + "is the no-result body (D448, amendment M70)");
+            concede(c);
+        });
+        return true;
+    }
+
+    /**
+     * <b>D448.</b>  MAIN thread, once the abandoned game's {@code over} is out:
+     * {@code act: newGame {mode:"restart"}} on the EDT, as if a client had sent
+     * it -- a fresh match, so the concession counts in no score.  {@link #newGame}
+     * queues it behind Forge's own wind-down when it must (D114).
+     */
+    void newGameAfterAbandon() {
+        FThreads.invokeInEdtNowOrLater(() -> {
+            final IGameController c = controller();
+            if (c == null) {
+                System.err.println("ABANDON: no controller to start the next game with (D448)");
+                return;
+            }
+            newGame(c, "restart");
+        });
     }
 
     // ==================================================================

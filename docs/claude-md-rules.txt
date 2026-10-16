@@ -64,6 +64,7 @@
 **From D379 on, each decision is a file of its own** (**D379**):
 **The socket's own two rules.** The ask timeout over ws is **0 — infinite —
 **A human seat has no wall clock** (**D286**). `--transport ws` and `console` put no
+**On a `--games N` server the stalled game is abandoned, not fatal** (**D448**,
 **`/observe` is a read-only copy of the seat, and never the seat** (D280–D282,
 **A LAN server is the token's, and loopback is never asked for it** (D287–D289,
 **A table of two is two seats, never one seat with two viewers** (D402, D403,
@@ -373,6 +374,7 @@ span: no deadline while a client is connected
 span: one client at a time
 span: The `input` half is conditional as of amendment M42
 span: A human seat has no wall clock
+span: On a `--games N` server the stalled game is abandoned, not fatal
 span: `/observe` is a read-only copy of the seat, and never the seat
 span: Nothing an observer does may reach the seat
 span: Both paths check `Origin`
