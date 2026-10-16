@@ -5,6 +5,11 @@
 //   check   <cube.md>                       every card against the engine's database
 //   library-candidates --fc <ForgeCoach> [--out cubes/library] [--seed 180] [--min-games 80]   the library pool and its candidate 180s (library-candidates.ts)
 //   census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   the census's population (census.ts, D445)
+//   decks   --band <pauper|peasant|legacy|powered> --count N --seed S --out <dir> [--cross-band 0.10] [--scripts <zip>]
+//           40-card decks at random colour makeups straight from a band's pool, no drafter (deckcensus.ts, D447)
+//   census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search] [--policy-b plain|search]
+//           [--replay <games.jsonl>] [--game-timeout 300]   random pairings, Bo1, numbers only; resumable (censusplay.ts, D447)
+//   census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--mixed-pilots]   win rate across the spectrum, per card (censusread.ts, D447)
 //   sample  --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff> --seed S --count N --out <dir>
 //           [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   stratified cube documents from the census (sample.ts, D445)
 //   ratings init <cube.md> [--out <tsv>] [--force]
@@ -125,6 +130,11 @@ function usage(msg?: string): never {
        tools/cubelab.sh census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   (D445, no engine)
        tools/cubelab.sh sample --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff>
                         --seed S --count N --out <dir> [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   (D445, no engine)
+       tools/cubelab.sh decks --band <pauper|peasant|legacy|powered> --count N --seed S --out <dir> [--cross-band 0.10]
+                        [--census <tsv>] [--pool <tsv>] [--scripts <cardsfolder.zip>]   (D447, no engine)
+       tools/cubelab.sh census-play --decks <dir> --pairs M --seed S --jobs K --out <dir> [--policy-a plain|search]
+                        [--policy-b plain|search] [--replay <games.jsonl>] [--game-timeout 300]   (D447)
+       tools/cubelab.sh census-read --games <dir>... --decks <dir>... --out <dir> [--boot 1000] [--boot-seed 1] [--mixed-pilots]   (D447, no engine)
        tools/cubelab.sh compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]...
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
                         [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
@@ -142,7 +152,7 @@ function flags(argv: string[]): { pos: string[]; f: Map<string, string[]> } {
     const a = argv[i] as string;
     if (a === '--force') { f.set('force', ['1']); continue; }
     if (a === '--record-all') { f.set('record-all', ['1']); continue; }
-    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged') { f.set(a.slice(2), ['1']); continue; }
+    if (a === '--deckset' || a === '--allow-version-change' || a === '--llm-sees-opponent' || a === '--no-run' || a === '--check' || a === '--allow-ai-flagged' || a === '--mixed-pilots') { f.set(a.slice(2), ['1']); continue; }
     if (a.startsWith('--')) {
       const v = argv[++i];
       if (v === undefined) usage(`${a} needs a value`);
@@ -392,6 +402,9 @@ async function main(): Promise<number> {
     case 'library-candidates': return (await import('./library-candidates.ts')).libraryCandidates(REPO, f, say);   // the library pool and its candidate 180s (J136)
     case 'census': return (await import('./census.ts')).censusCommand(REPO, pos, f, say);   // the library census's population (D445)
     case 'sample': return (await import('./sample.ts')).sampleCommand(REPO, f, say);   // the census's stratified cubes (D445)
+    case 'decks': return (await import('./deckcensus.ts')).decksCommand(REPO, f, say);   // the deck census's decks (D447)
+    case 'census-play': return (await import('./censusplay.ts')).censusPlayCommand(REPO, f, say);   // the deck census's games (D447)
+    case 'census-read': return (await import('./censusread.ts')).censusReadCommand(REPO, f, say);   // the deck census's spectrum and cards (D447)
     case 'ratings':
       if (pos[0] === 'apply' && pos[1]) return ratingsApply(REPO, pos[1], f, say);
       if (pos[0] !== 'init' || !pos[1]) usage('ratings init <cube.md> | ratings apply <cube.md> --from ... --rule explore-eb --out <tsv>');
