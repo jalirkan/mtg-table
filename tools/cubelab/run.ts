@@ -96,7 +96,7 @@ export interface RunOptions {
    * the other with the current drafter; grid, one cube, no learned files.  Absent = the run is the old one.
    */
   drafter?: RunDrafterOption;
-  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2, at most 4: MAX_LLM_JOBS); not part of the identity. */
+  /** D439: how many LLM drafts ask the model at once (`--llm-jobs`, default 2, at most 4); not part of the identity. */
   llmJobs?: number;
   /**
    * The LLM drafter's spend cap and fallback stop (the #144 review; llmdraft.ts `LlmBudget`), one for the
@@ -235,7 +235,7 @@ export function identityDiff(old: Partial<RunMeta>, cur: Partial<RunMeta>): stri
  * games when it is on (D356 exploration, D358 play exploration, D394 the profile mix).  With all of them
  * off it is the plain weights, so the version id of an ordinary run is what it always was.
  */
-export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number } | null }): unknown {
+export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null; playExplore?: PlayExploreOptions | null; profileMix?: string | null; drafter?: DrafterVersionInput | null }): unknown {
   if (!x.explore && !x.playExplore && !x.profileMix && !x.drafter) return w;
   return {
     ...w, ...(x.explore ? { explore: x.explore } : {}), ...(x.playExplore ? { playExplore: x.playExplore } : {}), ...(x.profileMix ? { profileMix: x.profileMix } : {}),
@@ -243,12 +243,21 @@ export function versionWeights(w: Weights, x: { explore?: ExploreOptions | null;
   };
 }
 
+/** What of a run's drafter enters its version: run.json's `drafter`, or the fields of it the version reads. */
+export interface DrafterVersionInput { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number; weights?: Record<string, number> }
+
 /** A drafter's part of the lab version: D416's object exactly as it was (so its ids do not move), D439's by kind. */
-function drafterVersion(d: { kind?: string; seat: string; sha?: string; model?: string; thinking?: string; seesOpponent?: boolean; promptVersion?: number }): unknown {
+function drafterVersion(d: DrafterVersionInput): unknown {
   if (!d.kind || d.kind === 'human-picks') return { kind: 'human-picks', seat: d.seat, sha: d.sha };
   if (d.kind === 'llm') return { kind: 'llm', seat: d.seat, model: d.model, thinking: d.thinking, seesOpponent: !!d.seesOpponent, promptVersion: d.promptVersion };
+  // forge-ranks drafts with FORGE_RANKS_WEIGHTS, so a change to them is a change of version (the #144
+  // review).  At D439's own values the object is D439's {kind, seat}, so no existing folder's id moves.
+  if (d.kind === 'forge-ranks' && d.weights && JSON.stringify(d.weights) !== JSON.stringify(FORGE_RANKS_WEIGHTS_D439)) return { kind: d.kind, seat: d.seat, weights: d.weights };
   return { kind: d.kind, seat: d.seat };
 }
+
+/** The forge-ranks weights D439 shipped: version ids written with them stay as they were. */
+const FORGE_RANKS_WEIGHTS_D439 = { synergy: 0, lean: 0, commitAt: 0.04 };
 
 export async function runLab(env: EngineEnv, o: RunOptions, say: (s: string) => void): Promise<RunCheck> {
   const t0 = Date.now();

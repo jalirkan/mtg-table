@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import type { Fact, LabCard } from '../../tools/cubelab/cards.ts';
 import { parseCube } from '../../tools/cubelab/cube.ts';
 import { aiChooser, gridDraft, newDrafter, type GridAsk } from '../../tools/cubelab/draft.ts';
-import { forgeRanked, parseDrafter, runForgeRanksDraft } from '../../tools/cubelab/drafters.ts';
+import { FORGE_RANKS_WEIGHTS, forgeRanked, parseDrafter, runForgeRanksDraft } from '../../tools/cubelab/drafters.ts';
 import type { LoadedCube } from '../../tools/cubelab/lab.ts';
 import {
   buildPrompt, cardTexts, costText, fakeDraftModel, FALLBACK_FLOOR, legalLines, LLM_SYSTEM, LlmBudget, llmCapsOf, LlmStop, oracleText, parseLlmSpec, parseReply,
@@ -441,6 +441,10 @@ test('run plumbing: each drafter is part of the folder identity and the version;
   assert.notDeepEqual(versionWeights(W, { drafter: llm }), versionWeights(W, { drafter: { ...llm, model: 'haiku' } }));
   assert.notDeepEqual(versionWeights(W, { drafter: llm }), versionWeights(W, { drafter: { ...llm, seesOpponent: true } }));
   assert.deepEqual(versionWeights(W, { drafter: { kind: 'forge-ranks', seat: 'B' } }), { ...W, drafter: { kind: 'forge-ranks', seat: 'B' } });
+  // FORGE_RANKS_WEIGHTS are in the version: at D439's values the id is D439's, any change moves it
+  assert.deepEqual(versionWeights(W, { drafter: { kind: 'forge-ranks', seat: 'B', weights: { ...FORGE_RANKS_WEIGHTS } } }), { ...W, drafter: { kind: 'forge-ranks', seat: 'B' } });
+  assert.deepEqual(versionWeights(W, { drafter: { kind: 'forge-ranks', seat: 'B', weights: { ...FORGE_RANKS_WEIGHTS, commitAt: 0.1 } } }),
+    { ...W, drafter: { kind: 'forge-ranks', seat: 'B', weights: { synergy: 0, lean: 0, commitAt: 0.1 } } });
   assert.equal(versionWeights(W, {}), W);
 });
 
