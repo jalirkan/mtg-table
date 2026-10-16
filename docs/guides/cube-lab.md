@@ -779,6 +779,49 @@ which `run`, the queue and bridge drafts would pick up on their own: pass it wit
 --raised docs/evidence/omega-ratings-raise.json`, PC job J064, D360's pre-registered
 reading) says to promote it.
 
+### The whole library as a pool, and candidate 180s from it (`library-candidates`)
+
+"The best 180 out of the whole library" (Justin, 2026-10-15) is a comparison, not one cube: seed several
+candidate 180s by different ideas, play each on the same seeds, evolve each a couple of generations from
+the whole library, and compare them on `compare`'s pre-registered measures (lab job J136). The candidates
+and the pool are committed under `cubes/library/`:
+
+```bash
+tools/cubelab.sh library-candidates --fc ~/code/ForgeCoach [--out cubes/library] [--seed 180] [--min-games 80]
+```
+
+- **`library-pool.tsv`**, the library: every card of ForgeCoach's nine cube documents
+  (`public/cubes/*.md`) and its two proxy lists (`docs/proxies/mtgo-vintage-cube-540.txt`,
+  `old-school-93-94-360.txt`), one row a card by Forge's name, in `omega-seed-pool.tsv`'s columns, so
+  `evolve --pool` reads it as it is. Support and the AI flag are the engine's facts (a card Forge 2.0.14
+  lacks is listed with `forge_supported` `no` and is never drawn or added); the tags are
+  `omega-seed-pool.tsv`'s, else the Synergy Cube's, else none. Five more columns: `colors` (printed),
+  `produces` (what a land makes or fetches), and `lab_games`, `lab_wr_shrunk`, `lab_cubes` — every meta
+  in ForgeCoach's `public/cubes` that played the card, its games summed and its `winRateShrunk` averaged
+  with those games as weights. The file's `#` header says which ForgeCoach commit it was made from.
+- **`hits-180.md`**, the greatest hits by lab rating: the cards with 80 or more lab games (`--min-games`),
+  best pooled shrunk win rate first (to four decimals, then games). A card with no lab data, or fewer
+  games, has no slot; the header says how many that excludes.
+- **`random-180.md`**, the control: every drawable card, keyed by a seeded uniform draw (`--seed`, 180,
+  `rng.ts`), under the same skeleton — a legal, colour-balanced cube that nobody selected.
+- **`synergy-v2-180.md`**: ForgeCoach's current Synergy Cube, copied with one provenance line under its
+  title. J136 takes `synergy-v3-180.md` instead when that file exists at the commit it runs on.
+- Omega is used as it is, `cubes/omega-cube-180.md`.
+
+**Omega's skeleton**, for the two that are drawn: 24 mono-coloured nonland cards a colour, 2 gold cards a
+pair and none of three colours or more, 18 colourless nonland cards, 22 lands (2 a pair that make exactly
+that pair, 2 others), and Omega's nonland curve (3 / 24 / 32 / 34 / 30 / 17 / 11 / 7 at mana value 0–6
+and 7+), every count exact; colours are printed colours, as evolve's colour constraint counts them. The
+lands are each pair's best two fixing lands and the best two others; the nonland cards are the single
+selection with the largest total key that fills every colour quota and every curve count (a min-cost
+flow). Deterministic: the same ForgeCoach commit and engine give the same files.
+`web/test/cubelab-library.test.ts` holds the committed files to it: 180 cards, no duplicates, only
+supported cards, every document written back unchanged, the skeleton exact, and the hits and the random
+cube exactly what the rule gives on the committed pool.
+
+Every candidate drafts on Forge's ranks (none has a ratings file beside it, and neither does Omega), so
+the comparison is of the lists, not of anyone's ratings.
+
 ## Learning the drafters' values from the games (D301–D302)
 
 The ratings start as Forge's draft ranks and the synergy term is a hand

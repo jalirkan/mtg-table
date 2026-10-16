@@ -1,0 +1,1602 @@
+# mtg-table cubes/library/library-pool.tsv: the whole library as an evolve seed pool. Written 2026-10-16 by tools/cubelab.sh library-candidates
+# (tools/cubelab/library-candidates.ts) from ForgeCoach@bf39a9f0; do not edit by hand, run it again.
+# Sources (the union, one row a card by Forge's name): omega = public/cubes/omega-cube-180.md (180, sha256 f6432a75975e); synergy = public/cubes/synergy-cube-180.md (180, sha256 8cb5e5f0827a); vintage180 = public/cubes/vintage-cube-180.md (180, sha256 3439d8ec74fd); modern = public/cubes/modern-era-cube-180.md (180, sha256 b68183979ecf); fairfight = public/cubes/fair-fight-cube-180.md (180, sha256 7db6ad35f7ef); pauper = public/cubes/pauper-cube-180.md (180, sha256 3d060689acac); peasant = public/cubes/peasant-cube-180.md (180, sha256 c1ed05254148); evybaby = public/cubes/evybaby-cube-360.md (360, sha256 94ff9cd8853c); twobert = public/cubes/twobert-cube-180.md (180, sha256 54d9c89eb9d2); mtgovc = docs/proxies/mtgo-vintage-cube-540.txt (540, sha256 27167e23114b); oldschool = docs/proxies/old-school-93-94-360.txt (360, sha256 af815a5f0ef2).
+# 1592 cards: 1568 in Forge 2.0.14 and supported, 24 not (forge_supported = no: never drawn, never added by evolve).
+# colour_identity, type, mana_value, forge_supported, forge_ai_flag (All = AI:RemoveDeck:All, Random = AI:RemoveDeck:Random), colors (printed)
+# and produces (what a land makes or fetches, as the lab's producesOf reads it) are the engine's facts (CubeLab.java facts).
+# theme_tags: omega-seed-pool.tsv's where it lists the card, else the Synergy Cube v2's tags, else empty.
+# lab_games, lab_wr_shrunk, lab_cubes: the cube lab's metas in ForgeCoach's public/cubes (evybaby-cube-360, fair-fight-cube-180, modern-era-cube-180, omega-cube-180, pauper-cube-180, peasant-cube-180, synergy-cube-180, vintage-cube-180):
+# games summed over every meta that played the card, winRateShrunk averaged with those games as weights.
+name	colour_identity	type	mana_value	theme_tags	sources	forge_supported	forge_ai_flag	colors	produces	lab_games	lab_wr_shrunk	lab_cubes
+Aang's Iceberg	W	Enchantment	3	ART	mtgovc	yes	none	W		0		
+Aang, Swift Savior	WU	Creature	3	ETB CTR EVA	evybaby mtgovc	yes	none	WU		507	0.5654	evybaby-cube-360
+Abandoned Air Temple	W	Land	0	LND AGG	mtgovc	yes	none		W	0		
+Abhorrent Oculus	U	Creature	3	GY EVA	mtgovc	yes	none	U		0		
+Abrade	R	Instant	2	removal ART	peasant evybaby mtgovc	yes	none	R		3242	0.4739	evybaby-cube-360 peasant-cube-180
+Abrupt Decay	BG	Instant	2	removal	modern	yes	none	BG		19	0.5384	modern-era-cube-180
+Absorbing Man	UG	Creature	3		mtgovc	yes	none	UG		0		
+Abu Ja'far	W	Creature	1		oldschool	yes	none	W		0		
+Acid Rain	U	Sorcery	4		oldschool	yes	Random	U		0		
+Acidic Slime	G	Creature	5	ETB removal	omega	yes	none	G		54	0.4865	omega-cube-180
+Active Volcano	R	Instant	1		oldschool	yes	Random	R		0		
+Adanto Vanguard	W	Creature	2	LIFE AGG	modern	yes	All	W		94	0.4123	modern-era-cube-180
+Adeline, Resplendent Cathar	W	Creature	3	AGG TOK	omega synergy vintage180 twobert mtgovc	yes	none	W		9965	0.5822	omega-cube-180 synergy-cube-180 vintage-cube-180
+Adun Oakenshield	BRG	Creature	3		oldschool	yes	none	BRG		0		
+Aeolipile		Artifact	2		oldschool	yes	none			0		
+Aerie Auxiliary	W	Creature	4		peasant	yes	none	W		746	0.6057	peasant-cube-180
+Aether Spellbomb	U	Artifact	1	ART	mtgovc	yes	Random			0		
+Agate Instigator	R	Creature	2		twobert	yes	none	R		0		
+Agatha's Soul Cauldron		Artifact	2	CTR GY ART	mtgovc	yes	none			0		
+Air Elemental	U	Creature	5		oldschool	yes	none	U		0		
+Ajani Vengeant	WR	Planeswalker	4	removal LIFE CTRL	modern	yes	none	WR		54	0.6216	modern-era-cube-180
+Ajani's Pridemate	W	Creature	2	LIFE CTR	synergy	yes	none	W		50	0.6283	synergy-cube-180
+Ajani, Nacatl Pariah	WR	Creature	2	TOK ETB CTR ART AGG	mtgovc	yes	none	W		0		
+Akron Legionnaire	W	Creature	8		oldschool	yes	none	W		0		
+Al Bhed Salvagers	B	Creature	3		twobert	yes	none	B		0		
+Aladdin	R	Creature	4		oldschool	yes	none	R		0		
+Aladdin's Ring		Artifact	8		oldschool	yes	none			0		
+Alesha, Who Laughs at Fate	BR	Creature	3		evybaby	yes	none	BR		616	0.4874	evybaby-cube-360
+Ali from Cairo	R	Creature	4		oldschool	yes	none	R		0		
+All Hallow's Eve	B	Sorcery	4		oldschool	yes	none	B		0		
+All-Fates Stalker	W	Creature	4		peasant	yes	none	W		900	0.5935	peasant-cube-180
+Alpha Deathclaw	BG	Creature	6	removal ETB CTR FAT	mtgovc	yes	none	BG		0		
+Ambrosia Whiteheart	W	Creature	2		evybaby	yes	none	W		182	0.5346	evybaby-cube-360
+Amethyst Dragon	R	Creature	6		peasant	yes	none	R		2810	0.5092	peasant-cube-180
+Amnesia	U	Sorcery	6		oldschool	yes	none	U		0		
+Anax, Hardened in the Forge	R	Enchantment Creature	3	SAC TOK	synergy	yes	none	R		180	0.4599	synergy-cube-180
+Ancestral Blade	W	Artifact	2	ART TOK AGG	pauper	yes	none	W		622	0.6433	pauper-cube-180
+Ancestral Recall	U	Instant	1	SPL CTRL	vintage180 mtgovc oldschool	yes	none	U		2976	0.5047	vintage-cube-180
+Anchovy & Banana Pizza	B	Artifact	4		evybaby	yes	none	B		138	0.4683	evybaby-cube-360
+Ancient Tomb		Land	0	RAMP REAN ART	vintage180 mtgovc	yes	Random			0		
+Angel of Invention	W	Creature	5		evybaby	yes	none	W		1030	0.5800	evybaby-cube-360
+Angelic Voices	W	Enchantment	4		oldschool	yes	Random	W		0		
+Anger of the Gods	R	Sorcery	3	removal	modern	yes	none	R		57	0.5194	modern-era-cube-180
+Animate Dead	B	Enchantment	2	REAN GY	omega vintage180 peasant mtgovc oldschool	yes	none	B		8346	0.5051	omega-cube-180 peasant-cube-180 vintage-cube-180
+Ankh of Mishra		Artifact	2		oldschool	yes	Random			0		
+Annoyed Altisaur	G	Creature	7	RAMP ETB	fairfight pauper	yes	none	G		865	0.5402	fair-fight-cube-180 pauper-cube-180
+Apex Witchstalker			0		evybaby	no	none			0		
+Arabella, Abandoned Doll	WR	Artifact Creature	2		peasant	yes	none	WR		78	0.6121	peasant-cube-180
+Arbiter of Woe	B	Creature	6		evybaby	yes	none	B		534	0.4729	evybaby-cube-360
+Arbor Elf	G	Creature	1	RAMP	pauper	yes	none	G		726	0.4665	pauper-cube-180
+Arc Trail	R	Sorcery	2	removal SPL	omega fairfight	yes	none	R		4842	0.5139	fair-fight-cube-180 omega-cube-180
+Arcane Omens	B	Sorcery	5		evybaby	yes	none	B		708	0.4231	evybaby-cube-360
+Arcbound Ravager		Artifact Creature	2		twobert	yes	none			0		
+Archaeomancer	U	Creature	4	ETB GY SPL	fairfight pauper	yes	none	U		10194	0.4694	fair-fight-cube-180 pauper-cube-180
+Archaeomender	U	Creature	3		evybaby	yes	none	U		732	0.4628	evybaby-cube-360
+Archangel Avacyn	WR	Creature	5	ETB	modern	yes	none	W		894	0.5241	modern-era-cube-180
+Archmage's Charm	U	Instant	3	counter CTRL	modern	yes	none	U		30	0.3799	modern-era-cube-180
+Archon of Cruelty	B	Creature	8	GY ETB FAT REAN	synergy vintage180 modern twobert mtgovc	yes	none	B		6033	0.4905	modern-era-cube-180 synergy-cube-180 vintage-cube-180
+Ardent Elementalist	R	Creature	4	GY ETB SPL	pauper	yes	none	R		286	0.5261	pauper-cube-180
+Arena of Glory	R	Land	0	LND AGG	mtgovc	yes	none		R	0		
+Argivian Archaeologist	W	Creature	3		oldschool	yes	Random	W		0		
+Argothian Pixies	G	Creature	2		oldschool	yes	none	G		0		
+Argothian Treefolk	G	Creature	5		oldschool	yes	none	G		0		
+Arid Mesa		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		WR	2308	0.5115	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Ark of Hunger	WR	Artifact	4		evybaby twobert	yes	none	WR		274	0.4285	evybaby-cube-360
+Armageddon	W	Sorcery	4		oldschool	yes	none	W		0		
+Army of Allah	W	Instant	3		oldschool	yes	none	W		0		
+Artifact Blast	R	Instant	1		oldschool	yes	none	R		0		
+Artisan of Kozilek		Creature	9		peasant	yes	none			2359	0.4783	peasant-cube-180
+Ash Barrens		Land	0	LND GY	fairfight pauper	yes	none		WUBRG	8029	0.4688	fair-fight-cube-180 pauper-cube-180
+Ashes to Ashes	B	Sorcery	3		oldschool	yes	none	B		0		
+Ashnod's Altar		Artifact	3		peasant oldschool	yes	none			22	0.4759	peasant-cube-180
+Ashroot Animist	RG	Creature	4		evybaby	yes	none	RG		127	0.5374	evybaby-cube-360
+Asmoranomardicadaistinaculdacar	BR	Creature	0		evybaby	yes	none	BR		391	0.4039	evybaby-cube-360
+Astrologian's Planisphere	U	Artifact	2	TOK CTR SPL ART	mtgovc	yes	none	U		0		
+Atlantis Attacks	U	Sorcery	7		evybaby	yes	none	U		427	0.4317	evybaby-cube-360
+Atog	R	Creature	2		oldschool	yes	none	R		0		
+Atraxa, Grand Unifier	WUBG	Creature	7	ETB ART LIFE FAT	mtgovc	yes	none	WUBG		0		
+Attended Knight	W	Creature	3	TOK ETB	fairfight pauper	yes	none	W		1126	0.5973	fair-fight-cube-180 pauper-cube-180
+Augur of Bolas	U	Creature	2	SPL ETB	fairfight pauper	yes	none	U		2075	0.5177	fair-fight-cube-180 pauper-cube-180
+Auriok Salvagers	W	Creature	4		mtgovc	yes	none	W		0		
+Avatar of Burgeoning Echoes			0		mtgovc	no	none			0		
+Avenger of Zendikar	G	Creature	7	LND TOK FAT	omega synergy vintage180 twobert	yes	none	G		5205	0.4699	omega-cube-180 synergy-cube-180 vintage-cube-180
+Awaken the Inferno			0		evybaby	no	none			0		
+Azorius Chancery	WU	Land	0	LND	pauper	yes	none		WU	2242	0.4996	pauper-cube-180
+Azure Drake	U	Creature	4		oldschool	yes	none	U		0		
+Bad Moon	B	Enchantment	2		oldschool	yes	none	B		0		
+Badgermole Cub	G	Creature	2	ETB CTR AGG	mtgovc	yes	none	G	G	0		
+Badlands	BR	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		BR	563	0.4685	omega-cube-180 vintage-cube-180
+Balance	W	Sorcery	2	CTRL	vintage180 mtgovc oldschool	yes	none	W		249	0.5688	vintage-cube-180
+Baleful Strix	UB	Artifact Creature	2	ETB CTRL ART	omega synergy vintage180 fairfight mtgovc	yes	none	UB		2856	0.4803	fair-fight-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Ball Lightning	R	Creature	3	AGG	omega oldschool	yes	none	R		128	0.5473	omega-cube-180
+Balmor, Battlemage Captain	UR	Creature	2		peasant	yes	none	UR		581	0.3943	peasant-cube-180
+Baloth Prime	G	Creature	4	TOK SAC LIFE	mtgovc	yes	none	G		0		
+Bane of Bala Ged		Creature	7		peasant	yes	none			1312	0.4632	peasant-cube-180
+Baneslayer Angel	W	Creature	5	EVA LIFE FAT	omega	yes	none	W		906	0.5378	omega-cube-180
+Barkchannel Pathway	UG	Land	0	LND	modern	yes	none		UG	561	0.4888	modern-era-cube-180
+Barrin, Tolarian Archmage	U	Creature	3	ETB	modern	yes	none	U		2718	0.4503	modern-era-cube-180
+Barrowgoyf	B	Creature	3	GY LIFE	mtgovc	yes	none	B		0		
+Basalt Monolith		Artifact	3	ART RAMP	mtgovc oldschool	yes	Random			0		
+Basking Broodscale	G	Creature	2	TOK SAC	pauper	yes	none	G		3062	0.4854	pauper-cube-180
+Batroc the Leaper	R	Creature	2	CTR AGG	mtgovc	yes	none	R		0		
+Batterskull		Artifact	5	ART LIFE	omega vintage180 modern	yes	none			3536	0.5401	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Battle Screech	W	Sorcery	4	TOK GY EVA	synergy fairfight pauper peasant twobert	yes	none	W		10617	0.5967	fair-fight-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Battlesong Berserker	R	Creature	4		evybaby	yes	none	R		476	0.4637	evybaby-cube-360
+Bayou	BG	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		BG	614	0.4562	omega-cube-180 vintage-cube-180
+Bazaar of Baghdad		Land	0	LND	oldschool	yes	Random			0		
+Beast Within	G	Instant	3	removal	synergy vintage180 modern	yes	All	G		871	0.4913	modern-era-cube-180 synergy-cube-180 vintage-cube-180
+Beetleback Chief	R	Creature	4	TOK ETB SAC	fairfight pauper	yes	none	R		3764	0.5024	fair-fight-cube-180 pauper-cube-180
+Belladonna Took	W	Creature	2		evybaby	yes	none	W		591	0.5303	evybaby-cube-360
+Benalish Hero	W	Creature	1		oldschool	yes	none	W		0		
+Berserk	G	Instant	1		oldschool	yes	none	G		0		
+Bespoke Bō	U	Artifact	3		twobert	yes	none	U		0		
+Bilbo, Luckwearer	U	Creature	2		evybaby	yes	none	U		674	0.5072	evybaby-cube-360
+Bilbo, Thief in the Night	U	Creature	2		mtgovc	yes	none	U		0		
+Biomechan Engineer	UG	Creature	2		peasant	yes	none	UG	WUBRG	264	0.4577	peasant-cube-180
+Biotech Specialist	RG	Creature	2		twobert	yes	none	RG	WUBRG	0		
+Birds of Paradise	G	Creature	1	RAMP	omega vintage180 modern evybaby mtgovc oldschool	yes	none	G	WUBRG	1166	0.5331	evybaby-cube-360 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Bitter Triumph	B	Instant	2	removal	peasant mtgovc	yes	none	B		2806	0.5400	peasant-cube-180
+Bitterblossom	B	Kindred Enchantment	2	TOK EVA SAC	omega	yes	none	B		2649	0.5272	omega-cube-180
+Black Knight	B	Creature	2		oldschool	yes	none	B		0		
+Black Lotus		Artifact	0	RAMP ART REAN	vintage180 mtgovc oldschool	yes	none			4449	0.4977	vintage-cube-180
+Black Vise		Artifact	1		oldschool	yes	none			0		
+Black Widow, Super Spy	B	Creature	2	CTR AGG	mtgovc	yes	none	B		0		
+Blackcleave Cliffs	BR	Land	0	LND	mtgovc	yes	none		BR	0		
+Blade Splicer	W	Creature	3	ETB TOK ART	omega synergy modern fairfight twobert	yes	none	W		11612	0.5693	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180
+Blazemire Verge	BR	Land	0	LND	mtgovc	yes	none		BR	0		
+Bleachbone Verge	WB	Land	0	LND	mtgovc	yes	none		WB	0		
+Blessing	W	Enchantment	2		oldschool	yes	none	W		0		
+Blightsteel Colossus		Artifact Creature	12	GY ART FAT	mtgovc	yes	none			0		
+Blightstep Pathway	BR	Land	0	LND	modern	yes	none		BR	183	0.4630	modern-era-cube-180
+Blood Artist	B	Creature	2	SAC LIFE TOK	omega synergy	yes	none	B		3691	0.5229	omega-cube-180 synergy-cube-180
+Blood Crypt	BR	Land	0	LND	synergy modern peasant evybaby twobert mtgovc	yes	none		BR	2238	0.4757	evybaby-cube-360 modern-era-cube-180 peasant-cube-180 synergy-cube-180
+Blood Fountain	B	Artifact	1	ART GY	pauper	yes	none	B		4749	0.4932	pauper-cube-180
+Blood Lust	R	Instant	2		oldschool	yes	none	R		0		
+Blood Moon	R	Enchantment	3		oldschool	yes	Random	R		0		
+Bloodbraid Challenger	RG	Creature	5	GY AGG	mtgovc	yes	none	RG		0		
+Bloodbraid Elf	RG	Creature	4	AGG ETB	omega modern peasant	yes	none	RG		3103	0.5164	modern-era-cube-180 omega-cube-180 peasant-cube-180
+Bloodchief's Thirst	B	Sorcery	1	removal	modern mtgovc	yes	none	B		2049	0.4442	modern-era-cube-180
+Bloodfell Caves	BR	Land	0	LND	fairfight pauper	yes	none		BR	1532	0.4683	fair-fight-cube-180 pauper-cube-180
+Bloodghast	B	Creature	2	SAC GY AGG	omega synergy vintage180 modern fairfight evybaby twobert	yes	none	B		1767	0.4976	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Bloodsoaked Champion	B	Creature	1	REAN AGG	modern	yes	none	B		15	0.3714	modern-era-cube-180
+Bloodstained Mire		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		BR	1629	0.4871	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Bloodtithe Harvester	BR	Creature	2	SAC removal AGG	vintage180 fairfight mtgovc	yes	none	BR		255	0.5210	fair-fight-cube-180 vintage-cube-180
+Bloodwater Entity	UR	Creature	3	SPL EVA GY	pauper	yes	none	UR		1726	0.5206	pauper-cube-180
+Blooming Marsh	BG	Land	0	LND	mtgovc	yes	none		BG	0		
+Blossoming Sands	WG	Land	0	LND	fairfight pauper	yes	none		WG	2984	0.5146	fair-fight-cube-180 pauper-cube-180
+Blue Elemental Blast	U	Instant	1		oldschool	yes	Random	U		0		
+Body Dropper	BR	Creature	2	SAC	pauper	yes	none	BR		10	0.4998	pauper-cube-180
+Bog Wraith	B	Creature	4		oldschool	yes	none	B		0		
+Bogardan Dragonheart	R	Creature	3	SAC EVA	pauper	yes	All	R		48	0.4705	pauper-cube-180
+Bolas's Citadel	B	Artifact	6	ART	mtgovc	yes	none	B		0		
+Bomat Courier	R	Artifact Creature	1		fairfight	yes	Random			7	0.4445	fair-fight-cube-180
+Bone Shards	B	Sorcery	1	SAC GY removal	omega synergy vintage180 modern fairfight peasant mtgovc	yes	none	B		13379	0.4908	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Bonecrusher Giant	R	Creature	3	removal AGG	omega vintage180 modern fairfight evybaby mtgovc	yes	none	R		10582	0.5130	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Bonesplitter		Artifact	1	ART AGG	synergy fairfight pauper peasant	yes	none			24891	0.5014	fair-fight-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Boomerang	U	Instant	2		oldschool	yes	none	U		0		
+Boomerang Basics	U	Sorcery	1	SPL	mtgovc	yes	none	U		0		
+Boros Garrison	WR	Land	0	LND	pauper	yes	none		WR	1864	0.5005	pauper-cube-180
+Borough Backup	W	Sorcery	5		evybaby	yes	none	W	WUBRG	74	0.4893	evybaby-cube-360
+Boseiju Reaches Skyward	G	Enchantment	4		evybaby	yes	none	G	G	547	0.5626	evybaby-cube-360
+Boseiju, Who Endures	G	Land	0	LND AGG	mtgovc	yes	none		G	0		
+Botanical Sanctum	UG	Land	0	LND	mtgovc	yes	none		UG	0		
+Bothersome Noisemaker	R	Creature	2		peasant evybaby	yes	none	R		2116	0.4974	evybaby-cube-360 peasant-cube-180
+Bountiful Landscape	URG	Land	0		peasant	yes	none		URG	1823	0.4465	peasant-cube-180
+Brain Freeze	U	Instant	2	SPL	mtgovc	yes	none	U		0		
+Braingeyser	U	Sorcery	2		oldschool	yes	none	U		0		
+Brainstorm	U	Instant	1	SPL	omega synergy vintage180 fairfight pauper evybaby twobert mtgovc	yes	none	U		22388	0.4602	evybaby-cube-360 fair-fight-cube-180 omega-cube-180 pauper-cube-180 synergy-cube-180 vintage-cube-180
+Branching Bolt	RG	Instant	3	removal	fairfight pauper	yes	none	RG		75	0.5222	fair-fight-cube-180 pauper-cube-180
+Branchloft Pathway	WG	Land	0	LND	modern	yes	none		WG	489	0.5540	modern-era-cube-180
+Brazen Borrower	U	Creature	3	SPL EVA	omega vintage180 modern fairfight evybaby mtgovc	yes	none	U		14693	0.4735	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Breeding Pit	B	Enchantment	4		oldschool	yes	none	B		0		
+Breeding Pool	UG	Land	0	LND	synergy modern peasant evybaby twobert mtgovc	yes	none		UG	3146	0.4676	evybaby-cube-360 modern-era-cube-180 peasant-cube-180 synergy-cube-180
+Brightblade Stoat	W	Creature	2		evybaby	yes	none	W		380	0.5475	evybaby-cube-360
+Brightclimb Pathway	WB	Land	0	LND	modern	yes	none		WB	253	0.5018	modern-era-cube-180
+Brightglass Gearhulk	WG	Artifact Creature	4		evybaby mtgovc	yes	none	WG		169	0.5343	evybaby-cube-360
+Brilliance Unleashed	UR	Sorcery	6		evybaby	yes	none	UR		228	0.4959	evybaby-cube-360
+Brimaz, King of Oreskos	W	Creature	3	TOK AGG	omega synergy modern	yes	none	W		8337	0.5664	modern-era-cube-180 omega-cube-180 synergy-cube-180
+Bristlebud Farmer	G	Creature	4		twobert	yes	none	G		0		
+Bristly Bill, Spine Sower	G	Creature	2	CTR LND AGG	twobert mtgovc	yes	none	G		0		
+Broadside Bombardiers	R	Creature	3	SAC ART AGG	twobert mtgovc	yes	none	R		0		
+Brothers of Fire	R	Creature	3		oldschool	yes	none	R		0		
+Burn Down the House	R	Sorcery	5		evybaby	yes	none	R		820	0.4607	evybaby-cube-360
+Burn, Burn, Tree and Fern	R	Enchantment	4		evybaby	yes	none	R	R	277	0.4815	evybaby-cube-360
+Burning-Tree Emissary	RG	Creature	2		evybaby	yes	none	RG	RG	69	0.5505	evybaby-cube-360
+Burst Lightning	R	Instant	1	removal SPL	synergy modern pauper evybaby twobert mtgovc	yes	none	R		8221	0.4909	evybaby-cube-360 modern-era-cube-180 pauper-cube-180 synergy-cube-180
+Bushwhack	G	Sorcery	1	removal RAMP	pauper evybaby twobert	yes	none	G	WUBRG	2246	0.5012	evybaby-cube-360 pauper-cube-180
+Cabal Ritual	B	Instant	2	GY RAMP	mtgovc	yes	Random	B	B	0		
+Candelabra of Tawnos		Artifact	1	ART	mtgovc oldschool	yes	All			0		
+Candy Grapple	B	Instant	2		evybaby	yes	none	B		1210	0.4780	evybaby-cube-360
+Candy Trail		Artifact	1	ART SAC	synergy pauper twobert	yes	none			7782	0.4950	pauper-cube-180 synergy-cube-180
+Captain Storm, Cosmium Raider	UR	Creature	2		evybaby	yes	none	UR		213	0.4034	evybaby-cube-360
+Carnage Interpreter	BR	Creature	3	TOK ETB ART	mtgovc	yes	none	BR		0		
+Carnage Tyrant	G	Creature	6		evybaby	yes	none	G		674	0.5706	evybaby-cube-360
+Carnivorous Cultivator			0		mtgovc	no	none			0		
+Carrier Thrall	B	Creature	2	SAC TOK	fairfight pauper	yes	none	B		180	0.5294	fair-fight-cube-180 pauper-cube-180
+Carrion Ants	B	Creature	4		oldschool	yes	none	B		0		
+Carrion Feeder	B	Creature	1	SAC CTR	synergy evybaby twobert	yes	none	B		72	0.4425	evybaby-cube-360 synergy-cube-180
+Casey Jones, Jury-Rig Justiciar	R	Creature	2		evybaby	yes	none	R		625	0.4605	evybaby-cube-360
+Cast Down	B	Instant	2	removal	fairfight pauper evybaby	yes	none	B		3668	0.5209	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Cast Out	W	Enchantment	4		peasant	yes	none	W		616	0.5786	peasant-cube-180
+Cathar Commando	W	Creature	2	removal ART AGG	peasant evybaby twobert mtgovc	yes	none	W		183	0.5365	evybaby-cube-360 peasant-cube-180
+Cathartic Reunion	R	Sorcery	2	GY SPL	synergy	yes	none	R		1093	0.4277	synergy-cube-180
+Cauldron Familiar	B	Creature	1	SAC ART GY	synergy evybaby twobert	yes	none	B		3588	0.5011	evybaby-cube-360 synergy-cube-180
+Cauldron of Essence	BG	Artifact	3		twobert	yes	none	BG		0		
+Caustic Bronco	B	Creature	2	AGG	mtgovc	yes	none	B		0		
+Cavern Harpy	UB	Creature	2	ETB EVA	pauper	yes	none	UB		729	0.4593	pauper-cube-180
+Celestial Colonnade	WU	Land	0	LND AGG	mtgovc	yes	none		WU	0		
+Chain Lightning	R	Sorcery	1	removal SPL AGG	omega vintage180 fairfight pauper peasant mtgovc oldschool	yes	none	R		13221	0.4971	fair-fight-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 vintage-cube-180
+Chain of Smog	B	Sorcery	2	discard	mtgovc	yes	Random	B		0		
+Champion of Wits	U	Creature	3	ETB GY	synergy	yes	none	U		3817	0.4285	synergy-cube-180
+Chandra, Torch of Defiance	R	Planeswalker	4	CTRL RAMP removal	omega synergy vintage180 modern evybaby mtgovc	yes	none	R	R	2853	0.5009	evybaby-cube-360 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Channel	G	Sorcery	2	RAMP REAN	oldschool	yes	All	G		0		
+Chaos Orb		Artifact	2		oldschool	yes	none			0		
+Charging Monstrosaur	R	Creature	5		peasant	yes	none	R		2400	0.5066	peasant-cube-180
+Charming Prince	W	Creature	2	ETB LIFE	synergy fairfight twobert	yes	none	W		210	0.6170	fair-fight-cube-180 synergy-cube-180
+Chart a Course	U	Sorcery	2	SPL CTRL	modern peasant	yes	none	U		7393	0.4373	modern-era-cube-180 peasant-cube-180
+Chittering Rats	B	Creature	3	ETB	fairfight pauper	yes	none	B		764	0.5084	fair-fight-cube-180 pauper-cube-180
+Choco-Comet	R	Sorcery	2		peasant	yes	none	R		3260	0.5070	peasant-cube-180
+Chromatic Star		Artifact	1	ART SAC	synergy pauper mtgovc	yes	All		WUBRG	5896	0.4555	pauper-cube-180 synergy-cube-180
+Chrome Mox		Artifact	0	ART RAMP	mtgovc	yes	none			0		
+Circle of Protection: Black	W	Enchantment	2		oldschool	yes	Random	W		0		
+Circle of Protection: Blue	W	Enchantment	2		oldschool	yes	Random	W		0		
+Circle of Protection: Green	W	Enchantment	2		oldschool	yes	Random	W		0		
+Circle of Protection: Red	W	Enchantment	2		oldschool	yes	Random	W		0		
+Circuit Mender		Artifact Creature	3		peasant evybaby	yes	none			2057	0.5155	evybaby-cube-360 peasant-cube-180
+City in a Bottle		Artifact	2		oldschool	yes	All			0		
+City of Brass		Land	0		peasant oldschool	yes	none		WUBRG	3581	0.5079	peasant-cube-180
+City of Traitors		Land	0	LND	mtgovc	yes	All			0		
+Cleanse	W	Sorcery	4		oldschool	yes	Random	W		0		
+Clearwater Pathway	UB	Land	0	LND	modern	yes	none		UB	422	0.3665	modern-era-cube-180
+Cloak and Dagger, Entwined	WB	Creature	3	discard LIFE	mtgovc	yes	none	WB		0		
+Clockwork Avian		Artifact Creature	5		oldschool	yes	none			0		
+Clockwork Beast		Artifact Creature	6		oldschool	yes	none			0		
+Clockwork Percussionist	R	Artifact Creature	1		evybaby	yes	none	R		1328	0.4414	evybaby-cube-360
+Clone	U	Creature	4		oldschool	yes	none	U		0		
+Cloudgoat Ranger	W	Creature	5		peasant	yes	none	W		1866	0.5726	peasant-cube-180
+Cloudkin Seer	U	Creature	3	ETB EVA	pauper	yes	none	U		4436	0.5224	pauper-cube-180
+Coalition Relic		Artifact	3	ART RAMP	omega mtgovc	yes	none		WUBRG	1480	0.4820	omega-cube-180
+Cockatrice	G	Creature	5		oldschool	yes	none	G		0		
+Cogwork Wrestler	U	Artifact Creature	1		evybaby	yes	none	U		218	0.4369	evybaby-cube-360
+Coiling Oracle	UG	Creature	2		evybaby	yes	none	UG		92	0.5892	evybaby-cube-360
+Collected Company	G	Instant	4	AGG ETB	modern	yes	none	G		3032	0.5419	modern-era-cube-180
+Collective Brutality	B	Sorcery	2	GY discard removal	vintage180 modern mtgovc	yes	none	B		3418	0.4312	modern-era-cube-180 vintage-cube-180
+Colossal Skyturtle	UG	Enchantment Creature	7		peasant	yes	none	UG		172	0.4583	peasant-cube-180
+Colossus of Sardia		Artifact Creature	9		oldschool	yes	none			0		
+Combat Thresher	W	Artifact Creature	7		peasant	yes	none			2895	0.5005	peasant-cube-180
+Commercial District	RG	Land	0	LND	evybaby mtgovc	yes	none		RG	763	0.5211	evybaby-cube-360
+Concealed Courtyard	WB	Land	0	LND	mtgovc	yes	none		WB	0		
+Concealing Curtains	B	Creature	1	discard AGG	mtgovc	yes	none	B		0		
+Conclave Mentor	WG	Creature	2	CTR LIFE	synergy	yes	none	WG		66	0.6975	synergy-cube-180
+Conclave Naturalists	G	Creature	5	ETB removal	fairfight pauper	yes	none	G		379	0.5102	fair-fight-cube-180 pauper-cube-180
+Concordant Crossroads	G	Enchantment	1		oldschool	yes	Random	G		0		
+Consecrated Sphinx	U	Creature	6	FAT CTRL REAN	omega	yes	none	U		3735	0.4980	omega-cube-180
+Consider	U	Instant	1	SPL GY	synergy peasant twobert mtgovc	yes	none	U		8486	0.4138	peasant-cube-180 synergy-cube-180
+Contagious Vorrac	G	Creature	3		evybaby	yes	none	G		233	0.4427	evybaby-cube-360
+Containment Priest	W	Creature	2	ETB GY hoser	vintage180 mtgovc	yes	none	W		2538	0.5344	vintage-cube-180
+Contaminated Landscape	WUB	Land	0		peasant	yes	none		WUB	1296	0.4780	peasant-cube-180
+Control Magic	U	Enchantment	4	removal CTRL	omega evybaby oldschool	yes	none	U		4338	0.5073	evybaby-cube-360 omega-cube-180
+Conversion	W	Enchantment	4		oldschool	yes	Random	W		0		
+Copperline Gorge	RG	Land	0	LND	mtgovc	yes	none		RG	0		
+Copy Artifact	U	Enchantment	2		oldschool	yes	none	U		0		
+Cori-Steel Cutter	R	Artifact	2	TOK SPL ART	mtgovc	yes	none	R		0		
+Cornered by Black Mages	B	Sorcery	3		evybaby	yes	none	B		452	0.4767	evybaby-cube-360
+Corpse Dance	B	Instant	3	GY	mtgovc	yes	none	B		0		
+Coruscation Mage	R	Creature	2		peasant	yes	none	R		10	0.4330	peasant-cube-180
+Cosmic Horror	B	Creature	6		oldschool	yes	none	B		0		
+Cost of Brilliance	B	Sorcery	3		evybaby	yes	none	B		168	0.4521	evybaby-cube-360
+Council's Judgment	W	Sorcery	3	removal CTRL	omega vintage180 mtgovc	yes	none	W		100	0.5059	omega-cube-180 vintage-cube-180
+Counterspell	U	Instant	2	counter CTRL	omega vintage180 modern fairfight pauper peasant evybaby twobert mtgovc oldschool	yes	none	U		28003	0.4772	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 vintage-cube-180
+Courier of Comestibles	G	Creature	2		evybaby twobert	yes	none	G		681	0.5364	evybaby-cube-360
+Courser of Kruphix	G	Enchantment Creature	3	LND LIFE	omega synergy vintage180 modern twobert	yes	none	G		9540	0.4966	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Coveted Jewel		Artifact	6	ART RAMP CTRL	mtgovc	yes	none			0		
+Crabomination	B	Creature	6	ETB GY ART FAT	mtgovc	yes	none	B		0		
+Cragcrown Pathway	RG	Land	0	LND	modern	yes	none		RG	356	0.5053	modern-era-cube-180
+Cranial Plating	B	Artifact	2	ART	synergy twobert	yes	none			2405	0.5361	synergy-cube-180
+Craterhoof Behemoth	G	Creature	8	FAT AGG TOK	omega vintage180 modern	yes	none	G		4733	0.5243	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Craw Giant	G	Creature	7		oldschool	yes	none	G		0		
+Craw Wurm	G	Creature	6		oldschool	yes	none	G		0		
+Creeping Tar Pit	UB	Land	0	LND AGG	mtgovc	yes	none		UB	0		
+Crop Rotation	G	Instant	1	SAC	mtgovc	yes	Random	G		0		
+Crude Bent Blade	B	Artifact	3		evybaby	yes	none	B		14	0.4703	evybaby-cube-360
+Crumble	G	Instant	1		oldschool	yes	Random	G		0		
+Crusade	W	Enchantment	2		oldschool	yes	none	W		0		
+Cryogen Relic	U	Artifact	2	ART	mtgovc	yes	none	U		0		
+Crypt Rats	B	Creature	3	SAC removal	fairfight pauper	yes	none	B		7510	0.4933	fair-fight-cube-180 pauper-cube-180
+Cryptic Command	U	Instant	4	counter CTRL	omega modern	yes	none	U		2132	0.4419	modern-era-cube-180 omega-cube-180
+Cult Conscript	B	Creature	1		peasant	yes	none	B		99	0.5629	peasant-cube-180
+Cuombajj Witches	B	Creature	2		oldschool	yes	All	B		0		
+Currency Converter		Artifact	1	TOK GY ART	mtgovc	yes	none			0		
+Curse of Predation	G	Enchantment	3		peasant	yes	none	G		1148	0.5419	peasant-cube-180
+Cut Down	B	Instant	1	removal	mtgovc	yes	none	B		0		
+Cyclone	G	Enchantment	4		oldschool	yes	All	G		0		
+Dack Fayden	UR	Planeswalker	3	ART CTRL	mtgovc	yes	Random	UR		0		
+Dakkon Blackblade	WUB	Creature	6		oldschool	yes	none	WUB		0		
+Damn	WB	Sorcery	2	removal	mtgovc	yes	none	B		0		
+Damnation	B	Sorcery	4	CTRL	omega modern mtgovc	yes	none	B		3975	0.4715	modern-era-cube-180 omega-cube-180
+Dance of Many	U	Enchantment	2		oldschool	yes	none	U		0		
+Dance of the Dead	B	Enchantment	2		peasant	yes	none	B		3578	0.5397	peasant-cube-180
+Dancing Scimitar		Artifact Creature	4		oldschool	yes	none			0		
+Dandân	U	Creature	2		oldschool	yes	none	U		0		
+Daring Waverider	U	Creature	6		evybaby	yes	none	U		1309	0.4868	evybaby-cube-360
+Dark Confidant	B	Creature	2	AGG CTRL	omega vintage180 modern mtgovc	yes	none	B		2140	0.4961	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Dark Depths		Land	0	LND AGG	mtgovc	yes	none			0		
+Dark Ritual	B	Instant	1	RAMP REAN	vintage180 mtgovc oldschool	yes	none	B	B	844	0.4294	vintage-cube-180
+Darkbore Pathway	BG	Land	0	LND	modern	yes	none		BG	417	0.4988	modern-era-cube-180
+Darkslick Shores	UB	Land	0	LND	mtgovc	yes	none		UB	0		
+Dauntless Scrapbot		Artifact Creature	3		peasant	yes	none		WUBRG	364	0.5000	peasant-cube-180
+Dauthi Voidwalker	B	Creature	2	GY AGG	modern mtgovc	yes	none	B		915	0.4556	modern-era-cube-180
+Davriel, Rogue Shadowmage	B	Planeswalker	3		fairfight	yes	none	B		8	0.3572	fair-fight-cube-180
+Daze	U	Instant	2	counter CTRL	mtgovc	yes	none	U		0		
+Dead // Gone	R	Instant	4		mtgovc	yes	none	R		0		
+Deadly Dispute	B	Instant	2	SAC ART	synergy modern fairfight pauper evybaby twobert	yes	none	B	WUBRG	11237	0.4758	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 pauper-cube-180 synergy-cube-180
+Death-Greeter's Champion	R	Creature	3	ETB CTR AGG	mtgovc	yes	none	R		0		
+Deathgrip	B	Enchantment	2		oldschool	yes	Random	B		0		
+Deathrite Shaman	BG	Creature	1	GY RAMP LND	vintage180 mtgovc	yes	none	BG	WUBRG	174	0.4227	vintage-cube-180
+Deceit	UB	Creature	6		evybaby	yes	none	UB		144	0.4573	evybaby-cube-360
+Deceptive Landscape	WBG	Land	0		peasant	yes	none		WBG	1049	0.5014	peasant-cube-180
+Deduce	U	Instant	2		evybaby	yes	none	U		1694	0.4831	evybaby-cube-360
+Deep Analysis	U	Sorcery	4	GY SPL	synergy pauper twobert	yes	none	U		11565	0.4710	pauper-cube-180 synergy-cube-180
+Deep Forest Hermit	G	Creature	5	ETB TOK	synergy twobert	yes	none	G		1614	0.4792	synergy-cube-180
+Deep Spawn	U	Creature	8		oldschool	yes	none	U		0		
+Deep-Cavern Bat	B	Creature	2	ETB LIFE EVA AGG	peasant mtgovc	yes	none	B		4044	0.5423	peasant-cube-180
+Delayed Blast Fireball	R	Instant	3	removal CTRL	mtgovc	yes	none	R		0		
+Delighted Halfling	G	Creature	1	RAMP	vintage180 mtgovc	yes	none	G	WUBRG	230	0.4640	vintage-cube-180
+Delver of Secrets	U	Creature	1	SPL EVA AGG	omega synergy vintage180 modern fairfight pauper	yes	none	U		131	0.5030	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 synergy-cube-180 vintage-cube-180
+Demonic Hordes	B	Creature	6		oldschool	yes	none	B		0		
+Demonic Tutor	B	Sorcery	2	CTRL REAN	omega vintage180 mtgovc oldschool	yes	Random	B		4701	0.4924	omega-cube-180 vintage-cube-180
+Derelor	B	Creature	4		oldschool	yes	none	B		0		
+Descendant of Storms	W	Creature	1		peasant evybaby	yes	none	W		3290	0.5436	evybaby-cube-360 peasant-cube-180
+Desecrator Hag	BG	Creature	4	GY ETB	pauper	yes	none	BG		62	0.4633	pauper-cube-180
+Desert Twister	G	Sorcery	6		oldschool	yes	none	G		0		
+Detective's Phoenix	R	Enchantment Creature	3	GY EVA AGG	mtgovc	yes	none	R		0		
+Detonate	R	Sorcery	1		oldschool	yes	none	R		0		
+Devoted Druid	G	Creature	2		mtgovc	yes	All	G	G	0		
+Diamond Valley		Land	0		oldschool	yes	none			0		
+Dimir Aqueduct	UB	Land	0	LND	pauper	yes	none		UB	1923	0.4910	pauper-cube-180
+Dinrova Horror	UB	Creature	6	ETB removal	pauper peasant	yes	none	UB		1725	0.4742	pauper-cube-180 peasant-cube-180
+Disenchant	W	Instant	2		oldschool	yes	none	W		0		
+Disfigure	B	Instant	1	removal	pauper	yes	none	B		4201	0.5070	pauper-cube-180
+Disharmony	R	Instant	3		oldschool	yes	All	R		0		
+Disintegrate	R	Sorcery	1		oldschool	yes	none	R		0		
+Dismal Backwater	UB	Land	0	LND	fairfight pauper	yes	none		UB	2852	0.4917	fair-fight-cube-180 pauper-cube-180
+Dismember	B	Instant	3	removal	peasant evybaby mtgovc	yes	none	B		4253	0.5253	evybaby-cube-360 peasant-cube-180
+Displacer Kitten	U	Creature	4	SPL	mtgovc	yes	none	U		0		
+Disrupting Scepter		Artifact	3		oldschool	yes	none			0		
+Disruptive Stormbrood	BG	Creature	5		evybaby	yes	none	G		1570	0.5440	evybaby-cube-360
+Divergent Equation	U	Instant	1		evybaby	yes	All	U		331	0.4359	evybaby-cube-360
+Divine Offering	W	Instant	2		oldschool	yes	none	W		0		
+Dockside Chef	B	Enchantment Creature	1		evybaby	yes	none	B		164	0.4782	evybaby-cube-360
+Dog Walker	WR	Creature	2	TOK AGG	pauper	yes	none	WR		113	0.6165	pauper-cube-180
+Don & Leo, Problem Solvers	WU	Creature	5		evybaby twobert	yes	none	WU		401	0.5392	evybaby-cube-360
+Doom Blade	B	Instant	2	removal	omega	yes	none	B		55	0.5067	omega-cube-180
+Doomed Traveler	W	Creature	1	SAC TOK	fairfight pauper	yes	none	W		72	0.5477	fair-fight-cube-180 pauper-cube-180
+Doomsday	B	Sorcery	3	GY	mtgovc	yes	All	B		0		
+Dori, Bearer of Friends	R	Creature	3		evybaby	yes	none	R	WUBRG	140	0.3812	evybaby-cube-360
+Down in the Valley	G	Enchantment	3		evybaby	yes	none	G	WUBRG	560	0.5483	evybaby-cube-360
+Down, Down to Goblin-town	B	Enchantment	3		evybaby	yes	none	B		53	0.5341	evybaby-cube-360
+Dragon Engine		Artifact Creature	3		oldschool	yes	none			0		
+Dragon Fodder	R	Sorcery	2	TOK SAC	pauper	yes	none	R		3091	0.5143	pauper-cube-180
+Dragon Whelp	R	Creature	4		oldschool	yes	none	R		0		
+Dragon's Rage Channeler	R	Creature	1	SPL GY AGG	omega vintage180 modern peasant mtgovc	yes	none	R		7498	0.5002	modern-era-cube-180 omega-cube-180 peasant-cube-180 vintage-cube-180
+Dragonbroods' Relic	WUBRG	Artifact	2		evybaby	yes	none	G	WUBRG	324	0.5320	evybaby-cube-360
+Dragonwing Glider	R	Artifact	5		evybaby	yes	none	R		817	0.4958	evybaby-cube-360
+Drain Life	B	Sorcery	2		oldschool	yes	none	B		0		
+Dreadhorde Arcanist	R	Creature	2	SPL GY	synergy twobert	yes	none	R		4	0.4993	synergy-cube-180
+Dreadwing Scavenger	UB	Creature	3		evybaby twobert	yes	none	UB		345	0.4739	evybaby-cube-360
+Dream Beavers	B	Creature	1		evybaby	yes	none	B		558	0.5000	evybaby-cube-360
+Drop of Honey	G	Enchantment	1		oldschool	yes	All	G		0		
+Drown in the Loch	UB	Instant	2		evybaby	yes	none	UB		12	0.5622	evybaby-cube-360
+Drudge Skeletons	B	Creature	2		oldschool	yes	none	B		0		
+Dubious Delicacy	B	Artifact	3		twobert	yes	none	B		0		
+Duress	B	Sorcery	1	discard	mtgovc	yes	none	B		0		
+Durkwood Boars	G	Creature	5		oldschool	yes	none	G		0		
+Dusk Legion Zealot	B	Creature	2	ETB	pauper	yes	none	B		4119	0.4992	pauper-cube-180
+Dust to Dust	W	Sorcery	3		oldschool	yes	none	W		0		
+Dwarven Soldier	R	Creature	2		oldschool	yes	none	R		0		
+Eagles of the North	W	Creature	6	EVA AGG TOK	fairfight pauper evybaby twobert mtgovc	yes	none	W	W	10634	0.5271	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Earth Elemental	R	Creature	5		oldschool	yes	none	R		0		
+Earthquake	R	Sorcery	1		oldschool	yes	none	R		0		
+Echo of Eons	U	Sorcery	6	GY	mtgovc	yes	none	U		0		
+Ecstatic Awakener	B	Creature	1	SAC	pauper	yes	none	B		125	0.5862	pauper-cube-180
+Eddymurk Crab	U	Creature	7		peasant	yes	none	U		58	0.4614	peasant-cube-180
+Eidolon of the Great Revel	R	Enchantment Creature	2	AGG	modern	yes	Random	R		66	0.5349	modern-era-cube-180
+Elas il-Kor, Sadistic Pilgrim	WB	Creature	2		peasant	yes	none	WB		27	0.6168	peasant-cube-180
+Elder Gargaroth	G	Creature	5	TOK LIFE	modern	yes	none	G		2449	0.5788	modern-era-cube-180
+Eldrazi Repurposer	G	Creature	3		peasant	yes	none	G		1827	0.5414	peasant-cube-180
+Elegant Parlor	WR	Land	0	LND	evybaby mtgovc	yes	none		WR	486	0.5099	evybaby-cube-360
+Elektra, Daughter of the Hand	B	Creature	4		evybaby	yes	none	B		559	0.4870	evybaby-cube-360
+Elite Interceptor	W	Creature	1		evybaby twobert	yes	none	W		396	0.5168	evybaby-cube-360
+Elite Spellbinder	W	Creature	3	AGG ETB	vintage180 fairfight evybaby mtgovc	yes	none	W		8187	0.5415	evybaby-cube-360 fair-fight-cube-180 vintage-cube-180
+Elspeth, Knight-Errant	W	Planeswalker	4	TOK ART CTRL	modern	yes	none	W		2228	0.5236	modern-era-cube-180
+Elspeth, Storm Slayer	W	Planeswalker	5	removal TOK CTR CTRL	mtgovc	yes	none	W		0		
+Elspeth, Sun's Champion	W	Planeswalker	6	TOK CTRL	omega synergy vintage180 modern	yes	none	W		11979	0.5733	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Elves of Deep Shadow	BG	Creature	1		oldschool	yes	none	G	B	0		
+Elvish Archers	G	Creature	2		oldschool	yes	none	G		0		
+Elvish Mystic	G	Creature	1	RAMP AGG	modern peasant evybaby mtgovc	yes	none	G	G	2210	0.5727	evybaby-cube-360 modern-era-cube-180 peasant-cube-180
+Elvish Reclaimer	G	Creature	1		mtgovc	yes	Random	G		0		
+Elvish Visionary	G	Creature	2	ETB	synergy	yes	none	G		2966	0.4511	synergy-cube-180
+Embercleave	R	Artifact	6	ART	modern	yes	All	R		469	0.5051	modern-era-cube-180
+Embereth Shieldbreaker	R	Creature	2		fairfight evybaby mtgovc	yes	none	R		44	0.4128	evybaby-cube-360 fair-fight-cube-180
+Emeritus of Abundance	G	Creature	3	GY	mtgovc	yes	none	G		0		
+Emeritus of Ideation	U	Creature	5	GY	mtgovc	yes	none	U		0		
+Emmara, Soul of the Accord	WG	Creature	2		evybaby	yes	none	WG		111	0.5648	evybaby-cube-360
+Emperor of Bones	B	Creature	2	CTR REAN AGG	mtgovc	yes	none	B		0		
+Empyrean Eagle	WU	Creature	3		evybaby	yes	none	WU		324	0.5349	evybaby-cube-360
+Emrakul's Messenger	U	Creature	2		evybaby	yes	Random	U		1530	0.4897	evybaby-cube-360
+Emrakul, the Aeons Torn		Creature	15	FAT REAN	vintage180 mtgovc	yes	none			3783	0.4641	vintage-cube-180
+Emry, Lurker of the Loch	U	Creature	3	ART GY	synergy twobert mtgovc	yes	none	U		2827	0.4138	synergy-cube-180
+Endurance	G	Creature	3	GY hoser	vintage180 twobert mtgovc	yes	none	G		55	0.4134	vintage-cube-180
+Enduring Innocence	W	Enchantment Creature	3	LIFE	twobert mtgovc	yes	none	W		0		
+Energy Flux	U	Enchantment	3		oldschool	yes	Random	U		0		
+Engineered Explosives		Artifact	0		mtgovc	yes	All			0		
+Enlightened Tutor	W	Instant	1		mtgovc	yes	Random	W		0		
+Entomb	B	Instant	1	REAN GY	vintage180 mtgovc	yes	none	B		1567	0.4568	vintage-cube-180
+Environmental Scientist	G	Creature	2		peasant evybaby	yes	none	G	WUBRG	1938	0.5653	evybaby-cube-360 peasant-cube-180
+Ephemerate	W	Instant	1	ETB SPL	omega synergy vintage180 fairfight pauper peasant evybaby twobert	yes	none	W		118	0.5268	evybaby-cube-360 fair-fight-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Erg Raiders	B	Creature	2		oldschool	yes	none	B		0		
+Erhnam Djinn	G	Creature	4		oldschool	yes	none	G		0		
+Eriette's Tempting Apple		Artifact	4		evybaby	yes	none			1425	0.4491	evybaby-cube-360
+Erode	W	Instant	1	removal	mtgovc	yes	none	W		0		
+Ertai Resurrected	UB	Creature	4		fairfight	yes	none	UB		346	0.4590	fair-fight-cube-180
+Escape to the Wilds	RG	Sorcery	5		mtgovc	yes	none	RG		0		
+Esika's Chariot	G	Artifact	4	TOK ART	mtgovc	yes	none	G		0		
+Esper Sentinel	W	Artifact Creature	1	ART AGG	modern	yes	none	W		2385	0.5135	modern-era-cube-180
+Essence Scatter	U	Instant	2		evybaby twobert	yes	none	U		1684	0.5041	evybaby-cube-360
+Etali, Primal Conqueror	RG	Creature	7	ETB FAT	mtgovc	yes	none	R		0		
+Eternal Witness	G	Creature	3	ETB GY	omega synergy vintage180 modern fairfight peasant	yes	none	G		12626	0.5013	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Eureka	G	Sorcery	4		oldschool	yes	Random	G		0		
+Eusocial Engineering	G	Enchantment	5		peasant	yes	none	G		669	0.5573	peasant-cube-180
+Everflowing Chalice		Artifact	0	ART RAMP	omega modern mtgovc	yes	none			465	0.4198	modern-era-cube-180 omega-cube-180
+Everything Pizza	WUBRG	Artifact	2		evybaby	yes	none		WUBRG	1691	0.4746	evybaby-cube-360
+Evolution Sage	G	Creature	3	CTR LND	synergy	yes	none	G		2838	0.4220	synergy-cube-180
+Evolved Sleeper	B	Creature	1	CTR AGG	modern	yes	none	B		96	0.4483	modern-era-cube-180
+Evolving Wilds		Land	0	LND GY	fairfight pauper	yes	none		WUBRG	10089	0.4839	fair-fight-cube-180 pauper-cube-180
+Exalted Angel	W	Creature	6	EVA LIFE	omega	yes	none	W		3408	0.5047	omega-cube-180
+Exclude	U	Instant	3	counter ETB	fairfight pauper	yes	none	U		10965	0.4998	fair-fight-cube-180 pauper-cube-180
+Exhibition Tidecaller	U	Creature	1		twobert	yes	none	U		0		
+Exhume	B	Sorcery	2	REAN GY	vintage180 mtgovc	yes	none	B		1533	0.4514	vintage-cube-180
+Exorcist	W	Creature	2		oldschool	yes	none	W		0		
+Expedition Map		Artifact	1	ART	mtgovc	yes	none			0		
+Experimental Confectioner	B	Creature	3		evybaby	yes	none	B		453	0.4968	evybaby-cube-360
+Experimental Synthesizer	R	Artifact	1	ART SAC	synergy fairfight pauper evybaby twobert	yes	none	R		4555	0.5036	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180 synergy-cube-180
+Expressive Iteration	UR	Sorcery	2	SPL	omega vintage180 modern evybaby mtgovc	yes	none	UR		122	0.4497	evybaby-cube-360 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Eye for an Eye	W	Instant	2		oldschool	yes	none	W		0		
+Fable of the Mirror-Breaker	R	Enchantment	3	ART TOK SAC	omega vintage180 modern mtgovc	yes	none	R		6631	0.5306	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Fabled Passage		Land	0	LND GY	mtgovc	yes	none		WUBRG	0		
+Fact or Fiction	U	Instant	4	CTRL GY	omega peasant	yes	none	U		4241	0.4370	omega-cube-180 peasant-cube-180
+Fading Hope	U	Instant	1	SPL removal	modern	yes	none	U		7	0.3703	modern-era-cube-180
+Faebloom Trick	U	Instant	3		evybaby	yes	none	U		1636	0.4921	evybaby-cube-360
+Faerie Guidemother	W	Creature	1	EVA AGG	pauper	yes	none	W		5	0.5597	pauper-cube-180
+Faerie Mastermind	U	Creature	2	EVA AGG	modern mtgovc	yes	none	U		3535	0.4436	modern-era-cube-180
+Faerie Seer	U	Creature	1	EVA	fairfight pauper evybaby	yes	none	U		48	0.4744	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Faerie Vandal	U	Creature	2		evybaby	yes	none	U		570	0.4610	evybaby-cube-360
+Faith's Fetters	W	Enchantment	4	removal	pauper	yes	none	W		724	0.5995	pauper-cube-180
+Faithless Looting	R	Sorcery	1	GY SPL REAN	synergy vintage180 pauper peasant evybaby twobert mtgovc	yes	All	R		13222	0.4492	evybaby-cube-360 pauper-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Falkenrath Aristocrat	BR	Creature	4	SAC AGG	omega	yes	none	BR		107	0.5669	omega-cube-180
+Falkenrath Noble	B	Creature	4	SAC EVA	fairfight pauper	yes	none	B		8474	0.5110	fair-fight-cube-180 pauper-cube-180
+Fallaji Archaeologist	U	Creature	2		peasant	yes	none	U		281	0.4551	peasant-cube-180
+Fallen Angel	B	Creature	5		oldschool	yes	none	B		0		
+Fallen Shinobi	UB	Creature	5	EVA AGG	mtgovc	yes	none	UB		0		
+Falling Star	R	Sorcery	3		oldschool	yes	none	R		0		
+Fanatic of Rhonas	G	Creature	2	TOK GY RAMP AGG	mtgovc	yes	none	G	G	0		
+Fanatical Firebrand	R	Creature	1	SAC AGG	pauper	yes	none	R		18	0.5261	pauper-cube-180
+Farrel's Mantle	W	Enchantment	3		oldschool	yes	none	W		0		
+Farrel's Zealot	W	Creature	3		oldschool	yes	none	W		0		
+Farseek	G	Sorcery	2		evybaby	yes	Random	G	WUBR	1418	0.5069	evybaby-cube-360
+Fastbond	G	Enchantment	1	RAMP LND	mtgovc oldschool	yes	none	G		0		
+Fatal Push	B	Instant	1	removal LND	omega synergy vintage180 modern fairfight peasant evybaby twobert mtgovc	yes	none	B		1761	0.5095	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Fateful Absence	W	Instant	2		fairfight	yes	none	W		1463	0.5550	fair-fight-cube-180
+Fblthp, Knows the Way			0		evybaby	no	none			0		
+Fear of Missing Out	R	Enchantment Creature	2	ETB GY AGG	mtgovc	yes	none	R		0		
+Feldon's Cane		Artifact	1		oldschool	yes	Random			0		
+Fellwar Stone		Artifact	2		oldschool	yes	none		WUBRG	0		
+Feral Thallid	G	Creature	6		oldschool	yes	none	G		0		
+Fervent Champion	R	Creature	1		fairfight	yes	none	R		13	0.4849	fair-fight-cube-180
+Fiery Confluence	R	Sorcery	4	removal ART	vintage180 evybaby mtgovc	yes	none	R		1094	0.4397	evybaby-cube-360 vintage-cube-180
+Figure of Destiny	WR	Creature	1	AGG	omega mtgovc	yes	none	WR		21	0.4634	omega-cube-180
+Figure of Fable	WG	Creature	1	AGG	mtgovc	yes	none	WG		0		
+Fire // Ice	UR	Instant	4	removal SPL	omega fairfight	yes	none	UR		341	0.4178	fair-fight-cube-180 omega-cube-180
+Fire Covenant	BR	Instant	3	removal	mtgovc	yes	All	BR		0		
+Fire Elemental	R	Creature	5		oldschool	yes	none	R		0		
+Fireball	R	Sorcery	1	removal RAMP	fairfight pauper oldschool	yes	none	R		3900	0.4954	fair-fight-cube-180 pauper-cube-180
+Fireblade Artist	BR	Creature	2	SAC	pauper	yes	All	BR		48	0.4558	pauper-cube-180
+Fireblast	R	Instant	6	AGG SPL	vintage180 mtgovc	yes	none	R		104	0.4839	vintage-cube-180
+Firebolt	R	Sorcery	1	removal GY	peasant evybaby mtgovc	yes	none	R		514	0.4745	evybaby-cube-360 peasant-cube-180
+Firebrand Archer	R	Creature	2	SPL	pauper	yes	none	R		3865	0.5009	pauper-cube-180
+Fissure	R	Instant	5		oldschool	yes	none	R		0		
+Flame Slash	R	Sorcery	1	removal	synergy modern pauper evybaby twobert mtgovc	yes	none	R		4758	0.5074	evybaby-cube-360 modern-era-cube-180 pauper-cube-180 synergy-cube-180
+Flame of Anor	UR	Instant	3	removal ART	mtgovc	yes	none	UR		0		
+Flametongue Kavu	R	Creature	4	ETB removal	omega fairfight evybaby	yes	none	R		3941	0.5203	evybaby-cube-360 fair-fight-cube-180 omega-cube-180
+Flash	U	Instant	2	REAN	mtgovc	yes	All	U		0		
+Flash Counter	U	Instant	2		oldschool	yes	none	U		0		
+Flashback	R	Instant	1		evybaby mtgovc	yes	none	R		21	0.5851	evybaby-cube-360
+Flashfires	R	Sorcery	4		oldschool	yes	Random	R		0		
+Flayer Husk		Artifact	1	ART TOK SAC	pauper	yes	none			6730	0.5098	pauper-cube-180
+Flickering Hound			0		evybaby twobert	no	none			0		
+Flickerwisp	W	Creature	3	ETB EVA	omega synergy vintage180 modern fairfight peasant twobert mtgovc	yes	none	W		2860	0.5484	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Fling	R	Instant	2	SAC SPL	fairfight pauper	yes	Random	R		497	0.5043	fair-fight-cube-180 pauper-cube-180
+Flitterwing Nuisance	U	Creature	1		evybaby	yes	none	U		459	0.4989	evybaby-cube-360
+Flooded Strand		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		WU	3878	0.5255	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Floodpits Drowner	U	Creature	2		peasant	yes	none	U		3056	0.4288	peasant-cube-180
+Floral Spuzzem	G	Creature	4		oldschool	yes	none	G		0		
+Flow State	U	Sorcery	2		evybaby	yes	none	U		254	0.4379	evybaby-cube-360
+Flying Men	U	Creature	1		oldschool	yes	none	U		0		
+Fog	G	Instant	1		oldschool	yes	none	G		0		
+Force Spike	U	Instant	1		oldschool	yes	none	U		0		
+Force of Nature	G	Creature	6		oldschool	yes	none	G		0		
+Force of Negation	U	Instant	3	counter GY	mtgovc	yes	none	U		0		
+Force of Vigor	G	Instant	4	ART	mtgovc	yes	none	G		0		
+Force of Will	U	Instant	5	counter CTRL	omega vintage180 mtgovc	yes	none	U		7141	0.4867	omega-cube-180 vintage-cube-180
+Forcefield		Artifact	3		oldschool	yes	none			0		
+Foreboding Landscape	UBG	Land	0		peasant	yes	none		UBG	1573	0.4595	peasant-cube-180
+Forensic Gadgeteer	U	Creature	3	TOK ART	mtgovc	yes	none	U		0		
+Fork	R	Instant	2		oldschool	yes	none	R		0		
+Formidable Speaker	G	Creature	3	ETB	mtgovc	yes	none	G		0		
+Forsaken Miner	B	Creature	1		evybaby twobert	yes	none	B		1131	0.4917	evybaby-cube-360
+Forth Eorlingas!	WR	Sorcery	2	TOK	mtgovc	yes	none	WR		0		
+Fractured Identity	WU	Sorcery	5	removal TOK	mtgovc	yes	none	WU		0		
+Frantic Search	U	Instant	3	GY RAMP SPL	vintage180 mtgovc	yes	Random	U		1422	0.4327	vintage-cube-180
+Frog Butler	G	Creature	2		evybaby	yes	none	G	WUBRG	624	0.5699	evybaby-cube-360
+Frost Trickster	U	Creature	3		peasant	yes	none	U		646	0.4144	peasant-cube-180
+Frozen Shade	B	Creature	3		oldschool	yes	none	B		0		
+Fury	R	Creature	5	ETB removal REAN	omega vintage180 modern mtgovc	yes	none	R		6416	0.5233	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Futurist Forge	U	Artifact	2		evybaby	yes	none	U		22	0.4046	evybaby-cube-360
+Gaea's Cradle	G	Land	0	LND AGG	mtgovc	yes	none		G	0		
+Gaea's Liege	G	Creature	6		oldschool	yes	All	G		0		
+Galewind Moose	G	Creature	6		evybaby	yes	none	G		849	0.5466	evybaby-cube-360
+Galvanic Blast	R	Instant	1		evybaby	yes	none	R		1403	0.4814	evybaby-cube-360
+Galvanic Discharge	R	Instant	1	removal	pauper mtgovc	yes	none	R		415	0.5264	pauper-cube-180
+Gandalf, Goblins' Bane	R	Creature	3		mtgovc	yes	none	R		0		
+Garruk Relentless	BG	Planeswalker	4	TOK removal	omega	yes	none	G		118	0.4855	omega-cube-180
+Garruk Wildspeaker	G	Planeswalker	4	RAMP TOK	omega vintage180 modern	yes	none	G		1489	0.5521	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Garruk, Curse Breaker	G	Planeswalker	5		mtgovc	yes	none	G		0		
+Gau, Feral Youth	R	Creature	2	CTR GY AGG	mtgovc	yes	none	R		0		
+Gauntlet of Might	R	Artifact	4		oldschool	yes	Random			0		
+Generous Ent	G	Creature	6	RAMP ART ETB	fairfight pauper evybaby twobert mtgovc	yes	none	G	G	9623	0.5147	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Generous Plunderer	R	Creature	2	TOK ART AGG	mtgovc	yes	none	R		0		
+Generous Revival			0		evybaby	no	none			0		
+Get Lost	W	Instant	2	removal TOK ART	mtgovc	yes	none	W		0		
+Ghazbán Ogre	G	Creature	1		oldschool	yes	Random	G		0		
+Ghost Ship	U	Creature	4		oldschool	yes	none	U		0		
+Ghostly Flicker	U	Instant	3	ETB SPL	pauper	yes	All	U		6157	0.4465	pauper-cube-180
+Giant Growth	G	Instant	1		oldschool	yes	none	G		0		
+Giant Killer	W	Creature	1		evybaby	yes	none	W		336	0.5365	evybaby-cube-360
+Giant Spider	G	Creature	4		oldschool	yes	none	G		0		
+Giant Tortoise	U	Creature	2		oldschool	yes	none	U		0		
+Giant Turtle	G	Creature	3		oldschool	yes	none	G		0		
+Gideon, Ally of Zendikar	W	Planeswalker	4	TOK CTRL	modern	yes	none	W		1852	0.5358	modern-era-cube-180
+Ginger, Queen of Sweets			0		mtgovc	no	none			0		
+Gitaxian Probe	U	Sorcery	1	SPL	mtgovc	yes	All	U		0		
+Githzerai Monk	W	Creature	5		peasant	yes	none	W		610	0.5413	peasant-cube-180
+Giver of Runes	W	Creature	1	AGG	mtgovc	yes	none	W		0		
+Glamer Gifter	U	Creature	2		evybaby	yes	none	U		285	0.4819	evybaby-cube-360
+Gleeful Demolition	R	Sorcery	1		evybaby	yes	none	R		982	0.4311	evybaby-cube-360
+Glen Elendra Archmage	U	Creature	4	counter	modern	yes	none	U		1366	0.4545	modern-era-cube-180
+Glimmer Lens	W	Artifact	2	TOK ART	mtgovc	yes	none	W		0		
+Gloom	B	Enchantment	3		oldschool	yes	Random	B		0		
+Glorybringer	R	Creature	5	EVA removal FAT	omega modern	yes	none	R		1785	0.5353	modern-era-cube-180 omega-cube-180
+Glowspore Shaman	BG	Creature	2	GY ETB	pauper	yes	none	BG		50	0.4285	pauper-cube-180
+Glóin the Mighty	R	Creature	4		evybaby	yes	none	R	R	33	0.4904	evybaby-cube-360
+Go for the Throat	B	Instant	2	removal	synergy modern evybaby	yes	none	B		4703	0.4898	evybaby-cube-360 modern-era-cube-180 synergy-cube-180
+Goblin Balloon Brigade	R	Creature	1		oldschool	yes	none	R		0		
+Goblin Bombardment	R	Enchantment	2	SAC TOK	synergy vintage180 peasant evybaby twobert mtgovc	yes	All	R		6825	0.4529	evybaby-cube-360 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Goblin Bushwhacker	R	Creature	1	AGG TOK	pauper	yes	none	R		35	0.4726	pauper-cube-180
+Goblin Engineer	R	Creature	2	ART GY REAN	vintage180 evybaby twobert mtgovc	yes	none	R		24	0.5422	evybaby-cube-360 vintage-cube-180
+Goblin Guide	R	Creature	1	AGG	omega vintage180 modern	yes	none	R		375	0.5069	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Goblin Plate Mail	BR	Artifact	2		peasant	yes	none	BR		4	0.4579	peasant-cube-180
+Goblin Rabblemaster	R	Creature	3	AGG TOK	omega synergy vintage180 modern	yes	none	R		5100	0.5149	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Goblin Surprise	R	Instant	3		peasant	yes	none	R		4184	0.4681	peasant-cube-180
+Goblin Welder	R	Creature	1	ART GY REAN	vintage180 evybaby mtgovc	yes	All	R		99	0.4535	evybaby-cube-360 vintage-cube-180
+Godless Shrine	WB	Land	0	LND	synergy modern peasant evybaby twobert mtgovc	yes	none		WB	2370	0.5261	evybaby-cube-360 modern-era-cube-180 peasant-cube-180 synergy-cube-180
+Goldspan Dragon	R	Creature	5	EVA ART RAMP	omega	yes	none	R		1843	0.5437	omega-cube-180
+Golgari Rot Farm	BG	Land	0	LND	pauper	yes	none		BG	1057	0.5079	pauper-cube-180
+Gollum, Silent Slinker	B	Creature	4		evybaby	yes	none	B		19	0.5126	evybaby-cube-360
+Gonti, Lord of Luxury	B	Creature	4		peasant	yes	none	B		2992	0.5342	peasant-cube-180
+Grafted Wargear		Artifact	3		peasant	yes	none			2986	0.5163	peasant-cube-180
+Granite Gargoyle	R	Creature	3		oldschool	yes	none	R		0		
+Grapple with the Past	G	Instant	2	GY RAMP	fairfight pauper	yes	none	G		5	0.5285	fair-fight-cube-180 pauper-cube-180
+Grave Titan	B	Creature	6	FAT TOK	omega	yes	none	B		137	0.5223	omega-cube-180
+Gravecrawler	B	Creature	1	GY SAC	synergy	yes	none	B		1203	0.5257	synergy-cube-180
+Gravedigger	B	Creature	4	ETB GY	fairfight pauper	yes	none	B		5108	0.5014	fair-fight-cube-180 pauper-cube-180
+Gray Merchant of Asphodel	B	Creature	5	ETB	fairfight pauper	yes	none	B		6170	0.5041	fair-fight-cube-180 pauper-cube-180
+Greed	B	Enchantment	4		oldschool	yes	none	B		0		
+Green Sun's Zenith	G	Sorcery	1	RAMP	vintage180 mtgovc	yes	none	G		17	0.4596	vintage-cube-180
+Greta, Sweettooth Scourge	BG	Creature	3		evybaby	yes	none	BG		76	0.5937	evybaby-cube-360
+Grief	B	Creature	4	ETB REAN discard	vintage180 modern mtgovc	yes	none	B		3737	0.4387	modern-era-cube-180 vintage-cube-180
+Grim Flayer	BG	Creature	2		fairfight	yes	none	BG		237	0.5292	fair-fight-cube-180
+Grim Haruspex	B	Creature	3	SAC	synergy twobert	yes	none	B		1653	0.5188	synergy-cube-180
+Grim Monolith		Artifact	2	ART RAMP	mtgovc	yes	Random			0		
+Grindstone		Artifact	1	ART	mtgovc	yes	none			0		
+Griselbrand	B	Creature	8	FAT REAN	vintage180 modern mtgovc	yes	none	B		3431	0.4477	modern-era-cube-180 vintage-cube-180
+Grist, the Hunger Tide	BG	Planeswalker	3	TOK SAC GY	omega synergy vintage180 modern mtgovc	yes	none	BG		746	0.5268	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Grizzly Bears	G	Creature	2		oldschool	yes	none	G		0		
+Grizzly Fate	G	Sorcery	5		peasant	yes	none	G		808	0.5749	peasant-cube-180
+Grumgully, the Generous	RG	Creature	3	CTR	synergy	yes	none	RG		0		
+Gruul Turf	RG	Land	0	LND	pauper	yes	none		RG	1196	0.5008	pauper-cube-180
+Guardian Beast	B	Creature	4		oldschool	yes	none	B		0		
+Guardian Idol		Artifact	2	ART RAMP	fairfight pauper	yes	none			5638	0.4923	fair-fight-cube-180 pauper-cube-180
+Guardian Scalelord	W	Creature	5	ETB CTR REAN	mtgovc	yes	none	W		0		
+Guide of Souls	W	Creature	1	CTR LIFE EVA AGG	mtgovc	yes	none	W		0		
+Gurmag Angler	B	Creature	7	GY	fairfight pauper	yes	none	B		8070	0.4940	fair-fight-cube-180 pauper-cube-180
+Gush	U	Instant	5	CTRL	mtgovc	yes	none	U		0		
+Gut, True Soul Zealot	R	Creature	3	TOK SAC ART EVA	peasant mtgovc	yes	none	R		3309	0.4797	peasant-cube-180
+Guttersnipe	R	Creature	3	SPL	fairfight pauper	yes	none	R		1654	0.4897	fair-fight-cube-180 pauper-cube-180
+Gwendlyn Di Corci	UBR	Creature	4		oldschool	yes	none	UBR		0		
+Gyruda, Doom of Depths	UB	Creature	6		twobert	yes	none	UB		0		
+Hallowed Fountain	WU	Land	0	LND	synergy modern evybaby twobert mtgovc	yes	none		WU	2839	0.5182	evybaby-cube-360 modern-era-cube-180 synergy-cube-180
+Halo Forager	UB	Creature	3		peasant evybaby	yes	Random	UB		1087	0.4373	evybaby-cube-360 peasant-cube-180
+Hand of Justice	W	Creature	6		oldschool	yes	none	W		0		
+Hangarback Walker		Artifact Creature	0	ART CTR TOK SAC	omega synergy fairfight twobert	yes	none			10907	0.5401	fair-fight-cube-180 omega-cube-180 synergy-cube-180
+Hanweir Battlements	R	Land	0		twobert	yes	none		R	0		
+Hanweir Garrison	R	Creature	3	TOK	synergy twobert	yes	none	R		101	0.5288	synergy-cube-180
+Hard Evidence	U	Sorcery	1	ART SPL	pauper evybaby	yes	none	U		8170	0.4787	evybaby-cube-360 pauper-cube-180
+Hardened Scales	G	Enchantment	1	CTR	synergy	yes	Random	G		2159	0.4383	synergy-cube-180
+Harrow	G	Instant	3		twobert	yes	none	G	WUBRG	0		
+Harvester of Misery	B	Creature	5	removal ETB	mtgovc	yes	none	B		0		
+Hasran Ogress	B	Creature	2		oldschool	yes	none	B		0		
+Haywire Mite	G	Artifact Creature	1	ART LIFE AGG	evybaby mtgovc	yes	none			45	0.4768	evybaby-cube-360
+Headliner Scarlett	R	Creature	4	ETB AGG	mtgovc	yes	none	R		0		
+Heartless Act	B	Instant	2	removal	modern	yes	none	B		676	0.4899	modern-era-cube-180
+Hedge Maze	UG	Land	0	LND	evybaby mtgovc	yes	none		UG	794	0.5258	evybaby-cube-360
+Hedron Crab	U	Creature	1		twobert	yes	none	U		0		
+Hell's Caretaker	B	Creature	4		oldschool	yes	Random	B		0		
+Hellfire	B	Sorcery	5		oldschool	yes	Random	B		0		
+Hellrider	R	Creature	4	AGG TOK	omega modern fairfight evybaby	yes	none	R		3243	0.5171	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180
+Hengegate Pathway	WU	Land	0	LND	modern	yes	none		WU	488	0.4862	modern-era-cube-180
+Hero of Bladehold	W	Creature	4	TOK AGG	omega	yes	none	W		754	0.5103	omega-cube-180
+Hero of the Dunes	WB	Creature	5		peasant	yes	none	WB		293	0.6230	peasant-cube-180
+Hero's Downfall	B	Instant	3	removal	modern	yes	none	B		2117	0.4511	modern-era-cube-180
+Heroic Reinforcements	WR	Sorcery	4		peasant	yes	none	WR		169	0.5714	peasant-cube-180
+Hexdrinker	G	Creature	1	AGG	mtgovc	yes	none	G		0		
+Hexgold Halberd	R	Artifact	2		evybaby	yes	none	R		114	0.4999	evybaby-cube-360
+Hidden Stockpile	WB	Enchantment	2		twobert	yes	none	WB		0		
+High Fae Trickster	U	Creature	4		evybaby	yes	none	U		1661	0.4991	evybaby-cube-360
+High Tide	U	Instant	1	RAMP SPL	oldschool	yes	All	U		0		
+Hivespine Wolverine	G	Creature	5		evybaby	yes	none	G		306	0.5245	evybaby-cube-360
+Holy Light	W	Instant	3		oldschool	yes	none	W		0		
+Homarid Spawning Bed	U	Enchantment	2		oldschool	yes	All	U		0		
+Honest Rutstein	BG	Creature	3		peasant	yes	none	BG		1170	0.5865	peasant-cube-180
+Hordeling Outburst	R	Sorcery	3	TOK SPL	synergy fairfight pauper peasant twobert	yes	none	R		2635	0.5070	fair-fight-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Horizon Canopy	WG	Land	0	LND	peasant mtgovc	yes	none		WG	592	0.4722	peasant-cube-180
+Hornet Queen	G	Creature	7	TOK ETB FAT	modern	yes	none	G		378	0.5804	modern-era-cube-180
+Howl from Beyond	B	Instant	1		oldschool	yes	none	B		0		
+Howling Mine		Artifact	2		oldschool	yes	none			0		
+Hullbreacher	U	Creature	3	TOK ART RAMP	mtgovc	yes	none	U	WUBRG	0		
+Hullbreaker Horror	U	Creature	7		evybaby	yes	none	U		1371	0.4910	evybaby-cube-360
+Hunter's Talent	G	Enchantment	2		peasant evybaby	yes	none	G		3653	0.5205	evybaby-cube-360 peasant-cube-180
+Huntmaster of the Fells	RG	Creature	4	ETB TOK LIFE	omega	yes	none	RG		130	0.5733	omega-cube-180
+Hurkyl's Recall	U	Instant	2		oldschool	yes	none	U		0		
+Hurricane	G	Sorcery	1		oldschool	yes	none	G		0		
+Hymn to Tourach	B	Sorcery	2	discard	omega vintage180 mtgovc oldschool	yes	none	B		1711	0.4944	omega-cube-180 vintage-cube-180
+Hypnotic Specter	B	Creature	3	EVA discard AGG	omega oldschool	yes	none	B		2836	0.5053	omega-cube-180
+Icatian Javelineers	W	Creature	1		oldschool	yes	none	W		0		
+Icatian Scout	W	Creature	1		oldschool	yes	none	W		0		
+Icatian Town	W	Sorcery	6		oldschool	yes	none	W		0		
+Ice Cream Kitty	BG	Artifact Creature	2		twobert	yes	none	BG		0		
+Ice Storm	G	Sorcery	3		oldschool	yes	none	G		0		
+Icefall Regent	U	Creature	5		evybaby	yes	none	U		1142	0.5249	evybaby-cube-360
+Icetill Explorer	G	Creature	4	GY LND	mtgovc	yes	none	G		0		
+Ichor Wellspring		Artifact	2	ART SAC	synergy pauper	yes	Random			12319	0.4954	pauper-cube-180 synergy-cube-180
+Icy Manipulator		Artifact	4		oldschool	yes	none			0		
+Ifh-Bíff Efreet	G	Creature	4		oldschool	yes	none	G		0		
+Ignoble Hierarch	BRG	Creature	1	RAMP AGG	twobert mtgovc	yes	none	G	BRG	0		
+Immolation	R	Enchantment	1		oldschool	yes	none	R		0		
+Imperial Seal	B	Sorcery	1	CTRL	mtgovc	yes	Random	B		0		
+Impractical Joke	R	Sorcery	1	removal SPL	mtgovc	yes	none	R		0		
+Imprison	B	Enchantment	1		oldschool	yes	All	B		0		
+Incinerate	R	Instant	2	removal SPL	omega	yes	none	R		468	0.5225	omega-cube-180
+Indatha Triome	WBG	Land	0	LND	mtgovc	yes	none		WBG	0		
+Infernal Grasp	B	Instant	2	removal	vintage180 twobert mtgovc	yes	none	B		26	0.3914	vintage-cube-180
+Inferno	R	Instant	7		oldschool	yes	none	R		0		
+Inferno Titan	R	Creature	6	FAT ETB removal	omega vintage180 modern	yes	none	R		4720	0.5410	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Infestation Sage	B	Creature	1		evybaby	yes	none	B		104	0.4435	evybaby-cube-360
+Inquisition of Kozilek	B	Sorcery	1	discard	modern mtgovc	yes	none	B		1843	0.4342	modern-era-cube-180
+Inspiring Overseer	W	Creature	3	ETB EVA	fairfight pauper peasant	yes	none	W		7627	0.5604	fair-fight-cube-180 pauper-cube-180 peasant-cube-180
+Inspiring Vantage	WR	Land	0	LND	mtgovc	yes	none		WR	0		
+Instill Energy	G	Enchantment	1		oldschool	yes	none	G		0		
+Intangible Virtue	W	Enchantment	2	TOK	synergy	yes	Random	W		11	0.5156	synergy-cube-180
+Inti, Seneschal of the Sun	R	Creature	2	CTR AGG	mtgovc	yes	none	R		0		
+Iron Hills Blacksmith	W	Creature	2		twobert	yes	none	W		0		
+Iron Man Armor		Artifact	3	ART	mtgovc	yes	none			0		
+Iron-Shield Elf	B	Creature	2	AGG	peasant twobert mtgovc	yes	none	B		137	0.5350	peasant-cube-180
+Ironclaw Orcs	R	Creature	2		oldschool	yes	none	R		0		
+Isamaru, Hound of Konda	W	Creature	1		evybaby	yes	none	W		226	0.5691	evybaby-cube-360
+Island Sanctuary	W	Enchantment	2		oldschool	yes	All	W		0		
+Island of Wak-Wak		Land	0		oldschool	yes	All			0		
+Ivora, Insatiable Heir	R	Creature	2	TOK ETB CTR ART AGG	mtgovc	yes	none	R		0		
+Ivory Tower		Artifact	1		oldschool	yes	none			0		
+Izzet Boilerworks	UR	Land	0	LND	pauper	yes	none		UR	1724	0.4925	pauper-cube-180
+Izzet Charm	UR	Instant	2	SPL removal counter	pauper	yes	none	UR		220	0.5000	pauper-cube-180
+Jace, Vryn's Prodigy	U	Creature	2	SPL GY	omega synergy vintage180 modern twobert mtgovc	yes	none	U		16228	0.4515	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Jace, Wielder of Mysteries	U	Planeswalker	4	CTRL	mtgovc	yes	Random	U		0		
+Jace, the Mind Sculptor	U	Planeswalker	4	CTRL SPL	omega vintage180 modern mtgovc	yes	none	U		11094	0.4775	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Jacked Rabbit	W	Creature	2	TOK CTR AGG	mtgovc	yes	none	W		0		
+Jade Statue		Artifact	4		oldschool	yes	none			0		
+Jalum Tome		Artifact	3		oldschool	yes	Random			0		
+Jayemdae Tome		Artifact	4		oldschool	yes	none			0		
+Jennifer Walters	WG	Creature	2	AGG	mtgovc	yes	none	W		0		
+Jetmir's Garden	WRG	Land	0	LND	mtgovc	yes	none		WRG	0		
+Jewel Thief	G	Creature	3	ART AGG	fairfight pauper evybaby	yes	none	G	WUBRG	1944	0.5306	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Jihad	W	Enchantment	3		oldschool	yes	none	W		0		
+Journey to Nowhere	W	Enchantment	2	removal ETB	fairfight pauper	yes	none	W		4113	0.5618	fair-fight-cube-180 pauper-cube-180
+Judge's Familiar	WU	Creature	1	EVA counter	pauper	yes	none	WU		19	0.5383	pauper-cube-180
+Juggernaut		Artifact Creature	4		oldschool	yes	none			0		
+Jungle Hollow	BG	Land	0	LND	fairfight pauper	yes	none		BG	2146	0.5069	fair-fight-cube-180 pauper-cube-180
+Junji, the Midnight Sky	B	Creature	5		evybaby	yes	none	B		943	0.4974	evybaby-cube-360
+Junún Efreet	B	Creature	3		oldschool	yes	none	B		0		
+Juri, Master of the Revue	BR	Creature	2	SAC CTR	synergy twobert	yes	none	BR		1	0.4754	synergy-cube-180
+Juzám Djinn	B	Creature	4		oldschool	yes	none	B		0		
+Ka-Zar of the Savage Land	G	Creature	5		peasant evybaby	yes	none	G		626	0.5690	evybaby-cube-360 peasant-cube-180
+Kaito, Bane of Nightmares	UB	Planeswalker	4	CTRL	mtgovc	yes	none	UB		0		
+Kaldra Compleat		Artifact	7	ART FAT	vintage180 mtgovc	yes	none			3725	0.5052	vintage-cube-180
+Kappa Cannoneer	U	Artifact Creature	6	ART AGG	vintage180 mtgovc	yes	none	U		2826	0.5053	vintage-cube-180
+Karakas	W	Land	0	LND AGG	mtgovc oldschool	yes	none		W	0		
+Kari Zev, Skyship Raider	R	Creature	2	TOK	synergy modern fairfight twobert	yes	none	R		134	0.5607	fair-fight-cube-180 modern-era-cube-180 synergy-cube-180
+Karma	W	Enchantment	4		oldschool	yes	Random	W		0		
+Karn Liberated		Planeswalker	7	CTRL FAT removal	omega modern	yes	none			6691	0.5025	modern-era-cube-180 omega-cube-180
+Karn, Scion of Urza		Planeswalker	4	ART CTRL	omega synergy vintage180 twobert mtgovc	yes	none			10087	0.5227	omega-cube-180 synergy-cube-180 vintage-cube-180
+Keen-Eyed Curator	G	Creature	2	GY AGG	mtgovc	yes	none	G		0		
+Kellan, Planar Trailblazer	R	Creature	1		evybaby	yes	none	R		295	0.4444	evybaby-cube-360
+Ketria Triome	URG	Land	0	LND	mtgovc	yes	none		URG	0		
+Khabál Ghoul	B	Creature	3		oldschool	yes	none	B		0		
+Khenra Spellspear	UR	Creature	2		peasant	yes	none	R		3918	0.4726	peasant-cube-180
+Killer Bees	G	Creature	3		oldschool	yes	none	G		0		
+Killian, Ink Duelist	WB	Creature	2		evybaby	yes	none	WB		60	0.5749	evybaby-cube-360
+King Suleiman	W	Creature	2		oldschool	yes	none	W		0		
+Kird Ape	R	Creature	1		oldschool	yes	none	R		0		
+Kismet	W	Enchantment	4		oldschool	yes	none	W		0		
+Kitchen Finks	WG	Creature	3	ETB LIFE	twobert	yes	none	WG		0		
+Kitesail Freebooter	B	Creature	2	ETB discard	synergy modern fairfight	yes	none	B		2954	0.5079	fair-fight-cube-180 modern-era-cube-180 synergy-cube-180
+Knight of Autumn	WG	Creature	3	ETB LIFE	synergy	yes	none	WG		34	0.6108	synergy-cube-180
+Knight of the Reliquary	WG	Creature	3	LND AGG	omega vintage180 modern mtgovc	yes	none	WG		30	0.4788	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Knockout Maneuver	G	Sorcery	3		evybaby	yes	none	G		906	0.5561	evybaby-cube-360
+Kokusho, the Evening Star	B	Creature	6	FAT LIFE SAC REAN	omega	yes	none	B		2403	0.5225	omega-cube-180
+Kolaghan's Command	BR	Instant	3	removal GY ART	omega vintage180 modern evybaby mtgovc	yes	none	BR		968	0.4925	evybaby-cube-360 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Kor Skyfisher	W	Creature	2	ETB EVA ART	fairfight pauper peasant	yes	none	W		13128	0.5282	fair-fight-cube-180 pauper-cube-180 peasant-cube-180
+Kormus Bell		Artifact	4		oldschool	yes	Random			0		
+Krenko, Tin Street Kingpin	R	Creature	3	TOK CTR	synergy	yes	none	R		1546	0.4476	synergy-cube-180
+Krosan Tusker	G	Creature	7	RAMP GY	fairfight pauper	yes	none	G	WUBRG	1296	0.4527	fair-fight-cube-180 pauper-cube-180
+Kuldotha Rebirth	R	Sorcery	1	ART TOK SAC	pauper	yes	Random	R		12	0.5623	pauper-cube-180
+Kumano Faces Kakkazan	R	Enchantment	1		evybaby	yes	none	R		64	0.4523	evybaby-cube-360
+Laelia, the Blade Reforged	R	Creature	3	AGG ART	vintage180 mtgovc	yes	none	R		2553	0.5045	vintage-cube-180
+Lakeshore Apothecary	U	Creature	2		evybaby	yes	none	U		26	0.4563	evybaby-cube-360
+Lampad of Death's Vigil	B	Enchantment Creature	2		peasant	yes	none	B		10	0.4330	peasant-cube-180
+Land Tax	W	Enchantment	1		oldschool	yes	none	W	WUBRG	0		
+Land's Edge	R	Enchantment	3		oldschool	yes	All	R		0		
+Large Bear	BG	Creature	5		evybaby	yes	none	BG		87	0.5607	evybaby-cube-360
+Lava Dart	R	Instant	1		mtgovc	yes	none	R		0		
+Leatherhead, Swamp Stalker	G	Creature	4		evybaby	yes	none	G		296	0.5474	evybaby-cube-360
+Ledger Shredder	U	Creature	2	SPL CTR GY AGG	vintage180 modern fairfight mtgovc	yes	none	U		14329	0.4710	fair-fight-cube-180 modern-era-cube-180 synergy-cube-180 vintage-cube-180
+Legion Extruder	R	Artifact	2	removal TOK SAC ART	mtgovc	yes	none	R		0		
+Legion Warboss	R	Creature	3	TOK	synergy twobert	yes	none	R		265	0.4526	synergy-cube-180
+Leonardo, Leader in Blue	W	Creature	1		evybaby	yes	none	W		130	0.5199	evybaby-cube-360
+Lessons from Life	UG	Sorcery	4		evybaby twobert	yes	none	UG		215	0.5234	evybaby-cube-360
+Ley Druid	G	Creature	3		oldschool	yes	none	G		0		
+Leyline Binding	W	Enchantment	6	removal	mtgovc	yes	Random	W		0		
+Library of Alexandria		Land	0	LND	mtgovc oldschool	yes	none			0		
+Library of Leng		Artifact	1		oldschool	yes	none			0		
+Life // Death	BG	Sorcery	3	REAN	mtgovc	yes	none	BG		0		
+Life of Toshiro Umezawa	B	Enchantment	2		evybaby	yes	none	B		1318	0.4791	evybaby-cube-360
+Lifeforce	G	Enchantment	2		oldschool	yes	Random	G		0		
+Light Up the Stage	R	Sorcery	3	SPL AGG	modern	yes	none	R		1288	0.5359	modern-era-cube-180
+Lightning Bolt	R	Instant	1	removal SPL AGG	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc oldschool	yes	none	R		20960	0.4966	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Lightning Greaves		Artifact	2	ART	mtgovc	yes	none			0		
+Lightning Helix	WR	Instant	2	removal LIFE SPL	omega synergy vintage180 modern fairfight evybaby	yes	none	WR		3652	0.5571	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Liliana of the Veil	B	Planeswalker	3	discard GY CTRL	omega vintage180 modern mtgovc	yes	none	B		3136	0.4778	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Liliana, the Last Hope	B	Planeswalker	3	GY removal CTRL	omega	yes	none	B		2776	0.5061	omega-cube-180
+Lingering Souls	WB	Sorcery	3	TOK GY EVA	omega synergy vintage180 modern peasant evybaby twobert mtgovc	yes	none	W		14398	0.5609	evybaby-cube-360 modern-era-cube-180 omega-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Lion Sash	W	Artifact Creature	2	CTR GY ART AGG	evybaby mtgovc	yes	none	W		918	0.5245	evybaby-cube-360
+Lion's Eye Diamond		Artifact	0	ART RAMP	mtgovc	yes	All			0		
+Lita, Little Orphan Amphibian	W	Creature	2		peasant	yes	none	W		630	0.5708	peasant-cube-180
+Lively Dirge	B	Sorcery	2		peasant	yes	none	B		2846	0.5356	peasant-cube-180
+Living Plane	G	Enchantment	4		oldschool	yes	Random	G		0		
+Llanowar Elves	G	Creature	1	RAMP	omega synergy vintage180 modern fairfight pauper peasant evybaby mtgovc oldschool	yes	none	G	G	11802	0.5130	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Llanowar Visionary	G	Creature	3	RAMP ETB	fairfight pauper twobert	yes	none	G	G	4028	0.5003	fair-fight-cube-180 pauper-cube-180
+Loam Lion	W	Creature	1		evybaby	yes	none	W		38	0.5343	evybaby-cube-360
+Lone Missionary	W	Creature	2	ETB	pauper	yes	none	W		21	0.6584	pauper-cube-180
+Lonis, Cryptozoologist	UG	Creature	2	ART ETB	synergy	yes	none	UG		85	0.3332	synergy-cube-180
+Loran of the Third Path	W	Creature	3	ETB ART removal	vintage180 modern mtgovc	yes	Random	W		4467	0.5327	modern-era-cube-180 vintage-cube-180
+Lord of the Pit	B	Creature	7		oldschool	yes	none	B		0		
+Lose Focus	U	Instant	2	counter CTRL	mtgovc	yes	none	U		0		
+Lotus Cobra	G	Creature	2	RAMP LND	omega synergy vintage180 modern	yes	none	G	WUBRG	9708	0.4887	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Lotus Petal		Artifact	0	ART SAC	synergy mtgovc	yes	Random		WUBRG	6228	0.5013	synergy-cube-180
+Lovestruck Beast	G	Creature	3		fairfight	yes	none	G		490	0.5333	fair-fight-cube-180
+Loxodon Smiter	WG	Creature	3		evybaby	yes	none	WG		192	0.5707	evybaby-cube-360
+Loxodon Warhammer		Artifact	3		peasant	yes	none			5042	0.5196	peasant-cube-180
+Lumbering Worldwagon	G	Artifact	3		evybaby	yes	none	G	WUBRG	385	0.5308	evybaby-cube-360
+Luminarch Aspirant	W	Creature	2	AGG CTR	omega synergy vintage180 modern mtgovc	yes	none	W		13039	0.5678	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Lunarch Veteran	W	Creature	1	LIFE TOK GY	synergy	yes	none	W		2384	0.6772	synergy-cube-180
+Lurrus of the Dream-Den	WB	Creature	3	GY LIFE	evybaby mtgovc	yes	none	WB		265	0.5438	evybaby-cube-360
+Lush Portico	WG	Land	0	LND	evybaby mtgovc	yes	none		WG	402	0.4787	evybaby-cube-360
+Lutri, the Spellchaser	UR	Creature	3	ETB	mtgovc	yes	none	UR		0		
+Lórien Revealed	U	Sorcery	5	CTRL	peasant evybaby twobert mtgovc	yes	none	U	U	5321	0.4388	evybaby-cube-360 peasant-cube-180
+Maelstrom Pulse	BG	Sorcery	3	removal	omega	yes	none	BG		4	0.5000	omega-cube-180
+Mahamoti Djinn	U	Creature	6		oldschool	yes	none	U		0		
+Malcolm, Alluring Scoundrel	U	Creature	2	EVA AGG	mtgovc	yes	none	U		0		
+Malevolent Rumble	G	Sorcery	2	TOK GY	peasant mtgovc	yes	none	G		1853	0.5585	peasant-cube-180
+Man-o'-War	U	Creature	3	ETB removal	omega fairfight pauper	yes	none	U		20409	0.4807	fair-fight-cube-180 omega-cube-180 pauper-cube-180 synergy-cube-180
+Mana Confluence		Land	0	LND	mtgovc	yes	none		WUBRG	0		
+Mana Crypt		Artifact	0	ART RAMP	mtgovc	yes	Random			0		
+Mana Drain	U	Instant	2	counter CTRL RAMP	vintage180 mtgovc oldschool	yes	none	U		3074	0.4783	vintage-cube-180
+Mana Flare	R	Enchantment	3		oldschool	yes	none	R		0		
+Mana Leak	U	Instant	2	counter SPL	omega synergy modern fairfight pauper peasant twobert mtgovc	yes	none	U		28600	0.4673	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Mana Short	U	Instant	3		oldschool	yes	All	U		0		
+Mana Tithe	W	Instant	1	counter CTRL	evybaby mtgovc	yes	none	W		1058	0.4981	evybaby-cube-360
+Mana Vault		Artifact	1	ART RAMP	mtgovc oldschool	yes	Random			0		
+Manabarbs	R	Enchantment	4		oldschool	yes	Random	R		0		
+Manamorphose	RG	Instant	2	SPL	mtgovc	yes	All	RG		0		
+Manifold Key		Artifact	1	ART	mtgovc	yes	All			0		
+Marauding Sphinx	U	Creature	5		peasant	yes	none	U		710	0.4726	peasant-cube-180
+March of Otherworldly Light	W	Instant	1	removal ART	synergy modern twobert	yes	none	W		10	0.5190	modern-era-cube-180 synergy-cube-180
+March of the Multitudes	WG	Instant	3		evybaby	yes	none	WG		248	0.5783	evybaby-cube-360
+Marionette Apprentice	B	Creature	2		peasant	yes	none	B		3968	0.5471	peasant-cube-180
+Marionette Master	B	Creature	6	ART SAC CTR	synergy twobert	yes	none	B		914	0.5160	synergy-cube-180
+Marsh Flats		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		WB	1991	0.5285	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Marwyn, the Preserver			0		mtgovc	no	none			0		
+Master of the Hunt	G	Creature	4		oldschool	yes	none	G		0		
+Master's Councillors	U	Creature	2		evybaby	yes	none	U		89	0.4953	evybaby-cube-360
+Mayhem Devil	BR	Creature	3	SAC	synergy fairfight peasant evybaby twobert	yes	none	BR		109	0.4040	evybaby-cube-360 fair-fight-cube-180 peasant-cube-180 synergy-cube-180
+Maze of Ith		Land	0		oldschool	yes	Random			0		
+Mechanized Ninja Cavalry	WR	Artifact Creature	2		evybaby twobert	yes	none	WR		59	0.4303	evybaby-cube-360
+Meekstone		Artifact	1		oldschool	yes	Random			0		
+Memory Deluge	U	Instant	4	GY	modern	yes	none	U		3688	0.4566	modern-era-cube-180
+Memory Jar		Artifact	5	discard ART	mtgovc	yes	All			0		
+Memory Lapse	U	Instant	2	counter SPL	vintage180 mtgovc	yes	none	U		2944	0.4828	vintage-cube-180
+Mentor of the Meek	W	Creature	3	TOK ETB	synergy	yes	none	W		2867	0.6491	synergy-cube-180
+Mesa Pegasus	W	Creature	2		oldschool	yes	none	W		0		
+Metalhead	UR	Artifact Creature	5		evybaby	yes	none	U		1052	0.4888	evybaby-cube-360
+Metamorphosis Fanatic	B	Creature	6	ETB REAN LIFE FAT	mtgovc	yes	none	B		0		
+Meticulous Archive	WU	Land	0	LND	peasant evybaby mtgovc	yes	none		WU	1635	0.5295	evybaby-cube-360 peasant-cube-180
+Micromancer	U	Creature	4		evybaby	yes	Random	U		1811	0.5188	evybaby-cube-360
+Midnight Reaper	B	Creature	3	SAC	synergy	yes	none	B		527	0.5155	synergy-cube-180
+Mighty Mutanimals	W	Creature	4		peasant	yes	none	W		1151	0.6020	peasant-cube-180
+Mijae Djinn	R	Creature	3		oldschool	yes	none	R		0		
+Militia Bugler	W	Creature	3	ETB	pauper	yes	none	W		3584	0.5552	pauper-cube-180
+Millstone		Artifact	2		oldschool	yes	none			0		
+Mind Stone		Artifact	2	ART RAMP	omega synergy modern fairfight pauper peasant mtgovc	yes	none			26120	0.4887	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Mind Twist	B	Sorcery	1	discard	mtgovc oldschool	yes	none	B		0		
+Mindstab Thrull	B	Creature	3		oldschool	yes	none	B		0		
+Mine Collapse	R	Instant	4	removal SAC	mtgovc	yes	none	R		0		
+Minsc & Boo, Timeless Heroes	RG	Planeswalker	4	AGG SAC	vintage180 modern mtgovc	yes	none	RG		1008	0.5689	modern-era-cube-180 vintage-cube-180
+Mintstrosity	B	Creature	2		evybaby	yes	none	B		152	0.4883	evybaby-cube-360
+Mire Triton	B	Creature	2	GY ETB	fairfight pauper	yes	none	B		1724	0.5381	fair-fight-cube-180 pauper-cube-180
+Mirkwood Nurturer	UG	Creature	3		evybaby	yes	none	UG		29	0.4080	evybaby-cube-360
+Mirkwood Pathmaker	G	Creature	3		evybaby	yes	none	G		123	0.6013	evybaby-cube-360
+Mirror Universe		Artifact	6		oldschool	yes	none			0		
+Miscalculation	U	Instant	2	counter SPL CTRL	peasant mtgovc	yes	none	U		3927	0.4320	peasant-cube-180
+Mischievous Mystic	U	Creature	2		evybaby	yes	none	U		1761	0.5132	evybaby-cube-360
+Mischievous Pup	W	Creature	3		evybaby	yes	none	W		44	0.5155	evybaby-cube-360
+Mishra's Bauble		Artifact	0	ART SAC SPL	synergy vintage180 peasant evybaby twobert mtgovc	yes	All			12619	0.4695	evybaby-cube-360 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Mishra's Factory		Land	0	LND AGG	omega oldschool	yes	none			0		
+Mishra's Workshop		Land	0	LND	mtgovc oldschool	yes	Random			0		
+Mist Raven	U	Creature	4	ETB EVA removal	pauper	yes	none	U		6510	0.5193	pauper-cube-180
+Misty Rainforest		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		UG	3101	0.4415	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Moat	W	Enchantment	4		oldschool	yes	Random	W		0		
+Mogg War Marshal	R	Creature	2	TOK SAC ETB	fairfight pauper peasant	yes	none	R		1297	0.5342	fair-fight-cube-180 pauper-cube-180 peasant-cube-180
+Mole Man, Moloid Master	G	Creature	3	TOK GY LND	mtgovc	yes	none	G		0		
+Momentary Blink	WU	Instant	2	ETB GY SPL	fairfight pauper	yes	none	W		3145	0.5274	fair-fight-cube-180 pauper-cube-180
+Momo, Friendly Flier	W	Creature	1		evybaby	yes	none	W		209	0.5240	evybaby-cube-360
+Momo, Playful Pet	W	Creature	1		peasant	yes	none	W		218	0.6512	peasant-cube-180
+Monastery Swiftspear	R	Creature	1	AGG SPL	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc	yes	none	R		20237	0.4953	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Monstrous Rage	R	Instant	1		evybaby	yes	none	R		236	0.4101	evybaby-cube-360
+Moon-Circuit Hacker	U	Enchantment Creature	2	EVA	fairfight pauper evybaby	yes	none	U		651	0.5438	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Moonshadow	B	Creature	1	GY AGG	mtgovc	yes	none	B		0		
+Moorish Cavalry	W	Creature	4		oldschool	yes	none	W		0		
+Morbid Opportunist	B	Creature	3		peasant	yes	none	B		3717	0.5347	peasant-cube-180
+Morphling	U	Creature	5	CTRL EVA	omega	yes	none	U		4183	0.4680	omega-cube-180
+Mother Bear	G	Creature	2	TOK GY	pauper	yes	none	G		34	0.4258	pauper-cube-180
+Mother of Runes	W	Creature	1	AGG	omega vintage180 mtgovc	yes	none	W		4216	0.5140	omega-cube-180 vintage-cube-180
+Mountain Yeti	R	Creature	4		oldschool	yes	none	R		0		
+Mouser Foundry	R	Artifact	2		evybaby twobert	yes	none	R		316	0.5089	evybaby-cube-360
+Mox Diamond		Artifact	0	GY ART RAMP	mtgovc	yes	none		WUBRG	0		
+Mox Emerald	G	Artifact	0	RAMP ART	vintage180 mtgovc oldschool	yes	none		G	4361	0.5152	vintage-cube-180
+Mox Jet	B	Artifact	0	RAMP ART	vintage180 mtgovc oldschool	yes	none		B	4366	0.5164	vintage-cube-180
+Mox Opal		Artifact	0	ART RAMP	mtgovc	yes	Random		WUBRG	0		
+Mox Pearl	W	Artifact	0	RAMP ART	vintage180 mtgovc oldschool	yes	none		W	4332	0.5129	vintage-cube-180
+Mox Ruby	R	Artifact	0	RAMP ART	vintage180 mtgovc oldschool	yes	none		R	4388	0.5113	vintage-cube-180
+Mox Sapphire	U	Artifact	0	RAMP ART	vintage180 mtgovc oldschool	yes	none		U	4372	0.5137	vintage-cube-180
+Mulldrifter	U	Creature	5	ETB CTRL EVA	omega synergy modern fairfight pauper peasant twobert	yes	none	U		26242	0.4728	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Multiversal Passage		Land	0	LND	mtgovc	yes	none			0		
+Murderous Redcap	BR	Creature	4	SAC ETB GY	synergy evybaby twobert	yes	none	BR		322	0.4356	evybaby-cube-360
+Murderous Rider	B	Creature	3	removal LIFE	modern fairfight	yes	none	B		4154	0.4843	fair-fight-cube-180 modern-era-cube-180
+Murktide Regent	U	Creature	7	SPL GY EVA	omega modern	yes	none	U		7800	0.4671	modern-era-cube-180 omega-cube-180
+Murmuring Mystic	U	Creature	4	SPL TOK	synergy fairfight pauper peasant	yes	none	U		14662	0.4775	fair-fight-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Mutagenic Growth	G	Instant	1		mtgovc	yes	none	G		0		
+Mutavault		Land	0	LND AGG	omega	yes	none			0		
+Myr Battlesphere		Artifact Creature	7	ART FAT	vintage180 mtgovc	yes	none			4205	0.4985	vintage-cube-180
+Myr Sire		Artifact Creature	2	ART SAC TOK	synergy fairfight pauper twobert	yes	none			1025	0.5391	fair-fight-cube-180 pauper-cube-180 synergy-cube-180
+Mystic Confluence	U	Instant	5	CTRL SPL	vintage180 twobert mtgovc	yes	All	U		3074	0.4515	vintage-cube-180
+Mystic Forge		Artifact	4	ART	mtgovc	yes	Random			0		
+Mystic Snake	UG	Creature	4	counter ETB	omega	yes	none	UG		1	0.5238	omega-cube-180
+Mystical Tutor	U	Instant	1	SPL REAN	mtgovc	yes	Random	U		0		
+Nadu, Winged Wisdom	UG	Creature	3	EVA	mtgovc	yes	none	UG		0		
+Nahiri, Storm of Stone	WR	Planeswalker	4		fairfight	yes	none	WR		142	0.5494	fair-fight-cube-180
+Narset, Parter of Veils	U	Planeswalker	3	CTRL	mtgovc	yes	none	U		0		
+Nasty Little Rabbit	G	Creature	1		evybaby	yes	none	G		151	0.5087	evybaby-cube-360
+Natural Order	G	Sorcery	4	REAN FAT	vintage180 mtgovc	yes	none	G		811	0.4477	vintage-cube-180
+Necromancy	B	Enchantment	3	REAN GY	vintage180 mtgovc	yes	none	B		1520	0.4753	vintage-cube-180
+Needleverge Pathway	WR	Land	0	LND	modern	yes	none		WR	255	0.5600	modern-era-cube-180
+Nessian Hornbeetle	G	Creature	2		evybaby	yes	none	G		176	0.5255	evybaby-cube-360
+Nest Invader	G	Creature	2	TOK SAC RAMP	fairfight pauper	yes	none	G		743	0.5004	fair-fight-cube-180 pauper-cube-180
+Nested Shambler	B	Creature	1	SAC TOK	fairfight pauper	yes	none	B		16	0.5513	fair-fight-cube-180 pauper-cube-180
+Nether Void	B	Enchantment	4		oldschool	yes	Random	B		0		
+Nethergoyf	B	Creature	1	GY AGG	mtgovc	yes	All	B		0		
+Nettlecyst		Artifact	3	TOK ART	mtgovc	yes	none			0		
+Nevinyrral's Disk		Artifact	4		oldschool	yes	none			0		
+Nezumi Linkbreaker	B	Creature	1		evybaby	yes	none	B		29	0.5508	evybaby-cube-360
+Nezumi Prowler	B	Artifact Creature	2		evybaby	yes	none	B		131	0.5165	evybaby-cube-360
+Nicol Bolas	UBR	Creature	8		oldschool	yes	none	UBR		0		
+Night Nurse, Healer of Heroes	W	Creature	2	ETB GY LIFE AGG	mtgovc	yes	none	W		0		
+Night's Whisper	B	Sorcery	2	SPL	fairfight pauper peasant evybaby mtgovc	yes	none	B		12027	0.4997	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180 peasant-cube-180
+Nightmare	B	Creature	6		oldschool	yes	none	B		0		
+Ninja of the Deep Hours	U	Creature	4	EVA ETB	fairfight pauper evybaby	yes	none	U		5053	0.4743	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Nishoba Brawler	G	Creature	2		evybaby	yes	Random	G		445	0.5849	evybaby-cube-360
+Nissa, Who Shakes the World	G	Planeswalker	5	LND RAMP	omega vintage180 modern mtgovc	yes	none	G	G	5107	0.5469	modern-era-cube-180 omega-cube-180 vintage-cube-180
+No More Lies	WU	Instant	2	counter GY CTRL	mtgovc	yes	none	WU		0		
+Noble Hierarch	WUG	Creature	1	RAMP AGG	modern twobert mtgovc	yes	none	G	WUG	3196	0.5569	modern-era-cube-180
+Northern Paladin	W	Creature	4		oldschool	yes	Random	W		0		
+Novice Inspector	W	Creature	1		evybaby	yes	none	W		870	0.5348	evybaby-cube-360
+Null Summoner			0		twobert	no	none			0		
+Nurturing Pixie	W	Creature	1		evybaby	yes	none	W		1302	0.5000	evybaby-cube-360
+Nyxborn Hydra	G	Enchantment Creature	1		peasant	yes	none	G		1523	0.5645	peasant-cube-180
+Oath of Druids	G	Enchantment	2	GY	mtgovc	yes	none	G		0		
+Ob Nixilis, the Adversary	BR	Planeswalker	3		evybaby	yes	none	BR		229	0.4136	evybaby-cube-360
+Oblivion Ring	W	Enchantment	3	removal ETB	fairfight pauper	yes	none	W		9225	0.5319	fair-fight-cube-180 pauper-cube-180
+Obsessive Pursuit	B	Enchantment	2		evybaby	yes	none	B		390	0.4414	evybaby-cube-360
+Obsianus Golem		Artifact Creature	6		oldschool	yes	none			0		
+Occult Epiphany	U	Instant	1	TOK SPL CTRL	mtgovc	yes	none	U		0		
+Ocelot Pride	W	Creature	1	AGG SAC	vintage180 mtgovc	yes	none	W		2793	0.5723	vintage-cube-180
+Oketra's Monument		Artifact	3		peasant	yes	none			39	0.5253	peasant-cube-180
+Okiba Reckoner Raid	B	Enchantment	1		evybaby	yes	none	B		73	0.5268	evybaby-cube-360
+Okiba-Gang Shinobi	B	Creature	5	EVA	fairfight pauper	yes	none	B		1526	0.4963	fair-fight-cube-180 pauper-cube-180
+Oko, Thief of Crowns	UG	Planeswalker	3	ART CTRL	vintage180 modern mtgovc	yes	none	UG		2679	0.5043	modern-era-cube-180 vintage-cube-180
+Okoye, Dora Milaje Leader	W	Creature	4		evybaby	yes	none	W		581	0.5291	evybaby-cube-360
+Okoye, Mighty and Adored	WG	Creature	4	ETB CTR	evybaby mtgovc	yes	none	WG		124	0.6110	evybaby-cube-360
+Old Man of the Sea	U	Creature	3		oldschool	yes	none	U		0		
+Oliphaunt	R	Creature	6	FAT	evybaby twobert mtgovc	yes	none	R	R	1647	0.4835	evybaby-cube-360
+Omnath, Locus of Creation	WURG	Creature	4	ETB RAMP LND LIFE	mtgovc	yes	none	WURG	WURG	0		
+Omnath, Locus of Rage	RG	Creature	7	LND TOK	synergy twobert	yes	none	RG		150	0.4176	synergy-cube-180
+Once Upon a Time	G	Instant	2	RAMP	mtgovc	yes	none	G		0		
+Oni-Cult Anvil	BR	Artifact	2		evybaby	yes	none	BR		481	0.4132	evybaby-cube-360
+Ophiomancer	B	Creature	3	TOK SAC	synergy vintage180	yes	none	B		3734	0.5101	synergy-cube-180 vintage-cube-180
+Opt	U	Instant	1	SPL	synergy modern	yes	none	U		6898	0.4363	modern-era-cube-180 synergy-cube-180
+Oracle of Mul Daya	G	Creature	4	LND	modern	yes	none	G		3144	0.5468	modern-era-cube-180
+Orcish Artillery	R	Creature	3		oldschool	yes	none	R		0		
+Orcish Bowmasters	B	Creature	2	ETB removal TOK	omega vintage180 mtgovc	yes	none	B		4985	0.5120	omega-cube-180 vintage-cube-180
+Orcish Lumberjack	RG	Creature	1	SAC RAMP AGG	mtgovc	yes	All	R	RG	0		
+Orcish Oriflamme	R	Enchantment	4		oldschool	yes	none	R		0		
+Order of Leitbur	W	Creature	2		oldschool	yes	none	W		0		
+Order of the Ebon Hand	B	Creature	2		oldschool	yes	none	B		0		
+Orgg	R	Creature	5		oldschool	yes	none	R		0		
+Ornithopter		Artifact Creature	0		oldschool	yes	none			0		
+Oroku Saki, Shredder Rising	B	Creature	3		evybaby	yes	none	B		223	0.4732	evybaby-cube-360
+Ossification	W	Enchantment	2		evybaby	yes	none	W		1484	0.5233	evybaby-cube-360
+Otawara, Soaring City	U	Land	0	LND AGG	mtgovc	yes	none		U	0		
+Otharri, Suns' Glory	WR	Creature	5	TOK REAN LIFE AGG	mtgovc	yes	none	WR		0		
+Oubliette	B	Enchantment	3		oldschool	yes	All	B		0		
+Ouroboroid	G	Creature	4	CTR	mtgovc	yes	none	G		0		
+Oust	W	Sorcery	1	LIFE	mtgovc	yes	none	W		0		
+Overgrown Tomb	BG	Land	0	LND	synergy modern evybaby twobert mtgovc	yes	none		BG	1785	0.4944	evybaby-cube-360 modern-era-cube-180 synergy-cube-180
+Overlord of the Balemurk	B	Enchantment Creature	5	GY	mtgovc	yes	none	B		0		
+Overlord of the Mistmoors	W	Enchantment Creature	7	TOK FAT	mtgovc	yes	none	W		0		
+Owlbear	G	Creature	5	ETB	pauper	yes	none	G		383	0.4987	pauper-cube-180
+Painter's Servant		Artifact Creature	2	ART AGG	mtgovc	yes	none			0		
+Palace Jailer	W	Creature	4	ETB removal	vintage180 evybaby mtgovc	yes	none	W		4128	0.5566	evybaby-cube-360 vintage-cube-180
+Palace Sentinels	W	Creature	4	ETB	pauper	yes	none	W		5857	0.5244	pauper-cube-180
+Palantír of Orthanc		Artifact	3	ART	mtgovc	yes	none			0		
+Paradox Surveyor	UG	Creature	3		evybaby	yes	none	UG		191	0.5308	evybaby-cube-360
+Paradoxical Outcome	U	Instant	4	ART SPL	mtgovc	yes	none	U		0		
+Parallax Wave	W	Enchantment	4	removal	mtgovc	yes	All	W		0		
+Paralyze	B	Enchantment	1		oldschool	yes	none	B		0		
+Path to Exile	W	Instant	1	removal LND	omega modern peasant evybaby mtgovc	yes	none	W		7812	0.5140	evybaby-cube-360 modern-era-cube-180 omega-cube-180 peasant-cube-180
+Path to the World Tree	WUBRG	Enchantment	2		evybaby	yes	none	G	WUBRG	120	0.4928	evybaby-cube-360
+Pelakka Wurm	G	Creature	7		peasant	yes	none	G		1121	0.5627	peasant-cube-180
+Pelt Collector	G	Creature	1	CTR	synergy	yes	none	G		73	0.4407	synergy-cube-180
+Pendelhaven	G	Land	0		oldschool	yes	Random		G	0		
+Pentad Prism		Artifact	2	ART RAMP	mtgovc	yes	none		WUBRG	0		
+Perilous Landscape	WUR	Land	0		peasant	yes	none		WUR	1576	0.4304	peasant-cube-180
+Perilous Myr		Artifact Creature	2	ART SAC	fairfight pauper	yes	none			11872	0.5070	fair-fight-cube-180 pauper-cube-180
+Persist	B	Sorcery	2	GY	synergy modern twobert	yes	none	B		1028	0.5214	modern-era-cube-180 synergy-cube-180
+Personal Incarnation	W	Creature	6		oldschool	yes	All	W		0		
+Pest Infestation	G	Sorcery	1	TOK ART LIFE	evybaby mtgovc	yes	none	G		1018	0.5626	evybaby-cube-360
+Pestermite	U	Creature	3	ETB EVA	fairfight pauper	yes	none	U		9389	0.4749	fair-fight-cube-180 pauper-cube-180
+Pestilence	B	Enchantment	4		oldschool	yes	none	B		0		
+Phantasmal Image	U	Creature	2	ETB	omega synergy modern fairfight mtgovc	yes	none	U		13614	0.4635	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180
+Phantom Monster	U	Creature	4		oldschool	yes	none	U		0		
+Phelia, Exuberant Shepherd	W	Creature	2	CTR AGG	mtgovc	yes	none	W		0		
+Phlage, Titan of Fire's Fury	WR	Creature	3	GY removal AGG	vintage180 mtgovc	yes	none	WR		897	0.5442	vintage-cube-180
+Phyrexian Arena	B	Enchantment	3	CTRL	omega	yes	none	B		985	0.4935	omega-cube-180
+Phyrexian Dragon Engine	R	Artifact Creature	3	ETB GY ART CTRL	mtgovc	yes	none			0		
+Phyrexian Metamorph	U	Artifact Creature	4	ART ETB	vintage180 mtgovc	yes	none	U		949	0.4592	vintage-cube-180
+Pia Nalaar	R	Creature	3	ART TOK SAC	synergy fairfight twobert	yes	none	R		2340	0.5045	fair-fight-cube-180 synergy-cube-180
+Pia and Kiran Nalaar	R	Creature	4	ART TOK SAC	synergy	yes	none	R		1239	0.4646	synergy-cube-180
+Picklock Prankster	U	Creature	2		evybaby	yes	none	U		1714	0.5023	evybaby-cube-360
+Pillage the Bog	BG	Sorcery	2	SPL	mtgovc	yes	none	BG		0		
+Pink Horror	UR	Creature	5		twobert	yes	none	UR		0		
+Pirate Ship	U	Creature	5		oldschool	yes	none	U		0		
+Pizza Face, Gastromancer	BG	Artifact Creature	5		evybaby	yes	none	BG		18	0.4998	evybaby-cube-360
+Plaguecrafter	B	Creature	3		fairfight	yes	none	B		62	0.4756	fair-fight-cube-180
+Plagued Rusalka	B	Creature	1	SAC removal	pauper	yes	Random	B		163	0.5464	pauper-cube-180
+Plateau	WR	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		WR	916	0.5314	omega-cube-180 vintage-cube-180
+Platinum Angel		Artifact Creature	7	ART FAT	omega	yes	none			553	0.4939	omega-cube-180
+Play with Fire	R	Instant	1	removal	modern	yes	none	R		1385	0.5352	modern-era-cube-180
+Plunder the Trollshaws	U	Instant	2		evybaby	yes	none	U		68	0.4544	evybaby-cube-360
+Political Triumph	W	Enchantment	1		evybaby	yes	none	W		18	0.4998	evybaby-cube-360
+Polluted Delta		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		UB	2614	0.4697	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Polukranos, World Eater	G	Creature	4	CTR removal	omega modern	yes	none	G		759	0.5672	modern-era-cube-180 omega-cube-180
+Pompous Battlemage			0		evybaby mtgovc	no	none			0		
+Ponder	U	Sorcery	1	SPL	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc	yes	none	U		32596	0.4591	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Porcelain Legionnaire	W	Artifact Creature	3		evybaby	yes	none	W		1637	0.5178	evybaby-cube-360
+Portable Hole	W	Artifact	1	removal ART	modern mtgovc	yes	none	W		1993	0.5201	modern-era-cube-180
+Portal to Phyrexia		Artifact	9	REAN ART	mtgovc	yes	none			0		
+Potioner's Trove		Artifact	3		evybaby	yes	none		WUBRG	966	0.4513	evybaby-cube-360
+Power Artifact	U	Enchantment	2		oldschool	yes	Random	U		0		
+Power Sink	U	Instant	1		oldschool	yes	none	U		0		
+Power Word Kill	B	Instant	2		peasant	yes	none	B		1109	0.5881	peasant-cube-180
+Practiced Offense	W	Sorcery	3		evybaby	yes	none	W		921	0.5611	evybaby-cube-360
+Practiced Scrollsmith	WR	Creature	3		evybaby	yes	none	WR		223	0.4074	evybaby-cube-360
+Preacher	W	Creature	3		oldschool	yes	none	W		0		
+Preordain	U	Sorcery	1	SPL	omega vintage180 modern fairfight pauper peasant evybaby mtgovc	yes	none	U		24588	0.4610	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 vintage-cube-180
+Priest of Forgotten Gods	B	Creature	2	SAC TOK	synergy twobert	yes	none	B	B	415	0.6161	synergy-cube-180
+Primal Might	G	Sorcery	1		fairfight	yes	none	G		74	0.5213	fair-fight-cube-180
+Primal Witchstalker			0		evybaby twobert	no	none			0		
+Primeval Titan	G	Creature	6	FAT LND RAMP	omega vintage180 modern	yes	none	G		1852	0.5464	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Primordial Pachyderm	G	Creature	4		peasant	yes	none	G		69	0.5617	peasant-cube-180
+Prismari Command	UR	Instant	3	removal TOK ART	modern	yes	none	UR		760	0.4718	modern-era-cube-180
+Prismatic Ending	W	Sorcery	1	removal	synergy modern evybaby twobert mtgovc	yes	All	W		1712	0.5122	evybaby-cube-360 modern-era-cube-180 synergy-cube-180
+Prismatic Strands	W	Instant	3	TOK SPL GY	pauper	yes	All	W		16	0.5276	pauper-cube-180
+Prismatic Vista		Land	0	LND GY	peasant mtgovc	yes	none		WUBRG	3799	0.4849	peasant-cube-180
+Prized Amalgam	UB	Creature	3	GY	synergy	yes	none	UB		20	0.5246	synergy-cube-180
+Prodigal Sorcerer	U	Creature	3		oldschool	yes	none	U		0		
+Proft's Eidetic Memory	U	Enchantment	2	CTR	mtgovc	yes	none	U		0		
+Prophetic Prism		Artifact	2	ART ETB	synergy pauper	yes	All		WUBRG	13491	0.4488	pauper-cube-180 synergy-cube-180
+Prosperous Innkeeper	G	Creature	2	LIFE ART ETB	synergy	yes	none	G	WUBRG	4283	0.4574	synergy-cube-180
+Psionic Blast	U	Instant	3		oldschool	yes	none	U		0		
+Psychic Frog	UB	Creature	2	GY AGG REAN	omega vintage180 modern mtgovc	yes	none	UB		3884	0.4509	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Psychic Purge	U	Sorcery	1		oldschool	yes	none	U		0		
+Pulse of Murasa	G	Instant	3	GY	fairfight pauper	yes	none	G		23	0.5516	fair-fight-cube-180 pauper-cube-180
+Purphoros, God of the Forge	R	Enchantment Creature	4		twobert	yes	none	R		0		
+Pursue the Past	WR	Sorcery	2		evybaby	yes	none	WR		212	0.5043	evybaby-cube-360
+Pyrite Spellbomb	R	Artifact	1		mtgovc	yes	Random			0		
+Pyrogoyf	R	Creature	4	GY	mtgovc	yes	none	R		0		
+Pyrokinesis	R	Instant	6	removal	vintage180 mtgovc	yes	none	R		31	0.4118	vintage-cube-180
+Pyrotechnics	R	Sorcery	5		oldschool	yes	none	R		0		
+Qasali Pridemage	WG	Creature	2	AGG removal	fairfight pauper evybaby	yes	none	WG		33	0.5359	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Quandrix Charm	UG	Instant	2		evybaby	yes	none	UG		22	0.4284	evybaby-cube-360
+Quantum Riddler	U	Creature	5	ETB	mtgovc	yes	none	U		0		
+Questing Beast	G	Creature	4	AGG	omega vintage180 modern mtgovc	yes	none	G		650	0.5425	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Questing Druid	RG	Creature	2		evybaby	yes	none	G		903	0.5460	evybaby-cube-360
+Quirion Dryad	G	Creature	2		evybaby	yes	none	G		348	0.5516	evybaby-cube-360
+Quirion Ranger	G	Creature	1		mtgovc	yes	All	G		0		
+Rabbit Battery	R	Artifact Creature	1		peasant evybaby	yes	none	R		3548	0.4923	evybaby-cube-360 peasant-cube-180
+Raffine's Tower	WUB	Land	0	LND	mtgovc	yes	none		WUB	0		
+Ragamuffin Raptor	G	Creature	5		evybaby	yes	none	G		117	0.5109	evybaby-cube-360
+Ragavan, Nimble Pilferer	R	Creature	1	AGG ART	omega vintage180 modern mtgovc	yes	none	R		6669	0.5232	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Raid Bombardment	R	Enchantment	3	TOK AGG	pauper	yes	none	R		41	0.5409	pauper-cube-180
+Raise the Alarm	W	Instant	2	TOK SPL	pauper	yes	none	W		82	0.6372	pauper-cube-180
+Rakdos Carnarium	BR	Land	0	LND	pauper	yes	none		BR	970	0.5101	pauper-cube-180
+Rally the Peasants	WR	Instant	3	TOK AGG GY	fairfight pauper	yes	none	W		391	0.5544	fair-fight-cube-180 pauper-cube-180
+Ram Through	G	Instant	2	removal	synergy fairfight pauper evybaby twobert	yes	none	G		54	0.5400	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180 synergy-cube-180
+Rampaging Baloths	G	Creature	6	LND TOK FAT	omega	yes	none	G		1827	0.4759	omega-cube-180
+Rampaging Ferocidon	R	Creature	3	LIFE	modern	yes	none	R		60	0.5000	modern-era-cube-180
+Rampant Growth	G	Sorcery	2	RAMP	modern	yes	none	G	WUBRG	2609	0.5633	modern-era-cube-180
+Ramunap Excavator	G	Creature	3	LND GY	synergy twobert	yes	none	G		3904	0.4266	synergy-cube-180
+Rancor	G	Enchantment	1	AGG GY	omega modern fairfight pauper	yes	none	G		1247	0.5301	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180
+Ranger-Captain of Eos	W	Creature	3	ETB	modern	yes	none	W		1703	0.5206	modern-era-cube-180
+Rankle, Master of Pranks	B	Creature	4	discard AGG	modern evybaby	yes	none	B		1065	0.4410	evybaby-cube-360 modern-era-cube-180
+Rasputin Dreamweaver	WU	Creature	6		oldschool	yes	none	WU		0		
+Raucous Theater	BR	Land	0	LND	evybaby mtgovc	yes	none		BR	692	0.5056	evybaby-cube-360
+Raugrin Triome	WUR	Land	0	LND	mtgovc	yes	none		WUR	0		
+Ravenous Chupacabra	B	Creature	4	ETB removal	omega fairfight peasant	yes	none	B		4849	0.5394	fair-fight-cube-180 omega-cube-180 peasant-cube-180
+Razorverge Thicket	WG	Land	0	LND	mtgovc	yes	none		WG	0		
+Reanimate	B	Sorcery	1	REAN GY	omega synergy vintage180 peasant twobert mtgovc	yes	none	B		8020	0.5083	omega-cube-180 peasant-cube-180 vintage-cube-180
+Recall	U	Sorcery	1		oldschool	yes	All	U		0		
+Reckless Fireweaver	R	Creature	2	ART	synergy	yes	none	R		1	0.4754	synergy-cube-180
+Reclamation Sage	G	Creature	3		peasant	yes	none	G		475	0.5333	peasant-cube-180
+Recruitment Officer	W	Creature	1		fairfight	yes	none	W		2928	0.5529	fair-fight-cube-180
+Recurring Nightmare	B	Enchantment	3	REAN ETB SAC	vintage180 mtgovc	yes	none	B		1522	0.4488	vintage-cube-180
+Red Elemental Blast	R	Instant	1		oldschool	yes	Random	R		0		
+Red Room Recruit	B	Creature	2		evybaby	yes	none	B		89	0.4678	evybaby-cube-360
+Reflector Mage	WU	Creature	3	ETB removal	omega synergy fairfight	yes	none	WU		81	0.5089	fair-fight-cube-180 omega-cube-180 synergy-cube-180
+Regal Caracal	W	Creature	5		evybaby	yes	none	W		1316	0.5494	evybaby-cube-360
+Regrowth	G	Sorcery	2		oldschool	yes	none	G		0		
+Relic Barrier		Artifact	2		oldschool	yes	Random			0		
+Relic of Sauron	UBR	Artifact	4	ART RAMP CTRL	mtgovc	yes	none		UBR	0		
+Remand	U	Instant	2	counter SPL	synergy modern twobert mtgovc	yes	none	U		8329	0.4460	modern-era-cube-180 synergy-cube-180
+Remove Soul	U	Instant	2		oldschool	yes	none	U		0		
+Renegade Freighter		Artifact	3	ART AGG	fairfight pauper	yes	none			519	0.4468	fair-fight-cube-180 pauper-cube-180
+Renegade Rallier	WG	Creature	3		twobert	yes	none	WG		0		
+Repentant Blacksmith	W	Creature	2		oldschool	yes	none	W		0		
+Reprieve	W	Instant	2	SPL	evybaby mtgovc	yes	none	W		1266	0.5000	evybaby-cube-360
+Repulse	U	Instant	3		fairfight	yes	none	U		5394	0.4695	fair-fight-cube-180
+Rescue Girl, First Responder			0		evybaby	no	none			0		
+Restless Anchorage	WU	Land	0		fairfight	yes	none		WU	1640	0.4765	fair-fight-cube-180
+Restless Bivouac	WR	Land	0		fairfight	yes	none		WR	958	0.4857	fair-fight-cube-180
+Restless Cottage	BG	Land	0		fairfight	yes	none		BG	1139	0.5272	fair-fight-cube-180
+Restless Fortress	WB	Land	0		fairfight	yes	none		WB	851	0.4891	fair-fight-cube-180
+Restless Prairie	WG	Land	0		fairfight	yes	none		WG	1324	0.5179	fair-fight-cube-180
+Restless Reef	UB	Land	0		fairfight	yes	none		UB	994	0.4507	fair-fight-cube-180
+Restless Ridgeline	RG	Land	0		fairfight	yes	none		RG	1487	0.4871	fair-fight-cube-180
+Restless Spire	UR	Land	0		fairfight	yes	none		UR	1030	0.4476	fair-fight-cube-180
+Restless Vents	BR	Land	0		fairfight	yes	none		BR	581	0.4742	fair-fight-cube-180
+Restless Vinestalk	UG	Land	0		fairfight	yes	none		UG	1318	0.5374	fair-fight-cube-180
+Restoration Angel	W	Creature	4	ETB EVA	omega synergy vintage180 modern fairfight twobert	yes	none	W		5624	0.5637	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Retrofitter Foundry		Artifact	1	ART TOK SAC	synergy vintage180 twobert mtgovc	yes	none			10404	0.5428	synergy-cube-180 vintage-cube-180
+Reveillark	W	Creature	5	ETB GY SAC	synergy twobert	yes	none	W		2570	0.6595	synergy-cube-180
+Righteousness	W	Instant	1		oldschool	yes	All	W		0		
+Rimrock Knight	R	Creature	2	AGG SPL	fairfight pauper	yes	none	R		2292	0.5086	fair-fight-cube-180 pauper-cube-180
+Rise from the Tides	U	Sorcery	6		peasant	yes	none	U		332	0.4204	peasant-cube-180
+Rise of the Witch-king	BG	Sorcery	4		peasant	yes	none	BG		2	0.4995	peasant-cube-180
+Risen Reef	UG	Creature	3	ETB LND	synergy	yes	none	UG		2213	0.3283	synergy-cube-180
+Rishkar, Peema Renegade	G	Creature	3	CTR	synergy	yes	none	G	G	3462	0.4408	synergy-cube-180
+Riverglide Pathway	UR	Land	0	LND	modern	yes	none		UR	362	0.4791	modern-era-cube-180
+Riverpyre Verge	UR	Land	0	LND	mtgovc	yes	none		UR	0		
+Roc of Kher Ridges	R	Creature	4		oldschool	yes	none	R		0		
+Rock Hydra	R	Creature	2		oldschool	yes	All	R		0		
+Rolling Thunder	R	Sorcery	2	removal RAMP	fairfight pauper	yes	none	R		2344	0.5326	fair-fight-cube-180 pauper-cube-180
+Royal Assassin	B	Creature	3		oldschool	yes	none	B		0		
+Rubble Rouser	R	Creature	3		evybaby	yes	none	R	R	584	0.4569	evybaby-cube-360
+Rubinia Soulsinger	WUG	Creature	5		oldschool	yes	none	WUG		0		
+Ruby, Daring Tracker	RG	Creature	2		evybaby	yes	none	RG	RG	57	0.4804	evybaby-cube-360
+Rugged Highlands	RG	Land	0	LND	fairfight pauper	yes	none		RG	2257	0.5133	fair-fight-cube-180 pauper-cube-180
+Rukh Egg	R	Creature	4		oldschool	yes	none	R		0		
+Sacred Foundry	WR	Land	0	LND	synergy modern peasant evybaby twobert mtgovc	yes	none		WR	2468	0.5014	evybaby-cube-360 modern-era-cube-180 peasant-cube-180 synergy-cube-180
+Sage of the Skies	W	Creature	3	LIFE EVA	mtgovc	yes	none	W		0		
+Saheeli, Jewel of Avishkar			0		evybaby	no	none			0		
+Saheeli, Sublime Artificer	UR	Planeswalker	3	SPL ART TOK	synergy fairfight mtgovc	yes	none	UR		1966	0.4095	fair-fight-cube-180 synergy-cube-180
+Sai, Master Thopterist	U	Creature	3	ART TOK	synergy twobert	yes	none	U		2096	0.4409	synergy-cube-180
+Sakura-Tribe Elder	G	Creature	2	RAMP LND SAC	omega synergy vintage180 modern fairfight pauper twobert	yes	none	G	WUBRG	6171	0.4988	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 synergy-cube-180 vintage-cube-180
+Salt Road Packbeast	W	Creature	6		evybaby	yes	none	W		436	0.5241	evybaby-cube-360
+Samurai's Katana	R	Artifact	3		peasant	yes	none	R		4084	0.5119	peasant-cube-180
+Samut, Hazoret's Champion			0		mtgovc	no	none			0		
+Sanctum Lurker			0		mtgovc	no	none			0		
+Sanguine Evangelist	W	Creature	3	TOK ETB EVA	mtgovc	yes	none	W		0		
+Saproling Migration	G	Sorcery	2	TOK	fairfight pauper	yes	none	G		3224	0.5025	fair-fight-cube-180 pauper-cube-180
+Satyr Wayfinder	G	Creature	2	GY LND	synergy fairfight pauper peasant twobert	yes	none	G		213	0.5190	fair-fight-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180
+Savage Land Dinosaur	G	Creature	6		evybaby	yes	none	G	WUBRG	26	0.4781	evybaby-cube-360
+Savai Triome	WBR	Land	0	LND	mtgovc	yes	none		WBR	0		
+Savannah	WG	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		WG	805	0.5086	omega-cube-180 vintage-cube-180
+Savannah Lions	W	Creature	1		oldschool	yes	none	W		0		
+Savor	B	Instant	2		evybaby	yes	none	B		946	0.4824	evybaby-cube-360
+Scalding Tarn		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		UR	2573	0.4672	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Scavenger Folk	G	Creature	1		oldschool	yes	none	G		0		
+Scavenging Ooze	G	Creature	2	GY LIFE CTR	omega synergy vintage180 modern fairfight evybaby twobert	yes	none	G		10197	0.4995	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Scolding Administrator	WB	Creature	2		evybaby	yes	none	WB		110	0.5384	evybaby-cube-360
+Scoured Barrens	WB	Land	0	LND	pauper	yes	none		WB	1771	0.5176	pauper-cube-180
+Screaming Nemesis	R	Creature	3	LIFE AGG	mtgovc	yes	none	R		0		
+Scrubland	WB	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		WB	802	0.5285	omega-cube-180 vintage-cube-180
+Scryb Sprites	G	Creature	1		oldschool	yes	none	G		0		
+Scurry Oak	G	Creature	3		peasant	yes	none	G		2345	0.5057	peasant-cube-180
+Scute Swarm	G	Creature	3	LND TOK	synergy	yes	none	G		1839	0.4492	synergy-cube-180
+Scythecat Cub	G	Creature	2	CTR LND AGG	mtgovc	yes	none	G		0		
+Seachrome Coast	WU	Land	0	LND	mtgovc	yes	none		WU	0		
+Sear	R	Instant	2	removal	mtgovc	yes	none	R		0		
+Search Party Captain	W	Creature	4	TOK AGG	pauper	yes	none	W		284	0.5822	pauper-cube-180
+Searslicer Goblin	R	Creature	2		evybaby	yes	none	R		1383	0.4611	evybaby-cube-360
+Seasoned Cryomancer			0		mtgovc	no	none			0		
+Seasoned Hallowblade	W	Creature	2	AGG	modern twobert	yes	none	W		31	0.5098	modern-era-cube-180
+Seasoned Pyromancer	R	Creature	3	GY TOK SPL	omega synergy vintage180 modern twobert mtgovc	yes	none	R		4251	0.4870	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Secure the Wastes	W	Instant	1		fairfight	yes	none	W		1075	0.5370	fair-fight-cube-180
+Sedge Troll	BR	Creature	3		oldschool	yes	none	R		0		
+Sedgemoor Witch	B	Creature	3	TOK LIFE	mtgovc	yes	none	B		0		
+Seeker of the Way	W	Creature	2	SPL AGG	fairfight pauper	yes	none	W		1796	0.5796	fair-fight-cube-180 pauper-cube-180
+Seething Landscape	UBR	Land	0		peasant	yes	none		UBR	1808	0.4633	peasant-cube-180
+Selesnya Evangel	WG	Creature	2	TOK	pauper	yes	none	WG		12	0.5623	pauper-cube-180
+Selesnya Sanctuary	WG	Land	0	LND	pauper	yes	none		WG	1982	0.4890	pauper-cube-180
+Selfless Spirit	W	Creature	2	EVA AGG	modern fairfight	yes	none	W		867	0.5667	fair-fight-cube-180 modern-era-cube-180
+Sengir Vampire	B	Creature	5		oldschool	yes	none	B		0		
+Sensei's Divining Top		Artifact	1	ART	mtgovc	yes	none			0		
+Sentinel of the Nameless City	G	Creature	3	TOK ART	fairfight mtgovc	yes	none	G		3868	0.5378	fair-fight-cube-180
+Serendib Djinn	U	Creature	4		oldschool	yes	All	U		0		
+Serendib Efreet	U	Creature	3		oldschool	yes	none	U		0		
+Serra Angel	W	Creature	5	EVA	oldschool	yes	none	W		0		
+Serra Paragon	W	Creature	4	LND GY ETB	vintage180 mtgovc	yes	none	W		477	0.5453	vintage-cube-180
+Serrated Arrows		Artifact	4	ART removal	fairfight pauper	yes	none			8844	0.5084	fair-fight-cube-180 pauper-cube-180
+Servo Schematic		Artifact	2	ART TOK SAC	synergy	yes	none			5753	0.4966	synergy-cube-180
+Settle Beyond Reality	W	Sorcery	5	removal ETB	pauper	yes	none	W		183	0.5911	pauper-cube-180
+Sewer-veillance Cam	U	Artifact	1	ART CTRL	evybaby twobert mtgovc	yes	none	U		174	0.3866	evybaby-cube-360
+Shadowspear		Artifact	1	ART	synergy modern fairfight twobert	yes	none			16572	0.5260	fair-fight-cube-180 modern-era-cube-180 synergy-cube-180
+Shadowy Backstreet	WB	Land	0	LND	evybaby mtgovc	yes	none		WB	345	0.5287	evybaby-cube-360
+Shahrazad	W	Sorcery	2		oldschool	yes	All	W		0		
+Shallow Grave	B	Instant	2	GY	mtgovc	yes	none	B		0		
+Shark Typhoon	U	Enchantment	6		twobert	yes	none	U		0		
+Shatter	R	Instant	2		oldschool	yes	none	R		0		
+Shattered Landscape	WBR	Land	0		peasant	yes	none		WBR	1347	0.4879	peasant-cube-180
+Shatterstorm	R	Sorcery	4		oldschool	yes	none	R		0		
+Shelldock Isle	U	Land	0	LND	mtgovc	yes	Random		U	0		
+Sheltered by Ghosts	W	Enchantment	2		peasant	yes	none	W		1102	0.6132	peasant-cube-180
+Sheltering Landscape	WRG	Land	0		peasant	yes	none		WRG	1338	0.4823	peasant-cube-180
+Sheoldred's Edict	B	Instant	2	removal	mtgovc	yes	none	B		0		
+Sheoldred, the Apocalypse	B	Creature	4	FAT LIFE	omega vintage180 modern mtgovc	yes	none	B		7238	0.4964	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Shepherd of the Flock	W	Creature	2		evybaby	yes	none	W		146	0.5240	evybaby-cube-360
+Shi'ar Soldier	U	Creature	2		peasant	yes	none	U		780	0.4600	peasant-cube-180
+Shifting Woodland	G	Land	0	LND AGG	mtgovc	yes	none		G	0		
+Shivan Dragon	R	Creature	6	EVA FAT	omega oldschool	yes	none	R		117	0.5255	omega-cube-180
+Shorikai, Genesis Engine	WU	Artifact	4	TOK ART CTRL	mtgovc	yes	none	WU		0		
+Show and Tell	U	Sorcery	3	REAN	vintage180 mtgovc	yes	none	U		425	0.4472	vintage-cube-180
+Showdown of the Skalds	WR	Enchantment	4	SPL CTR	synergy evybaby twobert	yes	none	WR		321	0.5027	evybaby-cube-360 synergy-cube-180
+Shriekmaw	B	Creature	5	ETB removal	omega fairfight peasant	yes	none	B		6239	0.5223	fair-fight-cube-180 omega-cube-180 peasant-cube-180
+Shuri, Vibranium Technologist	WU	Creature	3		peasant	yes	none	WU		179	0.4924	peasant-cube-180
+Siege-Gang Commander	R	Creature	5	TOK SAC ETB	omega fairfight	yes	none	R		2864	0.5250	fair-fight-cube-180 omega-cube-180
+Signal Pest		Artifact Creature	1		peasant	yes	none			24	0.4998	peasant-cube-180
+Silver Drake	WU	Creature	3	ETB EVA	pauper	yes	none	WU		730	0.5173	pauper-cube-180
+Silverquill Charm	WB	Instant	2		evybaby	yes	none	WB		112	0.5757	evybaby-cube-360
+Sindbad	U	Creature	2		oldschool	yes	none	U		0		
+Singing Tree	G	Creature	4		oldschool	yes	All	G		0		
+Sinister Starfish	B	Creature	2		peasant	yes	none	B		5	0.4796	peasant-cube-180
+Sink into Stupor	U	Instant	3	RAMP	peasant mtgovc	yes	none	U		3603	0.4184	peasant-cube-180
+Sinkhole	B	Sorcery	2		oldschool	yes	none	B		0		
+Six	G	Creature	3	LND GY	vintage180 mtgovc	yes	none	G		1319	0.4638	vintage-cube-180
+Skateboard		Artifact	1	ART	evybaby mtgovc	yes	none			25	0.5331	evybaby-cube-360
+Skewer the Critics	R	Sorcery	3	SPL AGG	pauper	yes	none	R		4768	0.4893	pauper-cube-180
+Skittering Precursor	R	Creature	3		peasant	yes	none	R		127	0.4557	peasant-cube-180
+Skullclamp		Artifact	1	ART SAC TOK	omega vintage180 mtgovc	yes	none			16401	0.4805	omega-cube-180 synergy-cube-180 vintage-cube-180
+Skyclave Apparition	W	Creature	3	ETB removal	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none	W		17062	0.5478	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Sleight of Mind	U	Instant	1		oldschool	yes	All	U		0		
+Slickshot Lockpicker	U	Creature	3		peasant	yes	none	U		3251	0.4249	peasant-cube-180
+Slickshot Show-Off	R	Creature	2		mtgovc	yes	none	R		0		
+Smuggler's Copter		Artifact	2	ART AGG EVA	omega synergy vintage180 modern twobert mtgovc	yes	none			8038	0.5277	modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Snap	U	Instant	2	SPL EVA	pauper	yes	none	U		6409	0.4802	pauper-cube-180
+Snapcaster Mage	U	Creature	2	SPL GY ETB	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none	U		22749	0.4531	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Snarl Song	G	Sorcery	6		evybaby	yes	none	G		680	0.5500	evybaby-cube-360
+Sneak Attack	R	Enchantment	4	REAN	vintage180 mtgovc	yes	Random	R		1939	0.4620	vintage-cube-180
+Sneaky Snacker	UB	Creature	2		evybaby	yes	none	UB		142	0.4691	evybaby-cube-360
+Snuff Out	B	Instant	4	removal	pauper twobert mtgovc	yes	none	B		4855	0.4956	pauper-cube-180
+Sokenzan Smelter	R	Creature	2		evybaby	yes	none	R		24	0.4089	evybaby-cube-360
+Sol Ring		Artifact	1	RAMP ART	vintage180 mtgovc oldschool	yes	none			4385	0.5078	vintage-cube-180
+Sol'kanar the Swamp King	UBR	Creature	5		oldschool	yes	none	UBR		0		
+Solemn Simulacrum		Artifact Creature	4	ART ETB RAMP	omega synergy fairfight	yes	none		WUBRG	14859	0.4993	fair-fight-cube-180 omega-cube-180 synergy-cube-180
+Solitude	W	Creature	5	ETB removal REAN	omega vintage180 modern mtgovc	yes	none	W		9551	0.5200	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Sorceress Queen	B	Creature	3		oldschool	yes	none	B		0		
+Sorin, Lord of Innistrad	WB	Planeswalker	4	TOK LIFE	omega	yes	none	WB		116	0.5588	omega-cube-180
+Soul Exchange	B	Sorcery	2		oldschool	yes	Random	B		0		
+Soul Warden	W	Creature	1	LIFE TOK	synergy	yes	none	W		1317	0.6597	synergy-cube-180
+Soul-Guide Lantern		Artifact	1	GY ART	mtgovc	yes	none			0		
+Soul-Scar Mage	R	Creature	1	SPL CTR	synergy mtgovc	yes	none	R		0		
+Soulherder	WU	Creature	3	ETB CTR	synergy fairfight peasant evybaby twobert	yes	Random	WU		723	0.5155	evybaby-cube-360 fair-fight-cube-180 peasant-cube-180 synergy-cube-180
+Sourbread Auntie	R	Creature	4		peasant	yes	none	R		229	0.4658	peasant-cube-180
+Sower of Temptation	U	Creature	4	ETB removal EVA	omega	yes	none	U		4232	0.5096	omega-cube-180
+Sowing Mycospawn	G	Creature	4	RAMP LND	mtgovc	yes	none	G		0		
+Spara's Headquarters	WUG	Land	0	LND	mtgovc	yes	none		WUG	0		
+Spawning Pit		Artifact	2		peasant	yes	All			43	0.4443	peasant-cube-180
+Spectral Sailor	U	Creature	1		fairfight evybaby	yes	none	U		877	0.4548	evybaby-cube-360 fair-fight-cube-180
+Spell Blast	U	Instant	1		oldschool	yes	none	U		0		
+Spell Pierce	U	Instant	1	counter	mtgovc	yes	none	U		0		
+Spell Queller	WU	Creature	3	ETB EVA	modern evybaby	yes	none	WU		667	0.4702	evybaby-cube-360 modern-era-cube-180
+Spellscorn Coven	UB	Creature	4		evybaby	yes	none	B		551	0.4781	evybaby-cube-360
+Spellseeker	U	Creature	3	ETB	mtgovc	yes	none	U		0		
+Spellstutter Sprite	U	Creature	2	EVA ETB counter	fairfight pauper evybaby	yes	none	U		12726	0.4503	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180
+Sphinx of False Conclusions			0		mtgovc	no	none			0		
+Spicy Oatmeal Pizza	R	Artifact	3		evybaby twobert	yes	none	R		267	0.4599	evybaby-cube-360
+Spider Spawning	BG	Sorcery	5		peasant twobert	yes	none	G		887	0.5127	peasant-cube-180
+Spider-Woman, Stunning Savior	WU	Creature	2	ART EVA AGG	mtgovc	yes	none	WU		0		
+Spinal Villain	R	Creature	3		oldschool	yes	Random	R		0		
+Spinewoods Armadillo	G	Creature	6		peasant	yes	none	G	WUBRG	1915	0.5550	peasant-cube-180
+Spinewoods Paladin	G	Creature	5		peasant	yes	none	G		356	0.5904	peasant-cube-180
+Spinner of Souls	G	Creature	3		evybaby	yes	none	G		838	0.5606	evybaby-cube-360
+Spirebluff Canal	UR	Land	0	LND	mtgovc	yes	none		UR	0		
+Spirit Link	W	Enchantment	1		oldschool	yes	none	W		0		
+Spirited Companion	W	Enchantment Creature	2	ETB SAC	synergy twobert	yes	none	W		3778	0.6461	synergy-cube-180
+Spiteful Prankster	R	Creature	3		peasant	yes	none	R		2481	0.5178	peasant-cube-180
+Splitskin Doll	W	Artifact Creature	2		peasant evybaby	yes	none	W		1407	0.5605	evybaby-cube-360 peasant-cube-180
+Springbloom Druid	G	Creature	3	LND ETB	synergy twobert	yes	none	G	WUBRG	2585	0.4284	synergy-cube-180
+Springheart Nantuko	G	Enchantment Creature	2	TOK LND AGG	mtgovc	yes	none	G		0		
+Sprout Swarm	G	Instant	2	TOK	pauper peasant	yes	none	G		1003	0.5571	pauper-cube-180 peasant-cube-180
+Spyglass Siren	U	Creature	1		peasant evybaby	yes	none	U		4530	0.4690	evybaby-cube-360 peasant-cube-180
+Squee, Goblin Nabob	R	Creature	3	GY	evybaby	yes	none	R		1251	0.4516	evybaby-cube-360
+Stab	B	Instant	1		evybaby	yes	none	B		255	0.5054	evybaby-cube-360
+Stadium Headliner	R	Creature	1		evybaby	yes	none	R		116	0.4779	evybaby-cube-360
+Staff of the Storyteller	W	Artifact	2	TOK ART	mtgovc	yes	none	W		0		
+Stampede Surfer	RG	Creature	5		twobert	yes	none	RG		0		
+Stampeding Scurryfoot	G	Creature	1		peasant	yes	none	G		1830	0.5476	peasant-cube-180
+Starfield Shepherd	W	Creature	5		evybaby	yes	none	W	W	820	0.5131	evybaby-cube-360
+Starting Town		Land	0	LND	mtgovc	yes	none		WUBRG	0		
+Stasis	U	Enchantment	2		oldschool	yes	Random	U		0		
+Staunch Crewmate	U	Creature	2		evybaby	yes	none	U		785	0.4981	evybaby-cube-360
+Steal Artifact	U	Enchantment	4		oldschool	yes	none	U		0		
+Steam Vents	UR	Land	0	LND	synergy modern peasant evybaby twobert mtgovc	yes	none		UR	3341	0.4444	evybaby-cube-360 modern-era-cube-180 peasant-cube-180 synergy-cube-180
+Steel Leaf Champion	G	Creature	3	EVA	modern	yes	none	G		540	0.6143	modern-era-cube-180
+Steel Overseer		Artifact Creature	2	ART CTR	synergy twobert	yes	none			2522	0.5248	synergy-cube-180
+Stern Scolding	U	Instant	1	counter	mtgovc	yes	none	U		0		
+Stickytongue Sentinel	G	Creature	3		evybaby twobert	yes	none	G		64	0.4285	evybaby-cube-360
+Stingcaster Mage	R	Creature	2		evybaby mtgovc	yes	none	R		411	0.4547	evybaby-cube-360
+Stitcher's Supplier	B	Creature	1	GY SAC	synergy twobert	yes	none	B		1324	0.5238	synergy-cube-180
+Stock Up	U	Sorcery	3	SPL CTRL	peasant evybaby mtgovc	yes	none	U		5719	0.4607	evybaby-cube-360 peasant-cube-180
+Stomping Ground	RG	Land	0	LND	synergy modern peasant evybaby twobert mtgovc	yes	none		RG	3399	0.4849	evybaby-cube-360 modern-era-cube-180 peasant-cube-180 synergy-cube-180
+Stone Giant	R	Creature	4		oldschool	yes	none	R		0		
+Stone Rain	R	Sorcery	3		oldschool	yes	none	R		0		
+Stone-Throwing Devils	B	Creature	1		oldschool	yes	none	B		0		
+Stoneforge Mystic	W	Creature	2	ART AGG ETB	omega vintage180 modern fairfight mtgovc	yes	none	W		11958	0.5314	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Storm Seeker	G	Instant	4		oldschool	yes	none	G		0		
+Stormchaser's Talent	U	Enchantment	1	TOK GY SPL	mtgovc	yes	none	U		0		
+Stormfront Pegasus	W	Creature	2	EVA AGG	pauper	yes	none	W		254	0.6168	pauper-cube-180
+Strategic Betrayal	B	Sorcery	2		evybaby	yes	none	B		24	0.4998	evybaby-cube-360
+Stress Dream	UR	Instant	5		evybaby	yes	none	UR		304	0.4815	evybaby-cube-360
+Strip Mine		Land	0	LND	mtgovc oldschool	yes	none			0		
+Strixhaven Skycoach		Artifact	3		evybaby	yes	none		WUBRG	1660	0.4780	evybaby-cube-360
+Studious First-Year	G	Creature	1		evybaby	yes	none	G		44	0.5311	evybaby-cube-360
+Su-Chi		Artifact Creature	4		oldschool	yes	none			0		
+Subtlety	U	Creature	4	ETB	mtgovc	yes	none	U		0		
+Summon: Fenrir	G	Enchantment Creature	3		peasant	yes	none	G	WUBRG	1323	0.5704	peasant-cube-180
+Sun Titan	W	Creature	6	FAT GY ETB	omega synergy vintage180 evybaby twobert	yes	none	W		7562	0.5762	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Sun-Blessed Healer	W	Creature	2		evybaby	yes	none	W		828	0.5495	evybaby-cube-360
+Sunastian Falconer	RG	Creature	5		oldschool	yes	none	RG		0		
+Sunbaked Canyon	WR	Land	0	LND	mtgovc	yes	none		WR	0		
+Sundering Archaic		Creature	6		evybaby	yes	none			1157	0.4698	evybaby-cube-360
+Sunfall	W	Sorcery	5	removal TOK CTR ART CTRL	mtgovc	yes	none	W		0		
+Sunlance	W	Sorcery	1	removal	pauper	yes	none	W		72	0.6195	pauper-cube-180
+Super Shredder	B	Creature	2	CTR AGG	evybaby mtgovc	yes	none	B		280	0.4600	evybaby-cube-360
+Superior Spider-Man	UB	Creature	4	GY	mtgovc	yes	none	UB		0		
+Suplex	R	Sorcery	2	removal ART	mtgovc	yes	none	R		0		
+Surgical Skullbomb	U	Artifact	1		evybaby	yes	none			16	0.5831	evybaby-cube-360
+Surrak, Elusive Hunter	G	Creature	3		evybaby	yes	none	G		1091	0.5589	evybaby-cube-360
+Survival of the Fittest	G	Enchantment	2	REAN GY	vintage180	yes	Random	G		1266	0.4510	vintage-cube-180
+Sweltering Suns	R	Sorcery	3		fairfight	yes	none	R		68	0.4659	fair-fight-cube-180
+Swift Reconfiguration	W	Enchantment	1		mtgovc	yes	none	W		0		
+Swiftwater Cliffs	UR	Land	0	LND	fairfight pauper	yes	none		UR	2885	0.4886	fair-fight-cube-180 pauper-cube-180
+Sword of Feast and Famine		Artifact	3	ART AGG	omega	yes	none			1635	0.5172	omega-cube-180
+Sword of Fire and Ice		Artifact	3	ART AGG	omega modern	yes	none			4782	0.5435	modern-era-cube-180 omega-cube-180
+Sword of Light and Shadow		Artifact	3	ART AGG GY	omega	yes	none			2785	0.5084	omega-cube-180
+Sword of the Ages		Artifact	6		oldschool	yes	All			0		
+Sword of the Meek		Artifact	2	REAN ART	mtgovc	yes	none			0		
+Swords to Plowshares	W	Instant	1	removal	omega synergy vintage180 modern fairfight peasant evybaby twobert mtgovc oldschool	yes	none	W		19153	0.5581	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Sylvan Library	G	Enchantment	2	CTRL	vintage180 oldschool	yes	All	G		128	0.4527	vintage-cube-180
+Sylvan Safekeeper	G	Creature	1	SAC AGG	mtgovc	yes	All	G		0		
+Sylvan Scavenging	G	Enchantment	3		evybaby	yes	none	G		1027	0.5444	evybaby-cube-360
+Syr Konrad, the Grim	B	Creature	5		peasant	yes	none	B		2570	0.5552	peasant-cube-180
+Syr Vondam, Sunstar Exemplar	WB	Creature	2		twobert	yes	none	WB		0		
+Tablet of Discovery	R	Artifact	3		evybaby	yes	none	R	R	274	0.4115	evybaby-cube-360
+Taiga	RG	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		RG	556	0.4900	omega-cube-180 vintage-cube-180
+Tainted Treats	BG	Instant	3		evybaby	yes	none	BG		106	0.5237	evybaby-cube-360
+Take Up the Shield	W	Instant	2		evybaby	yes	none	W		452	0.5254	evybaby-cube-360
+Talisman of Creativity	UR	Artifact	2	ART RAMP	mtgovc	yes	none		UR	0		
+Talisman of Curiosity	UG	Artifact	2	ART RAMP	mtgovc	yes	none		UG	0		
+Talisman of Dominance	UB	Artifact	2	ART RAMP	mtgovc	yes	none		UB	0		
+Talisman of Progress	WU	Artifact	2	ART RAMP	mtgovc	yes	none		WU	0		
+Talon Gates of Madara		Land	0	LND AGG	mtgovc	yes	none		WUBRG	0		
+Talrand, Sky Summoner	U	Creature	4	SPL TOK	synergy twobert	yes	none	U		4837	0.4371	synergy-cube-180
+Tamiyo's Safekeeping	G	Instant	1		mtgovc	yes	none	G		0		
+Tamiyo, Collector of Tales	UG	Planeswalker	4	GY CTRL	mtgovc	yes	All	UG		0		
+Tamiyo, Inquisitive Student	UG	Creature	1	TOK GY ART RAMP EVA AGG	mtgovc	yes	none	U		0		
+Tarfire	R	Kindred Instant	1	removal	mtgovc	yes	none	R		0		
+Tarmogoyf	G	Creature	2	AGG GY	omega modern	yes	none	G		5052	0.5279	modern-era-cube-180 omega-cube-180
+Tawnos's Coffin		Artifact	4		oldschool	yes	All			0		
+Tear Asunder	BG	Instant	2	removal ART	mtgovc	yes	none	G		0		
+Teferi, Hero of Dominaria	WU	Planeswalker	5	CTRL	omega vintage180 mtgovc	yes	none	WU		1699	0.5081	omega-cube-180 vintage-cube-180
+Teferi, Time Raveler	WU	Planeswalker	3	CTRL ETB	vintage180 modern mtgovc	yes	none	WU		2902	0.4993	modern-era-cube-180 vintage-cube-180
+Telekinesis	U	Instant	2		oldschool	yes	none	U		0		
+Temple Garden	WG	Land	0	LND	synergy modern evybaby twobert mtgovc	yes	none		WG	2125	0.5369	evybaby-cube-360 modern-era-cube-180 synergy-cube-180
+Tendrils of Agony	B	Sorcery	4	LIFE	mtgovc	yes	none	B		0		
+Tenth District Legionnaire	WR	Creature	2	AGG SPL	pauper	yes	none	WR		185	0.5512	pauper-cube-180
+Terminate	BR	Instant	2	removal	modern	yes	none	BR		189	0.4832	modern-era-cube-180
+Territorial Kavu	RG	Creature	2	GY AGG	evybaby	yes	none	RG		27	0.5104	evybaby-cube-360
+Terror	B	Instant	2		oldschool	yes	none	B		0		
+Tetravus		Artifact Creature	6		oldschool	yes	none			0		
+Tetsuo Umezawa	UBR	Creature	3		oldschool	yes	none	UBR		0		
+Tezzeret, Cruel Captain		Planeswalker	3	CTR ART CTRL	mtgovc	yes	none			0		
+Thalia, Guardian of Thraben	W	Creature	2	AGG	omega vintage180 modern evybaby	yes	none	W		10442	0.5189	evybaby-cube-360 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Thassa's Oracle	U	Creature	2	ETB AGG	mtgovc	yes	none	U		0		
+The Abyss	B	Enchantment	4		oldschool	yes	Random	B		0		
+The Echoverse Fulcrum			0		mtgovc	no	none			0		
+The Fantasticar		Artifact	3	TOK SPL ART	mtgovc	yes	none			0		
+The Last Ronin's Technique	W	Instant	4		peasant	yes	none	W		460	0.5729	peasant-cube-180
+The Legend of Yangchen	W	Enchantment	5		evybaby	yes	none	W		894	0.5514	evybaby-cube-360
+The Mightstone and Weakstone		Artifact	5	removal ART RAMP CTRL	fairfight mtgovc	yes	none			6443	0.4917	fair-fight-cube-180
+The Mighty Thor, Jane Foster	WU	Creature	3		evybaby twobert	yes	none	WU		222	0.5289	evybaby-cube-360
+The Mountain-king's Return	W	Enchantment	3		evybaby	yes	none	W		156	0.4318	evybaby-cube-360
+The One Ring		Artifact	4	ART LIFE	modern mtgovc	yes	none			5018	0.4682	modern-era-cube-180
+The Rack		Artifact	1		oldschool	yes	none			0		
+The Underworld Cookbook		Artifact	1		peasant evybaby	yes	none			50	0.4685	evybaby-cube-360 peasant-cube-180
+The Wandering Emperor	W	Planeswalker	4	CTRL TOK removal	omega vintage180 mtgovc	yes	none	W		1958	0.5263	omega-cube-180 vintage-cube-180
+The Witch's Vanity	B	Enchantment	2		evybaby	yes	none	B		1345	0.5018	evybaby-cube-360
+The Wondrous Wasp	U	Creature	2	ETB EVA AGG	mtgovc	yes	none	U		0		
+Theorix Charm			0		evybaby	no	none			0		
+Thermo-Alchemist	R	Creature	2		peasant	yes	none	R		446	0.4528	peasant-cube-180
+Thespian's Stage		Land	0	LND AGG	mtgovc	yes	All			0		
+Thicket Basilisk	G	Creature	5		oldschool	yes	none	G		0		
+Thief of Sanity	UB	Creature	3	GY EVA	modern	yes	none	UB		66	0.3488	modern-era-cube-180
+Thieving Skydiver	U	Creature	2	ART ETB	synergy vintage180 mtgovc	yes	none	U		3125	0.4568	synergy-cube-180 vintage-cube-180
+Thieving Sprite	B	Creature	3		evybaby	yes	none	B		44	0.4217	evybaby-cube-360
+Thing in the Ice	U	Creature	2		fairfight	yes	none	U		5140	0.4628	fair-fight-cube-180
+Think Twice	U	Instant	2		evybaby	yes	none	U		1333	0.4848	evybaby-cube-360
+Third Path Iconoclast	UR	Creature	2	SPL TOK ART SAC	synergy vintage180 peasant evybaby twobert mtgovc	yes	none	UR		4128	0.4079	evybaby-cube-360 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Thopter Foundry	WUB	Artifact	2	TOK SAC ART LIFE	mtgovc	yes	none	WUB		0		
+Thorn of the Black Rose	B	Creature	4	ETB	pauper	yes	none	B		4520	0.5009	pauper-cube-180
+Thornspire Verge	RG	Land	0	LND	mtgovc	yes	none		RG	0		
+Thornwood Falls	UG	Land	0	LND	pauper	yes	none		UG	891	0.5192	pauper-cube-180
+Thought Scour	U	Instant	1	SPL GY	synergy pauper twobert mtgovc	yes	none	U		10369	0.4516	pauper-cube-180 synergy-cube-180
+Thought-Stalker Warlock	B	Creature	3		evybaby	yes	none	B		655	0.4859	evybaby-cube-360
+Thoughtseize	B	Sorcery	1	discard	omega vintage180 modern mtgovc	yes	none	B		5653	0.4636	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Thraben Inspector	W	Creature	1	ART ETB	omega synergy vintage180 modern fairfight pauper peasant evybaby twobert mtgovc	yes	none	W		27790	0.5361	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 pauper-cube-180 peasant-cube-180 synergy-cube-180 vintage-cube-180
+Thragtusk	G	Creature	5	ETB LIFE SAC	omega vintage180 modern fairfight evybaby	yes	none	G		11463	0.5304	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Thranduil's Company	UG	Creature	4		twobert	yes	none	UG		0		
+Thranduil, Sindarin Liege	UG	Creature	4		evybaby twobert	yes	none	UG		189	0.5741	evybaby-cube-360
+Thrashing Brontodon	G	Creature	3		fairfight peasant	yes	none	G		165	0.5773	fair-fight-cube-180 peasant-cube-180
+Threadbind Clique	WU	Creature	4		evybaby	yes	none	U		681	0.5235	evybaby-cube-360
+Three Tree Rootweaver	G	Creature	2		evybaby	yes	none	G	WUBRG	31	0.5096	evybaby-cube-360
+Throat Slitter	B	Creature	5		evybaby	yes	none	B		690	0.5014	evybaby-cube-360
+Through the Breach	R	Instant	5	REAN	mtgovc	yes	All	R		0		
+Thrun, the Last Troll	G	Creature	4	AGG	omega	yes	none	G		1570	0.4755	omega-cube-180
+Thunder Spirit	W	Creature	3		oldschool	yes	none	W		0		
+Thundering Falls	UR	Land	0	LND	evybaby mtgovc	yes	none		UR	609	0.4769	evybaby-cube-360
+Thundermaw Hellkite	R	Creature	5	EVA AGG	omega modern	yes	none	R		900	0.5447	modern-era-cube-180 omega-cube-180
+Thundertrap Trainer	U	Creature	2	TOK ETB AGG	mtgovc	yes	none	U		0		
+Tibalt, Rakish Instigator	R	Planeswalker	3		fairfight	yes	none	R		104	0.4919	fair-fight-cube-180
+Tidehollow Sculler	WB	Artifact Creature	2	ETB discard AGG	synergy vintage180 modern mtgovc	yes	none	WB		8	0.4789	modern-era-cube-180 synergy-cube-180 vintage-cube-180
+Time Elemental	U	Creature	3		oldschool	yes	All	U		0		
+Time Spiral	U	Sorcery	6	GY	mtgovc	yes	none	U		0		
+Time Vault		Artifact	2		oldschool	yes	Random			0		
+Time Walk	U	Sorcery	2	SPL CTRL	vintage180 mtgovc oldschool	yes	none	U		3128	0.5076	vintage-cube-180
+Timetwister	U	Sorcery	3	GY	mtgovc oldschool	yes	none	U		0		
+Tinker	U	Sorcery	3	REAN ART	vintage180 mtgovc	yes	Random	U		3297	0.4863	vintage-cube-180
+Tireless Tracker	G	Creature	3	LND ART CTR	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none	G		13853	0.4932	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Tishana's Tidebinder	U	Creature	3	ETB ART	mtgovc	yes	none	U		0		
+Titania, Protector of Argoth	G	Creature	5	LND TOK GY	omega synergy vintage180 mtgovc	yes	none	G		4922	0.4564	omega-cube-180 synergy-cube-180 vintage-cube-180
+Together as One		Sorcery	6		evybaby	yes	none			1671	0.5062	evybaby-cube-360
+Tolarian Academy	U	Land	0	LND	mtgovc	yes	Random		U	0		
+Tolarian Terror	U	Creature	7	SPL GY	modern fairfight pauper	yes	none	U		11615	0.4918	fair-fight-cube-180 modern-era-cube-180 pauper-cube-180
+Tormod's Crypt		Artifact	0		oldschool	yes	Random			0		
+Torrential Gearhulk	U	Artifact Creature	6	SPL ETB GY	synergy modern twobert	yes	none	U		7051	0.4294	modern-era-cube-180 synergy-cube-180
+Torsten, Founder of Benalia	WG	Creature	7	TOK ETB FAT	mtgovc	yes	none	WG		0		
+Tortured Existence	B	Enchantment	1	GY SAC	pauper	yes	All	B		2183	0.4852	pauper-cube-180
+Tough Cookie	G	Artifact Creature	2		evybaby	yes	none	G		688	0.5819	evybaby-cube-360
+Toxic Deluge	B	Sorcery	3	CTRL removal	vintage180 mtgovc	yes	All	B		48	0.3971	vintage-cube-180
+Tracker	G	Creature	3		oldschool	yes	none	G		0		
+Tragic Slip	B	Instant	1	removal SAC	pauper	yes	none	B		3249	0.5032	pauper-cube-180
+Tranquil Cove	WU	Land	0	LND	fairfight pauper	yes	none		WU	3448	0.5149	fair-fight-cube-180 pauper-cube-180
+Tranquil Landscape	WUG	Land	0		peasant	yes	none		WUG	926	0.4810	peasant-cube-180
+Tranquility	G	Sorcery	3		oldschool	yes	none	G		0		
+Transmute Artifact	U	Sorcery	2		oldschool	yes	Random	U		0		
+Traumatic Critique	UR	Instant	2	removal SPL CTRL	mtgovc	yes	none	UR		0		
+Traveling Botanist	G	Creature	2		evybaby	yes	none	G		1496	0.5257	evybaby-cube-360
+Treasure Cruise	U	Sorcery	8	SPL GY	omega vintage180 fairfight pauper mtgovc	yes	none	U		9592	0.4616	fair-fight-cube-180 omega-cube-180 pauper-cube-180 vintage-cube-180
+Trickster's Stratagem	U	Sorcery	4		evybaby	yes	none	U		291	0.4276	evybaby-cube-360
+Triplicate Spirits	W	Sorcery	6	TOK EVA	pauper	yes	none	W		274	0.6734	pauper-cube-180
+Triskelion		Artifact Creature	6		oldschool	yes	none			0		
+Troll Negotiations	G	Sorcery	4		evybaby	yes	none	G		343	0.5509	evybaby-cube-360
+Troll of Khazad-dûm	B	Creature	6	FAT	peasant evybaby twobert mtgovc	yes	none	B	B	5675	0.5243	evybaby-cube-360 peasant-cube-180
+Tropical Island	UG	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		UG	869	0.4863	omega-cube-180 vintage-cube-180
+Trostani Discordant	WG	Creature	5		fairfight	yes	none	WG		637	0.5982	fair-fight-cube-180
+Trumpeting Herd	G	Sorcery	4		peasant	yes	none	G		3	0.4778	peasant-cube-180
+Tsunami	G	Sorcery	4		oldschool	yes	Random	G		0		
+Tundra	WU	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		WU	1693	0.5119	omega-cube-180 vintage-cube-180
+Tundra Wolves	W	Creature	1		oldschool	yes	none	W		0		
+Twiddle	U	Instant	1		oldschool	yes	All	U		0		
+Twinned Vision			0		evybaby twobert	no	none			0		
+Twinshot Sniper	R	Artifact Creature	4		peasant evybaby	yes	none	R		6033	0.4721	evybaby-cube-360 peasant-cube-180
+Twisted Fates			0		evybaby	no	none			0		
+Twisted Landscape	BRG	Land	0		peasant	yes	none		BRG	1525	0.4964	peasant-cube-180
+Two-Headed Giant of Foriys	R	Creature	5		oldschool	yes	none	R		0		
+Ugin, Eye of the Storms		Planeswalker	7	RAMP LIFE CTRL	mtgovc	yes	none			0		
+Ugin, the Spirit Dragon		Planeswalker	8	CTRL FAT removal	omega	yes	none			4767	0.5003	omega-cube-180
+Ulamog's Crusher		Creature	8	RAMP	pauper	yes	none			562	0.4948	pauper-cube-180
+Ulvenwald Mysteries	G	Enchantment	3	ART SAC TOK	synergy twobert	yes	none	G		405	0.4235	synergy-cube-180
+Ulvenwald Oddity	G	Creature	4		evybaby	yes	none	G		716	0.5774	evybaby-cube-360
+Umbral Collar Zealot	B	Creature	2		peasant evybaby twobert	yes	none	B		1053	0.5319	evybaby-cube-360 peasant-cube-180
+Umezawa's Jitte		Artifact	2	ART AGG	omega vintage180 mtgovc	yes	none			10137	0.4953	omega-cube-180 vintage-cube-180
+Unable to Scream	U	Enchantment	1		peasant	yes	none	U		2364	0.4346	peasant-cube-180
+Unbreakable Formation	W	Instant	3		fairfight	yes	none	W		1442	0.4795	fair-fight-cube-180
+Unburial Rites	WB	Sorcery	5	GY	synergy twobert	yes	none	B		575	0.4790	synergy-cube-180
+Undercity Sewers	UB	Land	0	LND	peasant evybaby mtgovc	yes	none		UB	1732	0.4941	evybaby-cube-360 peasant-cube-180
+Underground Mortuary	BG	Land	0	LND	peasant evybaby mtgovc	yes	none		BG	1519	0.5130	evybaby-cube-360 peasant-cube-180
+Underground Sea	UB	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		UB	1316	0.4757	omega-cube-180 vintage-cube-180
+Underworld Breach	R	Enchantment	2	GY	mtgovc	yes	none	R		0		
+Underworld Dreams	B	Enchantment	3		oldschool	yes	none	B		0		
+Unearth	B	Sorcery	1	GY ETB	fairfight pauper mtgovc	yes	none	B		89	0.5366	fair-fight-cube-180 pauper-cube-180
+Unexpected Windfall	R	Instant	4	ART GY SPL	synergy	yes	none	R	WUBRG	1730	0.4171	synergy-cube-180
+Unexpectedly Absent	W	Instant	2	removal	mtgovc	yes	none	W		0		
+Unholy Heat	R	Instant	1	removal GY	vintage180 modern mtgovc	yes	none	R		3019	0.5061	modern-era-cube-180 vintage-cube-180
+Unholy Strength	B	Enchantment	1		oldschool	yes	none	B		0		
+Unsummon	U	Instant	1	ETB SPL	synergy oldschool	yes	none	U		68	0.4203	synergy-cube-180
+Untamed Wilds	G	Sorcery	3		oldschool	yes	none	G	WUBRG	0		
+Unwelcome Sprite	U	Creature	2		evybaby	yes	none	U		174	0.4690	evybaby-cube-360
+Unwilling Ingredient	B	Creature	1	SAC GY	pauper	yes	none	B		16	0.6109	pauper-cube-180
+Up the Beanstalk	G	Enchantment	2		evybaby	yes	none	G		192	0.4481	evybaby-cube-360
+Upheaval	U	Sorcery	6	CTRL	mtgovc	yes	none	U		0		
+Urborg, Tomb of Yawgmoth		Land	0	LND	mtgovc	yes	Random			0		
+Uro, Titan of Nature's Wrath	UG	Creature	3	LND GY RAMP	omega vintage180 modern mtgovc	yes	none	UG		1170	0.4913	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Ursine Monstrosity	G	Creature	3	GY	mtgovc	yes	none	G		0		
+Urza's Avenger		Artifact Creature	6		oldschool	yes	All			0		
+Urza's Bauble		Artifact	0	ART	mtgovc	yes	All			0		
+Urza's Saga		Enchantment Land	0	LND GY AGG	twobert mtgovc	yes	none			0		
+Urza, Lord High Artificer	U	Creature	4	ART ETB RAMP	vintage180 mtgovc	yes	none	U	U	3527	0.5035	vintage-cube-180
+Uthden Troll	R	Creature	3		oldschool	yes	none	R		0		
+Utopia Sprawl	G	Enchantment	1	RAMP	pauper	yes	All	G		1998	0.4613	pauper-cube-180
+Vampire Gourmand	B	Creature	2		evybaby	yes	none	B		503	0.4570	evybaby-cube-360
+Vampire Nighthawk	B	Creature	3	EVA LIFE	omega synergy modern fairfight peasant	yes	none	B		13425	0.5142	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 peasant-cube-180 synergy-cube-180
+Vampiric Tutor	B	Instant	1	REAN CTRL	mtgovc	yes	All	B		0		
+Vapor Snag	U	Instant	1		evybaby	yes	none	U		25	0.4665	evybaby-cube-360
+Vault Skirge	B	Artifact Creature	2	ART AGG EVA	fairfight pauper	yes	none	B		547	0.5750	fair-fight-cube-180 pauper-cube-180
+Vaultborn Tyrant	G	Creature	7	TOK ART LIFE FAT	mtgovc	yes	none	G		0		
+Vendilion Clique	U	Creature	3	EVA discard	omega modern evybaby	yes	none	U		8747	0.4723	evybaby-cube-360 modern-era-cube-180 omega-cube-180
+Vengeful Rebel	B	Creature	3		evybaby	yes	none	B		766	0.4936	evybaby-cube-360
+Vengevine	G	Creature	4	AGG GY	omega	yes	none	G		2207	0.4692	omega-cube-180
+Venser, Shaper Savant	U	Creature	4	ETB counter	omega	yes	none	U		3725	0.4838	omega-cube-180
+Verdant Catacombs		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		BG	1992	0.4822	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Vesuvan Doppelganger	U	Creature	5		oldschool	yes	none	U		0		
+Veteran Beastrider	WG	Creature	3		peasant	yes	none	WG		21	0.5119	peasant-cube-180
+Veteran Bodyguard	W	Creature	5		oldschool	yes	none	W		0		
+Vibrance	RG	Creature	5	removal ETB LIFE	evybaby mtgovc	yes	none	RG		172	0.4895	evybaby-cube-360
+Vicious Offering	B	Instant	2	removal SAC	pauper	yes	none	B		2592	0.4847	pauper-cube-180
+Vicious Rivalry	BG	Sorcery	4	removal ART CTRL	mtgovc	yes	none	BG		0		
+Village Rites	B	Instant	1	SAC SPL	synergy fairfight pauper	yes	none	B		21	0.4346	fair-fight-cube-180 pauper-cube-180 synergy-cube-180
+Vinereap Mentor	BG	Creature	2		evybaby	yes	none	BG		163	0.5519	evybaby-cube-360
+Virus Beetle	B	Artifact Creature	2		evybaby	yes	none	B		1371	0.4745	evybaby-cube-360
+Viscera Seer	B	Creature	1	SAC	synergy	yes	All	B		29	0.4282	synergy-cube-180
+Vitu-Ghazi Guildmage	WG	Creature	2		peasant	yes	none	WG		24	0.5225	peasant-cube-180
+Vivi Ornitier	UR	Creature	3	CTR SPL RAMP	mtgovc	yes	none	UR	UR	0		
+Voice of Resurgence	WG	Creature	2	TOK SAC	omega vintage180 modern evybaby	yes	none	WG		660	0.5782	evybaby-cube-360 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Voice of Victory	W	Creature	2	TOK AGG	evybaby mtgovc	yes	none	W		1049	0.5575	evybaby-cube-360
+Volcanic Eruption	U	Sorcery	3		oldschool	yes	Random	U		0		
+Volcanic Island	UR	Land	0	LND	omega vintage180 mtgovc oldschool	yes	none		UR	1116	0.4861	omega-cube-180 vintage-cube-180
+Voldaren Epicure	R	Creature	1	TOK ETB ART AGG	evybaby mtgovc	yes	none	R		950	0.4639	evybaby-cube-360
+Voltage Surge	R	Instant	1		evybaby	yes	none	R		927	0.4562	evybaby-cube-360
+Vraska's Final Mercy			0		mtgovc	no	none			0		
+Vraska, Swarm's Eminence	BG	Planeswalker	4		fairfight	yes	none	BG		78	0.5408	fair-fight-cube-180
+Vulshok Morningstar		Artifact	2		fairfight	yes	none			3799	0.5292	fair-fight-cube-180
+Waker of Waves	U	Creature	7		peasant	yes	All	U		718	0.3835	peasant-cube-180
+Walking Ballista		Artifact Creature	0	ART CTR	omega synergy vintage180 modern fairfight twobert mtgovc	yes	none			25479	0.5005	fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Wall of Air	U	Creature	3		oldschool	yes	none	U		0		
+Wall of Earth	R	Creature	2		oldschool	yes	none	R		0		
+Wall of Roots	G	Creature	2	RAMP	fairfight pauper	yes	none	G	G	380	0.4402	fair-fight-cube-180 pauper-cube-180
+Wall of Swords	W	Creature	4		oldschool	yes	none	W		0		
+Wan Shi Tong, All-Knowing	U	Creature	5	TOK ETB	mtgovc	yes	none	U		0		
+Wan Shi Tong, Librarian	U	Creature	2	ETB CTR EVA AGG	mtgovc	yes	none	U		0		
+Warrior's Blades			0		evybaby	no	none			0		
+Wasteland		Land	0	LND	mtgovc	yes	none			0		
+Wastewood Verge	BG	Land	0	LND	mtgovc	yes	none		BG	0		
+Watcher for Tomorrow	U	Creature	2	ETB	synergy	yes	none	U		49	0.4346	synergy-cube-180
+Water Elemental	U	Creature	5		oldschool	yes	none	U		0		
+Waterlogged Grove	UG	Land	0	LND	mtgovc	yes	none		UG	0		
+Watery Grave	UB	Land	0	LND	synergy modern evybaby twobert mtgovc	yes	none		UB	1616	0.4456	evybaby-cube-360 modern-era-cube-180 synergy-cube-180
+Weakness	B	Enchantment	1		oldschool	yes	none	B		0		
+Wedding Announcement	W	Enchantment	3	TOK ART	omega	yes	none	W		3371	0.5087	omega-cube-180
+Welcome to Sweettooth	G	Enchantment	2		evybaby	yes	none	G		625	0.5690	evybaby-cube-360
+Welcoming Vampire	W	Creature	3	TOK ETB	synergy	yes	none	W		3533	0.6648	synergy-cube-180
+Werebear	G	Creature	2	RAMP GY	fairfight pauper	yes	none	G	G	871	0.4794	fair-fight-cube-180 pauper-cube-180
+Wheel of Fortune	R	Sorcery	3	discard	mtgovc oldschool	yes	none	R		0		
+Whirler Rogue	U	Creature	4		peasant evybaby	yes	none	U		3232	0.4748	evybaby-cube-360 peasant-cube-180
+Whirling Dervish	G	Creature	2		oldschool	yes	none	G		0		
+White Knight	W	Creature	2		oldschool	yes	none	W		0		
+Wicked Wolf	G	Creature	4		evybaby	yes	none	G		1086	0.5425	evybaby-cube-360
+Wight of the Reliquary	BG	Creature	2	SAC GY AGG	mtgovc	yes	none	BG		0		
+Wild Growth	G	Enchantment	1		oldschool	yes	All	G		0		
+Wild Nacatl	G	Creature	1		evybaby	yes	none	G		61	0.5431	evybaby-cube-360
+Wildheart Invoker	G	Creature	4	RAMP AGG	pauper	yes	none	G		370	0.4820	pauper-cube-180
+Will-o'-the-Wisp	B	Creature	1		oldschool	yes	none	B		0		
+Willow Satyr	G	Creature	4		oldschool	yes	none	G		0		
+Wind-Scarred Crag	WR	Land	0	LND	fairfight pauper	yes	none		WR	2761	0.4865	fair-fight-cube-180 pauper-cube-180
+Winding Constrictor	BG	Creature	2	CTR	synergy	yes	Random	BG		11	0.3866	synergy-cube-180
+Winding Way	G	Sorcery	2		twobert	yes	All	G		0		
+Winds of Abandon	W	Sorcery	2	removal	mtgovc	yes	none	W		0		
+Windswept Heath		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		WG	2450	0.5023	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Winter Eladrin	U	Creature	3		evybaby	yes	none	U		1684	0.5182	evybaby-cube-360
+Winter Orb		Artifact	2		oldschool	yes	Random			0		
+Wishclaw Talisman	B	Artifact	2	ART	mtgovc	yes	none	B		0		
+Wistfulness	UG	Creature	5	removal ETB ART CTRL	mtgovc	yes	none	UG		0		
+Witch Enchanter	W	Creature	4	removal ETB ART RAMP	peasant evybaby mtgovc	yes	none	W		3039	0.5437	evybaby-cube-360 peasant-cube-180
+Witch Hunter	W	Creature	4		oldschool	yes	none	W		0		
+Witch's Oven		Artifact	1		evybaby twobert	yes	Random			1907	0.4572	evybaby-cube-360
+Witherbloom Apprentice	BG	Creature	2	LIFE AGG	mtgovc	yes	none	BG		0		
+Woe Strider	B	Creature	3	SAC GY TOK	synergy fairfight	yes	none	B		2175	0.5350	fair-fight-cube-180 synergy-cube-180
+Wood Elves	G	Creature	3	ETB LND	synergy	yes	none	G	G	3393	0.4336	synergy-cube-180
+Wooded Foothills		Land	0	LND GY	omega synergy vintage180 evybaby twobert mtgovc	yes	none		RG	1970	0.4783	evybaby-cube-360 omega-cube-180 synergy-cube-180 vintage-cube-180
+Woodfall Primus	G	Creature	8	ETB FAT	mtgovc	yes	none	G		0		
+Worldspine Wurm	G	Creature	11	TOK GY FAT	mtgovc	yes	none	G		0		
+Wormwood Treefolk	BG	Creature	5		oldschool	yes	none	G		0		
+Wrath of God	W	Sorcery	4	CTRL	omega vintage180 modern evybaby oldschool	yes	none	W		6465	0.5098	evybaby-cube-360 modern-era-cube-180 omega-cube-180 vintage-cube-180
+Wrenn and Six	RG	Planeswalker	2	LND GY	vintage180 mtgovc	yes	none	RG		164	0.4131	vintage-cube-180
+Wrenn's Resolve	R	Sorcery	2	SPL	fairfight pauper	yes	none	R		7828	0.4817	fair-fight-cube-180 pauper-cube-180
+Writhing Chrysalis	RG	Creature	4	TOK SAC RAMP	fairfight pauper peasant evybaby	yes	none	RG		7400	0.5024	evybaby-cube-360 fair-fight-cube-180 pauper-cube-180 peasant-cube-180
+Wurmcoil Engine		Artifact Creature	6	ART FAT LIFE	omega vintage180 modern twobert	yes	none			14128	0.5327	modern-era-cube-180 omega-cube-180 vintage-cube-180
+Wyluli Wolf	G	Creature	2		oldschool	yes	none	G		0		
+Xander's Lounge	UBR	Land	0	LND	mtgovc	yes	none		UBR	0		
+Xira Arien	BRG	Creature	3		oldschool	yes	none	BRG		0		
+Yahenni, Undying Partisan	B	Creature	3		peasant evybaby	yes	none	B		1193	0.5265	evybaby-cube-360 peasant-cube-180
+Yasharn, Implacable Earth	WG	Creature	4		twobert	yes	Random	WG	G	0		
+Yavimaya Elder	G	Creature	3	RAMP GY SAC	fairfight pauper	yes	none	G	WUBRG	1807	0.4753	fair-fight-cube-180 pauper-cube-180
+Yavimaya, Cradle of Growth		Land	0	LND	mtgovc	yes	Random			0		
+Yawgmoth Demon	B	Creature	6		oldschool	yes	Random	B		0		
+Yawgmoth's Will	B	Sorcery	3	GY	mtgovc	yes	none	B		0		
+Yawgmoth, Thran Physician	B	Creature	4	SAC CTR GY	synergy twobert	yes	none	B		0		
+Ydwen Efreet	R	Creature	3		oldschool	yes	none	R		0		
+Yotian Soldier		Artifact Creature	3		oldschool	yes	none			0		
+Young Pyromancer	R	Creature	2	SPL TOK SAC	omega synergy vintage180 modern fairfight evybaby twobert	yes	none	R		2351	0.4923	evybaby-cube-360 fair-fight-cube-180 modern-era-cube-180 omega-cube-180 synergy-cube-180 vintage-cube-180
+Zagoth Triome	UBG	Land	0	LND	mtgovc	yes	none		UBG	0		
+Zealous Persecution	WB	Instant	2		evybaby	yes	none	WB		15	0.4855	evybaby-cube-360
+Ziatora's Proving Ground	BRG	Land	0	LND	mtgovc	yes	none		BRG	0		
+Zirda, the Dawnwaker	WR	Creature	3	ART	mtgovc	yes	none	WR		0		
+Zulaport Cutthroat	B	Creature	2	SAC LIFE	synergy evybaby twobert	yes	none	B		293	0.5252	evybaby-cube-360 synergy-cube-180
+Zuran Orb		Artifact	0	SAC ART LIFE	mtgovc	yes	none			0		
