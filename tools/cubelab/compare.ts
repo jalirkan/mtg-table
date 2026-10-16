@@ -53,6 +53,8 @@ import { rng } from './rng.ts';
 import type { DraftRecord, RunMeta } from './run.ts';
 import { VERIFY_SEED_MIN } from './seeds.ts';
 import { DEFAULT_WEIGHTS } from './weights.ts';
+import { deckShape, shapeJson, shapeTable, shapeTableMd, type ShapeInterval } from './shape-measures.ts';
+import type { Shape } from './shapes.ts';
 
 // ---------------------------------------------------------------- the measures
 
@@ -95,6 +97,16 @@ export interface DeckUnit {
   colours: number;
   splash: boolean;
   lands: number;
+  /** D446: the main colour count (a splash not counted; 0 for a Forge build without colours). */
+  main: number;
+  /** D446: this seat's match result ('D' a drawn match, null no games). */
+  match: 'W' | 'L' | 'D' | null;
+  /** D446: the seat's shape (absent: the run had shapes off), whether the exploration forced it, and whether its shape had no build. */
+  shape?: Shape;
+  forced: boolean;
+  fallback: boolean;
+  /** D446: card-flow cards in the played deck (null: the run marked no flow, i.e. shapes off). */
+  flow: number | null;
 }
 export interface GameUnit { draw: boolean; timeout: boolean; turns: number }
 export interface DraftUnit { seed: number; decks: [DeckUnit, DeckUnit]; games: GameUnit[]; firstLine: number[] }
@@ -128,6 +140,8 @@ export function populationOf(name: string, dir: string, run: RunMeta, info: Reco
   };
   const drafts = new Map<number, DraftUnit>();
   let engineErrors = 0;
+  // D446: a run with shapes on marked its card-flow cards in cards.json
+  const flowOn = !!run.shapes;
   for (const rec of [...recs].sort((a, b) => a.seed - b.seed)) {
     if (drafts.has(rec.seed)) throw new Error(`${name}: seed ${rec.seed} is in ${path.join(dir, 'drafts.jsonl')} twice`);
     if (rec.match.engineError) engineErrors++;
@@ -145,9 +159,13 @@ export function populationOf(name: string, dir: string, run: RunMeta, info: Reco
         : pd.main.reduce((s, [n, c]) => s + (BASICS.has(c) || info[c]?.land ? n : 0), 0);
       const key = pd.key;
       const main = [...key].filter((c) => 'WUBRG'.includes(c)).length;
+      const games = rec.match.games.length;
+      const match: DeckUnit['match'] = games === 0 ? null : rec.match.winner === 'draw' ? 'D' : rec.match.winner === me ? 'W' : 'L';
+      const flow = flowOn ? pd.main.reduce((t, [n, c]) => t + (info[c]?.flow ? n : 0), 0) : null;
       return {
         cards: [...new Set(pd.main.filter(([, c]) => !BASICS.has(c)).map(([, c]) => c))].map(idx),
         wins, decisive, key, colours: main + (pd.splash ? pd.splash.length : 0), splash: pd.splash !== null && pd.splash !== '', lands,
+        main, match, ...deckShape(dr), flow,
       };
     }) as [DeckUnit, DeckUnit];
     const games = rec.match.games.map((g): GameUnit => ({ draw: g.winner === 'draw', timeout: !!g.timeout, turns: g.turns }));
@@ -302,7 +320,9 @@ export interface Interval { est?: number; lo?: number; hi?: number; valid: numbe
 export interface Comparison {
   seeds: number[];
   options: CompareOptions;
-  pops: Array<{ name: string; est: Values; ci: Record<string, Interval>; flat: SpreadStats | null; drafts: number; games: number; decisive: number; pairsIncluded: number }>;
+  pops: Array<{ name: string; est: Values; ci: Record<string, Interval>; flat: SpreadStats | null; drafts: number; games: number; decisive: number; pairsIncluded: number;
+    /** D446: the shape measures (shape-measures.ts) and whether the run marked card flow. */
+    shapes: Record<string, ShapeInterval>; flowOn: boolean }>;
   /** diff[a][b][measure]: population a's value minus b's (a before b in the input order). */
   diff: Record<string, Record<string, Record<string, Interval & { excludesZero: boolean }>>>;
 }
@@ -330,8 +350,10 @@ export function compare(pops: Population[], o: CompareOptions, expect?: { seed: 
   const reps: Values[][] = pops.map(() => []);
   const r = rng(o.bootSeed, 'compare:bootstrap');
   const n = seeds.length;
+  const picks: number[][] = [];
   for (let b = 0; b < o.boot; b++) {
     const pick = Array.from({ length: n }, () => r.int(n));
+    picks.push(pick);
     pops.forEach((p, k) => {
       const ds = aligned[k] as DraftUnit[];
       (reps[k] as Values[]).push(measuresOf(p, pick.map((i) => ds[i] as DraftUnit), o, true));
@@ -366,6 +388,8 @@ export function compare(pops: Population[], o: CompareOptions, expect?: { seed: 
   });
   const out: Comparison = { seeds, options: o, pops: [], diff: {} };
   pops.forEach((p, k) => {
+    // D446: the shape measures, on the same replicates
+    const shapes = shapeTable(aligned[k] as DraftUnit[], { minPairGames: o.minPairGames, boot: o.boot, bootSeed: o.bootSeed }, picks);
     const ci: Record<string, Interval> = {};
     for (const m of MEASURES) ci[m.id] = interval(est[k]?.[m.id], (reps[k] as Values[]).map((v) => v[m.id]));
     const ds = aligned[k] as DraftUnit[];
@@ -375,6 +399,7 @@ export function compare(pops: Population[], o: CompareOptions, expect?: { seed: 
       name: p.name, est: est[k] as Values, ci, flat: flatnessOf(p, ds), drafts: ds.length,
       games: ds.reduce((s, d) => s + d.games.length, 0), decisive: ds.reduce((s, d) => s + d.games.filter((g) => !g.draw).length, 0),
       pairsIncluded: [...pairs.values()].filter((g) => g >= o.minPairGames && g > 0).length,
+      shapes, flowOn: !!p.run.shapes,
     });
   });
   for (let a = 0; a < pops.length; a++) for (let b = a + 1; b < pops.length; b++) {
@@ -458,7 +483,7 @@ export function compareJson(c: Comparison, rules: Rule[]): Record<string, unknow
         true_sd: r6(p.flat.trueSd), fc_lo: r6(p.flat.trueSdCi[0]), fc_hi: r6(p.flat.trueSdCi[1]), mean_rate: r6(p.flat.meanRate),
         readable: p.flat.n >= MIN_UNITS ? 1 : 0 });
     }
-    pop[p.name] = { index: i + 1, drafts: p.drafts, games: p.games, decisive: p.decisive, pairs_included: p.pairsIncluded, m, flatness_detail: flat };
+    pop[p.name] = { index: i + 1, drafts: p.drafts, games: p.games, decisive: p.decisive, pairs_included: p.pairsIncluded, m, flatness_detail: flat, shape: shapeJson(p.shapes), flow_marked: p.flowOn ? 1 : 0 };
   });
   const diff: Record<string, Record<string, Record<string, unknown>>> = {};
   for (const [a, row] of Object.entries(c.diff)) for (const [b, ms] of Object.entries(row)) {
@@ -574,6 +599,15 @@ export function compareMd(c: Comparison, labels: PopulationLabel[], rules: Rule[
       L.push('');
       L.push(`**Verdict** (rule ${d.id}:${rule.better}-better:margin=${rule.margin} ${d.unit}): ${wins.length ? wins.join('; ') : 'no population beats another'}.`);
     }
+    L.push('');
+  }
+  // D446: the shape measures, population by population (no pairwise differences: read them side by side)
+  L.push('## Shapes (D446)');
+  L.push('');
+  for (const p of c.pops) {
+    L.push(`### ${p.name}`);
+    L.push('');
+    L.push(...shapeTableMd(p.shapes, p.flowOn));
     L.push('');
   }
   return `${L.join('\n')}\n`;

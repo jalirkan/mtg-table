@@ -24,11 +24,12 @@
 //    IN DECK is the decisive games of the decks that played it.
 
 import type { DraftRecord, RunMeta } from './run.ts';
+import { shapeTableMd, type ShapeInterval } from './shape-measures.ts';
 
 export const PRIMARY_MIN = 5;
 const Z = 1.96;
 
-export interface CardInfo { section: string; colors: string; cmc: number; land: boolean; themes: string[]; rating: number; remAIDeck: boolean; type: string }
+export interface CardInfo { section: string; colors: string; cmc: number; land: boolean; themes: string[]; rating: number; remAIDeck: boolean; type: string; /** D446: card flow (cardflow.ts), written only when the run had shapes on. */ flow?: true }
 
 export interface Recording { seed: number; file: string; seat: 'A'; decks: [string, string]; ok: boolean; ms: number }
 
@@ -57,6 +58,8 @@ export interface Summary {
   curves: Array<{ key: string; decks: number; curve: number[]; avgCmc: number }>;
   samples: Array<{ key: string; seed: number; seat: 'A' | 'B'; record: string; colors: string; splash: string | null; theme: string; main: Array<[number, string]>; file: string | null }>;
   recordings: Recording[];
+  /** D446: the shape measures (shape-measures.ts; cli.ts's report adds them), present only when the run had shapes on. */
+  shapes?: { table: Record<string, ShapeInterval>; flowOn: boolean; boot: number; bootSeed: number; minPairGames: number };
 }
 
 export function wilson(wins: number, n: number): { lo: number | null; hi: number | null } {
@@ -288,6 +291,7 @@ a{color:var(--acc)}code{font-size:12px}
 <h2>Win rate by primary theme</h2><p class="dim">The theme most of a deck's spells carry, when at least ${PRIMARY_MIN} do.</p><div class="wrap">${groupTable(s.byTheme, 'theme')}</div>
 <h2>Average curve by pair</h2><div class="wrap"><table><thead><tr><th>pair</th><th>decks</th><th>0–1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6+</th><th>avg MV</th></tr></thead><tbody>${curveRows}</tbody></table></div>
 <h2>Sample decks of the top pairs</h2><p class="dim">For each of the three best pairs with two or more decks, the deck of that pair that won the most games.</p><div class="decks">${samples}</div>
+${s.shapes ? `<h2>Shapes (D446)</h2><p class="dim">${s.shapes.boot} draft-clustered bootstrap replicates (seed ${s.shapes.bootSeed}); colour counts and combinations need ${s.shapes.minPairGames}+ decisive matches or games.</p><pre>${esc(shapeTableMd(s.shapes.table, s.shapes.flowOn).join('\n'))}</pre>` : ''}
 <h2>Cards</h2><p class="dim">${s.run.format === 'winston' ? 'Winston deals every stack card into a pool, so pick % is 100% by construction; avg pick # says how early a card went. ' : ''}Click a heading to sort. Win % in deck is over the decisive games of the decks that played the card. <span class="tag">AI?</span> = Forge marks it AI:RemAIDeck (its AI plays it poorly).</p>
 <div class="wrap"><table id="cards"><thead><tr><th>card</th><th>section</th><th>rating</th><th>dealt</th><th>picked</th><th>pick %</th><th>avg pick #</th><th>in deck</th><th>deck %</th><th>W–L</th><th>win % in deck</th><th>95% CI</th></tr></thead><tbody>${cardsRows}</tbody></table></div>
 <h2>Never played</h2><p>${s.neverPlayed.length === 0 ? '<span class="dim">Every nonland card made a deck at least once.</span>' : s.neverPlayed.map((c) => `${esc(c.name)} <span class="dim">(picked ${c.picked}/${c.dealt})</span>`).join(' · ')}</p>
@@ -329,6 +333,10 @@ export function renderMarkdown(s: Summary, minGames = 6): string {
   if (byRate.length > 24) L.push('| … | | | | | |');
   for (const c of byRate.slice(Math.max(12, byRate.length - 12))) L.push(row(c));
   L.push('', `## Never played (${s.neverPlayed.length})`, '', s.neverPlayed.map((c) => c.name).join(', ') || '(none)', '');
+  if (s.shapes) {
+    L.push('## Shapes (D446)', '', `${s.shapes.boot} draft-clustered bootstrap replicates (seed ${s.shapes.bootSeed}); colour counts and combinations need ${s.shapes.minPairGames}+ decisive matches or games.`, '');
+    L.push(...shapeTableMd(s.shapes.table, s.shapes.flowOn), '');
+  }
   L.push('## Recorded games', '');
   if (s.recordings.length === 0) L.push('(none)');
   else {

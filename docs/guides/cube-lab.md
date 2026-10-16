@@ -8,7 +8,7 @@ and the raw data behind it, every pick with the cards that were on offer, for
 a drafting AI or a play AI to learn from later. No tokens, no network: Forge
 plays every game.
 
-The decisions are **D293–D297** (and **D299–D300** for *Evolve*) in [`DECISIONS.md`](../../DECISIONS.md), and [D441](../decisions/D441-cube-population-compare.md) for *Comparing cube populations*; what
+The decisions are **D293–D297** (and **D299–D300** for *Evolve*) in [`DECISIONS.md`](../../DECISIONS.md), [D441](../decisions/D441-cube-population-compare.md) for *Comparing cube populations*, and [D446](../decisions/D446-census-shapes.md) for the census's *Shapes*; what
 was measured is [`docs/evidence/cube-lab.md`](../evidence/cube-lab.md).
 
 ## One command
@@ -418,6 +418,8 @@ lowers it): a mix with search plays slower games.
 | `--llm-max-calls N` | none | stop the run before its (N+1)th model call |
 | `--llm-max-usd X\|none` | 5 | stop the run before a call that would take its spend (list price) past $X |
 | `--llm-fallback-rate R` | 0.25 | stop the run once more than R of its decisions fell back (over at least 8; 1 = never) |
+| `--shape-a`, `--shape-b` | `auto` | the seat's deck shape: `auto`, `two-colour`, `mono`, `three-colour`, `good-stuff` (grid; *Shapes*, D446) |
+| `--shape-explore on \| share=x[,<shape>=w...]` | off | each auto seat forced to a weighted random shape with probability x, seeded by the draft (D446) |
 | `--bridge a,b[,c]` | | a bridge run: no cube file; every draft's pool mixed from these cubes (below, D322) |
 | `--bridge-ratio 0.5,0.5` | equal | each cube's share of a bridge pool |
 | `--bridge-size N` | 180 | a bridge pool's size (at least 162, a grid's deal) |
@@ -498,6 +500,9 @@ drafter (each draft's decisions, replayed on resume; D439), and
              "winsA": 1, "winsB": 0, "winner": "A", "worker": 0 },
   "ms": { "draft": 15, "build": 20, "match": 24970 } }
 ```
+
+With shapes on (D446), each drafter also carries `"shape": "mono", "shapeForced": true` and, when its shape
+had no build and today's builder's deck played, `"shapeFallback": true`.
 
 Under an LLM drafter (D439) a line also carries `"llm": { "seat": "A", "model": "haiku", "thinking":
 "low", "resolved": "claude-haiku-…", "decisions": 18, "calls": 18, "retries": 0, "fallbacks": 0,
@@ -926,8 +931,8 @@ card's value *in context* — power band, colour structure, archetype — then s
 decks at a chosen power level, every suggestion confirmed by a fresh, pre-registered lab run (Justin,
 2026-10-16; the plan and its agreed corrections are the cloud's notes in `pc-jobs`' README, *NOTES TO
 THE PC*, and the PC's critique and J140's design in `pc-results/HEARTBEAT.md`, 2026-10-16). Phase 0 is
-the population and a sampler, and is all this section covers: no engine runs, nothing played. Phase 1
-(the drafter and builder shape variants, J140) and the census rounds come after it.
+the population and a sampler (no engine runs, nothing played); Phase 1, *Shapes* below (D446), the
+drafter and builder shape variants that J140 measures per band. The census rounds come after them.
 
 ```bash
 tools/cubelab.sh census build --fc ~/code/ForgeCoach            # cubes/library/census.tsv
@@ -995,6 +1000,66 @@ lists every file with its in-band, cross and fill counts and its sha256. A censu
 columns, the rule on every row and on known cards, determinism, every band × structure's cube
 parsing with no warning and only supported cards (what `check` needs), each structure's counts, and
 the cross-band share.
+
+### Shapes (D446, Phase 1)
+
+The lab drafter leans to two colours and the builder plays two, so mono decks and decks of three or more
+colours only ever appeared as accidents of a thin pool. A seat can now be given a **shape** to draft and
+build to, and an exploration share forces shapes at random so that every shape gets games:
+
+```bash
+tools/cubelab.sh run var/cubelab/census/cubes/legacy-two-colour-1-001.md --drafts 100 --games 1 --jobs 4 \
+    --shape-explore share=1,mono=0.5,two-colour=0.17,three-colour=0.17,good-stuff=0.16
+tools/cubelab.sh run cubes/pauper-cube-180.md --drafts 40 --games 1 --jobs 4 --shape-a mono   # seat A always mono
+tools/cubelab.sh shapes var/lab-j140/runs/*/* --out var/lab-j140/out                          # the measures by band
+```
+
+| shape | the drafter | the builder |
+|---|---|---|
+| `auto` (the default) | today's | today's: with both seats `auto` and no `--shape-explore`, a run is byte for byte what it was |
+| `two-colour` | today's | today's (the exploration's control arm) |
+| `mono` | leans as today for two picks; from its 3rd pick committed for good to the heaviest colour so far, then on-colour or colourless cards only (anything else −`offColour`) | one colour, a splash of at most 2 one-pip cards; 16 lands and 24 spells, 17 and 23 when those 24 average mana value 3.0 or more |
+| `three-colour` | leans as today; at `commitAt` committed to its three heaviest colours (off them −`offColour`), fixers ×2 | exactly three colours, no splash, each needed by 3+ spells; 17 lands with 3+ fixers for them in the pool, else 18 |
+| `good-stuff` | no lean and no synergy (the highest-rated card), +`fixing` for any land or fixer of two or more colours | the most colours (3–5) its fixers support (3 a colour beyond two), no splash, 18 lands |
+
+A shape whose builder finds no legal deck plays today's deck (`shapeFallback`). Shapes are grid only and
+refuse `--bridge`, `--drafter`, `--explore` and the head-to-head modes. Every number is `SHAPE_RULES` in
+`tools/cubelab/shapes.ts`, written in D446 before any test.
+
+**`--shape-explore share=x`** (or `on`, 0.25), optionally with weights per shape (`mono=…,two-colour=…,
+three-colour=…,good-stuff=…`; default equal): each `auto` seat is forced with probability x, its shape
+drawn by the weights, B never the shape a forced A got (so the exploration makes no mirrors), all from the
+draft's own stream `rng(seed, 'shape-explore')`. A fixed `--shape-a/-b` seat is never forced. Measured offline
+on census cubes (no engine: a draft and its build are pure), mono finds a build in 46–50% of seats a band
+(about 90% in mono-heavy cubes, 17–42% elsewhere), three-colour 94–99%, good-stuff 87–99%; the weights are
+there to give mono its share of built decks.
+
+**What it writes.** With shapes on, each drafter's line carries `shape`, `shapeForced` and (when today's
+builder played) `shapeFallback`; `run.json` carries `shapes: {A, B, explore: {share, weights}, rules, flow}`,
+part of the folder's identity and version; `cards.json` marks each **card-flow** card `flow: true` — a rule on
+the engine's oracle text generalising the Synergy v3 study's 17 cards that draw or filter without adding to
+the board (`tools/cubelab/cardflow.ts`; 40 of the library's cards).
+
+**The measures** (`report`'s *Shapes* section for a run with shapes on; every population of `compare`, as
+`pop.<name>.shape.<key>` in `compare.json`; and `shapes` over many folders), each with a draft-clustered 95%
+interval:
+
+| key | what |
+|---|---|
+| `cc1`…`cc4p` `_all`, `_forced`, `_unforced` | match win rate (over decisive matches) by the played deck's main colour count, 1, 2, 3, 4+ |
+| `spread` | max − min of those over colour counts with 30+ decisive matches |
+| `pw5_cc1`…`pw5_cc4p` | the share of colour combinations (W, WU, WUB …) with 30+ decisive games within 5 points of 50% |
+| `label_<shape>` | by shape: the seats drafted and built to it, mirrors left out (J140's rule reads this) |
+| `fallback_<shape>` | the share of a shape's seats whose shape had no build |
+| `flow_cc…`, `flow_<shape>` | card-flow cards per played deck (runs with shapes on only) |
+
+`tools/cubelab.sh shapes <run-dir>... --out <dir>` groups the folders by the census band in each cube's
+first line, pools each band's drafts, and writes `shapes.json` (numbers only), `shapes.md` and
+`ratings-rough.tsv`: the by-shape labels from each interval (`--viable 0.5 --dominant 0.55 --not-viable
+0.45`: VIABLE iff it holds 0.5, DOMINANT iff wholly above 0.55, NOT VIABLE iff wholly below 0.45; no label
+under 30 decisive matches), the band offsets from the cross-band slice (each other band's CROSS cards'
+pooled win rate minus the in-band cards'; FILL cards in neither), and every card's games within its band
+(report only).
 
 ## Learning the drafters' values from the games (D301–D302)
 
@@ -1360,6 +1425,7 @@ tools/cubelab.sh watch cubes/fair-fight-cube-180.md --drafter-b llm:sonnet   # C
 | `--player-a`, `--player-b` | `Default` | who plays each drafter's deck: a Forge profile, or `search-v2` (`search` also; the live search seat, through RecordMatch's `--policy search`). No Claude player: RecordMatch seats Forge AIs only |
 | `--llm-max-usd X`, `--llm-max-calls N`, `--llm-fallback-rate R` | 1, 40, 0.25 | an `llm:` drafter's cap for the whole watch and its fallback stop (D442): past either cap, or past R of its picks falling back to the lab drafter's line, the watch ends `error` with the reason |
 | `--pace ms` | 600 | the recorder's pace (M47); 0 = engine speed |
+| `--shape-a`, `--shape-b` | `auto` | the lab drafter's deck shape per seat (D446; not with `human-picks`) |
 | `--out <dir>` | `var/spectate/watch-<cube>-<seed>` | the folder; its name is the watch's id |
 | `--ratings <tsv>`, `--game-timeout <sec>` | as `run` | |
 
@@ -1432,6 +1498,10 @@ tools/cubelab.sh compare ... --no-run          # the measures again from the run
 | `lands`, `colours` | the played decks' mean land count; mean colours (main colours + splash) | |
 | `two_colour`, `splash` | the share of played decks with exactly two main colours (splash or not); with a splash | % |
 | `first_pick_top10` | of every card in the first line taken from each grid (evolve's first-line count), the share held by the 10 cards most often there | % |
+
+Beside them each population carries D446's shape measures (*Shapes*, above) as `pop.<name>.shape.<key>`
+in `compare.json` and a *Shapes* section in `compare.md`, on the same bootstrap replicates; they are read
+side by side, with no pairwise differences.
 
 **Intervals.** 95%, percentile, from a **draft-clustered bootstrap** (`--boot 1000` replicates,
 `--boot-seed 1`): a replicate draws the seeds with replacement and takes each drawn seed's whole

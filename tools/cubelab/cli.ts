@@ -26,13 +26,15 @@
 //           [--drafter forge-ranks | llm:<haiku|sonnet|opus|fake>[:thinking=off|low|default] [--drafter-seat A|B]]
 //           [--llm-sees-opponent] [--llm-jobs 2]               Forge's ranks, or Claude asked once a decision (D439)
 //           [--llm-max-calls N] [--llm-max-usd 5|none] [--llm-fallback-rate 0.25]   the LLM's spend cap and fallback stop
+//           [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff] [--shape-explore on|share=x]   deck shapes (D446, shapes.ts)
 //   run     --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own] [run's flags]   a pool mixed from cubes (bridge.ts)
 //   queue   plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--root <dir>]   the overnight mix (queue.ts)
 //           [--profile-mix Default:0.5,Reckless:0.25,Cautious:0.25]   each drafter's AI drawn per draft (D375; off by default)
 //   learn   <run-dir...> --out <x.ratings.tsv> [--cube <cube.md>] [--prior <tsv>] [--learn name=value]...   (D301)
 //   selfplay <cube.md> [--iterations 2] [--drafts-per-iter 30] [--h2h N] [--deck-h2h N] [--deck-synergy on|off]
 //           [--from <run-dir>]... [--jobs K] [--seed S] [--out <dir>]   (D302; learncmd.ts has every flag)
-//   report  <out> [--min-games N] [--play-explore include|exclude|only]   <out>/report.html, report.md, summary.json and meta.json
+//   report  <out> [--min-games N] [--play-explore include|exclude|only] [--min-pair-games 30]   <out>/report.html, report.md, summary.json and meta.json
+//           (a run with shapes on, D446: a Shapes section too)
 //   meta    <out> [--cube <cube.md>] [--min-pair-games 6] [--max-pairs 300] [--play-explore include|exclude|only]   <out>/meta.json (ForgeCoach, D297)
 //           (both leave drafts whose games explored OUT by default: D358)
 //   evolve  <cube.md> --pool <pool.tsv> [--notes <tsv>] [--generations G] [--drafts-per-gen N] [--jobs K]
@@ -47,6 +49,8 @@
 //   compare <cubeA.md> <cubeB.md>... [--variant name=<cube.md>[,ratings=<tsv>][,weight.<w>=<v>]...]... [--drafts N] [--seed S]
 //           [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--min-pair-games 30] [--rule <measure>:lower-better:margin=x]...
 //           [--no-run]   2-6 populations on the same seeds, through `run`; balance measures with paired bootstrap intervals (D441)
+//   shapes  <run-dir>... --out <dir> [--census <tsv>] [--boot 1000] [--viable 0.5 --dominant 0.55 --not-viable 0.45]
+//           the shape measures by census band, the labels, band offsets and rough ratings (D446, shapes-cmd.ts; no engine)
 //
 // docs/guides/cube-lab.md is the manual; D293-D296 are the decisions.
 
@@ -73,7 +77,9 @@ import { EVOLVE_DEFAULTS, mergeKnobs } from './evolve.ts';
 import { defaultNotes, evolve, parseExploreArgs } from './evolve-run.ts';
 import { readJsonLines } from './lines.ts';
 import { watchCommand } from './watch.ts';
-import { compareCommand } from './compare.ts';
+import { compareCommand, COMPARE_DEFAULTS, populationOf } from './compare.ts';
+import { shapeTable } from './shape-measures.ts';
+import { isShape, parseShapeExplore, shapeExploreText, SHAPE_NAMES, type Shape, type ShapeExplore } from './shapes.ts';
 
 const REPO = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const say = (s: string): void => { process.stdout.write(`${s}\n`); };
@@ -95,6 +101,7 @@ function usage(msg?: string): never {
                         [--drafter human-picks:<x.picks.json> | forge-ranks | llm:<model>[:thinking=off|low|default]]
                         [--drafter-seat A|B] [--llm-sees-opponent] [--llm-jobs 1..4]   (D416, D439; grid)
                         [--llm-max-calls N] [--llm-max-usd 5|none] [--llm-fallback-rate 0.25]   (the LLM's caps)
+                        [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff] [--shape-explore on|share=0.25[,mono=w,...]]   (D446; grid)
        tools/cubelab.sh run --bridge <a,b[,c]> [--bridge-ratio 0.5,0.5] [--bridge-size 180] [--bridge-ratings even|own]
                         [the flags above but --ratings]
        tools/cubelab.sh queue plan|run|check --night N --drafts D [--bridge-share 0.2] [--jobs K] [--games 1] [--root <dir>]
@@ -114,6 +121,7 @@ function usage(msg?: string): never {
                         [--drafter-a lab|forge-ranks|llm:<model>[:thinking=...]|human-picks:<f>] [--drafter-b ...]   (one side at most not lab)
                         [--player-a <Profile>|search-v2] [--player-b ...] [--pace 600] [--out <dir>] [--ratings <tsv>]
                         [--llm-max-usd 1|none] [--llm-max-calls 40] [--llm-fallback-rate 0.25]   (D440, D442, D443)
+                        [--shape-a|--shape-b auto|two-colour|mono|three-colour|good-stuff]   (D446; both lab drafters)
        tools/cubelab.sh census build --fc <ForgeCoach> [--editions <dir>] [--pool <tsv>] [--out cubes/library/census.tsv] [--check]   (D445, no engine)
        tools/cubelab.sh sample --band <pauper|peasant|legacy|powered|all> --structure <mono-heavy|two-colour|three-colour|good-stuff>
                         --seed S --count N --out <dir> [--cross-band 0.10] [--allow-ai-flagged] [--census <tsv>] [--pool <tsv>]   (D445, no engine)
@@ -121,6 +129,8 @@ function usage(msg?: string): never {
                         [--drafts N] [--seed S] [--games 3] [--jobs K] [--out <dir>] [--boot 1000] [--boot-seed 1]
                         [--min-pair-games 30] [--rule <measure>:lower-better|higher-better[:margin=x]]... [--no-run]
                         [run's other flags, for every population]   (D441: the same seeds; compare.json, compare.md)
+       tools/cubelab.sh shapes <run-dir>... --out <dir> [--census <tsv>] [--boot 1000] [--boot-seed 1] [--min-pair-games 30]
+                        [--viable 0.5] [--dominant 0.55] [--not-viable 0.45]   (D446, no engine: shapes.json, shapes.md, ratings-rough.tsv)
 `);
   process.exit(2);
 }
@@ -236,6 +246,12 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
     const pe = parsePlayExploreArgs(f.get('play-explore') ?? []);
     if (pe) o.playExplore = pe;
   } catch (e) { usage((e as Error).message); }
+  // D446: the seats' shapes and the shape exploration share
+  const shapeA = one(f, 'shape-a') ?? 'auto', shapeB = one(f, 'shape-b') ?? 'auto';
+  for (const [k, v] of [['shape-a', shapeA], ['shape-b', shapeB]] as const) if (!isShape(v)) usage(`--${k} is ${SHAPE_NAMES.join(', ')}; got ${v}`);
+  let shapeExplore: ShapeExplore | null = null;
+  try { shapeExplore = parseShapeExplore(f.get('shape-explore') ?? []); } catch (e) { usage((e as Error).message); }
+  if (shapeA !== 'auto' || shapeB !== 'auto' || shapeExplore !== null) o.shapes = { A: shapeA as Shape, B: shapeB as Shape, explore: shapeExplore };
   if (one(f, 'deck-synergy') === 'on' && !one(f, 'synergy')) usage('--deck-synergy on needs --synergy <tsv>');
   const drafterArg = one(f, 'drafter');
   if (drafterArg !== undefined) {
@@ -269,7 +285,7 @@ async function run(cubeFile: string, f: Map<string, string[]>): Promise<number> 
   // --games 0 drafts and builds only, plays nothing (the AI ladder's deck sets, D318); a report of such a run has no games
   if (o.games < 0) usage('--games must be 0 or more');
   if (one(f, 'record-all') && f.has('record-every')) usage('--record-all is --record-every 1; give one');
-  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profileMix ? `mixed per drafter (${mixText(o.profileMix)})` : o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}${o.playExplore ? `, play exploration ${playExploreText(o.playExplore)} (D358)` : ''}${o.drafter ? `, seat ${o.drafter.seat} drafting with ${o.drafter.kind === 'human-picks' ? `human picks ${o.drafter.file} (D416)` : o.drafter.kind === 'llm' ? `llm:${o.drafter.model} (thinking ${o.drafter.thinking}, D439)` : "Forge's ranks (D439)"}` : ''}`);
+  say(`cube lab: ${cubeFile}, ${format}, ${o.drafts} draft(s) from seed ${seed}, best of ${o.games}, ${o.jobs} job(s), AI ${o.profileMix ? `mixed per drafter (${mixText(o.profileMix)})` : o.profiles.join(' vs ')}, ratings ${ratingsFile ?? "Forge's ranks"}, out ${o.out}${o.recordEvery ? `, recording ${o.recordEvery === 1 ? 'every game' : `every game of every ${o.recordEvery}th draft`} (both chairs) into ${path.join(o.out, 'games')}` : ''}${o.playExplore ? `, play exploration ${playExploreText(o.playExplore)} (D358)` : ''}${o.shapes ? `, shapes A ${o.shapes.A} B ${o.shapes.B}${o.shapes.explore ? ` explore ${shapeExploreText(o.shapes.explore)}` : ''} (D446)` : ''}${o.drafter ? `, seat ${o.drafter.seat} drafting with ${o.drafter.kind === 'human-picks' ? `human picks ${o.drafter.file} (D416)` : o.drafter.kind === 'llm' ? `llm:${o.drafter.model} (thinking ${o.drafter.thinking}, D439)` : "Forge's ranks (D439)"}` : ''}`);
   await runLab(env, o, say);
   say(`next: tools/cubelab.sh report ${o.out}`);
   return 0;
@@ -309,6 +325,12 @@ function report(out: string, f: Map<string, string[]>): number {
   const { meta, cards, recs, recordings, playExploreDropped } = readRun(out, playExploreMode(f));
   if (playExploreDropped > 0) say(`${playExploreDropped} draft(s) whose games explored (D358) left out (--play-explore include keeps them)`);
   const s = aggregate(meta, cards, recs, recordings, { pairs: pairNames(meta), themes: meta.themeNames ?? {} });
+  if (meta.shapes) {
+    // D446: a run with shapes on gets the shape measures (shape-measures.ts), one population, draft-clustered intervals
+    const o = { minPairGames: int(f, 'min-pair-games', COMPARE_DEFAULTS.minPairGames), boot: COMPARE_DEFAULTS.boot, bootSeed: COMPARE_DEFAULTS.bootSeed };
+    const pop = populationOf('run', out, meta, cards, recs);
+    s.shapes = { table: shapeTable([...pop.drafts.values()], o), flowOn: true, ...o };
+  }
   fs.writeFileSync(path.join(out, 'report.html'), renderHtml(s));
   fs.writeFileSync(path.join(out, 'report.md'), renderMarkdown(s, int(f, 'min-games', 6)));
   fs.writeFileSync(path.join(out, 'summary.json'), `${JSON.stringify(s, null, 1)}\n`);
@@ -383,6 +405,7 @@ async function main(): Promise<number> {
     case 'evolve': if (!pos[0]) usage('evolve needs a cube file'); return evolveCmd(pos[0], f);
     case 'watch': if (!pos[0]) usage('watch needs a cube file'); return watchCommand(REPO, pos[0], f, say);   // D440
     case 'compare': return compareCommand(REPO, pos, f, say, run);
+    case 'shapes': return (await import('./shapes-cmd.ts')).shapesCommand(REPO, pos, f, say);   // D446: the shape measures by census band
     default: return usage(cmd ? `unknown command ${cmd}` : undefined);
   }
 }
