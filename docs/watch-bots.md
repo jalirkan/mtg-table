@@ -112,8 +112,16 @@ is not in mtg-table's `cubes/`, so the body carries it:
   draft needs at least 9 (the cube parser: no "## The list" section with "###
   Section (N)" headings found)`. At most 2,000 different names, each at most 150
   characters (the draft room's limits). A `## Not in Forge` section, or any card
-  the engine has no script for, is drafted without it, as for every cube (the
-  lab logs which).
+  the engine has no script for, is drafted without it, as for every cube.
+- **`match.unknownCards`** names those cards (the #150 review): before the `202`
+  the helper checks every name of the document against the engine's own card
+  names (the `Name:` lines of Forge's `cardsfolder.zip`, read once per helper
+  process, about 0.3 s, then a lookup a name; any case, accents folded, a split
+  card as `A // B` or its front face), and writes the ones it lacks — still a
+  `202`, the watch drafts without them. `null` means it was not checked (a
+  checkout with no engine resources); `[]`, every name is known. Once the draft
+  has run, `tools/cubelab.sh watch` replaces it with the engine's own list (the
+  lab's `run.json` `missing`), for every watch.
 - The helper writes the document to `var/spectate/watch-my-<slug>-<seed>/cube.md`
   **before** it answers `202`, with its first `# ` heading set to `title` (added on
   top when it has none; a document whose heading already is the title is kept

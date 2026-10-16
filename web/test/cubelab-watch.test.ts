@@ -362,3 +362,29 @@ test('D444: a custom cube in the watch folder (cube.md, written by the helper fi
     }, () => {}), /holds files a watch did not write \(cube\.md\)/);
   } finally { rmSync(repo, { recursive: true, force: true }); }
 });
+
+test('#150 review: match.json keeps the helper\'s unknownCards over the watch\'s first write, while it drafts', async () => {
+  const { repo, env } = factsRepo();
+  try {
+    const id = 'watch-pauper-cube-180-14';
+    const out = join(repo, 'var/spectate', id);
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, 'watch.log'), '');
+    // the helper's first word, before its 202 (its own index's guess)
+    writeFileSync(join(out, 'match.json'), `${JSON.stringify({ v: 1, kind: 'watch-match', status: 'drafting', unknownCards: ['From The Helper'] })}\n`);
+    const profiles = ['Default'];
+    const seen: Array<string[] | null | undefined> = [];
+    const loggedOut: DraftModel = { name: 'out', call: async () => {
+      seen.push((JSON.parse(readFileSync(join(out, 'match.json'), 'utf8')) as WatchMatch).unknownCards);
+      throw new Error('logged out');
+    } };
+    const e = await watch(env, {
+      cubeFile: CUBE_FILE, seed: 14, games: 1, players: { A: parsePlayer('Default', profiles), B: parsePlayer('Default', profiles) },
+      drafters: { A: 'lab', B: 'llm:sonnet' }, paceMs: 0, out, ratingsFile: null, gameTimeoutSec: 60, llmCaps: WATCH_LLM_CAPS, llmModel: async () => loggedOut,
+    }, () => {}).then(() => null, (x: unknown) => x);
+    assert.ok(e instanceof Error);
+    assert.deepEqual(seen[0], ['From The Helper'], 'while it drafts: the helper\'s list, carried over the watch\'s first write');
+    // (after the draft, watch.ts sets it to run.json's `missing`, the engine's own list: that needs the
+    // engine, so it is the real-engine smoke's, docs/decisions/D444's 2026-10-16 note)
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});

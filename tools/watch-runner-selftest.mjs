@@ -45,6 +45,8 @@ import { networkInterfaces } from 'node:os';
 import { join, resolve } from 'node:path';
 import { checkCubeDoc, createWatchRunner, MAX_WATCH_BODY, readCompleteLines, validateWatch, WATCH_ID } from './watch-runner.mjs';
 import { startHelper } from './coach-helper.mjs';
+import { parseCube } from './cubelab/cube.ts';
+import { CARDS_ZIP, forgeCardNames, unknownCards } from './forge-scripts.ts';
 
 const DIR = resolve('var/watch-runner-selftest');
 rmSync(DIR, { recursive: true, force: true });
@@ -464,6 +466,30 @@ check(!argvC[0].some((x) => /My Fair Cube|## The list/.test(x)), 'neither the ti
 await until(() => wcu.running() === null);
 check(wcu.get('watch-my-fair-fight-23').body.match?.status === 'done' && existsSync(join(cdir, 'cube.md')), 'the fake watch runs to done over it; cube.md stays');
 check(wcu.post({ cube: 'my-fair-fight', seed: 24, cubeDoc: cd('# x\nno list\n') }).status === 400 && !existsSync(join(ROOT, 'var/spectate/watch-my-fair-fight-24')), 'an unreadable cubeDoc: 400, and no folder is made');
+check(mc?.unknownCards === null, 'a checkout with no engine resources (this test root): match.json\'s unknownCards is null, not checked');
+// #150 review: names the engine does not know are named in match.json before the 202 (still a 202)
+{
+  const planted = FAIR.replace(/^(### [^\n]*\n)/m, '$1Zzyzx the Unprinted · Not A Real Card · ');
+  const known = new Set(parseCube(FAIR).cards.map((c) => c.name.toLowerCase()));
+  const wn = createWatchRunner({ repoRoot: ROOT, available: () => true, redactionCheck: fakeCheck, cardNames: () => known,
+    command: (q, dir) => ['bash', '-c', 'sleep 0.3; exec bash "$0" "$1" 1', FAKE, dir] });
+  const pn = wn.post({ cube: 'my-planted', seed: 25, cubeDoc: cd(planted, 'Planted') });
+  const mn = wn.get('watch-my-planted-25').body.match;
+  check(pn.status === 202 && JSON.stringify(mn?.unknownCards) === JSON.stringify(['Zzyzx the Unprinted', 'Not A Real Card']),
+    `a cube with two names the engine lacks: 202, and match.json names them from the start (${JSON.stringify(mn?.unknownCards)})`);
+  await until(() => wn.running() === null);
+  // the engine's real index (forge-home's cardsfolder.zip, read, never booted), where this checkout has one
+  const real = forgeCardNames(resolve(CARDS_ZIP));
+  if (!real) console.log('  SKIP  the real name index: no forge-home/res/cardsfolder/cardsfolder.zip here');
+  else {
+    const t1 = performance.now();
+    const u1 = unknownCards([...new Set(parseCube(planted).cards.map((c) => c.name))], real);
+    const ms = performance.now() - t1;
+    check(JSON.stringify(u1) === JSON.stringify(['Zzyzx the Unprinted', 'Not A Real Card']) && ms < 50,
+      `the real index (${real.size} names): Fair Fight's 180 are all known, the two planted are not; ${ms.toFixed(2)} ms for 182 names once built`);
+    check(unknownCards(['Fire // Ice', 'Delver of Secrets', 'Insectile Aberration', 'Æther Vial', 'lightning bolt'], real).length === 0, 'a split card as "A // B", both faces of a transform card, a ligature, any case: known');
+  }
+}
 // the fallback stop, as the watch reports it, comes through unchanged
 w.post({ cube: 'pauper-cube-180', seed: 8, drafterB: 'llm:sonnet' });
 await until(() => w.running() === null);

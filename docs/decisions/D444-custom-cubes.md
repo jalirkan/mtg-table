@@ -78,3 +78,18 @@ watch over its own folder's `cube.md` keeps it, drafts from it with no ratings, 
 180 cards read, 18 grids and 36 picks, two 40-card lab decks (WU, UR+b), the lab's `run.json`
 `ratingsFile: null`, the game won by A in 29 turns, `redaction: "pass"`, and the game route served
 its whole 4,186,430-byte log after the served-frames check.
+
+**2026-10-16, the #150 review (low).** A name the engine does not know was drafted without, and
+said only in the lab's log. `POST /watch` with a `cubeDoc` now checks the document's names before
+the `202` against the engine's own card names — every `Name:` line (each face) of the pinned
+engine's `cardsfolder.zip`, read through `tools/forge-scripts.ts` (`forgeCardNames`, a hand-walked
+zip and `node:zlib`, no engine boot): about 0.3 s once per helper process (35,495 names for
+2.0.14's 33,587 scripts), then about a millisecond for a 180-card cube; any case, accents and
+ligatures folded, a split card as `A // B` or by its front face — and writes the ones it lacks
+into the first `match.json` as `unknownCards` (`null` where the checkout has no engine resources;
+the watch still starts). `watch.ts` carries the list over its first write and, once the draft has
+run, replaces it with `run.json`'s `missing` (the engine's own lookup) for every watch. *Rejected:*
+`cubelab.sh check`, which boots Forge (seconds, a JVM a request); the card library's
+`var/cards/cards.sqlite`, which is Scryfall's and knows the cards Forge 2.0.14 lacks (Reality
+Fracture's among them); Forge's edition files, which list printings, not scripts.
+

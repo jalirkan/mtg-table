@@ -23,7 +23,10 @@
 //                          when it lists fewer than 9 different cards; over 256 KB is 413.  It is written to
 //                          var/spectate/<id>/cube.md before the 202, its first "# " heading set to the title,
 //                          and that path is the watch's cube; no ratings file sits beside it, so the lab
-//                          drafts with Forge's ranks, as for a cube with no ratings.  /health: "watchCustom": 1)
+//                          drafts with Forge's ranks, as for a cube with no ratings.  Its names the engine
+//                          lacks (forge-scripts.ts's name index, no engine boot) are match.json's
+//                          `unknownCards` from that first write -- still a 202; null = not checked.
+//                          /health: "watchCustom": 1)
 //                          (the body: at most 600 KB)
 //                          -> 202 {"ok": true, "id": "watch-<cube>-<seed>", "state": "/watch/<id>",
 //                                  "game": "/watch/<id>/game/<n>"}; match.json is written before it answers
@@ -84,6 +87,7 @@ import { fileURLToPath } from 'node:url';
 import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync, renameSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import { parseCube } from './cubelab/cube.ts';
+import { CARDS_ZIP, forgeCardNames, unknownCards } from './forge-scripts.ts';
 
 /** D444: a body may carry a custom cube's document (at most 256 KB of markdown, which JSON may escape). */
 export const MAX_WATCH_BODY = 600 * 1024;
@@ -213,7 +217,7 @@ export function checkCubeDoc(d) {
   if (names.length > MAX_CUBE_CARDS) return no(`the cube document lists ${names.length} different cards; at most ${MAX_CUBE_CARDS}`);
   const long = names.find((n) => [...n].length > MAX_CUBE_NAME || CONTROL.test(n));
   if (long !== undefined) return no(`the cube document lists a name that is not a card name (over ${MAX_CUBE_NAME} characters, or a control character): ${JSON.stringify(long.slice(0, 60))}…`);
-  return { doc: { title, markdown: withTitle(d.markdown, title), cards: names.length } };
+  return { doc: { title, markdown: withTitle(d.markdown, title), cards: names.length, names } };
 }
 
 /** The document with its title heading (the first line parseCube reads a title from) set to `title`, or one added on top. */
@@ -320,13 +324,19 @@ export function checkRedaction(buf, dir) {
  */
 export const DEFAULT_WATCH_KEEP = 10;
 
-export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000, redactionCheck = null, keep = DEFAULT_WATCH_KEEP, llmCap = DEFAULT_WATCH_LLM_CAP }) {
+export function createWatchRunner({ repoRoot, log = () => {}, command = null, available = null, killGraceMs = 5000, redactionCheck = null, keep = DEFAULT_WATCH_KEEP, llmCap = DEFAULT_WATCH_LLM_CAP, cardNames = null }) {
   if (!Number.isInteger(keep) || keep < 1) throw new Error(`keep is a whole number of watch folders >= 1, got ${keep}`);
   if (!(llmCap.maxUsd > 0) || !Number.isInteger(llmCap.maxCalls) || llmCap.maxCalls < 1 || !(llmCap.maxFallbackRate >= 0 && llmCap.maxFallbackRate <= 1)) {
     throw new Error(`llmCap is {maxUsd > 0, maxCalls >= 1, maxFallbackRate 0..1}, got ${JSON.stringify(llmCap)}`);
   }
   const root = resolve(repoRoot);
   const check = redactionCheck ?? ((buf) => checkRedaction(buf, join(root, 'var', 'watch-check')));
+  /**
+   * Every card name the engine knows (forge-scripts.ts: the Name: lines of forge-home's
+   * cardsfolder.zip, read once per process -- about 0.3 s -- and a Set lookup a name after; the
+   * engine is never booted for it), or null when this checkout has no engine resources.
+   */
+  const knownNames = cardNames ?? (() => { try { return forgeCardNames(join(root, CARDS_ZIP)); } catch { return null; } });
   const spectate = join(root, 'var', 'spectate');
   let running = null;   // { id, child, startedAt, failWhy? }
   /** Per game log: how much of it passed the redaction check (D440: nothing unchecked is served). */
@@ -371,6 +381,9 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       players: { A: seat(r.playerA), B: seat(r.playerB) },
       drafters: { A: { drafter: r.drafterA }, B: { drafter: r.drafterB } },
       cost: null, games: [], wins: { A: 0, B: 0, draws: 0 }, winner: null, current: null,
+      // a custom cube's names the engine does not know (null: not checked here, no engine resources);
+      // the lab drafts without them, and watch.ts replaces this with the engine's own list (run.json's missing)
+      ...(r.doc ? { unknownCards: r.unknownCards ?? null } : {}),
     };
   };
 
@@ -534,7 +547,12 @@ export function createWatchRunner({ repoRoot, log = () => {}, command = null, av
       mkdirSync(dir, { recursive: true });
       for (const k of [...checked.keys()]) if (k.startsWith(dir + sep)) checked.delete(k);
       prune(r.id);
-      if (r.doc) writeFileSync(join(dir, 'cube.md'), r.doc.markdown);   // D444: the cube the watch drafts, before the 202
+      if (r.doc) {
+        writeFileSync(join(dir, 'cube.md'), r.doc.markdown);   // D444: the cube the watch drafts, before the 202
+        const known = knownNames();
+        r.unknownCards = known ? unknownCards(r.doc.names, known) : null;
+        if (r.unknownCards?.length) log(`WATCH ${r.id}: ${r.unknownCards.length} card(s) of the cube are not in the engine and are drafted without: ${r.unknownCards.slice(0, 10).join(', ')}${r.unknownCards.length > 10 ? ', ...' : ''}`);
+      }
       writeFileSync(join(dir, 'match.json'), `${JSON.stringify(firstMatch(r), null, 1)}\n`);
       const fd = openSync(join(dir, 'watch.log'), 'w');
       const [file, ...args] = argvOf(r, dir);
